@@ -20,7 +20,7 @@
   {
     "key": "alt+ctrl+up",
     "command": "-quickInput.previousSeparator",
-    "when": "inQuickInput && quickInputType == 'quickPick'"
+    "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
   },
   {
     "key": "alt+ctrl+f",
@@ -80,12 +80,12 @@
   {
     "key": "alt+enter",
     "command": "-workbench.action.terminal.chat.insertCommand",
-    "when": "terminalChatResponseContainsCodeBlock && terminalHasBeenCreated && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks || terminalChatResponseContainsCodeBlock && terminalProcessSupported && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks"
+    "when": "chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalHasBeenCreated && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks || chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalProcessSupported && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks"
   },
   {
     "key": "alt+enter",
     "command": "-workbench.action.terminal.chat.insertFirstCommand",
-    "when": "terminalChatResponseContainsMultipleCodeBlocks && terminalHasBeenCreated && !terminalChatActiveRequest || terminalChatResponseContainsMultipleCodeBlocks && terminalProcessSupported && !terminalChatActiveRequest"
+    "when": "chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalHasBeenCreated && !terminalChatActiveRequest || chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalProcessSupported && !terminalChatActiveRequest"
   },
   {
     "key": "alt+enter",
@@ -115,7 +115,7 @@
   {
     "key": "alt+left",
     "command": "-workbench.action.terminal.focusPreviousPane",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && terminalHasBeenCreated && terminalSplitPaneActive || terminalFocus && terminalProcessSupported && terminalSplitPaneActive"
   },
   {
     "key": "alt+left",
@@ -129,8 +129,8 @@
   },
   {
     "key": "alt+oem_comma",
-    "command": "-gitlens.diffWithPrevious",
-    "when": "editorTextFocus && !isInDiffEditor && config.gitlens.keymap == 'alternate' && resource in 'gitlens:tabs:tracked'"
+    "command": "-gitlens.diffWithPrevious:key",
+    "when": "editorTextFocus && config.gitlens.keymap == 'alternate' && resource in 'gitlens:tabs:tracked'"
   },
   {
     "key": "alt+oem_comma",
@@ -144,8 +144,8 @@
   },
   {
     "key": "alt+oem_period",
-    "command": "-gitlens.diffWithNext",
-    "when": "editorTextFocus && gitlens:enabled && !isInDiffEditor && config.gitlens.keymap == 'alternate' && resourceScheme =~ /^(gitlens|git|pr)$/"
+    "command": "-gitlens.diffWithNext:key",
+    "when": "editorTextFocus && gitlens:enabled && config.gitlens.keymap == 'alternate' && resourceScheme =~ /^(gitlens|git|pr)$/"
   },
   {
     "key": "alt+right",
@@ -155,7 +155,7 @@
   {
     "key": "alt+right",
     "command": "-workbench.action.terminal.focusNextPane",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && terminalHasBeenCreated && terminalSplitPaneActive || terminalFocus && terminalProcessSupported && terminalSplitPaneActive"
   },
   {
     "key": "alt+right",
@@ -235,7 +235,7 @@
   {
     "key": "alt+c",
     "command": "-toggleSearchCaseSensitive",
-    "when": "searchViewletFocus"
+    "when": "searchViewletFocus && !fileMatchOrFolderMatchFocus"
   },
   {
     "key": "alt+h",
@@ -284,11 +284,6 @@
   },
   {
     "key": "alt+oem_4",
-    "command": "-github.copilot.previousPanelSolution",
-    "when": "github.copilot.activated && github.copilot.panelVisible && activeWebviewPanelId == 'GitHub Copilot Suggestions'"
-  },
-  {
-    "key": "alt+oem_4",
     "command": "-editor.action.accessibleViewPrevious",
     "when": "accessibleViewIsShown && accessibleViewSupportsNavigation"
   },
@@ -296,11 +291,6 @@
     "key": "alt+oem_4",
     "command": "-editor.action.inlineSuggest.showPrevious",
     "when": "inlineSuggestionVisible && !editorReadonly"
-  },
-  {
-    "key": "alt+oem_6",
-    "command": "-github.copilot.nextPanelSolution",
-    "when": "github.copilot.activated && github.copilot.panelVisible && activeWebviewPanelId == 'GitHub Copilot Suggestions'"
   },
   {
     "key": "alt+oem_6",
@@ -384,7 +374,7 @@
   {
     "key": "ctrl+shift+c",
     "command": "-workbench.action.terminal.openNativeConsole",
-    "when": "!terminalFocus"
+    "when": "!isSessionsWindow && !terminalFocus"
   },
   {
     "key": "ctrl+shift+c",
