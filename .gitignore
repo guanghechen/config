@@ -12,6 +12,7 @@
 .codex-global-state.json
 .codex-global-state.json.*
 .personality_migration
+.sandbox_migration
 auth.json
 cap_sid
 config.toml
