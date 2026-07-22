@@ -45,6 +45,14 @@ pub struct StatusRuntime {
     tmux: TmuxAdapter,
 }
 
+const METRIC_CLAIM_OPTIONS: &[(TmuxOptionScope, &str)] = &[
+    (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
+    (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
+    (TmuxOptionScope::GlobalSession, NETWORK_SAMPLE_STATE_OPTION),
+    (TmuxOptionScope::GlobalSession, NET_INTERFACE_OPTION),
+    (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
+];
+
 /// Compatibility path for jobs seeded before the tmux-managed scheduler is
 /// activated. New status02 loads only bump these generations to expire the jobs.
 struct GuardedSchedule {
@@ -454,14 +462,29 @@ impl StatusRuntime {
         };
         let generation_text = generation.to_string();
         let guards = scheduler_guards(&claim, &generation_text, &claim.observed_state);
-        let outcome = match self.tmux.claim_scheduler_task(
-            &guards,
-            task.state_option(),
-            &claim.claimed_state,
-            task.last_attempt_option(),
-            claim.started_at_seconds,
-        ) {
-            Ok(outcome) => outcome,
+        let metric_deadline = (task == SchedulerTask::Metrics).then(|| claim.deadline());
+        let claim_result = match task {
+            SchedulerTask::Metrics => self.tmux.claim_scheduler_task_with_options(
+                &guards,
+                task.state_option(),
+                &claim.claimed_state,
+                task.last_attempt_option(),
+                claim.started_at_seconds,
+                METRIC_CLAIM_OPTIONS,
+            ),
+            SchedulerTask::Heartbeat => self
+                .tmux
+                .claim_scheduler_task(
+                    &guards,
+                    task.state_option(),
+                    &claim.claimed_state,
+                    task.last_attempt_option(),
+                    claim.started_at_seconds,
+                )
+                .map(|outcome| (outcome, Vec::new())),
+        };
+        let (outcome, claimed_options) = match claim_result {
+            Ok(result) => result,
             Err(error) => {
                 self.record_scheduler_failure(&claim, "claim", &error);
                 return Err(error);
@@ -472,7 +495,14 @@ impl StatusRuntime {
         }
 
         let result = match task {
-            SchedulerTask::Metrics => self.execute_scheduled_metrics(&claim),
+            SchedulerTask::Metrics => metric_deadline.as_ref().map_or_else(
+                || {
+                    Err(AppError::Render(
+                        "metrics task is missing its execution deadline".to_string(),
+                    ))
+                },
+                |deadline| self.execute_scheduled_metrics(&claim, &claimed_options, deadline),
+            ),
             SchedulerTask::Heartbeat => self.execute_scheduled_heartbeat(&claim),
         };
         if let Err(error) = &result {
@@ -481,23 +511,33 @@ impl StatusRuntime {
         result
     }
 
-    fn execute_scheduled_metrics(&self, claim: &ClaimPlan) -> AppResult<()> {
-        let deadline = claim.deadline();
-        deadline.check("read-metric-state")?;
-        let values = self.tmux.show_options(&[
-            (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
-            (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
-            (TmuxOptionScope::GlobalSession, NETWORK_SAMPLE_STATE_OPTION),
-            (TmuxOptionScope::GlobalSession, NET_INTERFACE_OPTION),
-            (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
-        ])?;
+    fn execute_scheduled_metrics(
+        &self,
+        claim: &ClaimPlan,
+        values: &[String],
+        deadline: &OperationDeadline,
+    ) -> AppResult<()> {
+        let [
+            cpu_state,
+            memory_state,
+            network_state,
+            network_interface,
+            error_count,
+        ] = values
+        else {
+            return Err(AppError::TmuxParse(format!(
+                "expected {} claimed metric options, got {}",
+                METRIC_CLAIM_OPTIONS.len(),
+                values.len()
+            )));
+        };
         deadline.check("sample-metrics")?;
         let sample = self.collect_metrics_sample(
-            values.first().map(String::as_str).unwrap_or_default(),
-            values.get(1).map(String::as_str).unwrap_or_default(),
-            values.get(2).map(String::as_str).unwrap_or_default(),
-            normalize_network_interface(values.get(3).map(String::as_str)),
-            parse_metric_error_count(values.get(4).map(String::as_str)),
+            cpu_state,
+            memory_state,
+            network_state,
+            normalize_network_interface(Some(network_interface)),
+            parse_metric_error_count(Some(error_count)),
         );
         deadline.check("publish-metrics")?;
         let generation = claim.generation.to_string();

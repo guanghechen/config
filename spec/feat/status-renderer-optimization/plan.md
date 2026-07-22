@@ -44,9 +44,13 @@ the priority at the current session count.
      p95 90.3/76.4 ms, mean 103.8/72.3 ms.
    - Keep the Rust supervisor idea deferred; the low-risk shell change produced
      a measurable improvement without changing lifecycle behavior.
-3. **Pending — reduce metrics tmux IPC**
-   - Evaluate combining task claim with metric-state reads.
-   - Preserve timeout-after-commit ambiguity rules.
+3. **Completed — reduce metrics tmux IPC**
+   - Combine exact-state task claim with metric-state reads in one tmux command
+     queue, preserving timeout-after-claim ambiguity and lease recovery.
+   - Start the metrics execution deadline before the combined claim/read so the
+     optimization does not relax the execution budget.
+   - Alternating isolated due-tick A/B, 20 runs each: median 58.5/49.9 ms,
+     p95 70.2/61.9 ms, mean 85.0/70.2 ms.
 4. **Pending — precompute session groups/order at scale**
    - Implement only if same-group sessions reach 20–30 or traced pure render
      time exceeds 5–10 ms.

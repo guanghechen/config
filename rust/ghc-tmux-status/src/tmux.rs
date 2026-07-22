@@ -119,26 +119,44 @@ impl TmuxAdapter {
         last_attempt_option: &str,
         now_seconds: u64,
     ) -> AppResult<GuardedMutationOutcome> {
-        let command_list = tmux_command_sequence(&[
-            tmux_command_string(&[
-                "set".to_string(),
-                "-g".to_string(),
-                last_attempt_option.to_string(),
-                now_seconds.to_string(),
-            ]),
-            tmux_command_string(&[
-                "set".to_string(),
-                "-s".to_string(),
-                state_option.to_string(),
-                claimed_state.to_string(),
-            ]),
-            tmux_command_string(&[
-                "display-message".to_string(),
-                "-p".to_string(),
-                SCHEDULER_APPLIED_MARK.to_string(),
-            ]),
-        ]);
+        let mut commands = scheduler_claim_commands(
+            state_option,
+            claimed_state,
+            last_attempt_option,
+            now_seconds,
+        );
+        commands.push(marker_command(SCHEDULER_APPLIED_MARK));
+        let command_list = tmux_command_sequence(&commands);
         self.guarded_mutation(guards, command_list)
+    }
+
+    /// Claims a scheduler task and snapshots its execution inputs in the same
+    /// tmux command queue. A timeout after the state mutation remains ambiguous:
+    /// callers must not retry; the claimed lease is the recovery boundary.
+    pub fn claim_scheduler_task_with_options(
+        &self,
+        guards: &[TmuxOptionGuard<'_>],
+        state_option: &str,
+        claimed_state: &str,
+        last_attempt_option: &str,
+        now_seconds: u64,
+        options: &[(TmuxOptionScope, &str)],
+    ) -> AppResult<(GuardedMutationOutcome, Vec<String>)> {
+        let mut commands = scheduler_claim_commands(
+            state_option,
+            claimed_state,
+            last_attempt_option,
+            now_seconds,
+        );
+        commands.push(marker_command(SCHEDULER_APPLIED_MARK));
+        commands.extend(serialized_option_commands(options));
+        let skipped = marker_command(SCHEDULER_SKIPPED_MARK);
+        let output = self.tmux_output(option_guarded_command_args(
+            guards,
+            tmux_command_sequence(&commands),
+            Some(skipped),
+        ))?;
+        parse_guarded_options_output(&output, options.len())
     }
 
     pub fn finish_scheduler_task(
@@ -645,6 +663,50 @@ fn option_guarded_command_args(
     args
 }
 
+fn scheduler_claim_commands(
+    state_option: &str,
+    claimed_state: &str,
+    last_attempt_option: &str,
+    now_seconds: u64,
+) -> Vec<String> {
+    vec![
+        tmux_command_string(&[
+            "set".to_string(),
+            "-g".to_string(),
+            last_attempt_option.to_string(),
+            now_seconds.to_string(),
+        ]),
+        tmux_command_string(&[
+            "set".to_string(),
+            "-s".to_string(),
+            state_option.to_string(),
+            claimed_state.to_string(),
+        ]),
+    ]
+}
+
+fn marker_command(marker: &str) -> String {
+    tmux_command_string(&[
+        "display-message".to_string(),
+        "-p".to_string(),
+        marker.to_string(),
+    ])
+}
+
+fn serialized_option_commands(options: &[(TmuxOptionScope, &str)]) -> Vec<String> {
+    let mut commands = vec![marker_command(OPTIONS_MARK)];
+    for (index, (scope, name)) in options.iter().enumerate() {
+        commands.push(marker_command(&option_value_mark(index)));
+        commands.push(tmux_command_string(&[
+            "show".to_string(),
+            scope.show_value_flag().to_string(),
+            (*name).to_string(),
+        ]));
+    }
+    commands.push(marker_command(OPTIONS_END_MARK));
+    commands
+}
+
 fn combined_guard_format(guards: &[TmuxOptionGuard<'_>]) -> String {
     let mut conditions = guards.iter().map(|guard| {
         format!(
@@ -734,6 +796,31 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
 
 fn parse_options_output(output: &str, count: usize) -> AppResult<Vec<String>> {
     parse_option_values(&mut output.lines().peekable(), count)
+}
+
+fn parse_guarded_options_output(
+    output: &str,
+    count: usize,
+) -> AppResult<(GuardedMutationOutcome, Vec<String>)> {
+    let mut lines = output.lines().peekable();
+    match lines.next() {
+        Some(SCHEDULER_APPLIED_MARK) => {
+            let values = parse_option_values(&mut lines, count)?;
+            if lines.next().is_some() {
+                return Err(AppError::TmuxParse(
+                    "unexpected output after scheduler claim options".to_string(),
+                ));
+            }
+            Ok((GuardedMutationOutcome::Applied, values))
+        }
+        Some(SCHEDULER_SKIPPED_MARK) if lines.next().is_none() => {
+            Ok((GuardedMutationOutcome::Skipped, Vec::new()))
+        }
+        value => Err(AppError::TmuxParse(format!(
+            "unexpected scheduler claim result: {}",
+            value.unwrap_or("<missing>")
+        ))),
+    }
 }
 
 fn parse_session_navigation_output(output: &str) -> AppResult<SessionNavigationSnapshot> {
@@ -971,12 +1058,14 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
 #[cfg(test)]
 mod tests {
     use super::{
-        CONTEXT_MARK, FIELD_SEP, NAVIGATION_MARK, OPTIONS_END_MARK, OPTIONS_MARK, SESSIONS_MARK,
+        CONTEXT_MARK, FIELD_SEP, GuardedMutationOutcome, NAVIGATION_MARK, OPTIONS_END_MARK,
+        OPTIONS_MARK, SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK,
         SNAPSHOT_OPTIONS, TmuxOptionGuard, TmuxOptionScope, cache_witness_format,
         combined_guard_format, format_literal, guarded_command_args, nested_render_guard_args,
-        option_value_mark, options_command_args, parse_client_line, parse_options_output,
-        parse_session_line, parse_session_navigation_output, parse_snapshot_output,
-        serialized_plan_chunks, sets_and_reschedule_command, snapshot_command_args,
+        option_value_mark, options_command_args, parse_client_line, parse_guarded_options_output,
+        parse_options_output, parse_session_line, parse_session_navigation_output,
+        parse_snapshot_output, serialized_plan_chunks, sets_and_reschedule_command,
+        snapshot_command_args,
     };
     use crate::commit::{TmuxCommand, TmuxCommandPlan};
     use crate::config::RENDER_REVISION_OPTION;
@@ -1215,6 +1304,44 @@ $1	200"
                 "line one\nline two".to_string(),
             ]
         );
+    }
+
+    #[test]
+    fn guarded_claim_parser_preserves_applied_option_values() {
+        let options = option_section(&["", "tab\tvalue", "line one\nline two"]);
+        let output = format!("{SCHEDULER_APPLIED_MARK}\n{options}");
+
+        assert_eq!(
+            parse_guarded_options_output(&output, 3).unwrap(),
+            (
+                GuardedMutationOutcome::Applied,
+                vec![
+                    String::new(),
+                    "tab\tvalue".to_string(),
+                    "line one\nline two".to_string(),
+                ],
+            )
+        );
+    }
+
+    #[test]
+    fn guarded_claim_parser_accepts_exact_skipped_marker_only() {
+        assert_eq!(
+            parse_guarded_options_output(SCHEDULER_SKIPPED_MARK, 5).unwrap(),
+            (GuardedMutationOutcome::Skipped, Vec::new())
+        );
+        assert!(
+            parse_guarded_options_output(&format!("{SCHEDULER_SKIPPED_MARK}\nunexpected"), 5)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn guarded_claim_parser_rejects_trailing_applied_output() {
+        let options = option_section(&["value"]);
+        let output = format!("{SCHEDULER_APPLIED_MARK}\n{options}\nunexpected");
+
+        assert!(parse_guarded_options_output(&output, 1).is_err());
     }
 
     #[test]
