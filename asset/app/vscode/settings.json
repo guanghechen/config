@@ -7,6 +7,7 @@
     "editor.defaultFormatter": "vscode.css-language-features"
   },
   "[dart]": {
+    "editor.defaultFormatter": "Dart-Code.dart-code",
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "editor.rulers": [
@@ -90,7 +91,7 @@
   "claudeCode.preferredLocation": "panel",
   "cmake.configureOnOpen": true,
   "cSpell.userWords": ["guanghechen", "kyokuya", "sora", "yozora"],
-  "dart.hotReloadOnSave": "all",
+  "dart.hotReloadOnSave": "allIfDirty",
   "debug.console.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
   "debug.console.fontSize": 18,
   "debug.javascript.terminalOptions": {
@@ -104,8 +105,7 @@
   },
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.cursorStyle": "line",
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.detectIndentation": false,
+  "editor.detectIndentation": true,
   "editor.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
   "editor.fontSize": 18,
   "editor.formatOnSave": false,
@@ -135,7 +135,6 @@
   "editor.wordSeparators": "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-",
   "editor.wordWrap": "off",
   "eslint.format.enable": true,
-  "eslint.quiet": true,
   "eslint.run": "onSave",
   "eslint.validate": [
     "html",
@@ -148,8 +147,8 @@
     "vue"
   ],
   "explorer.autoReveal": false,
-  "explorer.confirmDragAndDrop": false,
-  "explorer.confirmPasteNative": false,
+  "explorer.confirmDragAndDrop": true,
+  "explorer.confirmPasteNative": true,
   "explorer.copyRelativePathSeparator": "/",
   "explorer.fileNesting.expand": true,
   "explorer.fileNesting.enabled": true,
@@ -157,7 +156,7 @@
     "*.ts": "${capture}.js",
     "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
     "*.jsx": "${capture}.js",
-    "*.tsx": "${capture}.ts",
+    "*.tsx": "${capture}.js, ${capture}.js.map, ${capture}.d.ts",
     ".eslintrc": ".eslintignore",
     ".npmrc": ".nvmrc, .yarnrc, .yarnrc.yml",
     ".prettierrc": ".prettierignore",
@@ -203,8 +202,7 @@
   "gitlens.defaultDateStyle": "absolute",
   "gitlens.gitCommands.skipConfirmations": [
     "fetch:command",
-    "stash-push:command",
-    "switch:command"
+    "stash-push:command"
   ],
   "gitlens.keymap": "none",
   "html.format.indentInnerHtml": true,
@@ -212,14 +210,14 @@
   "js/ts.preferences.quoteStyle": "single",
   "js/ts.tsc.autoDetect": "off",
   "js/ts.updateImportsOnFileMove.enabled": "always",
-  "jupyter.askForKernelRestart": false,
+  "jupyter.askForKernelRestart": true,
   "latex-workshop.latex.autoBuild.run": "never",
   "markdown.preview.fontFamily": "Maple Mono NF CN, Comic Sans MS, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif",
   "markdown.preview.fontSize": 18,
   "markdown.preview.scrollEditorWithPreview": false,
   "markdown.preview.scrollPreviewWithEditor": false,
   "notebook.lineNumbers": "on",
-  "npm.packageManager": "yarn",
+  "npm.packageManager": "auto",
   "nxConsole.showNodeVersionOnStartup": false,
   "prettier.requireConfig": true,
   "remote.defaultExtensionsIfInstalledLocally": [
@@ -231,8 +229,6 @@
   "remote.restoreForwardedPorts": true,
   "scm.alwaysShowActions": true,
   "scm.alwaysShowRepositories": true,
-  "scm.showIncomingChanges": "never",
-  "scm.showOutgoingChanges": "never",
   "search.seedOnFocus": true,
   "search.showLineNumbers": true,
   "security.workspace.trust.untrustedFiles": "prompt",
@@ -323,6 +319,7 @@
   "workbench.layoutControl.enabled": false,
   "workbench.localHistory.exclude": {
     "**/.env*": true,
+    "**/local/env.*": true,
     "**/.ssh/**": true,
     "**/.git-credentials": true,
     "**/*.pem": true,
