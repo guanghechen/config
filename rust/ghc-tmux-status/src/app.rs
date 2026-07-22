@@ -18,20 +18,8 @@ impl StatusApp {
         self.runtime.apply(event)
     }
 
-    pub fn heartbeat(&self, expected_generation: u64) -> AppResult<()> {
-        self.runtime.heartbeat(expected_generation)
-    }
-
-    pub fn metrics_sample(&self, expected_generation: u64) -> AppResult<()> {
-        self.runtime.metrics_sample(expected_generation)
-    }
-
     pub fn scheduler_tick(&self) -> AppResult<()> {
         self.runtime.scheduler_tick()
-    }
-
-    pub fn cpu_sample(&self, expected_generation: u64) -> AppResult<()> {
-        self.runtime.cpu_sample(expected_generation)
     }
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {

@@ -46,10 +46,7 @@ fn run() -> AppResult<()> {
     let app = StatusApp::live();
     match command {
         CliCommand::Apply(event) => app.apply(event),
-        CliCommand::Heartbeat(generation) => app.heartbeat(generation),
-        CliCommand::MetricsSample(generation) => app.metrics_sample(generation),
         CliCommand::SchedulerTick => app.scheduler_tick(),
-        CliCommand::LegacyCpuSample(generation) => app.cpu_sample(generation),
         CliCommand::DumpState => app.dump_state(),
         CliCommand::RenderStatus02 => app.render_status02_stdout(),
         CliCommand::FocusSession(target) => app.focus_session(target),
@@ -100,8 +97,6 @@ fn print_help() {
 
 USAGE:
   ghc-tmux-status apply
-  ghc-tmux-status heartbeat <generation>
-  ghc-tmux-status metrics-sample <generation>
   ghc-tmux-status scheduler-tick
   ghc-tmux-status render status02
   ghc-tmux-status session focus <prev|next|index>

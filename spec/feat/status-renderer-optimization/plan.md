@@ -57,8 +57,10 @@ the priority at the current session count.
    - A 4/10/20 attached-client prototype did not improve median latency; at 20
      sessions median changed 17.8 → 19.3 ms. The prototype was reverted. Revisit
      only with phase-level profiling that separates tmux snapshot IPC from render.
-5. **Blocked — retire legacy recursive scheduler compatibility**
-   - Requires an explicit decision to close the rollback compatibility window.
+5. **Completed — retire legacy recursive scheduler compatibility**
+   - The rollback compatibility window was explicitly closed.
+   - Removed the retired CLI, runtime, tmux adapter, loader generation, and
+     self-rescheduling paths; old commands now fail at the CLI boundary.
 
 ## Deferred
 

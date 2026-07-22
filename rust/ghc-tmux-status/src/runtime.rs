@@ -5,10 +5,8 @@ use std::time::Instant;
 use crate::commit::{CommitPlanner, TmuxCommandPlan};
 use crate::composer::{render_cache_key, render_status02};
 use crate::config::{
-    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
-    HEARTBEAT_INTERVAL_SECONDS, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
+    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
     METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
-    METRIC_RESAMPLE_INTERVAL_SECONDS, METRIC_SAMPLE_GENERATION_OPTION,
     METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
     ROWS_OVERRIDE_OPTION, SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
 };
@@ -53,19 +51,9 @@ const METRIC_CLAIM_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
 ];
 
-/// Compatibility path for jobs seeded before the tmux-managed scheduler is
-/// activated. New status02 loads only bump these generations to expire the jobs.
-struct GuardedSchedule {
-    generation_option: &'static str,
-    generation: u64,
-    delay_seconds: u64,
-    command: String,
-}
-
 #[derive(Clone, Copy)]
 enum ApplyMode<'a> {
     Standard,
-    LegacySchedule(&'a GuardedSchedule),
     Scheduler {
         claim: &'a ClaimPlan,
         deadline: &'a OperationDeadline,
@@ -153,157 +141,6 @@ impl StatusRuntime {
         result
     }
 
-    pub fn heartbeat(&self, expected_generation: u64) -> AppResult<()> {
-        let current_generation = match self
-            .tmux
-            .show_options(&[(TmuxOptionScope::Server, HEARTBEAT_GENERATION_OPTION)])
-        {
-            Ok(values) => values.into_iter().next().unwrap_or_default(),
-            Err(error) => {
-                self.trace_apply(|| {
-                    format!(
-                        "event=heartbeat action=read-error expected={expected_generation} error={error}"
-                    )
-                });
-                return self.schedule_next_heartbeat(expected_generation);
-            }
-        };
-        if !generation_matches(&current_generation, expected_generation) {
-            // A newer chain (or a non-02 layout) superseded this one; let it die.
-            self.trace_apply(|| {
-                format!(
-                    "event=heartbeat action=expired expected={expected_generation} current={current_generation}"
-                )
-            });
-            return Ok(());
-        }
-
-        let guarded_schedule = GuardedSchedule {
-            generation_option: HEARTBEAT_GENERATION_OPTION,
-            generation: expected_generation,
-            delay_seconds: HEARTBEAT_INTERVAL_SECONDS,
-            command: scheduled_command("heartbeat", expected_generation),
-        };
-        if let Err(error) = self.apply_inner(
-            RenderEvent {
-                kind: RenderEventKind::Heartbeat,
-            },
-            ApplyMode::LegacySchedule(&guarded_schedule),
-        ) {
-            self.trace_apply(|| format!("event=heartbeat action=apply-error error={error}"));
-            // Preserve the fallback refresh chain across transient snapshot/render
-            // failures, but keep the retry under the same authoritative guard.
-            return self.schedule_next_heartbeat(expected_generation);
-        }
-        Ok(())
-    }
-
-    fn schedule_next_heartbeat(&self, generation: u64) -> AppResult<()> {
-        let command = scheduled_command("heartbeat", generation);
-        self.tmux.schedule_background_guarded(
-            HEARTBEAT_GENERATION_OPTION,
-            generation,
-            HEARTBEAT_INTERVAL_SECONDS,
-            &command,
-        )
-    }
-
-    pub fn metrics_sample(&self, expected_generation: u64) -> AppResult<()> {
-        // No metrics provider off macOS: sampling would only error and self-reschedule
-        // forever. Let the chain die so we stop polling on unsupported platforms.
-        if !current_platform().supports_metrics() {
-            return Ok(());
-        }
-        let total_start = Instant::now();
-        let values = match self.tmux.show_options(&[
-            (TmuxOptionScope::Server, METRIC_SAMPLE_GENERATION_OPTION),
-            (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
-            (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
-            (TmuxOptionScope::GlobalSession, NETWORK_SAMPLE_STATE_OPTION),
-            (TmuxOptionScope::GlobalSession, NET_INTERFACE_OPTION),
-            (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
-        ]) {
-            Ok(values) => values,
-            Err(error) => {
-                self.trace_apply(|| {
-                    format!(
-                        "event=metrics-sample action=read-error error={error} total_ms={:.2}",
-                        duration_ms(total_start.elapsed())
-                    )
-                });
-                return self.schedule_next_metrics_sample(expected_generation);
-            }
-        };
-
-        let current_generation = values.first().map(String::as_str).unwrap_or_default();
-        if !generation_matches(current_generation, expected_generation) {
-            // A newer chain (or a non-02 layout) superseded this one; let it die.
-            self.trace_apply(|| {
-                format!(
-                    "event=metrics-sample action=expired expected={expected_generation} current={current_generation}"
-                )
-            });
-            return Ok(());
-        }
-
-        let previous_cpu_state = values.get(1).map(String::as_str).unwrap_or_default();
-        let previous_memory_state = values.get(2).map(String::as_str).unwrap_or_default();
-        let previous_network_state = values.get(3).map(String::as_str).unwrap_or_default();
-        let network_interface = normalize_network_interface(values.get(4).map(String::as_str));
-        let previous_error_count = parse_metric_error_count(values.get(5).map(String::as_str));
-
-        // The sampler is the single writer for metric baselines, display options, and
-        // health state. Render/apply/heartbeat only install templates or repair structure.
-        let sample = self.collect_metrics_sample(
-            previous_cpu_state,
-            previous_memory_state,
-            previous_network_state,
-            network_interface,
-            previous_error_count,
-        );
-        let sets = sample.set_refs();
-        let command = scheduled_command("metrics-sample", expected_generation);
-        match self.tmux.apply_sets_and_reschedule_guarded(
-            METRIC_SAMPLE_GENERATION_OPTION,
-            expected_generation,
-            &sets,
-            METRIC_RESAMPLE_INTERVAL_SECONDS,
-            &command,
-        ) {
-            Ok(()) => {
-                self.trace_apply(|| {
-                    format!(
-                        "event=metrics-sample action=sample-ok cpu_published={} memory_published={} network_published={} errors={} total_ms={:.2}",
-                        sample.summary.cpu_published,
-                        sample.summary.memory_published,
-                        sample.summary.network_published,
-                        sample.summary.errors.join(","),
-                        duration_ms(total_start.elapsed())
-                    )
-                });
-                Ok(())
-            }
-            Err(error) => {
-                self.trace_apply(|| {
-                    format!(
-                        "event=metrics-sample action=sample-error error={error} total_ms={:.2}",
-                        duration_ms(total_start.elapsed())
-                    )
-                });
-                self.schedule_next_metrics_sample(expected_generation)
-            }
-        }
-    }
-
-    pub fn cpu_sample(&self, expected_generation: u64) -> AppResult<()> {
-        // Legacy CPU-only samplers must terminate after one invocation. They are
-        // intentionally not rescheduled, so no tmux read is needed here.
-        self.trace_apply(|| {
-            format!("event=cpu-sample action=legacy-expired expected={expected_generation}")
-        });
-        Ok(())
-    }
-
     fn collect_metrics_sample(
         &self,
         previous_cpu_state: &str,
@@ -381,16 +218,6 @@ impl StatusRuntime {
             summary,
             set_values,
         }
-    }
-
-    fn schedule_next_metrics_sample(&self, generation: u64) -> AppResult<()> {
-        let command = scheduled_command("metrics-sample", generation);
-        self.tmux.schedule_background_guarded(
-            METRIC_SAMPLE_GENERATION_OPTION,
-            generation,
-            METRIC_RESAMPLE_INTERVAL_SECONDS,
-            &command,
-        )
     }
 
     pub fn scheduler_tick(&self) -> AppResult<()> {
@@ -777,14 +604,6 @@ impl StatusRuntime {
     ) -> AppResult<()> {
         match mode {
             ApplyMode::Standard => self.tmux.commit_plan_guarded(plan, render_revision),
-            ApplyMode::LegacySchedule(schedule) => self.tmux.commit_plan_guarded_and_reschedule(
-                plan,
-                schedule.generation_option,
-                schedule.generation,
-                render_revision,
-                schedule.delay_seconds,
-                &schedule.command,
-            ),
             ApplyMode::Scheduler { claim, deadline } => {
                 deadline.check("commit-render")?;
                 let generation = claim.generation.to_string();
@@ -821,7 +640,7 @@ impl StatusRuntime {
 fn check_apply_deadline(mode: ApplyMode<'_>, phase: &str) -> AppResult<()> {
     match mode {
         ApplyMode::Scheduler { deadline, .. } => deadline.check(phase),
-        ApplyMode::Standard | ApplyMode::LegacySchedule(_) => Ok(()),
+        ApplyMode::Standard => Ok(()),
     }
 }
 
@@ -1066,10 +885,6 @@ fn sanitize_metric_error(value: &str) -> String {
     sanitized.chars().take(MAX_ERROR_LEN).collect()
 }
 
-fn generation_matches(current: &str, expected: u64) -> bool {
-    current.parse::<u64>() == Ok(expected)
-}
-
 static RENDER_REVISION_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn next_render_revision() -> u64 {
@@ -1145,26 +960,6 @@ fn render_session_statuses(
         .collect()
 }
 
-const RELEASE_BINARY_RELATIVE_PATH: &str =
-    ".config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status";
-
-fn scheduled_command(command: &str, generation: u64) -> String {
-    format!("{} {command} {generation}", executable_command_path())
-}
-
-fn executable_command_path() -> String {
-    let path = std::env::current_exe()
-        .ok()
-        .and_then(|path| path.into_os_string().into_string().ok())
-        .or_else(|| {
-            std::env::var("HOME")
-                .ok()
-                .map(|home| format!("{home}/{RELEASE_BINARY_RELATIVE_PATH}"))
-        })
-        .unwrap_or_else(|| "ghc-tmux-status".to_string());
-    format!("'{}'", path.replace('\'', "'\\''"))
-}
-
 fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
     snapshot
         .options
@@ -1186,10 +981,10 @@ mod tests {
 
     use super::{
         LiveContextState, MetricPublishSummary, context_state_from_snapshot,
-        current_session_context_from_snapshot, generation_matches, metric_health_sets,
-        next_render_revision, normalize_network_interface, ordered_group_from_snapshot,
-        parse_metric_error_count, render_session_statuses, resolve_session_layouts,
-        sanitize_metric_error, scheduler_outcome_value,
+        current_session_context_from_snapshot, metric_health_sets, next_render_revision,
+        normalize_network_interface, ordered_group_from_snapshot, parse_metric_error_count,
+        render_session_statuses, resolve_session_layouts, sanitize_metric_error,
+        scheduler_outcome_value,
     };
     use crate::config::{
         METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
@@ -1373,14 +1168,6 @@ mod tests {
         assert_eq!(parse_metric_error_count(Some("7")), 7);
         assert_eq!(parse_metric_error_count(Some("bad")), 0);
         assert_eq!(parse_metric_error_count(None), 0);
-    }
-
-    #[test]
-    fn generation_match_requires_an_unsigned_integer() {
-        assert!(generation_matches("42", 42));
-        assert!(generation_matches("0042", 42));
-        assert!(!generation_matches("42; command", 42));
-        assert!(!generation_matches("", 0));
     }
 
     #[test]

@@ -24,11 +24,6 @@ pub const HEARTBEAT_EXECUTION_LEASE_SECONDS: u64 = 20;
 // window tolerates the tmux #() driver cadence, process startup, and rounding.
 pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = METRIC_RESAMPLE_INTERVAL_SECONDS * 2;
 
-// load-theme owns these server-scoped generation tokens. It mirrors the same
-// values to global session options only so pre-upgrade renderer chains expire.
-pub const HEARTBEAT_GENERATION_OPTION: &str = "@GHC_SL_HEARTBEAT_GEN";
-pub const METRIC_SAMPLE_GENERATION_OPTION: &str = "@GHC_SL_METRIC_GEN";
-
 pub const SCHEDULER_ACTIVE_OPTION: &str = "@GHC_SL_SCHED_ACTIVE";
 pub const SCHEDULER_GENERATION_OPTION: &str = "@GHC_SL_SCHED_GEN";
 pub const METRIC_SCHEDULER_STATE_OPTION: &str = "@GHC_SL_METRIC_SCHED";

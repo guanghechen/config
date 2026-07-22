@@ -46,16 +46,17 @@ session list  -> Rust component
 duration      -> Rust component
 layout        -> Rust runtime
 metrics       -> Rust components
-tick trigger  -> tmux #() launches ghc-tmux-status apply tick
+tick trigger  -> tmux #() driver launches ghc-tmux-status scheduler-tick
 ```
 
-Legacy shell helpers are retained for status01 fallback / rollback:
+Shell helpers retained for status01 fallback:
 
 ```text
 script/session-status.sh -> status01
 script/duration.sh       -> status01
-script/status-layout.sh  -> legacy status02 rollback only
 ```
+
+`script/status-layout.sh` 仅作为历史实现参考保留；当前 loader 不调用它。
 
 fallback：
 
@@ -357,10 +358,6 @@ binary 或 signal 等异常 process failure 按 generation fence scheduler。hoo
 直接调用与 ordering 语义，其 hang 由 Rust process watchdog 截断。最后一次成功 cache
 保持可见，并等待下一次成功 tick 或 theme reload 恢复。renderer crash、hang 和旧
 generation failure 均只允许 degrade，不能终止或持续阻塞 tmux server。
-
-回滚到不识别 scheduler state 的旧配置前，必须先用当前 loader 切到 status01；
-该步骤按 `ACTIVE=0 -> GEN=new` fence worker。随后才能替换 binary/config，再由旧
-loader 切回 status02。不得直接用旧 loader 覆盖仍 active 的新 scheduler。
 
 完整 Rust、shell 与真实 tmux 回归入口：
 

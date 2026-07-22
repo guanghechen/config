@@ -5,10 +5,7 @@ use crate::session::{FocusTarget, MoveDirection};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CliCommand {
     Apply(RenderEvent),
-    Heartbeat(u64),
-    MetricsSample(u64),
     SchedulerTick,
-    LegacyCpuSample(u64),
     DumpState,
     RenderStatus02,
     FocusSession(FocusTarget),
@@ -32,19 +29,7 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
             kind: RenderEventKind::parse(event)
                 .ok_or_else(|| AppError::Usage(format!("unknown render event: {event}")))?,
         })),
-        ["heartbeat", generation] => Ok(CliCommand::Heartbeat(parse_generation(
-            generation,
-            "heartbeat",
-        )?)),
-        ["metrics-sample", generation] => Ok(CliCommand::MetricsSample(parse_generation(
-            generation,
-            "metrics-sample",
-        )?)),
         ["scheduler-tick"] => Ok(CliCommand::SchedulerTick),
-        ["cpu-sample", generation] => Ok(CliCommand::LegacyCpuSample(parse_generation(
-            generation,
-            "cpu-sample",
-        )?)),
         ["dump-state"] => Ok(CliCommand::DumpState),
         ["render", "status02"] => Ok(CliCommand::RenderStatus02),
         ["session", "focus", target] => FocusTarget::parse(target)
@@ -75,14 +60,6 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
     }
 }
 
-fn parse_generation(value: &str, command: &str) -> AppResult<u64> {
-    value.parse::<u64>().map_err(|_| {
-        AppError::Usage(format!(
-            "invalid generation for {command}: expected an unsigned integer, got {value}"
-        ))
-    })
-}
-
 fn parse_layout(
     mode: &str,
     status: &str,
@@ -109,10 +86,7 @@ fn parse_layout(
 fn usage_error(command: &str) -> AppError {
     let expected = match command {
         "apply" => "apply [event]",
-        "heartbeat" => "heartbeat <generation>",
-        "metrics-sample" => "metrics-sample <generation>",
         "scheduler-tick" => "scheduler-tick",
-        "cpu-sample" => "cpu-sample <generation>",
         "dump-state" => "dump-state",
         "render" => "render status02",
         "session" => "session <focus|swap> <prev|next|index>",
@@ -133,12 +107,29 @@ mod tests {
     }
 
     #[test]
-    fn parses_typed_generation() {
+    fn rejects_retired_heartbeat_command() {
         assert_eq!(
-            parse(args(&["heartbeat", "42"])).unwrap(),
-            CliCommand::Heartbeat(42)
+            parse(args(&["heartbeat", "42"])).unwrap_err().to_string(),
+            "unknown command: heartbeat"
         );
-        assert!(parse(args(&["heartbeat", "42; touch /tmp/pwned"])).is_err());
+    }
+
+    #[test]
+    fn rejects_retired_metrics_sample_command() {
+        assert_eq!(
+            parse(args(&["metrics-sample", "42"]))
+                .unwrap_err()
+                .to_string(),
+            "unknown command: metrics-sample"
+        );
+    }
+
+    #[test]
+    fn rejects_retired_cpu_sample_command() {
+        assert_eq!(
+            parse(args(&["cpu-sample", "42"])).unwrap_err().to_string(),
+            "unknown command: cpu-sample"
+        );
     }
 
     #[test]

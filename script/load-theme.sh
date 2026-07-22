@@ -88,32 +88,10 @@ function _ghc_tmux_reset_per_session_layout_ {
 
 # A reload token needs uniqueness, not arithmetic ordering. Epoch + process id +
 # a per-call nonce avoids both overlapping reload races and same-shell rapid
-# reload reuse while remaining an unsigned integer accepted by the renderer CLI.
+# reload reuse while remaining an unsigned integer accepted by scheduler state.
 function _ghc_tmux_new_generation_ {
   printf '%s%05d%04d\n' \
     "$(date +%s)" "$(( $$ % 100000 ))" "$(( RANDOM % 10000 ))"
-}
-
-# The server option is authoritative for atomic `if-shell -F` guards: server
-# options win format lookup even when a session has a same-name override. The
-# global copy is retained only to expire pre-upgrade renderer chains that still
-# read `show -gqv`. Both writes share one tmux command queue.
-function _ghc_tmux_bump_heartbeat_generation_ {
-  local generation
-  generation=$(_ghc_tmux_new_generation_)
-  tmux set -s @GHC_SL_HEARTBEAT_GEN "$generation" ';' \
-       set -g @GHC_SL_HEARTBEAT_GEN "$generation"
-  printf '%s\n' "$generation"
-}
-
-# Same generation-guard mechanism as the heartbeat, for the unified metric sampler
-# chain. Must match ghc-tmux-status METRIC_SAMPLE_GENERATION_OPTION.
-function _ghc_tmux_bump_metric_generation_ {
-  local generation
-  generation=$(_ghc_tmux_new_generation_)
-  tmux set -s @GHC_SL_METRIC_GEN "$generation" ';' \
-       set -g @GHC_SL_METRIC_GEN "$generation"
-  printf '%s\n' "$generation"
 }
 
 # Fence every prior status02 scheduler before changing formats. ACTIVE is the
@@ -130,13 +108,6 @@ function _ghc_tmux_fence_scheduler_ {
   done
   tmux set -s @GHC_SL_SCHED_ACTIVE 0 2>/dev/null || true
   return 1
-}
-
-# Expire pre-unified CPU-only sampler chains after upgrade/reload.
-function _ghc_tmux_bump_legacy_cpu_generation_ {
-  local generation
-  generation=$(( $(tmux show -gqv @GHC_SL_CPU_GEN 2>/dev/null || echo 0) + 1 ))
-  tmux set -g @GHC_SL_CPU_GEN "$generation"
 }
 
 function _ghc_tmux_load_status01_ {
@@ -188,12 +159,6 @@ function _ghc_tmux_load_theme_ {
   tmux set -gu status-format 2>/dev/null || true
   tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
   _ghc_tmux_reset_per_session_layout_
-
-  # Expire prior recursive chains. The status02 branch below activates the
-  # tmux-managed scheduler; status01 leaves every scheduler fenced.
-  _ghc_tmux_bump_heartbeat_generation_ >/dev/null
-  _ghc_tmux_bump_metric_generation_ >/dev/null
-  _ghc_tmux_bump_legacy_cpu_generation_
 
   local status_position="top"
   if [ "$status_mode" == "11" ] || [ "$status_mode" == "12" ]; then

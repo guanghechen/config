@@ -6,16 +6,16 @@ use crate::commit::{
     CACHE_WITNESS_BYTES, SESSION_CACHE_OPTIONS, TmuxCommandPlan, tmux_command_string,
 };
 use crate::config::{
-    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
-    HEARTBEAT_LAST_ATTEMPT_OPTION, HEARTBEAT_LAST_COMPLETE_OPTION,
-    HEARTBEAT_LAST_EXEC_OUTCOME_OPTION, HEARTBEAT_SCHEDULER_STATE_OPTION, MEMORY_NOW_OPTION,
-    MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ATTEMPT_OPTION,
-    METRIC_LAST_COMPLETE_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_EXEC_OUTCOME_OPTION,
-    METRIC_LAST_OK_OPTION, METRIC_SAMPLE_GENERATION_OPTION, METRIC_SCHEDULER_STATE_OPTION,
-    NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION, RENDER_REVISION_OPTION, ROWS_OVERRIDE_OPTION,
-    SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION, SESSION_RENDER_KEY_OPTION,
-    STATUS_FORMAT_0_OPTION, STATUS_FORMAT_1_OPTION, STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION,
-    STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_RIGHT_OPTION,
+    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_LAST_ATTEMPT_OPTION,
+    HEARTBEAT_LAST_COMPLETE_OPTION, HEARTBEAT_LAST_EXEC_OUTCOME_OPTION,
+    HEARTBEAT_SCHEDULER_STATE_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
+    METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ATTEMPT_OPTION, METRIC_LAST_COMPLETE_OPTION,
+    METRIC_LAST_ERROR_OPTION, METRIC_LAST_EXEC_OUTCOME_OPTION, METRIC_LAST_OK_OPTION,
+    METRIC_SCHEDULER_STATE_OPTION, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
+    RENDER_REVISION_OPTION, ROWS_OVERRIDE_OPTION, SCHEDULER_ACTIVE_OPTION,
+    SCHEDULER_GENERATION_OPTION, SESSION_RENDER_KEY_OPTION, STATUS_FORMAT_0_OPTION,
+    STATUS_FORMAT_1_OPTION, STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_LEFT_OPTION,
+    STATUS_POSITION_OPTION, STATUS_RIGHT_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::model::{SessionInfo, SessionNavigationSnapshot, TmuxSnapshot};
@@ -230,70 +230,6 @@ impl TmuxAdapter {
         deadline: &OperationDeadline,
     ) -> AppResult<()> {
         self.commit_plan_with_guards(plan, expected_revision, guards, false, Some(deadline))
-    }
-
-    /// Commits a bounded status plan under generation + render guards, then
-    /// schedules exactly one successor under the generation guard. Each chunk
-    /// rechecks both tokens, so a reload or newer render aborts the remainder.
-    pub fn commit_plan_guarded_and_reschedule(
-        &self,
-        plan: &TmuxCommandPlan,
-        generation_option: &str,
-        expected_generation: u64,
-        expected_render_revision: u64,
-        delay_seconds: u64,
-        command: &str,
-    ) -> AppResult<()> {
-        let generation = expected_generation.to_string();
-        self.commit_plan_with_guards(
-            plan,
-            expected_render_revision,
-            &[TmuxOptionGuard {
-                option: generation_option,
-                expected: &generation,
-            }],
-            true,
-            None,
-        )?;
-        self.schedule_background_guarded(
-            generation_option,
-            expected_generation,
-            delay_seconds,
-            command,
-        )
-    }
-
-    /// Publishes metric state and schedules the next sample under one atomic
-    /// server-generation guard. A stale sampler therefore performs no mutation.
-    pub fn apply_sets_and_reschedule_guarded(
-        &self,
-        generation_option: &str,
-        expected_generation: u64,
-        sets: &[(&str, &str)],
-        delay_seconds: u64,
-        command: &str,
-    ) -> AppResult<()> {
-        let command_list = sets_and_reschedule_command(sets, delay_seconds, command);
-        self.tmux_status(guarded_command_args(
-            generation_option,
-            expected_generation,
-            command_list,
-        ))
-    }
-
-    pub fn schedule_background_guarded(
-        &self,
-        generation_option: &str,
-        expected_generation: u64,
-        delay_seconds: u64,
-        command: &str,
-    ) -> AppResult<()> {
-        let command_list = background_command_string(delay_seconds, command);
-        self.tmux_status(guarded_command_args(
-            generation_option,
-            expected_generation,
-            command_list,
-        ))
     }
 
     pub fn display_message(&self, message: &str) -> AppResult<()> {
@@ -609,39 +545,11 @@ fn nested_render_guard_args(
     option_guarded_command_args(guards, tmux_command_string(&render_guard), None)
 }
 
-fn sets_and_reschedule_command(sets: &[(&str, &str)], delay_seconds: u64, command: &str) -> String {
-    let mut commands = Vec::new();
-    for (name, value) in sets {
-        commands.push(tmux_command_string(&[
-            "set".to_string(),
-            "-g".to_string(),
-            (*name).to_string(),
-            (*value).to_string(),
-        ]));
-    }
-    commands.push(background_command_string(delay_seconds, command));
-    commands.join("; ")
-}
-
-fn background_command_string(delay_seconds: u64, command: &str) -> String {
-    tmux_command_string(&[
-        "run-shell".to_string(),
-        "-b".to_string(),
-        "-d".to_string(),
-        delay_seconds.to_string(),
-        command.to_string(),
-    ])
-}
-
-fn guarded_command_args(
-    generation_option: &str,
-    expected_generation: u64,
-    command_list: String,
-) -> Vec<String> {
+fn guarded_command_args(option: &str, expected_value: u64, command_list: String) -> Vec<String> {
     vec![
         "if-shell".to_string(),
         "-F".to_string(),
-        format!("#{{==:#{{{generation_option}}},{expected_generation}}}"),
+        format!("#{{==:#{{{option}}},{expected_value}}}"),
         command_list,
     ]
 }
@@ -1008,8 +916,6 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, STATUS_FORMAT_1_OPTION),
     (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
     (TmuxOptionScope::GlobalSession, "@GHC_SL_NET_IFACE"),
-    (TmuxOptionScope::Server, HEARTBEAT_GENERATION_OPTION),
-    (TmuxOptionScope::Server, METRIC_SAMPLE_GENERATION_OPTION),
     (TmuxOptionScope::Server, SCHEDULER_ACTIVE_OPTION),
     (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
     (TmuxOptionScope::Server, METRIC_SCHEDULER_STATE_OPTION),
@@ -1061,11 +967,10 @@ mod tests {
         CONTEXT_MARK, FIELD_SEP, GuardedMutationOutcome, NAVIGATION_MARK, OPTIONS_END_MARK,
         OPTIONS_MARK, SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK,
         SNAPSHOT_OPTIONS, TmuxOptionGuard, TmuxOptionScope, cache_witness_format,
-        combined_guard_format, format_literal, guarded_command_args, nested_render_guard_args,
-        option_value_mark, options_command_args, parse_client_line, parse_guarded_options_output,
+        combined_guard_format, format_literal, nested_render_guard_args, option_value_mark,
+        options_command_args, parse_client_line, parse_guarded_options_output,
         parse_options_output, parse_session_line, parse_session_navigation_output,
-        parse_snapshot_output, serialized_plan_chunks, sets_and_reschedule_command,
-        snapshot_command_args,
+        parse_snapshot_output, serialized_plan_chunks, snapshot_command_args,
     };
     use crate::commit::{TmuxCommand, TmuxCommandPlan};
     use crate::config::RENDER_REVISION_OPTION;
@@ -1177,7 +1082,7 @@ $2	90"
     }
 
     #[test]
-    fn generation_guard_wraps_each_render_guard() {
+    fn scheduler_generation_guard_wraps_each_render_guard() {
         let plan = TmuxCommandPlan {
             commands: vec![TmuxCommand::SetGlobal {
                 name: "@VALUE".to_string(),
@@ -1189,12 +1094,12 @@ $2	90"
             9,
             &chunks[0].command_list,
             &[TmuxOptionGuard {
-                option: "@GHC_SL_HEARTBEAT_GEN",
+                option: "@GHC_SL_SCHED_GEN",
                 expected: "7",
             }],
         );
 
-        assert_eq!(args[2], "#{==:#{@GHC_SL_HEARTBEAT_GEN},#{l:7}}");
+        assert_eq!(args[2], "#{==:#{@GHC_SL_SCHED_GEN},#{l:7}}");
         assert!(args[3].contains(RENDER_REVISION_OPTION));
         assert!(args[3].contains("@VALUE"));
     }
@@ -1342,31 +1247,5 @@ $1	200"
         let output = format!("{SCHEDULER_APPLIED_MARK}\n{options}\nunexpected");
 
         assert!(parse_guarded_options_output(&output, 1).is_err());
-    }
-
-    #[test]
-    fn guarded_sets_serialize_mutation_and_reschedule_in_one_branch() {
-        let command = sets_and_reschedule_command(
-            &[
-                ("@GHC_SL_CPU_SAMPLE", "blob #1; '$\\"),
-                ("@GHC_CPU_NOW", "100"),
-            ],
-            5,
-            "'/bin/ghc status' metrics-sample 7",
-        );
-        assert_eq!(
-            command,
-            "\"set\" \"-g\" \"@GHC_SL_CPU_SAMPLE\" \"blob #1; '\\$\\\\\"; \"set\" \"-g\" \"@GHC_CPU_NOW\" \"100\"; \"run-shell\" \"-b\" \"-d\" \"5\" \"'/bin/ghc status' metrics-sample 7\""
-        );
-
-        assert_eq!(
-            guarded_command_args("@GHC_SL_METRIC_GEN", 7, command.clone()),
-            vec![
-                "if-shell".to_string(),
-                "-F".to_string(),
-                "#{==:#{@GHC_SL_METRIC_GEN},7}".to_string(),
-                command,
-            ]
-        );
     }
 }
