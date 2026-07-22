@@ -115,7 +115,7 @@
   {
     "key": "cmd+enter",
     "command": "chatEditor.action.accept",
-    "when": "chat.hasEditorModifications && editorFocus && hasUndecidedChatEditingResource"
+    "when": "chatEdits.hasEditorModifications && editorFocus && !chatEdits.isCurrentlyBeingModified"
   },
   {
     "key": "cmd+enter",
