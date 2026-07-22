@@ -19,6 +19,14 @@ function _ghc_tmux_status_renderer_bin_ {
   fi
 }
 
+
+function _ghc_tmux_status_driver_bin_ {
+  local status_driver="$HOME/.config/tmux/script/status-scheduler.sh"
+  if [ -x "$status_driver" ]; then
+    printf '%s\n' "$status_driver"
+  fi
+}
+
 function _ghc_tmux_status_layout_hooks_ {
   printf '%s\n' \
     'client-resized[40]' \
@@ -200,15 +208,17 @@ function _ghc_tmux_load_theme_ {
     "02" | "12")
       local status_renderer
       status_renderer=$(_ghc_tmux_status_renderer_bin_)
+      local status_driver
+      status_driver=$(_ghc_tmux_status_driver_bin_)
       tmux set -g status-justify centre
       tmux set -g status-position "$status_position"
       # Global single-row baseline; the renderer overrides per session (on/2). Any
       # session without a per-session override falls back to one row, never two.
       tmux set -g status on
 
-      if [ -z "$status_renderer" ]; then
+      if [ -z "$status_renderer" ] || [ -z "$status_driver" ]; then
         _ghc_tmux_load_status01_ "$status_position"
-        tmux display-message "Rust status renderer missing; fallback to status01" 2>/dev/null || true
+        tmux display-message "Status renderer or scheduler driver missing; fallback to status01" 2>/dev/null || true
       else
         tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
         tmux set-hook -g 'client-resized[40]' "run-shell '$status_renderer apply client-resized'"

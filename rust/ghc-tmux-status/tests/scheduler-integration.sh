@@ -58,6 +58,16 @@ if [ "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)" != "$lease_state" 
   exit 1
 fi
 
+# Model a renderer crash after claim: the lease remains non-zero until it
+# expires, then the next independent status tick advances the sequence once.
+expired_lease_state="42:7:0:$((now - 1))"
+tmux -L "$socket" set -s @GHC_SL_HEARTBEAT_SCHED "$expired_lease_state"
+env TMUX="$server_env" "$binary" scheduler-tick
+case "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)" in
+  42:8:*:0) ;;
+  *) echo "expired crash lease did not recover exactly once" >&2; exit 1 ;;
+esac
+
 tmux -L "$socket" set -s @GHC_SL_HEARTBEAT_SCHED 'bad#,}'
 env TMUX="$server_env" "$binary" scheduler-tick
 case "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)" in

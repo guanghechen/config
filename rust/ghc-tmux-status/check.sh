@@ -8,6 +8,11 @@ manifest="$crate_dir/Cargo.toml"
 cargo fmt --manifest-path "$manifest" --check
 cargo test --manifest-path "$manifest"
 cargo clippy --manifest-path "$manifest" --all-targets -- -D warnings
-bash -n "$repo_dir/script/load-theme.sh" "$crate_dir/tests/scheduler-integration.sh"
+bash -n \
+  "$repo_dir/script/load-theme.sh" \
+  "$repo_dir/script/status-scheduler.sh" \
+  "$crate_dir/tests/driver-fault-integration.sh" \
+  "$crate_dir/tests/scheduler-integration.sh"
+"$crate_dir/tests/driver-fault-integration.sh"
 "$crate_dir/tests/scheduler-integration.sh"
 git -C "$repo_dir" diff --check

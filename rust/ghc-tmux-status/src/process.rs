@@ -1,10 +1,51 @@
 use std::ffi::OsStr;
 use std::io::{self, Read};
 use std::process::{Command, Output, Stdio};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
 
 use crate::error::{AppError, AppResult};
+
+const MAX_CAPTURE_BYTES: usize = 4 * 1024 * 1024;
+
+pub struct ProcessWatchdog {
+    completed: Arc<AtomicBool>,
+}
+
+impl ProcessWatchdog {
+    pub fn start(timeout: Duration) -> Self {
+        Self::start_with_action(timeout, move || {
+            eprintln!(
+                "ghc-tmux-status: process deadline exceeded after {}ms",
+                timeout.as_millis()
+            );
+            std::process::exit(124);
+        })
+    }
+
+    fn start_with_action<F>(timeout: Duration, action: F) -> Self
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let completed = Arc::new(AtomicBool::new(false));
+        let watchdog_completed = Arc::clone(&completed);
+        std::thread::spawn(move || {
+            std::thread::sleep(timeout);
+            if !watchdog_completed.load(Ordering::Acquire) {
+                action();
+            }
+        });
+        Self { completed }
+    }
+}
+
+impl Drop for ProcessWatchdog {
+    fn drop(&mut self) {
+        self.completed.store(true, Ordering::Release);
+    }
+}
 
 pub struct OperationDeadline {
     label: String,
@@ -40,6 +81,19 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
+    output_with_limit(program, args, timeout, MAX_CAPTURE_BYTES)
+}
+
+fn output_with_limit<I, S>(
+    program: &str,
+    args: I,
+    timeout: Duration,
+    max_capture_bytes: usize,
+) -> AppResult<Output>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
     let args = args
         .into_iter()
         .map(|arg| arg.as_ref().to_os_string())
@@ -56,8 +110,14 @@ where
     configure_process_group(&mut command_builder);
     let mut child = command_builder.spawn()?;
     let process_group_id = child.id();
-    let stdout_reader = child.stdout.take().map(spawn_reader);
-    let stderr_reader = child.stderr.take().map(spawn_reader);
+    let stdout_reader = child
+        .stdout
+        .take()
+        .map(|pipe| spawn_reader(pipe, max_capture_bytes));
+    let stderr_reader = child
+        .stderr
+        .take()
+        .map(|pipe| spawn_reader(pipe, max_capture_bytes));
     let start = Instant::now();
     let deadline = start + timeout;
 
@@ -82,7 +142,18 @@ where
     };
 
     let stdout = match receive_reader(stdout_reader, deadline) {
-        Ok(stdout) => stdout,
+        Ok(CapturedOutput {
+            bytes,
+            exceeded: false,
+        }) => bytes,
+        Ok(CapturedOutput { exceeded: true, .. }) => {
+            terminate_process_group(&mut child, process_group_id);
+            return Err(AppError::CommandOutputTooLarge {
+                command,
+                stream: "stdout",
+                limit_bytes: max_capture_bytes,
+            });
+        }
         Err(ReaderReceiveError::Timeout) => {
             terminate_process_group(&mut child, process_group_id);
             return Err(AppError::CommandTimeout {
@@ -96,7 +167,18 @@ where
         }
     };
     let stderr = match receive_reader(stderr_reader, deadline) {
-        Ok(stderr) => stderr,
+        Ok(CapturedOutput {
+            bytes,
+            exceeded: false,
+        }) => bytes,
+        Ok(CapturedOutput { exceeded: true, .. }) => {
+            terminate_process_group(&mut child, process_group_id);
+            return Err(AppError::CommandOutputTooLarge {
+                command,
+                stream: "stderr",
+                limit_bytes: max_capture_bytes,
+            });
+        }
         Err(ReaderReceiveError::Timeout) => {
             terminate_process_group(&mut child, process_group_id);
             return Err(AppError::CommandTimeout {
@@ -116,14 +198,25 @@ where
     })
 }
 
-fn spawn_reader<R>(mut pipe: R) -> Receiver<io::Result<Vec<u8>>>
+struct CapturedOutput {
+    bytes: Vec<u8>,
+    exceeded: bool,
+}
+
+fn spawn_reader<R>(pipe: R, max_capture_bytes: usize) -> Receiver<io::Result<CapturedOutput>>
 where
     R: Read + Send + 'static,
 {
     let (sender, receiver) = mpsc::channel();
     std::thread::spawn(move || {
         let mut output = Vec::new();
-        let result = pipe.read_to_end(&mut output).map(|_| output);
+        let result = pipe
+            .take(max_capture_bytes.saturating_add(1) as u64)
+            .read_to_end(&mut output)
+            .map(|_| CapturedOutput {
+                exceeded: output.len() > max_capture_bytes,
+                bytes: output,
+            });
         let _ = sender.send(result);
     });
     receiver
@@ -135,11 +228,14 @@ enum ReaderReceiveError {
 }
 
 fn receive_reader(
-    reader: Option<Receiver<io::Result<Vec<u8>>>>,
+    reader: Option<Receiver<io::Result<CapturedOutput>>>,
     deadline: Instant,
-) -> Result<Vec<u8>, ReaderReceiveError> {
+) -> Result<CapturedOutput, ReaderReceiveError> {
     let Some(reader) = reader else {
-        return Ok(Vec::new());
+        return Ok(CapturedOutput {
+            bytes: Vec::new(),
+            exceeded: false,
+        });
     };
     let remaining = deadline.saturating_duration_since(Instant::now());
     match reader.recv_timeout(remaining) {
@@ -189,9 +285,10 @@ unsafe extern "C" {
 
 #[cfg(all(test, unix))]
 mod tests {
+    use std::sync::mpsc;
     use std::time::{Duration, Instant};
 
-    use super::{OperationDeadline, output_with_timeout};
+    use super::{OperationDeadline, ProcessWatchdog, output_with_limit, output_with_timeout};
     use crate::error::AppError;
 
     #[test]
@@ -240,6 +337,29 @@ mod tests {
     }
 
     #[test]
+    fn rejects_output_larger_than_the_capture_budget() {
+        let error = output_with_limit(
+            "/bin/sh",
+            [
+                "-c",
+                "i=0; while [ $i -lt 2048 ]; do printf x; i=$((i+1)); done",
+            ],
+            Duration::from_secs(1),
+            1024,
+        )
+        .unwrap_err();
+
+        assert!(matches!(
+            error,
+            AppError::CommandOutputTooLarge {
+                stream: "stdout",
+                limit_bytes: 1024,
+                ..
+            }
+        ));
+    }
+
+    #[test]
     fn timeout_includes_descendants_holding_output_pipes() {
         let start = Instant::now();
         let error =
@@ -251,5 +371,26 @@ mod tests {
             start.elapsed() < Duration::from_secs(1),
             "timeout waited for a descendant-owned pipe"
         );
+    }
+
+    #[test]
+    fn watchdog_action_fires_after_timeout() {
+        let (sender, receiver) = mpsc::channel();
+        let _watchdog = ProcessWatchdog::start_with_action(Duration::from_millis(10), move || {
+            let _ = sender.send(());
+        });
+
+        assert_eq!(receiver.recv_timeout(Duration::from_secs(1)), Ok(()));
+    }
+
+    #[test]
+    fn dropping_watchdog_disarms_action() {
+        let (sender, receiver) = mpsc::channel();
+        let watchdog = ProcessWatchdog::start_with_action(Duration::from_millis(10), move || {
+            let _ = sender.send(());
+        });
+        drop(watchdog);
+
+        assert_eq!(receiver.recv_timeout(Duration::from_millis(50)).ok(), None);
     }
 }

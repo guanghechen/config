@@ -348,6 +348,16 @@ job 驱动；不使用 daemon，
 到期后的下一次 tick 恢复。reload 先将 scheduler 设为 inactive 并更换 generation，
 因此旧 worker 不能 publish。
 
+`script/status-scheduler.sh` 是 `#()` 与 Rust renderer 之间的 fail-closed
+process boundary：renderer 有 30 秒 process watchdog，所有子进程有 timeout、
+process-group reap 与 4 MiB/stream capture 上限。自触发的 scheduler `#()` 使用
+per-server single-flight lock；唯一 recovery owner 才能回收 stale lock。普通 application
+error 保留 scheduler active，由 task lease 在后续 tick 恢复；仅 panic、watchdog、缺
+binary 或 signal 等异常 process failure 按 generation fence scheduler。hook 保持原有
+直接调用与 ordering 语义，其 hang 由 Rust process watchdog 截断。最后一次成功 cache
+保持可见，并等待下一次成功 tick 或 theme reload 恢复。renderer crash、hang 和旧
+generation failure 均只允许 degrade，不能终止或持续阻塞 tmux server。
+
 回滚到不识别 scheduler state 的旧配置前，必须先用当前 loader 切到 status01；
 该步骤按 `ACTIVE=0 -> GEN=new` fence worker。随后才能替换 binary/config，再由旧
 loader 切回 status02。不得直接用旧 loader 覆盖仍 active 的新 scheduler。
@@ -362,6 +372,13 @@ rust/ghc-tmux-status/check.sh
 
 ```sh
 rust/ghc-tmux-status/tests/scheduler-integration.sh
+```
+
+`#()` crash/hang 隔离、crash-loop fence 与旧 generation 不可误伤新 scheduler 由
+以下独立 socket 测试覆盖：
+
+```sh
+rust/ghc-tmux-status/tests/driver-fault-integration.sh
 ```
 
 components：

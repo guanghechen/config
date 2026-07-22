@@ -21,16 +21,24 @@ mod tmux;
 mod util;
 mod widget;
 
+use std::process::ExitCode;
+use std::time::Duration;
+
 use crate::app::StatusApp;
 use crate::cli::CliCommand;
 use crate::error::AppResult;
 use crate::layout::LayoutEngine;
+use crate::process::ProcessWatchdog;
 
-fn main() {
+const PROCESS_DEADLINE: Duration = Duration::from_secs(30);
+
+fn main() -> ExitCode {
+    let _watchdog = ProcessWatchdog::start(PROCESS_DEADLINE);
     if let Err(error) = run() {
         eprintln!("ghc-tmux-status: {error}");
-        std::process::exit(1);
+        return ExitCode::FAILURE;
     }
+    ExitCode::SUCCESS
 }
 
 fn run() -> AppResult<()> {

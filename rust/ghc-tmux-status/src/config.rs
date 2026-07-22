@@ -6,10 +6,11 @@ pub const STATUS_INTERVAL_OPTION: &str = "status-interval";
 pub const STATUS_FORMAT_0_OPTION: &str = "status-format[0]";
 pub const STATUS_FORMAT_1_OPTION: &str = "status-format[1]";
 
-pub const STATUS_LEFT_FORMAT: &str = "#(printf '\\n'; sleep 4; $HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status scheduler-tick)#{E:@GHC_SL_STATUS02_LEFT}";
+pub const STATUS_LEFT_FORMAT: &str =
+    "#($HOME/.config/tmux/script/status-scheduler.sh)#{E:@GHC_SL_STATUS02_LEFT}";
 pub const STATUS_RIGHT_FORMAT: &str = "#{E:@GHC_SL_STATUS02_RIGHT}";
 pub const STATUS_JUSTIFY_VALUE: &str = "centre";
-pub const STATUS_SESSION_FORMAT: &str = "#(printf '\\n'; sleep 4; $HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status scheduler-tick)#[default]#[align=left]#{E:@GHC_SL_STATUS02_LEFT}#[align=right]#{E:@GHC_SL_STATUS02_SESSION_FORMAT}#[default]";
+pub const STATUS_SESSION_FORMAT: &str = "#($HOME/.config/tmux/script/status-scheduler.sh)#[default]#[align=left]#{E:@GHC_SL_STATUS02_LEFT}#[align=right]#{E:@GHC_SL_STATUS02_SESSION_FORMAT}#[default]";
 pub const STATUS_CURRENT_FORMAT: &str = "#{E:@GHC_SL_STATUS02_CURRENT_FORMAT}";
 pub const STATUS_REDRAW_INTERVAL_SECONDS_STR: &str = "1";
 pub const METRIC_RESAMPLE_INTERVAL_SECONDS: u64 = 5;
@@ -61,10 +62,11 @@ mod tests {
     use super::{STATUS_LEFT_FORMAT, STATUS_SESSION_FORMAT};
 
     #[test]
-    fn scheduler_tick_is_present_once_in_one_and_two_row_formats() {
+    fn fail_closed_scheduler_driver_is_present_once_in_one_and_two_row_formats() {
         for format in [STATUS_LEFT_FORMAT, STATUS_SESSION_FORMAT] {
-            assert_eq!(format.matches("scheduler-tick").count(), 1);
-            assert!(format.starts_with("#(printf '\\n'; sleep 4; "));
+            assert_eq!(format.matches("status-scheduler.sh").count(), 1);
+            assert!(format.starts_with("#($HOME/.config/tmux/script/status-scheduler.sh)"));
+            assert!(!format.contains("scheduler-tick"));
         }
     }
 }

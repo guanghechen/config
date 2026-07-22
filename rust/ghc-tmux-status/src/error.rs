@@ -5,10 +5,21 @@ pub type AppResult<T> = Result<T, AppError>;
 #[derive(Debug)]
 pub enum AppError {
     Usage(String),
-    TmuxCommand { command: String, stderr: String },
+    TmuxCommand {
+        command: String,
+        stderr: String,
+    },
     TmuxParse(String),
     Render(String),
-    CommandTimeout { command: String, timeout_ms: u128 },
+    CommandTimeout {
+        command: String,
+        timeout_ms: u128,
+    },
+    CommandOutputTooLarge {
+        command: String,
+        stream: &'static str,
+        limit_bytes: usize,
+    },
     Io(std::io::Error),
 }
 
@@ -27,6 +38,14 @@ impl Display for AppError {
             } => write!(
                 formatter,
                 "command timed out after {timeout_ms}ms: {command}"
+            ),
+            Self::CommandOutputTooLarge {
+                command,
+                stream,
+                limit_bytes,
+            } => write!(
+                formatter,
+                "command {stream} exceeded {limit_bytes} bytes: {command}"
             ),
             Self::Io(error) => write!(formatter, "io failed: {error}"),
         }
