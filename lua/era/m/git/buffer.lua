@@ -56,6 +56,23 @@ local function is_buf_visible(bufnr)
   return #winnrs > 0
 end
 
+---@param bufnr                      integer
+---@return nil
+local function refresh_dirty_if_visible(bufnr)
+  local buf_cache = cache[bufnr] ---@type era.m.git.buffer.ICache|nil
+  if not buf_cache or not buf_cache.dirty or not is_buf_visible(bufnr) then
+    return
+  end
+
+  -- Consume the deferred work before starting so duplicate enter events cannot start parallel queries.
+  buf_cache.dirty = false
+  M.refresh(bufnr, true):finally(function(resolved)
+    if not resolved and cache[bufnr] == buf_cache then
+      buf_cache.dirty = true
+    end
+  end)
+end
+
 ---@class era.m.git.buffer.IBatchInvalidateOpts
 ---@field public clear_compare_text     ?boolean
 ---@field public clear_compare_text_index ?boolean
@@ -360,7 +377,7 @@ function M.attach(bufnr, opts)
       changedtick = -1,
       compare_text = nil,
       compare_text_index = nil,
-      dirty = false,
+      dirty = true,
       file = file,
       force_next_update = true,
       hunks = nil,
@@ -435,16 +452,7 @@ function M.attach(bufnr, opts)
       return
     end
 
-    stl.git.info.get_file_info(r.toplevel, relpath):finally(function(resolved, file_info)
-      if not cache[bufnr] then
-        return
-      end
-      if resolved then
-        buf_cache.mode_bits = file_info and file_info.mode_bits
-        buf_cache.object_name = file_info and file_info.object_name
-      end
-      update_hunks(buf_cache)
-    end)
+    refresh_dirty_if_visible(bufnr)
   end
 
   if repo then
@@ -563,13 +571,23 @@ end
 
 ---@param bufnr                      integer
 ---@param invalidate_compare_text    ?boolean
----@return stl.c.Future              Resolves with nil when done
+---@return stl.c.Future              Resolves with nil when done; rejects when refresh fails
 function M.refresh(bufnr, invalidate_compare_text)
-  return stl.c.Future.new(function(resolve)
+  return stl.c.Future.new(function(resolve, reject)
     local buf_cache = cache[bufnr]
     if not buf_cache then
       resolve(nil)
       return
+    end
+
+    local function refresh_hunks()
+      update_hunks(buf_cache):finally(function(resolved, result)
+        if resolved then
+          resolve(nil)
+        else
+          reject(result)
+        end
+      end)
     end
 
     if invalidate_compare_text then
@@ -579,28 +597,26 @@ function M.refresh(bufnr, invalidate_compare_text)
           return
         end
 
-        if resolved then
-          local new_object_name = file_info and file_info.object_name
-          local old_object_name = buf_cache.object_name
-
-          if new_object_name ~= old_object_name then
-            buf_cache.compare_text_index = nil
-          end
-
-          buf_cache.mode_bits = file_info and file_info.mode_bits
-          buf_cache.object_name = new_object_name
+        if not resolved then
+          reject(file_info)
+          return
         end
 
+        local new_object_name = file_info and file_info.object_name
+        local old_object_name = buf_cache.object_name
+
+        if new_object_name ~= old_object_name then
+          buf_cache.compare_text_index = nil
+        end
+
+        buf_cache.mode_bits = file_info and file_info.mode_bits
+        buf_cache.object_name = new_object_name
         buf_cache.force_next_update = true
-        update_hunks(buf_cache):finally(function()
-          resolve(nil)
-        end)
+        refresh_hunks()
       end)
     else
       buf_cache.force_next_update = true
-      update_hunks(buf_cache):finally(function()
-        resolve(nil)
-      end)
+      refresh_hunks()
     end
   end)
 end
@@ -899,10 +915,13 @@ end
 function M.setup()
   local augroup = vim.api.nvim_create_augroup("DotModuleGitBuffer", { clear = true }) ---@type integer
 
-  ---@type stl.timer.IDisposableCallable
-  local buf_enter_debounced = stl.timer.debounce(function(bufnr)
-    if M.is_dirty(bufnr) then
-      M.refresh(bufnr, true)
+  local pending_visible_bufnrs = {} ---@type table<integer, true>
+
+  local refresh_visible_debounced = stl.timer.debounce(function()
+    local bufnrs = pending_visible_bufnrs
+    pending_visible_bufnrs = {}
+    for bufnr in pairs(bufnrs) do
+      refresh_dirty_if_visible(bufnr)
     end
   end, 50)
 
@@ -920,10 +939,11 @@ function M.setup()
     end,
   })
 
-  vim.api.nvim_create_autocmd("BufEnter", {
+  vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
     group = augroup,
     callback = function(args)
-      buf_enter_debounced(args.buf)
+      pending_visible_bufnrs[args.buf] = true
+      refresh_visible_debounced()
     end,
   })
 
