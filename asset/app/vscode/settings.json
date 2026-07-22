@@ -7,7 +7,7 @@
     "editor.defaultFormatter": "vscode.css-language-features"
   },
   "[dart]": {
-    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.defaultFormatter": "dart-code.dart-code",
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "editor.rulers": [
@@ -88,6 +88,7 @@
   "accessibility.signals.terminalBell": {
     "sound": "on"
   },
+  "chat.agent.sandbox.enabled": "on",
   "claudeCode.preferredLocation": "panel",
   "cmake.configureOnOpen": true,
   "cSpell.userWords": ["guanghechen", "kyokuya", "sora", "yozora"],
@@ -162,13 +163,16 @@
     ".prettierrc": ".prettierignore",
     "rollup.config.mjs": "rollup.config.*.mjs",
     "tsconfig.json": "tsconfig.*.json",
-    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml",
+    "package.json": "bun.lock, bun.lockb, npm-shrinkwrap.json, package-lock.json, pnpm-lock.yaml, yarn.lock",
     "pubspec.yaml": "pubspec.lock, .metadata"
   },
   "explorer.incrementalNaming": "smart",
   "explorer.openEditors.sortOrder": "fullPath",
   "explorer.openEditors.visible": 0,
   "extensions.autoUpdate": "on",
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  },
   "files.associations": {
     "*.rs": "rust",
     "*.txt": "plaintext",
@@ -196,7 +200,6 @@
   },
   "github.copilot.nextEditSuggestions.enabled": true,
   "gitlens.ai.model": "vscode",
-  "gitlens.ai.vscode.model": "copilot:claude-opus-4.6",
   "gitlens.defaultDateFormat": "YYYY-MM-DD HH:mm:ss",
   "gitlens.defaultDateShortFormat": "YYYY-MM-DD",
   "gitlens.defaultDateStyle": "absolute",
@@ -221,9 +224,9 @@
   "nxConsole.showNodeVersionOnStartup": false,
   "prettier.requireConfig": true,
   "remote.defaultExtensionsIfInstalledLocally": [
-    "GitHub.copilot",
-    "GitHub.copilot-chat",
-    "GitHub.vscode-pull-request-github"
+    "github.copilot",
+    "github.copilot-chat",
+    "github.vscode-pull-request-github"
   ],
   "remote.localPortHost": "localhost",
   "remote.restoreForwardedPorts": true,
@@ -246,6 +249,7 @@
   "terminal.integrated.defaultProfile.linux": "fish",
   "terminal.integrated.defaultProfile.osx": "fish",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.enablePersistentSessions": false,
   "terminal.integrated.enableVisualBell": true,
   "terminal.integrated.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
   "terminal.integrated.fontSize": 18,
@@ -311,7 +315,6 @@
   "workbench.editor.splitInGroupLayout": "vertical",
   "workbench.editor.splitSizing": "split",
   "workbench.editor.tabActionCloseVisibility": false,
-  "workbench.editor.tabCloseButton": "off",
   "workbench.editorAssociations": {
     "*.ipynb": "jupyter-notebook"
   },
@@ -333,8 +336,5 @@
   "workbench.startupEditor": "none",
   "workbench.statusBar.visible": true,
   "workbench.tree.indent": 12,
-  "zenMode.hideLineNumbers": false,
-  "extensions.experimental.affinity": {
-    "asvetliakov.vscode-neovim": 1
-  }
+  "zenMode.hideLineNumbers": false
 }
