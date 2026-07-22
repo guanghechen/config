@@ -134,16 +134,6 @@
   },
   {
     "key": "alt+oem_comma",
-    "command": "-gitlens.diffWithPreviousInDiffLeft",
-    "when": "editorTextFocus && isInDiffEditor && !isInDiffRightEditor && config.gitlens.keymap == 'alternate' && resource in 'gitlens:tabs:tracked'"
-  },
-  {
-    "key": "alt+oem_comma",
-    "command": "-gitlens.diffWithPreviousInDiffRight",
-    "when": "editorTextFocus && isInDiffRightEditor && config.gitlens.keymap == 'alternate' && resource in 'gitlens:tabs:tracked'"
-  },
-  {
-    "key": "alt+oem_comma",
     "command": "-gitlens.key.alt+,",
     "when": "gitlens:key:,"
   },
@@ -156,16 +146,6 @@
     "key": "alt+oem_period",
     "command": "-gitlens.diffWithNext",
     "when": "editorTextFocus && gitlens:enabled && !isInDiffEditor && config.gitlens.keymap == 'alternate' && resourceScheme =~ /^(gitlens|git|pr)$/"
-  },
-  {
-    "key": "alt+oem_period",
-    "command": "-gitlens.diffWithNextInDiffLeft",
-    "when": "editorTextFocus && gitlens:enabled && isInDiffEditor && !isInDiffRightEditor && config.gitlens.keymap == 'alternate' && resourceScheme =~ /^(gitlens|git|pr)$/"
-  },
-  {
-    "key": "alt+oem_period",
-    "command": "-gitlens.diffWithNextInDiffRight",
-    "when": "editorTextFocus && gitlens:enabled && isInDiffRightEditor && config.gitlens.keymap == 'alternate' && resourceScheme =~ /^(gitlens|git|pr)$/"
   },
   {
     "key": "alt+right",
@@ -410,11 +390,6 @@
     "key": "ctrl+shift+c",
     "command": "-workbench.action.terminal.copySelection",
     "when": "terminalTextSelectedInFocused || terminalFocus && terminalHasBeenCreated && terminalTextSelected || terminalFocus && terminalProcessSupported && terminalTextSelected || terminalFocus && terminalTextSelected && terminalTextSelectedInFocused || terminalHasBeenCreated && terminalTextSelected && terminalTextSelectedInFocused || terminalProcessSupported && terminalTextSelected && terminalTextSelectedInFocused"
-  },
-  {
-    "key": "ctrl+shift+i",
-    "command": "-workbench.action.chat.openEditSession",
-    "when": "chatEditingParticipantRegistered && view != 'workbench.panel.chat.view.edits'"
   },
   {
     "key": "ctrl+shift+i",

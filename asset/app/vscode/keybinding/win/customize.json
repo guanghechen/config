@@ -47,12 +47,12 @@
   {
     "key": "alt+ctrl+f",
     "command": "editor.action.formatSelection",
-    "when": "editorHasDocumentFormattingProvider && editorHasSelection && editorTextFocus && !editorReadonly"
+    "when": "editorHasDocumentSelectionFormattingProvider && editorHasSelection && editorTextFocus && !editorReadonly"
   },
   {
     "key": "alt+ctrl+f",
     "command": "editor.action.formatDocument",
-    "when": "editorHasDocumentFormattingProvider && editorTextFocus && !editorReadonly"
+    "when": "editorHasDocumentFormattingProvider && (!editorHasSelection || !editorHasDocumentSelectionFormattingProvider) && editorTextFocus && !editorReadonly"
   },
   {
     "key": "alt+ctrl+z",
@@ -184,16 +184,6 @@
   },
   {
     "key": "alt+enter",
-    "command": "notebook.cell.chat.acceptChanges",
-    "when": "inlineChatFocused && notebookCellChatFocused && !notebookCellEditorFocused"
-  },
-  {
-    "key": "alt+enter",
-    "command": "notebook.cell.chat.acceptChanges",
-    "when": "notebookEditorFocused && !inputFocus && !notebookCellEditorFocused && notebookChatOuterFocusPosition == 'below'"
-  },
-  {
-    "key": "alt+enter",
     "command": "previewSelectedCodeAction",
     "when": "codeActionMenuVisible"
   },
@@ -211,11 +201,6 @@
     "key": "alt+enter",
     "command": "scm.acceptInput",
     "when": "scmRepository"
-  },
-  {
-    "key": "alt+enter",
-    "command": "workbench.action.chat.submitSecondaryAgent",
-    "when": "chatInputHasText && chatRequestIsPaused && inChatInput && !chatInputHasAgent || chatInputHasText && inChatInput && !chatInputHasAgent && !chatSessionRequestInProgress || chatInstructionsAttached && chatRequestIsPaused && inChatInput && !chatInputHasAgent || chatInstructionsAttached && inChatInput && !chatInputHasAgent && !chatSessionRequestInProgress"
   },
   {
     "key": "alt+left",
@@ -513,7 +498,7 @@
   {
     "key": "alt+d",
     "command": "workbench.action.toggleSidebarVisibility",
-    "when": "!sidebarVisible && !panelVisible && !view.workbench.panel.chat.view.copilot.active"
+    "when": "!sideBarVisible && !panelVisible && !view.workbench.panel.chat.view.copilot.active"
   },
   {
     "key": "alt+f",
@@ -631,11 +616,6 @@
   },
   {
     "key": "alt+r",
-    "command": "inlineChat.regenerate",
-    "when": "inlineChatHasProvider && inlineChatVisible"
-  },
-  {
-    "key": "alt+r",
     "command": "workbench.action.terminal.chat.rerunRequest",
     "when": "terminalChatFocus && terminalHasBeenCreated && !terminalChatActiveRequest || terminalChatFocus && terminalProcessSupported && !terminalChatActiveRequest"
   },
@@ -646,12 +626,12 @@
   {
     "key": "alt+t",
     "command": "workbench.action.terminal.toggleTerminal",
-    "when": "terminal.active"
+    "when": "terminalFocus"
   },
   {
     "key": "alt+t",
     "command": "openInTerminal",
-    "when": "!terminal.active"
+    "when": "!terminalFocus"
   },
   {
     "key": "alt+v",
@@ -659,11 +639,6 @@
   },
   {
     "key": "alt+v",
-    "command": "editor.action.clipboardPasteAction",
-    "when": "editorTextFocus"
-  },
-  {
-    "key": "alt+v",
     "command": "workbench.action.terminal.paste",
     "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
   },
@@ -671,16 +646,6 @@
     "key": "alt+v",
     "command": "filesExplorer.paste",
     "when": "filesExplorerFocus && foldersViewVisible && !explorerResourceReadonly && !inputFocus"
-  },
-  {
-    "key": "alt+v",
-    "command": "filesExplorer.paste",
-    "when": "filesExplorerFocus && foldersViewVisible && !explorerResourceReadonly && !inputFocus"
-  },
-  {
-    "key": "alt+v",
-    "command": "workbench.action.terminal.paste",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
   },
   {
     "key": "alt+w",
@@ -720,11 +685,6 @@
     "command": "undo"
   },
   {
-    "key": "alt+z",
-    "command": "inlineChat.unstash",
-    "when": "inlineChatHasStashedSession && !editorReadonly"
-  },
-  {
     "key": "ctrl+shift+c",
     "command": "editor.action.commentLine",
     "when": "editorTextFocus && !editorReadonly"
@@ -732,11 +692,6 @@
   {
     "key": "ctrl+shift+i",
     "command": "workbench.action.toggleDevTools"
-  },
-  {
-    "key": "ctrl+shift+i",
-    "command": "workbench.panel.chatEditing",
-    "when": "workbench.panel.chat.view.edits.active"
   },
   {
     "key": "ctrl+p",

@@ -81,8 +81,8 @@ function formatKey(key) {
       text
         .split('+')
         .sort((x, y) => {
-          const r1 = ranks[x] ?? 1
-          const r2 = ranks[y] ?? 1
+          const r1 = ranks[x.toLowerCase()] ?? 1
+          const r2 = ranks[y.toLowerCase()] ?? 1
           return r2 - r1
         })
         .join('+'),
@@ -124,6 +124,35 @@ function sortKeybindings(keybindings) {
 }
 
 /**
+ * @param {string} source
+ * @param {IVscodeKeybinding[]} keybindings
+ * @param {boolean} unbind
+ */
+function validateKeybindings(source, keybindings, unbind) {
+  const seen = new Map()
+
+  keybindings.forEach((keybinding, index) => {
+    if (typeof keybinding.key !== 'string' || typeof keybinding.command !== 'string') {
+      throw new Error(`${source}[${index}] must contain string key and command fields`)
+    }
+
+    const isUnbind = keybinding.command.startsWith('-')
+    if (isUnbind !== unbind) {
+      const expected = unbind ? 'an unbind command prefixed with -' : 'a positive command'
+      throw new Error(`${source}[${index}] must contain ${expected}: ${keybinding.command}`)
+    }
+
+    const normalized = sortKeybindings([keybinding])[0]
+    const fingerprint = JSON.stringify(normalized)
+    const previousIndex = seen.get(fingerprint)
+    if (previousIndex !== undefined) {
+      throw new Error(`${source}[${index}] duplicates ${source}[${previousIndex}]`)
+    }
+    seen.set(fingerprint, index)
+  })
+}
+
+/**
  * @param {string} targetKeybindingsPath - Path to the VSCode keybindings.json file
  */
 export function handleSyncConfigVscode(targetKeybindingsPath) {
@@ -145,14 +174,17 @@ export function handleSyncConfigVscode(targetKeybindingsPath) {
   const raw_customize = JSON.parse(fs.readFileSync(fp_customize, encoding))
   const raw_unbind = JSON.parse(fs.readFileSync(fp_unbind, encoding))
 
+  validateKeybindings('rebind', raw_rebind, false)
+  validateKeybindings('customize', raw_customize, false)
+  validateKeybindings('unbind', raw_unbind, true)
+
   const resolved_rebind = sortKeybindings(raw_rebind)
-  const resolved_customize = sortKeybindings(raw_customize).filter(x => !x.command.startsWith('-'))
+  const resolved_customize = sortKeybindings(raw_customize)
 
   const existed_keys = new Set(
     resolved_customize.map(x => [x.key, '-' + x.command, x.when ?? 'undefined'].join('#.#')),
   )
   const resolved_unbind = sortKeybindings(raw_unbind).filter(x => {
-    if (!x.command.startsWith('-')) return false
     const key = [x.key, x.command, x.when ?? 'undefined'].join('#.#')
     return !existed_keys.has(key)
   })

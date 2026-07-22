@@ -409,28 +409,8 @@
   },
   {
     "key": "cmd+i",
-    "command": "-inlineChat2.start",
-    "when": "editorFocus && inlineChatHasEditsAgent && inlineChatPossible && !editorReadonly && !editorSimpleInput && !inlineChatHasSession"
-  },
-  {
-    "key": "cmd+i",
-    "command": "-inlineChat.startWithCurrentLine",
-    "when": "inlineChatHasProvider && inlineChatShowingHint && !editorReadonly && !inlineChatVisible"
-  },
-  {
-    "key": "cmd+i",
-    "command": "-inlineChat2.stop",
-    "when": "inlineChatHasEditsAgent && inlineChatVisible && inlineChatHasSession == 'empty'"
-  },
-  {
-    "key": "cmd+i",
     "command": "-workbench.action.terminal.chat.start",
     "when": "terminalChatAgentRegistered && terminalFocusInAny && terminalHasBeenCreated || terminalChatAgentRegistered && terminalFocusInAny && terminalProcessSupported"
-  },
-  {
-    "key": "cmd+i",
-    "command": "-inlineChat2.reveal",
-    "when": "inlineChatHasEditsAgent && inlineChatHasSession"
   },
   {
     "key": "cmd+i",
@@ -441,11 +421,6 @@
     "key": "cmd+i",
     "command": "-focusSuggestion",
     "when": "suggestWidgetVisible && textInputFocus && !suggestWidgetHasFocusedSuggestion"
-  },
-  {
-    "key": "cmd+i",
-    "command": "-inlineChat.holdForSpeech",
-    "when": "hasSpeechProvider && inlineChatHasProvider && inlineChatVisible && textInputFocus"
   },
   {
     "key": "cmd+i",
@@ -849,11 +824,6 @@
   },
   {
     "key": "cmd+k i",
-    "command": "-inlineChat.startWithCurrentLine",
-    "when": "inlineChatHasProvider && !editorReadonly && !inlineChatVisible"
-  },
-  {
-    "key": "cmd+k i",
     "command": "-notebook.cell.chat.start",
     "when": "config.notebook.experimental.cellChat && notebookChatAgentRegistered && notebookEditable && notebookEditorFocused && !inputFocus || config.notebook.experimental.generate && notebookChatAgentRegistered && notebookEditable && notebookEditorFocused && !inputFocus"
   },
@@ -1156,11 +1126,6 @@
     "when": "editorTextFocus && hasWordHighlights"
   },
   {
-    "key": "f7",
-    "command": "-inlineChat.moveToNextHunk",
-    "when": "inlineChatHasProvider && inlineChatVisible"
-  },
-  {
     "key": "f8",
     "command": "-editor.action.marker.nextInFiles",
     "when": "editorFocus"
@@ -1253,12 +1218,12 @@
   {
     "key": "cmd+ctrl+f",
     "command": "editor.action.formatSelection",
-    "when": "editorHasDocumentFormattingProvider && editorHasSelection && editorTextFocus && !editorReadonly"
+    "when": "editorHasDocumentSelectionFormattingProvider && editorHasSelection && editorTextFocus && !editorReadonly"
   },
   {
     "key": "cmd+ctrl+f",
     "command": "editor.action.formatDocument",
-    "when": "editorHasDocumentFormattingProvider && editorTextFocus && !editorReadonly"
+    "when": "editorHasDocumentFormattingProvider && (!editorHasSelection || !editorHasDocumentSelectionFormattingProvider) && editorTextFocus && !editorReadonly"
   },
   {
     "key": "cmd+ctrl+z",
@@ -1390,16 +1355,6 @@
   },
   {
     "key": "cmd+enter",
-    "command": "notebook.cell.chat.acceptChanges",
-    "when": "inlineChatFocused && notebookCellChatFocused && !notebookCellEditorFocused"
-  },
-  {
-    "key": "cmd+enter",
-    "command": "notebook.cell.chat.acceptChanges",
-    "when": "notebookEditorFocused && !inputFocus && !notebookCellEditorFocused && notebookChatOuterFocusPosition == 'below'"
-  },
-  {
-    "key": "cmd+enter",
     "command": "previewSelectedCodeAction",
     "when": "codeActionMenuVisible"
   },
@@ -1417,11 +1372,6 @@
     "key": "cmd+enter",
     "command": "scm.acceptInput",
     "when": "scmRepository"
-  },
-  {
-    "key": "cmd+enter",
-    "command": "workbench.action.chat.submitSecondaryAgent",
-    "when": "chatInputHasText && chatRequestIsPaused && inChatInput && !chatInputHasAgent || chatInputHasText && inChatInput && !chatInputHasAgent && !chatSessionRequestInProgress || chatInstructionsAttached && chatRequestIsPaused && inChatInput && !chatInputHasAgent || chatInstructionsAttached && inChatInput && !chatInputHasAgent && !chatSessionRequestInProgress"
   },
   {
     "key": "cmd+left",
@@ -1594,10 +1544,6 @@
   },
   {
     "key": "cmd+c",
-    "command": "editor.action.clipboardCopyAction"
-  },
-  {
-    "key": "cmd+c",
     "command": "execCopy"
   },
   {
@@ -1723,7 +1669,7 @@
   {
     "key": "cmd+d",
     "command": "workbench.action.toggleSidebarVisibility",
-    "when": "!sidebarVisible && !panelVisible && !view.workbench.panel.chat.view.copilot.active"
+    "when": "!sideBarVisible && !panelVisible && !view.workbench.panel.chat.view.copilot.active"
   },
   {
     "key": "cmd+f",
@@ -1841,11 +1787,6 @@
   },
   {
     "key": "cmd+r",
-    "command": "inlineChat.regenerate",
-    "when": "inlineChatHasProvider && inlineChatVisible"
-  },
-  {
-    "key": "cmd+r",
     "command": "workbench.action.terminal.chat.rerunRequest",
     "when": "terminalChatFocus && terminalHasBeenCreated && !terminalChatActiveRequest || terminalChatFocus && terminalProcessSupported && !terminalChatActiveRequest"
   },
@@ -1856,12 +1797,12 @@
   {
     "key": "cmd+t",
     "command": "workbench.action.terminal.toggleTerminal",
-    "when": "terminal.active"
+    "when": "terminalFocus"
   },
   {
     "key": "cmd+t",
     "command": "openInTerminal",
-    "when": "!terminal.active"
+    "when": "!terminalFocus"
   },
   {
     "key": "cmd+v",
@@ -1881,16 +1822,6 @@
     "key": "cmd+v",
     "command": "filesExplorer.paste",
     "when": "filesExplorerFocus && foldersViewVisible && !explorerResourceReadonly && !inputFocus"
-  },
-  {
-    "key": "cmd+v",
-    "command": "filesExplorer.paste",
-    "when": "filesExplorerFocus && foldersViewVisible && !explorerResourceReadonly && !inputFocus"
-  },
-  {
-    "key": "cmd+v",
-    "command": "workbench.action.terminal.paste",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
   },
   {
     "key": "cmd+w",
@@ -1918,10 +1849,6 @@
   },
   {
     "key": "cmd+x",
-    "command": "editor.action.clipboardCutAction"
-  },
-  {
-    "key": "cmd+x",
     "command": "execCut"
   },
   {
@@ -1934,11 +1861,6 @@
     "command": "undo"
   },
   {
-    "key": "cmd+z",
-    "command": "inlineChat.unstash",
-    "when": "inlineChatHasStashedSession && !editorReadonly"
-  },
-  {
     "key": "ctrl+shift+c",
     "command": "editor.action.commentLine",
     "when": "editorTextFocus && !editorReadonly"
@@ -1946,11 +1868,6 @@
   {
     "key": "ctrl+shift+i",
     "command": "workbench.action.toggleDevTools"
-  },
-  {
-    "key": "ctrl+shift+i",
-    "command": "workbench.panel.chatEditing",
-    "when": "workbench.panel.chat.view.edits.active"
   },
   {
     "key": "ctrl+p",
