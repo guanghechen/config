@@ -89,6 +89,14 @@
     "sound": "on"
   },
   "chat.agent.sandbox.enabled": "on",
+  "chat.agent.sandbox.enabledWindows": "on",
+  "chat.tools.compressOutput.enabled": true,
+  "chat.tools.terminal.terminalProfile.linux": {
+    "path": "/home/linuxbrew/.linuxbrew/bin/fish"
+  },
+  "chat.tools.terminal.terminalProfile.osx": {
+    "path": "/opt/homebrew/bin/fish"
+  },
   "claudeCode.preferredLocation": "panel",
   "cmake.configureOnOpen": true,
   "cSpell.userWords": ["guanghechen", "kyokuya", "sora", "yozora"],
@@ -110,9 +118,14 @@
   "editor.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
   "editor.fontSize": 18,
   "editor.formatOnSave": false,
+  "editor.guides.bracketPairs": "active",
   "editor.hideCursorInOverviewRuler": true,
+  "editor.inlineSuggest.edits.allowCodeShifting": "horizontal",
+  "editor.inlineSuggest.edits.showCollapsed": true,
   "editor.inlineSuggest.enabled": true,
+  "editor.inlineSuggest.minShowDelay": 100,
   "editor.lineNumbers": "relative",
+  "editor.linkedEditing": true,
   "editor.minimap.enabled": false,
   "editor.mouseWheelZoom": true,
   "editor.padding.top": 10,
@@ -170,6 +183,7 @@
   "explorer.openEditors.sortOrder": "fullPath",
   "explorer.openEditors.visible": 0,
   "extensions.autoUpdate": "on",
+  "extensions.autoUpdateDelay": 24,
   "extensions.experimental.affinity": {
     "asvetliakov.vscode-neovim": 1
   },
@@ -184,6 +198,7 @@
     "**/.idea": true,
     "**/*.tsbuildinfo": true
   },
+  "files.readonlyFromPermissions": true,
   "files.watcherExclude": {
     "**/.idea": true
   },
@@ -232,6 +247,11 @@
   "remote.restoreForwardedPorts": true,
   "scm.alwaysShowActions": true,
   "scm.alwaysShowRepositories": true,
+  "scm.defaultViewMode": "tree",
+  "scm.graph.badges": "all",
+  "scm.repositories.selectionMode": "single",
+  "scm.repositories.sortOrder": "path",
+  "search.quickOpen.includeSymbols": true,
   "search.seedOnFocus": true,
   "search.showLineNumbers": true,
   "security.workspace.trust.untrustedFiles": "prompt",
@@ -249,12 +269,18 @@
   "terminal.integrated.defaultProfile.linux": "fish",
   "terminal.integrated.defaultProfile.osx": "fish",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.enableImages": true,
   "terminal.integrated.enablePersistentSessions": false,
   "terminal.integrated.enableVisualBell": true,
   "terminal.integrated.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
   "terminal.integrated.fontSize": 18,
   "terminal.integrated.macOptionIsMeta": true,
   "terminal.integrated.rightClickBehavior": "default",
+  "terminal.integrated.suggest.quickSuggestions": {
+    "commands": "on",
+    "arguments": "on",
+    "unknown": "off"
+  },
   "terminal.integrated.tabs.location": "left",
   "terminal.external.windowsExec": "pwsh.exe",
   "vim.easymotion": true,
@@ -305,13 +331,18 @@
   "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}${separator}",
   "window.titleBarStyle": "custom",
   "workbench.activityBar.location": "top",
+  "workbench.browser.newTabPlacement": "sideGroup",
   "workbench.commandPalette.history": 1024,
   "workbench.enableExperiments": false,
   "workbench.editor.enablePreview": false,
+  "workbench.editor.highlightModifiedTabs": true,
   "workbench.editor.limit.enabled": true,
   "workbench.editor.limit.excludeDirty": true,
   "workbench.editor.limit.perEditorGroup": true,
   "workbench.editor.limit.value": 20,
+  "workbench.editor.navigationScope": "editorGroup",
+  "workbench.editor.pinnedTabsOnSeparateRow": true,
+  "workbench.editor.revealIfOpen": true,
   "workbench.editor.splitInGroupLayout": "vertical",
   "workbench.editor.splitSizing": "split",
   "workbench.editor.tabActionCloseVisibility": false,
