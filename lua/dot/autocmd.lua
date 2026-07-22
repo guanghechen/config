@@ -102,6 +102,38 @@ vim.api.nvim_create_autocmd("TabEnter", {
   end,
 })
 
+local tmux_zen_refresh_active = true
+local tmux_zen_refreshing = false
+local tmux_zen_refresh_pending = false
+
+---@return nil
+local function refresh_tmux_zen_mode()
+  if not stl.env.IS_TMUX or not tmux_zen_refresh_active then
+    return
+  end
+  if tmux_zen_refreshing then
+    tmux_zen_refresh_pending = true
+    return
+  end
+
+  tmux_zen_refreshing = true
+  stl.tmux.query_tmux_pane_zoomed(function(is_zoomed)
+    tmux_zen_refreshing = false
+    if not tmux_zen_refresh_active then
+      tmux_zen_refresh_pending = false
+      return
+    end
+    if tmux_zen_refresh_pending then
+      tmux_zen_refresh_pending = false
+      refresh_tmux_zen_mode()
+      return
+    end
+    if is_zoomed ~= nil then
+      dot.state.status.tmux_zen_mode:next(is_zoomed)
+    end
+  end)
+end
+
 vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
   group = stl.nvim.fn.augroup("state_on_VimEnter"),
   callback = function()
@@ -136,12 +168,20 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
       dot.state.status.dirtier_statusline:mark_dirty()
       dot.state.status.dirtier_tabline:mark_dirty()
     end)
+  end,
+})
 
-    if stl.env.IS_TMUX then
-      vim.schedule(function()
-        local is_tmux_pane_zoomed = stl.tmux.is_tmux_pane_zoomed() ---@type boolean
-        dot.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
-      end)
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = stl.nvim.fn.augroup("state_tmux_zen_mode_on_VimEnter"),
+  once = true,
+  callback = refresh_tmux_zen_mode,
+})
+
+vim.api.nvim_create_autocmd("SessionLoadPost", {
+  group = stl.nvim.fn.augroup("state_tmux_zen_mode_on_SessionLoadPost"),
+  callback = function()
+    if vim.v.vim_did_enter == 1 then
+      refresh_tmux_zen_mode()
     end
   end,
 })
@@ -150,6 +190,8 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   group = stl.nvim.fn.augroup("state_on_VimLeavePre"),
   once = true,
   callback = function()
+    tmux_zen_refresh_active = false
+    tmux_zen_refresh_pending = false
     dot.state.status.dispose()
   end,
 })
@@ -177,12 +219,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 
     vim.api.nvim_tabpage_set_win(current_tabnr, current_winnr)
     vim.schedule(function()
-      if stl.env.IS_TMUX then
-        vim.schedule(function()
-          local is_tmux_pane_zoomed = stl.tmux.is_tmux_pane_zoomed() ---@type boolean
-          dot.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
-        end)
-      end
+      refresh_tmux_zen_mode()
 
       dot.state.widget.resize()
       dot.state.status.dirtier_statusline:mark_dirty()

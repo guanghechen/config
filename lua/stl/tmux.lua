@@ -1,5 +1,7 @@
 ---@see https://github.com/alexghergh/nvim-tmux-navigation/blob/4898c98702954439233fdaf764c39636681e2861/lua/nvim-tmux-navigation/tmux_util.lua#L1
 
+local TMUX_QUERY_TIMEOUT_MS = 1000
+
 local tmux_directions = { ["p"] = "l", ["h"] = "L", ["j"] = "D", ["k"] = "U", ["l"] = "R", ["n"] = "t:.+" }
 local tmux_direction_cmds = {
   h = { "if", "-F", "#{pane_at_left}", "", "select-pane -L" },
@@ -27,13 +29,25 @@ local function tmux_command(args)
 end
 
 ---@param args                          string[]
----@return nil
-local function tmux_command_async(args)
+---@param opts                          ?vim.SystemOpts
+---@param callback                     ?fun(result: vim.SystemCompleted)
+---@return vim.SystemObj
+local function tmux_command_async(args, opts, callback)
   local cmd = { "tmux", "-S", tmux_socket }
   for _, arg in ipairs(args) do
     table.insert(cmd, arg)
   end
-  vim.system(cmd)
+  return vim.system(cmd, opts, callback)
+end
+
+---@param status                        string
+---@return boolean|nil
+local function parse_tmux_pane_zoomed(status)
+  local window_panes, window_zoomed_flag = status:match("^(%d+):([01])%s*$")
+  if window_panes == nil or window_zoomed_flag == nil then
+    return nil
+  end
+  return tonumber(window_panes) == 1 or window_zoomed_flag == "1"
 end
 
 ---@return boolean
@@ -59,6 +73,7 @@ end
 ---@class stl.tmux
 ---@field public is_tmux_pane_corner    fun(direction: "p"|"n"|"h"|"j"|"k"|"l"): boolean
 ---@field public is_tmux_pane_zoomed    fun(): boolean
+---@field public query_tmux_pane_zoomed fun(callback: fun(is_zoomed: boolean|nil): nil): nil
 ---@field public should_tmux_control    fun(disable_nav_when_zoomed: boolean): boolean
 ---@field public change_pane            fun(direction: "p"|"h"|"j"|"k"|"l"|"n"): nil
 ---@field public get_tmux_env_value     fun(tmux_env_name: string): string|nil
@@ -87,8 +102,36 @@ if vim.env.TMUX ~= nil then
   ---@return boolean
   function M.is_tmux_pane_zoomed()
     local status = tmux_command({ "display-message", "-p", "#{window_panes}:#{window_zoomed_flag}" })
-    local window_panes, window_zoomed_flag = status:match("^(%d+):(%d+)")
-    return tonumber(window_panes) == 1 or tonumber(window_zoomed_flag) == 1
+    return parse_tmux_pane_zoomed(status) == true
+  end
+
+  ---@param callback                   fun(is_zoomed: boolean|nil): nil
+  ---@return nil
+  function M.query_tmux_pane_zoomed(callback)
+    ---@param is_zoomed                boolean|nil
+    local function resolve(is_zoomed)
+      vim.schedule(function()
+        callback(is_zoomed)
+      end)
+    end
+
+    local function on_exit(result)
+      if result.code ~= 0 then
+        resolve(nil)
+        return
+      end
+      resolve(parse_tmux_pane_zoomed(result.stdout or ""))
+    end
+
+    local ok = pcall(
+      tmux_command_async,
+      { "display-message", "-p", "#{window_panes}:#{window_zoomed_flag}" },
+      { text = true, timeout = TMUX_QUERY_TIMEOUT_MS },
+      on_exit
+    )
+    if not ok then
+      resolve(nil)
+    end
   end
 
   -- whether tmux should take control over the navigation
@@ -142,6 +185,14 @@ else
   ---@return boolean
   function M.is_tmux_pane_zoomed()
     return true
+  end
+
+  ---@param callback                   fun(is_zoomed: boolean|nil): nil
+  ---@return nil
+  function M.query_tmux_pane_zoomed(callback)
+    vim.schedule(function()
+      callback(nil)
+    end)
   end
 
   ---@param disable_nav_when_zoomed     boolean
