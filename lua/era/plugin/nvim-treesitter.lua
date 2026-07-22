@@ -263,7 +263,6 @@ local M = {
 ---@type era.m.plugin.IPluginSpec
 M.spec = {
   name = "nvim-treesitter",
-  lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
   event = "VeryLazy",
   cmd = { "TSUpdate", "TSInstall", "TSLog", "TSUninstall" },
   build = function()
@@ -288,16 +287,132 @@ M.spec = {
 
     vim.treesitter.language.register("json", "excalidraw")
     vim.treesitter.language.register("json", "jsonc")
+
+    local augroup = stl.nvim.fn.augroup(__module_name__) ---@type integer
+    local pending_bufnrs = {} ---@type table<integer, true>
+    local ensured_filetype_set = {} ---@type table<string, true>
+    for _, filetype in ipairs(ensure_filetypes) do
+      ensured_filetype_set[filetype] = true
+    end
+
+    ---@param bufnr                      integer
+    ---@return string|nil
+    local function resolve_lang(bufnr)
+      if not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_buf_is_loaded(bufnr) then
+        return
+      end
+
+      local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+      if not ensured_filetype_set[filetype] then
+        return
+      end
+      return vim.treesitter.language.get_lang(filetype)
+    end
+
+    ---@param bufnr                      integer
+    ---@return string|nil
+    local function active_lang(bufnr)
+      -- `vim.treesitter.start()` replaces an existing highlighter without disposing it.
+      local highlighter = vim.treesitter.highlighter.active[bufnr]
+      return highlighter and highlighter.tree:lang() or nil
+    end
+
+    ---@param bufnr                      integer
+    ---@return nil
+    local function configure_windows(bufnr)
+      for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) == bufnr then
+          local foldexpr = vim.api.nvim_get_option_value("foldexpr", { win = winnr }) ---@type string
+          if foldexpr ~= "v:lua.vim.lsp.foldexpr()" then
+            vim.api.nvim_set_option_value(
+              "foldexpr",
+              "v:lua.vim.treesitter.foldexpr()",
+              { win = winnr, scope = "local" }
+            )
+          end
+        end
+      end
+    end
+
+    ---@param bufnr                      integer
+    ---@return nil
+    local function configure(bufnr)
+      vim.api.nvim_set_option_value("indentexpr", "v:lua.require'nvim-treesitter'.indentexpr()", { buf = bufnr })
+      configure_windows(bufnr)
+    end
+
+    ---@param bufnr                      integer
+    ---@return nil
+    local function activate(bufnr)
+      local lang = resolve_lang(bufnr) ---@type string|nil
+      if lang == nil then
+        pending_bufnrs[bufnr] = nil
+        return
+      end
+
+      pending_bufnrs[bufnr] = nil
+      local current_lang = active_lang(bufnr) ---@type string|nil
+      if current_lang ~= lang then
+        if current_lang ~= nil then
+          vim.treesitter.stop(bufnr)
+        end
+        vim.treesitter.start(bufnr, lang)
+      end
+      configure(bufnr)
+    end
+
+    ---@param bufnr                      integer
+    ---@return nil
+    local function defer_activation(bufnr)
+      local lang = resolve_lang(bufnr) ---@type string|nil
+      if lang == nil then
+        pending_bufnrs[bufnr] = nil
+        return
+      end
+      if active_lang(bufnr) == lang then
+        pending_bufnrs[bufnr] = nil
+        configure(bufnr)
+        return
+      end
+      pending_bufnrs[bufnr] = true
+    end
+
     vim.api.nvim_create_autocmd("FileType", {
+      group = augroup,
       pattern = ensure_filetypes,
       callback = function(event)
-        local bufnr = event.buf ---@type integer
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        vim.treesitter.start()
-        vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = winnr, scope = "local" })
-        vim.api.nvim_set_option_value("indentexpr", "v:lua.require'nvim-treesitter'.indentexpr()", { buf = bufnr })
+        activate(event.buf)
       end,
     })
+
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+      group = augroup,
+      callback = function(event)
+        defer_activation(event.buf)
+      end,
+    })
+
+    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI", "InsertEnter" }, {
+      group = augroup,
+      callback = function(event)
+        if pending_bufnrs[event.buf] then
+          activate(event.buf)
+        end
+      end,
+    })
+
+    vim.api.nvim_create_autocmd({ "BufUnload", "BufDelete", "BufWipeout" }, {
+      group = augroup,
+      callback = function(event)
+        pending_bufnrs[event.buf] = nil
+      end,
+    })
+
+    for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_is_valid(winnr) then
+        defer_activation(vim.api.nvim_win_get_buf(winnr))
+      end
+    end
   end,
   dependencies = {
     "nvim-treesitter-textobjects",
