@@ -5,6 +5,7 @@ use crate::session::{FocusTarget, MoveDirection};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CliCommand {
     Apply(RenderEvent),
+    BootstrapTheme(u64),
     SchedulerTick,
     DumpState,
     RenderStatus02,
@@ -25,6 +26,12 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
     match values.as_slice() {
         [] | ["help" | "--help" | "-h"] => Ok(CliCommand::Help),
         ["apply"] => Ok(CliCommand::Apply(RenderEvent::manual_apply())),
+        ["apply", "theme-loaded", generation] => {
+            parse_generation(generation).map(CliCommand::BootstrapTheme)
+        }
+        ["apply", "theme-loaded"] => Err(AppError::Usage(
+            "expected: apply theme-loaded <generation>".to_string(),
+        )),
         ["apply", event] => Ok(CliCommand::Apply(RenderEvent {
             kind: RenderEventKind::parse(event)
                 .ok_or_else(|| AppError::Usage(format!("unknown render event: {event}")))?,
@@ -58,6 +65,14 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
         ),
         [command, ..] => Err(usage_error(command)),
     }
+}
+
+fn parse_generation(value: &str) -> AppResult<u64> {
+    value.parse::<u64>().map_err(|_| {
+        AppError::Usage(format!(
+            "invalid generation for theme-loaded: expected an unsigned integer, got {value}"
+        ))
+    })
 }
 
 fn parse_layout(
@@ -139,6 +154,16 @@ mod tests {
             CliCommand::SchedulerTick
         );
         assert!(parse(args(&["scheduler-tick", "extra"])).is_err());
+    }
+
+    #[test]
+    fn bootstrap_theme_requires_a_typed_generation() {
+        assert_eq!(
+            parse(args(&["apply", "theme-loaded", "42"])).unwrap(),
+            CliCommand::BootstrapTheme(42)
+        );
+        assert!(parse(args(&["apply", "theme-loaded"])).is_err());
+        assert!(parse(args(&["apply", "theme-loaded", "bad"])).is_err());
     }
 
     #[test]

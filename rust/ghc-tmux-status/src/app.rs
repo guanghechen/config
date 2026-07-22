@@ -18,6 +18,10 @@ impl StatusApp {
         self.runtime.apply(event)
     }
 
+    pub fn bootstrap_theme(&self, expected_generation: u64) -> AppResult<()> {
+        self.runtime.bootstrap_theme(expected_generation)
+    }
+
     pub fn scheduler_tick(&self) -> AppResult<()> {
         self.runtime.scheduler_tick()
     }

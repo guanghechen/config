@@ -46,6 +46,7 @@ fn run() -> AppResult<()> {
     let app = StatusApp::live();
     match command {
         CliCommand::Apply(event) => app.apply(event),
+        CliCommand::BootstrapTheme(expected_generation) => app.bootstrap_theme(expected_generation),
         CliCommand::SchedulerTick => app.scheduler_tick(),
         CliCommand::DumpState => app.dump_state(),
         CliCommand::RenderStatus02 => app.render_status02_stdout(),
@@ -97,6 +98,7 @@ fn print_help() {
 
 USAGE:
   ghc-tmux-status apply
+  ghc-tmux-status apply theme-loaded <generation>
   ghc-tmux-status scheduler-tick
   ghc-tmux-status render status02
   ghc-tmux-status session focus <prev|next|index>

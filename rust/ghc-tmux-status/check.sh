@@ -12,7 +12,9 @@ bash -n \
   "$repo_dir/script/load-theme.sh" \
   "$repo_dir/script/status-scheduler.sh" \
   "$crate_dir/tests/driver-fault-integration.sh" \
+  "$crate_dir/tests/renderer-lifecycle-integration.sh" \
   "$crate_dir/tests/scheduler-integration.sh"
 "$crate_dir/tests/driver-fault-integration.sh"
+"$crate_dir/tests/renderer-lifecycle-integration.sh"
 "$crate_dir/tests/scheduler-integration.sh"
 git -C "$repo_dir" diff --check

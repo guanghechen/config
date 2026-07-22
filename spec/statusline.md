@@ -323,6 +323,7 @@ status           = 2
 
 ```text
 ghc-tmux-status apply
+ghc-tmux-status apply theme-loaded <generation>
 ghc-tmux-status scheduler-tick
 ghc-tmux-status render status02
 ghc-tmux-status layout <mode> <status> <width> <session-count>
@@ -358,6 +359,14 @@ binary 或 signal 等异常 process failure 按 generation fence scheduler。hoo
 直接调用与 ordering 语义，其 hang 由 Rust process watchdog 截断。最后一次成功 cache
 保持可见，并等待下一次成功 tick 或 theme reload 恢复。renderer crash、hang 和旧
 generation failure 均只允许 degrade，不能终止或持续阻塞 tmux server。
+
+`@GHC_SL_SCHED_ACTIVE/GEN` 同时是 renderer lifecycle fence：普通 hook 只在 active
+generation 下 claim snapshot 并 commit；`theme-loaded <generation>` 只在其显式持有的 fenced/inactive generation
+下 bootstrap。loader 在清理 renderer-owned options 前先置 inactive、rotate generation
+并 invalidate render revision，最后按 generation CAS 激活 scheduler。因此跨越 reload/
+fallback 的旧 hook 无法重新发布 status02。共享 session 的 rows/layout 由最窄 attached
+client 决定，而 session-scoped `status-left/right-length` 上限由最宽 client 决定，避免窄
+client 裁剪宽 client 可见内容。
 
 完整 Rust、shell 与真实 tmux 回归入口：
 

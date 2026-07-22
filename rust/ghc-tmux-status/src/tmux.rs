@@ -65,12 +65,24 @@ impl TmuxAdapter {
         parse_snapshot_output(&output)
     }
 
-    /// Starts a render revision and collects its snapshot in one tmux command
-    /// queue. A later apply replaces the server token, so this worker's eventual
-    /// commit becomes a guarded no-op instead of publishing stale state.
-    pub fn read_snapshot_for_render(&self, revision: u64) -> AppResult<TmuxSnapshot> {
-        let output = self.tmux_output(snapshot_command_args(Some(revision)))?;
-        parse_snapshot_output(&output)
+    /// Claims a render revision and collects its snapshot in one guarded tmux
+    /// command queue. A lifecycle fence can therefore reject a stale worker
+    /// before it replaces the render token, not only when it eventually commits.
+    pub fn read_snapshot_for_render(
+        &self,
+        revision: u64,
+        guards: &[TmuxOptionGuard<'_>],
+    ) -> AppResult<Option<TmuxSnapshot>> {
+        let args = if guards.is_empty() {
+            snapshot_command_args(Some(revision))
+        } else {
+            guarded_snapshot_command_args(revision, guards)
+        };
+        let output = self.tmux_output(args)?;
+        if output == RENDER_SKIPPED_MARK {
+            return Ok(None);
+        }
+        parse_snapshot_output(&output).map(Some)
     }
 
     pub fn read_session_navigation(&self) -> AppResult<SessionNavigationSnapshot> {
@@ -82,8 +94,9 @@ impl TmuxAdapter {
         &self,
         plan: &TmuxCommandPlan,
         expected_revision: u64,
-    ) -> AppResult<()> {
-        self.commit_plan_with_guards(plan, expected_revision, &[], true, None)
+        guards: &[TmuxOptionGuard<'_>],
+    ) -> AppResult<GuardedMutationOutcome> {
+        self.commit_plan_with_guards(plan, expected_revision, guards, true, None)
     }
 
     pub fn switch_client(&self, target_session_id: &str) -> AppResult<()> {
@@ -228,7 +241,7 @@ impl TmuxAdapter {
         expected_revision: u64,
         guards: &[TmuxOptionGuard<'_>],
         deadline: &OperationDeadline,
-    ) -> AppResult<()> {
+    ) -> AppResult<GuardedMutationOutcome> {
         self.commit_plan_with_guards(plan, expected_revision, guards, false, Some(deadline))
     }
 
@@ -243,33 +256,36 @@ impl TmuxAdapter {
         guards: &[TmuxOptionGuard<'_>],
         retry_individual_commands: bool,
         deadline: Option<&OperationDeadline>,
-    ) -> AppResult<()> {
+    ) -> AppResult<GuardedMutationOutcome> {
         if plan.is_empty() {
-            return Ok(());
+            return Ok(GuardedMutationOutcome::Applied);
         }
 
         for chunk in serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES) {
             if let Some(deadline) = deadline {
                 deadline.check("commit-plan")?;
             }
-            let guarded = nested_render_guard_args(expected_revision, &chunk.command_list, guards);
-            let result = self.tmux_status(guarded);
-            if result.is_ok() {
-                continue;
-            }
-            if !retry_individual_commands {
-                return result;
+            match self.render_guarded_mutation(expected_revision, &chunk.command_list, guards) {
+                Ok(GuardedMutationOutcome::Applied) => continue,
+                Ok(GuardedMutationOutcome::Skipped) => {
+                    return Ok(GuardedMutationOutcome::Skipped);
+                }
+                Err(error) if !retry_individual_commands => return Err(error),
+                Err(_) => {}
             }
 
             // Commands are idempotent. A chunk-level parser/argv failure can be
             // retried one command at a time without allowing a stale writer: both
             // guards are rebuilt around every individual mutation.
             for command in &plan.commands[chunk.range] {
-                self.tmux_status(nested_render_guard_args(
+                let outcome = self.render_guarded_mutation(
                     expected_revision,
                     &command.to_command_string(),
                     guards,
-                ))?;
+                )?;
+                if outcome == GuardedMutationOutcome::Skipped {
+                    return Ok(GuardedMutationOutcome::Skipped);
+                }
             }
         }
 
@@ -279,7 +295,27 @@ impl TmuxAdapter {
             &refresh,
             guards,
         ));
-        Ok(())
+        Ok(GuardedMutationOutcome::Applied)
+    }
+
+    fn render_guarded_mutation(
+        &self,
+        expected_revision: u64,
+        command_list: &str,
+        guards: &[TmuxOptionGuard<'_>],
+    ) -> AppResult<GuardedMutationOutcome> {
+        let output = self.tmux_output(nested_render_guard_args(
+            expected_revision,
+            command_list,
+            guards,
+        ))?;
+        match output.as_str() {
+            RENDER_APPLIED_MARK => Ok(GuardedMutationOutcome::Applied),
+            RENDER_SKIPPED_MARK => Ok(GuardedMutationOutcome::Skipped),
+            value => Err(AppError::TmuxParse(format!(
+                "unexpected render mutation result: {value}"
+            ))),
+        }
     }
 
     fn guarded_mutation(
@@ -394,6 +430,18 @@ fn snapshot_command_args(render_revision: Option<u64>) -> Vec<String> {
         "#{session_id}\t#{client_width}".to_string(),
     ]);
     args
+}
+
+fn guarded_snapshot_command_args(
+    render_revision: u64,
+    guards: &[TmuxOptionGuard<'_>],
+) -> Vec<String> {
+    let command_list = tmux_argv_sequence(&snapshot_command_args(Some(render_revision)));
+    option_guarded_command_args(
+        guards,
+        command_list,
+        Some(marker_command(RENDER_SKIPPED_MARK)),
+    )
 }
 
 fn options_command_args(options: &[(TmuxOptionScope, &str)]) -> Vec<String> {
@@ -534,15 +582,20 @@ fn nested_render_guard_args(
     command_list: &str,
     guards: &[TmuxOptionGuard<'_>],
 ) -> Vec<String> {
-    let render_guard = guarded_command_args(
-        RENDER_REVISION_OPTION,
-        expected_revision,
+    let applied_command = tmux_command_sequence(&[
         command_list.to_string(),
-    );
+        marker_command(RENDER_APPLIED_MARK),
+    ]);
+    let render_guard =
+        guarded_command_args(RENDER_REVISION_OPTION, expected_revision, applied_command);
     if guards.is_empty() {
         return render_guard;
     }
-    option_guarded_command_args(guards, tmux_command_string(&render_guard), None)
+    option_guarded_command_args(
+        guards,
+        tmux_command_string(&render_guard),
+        Some(marker_command(RENDER_SKIPPED_MARK)),
+    )
 }
 
 fn guarded_command_args(option: &str, expected_value: u64, command_list: String) -> Vec<String> {
@@ -551,6 +604,7 @@ fn guarded_command_args(option: &str, expected_value: u64, command_list: String)
         "-F".to_string(),
         format!("#{{==:#{{{option}}},{expected_value}}}"),
         command_list,
+        marker_command(RENDER_SKIPPED_MARK),
     ]
 }
 
@@ -638,6 +692,14 @@ fn format_literal(value: &str) -> String {
 
 fn tmux_command_sequence(commands: &[String]) -> String {
     commands.join("; ")
+}
+
+fn tmux_argv_sequence(args: &[String]) -> String {
+    args.split(|argument| argument == ";")
+        .filter(|command| !command.is_empty())
+        .map(tmux_command_string)
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
@@ -891,6 +953,8 @@ const OPTIONS_END_MARK: &str = "__GHC_STATUS_OPTIONS_END__";
 const OPTION_VALUE_MARK_PREFIX: &str = "\u{1e}__GHC_STATUS_OPTION_";
 const SESSIONS_MARK: &str = "__GHC_STATUS_SESSIONS__";
 const CLIENTS_MARK: &str = "__GHC_STATUS_CLIENTS__";
+const RENDER_APPLIED_MARK: &str = "__GHC_RENDER_APPLIED__";
+const RENDER_SKIPPED_MARK: &str = "__GHC_RENDER_SKIPPED__";
 const SCHEDULER_APPLIED_MARK: &str = "__GHC_SCHEDULER_APPLIED__";
 const SCHEDULER_SKIPPED_MARK: &str = "__GHC_SCHEDULER_SKIPPED__";
 
@@ -967,10 +1031,11 @@ mod tests {
         CONTEXT_MARK, FIELD_SEP, GuardedMutationOutcome, NAVIGATION_MARK, OPTIONS_END_MARK,
         OPTIONS_MARK, SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK,
         SNAPSHOT_OPTIONS, TmuxOptionGuard, TmuxOptionScope, cache_witness_format,
-        combined_guard_format, format_literal, nested_render_guard_args, option_value_mark,
-        options_command_args, parse_client_line, parse_guarded_options_output,
-        parse_options_output, parse_session_line, parse_session_navigation_output,
-        parse_snapshot_output, serialized_plan_chunks, snapshot_command_args,
+        combined_guard_format, format_literal, guarded_snapshot_command_args,
+        nested_render_guard_args, option_value_mark, options_command_args, parse_client_line,
+        parse_guarded_options_output, parse_options_output, parse_session_line,
+        parse_session_navigation_output, parse_snapshot_output, serialized_plan_chunks,
+        snapshot_command_args,
     };
     use crate::commit::{TmuxCommand, TmuxCommandPlan};
     use crate::config::RENDER_REVISION_OPTION;
@@ -1071,6 +1136,23 @@ $2	90"
         let args = snapshot_command_args(Some(42));
         assert_eq!(&args[..4], ["set", "-s", RENDER_REVISION_OPTION, "42"]);
         assert_eq!(args[4], ";");
+    }
+
+    #[test]
+    fn guarded_render_snapshot_checks_lifecycle_before_replacing_revision() {
+        let args = guarded_snapshot_command_args(
+            42,
+            &[TmuxOptionGuard {
+                option: "@GHC_SL_SCHED_ACTIVE",
+                expected: "1",
+            }],
+        );
+
+        assert_eq!(args[0], "if-shell");
+        assert_eq!(args[2], "#{==:#{@GHC_SL_SCHED_ACTIVE},#{l:1}}");
+        assert!(args[3].contains("@GHC_SL_RENDER_REV"));
+        assert!(args[3].contains("__GHC_STATUS_CONTEXT__"));
+        assert!(args[4].contains("__GHC_RENDER_SKIPPED__"));
     }
 
     #[test]

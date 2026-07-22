@@ -10,10 +10,11 @@ use crate::config::{
 };
 use crate::process::OperationDeadline;
 
-// load-theme is the single writer for scheduler lifecycle (active + generation).
-// This module owns each task state and advances it one way: observed -> claimed ->
-// completed. A claim/publish timeout is intentionally not retried because tmux may
-// already have committed it; the lease is the only recovery writer after ambiguity.
+// load-theme is the single writer for renderer lifecycle (active + generation).
+// The same fence gates standard renders and scheduler work. This module owns each
+// task state and advances it one way: observed -> claimed -> completed. A
+// claim/publish timeout is intentionally not retried because tmux may already have
+// committed it; the lease is the only recovery writer after ambiguity.
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SchedulerTask {

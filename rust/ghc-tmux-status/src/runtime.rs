@@ -54,6 +54,9 @@ const METRIC_CLAIM_OPTIONS: &[(TmuxOptionScope, &str)] = &[
 #[derive(Clone, Copy)]
 enum ApplyMode<'a> {
     Standard,
+    Bootstrap {
+        expected_generation: u64,
+    },
     Scheduler {
         claim: &'a ClaimPlan,
         deadline: &'a OperationDeadline,
@@ -68,15 +71,52 @@ impl StatusRuntime {
     }
 
     pub fn apply(&self, event: RenderEvent) -> AppResult<()> {
-        self.apply_inner(event, ApplyMode::Standard)
+        self.apply_inner(event, ApplyMode::Standard).map(|_| ())
     }
 
-    fn apply_inner(&self, event: RenderEvent, mode: ApplyMode<'_>) -> AppResult<()> {
+    pub fn bootstrap_theme(&self, expected_generation: u64) -> AppResult<()> {
+        const MAX_BOOTSTRAP_ATTEMPTS: usize = 3;
+
+        for _ in 0..MAX_BOOTSTRAP_ATTEMPTS {
+            let outcome = self.apply_inner(
+                RenderEvent {
+                    kind: RenderEventKind::ThemeLoaded,
+                },
+                ApplyMode::Bootstrap {
+                    expected_generation,
+                },
+            )?;
+            if outcome == GuardedMutationOutcome::Applied {
+                return Ok(());
+            }
+        }
+
+        Err(AppError::Render(format!(
+            "theme bootstrap did not acquire lifecycle generation {expected_generation}"
+        )))
+    }
+
+    fn apply_inner(
+        &self,
+        event: RenderEvent,
+        mode: ApplyMode<'_>,
+    ) -> AppResult<GuardedMutationOutcome> {
         check_apply_deadline(mode, "start")?;
         let total_start = Instant::now();
         let context_start = Instant::now();
         let render_revision = next_render_revision();
-        let context_state = self.live_context_state(Some(render_revision))?;
+        let Some(snapshot) = self.read_apply_snapshot(render_revision, mode)? else {
+            self.trace_apply(|| {
+                format!(
+                    "event={} action=lifecycle-skipped total_ms={:.2}",
+                    event.kind.as_str(),
+                    duration_ms(total_start.elapsed())
+                )
+            });
+            return Ok(GuardedMutationOutcome::Skipped);
+        };
+        let lifecycle_generation = lifecycle_generation(&snapshot)?;
+        let context_state = context_state_from_snapshot(snapshot);
         check_apply_deadline(mode, "read-context")?;
         let context_ms = duration_ms(context_start.elapsed());
         let context = match context_state {
@@ -87,7 +127,7 @@ impl StatusRuntime {
                 let plan_commands = plan.commands.len();
                 let plan_ms = duration_ms(plan_start.elapsed());
                 let commit_start = Instant::now();
-                let result = self.commit_plan(&plan, render_revision, mode);
+                let result = self.commit_plan(&plan, render_revision, mode, &lifecycle_generation);
                 self.trace_apply(|| {
                     format!(
                         "event={} active=false context_ms={context_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
@@ -113,7 +153,12 @@ impl StatusRuntime {
         let plan_ms = duration_ms(plan_start.elapsed());
         let is_noop = plan.is_empty();
         if is_noop {
-            let result = self.commit_plan(&TmuxCommandPlan::default(), render_revision, mode);
+            let result = self.commit_plan(
+                &TmuxCommandPlan::default(),
+                render_revision,
+                mode,
+                &lifecycle_generation,
+            );
             self.trace_apply(|| {
                 format!(
                     "event={} active=true noop=true layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2}",
@@ -127,7 +172,7 @@ impl StatusRuntime {
         }
 
         let commit_start = Instant::now();
-        let result = self.commit_plan(&plan, render_revision, mode);
+        let result = self.commit_plan(&plan, render_revision, mode, &lifecycle_generation);
         self.trace_apply(|| {
             format!(
                 "event={} active=true noop=false layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
@@ -601,9 +646,47 @@ impl StatusRuntime {
         plan: &TmuxCommandPlan,
         render_revision: u64,
         mode: ApplyMode<'_>,
-    ) -> AppResult<()> {
+        lifecycle_generation: &str,
+    ) -> AppResult<GuardedMutationOutcome> {
         match mode {
-            ApplyMode::Standard => self.tmux.commit_plan_guarded(plan, render_revision),
+            ApplyMode::Standard => self.tmux.commit_plan_guarded(
+                plan,
+                render_revision,
+                &[
+                    TmuxOptionGuard {
+                        option: SCHEDULER_ACTIVE_OPTION,
+                        expected: "1",
+                    },
+                    TmuxOptionGuard {
+                        option: SCHEDULER_GENERATION_OPTION,
+                        expected: lifecycle_generation,
+                    },
+                ],
+            ),
+            ApplyMode::Bootstrap {
+                expected_generation,
+            } => {
+                let expected_generation = expected_generation.to_string();
+                if lifecycle_generation != expected_generation {
+                    return Err(AppError::TmuxParse(format!(
+                        "theme bootstrap generation drifted: expected {expected_generation}, got {lifecycle_generation}"
+                    )));
+                }
+                self.tmux.commit_plan_guarded(
+                    plan,
+                    render_revision,
+                    &[
+                        TmuxOptionGuard {
+                            option: SCHEDULER_ACTIVE_OPTION,
+                            expected: "0",
+                        },
+                        TmuxOptionGuard {
+                            option: SCHEDULER_GENERATION_OPTION,
+                            expected: &expected_generation,
+                        },
+                    ],
+                )
+            }
             ApplyMode::Scheduler { claim, deadline } => {
                 deadline.check("commit-render")?;
                 let generation = claim.generation.to_string();
@@ -628,20 +711,62 @@ impl StatusRuntime {
             .ok_or_else(|| AppError::Render("status02 layout is not active".to_string()))
     }
 
-    fn live_context_state(&self, render_revision: Option<u64>) -> AppResult<LiveContextState> {
-        let snapshot = match render_revision {
-            Some(revision) => self.tmux.read_snapshot_for_render(revision)?,
-            None => self.tmux.read_snapshot()?,
-        };
-        Ok(context_state_from_snapshot(snapshot))
+    fn read_apply_snapshot(
+        &self,
+        render_revision: u64,
+        mode: ApplyMode<'_>,
+    ) -> AppResult<Option<TmuxSnapshot>> {
+        match mode {
+            ApplyMode::Standard => self.tmux.read_snapshot_for_render(
+                render_revision,
+                &[TmuxOptionGuard {
+                    option: SCHEDULER_ACTIVE_OPTION,
+                    expected: "1",
+                }],
+            ),
+            ApplyMode::Bootstrap {
+                expected_generation,
+            } => {
+                let expected_generation = expected_generation.to_string();
+                self.tmux.read_snapshot_for_render(
+                    render_revision,
+                    &[
+                        TmuxOptionGuard {
+                            option: SCHEDULER_ACTIVE_OPTION,
+                            expected: "0",
+                        },
+                        TmuxOptionGuard {
+                            option: SCHEDULER_GENERATION_OPTION,
+                            expected: &expected_generation,
+                        },
+                    ],
+                )
+            }
+            ApplyMode::Scheduler { claim, .. } => {
+                let generation = claim.generation.to_string();
+                self.tmux.read_snapshot_for_render(
+                    render_revision,
+                    &scheduler_guards(claim, &generation, &claim.claimed_state),
+                )
+            }
+        }
     }
 }
 
 fn check_apply_deadline(mode: ApplyMode<'_>, phase: &str) -> AppResult<()> {
     match mode {
         ApplyMode::Scheduler { deadline, .. } => deadline.check(phase),
-        ApplyMode::Standard => Ok(()),
+        ApplyMode::Standard | ApplyMode::Bootstrap { .. } => Ok(()),
     }
+}
+
+fn lifecycle_generation(snapshot: &TmuxSnapshot) -> AppResult<String> {
+    let generation = snapshot
+        .options
+        .get(SCHEDULER_GENERATION_OPTION)
+        .filter(|value| value.parse::<u64>().is_ok())
+        .ok_or_else(|| AppError::TmuxParse("invalid scheduler generation".to_string()))?;
+    Ok(generation.clone())
 }
 
 fn scheduler_guards<'a>(
@@ -748,7 +873,7 @@ fn rows_override(snapshot: &TmuxSnapshot) -> RowsOverride {
 /// sessions (no client width) are skipped until a client attaches and an event
 /// re-reconciles them.
 fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
-    let min_widths = min_client_widths(&snapshot.client_widths);
+    let width_ranges = client_width_ranges(&snapshot.client_widths);
     let group_counts = SessionGrouper::counts(&snapshot.sessions);
     let rows = rows_override(snapshot);
     let mut session_layouts = Vec::new();
@@ -756,14 +881,16 @@ fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
         if session.status == "off" {
             continue;
         }
-        let Some(&width) = min_widths.get(session.id.as_str()) else {
+        let Some(&(layout_width, status_length_width)) = width_ranges.get(session.id.as_str())
+        else {
             continue;
         };
         let count = group_counts
             .get(&SessionGrouper::key(&session.name))
             .copied()
             .unwrap_or_default();
-        let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", width, count, rows) else {
+        let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", layout_width, count, rows)
+        else {
             continue;
         };
         session_layouts.push(SessionLayout {
@@ -779,23 +906,29 @@ fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
             current_cache_witnesses: session.cache_witnesses.clone(),
             session_created: session.created,
             layout,
-            width,
+            status_length_width,
         });
     }
     session_layouts
 }
 
-/// Minimum attached-client width per session id. A session shared by several
-/// clients sizes to its narrowest client, matching tmux `window-size smallest`.
-fn min_client_widths(client_widths: &[(String, usize)]) -> std::collections::BTreeMap<&str, usize> {
-    let mut min_widths: std::collections::BTreeMap<&str, usize> = std::collections::BTreeMap::new();
+/// Narrowest and widest attached-client widths per session id. Rows are shared
+/// session state and resolve from the minimum; status-length maxima resolve from
+/// the maximum so a narrow peer cannot clip content on a wider client.
+fn client_width_ranges(
+    client_widths: &[(String, usize)],
+) -> std::collections::BTreeMap<&str, (usize, usize)> {
+    let mut ranges = std::collections::BTreeMap::new();
     for (session_id, width) in client_widths {
-        min_widths
+        ranges
             .entry(session_id.as_str())
-            .and_modify(|current| *current = (*current).min(*width))
-            .or_insert(*width);
+            .and_modify(|(min, max): &mut (usize, usize)| {
+                *min = (*min).min(*width);
+                *max = (*max).max(*width);
+            })
+            .or_insert((*width, *width));
     }
-    min_widths
+    ranges
 }
 
 enum LiveContextState {
@@ -990,7 +1123,7 @@ mod tests {
         METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
     };
     use crate::layout::LayoutEngine;
-    use crate::model::{RenderContext, RowsOverride, SessionInfo, TmuxSnapshot};
+    use crate::model::{LayoutKind, RenderContext, RowsOverride, SessionInfo, TmuxSnapshot};
 
     fn session(id: &str, name: &str, status: &str) -> SessionInfo {
         SessionInfo {
@@ -1033,6 +1166,35 @@ mod tests {
         let layouts = resolve_session_layouts(&snapshot);
         assert_eq!(layouts.len(), 1);
         assert_eq!(layouts[0].session_id, "$1");
+    }
+
+    #[test]
+    fn resolve_session_layouts_uses_min_width_for_rows_and_max_width_for_lengths() {
+        let snapshot = TmuxSnapshot {
+            mode: "02".to_string(),
+            status: "on".to_string(),
+            width: 90,
+            current_session_name: "main".to_string(),
+            client_last_session: String::new(),
+            host: "h".to_string(),
+            session_created: 1,
+            sessions: vec![session("$1", "main", "on"), session("$2", "work", "on")],
+            client_widths: vec![
+                ("$1".to_string(), 90),
+                ("$1".to_string(), 300),
+                ("$2".to_string(), 300),
+            ],
+            options: BTreeMap::new(),
+        };
+
+        let layouts = resolve_session_layouts(&snapshot);
+        let main = layouts
+            .iter()
+            .find(|layout| layout.session_id == "$1")
+            .unwrap();
+
+        assert_eq!(main.layout.kind, LayoutKind::Narrow);
+        assert_eq!(main.status_length_width, 300);
     }
 
     #[test]

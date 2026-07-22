@@ -94,20 +94,47 @@ function _ghc_tmux_new_generation_ {
     "$(date +%s)" "$(( $$ % 100000 ))" "$(( RANDOM % 10000 ))"
 }
 
+_GHC_TMUX_STATUS_FENCED_GENERATION=""
+
 # Fence every prior status02 scheduler before changing formats. ACTIVE is the
-# first mutation, so even a partially executed command leaves old workers unable
-# to publish. A retry covers an ambiguous client failure after server commit.
+# first mutation; GEN fences task commits; RENDER_REV fences ordinary hook commits.
+# A retry covers an ambiguous client failure after server commit.
 function _ghc_tmux_fence_scheduler_ {
   local attempt generation
   for attempt in 1 2; do
     generation=$(_ghc_tmux_new_generation_)
     if tmux set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
-            set -s @GHC_SL_SCHED_GEN "$generation"; then
+            set -s @GHC_SL_SCHED_GEN "$generation" ';' \
+            set -s @GHC_SL_RENDER_REV "fenced:$generation"; then
+      _GHC_TMUX_STATUS_FENCED_GENERATION=$generation
       return 0
     fi
   done
   tmux set -s @GHC_SL_SCHED_ACTIVE 0 2>/dev/null || true
   return 1
+}
+
+# Only the loader that owns the current lifecycle generation may activate the
+# scheduler. A superseded loader returns 2 so it can stop without fencing the
+# newer owner during fallback cleanup.
+function _ghc_tmux_activate_status_scheduler_ {
+  local generation=$1
+  local status_mode=$2
+  local outcome
+  if ! [[ "$generation" =~ ^[0-9]+$ ]] \
+    || ! [[ "$status_mode" =~ ^(02|12)$ ]]; then
+    return 1
+  fi
+  outcome=$(tmux if-shell -F \
+    "#{&&:#{==:#{@GHC_SL_SCHED_GEN},#{l:$generation}},#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},0},#{==:#{@GHC_SL_MODE},#{l:$status_mode}}}}" \
+    'set -s @GHC_SL_SCHED_ACTIVE 1 ; display-message -p __GHC_SCHED_ACTIVATED__' \
+    'display-message -p __GHC_SCHED_SUPERSEDED__' \
+    2>/dev/null) || return 1
+  case "$outcome" in
+    "__GHC_SCHED_ACTIVATED__") return 0 ;;
+    "__GHC_SCHED_SUPERSEDED__") return 2 ;;
+    *) return 1 ;;
+  esac
 }
 
 function _ghc_tmux_load_status01_ {
@@ -156,10 +183,6 @@ function _ghc_tmux_load_theme_ {
   fi
 
   _ghc_tmux_unset_status_layout_hooks_
-  tmux set -gu status-format 2>/dev/null || true
-  tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
-  _ghc_tmux_reset_per_session_layout_
-
   local status_position="top"
   if [ "$status_mode" == "11" ] || [ "$status_mode" == "12" ]; then
     status_position="bottom"
@@ -175,6 +198,12 @@ function _ghc_tmux_load_theme_ {
     tmux set -g @GHC_SL_MODE "$status_mode" 2>/dev/null || true
   fi
   _ghc_tmux_recover_status_scheduler_lock_
+
+  # Lifecycle is fenced before the first renderer-owned reset, so an in-flight
+  # hook cannot publish stale status02 options over the selected mode.
+  tmux set -gu status-format 2>/dev/null || true
+  tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
+  _ghc_tmux_reset_per_session_layout_
 
   case "$status_mode" in
     "01" | "11")
@@ -203,7 +232,17 @@ function _ghc_tmux_load_theme_ {
         tmux set-hook -g 'session-renamed[40]' "run-shell '$status_renderer apply session-renamed'"
         tmux set-hook -g 'session-window-changed[40]' "run-shell '$status_renderer apply window-changed'"
 
-        if ! "$status_renderer" apply theme-loaded; then
+        local bootstrap_generation="$_GHC_TMUX_STATUS_FENCED_GENERATION"
+        if ! "$status_renderer" apply theme-loaded "$bootstrap_generation"; then
+          # A newer loader owns the lifecycle now. This stale loader must stop;
+          # falling back would rotate the new owner's generation and undo it.
+          # A failed generation read cannot prove supersession, so it falls
+          # through to fail-closed status01 cleanup.
+          local current_generation
+          if current_generation=$(tmux show -sqv @GHC_SL_SCHED_GEN 2>/dev/null) \
+            && [ "$current_generation" != "$bootstrap_generation" ]; then
+            return 0
+          fi
           # Guarded replay can fail after committing a prefix of the plan. Fence
           # workers before rolling every renderer-owned local option back.
           _ghc_tmux_status02_fallback_ "$status_position" \
@@ -222,10 +261,19 @@ function _ghc_tmux_load_theme_ {
           fi
           # status-left/status-format[0] own the tmux-managed #() driver. CAS +
           # leases inside the renderer deduplicate per-client invocations.
-          if ! tmux set -s @GHC_SL_SCHED_ACTIVE 1; then
-            _ghc_tmux_status02_fallback_ "$status_position" \
-              "Status scheduler activation failed; fallback to status01"
-          fi
+          local activation_status
+          _ghc_tmux_activate_status_scheduler_ \
+            "$bootstrap_generation" "$status_mode"
+          activation_status=$?
+          case "$activation_status" in
+            0) ;;
+            # A newer loader owns lifecycle state and will finish initialization.
+            2) return 0 ;;
+            *)
+              _ghc_tmux_status02_fallback_ "$status_position" \
+                "Status scheduler activation failed; fallback to status01"
+              ;;
+          esac
         fi
       fi
       ;;

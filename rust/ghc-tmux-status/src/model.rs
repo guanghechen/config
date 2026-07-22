@@ -243,7 +243,10 @@ pub struct SessionLayout {
     pub current_cache_witnesses: [String; 4],
     pub session_created: i64,
     pub layout: LayoutPlan,
-    pub width: usize,
+    /// Widest attached client for this session. Layout rows are resolved from
+    /// the narrowest client, but the shared status-length ceiling must still
+    /// accommodate content visible on wider clients.
+    pub status_length_width: usize,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

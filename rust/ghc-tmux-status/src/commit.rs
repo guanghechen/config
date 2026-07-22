@@ -242,13 +242,13 @@ impl CommitPlanner {
                 &mut plan,
                 session_target,
                 "status-left-length",
-                &status_left_length_for_width(status, session_layout.width),
+                &status_left_length_for_width(status, session_layout.status_length_width),
             );
             push_set_session_target(
                 &mut plan,
                 session_target,
                 "status-right-length",
-                &status_right_length_for_width(status, session_layout.width),
+                &status_right_length_for_width(status, session_layout.status_length_width),
             );
             push_set_session_target(
                 &mut plan,
@@ -303,9 +303,9 @@ pub fn session_layout_settled(
     session_layout.current_layout_key == session_layout.layout.key
         && session_layout.current_status == session_layout.layout.target_status
         && session_layout.current_left_length
-            == status_left_length_for_width(status, session_layout.width)
+            == status_left_length_for_width(status, session_layout.status_length_width)
         && session_layout.current_right_length
-            == status_right_length_for_width(status, session_layout.width)
+            == status_right_length_for_width(status, session_layout.status_length_width)
         && session_layout.current_render_key == target_render_key(session_layout, render_key)
         && session_layout
             .current_cache_witnesses
@@ -472,7 +472,7 @@ mod tests {
                 target_status: target_status.to_string(),
                 key: target_key.to_string(),
             },
-            width: 200,
+            status_length_width: 200,
         }
     }
 

@@ -24,6 +24,8 @@ pub const HEARTBEAT_EXECUTION_LEASE_SECONDS: u64 = 20;
 // window tolerates the tmux #() driver cadence, process startup, and rounding.
 pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = METRIC_RESAMPLE_INTERVAL_SECONDS * 2;
 
+// load-theme owns this lifecycle pair. Standard renders require ACTIVE=1,
+// bootstrap requires ACTIVE=0, and every commit retains the observed GEN.
 pub const SCHEDULER_ACTIVE_OPTION: &str = "@GHC_SL_SCHED_ACTIVE";
 pub const SCHEDULER_GENERATION_OPTION: &str = "@GHC_SL_SCHED_GEN";
 pub const METRIC_SCHEDULER_STATE_OPTION: &str = "@GHC_SL_METRIC_SCHED";
