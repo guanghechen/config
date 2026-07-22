@@ -185,6 +185,7 @@
     "**/.idea": true
   },
   "git.autoRepositoryDetection": false,
+  "git.branchProtection": ["main", "master"],
   "git.mergeEditor": false,
   "git.openRepositoryInParentFolders": "never",
   "git.showPushSuccessNotification": true,
@@ -220,6 +221,7 @@
   "notebook.lineNumbers": "on",
   "npm.packageManager": "yarn",
   "nxConsole.showNodeVersionOnStartup": false,
+  "prettier.requireConfig": true,
   "remote.defaultExtensionsIfInstalledLocally": [
     "GitHub.copilot",
     "GitHub.copilot-chat",
@@ -235,6 +237,8 @@
   "search.showLineNumbers": true,
   "security.workspace.trust.untrustedFiles": "prompt",
   "settingsSync.ignoredExtensions": ["github.copilot", "github.copilot-chat"],
+  "telemetry.feedback.enabled": false,
+  "telemetry.telemetryLevel": "off",
   "terminal.explorerKind": "integrated",
   "terminal.integrated.cursorBlinking": true,
   "terminal.integrated.env.linux": {
@@ -302,9 +306,12 @@
   "window.titleBarStyle": "custom",
   "workbench.activityBar.location": "top",
   "workbench.commandPalette.history": 1024,
+  "workbench.enableExperiments": false,
   "workbench.editor.enablePreview": false,
   "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.excludeDirty": true,
   "workbench.editor.limit.perEditorGroup": true,
+  "workbench.editor.limit.value": 20,
   "workbench.editor.splitInGroupLayout": "vertical",
   "workbench.editor.splitSizing": "split",
   "workbench.editor.tabActionCloseVisibility": false,
@@ -314,6 +321,15 @@
   },
   "workbench.iconTheme": "vscode-icons",
   "workbench.layoutControl.enabled": false,
+  "workbench.localHistory.exclude": {
+    "**/.env*": true,
+    "**/.ssh/**": true,
+    "**/.git-credentials": true,
+    "**/*.pem": true,
+    "**/*.key": true,
+    "**/*.http_request": true,
+    "**/*.http_response": true
+  },
   "workbench.panel.defaultLocation": "bottom",
   "workbench.settings.openDefaultKeybindings": true,
   "workbench.settings.openDefaultSettings": true,
