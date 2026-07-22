@@ -105,7 +105,6 @@ function M.setup_workspace()
     local p = vim.fn.expand("%:p:h")
 
     local A = stl.env.locate_gitroot(p)
-    local B = stl.env.locate_gitroot(cwd)
 
     if A == nil then
       local ok, err = pcall(function()
@@ -128,25 +127,28 @@ function M.setup_workspace()
           })
         end)
       end
-    elseif A ~= B then
-      local ok, err = pcall(function()
-        vim.api.nvim_set_current_dir(A)
-      end)
-      if not ok then
-        local message = "Failed to change directory to git repo" ---@type string
-        local details = { repopath = A, error = err } ---@type table
-        message = message .. "\n\n" .. "```json\n" .. vim.inspect(details, { newline = "\n" }) .. "\n```" ---@type string
-
-        vim.schedule(function()
-          vim.notify(message, vim.log.levels.WARN, {
-            group = nil,
-            title = string.format("%s | %s", __module_name__, "setup_workspace"),
-            timeout = 3000,
-            message = message,
-            anonymous = false,
-            silent = false,
-          })
+    else
+      local B = stl.env.locate_gitroot(cwd)
+      if A ~= B then
+        local ok, err = pcall(function()
+          vim.api.nvim_set_current_dir(A)
         end)
+        if not ok then
+          local message = "Failed to change directory to git repo" ---@type string
+          local details = { repopath = A, error = err } ---@type table
+          message = message .. "\n\n" .. "```json\n" .. vim.inspect(details, { newline = "\n" }) .. "\n```" ---@type string
+
+          vim.schedule(function()
+            vim.notify(message, vim.log.levels.WARN, {
+              group = nil,
+              title = string.format("%s | %s", __module_name__, "setup_workspace"),
+              timeout = 3000,
+              message = message,
+              anonymous = false,
+              silent = false,
+            })
+          end)
+        end
       end
     end
   end
