@@ -65,6 +65,25 @@ function M.get_capabilities()
   capabilities.workspace.fileOperations = capabilities.workspace.fileOperations or {}
   capabilities.workspace.fileOperations.didRename = true
   capabilities.workspace.fileOperations.willRename = true
+
+  -- Capability negotiation belongs to the LSP boundary. Loading the completion UI here would
+  -- bypass its InsertEnter/CmdlineEnter lazy lifecycle.
+  local completion = capabilities.textDocument.completion
+  local completion_item = completion.completionItem
+  local resolve_properties = completion_item.resolveSupport.properties
+  for _, property in ipairs({ "detail", "data" }) do
+    if not vim.list_contains(resolve_properties, property) then
+      resolve_properties[#resolve_properties + 1] = property
+    end
+  end
+  completion_item.insertTextModeSupport = { valueSet = { 1 } }
+
+  local item_defaults = completion.completionList.itemDefaults
+  if not vim.list_contains(item_defaults, "commitCharacters") then
+    item_defaults[#item_defaults + 1] = "commitCharacters"
+  end
+  completion.insertTextMode = 1
+
   return capabilities
 end
 
@@ -72,11 +91,6 @@ end
 ---@param config                        table
 ---@diagnostic disable-next-line: unused-local
 function M.before_init(params, config)
-  local has_blink, blink = pcall(require, "blink.cmp")
-  if has_blink then
-    params.capabilities = vim.tbl_deep_extend("force", params.capabilities, blink.get_lsp_capabilities({}, false))
-  end
-
   local capabilities = params.capabilities ---@type lsp.ClientCapabilities
   capabilities.textDocument = capabilities.textDocument or {}
   capabilities.textDocument.completion = capabilities.textDocument.completion or {}

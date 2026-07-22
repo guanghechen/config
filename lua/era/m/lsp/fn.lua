@@ -142,7 +142,6 @@ end
 ---@param silent                        ?boolean
 ---@return string|nil
 function M.locate_mason_pkg_path(pkg, pkg_path, silent)
-  pcall(require, "mason") -- make sure Mason is loaded. Will fail when generating docs
   local root = vim.env.MASON or (stl.env.HOME_NVIM_DATA .. stl.env.PATH_SEP .. "mason")
   local filepath = root .. "/packages/" .. pkg .. "/" .. pkg_path
 
