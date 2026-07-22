@@ -3,6 +3,9 @@
 local M = {}
 M.__index = M
 
+---@type table<string, stl.c.Future>
+local create_inflight = {}
+
 ---@param gitdir                      string
 ---@return string|nil
 local function resolve_commondir(gitdir)
@@ -29,7 +32,12 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with ?era.m.git.Repo
 function M.create(toplevel, token)
-  return stl.c.Future.new(function(resolve)
+  -- Token-owned requests must keep independent cancellation boundaries.
+  if token == nil and create_inflight[toplevel] then
+    return create_inflight[toplevel]
+  end
+
+  local future = stl.c.Future.new(function(resolve)
     if token and token:is_cancelled() then
       resolve(nil)
       return
@@ -54,6 +62,17 @@ function M.create(toplevel, token)
       resolve(self)
     end)
   end)
+
+  if token == nil then
+    create_inflight[toplevel] = future
+    future:finally(function()
+      if create_inflight[toplevel] == future then
+        create_inflight[toplevel] = nil
+      end
+    end)
+  end
+
+  return future
 end
 
 ---@param file                       string
