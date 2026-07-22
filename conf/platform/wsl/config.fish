@@ -9,6 +9,7 @@ set -gx BROWSER "/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.ex
 set -gx f_windows_terminal_settings "/mnt/c/Users/$GHC_WINDOWS_USERNAME/AppData/Local/Packages/Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe/LocalState/settings.json"
 set -gx f_windows_download "/mnt/c/Users/$GHC_WINDOWS_USERNAME/Downloads"
 set -gx f_vscode_keybindings "/mnt/c/Users/$GHC_WINDOWS_USERNAME/AppData/Roaming/Code/User/keybindings.json"
+set -gx f_vscode_settings "/mnt/c/Users/$GHC_WINDOWS_USERNAME/AppData/Roaming/Code/User/settings.json"
 
 ## Aliases
 alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.

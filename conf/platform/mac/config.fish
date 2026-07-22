@@ -11,6 +11,7 @@ set -gx PATH $new_path
 ## Variables
 set -gx ghc_vpn_host_ip '127.0.0.1'
 set -gx f_vscode_keybindings "$HOME/Library/Application Support/Code/User/keybindings.json"
+set -gx f_vscode_settings "$HOME/Library/Application Support/Code/User/settings.json"
 set -gx f_cline_settings "$HOME/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
 
 ## llvm
