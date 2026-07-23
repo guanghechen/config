@@ -85,18 +85,20 @@ local sign_cache = {} ---@type table<number,table<number, era.m.statuscolumn.ISi
 local icon_cache = {} ---@type table<string, string>
 local cache = {} ---@type table<string, string>
 
-local did_setup = false
+local cache_timer ---@type uv.uv_timer_t|nil
 
 ---@return nil
-local function setup()
-  if not did_setup then
-    did_setup = true
-    local timer = assert(vim.uv.new_timer())
-    timer:start(config.refresh, config.refresh, function()
-      sign_cache = {}
-      cache = {}
-    end)
+local function schedule_cache_expiration()
+  if cache_timer == nil then
+    cache_timer = assert(vim.uv.new_timer())
+  elseif cache_timer:is_active() then
+    return
   end
+
+  cache_timer:start(config.refresh, 0, function()
+    sign_cache = {}
+    cache = {}
+  end)
 end
 
 ---@param signs_by_type                 table<era.m.statuscolumn.SignType, era.m.statuscolumn.ISign>
@@ -220,7 +222,7 @@ end
 
 ---@return string
 local function statuscolumn()
-  setup()
+  schedule_cache_expiration()
 
   local winnr = vim.g.statusline_winid ---@type integer
   local nu = vim.api.nvim_get_option_value("number", { win = winnr }) ---@type boolean
