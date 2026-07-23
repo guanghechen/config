@@ -440,6 +440,11 @@
     "command": "-editor.action.clipboardPasteAction"
   },
   {
+    "key": "shift+f7",
+    "command": "-editor.action.accessibleDiffViewer.prev",
+    "when": "isInDiffEditor"
+  },
+  {
     "key": "f5",
     "command": "-debug.openView",
     "when": "!debuggersAvailable"
@@ -447,6 +452,11 @@
   {
     "key": "f6",
     "command": "-workbench.action.focusNextPart"
+  },
+  {
+    "key": "f7",
+    "command": "-editor.action.accessibleDiffViewer.next",
+    "when": "isInDiffEditor"
   },
   {
     "key": "f10",

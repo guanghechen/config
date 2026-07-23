@@ -985,6 +985,11 @@
     "when": "editorTextFocus && parameterHintsMultipleSignatures && parameterHintsVisible"
   },
   {
+    "key": "shift+f7",
+    "command": "-editor.action.accessibleDiffViewer.prev",
+    "when": "isInDiffEditor"
+  },
+  {
     "key": "f1",
     "command": "-workbench.action.showCommands"
   },
@@ -1006,11 +1011,6 @@
     "key": "f7",
     "command": "-editor.action.accessibleDiffViewer.next",
     "when": "isInDiffEditor"
-  },
-  {
-    "key": "f7",
-    "command": "-editor.action.wordHighlight.next",
-    "when": "editorTextFocus && hasWordHighlights"
   },
   {
     "key": "f10",
@@ -1835,6 +1835,11 @@
     "when": "inReferenceSearchEditor || referenceSearchVisible"
   },
   {
+    "key": "shift+f7",
+    "command": "editor.action.wordHighlight.prev",
+    "when": "editorTextFocus && hasWordHighlights"
+  },
+  {
     "key": "shift+f8",
     "command": "editor.action.marker.prevInFiles",
     "when": "editorFocus"
@@ -1888,6 +1893,11 @@
     "key": "f6",
     "command": "workbench.action.debug.pause",
     "when": "debugState == 'running'"
+  },
+  {
+    "key": "f7",
+    "command": "editor.action.wordHighlight.next",
+    "when": "editorTextFocus && hasWordHighlights"
   },
   {
     "key": "f8",
