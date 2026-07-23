@@ -87,11 +87,22 @@ local function enable_lsp_for_filetype(ft)
     return
   end
 
+  local lsp_servers_to_enable = {} ---@type string[]
   for _, lsp in ipairs(lsp_servers) do
     if not enabled_lsp_set[lsp] then
-      enabled_lsp_set[lsp] = true
-      vim.lsp.enable(lsp)
+      lsp_servers_to_enable[#lsp_servers_to_enable + 1] = lsp
     end
+  end
+
+  if #lsp_servers_to_enable < 1 then
+    return
+  end
+
+  vim.lsp.enable(lsp_servers_to_enable)
+
+  -- Commit only after the entire batch succeeds, so failures remain retryable.
+  for _, lsp in ipairs(lsp_servers_to_enable) do
+    enabled_lsp_set[lsp] = true
   end
 end
 

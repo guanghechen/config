@@ -33,7 +33,9 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
     [13] = "rust",
   } ---@type table<integer, string>
   local enabled = {} ---@type table<string, integer>
+  local enable_batches = {} ---@type string[][]
   local filetype_callback = nil ---@type fun(args: { match: string })|nil
+  local fail_next_enable = false ---@type boolean
   local edits = 0 ---@type integer
 
   t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
@@ -55,8 +57,25 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
     t.assert_eq("filetype", name, "buffer option")
     return filetypes[opts.buf] or ""
   end)
-  t:patch_table(vim.lsp, "enable", function(name)
-    enabled[name] = (enabled[name] or 0) + 1
+  t:patch_table(vim.lsp, "enable", function(names)
+    if type(names) == "string" then
+      names = { names }
+    end
+
+    local batch = {} ---@type string[]
+    for _, name in ipairs(names) do
+      batch[#batch + 1] = name
+    end
+    enable_batches[#enable_batches + 1] = batch
+
+    if fail_next_enable then
+      fail_next_enable = false
+      error("injected enable failure")
+    end
+
+    for _, name in ipairs(batch) do
+      enabled[name] = (enabled[name] or 0) + 1
+    end
   end)
   t:patch_table(vim.lsp.buf, "code_action", vim.lsp.buf.code_action)
   t:patch_table(vim.cmd, "edit", function()
@@ -70,17 +89,48 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
   t.assert_eq(1, enabled.ruff, "existing Python buffer secondary LSP")
   t.assert_nil(enabled.rust_analyzer, "unloaded buffer")
   t.assert_true(filetype_callback ~= nil, "future FileType callback")
+  t.assert_eq(2, #enable_batches, "existing buffer batches")
+  t.assert_eq(1, #enable_batches[1], "Lua batch size")
+  t.assert_eq("lua_ls", enable_batches[1][1], "Lua batch")
+  t.assert_eq(2, #enable_batches[2], "Python batch size")
+  t.assert_eq("basedpyright", enable_batches[2][1], "Python primary LSP")
+  t.assert_eq("ruff", enable_batches[2][2], "Python secondary LSP")
 
   filetype_callback({ match = "typescript" })
   t.assert_eq(1, enabled.vtsls, "future TypeScript buffer")
   t.assert_eq(1, enabled.eslint, "future TypeScript secondary LSP")
   t.assert_eq(1, enabled.tailwindcss, "future TypeScript secondary LSP")
+  t.assert_eq(3, #enable_batches, "future buffer batch")
+  t.assert_eq(3, #enable_batches[3], "TypeScript batch size")
+  t.assert_eq("vtsls", enable_batches[3][1], "TypeScript primary LSP")
+  t.assert_eq("eslint", enable_batches[3][2], "TypeScript secondary LSP")
+  t.assert_eq("tailwindcss", enable_batches[3][3], "TypeScript secondary LSP")
 
   filetype_callback({ match = "lua" })
   Lsp.dressing()
 
   t.assert_eq(1, enabled.lua_ls, "repeated enable")
+  t.assert_eq(3, #enable_batches, "repeated enable batches")
   t.assert_eq(0, edits, "buffer re-edit")
+
+  fail_next_enable = true
+  local ok = pcall(filetype_callback, { match = "yaml.docker-compose" })
+
+  t.assert_false(ok, "enable failure")
+  t.assert_nil(enabled.yamlls, "failed primary LSP")
+  t.assert_nil(enabled.docker_compose_language_service, "failed secondary LSP")
+  t.assert_eq(4, #enable_batches, "failed batch")
+  t.assert_eq(2, #enable_batches[4], "failed batch size")
+  t.assert_eq("yamlls", enable_batches[4][1], "failed primary LSP batch")
+  t.assert_eq("docker_compose_language_service", enable_batches[4][2], "failed secondary LSP batch")
+
+  filetype_callback({ match = "yaml.docker-compose" })
+
+  t.assert_eq(1, enabled.yamlls, "retried primary LSP")
+  t.assert_eq(1, enabled.docker_compose_language_service, "retried secondary LSP")
+  t.assert_eq(5, #enable_batches, "retried batch")
+  t.assert_eq("yamlls", enable_batches[5][1], "retried primary LSP batch")
+  t.assert_eq("docker_compose_language_service", enable_batches[5][2], "retried secondary LSP batch")
 end)
 
 t:run()
