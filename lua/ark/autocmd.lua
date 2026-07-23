@@ -97,6 +97,17 @@ vim.filetype.add({
   },
 })
 
+-- Register synchronously so the initial Python buffer cannot miss FileType; load the implementation on demand.
+if not vim.g.vscode and not vim.g.yozvim then
+  vim.api.nvim_create_autocmd("FileType", {
+    group = augroup("python_venv"),
+    pattern = "python",
+    callback = function()
+      era.m.python_venv.dressing()
+    end,
+  })
+end
+
 --- Go to last loc when opening a buffer
 vim.api.nvim_create_autocmd("BufReadPost", {
   group = augroup("goto_last_location"),

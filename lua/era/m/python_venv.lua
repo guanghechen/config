@@ -518,24 +518,21 @@ end
 ---@return nil
 local function __setup__()
   if not initialized then
-    initialized = true
-
     stl.fn.observe({ dot.context.lsp.python_venv_path }, function()
       local venv_path = dot.context.lsp.python_venv_path:snapshot() ---@type string
       if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
         M.activate_venv(venv_path)
       end
     end, true)
+
+    -- Commit the state only after registration succeeds, so a later FileType can retry on failure.
+    initialized = true
   end
 end
 
 ---@return nil
 function M.dressing()
-  vim.api.nvim_create_autocmd("FileType", {
-    group = stl.nvim.fn.augroup("filetype_python_venv"),
-    pattern = "python",
-    callback = __setup__,
-  })
+  __setup__()
 end
 
 return M
