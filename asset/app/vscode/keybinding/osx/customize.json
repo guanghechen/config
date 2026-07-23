@@ -308,9 +308,38 @@
     "when": "!expressionSelected && focusedView == 'workbench.debug.variablesView' || !expressionSelected && focusedView == 'workbench.debug.watchExpressionsView'"
   },
   {
+    "key": "cmd+ctrl+,",
+    "command": "workbench.action.terminal.focusPrevious",
+    "when": "terminalFocus && !terminalEditorFocus"
+  },
+  {
+    "key": "cmd+ctrl+-",
+    "command": "workbench.action.terminal.fontZoomOut",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+ctrl+.",
+    "command": "workbench.action.terminal.focusNext",
+    "when": "terminalFocus && !terminalEditorFocus"
+  },
+  {
+    "key": "cmd+ctrl+/",
+    "command": "workbench.action.terminal.rename",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+ctrl+=",
+    "command": "workbench.action.terminal.fontZoomIn",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+ctrl+`",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+  {
     "key": "cmd+ctrl+down",
     "command": "workbench.action.terminal.resizePaneDown",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "cmd+ctrl+down",
@@ -323,6 +352,11 @@
     "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
   },
   {
+    "key": "cmd+ctrl+escape",
+    "command": "workbench.action.terminal.hideFind",
+    "when": "terminalFindVisible && terminalHasBeenCreated || terminalFindVisible && terminalProcessSupported"
+  },
+  {
     "key": "cmd+ctrl+f",
     "command": "editor.action.formatSelection",
     "when": "editorHasDocumentSelectionFormattingProvider && editorHasSelection && editorTextFocus && !editorReadonly"
@@ -333,9 +367,29 @@
     "when": "editorHasDocumentFormattingProvider && (!editorHasSelection || !editorHasDocumentSelectionFormattingProvider) && editorTextFocus && !editorReadonly"
   },
   {
+    "key": "cmd+ctrl+f11",
+    "command": "workbench.action.toggleFullScreen",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+ctrl+f12",
+    "command": "workbench.action.toggleFullScreen",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+ctrl+h",
+    "command": "workbench.action.terminal.focusPreviousPane",
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
+  },
+  {
+    "key": "cmd+ctrl+l",
+    "command": "workbench.action.terminal.focusNextPane",
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
+  },
+  {
     "key": "cmd+ctrl+left",
     "command": "workbench.action.terminal.resizePaneLeft",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "cmd+ctrl+left",
@@ -343,9 +397,14 @@
     "when": "!panelFocus && !terminalFocus && !sideBarFocus"
   },
   {
+    "key": "cmd+ctrl+n",
+    "command": "workbench.action.terminal.newInNewWindow",
+    "when": "terminalFocus"
+  },
+  {
     "key": "cmd+ctrl+right",
     "command": "workbench.action.terminal.resizePaneRight",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "cmd+ctrl+right",
@@ -360,7 +419,7 @@
   {
     "key": "cmd+ctrl+up",
     "command": "workbench.action.terminal.resizePaneUp",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "cmd+ctrl+up",
@@ -371,6 +430,11 @@
     "key": "cmd+ctrl+up",
     "command": "quickInput.previousSeparator",
     "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
+  },
+  {
+    "key": "cmd+ctrl+w",
+    "command": "workbench.action.terminal.killViewOrEditor",
+    "when": "terminalFocus"
   },
   {
     "key": "cmd+ctrl+z",
@@ -768,6 +832,11 @@
     "command": "undo"
   },
   {
+    "key": "ctrl+insert",
+    "command": "workbench.action.terminal.copySelection",
+    "when": "terminalTextSelectedInFocused || terminalFocus && terminalHasBeenCreated && terminalTextSelected || terminalFocus && terminalProcessSupported && terminalTextSelected || terminalFocus && terminalTextSelected && terminalTextSelectedInFocused || terminalHasBeenCreated && terminalTextSelected && terminalTextSelectedInFocused || terminalProcessSupported && terminalTextSelected && terminalTextSelectedInFocused"
+  },
+  {
     "key": "ctrl+p",
     "command": "editor.action.triggerSuggest",
     "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly && !suggestWidgetVisible"
@@ -910,5 +979,10 @@
     "key": "shift+f11",
     "command": "workbench.action.debug.stepOut",
     "when": "debugState == 'stopped'"
+  },
+  {
+    "key": "shift+insert",
+    "command": "workbench.action.terminal.paste",
+    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
   }
 ]

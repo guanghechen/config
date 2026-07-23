@@ -929,6 +929,26 @@
     }
   },
   {
+    "key": "alt+ctrl+,",
+    "command": "workbench.action.terminal.focusPrevious",
+    "when": "terminalFocus && !terminalEditorFocus"
+  },
+  {
+    "key": "alt+ctrl+-",
+    "command": "workbench.action.terminal.fontZoomOut",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "alt+ctrl+.",
+    "command": "workbench.action.terminal.focusNext",
+    "when": "terminalFocus && !terminalEditorFocus"
+  },
+  {
+    "key": "alt+ctrl+/",
+    "command": "workbench.action.terminal.rename",
+    "when": "terminalFocus"
+  },
+  {
     "key": "Alt+ctrl+0",
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
@@ -941,7 +961,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[49;5u"
+      "text": ""
     }
   },
   {
@@ -949,7 +969,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[50;5u"
+      "text": ""
     }
   },
   {
@@ -957,7 +977,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[51;5u"
+      "text": ""
     }
   },
   {
@@ -965,7 +985,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[52;5u"
+      "text": ""
     }
   },
   {
@@ -973,7 +993,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[53;5u"
+      "text": ""
     }
   },
   {
@@ -981,7 +1001,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[54;5u"
+      "text": ""
     }
   },
   {
@@ -989,7 +1009,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[55;5u"
+      "text": ""
     }
   },
   {
@@ -997,7 +1017,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[56;5u"
+      "text": ""
     }
   },
   {
@@ -1005,8 +1025,17 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[57;5u"
+      "text": ""
     }
+  },
+  {
+    "key": "alt+ctrl+=",
+    "command": "workbench.action.terminal.fontZoomIn",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "alt+ctrl+`",
+    "command": "workbench.action.terminal.toggleTerminal"
   },
   {
     "key": "Alt+ctrl+a",
@@ -1043,7 +1072,7 @@
   {
     "key": "alt+ctrl+down",
     "command": "workbench.action.terminal.resizePaneDown",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "alt+ctrl+down",
@@ -1056,20 +1085,17 @@
     "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
   },
   {
-    "key": "Alt+Ctrl+Down",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\u001b[1;5B"
-    }
-  },
-  {
     "key": "Alt+ctrl+e",
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
       "text": "\u0001\u0005"
     }
+  },
+  {
+    "key": "alt+ctrl+escape",
+    "command": "workbench.action.terminal.hideFind",
+    "when": "terminalFindVisible && terminalHasBeenCreated || terminalFindVisible && terminalProcessSupported"
   },
   {
     "key": "alt+ctrl+f",
@@ -1090,6 +1116,16 @@
     }
   },
   {
+    "key": "alt+ctrl+f11",
+    "command": "workbench.action.toggleFullScreen",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "alt+ctrl+f12",
+    "command": "workbench.action.toggleFullScreen",
+    "when": "terminalFocus"
+  },
+  {
     "key": "Alt+ctrl+g",
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
@@ -1098,12 +1134,9 @@
     }
   },
   {
-    "key": "Alt+ctrl+h",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\b"
-    }
+    "key": "alt+ctrl+h",
+    "command": "workbench.action.terminal.focusPreviousPane",
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "Alt+ctrl+i",
@@ -1118,7 +1151,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\n"
+      "text": ""
     }
   },
   {
@@ -1126,34 +1159,23 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u000b"
+      "text": ""
     }
   },
   {
-    "key": "Alt+ctrl+l",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\f"
-    }
+    "key": "alt+ctrl+l",
+    "command": "workbench.action.terminal.focusNextPane",
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "alt+ctrl+left",
     "command": "workbench.action.terminal.resizePaneLeft",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "alt+ctrl+left",
     "command": "workbench.action.moveEditorToLeftGroup",
     "when": "!panelFocus && !terminalFocus && !sideBarFocus"
-  },
-  {
-    "key": "Alt+Ctrl+Left",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\u001b[1;5D"
-    }
   },
   {
     "key": "Alt+ctrl+m",
@@ -1164,12 +1186,9 @@
     }
   },
   {
-    "key": "Alt+ctrl+n",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\u000e"
-    }
+    "key": "alt+ctrl+n",
+    "command": "workbench.action.terminal.newInNewWindow",
+    "when": "terminalFocus"
   },
   {
     "key": "Alt+ctrl+o",
@@ -1206,20 +1225,12 @@
   {
     "key": "alt+ctrl+right",
     "command": "workbench.action.terminal.resizePaneRight",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "alt+ctrl+right",
     "command": "workbench.action.moveEditorToRightGroup",
     "when": "!panelFocus && !terminalFocus && !sideBarFocus"
-  },
-  {
-    "key": "Alt+Ctrl+Right",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\u001b[1;5C"
-    }
   },
   {
     "key": "Alt+ctrl+s",
@@ -1253,7 +1264,7 @@
   {
     "key": "alt+ctrl+up",
     "command": "workbench.action.terminal.resizePaneUp",
-    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
+    "when": "terminalFocus && !terminalEditorFocus && terminalHasBeenCreated || terminalFocus && !terminalEditorFocus && terminalProcessSupported"
   },
   {
     "key": "alt+ctrl+up",
@@ -1266,14 +1277,6 @@
     "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
   },
   {
-    "key": "Alt+Ctrl+Up",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\u001b[1;5A"
-    }
-  },
-  {
     "key": "Alt+ctrl+v",
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
@@ -1282,12 +1285,9 @@
     }
   },
   {
-    "key": "Alt+ctrl+w",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\u0017"
-    }
+    "key": "alt+ctrl+w",
+    "command": "workbench.action.terminal.killViewOrEditor",
+    "when": "terminalFocus"
   },
   {
     "key": "Alt+ctrl+x",
@@ -1314,14 +1314,6 @@
     "key": "alt+ctrl+z",
     "command": "workbench.action.minimizeOtherEditors",
     "when": "editorFocus || (!panelFocus && !sideBarFocus && !terminalFocus)"
-  },
-  {
-    "key": "Alt+ctrl+z",
-    "command": "workbench.action.terminal.sendSequence",
-    "when": "terminalFocus",
-    "args": {
-      "text": "\u0001\u001a"
-    }
   },
   {
     "key": "alt+d",
@@ -1528,7 +1520,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[11~"
+      "text": "\u0001\u001bOP"
     }
   },
   {
@@ -1536,7 +1528,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[12~"
+      "text": "\u0001\u001bOQ"
     }
   },
   {
@@ -1544,7 +1536,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[13~"
+      "text": "\u0001\u001bOR"
     }
   },
   {
@@ -1552,7 +1544,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u0001\u001b[14~"
+      "text": "\u0001\u001bOS"
     }
   },
   {
@@ -2280,6 +2272,11 @@
     }
   },
   {
+    "key": "ctrl+insert",
+    "command": "workbench.action.terminal.copySelection",
+    "when": "terminalTextSelectedInFocused || terminalFocus && terminalHasBeenCreated && terminalTextSelected || terminalFocus && terminalProcessSupported && terminalTextSelected || terminalFocus && terminalTextSelected && terminalTextSelectedInFocused || terminalHasBeenCreated && terminalTextSelected && terminalTextSelectedInFocused || terminalProcessSupported && terminalTextSelected && terminalTextSelectedInFocused"
+  },
+  {
     "key": "ctrl+p",
     "command": "editor.action.triggerSuggest",
     "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly && !suggestWidgetVisible"
@@ -2308,7 +2305,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u001b[11~"
+      "text": "\u001bOP"
     }
   },
   {
@@ -2316,7 +2313,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u001b[12~"
+      "text": "\u001bOQ"
     }
   },
   {
@@ -2339,7 +2336,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u001b[13~"
+      "text": "\u001bOR"
     }
   },
   {
@@ -2362,7 +2359,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u001b[14~"
+      "text": "\u001bOS"
     }
   },
   {
@@ -2614,5 +2611,10 @@
     "args": {
       "text": "\u001b[24;2~"
     }
+  },
+  {
+    "key": "shift+insert",
+    "command": "workbench.action.terminal.paste",
+    "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
   }
 ]
