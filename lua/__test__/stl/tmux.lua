@@ -96,4 +96,21 @@ t:test("query_tmux_pane_zoomed: degrades when the process cannot start", functio
   t.assert_nil(actual, "spawn failure")
 end)
 
+t:test("get_tmux_env_value: executes tmux with argv", function()
+  local command = {} ---@type string[]
+  t:patch_table(vim.fn, "system", function(cmd)
+    command = cmd
+    return "FOO=value with spaces\n"
+  end)
+
+  local value = tmux.get_tmux_env_value("FOO")
+
+  t.assert_eq("value with spaces", value, "environment value")
+  t.assert_eq("tmux", command[1], "executable")
+  t.assert_eq("-S", command[2], "socket flag")
+  t.assert_eq("/tmp/nvim-test-tmux", command[3], "socket")
+  t.assert_eq("show-environment", command[4], "command")
+  t.assert_eq("FOO", command[5], "environment name")
+end)
+
 t:run()

@@ -157,13 +157,12 @@ local function get_tmux_window_id()
   if not stl.env.IS_TMUX then
     return ""
   end
-  local handle = io.popen("tmux display-message -p '#{window_id}'")
-  if handle then
-    local result = handle:read("*a"):gsub("%s+$", "")
-    handle:close()
-    return result
+  local ok, result = pcall(vim.fn.system, { "tmux", "display-message", "-p", "#{window_id}" })
+  if not ok or vim.v.shell_error ~= 0 then
+    return ""
   end
-  return ""
+  local window_id = result:gsub("%s+$", "") ---@type string
+  return window_id
 end
 
 ---@class stl.prompt

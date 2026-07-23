@@ -2,39 +2,16 @@
 local __module_name__ = "stl.shell" ---@type string
 
 ---@class stl.shell
----@field public format_command         fun(command?: string): string
 ---@field public get_shell_args         fun(command: string): string[]
 local M = {}
 
 if stl.env.IS_MAC or stl.env.IS_NIX or stl.env.IS_WSL then
-  ---@param cmd                         ?string
-  ---@return string
-  function M.format_command(cmd)
-    local shell = vim.env.SHELL or vim.o.shell ---@type string
-    if cmd == nil or #cmd < 1 then
-      return shell
-    else
-      return "sh -c " .. vim.fn.shellescape(cmd)
-    end
-  end
-
   ---@param cmd                         string
   ---@return string[]
   function M.get_shell_args(cmd)
     return { "sh", "-c", cmd }
   end
 elseif stl.env.IS_WIN then
-  ---@param cmd                         ?string
-  ---@return string
-  function M.format_command(cmd)
-    local shell = vim.env.SHELL or vim.o.shell ---@type string
-    if cmd == nil or #cmd < 1 then
-      return shell
-    else
-      return 'pwsh.exe -NoProfile -Command "' .. cmd:gsub('"', "'") .. '"'
-    end
-  end
-
   ---@param cmd                         string
   ---@return string[]
   function M.get_shell_args(cmd)
@@ -43,7 +20,7 @@ elseif stl.env.IS_WIN then
 else
   stl.reporter.error({
     from = __module_name__,
-    subject = "format_command",
+    subject = "get_shell_args",
     message = "Bad env",
     details = { env = stl.env },
   })

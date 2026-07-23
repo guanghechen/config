@@ -553,7 +553,11 @@ function M:__create_win_as_needed__(termmeta)
     vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   end
 
-  vim.api.nvim_set_option_value("winblend", resize_result and resize_result.winblend or 0, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value(
+    "winblend",
+    resize_result and resize_result.winblend or 0,
+    { win = winnr, scope = "local" }
+  )
   vim.api.nvim_set_option_value("winhighlight", TERMINAL_WIN_HIGHLIGHT, { win = winnr, scope = "local" })
   dot.state.status.dirtier_termline:mark_dirty()
 
@@ -581,7 +585,7 @@ function M:__start_job__(termmeta)
     return
   end
 
-  local channelid = vim.fn.jobstart(termmeta.cmd, {
+  local ok, channelid = pcall(vim.fn.jobstart, termmeta.cmd, {
     cwd = termmeta.cwd,
     env = termmeta.env,
     pty = true,
@@ -614,6 +618,29 @@ function M:__start_job__(termmeta)
       end
     end,
   })
+  if not ok or type(channelid) ~= "number" or channelid <= 0 then
+    local failed_bufnr = termmeta.bufnr ---@type integer
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "terminal failed to start",
+      details = {
+        uuid = termmeta.uuid,
+        name = termmeta.name,
+        cmd = termmeta.cmd,
+        cwd = termmeta.cwd,
+        error = not ok and channelid or nil,
+        channelid = ok and channelid or nil,
+      },
+    })
+    -- Let callers finish configuring the current window before closing the failed terminal.
+    vim.schedule(function()
+      local _, current = era.m.term.state.indexof_by_bufnr(failed_bufnr)
+      if current == termmeta and termmeta.jobid == nil then
+        era.m.term.event.on_closed(termmeta)
+      end
+    end)
+    return
+  end
   termmeta.jobid = channelid
 end
 

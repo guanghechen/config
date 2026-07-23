@@ -2,10 +2,55 @@
 --- Test for stl.prompt module
 --- Run with: nvim -l lua/__test__/stl/prompt.lua
 
+local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
-local prompt = require("stl.prompt")
 
 local t = harness.new("stl.prompt")
+
+bootstrap.with_runtime(t, {
+  stl = { env = { IS_TMUX = false } },
+})
+
+local prompt = require("stl.prompt")
+
+t:test("tmux window resolver: executes tmux with argv", function()
+  t:patch_table(stl.env, "IS_TMUX", true)
+
+  local command = {} ---@type string[]
+  t:patch_table(vim.fn, "system", function(cmd)
+    command = cmd
+    return "@7\n"
+  end)
+
+  local template = vim.iter(prompt.templates):find(function(item)
+    return item.name == "review-design"
+  end)
+  t.assert_true(template ~= nil, "review-design template")
+
+  local resolver = template.args.__TMUX_WINDOW_ID__ ---@type fun(): string
+  local window_id, extra = resolver()
+  t.assert_eq("@7", window_id, "window id")
+  t.assert_nil(extra, "extra return value")
+  t.assert_eq("tmux", command[1], "executable")
+  t.assert_eq("display-message", command[2], "command")
+  t.assert_eq("-p", command[3], "print flag")
+  t.assert_eq("#{window_id}", command[4], "format")
+end)
+
+t:test("tmux window resolver: spawn failure degrades to an empty value", function()
+  t:patch_table(stl.env, "IS_TMUX", true)
+  t:patch_table(vim.fn, "system", function()
+    error("spawn failed")
+  end)
+
+  local template = vim.iter(prompt.templates):find(function(item)
+    return item.name == "review-design"
+  end)
+  t.assert_true(template ~= nil, "review-design template")
+
+  local resolver = template.args.__TMUX_WINDOW_ID__ ---@type fun(): string
+  t.assert_eq("", resolver(), "window id")
+end)
 
 ----------------------------------------------------------------------------------------------------
 -- substitute tests

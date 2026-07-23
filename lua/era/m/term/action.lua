@@ -4,7 +4,7 @@ local __module_name__ = "era.m.term.action" ---@type string
 
 ---@type era.m.term.IProfile[]
 local profiles = {
-  { name = "shell", type = "shell", cmd = vim.o.shell },
+  { name = "shell", type = "shell", cmd = { vim.o.shell } },
 }
 
 ---@param profile                       era.m.term.IProfile|nil
@@ -29,8 +29,7 @@ end
 ---@param args                          ?string[]
 ---@return nil
 local function open_lazygit(name, cwd, args)
-  local argv = table.concat(args or {}, " ") ---@type string
-  local cmd = #argv > 0 and string.format("lazygit %s", argv) or "lazygit"
+  local cmd = vim.list_extend({ "lazygit" }, args or {}) ---@type string[]
   local termuuid = string.format("1c2b6245-da30-499a-8e23-8c33b5bd1a77#%s", name)
 
   S.widget:toggle_and_focus({
@@ -52,7 +51,7 @@ local function open_yazi(name, cwd, filepath)
   local tempname = dot.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
 
   local dirpath = dot.path.dirname(filepath) ---@type string
-  local cmd = string.format("yazi %s --chooser-file=%s", vim.fn.shellescape(dirpath), vim.fn.shellescape(tempname)) ---@type string
+  local cmd = { "yazi", dirpath, "--chooser-file=" .. tempname } ---@type string[]
   S.widget:toggle_and_focus({
     uuid = string.format("69f6829d-c54a-46a2-8c52-5f2f2d40aa93#%s", name),
     name = name,
@@ -208,7 +207,7 @@ function M.lazygit_file_history()
   local cwd = dot.path.cwd() ---@type string
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local args = { "-f", vim.fn.shellescape(filepath) } ---@type string[]
+  local args = { "-f", filepath } ---@type string[]
   open_lazygit("lazygit (file history)", cwd, args)
 end
 

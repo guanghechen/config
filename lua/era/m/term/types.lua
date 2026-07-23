@@ -2,7 +2,7 @@
 ---@field public uuid                   string
 ---@field public type                   string
 ---@field public name                   string
----@field public cmd                    ?string[]|string
+---@field public cmd                    ?string[]
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
@@ -17,7 +17,7 @@
 ---@field public type                   string
 ---@field public name                   string
 ---@field public bufnr                  integer
----@field public cmd                    string[]|string
+---@field public cmd                    string[]
 ---@field public cwd                    string
 ---@field public env                    table<string, string>|nil
 ---@field public permanent              boolean
@@ -31,7 +31,7 @@
 ---@class era.m.term.IProfile
 ---@field public name                   string
 ---@field public type                   string
----@field public cmd                    string
+---@field public cmd                    string[]
 
 ---@class era.m.term.IToggleAndFocusParams : era.m.term.ICreateParams
 ---@field public selected_text          string|nil
@@ -40,7 +40,7 @@
 ---@class era.m.term.IUpdateParams
 ---@field public name                   ?string
 ---@field public type                   ?string
----@field public cmd                    ?string[]|string
+---@field public cmd                    ?string[]
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public on_closed              ?fun(): nil

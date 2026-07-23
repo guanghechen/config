@@ -11,7 +11,7 @@ local script_path = dot.path.join(app_home, "cli/im-select/osx/im-select")
 
 ---@return era.m.im.InputMethod|nil
 function M.get_input_method()
-  if not vim.fn.executable(script_path) then
+  if vim.fn.executable(script_path) ~= 1 then
     stl.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
@@ -21,21 +21,25 @@ function M.get_input_method()
     return
   end
 
-  local handle = io.popen(vim.fn.fnameescape(script_path))
-  if not handle then
+  local ok, input_method = pcall(vim.fn.system, { script_path })
+  if not ok then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "get_input_method",
+      message = "Failed to start the executable file.",
+      details = { app_home = app_home, script_path = script_path, error = input_method },
+    })
+    return
+  end
+  ---@cast input_method string
+  local exit_code = vim.v.shell_error ---@type integer
+  if exit_code ~= 0 then
     stl.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Failed to run the executable file.",
-      details = { app_home = app_home, script_path = script_path },
+      details = { app_home = app_home, script_path = script_path, exit_code = exit_code, output = input_method },
     })
-    return
-  end
-
-  local input_method = handle:read("*a")
-  handle:close()
-
-  if input_method == nil then
     return
   end
 
@@ -57,7 +61,7 @@ end
 ---@param input_method                  era.m.im.InputMethod
 ---@return nil
 function M.set_input_method(input_method)
-  if not vim.fn.executable(script_path) then
+  if vim.fn.executable(script_path) ~= 1 then
     stl.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
@@ -82,21 +86,35 @@ function M.set_input_method(input_method)
     return
   end
 
-  local handle = io.popen(vim.fn.fnameescape(script_path) .. " " .. arg)
-  if not handle then
+  local ok, output = pcall(vim.fn.system, { script_path, arg })
+  if not ok then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "set_input_method",
+      message = "Failed to start the executable file.",
+      details = { app_home = app_home, script_path = script_path, input_method = input_method, error = output },
+    })
+    return
+  end
+  ---@cast output string
+  local exit_code = vim.v.shell_error ---@type integer
+  if exit_code ~= 0 then
     stl.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
       message = "Failed to run the executable file.",
-      details = { app_home = app_home, script_path = script_path, input_method = input_method },
+      details = {
+        app_home = app_home,
+        script_path = script_path,
+        input_method = input_method,
+        exit_code = exit_code,
+        output = output,
+      },
     })
     return
   end
 
-  local output = handle:read("*a")
-  handle:close()
-
-  if output ~= nil and output ~= "" then
+  if output ~= "" then
     stl.reporter.error({
       from = __module_name__,
       subject = "set_input_method",

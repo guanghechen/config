@@ -7,7 +7,7 @@ local S = era.m.ai
 ---@field public uuid                   string
 ---@field public agent                  era.m.ai.AgentName
 ---@field public bufnr                  integer
----@field public cmd                    string[]|string
+---@field public cmd                    string[]
 ---@field public cwd                    string
 ---@field public env                    table<string, string|false>|nil
 ---@field public jobid                  integer|nil
@@ -163,7 +163,7 @@ local function start_job(termmeta)
   local winnr = create_win(termmeta)
   vim.api.nvim_tabpage_set_win(vim.api.nvim_get_current_tabpage(), winnr)
 
-  local channelid = vim.fn.jobstart(termmeta.cmd, {
+  local ok, channelid = pcall(vim.fn.jobstart, termmeta.cmd, {
     cwd = termmeta.cwd,
     env = termmeta.env,
     pty = true,
@@ -190,13 +190,34 @@ local function start_job(termmeta)
       end
     end,
   })
+  if not ok or type(channelid) ~= "number" or channelid <= 0 then
+    stl.reporter.error({
+      from = __module_name__,
+      group = "ai",
+      subject = "terminal failed to start",
+      details = {
+        uuid = termmeta.uuid,
+        agent = termmeta.agent,
+        cmd = termmeta.cmd,
+        cwd = termmeta.cwd,
+        error = not ok and channelid or nil,
+        channelid = ok and channelid or nil,
+      },
+    })
+    vim.schedule(function()
+      if _metamap[termmeta.uuid] == termmeta and termmeta.jobid == nil then
+        M.on_closed(termmeta)
+      end
+    end)
+    return
+  end
   termmeta.jobid = channelid
 end
 
 ---@class era.m.ai.term.IOpenParams
 ---@field public uuid                   string
 ---@field public agent                  era.m.ai.AgentName
----@field public cmd                    string[]|string
+---@field public cmd                    string[]
 ---@field public cwd                    string
 ---@field public env                    ?table<string, string|false>
 
