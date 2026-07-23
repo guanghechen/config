@@ -15,7 +15,7 @@ The header convention for both **commit messages** and **PR titles**.
 
 ## Breaking Change
 
-Append `!` after the type/scope and/or lead with `:boom:`, then spell out `BREAKING CHANGE:` in the body when detail is needed:
+Append `!` after the type/scope and/or lead with `:boom:`, then spell out the impact in a `BREAKING CHANGE:` footer when it needs detail:
 
 ```
 :boom: feat(api)!: change response format
@@ -25,7 +25,14 @@ BREAKING CHANGE: `data` is now nested under `result`.
 
 ## Body / Footer (optional)
 
-Add a "why" body and footers (`Refs`, `Closes`) per Conventional Commits when the change warrants it.
+A body is optional and off by default — most commits are subject-only. Add one only when it records something the subject and diff don't already make obvious (a non-obvious *why*, a key decision, a consequence, a migration). A body that just restates the subject is noise — omit it. When you do write one, size it to the change's scope and blast radius, not raw line count:
+
+- **No body (default)**: the subject already says it all — typos, small localized fixes, and mechanical or self-evident changes, even wide ones like a pure rename.
+- **Short body**: there is a non-obvious *why*, decision, or affected consumer worth recording — a paragraph or a few bullets.
+- **Fuller body**: a large, sweeping change (broad refactor, wide blast radius, many interdependent parts) where a reader needs the motivation, the main changes grouped by area, and notable consequences (regenerated fixtures, updated snapshots, follow-ups).
+- **Major breaking change**: always include a body — a one-line motivation, what changed and the observable / breaking impact, plus a `BREAKING CHANGE:` footer with the migration note.
+
+Footers: add `Refs` / `Closes` per Conventional Commits when relevant.
 
 ## Type and Gitmoji Mapping
 

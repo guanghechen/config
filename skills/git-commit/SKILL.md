@@ -23,10 +23,10 @@ This skill does not handle:
 ## Inputs
 
 Optional user arguments may include:
-- commit scope (paths, glob, or topic)
+- a commit scope (paths, glob, or topic)
 - message hints
 
-Interpret arguments as constraints first, hints second.
+Interpret them as constraints first, hints second.
 
 ## Workflow
 
@@ -36,10 +36,10 @@ Interpret arguments as constraints first, hints second.
    - If no scope was requested and high-risk files (infra/workflow/config/deploy) are mixed in, ask for scope confirmation.
 
 2. Guard and read scoped diffs
-   - Classify the target paths. Treat as secret-path any `.env*`, `.ssh/`, `local/env.*`, `.git-credentials`, `*.http_request`, `*.http_response`, or other credential/secret-dump file:
-     - Never read or print their diff content.
-     - Surface their paths only and ask how to proceed (exclude, or explicit confirmation) before any enters a commit.
-   - Read content for the remaining non-secret target paths so step 3 has full coverage:
+   - Split the target paths into secret and non-secret. Treat as a secret path any `.env*`, `.ssh/`, `local/env.*`, `.git-credentials`, `*.http_request`, `*.http_response`, or other credential/secret-dump file:
+     - Never read or print its diff content.
+     - Surface the path only and ask how to proceed (exclude it, or confirm explicitly) before it is committed.
+   - Read the remaining non-secret paths in full so step 3 has complete coverage:
      - tracked paths (`git status` rows other than `??`): `git diff --cached -- <paths>` and `git diff -- <paths>`.
      - untracked paths (`??` rows): `git diff` shows nothing for them, so read their content explicitly via `git diff --no-index /dev/null <path>` (or read the file). A new file with an innocent name but a hardcoded secret is the exact gap this closes.
 
@@ -49,11 +49,12 @@ Interpret arguments as constraints first, hints second.
      - sensitive data (personal identifiers, internal-only endpoints)
      - unsuitable artifacts (debug dumps, local-only files, large generated files)
    - Mask suspicious strings; never print full secret values.
-   - On any finding, stop and ask confirmation before commit.
+   - On any finding, stop and ask for confirmation before committing.
 
 4. Compose message (Conventional Commits + Gitmoji)
-   - Run `git log --oneline -10` to confirm the repo's prevailing style; the convention below is the default unless the repo clearly diverges.
+   - Run `git log --oneline -10` to confirm the repo's prevailing style; the referenced convention is the default unless the repo clearly diverges.
    - Header format `:gitmoji: <type>(<scope>): <description>` — see [references/conventional-commits.md](references/conventional-commits.md) for the type vocabulary, gitmoji mapping table, and breaking-change / body / footer rules. PR titles use the same header format.
+   - Body is optional — default to subject-only. Add one only to capture what the subject and diff don't already show (a why, a key decision, a consequence, a migration), scaling it up for large or breaking changes per the body tiers in references; never pad with a body that restates the subject.
    - If target changes are clearly unrelated, propose split commits; else one cohesive commit.
 
 5. Stage, preview, commit
