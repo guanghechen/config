@@ -26,4 +26,7 @@ local M = setmetatable({
   end,
 })
 
+-- Feature loading precedes its buffers' FileType events while staying off the startup path.
+vim.treesitter.language.register("markdown", stl.filetype.NOTEPAD)
+
 return M

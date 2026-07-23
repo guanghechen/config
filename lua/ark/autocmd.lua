@@ -97,10 +97,6 @@ vim.filetype.add({
   },
 })
 
-vim.treesitter.language.register("markdown", "acp-chatbox")
-vim.treesitter.language.register("markdown", "acp-main")
-vim.treesitter.language.register("markdown", "notepad")
-
 --- Go to last loc when opening a buffer
 vim.api.nvim_create_autocmd("BufReadPost", {
   group = augroup("goto_last_location"),

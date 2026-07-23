@@ -288,4 +288,8 @@ function M.select_provider()
   end)
 end
 
+-- Feature loading precedes its buffers' FileType events while staying off the startup path.
+vim.treesitter.language.register("markdown", stl.filetype.ACP_CHATBOX)
+vim.treesitter.language.register("markdown", stl.filetype.ACP_MAIN)
+
 return M

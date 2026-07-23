@@ -8,6 +8,11 @@ local harness = require("__test__.harness")
 local t = harness.new("era.plugin.nvim-treesitter")
 
 bootstrap.with_stl(t, {
+  filetype = {
+    ACP_CHATBOX = "acp-chatbox",
+    ACP_MAIN = "acp-main",
+    NOTEPAD = "notepad",
+  },
   nvim = {
     fn = {
       augroup = function()
@@ -117,6 +122,22 @@ local function setup(buffers, windows, winnrs, start, active_languages)
   Treesitter.spec.config(nil, Treesitter.spec.opts)
   return callbacks, started, stopped, active
 end
+
+t:test("custom features own their markdown mappings", function()
+  local mappings = {} ---@type table<string, string>
+  t:patch_table(vim.treesitter.language, "register", function(lang, filetype)
+    mappings[filetype] = lang
+  end)
+  t:patch_table(package.loaded, "era.m.acp", nil)
+  t:patch_table(package.loaded, "era.m.notepad", nil)
+
+  require("era.m.acp")
+  require("era.m.notepad")
+
+  t.assert_eq("markdown", mappings[stl.filetype.ACP_CHATBOX], "ACP chatbox mapping")
+  t.assert_eq("markdown", mappings[stl.filetype.ACP_MAIN], "ACP main mapping")
+  t.assert_eq("markdown", mappings[stl.filetype.NOTEPAD], "notepad mapping")
+end)
 
 t:test("existing visible buffer starts on idle exactly once", function()
   local buffers = {
