@@ -14,6 +14,18 @@ import { Reporter } from '#stl/reporter'
 const reporter = new Reporter({ prefix: 'sync-config-vscode' })
 
 /**
+ * @param {string} filepath
+ * @returns {boolean}
+ */
+function isDirectory(filepath) {
+  try {
+    return fs.statSync(filepath).isDirectory()
+  } catch {
+    return false
+  }
+}
+
+/**
  * @typedef {Object} IVscodeKeybinding
  * @property {string} key - Key combination (e.g., "ctrl+f1", "cmd+shift+p")
  * @property {string} command - Command identifier to invoke
@@ -181,17 +193,18 @@ function validateKeybindings(source, keybindings, unbind) {
 }
 
 /**
- * @param {string} targetKeybindingsPath - Path to the VSCode keybindings.json file
+ * @param {string | undefined} targetKeybindingsPath - Path to the VSCode keybindings.json file
+ * @returns {boolean} Whether the keybindings were synced
  */
-export function handleSyncConfigVscode(targetKeybindingsPath) {
-  if (!targetKeybindingsPath || !fs.existsSync(path.dirname(targetKeybindingsPath))) return
+export function syncVscodeKeybindings(targetKeybindingsPath) {
+  if (!targetKeybindingsPath || !isDirectory(path.dirname(targetKeybindingsPath))) return false
 
   reporter.info('Syncing VSCode keybindings to:', targetKeybindingsPath)
 
   const encoding = 'utf8'
   const middle = PLATFORM === 'wsl' ? 'win' : PLATFORM
   const CONFIG_DIR = path.join(XDG_CONFIG_NODE_ASSET_APP_DIR, 'vscode/keybinding', middle)
-  if (!fs.existsSync(CONFIG_DIR)) return
+  if (!fs.existsSync(CONFIG_DIR)) return false
 
   const fp_rebind = path.join(CONFIG_DIR, 'rebind.json')
   const fp_customize = path.join(CONFIG_DIR, 'customize.json')
@@ -230,10 +243,57 @@ export function handleSyncConfigVscode(targetKeybindingsPath) {
   fs.writeFileSync(targetKeybindingsPath, content_all, encoding)
 
   reporter.info('VSCode keybindings synced successfully')
+  return true
+}
+
+/**
+ * @param {string | undefined} targetSettingsPath - Path to the VSCode settings.json file
+ * @param {string} [sourceSettingsPath] - Canonical settings.json path
+ * @returns {boolean} Whether the settings were synced
+ */
+export function syncVscodeSettings(
+  targetSettingsPath,
+  sourceSettingsPath = path.join(XDG_CONFIG_NODE_ASSET_APP_DIR, 'vscode/settings.json'),
+) {
+  if (!targetSettingsPath) return false
+  if (!isDirectory(path.dirname(targetSettingsPath))) {
+    reporter.warn('VSCode settings target directory not found:', path.dirname(targetSettingsPath))
+    return false
+  }
+
+  const encoding = 'utf8'
+  const content = fs.readFileSync(sourceSettingsPath, encoding)
+  const settings = JSON.parse(content)
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    throw new TypeError(`VSCode settings source must contain a JSON object: ${sourceSettingsPath}`)
+  }
+
+  reporter.info('Syncing VSCode settings to:', targetSettingsPath)
+  fs.writeFileSync(targetSettingsPath, content, encoding)
+  reporter.info('VSCode settings synced successfully')
+  return true
+}
+
+/**
+ * @param {string | undefined} targetKeybindingsPath
+ * @returns {string | undefined}
+ */
+export function resolveVscodeSettingsPath(targetKeybindingsPath) {
+  return targetKeybindingsPath
+    ? path.join(path.dirname(targetKeybindingsPath), 'settings.json')
+    : undefined
+}
+
+/**
+ * @param {string | undefined} targetKeybindingsPath
+ */
+export function handleSyncConfigVscode(targetKeybindingsPath) {
+  syncVscodeKeybindings(targetKeybindingsPath)
+  syncVscodeSettings(resolveVscodeSettingsPath(targetKeybindingsPath))
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command({ name: 'sync-config-vscode', description: 'Sync VSCode keybindings configuration.' })
+  const cmd = new Command({ name: 'sync-config-vscode', description: 'Sync VSCode user configuration.' })
     .argument({ name: 'target-path', kind: 'optional', description: 'Target keybindings.json path' })
     .action(async ({ args }) => {
       const targetPath = /** @type {string | undefined} */ (args['target-path']) || F_VSCODE_KEYBINDINGS

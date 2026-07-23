@@ -1,7 +1,29 @@
 import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { afterEach, describe, it, mock } from 'node:test'
 
-import { composeKeybindings, formatKey, sortKeybindings } from './sync-config-vscode.mjs'
+import {
+  composeKeybindings,
+  formatKey,
+  handleSyncConfigVscode,
+  resolveVscodeSettingsPath,
+  sortKeybindings,
+  syncVscodeSettings,
+} from './sync-config-vscode.mjs'
+
+const tempDirs = []
+
+afterEach(() => {
+  for (const tempDir of tempDirs.splice(0)) fs.rmSync(tempDir, { recursive: true })
+})
+
+function createTempDir() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-config-vscode-'))
+  tempDirs.push(tempDir)
+  return tempDir
+}
 
 describe('sync-config-vscode keybinding order', () => {
   it('normalizes modifier order', () => {
@@ -62,5 +84,105 @@ describe('sync-config-vscode keybinding order', () => {
       'contextual',
       'terminal',
     ])
+  })
+})
+
+describe('sync-config-vscode settings', () => {
+  it('resolves settings next to keybindings', () => {
+    assert.equal(
+      resolveVscodeSettingsPath('/code/User/keybindings.json'),
+      path.join('/code/User', 'settings.json'),
+    )
+    assert.equal(resolveVscodeSettingsPath(undefined), undefined)
+  })
+
+  it('copies the canonical settings after validating them', () => {
+    const tempDir = createTempDir()
+    const sourcePath = path.join(tempDir, 'source.json')
+    const targetPath = path.join(tempDir, 'settings.json')
+    const sourceContent = '{\n  "editor.fontSize": 16\n}\n'
+
+    fs.writeFileSync(sourcePath, sourceContent)
+    fs.writeFileSync(targetPath, '{"local":true}\n')
+
+    assert.equal(syncVscodeSettings(targetPath, sourcePath), true)
+    assert.equal(fs.readFileSync(targetPath, 'utf8'), sourceContent)
+  })
+
+  it('syncs keybindings and sibling settings through the public handler', () => {
+    const tempDir = createTempDir()
+    const targetKeybindingsPath = path.join(tempDir, 'keybindings.json')
+    const targetSettingsPath = path.join(tempDir, 'settings.json')
+    const writes = new Map()
+    const writeFileSync = mock.method(fs, 'writeFileSync', (filepath, content) => {
+      writes.set(path.resolve(String(filepath)), content)
+    })
+
+    try {
+      handleSyncConfigVscode(targetKeybindingsPath)
+    } finally {
+      writeFileSync.mock.restore()
+    }
+
+    assert.ok(writes.has(path.resolve(targetKeybindingsPath)))
+    assert.equal(
+      writes.get(path.resolve(targetSettingsPath)),
+      fs.readFileSync(path.join(import.meta.dirname, '../asset/app/vscode/settings.json'), 'utf8'),
+    )
+  })
+
+  it('skips settings when the target directory does not exist', () => {
+    const tempDir = createTempDir()
+    const sourcePath = path.join(tempDir, 'source.json')
+    const targetPath = path.join(tempDir, 'missing', 'settings.json')
+
+    fs.writeFileSync(sourcePath, '{}\n')
+
+    assert.equal(syncVscodeSettings(targetPath, sourcePath), false)
+    assert.equal(fs.existsSync(targetPath), false)
+  })
+
+  it('skips settings when the target parent is not a directory', () => {
+    const tempDir = createTempDir()
+    const parentPath = path.join(tempDir, 'not-a-directory')
+    const sourcePath = path.join(tempDir, 'source.json')
+    const targetPath = path.join(parentPath, 'settings.json')
+
+    fs.writeFileSync(parentPath, '')
+    fs.writeFileSync(sourcePath, '{}\n')
+
+    assert.equal(syncVscodeSettings(targetPath, sourcePath), false)
+    assert.equal(fs.existsSync(targetPath), false)
+  })
+
+  it('does not overwrite settings when the canonical source is invalid JSON', () => {
+    const tempDir = createTempDir()
+    const sourcePath = path.join(tempDir, 'source.json')
+    const targetPath = path.join(tempDir, 'settings.json')
+    const targetContent = '{"existing":true}\n'
+
+    fs.writeFileSync(sourcePath, '{invalid}\n')
+    fs.writeFileSync(targetPath, targetContent)
+
+    assert.throws(() => syncVscodeSettings(targetPath, sourcePath), SyntaxError)
+    assert.equal(fs.readFileSync(targetPath, 'utf8'), targetContent)
+  })
+
+  it('does not overwrite settings when the canonical source is not a JSON object', () => {
+    const tempDir = createTempDir()
+    const sourcePath = path.join(tempDir, 'source.json')
+    const targetPath = path.join(tempDir, 'settings.json')
+    const targetContent = '{"existing":true}\n'
+
+    for (const sourceContent of ['null\n', '[]\n', '"text"\n']) {
+      fs.writeFileSync(sourcePath, sourceContent)
+      fs.writeFileSync(targetPath, targetContent)
+
+      assert.throws(
+        () => syncVscodeSettings(targetPath, sourcePath),
+        /VSCode settings source must contain a JSON object/,
+      )
+      assert.equal(fs.readFileSync(targetPath, 'utf8'), targetContent)
+    }
   })
 })
