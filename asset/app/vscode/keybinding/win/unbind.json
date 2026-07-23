@@ -1,163 +1,5 @@
 [
   {
-    "key": "alt+ctrl+left",
-    "command": "-workbench.action.moveEditorToPreviousGroup"
-  },
-  {
-    "key": "alt+ctrl+right",
-    "command": "-workbench.action.moveEditorToNextGroup"
-  },
-  {
-    "key": "alt+ctrl+right",
-    "command": "-quickInput.acceptInBackground",
-    "when": "cursorAtEndOfQuickInputBox && inQuickInput && quickInputType == 'quickPick' || inQuickInput && !inputFocus && quickInputType == 'quickPick'"
-  },
-  {
-    "key": "alt+ctrl+up",
-    "command": "-editor.action.insertCursorAbove",
-    "when": "editorTextFocus"
-  },
-  {
-    "key": "alt+ctrl+f",
-    "command": "-list.find",
-    "when": "listFocus && listSupportsFind"
-  },
-  {
-    "key": "alt+ctrl+f",
-    "command": "-list.find.replInputFocus",
-    "when": "view == 'workbench.panel.repl.view'"
-  },
-  {
-    "key": "alt+ctrl+f",
-    "command": "-repl.action.find",
-    "when": "inDebugRepl || inDebugRepl && focusedView == 'workbench.panel.repl.view'"
-  },
-  {
-    "key": "alt+shift+h",
-    "command": "-references-view.showCallHierarchy",
-    "when": "editorHasCallHierarchyProvider"
-  },
-  {
-    "key": "alt+shift+h",
-    "command": "-gitlens.showQuickRepoHistory",
-    "when": "!gitlens:disabled && config.gitlens.keymap == 'alternate'"
-  },
-  {
-    "key": "alt+shift+h",
-    "command": "-editor.showCallHierarchy",
-    "when": "editorHasCallHierarchyProvider && editorTextFocus && !inReferenceSearchEditor"
-  },
-  {
-    "key": "alt+shift+h",
-    "command": "-editor.showIncomingCalls",
-    "when": "callHierarchyVisible && callHierarchyDirection == 'outgoingCalls'"
-  },
-  {
-    "key": "alt+shift+h",
-    "command": "-editor.showOutgoingCalls",
-    "when": "callHierarchyVisible && callHierarchyDirection == 'incomingCalls'"
-  },
-  {
-    "key": "alt+shift+h",
-    "command": "-editor.showSubtypes",
-    "when": "typeHierarchyVisible && typeHierarchyDirection == 'supertypes'"
-  },
-  {
-    "key": "alt+shift+h",
-    "command": "-editor.showSupertypes",
-    "when": "typeHierarchyVisible && typeHierarchyDirection == 'subtypes'"
-  },
-  {
-    "key": "alt+shift+o",
-    "command": "-editor.action.organizeImports",
-    "when": "textInputFocus && !editorReadonly && supportedCodeAction =~ /(\\s|^)source\\.organizeImports\\b/"
-  },
-  {
-    "key": "alt+enter",
-    "command": "-workbench.action.terminal.chat.insertCommand",
-    "when": "chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalHasBeenCreated && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks || chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalProcessSupported && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks"
-  },
-  {
-    "key": "alt+enter",
-    "command": "-workbench.action.terminal.chat.insertFirstCommand",
-    "when": "chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalHasBeenCreated && !terminalChatActiveRequest || chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalProcessSupported && !terminalChatActiveRequest"
-  },
-  {
-    "key": "alt+enter",
-    "command": "-notebook.cell.executeAndInsertBelow",
-    "when": "notebookCellListFocused && notebookCellType == 'markup' || notebookCellListFocused && notebookMissingKernelExtension && !notebookCellExecuting && notebookCellType == 'code' || notebookCellListFocused && !notebookCellExecuting && notebookCellType == 'code' && notebookKernelCount > 0 || notebookCellListFocused && !notebookCellExecuting && notebookCellType == 'code' && notebookKernelSourceCount > 0"
-  },
-  {
-    "key": "alt+enter",
-    "command": "-editor.action.selectAllMatches",
-    "when": "editorFocus && findWidgetVisible"
-  },
-  {
-    "key": "alt+enter",
-    "command": "-gitlens.key.alt+enter",
-    "when": "gitlens:key:alt+enter"
-  },
-  {
-    "key": "alt+enter",
-    "command": "-testing.editFocusedTest",
-    "when": "focusedView == 'workbench.view.testing'"
-  },
-  {
-    "key": "alt+left",
-    "command": "-workbench.action.navigateBack",
-    "when": "canNavigateBack"
-  },
-  {
-    "key": "alt+left",
-    "command": "-workbench.action.terminal.focusPreviousPane",
-    "when": "terminalFocus && terminalHasBeenCreated && terminalSplitPaneActive || terminalFocus && terminalProcessSupported && terminalSplitPaneActive"
-  },
-  {
-    "key": "alt+left",
-    "command": "-gitlens.key.alt+left",
-    "when": "gitlens:key:alt+left"
-  },
-  {
-    "key": "alt+left",
-    "command": "-workbench.action.quickInputBack",
-    "when": "inQuickOpen"
-  },
-  {
-    "key": "alt+oem_comma",
-    "command": "-gitlens.diffWithPrevious:key",
-    "when": "editorTextFocus && config.gitlens.keymap == 'alternate' && resource in 'gitlens:tabs:tracked'"
-  },
-  {
-    "key": "alt+oem_comma",
-    "command": "-gitlens.key.alt+,",
-    "when": "gitlens:key:,"
-  },
-  {
-    "key": "alt+oem_period",
-    "command": "-gitlens.key.alt+.",
-    "when": "gitlens:key:."
-  },
-  {
-    "key": "alt+oem_period",
-    "command": "-gitlens.diffWithNext:key",
-    "when": "editorTextFocus && gitlens:enabled && config.gitlens.keymap == 'alternate' && resourceScheme =~ /^(gitlens|git|pr)$/"
-  },
-  {
-    "key": "alt+right",
-    "command": "-workbench.action.navigateForward",
-    "when": "canNavigateForward"
-  },
-  {
-    "key": "alt+right",
-    "command": "-workbench.action.terminal.focusNextPane",
-    "when": "terminalFocus && terminalHasBeenCreated && terminalSplitPaneActive || terminalFocus && terminalProcessSupported && terminalSplitPaneActive"
-  },
-  {
-    "key": "alt+right",
-    "command": "-gitlens.key.alt+right",
-    "when": "gitlens:key:alt+right"
-  },
-  {
     "key": "alt+0",
     "command": "-workbench.action.lastEditorInGroup"
   },
@@ -228,6 +70,69 @@
     "when": "searchViewletFocus && !fileMatchOrFolderMatchFocus"
   },
   {
+    "key": "alt+ctrl+f",
+    "command": "-list.find",
+    "when": "listFocus && listSupportsFind"
+  },
+  {
+    "key": "alt+ctrl+f",
+    "command": "-list.find.replInputFocus",
+    "when": "view == 'workbench.panel.repl.view'"
+  },
+  {
+    "key": "alt+ctrl+f",
+    "command": "-repl.action.find",
+    "when": "inDebugRepl || inDebugRepl && focusedView == 'workbench.panel.repl.view'"
+  },
+  {
+    "key": "alt+ctrl+left",
+    "command": "-workbench.action.moveEditorToPreviousGroup"
+  },
+  {
+    "key": "alt+ctrl+right",
+    "command": "-workbench.action.moveEditorToNextGroup"
+  },
+  {
+    "key": "alt+ctrl+right",
+    "command": "-quickInput.acceptInBackground",
+    "when": "cursorAtEndOfQuickInputBox && inQuickInput && quickInputType == 'quickPick' || inQuickInput && !inputFocus && quickInputType == 'quickPick'"
+  },
+  {
+    "key": "alt+ctrl+up",
+    "command": "-editor.action.insertCursorAbove",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "alt+enter",
+    "command": "-workbench.action.terminal.chat.insertCommand",
+    "when": "chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalHasBeenCreated && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks || chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalProcessSupported && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks"
+  },
+  {
+    "key": "alt+enter",
+    "command": "-workbench.action.terminal.chat.insertFirstCommand",
+    "when": "chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalHasBeenCreated && !terminalChatActiveRequest || chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalProcessSupported && !terminalChatActiveRequest"
+  },
+  {
+    "key": "alt+enter",
+    "command": "-notebook.cell.executeAndInsertBelow",
+    "when": "notebookCellListFocused && notebookCellType == 'markup' || notebookCellListFocused && notebookMissingKernelExtension && !notebookCellExecuting && notebookCellType == 'code' || notebookCellListFocused && !notebookCellExecuting && notebookCellType == 'code' && notebookKernelCount > 0 || notebookCellListFocused && !notebookCellExecuting && notebookCellType == 'code' && notebookKernelSourceCount > 0"
+  },
+  {
+    "key": "alt+enter",
+    "command": "-editor.action.selectAllMatches",
+    "when": "editorFocus && findWidgetVisible"
+  },
+  {
+    "key": "alt+enter",
+    "command": "-gitlens.key.alt+enter",
+    "when": "gitlens:key:alt+enter"
+  },
+  {
+    "key": "alt+enter",
+    "command": "-testing.editFocusedTest",
+    "when": "focusedView == 'workbench.view.testing'"
+  },
+  {
     "key": "alt+h",
     "command": "-gitlens.showQuickFileHistory",
     "when": "!gitlens:disabled && config.gitlens.keymap == 'alternate'"
@@ -263,6 +168,26 @@
     "when": "editorFocus"
   },
   {
+    "key": "alt+left",
+    "command": "-workbench.action.navigateBack",
+    "when": "canNavigateBack"
+  },
+  {
+    "key": "alt+left",
+    "command": "-workbench.action.terminal.focusPreviousPane",
+    "when": "terminalFocus && terminalHasBeenCreated && terminalSplitPaneActive || terminalFocus && terminalProcessSupported && terminalSplitPaneActive"
+  },
+  {
+    "key": "alt+left",
+    "command": "-gitlens.key.alt+left",
+    "when": "gitlens:key:alt+left"
+  },
+  {
+    "key": "alt+left",
+    "command": "-workbench.action.quickInputBack",
+    "when": "inQuickOpen"
+  },
+  {
     "key": "alt+oem_2",
     "command": "-gitlens.gitCommands",
     "when": "!gitlens:disabled && config.gitlens.keymap == 'alternate'"
@@ -291,6 +216,26 @@
     "key": "alt+oem_6",
     "command": "-editor.action.inlineSuggest.showNext",
     "when": "inlineSuggestionVisible && !editorReadonly"
+  },
+  {
+    "key": "alt+oem_comma",
+    "command": "-gitlens.diffWithPrevious:key",
+    "when": "editorTextFocus && config.gitlens.keymap == 'alternate' && resource in 'gitlens:tabs:tracked'"
+  },
+  {
+    "key": "alt+oem_comma",
+    "command": "-gitlens.key.alt+,",
+    "when": "gitlens:key:,"
+  },
+  {
+    "key": "alt+oem_period",
+    "command": "-gitlens.key.alt+.",
+    "when": "gitlens:key:."
+  },
+  {
+    "key": "alt+oem_period",
+    "command": "-gitlens.diffWithNext:key",
+    "when": "editorTextFocus && gitlens:enabled && config.gitlens.keymap == 'alternate' && resourceScheme =~ /^(gitlens|git|pr)$/"
   },
   {
     "key": "alt+p",
@@ -328,9 +273,64 @@
     "when": "searchViewletFocus"
   },
   {
+    "key": "alt+right",
+    "command": "-workbench.action.navigateForward",
+    "when": "canNavigateForward"
+  },
+  {
+    "key": "alt+right",
+    "command": "-workbench.action.terminal.focusNextPane",
+    "when": "terminalFocus && terminalHasBeenCreated && terminalSplitPaneActive || terminalFocus && terminalProcessSupported && terminalSplitPaneActive"
+  },
+  {
+    "key": "alt+right",
+    "command": "-gitlens.key.alt+right",
+    "when": "gitlens:key:alt+right"
+  },
+  {
     "key": "alt+s",
     "command": "-gitlens.showQuickRepoStatus",
     "when": "!gitlens:disabled && config.gitlens.keymap == 'alternate'"
+  },
+  {
+    "key": "alt+shift+h",
+    "command": "-references-view.showCallHierarchy",
+    "when": "editorHasCallHierarchyProvider"
+  },
+  {
+    "key": "alt+shift+h",
+    "command": "-gitlens.showQuickRepoHistory",
+    "when": "!gitlens:disabled && config.gitlens.keymap == 'alternate'"
+  },
+  {
+    "key": "alt+shift+h",
+    "command": "-editor.showCallHierarchy",
+    "when": "editorHasCallHierarchyProvider && editorTextFocus && !inReferenceSearchEditor"
+  },
+  {
+    "key": "alt+shift+h",
+    "command": "-editor.showIncomingCalls",
+    "when": "callHierarchyVisible && callHierarchyDirection == 'outgoingCalls'"
+  },
+  {
+    "key": "alt+shift+h",
+    "command": "-editor.showOutgoingCalls",
+    "when": "callHierarchyVisible && callHierarchyDirection == 'incomingCalls'"
+  },
+  {
+    "key": "alt+shift+h",
+    "command": "-editor.showSubtypes",
+    "when": "typeHierarchyVisible && typeHierarchyDirection == 'supertypes'"
+  },
+  {
+    "key": "alt+shift+h",
+    "command": "-editor.showSupertypes",
+    "when": "typeHierarchyVisible && typeHierarchyDirection == 'subtypes'"
+  },
+  {
+    "key": "alt+shift+o",
+    "command": "-editor.action.organizeImports",
+    "when": "textInputFocus && !editorReadonly && supportedCodeAction =~ /(\\s|^)source\\.organizeImports\\b/"
   },
   {
     "key": "alt+w",
@@ -360,21 +360,6 @@
     "key": "alt+z",
     "command": "-workbench.action.terminal.sizeToContentWidth",
     "when": "terminalFocus && terminalHasBeenCreated && terminalIsOpen || terminalFocus && terminalIsOpen && terminalProcessSupported"
-  },
-  {
-    "key": "ctrl+shift+c",
-    "command": "-workbench.action.terminal.openNativeConsole",
-    "when": "!isSessionsWindow && !terminalFocus"
-  },
-  {
-    "key": "ctrl+shift+c",
-    "command": "-workbench.action.terminal.copySelection",
-    "when": "terminalTextSelectedInFocused || terminalFocus && terminalHasBeenCreated && terminalTextSelected || terminalFocus && terminalProcessSupported && terminalTextSelected || terminalFocus && terminalTextSelected && terminalTextSelectedInFocused || terminalHasBeenCreated && terminalTextSelected && terminalTextSelectedInFocused || terminalProcessSupported && terminalTextSelected && terminalTextSelectedInFocused"
-  },
-  {
-    "key": "ctrl+shift+i",
-    "command": "-workbench.action.toggleDevTools",
-    "when": "isDevelopment"
   },
   {
     "key": "ctrl+p",
@@ -436,13 +421,23 @@
     "when": "inFilesPicker && inQuickOpen"
   },
   {
-    "key": "ctrl+v",
-    "command": "-editor.action.clipboardPasteAction"
+    "key": "ctrl+shift+c",
+    "command": "-workbench.action.terminal.openNativeConsole",
+    "when": "!isSessionsWindow && !terminalFocus"
   },
   {
-    "key": "shift+f7",
-    "command": "-editor.action.accessibleDiffViewer.prev",
-    "when": "isInDiffEditor"
+    "key": "ctrl+shift+c",
+    "command": "-workbench.action.terminal.copySelection",
+    "when": "terminalTextSelectedInFocused || terminalFocus && terminalHasBeenCreated && terminalTextSelected || terminalFocus && terminalProcessSupported && terminalTextSelected || terminalFocus && terminalTextSelected && terminalTextSelectedInFocused || terminalHasBeenCreated && terminalTextSelected && terminalTextSelectedInFocused || terminalProcessSupported && terminalTextSelected && terminalTextSelectedInFocused"
+  },
+  {
+    "key": "ctrl+shift+i",
+    "command": "-workbench.action.toggleDevTools",
+    "when": "isDevelopment"
+  },
+  {
+    "key": "ctrl+v",
+    "command": "-editor.action.clipboardPasteAction"
   },
   {
     "key": "f5",
@@ -467,5 +462,10 @@
     "key": "f11",
     "command": "-extension.node-debug.startWithStopOnEntry",
     "when": "!inDebugMode && activeViewlet == 'workbench.view.debug' && debugConfigurationType == 'node' || !inDebugMode && activeViewlet == 'workbench.view.debug' && debugConfigurationType == 'pwa-extensionHost' || !inDebugMode && activeViewlet == 'workbench.view.debug' && debugConfigurationType == 'pwa-node'"
+  },
+  {
+    "key": "shift+f7",
+    "command": "-editor.action.accessibleDiffViewer.prev",
+    "when": "isInDiffEditor"
   }
 ]

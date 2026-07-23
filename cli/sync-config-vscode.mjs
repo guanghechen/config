@@ -73,7 +73,7 @@ const ranks = {
  * @param {string} key
  * @returns {string}
  */
-function formatKey(key) {
+export function formatKey(key) {
   return key
     .split(/\s+/g)
     .filter(x => !!x)
@@ -91,36 +91,64 @@ function formatKey(key) {
 }
 
 /**
+ * Compare key labels case-insensitively while treating digit runs numerically.
+ *
+ * @param {string} x
+ * @param {string} y
+ * @returns {number}
+ */
+function compareNaturalText(x, y) {
+  const parts_x = x.toLowerCase().match(/\d+|\D/g) ?? []
+  const parts_y = y.toLowerCase().match(/\d+|\D/g) ?? []
+  const L = Math.min(parts_x.length, parts_y.length)
+
+  for (let i = 0; i < L; ++i) {
+    const px = parts_x[i]
+    const py = parts_y[i]
+    if (px === py) continue
+
+    const nx = /^\d+$/.test(px) ? Number(px) : undefined
+    const ny = /^\d+$/.test(py) ? Number(py) : undefined
+    if (nx !== undefined && ny !== undefined && nx !== ny) return nx - ny
+    return px < py ? -1 : 1
+  }
+
+  return parts_x.length - parts_y.length
+}
+
+/**
  * @param {IVscodeKeybinding[]} keybindings
  * @returns {IVscodeKeybinding[]}
  */
-function sortKeybindings(keybindings) {
+export function sortKeybindings(keybindings) {
   return keybindings
     .map(x => {
       const { key, command, when, title, ...rest } = x
       return { key: formatKey(key), command, when, title, ...rest }
     })
     .sort((x, y) => {
-      const keys_x = x.key.split('+')
-      const keys_y = y.key.split('+')
-      const L = Math.min(keys_x.length, keys_y.length)
-
-      for (let i = 0; i < L; ++i) {
-        const kx = keys_x[i]
-        const ky = keys_y[i]
-        const rx = ranks[kx.toLowerCase()] ?? 1
-        const ry = ranks[ky.toLowerCase()] ?? 1
-        if (rx !== ry) return ry - rx
-        if (kx !== ky) return kx < ky ? -1 : 1
-      }
-
-      if (keys_x.length !== keys_y.length) return keys_x.length - keys_y.length
+      const compared = compareNaturalText(x.key, y.key)
+      if (compared !== 0) return compared
 
       if (x.when === y.when) return 0
       if (!x.when) return -1
       if (!y.when) return 1
       return 0
     })
+}
+
+/**
+ * Compose the generated keymap. Stable sorting preserves the manually curated
+ * low-to-high priority of equal-key contextual bindings; rebind entries remain
+ * last so terminal passthrough keeps precedence.
+ *
+ * @param {IVscodeKeybinding[]} unbind
+ * @param {IVscodeKeybinding[]} customize
+ * @param {IVscodeKeybinding[]} rebind
+ * @returns {IVscodeKeybinding[]}
+ */
+export function composeKeybindings(unbind, customize, rebind) {
+  return [...sortKeybindings(unbind), ...sortKeybindings([...customize, ...rebind])]
 }
 
 /**
@@ -188,7 +216,7 @@ export function handleSyncConfigVscode(targetKeybindingsPath) {
     const key = [x.key, x.command, x.when ?? 'undefined'].join('#.#')
     return !existed_keys.has(key)
   })
-  const resolved_items = [...resolved_unbind, ...resolved_customize, ...resolved_rebind]
+  const resolved_items = composeKeybindings(resolved_unbind, resolved_customize, resolved_rebind)
 
   const content_rebind = JSON.stringify(resolved_rebind, null, 2) + '\n'
   const content_customize = JSON.stringify(resolved_customize, null, 2) + '\n'
