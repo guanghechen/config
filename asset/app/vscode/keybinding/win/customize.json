@@ -15,6 +15,11 @@
     "when": "!panelFocus && !terminalFocus && !sideBarFocus"
   },
   {
+    "key": "alt+ctrl+down",
+    "command": "quickInput.nextSeparator",
+    "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
+  },
+  {
     "key": "alt+ctrl+left",
     "command": "workbench.action.terminal.resizePaneLeft",
     "when": "terminalFocus && terminalHasBeenCreated || terminalFocus && terminalProcessSupported"
@@ -43,6 +48,11 @@
     "key": "alt+ctrl+up",
     "command": "workbench.action.moveEditorToAboveGroup",
     "when": "!panelFocus && !terminalFocus && !sideBarFocus"
+  },
+  {
+    "key": "alt+ctrl+up",
+    "command": "quickInput.previousSeparator",
+    "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
   },
   {
     "key": "alt+ctrl+f",
@@ -207,8 +217,23 @@
     "command": "workbench.action.decreaseViewSize"
   },
   {
+    "key": "alt+left",
+    "command": "list.collapseAll",
+    "when": "listFocus && !inputFocus && !treestickyScrollFocused"
+  },
+  {
     "key": "alt+right",
     "command": "workbench.action.increaseViewSize"
+  },
+  {
+    "key": "alt+right",
+    "command": "quickInput.acceptInBackground",
+    "when": "cursorAtEndOfQuickInputBox && inQuickInput && quickInputType == 'quickPick' || inQuickInput && !inputFocus && quickInputType == 'quickPick'"
+  },
+  {
+    "key": "alt+right",
+    "command": "editor.action.inlineSuggest.acceptNextWord",
+    "when": "cursorBeforeGhostText && inlineSuggestionVisible && !accessibilityModeEnabled && !editorReadonly"
   },
   {
     "key": "alt+,",
@@ -216,14 +241,48 @@
     "when": "terminalFocus"
   },
   {
+    "key": "alt+,",
+    "command": "workbench.action.openSettings"
+  },
+  {
     "key": "alt+.",
     "command": "workbench.action.terminal.focusNext",
     "when": "terminalFocus"
   },
   {
+    "key": "alt+.",
+    "command": "workbench.action.chat.openModePicker",
+    "when": "chatIsEnabled && inChatInput && chatLocation == 'panel'"
+  },
+  {
+    "key": "alt+.",
+    "command": "editor.changeDropType",
+    "when": "dropWidgetVisible"
+  },
+  {
+    "key": "alt+.",
+    "command": "editor.changePasteType",
+    "when": "pasteWidgetVisible"
+  },
+  {
+    "key": "alt+.",
+    "command": "problems.action.showQuickFixes",
+    "when": "problemFocus"
+  },
+  {
+    "key": "alt+.",
+    "command": "acceptSelectedCodeAction",
+    "when": "codeActionMenuVisible"
+  },
+  {
     "key": "alt+/",
     "command": "workbench.action.terminal.new",
     "when": "terminalFocus"
+  },
+  {
+    "key": "alt+/",
+    "command": "workbench.action.chat.attachContext",
+    "when": "inChatInput && chatLocation == 'panel'"
   },
   {
     "key": "alt+0",
@@ -641,6 +700,11 @@
     "key": "alt+t",
     "command": "openInTerminal",
     "when": "!terminalFocus"
+  },
+  {
+    "key": "alt+u",
+    "command": "cursorUndo",
+    "when": "textInputFocus"
   },
   {
     "key": "alt+v",

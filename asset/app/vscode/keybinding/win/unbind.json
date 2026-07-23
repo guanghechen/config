@@ -18,11 +18,6 @@
     "when": "editorTextFocus"
   },
   {
-    "key": "alt+ctrl+up",
-    "command": "-quickInput.previousSeparator",
-    "when": "inQuickInput && quickInputType == 'quickPick' || inQuickInput && quickInputType == 'quickTree'"
-  },
-  {
     "key": "alt+ctrl+f",
     "command": "-list.find",
     "when": "listFocus && listSupportsFind"
@@ -161,11 +156,6 @@
     "key": "alt+right",
     "command": "-gitlens.key.alt+right",
     "when": "gitlens:key:alt+right"
-  },
-  {
-    "key": "alt+right",
-    "command": "-quickInput.acceptInBackground",
-    "when": "cursorAtEndOfQuickInputBox && inQuickInput && quickInputType == 'quickPick' || inQuickInput && !inputFocus && quickInputType == 'quickPick'"
   },
   {
     "key": "alt+0",
