@@ -10,7 +10,9 @@
 6. **PREFERRED**: Keep Markdown tables and ASCII diagrams visually aligned (CJK = 2 units, ASCII = 1); prefer bullet lists when clearer than a table.
 7. **PREFERRED**: For non-trivial proposals, recommend one option; use 2–3 examples with a brief contrast only when they clarify a meaningful tradeoff.
 8. **ALWAYS**: When identifying issues, provide concrete examples; if there is no minimal reproduction, state trigger, evidence, and impact.
-9. **ALWAYS**: Before delivering changes, perform a risk-proportionate adversarial self-review: Is the change robust, minimal in scope and complexity, and free of new issues? Fix confirmed in-scope issues and re-verify. If a material concern remains unresolved, pause delivery, present the evidence and options, and await the user's decision.
+9. **ALWAYS**: Before delivering a significant change, invoke the `adversarial-review` skill on the complete changeset; intermediate edits alone do not trigger review. Keep the skill read-only: fix confirmed in-scope findings in the calling workflow, re-run risk-proportionate verification, and re-review the complete changeset after fixes until it reports `Converged`. Pause for the user only when the skill reports `User decision required` or proceeding requires new authority or material scope expansion; provide evidence and concrete options.
+
+> Significant changes include cross-module or stateful-flow changes, public interface or configuration changes, security-sensitive work, broad refactors, and high-regression-risk fixes.
 
 ## Security
 
