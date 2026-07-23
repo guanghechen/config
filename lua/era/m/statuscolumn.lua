@@ -119,66 +119,64 @@ local function is_git_sign(name)
   return name:find("^m_git_sign_") ~= nil
 end
 
--- Returns a list of regular and extmark signs sorted by priority (low to high)
+-- Returns buffer signs grouped by line
 ---@param bufnr                         integer
----@param wanted                        era.m.statuscolumn.IWanted
 ---@return table<integer, era.m.statuscolumn.ISign[]>
-local function get_buf_signs(bufnr, wanted)
-  local signs_map = {} ---@type table<integer, era.m.statuscolumn.ISign[]>
+local function collect_buf_signs(bufnr)
+  local signs_by_lnum = {} ---@type table<integer, era.m.statuscolumn.ISign[]>
 
-  if wanted.sign or wanted.git then
-    -- Get extmark signs (includes both legacy and extmark signs in nvim 0.10+)
-    local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true, type = "sign" })
-    for _, extmark in ipairs(extmarks) do
-      local lnum = extmark[2] + 1
-      local name = extmark[4].sign_hl_group or extmark[4].sign_name or ""
-      ---@type era.m.statuscolumn.ISign
-      local sign = {
-        name = name,
-        type = is_git_sign(name) and "git" or "sign",
-        text = extmark[4].sign_text or "",
-        texthl = extmark[4].sign_hl_group,
-        priority = extmark[4].priority or 0,
-      }
+  -- Get extmark signs (includes both legacy and extmark signs in nvim 0.10+)
+  local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true, type = "sign" })
+  for _, extmark in ipairs(extmarks) do
+    local lnum = extmark[2] + 1
+    local name = extmark[4].sign_hl_group or extmark[4].sign_name or ""
+    ---@type era.m.statuscolumn.ISign
+    local sign = {
+      name = name,
+      type = is_git_sign(name) and "git" or "sign",
+      text = extmark[4].sign_text or "",
+      texthl = extmark[4].sign_hl_group,
+      priority = extmark[4].priority or 0,
+    }
 
-      signs_map[lnum] = signs_map[lnum] or {}
-      if wanted[sign.type] then
-        table.insert(signs_map[lnum], sign)
-      end
-    end
+    signs_by_lnum[lnum] = signs_by_lnum[lnum] or {}
+    table.insert(signs_by_lnum[lnum], sign)
   end
 
   -- Add marks
-  if wanted.mark then
-    local marks = vim.fn.getmarklist(bufnr)
-    vim.list_extend(marks, vim.fn.getmarklist())
-    for _, mark in ipairs(marks) do
-      if mark.pos[1] == bufnr and mark.mark:match("[a-zA-Z]") then
-        ---@type era.m.statuscolumn.ISign
-        local sign = { type = "mark", text = string.sub(mark.mark, 2), texthl = "StatusColumnMark" }
-        local lnum = mark.pos[2]
-        signs_map[lnum] = signs_map[lnum] or {}
-        table.insert(signs_map[lnum], sign)
-      end
+  local marks = vim.fn.getmarklist(bufnr)
+  vim.list_extend(marks, vim.fn.getmarklist())
+  for _, mark in ipairs(marks) do
+    if mark.pos[1] == bufnr and mark.mark:match("[a-zA-Z]") then
+      ---@type era.m.statuscolumn.ISign
+      local sign = { type = "mark", text = string.sub(mark.mark, 2), texthl = "StatusColumnMark" }
+      local lnum = mark.pos[2]
+      signs_by_lnum[lnum] = signs_by_lnum[lnum] or {}
+      table.insert(signs_by_lnum[lnum], sign)
     end
   end
 
-  return signs_map
+  return signs_by_lnum
 end
 
--- Returns a list of regular and extmark signs sorted by priority (high to low)
+-- Returns wanted signs for a line sorted by priority (high to low)
 ---@param winnr                         integer
 ---@param bufnr                         integer
 ---@param lnum                          integer
 ---@param wanted                        era.m.statuscolumn.IWanted
 ---@return era.m.statuscolumn.ISign[]
 local function line_signs(winnr, bufnr, lnum, wanted)
-  local buf_signs = sign_cache[bufnr] ---@type table<integer, era.m.statuscolumn.ISign[]>|nil
-  if not buf_signs then
-    buf_signs = get_buf_signs(bufnr, wanted)
-    sign_cache[bufnr] = buf_signs
+  local signs_by_lnum = sign_cache[bufnr] ---@type table<integer, era.m.statuscolumn.ISign[]>|nil
+  if not signs_by_lnum then
+    signs_by_lnum = collect_buf_signs(bufnr)
+    sign_cache[bufnr] = signs_by_lnum
   end
-  local signs = buf_signs[lnum] or {} ---@type era.m.statuscolumn.ISign[]
+  local signs = {} ---@type era.m.statuscolumn.ISign[]
+  for _, sign in ipairs(signs_by_lnum[lnum] or {}) do
+    if wanted[sign.type] then
+      signs[#signs + 1] = sign
+    end
+  end
 
   -- Get fold signs
   if wanted.fold then
