@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adversarial Review"
+  short_description: "Review changes for robustness, restraint, style, and simplicity"
+  default_prompt: "Use $adversarial-review to challenge the current change for robustness, scope, style, and simplicity; report findings with evidence and impact without editing the reviewed files, and surface any tradeoff that needs a decision."
