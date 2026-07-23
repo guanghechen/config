@@ -1282,22 +1282,22 @@
   {
     "key": "cmd+enter",
     "command": "chatEditor.action.accept",
-    "when": "chatEdits.hasEditorModifications && editorFocus && !chatEdits.isCurrentlyBeingModified"
+    "when": "chatEdits.hasEditorModifications && editorFocus && !chatEdits.isCurrentlyBeingModified || chatEdits.hasEditorModifications && notebookEditorFocused && !chatEdits.isCurrentlyBeingModified"
   },
   {
     "key": "cmd+enter",
     "command": "inlineChat2.keep",
-    "when": "inlineChatVisible && chatEdits.hasEditorModifications && !chatEdits.isRequestInProgress"
+    "when": "chatEdits.hasEditorModifications && inlineChatHasEditsAgent && inlineChatVisible && !chatEdits.isRequestInProgress || chatEdits.hasEditorModifications && inlineChatHasNotebookAgent && inlineChatVisible && !chatEdits.isRequestInProgress && activeEditor == 'workbench.editor.notebook'"
   },
   {
     "key": "cmd+enter",
     "command": "workbench.action.terminal.chat.runCommand",
-    "when": "terminalChatResponseContainsCodeBlock && terminalHasBeenCreated && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks || terminalChatResponseContainsCodeBlock && terminalProcessSupported && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks"
+    "when": "chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalHasBeenCreated && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks || chatIsEnabled && terminalChatResponseContainsCodeBlock && terminalProcessSupported && !terminalChatActiveRequest && !terminalChatResponseContainsMultipleCodeBlocks"
   },
   {
     "key": "cmd+enter",
     "command": "workbench.action.terminal.chat.runFirstCommand",
-    "when": "terminalChatResponseContainsMultipleCodeBlocks && terminalHasBeenCreated && !terminalChatActiveRequest || terminalChatResponseContainsMultipleCodeBlocks && terminalProcessSupported && !terminalChatActiveRequest"
+    "when": "chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalHasBeenCreated && !terminalChatActiveRequest || chatIsEnabled && terminalChatResponseContainsMultipleCodeBlocks && terminalProcessSupported && !terminalChatActiveRequest"
   },
   {
     "key": "cmd+enter",
@@ -1533,18 +1533,28 @@
   },
   {
     "key": "cmd+c",
+    "command": "suggestWidgetCopy",
+    "when": "suggestWidgetDetailsFocused"
+  },
+  {
+    "key": "cmd+c",
     "command": "gitlens.views.branches.copy",
-    "when": "focusedView == 'gitlens.views.branches'"
+    "when": "focusedView == 'gitlens.views.branches' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'branches'"
   },
   {
     "key": "cmd+c",
     "command": "gitlens.views.commits.copy",
-    "when": "focusedView == 'gitlens.views.commits'"
+    "when": "focusedView == 'gitlens.views.commits' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'commits'"
   },
   {
     "key": "cmd+c",
     "command": "gitlens.views.contributors.copy",
-    "when": "focusedView == 'gitlens.views.contributors'"
+    "when": "focusedView == 'gitlens.views.contributors' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'contributors'"
+  },
+  {
+    "key": "cmd+c",
+    "command": "gitlens.views.launchpad.copy",
+    "when": "focusedView == 'gitlens.views.launchpad' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'launchpad'"
   },
   {
     "key": "cmd+c",
@@ -1564,32 +1574,32 @@
   {
     "key": "cmd+c",
     "command": "gitlens.views.remotes.copy",
-    "when": "focusedView == 'gitlens.views.remotes'"
+    "when": "focusedView == 'gitlens.views.remotes' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'remotes'"
   },
   {
     "key": "cmd+c",
     "command": "gitlens.views.repositories.copy",
-    "when": "focusedView == 'gitlens.views.repositories'"
+    "when": "focusedView == 'gitlens.views.repositories' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'repositories'"
   },
   {
     "key": "cmd+c",
     "command": "gitlens.views.searchAndCompare.copy",
-    "when": "focusedView == 'gitlens.views.searchAndCompare'"
+    "when": "focusedView == 'gitlens.views.searchAndCompare' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'searchAndCompare'"
   },
   {
     "key": "cmd+c",
     "command": "gitlens.views.tags.copy",
-    "when": "focusedView == 'gitlens.views.tags'"
+    "when": "focusedView == 'gitlens.views.tags' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'tags'"
   },
   {
     "key": "cmd+c",
     "command": "gitlens.views.stashes.copy",
-    "when": "focusedView == 'gitlens.views.stashes'"
+    "when": "focusedView == 'gitlens.views.stashes' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'stashes'"
   },
   {
     "key": "cmd+c",
     "command": "gitlens.views.fileHistory.copy",
-    "when": "focusedView == 'gitlens.views.fileHistory'"
+    "when": "focusedView == 'gitlens.views.fileHistory' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'fileHistory'"
   },
   {
     "key": "cmd+c",
@@ -1599,7 +1609,7 @@
   {
     "key": "cmd+c",
     "command": "gitlens.views.worktrees.copy",
-    "when": "focusedView == 'gitlens.views.worktrees'"
+    "when": "focusedView == 'gitlens.views.worktrees' || focusedView == 'gitlens.views.scm.grouped' && gitlens:views:scm:grouped:view == 'worktrees'"
   },
   {
     "key": "cmd+c",
@@ -1639,7 +1649,7 @@
   {
     "key": "cmd+c",
     "command": "workbench.debug.viewlet.action.copyValue",
-    "when": "focusedView == 'workbench.debug.variablesView' || focusedView == 'workbench.debug.watchExpressionsView'"
+    "when": "!expressionSelected && focusedView == 'workbench.debug.variablesView' || !expressionSelected && focusedView == 'workbench.debug.watchExpressionsView'"
   },
   {
     "key": "cmd+d",
@@ -1747,6 +1757,16 @@
     "command": "workbench.action.files.newUntitledFile"
   },
   {
+    "key": "cmd+n",
+    "command": "workbench.action.openChat",
+    "when": "chatIsEnabled && inChat && inChatEditor"
+  },
+  {
+    "key": "cmd+n",
+    "command": "workbench.action.chat.newChat",
+    "when": "chatIsEnabled && inChat && chatLocation == 'panel'"
+  },
+  {
     "key": "cmd+o",
     "command": "workbench.action.navigateForward",
     "when": "editorTextFocus",
@@ -1773,7 +1793,7 @@
   {
     "key": "cmd+r",
     "command": "workbench.action.terminal.chat.rerunRequest",
-    "when": "terminalChatFocus && terminalHasBeenCreated && !terminalChatActiveRequest || terminalChatFocus && terminalProcessSupported && !terminalChatActiveRequest"
+    "when": "chatIsEnabled && terminalChatFocus && terminalHasBeenCreated && !terminalChatActiveRequest || chatIsEnabled && terminalChatFocus && terminalProcessSupported && !terminalChatActiveRequest"
   },
   {
     "key": "cmd+s",
@@ -1826,6 +1846,11 @@
     "key": "cmd+w",
     "command": "workbench.action.closeGroup",
     "when": "activeEditorGroupEmpty && multipleEditorGroups"
+  },
+  {
+    "key": "cmd+w",
+    "command": "workbench.action.restoreAuxiliaryBar",
+    "when": "auxiliaryBarMaximized"
   },
   {
     "key": "cmd+w",
