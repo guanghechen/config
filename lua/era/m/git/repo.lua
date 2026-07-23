@@ -44,18 +44,16 @@ function M.create(toplevel, token)
     end
 
     stl.async.run(function()
-      local result = stl.git.info.get_toplevel(toplevel, token):await()
-      if not result or not result.gitdir or not result.toplevel then
+      local result = stl.git.info.get_repo_info(toplevel, token):await()
+      if not result then
         resolve(nil)
         return
       end
 
-      local abbrev_result = stl.git.info.get_abbrev_head(result.toplevel, token):await()
-
       local self = setmetatable({}, M)
-      self.abbrev_head = abbrev_result and abbrev_result.abbrev_head
+      self.abbrev_head = result.abbrev_head
       self.commondir = resolve_commondir(result.gitdir)
-      self.detached = abbrev_result and abbrev_result.detached
+      self.detached = result.detached
       self.gitdir = result.gitdir
       self.toplevel = result.toplevel
 

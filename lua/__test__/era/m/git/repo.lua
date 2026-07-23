@@ -14,18 +14,13 @@ local t = harness.new("era.m.git.repo")
 ---@field token                        stl.c.CancellationToken|nil
 
 local requests = {} ---@type era.m.git.repo.test.IRequest[]
-local abbrev_calls = 0 ---@type integer
 
 bootstrap.with_stl(t, {
   async = require("stl.async"),
   c = { Future = Future },
   git = {
     info = {
-      get_abbrev_head = function()
-        abbrev_calls = abbrev_calls + 1
-        return Future.resolve({ abbrev_head = "main", detached = false })
-      end,
-      get_toplevel = function(_, token)
+      get_repo_info = function(_, token)
         local future, resolve = Future.new_with_resolver()
         requests[#requests + 1] = { resolve = resolve, token = token }
         return future
@@ -38,11 +33,15 @@ local Repo = require("era.m.git.repo")
 
 local function reset()
   requests = {}
-  abbrev_calls = 0
 end
 
 local function resolve_repo(index)
-  requests[index].resolve({ gitdir = "/repo/.git", toplevel = "/repo" })
+  requests[index].resolve({
+    abbrev_head = "main",
+    detached = false,
+    gitdir = "/repo/.git",
+    toplevel = "/repo",
+  })
 end
 
 t:test("concurrent unowned creates share one future", function()
@@ -52,12 +51,12 @@ t:test("concurrent unowned creates share one future", function()
   local second = Repo.create("/repo")
 
   t.assert_eq(first, second, "shared future")
-  t.assert_eq(1, #requests, "toplevel queries")
+  t.assert_eq(1, #requests, "repo queries")
 
   resolve_repo(1)
 
   t.assert_true(first:is_resolved(), "shared future resolved")
-  t.assert_eq(1, abbrev_calls, "abbrev queries")
+  t.assert_eq("main", first:get_result().abbrev_head, "abbrev head")
 end)
 
 t:test("successful create releases the in-flight entry", function()
@@ -68,7 +67,7 @@ t:test("successful create releases the in-flight entry", function()
   local second = Repo.create("/repo")
 
   t.assert_true(first ~= second, "new future")
-  t.assert_eq(2, #requests, "new toplevel query")
+  t.assert_eq(2, #requests, "new repo query")
   requests[2].resolve(nil)
 end)
 
@@ -80,7 +79,7 @@ t:test("failed create releases the in-flight entry", function()
   local second = Repo.create("/repo")
 
   t.assert_true(first ~= second, "new future after failure")
-  t.assert_eq(2, #requests, "retried toplevel query")
+  t.assert_eq(2, #requests, "retried repo query")
   requests[2].resolve(nil)
 end)
 
@@ -92,7 +91,7 @@ t:test("token-owned creates remain isolated", function()
   local second = Repo.create("/repo", token)
 
   t.assert_true(first ~= second, "independent futures")
-  t.assert_eq(2, #requests, "independent toplevel queries")
+  t.assert_eq(2, #requests, "independent repo queries")
   requests[1].resolve(nil)
   requests[2].resolve(nil)
 end)

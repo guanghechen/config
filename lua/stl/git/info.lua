@@ -2,6 +2,12 @@
 ---@field public branch                 ?string
 ---@field public commit                 ?string
 
+---@class stl.git.IRepoInfo
+---@field public abbrev_head            string
+---@field public detached               boolean
+---@field public gitdir                 string
+---@field public toplevel               string
+
 ---@class stl.git.info
 local M = {}
 
@@ -32,7 +38,6 @@ local function read_first_line(path)
   f:close()
   return line
 end
-
 
 ----------------------------------------------------------------------------------------------------
 -- Public (sync methods - file reading)
@@ -153,6 +158,25 @@ function M.eq(a, b)
 end
 
 ----------------------------------------------------------------------------------------------------
+-- Private (async process helpers)
+----------------------------------------------------------------------------------------------------
+
+---@param cwd                           string
+---@param token                         ?stl.c.CancellationToken
+---@param callback                      fun(abbrev_head: string): nil
+---@return vim.SystemObj
+local function start_short_head(cwd, token, callback)
+  return vim.system({ "git", "-C", cwd, "rev-parse", "--short", "HEAD" }, { text = true }, function(obj)
+    vim.schedule(function()
+      if token and token:is_cancelled() then
+        return
+      end
+      callback(obj.code == 0 and vim.trim(obj.stdout or "") or "")
+    end)
+  end)
+end
+
+----------------------------------------------------------------------------------------------------
 -- Public (async methods - Future version)
 ----------------------------------------------------------------------------------------------------
 
@@ -180,17 +204,8 @@ function M.get_abbrev_head(cwd, token)
 
         local head = vim.trim(obj.stdout or "")
         if head == "HEAD" then
-          proc = vim.system({ "git", "-C", cwd, "rev-parse", "--short", "HEAD" }, { text = true }, function(obj2)
-            vim.schedule(function()
-              if token and token:is_cancelled() then
-                return
-              end
-              if obj2.code == 0 then
-                resolve({ abbrev_head = vim.trim(obj2.stdout or ""), detached = true })
-              else
-                resolve({ abbrev_head = "", detached = true })
-              end
-            end)
+          proc = start_short_head(cwd, token, function(abbrev_head)
+            resolve({ abbrev_head = abbrev_head, detached = true })
           end)
         else
           resolve({ abbrev_head = head, detached = false })
@@ -316,16 +331,17 @@ end
 
 ---@param cwd                           string
 ---@param token                         ?stl.c.CancellationToken
----@return stl.c.Future                 Resolves with { gitdir: ?string, toplevel: ?string }
-function M.get_toplevel(cwd, token)
+---@return stl.c.Future                 Resolves with ?stl.git.IRepoInfo
+function M.get_repo_info(cwd, token)
   return stl.c.Future.new(function(resolve)
     if token and token:is_cancelled() then
-      resolve({ gitdir = nil, toplevel = nil })
+      resolve(nil)
       return
     end
 
-    local proc = vim.system(
-      { "git", "-C", cwd, "rev-parse", "--show-toplevel", "--absolute-git-dir" },
+    local proc ---@type vim.SystemObj|nil
+    proc = vim.system(
+      { "git", "-C", cwd, "rev-parse", "--show-toplevel", "--absolute-git-dir", "--abbrev-ref", "HEAD" },
       { text = true },
       function(obj)
         vim.schedule(function()
@@ -333,27 +349,47 @@ function M.get_toplevel(cwd, token)
             return
           end
 
-          if obj.code ~= 0 then
-            resolve({ gitdir = nil, toplevel = nil })
-            return
-          end
-
           local lines = vim.split(obj.stdout or "", "\n", { plain = true })
-          if #lines < 2 then
-            resolve({ gitdir = nil, toplevel = nil })
+          if not lines[1] or lines[1] == "" or not lines[2] or lines[2] == "" then
+            resolve(nil)
             return
           end
 
           local toplevel = yoz.path.normalize(lines[1], true, stl.env.PATH_SEP)
           local gitdir = yoz.path.normalize(lines[2], true, stl.env.PATH_SEP)
-          resolve({ gitdir = gitdir, toplevel = toplevel })
+          local head = lines[3] or ""
+          local result = {
+            abbrev_head = "",
+            detached = false,
+            gitdir = gitdir,
+            toplevel = toplevel,
+          } ---@type stl.git.IRepoInfo
+
+          if obj.code ~= 0 then
+            -- An unborn repository has valid paths but cannot resolve HEAD yet.
+            resolve(head == "HEAD" and result or nil)
+          elseif head == "HEAD" then
+            proc = start_short_head(toplevel, token, function(abbrev_head)
+              result.abbrev_head = abbrev_head
+              result.detached = true
+              resolve(result)
+            end)
+          elseif head ~= "" then
+            result.abbrev_head = head
+            resolve(result)
+          else
+            resolve(nil)
+          end
         end)
       end
     )
 
     if token then
       token:on_cancel(function()
-        proc:kill(9)
+        if proc then
+          proc:kill(9)
+        end
+        resolve(nil)
       end)
     end
   end)
