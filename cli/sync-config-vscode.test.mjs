@@ -87,6 +87,20 @@ describe('sync-config-vscode keybinding order', () => {
   })
 })
 
+describe('sync-config-vscode terminal sequences', () => {
+  it('matches each platform tmux keymap for session navigation', () => {
+    const root = path.join(import.meta.dirname, '../asset/app/vscode/keybinding')
+    const osx = JSON.parse(fs.readFileSync(path.join(root, 'osx/rebind.json'), 'utf8'))
+    const win = JSON.parse(fs.readFileSync(path.join(root, 'win/rebind.json'), 'utf8'))
+    const sequence = (keybindings, key) => keybindings.find(x => x.key.toLowerCase() === key)?.args?.text
+
+    assert.equal(sequence(osx, 'cmd+,'), '\u0001,')
+    assert.equal(sequence(osx, 'cmd+.'), '\u0001.')
+    assert.equal(sequence(win, 'alt+,'), '\u001b,')
+    assert.equal(sequence(win, 'alt+.'), '\u001b.')
+  })
+})
+
 describe('sync-config-vscode settings', () => {
   it('resolves settings next to keybindings', () => {
     assert.equal(

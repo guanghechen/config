@@ -4,7 +4,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u001b,"
+      "text": "\u0001,"
     }
   },
   {
@@ -12,7 +12,7 @@
     "command": "workbench.action.terminal.sendSequence",
     "when": "terminalFocus",
     "args": {
-      "text": "\u001b."
+      "text": "\u0001."
     }
   },
   {
