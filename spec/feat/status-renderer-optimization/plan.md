@@ -78,3 +78,34 @@ the priority at the current session count.
   benefit relative to unsafe FFI and semantic risk.
 - Persistent daemon: process savings do not justify lifecycle complexity.
 - Session-list linear window selection: wait for profiling evidence at scale.
+
+## 2026-07-24 Adversarial Review Follow-up
+
+The next optimization remains benchmark-driven. Process/tmux IPC is the known
+latency floor, but measurements from standalone `hyperfine` commands are only
+directional: they mix shell overhead with historical median/p95 data and cannot
+justify an implementation by themselves.
+
+The only approved implementation target is the scheduler driver's live-owner
+contention path:
+
+- The lock file remains the single owner of scheduler-driver execution.
+- A live driver or renderer owner is a read-only fast rejection; it must be
+  checked both before atomic acquisition and again after a failed acquisition,
+  because simultaneous contenders can both observe an initially absent lock.
+- Only dead or unknown ownership may enter the existing server-scoped recovery
+  lease. Recovery remains fail closed on tmux IPC failure or unknown lock data.
+- The accepted tradeoff is that an owner dying immediately after a live check
+  may defer recovery until the next status tick; no mutation is lost, and the
+  existing lease path recovers it on that tick.
+
+The following ideas are not approved without new isolated A/B evidence:
+
+- Passing scheduler task snapshots from shell into Rust would split the tmux
+  state boundary for an estimated one-IPC saving, so it remains deferred.
+- Length-only per-session delta commits reduce command bytes but do not normally
+  reduce process count for one attached session; first measure resize bursts.
+- Hook coalescing requires a dirty-generation replay contract to avoid dropping
+  the final lifecycle state; a simple single-flight gate is not acceptable.
+- Measure one-second tmux format-expansion CPU with inert/active drivers and
+  1/2/4 clients before ranking status-format refactors.

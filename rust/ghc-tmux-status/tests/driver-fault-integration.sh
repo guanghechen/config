@@ -57,6 +57,7 @@ file_is_nonempty() {
 mkdir -p "$(dirname "$renderer")" "$(dirname "$driver")" "$lock_tmp"
 cp "$driver_source" "$driver"
 chmod +x "$driver"
+real_tmux=$(command -v tmux)
 
 cat >"$renderer" <<EOF
 #!/bin/sh
@@ -163,9 +164,20 @@ chmod +x "$renderer"
 env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 46 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' set -g status-left "$driver_format"
 wait_for "hung renderer start" file_is_nonempty "$tmp/hangs"
+live_owner_bin="$tmp/live-owner-bin"
+live_owner_tmux_calls="$tmp/live-owner-tmux-calls"
+mkdir -p "$live_owner_bin"
+cat >"$live_owner_bin/tmux" <<EOF
+#!/bin/sh
+printf '%s\n' "\$*" >>'$live_owner_tmux_calls'
+exec '$real_tmux' "\$@"
+EOF
+chmod +x "$live_owner_bin/tmux"
+: >"$live_owner_tmux_calls"
 driver_pids=()
 for _ in $(seq 1 20); do
   env \
+    PATH="$live_owner_bin:$PATH" \
     HOME="$home" \
     TMPDIR="$lock_tmp" \
     TMUX="$server_env" \
@@ -179,6 +191,10 @@ done
 hang_count=$(wc -l <"$tmp/hangs" | tr -d ' ')
 if [ "$hang_count" != "1" ]; then
   echo "hung renderer spawned duplicate format jobs: $hang_count" >&2
+  exit 1
+fi
+if [ -s "$live_owner_tmux_calls" ]; then
+  echo "live scheduler owner contention entered tmux recovery" >&2
   exit 1
 fi
 env -u TMUX tmux -L "$socket" display-message -p '#{pid}:alive' >/dev/null
@@ -241,6 +257,41 @@ if [ -e "$scheduler_lock" ]; then
   echo "cleanup did not reclaim orphaned renderer lock artifacts" >&2
   exit 1
 fi
+env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+
+# A contender can observe no lock and still lose the atomic link race. Its
+# post-acquire check must recognize the newly published live owner without
+# entering the recovery lease or launching another renderer.
+cat >"$live_owner_bin/link" <<EOF
+#!/bin/sh
+printf '%s\n' '$$' >"\$2"
+exit 1
+EOF
+chmod +x "$live_owner_bin/link"
+cat >"$renderer" <<EOF
+#!/bin/sh
+: >'$tmp/post-acquire-renderer-ran'
+EOF
+chmod +x "$renderer"
+: >"$live_owner_tmux_calls"
+env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 471 ';' \
+  set -s @GHC_SL_SCHED_ACTIVE 1
+env PATH="$live_owner_bin:$PATH" HOME="$home" TMPDIR="$lock_tmp" \
+  TMUX="$server_env" GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 \
+  "$driver" >/dev/null 2>&1
+if [ -s "$live_owner_tmux_calls" ]; then
+  echo "post-acquire live owner race entered tmux recovery" >&2
+  exit 1
+fi
+if [ -f "$tmp/post-acquire-renderer-ran" ]; then
+  echo "post-acquire live owner race launched a duplicate renderer" >&2
+  exit 1
+fi
+if [ ! -f "$scheduler_lock" ] || [ "$(cat "$scheduler_lock")" != "$$" ]; then
+  echo "post-acquire live owner race did not preserve the published owner" >&2
+  exit 1
+fi
+unlink "$scheduler_lock"
 env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
 
 # Stale scheduler recovery has one elected reclaimer; concurrent status jobs
@@ -333,7 +384,6 @@ unlink "$stale_lock"
 # A cleanup-lease read failure must fail closed. Even with a dead main-lock
 # owner, normal recovery may not delete the lock or start the renderer.
 mkdir -p "$tmp/fail-bin"
-real_tmux=$(command -v tmux)
 cat >"$tmp/fail-bin/tmux" <<EOF
 #!/bin/sh
 if [ "\${1:-}" = show ] && [ "\${2:-}" = -sqv ] \

@@ -66,6 +66,12 @@ read_lock_owner() {
   fi
 }
 
+lock_has_live_owner() {
+  lock_exists || return 1
+  read_lock_owner
+  owner_value_is_alive "$lock_owner_value"
+}
+
 cleanup_candidate_files() {
   if [ -e "$lock_candidate" ] || [ -L "$lock_candidate" ]; then
     unlink "$lock_candidate" 2>/dev/null || true
@@ -208,9 +214,11 @@ if [ "$recover_only" = "1" ]; then
 fi
 
 acquire_driver_lock() {
+  lock_has_live_owner && return 1
   if acquire_fresh_lock; then
     return 0
   fi
+  lock_has_live_owner && return 1
   recover_lock_with_lease || return 1
   if acquire_fresh_lock; then
     release_recovery_lease
