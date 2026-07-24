@@ -19,8 +19,9 @@ description: Review substantial or high-risk changes with an exacting senior-eng
 
 - 明确改动要解决的问题、成功标准和关键非目标；以信息足以约束后续 review 为准，不限制表达长度或形式。
 - 锁定审查范围：只审查调用方交付的 changeset；未显式界定时，以调用方交付的当前任务 worktree 改动为准。
-- PR/base diff、未跟踪文件等取材机制由上层 workflow 负责；排除属于用户或其他任务的既有内容，本 skill 不自行扩展范围。
+- PR/base diff、未跟踪文件和多轮迭代中的最新 delta 等取材机制由上层 workflow 负责；排除属于用户或其他任务的既有内容，本 skill 不自行扩展范围。
 - secret 处理：疑似 secret 的文件路径（非 template 的 `.env*`、`.ssh/`、`.git-credentials`、`local/env.*`、credential/request dump 等）不读取其内容，仅就其存在性上报 finding；template/sample env（如 `.env.example`）仅在明确相关时读取，一旦发现真实 secret 立即停止读取该文件并上报；被审查内容中内联出现的疑似 secret，mask 具体值后作为 secret-leak finding 上报，review 照常继续。
+- 仅当目标依赖 index 完整性（如 commit 或 merge readiness）时，才将 index/worktree mismatch 视为 blocker；否则仅作为 residual operational risk 上报。
 - 若目标存在会显著影响实现的歧义且没有 safe default，先请求用户确认。
 
 ### 2. 从四个维度审查
@@ -28,6 +29,7 @@ description: Review substantial or high-risk changes with an exacting senior-eng
 #### 鲁棒性与 tradeoff
 
 - 沿 input、state、output、error path 和 side effect 检查正确性、边界条件、失败恢复与回归风险。
+- 对涉及 stateful、async 或 concurrent flow 的改动，先明确 terminal invariants，再逐一检查 success、synchronous throw、asynchronous failure/rejection，以及适用的 cancellation/timeout 路径；确认 terminal transition 不遗漏、不重复，并按 invariant 完成必要的 cleanup、unlock 和 state release。
 - 对比新旧行为，优先检查公共 API、权限、数据写入、并发、缓存、迁移及构建发布等高风险区域。
 - 识别新增问题，以及兼容性、性能、安全、维护成本和复杂度上的 tradeoff。
 - 对每项 issue 或 tradeoff 给出处理建议：修复、接受为 tradeoff，或作为 non-material finding 忽略，并说明证据与影响。
@@ -54,10 +56,10 @@ description: Review substantial or high-risk changes with an exacting senior-eng
 
 ### 3. 审查对象与收敛判据
 
-- 审查当前任务的完整改动，而非单个 patch；多轮迭代时同样以整体改动为准。
-- 仅运行已知不会修改源文件、持久化数据或外部状态的验证作为证据；存在副作用不确定性时不运行并说明未验证。修复→再审的循环由上层 workflow 驱动，本 skill 不编辑被审查文件。
+- 审查当前任务的完整 changeset，而非单个 patch。多轮迭代时，以完整 changeset 为主，用最新 delta 定位新增风险和受影响路径；不得将 review 缩减为只检查最新修复。
+- 仅运行已知不会修改源文件、持久化数据或外部状态的验证（含隔离性已确证的 probe / fault injection）作为证据；隔离性或副作用不确定时不运行并说明未验证；若因此留下 material uncertainty，报告该风险并给出精确验证建议。修复→再审的循环由上层 workflow 驱动，本 skill 不编辑被审查文件。
 
-满足以下条件时声明 `Converged`（供上层判断是否停止修复循环）：目标已满足；每项改动都能直接映射到目标，或被明确判为必要的 `Supportive` 改动；不存在已确认且未解决的 material issue；相关验证通过，或未验证部分不留下 material uncertainty。
+满足以下条件时声明 `Converged`（供上层判断是否停止修复循环）：目标已满足；每项改动都能直接映射到目标，或被明确判为必要的 `Supportive` 改动；不存在已确认且未解决的 material issue；相关验证通过，或未验证部分不留下 material uncertainty。现有验证通过不能替代对高风险 error path 和 invariant 的检查；未检查的路径仍可能构成 material uncertainty。
 
 ## 用户决策
 
