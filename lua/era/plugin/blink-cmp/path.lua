@@ -37,7 +37,7 @@ end
 ---Cancel an ongoing timer
 ---@param timer                         uv.uv_timer_t|nil
 function util.cancel_timer(timer)
-  if timer then
+  if timer and not timer:is_closing() then
     timer:stop()
     timer:close()
   end
@@ -45,14 +45,12 @@ end
 
 ---@class era.cmp.path.context
 ---@field public start_ts               integer
----@field public state                  table|nil
 ---@field public active_scans           integer
 ---@field public last_dirname           string|nil
 
 ---@class era.cmp.path
 ---@field public opts                   era.cmp.path.config
 ---@field public context                era.cmp.path.context
----@field public debounce_timer         uv.uv_timer_t|nil
 local M = {}
 
 function M.new(opts)
@@ -74,7 +72,6 @@ function M:reset_context(ts)
   ---@type era.cmp.path.context
   self.context = {
     start_ts = ts,
-    state = nil,
     active_scans = 0,
     last_dirname = nil,
   }
@@ -261,6 +258,7 @@ end
 ---@param include_hidden                boolean
 ---@param timeout_ms                    integer
 ---@param callback                      fun(entries: table[]|nil, error: string|nil)
+---@return fun()
 function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
   local timeout_timer ---@type uv.uv_timer_t|nil
   local cancelled = false
@@ -347,17 +345,33 @@ function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
   return cleanup
 end
 
+---@param context                       blink.cmp.Context
+---@param items                         table[]
+---@return blink.cmp.CompletionResponse
+local function completion_response(context, items)
+  local line_before_cursor = context.line:sub(1, context.cursor[2])
+  local last_char = line_before_cursor:sub(-1)
+  local follows_path_boundary = last_char == "@" or last_char == "/"
+
+  return {
+    -- Blink's query bounds exclude the parent path, so refresh once after a boundary before reusing basename matches.
+    is_incomplete_forward = follows_path_boundary,
+    is_incomplete_backward = true,
+    items = items,
+  }
+end
+
 function M:get_completions(context, callback)
-  callback = vim.schedule_wrap(callback)
+  local schedule_callback = vim.schedule_wrap(callback)
 
   local dirname = self:get_dirname(context)
   if not dirname then
-    return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
+    return schedule_callback(completion_response(context, {}))
   end
 
   -- Check if directory exists
   if not yoz.path.is_exist_directory(dirname) then
-    return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
+    return schedule_callback(completion_response(context, {}))
   end
 
   -- Prevent excessive memory growth when scanning large directories
@@ -367,12 +381,6 @@ function M:get_completions(context, callback)
     collectgarbage("collect")
   end
 
-  -- State management for debouncing and rate limiting
-  local current_state = { bufnr = context.bufnr, cursor = context.cursor, dirname = dirname }
-  if vim.deep_equal(current_state, self.context.state) then
-    return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
-  end
-
   -- Check rate limiting
   if not self:can_make_request() then
     stl.reporter.warn({
@@ -380,64 +388,113 @@ function M:get_completions(context, callback)
       subject = "rate_limit",
       message = string.format("Path completion rate limited, active scans: %d", self.context.active_scans),
     })
-    return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
+    return schedule_callback(completion_response(context, {}))
   end
 
   local now = util.timestamp()
   local since = now - self.context.start_ts
 
-  -- Debouncing
-  if self.opts.debounce and since < self.opts.debounce then
-    if self.debounce_timer then
-      self.debounce_timer:stop()
+  local cancelled = false ---@type boolean
+  local settled = false ---@type boolean
+  local debounce_timer ---@type uv.uv_timer_t|nil
+  local cancel_scan ---@type fun()|nil
+  local request_context ---@type era.cmp.path.context|nil
+  local scan_active = false ---@type boolean
+
+  local function release_scan()
+    if scan_active and request_context then
+      request_context.active_scans = math.max(0, request_context.active_scans - 1)
+      scan_active = false
     end
-    self.debounce_timer = vim.defer_fn(function()
-      self.debounce_timer = nil
-      self:get_completions(context, callback)
-    end, self.opts.debounce)
-    return
   end
 
-  -- Reset context for new request
-  self:reset_context(now)
-  self.context.state = current_state
-  self.context.active_scans = self.context.active_scans + 1
+  local function cleanup()
+    if cancelled or settled then
+      return
+    end
+    cancelled = true
+    util.cancel_timer(debounce_timer)
+    debounce_timer = nil
+    if cancel_scan then
+      cancel_scan()
+      cancel_scan = nil
+    end
+    release_scan()
+  end
 
-  local include_hidden = self.opts.show_hidden_files_by_default
-    or (string.sub(context.line, context.bounds.start_col, context.bounds.start_col) == "." and context.bounds.length == 0)
-    or (
-      string.sub(context.line, context.bounds.start_col - 1, context.bounds.start_col - 1) == "."
-      and context.bounds.length > 0
-    )
+  ---@param result table
+  local function emit(result)
+    vim.schedule(function()
+      if not cancelled then
+        settled = true
+        callback(result)
+      end
+    end)
+  end
 
-  local ranges = self:get_text_edit_ranges(context)
-
-  -- Use new async directory scanning
-  self:scan_directory_async(dirname, include_hidden, self.opts.request_timeout, function(entries, error)
-    self.context.active_scans = math.max(0, self.context.active_scans - 1)
-
-    if error then
-      stl.reporter.warn({
-        from = __module_name__,
-        subject = "directory_scan_failed",
-        message = "Failed to scan directory",
-        details = { dirname = dirname, error = error },
-      })
-      return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
+  local function start_scan()
+    if cancelled then
+      return
     end
 
-    if not entries then
-      return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
-    end
+    -- Reset context for new request
+    self:reset_context(util.timestamp())
+    request_context = self.context
+    request_context.active_scans = request_context.active_scans + 1
+    scan_active = true
 
-    local items = {}
-    for _, entry in ipairs(entries) do
-      local range = entry.type == "directory" and ranges.directory or ranges.file
-      table.insert(items, self:entry_to_completion_item(entry, dirname, range))
-    end
+    local include_hidden = self.opts.show_hidden_files_by_default
+      or (string.sub(context.line, context.bounds.start_col, context.bounds.start_col) == "." and context.bounds.length == 0)
+      or (
+        string.sub(context.line, context.bounds.start_col - 1, context.bounds.start_col - 1) == "."
+        and context.bounds.length > 0
+      )
 
-    callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = items })
-  end)
+    local ranges = self:get_text_edit_ranges(context)
+
+    cancel_scan = self:scan_directory_async(dirname, include_hidden, self.opts.request_timeout, function(entries, error)
+      if cancelled then
+        return
+      end
+      release_scan()
+
+      if error then
+        stl.reporter.warn({
+          from = __module_name__,
+          subject = "directory_scan_failed",
+          message = "Failed to scan directory",
+          details = { dirname = dirname, error = error },
+        })
+        emit(completion_response(context, {}))
+        return
+      end
+
+      if not entries then
+        emit(completion_response(context, {}))
+        return
+      end
+
+      local items = {}
+      for _, entry in ipairs(entries) do
+        local range = entry.type == "directory" and ranges.directory or ranges.file
+        table.insert(items, self:entry_to_completion_item(entry, dirname, range))
+      end
+
+      emit(completion_response(context, items))
+    end)
+  end
+
+  -- Debouncing
+  if self.opts.debounce and since < self.opts.debounce then
+    debounce_timer = vim.defer_fn(function()
+      debounce_timer = nil
+      start_scan()
+    end, self.opts.debounce)
+    return cleanup
+  end
+
+  start_scan()
+  return cleanup
 end
 
 ---Safely read file content for documentation with timeout

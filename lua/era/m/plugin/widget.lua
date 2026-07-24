@@ -663,6 +663,12 @@ function M:__render_task_result__(task, plugin_state)
       self:__render_commit__(commit)
     end
   end
+
+  if task.status == "error" and task.output and #task.output > 0 then
+    for _, line in ipairs(task.output) do
+      self:__append__("      " .. line, "m_pl_output"):__nl__()
+    end
+  end
 end
 
 ---@param commit                        era.m.plugin.ICommitInfo

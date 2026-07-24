@@ -3,7 +3,7 @@
 return {
   name = "blink.pairs",
   event = "VeryLazy",
-  build = "cargo build --release", -- See https://github.com/saghen/frizbee/issues/53#issuecomment-3823112232
+  build = "cargo build --release", -- Requires nightly, selected by blink.pairs/rust-toolchain.toml.
   opts = {
     mappings = {
       enabled = true,

@@ -47,7 +47,6 @@ local raw_specs = {
   -- stylua: ignore start
   { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                    },
   { name = "blink.indent",                main = "blink.indent",                  cond = conds.not_vscode_or_yozvim   },
-  { name = "blink.lib",                   main = "blink.lib",                     cond = conds.cmp                    },
   { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode_or_yozvim   },
   { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode_or_yozvim   },
   { name = "flash.nvim",                  main = "flash",                         cond = conds.not_vscode_or_yozvim   },
@@ -72,7 +71,6 @@ local raw_specs = {
 
 ---@type string[]
 local no_details_module_names = {
-  "blink.lib",
   "friendly-snippets",
   "nvim-nio",
 }

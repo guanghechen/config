@@ -1,28 +1,10 @@
 ---@see https://github.com/saghen/blink.cmp
 
-local function build_blink_cmp()
-  local root = require("era.m.plugin.state").options.root
-  local site = dot.path.join(vim.fn.stdpath("data"), "site")
-  if yoz.path.is_exist(site) then
-    vim.opt.rtp:prepend(site)
-  end
-
-  for _, name in ipairs({ "blink.lib", "blink.cmp" }) do
-    local path = dot.path.join(root, name)
-    if yoz.path.is_exist(path) then
-      vim.opt.rtp:prepend(path)
-    end
-  end
-
-  require("blink.cmp").build():wait(60000)
-end
-
 return {
   name = "blink.cmp",
-  build = build_blink_cmp,
+  build = "cargo build --release", -- See https://github.com/saghen/frizbee/issues/53#issuecomment-3823112232
   event = { "InsertEnter", "CmdlineEnter" },
   dependencies = {
-    "blink.lib",
     "friendly-snippets",
   },
   opts = function()

@@ -173,8 +173,7 @@ function M.build(name, on_progress)
     on_progress()
   end
 
-  local path = dot.path.join(State.options.root, name) ---@type string
-  return M.__run_build__(spec, path, task, on_progress):map(function(result)
+  local function finish(result)
     if result and result.ok then
       task.status = "done"
       task.step = nil
@@ -182,7 +181,7 @@ function M.build(name, on_progress)
     else
       task.status = "error"
       task.step = nil
-      task.message = "Build failed: " .. (result and result.err or "unknown error")
+      task.message = "Build failed: " .. tostring(result and result.err or "unknown error")
     end
 
     M.__save_to_history__()
@@ -191,6 +190,11 @@ function M.build(name, on_progress)
       on_progress()
     end
     return nil
+  end
+
+  local path = dot.path.join(State.options.root, name) ---@type string
+  return M.__run_build__(spec, path, task, on_progress):then_(finish, function(err)
+    return finish({ ok = false, err = err })
   end)
 end
 
@@ -328,7 +332,7 @@ function M.__run_build__(spec, path, task, on_output, token)
         end
       end
 
-      vim.system(stl.shell.get_shell_args(build), {
+      local ok, err = pcall(vim.system, stl.shell.get_shell_args(build), {
         cwd = path,
         text = true,
         stdout = on_data,
@@ -344,10 +348,17 @@ function M.__run_build__(spec, path, task, on_output, token)
           if result.code == 0 then
             resolve({ ok = true, err = nil })
           else
-            resolve({ ok = false, err = result.stderr or "Build command failed" })
+            local message = result.stderr
+            if not message or vim.trim(message) == "" then
+              message = output_lines[#output_lines]
+            end
+            resolve({ ok = false, err = message or "Build command failed" })
           end
         end)
       end)
+      if not ok then
+        resolve({ ok = false, err = tostring(err) })
+      end
       return
     end
 
