@@ -333,6 +333,7 @@ function M.watch_changes()
   stl.fn.observe({
     dot.state.status.msg_lsp,
     dot.state.status.msg_mode,
+    dot.state.status.msg_transient,
   }, function()
     dot.state.status.dirtier_statusline:mark_dirty()
   end)

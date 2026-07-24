@@ -4,7 +4,56 @@ local txt = stl.nvim.fn.txt
 ---@type string[]
 local location_levels = { "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" }
 
+local MIN_TRANSIENT_WIDTH = 5
 local location_step = 100 / (#location_levels - 1) ---@type number
+
+---@param text                          string
+---@param max_width                     integer
+---@return string
+---@return boolean
+local function truncate_middle(text, max_width)
+  if vim.api.nvim_strwidth(text) <= max_width then
+    return text, true
+  end
+  if max_width <= 1 then
+    return "…", false
+  end
+
+  local chars = vim.fn.strchars(text) ---@type integer
+  local content_width = max_width - 1
+  local left_max_width = math.ceil(content_width / 2)
+  local right_max_width = content_width - left_max_width
+
+  local left = "" ---@type string
+  local left_width = 0 ---@type integer
+  local left_chars = 0 ---@type integer
+  while left_chars < chars do
+    local char = vim.fn.strcharpart(text, left_chars, 1) ---@type string
+    local width = vim.api.nvim_strwidth(char) ---@type integer
+    if left_width + width > left_max_width then
+      break
+    end
+    left = left .. char
+    left_width = left_width + width
+    left_chars = left_chars + 1
+  end
+
+  local right = "" ---@type string
+  local right_width = 0 ---@type integer
+  local right_chars = 0 ---@type integer
+  while left_chars + right_chars < chars do
+    local char = vim.fn.strcharpart(text, chars - right_chars - 1, 1) ---@type string
+    local width = vim.api.nvim_strwidth(char) ---@type integer
+    if right_width + width > right_max_width then
+      break
+    end
+    right = char .. right
+    right_width = right_width + width
+    right_chars = right_chars + 1
+  end
+
+  return left .. "…" .. right, false
+end
 
 ---@return integer
 ---@return integer
@@ -63,35 +112,23 @@ end
 
 ---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
-function M.msg_changes(position)
-  local hln_text = position .. "_nvim_msg_changes" ---@type string
-
-  local last_text = "" ---@type string
-  local last_timestamp = os.time() ---@type integer
-  local timeout = 3 ---@type integer
+function M.msg_transient(position)
+  local hln_text = position .. "_nvim_msg_transient" ---@type string
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
-    name = "nvim:msg_changes",
-    atomic = true,
-    render = function()
-      local text = dot.state.status.msg_changes:snapshot() ---@type string
-      if text == "" then
-        return "", "", true
+    name = "nvim:msg_transient",
+    atomic = false,
+    render = function(_, remain_width)
+      local text = dot.state.status.msg_transient:snapshot() ---@type string
+      if text == "" or remain_width < MIN_TRANSIENT_WIDTH then
+        return "", "", false
       end
 
-      local timestamp = os.time() ---@type integer
-      if last_text == text then
-        if last_timestamp + timeout < timestamp then
-          return "", "", true
-        end
-      else
-        last_text = text
-        last_timestamp = timestamp
-      end
-
+      local full ---@type boolean
+      text, full = truncate_middle(text, remain_width)
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return text, hl_text, full
     end,
   }
   return component

@@ -52,7 +52,7 @@ statusline
   :place("right", era.m.nvimbar.component.lsp.diagnostics(position), 95)
   :place("right", era.m.nvimbar.component.nvim.msg_mode(position), 95)
   :place("right", era.m.nvimbar.component.nvim.msg_command(position), 80)
-  :place("right", era.m.nvimbar.component.nvim.msg_changes(position), 85)
+  :place("right", era.m.nvimbar.component.nvim.msg_transient(position), 85)
   :place("right", era.m.nvimbar.component.nvim.msg_lsp(position), 90)
 
 ---@return nil

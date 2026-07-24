@@ -165,10 +165,10 @@ function M.gen_hlgroup_map(context)
     ---! nvim
     nvim_mode_sep = { link = "ms_b_bg2" },
     nvim_mode_text = { link = "mf_b_bg0" },
-    nvim_msg_changes = { fg = c.fg3, bg = "bg_bar" },
     nvim_msg_command = { fg = c.pink, bg = "bg_bar" },
     nvim_msg_lsp = { fg = c.fg4, bg = "bg_bar" },
     nvim_msg_mode = { fg = c.yellow, bg = "bg_bar" },
+    nvim_msg_transient = { fg = c.fg3, bg = "bg_bar" },
     nvim_nr_sep = { fg = bg_pos, bg = c.bg0 },
     nvim_nr_text = { fg = c.fg2, bg = bg_pos, bold = true },
     nvim_pid = { fg = c.fg3, bg = "bg_bar" },

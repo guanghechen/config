@@ -3,9 +3,10 @@ local __module_name__ = "era.m.ui_attach.messages" ---@type string
 local states = require("era.m.ui_attach.state")
 
 local KIND_MAP = {
-  CHANGES = {
-    undo = true,
+  TRANSIENT = {
     bufwrite = true,
+    progress = true,
+    undo = true,
   },
   CONFIRM = {
     confirm = true,
@@ -15,7 +16,10 @@ local KIND_MAP = {
   },
 }
 
+local TRANSIENT_TIMEOUT = 3000
+
 local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
+local transient_generation = 0
 
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
@@ -28,6 +32,21 @@ local kind_2_level_map = {
 
 ---@class era.m.ui_attach.messages
 local M = {}
+
+---@param message                       string
+---@return nil
+local function show_transient_message(message)
+  transient_generation = transient_generation + 1
+  local generation = transient_generation
+  local text = message:gsub("%c+", " ") ---@type string
+
+  dot.state.status.msg_transient:next(vim.trim(text))
+  vim.defer_fn(function()
+    if transient_generation == generation then
+      dot.state.status.msg_transient:next("")
+    end
+  end, TRANSIENT_TIMEOUT)
+end
 
 ---@param task                          era.m.ui_attach.ITask
 ---@return nil
@@ -174,8 +193,8 @@ function M.show(task)
     message = message .. item[2] ---@type string
   end
 
-  if KIND_MAP.CHANGES[kind] == true then
-    dot.state.status.msg_changes:next(message)
+  if KIND_MAP.TRANSIENT[kind] == true then
+    show_transient_message(message)
   end
 
   local highlights = {} ---@type stl.t.IHighlight[]
@@ -208,8 +227,8 @@ function M.show(task)
     or yoz.fn.md5(string.format("%s:%s:%s", level, title, message))
   states.message.last_group = group
 
-  local anonymous = KIND_MAP.CHANGES[kind] ~= true and kind ~= "echo" and not history ---@type boolean
-  local silent = KIND_MAP.CHANGES[kind] == true ---@type boolean
+  local anonymous = KIND_MAP.TRANSIENT[kind] ~= true and kind ~= "echo" and not history ---@type boolean
+  local silent = KIND_MAP.TRANSIENT[kind] == true ---@type boolean
   stl.reporter.log(level, {
     from = __module_name__,
     title = title,

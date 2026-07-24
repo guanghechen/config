@@ -1,8 +1,8 @@
 ---@class dot.state.status.data
----@field public msg_changes            string
 ---@field public msg_command            string
 ---@field public msg_lsp                string
 ---@field public msg_mode               string
+---@field public msg_transient          string
 ---
 ---@field public lsp_symbol_ready       table<integer, boolean>
 ---@field public notification_paused    boolean
@@ -25,10 +25,10 @@
 ---
 ---@field public lint_schedule_nr       stl.c.Observable
 ---
----@field public msg_changes            stl.c.Observable
 ---@field public msg_command            stl.c.Observable
 ---@field public msg_lsp                stl.c.Observable
 ---@field public msg_mode               stl.c.Observable
+---@field public msg_transient          stl.c.Observable
 ---
 ---@field public copilots               table<integer, string>
 ---@field public lsp_symbol_ready       table<integer, boolean>
@@ -50,10 +50,10 @@ local M = {
 
   lint_schedule_nr = stl.c.Observable.from_value(0, stl.fn.falsy),
 
-  msg_changes = stl.c.Observable.from_value(""),
   msg_command = stl.c.Observable.from_value(""),
   msg_lsp = stl.c.Observable.from_value(""),
   msg_mode = stl.c.Observable.from_value(""),
+  msg_transient = stl.c.Observable.from_value(""),
 
   copilots = {}, -- Plain object for copilot status per client
   lsp_symbol_ready = {}, -- LSP clients that have responded (success or error) to documentSymbol
@@ -72,10 +72,10 @@ M._disposables
   :add_disposable(M.dirtier_notepadline)
   :add_disposable(M.dirty_winline_nr)
   :add_disposable(M.lint_schedule_nr)
-  :add_disposable(M.msg_changes)
   :add_disposable(M.msg_command)
   :add_disposable(M.msg_lsp)
   :add_disposable(M.msg_mode)
+  :add_disposable(M.msg_transient)
   :add_disposable(M.notification_paused)
   :add_disposable(M.notification_level)
   :add_disposable(M.searching)
@@ -97,10 +97,10 @@ end
 function M.dump()
   ---@type dot.state.status.data
   local data = {
-    msg_changes = M.msg_changes:snapshot(),
     msg_command = M.msg_command:snapshot(),
     msg_lsp = M.msg_lsp:snapshot(),
     msg_mode = M.msg_mode:snapshot(),
+    msg_transient = M.msg_transient:snapshot(),
     lsp_symbol_ready = M.lsp_symbol_ready,
     notification_paused = M.notification_paused:snapshot(),
     notification_level = M.notification_level:snapshot(),
@@ -123,10 +123,10 @@ function M.reset()
 
   M.lint_schedule_nr:next(0)
 
-  M.msg_changes:next("")
   M.msg_command:next("")
   M.msg_lsp:next("")
   M.msg_mode:next("")
+  M.msg_transient:next("")
 
   -- Reset copilot status (plain object)
   for k in pairs(M.copilots) do
