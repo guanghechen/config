@@ -135,7 +135,14 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 
     if mark[1] > 0 and mark[1] <= count then
       vim.schedule(function()
-        pcall(vim.api.nvim_win_set_cursor, winnr, mark)
+        if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+          return
+        end
+
+        local ok = pcall(vim.api.nvim_win_set_cursor, winnr, mark)
+        if ok then
+          era.m.scroll.accept_current_view(winnr)
+        end
       end)
     end
   end,

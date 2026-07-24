@@ -397,6 +397,27 @@ end
 ---@class era.m.scroll
 local M = {}
 
+---@param winnr                         integer
+---@return nil
+function M.accept_current_view(winnr)
+  if not enabled or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local state = get_state(winnr) ---@type era.m.scroll.IState|nil
+  if not state then
+    return
+  end
+
+  stop_animation(state)
+
+  local view = vim.api.nvim_win_call(winnr, vim.fn.winsaveview)
+  state.view = view
+  state.current = vim.deepcopy(view)
+  state.target = vim.deepcopy(view)
+  state.last = 0
+end
+
 ---@return nil
 function M.dressing()
   stl.fn.observe({ dot.context.flight.dressing_scroll }, function()
