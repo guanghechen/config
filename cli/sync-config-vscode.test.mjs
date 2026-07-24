@@ -107,29 +107,31 @@ describe('sync-config-vscode cross-platform keybindings', () => {
     const osx = JSON.parse(fs.readFileSync(path.join(root, 'osx/customize.json'), 'utf8'))
     const win = JSON.parse(fs.readFileSync(path.join(root, 'win/customize.json'), 'utf8'))
     const find = (keybindings, key) => keybindings.find(x => x.key.toLowerCase() === key)
+    const when =
+      'panelFocus || (activePanel == workbench.view.extension.cspellPanel && !sideBarFocus && !auxiliaryBarFocus && (focusedView == cSpellIssuesViewByFile || focusedView == cSpellIssuesViewByIssue))'
 
     assert.deepEqual(find(osx, 'cmd+ctrl+,'), {
       key: 'cmd+ctrl+,',
       command: 'workbench.action.previousPanelView',
-      when: 'panelFocus',
+      when,
       title: 'panel: focus previous view',
     })
     assert.deepEqual(find(osx, 'cmd+ctrl+.'), {
       key: 'cmd+ctrl+.',
       command: 'workbench.action.nextPanelView',
-      when: 'panelFocus',
+      when,
       title: 'panel: focus next view',
     })
     assert.deepEqual(find(win, 'alt+ctrl+,'), {
       key: 'alt+ctrl+,',
       command: 'workbench.action.previousPanelView',
-      when: 'panelFocus',
+      when,
       title: 'panel: focus previous view',
     })
     assert.deepEqual(find(win, 'alt+ctrl+.'), {
       key: 'alt+ctrl+.',
       command: 'workbench.action.nextPanelView',
-      when: 'panelFocus',
+      when,
       title: 'panel: focus next view',
     })
 

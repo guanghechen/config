@@ -1473,7 +1473,7 @@
   {
     "key": "cmd+ctrl+,",
     "command": "workbench.action.previousPanelView",
-    "when": "panelFocus",
+    "when": "panelFocus || (activePanel == workbench.view.extension.cspellPanel && !sideBarFocus && !auxiliaryBarFocus && (focusedView == cSpellIssuesViewByFile || focusedView == cSpellIssuesViewByIssue))",
     "title": "panel: focus previous view"
   },
   {
@@ -1484,7 +1484,7 @@
   {
     "key": "cmd+ctrl+.",
     "command": "workbench.action.nextPanelView",
-    "when": "panelFocus",
+    "when": "panelFocus || (activePanel == workbench.view.extension.cspellPanel && !sideBarFocus && !auxiliaryBarFocus && (focusedView == cSpellIssuesViewByFile || focusedView == cSpellIssuesViewByIssue))",
     "title": "panel: focus next view"
   },
   {
