@@ -76,6 +76,21 @@ return {
   capabilities = era.m.lsp.event.get_capabilities(),
   cmd = { svelteserver, "--stdio" },
   filetypes = { "svelte" },
+  settings = {
+    typescript = {
+      inlayHints = {
+        parameterNames = {
+          enabled = "literals",
+          suppressWhenArgumentMatchesName = true,
+        },
+        parameterTypes = { enabled = true },
+        variableTypes = { enabled = false },
+        propertyDeclarationTypes = { enabled = true },
+        functionLikeReturnTypes = { enabled = true },
+        enumMemberValues = { enabled = true },
+      },
+    },
+  },
   root_markers = { "svelte.config.js", "svelte.config.mjs", "svelte.config.cjs", "package.json", ".git" },
   root_dir = root_dir,
   before_init = before_init,

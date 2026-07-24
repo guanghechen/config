@@ -80,6 +80,9 @@ return {
     ".git",
   },
   settings = {
+    pyright = {
+      disableTaggedHints = true,
+    },
     python = {
       enabled = true,
       pythonPath = dot.context.lsp.get_python_bin_path(),

@@ -71,7 +71,7 @@ end
 local function root_dir(bufnr, on_dir)
   local workspace = dot.path.workspace() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  if #filepath > #workspace and filepath:sub(1, #workspace) == workspace then
+  if yoz.path.is_descendant(workspace, filepath) then
     on_dir(workspace)
     return
   end

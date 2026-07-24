@@ -20,15 +20,6 @@ local CONFIG_FILENAMES = {
   ".eslintrc.mjs",
 }
 
-local FLAT_CONFIG_FILENAMES = {
-  "eslint.config.js",
-  "eslint.config.mjs",
-  "eslint.config.cjs",
-  "eslint.config.ts",
-  "eslint.config.mts",
-  "eslint.config.cts",
-}
-
 ---@param params                        lsp.InitializeParams
 ---@param config                        any
 local function before_init(params, config)
@@ -41,26 +32,9 @@ local function before_init(params, config)
   if root_dir then
     config.settings = config.settings or {}
     config.settings.workspaceFolder = {
-      uri = root_dir,
+      uri = vim.uri_from_fname(root_dir),
       name = vim.fn.fnamemodify(root_dir, ":t"),
     }
-
-    for _, file in ipairs(FLAT_CONFIG_FILENAMES) do
-      local found_files = vim.fn.globpath(root_dir, file, true, true)
-
-      -- Filter out files inside node_modules
-      local has_inside_node_modules = false
-      for _, found_file in ipairs(found_files) do
-        if string.find(found_file, "[/\\]node_modules[/\\]") == nil then
-          has_inside_node_modules = true
-        end
-      end
-      if has_inside_node_modules then
-        config.settings.experimental = config.settings.experimental or {}
-        config.settings.experimental.useFlatConfig = true
-        break
-      end
-    end
 
     -- Support Yarn2 (PnP) projects
     local pnp_cjs = root_dir .. "/.pnp.cjs"
@@ -77,7 +51,7 @@ end
 local function on_attach(client, bufnr)
   era.m.lsp.event.on_attach(client, bufnr)
 
-  vim.api.nvim_buf_create_user_command(0, "LspEslintFixAll", function()
+  vim.api.nvim_buf_create_user_command(bufnr, "LspEslintFixAll", function()
     client:request_sync("workspace/executeCommand", {
       command = "eslint.applyAllFixes",
       arguments = {
@@ -164,9 +138,7 @@ return {
     validate = "on",
     packageManager = vim.NIL,
     useESLintClass = false,
-    experimental = {
-      useFlatConfig = false,
-    },
+    experimental = {},
     codeActionOnSave = {
       enable = false,
       mode = "all",

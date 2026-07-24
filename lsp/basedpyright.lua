@@ -91,6 +91,7 @@ return {
         -- Because it will override per-project configurations like `pyproject.toml`.
         -- If left unset, its default value is `true`, and it can be correctly overridden by project config files.
       },
+      disableTaggedHints = true,
     },
   },
   before_init = before_init,

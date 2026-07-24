@@ -52,17 +52,13 @@ return {
   capabilities = era.m.lsp.event.get_capabilities(),
   cmd = { "ruff", "server" },
   filetypes = { "python" },
-  root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },
-  settings = {
-    ruff = {
-      cmd_env = { RUFF_TRACE = "messages" },
-      init_options = {
-        settings = {
-          logLevel = "error",
-        },
-      },
+  init_options = {
+    settings = {
+      logLevel = "error",
     },
   },
+  root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },
+  settings = {},
   before_init = before_init,
   on_attach = on_attach,
   on_detach = on_detach,

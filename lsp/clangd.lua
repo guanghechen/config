@@ -135,7 +135,7 @@ return {
     "--function-arg-placeholders",
     "--fallback-style=llvm",
   },
-  filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+  filetypes = { "c", "c.doxygen", "cpp", "cpp.doxygen", "objc", "objcpp", "cuda" },
   init_options = {
     usePlaceholders = true,
     completeUnimported = true,

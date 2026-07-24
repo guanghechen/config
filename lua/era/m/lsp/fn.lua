@@ -4,6 +4,14 @@ local __module_name__ = "era.m.lsp.fn" ---@type string
 ---@class era.m.lsp.fn
 local M = {}
 
+local JS_PACKAGE_FILENAMES = {
+  "package-lock.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  "bun.lockb",
+  "bun.lock",
+}
+
 ----------------------------------------------------------------------------------------------------
 -- Symbol
 ----------------------------------------------------------------------------------------------------
@@ -61,7 +69,7 @@ end
 function M.find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
     local filepath = dirpath .. stl.env.PATH_SEP .. filename ---@type string
-    if yoz.path.is_exist_file(filepath) then
+    if yoz.path.is_exist(filepath) then
       return filepath
     end
   end
@@ -72,36 +80,53 @@ end
 ---@return string|nil
 ---@return string|nil
 function M.locate_lsp_root(filepath, config_filenames)
-  local cwd = dot.path.cwd() ---@type string
-  do
-    local config_filepath = M.find_filepath(cwd, config_filenames) ---@type string|nil
-    if config_filepath ~= nil then
-      return cwd, config_filepath
-    end
+  if filepath == "" then
+    return
   end
 
-  local workspace = dot.path.workspace() ---@type string
-  if cwd ~= workspace then
-    local config_filepath = M.find_filepath(workspace, config_filenames) ---@type string|nil
-    if config_filepath ~= nil then
-      return workspace, config_filepath
-    end
-  end
-
-  local pieces = yoz.path.split(filepath, false) ---@type string[]
-  local k = #pieces - 1 ---@type integer
-  while k >= 1 do
-    local dirpath = table.concat(pieces, stl.env.PATH_SEP, 1, k) ---@type string
-    if dirpath == cwd then
-      break
-    end
-
+  local dirpath = vim.fs.dirname(filepath) ---@type string
+  while true do
     local config_filepath = M.find_filepath(dirpath, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
       return dirpath, config_filepath
     end
-    k = k - 1
+
+    local parent = vim.fs.dirname(dirpath) ---@type string
+    if parent == dirpath then
+      break
+    end
+    dirpath = parent
   end
+end
+
+---@param filepath                      string
+---@return string|nil rootdir
+---@return "deno"|"node" project_type
+function M.locate_js_project_root(filepath)
+  if filepath == "" then
+    return nil, "node"
+  end
+
+  local node_root = M.locate_lsp_root(filepath, JS_PACKAGE_FILENAMES) ---@type string|nil
+  local deno_root = M.locate_lsp_root(filepath, { "deno.json", "deno.jsonc" }) ---@type string|nil
+  local deno_lock_root = vim.fs.root(filepath, { "deno.lock" }) ---@type string|nil
+  local rootdir = nil ---@type string|nil
+
+  if deno_lock_root ~= nil and (node_root == nil or #deno_lock_root > #node_root) then
+    rootdir = deno_lock_root
+  end
+  if
+    deno_root ~= nil
+    and (node_root == nil or #deno_root >= #node_root)
+    and (rootdir == nil or #deno_root >= #rootdir)
+  then
+    rootdir = deno_root
+  end
+
+  if rootdir ~= nil then
+    return rootdir, "deno"
+  end
+  return node_root, "node"
 end
 
 ---@param bin                           string

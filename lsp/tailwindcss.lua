@@ -34,12 +34,11 @@ local filetypes = {
   "hbs",
   "html",
   "javascript",
-  "javascript.jsx",
   "javascriptreact",
   "mdx",
   "svelte",
+  "templ",
   "typescript",
-  "typescript.tsx",
   "typescriptreact",
   "vue",
 }
@@ -102,10 +101,8 @@ capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
 ---@type vim.lsp.Config
 return {
   capabilities = capabilities,
-  cmd = lspBinPath and { lspBinPath, "--stdio" } or nil,
+  cmd = { lspBinPath or "tailwindcss-language-server", "--stdio" },
   filetypes = filetypes,
-  filetypes_exclude = { "markdown" },
-  filetypes_include = { "css", "javascriptreact", "javascript.jsx", "typescriptreact", "typescript.tsx" },
   workspace_required = true,
   settings = {
     tailwindCSS = {

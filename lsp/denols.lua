@@ -68,20 +68,10 @@ end
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
-  local root_markers = {
-    { "deno.lock", "deno.json", "deno.jsonc" },
-    { ".git" },
-  }
-
-  local deno_root = vim.fs.root(bufnr, { "deno.json", "deno.jsonc" })
-  local deno_lock_root = vim.fs.root(bufnr, { "deno.lock" })
-  local project_root = vim.fs.root(bufnr, root_markers)
-
-  if
-    (deno_lock_root and (not project_root or #deno_lock_root > #project_root))
-    or (deno_root and (not project_root or #deno_root >= #project_root))
-  then
-    on_dir(project_root or deno_lock_root or deno_root)
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local rootdir, project_type = era.m.lsp.fn.locate_js_project_root(filepath) ---@type string|nil, "deno"|"node"
+  if project_type == "deno" then
+    on_dir(rootdir)
   end
 end
 

@@ -29,7 +29,7 @@ end
 return {
   capabilities = era.m.lsp.event.get_capabilities(),
   cmd = { "vscode-html-language-server", "--stdio" },
-  filetypes = { "html" },
+  filetypes = { "html", "templ" },
   flags = {
     debounce_text_changes = 500,
     exit_timeout = 200,
