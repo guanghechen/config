@@ -164,3 +164,22 @@ delta commit.
      63.725 ms and mean from 80.110 to 69.199 ms. Observed p95 changed from
      130.282 to 87.171 ms; these local process-startup samples are directional,
      not a tail-latency guarantee.
+
+9. **Completed — reuse the scheduler driver's atomic snapshot**
+   - The driver now reads lifecycle generation and both task states in its
+     existing pre-launch tmux call. Strictly framed values cross an explicit
+     namespaced process-environment boundary; empty or malformed state falls back
+     to the original Rust-owned live read so exact repair behavior is retained.
+   - tmux remains the state owner and single writer. Rust preserves each raw
+     task state as the CAS witness, and every due claim still checks active,
+     generation, and exact observed state. A stale due snapshot is skipped; a
+     stale not-due snapshot can defer work until the next tick but cannot write.
+   - Old/new driver and binary combinations remain compatible: an old binary
+     ignores the new environment value, while a new binary without it performs
+     the original live read. Integration also covers no-second-read, stale CAS
+     rejection, invalid-input fallback, and production driver routing.
+   - Alternating committed/worktree full-driver A/B on one isolated no-due
+     scheduler (50 runs each, zero test delay) reduced median wall time from
+     59.164 to 54.142 ms and mean from 60.178 to 54.437 ms. Observed p95 changed
+     from 68.518 to 61.415 ms; these local process-startup samples are
+     directional, not a tail-latency guarantee.

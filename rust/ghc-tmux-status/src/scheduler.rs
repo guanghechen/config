@@ -10,6 +10,8 @@ use crate::config::{
 };
 use crate::process::OperationDeadline;
 
+pub const SCHEDULER_SNAPSHOT_ENV: &str = "GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT";
+
 // load-theme is the single writer for renderer lifecycle (active + generation).
 // The same fence gates standard renders and scheduler work. This module owns each
 // task state and advances it one way: observed -> claimed -> completed. A
@@ -80,6 +82,69 @@ impl SchedulerTask {
             Self::Heartbeat => HEARTBEAT_EXECUTION_BUDGET_SECONDS,
         })
     }
+}
+
+/// Read-only scheduler input captured by the driver before it launches Rust.
+/// tmux remains the state owner and single writer: task mutations still compare
+/// the exact transported strings before committing.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SchedulerSnapshot {
+    pub generation: u64,
+    metric_state: String,
+    heartbeat_state: String,
+}
+
+impl SchedulerSnapshot {
+    pub fn from_observed(
+        generation: u64,
+        metric_state: impl Into<String>,
+        heartbeat_state: impl Into<String>,
+    ) -> Self {
+        Self {
+            generation,
+            metric_state: metric_state.into(),
+            heartbeat_state: heartbeat_state.into(),
+        }
+    }
+
+    pub fn from_transport(value: &str) -> Option<Self> {
+        let mut fields = value.split('\t');
+        if fields.next()? != "1" {
+            return None;
+        }
+        let generation = fields.next()?;
+        let metric_state = fields.next()?;
+        let heartbeat_state = fields.next()?;
+        if fields.next().is_some() {
+            return None;
+        }
+        let generation = generation.parse().ok()?;
+        if !has_transport_shape(metric_state) || !has_transport_shape(heartbeat_state) {
+            return None;
+        }
+        Some(Self::from_observed(
+            generation,
+            metric_state,
+            heartbeat_state,
+        ))
+    }
+
+    pub fn state_for(&self, task: SchedulerTask) -> &str {
+        match task {
+            SchedulerTask::Metrics => &self.metric_state,
+            SchedulerTask::Heartbeat => &self.heartbeat_state,
+        }
+    }
+}
+
+fn has_transport_shape(value: &str) -> bool {
+    let mut fields = value.split(':');
+    let valid = (0..4).all(|_| {
+        fields.next().is_some_and(|field| {
+            !field.is_empty() && field.bytes().all(|byte| byte.is_ascii_digit())
+        })
+    });
+    valid && fields.next().is_none()
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -195,7 +260,35 @@ fn is_due(
 
 #[cfg(test)]
 mod tests {
-    use super::{ScheduleState, SchedulerTask, plan_claim};
+    use super::{ScheduleState, SchedulerSnapshot, SchedulerTask, plan_claim};
+
+    #[test]
+    fn transported_snapshot_preserves_exact_cas_witnesses() {
+        let snapshot =
+            SchedulerSnapshot::from_transport("1\t42\t042:01:18446744073709551616:0\t42:2:100:0")
+                .unwrap();
+
+        assert_eq!(snapshot.generation, 42);
+        assert_eq!(
+            snapshot.state_for(SchedulerTask::Metrics),
+            "042:01:18446744073709551616:0"
+        );
+        assert_eq!(snapshot.state_for(SchedulerTask::Heartbeat), "42:2:100:0");
+    }
+
+    #[test]
+    fn transported_snapshot_rejects_ambiguous_framing() {
+        for value in [
+            "",
+            "2\t42\t42:1:100:0\t42:2:100:0",
+            "1\tinvalid\t42:1:100:0\t42:2:100:0",
+            "1\t42\tinvalid\t42:2:100:0",
+            "1\t42\t42:1:100\t42:2:100:0",
+            "1\t42\t42:1:100:0\t42:2:100:0\textra",
+        ] {
+            assert!(SchedulerSnapshot::from_transport(value).is_none());
+        }
+    }
 
     #[test]
     fn missing_or_invalid_state_is_claimed_immediately() {

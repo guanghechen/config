@@ -83,6 +83,54 @@ if [ "$(legacy_state)" != "$legacy_state_before" ]; then
   exit 1
 fi
 
+# The production driver already owns one atomic scheduler snapshot. Reusing a
+# valid, not-due snapshot must not issue a second tmux query from Rust.
+snapshot_now=$(date +%s)
+metric_not_due="777:9:$((snapshot_now + 30)):0"
+heartbeat_not_due="777:11:$((snapshot_now + 60)):0"
+tmux -L "$socket" set -s @GHC_SL_METRIC_SCHED "$metric_not_due" ';' \
+  set -s @GHC_SL_HEARTBEAT_SCHED "$heartbeat_not_due"
+: >"$tmux_call_log"
+env \
+  TMUX="$server_env" \
+  PATH="$tmp/bin:$PATH" \
+  GHC_TMUX_REAL_TMUX="$real_tmux" \
+  GHC_TMUX_TMUX_CALL_LOG="$tmux_call_log" \
+  GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT=$'1\t'"777"$'\t'"$metric_not_due"$'\t'"$heartbeat_not_due" \
+  "$binary" scheduler-tick
+if [ -s "$tmux_call_log" ]; then
+  echo "preloaded not-due scheduler snapshot queried tmux" >&2
+  cat "$tmux_call_log" >&2
+  exit 1
+fi
+
+# A preloaded due witness may race another scheduler. The exact state guard
+# must skip rather than overwrite the newer authoritative value.
+snapshot_state_before=$(legacy_state)
+env \
+  TMUX="$server_env" \
+  GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT=$'1\t'"777"$'\t'"$metric_not_due"$'\t777:10:0:0' \
+  "$binary" scheduler-tick
+if [ "$(legacy_state)" != "$snapshot_state_before" ]; then
+  echo "stale preloaded scheduler snapshot overwrote authoritative state" >&2
+  exit 1
+fi
+
+# Invalid transported state falls back to the live-read form. This keeps new
+# binaries compatible with old drivers and preserves exact repair semantics.
+: >"$tmux_call_log"
+env \
+  TMUX="$server_env" \
+  PATH="$tmp/bin:$PATH" \
+  GHC_TMUX_REAL_TMUX="$real_tmux" \
+  GHC_TMUX_TMUX_CALL_LOG="$tmux_call_log" \
+  GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT=invalid \
+  "$binary" scheduler-tick
+if [ ! -s "$tmux_call_log" ]; then
+  echo "invalid transported scheduler snapshot did not fall back to tmux" >&2
+  exit 1
+fi
+
 tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 1
 tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 42
 tmux -L "$socket" set -g @GHC_SL_MODE 01

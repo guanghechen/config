@@ -29,6 +29,7 @@ use crate::cli::CliCommand;
 use crate::error::AppResult;
 use crate::layout::LayoutEngine;
 use crate::process::ProcessWatchdog;
+use crate::scheduler::{SCHEDULER_SNAPSHOT_ENV, SchedulerSnapshot};
 
 const PROCESS_DEADLINE: Duration = Duration::from_secs(30);
 
@@ -47,7 +48,12 @@ fn run() -> AppResult<()> {
     match command {
         CliCommand::Apply(event) => app.apply(event),
         CliCommand::BootstrapTheme(expected_generation) => app.bootstrap_theme(expected_generation),
-        CliCommand::SchedulerTick => app.scheduler_tick(),
+        CliCommand::SchedulerTick => {
+            let snapshot = std::env::var(SCHEDULER_SNAPSHOT_ENV)
+                .ok()
+                .and_then(|value| SchedulerSnapshot::from_transport(&value));
+            app.scheduler_tick(snapshot)
+        }
         CliCommand::DumpState => app.dump_state(),
         CliCommand::RenderStatus02 => app.render_status02_stdout(),
         CliCommand::FocusSession(target) => app.focus_session(target),

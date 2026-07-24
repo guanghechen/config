@@ -235,10 +235,23 @@ if ! [[ "$delay_seconds" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
 fi
 sleep "$delay_seconds"
 
-lifecycle=$(tmux display-message -p $'#{@GHC_SL_SCHED_ACTIVE}\t#{@GHC_SL_SCHED_GEN}' 2>/dev/null) || exit 0
-IFS=$'\t' read -r active generation <<<"$lifecycle"
+scheduler_snapshot=$(tmux display-message -p \
+  $'#{@GHC_SL_SCHED_ACTIVE}\t#{@GHC_SL_SCHED_GEN}\t#{@GHC_SL_METRIC_SCHED}\t#{@GHC_SL_HEARTBEAT_SCHED}' \
+  2>/dev/null) || exit 0
+IFS=$'\t' read -r active generation _ <<<"$scheduler_snapshot"
 if [ "$active" != "1" ] || ! [[ "$generation" =~ ^[0-9]+$ ]]; then
   exit 0
+fi
+
+# tmux remains authoritative. A fully framed snapshot saves the renderer's
+# duplicate read; malformed state falls back so Rust can observe and repair the
+# exact value. Every due mutation still compares these raw strings through CAS.
+scheduler_snapshot_pattern=$'^1\t([0-9]+)\t([0-9]+:[0-9]+:[0-9]+:[0-9]+)\t([0-9]+:[0-9]+:[0-9]+:[0-9]+)$'
+if [[ "$scheduler_snapshot" =~ $scheduler_snapshot_pattern ]]; then
+  generation=${BASH_REMATCH[1]}
+  export GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT="1"$'\t'"$generation"$'\t'"${BASH_REMATCH[2]}"$'\t'"${BASH_REMATCH[3]}"
+else
+  unset GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT
 fi
 
 renderer_status=0

@@ -24,7 +24,7 @@ use crate::model::{
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::platform::current_platform;
 use crate::process::OperationDeadline;
-use crate::scheduler::{ClaimPlan, SchedulerTask, plan_claim};
+use crate::scheduler::{ClaimPlan, SchedulerSnapshot, SchedulerTask, plan_claim};
 use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPTION, SessionGrouper, SwapOutcome, focus_target,
     ordered_sessions, swap_current,
@@ -265,26 +265,15 @@ impl StatusRuntime {
         }
     }
 
-    pub fn scheduler_tick(&self) -> AppResult<()> {
-        let values = self.tmux.show_options(&[
-            (TmuxOptionScope::Server, SCHEDULER_ACTIVE_OPTION),
-            (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
-            (
-                TmuxOptionScope::Server,
-                SchedulerTask::Metrics.state_option(),
-            ),
-            (
-                TmuxOptionScope::Server,
-                SchedulerTask::Heartbeat.state_option(),
-            ),
-        ])?;
-        if values.first().map(String::as_str) != Some("1") {
+    pub fn scheduler_tick(&self, snapshot: Option<SchedulerSnapshot>) -> AppResult<()> {
+        let snapshot = match snapshot {
+            Some(snapshot) => Some(snapshot),
+            None => self.read_scheduler_snapshot()?,
+        };
+        let Some(snapshot) = snapshot else {
             return Ok(());
-        }
-        let generation = values
-            .get(1)
-            .and_then(|value| value.parse::<u64>().ok())
-            .ok_or_else(|| AppError::TmuxParse("invalid scheduler generation".to_string()))?;
+        };
+        let generation = snapshot.generation;
         let now_seconds = unix_timestamp_seconds();
         let mut failures = Vec::new();
 
@@ -292,7 +281,7 @@ impl StatusRuntime {
             && let Err(error) = self.run_scheduler_task(
                 SchedulerTask::Metrics,
                 generation,
-                values.get(2).map(String::as_str).unwrap_or_default(),
+                snapshot.state_for(SchedulerTask::Metrics),
                 now_seconds,
             )
         {
@@ -304,7 +293,7 @@ impl StatusRuntime {
         if let Err(error) = self.run_scheduler_task(
             SchedulerTask::Heartbeat,
             generation,
-            values.get(3).map(String::as_str).unwrap_or_default(),
+            snapshot.state_for(SchedulerTask::Heartbeat),
             now_seconds,
         ) {
             self.trace_apply(|| {
@@ -319,6 +308,33 @@ impl StatusRuntime {
         Err(AppError::Render(format!(
             "scheduler tick failed: {}",
             failures.join("; ")
+        )))
+    }
+
+    fn read_scheduler_snapshot(&self) -> AppResult<Option<SchedulerSnapshot>> {
+        let values = self.tmux.show_options(&[
+            (TmuxOptionScope::Server, SCHEDULER_ACTIVE_OPTION),
+            (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
+            (
+                TmuxOptionScope::Server,
+                SchedulerTask::Metrics.state_option(),
+            ),
+            (
+                TmuxOptionScope::Server,
+                SchedulerTask::Heartbeat.state_option(),
+            ),
+        ])?;
+        if values.first().map(String::as_str) != Some("1") {
+            return Ok(None);
+        }
+        let generation = values
+            .get(1)
+            .and_then(|value| value.parse::<u64>().ok())
+            .ok_or_else(|| AppError::TmuxParse("invalid scheduler generation".to_string()))?;
+        Ok(Some(SchedulerSnapshot::from_observed(
+            generation,
+            values.get(2).cloned().unwrap_or_default(),
+            values.get(3).cloned().unwrap_or_default(),
         )))
     }
 

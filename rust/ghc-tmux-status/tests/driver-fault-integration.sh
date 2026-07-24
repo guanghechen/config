@@ -61,6 +61,8 @@ real_tmux=$(command -v tmux)
 
 cat >"$renderer" <<EOF
 #!/bin/sh
+printf '%s\n' "\$*" >>'$tmp/crash-renderer-args'
+printf '%s\n' "\${GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT-}" >>'$tmp/crash-renderer-snapshots'
 printf '%s\n' "\$\$" >>'$tmp/crashes'
 kill -KILL "\$\$"
 EOF
@@ -116,12 +118,22 @@ if [ "$(wc -l <"$tmp/crashes" | tr -d ' ')" != "1" ]; then
   echo "renderer crash loop was not stopped" >&2
   exit 1
 fi
+if [ "$(cat "$tmp/crash-renderer-args")" != "scheduler-tick" ]; then
+  echo "invalid scheduler state did not use the live-read fallback" >&2
+  exit 1
+fi
+if [ -n "$(cat "$tmp/crash-renderer-snapshots")" ]; then
+  echo "invalid scheduler state leaked a transported snapshot" >&2
+  exit 1
+fi
 env -u TMUX tmux -L "$socket" display-message -p '#{pid}:alive' >/dev/null
 
 # A normal application error must preserve lease-based scheduler recovery.
 env -u TMUX tmux -L "$socket" set -g status-left ALIVE
-cat >"$renderer" <<'EOF'
+cat >"$renderer" <<EOF
 #!/bin/sh
+printf '%s\n' "\$*" >'$tmp/normal-renderer-args'
+printf '%s\n' "\${GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT-}" >'$tmp/normal-renderer-snapshot'
 exit 1
 EOF
 chmod +x "$renderer"
@@ -143,7 +155,9 @@ EOF
 chmod +x "$cleanup_bin/rm" "$cleanup_bin/unlink"
 : >"$cleanup_calls"
 env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 43 ';' \
-  set -s @GHC_SL_SCHED_ACTIVE 1
+  set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
+  set -s @GHC_SL_METRIC_SCHED '43:9:9999999999:0' ';' \
+  set -s @GHC_SL_HEARTBEAT_SCHED '43:11:9999999999:0'
 env PATH="$cleanup_bin:$PATH" HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
   GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 "$driver" >/dev/null
 if ! option_is_active; then
@@ -156,6 +170,12 @@ if [ "$(cat "$cleanup_calls")" != "rm" ]; then
 fi
 if [ -n "$(ls -A "$lock_tmp")" ]; then
   echo "normal scheduler release left lock artifacts" >&2
+  exit 1
+fi
+if [ "$(cat "$tmp/normal-renderer-args")" != "scheduler-tick" ] \
+  || [ "$(cat "$tmp/normal-renderer-snapshot")" \
+    != $'1\t43\t43:9:9999999999:0\t43:11:9999999999:0' ]; then
+  echo "driver did not transport its valid scheduler snapshot to the renderer" >&2
   exit 1
 fi
 
