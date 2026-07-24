@@ -39,7 +39,7 @@ pr-review 是**纯审查器**：判断这些改动是否以足够小、足够清
 
 ### 3. 委派四维度审查
 
-- 以第 2 步成功标准为「确认目标」，invoke the `adversarial-review` skill 审查本次 changeset，收集其 findings（`material / non-material / tradeoff`）与终态信号（`Adversarial Review: Converged` / `Adversarial Review: User decision required`）。
+- 以第 2 步成功标准为「确认目标」，invoke the `adversarial-review` skill 审查本次 changeset，收集其 findings（`material / non-material / tradeoff`）与终态信号（`Adversarial Review: Clean` / `Adversarial Review: User decision required`）。
 - 对某一 changeset 状态**只 invoke 一次并报告**；本 skill 不修复、不「修完再 invoke」（那等于改文件）。作者推新 commit 后由用户重跑，即新的一遍，非内部修复环。
 
 ### 4. PR 专属判断
@@ -53,16 +53,16 @@ pr-review 是**纯审查器**：判断这些改动是否以足够小、足够清
 
 由两条正交轴共同决定，取更严一侧：
 
-- **代码质量轴**（读核心终态，不重判 blocking-ness）：未 Converged 且有必须修复的 material issue ／ `User decision required`（待决 tradeoff，并保留核心的处理建议）／ `Converged`（无必须修复项，可含已接受 tradeoff 与 non-material）。
+- **代码质量轴**（读核心终态，不重判 blocking-ness）：未 `Clean` 且有必须修复的 material issue ／ `User decision required`（待决 tradeoff，并保留核心的处理建议）／ `Clean`（无必须修复项，可含已接受 tradeoff 与 non-material）。
 - **价值 / 合入轴**（pr-review 独有）：是否解决真问题、测试与 ship 是否足以合入。
 
 映射：
 
 - 有必须修复的 material issue、合入前必须补齐的测试 / ship 缺口，或核心对待决 tradeoff 建议 `Reject and revise` → 根因是局部缺陷 `Request changes`；根因是方向、架构或价值不足 `Needs redesign`。
 - 无必须修复项，但有待用户明确接受的 tradeoff（核心建议 `Accept tradeoff`）或其他 merge prerequisite → `Conditional approve`，列出决策项与前置条件。
-- Converged 且价值已确认，仅剩 optional non-material follow-up 或无 → `Approve`。
+- `Clean` 且价值已确认，仅剩 optional non-material follow-up 或无 → `Approve`。
 
-`Converged` 是 `Approve` 的必要非充分条件——它只清洁代码质量轴，价值/测试闸门可独立否决。`User decision required` 折叠为 verdict 的决策项，沿用核心「推荐 `Accept tradeoff` | `Reject and revise`」，不替用户拍板。
+`Clean` 是 `Approve` 的必要非充分条件——它只清洁代码质量轴，价值/测试闸门可独立否决。`User decision required` 折叠为 verdict 的决策项，沿用核心「推荐 `Accept tradeoff` | `Reject and revise`」，不替用户拍板。
 
 ## 输出格式
 
@@ -81,7 +81,7 @@ Merge Verdict: Request changes | Conditional approve | Approve | Needs redesign
 
 价值评估
 - ✗「实现看起来没问题。」
-- ✓「PR 加了缓存层，但慢路径来自数据库排序，缓存没覆盖该查询入口；核心性能问题没解决——即便核心审查 `Converged`，合入价值仍不足，判 `Needs redesign`。」
+- ✓「PR 加了缓存层，但慢路径来自数据库排序，缓存没覆盖该查询入口；核心性能问题没解决——即便核心审查判 `Clean`，合入价值仍不足，判 `Needs redesign`。」
 
 范围约束
 - ✗ 默认接受「顺手调整了按钮布局。」

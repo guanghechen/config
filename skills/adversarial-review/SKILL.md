@@ -11,7 +11,7 @@ description: Review substantial or high-risk changes with an exacting senior-eng
 
 保持严格但务实：只报告有明确证据和实际影响的问题，不把个人偏好包装成 finding，也不借 review 扩大授权或任务范围。本 skill 只审查、不编辑被审查文件；修复由上层 workflow 自行决定。
 
-每个 finding 必须指出具体位置或受影响范围、触发条件、证据、影响和可执行建议；没有最小复现时，说明触发路径和影响范围。仅将可能导致 bug、回归、兼容性、性能、安全、数据或发布风险，或真实维护成本的问题视为 material issue；纯风格偏好不得阻止收敛。
+每个 finding 必须指出具体位置或受影响范围、触发条件、证据、影响和可执行建议；没有最小复现时，说明触发路径和影响范围。仅将可能导致 bug、回归、兼容性、性能、安全、数据或发布风险，或真实维护成本的问题视为 material issue；纯风格偏好不得阻止判定为 `Clean`。
 
 ## Workflow
 
@@ -54,12 +54,12 @@ description: Review substantial or high-risk changes with an exacting senior-eng
 - 对很小且只调用一次的函数，优先认可 inline；仅在已有多处真实复用，或 inline 会明显破坏主流程可读性时认可提取。
 - 若实现规模明显超过问题本身，作为 finding 建议进一步简化。
 
-### 3. 审查对象与收敛判据
+### 3. 审查对象与终态判据
 
 - 审查当前任务的完整 changeset，而非单个 patch。多轮迭代时，以完整 changeset 为主，用最新 delta 定位新增风险和受影响路径；不得将 review 缩减为只检查最新修复。
 - 仅运行已知不会修改源文件、持久化数据或外部状态的验证（含隔离性已确证的 probe / fault injection）作为证据；隔离性或副作用不确定时不运行并说明未验证；若因此留下 material uncertainty，报告该风险并给出精确验证建议。修复→再审的循环由上层 workflow 驱动，本 skill 不编辑被审查文件。
 
-满足以下条件时声明 `Converged`（供上层判断是否停止修复循环）：目标已满足；每项改动都能直接映射到目标，或被明确判为必要的 `Supportive` 改动；不存在已确认且未解决的 material issue；相关验证通过，或未验证部分不留下 material uncertainty。现有验证通过不能替代对高风险 error path 和 invariant 的检查；未检查的路径仍可能构成 material uncertainty。
+满足以下条件时声明 `Clean`（本轮 review 无 material issue；是否停止修复循环由上层据此判断）：目标已满足；每项改动都能直接映射到目标，或被明确判为必要的 `Supportive` 改动；不存在已确认且未解决的 material issue；相关验证通过，或未验证部分不留下 material uncertainty。现有验证通过不能替代对高风险 error path 和 invariant 的检查；未检查的路径仍可能构成 material uncertainty。
 
 ## 用户决策
 
@@ -73,10 +73,10 @@ Adversarial Review: User decision required
 推荐：Accept tradeoff | Reject and revise，并说明理由。
 ```
 
-用户决策前，不将结果标记为 Converged。
+用户决策前，不将结果标记为 `Clean`。
 
 ## 完成输出
 
-存在 material issue 时，按「立场」中的 finding 要求优先列出 findings、需决策项和残余风险，并不得声明 `Converged`；未验证部分说明其 material uncertainty。
+存在 material issue 时，按「立场」中的 finding 要求优先列出 findings、需决策项和残余风险，并不得声明 `Clean`；未验证部分说明其 material uncertainty。
 
-无 material issue 时，输出 `Adversarial Review: Converged`，随后只报告已接受的 material tradeoff、明确判定为可忽略的 non-material finding、实际验证和残余风险；省略空项。没有上述内容时，一句话即可。
+无 material issue 时，输出 `Adversarial Review: Clean`，随后只报告已接受的 material tradeoff、明确判定为可忽略的 non-material finding、实际验证和残余风险；省略空项。没有上述内容时，一句话即可。
