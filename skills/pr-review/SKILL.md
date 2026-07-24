@@ -1,134 +1,93 @@
 ---
 name: pr-review
-description: Review a pull request or a base-to-worktree diff with emphasis on risk, code polishing, scope control, value, testability, and merge readiness. Use when the user asks to review a specific PR (by id, branch, or the current branch's PR), or to review everything changed since a given base commit/branch up to the current working tree.
+description: "Review a pull request or a base-to-worktree diff for merge readiness — read-only. Acquire the changeset and its goal, delegate the core four-dimension code review to the adversarial-review skill, then add PR-specific judgment: value, testability, and ship readiness. Report findings in the core's material / non-material / tradeoff vocabulary and end with a Merge Verdict. Never edit files. Use when the user asks to review a specific PR (by id, branch, or the current branch's PR), or everything changed since a given base up to the working tree."
 ---
 
 # PR Review
 
 ## 使用边界
 
-本 skill 处理两类审查请求：
+本 skill 处理两类审查请求，只审查、不修改文件：
 
-1. **PR 审查**：用户给出具体 PR id、指定分支，或当前分支已关联 PR。base 取该 PR 的 merge target，审查范围是 PR 引入的提交（`base...HEAD`）。
-2. **base→工作树 审查**：用户给出一个 base（commit hash 或分支），要求审查从该 base 到当前文件状态的所有 diff。范围含已提交、staged、unstaged 改动，以及未跟踪新文件。
+1. **PR 审查**：用户给出 PR id、指定分支，或当前分支已关联 PR。范围由该 PR 的 base / head OID 界定；除非已核验本地 `HEAD` 等于 PR head，否则不得用本地 `HEAD` 代替。
+2. **base→工作树 审查**：用户给出一个 base（commit 或分支），审查从该 base 到当前文件状态的全部 diff，含已提交、staged、unstaged 与未跟踪新文件。
 
-不属于这两类的请求（如泛泛「看看这段代码」），先确认它能否归入其一，否则说明本 skill 不适用。
+不属于这两类的请求（如泛泛「看看这段代码」），先确认能否归入其一；否则说明本 skill 不适用——无取材边界的纯代码审查直接用 `adversarial-review` skill。
 
-目标不是泛泛表扬或格式检查，而是判断：这些改动是否以足够小、足够清晰、足够可验证的方式解决了真实问题，且没有引入不合理风险。
+## 定位
 
-## 审查原则
+pr-review 是**纯审查器**：判断这些改动是否以足够小、足够清晰、足够可验证的方式解决了真实问题，且没有引入不合理风险与合入障碍。
 
-1. 风险优先：先找可能导致 bug、行为回归、兼容性问题、性能退化、安全/数据风险、发布风险或隐藏 side effect 的改动。
-2. 证据驱动：每个 finding 给出具体代码位置、触发条件、证据、影响和建议。没有最小复现时，说明触发路径、证据和影响范围。
-3. 简洁必要：识别无用代码、重复逻辑、过度抽象、绕路实现和臃肿改动；只有能降低真实复杂度的抛光建议才升级为 `Should Fix`。
-4. 行为优先于 diff 表面：对关键改动追踪 input、state、output、error path 和 side effect，对比新旧行为，而不是只读 diff 表面。
-5. 范围与价值约束：改动必须能映射到 issue/PR 目标或必要验证；无法映射又不够小的改动建议拆 follow-up。价值声明要落到可观察证据，不接受「更优雅」「以后会用到」式空泛声明。
+四维度代码审查（鲁棒性、克制、风格、简洁）、material 判定与 finding 契约整块**委派**给 `adversarial-review` skill，本 skill 不复述其判据。pr-review 只负责核心不覆盖的部分：取材、目标与价值判断、合入就绪、Merge Verdict，并沿用核心的 `material / non-material / tradeoff` 词表，不引入平行 severity。
 
-## 工作流
+## Workflow
 
-1. 获取审查对象
-   - 先判定属于哪一类：
-     - **PR 审查**：用户给出 PR id、分支名，或要求审查当前分支的 PR。用 `gh` 取材：`gh pr view <n>`（含描述、关联 issue）、`gh pr diff <n>`（diff）；当前分支的 PR 用 `gh pr view`（不带号，自动解析当前分支）。base = 该 PR 的 merge target（`gh pr view <n> --json baseRefName`），不要臆测。审查范围是 PR 引入的提交，即 `base...HEAD`。
-     - **base→工作树 审查**：用户给出 base（commit hash 或分支）。取材覆盖到当前文件状态：
-       - 已提交 + 已跟踪的未提交改动：`git diff <base>`（含 staged 与 unstaged）。
-       - 未跟踪新文件：`git status --porcelain` 取 `??` 行，逐个 `git diff --no-index /dev/null <path>` 读入（与 git-commit 一致）；忽略被 `.gitignore` 排除项。
-   - 若 issue 或目标可见，先提炼 1-3 条成功标准：合入后应解决什么、不能改变什么。
-   - secret 处理：diff 或文件内容中出现 secret，mask 具体值并把 secret leak 作为 finding；若 review 范围涉及 secret-looking 路径（如 `.env*`、`.ssh/`、credential/request dump），按全局安全规则停止，不读取其内容。
+### 1. 取材
 
-2. 意图/范围映射
-   - 把每类改动映射到 issue、PR 描述或成功标准，按三类归档：
-     - In scope：直接服务 issue/目标/必要验证。
-     - Supportive：不直接解决问题，但很小、收益明确、风险极低（如同一代码路径上的 typo、补齐缺失 fixture）。
-     - Out of scope：无法映射，或扩大行为面/评审面/测试面/发布风险；通常建议拆到后续提交或独立 PR。
-   - 对 foundation/refactor 类改动，要求指出后续工作会依赖的具体接口、模块边界或删除的复杂度，而非抽象地「为以后做准备」。
+- **先筛路径，再读内容**：先用不返回 patch / content 的 rename-aware metadata 取得完整 old / new path 清单，排除全局 Security 红线禁止读取的 secret 路径（非 template `.env*`、`.ssh/`、`.git-credentials` 等），再加载允许路径的 diff。禁止路径删除若无法与 rename 可靠配对，同时存在任意未配对 addition / untracked path，则不读取新增内容：base→工作树模式要求 staged rename 或 sanitized changeset，PR 模式要求 sanitized changeset。不得先运行 bulk diff 再过滤；装入内容中意外出现的疑似 secret 立即 mask。
+- **Git 输入安全**：在进程内将用户给出的 base 与 `^{commit}` 拼成一个 revision，作为单一 argv 传给 `git rev-parse --verify --end-of-options`，解析为 immutable `baseOID`；失败即停止。后续每个 revision、OID 与 path 都作为独立 argv 传递，绝不拼接进 shell command；路径经 NUL-safe loop 处理，并用 `git --literal-pathspecs` 与 `--no-ext-diff --no-textconv` 禁止 pathspec magic、external diff 和 textconv。
+- **PR 模式**：从同一 PR snapshot 取得描述、关联 issue、base / head OID，以及分页的 `path` / change type metadata；分页期间 OID 变化则丢弃并重取，metadata 数量必须等于 provider 报告的 changed-file 总数。diff 必须固定到这组 OID，不得再次按可变 PR ref 取材，也不得用其他 checkout 的本地 `HEAD` 代替；逐路径记录完整 diff 或明确的 binary 状态，任何遗漏、截断或 provider limit 都视为取材失败。若 metadata 不能安全给出 rename 的 old / new path、含禁止路径，或远端取材不完整，则仅在 base / head object 本地可用时，以 `baseOID...headOID` 的 rename-aware metadata 按允许路径读取；否则停止并要求 sanitized changeset。
+- **base→工作树 模式**：用 `git --literal-pathspecs diff --no-ext-diff --no-textconv --name-status -z --find-renames <baseOID>` 与 `git --no-optional-locks status --porcelain=v1 -z --untracked-files=all` 取得完整的 NUL-delimited old / new path metadata，再逐个读取允许路径：已跟踪文件用 `git --literal-pathspecs diff --no-ext-diff --no-textconv <baseOID> -- <path...>`，未跟踪新文件用 `git --literal-pathspecs diff --no-index --no-ext-diff --no-textconv -- /dev/null <path>`（exit code `1` 表示存在 diff，不是执行失败）；忽略 `.gitignore` 排除项。若 rename 任一端是禁止路径，则不读取该文件内容。
+- **worktree 一致性**：读取前后分别计算 path / status、old / new path 与允许文件 content identity 的 fingerprint；不一致说明取材期间发生 drift，丢弃本轮结果并从路径筛查重新开始。
 
-3. 建立改动地图
-   - 按功能代码、测试、配置、迁移、文档、生成物分类。
-   - 标记高风险区域：公共 API、权限/认证、计费、数据写入、并发、缓存、迁移、构建发布配置、跨模块共享逻辑。
+### 2. 确认目标与价值锚点
 
-4. 按行为路径审查关键改动
-   - 输入：入口、参数、权限、环境变量、配置、用户操作是否变化。
-   - 状态：缓存、数据库、内存、并发、UI state 是否有新的读写路径。
-   - 输出：返回值、渲染、事件、日志、通知、外部调用是否符合预期。
-   - 错误路径：异常、空值、超时、重试、部分失败、回滚是否被处理。
-   - Side effect：后台任务、迁移、网络请求、文件写入、跨模块调用是否扩大影响面。
+- 从 issue / PR 描述提炼要解决的问题与 1-3 条成功标准：合入后应解决什么、不能改变什么。
+- 该目标一物两用：既作第 3 步核心「确认目标」的传入值，又作第 4 步价值判断的基准。
+- 目标不可见或存在会显著影响判断的歧义时，先向用户确认。
 
-5. 给出合入判断
-   - 用 `Blocker`、`Should Fix`、`Nit`、`Question` 标记 findings。
-   - 输出 `Merge Verdict`：`Request changes`、`Conditional approve`、`Approve` 或 `Needs redesign`，理由必须对应 findings、测试缺口、范围偏差或价值判断。
+### 3. 委派四维度审查
+
+- 以第 2 步成功标准为「确认目标」，invoke the `adversarial-review` skill 审查本次 changeset，收集其 findings（`material / non-material / tradeoff`）与终态信号（`Adversarial Review: Converged` / `Adversarial Review: User decision required`）。
+- 对某一 changeset 状态**只 invoke 一次并报告**；本 skill 不修复、不「修完再 invoke」（那等于改文件）。作者推新 commit 后由用户重跑，即新的一遍，非内部修复环。
+
+### 4. PR 专属判断
+
+- **价值 / efficacy**：整套改动是否真正解决目标问题、有可观察价值——落到证据，不接受「更优雅」「以后会用到」。与核心克制区分：克制查「改动该不该在」，价值查「整体是否达成目标」；代码正确且在范围内，仍可能因未覆盖真正瓶颈而价值不足。
+- **合入闸门**：测试可测性与 ship 就绪（feature flag、迁移顺序、灰度兼容）是否足以合入；不足则列为合入前要求或 follow-up。
+- **范围处置**：核心判为 `Out of scope` 的改动应从当前 changeset 移除；若仍有独立价值，再放入 follow-up commit / PR。
+- **foundation / refactor 改动**：要求点名后续会依赖的具体接口、模块边界或删除的复杂度，而非抽象地「为以后做准备」。
+
+### 5. Merge Verdict
+
+由两条正交轴共同决定，取更严一侧：
+
+- **代码质量轴**（读核心终态，不重判 blocking-ness）：未 Converged 且有必须修复的 material issue ／ `User decision required`（待决 tradeoff，并保留核心的处理建议）／ `Converged`（无必须修复项，可含已接受 tradeoff 与 non-material）。
+- **价值 / 合入轴**（pr-review 独有）：是否解决真问题、测试与 ship 是否足以合入。
+
+映射：
+
+- 有必须修复的 material issue、合入前必须补齐的测试 / ship 缺口，或核心对待决 tradeoff 建议 `Reject and revise` → 根因是局部缺陷 `Request changes`；根因是方向、架构或价值不足 `Needs redesign`。
+- 无必须修复项，但有待用户明确接受的 tradeoff（核心建议 `Accept tradeoff`）或其他 merge prerequisite → `Conditional approve`，列出决策项与前置条件。
+- Converged 且价值已确认，仅剩 optional non-material follow-up 或无 → `Approve`。
+
+`Converged` 是 `Approve` 的必要非充分条件——它只清洁代码质量轴，价值/测试闸门可独立否决。`User decision required` 折叠为 verdict 的决策项，沿用核心「推荐 `Accept tradeoff` | `Reject and revise`」，不替用户拍板。
 
 ## 输出格式
 
-优先输出 findings。除非用户明确要求摘要优先，否则不要把总结放在问题前面。
+findings 优先，除非用户要求摘要优先。每个 finding 按 `adversarial-review` 的 finding 要求给出（位置或受影响范围、触发条件、证据、影响、建议），并标注 `material / non-material / tradeoff`；本 skill 只额外呈现 Merge Verdict，不重定义 finding 字段。
 
-每个 finding：
-
-```markdown
-- [Severity] 文件路径:行号 - 简短标题
-  问题：具体说明哪里不对。
-  证据：引用 diff、现有行为、issue 要求或触发路径。
-  影响：用户、系统、数据、维护或发布层面的后果。
-  建议：可执行的修改方向；若需拆分，说明拆到后续提交或独立 PR 的边界。
-```
-
-Severity：
-
-- `Blocker`：合入会造成明确错误、严重风险、价值缺失或明显偏离 issue。
-- `Should Fix`：建议合入前修复，风险或维护成本真实但不一定阻断所有场景。
-- `Nit`：低风险抛光，不能夸大成阻塞。纯风格偏好、等价写法、轻微命名偏好通常只能是 Nit，且不能要求大范围重写。
-- `Question`：需作者澄清的设计/范围/行为问题，要有具体依据。
-
-未发现问题时明确写 `未发现阻塞问题。`，然后说明残余的测试缺口、风险或人工验收建议。
+未发现问题时写 `未发现阻塞问题。`，再说明残余的合入风险（人工验收、rollout、待补信息）。
 
 最后必须输出：
 
 ```markdown
 Merge Verdict: Request changes | Conditional approve | Approve | Needs redesign
-理由：1-3 条，对应 findings、测试缺口、范围偏差、价值判断或明确的无阻塞结论。
+理由：1-3 条，对应代码质量轴信号、价值判断、测试/范围缺口或明确的无阻塞结论。
 ```
-
-- `Request changes`：存在 blocker 或合入前必须修复的真实风险。
-- `Conditional approve`：无 blocker，但有明确 follow-up、验证缺口或小范围修改要求。
-- `Approve`：未发现阻塞问题，范围、价值、验证都足够清楚。
-- `Needs redesign`：问题主要来自方向、价值、范围或架构边界，无法靠局部 patch 修好。
-
-severity → verdict 映射（取最高档）：
-
-- 有 `Blocker`：`Request changes`（若根因是方向/范围/架构而非局部缺陷，则 `Needs redesign`）。
-- 无 `Blocker`、有 `Should Fix`：`Conditional approve`，把这些 `Should Fix` 列为合入前的小范围修改要求。
-- 仅剩 `Question` 未决：默认 `Conditional approve` 并列出待澄清项；仅当澄清结果可能推翻设计、不澄清就无法判断能否合入时，才用 `Request changes`。
-- 只剩 `Nit` 或无 finding：`Approve`。
-
-收敛判断（反复执行时）：当某轮无新增 `Blocker`/`Should Fix`、仅剩 `Nit` 或可选打磨时，显式声明「已达可合入收敛点，剩余为可选项」，不要为了找问题而继续升级 Nit；是否继续打磨交由我决定。
-
-若对当前结论仍不够满意（如证据不足、范围存疑、价值待确认），在末尾补一条简要的下一步建议（需要补的信息、可拆的边界或待验证的点），供我判断后再决定。
 
 ## 示例（正反对比）
 
-风险评估
-- ✗「这里可能有问题。」
-- ✓「API 返回 empty array 时，新逻辑跳过清空状态，页面继续展示上次结果。触发路径是 `loadItems -> setItems` 没在空结果分支执行，用户会看到过期数据。」
-
-代码抛光
-- ✗「这里可以优化。」
-- ✓「新增 helper 只被调用一次，把 3 行直线逻辑拆到远处，增加跳转成本但无复用收益。建议内联。」
+价值评估
+- ✗「实现看起来没问题。」
+- ✓「PR 加了缓存层，但慢路径来自数据库排序，缓存没覆盖该查询入口；核心性能问题没解决——即便核心审查 `Converged`，合入价值仍不足，判 `Needs redesign`。」
 
 范围约束
 - ✗ 默认接受「顺手调整了按钮布局。」
-- ✓「issue 只要求修复导出失败，按钮重排属无关 UI 变化，会影响截图测试和用户既有操作习惯，建议拆到单独 PR。」
-
-价值评估
-- ✗「实现看起来没问题。」
-- ✓「PR 加了缓存层，但慢路径来自数据库排序，缓存没覆盖该查询入口；核心性能问题没解决，合入价值不足。」
-
-行为路径
-- ✗「错误处理看起来不完整。」
-- ✓「token refresh 超时时直接返回 cached user，但没标记 auth stale。后续写操作仍带旧 token，触发 401 重试循环。建议在 timeout path 清理 session 或进入重新登录。」
+- ✓「issue 只要求修复导出失败，按钮重排属无关 UI 变化，会影响截图测试与用户既有操作习惯；核心已判其 `Out of scope`，建议拆到单独 PR 而非并入本次。」
 
 ## 避免事项
 
-- 不要把个人风格偏好包装成阻塞问题。
-- 不要只罗列 diff，要分析行为和维护影响。
-- 不要因为改动较大就笼统反对；指出具体可拆边界和风险来源。
-- 不要因为测试通过就停止审查；测试只降低风险，不替代范围和价值判断。
-- 不要建议无关大重构，除非它是修复当前改动风险的最小必要改动。
+- 不因改动较大就笼统反对；指出具体可拆边界与风险来源。
+- 不因测试通过就停止审查；测试只降低风险，不替代范围与价值判断。
+- 不把四维度判据、finding 字段或 severity 阶梯搬回本 skill——那是 `adversarial-review` 的职责。
