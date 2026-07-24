@@ -38,12 +38,25 @@ function _ghc_tmux_recover_status_scheduler_lock_ {
 
 function _ghc_tmux_status_layout_hooks_ {
   printf '%s\n' \
+    'client-attached[40]' \
+    'client-detached[40]' \
     'client-resized[40]' \
     'client-session-changed[40]' \
     'session-created[40]' \
     'session-closed[40]' \
     'session-renamed[40]' \
     'session-window-changed[40]'
+}
+
+# Layout hooks are reconcile notifications, not part of the triggering tmux
+# transaction. A failed background job must stay silent because tmux turns job
+# output or a non-zero exit into view-mode; the next lifecycle event retries.
+function _ghc_tmux_set_status_layout_hook_ {
+  local layout_hook=$1
+  local event=$2
+  local status_renderer=$3
+  tmux set-hook -g "$layout_hook" \
+    "run-shell -b '$status_renderer apply $event >/dev/null 2>&1 || true'"
 }
 
 function _ghc_tmux_unset_status_layout_hooks_ {
@@ -225,12 +238,16 @@ function _ghc_tmux_load_theme_ {
         tmux display-message "Status renderer or scheduler driver missing; fallback to status01" 2>/dev/null || true
       else
         tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-        tmux set-hook -g 'client-resized[40]' "run-shell '$status_renderer apply client-resized'"
-        tmux set-hook -g 'client-session-changed[40]' "run-shell '$status_renderer apply session-changed'"
-        tmux set-hook -g 'session-created[40]' "run-shell '$status_renderer apply session-created'"
-        tmux set-hook -g 'session-closed[40]' "run-shell '$status_renderer apply session-closed'"
-        tmux set-hook -g 'session-renamed[40]' "run-shell '$status_renderer apply session-renamed'"
-        tmux set-hook -g 'session-window-changed[40]' "run-shell '$status_renderer apply window-changed'"
+        # Attach/detach change the attached-width set, so they share the
+        # client-resized event kind.
+        _ghc_tmux_set_status_layout_hook_ 'client-attached[40]' client-resized "$status_renderer"
+        _ghc_tmux_set_status_layout_hook_ 'client-detached[40]' client-resized "$status_renderer"
+        _ghc_tmux_set_status_layout_hook_ 'client-resized[40]' client-resized "$status_renderer"
+        _ghc_tmux_set_status_layout_hook_ 'client-session-changed[40]' session-changed "$status_renderer"
+        _ghc_tmux_set_status_layout_hook_ 'session-created[40]' session-created "$status_renderer"
+        _ghc_tmux_set_status_layout_hook_ 'session-closed[40]' session-closed "$status_renderer"
+        _ghc_tmux_set_status_layout_hook_ 'session-renamed[40]' session-renamed "$status_renderer"
+        _ghc_tmux_set_status_layout_hook_ 'session-window-changed[40]' window-changed "$status_renderer"
 
         local bootstrap_generation="$_GHC_TMUX_STATUS_FENCED_GENERATION"
         if ! "$status_renderer" apply theme-loaded "$bootstrap_generation"; then

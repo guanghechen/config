@@ -19,8 +19,14 @@ function _ghc_tmux_focus_session_ {
   local status_renderer
   status_renderer=$(_ghc_tmux_status_renderer_bin_)
   if [ -n "$status_renderer" ]; then
-    "$status_renderer" session focus "$direction"
-    return $?
+    if "$status_renderer" session focus "$direction" >/dev/null 2>&1; then
+      return 0
+    fi
+
+    # run-shell turns command output or a non-zero exit into view-mode, which
+    # captures all pane input. Navigation failure must remain a status message.
+    tmux display-message "Session focus failed" >/dev/null 2>&1 || true
+    return 0
   fi
 
   local current_session_name
