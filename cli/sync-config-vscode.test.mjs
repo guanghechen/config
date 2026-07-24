@@ -102,6 +102,55 @@ describe('sync-config-vscode terminal sequences', () => {
 })
 
 describe('sync-config-vscode cross-platform keybindings', () => {
+  it('navigates panel views with ctrl plus the platform modifier', () => {
+    const root = path.join(import.meta.dirname, '../asset/app/vscode/keybinding')
+    const osx = JSON.parse(fs.readFileSync(path.join(root, 'osx/customize.json'), 'utf8'))
+    const win = JSON.parse(fs.readFileSync(path.join(root, 'win/customize.json'), 'utf8'))
+    const find = (keybindings, key) => keybindings.find(x => x.key.toLowerCase() === key)
+
+    assert.deepEqual(find(osx, 'cmd+ctrl+,'), {
+      key: 'cmd+ctrl+,',
+      command: 'workbench.action.previousPanelView',
+      when: 'panelFocus',
+      title: 'panel: focus previous view',
+    })
+    assert.deepEqual(find(osx, 'cmd+ctrl+.'), {
+      key: 'cmd+ctrl+.',
+      command: 'workbench.action.nextPanelView',
+      when: 'panelFocus',
+      title: 'panel: focus next view',
+    })
+    assert.deepEqual(find(win, 'alt+ctrl+,'), {
+      key: 'alt+ctrl+,',
+      command: 'workbench.action.previousPanelView',
+      when: 'panelFocus',
+      title: 'panel: focus previous view',
+    })
+    assert.deepEqual(find(win, 'alt+ctrl+.'), {
+      key: 'alt+ctrl+.',
+      command: 'workbench.action.nextPanelView',
+      when: 'panelFocus',
+      title: 'panel: focus next view',
+    })
+
+    assert.equal(
+      osx.some(x => x.command === 'workbench.action.previousPanelView' && x.key === 'cmd+['),
+      false,
+    )
+    assert.equal(
+      osx.some(x => x.command === 'workbench.action.nextPanelView' && x.key === 'cmd+]'),
+      false,
+    )
+    assert.equal(
+      win.some(x => x.command === 'workbench.action.previousPanelView' && x.key === 'alt+['),
+      false,
+    )
+    assert.equal(
+      win.some(x => x.command === 'workbench.action.nextPanelView' && x.key === 'alt+]'),
+      false,
+    )
+  })
+
   it('toggles fullscreen from any focus context', () => {
     const root = path.join(import.meta.dirname, '../asset/app/vscode/keybinding')
     const osx = JSON.parse(fs.readFileSync(path.join(root, 'osx/customize.json'), 'utf8'))
