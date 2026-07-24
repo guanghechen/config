@@ -10,7 +10,9 @@
 6. **PREFERRED**: Keep Markdown tables and ASCII diagrams visually aligned (CJK = 2 units, ASCII = 1); prefer bullet lists when clearer than a table.
 7. **PREFERRED**: For non-trivial proposals, recommend one option; use 2–3 examples with a brief contrast only when they clarify a meaningful tradeoff.
 8. **ALWAYS**: When identifying issues, provide concrete examples; if there is no minimal reproduction, state trigger, evidence, and impact.
-9. **ALWAYS**: Before delivering changes, perform a risk-proportionate adversarial self-review: Is the change robust, minimal in scope and complexity, and free of new issues? Fix confirmed in-scope issues and re-verify. If a material concern remains unresolved, pause delivery, present the evidence and options, and await the user's decision.
+9. **ALWAYS**: After implementation and ordinary verification, but before delivering a significant change, read and follow `$CLAUDE_CONFIG_DIR/refs/review-loop.md`. Run its caller-side loop as a distinct final pass over the complete changeset until the read-only `adversarial-review` skill reports `Converged`. Use a fresh isolated (clean-context) reviewer whenever available; if genuinely unavailable, disclose the same-context pass as an anti-anchoring degradation. Intermediate edits, passing verification, and partial reviews do not replace this final pass.
+
+> Significant changes include cross-module or stateful-flow changes, public interface changes, shared configuration changes that affect behavior or compatibility, security-sensitive work, broad refactors, and high-regression-risk fixes.
 
 ## Security
 
@@ -24,7 +26,7 @@
 
 1. **PREFERRED** `[planning]`: Prefer a reproducible test or verification command when feasible.
 2. **PREFERRED** `[comments]`: Prefer self-documenting code; comment "WHY", not "WHAT".
-3. **PREFERRED** `[conventions]`: Follow established repository conventions; otherwise follow ecosystem conventions, with a preference for `I`-prefixed interface names.
+3. **PREFERRED** `[conventions]`: Follow established repository conventions, then ecosystem conventions; prefer `I`-prefixed interface names only when both are silent.
 4. **PREFERRED** `[early-return]`: Use early returns to cut nesting when it improves readability.
 5. **ALWAYS** `[error-handling]`: Validate inputs at external boundaries; catch errors only to recover or add actionable context; otherwise propagate them unchanged.
 
@@ -39,7 +41,7 @@
 1. **CRITICAL** `[module-boundary]`: For large implementation or refactor tasks, enforce clear responsibilities, intentional module boundaries, and acyclic one-way dependencies; no boundary violations, reverse dependencies, or cross-module call cycles.
 2. **ALWAYS** `[structure-bias]`: Default to the simplest effective design — high cohesion, low coupling, abstraction on demand (extract a pattern only when the 2nd or 3rd real peer appears). Stop and simplify when an implementation outgrows the problem — or when a senior engineer would call the design overcomplicated.
 3. **ALWAYS** `[stateful-contract]`: When a significant change touches a stateful flow or module boundary, capture in code or a short note: state owner and single writer, one-way data flow, interface contract (inputs, outputs, errors, and applicable timeouts), and failure strategy (for example, `retry`, `rollback`, `degrade`, or `abort`). Create a standalone design doc only when requested or complexity warrants it.
-4. **CRITICAL** `[plugin-core]`: When extensibility, third-party integration, or multi-implementation replacement is genuinely required, enforce `Minimal Core` + `Plug-in Architecture` — core runs without optional plugins, unified load and unload contract, capability and compatibility checks, isolated plugin failure with graceful degradation. Otherwise avoid forced pluginization.
+4. **CRITICAL** `[plugin-core]`: When runtime extensibility — such as optional third-party extensions or implementations that must be loaded or replaced dynamically — is a genuine product requirement, enforce `Minimal Core` + `Plug-in Architecture`: core runs without optional plugins, with a unified load and unload contract, capability and compatibility checks, and isolated plugin failure with graceful degradation. A single mandatory integration does not qualify; avoid pluginization unless this condition holds.
 5. **ALWAYS** `[open-questions]`: Centralize unresolved design questions; resolve or explicitly mark them non-blocking before implementation.
 
 ## Environment
