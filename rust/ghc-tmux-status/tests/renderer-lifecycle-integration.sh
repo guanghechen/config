@@ -7,8 +7,14 @@ binary="$crate_dir/target/debug/ghc-tmux-status"
 tmp=$(mktemp -d /tmp/ghc-tmux-render-lifecycle-test.XXXXXX)
 socket="ghc-tmux-render-lifecycle-test-$$"
 real_tmux=$(command -v tmux)
+refresh_client_a_pid=
+refresh_client_b_pid=
 
 cleanup() {
+  [ -z "$refresh_client_a_pid" ] || kill "$refresh_client_a_pid" 2>/dev/null || true
+  [ -z "$refresh_client_b_pid" ] || kill "$refresh_client_b_pid" 2>/dev/null || true
+  exec 9>&- 2>/dev/null || true
+  exec 8>&- 2>/dev/null || true
   env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
@@ -24,6 +30,35 @@ wait_for_file() {
   done
   echo "timed out waiting for $path" >&2
   return 1
+}
+
+wait_for_client_count() {
+  local expected=$1
+  local count=0
+  for _ in $(seq 1 100); do
+    count=$(env -u TMUX tmux -L "$socket" list-clients | wc -l | tr -d ' ')
+    if [ "$count" -eq "$expected" ]; then
+      return 0
+    fi
+    sleep 0.02
+  done
+  echo "timed out waiting for $expected clients; observed $count" >&2
+  return 1
+}
+
+assert_refresh_context_guard() {
+  local expected=$1
+  local context=$2
+  local actual
+  env TMUX="$server_env" TMUX_PANE="$refresh_pane" "$real_tmux" \
+    if-shell -F '#{!=:#{client_name},}' \
+    'set -g @GHC_TEST_REFRESH_CONTEXT true' \
+    'set -g @GHC_TEST_REFRESH_CONTEXT false'
+  actual=$(env -u TMUX tmux -L "$socket" show -gqv @GHC_TEST_REFRESH_CONTEXT)
+  if [ "$actual" != "$expected" ]; then
+    echo "$context refresh context guard was $actual, expected $expected" >&2
+    exit 1
+  fi
 }
 
 fence_to_status01() {
@@ -61,6 +96,7 @@ assert_fallback_status_unchanged() {
 cargo build --quiet --manifest-path "$crate_dir/Cargo.toml"
 env -u TMUX tmux -L "$socket" -f /dev/null new-session -d -s lifecycle -x 120 -y 30
 server_env=$(tmux -L "$socket" display-message -p '#{socket_path},#{pid},0')
+refresh_pane=$(tmux -L "$socket" display-message -p -t lifecycle:0.0 '#{pane_id}')
 
 # A standard apply that already captured status02 must not commit after the loader
 # fences lifecycle and installs status01.
@@ -227,5 +263,119 @@ case "$loader_state" in
   $'02\t1\t#($HOME/.config/tmux/script/status-scheduler.sh)'*$'\t1') ;;
   *) echo "loader did not converge and activate status02: $loader_state" >&2; exit 1 ;;
 esac
+
+# A non-empty standard render folds its guarded status refresh into the final
+# commit queue, avoiding a third tmux process.
+mkdir -p "$tmp/folded-refresh/bin"
+cat >"$tmp/folded-refresh/bin/tmux" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >>"$GHC_TMUX_CALL_LOG"
+if [ -n "${GHC_TMUX_FAIL_FOLDED_ONCE:-}" ] && \
+  [ ! -e "$GHC_TMUX_FAIL_FOLDED_ONCE" ]; then
+  case "$*" in
+    *client_name*refresh-client*)
+      : >"$GHC_TMUX_FAIL_FOLDED_ONCE"
+      exit 1
+      ;;
+  esac
+fi
+exec "$GHC_TMUX_REAL_TMUX" "$@"
+EOF
+chmod +x "$tmp/folded-refresh/bin/tmux"
+
+assert_folded_call_log() {
+  local context=$1
+  local call_count
+  call_count=$(wc -l <"$tmp/folded-refresh/calls" | tr -d ' ')
+  if [ "$call_count" -ne 2 ]; then
+    echo "$context standard render used $call_count tmux calls instead of 2" >&2
+    exit 1
+  fi
+  if ! awk '/client_name/ && /refresh-client/ { found = 1 } END { exit !found }' \
+    "$tmp/folded-refresh/calls"; then
+    echo "$context standard render did not fold the guarded refresh" >&2
+    exit 1
+  fi
+}
+
+# Without an attached client, the context guard must skip refresh while the
+# mutation and applied marker still complete in the folded queue.
+assert_refresh_context_guard false detached
+tmux -L "$socket" set -g @GHC_SL_MODE 02 ';' \
+  set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
+  set -s @GHC_SL_SCHED_GEN 49 ';' \
+  set -g status on ';' \
+  set -g status-left STALE-LEFT
+env \
+  HOME="$loader_home" \
+  TMUX="$server_env" \
+  PATH="$tmp/folded-refresh/bin:$PATH" \
+  GHC_TMUX_CALL_LOG="$tmp/folded-refresh/calls" \
+  GHC_TMUX_REAL_TMUX="$real_tmux" \
+  "$binary" apply client-resized
+assert_folded_call_log detached
+if [ "$(tmux -L "$socket" show -gqv status-left)" = "STALE-LEFT" ]; then
+  echo "detached standard render did not commit" >&2
+  exit 1
+fi
+
+# Hold real control-mode clients open so the same predicate is evaluated by
+# tmux with one and then two attached client contexts.
+mkfifo \
+  "$tmp/folded-refresh/client-a.in" \
+  "$tmp/folded-refresh/client-b.in"
+exec 9<>"$tmp/folded-refresh/client-a.in"
+exec 8<>"$tmp/folded-refresh/client-b.in"
+env -u TMUX "$real_tmux" -L "$socket" -C attach-session -t lifecycle \
+  <&9 >"$tmp/folded-refresh/client-a.out" 2>&1 &
+refresh_client_a_pid=$!
+wait_for_client_count 1
+assert_refresh_context_guard true one-client
+
+: >"$tmp/folded-refresh/calls"
+tmux -L "$socket" set -g status-left STALE-ATTACHED-LEFT
+env \
+  HOME="$loader_home" \
+  TMUX="$server_env" \
+  TMUX_PANE="$refresh_pane" \
+  PATH="$tmp/folded-refresh/bin:$PATH" \
+  GHC_TMUX_CALL_LOG="$tmp/folded-refresh/calls" \
+  GHC_TMUX_REAL_TMUX="$real_tmux" \
+  "$binary" apply client-resized
+assert_folded_call_log attached
+if [ "$(tmux -L "$socket" show -gqv status-left)" = "STALE-ATTACHED-LEFT" ]; then
+  echo "attached standard render did not commit" >&2
+  exit 1
+fi
+
+env -u TMUX "$real_tmux" -L "$socket" -C attach-session -t lifecycle \
+  <&8 >"$tmp/folded-refresh/client-b.out" 2>&1 &
+refresh_client_b_pid=$!
+wait_for_client_count 2
+assert_refresh_context_guard true two-client
+
+# If the final folded queue fails, the standard path retains its existing
+# per-command retry and follows it with the original best-effort refresh.
+: >"$tmp/folded-refresh/calls"
+tmux -L "$socket" set -g status-left STALE-LEFT-AGAIN
+env \
+  HOME="$loader_home" \
+  TMUX="$server_env" \
+  PATH="$tmp/folded-refresh/bin:$PATH" \
+  GHC_TMUX_CALL_LOG="$tmp/folded-refresh/calls" \
+  GHC_TMUX_FAIL_FOLDED_ONCE="$tmp/folded-refresh/failed-once" \
+  GHC_TMUX_REAL_TMUX="$real_tmux" \
+  "$binary" apply client-resized
+if [ "$(tmux -L "$socket" show -gqv status-left)" = "STALE-LEFT-AGAIN" ]; then
+  echo "standard render did not recover from a folded commit failure" >&2
+  exit 1
+fi
+if ! awk '
+  /refresh-client/ && !/client_name/ { found = 1 }
+  END { exit !found }
+' "$tmp/folded-refresh/calls"; then
+  echo "folded commit fallback omitted the separate refresh" >&2
+  exit 1
+fi
 
 printf '%s\n' "renderer lifecycle integration: ok"

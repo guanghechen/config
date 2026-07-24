@@ -261,27 +261,38 @@ impl TmuxAdapter {
             return Ok(GuardedMutationOutcome::Applied);
         }
 
-        for chunk in serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES) {
+        let chunks = serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES);
+        let final_chunk_index = chunks.len() - 1;
+        let mut refresh_separately = !retry_individual_commands;
+
+        for (chunk_index, chunk) in chunks.iter().enumerate() {
             if let Some(deadline) = deadline {
                 deadline.check("commit-plan")?;
             }
-            match self.render_guarded_mutation(expected_revision, &chunk.command_list, guards) {
+            let fold_refresh = retry_individual_commands && chunk_index == final_chunk_index;
+            match self.render_guarded_mutation(
+                expected_revision,
+                &chunk.command_list,
+                guards,
+                fold_refresh,
+            ) {
                 Ok(GuardedMutationOutcome::Applied) => continue,
                 Ok(GuardedMutationOutcome::Skipped) => {
                     return Ok(GuardedMutationOutcome::Skipped);
                 }
                 Err(error) if !retry_individual_commands => return Err(error),
-                Err(_) => {}
+                Err(_) => refresh_separately |= fold_refresh,
             }
 
             // Commands are idempotent. A chunk-level parser/argv failure can be
             // retried one command at a time without allowing a stale writer: both
             // guards are rebuilt around every individual mutation.
-            for command in &plan.commands[chunk.range] {
+            for command in &plan.commands[chunk.range.clone()] {
                 let outcome = self.render_guarded_mutation(
                     expected_revision,
                     &command.to_command_string(),
                     guards,
+                    false,
                 )?;
                 if outcome == GuardedMutationOutcome::Skipped {
                     return Ok(GuardedMutationOutcome::Skipped);
@@ -289,12 +300,15 @@ impl TmuxAdapter {
             }
         }
 
-        let refresh = tmux_command_string(&["refresh-client".to_string(), "-S".to_string()]);
-        let _ = self.tmux_status(nested_render_guard_args(
-            expected_revision,
-            &refresh,
-            guards,
-        ));
+        if refresh_separately {
+            let refresh = tmux_command_string(&["refresh-client".to_string(), "-S".to_string()]);
+            let _ = self.tmux_status(nested_render_guard_args(
+                expected_revision,
+                &refresh,
+                guards,
+                false,
+            ));
+        }
         Ok(GuardedMutationOutcome::Applied)
     }
 
@@ -303,11 +317,13 @@ impl TmuxAdapter {
         expected_revision: u64,
         command_list: &str,
         guards: &[TmuxOptionGuard<'_>],
+        refresh_status: bool,
     ) -> AppResult<GuardedMutationOutcome> {
         let output = self.tmux_output(nested_render_guard_args(
             expected_revision,
             command_list,
             guards,
+            refresh_status,
         ))?;
         match output.as_str() {
             RENDER_APPLIED_MARK => Ok(GuardedMutationOutcome::Applied),
@@ -587,11 +603,20 @@ fn nested_render_guard_args(
     expected_revision: u64,
     command_list: &str,
     guards: &[TmuxOptionGuard<'_>],
+    refresh_status: bool,
 ) -> Vec<String> {
-    let applied_command = tmux_command_sequence(&[
-        command_list.to_string(),
-        marker_command(RENDER_APPLIED_MARK),
-    ]);
+    let mut applied_commands = vec![command_list.to_string()];
+    if refresh_status {
+        applied_commands.push(tmux_command_string(&[
+            "if-shell".to_string(),
+            "-F".to_string(),
+            "#{!=:#{client_name},}".to_string(),
+            tmux_command_string(&["refresh-client".to_string(), "-S".to_string()]),
+            String::new(),
+        ]));
+    }
+    applied_commands.push(marker_command(RENDER_APPLIED_MARK));
+    let applied_command = tmux_command_sequence(&applied_commands);
     let render_guard =
         guarded_command_args(RENDER_REVISION_OPTION, expected_revision, applied_command);
     if guards.is_empty() {
@@ -1066,10 +1091,10 @@ const DIAGNOSTIC_SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
 mod tests {
     use super::{
         CONTEXT_MARK, DIAGNOSTIC_SNAPSHOT_OPTIONS, FIELD_SEP, GuardedMutationOutcome,
-        NAVIGATION_MARK, OPTIONS_END_MARK, OPTIONS_MARK, RENDER_SNAPSHOT_OPTIONS,
-        SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK, TmuxOptionGuard,
-        TmuxOptionScope, cache_witness_format, combined_guard_format, format_literal,
-        guarded_snapshot_command_args, nested_render_guard_args, option_value_mark,
+        NAVIGATION_MARK, OPTIONS_END_MARK, OPTIONS_MARK, RENDER_APPLIED_MARK, RENDER_SKIPPED_MARK,
+        RENDER_SNAPSHOT_OPTIONS, SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK,
+        TmuxOptionGuard, TmuxOptionScope, cache_witness_format, combined_guard_format,
+        format_literal, guarded_snapshot_command_args, nested_render_guard_args, option_value_mark,
         options_command_args, parse_client_line, parse_guarded_options_output,
         parse_options_output, parse_session_line, parse_session_navigation_output,
         parse_snapshot_output, serialized_plan_chunks, snapshot_command_args,
@@ -1261,11 +1286,24 @@ $2	90"
                 option: "@GHC_SL_SCHED_GEN",
                 expected: "7",
             }],
+            false,
         );
 
         assert_eq!(args[2], "#{==:#{@GHC_SL_SCHED_GEN},#{l:7}}");
         assert!(args[3].contains(RENDER_REVISION_OPTION));
         assert!(args[3].contains("@VALUE"));
+    }
+
+    #[test]
+    fn folded_status_refresh_is_guarded_and_precedes_the_applied_marker() {
+        let args = nested_render_guard_args(9, "set -g @VALUE new", &[], true);
+        let applied_branch = &args[3];
+        let refresh = applied_branch.find("refresh-client").unwrap();
+        let marker = applied_branch.find(RENDER_APPLIED_MARK).unwrap();
+
+        assert!(applied_branch.contains("#{!=:#{client_name},}"));
+        assert!(refresh < marker);
+        assert!(args[4].contains(RENDER_SKIPPED_MARK));
     }
 
     #[test]

@@ -124,3 +124,28 @@ only when cache witnesses, render key, layout, status, and row formats already
 match. Any other drift retains the full reconcile bundle and its existing
 fail-closed retry behavior. This is intentionally not a general field-level
 delta commit.
+
+7. **Completed — fold the standard status refresh into the final commit queue**
+   - The Rust commit adapter remains the single writer. For Standard and
+     Bootstrap renders, only the final guarded chunk conditionally runs
+     `refresh-client -S` before publishing the applied marker, reducing a
+     non-empty apply from three tmux processes to two.
+   - A non-empty `client_name` guards the nested refresh. This identifies a
+     usable tmux client context and preserves success on a detached server,
+     where an unguarded refresh exits nonzero and prevents the applied marker
+     from running. Isolated integration covers zero, one, and two clients.
+   - A final folded-queue failure retains the existing recovery contract:
+     idempotent mutations retry individually under the same revision/lifecycle
+     guards, followed by the original separate best-effort refresh. Scheduler
+     commits keep their independent refresh and deadline-sensitive abort path.
+   - The data flow remains snapshot → pure plan → guarded commit; no state owner
+     or latest-wins boundary moved. The cost is a slightly larger final nested
+     command, sharing one two-second process timeout between final mutation and
+     refresh, and duplicate mutation work if that call fails. The existing
+     Standard/Bootstrap retry path contains those failure costs.
+   - Alternating HEAD/worktree release-binary A/B with one attached control-mode
+     client (30 non-empty renders each) reduced commit median from 25.010 to
+     12.280 ms and total median from 37.385 to 25.930 ms. Observed commit p95
+     changed from 68.870 to 35.440 ms; total p95 changed from 128.050 to
+     94.030 ms. These noisy local latency samples support the removed IPC; they
+     are not a broad throughput or tail-latency claim.
