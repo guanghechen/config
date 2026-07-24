@@ -149,3 +149,18 @@ delta commit.
      changed from 68.870 to 35.440 ms; total p95 changed from 128.050 to
      94.030 ms. These noisy local latency samples support the removed IPC; they
      are not a broad throughput or tail-latency claim.
+
+8. **Completed — coalesce scheduler lock artifact cleanup**
+   - The fixed lock path remains the single ownership source. Its prewritten
+     hard-link candidate now remains as a non-authoritative cleanup handle until
+     normal release, allowing lock, candidate, and update paths to be removed by
+     one utility process instead of two sequential `unlink` processes.
+   - Ownership loss keeps the existing conservative path: never remove the fixed
+     lock, but clean this driver's PID-scoped artifacts. After a driver crash,
+     recovery retains the candidate while either recorded owner is alive and
+     removes it only after both owners are dead.
+   - Alternating committed/worktree driver A/B on one isolated no-due scheduler
+     (50 runs each, zero test delay) reduced median wall time from 73.826 to
+     63.725 ms and mean from 80.110 to 69.199 ms. Observed p95 changed from
+     130.282 to 87.171 ms; these local process-startup samples are directional,
+     not a tail-latency guarantee.

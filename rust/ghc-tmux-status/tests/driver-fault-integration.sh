@@ -125,12 +125,37 @@ cat >"$renderer" <<'EOF'
 exit 1
 EOF
 chmod +x "$renderer"
+cleanup_bin="$tmp/cleanup-bin"
+cleanup_calls="$tmp/cleanup-calls"
+real_rm=$(command -v rm)
+real_unlink=$(command -v unlink)
+mkdir -p "$cleanup_bin"
+cat >"$cleanup_bin/rm" <<EOF
+#!/bin/sh
+printf '%s\n' rm >>'$cleanup_calls'
+exec '$real_rm' "\$@"
+EOF
+cat >"$cleanup_bin/unlink" <<EOF
+#!/bin/sh
+printf '%s\n' unlink >>'$cleanup_calls'
+exec '$real_unlink' "\$@"
+EOF
+chmod +x "$cleanup_bin/rm" "$cleanup_bin/unlink"
+: >"$cleanup_calls"
 env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 43 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1
-env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
+env PATH="$cleanup_bin:$PATH" HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
   GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 "$driver" >/dev/null
 if ! option_is_active; then
   echo "ordinary renderer error permanently fenced scheduler" >&2
+  exit 1
+fi
+if [ "$(cat "$cleanup_calls")" != "rm" ]; then
+  echo "normal scheduler release did not use one cleanup process" >&2
+  exit 1
+fi
+if [ -n "$(ls -A "$lock_tmp")" ]; then
+  echo "normal scheduler release left lock artifacts" >&2
   exit 1
 fi
 
@@ -231,8 +256,13 @@ orphan_driver_pid=$!
 wait_for "orphan renderer ownership publication" file_is_nonempty "$tmp/orphan-renderers"
 orphan_renderer_pid=$(tail -n 1 "$tmp/orphan-renderers")
 orphan_lock_owner=$(cat "$scheduler_lock" 2>/dev/null || true)
+orphan_candidate="${scheduler_lock}.candidate.${orphan_driver_pid}"
 if [ "$orphan_lock_owner" != "$orphan_driver_pid:$orphan_renderer_pid" ]; then
   echo "driver did not publish orphan renderer ownership" >&2
+  exit 1
+fi
+if [ ! -f "$orphan_candidate" ]; then
+  echo "driver did not retain its cleanup candidate" >&2
   exit 1
 fi
 kill -KILL "$orphan_driver_pid" 2>/dev/null || true
@@ -246,14 +276,15 @@ done
 for driver_pid in "${driver_pids[@]}"; do
   wait "$driver_pid"
 done
-if [ ! -f "$scheduler_lock" ] || [ "$(wc -l <"$tmp/orphan-renderers" | tr -d ' ')" != "1" ]; then
+if [ ! -f "$scheduler_lock" ] || [ ! -f "$orphan_candidate" ] \
+  || [ "$(wc -l <"$tmp/orphan-renderers" | tr -d ' ')" != "1" ]; then
   echo "cleanup removed a lock still owned by an orphan renderer" >&2
   exit 1
 fi
 kill "$orphan_renderer_pid" 2>/dev/null || true
 env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
   "$driver" --recover >/dev/null 2>&1
-if [ -e "$scheduler_lock" ]; then
+if [ -e "$scheduler_lock" ] || [ -e "$orphan_candidate" ]; then
   echo "cleanup did not reclaim orphaned renderer lock artifacts" >&2
   exit 1
 fi

@@ -94,8 +94,8 @@ acquire_fresh_lock() {
     return 1
   fi
   owns_lock=1
-  # The fixed hard link now owns the inode; the source name is no longer needed.
-  unlink "$lock_candidate" 2>/dev/null || true
+  # Retain the source link so normal release can remove all owned artifacts in
+  # one process; only the fixed lock path is read as scheduler ownership.
 }
 
 publish_renderer_owner() {
@@ -147,7 +147,7 @@ release_lock() {
     owner=""
   fi
   if [ "${owner%%:*}" = "$$" ]; then
-    unlink "$lock_path" 2>/dev/null || true
+    rm -f -- "$lock_path" "$lock_candidate" "$lock_update" 2>/dev/null || true
   fi
   cleanup_candidate_files
   owns_lock=0
