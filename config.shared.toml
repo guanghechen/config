@@ -21,7 +21,12 @@ disable_on_external_context = true
 use_memories = false
 
 [agents]
-max_depth = 2
+enabled = true
+default_subagent_model = "gpt-5.6-sol"
+default_subagent_reasoning_effort = "xhigh"
+max_concurrent_threads_per_session = 6
+max_depth = 1
+interrupt_message = true
 
 [agents.coder]
 description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
@@ -93,4 +98,3 @@ terminal_title = ["activity", "project-name", "git-branch", "model-with-reasonin
 sandbox = "elevated"
 
 [notice]
-
