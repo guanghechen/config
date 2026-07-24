@@ -25,6 +25,8 @@ pr-review 是**纯审查器**：判断这些改动是否以足够小、足够清
 
 ### 1. 取材
 
+> 下列要求是取材契约，不按来源是否可信选择性放松：secret 路径预筛始终先于内容读取；revision / path 输入隔离、pathspec magic 防护以及禁用 external diff / textconv 始终适用；base→工作树模式始终执行前后 fingerprint，因为来源可信不能排除并发编辑造成的 drift。
+
 - **先筛路径，再读内容**：先用不返回 patch / content 的 rename-aware metadata 取得完整 old / new path 清单，排除全局 Security 红线禁止读取的 secret 路径（非 template `.env*`、`.ssh/`、`.git-credentials` 等），再加载允许路径的 diff。禁止路径删除若无法与 rename 可靠配对，同时存在任意未配对 addition / untracked path，则不读取新增内容：base→工作树模式要求 staged rename 或 sanitized changeset，PR 模式要求 sanitized changeset。不得先运行 bulk diff 再过滤；装入内容中意外出现的疑似 secret 立即 mask。
 - **Git 输入安全**：在进程内将用户给出的 base 与 `^{commit}` 拼成一个 revision，作为单一 argv 传给 `git rev-parse --verify --end-of-options`，解析为 immutable `baseOID`；失败即停止。后续每个 revision、OID 与 path 都作为独立 argv 传递，绝不拼接进 shell command；路径经 NUL-safe loop 处理，并用 `git --literal-pathspecs` 与 `--no-ext-diff --no-textconv` 禁止 pathspec magic、external diff 和 textconv。
 - **PR 模式**：从同一 PR snapshot 取得描述、关联 issue、base / head OID，以及分页的 `path` / change type metadata；分页期间 OID 变化则丢弃并重取，metadata 数量必须等于 provider 报告的 changed-file 总数。diff 必须固定到这组 OID，不得再次按可变 PR ref 取材，也不得用其他 checkout 的本地 `HEAD` 代替；逐路径记录完整 diff 或明确的 binary 状态，任何遗漏、截断或 provider limit 都视为取材失败。若 metadata 不能安全给出 rename 的 old / new path、含禁止路径，或远端取材不完整，则仅在 base / head object 本地可用时，以 `baseOID...headOID` 的 rename-aware metadata 按允许路径读取；否则停止并要求 sanitized changeset。
