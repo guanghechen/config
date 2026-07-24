@@ -101,6 +101,24 @@ describe('sync-config-vscode terminal sequences', () => {
   })
 })
 
+describe('sync-config-vscode cross-platform keybindings', () => {
+  it('toggles fullscreen from any focus context', () => {
+    const root = path.join(import.meta.dirname, '../asset/app/vscode/keybinding')
+    const osx = JSON.parse(fs.readFileSync(path.join(root, 'osx/customize.json'), 'utf8'))
+    const win = JSON.parse(fs.readFileSync(path.join(root, 'win/customize.json'), 'utf8'))
+    const find = (keybindings, key) => keybindings.find(x => x.key.toLowerCase() === key)
+
+    assert.deepEqual(find(osx, 'cmd+ctrl+f11'), {
+      key: 'cmd+ctrl+f11',
+      command: 'workbench.action.toggleFullScreen',
+    })
+    assert.deepEqual(find(win, 'alt+ctrl+f11'), {
+      key: 'alt+ctrl+f11',
+      command: 'workbench.action.toggleFullScreen',
+    })
+  })
+})
+
 describe('sync-config-vscode settings', () => {
   it('resolves settings next to keybindings', () => {
     assert.equal(

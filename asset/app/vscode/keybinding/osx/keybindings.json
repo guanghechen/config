@@ -1671,8 +1671,7 @@
   },
   {
     "key": "cmd+ctrl+f11",
-    "command": "workbench.action.toggleFullScreen",
-    "when": "terminalFocus"
+    "command": "workbench.action.toggleFullScreen"
   },
   {
     "key": "cmd+ctrl+f12",
