@@ -86,7 +86,7 @@ latency floor, but measurements from standalone `hyperfine` commands are only
 directional: they mix shell overhead with historical median/p95 data and cannot
 justify an implementation by themselves.
 
-The only approved implementation target is the scheduler driver's live-owner
+The first approved implementation target was the scheduler driver's live-owner
 contention path:
 
 - The lock file remains the single owner of scheduler-driver execution.
@@ -103,9 +103,24 @@ The following ideas are not approved without new isolated A/B evidence:
 
 - Passing scheduler task snapshots from shell into Rust would split the tmux
   state boundary for an estimated one-IPC saving, so it remains deferred.
-- Length-only per-session delta commits reduce command bytes but do not normally
-  reduce process count for one attached session; first measure resize bursts.
 - Hook coalescing requires a dirty-generation replay contract to avoid dropping
   the final lifecycle state; a simple single-flight gate is not acceptable.
-- Measure one-second tmux format-expansion CPU with inert/active drivers and
-  1/2/4 clients before ranking status-format refactors.
+
+Follow-up isolated measurements resolved two of those questions:
+
+- Over 10-second steady-state windows, tmux server CPU was 0.01 seconds with one
+  client, 0.03–0.04 seconds with two, and 0.06–0.08 seconds with four. Active
+  and inert scheduler modes were indistinguishable. Status-format expansion is
+  therefore not a priority at the measured client counts.
+- Adjacent 91/92-column resizes kept the same render key while changing only
+  `status-right-length`. Alternating old/new A/B runs (30 each) reduced the plan
+  from 10 commands to 1, commit median from 16.270 to 15.015 ms, and total median
+  from 25.000 to 23.230 ms; total p95 changed from 33.280 to 26.530 ms.
+
+The length-only fast path keeps the existing state boundary: session-local tmux
+options have one writer, the Rust commit planner, and every mutation still runs
+through render-revision and lifecycle guards. It emits individual length writes
+only when cache witnesses, render key, layout, status, and row formats already
+match. Any other drift retains the full reconcile bundle and its existing
+fail-closed retry behavior. This is intentionally not a general field-level
+delta commit.

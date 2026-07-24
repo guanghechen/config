@@ -203,15 +203,30 @@ impl CommitPlanner {
         for rendered_session in session_statuses {
             let session_layout = &rendered_session.session_layout;
             let status = &rendered_session.status;
-            if session_layout_settled(
-                session_layout,
-                status,
-                &rendered_session.render_key,
-                options,
-            ) {
+            let session_target = &session_layout.session_id;
+            let left_length =
+                status_left_length_for_width(status, session_layout.status_length_width);
+            let right_length =
+                status_right_length_for_width(status, session_layout.status_length_width);
+            if session_render_state_settled(session_layout, &rendered_session.render_key, options) {
+                if session_layout.current_left_length != left_length {
+                    push_set_session_target(
+                        &mut plan,
+                        session_target,
+                        "status-left-length",
+                        &left_length,
+                    );
+                }
+                if session_layout.current_right_length != right_length {
+                    push_set_session_target(
+                        &mut plan,
+                        session_target,
+                        "status-right-length",
+                        &right_length,
+                    );
+                }
                 continue;
             }
-            let session_target = &session_layout.session_id;
             let render_key = target_render_key(session_layout, &rendered_session.render_key);
             for (name, value) in SESSION_CACHE_OPTIONS.iter().zip([
                 &status.status_left.rich_text,
@@ -242,13 +257,13 @@ impl CommitPlanner {
                 &mut plan,
                 session_target,
                 "status-left-length",
-                &status_left_length_for_width(status, session_layout.status_length_width),
+                &left_length,
             );
             push_set_session_target(
                 &mut plan,
                 session_target,
                 "status-right-length",
-                &status_right_length_for_width(status, session_layout.status_length_width),
+                &right_length,
             );
             push_set_session_target(
                 &mut plan,
@@ -289,23 +304,16 @@ impl CommitPlanner {
     }
 }
 
-/// True when a session's per-session layout options already match the reconcile
-/// target: rows/status, layout key, and the width-derived status lengths. Lengths
-/// are part of the witness so a content- or width-driven length change that keeps
-/// the same wide/narrow kind (same key + status) still triggers a refresh.
-pub fn session_layout_settled(
+// Lengths are intentionally excluded: a resize can update those independently
+// only after every cache, layout, status, and format witness has converged.
+fn session_render_state_settled(
     session_layout: &SessionLayout,
-    status: &RenderedStatus,
     render_key: &str,
     global_options: &BTreeMap<String, String>,
 ) -> bool {
     let target_cache_witness = cache_witness(render_key);
     session_layout.current_layout_key == session_layout.layout.key
         && session_layout.current_status == session_layout.layout.target_status
-        && session_layout.current_left_length
-            == status_left_length_for_width(status, session_layout.status_length_width)
-        && session_layout.current_right_length
-            == status_right_length_for_width(status, session_layout.status_length_width)
         && session_layout.current_render_key == target_render_key(session_layout, render_key)
         && session_layout
             .current_cache_witnesses
@@ -655,11 +663,9 @@ mod tests {
     }
 
     #[test]
-    fn rewrites_per_session_layout_when_only_length_is_stale() {
-        // F-001: rows + layout key match the target, but the width-derived length is
-        // stale (content/width changed within the same wide/narrow kind). The bundle
-        // must still be rewritten so the per-session length is repaired without a
-        // reload or kind/status transition.
+    fn writes_only_stale_length_when_render_state_is_settled() {
+        // A resize within the same render/layout state changes only the derived
+        // length; rewriting the cache bundle would add avoidable tmux parsing work.
         let status = rendered_status("body");
         let mut session_layout =
             session_layout("$2", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
@@ -668,11 +674,86 @@ mod tests {
         context.session_layouts = vec![session_layout];
         let plan = plan(&status, &context, &RenderEvent::manual_apply());
 
-        assert!(plan.commands.iter().any(|command| matches!(
-            command,
-            TmuxCommand::SetSessionTarget { target, name, value }
-                if target == "$2" && name == "status-left-length" && value == "64"
-        )));
+        let session_commands = session_commands_for_target(&plan, "$2");
+        assert_eq!(session_commands.len(), 1);
+        assert!(matches!(
+            session_commands[0],
+            TmuxCommand::SetSessionTarget { name, value, .. }
+                if name == "status-left-length" && value == "64"
+        ));
+    }
+
+    #[test]
+    fn writes_only_stale_right_length_when_render_state_is_settled() {
+        let status = rendered_status("body");
+        let mut session_layout =
+            session_layout("$5", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
+        session_layout.current_right_length = "40".to_string();
+        let mut context = context_with_options(BTreeMap::new());
+        context.session_layouts = vec![session_layout];
+        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+
+        let session_commands = session_commands_for_target(&plan, "$5");
+        assert_eq!(session_commands.len(), 1);
+        assert!(matches!(
+            session_commands[0],
+            TmuxCommand::SetSessionTarget { name, value, .. }
+                if name == "status-right-length" && value == "84"
+        ));
+    }
+
+    #[test]
+    fn writes_both_stale_lengths_when_render_state_is_settled() {
+        let status = rendered_status("body");
+        let mut session_layout =
+            session_layout("$6", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
+        session_layout.current_left_length = "40".to_string();
+        session_layout.current_right_length = "40".to_string();
+        let mut context = context_with_options(BTreeMap::new());
+        context.session_layouts = vec![session_layout];
+        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+
+        let session_commands = session_commands_for_target(&plan, "$6");
+        assert_eq!(session_commands.len(), 2);
+        for (expected_name, expected_value) in
+            [("status-left-length", "64"), ("status-right-length", "84")]
+        {
+            assert!(session_commands.iter().any(|command| matches!(
+                command,
+                TmuxCommand::SetSessionTarget { name, value, .. }
+                    if name == expected_name && value == expected_value
+            )));
+        }
+    }
+
+    #[test]
+    fn any_render_state_drift_keeps_the_full_wide_reconcile_bundle() {
+        let status = rendered_status("body");
+        for drift in [
+            "cache-witness",
+            "render-key",
+            "layout-key",
+            "status",
+            "format-0",
+            "format-1",
+        ] {
+            let mut session_layout =
+                session_layout("$7", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
+            match drift {
+                "cache-witness" => session_layout.current_cache_witnesses[0].clear(),
+                "render-key" => session_layout.current_render_key.clear(),
+                "layout-key" => session_layout.current_layout_key = "02:narrow".to_string(),
+                "status" => session_layout.current_status = "2".to_string(),
+                "format-0" => session_layout.current_format_0 = "BROKEN".to_string(),
+                "format-1" => session_layout.current_format_1 = "BROKEN".to_string(),
+                _ => unreachable!(),
+            }
+            let mut context = context_with_options(BTreeMap::new());
+            context.session_layouts = vec![session_layout];
+            let plan = plan(&status, &context, &RenderEvent::manual_apply());
+
+            assert_full_wide_reconcile_bundle(&plan, "$7", drift);
+        }
     }
 
     #[test]
@@ -865,6 +946,55 @@ mod tests {
             })
             .collect::<Vec<_>>();
         CommitPlanner::plan(status, &session_statuses, context, event)
+    }
+
+    fn session_commands_for_target<'a>(
+        plan: &'a TmuxCommandPlan,
+        expected_target: &str,
+    ) -> Vec<&'a TmuxCommand> {
+        plan.commands
+            .iter()
+            .filter(|command| match command {
+                TmuxCommand::SetSessionTarget { target, .. }
+                | TmuxCommand::UnsetSessionTarget { target, .. } => target == expected_target,
+                TmuxCommand::SetGlobal { .. } | TmuxCommand::UnsetGlobal { .. } => false,
+            })
+            .collect()
+    }
+
+    fn assert_full_wide_reconcile_bundle(
+        plan: &TmuxCommandPlan,
+        expected_target: &str,
+        drift: &str,
+    ) {
+        let session_commands = session_commands_for_target(plan, expected_target);
+        assert_eq!(session_commands.len(), 10, "drift={drift}");
+        for expected_name in [
+            "@GHC_SL_STATUS02_LEFT",
+            "@GHC_SL_STATUS02_RIGHT",
+            "@GHC_SL_STATUS02_SESSION_FORMAT",
+            "@GHC_SL_STATUS02_CURRENT_FORMAT",
+            "@GHC_SL_RENDER_KEY",
+            "@GHC_SL_LAYOUT",
+            "status-left-length",
+            "status-right-length",
+            "status",
+        ] {
+            assert!(
+                session_commands.iter().any(|command| matches!(
+                    command,
+                    TmuxCommand::SetSessionTarget { name, .. } if name == expected_name
+                )),
+                "drift={drift} missing={expected_name}"
+            );
+        }
+        assert!(
+            session_commands.iter().any(|command| matches!(
+                command,
+                TmuxCommand::UnsetSessionTarget { name, .. } if name == "status-format"
+            )),
+            "drift={drift} missing=status-format unset"
+        );
     }
 
     fn tmux_snapshot(options: BTreeMap<String, String>) -> TmuxSnapshot {
