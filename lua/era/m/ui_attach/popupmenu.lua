@@ -1,9 +1,33 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.ui_attach.popupmenu" ---@type string
+
 local states = require("era.m.ui_attach.state")
 
 local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 ---@class era.m.ui_attach.popupmenu
 local M = {}
+
+---@param state                         era.m.ui_attach.popupmenu.IState
+---@return nil
+local function render_selection(state)
+  local bufnr = state.bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu_selected, 0, -1)
+  local selected = state.selected ---@type integer
+  if selected < 0 or selected >= #state.items then
+    return
+  end
+
+  vim.hl.range(bufnr, nsnrs.popupmenu_selected, "f_up_selected", { selected, 0 }, { selected, -1 })
+  local winnr = state.winnr ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_win_set_cursor(winnr, { selected + 1, 0 })
+  end
+end
 
 ---@param task                          era.m.ui_attach.ITask
 ---@return nil
@@ -32,18 +56,13 @@ function M.select(task)
     return
   end
 
-  local bufnr = states.popupmenu.bufnr ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-
   local selected = unpack(task.args) ---@type integer
 
   states.popupmenu.selected = selected ---@type integer
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu_selected, 0, -1)
-  if selected >= 0 then
-    local row = selected ---@type integer
-    vim.hl.range(bufnr, nsnrs.popupmenu_selected, "f_up_selected", { row, 0 }, { row, -1 })
+  render_selection(states.popupmenu)
+  local winnr = states.popupmenu.winnr ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim__redraw({ win = winnr, flush = true })
   end
 end
 
@@ -80,6 +99,30 @@ function M.show(task)
 end
 
 ---@param state                         era.m.ui_attach.popupmenu.IState
+---@return integer
+---@return integer
+function M._resolve_position(state)
+  local row = math.floor(state.row or 0) ---@type integer
+  local col = math.floor(state.col or 0) ---@type integer
+
+  if state.grid == -1 and type(vim.g.ui_cmdline_pos) == "table" then
+    local cmd_pos = vim.g.ui_cmdline_pos ---@type integer[]|nil
+    if cmd_pos ~= nil and #cmd_pos >= 2 then
+      row = cmd_pos[1]
+      local cmdline = states.get_active_cmdline()
+      local offset = state.col ---@type integer
+      if cmdline ~= nil then
+        local text = cmdline.first .. cmdline.second ---@type string
+        offset = vim.fn.strdisplaywidth(text:sub(1, state.col))
+      end
+      col = cmd_pos[2] + offset
+    end
+  end
+
+  return row, col
+end
+
+---@param state                         era.m.ui_attach.popupmenu.IState
 ---@return nil
 function M._show(state)
   local bufnr = state.bufnr ---@type integer|nil
@@ -97,16 +140,7 @@ function M._show(state)
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
   local height = math.min(math.floor(vim.o.lines * 0.8), #state.items)
 
-  local row = math.floor(state.row or 0) ---@type integer
-  local col = math.floor(state.col or 0) ---@type integer
-
-  if state.grid == -1 and type(vim.g.ui_cmdline_pos) == "table" then
-    local cmd_pos = vim.g.ui_cmdline_pos ---@type integer[]|nil
-    if cmd_pos ~= nil and #cmd_pos >= 2 then
-      row = cmd_pos[1]
-      col = cmd_pos[2]
-    end
-  end
+  local row, col = M._resolve_position(state)
 
   local max_row = math.max(0, vim.o.lines - height - 1) ---@type integer
   local max_col = math.max(0, vim.o.columns - width - 1) ---@type integer
@@ -141,7 +175,11 @@ function M._show(state)
     vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
-    vim.api.nvim_set_option_value("winhighlight", "Normal:f_up_normal,FloatBorder:f_up_border,CursorLine:f_up_normal", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value(
+      "winhighlight",
+      "Normal:f_up_normal,FloatBorder:f_up_border,CursorLine:f_up_normal",
+      { win = winnr, scope = "local" }
+    )
   else
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_config(winnr, wincfg)
@@ -165,13 +203,8 @@ function M._show(state)
   end
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu, 0, -1)
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu_selected, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-  if state.selected >= 0 then
-    local row_selected = state.selected ---@type integer
-    vim.hl.range(bufnr, nsnrs.popupmenu_selected, "f_up_selected", { row_selected, 0 }, { row_selected, -1 })
-  end
+  render_selection(state)
 
   vim.api.nvim__redraw({ win = winnr, flush = true })
 end

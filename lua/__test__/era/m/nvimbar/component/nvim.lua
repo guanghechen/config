@@ -10,6 +10,11 @@ local function setup(message)
   t:patch_global("dot", {
     state = {
       status = {
+        msg_command = {
+          snapshot = function()
+            return message
+          end,
+        },
         msg_transient = {
           snapshot = function()
             return message
@@ -71,6 +76,19 @@ t:test("transient messages stay hidden when only an ellipsis would fit", functio
   local text = component.render({}, 4)
 
   t.assert_eq("", text, "narrow message")
+end)
+
+t:test("command messages remain visible until the API clears them", function()
+  local nvim = setup("2,1 All")
+  local now = 0
+  t:patch_table(os, "time", function()
+    return now
+  end)
+  local component = nvim.msg_command("f_sl")
+
+  t.assert_eq("2,1 All", component.render(), "initial command message")
+  now = 10
+  t.assert_eq("2,1 All", component.render(), "persistent command message")
 end)
 
 t:run()

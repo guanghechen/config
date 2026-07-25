@@ -227,6 +227,10 @@ end
 ---@param group                         string
 ---@return nil
 function M.dismiss_by_group(group)
+  __TASKS__:rearrange(function(task)
+    return task.group ~= group
+  end)
+
   local dismissing = {} ---@type era.t.INotifierWindow[]
   for _, win in ipairs(__WINS__) do
     if win.task.group == group then
@@ -249,6 +253,7 @@ function M.dismiss_by_group(group)
   for _, win in ipairs(dismissing) do
     M.__destroy_win__(win)
   end
+  M.schedule()
 end
 
 ---@return era.t.INotifierTask[]
@@ -723,7 +728,8 @@ function M.__handle__()
       local width = measure_task_width(task) ---@type integer
       local height = measure_task_height(task) ---@type integer
       local wincfg = vim.api.nvim_win_get_config(win.winnr) ---@type vim.api.keyset.win_config
-      local winbar = wincfg.width ~= width and M.__gen_winbar__(task, width) or vim.api.nvim_get_option_value("winbar", { win = win.winnr })
+      local winbar = wincfg.width ~= width and M.__gen_winbar__(task, width)
+        or vim.api.nvim_get_option_value("winbar", { win = win.winnr })
 
       wincfg.row = win.row
       wincfg.width = width

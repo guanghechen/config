@@ -16,7 +16,11 @@ function M.dressing()
     return
   end
 
-  local tasks = stl.c.CircularQueue.new({ capacity = 500 })
+  -- `vim.ui_attach` is the single writer into this lossless FIFO. Handlers
+  -- consume in order; after an event is claimed there is no remote fallback,
+  -- so failures are reported with context and the stream degrades by continuing.
+  local tasks = {} ---@type era.m.ui_attach.ITask[]
+  local task_head = 1
   local processing = false ---@type boolean
 
   ---@type table<string, boolean|nil>
@@ -58,9 +62,6 @@ function M.dressing()
     msg_clear = function(task)
       require("era.m.ui_attach.messages").clear(task)
     end,
-    msg_history_clear = function(task)
-      require("era.m.ui_attach.messages").history_clear(task)
-    end,
     msg_history_show = function(task)
       require("era.m.ui_attach.messages").history_show(task)
     end,
@@ -94,30 +95,46 @@ function M.dressing()
     handle(task)
   end
 
+  ---@param task                        era.m.ui_attach.ITask
+  ---@param err                         string
+  ---@return nil
+  local function report_task_error(task, err)
+    local options = {
+      from = __module_name__,
+      message = string.format("failed to handle UI event | %s", task.event),
+      details = {
+        event = task.event,
+        args = task.args,
+        error = err,
+      },
+      anonymous = false,
+    }
+    local reported = pcall(stl.reporter.error, options)
+    if not reported then
+      stl.debug.log_silent(options.message, options.details)
+    end
+  end
+
   ---@return nil
   local function process_queue()
-    if processing or tasks:size() < 1 then
+    if processing or task_head > #tasks then
       return
     end
 
     processing = true
-    while tasks:size() > 0 do
-      local task = tasks:dequeue() ---@type era.m.ui_attach.ITask
+    while task_head <= #tasks do
+      local task = tasks[task_head] ---@type era.m.ui_attach.ITask
+      task_head = task_head + 1
 
-      ---! Optimization: merge adjacent cmdline_hide and cmdline_show events.
-      if task.event == "cmdline_hide" then
-        local next_task = tasks:dequeue() ---@type era.m.ui_attach.ITask
-        if next_task ~= nil then
-          if next_task.event == "cmdline_show" and task.args[1] == next_task.args[1] then
-            task = next_task
-          else
-            tasks:enqueue_front(next_task)
-          end
-        end
+      local ok, err = xpcall(function()
+        process_task(task)
+      end, debug.traceback)
+      if not ok then
+        report_task_error(task, err)
       end
-
-      pcall(process_task, task)
     end
+    tasks = {}
+    task_head = 1
     processing = false
   end
 
@@ -137,12 +154,6 @@ function M.dressing()
 
     if vim.v.exiting ~= vim.NIL then
       return
-    end
-
-    -- HACK: special case for return prompts
-    if event == "msg_show" and kind == "return_prompt" then
-      vim.api.nvim_input("<cr>")
-      return true
     end
 
     local handler = handlers[event]
@@ -165,7 +176,7 @@ function M.dressing()
       event = event,
       args = { kind, ... },
     }
-    tasks:enqueue(task)
+    tasks[#tasks + 1] = task
 
     if vim.in_fast_event() then
       timer:stop()

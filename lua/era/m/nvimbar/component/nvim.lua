@@ -139,10 +139,6 @@ end
 function M.msg_command(position)
   local hln_text = position .. "_nvim_msg_command" ---@type string
 
-  local last_text = "" ---@type string
-  local last_timestamp = os.time() ---@type integer
-  local timeout = 3 ---@type integer
-
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_command",
@@ -151,16 +147,6 @@ function M.msg_command(position)
       local text = dot.state.status.msg_command:snapshot() ---@type string
       if text == "" then
         return "", "", true
-      end
-
-      local timestamp = os.time() ---@type integer
-      if last_text == text then
-        if last_timestamp + timeout < timestamp then
-          return "", "", true
-        end
-      else
-        last_text = text
-        last_timestamp = timestamp
       end
 
       local hl_text = txt(text, hln_text) ---@type string

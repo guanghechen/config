@@ -59,6 +59,15 @@ function M.log(level, options)
   })
 end
 
+---@param group                         string
+---@return nil
+function M.dismiss(group)
+  local notifier = vim.notify
+  if type(notifier) == "table" and type(notifier.dismiss_by_group) == "function" then
+    notifier.dismiss_by_group(group)
+  end
+end
+
 ---@param options                       stl.reporter.IOptions
 function M.debug(options)
   M.log(vim.log.levels.DEBUG, options)
