@@ -112,6 +112,7 @@ end
 
 ---@return nil
 function M.dressing()
+  M.event.dressing()
   M.diagnostic.setup()
   vim.lsp.buf.code_action = M.action.code_action
 

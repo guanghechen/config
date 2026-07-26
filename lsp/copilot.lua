@@ -112,7 +112,7 @@ local function on_attach(client, bufnr)
       desc = "Next Copilot Suggestion",
     },
   }
-  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr })
+  era.m.lsp.event.bindkeys(client, bufnr, keymaps)
 
   vim.api.nvim_buf_create_user_command(bufnr, "LspCopilotSignIn", function()
     sign_in(bufnr, client)

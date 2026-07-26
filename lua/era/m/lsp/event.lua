@@ -1,4 +1,34 @@
+local Methods = vim.lsp.protocol.Methods
+
 local augroup_codelens = stl.nvim.fn.augroup("era.m.lsp.event.codelens") ---@type integer
+local augroup_keymaps = stl.nvim.fn.augroup("era.m.lsp.event.keymaps") ---@type integer
+
+local KEYMAP_METHODS = {
+  ["textDocument/codeAction"] = true,
+  ["textDocument/codeLens"] = true,
+  ["textDocument/definition"] = true,
+  ["textDocument/implementation"] = true,
+  ["textDocument/references"] = true,
+  ["textDocument/rename"] = true,
+  ["textDocument/typeDefinition"] = true,
+} ---@type table<string, true>
+
+---@class era.m.lsp.event.IKeymap : stl.t.IKeymap
+---@field public method                 ?string
+
+---@class era.m.lsp.event.IClientKeymaps
+---@field public id                     integer
+---@field public name                   string
+---@field public keymaps                stl.t.IKeymap[]
+
+---@class era.m.lsp.event.IKeymapState
+---@field public generic                era.m.lsp.event.IKeymap[]
+---@field public clients                table<integer, era.m.lsp.event.IClientKeymaps>
+---@field public bound                  table<string, { mode:string, key:string }>
+
+---@type table<integer, era.m.lsp.event.IKeymapState>
+local keymap_states = {}
+local dressed = false ---@type boolean
 
 ---@class era.m.lsp.event
 local M = {}
@@ -100,9 +130,201 @@ end
 
 ---@param bufnr                         integer
 ---@param method                        string
+---@param exclude_client_id             ?integer
 ---@return boolean
-local function buf_supports_method(bufnr, method)
-  return #vim.lsp.get_clients({ bufnr = bufnr, method = method }) > 0
+local function buf_supports_method(bufnr, method, exclude_client_id)
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, method = method })) do
+    if client.id ~= exclude_client_id then
+      return true
+    end
+  end
+  return false
+end
+
+---@param bufnr                         integer
+---@return era.m.lsp.event.IKeymapState
+local function get_keymap_state(bufnr)
+  local state = keymap_states[bufnr]
+  if state == nil then
+    state = {
+      generic = {},
+      clients = {},
+      bound = {},
+    }
+    keymap_states[bufnr] = state
+  end
+  return state
+end
+
+---@param bound                         table<string, { mode:string, key:string }>
+---@param keymaps                       stl.t.IKeymap[]
+---@return nil
+local function track_keymaps(bound, keymaps)
+  for _, keymap in ipairs(keymaps) do
+    if not keymap.disabled then
+      local keys = { keymap.key } ---@type string[]
+      vim.list_extend(keys, keymap.aliases or {})
+      for _, mode in ipairs(keymap.modes) do
+        for _, key in ipairs(keys) do
+          bound[mode .. "\0" .. key] = { mode = mode, key = key }
+        end
+      end
+    end
+  end
+end
+
+---@param bound                         table<string, { mode:string, key:string }>
+---@param bufnr                         integer
+---@return nil
+local function unbind_keymaps(bound, bufnr)
+  for _, keymap in pairs(bound) do
+    pcall(vim.keymap.del, keymap.mode, keymap.key, { buffer = bufnr })
+  end
+end
+
+---@param bufnr                         integer
+---@param exclude_client_id             ?integer
+---@return table<integer, true>
+local function get_attached_client_ids(bufnr, exclude_client_id)
+  local attached_client_ids = {} ---@type table<integer, true>
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+    if client.id ~= exclude_client_id then
+      attached_client_ids[client.id] = true
+    end
+  end
+  return attached_client_ids
+end
+
+---@param state                         era.m.lsp.event.IKeymapState
+---@param bufnr                         integer
+---@param exclude_client_id             ?integer
+---@return stl.t.IKeymap[]
+local function get_generic_keymaps(state, bufnr, exclude_client_id)
+  local generic = {} ---@type stl.t.IKeymap[]
+  for _, keymap in ipairs(state.generic) do
+    if keymap.method == nil or buf_supports_method(bufnr, keymap.method, exclude_client_id) then
+      generic[#generic + 1] = keymap
+    end
+  end
+  return generic
+end
+
+---@param bufnr                         integer
+---@param exclude_client_id             ?integer
+---@return nil
+local function reconcile_keymaps(bufnr, exclude_client_id)
+  local state = keymap_states[bufnr]
+  if state == nil then
+    return
+  end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    keymap_states[bufnr] = nil
+    return
+  end
+
+  unbind_keymaps(state.bound, bufnr)
+  state.bound = {}
+
+  local attached_client_ids = get_attached_client_ids(bufnr, exclude_client_id)
+  if vim.tbl_isempty(attached_client_ids) then
+    keymap_states[bufnr] = nil
+    return
+  end
+
+  local generic = get_generic_keymaps(state, bufnr, exclude_client_id)
+  track_keymaps(state.bound, generic)
+  stl.nvim.fn.bindkeys(generic, { bufnr = bufnr })
+
+  local clients = {} ---@type era.m.lsp.event.IClientKeymaps[]
+  for client_id, client_keymaps in pairs(state.clients) do
+    if attached_client_ids[client_id] then
+      clients[#clients + 1] = client_keymaps
+    end
+  end
+  table.sort(clients, function(a, b)
+    if a.name == b.name then
+      return a.id < b.id
+    end
+    return a.name < b.name
+  end)
+  for _, client_keymaps in ipairs(clients) do
+    track_keymaps(state.bound, client_keymaps.keymaps)
+    stl.nvim.fn.bindkeys(client_keymaps.keymaps, { bufnr = bufnr })
+  end
+end
+
+---@param registrations                 lsp.Registration[]|lsp.Unregistration[]
+---@return boolean
+local function changes_keymaps(registrations)
+  for _, registration in ipairs(registrations) do
+    if KEYMAP_METHODS[registration.method] then
+      return true
+    end
+  end
+  return false
+end
+
+---@param client_id                     integer
+---@return nil
+local function reconcile_client_keymaps(client_id)
+  local client = vim.lsp.get_client_by_id(client_id)
+  if client == nil then
+    return
+  end
+  for bufnr in pairs(client.attached_buffers) do
+    reconcile_keymaps(bufnr)
+  end
+end
+
+---@return nil
+function M.dressing()
+  if dressed then
+    return
+  end
+
+  local register_capability = assert(vim.lsp.handlers[Methods.client_registerCapability])
+  local unregister_capability = assert(vim.lsp.handlers[Methods.client_unregisterCapability])
+
+  vim.api.nvim_create_autocmd("BufWipeout", {
+    group = augroup_keymaps,
+    callback = function(args)
+      keymap_states[args.buf] = nil
+    end,
+  })
+
+  vim.lsp.handlers[Methods.client_registerCapability] = function(err, params, ctx, config)
+    local result = register_capability(err, params, ctx, config) ---@type any
+    if changes_keymaps(params.registrations or {}) then
+      reconcile_client_keymaps(ctx.client_id)
+    end
+    return result
+  end
+  vim.lsp.handlers[Methods.client_unregisterCapability] = function(err, params, ctx, config)
+    local result = unregister_capability(err, params, ctx, config) ---@type any
+    if changes_keymaps(params.unregisterations or {}) then
+      reconcile_client_keymaps(ctx.client_id)
+    end
+    return result
+  end
+
+  dressed = true
+end
+
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+---@param keymaps                       stl.t.IKeymap[]
+---@return nil
+function M.bindkeys(client, bufnr, keymaps)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  local state = get_keymap_state(bufnr)
+  state.clients[client.id] = {
+    id = client.id,
+    name = client.name,
+    keymaps = keymaps,
+  }
+  reconcile_keymaps(bufnr)
 end
 
 ---@param client                        vim.lsp.Client
@@ -176,7 +398,7 @@ function M.on_attach(client, bufnr)
     era.m.illuminate.dressing(bufnr)
   end
 
-  ---@type stl.t.IKeymap[]
+  ---@type era.m.lsp.event.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },
@@ -210,7 +432,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show signature help",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/definition"),
+      method = "textDocument/definition",
       modes = { "n" },
       key = "gd",
       callback = function()
@@ -220,7 +442,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto definition",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/implementation"),
+      method = "textDocument/implementation",
       modes = { "n" },
       key = "gi",
       callback = function()
@@ -230,7 +452,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto implementation",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/references"),
+      method = "textDocument/references",
       modes = { "n" },
       key = "gr",
       callback = function()
@@ -240,7 +462,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show references",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/typeDefinition"),
+      method = "textDocument/typeDefinition",
       modes = { "n" },
       key = "gt",
       callback = function()
@@ -250,7 +472,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto type definition",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/codeAction"),
+      method = "textDocument/codeAction",
       modes = { "n", "x" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
@@ -263,7 +485,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: code action",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/codeLens"),
+      method = "textDocument/codeLens",
       modes = { "n", "x" },
       key = "<leader>cc",
       callback = function()
@@ -272,7 +494,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: codelens",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/codeLens"),
+      method = "textDocument/codeLens",
       modes = { "n", "x" },
       key = "<leader>cC",
       callback = function()
@@ -281,7 +503,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: refresh & display codelens",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/codeAction"),
+      method = "textDocument/codeAction",
       modes = { "n" },
       key = "<leader>ca",
       callback = function()
@@ -298,7 +520,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: source action",
     },
     {
-      disabled = not buf_supports_method(bufnr, "textDocument/rename"),
+      method = "textDocument/rename",
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
@@ -310,12 +532,13 @@ function M.on_attach(client, bufnr)
       desc = "lsp: rename",
     },
   }
-  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr })
+  local state = get_keymap_state(bufnr)
+  state.generic = keymaps
+  reconcile_keymaps(bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
----@diagnostic disable-next-line: unused-local
 function M.on_detach(client, bufnr)
   local support_codelens = vim.b[bufnr].support_codelens or 0 ---@type integer
   local support_inlayhint = vim.b[bufnr].support_inlayhint or 0 ---@type integer
@@ -355,6 +578,12 @@ function M.on_detach(client, bufnr)
   vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type integer
   vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type integer
   vim.b[bufnr].support_foldingRange = support_foldingRange ---@type integer
+
+  local state = keymap_states[bufnr]
+  if state ~= nil then
+    state.clients[client.id] = nil
+    reconcile_keymaps(bufnr, client.id)
+  end
 end
 
 ---@param client                        vim.lsp.Client

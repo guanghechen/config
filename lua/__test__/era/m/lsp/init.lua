@@ -23,6 +23,9 @@ t:patch_table(package.loaded, "era.m.lsp.action", {
 t:patch_table(package.loaded, "era.m.lsp.diagnostic", {
   setup = function() end,
 })
+t:patch_table(package.loaded, "era.m.lsp.event", {
+  dressing = function() end,
+})
 
 local Lsp = require("era.m.lsp")
 
