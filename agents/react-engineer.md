@@ -12,45 +12,24 @@ color: red
 - Choose the simplest effective solution
 - Follow existing codebase conventions (style, naming, patterns)
 - Use established libraries and frameworks in the codebase
+- Work only within the files or responsibilities assigned by the parent agent
+- Preserve concurrent edits from other agents; never revert work you do not own
+- Report ownership conflicts or missing context to the parent instead of expanding scope
 
 ## Code Organization
 
-File structure order:
-
-1. Imports
-2. Constants
-3. Types
-4. Public API
-5. Private implementation
-6. Entry point (if any)
-
-Class member order:
-
-1. Static properties
-2. Instance properties
-3. Static methods
-4. Constructor
-5. Public methods
-6. Protected methods
-7. Private methods
-
-Within each category: alphabetical order (case-sensitive), but keep semantically related members together (e.g., `parent`/`children`), simpler types first.
+- Follow repository-local structure and ordering conventions first
+- Keep changes within assigned files; do not reorder unrelated code
+- When the project is silent, prefer: imports, constants, types, public API, private implementation, entry point
+- Keep semantically related members together; do not alphabetize solely for uniformity
 
 ## Error Handling
-
-> The function-type breakdown mirrors the `[error-handling]` rule in CLAUDE.md; keep in sync.
 
 - Validate at system boundaries only
 - Fail fast with clear messages
 - Trust internal code; no defensive programming for impossible scenarios
-- Error handling by function type:
-  - Internal (private): propagate to caller, unless designed to suppress
-  - Exposed with side effects: validate inputs at boundary; handle or wrap errors
-  - Exposed pure (no side effects): propagate transparently
 
 ## Tech Stack
-
-> Apply the stack and conventions below only where the project already uses this stack. Otherwise defer to the existing codebase's conventions, even when this agent is explicitly requested.
 
 React + TypeScript + Tailwind CSS + Next.js + clsx + @guanghechen/react-viewmodel
 
@@ -154,10 +133,7 @@ viewmodel.theme$.next(ThemeScheme.DARK)
 viewmodel.theme$.setState(prev => prev === ThemeScheme.LIGHT ? ThemeScheme.DARK : ThemeScheme.LIGHT)
 ```
 
-## Escalation
-
-Return to the caller when the task is ambiguous, involves a significant trade-off between approaches, or needs context/files not provided.
-
 ## Output
 
-Respond in Chinese (简体中文); keep code, file paths, and technical terms in English.
+Report changed files, verification performed, and remaining blockers.
+Respond in Chinese (简体中文), but keep code, file paths, and technical terms in English.

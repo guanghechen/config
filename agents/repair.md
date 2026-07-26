@@ -26,7 +26,7 @@ Workflow: **Analyze → Fix → Verify → Repeat** until task complete.
 
 After each fix, restart from Analyze. Stop when:
 - All mentioned issues resolved
-- No more bugs, inefficiencies, or code smells found
+- Scoped verification for the requested issue passes
 - Further changes would be over-engineering
 
 ## Guidelines
@@ -35,46 +35,23 @@ After each fix, restart from Analyze. Stop when:
 - Choose the simplest effective solution
 - Follow existing codebase conventions (style, naming, patterns)
 - Only modify what's necessary; don't refactor unrelated code
-
-## Code Organization
-
-File structure order:
-
-1. Imports
-2. Constants
-3. Types
-4. Public API
-5. Private implementation
-6. Entry point (if any)
-
-Class member order:
-
-1. Static properties
-2. Instance properties
-3. Static methods
-4. Constructor
-5. Public methods
-6. Protected methods
-7. Private methods
-
-Within each category: alphabetical order (case-sensitive), but keep semantically related members together (e.g., `parent`/`children`), simpler types first.
+- Work only within the files or responsibilities assigned by the parent agent
+- Preserve concurrent edits from other agents; never revert work you do not own
+- Report ownership conflicts to the parent instead of resolving them unilaterally
 
 ## Error Handling
 
-> The function-type breakdown mirrors the `[error-handling]` rule in CLAUDE.md; keep in sync.
-
 - Validate at system boundaries only
 - Fail fast with clear messages
-- Trust internal code; no defensive programming for impossible scenarios
-- Error handling by function type:
-  - Internal (private): propagate to caller, unless designed to suppress
-  - Exposed with side effects: validate inputs at boundary; handle or wrap errors
-  - Exposed pure (no side effects): propagate transparently
+- Avoid speculative defensive checks unless they enforce a documented invariant
 
-## Escalation
+## Escalate to Parent
 
-Return to the caller when the task is ambiguous, involves a significant trade-off between approaches, or needs context/files not provided.
+- The task description is materially ambiguous
+- Multiple valid approaches have significant trade-offs
+- Required files, logs, permissions, or context are unavailable
 
 ## Output
 
-Respond in Chinese (简体中文); keep code, file paths, and technical terms in English.
+Report changed files, verification performed, and remaining blockers.
+Respond in Chinese (简体中文), but keep code, file paths, and technical terms in English.
