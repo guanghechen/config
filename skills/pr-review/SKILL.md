@@ -25,8 +25,6 @@ pr-review 是**纯审查器**：判断这些改动是否以足够小、足够清
 
 ### 1. 取材
 
-> 下列要求是取材契约，不按来源是否可信选择性放松：secret 路径预筛始终先于内容读取；revision / path 输入隔离、pathspec magic 防护以及禁用 external diff / textconv 始终适用；base→工作树模式始终执行前后 fingerprint，因为来源可信不能排除并发编辑造成的 drift。
-
 - **先筛路径，再读内容**：先用不返回 patch / content 的 rename-aware metadata 取得完整 old / new path 清单，排除全局 Security 红线禁止读取的 secret 路径（非 template `.env*`、`.ssh/`、`.git-credentials` 等），再加载允许路径的 diff。禁止路径删除若无法与 rename 可靠配对，同时存在任意未配对 addition / untracked path，则不读取新增内容：base→工作树模式要求 staged rename 或 sanitized changeset，PR 模式要求 sanitized changeset。不得先运行 bulk diff 再过滤；装入内容中意外出现的疑似 secret 立即 mask。
 - **Git 输入安全**：在进程内将用户给出的 base 与 `^{commit}` 拼成一个 revision，作为单一 argv 传给 `git rev-parse --verify --end-of-options`，解析为 immutable `baseOID`；失败即停止。后续每个 revision、OID 与 path 都作为独立 argv 传递，绝不拼接进 shell command；路径经 NUL-safe loop 处理，并用 `git --literal-pathspecs` 与 `--no-ext-diff --no-textconv` 禁止 pathspec magic、external diff 和 textconv。
 - **PR 模式**：从同一 PR snapshot 取得描述、关联 issue、base / head OID，以及分页的 `path` / change type metadata；分页期间 OID 变化则丢弃并重取，metadata 数量必须等于 provider 报告的 changed-file 总数。diff 必须固定到这组 OID，不得再次按可变 PR ref 取材，也不得用其他 checkout 的本地 `HEAD` 代替；逐路径记录完整 diff 或明确的 binary 状态，任何遗漏、截断或 provider limit 都视为取材失败。若 metadata 不能安全给出 rename 的 old / new path、含禁止路径，或远端取材不完整，则仅在 base / head object 本地可用时，以 `baseOID...headOID` 的 rename-aware metadata 按允许路径读取；否则停止并要求 sanitized changeset。
@@ -41,7 +39,7 @@ pr-review 是**纯审查器**：判断这些改动是否以足够小、足够清
 
 ### 3. 委派四维度审查
 
-- 以第 2 步成功标准为「确认目标」，invoke the `adversarial-review` skill 审查本次 changeset，收集其 findings（`material / non-material / tradeoff`）与终态信号（`Adversarial Review: Clean` / `Adversarial Review: User decision required`）。
+- 以第 2 步成功标准为「确认目标」，invoke the `adversarial-review` skill 审查本次 changeset，收集其 findings（`material / non-material / tradeoff`）与终态信号（`Adversarial Review: Converged` / `Adversarial Review: User decision required`）。
 - 对某一 changeset 状态**只 invoke 一次并报告**；本 skill 不修复、不「修完再 invoke」（那等于改文件）。作者推新 commit 后由用户重跑，即新的一遍，非内部修复环。
 
 ### 4. PR 专属判断
@@ -55,16 +53,16 @@ pr-review 是**纯审查器**：判断这些改动是否以足够小、足够清
 
 由两条正交轴共同决定，取更严一侧：
 
-- **代码质量轴**（读核心终态，不重判 blocking-ness）：未 `Clean` 且有必须修复的 material issue ／ `User decision required`（待决 tradeoff，并保留核心的处理建议）／ `Clean`（无必须修复项，可含已接受 tradeoff 与 non-material）。
+- **代码质量轴**（读核心终态，不重判 blocking-ness）：未 Converged 且有必须修复的 material issue ／ `User decision required`（待决 tradeoff，并保留核心的处理建议）／ `Converged`（无必须修复项，可含已接受 tradeoff 与 non-material）。
 - **价值 / 合入轴**（pr-review 独有）：是否解决真问题、测试与 ship 是否足以合入。
 
 映射：
 
 - 有必须修复的 material issue、合入前必须补齐的测试 / ship 缺口，或核心对待决 tradeoff 建议 `Reject and revise` → 根因是局部缺陷 `Request changes`；根因是方向、架构或价值不足 `Needs redesign`。
 - 无必须修复项，但有待用户明确接受的 tradeoff（核心建议 `Accept tradeoff`）或其他 merge prerequisite → `Conditional approve`，列出决策项与前置条件。
-- `Clean` 且价值已确认，仅剩 optional non-material follow-up 或无 → `Approve`。
+- Converged 且价值已确认，仅剩 optional non-material follow-up 或无 → `Approve`。
 
-`Clean` 是 `Approve` 的必要非充分条件——它只清洁代码质量轴，价值/测试闸门可独立否决。`User decision required` 折叠为 verdict 的决策项，沿用核心「推荐 `Accept tradeoff` | `Reject and revise`」，不替用户拍板。
+`Converged` 是 `Approve` 的必要非充分条件——它只清洁代码质量轴，价值/测试闸门可独立否决。`User decision required` 折叠为 verdict 的决策项，沿用核心「推荐 `Accept tradeoff` | `Reject and revise`」，不替用户拍板。
 
 ## 输出格式
 
@@ -83,7 +81,7 @@ Merge Verdict: Request changes | Conditional approve | Approve | Needs redesign
 
 价值评估
 - ✗「实现看起来没问题。」
-- ✓「PR 加了缓存层，但慢路径来自数据库排序，缓存没覆盖该查询入口；核心性能问题没解决——即便核心审查判 `Clean`，合入价值仍不足，判 `Needs redesign`。」
+- ✓「PR 加了缓存层，但慢路径来自数据库排序，缓存没覆盖该查询入口；核心性能问题没解决——即便核心审查 `Converged`，合入价值仍不足，判 `Needs redesign`。」
 
 范围约束
 - ✗ 默认接受「顺手调整了按钮布局。」
