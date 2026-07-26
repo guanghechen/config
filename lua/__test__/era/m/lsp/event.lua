@@ -6,7 +6,6 @@ local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
 
 local t = harness.new("era.m.lsp.event")
-local keymap_sets = 0 ---@type integer
 
 bootstrap.with_stl(t, {
   nvim = {
@@ -14,27 +13,7 @@ bootstrap.with_stl(t, {
       augroup = function(name)
         return vim.api.nvim_create_augroup(name, { clear = true })
       end,
-      bindkeys = function(keymaps, override)
-        for _, keymap in ipairs(keymaps) do
-          if not keymap.disabled then
-            local opts = {
-              buffer = override.bufnr,
-              nowait = override.nowait or keymap.nowait,
-              noremap = override.noremap or keymap.noremap,
-              silent = override.silent or keymap.silent,
-              expr = override.expr or keymap.expr,
-              replace_keycodes = override.replace_keycodes or keymap.replace_keycodes,
-              desc = keymap.desc,
-            }
-            keymap_sets = keymap_sets + #keymap.modes
-            vim.keymap.set(keymap.modes, keymap.key, keymap.callback, opts)
-            for _, alias in ipairs(keymap.aliases or {}) do
-              keymap_sets = keymap_sets + #keymap.modes
-              vim.keymap.set(keymap.modes, alias, keymap.callback, opts)
-            end
-          end
-        end
-      end,
+      bindkeys = require("stl.nvim.fn").bindkeys,
     },
   },
 })
@@ -175,8 +154,14 @@ end)
 t:test("keymaps: reconcile dynamic capability changes with bounded writes", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local client = add_client(bufnr, "tailwindcss")
+  local keymap_sets = 0 ---@type integer
   local keymap_dels = 0 ---@type integer
+  local keymap_set = vim.keymap.set
   local keymap_del = vim.keymap.del
+  t:patch_table(vim.keymap, "set", function(modes, ...)
+    keymap_sets = keymap_sets + (type(modes) == "table" and #modes or 1)
+    return keymap_set(modes, ...)
+  end)
   t:patch_table(vim.keymap, "del", function(...)
     keymap_dels = keymap_dels + 1
     return keymap_del(...)

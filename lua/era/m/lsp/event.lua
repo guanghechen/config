@@ -129,19 +129,6 @@ function M.before_init(params, config)
 end
 
 ---@param bufnr                         integer
----@param method                        string
----@param exclude_client_id             ?integer
----@return boolean
-local function buf_supports_method(bufnr, method, exclude_client_id)
-  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, method = method })) do
-    if client.id ~= exclude_client_id then
-      return true
-    end
-  end
-  return false
-end
-
----@param bufnr                         integer
 ---@return era.m.lsp.event.IKeymapState
 local function get_keymap_state(bufnr)
   local state = keymap_states[bufnr]
@@ -184,33 +171,6 @@ end
 
 ---@param bufnr                         integer
 ---@param exclude_client_id             ?integer
----@return table<integer, true>
-local function get_attached_client_ids(bufnr, exclude_client_id)
-  local attached_client_ids = {} ---@type table<integer, true>
-  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
-    if client.id ~= exclude_client_id then
-      attached_client_ids[client.id] = true
-    end
-  end
-  return attached_client_ids
-end
-
----@param state                         era.m.lsp.event.IKeymapState
----@param bufnr                         integer
----@param exclude_client_id             ?integer
----@return stl.t.IKeymap[]
-local function get_generic_keymaps(state, bufnr, exclude_client_id)
-  local generic = {} ---@type stl.t.IKeymap[]
-  for _, keymap in ipairs(state.generic) do
-    if keymap.method == nil or buf_supports_method(bufnr, keymap.method, exclude_client_id) then
-      generic[#generic + 1] = keymap
-    end
-  end
-  return generic
-end
-
----@param bufnr                         integer
----@param exclude_client_id             ?integer
 ---@return nil
 local function reconcile_keymaps(bufnr, exclude_client_id)
   local state = keymap_states[bufnr]
@@ -225,29 +185,48 @@ local function reconcile_keymaps(bufnr, exclude_client_id)
   unbind_keymaps(state.bound, bufnr)
   state.bound = {}
 
-  local attached_client_ids = get_attached_client_ids(bufnr, exclude_client_id)
-  if vim.tbl_isempty(attached_client_ids) then
+  local attached_clients = {} ---@type vim.lsp.Client[]
+  local attached_client_ids = {} ---@type table<integer, true>
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+    if client.id ~= exclude_client_id then
+      attached_clients[#attached_clients + 1] = client
+      attached_client_ids[client.id] = true
+    end
+  end
+  if #attached_clients == 0 then
     keymap_states[bufnr] = nil
     return
   end
 
-  local generic = get_generic_keymaps(state, bufnr, exclude_client_id)
+  local generic = {} ---@type stl.t.IKeymap[]
+  for _, keymap in ipairs(state.generic) do
+    if keymap.method == nil then
+      generic[#generic + 1] = keymap
+    else
+      for _, client in ipairs(attached_clients) do
+        if client:supports_method(keymap.method, bufnr) then
+          generic[#generic + 1] = keymap
+          break
+        end
+      end
+    end
+  end
   track_keymaps(state.bound, generic)
   stl.nvim.fn.bindkeys(generic, { bufnr = bufnr })
 
-  local clients = {} ---@type era.m.lsp.event.IClientKeymaps[]
+  local client_keymaps_list = {} ---@type era.m.lsp.event.IClientKeymaps[]
   for client_id, client_keymaps in pairs(state.clients) do
     if attached_client_ids[client_id] then
-      clients[#clients + 1] = client_keymaps
+      client_keymaps_list[#client_keymaps_list + 1] = client_keymaps
     end
   end
-  table.sort(clients, function(a, b)
+  table.sort(client_keymaps_list, function(a, b)
     if a.name == b.name then
       return a.id < b.id
     end
     return a.name < b.name
   end)
-  for _, client_keymaps in ipairs(clients) do
+  for _, client_keymaps in ipairs(client_keymaps_list) do
     track_keymaps(state.bound, client_keymaps.keymaps)
     stl.nvim.fn.bindkeys(client_keymaps.keymaps, { bufnr = bufnr })
   end
