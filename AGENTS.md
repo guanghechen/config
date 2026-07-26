@@ -10,7 +10,7 @@
 6. **PREFERRED**: Keep Markdown tables and ASCII diagrams visually aligned (CJK = 2 units, ASCII = 1); prefer bullet lists when clearer than a table.
 7. **PREFERRED**: For non-trivial proposals, recommend one option; use 2–3 examples with a brief contrast only when they clarify a meaningful tradeoff.
 8. **ALWAYS**: When identifying issues, provide concrete examples; if there is no minimal reproduction, state trigger, evidence, and impact.
-9. **ALWAYS**: After implementation and ordinary verification, but before delivering a significant change, read and follow `$CODEX_HOME/workflows/review-loop.md`. Run its caller-side loop as a distinct final pass over the complete changeset until the read-only `adversarial-review` skill reports `Converged`. Use a fresh isolated (clean-context) reviewer whenever available; if genuinely unavailable, disclose the same-context pass as an anti-anchoring degradation. Intermediate edits, passing verification, and partial reviews do not replace this final pass.
+9. **ALWAYS**: After implementation and ordinary verification, but before delivering a significant change, invoke `$review-loop` as a distinct final pass over the complete changeset. Do not deliver until it reports `Converged` or stops with a clearly reported blocker or user decision. Intermediate edits, passing verification, and partial reviews do not replace this final pass.
 
 > Significant changes include cross-module or stateful-flow changes, public interface changes, shared configuration changes that affect behavior or compatibility, security-sensitive work, broad refactors, and high-regression-risk fixes.
 
