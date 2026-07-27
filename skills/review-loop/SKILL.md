@@ -10,7 +10,7 @@ Run this as a distinct final pass. The caller is the single writer for loop stat
 ## Limits
 
 - A round spans evidence acquisition through result dispatch; any fix or new writeful verification starts a new round.
-- Allow at most 3 rounds, 2 fresh reviewer attempts per round, and 2 fixes for the same finding, identified by trigger, affected behavior, and impact.
+- Allow at most 7 rounds, 2 fresh reviewer attempts per round, and 2 fixes for the same finding, identified by trigger, affected behavior, and impact.
 - Reviewer deadlines are absolute: 180 seconds unless a longer bound is chosen before launch. Polling does not extend them. On timeout, close or terminate the reviewer before replacement; if shutdown is uncertain, stop as blocked.
 - Give caller-run verification a bounded deadline chosen before launch. On timeout, stop waiting, preserve raw evidence, and cancel or terminate it when safe. If termination or side-effect state is uncertain, stop as blocked; do not retry under unchanged preconditions.
 
