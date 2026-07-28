@@ -9,6 +9,7 @@
     Description       = 'Helper functions for Guanghechen config environment.'
     FunctionsToExport = @(
         'ghc-opensource'
+        'ghc-profile'
         'ghc-proxy'
         'ghc-theme'
         'ghc-update-agents'
