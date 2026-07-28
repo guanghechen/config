@@ -111,7 +111,7 @@ export CODEX_HOME="$XDG_CONFIG_HOME/codex"
 export GEMINI_CONFIG_DIR="$HOME/.gemini"
 
 export ANTHROPIC_MODEL="claude-opus-4.6-1m"
-export ANTHROPIC_SMALL_FAST_MODEL="claude-sonnet-4.6"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-sonnet-5"
 export CLAUDE_CODE_MAX_OUTPUT_TOKENS="64000"
 
 export GEMINI_MODEL="gemini-3-pro-preview"
