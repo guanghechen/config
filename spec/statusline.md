@@ -459,7 +459,7 @@ tx_speed = (current_tx_bytes - previous_tx_bytes) / elapsed_seconds
 新增 theme variable 必须修改：
 
 ```text
-/Users/wanchenfang/.config/guanghechen/asset/theme/app/tmux.hbs
+$HOME/.config/guanghechen/asset/theme/app/tmux.hbs
 ```
 
 然后执行：

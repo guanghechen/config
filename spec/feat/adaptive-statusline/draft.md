@@ -10,7 +10,7 @@ Consolidate tmux statusline modes and keep the adaptive mode that uses two statu
 - Only status modes `01/02/11/12` remain loadable; legacy `03/04/13/14` normalize to retained modes.
 - Retained mode names are `01`/`02` for top position and `11`/`12` for bottom position.
 - Width threshold is 200 columns.
-- Theme colors and symbols must be defined in `/Users/wanchenfang/.config/guanghechen/asset/theme/app/tmux.hbs`, then generated with `fish -c "ghc-theme gen && ghc-theme apply"`.
+- Theme colors and symbols must be defined in `$HOME/.config/guanghechen/asset/theme/app/tmux.hbs`, then generated with `fish -c "ghc-theme gen && ghc-theme apply"`.
 
 ## 3. Open Questions
 

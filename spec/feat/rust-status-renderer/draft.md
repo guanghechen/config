@@ -18,7 +18,7 @@ The target direction is a Rust CLI-first renderer with a first-class component m
 - `literal_text` is the display-only plain text used for monospace width calculation.
 - `rich_text` is the tmux statusline format fragment used for final composition.
 - Components own their cache keys, refresh conditions, and stale/degrade behavior. The core provides cache access ports but does not own component cache policy.
-- Theme colors and symbols continue to come from generated tmux options. If new variables are needed, define them in `/Users/wanchenfang/.config/guanghechen/asset/theme/app/tmux.hbs` and generate with `fish -c "ghc-theme gen && ghc-theme apply"`.
+- Theme colors and symbols continue to come from generated tmux options. If new variables are needed, define them in `$HOME/.config/guanghechen/asset/theme/app/tmux.hbs` and generate with `fish -c "ghc-theme gen && ghc-theme apply"`.
 - Initial delivery is CLI-first, not daemon-first. A daemon can be added after the data model and cache contract are stable.
 
 ## 3. Candidate Approaches

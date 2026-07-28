@@ -7,7 +7,7 @@
 | Adaptive modes  | arch.md       | `script/load-theme.sh`                           | tmux parse validation    |
 | Layout selector | flow.md       | `script/status-layout.sh`                        | bash syntax validation   |
 | Status formats  | arch.md       | `conf/theme/status02.tmux.conf`                  | tmux parse validation    |
-| Theme variables | arch.md       | `/Users/wanchenfang/.config/guanghechen/asset/theme/app/tmux.hbs` | `ghc-theme gen/apply` |
+| Theme variables | arch.md       | `$HOME/.config/guanghechen/asset/theme/app/tmux.hbs` | `ghc-theme gen/apply` |
 
 ## 2. Work Breakdown
 
