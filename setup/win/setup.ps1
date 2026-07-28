@@ -103,9 +103,6 @@ Set-Location -Path $repomain
 . .\setup\win\winget.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\env\cleanup-stale.ps1
-
-Set-Location -Path $repomain
 . .\setup\win\env\cargo.ps1
 
 Set-Location -Path $repomain
