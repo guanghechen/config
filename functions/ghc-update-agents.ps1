@@ -26,11 +26,6 @@ function ghc-update-agents {
   }
 
   if (Get-Command claude -ErrorAction SilentlyContinue) {
-    Write-Host "  Patching Claude Code..." -ForegroundColor Cyan
-    $patchScript = "/Users/wanchenfang/.config/guanghechen/cli/patch-agents.mjs"
-    Write-Host "  node $patchScript --agent claude" -ForegroundColor Cyan
-    node $patchScript --agent claude
-
     $xdgConfigHome = if ($env:XDG_CONFIG_HOME) {
       $env:XDG_CONFIG_HOME
     } elseif ($env:USERPROFILE) {
@@ -38,6 +33,12 @@ function ghc-update-agents {
     } else {
       Join-Path $HOME ".config"
     }
+
+    Write-Host "  Patching Claude Code..." -ForegroundColor Cyan
+    $patchScript = Join-Path $xdgConfigHome "guanghechen" "cli" "patch-agents.mjs"
+    Write-Host "  node $patchScript --agent claude" -ForegroundColor Cyan
+    node $patchScript --agent claude
+
     $claudeSettingsDir = Join-Path $xdgConfigHome "claude"
     $claudeSettingsFile = Join-Path $claudeSettingsDir "settings.json"
     if (Test-Path $claudeSettingsFile) {
