@@ -8,7 +8,6 @@
     PowerShellVersion = '7.0'
     Description       = 'Helper functions for Guanghechen config environment.'
     FunctionsToExport = @(
-        'ghc-claude-remote'
         'ghc-opensource'
         'ghc-proxy'
         'ghc-theme'
@@ -16,7 +15,6 @@
         'ghc-update'
         'ghc-upgrade'
         'ghc-winshark-vsc'
-        'swap-alt-win'
         'yoz'
     )
     CmdletsToExport   = @()

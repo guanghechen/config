@@ -3,7 +3,6 @@ $pwshRoot = Split-Path -Parent $modulesRoot
 $functionsRoot = Join-Path $pwshRoot "functions"
 
 $lazyFunctions = @(
-    'ghc-claude-remote'
     'ghc-opensource'
     'ghc-proxy'
     'ghc-theme'
@@ -11,7 +10,6 @@ $lazyFunctions = @(
     'ghc-update'
     'ghc-upgrade'
     'ghc-winshark-vsc'
-    'swap-alt-win'
     'yoz'
 )
 
