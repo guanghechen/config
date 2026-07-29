@@ -122,7 +122,7 @@ printf "\e[92m  [setup windows-terminal] done.\e[0m\n"
 
 ## Setup font
 printf "\n\e[96m  [setup font] preparing...\e[0m\n"
-source "$HOME/.config/guanghechen/setup/nix/bot/font-maple.bash"
+source "$HOME/.config/guanghechen/setup/nix/bot/font-maple.bash" || exit 1
 printf "\e[92m  [setup font] done.\e[0m\n"
 
 ## Setup themes

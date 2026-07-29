@@ -1,46 +1,25 @@
 #! /usr/bin/env bash
 
 source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
+source "$HOME/.config/guanghechen/setup/nix/bot/font.bash"
 
-FONT_COMMON_DIR="/Library/Fonts"
-FONT_LOCAL_DIR="$HOME/Library/Fonts"
-FORCE=false
+ghc_setup_font_maple() {
+  local label="MapleMono"
+  local url="https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip"
+  local sha256="ab88522932cf4015dffeaef6dedc59a22a5fefecdcc6e583d9fcd997da5b7cac"
+  local font_dir="/Library/Fonts"
+  local local_dir="$HOME/Library/Fonts"
+  local workdir="$HOME/download/fonts/Maple"
 
-for arg in "$@"; do
-  case $arg in
-    --force)
-      FORCE=true
-      shift
-      ;;
-  esac
-done
+  ## Fonts are reproducible artifacts: verify before replacing them, and rerun
+  ## setup after any install or cache failure.
+  ghc_font_fetch "$label" "$url" "$sha256" "$workdir" || return 1
 
-if [ "$FORCE" = true ] && [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
-  printf "\e[96m  [setup font (Maple)] force removing existing Maple fonts...\e[0m\n"
-  rm -rf "$FONT_LOCAL_DIR"/MapleMono*
-  sudo rm -rf "$FONT_COMMON_DIR"/MapleMono*
-fi
+  printf "\e[96m  [setup font (%s)] installing into %s...\e[0m\n" "$label" "$font_dir"
+  rm -f "$local_dir"/MapleMono*.ttf || return 1
+  sudo rm -f "$font_dir"/MapleMono*.ttf || return 1
+  sudo install -m 0644 "$workdir"/*.ttf "$font_dir/" || return 1
+  sudo atsutil databases -remove || return 1
+}
 
-if [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
-  printf "\e[93m  [setup font (Maple)] Maple is already installed. (skipped)\e[0m\n"
-else
-  # Create the font download folder and ensure it to be clean.
-  mkdir -p ~/download/fonts/Maple
-  rm -rf ~/download/fonts/Maple
-  mkdir -p ~/download/fonts/Maple
-
-  # Remove the existed Maple fonts
-  rm -rf "$FONT_LOCAL_DIR/Maple*"
-  sudo rm -rf "$FONT_COMMON_DIR/Maple*"
-
-  cd "$HOME/download/fonts/Maple" || return 1
-
-  printf "\e[96m  [setup font (Maple)] downloading MapleMono-NF-CN fonts...\e[0m\n"
-  wget https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip
-
-  printf "\e[96m  [setup font (Maple)] installing MapleMono fonts...\e[0m\n"
-  unzip MapleMono-NF-CN-unhinted.zip
-  rm -f MapleMono-NF-CN-unhinted.zip
-  sudo cp ~/download/fonts/Maple/* "$FONT_COMMON_DIR/"
-  sudo atsutil databases -remove
-fi
+ghc_setup_font_maple

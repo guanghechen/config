@@ -1,39 +1,24 @@
 #! /usr/bin/env bash
 
 source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
+source "$HOME/.config/guanghechen/setup/nix/bot/font.bash"
 
-FONT_DIR="/usr/share/fonts/Maple"
-FORCE=false
+ghc_setup_font_maple() {
+  local label="MapleMono"
+  local url="https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip"
+  local sha256="ab88522932cf4015dffeaef6dedc59a22a5fefecdcc6e583d9fcd997da5b7cac"
+  local font_dir="/usr/share/fonts/Maple"
+  local workdir="$HOME/download/fonts/Maple"
 
-for arg in "$@"; do
-  case $arg in
-  --force)
-    FORCE=true
-    shift
-    ;;
-  esac
-done
+  ## Fonts are reproducible artifacts: verify before replacing them, and rerun
+  ## setup after any install or cache failure.
+  ghc_font_fetch "$label" "$url" "$sha256" "$workdir" || return 1
 
-if [ "$FORCE" = true ] && [ -d "$FONT_DIR" ]; then
-  printf "\e[96m  [setup font (Maple)] force removing existing Maple fonts...\e[0m\n"
-  sudo rm -rf "$FONT_DIR"
-fi
+  printf "\e[96m  [setup font (%s)] installing into %s...\e[0m\n" "$label" "$font_dir"
+  sudo rm -rf "${font_dir:?}" || return 1
+  sudo install -d -m 0755 "$font_dir" || return 1
+  sudo install -m 0644 "$workdir"/*.ttf "$font_dir/" || return 1
+  sudo fc-cache -f || return 1
+}
 
-if [ -d "$FONT_DIR" ]; then
-  printf "\e[93m  [setup font (Maple)] Maple is already installed. (skipped)\e[0m\n"
-else
-  mkdir -p ~/download/fonts/Maple
-  rm -rf ~/download/fonts/Maple
-  mkdir -p ~/download/fonts/Maple
-
-  cd "$HOME/download/fonts/Maple" || return 1
-
-  printf "\e[96m  [setup font (Maple)] downloading MapleMono-NF-CN fonts...\e[0m\n"
-  wget https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip
-
-  printf "\e[96m  [setup font (Maple)] installing MapleMono fonts...\e[0m\n"
-  unzip MapleMono-NF-CN-unhinted.zip
-  rm -f MapleMono-NF-CN-unhinted.zip
-  sudo cp -r ~/download/fonts/Maple "$FONT_DIR/"
-  sudo fc-cache -f -v
-fi
+ghc_setup_font_maple
