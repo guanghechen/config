@@ -1,9 +1,10 @@
 #! /usr/bin/env bash
 
-## Step helpers for setup.bash.
+## Shared step helpers for setup entrypoints.
 ##
-## Each script runs in its own `bash -e -o pipefail` process, so any unhandled
-## command failure becomes the step status without leaking shell state.
+## Each leaf script runs in its own `bash -e -o pipefail` process, so any
+## unhandled command failure becomes the step status without leaking shell
+## state into the entrypoint.
 
 GHC_STEP_FAILURES=()
 

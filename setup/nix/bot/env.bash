@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/env/setting.bash"
+source "$HOME/.config/guanghechen/env/setting.bash" || return 1
 
 ### Homebrew
 export HOMEBREW_NO_ANALYTICS=1
@@ -22,12 +22,16 @@ fi
 
 ### fnm
 if command -v fnm >/dev/null 2>&1; then
-  eval "$(fnm env --use-on-cd)"
+  _ghc_fnm_env="$(fnm env --use-on-cd)" || return 1
+  eval "$_ghc_fnm_env" || return 1
+  unset _ghc_fnm_env
 fi
 
 ### Miniforge3
 if [ -f "$HOME/.app/miniforge3/bin/conda" ] && [[ ":$PATH:" != *":$HOME/.app/miniforge3/bin:"* ]]; then
   export HOME_MINIFORGE="$HOME/.app/miniforge3"
   export PATH="$HOME/.app/miniforge3/bin:$PATH"
-  eval "$("$HOME/.app/miniforge3/bin/conda" shell.bash hook)"
+  _ghc_conda_env="$("$HOME/.app/miniforge3/bin/conda" shell.bash hook)" || return 1
+  eval "$_ghc_conda_env" || return 1
+  unset _ghc_conda_env
 fi

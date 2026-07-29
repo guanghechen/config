@@ -27,8 +27,8 @@ if ! ghc_bootstrap_repo; then
 fi
 printf "\e[92m  [setup repo] done.\e[0m\n"
 
-source "$setup_osx/bot/step.bash" || {
-  printf "\e[91m  [setup repo] step.bash is missing from %s. aborting.\e[0m\n" "$setup_osx/bot"
+source "$setup_nix/bot/step.bash" || {
+  printf "\e[91m  [setup repo] step.bash is missing from %s. aborting.\e[0m\n" "$setup_nix/bot"
   exit 1
 }
 
