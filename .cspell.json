@@ -1,5 +1,8 @@
 {
-  "ignorePaths": ["asset/app/vscode/settings.json", "config/theme/app/newsboat.hbs"],
+  "ignorePaths": [
+    "asset/app/vscode/settings.json",
+    "config/theme/app/newsboat.hbs"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -19,6 +22,7 @@
     "gitmoji",
     "gruvbox",
     "guanghechen",
+    "herdr",
     "karabiner",
     "killall",
     "komorebi",

@@ -129,6 +129,37 @@ export const apps = [
     },
   },
   {
+    name: 'herdr',
+    home: path.join(XDG_CONFIG_HOME, 'herdr'),
+    themes: 'theme/',
+    extname: '.json',
+    local: 'theme/local.json',
+    active: app =>
+      is_file(path.join(app.home, 'config.shared.toml')) &&
+      is_file(path.join(app.home, 'script', 'sync.mjs')),
+    render: async (_app, template, scheme) => render_template(template, scheme),
+    after_apply: async (app, _scheme, reporter) => {
+      await exec({
+        reporter,
+        cmd: process.execPath,
+        args: [path.join(app.home, 'script', 'sync.mjs')],
+      })
+
+      const is_herdr_exist = await command_exists(reporter, 'herdr')
+      if (!is_herdr_exist) return
+
+      const { stdout } = await exec({
+        reporter,
+        cmd: 'herdr',
+        args: ['status', 'server', '--json'],
+        silent: true,
+      })
+      if (!JSON.parse(stdout).running) return
+
+      await exec({ reporter, cmd: 'herdr', args: ['server', 'reload-config'], silent: true })
+    },
+  },
+  {
     name: 'git-delta',
     home: path.join(XDG_CONFIG_HOME, 'git-delta'),
     themes: 'theme/',
