@@ -42,6 +42,10 @@ brew install btop fastfetch httpie
 printf "\e[96m  [setup homebrew] installing github cli...\e[0m\n"
 brew install gh
 
+### Install GitHub Copilot CLI
+printf "\e[96m  [setup homebrew] installing github copilot cli...\e[0m\n"
+brew install --cask copilot-cli
+
 ### Install Codex
 printf "\e[96m  [setup homebrew] installing codex...\e[0m\n"
 brew install --cask codex

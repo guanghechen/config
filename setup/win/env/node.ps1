@@ -23,7 +23,7 @@ Write-Host "  [setup node] installing @guanghechen/kit" -ForegroundColor Cyan
 npm install -g @guanghechen/kit
 
 ## Setup agents
-foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@github/copilot")) {
+foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli")) {
   if (npm list -g $pkg 2>$null) {
     Write-Host "  [setup node] $pkg is already installed. (skipped)" -ForegroundColor Yellow
   } else {

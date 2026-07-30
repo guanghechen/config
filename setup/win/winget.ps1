@@ -6,6 +6,7 @@ winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
 winget install -e --source winget --id Microsoft.PowerShell
 winget install -e --source winget --id Microsoft.PowerToys
 winget install -e --source winget --id Neovim.Neovim
+winget install -e --source winget --id GitHub.Copilot
 
 winget install -e --source winget --id Schniz.fnm
 # winget install -e --source winget --id LLVM.LLVM

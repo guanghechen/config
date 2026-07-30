@@ -19,7 +19,7 @@ printf "\e[96m  [setup node] installing @guanghechen/kit\e[0m\n"
 npm install -g @guanghechen/kit
 
 ## Setup agents
-for pkg in @anthropic-ai/claude-code @google/gemini-cli @github/copilot; do
+for pkg in @anthropic-ai/claude-code @google/gemini-cli; do
   if npm list -g "$pkg" &>/dev/null; then
     printf "\e[93m  [setup node] %s is already installed. (skipped)\e[0m\n" "$pkg"
   else
