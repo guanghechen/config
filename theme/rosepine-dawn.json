@@ -1,0 +1,21 @@
+{
+  "name": "rosepine-dawn",
+  "custom": {
+    "panel_bg": "#FAF4ED",
+    "surface_dim": "#F2E9E1",
+    "surface0": "#DFDAD9",
+    "surface1": "#CECACD",
+    "overlay0": "#9893A5",
+    "overlay1": "#9893A5",
+    "text": "#464261",
+    "subtext0": "#797593",
+    "accent": "#B4637A",
+    "mauve": "#907AA9",
+    "green": "#6D8F89",
+    "yellow": "#EA9D34",
+    "red": "#B4637A",
+    "blue": "#286983",
+    "teal": "#56949F",
+    "peach": "#D7827E"
+  }
+}

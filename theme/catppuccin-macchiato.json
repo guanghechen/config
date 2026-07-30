@@ -1,0 +1,21 @@
+{
+  "name": "catppuccin-macchiato",
+  "custom": {
+    "panel_bg": "#24273A",
+    "surface_dim": "#363A4F",
+    "surface0": "#494D64",
+    "surface1": "#5B6078",
+    "overlay0": "#8087A2",
+    "overlay1": "#939AB7",
+    "text": "#B8C0E0",
+    "subtext0": "#A5ADCB",
+    "accent": "#F5BDE6",
+    "mauve": "#F5BDE6",
+    "green": "#A6DA95",
+    "yellow": "#EED49F",
+    "red": "#ED8796",
+    "blue": "#8AADF4",
+    "teal": "#8BD5CA",
+    "peach": "#F5A97F"
+  }
+}

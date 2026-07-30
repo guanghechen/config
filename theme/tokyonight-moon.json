@@ -1,0 +1,21 @@
+{
+  "name": "tokyonight-moon",
+  "custom": {
+    "panel_bg": "#222436",
+    "surface_dim": "#191b29",
+    "surface0": "#2f334d",
+    "surface1": "#2d3f76",
+    "overlay0": "#7c86ba",
+    "overlay1": "#909bca",
+    "text": "#b6c1e7",
+    "subtext0": "#a5afd9",
+    "accent": "#c099ff",
+    "mauve": "#fca7ea",
+    "green": "#c3e88d",
+    "yellow": "#ffc777",
+    "red": "#ff757f",
+    "blue": "#82aaff",
+    "teal": "#86e1fc",
+    "peach": "#ff966c"
+  }
+}

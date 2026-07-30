@@ -1,0 +1,21 @@
+{
+  "name": "catppuccin-latte",
+  "custom": {
+    "panel_bg": "#EFF1F5",
+    "surface_dim": "#CCD0DA",
+    "surface0": "#BCC0CC",
+    "surface1": "#ACB0BE",
+    "overlay0": "#8C8FA1",
+    "overlay1": "#7C7F93",
+    "text": "#5C5F77",
+    "subtext0": "#6C6F85",
+    "accent": "#EA76CB",
+    "mauve": "#EA76CB",
+    "green": "#40A02B",
+    "yellow": "#DF8E1D",
+    "red": "#D20F39",
+    "blue": "#1E66F5",
+    "teal": "#179299",
+    "peach": "#FE640B"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "gruvbox-light",
+  "custom": {
+    "panel_bg": "#F2E5BC",
+    "surface_dim": "#D5C4A1",
+    "surface0": "#BDAE93",
+    "surface1": "#A89984",
+    "overlay0": "#7C6F64",
+    "overlay1": "#665C54",
+    "text": "#3C3836",
+    "subtext0": "#504945",
+    "accent": "#B16286",
+    "mauve": "#B16286",
+    "green": "#98971A",
+    "yellow": "#D79921",
+    "red": "#CC241D",
+    "blue": "#458588",
+    "teal": "#689D6A",
+    "peach": "#D65D0E"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "catppuccin-frappe",
+  "custom": {
+    "panel_bg": "#303446",
+    "surface_dim": "#414559",
+    "surface0": "#51576D",
+    "surface1": "#626880",
+    "overlay0": "#838BA7",
+    "overlay1": "#949CBB",
+    "text": "#B5BFE2",
+    "subtext0": "#A5ADCE",
+    "accent": "#F4B8E4",
+    "mauve": "#F4B8E4",
+    "green": "#A6D189",
+    "yellow": "#E5C890",
+    "red": "#E78284",
+    "blue": "#8CAAEE",
+    "teal": "#81C8BE",
+    "peach": "#EF9F76"
+  }
+}

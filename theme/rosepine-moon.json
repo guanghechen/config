@@ -1,0 +1,21 @@
+{
+  "name": "rosepine-moon",
+  "custom": {
+    "panel_bg": "#232136",
+    "surface_dim": "#393552",
+    "surface0": "#44415A",
+    "surface1": "#56526E",
+    "overlay0": "#6E6A86",
+    "overlay1": "#6E6A86",
+    "text": "#E0DEF4",
+    "subtext0": "#908CAA",
+    "accent": "#EB6F92",
+    "mauve": "#C4A7E7",
+    "green": "#95B1AC",
+    "yellow": "#F6C177",
+    "red": "#EB6F92",
+    "blue": "#3E8FB0",
+    "teal": "#9CCFD8",
+    "peach": "#EA9A97"
+  }
+}

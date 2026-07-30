@@ -1,0 +1,21 @@
+{
+  "name": "tokyonight-day",
+  "custom": {
+    "panel_bg": "#e1e2e7",
+    "surface_dim": "#d0d5e3",
+    "surface0": "#c1c9df",
+    "surface1": "#b7c1e3",
+    "overlay0": "#1e3469",
+    "overlay1": "#233e7c",
+    "text": "#3054a8",
+    "subtext0": "#294891",
+    "accent": "#9854f1",
+    "mauve": "#7847bd",
+    "green": "#587539",
+    "yellow": "#8c6c3e",
+    "red": "#f52a65",
+    "blue": "#2e7de9",
+    "teal": "#007197",
+    "peach": "#b15c00"
+  }
+}

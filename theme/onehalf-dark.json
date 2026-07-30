@@ -1,0 +1,21 @@
+{
+  "name": "onehalf-dark",
+  "custom": {
+    "panel_bg": "#1E222A",
+    "surface_dim": "#3E4451",
+    "surface0": "#545862",
+    "surface1": "#565C64",
+    "overlay0": "#ABB2BF",
+    "overlay1": "#B6BDCA",
+    "text": "#D7DAE0",
+    "subtext0": "#C8CCD4",
+    "accent": "#DE8C92",
+    "mauve": "#C678DD",
+    "green": "#98C379",
+    "yellow": "#E5C07B",
+    "red": "#E06C75",
+    "blue": "#61AFEF",
+    "teal": "#56B6C2",
+    "peach": "#D75F00"
+  }
+}

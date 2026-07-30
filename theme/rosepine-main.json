@@ -1,0 +1,21 @@
+{
+  "name": "rosepine-main",
+  "custom": {
+    "panel_bg": "#191724",
+    "surface_dim": "#26233A",
+    "surface0": "#403D52",
+    "surface1": "#524F67",
+    "overlay0": "#6E6A86",
+    "overlay1": "#6E6A86",
+    "text": "#E0DEF4",
+    "subtext0": "#908CAA",
+    "accent": "#EB6F92",
+    "mauve": "#C4A7E7",
+    "green": "#95B1AC",
+    "yellow": "#F6C177",
+    "red": "#EB6F92",
+    "blue": "#31748F",
+    "teal": "#9CCFD8",
+    "peach": "#EBBCBA"
+  }
+}

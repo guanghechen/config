@@ -1,5 +1,5 @@
-# Shared behavior and layout live here. script/sync.mjs updates the matching
-# prefix in config.toml while preserving the generated theme below the divider.
+# Shared behavior and layout live here. script/sync.mjs composes this file,
+# theme/local.json, and the preserved manual tail into config.toml.
 onboarding = false
 
 # tmux uses ctrl+a, so Herdr keeps ctrl+b as a distinct prefix.

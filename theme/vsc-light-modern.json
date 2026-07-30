@@ -1,0 +1,21 @@
+{
+  "name": "vsc-light-modern",
+  "custom": {
+    "panel_bg": "#FFFFFF",
+    "surface_dim": "#E8E8E8",
+    "surface0": "#D3D3D3",
+    "surface1": "#CCCCCC",
+    "overlay0": "#8B949E",
+    "overlay1": "#767676",
+    "text": "#3B3B3B",
+    "subtext0": "#616161",
+    "accent": "#E75480",
+    "mauve": "#AF00DB",
+    "green": "#2EA043",
+    "yellow": "#795E26",
+    "red": "#F85149",
+    "blue": "#005FB8",
+    "teal": "#267F99",
+    "peach": "#C72E0F"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "gruvbox-dark",
+  "custom": {
+    "panel_bg": "#32302F",
+    "surface_dim": "#504945",
+    "surface0": "#665C54",
+    "surface1": "#7C6F64",
+    "overlay0": "#A89984",
+    "overlay1": "#BDAE93",
+    "text": "#EBDBB2",
+    "subtext0": "#D5C4A1",
+    "accent": "#D3869B",
+    "mauve": "#B16286",
+    "green": "#98971A",
+    "yellow": "#D79921",
+    "red": "#CC241D",
+    "blue": "#458588",
+    "teal": "#689D6A",
+    "peach": "#D65D0E"
+  }
+}

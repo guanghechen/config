@@ -1,5 +1,6 @@
 # Machine-local Herdr runtime state.
 /config.toml
+/theme/local.json
 /.plugins.lock
 /*.log
 /*.log.*
