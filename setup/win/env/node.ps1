@@ -9,18 +9,18 @@ fnm use $env:GHC_APP_EDITION_NODE
 fnm default $env:GHC_APP_EDITION_NODE
 
 Write-Host "  [setup node] installing npm pm2 yarn prettier" -ForegroundColor Cyan
-npm install -g npm pm2 yarn prettier --registry=https://registry.npmjs.org
+npm install -g npm pm2 yarn prettier
 
 ## Setup tree-sitter-cli
 if (npm list -g tree-sitter-cli 2>$null) {
   Write-Host "  [setup node] tree-sitter-cli is already installed. (skipped)" -ForegroundColor Yellow
 } else {
   Write-Host "  [setup node] installing tree-sitter-cli..." -ForegroundColor Cyan
-  npm install -g tree-sitter-cli --registry=https://registry.npmjs.org
+  npm install -g tree-sitter-cli
 }
 
 Write-Host "  [setup node] installing @guanghechen/kit" -ForegroundColor Cyan
-npm install -g @guanghechen/kit --registry=https://registry.npmjs.org
+npm install -g @guanghechen/kit
 
 ## Setup agents
 foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@openai/codex", "@github/copilot")) {
@@ -28,6 +28,6 @@ foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@openai/c
     Write-Host "  [setup node] $pkg is already installed. (skipped)" -ForegroundColor Yellow
   } else {
     Write-Host "  [setup node] installing $pkg..." -ForegroundColor Cyan
-    npm install -g $pkg --registry=https://registry.npmjs.org
+    npm install -g $pkg
   }
 }
