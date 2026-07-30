@@ -93,6 +93,7 @@ terminal_title = ["activity", "project-name", "git-branch", "model-with-reasonin
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+"gpt-5.6-sol" = 4
 
 [windows]
 sandbox = "elevated"
