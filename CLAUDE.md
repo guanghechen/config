@@ -10,10 +10,6 @@
 6. **PREFERRED**: Keep Markdown tables and ASCII diagrams visually aligned (CJK = 2 units, ASCII = 1); prefer bullet lists when clearer than a table.
 7. **PREFERRED**: For non-trivial proposals, recommend one option; use 2–3 examples with a brief contrast only when they clarify a meaningful tradeoff.
 8. **ALWAYS**: When identifying issues, provide concrete examples; if there is no minimal reproduction, state trigger, evidence, and impact.
-9. **ALWAYS**: After implementation and ordinary verification, but before delivering a significant change, invoke the `review-loop` skill as a distinct final pass over the complete changeset. Do not deliver until it reports `Converged` or stops with a clearly reported blocker or user decision. Intermediate edits, passing verification, and partial reviews do not replace this final pass.
-
-> Significant changes include cross-module or stateful-flow changes, public interface changes, shared configuration changes that affect behavior or compatibility, security-sensitive work, broad refactors, and high-regression-risk fixes.
-
 ## Security
 
 1. **CRITICAL**: Never access secrets — `.ssh/`, non-template `.env*` files, `local/env.*`, `.git-credentials`, `*.http_request`, `*.http_response`. Read sample or template env files only when explicitly relevant; stop if they contain real secret values.
@@ -40,7 +36,7 @@
 
 1. **CRITICAL** `[module-boundary]`: For large implementation or refactor tasks, enforce clear responsibilities, intentional module boundaries, and acyclic one-way dependencies; no boundary violations, reverse dependencies, or cross-module call cycles.
 2. **ALWAYS** `[structure-bias]`: Default to the simplest effective design — high cohesion, low coupling, abstraction on demand (extract a pattern only when the 2nd or 3rd real peer appears). Stop and simplify when an implementation outgrows the problem — or when a senior engineer would call the design overcomplicated.
-3. **ALWAYS** `[stateful-contract]`: When a significant change touches a stateful flow or module boundary, capture in code or a short note: state owner and single writer, one-way data flow, interface contract (inputs, outputs, errors, and applicable timeouts), and failure strategy (for example, `retry`, `rollback`, `degrade`, or `abort`). Create a standalone design doc only when requested or complexity warrants it.
+3. **ALWAYS** `[stateful-contract]`: When a change alters state ownership, data flow, an interface contract (inputs, outputs, errors, or applicable timeouts), or failure strategy (for example, `retry`, `rollback`, `degrade`, or `abort`), capture the updated contract in code or a short note. Create a standalone design doc only when requested or complexity warrants it.
 4. **CRITICAL** `[plugin-core]`: When runtime extensibility — such as optional third-party extensions or implementations that must be loaded or replaced dynamically — is a genuine product requirement, enforce `Minimal Core` + `Plug-in Architecture`: core runs without optional plugins, with a unified load and unload contract, capability and compatibility checks, and isolated plugin failure with graceful degradation. A single mandatory integration does not qualify; avoid pluginization unless this condition holds.
 5. **ALWAYS** `[open-questions]`: Centralize unresolved design questions; resolve or explicitly mark them non-blocking before implementation.
 

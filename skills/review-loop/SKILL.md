@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: Gate delivery of significant or explicitly reviewed changes after implementation and ordinary verification. Use for cross-module, stateful, public-interface, shared-configuration, security-sensitive, broad-refactor, or high-regression-risk changes. Orchestrate fresh read-only adversarial-review passes, safe fixes, and bounded re-verification until Converged, clearly blocked, or user input is required.
+description: Run a bounded final adversarial-review loop only when the user explicitly invokes the `review-loop` skill or unambiguously asks for the review loop. After implementation and ordinary verification, orchestrate fresh read-only adversarial-review passes, safe fixes, and bounded re-verification until Converged, clearly blocked, or user input is required. Never infer invocation from change size, risk, or significance alone.
 ---
 
 # Review Loop
