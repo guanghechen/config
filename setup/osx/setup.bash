@@ -73,8 +73,8 @@ ghc_ensure_kit_worktree() {
     git -C "$repomain" worktree add "$repoworktree" kit
   else
     printf "\e[96m  [setup config] creating worktree %s from origin/kit...\e[0m\n" "$repoworktree"
-    git -C "$repomain" fetch origin
-    git -C "$repomain" worktree add --track -b kit "$repoworktree" origin/kit
+    git -C "$repomain" fetch origin &&
+      git -C "$repomain" worktree add --track -b kit "$repoworktree" origin/kit
   fi
 }
 
