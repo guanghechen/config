@@ -64,7 +64,6 @@ ghc_step_optional miniforge ghc_run_script "$setup_nix/env/miniforge.bash"
 ghc_step_optional bun ghc_run_script "$setup_nix/env/bun.bash"
 ghc_step_optional fish ghc_run_script "$setup_nix/bot/fish.bash"
 ghc_step_optional node ghc_run_script "$setup_nix/env/node.bash"
-ghc_step_optional pnpm ghc_run_script "$setup_nix/env/pnpm.bash"
 
 ## Refresh PATH after installers ran in isolated shells.
 source "$setup_nix/bot/env.bash" || exit 1

@@ -18,6 +18,10 @@ brew update
 printf "\e[96m  [setup homebrew] installing fnm...\e[0m\n"
 brew install fnm
 
+### Install node package manager
+printf "\e[96m  [setup homebrew] installing pnpm...\e[0m\n"
+brew install pnpm
+
 ### Install python
 printf "\e[96m  [setup homebrew] installing uv...\e[0m\n"
 brew install uv
