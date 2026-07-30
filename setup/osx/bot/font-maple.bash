@@ -10,6 +10,30 @@ ghc_setup_font_maple() {
   local font_dir="/Library/Fonts"
   local local_dir="$HOME/Library/Fonts"
   local workdir="$HOME/download/fonts/Maple"
+  local force=false
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --force) force=true ;;
+      *)
+        printf "unknown font setup argument: %s\n" "$1" >&2
+        return 2
+        ;;
+    esac
+    shift
+  done
+
+  if [ "$force" = false ]; then
+    if ghc_font_files_exist "$font_dir" "${GHC_MAPLE_FONT_FILES[@]}" ||
+      ghc_font_files_exist "$local_dir" "${GHC_MAPLE_FONT_FILES[@]}"; then
+      printf "\e[93m  [setup font (%s)] already installed. (skipped)\e[0m\n" "$label"
+      return 0
+    fi
+  fi
+
+  if [ "$force" = true ]; then
+    printf "\e[96m  [setup font (%s)] force reinstalling...\e[0m\n" "$label"
+  fi
 
   ## Fonts are reproducible artifacts: verify before replacing them, and rerun
   ## setup after any install or cache failure.
@@ -19,7 +43,8 @@ ghc_setup_font_maple() {
   rm -f "$local_dir"/MapleMono*.ttf || return 1
   sudo rm -f "$font_dir"/MapleMono*.ttf || return 1
   sudo install -m 0644 "$workdir"/*.ttf "$font_dir/" || return 1
-  sudo atsutil databases -remove || return 1
+  printf "\e[92m  [setup font (%s)] installed %s fonts into %s.\e[0m\n" \
+    "$label" "${#GHC_MAPLE_FONT_FILES[@]}" "$font_dir"
 }
 
-ghc_setup_font_maple
+ghc_setup_font_maple "$@"

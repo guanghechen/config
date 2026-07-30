@@ -3,6 +3,34 @@
 ## Fetch a clean, verified set of font files. The staging directory is
 ## disposable; callers own the live target and recover by rerunning setup.
 
+GHC_MAPLE_FONT_FILES=(
+  MapleMono-NF-CN-Bold.ttf
+  MapleMono-NF-CN-BoldItalic.ttf
+  MapleMono-NF-CN-ExtraBold.ttf
+  MapleMono-NF-CN-ExtraBoldItalic.ttf
+  MapleMono-NF-CN-ExtraLight.ttf
+  MapleMono-NF-CN-ExtraLightItalic.ttf
+  MapleMono-NF-CN-Italic.ttf
+  MapleMono-NF-CN-Light.ttf
+  MapleMono-NF-CN-LightItalic.ttf
+  MapleMono-NF-CN-Medium.ttf
+  MapleMono-NF-CN-MediumItalic.ttf
+  MapleMono-NF-CN-Regular.ttf
+  MapleMono-NF-CN-SemiBold.ttf
+  MapleMono-NF-CN-SemiBoldItalic.ttf
+  MapleMono-NF-CN-Thin.ttf
+  MapleMono-NF-CN-ThinItalic.ttf
+)
+
+ghc_font_files_exist() {
+  local font_dir="$1" font_file
+  shift
+
+  for font_file in "$@"; do
+    [ -f "$font_dir/$font_file" ] || return 1
+  done
+}
+
 ## macOS ships `shasum`, Linux ships `sha256sum`.
 ghc_font_sha256() {
   local output
