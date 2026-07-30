@@ -8,7 +8,6 @@ function ghc-update-agents {
   $agents = @(
     "@anthropic-ai/claude-code"
     "@google/gemini-cli"
-    "@github/copilot"
     "opencode-ai"
   )
 
