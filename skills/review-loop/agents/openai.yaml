@@ -1,4 +1,6 @@
 interface:
   display_name: "Review Loop"
-  short_description: "Gate significant changes with iterative adversarial review"
-  default_prompt: "Use $review-loop to gate the current significant change with bounded fresh adversarial reviews until Converged, clearly blocked, or user input is required."
+  short_description: "Run an explicitly requested iterative adversarial review"
+  default_prompt: "Use $review-loop to review the current completed changes with bounded fresh adversarial-review passes until Converged, clearly blocked, or user input is required."
+policy:
+  allow_implicit_invocation: false
