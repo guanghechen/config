@@ -38,10 +38,15 @@ function M:cancel()
     return
   end
   self._cancelled = true
-  for _, cb in ipairs(self._callbacks) do
+
+  -- Detach before dispatch: a callback may unsubscribe itself while it runs (Future does, via
+  -- __cleanup__), and removing from the array being iterated would skip the following callback.
+  local callbacks = self._callbacks ---@type fun()[]
+  self._callbacks = {}
+
+  for _, cb in ipairs(callbacks) do
     pcall(cb)
   end
-  self._callbacks = {}
 end
 
 ---Register a callback to be called when the token is cancelled.

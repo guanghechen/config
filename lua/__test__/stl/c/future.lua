@@ -200,6 +200,45 @@ t:test("get_error: returns error when cancelled", function()
   t.assert_true(err ~= nil and string.find(err, "cancelled") ~= nil)
 end)
 
+t:test("token: every future sharing a token is cancelled", function()
+  -- Each future unsubscribes itself from the token while the token dispatches, so a token that
+  -- mutated its callback array mid-iteration used to cancel only every second future.
+  local token = CancellationToken.new()
+  local futures = {} ---@type stl.c.Future[]
+  for i = 1, 6 do
+    futures[i] = Future.new({ token = token })
+  end
+
+  token:cancel()
+
+  local states = {} ---@type string[]
+  for i = 1, #futures do
+    states[i] = futures[i]:is_cancelled() and "cancelled" or "pending"
+  end
+  t.assert_eq(
+    "cancelled,cancelled,cancelled,cancelled,cancelled,cancelled",
+    table.concat(states, ","),
+    "all six futures cancelled"
+  )
+end)
+
+t:test("token: a shared token still runs plain cancel callbacks", function()
+  local token = CancellationToken.new()
+  local future = Future.new({ token = token })
+  local aborted = {} ---@type string[]
+  token:on_cancel(function()
+    aborted[#aborted + 1] = "job-1"
+  end)
+  token:on_cancel(function()
+    aborted[#aborted + 1] = "job-2"
+  end)
+
+  token:cancel()
+
+  t.assert_true(future:is_cancelled(), "future cancelled")
+  t.assert_eq("job-1,job-2", table.concat(aborted, ","), "both abort callbacks run")
+end)
+
 ----------------------------------------------------------------------------------------------------
 -- finally tests
 ----------------------------------------------------------------------------------------------------
@@ -892,6 +931,47 @@ t:test("allSettled: supports token cancellation", function()
 
   token:cancel()
   t.assert_true(future:is_cancelled())
+end)
+
+t:test("finally: a settled future still delivers a falsy result", function()
+  -- `self._result or self._error` handed the error slot to the callback whenever the result was
+  -- `false` or `nil`, so the same future produced different values depending on whether the
+  -- callback subscribed before or after it settled.
+  --
+  -- These must be identity assertions. The defect's symptom is `nil`, and `assert_false` only
+  -- tests truthiness -- it accepts `nil`, so it passes against the unfixed implementation.
+  local after_ok, after_result = "unset", "unset"
+  Future.resolve(false):finally(function(ok, result)
+    after_ok, after_result = ok, result
+  end)
+  t.assert_eq(true, after_ok, "resolved")
+  t.assert_eq(false, after_result, "false survives on an already-settled future")
+
+  -- Control: this path never went through the `or`, so it held before the fix too.
+  local before_ok, before_result = "unset", "unset"
+  local pending = Future.new()
+  pending:finally(function(ok, result)
+    before_ok, before_result = ok, result
+  end)
+  pending:__resolve__(false)
+  t.assert_eq(true, before_ok, "resolved")
+  t.assert_eq(false, before_result, "and matches the subscribe-before-settle path")
+
+  -- A resolved future has no error, so `nil or nil` was already `nil`: this pins the contract but
+  -- cannot fail against the old code. The rejected side is what tells the two slots apart.
+  local nil_ok, nil_result = "unset", "unset"
+  Future.resolve(nil):finally(function(ok, result)
+    nil_ok, nil_result = ok, result
+  end)
+  t.assert_eq(true, nil_ok, "a nil result still reports success")
+  t.assert_nil(nil_result, "nil result is not replaced by the error")
+
+  local rejected_ok, rejected_result = "unset", "unset"
+  Future.reject("boom"):finally(function(ok, result)
+    rejected_ok, rejected_result = ok, result
+  end)
+  t.assert_eq(false, rejected_ok, "a settled rejection still reports failure")
+  t.assert_eq("boom", rejected_result, "and delivers the error, not the result slot")
 end)
 
 t:run()

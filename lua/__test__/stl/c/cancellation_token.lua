@@ -117,6 +117,44 @@ t:test("cancel: handles callback errors gracefully", function()
   t.assert_true(second_called, "second callback should still be called")
 end)
 
+t:test("cancel: a callback that unsubscribes itself does not skip the next one", function()
+  -- stl.c.Future does exactly this from __cleanup__. Removing an entry from the array being
+  -- iterated used to shift it left, so ipairs skipped every second callback.
+  local token = CancellationToken.new()
+  local fired = {} ---@type integer[]
+  local subs = {} ---@type stl.c.IUnsubscribable[]
+
+  for i = 1, 4 do
+    subs[i] = token:on_cancel(function()
+      fired[#fired + 1] = i
+      subs[i].unsubscribe()
+    end)
+  end
+
+  token:cancel()
+  t.assert_eq("1,2,3,4", table.concat(fired, ","), "every callback fires exactly once, in order")
+end)
+
+t:test("cancel: a self-unsubscribing callback does not hide its neighbours", function()
+  -- Mixed shape: one self-unsubscribing callback plus plain work-cancelling ones.
+  local token = CancellationToken.new()
+  local aborted = {} ---@type string[]
+
+  local sub = token:on_cancel(function()
+    ---@diagnostic disable-next-line: need-check-nil
+    sub.unsubscribe()
+  end)
+  token:on_cancel(function()
+    aborted[#aborted + 1] = "job-1"
+  end)
+  token:on_cancel(function()
+    aborted[#aborted + 1] = "job-2"
+  end)
+
+  token:cancel()
+  t.assert_eq("job-1,job-2", table.concat(aborted, ","), "both abort callbacks run")
+end)
+
 ----------------------------------------------------------------------------------------------------
 -- on_cancel tests
 ----------------------------------------------------------------------------------------------------

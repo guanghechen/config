@@ -141,7 +141,14 @@ end
 ---@return nil
 function M:finally(callback)
   if self:is_done() then
-    pcall(callback, self._state == "resolved", self._result or self._error)
+    -- Branch on the state rather than falling back with `or`: a future resolved with `false` or
+    -- `nil` would otherwise hand the callback the error slot, so the same future delivered
+    -- different values depending on whether the callback subscribed before or after it settled.
+    if self._state == "resolved" then
+      pcall(callback, true, self._result)
+    else
+      pcall(callback, false, self._error)
+    end
   else
     self._listeners[#self._listeners + 1] = callback
   end
