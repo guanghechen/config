@@ -28,9 +28,11 @@ if command -v fnm >/dev/null 2>&1; then
 fi
 
 ### Miniforge3
-if [ -f "$HOME/.app/miniforge3/bin/conda" ] && [[ ":$PATH:" != *":$HOME/.app/miniforge3/bin:"* ]]; then
+if [ -f "$HOME/.app/miniforge3/bin/conda" ]; then
   export HOME_MINIFORGE="$HOME/.app/miniforge3"
-  export PATH="$HOME/.app/miniforge3/bin:$PATH"
+  if [[ ":$PATH:" != *":$HOME_MINIFORGE/bin:"* ]]; then
+    export PATH="$HOME_MINIFORGE/bin:$PATH"
+  fi
   _ghc_conda_env="$("$HOME/.app/miniforge3/bin/conda" shell.bash hook)" || return 1
   eval "$_ghc_conda_env" || return 1
   unset _ghc_conda_env
