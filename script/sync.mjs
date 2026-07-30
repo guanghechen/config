@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const CONFIG_DIVIDER = '#'.repeat(100)
+const DEFAULT_THEME_FILENAME = 'vsc-dark-modern.json'
 
 const THEME_COLOR_KEYS = [
   'panel_bg',
@@ -106,8 +107,9 @@ function extractManualTail(current) {
 }
 
 /**
- * config.shared.toml owns the first section, theme/local.json owns the second,
- * and the content after the second divider is preserved as the manual tail.
+ * config.shared.toml owns the first section, the selected theme owns the
+ * second, and the content after the second divider is preserved as the manual
+ * tail.
  *
  * @param {string} shared
  * @param {string} theme
@@ -126,17 +128,31 @@ export function renderConfig(shared, theme, current) {
 
 /**
  * @param {string} filepath
- * @returns {Promise<string>}
+ * @returns {Promise<string | null>}
  */
-async function readExistingConfig(filepath) {
+async function readFileIfExists(filepath) {
   try {
     return await fs.readFile(filepath, 'utf8')
   } catch (error) {
     if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
-      return ''
+      return null
     }
     throw error
   }
+}
+
+/**
+ * Use the machine-local theme when selected; otherwise use the repository
+ * default preset next to it.
+ *
+ * @param {string} themePath
+ * @returns {Promise<string>}
+ */
+async function readTheme(themePath) {
+  const localTheme = await readFileIfExists(themePath)
+  if (localTheme !== null) return localTheme
+
+  return fs.readFile(path.join(path.dirname(themePath), DEFAULT_THEME_FILENAME), 'utf8')
 }
 
 /**
@@ -193,12 +209,13 @@ export async function writeFileAtomically(filepath, content) {
  * @returns {Promise<boolean>}
  */
 export async function syncConfig(sharedPath, themePath, configPath) {
-  const [shared, themeJson, current] = await Promise.all([
+  const [shared, themeJson, existingConfig] = await Promise.all([
     fs.readFile(sharedPath, 'utf8'),
-    fs.readFile(themePath, 'utf8'),
-    readExistingConfig(configPath),
+    readTheme(themePath),
+    readFileIfExists(configPath),
   ])
   const theme = renderTheme(JSON.parse(themeJson))
+  const current = existingConfig ?? ''
   const next = renderConfig(shared, theme, current)
   if (next === current) return false
 

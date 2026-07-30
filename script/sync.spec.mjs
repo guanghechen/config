@@ -142,7 +142,44 @@ test('syncs all three sections and skips an unchanged config', async t => {
   assert.equal(await syncConfig(sharedPath, themePath, configPath), false)
 })
 
-test('does not overwrite config when theme input is invalid or missing', async t => {
+test('falls back to vsc-dark-modern when local theme selection is missing', async t => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'herdr-sync-spec-'))
+  t.after(() => fs.rm(tempDir, { recursive: true, force: true }))
+
+  const sharedPath = path.join(tempDir, 'config.shared.toml')
+  const themePath = path.join(tempDir, 'local.json')
+  const fallbackThemePath = path.join(tempDir, 'vsc-dark-modern.json')
+  const configPath = path.join(tempDir, 'config.toml')
+  const localTheme = { ...THEME, name: 'local-theme' }
+  const expectedFallback = [
+    'onboarding = false',
+    CONFIG_DIVIDER,
+    THEME_TOML,
+    CONFIG_DIVIDER,
+    '',
+  ].join('\n\n')
+  const expectedLocal = [
+    'onboarding = false',
+    CONFIG_DIVIDER,
+    renderTheme(localTheme),
+    CONFIG_DIVIDER,
+    '',
+  ].join('\n\n')
+  await Promise.all([
+    fs.writeFile(sharedPath, 'onboarding = false\n', 'utf8'),
+    fs.writeFile(fallbackThemePath, JSON.stringify(THEME), 'utf8'),
+  ])
+
+  assert.equal(await syncConfig(sharedPath, themePath, configPath), true)
+  assert.equal(await fs.readFile(configPath, 'utf8'), expectedFallback)
+  assert.equal(await syncConfig(sharedPath, themePath, configPath), false)
+
+  await fs.writeFile(themePath, JSON.stringify(localTheme), 'utf8')
+  assert.equal(await syncConfig(sharedPath, themePath, configPath), true)
+  assert.equal(await fs.readFile(configPath, 'utf8'), expectedLocal)
+})
+
+test('does not overwrite config when theme input is invalid or unavailable', async t => {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'herdr-sync-spec-'))
   t.after(() => fs.rm(tempDir, { recursive: true, force: true }))
 
