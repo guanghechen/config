@@ -41,7 +41,7 @@
           "branch": "codex",
           "editions": ["nix", "nix-remote", "osx", "win"],
           "on": {
-            "synced": "node script/setup.mjs"
+            "synced": "node script/cli/sync.mjs"
           }
         },
         {
