@@ -67,7 +67,7 @@ matcher = "apply_patch"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = 'node "$HOME/.config/codex/script/hook/pre-tool-use.mjs"'
+command = 'node "${CODEX_HOME}/script/hook/pre-tool-use.mjs"'
 timeout = 5
 statusMessage = "Checking sensitive file access"
 
@@ -76,7 +76,7 @@ matcher = "^Bash$"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = 'node "$HOME/.config/codex/script/hook/pre-bash-sensitive.mjs"'
+command = 'node "${CODEX_HOME}/script/hook/pre-bash-sensitive.mjs"'
 timeout = 5
 statusMessage = "Checking sensitive path usage"
 

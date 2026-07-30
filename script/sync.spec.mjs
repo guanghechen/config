@@ -15,9 +15,89 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { renderSharedConfig } from "./sync.mjs";
 
 const DIVIDER = "#".repeat(100);
 const SOURCE_SCRIPT_PATH = fileURLToPath(new URL("./sync.mjs", import.meta.url));
+
+test("renders HOME in TOML strings and leaves comments and unknown symbols unchanged", () => {
+  const source = [
+    'basic = "${HOME}/basic"',
+    "literal = '${HOME}/literal'",
+    'codex = "${CODEX_HOME}/config"',
+    'unknown = "${TOKEN}"',
+    "# ${HOME}",
+  ].join("\n");
+
+  const actual = renderSharedConfig(source, {
+    environment: { CODEX_HOME: "/opt/codex", HOME: "/home/alice" },
+    platform: "linux",
+  });
+
+  assert.equal(actual, [
+    'basic = "/home/alice/basic"',
+    "literal = '/home/alice/literal'",
+    'codex = "/opt/codex/config"',
+    'unknown = "${TOKEN}"',
+    "# ${HOME}",
+  ].join("\n"));
+});
+
+test("renders USERPROFILE with TOML-safe escaping on Windows", () => {
+  const source = [
+    'basic = "${HOME}/config"',
+    "literal = '${HOME}/config'",
+  ].join("\n");
+
+  const actual = renderSharedConfig(source, {
+    environment: { HOME: "/wrong", USERPROFILE: "C:\\Users\\Alice" },
+    platform: "win32",
+  });
+
+  assert.equal(actual, [
+    'basic = "C:\\\\Users\\\\Alice/config"',
+    "literal = 'C:\\Users\\Alice/config'",
+  ].join("\n"));
+});
+
+test("renders symbols after multiline strings ending with four quotes", () => {
+  const source = [
+    'basic = """${HOME}""""',
+    "literal = '''${HOME}''''",
+    'after = "${HOME}/after"',
+  ].join("\n");
+
+  const actual = renderSharedConfig(source, {
+    environment: { HOME: "/home/alice" },
+    platform: "linux",
+  });
+
+  assert.equal(actual, [
+    'basic = """/home/alice""""',
+    "literal = '''/home/alice''''",
+    'after = "/home/alice/after"',
+  ].join("\n"));
+});
+
+test("rejects a supported symbol outside a TOML string", () => {
+  assert.throws(
+    () => renderSharedConfig("path = ${HOME}\n", {
+      environment: { HOME: "/home/alice" },
+      platform: "linux",
+    }),
+    /must appear inside a TOML string/,
+  );
+});
+
+test("rejects CODEX_HOME when its environment variable is missing", () => {
+  assert.throws(
+    () => renderSharedConfig('path = "${CODEX_HOME}/config"\n', {
+      environment: { HOME: "/home/alice" },
+      platform: "linux",
+    }),
+    /CODEX_HOME is not set/,
+  );
+});
 
 test(
   "replaces only the shared prefix and preserves the first divider onward",
@@ -57,6 +137,22 @@ test("creates config.toml with a private mode when it does not exist", async (t)
     `model = "new"\n\n${DIVIDER}\n\n`,
   );
   assert.equal((await stat(fixture.localConfigPath)).mode & 0o7777, 0o600);
+});
+
+test("leaves config.toml unchanged when the HOME environment variable is missing", async (t) => {
+  const fixture = await createFixture(t);
+  const originalConfig = `model = "old"\n\n${DIVIDER}\n\n[local]\nvalue = "keep"\n`;
+  const environment = { ...process.env };
+  delete environment.HOME;
+  delete environment.USERPROFILE;
+  await writeFile(fixture.sharedConfigPath, 'path = "${HOME}/config"\n');
+  await writeFile(fixture.localConfigPath, originalConfig);
+
+  const result = runSync(fixture.scriptPath, environment);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /(?:HOME|USERPROFILE) is not set/);
+  assert.equal(await readFile(fixture.localConfigPath, "utf8"), originalConfig);
 });
 
 test("leaves an undivided config.toml unchanged", async (t) => {
@@ -103,8 +199,11 @@ async function createFixture(t) {
   };
 }
 
-function runSync(scriptPath) {
-  return spawnSync(process.execPath, [scriptPath], { encoding: "utf8" });
+function runSync(scriptPath, environment = process.env) {
+  return spawnSync(process.execPath, [scriptPath], {
+    encoding: "utf8",
+    env: environment,
+  });
 }
 
 async function temporaryFiles(fixture) {
