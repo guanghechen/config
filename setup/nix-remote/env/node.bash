@@ -13,7 +13,7 @@ fnm use "$GHC_APP_EDITION_NODE"
 fnm default "$GHC_APP_EDITION_NODE"
 
 printf "\e[96m  [setup node] installing npm pm2 yarn prettier\e[0m\n"
-npm install -g npm pm2 yarn prettier
+npm install -g npm pm2 yarn prettier --registry=https://registry.npmjs.org
 
 printf "\e[96m  [setup node] installing @guanghechen/kit\e[0m\n"
-npm install -g @guanghechen/kit
+npm install -g @guanghechen/kit --registry=https://registry.npmjs.org
