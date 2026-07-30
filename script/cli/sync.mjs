@@ -22,7 +22,7 @@ const SPECIAL_SYMBOLS = new Map([
 ]);
 
 const scriptPath = fileURLToPath(import.meta.url);
-const defaultCodexHome = path.resolve(path.dirname(scriptPath), "..");
+const defaultCodexHome = path.resolve(path.dirname(scriptPath), "../..");
 
 async function main() {
   const localConfigPath = await syncConfig();

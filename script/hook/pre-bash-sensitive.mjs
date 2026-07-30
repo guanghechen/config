@@ -10,8 +10,12 @@
  */
 
 import { readFileSync } from "node:fs"
-import { SENSITIVE_PATHS, SENSITIVE_PATTERNS } from "./sensitive.mjs"
-import { allow, denyPreToolUse } from "./util.mjs"
+import {
+  allow,
+  denyPreToolUse,
+  SENSITIVE_PATHS,
+  SENSITIVE_PATTERNS,
+} from "../util.mjs"
 
 const DANGEROUS_COMMANDS = new Set([
   "cat", "bat", "less", "more", "head", "tail", "tac", "nl", "od", "xxd", "hexdump", "strings",

@@ -187,8 +187,8 @@ async function createFixture(t) {
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "codex-sync-test-"));
   t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
 
-  const scriptPath = path.join(temporaryRoot, "script", "sync.mjs");
-  await mkdir(path.dirname(scriptPath));
+  const scriptPath = path.join(temporaryRoot, "script", "cli", "sync.mjs");
+  await mkdir(path.dirname(scriptPath), { recursive: true });
   await copyFile(SOURCE_SCRIPT_PATH, scriptPath);
 
   return {

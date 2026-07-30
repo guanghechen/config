@@ -2,8 +2,7 @@
 
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import { isSensitiveFile } from "./sensitive.mjs"
-import { allow, denyPreToolUse } from "./util.mjs"
+import { allow, denyPreToolUse, isSensitiveFile } from "../util.mjs"
 
 function extractPatchPaths(patchText) {
   if (typeof patchText !== "string") return []
