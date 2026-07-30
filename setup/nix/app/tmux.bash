@@ -14,7 +14,7 @@ if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then
   fi
 
   if [ "$(uname -s)" = "Linux" ]; then
-    sudo apt install bison libevent-dev libncurses5-dev libncursesw5-dev
+    sudo apt install -y bison libevent-dev libncurses5-dev libncursesw5-dev
     cd "$root_tmux" || return 1
     sh autogen.sh
     ./configure

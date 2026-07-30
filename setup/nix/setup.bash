@@ -12,7 +12,7 @@ ghc_prepare_system() {
     sudo apt install -y bash-completion build-essential libvips-dev unixodbc &&
     sudo apt install -y clangd colordiff file fontconfig libunwind8 net-tools vim &&
     sudo apt install -y wl-clipboard &&
-    sudo apt autoremove &&
+    sudo apt autoremove -y &&
     sudo apt autoclean &&
     sudo locale-gen en_US.UTF-8 &&
     sudo update-locale LANG=en_US.UTF-8
