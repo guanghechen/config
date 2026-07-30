@@ -86,6 +86,13 @@
           "editions": ["nix", "nix-remote", "osx", "win"]
         },
         {
+          "branch": "herdr",
+          "editions": ["nix", "nix-remote", "osx"],
+          "on": {
+            "synced": "node script/sync.mjs"
+          }
+        },
+        {
           "branch": "karabiner",
           "editions": ["osx"]
         },
