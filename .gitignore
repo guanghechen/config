@@ -1,0 +1,8 @@
+# Machine-local Herdr runtime state.
+/config.toml
+/.plugins.lock
+/*.log
+/*.log.*
+/*.sock
+/session*.json
+/plugins/
