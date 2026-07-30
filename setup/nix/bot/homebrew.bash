@@ -42,6 +42,10 @@ brew install btop fastfetch httpie
 printf "\e[96m  [setup homebrew] installing github cli...\e[0m\n"
 brew install gh
 
+### Install Codex
+printf "\e[96m  [setup homebrew] installing codex...\e[0m\n"
+brew install --cask codex
+
 ### Install usual tools
 printf "\e[96m  [setup homebrew] installing usual tools...\e[0m\n"
 brew install automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tldr tree tty-clock unzip yt-dlp zoxide
