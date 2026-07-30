@@ -8,8 +8,8 @@ if (fnm list | Select-String -Quiet "v$env:GHC_APP_EDITION_NODE") {
 fnm use $env:GHC_APP_EDITION_NODE
 fnm default $env:GHC_APP_EDITION_NODE
 
-Write-Host "  [setup node] installing npm pm2 yarn prettier" -ForegroundColor Cyan
-npm install -g npm pm2 yarn prettier
+Write-Host "  [setup node] installing npm yarn prettier" -ForegroundColor Cyan
+npm install -g npm yarn prettier
 
 ## Setup tree-sitter-cli
 if (npm list -g tree-sitter-cli 2>$null) {
