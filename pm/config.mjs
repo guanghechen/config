@@ -36,32 +36,6 @@ const apps = [
     args: ['copilot', 'start', '--port=4747'],
   },
   {
-    enabled: enabled.copilot_api,
-    autostart: false,
-    name: 'copilot-api',
-    cwd: repos.copilot_api,
-    cmd: 'bun',
-    args: ['run', 'start', 'start', `--port=${GHC_COPILOT_API_PORT}`],
-    env: {
-      NODE_ENV: 'production',
-      PWD: repos.copilot_api,
-      HOST: GHC_COPILOT_API_HOST,
-    },
-  },
-  {
-    enabled: enabled.copilot_api_default,
-    autostart: false,
-    name: 'copilot-api-default',
-    cwd: repos.copilot_api,
-    cmd: 'bun',
-    args: ['run', 'start', 'start'],
-    env: {
-      NODE_ENV: 'production',
-      PWD: repos.copilot_api,
-      HOST: GHC_COPILOT_API_HOST,
-    },
-  },
-  {
     enabled: enabled.copilot_api_codex,
     autostart: false,
     name: 'copilot-api-codex',
