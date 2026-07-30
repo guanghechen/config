@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { readFile, rename, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { DIVIDER, syncConfig, writeAtomic } from "./sync.mjs";
 
-const DIVIDER = "#".repeat(100);
-const DIVIDER_RE = /^#{100}\n/m;
+const DIVIDER_RE = new RegExp(`^${DIVIDER}(?=\\r?$)`, "m");
 
 const HOOK_EVENT_KEYS = new Map([
   ["PreToolUse", "pre_tool_use"],
@@ -37,12 +37,17 @@ const codexHome = path.resolve(process.env.CODEX_SETUP_HOME || path.join(scriptD
 const sharedConfigPath = path.join(codexHome, "config.shared.toml");
 const localConfigPath = path.join(codexHome, "config.toml");
 
+// Setup is the lifecycle entry point: syncConfig owns the shared prefix, while
+// this file owns legacy migration and the generated hooks.state suffix sections.
 async function main() {
   const sharedConfig = await readFile(sharedConfigPath, "utf8");
-  const existingConfig = await readOptionalFile(localConfigPath);
-  const suffix = existingConfig === null ? "" : localConfigSuffix(existingConfig, sharedConfig);
   const trustedHooks = discoverCommandHooks(sharedConfig);
-  const nextConfig = buildConfig(sharedConfig, suffix, trustedHooks);
+
+  await migrateLegacyConfig(sharedConfig);
+  await syncConfig({ codexHome });
+
+  const syncedConfig = await readFile(localConfigPath, "utf8");
+  const nextConfig = replaceHooksState(syncedConfig, trustedHooks);
 
   await writeAtomic(localConfigPath, nextConfig);
   console.log(`updated ${localConfigPath}`);
@@ -59,29 +64,40 @@ async function readOptionalFile(filePath) {
   }
 }
 
-async function writeAtomic(filePath, contents) {
-  const tmpPath = `${filePath}.${process.pid}.tmp`;
-  await writeFile(tmpPath, contents);
-  await rename(tmpPath, filePath);
-}
+async function migrateLegacyConfig(sharedConfig) {
+  const existingConfig = await readOptionalFile(localConfigPath);
+  if (existingConfig === null || DIVIDER_RE.test(existingConfig)) {
+    return;
+  }
 
-function buildConfig(sharedConfig, suffix, trustedHooks) {
+  // syncConfig deliberately refuses to guess the ownership boundary. Setup owns
+  // this one-time compatibility path and makes that boundary explicit first.
+  const suffix = trimLeadingNewlines(migrateUndividedSuffix(existingConfig, sharedConfig));
   const prefix = `${trimTrailingNewlines(sharedConfig)}\n\n${DIVIDER}\n\n`;
-  const trustState = renderTrustState(trustedHooks, localConfigPath);
-  const cleanSuffix = trimLeadingNewlines(removeHooksState(suffix));
-
-  if (!cleanSuffix) {
-    return `${prefix}${trustState}`;
-  }
-  return `${prefix}${trustState}\n${cleanSuffix}`;
+  await writeAtomic(localConfigPath, `${prefix}${suffix}`);
 }
 
-function localConfigSuffix(existingConfig, sharedConfig) {
-  const dividerMatch = existingConfig.match(DIVIDER_RE);
-  if (dividerMatch) {
-    return existingConfig.slice(dividerMatch.index + dividerMatch[0].length);
+function replaceHooksState(syncedConfig, trustedHooks) {
+  const dividerMatch = syncedConfig.match(DIVIDER_RE);
+  if (!dividerMatch) {
+    throw new Error(`sync did not create the expected divider in ${localConfigPath}`);
   }
-  return migrateUndividedSuffix(existingConfig, sharedConfig);
+
+  const dividerEnd = dividerMatch.index + DIVIDER.length;
+  const lineEnding = syncedConfig.startsWith("\r\n", dividerEnd) ? "\r\n" : "\n";
+  const prefixThroughDivider = syncedConfig.slice(0, dividerEnd + lineEnding.length);
+  const suffix = syncedConfig.slice(dividerEnd + lineEnding.length);
+  const trustState = renderTrustState(trustedHooks, localConfigPath, lineEnding);
+  const localSuffix = trimLeadingNewlines(removeHooksState(suffix));
+
+  const separatorAfterTrustState = trustState && localSuffix ? lineEnding : "";
+  return (
+    prefixThroughDivider
+    + lineEnding
+    + trustState
+    + separatorAfterTrustState
+    + localSuffix
+  );
 }
 
 function migrateUndividedSuffix(existingConfig, sharedConfig) {
@@ -131,13 +147,22 @@ function parseSectionHeader(line) {
 }
 
 function removeHooksState(toml) {
-  return sectionBlocks(toml)
-    .filter((block) => !block.header.startsWith("[hooks.state"))
-    .map((block) => block.text.trimEnd())
-    .join("\n\n");
+  const keptLines = [];
+  let removing = false;
+
+  for (const line of toml.split(/(?<=\n)/u)) {
+    const header = parseSectionHeader(line);
+    if (header) {
+      removing = header === "[hooks.state]" || header.startsWith("[hooks.state.");
+    }
+    if (!removing) {
+      keptLines.push(line);
+    }
+  }
+  return keptLines.join("");
 }
 
-function renderTrustState(hooks, sourcePath) {
+function renderTrustState(hooks, sourcePath, lineEnding) {
   if (hooks.length === 0) {
     return "";
   }
@@ -149,7 +174,7 @@ function renderTrustState(hooks, sourcePath) {
     lines.push(`trusted_hash = "${hook.currentHash}"`);
     lines.push("");
   }
-  return trimTrailingNewlines(lines.join("\n")) + "\n";
+  return trimTrailingNewlines(lines.join(lineEnding)) + lineEnding;
 }
 
 function tomlBasicString(value) {
@@ -332,11 +357,11 @@ function canonicalJson(value) {
 }
 
 function trimTrailingNewlines(value) {
-  return value.replace(/\n+$/u, "");
+  return value.replace(/(?:\r?\n)+$/u, "");
 }
 
 function trimLeadingNewlines(value) {
-  return value.replace(/^\n+/u, "");
+  return value.replace(/^(?:\r?\n)+/u, "");
 }
 
 main().catch((error) => {

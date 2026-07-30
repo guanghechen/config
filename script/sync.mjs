@@ -8,28 +8,34 @@ import { fileURLToPath } from "node:url";
 // Unlike setup.mjs, this command never migrates or regenerates local state:
 // config.shared.toml owns the prefix, while the first divider and everything
 // after it must remain byte-for-byte identical.
-const DIVIDER = "#".repeat(100);
+export const DIVIDER = "#".repeat(100);
 // Exclude the line ending so slicing at match.index also preserves the divider.
 const DIVIDER_RE = new RegExp(`^${DIVIDER}(?=\\r?$)`, "m");
 const DEFAULT_CONFIG_MODE = 0o600;
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const codexHome = path.resolve(scriptDir, "..");
-const sharedConfigPath = path.join(codexHome, "config.shared.toml");
-const localConfigPath = path.join(codexHome, "config.toml");
+const scriptPath = fileURLToPath(import.meta.url);
+const defaultCodexHome = path.resolve(path.dirname(scriptPath), "..");
 
 async function main() {
+  const localConfigPath = await syncConfig();
+  console.log(`updated ${localConfigPath}`);
+}
+
+export async function syncConfig({ codexHome = defaultCodexHome } = {}) {
+  const resolvedCodexHome = path.resolve(codexHome);
+  const sharedConfigPath = path.join(resolvedCodexHome, "config.shared.toml");
+  const localConfigPath = path.join(resolvedCodexHome, "config.toml");
   const [sharedConfig, existingConfig] = await Promise.all([
     readFile(sharedConfigPath, "utf8"),
     readOptionalFile(localConfigPath),
   ]);
   const preservedSuffix = existingConfig === null
     ? `${DIVIDER}\n\n`
-    : localConfigSuffix(existingConfig);
+    : localConfigSuffix(existingConfig, localConfigPath);
   const nextConfig = `${trimTrailingNewlines(sharedConfig)}\n\n${preservedSuffix}`;
 
   await writeAtomic(localConfigPath, nextConfig);
-  console.log(`updated ${localConfigPath}`);
+  return localConfigPath;
 }
 
 async function readOptionalFile(filePath) {
@@ -43,7 +49,7 @@ async function readOptionalFile(filePath) {
   }
 }
 
-function localConfigSuffix(existingConfig) {
+function localConfigSuffix(existingConfig, localConfigPath) {
   const dividerMatch = existingConfig.match(DIVIDER_RE);
   if (!dividerMatch) {
     // Guessing this ownership boundary could overwrite local-only configuration.
@@ -66,7 +72,7 @@ function trimTrailingNewlines(value) {
   return value.replace(/(?:\r?\n)+$/u, "");
 }
 
-async function writeAtomic(filePath, contents) {
+export async function writeAtomic(filePath, contents) {
   // A sibling temporary file keeps rename on the same filesystem and atomic.
   const tmpPath = `${filePath}.${process.pid}.${randomUUID()}.tmp`;
   const mode = await targetMode(filePath);
@@ -100,7 +106,9 @@ async function targetMode(filePath) {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+if (path.resolve(process.argv[1] || "") === scriptPath) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
