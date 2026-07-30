@@ -138,6 +138,10 @@ if (Test-Path "$repoworktree\.git") {
 kit repo set config.edition "win"
 kit repo sync
 
+# The installer writes under CODEX_HOME, so run it after kit prepares the directory.
+Set-Location -Path $repomain
+. .\setup\win\env\codex.ps1
+
 ### Setup xdg configs
 Set-Location -Path $repomain
 . .\setup\win\config.ps1
