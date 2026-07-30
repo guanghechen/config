@@ -5,7 +5,6 @@ function ghc-update-agents --description "Update AI coding agents globally"
     set -l agents \
         @anthropic-ai/claude-code \
         @google/gemini-cli \
-        @github/copilot \
         opencode-ai
 
     if test -z "$_flag_skip_installation"
