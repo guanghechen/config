@@ -12,8 +12,8 @@ fi
 fnm use "$GHC_APP_EDITION_NODE"
 fnm default "$GHC_APP_EDITION_NODE"
 
-printf "\e[96m  [setup node] installing npm prettier\e[0m\n"
-npm install -g npm prettier
+printf "\e[96m  [setup node] installing npm\e[0m\n"
+npm install -g npm
 
 printf "\e[96m  [setup node] installing @guanghechen/kit\e[0m\n"
 npm install -g @guanghechen/kit
