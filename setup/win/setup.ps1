@@ -14,7 +14,6 @@ $env:LG_CONFIG_FILE        = "$env:XDG_CONFIG_HOME\lazygit\config.yml,$env:XDG_C
 $env:LS_COLORS             = "di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93"
 $env:NODE_OPTIONS          = "--max-old-space-size=8192"
 $env:no_proxy              = "localhost,127.0.0.1,::1"
-$env:PNPM_HOME             = "$env:LOCALAPPDATA\pnpm"
 $env:PYTHONIOENCODING      = "utf8"
 $env:PYTHONPYCACHEPREFIX   = "$env:USERPROFILE\.cache\pycache"
 $env:PYTHONUTF8            = 1
@@ -41,7 +40,6 @@ setx LG_CONFIG_FILE        "$env:LG_CONFIG_FILE"
 setx LS_COLORS             "$env:LS_COLORS"
 setx NODE_OPTIONS          "$env:NODE_OPTIONS"
 setx no_proxy              "$env:no_proxy"
-setx PNPM_HOME             "$env:PNPM_HOME"
 setx PYTHONIOENCODING      "$env:PYTHONIOENCODING"
 setx PYTHONPYCACHEPREFIX   "$env:PYTHONPYCACHEPREFIX"
 setx PYTHONUTF8            $env:PYTHONUTF8
@@ -113,9 +111,6 @@ Set-Location -Path $repomain
 
 Set-Location -Path $repomain
 . .\setup\win\env\node.ps1
-
-Set-Location -Path $repomain
-. .\setup\win\env\pnpm.ps1
 
 ## Setup configs
 ### ensure kit worktree

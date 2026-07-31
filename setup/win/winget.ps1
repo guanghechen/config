@@ -11,6 +11,7 @@ winget install -e --source winget --id GitHub.Copilot
 winget install -e --source winget --id Schniz.fnm
 # winget install -e --source winget --id LLVM.LLVM
 winget install -e --source winget --id astral-sh.uv
+winget install -e --source winget --id pnpm.pnpm
 
 # winget install -e --source winget --id Gyan.FFmpeg
 winget install -e --source winget --id ImageMagick.ImageMagick
