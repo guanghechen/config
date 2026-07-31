@@ -16,6 +16,11 @@ if [ -f "$HOME/.cargo/config.toml" ]; then
 else
   printf "\e[96m  [setup rust] setting up ~/.cargo/config.toml...\e[0m\n"
   cp "$HOME/.config/guanghechen/asset/conf/cargo.toml" "$HOME/.cargo/config.toml"
+fi
 
-  cargo install cargo-watch inferno
+if command -v cargo-watch &>/dev/null; then
+  printf "\e[93m  [setup rust] cargo-watch is already installed. (skipped)\e[0m\n"
+else
+  printf "\e[96m  [setup rust] installing cargo-watch...\e[0m\n"
+  cargo install cargo-watch
 fi
