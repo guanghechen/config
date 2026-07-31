@@ -190,13 +190,6 @@ if (-not (Test-IsAdmin)) {
   return
 }
 
-if ($Force -and $installedInAnyScope) {
-  Write-Host "  [setup font (Maple)] force removing existing MapleMono-NF-CN fonts..." -ForegroundColor Cyan
-}
-
-Remove-MapleFontsAt -FontDir $userFontDir -RegistryPath $userRegistryPath
-Remove-MapleFontsAt -FontDir $systemFontDir -RegistryPath $systemRegistryPath
-
 New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
 Remove-Item -Path (Join-Path $downloadDir "*") -Recurse -Force -ErrorAction SilentlyContinue
 
@@ -222,6 +215,13 @@ $missingFontFiles = @($expectedMapleFontFiles | Where-Object { $actualFontNames 
 if ($missingFontFiles.Count -gt 0) {
   throw "Maple font archive is missing expected files: $($missingFontFiles -join ', ')"
 }
+
+if ($Force -and $installedInAnyScope) {
+  Write-Host "  [setup font (Maple)] force removing existing MapleMono-NF-CN fonts..." -ForegroundColor Cyan
+}
+
+Remove-MapleFontsAt -FontDir $userFontDir -RegistryPath $userRegistryPath
+Remove-MapleFontsAt -FontDir $systemFontDir -RegistryPath $systemRegistryPath
 
 New-Item -ItemType Directory -Path $systemFontDir -Force | Out-Null
 New-Item -Path $systemRegistryPath -Force | Out-Null
