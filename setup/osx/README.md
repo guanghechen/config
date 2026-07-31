@@ -9,6 +9,12 @@
 
 - **Desktop & Dock**
   - Enable `Automatically hide and show the Dock`
+  - Under `Mission Control`:
+    - Disable `Automatically rearrange Spaces based on most recent use`
+    - Enable `When switching to an application, switch to a Space with open windows for the application`
+    - Enable `Group windows by application`
+    - Enable `Displays have separate Spaces`
+    - Enable `Drag windows to top of screen to enter Mission Control`
 
 ### Finder
 
