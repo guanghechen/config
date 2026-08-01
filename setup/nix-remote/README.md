@@ -5,7 +5,7 @@
   - Build the docker image.
 
     ```bash
-    docker build -t guanghechen/nix-remote:latest -f ~/.config/guanghechen/setup/nix-remote/Dockerfile ~/.config/guanghechen/nix-remote
+    docker build -t guanghechen/nix-remote:latest -f ~/.config/guanghechen/setup/nix-remote/Dockerfile ~/.config/guanghechen/setup/nix-remote
     ```
 
   - Run the docker container.

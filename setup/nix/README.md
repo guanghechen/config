@@ -5,8 +5,8 @@
   - Build and start the docker image.
 
     ```bash
-    mkdir local/pm
-    cp nix/Dockerfile local/pm/
+    mkdir -p local/pm
+    cp setup/nix/Dockerfile local/pm/
     podman run -it --name dotfiles --hostname dotfiles $(podman build -q local/pm)
     ```
 
@@ -47,7 +47,7 @@
   - Build the docker image.
 
     ```bash
-    docker build -t guanghechen/nix:latest -f ~/.config/guanghechen/setup/nix/Dockerfile ~/.config/guanghechen/nix
+    docker build -t guanghechen/nix:latest -f ~/.config/guanghechen/setup/nix/Dockerfile ~/.config/guanghechen/setup/nix
     ```
 
   - Run the docker container.
