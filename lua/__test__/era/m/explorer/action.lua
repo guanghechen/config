@@ -125,4 +125,148 @@ t:test("create_file: no trailing slash creates file path", function()
   t.assert_eq("/project/foo", calls.opened_filepath, "file should open")
 end)
 
+t:test("cut refreshes the tree without deleting the moved source again", function()
+  local remove_calls = 0
+  local moved_to
+  t:patch_global("stl", {
+    os = {
+      path = {
+        normalize = function(filepath)
+          return filepath
+        end,
+        to_os = function(filepath)
+          return filepath
+        end,
+      },
+    },
+  })
+  t:patch_table(vim.ui, "input", function(_, callback)
+    callback("/project/target.txt")
+  end)
+  t:patch_table(vim, "schedule", function(callback)
+    callback()
+  end)
+
+  local ctx = {
+    get_cursor_filepath = function()
+      return "/project/source.txt"
+    end,
+    refresh = function() end,
+    resource_manager = {
+      move = function(_, _, target)
+        moved_to = target
+        return true
+      end,
+    },
+    sync_cursor_to_filepath = function() end,
+    tree = {
+      get_selected_nodes = function()
+        return {}
+      end,
+      refresh = function() end,
+      remove = function()
+        remove_calls = remove_calls + 1
+      end,
+    },
+  }
+
+  Action.new(ctx):cut()
+
+  t.assert_eq("/project/target.txt", moved_to, "move target")
+  t.assert_eq(0, remove_calls, "post-move remove calls")
+end)
+
+t:test("move_selected refreshes without deleting moved sources again", function()
+  local remove_calls = 0
+  local moved_to
+  t:patch_global("stl", {
+    icon = { symbols = { selection_copy = "C", selection_cut = "X" } },
+    os = {
+      path = {
+        normalize = function(filepath)
+          return filepath:gsub("/+", "/")
+        end,
+        to_os = function(filepath)
+          return filepath
+        end,
+      },
+    },
+    reporter = {
+      error = function() end,
+      info = function() end,
+      warn = function() end,
+    },
+  })
+  t:patch_global("dot", {
+    path = {
+      cwd = function()
+        return "/project"
+      end,
+      join = function(left, right)
+        return left:gsub("/+$", "") .. "/" .. right:gsub("^/+", "")
+      end,
+      relative = function(base, filepath)
+        local prefix = base:gsub("/+$", "") .. "/"
+        return filepath:sub(1, #prefix) == prefix and filepath:sub(#prefix + 1) or filepath
+      end,
+      resolve = function(_, filepath)
+        return filepath
+      end,
+    },
+  })
+  t:patch_global("yoz", {
+    path = {
+      is_absolute = function(filepath)
+        return filepath:sub(1, 1) == "/"
+      end,
+    },
+  })
+  t:patch_global("era", {
+    view = {
+      Act = {
+        new = function(props)
+          return {
+            open = function()
+              props.on_confirm("/target")
+            end,
+          }
+        end,
+      },
+    },
+  })
+  t:patch_table(vim, "schedule", function(callback)
+    callback()
+  end)
+
+  local node = { filepath = "/project/a.txt", nodetype = "F" }
+  local ctx = {
+    fullname = "test",
+    refresh = function() end,
+    resource_manager = {
+      move = function(_, _, target)
+        moved_to = target
+        return true
+      end,
+    },
+    tree = {
+      clear_selection = function() end,
+      get_common_ancestor_path = function()
+        return "/project/"
+      end,
+      get_selected_nodes = function()
+        return { node }
+      end,
+      refresh = function() end,
+      remove = function()
+        remove_calls = remove_calls + 1
+      end,
+    },
+  }
+
+  Action.new(ctx):move_selected()
+
+  t.assert_eq("/target/a.txt", moved_to, "move target")
+  t.assert_eq(0, remove_calls, "post-move remove calls")
+end)
+
 t:run()

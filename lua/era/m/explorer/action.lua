@@ -339,7 +339,7 @@ function M:cut()
     local target_filepath = normalize_filepath(input) ---@type string
     local ok = ctx.resource_manager:move(filepath, target_filepath) ---@type boolean
     if ok then
-      ctx.tree:remove(filepath)
+      -- The move already changed the filesystem; refresh reconciles the stale tree node.
       ctx.tree:refresh(true)
       vim.schedule(function()
         ctx.refresh(true)
@@ -972,8 +972,9 @@ function M:rename()
       return
     end
 
-    local new_filepath = normalize_filepath(root_filepath .. new_relative_path .. (is_directory and "/" or ""), is_directory)
-      ---@type string
+    local new_filepath =
+      normalize_filepath(root_filepath .. new_relative_path .. (is_directory and "/" or ""), is_directory)
+    ---@type string
 
     local ok = ctx.resource_manager:move(filepath, new_filepath) ---@type boolean
     if ok then
@@ -1198,7 +1199,8 @@ function M:paste()
     return
   end
 
-  local target_dir_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath or ctx.get_parent_filepath(cursor_filepath) ---@type string
+  local target_dir_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath
+    or ctx.get_parent_filepath(cursor_filepath) ---@type string
   local target_dir = normalize_filepath(target_dir_filepath) ---@type string
 
   local mode = select_mode == "cut" and "move" or "copy" ---@type era.m.explorer.action.TransferModeEnum
@@ -1343,9 +1345,6 @@ function M:__transfer_selected__(mode, initial_target)
         local ok ---@type boolean
         if is_move then
           ok = ctx.resource_manager:move(node.filepath, target_filepath)
-          if ok then
-            ctx.tree:remove(node.filepath)
-          end
         else
           ok = ctx.resource_manager:copy(node.filepath, target_filepath)
         end
