@@ -347,7 +347,7 @@ function M:insert_dirpath(dirpath)
   if filestate == nil or filestate.nodetype ~= "container" then
     local node = filetree:retrieve(filenode.parent) ---@type stl.c.IFiletreeNode|nil
     while node ~= nil and node.uuid ~= node.parent do
-      local nodestate = statemap[filenode.uuid] ---@type era.m.picker.view.filetree.INodeState|nil
+      local nodestate = statemap[node.uuid] ---@type era.m.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
         break
       end
@@ -403,7 +403,7 @@ function M:insert_filepath(filepath, with_locations)
   if filestate == nil or filestate.nodetype ~= "leaf" then
     local node = filetree:retrieve(filenode.parent) ---@type stl.c.IFiletreeNode|nil
     while node ~= nil and node.uuid ~= node.parent do
-      local nodestate = statemap[filenode.uuid] ---@type era.m.picker.view.filetree.INodeState|nil
+      local nodestate = statemap[node.uuid] ---@type era.m.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
         break
       end
