@@ -391,7 +391,7 @@ function M.watch_changes()
   }))
 
   ---! watch the editor states file changes.
-  if M._storage.editor and vim.fn.filereadable(M._storage.editor) then
+  if M._storage.editor and vim.fn.filereadable(M._storage.editor) ~= 0 then
     local unwatch = stl.fs.watch_file({
       filepath = M._storage.editor,
       ---@diagnostic disable-next-line: unused-local
