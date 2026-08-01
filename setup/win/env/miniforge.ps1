@@ -27,7 +27,7 @@ if (Test-Path $ipythonConfigPath) {
     Write-Host "  [setup miniforge] $ipythonConfigPath already exists. (skipped)" -ForegroundColor Yellow
 } else {
     Write-Host "  [setup miniforge] setting up ipython..." -ForegroundColor Cyan
-    ipython profile create
+    conda run --name lemon ipython profile create
     Add-Content $ipythonConfigPath "`nc.TerminalInteractiveShell.editing_mode = 'vi'"
 }
 

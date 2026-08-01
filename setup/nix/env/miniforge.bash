@@ -92,6 +92,6 @@ if [ -f "$ipython_config_path" ]; then
   printf "\e[93m  [setup miniforge] %s already exists. (skipped).\e[0m\n" "$ipython_config_path"
 else
   printf "\e[96m  [setup miniforge] setting up ipython...\e[0m\n"
-  ipython profile create
+  conda run --name lemon ipython profile create
   printf "\nc.TerminalInteractiveShell.editing_mode = 'vi'\n" >>"$ipython_config_path"
 fi
