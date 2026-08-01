@@ -20,11 +20,6 @@ if (Test-Path $gitconfig_path) {
   Copy-Item -Path $source -Destination $target -Force
 }
 
-# Setup nvim
-Write-Host "  [setup config] setup nvim..." -ForegroundColor Cyan
-Set-Location -Path $repomain
-. .\setup\win\app\nvim.ps1
-
 # Setup rust
 $cargo_config_path = Join-Path "$env:USERPROFILE" ".cargo\config.toml"
 if (Test-Path $cargo_config_path) {
