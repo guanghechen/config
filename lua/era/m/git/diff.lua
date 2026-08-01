@@ -154,7 +154,7 @@ function M.run_diff(old_lines, new_lines)
     hunks[#hunks + 1] = hunk
   end
 
-  return M.denoise_hunks(hunks)
+  return hunks
 end
 
 ---Worker function for async diff (self-contained, no external dependencies)
@@ -256,7 +256,7 @@ local function __run_diff_async__(old_lines, new_lines, callback)
         hunks[#hunks + 1] = hunk
       end
 
-      callback(M.denoise_hunks(hunks))
+      callback(hunks)
     end)
   )
 
@@ -616,71 +616,6 @@ function M.compute_hunk_word_diff(hunk)
         new_lnum = i,
         changes = word_changes,
       }
-    end
-  end
-
-  return result
-end
-
-----------------------------------------------------------------------------------------------------
--- Hunk denoise
-----------------------------------------------------------------------------------------------------
-
----Merge hunks that are close together (gap <= 2 lines, matching VSCode behavior)
----@param hunks                          era.m.git.Hunk[]
----@return era.m.git.Hunk[]
-function M.denoise_hunks(hunks)
-  if #hunks <= 1 then
-    return hunks
-  end
-
-  local result = { hunks[1] } ---@type era.m.git.Hunk[]
-
-  for i = 2, #hunks do
-    local prev = result[#result] ---@type era.m.git.Hunk
-    local curr = hunks[i] ---@type era.m.git.Hunk
-
-    local prev_end = prev.added.start + prev.added.count ---@type integer
-    local gap = curr.added.start - prev_end ---@type integer
-
-    if gap <= 2 then
-      local new_removed_lines = vim.list_extend({}, prev.removed.lines) ---@type string[]
-      vim.list_extend(new_removed_lines, curr.removed.lines)
-
-      local new_added_lines = vim.list_extend({}, prev.added.lines) ---@type string[]
-      vim.list_extend(new_added_lines, curr.added.lines)
-
-      local new_old_count = prev.removed.count + curr.removed.count ---@type integer
-      local new_new_count = prev.added.count + curr.added.count ---@type integer
-
-      local new_hunk_type ---@type era.m.git.HunkType
-      if new_old_count == 0 then
-        new_hunk_type = "add"
-      elseif new_new_count == 0 then
-        new_hunk_type = "delete"
-      else
-        new_hunk_type = "change"
-      end
-
-      result[#result] = {
-        type = new_hunk_type,
-        head = string.format("@@ -%d,%d +%d,%d @@", prev.removed.start, new_old_count, prev.added.start, new_new_count),
-        added = {
-          start = prev.added.start,
-          count = new_new_count,
-          lines = new_added_lines,
-          no_nl_at_eof = curr.added.no_nl_at_eof or prev.added.no_nl_at_eof,
-        },
-        removed = {
-          start = prev.removed.start,
-          count = new_old_count,
-          lines = new_removed_lines,
-          no_nl_at_eof = curr.removed.no_nl_at_eof or prev.removed.no_nl_at_eof,
-        },
-        vend = curr.vend,
-      }
-    else
-      result[#result + 1] = curr
     end
   end
 

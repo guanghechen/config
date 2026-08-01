@@ -235,4 +235,99 @@ t:test("failed initialization remains dirty for a later visibility event", funct
   t.assert_true(Buffer.is_dirty(11), "failed retry dirty")
 end)
 
+---@return era.m.git.buffer
+---@return table<integer, table>
+---@return era.m.git.diff
+---@return era.m.git.staging|nil
+local function setup_reset_runtime()
+  local diff = require("era.m.git.diff")
+  local hunk = require("era.m.git.hunk")
+  local has_staging, staging = pcall(require, "era.m.git.staging") ---@type boolean, era.m.git.staging|nil
+  t:patch_global("stl", { c = { Future = Future, Ticker = {
+    new = function()
+      return {}
+    end,
+  } } })
+  t:patch_global("era", { m = { git = { diff = diff, hunk = hunk, staging = has_staging and staging or nil } } })
+
+  local Buffer = assert(loadfile("lua/era/m/git/buffer.lua"))()
+  local cache ---@type table<integer, table>
+  for index = 1, 50 do
+    local name, value = debug.getupvalue(Buffer.reset_hunk, index)
+    if name == "cache" then
+      cache = value
+      break
+    end
+  end
+  t.assert_true(cache ~= nil, "cache upvalue")
+  return Buffer, cache, diff, staging
+end
+
+---@param cache                         table<integer, table>
+---@param diff                          era.m.git.diff
+---@param staging                       era.m.git.staging|nil
+---@param head                          string[]
+---@param edited                        string[]
+---@return integer
+local function seed_reset_buffer(cache, diff, staging, head, edited)
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.list_slice(edited, 1, #edited - 1))
+  cache[bufnr] = {
+    compare_text = head,
+    hunks = diff.run_diff(head, edited),
+    index_document = staging and staging.from_text(table.concat(head, "\n")) or nil,
+    untracked = false,
+  }
+  return bufnr
+end
+
+t:test("reset_hunk restores pure deletions at their anchors", function()
+  local Buffer, cache, diff, staging = setup_reset_runtime()
+  local cases = {
+    { { "a", "b", "c", "d", "" }, { "a", "c", "d", "" }, "a|b|c|d" },
+    { { "a", "b", "c", "" }, { "b", "c", "" }, "a|b|c" },
+  }
+
+  for _, case in ipairs(cases) do
+    local bufnr = seed_reset_buffer(cache, diff, staging, case[1], case[2])
+    t.assert_true(Buffer.reset_hunk(bufnr, { 1, 1 }), "reset")
+    t.assert_eq(case[3], table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "|"), "buffer order")
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+end)
+
+t:test("working-buffer unstage refuses unsafe coordinate projection", function()
+  local Buffer = setup_reset_runtime()
+  local outcome = nil ---@type table|nil
+  Buffer.unstage_hunk(0):finally(function(_, result)
+    outcome = result
+  end)
+
+  t.assert_true(outcome ~= nil, "settled")
+  t.assert_false(outcome.ok, "refused")
+end)
+
+t:test("reset_hunk preserves unchanged gaps between nearby hunks", function()
+  local Buffer, cache, diff, staging = setup_reset_runtime()
+  local head = { "local M = {}", "function M.hello()", '  return "hi"', "end", "return M", "" } ---@type string[]
+  local edited = {
+    "local M = {}",
+    "function M.hello()",
+    '  return "changed"',
+    "end",
+    "function M.extra() end",
+    "return M",
+    "",
+  } ---@type string[]
+  local bufnr = seed_reset_buffer(cache, diff, staging, head, edited)
+
+  t.assert_true(Buffer.reset_hunk(bufnr, { 3, 5 }), "reset")
+  t.assert_eq(
+    table.concat(head, "|", 1, #head - 1),
+    table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "|"),
+    "HEAD round-trip"
+  )
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
 t:run()

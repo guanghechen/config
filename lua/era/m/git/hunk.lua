@@ -472,9 +472,8 @@ end
 ---@param hunk                          era.m.git.Hunk
 ---@param min_lnum                      integer|nil
 ---@param max_lnum                      integer|nil
----@param next_hunk                     era.m.git.Hunk|nil
 ---@return era.m.git.Sign[]
-function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
+function M.calc_signs(hunk, min_lnum, max_lnum)
   local signs = {} ---@type era.m.git.Sign[]
   min_lnum = min_lnum or 1
   max_lnum = max_lnum or math.huge
@@ -495,7 +494,6 @@ function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
     end
   else
     local is_change_hunk = hunk.type == "change" ---@type boolean
-    local next_is_adjacent_delete = next_hunk and next_hunk.type == "delete" and next_hunk.added.start == start + count
     local has_extra_removes = is_change_hunk and removed_count > count
 
     for i = 0, count - 1 do
@@ -503,7 +501,7 @@ function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
       if lnum >= min_lnum and lnum <= max_lnum then
         local is_last_line = (i == count - 1) ---@type boolean
 
-        if is_last_line and is_change_hunk and (next_is_adjacent_delete or has_extra_removes) then
+        if is_last_line and is_change_hunk and has_extra_removes then
           signs[#signs + 1] = { type = "changedelete", lnum = lnum }
         elseif is_change_hunk and i < removed_count then
           signs[#signs + 1] = { type = "change", lnum = lnum }
@@ -535,8 +533,7 @@ function M.calc_signs_all(hunks, min_lnum, max_lnum)
       break
     end
 
-    local next_hunk = hunks[i + 1] ---@type era.m.git.Hunk|nil
-    local hunk_signs = M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
+    local hunk_signs = M.calc_signs(hunk, min_lnum, max_lnum)
     for _, sign in ipairs(hunk_signs) do
       signs[#signs + 1] = sign
     end

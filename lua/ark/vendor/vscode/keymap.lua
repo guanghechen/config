@@ -73,7 +73,6 @@ mvs({ "n", "x" }, "<leader>gB", "gitlens.openFileOnRemote", "git: open on remote
 mvs({ "n", "x" }, "<leader>gd", "git.openChange", "git: diff")
 mvs({ "n", "x" }, "<leader>gD", "gitlens.showQuickFileHistory", "git: file history (GitLens)")
 mvs({ "n", "x" }, "ghs", "git.stageSelectedRanges", "git: stage hunk")
-mvs({ "n", "x" }, "ghu", "git.unstageSelectedRanges", "git: unstage hunk")
 mvs({ "n", "x" }, "ghr", "git.revertSelectedRanges", "git: revert hunk")
 mvs({ "n", "x" }, "ghS", "git.stage", "git: stage file")
 mvs({ "n", "x" }, "ghR", "git.clean", "git: discard file changes")

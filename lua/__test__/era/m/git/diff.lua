@@ -51,70 +51,17 @@ t:test("run_diff: content with pipe character", function()
 end)
 
 ----------------------------------------------------------------------------------------------------
--- denoise_hunks tests
+-- authoritative hunk tests
 ----------------------------------------------------------------------------------------------------
 
-t:test("denoise_hunks: empty input", function()
-  local result = diff.denoise_hunks({})
-  t.assert_eq(0, #result, "result count")
-end)
-
-t:test("denoise_hunks: single hunk unchanged", function()
-  local hunks = diff.run_diff({ "old", "" }, { "new", "" })
-  local result = diff.denoise_hunks(hunks)
-  t.assert_eq(1, #result, "result count")
-end)
-
-t:test("denoise_hunks: gap <= 2 merges hunks", function()
-  -- Modify line 1 and line 4, gap = 2 (lines 2, 3)
+t:test("run_diff: nearby changes remain independent authoritative hunks", function()
   local old = { "line1", "line2", "line3", "line4", "" }
   local new = { "modified1", "line2", "line3", "modified4", "" }
   local hunks = diff.run_diff(old, new)
-  t.assert_eq(1, #hunks, "merged hunk count")
-  t.assert_eq(1, hunks[1].added.start, "merged start")
-  t.assert_eq(4, hunks[1].vend, "merged end")
-end)
 
-t:test("denoise_hunks: gap > 2 keeps separate hunks", function()
-  -- Modify line 1 and line 5, gap = 3 (lines 2, 3, 4)
-  local old = { "line1", "line2", "line3", "line4", "line5", "" }
-  local new = { "modified1", "line2", "line3", "line4", "modified5", "" }
-  local hunks = diff.run_diff(old, new)
-  t.assert_eq(2, #hunks, "separate hunk count")
-  t.assert_eq(1, hunks[1].added.start, "first hunk start")
-  t.assert_eq(5, hunks[2].added.start, "second hunk start")
-end)
-
-t:test("denoise_hunks: adjacent hunks (gap = 0) merge", function()
-  -- Modify lines 1 and 2, gap = 0
-  local old = { "line1", "line2", "line3", "" }
-  local new = { "modified1", "modified2", "line3", "" }
-  local hunks = diff.run_diff(old, new)
-  t.assert_eq(1, #hunks, "merged hunk count")
-end)
-
-t:test("denoise_hunks: gap = 1 merges", function()
-  -- Modify line 1 and line 3, gap = 1 (line 2)
-  local old = { "line1", "line2", "line3", "" }
-  local new = { "modified1", "line2", "modified3", "" }
-  local hunks = diff.run_diff(old, new)
-  t.assert_eq(1, #hunks, "merged hunk count")
-end)
-
-t:test("denoise_hunks: gap = 2 merges", function()
-  -- Modify line 1 and line 4, gap = 2 (lines 2, 3)
-  local old = { "line1", "line2", "line3", "line4", "" }
-  local new = { "modified1", "line2", "line3", "modified4", "" }
-  local hunks = diff.run_diff(old, new)
-  t.assert_eq(1, #hunks, "merged hunk count")
-end)
-
-t:test("denoise_hunks: multiple merges in chain", function()
-  -- Modify lines 1, 3, 5 with gaps of 1 each - should all merge
-  local old = { "l1", "l2", "l3", "l4", "l5", "" }
-  local new = { "m1", "l2", "m3", "l4", "m5", "" }
-  local hunks = diff.run_diff(old, new)
-  t.assert_eq(1, #hunks, "all merged into one")
+  t.assert_eq(2, #hunks, "hunk count")
+  t.assert_eq(1, hunks[1].added.start, "first start")
+  t.assert_eq(4, hunks[2].added.start, "second start")
 end)
 
 ----------------------------------------------------------------------------------------------------
@@ -160,11 +107,10 @@ t:test("run_diff_future: empty files", function()
   t.assert_eq(0, #result_hunks, "hunk count")
 end)
 
-t:test("run_diff_future: applies denoise", function()
+t:test("run_diff_future: preserves independent nearby changes", function()
   local done = false
   local result_hunks = nil
 
-  -- Gap = 2, should merge
   local old = { "line1", "line2", "line3", "line4", "" }
   local new = { "modified1", "line2", "line3", "modified4", "" }
 
@@ -179,7 +125,7 @@ t:test("run_diff_future: applies denoise", function()
   end)
 
   t.assert_eq(true, done, "callback called")
-  t.assert_eq(1, #result_hunks, "merged hunk count")
+  t.assert_eq(2, #result_hunks, "hunk count")
 end)
 
 t:test("run_diff_future: content with special characters", function()

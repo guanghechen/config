@@ -354,35 +354,7 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
     },
   }
 
-  if is_staged then
-    keymaps[#keymaps + 1] = {
-      modes = { "n" },
-      key = "u",
-      callback = function()
-        self:close()
-        -- For topdelete (added.start = 0, vend = 0), use effective position 1
-        local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
-        local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
-        local range = { effective_start, effective_vend }
-        era.m.git.hunk.unstage(range):finally(function(ok, result)
-          if ok and result.ok then
-            stl.reporter.info({
-              from = __module_name__,
-              subject = "Git Hunk",
-              message = "Hunk unstaged",
-            })
-          else
-            stl.reporter.error({
-              from = __module_name__,
-              subject = "Git Hunk",
-              message = (result and result.err) or "Failed to unstage hunk",
-            })
-          end
-        end)
-      end,
-      desc = "git-hunk: unstage",
-    }
-  else
+  if not is_staged then
     keymaps[#keymaps + 1] = {
       modes = { "n" },
       key = "s",

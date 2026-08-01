@@ -646,7 +646,15 @@ function M.reset_hunk(bufnr, range)
 
   local hunks ---@type era.m.git.Hunk[]
   if range then
-    hunks = era.m.git.hunk.create_partials(buf_cache.hunks, range[1], range[2])
+    hunks = {}
+    local top, bot = range[1], range[2] ---@type integer, integer
+    for _, hunk in ipairs(buf_cache.hunks or {}) do
+      local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+      local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+      if not (effective_vend < top or effective_start > bot) then
+        hunks[#hunks + 1] = hunk
+      end
+    end
   else
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
@@ -662,7 +670,7 @@ function M.reset_hunk(bufnr, range)
   for i = #hunks, 1, -1 do
     local hunk = hunks[i] ---@type era.m.git.Hunk
     -- For topdelete (added.start = 0), insert at beginning (index 0)
-    local start_line = hunk.added.start == 0 and 0 or (hunk.added.start - 1) ---@type integer
+    local start_line = hunk.added.count == 0 and hunk.added.start or (hunk.added.start - 1) ---@type integer
     local end_line = start_line + hunk.added.count ---@type integer
     vim.api.nvim_buf_set_lines(bufnr, start_line, end_line, false, hunk.removed.lines)
   end
@@ -815,101 +823,12 @@ end
 
 ---@param bufnr                      integer
 ---@param range                      ?{ [1]: integer, [2]: integer }
----@return stl.c.Future              Resolves with { ok: boolean, err: ?string }
+---@return stl.c.Future
 function M.unstage_hunk(bufnr, range)
-  return stl.c.Future.new(function(resolve)
-    local buf_cache = cache[bufnr]
-    if not buf_cache then
-      resolve({ ok = false, err = "Buffer not attached" })
-      return
-    end
-
-    local hunks_staged = buf_cache.hunks_staged
-    if not hunks_staged or #hunks_staged == 0 then
-      resolve({ ok = false, err = "No staged hunks" })
-      return
-    end
-
-    local head_lines = buf_cache.compare_text
-    local index_lines = buf_cache.compare_text_index
-    if not head_lines or not index_lines then
-      resolve({ ok = false, err = "Missing compare text" })
-      return
-    end
-
-    -- hunks_staged is from filter_common(diff(HEAD, Buffer), diff(Index, Buffer))
-    -- Its coordinates are in Buffer line numbers, but apply_inverted_hunks needs
-    -- hunks with Index coordinates. Compute diff(HEAD, Index) for correct coordinates.
-    local hunks_head_to_index = era.m.git.diff.run_diff(head_lines, index_lines)
-
-    if #hunks_head_to_index == 0 then
-      resolve({ ok = false, err = "No staged changes found" })
-      return
-    end
-
-    -- User selects hunks based on Buffer line numbers (from hunks_staged).
-    -- We need to find the corresponding hunks in hunks_head_to_index.
-    -- Since both represent the same staged changes, we match by hunk index.
-    local selected_indices = {} ---@type table<integer, boolean>
-
-    if range then
-      local top, bot = range[1], range[2] ---@type integer, integer
-      for i, hunk in ipairs(hunks_staged) do
-        local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
-        local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
-        if not (effective_vend < top or effective_start > bot) then
-          selected_indices[i] = true
-        end
-      end
-    else
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-      local _, idx = era.m.git.hunk.find(lnum, hunks_staged)
-      if idx then
-        selected_indices[idx] = true
-      end
-    end
-
-    if not next(selected_indices) then
-      resolve({ ok = false, err = "No staged hunk at cursor" })
-      return
-    end
-
-    -- Select corresponding hunks from hunks_head_to_index
-    local selected_hunks = {} ---@type era.m.git.Hunk[]
-    for i, hunk in ipairs(hunks_head_to_index) do
-      if selected_indices[i] then
-        selected_hunks[#selected_hunks + 1] = hunk
-      end
-    end
-
-    if #selected_hunks == 0 then
-      resolve({ ok = false, err = "Failed to map staged hunks" })
-      return
-    end
-
-    local new_index_lines = apply_inverted_hunks(index_lines, head_lines, selected_hunks)
-    local toplevel = buf_cache.repo.toplevel
-    local relpath = buf_cache.relpath
-    local mode_bits = buf_cache.mode_bits or "100644"
-
-    stl.async.run(function()
-      local hash = stl.git.act.hash_object(toplevel, relpath, new_index_lines):await()
-      if not hash then
-        resolve({ ok = false, err = "Failed to hash object" })
-        return
-      end
-
-      local ok = stl.git.act.update_index(toplevel, mode_bits, hash, relpath):await()
-      if ok then
-        M.refresh(bufnr, true):finally(function()
-          resolve({ ok = true, err = nil })
-        end)
-      else
-        resolve({ ok = false, err = "Failed to update index" })
-      end
-    end)
-  end)
+  return stl.c.Future.resolve({
+    ok = false,
+    err = "Open the staged diff and run unstage from its index-side window",
+  })
 end
 
 function M.setup()
