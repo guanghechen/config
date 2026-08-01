@@ -250,6 +250,55 @@ t:test("keymaps: client-specific mappings win and detach restores fallback", fun
   delete_buffer(bufnr)
 end)
 
+t:test("foldexpr: restores visible windows after the last folding client detaches", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local original = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_buf(original, bufnr)
+  vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = original, scope = "local" })
+
+  local first = add_client(bufnr, "lua_ls", { ["textDocument/foldingRange"] = true })
+  Event.on_attach(first, bufnr)
+  local split = vim.api.nvim_open_win(bufnr, false, { split = "below", win = original }) ---@type integer
+  local second = add_client(bufnr, "vtsls", { ["textDocument/foldingRange"] = true })
+  Event.on_attach(second, bufnr)
+
+  Event.on_detach(first, bufnr)
+  first.attached_buffers[bufnr] = nil
+  Event.on_detach(second, bufnr)
+  second.attached_buffers[bufnr] = nil
+
+  local original_foldexpr = vim.api.nvim_get_option_value("foldexpr", { win = original, scope = "local" })
+  local split_foldexpr = vim.api.nvim_get_option_value("foldexpr", { win = split, scope = "local" })
+
+  vim.api.nvim_win_close(split, true)
+  delete_buffer(bufnr)
+
+  t.assert_eq("v:lua.vim.treesitter.foldexpr()", original_foldexpr, "saved foldexpr")
+  t.assert_eq("v:lua.vim.treesitter.foldexpr()", split_foldexpr, "buffer foldexpr fallback")
+end)
+
+t:test("foldexpr: restores a hidden buffer when it re-enters a window", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local other_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = winnr, scope = "local" })
+
+  local client = add_client(bufnr, "lua_ls", { ["textDocument/foldingRange"] = true })
+  Event.on_attach(client, bufnr)
+  vim.api.nvim_win_set_buf(winnr, other_bufnr)
+
+  Event.on_detach(client, bufnr)
+  client.attached_buffers[bufnr] = nil
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  local restored = vim.api.nvim_get_option_value("foldexpr", { win = winnr, scope = "local" })
+
+  vim.api.nvim_buf_delete(other_bufnr, { force = true })
+  delete_buffer(bufnr)
+
+  t.assert_eq("v:lua.vim.treesitter.foldexpr()", restored, "hidden buffer foldexpr")
+end)
+
 if vim.env.NVIM_LSP_EVENT_BENCHMARK == "1" then
   t:test("benchmark: dynamic capability reconciliation", function()
     local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

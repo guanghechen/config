@@ -1,6 +1,7 @@
 local Methods = vim.lsp.protocol.Methods
 
 local augroup_codelens = stl.nvim.fn.augroup("era.m.lsp.event.codelens") ---@type integer
+local augroup_foldexpr = stl.nvim.fn.augroup("era.m.lsp.event.foldexpr") ---@type integer
 local augroup_keymaps = stl.nvim.fn.augroup("era.m.lsp.event.keymaps") ---@type integer
 
 local KEYMAP_METHODS = {
@@ -12,6 +13,91 @@ local KEYMAP_METHODS = {
   ["textDocument/rename"] = true,
   ["textDocument/typeDefinition"] = true,
 } ---@type table<string, true>
+
+local LSP_FOLDEXPR = "v:lua.vim.lsp.foldexpr()" ---@type string
+
+---@class era.m.lsp.event.IFoldexprState
+---@field public fallback               string
+---@field public windows                table<integer, string>
+
+---@type table<integer, era.m.lsp.event.IFoldexprState>
+local foldexpr_states = {}
+
+---@param state                          era.m.lsp.event.IFoldexprState
+---@return nil
+local function prune_invalid_windows(state)
+  for winnr in pairs(state.windows) do
+    if not vim.api.nvim_win_is_valid(winnr) then
+      state.windows[winnr] = nil
+    end
+  end
+end
+
+---@param bufnr                         integer
+---@return nil
+local function apply_lsp_foldexpr(bufnr)
+  local state = foldexpr_states[bufnr] ---@type era.m.lsp.event.IFoldexprState|nil
+  if state ~= nil then
+    prune_invalid_windows(state)
+  end
+
+  for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) == bufnr then
+      local current = vim.api.nvim_get_option_value("foldexpr", { win = winnr, scope = "local" }) ---@type string
+      if current ~= LSP_FOLDEXPR then
+        if state == nil then
+          state = { fallback = current, windows = {} }
+          foldexpr_states[bufnr] = state
+        end
+        state.windows[winnr] = current
+        vim.api.nvim_set_option_value("foldexpr", LSP_FOLDEXPR, { win = winnr, scope = "local" })
+      end
+    end
+  end
+end
+
+---@param bufnr                         integer
+---@return nil
+local function restore_foldexpr(bufnr)
+  local state = foldexpr_states[bufnr] ---@type era.m.lsp.event.IFoldexprState|nil
+  if state ~= nil then
+    prune_invalid_windows(state)
+  end
+  local fallback = state and state.fallback or vim.api.nvim_get_option_value("foldexpr", { scope = "global" }) ---@type string
+
+  for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) == bufnr then
+      local current = vim.api.nvim_get_option_value("foldexpr", { win = winnr, scope = "local" }) ---@type string
+      if current == LSP_FOLDEXPR then
+        local saved = state and state.windows[winnr] or nil ---@type string|nil
+        vim.api.nvim_set_option_value("foldexpr", saved or fallback, { win = winnr, scope = "local" })
+      end
+      if state ~= nil then
+        state.windows[winnr] = nil
+      end
+    end
+  end
+
+  if state ~= nil and next(state.windows) == nil then
+    foldexpr_states[bufnr] = nil
+  end
+end
+
+---@param bufnr                         integer
+---@return nil
+local function reconcile_foldexpr(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    foldexpr_states[bufnr] = nil
+    return
+  end
+
+  local support_folding_range = vim.b[bufnr].support_foldingRange or 0 ---@type integer
+  if support_folding_range > 0 then
+    apply_lsp_foldexpr(bufnr)
+  else
+    restore_foldexpr(bufnr)
+  end
+end
 
 ---@class era.m.lsp.event.IKeymap : stl.t.IKeymap
 ---@field public method                 ?string
@@ -270,6 +356,18 @@ function M.dressing()
       keymap_states[args.buf] = nil
     end,
   })
+  vim.api.nvim_create_autocmd("BufWinEnter", {
+    group = augroup_foldexpr,
+    callback = function(args)
+      reconcile_foldexpr(args.buf)
+    end,
+  })
+  vim.api.nvim_create_autocmd("BufWipeout", {
+    group = augroup_foldexpr,
+    callback = function(args)
+      foldexpr_states[args.buf] = nil
+    end,
+  })
 
   vim.lsp.handlers[Methods.client_registerCapability] = function(err, params, ctx, config)
     local result = register_capability(err, params, ctx, config) ---@type any
@@ -366,10 +464,7 @@ function M.on_attach(client, bufnr)
   end
 
   if support_foldingRange == 1 then
-    local winnr = vim.fn.bufwinid(bufnr) ---@type integer
-    if winnr ~= -1 then
-      vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.lsp.foldexpr()", { win = winnr, scope = "local" })
-    end
+    apply_lsp_foldexpr(bufnr)
   end
 
   -- illuminate
@@ -550,6 +645,9 @@ function M.on_detach(client, bufnr)
   end
   if support_foldingRange > 0 and client:supports_method("textDocument/foldingRange") then
     support_foldingRange = support_foldingRange - 1
+    if support_foldingRange == 0 then
+      restore_foldexpr(bufnr)
+    end
   end
 
   vim.b[bufnr].support_codelens = support_codelens ---@type integer
