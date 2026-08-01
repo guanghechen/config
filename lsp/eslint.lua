@@ -35,14 +35,6 @@ local function before_init(params, config)
       uri = vim.uri_from_fname(root_dir),
       name = vim.fn.fnamemodify(root_dir, ":t"),
     }
-
-    -- Support Yarn2 (PnP) projects
-    local pnp_cjs = root_dir .. "/.pnp.cjs"
-    local pnp_js = root_dir .. "/.pnp.js"
-    if vim.uv.fs_stat(pnp_cjs) or vim.uv.fs_stat(pnp_js) then
-      local cmd = config.cmd
-      config.cmd = vim.list_extend({ "yarn", "exec" }, cmd)
-    end
   end
 end
 
