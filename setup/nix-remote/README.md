@@ -20,12 +20,6 @@
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.bash)"
     ```
 
-    Or
-
-    ```bash
-    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.bash)
-    ```
-
   - Run the container with fish.
 
     ```bash

@@ -16,12 +16,6 @@
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.bash)"
     ```
 
-    Or
-
-    ```bash
-    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.bash)
-    ```
-
   - Run the container with fish.
 
     ```bash
@@ -60,12 +54,6 @@
 
     ```bash
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.bash)"
-    ```
-
-    Or
-
-    ```bash
-    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.bash)
     ```
 
   - Run the container with fish.
