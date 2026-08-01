@@ -10,6 +10,11 @@
   > language settings > Change system locale, and check Beta: Use Unicode UTF-8 for
   > worldwide language support. Then reboot the PC for the change to take effect.
 
+* Install Git
+
+  - Install [Git for Windows](https://git-scm.com/download/win) to `C:\app\git`.
+  - Ensure `git` is available on `PATH` before running the bootstrap script.
+
 * Install rust
 
   - Download exe from https://www.rust-lang.org/tools/install
@@ -38,7 +43,8 @@
 
 * Install miniforge
 
-  - Download exe from  https://github.com/conda-forge/miniforge?tab=readme-ov-file#download
+  - Download the installer from https://github.com/conda-forge/miniforge?tab=readme-ov-file#download.
+  - Install Miniforge to `C:\app\miniforge`.
 
 ## Setup
 
