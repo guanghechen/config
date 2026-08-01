@@ -12,6 +12,7 @@ local t = harness.new("dot.autocmd")
 ---@field scheduled                   fun()[]
 ---@field updates                     boolean[]
 ---@field disposed                    integer
+---@field tab_close_argc               integer|nil
 
 ---@param vim_did_enter                ?integer
 ---@return dot.autocmd.test.IRuntime
@@ -22,6 +23,7 @@ local function setup(vim_did_enter)
     scheduled = {},
     updates = {},
     disposed = 0,
+    tab_close_argc = nil,
   } ---@type dot.autocmd.test.IRuntime
 
   t:patch_global("stl", {
@@ -44,6 +46,11 @@ local function setup(vim_did_enter)
     },
   })
   t:patch_global("dot", {
+    tab = {
+      on_close = function(...)
+        runtime.tab_close_argc = select("#", ...)
+      end,
+    },
     state = {
       status = {
         dirtier_statusline = { mark_dirty = function() end },
@@ -125,6 +132,14 @@ t:test("runtime SessionLoadPost corrects state reset during restore", function()
   t.assert_eq(2, #runtime.updates, "state updates")
   t.assert_true(runtime.updates[1], "session reset")
   t.assert_false(runtime.updates[2], "restored tmux state")
+end)
+
+t:test("TabClosed delegates without passing the ordinal as a handle", function()
+  local runtime = setup()
+
+  runtime.autocmds.bootstrap_on_TabClosed.callback({ file = "2" })
+
+  t.assert_eq(0, runtime.tab_close_argc, "tab close arguments")
 end)
 
 t:test("concurrent refreshes keep one query in flight and apply the final result", function()

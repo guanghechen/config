@@ -152,7 +152,11 @@ end
 ---@param pinned                        ?boolean
 ---@return dot.tab.IMeta|nil
 function M.add_buf(tabnr, bufnr, pinned)
-  if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
+  if
+    bufnr < 1
+    or not vim.api.nvim_buf_is_valid(bufnr)
+    or not vim.api.nvim_get_option_value("buflisted", { buf = bufnr })
+  then
     return
   end
 
@@ -270,7 +274,11 @@ function M.resolve(tabnr, force)
       ---@cast buf                      dot.tab.IBufItem
       local bufnr = buf.bufnr ---@type integer
       local pinned = buf.pinned ---@type boolean
-      if not bufnr_set[bufnr] and vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
+      if
+        not bufnr_set[bufnr]
+        and vim.api.nvim_buf_is_valid(bufnr)
+        and vim.api.nvim_get_option_value("buflisted", { buf = bufnr })
+      then
         bufnr_set[bufnr] = true
         bufs[#bufs + 1] = { bufnr = bufnr, pinned = pinned }
       end
@@ -369,31 +377,31 @@ function M.on_bufs_close(tabnr, bufnrs)
       k = k + 1
     end
   end
+  -- `k - 1` is the number kept, so `k <= N` means at least one entry was dropped.
   if k <= N then
     for i = N, k, -1 do
       bufs[i] = nil
     end
-  else
     dot.state.status.dirtier_tabline:mark_dirty()
   end
 end
 
----@param tabnr                         ?integer
 ---@return nil
-function M.on_close(tabnr)
-  if tabnr == nil then
-    return
+function M.on_close()
+  -- `TabClosed` reports the closing tab's *number*, while `meta_map` is keyed by tabpage handle,
+  -- and by the time the event fires the handle is gone so the two cannot be mapped. Drop whatever
+  -- no longer resolves instead: that is exactly the set of closed tabs.
+  for tabnr, meta in pairs(meta_map) do
+    if not vim.api.nvim_tabpage_is_valid(tabnr) then
+      meta_map[tabnr] = nil
+      meta.winnr_fixed:dispose()
+      meta.winnr_float:dispose()
+      meta.winnr_sourcefile:dispose()
+    end
   end
 
-  local meta = meta_map[tabnr] ---@type dot.tab.IMeta|nil
-  if meta ~= nil then
-    meta_map[tabnr] = nil
-    meta.winnr_fixed:dispose()
-    meta.winnr_float:dispose()
-    meta.winnr_sourcefile:dispose()
-  end
-
-  M.refresh()
+  -- Defer buffer deletion so BufDelete autocmds are not suppressed by the non-nested TabClosed event.
+  vim.schedule(M.refresh)
 end
 
 return M

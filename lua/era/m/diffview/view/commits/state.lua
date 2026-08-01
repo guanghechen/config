@@ -397,9 +397,11 @@ function M.create(tabnr)
 
   -- Setup TabClosed autocmd to clean up state when tab is closed directly
   local autocmd_id = vim.api.nvim_create_autocmd("TabClosed", {
-    callback = function(ev)
-      local closed_tabnr = tonumber(ev.file) ---@type integer|nil
-      if closed_tabnr and closed_tabnr == tabnr then
+    callback = function()
+      -- `TabClosed` reports the closing tab's *number*, but `tabnr` here is a tabpage handle and
+      -- the two diverge as soon as any tab has been closed. The handle is already invalid by the
+      -- time the event fires, so test that directly instead of comparing identifiers.
+      if not vim.api.nvim_tabpage_is_valid(tabnr) then
         M.remove(tabnr)
       end
     end,

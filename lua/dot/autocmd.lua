@@ -85,9 +85,8 @@ vim.api.nvim_create_autocmd("OptionSet", {
 
 vim.api.nvim_create_autocmd("TabClosed", {
   group = stl.nvim.fn.augroup("bootstrap_on_TabClosed"),
-  callback = function(event)
-    local tabnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
-    dot.tab.on_close(tabnr)
+  callback = function()
+    dot.tab.on_close()
 
     dot.state.status.dirtier_statusline:mark_dirty()
     dot.state.status.dirtier_tabline:mark_dirty()
@@ -266,7 +265,11 @@ vim.api.nvim_create_autocmd("WinEnter", {
           if winnr_float_last ~= nil and winnr_float_last > 0 and vim.api.nvim_win_is_valid(winnr_float_last) then
             local winhighlight = vim.api.nvim_get_option_value("winhighlight", { win = winnr_float_last }) ---@type string
             local winhighlight_next = winhighlight:gsub("FloatBorder:FloatActiveBorder", "FloatBorder:FloatBorder")
-            vim.api.nvim_set_option_value("winhighlight", winhighlight_next, { win = winnr_float_last, scope = "local" })
+            vim.api.nvim_set_option_value(
+              "winhighlight",
+              winhighlight_next,
+              { win = winnr_float_last, scope = "local" }
+            )
           end
           meta.winnr_float:next(winnr)
         end
