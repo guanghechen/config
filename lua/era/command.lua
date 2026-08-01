@@ -427,6 +427,13 @@ command
     end,
   })
   .implement({
+    uuid = K.diagnostic.goto_next_info.uuid,
+    tabtypes = stl.e.TabTypeSet.ALL,
+    action = function()
+      era.m.lsp.diagnostic.goto_next_info()
+    end,
+  })
+  .implement({
     uuid = K.diagnostic.goto_next_quickfix.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
@@ -459,6 +466,13 @@ command
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
       era.m.lsp.diagnostic.goto_prev_hint()
+    end,
+  })
+  .implement({
+    uuid = K.diagnostic.goto_prev_info.uuid,
+    tabtypes = stl.e.TabTypeSet.ALL,
+    action = function()
+      era.m.lsp.diagnostic.goto_prev_info()
     end,
   })
   .implement({
