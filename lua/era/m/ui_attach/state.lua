@@ -30,6 +30,7 @@ local __module_name__ = "era.m.ui_attach.state" ---@type string
 ---@field public first                  string
 ---@field public second                 string
 ---@field public special                era.m.ui_attach.cmdline.ISpecial|nil
+---@field public confirming_task        era.m.ui_attach.ITask|nil
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 

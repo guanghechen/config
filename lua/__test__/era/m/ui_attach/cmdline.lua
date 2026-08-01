@@ -90,9 +90,10 @@ end)
 
 t:test("nested hide restores the highest active cmdline position", function()
   local cmdline, states = setup()
-  states.cmdline[1] = { level = 1, winnr = 11 }
-  states.cmdline[2] = { level = 2, winnr = 22 }
   local confirming_task = states.message.confirming_task
+  states.message.confirming_task = nil
+  states.cmdline[1] = { level = 1, winnr = 11, type = "confirm", confirming_task = confirming_task }
+  states.cmdline[2] = { level = 2, winnr = 22 }
   cmdline._update_cmdline_position = function(state, winnr)
     vim.g.ui_cmdline_pos = { state.level, winnr }
   end
@@ -101,7 +102,8 @@ t:test("nested hide restores the highest active cmdline position", function()
 
   t.assert_eq(2, vim.g.ui_cmdline_pos[1], "active level")
   t.assert_eq(22, vim.g.ui_cmdline_pos[2], "active window")
-  t.assert_true(states.message.confirming_task == confirming_task, "confirmation")
+  t.assert_true(states.cmdline[1].confirming_task == confirming_task, "confirmation")
+  t.assert_nil(states.message.confirming_task, "pending confirmation")
 end)
 
 t:test("cmdline position uses original content origin", function()
@@ -281,6 +283,110 @@ t:test("popup byte offset compensates for a concealed command prefix", function(
 
   -- screen col 5 + icon width 2; the concealed "edit " prefix contributes no width
   t.assert_eq(7, col, "popup column")
+end)
+
+t:test("confirm prompts keep their renderer while the user types", function()
+  local cmdline, states = setup()
+  local rendered = {} ---@type string[]
+  cmdline._show = function()
+    rendered[#rendered + 1] = "command"
+  end
+  cmdline._show_confirm = function()
+    rendered[#rendered + 1] = "confirm"
+  end
+
+  local function show(text, pos)
+    cmdline.show({
+      event = "cmdline_show",
+      args = { { { 0, text, 0 } }, pos, "", "Type number and <Enter>", 0, 1, 0 },
+    })
+  end
+
+  show("", 0)
+  show("1", 1)
+  show("12", 2)
+
+  t.assert_eq("confirm,confirm,confirm", table.concat(rendered, ","), "confirm renders")
+  t.assert_true(states.cmdline[1].confirming_task ~= nil, "confirmation owner")
+  t.assert_nil(states.message.confirming_task, "pending confirmation")
+end)
+
+t:test("real command lines clear pending confirmations", function()
+  local cmdline, states = setup()
+  local rendered
+  cmdline._show = function()
+    rendered = "command"
+  end
+
+  cmdline.show({ event = "cmdline_show", args = { { { 0, "set number", 0 } }, 10, ":", "", 0, 1, 0 } })
+
+  t.assert_eq("command", rendered, "command renderer")
+  t.assert_nil(states.message.confirming_task, "pending confirmation")
+end)
+
+t:test("cursor movement inside a confirm prompt keeps the confirm renderer", function()
+  local cmdline, states = setup()
+  local rendered
+  cmdline._show = function()
+    rendered = "command"
+  end
+  cmdline._show_confirm = function()
+    rendered = "confirm"
+  end
+  states.cmdline[1] = {
+    level = 1,
+    pos = 0,
+    type = "confirm",
+    confirming_task = states.message.confirming_task,
+  }
+  states.message.confirming_task = nil
+
+  cmdline.pos({ event = "cmdline_pos", args = { 3, 1 } })
+
+  t.assert_eq("confirm", rendered, "confirm renderer")
+end)
+
+t:test("special chars inside a confirm prompt keep the confirm renderer", function()
+  local cmdline, states = setup()
+  local rendered
+  states.cmdline[1] = {
+    level = 1,
+    type = "confirm",
+    confirming_task = states.message.confirming_task,
+  }
+  states.message.confirming_task = nil
+  cmdline._show = function()
+    rendered = "command"
+  end
+  cmdline._show_confirm = function()
+    rendered = "confirm"
+  end
+
+  cmdline.special_char({ event = "cmdline_special_char", args = { "x", false, 1 } })
+
+  t.assert_eq("confirm", rendered, "special char renderer")
+end)
+
+t:test("nested expression cmdlines do not inherit an outer confirmation", function()
+  local cmdline, states = setup()
+  local rendered
+  states.cmdline[1] = {
+    level = 1,
+    type = "confirm",
+    confirming_task = states.message.confirming_task,
+  }
+  states.message.confirming_task = nil
+  cmdline._show = function()
+    rendered = "command"
+  end
+  cmdline._show_confirm = function()
+    rendered = "confirm"
+  end
+
+  cmdline.show({ event = "cmdline_show", args = { { { 0, "1+1", 0 } }, 3, "=", "", 0, 2, 0 } })
+
+  t.assert_eq("command", rendered, "nested renderer")
+  t.assert_true(states.cmdline[1].confirming_task ~= nil, "outer confirmation")
 end)
 
 t:run()

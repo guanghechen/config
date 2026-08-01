@@ -69,6 +69,16 @@ local _cmdline_type_map = {
 ---@class era.m.ui_attach.cmdline
 local M = {}
 
+---@param state                          era.m.ui_attach.cmdline.IState
+---@return nil
+local function render_state(state)
+  if state.type == "confirm" and state.confirming_task ~= nil then
+    M._show_confirm(state, state.confirming_task)
+  else
+    M._show(state)
+  end
+end
+
 ---@param task                          era.m.ui_attach.ITask
 ---@return nil
 function M.hide(task)
@@ -111,7 +121,7 @@ function M.pos(task)
   local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
-    M._show(state)
+    render_state(state)
     -- Update position for blink.cmp after position change
     if state.winnr and vim.api.nvim_win_is_valid(state.winnr) then
       M._update_cmdline_position(state, state.winnr)
@@ -132,22 +142,30 @@ function M.show(task)
   ---@cast level                        integer             -- Nesting level, 1 means top level
   ---@cast hlid                         integer             -- hlgroup id
 
-  local msg_show_task = states.message.confirming_task ---@type era.m.ui_attach.ITask|nil
-
-  local typ = states.message.confirming_task ~= nil and "confirm" or "command" ---@type string
+  local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
+  local confirming_task = state and state.confirming_task or nil ---@type era.m.ui_attach.ITask|nil
+  local typ = "command" ---@type string
   local language = nil ---@type string|nil
   if firstc == ":" then
-    typ = "command" ---@type string
     language = "vim" ---@type string
     states.message.confirming_task = nil
+    confirming_task = nil
   elseif firstc == "/" then
     typ = "search_forward" ---@type string
     language = "regex" ---@type string
     states.message.confirming_task = nil
+    confirming_task = nil
   elseif firstc == "?" then
     typ = "search_backward" ---@type string
     language = "regex" ---@type string
     states.message.confirming_task = nil
+    confirming_task = nil
+  elseif confirming_task ~= nil then
+    typ = "confirm"
+  elseif states.message.confirming_task ~= nil then
+    confirming_task = states.message.confirming_task
+    states.message.confirming_task = nil
+    typ = "confirm"
   end
 
   local text = "" ---@type string
@@ -176,7 +194,6 @@ function M.show(task)
 
   local icon = _cmdline_type_map[typ] ---@type string
 
-  local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
   if state == nil then
     ---@type era.m.ui_attach.cmdline.IState
     state = {
@@ -194,6 +211,7 @@ function M.show(task)
       first = first,
       second = second,
       special = nil,
+      confirming_task = confirming_task,
       bufnr = nil,
       winnr = nil,
     }
@@ -213,14 +231,10 @@ function M.show(task)
     state.first = first
     state.second = second
     state.special = nil
+    state.confirming_task = confirming_task
   end
 
-  if typ == "confirm" and msg_show_task ~= nil then
-    states.message.confirming_task = nil
-    M._show_confirm(state, msg_show_task)
-  else
-    M._show(state)
-  end
+  render_state(state)
 end
 
 ---@class era.m.ui_attach.cmdline.IRender
@@ -672,7 +686,7 @@ function M.special_char(task)
   end
 
   state.special = { c = c, shift = shift }
-  M._show(state)
+  render_state(state)
 end
 
 ---@param task                          era.m.ui_attach.ITask
