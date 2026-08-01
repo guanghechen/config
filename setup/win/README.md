@@ -35,8 +35,8 @@
 
 * Install font
   - Maple
-    - https://github.com/guanghechen/mirror/releases/download/font/MapleMonoNormalNL-NF-CN-unhinted.zip
-    - "Maple Mono Normal NL NF CN"
+    - https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip
+    - "Maple Mono NF CN"
   - RobotoMono
     - https://github.com/guanghechen/mirror/releases/download/font/RobotoMono.zip
     - "RobotoMono Nerd Font"
