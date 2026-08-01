@@ -152,20 +152,29 @@ function M.__load_plugin__(state)
 
   local start_time = vim.uv.hrtime() ---@type integer
 
+  -- A dependency may require this plugin's main module and re-enter the loader.
+  state.loaded = true
+
+  local has_path = state.path ~= nil and yoz.path.is_exist(state.path) ---@type boolean
+  if has_path then
+    vim.opt.rtp:prepend(state.path)
+  end
+
   if spec.dependencies then
     for _, dep_name in ipairs(spec.dependencies) do
       local dep_state = M.plugins[dep_name] ---@type era.m.plugin.IPluginState|nil
       if dep_state then
-        M.__load_plugin__(dep_state)
+        local ok, err = pcall(M.__load_plugin__, dep_state) ---@type boolean, string|nil
+        if not ok then
+          -- The early guard only breaks re-entry; dependency failure must leave the parent retryable.
+          state.loaded = false
+          error(err, 0)
+        end
       end
     end
   end
 
-  state.loaded = true
-
-  if state.path and yoz.path.is_exist(state.path) then
-    vim.opt.rtp:prepend(state.path)
-
+  if has_path then
     local plugin_dir = dot.path.join(state.path, "plugin") ---@type string
     if yoz.path.is_exist(plugin_dir) then
       for _, file in ipairs(vim.fn.glob(plugin_dir .. "/*.lua", false, true)) do
