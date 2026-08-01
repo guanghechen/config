@@ -5,7 +5,9 @@ $repomain = Join-Path $env:USERPROFILE ".config\guanghechen"
 # Define the source and destination paths
 Write-Host "  [setup config] copying pwsh profile.ps1..." -ForegroundColor Cyan
 $source = "$env:XDG_CONFIG_HOME\pwsh\profile.ps1"
-Copy-Item -Path $source -Destination $PROFILE -Force
+$profileDir = Split-Path -Parent $PROFILE
+New-Item -ItemType Directory -Path $profileDir -Force -ErrorAction Stop | Out-Null
+Copy-Item -Path $source -Destination $PROFILE -Force -ErrorAction Stop
 
 # Setup git
 $gitconfig_path = Join-Path "$env:USERPROFILE" ".gitconfig"
