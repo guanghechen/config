@@ -2,9 +2,11 @@
 Write-Host "`n  [setup miniforge] setting up conda..." -ForegroundColor Cyan
 
 # Source conda environment script
-If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
-  (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
+$condaExecutable = "$env:APP_HOME_MINIFORGE\Scripts\conda.exe"
+if (-not (Test-Path -LiteralPath $condaExecutable -PathType Leaf)) {
+  throw "[setup miniforge] conda executable does not exist: $condaExecutable"
 }
+(& $condaExecutable "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
 
 # Disable auto activation of base environment
 conda config --set auto_activate_base false
