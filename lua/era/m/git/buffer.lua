@@ -23,7 +23,7 @@ local repo = nil
 ---@class era.m.git.buffer.IUpdateLock
 ---@field public running              boolean
 ---@field public scheduled            boolean
----@field public pending_resolvers    (fun(result: nil): nil)[]
+---@field public pending             { resolve: fun(result: nil): nil, reject: fun(err: string): nil }[]
 
 ---@type table<integer, era.m.git.buffer.IUpdateLock>
 local update_locks = {}
@@ -35,7 +35,7 @@ local function get_update_lock(bufnr)
     update_locks[bufnr] = {
       running = false,
       scheduled = false,
-      pending_resolvers = {},
+      pending = {},
     }
   end
   return update_locks[bufnr]
@@ -74,8 +74,8 @@ local function refresh_dirty_if_visible(bufnr)
 end
 
 ---@class era.m.git.buffer.IBatchInvalidateOpts
----@field public clear_compare_text     ?boolean
----@field public clear_compare_text_index ?boolean
+---@field public clear_head_document    ?boolean
+---@field public clear_index_document   ?boolean
 ---@field public clear_object_name      ?boolean
 ---@field public delay_interval         integer
 
@@ -85,11 +85,11 @@ local function batch_invalidate_and_refresh(opts)
 
   for bufnr, buf_cache in pairs(cache) do
     if buf_cache then
-      if opts.clear_compare_text then
-        buf_cache.compare_text = nil
+      if opts.clear_head_document then
+        buf_cache.head_document = nil
       end
-      if opts.clear_compare_text_index then
-        buf_cache.compare_text_index = nil
+      if opts.clear_index_document then
+        buf_cache.index_document = nil
       end
       if opts.clear_object_name then
         buf_cache.object_name = nil
@@ -111,26 +111,63 @@ local function batch_invalidate_and_refresh(opts)
   end
 end
 
----@param bufnr                      integer
----@return string[]
-local function get_buf_lines(bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return {}
+---@param template                      era.m.git.Document
+---@return era.m.git.Document
+local function empty_document(template)
+  return era.m.git.staging.from_text("", {
+    bomb = template.bomb,
+    default_eol = template.eol,
+    encoding = template.encoding,
+  })
+end
+
+---@param result                        stl.git.IBlobResult
+---@param template                      era.m.git.Document
+---@param missing_is_empty              boolean
+---@return era.m.git.Document|nil
+---@return string|nil
+local function document_from_blob_result(result, template, missing_is_empty)
+  if type(result) ~= "table" then
+    return nil, "Invalid Git blob result"
   end
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  -- Append empty string if buffer has EOL (trailing newline)
-  -- This matches the format from git cat-file: "line1\nline2\n" -> {"line1", "line2", ""}
-  -- nvim_buf_get_lines doesn't include trailing newline info, so we check the eol option
-  if vim.api.nvim_get_option_value("eol", { buf = bufnr }) and #lines > 0 then
-    lines[#lines + 1] = ""
+  if result.ok then
+    if type(result.bytes) ~= "string" then
+      return nil, "Git blob result has no bytes"
+    end
+    return era.m.git.staging.from_blob(result.bytes, template.encoding, template.eol)
   end
-  return lines
+  if result.missing and missing_is_empty then
+    return empty_document(template), nil
+  end
+  return nil, result.err or "Failed to read Git blob"
+end
+
+---@param result                        stl.git.IFileInfoResult
+---@return stl.git.IFileInfo|nil
+---@return string|nil
+local function file_info_from_result(result)
+  if type(result) ~= "table" then
+    return nil, "Invalid Git file info result"
+  end
+  if result.ok then
+    if not result.info then
+      return nil, "Git file info result has no entry"
+    end
+    if result.info.has_conflicts then
+      return nil, "Cannot operate on an unmerged index entry"
+    end
+    return result.info, nil
+  end
+  if result.missing then
+    return nil, nil
+  end
+  return nil, result.err or "Failed to inspect Git index"
 end
 
 ---@param buf_cache                  era.m.git.buffer.ICache
 ---@return stl.c.Future              Resolves with nil when done
 local function update_hunks(buf_cache)
-  return stl.c.Future.new(function(resolve)
+  return stl.c.Future.new(function(resolve, reject)
     local bufnr = buf_cache.bufnr ---@type integer
 
     if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -142,9 +179,22 @@ local function update_hunks(buf_cache)
 
     -- If already scheduled or running, add resolver to pending list
     if lock.scheduled or lock.running then
-      table.insert(lock.pending_resolvers, resolve)
+      lock.pending[#lock.pending + 1] = { resolve = resolve, reject = reject }
       lock.scheduled = true
       return
+    end
+
+    local buffer_document = era.m.git.staging.from_buffer(bufnr) ---@type era.m.git.Document
+    local document_format = table.concat({
+      buffer_document.encoding,
+      buffer_document.eol,
+      buffer_document.bomb and "1" or "0",
+    }, ":") ---@type string
+    if buf_cache.document_format ~= document_format then
+      buf_cache.document_format = document_format
+      buf_cache.head_document = nil
+      buf_cache.index_document = nil
+      buf_cache.force_next_update = true
     end
 
     local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
@@ -161,37 +211,92 @@ local function update_hunks(buf_cache)
     local old_hunks = buf_cache.hunks ---@type era.m.git.Hunk[]|nil
     local old_hunks_staged = buf_cache.hunks_staged ---@type era.m.git.Hunk[]|nil
 
-    local buf_lines = get_buf_lines(bufnr) ---@type string[]
     local toplevel = buf_cache.repo.toplevel ---@type string
     local relpath = buf_cache.relpath ---@type string
+
+    local function run_scheduled_update()
+      if not lock.scheduled then
+        return
+      end
+      lock.scheduled = false
+      local pending = lock.pending
+      lock.pending = {}
+      vim.schedule(function()
+        local current_cache = cache[bufnr]
+        if current_cache and current_cache.attached then
+          update_hunks(current_cache):finally(function(resolved, result)
+            for _, waiter in ipairs(pending) do
+              if resolved then
+                waiter.resolve(nil)
+              else
+                waiter.reject(result)
+              end
+            end
+          end)
+        else
+          for _, waiter in ipairs(pending) do
+            waiter.resolve(nil)
+          end
+        end
+      end)
+    end
+
+    ---@param ok                        boolean
+    ---@param err                       string|nil
+    local function settle(ok, err)
+      lock.running = false
+      if ok then
+        resolve(nil)
+      else
+        reject(err or "Failed to update Git hunks")
+      end
+      run_scheduled_update()
+    end
+
+    ---@param err                       string
+    local function fail(err)
+      if cache[bufnr] == buf_cache then
+        buf_cache.dirty = true
+        buf_cache.force_next_update = true
+        stl.reporter.warn({
+          from = __module_name__,
+          subject = "update_hunks",
+          message = err,
+        })
+      end
+      settle(false, err)
+    end
 
     local function finish()
       if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
         lock.running = false
         lock.scheduled = false
         -- Resolve all pending resolvers
-        for _, pending_resolve in ipairs(lock.pending_resolvers) do
-          pending_resolve(nil)
+        for _, waiter in ipairs(lock.pending) do
+          waiter.resolve(nil)
         end
-        lock.pending_resolvers = {}
+        lock.pending = {}
         resolve(nil)
         return
       end
 
-      buf_cache.untracked = buf_cache.object_name == nil and #(buf_cache.compare_text or {}) == 0
-
-      local compare_text_index = buf_cache.compare_text_index or {}
-      local compare_text_head = buf_cache.compare_text or {}
+      local head_document = buf_cache.head_document ---@type era.m.git.Document|nil
+      local index_document = buf_cache.index_document ---@type era.m.git.Document|nil
+      if not head_document or not index_document then
+        fail("Git comparison documents are incomplete")
+        return
+      end
+      buf_cache.untracked = buf_cache.object_name == nil
 
       local function on_diff_complete()
         if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
           lock.running = false
           lock.scheduled = false
           -- Resolve all pending resolvers
-          for _, pending_resolve in ipairs(lock.pending_resolvers) do
-            pending_resolve(nil)
+          for _, waiter in ipairs(lock.pending) do
+            waiter.resolve(nil)
           end
-          lock.pending_resolvers = {}
+          lock.pending = {}
           resolve(nil)
           return
         end
@@ -211,61 +316,27 @@ local function update_hunks(buf_cache)
 
         buf_cache.dirty = false
 
-        -- Complete current update
-        lock.running = false
-        resolve(nil)
-
-        -- Check if there's a scheduled update waiting
-        if lock.scheduled then
-          lock.scheduled = false
-          -- Capture pending resolvers before clearing
-          local pending = lock.pending_resolvers
-          lock.pending_resolvers = {}
-          -- Use vim.schedule to avoid deep recursion
-          vim.schedule(function()
-            local current_cache = cache[bufnr]
-            if current_cache and current_cache.attached then
-              -- Chain pending resolvers to the new update
-              update_hunks(current_cache):finally(function()
-                for _, pending_resolve in ipairs(pending) do
-                  pending_resolve(nil)
-                end
-              end)
-            else
-              -- No more updates, resolve all pending
-              for _, pending_resolve in ipairs(pending) do
-                pending_resolve(nil)
-              end
-            end
-          end)
-        end
+        settle(true, nil)
       end
 
-      -- Compute unstaged hunks (Index vs Buffer)
-      era.m.git.diff.run_diff_future(compare_text_index, buf_lines):finally(function(ok, hunks)
+      era.m.git.diff.run_diff_future(index_document.lines, buffer_document.lines):finally(function(ok, hunks)
         if not ok then
           on_diff_complete()
           return
         end
         buf_cache.hunks = hunks
 
-        if compare_text_index == compare_text_head then
-          buf_cache.hunks_staged = nil
+        era.m.git.diff.run_diff_future(head_document.lines, buffer_document.lines):finally(function(ok_head, hunks_head)
+          if ok_head then
+            buf_cache.hunks_staged = era.m.git.diff.filter_secondary(buf_cache.hunks, hunks_head)
+          end
           on_diff_complete()
-        else
-          -- Compute staged hunks (HEAD vs Buffer, then filter)
-          era.m.git.diff.run_diff_future(compare_text_head, buf_lines):finally(function(ok_head, hunks_head)
-            if ok_head then
-              buf_cache.hunks_staged = era.m.git.diff.filter_common(hunks_head, buf_cache.hunks)
-            end
-            on_diff_complete()
-          end)
-        end
+        end)
       end)
     end
 
-    local need_head = not buf_cache.compare_text ---@type boolean
-    local need_index = not buf_cache.compare_text_index ---@type boolean
+    local need_head = not buf_cache.head_document ---@type boolean
+    local need_index = not buf_cache.index_document ---@type boolean
     local object_name = buf_cache.object_name ---@type string|nil
 
     if not need_head and not need_index then
@@ -274,13 +345,11 @@ local function update_hunks(buf_cache)
     end
 
     if need_index and not object_name then
+      buf_cache.index_document = empty_document(buffer_document)
       need_index = false
     end
 
     if not need_head and not need_index then
-      if not buf_cache.compare_text_index then
-        buf_cache.compare_text_index = buf_cache.compare_text or {}
-      end
       finish()
       return
     end
@@ -292,33 +361,38 @@ local function update_hunks(buf_cache)
 
     if need_head then
       head_future_idx = #futures + 1
-      futures[head_future_idx] = stl.git.info.get_show_text(toplevel, "HEAD:" .. relpath)
+      futures[head_future_idx] = stl.git.info.get_show_blob(toplevel, "HEAD:" .. relpath)
     end
 
     if need_index then
       index_future_idx = #futures + 1
-      futures[index_future_idx] = stl.git.info.get_show_text(toplevel, object_name --[[@as string]])
+      futures[index_future_idx] = stl.git.info.get_show_blob(toplevel, object_name --[[@as string]])
     end
 
     stl.c.Future.all(futures):finally(function(resolved, results)
-      if not resolved or not results then
-        if not buf_cache.compare_text_index then
-          buf_cache.compare_text_index = buf_cache.compare_text or {}
-        end
-        finish()
+      if not resolved or type(results) ~= "table" then
+        fail(type(results) == "string" and results or "Failed to load Git comparison documents")
         return
       end
 
       if head_future_idx then
-        buf_cache.compare_text = results[head_future_idx] or {}
+        local result = results[head_future_idx] ---@type stl.git.IBlobResult
+        local document, err = document_from_blob_result(result, buffer_document, true)
+        if not document then
+          fail("Failed to load HEAD: " .. (err or "unknown error"))
+          return
+        end
+        buf_cache.head_document = document
       end
 
       if index_future_idx then
-        buf_cache.compare_text_index = results[index_future_idx] or buf_cache.compare_text
-      end
-
-      if not buf_cache.compare_text_index then
-        buf_cache.compare_text_index = buf_cache.compare_text or {}
+        local result = results[index_future_idx] ---@type stl.git.IBlobResult
+        local document, err = document_from_blob_result(result, buffer_document, false)
+        if not document then
+          fail("Failed to load index: " .. (err or "unknown error"))
+          return
+        end
+        buf_cache.index_document = document
       end
 
       finish()
@@ -375,8 +449,9 @@ function M.attach(bufnr, opts)
       attached = true,
       bufnr = bufnr,
       changedtick = -1,
-      compare_text = nil,
-      compare_text_index = nil,
+      document_format = nil,
+      head_document = nil,
+      index_document = nil,
       dirty = true,
       file = file,
       force_next_update = true,
@@ -546,8 +621,8 @@ end
 
 function M.invalidate_compare_text_all()
   batch_invalidate_and_refresh({
-    clear_compare_text = true,
-    clear_compare_text_index = true,
+    clear_head_document = true,
+    clear_index_document = true,
     clear_object_name = true,
     delay_interval = 15,
   })
@@ -555,7 +630,7 @@ end
 
 function M.invalidate_index_all()
   batch_invalidate_and_refresh({
-    clear_compare_text_index = true,
+    clear_index_document = true,
     clear_object_name = true,
     delay_interval = 20,
   })
@@ -563,16 +638,16 @@ end
 
 function M.mark_dirty_all()
   batch_invalidate_and_refresh({
-    clear_compare_text_index = true,
+    clear_index_document = true,
     clear_object_name = true,
     delay_interval = 10,
   })
 end
 
 ---@param bufnr                      integer
----@param invalidate_compare_text    ?boolean
+---@param invalidate_index          ?boolean
 ---@return stl.c.Future              Resolves with nil when done; rejects when refresh fails
-function M.refresh(bufnr, invalidate_compare_text)
+function M.refresh(bufnr, invalidate_index)
   return stl.c.Future.new(function(resolve, reject)
     local buf_cache = cache[bufnr]
     if not buf_cache then
@@ -580,25 +655,41 @@ function M.refresh(bufnr, invalidate_compare_text)
       return
     end
 
+    local function fail(err)
+      if cache[bufnr] == buf_cache then
+        buf_cache.dirty = true
+        buf_cache.force_next_update = true
+      end
+      reject(err)
+    end
+
     local function refresh_hunks()
       update_hunks(buf_cache):finally(function(resolved, result)
         if resolved then
           resolve(nil)
         else
-          reject(result)
+          fail(result)
         end
       end)
     end
 
-    if invalidate_compare_text then
-      stl.git.info.get_file_info(buf_cache.repo.toplevel, buf_cache.relpath):finally(function(resolved, file_info)
+    if invalidate_index then
+      stl.git.info.get_file_info(buf_cache.repo.toplevel, buf_cache.relpath):finally(function(resolved, result)
         if not cache[bufnr] then
           resolve(nil)
           return
         end
 
         if not resolved then
-          reject(file_info)
+          buf_cache.index_document = nil
+          fail(result)
+          return
+        end
+
+        local file_info, err = file_info_from_result(result)
+        if err then
+          buf_cache.index_document = nil
+          fail(err)
           return
         end
 
@@ -606,7 +697,7 @@ function M.refresh(bufnr, invalidate_compare_text)
         local old_object_name = buf_cache.object_name
 
         if new_object_name ~= old_object_name then
-          buf_cache.compare_text_index = nil
+          buf_cache.index_document = nil
         end
 
         buf_cache.mode_bits = file_info and file_info.mode_bits
@@ -621,16 +712,236 @@ function M.refresh(bufnr, invalidate_compare_text)
   end)
 end
 
+---@type table<string, boolean>
+local index_writes = {}
+
+---@param on_error                      fun(err: string): nil
+---@param callback                      function
+---@return function
+local function protected_callback(on_error, callback)
+  return function(...)
+    local args = { n = select("#", ...), ... }
+    local ok, err = xpcall(function()
+      callback(unpack(args, 1, args.n))
+    end, debug.traceback)
+    if not ok then
+      on_error(tostring(err))
+    end
+  end
+end
+
+---@param template                      era.m.git.Document
+---@param text                          string
+---@return era.m.git.Document
+local function document_with_text(template, text)
+  local document = era.m.git.staging.from_text(text, {
+    bomb = template.bomb,
+    default_eol = template.eol,
+    encoding = template.encoding,
+  })
+  -- VS Code encodes the exact string returned by applyLineChanges; it does not normalize the
+  -- original and modified documents' EOLs a second time before `hash-object --path`.
+  document.text = text
+  return document
+end
+
+---@class era.m.git.buffer.IIndexSnapshot
+---@field public document               era.m.git.Document
+---@field public object_name            string|nil
+
+---@param toplevel                      string
+---@param relpath                       string
+---@param template                      era.m.git.Document
+---@return stl.c.Future
+local function load_index_context(toplevel, relpath, template)
+  return stl.c.Future.new(function(resolve, reject)
+    stl.git.info.get_file_info(toplevel, relpath):finally(protected_callback(reject, function(resolved, result)
+      if not resolved then
+        reject(result)
+        return
+      end
+      local file_info, info_err = file_info_from_result(result)
+      if info_err then
+        reject(info_err)
+        return
+      end
+      if not file_info or not file_info.object_name then
+        stl.git.info
+          .get_head_file_mode(toplevel, relpath)
+          :finally(protected_callback(reject, function(mode_resolved, mode_result)
+            if not mode_resolved or type(mode_result) ~= "table" then
+              reject(type(mode_result) == "string" and mode_result or "Failed to inspect HEAD mode")
+              return
+            end
+            if not mode_result.ok and not mode_result.missing then
+              reject(mode_result.err or "Failed to inspect HEAD mode")
+              return
+            end
+            resolve({
+              add = true,
+              document = empty_document(template),
+              mode_bits = mode_result.mode_bits or "100644",
+              object_name = nil,
+            })
+          end))
+        return
+      end
+
+      stl.git.info
+        .get_show_blob(toplevel, file_info.object_name)
+        :finally(protected_callback(reject, function(blob_resolved, result)
+          if not blob_resolved then
+            reject(result or "Failed to read index blob")
+            return
+          end
+          local document, err = document_from_blob_result(result, template, false)
+          if not document then
+            reject(err or "Failed to read index blob")
+            return
+          end
+          resolve({
+            add = false,
+            document = document,
+            mode_bits = file_info.mode_bits or "100644",
+            object_name = file_info.object_name,
+          })
+        end))
+    end))
+  end)
+end
+
+---@param toplevel                      string
+---@param relpath                       string
+---@param template                      era.m.git.Document
+---@return stl.c.Future
+local function load_head_document(toplevel, relpath, template)
+  return stl.c.Future.new(function(resolve, reject)
+    stl.git.info
+      .get_show_blob(toplevel, "HEAD:" .. relpath)
+      :finally(protected_callback(reject, function(resolved, result)
+        if not resolved then
+          reject(result)
+          return
+        end
+        local document, err = document_from_blob_result(result, template, true)
+        if not document then
+          reject(err or "Failed to read HEAD blob")
+          return
+        end
+        resolve(document)
+      end))
+  end)
+end
+
+---@param toplevel                      string
+---@param relpath                       string
+---@param document                      era.m.git.Document
+---@param mode_bits                     string
+---@param add                           boolean
+---@return stl.c.Future
+local function write_index_document(toplevel, relpath, document, mode_bits, add)
+  return stl.c.Future.new(function(resolve)
+    local finished = false ---@type boolean
+    ---@param result                    { ok: boolean, err: string|nil }
+    local function finish(result)
+      if finished then
+        return
+      end
+      finished = true
+      resolve(result)
+    end
+
+    local function fail(err)
+      finish({ ok = false, err = tostring(err) })
+    end
+
+    local ok, err = xpcall(function()
+      local bytes, encode_err = era.m.git.staging.encode(document)
+      if not bytes then
+        finish({ ok = false, err = encode_err or "Failed to encode document" })
+        return
+      end
+
+      stl.git.act.hash_object(toplevel, relpath, bytes):finally(protected_callback(fail, function(hash_resolved, hash)
+        if not hash_resolved or not hash then
+          finish({ ok = false, err = "Failed to hash document" })
+          return
+        end
+        stl.git.act
+          .update_index(toplevel, mode_bits, hash, relpath, nil, add)
+          :finally(protected_callback(fail, function(updated, updated_ok)
+            if updated and updated_ok then
+              finish({ ok = true, err = nil })
+            else
+              finish({ ok = false, err = "Failed to update index" })
+            end
+          end))
+      end))
+    end, debug.traceback)
+    if not ok then
+      fail(err)
+    end
+  end)
+end
+
+---@param key                           string
+---@param task                          fun(finish: fun(result: { ok: boolean, err: string|nil }): nil): nil
+---@return stl.c.Future
+local function with_index_write(key, task)
+  return stl.c.Future.new(function(resolve)
+    if index_writes[key] then
+      resolve({ ok = false, err = "Another hunk write is already running for this file" })
+      return
+    end
+    index_writes[key] = true
+    local finished = false ---@type boolean
+    local function finish(result)
+      if finished then
+        return
+      end
+      finished = true
+      index_writes[key] = nil
+      resolve(result)
+    end
+    local ok, err = pcall(task, finish)
+    if not ok then
+      finish({ ok = false, err = tostring(err) })
+    end
+  end)
+end
+
+---@param hunks                         era.m.git.Hunk[]
+---@param range                         { [1]: integer, [2]: integer }
+---@param partial                       boolean
+---@return era.m.git.Hunk[]
+local function select_hunks(hunks, range, partial)
+  local selected = {} ---@type era.m.git.Hunk[]
+  for _, hunk in ipairs(hunks) do
+    if partial then
+      local intersected = era.m.git.staging.intersect(hunk, range[1], range[2])
+      if intersected then
+        selected[#selected + 1] = intersected
+      end
+    elseif era.m.git.staging.touches(hunk, range[1], range[2]) then
+      selected[1] = hunk
+      break
+    end
+  end
+  return selected
+end
+
 ---@param bufnr                      integer
 ---@return boolean
 function M.reset_buffer(bufnr)
   local buf_cache = cache[bufnr]
-  if not buf_cache then
+  if not buf_cache or not buf_cache.index_document then
+    return false
+  end
+  if buf_cache.untracked then
     return false
   end
 
-  local compare_text = buf_cache.compare_text or {} ---@type string[]
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, compare_text)
+  era.m.git.staging.replace_buffer_text(bufnr, buf_cache.index_document.text)
   return true
 end
 
@@ -640,41 +951,36 @@ end
 ---@return string|nil
 function M.reset_hunk(bufnr, range)
   local buf_cache = cache[bufnr]
-  if not buf_cache then
+  if not buf_cache or not buf_cache.index_document then
     return false, "Buffer not attached"
   end
-
-  local hunks ---@type era.m.git.Hunk[]
-  if range then
-    hunks = {}
-    local top, bot = range[1], range[2] ---@type integer, integer
-    for _, hunk in ipairs(buf_cache.hunks or {}) do
-      local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
-      local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
-      if not (effective_vend < top or effective_start > bot) then
-        hunks[#hunks + 1] = hunk
-      end
-    end
-  else
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-    local hunk = era.m.git.hunk.find(lnum, buf_cache.hunks)
-    hunks = hunk and { hunk } or {}
+  if buf_cache.untracked then
+    return false, "Untracked files have no index content to restore"
   end
 
-  if #hunks == 0 then
+  local buffer_document = era.m.git.staging.from_buffer(bufnr) ---@type era.m.git.Document
+  local index_document = buf_cache.index_document ---@type era.m.git.Document
+  local hunks = era.m.git.diff.run_diff(index_document.lines, buffer_document.lines) ---@type era.m.git.Hunk[]
+  if not range then
+    local lnum = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())[1] ---@type integer
+    range = { lnum, lnum }
+  end
+
+  local untouched = {} ---@type era.m.git.Hunk[]
+  local touched = false ---@type boolean
+  for _, hunk in ipairs(hunks) do
+    if era.m.git.staging.touches(hunk, range[1], range[2]) then
+      touched = true
+    else
+      untouched[#untouched + 1] = hunk
+    end
+  end
+  if not touched then
     return false, "No hunk at cursor"
   end
 
-  -- Process hunks from bottom to top to avoid line number offset issues
-  for i = #hunks, 1, -1 do
-    local hunk = hunks[i] ---@type era.m.git.Hunk
-    -- For topdelete (added.start = 0), insert at beginning (index 0)
-    local start_line = hunk.added.count == 0 and hunk.added.start or (hunk.added.start - 1) ---@type integer
-    local end_line = start_line + hunk.added.count ---@type integer
-    vim.api.nvim_buf_set_lines(bufnr, start_line, end_line, false, hunk.removed.lines)
-  end
-
+  local text = era.m.git.staging.apply_line_changes(index_document, buffer_document, untouched) ---@type string
+  era.m.git.staging.replace_buffer_text(bufnr, text)
   return true, nil
 end
 
@@ -695,130 +1001,167 @@ function M.stage_buffer(bufnr)
   end)
 end
 
+---@class era.m.git.buffer.IStageRangeOpts
+---@field public buffer_document        era.m.git.Document
+---@field public expected_index         era.m.git.buffer.IIndexSnapshot
+---@field public partial                boolean
+---@field public range                  { [1]: integer, [2]: integer }
+---@field public relpath                string
+---@field public toplevel               string
+
+---@param opts                          era.m.git.buffer.IStageRangeOpts
+---@return stl.c.Future
+function M.stage_range(opts)
+  local key = opts.toplevel .. "\0" .. opts.relpath ---@type string
+  return with_index_write(key, function(finish)
+    load_index_context(opts.toplevel, opts.relpath, opts.buffer_document):finally(protected_callback(function(err)
+      finish({ ok = false, err = err })
+    end, function(loaded, context)
+      if not loaded or type(context) ~= "table" then
+        finish({ ok = false, err = type(context) == "string" and context or "Failed to load index" })
+        return
+      end
+
+      local index_document = context.document ---@type era.m.git.Document
+      if
+        context.object_name ~= opts.expected_index.object_name
+        or index_document.text ~= opts.expected_index.document.text
+      then
+        finish({ ok = false, err = "The index changed since the hunk was drawn; try again" })
+        return
+      end
+
+      local hunks = era.m.git.diff.run_diff(index_document.lines, opts.buffer_document.lines) ---@type era.m.git.Hunk[]
+      local selected = select_hunks(hunks, opts.range, opts.partial) ---@type era.m.git.Hunk[]
+      if #selected == 0 then
+        finish({ ok = false, err = "The selection range does not contain any changes" })
+        return
+      end
+
+      local text = era.m.git.staging.apply_line_changes(index_document, opts.buffer_document, selected) ---@type string
+      local document = document_with_text(opts.buffer_document, text) ---@type era.m.git.Document
+      write_index_document(opts.toplevel, opts.relpath, document, context.mode_bits, context.add):finally(
+        protected_callback(function(err)
+          finish({ ok = false, err = err })
+        end, function(resolved, result)
+          if resolved and type(result) == "table" then
+            finish(result)
+          else
+            finish({ ok = false, err = type(result) == "string" and result or "Failed to write index" })
+          end
+        end)
+      )
+    end))
+  end)
+end
+
 ---@param bufnr                      integer
 ---@param range                      ?{ [1]: integer, [2]: integer }
 ---@return stl.c.Future              Resolves with { ok: boolean, err: ?string }
 function M.stage_hunk(bufnr, range)
-  return stl.c.Future.new(function(resolve)
-    local buf_cache = cache[bufnr]
-    if not buf_cache then
-      resolve({ ok = false, err = "Buffer not attached" })
-      return
+  local buf_cache = cache[bufnr]
+  if not buf_cache or not buf_cache.index_document then
+    return stl.c.Future.resolve({ ok = false, err = "Buffer not attached" })
+  end
+
+  local partial = range ~= nil ---@type boolean
+  if not range then
+    local lnum = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())[1] ---@type integer
+    range = { lnum, lnum }
+  end
+
+  local future = M.stage_range({
+    buffer_document = era.m.git.staging.from_buffer(bufnr),
+    expected_index = {
+      document = buf_cache.index_document,
+      object_name = buf_cache.object_name,
+    },
+    partial = partial,
+    range = range,
+    relpath = buf_cache.relpath,
+    toplevel = buf_cache.repo.toplevel,
+  })
+  return future:then_(function(result)
+    if not result.ok then
+      return result
     end
-
-    local hunks ---@type era.m.git.Hunk[]
-    if range then
-      hunks = era.m.git.hunk.create_partials(buf_cache.hunks, range[1], range[2])
-    else
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-      local hunk = era.m.git.hunk.find(lnum, buf_cache.hunks)
-      hunks = hunk and { hunk } or {}
-    end
-
-    if #hunks == 0 then
-      resolve({ ok = false, err = "No hunk at cursor" })
-      return
-    end
-
-    local toplevel = buf_cache.repo.toplevel
-    local relpath = buf_cache.relpath
-    local mode_bits = buf_cache.mode_bits
-
-    local function do_stage()
-      local patch = era.m.git.hunk.create_patch_multi(relpath, hunks, mode_bits, false)
-      stl.git.act.apply_patch(toplevel, patch, false):finally(function(resolved, result)
-        if resolved and result and result.ok then
-          M.refresh(bufnr, true):finally(function()
-            resolve({ ok = true, err = nil })
-          end)
-        else
-          resolve({ ok = false, err = result and result.err or "apply_patch failed" })
-        end
+    return stl.c.Future.new(function(resolve)
+      M.refresh(bufnr, true):finally(function()
+        resolve(result)
       end)
-    end
-
-    if not buf_cache.object_name then
-      stl.async.run(function()
-        stl.git.act.add_intent_to_add(toplevel, relpath):await()
-        local file_info = stl.git.info.get_file_info(toplevel, relpath):await()
-        buf_cache.mode_bits = file_info and file_info.mode_bits
-        buf_cache.object_name = file_info and file_info.object_name
-        mode_bits = buf_cache.mode_bits
-        if not buf_cache.object_name or not buf_cache.mode_bits then
-          resolve({ ok = false, err = "Failed to read index entry for new file" })
-          return
-        end
-        do_stage()
-      end)
-    else
-      do_stage()
-    end
+    end)
   end)
 end
 
---- Apply inverted hunks to restore index content to HEAD state.
----
---- This function takes the current index content and "undoes" the staged changes
---- by replacing the modified sections with their original HEAD content.
----
---- Coordinate system:
---- - hunks_staged are computed as: diff(HEAD, Index)
----   - hunk.removed = lines from HEAD (what was removed to get Index)
----   - hunk.added = lines in Index (what was added to get Index)
---- - To unstage: replace added sections in Index with removed sections from HEAD
----
---- Edge cases handled:
---- - Pure deletions (added.count == 0): added.start points to where deletion occurred
---- - Pure additions (removed.count == 0): just remove the added lines
---- - Hunks must be sorted by added.start for correct application
----
----@param index_lines                string[]  Current index (staged) content
----@param head_lines                 string[]  Original HEAD content
----@param hunks                      era.m.git.Hunk[]  Staged hunks (HEAD vs Index diff)
----@return string[]
-local function apply_inverted_hunks(index_lines, head_lines, hunks)
-  if #hunks == 0 then
-    return index_lines
-  end
+---@class era.m.git.buffer.IUnstageRangeOpts
+---@field public expected_index         era.m.git.buffer.IIndexSnapshot
+---@field public range                  { [1]: integer, [2]: integer }
+---@field public relpath                string
+---@field public toplevel               string
 
-  table.sort(hunks, function(a, b)
-    return a.added.start < b.added.start
-  end)
-
-  local result = {} ---@type string[]
-  local current_line = 1
-
-  for _, hunk in ipairs(hunks) do
-    local start_in_index = hunk.added.start
-    local count_in_index = hunk.added.count
-    local start_in_head = hunk.removed.start
-    local count_in_head = hunk.removed.count
-
-    -- For topdelete (start_in_index = 0), no lines to copy before the hunk
-    -- Otherwise, copy lines from current position to just before the hunk
-    if start_in_index > 0 then
-      for i = current_line, start_in_index - 1 do
-        result[#result + 1] = index_lines[i]
-      end
-    end
-    -- Move past the added lines in index (for topdelete, this is 0 + 0 = 0, so use max(1, ...))
-    current_line = math.max(1, start_in_index + count_in_index)
-
-    if count_in_head > 0 then
-      for i = start_in_head, start_in_head + count_in_head - 1 do
-        if head_lines[i] then
-          result[#result + 1] = head_lines[i]
+---@param opts                          era.m.git.buffer.IUnstageRangeOpts
+---@return stl.c.Future
+function M.unstage_range(opts)
+  local key = opts.toplevel .. "\0" .. opts.relpath ---@type string
+  return with_index_write(key, function(finish)
+    load_index_context(opts.toplevel, opts.relpath, opts.expected_index.document):finally(
+      protected_callback(function(err)
+        finish({ ok = false, err = err })
+      end, function(index_loaded, context)
+        if not index_loaded or type(context) ~= "table" or context.add then
+          finish({ ok = false, err = "The file has no index content to unstage partially" })
+          return
         end
-      end
-    end
-  end
 
-  for i = current_line, #index_lines do
-    result[#result + 1] = index_lines[i]
-  end
+        local index_document = context.document ---@type era.m.git.Document
+        if
+          context.object_name ~= opts.expected_index.object_name
+          or index_document.text ~= opts.expected_index.document.text
+        then
+          finish({ ok = false, err = "The index changed since the staged diff was drawn; try again" })
+          return
+        end
 
-  return result
+        load_head_document(opts.toplevel, opts.relpath, opts.expected_index.document):finally(
+          protected_callback(function(err)
+            finish({ ok = false, err = err })
+          end, function(head_loaded, head_document)
+            if not head_loaded or type(head_document) ~= "table" then
+              finish({ ok = false, err = type(head_document) == "string" and head_document or "Failed to load HEAD" })
+              return
+            end
+
+            local hunks = era.m.git.diff.run_diff(head_document.lines, index_document.lines) ---@type era.m.git.Hunk[]
+            local selected = select_hunks(hunks, opts.range, true) ---@type era.m.git.Hunk[]
+            if #selected == 0 then
+              finish({ ok = false, err = "The selection range does not contain any staged changes" })
+              return
+            end
+
+            local inverted = {} ---@type era.m.git.Hunk[]
+            for _, hunk in ipairs(selected) do
+              inverted[#inverted + 1] = era.m.git.staging.invert(hunk)
+            end
+            table.sort(inverted, era.m.git.staging.less)
+
+            local text = era.m.git.staging.apply_line_changes(index_document, head_document, inverted) ---@type string
+            local document = document_with_text(opts.expected_index.document, text) ---@type era.m.git.Document
+            write_index_document(opts.toplevel, opts.relpath, document, context.mode_bits, false):finally(
+              protected_callback(function(err)
+                finish({ ok = false, err = err })
+              end, function(resolved, result)
+                if resolved and type(result) == "table" then
+                  finish(result)
+                else
+                  finish({ ok = false, err = type(result) == "string" and result or "Failed to write index" })
+                end
+              end)
+            )
+          end)
+        )
+      end)
+    )
+  end)
 end
 
 ---@param bufnr                      integer

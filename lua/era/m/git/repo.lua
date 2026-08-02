@@ -91,7 +91,7 @@ end
 
 ---@param file                       string
 ---@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with era.m.git.FileInfo|nil
+---@return stl.c.Future              Resolves with stl.git.IFileInfoResult
 function M:get_file_info(file, token)
   local relpath = dot.path.relative(self.toplevel, file)
   return stl.git.info.get_file_info(self.toplevel, relpath, token)
@@ -105,18 +105,25 @@ end
 
 ---@param object                     string
 ---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with stl.git.IBlobResult
+function M:get_show_blob(object, token)
+  return stl.git.info.get_show_blob(self.toplevel, object, token)
+end
+
+---@param object                     string
+---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with string[]|nil
 function M:get_show_text(object, token)
   return stl.git.info.get_show_text(self.toplevel, object, token)
 end
 
 ---@param file                       string
----@param lines                      string[]
+---@param content                    string
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with string|nil (hash)
-function M:hash_object(file, lines, token)
+function M:hash_object(file, content, token)
   local relpath = dot.path.relative(self.toplevel, file)
-  return stl.git.act.hash_object(self.toplevel, relpath, lines, token)
+  return stl.git.act.hash_object(self.toplevel, relpath, content, token)
 end
 
 ---@param token                      ?stl.c.CancellationToken
@@ -167,10 +174,11 @@ end
 ---@param object_name                string
 ---@param file                       string
 ---@param token                      ?stl.c.CancellationToken
+---@param add                        ?boolean
 ---@return stl.c.Future              Resolves with boolean
-function M:update_index(mode_bits, object_name, file, token)
+function M:update_index(mode_bits, object_name, file, token, add)
   local relpath = dot.path.relative(self.toplevel, file)
-  return stl.git.act.update_index(self.toplevel, mode_bits, object_name, relpath, token)
+  return stl.git.act.update_index(self.toplevel, mode_bits, object_name, relpath, token, add)
 end
 
 return M

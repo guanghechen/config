@@ -8,6 +8,24 @@
 ---@field public gitdir                 string
 ---@field public toplevel               string
 
+---@class stl.git.IBlobResult
+---@field public bytes                  ?string
+---@field public err                    ?string
+---@field public missing                boolean
+---@field public ok                     boolean
+
+---@class stl.git.IFileInfoResult
+---@field public err                    ?string
+---@field public info                   ?stl.git.IFileInfo
+---@field public missing                boolean
+---@field public ok                     boolean
+
+---@class stl.git.IFileModeResult
+---@field public err                    ?string
+---@field public missing                boolean
+---@field public mode_bits              ?string
+---@field public ok                     boolean
+
 ---@class stl.git.info
 local M = {}
 
@@ -180,6 +198,133 @@ end
 -- Public (async methods - Future version)
 ----------------------------------------------------------------------------------------------------
 
+---@param message                       string
+---@param obj                           vim.SystemCompleted
+---@return string
+local function git_error(message, obj)
+  local stderr = vim.trim(obj.stderr or "") ---@type string
+  if stderr ~= "" then
+    return message .. ": " .. stderr
+  end
+  return string.format("%s (exit %s)", message, tostring(obj.code))
+end
+
+---@param cwd                           string
+---@param object                        string
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with stl.git.IBlobResult
+function M.get_show_blob(cwd, object, token)
+  return stl.c.Future.new(function(resolve)
+    local finished = false ---@type boolean
+    local proc = nil ---@type vim.SystemObj|nil
+    local cancel_sub = nil ---@type stl.c.IUnsubscribable|nil
+
+    ---@param result                    stl.git.IBlobResult
+    local function finish(result)
+      if finished then
+        return
+      end
+      finished = true
+      if cancel_sub then
+        cancel_sub:unsubscribe()
+      end
+      resolve(result)
+    end
+
+    local function cancelled()
+      return token ~= nil and token:is_cancelled()
+    end
+
+    if cancelled() then
+      finish({ ok = false, missing = false, err = "Operation cancelled" })
+      return
+    end
+
+    proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = false }, function(obj)
+      vim.schedule(function()
+        if finished then
+          return
+        end
+        if obj.code == 0 then
+          finish({ ok = true, missing = false, bytes = obj.stdout or "" })
+          return
+        end
+
+        local read_err = git_error("Failed to read Git object " .. object, obj) ---@type string
+        local index_path = object:match("^:(.*)$") ---@type string|nil
+        local _, staged_path = object:match("^:(%d):(.*)$")
+        if staged_path then
+          index_path = staged_path
+        end
+
+        if index_path then
+          proc = vim.system(
+            { "git", "-C", cwd, "ls-files", "--error-unmatch", "--", index_path },
+            { text = false },
+            function(index_obj)
+              vim.schedule(function()
+                if finished then
+                  return
+                end
+                if index_obj.code == 1 then
+                  finish({ ok = false, missing = true, err = "Git index path does not exist: " .. index_path })
+                elseif index_obj.code == 0 then
+                  finish({ ok = false, missing = false, err = read_err })
+                else
+                  finish({
+                    ok = false,
+                    missing = false,
+                    err = git_error("Failed to inspect Git index path " .. index_path, index_obj),
+                  })
+                end
+              end)
+            end
+          )
+          return
+        end
+
+        local revision, relpath = object:match("^([^:]+):(.*)$")
+        if revision then
+          proc = vim.system(
+            { "git", "-C", cwd, "ls-tree", revision, "--", relpath },
+            { text = false },
+            function(tree_obj)
+              vim.schedule(function()
+                if finished then
+                  return
+                end
+                if tree_obj.code ~= 0 then
+                  finish({
+                    ok = false,
+                    missing = false,
+                    err = git_error("Failed to inspect Git tree " .. revision, tree_obj),
+                  })
+                elseif tree_obj.stdout == nil or tree_obj.stdout == "" then
+                  finish({ ok = false, missing = true, err = "Git tree path does not exist: " .. object })
+                else
+                  finish({ ok = false, missing = false, err = read_err })
+                end
+              end)
+            end
+          )
+          return
+        end
+
+        finish({ ok = false, missing = false, err = read_err })
+      end)
+    end)
+
+    if token then
+      cancel_sub = token:on_cancel(function()
+        if proc then
+          proc:kill(9)
+        end
+        finish({ ok = false, missing = false, err = "Operation cancelled" })
+      end)
+    end
+  end)
+end
+
 ---@param cwd                           string
 ---@param token                         ?stl.c.CancellationToken
 ---@return stl.c.Future                 Resolves with { abbrev_head: string, detached: boolean }
@@ -226,17 +371,41 @@ end
 ---@param cwd                           string
 ---@param relpath                       string
 ---@param token                         ?stl.c.CancellationToken
----@return stl.c.Future                 Resolves with ?stl.git.IFileInfo
+---@return stl.c.Future                 Resolves with stl.git.IFileInfoResult
 function M.get_file_info(cwd, relpath, token)
   return stl.c.Future.new(function(resolve)
+    local finished = false ---@type boolean
+    local proc = nil ---@type vim.SystemObj|nil
+    local cancel_sub = nil ---@type stl.c.IUnsubscribable|nil
+
+    ---@param result                    stl.git.IFileInfoResult
+    local function finish(result)
+      if finished then
+        return
+      end
+      finished = true
+      if cancel_sub then
+        cancel_sub:unsubscribe()
+      end
+      resolve(result)
+    end
+
     if token and token:is_cancelled() then
-      resolve(nil)
+      finish({ ok = false, missing = false, err = "Operation cancelled" })
       return
     end
 
-    local proc = vim.system({ "git", "-C", cwd, "ls-files", "--stage", "--", relpath }, { text = true }, function(obj)
+    proc = vim.system({ "git", "-C", cwd, "ls-files", "--stage", "--", relpath }, { text = true }, function(obj)
       vim.schedule(function()
-        if token and token:is_cancelled() then
+        if finished then
+          return
+        end
+        if obj.code ~= 0 then
+          finish({
+            ok = false,
+            missing = false,
+            err = git_error("Failed to inspect Git index path " .. relpath, obj),
+          })
           return
         end
 
@@ -248,32 +417,111 @@ function M.get_file_info(cwd, relpath, token)
           relpath = relpath,
         }
 
-        if obj.code == 0 then
-          local lines = vim.split(obj.stdout or "", "\n", { plain = true })
-          for _, line in ipairs(lines) do
-            local mode, object, stage = line:match("^(%d+)%s+(%x+)%s+(%d)%s+")
-            if mode and object and stage then
-              if stage == "0" then
-                info.mode_bits = mode
-                info.object_name = object
-              else
-                info.has_conflicts = true
-              end
+        local lines = vim.split(obj.stdout or "", "\n", { plain = true })
+        for _, line in ipairs(lines) do
+          local mode, object, stage = line:match("^(%d+)%s+(%x+)%s+(%d)%s+")
+          if mode and object and stage then
+            if stage == "0" then
+              info.mode_bits = mode
+              info.object_name = object
+            else
+              info.has_conflicts = true
             end
           end
         end
 
         if not info.object_name and not info.has_conflicts then
-          resolve(nil)
+          finish({ ok = false, missing = true })
         else
-          resolve(info)
+          finish({ ok = true, missing = false, info = info })
         end
       end)
     end)
 
     if token then
-      token:on_cancel(function()
-        proc:kill(9)
+      cancel_sub = token:on_cancel(function()
+        if proc then
+          proc:kill(9)
+        end
+        finish({ ok = false, missing = false, err = "Operation cancelled" })
+      end)
+    end
+  end)
+end
+
+---@param cwd                           string
+---@param relpath                       string
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with stl.git.IFileModeResult
+function M.get_head_file_mode(cwd, relpath, token)
+  return stl.c.Future.new(function(resolve)
+    local finished = false ---@type boolean
+    local proc = nil ---@type vim.SystemObj|nil
+    local cancel_sub = nil ---@type stl.c.IUnsubscribable|nil
+
+    ---@param result                    stl.git.IFileModeResult
+    local function finish(result)
+      if finished then
+        return
+      end
+      finished = true
+      if cancel_sub then
+        cancel_sub:unsubscribe()
+      end
+      resolve(result)
+    end
+
+    if token and token:is_cancelled() then
+      finish({ ok = false, missing = false, err = "Operation cancelled" })
+      return
+    end
+
+    proc = vim.system({ "git", "-C", cwd, "ls-tree", "HEAD", "--", relpath }, { text = true }, function(obj)
+      vim.schedule(function()
+        if finished then
+          return
+        end
+        if obj.code ~= 0 then
+          local tree_err = git_error("Failed to inspect HEAD path " .. relpath, obj) ---@type string
+          proc = vim.system(
+            { "git", "-C", cwd, "rev-parse", "--verify", "--quiet", "HEAD" },
+            { text = false },
+            function(head_obj)
+              vim.schedule(function()
+                if finished then
+                  return
+                end
+                if head_obj.code == 1 then
+                  finish({ ok = false, missing = true })
+                elseif head_obj.code == 0 then
+                  finish({ ok = false, missing = false, err = tree_err })
+                else
+                  finish({
+                    ok = false,
+                    missing = false,
+                    err = git_error("Failed to inspect HEAD", head_obj),
+                  })
+                end
+              end)
+            end
+          )
+          return
+        end
+        local mode_bits = (obj.stdout or ""):match("^(%d+)") ---@type string|nil
+        if mode_bits then
+          finish({ ok = true, missing = false, mode_bits = mode_bits })
+        else
+          finish({ ok = false, missing = true })
+        end
+      end)
+    end)
+
+    if token then
+      cancel_sub = token:on_cancel(function()
+        if proc then
+          proc:kill(9)
+        end
+        finish({ ok = false, missing = false, err = "Operation cancelled" })
       end)
     end
   end)

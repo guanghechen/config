@@ -121,26 +121,19 @@ end
 
 ---@param cwd                           string
 ---@param file                          string
----@param lines                         string[]
+---@param content                       string
 ---@param token                         ?stl.c.CancellationToken
 ---@return stl.c.Future                 Resolves with hash (string|nil)
-function M.hash_object(cwd, file, lines, token)
+function M.hash_object(cwd, file, content, token)
   return stl.c.Future.new(function(resolve)
     if token and token:is_cancelled() then
       resolve(nil)
       return
     end
 
-    local stdin = table.concat(lines, "\n")
-    -- Only add trailing newline if the last element is NOT already an empty string
-    -- (empty string at end indicates the original file had a trailing newline)
-    if #lines > 0 and lines[#lines] ~= "" then
-      stdin = stdin .. "\n"
-    end
-
     local proc = vim.system(
       { "git", "-C", cwd, "hash-object", "-w", "--path", file, "--stdin" },
-      { stdin = stdin, text = true },
+      { stdin = content, text = false },
       function(obj)
         vim.schedule(function()
           if obj.code ~= 0 then
@@ -152,7 +145,7 @@ function M.hash_object(cwd, file, lines, token)
             })
             resolve(nil)
           else
-            local hash = vim.trim(obj.stdout or "")
+            local hash = (obj.stdout or ""):match("^([0-9a-fA-F]+)") or ""
             resolve(hash ~= "" and hash or nil)
           end
         end)
@@ -271,8 +264,9 @@ end
 ---@param object_name                   string
 ---@param relpath                       string
 ---@param token                         ?stl.c.CancellationToken
+---@param add                           ?boolean
 ---@return stl.c.Future                 Resolves with boolean (success)
-function M.update_index(cwd, mode_bits, object_name, relpath, token)
+function M.update_index(cwd, mode_bits, object_name, relpath, token, add)
   return stl.c.Future.new(function(resolve)
     if token and token:is_cancelled() then
       resolve(false)
@@ -280,7 +274,12 @@ function M.update_index(cwd, mode_bits, object_name, relpath, token)
     end
 
     local cacheinfo = string.format("%s,%s,%s", mode_bits, object_name, relpath)
-    local proc = vim.system({ "git", "-C", cwd, "update-index", "--cacheinfo", cacheinfo }, { text = true }, function(obj)
+    local args = { "git", "-C", cwd, "update-index" } ---@type string[]
+    if add then
+      args[#args + 1] = "--add"
+    end
+    vim.list_extend(args, { "--cacheinfo", cacheinfo })
+    local proc = vim.system(args, { text = true }, function(obj)
       vim.schedule(function()
         if obj.code ~= 0 then
           stl.reporter.warn({

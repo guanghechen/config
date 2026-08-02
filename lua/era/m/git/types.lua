@@ -25,6 +25,13 @@
 -- Hunk types
 ----------------------------------------------------------------------------------------------------
 
+---@class era.m.git.Document
+---@field public bomb                   boolean
+---@field public encoding               string
+---@field public eol                    string
+---@field public lines                  string[]
+---@field public text                   string
+
 ---@class era.m.git.Hunk
 ---@field public added                  era.m.git.HunkNode
 ---@field public head                   string
@@ -58,17 +65,18 @@
 ---@field public apply_patch            fun(self: era.m.git.Repo, patch: string, reverse: boolean|nil, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public commondir              ?string
 ---@field public detached               boolean
----@field public get_file_info          fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
+---@field public get_file_info          fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future Resolves with stl.git.IFileInfoResult
 ---@field public get_relpath            fun(self: era.m.git.Repo, file: string): string
+---@field public get_show_blob          fun(self: era.m.git.Repo, object: string, token: stl.c.CancellationToken|nil): stl.c.Future Resolves with stl.git.IBlobResult
 ---@field public get_show_text          fun(self: era.m.git.Repo, object: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public gitdir                 string
----@field public hash_object            fun(self: era.m.git.Repo, file: string, lines: string[], token: stl.c.CancellationToken|nil): stl.c.Future
+---@field public hash_object            fun(self: era.m.git.Repo, file: string, content: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public refresh_head           fun(self: era.m.git.Repo, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public reset_file             fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public stage_file             fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public toplevel               string
 ---@field public unstage_file           fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
----@field public update_index           fun(self: era.m.git.Repo, mode_bits: string, object_name: string, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
+---@field public update_index           fun(self: era.m.git.Repo, mode_bits: string, object_name: string, file: string, token: stl.c.CancellationToken|nil, add: boolean|nil): stl.c.Future
 
 ---@class era.m.git.FileInfo
 ---@field public has_conflicts          ?boolean
@@ -84,13 +92,14 @@
 ---@field public attached               boolean
 ---@field public bufnr                  integer
 ---@field public changedtick            integer
----@field public compare_text           ?string[]
----@field public compare_text_index     ?string[]
+---@field public document_format        ?string
 ---@field public dirty                  boolean
 ---@field public file                   string
 ---@field public force_next_update      boolean
 ---@field public hunks                  ?era.m.git.Hunk[]
 ---@field public hunks_staged           ?era.m.git.Hunk[]
+---@field public head_document          ?era.m.git.Document
+---@field public index_document         ?era.m.git.Document
 ---@field public mode_bits              ?string
 ---@field public object_name            ?string
 ---@field public relpath                string

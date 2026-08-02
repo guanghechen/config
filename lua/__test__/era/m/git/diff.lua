@@ -51,7 +51,7 @@ t:test("run_diff: content with pipe character", function()
 end)
 
 ----------------------------------------------------------------------------------------------------
--- authoritative hunk tests
+-- authoritative LineChange tests
 ----------------------------------------------------------------------------------------------------
 
 t:test("run_diff: nearby changes remain independent authoritative hunks", function()
@@ -62,6 +62,22 @@ t:test("run_diff: nearby changes remain independent authoritative hunks", functi
   t.assert_eq(2, #hunks, "hunk count")
   t.assert_eq(1, hunks[1].added.start, "first start")
   t.assert_eq(4, hunks[2].added.start, "second start")
+end)
+
+t:test("run_diff: top insertion preserves the zero original anchor", function()
+  local hunks = diff.run_diff({ "b", "c", "" }, { "a", "b", "c", "" })
+  t.assert_eq(0, hunks[1].removed.start, "original anchor")
+  t.assert_eq("@@ -0,0 +1,1 @@", hunks[1].head, "header")
+end)
+
+t:test("run_diff: final-newline-only changes are represented", function()
+  local removed = diff.run_diff({ "a", "b", "" }, { "a", "b" })
+  local added = diff.run_diff({ "a", "b" }, { "a", "b", "" })
+
+  t.assert_eq(1, #removed, "removed final newline")
+  t.assert_true(removed[1].added.no_nl_at_eof == true, "missing newline marker")
+  t.assert_eq(1, #added, "added final newline")
+  t.assert_true(added[1].removed.no_nl_at_eof == true, "original missing newline marker")
 end)
 
 ----------------------------------------------------------------------------------------------------
@@ -111,6 +127,7 @@ t:test("run_diff_future: preserves independent nearby changes", function()
   local done = false
   local result_hunks = nil
 
+  -- Gap = 2, should merge
   local old = { "line1", "line2", "line3", "line4", "" }
   local new = { "modified1", "line2", "line3", "modified4", "" }
 
@@ -150,35 +167,33 @@ t:test("run_diff_future: content with special characters", function()
 end)
 
 ----------------------------------------------------------------------------------------------------
--- filter_common tests
+-- filter_secondary tests
 ----------------------------------------------------------------------------------------------------
 
-t:test("filter_common: nil inputs", function()
-  local result = diff.filter_common(nil, nil)
+t:test("filter_secondary: nil inputs", function()
+  local result = diff.filter_secondary(nil, nil)
   t.assert_eq(nil, result, "nil result")
 end)
 
-t:test("filter_common: identical hunks filtered out", function()
-  local hunks_a = diff.run_diff({ "old", "" }, { "new", "" })
-  local hunks_b = diff.run_diff({ "old", "" }, { "new", "" })
-  local result = diff.filter_common(hunks_a, hunks_b)
+t:test("filter_secondary: duplicate provider changes are hidden", function()
+  local primary = diff.run_diff({ "old", "" }, { "new", "" })
+  local secondary = diff.run_diff({ "old", "" }, { "new", "" })
+  local result = diff.filter_secondary(primary, secondary)
   t.assert_eq(nil, result, "all common filtered")
 end)
 
-t:test("filter_common: different hunks preserved", function()
-  -- Simulate: HEAD="a", Index="b", Buffer="c"
-  -- hunks_head = diff(HEAD, Buffer) = diff("a", "c") -> change at line 1
-  -- hunks_index = diff(Index, Buffer) = diff("b", "c") -> change at line 1
-  -- Result should be hunks in head but not in index (staged changes)
-  -- Since both have changes at same position with same new content, they are "common"
-  -- But the old content differs, so the HEAD hunk represents the staged change
+t:test("filter_secondary: same modified range with different originals stays visible", function()
+  local primary = diff.run_diff({ "index", "" }, { "buffer", "" })
+  local secondary = diff.run_diff({ "head", "" }, { "buffer", "" })
+  local result = diff.filter_secondary(primary, secondary)
+  t.assert_eq(1, result and #result or 0, "secondary hunk preserved")
+end)
 
-  -- Better test: HEAD="original", Index="modified", Buffer="modified" (no unstaged changes)
-  local hunks_head = diff.run_diff({ "original", "" }, { "modified", "" })
-  local hunks_index = diff.run_diff({ "modified", "" }, { "modified", "" }) -- empty
-  local result = diff.filter_common(hunks_head, hunks_index)
-  -- hunks_head has a change, hunks_index is empty, so the change is "staged only"
-  t.assert_eq(1, result and #result or 0, "staged hunk preserved")
+t:test("filter_secondary: original final-newline differences stay visible", function()
+  local primary = diff.run_diff({ "a" }, { "b" })
+  local secondary = diff.run_diff({ "a", "" }, { "b" })
+  local result = diff.filter_secondary(primary, secondary)
+  t.assert_eq(1, result and #result or 0, "EOF-distinct secondary hunk")
 end)
 
 t:run()

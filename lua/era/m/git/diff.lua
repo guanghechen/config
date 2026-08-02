@@ -94,33 +94,8 @@ function M.run_diff(old_lines, new_lines)
 
   local old_has_trailing_nl = #old_lines > 0 and old_lines[#old_lines] == "" ---@type boolean
   local new_has_trailing_nl = #new_lines > 0 and new_lines[#new_lines] == "" ---@type boolean
-
-  local old_effective = old_lines ---@type string[]
-  local new_effective = new_lines ---@type string[]
-
-  if old_has_trailing_nl then
-    old_effective = {}
-    for i = 1, #old_lines - 1 do
-      old_effective[i] = old_lines[i]
-    end
-  end
-
-  if new_has_trailing_nl then
-    new_effective = {}
-    for i = 1, #new_lines - 1 do
-      new_effective[i] = new_lines[i]
-    end
-  end
-
-  local a = table.concat(old_effective, "\n") ---@type string
-  local b = table.concat(new_effective, "\n") ---@type string
-
-  if #old_effective > 0 then
-    a = a .. "\n"
-  end
-  if #new_effective > 0 then
-    b = b .. "\n"
-  end
+  local a = table.concat(old_lines, "\n") ---@type string
+  local b = table.concat(new_lines, "\n") ---@type string
 
   local diff_opts = { result_type = "indices", algorithm = "histogram" }
   local ok, raw = pcall(vim.text.diff, a, b, diff_opts)
@@ -134,20 +109,13 @@ function M.run_diff(old_lines, new_lines)
     local new_start = result[3] ---@type integer
     local new_count = result[4] ---@type integer
 
-    if old_start == 0 then
-      old_start = 1
-    end
-    if new_start == 0 and new_count > 0 then
-      new_start = 1
-    end
-
     local hunk = create_hunk(
       old_start,
       old_count,
       new_start,
       new_count,
-      old_effective,
-      new_effective,
+      old_lines,
+      new_lines,
       old_has_trailing_nl,
       new_has_trailing_nl
     )
@@ -181,33 +149,8 @@ local diff_worker_fn = nil
 local function __run_diff_async__(old_lines, new_lines, callback)
   local old_has_trailing_nl = #old_lines > 0 and old_lines[#old_lines] == "" ---@type boolean
   local new_has_trailing_nl = #new_lines > 0 and new_lines[#new_lines] == "" ---@type boolean
-
-  local old_effective = old_lines ---@type string[]
-  local new_effective = new_lines ---@type string[]
-
-  if old_has_trailing_nl then
-    old_effective = {}
-    for i = 1, #old_lines - 1 do
-      old_effective[i] = old_lines[i]
-    end
-  end
-
-  if new_has_trailing_nl then
-    new_effective = {}
-    for i = 1, #new_lines - 1 do
-      new_effective[i] = new_lines[i]
-    end
-  end
-
-  local a = table.concat(old_effective, "\n") ---@type string
-  local b = table.concat(new_effective, "\n") ---@type string
-
-  if #old_effective > 0 then
-    a = a .. "\n"
-  end
-  if #new_effective > 0 then
-    b = b .. "\n"
-  end
+  local a = table.concat(old_lines, "\n") ---@type string
+  local b = table.concat(new_lines, "\n") ---@type string
 
   -- Lazy load worker function
   if not diff_worker_fn then
@@ -236,20 +179,13 @@ local function __run_diff_async__(old_lines, new_lines, callback)
         local new_start = result[3] ---@type integer
         local new_count = result[4] ---@type integer
 
-        if old_start == 0 then
-          old_start = 1
-        end
-        if new_start == 0 and new_count > 0 then
-          new_start = 1
-        end
-
         local hunk = create_hunk(
           old_start,
           old_count,
           new_start,
           new_count,
-          old_effective,
-          new_effective,
+          old_lines,
+          new_lines,
           old_has_trailing_nl,
           new_has_trailing_nl
         )
@@ -290,75 +226,51 @@ end
 -- Hunk filtering
 ----------------------------------------------------------------------------------------------------
 
----@param a                             era.m.git.Hunk
----@param b                             era.m.git.Hunk
+---@param a                             string[]
+---@param b                             string[]
 ---@return boolean
-local function compare_new(a, b)
-  if a.added.start ~= b.added.start then
+local function same_lines(a, b)
+  if #a ~= #b then
     return false
   end
-  if a.added.count ~= b.added.count then
-    return false
-  end
-  for i = 1, a.added.count do
-    if a.added.lines[i] ~= b.added.lines[i] then
+  for index, line in ipairs(a) do
+    if b[index] ~= line then
       return false
     end
   end
   return true
 end
 
----Filter out common hunks to compute staged-only changes.
----
----Input `a`: diff(HEAD, Buffer) - all changes from HEAD to current buffer
----Input `b`: diff(Index, Buffer) - unstaged changes only
----Output: hunks in `a` but not in `b` - staged changes only
----
----@param a                             era.m.git.Hunk[]|nil
----@param b                             era.m.git.Hunk[]|nil
+---Filter secondary HEAD-to-buffer changes the same way VS Code's QuickDiffModel does.
+---@param primary                       era.m.git.Hunk[]|nil Index -> Buffer
+---@param secondary                     era.m.git.Hunk[]|nil HEAD -> Buffer
 ---@return era.m.git.Hunk[]|nil
-function M.filter_common(a, b)
-  if not a and not b then
+function M.filter_secondary(primary, secondary)
+  if not secondary or #secondary == 0 then
     return nil
   end
+  primary = primary or {}
+  local result = {} ---@type era.m.git.Hunk[]
 
-  a = a or {}
-  b = b or {}
-
-  local a_i = 1 ---@type integer
-  local b_i = 1 ---@type integer
-  local ret = {} ---@type era.m.git.Hunk[]
-
-  for _ = 1, math.max(#a, #b) + 1 do
-    local a_h = a[a_i] ---@type era.m.git.Hunk|nil
-    local b_h = b[b_i] ---@type era.m.git.Hunk|nil
-
-    if not a_h then
-      break
-    end
-
-    if not b_h then
-      for i = a_i, #a do
-        ret[#ret + 1] = a[i]
+  for _, candidate in ipairs(secondary) do
+    local duplicate = false ---@type boolean
+    for _, current in ipairs(primary) do
+      if
+        current.added.start == candidate.added.start
+        and current.added.count == candidate.added.count
+        and current.removed.count == candidate.removed.count
+        and current.removed.no_nl_at_eof == candidate.removed.no_nl_at_eof
+        and same_lines(current.removed.lines, candidate.removed.lines)
+      then
+        duplicate = true
+        break
       end
-      break
     end
-
-    if a_h.added.start > b_h.added.start then
-      b_i = b_i + 1
-    elseif a_h.added.start < b_h.added.start then
-      ret[#ret + 1] = a_h
-      a_i = a_i + 1
-    else
-      if not compare_new(a_h, b_h) then
-        ret[#ret + 1] = a_h
-      end
-      a_i = a_i + 1
-      b_i = b_i + 1
+    if not duplicate then
+      result[#result + 1] = candidate
     end
   end
-
-  return #ret > 0 and ret or nil
+  return #result > 0 and result or nil
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -621,7 +533,5 @@ function M.compute_hunk_word_diff(hunk)
 
   return result
 end
-
-----------------------------------------------------------------------------------------------------
 
 return M

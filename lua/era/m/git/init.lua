@@ -9,6 +9,7 @@ local __mods = {
   Hunkview = "era.m.git.hunkview",
   repo = "era.m.git.repo",
   sign = "era.m.git.sign",
+  staging = "era.m.git.staging",
   state = "era.m.git.state",
   status = "era.m.git.status",
   watcher = "era.m.git.watcher",
@@ -23,6 +24,7 @@ local __mods = {
 ---@field public Hunkview               era.m.git.Hunkview
 ---@field public repo                   era.m.git.repo
 ---@field public sign                   era.m.git.sign
+---@field public staging                era.m.git.staging
 ---@field public state                  era.m.git.state
 ---@field public status                 era.m.git.status
 ---@field public watcher                era.m.git.watcher
