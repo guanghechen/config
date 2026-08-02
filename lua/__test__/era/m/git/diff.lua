@@ -196,4 +196,29 @@ t:test("filter_secondary: original final-newline differences stay visible", func
   t.assert_eq(1, result and #result or 0, "EOF-distinct secondary hunk")
 end)
 
+t:test("compute_word_diff: native byte diff preserves byte-column ranges", function()
+  local changes = diff.compute_word_diff("fooBar", "fooBaz")
+  t.assert_eq(1, #changes, "change count")
+  t.assert_eq(4, changes[1].old_start, "old start")
+  t.assert_eq(6, changes[1].old_end, "old end")
+  t.assert_eq(4, changes[1].new_start, "new start")
+  t.assert_eq(6, changes[1].new_end, "new end")
+end)
+
+t:test("compute_hunk_word_diff: large hunks stay within the popup latency budget", function()
+  local old_line = string.rep("a", 500) ---@type string
+  local new_line = string.rep("b", 500) ---@type string
+  local hunk = { type = "change", removed = { lines = {} }, added = { lines = {} } } ---@type era.m.git.Hunk
+  for index = 1, 200 do
+    hunk.removed.lines[index] = old_line
+    hunk.added.lines[index] = new_line
+  end
+
+  local start = vim.uv.hrtime() ---@type integer
+  local changes = diff.compute_hunk_word_diff(hunk)
+  local elapsed_ms = (vim.uv.hrtime() - start) / 1e6 ---@type number
+  t.assert_eq(200, #changes, "line changes")
+  t.assert_true(elapsed_ms < 100, string.format("latency %.2fms", elapsed_ms))
+end)
+
 t:run()

@@ -322,60 +322,14 @@ local function is_word_boundary(text, pos)
   return prev_cat ~= curr_cat or (prev_cat == "word_lower" and curr_cat == "word_upper")
 end
 
----@param a                             string
----@param b                             string
----@return integer[]
-local function lcs_table(a, b)
-  local m = #a ---@type integer
-  local n = #b ---@type integer
-  local width = n + 1 ---@type integer
-  local dp = {} ---@type integer[]
-
-  for j = 1, width do
-    dp[j] = 0
+---@param text                          string
+---@return string
+local function bytes_as_lines(text)
+  local bytes = {} ---@type string[]
+  for index = 1, #text do
+    bytes[index] = text:sub(index, index)
   end
-
-  for i = 1, m do
-    local row_offset = i * width ---@type integer
-    dp[row_offset + 1] = 0
-
-    for j = 1, n do
-      local idx = row_offset + j + 1 ---@type integer
-      if a:sub(i, i) == b:sub(j, j) then
-        dp[idx] = dp[idx - width - 1] + 1
-      else
-        dp[idx] = math.max(dp[idx - width], dp[idx - 1])
-      end
-    end
-  end
-
-  return dp
-end
-
----@param dp                            integer[]
----@param a                             string
----@param b                             string
----@return table<integer, integer>
-local function lcs_backtrack(dp, a, b)
-  local matches = {} ---@type table<integer, integer>
-  local i = #a ---@type integer
-  local j = #b ---@type integer
-  local width = #b + 1 ---@type integer
-
-  while i > 0 and j > 0 do
-    local idx = i * width + j + 1 ---@type integer
-    if a:sub(i, i) == b:sub(j, j) then
-      matches[i] = j
-      i = i - 1
-      j = j - 1
-    elseif dp[idx - width] > dp[idx - 1] then
-      i = i - 1
-    else
-      j = j - 1
-    end
-  end
-
-  return matches
+  return table.concat(bytes, "\n")
 end
 
 ---@param old_text                      string
@@ -398,48 +352,23 @@ function M.compute_word_diff(old_text, new_text)
   local a = #old_text > max_len and old_text:sub(1, max_len) or old_text ---@type string
   local b = #new_text > max_len and new_text:sub(1, max_len) or new_text ---@type string
 
-  local dp = lcs_table(a, b)
-  local matches = lcs_backtrack(dp, a, b)
-
   local changes = {} ---@type era.m.git.WordChange[]
-  local old_pos = 1 ---@type integer
-  local new_pos = 1 ---@type integer
-
-  local sorted_old = {} ---@type integer[]
-  for k in pairs(matches) do
-    sorted_old[#sorted_old + 1] = k
-  end
-  table.sort(sorted_old)
-
-  for _, old_idx in ipairs(sorted_old) do
-    local new_idx = matches[old_idx] ---@type integer
-
-    if old_pos < old_idx or new_pos < new_idx then
-      local old_start = old_pos - 1 ---@type integer
-      local old_end = old_idx - 1 ---@type integer
-      local new_start = new_pos - 1 ---@type integer
-      local new_end = new_idx - 1 ---@type integer
-
-      if old_end > old_start or new_end > new_start then
-        changes[#changes + 1] = {
-          old_start = old_start,
-          old_end = old_end,
-          new_start = new_start,
-          new_end = new_end,
-        }
-      end
-    end
-
-    old_pos = old_idx + 1
-    new_pos = new_idx + 1
+  local ok, raw = pcall(vim.text.diff, bytes_as_lines(a), bytes_as_lines(b), {
+    algorithm = "histogram",
+    result_type = "indices",
+  })
+  if not ok or type(raw) ~= "table" then
+    return { { old_start = 0, old_end = #a, new_start = 0, new_end = #b } }
   end
 
-  if old_pos <= #a or new_pos <= #b then
+  for _, result in ipairs(raw) do
+    local old_start = result[2] == 0 and result[1] or (result[1] - 1) ---@type integer
+    local new_start = result[4] == 0 and result[3] or (result[3] - 1) ---@type integer
     changes[#changes + 1] = {
-      old_start = old_pos - 1,
-      old_end = #a,
-      new_start = new_pos - 1,
-      new_end = #b,
+      old_start = old_start,
+      old_end = old_start + result[2],
+      new_start = new_start,
+      new_end = new_start + result[4],
     }
   end
 
