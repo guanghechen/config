@@ -249,6 +249,90 @@ function M.unstage(ctx)
   end)
 end
 
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param range                          ?{ [1]: integer, [2]: integer }
+function M.unstage_hunk(ctx, range)
+  local entry = ctx.state:get_current_entry() ---@type era.m.diffview.IFileEntry|nil
+  if not entry or entry.stage_type ~= "staged" then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "unstage_hunk",
+      message = "Select a staged entry before unstaging a hunk.",
+    })
+    return
+  end
+
+  local right_winnr = ctx.layout.sbs_right_winnr ---@type integer|nil
+  if not right_winnr or not vim.api.nvim_win_is_valid(right_winnr) then
+    stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = "The staged diff is not open." })
+    return
+  end
+  if vim.api.nvim_get_current_win() ~= right_winnr then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "unstage_hunk",
+      message = "Move to the index-side window before unstaging a hunk.",
+    })
+    return
+  end
+  if entry.status == "R" or entry.status == "C" or entry.status == "D" then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "unstage_hunk",
+      message = "This entry can only be unstaged as a whole; use `gu` in the file list.",
+    })
+    return
+  end
+
+  local right_bufnr = vim.api.nvim_win_get_buf(right_winnr) ---@type integer
+  local expected_name = era.m.diffview.util.gen_index_bufname(entry.filepath) ---@type string
+  if vim.api.nvim_buf_get_name(right_bufnr) ~= expected_name then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "unstage_hunk",
+      message = "The staged diff is still loading; try again.",
+    })
+    return
+  end
+
+  if not range then
+    local lnum = vim.api.nvim_win_get_cursor(right_winnr)[1] ---@type integer
+    range = { lnum, lnum }
+  end
+  local index_document = era.m.git.staging.from_buffer(right_bufnr) ---@type era.m.git.Document
+  local object_name = vim.b[right_bufnr].git_object_name ---@type string|nil
+  if not object_name then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "unstage_hunk",
+      message = "The staged diff has no authoritative index snapshot; reopen it and try again.",
+    })
+    return
+  end
+
+  era.m.git.buffer
+    .unstage_range({
+      expected_index = { document = index_document, object_name = object_name },
+      range = range,
+      relpath = entry.filepath,
+      toplevel = dot.path.workspace(),
+    })
+    :finally(function(resolved, result)
+      if not resolved or type(result) ~= "table" or not result.ok then
+        local reason = type(result) == "table" and result.err or result ---@type string|nil
+        stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = reason or "Failed to unstage" })
+        return
+      end
+      stl.async.run(function()
+        M.refresh(ctx)
+        local current = ctx.state:get_current_entry() ---@type era.m.diffview.IFileEntry|nil
+        if current then
+          workspace_view.open_entry(ctx, current)
+        end
+      end)
+    end)
+end
+
 ---Toggle stage/unstage for file at cursor
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.toggle_stage(ctx)

@@ -143,6 +143,32 @@ end
 -- Git content loading
 ----------------------------------------------------------------------------------------------------
 
+---@param object                        string
+---@return string
+---@return string
+local function get_document_format(object)
+  local relpath = object:match("^[^:]*:(.*)$") ---@type string|nil
+  if not relpath or relpath == "" then
+    return "utf-8", "\n"
+  end
+
+  local filepath = dot.path.join(dot.path.workspace(), relpath) ---@type string
+  local local_bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
+  if vim.fn.filereadable(filepath) == 1 then
+    local_bufnr = local_bufnr or vim.fn.bufadd(filepath)
+    if not vim.api.nvim_buf_is_loaded(local_bufnr) then
+      vim.fn.bufload(local_bufnr)
+    end
+  end
+  if not local_bufnr or not vim.api.nvim_buf_is_loaded(local_bufnr) then
+    return "utf-8", "\n"
+  end
+
+  local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = local_bufnr }) ---@type string
+  local fileformat = vim.api.nvim_get_option_value("fileformat", { buf = local_bufnr }) ---@type string
+  return era.m.git.staging.normalize_encoding(encoding), era.m.git.staging.eol_from_fileformat(fileformat)
+end
+
 ---Load content from git object into buffer.
 ---@async
 ---@param object                        string                          git object (e.g., "HEAD:path" or ":path")
@@ -150,14 +176,62 @@ end
 ---@param token                         ?stl.c.CancellationToken
 ---@return boolean ok
 function M.load_git_content(object, bufnr, token)
-  local future = stl.git.exec.exec({ "show", object }, { cwd = dot.path.workspace() }, token)
-  local result = future:await()
+  local index_object_name = nil ---@type string|nil
+  local blob_object = object ---@type string
+  local index_path = object:match("^:(.*)$") ---@type string|nil
+  if index_path then
+    local info_result = stl.git.info.get_file_info(dot.path.workspace(), index_path, token):await()
+    if
+      type(info_result) ~= "table"
+      or not info_result.ok
+      or not info_result.info
+      or info_result.info.has_conflicts
+      or not info_result.info.object_name
+    then
+      if not token or not token:is_cancelled() then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "load_git_content",
+          message = (type(info_result) == "table" and info_result.err) or "Unable to inspect index object",
+        })
+      end
+      return false
+    end
+    index_object_name = info_result.info.object_name
+    blob_object = index_object_name
+  end
 
-  if not result then
+  local result = stl.git.info.get_show_blob(dot.path.workspace(), blob_object, token):await()
+
+  if type(result) ~= "table" then
     stl.reporter.error({
       from = __module_name__,
       subject = "load_git_content",
-      message = "exec returned nil result for object: " .. object,
+      message = "Invalid blob result for object: " .. object,
+    })
+    return false
+  end
+
+  local bytes = result.bytes ---@type string|nil
+  if not result.ok then
+    if result.missing then
+      bytes = ""
+    else
+      if not token or not token:is_cancelled() then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "load_git_content",
+          message = result.err or "Unable to read object: " .. object,
+        })
+      end
+      return false
+    end
+  end
+  if type(bytes) ~= "string" then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "load_git_content",
+      message = "Blob result has no bytes: " .. object,
     })
     return false
   end
@@ -168,22 +242,23 @@ function M.load_git_content(object, bufnr, token)
     return false
   end
 
-  if result.code ~= 0 then
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  local encoding, default_eol = get_document_format(object) ---@type string, string
+  local document, decode_err = era.m.git.staging.from_blob(bytes, encoding, default_eol)
+  if not document then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "load_git_content",
+      message = decode_err or "Unable to decode object: " .. object,
+    })
     return false
   end
 
-  local lines = result.lines
-
-  -- Remove trailing empty line if present (vim.diff artifact)
-  if #lines > 0 and lines[#lines] == "" then
-    lines[#lines] = nil
-  end
-
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_set_option_value("fileformat", document.eol == "\r\n" and "dos" or "unix", { buf = bufnr })
+  vim.api.nvim_set_option_value("fileencoding", document.encoding, { buf = bufnr })
+  vim.api.nvim_set_option_value("bomb", document.bomb, { buf = bufnr })
+  era.m.git.staging.replace_buffer_text(bufnr, document.text)
+  vim.b[bufnr].git_object_name = index_object_name
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
   vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
 

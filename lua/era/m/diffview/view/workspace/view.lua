@@ -439,6 +439,10 @@ function M.open_entry(ctx, entry, token)
     entry = entry,
     token = token,
   })
+
+  local keymap = require("era.m.diffview.view.workspace.keymap")
+  keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
+  keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
 end
 
 ---Clear sbs view

@@ -62,6 +62,8 @@ function M.gen_sbs(ctx)
     { modes = { "n" }, key = "zR", desc = "diffview(workspace): Open all folds", callback = function() action.open_all_folds(ctx) end },
     { modes = { "n" }, key = "t3", desc = "diffview(workspace): Toggle fold unchanged hunks", callback = function() action.toggle_fold_unchanged(ctx) end },
     { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() stl.async.run(function() action.refresh(ctx) end) end, aliases = { "<D-r>", "<M-r>" } },
+    { modes = { "n" }, key = "ghu", desc = "diffview(workspace): Unstage selected index line", callback = function() action.unstage_hunk(ctx) end },
+    { modes = { "x" }, key = "ghu", desc = "diffview(workspace): Unstage selected index lines", callback = function() local start_lnum, end_lnum = stl.nvim.buf.retrieve_visual_lnum_range() action.unstage_hunk(ctx, { start_lnum, end_lnum }) end },
   }
 end
 
