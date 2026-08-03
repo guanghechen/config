@@ -91,7 +91,7 @@ end
 
 ## platform specific
 if test "$GHC_ENV_PLATFORM" = osx
-    source ~/.config/fish/conf/platform/mac/config.fish
+    source ~/.config/fish/conf/platform/osx/config.fish
 else if test "$GHC_ENV_PLATFORM" = wsl
     source ~/.config/fish/conf/platform/wsl/config.fish
 else
