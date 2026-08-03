@@ -94,7 +94,6 @@ ghc_step_optional newsboat ghc_run_script "$setup_nix/app/newsboat.bash"
 ghc_step_optional nvim ghc_run_script "$setup_nix/app/nvim.bash"
 ghc_step_optional tmux ghc_run_script "$setup_nix/app/tmux.bash"
 ghc_step_optional vscode ghc_run_script "$setup_nix/app/vscode.bash"
-ghc_step_optional windows-terminal ghc_run_script "$setup_nix/app/windows-terminal.bash"
 
 ## Setup font
 ghc_step_optional font ghc_run_script "$setup_osx/bot/font-maple.bash"
