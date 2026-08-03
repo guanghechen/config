@@ -102,14 +102,14 @@ All environment variables follow the naming convention `GHC_*` (guanghechen):
 # Print all settings
 node cli/setting.mjs --print
 
-# Set edition
-node cli/setting.mjs --set-edition nix
-
-# Set theme
+# Set values
+node cli/setting.mjs --set-node-edition 24
+node cli/setting.mjs --set-nvim-edition manual
+node cli/setting.mjs --set-python-env lemon
 node cli/setting.mjs --set-theme catppuccin-mocha
+node cli/setting.mjs --set-tmux-edition latest
 
 # Print specific value
-node cli/setting.mjs --print-edition
 node cli/setting.mjs --print-theme
 node cli/setting.mjs --print-node-edition
 node cli/setting.mjs --print-python-env
@@ -199,34 +199,36 @@ red = "{{red}}"
 
 ```
 setup/nix/setup.bash
-    │
-    ├── apt update & install packages
-    │
-    ├── git clone/pull this repo
-    │
-    ├── source env/setting.bash (defaults, checked in)
-    │
-    ├── bot/config.bash (symlinks, profile)
-    ├── bot/font-maple.bash (font installation)
-    ├── bot/homebrew.bash (linuxbrew)
-    ├── bot/fish.bash (fish shell)
-    │
-    ├── env/rust.bash (rustup)
-    ├── env/miniforge.bash (conda)
-    ├── env/bun.bash
-    ├── env/node.bash (fnm + node)
-    ├── env/pnpm.bash
-    │
-    ├── node cli/setting.mjs --set-edition nix
-    │   └── generates env/setting.local.{bash,ps1}
-    │
-    ├── app/newsboat.bash
-    ├── app/nvim.bash
-    ├── app/tmux.bash
-    ├── app/vscode.bash
-    │
-    └── node cli/theme.mjs apply
+    ├── require sudo + apt [fatal]
+    ├── apt update/upgrade + system packages [fatal]
+    ├── clone or fast-forward this repo [fatal]
+    ├── source bot/step.bash + bot/env.bash [fatal]
+    ├── bot/homebrew.bash [optional, conditional]
+    ├── environment steps [optional]
+    │   ├── env/rust.bash
+    │   ├── env/miniforge.bash
+    │   ├── env/bun.bash
+    │   ├── bot/fish.bash
+    │   └── env/node.bash
+    ├── refresh bot/env.bash; require node + kit [fatal]
+    ├── configuration
+    │   ├── create/attach kit worktree [fatal]
+    │   ├── kit repo set config.edition nix + kit repo sync [fatal]
+    │   └── bot/config.bash [optional]
+    ├── application steps [optional]
+    │   ├── app/newsboat.bash
+    │   ├── app/nvim.bash
+    │   ├── app/tmux.bash
+    │   ├── app/vscode.bash
+    │   └── app/windows-terminal.bash
+    ├── bot/font-maple.bash [optional]
+    ├── node cli/theme.mjs apply [optional]
+    └── ghc_step_summary
 ```
+
+Fatal steps abort immediately. Optional leaf scripts run in isolated
+`bash -e -o pipefail` processes; optional failures are collected and make
+`ghc_step_summary` return non-zero.
 
 ### Environment Bootstrap (setup/nix/bot/env.bash)
 
