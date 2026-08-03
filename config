@@ -104,7 +104,7 @@ max-downloads 3
 
 # -----------------------------------------------------------------------------
 # Platform-specific Configuration (auto-linked by fish function)
-# Available: conf/platform/{mac,nix,wsl,win}
+# Available: conf/platform/{osx,nix,wsl,win}
 # -----------------------------------------------------------------------------
 include "~/.config/newsboat/local/platform"
 
