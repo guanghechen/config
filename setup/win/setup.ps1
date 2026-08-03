@@ -1,3 +1,11 @@
+if (-not (Get-Command git -CommandType Application -ErrorAction SilentlyContinue)) {
+  throw "[setup preparation] required command not found: git"
+}
+
+if (-not (Get-Command winget -CommandType Application -ErrorAction SilentlyContinue)) {
+  throw "[setup preparation] required command not found: winget"
+}
+
 $env:APP_HOME_MINIFORGE    = "C:\app\miniforge"
 $env:APP_HOME_GIT          = "C:\app\git"
 $env:XDG_CONFIG_HOME       = "$env:USERPROFILE\.config"

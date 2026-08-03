@@ -15,6 +15,11 @@
   - Install [Git for Windows](https://git-scm.com/download/win) to `C:\app\git`.
   - Ensure `git` is available on `PATH` before running the bootstrap script.
 
+* Install winget
+
+  - Install [App Installer](https://learn.microsoft.com/en-us/windows/package-manager/winget/) if it is not already available.
+  - Ensure `winget` is available on `PATH` before running the bootstrap script.
+
 * Install rust
 
   - Download exe from https://www.rust-lang.org/tools/install
