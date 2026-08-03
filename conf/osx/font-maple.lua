@@ -1,6 +1,6 @@
 local wezterm = require("wezterm")
 
----@class conf.mac.font.maple
+---@class conf.osx.font.maple
 local M = {}
 
 local family = "Maple Mono NF CN"

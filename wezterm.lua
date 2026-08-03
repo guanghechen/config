@@ -39,8 +39,8 @@ theme.setup(config)
 
 require("conf.tabline").setup(config)
 
-if env.IS_MAC then
-  require("conf.mac").setup(config)
+if env.IS_OSX then
+  require("conf.osx").setup(config)
 elseif env.IS_NIX then
   require("conf.nix").setup(config)
 elseif env.IS_WSL then

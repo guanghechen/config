@@ -16,7 +16,7 @@ if target:find("windows") then
 end
 
 M.IS_NIX = target:find("linux") ~= nil
-M.IS_MAC = target:find("darwin") ~= nil
+M.IS_OSX = target:find("darwin") ~= nil
 M.IS_WIN = target:find("windows") and not is_wsl
 M.IS_WSL = is_wsl
 
