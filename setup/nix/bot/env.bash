@@ -2,6 +2,24 @@
 
 source "$HOME/.config/guanghechen/env/setting.bash" || return 1
 
+### Runtime platform (wsl | osx | nix | unknown), independent of GHC_EDITION.
+case "$(uname -s)" in
+  Darwin)
+    GHC_ENV_PLATFORM=osx
+    ;;
+  Linux)
+    if uname -r | grep -qi microsoft; then
+      GHC_ENV_PLATFORM=wsl
+    else
+      GHC_ENV_PLATFORM=nix
+    fi
+    ;;
+  *)
+    GHC_ENV_PLATFORM=unknown
+    ;;
+esac
+export GHC_ENV_PLATFORM
+
 ### Homebrew
 export HOMEBREW_NO_ANALYTICS=1
 if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then

@@ -1,17 +1,12 @@
 #! /usr/bin/env bash
 
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
+
 newsboat_config_dir="$HOME/.config/newsboat"
 if [ -d "$newsboat_config_dir" ]; then
   newsboat_platform_link="$newsboat_config_dir/local/platform"
   newsboat_platform_dir="$newsboat_config_dir/conf/platform"
-
-  if [ "$(uname)" = "Darwin" ]; then
-    platform="mac"
-  elif [ -r /proc/version ] && grep -qEi "(Microsoft|WSL)" /proc/version; then
-    platform="wsl"
-  else
-    platform="nix"
-  fi
+  platform="$GHC_ENV_PLATFORM"
 
   mkdir -p "$newsboat_config_dir/local"
 
