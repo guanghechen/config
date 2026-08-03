@@ -8,13 +8,13 @@
 
 ## Bootstrap
 
-* Nix: [Nix Setup](./setup/nix/README.md)
+* Debian/Ubuntu (including WSL): [Nix Setup](./setup/nix/README.md)
 
   ```bash
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.bash)"
   ```
 
-* Nix* (remote): [Nix-Remote Setup](./setup/nix-remote/README.md)
+* Debian/Ubuntu (including WSL, remote): [Nix-Remote Setup](./setup/nix-remote/README.md)
 
   ```bash
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.bash)"

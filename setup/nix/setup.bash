@@ -4,6 +4,13 @@ repomain="$HOME/.config/guanghechen"
 repoworktree="$HOME/.config/kit"
 setup_nix="$repomain/setup/nix"
 
+for prerequisite in sudo apt; do
+  if ! command -v "$prerequisite" >/dev/null 2>&1; then
+    printf "\e[91m  [setup preparation] unsupported platform: required command not found: %s (Debian/Ubuntu only).\e[0m\n" "$prerequisite" >&2
+    exit 1
+  fi
+done
+
 ghc_prepare_system() {
   sudo apt update &&
     sudo apt dist-upgrade -y &&

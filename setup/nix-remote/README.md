@@ -1,3 +1,7 @@
+## Requirements
+
+Debian or Ubuntu (including WSL), with `curl`, `sudo`, and `apt` available.
+
 ## FAQ
 
 * **Test in docker**:
