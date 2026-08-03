@@ -7,8 +7,24 @@ printf "\e[96m  [setup miniforge] set environment variables...\e[0m\n"
 export PYTHONIOENCODING=utf8
 export PYTHONUTF8=1
 export HOME_MINIFORGE="$HOME/.app/miniforge3"
+miniforge_conda="$HOME_MINIFORGE/bin/conda"
+miniforge_profile="$HOME_MINIFORGE/etc/profile.d/conda.sh"
 
-if [ -d "$HOME_MINIFORGE" ]; then
+if [ -e "$HOME_MINIFORGE" ] || [ -L "$HOME_MINIFORGE" ]; then
+  if [ ! -x "$miniforge_conda" ]; then
+    printf "\e[91m [setup miniforge] conda executable is missing or not executable: %s\e[0m\n" \
+      "$miniforge_conda" >&2
+    printf "\e[91m   repair the existing prefix manually before rerunning setup: %s\e[0m\n" \
+      "$HOME_MINIFORGE" >&2
+    exit 1
+  fi
+  if [ ! -r "$miniforge_profile" ]; then
+    printf "\e[91m [setup miniforge] conda profile is missing or unreadable: %s\e[0m\n" \
+      "$miniforge_profile" >&2
+    printf "\e[91m   repair the existing prefix manually before rerunning setup: %s\e[0m\n" \
+      "$HOME_MINIFORGE" >&2
+    exit 1
+  fi
   printf "\e[93m  [setup miniforge] miniforge is already installed. (skipped)\e[0m\n"
 else
   miniforge_version="26.3.2-3"
@@ -74,7 +90,7 @@ export PATH=$HOME_MINIFORGE/bin:$PATH
 
 ### Setup conda
 printf "\e[96m  [setup miniforge] setting up conda...\e[0m\n"
-source "$HOME_MINIFORGE/etc/profile.d/conda.sh"
+source "$miniforge_profile"
 conda config --set auto_activate_base false
 
 if conda env list | grep -q "^lemon[[:space:]]"; then
