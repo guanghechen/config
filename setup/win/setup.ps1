@@ -6,6 +6,14 @@ if (-not (Get-Command winget -CommandType Application -ErrorAction SilentlyConti
   throw "[setup preparation] required command not found: winget"
 }
 
+if (-not (Get-Command cargo -CommandType Application -ErrorAction SilentlyContinue)) {
+  throw "[setup preparation] required command not found: cargo"
+}
+
+if (-not (Get-Command rustc -CommandType Application -ErrorAction SilentlyContinue)) {
+  throw "[setup preparation] required command not found: rustc"
+}
+
 $env:APP_HOME_MINIFORGE    = "C:\app\miniforge"
 $env:APP_HOME_GIT          = "C:\app\git"
 $env:XDG_CONFIG_HOME       = "$env:USERPROFILE\.config"
