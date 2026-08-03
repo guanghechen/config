@@ -225,6 +225,36 @@ t:test("selection: empty-directory folding preserves an explicit selection root"
   tree:dispose()
 end)
 
+t:test("render: pending transfer renders without explicit selection", function()
+  local tree = create_tree()
+  local dir = tree:locate("/project/dir/")
+  t.assert_true(dir ~= nil, "directory fixture")
+  tree:load_node(dir, false)
+  dir.expanded = true
+
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  local view = View.new("pending-transfer-test")
+  local result = view:render(bufnr, tree, tree:get_root_node(), {
+    foldempty = false,
+    pending_transfer = {
+      mode = "move",
+      sources = { { filepath = dir.filepath, nodename = dir.nodename, nodetype = dir.nodetype } },
+      source_filepaths = { [dir.filepath] = true },
+    },
+    show_diagnostics = false,
+    show_git_status = false,
+    show_icons = false,
+  })
+
+  t.assert_eq(0, #tree:get_selected_nodes(), "pending source is not explicit selection")
+  t.assert_eq(2, #result.sign_info_list, "pending directory sign inheritance")
+  t.assert_eq("m_ex_cut", result.sign_info_list[1].sign_hl_group, "pending move sign")
+  t.assert_eq("m_ex_cut", result.sign_info_list[2].sign_hl_group, "pending descendant sign")
+
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+  tree:dispose()
+end)
+
 t:test("selection: remains consistent when attaching below a selected directory", function()
   local tree = create_tree()
   local dir = tree:locate("/project/dir/")

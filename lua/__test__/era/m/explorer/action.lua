@@ -125,76 +125,647 @@ t:test("create_file: no trailing slash creates file path", function()
   t.assert_eq("/project/foo", calls.opened_filepath, "file should open")
 end)
 
-t:test("cut refreshes the tree without deleting the moved source again", function()
-  local remove_calls = 0
-  local moved_to
-  t:patch_global("stl", {
-    os = {
-      path = {
-        normalize = function(filepath)
-          return filepath
-        end,
-        to_os = function(filepath)
-          return filepath
-        end,
-      },
-    },
-  })
-  t:patch_table(vim.ui, "input", function(_, callback)
-    callback("/project/target.txt")
-  end)
-  t:patch_table(vim, "schedule", function(callback)
-    callback()
-  end)
+local function normalize(filepath, keep_trailing_slash)
+  local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
+  if keep_trailing_slash == false and normalized ~= "/" then
+    normalized = normalized:gsub("/+$", "")
+  elseif keep_trailing_slash == true and normalized:sub(-1) ~= "/" then
+    normalized = normalized .. "/"
+  end
+  return normalized
+end
 
-  local ctx = {
-    get_cursor_filepath = function()
-      return "/project/source.txt"
-    end,
-    refresh = function() end,
-    resource_manager = {
-      move = function(_, _, target)
-        moved_to = target
-        return true
-      end,
-    },
-    sync_cursor_to_filepath = function() end,
-    tree = {
-      get_selected_nodes = function()
-        return {}
-      end,
-      refresh = function() end,
-      remove = function()
-        remove_calls = remove_calls + 1
-      end,
-    },
+---@param props                         table
+---@return era.m.explorer.Action
+---@return table
+---@return fun(filepath: string): nil
+---@return fun(filepath: string): boolean
+local function setup_transfer(props)
+  local calls = {
+    copies = {},
+    moves = {},
+    removes = {},
+    reports = {},
+    clear_selection = 0,
+    refresh = 0,
   }
+  local cursor = props.cursor ---@type string
+  local resources = props.resources ---@type table<string, era.m.explorer.resource.INode>
+  local tree_nodes = props.tree_nodes or {} ---@type table<string, era.m.explorer.Node>
+  local selected_nodes = {} ---@type era.m.explorer.Node[]
+  local selected_filepaths = {} ---@type table<string, boolean>
+  for _, node in ipairs(props.selected_nodes or {}) do
+    selected_nodes[#selected_nodes + 1] = node
+    selected_filepaths[node.filepath] = true
+    tree_nodes[node.filepath] = tree_nodes[node.filepath] or node
+  end
+  local failed_targets = props.failed_targets or {} ---@type table<string, boolean>
+  local failed_removals = props.failed_removals or {} ---@type table<string, boolean>
 
-  Action.new(ctx):cut()
+  local function report(options)
+    calls.reports[#calls.reports + 1] = options
+  end
 
-  t.assert_eq("/project/target.txt", moved_to, "move target")
-  t.assert_eq(0, remove_calls, "post-move remove calls")
-end)
-
-t:test("move_selected refreshes without deleting moved sources again", function()
-  local remove_calls = 0
-  local moved_to
   t:patch_global("stl", {
-    icon = { symbols = { selection_copy = "C", selection_cut = "X" } },
     os = {
       path = {
-        normalize = function(filepath)
-          return filepath:gsub("/+", "/")
-        end,
+        normalize = normalize,
         to_os = function(filepath)
           return filepath
         end,
       },
     },
     reporter = {
-      error = function() end,
-      info = function() end,
-      warn = function() end,
+      error = report,
+      info = report,
+      warn = report,
+    },
+  })
+  t:patch_global("yoz", {
+    path = {
+      is_descendant = function(from, to)
+        from = normalize(from, false)
+        to = normalize(to, false)
+        return to == from or to:sub(1, #from + 1) == from .. "/"
+      end,
+    },
+  })
+  t:patch_table(vim, "schedule", function(callback)
+    callback()
+  end)
+  t:patch_table(vim.api, "nvim_feedkeys", function() end)
+
+  local resource_manager = {
+    locate = function(_, filepath)
+      return resources[filepath] or resources[normalize(filepath, false)] or resources[normalize(filepath, true)]
+    end,
+    copy = function(_, source, target)
+      calls.copies[#calls.copies + 1] = { source = source, target = target }
+      if failed_targets[target] then
+        return false
+      end
+      resources[target] = {
+        filepath = target,
+        nodename = target:match("([^/]+)/?$") or "",
+        nodetype = target:sub(-1) == "/" and "D" or "F",
+      }
+      return true
+    end,
+    move = function(_, source, target)
+      calls.moves[#calls.moves + 1] = { source = source, target = target }
+      if failed_targets[target] then
+        return false
+      end
+      resources[source] = nil
+      resources[target] = {
+        filepath = target,
+        nodename = target:match("([^/]+)/?$") or "",
+        nodetype = target:sub(-1) == "/" and "D" or "F",
+      }
+      return true
+    end,
+  }
+
+  local ctx = {
+    fullname = "test",
+    get_cursor_filepath = function()
+      return cursor
+    end,
+    get_parent_filepath = function(filepath)
+      local target = normalize(filepath, false)
+      return target:match("^(.*/)[^/]+$") or "/"
+    end,
+    get_visual_nodes = function()
+      return props.visual_nodes or {}
+    end,
+    refresh = function()
+      calls.refresh = calls.refresh + 1
+    end,
+    resource_manager = resource_manager,
+    sync_cursor_to_filepath = function() end,
+    tree = {
+      clear_selection = function()
+        calls.clear_selection = calls.clear_selection + 1
+        selected_nodes = {}
+        selected_filepaths = {}
+      end,
+      get_selected_nodes = function()
+        local result = {} ---@type era.m.explorer.Node[]
+        for _, node in ipairs(selected_nodes) do
+          result[#result + 1] = node
+        end
+        return result
+      end,
+      is_selected = function(_, filepath)
+        return selected_filepaths[filepath] == true
+      end,
+      locate = function(_, filepath)
+        return tree_nodes[filepath]
+      end,
+      remove = function(_, filepath)
+        calls.removes[#calls.removes + 1] = filepath
+        if failed_removals[filepath] then
+          return false
+        end
+
+        tree_nodes[filepath] = nil
+        resources[filepath] = nil
+        for i, node in ipairs(selected_nodes) do
+          if node.filepath == filepath then
+            table.remove(selected_nodes, i)
+            selected_filepaths[filepath] = nil
+            break
+          end
+        end
+        return true
+      end,
+      refresh = function() end,
+      toggle_selected = function(_, filepath, force_selected)
+        local is_selected = selected_filepaths[filepath] == true
+        local should_select = force_selected == "select" or (force_selected == nil and not is_selected)
+        if should_select == is_selected then
+          return
+        end
+
+        if should_select then
+          local node = tree_nodes[filepath]
+          if node ~= nil then
+            selected_nodes[#selected_nodes + 1] = node
+            selected_filepaths[filepath] = true
+          end
+          return
+        end
+
+        for i, node in ipairs(selected_nodes) do
+          if node.filepath == filepath then
+            table.remove(selected_nodes, i)
+            selected_filepaths[filepath] = nil
+            return
+          end
+        end
+      end,
+    },
+  }
+
+  return Action.new(ctx),
+    calls,
+    function(filepath)
+      cursor = filepath
+    end,
+    function(filepath)
+      return selected_filepaths[filepath] == true
+    end
+end
+
+t:test("transfer: stage includes the selection and focused item", function()
+  local selected_nodes = {
+    { filepath = "/project/src/a.txt", nodename = "a.txt", nodetype = "F" },
+    { filepath = "/project/test/b.txt", nodename = "b.txt", nodetype = "F" },
+  }
+  local focused = { filepath = "/project/focused.txt", nodename = "focused.txt", nodetype = "F" }
+  local action, _, _, is_selected = setup_transfer({
+    cursor = focused.filepath,
+    resources = {},
+    selected_nodes = selected_nodes,
+    tree_nodes = { [focused.filepath] = focused },
+  })
+
+  action:cut()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer")
+  t.assert_eq("move", pending.mode, "pending mode")
+  t.assert_eq(3, #pending.sources, "pending source count")
+  t.assert_true(pending.source_filepaths["/project/src/a.txt"], "pending source map")
+  t.assert_true(pending.source_filepaths[focused.filepath], "focused source")
+  t.assert_true(is_selected(focused.filepath), "focused selection")
+end)
+
+t:test("transfer: visual stage includes the existing selection", function()
+  local selected = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local visual = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+  local action = setup_transfer({
+    cursor = visual.filepath,
+    resources = {},
+    selected_nodes = { selected },
+    tree_nodes = { [visual.filepath] = visual },
+    visual_nodes = { visual },
+  })
+
+  action:stage_transfer_visual("copy")
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer")
+  t.assert_eq("copy", pending.mode, "pending mode")
+  t.assert_eq(2, #pending.sources, "pending source count")
+  t.assert_true(pending.source_filepaths[selected.filepath], "selected source")
+  t.assert_true(pending.source_filepaths[visual.filepath], "visual source")
+end)
+
+t:test("transfer: tab adds focused item to pending mode and selection", function()
+  local first = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local second = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+  local action, _, set_cursor, is_selected = setup_transfer({
+    cursor = first.filepath,
+    resources = {},
+    tree_nodes = { [first.filepath] = first, [second.filepath] = second },
+  })
+
+  action:stage_transfer("move")
+  set_cursor(second.filepath)
+  action:select_toggle()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer")
+  t.assert_eq("move", pending.mode, "inherited mode")
+  t.assert_eq(2, #pending.sources, "pending source count")
+  t.assert_true(pending.source_filepaths[first.filepath], "first source")
+  t.assert_true(pending.source_filepaths[second.filepath], "new source")
+  t.assert_true(is_selected(first.filepath), "original pending selection")
+  t.assert_true(is_selected(second.filepath), "new selection")
+end)
+
+t:test("transfer: unselecting the final item clears pending mode", function()
+  local node = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local action = setup_transfer({
+    cursor = node.filepath,
+    resources = {},
+    selected_nodes = { node },
+  })
+
+  action:cut()
+  action:select_toggle()
+
+  t.assert_nil(action:get_pending_transfer(), "pending transfer")
+end)
+
+t:test("transfer: unselecting a child removes its collapsed ancestor source", function()
+  local parent = { filepath = "/project/dir/", nodename = "dir", nodetype = "D" }
+  local child = { filepath = "/project/dir/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local action, _, set_cursor, is_selected = setup_transfer({
+    cursor = child.filepath,
+    resources = {},
+    tree_nodes = { [parent.filepath] = parent, [child.filepath] = child },
+    visual_nodes = { parent },
+  })
+
+  action:select_toggle()
+  set_cursor(parent.filepath)
+  action:stage_transfer_visual("move")
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer before cancellation")
+  t.assert_eq(1, #pending.sources, "collapsed source count")
+  t.assert_true(pending.source_filepaths[parent.filepath], "collapsed ancestor source")
+
+  set_cursor(child.filepath)
+  action:select_toggle()
+
+  t.assert_false(is_selected(child.filepath), "child selection")
+  t.assert_nil(action:get_pending_transfer(), "pending transfer")
+end)
+
+t:test("transfer: copy replaces an unselected cut item with focused item", function()
+  local cut = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local focused = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+  local action, _, set_cursor = setup_transfer({
+    cursor = cut.filepath,
+    resources = {},
+    tree_nodes = { [cut.filepath] = cut, [focused.filepath] = focused },
+  })
+
+  action:cut()
+  set_cursor(focused.filepath)
+  action:copy()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer")
+  t.assert_eq("copy", pending.mode, "pending mode")
+  t.assert_eq(1, #pending.sources, "pending source count")
+  t.assert_false(pending.source_filepaths[cut.filepath] == true, "old cut source")
+  t.assert_true(pending.source_filepaths[focused.filepath], "focused copy source")
+end)
+
+t:test("transfer: copy includes promoted pending selection and focused item", function()
+  local old_cut = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local selected = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+  local focused = { filepath = "/project/charlie.txt", nodename = "charlie.txt", nodetype = "F" }
+  local action, _, set_cursor, is_selected = setup_transfer({
+    cursor = old_cut.filepath,
+    resources = {},
+    tree_nodes = {
+      [old_cut.filepath] = old_cut,
+      [selected.filepath] = selected,
+      [focused.filepath] = focused,
+    },
+  })
+
+  action:stage_transfer("move")
+  set_cursor(selected.filepath)
+  action:select_toggle()
+  set_cursor(focused.filepath)
+  action:copy()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer")
+  t.assert_eq("copy", pending.mode, "pending mode")
+  t.assert_eq(3, #pending.sources, "pending source count")
+  t.assert_true(pending.source_filepaths[old_cut.filepath], "promoted copy source")
+  t.assert_true(pending.source_filepaths[selected.filepath], "selected copy source")
+  t.assert_true(pending.source_filepaths[focused.filepath], "focused copy source")
+  t.assert_true(is_selected(old_cut.filepath), "promoted selection")
+  t.assert_true(is_selected(focused.filepath), "focused selection")
+end)
+
+t:test("transfer: copy cancels focused item already marked copy", function()
+  local source = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local action = setup_transfer({
+    cursor = source.filepath,
+    resources = {},
+    tree_nodes = { [source.filepath] = source },
+  })
+  local copy_as_called = false ---@type boolean
+  action.copy_as = function()
+    copy_as_called = true
+  end
+
+  action:stage_transfer("copy")
+  action:copy()
+
+  t.assert_false(copy_as_called, "copy as")
+  t.assert_nil(action:get_pending_transfer(), "pending transfer")
+end)
+
+t:test("transfer: copy cancellation keeps other selected copy items", function()
+  local selected = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local focused = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+  local action, _, _, is_selected = setup_transfer({
+    cursor = focused.filepath,
+    resources = {},
+    selected_nodes = { selected },
+    tree_nodes = { [focused.filepath] = focused },
+  })
+
+  action:copy()
+  action:copy()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer")
+  t.assert_eq(1, #pending.sources, "pending source count")
+  t.assert_true(pending.source_filepaths[selected.filepath], "remaining copy source")
+  t.assert_false(pending.source_filepaths[focused.filepath] == true, "cancelled copy source")
+  t.assert_true(is_selected(selected.filepath), "remaining selection")
+  t.assert_false(is_selected(focused.filepath), "cancelled selection")
+end)
+
+t:test("transfer: cut cancels focused item already marked cut", function()
+  local source = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local action = setup_transfer({
+    cursor = source.filepath,
+    resources = {},
+    tree_nodes = { [source.filepath] = source },
+  })
+
+  action:cut()
+  action:cut()
+
+  t.assert_nil(action:get_pending_transfer(), "pending transfer")
+end)
+
+t:test("transfer: deleting a focused pending source clears it", function()
+  local source = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local action, calls = setup_transfer({
+    cursor = source.filepath,
+    resources = { [source.filepath] = source },
+    tree_nodes = { [source.filepath] = source },
+  })
+  t:patch_table(vim.ui, "input", function(_, callback)
+    callback("y")
+  end)
+
+  action:cut()
+  action:delete()
+
+  t.assert_eq(1, #calls.removes, "remove count")
+  t.assert_nil(action:get_pending_transfer(), "pending transfer")
+end)
+
+t:test("transfer: partial selected delete clears selection and pending", function()
+  local deleted = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local retained = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+  local action, calls = setup_transfer({
+    cursor = deleted.filepath,
+    failed_removals = { [retained.filepath] = true },
+    resources = { [deleted.filepath] = deleted, [retained.filepath] = retained },
+    selected_nodes = { deleted, retained },
+  })
+  t:patch_table(vim.ui, "input", function(_, callback)
+    callback("y")
+  end)
+
+  action:cut()
+  action:delete()
+
+  t.assert_eq(1, calls.clear_selection, "selection clear count")
+  t.assert_nil(action:get_pending_transfer(), "pending transfer")
+end)
+
+t:test("transfer: renaming an ancestor removes only covered pending sources", function()
+  local parent = { filepath = "/project/dir/", nodename = "dir", nodetype = "D" }
+  local child = { filepath = "/project/dir/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
+  local unrelated = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+  local action, _, set_cursor = setup_transfer({
+    cursor = child.filepath,
+    resources = {
+      [parent.filepath] = parent,
+      [child.filepath] = child,
+      [unrelated.filepath] = unrelated,
+    },
+    selected_nodes = { child, unrelated },
+    tree_nodes = { [parent.filepath] = parent },
+  })
+  t:patch_table(vim.ui, "input", function(_, callback)
+    callback("renamed")
+  end)
+
+  action:cut()
+  set_cursor(parent.filepath)
+  action:rename()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "pending transfer")
+  t.assert_eq(1, #pending.sources, "pending source count")
+  t.assert_true(pending.source_filepaths[unrelated.filepath], "unrelated source")
+  t.assert_false(pending.source_filepaths[child.filepath] == true, "renamed descendant source")
+end)
+
+t:test("transfer: paste uses target directory and source basenames without a prompt", function()
+  local nodes = {
+    { filepath = "/project/src/a.txt", nodename = "a.txt", nodetype = "F" },
+    { filepath = "/project/test/b.txt", nodename = "b.txt", nodetype = "F" },
+  }
+  local resources = {
+    ["/project/src/a.txt"] = nodes[1],
+    ["/project/test/b.txt"] = nodes[2],
+    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
+  }
+  local action, calls, set_cursor = setup_transfer({
+    cursor = nodes[1].filepath,
+    resources = resources,
+    selected_nodes = nodes,
+  })
+  t:patch_table(vim.ui, "input", function()
+    error("paste must not open an input prompt")
+  end)
+
+  action:stage_transfer("copy")
+  set_cursor("/target/")
+  action:paste()
+
+  t.assert_eq(2, #calls.copies, "copy count")
+  t.assert_eq("/target/a.txt", calls.copies[1].target, "first basename target")
+  t.assert_eq("/target/b.txt", calls.copies[2].target, "second basename target")
+  t.assert_eq(1, calls.clear_selection, "selection clear count")
+  t.assert_nil(action:get_pending_transfer(), "pending transfer after success")
+end)
+
+t:test("transfer: preflight conflict aborts the whole batch", function()
+  local source = { filepath = "/project/a.txt", nodename = "a.txt", nodetype = "F" }
+  local resources = {
+    [source.filepath] = source,
+    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
+    ["/target/a.txt"] = { filepath = "/target/a.txt", nodename = "a.txt", nodetype = "F" },
+  }
+  local action, calls, set_cursor = setup_transfer({
+    cursor = source.filepath,
+    resources = resources,
+    tree_nodes = { [source.filepath] = source },
+  })
+
+  action:stage_transfer("move")
+  set_cursor("/target/")
+  action:paste()
+
+  t.assert_eq(0, #calls.moves, "move count")
+  t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
+  t.assert_eq(1, #calls.reports, "conflict report count")
+end)
+
+t:test("transfer: duplicate basenames abort before any write", function()
+  local nodes = {
+    { filepath = "/project/src/config.lua", nodename = "config.lua", nodetype = "F" },
+    { filepath = "/project/test/config.lua", nodename = "config.lua", nodetype = "F" },
+  }
+  local resources = {
+    [nodes[1].filepath] = nodes[1],
+    [nodes[2].filepath] = nodes[2],
+    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
+  }
+  local action, calls, set_cursor = setup_transfer({
+    cursor = nodes[1].filepath,
+    resources = resources,
+    selected_nodes = nodes,
+  })
+
+  action:stage_transfer("copy")
+  set_cursor("/target/")
+  action:paste()
+
+  t.assert_eq(0, #calls.copies, "copy count")
+  t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
+end)
+
+t:test("transfer: rejects copying a directory into its descendant", function()
+  local source = { filepath = "/project/dir/", nodename = "dir", nodetype = "D" }
+  local resources = {
+    [source.filepath] = source,
+    ["/project/dir/child/"] = { filepath = "/project/dir/child/", nodename = "child", nodetype = "D" },
+  }
+  local action, calls, set_cursor = setup_transfer({
+    cursor = source.filepath,
+    resources = resources,
+    tree_nodes = { [source.filepath] = source },
+  })
+
+  action:stage_transfer("copy")
+  set_cursor("/project/dir/child/")
+  action:paste()
+
+  t.assert_eq(0, #calls.copies, "copy count")
+  t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
+end)
+
+t:test("transfer: partial failure retains only failed sources", function()
+  local nodes = {
+    { filepath = "/project/a.txt", nodename = "a.txt", nodetype = "F" },
+    { filepath = "/project/b.txt", nodename = "b.txt", nodetype = "F" },
+  }
+  local resources = {
+    [nodes[1].filepath] = nodes[1],
+    [nodes[2].filepath] = nodes[2],
+    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
+  }
+  local action, calls, set_cursor = setup_transfer({
+    cursor = nodes[1].filepath,
+    failed_targets = { ["/target/b.txt"] = true },
+    resources = resources,
+    selected_nodes = nodes,
+  })
+
+  action:stage_transfer("move")
+  set_cursor("/target/")
+  action:paste()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "failed pending transfer")
+  t.assert_eq(1, #pending.sources, "failed source count")
+  t.assert_eq("/project/b.txt", pending.sources[1].filepath, "failed source")
+  t.assert_eq(1, calls.clear_selection, "selection clear count")
+end)
+
+---@param method                        "copy"|"copy_as"|"rename"
+---@param input                         string
+---@param options                       table|nil
+---@return table
+local function run_name_action(method, input, options)
+  options = options or {}
+  local calls = {
+    default = nil,
+    copied_to = nil,
+    moved_to = nil,
+    reports = {},
+    synced_to = nil,
+  }
+  local node = options.node or { filepath = "/project/src/source.lua", nodename = "source.lua", nodetype = "F" } ---@type era.m.explorer.Node
+
+  t:patch_global("stl", {
+    os = {
+      path = {
+        normalize = normalize,
+        to_os = function(filepath)
+          return filepath
+        end,
+      },
+    },
+    reporter = {
+      error = function(options)
+        calls.reports[#calls.reports + 1] = options
+      end,
+      info = function(options)
+        calls.reports[#calls.reports + 1] = options
+      end,
+    },
+  })
+  t:patch_global("yoz", {
+    path = {
+      extname = function(filepath)
+        return filepath:match("(%.[^./]+)$") or ""
+      end,
+      is_descendant = function(from, to)
+        from = normalize(from, false)
+        to = normalize(to, false)
+        return to == from or to:sub(1, #from + 1) == from .. "/"
+      end,
     },
   })
   t:patch_global("dot", {
@@ -202,71 +773,93 @@ t:test("move_selected refreshes without deleting moved sources again", function(
       cwd = function()
         return "/project"
       end,
-      join = function(left, right)
-        return left:gsub("/+$", "") .. "/" .. right:gsub("^/+", "")
+      relative = function(_, filepath)
+        return filepath:sub(#"/project/" + 1)
       end,
-      relative = function(base, filepath)
-        local prefix = base:gsub("/+$", "") .. "/"
-        return filepath:sub(1, #prefix) == prefix and filepath:sub(#prefix + 1) or filepath
-      end,
-      resolve = function(_, filepath)
-        return filepath
-      end,
-    },
-  })
-  t:patch_global("yoz", {
-    path = {
-      is_absolute = function(filepath)
-        return filepath:sub(1, 1) == "/"
+      resolve = function(cwd, filepath)
+        if filepath:sub(1, 1) == "/" then
+          return filepath
+        end
+        return cwd .. "/" .. filepath
       end,
     },
   })
-  t:patch_global("era", {
-    view = {
-      Act = {
-        new = function(props)
-          return {
-            open = function()
-              props.on_confirm("/target")
-            end,
-          }
-        end,
-      },
-    },
-  })
+  t:patch_table(vim.ui, "input", function(options, callback)
+    calls.default = options.default
+    callback(input)
+  end)
   t:patch_table(vim, "schedule", function(callback)
     callback()
   end)
 
-  local node = { filepath = "/project/a.txt", nodetype = "F" }
   local ctx = {
     fullname = "test",
+    get_cursor_filepath = function()
+      return node.filepath
+    end,
+    get_parent_filepath = function()
+      return options.parent_filepath or "/project/src"
+    end,
     refresh = function() end,
     resource_manager = {
+      copy = function(_, _, target)
+        calls.copied_to = target
+        return true
+      end,
       move = function(_, _, target)
-        moved_to = target
+        calls.moved_to = target
         return true
       end,
     },
+    sync_cursor_to_filepath = function(filepath)
+      calls.synced_to = filepath
+    end,
     tree = {
-      clear_selection = function() end,
-      get_common_ancestor_path = function()
-        return "/project/"
-      end,
       get_selected_nodes = function()
-        return { node }
+        return {}
+      end,
+      locate = function()
+        return node
       end,
       refresh = function() end,
-      remove = function()
-        remove_calls = remove_calls + 1
-      end,
     },
   }
 
-  Action.new(ctx):move_selected()
+  local action = Action.new(ctx)
+  action[method](action)
+  return calls
+end
 
-  t.assert_eq("/target/a.txt", moved_to, "move target")
-  t.assert_eq(0, remove_calls, "post-move remove calls")
+t:test("copy: without selection accepts a cwd-relative copy-as path", function()
+  local calls = run_name_action("copy", "target/peer.lua")
+
+  t.assert_eq("src/source-copy.lua", calls.default, "suggested copy path")
+  t.assert_eq("/project/target/peer.lua", calls.copied_to, "copy target")
+  t.assert_eq("/project/target/peer.lua", calls.synced_to, "synced copy target")
+end)
+
+t:test("copy: copy-as rejects a directory target inside the source", function()
+  local calls = run_name_action("copy_as", "src/nested-copy/", {
+    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
+    parent_filepath = "/project",
+  })
+
+  t.assert_nil(calls.copied_to, "copy target")
+  t.assert_eq(1, #calls.reports, "validation report count")
+end)
+
+t:test("rename: rejects path separators instead of moving across directories", function()
+  local calls = run_name_action("rename", "nested/peer.lua")
+
+  t.assert_nil(calls.moved_to, "move target")
+  t.assert_eq(1, #calls.reports, "validation report count")
+end)
+
+t:test("rename: joins a parent without trailing slash", function()
+  local calls = run_name_action("rename", "peer.lua")
+
+  t.assert_eq("/project/src/peer.lua", calls.moved_to, "move target")
+  t.assert_eq("/project/src/peer.lua", calls.synced_to, "synced rename target")
 end)
 
 t:run()

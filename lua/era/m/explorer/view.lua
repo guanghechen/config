@@ -61,11 +61,11 @@ function M:render(bufnr, tree, root, options)
     deferred_file_icons = deferred_file_icons,
     foldempty = options.foldempty ~= false,
     only_selected = options.only_selected == true,
+    pending_transfer = options.pending_transfer,
     show_diagnostics = options.show_diagnostics ~= false,
     show_git_status = options.show_git_status ~= false,
     show_icons = options.show_icons ~= false,
     diag_counts = diag_counts,
-    select_mode = options.select_mode or "select",
   }
 
   self:__precompute__(root, ctx)
@@ -86,9 +86,19 @@ function M:render(bufnr, tree, root, options)
   ---@param is_last                     boolean
   ---@param display_name                string|nil
   ---@param inherited_selected          boolean
+  ---@param inherited_transfer_mode     era.m.explorer.TransferModeEnum|nil
   ---@return nil
-  local function traverse(node, prefix, is_last, display_name, inherited_selected)
+  local function traverse(node, prefix, is_last, display_name, inherited_selected, inherited_transfer_mode)
     local is_selected = inherited_selected or node.selected ---@type boolean
+    local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
+    local transfer_mode = inherited_transfer_mode ---@type era.m.explorer.TransferModeEnum|nil
+    if
+      transfer_mode == nil
+      and pending_transfer ~= nil
+      and (is_selected or pending_transfer.source_filepaths[node.filepath])
+    then
+      transfer_mode = pending_transfer.mode
+    end
 
     if only_selected and not is_selected then
       if node.nodetype == "F" then
@@ -139,13 +149,13 @@ function M:render(bufnr, tree, root, options)
       diagnostic_info_list[#diagnostic_info_list + 1] = diag_info
     end
 
-    if is_selected then
+    if transfer_mode ~= nil or is_selected then
       local sign_text ---@type string
       local sign_hl_group ---@type string
-      if ctx.select_mode == "cut" then
+      if transfer_mode == "move" then
         sign_text = stl.icon.symbols.selection_cut
         sign_hl_group = "m_ex_cut"
-      elseif ctx.select_mode == "copy" then
+      elseif transfer_mode == "copy" then
         sign_text = stl.icon.symbols.selection_copy
         sign_hl_group = "m_ex_copy"
       else
@@ -178,13 +188,18 @@ function M:render(bufnr, tree, root, options)
           end
         end
 
-        traverse(child, child_prefix, i == N, child_display_name, is_selected)
+        traverse(child, child_prefix, i == N, child_display_name, is_selected, transfer_mode)
       end
     end
   end
 
   local root_is_expanded = root.expanded ---@type boolean
   local root_is_selected = tree:is_selected(root_filepath) ---@type boolean
+  local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
+  local root_transfer_mode = pending_transfer ~= nil
+      and (root_is_selected or pending_transfer.source_filepaths[root_filepath])
+      and pending_transfer.mode
+    or nil ---@type era.m.explorer.TransferModeEnum|nil
   if root_is_expanded then
     if not root.loaded and ctx.resource_manager ~= nil then
       ctx.tree:load_node(root, false)
@@ -203,7 +218,7 @@ function M:render(bufnr, tree, root, options)
         end
       end
 
-      traverse(child, "", i == N, child_display_name, root_is_selected)
+      traverse(child, "", i == N, child_display_name, root_is_selected, root_transfer_mode)
     end
   end
 
@@ -429,7 +444,8 @@ function M:__fold_empty_dirs__(node, ctx)
   local current = node ---@type era.m.explorer.Node
 
   while true do
-    if current.selected then
+    local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
+    if current.selected or (pending_transfer ~= nil and pending_transfer.source_filepaths[current.filepath]) then
       break
     end
 

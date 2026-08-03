@@ -16,7 +16,6 @@ local __module_name__ = "era.m.explorer.tree" ---@type string
 ---@field public o_flag_hidden          stl.c.Observable
 ---@field public o_root_filepath             stl.c.Observable
 ---@field public prev_root_filepath          string|nil
----@field public select_mode            era.m.explorer.SelectModeEnum
 ---@field public ticks                  era.m.explorer.ITreeTicks
 ---@field protected _disposed           boolean
 ---@field protected _resource_manager   era.m.explorer.resource.IManager
@@ -77,7 +76,6 @@ function M.new(props)
   self.o_flag_hidden = props.o_flag_hidden
   self.o_root_filepath = stl.c.Observable.from_value(default_root)
   self.prev_root_filepath = nil
-  self.select_mode = "select"
   self.ticks = { structure = 0 }
   self._disposed = false
   self._resource_manager = resource_manager
@@ -120,7 +118,6 @@ function M:clear()
   local superroot = era.m.explorer.Node.superroot() ---@type era.m.explorer.Node
   self._superroot = superroot
   self._root = superroot
-  self.select_mode = "select"
   self.ticks.structure = self.ticks.structure + 1
 end
 
@@ -128,7 +125,6 @@ end
 function M:clear_selection()
   self:__health__()
   self._superroot:clear_selection_recursive()
-  self.select_mode = "select"
 end
 
 ---@return nil
@@ -190,35 +186,6 @@ function M:expand_path(filepath)
   end
 
   self.ticks.structure = self.ticks.structure + 1
-end
-
----@param nodes                         ?era.m.explorer.Node[]
----@return string|nil
-function M:get_common_ancestor_path(nodes)
-  self:__health__()
-
-  nodes = nodes or self:get_selected_nodes()
-  if #nodes == 0 then
-    return nil
-  end
-
-  local paths = {} ---@type string[]
-  for _, node in ipairs(nodes) do
-    paths[#paths + 1] = node.filepath
-  end
-
-  local common = dot.path.dirname(paths[1]) ---@type string
-  for i = 2, #paths do
-    local path = paths[i] ---@type string
-    while not yoz.path.is_descendant(common, path) and path ~= common do
-      common = dot.path.dirname(common)
-      if common == "" or common == "/" then
-        return "/"
-      end
-    end
-  end
-
-  return common
 end
 
 ---@return era.m.explorer.resource.IManager

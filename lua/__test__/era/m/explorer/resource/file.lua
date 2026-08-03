@@ -65,6 +65,15 @@ bootstrap.with_runtime(t, {
       warn = function() end,
     },
   },
+  yoz = {
+    path = {
+      is_descendant = function(from, to)
+        from = normalize(from, false)
+        to = normalize(to, false)
+        return to == from or to:sub(1, #from + 1) == from .. "/"
+      end,
+    },
+  },
 })
 
 local FileManager = require("era.m.explorer.resource.file")
@@ -200,6 +209,21 @@ t:test("copy: reuses scandir types for regular descendants", function()
   t.assert_true(ok, "copy result")
   t.assert_eq(2, lstat_calls, "only target existence and source identity should use lstat")
   t.assert_true(vim.uv.fs_stat(target .. "/nested/file") ~= nil, "nested file should be copied")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: rejects a directory target inside the source before writing", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = source .. "/nested/copy" ---@type string
+  vim.fn.mkdir(source, "p")
+  vim.fn.writefile({ "sentinel" }, source .. "/sentinel")
+
+  local ok = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+
+  t.assert_false(ok, "copy result")
+  t.assert_nil(vim.uv.fs_lstat(source .. "/nested"), "target parent should not be created")
+  t.assert_true(vim.uv.fs_stat(source .. "/sentinel") ~= nil, "source should remain unchanged")
   vim.fn.delete(root, "rf")
 end)
 

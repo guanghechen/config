@@ -914,9 +914,9 @@ function M:__render__()
     resource_manager = self._resource_manager,
     foldempty = self._tree.o_flag_foldempty:snapshot(),
     only_selected = dot.context.explorer.flag_selected:snapshot(),
+    pending_transfer = self._action:get_pending_transfer(),
     show_git_status = true,
     show_icons = true,
-    select_mode = self._tree.select_mode,
   })
   self._render_result = render_result
 
@@ -1023,6 +1023,14 @@ function M:__setup_keymaps__(bufnr)
         action:open()
       end,
       desc = "explorer: open/toggle",
+    },
+    {
+      modes = { "n" },
+      key = "<Esc>",
+      callback = function()
+        action:cancel_transfer()
+      end,
+      desc = "explorer: cancel pending transfer",
     },
     {
       modes = { "i", "n" },
@@ -1217,9 +1225,9 @@ function M:__setup_keymaps__(bufnr)
       modes = { "i", "n" },
       key = "c",
       callback = function()
-        action:copy_node()
+        action:copy()
       end,
-      desc = "explorer: copy node",
+      desc = "explorer: copy selection/copy as",
     },
     {
       modes = { "i", "n" },
@@ -1277,14 +1285,6 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "i", "n" },
-      key = "mc",
-      callback = function()
-        action:toggle_select_mode("copy")
-      end,
-      desc = "explorer: toggle copy selection",
-    },
-    {
-      modes = { "i", "n" },
       key = "md",
       callback = function()
         action:delete_selected()
@@ -1298,30 +1298,6 @@ function M:__setup_keymaps__(bufnr)
         action:open_selected()
       end,
       desc = "explorer: open selected files",
-    },
-    {
-      modes = { "i", "n" },
-      key = "mp",
-      callback = function()
-        action:paste()
-      end,
-      desc = "explorer: paste",
-    },
-    {
-      modes = { "i", "n" },
-      key = "ms",
-      callback = function()
-        action:toggle_select_mode("select")
-      end,
-      desc = "explorer: toggle select mode",
-    },
-    {
-      modes = { "i", "n" },
-      key = "mx",
-      callback = function()
-        action:toggle_select_mode("cut")
-      end,
-      desc = "explorer: toggle cut selection",
     },
     {
       modes = { "i", "n" },
@@ -1425,15 +1401,15 @@ function M:__setup_keymaps__(bufnr)
       callback = function()
         action:cut()
       end,
-      desc = "explorer: cut",
+      desc = "explorer: stage move",
     },
     {
       modes = { "i", "n" },
       key = "y",
       callback = function()
-        action:toggle_select_mode("copy")
+        action:stage_transfer("copy")
       end,
-      desc = "explorer: yank (copy)",
+      desc = "explorer: stage copy",
     },
     {
       modes = { "i", "n" },
@@ -1486,17 +1462,9 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "<Tab>",
       callback = function()
-        action:toggle_select_mode_visual("select")
+        action:mark_visual()
       end,
       desc = "explorer: toggle select (visual)",
-    },
-    {
-      modes = { "x" },
-      key = "c",
-      callback = function()
-        action:toggle_select_mode_visual("copy")
-      end,
-      desc = "explorer: toggle copy (visual)",
     },
     {
       modes = { "x" },
@@ -1505,38 +1473,6 @@ function M:__setup_keymaps__(bufnr)
         action:delete_visual()
       end,
       desc = "explorer: delete (visual)",
-    },
-    {
-      modes = { "x" },
-      key = "mc",
-      callback = function()
-        action:toggle_select_mode_visual("copy")
-      end,
-      desc = "explorer: toggle copy (visual)",
-    },
-    {
-      modes = { "x" },
-      key = "ms",
-      callback = function()
-        action:toggle_select_mode_visual("select")
-      end,
-      desc = "explorer: toggle select (visual)",
-    },
-    {
-      modes = { "x" },
-      key = "mx",
-      callback = function()
-        action:toggle_select_mode_visual("cut")
-      end,
-      desc = "explorer: toggle cut (visual)",
-    },
-    {
-      modes = { "x" },
-      key = "my",
-      callback = function()
-        action:toggle_select_mode_visual("copy")
-      end,
-      desc = "explorer: toggle copy (visual)",
     },
     {
       modes = { "x" },
@@ -1550,17 +1486,17 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "x",
       callback = function()
-        action:toggle_select_mode_visual("cut")
+        action:stage_transfer_visual("move")
       end,
-      desc = "explorer: toggle cut (visual)",
+      desc = "explorer: stage move (visual)",
     },
     {
       modes = { "x" },
       key = "y",
       callback = function()
-        action:toggle_select_mode_visual("copy")
+        action:stage_transfer_visual("copy")
       end,
-      desc = "explorer: toggle copy (visual)",
+      desc = "explorer: stage copy (visual)",
     },
   }
 

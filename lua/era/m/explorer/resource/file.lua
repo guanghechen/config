@@ -244,6 +244,20 @@ function M:copy(source_filepath, target_filepath)
   local source_os_path = to_os_filepath(source_path) ---@type string
   local target_os_path = to_os_filepath(target_path) ---@type string
 
+  local source_stat = vim.uv.fs_lstat(source_os_path)
+  if source_stat == nil then
+    return false
+  end
+
+  if source_stat.type == "directory" and yoz.path.is_descendant(source_path, target_path) then
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "copy",
+      message = string.format("Cannot copy a directory into itself: %s -> %s", source_path, target_path),
+    })
+    return false
+  end
+
   if vim.uv.fs_lstat(target_os_path) ~= nil then
     stl.reporter.error({
       from = self.fullname,
@@ -265,11 +279,6 @@ function M:copy(source_filepath, target_filepath)
       })
       return false
     end
-  end
-
-  local source_stat = vim.uv.fs_lstat(source_os_path)
-  if source_stat == nil then
-    return false
   end
 
   return self:__copy_entry__(source_os_path, target_os_path, source_stat.type)

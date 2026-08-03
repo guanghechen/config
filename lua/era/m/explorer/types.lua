@@ -13,10 +13,19 @@
 ---| "F"
 ---| "D"
 
----@alias era.m.explorer.SelectModeEnum
----| "select"
----| "cut"
+---@alias era.m.explorer.TransferModeEnum
+---| "move"
 ---| "copy"
+
+---@class era.m.explorer.IPendingTransferSource
+---@field public filepath               string
+---@field public nodename               string
+---@field public nodetype               era.m.explorer.NodeTypeEnum
+
+---@class era.m.explorer.IPendingTransfer
+---@field public mode                   era.m.explorer.TransferModeEnum
+---@field public sources                era.m.explorer.IPendingTransferSource[]
+---@field public source_filepaths       table<string, boolean>
 
 ---@class era.m.explorer.ITreeTicks
 ---@field public structure              integer
@@ -88,7 +97,7 @@
 ---@field public deferred_file_icons    era.m.explorer.view.IFileIconInfo[]
 ---@field public foldempty              boolean
 ---@field public only_selected          boolean
----@field public select_mode            era.m.explorer.SelectModeEnum
+---@field public pending_transfer       era.m.explorer.IPendingTransfer|nil
 ---@field public show_diagnostics       boolean
 ---@field public show_git_status        boolean
 ---@field public show_icons             boolean
@@ -97,8 +106,8 @@
 ---@field public defer_file_icons       ?boolean
 ---@field public foldempty              ?boolean
 ---@field public only_selected          ?boolean
+---@field public pending_transfer       era.m.explorer.IPendingTransfer|nil
 ---@field public resource_manager       ?era.m.explorer.resource.IManager
----@field public select_mode            ?era.m.explorer.SelectModeEnum
 ---@field public show_diagnostics       ?boolean
 ---@field public show_git_status        ?boolean
 ---@field public show_icons             ?boolean
