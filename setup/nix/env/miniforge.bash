@@ -11,8 +11,15 @@ miniforge_conda="$HOME_MINIFORGE/bin/conda"
 miniforge_profile="$HOME_MINIFORGE/etc/profile.d/conda.sh"
 
 if [ -e "$HOME_MINIFORGE" ] || [ -L "$HOME_MINIFORGE" ]; then
+  if [ ! -f "$miniforge_conda" ]; then
+    printf "\e[91m [setup miniforge] conda executable is missing or not a regular file: %s\e[0m\n" \
+      "$miniforge_conda" >&2
+    printf "\e[91m   repair the existing prefix manually before rerunning setup: %s\e[0m\n" \
+      "$HOME_MINIFORGE" >&2
+    exit 1
+  fi
   if [ ! -x "$miniforge_conda" ]; then
-    printf "\e[91m [setup miniforge] conda executable is missing or not executable: %s\e[0m\n" \
+    printf "\e[91m [setup miniforge] conda executable is not executable: %s\e[0m\n" \
       "$miniforge_conda" >&2
     printf "\e[91m   repair the existing prefix manually before rerunning setup: %s\e[0m\n" \
       "$HOME_MINIFORGE" >&2

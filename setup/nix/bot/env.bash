@@ -46,7 +46,7 @@ if command -v fnm >/dev/null 2>&1; then
 fi
 
 ### Miniforge3
-if [ -f "$HOME/.app/miniforge3/bin/conda" ]; then
+if [ -f "$HOME/.app/miniforge3/bin/conda" ] && [ -x "$HOME/.app/miniforge3/bin/conda" ]; then
   export HOME_MINIFORGE="$HOME/.app/miniforge3"
   if [[ ":$PATH:" != *":$HOME_MINIFORGE/bin:"* ]]; then
     export PATH="$HOME_MINIFORGE/bin:$PATH"
