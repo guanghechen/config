@@ -98,7 +98,6 @@ ghc_step_optional windows-terminal ghc_run_script "$setup_nix/app/windows-termin
 
 ## Setup font
 ghc_step_optional font ghc_run_script "$setup_osx/bot/font-maple.bash"
-# ghc_step_optional font ghc_run_script "$setup_osx/bot/font-roboto.bash"
 
 ## Setup themes
 ghc_step_optional theme node "$repomain/cli/theme.mjs" apply
