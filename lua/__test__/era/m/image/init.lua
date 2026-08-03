@@ -33,7 +33,7 @@ t:test("dressing attaches existing and future supported buffers", function()
   }
 
   t:patch_global("stl", {
-    env = { IS_MAC = true },
+    env = { IS_OSX = true },
     nvim = {
       fn = {
         augroup = function()

@@ -522,7 +522,7 @@ function M:remove(filepath, on_removed)
 
   if use_trash then
     -- os_filepath has no trailing slash, so native trash tools operate on the link itself.
-    if stl.env.IS_MAC then
+    if stl.env.IS_OSX then
       local result = vim.system({ "trash", "-F", os_filepath }, { text = true }):wait()
       ok = result.code == 0
       if not ok then

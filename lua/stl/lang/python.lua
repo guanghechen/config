@@ -19,7 +19,7 @@ end
 ---@field public paths                  stl.lang.python.IVenvManagerPaths
 local M = {}
 
-if stl.env.IS_MAC then
+if stl.env.IS_OSX then
   ---@type stl.lang.python.IVenvManagerPaths
   M.paths = {
     Poetry = "~/Library/Caches/pypoetry/virtualenvs",

@@ -5,7 +5,7 @@ local __module_name__ = "stl.shell" ---@type string
 ---@field public get_shell_args         fun(command: string): string[]
 local M = {}
 
-if stl.env.IS_MAC or stl.env.IS_NIX or stl.env.IS_WSL then
+if stl.env.IS_OSX or stl.env.IS_NIX or stl.env.IS_WSL then
   ---@param cmd                         string
   ---@return string[]
   function M.get_shell_args(cmd)

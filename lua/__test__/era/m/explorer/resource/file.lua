@@ -46,7 +46,7 @@ bootstrap.with_runtime(t, {
   },
   stl = {
     env = {
-      IS_MAC = false,
+      IS_OSX = false,
       IS_NIX = false,
       IS_WIN = is_win,
       IS_WSL = false,
@@ -233,7 +233,7 @@ t:test("remove with trash: passes a slash-free symlink path to the native tool",
   local command = nil ---@type string[]|nil
   use_trash = true
 
-  t:patch_table(stl.env, "IS_MAC", true)
+  t:patch_table(stl.env, "IS_OSX", true)
   t:patch_table(stl.env, "IS_NIX", false)
   t:patch_table(stl.env, "IS_WIN", false)
   t:patch_table(stl.env, "IS_WSL", false)

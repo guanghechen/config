@@ -1,9 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.im.mac" ---@type string
+local __module_name__ = "era.m.im.osx" ---@type string
 
 -- cspell:ignore SCIM ITABC
 
----@class era.m.im.mac : era.m.im
+---@class era.m.im.osx : era.m.im
 local M = {}
 
 local app_home = dot.path.locate_app_config_home("guanghechen")

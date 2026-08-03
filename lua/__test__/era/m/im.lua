@@ -52,8 +52,8 @@ local function test_process_commands(module_name, english_output, chinese_arg)
   t.assert_eq(chinese_arg, commands[2][2], "set argument")
 end
 
-t:test("mac: executes im-select with argv", function()
-  test_process_commands("era.m.im.mac", "com.apple.keylayout.ABC", "com.apple.inputmethod.SCIM.ITABC")
+t:test("osx: executes im-select with argv", function()
+  test_process_commands("era.m.im.osx", "com.apple.keylayout.ABC", "com.apple.inputmethod.SCIM.ITABC")
 end)
 
 t:test("win: executes im-select with argv", function()
@@ -75,7 +75,7 @@ t:test("unavailable executable is rejected before process launch", function()
     return ""
   end)
 
-  local im = require("era.m.im.mac")
+  local im = require("era.m.im.osx")
   t.assert_nil(im.get_input_method(), "input method")
   t.assert_false(launched, "process launch")
   t.assert_eq(1, #reports, "error count")
@@ -90,7 +90,7 @@ t:test("spawn failure is reported without escaping the module boundary", functio
     error("spawn failed")
   end)
 
-  local im = require("era.m.im.mac")
+  local im = require("era.m.im.osx")
   t.assert_nil(im.get_input_method(), "input method")
   im.set_input_method("English")
 

@@ -8,8 +8,8 @@
 ---@field public set_input_method       fun(input_method: era.m.im.InputMethod): nil
 local M = {}
 
-if stl.env.IS_MAC then
-  M = require("era.m.im.mac")
+if stl.env.IS_OSX then
+  M = require("era.m.im.osx")
 elseif stl.env.IS_WSL then
   M = require("era.m.im.wsl")
 elseif stl.env.IS_WIN then

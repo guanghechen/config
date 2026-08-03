@@ -191,7 +191,7 @@ M.os = {
   wsl = "",
   unknown = "",
   current = (stl.env.IS_NIX and "")
-    or (stl.env.IS_MAC and "")
+    or (stl.env.IS_OSX and "")
     or (stl.env.IS_WIN and "")
     or (stl.env.IS_WSL and "")
     or "",

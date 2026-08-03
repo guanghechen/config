@@ -4,8 +4,8 @@
 ---@field public paste_image_from_clipboard fun(filepath_target: string): boolean
 local M = {}
 
-if stl.env.IS_MAC then
-  M = require("era.m.clipboard.mac")
+if stl.env.IS_OSX then
+  M = require("era.m.clipboard.osx")
 elseif stl.env.IS_WSL then
   M = require("era.m.clipboard.wsl")
 elseif stl.env.IS_NIX then

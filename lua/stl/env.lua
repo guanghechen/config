@@ -3,7 +3,7 @@ local __module_name__ = "stl.env" ---@type string
 
 local os_name = vim.uv.os_uname().sysname ---@type string|nil
 
-local IS_MAC = os_name == "Darwin" ---@type boolean
+local IS_OSX = os_name == "Darwin" ---@type boolean
 local IS_WIN = os_name == "Windows_NT" ---@type boolean
 local IS_WSL = vim.fn.has("wsl") == 1 ---@type boolean
 local IS_NIX = not IS_WSL and os_name == "Linux" ---@type boolean
@@ -29,7 +29,7 @@ local IS_HEADLESS = #vim.api.nvim_list_uis() == 0 ---@type boolean
 local M = {}
 
 ---! OS settings
-M.IS_MAC = IS_MAC ---@type boolean
+M.IS_OSX = IS_OSX ---@type boolean
 M.IS_WIN = IS_WIN ---@type boolean
 M.IS_WSL = IS_WSL ---@type boolean
 M.IS_NIX = IS_NIX ---@type boolean

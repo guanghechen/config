@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.clipboard.mac" ---@type string
+local __module_name__ = "era.m.clipboard.osx" ---@type string
 
----@class era.m.clipboard.mac
+---@class era.m.clipboard.osx
 local M = {}
 
 local exec = require("era.m.clipboard.exec")

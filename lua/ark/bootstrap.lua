@@ -45,7 +45,7 @@ function M.setup_clipboard()
     }
   end
 
-  if stl.env.IS_MAC then
+  if stl.env.IS_OSX then
     if stl.env.IS_TMUX then
       vim.g.clipboard = tmux_clipboard()
     end
@@ -59,7 +59,7 @@ end
 
 ---@return nil
 function M.setup_shell()
-  if stl.env.IS_MAC then
+  if stl.env.IS_OSX then
     -- vim.o.shell = "/bin/bash"
   elseif stl.env.IS_NIX then
     -- vim.o.shell = "/usr/bin/bash"
