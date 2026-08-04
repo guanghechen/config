@@ -3,7 +3,7 @@
 source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 ### Install git
-brew tap microsoft/git
+brew install -y git
 brew install -y --cask git-credential-manager
 
 ### Install wget
@@ -14,9 +14,6 @@ brew install -y unixodbc
 
 ### Install pngpaste
 brew install -y pngpaste
-
-### Install alacritty
-brew install -y --cask alacritty
 
 ### Install ghostty
 brew install -y --cask ghostty
