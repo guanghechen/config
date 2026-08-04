@@ -97,6 +97,7 @@ local __m__mods = {
   notepad = "era.m.notepad",
   notifier = "era.m.notifier",
   nvimbar = "era.m.nvimbar",
+  paste = "era.m.paste",
   picker = "era.m.picker",
   plugin = "era.m.plugin",
   python_venv = "era.m.python_venv",
@@ -143,6 +144,7 @@ local __m__mods = {
 ---@field public notepad                era.m.notepad
 ---@field public notifier               era.m.notifier
 ---@field public nvimbar                era.m.nvimbar
+---@field public paste                  era.m.paste
 ---@field public picker                 era.m.picker
 ---@field public plugin                 era.m.plugin
 ---@field public python_venv            era.m.python_venv

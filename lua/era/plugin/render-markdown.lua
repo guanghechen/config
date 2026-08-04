@@ -383,6 +383,29 @@ return {
     local plugin = require("render-markdown")
     plugin.setup(opts)
 
+    local refresh_after_paste = stl.timer.debounce(function(bufnr, manager)
+      if not vim.api.nvim_buf_is_valid(bufnr) or not manager.attached(bufnr) then
+        return
+      end
+      plugin.render({ buf = bufnr })
+    end, opts.debounce + 1)
+
+    vim.api.nvim_create_autocmd("User", {
+      group = stl.nvim.fn.augroup("render-markdown-on-paste"),
+      pattern = "EraPasteSettled",
+      callback = function(event)
+        local bufnr = event.data and event.data.bufnr or nil ---@type integer|nil
+        if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
+        local manager = require("render-markdown.core.manager")
+        if not manager.attached(bufnr) then
+          return
+        end
+        refresh_after_paste(bufnr, manager)
+      end,
+    })
+
     stl.fn.observe({ dot.context.plugin.render_markdown }, function()
       local flag = dot.context.plugin.render_markdown:snapshot() ---@type boolean
       if flag then
