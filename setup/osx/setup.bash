@@ -5,6 +5,11 @@ repoworktree="$HOME/.config/kit"
 setup_nix="$repomain/setup/nix"
 setup_osx="$repomain/setup/osx"
 
+if ! git --version >/dev/null 2>&1; then
+  printf "\e[91m  [setup preparation] Git is unavailable. Install Xcode Command Line Tools with: xcode-select --install\e[0m\n" >&2
+  exit 1
+fi
+
 ## Download core configurations
 ##
 ## This runs before step.bash is available, since step.bash lives in the repo
