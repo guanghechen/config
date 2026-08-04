@@ -48,6 +48,11 @@ if test -f "$HOME/.app/miniforge3/bin/conda"
     # end
 end
 
+# ollama
+set -gx OLLAMA_NO_CLOUD 1
+set -gx OLLAMA_NOHISTORY 1
+set -gx OLLAMA_DEBUG_LOG_REQUESTS 0
+
 ### pnpm
 set -gx PNPM_HOME "$HOME/Library/pnpm"
 if not string match -q -- "$PNPM_HOME/bin" $PATH
