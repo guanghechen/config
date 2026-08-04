@@ -7,4 +7,8 @@ node "$nvim_repopath/rust/script/build.mjs"
 if ($LASTEXITCODE -ne 0) {
   throw "[setup nvim] failed to build native module (exit code: $LASTEXITCODE)."
 }
+
 nvim --headless -u "$nvim_repopath/init-update.lua"
+if ($LASTEXITCODE -ne 0) {
+  throw "[setup nvim] failed to update Neovim (exit code: $LASTEXITCODE)."
+}
