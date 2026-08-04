@@ -28,7 +28,9 @@ if (Test-Path $cargo_config_path) {
   Write-Host "  [setup config] copying cargo.toml..." -ForegroundColor Cyan
   $source = Join-Path $repomain "asset\conf\cargo.toml"
   $target = $cargo_config_path
-  Copy-Item -Path $source -Destination $target -Force
+  $cargo_config_dir = Split-Path -Parent $cargo_config_path
+  New-Item -ItemType Directory -Path $cargo_config_dir -Force -ErrorAction Stop | Out-Null
+  Copy-Item -Path $source -Destination $target -Force -ErrorAction Stop
 }
 
 Write-Host "  [setup config] done." -ForegroundColor Green
