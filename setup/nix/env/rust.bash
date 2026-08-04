@@ -15,6 +15,7 @@ if [ -f "$HOME/.cargo/config.toml" ]; then
   printf "\e[93m  [setup rust] ~/.cargo/config.toml already exists. (skipped)\e[0m\n"
 else
   printf "\e[96m  [setup rust] setting up ~/.cargo/config.toml...\e[0m\n"
+  mkdir -p "$HOME/.cargo"
   cp "$HOME/.config/guanghechen/asset/conf/cargo.toml" "$HOME/.cargo/config.toml"
 fi
 
