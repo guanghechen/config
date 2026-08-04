@@ -24,10 +24,10 @@ Debian or Ubuntu (including WSL), with `curl`, `sudo`, and `apt` available.
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.bash)"
     ```
 
-  - Run the container with fish.
+  - Run the container with Bash.
 
     ```bash
-    docker exec -it ghc-config /home/linuxbrew/.linuxbrew/bin/fish
+    docker exec -it ghc-config /bin/bash
     ```
 
   - Remove docker container
