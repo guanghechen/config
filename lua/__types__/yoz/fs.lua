@@ -34,6 +34,15 @@ local M = {}
 ---@class yoz.fs.IMoveError
 ---@field public error                  string
 
+---Checks whether target is at or below source after resolving filesystem aliases.
+---Both arguments must be native absolute local paths. Source must exist; target may not
+---exist, but it must not contain `..` components.
+---@param source                       string
+---@param target                       string
+---@return boolean|nil
+---@return string|nil
+function M.is_descendant(source, target) end
+
 ---@param dirpath                       string
 ---@param recursive                     boolean
 ---@return yoz.fs.ICollectFilesResult|nil

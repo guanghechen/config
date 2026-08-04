@@ -14,6 +14,7 @@ libc = "0.2.177"
 md-5 = "0.10.6"
 mlua = { version = "0.11.4", default-features = false, features = ["luajit", "module"] }
 regex = "1.12.2"
+same-file = "1.0.6"
 serde = { version = "1.0.228", features = ["derive"] }
 time = { version = "0.3.44", features = ["macros", "formatting", "local-offset"] }
 uuid = { version = "1.18.1", features = ["v4", "fast-rng"] }
