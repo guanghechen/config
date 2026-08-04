@@ -126,7 +126,10 @@
         },
         {
           "branch": "nvim",
-          "editions": ["nix", "nix-remote", "osx", "win"]
+          "editions": ["nix", "nix-remote", "osx", "win"],
+          "on": {
+            "synced": "node rust/script/build.mjs --force"
+          }
         },
         {
           "branch": "nvim-lazy",
@@ -134,7 +137,10 @@
         },
         {
           "branch": "nvim-nvchad",
-          "editions": ["nix", "osx"]
+          "editions": ["nix", "osx"],
+          "on": {
+            "synced": "node rust/script/build.mjs --force"
+          }
         },
         {
           "branch": "opencode",
