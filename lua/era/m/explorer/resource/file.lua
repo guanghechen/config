@@ -249,13 +249,35 @@ function M:copy(source_filepath, target_filepath)
     return false
   end
 
-  if source_stat.type == "directory" and yoz.path.is_descendant(source_path, target_path) then
-    stl.reporter.error({
-      from = self.fullname,
-      subject = "copy",
-      message = string.format("Cannot copy a directory into itself: %s -> %s", source_path, target_path),
-    })
-    return false
+  if source_stat.type == "directory" then
+    if yoz.path.is_descendant(source_path, target_path) then
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "copy",
+        message = string.format("Cannot copy a directory into itself: %s -> %s", source_path, target_path),
+      })
+      return false
+    end
+
+    local is_descendant, err = yoz.fs.is_descendant(source_os_path, target_os_path) ---@type boolean|nil, string|nil
+    if is_descendant == nil then
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "copy",
+        message = string.format("Cannot resolve copy paths: %s -> %s", source_path, target_path),
+        details = { error = err },
+      })
+      return false
+    end
+
+    if is_descendant then
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "copy",
+        message = string.format("Cannot copy a directory into itself: %s -> %s", source_path, target_path),
+      })
+      return false
+    end
   end
 
   if vim.uv.fs_lstat(target_os_path) ~= nil then

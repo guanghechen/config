@@ -7,6 +7,8 @@ local harness = require("__test__.harness")
 
 local t = harness.new("era.m.explorer.resource.file")
 local is_win = package.config:sub(1, 1) == "\\" ---@type boolean
+local fs_descendant_result = false ---@type boolean|nil
+local fs_descendant_error = nil ---@type string|nil
 local use_trash = false ---@type boolean
 
 local function normalize(filepath, keep_trailing_slash)
@@ -66,6 +68,11 @@ bootstrap.with_runtime(t, {
     },
   },
   yoz = {
+    fs = {
+      is_descendant = function()
+        return fs_descendant_result, fs_descendant_error
+      end,
+    },
     path = {
       is_descendant = function(from, to)
         from = normalize(from, false)
@@ -223,6 +230,42 @@ t:test("copy: rejects a directory target inside the source before writing", func
 
   t.assert_false(ok, "copy result")
   t.assert_nil(vim.uv.fs_lstat(source .. "/nested"), "target parent should not be created")
+  t.assert_true(vim.uv.fs_stat(source .. "/sentinel") ~= nil, "source should remain unchanged")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: rejects a filesystem descendant before writing", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/alias/nested/copy" ---@type string
+  vim.fn.mkdir(source, "p")
+  vim.fn.writefile({ "sentinel" }, source .. "/sentinel")
+
+  fs_descendant_result = true
+  local copied = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+  fs_descendant_result = false
+
+  t.assert_false(copied, "copy result")
+  t.assert_nil(vim.uv.fs_lstat(root .. "/alias"), "target parent should not be created")
+  t.assert_true(vim.uv.fs_stat(source .. "/sentinel") ~= nil, "source should remain unchanged")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: rejects an unresolved filesystem descendant check", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target/copy" ---@type string
+  vim.fn.mkdir(source, "p")
+  vim.fn.writefile({ "sentinel" }, source .. "/sentinel")
+
+  fs_descendant_result = nil
+  fs_descendant_error = "permission denied"
+  local copied = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+  fs_descendant_result = false
+  fs_descendant_error = nil
+
+  t.assert_false(copied, "copy result")
+  t.assert_nil(vim.uv.fs_lstat(root .. "/target"), "target should not be created")
   t.assert_true(vim.uv.fs_stat(source .. "/sentinel") ~= nil, "source should remain unchanged")
   vim.fn.delete(root, "rf")
 end)
