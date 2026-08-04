@@ -12,6 +12,6 @@ if [ -d "$newsboat_config_dir" ]; then
 
   if [ -e "$newsboat_platform_dir/$platform" ]; then
     printf "\e[96m  [setup newsboat] setting up platform symlink (%s)...\e[0m\n" "$platform"
-    ln -sf "$newsboat_platform_dir/$platform" "$newsboat_platform_link"
+    ln -sfn "$newsboat_platform_dir/$platform" "$newsboat_platform_link"
   fi
 fi
