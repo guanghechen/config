@@ -16,40 +16,40 @@ brew update
 
 ### Install node
 printf "\e[96m  [setup homebrew] installing fnm...\e[0m\n"
-brew install fnm
+brew install -y fnm
 
 ### Install node package manager
 printf "\e[96m  [setup homebrew] installing pnpm...\e[0m\n"
-brew install pnpm
+brew install -y pnpm
 
 ### Install python
 printf "\e[96m  [setup homebrew] installing uv...\e[0m\n"
-brew install uv
+brew install -y uv
 
 ### Install nvim
 printf "\e[96m  [setup homebrew] installing nvim...\e[0m\n"
-brew install nvim fd git-delta lazygit ripgrep
+brew install -y nvim fd git-delta lazygit ripgrep
 
 ### Install yazi
 printf "\e[96m  [setup homebrew] installing yazi...\e[0m\n"
-brew install yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jstkdng/programs/ueberzugpp
+brew install -y yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jstkdng/programs/ueberzugpp
 
 ### Install hardware utilities (cpu/memo/disk/network)
 printf "\e[96m  [setup homebrew] installing hardware utilities (cpu/memo/disk/network)...\e[0m\n"
-brew install btop fastfetch httpie
+brew install -y btop fastfetch httpie
 
 ### Install github cli
 printf "\e[96m  [setup homebrew] installing github cli...\e[0m\n"
-brew install gh
+brew install -y gh
 
 ### Install GitHub Copilot CLI
 printf "\e[96m  [setup homebrew] installing github copilot cli...\e[0m\n"
-brew install --cask copilot-cli
+brew install -y --cask copilot-cli
 
 ### Install Codex
 printf "\e[96m  [setup homebrew] installing codex...\e[0m\n"
-brew install --cask codex
+brew install -y --cask codex
 
 ### Install usual tools
 printf "\e[96m  [setup homebrew] installing usual tools...\e[0m\n"
-brew install automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tldr tree tty-clock unzip yt-dlp zoxide
+brew install -y automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tldr tree tty-clock unzip yt-dlp zoxide

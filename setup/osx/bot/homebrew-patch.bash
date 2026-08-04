@@ -4,42 +4,42 @@ source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 ### Install git
 brew tap microsoft/git
-brew install --cask git-credential-manager
+brew install -y --cask git-credential-manager
 
 ### Install wget
-brew install wget
+brew install -y wget
 
 ### Install odbc
-brew install unixodbc
+brew install -y unixodbc
 
 ### Install pngpaste
-brew install pngpaste
+brew install -y pngpaste
 
 ### Install alacritty
-brew install --cask alacritty
+brew install -y --cask alacritty
 
 ### Install ghostty
-brew install --cask ghostty
+brew install -y --cask ghostty
 
 ### Install kitty
-brew install --cask kitty
+brew install -y --cask kitty
 
 ### Install tex
-brew install tectonic
+brew install -y tectonic
 
 ### Install wezterm
-brew install --cask wezterm
+brew install -y --cask wezterm
 
 ### Install yabai
-brew install koekeishiya/formulae/skhd
-brew install koekeishiya/formulae/yabai
-brew install FelixKratz/formulae/borders
+brew install -y koekeishiya/formulae/skhd
+brew install -y koekeishiya/formulae/yabai
+brew install -y FelixKratz/formulae/borders
 
 ### Install OSX System Utilities
-brew install mole
+brew install -y mole
 
 ### Install karabiner-elements
 ### macOS built-in modifier-key remapping only applies to the local device. We need
 ### Karabiner-Elements so keyboard key swaps keep working when this Mac controls
 ### another macOS device through Universal Control.
-brew install --cask karabiner-elements
+brew install -y --cask karabiner-elements

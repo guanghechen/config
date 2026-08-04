@@ -12,7 +12,7 @@ if [[
   printf "\e[93m  [setup homebrew] fish is already set up. (skipped)\e[0m\n"
 else
   printf "\e[96m  [setup homebrew] setting up fish...\e[0m\n"
-  brew install fish
+  brew install -y fish
   if [ -n "${CI:-}" ] || [ "${GHC_NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
     printf "\e[93m  [setup homebrew] non-interactive shell detected. (skipped chsh)\e[0m\n"
   else
