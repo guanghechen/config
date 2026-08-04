@@ -107,6 +107,13 @@ Delete 只要删除了至少一项，就清空 selection 与 pending；失败项
 2. 内部组合目标路径并更新 tree。
 3. 真正 IO 时在 `FileManager` 转 OS 路径。
 
+### Reveal
+
+1. 目标位于当前 root 时，直接按内部 logical filepath 展开并定位。
+2. buffer filepath 已被系统 canonicalize 到 root 外时，`FileManager` 尝试通过当前 root 本身或其直接可见
+   symlink child 重建 logical filepath；多个 alias 匹配时优先选择 canonical target 最具体的一个。
+3. alias 映射成功时保持当前 root；无法映射时才切换到 canonical target 的父目录。
+
 ### 移动/复制
 
 记显式 selected roots 为 `S`，当前 focused item 为 `F`，pending transfer 为 `P`。

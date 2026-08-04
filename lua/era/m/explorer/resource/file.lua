@@ -456,6 +456,102 @@ function M:locate(filepath)
   }
 end
 
+---Maps a canonical target back into the current Explorer root's logical namespace.
+---
+---Neovim buffer names may resolve symlinks, so a file opened through `root/alias/...`
+---can be reported as an unrelated physical path. This method canonicalizes the target,
+---the root, and each directly contained visible symlink, then rebuilds the logical path
+---from the most specific canonical ancestor and the target's remaining suffix. The scan
+---is intentionally non-recursive to bound reveal latency. Returning `nil` leaves the
+---caller free to use the existing cross-root fallback.
+---@param root_filepath                 string
+---@param target_filepath               string
+---@return string|nil
+function M:resolve_root_alias(root_filepath, target_filepath)
+  local root = self:__filepath_to_filepath__(root_filepath) ---@type string
+  local target = self:__filepath_to_filepath__(target_filepath) ---@type string
+  if root == "" or target == "" then
+    return nil
+  end
+
+  if root:sub(-1) ~= "/" then
+    root = root .. "/"
+  end
+
+  local target_is_directory = target:sub(-1) == "/" ---@type boolean
+  local target_realpath = vim.uv.fs_realpath(to_os_filepath(strip_trailing_slash(target))) ---@type string|nil
+  if target_realpath == nil then
+    return nil
+  end
+
+  local canonical_target = normalize_filepath(target_realpath, false) ---@type string
+  local best_filepath = nil ---@type string|nil
+  local best_specificity = -1 ---@type integer
+
+  ---@param logical_alias string
+  ---@param alias_realpath string
+  local function consider_alias(logical_alias, alias_realpath)
+    local canonical_alias = normalize_filepath(alias_realpath, false) ---@type string
+    if not yoz.path.is_descendant(canonical_alias, canonical_target) then
+      return
+    end
+
+    local suffix = canonical_target:sub(#canonical_alias + 1) ---@type string
+    if suffix ~= "" and suffix:sub(1, 1) ~= "/" then
+      suffix = "/" .. suffix
+    end
+
+    local candidate = strip_trailing_slash(logical_alias) .. suffix ---@type string
+    candidate = normalize_filepath(candidate, target_is_directory)
+
+    local specificity = #canonical_alias ---@type integer
+    if
+      specificity > best_specificity
+      or (specificity == best_specificity and (best_filepath == nil or candidate < best_filepath))
+    then
+      best_filepath = candidate
+      best_specificity = specificity
+    end
+  end
+
+  local root_os_path = to_os_filepath(strip_trailing_slash(root)) ---@type string
+  local root_realpath = vim.uv.fs_realpath(root_os_path) ---@type string|nil
+  if root_realpath ~= nil then
+    consider_alias(root, root_realpath)
+  end
+
+  local handle = vim.uv.fs_scandir(root_os_path) ---@type userdata|nil
+  if handle == nil then
+    return best_filepath
+  end
+
+  while true do
+    local name, ftype = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil
+    if name == nil then
+      break
+    end
+
+    if self._show_hidden or name:sub(1, 1) ~= "." then
+      local logical_alias = root .. name ---@type string
+      local alias_os_path = to_os_filepath(logical_alias) ---@type string
+      local is_link = ftype == "link" ---@type boolean
+      if ftype == "unknown" then
+        local stat = vim.uv.fs_lstat(alias_os_path) ---@type uv.fs_stat.result|nil
+        is_link = stat ~= nil and stat.type == "link"
+      end
+
+      if is_link then
+        local alias_realpath = vim.uv.fs_realpath(alias_os_path) ---@type string|nil
+        if alias_realpath ~= nil then
+          consider_alias(logical_alias, alias_realpath)
+        end
+      end
+    end
+  end
+
+  return best_filepath
+end
+
 ---@param source_filepath                    string
 ---@param target_filepath                    string
 ---@return boolean

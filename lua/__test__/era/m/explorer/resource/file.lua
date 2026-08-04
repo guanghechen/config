@@ -102,6 +102,31 @@ local function create_directory_link_fixture()
   return root, target, link
 end
 
+---@return string base
+---@return string root
+---@return string physical
+local function create_root_alias_fixture()
+  local base = vim.fn.tempname() ---@type string
+  local root = base .. "/explorer" ---@type string
+  local physical = base .. "/external/physical" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.mkdir(physical .. "/nested", "p")
+  vim.fn.writefile({ "nested" }, physical .. "/nested/file")
+  vim.fn.writefile({ "direct" }, physical .. "/direct")
+
+  local flags = is_win and { dir = true } or nil
+  local alias_ok, alias_err = vim.uv.fs_symlink("../external/physical", root .. "/alias", flags)
+  if not alias_ok then
+    error("failed to create root alias fixture: " .. tostring(alias_err))
+  end
+  local specific_ok, specific_err = vim.uv.fs_symlink("../external/physical/nested", root .. "/specific", flags)
+  if not specific_ok then
+    error("failed to create specific root alias fixture: " .. tostring(specific_err))
+  end
+
+  return base, root, physical
+end
+
 ---@param root string
 ---@return era.m.explorer.resource.INode
 local function load_link_node(root)
@@ -121,6 +146,39 @@ t:test("load: directory symlink is expandable", function()
   t.assert_eq("D", node.nodetype, "node type")
   t.assert_eq(root .. "/link/", node.filepath, "node filepath")
   vim.fn.delete(root, "rf")
+end)
+
+t:test("resolve_root_alias: rebuilds a canonical target through a root symlink", function()
+  local base, root, physical = create_root_alias_fixture()
+  local manager = FileManager.new({ name = "test", show_hidden = true })
+
+  local resolved = manager:resolve_root_alias(root .. "/", physical .. "/direct")
+
+  t.assert_eq(root .. "/alias/direct", resolved)
+  vim.fn.delete(base, "rf")
+end)
+
+t:test("resolve_root_alias: prefers the most specific root symlink", function()
+  local base, root, physical = create_root_alias_fixture()
+  local manager = FileManager.new({ name = "test", show_hidden = true })
+
+  local resolved = manager:resolve_root_alias(root .. "/", physical .. "/nested/file")
+
+  t.assert_eq(root .. "/specific/file", resolved)
+  vim.fn.delete(base, "rf")
+end)
+
+t:test("resolve_root_alias: ignores unrelated canonical targets", function()
+  local base, root = create_root_alias_fixture()
+  local unrelated = base .. "/external/unrelated" ---@type string
+  vim.fn.mkdir(unrelated, "p")
+  vim.fn.writefile({ "unrelated" }, unrelated .. "/file")
+
+  local resolved = FileManager.new({ name = "test", show_hidden = true })
+    :resolve_root_alias(root .. "/", unrelated .. "/file")
+
+  t.assert_nil(resolved)
+  vim.fn.delete(base, "rf")
 end)
 
 t:test("sync_watches: reports each watch-limit transition once", function()

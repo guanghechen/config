@@ -253,13 +253,15 @@ end)
 
 ---@param initial_root                 string
 ---@param attach_ok                    boolean|nil
+---@param alias_filepath               string|nil
 ---@return era.m.explorer.Widget, table
-local function new_reveal_widget(initial_root, attach_ok)
+local function new_reveal_widget(initial_root, attach_ok, alias_filepath)
   local calls = {
     attach = 0,
     expand_path = 0,
     focus = 0,
     refresh = 0,
+    resolve_root_alias = 0,
     render = 0,
   }
   local tree = {
@@ -284,6 +286,14 @@ local function new_reveal_widget(initial_root, attach_ok)
   end
 
   local widget = setmetatable({
+    _resource_manager = {
+      resolve_root_alias = function(_, root_filepath, target_filepath)
+        calls.resolve_root_alias = calls.resolve_root_alias + 1
+        calls.alias_root_filepath = root_filepath
+        calls.alias_target_filepath = target_filepath
+        return alias_filepath
+      end,
+    },
     _tree = tree,
     __get_parent_filepath__ = function(_, filepath)
       return filepath:match("^(.*/)[^/]+/?$")
@@ -308,6 +318,7 @@ t:test("reveal: refreshes and renders once after preparing the target", function
   widget:reveal("/project/src/main.lua")
 
   t.assert_eq(0, calls.attach, "same-root reveal should not attach a new root")
+  t.assert_eq(0, calls.resolve_root_alias, "same-root reveal should skip alias resolution")
   t.assert_eq(1, calls.expand_path, "target path should expand once")
   t.assert_eq("/project/src/", calls.expanded_filepath)
   t.assert_eq("/project/src/main.lua", widget._tree.o_cursor_filepath:snapshot())
@@ -322,6 +333,7 @@ t:test("reveal: changes root without an intermediate refresh", function()
   widget:reveal("/outside/main.lua")
 
   t.assert_eq(1, calls.attach, "cross-root reveal should attach once")
+  t.assert_eq(1, calls.resolve_root_alias, "cross-root reveal should try the current root aliases")
   t.assert_eq("/outside/", calls.attached_filepath)
   t.assert_eq("/project/", widget._tree.prev_root_filepath)
   t.assert_eq("/outside/", widget._tree.o_root_filepath:snapshot())
@@ -329,6 +341,22 @@ t:test("reveal: changes root without an intermediate refresh", function()
   t.assert_eq(1, calls.focus, "cross-root reveal should focus once")
   t.assert_eq(1, calls.refresh, "cross-root reveal should refresh once")
   t.assert_eq(1, calls.render, "cross-root reveal should render once")
+end)
+
+t:test("reveal: preserves the root when the canonical target has a logical alias", function()
+  local widget, calls = new_reveal_widget("/project/", nil, "/project/local/main.lua")
+
+  widget:reveal("/physical/local/main.lua")
+
+  t.assert_eq(1, calls.resolve_root_alias, "canonical target should resolve once")
+  t.assert_eq("/project/", calls.alias_root_filepath)
+  t.assert_eq("/physical/local/main.lua", calls.alias_target_filepath)
+  t.assert_eq(0, calls.attach, "logical alias should preserve the current root")
+  t.assert_eq("/project/local/", calls.expanded_filepath)
+  t.assert_eq("/project/local/main.lua", widget._tree.o_cursor_filepath:snapshot())
+  t.assert_eq(1, calls.focus, "logical reveal should focus once")
+  t.assert_eq(1, calls.refresh, "logical reveal should refresh once")
+  t.assert_eq(1, calls.render, "logical reveal should render once")
 end)
 
 t:test("reveal: preserves the current root when attach fails", function()

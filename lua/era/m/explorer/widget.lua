@@ -347,11 +347,16 @@ function M:reveal(filepath)
 
   local root_filepath = self._tree.o_root_filepath:snapshot() ---@type string
   if not vim.startswith(filepath, root_filepath) then
-    local parent_filepath = self:__get_parent_filepath__(filepath) ---@type string
-    local ok = self:__set_root__(parent_filepath) ---@type boolean
-    if not ok then
-      self:focus()
-      return
+    local alias_filepath = self._resource_manager:resolve_root_alias(root_filepath, filepath) ---@type string|nil
+    if alias_filepath ~= nil then
+      filepath = alias_filepath
+    else
+      local parent_filepath = self:__get_parent_filepath__(filepath) ---@type string
+      local ok = self:__set_root__(parent_filepath) ---@type boolean
+      if not ok then
+        self:focus()
+        return
+      end
     end
   end
 

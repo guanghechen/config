@@ -57,6 +57,7 @@
 ---@field public locate                 fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode|nil
 ---@field public move                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): boolean
 ---@field public remove                 fun(self: era.m.explorer.resource.IManager, filepath: string, on_removed: fun(): nil): boolean
+---@field public resolve_root_alias     fun(self: era.m.explorer.resource.IManager, root_filepath: string, target_filepath: string): string|nil
 
 ---@class era.m.explorer.resource.INode
 ---@field public filepath                    string
