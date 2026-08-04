@@ -174,7 +174,8 @@ function _ghc_tmux_normalize_status_mode_ {
   local status_mode=$1
 
   case "$status_mode" in
-    "" | "03") echo "01" ;;
+    "") echo "02" ;;
+    "03") echo "01" ;;
     "04") echo "02" ;;
     "13") echo "11" ;;
     "14") echo "12" ;;

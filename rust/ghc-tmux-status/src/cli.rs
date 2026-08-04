@@ -45,8 +45,10 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
         ["session", "swap", direction] => MoveDirection::parse(direction)
             .map(CliCommand::SwapSession)
             .ok_or_else(|| AppError::Usage(format!("invalid session swap direction: {direction}"))),
-        ["layout", mode, status, width, session_count]
-        | ["layout", mode, status, width, session_count, "auto"] => {
+        ["layout", mode, status, width, session_count] => {
+            parse_layout(mode, status, width, session_count, RowsOverride::default())
+        }
+        ["layout", mode, status, width, session_count, "auto"] => {
             parse_layout(mode, status, width, session_count, RowsOverride::Auto)
         }
         [
@@ -183,6 +185,26 @@ mod tests {
 
     #[test]
     fn parses_layout_rows_override() {
+        assert_eq!(
+            parse(args(&["layout", "02", "on", "120", "3"])).unwrap(),
+            CliCommand::Layout {
+                mode: "02".to_string(),
+                status: "on".to_string(),
+                width: 120,
+                session_count: 3,
+                rows: RowsOverride::Two,
+            }
+        );
+        assert_eq!(
+            parse(args(&["layout", "02", "on", "120", "3", "auto"])).unwrap(),
+            CliCommand::Layout {
+                mode: "02".to_string(),
+                status: "on".to_string(),
+                width: 120,
+                session_count: 3,
+                rows: RowsOverride::Auto,
+            }
+        );
         assert_eq!(
             parse(args(&["layout", "02", "on", "120", "3", "2"])).unwrap(),
             CliCommand::Layout {

@@ -161,17 +161,18 @@ impl LayoutKind {
 /// pin the row count regardless of screen width.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub enum RowsOverride {
-    #[default]
     Auto,
     One,
+    #[default]
     Two,
 }
 
 impl RowsOverride {
-    /// Parses the raw option value. Empty, `auto`, and any unrecognized value
-    /// fall back to `Auto` so a stale or typo'd option never wedges the layout.
+    /// Parses the raw option value. Empty uses the two-row default; `auto` and
+    /// unrecognized values fall back to `Auto` so a typo never wedges the layout.
     pub fn parse(value: &str) -> Self {
         match value.trim() {
+            "" => Self::default(),
             "1" => Self::One,
             "2" => Self::Two,
             _ => Self::Auto,
@@ -286,11 +287,11 @@ mod tests {
     }
 
     #[test]
-    fn rows_override_parse_maps_known_values_and_defaults_to_auto() {
+    fn rows_override_parse_maps_known_values_and_defaults_to_two() {
         assert_eq!(RowsOverride::parse("1"), RowsOverride::One);
         assert_eq!(RowsOverride::parse("2"), RowsOverride::Two);
         assert_eq!(RowsOverride::parse(" 2 "), RowsOverride::Two);
-        assert_eq!(RowsOverride::parse(""), RowsOverride::Auto);
+        assert_eq!(RowsOverride::parse(""), RowsOverride::Two);
         assert_eq!(RowsOverride::parse("auto"), RowsOverride::Auto);
         assert_eq!(RowsOverride::parse("3"), RowsOverride::Auto);
     }

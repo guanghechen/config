@@ -870,7 +870,7 @@ fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
 }
 
 /// The manual rows override (`@GHC_SL_ROWS`) for this snapshot, defaulting to
-/// `Auto` when the option is unset. Shared by the global and per-session resolves
+/// `Two` when the option is unset. Shared by the global and per-session resolves
 /// so both agree on the pinned row count.
 fn rows_override(snapshot: &TmuxSnapshot) -> RowsOverride {
     RowsOverride::parse(

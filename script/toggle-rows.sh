@@ -18,6 +18,7 @@ function _ghc_tmux_toggle_rows_ {
   local direction="${1:-forward}"
   local rows
   rows=$(tmux show -gqv @GHC_SL_ROWS)
+  rows=${rows:-2}
 
   local next
   case "$direction" in

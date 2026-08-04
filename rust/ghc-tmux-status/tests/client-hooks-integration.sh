@@ -200,7 +200,7 @@ EOF
 chmod +x "$loader_root/script/status-scheduler.sh"
 
 tmux_server set-environment -g HOME "$loader_home"
-tmux_server set -g @GHC_SL_MODE 02
+tmux_server set -g @GHC_SL_MODE 02 ';' set -g @GHC_SL_ROWS auto
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
 
 assert_background_hook 'client-attached[40]' client-resized "$renderer"
