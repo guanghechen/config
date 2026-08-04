@@ -6,7 +6,7 @@ source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
   cd "$HOME/.config/nvim" &&
     conda activate "$GHC_APP_PYTHON_ENV" &&
     fnm use "$GHC_APP_EDITION_NODE" &&
-    bash rust/build.sh &&
+    node rust/script/build.mjs &&
     nvim --headless -u ./init-update.lua
 )
 
@@ -15,7 +15,7 @@ if [ -d "$HOME/.config/nvim-nvchad/" ]; then
     cd "$HOME/.config/nvim-nvchad" &&
       conda activate "$GHC_APP_PYTHON_ENV" &&
       fnm use "$GHC_APP_EDITION_NODE" &&
-      bash rust/build.sh &&
+      node rust/script/build.mjs &&
       NVIM_APPNAME=nvim-nvchad nvim --headless -u ./init-update.lua
   )
 fi
