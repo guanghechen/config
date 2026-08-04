@@ -102,12 +102,25 @@ if (Test-Path "$env:APP_HOME_GIT\bin\bash.exe") {
 $reporoot = "$env:XDG_CONFIG_HOME"
 $repomain = Join-Path $env:USERPROFILE ".config\guanghechen"
 $repoworktree = Join-Path $env:USERPROFILE ".config\kit"
-if (Test-Path $repomain) {
+$repoGitPath = Join-Path $repomain ".git"
+if (Test-Path -LiteralPath $repoGitPath) {
   git -C "$repomain" fetch origin
+  if ($LASTEXITCODE -ne 0) {
+    throw "[setup repo] failed to fetch origin in $repomain (exit code: $LASTEXITCODE)."
+  }
+
   git -C "$repomain" merge origin/guanghechen --ff-only
+  if ($LASTEXITCODE -ne 0) {
+    throw "[setup repo] failed to fast-forward $repomain (exit code: $LASTEXITCODE)."
+  }
+} elseif (Test-Path -LiteralPath $repomain) {
+  throw "[setup repo] path exists but is not a Git worktree: $repomain"
 } else {
-  New-Item -ItemType Directory -Path "$reporoot" -Force | Out-Null
+  New-Item -ItemType Directory -Path "$reporoot" -Force -ErrorAction Stop | Out-Null
   git -C "$reporoot" clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
+  if ($LASTEXITCODE -ne 0) {
+    throw "[setup repo] failed to clone $repomain (exit code: $LASTEXITCODE)."
+  }
 }
 
 # Load default settings (checked in)
