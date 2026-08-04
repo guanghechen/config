@@ -10,6 +10,11 @@ export HOME_MINIFORGE="$HOME/.app/miniforge3"
 miniforge_conda="$HOME_MINIFORGE/bin/conda"
 miniforge_profile="$HOME_MINIFORGE/etc/profile.d/conda.sh"
 
+if [ -z "${GHC_APP_PYTHON_ENV:-}" ]; then
+  printf "\e[91m [setup miniforge] GHC_APP_PYTHON_ENV is not configured.\e[0m\n" >&2
+  exit 1
+fi
+
 if [ -e "$HOME_MINIFORGE" ] || [ -L "$HOME_MINIFORGE" ]; then
   if [ ! -f "$miniforge_conda" ]; then
     printf "\e[91m [setup miniforge] conda executable is missing or not a regular file: %s\e[0m\n" \
@@ -100,12 +105,14 @@ printf "\e[96m  [setup miniforge] setting up conda...\e[0m\n"
 source "$miniforge_profile"
 conda config --set auto_activate_base false
 
-if conda env list | grep -q "^lemon[[:space:]]"; then
-  printf "\e[93m  [setup miniforge] the 'lemon' env is already created. (skipped)\e[0m\n"
+if conda env list | awk -v target="$GHC_APP_PYTHON_ENV" '$1 == target { found = 1 } END { exit !found }'; then
+  printf "\e[93m  [setup miniforge] the '%s' env is already created. (skipped)\e[0m\n" \
+    "$GHC_APP_PYTHON_ENV"
 else
-  printf "\e[96m  [setup miniforge] creating 'lemon' env with conda...\e[0m\n"
-  conda create --yes --name lemon python=3.12
-  conda activate lemon
+  printf "\e[96m  [setup miniforge] creating '%s' env with conda...\e[0m\n" \
+    "$GHC_APP_PYTHON_ENV"
+  conda create --yes --name "$GHC_APP_PYTHON_ENV" python=3.12
+  conda activate "$GHC_APP_PYTHON_ENV"
   pip install debugpy httpie ipython
 fi
 
@@ -115,6 +122,6 @@ if [ -f "$ipython_config_path" ]; then
   printf "\e[93m  [setup miniforge] %s already exists. (skipped).\e[0m\n" "$ipython_config_path"
 else
   printf "\e[96m  [setup miniforge] setting up ipython...\e[0m\n"
-  conda run --name lemon ipython profile create
+  conda run --name "$GHC_APP_PYTHON_ENV" ipython profile create
   printf "\nc.TerminalInteractiveShell.editing_mode = 'vi'\n" >>"$ipython_config_path"
 fi

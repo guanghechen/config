@@ -1,6 +1,11 @@
 # Setting up conda
 Write-Host "`n  [setup miniforge] setting up conda..." -ForegroundColor Cyan
 
+$pythonEnv = $env:GHC_APP_PYTHON_ENV
+if ([string]::IsNullOrWhiteSpace($pythonEnv)) {
+  throw "[setup miniforge] GHC_APP_PYTHON_ENV is not configured."
+}
+
 # Source conda environment script
 $condaExecutable = "$env:APP_HOME_MINIFORGE\Scripts\conda.exe"
 if (-not (Test-Path -LiteralPath $condaExecutable -PathType Leaf)) {
@@ -11,13 +16,14 @@ if (-not (Test-Path -LiteralPath $condaExecutable -PathType Leaf)) {
 # Disable auto activation of base environment
 conda config --set auto_activate_base false
 
-# Check if 'lemon' environment exists
-if (conda env list | Select-String -Pattern "^lemon\s") {
-    Write-Host "  [setup miniforge] the 'lemon' env is already created. (skipped)" -ForegroundColor Yellow
+# Check if the configured environment exists
+$pythonEnvPattern = "^$([regex]::Escape($pythonEnv))\s"
+if (conda env list | Select-String -Pattern $pythonEnvPattern) {
+    Write-Host "  [setup miniforge] the '$pythonEnv' env is already created. (skipped)" -ForegroundColor Yellow
 } else {
-    Write-Host "  [setup miniforge] creating 'lemon' env with conda..." -ForegroundColor Cyan
-    conda create --yes --name lemon python=3.12
-    conda activate lemon
+    Write-Host "  [setup miniforge] creating '$pythonEnv' env with conda..." -ForegroundColor Cyan
+    conda create --yes --name $pythonEnv python=3.12
+    conda activate $pythonEnv
     pip install debugpy httpie ipython yt-dlp
 }
 
@@ -27,7 +33,7 @@ if (Test-Path $ipythonConfigPath) {
     Write-Host "  [setup miniforge] $ipythonConfigPath already exists. (skipped)" -ForegroundColor Yellow
 } else {
     Write-Host "  [setup miniforge] setting up ipython..." -ForegroundColor Cyan
-    conda run --name lemon ipython profile create
+    conda run --name $pythonEnv ipython profile create
     Add-Content $ipythonConfigPath "`nc.TerminalInteractiveShell.editing_mode = 'vi'"
 }
 
