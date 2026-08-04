@@ -1,194 +1,226 @@
-# Statusline 规范
+# Statusline 最终设计
 
-## 1. Final Decisions
+> 状态：Final
+>
+> 实现入口：`rust/ghc-tmux-status`、`script/load-theme.sh`、`script/status-scheduler.sh`
 
-- `status02` 由 Rust renderer 持有；`status01` 是 fallback。
-- 当前实现使用 CLI + tmux option cache，不使用 daemon。
-- `StatusRuntime` 负责 read snapshot、resolve context、render components、compose、commit。
-- component 不持有 `StatusRuntime`，不直接读写 tmux。
-- 每个 component 必须实现 `snapshot` 和 `render`。
-- component 自己维护 snapshot、bounded cache、刷新策略和 degrade 策略。
-- `Tick` 是 render event，由 runtime 统一驱动。
-- CPU / memory / network 是三个独立 component；先只支持 macOS，其他平台隐藏。CPU 使用 native ticks，memory/network 暂用系统命令。
-- tmux native window list 暂不重写。
-- dynamic plugin 暂不实现，只保留稳定边界。
+本文是 tmux statusline 的唯一系统级设计说明，定义 renderer、layout、scheduler、
+cache、commit 与降级策略。Session 的分组、排序和导航规则见
+`session-navigation.md`；性能约束与已接受的优化见 `status-performance.md`。
 
-## 2. Status Modes
+## 1. 目标与非目标
 
-```text
-01 -> top    status01
-11 -> bottom status01
-02 -> top    status02, Rust-owned
-12 -> bottom status02, Rust-owned
-```
+### 1.1 目标
 
-兼容归一化：
+- 由 Rust 统一持有 `status02` 的状态采集、布局、渲染和提交。
+- tmux 继续作为事件源、持久状态所有者和最终绘制器。
+- 在多 client、并发 hook、reload 和 worker failure 下最终收敛。
+- expensive metric sampling 与每秒 status redraw 解耦。
+- 保留可诊断、可回退、可测试的清晰边界。
 
-```text
-03 -> 01
-04 -> 02
-13 -> 11
-14 -> 12
-empty / unknown -> 01
-```
+### 1.2 非目标
 
-`status02.tmux.conf` 只读 Rust cache：
+- 不引入 daemon。
+- 不实现 dynamic plugin loading。
+- 不接管 tmux native window list。
+- 不让 widget、domain module 或 metric provider 直接读写 tmux。
+- 不保留实现过程或历史进度，只记录当前有效 contract。
 
-```tmux
-set -g status-left  "#{E:@GHC_SL_STATUS02_LEFT}"
-set -g status-right "#{E:@GHC_SL_STATUS02_RIGHT}"
-```
+## 2. 核心决策
 
-`status02` steady-state 不依赖 legacy bash renderers：
+| 决策 | 最终选择 | 原因 |
+|---|---|---|
+| `status02` owner | Rust CLI | 将状态与失败边界集中在可测试代码中 |
+| 最终绘制 | tmux format | 保留 native window list 与成熟的 tmux rendering |
+| 生命周期 | process-per-event | 当前负载下 daemon 收益不足以覆盖生命周期复杂度 |
+| 持久状态 | tmux options | 无额外文件或服务，且可直接观察 |
+| layout state | session-scoped | 不同 session 可独立持有 rows、lengths 与 formats |
+| metrics | scheduler-owned samples | 避免 widget render 触发外部 IO |
+| commit | guarded delta plan | 减少 tmux IPC，并阻止 stale writer |
+| fallback | `status01` | Rust 或 scheduler 不可用时保持可用状态栏 |
+| theme | generated `@GHC_*` options | renderer 不硬编码 palette |
 
-```text
-session list  -> Rust component
-duration      -> Rust component
-layout        -> Rust runtime
-metrics       -> Rust components
-tick trigger  -> tmux #() driver launches ghc-tmux-status scheduler-tick
-```
+## 3. 系统边界与所有权
 
-Shell helpers retained for status01 fallback:
+### 3.1 数据流
 
 ```text
-script/session-status.sh -> status01
-script/duration.sh       -> status01
-```
-
-`script/status-layout.sh` 仅作为历史实现参考保留；当前 loader 不调用它。
-
-fallback：
-
-```text
-Rust binary missing -> status01
-Rust apply failed   -> status01
-mode 01/11          -> status01
-mode 02/12          -> Rust status02 if available
-```
-
-## 3. Ownership
-
-```text
-tmux event / tick
+tmux event / status tick
   -> ghc-tmux-status
-  -> TmuxAdapter.read_snapshot
-  -> SessionGrouper.group
-  -> LayoutEngine.resolve
-  -> StatusRuntime.render
-  -> Component.snapshot
-  -> Component.render
-  -> StatusComposer.compose
-  -> CommitPlanner.plan
-  -> TmuxAdapter.commit_plan
+  -> guarded snapshot
+  -> session group + order
+  -> per-session layout
+  -> widget render
+  -> status composition
+  -> delta commit plan
+  -> guarded tmux mutation
+  -> status refresh
 ```
 
-职责：
+数据流只向前推进。Domain 与 render 层返回纯数据；所有外部副作用均收敛到
+`TmuxAdapter` 和 scheduler process boundary。
 
-| Module              | Responsibility                         |
-|---------------------|----------------------------------------|
-| `TmuxAdapter`       | 唯一 tmux read/write 边界              |
-| `StatusRuntime`     | pipeline orchestration                 |
-| `StatusComponent`   | snapshot / bounded cache / render / degrade |
-| `StatusComposer`    | compose `RenderedSegment`              |
-| `CommitPlanner`     | delta commit planning                  |
-| `MetricProvider`    | platform-specific metrics sampling     |
+### 3.2 模块职责
 
-禁止依赖：
+| Module | 唯一职责 |
+|---|---|
+| `cli` / `app` | 解析命令并暴露 application operations |
+| `runtime` | 编排 snapshot、context、render、scheduler 与 commit |
+| `tmux` | tmux subprocess、framing、guards 与 mutation |
+| `layout` | 计算 position、rows、target status 与 layout key |
+| `session` | 分组、排序、focus 与 swap 的纯 domain logic |
+| `status_widget` | 约束 template/computed widget 的统一接口 |
+| `widget` | 产出独立 status fragment 与 width shadow |
+| `composer` | 组合 fragments 与 responsive metric guards |
+| `status_length` | 计算左右 status length 上限 |
+| `commit` | 生成 idempotent tmux command plan |
+| `scheduler` | task cadence、claim、lease 与 completion |
+| `metric` / `platform` | platform detection 与 metrics sampling |
+| `process` | timeout、capture limit、watchdog、process-group reap |
+| `introspect` / `observability` | read-only diagnostics 与 opt-in trace |
+
+### 3.3 Single source / single writer
+
+| State | Source of truth | Writer |
+|---|---|---|
+| selected mode | `@GHC_SL_MODE` | `load-theme.sh` / explicit toggle |
+| lifecycle generation | `@GHC_SL_SCHED_ACTIVE/GEN` | `load-theme.sh` |
+| scheduler task state | server-scoped task options | guarded Rust scheduler commit |
+| rendered session cache | session-scoped `@GHC_SL_*` | guarded Rust commit |
+| session virtual order | `@GHC_SL_SESSION_ORDER` | session swap command |
+| palette/symbols | generated theme options | external theme generator |
+| native window list | tmux | tmux |
+
+禁止以下反向依赖：
 
 ```text
-StatusComponent -> StatusRuntime
-StatusComponent -> TmuxAdapter
-StatusComposer  -> ComponentCache internals
-MetricProvider  -> TmuxAdapter
-LayoutEngine    -> TmuxAdapter
-SessionGrouper  -> TmuxAdapter
+widget / session / layout -> TmuxAdapter
+metric provider          -> TmuxAdapter
+composer                 -> cache internals
+commit                   -> metric sampling
+tmux config              -> Rust internal types
 ```
 
-## 4. Platform
+## 4. Mode 与 loader 生命周期
 
-```rust
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Platform {
-    Win,
-    Wsl,
-    Nix,
-    Osx,
-}
+### 4.1 Mode contract
 
-pub fn current_platform() -> Platform;
-```
+| Mode | Position | Renderer |
+|---|---|---|
+| `01` | top | shell-backed `status01` |
+| `11` | bottom | shell-backed `status01` |
+| `02` | top | Rust-owned `status02` |
+| `12` | bottom | Rust-owned `status02` |
 
-规则：
+Normalization：
 
 ```text
-macOS       -> Osx
-Windows     -> Win
-Linux + WSL -> Wsl
-Linux       -> Nix
-Other Unix  -> Nix
+empty   -> 02
+03      -> 01
+04      -> 02
+13      -> 11
+14      -> 12
+unknown -> 01
 ```
 
-约束：
+### 4.2 Reload contract
 
-- platform 只检测一次。
-- 只有 `platform` module 可以做 OS detection。
-- 其他模块只依赖 `Platform`。
+`script/load-theme.sh` 是 renderer lifecycle 的唯一 writer：
 
-## 5. Events
+1. 归一化 mode。
+2. 将 scheduler 置为 inactive 并 rotate generation。
+3. invalidate render revision。
+4. 清理所有 session 的 renderer-owned layout/cache overrides。
+5. 加载 `status01`，或使用显式 generation bootstrap `status02`。
+6. 注册 lifecycle hooks。
+7. 通过 generation CAS 激活 scheduler。
 
-```rust
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-pub enum RenderEventKind {
-    Tick,
-    ThemeLoaded,
-    ClientResized,
-    SessionChanged,
-    SessionCreated,
-    SessionClosed,
-    SessionRenamed,
-    ManualApply,
-}
+旧 hook、旧 worker 和 superseded loader 因 generation/revision guard 无法重新发布旧状态。
 
-pub struct RenderEvent {
-    pub kind: RenderEventKind,
-}
+### 4.3 Hook contract
+
+Adaptive mode 注册固定 hooks：
+
+```text
+client-attached[40]
+client-detached[40]
+client-resized[40]
+client-session-changed[40]
+session-created[40]
+session-closed[40]
+session-renamed[40]
+session-window-changed[40]
 ```
 
-规则：
+Hook 仅发送 background reconcile notification。其 stdout、stderr 和非零退出均被隔离，
+避免 tmux 进入 view mode；下一次 event 负责重试。
 
-- `Tick` / `ThemeLoaded` / `ManualApply` 给所有 registered components 一次刷新机会。
-- 非周期事件由 component 根据 `interests` 和 cache policy 自行决定是否取新 snapshot。
-- component 可以复用 bounded cache，但不缓存 generic rendered rich_text。
-- cache missing 时可以 fresh snapshot。
-- 每次 event 后统一 compose final statusline。
+### 4.4 Fallback
 
-## 6. Component Contract
+以下情况加载 `status01`：
 
-```rust
-pub trait StatusComponent {
-    fn id(&self) -> &'static str;
-    fn interests(&self) -> ComponentInterests;
+- mode 为 `01` / `11`；
+- Rust binary 或 scheduler driver 不存在；
+- bootstrap apply 失败；
+- scheduler activation 失败。
 
-    fn snapshot(
-        &mut self,
-        context: &RenderContext,
-        event: &RenderEvent,
-        cache: &mut dyn ComponentCache,
-    ) -> AppResult<()>;
+Session-local `status off` 始终由 session policy 持有，loader 与 renderer 均不得把它
+误改为 `on`。
 
-    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment>;
-}
+## 5. Snapshot 与 reconcile
+
+一次 apply 只读取一个 immutable `TmuxSnapshot`，随后为所有目标 session 派生独立的
+`SessionLayout` 和 render context。
+
+Snapshot 包含：
+
+- invoking client 的 width、current session、last session 与 host；
+- 所有 session 的 id、name、bell、status、layout、length、formats 与 cache witnesses；
+- attached clients 的 `(session_id, client_width)`；
+- render 所需的 global/server options。
+
+Reconcile 规则：
+
+- effective `status=off` 的 session 跳过；
+- detached session 暂不写入，等待 attach/resize event；
+- 同一 session 的 rows 使用最窄 attached width；
+- 同一 session 的 status lengths 使用最宽 attached width。
+
+这样既保证窄 client 的 row layout 可用，也避免窄 client 把宽 client 的内容上限裁小。
+
+## 6. Layout 与 rows
+
+Adaptive layout 仅适用于 mode `02` / `12`；`status=off` 不产生 layout plan。
+
+`@GHC_SL_ROWS` contract：
+
+```text
+unset / empty -> two rows
+1             -> one row
+2             -> two rows
+auto          -> adaptive heuristic
+other         -> adaptive heuristic
 ```
 
-```rust
-pub enum ComponentInterests {
-    Static,
-    All,
-    Events(&'static [RenderEventKind]),
-    Periodic { interval_secs: u64 },
-}
+`auto` heuristic：
+
+```text
+session group count <= 1 -> one row
+client width >= 200      -> one row
+otherwise                -> two rows
 ```
+
+| Layout | Rows | tmux `status` | Key |
+|---|---:|---|---|
+| wide | 1 | `on` | `{mode}:wide` |
+| narrow | 2 | `2` | `{mode}:narrow` |
+
+Wide session 删除 local `status-format` override，回落到 global fallback。Narrow session
+持有自己的 `status-format[0]` 与 `status-format[1]`。
+
+## 7. Widget 与 composition
+
+### 7.1 Render contract
 
 ```rust
 pub struct RenderedSegment {
@@ -197,345 +229,243 @@ pub struct RenderedSegment {
 }
 ```
 
-约束：
+- `literal_text` 是无 style 的可见字符 shadow，仅用于 width calculation。
+- `rich_text` 是最终 tmux format fragment。
+- `TemplateWidget` 只组合 cheap native tmux templates。
+- `ComputedWidget` 只执行 cheap in-process computation。
+- Widget render 不得采样 metrics，也不得执行任意外部 IO。
 
-- `snapshot` 负责取数、bounded cache、stale 判断和 degrade。
-- `render` 负责把 component 内部 snapshot 转成 tmux format。
-- `literal_text` 是纯文本，用于宽度计算。
-- `rich_text` 是 tmux statusline fragment。
-- core 不读 component 内部 snapshot。
+### 7.2 Widget 分类
 
-## 7. Cache
+| Computed | Template |
+|---|---|
+| host | prefix indicator |
+| session list | fullscreen |
+| duration | window id |
+|  | network |
+|  | CPU |
+|  | memory |
+|  | date |
+|  | time |
 
-component cache：
+Metric widget 读取 sampler-owned tmux options；它们不是 cached metric lifecycle。
+
+### 7.3 Row composition
+
+- `status-left`：host + ordered session list。
+- Wide right：prefix + window indicators + responsive metrics。
+- Narrow row 0 right：prefix + responsive metrics。
+- Narrow row 1：native window list + current-window indicators。
+
+Metric display order：
 
 ```text
-@GHC_STATUS_COMPONENT_CACHE_{component_id}
+network -> CPU -> memory -> duration -> date -> time
 ```
 
-final row cache：
+空间不足时的 drop order：
+
+```text
+duration -> date -> memory -> CPU -> network
+```
+
+time 始终保留；当 time 也放不下时，最终交给 tmux character truncation。
+
+## 8. Session list
+
+Session list 的 group、order、focus 与 last-session 语义由 `session-navigation.md` 定义。
+
+渲染约束：
+
+- active style 优先于 last-session style；
+- `client_last_session` 仅在当前 group 可见且非 active 时高亮；
+- bell source 为 tmux `session_alerts`，包含 `!` 即表示该 session 有 bell；
+- bell icon 位于 item body 内，不改变 slant edge；
+- `literal_text` 必须包含每个可见 icon 的 width placeholder；
+- 超长 session name 在固定 byte budget 内截断。
+
+## 9. Length 与 cache contract
+
+### 9.1 Status lengths
+
+```text
+left floor  = 64
+right floor = 84
+padding     = 2
+desired     = max(floor, display_width(literal_text) + padding)
+result      = min(desired, max(client_width, floor))
+```
+
+Conditional pill 使用 pessimistic literal shadow。作为最大值，适度 over-reserve 可接受；
+underestimate 会造成可见 clipping，因此不可接受。
+
+### 9.2 Session-scoped rendered state
 
 ```text
 @GHC_SL_STATUS02_LEFT
 @GHC_SL_STATUS02_RIGHT
 @GHC_SL_STATUS02_SESSION_FORMAT
 @GHC_SL_STATUS02_CURRENT_FORMAT
+@GHC_SL_RENDER_KEY
 @GHC_SL_LAYOUT
+status-left-length
+status-right-length
+status
+status-format[]
 ```
 
-`@GHC_SL_STATUS02_SESSION_FORMAT` 只保存 narrow row 0 的右侧 fragment；左侧通过
-`@GHC_SL_STATUS02_LEFT` 间接组合，避免在每个 session cache 中复制完整 session list。
+四个 rendered cache value 都带固定 witness。只有 cache witnesses、render key、layout、
+status 与 row formats 全部匹配时，session 才视为 settled。
 
-规则：
+- 仅 length drift：允许走 length-only fast path。
+- 任意其他 drift：提交完整 session reconcile bundle。
+- Global rendered options：仅作为新 attach session 的稳定 fallback，不拥有 session layout。
 
-- component cache 是 single-slot bounded payload。
-- 不缓存 generic rendered rich_text。
-- component 只写自己的 cache。
-- final row cache 只由 renderer 写。
-- compose 完整成功后才 commit。
-- commit 使用 delta plan，只写变化的长 option。
-- final cache 相同且 component cache 无变化则 no-op。
-- optional component 失败：stale cache -> hidden -> continue。
-- required component 失败：abort current commit，保留上一版 statusline。
+## 10. Scheduler 与 metrics
 
-## 8. Session Grouping
+### 10.1 Task contract
 
-status02 session list 只展示当前 session 所在 group。
+| Task | Interval | Execution budget | Lease |
+|---|---:|---:|---:|
+| metrics | 5 s | 8 s | 15 s |
+| heartbeat | 30 s | 10 s | 20 s |
+
+Server state：
 
 ```text
-_popup@* current -> all _popup@* sessions
-agent current    -> all agent sessions
-G{n}-* current   -> all same G{n}-* sessions
-normal current   -> all normal sessions
+generation:sequence:next_due_seconds:lease_until_seconds
 ```
 
-normal sessions exclude：
+Status format 通过 `#()` 调用 `script/status-scheduler.sh`。Shell driver 只负责
+single-flight 与 process supervision，Rust 负责 task state transition 和实际工作。
+
+### 10.2 State transition
 
 ```text
-_popup@*
-agent sessions
-G{digits}-*
+observed
+  -> exact-state claim + lease
+  -> task execution
+  -> guarded publish
+  -> completion with lease=0
 ```
 
-agent session：
+必须保持：
 
-```text
-{claude|codex|gemini}-{non-empty ascii hex suffix}
+- claim 比较 active、generation 与 exact observed task state；
+- timeout 后的 ambiguous mutation 不在进程内重试；
+- expired lease 由下一次 tick 恢复；
+- reload rotate generation 后，旧 worker 不得 publish；
+- ordinary application error 保留 scheduler active；
+- panic、watchdog、missing binary 或 signal 仅 fence observed generation。
+
+### 10.3 Metrics
+
+macOS provider：
+
+- CPU：native Mach host ticks；
+- memory：native memory size + `vm_stat`；
+- network：route-selected interface + `netstat` counters。
+
+其他 platform 不显示 metric pills。Sampling failure 保留上一份可用 display value，更新
+health state，并在下一次 due tick 重试。
+
+## 11. Guarded commit
+
+每次 render 在读取 snapshot 的同一个 tmux queue 中 claim 新 render revision。Commit 同时
+检查 revision 与 lifecycle guards，因此 stale writer 无法发布。
+
+Plan 在 32 KiB command budget 内分 chunk：
+
+- Standard / Bootstrap：chunk 失败后，可在相同 guards 下逐命令重试；
+- Scheduler：deadline-sensitive ambiguous mutation 不重试；
+- final Standard / Bootstrap chunk 可折叠 `refresh-client -S`；
+- detached context 跳过 refresh，不影响 mutation success。
+
+## 12. Failure contract
+
+| Failure | Strategy | Observable result |
+|---|---|---|
+| local `status off` | degrade | 跳过该 session |
+| detached session | retry later | attach 后再 reconcile |
+| invalid adaptive mode | no-op | 不生成 layout plan |
+| snapshot read/parse failure | abort | 保留旧 status |
+| widget/composition failure | abort | 保留旧 status |
+| metric unsupported/failure | degrade | hidden 或 last-known value |
+| guarded commit skipped | retry later | 新er writer 胜出 |
+| tmux commit failure | retry later | guards 允许的旧状态保持可见 |
+| renderer/driver unavailable on load | fallback | 使用 `status01` |
+
+Process boundary：
+
+- Rust process watchdog：30 s；
+- tmux command timeout：2 s；
+- metric command timeout：1 s；
+- stdout/stderr capture limit：每 stream 4 MiB；
+- timeout 时终止并回收整个 child process group。
+
+## 13. Observability 与 CLI
+
+### 13.1 Trace
+
+```sh
+GHC_TMUX_STATUS_TRACE=1 ghc-tmux-status apply manual-apply
 ```
 
-## 9. Layout
+Trace 仅写 stderr，默认关闭，不改变 status output。
 
-adaptive status 只作用于 `02` 和 `12`。
+### 13.2 Read-only diagnostics
 
-```text
-02 -> top
-12 -> bottom
-```
+`ghc-tmux-status dump-state` 报告：
 
-规则：
+- mode、status、width、current session、group、layout 与 target rows；
+- lifecycle generation 与 scheduler health；
+- metric freshness、health 与 consecutive errors；
+- widget lifecycle placement count；
+- visible ordered sessions。
 
-```text
-local status off   -> no-op
-session_count <= 1 -> wide, one row; render session list when count == 1
-width >= 200       -> wide, one row
-otherwise          -> narrow, two rows
-invalid width      -> wide
-```
+`ghc-tmux-status render status02` 输出 rich/literal segments 与左右 length，且不 commit。
 
-commit target：
+### 13.3 CLI surface
 
 ```text
-wide   -> status on
-narrow -> status 2
-```
-
-layout key：
-
-```text
-{mode}:{wide|narrow}
-```
-
-## 10. Rows
-
-wide：
-
-```text
-status-left  = @GHC_SL_STATUS02_LEFT
-status-right = @GHC_SL_STATUS02_RIGHT
-status       = on
-```
-
-narrow：
-
-```text
-status-format[0] = @GHC_SL_STATUS02_LEFT + @GHC_SL_STATUS02_SESSION_FORMAT
-status-format[1] = @GHC_SL_STATUS02_CURRENT_FORMAT
-status           = 2
-```
-
-约束：
-
-- 保留 tmux native `#{W:...}` window list。
-- 不重写 `window-status-format`。
-- 不重写 `window-status-current-format`。
-
-## 11. CLI
-
-```text
-ghc-tmux-status apply
+ghc-tmux-status apply [event]
 ghc-tmux-status apply theme-loaded <generation>
 ghc-tmux-status scheduler-tick
 ghc-tmux-status render status02
-ghc-tmux-status layout <mode> <status> <width> <session-count>
+ghc-tmux-status session focus <prev|next|index>
+ghc-tmux-status session swap <prev|next>
+ghc-tmux-status layout <mode> <status> <width> <session-count> [auto|1|2]
 ghc-tmux-status dump-state
 ```
 
-语义：
+`layout` 省略 rows 时使用 two-row default；显式 `auto` 才启用 adaptive heuristic。
 
-| Command           | Meaning                         |
-|-------------------|---------------------------------|
-| `apply`           | read live snapshot, render, commit |
-| `scheduler-tick`  | claim and run due one-shot status work |
-| `render status02` | print rendered status02 output  |
-| `layout`          | pure layout calculation         |
-| `dump-state`      | print debug snapshot/state      |
+## 14. 系统不变量
 
-## 12. Metrics Components
+- `status01` 始终是可用 fallback。
+- 无 metrics provider 时 core renderer 仍可运行。
+- Native window list owner 始终是 tmux。
+- Pure domain/render module 不调用 tmux。
+- Widget render 不采样 metrics。
+- Session-dependent state 只有 guarded Rust commit 一个 writer。
+- Settled state 不产生 tmux mutation。
+- Stale generation 与 stale render revision 均不可 publish。
+- Bad external data 只能返回 error 或 degrade，不得使 renderer panic。
 
-`status02` 的周期任务由 status format 内每约 4 秒完成一次的 tmux `#()` one-shot
-job 驱动；不使用 daemon，
-也不由 worker 递归创建 successor。每个 task 以
-`generation:sequence:next_due:lease_until` 为 server state，通过 exact-state CAS
-在多 client 间去重。timeout 后不重试 ambiguous mutation；worker crash 由 lease
-到期后的下一次 tick 恢复。reload 先将 scheduler 设为 inactive 并更换 generation，
-因此旧 worker 不能 publish。
+## 15. 验证
 
-`script/status-scheduler.sh` 是 `#()` 与 Rust renderer 之间的 fail-closed
-process boundary：renderer 有 30 秒 process watchdog，所有子进程有 timeout、
-process-group reap 与 4 MiB/stream capture 上限。自触发的 scheduler `#()` 使用
-per-server single-flight lock；唯一 recovery owner 才能回收 stale lock。普通 application
-error 保留 scheduler active，由 task lease 在后续 tick 恢复；仅 panic、watchdog、缺
-binary 或 signal 等异常 process failure 按 generation fence scheduler。hook 保持原有
-直接调用与 ordering 语义，其 hang 由 Rust process watchdog 截断。最后一次成功 cache
-保持可见，并等待下一次成功 tick 或 theme reload 恢复。renderer crash、hang 和旧
-generation failure 均只允许 degrade，不能终止或持续阻塞 tmux server。
-
-`@GHC_SL_SCHED_ACTIVE/GEN` 同时是 renderer lifecycle fence：普通 hook 只在 active
-generation 下 claim snapshot 并 commit；`theme-loaded <generation>` 只在其显式持有的 fenced/inactive generation
-下 bootstrap。loader 在清理 renderer-owned options 前先置 inactive、rotate generation
-并 invalidate render revision，最后按 generation CAS 激活 scheduler。因此跨越 reload/
-fallback 的旧 hook 无法重新发布 status02。共享 session 的 rows/layout 由最窄 attached
-client 决定，而 session-scoped `status-left/right-length` 上限由最宽 client 决定，避免窄
-client 裁剪宽 client 可见内容。
-
-完整 Rust、shell 与真实 tmux 回归入口：
+统一入口：
 
 ```sh
 rust/ghc-tmux-status/check.sh
 ```
 
-其中并发、lease、generation fence 与 timeout-after-commit 由以下脚本覆盖：
-
-```sh
-rust/ghc-tmux-status/tests/scheduler-integration.sh
-```
-
-`#()` crash/hang 隔离、crash-loop fence 与旧 generation 不可误伤新 scheduler 由
-以下独立 socket 测试覆盖：
-
-```sh
-rust/ghc-tmux-status/tests/driver-fault-integration.sh
-```
-
-components：
-
-```text
-CpuComponent
-MemoryComponent
-NetworkComponent
-```
-
-显示内容：
-
-```text
-CPU 12%  MEM 43%  ↓1.2M ↑80K
-```
-
-平台支持：
-
-```text
-Osx -> supported
-Win -> hidden
-Wsl -> hidden
-Nix -> hidden
-```
-
-module：
-
-```text
-src/platform.rs
-src/metric/mod.rs
-src/metric/darwin.rs
-src/metric/unsupported.rs
-src/component/cpu.rs
-src/component/memory.rs
-src/component/network.rs
-```
-
-provider：
-
-```rust
-pub trait MetricsProvider {
-    fn sample_cpu(&self) -> AppResult<CpuSnapshot>;
-    fn sample_memory(&self) -> AppResult<MemorySnapshot>;
-    fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot>;
-}
-```
-
-macOS source：
-
-```text
-CPU     -> macOS CPU counter or lightweight command
-Memory  -> vm_stat + sysctl hw.memsize
-Network -> netstat -bn -I <interface>
-```
-
-network speed：
-
-```text
-rx_speed = (current_rx_bytes - previous_rx_bytes) / elapsed_seconds
-tx_speed = (current_tx_bytes - previous_tx_bytes) / elapsed_seconds
-```
-
-规则：
-
-- 默认 interface：`en0`。
-- 允许未来通过 tmux option 覆盖 interface。
-- counter reset / negative delta：本次 speed = `0`，刷新 cache。
-- unsupported / parse failure：隐藏对应 component。
-
-## 13. Theme
-
-新增 theme variable 必须修改：
-
-```text
-$HOME/.config/guanghechen/asset/theme/app/tmux.hbs
-```
-
-然后执行：
-
-```fish
-fish -c "ghc-theme gen && ghc-theme apply"
-```
-
-Rust renderer 只引用 `@GHC_*` tmux options，不硬编码最终颜色。
-
-## 14. Degrade
-
-```text
-platform unsupported        -> hide platform component
-optional component failed   -> stale cache or hidden
-required component failed   -> abort current commit
-invalid width               -> wide layout
-session list read failed    -> one-row without session list
-tmux commit failed          -> keep previous visible statusline
-local status off            -> no status/layout writes
-```
-
-component 不允许因为坏系统数据 panic。
-
-## 15. Minimal Core
-
-core 必须在无 optional component 时可运行。
-
-必备能力：
-
-```text
-read tmux snapshot
-resolve session group
-resolve adaptive layout
-render built-in components
-compose rows
-diff final cache
-batch commit
-fallback status01
-```
-
-built-in components：
-
-```text
-host
-session_list
-prefix_indicator
-duration
-date
-time
-fullscreen
-window_id
-```
-
-optional components：
-
-```text
-cpu
-memory
-network
-```
-
-## 16. Tests
-
 必须覆盖：
 
-```text
-mode normalization
-single-session layout
-multi-session wide/narrow layout
-top/bottom position
-local status off
-normal / popup / agent / G{n} session grouping
-literal_text width
-component cache reuse
-final cache no-op
-Rust missing / apply failed fallback
-macOS cpu/memory/network success / parse failure / counter reset
-```
+- Rust format、unit tests、Clippy 与 release build；
+- shell syntax 与 diff hygiene；
+- mode/layout/rows/grouping/width contracts；
+- client attach/detach/resize/session-change convergence；
+- render revision、generation fence、CAS 与 lease recovery；
+- driver crash/hang、timeout-after-commit 与 old-generation isolation；
+- focus fallback 与 session-scoped render ownership。
