@@ -40,4 +40,4 @@ find ~/.local/share/nvim/lazy -name "*.dylib" -o -name "*.so" | while read f; do
 done
 ```
 
-**注意**：每次重新编译 `yoz.so`（通过 `rust/build.sh`）或更新包含原生库的插件后，可能需要重新执行签名操作。
+**注意**：`node rust/script/build.mjs` 会自动签名 `yoz.so`；更新其他原生库后，可能仍需重新执行签名操作。
