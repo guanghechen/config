@@ -79,8 +79,6 @@ abbr -a tcap "tmux capture-pane -ep -t %"
 alias tdetach='tmux detach' # Detach from the session
 alias tattach='tmux attach -t' # Attach to a session
 alias tdetach-others='tmux detach -a' # Detach other clients from the session
-alias tmux-use-fake-clipboard="tmux set-environment ghc_use_fake_clipboard /opt/me/data/clipboard/fake.txt"
-alias watch-fake-clipboard="nohup bash $HOME/.config/tmux/script/fake-clipboard.sh /opt/me/data/clipboard/fake.txt &!"
 
 ### misc
 alias ghc-ora="node $HOME/.config/ora/cli/http.mjs"
