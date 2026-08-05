@@ -44,8 +44,8 @@ pub const MEMORY_SAMPLE_STATE_OPTION: &str = "@GHC_SL_MEM_SAMPLE";
 pub const NETWORK_NOW_OPTION: &str = "@GHC_NET_NOW";
 pub const NETWORK_SAMPLE_STATE_OPTION: &str = "@GHC_SL_NET_SAMPLE";
 
-// Manual rows override for the adaptive layout: `auto` (or unset) keeps the
-// width/session-count heuristic; `1` forces a single row, `2` forces two rows.
+// Manual rows override: unset defaults to two rows; `auto` uses the
+// width/session-count heuristic; `1`/`2` force the corresponding row count.
 pub const ROWS_OVERRIDE_OPTION: &str = "@GHC_SL_ROWS";
 pub const RENDER_REVISION_OPTION: &str = "@GHC_SL_RENDER_REV";
 pub const SESSION_RENDER_KEY_OPTION: &str = "@GHC_SL_RENDER_KEY";
