@@ -6,6 +6,12 @@ local harness = require("__test__.harness")
 
 local t = harness.new("ark.vendor.vscode.keymap")
 
+---@param action                        string
+---@return string
+local function action_callback(action)
+  return "<cmd>lua require('vscode').action('" .. action .. "')<cr>"
+end
+
 ---@class ark.vendor.vscode.keymap.test.IMapping
 ---@field modes                         string[]
 ---@field callback                      string|fun(): nil
@@ -36,7 +42,41 @@ t:test("routes file finding through VSCode Quick Open", function()
   local mapping = mappings["<leader><leader>"]
 
   t.assert_true(mapping ~= nil, "mapping")
-  t.assert_eq("<cmd>lua require('vscode').action('workbench.action.quickOpen')<cr>", mapping.callback, "VSCode action")
+  t.assert_eq(action_callback("workbench.action.quickOpen"), mapping.callback, "VSCode action")
+end)
+
+t:test("uses the Lua API for undo and redo", function()
+  local mappings = setup()
+
+  t.assert_eq(action_callback("undo"), mappings["u"].callback, "undo")
+  t.assert_eq(action_callback("redo"), mappings["<C-r>"].callback, "redo")
+end)
+
+t:test("keeps core leader mappings aligned with native intent", function()
+  local mappings = setup()
+  local expected = {
+    ["<leader>:"] = "workbench.action.showCommands",
+    ["<leader>2"] = "workbench.view.search",
+    ["<leader>3"] = "workbench.view.scm",
+    ["<leader>bH"] = "workbench.action.closeEditorsToTheLeft",
+    ["<leader>bL"] = "workbench.action.closeEditorsToTheRight",
+    ["<leader>qq"] = "workbench.action.closeWindow",
+    ["<leader>sc"] = "workbench.action.findInFiles",
+    ["<leader>sf"] = "actions.find",
+    ["<leader>sw"] = "workbench.action.findInFiles",
+    ["<leader>t0"] = "workbench.action.lastEditorInGroup",
+    ["<leader>tn"] = "workbench.action.files.newUntitledFile",
+    ["<leader>xD"] = "workbench.actions.view.problems",
+  } ---@type table<string, string>
+
+  for key, vscode_action in pairs(expected) do
+    t.assert_eq(action_callback(vscode_action), mappings[key].callback, key)
+  end
+
+  for index = 1, 9 do
+    local key = "<leader>t" .. index
+    t.assert_eq(action_callback("workbench.action.openEditorAtIndex" .. index), mappings[key].callback, key)
+  end
 end)
 
 t:run()

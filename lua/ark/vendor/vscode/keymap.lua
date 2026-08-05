@@ -18,18 +18,18 @@ mk({ "n" }, "]i", actions.goto_indent_scope_bot, "goto: indent scope bottom")
 ------------------------------------------------------------------------------------------#enhance--
 
 -- Keep undo/redo lists in sync with VsCode
-mk({ "n" }, "u", "<Cmd>call VSCodeNotify('undo')<CR>")
-mk({ "n" }, "<C-r>", "<Cmd>call VSCodeNotify('redo')<CR>")
+mvs({ "n" }, "u", "undo")
+mvs({ "n" }, "<C-r>", "redo")
 
 --#[b]uf--------------------------------------------------------------------------------------------
 mvs({ "n", "x" }, { "<leader>[", "<leader>b[" }, "workbench.action.previousEditorInGroup", "buf: prev")
 mvs({ "n", "x" }, { "<leader>]", "<leader>b]" }, "workbench.action.nextEditorInGroup", "buf: next")
 mvs({ "n", "x" }, { "<leader>{", "<leader>b{" }, "workbench.action.moveEditorLeftInGroup", "buf: move left")
 mvs({ "n", "x" }, { "<leader>}", "<leader>b}" }, "workbench.action.moveEditorRightInGroup", "buf: move right")
-mvs({ "n", "x" }, "<leader>bH", "workbench.action.moveEditorToLeftGroup", "buf: move to left group")
+mvs({ "n", "x" }, "<leader>bH", "workbench.action.closeEditorsToTheLeft", "buf: close to left")
 mvs({ "n", "x" }, "<leader>bJ", "workbench.action.moveEditorToBottomGroup", "buf: move to bottom group")
 mvs({ "n", "x" }, "<leader>bK", "workbench.action.moveEditorToAboveGroup", "buf: move to above group")
-mvs({ "n", "x" }, "<leader>bL", "workbench.action.moveEditorToRightGroup", "buf: move to right group")
+mvs({ "n", "x" }, "<leader>bL", "workbench.action.closeEditorsToTheRight", "buf: close to right")
 mvs({ "n", "x" }, "<leader>bd", "workbench.action.closeActiveEditor", "buf: close")
 mvs({ "n", "x" }, "<leader>bh", "workbench.action.closeEditorsToTheLeft", "buf: close to left")
 mvs({ "n", "x" }, "<leader>bl", "workbench.action.closeEditorsToTheRight", "buf: close to right")
@@ -64,6 +64,7 @@ mvs({ "n", "x" }, "<leader>fs", "workbench.action.gotoSymbol", "find: symbols")
 mvs({ "n", "x" }, "<leader>fS", "workbench.action.showAllSymbols", "find: workspace symbols")
 mvs({ "n", "x" }, "<leader>fr", "workbench.action.openRecent", "find: recent")
 mvs({ "n", "x" }, { "<leader>f?", "<leader>?" }, "workbench.action.openGlobalKeybindings", "find: keymaps")
+mvs({ "n", "x" }, "<leader>:", "workbench.action.showCommands", "find: commands")
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
@@ -94,6 +95,9 @@ mvs({ "n" }, "<leader>ls", "editor.action.triggerParameterHints", "lsp: signatur
 --#[s]earch-----------------------------------------------------------------------------------------
 mvs({ "n", "x" }, "<leader>ss", "workbench.action.findInFiles", "search: in files")
 mvs({ "n", "x" }, "<leader>sb", "actions.find", "search: in buffer")
+mvs({ "n", "x" }, "<leader>sf", "actions.find", "search: in file")
+mvs({ "n", "x" }, "<leader>sc", "workbench.action.findInFiles", "search: in cwd")
+mvs({ "n", "x" }, "<leader>sw", "workbench.action.findInFiles", "search: in workspace")
 mvs({ "n", "x" }, "<leader>sr", "workbench.action.replaceInFiles", "search: replace in files")
 mvs({ "i", "n", "x" }, { "<C-a>f", "<D-f>", "<M-f>" }, "actions.find", "search: in buffer")
 -----------------------------------------------------------------------------------------#[s]earch--
@@ -105,12 +109,17 @@ mvs({ "n", "x" }, "<leader>td", "workbench.action.closeActiveEditor", "tab: clos
 mvs({ "n", "x" }, "<leader>to", "workbench.action.closeOtherEditors", "tab: close others")
 mvs({ "n", "x" }, "<leader>tH", "workbench.action.closeEditorsToTheLeft", "tab: close to left")
 mvs({ "n", "x" }, "<leader>tL", "workbench.action.closeEditorsToTheRight", "tab: close to right")
+mvs({ "n", "x" }, "<leader>tn", "workbench.action.files.newUntitledFile", "tab: new with buf")
+for index = 1, 9 do
+  mvs({ "n", "x" }, "<leader>t" .. index, "workbench.action.openEditorAtIndex" .. index, "tab: focus " .. index)
+end
+-- VS Code has exact editor commands only for indices 1-9, so t0 uses the closest stable fallback.
+mvs({ "n", "x" }, "<leader>t0", "workbench.action.lastEditorInGroup", "tab: focus last")
 --------------------------------------------------------------------------------------------#[t]ab--
 
 --#[t]erminal---------------------------------------------------------------------------------------
 mvs({ "i", "n", "t", "x" }, { "<C-a>t", "<D-t>", "<M-t>" }, "workbench.action.terminal.toggleTerminal", "term: toggle")
 mvs({ "n", "x" }, "<leader>tt", "workbench.action.terminal.toggleTerminal", "term: toggle")
-mvs({ "n", "x" }, "<leader>tn", "workbench.action.terminal.new", "term: new")
 ---------------------------------------------------------------------------------------#[t]erminal--
 
 --#[u]i/toggle--------------------------------------------------------------------------------------
@@ -140,6 +149,7 @@ mvs({ "n", "x" }, "z;", "workbench.action.toggleEditorWidths", "win: toggle maxi
 --------------------------------------------------------------------------------------------#[w]in--
 
 --#[x] diagnostic-----------------------------------------------------------------------------------
+mvs({ "n", "x" }, "<leader>xD", "workbench.actions.view.problems", "diagnostic: workspace problems")
 mvs({ "n", "x" }, "<leader>xd", "workbench.actions.view.problems", "diagnostic: problems")
 mvs({ "n", "x" }, "[d", "editor.action.marker.prev", "diagnostic: prev")
 mvs({ "n", "x" }, "]d", "editor.action.marker.next", "diagnostic: next")
@@ -164,6 +174,8 @@ mvs({ "n", "x" }, { "<C-a>2", "<D-2>", "<M-2>" }, "workbench.view.search", "side
 mvs({ "n", "x" }, { "<C-a>3", "<D-3>", "<M-3>" }, "workbench.view.scm", "sidebar: git")
 mvs({ "n", "x" }, { "<C-a>4", "<D-4>", "<M-4>" }, "workbench.view.debug", "sidebar: debug")
 mvs({ "n", "x" }, { "<C-a>5", "<D-5>", "<M-5>" }, "workbench.view.extensions", "sidebar: extensions")
+mvs({ "n", "x" }, "<leader>2", "workbench.view.search", "sidebar: search")
+mvs({ "n", "x" }, "<leader>3", "workbench.view.scm", "sidebar: git")
 --------------------------------------------------------------------------------------#[1] sidebar--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
@@ -171,3 +183,7 @@ mvs({ "n", "x" }, "<leader>1", "workbench.view.explorer", "explorer: focus")
 mvs({ "n", "x" }, "<leader>er", "workbench.files.action.showActiveFileInExplorer", "explorer: reveal file")
 mvs({ "n", "x" }, "<leader>et", "workbench.action.toggleSidebarVisibility", "explorer: toggle")
 ---------------------------------------------------------------------------------------#[e]xplorer--
+
+--#[q]uit-------------------------------------------------------------------------------------------
+mvs({ "n", "x" }, "<leader>qq", "workbench.action.closeWindow", "quit: close window")
+-------------------------------------------------------------------------------------------#[q]uit--
