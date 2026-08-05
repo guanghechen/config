@@ -11,6 +11,15 @@ web_search = "disabled"
 model = "gpt-5.6-sol"
 model_provider = "copilot"
 
+[analytics]
+enabled = false
+
+[otel]
+exporter = "none"
+metrics_exporter = "none"
+trace_exporter = "none"
+log_user_prompt = false
+
 [model_providers.copilot]
 name = "copilot"
 base_url = "http://127.0.0.1:4747/api/codex"
