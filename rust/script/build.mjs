@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs"
+import { randomUUID } from "node:crypto"
+import { copyFileSync, existsSync, mkdirSync, renameSync, rmSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -56,6 +57,16 @@ function parseForce(args) {
   return args.length > 0
 }
 
+export function replaceFileAtomically(source, destination) {
+  const temporary = `${destination}.${randomUUID()}.tmp`
+  try {
+    copyFileSync(source, temporary)
+    renameSync(temporary, destination)
+  } finally {
+    rmSync(temporary, { force: true })
+  }
+}
+
 function main() {
   const force = parseForce(process.argv.slice(2))
   const build = getPlatformBuild(process.platform)
@@ -93,8 +104,8 @@ function main() {
     run("codesign", ["--force", "--sign", "-", stagedBin], rustDir)
   }
 
-  copyFileSync(stagedLua, luaOutput)
-  copyFileSync(stagedBin, binOutput)
+  replaceFileAtomically(stagedLua, luaOutput)
+  replaceFileAtomically(stagedBin, binOutput)
   rmSync(targetDir, { recursive: true, force: true })
 
   console.log(`${GREEN}[neovim yoz] ✓ built${RESET}`)
