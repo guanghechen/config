@@ -11,7 +11,10 @@
       "branches": [
         {
           "branch": "guanghechen",
-          "editions": ["nix", "nix-remote", "osx", "win"]
+          "editions": ["nix", "nix-remote", "osx", "win"],
+          "on": {
+            "synced": "node cli/sync-config-vscode.mjs"
+          }
         },
         {
           "branch": "alacritty",
