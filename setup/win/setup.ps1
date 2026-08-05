@@ -79,6 +79,7 @@ $env:GEMINI_MODEL                     = "gemini-3-pro-preview"
 $env:GEMINI_CONFIG_DIR                = Join-Path $env:USERPROFILE ".gemini"
 $env:PI_CODING_AGENT_DIR              = Join-Path $env:XDG_CONFIG_HOME "pi"
 $env:PI_CODING_AGENT_SESSION_DIR      = Join-Path $env:XDG_STATE_HOME "pi\sessions"
+$env:PI_TELEMETRY                     = 0
 
 setx ANTHROPIC_BASE_URL               "$env:ANTHROPIC_BASE_URL"
 setx ANTHROPIC_DEFAULT_HAIKU_MODEL    "$env:ANTHROPIC_DEFAULT_HAIKU_MODEL"
@@ -92,6 +93,7 @@ setx GEMINI_MODEL                     "$env:GEMINI_MODEL"
 setx GEMINI_CONFIG_DIR                "$env:GEMINI_CONFIG_DIR"
 setx PI_CODING_AGENT_DIR              "$env:PI_CODING_AGENT_DIR"
 setx PI_CODING_AGENT_SESSION_DIR      "$env:PI_CODING_AGENT_SESSION_DIR"
+setx PI_TELEMETRY                     "$env:PI_TELEMETRY"
 
 ####################################################################################################
 
