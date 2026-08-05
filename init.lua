@@ -34,7 +34,7 @@ function Status:name()
 
   local linked = ""
   if h.link_to ~= nil then
-    linked = " -> " .. tostring(h.link_to)
+    linked = " -> " .. ui.printable(tostring(h.link_to))
   end
-  return ui.Line(" " .. h.name .. linked)
+  return ui.Line(" " .. ui.printable(h.name) .. linked)
 end
