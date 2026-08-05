@@ -187,41 +187,60 @@ function M:create(filepath)
     return nil
   end
 
-  local os_filepath = to_os_filepath(filepath) ---@type string
   local is_directory = filepath:sub(-1) == "/" ---@type boolean
+  local target_filepath = is_directory and strip_trailing_slash(filepath) or filepath ---@type string
+  local os_filepath = to_os_filepath(target_filepath) ---@type string
+  local os_parent_dir = vim.fn.fnamemodify(os_filepath, ":h") ---@type string
+  if vim.fn.isdirectory(os_parent_dir) == 0 then
+    local call_ok, result = pcall(vim.fn.mkdir, os_parent_dir, "p")
+    if not call_ok or (result == 0 and vim.fn.isdirectory(os_parent_dir) == 0) then
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "create",
+        message = string.format("Failed to create parent directory: %s", filepath),
+        details = {
+          error = not call_ok and result or nil,
+          code = call_ok and result or nil,
+        },
+      })
+      return nil
+    end
+  end
+
   if is_directory then
-    local ok, err = pcall(vim.fn.mkdir, os_filepath, "p")
+    local ok, err, code = vim.uv.fs_mkdir(os_filepath, 493)
     if not ok then
       stl.reporter.error({
         from = self.fullname,
         subject = "create",
-        message = string.format("Failed to create directory: %s", filepath),
-        details = { error = err },
+        message = code == "EEXIST" and string.format("Target already exists: %s", filepath)
+          or string.format("Failed to create directory: %s", filepath),
+        details = { error = err, code = code },
       })
       return nil
     end
   else
-    local os_parent_dir = vim.fn.fnamemodify(os_filepath, ":h") ---@type string
-    if vim.fn.isdirectory(os_parent_dir) == 0 then
-      local ok, err = pcall(vim.fn.mkdir, os_parent_dir, "p")
-      if not ok then
-        stl.reporter.error({
-          from = self.fullname,
-          subject = "create",
-          message = string.format("Failed to create parent directory: %s", filepath),
-          details = { error = err },
-        })
-        return nil
-      end
-    end
-
-    local ok, err = pcall(vim.fn.writefile, {}, os_filepath)
-    if not ok then
+    local fd, err, code = vim.uv.fs_open(os_filepath, "wx", 438)
+    if fd == nil then
       stl.reporter.error({
         from = self.fullname,
         subject = "create",
-        message = string.format("Failed to create file: %s", filepath),
-        details = { error = err },
+        message = code == "EEXIST" and string.format("Target already exists: %s", filepath)
+          or string.format("Failed to create file: %s", filepath),
+        details = { error = err, code = code },
+      })
+      return nil
+    end
+
+    local closed, close_err, close_code = vim.uv.fs_close(fd)
+    if not closed then
+      -- A failed close does not prove whether the descriptor was released. Unlinking by
+      -- pathname could delete a replacement created by another process.
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "create",
+        message = string.format("Failed to close created file; target may remain: %s", filepath),
+        details = { error = close_err, code = close_code },
       })
       return nil
     end

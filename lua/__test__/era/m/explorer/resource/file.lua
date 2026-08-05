@@ -139,6 +139,70 @@ local function load_link_node(root)
   error("link node was not loaded")
 end
 
+t:test("create: refuses to truncate an existing file", function()
+  local root = vim.fn.tempname() ---@type string
+  local filepath = root .. "/existing.txt" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.writefile({ "sentinel" }, filepath)
+
+  local node = FileManager.new({ name = "test" }):create(filepath)
+
+  t.assert_nil(node, "existing target should be rejected")
+  t.assert_eq("sentinel", vim.fn.readfile(filepath)[1], "existing content")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("create: refuses an existing directory", function()
+  local root = vim.fn.tempname() ---@type string
+  local dirpath = root .. "/existing/" ---@type string
+  vim.fn.mkdir(dirpath, "p")
+
+  local node = FileManager.new({ name = "test" }):create(dirpath)
+
+  t.assert_nil(node, "existing target should be rejected")
+  t.assert_true(vim.uv.fs_stat(dirpath) ~= nil, "existing directory should remain")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("create: creates missing entries with nested parents", function()
+  local root = vim.fn.tempname() ---@type string
+  local filepath = root .. "/files/nested.txt" ---@type string
+  local dirpath = root .. "/directories/nested/" ---@type string
+  local manager = FileManager.new({ name = "test" })
+
+  local file_node = manager:create(filepath)
+  local dir_node = manager:create(dirpath)
+
+  t.assert_true(file_node ~= nil, "file should be created")
+  t.assert_eq("F", file_node.nodetype, "file node type")
+  t.assert_true(dir_node ~= nil, "directory should be created")
+  t.assert_eq("D", dir_node.nodetype, "directory node type")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("create: close failure does not delete a replacement", function()
+  local root = vim.fn.tempname() ---@type string
+  local filepath = root .. "/target.txt" ---@type string
+  local fs_close = vim.uv.fs_close
+  vim.fn.mkdir(root, "p")
+
+  t:patch_table(vim.uv, "fs_close", function(fd)
+    assert(fs_close(fd))
+    assert(vim.uv.fs_unlink(filepath))
+    local replacement_fd = assert(vim.uv.fs_open(filepath, "wx", 438)) ---@type integer
+    assert(vim.uv.fs_write(replacement_fd, "sentinel", 0))
+    assert(fs_close(replacement_fd))
+    return nil, "injected close failure", "EIO"
+  end)
+
+  local node = FileManager.new({ name = "test" }):create(filepath)
+
+  t.assert_nil(node, "close failure should fail create")
+  t.assert_true(vim.uv.fs_stat(filepath) ~= nil, "replacement should remain")
+  t.assert_eq("sentinel", vim.fn.readfile(filepath)[1], "replacement content")
+  vim.fn.delete(root, "rf")
+end)
+
 t:test("load: directory symlink is expandable", function()
   local root = create_directory_link_fixture()
   local node = load_link_node(root)
