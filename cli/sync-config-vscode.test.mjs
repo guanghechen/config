@@ -9,7 +9,9 @@ import {
   composeKeybindings,
   formatKey,
   handleSyncConfigVscode,
+  resolveDefaultVscodeKeybindingsPath,
   resolveVscodeKeybindingPlatform,
+  resolveVscodeRuntimePlatform,
   resolveVscodeSettingsPath,
   sortKeybindings,
   syncVscodeKeybindings,
@@ -26,6 +28,20 @@ function createTempDir() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-config-vscode-'))
   tempDirs.push(tempDir)
   return tempDir
+}
+
+/**
+ * @param {Record<string, string>} [overrides]
+ * @returns {Record<string, string>}
+ */
+function createCliEnv(overrides = {}) {
+  /** @type {Record<string, string>} */
+  const env = {}
+  for (const name of ['PATH', 'SystemRoot', 'WINDIR', 'TMPDIR', 'TEMP', 'TMP']) {
+    const value = process.env[name]
+    if (value) env[name] = value
+  }
+  return { ...env, ...overrides }
 }
 
 describe('sync-config-vscode keybinding order', () => {
@@ -106,11 +122,43 @@ describe('sync-config-vscode terminal sequences', () => {
 
 describe('sync-config-vscode cross-platform keybindings', () => {
   it('maps supported platforms to available keybinding variants', () => {
-    assert.equal(resolveVscodeKeybindingPlatform('nix'), 'win')
+    assert.equal(resolveVscodeKeybindingPlatform('nix'), undefined)
     assert.equal(resolveVscodeKeybindingPlatform('win'), 'win')
     assert.equal(resolveVscodeKeybindingPlatform('wsl'), 'win')
     assert.equal(resolveVscodeKeybindingPlatform('osx'), 'osx')
     assert.equal(resolveVscodeKeybindingPlatform('unknown'), undefined)
+  })
+
+  it('resolves the runtime platform from a validated override', () => {
+    assert.equal(resolveVscodeRuntimePlatform('nix', 'unknown'), 'nix')
+    assert.equal(resolveVscodeRuntimePlatform('win', 'unknown'), 'win')
+    assert.equal(resolveVscodeRuntimePlatform('osx', 'unknown'), 'osx')
+    assert.equal(resolveVscodeRuntimePlatform('wsl', 'unknown'), 'wsl')
+    assert.equal(resolveVscodeRuntimePlatform('invalid', 'nix'), 'nix')
+  })
+
+  it('resolves default keybindings paths on every supported platform', () => {
+    assert.equal(
+      resolveDefaultVscodeKeybindingsPath('nix', {
+        HOME: '/home/tester',
+        XDG_CONFIG_HOME: '/home/tester/.xdg',
+      }),
+      undefined,
+    )
+    assert.equal(
+      resolveDefaultVscodeKeybindingsPath('osx', { HOME: '/Users/tester' }),
+      '/Users/tester/Library/Application Support/Code/User/keybindings.json',
+    )
+    assert.equal(
+      resolveDefaultVscodeKeybindingsPath('win', {
+        APPDATA: String.raw`C:\Users\tester\AppData\Roaming`,
+      }),
+      String.raw`C:\Users\tester\AppData\Roaming\Code\User\keybindings.json`,
+    )
+    assert.equal(
+      resolveDefaultVscodeKeybindingsPath('wsl', { GHC_WINDOWS_USERNAME: 'tester' }),
+      '/mnt/c/Users/tester/AppData/Roaming/Code/User/keybindings.json',
+    )
   })
 
   it('syncs keybindings without crashing on every supported platform', () => {
@@ -119,7 +167,8 @@ describe('sync-config-vscode cross-platform keybindings', () => {
     const writeFileSync = mock.method(fs, 'writeFileSync', () => {})
 
     try {
-      for (const platform of ['nix', 'win', 'osx', 'wsl']) {
+      assert.equal(syncVscodeKeybindings(targetPath, 'nix'), false)
+      for (const platform of ['win', 'osx', 'wsl']) {
         assert.equal(syncVscodeKeybindings(targetPath, platform), true)
       }
     } finally {
@@ -195,20 +244,44 @@ describe('sync-config-vscode cross-platform keybindings', () => {
   })
 })
 
-describe('sync-config-vscode settings', () => {
-  it('exits cleanly when no target path is configured', () => {
-    const env = { ...process.env }
-    delete env.f_vscode_keybindings
+describe('sync-config-vscode CLI', () => {
+  it('exits cleanly on every supported runtime platform when the target is unavailable', () => {
+    const tempDir = createTempDir()
+    const scriptPath = path.join(import.meta.dirname, 'sync-config-vscode.mjs')
 
+    for (const platform of ['nix', 'win', 'osx', 'wsl']) {
+      const targetPath = path.join(tempDir, platform, 'keybindings.json')
+      const result = spawnSync(process.execPath, [scriptPath], {
+        encoding: 'utf8',
+        env: createCliEnv({
+          GHC_ENV_PLATFORM: platform,
+          f_vscode_keybindings: targetPath,
+        }),
+      })
+
+      assert.equal(result.status, 0, `${platform}: ${result.stderr}`)
+    }
+  })
+
+  it('performs no writes on Nix even when the target directory exists', () => {
+    const tempDir = createTempDir()
+    const targetPath = path.join(tempDir, 'keybindings.json')
     const result = spawnSync(
       process.execPath,
-      [path.join(import.meta.dirname, 'sync-config-vscode.mjs')],
-      { encoding: 'utf8', env },
+      [path.join(import.meta.dirname, 'sync-config-vscode.mjs'), targetPath],
+      {
+        encoding: 'utf8',
+        env: createCliEnv({ GHC_ENV_PLATFORM: 'nix' }),
+      },
     )
 
     assert.equal(result.status, 0, result.stderr)
+    assert.equal(fs.existsSync(targetPath), false)
+    assert.equal(fs.existsSync(path.join(tempDir, 'settings.json')), false)
   })
+})
 
+describe('sync-config-vscode settings', () => {
   it('resolves settings next to keybindings', () => {
     assert.equal(
       resolveVscodeSettingsPath('/code/User/keybindings.json'),
@@ -240,7 +313,7 @@ describe('sync-config-vscode settings', () => {
     })
 
     try {
-      handleSyncConfigVscode(targetKeybindingsPath)
+      handleSyncConfigVscode(targetKeybindingsPath, 'win')
     } finally {
       writeFileSync.mock.restore()
     }

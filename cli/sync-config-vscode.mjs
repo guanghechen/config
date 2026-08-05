@@ -5,13 +5,16 @@
  */
 
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
-import { F_VSCODE_KEYBINDINGS, PLATFORM, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#env'
+import { PLATFORM, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#env'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'
 
 const reporter = new Reporter({ prefix: 'sync-config-vscode' })
+
+/** @typedef {'wsl' | 'win' | 'osx' | 'nix' | 'unknown'} IVscodePlatform */
 
 /**
  * @param {string} filepath
@@ -193,18 +196,72 @@ function validateKeybindings(source, keybindings, unbind) {
 }
 
 /**
- * @param {'wsl' | 'win' | 'osx' | 'nix' | 'unknown'} platform
+ * @param {IVscodePlatform} platform
  * @returns {'win' | 'osx' | undefined}
  */
 export function resolveVscodeKeybindingPlatform(platform) {
   if (platform === 'osx') return 'osx'
-  if (platform === 'nix' || platform === 'win' || platform === 'wsl') return 'win'
+  if (platform === 'win' || platform === 'wsl') return 'win'
+  return undefined
+}
+
+/**
+ * @param {string | undefined} override
+ * @param {IVscodePlatform} [fallback]
+ * @returns {IVscodePlatform}
+ */
+export function resolveVscodeRuntimePlatform(override, fallback = PLATFORM) {
+  if (override === 'nix' || override === 'win' || override === 'osx' || override === 'wsl') {
+    return override
+  }
+  return fallback
+}
+
+/**
+ * @param {IVscodePlatform} platform
+ * @param {Record<string, string | undefined>} [env]
+ * @param {string} [homeDir]
+ * @returns {string | undefined}
+ */
+export function resolveDefaultVscodeKeybindingsPath(
+  platform,
+  env = process.env,
+  homeDir = os.homedir(),
+) {
+  const configuredPath = env.f_vscode_keybindings
+  if (typeof configuredPath === 'string' && configuredPath.trim()) return configuredPath
+
+  if (platform === 'win') {
+    const appData =
+      env.APPDATA ||
+      (env.USERPROFILE ? path.win32.join(env.USERPROFILE, 'AppData', 'Roaming') : undefined)
+    return appData ? path.win32.join(appData, 'Code', 'User', 'keybindings.json') : undefined
+  }
+
+  const home = env.HOME || homeDir
+  if (platform === 'osx') {
+    return path.posix.join(
+      home,
+      'Library',
+      'Application Support',
+      'Code',
+      'User',
+      'keybindings.json',
+    )
+  }
+  if (platform === 'wsl' && env.GHC_WINDOWS_USERNAME) {
+    return path.posix.join(
+      '/mnt/c/Users',
+      env.GHC_WINDOWS_USERNAME,
+      'AppData/Roaming/Code/User/keybindings.json',
+    )
+  }
   return undefined
 }
 
 /**
  * @param {string | undefined} targetKeybindingsPath - Path to the VSCode keybindings.json file
- * @param {'wsl' | 'win' | 'osx' | 'nix' | 'unknown'} [platform] - Runtime platform
+ * @param {IVscodePlatform} [platform] - Runtime platform
  * @returns {boolean} Whether the keybindings were synced
  */
 export function syncVscodeKeybindings(targetKeybindingsPath, platform = PLATFORM) {
@@ -306,9 +363,11 @@ export function resolveVscodeSettingsPath(targetKeybindingsPath) {
 
 /**
  * @param {string | undefined} targetKeybindingsPath
+ * @param {IVscodePlatform} [platform]
  */
-export function handleSyncConfigVscode(targetKeybindingsPath) {
-  syncVscodeKeybindings(targetKeybindingsPath)
+export function handleSyncConfigVscode(targetKeybindingsPath, platform = PLATFORM) {
+  if (platform === 'nix') return
+  syncVscodeKeybindings(targetKeybindingsPath, platform)
   syncVscodeSettings(resolveVscodeSettingsPath(targetKeybindingsPath))
 }
 
@@ -316,9 +375,12 @@ if (process.argv[1] === import.meta.filename) {
   const cmd = new Command({ name: 'sync-config-vscode', description: 'Sync VSCode user configuration.' })
     .argument({ name: 'target-path', kind: 'optional', description: 'Target keybindings.json path' })
     .action(async ({ args }) => {
-      const targetPath = /** @type {string | undefined} */ (args['target-path']) || F_VSCODE_KEYBINDINGS
+      const platform = resolveVscodeRuntimePlatform(process.env.GHC_ENV_PLATFORM)
+      const targetPath =
+        /** @type {string | undefined} */ (args['target-path']) ||
+        resolveDefaultVscodeKeybindingsPath(platform)
       if (targetPath) {
-        handleSyncConfigVscode(targetPath)
+        handleSyncConfigVscode(targetPath, platform)
       }
     })
 
