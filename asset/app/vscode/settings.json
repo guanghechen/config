@@ -288,12 +288,6 @@
   "vim.history": 500,
   "vim.hlsearch": true,
   "vim.incsearch": true,
-  "vim.insertModeKeyBindings": [
-    {
-      "before": ["j", "j"],
-      "after": ["<Esc>"]
-    }
-  ],
   "vim.normalModeKeyBindingsNonRecursive": [
     {
       "before": ["u"],
