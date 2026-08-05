@@ -249,15 +249,15 @@ function M:create(filepath)
   return self:locate(filepath)
 end
 
----@param source_filepath                    string
----@param target_filepath                    string
----@return boolean
+---@param source_filepath               string
+---@param target_filepath               string
+---@return era.m.explorer.resource.CopyStatus
 function M:copy(source_filepath, target_filepath)
   local source_path = strip_trailing_slash(self:__filepath_to_filepath__(source_filepath)) ---@type string
   local target_path = strip_trailing_slash(self:__filepath_to_filepath__(target_filepath)) ---@type string
 
   if source_path == "" or target_path == "" then
-    return false
+    return "retryable_failure"
   end
 
   local source_os_path = to_os_filepath(source_path) ---@type string
@@ -265,7 +265,7 @@ function M:copy(source_filepath, target_filepath)
 
   local source_stat = vim.uv.fs_lstat(source_os_path)
   if source_stat == nil then
-    return false
+    return self:__copy_failure_status__(target_os_path)
   end
 
   if source_stat.type == "directory" then
@@ -275,7 +275,7 @@ function M:copy(source_filepath, target_filepath)
         subject = "copy",
         message = string.format("Cannot copy a directory into itself: %s -> %s", source_path, target_path),
       })
-      return false
+      return self:__copy_failure_status__(target_os_path)
     end
 
     local is_descendant, err = yoz.fs.is_descendant(source_os_path, target_os_path) ---@type boolean|nil, string|nil
@@ -286,7 +286,7 @@ function M:copy(source_filepath, target_filepath)
         message = string.format("Cannot resolve copy paths: %s -> %s", source_path, target_path),
         details = { error = err },
       })
-      return false
+      return self:__copy_failure_status__(target_os_path)
     end
 
     if is_descendant then
@@ -295,7 +295,7 @@ function M:copy(source_filepath, target_filepath)
         subject = "copy",
         message = string.format("Cannot copy a directory into itself: %s -> %s", source_path, target_path),
       })
-      return false
+      return self:__copy_failure_status__(target_os_path)
     end
   end
 
@@ -305,24 +305,35 @@ function M:copy(source_filepath, target_filepath)
       subject = "copy",
       message = string.format("Target already exists: %s", target_path),
     })
-    return false
+    return "partial_failure"
   end
 
   local target_parent = vim.fn.fnamemodify(target_os_path, ":h") ---@type string
   if vim.fn.isdirectory(target_parent) == 0 then
     local ok, err = pcall(vim.fn.mkdir, target_parent, "p")
-    if not ok then
+    if not ok or vim.fn.isdirectory(target_parent) == 0 then
       stl.reporter.error({
         from = self.fullname,
         subject = "copy",
         message = string.format("Failed to create target parent directory: %s", target_parent),
         details = { error = err },
       })
-      return false
+      return self:__copy_failure_status__(target_os_path)
     end
   end
 
   return self:__copy_entry__(source_os_path, target_os_path, source_stat.type)
+end
+
+---@protected
+---@param target_path                   string
+---@return era.m.explorer.resource.CopyStatus
+function M:__copy_failure_status__(target_path)
+  local stat, _, code = vim.uv.fs_lstat(target_path)
+  if stat == nil and code == "ENOENT" then
+    return "retryable_failure"
+  end
+  return "partial_failure"
 end
 
 ---@param filepath                           string
@@ -775,12 +786,12 @@ end
 ---@param source_path                   string
 ---@param target_path                   string
 ---@param source_type                   ?string
----@return boolean
+---@return era.m.explorer.resource.CopyStatus
 function M:__copy_entry__(source_path, target_path, source_type)
   if source_type == nil or source_type == "unknown" then
     local source_stat = vim.uv.fs_lstat(source_path) ---@type uv.fs_stat.result|nil
     if source_stat == nil then
-      return false
+      return self:__copy_failure_status__(target_path)
     end
     source_type = source_stat.type
   end
@@ -796,48 +807,63 @@ end
 ---@protected
 ---@param source_path                   string
 ---@param target_path                   string
----@return boolean
+---@return era.m.explorer.resource.CopyStatus
 function M:__copy_directory__(source_path, target_path)
-  local ok, err = pcall(vim.fn.mkdir, target_path, "p")
-  if not ok then
+  local created, err, code = vim.uv.fs_mkdir(target_path, 511)
+  if not created then
     stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Failed to create target directory: %s", target_path),
-      details = { error = err },
+      details = { error = err, code = code },
     })
-    return false
+    return self:__copy_failure_status__(target_path)
   end
 
-  local handle = vim.uv.fs_scandir(source_path) ---@type userdata|nil
+  local handle, scan_err, scan_code = vim.uv.fs_scandir(source_path) ---@type userdata|nil, string|nil, string|nil
   if handle == nil then
-    return true
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "copy",
+      message = string.format("Failed to scan source directory: %s", source_path),
+      details = { error = scan_err, code = scan_code },
+    })
+    return "partial_failure"
   end
 
   local source_prefix = source_path:sub(-1) == OS_SEP and source_path or (source_path .. OS_SEP) ---@type string
   local target_prefix = target_path:sub(-1) == OS_SEP and target_path or (target_path .. OS_SEP) ---@type string
 
   while true do
-    local name, ftype = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil
+    local name, ftype, next_code = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil, string|nil
     if name == nil then
+      if ftype ~= nil then
+        stl.reporter.error({
+          from = self.fullname,
+          subject = "copy",
+          message = string.format("Failed while scanning source directory: %s", source_path),
+          details = { error = ftype, code = next_code },
+        })
+        return "partial_failure"
+      end
       break
     end
 
     local child_source = source_prefix .. name ---@type string
     local child_target = target_prefix .. name ---@type string
 
-    if not self:__copy_entry__(child_source, child_target, ftype) then
-      return false
+    if self:__copy_entry__(child_source, child_target, ftype) ~= "success" then
+      return "partial_failure"
     end
   end
 
-  return true
+  return "success"
 end
 
 ---@protected
 ---@param source_path                   string
 ---@param target_path                   string
----@return boolean
+---@return era.m.explorer.resource.CopyStatus
 function M:__copy_link__(source_path, target_path)
   local link_target, read_err = vim.uv.fs_readlink(source_path)
   if link_target == nil then
@@ -847,7 +873,7 @@ function M:__copy_link__(source_path, target_path)
       message = string.format("Failed to read symbolic link: %s", source_path),
       details = { error = read_err },
     })
-    return false
+    return self:__copy_failure_status__(target_path)
   end
 
   local flags = nil ---@type uv.fs_symlink.flags|nil
@@ -863,76 +889,102 @@ function M:__copy_link__(source_path, target_path)
       message = string.format("Failed to copy symbolic link: %s -> %s", source_path, target_path),
       details = { error = err },
     })
-    return false
+    return self:__copy_failure_status__(target_path)
   end
 
-  return true
+  return "success"
 end
 
 ---@protected
 ---@param source_path                   string
 ---@param target_path                   string
----@return boolean
+---@return era.m.explorer.resource.CopyStatus
 function M:__copy_file__(source_path, target_path)
-  local CHUNK_SIZE = 64 * 1024 ---@type integer
-
-  local stat = vim.uv.fs_stat(source_path) ---@type uv.fs_stat.result|nil
-  if stat == nil then
-    stl.reporter.error({
-      from = self.fullname,
-      subject = "copy",
-      message = string.format("Failed to stat source file: %s", source_path),
-    })
-    return false
-  end
-
-  local source_fd = vim.uv.fs_open(source_path, "r", 438) ---@type integer|nil
+  local source_fd, source_err, source_code = vim.uv.fs_open(source_path, "r", 438)
   if source_fd == nil then
     stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Failed to open source file: %s", source_path),
+      details = { error = source_err, code = source_code },
     })
-    return false
+    return self:__copy_failure_status__(target_path)
   end
 
-  local target_fd = vim.uv.fs_open(target_path, "w", stat.mode) ---@type integer|nil
+  local function close_source()
+    local closed, err, code = vim.uv.fs_close(source_fd)
+    if not closed then
+      stl.reporter.warn({
+        from = self.fullname,
+        subject = "copy",
+        message = string.format("Failed to close source file after copy: %s", source_path),
+        details = { error = err, code = code },
+      })
+    end
+  end
+
+  local stat, stat_err, stat_code = vim.uv.fs_fstat(source_fd)
+  if stat == nil then
+    close_source()
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "copy",
+      message = string.format("Failed to stat source file: %s", source_path),
+      details = { error = stat_err, code = stat_code },
+    })
+    return self:__copy_failure_status__(target_path)
+  end
+
+  local target_fd, target_err, target_code = vim.uv.fs_open(target_path, "wx", stat.mode)
   if target_fd == nil then
-    vim.uv.fs_close(source_fd)
+    close_source()
     stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Failed to create target file: %s", target_path),
+      details = { error = target_err, code = target_code },
     })
-    return false
+    return self:__copy_failure_status__(target_path)
   end
 
   local offset = 0 ---@type integer
-  local file_size = stat.size ---@type integer
-  local success = true ---@type boolean
-
-  while offset < file_size do
-    local chunk = vim.uv.fs_read(source_fd, CHUNK_SIZE, offset) ---@type string|nil
-    if chunk == nil or #chunk == 0 then
-      break
-    end
-    local written = vim.uv.fs_write(target_fd, chunk, offset) ---@type integer|nil
-    if written == nil or written ~= #chunk then
-      success = false
+  local transfer_ok = true ---@type boolean
+  while offset < stat.size do
+    local remaining = stat.size - offset ---@type integer
+    local copied, err, code = vim.uv.fs_sendfile(target_fd, source_fd, offset, remaining)
+    if copied == nil or copied <= 0 or copied > remaining then
+      transfer_ok = false
       stl.reporter.error({
         from = self.fullname,
         subject = "copy",
-        message = string.format("Failed to write to target file: %s", target_path),
+        message = string.format("Failed to copy file data: %s -> %s", source_path, target_path),
+        details = { error = err, code = code, copied = copied, remaining = remaining },
       })
       break
     end
-    offset = offset + #chunk
+    offset = offset + copied
   end
 
-  vim.uv.fs_close(source_fd)
-  vim.uv.fs_close(target_fd)
+  close_source()
 
-  return success
+  local target_closed, target_close_err, target_close_code = vim.uv.fs_close(target_fd)
+  if not target_closed then
+    transfer_ok = false
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "copy",
+      message = string.format("Failed to close target file; target may be partial: %s", target_path),
+      details = { error = target_close_err, code = target_close_code },
+    })
+  end
+
+  if not transfer_ok then
+    -- The target fd was opened exclusively, but pathname ownership cannot be
+    -- proven after failure. Leave it visible for explicit user resolution.
+    return "partial_failure"
+  end
+
+  return "success"
 end
 
 ---@protected

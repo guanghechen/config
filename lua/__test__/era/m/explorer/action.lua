@@ -160,6 +160,7 @@ local function setup_transfer(props)
     reports = {},
     clear_selection = 0,
     refresh = 0,
+    tree_refresh = 0,
   }
   local cursor = props.cursor ---@type string
   local resources = props.resources ---@type table<string, era.m.explorer.resource.INode>
@@ -172,6 +173,7 @@ local function setup_transfer(props)
     tree_nodes[node.filepath] = tree_nodes[node.filepath] or node
   end
   local failed_targets = props.failed_targets or {} ---@type table<string, boolean>
+  local partial_targets = props.partial_targets or {} ---@type table<string, boolean>
   local failed_removals = props.failed_removals or {} ---@type table<string, boolean>
 
   local function report(options)
@@ -213,15 +215,18 @@ local function setup_transfer(props)
     end,
     copy = function(_, source, target)
       calls.copies[#calls.copies + 1] = { source = source, target = target }
+      if partial_targets[target] then
+        return "partial_failure"
+      end
       if failed_targets[target] then
-        return false
+        return "retryable_failure"
       end
       resources[target] = {
         filepath = target,
         nodename = target:match("([^/]+)/?$") or "",
         nodetype = target:sub(-1) == "/" and "D" or "F",
       }
-      return true
+      return "success"
     end,
     move = function(_, source, target)
       calls.moves[#calls.moves + 1] = { source = source, target = target }
@@ -291,7 +296,9 @@ local function setup_transfer(props)
         end
         return true
       end,
-      refresh = function() end,
+      refresh = function()
+        calls.tree_refresh = calls.tree_refresh + 1
+      end,
       toggle_selected = function(_, filepath, force_selected)
         local is_selected = selected_filepaths[filepath] == true
         local should_select = force_selected == "select" or (force_selected == nil and not is_selected)
@@ -735,6 +742,42 @@ t:test("transfer: partial failure retains only failed sources", function()
   t.assert_eq(1, calls.clear_selection, "selection clear count")
 end)
 
+t:test("transfer: copy retains only retryable failures and exposes partial targets", function()
+  local nodes = {
+    { filepath = "/project/a.txt", nodename = "a.txt", nodetype = "F" },
+    { filepath = "/project/b.txt", nodename = "b.txt", nodetype = "F" },
+    { filepath = "/project/c.txt", nodename = "c.txt", nodetype = "F" },
+  }
+  local resources = {
+    [nodes[1].filepath] = nodes[1],
+    [nodes[2].filepath] = nodes[2],
+    [nodes[3].filepath] = nodes[3],
+    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
+  }
+  local action, calls, set_cursor = setup_transfer({
+    cursor = nodes[1].filepath,
+    failed_targets = { ["/target/b.txt"] = true },
+    partial_targets = { ["/target/c.txt"] = true },
+    resources = resources,
+    selected_nodes = nodes,
+  })
+
+  action:stage_transfer("copy")
+  local refresh_before_paste = calls.refresh ---@type integer
+  set_cursor("/target/")
+  action:paste()
+
+  local pending = action:get_pending_transfer()
+  t.assert_true(pending ~= nil, "retryable pending transfer")
+  t.assert_eq(1, #pending.sources, "retryable source count")
+  t.assert_eq(nodes[2].filepath, pending.sources[1].filepath, "retryable source")
+  t.assert_eq(1, calls.clear_selection, "selection clear count")
+  t.assert_eq(1, calls.tree_refresh, "tree refresh count")
+  t.assert_eq(refresh_before_paste + 1, calls.refresh, "view refresh count")
+  t.assert_eq(1, #calls.reports, "summary report count")
+  t.assert_eq("/target/c.txt", calls.reports[1].details.partial_targets[1], "partial target detail")
+end)
+
 ---@param method                        "copy"|"copy_as"|"rename"
 ---@param input                         string
 ---@param options                       table|nil
@@ -746,7 +789,9 @@ local function run_name_action(method, input, options)
     copied_to = nil,
     moved_to = nil,
     reports = {},
+    refresh = 0,
     synced_to = nil,
+    tree_refresh = 0,
   }
   local node = options.node or { filepath = "/project/src/source.lua", nodename = "source.lua", nodetype = "F" } ---@type era.m.explorer.Node
 
@@ -812,11 +857,13 @@ local function run_name_action(method, input, options)
     get_parent_filepath = function()
       return options.parent_filepath or "/project/src"
     end,
-    refresh = function() end,
+    refresh = function()
+      calls.refresh = calls.refresh + 1
+    end,
     resource_manager = {
       copy = function(_, _, target)
         calls.copied_to = target
-        return true
+        return options.copy_status or "success"
       end,
       move = function(_, _, target)
         calls.moved_to = target
@@ -833,7 +880,9 @@ local function run_name_action(method, input, options)
       locate = function()
         return node
       end,
-      refresh = function() end,
+      refresh = function()
+        calls.tree_refresh = calls.tree_refresh + 1
+      end,
     },
   }
 
@@ -858,6 +907,16 @@ t:test("copy: copy-as rejects a directory target inside the source", function()
 
   t.assert_nil(calls.copied_to, "copy target")
   t.assert_eq(1, #calls.reports, "validation report count")
+end)
+
+t:test("copy: copy-as refreshes an unresolved partial target without focusing it", function()
+  local calls = run_name_action("copy_as", "target/peer.lua", { copy_status = "partial_failure" })
+
+  t.assert_eq("/project/target/peer.lua", calls.copied_to, "copy target")
+  t.assert_eq(1, calls.tree_refresh, "tree refresh count")
+  t.assert_eq(1, calls.refresh, "view refresh count")
+  t.assert_nil(calls.synced_to, "partial target should not receive focus")
+  t.assert_eq(1, #calls.reports, "partial failure report count")
 end)
 
 t:test("rename: rejects path separators instead of moving across directories", function()

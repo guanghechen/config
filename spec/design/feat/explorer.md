@@ -156,15 +156,22 @@ Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目�
 2. 不 overwrite；任一目标已存在时，preflight 整批拒绝。
 3. source 缺失、多个 source 映射到同一目标或目标目录不存在时，preflight 整批拒绝。
 4. 目录不得 copy/move 到自身或后代目录。
-5. preflight 通过后逐项执行；若运行时部分失败，仅失败项继续保留为 pending，成功项不回滚。
-6. 执行过写入后清空显式 selection；全部成功时同时清空 pending，并刷新 tree。
+5. preflight 通过后逐项执行；Copy 明确返回 `success`、`retryable_failure` 或
+   `partial_failure`。`retryable_failure` 表示 final target 不存在，可以保留 source 继续重试；
+   `partial_failure` 表示 final target 已存在或状态无法确认，需要用户先处理 target，不作为普通 pending
+   重试项。成功项不回滚。
+6. 任一项成功或出现 `partial_failure` 后，清空显式 selection，只保留 `retryable_failure` source 为
+   pending，并刷新 tree；全部成功时同时清空 pending。
 
 ### Copy As 与 Rename
 
 - Copy As 默认显示 cwd-relative 的完整建议目标路径；相对输入以 cwd 解析，绝对路径直接使用。
 - Rename 只接受单一名称：不得为空、等于 `.`/`..`，或包含 `/`、`\\`；目标始终位于 source 的当前
   父目录。
-- 两者的目标冲突均由 `FileManager` 按 no-overwrite 策略拒绝。
+- 两者的目标冲突均由 `FileManager` 使用 exclusive filesystem primitive 按 no-overwrite 策略拒绝。
+  Copy As 出现 `partial_failure` 时刷新 tree，使 unresolved target 可见。
+- Copy failure 不按 pathname 自动删除 target；一旦 exclusive create 成功，后续 transfer/close failure 保留
+  target 并返回 `partial_failure`，避免删除 ownership 不明的 concurrent replacement。
 
 ## 维护与验证
 

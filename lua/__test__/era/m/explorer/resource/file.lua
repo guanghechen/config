@@ -310,9 +310,9 @@ t:test("copy: copies the symlink without copying its target directory", function
   local node = load_link_node(root)
   local copied = root .. "/copied" ---@type string
 
-  local ok = FileManager.new({ name = "test" }):copy(node.filepath, copied .. "/")
+  local status = FileManager.new({ name = "test" }):copy(node.filepath, copied .. "/")
 
-  t.assert_true(ok, "copy result")
+  t.assert_eq("success", status, "copy status")
   t.assert_eq("link", vim.uv.fs_lstat(copied).type, "copy should remain a symlink")
   t.assert_eq("target", vim.uv.fs_readlink(copied), "link target")
   t.assert_true(vim.uv.fs_stat(target .. "/sentinel") ~= nil, "target should remain")
@@ -333,11 +333,230 @@ t:test("copy: reuses scandir types for regular descendants", function()
     return fs_lstat(filepath)
   end)
 
-  local ok = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+  local status = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
 
-  t.assert_true(ok, "copy result")
+  t.assert_eq("success", status, "copy status")
   t.assert_eq(2, lstat_calls, "only target existence and source identity should use lstat")
   t.assert_true(vim.uv.fs_stat(target .. "/nested/file") ~= nil, "nested file should be copied")
+  t.assert_eq("content", vim.fn.readfile(target .. "/nested/file")[1], "nested file content")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: exclusive file copy preserves a target created after preflight", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.writefile({ "source" }, source)
+  local fs_open = vim.uv.fs_open
+
+  t:patch_table(vim.uv, "fs_open", function(filepath, flags, mode)
+    if filepath == target and flags == "wx" then
+      vim.fn.writefile({ "sentinel" }, filepath)
+    end
+    return fs_open(filepath, flags, mode)
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source, target)
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_eq("sentinel", vim.fn.readfile(target)[1], "concurrent target content")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: exclusive target open failure without a target remains retryable", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.writefile({ "source" }, source)
+
+  local fs_open = vim.uv.fs_open
+  t:patch_table(vim.uv, "fs_open", function(filepath, flags, mode)
+    if filepath == target and flags == "wx" then
+      return nil, "injected open failure", "EIO"
+    end
+    return fs_open(filepath, flags, mode)
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source, target)
+
+  t.assert_eq("retryable_failure", status, "copy status")
+  t.assert_nil(vim.uv.fs_lstat(target), "target should not exist")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: transfer failure leaves the partial target visible", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.writefile({ "source" }, source)
+
+  local fs_sendfile = vim.uv.fs_sendfile
+  local send_count = 0 ---@type integer
+  t:patch_table(vim.uv, "fs_sendfile", function(out_fd, in_fd, offset, size)
+    send_count = send_count + 1
+    if send_count == 1 then
+      return fs_sendfile(out_fd, in_fd, offset, math.min(size, 3))
+    end
+    return nil, "injected copy failure", "EIO"
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source, target)
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_eq("sou", vim.fn.readfile(target)[1], "partial target content")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: premature transfer EOF is not reported as success", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.writefile({ "source" }, source)
+
+  t:patch_table(vim.uv, "fs_sendfile", function()
+    return 0
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source, target)
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_true(vim.uv.fs_lstat(target) ~= nil, "partial target should remain")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: target close failure does not delete a concurrent replacement", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.writefile({ "source" }, source)
+  local fs_close = vim.uv.fs_close
+  local fs_open = vim.uv.fs_open
+  local target_fd = nil ---@type integer|nil
+
+  t:patch_table(vim.uv, "fs_open", function(filepath, flags, mode)
+    local fd, err, code = fs_open(filepath, flags, mode)
+    if filepath == target and flags == "wx" then
+      target_fd = fd
+    end
+    return fd, err, code
+  end)
+  t:patch_table(vim.uv, "fs_close", function(fd)
+    if fd ~= target_fd then
+      return fs_close(fd)
+    end
+
+    assert(fs_close(fd))
+    assert(vim.uv.fs_unlink(target))
+    local replacement_fd = assert(fs_open(target, "wx", 438)) ---@type integer
+    assert(vim.uv.fs_write(replacement_fd, "sentinel", 0))
+    assert(fs_close(replacement_fd))
+    return nil, "injected close failure", "EIO"
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source, target)
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_eq("sentinel", vim.fn.readfile(target)[1], "replacement content")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: missing source with a concurrent target is not retryable", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/missing" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(root, "p")
+  vim.fn.writefile({ "sentinel" }, target)
+
+  local status = FileManager.new({ name = "test" }):copy(source, target)
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_eq("sentinel", vim.fn.readfile(target)[1], "concurrent target content")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: exclusive directory create does not merge a concurrent target", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(source, "p")
+  vim.fn.writefile({ "source" }, source .. "/file")
+  local fs_mkdir = vim.uv.fs_mkdir
+
+  t:patch_table(vim.uv, "fs_mkdir", function(filepath, mode)
+    if filepath == target then
+      assert(fs_mkdir(filepath, mode))
+      vim.fn.writefile({ "sentinel" }, filepath .. "/sentinel")
+    end
+    return fs_mkdir(filepath, mode)
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_eq("sentinel", vim.fn.readfile(target .. "/sentinel")[1], "concurrent target content")
+  t.assert_nil(vim.uv.fs_lstat(target .. "/file"), "source content should not be merged")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: scandir failure after target creation reports partial failure", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(source, "p")
+  local fs_scandir = vim.uv.fs_scandir
+
+  t:patch_table(vim.uv, "fs_scandir", function(filepath)
+    if filepath == source then
+      return nil, "injected scan failure", "EIO"
+    end
+    return fs_scandir(filepath)
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_true(vim.uv.fs_lstat(target) ~= nil, "target directory should remain")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: scandir iteration failure reports partial failure", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(source, "p")
+
+  t:patch_table(vim.uv, "fs_scandir_next", function()
+    return nil, "injected scan failure", "EIO"
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_true(vim.uv.fs_lstat(target) ~= nil, "target directory should remain")
+  vim.fn.delete(root, "rf")
+end)
+
+t:test("copy: recursive child failure promotes the directory result to partial", function()
+  local root = vim.fn.tempname() ---@type string
+  local source = root .. "/source" ---@type string
+  local target = root .. "/target" ---@type string
+  vim.fn.mkdir(source, "p")
+  vim.fn.writefile({ "source" }, source .. "/file")
+
+  t:patch_table(vim.uv, "fs_sendfile", function()
+    return nil, "injected copy failure", "EIO"
+  end)
+
+  local status = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+
+  t.assert_eq("partial_failure", status, "copy status")
+  t.assert_true(vim.uv.fs_lstat(target) ~= nil, "target directory should remain")
+  t.assert_true(vim.uv.fs_lstat(target .. "/file") ~= nil, "failed child target should remain visible")
   vim.fn.delete(root, "rf")
 end)
 
@@ -348,9 +567,9 @@ t:test("copy: rejects a directory target inside the source before writing", func
   vim.fn.mkdir(source, "p")
   vim.fn.writefile({ "sentinel" }, source .. "/sentinel")
 
-  local ok = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
+  local status = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
 
-  t.assert_false(ok, "copy result")
+  t.assert_eq("retryable_failure", status, "copy status")
   t.assert_nil(vim.uv.fs_lstat(source .. "/nested"), "target parent should not be created")
   t.assert_true(vim.uv.fs_stat(source .. "/sentinel") ~= nil, "source should remain unchanged")
   vim.fn.delete(root, "rf")
@@ -367,7 +586,7 @@ t:test("copy: rejects a filesystem descendant before writing", function()
   local copied = FileManager.new({ name = "test" }):copy(source .. "/", target .. "/")
   fs_descendant_result = false
 
-  t.assert_false(copied, "copy result")
+  t.assert_eq("retryable_failure", copied, "copy status")
   t.assert_nil(vim.uv.fs_lstat(root .. "/alias"), "target parent should not be created")
   t.assert_true(vim.uv.fs_stat(source .. "/sentinel") ~= nil, "source should remain unchanged")
   vim.fn.delete(root, "rf")
@@ -386,7 +605,7 @@ t:test("copy: rejects an unresolved filesystem descendant check", function()
   fs_descendant_result = false
   fs_descendant_error = nil
 
-  t.assert_false(copied, "copy result")
+  t.assert_eq("retryable_failure", copied, "copy status")
   t.assert_nil(vim.uv.fs_lstat(root .. "/target"), "target should not be created")
   t.assert_true(vim.uv.fs_stat(source .. "/sentinel") ~= nil, "source should remain unchanged")
   vim.fn.delete(root, "rf")

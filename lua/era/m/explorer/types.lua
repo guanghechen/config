@@ -48,9 +48,14 @@
 ---@field public render                 fun(): nil
 ---@field public sync_cursor_to_filepath     fun(filepath: string): nil
 
+---@alias era.m.explorer.resource.CopyStatus
+---| "success"
+---| "retryable_failure"
+---| "partial_failure"
+
 ---@class era.m.explorer.resource.IManager
 ---@field public compare                fun(left: era.m.explorer.resource.INode, right: era.m.explorer.resource.INode): integer
----@field public copy                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): boolean
+---@field public copy                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): era.m.explorer.resource.CopyStatus
 ---@field public create                 fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode|nil
 ---@field public insert_if_missing      fun(self: era.m.explorer.resource.IManager, filepath: string): boolean
 ---@field public load                   fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode[]

@@ -236,8 +236,8 @@ function M:copy_as()
       return
     end
 
-    local ok = ctx.resource_manager:copy(filepath, target_filepath) ---@type boolean
-    if ok then
+    local status = ctx.resource_manager:copy(filepath, target_filepath) ---@type era.m.explorer.resource.CopyStatus
+    if status == "success" then
       ctx.tree:refresh(true)
       vim.schedule(function()
         ctx.refresh(true)
@@ -247,6 +247,16 @@ function M:copy_as()
         from = ctx.fullname,
         subject = "copy as",
         message = string.format("Copied to: %s", target_filepath),
+      })
+    elseif status == "partial_failure" then
+      ctx.tree:refresh(true)
+      vim.schedule(function()
+        ctx.refresh(true)
+      end)
+      stl.reporter.error({
+        from = ctx.fullname,
+        subject = "copy as",
+        message = string.format("Copy left an unresolved target: %s", target_filepath),
       })
     end
   end)
@@ -1485,35 +1495,53 @@ function M:__execute_transfer__(pending_transfer, plans, target_dir)
   local is_move = pending_transfer.mode == "move" ---@type boolean
   local verb = is_move and "move" or "copy" ---@type string
   local verb_past = is_move and "Moved" or "Copied" ---@type string
-  local failed_sources = {} ---@type era.m.explorer.IPendingTransferSource[]
-  local failures = {} ---@type string[]
+  local retryable_sources = {} ---@type era.m.explorer.IPendingTransferSource[]
+  local retryable_failures = {} ---@type string[]
+  local partial_targets = {} ---@type string[]
   local success_count = 0 ---@type integer
 
   for _, plan in ipairs(plans) do
-    local ok ---@type boolean
+    local status ---@type era.m.explorer.resource.CopyStatus
     if is_move then
-      ok = ctx.resource_manager:move(plan.source.filepath, plan.target_filepath)
+      status = ctx.resource_manager:move(plan.source.filepath, plan.target_filepath) and "success"
+        or "retryable_failure"
     else
-      ok = ctx.resource_manager:copy(plan.source.filepath, plan.target_filepath)
+      status = ctx.resource_manager:copy(plan.source.filepath, plan.target_filepath)
     end
-    if ok then
+    if status == "success" then
       success_count = success_count + 1
+    elseif status == "partial_failure" then
+      partial_targets[#partial_targets + 1] = plan.target_filepath
     else
-      failed_sources[#failed_sources + 1] = plan.source
-      failures[#failures + 1] = string.format("%s -> %s", plan.source.filepath, plan.target_filepath)
+      retryable_sources[#retryable_sources + 1] = plan.source
+      retryable_failures[#retryable_failures + 1] =
+        string.format("%s -> %s", plan.source.filepath, plan.target_filepath)
     end
   end
 
-  if success_count > 0 then
+  if success_count > 0 or #partial_targets > 0 then
     ctx.tree:clear_selection()
-    self:__set_pending_transfer__(#failed_sources > 0 and pending_transfer.mode or nil, failed_sources)
+    self:__set_pending_transfer__(#retryable_sources > 0 and pending_transfer.mode or nil, retryable_sources)
     ctx.tree:refresh(true)
     vim.schedule(function()
       ctx.refresh(true)
     end)
   end
 
-  if #failed_sources == 0 then
+  if #partial_targets > 0 then
+    stl.reporter.error({
+      from = ctx.fullname,
+      subject = verb,
+      message = string.format(
+        "%s %d item(s), %d retryable failure(s), %d unresolved target(s)",
+        verb_past,
+        success_count,
+        #retryable_sources,
+        #partial_targets
+      ),
+      details = { failures = retryable_failures, partial_targets = partial_targets },
+    })
+  elseif #retryable_sources == 0 then
     stl.reporter.info({
       from = ctx.fullname,
       subject = verb,
@@ -1523,15 +1551,15 @@ function M:__execute_transfer__(pending_transfer, plans, target_dir)
     stl.reporter.warn({
       from = ctx.fullname,
       subject = verb,
-      message = string.format("%s %d item(s), %d failed", verb_past, success_count, #failed_sources),
-      details = { failures = failures },
+      message = string.format("%s %d item(s), %d failed", verb_past, success_count, #retryable_sources),
+      details = { failures = retryable_failures },
     })
   else
     stl.reporter.error({
       from = ctx.fullname,
       subject = verb,
-      message = string.format("Failed to %s %d item(s)", verb, #failed_sources),
-      details = { failures = failures },
+      message = string.format("Failed to %s %d item(s)", verb, #retryable_sources),
+      details = { failures = retryable_failures },
     })
   end
 end
