@@ -1,8 +1,9 @@
 {
-  "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.6-sol",
-  "defaultThinkingLevel": "xhigh",
   "defaultProjectTrust": "ask",
-  "transport": "websocket",
+  "defaultProvider": "github-copilot",
+  "defaultThinkingLevel": "xhigh",
+  "enableAnalytics": false,
+  "enableInstallTelemetry": false,
   "enableSkillCommands": true
 }
