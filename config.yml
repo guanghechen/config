@@ -2,7 +2,6 @@ confirmOnQuit: false # Don't show confirmation when quitting
 disableStartupPopups: true # Don't show introductory popups on startup
 notARepository: skip # Skip to most recent repo when opening outside a git repo
 promptToReturnFromSubprocess: false # Don't prompt to return after subprocess exits
-
 git:
   autoFetch: false # Don't auto-fetch from remote
   autoForwardBranches: allBranches # Auto fast-forward all local branches after fetch
@@ -25,16 +24,15 @@ git:
   mainBranches: # Branches considered as main branches
     - main
     - master
-  pagers: # Use delta as pager (install: cargo install git-delta)
+  diffRenderers: # Use delta as pager (install: cargo install git-delta)
     - colorArg: always
-      pager: delta --paging=never
+      command: delta --paging=never
   parseEmoji: true # Render emoji strings like :rocket: as 🚀
   pull:
     mode: ff-only # Only allow fast-forward, abort otherwise
   remoteBranchSortOrder: alphabetical # Sort remote branches alphabetically
   skipHookPrefix: WIP # Prefix to skip pre-commit hooks
   truncateCopiedCommitHashesTo: 40 # Copy full commit hash (40 chars)
-
 gui:
   animateExplosion: true # Show explosion animation when nuking working tree
   authorColors: # Custom colors for commit authors
@@ -119,7 +117,6 @@ gui:
   timeFormat: "2006-01-02 15:04:05" # Time format for older commits (YYYY-MM-DD HH:mm:SS)
   useHunkModeInStagingView: true # Start in hunk mode when entering staging view
   wrapLinesInStagingView: true # Wrap long lines in staging view
-
 keybinding:
   main:
     toggleSelectHunk: '`' # Use backtick to toggle hunk selection
@@ -128,7 +125,6 @@ keybinding:
     nextScreenMode: <tab> # Use tab for screen mode switching
     prevBlock-alt2: <disabled> # Disable backtab for panel switching
     prevScreenMode: <backtab> # Use backtab for screen mode switching
-
 os:
   edit: "nvim" # Editor command
   editAtLine: "nvim --line={{line}} {{filename}}" # Editor command with line number
