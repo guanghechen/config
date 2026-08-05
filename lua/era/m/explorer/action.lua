@@ -335,6 +335,9 @@ function M:create_file()
   local parent_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath or ctx.get_parent_filepath(cursor_filepath) ---@type string
   local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
   local relative_path = parent_filepath:sub(#root_filepath + 1) ---@type string
+  if relative_path ~= "" and relative_path:sub(-1) ~= "/" then
+    relative_path = relative_path .. "/"
+  end
 
   vim.ui.input({ prompt = "Create file: ", default = relative_path }, function(input)
     if input == nil or #vim.trim(input) == 0 then

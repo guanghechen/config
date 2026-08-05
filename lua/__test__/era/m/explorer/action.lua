@@ -7,11 +7,14 @@ local Action = require("era.m.explorer.action")
 
 local t = harness.new("era.m.explorer.action")
 
----@param input                         string
+---@param input                         string|nil
+---@param cursor_filepath               string|nil
+---@param parent_filepath               string|nil
 ---@return table
-local function run_create_file(input)
+local function run_create_file(input, cursor_filepath, parent_filepath)
   local calls = {
     create_filepath = nil,
+    default_input = nil,
     opened_filepath = nil,
     rendered = false,
     refreshed = false,
@@ -48,7 +51,8 @@ local function run_create_file(input)
     },
   })
 
-  t:patch_table(vim.ui, "input", function(_, callback)
+  t:patch_table(vim.ui, "input", function(options, callback)
+    calls.default_input = options.default
     callback(input)
   end)
 
@@ -58,9 +62,12 @@ local function run_create_file(input)
 
   local ctx = {
     get_cursor_filepath = function()
-      return "/project/"
+      return cursor_filepath or "/project/"
     end,
     get_parent_filepath = function(filepath)
+      if parent_filepath ~= nil then
+        return parent_filepath
+      end
       local target = filepath:sub(-1) == "/" and filepath:sub(1, -2) or filepath
       local parent = target:match("^(.*/)[^/]+$")
       return parent or "/"
@@ -101,6 +108,11 @@ end
 ----------------------------------------------------------------------------------------------------
 -- create_file tests
 ----------------------------------------------------------------------------------------------------
+
+t:test("create_file: file focus keeps a trailing slash in the parent prompt", function()
+  local calls = run_create_file(nil, "/project/src/main.lua", "/project/src")
+  t.assert_eq("src/", calls.default_input, "default input")
+end)
 
 t:test("create_file: trailing slash creates directory path", function()
   local calls = run_create_file("foo/")
