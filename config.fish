@@ -76,6 +76,9 @@ set -gx OPENAI_BASE_URL 'http://127.0.0.1:4747/api/codex'
 
 set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
 set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
+set -gx PI_CODING_AGENT_DIR "$XDG_CONFIG_HOME/pi"
+set -gx PI_CODING_AGENT_SESSION_DIR "$HOME/.local/state/pi/sessions"
+set -gx PI_TELEMETRY 0
 set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
 set -gx ANTHROPIC_MODEL "claude-opus-5[1m]"
