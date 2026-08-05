@@ -108,6 +108,9 @@ export OPENAI_BASE_URL="http://127.0.0.1:4747/api/codex"
 
 export CLAUDE_CONFIG_DIR="$XDG_CONFIG_HOME/claude"
 export CODEX_HOME="$XDG_CONFIG_HOME/codex"
+export PI_CODING_AGENT_DIR="$XDG_CONFIG_HOME/pi"
+export PI_CODING_AGENT_SESSION_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pi/sessions"
+export PI_TELEMETRY="0"
 export GEMINI_CONFIG_DIR="$HOME/.gemini"
 
 export ANTHROPIC_MODEL="claude-opus-4.6-1m"
