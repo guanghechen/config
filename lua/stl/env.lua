@@ -83,26 +83,7 @@ function M.locate_gitroot(dirpath)
     return trimmed_output
   end
 
-  local message = "Failed to locate git root"
-  local detail_payload = {
-    dirpath = dirpath,
-    output = trimmed_output,
-    shell_error = shell_error,
-    error = ok_gitroot and nil or output_gitroot,
-  }
-  local details_text = vim.json.encode(detail_payload, { indent = "  ", sort_keys = false })
-  local text = string.format("%s\n\n```json\n%s\n```", message, details_text)
-
-  vim.schedule(function()
-    vim.notify(text, vim.log.levels.WARN, {
-      title = string.format("%s │ locate_gitroot", __module_name__),
-      group = string.format("%s:locate_gitroot", __module_name__),
-      timeout = 3000,
-      message = text,
-      anonymous = false,
-      silent = true,
-    })
-  end)
+  return nil
 end
 
 ---@param filepath                      string
