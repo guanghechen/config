@@ -54,7 +54,7 @@ mvs({ "n", "x" }, "<leader>yr", "copyRelativeFilePath", "copy: relative file pat
 -------------------------------------------------------------------------------------------#[c]opy--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-mk({ "n" }, "<leader><leader>", "<cmd>Find<cr>", "find: files")
+mvs({ "n" }, "<leader><leader>", "workbench.action.quickOpen", "find: files")
 mvs({ "n", "x" }, "<leader>fb", "workbench.action.showAllEditors", "find: buffers")
 mvs({ "n", "x" }, "<leader>fc", "workbench.action.showCommands", "find: commands")
 mvs({ "n", "x" }, "<leader>ff", "workbench.action.quickOpen", "find: files")
