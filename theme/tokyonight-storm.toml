@@ -1,4 +1,4 @@
-# https://github.com/sxyazi/yazi/blob/ef599a160aa377b1685b0f9b9c247a0e7a0c26b5/yazi-config/preset/theme-dark.toml#L1
+#:schema https://yazi-rs.github.io/schemas/theme.json
 
 # tokyonight-storm
 
@@ -22,9 +22,6 @@ btn_no                  = {}
 btn_labels              = [ "  [Y]es  ", "  (N)o  " ]
 
 [help]
-icon_info               = ""
-icon_warn               = ""
-icon_error              = ""
 on                      = { fg = "#7dcfff" }
 run                     = { fg = "#9d7cd8" }
 desc                    = {}
@@ -68,6 +65,9 @@ unset_alt               = { fg = "#9ba5cf",     bg = "#1b1e2d",  bold = true }
 title_info              = { fg = "#9ece6a" }
 title_warn              = { fg = "#e0af68" }
 title_error             = { fg = "#f7768e" }
+icon_info               = ""
+icon_warn               = ""
+icon_error              = ""
 
 [pick]
 border                  = { fg = "#7aa2f7" }
@@ -143,8 +143,7 @@ rules = [
 
 [icon]
 
-globs = []
-dirs  = [
+prepend_dirs = [
   { name = ".cache",                      text = "󰪺", fg = "#1abc9c" },
   { name = ".config",                     text = "󱁿", fg = "#1abc9c" },
   { name = ".git",                        text = "", fg = "#ff9e64" },
@@ -215,7 +214,7 @@ dirs  = [
   { name = "usr",                         text = "󰉌", fg = "#e0af68" },
   { name = "var",                         text = "󱋣", fg = "#e0af68" },
 ]
-files = [
+prepend_files = [
   { name = ".babelrc",                    text = "󰈚", fg = "#7dcfff" },
   { name = ".bash_profile",               text = "󰒓", fg = "#9ece6a" },
   { name = ".bashrc",                     text = "󰒓", fg = "#9ece6a" },
@@ -413,7 +412,7 @@ files = [
   { name = "xsettingsd.conf",             text = "󰈚", fg = "#f7768e" },
   { name = "yarn.lock",                   text = "", fg = "#7aa2f7" },
 ]
-exts = [
+prepend_exts = [
   { name = "3gp",                         text = "", fg = "#e0af68" },
   { name = "3mf",                         text = "󰆧", fg = "#9ba5cf" },
   { name = "7z",                          text = "", fg = "#e0af68" },
@@ -852,7 +851,7 @@ exts = [
   { name = "zst",                         text = "", fg = "#e0af68" },
   { name = "🔥",                          text = "", fg = "#f7768e" },
 ]
-conds = [
+prepend_conds = [
   # Special files
   { if = "orphan",                        text = "" },
   { if = "link",                          text = "" },
