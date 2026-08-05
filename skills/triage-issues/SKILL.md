@@ -1,12 +1,12 @@
 ---
 name: triage-issues
-description: Persist and triage issues, suggestions, or decision points already surfaced in the current context, one at a time. Use only when the user explicitly invokes this skill. Do not invoke implicitly, discover new items, rerun the originating analysis, or implement changes.
+description: Persist and triage issues, suggestions, or decision points already surfaced in the current context, one at a time. Use only when the user explicitly invokes this skill. Do not invoke implicitly, discover new items, rerun the originating analysis, or implement changes without explicit item-scoped authorization.
 disable-model-invocation: true
 ---
 
 # 逐项整理问题、建议与决策
 
-保存上下文中已有的条目，再逐项与用户评审。除非用户另行授权，否则只写清单，不实施改动。
+保存上下文中已有的条目，再逐项与用户评审。用户明确选择“试做当前项”时只实施该项；否则除另行授权外只写清单，不实施改动。
 
 ## 1. 提取与分类
 
@@ -63,45 +63,48 @@ disable-model-invocation: true
 
 ## 3. 逐项评审
 
-选择当前条目：用户明确要求重开终态条目时，将原决定记入日志，决策重置为 `undecided`，状态置为 `discussing`，并把其他 `discussing` 项恢复为 `pending`；其他情况，唯一的 `discussing` 优先，多个 `discussing` 时让用户指定并将其余恢复为 `pending`，没有 `discussing` 时取第一个 `pending`；均不存在时输出完成汇总。展示前把选中的 `pending` 写为 `discussing`。条目详情中的状态是唯一事实来源，队列只保存顺序。
+选择当前条目：显式重开终态项时记录原决定、重置为 `undecided`，并将其设为唯一的 `discussing`；否则续接唯一的 `discussing`，多个时让用户指定并将其余设为 `pending`，没有时取首个 `pending`，均无则汇总。展示前把选中的 `pending` 改为 `discussing`。详情状态是唯一事实来源，队列只定顺序。
 
 必要时仅只读检查当前条目直接相关的代码、测试、help 或 benchmark，以补足准确示例；不得扩展问题集合。
 
 本会话首次展示或重开当前条目时完整重述并使用以下简报；用户追问按第 4 节直接回答。`issue` / `suggestion` 只用“当前 vs 改后”表，`decision` 只用“选项对比”表。
 
 ```markdown
-### ITEM-001 — <标题>
+### ITEM-001 - <简短标题>
 
-#### 结论先行
+#### Descriptions
 
-- 类型 / 来源：<类型> / <来源及原始 disposition>
-- 条目本身：<issue / suggestion：具体触发或现状 → 机制或限制 → 后果、阻塞或收益；decision：选项、关键分歧及阻塞>
-- 本项需要决定什么：<具体选择>
-- 推荐决策：<选择> — <理由>
+<详细描述：issue / suggestion 说明具体触发或现状 → 机制或限制 → 后果、阻塞或收益；decision 说明背景、选项、关键分歧及阻塞；必要时注明来源和原始 disposition>
 
-#### 具体例子与变化
+#### Examples
 
-- 端到端例子：<具体命令、输入或前提 → 关键步骤 → 最终可观察结果；真实或 illustrative>
+<一个端到端例子：具体命令、输入或前提 → 关键步骤 → 最终可观察结果；真实或标明 illustrative>
 
-  | 输入 / 前提 (issue / suggestion only) | 当前结果     | 改后结果     | 影响       |
-  | ------------------------------------- | ------------ | ------------ | ---------- |
-  | <具体场景>                            | <可观察结果> | <可观察结果> | <具体价值> |
+#### Proposal
 
-  | 选项 (decision only)   | 选择后的结果 | 收益       | 成本 / 风险 | Effort / 可逆性    |
-  | ---------------------- | ------------ | ---------- | ----------- | ------------------ |
-  | <原始或 proposed 选项> | <可观察结果> | <具体收益> | <具体代价>  | <总成本与回退难度> |
+<推荐方案或选项、理由、最小有效范围和验证方式；首次处理提供“Accept 后续统一处理 / Reject / 先验证 / 延后”，可安全实施时再提供“试做当前项”；decision 有后续工作时再选处理时机；补充选项标为 proposed>
 
-- 明确不变：<关键 happy path、兼容性或非目标的实际结果>
+---
 
-#### 方案与成本
+| 对比项 (issue / suggestion only) | 解决前       | 解决后       | 变化 / 影响 |
+| -------------------------------- | ------------ | ------------ | ----------- |
+| <行为、性能或 architecture 维度> | <可观察结果> | <可观察结果> | <具体差异>  |
 
-- 推荐方案 / 范围：<最小有效方案及涉及范围>
-- 证据 / 验证：<可信度、来源、假设和验证方式>
-- Effort：<规模、范围和假设>
-- Tradeoff / 未决信息：<风险、替代方案或 unknown>
+| 选项 (decision only)   | 选择后的结果 | 收益       | 成本 / 风险 | Effort / 可逆性    |
+| ---------------------- | ------------ | ---------- | ----------- | ------------------ |
+| <原始或 proposed 选项> | <可观察结果> | <具体收益> | <具体代价>  | <总成本与回退难度> |
+
+<明确不变：关键 happy path、兼容性或非目标的实际结果>
+
+---
+
+- 收益：<解决问题或选择方案后的具体价值>
+- 代价 / 风险：<实施成本、副作用和 tradeoff>
+- Effort / 可逆性：<总成本、范围、假设和回退难度>
+- 证据 / 未决信息：<可信度、来源、验证缺口或 unknown>
 ```
 
-每个简报先讲清条目本身，再用一个端到端例子说明变化（一个无法覆盖关键差异时最多两个）：行为变化给出具体命令或输入、关键步骤及前后可观察结果，不得用类别名或风险术语代替例子；Performance 给出 workload、baseline、预期值和差值；Architecture 给出前后调用、数据或 ownership 流及后续修改影响；`decision` 逐项给出结果、成本、风险、Effort 和可逆性。
+`Descriptions` 应能独立说明条目。示例默认一个，无法覆盖关键差异时最多两个，不得用抽象类别或风险术语代替可观察结果。对比区只留适用的一张表：Performance 写 workload、baseline、预期值和差值；Architecture 写前后 flow、ownership 及修改影响；`decision` 写结果、成本、风险、Effort 和可逆性。最后分析推荐方案的收益、代价与不确定性。
 
 证据等级为 `verified`（代码、测试或 reproduction）、`measured`（benchmark 或观测）、`estimated`（有假设的推算）、`illustrative`（解释示例）。精确数字、错误文本和当前行为只能是 `verified` 或 `measured`；否则当前结果写 `unknown（待验证）`。无法可信对比时说明缺口并推荐“先验证”。
 
@@ -109,10 +112,10 @@ Effort 覆盖适用的验证、实现、测试和 review：`XS` <30 分钟；`S`
 
 ## 4. 记录与推进
 
-- 状态仅为 `pending`、`discussing`、`decided`、`deferred`、`dismissed`；具体选择写入“决策”。
-- 批准、先验证、接受风险或选择选项 → `decided`；延后 → `deferred`；忽略 → `dismissed`。进入下一项前把决定、理由、时间、Effort 和约束写回清单文件。
-- 用户追问、质疑、补充约束或未明确选择时，直接回应且不推断决策；除必要的一句持久化提示外，不复述状态机或 Skill 规则。保持 `discussing`；纯澄清本身不写文件。回答一旦转向与当前推荐不一致的方案，或改变结论、推荐、条目范围，就按实质变化处理：先说明原因，写回并追加一条日志，只重述受影响的小节。其他新增事实、证据或约束只写回并追加一条日志；否则不重复。
-- 本 Skill 不跟踪后续验证或实施。讨论中出现新条目或发现当前项含可独立决策的内容时，征得同意后以新 ID 追加为 `pending`；拆分时当前项保留原 ID 与 `discussing` 并收窄。
+- 处理结果：试做 → `discussing`；接受试做结果、Accept 后续统一处理或其他明确接受决定 → `decided`；Reject / 忽略 → `dismissed`；延后 → `deferred`。`decision` 需确定方案；有后续工作时还需处理时机。进入下一项前记录决定、理由、时间、Effort 和约束；有试做改动时，只在接受结果或安全回退后写入终态。
+- 试做只授权实施并验证当前项：先在日志记录所选方案 / 选项、受影响路径及 worktree baseline，不 stage、commit 或 push，保持 `undecided`；完成后展示实际行为、diff、验证和未决风险。若不接受，明确确认后只回退本次试做改动；无法隔离时保持 `discussing` 并询问。
+- 追问、质疑、补充约束或未明确选择时直接回应，不推断决策，并保持 `discussing`。纯澄清不写文件；新增事实只写回并记一条日志；结论、推荐或范围变化时先说明原因，再只重述受影响的小节；否则不重复。
+- 除当前项的显式试做外，本 Skill 不跟踪后续验证或实施。讨论中出现新条目或发现当前项含可独立决策的内容时，征得同意后以新 ID 追加为 `pending`；拆分时当前项保留原 ID 与 `discussing` 并收窄。
 - 仅在当前条目已讲清且没有未答问题时请求明确决策；不同时展开下一项。
 
-完成后报告清单路径、状态数量、批准工作及 Effort、所选决策、接受或延后的风险和推荐下一步。
+完成后报告清单路径、状态数量、已接受的试做、Accept 后续统一处理的工作及 Effort、Reject 或延后、所选决策和推荐下一步。
