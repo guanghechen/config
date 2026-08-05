@@ -1,0 +1,7 @@
+{
+  "defaultProvider": "github-copilot",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "xhigh",
+  "defaultProjectTrust": "ask",
+  "transport": "websocket"
+}
