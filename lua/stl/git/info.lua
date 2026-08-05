@@ -294,11 +294,33 @@ function M.get_show_blob(cwd, object, token)
                   return
                 end
                 if tree_obj.code ~= 0 then
-                  finish({
-                    ok = false,
-                    missing = false,
-                    err = git_error("Failed to inspect Git tree " .. revision, tree_obj),
-                  })
+                  local tree_err = git_error("Failed to inspect Git tree " .. revision, tree_obj) ---@type string
+                  proc = vim.system(
+                    { "git", "-C", cwd, "rev-parse", "--verify", "--quiet", revision },
+                    { text = false },
+                    function(revision_obj)
+                      vim.schedule(function()
+                        if finished then
+                          return
+                        end
+                        if revision_obj.code == 1 then
+                          finish({
+                            ok = false,
+                            missing = true,
+                            err = "Git revision does not exist: " .. revision,
+                          })
+                        elseif revision_obj.code == 0 then
+                          finish({ ok = false, missing = false, err = tree_err })
+                        else
+                          finish({
+                            ok = false,
+                            missing = false,
+                            err = git_error("Failed to inspect Git revision " .. revision, revision_obj),
+                          })
+                        end
+                      end)
+                    end
+                  )
                 elseif tree_obj.stdout == nil or tree_obj.stdout == "" then
                   finish({ ok = false, missing = true, err = "Git tree path does not exist: " .. object })
                 else

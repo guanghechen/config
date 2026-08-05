@@ -86,6 +86,52 @@ t:test("get_show_blob: confirms a missing revision path with ls-tree", function(
   t.assert_true(result.missing, "missing")
 end)
 
+t:test("get_show_blob: treats an unborn revision as missing", function()
+  local requests = mock_system()
+  local future = info.get_show_blob("/work", "HEAD:f.txt")
+
+  requests[1].callback({ code = 128, stderr = "fatal: invalid object name 'HEAD'" })
+  t.wait_until(function()
+    return #requests == 2
+  end, 1000, "ls-tree should start")
+  requests[2].callback({ code = 128, stderr = "fatal: Not a valid object name HEAD" })
+  t.wait_until(function()
+    return #requests == 3
+  end, 1000, "revision verification should start")
+  t.assert_eq(
+    "git -C /work rev-parse --verify --quiet HEAD",
+    table.concat(requests[3].argv, " "),
+    "verification command"
+  )
+  requests[3].callback({ code = 1, stdout = "" })
+  wait_future(future)
+
+  local result = future:get_result()
+  t.assert_false(result.ok, "not read")
+  t.assert_true(result.missing, "unborn revision")
+end)
+
+t:test("get_show_blob: preserves tree inspection failure when the revision exists", function()
+  local requests = mock_system()
+  local future = info.get_show_blob("/work", "HEAD:f.txt")
+
+  requests[1].callback({ code = 128, stderr = "injected read failure" })
+  t.wait_until(function()
+    return #requests == 2
+  end, 1000, "ls-tree should start")
+  requests[2].callback({ code = 128, stderr = "injected tree failure" })
+  t.wait_until(function()
+    return #requests == 3
+  end, 1000, "revision verification should start")
+  requests[3].callback({ code = 0, stdout = "abc123\n" })
+  wait_future(future)
+
+  local result = future:get_result()
+  t.assert_false(result.ok, "not read")
+  t.assert_false(result.missing, "revision exists")
+  t.assert_true(result.err:find("injected tree failure", 1, true) ~= nil, "tree error")
+end)
+
 t:test("get_show_blob: an existing revision path read failure is not missing", function()
   local requests = mock_system()
   local future = info.get_show_blob("/work", "HEAD:f.txt")
