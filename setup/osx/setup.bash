@@ -98,7 +98,6 @@ printf "\n\e[95m ===== [setup app] =====\e[0m\n"
 ghc_step_optional newsboat ghc_run_script "$setup_nix/app/newsboat.bash"
 ghc_step_optional nvim ghc_run_script "$setup_nix/app/nvim.bash"
 ghc_step_optional tmux ghc_run_script "$setup_nix/app/tmux.bash"
-ghc_step_optional vscode ghc_run_script "$setup_nix/app/vscode.bash"
 
 ## Setup font
 ghc_step_optional font ghc_run_script "$setup_osx/bot/font-maple.bash"

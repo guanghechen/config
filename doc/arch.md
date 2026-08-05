@@ -219,7 +219,6 @@ setup/nix/setup.bash
     │   ├── app/newsboat.bash
     │   ├── app/nvim.bash
     │   ├── app/tmux.bash
-    │   ├── app/vscode.bash
     │   └── app/windows-terminal.bash
     ├── bot/font-maple.bash [optional]
     ├── node cli/theme.mjs apply [optional]

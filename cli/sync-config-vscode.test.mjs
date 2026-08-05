@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -8,8 +9,10 @@ import {
   composeKeybindings,
   formatKey,
   handleSyncConfigVscode,
+  resolveVscodeKeybindingPlatform,
   resolveVscodeSettingsPath,
   sortKeybindings,
+  syncVscodeKeybindings,
   syncVscodeSettings,
 } from './sync-config-vscode.mjs'
 
@@ -102,6 +105,28 @@ describe('sync-config-vscode terminal sequences', () => {
 })
 
 describe('sync-config-vscode cross-platform keybindings', () => {
+  it('maps supported platforms to available keybinding variants', () => {
+    assert.equal(resolveVscodeKeybindingPlatform('nix'), 'win')
+    assert.equal(resolveVscodeKeybindingPlatform('win'), 'win')
+    assert.equal(resolveVscodeKeybindingPlatform('wsl'), 'win')
+    assert.equal(resolveVscodeKeybindingPlatform('osx'), 'osx')
+    assert.equal(resolveVscodeKeybindingPlatform('unknown'), undefined)
+  })
+
+  it('syncs keybindings without crashing on every supported platform', () => {
+    const tempDir = createTempDir()
+    const targetPath = path.join(tempDir, 'keybindings.json')
+    const writeFileSync = mock.method(fs, 'writeFileSync', () => {})
+
+    try {
+      for (const platform of ['nix', 'win', 'osx', 'wsl']) {
+        assert.equal(syncVscodeKeybindings(targetPath, platform), true)
+      }
+    } finally {
+      writeFileSync.mock.restore()
+    }
+  })
+
   it('navigates panel views with ctrl plus the platform modifier', () => {
     const root = path.join(import.meta.dirname, '../asset/app/vscode/keybinding')
     const osx = JSON.parse(fs.readFileSync(path.join(root, 'osx/customize.json'), 'utf8'))
@@ -171,6 +196,19 @@ describe('sync-config-vscode cross-platform keybindings', () => {
 })
 
 describe('sync-config-vscode settings', () => {
+  it('exits cleanly when no target path is configured', () => {
+    const env = { ...process.env }
+    delete env.f_vscode_keybindings
+
+    const result = spawnSync(
+      process.execPath,
+      [path.join(import.meta.dirname, 'sync-config-vscode.mjs')],
+      { encoding: 'utf8', env },
+    )
+
+    assert.equal(result.status, 0, result.stderr)
+  })
+
   it('resolves settings next to keybindings', () => {
     assert.equal(
       resolveVscodeSettingsPath('/code/User/keybindings.json'),

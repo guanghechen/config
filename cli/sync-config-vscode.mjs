@@ -193,17 +193,37 @@ function validateKeybindings(source, keybindings, unbind) {
 }
 
 /**
+ * @param {'wsl' | 'win' | 'osx' | 'nix' | 'unknown'} platform
+ * @returns {'win' | 'osx' | undefined}
+ */
+export function resolveVscodeKeybindingPlatform(platform) {
+  if (platform === 'osx') return 'osx'
+  if (platform === 'nix' || platform === 'win' || platform === 'wsl') return 'win'
+  return undefined
+}
+
+/**
  * @param {string | undefined} targetKeybindingsPath - Path to the VSCode keybindings.json file
+ * @param {'wsl' | 'win' | 'osx' | 'nix' | 'unknown'} [platform] - Runtime platform
  * @returns {boolean} Whether the keybindings were synced
  */
-export function syncVscodeKeybindings(targetKeybindingsPath) {
+export function syncVscodeKeybindings(targetKeybindingsPath, platform = PLATFORM) {
   if (!targetKeybindingsPath || !isDirectory(path.dirname(targetKeybindingsPath))) return false
 
   reporter.info('Syncing VSCode keybindings to:', targetKeybindingsPath)
 
   const encoding = 'utf8'
-  const middle = PLATFORM === 'wsl' ? 'win' : PLATFORM
-  const CONFIG_DIR = path.join(XDG_CONFIG_NODE_ASSET_APP_DIR, 'vscode/keybinding', middle)
+  const keybindingPlatform = resolveVscodeKeybindingPlatform(platform)
+  if (!keybindingPlatform) {
+    reporter.warn('Unsupported platform for VSCode keybindings:', platform)
+    return false
+  }
+
+  const CONFIG_DIR = path.join(
+    XDG_CONFIG_NODE_ASSET_APP_DIR,
+    'vscode/keybinding',
+    keybindingPlatform,
+  )
   if (!fs.existsSync(CONFIG_DIR)) return false
 
   const fp_rebind = path.join(CONFIG_DIR, 'rebind.json')

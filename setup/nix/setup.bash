@@ -111,7 +111,6 @@ printf "\n\e[95m ===== [setup app] =====\e[0m\n"
 ghc_step_optional newsboat ghc_run_script "$setup_nix/app/newsboat.bash"
 ghc_step_optional nvim ghc_run_script "$setup_nix/app/nvim.bash"
 ghc_step_optional tmux ghc_run_script "$setup_nix/app/tmux.bash"
-ghc_step_optional vscode ghc_run_script "$setup_nix/app/vscode.bash"
 if [ "$GHC_ENV_PLATFORM" = "wsl" ]; then
   ghc_step_optional windows-terminal ghc_run_script "$setup_nix/app/windows-terminal.bash"
 fi
