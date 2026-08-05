@@ -38,11 +38,11 @@
         },
         {
           "branch": "claude",
-          "editions": ["nix", "nix-remote", "osx", "win"]
+          "editions": ["nix", "osx", "win"]
         },
         {
           "branch": "codex",
-          "editions": ["nix", "nix-remote", "osx", "win"],
+          "editions": ["nix", "osx", "win"],
           "on": {
             "synced": "node script/cli/sync.mjs"
           }
@@ -66,7 +66,7 @@
         {
           "branch": "gemini",
           "location": "${HOME}/.gemini",
-          "editions": ["nix", "nix-remote", "osx", "win"]
+          "editions": ["nix", "osx", "win"]
         },
         {
           "branch": "gh",
@@ -147,7 +147,7 @@
         },
         {
           "branch": "opencode",
-          "editions": ["nix", "nix-remote", "osx", "win"]
+          "editions": ["nix", "osx", "win"]
         },
         {
           "branch": "ora",
@@ -159,6 +159,10 @@
         {
           "branch": "pm2",
           "editions": []
+        },
+        {
+          "branch": "pi",
+          "editions": ["nix", "osx", "win"]
         },
         {
           "branch": "pwsh",
