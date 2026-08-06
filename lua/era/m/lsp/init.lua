@@ -39,6 +39,7 @@ local ft_to_lsp_map = {
   ["c.doxygen"] = { "clangd" },
   cpp = { "clangd" },
   ["cpp.doxygen"] = { "clangd" },
+  cs = { "roslyn_ls" },
   css = { "cssls", "tailwindcss", "emmet_language_server" },
   cuda = { "clangd" },
   dart = { "dartls" },

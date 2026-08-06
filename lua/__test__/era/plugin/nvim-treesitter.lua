@@ -36,12 +36,14 @@ local Treesitter = require("era.plugin.nvim-treesitter")
 ---@param winnrs                       integer[]
 ---@param start                        fun(bufnr: integer, lang: string)|nil
 ---@param active_languages             table<integer, string>|nil
----@return table<string, fun(event: { buf: integer })>, integer[], integer[], table<integer, table>
-local function setup(buffers, windows, winnrs, start, active_languages)
+---@param parser_available             fun(lang: string): boolean|nil
+---@return table<string, fun(event: { buf: integer })>, integer[], integer[], table<integer, table>, table<string, string>
+local function setup(buffers, windows, winnrs, start, active_languages, parser_available)
   local callbacks = {} ---@type table<string, fun(event: { buf: integer })>
   local started = {} ---@type integer[]
   local stopped = {} ---@type integer[]
   local active = {} ---@type table<integer, table>
+  local registrations = {} ---@type table<string, string>
 
   ---@param lang                        string
   ---@return table
@@ -105,7 +107,12 @@ local function setup(buffers, windows, winnrs, start, active_languages)
     end
     error("unexpected option write: " .. name)
   end)
-  t:patch_table(vim.treesitter.language, "register", function() end)
+  t:patch_table(vim.treesitter.language, "register", function(lang, filetype)
+    registrations[filetype] = lang
+  end)
+  t:patch_table(vim.treesitter.language, "add", parser_available or function()
+    return true
+  end)
   t:patch_table(vim.treesitter.highlighter, "active", active)
   t:patch_table(vim.treesitter, "start", function(bufnr, lang)
     started[#started + 1] = bufnr
@@ -120,7 +127,7 @@ local function setup(buffers, windows, winnrs, start, active_languages)
   end)
 
   Treesitter.spec.config(nil, Treesitter.spec.opts)
-  return callbacks, started, stopped, active
+  return callbacks, started, stopped, active, registrations
 end
 
 t:test("custom features own their markdown mappings", function()
@@ -137,6 +144,12 @@ t:test("custom features own their markdown mappings", function()
   t.assert_eq("markdown", mappings[stl.filetype.ACP_CHATBOX], "ACP chatbox mapping")
   t.assert_eq("markdown", mappings[stl.filetype.ACP_MAIN], "ACP main mapping")
   t.assert_eq("markdown", mappings[stl.filetype.NOTEPAD], "notepad mapping")
+end)
+
+t:test("C# filetype uses the c_sharp parser", function()
+  local _, _, _, _, registrations = setup({}, {}, {})
+
+  t.assert_eq("c_sharp", registrations.cs, "C# parser mapping")
 end)
 
 t:test("existing visible buffer starts on idle exactly once", function()
@@ -176,6 +189,25 @@ t:test("future FileType starts synchronously", function()
 
   t.assert_eq(1, #started, "FileType start")
   t.assert_eq(12, started[1], "FileType buffer")
+end)
+
+t:test("missing parser skips FileType activation", function()
+  local buffers = {
+    [11] = { valid = true, loaded = true, filetype = "typescript" },
+  }
+  local windows = {
+    [101] = { valid = true, bufnr = 11, foldexpr = "0" },
+  }
+  local callbacks, started = setup(buffers, windows, { 101 }, nil, nil, function()
+    return false
+  end)
+
+  local ok = pcall(callbacks.FileType, { buf = 11 })
+
+  t.assert_true(ok, "missing parser must not fail FileType")
+  t.assert_eq(0, #started, "missing parser start")
+  t.assert_nil(buffers[11].indentexpr, "indent without parser")
+  t.assert_eq("0", windows[101].foldexpr, "fold without parser")
 end)
 
 t:test("existing matching highlighter is reused", function()

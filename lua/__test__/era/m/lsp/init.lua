@@ -8,6 +8,12 @@ local harness = require("__test__.harness")
 local t = harness.new("era.m.lsp")
 
 bootstrap.with_stl(t, {
+  reporter = {
+    debug = function() end,
+    error = function() end,
+    info = function() end,
+    warn = function() end,
+  },
   nvim = {
     fn = {
       augroup = function()
@@ -23,11 +29,31 @@ t:patch_table(package.loaded, "era.m.lsp.action", {
 t:patch_table(package.loaded, "era.m.lsp.diagnostic", {
   setup = function() end,
 })
-t:patch_table(package.loaded, "era.m.lsp.event", {
+local lsp_event = {
+  before_init = function() end,
   dressing = function() end,
+  get_capabilities = vim.lsp.protocol.make_client_capabilities,
+  on_attach = function() end,
+  on_init = function() end,
+}
+t:patch_table(package.loaded, "era.m.lsp.event", lsp_event)
+bootstrap.with_era(t, {
+  m = {
+    lsp = {
+      event = lsp_event,
+    },
+  },
 })
 
 local Lsp = require("era.m.lsp")
+local RoslynConfig = dofile("lsp/roslyn_ls.lua")
+
+local function fake_roslyn_client()
+  return {
+    id = 1,
+    offset_encoding = "utf-16",
+  }
+end
 
 t:test("dressing: enables LSPs for existing and future buffers without re-editing", function()
   local filetypes = {
@@ -148,6 +174,113 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
   t.assert_eq(7, #enable_batches, "retried batch")
   t.assert_eq("yamlls", enable_batches[7][1], "retried primary LSP batch")
   t.assert_eq("docker_compose_language_service", enable_batches[7][2], "retried secondary LSP batch")
+
+  filetype_callback({ match = "cs" })
+  t.assert_eq(1, enabled.roslyn_ls, "future C# buffer")
+  t.assert_eq(8, #enable_batches, "C# batch")
+  t.assert_eq(1, #enable_batches[8], "C# batch size")
+  t.assert_eq("roslyn_ls", enable_batches[8][1], "C# primary LSP")
+end)
+
+t:test("roslyn completion: rejects edits targeting another buffer", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_buf_set_name(bufnr, "/tmp/roslyn-invalid-completion.cs")
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "fo" })
+
+  local warnings = 0
+  t:patch_table(stl.reporter, "warn", function()
+    warnings = warnings + 1
+  end)
+  t:patch_table(vim.lsp, "get_client_by_id", function()
+    return fake_roslyn_client()
+  end)
+
+  RoslynConfig.commands["roslyn.client.completionComplexEdit"]({
+    arguments = {
+      { uri = vim.uri_from_fname("/tmp/another-buffer.cs") },
+      {
+        range = {
+          start = { line = 0, character = 0 },
+          ["end"] = { line = 0, character = 2 },
+        },
+        newText = "for",
+      },
+      false,
+      -1,
+    },
+  }, { client_id = 1, bufnr = bufnr })
+
+  t.assert_eq(1, warnings, "invalid edit warning")
+  t.assert_eq("fo", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1], "unchanged buffer")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("roslyn completion: restores UTF-16 cursor offset after a plain edit", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_buf_set_name(bufnr, "/tmp/roslyn-offset-completion.cs")
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "x" })
+  vim.api.nvim_set_option_value("fileformat", "dos", { buf = bufnr })
+
+  t:patch_table(vim.lsp, "get_client_by_id", function()
+    return fake_roslyn_client()
+  end)
+
+  RoslynConfig.commands["roslyn.client.completionComplexEdit"]({
+    arguments = {
+      { uri = vim.uri_from_bufnr(bufnr) },
+      {
+        range = {
+          start = { line = 0, character = 0 },
+          ["end"] = { line = 0, character = 1 },
+        },
+        newText = "😀x\r\ntail",
+      },
+      false,
+      7,
+    },
+  }, { client_id = 1, bufnr = bufnr })
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  t.assert_eq("😀x", lines[1], "first edited line")
+  t.assert_eq("tail", lines[2], "second edited line")
+  t.assert_eq(2, vim.api.nvim_win_get_cursor(0)[1], "cursor line")
+  t.assert_eq(2, vim.api.nvim_win_get_cursor(0)[2], "cursor byte column")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("roslyn completion: expands snippet edits instead of inserting placeholders", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_buf_set_name(bufnr, "/tmp/roslyn-snippet-completion.cs")
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "  fo" })
+
+  t:patch_table(vim.lsp, "get_client_by_id", function()
+    return fake_roslyn_client()
+  end)
+
+  RoslynConfig.commands["roslyn.client.completionComplexEdit"]({
+    arguments = {
+      { uri = vim.uri_from_bufnr(bufnr) },
+      {
+        range = {
+          start = { line = 0, character = 2 },
+          ["end"] = { line = 0, character = 4 },
+        },
+        newText = "for (${1:int i = 0}; ${2:i < length}; ${3:i++}) {\n\t$0\n}",
+      },
+      true,
+      -1,
+    },
+  }, { client_id = 1, bufnr = bufnr })
+
+  local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
+  t.assert_true(text:find("for %(int i = 0; i < length; i%+%+%)") ~= nil, "expanded snippet text")
+  t.assert_true(text:find("%$[0-9{]") == nil, "no literal placeholders")
+  t.assert_true(vim.snippet.active(), "active snippet session")
+  vim.snippet.stop()
+  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:run()

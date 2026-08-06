@@ -109,6 +109,7 @@ function M.gen_hlgroup_map(context)
     lsp_icon_html = { fg = c.brightOrange, bg = "bg_bar" },
     lsp_icon_jsonls = { fg = c.brightYellow, bg = "bg_bar" },
     lsp_icon_lua_ls = { fg = c.brightBlue, bg = "bg_bar" },
+    lsp_icon_roslyn_ls = { fg = c.brightGreen, bg = "bg_bar" },
     lsp_icon_ruff = { fg = c.brightGreen, bg = "bg_bar" },
     lsp_icon_rust_analyzer = { fg = c.brightOrange, bg = "bg_bar" },
     lsp_icon_stylua = { fg = c.brightAqua, bg = "bg_bar" },

@@ -23,4 +23,10 @@ t:test("detect: matches by filename without a buffer", function()
   t.assert_nil(received.buf, "buffer")
 end)
 
+t:test("C# uses Neovim's cs filetype", function()
+  t.assert_true(Filetype.is_cmp_enabled("cs"), "completion")
+  t.assert_true(Filetype.is_language("cs"), "language")
+  t.assert_false(Filetype.is_cmp_enabled("csharp"), "nonexistent alias")
+end)
+
 t:run()

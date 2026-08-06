@@ -268,6 +268,7 @@ M.lsp = {
   html = "󰌝",
   jsonls = "",
   lua_ls = "",
+  roslyn_ls = "󰌛",
   ruff = "󰄛",
   rust_analyzer = "",
   stylua = "󰢱",

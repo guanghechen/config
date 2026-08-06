@@ -27,6 +27,7 @@ local LSP_CLIENT_NAME_ORDERS = {
   jsonls = 5,
   lua_ls = 5,
   pyright = 5,
+  roslyn_ls = 5,
   rust_analyzer = 5,
   tailwindcss = 3,
   taplo = 5,

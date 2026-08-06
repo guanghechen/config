@@ -10,6 +10,7 @@ local ensure_filetypes = {
   "c",
   "cc",
   "cpp",
+  "cs",
   "css",
   "cxx",
   "dart",
@@ -66,6 +67,7 @@ local ensure_filetypes = {
 local ensure_installed = {
   "bash",
   "c",
+  "c_sharp",
   "cpp",
   "css",
   "dart",
@@ -285,6 +287,7 @@ M.spec = {
       end)
     end, {})
 
+    vim.treesitter.language.register("c_sharp", "cs")
     vim.treesitter.language.register("json", "excalidraw")
     vim.treesitter.language.register("json", "jsonc")
 
@@ -353,6 +356,9 @@ M.spec = {
       pending_bufnrs[bufnr] = nil
       local current_lang = active_lang(bufnr) ---@type string|nil
       if current_lang ~= lang then
+        if not vim.treesitter.language.add(lang) then
+          return
+        end
         if current_lang ~= nil then
           vim.treesitter.stop(bufnr)
         end

@@ -21,6 +21,7 @@ local function get_mason_ensure_installed()
     "lua-language-server", -- lua_ls
     -- "pyright", -- pyright
     "basedpyright", -- basedpyright
+    "roslyn-language-server", -- roslyn_ls
     "rust-analyzer", -- rust_analyzer
     -- "sqls", -- sqls
     "svelte-language-server", -- svelte
