@@ -22,6 +22,17 @@ local M = {}
 ---@field public changes_bufnr           integer|nil
 ---@field public sbs_left_winnr          integer|nil
 ---@field public sbs_right_winnr         integer|nil
+---@field public preview_generation      integer
+
+---@class era.m.diffview.view.workspace.IOpenEntryOpts
+---@field public preserve_view           boolean|nil
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return integer
+local function next_preview_generation(lyt)
+  lyt.preview_generation = (lyt.preview_generation or 0) + 1
+  return lyt.preview_generation
+end
 
 ----------------------------------------------------------------------------------------------------
 -- Layout creation
@@ -45,6 +56,7 @@ function M.create_layout(layout_type)
     changes_bufnr = nil,
     sbs_left_winnr = nil,
     sbs_right_winnr = nil,
+    preview_generation = 0,
   } ---@type era.m.diffview.view.workspace.ILayout
 
   if layout_type == 1 then
@@ -114,6 +126,7 @@ function M.__create_layout_full__(tabnr)
     changes_bufnr = changes_bufnr,
     sbs_left_winnr = sbs_left_winnr,
     sbs_right_winnr = sbs_right_winnr,
+    preview_generation = 0,
   }
 end
 
@@ -134,6 +147,7 @@ function M.__create_layout_changes_only__(tabnr)
     changes_bufnr = changes_bufnr,
     sbs_left_winnr = nil,
     sbs_right_winnr = nil,
+    preview_generation = 0,
   }
 end
 
@@ -166,6 +180,7 @@ function M.__create_layout_sbs_only__(tabnr)
     changes_bufnr = nil,
     sbs_left_winnr = sbs_left_winnr,
     sbs_right_winnr = sbs_right_winnr,
+    preview_generation = 0,
   }
 end
 
@@ -198,6 +213,8 @@ end
 ---Close all windows in layout
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.close_windows(lyt)
+  next_preview_generation(lyt)
+
   if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
     pcall(vim.api.nvim_win_close, lyt.changes_winnr, true)
   end
@@ -367,6 +384,8 @@ end
 ---Destroy layout and close tab
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.destroy(lyt)
+  next_preview_generation(lyt)
+
   -- Restore window options for local buffers in sbs
   if lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
     local bufnr = vim.api.nvim_win_get_buf(lyt.sbs_right_winnr)
@@ -383,7 +402,9 @@ function M.destroy(lyt)
     local tabs = vim.api.nvim_list_tabpages()
     if #tabs > 1 then
       local tabnr_num = vim.api.nvim_tabpage_get_number(lyt.tabnr)
-      pcall(function() vim.cmd("tabclose " .. tabnr_num) end)
+      pcall(function()
+        vim.cmd("tabclose " .. tabnr_num)
+      end)
     end
   end
 end
@@ -423,7 +444,8 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@param entry                          era.m.diffview.IFileEntry
 ---@param token                          ?stl.c.CancellationToken
-function M.open_entry(ctx, entry, token)
+---@param opts                           era.m.diffview.view.workspace.IOpenEntryOpts|nil
+function M.open_entry(ctx, entry, token, opts)
   local lyt = ctx.layout
 
   if not lyt.sbs_left_winnr or not vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
@@ -433,12 +455,23 @@ function M.open_entry(ctx, entry, token)
     return
   end
 
+  local generation = next_preview_generation(lyt)
+  local function is_current()
+    return lyt.preview_generation == generation
+  end
+
   pane_sbs.open_diff_entry({
     left_winnr = lyt.sbs_left_winnr,
     right_winnr = lyt.sbs_right_winnr,
     entry = entry,
     token = token,
+    is_current = is_current,
+    preserve_view = opts and opts.preserve_view,
   })
+
+  if not is_current() then
+    return
+  end
 
   local keymap = require("era.m.diffview.view.workspace.keymap")
   keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
@@ -449,9 +482,17 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.clear_sbs(ctx)
   local lyt = ctx.layout
+  local generation = next_preview_generation(lyt)
 
-  if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) and lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
-    pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
+  if
+    lyt.sbs_left_winnr
+    and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr)
+    and lyt.sbs_right_winnr
+    and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
+  then
+    pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr, function()
+      return lyt.preview_generation == generation
+    end)
   end
 end
 

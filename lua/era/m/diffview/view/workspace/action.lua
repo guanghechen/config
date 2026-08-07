@@ -39,6 +39,12 @@ local function get_entry_at_cursor()
   return pane_changes.get_entry_at_line(bufnr, lnum)
 end
 
+---@param entry                          era.m.diffview.IFileEntry
+---@return string
+local function get_entry_id(entry)
+  return (entry.stage_type or "") .. "\0" .. entry.filepath
+end
+
 ---Get entries in panel order and the subset currently visible in the changes pane.
 ---Falls back to state order with every entry visible when the workspace has no changes pane.
 ---@param ctx                            era.m.diffview.view.workspace.IContext
@@ -60,10 +66,71 @@ local function get_navigation_entries(ctx)
   for _, item in ipairs(line_map) do
     local entry = item.entry ---@type era.m.diffview.IFileEntry|nil
     if item.type == "file" and entry then
-      visible_entry_ids[(entry.stage_type or "") .. "\0" .. entry.filepath] = true
+      visible_entry_ids[get_entry_id(entry)] = true
     end
   end
   return pane_changes.get_entries_in_render_order(entries), visible_entry_ids
+end
+
+---Resolve current selection against freshly rendered entries.
+---@param current                        era.m.diffview.IFileEntry
+---@param previous_entries               era.m.diffview.IFileEntry[]
+---@param entries                        era.m.diffview.IFileEntry[]
+---@param visible_entry_ids              table<string, boolean>|nil
+---@return era.m.diffview.IFileEntry|nil
+local function resolve_refreshed_entry(current, previous_entries, entries, visible_entry_ids)
+  local current_id = get_entry_id(current)
+  local entries_by_id = {} ---@type table<string, era.m.diffview.IFileEntry>
+
+  for _, entry in ipairs(entries) do
+    local entry_id = get_entry_id(entry)
+    entries_by_id[entry_id] = entry
+    if entry_id == current_id then
+      return entry
+    end
+  end
+
+  for _, entry in ipairs(entries) do
+    if entry.filepath == current.filepath then
+      return entry
+    end
+  end
+
+  local function get_visible_entry(entry)
+    local refreshed = entries_by_id[get_entry_id(entry)]
+    if refreshed and (not visible_entry_ids or visible_entry_ids[get_entry_id(refreshed)]) then
+      return refreshed
+    end
+  end
+
+  local current_idx = nil ---@type integer|nil
+  for i, entry in ipairs(previous_entries) do
+    if get_entry_id(entry) == current_id then
+      current_idx = i
+      break
+    end
+  end
+
+  if current_idx then
+    for i = current_idx + 1, #previous_entries do
+      local entry = get_visible_entry(previous_entries[i])
+      if entry then
+        return entry
+      end
+    end
+    for i = current_idx - 1, 1, -1 do
+      local entry = get_visible_entry(previous_entries[i])
+      if entry then
+        return entry
+      end
+    end
+  end
+
+  for _, entry in ipairs(entries) do
+    if not visible_entry_ids or visible_entry_ids[get_entry_id(entry)] then
+      return entry
+    end
+  end
 end
 
 ---Navigate to an adjacent entry and keep state, panel cursor, and preview in sync.
@@ -91,8 +158,7 @@ local function goto_adjacent_entry(ctx, direction)
   for offset = 1, #entries do
     local target_idx = ((start_idx - 1 + direction * offset) % #entries) + 1
     local entry = entries[target_idx]
-    local entry_id = (entry.stage_type or "") .. "\0" .. entry.filepath
-    if not visible_entry_ids or visible_entry_ids[entry_id] then
+    if not visible_entry_ids or visible_entry_ids[get_entry_id(entry)] then
       target_entry = entry
       break
     end
@@ -334,10 +400,6 @@ function M.unstage_hunk(ctx, range)
       end
       stl.async.run(function()
         M.refresh(ctx)
-        local current = ctx.state:get_current_entry() ---@type era.m.diffview.IFileEntry|nil
-        if current then
-          workspace_view.open_entry(ctx, current)
-        end
       end)
     end)
 end
@@ -653,21 +715,31 @@ function M.refresh(ctx, token)
   end
 
   stl.async.scheduler()
+  if token and token:is_cancelled() then
+    return
+  end
+
+  local current = ctx.state:get_current_entry()
+  local previous_entries = {} ---@type era.m.diffview.IFileEntry[]
+  if current then
+    previous_entries = get_navigation_entries(ctx)
+  end
+
   ctx.state:set_entries(entries)
   workspace_view.render_changes(ctx)
 
-  -- Re-select current entry if still exists
-  local current = ctx.state:get_current_entry()
   if current then
-    local found = false
-    for _, entry in ipairs(entries) do
-      if entry.filepath == current.filepath and entry.stage_type == current.stage_type then
-        found = true
-        break
-      end
-    end
-    if not found then
-      ctx.state:set_current_entry(nil)
+    local refreshed_entries, visible_entry_ids = get_navigation_entries(ctx)
+    local refreshed_entry = resolve_refreshed_entry(current, previous_entries, refreshed_entries, visible_entry_ids)
+    ctx.state:set_current_entry(refreshed_entry)
+
+    if refreshed_entry then
+      M.__update_changes_cursor__(ctx, refreshed_entry)
+      workspace_view.open_entry(ctx, refreshed_entry, token, {
+        preserve_view = get_entry_id(current) == get_entry_id(refreshed_entry),
+      })
+    else
+      workspace_view.clear_sbs(ctx)
     end
   end
 

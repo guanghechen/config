@@ -60,10 +60,14 @@ local function apply_foldlevel(winnr, force)
       return
     end
     if level <= 0 then
-      pcall(function() vim.cmd("silent! normal! zM") end)
+      pcall(function()
+        vim.cmd("silent! normal! zM")
+      end)
       return
     end
-    pcall(function() vim.cmd("silent! normal! zR") end)
+    pcall(function()
+      vim.cmd("silent! normal! zR")
+    end)
   end)
 end
 
@@ -143,6 +147,13 @@ end
 -- Git content loading
 ----------------------------------------------------------------------------------------------------
 
+---@param token                         stl.c.CancellationToken|nil
+---@param is_current                    (fun(): boolean)|nil
+---@return boolean
+local function is_request_current(token, is_current)
+  return (not token or not token:is_cancelled()) and (not is_current or is_current())
+end
+
 ---@param object                        string
 ---@return string
 ---@return string
@@ -174,13 +185,22 @@ end
 ---@param object                        string                          git object (e.g., "HEAD:path" or ":path")
 ---@param bufnr                         integer                         target buffer
 ---@param token                         ?stl.c.CancellationToken
+---@param is_current                    (fun(): boolean)|nil
+---@param before_write                  (fun(): nil)|nil
 ---@return boolean ok
-function M.load_git_content(object, bufnr, token)
+function M.load_git_content(object, bufnr, token, is_current, before_write)
+  if not is_request_current(token, is_current) then
+    return false
+  end
+
   local index_object_name = nil ---@type string|nil
   local blob_object = object ---@type string
   local index_path = object:match("^:(.*)$") ---@type string|nil
   if index_path then
     local info_result = stl.git.info.get_file_info(dot.path.workspace(), index_path, token):await()
+    if not is_request_current(token, is_current) then
+      return false
+    end
     if
       type(info_result) ~= "table"
       or not info_result.ok
@@ -202,6 +222,9 @@ function M.load_git_content(object, bufnr, token)
   end
 
   local result = stl.git.info.get_show_blob(dot.path.workspace(), blob_object, token):await()
+  if not is_request_current(token, is_current) then
+    return false
+  end
 
   if type(result) ~= "table" then
     stl.reporter.error({
@@ -221,7 +244,7 @@ function M.load_git_content(object, bufnr, token)
         stl.reporter.error({
           from = __module_name__,
           subject = "load_git_content",
-          message = result.err or "Unable to read object: " .. object,
+          message = result.err or ("Unable to read object: " .. object),
         })
       end
       return false
@@ -238,7 +261,7 @@ function M.load_git_content(object, bufnr, token)
 
   stl.async.scheduler()
 
-  if not vim.api.nvim_buf_is_valid(bufnr) then
+  if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
 
@@ -248,8 +271,15 @@ function M.load_git_content(object, bufnr, token)
     stl.reporter.error({
       from = __module_name__,
       subject = "load_git_content",
-      message = decode_err or "Unable to decode object: " .. object,
+      message = decode_err or ("Unable to decode object: " .. object),
     })
+    return false
+  end
+
+  if before_write then
+    before_write()
+  end
+  if not is_request_current(token, is_current) then
     return false
   end
 
@@ -426,6 +456,8 @@ end
 ---@field public right_winnr            integer
 ---@field public entry                  era.m.diffview.IFileEntry
 ---@field public token                  ?stl.c.CancellationToken
+---@field public is_current             (fun(): boolean)|nil
+---@field public preserve_view           boolean|nil
 
 ---Open file entry in side-by-side view (for Git Diff staged/unstaged).
 ---@async
@@ -435,6 +467,43 @@ function M.open_diff_entry(opts)
   local right_winnr = opts.right_winnr
   local entry = opts.entry
   local token = opts.token
+  local is_current = opts.is_current
+
+  if not is_request_current(token, is_current) then
+    return
+  end
+
+  local apply_opts = {
+    is_current = is_current,
+    preserve_view = opts.preserve_view,
+  } ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
+
+  local function capture_views()
+    if apply_opts.preserve_view ~= true or apply_opts.left_view or apply_opts.right_view then
+      return
+    end
+    if vim.api.nvim_win_is_valid(left_winnr) then
+      apply_opts.left_view = vim.api.nvim_win_call(left_winnr, vim.fn.winsaveview)
+    end
+    if vim.api.nvim_win_is_valid(right_winnr) then
+      apply_opts.right_view = vim.api.nvim_win_call(right_winnr, vim.fn.winsaveview)
+    end
+  end
+
+  ---@param object                      string
+  ---@param bufnr                       integer
+  ---@return boolean current
+  local function load_content(object, bufnr)
+    M.load_git_content(object, bufnr, token, is_current, capture_views)
+    return is_request_current(token, is_current)
+  end
+
+  ---@param left_bufnr                  integer
+  ---@param right_bufnr                 integer
+  local function apply_buffers(left_bufnr, right_bufnr)
+    capture_views()
+    M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
+  end
 
   local status = entry.status
   local filepath = entry.filepath
@@ -454,16 +523,20 @@ function M.open_diff_entry(opts)
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.get_null_buffer()
 
-      M.load_git_content(era.m.diffview.util.head_object(filepath), left_bufnr, token)
-      M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr) then
+        return
+      end
+      apply_buffers(left_bufnr, right_bufnr)
     else
       -- Unstaged delete: index -> (deleted)
       local left_name = era.m.diffview.util.gen_old_bufname(filepath, "index")
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.get_null_buffer()
 
-      M.load_git_content(era.m.diffview.util.staged_object(filepath), left_bufnr, token)
-      M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr) then
+        return
+      end
+      apply_buffers(left_bufnr, right_bufnr)
     end
   elseif status == "A" or status == "?" then
     -- Added file: show null on left, new content on right
@@ -474,8 +547,10 @@ function M.open_diff_entry(opts)
       local right_name = era.m.diffview.util.gen_index_bufname(filepath)
       right_bufnr = M.create_sbs_buffer(right_name)
 
-      M.load_git_content(era.m.diffview.util.staged_object(filepath), right_bufnr, token)
-      M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr) then
+        return
+      end
+      apply_buffers(left_bufnr, right_bufnr)
     else
       -- Unstaged add: (new) -> working tree
       local absolute_path = dot.path.join(workspace, filepath)
@@ -486,7 +561,7 @@ function M.open_diff_entry(opts)
         M.save_winopts(right_bufnr, right_winnr)
       end
 
-      M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+      apply_buffers(left_bufnr, right_bufnr)
     end
   else
     -- Modified file: show old on left, new on right
@@ -497,10 +572,14 @@ function M.open_diff_entry(opts)
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.create_sbs_buffer(right_name)
 
-      M.load_git_content(era.m.diffview.util.head_object(filepath), left_bufnr, token)
-      M.load_git_content(era.m.diffview.util.staged_object(filepath), right_bufnr, token)
+      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr) then
+        return
+      end
+      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr) then
+        return
+      end
 
-      M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+      apply_buffers(left_bufnr, right_bufnr)
     else
       -- Unstaged modify: index -> working tree
       local left_name = era.m.diffview.util.gen_old_bufname(filepath, "index")
@@ -514,8 +593,10 @@ function M.open_diff_entry(opts)
         M.save_winopts(right_bufnr, right_winnr)
       end
 
-      M.load_git_content(era.m.diffview.util.staged_object(filepath), left_bufnr, token)
-      M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr) then
+        return
+      end
+      apply_buffers(left_bufnr, right_bufnr)
     end
   end
 end
@@ -581,47 +662,92 @@ end
 ---Clear side-by-side view (show null buffers on both sides)
 ---@param left_winnr                    integer
 ---@param right_winnr                   integer
-function M.clear(left_winnr, right_winnr)
+---@param is_current                    (fun(): boolean)|nil
+function M.clear(left_winnr, right_winnr, is_current)
   local null_buf = M.get_null_buffer()
-  M.__apply_buffers__(left_winnr, right_winnr, null_buf, null_buf)
+  M.__apply_buffers__(left_winnr, right_winnr, null_buf, null_buf, { is_current = is_current })
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@class era.m.diffview.pane.sbs.IApplyBuffersOpts
+---@field public is_current             (fun(): boolean)|nil
+---@field public preserve_view           boolean|nil
+---@field public left_view              vim.fn.winsaveview.ret|nil
+---@field public right_view             vim.fn.winsaveview.ret|nil
 
 ---Apply buffers to side-by-side windows
 ---@param left_winnr                    integer
 ---@param right_winnr                   integer
 ---@param left_bufnr                    integer
 ---@param right_bufnr                   integer
-function M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
-  -- Step 1: Turn off diff mode before changing buffers to avoid Neovim recalculating diffs
-  if vim.api.nvim_win_is_valid(left_winnr) then
-    vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
-  end
-  if vim.api.nvim_win_is_valid(right_winnr) then
-    vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
+---@param opts                           era.m.diffview.pane.sbs.IApplyBuffersOpts|nil
+function M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, opts)
+  local is_current = opts and opts.is_current
+  if not is_request_current(nil, is_current) then
+    return
   end
 
-  -- Step 2: Set buffers and apply non-blocking options
-  if vim.api.nvim_win_is_valid(left_winnr) then
-    vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
-    M.apply_sbs_winopts(left_winnr, "sbs_left")
-  end
+  local preserve_view = opts
+    and opts.preserve_view == true
+    and vim.api.nvim_win_is_valid(left_winnr)
+    and vim.api.nvim_win_get_buf(left_winnr) == left_bufnr
+    and vim.api.nvim_win_is_valid(right_winnr)
+    and vim.api.nvim_win_get_buf(right_winnr) == right_bufnr
 
-  if vim.api.nvim_win_is_valid(right_winnr) then
-    vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
-    M.apply_sbs_winopts(right_winnr, "sbs_right")
-  end
-
-  -- Step 3: Defer expensive operations (diff calculation, filetype detection)
-  vim.schedule(function()
-    -- Apply diff-related options (triggers diff calculation)
+  if not preserve_view then
+    -- Turn off diff mode before changing buffers to avoid Neovim recalculating diffs.
     if vim.api.nvim_win_is_valid(left_winnr) then
-      M.apply_sbs_diff_winopts(left_winnr)
+      vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
     end
     if vim.api.nvim_win_is_valid(right_winnr) then
-      M.apply_sbs_diff_winopts(right_winnr)
+      vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
     end
+
+    if vim.api.nvim_win_is_valid(left_winnr) then
+      vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
+      M.apply_sbs_winopts(left_winnr, "sbs_left")
+    end
+    if vim.api.nvim_win_is_valid(right_winnr) then
+      vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
+      M.apply_sbs_winopts(right_winnr, "sbs_right")
+    end
+  end
+
+  vim.schedule(function()
+    if not is_request_current(nil, is_current) then
+      return
+    end
+
+    if
+      not vim.api.nvim_win_is_valid(left_winnr)
+      or vim.api.nvim_win_get_buf(left_winnr) ~= left_bufnr
+      or not vim.api.nvim_win_is_valid(right_winnr)
+      or vim.api.nvim_win_get_buf(right_winnr) ~= right_bufnr
+    then
+      return
+    end
+
+    if preserve_view then
+      vim.api.nvim_win_call(left_winnr, function()
+        vim.cmd("silent! diffupdate")
+      end)
+      if opts and opts.left_view then
+        vim.api.nvim_win_call(left_winnr, function()
+          vim.fn.winrestview(opts.left_view)
+        end)
+      end
+      if opts and opts.right_view then
+        vim.api.nvim_win_call(right_winnr, function()
+          vim.fn.winrestview(opts.right_view)
+        end)
+      end
+      return
+    end
+
+    -- Apply diff-related options (triggers diff calculation)
+    M.apply_sbs_diff_winopts(left_winnr)
+    M.apply_sbs_diff_winopts(right_winnr)
 
     -- Detect filetype for syntax highlighting
     if vim.api.nvim_buf_is_valid(left_bufnr) then
