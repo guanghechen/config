@@ -106,6 +106,7 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", workspace_view)
 
+  ---@diagnostic disable-next-line: missing-fields
   era.m.diffview = {
     util = {
       gen_index_bufname = function(filepath)
@@ -141,13 +142,15 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
     },
   }
 
-  action.unstage_hunk(ctx, { 2, 3 })
+  local future = action.unstage_hunk(ctx, { 2, 3 })
 
+  t.assert_true(future ~= nil, "unstage future")
   t.assert_true(captured ~= nil, "unstage called")
-  t.assert_eq("abc123", captured.expected_index.object_name, "object snapshot")
-  t.assert_eq("INDEX\n", captured.expected_index.document.text, "document snapshot")
-  t.assert_eq(2, captured.range[1], "range start")
-  t.assert_eq(3, captured.range[2], "range end")
+  local unstage_opts = assert(captured)
+  t.assert_eq("abc123", unstage_opts.expected_index.object_name, "object snapshot")
+  t.assert_eq("INDEX\n", unstage_opts.expected_index.document.text, "document snapshot")
+  t.assert_eq(2, unstage_opts.range[1], "range start")
+  t.assert_eq(3, unstage_opts.range[2], "range end")
   t.assert_true(refreshed, "view refreshed")
   t.assert_false(opened, "refresh owns reopening")
   t.assert_eq(0, #errors, "no errors")
@@ -159,6 +162,7 @@ t:test("workspace keymaps route normal and visual ghu", function()
   local action = {
     unstage_hunk = function(_, range)
       calls[#calls + 1] = range or {}
+      return Future.resolve({ ok = true })
     end,
   }
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", action)
@@ -179,11 +183,72 @@ t:test("workspace keymaps route normal and visual ghu", function()
 
   t.assert_true(normal ~= nil, "normal mapping")
   t.assert_true(visual ~= nil, "visual mapping")
-  normal.callback()
-  visual.callback()
+  assert(normal).callback()
+  assert(visual).callback()
   t.assert_eq(0, #calls[1], "normal cursor range")
   t.assert_eq(4, calls[2][1], "visual start")
   t.assert_eq(6, calls[2][2], "visual end")
+end)
+
+t:test("visual ghu exits only after a successful unstage", function()
+  local resolve_unstage = nil ---@type (fun(result: table): nil)|nil
+  local action = {
+    unstage_hunk = function()
+      local future, resolve = Future.new_with_resolver()
+      resolve_unstage = resolve
+      return future
+    end,
+  }
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", action)
+  stl.nvim.buf.retrieve_visual_lnum_range = function()
+    return 1, 1
+  end
+
+  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  local visual = nil ---@type table|nil
+  for _, mapping in ipairs(keymap.gen_sbs({})) do
+    if mapping.key == "ghu" and mapping.modes[1] == "x" then
+      visual = mapping
+      break
+    end
+  end
+  t.assert_true(visual ~= nil, "visual mapping")
+
+  local test_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, { "one", "two" })
+  vim.api.nvim_win_set_buf(0, test_bufnr)
+
+  vim.cmd("normal! V")
+  assert(visual).callback()
+  t.assert_eq("V", vim.fn.mode(), "selection while pending")
+  assert(resolve_unstage)({ ok = true })
+  t.assert_eq("n", vim.fn.mode(), "selection cleared after success")
+
+  vim.cmd("normal! V")
+  assert(visual).callback()
+  assert(resolve_unstage)({ ok = false, err = "failed" })
+  t.assert_eq("V", vim.fn.mode(), "selection retained after failure")
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "nx", false)
+
+  vim.cmd("normal! ggV")
+  assert(visual).callback()
+  vim.cmd("normal! j")
+  vim.api.nvim_exec_autocmds("CursorMoved", { buffer = test_bufnr })
+  vim.cmd("normal! k")
+  assert(resolve_unstage)({ ok = true })
+  t.assert_eq("V", vim.fn.mode(), "changed then restored selection retained after success")
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "nx", false)
+
+  vim.cmd("normal! V")
+  assert(visual).callback()
+  local resolve_older_unstage = assert(resolve_unstage)
+  assert(visual).callback()
+  local resolve_newer_unstage = assert(resolve_unstage)
+  resolve_older_unstage({ ok = true })
+  t.assert_eq("V", vim.fn.mode(), "older unstage keeps newer selection")
+  resolve_newer_unstage({ ok = true })
+  t.assert_eq("n", vim.fn.mode(), "newer unstage clears unchanged selection")
+  vim.api.nvim_buf_delete(test_bufnr, { force = true })
 end)
 
 t:test("workspace view binds keymaps after replacing null buffers", function()

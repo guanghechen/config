@@ -2,12 +2,11 @@
 local __module_name__ = "era.m.diffview.view.workspace.keymap" ---@type string
 
 local action = require("era.m.diffview.view.workspace.action")
+local git_visual = require("era.m.git.visual")
 
 ---Workspace view keymaps.
 ---@class era.m.diffview.view.workspace.keymap
 local M = {}
-
-----------------------------------------------------------------------------------------------------
 
 ---Generate keymaps for changes buffer
 ---@param ctx                            era.m.diffview.view.workspace.IContext
@@ -52,6 +51,8 @@ function M.gen_sbs(ctx)
     { modes = { "n" }, key = "<C-k>", desc = "diffview(workspace): Prev file diff", callback = function() action.goto_prev_entry(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(workspace): Open file in previous tab", callback = function() action.goto_file(ctx) end },
     { modes = { "n" }, key = "gF", desc = "diffview(workspace): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
+    { modes = { "n" }, key = "gs", desc = "diffview(workspace): Stage file", callback = function() action.stage(ctx) end },
+    { modes = { "n" }, key = "gu", desc = "diffview(workspace): Unstage file", callback = function() action.unstage(ctx) end },
     { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help(ctx) end },
     { modes = { "n" }, key = "za", desc = "diffview(workspace): Toggle panel collapse", callback = function() action.sbs_toggle_collapse(ctx) end },
     { modes = { "n" }, key = "zc", desc = "diffview(workspace): Collapse panel item", callback = function() action.sbs_collapse(ctx) end },
@@ -63,7 +64,7 @@ function M.gen_sbs(ctx)
     { modes = { "n" }, key = "t3", desc = "diffview(workspace): Toggle fold unchanged hunks", callback = function() action.toggle_fold_unchanged(ctx) end },
     { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() stl.async.run(function() action.refresh(ctx) end) end, aliases = { "<D-r>", "<M-r>" } },
     { modes = { "n" }, key = "ghu", desc = "diffview(workspace): Unstage selected index line", callback = function() action.unstage_hunk(ctx) end },
-    { modes = { "x" }, key = "ghu", desc = "diffview(workspace): Unstage selected index lines", callback = function() local start_lnum, end_lnum = stl.nvim.buf.retrieve_visual_lnum_range() action.unstage_hunk(ctx, { start_lnum, end_lnum }) end },
+    { modes = { "x" }, key = "ghu", desc = "diffview(workspace): Unstage selected index lines", callback = function() local start_lnum, end_lnum = stl.nvim.buf.retrieve_visual_lnum_range() local future = action.unstage_hunk(ctx, { start_lnum, end_lnum }) if future then git_visual.leave_on_success(future) end end },
   }
 end
 

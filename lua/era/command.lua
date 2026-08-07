@@ -1,5 +1,6 @@
 local command = dot.command ---@type dot.command
 local K = dot.command.definitions ---@type dot.command.definitions
+local git_visual = require("era.m.git.visual")
 
 --[acp] --------------------------------------------------------------------------------------------
 command
@@ -861,7 +862,8 @@ command
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
       local lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
-      era.m.git.hunk.stage({ lnum_start, lnum_end })
+      local future = era.m.git.hunk.stage({ lnum_start, lnum_end })
+      git_visual.leave_on_success(future)
     end,
   })
   .implement({

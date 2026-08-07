@@ -39,6 +39,16 @@ local function get_entry_at_cursor()
   return pane_changes.get_entry_at_line(bufnr, lnum)
 end
 
+---Get the entry targeted by an action from the active workspace pane.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return era.m.diffview.IFileEntry|nil
+local function get_action_entry(ctx)
+  if vim.api.nvim_get_current_buf() == ctx.layout.changes_bufnr then
+    return get_entry_at_cursor()
+  end
+  return ctx.state:get_current_entry()
+end
+
 ---@param entry                          era.m.diffview.IFileEntry
 ---@return string
 local function get_entry_id(entry)
@@ -290,10 +300,10 @@ end
 -- Git operations
 ----------------------------------------------------------------------------------------------------
 
----Stage file at cursor
+---Stage the file targeted by the active workspace pane
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.stage(ctx)
-  local entry = get_entry_at_cursor()
+  local entry = get_action_entry(ctx)
   if not entry or entry.stage_type ~= "unstaged" then
     return
   end
@@ -307,10 +317,10 @@ function M.stage(ctx)
   end)
 end
 
----Unstage file at cursor
+---Unstage the file targeted by the active workspace pane
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.unstage(ctx)
-  local entry = get_entry_at_cursor()
+  local entry = get_action_entry(ctx)
   if not entry or entry.stage_type ~= "staged" then
     return
   end
@@ -326,6 +336,7 @@ end
 
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@param range                          ?{ [1]: integer, [2]: integer }
+---@return stl.c.Future|nil
 function M.unstage_hunk(ctx, range)
   local entry = ctx.state:get_current_entry() ---@type era.m.diffview.IFileEntry|nil
   if not entry or entry.stage_type ~= "staged" then
@@ -385,23 +396,23 @@ function M.unstage_hunk(ctx, range)
     return
   end
 
-  era.m.git.buffer
-    .unstage_range({
-      expected_index = { document = index_document, object_name = object_name },
-      range = range,
-      relpath = entry.filepath,
-      toplevel = dot.path.workspace(),
-    })
-    :finally(function(resolved, result)
-      if not resolved or type(result) ~= "table" or not result.ok then
-        local reason = type(result) == "table" and result.err or result ---@type string|nil
-        stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = reason or "Failed to unstage" })
-        return
-      end
-      stl.async.run(function()
-        M.refresh(ctx)
-      end)
+  local future = era.m.git.buffer.unstage_range({
+    expected_index = { document = index_document, object_name = object_name },
+    range = range,
+    relpath = entry.filepath,
+    toplevel = dot.path.workspace(),
+  })
+  future:finally(function(resolved, result)
+    if not resolved or type(result) ~= "table" or not result.ok then
+      local reason = type(result) == "table" and result.err or result ---@type string|nil
+      stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = reason or "Failed to unstage" })
+      return
+    end
+    stl.async.run(function()
+      M.refresh(ctx)
     end)
+  end)
+  return future
 end
 
 ---Toggle stage/unstage for file at cursor
