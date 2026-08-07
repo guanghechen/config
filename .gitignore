@@ -1,4 +1,5 @@
 conf.d/fish_frozen_theme.fish
+completions/copilot.fish
 
 # Ignore history and temporary files
 fish_history
