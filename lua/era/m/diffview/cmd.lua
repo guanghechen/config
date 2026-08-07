@@ -73,8 +73,7 @@ function M.open(opts)
     -- Auto-select first entry if any
     local entries = st:get_entries()
     if #entries > 0 then
-      local first_entry = entries[1]
-      st:set_current_entry(first_entry)
+      local first_entry = entries[1] ---@type era.m.diffview.IFileEntry
 
       -- Move cursor to first file line (skip directories)
       if lyt.changes_bufnr and vim.api.nvim_buf_is_valid(lyt.changes_bufnr) then
@@ -83,6 +82,8 @@ function M.open(opts)
         if line_map then
           for i, item in ipairs(line_map) do
             if item.type == "file" and item.entry ~= nil then
+              local visible_entry = assert(item.entry) ---@type era.m.diffview.IFileEntry
+              first_entry = st:find_entry(visible_entry.filepath, visible_entry.stage_type) or visible_entry
               if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
                 vim.api.nvim_win_set_cursor(lyt.changes_winnr, { i, 0 })
               end
@@ -91,6 +92,9 @@ function M.open(opts)
           end
         end
       end
+
+      st:set_current_entry(first_entry)
+      workspace_view.open_entry(ctx, first_entry)
     end
   end)
 end
