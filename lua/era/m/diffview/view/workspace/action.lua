@@ -39,6 +39,77 @@ local function get_entry_at_cursor()
   return pane_changes.get_entry_at_line(bufnr, lnum)
 end
 
+---Get entries in panel order and the subset currently visible in the changes pane.
+---Falls back to state order with every entry visible when the workspace has no changes pane.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return era.m.diffview.IFileEntry[] entries
+---@return table<string, boolean>|nil visible_entry_ids
+local function get_navigation_entries(ctx)
+  local entries = ctx.state:get_entries()
+  local changes_bufnr = ctx.layout.changes_bufnr
+  if not changes_bufnr or not vim.api.nvim_buf_is_valid(changes_bufnr) then
+    return entries, nil
+  end
+
+  local line_map = pane_changes.get_line_map(changes_bufnr)
+  if not line_map then
+    return entries, nil
+  end
+
+  local visible_entry_ids = {} ---@type table<string, boolean>
+  for _, item in ipairs(line_map) do
+    local entry = item.entry ---@type era.m.diffview.IFileEntry|nil
+    if item.type == "file" and entry then
+      visible_entry_ids[(entry.stage_type or "") .. "\0" .. entry.filepath] = true
+    end
+  end
+  return pane_changes.get_entries_in_render_order(entries), visible_entry_ids
+end
+
+---Navigate to an adjacent entry and keep state, panel cursor, and preview in sync.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param direction                      1|-1
+local function goto_adjacent_entry(ctx, direction)
+  local entries, visible_entry_ids = get_navigation_entries(ctx)
+  if #entries == 0 then
+    return
+  end
+
+  local current = ctx.state:get_current_entry()
+  local current_idx = nil ---@type integer|nil
+  if current then
+    for i, entry in ipairs(entries) do
+      if entry.filepath == current.filepath and entry.stage_type == current.stage_type then
+        current_idx = i
+        break
+      end
+    end
+  end
+
+  local start_idx = current_idx or (direction == 1 and 0 or 1)
+  local target_entry = nil ---@type era.m.diffview.IFileEntry|nil
+  for offset = 1, #entries do
+    local target_idx = ((start_idx - 1 + direction * offset) % #entries) + 1
+    local entry = entries[target_idx]
+    local entry_id = (entry.stage_type or "") .. "\0" .. entry.filepath
+    if not visible_entry_ids or visible_entry_ids[entry_id] then
+      target_entry = entry
+      break
+    end
+  end
+
+  if not target_entry then
+    return
+  end
+
+  ctx.state:set_current_entry(target_entry)
+  M.__update_changes_cursor__(ctx, target_entry)
+
+  stl.async.run(function()
+    workspace_view.open_entry(ctx, target_entry)
+  end)
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Selection actions
 ----------------------------------------------------------------------------------------------------
@@ -140,75 +211,13 @@ end
 ---Navigate to next file entry (from any window)
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.goto_next_entry(ctx)
-  local entries = ctx.state:get_entries()
-  local current = ctx.state:get_current_entry()
-
-  if #entries == 0 then
-    return
-  end
-
-  local current_idx = 0
-  if current then
-    for i, e in ipairs(entries) do
-      if e.filepath == current.filepath and e.stage_type == current.stage_type then
-        current_idx = i
-        break
-      end
-    end
-  end
-
-  local next_idx = current_idx + 1
-  if next_idx > #entries then
-    next_idx = 1
-  end
-
-  local next_entry = entries[next_idx]
-  ctx.state:set_current_entry(next_entry)
-
-  -- Update changes cursor
-  M.__update_changes_cursor__(ctx, next_entry)
-
-  -- Open in side-by-side view
-  stl.async.run(function()
-    workspace_view.open_entry(ctx, next_entry)
-  end)
+  goto_adjacent_entry(ctx, 1)
 end
 
 ---Navigate to previous file entry (from any window)
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.goto_prev_entry(ctx)
-  local entries = ctx.state:get_entries()
-  local current = ctx.state:get_current_entry()
-
-  if #entries == 0 then
-    return
-  end
-
-  local current_idx = 0
-  if current then
-    for i, e in ipairs(entries) do
-      if e.filepath == current.filepath and e.stage_type == current.stage_type then
-        current_idx = i
-        break
-      end
-    end
-  end
-
-  local prev_idx = current_idx - 1
-  if prev_idx < 1 then
-    prev_idx = #entries
-  end
-
-  local prev_entry = entries[prev_idx]
-  ctx.state:set_current_entry(prev_entry)
-
-  -- Update changes cursor
-  M.__update_changes_cursor__(ctx, prev_entry)
-
-  -- Open in side-by-side view
-  stl.async.run(function()
-    workspace_view.open_entry(ctx, prev_entry)
-  end)
+  goto_adjacent_entry(ctx, -1)
 end
 
 ----------------------------------------------------------------------------------------------------

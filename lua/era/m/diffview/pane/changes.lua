@@ -182,6 +182,45 @@ end
 -- Section rendering helpers
 ----------------------------------------------------------------------------------------------------
 
+---Get entries in filetree traversal order.
+---@param entries                       era.m.diffview.IFileEntry[]
+---@return era.m.diffview.IFileEntry[]
+local function get_sorted_section_entries(entries)
+  local items = {} ---@type era.view.filetree.IFileItem[]
+  for _, entry in ipairs(entries) do
+    items[#items + 1] = {
+      filepath = entry.filepath,
+      data = entry,
+    }
+  end
+
+  local sorted_entries = {} ---@type era.m.diffview.IFileEntry[]
+  for _, item in ipairs(view_filetree.get_sorted_files(items)) do
+    sorted_entries[#sorted_entries + 1] = item.data --[[@as era.m.diffview.IFileEntry]]
+  end
+  return sorted_entries
+end
+
+---Get entries in the same order used by the rendered changes panel.
+---@param entries                       era.m.diffview.IFileEntry[]
+---@return era.m.diffview.IFileEntry[]
+function M.get_entries_in_render_order(entries)
+  local staged = {} ---@type era.m.diffview.IFileEntry[]
+  local unstaged = {} ---@type era.m.diffview.IFileEntry[]
+
+  for _, entry in ipairs(entries) do
+    if entry.stage_type == "staged" then
+      staged[#staged + 1] = entry
+    else
+      unstaged[#unstaged + 1] = entry
+    end
+  end
+
+  local ordered = get_sorted_section_entries(staged)
+  vim.list_extend(ordered, get_sorted_section_entries(unstaged))
+  return ordered
+end
+
 ---Render a section (staged or unstaged) as tree
 ---@param entries                       era.m.diffview.IFileEntry[]
 ---@param stage_type                    stl.m.diffview.StageTypeEnum
@@ -225,23 +264,11 @@ end
 ---@param highlights                    stl.t.IHighlight[]
 ---@param line_map                      era.m.diffview.IFiletreeLineMap[]
 local function render_section_list(entries, stage_type, lines, highlights, line_map)
-  -- Convert to file items and sort in tree traversal order
-  local items = {} ---@type era.view.filetree.IFileItem[]
-  for _, entry in ipairs(entries) do
-    items[#items + 1] = {
-      filepath = entry.filepath,
-      data = entry,
-    }
-  end
-
-  local sorted_items = view_filetree.get_sorted_files(items)
-
-  for _, item in ipairs(sorted_items) do
+  for _, entry in ipairs(get_sorted_section_entries(entries)) do
     local lnum = #lines ---@type integer
     local col = 0 ---@type integer
 
-    local entry = item.data ---@type era.m.diffview.IFileEntry
-    local filepath = item.filepath ---@type string
+    local filepath = entry.filepath ---@type string
     local basename = vim.fn.fnamemodify(filepath, ":t") ---@type string
 
     local fileicon, fileicon_hln = stl.fileicon.get_file_icon(basename)
@@ -469,7 +496,12 @@ end
 ---@return integer|nil                  1-indexed line number
 function M.find_entry_line(line_map, entry)
   for i, item in ipairs(line_map) do
-    if item.type == "file" and item.entry and item.entry.filepath == entry.filepath and item.entry.stage_type == entry.stage_type then
+    if
+      item.type == "file"
+      and item.entry
+      and item.entry.filepath == entry.filepath
+      and item.entry.stage_type == entry.stage_type
+    then
       return i
     end
   end
