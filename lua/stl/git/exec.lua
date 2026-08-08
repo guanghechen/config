@@ -51,7 +51,7 @@ end
 ---Execute git command asynchronously with callback (for simple fire-and-forget operations).
 ---@param args                          string[]
 ---@param opts                          { cwd: string|nil }|nil
----@param callback                      fun(lines: string[], code: integer): nil
+---@param callback                      fun(lines: string[], code: integer, stderr: string): nil
 function M.exec_async(args, opts, callback)
   local cmd = { "git" }
   if opts and opts.cwd then
@@ -71,7 +71,7 @@ function M.exec_async(args, opts, callback)
           lines[#lines] = nil
         end
       end
-      callback(lines, obj.code)
+      callback(lines, obj.code, obj.stderr or "")
     end)
   end)
 end

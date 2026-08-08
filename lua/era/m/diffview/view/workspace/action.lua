@@ -49,6 +49,22 @@ local function get_action_entry(ctx)
   return ctx.state:get_current_entry()
 end
 
+---@param operation                     string
+---@param filepath                      string
+---@param code                          integer
+---@param stderr                        string
+local function report_git_failure(operation, filepath, code, stderr)
+  local reason = vim.trim(stderr)
+  local message = string.format("Failed to %s `%s` (exit %d)", operation, filepath, code)
+  message = reason == "" and (message .. ".") or (message .. ": " .. reason)
+
+  stl.reporter.error({
+    from = __module_name__,
+    subject = operation,
+    message = message,
+  })
+end
+
 ---@param entry                          era.m.diffview.IFileEntry
 ---@return string
 local function get_entry_id(entry)
@@ -308,12 +324,15 @@ function M.stage(ctx)
     return
   end
 
-  stl.git.exec.exec_async({ "add", "--", entry.filepath }, { cwd = dot.path.workspace() }, function(_, code)
-    if code == 0 then
-      stl.async.run(function()
-        M.refresh(ctx)
-      end)
+  stl.git.exec.exec_async({ "add", "--", entry.filepath }, { cwd = dot.path.workspace() }, function(_, code, stderr)
+    if code ~= 0 then
+      report_git_failure("stage", entry.filepath, code, stderr)
+      return
     end
+
+    stl.async.run(function()
+      M.refresh(ctx)
+    end)
   end)
 end
 
@@ -325,13 +344,20 @@ function M.unstage(ctx)
     return
   end
 
-  stl.git.exec.exec_async({ "reset", "HEAD", "--", entry.filepath }, { cwd = dot.path.workspace() }, function(_, code)
-    if code == 0 then
+  stl.git.exec.exec_async(
+    { "reset", "HEAD", "--", entry.filepath },
+    { cwd = dot.path.workspace() },
+    function(_, code, stderr)
+      if code ~= 0 then
+        report_git_failure("unstage", entry.filepath, code, stderr)
+        return
+      end
+
       stl.async.run(function()
         M.refresh(ctx)
       end)
     end
-  end)
+  )
 end
 
 ---@param ctx                            era.m.diffview.view.workspace.IContext

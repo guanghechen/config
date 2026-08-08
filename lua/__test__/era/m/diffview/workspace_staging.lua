@@ -8,6 +8,8 @@ local t = harness.new("era.m.diffview.workspace_staging")
 
 local git_calls = {} ---@type table[]
 local refreshed = 0
+local git_result = { code = 0, stderr = "" }
+local reports = {} ---@type table[]
 
 bootstrap.with_global(t, "stl", {
   async = {
@@ -19,9 +21,14 @@ bootstrap.with_global(t, "stl", {
     exec = {
       exec_async = function(args, opts, callback)
         git_calls[#git_calls + 1] = { args = args, opts = opts }
-        callback(nil, 0)
+        callback({}, git_result.code, git_result.stderr)
       end,
     },
+  },
+  reporter = {
+    error = function(options)
+      reports[#reports + 1] = options
+    end,
   },
 })
 bootstrap.with_global(t, "dot", {
@@ -52,6 +59,8 @@ end
 local function reset_calls()
   git_calls = {}
   refreshed = 0
+  git_result = { code = 0, stderr = "" }
+  reports = {}
 end
 
 ---@param call                           table
@@ -120,6 +129,45 @@ t:test("sbs routes stage and unstage to the canonical current entry", function()
   t.assert_eq(2, refreshed, "refresh calls")
   vim.api.nvim_buf_delete(ctx.layout.changes_bufnr, { force = true })
   vim.api.nvim_buf_delete(sbs_bufnr, { force = true })
+end)
+
+t:test("stage and unstage report Git failures without refreshing", function()
+  reset_calls()
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "unstaged", "staged" })
+  entries_at_line[changes_bufnr] = {
+    { filepath = "locked.txt", stage_type = "unstaged", status = "M" },
+    { filepath = "denied.txt", stage_type = "staged", status = "M" },
+  }
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      get_current_entry = function()
+        return nil
+      end,
+    },
+  }
+
+  git_result = { code = 128, stderr = "fatal: Unable to create '.git/index.lock'\n" }
+  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  action.stage(ctx)
+  git_result = { code = 1, stderr = "" }
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  action.unstage(ctx)
+
+  t.assert_eq(0, refreshed, "refresh calls")
+  t.assert_eq(2, #reports, "error reports")
+  t.assert_eq("stage", reports[1].subject, "stage report subject")
+  t.assert_eq(
+    "Failed to stage `locked.txt` (exit 128): fatal: Unable to create '.git/index.lock'",
+    reports[1].message,
+    "stage report message"
+  )
+  t.assert_eq("unstage", reports[2].subject, "unstage report subject")
+  t.assert_eq("Failed to unstage `denied.txt` (exit 1).", reports[2].message, "unstage report message")
+  entries_at_line[changes_bufnr] = nil
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 
 t:test("sbs keymaps route whole-file stage and unstage", function()
