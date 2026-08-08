@@ -467,7 +467,17 @@ function M.reset(ctx)
   -- Untracked files: remove them
   if entry.status == "?" then
     local absolute = dot.path.join(dot.path.workspace(), entry.filepath)
-    vim.fn.delete(absolute)
+    local ok, err = stl.os.fs.delete(absolute)
+    if not ok then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "discard",
+        message = string.format("Failed to discard `%s`: unable to delete the untracked file.", entry.filepath),
+        details = { error = err or "delete_failed" },
+      })
+      return
+    end
+
     stl.async.run(function()
       M.refresh(ctx)
     end)
@@ -475,13 +485,20 @@ function M.reset(ctx)
   end
 
   -- Tracked files: git checkout
-  stl.git.exec.exec_async({ "checkout", "--", entry.filepath }, { cwd = dot.path.workspace() }, function(_, code)
-    if code == 0 then
+  stl.git.exec.exec_async(
+    { "checkout", "--", entry.filepath },
+    { cwd = dot.path.workspace() },
+    function(_, code, stderr)
+      if code ~= 0 then
+        report_git_failure("discard", entry.filepath, code, stderr)
+        return
+      end
+
       stl.async.run(function()
         M.refresh(ctx)
       end)
     end
-  end)
+  )
 end
 
 ----------------------------------------------------------------------------------------------------

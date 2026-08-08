@@ -9,6 +9,8 @@ local t = harness.new("era.m.diffview.workspace_staging")
 local git_calls = {} ---@type table[]
 local refreshed = 0
 local git_result = { code = 0, stderr = "" }
+local delete_calls = {} ---@type string[]
+local delete_result = { ok = true, err = nil }
 local reports = {} ---@type table[]
 
 bootstrap.with_global(t, "stl", {
@@ -25,6 +27,14 @@ bootstrap.with_global(t, "stl", {
       end,
     },
   },
+  os = {
+    fs = {
+      delete = function(filepath)
+        delete_calls[#delete_calls + 1] = filepath
+        return delete_result.ok, delete_result.err
+      end,
+    },
+  },
   reporter = {
     error = function(options)
       reports[#reports + 1] = options
@@ -33,6 +43,9 @@ bootstrap.with_global(t, "stl", {
 })
 bootstrap.with_global(t, "dot", {
   path = {
+    join = function(base, filepath)
+      return base .. "/" .. filepath
+    end,
     workspace = function()
       return "/repo"
     end,
@@ -60,6 +73,8 @@ local function reset_calls()
   git_calls = {}
   refreshed = 0
   git_result = { code = 0, stderr = "" }
+  delete_calls = {}
+  delete_result = { ok = true, err = nil }
   reports = {}
 end
 
@@ -166,6 +181,68 @@ t:test("stage and unstage report Git failures without refreshing", function()
   )
   t.assert_eq("unstage", reports[2].subject, "unstage report subject")
   t.assert_eq("Failed to unstage `denied.txt` (exit 1).", reports[2].message, "unstage report message")
+  entries_at_line[changes_bufnr] = nil
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("discard refreshes after tracked and untracked files are removed", function()
+  reset_calls()
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "tracked", "untracked" })
+  entries_at_line[changes_bufnr] = {
+    { filepath = "tracked.txt", stage_type = "unstaged", status = "M" },
+    { filepath = "untracked.txt", stage_type = "unstaged", status = "?" },
+  }
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  local ctx = { layout = { changes_bufnr = changes_bufnr } }
+
+  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  action.reset(ctx)
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  action.reset(ctx)
+
+  t.assert_eq(1, #git_calls, "git calls")
+  assert_git_call(git_calls[1], "checkout", "tracked.txt")
+  t.assert_eq("/repo/untracked.txt", delete_calls[1], "deleted filepath")
+  t.assert_eq(2, refreshed, "refresh calls")
+  t.assert_eq(0, #reports, "error reports")
+  entries_at_line[changes_bufnr] = nil
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("discard reports tracked and untracked failures without refreshing", function()
+  reset_calls()
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "tracked", "untracked" })
+  entries_at_line[changes_bufnr] = {
+    { filepath = "conflicted.txt", stage_type = "unstaged", status = "M" },
+    { filepath = "locked.txt", stage_type = "unstaged", status = "?" },
+  }
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  local ctx = { layout = { changes_bufnr = changes_bufnr } }
+
+  git_result = { code = 128, stderr = "fatal: checkout failed\n" }
+  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  action.reset(ctx)
+  delete_result = { ok = false, err = "permission_denied" }
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  action.reset(ctx)
+
+  t.assert_eq(0, refreshed, "refresh calls")
+  t.assert_eq(2, #reports, "error reports")
+  t.assert_eq("discard", reports[1].subject, "tracked report subject")
+  t.assert_eq(
+    "Failed to discard `conflicted.txt` (exit 128): fatal: checkout failed",
+    reports[1].message,
+    "tracked report message"
+  )
+  t.assert_eq("discard", reports[2].subject, "untracked report subject")
+  t.assert_eq(
+    "Failed to discard `locked.txt`: unable to delete the untracked file.",
+    reports[2].message,
+    "untracked report message"
+  )
+  t.assert_eq("permission_denied", reports[2].details.error, "untracked report error")
   entries_at_line[changes_bufnr] = nil
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
