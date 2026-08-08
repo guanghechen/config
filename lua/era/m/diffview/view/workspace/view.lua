@@ -458,6 +458,9 @@ function M.open_entry(ctx, entry, token, opts)
   local generation = next_preview_generation(lyt)
   local function is_current()
     return lyt.preview_generation == generation
+      and not ctx.state:is_disposed()
+      and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr)
+      and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
   end
 
   pane_sbs.open_diff_entry({
@@ -492,6 +495,9 @@ function M.clear_sbs(ctx)
   then
     pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr, function()
       return lyt.preview_generation == generation
+        and not ctx.state:is_disposed()
+        and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr)
+        and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
     end)
   end
 end

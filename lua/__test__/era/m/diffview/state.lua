@@ -73,4 +73,36 @@ t:test("commits state cleanup follows tabpage handle validity", function()
   verify_invalid_handle_cleanup("lua/era/m/diffview/view/commits/state.lua", "commits")
 end)
 
+t:test("workspace state disposes its refresh owner after unsubscribing", function()
+  local disposed = {} ---@type string[]
+  t:patch_global("stl", { c = { Observable = Observable } })
+  local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
+  local uninitialized = State.State.new(100)
+  t.assert_false(pcall(uninitialized.request_refresh, uninitialized), "uninitialized refresh still rejected")
+  uninitialized:dispose()
+
+  local state = State.State.new(101)
+
+  state:set_refresh({
+    dispose = function()
+      disposed[#disposed + 1] = "refresh"
+    end,
+  })
+  state:set_git_subscription({
+    unsubscribe = function()
+      disposed[#disposed + 1] = "subscription"
+    end,
+  })
+  state:dispose()
+
+  t.assert_eq("subscription", disposed[1], "subscription disposed first")
+  t.assert_eq("refresh", disposed[2], "refresh owner disposed second")
+  t.assert_true(state:is_disposed(), "state marked disposed")
+
+  local ok_request = pcall(state.request_refresh, state)
+  local ok_check = pcall(state.request_refresh_if_stale, state)
+  t.assert_true(ok_request, "late local refresh is ignored")
+  t.assert_true(ok_check, "late watcher refresh is ignored")
+end)
+
 t:run()

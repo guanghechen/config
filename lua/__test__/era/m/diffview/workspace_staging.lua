@@ -65,7 +65,8 @@ t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
 t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {})
 
 local action = assert(loadfile("lua/era/m/diffview/view/workspace/action.lua"))()
-action.refresh = function()
+
+local function request_refresh()
   refreshed = refreshed + 1
 end
 
@@ -100,6 +101,7 @@ t:test("changes pane routes stage and unstage to the entry at cursor", function(
   local ctx = {
     layout = { changes_bufnr = changes_bufnr },
     state = {
+      request_refresh = request_refresh,
       get_current_entry = function()
         return { filepath = "preview.txt", stage_type = "unstaged", status = "M" }
       end,
@@ -128,6 +130,7 @@ t:test("sbs routes stage and unstage to the canonical current entry", function()
   local ctx = {
     layout = { changes_bufnr = vim.api.nvim_create_buf(false, true) },
     state = {
+      request_refresh = request_refresh,
       get_current_entry = function()
         return current
       end,
@@ -158,6 +161,7 @@ t:test("stage and unstage report Git failures without refreshing", function()
   local ctx = {
     layout = { changes_bufnr = changes_bufnr },
     state = {
+      request_refresh = request_refresh,
       get_current_entry = function()
         return nil
       end,
@@ -194,7 +198,7 @@ t:test("discard refreshes after tracked and untracked files are removed", functi
     { filepath = "untracked.txt", stage_type = "unstaged", status = "?" },
   }
   vim.api.nvim_win_set_buf(0, changes_bufnr)
-  local ctx = { layout = { changes_bufnr = changes_bufnr } }
+  local ctx = { layout = { changes_bufnr = changes_bufnr }, state = { request_refresh = request_refresh } }
 
   vim.api.nvim_win_set_cursor(0, { 1, 0 })
   action.reset(ctx)
@@ -219,7 +223,7 @@ t:test("discard reports tracked and untracked failures without refreshing", func
     { filepath = "locked.txt", stage_type = "unstaged", status = "?" },
   }
   vim.api.nvim_win_set_buf(0, changes_bufnr)
-  local ctx = { layout = { changes_bufnr = changes_bufnr } }
+  local ctx = { layout = { changes_bufnr = changes_bufnr }, state = { request_refresh = request_refresh } }
 
   git_result = { code = 128, stderr = "fatal: checkout failed\n" }
   vim.api.nvim_win_set_cursor(0, { 1, 0 })

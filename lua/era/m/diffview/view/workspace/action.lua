@@ -330,9 +330,7 @@ function M.stage(ctx)
       return
     end
 
-    stl.async.run(function()
-      M.refresh(ctx)
-    end)
+    ctx.state:request_refresh()
   end)
 end
 
@@ -353,9 +351,7 @@ function M.unstage(ctx)
         return
       end
 
-      stl.async.run(function()
-        M.refresh(ctx)
-      end)
+      ctx.state:request_refresh()
     end
   )
 end
@@ -434,9 +430,7 @@ function M.unstage_hunk(ctx, range)
       stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = reason or "Failed to unstage" })
       return
     end
-    stl.async.run(function()
-      M.refresh(ctx)
-    end)
+    ctx.state:request_refresh()
   end)
   return future
 end
@@ -478,9 +472,7 @@ function M.reset(ctx)
       return
     end
 
-    stl.async.run(function()
-      M.refresh(ctx)
-    end)
+    ctx.state:request_refresh()
     return
   end
 
@@ -494,9 +486,7 @@ function M.reset(ctx)
         return
       end
 
-      stl.async.run(function()
-        M.refresh(ctx)
-      end)
+      ctx.state:request_refresh()
     end
   )
 end
@@ -762,7 +752,8 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@param token                          ?stl.c.CancellationToken
 function M.refresh(ctx, token)
-  local entries = data.fetch_diff_entries(token)
+  -- Let in-flight Git reads settle; the token guards view ownership and prevents writes after disposal.
+  local entries = data.fetch_diff_entries()
 
   if token and token:is_cancelled() then
     return

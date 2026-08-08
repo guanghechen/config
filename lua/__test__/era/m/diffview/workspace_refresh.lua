@@ -2,6 +2,7 @@
 --- Run with: nvim -l lua/__test__/era/m/diffview/workspace_refresh.lua
 
 local bootstrap = require("__test__.bootstrap")
+local CancellationToken = require("stl.c.cancellation_token")
 local harness = require("__test__.harness")
 
 local t = harness.new("era.m.diffview.workspace_refresh")
@@ -26,6 +27,7 @@ bootstrap.with_global(t, "era", {})
 ---@field current                        era.m.diffview.IFileEntry
 ---@field entries                        era.m.diffview.IFileEntry[]
 ---@field refreshed_entries              era.m.diffview.IFileEntry[]
+---@field token                          stl.c.CancellationToken|nil
 ---@field visible_entries                era.m.diffview.IFileEntry[]
 
 ---@param opts                           era.m.diffview.test.IRefreshCase
@@ -101,7 +103,7 @@ local function load_refresh_case(opts)
     },
   }
 
-  action.refresh(ctx)
+  action.refresh(ctx, opts.token)
   return action,
     function()
       return current
@@ -190,6 +192,25 @@ t:test("refresh clears selection and preview when no entries remain", function()
   t.assert_nil(get_current(), "cleared selection")
   t.assert_eq(0, #opened, "no preview")
   t.assert_true(was_cleared(), "preview cleared")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("cancelled refresh does not write disposed view state", function()
+  local current = { filepath = "a.lua", stage_type = "unstaged", status = "M" }
+  local refreshed = { filepath = "a.lua", stage_type = "staged", status = "M" }
+  local token = CancellationToken.new()
+  token:cancel()
+  local _, get_current, opened, was_cleared, bufnr = load_refresh_case({
+    current = current,
+    entries = { current },
+    refreshed_entries = { refreshed },
+    token = token,
+    visible_entries = { refreshed },
+  })
+
+  t.assert_eq(current, get_current(), "selection unchanged")
+  t.assert_eq(0, #opened, "preview unchanged")
+  t.assert_false(was_cleared(), "preview not cleared")
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 

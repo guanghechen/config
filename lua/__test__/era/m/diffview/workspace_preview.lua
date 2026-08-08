@@ -94,6 +94,7 @@ t:test("workspace preview generation makes the latest request the sole writer", 
 
   local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
   local left_winnr, right_winnr = create_windows()
+  local disposed = false
   local ctx = {
     layout = {
       tabnr = vim.api.nvim_get_current_tabpage(),
@@ -102,7 +103,11 @@ t:test("workspace preview generation makes the latest request the sole writer", 
       sbs_right_winnr = right_winnr,
       preview_generation = 0,
     },
-    state = {},
+    state = {
+      is_disposed = function()
+        return disposed
+      end,
+    },
   }
 
   view.open_entry(ctx, { filepath = "a.lua", stage_type = "staged", status = "M" }, nil, {
@@ -113,6 +118,10 @@ t:test("workspace preview generation makes the latest request the sole writer", 
   t.assert_false(requests[1].is_current(), "older request invalidated")
   t.assert_true(requests[2].is_current(), "latest request current")
   t.assert_true(requests[1].preserve_view, "preserve option forwarded")
+
+  disposed = true
+  t.assert_false(requests[2].is_current(), "disposed workspace invalidates preview")
+  disposed = false
 
   view.clear_sbs(ctx)
   t.assert_false(requests[2].is_current(), "clear invalidates open request")

@@ -15,8 +15,9 @@ local M = {}
 ---@field public entries                 stl.c.Observable                Observable<era.m.diffview.IFileEntry[]>
 ---@field public current_entry           stl.c.Observable                Observable<era.m.diffview.IFileEntry|nil>
 ---@field public collapsed_dirs          table<string, boolean>          Collapsed directory paths
+---@field protected _disposed            boolean
 ---@field protected _git_subscription    stl.c.IUnsubscribable|nil
----@field protected _git_debounce        stl.timer.IDisposableCallable|nil
+---@field protected _refresh             era.m.diffview.view.workspace.Refresh|nil
 ---@field protected _tab_closed_autocmd  integer|nil
 local State = {}
 State.__index = State
@@ -34,8 +35,9 @@ function State.new(tabnr)
   self.current_entry = stl.c.Observable.from_value(nil)
   self.collapsed_dirs = {}
 
+  self._disposed = false
   self._git_subscription = nil
-  self._git_debounce = nil
+  self._refresh = nil
   self._tab_closed_autocmd = nil
 
   return self
@@ -175,12 +177,42 @@ function State:subscribe(field, callback)
   return observable:subscribe(stl.c.Subscriber.new({ on_next = callback }))
 end
 
----Set git subscription for auto-refresh
+---Set the workspace refresh owner.
+---@param refresh                        era.m.diffview.view.workspace.Refresh
+function State:set_refresh(refresh)
+  assert(not self._disposed, "Workspace state is disposed")
+  if self._refresh then
+    self._refresh:dispose()
+  end
+  self._refresh = refresh
+end
+
+---Request a workspace refresh.
+---@param callback                       ?fun(): nil
+function State:request_refresh(callback)
+  if self._disposed then
+    return
+  end
+  assert(self._refresh, "Workspace refresh owner is not initialized"):request(callback)
+end
+
+---Request a workspace refresh when Git state no longer matches the view.
+function State:request_refresh_if_stale()
+  if self._disposed then
+    return
+  end
+  assert(self._refresh, "Workspace refresh owner is not initialized"):request_if_stale()
+end
+
+---@return boolean
+function State:is_disposed()
+  return self._disposed
+end
+
+---Set git subscription for auto-refresh.
 ---@param subscription                   stl.c.IUnsubscribable
----@param debounce                       stl.timer.IDisposableCallable|nil
-function State:set_git_subscription(subscription, debounce)
+function State:set_git_subscription(subscription)
   self._git_subscription = subscription
-  self._git_debounce = debounce
 end
 
 ---Set TabClosed autocmd id
@@ -195,14 +227,19 @@ end
 
 ---Dispose all subscriptions and resources
 function State:dispose()
-  -- Dispose git subscription and debounce timer
+  if self._disposed then
+    return
+  end
+  self._disposed = true
+
+  -- Stop new refresh requests before disposing their owner.
   if self._git_subscription then
     self._git_subscription:unsubscribe()
     self._git_subscription = nil
   end
-  if self._git_debounce then
-    self._git_debounce:dispose()
-    self._git_debounce = nil
+  if self._refresh then
+    self._refresh:dispose()
+    self._refresh = nil
   end
 
   -- Delete TabClosed autocmd

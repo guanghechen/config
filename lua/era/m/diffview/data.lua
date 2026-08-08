@@ -144,6 +144,30 @@ function M.__convert_status_to_entries__(status_map)
   return entries
 end
 
+---@param entries                     era.m.diffview.IFileEntry[]
+---@param status_map                  table<string, era.m.git.StatusEntry>
+---@return boolean
+function M.matches_status_entries(entries, status_map)
+  local expected = M.__convert_status_to_entries__(status_map)
+  if #entries ~= #expected then
+    return false
+  end
+
+  local entry_ids = {} ---@type table<string, boolean>
+  for _, entry in ipairs(entries) do
+    local id = (entry.stage_type or "") .. "\0" .. entry.status .. "\0" .. entry.filepath
+    entry_ids[id] = true
+  end
+
+  for _, entry in ipairs(expected) do
+    local id = (entry.stage_type or "") .. "\0" .. entry.status .. "\0" .. entry.filepath
+    if not entry_ids[id] then
+      return false
+    end
+  end
+  return true
+end
+
 ---Fetch numstat and update entries with insertions/deletions.
 ---@async
 ---@param entries                     era.m.diffview.IFileEntry[]

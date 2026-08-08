@@ -37,6 +37,9 @@ t:test("open selects and previews the first visible file", function()
     get_entries = function()
       return entries
     end,
+    request_refresh = function(_, callback)
+      callback()
+    end,
     find_entry = function(_, filepath, stage_type)
       for _, entry in ipairs(entries) do
         if entry.filepath == filepath and entry.stage_type == stage_type then

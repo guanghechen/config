@@ -11,7 +11,6 @@ local M = {}
 ---Open Git Diff view (staged/unstaged changes)
 ---@param opts                        { layout: integer|nil }|nil
 function M.open(opts)
-  local workspace_action = require("era.m.diffview.view.workspace.action")
   local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
   local workspace_state = require("era.m.diffview.view.workspace.state")
   local workspace_tabline = require("era.m.diffview.view.workspace.tabline")
@@ -67,9 +66,7 @@ function M.open(opts)
   M.__setup_git_subscription_workspace__(st, ctx)
 
   -- Fetch and render data
-  stl.async.run(function()
-    workspace_action.refresh(ctx)
-
+  st:request_refresh(function()
     -- Auto-select first entry if any
     local entries = st:get_entries()
     if #entries > 0 then
@@ -260,16 +257,13 @@ function M.refresh()
   local tabtype = vim.t[tabnr].tabtype
 
   if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
-    local workspace_action = require("era.m.diffview.view.workspace.action")
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
 
     local st = workspace_state.get(tabnr)
     local lyt = workspace_view.get_layout(tabnr)
     if st and lyt then
-      stl.async.run(function()
-        workspace_action.refresh({ layout = lyt, state = st })
-      end)
+      st:request_refresh()
     end
   elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_action = require("era.m.diffview.view.commits.action")
@@ -297,59 +291,39 @@ local GIT_REFRESH_DEBOUNCE_MS = 300 ---@type integer
 ---@param ctx                         era.m.diffview.view.workspace.IContext
 function M.__setup_git_subscription_workspace__(st, ctx)
   local tabnr = ctx.layout.tabnr ---@type integer
-  local refreshing = false ---@type boolean
-  local pending = false ---@type boolean
+  local data = require("era.m.diffview.data")
   local workspace_action = require("era.m.diffview.view.workspace.action")
+  local Refresh = require("era.m.diffview.view.workspace.refresh")
   local workspace_state = require("era.m.diffview.view.workspace.state")
 
-  local debounced_refresh ---@type stl.timer.IDisposableCallable
-  debounced_refresh = stl.timer.debounce(function()
-    if refreshing then
-      pending = true
-      return
-    end
-
-    -- Validate tab still exists and state is still active
-    if not vim.api.nvim_tabpage_is_valid(tabnr) then
-      return
-    end
-    if workspace_state.get(tabnr) ~= st then
-      return
-    end
-
-    refreshing = true
-    stl.async.run(function()
-      -- Re-check state validity after async operation
+  local refresh = Refresh.new({
+    debounce_ms = GIT_REFRESH_DEBOUNCE_MS,
+    is_stale = function()
+      return not data.matches_status_entries(st:get_entries(), era.m.git.state.status_table())
+    end,
+    is_valid = function()
+      return vim.api.nvim_tabpage_is_valid(tabnr) and workspace_state.get(tabnr) == st
+    end,
+    run = function(token)
       if workspace_state.get(tabnr) ~= st then
-        refreshing = false
         return
       end
-
-      workspace_action.refresh(ctx)
-      refreshing = false
-      if pending then
-        pending = false
-        -- Schedule immediate refresh instead of debouncing again
-        vim.schedule(function()
-          if vim.api.nvim_tabpage_is_valid(tabnr) and workspace_state.get(tabnr) == st then
-            debounced_refresh()
-          end
-        end)
-      end
-    end)
-  end, GIT_REFRESH_DEBOUNCE_MS)
+      workspace_action.refresh(ctx, token)
+    end,
+  })
+  st:set_refresh(refresh)
 
   -- Subscribe to staged files changes (triggered by .git/index watcher)
   local subscription = era.m.git.state.o_staged_files:subscribe(
     stl.c.Subscriber.new({
       on_next = function()
-        debounced_refresh()
+        st:request_refresh_if_stale()
       end,
     }),
     true -- ignoreInitial: avoid triggering on subscribe
   )
 
-  st:set_git_subscription(subscription, debounced_refresh)
+  st:set_git_subscription(subscription)
 end
 
 ----------------------------------------------------------------------------------------------------

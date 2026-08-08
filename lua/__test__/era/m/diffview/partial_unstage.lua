@@ -122,9 +122,6 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
   }
 
   local action = assert(loadfile("lua/era/m/diffview/view/workspace/action.lua"))()
-  action.refresh = function()
-    refreshed = true
-  end
 
   local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
   vim.api.nvim_buf_set_name(bufnr, "diffview://index/f.txt")
@@ -136,6 +133,9 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
   local ctx = {
     layout = { sbs_right_winnr = winnr },
     state = {
+      request_refresh = function()
+        refreshed = true
+      end,
       get_current_entry = function()
         return entry
       end,
@@ -277,7 +277,14 @@ t:test("workspace view binds keymaps after replacing null buffers", function()
   vim.cmd("vnew")
   local right_winnr = vim.api.nvim_get_current_win() ---@type integer
   local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
-  view.open_entry({ layout = { sbs_left_winnr = left_winnr, sbs_right_winnr = right_winnr } }, {})
+  view.open_entry({
+    layout = { sbs_left_winnr = left_winnr, sbs_right_winnr = right_winnr },
+    state = {
+      is_disposed = function()
+        return false
+      end,
+    },
+  }, {})
 
   t.assert_eq(2, #mapped, "mapped buffers")
   t.assert_eq(vim.api.nvim_win_get_buf(left_winnr), mapped[1], "left replacement")
