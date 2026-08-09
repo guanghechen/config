@@ -141,23 +141,25 @@ local function parse_numstat_output(lines)
   return stats
 end
 
+---@param entries                      era.m.diffview.IFileEntry[]
+---@param stats                        table<string, era.m.git.status.INumstat>
+---@param stage_type                   stl.m.diffview.StageTypeEnum
+local function apply_numstat_map(entries, stats, stage_type)
+  for _, entry in ipairs(entries) do
+    if entry.stage_type == stage_type then
+      local stat = stats[entry.filepath]
+      if stat then
+        entry.insertions = stat.insertions
+        entry.deletions = stat.deletions
+      end
+    end
+  end
+end
+
 ---@param result                       stl.git.exec.IResult|nil
 ---@return boolean
 local function git_succeeded(result)
   return type(result) == "table" and result.code == 0
-end
-
----@param result                       stl.git.exec.IResult|nil
----@param label                        string
-local function assert_git_success(result, label)
-  if git_succeeded(result) then
-    return
-  end
-
-  local code = type(result) == "table" and tostring(result.code) or "unknown" ---@type string
-  local stderr = type(result) == "table" and vim.trim(result.stderr or "") or "" ---@type string
-  local details = stderr ~= "" and (": " .. stderr) or "" ---@type string
-  error(string.format("Git %s failed (exit %s)%s", label, code, details), 0)
 end
 
 ---@param args                         string[]
@@ -211,14 +213,9 @@ local function fetch_untracked_numstat(entries, cwd, token)
   if vim.fn.mkdir(temp_dir, "p") ~= 1 then
     return nil
   end
+  -- Keep the index path absent: `git add` creates a new empty alternate index, avoiding a separate `read-tree`.
   local env = { GIT_INDEX_FILE = temp_index } ---@type table<string, string>
   local ok, result = xpcall(function()
-    local init_result = exec_git({ "read-tree", "--empty" }, { cwd = cwd, raw = true, env = env }, token)
-    check_token(token)
-    if not git_succeeded(init_result) then
-      return nil
-    end
-
     local pathspec = table.concat(paths, "\0") .. "\0" ---@type string
     local add_result = exec_git(
       { "--literal-pathspecs", "add", "-N", "--pathspec-from-file=-", "--pathspec-file-nul" },
@@ -259,14 +256,21 @@ end
 function M.fetch_diff_entries(token)
   check_token(token)
 
-  local result = era.m.git.status.collect(nil, token):await()
+  local result = era.m.git.status.collect({ include_numstat = true }, token):await()
   local status_map = result and result.status_map or nil
 
   check_token(token)
 
   local entries = M.__convert_status_to_entries__(status_map)
+  if #entries == 0 then
+    return entries
+  end
 
-  return M.__fetch_numstat__(entries, token)
+  local numstats = assert(result and result.numstats, "Git status snapshot is missing requested numstat")
+  apply_numstat_map(entries, numstats.staged, "staged")
+  apply_numstat_map(entries, numstats.unstaged, "unstaged")
+
+  return M.__fetch_untracked_numstat__(entries, token)
 end
 
 ---Convert status map to file entries.
@@ -318,12 +322,12 @@ function M.matches_status_entries(entries, status_map)
   return true
 end
 
----Fetch numstat and update entries with insertions/deletions.
+---Fetch untracked numstat and update entries with insertions/deletions.
 ---@async
 ---@param entries                     era.m.diffview.IFileEntry[]
 ---@param token                       ?stl.c.CancellationToken
 ---@return era.m.diffview.IFileEntry[]
-function M.__fetch_numstat__(entries, token)
+function M.__fetch_untracked_numstat__(entries, token)
   if #entries == 0 then
     return entries
   end
@@ -331,26 +335,6 @@ function M.__fetch_numstat__(entries, token)
   check_token(token)
 
   local cwd = dot.path.workspace()
-
-  -- Parallel fetch
-  local staged_future = stl.git.exec.exec(
-    { "diff", "--staged", "--numstat", "-z", "--" },
-    { cwd = cwd, raw = true },
-    token
-  )
-  local unstaged_future = stl.git.exec.exec({ "diff", "--numstat", "-z", "--" }, { cwd = cwd, raw = true }, token)
-
-  local results = stl.async.await_all({ staged_future, unstaged_future })
-
-  check_token(token)
-
-  assert_git_success(results[1], "numstat staged diff")
-  assert_git_success(results[2], "numstat unstaged diff")
-
-  -- Apply stats
-  M.__apply_numstat_stats__(entries, results[1], "staged")
-  M.__apply_numstat_stats__(entries, results[2], "unstaged")
-
   local untracked_result = fetch_untracked_numstat(entries, cwd, token)
   if untracked_result then
     M.__apply_numstat_stats__(entries, untracked_result, "unstaged")
@@ -370,16 +354,7 @@ function M.__apply_numstat_stats__(entries, result, stage_type)
   end
 
   local stats = parse_numstat_output(result.lines)
-
-  for _, entry in ipairs(entries) do
-    if entry.stage_type == stage_type then
-      local stat = stats[entry.filepath]
-      if stat then
-        entry.insertions = stat.insertions
-        entry.deletions = stat.deletions
-      end
-    end
-  end
+  apply_numstat_map(entries, stats, stage_type)
 end
 
 ---Fetch total commit count.

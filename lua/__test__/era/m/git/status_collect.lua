@@ -90,6 +90,20 @@ bootstrap.with_global(t, "dot", {
 
 local status = assert(loadfile("lua/era/m/git/status.lua"))()
 
+---@param args                         string[]
+---@param opts                         stl.git.exec.IExecOpts
+---@return stl.git.exec.IResult
+local function exec_real_git(args, opts)
+  local cmd = { "git", "-C", assert(opts.cwd) }
+  vim.list_extend(cmd, args)
+  local result = vim.system(cmd, { text = false }):wait()
+  return {
+    code = result.code,
+    lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
+    stderr = result.stderr or "",
+  }
+end
+
 t:test("collect: default staged diff does not require HEAD", function()
   commands = {}
   command_opts = {}
@@ -112,6 +126,50 @@ t:test("collect: explicit base remains supported", function()
   status.collect({ base = "HEAD" }):get_result()
 
   t.assert_eq("diff --staged --name-status -z HEAD --", table.concat(commands[1], " "), "staged command")
+end)
+
+t:test("collect: optional numstat mode returns one coherent tracked snapshot", function()
+  commands = {}
+  command_opts = {}
+  responses = {
+    {
+      code = 0,
+      lines = {
+        ":100644 100644 aaaaaaa bbbbbbb M\0normal.lua\0"
+          .. ":100644 100644 aaaaaaa bbbbbbb R100\0old\tname.lua\0new\tname.lua\0"
+          .. ":100644 100644 aaaaaaa bbbbbbb M\0binary.dat\0"
+          .. "3\t1\tnormal.lua\0"
+          .. "4\t2\t\0old\tname.lua\0new\tname.lua\0"
+          .. "-\t-\tbinary.dat\0",
+      },
+    },
+    {
+      code = 0,
+      lines = {
+        ":100644 000000 aaaaaaa 0000000 D\0deleted.lua\0" .. "0\t5\tdeleted.lua\0",
+      },
+    },
+    { code = 0, lines = { "fresh\nfile.lua\0" } },
+  }
+
+  local result = status.collect({ include_numstat = true }):get_result()
+
+  t.assert_eq("diff --staged --raw --numstat -z --", table.concat(commands[1], " "), "staged snapshot")
+  t.assert_eq("diff --raw --numstat -z --", table.concat(commands[2], " "), "unstaged snapshot")
+  t.assert_eq("ls-files --exclude-standard --others -z", table.concat(commands[3], " "), "untracked snapshot")
+  t.assert_true(command_opts[1].raw and command_opts[2].raw and command_opts[3].raw, "raw protocols")
+
+  local renamed = result.status_map["/repo/new\tname.lua"]
+  t.assert_true(renamed ~= nil and renamed.staged.R == true, "rename status")
+  t.assert_eq("old\tname.lua", renamed.staged_prev_relative, "rename source")
+  t.assert_true(result.status_map["/repo/deleted.lua"].unstaged.D == true, "unstaged deletion")
+  t.assert_true(result.status_map["/repo/fresh\nfile.lua"].unstaged["?"] == true, "untracked file")
+  t.assert_eq(3, result.numstats.staged["normal.lua"].insertions, "normal insertions")
+  t.assert_eq(1, result.numstats.staged["normal.lua"].deletions, "normal deletions")
+  t.assert_eq(4, result.numstats.staged["new\tname.lua"].insertions, "rename insertions")
+  t.assert_eq(2, result.numstats.staged["new\tname.lua"].deletions, "rename deletions")
+  t.assert_nil(result.numstats.staged["binary.dat"], "binary stats remain unknown")
+  t.assert_eq(5, result.numstats.unstaged["deleted.lua"].deletions, "unstaged deletions")
 end)
 
 t:test("collect: NUL protocol preserves special paths and rename destinations", function()
@@ -176,6 +234,82 @@ t:test("collect: untracked query failure rejects the otherwise complete snapshot
     assert(future:get_error()):find("untracked files failed (exit 1): fatal: ls-files failed", 1, true) ~= nil,
     "actionable untracked error"
   )
+end)
+
+t:test("collect: real Git snapshot keeps staged, unstaged, rename, and numstat aligned", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  ---@param ... string
+  ---@return vim.SystemCompleted
+  local function git(...)
+    return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
+  end
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git("init", "-q").code, "git init")
+    vim.fn.writefile({ "old one", "old two" }, repo .. "/old.txt")
+    vim.fn.writefile({ "base" }, repo .. "/mixed.txt")
+    t.assert_eq(0, git("add", "--", "old.txt", "mixed.txt").code, "initial add")
+    t.assert_eq(
+      0,
+      git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
+      "initial commit"
+    )
+
+    t.assert_eq(0, git("mv", "old.txt", "new.txt").code, "stage rename")
+    vim.fn.writefile({ "staged" }, repo .. "/mixed.txt", "a")
+    t.assert_eq(0, git("add", "--", "new.txt", "mixed.txt").code, "stage changes")
+    vim.fn.writefile({ "unstaged" }, repo .. "/mixed.txt", "a")
+    vim.fn.writefile({ "fresh" }, repo .. "/fresh.txt")
+
+    t:patch_table(dot.path, "workspace", function()
+      return repo
+    end)
+    t:patch_table(stl.git.exec, "exec", exec_real_git)
+
+    local result = status.collect({ include_numstat = true }):get_result()
+    local renamed = result.status_map[repo .. "/new.txt"]
+    local mixed = result.status_map[repo .. "/mixed.txt"]
+
+    t.assert_true(renamed ~= nil and renamed.staged.R == true, "real rename status")
+    t.assert_eq("old.txt", renamed.staged_prev_relative, "real rename source")
+    t.assert_true(mixed.staged.M == true and mixed.unstaged.M == true, "real mixed status")
+    t.assert_true(result.status_map[repo .. "/fresh.txt"].unstaged["?"] == true, "real untracked status")
+    t.assert_eq(1, result.numstats.staged["mixed.txt"].insertions, "real staged insertions")
+    t.assert_eq(1, result.numstats.unstaged["mixed.txt"].insertions, "real unstaged insertions")
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
+
+t:test("collect: real Git numstat snapshot supports an unborn HEAD", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, vim.system({ "git", "-C", repo, "init", "-q" }, { text = true }):wait().code, "git init")
+    vim.fn.writefile({ "first", "second" }, repo .. "/first.txt")
+    t.assert_eq(0, vim.system({ "git", "-C", repo, "add", "--", "first.txt" }, { text = true }):wait().code, "add")
+
+    t:patch_table(dot.path, "workspace", function()
+      return repo
+    end)
+    t:patch_table(stl.git.exec, "exec", exec_real_git)
+
+    local result = status.collect({ include_numstat = true }):get_result()
+    t.assert_true(result.status_map[repo .. "/first.txt"].staged.A == true, "unborn staged add")
+    t.assert_eq(2, result.numstats.staged["first.txt"].insertions, "unborn insertions")
+    t.assert_eq(0, result.numstats.staged["first.txt"].deletions, "unborn deletions")
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
 end)
 
 t:test("collect: delayed child rejection settles the outer future", function()

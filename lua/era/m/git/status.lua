@@ -372,6 +372,70 @@ local function parse_name_status_output(lines)
   return records
 end
 
+---Parse combined `--raw --numstat -z` output. Raw records precede numstat records;
+---both sections use Git's NUL protocol, including separate source/destination fields for renames.
+---@param lines                       string[]
+---@return era.m.git.status.INameStatusRecord[] records
+---@return table<string, era.m.git.status.INumstat> numstats
+local function parse_raw_numstat_output(lines)
+  local output = table.concat(lines, "\n") ---@type string
+  local fields = vim.split(output, "\0", { plain = true }) ---@type string[]
+  local records = {} ---@type era.m.git.status.INameStatusRecord[]
+  local index = 1 ---@type integer
+
+  while index <= #fields do
+    local header = fields[index]
+    if type(header) ~= "string" or header:sub(1, 1) ~= ":" then
+      break
+    end
+
+    local status = header:match(" ([^ ]+)$") ---@type string|nil
+    if status == nil or status == "" then
+      break
+    end
+
+    local code = status:sub(1, 1) ---@type string
+    local previous = nil ---@type string|nil
+    local relative = nil ---@type string|nil
+    if code == "R" or code == "C" then
+      previous = fields[index + 1]
+      relative = fields[index + 2]
+      index = index + 3
+    else
+      relative = fields[index + 1]
+      index = index + 2
+    end
+
+    if type(relative) == "string" and relative ~= "" then
+      records[#records + 1] = { status = status, relative = relative, previous = previous }
+    end
+  end
+
+  local numstats = {} ---@type table<string, era.m.git.status.INumstat>
+  while index <= #fields do
+    local record = fields[index]
+    local insertions_text, deletions_text, relative = record:match("^([%d-]+)\t([%d-]+)\t(.*)$")
+    if insertions_text == nil or deletions_text == nil or relative == nil then
+      index = index + 1
+    else
+      if relative == "" then
+        relative = fields[index + 2]
+        index = index + 3
+      else
+        index = index + 1
+      end
+
+      local insertions = tonumber(insertions_text) ---@type integer|nil
+      local deletions = tonumber(deletions_text) ---@type integer|nil
+      if insertions and deletions and relative and relative ~= "" then
+        numstats[relative] = { insertions = insertions, deletions = deletions }
+      end
+    end
+  end
+
+  return records, numstats
+end
+
 ---Parse path-only output, preserving literal paths from Git's NUL protocol.
 ---@param lines                         string[]
 ---@return string[]
@@ -503,20 +567,21 @@ end
 
 ---@param opts                       ?era.m.git.status.ICollectOpts
 ---@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with { status_map: table, status_groups: table };
+---@return stl.c.Future              Resolves with era.m.git.status.ICollectResult;
 ---                                 rejects if any required Git query fails
 function M.collect(opts, token)
   local workspace = dot.path.workspace()
   if not dot.path.is_git_repo() then
-    return stl.c.Future.resolve({ status_map = {}, status_groups = create_status_groups() })
+    return stl.c.Future.resolve({ status_map = {}, status_groups = create_status_groups(), numstats = nil })
   end
 
   local base = opts and opts.base
+  local include_numstat = opts ~= nil and opts.include_numstat == true
   local include_untracked = opts == nil or opts.include_untracked ~= false
 
   return stl.c.Future.new(function(resolve, reject) ---@diagnostic disable-line: redundant-parameter
     if token and token:is_cancelled() then
-      resolve({ status_map = {}, status_groups = create_status_groups() })
+      resolve({ status_map = {}, status_groups = create_status_groups(), numstats = nil })
       return
     end
 
@@ -524,16 +589,27 @@ function M.collect(opts, token)
       local status_map = {} ---@type table<string, era.m.git.StatusEntry>
       local status_groups = create_status_groups()
 
-      local staged_args = { "diff", "--staged", "--name-status", "-z" } ---@type string[]
+      local staged_args = { "diff", "--staged" } ---@type string[]
+      local unstaged_args = { "diff" } ---@type string[]
+      if include_numstat then
+        vim.list_extend(staged_args, { "--raw", "--numstat" })
+        vim.list_extend(unstaged_args, { "--raw", "--numstat" })
+      else
+        staged_args[#staged_args + 1] = "--name-status"
+        unstaged_args[#unstaged_args + 1] = "--name-status"
+      end
+      staged_args[#staged_args + 1] = "-z"
+      unstaged_args[#unstaged_args + 1] = "-z"
       if base ~= nil then
         staged_args[#staged_args + 1] = base
       end
       staged_args[#staged_args + 1] = "--"
+      unstaged_args[#unstaged_args + 1] = "--"
 
       ---@type stl.c.Future[]
       local futures = {
         stl.git.exec.exec(staged_args, { cwd = workspace, raw = true }, token),
-        stl.git.exec.exec({ "diff", "--name-status", "-z", "--" }, { cwd = workspace, raw = true }, token),
+        stl.git.exec.exec(unstaged_args, { cwd = workspace, raw = true }, token),
       }
 
       if include_untracked then
@@ -557,28 +633,39 @@ function M.collect(opts, token)
         end
       end
 
+      local staged_records = nil ---@type era.m.git.status.INameStatusRecord[]|nil
+      local unstaged_records = nil ---@type era.m.git.status.INameStatusRecord[]|nil
+      local staged_numstats = nil ---@type table<string, era.m.git.status.INumstat>|nil
+      local unstaged_numstats = nil ---@type table<string, era.m.git.status.INumstat>|nil
+
       -- Process staged changes (diff --staged)
-      local staged_result = results[1] ---@type { lines: string[], code: integer }|nil
-      if staged_result and staged_result.lines then
-        for _, record in ipairs(parse_name_status_output(staged_result.lines)) do
-          local relative = record.relative
-          local absolute = join_status_path(workspace, relative)
-          local entry = ensure_entry(status_map, absolute, relative)
-          apply_status_code(entry, "staged", record.status)
-          entry.staged_prev_relative = record.previous
-        end
+      local staged_result = assert(results[1]) ---@type stl.git.exec.IResult
+      if include_numstat then
+        staged_records, staged_numstats = parse_raw_numstat_output(staged_result.lines)
+      else
+        staged_records = parse_name_status_output(staged_result.lines)
+      end
+      for _, record in ipairs(staged_records) do
+        local relative = record.relative
+        local absolute = join_status_path(workspace, relative)
+        local entry = ensure_entry(status_map, absolute, relative)
+        apply_status_code(entry, "staged", record.status)
+        entry.staged_prev_relative = record.previous
       end
 
       -- Process unstaged changes (diff)
-      local unstaged_result = results[2] ---@type { lines: string[], code: integer }|nil
-      if unstaged_result and unstaged_result.lines then
-        for _, record in ipairs(parse_name_status_output(unstaged_result.lines)) do
-          local relative = record.relative
-          local absolute = join_status_path(workspace, relative)
-          local entry = ensure_entry(status_map, absolute, relative)
-          apply_status_code(entry, "unstaged", record.status)
-          entry.unstaged_prev_relative = record.previous
-        end
+      local unstaged_result = assert(results[2]) ---@type stl.git.exec.IResult
+      if include_numstat then
+        unstaged_records, unstaged_numstats = parse_raw_numstat_output(unstaged_result.lines)
+      else
+        unstaged_records = parse_name_status_output(unstaged_result.lines)
+      end
+      for _, record in ipairs(unstaged_records) do
+        local relative = record.relative
+        local absolute = join_status_path(workspace, relative)
+        local entry = ensure_entry(status_map, absolute, relative)
+        apply_status_code(entry, "unstaged", record.status)
+        entry.unstaged_prev_relative = record.previous
       end
 
       -- Process untracked files (ls-files)
@@ -617,7 +704,11 @@ function M.collect(opts, token)
         end
       end
 
-      resolve({ status_map = status_map, status_groups = status_groups })
+      local numstats = nil ---@type { staged: table<string, era.m.git.status.INumstat>, unstaged: table<string, era.m.git.status.INumstat> }|nil
+      if include_numstat then
+        numstats = { staged = assert(staged_numstats), unstaged = assert(unstaged_numstats) }
+      end
+      resolve({ status_map = status_map, status_groups = status_groups, numstats = numstats })
     end
 
     stl.async.run(function()

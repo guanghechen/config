@@ -61,22 +61,30 @@ t:test("numstat: preserves literal special paths from the NUL protocol", functio
   t.assert_eq(2, multiline.deletions, "newline path deletions")
 end)
 
-t:test("numstat: requests NUL-delimited staged and unstaged data without requiring HEAD", function()
-  local commands = {} ---@type string[][]
-  local command_opts = {} ---@type stl.git.exec.IExecOpts[]
-  stl.git = {
-    exec = {
-      exec = function(args, opts)
-        commands[#commands + 1] = args
-        command_opts[#command_opts + 1] = opts
-        return { code = 0, lines = {} }
-      end,
+t:test("fetch: applies tracked stats from the shared status snapshot", function()
+  local collect_opts = nil ---@type era.m.git.status.ICollectOpts|nil
+  era.m = {
+    git = {
+      status = {
+        collect = function(opts)
+          collect_opts = opts
+          return {
+            await = function()
+              return {
+                status_map = {
+                  ["/repo/a.lua"] = { relative = "a.lua", staged = { A = true }, unstaged = {} },
+                  ["/repo/b.lua"] = { relative = "b.lua", staged = {}, unstaged = { M = true } },
+                },
+                numstats = {
+                  staged = { ["a.lua"] = { insertions = 7, deletions = 0 } },
+                  unstaged = { ["b.lua"] = { insertions = 2, deletions = 3 } },
+                },
+              }
+            end,
+          }
+        end,
+      },
     },
-  }
-  stl.async = {
-    await_all = function(futures)
-      return futures
-    end,
   }
   dot.path = {
     workspace = function()
@@ -84,12 +92,17 @@ t:test("numstat: requests NUL-delimited staged and unstaged data without requiri
     end,
   }
 
-  data.__fetch_numstat__({ { filepath = "a.lua", stage_type = "staged", status = "A" } })
+  local entries = data.fetch_diff_entries()
+  local by_stage = {} ---@type table<string, era.m.diffview.IFileEntry>
+  for _, entry in ipairs(entries) do
+    by_stage[assert(entry.stage_type)] = entry
+  end
 
-  t.assert_eq("diff --staged --numstat -z --", table.concat(commands[1], " "), "staged command")
-  t.assert_eq("diff --numstat -z --", table.concat(commands[2], " "), "unstaged command")
-  t.assert_true(command_opts[1].raw, "staged raw output")
-  t.assert_true(command_opts[2].raw, "unstaged raw output")
+  t.assert_true(collect_opts ~= nil and collect_opts.include_numstat == true, "single tracked snapshot requested")
+  t.assert_eq(7, by_stage.staged.insertions, "staged insertions")
+  t.assert_eq(0, by_stage.staged.deletions, "staged deletions")
+  t.assert_eq(2, by_stage.unstaged.insertions, "unstaged insertions")
+  t.assert_eq(3, by_stage.unstaged.deletions, "unstaged deletions")
 end)
 
 t:test("numstat: batches all untracked files through one isolated index", function()
@@ -100,7 +113,7 @@ t:test("numstat: batches all untracked files through one isolated index", functi
       exec = function(args, opts)
         commands[#commands + 1] = args
         command_opts[#command_opts + 1] = opts
-        if #commands == 5 then
+        if #commands == 2 then
           return { code = 0, lines = { "3\t0\tnew.lua\0" }, stderr = "" }
         end
         return { code = 0, lines = {}, stderr = "" }
@@ -123,67 +136,25 @@ t:test("numstat: batches all untracked files through one isolated index", functi
       { filepath = index == 1 and "new.lua" or ("bulk/" .. index), stage_type = "unstaged", status = "?" }
   end
 
-  data.__fetch_numstat__(entries)
+  data.__fetch_untracked_numstat__(entries)
 
-  t.assert_eq(5, #commands, "fixed Git process count")
-  t.assert_eq("read-tree --empty", table.concat(commands[3], " "), "temporary index command")
+  t.assert_eq(2, #commands, "fixed Git process count")
   t.assert_eq(
     "--literal-pathspecs add -N --pathspec-from-file=- --pathspec-file-nul",
-    table.concat(commands[4], " "),
+    table.concat(commands[1], " "),
     "intent-to-add command"
   )
-  t.assert_eq("diff --numstat -z --", table.concat(commands[5], " "), "untracked diff command")
-  t.assert_eq(command_opts[3].env.GIT_INDEX_FILE, command_opts[5].env.GIT_INDEX_FILE, "isolated index reused")
-  t.assert_true(command_opts[3].env.GIT_INDEX_FILE ~= "/repo/.git/index", "main index untouched")
-  t.assert_true(command_opts[4].stdin:sub(1, 8) == "new.lua\0", "NUL pathspec stdin")
-  t.assert_true(command_opts[5].raw, "raw output")
+  t.assert_eq("diff --numstat -z --", table.concat(commands[2], " "), "untracked diff command")
+  t.assert_eq(command_opts[1].env.GIT_INDEX_FILE, command_opts[2].env.GIT_INDEX_FILE, "isolated index reused")
+  t.assert_true(command_opts[1].env.GIT_INDEX_FILE ~= "/repo/.git/index", "main index untouched")
+  t.assert_true(command_opts[1].stdin:sub(1, 8) == "new.lua\0", "NUL pathspec stdin")
+  t.assert_true(command_opts[2].raw, "raw output")
   t.assert_eq(3, entries[1].insertions, "untracked insertions")
   t.assert_eq(0, entries[1].deletions, "untracked deletions")
 end)
 
-t:test("numstat: rejects staged and unstaged query failures", function()
-  dot.path = {
-    workspace = function()
-      return "/repo"
-    end,
-  }
-  stl.async = {
-    await_all = function(futures)
-      return futures
-    end,
-  }
-
-  local function assert_failure(responses, expected)
-    local index = 0 ---@type integer
-    stl.git = {
-      exec = {
-        exec = function()
-          index = index + 1
-          return responses[index]
-        end,
-      },
-    }
-
-    local ok, err = pcall(data.__fetch_numstat__, { { filepath = "a.lua", stage_type = "staged", status = "M" } })
-    t.assert_false(ok, "failed query rejected")
-    t.assert_true(tostring(err):find(expected, 1, true) ~= nil, "actionable query failure")
-  end
-
-  assert_failure({
-    { code = 128, lines = {}, stderr = "fatal: staged failed\n" },
-    { code = 0, lines = {}, stderr = "" },
-  }, "numstat staged diff failed (exit 128): fatal: staged failed")
-  assert_failure({
-    { code = 0, lines = {}, stderr = "" },
-    { code = 1, lines = {}, stderr = "fatal: unstaged failed\n" },
-  }, "numstat unstaged diff failed (exit 1): fatal: unstaged failed")
-end)
-
 t:test("numstat: degrades an untracked temporary-index query failure", function()
   local responses = {
-    { code = 0, lines = { "7\t2\tstaged.lua\0" }, stderr = "" },
-    { code = 0, lines = { "3\t1\tmodified.lua\0" }, stderr = "" },
-    { code = 0, lines = {}, stderr = "" },
     { code = 0, lines = {}, stderr = "" },
     { code = 128, lines = {}, stderr = "fatal: cannot hash unreadable.lua\n" },
   }
@@ -207,10 +178,10 @@ t:test("numstat: degrades an untracked temporary-index query failure", function(
     end,
   }
 
-  local staged = { filepath = "staged.lua", stage_type = "staged", status = "M" }
-  local modified = { filepath = "modified.lua", stage_type = "unstaged", status = "M" }
+  local staged = { filepath = "staged.lua", stage_type = "staged", status = "M", insertions = 7, deletions = 2 }
+  local modified = { filepath = "modified.lua", stage_type = "unstaged", status = "M", insertions = 3, deletions = 1 }
   local untracked = { filepath = "unreadable.lua", stage_type = "unstaged", status = "?" }
-  local result = data.__fetch_numstat__({ staged, modified, untracked })
+  local result = data.__fetch_untracked_numstat__({ staged, modified, untracked })
 
   t.assert_true(result[1] == staged and result[2] == modified and result[3] == untracked, "entries preserved")
   t.assert_eq(7, staged.insertions, "staged stats preserved")
@@ -229,7 +200,7 @@ t:test("numstat: cancellation stops the isolated-index pipeline and removes its 
     exec = {
       exec = function(_, opts, exec_token)
         command_count = command_count + 1
-        if command_count == 3 then
+        if command_count == 1 then
           temp_index = opts.env.GIT_INDEX_FILE
           exec_token:cancel()
           return { code = -1, lines = {}, stderr = "Operation cancelled" }
@@ -249,12 +220,12 @@ t:test("numstat: cancellation stops the isolated-index pipeline and removes its 
     end,
   }
 
-  local ok = pcall(data.__fetch_numstat__, {
+  local ok = pcall(data.__fetch_untracked_numstat__, {
     { filepath = "new.lua", stage_type = "unstaged", status = "?" },
   }, token)
 
   t.assert_false(ok, "cancelled query rejected")
-  t.assert_eq(3, command_count, "later temporary-index commands skipped")
+  t.assert_eq(1, command_count, "later temporary-index commands skipped")
   local temp_dir = assert(temp_index):match("^(.*)/index$")
   t.assert_true(temp_dir ~= nil and vim.uv.fs_stat(temp_dir) == nil, "temporary index removed")
 end)
@@ -266,7 +237,7 @@ t:test("numstat: unexpected temporary-index errors propagate after cleanup", fun
     exec = {
       exec = function(_, opts)
         command_count = command_count + 1
-        if command_count == 3 then
+        if command_count == 1 then
           temp_index = opts.env.GIT_INDEX_FILE
           error("unexpected executor bug")
         end
@@ -285,7 +256,7 @@ t:test("numstat: unexpected temporary-index errors propagate after cleanup", fun
     end,
   }
 
-  local ok, err = pcall(data.__fetch_numstat__, {
+  local ok, err = pcall(data.__fetch_untracked_numstat__, {
     { filepath = "new.lua", stage_type = "unstaged", status = "?" },
   })
 
@@ -442,7 +413,7 @@ t:test("numstat: reads real untracked text while preserving binary and empty sem
     local special_entry = { filepath = special, stage_type = "unstaged", status = "?" }
     local magic_entry = { filepath = magic, stage_type = "unstaged", status = "?" }
     local other_entry = { filepath = "other.txt", stage_type = "unstaged", status = "?" }
-    data.__fetch_numstat__({ plain, empty, binary_entry, special_entry, magic_entry, other_entry })
+    data.__fetch_untracked_numstat__({ plain, empty, binary_entry, special_entry, magic_entry, other_entry })
 
     t.assert_eq(3, plain.insertions, "text insertions")
     t.assert_eq(0, plain.deletions, "text deletions")
@@ -500,7 +471,7 @@ t:test("numstat: an unreadable untracked file does not block the Changes snapsho
     }
 
     local entry = { filepath = "unreadable.txt", stage_type = "unstaged", status = "?" }
-    local result = data.__fetch_numstat__({ entry })
+    local result = data.__fetch_untracked_numstat__({ entry })
 
     t.assert_true(result[1] == entry, "entry preserved")
     t.assert_nil(entry.insertions, "insertions remain unknown")

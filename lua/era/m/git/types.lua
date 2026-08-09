@@ -136,7 +136,17 @@
 
 ---@class era.m.git.status.ICollectOpts
 ---@field public base                   ?string
+---@field public include_numstat        ?boolean
 ---@field public include_untracked      ?boolean
+
+---@class era.m.git.status.INumstat
+---@field public insertions             integer
+---@field public deletions              integer
+
+---@class era.m.git.status.ICollectResult
+---@field public status_map             table<string, era.m.git.StatusEntry>
+---@field public status_groups          table<string, table<string, boolean>>
+---@field public numstats               { staged: table<string, era.m.git.status.INumstat>, unstaged: table<string, era.m.git.status.INumstat> }|nil
 
 ---@class era.m.git.StatusEntry
 ---@field public categories             table<string, boolean>
