@@ -62,6 +62,53 @@ local function wait_future(future)
   end, 1000, "future should resolve")
 end
 
+t:test("get_object_name: resolves immutable identity and classifies absence", function()
+  local requests = mock_system()
+  local present = info.get_object_name("/work", "HEAD:f.txt")
+
+  t.assert_eq(
+    "git -C /work rev-parse --verify --quiet HEAD:f.txt",
+    table.concat(requests[1].argv, " "),
+    "resolution command"
+  )
+  requests[1].callback({ code = 0, stdout = "abc123\n" })
+  wait_future(present)
+  local present_result = present:get_result()
+  t.assert_true(present_result.ok, "resolved")
+  t.assert_false(present_result.missing, "present")
+  t.assert_eq("abc123", present_result.object_name, "object identity")
+
+  local missing = info.get_object_name("/work", "HEAD:missing.txt")
+  requests[2].callback({ code = 1, stdout = "" })
+  wait_future(missing)
+  local missing_result = missing:get_result()
+  t.assert_false(missing_result.ok, "not resolved")
+  t.assert_true(missing_result.missing, "missing")
+
+  local failed = info.get_object_name("/work", "HEAD:f.txt")
+  requests[3].callback({ code = 128, stderr = "injected resolution failure" })
+  wait_future(failed)
+  local failed_result = failed:get_result()
+  t.assert_false(failed_result.ok, "failed")
+  t.assert_false(failed_result.missing, "failure is not absence")
+  t.assert_true(failed_result.err:find("injected resolution failure", 1, true) ~= nil, "actionable error")
+end)
+
+t:test("get_object_name: cancellation kills resolution and returns failure", function()
+  local requests = mock_system()
+  local token = CancellationToken.new()
+  local future = info.get_object_name("/work", "HEAD:f.txt", token)
+
+  token:cancel()
+  wait_future(future)
+
+  local result = future:get_result()
+  t.assert_true(requests[1].proc.killed, "resolution killed")
+  t.assert_false(result.ok, "not resolved")
+  t.assert_false(result.missing, "cancellation is not absence")
+  t.assert_eq("Operation cancelled", result.err, "error")
+end)
+
 t:test("get_show_blob: returns raw bytes", function()
   local requests = mock_system()
   local future = info.get_show_blob("/work", "abc123")

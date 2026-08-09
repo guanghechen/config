@@ -95,6 +95,7 @@ t:test("pane loader binds index bytes to the captured object hash", function()
   t.assert_eq("./f.txt", index_path, "explicit stage-zero path")
   t.assert_eq("abc123", blob_object, "blob read by captured hash")
   t.assert_eq("abc123", vim.b[bufnr].git_object_name, "buffer snapshot")
+  t.assert_eq("abc123", vim.b[bufnr].git_content_object_name, "content identity")
   t.assert_eq("index\n", staging.from_buffer(bufnr).text, "buffer document")
   t.assert_eq(0, #errors, "no errors")
   vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -216,6 +217,7 @@ t:test("pane loader reuses only an identical index object and source format", fu
   t.assert_eq(1, write_calls, "initial buffer write")
   t.assert_eq(1, before_write_calls, "initial before-write hook")
   t.assert_eq("abc123", vim.b[target_bufnr].git_object_name, "object identity")
+  t.assert_eq("abc123", vim.b[target_bufnr].git_content_object_name, "content identity")
   t.assert_eq("utf-8", vim.b[target_bufnr].git_source_encoding, "encoding identity")
   t.assert_eq("\n", vim.b[target_bufnr].git_source_default_eol, "EOL identity")
 
@@ -241,6 +243,181 @@ t:test("pane loader reuses only an identical index object and source format", fu
 
   vim.api.nvim_buf_delete(source_bufnr, { force = true })
   vim.api.nvim_buf_delete(target_bufnr, { force = true })
+end)
+
+t:test("pane loader caches HEAD and explicit commit content by resolved object", function()
+  local object_names = {
+    ["HEAD:f.txt"] = "head-a",
+    ["commit:f.txt"] = "commit-a",
+  } ---@type table<string, string>
+  local resolve_calls = 0 ---@type integer
+  local blob_calls = 0 ---@type integer
+  local write_calls = 0 ---@type integer
+  t:patch_table(stl.git.info, "get_object_name", function(_, object)
+    resolve_calls = resolve_calls + 1
+    return Future.resolve({ ok = true, missing = false, object_name = object_names[object] })
+  end)
+  t:patch_table(stl.git.info, "get_show_blob", function(_, object)
+    blob_calls = blob_calls + 1
+    return Future.resolve({ ok = true, missing = false, bytes = object })
+  end)
+
+  local source_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local head_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local commit_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  t:patch_table(stl.nvim.buf, "locate_bufnr", function()
+    return source_bufnr
+  end)
+  local replace_buffer_text = staging.replace_buffer_text
+  t:patch_table(staging, "replace_buffer_text", function(...)
+    write_calls = write_calls + 1
+    return replace_buffer_text(...)
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local function load(object, bufnr)
+    local outcome = nil ---@type boolean|nil
+    stl.async.run(function()
+      outcome = pane.load_git_content(object, bufnr)
+    end)
+    wait(function()
+      return outcome ~= nil
+    end)
+    return outcome
+  end
+
+  t.assert_true(load("HEAD:f.txt", head_bufnr), "initial HEAD load")
+  t.assert_true(load("HEAD:f.txt", head_bufnr), "identical HEAD load")
+  t.assert_eq(2, resolve_calls, "dynamic HEAD identity is resampled")
+  t.assert_eq(1, blob_calls, "identical HEAD skips blob read")
+  t.assert_eq(1, write_calls, "identical HEAD skips buffer write")
+  t.assert_eq("head-a", vim.b[head_bufnr].git_content_object_name, "HEAD content identity")
+  t.assert_nil(vim.b[head_bufnr].git_object_name, "HEAD is not an index snapshot")
+
+  vim.api.nvim_set_option_value("fileencoding", "latin1", { buf = source_bufnr })
+  t.assert_true(load("HEAD:f.txt", head_bufnr), "changed HEAD source format")
+  t.assert_eq(2, blob_calls, "changed HEAD format reads blob")
+  t.assert_eq(2, write_calls, "changed HEAD format rewrites buffer")
+
+  object_names["HEAD:f.txt"] = "head-b"
+  t.assert_true(load("HEAD:f.txt", head_bufnr), "changed HEAD load")
+  t.assert_eq(3, blob_calls, "changed HEAD reads blob")
+  t.assert_eq(3, write_calls, "changed HEAD rewrites buffer")
+  t.assert_eq("head-b", staging.from_buffer(head_bufnr).text, "changed HEAD content")
+
+  t.assert_true(load("commit:f.txt", commit_bufnr), "initial commit load")
+  t.assert_true(load("commit:f.txt", commit_bufnr), "identical commit load")
+  t.assert_eq(6, resolve_calls, "each revision load resolves an identity")
+  t.assert_eq(4, blob_calls, "identical commit skips blob read")
+  t.assert_eq(4, write_calls, "identical commit skips buffer write")
+  t.assert_eq("commit-a", vim.b[commit_bufnr].git_content_object_name, "commit content identity")
+  t.assert_nil(vim.b[commit_bufnr].git_object_name, "commit is not an index snapshot")
+
+  vim.api.nvim_buf_delete(source_bufnr, { force = true })
+  vim.api.nvim_buf_delete(head_bufnr, { force = true })
+  vim.api.nvim_buf_delete(commit_bufnr, { force = true })
+end)
+
+t:test("pane revision loader binds fetch to the resolved snapshot", function()
+  local name_future, resolve_name = Future.new_with_resolver()
+  local name_requested = false ---@type boolean
+  local blob_object = nil ---@type string|nil
+  t:patch_table(stl.git.info, "get_object_name", function()
+    name_requested = true
+    return name_future
+  end)
+  t:patch_table(stl.git.info, "get_show_blob", function(_, object)
+    blob_object = object
+    return Future.resolve({ ok = true, missing = false, bytes = "snapshot-a" })
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local outcome = nil ---@type boolean|nil
+  stl.async.run(function()
+    outcome = pane.load_git_content("HEAD:f.txt", bufnr)
+  end)
+  wait(function()
+    return name_requested
+  end)
+
+  resolve_name({ ok = true, missing = false, object_name = "snapshot-a-oid" })
+  wait(function()
+    return outcome ~= nil
+  end)
+
+  t.assert_true(outcome, "loaded")
+  t.assert_eq("snapshot-a-oid", blob_object, "blob fetch uses the resolved OID")
+  t.assert_eq("snapshot-a-oid", vim.b[bufnr].git_content_object_name, "resolved identity committed")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("pane revision cache never bypasses resolution failure or request ownership", function()
+  local name_future, resolve_name = Future.new_with_resolver()
+  local name_requested = false ---@type boolean
+  local blob_calls = 0 ---@type integer
+  t:patch_table(stl.git.info, "get_object_name", function()
+    name_requested = true
+    return name_future
+  end)
+  t:patch_table(stl.git.info, "get_show_blob", function()
+    blob_calls = blob_calls + 1
+    return Future.resolve({ ok = true, missing = false, bytes = "unexpected" })
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local current = true ---@type boolean
+  local outcome = nil ---@type boolean|nil
+  stl.async.run(function()
+    outcome = pane.load_git_content("HEAD:f.txt", bufnr, nil, function()
+      return current
+    end)
+  end)
+  wait(function()
+    return name_requested
+  end)
+
+  current = false
+  resolve_name({ ok = true, missing = false, object_name = "head-a" })
+  wait(function()
+    return outcome ~= nil
+  end)
+  t.assert_false(outcome, "stale resolution rejected")
+  t.assert_eq(0, blob_calls, "stale request does not read blob")
+  t.assert_nil(vim.b[bufnr].git_content_object_name, "stale request does not commit identity")
+
+  t:patch_table(stl.git.info, "get_object_name", function()
+    return Future.resolve({ ok = false, missing = false, err = "resolution failed" })
+  end)
+  current = true
+  outcome = nil
+  stl.async.run(function()
+    outcome = pane.load_git_content("HEAD:f.txt", bufnr)
+  end)
+  wait(function()
+    return outcome ~= nil
+  end)
+  t.assert_false(outcome, "resolution failure rejected")
+  t.assert_eq(0, blob_calls, "failed resolution does not read blob")
+  t.assert_nil(vim.b[bufnr].git_content_object_name, "failure does not commit identity")
+
+  t:patch_table(stl.git.info, "get_object_name", function()
+    return Future.resolve({ ok = false, missing = true, err = "object missing" })
+  end)
+  outcome = nil
+  stl.async.run(function()
+    outcome = pane.load_git_content("HEAD:missing.txt", bufnr)
+  end)
+  wait(function()
+    return outcome ~= nil
+  end)
+  t.assert_true(outcome, "missing revision path becomes empty content")
+  t.assert_eq(0, blob_calls, "missing revision path skips blob read")
+  t.assert_eq("", staging.from_buffer(bufnr).text, "missing revision content")
+  t.assert_nil(vim.b[bufnr].git_content_object_name, "absence is not cached as an object")
+
+  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("pane loader resamples source format after an asynchronous blob read", function()
@@ -343,6 +520,7 @@ t:test("pane loader invalidates identity before a fallible buffer rewrite", func
 
   t.assert_false(write_ok, "write failure propagated")
   t.assert_nil(vim.b[bufnr].git_object_name, "failed write invalidates object identity")
+  t.assert_nil(vim.b[bufnr].git_content_object_name, "failed write invalidates content identity")
   t.assert_nil(vim.b[bufnr].git_source_encoding, "failed write invalidates format identity")
   t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }), "failed write reseals buffer")
 
@@ -392,6 +570,7 @@ t:test("pane index cache never bypasses failure or request ownership", function(
 
   t.assert_false(load(), "failed blob read")
   t.assert_nil(vim.b[bufnr].git_object_name, "failure does not commit object identity")
+  t.assert_nil(vim.b[bufnr].git_content_object_name, "failure does not commit content identity")
   t.assert_nil(vim.b[bufnr].git_source_encoding, "failure does not commit format identity")
   fail_blob = false
   t.assert_true(load(), "retry after failure")

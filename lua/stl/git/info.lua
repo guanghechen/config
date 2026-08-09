@@ -14,6 +14,12 @@
 ---@field public missing                boolean
 ---@field public ok                     boolean
 
+---@class stl.git.IObjectNameResult
+---@field public err                    ?string
+---@field public missing                boolean
+---@field public object_name            ?string
+---@field public ok                     boolean
+
 ---@class stl.git.IFileInfoResult
 ---@field public err                    ?string
 ---@field public info                   ?stl.git.IFileInfo
@@ -207,6 +213,75 @@ local function git_error(message, obj)
     return message .. ": " .. stderr
   end
   return string.format("%s (exit %s)", message, tostring(obj.code))
+end
+
+---@param cwd                           string
+---@param object                        string
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with stl.git.IObjectNameResult
+function M.get_object_name(cwd, object, token)
+  return stl.c.Future.new(function(resolve)
+    local finished = false ---@type boolean
+    local proc = nil ---@type vim.SystemObj|nil
+    local cancel_sub = nil ---@type stl.c.IUnsubscribable|nil
+
+    ---@param result                    stl.git.IObjectNameResult
+    local function finish(result)
+      if finished then
+        return
+      end
+      finished = true
+      if cancel_sub then
+        cancel_sub:unsubscribe()
+      end
+      resolve(result)
+    end
+
+    local function cancelled()
+      return token ~= nil and token:is_cancelled()
+    end
+
+    if cancelled() then
+      finish({ ok = false, missing = false, err = "Operation cancelled" })
+      return
+    end
+
+    proc = vim.system({ "git", "-C", cwd, "rev-parse", "--verify", "--quiet", object }, { text = true }, function(obj)
+      vim.schedule(function()
+        if finished then
+          return
+        end
+        if obj.code == 1 then
+          finish({ ok = false, missing = true, err = "Git object does not exist: " .. object })
+          return
+        end
+        if obj.code ~= 0 then
+          finish({
+            ok = false,
+            missing = false,
+            err = git_error("Failed to resolve Git object " .. object, obj),
+          })
+          return
+        end
+
+        local object_name = vim.trim(obj.stdout or "") ---@type string
+        if object_name == "" then
+          finish({ ok = false, missing = false, err = "Git returned an empty object name: " .. object })
+          return
+        end
+        finish({ ok = true, missing = false, object_name = object_name })
+      end)
+    end)
+
+    if token then
+      cancel_sub = token:on_cancel(function()
+        if proc then
+          proc:kill(9)
+        end
+        finish({ ok = false, missing = false, err = "Operation cancelled" })
+      end)
+    end
+  end)
 end
 
 ---@param cwd                           string

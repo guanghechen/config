@@ -194,8 +194,12 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
     return false
   end
 
+  -- Keep the index snapshot separate: partial unstage consumes it, while every resolved Git object
+  -- may own the content cache identity.
   local index_object_name = nil ---@type string|nil
+  local content_object_name = nil ---@type string|nil
   local blob_object = object ---@type string
+  local object_missing = false ---@type boolean
   local source_encoding = nil ---@type string|nil
   local source_default_eol = nil ---@type string|nil
   local index_stage_path = object:match("^:%d:(.*)$") ---@type string|nil
@@ -222,8 +226,33 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
       return false
     end
     index_object_name = info_result.info.object_name
-    blob_object = index_object_name
+    content_object_name = index_object_name
+    blob_object = content_object_name
+  elseif object:match("^[^:]+:") then
+    local name_result = stl.git.info.get_object_name(dot.path.workspace(), object, token):await()
+    if not is_request_current(token, is_current) then
+      return false
+    end
+    if type(name_result) ~= "table" or not name_result.ok or not name_result.object_name then
+      if type(name_result) == "table" and name_result.missing then
+        object_missing = true
+      else
+        if not token or not token:is_cancelled() then
+          stl.reporter.error({
+            from = __module_name__,
+            subject = "load_git_content",
+            message = (type(name_result) == "table" and name_result.err) or "Unable to resolve Git object",
+          })
+        end
+        return false
+      end
+    else
+      content_object_name = name_result.object_name
+      blob_object = content_object_name
+    end
+  end
 
+  if content_object_name then
     stl.async.scheduler()
 
     if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -235,41 +264,45 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
       return false
     end
     if
-      vim.b[bufnr].git_object_name == index_object_name
+      vim.b[bufnr].git_content_object_name == content_object_name
       and vim.b[bufnr].git_source_encoding == source_encoding
       and vim.b[bufnr].git_source_default_eol == source_default_eol
     then
+      vim.b[bufnr].git_object_name = index_object_name
       return true
     end
   end
 
-  local result = stl.git.info.get_show_blob(dot.path.workspace(), blob_object, token):await()
-  if not is_request_current(token, is_current) then
-    return false
-  end
-
-  if type(result) ~= "table" then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "load_git_content",
-      message = "Invalid blob result for object: " .. object,
-    })
-    return false
-  end
-
-  local bytes = result.bytes ---@type string|nil
-  if not result.ok then
-    if result.missing then
-      bytes = ""
-    else
-      if not token or not token:is_cancelled() then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = "load_git_content",
-          message = result.err or ("Unable to read object: " .. object),
-        })
-      end
+  local bytes = object_missing and "" or nil ---@type string|nil
+  if not object_missing then
+    local result = stl.git.info.get_show_blob(dot.path.workspace(), blob_object, token):await()
+    if not is_request_current(token, is_current) then
       return false
+    end
+
+    if type(result) ~= "table" then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "load_git_content",
+        message = "Invalid blob result for object: " .. object,
+      })
+      return false
+    end
+
+    bytes = result.bytes
+    if not result.ok then
+      if result.missing then
+        bytes = ""
+      else
+        if not token or not token:is_cancelled() then
+          stl.reporter.error({
+            from = __module_name__,
+            subject = "load_git_content",
+            message = result.err or ("Unable to read object: " .. object),
+          })
+        end
+        return false
+      end
     end
   end
   if type(bytes) ~= "string" then
@@ -309,6 +342,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   end
 
   vim.b[bufnr].git_object_name = nil
+  vim.b[bufnr].git_content_object_name = nil
   vim.b[bufnr].git_source_encoding = nil
   vim.b[bufnr].git_source_default_eol = nil
 
@@ -329,8 +363,9 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   end
 
   vim.b[bufnr].git_object_name = index_object_name
-  vim.b[bufnr].git_source_encoding = index_object_name and encoding or nil
-  vim.b[bufnr].git_source_default_eol = index_object_name and default_eol or nil
+  vim.b[bufnr].git_content_object_name = content_object_name
+  vim.b[bufnr].git_source_encoding = content_object_name and encoding or nil
+  vim.b[bufnr].git_source_default_eol = content_object_name and default_eol or nil
 
   return true
 end

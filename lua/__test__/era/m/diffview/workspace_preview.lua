@@ -169,6 +169,9 @@ t:test("workspace preview generation makes the latest request the sole writer", 
 end)
 
 t:test("stale async load cannot overwrite a shared preview buffer", function()
+  t:patch_table(stl.git.info, "get_object_name", function()
+    return Future.resolve({ ok = true, missing = false, object_name = "head-object" })
+  end)
   t:patch_table(stl.git.info, "get_show_blob", function()
     return Future.resolve({ ok = true, bytes = "NEW\n" })
   end)
@@ -313,6 +316,92 @@ t:test("index preview disambiguates a digit-colon filename from an unmerged stag
     t.assert_eq("digit-colon", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "exact index content")
     t.assert_eq(expected_object, vim.b[bufnr].git_object_name, "authoritative index object")
     vim.api.nvim_buf_delete(bufnr, { force = true })
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
+
+t:test("revision preview caches real blobs and observes HEAD changes", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+    vim.fn.writefile({ "base" }, repo .. "/f.txt")
+    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "git add")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
+      "commit base"
+    )
+    local base_hash = vim.trim(git(repo, "rev-parse", "HEAD").stdout or "") ---@type string
+
+    t:patch_table(dot.path, "workspace", function()
+      return repo
+    end)
+    local production_info = assert(loadfile("lua/stl/git/info.lua"))()
+    local get_show_blob = production_info.get_show_blob
+    local blob_calls = 0 ---@type integer
+    production_info.get_show_blob = function(...)
+      blob_calls = blob_calls + 1
+      return get_show_blob(...)
+    end
+    t:patch_table(stl.git, "info", production_info)
+
+    local writes = 0 ---@type integer
+    local replace_buffer_text = staging.replace_buffer_text
+    t:patch_table(staging, "replace_buffer_text", function(...)
+      writes = writes + 1
+      return replace_buffer_text(...)
+    end)
+
+    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+    local head_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+    local commit_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+    local function load(object, bufnr)
+      local outcome = nil ---@type boolean|nil
+      stl.async.run(function()
+        outcome = pane.load_git_content(object, bufnr)
+      end)
+      wait(function()
+        return outcome ~= nil
+      end)
+      return outcome
+    end
+
+    t.assert_true(load("HEAD:f.txt", head_bufnr), "initial HEAD load")
+    t.assert_true(load("HEAD:f.txt", head_bufnr), "cached HEAD load")
+    t.assert_eq(1, blob_calls, "cached HEAD skips blob read")
+    t.assert_eq(1, writes, "cached HEAD skips buffer write")
+
+    vim.fn.writefile({ "next" }, repo .. "/f.txt")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qam", "next").code,
+      "commit next"
+    )
+    t.assert_true(load("HEAD:f.txt", head_bufnr), "changed HEAD load")
+    t.assert_eq(2, blob_calls, "changed HEAD reads blob")
+    t.assert_eq(2, writes, "changed HEAD rewrites buffer")
+    t.assert_eq("next\n", staging.from_buffer(head_bufnr).text, "latest HEAD content")
+
+    local commit_object = base_hash .. ":f.txt" ---@type string
+    t.assert_true(load(commit_object, commit_bufnr), "initial commit load")
+    t.assert_true(load(commit_object, commit_bufnr), "cached commit load")
+    t.assert_eq(3, blob_calls, "cached commit skips blob read")
+    t.assert_eq(3, writes, "cached commit skips buffer write")
+    t.assert_eq("base\n", staging.from_buffer(commit_bufnr).text, "commit content")
+    t.assert_eq(
+      vim.trim(git(repo, "rev-parse", commit_object).stdout or ""),
+      vim.b[commit_bufnr].git_content_object_name,
+      "commit blob identity"
+    )
+
+    vim.api.nvim_buf_delete(head_bufnr, { force = true })
+    vim.api.nvim_buf_delete(commit_bufnr, { force = true })
   end, debug.traceback)
 
   vim.fn.delete(repo, "rf")
