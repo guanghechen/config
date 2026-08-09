@@ -164,6 +164,10 @@ Hook 仅发送 background reconcile notification。其 stdout、stderr 和非零
 - bootstrap apply 失败；
 - scheduler activation 失败。
 
+Fresh server 在首个 session 创建前没有 render context。Loader 此时保留 `status01`，并
+注册一次性 `session-created[40]` bootstrap hook；首个 session 创建后通过
+`load-theme.sh` 重试 lifecycle。其他 fallback 保持稳定，不随新 session 自动重试。
+
 Session-local `status off` 始终由 session policy 持有，loader 与 renderer 均不得把它
 误改为 `on`。
 

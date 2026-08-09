@@ -59,6 +59,11 @@ function _ghc_tmux_set_status_layout_hook_ {
     "run-shell -b '$status_renderer apply $event >/dev/null 2>&1 || true'"
 }
 
+function _ghc_tmux_defer_status_bootstrap_ {
+  tmux set-hook -g 'session-created[40]' \
+    "run-shell -b 'bash \"$HOME/.config/tmux/script/load-theme.sh\" >/dev/null 2>&1 || true'"
+}
+
 function _ghc_tmux_unset_status_layout_hooks_ {
   local layout_hook
   for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
@@ -237,6 +242,12 @@ function _ghc_tmux_load_theme_ {
       if [ -z "$status_renderer" ] || [ -z "$status_driver" ]; then
         _ghc_tmux_load_status01_ "$status_position"
         tmux display-message "Status renderer or scheduler driver missing; fallback to status01" 2>/dev/null || true
+      elif [ -z "$(tmux list-sessions -F '#{session_id}' 2>/dev/null)" ]; then
+        # A fresh server loads tmux.conf before creating its first session, so
+        # status02 has no render context yet. Keep the usable fallback and let
+        # the first session retry through this lifecycle writer exactly once.
+        _ghc_tmux_load_status01_ "$status_position"
+        _ghc_tmux_defer_status_bootstrap_
       else
         tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
         # Attach/detach change the attached-width set, so they share the

@@ -6,6 +6,7 @@ repo_dir=$(cd "$crate_dir/../.." && pwd)
 binary="$crate_dir/target/debug/ghc-tmux-status"
 tmp=$(mktemp -d /tmp/ghc-tmux-render-lifecycle-test.XXXXXX)
 socket="ghc-tmux-render-lifecycle-test-$$"
+cold_socket="ghc-tmux-cold-start-test-$$"
 real_tmux=$(command -v tmux)
 refresh_client_a_pid=
 refresh_client_b_pid=
@@ -15,6 +16,7 @@ cleanup() {
   [ -z "$refresh_client_b_pid" ] || kill "$refresh_client_b_pid" 2>/dev/null || true
   exec 9>&- 2>/dev/null || true
   exec 8>&- 2>/dev/null || true
+  env -u TMUX tmux -L "$cold_socket" kill-server 2>/dev/null || true
   env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
@@ -255,6 +257,49 @@ cp "$repo_dir/conf/theme.tmux.conf" "$loader_root/conf/theme.tmux.conf"
 cp "$repo_dir/conf/theme/"{status01,status02,panestatus01,panestatus02}.tmux.conf \
   "$loader_root/conf/theme/"
 cp "$binary" "$loader_root/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+
+# A fresh tmux server loads its config before the first session exists. The
+# loader must keep status01 as a temporary fallback, then retry exactly when a
+# concrete render context becomes available.
+cat >"$tmp/cold-start.conf" <<'EOF'
+set-option -s exit-empty off
+run-shell "bash $HOME/.config/tmux/script/load-theme.sh"
+EOF
+env -u TMUX HOME="$loader_home" tmux -L "$cold_socket" \
+  -f "$tmp/cold-start.conf" start-server
+cold_initial_state=$(tmux -L "$cold_socket" display-message -p \
+  '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{status-interval}')
+if [ "$cold_initial_state" != $'02\t0\t20' ]; then
+  echo "cold-start loader did not retain its temporary fallback: $cold_initial_state" >&2
+  exit 1
+fi
+cold_initial_hook=$(tmux -L "$cold_socket" show-hooks -g 'session-created[40]')
+if [[ "$cold_initial_hook" != *"load-theme.sh"* ]]; then
+  echo "cold-start loader did not register its deferred bootstrap hook: $cold_initial_hook" >&2
+  exit 1
+fi
+
+tmux -L "$cold_socket" new-session -d -s cold-start -x 120 -y 30
+cold_state=""
+for _ in $(seq 1 100); do
+  cold_state=$(tmux -L "$cold_socket" display-message -p \
+    '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{status-left}	#{status-interval}')
+  case "$cold_state" in
+    $'02\t1\t#($HOME/.config/tmux/script/status-scheduler.sh)'*$'\t1') break ;;
+  esac
+  sleep 0.02
+done
+case "$cold_state" in
+  $'02\t1\t#($HOME/.config/tmux/script/status-scheduler.sh)'*$'\t1') ;;
+  *) echo "cold-start status02 did not recover after session creation: $cold_state" >&2; exit 1 ;;
+esac
+cold_active_hook=$(tmux -L "$cold_socket" show-hooks -g 'session-created[40]')
+if [[ "$cold_active_hook" == *"load-theme.sh"* \
+  || "$cold_active_hook" != *"ghc-tmux-status apply session-created"* ]]; then
+  echo "cold-start bootstrap hook did not transition to the renderer hook: $cold_active_hook" >&2
+  exit 1
+fi
+
 tmux -L "$socket" set-environment -g HOME "$loader_home"
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
 loader_state=$(tmux -L "$socket" display-message -p \
