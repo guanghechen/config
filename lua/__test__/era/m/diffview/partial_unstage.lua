@@ -166,6 +166,283 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
+t:test("pane loader reuses only an identical index object and source format", function()
+  local object_name = "abc123" ---@type string
+  local blob_calls = 0 ---@type integer
+  local write_calls = 0 ---@type integer
+  local before_write_calls = 0 ---@type integer
+  t:patch_table(stl.git.info, "get_file_info", function()
+    return Future.resolve({
+      ok = true,
+      info = {
+        has_conflicts = false,
+        object_name = object_name,
+      },
+    })
+  end)
+  t:patch_table(stl.git.info, "get_show_blob", function(_, object)
+    blob_calls = blob_calls + 1
+    t.assert_eq(object_name, object, "blob read by resolved object")
+    return Future.resolve({ ok = true, missing = false, bytes = "index" })
+  end)
+
+  local source_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local target_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  t:patch_table(stl.nvim.buf, "locate_bufnr", function()
+    return source_bufnr
+  end)
+  local replace_buffer_text = staging.replace_buffer_text
+  t:patch_table(staging, "replace_buffer_text", function(...)
+    write_calls = write_calls + 1
+    return replace_buffer_text(...)
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local function load()
+    local outcome = nil ---@type boolean|nil
+    stl.async.run(function()
+      outcome = pane.load_git_content(":./f.txt", target_bufnr, nil, nil, function()
+        before_write_calls = before_write_calls + 1
+      end)
+    end)
+    wait(function()
+      return outcome ~= nil
+    end)
+    return outcome
+  end
+
+  t.assert_true(load(), "initial load")
+  t.assert_eq(1, blob_calls, "initial blob read")
+  t.assert_eq(1, write_calls, "initial buffer write")
+  t.assert_eq(1, before_write_calls, "initial before-write hook")
+  t.assert_eq("abc123", vim.b[target_bufnr].git_object_name, "object identity")
+  t.assert_eq("utf-8", vim.b[target_bufnr].git_source_encoding, "encoding identity")
+  t.assert_eq("\n", vim.b[target_bufnr].git_source_default_eol, "EOL identity")
+
+  t.assert_true(load(), "identical snapshot")
+  t.assert_eq(1, blob_calls, "identical snapshot skips blob read")
+  t.assert_eq(1, write_calls, "identical snapshot skips buffer write")
+  t.assert_eq(1, before_write_calls, "identical snapshot skips before-write hook")
+
+  object_name = "def456"
+  t.assert_true(load(), "changed object")
+  t.assert_eq(2, blob_calls, "changed object reloads blob")
+  t.assert_eq(2, write_calls, "changed object rewrites buffer")
+
+  vim.api.nvim_set_option_value("fileencoding", "latin1", { buf = source_bufnr })
+  t.assert_true(load(), "changed encoding")
+  t.assert_eq(3, blob_calls, "changed encoding reloads blob")
+  t.assert_eq(3, write_calls, "changed encoding rewrites buffer")
+
+  vim.api.nvim_set_option_value("fileformat", "dos", { buf = source_bufnr })
+  t.assert_true(load(), "changed default EOL")
+  t.assert_eq(4, blob_calls, "changed EOL reloads blob")
+  t.assert_eq(4, write_calls, "changed EOL rewrites buffer")
+
+  vim.api.nvim_buf_delete(source_bufnr, { force = true })
+  vim.api.nvim_buf_delete(target_bufnr, { force = true })
+end)
+
+t:test("pane loader resamples source format after an asynchronous blob read", function()
+  t:patch_table(stl.git.info, "get_file_info", function()
+    return Future.resolve({
+      ok = true,
+      info = {
+        has_conflicts = false,
+        object_name = "abc123",
+      },
+    })
+  end)
+  local blob_future, resolve_blob = Future.new_with_resolver()
+  local blob_requested = false ---@type boolean
+  t:patch_table(stl.git.info, "get_show_blob", function()
+    blob_requested = true
+    return blob_future
+  end)
+
+  local source_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local target_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  t:patch_table(stl.nvim.buf, "locate_bufnr", function()
+    return source_bufnr
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local outcome = nil ---@type boolean|nil
+  stl.async.run(function()
+    outcome = pane.load_git_content(":./f.txt", target_bufnr)
+  end)
+  wait(function()
+    return blob_requested
+  end)
+
+  vim.api.nvim_set_option_value("fileencoding", "latin1", { buf = source_bufnr })
+  vim.api.nvim_set_option_value("fileformat", "dos", { buf = source_bufnr })
+  resolve_blob({ ok = true, missing = false, bytes = "index" })
+  wait(function()
+    return outcome ~= nil
+  end)
+
+  t.assert_true(outcome, "loaded")
+  t.assert_eq("latin1", vim.b[target_bufnr].git_source_encoding, "latest encoding identity")
+  t.assert_eq("\r\n", vim.b[target_bufnr].git_source_default_eol, "latest EOL identity")
+  t.assert_eq("latin1", vim.api.nvim_get_option_value("fileencoding", { buf = target_bufnr }), "decoded encoding")
+  t.assert_eq("dos", vim.api.nvim_get_option_value("fileformat", { buf = target_bufnr }), "decoded EOL")
+
+  vim.api.nvim_buf_delete(source_bufnr, { force = true })
+  vim.api.nvim_buf_delete(target_bufnr, { force = true })
+end)
+
+t:test("pane loader invalidates identity before a fallible buffer rewrite", function()
+  local object_name = "object-a" ---@type string
+  local blob_calls = 0 ---@type integer
+  t:patch_table(stl.git.info, "get_file_info", function()
+    return Future.resolve({
+      ok = true,
+      info = {
+        has_conflicts = false,
+        object_name = object_name,
+      },
+    })
+  end)
+  t:patch_table(stl.git.info, "get_show_blob", function(_, object)
+    blob_calls = blob_calls + 1
+    return Future.resolve({ ok = true, missing = false, bytes = object })
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local function load()
+    local outcome = nil ---@type boolean|nil
+    stl.async.run(function()
+      outcome = pane.load_git_content(":./f.txt", bufnr)
+    end)
+    wait(function()
+      return outcome ~= nil
+    end)
+    return outcome
+  end
+
+  t.assert_true(load(), "initial object")
+  t.assert_eq("object-a", vim.b[bufnr].git_object_name, "initial identity")
+
+  local replace_buffer_text = staging.replace_buffer_text
+  local restore_replace = t:patch_table(staging, "replace_buffer_text", function(target_bufnr)
+    replace_buffer_text(target_bufnr, "partial")
+    error("injected write failure")
+  end)
+  object_name = "object-b"
+  local completed = false ---@type boolean
+  local write_ok = nil ---@type boolean|nil
+  stl.async.run(function()
+    write_ok = pcall(pane.load_git_content, ":./f.txt", bufnr)
+    completed = true
+  end)
+  wait(function()
+    return completed
+  end)
+
+  t.assert_false(write_ok, "write failure propagated")
+  t.assert_nil(vim.b[bufnr].git_object_name, "failed write invalidates object identity")
+  t.assert_nil(vim.b[bufnr].git_source_encoding, "failed write invalidates format identity")
+  t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }), "failed write reseals buffer")
+
+  restore_replace()
+  object_name = "object-a"
+  t.assert_true(load(), "original key reloads after failed write")
+  t.assert_eq(3, blob_calls, "invalid identity prevents false cache hit")
+  t.assert_eq("object-a", staging.from_buffer(bufnr).text, "authoritative content restored")
+
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("pane index cache never bypasses failure or request ownership", function()
+  local object_name = "abc123" ---@type string
+  local blob_calls = 0 ---@type integer
+  local fail_blob = true ---@type boolean
+  local info_result = {
+    ok = true,
+    info = {
+      has_conflicts = false,
+      object_name = object_name,
+    },
+  }
+  t:patch_table(stl.git.info, "get_file_info", function()
+    return Future.resolve(info_result)
+  end)
+  t:patch_table(stl.git.info, "get_show_blob", function()
+    blob_calls = blob_calls + 1
+    if fail_blob then
+      return Future.resolve({ ok = false, missing = false, err = "read failed" })
+    end
+    return Future.resolve({ ok = true, missing = false, bytes = "index" })
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local function load(token, is_current)
+    local outcome = nil ---@type boolean|nil
+    stl.async.run(function()
+      outcome = pane.load_git_content(":./f.txt", bufnr, token, is_current)
+    end)
+    wait(function()
+      return outcome ~= nil
+    end)
+    return outcome
+  end
+
+  t.assert_false(load(), "failed blob read")
+  t.assert_nil(vim.b[bufnr].git_object_name, "failure does not commit object identity")
+  t.assert_nil(vim.b[bufnr].git_source_encoding, "failure does not commit format identity")
+  fail_blob = false
+  t.assert_true(load(), "retry after failure")
+  t.assert_eq(2, blob_calls, "retry reads blob again")
+
+  info_result = {
+    ok = true,
+    info = {
+      has_conflicts = true,
+      object_name = object_name,
+    },
+  }
+  t.assert_false(load(), "conflict rejects cached stage-zero object")
+  t.assert_eq(2, blob_calls, "conflict does not read blob")
+
+  local cancelled_token = {
+    is_cancelled = function()
+      return true
+    end,
+  }
+  t.assert_false(load(cancelled_token), "cancelled request rejects cache")
+  t.assert_eq(2, blob_calls, "cancelled request does not read blob")
+
+  local pending_info, resolve_info = Future.new_with_resolver()
+  t:patch_table(stl.git.info, "get_file_info", function()
+    return pending_info
+  end)
+  local current = true ---@type boolean
+  local outcome = nil ---@type boolean|nil
+  stl.async.run(function()
+    outcome = pane.load_git_content(":./f.txt", bufnr, nil, function()
+      return current
+    end)
+  end)
+  current = false
+  resolve_info({
+    ok = true,
+    info = {
+      has_conflicts = false,
+      object_name = object_name,
+    },
+  })
+  wait(function()
+    return outcome ~= nil
+  end)
+  t.assert_false(outcome, "request made stale while awaiting index info")
+  t.assert_eq(2, blob_calls, "stale request does not read blob")
+
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
 t:test("workspace keymaps route normal and visual ghu", function()
   local calls = {} ---@type table[]
   local action = {

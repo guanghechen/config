@@ -196,6 +196,8 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
 
   local index_object_name = nil ---@type string|nil
   local blob_object = object ---@type string
+  local source_encoding = nil ---@type string|nil
+  local source_default_eol = nil ---@type string|nil
   local index_stage_path = object:match("^:%d:(.*)$") ---@type string|nil
   local index_path = not index_stage_path and object:match("^:(.*)$") or nil ---@type string|nil
   if index_path then
@@ -221,6 +223,24 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
     end
     index_object_name = info_result.info.object_name
     blob_object = index_object_name
+
+    stl.async.scheduler()
+
+    if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
+      return false
+    end
+
+    source_encoding, source_default_eol = get_document_format(object)
+    if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
+      return false
+    end
+    if
+      vim.b[bufnr].git_object_name == index_object_name
+      and vim.b[bufnr].git_source_encoding == source_encoding
+      and vim.b[bufnr].git_source_default_eol == source_default_eol
+    then
+      return true
+    end
   end
 
   local result = stl.git.info.get_show_blob(dot.path.workspace(), blob_object, token):await()
@@ -268,6 +288,9 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   end
 
   local encoding, default_eol = get_document_format(object) ---@type string, string
+  if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
+    return false
+  end
   local document, decode_err = era.m.git.staging.from_blob(bytes, encoding, default_eol)
   if not document then
     stl.reporter.error({
@@ -281,18 +304,33 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   if before_write then
     before_write()
   end
-  if not is_request_current(token, is_current) then
+  if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
 
-  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-  vim.api.nvim_set_option_value("fileformat", document.eol == "\r\n" and "dos" or "unix", { buf = bufnr })
-  vim.api.nvim_set_option_value("fileencoding", document.encoding, { buf = bufnr })
-  vim.api.nvim_set_option_value("bomb", document.bomb, { buf = bufnr })
-  era.m.git.staging.replace_buffer_text(bufnr, document.text)
+  vim.b[bufnr].git_object_name = nil
+  vim.b[bufnr].git_source_encoding = nil
+  vim.b[bufnr].git_source_default_eol = nil
+
+  local write_ok, write_err = pcall(function()
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+    vim.api.nvim_set_option_value("fileformat", document.eol == "\r\n" and "dos" or "unix", { buf = bufnr })
+    vim.api.nvim_set_option_value("fileencoding", document.encoding, { buf = bufnr })
+    vim.api.nvim_set_option_value("bomb", document.bomb, { buf = bufnr })
+    era.m.git.staging.replace_buffer_text(bufnr, document.text)
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+  end)
+  if not write_ok then
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      pcall(vim.api.nvim_set_option_value, "modifiable", false, { buf = bufnr })
+    end
+    error(write_err, 0)
+  end
+
   vim.b[bufnr].git_object_name = index_object_name
-  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-  vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+  vim.b[bufnr].git_source_encoding = index_object_name and encoding or nil
+  vim.b[bufnr].git_source_default_eol = index_object_name and default_eol or nil
 
   return true
 end
