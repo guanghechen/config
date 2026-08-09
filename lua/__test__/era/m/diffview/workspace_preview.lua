@@ -477,6 +477,133 @@ t:test("workspace preview routes status snapshot identities for every file shape
   t.assert_eq("index-source", renamed[1].object_name, "unstaged rename source identity")
 end)
 
+t:test("staged preview starts both immutable loads before publishing", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local left_gate, release_left = Future.new_with_resolver()
+  local started = {} ---@type string[]
+  local applied = 0 ---@type integer
+  local next_bufnr = 0 ---@type integer
+  pane.create_sbs_buffer = function()
+    next_bufnr = next_bufnr + 1
+    return next_bufnr
+  end
+  pane.load_git_content = function(object)
+    started[#started + 1] = object
+    if object == "HEAD:f.txt" then
+      left_gate:await()
+    end
+    return true, true
+  end
+  pane.__apply_buffers__ = function()
+    applied = applied + 1
+  end
+
+  stl.async.run(function()
+    pane.open_diff_entry({
+      left_winnr = -1,
+      right_winnr = -1,
+      entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
+    })
+  end)
+
+  t.assert_eq(2, #started, "right load starts while left remains pending")
+  t.assert_eq("HEAD:f.txt", started[1], "left source")
+  t.assert_eq(":./f.txt", started[2], "right source")
+  t.assert_eq(0, applied, "pair is not published while one side is pending")
+
+  release_left(true)
+  wait(function()
+    return applied == 1
+  end)
+end)
+
+t:test("stale staged pair cannot publish after both loads settle", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local left_gate, release_left = Future.new_with_resolver()
+  local right_gate, release_right = Future.new_with_resolver()
+  local current = true ---@type boolean
+  local done = false ---@type boolean
+  local applied = 0 ---@type integer
+  local next_bufnr = 0 ---@type integer
+  pane.create_sbs_buffer = function()
+    next_bufnr = next_bufnr + 1
+    return next_bufnr
+  end
+  pane.load_git_content = function(object)
+    if object == "HEAD:f.txt" then
+      left_gate:await()
+    else
+      right_gate:await()
+    end
+    return true, true
+  end
+  pane.__apply_buffers__ = function()
+    applied = applied + 1
+  end
+
+  stl.async.run(function()
+    pane.open_diff_entry({
+      left_winnr = -1,
+      right_winnr = -1,
+      entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
+      is_current = function()
+        return current
+      end,
+    })
+    done = true
+  end)
+
+  current = false
+  release_left(true)
+  release_right(true)
+  wait(function()
+    return done
+  end)
+  t.assert_eq(0, applied, "stale pair rejected at the publish barrier")
+end)
+
+t:test("staged pair drains its sibling before propagating a load exception", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local right_gate, release_right = Future.new_with_resolver()
+  local outcome = nil ---@type { ok: boolean, err: string }|nil
+  local applied = 0 ---@type integer
+  local next_bufnr = 0 ---@type integer
+  pane.create_sbs_buffer = function()
+    next_bufnr = next_bufnr + 1
+    return next_bufnr
+  end
+  pane.load_git_content = function(object)
+    if object == "HEAD:f.txt" then
+      error("left load failed")
+    end
+    right_gate:await()
+    return true, true
+  end
+  pane.__apply_buffers__ = function()
+    applied = applied + 1
+  end
+
+  stl.async.run(function()
+    local ok, err = xpcall(function()
+      pane.open_diff_entry({
+        left_winnr = -1,
+        right_winnr = -1,
+        entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
+      })
+    end, debug.traceback)
+    outcome = { ok = ok, err = tostring(err) }
+  end)
+
+  t.assert_nil(outcome, "parent waits for the still-running sibling")
+  release_right(true)
+  wait(function()
+    return outcome ~= nil
+  end)
+  t.assert_false(assert(outcome).ok, "load exception propagated")
+  t.assert_true(assert(outcome).err:find("left load failed", 1, true) ~= nil, "original exception retained")
+  t.assert_eq(0, applied, "failed pair never published")
+end)
+
 t:test("index preview disambiguates a digit-colon filename from an unmerged stage", function()
   local repo = vim.fn.tempname() ---@type string
   vim.fn.mkdir(repo, "p")
@@ -623,6 +750,8 @@ t:test("real staged preview reuses captured identities without resolver processe
     local index_object = vim.trim(git(repo, "rev-parse", ":f.txt").stdout or "") ---@type string
     local resolution_calls = 0 ---@type integer
     local blob_calls = 0 ---@type integer
+    local active_blob_calls = 0 ---@type integer
+    local max_active_blob_calls = 0 ---@type integer
     local production_info = assert(loadfile("lua/stl/git/info.lua"))()
     local get_object_name = production_info.get_object_name
     local get_file_info = production_info.get_file_info
@@ -637,7 +766,13 @@ t:test("real staged preview reuses captured identities without resolver processe
     end
     production_info.get_show_blob = function(...)
       blob_calls = blob_calls + 1
-      return get_show_blob(...)
+      active_blob_calls = active_blob_calls + 1
+      max_active_blob_calls = math.max(max_active_blob_calls, active_blob_calls)
+      local future = get_show_blob(...)
+      future:finally(function()
+        active_blob_calls = active_blob_calls - 1
+      end)
+      return future
     end
 
     t:patch_table(dot.path, "workspace", function()
@@ -685,6 +820,7 @@ t:test("real staged preview reuses captured identities without resolver processe
     local right_bufnr = vim.api.nvim_win_get_buf(right_winnr) ---@type integer
     t.assert_eq(0, resolution_calls, "captured identities eliminate resolver processes")
     t.assert_eq(2, blob_calls, "second preview reuses both immutable buffers")
+    t.assert_eq(2, max_active_blob_calls, "cold staged blobs load concurrently")
     t.assert_eq("base", vim.api.nvim_buf_get_lines(left_bufnr, 0, 1, false)[1], "HEAD snapshot")
     t.assert_eq("staged", vim.api.nvim_buf_get_lines(right_bufnr, 0, 1, false)[1], "index snapshot")
 
@@ -702,7 +838,7 @@ t:test("real staged preview reuses captured identities without resolver processe
   end
 end)
 
-t:test("preview does not publish buffers after Git content loading fails", function()
+t:test("parallel preview does not publish buffers after either Git content load fails", function()
   local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
   local objects = {} ---@type string[]
   local applied = 0
@@ -725,8 +861,9 @@ t:test("preview does not publish buffers after Git content loading fails", funct
     entry = { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "staged", status = "R" },
   })
 
-  t.assert_eq(1, #objects, "second load skipped after first failure")
+  t.assert_eq(2, #objects, "both immutable loads start concurrently")
   t.assert_eq("HEAD:old.lua", objects[1], "failed source")
+  t.assert_eq(":./new.lua", objects[2], "parallel destination")
   t.assert_eq(0, applied, "buffers not published")
 end)
 

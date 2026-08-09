@@ -590,6 +590,63 @@ function M.open_diff_entry(opts)
     return loaded and is_request_current(token, is_current)
   end
 
+  ---Load an immutable pair concurrently, then publish only after both sides settle successfully.
+  ---@param left_object                 string
+  ---@param left_bufnr                  integer
+  ---@param left_object_name            string|nil
+  ---@param right_object                string
+  ---@param right_bufnr                 integer
+  ---@param right_object_name           string|nil
+  ---@return boolean current
+  local function load_content_pair(
+    left_object,
+    left_bufnr,
+    left_object_name,
+    right_object,
+    right_bufnr,
+    right_object_name
+  )
+    ---@param object                    string
+    ---@param bufnr                     integer
+    ---@param object_name               string|nil
+    ---@return stl.c.Future
+    local function start_load(object, bufnr, object_name)
+      return stl.c.Future.new(function(resolve)
+        stl.async.run(function()
+          local ok, result = xpcall(function()
+            local loaded, content_changed =
+              M.load_git_content(object, bufnr, token, is_current, capture_views, object_name)
+            return { loaded = loaded, content_changed = content_changed }
+          end, debug.traceback)
+          if ok then
+            resolve(result)
+          else
+            resolve({ loaded = false, content_changed = false, err = result })
+          end
+        end)
+      end)
+    end
+
+    local results = stl.c.Future
+      .all({
+        start_load(left_object, left_bufnr, left_object_name),
+        start_load(right_object, right_bufnr, right_object_name),
+      })
+      :await()
+    local left = results[1] ---@type { loaded: boolean, content_changed: boolean, err: string|nil }
+    local right = results[2] ---@type { loaded: boolean, content_changed: boolean, err: string|nil }
+    if left.err then
+      error(left.err, 0)
+    end
+    if right.err then
+      error(right.err, 0)
+    end
+    if left.content_changed or right.content_changed then
+      apply_opts.refresh_diff = true
+    end
+    return left.loaded and right.loaded and is_request_current(token, is_current)
+  end
+
   ---@param left_bufnr                  integer
   ---@param right_bufnr                 integer
   local function apply_buffers(left_bufnr, right_bufnr)
@@ -683,10 +740,16 @@ function M.open_diff_entry(opts)
     if stage_type == "staged" then
       local right_name = era.m.diffview.util.gen_index_bufname(filepath)
       right_bufnr = M.create_sbs_buffer(right_name)
-      if not load_content(era.m.diffview.util.head_object(previous), left_bufnr, entry.old_object_name) then
-        return
-      end
-      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr, entry.new_object_name) then
+      if
+        not load_content_pair(
+          era.m.diffview.util.head_object(previous),
+          left_bufnr,
+          entry.old_object_name,
+          era.m.diffview.util.staged_object(filepath),
+          right_bufnr,
+          entry.new_object_name
+        )
+      then
         return
       end
     else
@@ -708,10 +771,16 @@ function M.open_diff_entry(opts)
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.create_sbs_buffer(right_name)
 
-      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr, entry.old_object_name) then
-        return
-      end
-      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr, entry.new_object_name) then
+      if
+        not load_content_pair(
+          era.m.diffview.util.head_object(filepath),
+          left_bufnr,
+          entry.old_object_name,
+          era.m.diffview.util.staged_object(filepath),
+          right_bufnr,
+          entry.new_object_name
+        )
+      then
         return
       end
 
