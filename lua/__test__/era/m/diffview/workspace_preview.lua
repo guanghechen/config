@@ -248,6 +248,134 @@ t:test("matching refresh preserves view without resetting diff folds", function(
   end
 end)
 
+t:test("unchanged staged preview skips view capture and diff refresh", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local left_winnr, right_winnr = create_windows()
+  local applied_opts = nil ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts|nil
+  local view_captures = 0 ---@type integer
+  local loads = 0 ---@type integer
+
+  t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
+    local bufnr = vim.fn.bufnr(name) ---@type integer
+    return bufnr ~= -1 and bufnr or nil
+  end)
+  t:patch_table(vim.fn, "winsaveview", function()
+    view_captures = view_captures + 1
+    return {}
+  end)
+  pane.load_git_content = function()
+    loads = loads + 1
+    return true, false
+  end
+  pane.__apply_buffers__ = function(_, _, _, _, opts)
+    applied_opts = opts
+  end
+
+  pane.open_diff_entry({
+    left_winnr = left_winnr,
+    right_winnr = right_winnr,
+    entry = { filepath = "cached.txt", stage_type = "staged", status = "M" },
+    preserve_view = true,
+  })
+
+  t.assert_eq(2, loads, "both immutable sides checked")
+  t.assert_eq(0, view_captures, "unchanged content skips view capture")
+  t.assert_false(assert(applied_opts).refresh_diff, "unchanged staged content skips diff refresh")
+  close_windows(left_winnr, right_winnr)
+end)
+
+t:test("changed staged or mutable unstaged preview retains diff refresh", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local left_winnr, right_winnr = create_windows()
+  local applied = {} ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts[]
+  local view_captures = 0 ---@type integer
+  local load_count = 0 ---@type integer
+  local mutable_phase = false ---@type boolean
+
+  t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
+    local bufnr = vim.fn.bufnr(name) ---@type integer
+    return bufnr ~= -1 and bufnr or nil
+  end)
+  t:patch_table(vim.fn, "winsaveview", function()
+    view_captures = view_captures + 1
+    return {}
+  end)
+  pane.load_git_content = function(_, _, _, _, before_write)
+    if mutable_phase then
+      return true, false
+    end
+    load_count = load_count + 1
+    local changed = load_count == 2
+    if changed then
+      before_write()
+    end
+    return true, changed
+  end
+  pane.__apply_buffers__ = function(_, _, _, _, opts)
+    applied[#applied + 1] = opts
+  end
+
+  pane.open_diff_entry({
+    left_winnr = left_winnr,
+    right_winnr = right_winnr,
+    entry = { filepath = "changed.txt", stage_type = "staged", status = "M" },
+    preserve_view = true,
+  })
+  t.assert_true(applied[1].refresh_diff, "changed staged side refreshes diff")
+  t.assert_eq(2, view_captures, "changed staged content captures both views")
+
+  view_captures = 0
+  mutable_phase = true
+  pane.open_diff_entry({
+    left_winnr = left_winnr,
+    right_winnr = right_winnr,
+    entry = { filepath = "changed.txt", stage_type = "unstaged", status = "M" },
+    preserve_view = true,
+  })
+  t.assert_true(applied[2].refresh_diff, "mutable working-tree side refreshes diff")
+  t.assert_eq(2, view_captures, "mutable preview captures both views")
+  close_windows(left_winnr, right_winnr)
+end)
+
+t:test("unchanged matching buffers skip scheduled diff work only while identity matches", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local left_winnr, right_winnr = create_windows()
+  local left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local schedules = 0 ---@type integer
+  vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
+  vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
+  t:patch_table(vim, "schedule", function()
+    schedules = schedules + 1
+  end)
+
+  pane.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, {
+    preserve_view = true,
+    refresh_diff = false,
+  })
+
+  t.assert_eq(0, schedules, "cache hit schedules no diff refresh")
+  t.assert_eq(left_bufnr, vim.api.nvim_win_get_buf(left_winnr), "left buffer retained")
+  t.assert_eq(right_bufnr, vim.api.nvim_win_get_buf(right_winnr), "right buffer retained")
+
+  local replacement_left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local replacement_right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  pane.__apply_buffers__(left_winnr, right_winnr, replacement_left_bufnr, replacement_right_bufnr, {
+    preserve_view = true,
+    refresh_diff = false,
+  })
+  t.assert_eq(1, schedules, "buffer mismatch retains scheduled setup")
+  t.assert_eq(replacement_left_bufnr, vim.api.nvim_win_get_buf(left_winnr), "left replacement applied")
+  t.assert_eq(replacement_right_bufnr, vim.api.nvim_win_get_buf(right_winnr), "right replacement applied")
+
+  close_windows(left_winnr, right_winnr)
+  for _, bufnr in ipairs({ left_bufnr, right_bufnr, replacement_left_bufnr, replacement_right_bufnr }) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end
+end)
+
 t:test("rename preview reads the source side for each stage", function()
   local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
   local objects = {} ---@type string[]

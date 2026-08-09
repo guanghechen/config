@@ -201,18 +201,21 @@ t:test("pane loader reuses only an identical index object and source format", fu
   local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
   local function load()
     local outcome = nil ---@type boolean|nil
+    local content_changed = nil ---@type boolean|nil
     stl.async.run(function()
-      outcome = pane.load_git_content(":./f.txt", target_bufnr, nil, nil, function()
+      outcome, content_changed = pane.load_git_content(":./f.txt", target_bufnr, nil, nil, function()
         before_write_calls = before_write_calls + 1
       end)
     end)
     wait(function()
       return outcome ~= nil
     end)
-    return outcome
+    return outcome, content_changed
   end
 
-  t.assert_true(load(), "initial load")
+  local initial_ok, initial_changed = load()
+  t.assert_true(initial_ok, "initial load")
+  t.assert_true(initial_changed, "initial load reports rewritten content")
   t.assert_eq(1, blob_calls, "initial blob read")
   t.assert_eq(1, write_calls, "initial buffer write")
   t.assert_eq(1, before_write_calls, "initial before-write hook")
@@ -221,13 +224,17 @@ t:test("pane loader reuses only an identical index object and source format", fu
   t.assert_eq("utf-8", vim.b[target_bufnr].git_source_encoding, "encoding identity")
   t.assert_eq("\n", vim.b[target_bufnr].git_source_default_eol, "EOL identity")
 
-  t.assert_true(load(), "identical snapshot")
+  local cached_ok, cached_changed = load()
+  t.assert_true(cached_ok, "identical snapshot")
+  t.assert_false(cached_changed, "identical snapshot reports unchanged content")
   t.assert_eq(1, blob_calls, "identical snapshot skips blob read")
   t.assert_eq(1, write_calls, "identical snapshot skips buffer write")
   t.assert_eq(1, before_write_calls, "identical snapshot skips before-write hook")
 
   object_name = "def456"
-  t.assert_true(load(), "changed object")
+  local object_ok, object_changed = load()
+  t.assert_true(object_ok, "changed object")
+  t.assert_true(object_changed, "changed object reports rewritten content")
   t.assert_eq(2, blob_calls, "changed object reloads blob")
   t.assert_eq(2, write_calls, "changed object rewrites buffer")
 
@@ -246,10 +253,11 @@ t:test("pane loader reuses only an identical index object and source format", fu
 end)
 
 t:test("pane loader caches HEAD and explicit commit content by resolved object", function()
+  ---@type table<string, string>
   local object_names = {
     ["HEAD:f.txt"] = "head-a",
     ["commit:f.txt"] = "commit-a",
-  } ---@type table<string, string>
+  }
   local resolve_calls = 0 ---@type integer
   local blob_calls = 0 ---@type integer
   local write_calls = 0 ---@type integer

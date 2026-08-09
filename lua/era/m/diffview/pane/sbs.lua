@@ -189,9 +189,10 @@ end
 ---@param is_current                    (fun(): boolean)|nil
 ---@param before_write                  (fun(): nil)|nil
 ---@return boolean ok
+---@return boolean content_changed
 function M.load_git_content(object, bufnr, token, is_current, before_write)
   if not is_request_current(token, is_current) then
-    return false
+    return false, false
   end
 
   -- Keep the index snapshot separate: partial unstage consumes it, while every resolved Git object
@@ -207,7 +208,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   if index_path then
     local info_result = stl.git.info.get_file_info(dot.path.workspace(), index_path, token):await()
     if not is_request_current(token, is_current) then
-      return false
+      return false, false
     end
     if
       type(info_result) ~= "table"
@@ -223,7 +224,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
           message = (type(info_result) == "table" and info_result.err) or "Unable to inspect index object",
         })
       end
-      return false
+      return false, false
     end
     index_object_name = info_result.info.object_name
     content_object_name = index_object_name
@@ -231,7 +232,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   elseif object:match("^[^:]+:") then
     local name_result = stl.git.info.get_object_name(dot.path.workspace(), object, token):await()
     if not is_request_current(token, is_current) then
-      return false
+      return false, false
     end
     if type(name_result) ~= "table" or not name_result.ok or not name_result.object_name then
       if type(name_result) == "table" and name_result.missing then
@@ -244,7 +245,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
             message = (type(name_result) == "table" and name_result.err) or "Unable to resolve Git object",
           })
         end
-        return false
+        return false, false
       end
     else
       content_object_name = name_result.object_name
@@ -256,12 +257,12 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
     stl.async.scheduler()
 
     if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-      return false
+      return false, false
     end
 
     source_encoding, source_default_eol = get_document_format(object)
     if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-      return false
+      return false, false
     end
     if
       vim.b[bufnr].git_content_object_name == content_object_name
@@ -269,7 +270,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
       and vim.b[bufnr].git_source_default_eol == source_default_eol
     then
       vim.b[bufnr].git_object_name = index_object_name
-      return true
+      return true, false
     end
   end
 
@@ -277,7 +278,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   if not object_missing then
     local result = stl.git.info.get_show_blob(dot.path.workspace(), blob_object, token):await()
     if not is_request_current(token, is_current) then
-      return false
+      return false, false
     end
 
     if type(result) ~= "table" then
@@ -286,7 +287,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
         subject = "load_git_content",
         message = "Invalid blob result for object: " .. object,
       })
-      return false
+      return false, false
     end
 
     bytes = result.bytes
@@ -301,7 +302,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
             message = result.err or ("Unable to read object: " .. object),
           })
         end
-        return false
+        return false, false
       end
     end
   end
@@ -311,18 +312,18 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
       subject = "load_git_content",
       message = "Blob result has no bytes: " .. object,
     })
-    return false
+    return false, false
   end
 
   stl.async.scheduler()
 
   if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
+    return false, false
   end
 
   local encoding, default_eol = get_document_format(object) ---@type string, string
   if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
+    return false, false
   end
   local document, decode_err = era.m.git.staging.from_blob(bytes, encoding, default_eol)
   if not document then
@@ -331,14 +332,14 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
       subject = "load_git_content",
       message = decode_err or ("Unable to decode object: " .. object),
     })
-    return false
+    return false, false
   end
 
   if before_write then
     before_write()
   end
   if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
+    return false, false
   end
 
   vim.b[bufnr].git_object_name = nil
@@ -367,7 +368,7 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   vim.b[bufnr].git_source_encoding = content_object_name and encoding or nil
   vim.b[bufnr].git_source_default_eol = content_object_name and default_eol or nil
 
-  return true
+  return true, true
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -551,6 +552,7 @@ function M.open_diff_entry(opts)
   local apply_opts = {
     is_current = is_current,
     preserve_view = opts.preserve_view,
+    refresh_diff = entry.stage_type ~= "staged",
   } ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
 
   local function capture_views()
@@ -569,14 +571,19 @@ function M.open_diff_entry(opts)
   ---@param bufnr                       integer
   ---@return boolean current
   local function load_content(object, bufnr)
-    local loaded = M.load_git_content(object, bufnr, token, is_current, capture_views)
+    local loaded, content_changed = M.load_git_content(object, bufnr, token, is_current, capture_views)
+    if content_changed then
+      apply_opts.refresh_diff = true
+    end
     return loaded and is_request_current(token, is_current)
   end
 
   ---@param left_bufnr                  integer
   ---@param right_bufnr                 integer
   local function apply_buffers(left_bufnr, right_bufnr)
-    capture_views()
+    if apply_opts.refresh_diff ~= false then
+      capture_views()
+    end
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   end
 
@@ -792,6 +799,7 @@ end
 ---@field public preserve_view           boolean|nil
 ---@field public left_view              vim.fn.winsaveview.ret|nil
 ---@field public right_view             vim.fn.winsaveview.ret|nil
+---@field public refresh_diff           boolean|nil
 
 ---Apply buffers to side-by-side windows
 ---@param left_winnr                    integer
@@ -811,6 +819,10 @@ function M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, o
     and vim.api.nvim_win_get_buf(left_winnr) == left_bufnr
     and vim.api.nvim_win_is_valid(right_winnr)
     and vim.api.nvim_win_get_buf(right_winnr) == right_bufnr
+
+  if opts and preserve_view and opts.refresh_diff == false then
+    return
+  end
 
   if not preserve_view then
     -- Turn off diff mode before changing buffers to avoid Neovim recalculating diffs.
