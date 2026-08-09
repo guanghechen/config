@@ -154,15 +154,23 @@ t:test("collect: optional numstat mode returns one coherent tracked snapshot", f
 
   local result = status.collect({ include_numstat = true }):get_result()
 
-  t.assert_eq("diff --staged --raw --numstat -z --", table.concat(commands[1], " "), "staged snapshot")
-  t.assert_eq("diff --raw --numstat -z --", table.concat(commands[2], " "), "unstaged snapshot")
+  t.assert_eq("diff --staged --raw --abbrev=64 --numstat -z --", table.concat(commands[1], " "), "staged snapshot")
+  t.assert_eq("diff --raw --abbrev=64 --numstat -z --", table.concat(commands[2], " "), "unstaged snapshot")
   t.assert_eq("ls-files --exclude-standard --others -z", table.concat(commands[3], " "), "untracked snapshot")
   t.assert_true(command_opts[1].raw and command_opts[2].raw and command_opts[3].raw, "raw protocols")
 
   local renamed = result.status_map["/repo/new\tname.lua"]
+  local normal = result.status_map["/repo/normal.lua"]
+  local deleted = result.status_map["/repo/deleted.lua"]
   t.assert_true(renamed ~= nil and renamed.staged.R == true, "rename status")
   t.assert_eq("old\tname.lua", renamed.staged_prev_relative, "rename source")
-  t.assert_true(result.status_map["/repo/deleted.lua"].unstaged.D == true, "unstaged deletion")
+  t.assert_eq("aaaaaaa", normal.staged_old_object_name, "staged source identity")
+  t.assert_eq("bbbbbbb", normal.staged_new_object_name, "staged target identity")
+  t.assert_eq("aaaaaaa", renamed.staged_old_object_name, "rename source identity")
+  t.assert_eq("bbbbbbb", renamed.staged_new_object_name, "rename target identity")
+  t.assert_true(deleted.unstaged.D == true, "unstaged deletion")
+  t.assert_eq("aaaaaaa", deleted.unstaged_old_object_name, "unstaged index identity")
+  t.assert_nil(deleted.unstaged_new_object_name, "worktree zero identity omitted")
   t.assert_true(result.status_map["/repo/fresh\nfile.lua"].unstaged["?"] == true, "untracked file")
   t.assert_eq(3, result.numstats.staged["normal.lua"].insertions, "normal insertions")
   t.assert_eq(1, result.numstats.staged["normal.lua"].deletions, "normal deletions")
@@ -271,10 +279,20 @@ t:test("collect: real Git snapshot keeps staged, unstaged, rename, and numstat a
     local result = status.collect({ include_numstat = true }):get_result()
     local renamed = result.status_map[repo .. "/new.txt"]
     local mixed = result.status_map[repo .. "/mixed.txt"]
+    local head_rename_object = vim.trim(git("rev-parse", "HEAD:old.txt").stdout or "") ---@type string
+    local index_rename_object = vim.trim(git("rev-parse", ":new.txt").stdout or "") ---@type string
+    local head_mixed_object = vim.trim(git("rev-parse", "HEAD:mixed.txt").stdout or "") ---@type string
+    local index_mixed_object = vim.trim(git("rev-parse", ":mixed.txt").stdout or "") ---@type string
 
     t.assert_true(renamed ~= nil and renamed.staged.R == true, "real rename status")
     t.assert_eq("old.txt", renamed.staged_prev_relative, "real rename source")
+    t.assert_eq(head_rename_object, renamed.staged_old_object_name, "real rename source identity")
+    t.assert_eq(index_rename_object, renamed.staged_new_object_name, "real rename target identity")
     t.assert_true(mixed.staged.M == true and mixed.unstaged.M == true, "real mixed status")
+    t.assert_eq(head_mixed_object, mixed.staged_old_object_name, "real staged source identity")
+    t.assert_eq(index_mixed_object, mixed.staged_new_object_name, "real staged target identity")
+    t.assert_eq(index_mixed_object, mixed.unstaged_old_object_name, "real unstaged index identity")
+    t.assert_nil(mixed.unstaged_new_object_name, "real worktree identity omitted")
     t.assert_true(result.status_map[repo .. "/fresh.txt"].unstaged["?"] == true, "real untracked status")
     t.assert_eq(1, result.numstats.staged["mixed.txt"].insertions, "real staged insertions")
     t.assert_eq(1, result.numstats.unstaged["mixed.txt"].insertions, "real unstaged insertions")
@@ -301,7 +319,12 @@ t:test("collect: real Git numstat snapshot supports an unborn HEAD", function()
     t:patch_table(stl.git.exec, "exec", exec_real_git)
 
     local result = status.collect({ include_numstat = true }):get_result()
-    t.assert_true(result.status_map[repo .. "/first.txt"].staged.A == true, "unborn staged add")
+    local first = result.status_map[repo .. "/first.txt"]
+    local index_result = vim.system({ "git", "-C", repo, "rev-parse", ":first.txt" }, { text = true }):wait()
+    local index_object = vim.trim(index_result.stdout or "") ---@type string
+    t.assert_true(first.staged.A == true, "unborn staged add")
+    t.assert_nil(first.staged_old_object_name, "unborn source identity omitted")
+    t.assert_eq(index_object, first.staged_new_object_name, "unborn index identity")
     t.assert_eq(2, result.numstats.staged["first.txt"].insertions, "unborn insertions")
     t.assert_eq(0, result.numstats.staged["first.txt"].deletions, "unborn deletions")
   end, debug.traceback)

@@ -52,6 +52,8 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@field public insertions             integer|nil                     added lines count
 ---@field public deletions              integer|nil                     deleted lines count
 ---@field public prev_filepath          string|nil                      previous filepath (for rename/copy)
+---@field public old_object_name        string|nil                      source blob from the status snapshot
+---@field public new_object_name        string|nil                      target blob from the status snapshot
 
 ----------------------------------------------------------------------------------------------------
 -- Commit types

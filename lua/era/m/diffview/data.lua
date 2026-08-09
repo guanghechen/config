@@ -23,10 +23,16 @@ end
 local function convert_status_entry(entry, stage_type)
   local codes = stage_type == "staged" and entry.staged or entry.unstaged or entry.codes
   local prev_filepath = nil ---@type string|nil
+  local old_object_name = nil ---@type string|nil
+  local new_object_name = nil ---@type string|nil
   if stage_type == "staged" then
     prev_filepath = entry.staged_prev_relative
+    old_object_name = entry.staged_old_object_name
+    new_object_name = entry.staged_new_object_name
   else
     prev_filepath = entry.unstaged_prev_relative
+    old_object_name = entry.unstaged_old_object_name
+    new_object_name = entry.unstaged_new_object_name
   end
 
   ---Determine primary status code from codes table
@@ -53,6 +59,8 @@ local function convert_status_entry(entry, stage_type)
     insertions = nil,
     deletions = nil,
     prev_filepath = prev_filepath,
+    old_object_name = old_object_name,
+    new_object_name = new_object_name,
   }
 end
 
@@ -314,10 +322,12 @@ local function equal_diff_entry(left, right)
     and left.insertions == right.insertions
     and left.deletions == right.deletions
     and left.prev_filepath == right.prev_filepath
+    and left.old_object_name == right.old_object_name
+    and left.new_object_name == right.new_object_name
 end
 
----Compare complete Changes snapshots independent of Git collection order.
----Unknown line stats (`nil`) remain distinct from known zero values.
+---Compare complete semantic snapshots independent of Git collection order.
+---Unknown line stats (`nil`) and blob identities remain distinct from known values.
 ---@param left                        era.m.diffview.IFileEntry[]
 ---@param right                       era.m.diffview.IFileEntry[]
 ---@return boolean

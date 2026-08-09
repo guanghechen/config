@@ -188,9 +188,10 @@ end
 ---@param token                         ?stl.c.CancellationToken
 ---@param is_current                    (fun(): boolean)|nil
 ---@param before_write                  (fun(): nil)|nil
+---@param resolved_object_name          string|nil                      object captured by the status snapshot
 ---@return boolean ok
 ---@return boolean content_changed
-function M.load_git_content(object, bufnr, token, is_current, before_write)
+function M.load_git_content(object, bufnr, token, is_current, before_write, resolved_object_name)
   if not is_request_current(token, is_current) then
     return false, false
   end
@@ -206,50 +207,59 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
   local index_stage_path = object:match("^:%d:(.*)$") ---@type string|nil
   local index_path = not index_stage_path and object:match("^:(.*)$") or nil ---@type string|nil
   if index_path then
-    local info_result = stl.git.info.get_file_info(dot.path.workspace(), index_path, token):await()
-    if not is_request_current(token, is_current) then
-      return false, false
-    end
-    if
-      type(info_result) ~= "table"
-      or not info_result.ok
-      or not info_result.info
-      or info_result.info.has_conflicts
-      or not info_result.info.object_name
-    then
-      if not token or not token:is_cancelled() then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = "load_git_content",
-          message = (type(info_result) == "table" and info_result.err) or "Unable to inspect index object",
-        })
+    if resolved_object_name then
+      index_object_name = resolved_object_name
+    else
+      local info_result = stl.git.info.get_file_info(dot.path.workspace(), index_path, token):await()
+      if not is_request_current(token, is_current) then
+        return false, false
       end
-      return false, false
-    end
-    index_object_name = info_result.info.object_name
-    content_object_name = index_object_name
-    blob_object = content_object_name
-  elseif object:match("^[^:]+:") then
-    local name_result = stl.git.info.get_object_name(dot.path.workspace(), object, token):await()
-    if not is_request_current(token, is_current) then
-      return false, false
-    end
-    if type(name_result) ~= "table" or not name_result.ok or not name_result.object_name then
-      if type(name_result) == "table" and name_result.missing then
-        object_missing = true
-      else
+      if
+        type(info_result) ~= "table"
+        or not info_result.ok
+        or not info_result.info
+        or info_result.info.has_conflicts
+        or not info_result.info.object_name
+      then
         if not token or not token:is_cancelled() then
           stl.reporter.error({
             from = __module_name__,
             subject = "load_git_content",
-            message = (type(name_result) == "table" and name_result.err) or "Unable to resolve Git object",
+            message = (type(info_result) == "table" and info_result.err) or "Unable to inspect index object",
           })
         end
         return false, false
       end
-    else
-      content_object_name = name_result.object_name
+      index_object_name = info_result.info.object_name
+    end
+    content_object_name = index_object_name
+    blob_object = content_object_name
+  elseif object:match("^[^:]+:") then
+    if resolved_object_name then
+      content_object_name = resolved_object_name
       blob_object = content_object_name
+    else
+      local name_result = stl.git.info.get_object_name(dot.path.workspace(), object, token):await()
+      if not is_request_current(token, is_current) then
+        return false, false
+      end
+      if type(name_result) ~= "table" or not name_result.ok or not name_result.object_name then
+        if type(name_result) == "table" and name_result.missing then
+          object_missing = true
+        else
+          if not token or not token:is_cancelled() then
+            stl.reporter.error({
+              from = __module_name__,
+              subject = "load_git_content",
+              message = (type(name_result) == "table" and name_result.err) or "Unable to resolve Git object",
+            })
+          end
+          return false, false
+        end
+      else
+        content_object_name = name_result.object_name
+        blob_object = content_object_name
+      end
     end
   end
 
@@ -569,9 +579,11 @@ function M.open_diff_entry(opts)
 
   ---@param object                      string
   ---@param bufnr                       integer
+  ---@param resolved_object_name        string|nil
   ---@return boolean current
-  local function load_content(object, bufnr)
-    local loaded, content_changed = M.load_git_content(object, bufnr, token, is_current, capture_views)
+  local function load_content(object, bufnr, resolved_object_name)
+    local loaded, content_changed =
+      M.load_git_content(object, bufnr, token, is_current, capture_views, resolved_object_name)
     if content_changed then
       apply_opts.refresh_diff = true
     end
@@ -623,7 +635,7 @@ function M.open_diff_entry(opts)
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.get_null_buffer()
 
-      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr) then
+      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr, entry.old_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)
@@ -633,7 +645,7 @@ function M.open_diff_entry(opts)
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.get_null_buffer()
 
-      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr) then
+      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr, entry.old_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)
@@ -647,7 +659,7 @@ function M.open_diff_entry(opts)
       local right_name = era.m.diffview.util.gen_index_bufname(filepath)
       right_bufnr = M.create_sbs_buffer(right_name)
 
-      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr) then
+      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr, entry.new_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)
@@ -671,10 +683,10 @@ function M.open_diff_entry(opts)
     if stage_type == "staged" then
       local right_name = era.m.diffview.util.gen_index_bufname(filepath)
       right_bufnr = M.create_sbs_buffer(right_name)
-      if not load_content(era.m.diffview.util.head_object(previous), left_bufnr) then
+      if not load_content(era.m.diffview.util.head_object(previous), left_bufnr, entry.old_object_name) then
         return
       end
-      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr) then
+      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr, entry.new_object_name) then
         return
       end
     else
@@ -682,7 +694,7 @@ function M.open_diff_entry(opts)
       if vim.api.nvim_win_is_valid(right_winnr) then
         M.save_winopts(right_bufnr, right_winnr)
       end
-      if not load_content(era.m.diffview.util.staged_object(previous), left_bufnr) then
+      if not load_content(era.m.diffview.util.staged_object(previous), left_bufnr, entry.old_object_name) then
         return
       end
     end
@@ -696,10 +708,10 @@ function M.open_diff_entry(opts)
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.create_sbs_buffer(right_name)
 
-      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr) then
+      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr, entry.old_object_name) then
         return
       end
-      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr) then
+      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr, entry.new_object_name) then
         return
       end
 
@@ -717,7 +729,7 @@ function M.open_diff_entry(opts)
         M.save_winopts(right_bufnr, right_winnr)
       end
 
-      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr) then
+      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr, entry.old_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)

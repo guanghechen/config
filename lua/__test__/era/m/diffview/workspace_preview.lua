@@ -1,4 +1,5 @@
 ---@diagnostic disable: undefined-global
+-- cspell:ignore unchanges worktree
 --- Run with: nvim -l lua/__test__/era/m/diffview/workspace_preview.lua
 
 local bootstrap = require("__test__.bootstrap")
@@ -23,6 +24,15 @@ bootstrap.with_global(t, "stl", {
   },
 })
 bootstrap.with_global(t, "dot", {
+  context = {
+    diffview = {
+      flag_fold_unchanges = {
+        snapshot = function()
+          return false
+        end,
+      },
+    },
+  },
   path = {
     join = function(...)
       return table.concat({ ... }, "/")
@@ -376,11 +386,15 @@ t:test("unchanged matching buffers skip scheduled diff work only while identity 
   end
 end)
 
-t:test("rename preview reads the source side for each stage", function()
+t:test("workspace preview routes status snapshot identities for every file shape", function()
   local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-  local objects = {} ---@type string[]
+  local calls = {} ---@type { object: string, object_name: string|nil }[]
   local next_bufnr = 0
   pane.create_sbs_buffer = function()
+    next_bufnr = next_bufnr + 1
+    return next_bufnr
+  end
+  pane.get_null_buffer = function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
   end
@@ -388,28 +402,79 @@ t:test("rename preview reads the source side for each stage", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
   end
-  pane.load_git_content = function(object)
-    objects[#objects + 1] = object
+  pane.load_git_content = function(object, _, _, _, _, object_name)
+    calls[#calls + 1] = { object = object, object_name = object_name }
     return true
   end
   pane.__apply_buffers__ = function() end
 
-  pane.open_diff_entry({
-    left_winnr = -1,
-    right_winnr = -1,
-    entry = { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "staged", status = "R" },
-  })
-  t.assert_eq("HEAD:old.lua", objects[1], "staged source")
-  t.assert_eq(":./new.lua", objects[2], "staged destination")
+  ---@param entry                      era.m.diffview.IFileEntry
+  ---@return { object: string, object_name: string|nil }[]
+  local function open(entry)
+    calls = {}
+    pane.open_diff_entry({ left_winnr = -1, right_winnr = -1, entry = entry })
+    return calls
+  end
 
-  objects = {}
-  pane.open_diff_entry({
-    left_winnr = -1,
-    right_winnr = -1,
-    entry = { filepath = "new.lua", prev_filepath = "index.lua", stage_type = "unstaged", status = "R" },
+  local modified = open({
+    filepath = "modified.lua",
+    stage_type = "staged",
+    status = "M",
+    old_object_name = "head-modified",
+    new_object_name = "index-modified",
   })
-  t.assert_eq(":./index.lua", objects[1], "unstaged source")
-  t.assert_eq(1, #objects, "working destination uses local buffer")
+  t.assert_eq("head-modified", modified[1].object_name, "staged modify source identity")
+  t.assert_eq("index-modified", modified[2].object_name, "staged modify target identity")
+
+  local worktree_modified = open({
+    filepath = "modified.lua",
+    stage_type = "unstaged",
+    status = "M",
+    old_object_name = "index-before-worktree",
+  })
+  t.assert_eq(1, #worktree_modified, "unstaged modify loads only its index source")
+  t.assert_eq("index-before-worktree", worktree_modified[1].object_name, "unstaged modify source identity")
+
+  local added = open({
+    filepath = "added.lua",
+    stage_type = "staged",
+    status = "A",
+    new_object_name = "index-added",
+  })
+  t.assert_eq(1, #added, "staged add loads only its target")
+  t.assert_eq("index-added", added[1].object_name, "staged add target identity")
+
+  local deleted = open({
+    filepath = "deleted.lua",
+    stage_type = "staged",
+    status = "D",
+    old_object_name = "head-deleted",
+  })
+  t.assert_eq(1, #deleted, "staged delete loads only its source")
+  t.assert_eq("head-deleted", deleted[1].object_name, "staged delete source identity")
+
+  local copied = open({
+    filepath = "copied.lua",
+    prev_filepath = "original.lua",
+    stage_type = "staged",
+    status = "C",
+    old_object_name = "head-original",
+    new_object_name = "index-copy",
+  })
+  t.assert_eq("HEAD:original.lua", copied[1].object, "staged copy source selector")
+  t.assert_eq("head-original", copied[1].object_name, "staged copy source identity")
+  t.assert_eq("index-copy", copied[2].object_name, "staged copy target identity")
+
+  local renamed = open({
+    filepath = "new.lua",
+    prev_filepath = "index.lua",
+    stage_type = "unstaged",
+    status = "R",
+    old_object_name = "index-source",
+  })
+  t.assert_eq(1, #renamed, "unstaged rename loads only its index source")
+  t.assert_eq(":./index.lua", renamed[1].object, "unstaged rename source selector")
+  t.assert_eq("index-source", renamed[1].object_name, "unstaged rename source identity")
 end)
 
 t:test("index preview disambiguates a digit-colon filename from an unmerged stage", function()
@@ -530,6 +595,105 @@ t:test("revision preview caches real blobs and observes HEAD changes", function(
 
     vim.api.nvim_buf_delete(head_bufnr, { force = true })
     vim.api.nvim_buf_delete(commit_bufnr, { force = true })
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
+
+t:test("real staged preview reuses captured identities without resolver processes", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+    vim.fn.writefile({ "base" }, repo .. "/f.txt")
+    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "add base")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
+      "commit base"
+    )
+    vim.fn.writefile({ "staged" }, repo .. "/f.txt")
+    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "add staged change")
+
+    local head_object = vim.trim(git(repo, "rev-parse", "HEAD:f.txt").stdout or "") ---@type string
+    local index_object = vim.trim(git(repo, "rev-parse", ":f.txt").stdout or "") ---@type string
+    local resolution_calls = 0 ---@type integer
+    local blob_calls = 0 ---@type integer
+    local production_info = assert(loadfile("lua/stl/git/info.lua"))()
+    local get_object_name = production_info.get_object_name
+    local get_file_info = production_info.get_file_info
+    local get_show_blob = production_info.get_show_blob
+    production_info.get_object_name = function(...)
+      resolution_calls = resolution_calls + 1
+      return get_object_name(...)
+    end
+    production_info.get_file_info = function(...)
+      resolution_calls = resolution_calls + 1
+      return get_file_info(...)
+    end
+    production_info.get_show_blob = function(...)
+      blob_calls = blob_calls + 1
+      return get_show_blob(...)
+    end
+
+    t:patch_table(dot.path, "workspace", function()
+      return repo
+    end)
+    t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
+      return repo .. "/" .. filepath
+    end)
+    t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
+      local bufnr = vim.fn.bufnr(name) ---@type integer
+      return bufnr ~= -1 and bufnr or nil
+    end)
+    t:patch_table(stl.git, "info", production_info)
+
+    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+    local left_winnr, right_winnr = create_windows()
+    ---@type era.m.diffview.IFileEntry
+    local entry = {
+      filepath = "f.txt",
+      stage_type = "staged",
+      status = "M",
+      old_object_name = head_object,
+      new_object_name = index_object,
+    }
+    local function open_preview()
+      local done = false ---@type boolean
+      stl.async.run(function()
+        pane.open_diff_entry({
+          left_winnr = left_winnr,
+          right_winnr = right_winnr,
+          entry = entry,
+          preserve_view = true,
+        })
+        done = true
+      end)
+      wait(function()
+        return done
+      end)
+    end
+
+    open_preview()
+    open_preview()
+
+    local left_bufnr = vim.api.nvim_win_get_buf(left_winnr) ---@type integer
+    local right_bufnr = vim.api.nvim_win_get_buf(right_winnr) ---@type integer
+    t.assert_eq(0, resolution_calls, "captured identities eliminate resolver processes")
+    t.assert_eq(2, blob_calls, "second preview reuses both immutable buffers")
+    t.assert_eq("base", vim.api.nvim_buf_get_lines(left_bufnr, 0, 1, false)[1], "HEAD snapshot")
+    t.assert_eq("staged", vim.api.nvim_buf_get_lines(right_bufnr, 0, 1, false)[1], "index snapshot")
+
+    close_windows(left_winnr, right_winnr)
+    for _, bufnr in ipairs({ left_bufnr, right_bufnr, vim.fn.bufnr(repo .. "/f.txt") }) do
+      if bufnr ~= -1 and vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+    end
   end, debug.traceback)
 
   vim.fn.delete(repo, "rf")

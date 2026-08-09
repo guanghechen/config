@@ -72,8 +72,18 @@ t:test("fetch: applies tracked stats from the shared status snapshot", function(
             await = function()
               return {
                 status_map = {
-                  ["/repo/a.lua"] = { relative = "a.lua", staged = { A = true }, unstaged = {} },
-                  ["/repo/b.lua"] = { relative = "b.lua", staged = {}, unstaged = { M = true } },
+                  ["/repo/a.lua"] = {
+                    relative = "a.lua",
+                    staged = { A = true },
+                    unstaged = {},
+                    staged_new_object_name = "index-a",
+                  },
+                  ["/repo/b.lua"] = {
+                    relative = "b.lua",
+                    staged = {},
+                    unstaged = { M = true },
+                    unstaged_old_object_name = "index-b",
+                  },
                 },
                 numstats = {
                   staged = { ["a.lua"] = { insertions = 7, deletions = 0 } },
@@ -103,9 +113,11 @@ t:test("fetch: applies tracked stats from the shared status snapshot", function(
   t.assert_eq(0, by_stage.staged.deletions, "staged deletions")
   t.assert_eq(2, by_stage.unstaged.insertions, "unstaged insertions")
   t.assert_eq(3, by_stage.unstaged.deletions, "unstaged deletions")
+  t.assert_eq("index-a", by_stage.staged.new_object_name, "staged snapshot identity")
+  t.assert_eq("index-b", by_stage.unstaged.old_object_name, "unstaged snapshot identity")
 end)
 
-t:test("entries: equality ignores order and compares the complete display snapshot", function()
+t:test("entries: equality ignores order and compares the complete semantic snapshot", function()
   local staged = {
     filepath = "new.lua",
     stage_type = "staged",
@@ -113,6 +125,8 @@ t:test("entries: equality ignores order and compares the complete display snapsh
     insertions = 7,
     deletions = 2,
     prev_filepath = "old.lua",
+    old_object_name = "head-a",
+    new_object_name = "index-a",
   } ---@type era.m.diffview.IFileEntry
   local unstaged = {
     filepath = "work.lua",
@@ -135,6 +149,8 @@ t:test("entries: equality ignores order and compares the complete display snapsh
     { "insertions", 8 },
     { "deletions", 3 },
     { "prev_filepath", "older.lua" },
+    { "old_object_name", "head-b" },
+    { "new_object_name", "index-b" },
   }
   for _, mutation in ipairs(mutations) do
     local changed = vim.deepcopy(entries)
@@ -322,15 +338,24 @@ t:test("status conversion keeps stage-specific rename sources", function()
       unstaged = { R = true },
       staged_prev_relative = "head.lua",
       unstaged_prev_relative = "index.lua",
+      staged_old_object_name = "head-old",
+      staged_new_object_name = "index-new",
+      unstaged_old_object_name = "index-old",
     },
   })
 
   local sources = {} ---@type table<string, string>
+  local identities = {} ---@type table<string, era.m.diffview.IFileEntry>
   for _, entry in ipairs(entries) do
     sources[assert(entry.stage_type)] = assert(entry.prev_filepath)
+    identities[assert(entry.stage_type)] = entry
   end
   t.assert_eq("head.lua", sources.staged, "staged source")
   t.assert_eq("index.lua", sources.unstaged, "unstaged source")
+  t.assert_eq("head-old", identities.staged.old_object_name, "staged old identity")
+  t.assert_eq("index-new", identities.staged.new_object_name, "staged new identity")
+  t.assert_eq("index-old", identities.unstaged.old_object_name, "unstaged old identity")
+  t.assert_nil(identities.unstaged.new_object_name, "unstaged worktree identity")
 
   local staged_only = data.__convert_status_to_entries__({
     ["/repo/plain.lua"] = {

@@ -328,9 +328,20 @@ local function parse_name_status_line(line)
 end
 
 ---@class era.m.git.status.INameStatusRecord
----@field public status                 string
----@field public relative               string
+---@field public new_object_name        string|nil
+---@field public old_object_name        string|nil
 ---@field public previous               string|nil
+---@field public relative               string
+---@field public status                 string
+
+---@param object_name                   string|nil
+---@return string|nil
+local function normalize_object_name(object_name)
+  if type(object_name) ~= "string" or object_name == "" or not object_name:find("[^0]") then
+    return nil
+  end
+  return object_name
+end
 
 ---Parse name-status output, preserving literal paths from Git's NUL protocol.
 ---@param lines                         string[]
@@ -343,7 +354,13 @@ local function parse_name_status_output(lines)
     for _, line in ipairs(lines) do
       local status, relative, previous = parse_name_status_line(line)
       if status ~= nil and relative ~= nil then
-        records[#records + 1] = { status = status, relative = relative, previous = previous }
+        records[#records + 1] = {
+          status = status,
+          relative = relative,
+          previous = previous,
+          old_object_name = nil,
+          new_object_name = nil,
+        }
       end
     end
     return records
@@ -365,7 +382,13 @@ local function parse_name_status_output(lines)
     end
 
     if status ~= "" and relative ~= nil and relative ~= "" then
-      records[#records + 1] = { status = status, relative = relative, previous = previous }
+      records[#records + 1] = {
+        status = status,
+        relative = relative,
+        previous = previous,
+        old_object_name = nil,
+        new_object_name = nil,
+      }
     end
   end
 
@@ -389,8 +412,8 @@ local function parse_raw_numstat_output(lines)
       break
     end
 
-    local status = header:match(" ([^ ]+)$") ---@type string|nil
-    if status == nil or status == "" then
+    local old_object_name, new_object_name, status = header:match("^:%d+ %d+ (%x+) (%x+) ([^ ]+)$")
+    if status == nil or status == "" or old_object_name == nil or new_object_name == nil then
       break
     end
 
@@ -407,7 +430,13 @@ local function parse_raw_numstat_output(lines)
     end
 
     if type(relative) == "string" and relative ~= "" then
-      records[#records + 1] = { status = status, relative = relative, previous = previous }
+      records[#records + 1] = {
+        status = status,
+        relative = relative,
+        previous = previous,
+        old_object_name = normalize_object_name(old_object_name),
+        new_object_name = normalize_object_name(new_object_name),
+      }
     end
   end
 
@@ -481,7 +510,11 @@ local function ensure_entry(status_map, absolute_path, relative_path)
       stage = nil,
       categories = {},
       staged_display = "",
+      staged_new_object_name = nil,
+      staged_old_object_name = nil,
       unstaged_display = "",
+      unstaged_new_object_name = nil,
+      unstaged_old_object_name = nil,
     }
     status_map[absolute_path] = entry
   end
@@ -592,8 +625,8 @@ function M.collect(opts, token)
       local staged_args = { "diff", "--staged" } ---@type string[]
       local unstaged_args = { "diff" } ---@type string[]
       if include_numstat then
-        vim.list_extend(staged_args, { "--raw", "--numstat" })
-        vim.list_extend(unstaged_args, { "--raw", "--numstat" })
+        vim.list_extend(staged_args, { "--raw", "--abbrev=64", "--numstat" })
+        vim.list_extend(unstaged_args, { "--raw", "--abbrev=64", "--numstat" })
       else
         staged_args[#staged_args + 1] = "--name-status"
         unstaged_args[#unstaged_args + 1] = "--name-status"
@@ -651,6 +684,8 @@ function M.collect(opts, token)
         local entry = ensure_entry(status_map, absolute, relative)
         apply_status_code(entry, "staged", record.status)
         entry.staged_prev_relative = record.previous
+        entry.staged_old_object_name = record.old_object_name
+        entry.staged_new_object_name = record.new_object_name
       end
 
       -- Process unstaged changes (diff)
@@ -666,6 +701,8 @@ function M.collect(opts, token)
         local entry = ensure_entry(status_map, absolute, relative)
         apply_status_code(entry, "unstaged", record.status)
         entry.unstaged_prev_relative = record.previous
+        entry.unstaged_old_object_name = record.old_object_name
+        entry.unstaged_new_object_name = record.new_object_name
       end
 
       -- Process untracked files (ls-files)

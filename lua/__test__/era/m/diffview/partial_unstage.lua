@@ -101,6 +101,56 @@ t:test("pane loader binds index bytes to the captured object hash", function()
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
+t:test("pane loader consumes status snapshot identities without resolving them again", function()
+  local resolution_calls = 0 ---@type integer
+  local blob_objects = {} ---@type string[]
+  t:patch_table(stl.git.info, "get_file_info", function()
+    resolution_calls = resolution_calls + 1
+    return Future.resolve({ ok = false, missing = false, err = "unexpected index resolution" })
+  end)
+  t:patch_table(stl.git.info, "get_object_name", function()
+    resolution_calls = resolution_calls + 1
+    return Future.resolve({ ok = false, missing = false, err = "unexpected revision resolution" })
+  end)
+  t:patch_table(stl.git.info, "get_show_blob", function(_, object)
+    blob_objects[#blob_objects + 1] = object
+    return Future.resolve({ ok = true, missing = false, bytes = object })
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local index_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local head_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local function load(object, bufnr, object_name)
+    local outcome = nil ---@type boolean|nil
+    local content_changed = nil ---@type boolean|nil
+    stl.async.run(function()
+      outcome, content_changed = pane.load_git_content(object, bufnr, nil, nil, nil, object_name)
+    end)
+    wait(function()
+      return outcome ~= nil
+    end)
+    return outcome, content_changed
+  end
+
+  local index_ok, index_changed = load(":./f.txt", index_bufnr, "index-snapshot")
+  local head_ok, head_changed = load("HEAD:f.txt", head_bufnr, "head-snapshot")
+  t.assert_true(index_ok and index_changed, "captured index loaded")
+  t.assert_true(head_ok and head_changed, "captured revision loaded")
+  t.assert_eq(0, resolution_calls, "captured identities skip resolution queries")
+  t.assert_eq("index-snapshot", blob_objects[1], "index blob read by captured identity")
+  t.assert_eq("head-snapshot", blob_objects[2], "revision blob read by captured identity")
+  t.assert_eq("index-snapshot", vim.b[index_bufnr].git_object_name, "partial unstage snapshot retained")
+  t.assert_nil(vim.b[head_bufnr].git_object_name, "revision is not an index snapshot")
+
+  local cached_ok, cached_changed = load(":./f.txt", index_bufnr, "index-snapshot")
+  t.assert_true(cached_ok, "captured index cache hit")
+  t.assert_false(cached_changed, "captured index cache reports unchanged")
+  t.assert_eq(2, #blob_objects, "cache hit skips blob query")
+
+  vim.api.nvim_buf_delete(index_bufnr, { force = true })
+  vim.api.nvim_buf_delete(head_bufnr, { force = true })
+end)
+
 t:test("workspace action forwards the right-buffer index snapshot", function()
   local captured = nil ---@type table|nil
   local opened = false ---@type boolean
