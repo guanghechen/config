@@ -81,6 +81,16 @@ local function load_refresh_case(opts)
       opened[#opened + 1] = entry
       open_opts[#open_opts + 1] = entry_opts
     end,
+    focus_changes = function() end,
+    get_changes_pane = function(_, stage_type)
+      return { stage_type = stage_type, bufnr = changes_bufnr }
+    end,
+    get_changes_panes = function()
+      return { { bufnr = changes_bufnr } }
+    end,
+    is_changes_buffer = function()
+      return false
+    end,
     render_changes = function()
       line_map = {}
       for _, entry in ipairs(opts.visible_entries) do

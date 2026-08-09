@@ -6,7 +6,7 @@ local config = require("era.m.diffview.config")
 local util = require("era.m.diffview.util")
 
 ---Changes pane for workspace view.
----Renders staged + unstaged file entries as dual trees with separator.
+---Renders one staged or unstaged file tree; the workspace composes both sibling panes.
 ---@class era.m.diffview.pane.changes
 local M = {}
 
@@ -44,19 +44,30 @@ local function format_display_path(path)
   return vim.fn.strtrans(path)
 end
 
----Build right-aligned metadata using pane-wide fixed INS / DEL / S columns.
+---@class era.m.diffview.pane.changes.IMetadataWidths
+---@field public insertion              integer
+---@field public deletion               integer
+
+---Measure fixed INS / DEL columns shared by the sibling Changes panes.
+---@param entries                       era.m.diffview.IFileEntry[]
+---@return era.m.diffview.pane.changes.IMetadataWidths
+function M.measure_metadata(entries)
+  local widths = { insertion = 0, deletion = 0 } ---@type era.m.diffview.pane.changes.IMetadataWidths
+  for _, entry in ipairs(entries) do
+    widths.insertion = math.max(widths.insertion, #format_stat(entry.insertions, "+"))
+    widths.deletion = math.max(widths.deletion, #format_stat(entry.deletions, "-"))
+  end
+  return widths
+end
+
+---Build right-aligned metadata using Changes-wide fixed INS / DEL / S columns.
 ---@param items                         era.m.diffview.pane.changes.IOverlayEntry[]
 ---@param panel_width                   integer
+---@param widths                        era.m.diffview.pane.changes.IMetadataWidths
 ---@return era.m.diffview.IOverlay[]
-local function build_overlays(items, panel_width)
-  local insertion_width = 0 ---@type integer
-  local deletion_width = 0 ---@type integer
-
-  for _, item in ipairs(items) do
-    insertion_width = math.max(insertion_width, #format_stat(item.entry.insertions, "+"))
-    deletion_width = math.max(deletion_width, #format_stat(item.entry.deletions, "-"))
-  end
-
+local function build_overlays(items, panel_width, widths)
+  local insertion_width = widths.insertion
+  local deletion_width = widths.deletion
   local overlays = {} ---@type era.m.diffview.IOverlay[]
   for _, item in ipairs(items) do
     local entry = item.entry
@@ -109,17 +120,26 @@ end
 -- Buffer creation
 ----------------------------------------------------------------------------------------------------
 
----Create a changes panel buffer
+---Create a changes panel buffer.
+---@param stage_type                    stl.m.diffview.StageTypeEnum
 ---@return integer                      bufnr
-function M.create_buffer()
+function M.create_buffer(stage_type)
   local bufnr = vim.api.nvim_create_buf(false, true)
 
   for opt, val in pairs(config.BUFOPTS_PANEL) do
     vim.api.nvim_set_option_value(opt, val, { buf = bufnr })
   end
   vim.api.nvim_set_option_value("filetype", config.FT.CHANGES, { buf = bufnr })
+  vim.b[bufnr].diffview_changes_stage_type = stage_type
 
   return bufnr
+end
+
+---Get the stage rendered by a Changes buffer.
+---@param bufnr                         integer
+---@return stl.m.diffview.StageTypeEnum|nil
+function M.get_stage_type(bufnr)
+  return vim.b[bufnr].diffview_changes_stage_type
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -298,7 +318,7 @@ local function get_sorted_section_entries(entries)
   return sorted_entries
 end
 
----Get entries in the same order used by the rendered changes panel.
+---Get entries in the same order used across the staged and unstaged panes.
 ---@param entries                       era.m.diffview.IFileEntry[]
 ---@return era.m.diffview.IFileEntry[]
 function M.get_entries_in_render_order(entries)
@@ -427,14 +447,16 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.m.diffview.pane.changes.IRenderOpts
+---@field public stage_type             stl.m.diffview.StageTypeEnum
 ---@field public viewtype               stl.m.diffview.PanelViewTypeEnum|nil
 ---@field public foldempty              boolean|nil
 ---@field public collapsed_dirs         table<string, boolean>|nil
 ---@field public panel_width            integer|nil
+---@field public metadata_widths        era.m.diffview.pane.changes.IMetadataWidths|nil
 
----Render changes panel with staged and unstaged files
+---Render one staged or unstaged Changes pane.
 ---@param entries                       era.m.diffview.IFileEntry[]
----@param opts                          era.m.diffview.pane.changes.IRenderOpts|nil
+---@param opts                          era.m.diffview.pane.changes.IRenderOpts
 ---@return era.m.diffview.IRenderResult
 function M.render(entries, opts)
   local lines = {} ---@type string[]
@@ -443,77 +465,51 @@ function M.render(entries, opts)
   local overlay_entries = {} ---@type era.m.diffview.pane.changes.IOverlayEntry[]
 
   -- Get options
-  local viewtype = (opts and opts.viewtype) or dot.context.diffview.flag_panel_viewtype:snapshot() ---@type stl.m.diffview.PanelViewTypeEnum
-  local foldempty_opt = opts and opts.foldempty
+  local stage_type = opts.stage_type
+  local viewtype = opts.viewtype or dot.context.diffview.flag_panel_viewtype:snapshot() ---@type stl.m.diffview.PanelViewTypeEnum
+  local foldempty_opt = opts.foldempty
   local foldempty = foldempty_opt ~= nil and foldempty_opt or dot.context.diffview.flag_foldempty:snapshot() ---@type boolean
-  local collapsed_dirs = (opts and opts.collapsed_dirs) or {} ---@type table<string, boolean>
-  local panel_width = (opts and opts.panel_width) or config.FILETREE_WIDTH ---@type integer
-
-  -- Separate staged and unstaged
-  local staged = {} ---@type era.m.diffview.IFileEntry[]
-  local unstaged = {} ---@type era.m.diffview.IFileEntry[]
+  local collapsed_dirs = opts.collapsed_dirs or {} ---@type table<string, boolean>
+  local panel_width = opts.panel_width or config.FILETREE_WIDTH ---@type integer
+  local section_entries = {} ---@type era.m.diffview.IFileEntry[]
 
   for _, entry in ipairs(entries) do
-    if entry.stage_type == "staged" then
-      staged[#staged + 1] = entry
-    else
-      unstaged[#unstaged + 1] = entry
+    if entry.stage_type == stage_type then
+      section_entries[#section_entries + 1] = entry
     end
   end
 
-  -- Render staged section
-  local staged_header = string.format("Staged (%d)", #staged)
-  lines[#lines + 1] = staged_header
+  local label = stage_type == "staged" and "Staged" or "Unstaged"
+  local header = string.format("%s (%d)", label, #section_entries)
+  lines[#lines + 1] = header
   highlights[#highlights + 1] = {
     hlname = "m_dv_ft_header",
     lnum = #lines - 1,
     coll = 0,
-    colr = #staged_header,
+    colr = #header,
   }
-  line_map[#line_map + 1] = { type = "header", entry = nil, stage_type = "staged", uuid = nil }
+  line_map[#line_map + 1] = { type = "header", entry = nil, stage_type = stage_type, uuid = nil }
 
   if viewtype == "list" then
-    render_section_list(staged, "staged", lines, highlights, line_map, overlay_entries)
+    render_section_list(section_entries, stage_type, lines, highlights, line_map, overlay_entries)
   else
-    render_section_tree(staged, "staged", lines, highlights, line_map, collapsed_dirs, foldempty, overlay_entries)
-  end
-
-  -- Separator
-  if #staged > 0 or #unstaged > 0 then
-    local sep_width = math.max(0, panel_width) ---@type integer
-    local sep_line = string.rep(config.ICONS.SEPARATOR, sep_width)
-    lines[#lines + 1] = sep_line
-    highlights[#highlights + 1] = {
-      hlname = "m_dv_ft_separator",
-      lnum = #lines - 1,
-      coll = 0,
-      colr = #sep_line,
-    }
-    line_map[#line_map + 1] = { type = "separator", entry = nil, stage_type = nil, uuid = nil }
-  end
-
-  -- Render unstaged section
-  local unstaged_header = string.format("Unstaged (%d)", #unstaged)
-  lines[#lines + 1] = unstaged_header
-  highlights[#highlights + 1] = {
-    hlname = "m_dv_ft_header",
-    lnum = #lines - 1,
-    coll = 0,
-    colr = #unstaged_header,
-  }
-  line_map[#line_map + 1] = { type = "header", entry = nil, stage_type = "unstaged", uuid = nil }
-
-  if viewtype == "list" then
-    render_section_list(unstaged, "unstaged", lines, highlights, line_map, overlay_entries)
-  else
-    render_section_tree(unstaged, "unstaged", lines, highlights, line_map, collapsed_dirs, foldempty, overlay_entries)
+    render_section_tree(
+      section_entries,
+      stage_type,
+      lines,
+      highlights,
+      line_map,
+      collapsed_dirs,
+      foldempty,
+      overlay_entries
+    )
   end
 
   return {
     lines = lines,
     highlights = highlights,
     line_map = line_map,
-    overlays = build_overlays(overlay_entries, panel_width),
+    overlays = build_overlays(overlay_entries, panel_width, opts.metadata_widths or M.measure_metadata(entries)),
   }
 end
 

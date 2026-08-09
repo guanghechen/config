@@ -74,19 +74,27 @@ local entries = {
 }
 
 ---@param viewtype                     stl.m.diffview.PanelViewTypeEnum
+---@param stage_type                  stl.m.diffview.StageTypeEnum
 ---@return era.m.diffview.IRenderResult
-local function render(viewtype)
+local function render(viewtype, stage_type)
   return changes.render(entries, {
+    stage_type = stage_type,
     viewtype = viewtype,
     foldempty = true,
     collapsed_dirs = {},
+    metadata_widths = changes.measure_metadata(entries),
     panel_width = 40,
   })
 end
 
----@param result                       era.m.diffview.IRenderResult
-local function assert_aligned_columns(result)
-  local overlays = overlays_by_filepath(result)
+---@param viewtype                     stl.m.diffview.PanelViewTypeEnum
+local function assert_aligned_columns(viewtype)
+  local overlays = {} ---@type table<string, era.m.diffview.IOverlay>
+  for _, stage_type in ipairs({ "staged", "unstaged" }) do
+    for filepath, overlay in pairs(overlays_by_filepath(render(viewtype, stage_type))) do
+      overlays[filepath] = overlay
+    end
+  end
   t.assert_eq(" +12 -3 M", overlay_text(overlays["src/foo.lua"]), "full metadata row")
   t.assert_eq("  +8    A", overlay_text(overlays["src/new.lua"]), "missing deletion keeps its column")
   t.assert_eq("     -6 D", overlay_text(overlays["src/deleted.lua"]), "missing insertion keeps its column")
@@ -94,21 +102,28 @@ local function assert_aligned_columns(result)
 end
 
 t:test("render: list keeps pane-wide INS / DEL / S columns", function()
-  assert_aligned_columns(render("list"))
+  assert_aligned_columns("list")
 end)
 
 t:test("render: tree uses the same metadata columns", function()
-  assert_aligned_columns(render("tree"))
+  assert_aligned_columns("tree")
 end)
 
 t:test("render: narrow pane keeps status when full metadata cannot fit", function()
-  local result = changes.render(entries, {
-    viewtype = "list",
-    foldempty = true,
-    collapsed_dirs = {},
-    panel_width = 5,
-  })
-  local overlays = overlays_by_filepath(result)
+  local overlays = {} ---@type table<string, era.m.diffview.IOverlay>
+  for _, stage_type in ipairs({ "staged", "unstaged" }) do
+    local result = changes.render(entries, {
+      stage_type = stage_type,
+      viewtype = "list",
+      foldempty = true,
+      collapsed_dirs = {},
+      metadata_widths = changes.measure_metadata(entries),
+      panel_width = 5,
+    })
+    for filepath, overlay in pairs(overlays_by_filepath(result)) do
+      overlays[filepath] = overlay
+    end
+  end
 
   t.assert_eq(" M", overlay_text(overlays["src/foo.lua"]), "status fallback")
   t.assert_eq(" ?", overlay_text(overlays["src/untracked.lua"]), "untracked fallback")
@@ -118,6 +133,7 @@ t:test("render: escapes control characters without changing semantic paths", fun
   for _, viewtype in ipairs({ "list", "tree" }) do
     local entry = { filepath = "src/multi\nline\tname.lua", stage_type = "staged", status = "A" }
     local result = changes.render({ entry }, {
+      stage_type = "staged",
       viewtype = viewtype,
       foldempty = true,
       collapsed_dirs = {},
@@ -145,7 +161,7 @@ t:test("render: escapes control characters without changing semantic paths", fun
 end)
 
 t:test("render: filename and status use per-status highlights", function()
-  local result = render("list")
+  local result = render("list", "staged")
   local overlays = overlays_by_filepath(result)
 
   t.assert_eq("status_M", overlays["src/foo.lua"].virt_text[#overlays["src/foo.lua"].virt_text][2], "status")
@@ -168,7 +184,7 @@ t:test("render: filename and status use per-status highlights", function()
 end)
 
 t:test("apply: installs right-aligned virtual text", function()
-  local result = render("list")
+  local result = render("list", "staged")
   local bufnr = vim.api.nvim_create_buf(false, true)
   changes.apply_to_buffer(bufnr, result)
 
@@ -181,8 +197,24 @@ t:test("apply: installs right-aligned virtual text", function()
     end
   end
 
-  t.assert_eq(#entries, right_aligned, "one right-aligned overlay per file")
+  t.assert_eq(2, right_aligned, "one right-aligned overlay per staged file")
   vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("render: each pane contains only its own header and entries", function()
+  local staged = render("list", "staged")
+  local unstaged = render("list", "unstaged")
+
+  t.assert_eq("Staged (2)", staged.lines[1], "staged header")
+  t.assert_eq("Unstaged (2)", unstaged.lines[1], "unstaged header")
+  t.assert_eq(3, #staged.lines, "staged lines")
+  t.assert_eq(3, #unstaged.lines, "unstaged lines")
+  for _, item in ipairs(staged.line_map) do
+    t.assert_eq("staged", item.stage_type, "staged line ownership")
+  end
+  for _, item in ipairs(unstaged.line_map) do
+    t.assert_eq("unstaged", item.stage_type, "unstaged line ownership")
+  end
 end)
 
 t:test("status highlight mapping distinguishes conflicts and untracked files", function()

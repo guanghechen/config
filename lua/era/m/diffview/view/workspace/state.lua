@@ -14,7 +14,7 @@ local M = {}
 ---@field public layout_type             integer                         Current layout (1-3)
 ---@field public entries                 stl.c.Observable                Observable<era.m.diffview.IFileEntry[]>
 ---@field public current_entry           stl.c.Observable                Observable<era.m.diffview.IFileEntry|nil>
----@field public collapsed_dirs          table<string, boolean>          Collapsed directory paths
+---@field public collapsed_dirs          table<stl.m.diffview.StageTypeEnum, table<string, boolean>> Per-pane tree state
 ---@field protected _disposed            boolean
 ---@field protected _git_subscription    stl.c.IUnsubscribable|nil
 ---@field protected _refresh             era.m.diffview.view.workspace.Refresh|nil
@@ -34,7 +34,7 @@ function State.new(tabnr)
 
   self.entries = stl.c.Observable.from_value({})
   self.current_entry = stl.c.Observable.from_value(nil)
-  self.collapsed_dirs = {}
+  self.collapsed_dirs = { staged = {}, unstaged = {} }
 
   self._disposed = false
   self._git_subscription = nil
@@ -107,62 +107,73 @@ end
 -- Directory collapse management
 ----------------------------------------------------------------------------------------------------
 
----Check if directory is collapsed
+---Check if a directory is collapsed in one Changes pane.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
 ---@param dir_path                       string
 ---@return boolean
-function State:is_collapsed(dir_path)
-  return self.collapsed_dirs[dir_path] == true
+function State:is_collapsed(stage_type, dir_path)
+  return self.collapsed_dirs[stage_type][dir_path] == true
 end
 
----Toggle directory collapse state
+---Toggle directory collapse state in one Changes pane.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
 ---@param dir_path                       string
-function State:toggle_collapse(dir_path)
-  self.collapsed_dirs[dir_path] = not self.collapsed_dirs[dir_path]
+function State:toggle_collapse(stage_type, dir_path)
+  local collapsed_dirs = self.collapsed_dirs[stage_type]
+  collapsed_dirs[dir_path] = not collapsed_dirs[dir_path]
 end
 
----Expand directory
+---Expand a directory in one Changes pane.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
 ---@param dir_path                       string
-function State:expand_dir(dir_path)
-  self.collapsed_dirs[dir_path] = nil
+function State:expand_dir(stage_type, dir_path)
+  self.collapsed_dirs[stage_type][dir_path] = nil
 end
 
----Collapse directory
+---Collapse a directory in one Changes pane.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
 ---@param dir_path                       string
-function State:collapse_dir(dir_path)
-  self.collapsed_dirs[dir_path] = true
+function State:collapse_dir(stage_type, dir_path)
+  self.collapsed_dirs[stage_type][dir_path] = true
 end
 
----Expand all directories
-function State:expand_all()
-  self.collapsed_dirs = {}
+---Expand all directories in one Changes pane.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
+function State:expand_all(stage_type)
+  self.collapsed_dirs[stage_type] = {}
 end
 
----Collapse all directories (from current entries)
-function State:collapse_all()
+---Collapse all directories in one Changes pane.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
+function State:collapse_all(stage_type)
   local entries = self:get_entries()
   local dirs = {} ---@type table<string, boolean>
 
   for _, entry in ipairs(entries) do
-    local dir = vim.fn.fnamemodify(entry.filepath, ":h")
-    while dir ~= "." and dir ~= "" do
-      dirs[dir] = true
-      dir = vim.fn.fnamemodify(dir, ":h")
+    if entry.stage_type == stage_type then
+      local dir = vim.fn.fnamemodify(entry.filepath, ":h")
+      while dir ~= "." and dir ~= "" do
+        dirs[dir] = true
+        dir = vim.fn.fnamemodify(dir, ":h")
+      end
     end
   end
 
-  self.collapsed_dirs = dirs
+  self.collapsed_dirs[stage_type] = dirs
 end
 
----Get collapsed dirs snapshot
+---Get one pane's collapsed dirs snapshot.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
 ---@return table<string, boolean>
-function State:get_collapsed_dirs()
-  return vim.tbl_extend("force", {}, self.collapsed_dirs)
+function State:get_collapsed_dirs(stage_type)
+  return vim.tbl_extend("force", {}, self.collapsed_dirs[stage_type])
 end
 
----Set collapsed dirs
+---Set one pane's collapsed dirs.
+---@param stage_type                     stl.m.diffview.StageTypeEnum
 ---@param collapsed_dirs                 table<string, boolean>
-function State:set_collapsed_dirs(collapsed_dirs)
-  self.collapsed_dirs = collapsed_dirs
+function State:set_collapsed_dirs(stage_type, collapsed_dirs)
+  self.collapsed_dirs[stage_type] = collapsed_dirs
 end
 
 ----------------------------------------------------------------------------------------------------

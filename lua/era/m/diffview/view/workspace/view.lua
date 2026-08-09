@@ -15,11 +15,21 @@ local M = {}
 -- Type definitions
 ----------------------------------------------------------------------------------------------------
 
+---@class era.m.diffview.view.workspace.IChangesPane
+---@field public stage_type              stl.m.diffview.StageTypeEnum
+---@field public winnr                   integer|nil
+---@field public bufnr                   integer|nil
+
+---@class era.m.diffview.view.workspace.IChangesLayout
+---@field public staged                  era.m.diffview.view.workspace.IChangesPane
+---@field public unstaged                era.m.diffview.view.workspace.IChangesPane
+---@field public expanded_staged_height  integer|nil                    Restored after an empty pane expands again
+---@field public both_nonempty           boolean                        Last rendered occupancy state
+
 ---@class era.m.diffview.view.workspace.ILayout
 ---@field public tabnr                   integer
 ---@field public layout_type             integer                         1=changes+sbs, 2=changes only, 3=sbs only
----@field public changes_winnr           integer|nil
----@field public changes_bufnr           integer|nil
+---@field public changes                 era.m.diffview.view.workspace.IChangesLayout
 ---@field public sbs_left_winnr          integer|nil
 ---@field public sbs_right_winnr         integer|nil
 ---@field public preview_generation      integer
@@ -32,6 +42,64 @@ local M = {}
 local function next_preview_generation(lyt)
   lyt.preview_generation = (lyt.preview_generation or 0) + 1
   return lyt.preview_generation
+end
+
+---@return era.m.diffview.view.workspace.IChangesLayout
+local function create_empty_changes_layout()
+  return {
+    staged = { stage_type = "staged", winnr = nil, bufnr = nil },
+    unstaged = { stage_type = "unstaged", winnr = nil, bufnr = nil },
+    expanded_staged_height = nil,
+    both_nonempty = false,
+  }
+end
+
+---Create the vertically stacked Staged and Unstaged sibling panes in one Changes column.
+---@param anchor_winnr                  integer
+---@return era.m.diffview.view.workspace.IChangesLayout
+local function create_changes_layout(anchor_winnr)
+  local result = layout_util.create(layout_util.vertical("staged", "unstaged", 0.5), anchor_winnr)
+  local changes = create_empty_changes_layout()
+
+  for _, stage_type in ipairs({ "staged", "unstaged" }) do
+    local pane = changes[stage_type] ---@type era.m.diffview.view.workspace.IChangesPane
+    pane.winnr = result.winnrs[stage_type]
+    pane.bufnr = pane_changes.create_buffer(stage_type)
+    if pane.winnr then
+      vim.api.nvim_win_set_buf(pane.winnr, pane.bufnr)
+      pane_changes.apply_winopts(pane.winnr)
+    end
+  end
+
+  if changes.staged.winnr then
+    changes.expanded_staged_height = vim.api.nvim_win_get_height(changes.staged.winnr)
+  end
+  return changes
+end
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param stage_type                     stl.m.diffview.StageTypeEnum
+---@return era.m.diffview.view.workspace.IChangesPane
+function M.get_changes_pane(lyt, stage_type)
+  return lyt.changes[stage_type]
+end
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return era.m.diffview.view.workspace.IChangesPane[]
+function M.get_changes_panes(lyt)
+  return { lyt.changes.staged, lyt.changes.unstaged }
+end
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param bufnr                          integer
+---@return boolean
+function M.is_changes_buffer(lyt, bufnr)
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.bufnr == bufnr then
+      return true
+    end
+  end
+  return false
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -52,8 +120,7 @@ function M.create_layout(layout_type)
   local lyt = {
     tabnr = tabnr,
     layout_type = layout_type,
-    changes_winnr = nil,
-    changes_bufnr = nil,
+    changes = create_empty_changes_layout(),
     sbs_left_winnr = nil,
     sbs_right_winnr = nil,
     preview_generation = 0,
@@ -85,15 +152,9 @@ function M.__create_layout_full__(tabnr)
 
   -- Create changes window on the left
   vim.cmd("topleft vsplit")
-  local changes_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_width(changes_winnr, config.FILETREE_WIDTH)
-
-  -- Create changes buffer
-  local changes_bufnr = pane_changes.create_buffer()
-  vim.api.nvim_win_set_buf(changes_winnr, changes_bufnr)
-
-  -- Apply panel window options
-  pane_changes.apply_winopts(changes_winnr)
+  local changes_anchor_winnr = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_width(changes_anchor_winnr, config.FILETREE_WIDTH)
+  local changes = create_changes_layout(changes_anchor_winnr)
 
   -- Go back to pivot and create sbs windows
   vim.api.nvim_set_current_win(pivot_winnr)
@@ -116,14 +177,15 @@ function M.__create_layout_full__(tabnr)
     pane_sbs.apply_sbs_winopts(sbs_right_winnr, "sbs_right")
   end
 
-  -- Focus changes pane
-  vim.api.nvim_set_current_win(changes_winnr)
+  -- Unstaged is the default work queue until the first rendered entry selects its owning pane.
+  if changes.unstaged.winnr then
+    vim.api.nvim_set_current_win(changes.unstaged.winnr)
+  end
 
   return {
     tabnr = tabnr,
     layout_type = 1,
-    changes_winnr = changes_winnr,
-    changes_bufnr = changes_bufnr,
+    changes = changes,
     sbs_left_winnr = sbs_left_winnr,
     sbs_right_winnr = sbs_right_winnr,
     preview_generation = 0,
@@ -134,17 +196,12 @@ end
 ---@param tabnr                          integer
 ---@return era.m.diffview.view.workspace.ILayout
 function M.__create_layout_changes_only__(tabnr)
-  local changes_winnr = vim.api.nvim_get_current_win()
-  local changes_bufnr = pane_changes.create_buffer()
-
-  vim.api.nvim_win_set_buf(changes_winnr, changes_bufnr)
-  pane_changes.apply_winopts(changes_winnr)
+  local changes = create_changes_layout(vim.api.nvim_get_current_win())
 
   return {
     tabnr = tabnr,
     layout_type = 2,
-    changes_winnr = changes_winnr,
-    changes_bufnr = changes_bufnr,
+    changes = changes,
     sbs_left_winnr = nil,
     sbs_right_winnr = nil,
     preview_generation = 0,
@@ -176,8 +233,7 @@ function M.__create_layout_sbs_only__(tabnr)
   return {
     tabnr = tabnr,
     layout_type = 3,
-    changes_winnr = nil,
-    changes_bufnr = nil,
+    changes = create_empty_changes_layout(),
     sbs_left_winnr = sbs_left_winnr,
     sbs_right_winnr = sbs_right_winnr,
     preview_generation = 0,
@@ -215,8 +271,11 @@ end
 function M.close_windows(lyt)
   next_preview_generation(lyt)
 
-  if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-    pcall(vim.api.nvim_win_close, lyt.changes_winnr, true)
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      pcall(vim.api.nvim_win_close, pane.winnr, true)
+    end
+    pane.winnr = nil
   end
   if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
     pcall(vim.api.nvim_win_close, lyt.sbs_left_winnr, true)
@@ -234,8 +293,23 @@ end
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 ---@return era.m.diffview.view.workspace.ILayout
 function M.show_changes(lyt)
-  if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
+  local staged = lyt.changes.staged
+  local unstaged = lyt.changes.unstaged
+  if
+    staged.winnr
+    and vim.api.nvim_win_is_valid(staged.winnr)
+    and unstaged.winnr
+    and vim.api.nvim_win_is_valid(unstaged.winnr)
+  then
     return lyt
+  end
+
+  -- The two windows are one logical panel; recover a partially closed panel as a pair.
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      M.hide_changes(lyt)
+      break
+    end
   end
 
   -- Find reference window
@@ -244,19 +318,26 @@ function M.show_changes(lyt)
     return lyt
   end
 
-  -- Create buffer if needed
-  if not lyt.changes_bufnr or not vim.api.nvim_buf_is_valid(lyt.changes_bufnr) then
-    lyt.changes_bufnr = pane_changes.create_buffer()
-  end
-
   vim.api.nvim_set_current_win(ref_winnr)
   vim.cmd("topleft vsplit")
-  local changes_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_width(changes_winnr, config.FILETREE_WIDTH)
-  vim.api.nvim_win_set_buf(changes_winnr, lyt.changes_bufnr)
-  pane_changes.apply_winopts(changes_winnr)
+  local anchor_winnr = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_width(anchor_winnr, config.FILETREE_WIDTH)
+  local result = layout_util.create(layout_util.vertical("staged", "unstaged", 0.5), anchor_winnr)
 
-  lyt.changes_winnr = changes_winnr
+  for _, stage_type in ipairs({ "staged", "unstaged" }) do
+    local pane = M.get_changes_pane(lyt, stage_type)
+    pane.winnr = result.winnrs[stage_type]
+    if not pane.bufnr or not vim.api.nvim_buf_is_valid(pane.bufnr) then
+      pane.bufnr = pane_changes.create_buffer(stage_type)
+    end
+    if pane.winnr then
+      vim.api.nvim_win_set_buf(pane.winnr, pane.bufnr)
+      pane_changes.apply_winopts(pane.winnr)
+    end
+  end
+  if staged.winnr then
+    lyt.changes.expanded_staged_height = vim.api.nvim_win_get_height(staged.winnr)
+  end
 
   return lyt
 end
@@ -265,9 +346,16 @@ end
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 ---@return era.m.diffview.view.workspace.ILayout
 function M.hide_changes(lyt)
-  if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-    vim.api.nvim_win_hide(lyt.changes_winnr)
-    lyt.changes_winnr = nil
+  local has_reference = (lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr))
+    or (lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr))
+  if not has_reference then
+    return lyt
+  end
+  for _, pane in ipairs({ lyt.changes.unstaged, lyt.changes.staged }) do
+    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      vim.api.nvim_win_hide(pane.winnr)
+    end
+    pane.winnr = nil
   end
   return lyt
 end
@@ -276,22 +364,29 @@ end
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 ---@return era.m.diffview.view.workspace.ILayout
 function M.toggle_changes(lyt)
-  if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-    return M.hide_changes(lyt)
-  else
-    return M.show_changes(lyt)
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      return M.hide_changes(lyt)
+    end
   end
+  return M.show_changes(lyt)
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Focus management
 ----------------------------------------------------------------------------------------------------
 
----Focus changes panel
+---Focus one Changes pane, defaulting to the Unstaged work queue.
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
-function M.focus_changes(lyt)
-  if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-    vim.api.nvim_set_current_win(lyt.changes_winnr)
+---@param stage_type                     stl.m.diffview.StageTypeEnum|nil
+function M.focus_changes(lyt, stage_type)
+  local preferred = M.get_changes_pane(lyt, stage_type or "unstaged")
+  local fallback = M.get_changes_pane(lyt, stage_type == "staged" and "unstaged" or "staged")
+  for _, pane in ipairs({ preferred, fallback }) do
+    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      vim.api.nvim_set_current_win(pane.winnr)
+      return
+    end
   end
 end
 
@@ -311,43 +406,31 @@ function M.focus_right(lyt)
   end
 end
 
----Cycle focus: changes -> left -> right -> changes
+---Cycle focus: staged -> unstaged -> left -> right -> staged.
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.cycle_focus(lyt)
   local current_winnr = vim.api.nvim_get_current_win()
+  local valid = {} ---@type integer[]
+  local current_idx = nil ---@type integer|nil
 
-  local changes_valid = lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr)
-  local left_valid = lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr)
-  local right_valid = lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
-
-  if current_winnr == lyt.changes_winnr then
-    if left_valid then
-      vim.api.nvim_set_current_win(lyt.sbs_left_winnr)
-    elseif right_valid then
-      vim.api.nvim_set_current_win(lyt.sbs_right_winnr)
-    end
-  elseif current_winnr == lyt.sbs_left_winnr then
-    if right_valid then
-      vim.api.nvim_set_current_win(lyt.sbs_right_winnr)
-    elseif changes_valid then
-      vim.api.nvim_set_current_win(lyt.changes_winnr)
-    end
-  elseif current_winnr == lyt.sbs_right_winnr then
-    if changes_valid then
-      vim.api.nvim_set_current_win(lyt.changes_winnr)
-    elseif left_valid then
-      vim.api.nvim_set_current_win(lyt.sbs_left_winnr)
-    end
-  else
-    -- Current window not in layout
-    if changes_valid then
-      vim.api.nvim_set_current_win(lyt.changes_winnr)
-    elseif left_valid then
-      vim.api.nvim_set_current_win(lyt.sbs_left_winnr)
-    elseif right_valid then
-      vim.api.nvim_set_current_win(lyt.sbs_right_winnr)
+  ---@param winnr integer|nil
+  local function append(winnr)
+    if winnr and vim.api.nvim_win_is_valid(winnr) then
+      valid[#valid + 1] = winnr
+      if winnr == current_winnr then
+        current_idx = #valid
+      end
     end
   end
+  append(lyt.changes.staged.winnr)
+  append(lyt.changes.unstaged.winnr)
+  append(lyt.sbs_left_winnr)
+  append(lyt.sbs_right_winnr)
+
+  if #valid == 0 then
+    return
+  end
+  vim.api.nvim_set_current_win(valid[current_idx and (current_idx % #valid) + 1 or 1])
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -364,8 +447,10 @@ function M.is_valid(lyt)
 
   -- At least one window must be valid
   local has_valid = false
-  if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-    has_valid = true
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      has_valid = true
+    end
   end
   if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
     has_valid = true
@@ -392,9 +477,11 @@ function M.destroy(lyt)
     pane_sbs.restore_winopts(bufnr)
   end
 
-  -- Clean up changes buffer
-  if lyt.changes_bufnr and vim.api.nvim_buf_is_valid(lyt.changes_bufnr) then
-    pcall(vim.api.nvim_buf_delete, lyt.changes_bufnr, { force = true })
+  -- Clean up Changes buffers.
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
+      pcall(vim.api.nvim_buf_delete, pane.bufnr, { force = true })
+    end
   end
 
   -- Close tab if it still exists
@@ -413,30 +500,76 @@ end
 -- Rendering
 ----------------------------------------------------------------------------------------------------
 
----Render changes pane
+---Collapse an empty sibling to its header and restore the prior split when both have entries.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param staged_count                   integer
+---@param unstaged_count                 integer
+function M.__sync_changes_heights__(lyt, staged_count, unstaged_count)
+  local changes = lyt.changes
+  local staged_winnr = changes.staged.winnr
+  local unstaged_winnr = changes.unstaged.winnr
+  if
+    not staged_winnr
+    or not vim.api.nvim_win_is_valid(staged_winnr)
+    or not unstaged_winnr
+    or not vim.api.nvim_win_is_valid(unstaged_winnr)
+  then
+    return
+  end
+
+  local staged_height = vim.api.nvim_win_get_height(staged_winnr)
+  local unstaged_height = vim.api.nvim_win_get_height(unstaged_winnr)
+  local both_nonempty = staged_count > 0 and unstaged_count > 0
+  if changes.both_nonempty then
+    changes.expanded_staged_height = staged_height
+  end
+
+  if both_nonempty then
+    if not changes.both_nonempty then
+      local max_staged_height = math.max(1, staged_height + unstaged_height - 1)
+      local restored_height =
+        math.min(changes.expanded_staged_height or math.floor((staged_height + unstaged_height) / 2), max_staged_height)
+      vim.api.nvim_win_set_height(staged_winnr, math.max(1, restored_height))
+    end
+  elseif staged_count == 0 then
+    vim.api.nvim_win_set_height(staged_winnr, 1)
+  elseif unstaged_count == 0 then
+    vim.api.nvim_win_set_height(unstaged_winnr, 1)
+  end
+  changes.both_nonempty = both_nonempty
+end
+
+---Render the sibling Changes panes from one workspace snapshot.
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.render_changes(ctx)
   local lyt = ctx.layout
   local state = ctx.state
-
-  if not lyt.changes_bufnr or not vim.api.nvim_buf_is_valid(lyt.changes_bufnr) then
-    return
-  end
-
   local entries = state:get_entries()
-  local collapsed_dirs = state:get_collapsed_dirs()
-  local panel_width = config.FILETREE_WIDTH
-
-  if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-    panel_width = vim.api.nvim_win_get_width(lyt.changes_winnr)
+  local metadata_widths = pane_changes.measure_metadata(entries)
+  local counts = { staged = 0, unstaged = 0 } ---@type table<stl.m.diffview.StageTypeEnum, integer>
+  for _, entry in ipairs(entries) do
+    if entry.stage_type then
+      counts[entry.stage_type] = counts[entry.stage_type] + 1
+    end
   end
 
-  local result = pane_changes.render(entries, {
-    collapsed_dirs = collapsed_dirs,
-    panel_width = panel_width,
-  })
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
+      local panel_width = config.FILETREE_WIDTH
+      if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+        panel_width = vim.api.nvim_win_get_width(pane.winnr)
+      end
+      local result = pane_changes.render(entries, {
+        stage_type = pane.stage_type,
+        collapsed_dirs = state:get_collapsed_dirs(pane.stage_type),
+        metadata_widths = metadata_widths,
+        panel_width = panel_width,
+      })
+      pane_changes.apply_to_buffer(pane.bufnr, result)
+    end
+  end
 
-  pane_changes.apply_to_buffer(lyt.changes_bufnr, result)
+  M.__sync_changes_heights__(lyt, counts.staged, counts.unstaged)
 end
 
 ---Open file entry in sbs view

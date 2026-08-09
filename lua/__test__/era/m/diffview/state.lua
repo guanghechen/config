@@ -111,4 +111,28 @@ t:test("workspace state disposes its refresh owner after unsubscribing", functio
   t.assert_true(ok_check, "late watcher refresh is ignored")
 end)
 
+t:test("workspace keeps staged and unstaged tree state independent", function()
+  t:patch_global("stl", { c = { Observable = Observable } })
+  local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
+  local state = State.State.new(101)
+
+  state:collapse_dir("staged", "src")
+  t.assert_true(state:is_collapsed("staged", "src"), "staged collapsed")
+  t.assert_false(state:is_collapsed("unstaged", "src"), "unstaged remains expanded")
+
+  state:toggle_collapse("unstaged", "src")
+  state:expand_dir("staged", "src")
+  t.assert_false(state:is_collapsed("staged", "src"), "staged expanded")
+  t.assert_true(state:is_collapsed("unstaged", "src"), "unstaged remains collapsed")
+
+  state:set_entries({
+    { filepath = "staged/dir/a.lua", stage_type = "staged", status = "M" },
+    { filepath = "unstaged/dir/b.lua", stage_type = "unstaged", status = "M" },
+  })
+  state:collapse_all("staged")
+  t.assert_true(state:is_collapsed("staged", "staged/dir"), "staged directories collapsed")
+  t.assert_false(state:is_collapsed("unstaged", "unstaged/dir"), "unstaged directories untouched")
+  state:dispose()
+end)
+
 t:run()

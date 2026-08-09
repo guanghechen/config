@@ -113,12 +113,22 @@ function M.toggle_files()
     if st and lyt then
       workspace_view.toggle_changes(lyt)
       -- Re-render if shown
-      if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-        workspace_view.render_changes({
+      local changes_visible = false
+      for _, pane in ipairs(workspace_view.get_changes_panes(lyt)) do
+        if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+          changes_visible = true
+          break
+        end
+      end
+      if changes_visible then
+        local ctx = {
           layout = lyt,
           state = st,
-        })
-        vim.api.nvim_set_current_win(lyt.changes_winnr)
+        }
+        require("era.m.diffview.view.workspace.keymap").setup_changes(ctx)
+        workspace_view.render_changes(ctx)
+        local current = st:get_current_entry()
+        workspace_view.focus_changes(lyt, current and current.stage_type or nil)
       end
     end
   elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then

@@ -44,7 +44,7 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@return era.m.diffview.IFileEntry|nil
 local function get_action_entry(ctx)
-  if vim.api.nvim_get_current_buf() == ctx.layout.changes_bufnr then
+  if workspace_view.is_changes_buffer(ctx.layout, vim.api.nvim_get_current_buf()) then
     return get_entry_at_cursor()
   end
   return ctx.state:get_current_entry()
@@ -79,22 +79,24 @@ end
 ---@return table<string, boolean>|nil visible_entry_ids
 local function get_navigation_entries(ctx)
   local entries = ctx.state:get_entries()
-  local changes_bufnr = ctx.layout.changes_bufnr
-  if not changes_bufnr or not vim.api.nvim_buf_is_valid(changes_bufnr) then
-    return entries, nil
-  end
-
-  local line_map = pane_changes.get_line_map(changes_bufnr)
-  if not line_map then
-    return entries, nil
-  end
-
   local visible_entry_ids = {} ---@type table<string, boolean>
-  for _, item in ipairs(line_map) do
-    local entry = item.entry ---@type era.m.diffview.IFileEntry|nil
-    if item.type == "file" and entry then
-      visible_entry_ids[get_entry_id(entry)] = true
+  local has_line_map = false
+  for _, pane in ipairs(workspace_view.get_changes_panes(ctx.layout)) do
+    if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
+      local line_map = pane_changes.get_line_map(pane.bufnr)
+      if line_map then
+        has_line_map = true
+        for _, item in ipairs(line_map) do
+          local entry = item.entry ---@type era.m.diffview.IFileEntry|nil
+          if item.type == "file" and entry then
+            visible_entry_ids[get_entry_id(entry)] = true
+          end
+        end
+      end
     end
+  end
+  if not has_line_map then
+    return entries, nil
   end
   return pane_changes.get_entries_in_render_order(entries), visible_entry_ids
 end
@@ -164,6 +166,7 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@param direction                      1|-1
 local function goto_adjacent_entry(ctx, direction)
+  local move_changes_focus = workspace_view.is_changes_buffer(ctx.layout, vim.api.nvim_get_current_buf())
   local entries, visible_entry_ids = get_navigation_entries(ctx)
   if #entries == 0 then
     return
@@ -197,6 +200,9 @@ local function goto_adjacent_entry(ctx, direction)
 
   ctx.state:set_current_entry(target_entry)
   M.__update_changes_cursor__(ctx, target_entry)
+  if move_changes_focus and target_entry.stage_type then
+    workspace_view.focus_changes(ctx.layout, target_entry.stage_type)
+  end
 
   stl.async.run(function()
     workspace_view.open_entry(ctx, target_entry)
@@ -244,7 +250,7 @@ function M.toggle_collapse(ctx)
   end
 
   -- Toggle in state
-  ctx.state:toggle_collapse(item.uuid)
+  ctx.state:toggle_collapse(assert(item.stage_type), item.uuid)
 
   -- Re-render
   workspace_view.render_changes(ctx)
@@ -317,6 +323,92 @@ end
 -- Git operations
 ----------------------------------------------------------------------------------------------------
 
+---@class era.m.diffview.view.workspace.ITransferContext
+---@field public entry_id               string
+---@field public fallback               era.m.diffview.IFileEntry|nil
+---@field public source_stage_type      stl.m.diffview.StageTypeEnum
+---@field public destination_stage_type stl.m.diffview.StageTypeEnum
+
+---Capture the next visible item in the source work queue before Git moves the entry.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param entry                          era.m.diffview.IFileEntry
+---@param destination_stage_type         stl.m.diffview.StageTypeEnum
+---@return era.m.diffview.view.workspace.ITransferContext
+local function capture_transfer(ctx, entry, destination_stage_type)
+  local source_stage_type = assert(entry.stage_type) ---@type stl.m.diffview.StageTypeEnum
+  local pane = workspace_view.get_changes_pane(ctx.layout, source_stage_type)
+  local fallback = nil ---@type era.m.diffview.IFileEntry|nil
+  if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
+    local line_map = pane_changes.get_line_map(pane.bufnr)
+    if line_map then
+      local entry_lnum = pane_changes.find_entry_line(line_map, entry)
+      if entry_lnum then
+        for i = entry_lnum + 1, #line_map do
+          if line_map[i].type == "file" and line_map[i].entry then
+            fallback = line_map[i].entry
+            break
+          end
+        end
+        if not fallback then
+          for i = entry_lnum - 1, 1, -1 do
+            if line_map[i].type == "file" and line_map[i].entry then
+              fallback = line_map[i].entry
+              break
+            end
+          end
+        end
+      end
+    end
+  end
+
+  return {
+    entry_id = get_entry_id(entry),
+    fallback = fallback,
+    source_stage_type = source_stage_type,
+    destination_stage_type = destination_stage_type,
+  }
+end
+
+---Refresh after a stage transfer without stealing a newer selection or focus.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param transfer                       era.m.diffview.view.workspace.ITransferContext
+local function refresh_after_transfer(ctx, transfer)
+  if ctx.state.is_disposed and ctx.state:is_disposed() then
+    return
+  end
+  local current = ctx.state:get_current_entry()
+  if current and get_entry_id(current) == transfer.entry_id and transfer.fallback then
+    ctx.state:set_current_entry(transfer.fallback)
+  end
+
+  ctx.state:request_refresh(function()
+    if ctx.state.is_disposed and ctx.state:is_disposed() then
+      return
+    end
+    local source = workspace_view.get_changes_pane(ctx.layout, transfer.source_stage_type)
+    local source_has_visible_entries = false
+    if source.bufnr and vim.api.nvim_buf_is_valid(source.bufnr) then
+      local line_map = pane_changes.get_line_map(source.bufnr)
+      if line_map then
+        for _, item in ipairs(line_map) do
+          if item.type == "file" and item.entry then
+            source_has_visible_entries = true
+            break
+          end
+        end
+      end
+    end
+    if
+      not source_has_visible_entries
+      and source.winnr
+      and vim.api.nvim_win_is_valid(source.winnr)
+      and vim.api.nvim_get_current_win() == source.winnr
+    then
+      workspace_view.focus_changes(ctx.layout, transfer.destination_stage_type)
+    end
+  end)
+end
+
 ---Stage the file targeted by the active workspace pane
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.stage(ctx)
@@ -330,6 +422,7 @@ function M.stage(ctx)
     args[#args + 1] = entry.prev_filepath
   end
   args[#args + 1] = entry.filepath
+  local transfer = capture_transfer(ctx, entry, "staged")
 
   stl.git.exec.exec_async(args, { cwd = dot.path.workspace() }, function(_, code, stderr)
     if code ~= 0 then
@@ -337,7 +430,7 @@ function M.stage(ctx)
       return
     end
 
-    ctx.state:request_refresh()
+    refresh_after_transfer(ctx, transfer)
   end)
 end
 
@@ -348,6 +441,7 @@ function M.unstage(ctx)
   if not entry or entry.stage_type ~= "staged" then
     return
   end
+  local transfer = capture_transfer(ctx, entry, "unstaged")
 
   local workspace = dot.path.workspace()
   local function on_unstage(_, code, stderr)
@@ -356,7 +450,7 @@ function M.unstage(ctx)
       return
     end
 
-    ctx.state:request_refresh()
+    refresh_after_transfer(ctx, transfer)
   end
 
   stl.git.exec.exec_async(
@@ -691,25 +785,27 @@ end
 ---Toggle directory collapse from sbs window
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.sbs_toggle_collapse(ctx)
+  local current = ctx.state:get_current_entry()
   local dir = get_current_entry_dir(ctx)
-  if not dir or dir == "." then
+  if not current or not current.stage_type or not dir or dir == "." then
     return
   end
 
-  ctx.state:toggle_collapse(dir)
+  ctx.state:toggle_collapse(current.stage_type, dir)
   workspace_view.render_changes(ctx)
 end
 
 ---Expand directory from sbs window
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.sbs_expand(ctx)
+  local current = ctx.state:get_current_entry()
   local dir = get_current_entry_dir(ctx)
-  if not dir or dir == "." then
+  if not current or not current.stage_type or not dir or dir == "." then
     return
   end
 
-  if ctx.state:is_collapsed(dir) then
-    ctx.state:expand_dir(dir)
+  if ctx.state:is_collapsed(current.stage_type, dir) then
+    ctx.state:expand_dir(current.stage_type, dir)
     workspace_view.render_changes(ctx)
   end
 end
@@ -717,13 +813,14 @@ end
 ---Collapse directory from sbs window
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.sbs_collapse(ctx)
+  local current = ctx.state:get_current_entry()
   local dir = get_current_entry_dir(ctx)
-  if not dir or dir == "." then
+  if not current or not current.stage_type or not dir or dir == "." then
     return
   end
 
-  if not ctx.state:is_collapsed(dir) then
-    ctx.state:collapse_dir(dir)
+  if not ctx.state:is_collapsed(current.stage_type, dir) then
+    ctx.state:collapse_dir(current.stage_type, dir)
     workspace_view.render_changes(ctx)
   end
 end
@@ -731,14 +828,22 @@ end
 ---Expand all directories from sbs window
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.sbs_expand_all(ctx)
-  ctx.state:expand_all()
+  local current = ctx.state:get_current_entry()
+  if not current or not current.stage_type then
+    return
+  end
+  ctx.state:expand_all(current.stage_type)
   workspace_view.render_changes(ctx)
 end
 
 ---Collapse all directories from sbs window
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.sbs_collapse_all(ctx)
-  ctx.state:collapse_all()
+  local current = ctx.state:get_current_entry()
+  if not current or not current.stage_type then
+    return
+  end
+  ctx.state:collapse_all(current.stage_type)
   workspace_view.render_changes(ctx)
 end
 
@@ -856,19 +961,21 @@ end
 ---@param entry                          era.m.diffview.IFileEntry
 function M.__update_changes_cursor__(ctx, entry)
   local lyt = ctx.layout
-
-  if not lyt.changes_bufnr or not vim.api.nvim_buf_is_valid(lyt.changes_bufnr) then
+  if not entry.stage_type then
     return
   end
-
-  local line_map = pane_changes.get_line_map(lyt.changes_bufnr)
+  local pane = workspace_view.get_changes_pane(lyt, entry.stage_type)
+  if not pane.bufnr or not vim.api.nvim_buf_is_valid(pane.bufnr) then
+    return
+  end
+  local line_map = pane_changes.get_line_map(pane.bufnr)
   if not line_map then
     return
   end
 
   local target_lnum = pane_changes.find_entry_line(line_map, entry)
-  if target_lnum and lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-    vim.api.nvim_win_set_cursor(lyt.changes_winnr, { target_lnum, 0 })
+  if target_lnum and pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+    vim.api.nvim_win_set_cursor(pane.winnr, { target_lnum, 0 })
   end
 end
 

@@ -65,10 +65,21 @@ bootstrap.with_global(t, "dot", {
 bootstrap.with_global(t, "era", { m = { diffview = {} } })
 
 local entries_at_line = {} ---@type table<integer, table<integer, era.m.diffview.IFileEntry>>
+local line_maps = {} ---@type table<integer, era.m.diffview.IFiletreeLineMap[]>
 t:patch_table(package.loaded, "era.m.diffview.data", {})
 t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
+  find_entry_line = function(items, target)
+    for i, item in ipairs(items) do
+      if item.entry == target then
+        return i
+      end
+    end
+  end,
   get_entry_at_line = function(bufnr, lnum)
     return entries_at_line[bufnr] and entries_at_line[bufnr][lnum]
+  end,
+  get_line_map = function(bufnr)
+    return line_maps[bufnr]
   end,
 })
 t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
@@ -78,7 +89,32 @@ t:patch_table(package.loaded, "era.m.diffview.util", {
   end,
 })
 t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
-t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {})
+t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
+  focus_changes = function(lyt, stage_type)
+    local pane = lyt.changes and lyt.changes[stage_type]
+    if pane and pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      vim.api.nvim_set_current_win(pane.winnr)
+    end
+  end,
+  get_changes_pane = function(lyt, stage_type)
+    if lyt.changes then
+      return lyt.changes[stage_type]
+    end
+    return { stage_type = stage_type }
+  end,
+  get_changes_panes = function(lyt)
+    if not lyt.changes then
+      return {}
+    end
+    return { lyt.changes.staged, lyt.changes.unstaged }
+  end,
+  is_changes_buffer = function(lyt, bufnr)
+    if lyt.changes then
+      return lyt.changes.staged.bufnr == bufnr or lyt.changes.unstaged.bufnr == bufnr
+    end
+    return lyt.changes_bufnr == bufnr
+  end,
+})
 
 local action = assert(loadfile("lua/era/m/diffview/view/workspace/action.lua"))()
 
@@ -95,6 +131,7 @@ local function reset_calls()
   delete_result = { ok = true, err = nil }
   reports = {}
   workspace = "/repo"
+  line_maps = {}
 end
 
 ---@param call                           table
@@ -140,6 +177,187 @@ t:test("changes pane routes stage and unstage to the entry at cursor", function(
   t.assert_eq(2, refreshed, "refresh calls")
   entries_at_line[changes_bufnr] = nil
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("stage transfers keep the source work queue stable and move focus only when it empties", function()
+  reset_calls()
+  local staged_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local original_bufnr = vim.api.nvim_win_get_buf(staged_winnr) ---@type integer
+  local staged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local unstaged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_win_set_buf(staged_winnr, staged_bufnr)
+  vim.cmd("belowright split")
+  local unstaged_winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_buf(unstaged_winnr, unstaged_bufnr)
+
+  local first_unstaged = { filepath = "first.lua", stage_type = "unstaged", status = "M" }
+  local first_staged = { filepath = "first.lua", stage_type = "staged", status = "M" }
+  local second_unstaged = { filepath = "second.lua", stage_type = "unstaged", status = "M" }
+  local second_staged = { filepath = "second.lua", stage_type = "staged", status = "M" }
+  local third_staged = { filepath = "third.lua", stage_type = "staged", status = "M" }
+  local root_unstaged = { filepath = "root.lua", stage_type = "unstaged", status = "M" }
+  local root_staged = { filepath = "root.lua", stage_type = "staged", status = "M" }
+  local hidden_unstaged = { filepath = "hidden/inside.lua", stage_type = "unstaged", status = "M" }
+  local current = first_unstaged ---@type era.m.diffview.IFileEntry
+  local entries = { first_unstaged, second_unstaged } ---@type era.m.diffview.IFileEntry[]
+  local phase = 1
+  local layout = {
+    changes = {
+      staged = { stage_type = "staged", bufnr = staged_bufnr, winnr = staged_winnr },
+      unstaged = { stage_type = "unstaged", bufnr = unstaged_bufnr, winnr = unstaged_winnr },
+    },
+  }
+  local state = {
+    get_current_entry = function()
+      return current
+    end,
+    get_entries = function()
+      return entries
+    end,
+    request_refresh = function(_, callback)
+      if phase == 1 then
+        entries = { first_staged, second_unstaged }
+        line_maps[unstaged_bufnr] = {
+          { type = "header", stage_type = "unstaged" },
+          { type = "file", entry = second_unstaged, stage_type = "unstaged" },
+        }
+      elseif phase == 2 then
+        entries = { first_unstaged, third_staged, second_unstaged }
+        line_maps[staged_bufnr] = {
+          { type = "header", stage_type = "staged" },
+          { type = "file", entry = third_staged, stage_type = "staged" },
+        }
+      elseif phase == 3 then
+        entries = { second_staged, third_staged }
+        current = second_staged
+        line_maps[unstaged_bufnr] = {
+          { type = "header", stage_type = "unstaged" },
+        }
+      else
+        entries = { root_staged, hidden_unstaged, third_staged }
+        current = root_staged
+        line_maps[unstaged_bufnr] = {
+          { type = "header", stage_type = "unstaged" },
+          { type = "directory", uuid = "hidden", stage_type = "unstaged" },
+        }
+      end
+      callback()
+    end,
+    set_current_entry = function(_, entry)
+      current = entry
+    end,
+  }
+  local ctx = { layout = layout, state = state }
+
+  vim.api.nvim_buf_set_lines(unstaged_bufnr, 0, -1, false, { "Unstaged", "first.lua", "second.lua" })
+  entries_at_line[unstaged_bufnr] = { [2] = first_unstaged, [3] = second_unstaged }
+  line_maps[unstaged_bufnr] = {
+    { type = "header", stage_type = "unstaged" },
+    { type = "file", entry = first_unstaged, stage_type = "unstaged" },
+    { type = "file", entry = second_unstaged, stage_type = "unstaged" },
+  }
+  vim.api.nvim_set_current_win(unstaged_winnr)
+  vim.api.nvim_win_set_cursor(unstaged_winnr, { 2, 0 })
+  action.stage(ctx)
+  t.assert_eq(second_unstaged, current, "stage selects the next unstaged entry")
+  t.assert_eq(unstaged_winnr, vim.api.nvim_get_current_win(), "stage keeps unstaged focus")
+
+  phase = 2
+  current = first_staged
+  entries = { first_staged, third_staged, second_unstaged }
+  vim.api.nvim_buf_set_lines(staged_bufnr, 0, -1, false, { "Staged", "first.lua", "third.lua" })
+  entries_at_line[staged_bufnr] = { [2] = first_staged, [3] = third_staged }
+  line_maps[staged_bufnr] = {
+    { type = "header", stage_type = "staged" },
+    { type = "file", entry = first_staged, stage_type = "staged" },
+    { type = "file", entry = third_staged, stage_type = "staged" },
+  }
+  vim.api.nvim_set_current_win(staged_winnr)
+  vim.api.nvim_win_set_cursor(staged_winnr, { 2, 0 })
+  action.unstage(ctx)
+  t.assert_eq(third_staged, current, "unstage selects the next staged entry")
+  t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "unstage keeps staged focus")
+
+  phase = 3
+  current = second_unstaged
+  entries = { second_unstaged, third_staged }
+  vim.api.nvim_buf_set_lines(unstaged_bufnr, 0, -1, false, { "Unstaged", "second.lua" })
+  entries_at_line[unstaged_bufnr] = { [2] = second_unstaged }
+  line_maps[unstaged_bufnr] = {
+    { type = "header", stage_type = "unstaged" },
+    { type = "file", entry = second_unstaged, stage_type = "unstaged" },
+  }
+  vim.api.nvim_set_current_win(unstaged_winnr)
+  vim.api.nvim_win_set_cursor(unstaged_winnr, { 2, 0 })
+  action.stage(ctx)
+  t.assert_eq(second_staged, current, "last transfer follows the canonical destination entry")
+  t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "empty source moves focus to destination")
+
+  phase = 4
+  current = root_unstaged
+  entries = { root_unstaged, hidden_unstaged, third_staged }
+  vim.api.nvim_buf_set_lines(unstaged_bufnr, 0, -1, false, { "Unstaged", "root.lua", "  hidden/" })
+  entries_at_line[unstaged_bufnr] = { [2] = root_unstaged }
+  line_maps[unstaged_bufnr] = {
+    { type = "header", stage_type = "unstaged" },
+    { type = "file", entry = root_unstaged, stage_type = "unstaged" },
+    { type = "directory", uuid = "hidden", stage_type = "unstaged" },
+  }
+  vim.api.nvim_set_current_win(unstaged_winnr)
+  vim.api.nvim_win_set_cursor(unstaged_winnr, { 2, 0 })
+  action.stage(ctx)
+  t.assert_eq(root_staged, current, "hidden source entries follow the canonical destination entry")
+  t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "hidden-only source moves focus to destination")
+
+  entries_at_line[staged_bufnr] = nil
+  entries_at_line[unstaged_bufnr] = nil
+  line_maps[staged_bufnr] = nil
+  line_maps[unstaged_bufnr] = nil
+  vim.api.nvim_win_close(unstaged_winnr, true)
+  vim.api.nvim_set_current_win(staged_winnr)
+  vim.api.nvim_win_set_buf(staged_winnr, original_bufnr)
+  vim.api.nvim_buf_delete(staged_bufnr, { force = true })
+  vim.api.nvim_buf_delete(unstaged_bufnr, { force = true })
+end)
+
+t:test("completed Git work does not refresh disposed workspace state", function()
+  reset_calls()
+  local entry = { filepath = "deferred.lua", stage_type = "unstaged", status = "M" }
+  local disposed = false
+  local reads = 0
+  local writes = 0
+  local refreshes = 0
+  local resolve_git = nil ---@type fun(stdout: string[], code: integer, stderr: string)|nil
+  t:patch_table(stl.git.exec, "exec_async", function(_, _, callback)
+    resolve_git = callback
+  end)
+
+  local ctx = {
+    layout = {},
+    state = {
+      get_current_entry = function()
+        reads = reads + 1
+        return entry
+      end,
+      is_disposed = function()
+        return disposed
+      end,
+      request_refresh = function()
+        refreshes = refreshes + 1
+      end,
+      set_current_entry = function()
+        writes = writes + 1
+      end,
+    },
+  }
+
+  action.stage(ctx)
+  disposed = true
+  assert(resolve_git)({}, 0, "")
+
+  t.assert_eq(1, reads, "disposed callback does not read selection")
+  t.assert_eq(0, writes, "disposed callback does not write selection")
+  t.assert_eq(0, refreshes, "disposed callback does not request refresh")
 end)
 
 t:test("sbs routes stage and unstage to the canonical current entry", function()
@@ -258,7 +476,16 @@ t:test("stage, unstage, and discard treat pathspec-magic filenames literally", f
     local entry = { filepath = magic, stage_type = "unstaged", status = "M" }
     entries_at_line[changes_bufnr] = { entry }
     vim.api.nvim_win_set_buf(0, changes_bufnr)
-    local ctx = { layout = { changes_bufnr = changes_bufnr }, state = { request_refresh = request_refresh } }
+    local ctx = {
+      layout = { changes_bufnr = changes_bufnr },
+      state = {
+        get_current_entry = function()
+          return entry
+        end,
+        request_refresh = request_refresh,
+        set_current_entry = function() end,
+      },
+    }
 
     action.stage(ctx)
     local cached = git(repo, "diff", "--staged", "--name-only", "-z", "--")
@@ -561,6 +788,29 @@ t:test("sbs keymaps route whole-file stage and unstage", function()
   t.assert_eq("stage", calls[1], "gs routing")
   t.assert_eq("unstage", calls[2], "gu routing")
   t.assert_eq(2, #calls, "whole-file mappings")
+
+  local staged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local unstaged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  keymap.setup_changes({
+    layout = {
+      changes = {
+        staged = { stage_type = "staged", bufnr = staged_bufnr },
+        unstaged = { stage_type = "unstaged", bufnr = unstaged_bufnr },
+      },
+    },
+  })
+  for _, bufnr in ipairs({ staged_bufnr, unstaged_bufnr }) do
+    local mappings = vim.api.nvim_buf_get_keymap(bufnr, "n")
+    local has_stage = false
+    local has_unstage = false
+    for _, mapping in ipairs(mappings) do
+      has_stage = has_stage or mapping.lhs == "gs"
+      has_unstage = has_unstage or mapping.lhs == "gu"
+    end
+    t.assert_true(has_stage, "gs installed in sibling buffer")
+    t.assert_true(has_unstage, "gu installed in sibling buffer")
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
 end)
 
 t:run()

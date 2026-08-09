@@ -73,21 +73,29 @@ function M.open(opts)
     if #entries > 0 then
       local first_entry = entries[1] ---@type era.m.diffview.IFileEntry
 
-      -- Move cursor to first file line (skip directories)
-      if lyt.changes_bufnr and vim.api.nvim_buf_is_valid(lyt.changes_bufnr) then
-        local pane_changes = require("era.m.diffview.pane.changes")
-        local line_map = pane_changes.get_line_map(lyt.changes_bufnr)
-        if line_map then
-          for i, item in ipairs(line_map) do
-            if item.type == "file" and item.entry ~= nil then
-              local visible_entry = assert(item.entry) ---@type era.m.diffview.IFileEntry
-              first_entry = st:find_entry(visible_entry.filepath, visible_entry.stage_type) or visible_entry
-              if lyt.changes_winnr and vim.api.nvim_win_is_valid(lyt.changes_winnr) then
-                vim.api.nvim_win_set_cursor(lyt.changes_winnr, { i, 0 })
+      -- Select the first visible entry in panel order: Staged, then Unstaged.
+      local pane_changes = require("era.m.diffview.pane.changes")
+      local selected_visible = false
+      for _, pane in ipairs(workspace_view.get_changes_panes(lyt)) do
+        if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
+          local line_map = pane_changes.get_line_map(pane.bufnr)
+          if line_map then
+            for i, item in ipairs(line_map) do
+              if item.type == "file" and item.entry ~= nil then
+                local visible_entry = assert(item.entry) ---@type era.m.diffview.IFileEntry
+                first_entry = st:find_entry(visible_entry.filepath, visible_entry.stage_type) or visible_entry
+                if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+                  vim.api.nvim_win_set_cursor(pane.winnr, { i, 0 })
+                  vim.api.nvim_set_current_win(pane.winnr)
+                end
+                selected_visible = true
+                break
               end
-              break
             end
           end
+        end
+        if selected_visible then
+          break
         end
       end
 
@@ -102,11 +110,16 @@ end
 ---@param ctx                         era.m.diffview.view.workspace.IContext
 function M.__setup_changes_resize_workspace__(st, ctx)
   local workspace_view = require("era.m.diffview.view.workspace.view")
-  local last_winnr = ctx.layout.changes_winnr ---@type integer|nil
-  local last_width = nil ---@type integer|nil
-  if last_winnr and vim.api.nvim_win_is_valid(last_winnr) then
-    last_width = vim.api.nvim_win_get_width(last_winnr)
+  local function get_width_signature()
+    local parts = {} ---@type string[]
+    for _, pane in ipairs(workspace_view.get_changes_panes(ctx.layout)) do
+      if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+        parts[#parts + 1] = string.format("%d:%d", pane.winnr, vim.api.nvim_win_get_width(pane.winnr))
+      end
+    end
+    return table.concat(parts, "|")
   end
+  local last_signature = get_width_signature()
 
   local autocmd_id = vim.api.nvim_create_autocmd("WinResized", {
     callback = function()
@@ -114,20 +127,15 @@ function M.__setup_changes_resize_workspace__(st, ctx)
         return
       end
 
-      local winnr = ctx.layout.changes_winnr ---@type integer|nil
-      if not winnr or not vim.api.nvim_win_is_valid(winnr) then
-        last_winnr = nil
-        last_width = nil
+      local signature = get_width_signature()
+      if signature == last_signature then
         return
       end
 
-      local width = vim.api.nvim_win_get_width(winnr) ---@type integer
-      if winnr == last_winnr and width == last_width then
+      last_signature = signature
+      if signature == "" then
         return
       end
-
-      last_winnr = winnr
-      last_width = width
       workspace_view.render_changes(ctx)
     end,
   })
