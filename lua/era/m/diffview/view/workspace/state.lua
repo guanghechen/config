@@ -18,6 +18,7 @@ local M = {}
 ---@field protected _disposed            boolean
 ---@field protected _git_subscription    stl.c.IUnsubscribable|nil
 ---@field protected _refresh             era.m.diffview.view.workspace.Refresh|nil
+---@field protected _resize_autocmd_id   integer|nil
 ---@field protected _tab_closed_autocmd  integer|nil
 local State = {}
 State.__index = State
@@ -38,6 +39,7 @@ function State.new(tabnr)
   self._disposed = false
   self._git_subscription = nil
   self._refresh = nil
+  self._resize_autocmd_id = nil
   self._tab_closed_autocmd = nil
 
   return self
@@ -215,6 +217,12 @@ function State:set_git_subscription(subscription)
   self._git_subscription = subscription
 end
 
+---Set Changes pane resize autocmd id.
+---@param autocmd_id                     integer
+function State:set_resize_autocmd(autocmd_id)
+  self._resize_autocmd_id = autocmd_id
+end
+
 ---Set TabClosed autocmd id
 ---@param autocmd_id                     integer
 function State:set_tab_closed_autocmd(autocmd_id)
@@ -246,6 +254,10 @@ function State:dispose()
   if self._tab_closed_autocmd then
     pcall(vim.api.nvim_del_autocmd, self._tab_closed_autocmd)
     self._tab_closed_autocmd = nil
+  end
+  if self._resize_autocmd_id then
+    pcall(vim.api.nvim_del_autocmd, self._resize_autocmd_id)
+    self._resize_autocmd_id = nil
   end
 
   -- Dispose observables

@@ -3,6 +3,7 @@ local __module_name__ = "era.m.diffview.pane.changes" ---@type string
 
 local view_filetree = require("era.view.filetree")
 local config = require("era.m.diffview.config")
+local util = require("era.m.diffview.util")
 
 ---Changes pane for workspace view.
 ---Renders staged + unstaged file entries as dual trees with separator.
@@ -14,6 +15,95 @@ local M = {}
 ----------------------------------------------------------------------------------------------------
 
 local NS = config.NS
+
+---@class era.m.diffview.pane.changes.IOverlayEntry
+---@field public lnum                   integer
+---@field public entry                  era.m.diffview.IFileEntry
+
+---@param value                         integer|nil
+---@param prefix                        string
+---@return string
+local function format_stat(value, prefix)
+  if value == nil or value <= 0 then
+    return ""
+  end
+  return prefix .. tostring(value)
+end
+
+---@param text                          string
+---@param width                         integer
+---@return string
+local function pad_left(text, width)
+  return string.rep(" ", math.max(0, width - #text)) .. text
+end
+
+---Keep Git paths semantic in line_map/actions while making buffer text single-line and printable.
+---@param path                          string
+---@return string
+local function format_display_path(path)
+  return vim.fn.strtrans(path)
+end
+
+---Build right-aligned metadata using pane-wide fixed INS / DEL / S columns.
+---@param items                         era.m.diffview.pane.changes.IOverlayEntry[]
+---@param panel_width                   integer
+---@return era.m.diffview.IOverlay[]
+local function build_overlays(items, panel_width)
+  local insertion_width = 0 ---@type integer
+  local deletion_width = 0 ---@type integer
+
+  for _, item in ipairs(items) do
+    insertion_width = math.max(insertion_width, #format_stat(item.entry.insertions, "+"))
+    deletion_width = math.max(deletion_width, #format_stat(item.entry.deletions, "-"))
+  end
+
+  local overlays = {} ---@type era.m.diffview.IOverlay[]
+  for _, item in ipairs(items) do
+    local entry = item.entry
+    local insertion = format_stat(entry.insertions, "+") ---@type string
+    local deletion = format_stat(entry.deletions, "-") ---@type string
+    local status = entry.status ~= "" and entry.status or "?" ---@type string
+    local virt_text = { { " ", "m_dv_ft_filename" } } ---@type [string, string][]
+
+    if insertion_width > 0 then
+      virt_text[#virt_text + 1] = {
+        pad_left(insertion, insertion_width),
+        insertion ~= "" and "m_dv_ft_insertions" or "m_dv_ft_filename",
+      }
+    end
+    if insertion_width > 0 and deletion_width > 0 then
+      virt_text[#virt_text + 1] = { " ", "m_dv_ft_filename" }
+    end
+    if deletion_width > 0 then
+      virt_text[#virt_text + 1] = {
+        pad_left(deletion, deletion_width),
+        deletion ~= "" and "m_dv_ft_deletions" or "m_dv_ft_filename",
+      }
+    end
+    if insertion_width > 0 or deletion_width > 0 then
+      virt_text[#virt_text + 1] = { " ", "m_dv_ft_filename" }
+    end
+    virt_text[#virt_text + 1] = { status, util.get_status_hlgroup(status) }
+
+    local metadata_width = 0 ---@type integer
+    for _, segment in ipairs(virt_text) do
+      metadata_width = metadata_width + #segment[1]
+    end
+    if metadata_width > panel_width then
+      virt_text = {
+        { panel_width > 1 and " " or "", "m_dv_ft_filename" },
+        { status, util.get_status_hlgroup(status) },
+      }
+    end
+
+    overlays[#overlays + 1] = {
+      lnum = item.lnum,
+      virt_text = virt_text,
+    }
+  end
+
+  return overlays
+end
 
 ----------------------------------------------------------------------------------------------------
 -- Buffer creation
@@ -80,7 +170,8 @@ local function create_directory_renderer(stage_type, line_map, collapsed_dirs)
   return function(node, lnum, indent)
     local is_collapsed = collapsed_dirs[node.filepath] == true ---@type boolean
     local icon = is_collapsed and stl.icon.filetype.Folder or stl.icon.filetype.FolderOpen ---@type string
-    local line = indent .. icon .. " " .. node.name ---@type string
+    local display_name = format_display_path(node.name) ---@type string
+    local line = indent .. icon .. " " .. display_name ---@type string
 
     local col = 0 ---@type integer
     local highlights = {} ---@type stl.t.IHighlight[]
@@ -126,8 +217,9 @@ end
 ---Create file renderer
 ---@param stage_type                    stl.m.diffview.StageTypeEnum
 ---@param line_map                      era.m.diffview.IFiletreeLineMap[]
+---@param overlay_entries               era.m.diffview.pane.changes.IOverlayEntry[]
 ---@return era.view.filetree.IFileRenderer
-local function create_file_renderer(stage_type, line_map)
+local function create_file_renderer(stage_type, line_map, overlay_entries)
   ---@param node                        era.view.filetree.ITreeNode
   ---@param lnum                        integer
   ---@param indent                      string
@@ -135,7 +227,9 @@ local function create_file_renderer(stage_type, line_map)
   return function(node, lnum, indent)
     local entry = node.data ---@type era.m.diffview.IFileEntry|nil
     local fileicon, fileicon_hln = stl.fileicon.get_file_icon(node.name)
-    local line = indent .. fileicon .. " " .. node.name ---@type string
+    local display_name = format_display_path(node.name) ---@type string
+    local line = indent .. fileicon .. " " .. display_name ---@type string
+    local status_hl = entry and util.get_status_hlgroup(entry.status) or "m_dv_ft_filename" ---@type string
 
     local col = 0 ---@type integer
     local highlights = {} ---@type stl.t.IHighlight[]
@@ -160,10 +254,10 @@ local function create_file_renderer(stage_type, line_map)
 
     -- Highlight filename
     highlights[#highlights + 1] = {
-      hlname = "m_dv_ft_filename",
+      hlname = status_hl,
       lnum = lnum,
       coll = col,
-      colr = col + #node.name,
+      colr = col + #display_name,
     }
 
     -- Add to line_map
@@ -173,6 +267,9 @@ local function create_file_renderer(stage_type, line_map)
       stage_type = stage_type,
       uuid = node.filepath,
     }
+    if entry then
+      overlay_entries[#overlay_entries + 1] = { lnum = lnum, entry = entry }
+    end
 
     return line, highlights
   end
@@ -229,7 +326,17 @@ end
 ---@param line_map                      era.m.diffview.IFiletreeLineMap[]
 ---@param collapsed_dirs                table<string, boolean>
 ---@param foldempty                     boolean
-local function render_section_tree(entries, stage_type, lines, highlights, line_map, collapsed_dirs, foldempty)
+---@param overlay_entries               era.m.diffview.pane.changes.IOverlayEntry[]
+local function render_section_tree(
+  entries,
+  stage_type,
+  lines,
+  highlights,
+  line_map,
+  collapsed_dirs,
+  foldempty,
+  overlay_entries
+)
   if #entries == 0 then
     return
   end
@@ -247,7 +354,7 @@ local function render_section_tree(entries, stage_type, lines, highlights, line_
     foldempty = foldempty,
     start_lnum = #lines,
     render_directory = create_directory_renderer(stage_type, line_map, collapsed_dirs),
-    render_file = create_file_renderer(stage_type, line_map),
+    render_file = create_file_renderer(stage_type, line_map, overlay_entries),
     is_collapsed = function(node)
       return collapsed_dirs[node.filepath] == true
     end,
@@ -263,17 +370,20 @@ end
 ---@param lines                         string[]
 ---@param highlights                    stl.t.IHighlight[]
 ---@param line_map                      era.m.diffview.IFiletreeLineMap[]
-local function render_section_list(entries, stage_type, lines, highlights, line_map)
+---@param overlay_entries               era.m.diffview.pane.changes.IOverlayEntry[]
+local function render_section_list(entries, stage_type, lines, highlights, line_map, overlay_entries)
   for _, entry in ipairs(get_sorted_section_entries(entries)) do
     local lnum = #lines ---@type integer
     local col = 0 ---@type integer
 
     local filepath = entry.filepath ---@type string
     local basename = vim.fn.fnamemodify(filepath, ":t") ---@type string
+    local display_filepath = format_display_path(filepath) ---@type string
 
     local fileicon, fileicon_hln = stl.fileicon.get_file_icon(basename)
+    local status_hl = util.get_status_hlgroup(entry.status) ---@type string
     local indent = "  " ---@type string
-    local line = indent .. fileicon .. " " .. filepath ---@type string
+    local line = indent .. fileicon .. " " .. display_filepath ---@type string
 
     -- Highlight indent
     highlights[#highlights + 1] = {
@@ -295,10 +405,10 @@ local function render_section_list(entries, stage_type, lines, highlights, line_
 
     -- Highlight filepath
     highlights[#highlights + 1] = {
-      hlname = "m_dv_ft_filename",
+      hlname = status_hl,
       lnum = lnum,
       coll = col,
-      colr = col + #filepath,
+      colr = col + #display_filepath,
     }
 
     lines[#lines + 1] = line
@@ -308,6 +418,7 @@ local function render_section_list(entries, stage_type, lines, highlights, line_
       stage_type = stage_type,
       uuid = filepath,
     }
+    overlay_entries[#overlay_entries + 1] = { lnum = lnum, entry = entry }
   end
 end
 
@@ -329,6 +440,7 @@ function M.render(entries, opts)
   local lines = {} ---@type string[]
   local highlights = {} ---@type stl.t.IHighlight[]
   local line_map = {} ---@type era.m.diffview.IFiletreeLineMap[]
+  local overlay_entries = {} ---@type era.m.diffview.pane.changes.IOverlayEntry[]
 
   -- Get options
   local viewtype = (opts and opts.viewtype) or dot.context.diffview.flag_panel_viewtype:snapshot() ---@type stl.m.diffview.PanelViewTypeEnum
@@ -361,9 +473,9 @@ function M.render(entries, opts)
   line_map[#line_map + 1] = { type = "header", entry = nil, stage_type = "staged", uuid = nil }
 
   if viewtype == "list" then
-    render_section_list(staged, "staged", lines, highlights, line_map)
+    render_section_list(staged, "staged", lines, highlights, line_map, overlay_entries)
   else
-    render_section_tree(staged, "staged", lines, highlights, line_map, collapsed_dirs, foldempty)
+    render_section_tree(staged, "staged", lines, highlights, line_map, collapsed_dirs, foldempty, overlay_entries)
   end
 
   -- Separator
@@ -392,15 +504,16 @@ function M.render(entries, opts)
   line_map[#line_map + 1] = { type = "header", entry = nil, stage_type = "unstaged", uuid = nil }
 
   if viewtype == "list" then
-    render_section_list(unstaged, "unstaged", lines, highlights, line_map)
+    render_section_list(unstaged, "unstaged", lines, highlights, line_map, overlay_entries)
   else
-    render_section_tree(unstaged, "unstaged", lines, highlights, line_map, collapsed_dirs, foldempty)
+    render_section_tree(unstaged, "unstaged", lines, highlights, line_map, collapsed_dirs, foldempty, overlay_entries)
   end
 
   return {
     lines = lines,
     highlights = highlights,
     line_map = line_map,
+    overlays = build_overlays(overlay_entries, panel_width),
   }
 end
 
@@ -423,6 +536,16 @@ function M.apply_to_buffer(bufnr, result)
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
   for _, hl in ipairs(result.highlights) do
     vim.hl.range(bufnr, NS, hl.hlname, { hl.lnum, hl.coll }, { hl.lnum, hl.colr })
+  end
+
+  -- Apply right-aligned INS / DEL / S columns.
+  if result.overlays then
+    for _, overlay in ipairs(result.overlays) do
+      vim.api.nvim_buf_set_extmark(bufnr, NS, overlay.lnum, 0, {
+        virt_text = overlay.virt_text,
+        virt_text_pos = "right_align",
+      })
+    end
   end
 
   -- Store line_map

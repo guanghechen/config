@@ -23,6 +23,9 @@ local function normalize(filepath, keep_trailing_slash, sep)
 end
 
 bootstrap.with_runtime(t, {
+  stl = {
+    env = { PATH_SEP = "/" },
+  },
   dot = {
     path = {
       normalize = normalize,
@@ -66,6 +69,7 @@ local function create_entry(code)
 end
 
 t:test("compute_dir_status: normalizes Windows separators for descendants", function()
+  t:patch_table(stl.env, "PATH_SEP", "\\")
   aggregated = status.aggregate({
     ["C:\\repo\\dir\\file.lua"] = create_entry("M"),
   })
@@ -77,6 +81,7 @@ t:test("compute_dir_status: normalizes Windows separators for descendants", func
 end)
 
 t:test("resolve: Windows-style descendants inherit untracked symlink status", function()
+  t:patch_table(stl.env, "PATH_SEP", "\\")
   aggregated = status.aggregate({
     ["C:\\repo\\link"] = create_entry("?"),
   })
@@ -91,6 +96,7 @@ t:test("resolve: Windows-style descendants inherit untracked symlink status", fu
 end)
 
 t:test("compute_dir_status: includes a directory symlink own entry", function()
+  t:patch_table(stl.env, "PATH_SEP", "\\")
   aggregated = status.aggregate({
     ["C:\\repo\\link"] = create_entry("?"),
   })
@@ -102,6 +108,7 @@ t:test("compute_dir_status: includes a directory symlink own entry", function()
 end)
 
 t:test("calc_info: mixed directory status keeps untracked U highlight", function()
+  t:patch_table(stl.env, "PATH_SEP", "\\")
   aggregated = status.aggregate({
     ["C:\\repo\\dir\\link"] = create_entry("?"),
     ["C:\\repo\\dir\\tracked.lua"] = create_entry("M"),
@@ -112,6 +119,17 @@ t:test("calc_info: mixed directory status keeps untracked U highlight", function
 
   t.assert_eq(" UM", text, "directory status text")
   t.assert_eq(status.GIT_STATUS_HIGHLIGHT["?"], highlights[2].hlname, "untracked character highlight")
+end)
+
+t:test("resolve: POSIX preserves literal backslashes", function()
+  t:patch_table(stl.env, "PATH_SEP", "/")
+  aggregated = status.aggregate({
+    ["/repo/back\\slash.lua"] = create_entry("M"),
+  })
+
+  local display = status.resolve("/repo/back\\slash.lua", "file")
+
+  t.assert_eq("M", display, "literal backslash path")
 end)
 
 t:run()

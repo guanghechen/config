@@ -22,6 +22,12 @@ end
 ---@return era.m.diffview.IFileEntry
 local function convert_status_entry(entry, stage_type)
   local codes = stage_type == "staged" and entry.staged or entry.unstaged or entry.codes
+  local prev_filepath = nil ---@type string|nil
+  if stage_type == "staged" then
+    prev_filepath = entry.staged_prev_relative
+  else
+    prev_filepath = entry.unstaged_prev_relative
+  end
 
   ---Determine primary status code from codes table
   ---@param c                          table<string, boolean>|nil
@@ -46,6 +52,7 @@ local function convert_status_entry(entry, stage_type)
     stage_type = stage_type,
     insertions = nil,
     deletions = nil,
+    prev_filepath = prev_filepath,
   }
 end
 
@@ -90,6 +97,157 @@ local function parse_numstat_line(line)
   return nil, nil, nil, nil
 end
 
+---Parse NUL-delimited numstat output. Rename/copy records use an empty path field
+---followed by the previous and current paths as separate records.
+---@param lines                       string[]
+---@return table<string, { insertions: integer, deletions: integer }>
+local function parse_numstat_output(lines)
+  local output = table.concat(lines, "\n") ---@type string
+  local stats = {} ---@type table<string, { insertions: integer, deletions: integer }>
+
+  if not output:find("\0", 1, true) then
+    for _, line in ipairs(lines) do
+      local insertions, deletions, filepath = parse_numstat_line(line)
+      if insertions and deletions and filepath then
+        stats[filepath] = { insertions = insertions, deletions = deletions }
+      end
+    end
+    return stats
+  end
+
+  local records = vim.split(output, "\0", { plain = true }) ---@type string[]
+  local index = 1 ---@type integer
+  while index <= #records do
+    local record = records[index]
+    local insertions_text, deletions_text, filepath = record:match("^([%d-]+)\t([%d-]+)\t(.*)$")
+    if insertions_text == nil or deletions_text == nil or filepath == nil then
+      index = index + 1
+    else
+      if filepath == "" then
+        filepath = records[index + 2]
+        index = index + 3
+      else
+        index = index + 1
+      end
+
+      local insertions = tonumber(insertions_text) ---@type integer|nil
+      local deletions = tonumber(deletions_text) ---@type integer|nil
+      if insertions and deletions and filepath and filepath ~= "" then
+        stats[filepath] = { insertions = insertions, deletions = deletions }
+      end
+    end
+  end
+
+  return stats
+end
+
+---@param result                       stl.git.exec.IResult|nil
+---@return boolean
+local function git_succeeded(result)
+  return type(result) == "table" and result.code == 0
+end
+
+---@param result                       stl.git.exec.IResult|nil
+---@param label                        string
+local function assert_git_success(result, label)
+  if git_succeeded(result) then
+    return
+  end
+
+  local code = type(result) == "table" and tostring(result.code) or "unknown" ---@type string
+  local stderr = type(result) == "table" and vim.trim(result.stderr or "") or "" ---@type string
+  local details = stderr ~= "" and (": " .. stderr) or "" ---@type string
+  error(string.format("Git %s failed (exit %s)%s", label, code, details), 0)
+end
+
+---@param args                         string[]
+---@param opts                         stl.git.exec.IExecOpts
+---@param token                        stl.c.CancellationToken|nil
+---@return stl.git.exec.IResult
+local function exec_git(args, opts, token)
+  return stl.async.await_all({ stl.git.exec.exec(args, opts, token) })[1]
+end
+
+---@param temp_dir                     string
+local function cleanup_temp_dir(temp_dir)
+  if vim.fn.delete(temp_dir, "rf") == 0 or not vim.uv.fs_stat(temp_dir) then
+    return
+  end
+
+  vim.defer_fn(function()
+    if vim.fn.delete(temp_dir, "rf") ~= 0 and vim.uv.fs_stat(temp_dir) then
+      stl.reporter.warn({
+        from = __module_name__,
+        subject = "fetch_numstat",
+        message = "Unable to remove temporary Git index directory: " .. temp_dir,
+      })
+    end
+  end, 100)
+end
+
+---Use an isolated intent-to-add index so Git computes every untracked stat in one diff.
+---Untracked stats are auxiliary: non-cancellation failures degrade to unknown stats
+---instead of blocking the complete Changes pane snapshot.
+---@async
+---@param entries                      era.m.diffview.IFileEntry[]
+---@param cwd                          string
+---@param token                        stl.c.CancellationToken|nil
+---@return stl.git.exec.IResult|nil
+local function fetch_untracked_numstat(entries, cwd, token)
+  local paths = {} ---@type string[]
+  for _, entry in ipairs(entries) do
+    if entry.stage_type == "unstaged" and entry.status == "?" then
+      paths[#paths + 1] = entry.filepath
+    end
+  end
+  if #paths == 0 then
+    return nil
+  end
+
+  check_token(token)
+
+  local temp_dir = vim.fn.tempname() ---@type string
+  local temp_index = temp_dir .. "/index" ---@type string
+  if vim.fn.mkdir(temp_dir, "p") ~= 1 then
+    return nil
+  end
+  local env = { GIT_INDEX_FILE = temp_index } ---@type table<string, string>
+  local ok, result = xpcall(function()
+    local init_result = exec_git({ "read-tree", "--empty" }, { cwd = cwd, raw = true, env = env }, token)
+    check_token(token)
+    if not git_succeeded(init_result) then
+      return nil
+    end
+
+    local pathspec = table.concat(paths, "\0") .. "\0" ---@type string
+    local add_result = exec_git(
+      { "--literal-pathspecs", "add", "-N", "--pathspec-from-file=-", "--pathspec-file-nul" },
+      { cwd = cwd, raw = true, env = env, stdin = pathspec },
+      token
+    )
+    check_token(token)
+    if not git_succeeded(add_result) then
+      return nil
+    end
+
+    local diff_result = exec_git({ "diff", "--numstat", "-z", "--" }, { cwd = cwd, raw = true, env = env }, token)
+    check_token(token)
+    if not git_succeeded(diff_result) then
+      return nil
+    end
+    return diff_result
+  end, function(err)
+    return err
+  end)
+
+  cleanup_temp_dir(temp_dir)
+  if not ok then
+    check_token(token)
+    error(result, 0)
+  end
+  return result
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Async data fetching (Future/await pattern)
 ----------------------------------------------------------------------------------------------------
@@ -122,20 +280,12 @@ function M.__convert_status_to_entries__(status_map)
   end
 
   for _, status_entry in pairs(status_map) do
-    local stage = status_entry.stage
-
-    if stage == "staged" or stage == "mixed" then
+    if next(status_entry.staged or {}) ~= nil then
       local entry = convert_status_entry(status_entry, "staged")
       entries[#entries + 1] = entry
     end
 
-    if stage == "unstaged" or stage == "mixed" then
-      local entry = convert_status_entry(status_entry, "unstaged")
-      entries[#entries + 1] = entry
-    end
-
-    -- Handle untracked files
-    if stage == nil and status_entry.codes and status_entry.codes["?"] then
+    if next(status_entry.unstaged or {}) ~= nil then
       local entry = convert_status_entry(status_entry, "unstaged")
       entries[#entries + 1] = entry
     end
@@ -155,12 +305,12 @@ function M.matches_status_entries(entries, status_map)
 
   local entry_ids = {} ---@type table<string, boolean>
   for _, entry in ipairs(entries) do
-    local id = (entry.stage_type or "") .. "\0" .. entry.status .. "\0" .. entry.filepath
+    local id = table.concat({ entry.stage_type or "", entry.status, entry.filepath, entry.prev_filepath or "" }, "\0")
     entry_ids[id] = true
   end
 
   for _, entry in ipairs(expected) do
-    local id = (entry.stage_type or "") .. "\0" .. entry.status .. "\0" .. entry.filepath
+    local id = table.concat({ entry.stage_type or "", entry.status, entry.filepath, entry.prev_filepath or "" }, "\0")
     if not entry_ids[id] then
       return false
     end
@@ -183,16 +333,28 @@ function M.__fetch_numstat__(entries, token)
   local cwd = dot.path.workspace()
 
   -- Parallel fetch
-  local staged_future = stl.git.exec.exec({ "diff", "--staged", "--numstat", "HEAD", "--" }, { cwd = cwd }, token)
-  local unstaged_future = stl.git.exec.exec({ "diff", "--numstat" }, { cwd = cwd }, token)
+  local staged_future = stl.git.exec.exec(
+    { "diff", "--staged", "--numstat", "-z", "--" },
+    { cwd = cwd, raw = true },
+    token
+  )
+  local unstaged_future = stl.git.exec.exec({ "diff", "--numstat", "-z", "--" }, { cwd = cwd, raw = true }, token)
 
   local results = stl.async.await_all({ staged_future, unstaged_future })
 
   check_token(token)
 
+  assert_git_success(results[1], "numstat staged diff")
+  assert_git_success(results[2], "numstat unstaged diff")
+
   -- Apply stats
   M.__apply_numstat_stats__(entries, results[1], "staged")
   M.__apply_numstat_stats__(entries, results[2], "unstaged")
+
+  local untracked_result = fetch_untracked_numstat(entries, cwd, token)
+  if untracked_result then
+    M.__apply_numstat_stats__(entries, untracked_result, "unstaged")
+  end
 
   return entries
 end
@@ -207,16 +369,7 @@ function M.__apply_numstat_stats__(entries, result, stage_type)
     return
   end
 
-  local stats = {} ---@type table<string, { insertions: integer, deletions: integer }>
-  for _, line in ipairs(result.lines) do
-    local ins, del, filepath = parse_numstat_line(line)
-    if ins and del and filepath then
-      stats[filepath] = {
-        insertions = ins,
-        deletions = del,
-      }
-    end
-  end
+  local stats = parse_numstat_output(result.lines)
 
   for _, entry in ipairs(entries) do
     if entry.stage_type == stage_type then
@@ -742,7 +895,6 @@ function M.__fetch_commit_numstat__(hash, files, token)
 
   return files
 end
-
 
 ----------------------------------------------------------------------------------------------------
 -- Helpers

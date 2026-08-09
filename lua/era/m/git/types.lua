@@ -148,10 +148,12 @@
 ---@field public staged                 table<string, boolean>
 ---@field public staged_bits            integer
 ---@field public staged_display         string
+---@field public staged_prev_relative   string|nil
 ---@field public summary                ?string
 ---@field public unstaged               table<string, boolean>
 ---@field public unstaged_bits          integer
 ---@field public unstaged_display       string
+---@field public unstaged_prev_relative string|nil
 
 ----------------------------------------------------------------------------------------------------
 -- Aggregated cache types

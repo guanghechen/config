@@ -10,6 +10,7 @@ local t = harness.new("era.m.diffview.partial_unstage")
 local errors = {} ---@type string[]
 
 bootstrap.with_global(t, "stl", {
+  env = { PATH_SEP = "/" },
   async = require("stl.async"),
   c = { Future = Future },
   git = { info = {} },
@@ -37,7 +38,7 @@ bootstrap.with_global(t, "dot", {
     end,
   },
 })
-bootstrap.with_global(t, "era", { m = { git = { staging = staging } } })
+bootstrap.with_global(t, "era", { m = { diffview = {}, git = { staging = staging } } })
 
 local config = {
   BUFOPTS_PANEL = {},
@@ -48,6 +49,11 @@ local config = {
 }
 bootstrap.with_global(t, "yoz", {})
 t:patch_table(package.loaded, "era.m.diffview.config", config)
+t:patch_table(package.loaded, "era.m.diffview.util", {
+  workspace_path = function(filepath)
+    return "/repo/" .. filepath
+  end,
+})
 
 ---@param predicate                     fun(): boolean
 local function wait(predicate)
@@ -56,7 +62,9 @@ end
 
 t:test("pane loader binds index bytes to the captured object hash", function()
   local blob_object = nil ---@type string|nil
-  stl.git.info.get_file_info = function()
+  local index_path = nil ---@type string|nil
+  stl.git.info.get_file_info = function(_, relpath)
+    index_path = relpath
     return Future.resolve({
       ok = true,
       missing = false,
@@ -77,13 +85,14 @@ t:test("pane loader binds index bytes to the captured object hash", function()
   local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
   local outcome = nil ---@type boolean|nil
   stl.async.run(function()
-    outcome = pane.load_git_content(":f.txt", bufnr)
+    outcome = pane.load_git_content(":./f.txt", bufnr)
   end)
   wait(function()
     return outcome ~= nil
   end)
 
   t.assert_true(outcome, "loaded")
+  t.assert_eq("./f.txt", index_path, "explicit stage-zero path")
   t.assert_eq("abc123", blob_object, "blob read by captured hash")
   t.assert_eq("abc123", vim.b[bufnr].git_object_name, "buffer snapshot")
   t.assert_eq("index\n", staging.from_buffer(bufnr).text, "buffer document")

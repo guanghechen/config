@@ -9,6 +9,13 @@ local harness = require("__test__.harness")
 
 local t = harness.new("stl.git.info")
 
+---@param repo                         string
+---@param ...                          string
+---@return vim.SystemCompleted
+local function git(repo, ...)
+  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
+end
+
 bootstrap.with_runtime(t, {
   stl = {
     c = { Future = Future },
@@ -69,6 +76,27 @@ t:test("get_show_blob: returns raw bytes", function()
   t.assert_eq(1, #requests, "process count")
 end)
 
+t:test("get_show_blob: treats an absent unmerged stage as missing", function()
+  local requests = mock_system()
+  local future = info.get_show_blob("/work", ":2:f.txt")
+
+  requests[1].callback({ code = 128, stderr = "fatal: path is not at stage 2" })
+  t.wait_until(function()
+    return #requests == 2
+  end, 1000, "stage inspection should start")
+  t.assert_eq(
+    "git -C /work --literal-pathspecs ls-files --stage -z -- f.txt",
+    table.concat(requests[2].argv, " "),
+    "stage inspection command"
+  )
+  requests[2].callback({ code = 0, stdout = "100644 abc123 3\tf.txt\0" })
+  wait_future(future)
+
+  local result = future:get_result()
+  t.assert_false(result.ok, "not read")
+  t.assert_true(result.missing, "missing stage")
+end)
+
 t:test("get_show_blob: confirms a missing revision path with ls-tree", function()
   local requests = mock_system()
   local future = info.get_show_blob("/work", "HEAD:missing.txt")
@@ -77,7 +105,11 @@ t:test("get_show_blob: confirms a missing revision path with ls-tree", function(
   t.wait_until(function()
     return #requests == 2
   end, 1000, "ls-tree should start")
-  t.assert_eq("git -C /work ls-tree HEAD -- missing.txt", table.concat(requests[2].argv, " "), "command")
+  t.assert_eq(
+    "git -C /work --literal-pathspecs ls-tree HEAD -- missing.txt",
+    table.concat(requests[2].argv, " "),
+    "command"
+  )
   requests[2].callback({ code = 0, stdout = "" })
   wait_future(future)
 
@@ -157,7 +189,11 @@ t:test("get_show_blob: confirms a missing index path with ls-files", function()
   t.wait_until(function()
     return #requests == 2
   end, 1000, "ls-files should start")
-  t.assert_eq("git -C /work ls-files --error-unmatch -- missing.txt", table.concat(requests[2].argv, " "), "command")
+  t.assert_eq(
+    "git -C /work --literal-pathspecs ls-files --error-unmatch -- missing.txt",
+    table.concat(requests[2].argv, " "),
+    "command"
+  )
   requests[2].callback({ code = 1, stdout = "" })
   wait_future(future)
 
@@ -283,6 +319,43 @@ t:test("get_head_file_mode: distinguishes mode, missing path, unborn HEAD, and f
   t.assert_false(failed_result.ok, "failed")
   t.assert_false(failed_result.missing, "not missing")
   t.assert_true(failed_result.err:find("injected tree failure", 1, true) ~= nil, "error")
+end)
+
+t:test("path queries treat pathspec-magic filenames literally", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  local ok, err = xpcall(function()
+    local magic = ":(glob)o*.txt" ---@type string
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+    vim.fn.writefile({ "magic" }, repo .. "/" .. magic)
+    vim.fn.writefile({ "other" }, repo .. "/other.txt")
+    t.assert_true(vim.uv.fs_chmod(repo .. "/" .. magic, 493), "make magic path executable")
+    t.assert_eq(0, git(repo, "add", "--all").code, "git add")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
+      "git commit"
+    )
+
+    local expected_object = vim.trim(git(repo, "rev-parse", "HEAD:" .. magic).stdout or "") ---@type string
+    local file_future = info.get_file_info(repo, magic)
+    wait_future(file_future)
+    local file_result = file_future:get_result()
+    t.assert_true(file_result.ok, "index path found")
+    t.assert_eq(expected_object, file_result.info.object_name, "exact index object")
+
+    local mode_future = info.get_head_file_mode(repo, magic)
+    wait_future(mode_future)
+    local mode_result = mode_future:get_result()
+    t.assert_true(mode_result.ok, "HEAD path found")
+    t.assert_eq("100755", mode_result.mode_bits, "exact HEAD mode")
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
 end)
 
 t:test("get_repo_info: resolves a branch with one process", function()

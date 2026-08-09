@@ -166,18 +166,15 @@ function M:await()
     end
   end
 
-  -- Yield and wait for resolution via stl.async.await
-  -- Note: stl.async.await wraps the callback to add nil prefix automatically,
-  -- so we should call callback(result) for success or error(err) for errors.
-  return stl.async.await(function(callback)
+  local resolved, result = stl.async.await(function(callback)
     self:finally(function(ok, result)
-      if ok then
-        callback(result)
-      else
-        error(result or "Future rejected", 0)
-      end
+      callback(ok, result)
     end)
   end)
+  if not resolved then
+    error(result or "Future rejected", 0)
+  end
+  return result
 end
 
 ---IDisposable implementation: check if disposed.

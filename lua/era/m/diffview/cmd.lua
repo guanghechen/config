@@ -64,6 +64,7 @@ function M.open(opts)
 
   -- Setup git subscription for auto-refresh
   M.__setup_git_subscription_workspace__(st, ctx)
+  M.__setup_changes_resize_workspace__(st, ctx)
 
   -- Fetch and render data
   st:request_refresh(function()
@@ -94,6 +95,43 @@ function M.open(opts)
       workspace_view.open_entry(ctx, first_entry)
     end
   end)
+end
+
+---Re-render the Changes pane only when its own window crosses to a new width.
+---@param st                          era.m.diffview.view.workspace.State
+---@param ctx                         era.m.diffview.view.workspace.IContext
+function M.__setup_changes_resize_workspace__(st, ctx)
+  local workspace_view = require("era.m.diffview.view.workspace.view")
+  local last_winnr = ctx.layout.changes_winnr ---@type integer|nil
+  local last_width = nil ---@type integer|nil
+  if last_winnr and vim.api.nvim_win_is_valid(last_winnr) then
+    last_width = vim.api.nvim_win_get_width(last_winnr)
+  end
+
+  local autocmd_id = vim.api.nvim_create_autocmd("WinResized", {
+    callback = function()
+      if st:is_disposed() then
+        return
+      end
+
+      local winnr = ctx.layout.changes_winnr ---@type integer|nil
+      if not winnr or not vim.api.nvim_win_is_valid(winnr) then
+        last_winnr = nil
+        last_width = nil
+        return
+      end
+
+      local width = vim.api.nvim_win_get_width(winnr) ---@type integer
+      if winnr == last_winnr and width == last_width then
+        return
+      end
+
+      last_winnr = winnr
+      last_width = width
+      workspace_view.render_changes(ctx)
+    end,
+  })
+  st:set_resize_autocmd(autocmd_id)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -313,11 +351,12 @@ function M.__setup_git_subscription_workspace__(st, ctx)
   })
   st:set_refresh(refresh)
 
-  -- Subscribe to staged files changes (triggered by .git/index watcher)
-  local subscription = era.m.git.state.o_staged_files:subscribe(
+  -- Every successful Git state collection is a new index snapshot, even when
+  -- its paths and status codes are unchanged.
+  local subscription = era.m.git.state.o_refreshed:subscribe(
     stl.c.Subscriber.new({
       on_next = function()
-        st:request_refresh_if_stale()
+        st:request_refresh()
       end,
     }),
     true -- ignoreInitial: avoid triggering on subscribe

@@ -45,6 +45,9 @@ bootstrap.with_runtime(t, {
     },
   },
   stl = {
+    env = {
+      PATH_SEP = "/",
+    },
     fileicon = Fileicon,
   },
 })

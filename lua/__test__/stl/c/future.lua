@@ -3,10 +3,13 @@
 --- Run with: nvim -l lua/__test__/stl/c/future.lua
 
 local harness = require("__test__.harness")
+local async = require("stl.async")
 local Future = require("stl.c.future")
 local CancellationToken = require("stl.c.cancellation_token")
 
 local t = harness.new("stl.c.future")
+
+t:patch_global("stl", { async = async })
 
 ----------------------------------------------------------------------------------------------------
 -- Constructor tests
@@ -972,6 +975,26 @@ t:test("finally: a settled future still delivers a falsy result", function()
   end)
   t.assert_eq(false, rejected_ok, "a settled rejection still reports failure")
   t.assert_eq("boom", rejected_result, "and delivers the error, not the result slot")
+end)
+
+t:test("await: an asynchronous rejection resumes the waiter with the error", function()
+  local future = Future.new()
+  local resumed = false
+  local await_ok = nil ---@type boolean|nil
+  local await_err = nil ---@type string|nil
+
+  async.run(function()
+    await_ok, await_err = pcall(function()
+      future:await()
+    end)
+    resumed = true
+  end)
+
+  t.assert_false(resumed, "waiter remains suspended while pending")
+  future:__reject__("asynchronous failure")
+  t.assert_true(resumed, "waiter resumed")
+  t.assert_false(await_ok, "await rejected")
+  t.assert_eq("asynchronous failure", await_err, "rejection preserved")
 end)
 
 t:run()

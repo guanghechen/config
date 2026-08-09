@@ -42,28 +42,72 @@ local Future = {}
 Future.__index = Future
 
 function Future.new(executor)
-  local self = setmetatable({ _done = false, _listeners = {} }, Future)
+  local self = setmetatable({ _done = false, _failed = false, _listeners = {} }, Future)
   executor(function(result)
     self._done = true
     self._result = result
     for _, listener in ipairs(self._listeners) do
       listener(true, result)
     end
+  end, function(err)
+    self._done = true
+    self._failed = true
+    self._error = err
+    for _, listener in ipairs(self._listeners) do
+      listener(false, err)
+    end
   end)
   return self
+end
+
+function Future.resolve(result)
+  return Future.new(function(resolve)
+    resolve(result)
+  end)
+end
+
+function Future.reject(err)
+  return Future.new(function(_, reject)
+    reject(err)
+  end)
 end
 
 function Future:is_done()
   return self._done
 end
 
+function Future:is_failed()
+  return self._failed
+end
+
+function Future:get_error()
+  return self._error
+end
+
 function Future:finally(callback)
   if self._done then
-    callback(true, self._result)
+    callback(not self._failed, self._failed and self._error or self._result)
   else
     self._listeners[#self._listeners + 1] = callback
   end
   return self
+end
+
+function Future:map(callback)
+  return Future.new(function(resolve, reject)
+    self:finally(function(ok, result)
+      if not ok then
+        reject(result)
+        return
+      end
+      local callback_ok, value = pcall(callback, result)
+      if callback_ok then
+        resolve(value)
+      else
+        reject(value)
+      end
+    end)
+  end)
 end
 
 bootstrap.with_runtime(t, {
@@ -96,7 +140,15 @@ bootstrap.with_runtime(t, {
     c = {
       CancellationToken = {
         new = function()
-          return { cancel = function() end }
+          local cancelled = false
+          return {
+            cancel = function()
+              cancelled = true
+            end,
+            is_cancelled = function()
+              return cancelled
+            end,
+          }
         end,
       },
       Future = Future,
@@ -110,6 +162,7 @@ bootstrap.with_runtime(t, {
       noop = function() end,
     },
     reporter = {
+      error = function() end,
       warn = function() end,
     },
     timer = {
@@ -290,15 +343,17 @@ t:test("preload_ignored: capacity reset rebuilds the complete current batch", fu
   t.assert_eq(2, calls, "cache-hit batch should not be queried after rebuild")
 end)
 
-t:test("refresh: unchanged status does not publish or discard directory cache", function()
+t:test("refresh: successful collections publish without rebuilding unchanged status", function()
   local status_maps = {
     { ["/project/file"] = { display = "M" } },
     { ["/project/file"] = { display = "M" } },
     { ["/project/file"] = { display = "D" } },
   } ---@type table<string, table>[]
   local collect_index = 0 ---@type integer
+  local collect_base = "unset" ---@type string|false
 
-  t:patch_table(era.m.git.status, "collect", function()
+  t:patch_table(era.m.git.status, "collect", function(opts)
+    collect_base = opts and opts.base or false
     collect_index = collect_index + 1
     return Future.new(function(resolve)
       resolve({ status_map = status_maps[collect_index] })
@@ -328,6 +383,7 @@ t:test("refresh: unchanged status does not publish or discard directory cache", 
   local unstaged_before = next_count(state.o_unstaged_files)
 
   wait_future(state.refresh(false))
+  t.assert_false(collect_base, "global refresh must support unborn HEAD")
   t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "initial changed status notification")
   t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "initial staged files notification")
   t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "initial unstaged files notification")
@@ -337,36 +393,60 @@ t:test("refresh: unchanged status does not publish or discard directory cache", 
   aggregated.dir_cache["/project"] = dir_status
 
   wait_future(state.refresh(false))
-  t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "unchanged status notification")
+  t.assert_eq(refreshed_before + 2, next_count(state.o_refreshed), "unchanged status notification")
   t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "unchanged staged files notification")
   t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "unchanged unstaged files notification")
   t.assert_true(aggregated.dir_cache["/project"] == dir_status, "unchanged status should preserve directory cache")
   t.assert_eq(2, state.last_refreshed_at(), "unchanged refresh should still update completion timestamp")
 
   wait_future(state.refresh(false))
-  t.assert_eq(refreshed_before + 2, next_count(state.o_refreshed), "changed status notification")
+  t.assert_eq(refreshed_before + 3, next_count(state.o_refreshed), "changed status notification")
   t.assert_eq(staged_before + 2, next_count(state.o_staged_files), "changed staged files notification")
   t.assert_eq(unstaged_before + 2, next_count(state.o_unstaged_files), "changed unstaged files notification")
   t.assert_nil(aggregated.dir_cache["/project"], "changed status should invalidate directory cache")
   t.assert_eq("D", aggregated.file_display["/project/file"], "changed status should replace aggregated cache")
 end)
 
-t:test("refresh: failed collect preserves status without publishing", function()
+t:test("refresh: failed collect reports once, preserves status, and permits recovery", function()
   local aggregated = state.aggregated()
   local status_table = aggregated.status_table
   local refreshed_before = next_count(state.o_refreshed)
+  local reports = {} ---@type table[]
+  local attempts = 0 ---@type integer
 
   t:patch_table(era.m.git.status, "collect", function()
-    return {
-      finally = function(_, callback)
-        callback(false, nil)
-      end,
-    }
+    attempts = attempts + 1
+    if attempts == 1 then
+      return Future.reject("fatal: status unavailable")
+    end
+    return Future.resolve({ status_map = status_table })
+  end)
+  t:patch_table(stl.reporter, "error", function(opts)
+    reports[#reports + 1] = opts
   end)
 
   wait_future(state.refresh(false))
   t.assert_true(aggregated.status_table == status_table, "failed collect should preserve status cache")
   t.assert_eq(refreshed_before, next_count(state.o_refreshed), "failed collect notification")
+  t.assert_eq(1, #reports, "failure reported once")
+  t.assert_true(reports[1].message:find("fatal: status unavailable", 1, true) ~= nil, "failure reason preserved")
+
+  wait_future(state.refresh(false))
+  t.assert_eq(2, attempts, "later refresh retried")
+  t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "successful retry published")
+  t.assert_eq(1, #reports, "successful retry emits no additional error")
+end)
+
+t:test("status: propagates collection failures", function()
+  t:patch_table(era.m.git.status, "collect", function()
+    return Future.reject("fatal: status unavailable")
+  end)
+
+  local future = state.status("HEAD")
+
+  t.assert_true(future:is_done(), "status future settled")
+  t.assert_true(future:is_failed(), "status future rejected")
+  t.assert_eq("fatal: status unavailable", future:get_error(), "collection error preserved")
 end)
 
 t:run()

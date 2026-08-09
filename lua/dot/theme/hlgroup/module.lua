@@ -332,6 +332,8 @@ function M.default_gen_hlgroup_map(context)
     m_dv_ft_status_delete = { fg = u.brightRed },
     m_dv_ft_status_modify = { fg = u.brightYellow },
     m_dv_ft_status_rename = { fg = u.brightBlue },
+    m_dv_ft_status_unmerged = { fg = u.brightOrange },
+    m_dv_ft_status_untracked = { fg = u.fg4 },
 
     ---module/diffview (commits)
     m_dv_cm_author = { fg = u.purple },

@@ -59,6 +59,9 @@ local initialized = false
 ---@type integer
 local last_refresh = 0
 
+---@type integer
+local refresh_generation = 0
+
 ---@type boolean
 local refreshing = false
 
@@ -107,9 +110,10 @@ local function do_refresh()
     current_collect_token = nil
   end
 
-  current_collect_token = stl.c.CancellationToken.new()
+  local token = stl.c.CancellationToken.new()
+  current_collect_token = token
 
-  era.m.git.status.collect({ base = "HEAD" }, current_collect_token):finally(function(resolved, result)
+  era.m.git.status.collect(nil, token):finally(function(resolved, result)
     current_collect_token = nil
 
     if resolved and result and type(result.status_map) == "table" then
@@ -128,12 +132,20 @@ local function do_refresh()
 
       initialized = true
       last_refresh = vim.uv.now()
+      refresh_generation = refresh_generation + 1
+      M.o_refreshed:next(refresh_generation)
 
       if status_changed then
-        M.o_refreshed:next(last_refresh)
         M.o_staged_files:next(aggregated_cache.staged_files)
         M.o_unstaged_files:next(aggregated_cache.unstaged_files)
       end
+    elseif not token:is_cancelled() then
+      local reason = tostring(result or "Unknown error"):match("^[^\r\n]+") or "Unknown error" ---@type string
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "refresh",
+        message = "Failed to refresh Git status: " .. reason,
+      })
     end
 
     refreshing = false
@@ -455,26 +467,22 @@ end
 
 ---@param base                       ?string
 ---@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with table<string, string>
+---@return stl.c.Future              Resolves with table<string, string>; propagates collection failures
 function M.status(base, token)
-  return stl.c.Future.new(function(resolve)
-    if token and token:is_cancelled() then
-      resolve({})
-      return
-    end
+  if token and token:is_cancelled() then
+    return stl.c.Future.resolve({})
+  end
 
-    stl.async.run(function()
-      local collect_result = era.m.git.status.collect({ base = base }, token):await()
-      local result = {} ---@type table<string, string>
-      if collect_result and type(collect_result.status_map) == "table" then
-        for filepath, entry in pairs(collect_result.status_map) do
-          if type(filepath) == "string" and type(entry) == "table" then
-            result[filepath] = entry.display or ""
-          end
+  return era.m.git.status.collect({ base = base }, token):map(function(collect_result)
+    local result = {} ---@type table<string, string>
+    if collect_result and type(collect_result.status_map) == "table" then
+      for filepath, entry in pairs(collect_result.status_map) do
+        if type(filepath) == "string" and type(entry) == "table" then
+          result[filepath] = entry.display or ""
         end
       end
-      resolve(result)
-    end)
+    end
+    return result
   end)
 end
 

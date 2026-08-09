@@ -103,8 +103,27 @@ M.STATUS_CODE_ORDER = STATUS_CODE_ORDER
 ---@param filepath                   string
 ---@return string
 local function normalize_status_path(filepath)
-  -- Git status cache keys are platform-independent so prefix and ancestor lookups have one contract.
-  return dot.path.normalize(filepath, false, "/")
+  -- Git status cache keys use forward slashes on Windows. On POSIX, backslash is a legal filename
+  -- byte and must not be interpreted as a separator.
+  if stl.env.PATH_SEP == "\\" then
+    return dot.path.normalize(filepath, false, "/")
+  end
+  if filepath ~= "/" then
+    local normalized = filepath:gsub("/+$", "") ---@type string
+    return normalized
+  end
+  return filepath
+end
+
+---@param workspace                  string
+---@param relative                   string
+---@return string
+local function join_status_path(workspace, relative)
+  if stl.env.PATH_SEP == "\\" then
+    return normalize_status_path(dot.path.join(workspace, relative))
+  end
+  local prefix = workspace:sub(-1) == "/" and workspace or (workspace .. "/")
+  return prefix .. relative
 end
 
 ---@param code                       string
@@ -272,6 +291,7 @@ end
 ---@param line                       string
 ---@return string|nil                status
 ---@return string|nil                relative_path
+---@return string|nil                previous_relative_path
 local function parse_name_status_line(line)
   if type(line) ~= "string" or #line < 3 then
     return nil, nil
@@ -284,8 +304,10 @@ local function parse_name_status_line(line)
 
   local status = parts[1]
   local relative = parts[2]
+  local previous = nil ---@type string|nil
 
   if status:match("^[RC]") then
+    previous = relative
     relative = parts[3]
   end
 
@@ -296,8 +318,83 @@ local function parse_name_status_line(line)
   relative = relative:gsub('^"', ""):gsub('"$', "")
   relative = stl.string.octal_to_utf8(relative)
   relative = normalize_status_path(relative)
+  if previous ~= nil then
+    previous = previous:gsub('^"', ""):gsub('"$', "")
+    previous = stl.string.octal_to_utf8(previous)
+    previous = normalize_status_path(previous)
+  end
 
-  return status, relative
+  return status, relative, previous
+end
+
+---@class era.m.git.status.INameStatusRecord
+---@field public status                 string
+---@field public relative               string
+---@field public previous               string|nil
+
+---Parse name-status output, preserving literal paths from Git's NUL protocol.
+---@param lines                         string[]
+---@return era.m.git.status.INameStatusRecord[]
+local function parse_name_status_output(lines)
+  local output = table.concat(lines, "\n") ---@type string
+  local records = {} ---@type era.m.git.status.INameStatusRecord[]
+
+  if not output:find("\0", 1, true) then
+    for _, line in ipairs(lines) do
+      local status, relative, previous = parse_name_status_line(line)
+      if status ~= nil and relative ~= nil then
+        records[#records + 1] = { status = status, relative = relative, previous = previous }
+      end
+    end
+    return records
+  end
+
+  local fields = vim.split(output, "\0", { plain = true }) ---@type string[]
+  local index = 1 ---@type integer
+  while index <= #fields do
+    local status = fields[index]
+    local relative = nil ---@type string|nil
+    local previous = nil ---@type string|nil
+    if status:match("^[RC]") then
+      previous = fields[index + 1]
+      relative = fields[index + 2]
+      index = index + 3
+    else
+      relative = fields[index + 1]
+      index = index + 2
+    end
+
+    if status ~= "" and relative ~= nil and relative ~= "" then
+      records[#records + 1] = { status = status, relative = relative, previous = previous }
+    end
+  end
+
+  return records
+end
+
+---Parse path-only output, preserving literal paths from Git's NUL protocol.
+---@param lines                         string[]
+---@return string[]
+local function parse_path_output(lines)
+  local output = table.concat(lines, "\n") ---@type string
+  if not output:find("\0", 1, true) then
+    local paths = {} ---@type string[]
+    for _, line in ipairs(lines) do
+      if type(line) == "string" and line ~= "" then
+        local relative = line:gsub('^"', ""):gsub('"$', "")
+        paths[#paths + 1] = stl.string.octal_to_utf8(relative)
+      end
+    end
+    return paths
+  end
+
+  local paths = {} ---@type string[]
+  for _, relative in ipairs(vim.split(output, "\0", { plain = true })) do
+    if relative ~= "" then
+      paths[#paths + 1] = relative
+    end
+  end
+  return paths
 end
 
 ---@param status_map                 table<string, era.m.git.StatusEntry>
@@ -406,61 +503,81 @@ end
 
 ---@param opts                       ?era.m.git.status.ICollectOpts
 ---@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with { status_map: table, status_groups: table }
+---@return stl.c.Future              Resolves with { status_map: table, status_groups: table };
+---                                 rejects if any required Git query fails
 function M.collect(opts, token)
   local workspace = dot.path.workspace()
   if not dot.path.is_git_repo() then
     return stl.c.Future.resolve({ status_map = {}, status_groups = create_status_groups() })
   end
 
-  local base = (opts and opts.base) or "HEAD"
+  local base = opts and opts.base
   local include_untracked = opts == nil or opts.include_untracked ~= false
 
-  return stl.c.Future.new(function(resolve)
+  return stl.c.Future.new(function(resolve, reject) ---@diagnostic disable-line: redundant-parameter
     if token and token:is_cancelled() then
       resolve({ status_map = {}, status_groups = create_status_groups() })
       return
     end
 
-    stl.async.run(function()
+    local function collect()
       local status_map = {} ---@type table<string, era.m.git.StatusEntry>
       local status_groups = create_status_groups()
 
+      local staged_args = { "diff", "--staged", "--name-status", "-z" } ---@type string[]
+      if base ~= nil then
+        staged_args[#staged_args + 1] = base
+      end
+      staged_args[#staged_args + 1] = "--"
+
       ---@type stl.c.Future[]
       local futures = {
-        stl.git.exec.exec({ "diff", "--staged", "--name-status", base, "--" }, { cwd = workspace }, token),
-        stl.git.exec.exec({ "diff", "--name-status" }, { cwd = workspace }, token),
+        stl.git.exec.exec(staged_args, { cwd = workspace, raw = true }, token),
+        stl.git.exec.exec({ "diff", "--name-status", "-z", "--" }, { cwd = workspace, raw = true }, token),
       }
 
       if include_untracked then
-        futures[3] = stl.git.exec.exec({ "ls-files", "--exclude-standard", "--others" }, { cwd = workspace }, token)
+        futures[3] = stl.git.exec.exec(
+          { "ls-files", "--exclude-standard", "--others", "-z" },
+          { cwd = workspace, raw = true },
+          token
+        )
       end
 
       local results = stl.c.Future.all(futures):await()
+      local labels = { "staged diff", "unstaged diff", "untracked files" } ---@type string[]
+      for index = 1, #futures do
+        local result = results[index] ---@type stl.git.exec.IResult|nil
+        if type(result) ~= "table" or result.code ~= 0 then
+          local code = type(result) == "table" and tostring(result.code) or "unknown" ---@type string
+          local stderr = type(result) == "table" and vim.trim(result.stderr or "") or "" ---@type string
+          local details = stderr ~= "" and (": " .. stderr) or "" ---@type string
+          reject(string.format("Git status %s failed (exit %s)%s", labels[index], code, details))
+          return
+        end
+      end
 
       -- Process staged changes (diff --staged)
       local staged_result = results[1] ---@type { lines: string[], code: integer }|nil
       if staged_result and staged_result.lines then
-        for _, line in ipairs(staged_result.lines) do
-          local status, relative = parse_name_status_line(line)
-          if status ~= nil and relative ~= nil then
-            local absolute = normalize_status_path(dot.path.join(workspace, relative))
-            local entry = ensure_entry(status_map, absolute, relative)
-            apply_status_code(entry, "staged", status)
-          end
+        for _, record in ipairs(parse_name_status_output(staged_result.lines)) do
+          local relative = record.relative
+          local absolute = join_status_path(workspace, relative)
+          local entry = ensure_entry(status_map, absolute, relative)
+          apply_status_code(entry, "staged", record.status)
+          entry.staged_prev_relative = record.previous
         end
       end
 
       -- Process unstaged changes (diff)
       local unstaged_result = results[2] ---@type { lines: string[], code: integer }|nil
       if unstaged_result and unstaged_result.lines then
-        for _, line in ipairs(unstaged_result.lines) do
-          local status, relative = parse_name_status_line(line)
-          if status ~= nil and relative ~= nil then
-            local absolute = normalize_status_path(dot.path.join(workspace, relative))
-            local entry = ensure_entry(status_map, absolute, relative)
-            apply_status_code(entry, "unstaged", status)
-          end
+        for _, record in ipairs(parse_name_status_output(unstaged_result.lines)) do
+          local relative = record.relative
+          local absolute = join_status_path(workspace, relative)
+          local entry = ensure_entry(status_map, absolute, relative)
+          apply_status_code(entry, "unstaged", record.status)
+          entry.unstaged_prev_relative = record.previous
         end
       end
 
@@ -468,20 +585,15 @@ function M.collect(opts, token)
       if include_untracked then
         local untracked_result = results[3] ---@type { lines: string[], code: integer }|nil
         if untracked_result and untracked_result.lines then
-          for _, line in ipairs(untracked_result.lines) do
-            if type(line) == "string" and #line > 0 then
-              local relative = line:gsub('^"', ""):gsub('"$', "")
-              relative = stl.string.octal_to_utf8(relative)
-              relative = normalize_status_path(relative)
-
-              local absolute = normalize_status_path(dot.path.join(workspace, relative))
-              local entry = ensure_entry(status_map, absolute, relative)
-              entry.codes["?"] = true
-              entry.unstaged["?"] = true
-              local bitflag = ensure_status_bit("?")
-              if bitflag ~= 0 then
-                entry.unstaged_bits = bit.bor(entry.unstaged_bits or 0, bitflag)
-              end
+          for _, path in ipairs(parse_path_output(untracked_result.lines)) do
+            local relative = path
+            local absolute = join_status_path(workspace, relative)
+            local entry = ensure_entry(status_map, absolute, relative)
+            entry.codes["?"] = true
+            entry.unstaged["?"] = true
+            local bitflag = ensure_status_bit("?")
+            if bitflag ~= 0 then
+              entry.unstaged_bits = bit.bor(entry.unstaged_bits or 0, bitflag)
             end
           end
         end
@@ -506,6 +618,13 @@ function M.collect(opts, token)
       end
 
       resolve({ status_map = status_map, status_groups = status_groups })
+    end
+
+    stl.async.run(function()
+      local ok, err = xpcall(collect, debug.traceback)
+      if not ok then
+        reject(err)
+      end
     end)
   end)
 end

@@ -102,6 +102,7 @@ t:test("open selects and previews the first visible file", function()
 
   local cmd = assert(loadfile("lua/era/m/diffview/cmd.lua"))()
   cmd.__setup_git_subscription_workspace__ = function() end
+  cmd.__setup_changes_resize_workspace__ = function() end
   cmd.open()
 
   t.assert_eq(entries[2], selected, "selected entry")
@@ -110,6 +111,59 @@ t:test("open selects and previews the first visible file", function()
 
   vim.api.nvim_win_set_buf(winnr, original_bufnr)
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("resize watcher rerenders only when the Changes pane width changes", function()
+  local width = 40 ---@type integer
+  local disposed = false ---@type boolean
+  local callback = nil ---@type function|nil
+  local autocmd_id = nil ---@type integer|nil
+  local renders = 0 ---@type integer
+  local ctx = { layout = { changes_winnr = 42 }, state = {} }
+  local state = {
+    is_disposed = function()
+      return disposed
+    end,
+    set_resize_autocmd = function(_, value)
+      autocmd_id = value
+    end,
+  }
+
+  t:patch_table(vim.api, "nvim_win_is_valid", function(winnr)
+    return winnr == 42
+  end)
+  t:patch_table(vim.api, "nvim_win_get_width", function()
+    return width
+  end)
+  t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
+    t.assert_eq("WinResized", event, "resize event")
+    callback = opts.callback
+    return 77
+  end)
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
+    render_changes = function(actual_ctx)
+      t.assert_eq(ctx, actual_ctx, "render context")
+      renders = renders + 1
+    end,
+  })
+
+  local cmd = assert(loadfile("lua/era/m/diffview/cmd.lua"))()
+  cmd.__setup_changes_resize_workspace__(state, ctx)
+  t.assert_eq(77, autocmd_id, "owned autocmd")
+
+  callback()
+  t.assert_eq(0, renders, "same width")
+  width = 5
+  callback()
+  callback()
+  t.assert_eq(1, renders, "narrow width")
+  width = 40
+  callback()
+  t.assert_eq(2, renders, "restored width")
+  disposed = true
+  width = 10
+  callback()
+  t.assert_eq(2, renders, "disposed state")
 end)
 
 t:run()

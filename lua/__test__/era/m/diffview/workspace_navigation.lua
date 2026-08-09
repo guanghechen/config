@@ -6,12 +6,21 @@ local harness = require("__test__.harness")
 
 local t = harness.new("era.m.diffview.workspace_navigation")
 
+local workspace = "/repo"
+t:patch_table(package.loaded, "era.m.diffview.util", {
+  workspace_path = function(filepath)
+    return workspace .. "/" .. filepath
+  end,
+})
+
 bootstrap.with_global(t, "stl", {
   async = {
     run = function(callback)
       callback()
     end,
   },
+  e = { TabTypeEnum = { NORMAL = "normal" } },
+  reporter = { warn = function() end },
 })
 bootstrap.with_global(t, "dot", {})
 bootstrap.with_global(t, "era", {})
@@ -55,6 +64,11 @@ end
 
 t:test("changes panel order groups stages and follows filetree traversal", function()
   t:patch_table(package.loaded, "era.m.diffview.config", { NS = 0 })
+  t:patch_table(package.loaded, "era.m.diffview.util", {
+    get_status_hlgroup = function()
+      return "m_dv_ft_filename"
+    end,
+  })
   local changes = assert(loadfile("lua/era/m/diffview/pane/changes.lua"))()
   local unstaged = { filepath = "a.lua", stage_type = "unstaged", status = "M" }
   local staged_root = { filepath = "z.lua", stage_type = "staged", status = "M" }
@@ -215,6 +229,41 @@ t:test("navigation falls back to state order without a changes panel", function(
   action.goto_prev_entry(ctx)
   t.assert_eq(alpha, current, "fallback previous")
   t.assert_eq(2, #opened, "fallback previews")
+end)
+
+t:test("goto file preserves a literal POSIX backslash", function()
+  local repo = vim.fn.tempname() ---@type string
+  local relative = "back\\slash.lua"
+  local filepath = repo .. "/" .. relative
+  vim.fn.mkdir(repo, "p")
+  vim.fn.writefile({ "content" }, filepath)
+  workspace = repo
+
+  local action = load_action(nil, {})
+  local target_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  vim.cmd.tabnew()
+  local diff_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      get_current_entry = function()
+        return { filepath = relative, stage_type = "unstaged", status = "M" }
+      end,
+    },
+  }
+
+  action.goto_file(ctx)
+
+  t.assert_eq(target_tabnr, vim.api.nvim_get_current_tabpage(), "existing tab")
+  t.assert_eq(vim.uv.fs_realpath(filepath), vim.api.nvim_buf_get_name(0), "literal filepath")
+
+  vim.api.nvim_set_current_tabpage(diff_tabnr)
+  vim.cmd.tabclose()
+  vim.cmd.enew()
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+  vim.fn.delete(repo, "rf")
+  workspace = "/repo"
 end)
 
 t:run()

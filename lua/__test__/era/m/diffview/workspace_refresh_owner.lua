@@ -3,10 +3,12 @@
 
 local harness = require("__test__.harness")
 local async = require("stl.async")
+local Future = require("stl.c.future")
 
 local t = harness.new("era.m.diffview.workspace_refresh_owner")
 
 local timers = {} ---@type table[]
+local reported_errors = {} ---@type table[]
 local CancellationToken = {}
 CancellationToken.__index = CancellationToken
 
@@ -18,9 +20,18 @@ function CancellationToken:cancel()
   self.cancelled = true
 end
 
+function CancellationToken:is_cancelled()
+  return self.cancelled
+end
+
 t:patch_global("stl", {
   async = async,
-  c = { CancellationToken = CancellationToken },
+  c = { CancellationToken = CancellationToken, Future = Future },
+  reporter = {
+    error = function(opts)
+      reported_errors[#reported_errors + 1] = opts
+    end,
+  },
   timer = {
     debounce = function(callback)
       local timer = { disposed = false, pending = false }
@@ -151,6 +162,45 @@ t:test("deferred failure releases the owner", function()
   state.completions[2]()
 end)
 
+t:test("asynchronous rejection reports once, preserves state, and permits recovery", function()
+  reported_errors = {}
+  local published = "old"
+  local runs = 0
+  local futures = {} ---@type stl.c.Future[]
+  local owner = Refresh.new({
+    debounce_ms = 300,
+    is_stale = function()
+      return false
+    end,
+    is_valid = function()
+      return true
+    end,
+    run = function()
+      runs = runs + 1
+      local future = Future.new()
+      futures[runs] = future
+      future:await()
+      published = "new"
+    end,
+  })
+
+  owner:request()
+  futures[1]:__reject__("Git status staged diff failed") ---@diagnostic disable-line: invisible
+
+  t.assert_eq("old", published, "failed refresh preserves state")
+  t.assert_eq(1, #reported_errors, "failure reported once")
+  t.assert_true(
+    reported_errors[1].message:find("Git status staged diff failed", 1, true) ~= nil,
+    "failure reason preserved"
+  )
+
+  owner:request()
+  t.assert_eq(2, runs, "owner accepts a later request")
+  futures[2]:__resolve__(nil) ---@diagnostic disable-line: invisible
+  t.assert_eq("new", published, "later refresh succeeds")
+  t.assert_eq(1, #reported_errors, "success emits no additional error")
+end)
+
 t:test("successful trailing refresh completes callbacks after an earlier failure", function()
   local owner, state = new_owner()
   local callbacks = 0
@@ -189,7 +239,7 @@ t:test("status matching ignores order and diff statistics", function()
   local data = assert(loadfile("lua/era/m/diffview/data.lua"))()
   local status_map = {
     ["a.lua"] = { relative = "a.lua", stage = "staged", staged = { M = true } },
-    ["b.lua"] = { relative = "b.lua", codes = { ["?"] = true } },
+    ["b.lua"] = { relative = "b.lua", codes = { ["?"] = true }, unstaged = { ["?"] = true } },
   }
   local entries = {
     { filepath = "b.lua", stage_type = "unstaged", status = "?", insertions = 3 },
@@ -199,6 +249,91 @@ t:test("status matching ignores order and diff statistics", function()
   t.assert_true(data.matches_status_entries(entries, status_map), "matching status entries")
   entries[1].status = "D"
   t.assert_false(data.matches_status_entries(entries, status_map), "changed status entry")
+
+  local renamed = {
+    ["new.lua"] = {
+      relative = "new.lua",
+      stage = "staged",
+      staged = { R = true },
+      staged_prev_relative = "old.lua",
+    },
+  }
+  t.assert_false(
+    data.matches_status_entries({ { filepath = "new.lua", stage_type = "staged", status = "R" } }, renamed),
+    "changed rename source"
+  )
+end)
+
+t:test("workspace subscribes to every successful Git refresh", function()
+  local subscriber = nil ---@type table|nil
+  local ignore_initial = nil ---@type boolean|nil
+  local refresh_requests = 0 ---@type integer
+  local state = {
+    get_entries = function()
+      return {}
+    end,
+    request_refresh = function()
+      refresh_requests = refresh_requests + 1
+    end,
+    set_git_subscription = function() end,
+    set_refresh = function() end,
+  }
+
+  t:patch_table(stl.c, "Subscriber", {
+    new = function(opts)
+      return opts
+    end,
+  })
+  t:patch_global("era", {
+    m = {
+      git = {
+        state = {
+          o_refreshed = {
+            subscribe = function(_, value, ignored)
+              subscriber = value
+              ignore_initial = ignored
+              return { unsubscribe = function() end }
+            end,
+          },
+          o_staged_files = {
+            subscribe = function()
+              error("workspace must subscribe to o_refreshed")
+            end,
+          },
+          status_table = function()
+            return {}
+          end,
+        },
+      },
+    },
+  })
+  t:patch_table(package.loaded, "era.m.diffview.data", {
+    matches_status_entries = function()
+      return true
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", { refresh = function() end })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.refresh", {
+    new = function()
+      return {}
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {
+    get = function()
+      return state
+    end,
+  })
+  t:patch_table(vim.api, "nvim_tabpage_is_valid", function()
+    return true
+  end)
+
+  local cmd = assert(loadfile("lua/era/m/diffview/cmd.lua"))()
+  cmd.__setup_git_subscription_workspace__(state, { layout = { tabnr = 1 }, state = state })
+
+  t.assert_true(subscriber ~= nil, "Git refresh subscriber")
+  t.assert_true(ignore_initial, "initial generation ignored")
+  assert(subscriber).on_next()
+  t.assert_eq(1, refresh_requests, "successful Git refresh forces workspace refresh")
 end)
 
 t:run()

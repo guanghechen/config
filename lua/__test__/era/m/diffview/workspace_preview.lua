@@ -10,6 +10,8 @@ local t = harness.new("era.m.diffview.workspace_preview")
 
 bootstrap.with_global(t, "stl", {
   async = require("stl.async"),
+  c = { Future = Future },
+  e = { TabTypeEnum = { DIFFVIEW_COMMITS = 1, DIFFVIEW_WORKSPACE = 2 } },
   git = { info = {} },
   nvim = { buf = {
     locate_bufnr = function()
@@ -30,7 +32,32 @@ bootstrap.with_global(t, "dot", {
     end,
   },
 })
-bootstrap.with_global(t, "era", { m = { git = { staging = staging } } })
+bootstrap.with_global(t, "era", {
+  m = {
+    diffview = {
+      util = {
+        gen_index_bufname = function(filepath)
+          return "index:" .. filepath
+        end,
+        gen_old_bufname = function(filepath, ref)
+          return ref .. ":" .. filepath
+        end,
+        head_object = function(filepath)
+          return "HEAD:" .. filepath
+        end,
+        index_stage_object = function(filepath, stage)
+          return string.format(":%d:%s", stage, filepath)
+        end,
+        staged_object = function(filepath)
+          return ":./" .. filepath
+        end,
+      },
+    },
+    git = { staging = staging },
+  },
+})
+
+local production_util = assert(loadfile("lua/era/m/diffview/util.lua"))()
 
 local config = {
   BUFOPTS_PANEL = {},
@@ -48,10 +75,22 @@ local config = {
   },
 }
 t:patch_table(package.loaded, "era.m.diffview.config", config)
+t:patch_table(package.loaded, "era.m.diffview.util", {
+  workspace_path = function(filepath)
+    return "/repo/" .. filepath
+  end,
+})
 
 ---@param predicate                     fun(): boolean
 local function wait(predicate)
   t.wait_until(predicate, 5000, "async preview operation")
+end
+
+---@param repo                          string
+---@param ...                           string
+---@return vim.SystemCompleted
+local function git(repo, ...)
+  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
 end
 
 ---@return integer left_winnr
@@ -203,6 +242,189 @@ t:test("matching refresh preserves view without resetting diff folds", function(
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end
+  end
+end)
+
+t:test("rename preview reads the source side for each stage", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local objects = {} ---@type string[]
+  local next_bufnr = 0
+  pane.create_sbs_buffer = function()
+    next_bufnr = next_bufnr + 1
+    return next_bufnr
+  end
+  pane.find_or_create_local_buffer = function()
+    next_bufnr = next_bufnr + 1
+    return next_bufnr
+  end
+  pane.load_git_content = function(object)
+    objects[#objects + 1] = object
+    return true
+  end
+  pane.__apply_buffers__ = function() end
+
+  pane.open_diff_entry({
+    left_winnr = -1,
+    right_winnr = -1,
+    entry = { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "staged", status = "R" },
+  })
+  t.assert_eq("HEAD:old.lua", objects[1], "staged source")
+  t.assert_eq(":./new.lua", objects[2], "staged destination")
+
+  objects = {}
+  pane.open_diff_entry({
+    left_winnr = -1,
+    right_winnr = -1,
+    entry = { filepath = "new.lua", prev_filepath = "index.lua", stage_type = "unstaged", status = "R" },
+  })
+  t.assert_eq(":./index.lua", objects[1], "unstaged source")
+  t.assert_eq(1, #objects, "working destination uses local buffer")
+end)
+
+t:test("index preview disambiguates a digit-colon filename from an unmerged stage", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+    vim.fn.writefile({ "digit-colon" }, repo .. "/2:foo")
+    vim.fn.writefile({ "plain" }, repo .. "/foo")
+    t.assert_eq(0, git(repo, "add", "--all").code, "git add")
+
+    t:patch_table(dot.path, "workspace", function()
+      return repo
+    end)
+    t:patch_table(stl.git, "info", assert(loadfile("lua/stl/git/info.lua"))())
+
+    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+    local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+    local selector = production_util.staged_object("2:foo") ---@type string
+    local outcome = nil ---@type boolean|nil
+    stl.async.run(function()
+      outcome = pane.load_git_content(selector, bufnr)
+    end)
+    wait(function()
+      return outcome ~= nil
+    end)
+
+    local expected_object = vim.trim(git(repo, "rev-parse", ":./2:foo").stdout or "") ---@type string
+    t.assert_eq(":./2:foo", selector, "explicit stage-zero selector")
+    t.assert_true(outcome, "index preview loaded")
+    t.assert_eq("digit-colon", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "exact index content")
+    t.assert_eq(expected_object, vim.b[bufnr].git_object_name, "authoritative index object")
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
+
+t:test("preview does not publish buffers after Git content loading fails", function()
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local objects = {} ---@type string[]
+  local applied = 0
+  local next_bufnr = 0
+  pane.create_sbs_buffer = function()
+    next_bufnr = next_bufnr + 1
+    return next_bufnr
+  end
+  pane.load_git_content = function(object)
+    objects[#objects + 1] = object
+    return false
+  end
+  pane.__apply_buffers__ = function()
+    applied = applied + 1
+  end
+
+  pane.open_diff_entry({
+    left_winnr = -1,
+    right_winnr = -1,
+    entry = { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "staged", status = "R" },
+  })
+
+  t.assert_eq(1, #objects, "second load skipped after first failure")
+  t.assert_eq("HEAD:old.lua", objects[1], "failed source")
+  t.assert_eq(0, applied, "buffers not published")
+end)
+
+t:test("conflict preview compares ours with the working tree", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q", "-b", "main").code, "git init")
+    vim.fn.writefile({ "base" }, repo .. "/f.txt")
+    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "add base")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
+      "commit base"
+    )
+    t.assert_eq(0, git(repo, "branch", "theirs").code, "create branch")
+    vim.fn.writefile({ "ours" }, repo .. "/f.txt")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-am", "ours", "-q").code,
+      "commit ours"
+    )
+    t.assert_eq(0, git(repo, "checkout", "-q", "theirs").code, "checkout theirs")
+    vim.fn.writefile({ "theirs" }, repo .. "/f.txt")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-am", "theirs", "-q").code,
+      "commit theirs"
+    )
+    t.assert_eq(0, git(repo, "checkout", "-q", "main").code, "checkout main")
+    t.assert_eq(
+      1,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "merge", "theirs").code,
+      "merge conflict"
+    )
+
+    t:patch_table(dot.path, "workspace", function()
+      return repo
+    end)
+    t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
+      return repo .. "/" .. filepath
+    end)
+    t:patch_table(stl.git, "info", require("stl.git.info"))
+
+    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+    local applied = nil ---@type integer[]|nil
+    pane.__apply_buffers__ = function(_, _, left_bufnr, right_bufnr)
+      applied = { left_bufnr, right_bufnr }
+    end
+
+    local done = false
+    stl.async.run(function()
+      pane.open_diff_entry({
+        left_winnr = -1,
+        right_winnr = -1,
+        entry = { filepath = "f.txt", stage_type = "unstaged", status = "U" },
+      })
+      done = true
+    end)
+    wait(function()
+      return done
+    end)
+
+    local buffers = assert(applied, "conflict preview applied")
+    t.assert_eq("ours", vim.api.nvim_buf_get_lines(buffers[1], 0, 1, false)[1], "stage two on left")
+    local working = table.concat(vim.api.nvim_buf_get_lines(buffers[2], 0, -1, false), "\n")
+    t.assert_true(working:find("<<<<<<< HEAD", 1, true) ~= nil, "working conflict markers on right")
+
+    for _, bufnr in ipairs(buffers) do
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+    end
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
   end
 end)
 

@@ -10,6 +10,18 @@ local M = {}
 -- Path utilities
 ----------------------------------------------------------------------------------------------------
 
+---Resolve a Git relative path without treating a legal POSIX backslash as a separator.
+---@param filepath                     string
+---@return string
+function M.workspace_path(filepath)
+  local workspace = dot.path.workspace() ---@type string
+  if stl.env.PATH_SEP == "\\" then
+    return dot.path.join(workspace, filepath)
+  end
+  local prefix = workspace:sub(-1) == "/" and workspace or (workspace .. "/")
+  return prefix .. filepath
+end
+
 ---Get display name for file entry
 ---@param entry                        era.m.diffview.IFileEntry
 ---@return string
@@ -33,14 +45,18 @@ end
 ---@param status                       string
 ---@return string
 function M.get_status_hlgroup(status)
-  if status == "A" or status == "?" then
+  if status == "A" then
     return "m_dv_ft_status_add"
   elseif status == "D" then
     return "m_dv_ft_status_delete"
-  elseif status == "M" or status == "T" or status == "U" then
+  elseif status == "M" or status == "T" then
     return "m_dv_ft_status_modify"
   elseif status == "R" or status == "C" then
     return "m_dv_ft_status_rename"
+  elseif status == "U" then
+    return "m_dv_ft_status_unmerged"
+  elseif status == "?" then
+    return "m_dv_ft_status_untracked"
   end
   return "m_dv_ft_filename"
 end
@@ -85,7 +101,15 @@ end
 ---@param filepath                     string                          relative path
 ---@return string
 function M.staged_object(filepath)
-  return ":" .. filepath
+  return ":./" .. filepath
+end
+
+---Generate git object path for an unmerged index stage.
+---@param filepath                     string
+---@param stage                        1|2|3
+---@return string
+function M.index_stage_object(filepath, stage)
+  return string.format(":%d:%s", stage, filepath)
 end
 
 ---Generate git object path for HEAD version

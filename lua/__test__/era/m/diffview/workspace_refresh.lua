@@ -22,6 +22,11 @@ bootstrap.with_global(t, "dot", {
   },
 })
 bootstrap.with_global(t, "era", {})
+t:patch_table(package.loaded, "era.m.diffview.util", {
+  workspace_path = function(filepath)
+    return "/repo/" .. filepath
+  end,
+})
 
 ---@class era.m.diffview.test.IRefreshCase
 ---@field current                        era.m.diffview.IFileEntry

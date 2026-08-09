@@ -75,7 +75,11 @@ end)
 
 t:test("workspace state disposes its refresh owner after unsubscribing", function()
   local disposed = {} ---@type string[]
+  local deleted_autocmd = nil ---@type integer|nil
   t:patch_global("stl", { c = { Observable = Observable } })
+  t:patch_table(vim.api, "nvim_del_autocmd", function(autocmd_id)
+    deleted_autocmd = autocmd_id
+  end)
   local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
   local uninitialized = State.State.new(100)
   t.assert_false(pcall(uninitialized.request_refresh, uninitialized), "uninitialized refresh still rejected")
@@ -93,10 +97,12 @@ t:test("workspace state disposes its refresh owner after unsubscribing", functio
       disposed[#disposed + 1] = "subscription"
     end,
   })
+  state:set_resize_autocmd(88)
   state:dispose()
 
   t.assert_eq("subscription", disposed[1], "subscription disposed first")
   t.assert_eq("refresh", disposed[2], "refresh owner disposed second")
+  t.assert_eq(88, deleted_autocmd, "resize autocmd disposed")
   t.assert_true(state:is_disposed(), "state marked disposed")
 
   local ok_request = pcall(state.request_refresh, state)

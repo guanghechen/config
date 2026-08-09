@@ -11,6 +11,7 @@ local M = {}
 ----------------------------------------------------------------------------------------------------
 
 local config = require("era.m.diffview.config")
+local util = require("era.m.diffview.util")
 
 ---@type table<string, any>
 local BUFOPTS_SBS = config.BUFOPTS_SBS
@@ -158,12 +159,12 @@ end
 ---@return string
 ---@return string
 local function get_document_format(object)
-  local relpath = object:match("^[^:]*:(.*)$") ---@type string|nil
+  local relpath = object:match("^:%d:(.*)$") or object:match("^[^:]*:(.*)$") ---@type string|nil
   if not relpath or relpath == "" then
     return "utf-8", "\n"
   end
 
-  local filepath = dot.path.join(dot.path.workspace(), relpath) ---@type string
+  local filepath = util.workspace_path(relpath) ---@type string
   local local_bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
   if vim.fn.filereadable(filepath) == 1 then
     local_bufnr = local_bufnr or vim.fn.bufadd(filepath)
@@ -182,7 +183,7 @@ end
 
 ---Load content from git object into buffer.
 ---@async
----@param object                        string                          git object (e.g., "HEAD:path" or ":path")
+---@param object                        string                          git object (e.g., "HEAD:path" or ":./path")
 ---@param bufnr                         integer                         target buffer
 ---@param token                         ?stl.c.CancellationToken
 ---@param is_current                    (fun(): boolean)|nil
@@ -195,7 +196,8 @@ function M.load_git_content(object, bufnr, token, is_current, before_write)
 
   local index_object_name = nil ---@type string|nil
   local blob_object = object ---@type string
-  local index_path = object:match("^:(.*)$") ---@type string|nil
+  local index_stage_path = object:match("^:%d:(.*)$") ---@type string|nil
+  local index_path = not index_stage_path and object:match("^:(.*)$") or nil ---@type string|nil
   if index_path then
     local info_result = stl.git.info.get_file_info(dot.path.workspace(), index_path, token):await()
     if not is_request_current(token, is_current) then
@@ -494,8 +496,8 @@ function M.open_diff_entry(opts)
   ---@param bufnr                       integer
   ---@return boolean current
   local function load_content(object, bufnr)
-    M.load_git_content(object, bufnr, token, is_current, capture_views)
-    return is_request_current(token, is_current)
+    local loaded = M.load_git_content(object, bufnr, token, is_current, capture_views)
+    return loaded and is_request_current(token, is_current)
   end
 
   ---@param left_bufnr                  integer
@@ -508,14 +510,32 @@ function M.open_diff_entry(opts)
   local status = entry.status
   local filepath = entry.filepath
   local stage_type = entry.stage_type
-  local workspace = dot.path.workspace()
 
   -- Determine what to show on left/right based on stage type and status
   local left_bufnr = nil ---@type integer|nil
   local right_bufnr = nil ---@type integer|nil
 
   -- Handle different cases
-  if status == "D" then
+  if status == "U" then
+    -- Conflict preview contract: compare stage 2 (ours) with the editable working tree.
+    local left_name = era.m.diffview.util.gen_old_bufname(filepath, "ours")
+    left_bufnr = M.create_sbs_buffer(left_name)
+
+    local absolute_path = util.workspace_path(filepath)
+    if vim.fn.filereadable(absolute_path) == 1 then
+      right_bufnr = M.find_or_create_local_buffer(absolute_path)
+      if vim.api.nvim_win_is_valid(right_winnr) then
+        M.save_winopts(right_bufnr, right_winnr)
+      end
+    else
+      right_bufnr = M.get_null_buffer()
+    end
+
+    if not load_content(era.m.diffview.util.index_stage_object(filepath, 2), left_bufnr) then
+      return
+    end
+    apply_buffers(left_bufnr, right_bufnr)
+  elseif status == "D" then
     -- Deleted file: show old content on left, null on right
     if stage_type == "staged" then
       -- Staged delete: HEAD -> (deleted)
@@ -553,7 +573,7 @@ function M.open_diff_entry(opts)
       apply_buffers(left_bufnr, right_bufnr)
     else
       -- Unstaged add: (new) -> working tree
-      local absolute_path = dot.path.join(workspace, filepath)
+      local absolute_path = util.workspace_path(filepath)
       right_bufnr = M.find_or_create_local_buffer(absolute_path)
 
       -- Save window options for local buffer
@@ -563,6 +583,30 @@ function M.open_diff_entry(opts)
 
       apply_buffers(left_bufnr, right_bufnr)
     end
+  elseif status == "R" or status == "C" then
+    local previous = entry.prev_filepath or filepath
+    local left_name = era.m.diffview.util.gen_old_bufname(previous, stage_type == "staged" and "HEAD" or "index")
+    left_bufnr = M.create_sbs_buffer(left_name)
+
+    if stage_type == "staged" then
+      local right_name = era.m.diffview.util.gen_index_bufname(filepath)
+      right_bufnr = M.create_sbs_buffer(right_name)
+      if not load_content(era.m.diffview.util.head_object(previous), left_bufnr) then
+        return
+      end
+      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr) then
+        return
+      end
+    else
+      right_bufnr = M.find_or_create_local_buffer(util.workspace_path(filepath))
+      if vim.api.nvim_win_is_valid(right_winnr) then
+        M.save_winopts(right_bufnr, right_winnr)
+      end
+      if not load_content(era.m.diffview.util.staged_object(previous), left_bufnr) then
+        return
+      end
+    end
+    apply_buffers(left_bufnr, right_bufnr)
   else
     -- Modified file: show old on left, new on right
     if stage_type == "staged" then
@@ -585,7 +629,7 @@ function M.open_diff_entry(opts)
       local left_name = era.m.diffview.util.gen_old_bufname(filepath, "index")
       left_bufnr = M.create_sbs_buffer(left_name)
 
-      local absolute_path = dot.path.join(workspace, filepath)
+      local absolute_path = util.workspace_path(filepath)
       right_bufnr = M.find_or_create_local_buffer(absolute_path)
 
       -- Save window options for local buffer

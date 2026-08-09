@@ -4,6 +4,7 @@ local __module_name__ = "era.m.diffview.view.workspace.action" ---@type string
 local data = require("era.m.diffview.data")
 local pane_changes = require("era.m.diffview.pane.changes")
 local pane_sbs = require("era.m.diffview.pane.sbs")
+local util = require("era.m.diffview.util")
 local workspace_state = require("era.m.diffview.view.workspace.state")
 local workspace_view = require("era.m.diffview.view.workspace.view")
 
@@ -324,7 +325,13 @@ function M.stage(ctx)
     return
   end
 
-  stl.git.exec.exec_async({ "add", "--", entry.filepath }, { cwd = dot.path.workspace() }, function(_, code, stderr)
+  local args = { "--literal-pathspecs", "add", "--" } ---@type string[]
+  if entry.status == "R" and entry.prev_filepath then
+    args[#args + 1] = entry.prev_filepath
+  end
+  args[#args + 1] = entry.filepath
+
+  stl.git.exec.exec_async(args, { cwd = dot.path.workspace() }, function(_, code, stderr)
     if code ~= 0 then
       report_git_failure("stage", entry.filepath, code, stderr)
       return
@@ -342,16 +349,39 @@ function M.unstage(ctx)
     return
   end
 
+  local workspace = dot.path.workspace()
+  local function on_unstage(_, code, stderr)
+    if code ~= 0 then
+      report_git_failure("unstage", entry.filepath, code, stderr)
+      return
+    end
+
+    ctx.state:request_refresh()
+  end
+
   stl.git.exec.exec_async(
-    { "reset", "HEAD", "--", entry.filepath },
-    { cwd = dot.path.workspace() },
+    { "rev-parse", "--verify", "--quiet", "HEAD^{commit}" },
+    { cwd = workspace },
     function(_, code, stderr)
+      if code == 1 then
+        stl.git.exec.exec_async(
+          { "--literal-pathspecs", "rm", "--cached", "-f", "--", entry.filepath },
+          { cwd = workspace },
+          on_unstage
+        )
+        return
+      end
       if code ~= 0 then
         report_git_failure("unstage", entry.filepath, code, stderr)
         return
       end
 
-      ctx.state:request_refresh()
+      local args = { "--literal-pathspecs", "reset", "HEAD", "--" } ---@type string[]
+      if entry.status == "R" and entry.prev_filepath then
+        args[#args + 1] = entry.prev_filepath
+      end
+      args[#args + 1] = entry.filepath
+      stl.git.exec.exec_async(args, { cwd = workspace }, on_unstage)
     end
   )
 end
@@ -460,7 +490,7 @@ function M.reset(ctx)
 
   -- Untracked files: remove them
   if entry.status == "?" then
-    local absolute = dot.path.join(dot.path.workspace(), entry.filepath)
+    local absolute = util.workspace_path(entry.filepath)
     local ok, err = stl.os.fs.delete(absolute)
     if not ok then
       stl.reporter.error({
@@ -478,7 +508,7 @@ function M.reset(ctx)
 
   -- Tracked files: git checkout
   stl.git.exec.exec_async(
-    { "checkout", "--", entry.filepath },
+    { "--literal-pathspecs", "checkout", "--", entry.filepath },
     { cwd = dot.path.workspace() },
     function(_, code, stderr)
       if code ~= 0 then
@@ -503,7 +533,7 @@ function M.goto_file(ctx)
     return
   end
 
-  local filepath = dot.path.join(dot.path.workspace(), entry.filepath)
+  local filepath = util.workspace_path(entry.filepath)
   if not vim.uv.fs_stat(filepath) then
     stl.reporter.warn({
       from = __module_name__,
@@ -530,7 +560,7 @@ function M.goto_file(ctx)
   if target_tabnr then
     -- Switch to existing tab and open file
     vim.api.nvim_set_current_tabpage(target_tabnr)
-    vim.cmd.edit(filepath)
+    vim.cmd.edit(vim.fn.fnameescape(filepath))
   else
     -- No suitable tab exists, create new tab
     vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
@@ -547,7 +577,7 @@ function M.goto_file_tab(ctx)
     return
   end
 
-  local filepath = dot.path.join(dot.path.workspace(), entry.filepath)
+  local filepath = util.workspace_path(entry.filepath)
   if not vim.uv.fs_stat(filepath) then
     stl.reporter.warn({
       from = __module_name__,

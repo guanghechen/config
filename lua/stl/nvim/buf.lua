@@ -46,7 +46,14 @@ local function normalize_bufpath(filepath)
   end
 
   local last = filepath:sub(-1) ---@type string
-  local keep_trailing_slash = last == "/" or last == "\\" ---@type boolean
+  local keep_trailing_slash = last == "/" or (stl.env.IS_WIN and last == "\\") ---@type boolean
+  if not stl.env.IS_WIN then
+    local normalized = vim.fs.normalize(filepath, { expand_env = false }) ---@type string
+    if keep_trailing_slash and normalized ~= "/" and normalized:sub(-1) ~= "/" then
+      return normalized .. "/"
+    end
+    return normalized
+  end
   return yoz.path.normalize(filepath, keep_trailing_slash, "/")
 end
 
@@ -86,7 +93,9 @@ function M.is_editable(bufnr)
   if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
-  return vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" and vim.api.nvim_get_option_value("modifiable", { buf = bufnr }) and not vim.api.nvim_get_option_value("readonly", { buf = bufnr })
+  return vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
+    and vim.api.nvim_get_option_value("modifiable", { buf = bufnr })
+    and not vim.api.nvim_get_option_value("readonly", { buf = bufnr })
 end
 
 ---@param bufnr                         ?integer
