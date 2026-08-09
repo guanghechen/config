@@ -105,6 +105,53 @@ t:test("fetch: applies tracked stats from the shared status snapshot", function(
   t.assert_eq(3, by_stage.unstaged.deletions, "unstaged deletions")
 end)
 
+t:test("entries: equality ignores order and compares the complete display snapshot", function()
+  local staged = {
+    filepath = "new.lua",
+    stage_type = "staged",
+    status = "R",
+    insertions = 7,
+    deletions = 2,
+    prev_filepath = "old.lua",
+  } ---@type era.m.diffview.IFileEntry
+  local unstaged = {
+    filepath = "work.lua",
+    stage_type = "unstaged",
+    status = "M",
+    insertions = 3,
+    deletions = 1,
+  } ---@type era.m.diffview.IFileEntry
+  local entries = { staged, unstaged }
+
+  t.assert_true(
+    data.equal_diff_entries(entries, { vim.deepcopy(unstaged), vim.deepcopy(staged) }),
+    "collection order ignored"
+  )
+
+  local mutations = {
+    { "filepath", "other.lua" },
+    { "stage_type", "unstaged" },
+    { "status", "M" },
+    { "insertions", 8 },
+    { "deletions", 3 },
+    { "prev_filepath", "older.lua" },
+  }
+  for _, mutation in ipairs(mutations) do
+    local changed = vim.deepcopy(entries)
+    changed[1][mutation[1]] = mutation[2]
+    t.assert_false(data.equal_diff_entries(entries, changed), "changed " .. mutation[1])
+  end
+
+  t.assert_false(data.equal_diff_entries(entries, { staged }), "different entry count")
+  t.assert_false(
+    data.equal_diff_entries(
+      { { filepath = "binary.dat", stage_type = "unstaged", status = "M" } },
+      { { filepath = "binary.dat", stage_type = "unstaged", status = "M", insertions = 0, deletions = 0 } }
+    ),
+    "unknown and zero stats stay distinct"
+  )
+end)
+
 t:test("numstat: batches all untracked files through one isolated index", function()
   local commands = {} ---@type string[][]
   local command_opts = {} ---@type stl.git.exec.IExecOpts[]

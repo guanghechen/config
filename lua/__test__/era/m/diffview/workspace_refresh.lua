@@ -29,9 +29,14 @@ t:patch_table(package.loaded, "era.m.diffview.util", {
 })
 
 ---@class era.m.diffview.test.IRefreshCase
----@field current                        era.m.diffview.IFileEntry
+---@field current                        era.m.diffview.IFileEntry|nil
+---@field clear_failures                 integer|nil
+---@field defer_refresh                  boolean|nil
 ---@field entries                        era.m.diffview.IFileEntry[]
+---@field render_failures                integer|nil
 ---@field refreshed_entries              era.m.diffview.IFileEntry[]
+---@field snapshot_initialized            boolean|nil
+---@field snapshot_unchanged              boolean|nil
 ---@field token                          stl.c.CancellationToken|nil
 ---@field visible_entries                era.m.diffview.IFileEntry[]
 
@@ -42,6 +47,11 @@ t:patch_table(package.loaded, "era.m.diffview.util", {
 ---@return fun(): boolean was_cleared
 ---@return integer changes_bufnr
 ---@return era.m.diffview.view.workspace.IOpenEntryOpts[] open_opts
+---@return fun(): integer get_set_count
+---@return fun(): integer get_render_count
+---@return fun(): nil run_refresh
+---@return fun(): integer get_commit_count
+---@return fun(): integer get_height_sync_count
 local function load_refresh_case(opts)
   local current = opts.current ---@type era.m.diffview.IFileEntry|nil
   local entries = opts.entries
@@ -53,9 +63,19 @@ local function load_refresh_case(opts)
   local opened = {} ---@type era.m.diffview.IFileEntry[]
   local open_opts = {} ---@type era.m.diffview.view.workspace.IOpenEntryOpts[]
   local cleared = false
+  local clear_failures = opts.clear_failures or 0
+  local commit_count = 0 ---@type integer
+  local height_sync_count = 0 ---@type integer
+  local render_count = 0 ---@type integer
+  local render_failures = opts.render_failures or 0
+  local set_count = 0 ---@type integer
+  local snapshot_applied = opts.snapshot_initialized ~= false
   local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
 
   t:patch_table(package.loaded, "era.m.diffview.data", {
+    equal_diff_entries = function()
+      return opts.snapshot_unchanged == true
+    end,
     fetch_diff_entries = function()
       return opts.refreshed_entries
     end,
@@ -75,6 +95,10 @@ local function load_refresh_case(opts)
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
     clear_sbs = function()
+      if clear_failures > 0 then
+        clear_failures = clear_failures - 1
+        error("injected clear failure")
+      end
       cleared = true
     end,
     open_entry = function(_, entry, _, entry_opts)
@@ -92,10 +116,18 @@ local function load_refresh_case(opts)
       return false
     end,
     render_changes = function()
+      render_count = render_count + 1
+      if render_failures > 0 then
+        render_failures = render_failures - 1
+        error("injected render failure")
+      end
       line_map = {}
       for _, entry in ipairs(opts.visible_entries) do
         line_map[#line_map + 1] = { type = "file", entry = entry }
       end
+    end,
+    sync_changes_heights = function()
+      height_sync_count = height_sync_count + 1
     end,
   })
 
@@ -109,16 +141,30 @@ local function load_refresh_case(opts)
       get_entries = function()
         return entries
       end,
+      commit_entries_snapshot = function()
+        commit_count = commit_count + 1
+        snapshot_applied = true
+      end,
+      is_entries_snapshot_applied = function()
+        return snapshot_applied
+      end,
       set_current_entry = function(_, entry)
         current = entry
       end,
       set_entries = function(_, value)
+        set_count = set_count + 1
         entries = value
+        snapshot_applied = false
       end,
     },
   }
 
-  action.refresh(ctx, opts.token)
+  local function run_refresh()
+    action.refresh(ctx, opts.token)
+  end
+  if not opts.defer_refresh then
+    run_refresh()
+  end
   return action,
     function()
       return current
@@ -128,8 +174,122 @@ local function load_refresh_case(opts)
       return cleared
     end,
     changes_bufnr,
-    open_opts
+    open_opts,
+    function()
+      return set_count
+    end,
+    function()
+      return render_count
+    end,
+    run_refresh,
+    function()
+      return commit_count
+    end,
+    function()
+      return height_sync_count
+    end
 end
+
+t:test("refresh commits and renders the initial empty snapshot", function()
+  local _, get_current, opened, was_cleared, bufnr, _, get_set_count, get_render_count, _, get_commit_count =
+    load_refresh_case({
+      current = nil,
+      entries = {},
+      refreshed_entries = {},
+      snapshot_initialized = false,
+      snapshot_unchanged = true,
+      visible_entries = {},
+    })
+
+  t.assert_nil(get_current(), "selection remains empty")
+  t.assert_eq(0, #opened, "no preview opened")
+  t.assert_eq(1, get_set_count(), "initial snapshot committed")
+  t.assert_eq(1, get_render_count(), "empty pane headers rendered")
+  t.assert_eq(1, get_commit_count(), "initial snapshot marked applied")
+  t.assert_false(was_cleared(), "already empty preview not rewritten")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("refresh skips an unchanged panel snapshot but refreshes the selected preview", function()
+  local current = {
+    filepath = "a.lua",
+    stage_type = "unstaged",
+    status = "M",
+    insertions = 1,
+    deletions = 2,
+  }
+  local refreshed = vim.deepcopy(current)
+  local _, get_current, opened, was_cleared, bufnr, open_opts, get_set_count, get_render_count, _, get_commit_count, get_height_sync_count =
+    load_refresh_case({
+      current = current,
+      entries = { current },
+      refreshed_entries = { refreshed },
+      snapshot_unchanged = true,
+      visible_entries = { current },
+    })
+
+  t.assert_true(get_current() == current, "existing canonical selection retained")
+  t.assert_true(opened[1] == current, "selected preview refreshed from existing snapshot")
+  t.assert_true(open_opts[1].preserve_view, "same preview preserves view")
+  t.assert_eq(0, get_set_count(), "state snapshot not replaced")
+  t.assert_eq(0, get_render_count(), "Changes panes not rendered")
+  t.assert_eq(0, get_commit_count(), "already applied snapshot not recommitted")
+  t.assert_eq(1, get_height_sync_count(), "cheap pane height invariant synchronized")
+  t.assert_false(was_cleared(), "preview retained")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("failed render keeps the snapshot pending so an identical retry completes", function()
+  local current = { filepath = "a.lua", stage_type = "unstaged", status = "M", insertions = 1 }
+  local refreshed = { filepath = "a.lua", stage_type = "unstaged", status = "M", insertions = 2 }
+  local _, get_current, opened, _, bufnr, _, get_set_count, get_render_count, run_refresh, get_commit_count =
+    load_refresh_case({
+      current = current,
+      defer_refresh = true,
+      entries = { current },
+      refreshed_entries = { refreshed },
+      render_failures = 1,
+      visible_entries = { refreshed },
+    })
+
+  local ok = pcall(run_refresh)
+  t.assert_false(ok, "injected render failure propagated")
+  t.assert_eq(0, get_commit_count(), "failed snapshot remains pending")
+
+  run_refresh()
+  t.assert_eq(refreshed, get_current(), "retry commits canonical selection")
+  t.assert_eq(refreshed, opened[1], "retry opens refreshed preview")
+  t.assert_eq(2, get_set_count(), "identical retry still takes slow path")
+  t.assert_eq(2, get_render_count(), "failed render retried")
+  t.assert_eq(1, get_commit_count(), "retry marks snapshot applied")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("failed preview cleanup preserves selection until an identical retry completes", function()
+  local removed = { filepath = "a.lua", stage_type = "unstaged", status = "M" }
+  local _, get_current, _, was_cleared, bufnr, _, get_set_count, get_render_count, run_refresh, get_commit_count =
+    load_refresh_case({
+      clear_failures = 1,
+      current = removed,
+      defer_refresh = true,
+      entries = { removed },
+      refreshed_entries = {},
+      visible_entries = {},
+    })
+
+  local ok = pcall(run_refresh)
+  t.assert_false(ok, "injected cleanup failure propagated")
+  t.assert_eq(removed, get_current(), "failed cleanup keeps prior selection for retry")
+  t.assert_eq(0, get_commit_count(), "failed snapshot remains pending")
+
+  run_refresh()
+  t.assert_nil(get_current(), "retry clears selection")
+  t.assert_true(was_cleared(), "retry completes preview cleanup")
+  t.assert_eq(2, get_set_count(), "identical retry still takes slow path")
+  t.assert_eq(2, get_render_count(), "retry restores panel application")
+  t.assert_eq(1, get_commit_count(), "retry marks snapshot applied")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
 
 t:test("refresh rebinds selection to the canonical entry", function()
   local stale = { filepath = "a.lua", stage_type = "unstaged", status = "M", insertions = 1 }

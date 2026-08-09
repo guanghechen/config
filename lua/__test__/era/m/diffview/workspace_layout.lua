@@ -118,6 +118,11 @@ t:test("render shares metadata widths and restores the split after an empty pane
     entries = { entries[2] }
     view.render_changes(ctx)
     t.assert_eq(1, vim.api.nvim_win_get_height(staged_winnr), "empty staged header")
+    local rendered = #render_calls
+    vim.api.nvim_win_set_height(staged_winnr, 2)
+    view.sync_changes_heights(ctx)
+    t.assert_eq(1, vim.api.nvim_win_get_height(staged_winnr), "height-only drift corrected")
+    t.assert_eq(rendered, #render_calls, "height sync does not rebuild pane buffers")
 
     entries = {
       { filepath = "a.lua", stage_type = "staged", status = "M" },

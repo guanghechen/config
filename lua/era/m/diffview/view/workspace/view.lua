@@ -539,6 +539,18 @@ function M.__sync_changes_heights__(lyt, staged_count, unstaged_count)
   changes.both_nonempty = both_nonempty
 end
 
+---Synchronize Changes split heights without rebuilding either pane buffer.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.sync_changes_heights(ctx)
+  local counts = { staged = 0, unstaged = 0 } ---@type table<stl.m.diffview.StageTypeEnum, integer>
+  for _, entry in ipairs(ctx.state:get_entries()) do
+    if entry.stage_type then
+      counts[entry.stage_type] = counts[entry.stage_type] + 1
+    end
+  end
+  M.__sync_changes_heights__(ctx.layout, counts.staged, counts.unstaged)
+end
+
 ---Render the sibling Changes panes from one workspace snapshot.
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.render_changes(ctx)
@@ -546,12 +558,6 @@ function M.render_changes(ctx)
   local state = ctx.state
   local entries = state:get_entries()
   local metadata_widths = pane_changes.measure_metadata(entries)
-  local counts = { staged = 0, unstaged = 0 } ---@type table<stl.m.diffview.StageTypeEnum, integer>
-  for _, entry in ipairs(entries) do
-    if entry.stage_type then
-      counts[entry.stage_type] = counts[entry.stage_type] + 1
-    end
-  end
 
   for _, pane in ipairs(M.get_changes_panes(lyt)) do
     if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
@@ -569,7 +575,7 @@ function M.render_changes(ctx)
     end
   end
 
-  M.__sync_changes_heights__(lyt, counts.staged, counts.unstaged)
+  M.sync_changes_heights(ctx)
 end
 
 ---Open file entry in sbs view

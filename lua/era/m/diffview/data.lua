@@ -298,6 +298,57 @@ function M.__convert_status_to_entries__(status_map)
   return entries
 end
 
+---@param entry                       era.m.diffview.IFileEntry
+---@return string
+local function get_diff_entry_id(entry)
+  return table.concat({ entry.stage_type or "", entry.filepath }, "\0")
+end
+
+---@param left                        era.m.diffview.IFileEntry
+---@param right                       era.m.diffview.IFileEntry
+---@return boolean
+local function equal_diff_entry(left, right)
+  return left.filepath == right.filepath
+    and left.stage_type == right.stage_type
+    and left.status == right.status
+    and left.insertions == right.insertions
+    and left.deletions == right.deletions
+    and left.prev_filepath == right.prev_filepath
+end
+
+---Compare complete Changes snapshots independent of Git collection order.
+---Unknown line stats (`nil`) remain distinct from known zero values.
+---@param left                        era.m.diffview.IFileEntry[]
+---@param right                       era.m.diffview.IFileEntry[]
+---@return boolean
+function M.equal_diff_entries(left, right)
+  if left == right then
+    return true
+  end
+  if #left ~= #right then
+    return false
+  end
+
+  local left_by_id = {} ---@type table<string, era.m.diffview.IFileEntry>
+  for _, entry in ipairs(left) do
+    local id = get_diff_entry_id(entry)
+    if left_by_id[id] then
+      return false
+    end
+    left_by_id[id] = entry
+  end
+
+  local seen = {} ---@type table<string, boolean>
+  for _, entry in ipairs(right) do
+    local id = get_diff_entry_id(entry)
+    if seen[id] or not left_by_id[id] or not equal_diff_entry(left_by_id[id], entry) then
+      return false
+    end
+    seen[id] = true
+  end
+  return true
+end
+
 ---@param entries                     era.m.diffview.IFileEntry[]
 ---@param status_map                  table<string, era.m.git.StatusEntry>
 ---@return boolean

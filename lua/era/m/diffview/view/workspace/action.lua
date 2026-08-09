@@ -900,6 +900,16 @@ function M.refresh(ctx, token)
   end
 
   local current = ctx.state:get_current_entry()
+  if ctx.state:is_entries_snapshot_applied() and data.equal_diff_entries(ctx.state:get_entries(), entries) then
+    -- Panel metadata can stay unchanged while the selected Git blob changes.
+    -- Keep the canonical panel snapshot, but refresh its preview content.
+    workspace_view.sync_changes_heights(ctx)
+    if current then
+      workspace_view.open_entry(ctx, current, token, { preserve_view = true })
+    end
+    return
+  end
+
   local previous_entries = {} ---@type era.m.diffview.IFileEntry[]
   if current then
     previous_entries = get_navigation_entries(ctx)
@@ -911,7 +921,6 @@ function M.refresh(ctx, token)
   if current then
     local refreshed_entries, visible_entry_ids = get_navigation_entries(ctx)
     local refreshed_entry = resolve_refreshed_entry(current, previous_entries, refreshed_entries, visible_entry_ids)
-    ctx.state:set_current_entry(refreshed_entry)
 
     if refreshed_entry then
       M.__update_changes_cursor__(ctx, refreshed_entry)
@@ -921,10 +930,12 @@ function M.refresh(ctx, token)
     else
       workspace_view.clear_sbs(ctx)
     end
+    ctx.state:set_current_entry(refreshed_entry)
   end
 
   -- Update tabline
   dot.state.status.dirtier_tabline:mark_dirty()
+  ctx.state:commit_entries_snapshot()
 end
 
 ---Close the diffview

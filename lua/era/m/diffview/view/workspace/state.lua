@@ -17,6 +17,7 @@ local M = {}
 ---@field public collapsed_dirs          table<stl.m.diffview.StageTypeEnum, table<string, boolean>> Per-pane tree state
 ---@field protected _disposed            boolean
 ---@field protected _git_subscription    stl.c.IUnsubscribable|nil
+---@field protected _entries_snapshot_applied boolean
 ---@field protected _refresh             era.m.diffview.view.workspace.Refresh|nil
 ---@field protected _resize_autocmd_id   integer|nil
 ---@field protected _tab_closed_autocmd  integer|nil
@@ -38,6 +39,7 @@ function State.new(tabnr)
 
   self._disposed = false
   self._git_subscription = nil
+  self._entries_snapshot_applied = false
   self._refresh = nil
   self._resize_autocmd_id = nil
   self._tab_closed_autocmd = nil
@@ -55,10 +57,22 @@ function State:get_entries()
   return self.entries:snapshot()
 end
 
----Set entries
+---Whether the current entries snapshot and all dependent view state were applied successfully.
+---@return boolean
+function State:is_entries_snapshot_applied()
+  return self._entries_snapshot_applied
+end
+
+---Replace entries and keep the snapshot pending until dependent view state is applied.
 ---@param entries                        era.m.diffview.IFileEntry[]
 function State:set_entries(entries)
+  self._entries_snapshot_applied = false
   self.entries:next(entries)
+end
+
+---Mark the current entries snapshot and its dependent view state as applied.
+function State:commit_entries_snapshot()
+  self._entries_snapshot_applied = true
 end
 
 ---Get current entry snapshot
