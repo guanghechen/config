@@ -1,0 +1,31 @@
+{
+  "apps": [
+    {
+      "name": "kit-copilot",
+      "cmd": "kit",
+      "args": ["copilot", "start"],
+      "autostart": true,
+      "autorestart": true,
+      "maxRestarts": 16,
+      "killTimeout": 5000,
+      "logsRotateStrategy": "size",
+      "logsRotateSize": "10MB"
+    },
+    {
+      "name": "yoz",
+      "cmd": "npm",
+      "args": ["run", "start"],
+      "cwd": "${KIT_CONFIG_HOME}/yoz",
+      "env": {
+        "NODE_ENV": "development",
+        "PWD": "${KIT_CONFIG_HOME}/yoz"
+      },
+      "autostart": true,
+      "autorestart": true,
+      "maxRestarts": 16,
+      "killTimeout": 5000,
+      "logsRotateStrategy": "size",
+      "logsRotateSize": "10MB"
+    }
+  ]
+}
