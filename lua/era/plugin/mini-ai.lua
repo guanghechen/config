@@ -21,6 +21,10 @@ local function ai_splitline(ai_type)
   return era.m.splitline.ai_textobject(ai_type)
 end
 
+local function ai_hunk()
+  return era.m.git.hunk.ai_textobject()
+end
+
 return {
   name = "mini.ai",
   event = "VeryLazy",
@@ -36,6 +40,7 @@ return {
           i = { "@block.inner", "@conditional.inner", "@loop.inner" },
         }),
         f = ai.gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }), -- function
+        h = ai_hunk, -- unstaged Git hunk
         c = ai.gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }), -- class
         t = { "<([%p%w]-)%f[^<%w][^<>]->.-</%1>", "^<.->().*()</[^/]->$" }, -- tags
         d = { "%f[%d]%d+" }, -- digits
@@ -87,6 +92,7 @@ return {
         { "e", desc = "CamelCase / snake_case" },
         { "f", desc = "function" },
         { "g", desc = "entire file" },
+        { "h", desc = "unstaged Git hunk" },
         { "i", desc = "indent" },
         { "m", desc = "comment" },
         { "n", desc = "number" },

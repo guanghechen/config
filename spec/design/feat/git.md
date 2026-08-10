@@ -245,6 +245,7 @@ Sign 类型：
 ```lua
 M.find(lnum, hunks)          -- 查找光标所在的 hunk
 M.find_nearest(lnum, hunks, direction, opts)  -- 查找最近的 hunk
+M.ai_textobject()              -- mini.ai 的 unstaged hunk regions
 M.nav(direction)             -- 导航到下一个/上一个 unstaged hunk
 M.nav_all(direction)         -- 导航到下一个/上一个 hunk（包含 staged）
 M.stage(range, callback)     -- Stage hunk
@@ -253,6 +254,9 @@ M.reset(range)               -- Reset hunk（恢复到 index 内容）
 M.stage_buffer(callback)     -- Stage 整个文件
 M.reset_buffer()             -- Reset 整个文件
 ```
+
+`ih`/`ah` 以 linewise Visual mode 选择当前或下一个 unstaged hunk；可用 `vihghs` 在 stage 前确认完整范围。
+纯删除没有 modified-side 行，因此选择其 sign 所在的 anchor line，以保持 `ghs` 等 hunk 操作可用。
 
 ### 操作模式规则
 
