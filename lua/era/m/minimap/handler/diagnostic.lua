@@ -14,14 +14,15 @@ local SYMBOLS = { "-", "=", "≡" } ---@type string[]
 local SYMBOLS_COUNT = #SYMBOLS ---@type integer
 
 local MIN_SEVERITY = vim.diagnostic.severity.HINT ---@type integer
+local DEBOUNCE_MS = 50 ---@type integer
 
 ---@class era.m.minimap.handler.diagnostic : era.m.minimap.IHandler
 local M = {
   name = "diagnostic",
 }
 
----@type table<integer, stl.c.ISubscriber>
-local subscribers = {}
+---@type table<integer, stl.timer.IDisposableCallable>
+local refresh_debounced_by_winnr = {}
 
 ---@param severity                    integer
 ---@param count                       integer
@@ -88,24 +89,47 @@ local function render(winnr)
     end
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local marks = get_marks(bufnr, winnr)
-    if vim.api.nvim_win_is_valid(winnr) then
-      view.render_handler(winnr, M.ns, M.config, marks)
+    if not vim.api.nvim_win_is_valid(winnr) or not view.is_attached(winnr) then
+      return
     end
+    if vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+      return
+    end
+    view.render_handler(winnr, M.ns, M.config, marks)
   end)
 end
 
 ---@param winnr                       integer
 ---@return nil
 function M.attach(winnr)
-  local subscriber = stl.c.Subscriber.new({
-    on_next = function()
-      vim.schedule(function()
-        render(winnr)
-      end)
+  local gname = "era_minimap_diagnostic_" .. tostring(winnr) ---@type string
+  local group = vim.api.nvim_create_augroup(gname, { clear = true })
+
+  local previous = refresh_debounced_by_winnr[winnr]
+  if previous then
+    previous:dispose()
+  end
+
+  local refresh_debounced = stl.timer.debounce(function()
+    if not vim.api.nvim_win_is_valid(winnr) then
+      return
+    end
+    render(winnr)
+  end, DEBOUNCE_MS)
+  refresh_debounced_by_winnr[winnr] = refresh_debounced
+
+  vim.api.nvim_create_autocmd({ "DiagnosticChanged", "BufWinEnter" }, {
+    group = group,
+    callback = function(args)
+      if not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+      if vim.api.nvim_win_get_buf(winnr) ~= args.buf then
+        return
+      end
+      refresh_debounced()
     end,
   })
-  subscribers[winnr] = subscriber
-  era.m.lsp.diagnostic.subscribe_all(subscriber)
 
   render(winnr)
 end
@@ -113,10 +137,13 @@ end
 ---@param winnr                       integer
 ---@return nil
 function M.detach(winnr)
-  local subscriber = subscribers[winnr]
-  if subscriber then
-    subscriber:dispose()
-    subscribers[winnr] = nil
+  local gname = "era_minimap_diagnostic_" .. tostring(winnr) ---@type string
+  vim.api.nvim_clear_autocmds({ group = gname })
+
+  local refresh_debounced = refresh_debounced_by_winnr[winnr]
+  if refresh_debounced then
+    refresh_debounced:dispose()
+    refresh_debounced_by_winnr[winnr] = nil
   end
 end
 
