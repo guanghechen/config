@@ -313,19 +313,35 @@ function M.resolve(tabnr, force)
   return meta
 end
 
----@param tabnr                         integer
+--- Remove a globally deleted buffer from every tab's metadata.
+---@param bufnr                         integer
 ---@return nil
-function M.on_buf_delete(tabnr)
-  if tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
+function M.on_buf_delete(bufnr)
+  if bufnr < 1 then
     return
   end
 
-  local meta = M.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
-  if meta == nil then
-    return
+  local removed = false
+  for _, meta in pairs(meta_map) do
+    local bufs = meta.bufs ---@type dot.tab.IBufItem[]
+    local k, N = 1, #bufs ---@type integer, integer
+    for i = 1, N, 1 do
+      local buf = bufs[i] ---@type dot.tab.IBufItem
+      if buf.bufnr == bufnr then
+        removed = true
+      else
+        bufs[k] = buf
+        k = k + 1
+      end
+    end
+    for i = N, k, -1 do
+      bufs[i] = nil
+    end
   end
 
-  M.refresh_bufs(meta.bufs)
+  if removed then
+    dot.state.status.dirtier_tabline:mark_dirty()
+  end
 end
 
 ---@param tabnr                         integer
@@ -351,6 +367,7 @@ function M.on_buf_enter(tabnr, bufnr)
   table.insert(meta.bufs, buf)
 end
 
+--- Detach buffer references from one tab without deleting the underlying buffers.
 ---@param tabnr                         integer
 ---@param bufnrs                        integer[]
 ---@return nil

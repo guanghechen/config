@@ -13,6 +13,9 @@ local t = harness.new("dot.autocmd")
 ---@field updates                     boolean[]
 ---@field disposed                    integer
 ---@field tab_close_argc               integer|nil
+---@field tab_delete_bufnr             integer|nil
+---@field buf_close_bufnr              integer|nil
+---@field term_delete_bufnr            integer|nil
 
 ---@param vim_did_enter                ?integer
 ---@return dot.autocmd.test.IRuntime
@@ -24,6 +27,9 @@ local function setup(vim_did_enter)
     updates = {},
     disposed = 0,
     tab_close_argc = nil,
+    tab_delete_bufnr = nil,
+    buf_close_bufnr = nil,
+    term_delete_bufnr = nil,
   } ---@type dot.autocmd.test.IRuntime
 
   t:patch_global("stl", {
@@ -47,8 +53,16 @@ local function setup(vim_did_enter)
   })
   t:patch_global("dot", {
     tab = {
+      on_buf_delete = function(bufnr)
+        runtime.tab_delete_bufnr = bufnr
+      end,
       on_close = function(...)
         runtime.tab_close_argc = select("#", ...)
+      end,
+    },
+    buf = {
+      on_close = function(bufnr)
+        runtime.buf_close_bufnr = bufnr
       end,
     },
     state = {
@@ -67,7 +81,17 @@ local function setup(vim_did_enter)
       widget = { resize = function() end },
     },
   })
-  t:patch_global("era", {})
+  t:patch_global("era", {
+    m = {
+      term = {
+        event = {
+          on_buf_deleted = function(bufnr)
+            runtime.term_delete_bufnr = bufnr
+          end,
+        },
+      },
+    },
+  })
   t:patch_global("yoz", {})
   t:patch_table(vim.v, "vim_did_enter", vim_did_enter or 0)
   t:patch_table(vim, "schedule", function(callback)
@@ -140,6 +164,16 @@ t:test("TabClosed delegates without passing the ordinal as a handle", function()
   runtime.autocmds.bootstrap_on_TabClosed.callback({ file = "2" })
 
   t.assert_eq(0, runtime.tab_close_argc, "tab close arguments")
+end)
+
+t:test("BufDelete forwards the deleted buffer to every owner", function()
+  local runtime = setup()
+
+  runtime.autocmds.bootstrap_on_BufDelete.callback({ buf = 42 })
+
+  t.assert_eq(42, runtime.tab_delete_bufnr, "tab metadata")
+  t.assert_eq(42, runtime.buf_close_bufnr, "buffer metadata")
+  t.assert_eq(42, runtime.term_delete_bufnr, "terminal metadata")
 end)
 
 t:test("concurrent refreshes keep one query in flight and apply the final result", function()

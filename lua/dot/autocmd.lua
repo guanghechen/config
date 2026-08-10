@@ -2,8 +2,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
   group = stl.nvim.fn.augroup("bootstrap_on_BufDelete"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    dot.tab.on_buf_delete(tabnr)
+    dot.tab.on_buf_delete(bufnr)
     dot.buf.on_close(bufnr)
     era.m.term.event.on_buf_deleted(bufnr)
   end,

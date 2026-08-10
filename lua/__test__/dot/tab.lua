@@ -92,6 +92,76 @@ t:test("on_bufs_close marks the tabline dirty only when entries are removed", fu
   t.assert_false(retained, "removed buffer metadata")
 end)
 
+t:test("on_bufs_close preserves references owned by other tabs", function()
+  local Tab = setup()
+  local tabnr_first = vim.api.nvim_get_current_tabpage()
+  local bufnr = vim.api.nvim_create_buf(true, false)
+
+  Tab.resolve(tabnr_first, true)
+  Tab.add_buf(tabnr_first, bufnr, false)
+
+  vim.cmd.tabnew()
+  local tabnr_second = vim.api.nvim_get_current_tabpage()
+  Tab.resolve(tabnr_second, true)
+  Tab.add_buf(tabnr_second, bufnr, false)
+
+  Tab.on_bufs_close(tabnr_first, { bufnr })
+  local retained_first = Tab.has_buf(tabnr_first, bufnr)
+  local retained_second = Tab.has_buf(tabnr_second, bufnr)
+  local referenced_after_first_close = #Tab.retrieve_unreferenced_bufnrs({ bufnr }) == 0
+  local valid_after_first_close = vim.api.nvim_buf_is_valid(bufnr)
+  local listed_after_first_close = vim.api.nvim_get_option_value("buflisted", { buf = bufnr })
+
+  Tab.on_bufs_close(tabnr_second, { bufnr })
+  local bufnrs_unreferenced = Tab.retrieve_unreferenced_bufnrs({ bufnr })
+
+  vim.cmd.tabclose()
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+
+  t.assert_false(retained_first, "first tab metadata")
+  t.assert_true(retained_second, "second tab metadata")
+  t.assert_true(referenced_after_first_close, "buffer remains referenced")
+  t.assert_true(valid_after_first_close, "buffer remains valid")
+  t.assert_true(listed_after_first_close, "buffer remains listed")
+  t.assert_eq(1, #bufnrs_unreferenced, "unreferenced buffer count")
+  t.assert_eq(bufnr, bufnrs_unreferenced[1], "unreferenced buffer")
+end)
+
+t:test("on_buf_delete removes only the target from every tab and marks dirty once", function()
+  local Tab, get_dirty_count = setup()
+  local tabnr_first = vim.api.nvim_get_current_tabpage()
+  local bufnr = vim.api.nvim_create_buf(true, false)
+  local bufnr_other = vim.api.nvim_create_buf(true, false)
+
+  Tab.resolve(tabnr_first, true)
+  Tab.add_buf(tabnr_first, bufnr, false)
+  Tab.add_buf(tabnr_first, bufnr_other, false)
+
+  vim.cmd.tabnew()
+  local tabnr_second = vim.api.nvim_get_current_tabpage()
+  Tab.resolve(tabnr_second, true)
+  Tab.add_buf(tabnr_second, bufnr, false)
+  Tab.add_buf(tabnr_second, bufnr_other, false)
+
+  Tab.on_buf_delete(bufnr)
+  Tab.on_buf_delete(bufnr)
+  local retained_first = Tab.has_buf(tabnr_first, bufnr)
+  local retained_second = Tab.has_buf(tabnr_second, bufnr)
+  local retained_other_first = Tab.has_buf(tabnr_first, bufnr_other)
+  local retained_other_second = Tab.has_buf(tabnr_second, bufnr_other)
+  local dirty_count = get_dirty_count()
+
+  vim.cmd.tabclose()
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+  vim.api.nvim_buf_delete(bufnr_other, { force = true })
+
+  t.assert_false(retained_first, "first tab metadata")
+  t.assert_false(retained_second, "second tab metadata")
+  t.assert_true(retained_other_first, "unrelated buffer in first tab")
+  t.assert_true(retained_other_second, "unrelated buffer in second tab")
+  t.assert_eq(1, dirty_count, "dirty count")
+end)
+
 t:test("TabClosed disposes metadata synchronously and defers buffer deletion", function()
   local Tab = setup()
   vim.cmd.tabnew()
