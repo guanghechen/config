@@ -188,9 +188,13 @@ local function render(winnr)
     end
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local marks = get_marks(bufnr, winnr)
-    if vim.api.nvim_win_is_valid(winnr) then
-      view.render_handler(winnr, M.ns, M.config, marks)
+    if not vim.api.nvim_win_is_valid(winnr) or not view.is_attached(winnr) then
+      return
     end
+    if vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+      return
+    end
+    view.render_handler(winnr, M.ns, M.config, marks)
   end)
 end
 
@@ -227,6 +231,16 @@ function M.attach(winnr)
       if is_search_mode() then
         exec_search_autocmd(winnr, { pattern = vim.fn.getcmdline() })
       end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufWinEnter", {
+    group = group,
+    callback = function(args)
+      if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= args.buf then
+        return
+      end
+      exec_search_autocmd(winnr, { buf = args.buf })
     end,
   })
 
