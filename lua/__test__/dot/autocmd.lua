@@ -16,6 +16,7 @@ local t = harness.new("dot.autocmd")
 ---@field tab_delete_bufnr             integer|nil
 ---@field buf_close_bufnr              integer|nil
 ---@field term_delete_bufnr            integer|nil
+---@field commands                     integer
 
 ---@param vim_did_enter                ?integer
 ---@return dot.autocmd.test.IRuntime
@@ -30,6 +31,7 @@ local function setup(vim_did_enter)
     tab_delete_bufnr = nil,
     buf_close_bufnr = nil,
     term_delete_bufnr = nil,
+    commands = 0,
   } ---@type dot.autocmd.test.IRuntime
 
   t:patch_global("stl", {
@@ -101,26 +103,9 @@ local function setup(vim_did_enter)
     runtime.autocmds[opts.group] = opts
     return 1
   end)
-  t:patch_table(vim.api, "nvim_get_current_tabpage", function()
-    return 1
+  t:patch_table(vim, "cmd", function()
+    runtime.commands = runtime.commands + 1
   end)
-  t:patch_table(vim.api, "nvim_tabpage_get_win", function()
-    return 11
-  end)
-  t:patch_table(vim.api, "nvim_list_tabpages", function()
-    return { 1 }
-  end)
-  t:patch_table(vim.api, "nvim_tabpage_list_wins", function()
-    return { 11 }
-  end)
-  t:patch_table(vim.api, "nvim_win_is_valid", function()
-    return true
-  end)
-  t:patch_table(vim.api, "nvim_win_call", function(_, callback)
-    callback()
-  end)
-  t:patch_table(vim.api, "nvim_tabpage_set_win", function() end)
-  t:patch_table(vim, "cmd", function() end)
 
   assert(loadfile("lua/dot/autocmd.lua"))()
   return runtime
@@ -195,11 +180,12 @@ t:test("concurrent refreshes keep one query in flight and apply the final result
   t.assert_true(runtime.updates[1], "final state")
 end)
 
-t:test("VimResized refreshes tmux state without a nested scheduled query", function()
+t:test("VimResized refreshes state without changing window layouts", function()
   local runtime = setup()
 
   runtime.autocmds.bootstrap_on_VimResized.callback()
   t.assert_eq(1, #runtime.scheduled, "scheduled resize callbacks")
+  t.assert_eq(0, runtime.commands, "layout commands")
   t.assert_eq(0, #runtime.queries, "before scheduled resize work")
 
   table.remove(runtime.scheduled, 1)()

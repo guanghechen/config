@@ -194,28 +194,10 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   end,
 })
 
----! Auto resize splits when window got resized.
+---! Refresh resize-dependent state after editor resize.
 vim.api.nvim_create_autocmd("VimResized", {
   group = stl.nvim.fn.augroup("bootstrap_on_VimResized"),
   callback = function()
-    local current_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local current_winnr = vim.api.nvim_tabpage_get_win(current_tabnr) ---@type integer
-
-    -- Equalize windows in all tabs without using tabdo (which triggers autocmds and causes duplicate windows)
-    local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-    for _, tabnr in ipairs(tabnrs) do
-      local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-      if #winnrs > 0 then
-        local winnr = winnrs[1] ---@type integer
-        if vim.api.nvim_win_is_valid(winnr) then
-          vim.api.nvim_win_call(winnr, function()
-            vim.cmd("wincmd =")
-          end)
-        end
-      end
-    end
-
-    vim.api.nvim_tabpage_set_win(current_tabnr, current_winnr)
     vim.schedule(function()
       refresh_tmux_zen_mode()
 
