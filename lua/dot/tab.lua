@@ -11,6 +11,11 @@
 
 local meta_map = {} ---@type table<integer, dot.tab.IMeta>
 
+-- Consecutive `TabClosed` events share one scheduled refresh while retaining every cleanup candidate.
+local bufnrs_pending_tab_close = {} ---@type integer[]
+local bufnr_pending_tab_close_set = {} ---@type table<integer, true>
+local tab_close_refresh_scheduled = false ---@type boolean
+
 ---@class dot.tab
 local M = {}
 
@@ -60,7 +65,11 @@ function M.retrieve_unreferenced_bufnrs(bufnrs)
   bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
   local bufnrs_unreferenced = {} ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    if vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) and not bufnr_set[bufnr] then
+    if
+      vim.api.nvim_buf_is_valid(bufnr)
+      and vim.api.nvim_get_option_value("buflisted", { buf = bufnr })
+      and not bufnr_set[bufnr]
+    then
       bufnrs_unreferenced[#bufnrs_unreferenced + 1] = bufnr
     end
   end
@@ -224,14 +233,17 @@ function M.rearrange_bufs(bufs)
   end
 end
 
+--- Rebuild all live tab metadata, then delete unreferenced buffers from the optional candidate set.
+--- Without candidates, deletion applies to every Neovim buffer.
+---@param bufnrs                        ?integer[]
 ---@return nil
-function M.refresh()
+function M.refresh(bufnrs)
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
     M.resolve(tabnr, true)
   end
 
-  local bufnrs_unreferenced = M.retrieve_unreferenced_bufnrs() ---@type integer[]
+  local bufnrs_unreferenced = M.retrieve_unreferenced_bufnrs(bufnrs) ---@type integer[]
   for _, bufnr in ipairs(bufnrs_unreferenced) do
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
@@ -410,6 +422,13 @@ function M.on_close()
   -- no longer resolves instead: that is exactly the set of closed tabs.
   for tabnr, meta in pairs(meta_map) do
     if not vim.api.nvim_tabpage_is_valid(tabnr) then
+      for _, buf in ipairs(meta.bufs) do
+        if not bufnr_pending_tab_close_set[buf.bufnr] then
+          bufnr_pending_tab_close_set[buf.bufnr] = true
+          bufnrs_pending_tab_close[#bufnrs_pending_tab_close + 1] = buf.bufnr
+        end
+      end
+
       meta_map[tabnr] = nil
       meta.winnr_fixed:dispose()
       meta.winnr_float:dispose()
@@ -417,8 +436,19 @@ function M.on_close()
     end
   end
 
+  if tab_close_refresh_scheduled then
+    return
+  end
+  tab_close_refresh_scheduled = true
+
   -- Defer buffer deletion so BufDelete autocmds are not suppressed by the non-nested TabClosed event.
-  vim.schedule(M.refresh)
+  vim.schedule(function()
+    local bufnrs = bufnrs_pending_tab_close
+    bufnrs_pending_tab_close = {}
+    bufnr_pending_tab_close_set = {}
+    tab_close_refresh_scheduled = false
+    M.refresh(bufnrs)
+  end)
 end
 
 return M
