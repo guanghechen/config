@@ -42,14 +42,6 @@ vim.api.nvim_create_autocmd("CursorHold", {
   end,
 })
 
-vim.api.nvim_create_autocmd("DiagnosticChanged", {
-  group = stl.nvim.fn.augroup("bootstrap_on_DiagnosticChanged"),
-  callback = function()
-    dot.state.status.dirtier_statusline:mark_dirty()
-    dot.state.status.dirtier_tabline:mark_dirty()
-  end,
-})
-
 vim.api.nvim_create_autocmd("FileType", {
   group = stl.nvim.fn.augroup("bootstrap_on_FileType"),
   callback = function(event)
