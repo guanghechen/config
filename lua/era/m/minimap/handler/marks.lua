@@ -5,7 +5,10 @@ local util = require("era.m.minimap.util")
 
 local HIGHLIGHT = "m_mm_mark"
 local MARK_KEY = "m"
+local GLOBAL_GROUP_NAME = "era_minimap_marks"
+local REFRESH_PATTERN = "EraMinimapMarksChanged"
 local BUILTIN_MARKS = { "'.", "'^", "''", "'\"", "'<", "'>", "'[", "']" } ---@type string[]
+local KEYMAP_MODES = { "n", "x" } ---@type string[]
 
 ---@class era.m.minimap.handler.marks : era.m.minimap.IHandler
 local M = {
@@ -21,8 +24,24 @@ local global_mark_cache = nil
 ---@type boolean
 local cache_dirty = true
 
----@type table<string, true>
+---@type table<integer, true>
+local attached_winnrs = {}
+
+---@type table<string, table<string, function>>
 local created_keymaps = {}
+
+---@return table<string, table<string, table>>
+local function get_global_keymaps_by_mode()
+  local ret = {} ---@type table<string, table<string, table>>
+  for _, mode in ipairs(KEYMAP_MODES) do
+    local mappings = {} ---@type table<string, table>
+    for _, mapping in ipairs(vim.api.nvim_get_keymap(mode)) do
+      mappings[mapping.lhs] = mapping
+    end
+    ret[mode] = mappings
+  end
+  return ret
+end
 
 ---@return table<string, { pos: integer[], mark: string }[]>
 local function get_global_marks_by_file()
@@ -108,75 +127,107 @@ local function render(winnr)
   end
 end
 
----@param data                        any
----@param winnr                       integer
 ---@return nil
-local function exec_mark_autocmd(data, winnr)
+local function exec_mark_autocmd()
   invalidate_cache()
   vim.api.nvim_exec_autocmds("User", {
-    pattern = "Mark_" .. tostring(winnr),
-    data = data,
+    pattern = REFRESH_PATTERN,
   })
+end
+
+---@param m_key                       string
+---@param global_keymaps              table<string, table<string, table>>
+---@return nil
+local function create_keymaps(m_key, global_keymaps)
+  for _, mode in ipairs(KEYMAP_MODES) do
+    if not global_keymaps[mode][m_key] then
+      local callback = function()
+        exec_mark_autocmd()
+        return m_key
+      end
+      vim.keymap.set(mode, m_key, callback, { expr = true })
+      created_keymaps[mode] = created_keymaps[mode] or {}
+      created_keymaps[mode][m_key] = callback
+      global_keymaps[mode][m_key] = { callback = callback }
+    end
+  end
+end
+
+---@return nil
+local function attach_global_resources()
+  local group = vim.api.nvim_create_augroup(GLOBAL_GROUP_NAME, { clear = true })
+  local global_keymaps = get_global_keymaps_by_mode()
+
+  for code = string.byte("A"), string.byte("Z") do
+    create_keymaps(MARK_KEY .. string.char(code), global_keymaps)
+  end
+
+  for code = string.byte("a"), string.byte("z") do
+    create_keymaps(MARK_KEY .. string.char(code), global_keymaps)
+  end
+
+  for _, cmd in ipairs({ "k", "mar", "delm" }) do
+    util.on_cmd(cmd, group, exec_mark_autocmd)
+  end
+end
+
+---@return nil
+local function detach_global_resources()
+  vim.api.nvim_clear_autocmds({ group = GLOBAL_GROUP_NAME })
+  local global_keymaps = get_global_keymaps_by_mode()
+
+  for mode, mappings in pairs(created_keymaps) do
+    for m_key, callback in pairs(mappings) do
+      local current = global_keymaps[mode][m_key]
+      if current and current.callback == callback then
+        pcall(vim.keymap.del, mode, m_key)
+      end
+    end
+  end
+  created_keymaps = {}
 end
 
 ---@param winnr                       integer
 ---@return nil
 function M.attach(winnr)
+  if attached_winnrs[winnr] then
+    return
+  end
+
+  if next(attached_winnrs) == nil then
+    attach_global_resources()
+  end
+  attached_winnrs[winnr] = true
+
   local gname = "era_minimap_marks_" .. tostring(winnr) ---@type string
   local group = vim.api.nvim_create_augroup(gname, { clear = true })
 
-  for code = string.byte("A"), string.byte("Z") do
-    local m = string.char(code) ---@type string
-    local m_key = MARK_KEY .. m ---@type string
-    if vim.fn.maparg(m_key) == "" then
-      vim.keymap.set({ "n", "x" }, m_key, function()
-        exec_mark_autocmd({ key = m_key }, winnr)
-        return m_key
-      end, { expr = true })
-      created_keymaps[m_key] = true
-    end
-  end
-
-  for code = string.byte("a"), string.byte("z") do
-    local m = string.char(code) ---@type string
-    local m_key = MARK_KEY .. m ---@type string
-    if vim.fn.maparg(m_key) == "" then
-      vim.keymap.set({ "n", "x" }, m_key, function()
-        exec_mark_autocmd({ key = m_key }, winnr)
-        return m_key
-      end, { expr = true })
-      created_keymaps[m_key] = true
-    end
-  end
-
-  for _, cmd in ipairs({ "k", "mar", "delm" }) do
-    util.on_cmd(cmd, group, function()
-      exec_mark_autocmd({ cmd = cmd }, winnr)
-    end)
-  end
-
   vim.api.nvim_create_autocmd("User", {
     group = group,
-    pattern = "Mark_" .. tostring(winnr),
+    pattern = REFRESH_PATTERN,
     callback = vim.schedule_wrap(function()
       render(winnr)
     end),
   })
 
+  invalidate_cache()
   render(winnr)
 end
 
 ---@param winnr                       integer
 ---@return nil
 function M.detach(winnr)
+  if not attached_winnrs[winnr] then
+    return
+  end
+  attached_winnrs[winnr] = nil
+
   local gname = "era_minimap_marks_" .. tostring(winnr) ---@type string
   vim.api.nvim_clear_autocmds({ group = gname })
 
-  for m_key in pairs(created_keymaps) do
-    pcall(vim.keymap.del, "n", m_key)
-    pcall(vim.keymap.del, "x", m_key)
+  if next(attached_winnrs) == nil then
+    detach_global_resources()
   end
-  created_keymaps = {}
 end
 
 return M
