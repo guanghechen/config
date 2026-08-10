@@ -1,12 +1,8 @@
 /goals_*.sqlite*
 /logs_*.sqlite*
-/mcp-oauth-locks/
-/node_repl/active_execs/
-/plugins/.plugin-appserver/
-/process_manager/
 /sandbox*.log
-/skills/kit-*
-/skills/yui-*
+/queue_*.sqlite*
+/thread_history_*.sqlite*
 /state*.sqlite*
 
 .codex-global-state.json
@@ -31,11 +27,18 @@ version.json
 /automations/
 /cache/
 /computer-use/
+/mcp-oauth-locks/
 /memories/
+/node_repl/active_execs/
+/plugins/.plugin-appserver/
 /plugins/cache/
+/process_manager/
 /rules/
 /skills/.system
+/skills/kit-*
+/skills/yui-*
 /themes/local.tmTheme
+/thread-writer-locks/
 
 .tmp/
 log/
