@@ -3,14 +3,10 @@ local __module_name__ = "era.m.lsp.diagnostic" ---@type string
 
 local DEBOUNCE_MS = 50 ---@type integer
 
----@param data                           era.m.lsp.diagnostic.IBufferDiagnostics
----@return nil
-local function reset_buffer(data)
-  data.error = 0
-  data.warn = 0
-  data.info = 0
-  data.hint = 0
-  data.total = 0
+---@param bufnr                          integer
+---@return era.m.lsp.diagnostic.IBufferDiagnostics
+local function new_buffer(bufnr)
+  return { bufnr = bufnr, error = 0, warn = 0, info = 0, hint = 0, total = 0 }
 end
 
 ---@param a                              era.m.lsp.diagnostic.IBufferDiagnostics
@@ -44,9 +40,6 @@ M._total_info = 0
 ---@type integer
 M._total_hint = 0
 
----@type stl.timer.IDisposableCallable
-local refresh_debounced
-
 ---@param bufnr                          integer
 ---@return boolean
 local function is_file_buffer(bufnr)
@@ -57,105 +50,137 @@ local function is_file_buffer(bufnr)
   return bufname ~= "" and not vim.startswith(bufname, "term://")
 end
 
+---@type era.m.lsp.diagnostic.IBufferDiagnostics
+local EMPTY_BUFFER = new_buffer(-1)
+
+---@param data                           era.m.lsp.diagnostic.IBufferDiagnostics
+---@param diagnostic                    vim.Diagnostic
+---@return nil
+local function add_diagnostic(data, diagnostic)
+  local severity = diagnostic.severity ---@type vim.diagnostic.Severity
+  if severity == vim.diagnostic.severity.ERROR then
+    data.error = data.error + 1
+  elseif severity == vim.diagnostic.severity.WARN then
+    data.warn = data.warn + 1
+  elseif severity == vim.diagnostic.severity.INFO then
+    data.info = data.info + 1
+  elseif severity == vim.diagnostic.severity.HINT then
+    data.hint = data.hint + 1
+  end
+  data.total = data.total + 1
+end
+
 ---@param bufnr                          integer
----@return era.m.lsp.diagnostic.IBufferDiagnostics
-local function get_or_create_buffer(bufnr)
-  local data = M._buffers[bufnr] ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
-  if data == nil then
-    data = { bufnr = bufnr, error = 0, warn = 0, info = 0, hint = 0, total = 0 }
-    M._buffers[bufnr] = data
+---@return era.m.lsp.diagnostic.IBufferDiagnostics|nil
+local function collect_buffer(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return nil
+  end
+
+  local data = new_buffer(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
+  if not is_file_buffer(bufnr) then
+    return data
+  end
+
+  local diagnostics = vim.diagnostic.get(bufnr) ---@type vim.Diagnostic[]
+  for _, diagnostic in ipairs(diagnostics) do
+    add_diagnostic(data, diagnostic)
   end
   return data
 end
 
----@type era.m.lsp.diagnostic.IBufferDiagnostics
-local EMPTY_BUFFER = { bufnr = -1, error = 0, warn = 0, info = 0, hint = 0, total = 0 }
+---@param bufnr                          integer
+---@param next_data                      era.m.lsp.diagnostic.IBufferDiagnostics|nil
+---@return boolean
+local function apply_buffer(bufnr, next_data)
+  -- Keep the per-buffer cache and aggregate totals consistent through one writer.
+  local prev_data = M._buffers[bufnr] ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
+  local prev_counts = prev_data or EMPTY_BUFFER ---@type era.m.lsp.diagnostic.IBufferDiagnostics
+  local next_counts = next_data or EMPTY_BUFFER ---@type era.m.lsp.diagnostic.IBufferDiagnostics
+  local changed = not equals_buffer(prev_counts, next_counts) ---@type boolean
 
-local function do_refresh()
-  local prev_totals = {
-    error = M._total_error,
-    warn = M._total_warn,
-    info = M._total_info,
-    hint = M._total_hint,
-  }
-
-  local changed_bufnrs = {} ---@type table<integer, { prev: era.m.lsp.diagnostic.IBufferDiagnostics, next: era.m.lsp.diagnostic.IBufferDiagnostics }>
-
-  M._total_error = 0
-  M._total_warn = 0
-  M._total_info = 0
-  M._total_hint = 0
-
-  for bufnr, data in pairs(M._buffers) do
-    changed_bufnrs[bufnr] = {
-      prev = {
-        bufnr = bufnr,
-        error = data.error,
-        warn = data.warn,
-        info = data.info,
-        hint = data.hint,
-        total = data.total,
-      },
-      next = data,
-    }
-    reset_buffer(data)
+  M._buffers[bufnr] = next_data
+  if not changed then
+    return false
   end
 
+  M._total_error = M._total_error + next_counts.error - prev_counts.error
+  M._total_warn = M._total_warn + next_counts.warn - prev_counts.warn
+  M._total_info = M._total_info + next_counts.info - prev_counts.info
+  M._total_hint = M._total_hint + next_counts.hint - prev_counts.hint
+
+  if next_data ~= nil then
+    local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
+    if subscribers ~= nil then
+      subscribers:notify(next_data)
+    end
+  end
+  return true
+end
+
+---@param changed                        boolean
+---@return nil
+local function publish_changes(changed)
+  if not changed then
+    return
+  end
+
+  M._subscribers_all:notify(nil)
+  dot.state.status.dirtier_statusline:mark_dirty()
+  dot.state.status.dirtier_tabline:mark_dirty()
+end
+
+local pending_bufnrs = {} ---@type table<integer, boolean>
+
+---@return nil
+local function do_refresh_pending()
+  local bufnrs = pending_bufnrs ---@type table<integer, boolean>
+  pending_bufnrs = {}
+
+  local changed = false ---@type boolean
+  for bufnr in pairs(bufnrs) do
+    changed = apply_buffer(bufnr, collect_buffer(bufnr)) or changed
+  end
+  publish_changes(changed)
+end
+
+---@return nil
+local function do_refresh_all()
+  local next_buffers = {} ---@type table<integer, era.m.lsp.diagnostic.IBufferDiagnostics>
   local diagnostics = vim.diagnostic.get() ---@type vim.Diagnostic[]
   for _, diagnostic in ipairs(diagnostics) do
     local bufnr = diagnostic.bufnr ---@type integer|nil
     if bufnr ~= nil and is_file_buffer(bufnr) then
-      local data = get_or_create_buffer(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
-      if changed_bufnrs[bufnr] == nil then
-        changed_bufnrs[bufnr] = {
-          prev = { bufnr = bufnr, error = 0, warn = 0, info = 0, hint = 0, total = 0 },
-          next = data,
-        }
+      local data = next_buffers[bufnr] ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
+      if data == nil then
+        data = new_buffer(bufnr)
+        next_buffers[bufnr] = data
       end
-
-      local severity = diagnostic.severity ---@type vim.diagnostic.Severity
-      if severity == vim.diagnostic.severity.ERROR then
-        data.error = data.error + 1
-        M._total_error = M._total_error + 1
-      elseif severity == vim.diagnostic.severity.WARN then
-        data.warn = data.warn + 1
-        M._total_warn = M._total_warn + 1
-      elseif severity == vim.diagnostic.severity.INFO then
-        data.info = data.info + 1
-        M._total_info = M._total_info + 1
-      elseif severity == vim.diagnostic.severity.HINT then
-        data.hint = data.hint + 1
-        M._total_hint = M._total_hint + 1
-      end
-
-      data.total = data.total + 1
+      add_diagnostic(data, diagnostic)
     end
   end
 
-  local buffers_changed = false ---@type boolean
-  for bufnr, change in pairs(changed_bufnrs) do
-    if not equals_buffer(change.prev, change.next) then
-      buffers_changed = true
-      local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
-      if subscribers ~= nil then
-        subscribers:notify(change.next)
-      end
+  local bufnrs = {} ---@type table<integer, boolean>
+  for bufnr in pairs(M._buffers) do
+    bufnrs[bufnr] = true
+  end
+  for bufnr in pairs(next_buffers) do
+    bufnrs[bufnr] = true
+  end
+
+  local changed = false ---@type boolean
+  for bufnr in pairs(bufnrs) do
+    local next_data = next_buffers[bufnr] ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
+    if next_data == nil and vim.api.nvim_buf_is_valid(bufnr) then
+      next_data = new_buffer(bufnr)
     end
+    changed = apply_buffer(bufnr, next_data) or changed
   end
-
-  local totals_changed = prev_totals.error ~= M._total_error
-    or prev_totals.warn ~= M._total_warn
-    or prev_totals.info ~= M._total_info
-    or prev_totals.hint ~= M._total_hint
-
-  if totals_changed or buffers_changed then
-    M._subscribers_all:notify(nil)
-    dot.state.status.dirtier_statusline:mark_dirty()
-    dot.state.status.dirtier_tabline:mark_dirty()
-  end
+  publish_changes(changed)
 end
 
-refresh_debounced = stl.timer.debounce(do_refresh, DEBOUNCE_MS)
+---@type stl.timer.IDisposableCallable
+local refresh_debounced = stl.timer.debounce(do_refresh_pending, DEBOUNCE_MS)
 
 ---@param filepath                       string
 ---@param offset                         integer
@@ -252,8 +277,10 @@ function M.has_diagnostics(filepath, severity)
   return false
 end
 
+---@param bufnr                          integer
 ---@return nil
-function M.refresh()
+function M.refresh(bufnr)
+  pending_bufnrs[bufnr] = true
   refresh_debounced()
 end
 
@@ -281,8 +308,8 @@ function M.setup()
 
   vim.api.nvim_create_autocmd("DiagnosticChanged", {
     group = augroup,
-    callback = function()
-      M.refresh()
+    callback = function(args)
+      M.refresh(args.buf)
     end,
   })
 
@@ -290,16 +317,18 @@ function M.setup()
     group = augroup,
     callback = function(args)
       local bufnr = args.buf ---@type integer
-      M._buffers[bufnr] = nil
+      pending_bufnrs[bufnr] = nil
+      local changed = apply_buffer(bufnr, nil) ---@type boolean
       local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
       if subscribers ~= nil then
         subscribers:dispose()
         M._subscribers_bufnr[bufnr] = nil
       end
+      publish_changes(changed)
     end,
   })
 
-  do_refresh()
+  do_refresh_all()
 end
 
 ----------------------------------------------------------------------------------------------------
