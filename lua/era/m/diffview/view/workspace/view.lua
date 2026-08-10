@@ -153,7 +153,7 @@ function M.__create_layout_full__(tabnr)
   -- Create changes window on the left
   vim.cmd("topleft vsplit")
   local changes_anchor_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_width(changes_anchor_winnr, config.FILETREE_WIDTH)
+  vim.api.nvim_win_set_width(changes_anchor_winnr, dot.context.diffview.panel_width:snapshot())
   local changes = create_changes_layout(changes_anchor_winnr)
 
   -- Go back to pivot and create sbs windows
@@ -321,7 +321,7 @@ function M.show_changes(lyt)
   vim.api.nvim_set_current_win(ref_winnr)
   vim.cmd("topleft vsplit")
   local anchor_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_width(anchor_winnr, config.FILETREE_WIDTH)
+  vim.api.nvim_win_set_width(anchor_winnr, dot.context.diffview.panel_width:snapshot())
   local result = layout_util.create(layout_util.vertical("staged", "unstaged", 0.5), anchor_winnr)
 
   for _, stage_type in ipairs({ "staged", "unstaged" }) do

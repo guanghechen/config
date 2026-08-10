@@ -110,16 +110,22 @@ end
 ---@param ctx                         era.m.diffview.view.workspace.IContext
 function M.__setup_changes_resize_workspace__(st, ctx)
   local workspace_view = require("era.m.diffview.view.workspace.view")
-  local function get_width_signature()
-    local parts = {} ---@type string[]
+  local function get_changes_measurement()
+    local winnrs = {} ---@type string[]
+    local widths = {} ---@type string[]
+    local width = nil ---@type integer|nil
     for _, pane in ipairs(workspace_view.get_changes_panes(ctx.layout)) do
       if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
-        parts[#parts + 1] = string.format("%d:%d", pane.winnr, vim.api.nvim_win_get_width(pane.winnr))
+        local pane_width = vim.api.nvim_win_get_width(pane.winnr) ---@type integer
+        winnrs[#winnrs + 1] = tostring(pane.winnr)
+        widths[#widths + 1] = tostring(pane_width)
+        width = width or pane_width
       end
     end
-    return table.concat(parts, "|")
+    return table.concat(winnrs, "|"), table.concat(widths, "|"), width
   end
-  local last_signature = get_width_signature()
+  local last_winnr_signature, last_width_signature = get_changes_measurement()
+  local last_columns = vim.api.nvim_get_option_value("columns", {}) ---@type integer
 
   local autocmd_id = vim.api.nvim_create_autocmd("WinResized", {
     callback = function()
@@ -127,14 +133,24 @@ function M.__setup_changes_resize_workspace__(st, ctx)
         return
       end
 
-      local signature = get_width_signature()
-      if signature == last_signature then
+      local columns = vim.api.nvim_get_option_value("columns", {}) ---@type integer
+      local terminal_resized = columns ~= last_columns ---@type boolean
+      last_columns = columns
+
+      local winnr_signature, width_signature, width = get_changes_measurement()
+      if winnr_signature == last_winnr_signature and width_signature == last_width_signature then
         return
       end
 
-      last_signature = signature
-      if signature == "" then
+      local same_windows = winnr_signature == last_winnr_signature ---@type boolean
+      last_winnr_signature = winnr_signature
+      last_width_signature = width_signature
+      if winnr_signature == "" then
         return
+      end
+      -- A rebuilt pane inherits the preference; its clamped width is not a user resize.
+      if same_windows and not terminal_resized and width then
+        dot.context.diffview.panel_width:next(width)
       end
       workspace_view.render_changes(ctx)
     end,

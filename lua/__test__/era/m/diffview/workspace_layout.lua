@@ -7,6 +7,19 @@ local t = harness.new("era.m.diffview.workspace_layout")
 local null_bufnr = vim.api.nvim_create_buf(false, true)
 local render_calls = {} ---@type table[]
 local metadata_widths = { insertion = 3, deletion = 2 }
+local panel_width = 40
+
+t:patch_global("dot", {
+  context = {
+    diffview = {
+      panel_width = {
+        snapshot = function()
+          return panel_width
+        end,
+      },
+    },
+  },
+})
 
 t:patch_table(package.loaded, "era.m.diffview.config", { FILETREE_WIDTH = 40 })
 t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
@@ -144,6 +157,7 @@ t:test("hide and show recreate both wiped sibling buffers as one panel", functio
   local lyt = view.__create_layout_full__(tabnr)
   local staged_bufnr = lyt.changes.staged.bufnr
   local unstaged_bufnr = lyt.changes.unstaged.bufnr
+  t.assert_eq(panel_width, vim.api.nvim_win_get_width(lyt.changes.staged.winnr), "initial panel width")
 
   view.hide_changes(lyt)
   t.assert_nil(lyt.changes.staged.winnr, "staged hidden")
@@ -151,12 +165,14 @@ t:test("hide and show recreate both wiped sibling buffers as one panel", functio
   t.assert_false(vim.api.nvim_buf_is_valid(staged_bufnr), "staged buffer wiped")
   t.assert_false(vim.api.nvim_buf_is_valid(unstaged_bufnr), "unstaged buffer wiped")
 
+  panel_width = 32
   view.show_changes(lyt)
   t.assert_true(vim.api.nvim_win_is_valid(lyt.changes.staged.winnr), "staged shown")
   t.assert_true(vim.api.nvim_win_is_valid(lyt.changes.unstaged.winnr), "unstaged shown")
   t.assert_true(vim.api.nvim_buf_is_valid(lyt.changes.staged.bufnr), "staged buffer recreated")
   t.assert_true(vim.api.nvim_buf_is_valid(lyt.changes.unstaged.bufnr), "unstaged buffer recreated")
   t.assert_true(lyt.changes.staged.bufnr ~= lyt.changes.unstaged.bufnr, "distinct recreated buffers")
+  t.assert_eq(panel_width, vim.api.nvim_win_get_width(lyt.changes.staged.winnr), "restored panel width")
 
   view.destroy(lyt)
   t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")

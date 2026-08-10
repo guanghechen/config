@@ -170,6 +170,7 @@ function M.apply_winopts(winnr)
   for opt, val in pairs(config.WINOPTS_PANEL) do
     vim.api.nvim_set_option_value(opt, val, { win = winnr, scope = "local" })
   end
+  vim.api.nvim_set_option_value("winfixwidth", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", gen_winhl(), { win = winnr, scope = "local" })
 end
 

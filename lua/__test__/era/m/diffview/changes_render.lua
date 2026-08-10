@@ -30,6 +30,7 @@ t:patch_table(package.loaded, "era.m.diffview.config", {
   NS = ns,
   ICONS = { SEPARATOR = "-" },
   FILETREE_WIDTH = 40,
+  WINOPTS_PANEL = {},
 })
 t:patch_table(package.loaded, "era.m.diffview.util", {
   get_status_hlgroup = function(status)
@@ -199,6 +200,15 @@ t:test("apply: installs right-aligned virtual text", function()
 
   t.assert_eq(2, right_aligned, "one right-aligned overlay per staged file")
   vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("window options keep the Changes column width fixed", function()
+  local winnr = vim.api.nvim_get_current_win()
+  local winfixwidth = vim.api.nvim_get_option_value("winfixwidth", { win = winnr })
+  changes.apply_winopts(winnr)
+
+  t.assert_true(vim.api.nvim_get_option_value("winfixwidth", { win = winnr }), "fixed width")
+  vim.api.nvim_set_option_value("winfixwidth", winfixwidth, { win = winnr, scope = "local" })
 end)
 
 t:test("render: each pane contains only its own header and entries", function()

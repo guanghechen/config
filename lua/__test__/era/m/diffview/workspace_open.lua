@@ -5,6 +5,7 @@ local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
 
 local t = harness.new("era.m.diffview.workspace_open")
+local remembered_widths = {} ---@type integer[]
 
 bootstrap.with_global(t, "stl", {
   async = {
@@ -17,6 +18,15 @@ bootstrap.with_global(t, "stl", {
   },
 })
 bootstrap.with_global(t, "dot", {
+  context = {
+    diffview = {
+      panel_width = {
+        next = function(_, width)
+          remembered_widths[#remembered_widths + 1] = width
+        end,
+      },
+    },
+  },
   path = {
     workspace = function()
       return "/repo"
@@ -124,7 +134,9 @@ t:test("open selects and previews the first visible file", function()
 end)
 
 t:test("resize watcher rerenders only when the Changes pane width changes", function()
+  remembered_widths = {}
   local widths = { [42] = 40, [43] = 40 } ---@type table<integer, integer>
+  local columns = 200
   local disposed = false ---@type boolean
   local callback = nil ---@type function|nil
   local autocmd_id = nil ---@type integer|nil
@@ -148,10 +160,17 @@ t:test("resize watcher rerenders only when the Changes pane width changes", func
   }
 
   t:patch_table(vim.api, "nvim_win_is_valid", function(winnr)
-    return winnr == 42 or winnr == 43
+    return widths[winnr] ~= nil
   end)
   t:patch_table(vim.api, "nvim_win_get_width", function(winnr)
     return widths[winnr]
+  end)
+  local get_option_value = vim.api.nvim_get_option_value
+  t:patch_table(vim.api, "nvim_get_option_value", function(name, opts)
+    if name == "columns" then
+      return columns
+    end
+    return get_option_value(name, opts)
   end)
   t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
     t.assert_eq("WinResized", event, "resize event")
@@ -180,15 +199,36 @@ t:test("resize watcher rerenders only when the Changes pane width changes", func
   resize()
   resize()
   t.assert_eq(1, renders, "narrow width")
+  t.assert_eq(1, #remembered_widths, "manual resize writes")
+  t.assert_eq(5, remembered_widths[1], "remembered manual width")
+
+  columns = 240
   widths[42] = 40
   widths[43] = 40
   resize()
   t.assert_eq(2, renders, "restored width")
-  disposed = true
-  widths[42] = 10
-  widths[43] = 10
+  t.assert_eq(1, #remembered_widths, "terminal resize does not write")
+
+  ctx.layout.changes.staged.winnr = 44
+  ctx.layout.changes.unstaged.winnr = 45
+  widths[44] = 24
+  widths[45] = 24
   resize()
-  t.assert_eq(2, renders, "disposed state")
+  t.assert_eq(3, renders, "recreated panes render")
+  t.assert_eq(1, #remembered_widths, "recreated panes do not overwrite the preference")
+
+  widths[44] = 18
+  widths[45] = 18
+  resize()
+  t.assert_eq(4, renders, "recreated pane resize")
+  t.assert_eq(2, #remembered_widths, "recreated pane manual resize writes")
+  t.assert_eq(18, remembered_widths[2], "recreated pane width")
+
+  disposed = true
+  widths[44] = 10
+  widths[45] = 10
+  resize()
+  t.assert_eq(4, renders, "disposed state")
 end)
 
 t:run()

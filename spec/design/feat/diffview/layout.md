@@ -11,6 +11,10 @@
 | 3    | 仅 sbs                     | `sbs only`                          |
 
 **布局 1: changes + sbs**
+
+Changes column 的宽度由 workspace-scoped `dot.context.diffview.panel_width` 保存。手动调整会更新该值；
+终端整体 resize 不会覆盖用户偏好，重新打开或隐藏后恢复 Changes 时继续使用保存值。
+
 ```
 ┌─────────────┬─────────────────┬─────────────────┐
 │             │                 │                 │
