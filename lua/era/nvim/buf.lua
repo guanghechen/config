@@ -18,7 +18,7 @@ local function __close__(tabnr, bufnrs)
 
   dot.tab.on_bufs_close(tabnr, bufnrs)
 
-  local bufnrs_unreferenced = dot.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+  local bufnrs_unreferenced = dot.tab.retrieve_unreferenced_bufnrs(bufnrs) ---@type integer[]
   for _, bufnr in ipairs(bufnrs_unreferenced) do
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end

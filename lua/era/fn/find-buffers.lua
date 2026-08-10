@@ -235,7 +235,7 @@ picker = era.m.picker.ListComposer.new({
           dot.tab.on_bufs_close(tabnr, { bufnr })
         end
 
-        local bufnrs_unreferenced = dot.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+        local bufnrs_unreferenced = dot.tab.retrieve_unreferenced_bufnrs({ bufnr }) ---@type integer[]
         if #bufnrs_unreferenced > 0 then
           for _, unreferenced_bufnr in ipairs(bufnrs_unreferenced) do
             vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
