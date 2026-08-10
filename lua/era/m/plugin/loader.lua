@@ -67,12 +67,14 @@ function M.__register_plugins__(specs)
     local state = {
       spec = spec,
       loaded = false,
+      loading = false,
       path = M.__resolve_plugin_path__(spec),
     }
     M.plugins[spec.name] = state
 
-    local main_module = M.__resolve_main_module__(spec) ---@type string
-    M._module_to_plugin[main_module] = spec.name
+    if spec.main then
+      M._module_to_plugin[spec.main] = spec.name
+    end
   end
 end
 
@@ -136,7 +138,7 @@ end
 ---@param state                         era.m.plugin.IPluginState
 ---@return nil
 function M.__load_plugin__(state)
-  if state.loaded then
+  if state.loaded or state.loading then
     return
   end
 
@@ -151,80 +153,72 @@ function M.__load_plugin__(state)
   end
 
   local start_time = vim.uv.hrtime() ---@type integer
+  local main_loaded_before = spec.main and package.loaded[spec.main] or nil
 
-  -- A dependency may require this plugin's main module and re-enter the loader.
-  state.loaded = true
+  state.loading = true
+  local ok, err = pcall(function()
+    local has_path = state.path ~= nil and yoz.path.is_exist(state.path) ---@type boolean
+    if has_path then
+      vim.opt.rtp:prepend(state.path)
+    end
 
-  local has_path = state.path ~= nil and yoz.path.is_exist(state.path) ---@type boolean
-  if has_path then
-    vim.opt.rtp:prepend(state.path)
-  end
-
-  if spec.dependencies then
-    for _, dep_name in ipairs(spec.dependencies) do
-      local dep_state = M.plugins[dep_name] ---@type era.m.plugin.IPluginState|nil
-      if dep_state then
-        local ok, err = pcall(M.__load_plugin__, dep_state) ---@type boolean, string|nil
-        if not ok then
-          -- The early guard only breaks re-entry; dependency failure must leave the parent retryable.
-          state.loaded = false
-          error(err, 0)
+    if spec.dependencies then
+      for _, dep_name in ipairs(spec.dependencies) do
+        local dep_state = M.plugins[dep_name] ---@type era.m.plugin.IPluginState|nil
+        if dep_state then
+          M.__load_plugin__(dep_state)
         end
       end
     end
-  end
 
-  if has_path then
-    local plugin_dir = dot.path.join(state.path, "plugin") ---@type string
-    if yoz.path.is_exist(plugin_dir) then
-      for _, file in ipairs(vim.fn.glob(plugin_dir .. "/*.lua", false, true)) do
-        vim.cmd.source(file)
+    if has_path then
+      local plugin_dir = dot.path.join(state.path, "plugin") ---@type string
+      if yoz.path.is_exist(plugin_dir) then
+        for _, file in ipairs(vim.fn.glob(plugin_dir .. "/*.lua", false, true)) do
+          vim.cmd.source(file)
+        end
+        for _, file in ipairs(vim.fn.glob(plugin_dir .. "/*.vim", false, true)) do
+          vim.cmd.source(file)
+        end
       end
-      for _, file in ipairs(vim.fn.glob(plugin_dir .. "/*.vim", false, true)) do
-        vim.cmd.source(file)
+
+      local after_dir = dot.path.join(state.path, "after") ---@type string
+      if yoz.path.is_exist(after_dir) then
+        vim.opt.rtp:append(after_dir)
       end
     end
 
-    local after_dir = dot.path.join(state.path, "after") ---@type string
-    if yoz.path.is_exist(after_dir) then
-      vim.opt.rtp:append(after_dir)
+    local opts = {} ---@type table
+    if spec.opts then
+      opts = type(spec.opts) == "function" and spec.opts() or spec.opts --[[@as table]]
     end
-  end
 
-  local opts = {} ---@type table
-  if spec.opts then
-    opts = type(spec.opts) == "function" and spec.opts() or spec.opts --[[@as table]]
-  end
-
-  if spec.config then
-    spec.config(spec, opts)
-  elseif spec.main then
-    local ok, mod = pcall(require, spec.main)
-    if ok and mod and type(mod.setup) == "function" then
-      mod.setup(opts)
+    if spec.config then
+      spec.config(spec, opts)
+    elseif spec.main then
+      local mod = require(spec.main)
+      if mod and type(mod.setup) == "function" then
+        mod.setup(opts)
+      end
     end
+  end)
+  state.loading = false
+
+  if not ok then
+    if spec.main then
+      -- Loading is fail-fast: restore owned state and the primary module cache, but do not
+      -- retry because plugin scripts and config may have produced other partial side effects.
+      package.loaded[spec.main] = main_loaded_before
+    end
+    error(err, 0)
   end
 
+  state.loaded = true
   state.load_time = (vim.uv.hrtime() - start_time) / 1e6
 
   vim.schedule(function()
     vim.api.nvim_exec_autocmds("User", { pattern = "PluginLoad", modeline = false, data = spec.name })
   end)
-end
-
----@param spec                          era.m.plugin.IPluginSpec
----@return string
-function M.__resolve_main_module__(spec)
-  if spec.main then
-    return spec.main
-  end
-
-  local name = spec.name ---@type string
-  name = name:gsub("%.nvim$", "")
-  name = name:gsub("%.lua$", "")
-  name = name:gsub("^nvim%-", "")
-  name = name:gsub("%-nvim$", "")
-  return name
 end
 
 ---@param spec                          era.m.plugin.IPluginSpec

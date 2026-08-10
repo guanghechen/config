@@ -95,6 +95,7 @@
 ---@class era.m.plugin.IPluginState
 ---@field public spec                   era.m.plugin.IPluginSpec
 ---@field public loaded                 boolean
+---@field public loading                boolean
 ---@field public load_time              number|nil
 ---@field public path                   string|nil
 
