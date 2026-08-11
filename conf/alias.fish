@@ -1,5 +1,4 @@
 ### basic
-abbr -a ll 'lsd -la'
 abbr -a .. 'cd ../'
 abbr -a ... 'cd ../../'
 abbr -a .... 'cd ../../../'
