@@ -35,6 +35,7 @@ local M = {}
 ---@class yoz.search.ISearchFileResult
 ---@field public elapsed_time           integer
 ---@field public items                  yoz.search.IFileMatch[]
+---@field public limit_reached          boolean
 
 ---@class yoz.search.ISearchFailedResult
 ---@field public elapsed_time           integer

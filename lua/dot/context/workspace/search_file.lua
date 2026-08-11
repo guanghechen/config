@@ -1,4 +1,5 @@
 ---@class dot.context.search_file.data
+---@field public flag_limit_matches     boolean
 ---@field public flag_replace           boolean
 ---@field public max_filesize           string
 ---@field public max_matches            integer
@@ -6,6 +7,7 @@
 ---@field public replace_pattern_history stl.c.history.ISerializedData
 
 ---@class dot.context.search_file.state
+---@field public flag_limit_matches     stl.c.Observable
 ---@field public flag_replace           stl.c.Observable
 ---@field public max_filesize           stl.c.Observable
 ---@field public max_matches            stl.c.Observable
@@ -19,10 +21,13 @@
 ---@field public normalize              fun(data: unknown): dot.context.search_file.data
 local M = {}
 
+local MAX_MATCHES = 2147483647 ---@type integer
+
 ---@return dot.context.search_file.data
 function M.defaults()
   ---@type dot.context.search_file.data
   return {
+    flag_limit_matches = true,
     flag_replace = false,
     max_filesize = "1M",
     max_matches = 500,
@@ -36,13 +41,21 @@ end
 function M.normalize(data)
   local resolved = M.defaults() ---@type dot.context.search_file.data
   if type(data) == "table" then
+    if type(data.flag_limit_matches) == "boolean" then
+      resolved.flag_limit_matches = data.flag_limit_matches
+    end
     if type(data.flag_replace) == "boolean" then
       resolved.flag_replace = data.flag_replace
     end
     if type(data.max_filesize) == "string" then
       resolved.max_filesize = data.max_filesize
     end
-    if type(data.max_matches) == "number" then
+    if
+      type(data.max_matches) == "number"
+      and data.max_matches >= 1
+      and data.max_matches <= MAX_MATCHES
+      and data.max_matches == math.floor(data.max_matches)
+    then
       resolved.max_matches = data.max_matches
     end
     if type(data.replacement) == "string" then
@@ -66,6 +79,7 @@ end
 function M.dump()
   ---@type dot.context.search_file.data
   return {
+    flag_limit_matches = M.flag_limit_matches:snapshot(),
     flag_replace = M.flag_replace:snapshot(),
     max_matches = M.max_matches:snapshot(),
     max_filesize = M.max_filesize:snapshot(),
@@ -79,6 +93,7 @@ end
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.search_file.data
 
+  M.flag_limit_matches:next(data.flag_limit_matches)
   M.flag_replace:next(data.flag_replace)
   M.max_filesize:next(data.max_filesize)
   M.max_matches:next(data.max_matches)
@@ -89,6 +104,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.search_file.data
+M.flag_limit_matches = stl.c.Observable.from_value(_defaults.flag_limit_matches)
 M.flag_replace = stl.c.Observable.from_value(_defaults.flag_replace)
 M.max_filesize = stl.c.Observable.from_value(_defaults.max_filesize)
 M.max_matches = stl.c.Observable.from_value(_defaults.max_matches)

@@ -30,6 +30,7 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_exclude           boolean
 ---@field public flag_gitignore         boolean
+---@field public flag_limit_matches     boolean
 ---@field public flag_regex             boolean
 ---@field public flag_replace           boolean
 ---@field public includes               string[]
@@ -82,6 +83,7 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---@field public flag_exclude           stl.c.Observable
 ---@field public flag_foldempty         stl.c.Observable
 ---@field public flag_gitignore         stl.c.Observable
+---@field public flag_limit_matches     stl.c.Observable
 ---@field public flag_regex             stl.c.Observable
 ---@field public flag_replace           stl.c.Observable
 ---@field public flag_case_sensitive    stl.c.Observable
@@ -124,6 +126,7 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---@field public flag_exclude           stl.c.Observable
 ---@field public flag_foldempty         stl.c.Observable
 ---@field public flag_gitignore         stl.c.Observable
+---@field public flag_limit_matches     stl.c.Observable
 ---@field public flag_regex             stl.c.Observable
 ---@field public flag_replace           stl.c.Observable
 ---@field public flag_case_sensitive    stl.c.Observable
@@ -143,6 +146,7 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---@field protected _retriever          stl.c.TreeRetriever
 ---@field protected _file_search        era.m.searcher.FileSearch|nil
 ---@field protected _published_search_inputs era.m.searcher.composer.filetree.ISearchInputs|nil
+---@field protected _published_search_limit_reached boolean
 ---@field protected _search_indicator_hl_index integer|nil
 ---@field protected _search_indicator_started_at integer|nil
 ---@field protected _search_indicator_frame string|nil
@@ -187,6 +191,7 @@ function M.new(props)
   local o_flag_exclude = props.flag_exclude ---@type stl.c.Observable
   local o_flag_foldempty = props.flag_foldempty ---@type stl.c.Observable
   local o_flag_gitignore = props.flag_gitignore ---@type stl.c.Observable
+  local o_flag_limit_matches = props.flag_limit_matches ---@type stl.c.Observable
   local o_flag_regex = props.flag_regex ---@type stl.c.Observable
   local o_flag_replace = props.flag_replace ---@type stl.c.Observable
   local o_flag_case_sensitive = props.flag_case_sensitive ---@type stl.c.Observable
@@ -713,7 +718,7 @@ function M.new(props)
       end
     end,
     replace_all = function()
-      if not self:__require_current_search_projection__("replace_all") then
+      if not self:__require_exhaustive_search_projection__("replace_all") then
         return
       end
 
@@ -1429,6 +1434,14 @@ function M.new(props)
       return uuid ~= nil and treeview:isselected(uuid)
     end,
 
+    result_status = function()
+      local inputs = self._published_search_inputs ---@type era.m.searcher.composer.filetree.ISearchInputs|nil
+      if not self._published_search_limit_reached or inputs == nil then
+        return nil, nil
+      end
+      return string.format("LIMIT %d", inputs.max_matches), "picker_result_limit"
+    end,
+
     ---@type era.m.searcher.result.IDraw
     render_result = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
@@ -1621,6 +1634,7 @@ function M.new(props)
   self.flag_exclude = o_flag_exclude
   self.flag_foldempty = o_flag_foldempty
   self.flag_gitignore = o_flag_gitignore
+  self.flag_limit_matches = o_flag_limit_matches
   self.flag_regex = o_flag_regex
   self.flag_replace = o_flag_replace
   self.flag_case_sensitive = o_flag_case_sensitive
@@ -1640,6 +1654,7 @@ function M.new(props)
   self._retriever = retriever
   self._file_search = file_search
   self._published_search_inputs = nil
+  self._published_search_limit_reached = false
   self._search_indicator_hl_index = nil
   self._search_indicator_started_at = nil
   self._search_indicator_frame = nil
@@ -1663,6 +1678,7 @@ function M.new(props)
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({
     o_search_pattern,
     o_flag_foldempty,
+    o_flag_limit_matches,
     o_flag_regex,
     o_flag_replace,
     o_flag_case_sensitive,
@@ -1678,6 +1694,7 @@ function M.new(props)
     o_excludes,
     o_flag_exclude,
     o_flag_gitignore,
+    o_flag_limit_matches,
     o_flag_regex,
     o_flag_replace,
     o_flag_case_sensitive,
@@ -1780,6 +1797,7 @@ function M:dispose()
   self.flag_exclude = nil
   self.flag_foldempty = nil
   self.flag_gitignore = nil
+  self.flag_limit_matches = nil
   self.flag_regex = nil
   self.flag_replace = nil
   self.flag_case_sensitive = nil
@@ -1797,6 +1815,7 @@ function M:dispose()
   self._retriever = nil
   self._file_search = nil
   self._published_search_inputs = nil
+  self._published_search_limit_reached = nil
   self._search_indicator_hl_index = nil
   self._search_indicator_started_at = nil
   self._search_indicator_frame = nil
@@ -1912,6 +1931,8 @@ function M:reset_filepaths(rootpath, cwd, filepaths)
   self:__health__()
 
   self._published_search_inputs = nil
+  self._published_search_limit_reached = false
+  self:mark_result_flags_dirty()
 
   local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
@@ -2131,6 +2152,7 @@ function M:__snapshot_search_inputs__()
     flag_case_sensitive = self.flag_case_sensitive:snapshot(),
     flag_exclude = self.flag_exclude:snapshot(),
     flag_gitignore = self.flag_gitignore:snapshot(),
+    flag_limit_matches = self.flag_limit_matches:snapshot(),
     flag_regex = self.flag_regex:snapshot(),
     flag_replace = self.flag_replace:snapshot(),
     includes = vim.list_slice(self.includes:snapshot()),
@@ -2175,6 +2197,25 @@ function M:__require_current_search_projection__(subject)
 end
 
 ---@protected
+---@param subject                       string
+---@return boolean
+function M:__require_exhaustive_search_projection__(subject)
+  if not self:__require_current_search_projection__(subject) then
+    return false
+  end
+  if not self._published_search_limit_reached then
+    return true
+  end
+
+  stl.reporter.warn({
+    from = self.fullname,
+    subject = subject,
+    message = "Search results reached the match limit; disable the limit and wait for a complete search before replacing all files.",
+  })
+  return false
+end
+
+---@protected
 ---@return era.m.searcher.file_search.IRequest|nil
 ---@return string|nil
 function M:__snapshot_search_request__()
@@ -2205,7 +2246,7 @@ function M:__snapshot_search_request__()
     flag_regex = inputs.flag_regex,
     flag_replace = inputs.flag_replace,
     max_filesize = inputs.max_filesize,
-    max_matches = inputs.max_matches,
+    max_matches = inputs.flag_limit_matches and inputs.max_matches or nil,
 
     search_pattern = inputs.search_pattern,
     replace_pattern = inputs.replace_pattern,
@@ -2249,12 +2290,14 @@ function M:__clear_search_projection__()
   local rootpath = self.rootpath:snapshot() ---@type string
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
   self._published_search_inputs = nil
+  self._published_search_limit_reached = false
   treeview:reset_filepaths(rootpath, {})
 
   self._last_preview_filepath = nil
   self._uuid_root = yoz.path.is_absolute(rootpath) and stl.c.Filetree.uuid(rootpath) or nil
   self._uuids_file = {}
   self._uuids_order = {}
+  self:mark_result_flags_dirty()
   self:mark_result_dirty()
 end
 
@@ -2397,10 +2440,12 @@ function M:__apply_search_result__(context, result)
     end)
   end
 
+  self._published_search_inputs = context.inputs
+  self._published_search_limit_reached = result.limit_reached
   self._uuids_order = uuids
   treeview:mark_cache_treeview_dirty()
+  self:mark_result_flags_dirty()
   self:mark_result_dirty()
-  self._published_search_inputs = context.inputs
 end
 
 ---@param nodeuuid                      string
@@ -2520,7 +2565,7 @@ function M:__replace_file__(cwd, node, nodestate)
   local search_pattern = self.search_pattern:snapshot() ---@type string
   local replace_pattern = self.replace_pattern:snapshot() ---@type string
 
-  if count == L then
+  if count == L and not self._published_search_limit_reached then
     local filepath = dot.path.resolve(cwd, node.data.filepath) ---@type string
     local succeed, replace_error = yoz.replace.replace_file({
       filepath = filepath,

@@ -209,11 +209,19 @@ fn flatten_line_matches(lines: Vec<LineMatch>) -> Vec<ITextMatch> {
     result
 }
 
-fn parse_max_matches(options: &ISearchInFilesOptions) -> u32 {
+fn parse_max_matches(options: &ISearchInFilesOptions) -> Result<Option<u32>, String> {
     match options.max_matches {
-        Some(value) if value >= 0 => value as u32,
-        _ => u32::MAX,
+        Some(value) if value > 0 => Ok(Some(value as u32)),
+        Some(value) => Err(format!(
+            "Invalid max_matches '{}': expected a positive integer or nil",
+            value
+        )),
+        None => Ok(None),
     }
+}
+
+fn reached_match_limit(matches_count: u32, max_matches: Option<u32>) -> bool {
+    max_matches.is_some_and(|limit| matches_count >= limit)
 }
 
 fn parse_max_filesize(value: &Option<String>) -> Result<Option<u64>, String> {
@@ -396,7 +404,7 @@ struct FileMatchSink<'matcher, 'count, 'cancel> {
     matcher: &'matcher RegexMatcher,
     lines: &'matcher mut Vec<LineMatch>,
     matches_count: &'count mut u32,
-    max_matches: u32,
+    max_matches: Option<u32>,
     cancelled: &'cancel AtomicBool,
 }
 
@@ -408,7 +416,7 @@ impl<'matcher, 'count, 'cancel> Sink for FileMatchSink<'matcher, 'count, 'cancel
             return Err(cancellation_error());
         }
 
-        if *self.matches_count >= self.max_matches {
+        if reached_match_limit(*self.matches_count, self.max_matches) {
             return Ok(false);
         }
 
@@ -425,7 +433,7 @@ impl<'matcher, 'count, 'cancel> Sink for FileMatchSink<'matcher, 'count, 'cancel
                 return false;
             }
 
-            if *self.matches_count >= self.max_matches {
+            if reached_match_limit(*self.matches_count, self.max_matches) {
                 continue_search = false;
                 return false;
             }
@@ -446,7 +454,9 @@ impl<'matcher, 'count, 'cancel> Sink for FileMatchSink<'matcher, 'count, 'cancel
         }
 
         if match_ranges.is_empty() {
-            return Ok(continue_search && *self.matches_count < self.max_matches);
+            return Ok(
+                continue_search && !reached_match_limit(*self.matches_count, self.max_matches)
+            );
         }
 
         self.lines.push(LineMatch {
@@ -456,7 +466,7 @@ impl<'matcher, 'count, 'cancel> Sink for FileMatchSink<'matcher, 'count, 'cancel
             matches: match_ranges,
         });
 
-        Ok(continue_search && *self.matches_count < self.max_matches)
+        Ok(continue_search && !reached_match_limit(*self.matches_count, self.max_matches))
     }
 }
 
@@ -467,6 +477,7 @@ pub fn search_in_files(
         return Ok(ISearchFileResult {
             elapsed_time: 0,
             items: Vec::new(),
+            limit_reached: false,
         });
     }
 
@@ -504,6 +515,7 @@ pub(crate) fn search_in_files_cancellable(
         return SearchInFilesOutcome::Completed(ISearchFileResult {
             elapsed_time: 0,
             items: Vec::new(),
+            limit_reached: false,
         });
     }
 
@@ -552,7 +564,15 @@ pub(crate) fn search_in_files_cancellable(
         return SearchInFilesOutcome::Cancelled;
     }
 
-    let max_matches = parse_max_matches(options);
+    let max_matches = match parse_max_matches(options) {
+        Ok(limit) => limit,
+        Err(error) => {
+            return SearchInFilesOutcome::Failed(ISearchFailedResult {
+                elapsed_time: 0,
+                error,
+            });
+        }
+    };
     let resolved_paths = resolve_search_paths(&base_dir, options);
     let filesize_limit = match parse_max_filesize(&options.max_filesize) {
         Ok(limit) => limit,
@@ -595,7 +615,7 @@ pub(crate) fn search_in_files_cancellable(
             return SearchInFilesOutcome::Cancelled;
         }
 
-        if matches_count >= max_matches {
+        if reached_match_limit(matches_count, max_matches) {
             break;
         }
 
@@ -677,6 +697,7 @@ pub(crate) fn search_in_files_cancellable(
     SearchInFilesOutcome::Completed(ISearchFileResult {
         elapsed_time: start.elapsed().as_millis() as u64,
         items,
+        limit_reached: reached_match_limit(matches_count, max_matches),
     })
 }
 
@@ -938,6 +959,10 @@ mod tests {
         };
 
         let result = search_in_files(&options).expect("expected successful search");
+        assert!(
+            result.limit_reached,
+            "the match budget should stop traversal"
+        );
         assert_eq!(result.items.len(), 1, "only a.txt should be included");
 
         let file_match = result
@@ -961,6 +986,52 @@ mod tests {
             "match should occur on a single line"
         );
         assert_eq!(last_match.lx, 5, "last match should be on line 5");
+    }
+
+    #[test]
+    fn t_search_in_files_without_limit_reports_exhaustive_result() {
+        let cwd = fixtures_dir();
+        let options = ISearchInFilesOptions {
+            cwd: Some(cwd),
+            flag_case_sensitive: true,
+            flag_gitignore: true,
+            flag_regex: false,
+            max_filesize: None,
+            max_matches: None,
+            search_pattern: "Hello".to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: "*.txt".to_string(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        assert!(
+            !result.limit_reached,
+            "unlimited traversal should be exhaustive"
+        );
+    }
+
+    #[test]
+    fn t_search_in_files_rejects_non_positive_match_limit() {
+        let cwd = fixtures_dir();
+        let options = ISearchInFilesOptions {
+            cwd: Some(cwd),
+            flag_case_sensitive: true,
+            flag_gitignore: true,
+            flag_regex: false,
+            max_filesize: None,
+            max_matches: Some(0),
+            search_pattern: "Hello".to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: "*.txt".to_string(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let error =
+            search_in_files(&options).expect_err("zero must not silently produce an empty result");
+        assert!(error.error.contains("positive integer or nil"));
     }
 
     #[test]
@@ -1364,7 +1435,7 @@ mod tests {
             matcher: &matcher,
             lines: &mut lines,
             matches_count: &mut matches_count,
-            max_matches: 100,
+            max_matches: Some(100),
             cancelled: &cancelled,
         };
         let mut searcher = SearcherBuilder::new().multi_line(true).build();

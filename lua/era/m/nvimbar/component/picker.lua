@@ -61,4 +61,26 @@ function M.result_pos(position, result_lnum, result_total)
   return component
 end
 
+---@param position                      stl.t.NvimbarPositionEnum
+---@param snapshot                      era.m.searcher.result.IStatusSnapshot
+---@return era.m.nvimbar.IRawComponent
+function M.result_status(position, snapshot)
+  ---@type era.m.nvimbar.IRawComponent
+  local component = {
+    name = "picker:result_status",
+    atomic = true,
+    condition = function()
+      local text = snapshot()
+      return type(text) == "string" and text ~= ""
+    end,
+    render = function()
+      local text, hln = snapshot()
+      text = string.format(" %s ", text or "")
+      local hl_text = txt(text, string.format("%s_%s", position, hln or "picker_result_pos_text"))
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
 return M

@@ -1,5 +1,6 @@
 local name = "era.fn.search_in_files" ---@type string
 local title = "Search Files" ---@type string
+local MAX_MATCHES = 2147483647 ---@type integer
 local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())
 
 local o_excludes = dot.context.select.search_file.excludes
@@ -7,6 +8,7 @@ local o_flag_exclude = dot.context.select.search_file.flag_exclude
 local o_flag_foldempty = dot.context.select.search_file.flag_foldempty
 local o_flag_fuzzy = dot.context.select.search_file.flag_fuzzy
 local o_flag_gitignore = dot.context.select.search_file.flag_gitignore
+local o_flag_limit_matches = dot.context.search_file.flag_limit_matches
 local o_flag_regex = dot.context.select.search_file.flag_regex
 local o_flag_replace = dot.context.search_file.flag_replace
 local o_flag_case_sensitive = dot.context.select.search_file.flag_case_sensitive
@@ -72,8 +74,13 @@ local function edit_setting(searcher)
           return "Invalid data.max_filesize, expect a string."
         end
 
-        if type(raw_data.max_matches) ~= "number" then
-          return "Invalid data.max_matches, expect a number."
+        if
+          type(raw_data.max_matches) ~= "number"
+          or raw_data.max_matches < 1
+          or raw_data.max_matches > MAX_MATCHES
+          or raw_data.max_matches ~= math.floor(raw_data.max_matches)
+        then
+          return "Invalid data.max_matches, expect a positive 32-bit integer."
         end
 
         if raw_data.includes == nil or not vim.islist(raw_data.includes) then
@@ -167,6 +174,7 @@ searcher = era.m.searcher.FiletreeComposer.new({
   flag_exclude = o_flag_exclude,
   flag_foldempty = o_flag_foldempty,
   flag_gitignore = o_flag_gitignore,
+  flag_limit_matches = o_flag_limit_matches,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_replace = o_flag_replace,
@@ -213,6 +221,17 @@ searcher = era.m.searcher.FiletreeComposer.new({
       snapshot = function()
         local enabled = o_flag_gitignore:snapshot() ---@type boolean
         return stl.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+    {
+      desc = string.format("%s: toggle match limit", title),
+      callback = function()
+        local enabled = o_flag_limit_matches:snapshot() ---@type boolean
+        o_flag_limit_matches:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = o_flag_limit_matches:snapshot() ---@type boolean
+        return stl.icon.symbols.flag_limit, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   },

@@ -29,6 +29,7 @@ local function new_composer(name, max_matches)
   local controls = {
     search_pattern = observable(""),
     replace_pattern = observable(""),
+    flag_limit_matches = observable(true),
     flag_regex = observable(false),
     flag_replace = observable(false),
     max_matches = observable(max_matches),
@@ -43,6 +44,7 @@ local function new_composer(name, max_matches)
     flag_exclude = observable(false),
     flag_foldempty = observable(false),
     flag_gitignore = observable(false),
+    flag_limit_matches = controls.flag_limit_matches,
     flag_regex = controls.flag_regex,
     flag_replace = controls.flag_replace,
     flag_case_sensitive = observable(true),
@@ -286,6 +288,90 @@ t:test("search indicator follows the logical search lifecycle", function()
   composer:schedule_search()
   t.assert_eq(nil, composer._search_indicator_started_at, "empty query must stop the indicator lifecycle")
   t.assert_eq(title, vim.trim(composer.finder.title), "empty query must restore the Finder title")
+
+  composer:dispose()
+  vim.wait(20)
+end)
+
+t:test("match limit status follows the published projection and blocks replace all", function()
+  local composer, controls = new_composer("file-search-limit", 500)
+  vim.wait(20)
+  controls.search_pattern:next("needle")
+
+  t.wait_until(function()
+    return composer._file_search._active == nil and composer:__is_search_projection_current__()
+  end, 5000, "limited search did not publish")
+  t.assert_true(composer._published_search_limit_reached, "500-result projection should be marked limited")
+
+  local replace_file_calls = 0
+  local replace_match_calls = 0
+  local warnings = 0
+  t:patch_table(yoz.replace, "replace_file", function()
+    replace_file_calls = replace_file_calls + 1
+    return false, nil
+  end)
+  t:patch_table(yoz.replace, "replace_file_by_matches", function()
+    replace_match_calls = replace_match_calls + 1
+    return false, nil
+  end)
+  t:patch_table(stl.reporter, "warn", function()
+    warnings = warnings + 1
+  end)
+
+  local replace_all ---@type fun(): nil
+  for _, keymap in ipairs(composer.finder.keymaps) do
+    if keymap.desc == "searcher: replace all files" then
+      replace_all = keymap.callback
+      break
+    end
+  end
+  assert(replace_all ~= nil, "replace-all action should be bound")
+  replace_all()
+  t.assert_eq(0, replace_file_calls, "limited projection must not reach native whole-file replacement")
+  t.assert_eq(0, replace_match_calls, "limited projection must not reach native bulk replacement")
+  t.assert_eq(1, warnings, "limited bulk replacement should explain why it was rejected")
+
+  local leafuuid = composer._uuids_order[1] ---@type string
+  local leafnode = composer._filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode
+  local leafstate = composer._treeview:retrieve(leafuuid) ---@type era.m.searcher.view.filetree.IFileNodeState
+  assert(leafnode ~= nil and leafstate ~= nil, "limited result leaf should exist")
+  composer:__replace_file__(fixture_dir, leafnode, leafstate)
+  t.assert_eq(0, replace_file_calls, "limited node replacement must not replace undiscovered matches")
+  t.assert_eq(1, replace_match_calls, "limited node replacement should use explicit visible match offsets")
+
+  local winnr = composer.result:create_win({
+    border = "single",
+    number = false,
+    winhighlight = "",
+  }, {
+    row = 0,
+    col = 0,
+    width = 80,
+    height = 10,
+  })
+  local winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
+  t.assert_true(winbar:find("LIMIT 500", 1, true) ~= nil, "limited projection should render a persistent status")
+  local rendered_winbar = vim.api.nvim_eval_statusline(winbar, { winid = winnr, maxwidth = 80 }).str ---@type string
+  local limit_start = assert(rendered_winbar:find(" LIMIT 500 ", 1, true), "limited status should be rendered")
+  local limit_prefix = rendered_winbar:sub(1, limit_start - 1) ---@type string
+  local limit_center = vim.api.nvim_strwidth(limit_prefix) + vim.api.nvim_strwidth(" LIMIT 500 ") / 2 ---@type number
+  t.assert_true(math.abs(limit_center - 40) <= 0.5, "limited projection status should be centered")
+
+  controls.flag_limit_matches:next(false)
+  t.assert_true(
+    composer._published_search_limit_reached,
+    "changing future request settings must not rewrite the displayed projection status"
+  )
+  t.assert_false(composer:__is_search_projection_current__(), "the bounded projection should become stale immediately")
+
+  t.wait_until(function()
+    return composer._file_search._active == nil
+      and composer:__is_search_projection_current__()
+      and not composer._published_search_limit_reached
+  end, 10000, "unlimited search did not replace the limited projection")
+  vim.wait(150)
+  winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
+  t.assert_true(winbar:find("LIMIT", 1, true) == nil, "exhaustive projection should clear the limit status")
 
   composer:dispose()
   vim.wait(20)

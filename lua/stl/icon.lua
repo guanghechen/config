@@ -130,6 +130,7 @@ M.symbols = {
   flag_layout_left = "󰯌",   -- view-split-vertical (legacy)
   flag_layout_top = "󰯍",    -- view-split-horizontal (legacy)
   flag_list = "",
+  flag_limit = "󰓅",
   flag_regex = "󰑑",
   flag_replace = "",
   flag_reset = "󰝳",

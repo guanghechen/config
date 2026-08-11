@@ -213,6 +213,7 @@ function M.gen_hlgroup_map(context)
     picker_flag_purple = { fg = c.bg0, bg = c.brightPurple, sp = c.pink, underline = true },
     picker_flag_aqua = { fg = c.bg0, bg = c.brightAqua, sp = c.pink, underline = true },
     picker_flag_orange = { fg = c.bg0, bg = c.brightOrange, sp = c.pink, underline = true },
+    picker_result_limit = { fg = c.bg0, bg = c.brightOrange, bold = true, sp = c.pink, underline = true },
     picker_result_pos_text = { fg = c.fg4, bg = "bg_bar", sp = c.pink, underline = true },
 
     ---! python

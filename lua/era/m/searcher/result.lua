@@ -14,6 +14,9 @@ local Nvimbar = require("era.m.nvimbar").Nvimbar
 ---@alias era.m.searcher.result.IOnDrawed
 ---| fun(bufnr: integer): nil
 
+---@alias era.m.searcher.result.IStatusSnapshot
+---| fun(): string|nil, string|nil
+
 ---@class era.m.searcher.result.IDrawResult
 ---@field public lnum_current           integer|nil
 ---@field public lnum_present           integer|nil
@@ -47,6 +50,7 @@ local Nvimbar = require("era.m.nvimbar").Nvimbar
 ---@field public flags                  era.m.searcher.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
 ---@field public on_drawed              ?era.m.searcher.result.IOnDrawed
+---@field public status                 ?era.m.searcher.result.IStatusSnapshot
 
 ---@class era.m.searcher.Result
 ---@field public uuid                   string
@@ -79,6 +83,7 @@ function M.new(props)
   local isselected = props.isselected or stl.fn.falsy ---@type era.m.searcher.result.IIsSelected
   local keymaps = props.keymaps ---@type stl.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
+  local status = props.status ---@type era.m.searcher.result.IStatusSnapshot|nil
 
   local on_drawed = props.on_drawed or stl.fn.noop ---@type era.m.searcher.result.IOnDrawed
   local augroup_CursorMoved = stl.nvim.fn.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
@@ -156,6 +161,10 @@ function M.new(props)
   })
     :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
     :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
+
+  if status ~= nil then
+    nvimbar:place("center", c.picker.result_status(position, status), 200)
+  end
 
   ---@type stl.c.Scheduler
   local scheduler_lnum_current = stl.c.Scheduler.new({

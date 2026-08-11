@@ -51,6 +51,7 @@ impl IntoLua for IFileMatch {
 pub struct ISearchFileResult {
     pub elapsed_time: u64,
     pub items: Vec<IFileMatch>,
+    pub limit_reached: bool,
 }
 
 impl IntoLua for ISearchFileResult {
@@ -58,6 +59,7 @@ impl IntoLua for ISearchFileResult {
         let table = lua.create_table()?;
         table.set("elapsed_time", self.elapsed_time)?;
         table.set("items", lua.create_sequence_from(self.items)?)?;
+        table.set("limit_reached", self.limit_reached)?;
         Ok(LuaValue::Table(table))
     }
 }

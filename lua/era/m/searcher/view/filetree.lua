@@ -60,7 +60,7 @@ local __module_name__ = "era.m.searcher.view.filetree" ---@type string
 ---@field public flag_regex             boolean
 ---@field public flag_replace           boolean
 ---@field public max_filesize           string
----@field public max_matches            integer
+---@field public max_matches            integer|nil
 ---
 ---@field public excludes               string[]
 ---@field public includes               string[]
@@ -73,6 +73,7 @@ local __module_name__ = "era.m.searcher.view.filetree" ---@type string
 ---@class era.m.searcher.view.filetree.ISearchResult
 ---@field public items                  era.m.searcher.view.filetree.ISearchedItem[]
 ---@field public filematch_map          table<string, era.m.searcher.view.filetree.IResolvedFileMatch>
+---@field public limit_reached          boolean
 
 ---@class era.m.searcher.view.filetree.ISearchedPreviewItem
 ---@field public offset                 integer
@@ -256,7 +257,7 @@ end
 ---@return era.m.searcher.view.filetree.ISearchResult
 function M:normalize_search_result(params, results)
   self:__health__()
-  if type(results) ~= "table" or type(results.items) ~= "table" then
+  if type(results) ~= "table" or type(results.items) ~= "table" or type(results.limit_reached) ~= "boolean" then
     error("invalid native search result")
   end
 
@@ -394,6 +395,7 @@ function M:normalize_search_result(params, results)
   local result = {
     items = items,
     filematch_map = filematch_map,
+    limit_reached = results.limit_reached,
   }
   return result
 end

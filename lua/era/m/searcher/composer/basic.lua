@@ -130,6 +130,7 @@ local __highlights__ = {
 ---
 ---@field public result_number          boolean
 ---@field public result_isselected      ?era.m.searcher.result.IIsSelected
+---@field public result_status          ?era.m.searcher.result.IStatusSnapshot
 ---
 ---@field public render_preview         ?era.m.searcher.preview.IDraw
 ---@field public render_result          era.m.searcher.result.IDraw
@@ -208,6 +209,7 @@ function M.new(props)
 
   local result_number = not not props.result_number ---@type boolean
   local result_isselected = props.result_isselected ---@type era.m.searcher.result.IIsSelected|nil
+  local result_status = props.result_status ---@type era.m.searcher.result.IStatusSnapshot|nil
 
   local render_preview = props.render_preview ---@type era.m.searcher.preview.IDraw|nil
   local render_result = props.render_result ---@type era.m.searcher.result.IDraw
@@ -296,6 +298,7 @@ function M.new(props)
     ),
     flags = flags,
     flags_start_index = flags_start_index,
+    status = result_status,
     ---@type era.m.searcher.result.IOnDrawed
     on_drawed = function(bufnr)
       self:mark_preview_dirty()

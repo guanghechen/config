@@ -53,6 +53,8 @@ export interface IFileMatch {
 export interface ISearchFileResult {
   readonly items: IFileMatch[]
   readonly elapsed_time: number // milliseconds
+  // True when traversal stopped at max_matches before exhaustiveness was established.
+  readonly limit_reached: boolean
 }
 
 export interface ISearchInLinesMatchPoint {
@@ -226,6 +228,38 @@ Controller disposal is synchronous in this order:
 5. clear pending work and callback references.
 
 This happens before the composer's existing scheduled UI teardown.
+
+## Match Limit and Result Completeness
+
+File search has one persisted `flag_limit_matches` switch and one persisted positive-integer
+`max_matches` value. The switch defaults to enabled. An enabled request passes `max_matches` to
+Rust; a disabled request passes `nil`, which means unlimited traversal. Zero, negative,
+fractional, and out-of-range limits are rejected at the Lua settings boundary, while the native
+API accepts only `nil` or a positive 32-bit integer.
+
+`ISearchFileResult.limit_reached` is true only when traversal stops at `max_matches` before the
+engine establishes exhaustiveness. It means that the published projection is not known to be
+complete; it does not claim that a further match exists. The synchronous and background APIs
+return the same flag for the same request.
+
+The result winline owns two separate presentations of this state:
+
+- an interactive limit flag shows whether future requests are bounded;
+- a persistent orange `LIMIT <max_matches>` status marks the currently published projection when
+  `limit_reached` is true.
+
+The status belongs to the published projection rather than the live settings. It remains while a
+newer request is pending or fails, and disappears only when that projection is replaced or
+cleared. Toggling the flag invalidates the current request and schedules a new search. Disabling
+the flag retains the positive limit value for later re-enablement.
+
+Global `replace all` is rejected with a warning when the current projection has
+`limit_reached = true`; the user must disable the limit and publish an exhaustive result first.
+Node-scoped and individual replacement remain explicit operations over visible matches and are
+not blocked by this guard. On a limited projection, node-scoped replacement must use explicit
+match offsets and must not take the whole-file replacement fast path, because the cutoff file may
+contain undiscovered matches. Existing stale-projection checks still run before every destructive
+replacement.
 
 ## Publication and Performance Boundary
 
