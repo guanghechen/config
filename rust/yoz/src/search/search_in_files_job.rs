@@ -70,7 +70,7 @@ impl SearchInFilesJob {
 
         match outcome {
             SearchInFilesOutcome::Completed(result) => {
-                let result = result.clone().into_lua(lua)?;
+                let result = result.into_lua(lua)?;
                 poll_values(lua, "completed", result, LuaValue::Nil)
             }
             SearchInFilesOutcome::Cancelled => {

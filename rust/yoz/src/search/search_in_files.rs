@@ -634,7 +634,6 @@ pub(crate) fn search_in_files_cancellable(
         }
 
         let path = entry.into_path();
-        let display = display_path(&path, &base_dir);
 
         if is_cancelled(cancelled) {
             return SearchInFilesOutcome::Cancelled;
@@ -644,6 +643,7 @@ pub(crate) fn search_in_files_cancellable(
             Ok(file) => file,
             Err(_) if is_cancelled(cancelled) => return SearchInFilesOutcome::Cancelled,
             Err(error) => {
+                let display = display_path(&path, &base_dir);
                 return SearchInFilesOutcome::Failed(ISearchFailedResult {
                     elapsed_time: start.elapsed().as_millis() as u64,
                     error: format!("Failed to search '{}': {}", display, error),
@@ -665,6 +665,7 @@ pub(crate) fn search_in_files_cancellable(
             if is_cancelled(cancelled) {
                 return SearchInFilesOutcome::Cancelled;
             }
+            let display = display_path(&path, &base_dir);
             return SearchInFilesOutcome::Failed(ISearchFailedResult {
                 elapsed_time: start.elapsed().as_millis() as u64,
                 error: format!("Failed to search '{}': {}", display, error),
@@ -685,7 +686,7 @@ pub(crate) fn search_in_files_cancellable(
         }
 
         items.push(IFileMatch {
-            p: display,
+            p: display_path(&path, &base_dir),
             matches,
         });
     }

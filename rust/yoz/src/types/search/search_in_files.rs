@@ -18,6 +18,12 @@ pub struct ITextMatch {
 
 impl IntoLua for ITextMatch {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
+        (&self).into_lua(lua)
+    }
+}
+
+impl IntoLua for &ITextMatch {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("lx", self.lx)?;
         table.set("ly", self.ly)?;
@@ -25,7 +31,7 @@ impl IntoLua for ITextMatch {
         table.set("cy", self.cy)?;
         table.set("ox", self.ox)?;
         table.set("oy", self.oy)?;
-        table.set("s", self.s)?;
+        table.set("s", self.s.as_str())?;
         table.set("sx", self.sx)?;
         table.set("sy", self.sy)?;
         Ok(LuaValue::Table(table))
@@ -40,9 +46,15 @@ pub struct IFileMatch {
 
 impl IntoLua for IFileMatch {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
+        (&self).into_lua(lua)
+    }
+}
+
+impl IntoLua for &IFileMatch {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
-        table.set("p", self.p)?;
-        table.set("matches", lua.create_sequence_from(self.matches)?)?;
+        table.set("p", self.p.as_str())?;
+        table.set("matches", lua.create_sequence_from(self.matches.iter())?)?;
         Ok(LuaValue::Table(table))
     }
 }
@@ -56,9 +68,15 @@ pub struct ISearchFileResult {
 
 impl IntoLua for ISearchFileResult {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
+        (&self).into_lua(lua)
+    }
+}
+
+impl IntoLua for &ISearchFileResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("elapsed_time", self.elapsed_time)?;
-        table.set("items", lua.create_sequence_from(self.items)?)?;
+        table.set("items", lua.create_sequence_from(self.items.iter())?)?;
         table.set("limit_reached", self.limit_reached)?;
         Ok(LuaValue::Table(table))
     }
