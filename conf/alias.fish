@@ -47,8 +47,10 @@ abbr -a cxd 'codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox'
 abbr -a ggg 'gemini --model="gemini-3-pro-preview" --yolo'
 
 ### fzf
-alias fzf="$HOMEBREW_PREFIX/bin/fzf"
-alias fvim='$HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim'
+if set -q HOMEBREW_PREFIX; and test -x "$HOMEBREW_PREFIX/bin/fzf"
+    alias fzf="$HOMEBREW_PREFIX/bin/fzf"
+end
+alias fvim='fzf --print0 | xargs -0 -o nvim'
 
 ### lazygit
 if test -f "$HOME/.config/lazygit/local/theme.yml"
