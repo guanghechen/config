@@ -10,7 +10,11 @@ function ghc-update-agents --description "Update AI coding agents globally"
     if test -z "$_flag_skip_installation"
         for agent in $agents
             printf "\e[96m  Installing %s...\e[0m\n" $agent
-            npm install -g $agent >/dev/null
+            npm install -g $agent >/dev/null; or begin
+                set -l install_status $status
+                printf "\e[91m  Failed to install %s\e[0m\n" $agent >&2
+                return $install_status
+            end
             set -l pkg_ver (npm list -g $agent --depth=0 2>/dev/null | grep $agent | sed 's/.*@//')
             printf "\e[92m  %s installed: v%s\e[0m\n\n" $agent $pkg_ver
         end
