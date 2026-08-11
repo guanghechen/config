@@ -1,7 +1,7 @@
 fish_vi_key_bindings
 
-## Reset fish_user_paths (prevent duplication)
-set -U fish_user_paths
+## Keep configured paths process-local
+set -g fish_user_paths
 
 ## Setup bootstrap envs
 set -gx XDG_CONFIG_HOME "$HOME/.config"
@@ -22,11 +22,11 @@ else
 end
 
 ### preference
-set -x PREFER_NEOVIM_VERSION stable
-set -x PREFER_TMUX_VERSION stable
-set -x ROOT_SOURCECODES "$HOME/sourcecodes"
-set -x ROOT_WORKSPACE "$HOME/ws"
-set -x YOZ_SERVER_PORT 7777
+set -gx PREFER_NEOVIM_VERSION stable
+set -gx PREFER_TMUX_VERSION stable
+set -gx ROOT_SOURCECODES "$HOME/sourcecodes"
+set -gx ROOT_WORKSPACE "$HOME/ws"
+set -gx YOZ_SERVER_PORT 7777
 
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
@@ -45,24 +45,10 @@ else if test -f /home/linuxbrew/.linuxbrew/bin/brew
     set -gx HOMEBREW_SHELLENV_PREFIX "/home/linuxbrew/.linuxbrew"
     set -gx NEOVIM_HOME "/home/linuxbrew/.linuxbrew"
 end
-if not set -q PREFER_NEOVIM_VERSION; or test "$PREFER_NEOVIM_VERSION" != stable
-    if test -f "$HOME/.app/neovim/bin/nvim"
-        set -gx NEOVIM_HOME "$HOME/.app/neovim"
-    else if test -f /opt/me/app/neovim/bin/nvim
-        set -gx NEOVIM_HOME /opt/me/app/neovim
-    end
-    fish_add_path --append "$NEOVIM_HOME/bin/" $PATH
-end
 fish_add_path --append /usr/local/bin/
 fish_add_path --append "$HOMEBREW_PREFIX/bin/"
-fish_add_path --append "$HOME/.local/bin/"
 
 ## setup environments
-set -gx EDITOR "$NEOVIM_HOME/bin/nvim"
-set -gx VISUAL "$NEOVIM_HOME/bin/nvim"
-set -gx MYVIMRC "$HOME/.config/nvim/init.lua"
-set -gx VIM "$NEOVIM_HOME/share/nvim"
-set -gx VIMRUNTIME "$NEOVIM_HOME/share/nvim/runtime"
 set -gx LG_CONFIG_FILE "$XDG_CONFIG_HOME/lazygit/config.yml,$XDG_CONFIG_HOME/lazygit/local/theme.yml"
 set -gx NODE_OPTIONS "--max-old-space-size=8192"
 set -gx PYTHONIOENCODING utf8

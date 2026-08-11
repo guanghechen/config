@@ -4,20 +4,20 @@ if type -q starship
     starship init fish | source
 end
 
+### fnm
+if type -q fnm
+    fnm env --use-on-cd --shell fish | source
+end
+
 ### bun
 if test -d "$HOME/.bun"
     set -gx BUN_INSTALL "$HOME/.bun"
-    fish_add_path --prepend "$BUN_INSTALL/bin"
+    fish_add_path --append "$BUN_INSTALL/bin"
 end
 
 ### cargo
 if test -f "$HOME/.cargo/bin/cargo"
-    fish_add_path --prepend "$HOME/.cargo/bin/"
-end
-
-### fnm
-if type -q fnm
-    fnm env --use-on-cd --shell fish | source
+    fish_add_path --prepend --move "$HOME/.cargo/bin/"
 end
 
 ### flutter
@@ -30,11 +30,11 @@ set -gx FZF_DEFAULT_COMMAND "fd --hidden --follow --no-ignore-vcs --color=never 
 set -gx FZF_DEFAULT_OPTS_FILE "$HOME/.config/fzf/fzf.fzfrc"
 
 ### miniforge3
-if test -f "$HOME/.app/miniforge3/bin/conda"
-    fish_add_path --prepend "$HOME/.app/miniforge3/bin/conda"
+set -l conda_exe "$HOME/.app/miniforge3/bin/conda"
+if test -x "$conda_exe"
     set -gx CONDA_CHANGEPS1 false
     set -gx CONDA_PROMPT_MODIFIER ""
-    eval "$HOME/.app/miniforge3/bin/conda" "shell.fish" hook $argv | source
+    "$conda_exe" shell.fish hook | source
 
     # if status is-interactive
     #   if set -q CONDA_PREFIX
@@ -46,6 +46,26 @@ if test -f "$HOME/.app/miniforge3/bin/conda"
     #     conda activate lemon
     #   end
     # end
+end
+
+### neovim
+if test "$PREFER_NEOVIM_VERSION" != stable
+    if test -x "$HOME/.app/neovim/bin/nvim"
+        set -gx NEOVIM_HOME "$HOME/.app/neovim"
+    else if test -x /opt/me/app/neovim/bin/nvim
+        set -gx NEOVIM_HOME /opt/me/app/neovim
+    end
+
+    if set -q NEOVIM_HOME
+        fish_add_path --prepend --move "$NEOVIM_HOME/bin/"
+    end
+end
+if set -q NEOVIM_HOME; and test -x "$NEOVIM_HOME/bin/nvim"
+    set -gx EDITOR "$NEOVIM_HOME/bin/nvim"
+    set -gx VISUAL "$NEOVIM_HOME/bin/nvim"
+    set -gx MYVIMRC "$HOME/.config/nvim/init.lua"
+    set -gx VIM "$NEOVIM_HOME/share/nvim"
+    set -gx VIMRUNTIME "$NEOVIM_HOME/share/nvim/runtime"
 end
 
 # ollama
@@ -76,3 +96,6 @@ end
 if type -q zoxide
     zoxide init fish | source
 end
+
+### local
+fish_add_path --append "$HOME/.local/bin/"
