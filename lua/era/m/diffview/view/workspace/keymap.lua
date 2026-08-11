@@ -26,6 +26,7 @@ function M.gen_changes(ctx)
     { modes = { "n" }, key = "gs", desc = "diffview(workspace): Stage file", callback = function() action.stage(ctx) end },
     { modes = { "n" }, key = "gu", desc = "diffview(workspace): Unstage file", callback = function() action.unstage(ctx) end },
     { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help(ctx) end },
+    { modes = { "n" }, key = "oc", desc = "diffview(workspace): Copy filepath", callback = function() action.copy_filepath() end },
     { modes = { "n" }, key = "q", desc = "diffview(workspace): Close diffview", callback = function() action.close(ctx) end },
     { modes = { "n" }, key = "t1", desc = "diffview(workspace): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
     { modes = { "n" }, key = "t2", desc = "diffview(workspace): Toggle fold empty dirs", callback = function() action.toggle_foldempty(ctx) end },

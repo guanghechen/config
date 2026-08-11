@@ -313,6 +313,7 @@ fetch_log_page(page, 50)
 | `gs`            | Stage 文件           |
 | `gu`            | Unstage 文件         |
 | `gr`            | Reset 文件           |
+| `oc`            | 复制文件路径         |
 | `t1`            | 切换显示模式         |
 | `t2`            | 切换折叠空目录       |
 | `gf`            | 在之前的 tab 打开    |

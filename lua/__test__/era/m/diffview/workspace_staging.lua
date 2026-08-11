@@ -179,6 +179,39 @@ t:test("changes pane routes stage and unstage to the entry at cursor", function(
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 
+t:test("changes pane copies the filepath for the entry at cursor", function()
+  reset_calls()
+  local selections = {} ---@type era.fn.select_copy_filepath.IParams[]
+  t:patch_table(era, "fn", {
+    select_copy_filepath = function(params)
+      selections[#selections + 1] = params
+    end,
+  })
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "Unstaged", "src/main.lua" })
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  entries_at_line[changes_bufnr] = {
+    [2] = { filepath = "src/main.lua", stage_type = "unstaged", status = "M" },
+  }
+
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  action.copy_filepath()
+
+  t.assert_eq(1, #selections, "selection count")
+  t.assert_eq("/repo/src/main.lua", selections[1].filepath, "absolute filepath")
+  t.assert_eq("cursor", selections[1].relative, "popup anchor")
+  t.assert_eq(1, selections[1].row, "popup row")
+  t.assert_eq(4, selections[1].col, "popup column")
+
+  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  action.copy_filepath()
+  t.assert_eq(1, #selections, "non-file row ignored")
+
+  entries_at_line[changes_bufnr] = nil
+  vim.cmd.enew()
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
 t:test("stage transfers keep the source work queue stable and move focus only when it empties", function()
   reset_calls()
   local staged_winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -809,6 +842,47 @@ t:test("sbs keymaps route whole-file stage and unstage", function()
     end
     t.assert_true(has_stage, "gs installed in sibling buffer")
     t.assert_true(has_unstage, "gu installed in sibling buffer")
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+end)
+
+t:test("changes keymaps route copy filepath", function()
+  local calls = 0
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
+    copy_filepath = function()
+      calls = calls + 1
+    end,
+  })
+
+  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  local has_copy = false
+  for _, mapping in ipairs(keymap.gen_changes({})) do
+    if mapping.key == "oc" then
+      has_copy = true
+      mapping.callback()
+    end
+  end
+
+  t.assert_true(has_copy, "oc routing")
+  t.assert_eq(1, calls, "copy filepath calls")
+
+  local staged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local unstaged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  keymap.setup_changes({
+    layout = {
+      changes = {
+        staged = { stage_type = "staged", bufnr = staged_bufnr },
+        unstaged = { stage_type = "unstaged", bufnr = unstaged_bufnr },
+      },
+    },
+  })
+  for _, bufnr in ipairs({ staged_bufnr, unstaged_bufnr }) do
+    local mappings = vim.api.nvim_buf_get_keymap(bufnr, "n")
+    local installed = false
+    for _, mapping in ipairs(mappings) do
+      installed = installed or mapping.lhs == "oc"
+    end
+    t.assert_true(installed, "oc installed in sibling buffer")
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end)

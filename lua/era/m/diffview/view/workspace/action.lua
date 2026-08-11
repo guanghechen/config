@@ -619,6 +619,22 @@ end
 -- File operations
 ----------------------------------------------------------------------------------------------------
 
+---Copy the file entry at cursor in the changes pane
+---@return nil
+function M.copy_filepath()
+  local entry = get_entry_at_cursor()
+  if not entry then
+    return
+  end
+
+  era.fn.select_copy_filepath({
+    filepath = util.workspace_path(entry.filepath),
+    relative = "cursor",
+    row = 1,
+    col = 4,
+  })
+end
+
 ---Open file in previous/existing tab (keeps diffview open)
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.goto_file(ctx)
