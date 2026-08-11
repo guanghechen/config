@@ -1,5 +1,4 @@
 function fzf-variables --description "Search shell variables and insert name"
-    set -l set_show (set --show | psub)
     set -l var_names (set --names | string match --invert history)
 
     set -l token (commandline --current-token)
@@ -7,9 +6,7 @@ function fzf-variables --description "Search shell variables and insert name"
 
     set -l selected (
         printf '%s\n' $var_names |
-        fzf --multi --prompt="Variables> " --query=$query \
-            --preview-window="wrap" \
-            --preview="string match --regex '^\\\${1}(?::|\\[).*' <$set_show | string replace --regex '^\\\${1}(?:: )?' ''"
+        fzf --multi --prompt="Variables> " --query=$query
     )
 
     if test $status -eq 0
