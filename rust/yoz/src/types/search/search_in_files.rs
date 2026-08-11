@@ -24,7 +24,7 @@ impl IntoLua for ITextMatch {
 
 impl IntoLua for &ITextMatch {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
-        let table = lua.create_table()?;
+        let table = lua.create_table_with_capacity(0, 9)?;
         table.set("lx", self.lx)?;
         table.set("ly", self.ly)?;
         table.set("cx", self.cx)?;
@@ -52,7 +52,7 @@ impl IntoLua for IFileMatch {
 
 impl IntoLua for &IFileMatch {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
-        let table = lua.create_table()?;
+        let table = lua.create_table_with_capacity(0, 2)?;
         table.set("p", self.p.as_str())?;
         table.set("matches", lua.create_sequence_from(self.matches.iter())?)?;
         Ok(LuaValue::Table(table))
@@ -74,7 +74,7 @@ impl IntoLua for ISearchFileResult {
 
 impl IntoLua for &ISearchFileResult {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
-        let table = lua.create_table()?;
+        let table = lua.create_table_with_capacity(0, 3)?;
         table.set("elapsed_time", self.elapsed_time)?;
         table.set("items", lua.create_sequence_from(self.items.iter())?)?;
         table.set("limit_reached", self.limit_reached)?;
