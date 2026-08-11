@@ -106,8 +106,6 @@ local function edit_setting(searcher)
           if search_pattern ~= last_keyword then
             searcher.finder:set_content(search_pattern)
           end
-
-          searcher:schedule_search()
         end)
         return true
       end,
@@ -244,7 +242,6 @@ end)
 
 stl.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
   searcher:mark_result_flags_dirty()
-  searcher:schedule_search()
 end, true)
 
 stl.fn.observe({ o_includes, o_excludes }, function()

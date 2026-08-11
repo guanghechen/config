@@ -2,6 +2,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.composer.filetree" ---@type string
 
+local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
+
 ---@alias era.m.searcher.composer.filetree.IOnAttached
 ---| fun(self: era.m.searcher.FiletreeComposer, rootpath: string): nil
 
@@ -22,6 +24,25 @@ local __module_name__ = "era.m.searcher.composer.filetree" ---@type string
 ---
 ---@alias era.m.searcher.composer.filetree.IOnRefresh
 ---| fun(self: era.m.searcher.FiletreeComposer, force: boolean): nil
+
+---@class era.m.searcher.composer.filetree.ISearchInputs
+---@field public excludes               string[]
+---@field public flag_case_sensitive    boolean
+---@field public flag_exclude           boolean
+---@field public flag_gitignore         boolean
+---@field public flag_regex             boolean
+---@field public flag_replace           boolean
+---@field public includes               string[]
+---@field public max_filesize           string
+---@field public max_matches            integer
+---@field public replace_pattern        string
+---@field public rootpath               string
+---@field public search_pattern         string
+
+---@class era.m.searcher.composer.filetree.ISearchRequestContext
+---@field public inputs                 era.m.searcher.composer.filetree.ISearchInputs
+---@field public rootpath               string
+---@field public params                 era.m.searcher.view.filetree.ISearchParams
 
 ---@class era.m.searcher.composer.filetree.actions
 ---@field public add_node_to_ai         fun(): nil
@@ -120,9 +141,14 @@ local __module_name__ = "era.m.searcher.composer.filetree" ---@type string
 ---@field protected _composer           era.m.searcher.BasicComposer
 ---@field protected _plainfile          era.m.searcher.PlainfileView
 ---@field protected _retriever          stl.c.TreeRetriever
+---@field protected _file_search        era.m.searcher.FileSearch|nil
+---@field protected _published_search_inputs era.m.searcher.composer.filetree.ISearchInputs|nil
+---@field protected _search_indicator_hl_index integer|nil
+---@field protected _search_indicator_started_at integer|nil
+---@field protected _search_indicator_frame string|nil
+---@field protected _search_indicator_title string|nil
+---@field protected _search_schedule_pending boolean
 ---@field protected _scheduler_search   stl.c.Scheduler|nil
----@field protected _is_searching       boolean
----@field protected _search_pending     boolean
 ---@field protected _treeview           era.m.searcher.FiletreeView
 ---
 ---@field protected _last_preview_filepath string|nil
@@ -137,6 +163,13 @@ local __module_name__ = "era.m.searcher.composer.filetree" ---@type string
 ---@field protected _observer_unsubs    stl.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
+
+local SEARCH_INDICATOR_HIGHLIGHTS = {
+  "m_pk_search_spinner_aqua",
+  "m_pk_search_spinner_blue",
+  "m_pk_search_spinner_purple",
+  "m_pk_search_spinner_pink",
+}
 
 ---@param props                         era.m.searcher.IFiletreeComposerProps
 ---@return era.m.searcher.FiletreeComposer
@@ -315,10 +348,41 @@ function M.new(props)
     timeout = 0,
     silent = stl.fn.falsy,
     value = stl.c.Observable.from_value(true),
-    task = function()
-      self:__search__()
-      treeview:mark_cache_treeview_dirty()
-      self:mark_result_dirty()
+    task = function(_, generation)
+      if not self._disposed and self._file_search:is_current_generation(generation) then
+        self:__submit_search__()
+      end
+    end,
+  })
+
+  local file_search = era.m.searcher.FileSearch.new({
+    name = fullname,
+    is_current = function(request)
+      return self:__is_search_request_current__(request)
+    end,
+    start_job = function(request)
+      return treeview:start_search(request.context.params)
+    end,
+    on_completed = function(request, result)
+      self:__stop_search_indicator__()
+      self:__publish_search__(request, result)
+    end,
+    on_running = function()
+      self:__pulse_search_indicator__()
+    end,
+    on_error = function(phase, err, request)
+      if phase ~= "progress" then
+        self:__stop_search_indicator__()
+      end
+      stl.reporter.error({
+        from = fullname,
+        subject = "file_search",
+        message = string.format("Search %s failure", phase),
+        details = {
+          error = err,
+          request = request and request.context or nil,
+        },
+      })
     end,
   })
 
@@ -649,6 +713,10 @@ function M.new(props)
       end
     end,
     replace_all = function()
+      if not self:__require_current_search_projection__("replace_all") then
+        return
+      end
+
       local rootuuid = self._uuid_root ---@type string|nil
       local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type stl.c.IFiletreeNode|nil
       if rootnode == nil then
@@ -677,6 +745,10 @@ function M.new(props)
       end
     end,
     replace_in_node = function()
+      if not self:__require_current_search_projection__("replace_in_node") then
+        return
+      end
+
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid == nil then
         return
@@ -1566,9 +1638,14 @@ function M.new(props)
   self._composer = composer
   self._plainfile = plainfile
   self._retriever = retriever
+  self._file_search = file_search
+  self._published_search_inputs = nil
+  self._search_indicator_hl_index = nil
+  self._search_indicator_started_at = nil
+  self._search_indicator_frame = nil
+  self._search_indicator_title = nil
+  self._search_schedule_pending = false
   self._scheduler_search = scheduler_search
-  self._is_searching = false
-  self._search_pending = false
   self._treeview = treeview
 
   self._last_preview_filepath = nil
@@ -1597,12 +1674,30 @@ function M.new(props)
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe(
-    { o_replace_pattern, o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive },
-    function()
-      scheduler_search:schedule()
-    end
-  )
+  local search_observables = {
+    o_excludes,
+    o_flag_exclude,
+    o_flag_gitignore,
+    o_flag_regex,
+    o_flag_replace,
+    o_flag_case_sensitive,
+    o_includes,
+    o_max_filesize,
+    o_max_matches,
+    o_replace_pattern,
+    o_rootpath,
+    o_search_pattern,
+  } ---@type stl.c.Observable[]
+  for _, observable in ipairs(search_observables) do
+    observer_unsubs[#observer_unsubs + 1] = observable:subscribe(
+      stl.c.Subscriber.new({
+        on_next = function()
+          self:schedule_search()
+        end,
+      }),
+      true
+    )
+  end
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
@@ -1621,16 +1716,21 @@ function M:dispose()
     return
   end
   self._disposed = true
+  self:__stop_search_indicator__(false)
 
   local fullname = self.fullname
   local on_dispose = self._on_disposed ---@type era.m.searcher.composer.filetree.IOnDisposed
   local composer = self._composer ---@type era.m.searcher.BasicComposer
   local plainfile = self._plainfile ---@type era.m.searcher.PlainfileView
   local retriever = self._retriever ---@type stl.c.TreeRetriever
+  local file_search = self._file_search ---@type era.m.searcher.FileSearch
   local scheduler_search = self._scheduler_search ---@type stl.c.Scheduler
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
   local observer_unsubs = self._observer_unsubs ---@type stl.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
+
+  local ok_file_search, error_file_search = pcall(file_search.dispose, file_search)
+  local ok_scheduler_cancel, error_scheduler_cancel = pcall(scheduler_search.cancel, scheduler_search)
 
   local ok_unsubs = true ---@type boolean
   local error_unsubs = {} ---@type table[]
@@ -1652,7 +1752,7 @@ function M:dispose()
     local ok5, error5 = pcall(retriever.dispose, retriever)
     local ok6, error6 = pcall(on_dispose)
 
-    if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
+    if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok_file_search and ok_scheduler_cancel) then
       stl.reporter.error({
         from = fullname,
         subject = "dispose",
@@ -1664,6 +1764,8 @@ function M:dispose()
           error4 = not ok4 and error4 or nil,
           error5 = not ok5 and error5 or nil,
           error6 = not ok6 and error6 or nil,
+          error_file_search = not ok_file_search and error_file_search or nil,
+          error_scheduler_cancel = not ok_scheduler_cancel and error_scheduler_cancel or nil,
           error_observers = not ok_unsubs and error_unsubs or nil,
         },
       })
@@ -1693,6 +1795,13 @@ function M:dispose()
   self._composer = nil
   self._plainfile = nil
   self._retriever = nil
+  self._file_search = nil
+  self._published_search_inputs = nil
+  self._search_indicator_hl_index = nil
+  self._search_indicator_started_at = nil
+  self._search_indicator_frame = nil
+  self._search_indicator_title = nil
+  self._search_schedule_pending = nil
   self._scheduler_search = nil
   self._treeview = nil
 
@@ -1772,7 +1881,7 @@ function M:attach(rootuuid)
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
-  self._scheduler_search:schedule()
+  self:schedule_search()
 
   local next_rootnode = filetree:retrieve(rootuuid)
   if next_rootnode ~= nil then
@@ -1801,6 +1910,8 @@ end
 ---@return era.m.searcher.FiletreeComposer
 function M:reset_filepaths(rootpath, cwd, filepaths)
   self:__health__()
+
+  self._published_search_inputs = nil
 
   local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
@@ -1832,7 +1943,94 @@ end
 ---@return nil
 function M:schedule_search()
   self:__health__()
-  self._scheduler_search:schedule()
+  if self._search_schedule_pending then
+    return
+  end
+
+  self._search_schedule_pending = true
+  vim.schedule(function()
+    if not self._disposed then
+      self._search_schedule_pending = false
+    end
+  end)
+
+  local generation = self._file_search:invalidate() ---@type integer
+
+  local search_pattern = self.search_pattern:snapshot() ---@type string
+  if #search_pattern < 1 then
+    self._scheduler_search:cancel()
+    self:__stop_search_indicator__()
+    self:__clear_search_projection__()
+    return
+  end
+  self:__start_search_indicator__()
+  self._scheduler_search:schedule({ context = generation })
+end
+
+---@protected
+---@return nil
+function M:__start_search_indicator__()
+  if self._search_indicator_started_at ~= nil then
+    return
+  end
+  self._search_indicator_started_at = vim.uv.hrtime()
+end
+
+---@protected
+---@return nil
+function M:__pulse_search_indicator__()
+  local started_at = self._search_indicator_started_at ---@type integer|nil
+  if started_at == nil or vim.uv.hrtime() - started_at < SEARCH_INDICATOR_DELAY_NS then
+    return
+  end
+
+  local previous_frame = self._search_indicator_frame ---@type string|nil
+  local title = self._search_indicator_title ---@type string|nil
+  local current_title = vim.trim(self.finder.title) ---@type string
+  local rendered_title = previous_frame ~= nil and title ~= nil and string.format("%s %s", previous_frame, title) or nil ---@type string|nil
+  if title == nil or current_title ~= rendered_title then
+    title = current_title
+    self._search_indicator_title = title
+  end
+
+  local frame = stl.anim.spinner() ---@type string
+  if frame == previous_frame and current_title == rendered_title then
+    return
+  end
+
+  local hl_index = self._search_indicator_hl_index or 0 ---@type integer
+  if frame ~= previous_frame then
+    hl_index = hl_index % #SEARCH_INDICATOR_HIGHLIGHTS + 1
+    self._search_indicator_hl_index = hl_index
+  end
+
+  self._search_indicator_frame = frame
+  self.finder:set_title(title, {
+    text = frame,
+    hl = SEARCH_INDICATOR_HIGHLIGHTS[hl_index],
+  })
+end
+
+---@protected
+---@param restore_title                 ?boolean
+---@return nil
+function M:__stop_search_indicator__(restore_title)
+  local frame = self._search_indicator_frame ---@type string|nil
+  local title = self._search_indicator_title ---@type string|nil
+  if frame ~= nil and title ~= nil then
+    local current_title = vim.trim(self.finder.title) ---@type string
+    if current_title ~= string.format("%s %s", frame, title) then
+      title = current_title
+    end
+  end
+
+  self._search_indicator_started_at = nil
+  self._search_indicator_frame = nil
+  self._search_indicator_title = nil
+  self._search_indicator_hl_index = nil
+  if frame ~= nil and title ~= nil and restore_title ~= false then
+    pcall(self.finder.set_title, self.finder, title)
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1926,58 +2124,64 @@ function M:__health__()
 end
 
 ---@protected
----@return nil
-function M:__search__()
-  if self._is_searching then
-    self._search_pending = true
-    return
-  end
-
-  self._is_searching = true
-
-  local function finalize_once()
-    if not self._is_searching then
-      return nil
-    end
-
-    if self._search_pending then
-      local scheduler = self._scheduler_search
-      self._search_pending = false
-      if scheduler ~= nil then
-        scheduler:schedule()
-      end
-    else
-      self._search_pending = false
-    end
-
-    self._is_searching = false
-    return nil
-  end
-
-  local ok, err = xpcall(function()
-    self:__search_internal__()
-  end, function(message)
-    finalize_once()
-    return message
-  end)
-
-  if not ok then
-    error(err)
-  end
-
-  finalize_once()
+---@return era.m.searcher.composer.filetree.ISearchInputs
+function M:__snapshot_search_inputs__()
+  return {
+    excludes = vim.list_slice(self.excludes:snapshot()),
+    flag_case_sensitive = self.flag_case_sensitive:snapshot(),
+    flag_exclude = self.flag_exclude:snapshot(),
+    flag_gitignore = self.flag_gitignore:snapshot(),
+    flag_regex = self.flag_regex:snapshot(),
+    flag_replace = self.flag_replace:snapshot(),
+    includes = vim.list_slice(self.includes:snapshot()),
+    max_filesize = self.max_filesize:snapshot(),
+    max_matches = self.max_matches:snapshot(),
+    replace_pattern = self.replace_pattern:snapshot(),
+    rootpath = self.rootpath:snapshot(),
+    search_pattern = self.search_pattern:snapshot(),
+  }
 end
 
-function M:__search_internal__()
-  local rootpath = self.rootpath:snapshot() ---@type string
+---@protected
+---@param request                       era.m.searcher.file_search.IRequest
+---@return boolean
+function M:__is_search_request_current__(request)
+  ---@type era.m.searcher.composer.filetree.ISearchRequestContext
+  local context = request.context
+  return stl.fn.equals_deep(context.inputs, self:__snapshot_search_inputs__())
+end
 
+---@protected
+---@return boolean
+function M:__is_search_projection_current__()
+  local inputs = self._published_search_inputs ---@type era.m.searcher.composer.filetree.ISearchInputs|nil
+  return inputs ~= nil and stl.fn.equals_deep(inputs, self:__snapshot_search_inputs__())
+end
+
+---@protected
+---@param subject                       string
+---@return boolean
+function M:__require_current_search_projection__(subject)
+  if self:__is_search_projection_current__() then
+    return true
+  end
+
+  stl.reporter.warn({
+    from = self.fullname,
+    subject = subject,
+    message = "Search results are stale; wait for the current search before replacing files.",
+  })
+  return false
+end
+
+---@protected
+---@return era.m.searcher.file_search.IRequest|nil
+---@return string|nil
+function M:__snapshot_search_request__()
+  local inputs = self:__snapshot_search_inputs__()
+  local rootpath = inputs.rootpath
   if not yoz.path.is_exist(rootpath) then
-    stl.reporter.error({
-      from = self.fullname,
-      subject = "__search__",
-      message = string.format("Root path does not exist: %s", rootpath),
-    })
-    return
+    return nil, string.format("Root path does not exist: %s", rootpath)
   end
 
   local cwd = rootpath ---@type string
@@ -1988,48 +2192,96 @@ function M:__search_internal__()
     specified_filepath = rootpath ---@type string
   end
 
-  local replace_pattern = self.replace_pattern:snapshot() ---@type string|nil
-  local search_pattern = self.search_pattern:snapshot() ---@type string
+  ---@type era.m.searcher.view.filetree.ISearchParams
+  local params = {
+    cwd = cwd,
+    specified_filepath = specified_filepath,
+    excludes = inputs.excludes,
+    includes = inputs.includes,
+
+    flag_case_sensitive = inputs.flag_case_sensitive,
+    flag_exclude = inputs.flag_exclude,
+    flag_gitignore = inputs.flag_gitignore,
+    flag_regex = inputs.flag_regex,
+    flag_replace = inputs.flag_replace,
+    max_filesize = inputs.max_filesize,
+    max_matches = inputs.max_matches,
+
+    search_pattern = inputs.search_pattern,
+    replace_pattern = inputs.replace_pattern,
+  }
+
+  ---@type era.m.searcher.composer.filetree.ISearchRequestContext
+  local context = {
+    inputs = inputs,
+    rootpath = rootpath,
+    params = params,
+  }
+
+  local treeview = self._treeview ---@type era.m.searcher.FiletreeView
+  return {
+    options = treeview:build_search_options(params),
+    context = context,
+  }, nil
+end
+
+---@protected
+---@return nil
+function M:__submit_search__()
+  local request, err = self:__snapshot_search_request__()
+  if request == nil then
+    self._file_search:fail_current("snapshot", err, nil)
+    return
+  end
+
+  ---@type era.m.searcher.composer.filetree.ISearchRequestContext
+  local context = request.context
+  if #context.params.search_pattern < 1 then
+    self:__clear_search_projection__()
+    return
+  end
+  self._file_search:submit(request)
+end
+
+---@protected
+---@return nil
+function M:__clear_search_projection__()
+  local rootpath = self.rootpath:snapshot() ---@type string
+  local treeview = self._treeview ---@type era.m.searcher.FiletreeView
+  self._published_search_inputs = nil
+  treeview:reset_filepaths(rootpath, {})
+
+  self._last_preview_filepath = nil
+  self._uuid_root = yoz.path.is_absolute(rootpath) and stl.c.Filetree.uuid(rootpath) or nil
+  self._uuids_file = {}
+  self._uuids_order = {}
+  self:mark_result_dirty()
+end
+
+---@protected
+---@param request                       era.m.searcher.file_search.IRequest
+---@param raw_result                    yoz.search.ISearchFileResult
+---@return nil
+function M:__publish_search__(request, raw_result)
+  ---@type era.m.searcher.composer.filetree.ISearchRequestContext
+  local context = request.context
+  local treeview = self._treeview ---@type era.m.searcher.FiletreeView
+  local result = treeview:normalize_search_result(context.params, raw_result) ---@type era.m.searcher.view.filetree.ISearchResult
+  self:__apply_search_result__(context, result)
+end
+
+---@protected
+---@param context                       era.m.searcher.composer.filetree.ISearchRequestContext
+---@param result                        era.m.searcher.view.filetree.ISearchResult
+---@return nil
+function M:__apply_search_result__(context, result)
+  local rootpath = context.rootpath ---@type string
+  local params = context.params ---@type era.m.searcher.view.filetree.ISearchParams
+  local cwd = params.cwd ---@type string
 
   local filetree = self._filetree ---@type stl.c.Filetree
   local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
-
-  if #search_pattern < 1 then
-    local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
-    self._uuids_order = uuids_order
-    if frecency ~= nil then
-      table.sort(uuids_order, function(a, b)
-        local sa = frecency:score(a) or 0 ---@type integer
-        local sb = frecency:score(b) or 0 ---@type integer
-        return sa > sb
-      end)
-    end
-    return
-  end
-
-  ---@type era.m.searcher.view.filetree.ISearchResult|nil
-  local result = treeview:search({
-    cwd = cwd,
-    specified_filepath = specified_filepath,
-    excludes = self.excludes:snapshot(),
-    includes = self.includes:snapshot(),
-
-    flag_case_sensitive = self.flag_case_sensitive:snapshot(),
-    flag_exclude = self.flag_exclude:snapshot(),
-    flag_gitignore = self.flag_gitignore:snapshot(),
-    flag_regex = self.flag_regex:snapshot(),
-    flag_replace = self.flag_replace:snapshot(),
-    max_filesize = self.max_filesize:snapshot(),
-    max_matches = self.max_matches:snapshot(),
-
-    search_pattern = search_pattern,
-    replace_pattern = replace_pattern,
-  })
-
-  if result == nil then
-    return
-  end
 
   local items = result.items ---@type era.m.searcher.view.filetree.ISearchedItem[]
   local filematch_map = result.filematch_map ---@type table<string, era.m.searcher.view.filetree.IResolvedFileMatch>
@@ -2146,6 +2398,9 @@ function M:__search_internal__()
   end
 
   self._uuids_order = uuids
+  treeview:mark_cache_treeview_dirty()
+  self:mark_result_dirty()
+  self._published_search_inputs = context.inputs
 end
 
 ---@param nodeuuid                      string

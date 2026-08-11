@@ -6,6 +6,10 @@ local __module_name__ = "era.m.searcher.finder" ---@type string
 ---@field public winhighlight           string
 ---@field public zindex                 ?integer
 
+---@class era.m.searcher.finder.ITitleAccent
+---@field public text                   string
+---@field public hl                     string
+
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.m.searcher.IFinderProps
@@ -27,6 +31,7 @@ local __module_name__ = "era.m.searcher.finder" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
+---@field protected _title_render       string|table[]
 ---@field protected _winnr              integer|nil
 local M = {}
 M.__index = M
@@ -62,6 +67,7 @@ function M.new(props)
 
   self._disposed = false
   self._bufnr = nil
+  self._title_render = title
   self._winnr = nil
   return self
 end
@@ -83,6 +89,7 @@ function M:dispose()
   self.linecount = nil
   self.title = nil
   self._bufnr = nil
+  self._title_render = nil
   self._winnr = nil
 
   local ok1, error1 = pcall(linecount.dispose, linecount)
@@ -202,7 +209,7 @@ function M:create_win(winopts, dimension)
     style = "minimal",
     focusable = true,
     noautocmd = true,
-    title = self.title,
+    title = self._title_render,
     title_pos = "center",
     zindex = winopts.zindex,
   }
@@ -312,16 +319,34 @@ function M:set_content(content)
 end
 
 ---@param title                         string
+---@param accent                        era.m.searcher.finder.ITitleAccent|nil
 ---@return era.m.searcher.Finder
-function M:set_title(title)
+function M:set_title(title, accent)
   self:__health__()
-  if self.title ~= title then
-    self.title = string.format(" %s ", vim.trim(title))
+  title = vim.trim(title)
+
+  local plain_title ---@type string
+  local title_render ---@type string|table[]
+  if accent ~= nil then
+    local accent_text = vim.trim(accent.text) ---@type string
+    plain_title = string.format(" %s %s ", accent_text, title)
+    title_render = {
+      { string.format(" %s", accent_text), accent.hl },
+      { string.format(" %s ", title) },
+    }
+  else
+    plain_title = string.format(" %s ", title)
+    title_render = plain_title
+  end
+
+  if self.title ~= plain_title or not vim.deep_equal(self._title_render, title_render) then
+    self.title = plain_title
+    self._title_render = title_render
 
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-      wincfg.title = self.title
+      wincfg.title = title_render
       vim.api.nvim_win_set_config(winnr, wincfg)
     end
   end

@@ -40,6 +40,20 @@ local M = {}
 ---@field public elapsed_time           integer
 ---@field public error                  string
 
+---@alias yoz.search.SearchInFilesJobStatus "running"|"completed"|"cancelled"|"failed"
+
+---@class yoz.search.SearchInFilesJob
+local SearchInFilesJob = {}
+
+---@return yoz.search.SearchInFilesJobStatus
+---@return yoz.search.ISearchFileResult|nil
+---@return yoz.search.ISearchFailedResult|nil
+function SearchInFilesJob:poll() end
+
+function SearchInFilesJob:cancel() end
+
+function SearchInFilesJob:dispose() end
+
 ---@class yoz.search.ISearchTextResult
 ---@field public elapsed_time           integer
 ---@field public matches                yoz.search.ITextMatch[]
@@ -49,6 +63,10 @@ local M = {}
 ---@return yoz.search.ISearchFileResult|nil
 ---@return yoz.search.ISearchFailedResult|nil
 function M.search_in_files(options) end
+
+---@param options                       yoz.search.ISearchInFilesOptions
+---@return yoz.search.SearchInFilesJob
+function M.start_search_in_files(options) end
 
 ---@alias yoz.search.ISearchInLinesLiteralMatchPoint yoz.search.ISearchInLinesMatchPoint
 

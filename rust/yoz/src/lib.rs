@@ -583,6 +583,14 @@ fn find_module(lua: &Lua) -> LuaResult<LuaTable> {
 fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         (
+            "start_search_in_files",
+            f(lua, |lua, options: LuaValue| {
+                let options = search::ISearchInFilesOptions::from_lua(options, lua)?;
+                let job = search::start_search_in_files(options).map_err(LuaError::external)?;
+                lua.create_userdata(job)
+            })?,
+        ),
+        (
             "search_in_files",
             f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
                 let options = search::ISearchInFilesOptions::from_lua(options, lua)?;

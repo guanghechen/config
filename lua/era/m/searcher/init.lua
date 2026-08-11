@@ -1,6 +1,7 @@
 ---@class era.m.searcher.__mods
 local __mods = {
   BufferSearcher = "era.m.searcher.buffer",
+  FileSearch = "era.m.searcher.file_search",
 
   Finder = "era.m.searcher.finder",
   Preview = "era.m.searcher.preview",
@@ -17,6 +18,7 @@ local __mods = {
 ---@field public __mods                 era.m.searcher.__mods
 ---
 ---@field public BufferSearcher         era.m.searcher.buffer.Searcher
+---@field public FileSearch             era.m.searcher.FileSearch
 ---
 ---@field public Finder                 era.m.searcher.Finder
 ---@field public Preview                era.m.searcher.Preview

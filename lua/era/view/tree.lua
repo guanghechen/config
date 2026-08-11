@@ -128,6 +128,32 @@ local __module_name__ = "era.view.treeview" ---@type string
 
 local NSNR_DEFAULT = dot.var.nsnr.view_tree ---@type integer
 
+---@param bufnr                         integer
+---@param nsnr                          integer
+---@param hlname                        string
+---@param row                           integer
+---@param coll                          integer
+---@param colr                          integer
+---@param line_length                   integer
+---@return nil
+local function set_inline_highlight(bufnr, nsnr, hlname, row, coll, colr, line_length)
+  coll = math.max(0, math.min(coll, line_length))
+  colr = colr < 0 and line_length or math.max(0, math.min(colr, line_length))
+  if coll >= colr then
+    return
+  end
+
+  -- vim.hl.range resolves Vim positions and regions for every call. These ranges are already
+  -- validated single-line byte offsets, so a direct extmark avoids that cost on large results.
+  vim.api.nvim_buf_set_extmark(bufnr, nsnr, row, coll, {
+    end_row = row,
+    end_col = colr,
+    hl_group = hlname,
+    priority = vim.hl.priorities.user,
+    strict = false,
+  })
+end
+
 ---@param childline                     integer[]
 ---@param location_lnums                integer[]
 ---@return integer|nil
@@ -653,7 +679,8 @@ function M:render_listview(params)
     local highlights = highlights_list[index] ---@type stl.t.IHighlightInline[]|nil
     local indent = indents[index] ---@type string
     local offset = #indent
-    vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
+    local line_length = #lines[index] ---@type integer
+    set_inline_highlight(bufnr, nsnr, self._indent_hln, row, #INDENT_COMMON, offset, line_length)
 
     if highlights ~= nil then
       local H = #highlights ---@type integer
@@ -662,7 +689,7 @@ function M:render_listview(params)
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
         local coll = highlight.coll ---@type integer
-        vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, colr < 0 and -1 or offset + colr })
+        set_inline_highlight(bufnr, nsnr, hlname, row, offset + coll, colr < 0 and -1 or offset + colr, line_length)
       end
     end
   end
@@ -1159,7 +1186,8 @@ function M:render_treeview(params)
     local highlights = highlights_list[index] ---@type stl.t.IHighlightInline[]|nil
     local indent = indents[index] ---@type string
     local offset = #indent
-    vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
+    local line_length = #lines[index] ---@type integer
+    set_inline_highlight(bufnr, nsnr, self._indent_hln, row, #INDENT_COMMON, offset, line_length)
 
     if highlights ~= nil then
       local H = #highlights ---@type integer
@@ -1168,7 +1196,7 @@ function M:render_treeview(params)
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
         local coll = highlight.coll ---@type integer
-        vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, colr < 0 and -1 or offset + colr })
+        set_inline_highlight(bufnr, nsnr, hlname, row, offset + coll, colr < 0 and -1 or offset + colr, line_length)
       end
     end
   end

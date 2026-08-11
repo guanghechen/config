@@ -19,10 +19,66 @@ use ignore::WalkBuilder;
 use ignore::overrides::Override;
 use ignore::overrides::OverrideBuilder;
 use regex::escape;
+use std::fmt;
+use std::fs::File;
 use std::io;
+use std::io::Read;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::time::Instant;
+
+#[derive(Clone, Debug)]
+pub(crate) enum SearchInFilesOutcome {
+    Completed(ISearchFileResult),
+    Cancelled,
+    Failed(ISearchFailedResult),
+}
+
+#[derive(Debug)]
+struct SearchCancelled;
+
+impl fmt::Display for SearchCancelled {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("search cancelled")
+    }
+}
+
+impl std::error::Error for SearchCancelled {}
+
+fn cancellation_error() -> io::Error {
+    io::Error::other(SearchCancelled)
+}
+
+fn is_cancelled(cancelled: &AtomicBool) -> bool {
+    cancelled.load(Ordering::Acquire)
+}
+
+struct CancellableReader<'cancel, R> {
+    inner: R,
+    cancelled: &'cancel AtomicBool,
+}
+
+impl<'cancel, R> CancellableReader<'cancel, R> {
+    fn new(inner: R, cancelled: &'cancel AtomicBool) -> Self {
+        Self { inner, cancelled }
+    }
+}
+
+impl<R: Read> Read for CancellableReader<'_, R> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        if is_cancelled(self.cancelled) {
+            return Err(cancellation_error());
+        }
+
+        let result = self.inner.read(buffer);
+        if is_cancelled(self.cancelled) {
+            return Err(cancellation_error());
+        }
+        result
+    }
+}
 
 #[derive(Clone)]
 struct MatchRange {
@@ -211,13 +267,20 @@ fn parse_max_filesize(value: &Option<String>) -> Result<Option<u64>, String> {
     Ok(Some(value.saturating_mul(multiplier)))
 }
 
-fn resolve_base_dir(options: &ISearchInFilesOptions) -> Result<PathBuf, String> {
+pub(crate) fn resolve_base_dir(options: &ISearchInFilesOptions) -> Result<PathBuf, String> {
     if let Some(cwd) = options.cwd.as_ref().filter(|cwd| !cwd.is_empty()) {
-        Ok(PathBuf::from(cwd))
-    } else {
-        std::env::current_dir()
-            .map_err(|error| format!("Failed to determine current directory: {}", error))
+        let cwd = PathBuf::from(cwd);
+        if cwd.is_absolute() {
+            return Ok(cwd);
+        }
+
+        return std::env::current_dir()
+            .map(|current_dir| current_dir.join(cwd))
+            .map_err(|error| format!("Failed to determine current directory: {}", error));
     }
+
+    std::env::current_dir()
+        .map_err(|error| format!("Failed to determine current directory: {}", error))
 }
 
 fn resolve_search_paths(base: &Path, options: &ISearchInFilesOptions) -> Vec<PathBuf> {
@@ -329,17 +392,22 @@ fn build_matcher(options: &ISearchInFilesOptions) -> Result<RegexMatcher, String
     }
 }
 
-struct FileMatchSink<'matcher, 'count> {
+struct FileMatchSink<'matcher, 'count, 'cancel> {
     matcher: &'matcher RegexMatcher,
     lines: &'matcher mut Vec<LineMatch>,
     matches_count: &'count mut u32,
     max_matches: u32,
+    cancelled: &'cancel AtomicBool,
 }
 
-impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
+impl<'matcher, 'count, 'cancel> Sink for FileMatchSink<'matcher, 'count, 'cancel> {
     type Error = io::Error;
 
     fn matched(&mut self, _searcher: &Searcher, mat: &SinkMatch<'_>) -> Result<bool, Self::Error> {
+        if is_cancelled(self.cancelled) {
+            return Err(cancellation_error());
+        }
+
         if *self.matches_count >= self.max_matches {
             return Ok(false);
         }
@@ -352,6 +420,11 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
         let mut continue_search = true;
 
         let result = self.matcher.find_iter(bytes, |range| {
+            if is_cancelled(self.cancelled) {
+                continue_search = false;
+                return false;
+            }
+
             if *self.matches_count >= self.max_matches {
                 continue_search = false;
                 return false;
@@ -367,6 +440,9 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
 
         if let Err(error) = result {
             return Err(io::Error::other(error));
+        }
+        if is_cancelled(self.cancelled) {
+            return Err(cancellation_error());
         }
 
         if match_ranges.is_empty() {
@@ -394,8 +470,6 @@ pub fn search_in_files(
         });
     }
 
-    let start = Instant::now();
-
     let base_dir = match resolve_base_dir(options) {
         Ok(path) => path,
         Err(error) => {
@@ -406,8 +480,41 @@ pub fn search_in_files(
         }
     };
 
+    let cancelled = AtomicBool::new(false);
+    match search_in_files_cancellable(options, base_dir, &cancelled) {
+        SearchInFilesOutcome::Completed(result) => Ok(result),
+        SearchInFilesOutcome::Failed(error) => Err(error),
+        SearchInFilesOutcome::Cancelled => Err(ISearchFailedResult {
+            elapsed_time: 0,
+            error: "Synchronous search was unexpectedly cancelled".to_string(),
+        }),
+    }
+}
+
+pub(crate) fn search_in_files_cancellable(
+    options: &ISearchInFilesOptions,
+    base_dir: PathBuf,
+    cancelled: &AtomicBool,
+) -> SearchInFilesOutcome {
+    if is_cancelled(cancelled) {
+        return SearchInFilesOutcome::Cancelled;
+    }
+
+    if options.search_pattern.is_empty() {
+        return SearchInFilesOutcome::Completed(ISearchFileResult {
+            elapsed_time: 0,
+            items: Vec::new(),
+        });
+    }
+
+    let start = Instant::now();
+
     let include_patterns = string::parse_comma_list(&options.include_patterns);
     let exclude_patterns = string::parse_comma_list(&options.exclude_patterns);
+
+    if is_cancelled(cancelled) {
+        return SearchInFilesOutcome::Cancelled;
+    }
 
     let overrides = match build_overrides(
         &base_dir,
@@ -417,7 +524,7 @@ pub fn search_in_files(
     ) {
         Ok(overrides) => overrides,
         Err(error) => {
-            return Err(ISearchFailedResult {
+            return SearchInFilesOutcome::Failed(ISearchFailedResult {
                 elapsed_time: 0,
                 error,
             });
@@ -427,7 +534,7 @@ pub fn search_in_files(
     let matcher = match build_matcher(options) {
         Ok(matcher) => matcher,
         Err(error) => {
-            return Err(ISearchFailedResult {
+            return SearchInFilesOutcome::Failed(ISearchFailedResult {
                 elapsed_time: 0,
                 error,
             });
@@ -441,12 +548,16 @@ pub fn search_in_files(
         .binary_detection(BinaryDetection::quit(b'\x00'));
     let mut searcher = searcher_builder.build();
 
+    if is_cancelled(cancelled) {
+        return SearchInFilesOutcome::Cancelled;
+    }
+
     let max_matches = parse_max_matches(options);
     let resolved_paths = resolve_search_paths(&base_dir, options);
     let filesize_limit = match parse_max_filesize(&options.max_filesize) {
         Ok(limit) => limit,
         Err(error) => {
-            return Err(ISearchFailedResult {
+            return SearchInFilesOutcome::Failed(ISearchFailedResult {
                 elapsed_time: 0,
                 error,
             });
@@ -480,12 +591,17 @@ pub fn search_in_files(
     let mut items: Vec<IFileMatch> = Vec::new();
 
     for entry in walk_builder.build() {
+        if is_cancelled(cancelled) {
+            return SearchInFilesOutcome::Cancelled;
+        }
+
         if matches_count >= max_matches {
             break;
         }
 
         let entry = match entry {
             Ok(entry) => entry,
+            Err(_) if is_cancelled(cancelled) => return SearchInFilesOutcome::Cancelled,
             Err(_) => continue,
         };
 
@@ -500,19 +616,43 @@ pub fn search_in_files(
         let path = entry.into_path();
         let display = display_path(&path, &base_dir);
 
+        if is_cancelled(cancelled) {
+            return SearchInFilesOutcome::Cancelled;
+        }
+
+        let file = match File::open(&path) {
+            Ok(file) => file,
+            Err(_) if is_cancelled(cancelled) => return SearchInFilesOutcome::Cancelled,
+            Err(error) => {
+                return SearchInFilesOutcome::Failed(ISearchFailedResult {
+                    elapsed_time: start.elapsed().as_millis() as u64,
+                    error: format!("Failed to search '{}': {}", display, error),
+                });
+            }
+        };
+
         let mut lines: Vec<LineMatch> = Vec::new();
         let mut sink = FileMatchSink {
             matcher: &matcher,
             lines: &mut lines,
             matches_count: &mut matches_count,
             max_matches,
+            cancelled,
         };
 
-        if let Err(error) = searcher.search_path(&matcher, &path, &mut sink) {
-            return Err(ISearchFailedResult {
+        let reader = CancellableReader::new(file, cancelled);
+        if let Err(error) = searcher.search_reader(&matcher, reader, &mut sink) {
+            if is_cancelled(cancelled) {
+                return SearchInFilesOutcome::Cancelled;
+            }
+            return SearchInFilesOutcome::Failed(ISearchFailedResult {
                 elapsed_time: start.elapsed().as_millis() as u64,
                 error: format!("Failed to search '{}': {}", display, error),
             });
+        }
+
+        if is_cancelled(cancelled) {
+            return SearchInFilesOutcome::Cancelled;
         }
 
         if lines.is_empty() {
@@ -530,7 +670,11 @@ pub fn search_in_files(
         });
     }
 
-    Ok(ISearchFileResult {
+    if is_cancelled(cancelled) {
+        return SearchInFilesOutcome::Cancelled;
+    }
+
+    SearchInFilesOutcome::Completed(ISearchFileResult {
         elapsed_time: start.elapsed().as_millis() as u64,
         items,
     })
@@ -1115,6 +1259,126 @@ mod tests {
         assert_eq!(
             result.elapsed_time, 0,
             "empty search pattern should report zero elapsed time"
+        );
+    }
+
+    #[test]
+    fn t_search_in_files_pre_cancel_dominates_setup() {
+        let workspace = setup_pattern_workspace();
+        let options = ISearchInFilesOptions {
+            cwd: Some(workspace.path().to_string_lossy().to_string()),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: true,
+            max_filesize: Some("invalid".to_string()),
+            max_matches: None,
+            search_pattern: "[".to_string(),
+            search_paths: String::new(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+        let cancelled = AtomicBool::new(true);
+
+        let outcome =
+            search_in_files_cancellable(&options, workspace.path().to_path_buf(), &cancelled);
+        assert!(matches!(outcome, SearchInFilesOutcome::Cancelled));
+    }
+
+    #[test]
+    fn t_resolve_base_dir_captures_relative_cwd() {
+        let relative_cwd = PathBuf::from("relative-search-root");
+        let options = ISearchInFilesOptions {
+            cwd: Some(relative_cwd.to_string_lossy().to_string()),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: false,
+            max_filesize: None,
+            max_matches: None,
+            search_pattern: "needle".to_string(),
+            search_paths: String::new(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let current_dir = std::env::current_dir().expect("current directory should be available");
+        let resolved = resolve_base_dir(&options).expect("relative cwd should resolve");
+
+        assert!(resolved.is_absolute());
+        assert_eq!(current_dir.join(relative_cwd), resolved);
+    }
+
+    #[test]
+    fn t_cancellable_reader_returns_typed_non_interrupted_error() {
+        struct CancelAfterRead<'cancel> {
+            cancelled: &'cancel AtomicBool,
+        }
+
+        impl Read for CancelAfterRead<'_> {
+            fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+                buffer[0] = b'x';
+                self.cancelled.store(true, Ordering::Release);
+                Ok(1)
+            }
+        }
+
+        let cancelled = AtomicBool::new(false);
+        let inner = CancelAfterRead {
+            cancelled: &cancelled,
+        };
+        let mut reader = CancellableReader::new(inner, &cancelled);
+        let error = reader
+            .read(&mut [0u8; 1])
+            .expect_err("cancellation after a read must be observed");
+
+        assert_ne!(error.kind(), io::ErrorKind::Interrupted);
+        assert!(
+            error
+                .get_ref()
+                .is_some_and(|source| source.downcast_ref::<SearchCancelled>().is_some()),
+            "expected the typed cancellation sentinel"
+        );
+    }
+
+    #[test]
+    fn t_file_match_sink_reports_cancellation() {
+        let options = ISearchInFilesOptions {
+            cwd: None,
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: false,
+            max_filesize: None,
+            max_matches: None,
+            search_pattern: "needle".to_string(),
+            search_paths: String::new(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+        let matcher = build_matcher(&options).expect("matcher should build");
+        let cancelled = AtomicBool::new(true);
+        let mut lines = Vec::new();
+        let mut matches_count = 0;
+        let mut sink = FileMatchSink {
+            matcher: &matcher,
+            lines: &mut lines,
+            matches_count: &mut matches_count,
+            max_matches: 100,
+            cancelled: &cancelled,
+        };
+        let mut searcher = SearcherBuilder::new().multi_line(true).build();
+
+        let error = searcher
+            .search_reader(&matcher, io::Cursor::new(b"needle\n"), &mut sink)
+            .expect_err("cancelled sink must stop the search");
+
+        assert_ne!(error.kind(), io::ErrorKind::Interrupted);
+        assert!(
+            error
+                .get_ref()
+                .is_some_and(|source| source.downcast_ref::<SearchCancelled>().is_some()),
+            "expected the typed cancellation sentinel"
         );
     }
 }

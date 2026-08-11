@@ -3,7 +3,7 @@ use mlua::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ITextMatch {
     pub lx: u32,
     pub ly: u32,
@@ -32,7 +32,7 @@ impl IntoLua for ITextMatch {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct IFileMatch {
     pub p: String,
     pub matches: Vec<ITextMatch>,
@@ -47,7 +47,7 @@ impl IntoLua for IFileMatch {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ISearchFileResult {
     pub elapsed_time: u64,
     pub items: Vec<IFileMatch>,
@@ -79,7 +79,7 @@ impl IntoLua for ISearchTextResult {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ISearchFailedResult {
     pub elapsed_time: u64,
     pub error: String,

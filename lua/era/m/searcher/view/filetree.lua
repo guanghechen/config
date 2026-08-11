@@ -204,65 +204,69 @@ function M:collect_file_uuids(root)
 end
 
 ---@param params                        era.m.searcher.view.filetree.ISearchParams
+---@return yoz.search.ISearchInFilesOptions
+function M:build_search_options(params)
+  local excludes = params.flag_exclude and params.excludes or {} ---@type string[]
+  return {
+    cwd = params.cwd,
+    flag_case_sensitive = params.flag_case_sensitive,
+    flag_gitignore = params.flag_gitignore,
+    flag_regex = params.flag_regex,
+    max_filesize = params.max_filesize,
+    max_matches = params.max_matches,
+    search_pattern = params.search_pattern,
+    search_paths = "",
+    include_patterns = table.concat(params.includes, ","),
+    exclude_patterns = table.concat(excludes, ","),
+    specified_filepath = params.specified_filepath,
+  }
+end
+
+---@param params                        era.m.searcher.view.filetree.ISearchParams
+---@return yoz.search.SearchInFilesJob
+function M:start_search(params)
+  self:__health__()
+  return yoz.search.start_search_in_files(self:build_search_options(params))
+end
+
+---@param params                        era.m.searcher.view.filetree.ISearchParams
 ---@return era.m.searcher.view.filetree.ISearchResult|nil
 function M:search(params)
   self:__health__()
 
-  local flag_case_sensitive = params.flag_case_sensitive ---@type boolean
-  local flag_exclude = params.flag_exclude ---@type boolean
-  local flag_gitignore = params.flag_gitignore ---@type boolean
-  local flag_regex = params.flag_regex ---@type boolean
-  local flag_replace = params.flag_replace ---@type boolean
-  local max_filesize = params.max_filesize ---@type string
-  local max_matches = params.max_matches ---@type integer
-
-  local includes = params.includes ---@type string[]
-  local excludes = flag_exclude and params.excludes or {} ---@type string[]
-
-  local cwd = params.cwd ---@type string
-  local specified_filepath = params.specified_filepath ---@type string|nil
-  local search_pattern = params.search_pattern ---@type string
-  local replace_pattern = params.replace_pattern ---@type string|nil
-
   ---@type yoz.search.ISearchFileResult|nil, yoz.search.ISearchFailedResult|nil
-  local results, err = yoz.search.search_in_files({
-    cwd = cwd,
-    flag_case_sensitive = flag_case_sensitive,
-    flag_gitignore = flag_gitignore,
-    flag_regex = flag_regex,
-    max_filesize = max_filesize,
-    max_matches = max_matches,
-    search_pattern = search_pattern,
-    search_paths = "",
-    include_patterns = table.concat(includes, ","),
-    exclude_patterns = table.concat(excludes, ","),
-    specified_filepath = specified_filepath,
-  })
-
+  local results, err = yoz.search.search_in_files(self:build_search_options(params))
   if results == nil or results.items == nil then
     stl.reporter.error({
       from = self.fullname,
       subject = "search",
       message = "Failed to perform the search action.",
       details = {
-        flag_case_sensitive = flag_case_sensitive,
-        flag_exclude = flag_exclude,
-        flag_gitignore = flag_gitignore,
-        flag_regex = flag_regex,
-        flag_replace = flag_replace,
-        max_filesize = max_filesize,
-        max_matches = max_matches,
-        includes = includes,
-        excludes = excludes,
-        cwd = cwd,
-        specified_filepath = specified_filepath,
-        search_pattern = search_pattern,
-        replacement = replace_pattern,
+        params = params,
         error = err and err.error or err,
       },
     })
     return
   end
+  return self:normalize_search_result(params, results)
+end
+
+---@param params                        era.m.searcher.view.filetree.ISearchParams
+---@param results                       yoz.search.ISearchFileResult
+---@return era.m.searcher.view.filetree.ISearchResult
+function M:normalize_search_result(params, results)
+  self:__health__()
+  if type(results) ~= "table" or type(results.items) ~= "table" then
+    error("invalid native search result")
+  end
+
+  local flag_case_sensitive = params.flag_case_sensitive ---@type boolean
+  local flag_regex = params.flag_regex ---@type boolean
+  local flag_replace = params.flag_replace ---@type boolean
+
+  local cwd = params.cwd ---@type string
+  local search_pattern = params.search_pattern ---@type string
+  local replace_pattern = params.replace_pattern ---@type string|nil
 
   local has_replace_preview = flag_replace and replace_pattern ~= nil and replace_pattern ~= ""
   local search_highlight = has_replace_preview and "m_ss_search" or "m_ss_matches"

@@ -166,7 +166,9 @@ function M:schedule(opts)
   local rescheduled = not not opts.rescheduled ---@type boolean
   local context = opts.context ---@type unknown|nil
 
-  self._context = context
+  if not rescheduled or context ~= nil then
+    self._context = context
+  end
   if not rescheduled then
     self._tick_pending = self._tick_pending + 1 ---@type integer
   end
