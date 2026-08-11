@@ -4,50 +4,50 @@
 #
 
 # Core syntax highlighting
-set -U  fish_color_command                       brblue
-set -U  fish_color_keyword                       brmagenta
-set -U  fish_color_param                         cyan
-set -U  fish_color_option                        green
-set -U  fish_color_quote                         brgreen
-set -U  fish_color_redirection                   brmagenta
-set -U  fish_color_end                           bryellow
-set -U  fish_color_operator                      yellow
+set -g  fish_color_command                       brblue
+set -g  fish_color_keyword                       brmagenta
+set -g  fish_color_param                         cyan
+set -g  fish_color_option                        green
+set -g  fish_color_quote                         brgreen
+set -g  fish_color_redirection                   brmagenta
+set -g  fish_color_end                           bryellow
+set -g  fish_color_operator                      yellow
 
 # Interactive elements
-set -U  fish_color_autosuggestion                brblack
-set -U  fish_color_completion                    normal
-set -U  fish_color_comment                       brblack
-set -U  fish_color_gray                          brblack
+set -g  fish_color_autosuggestion                brblack
+set -g  fish_color_completion                    normal
+set -g  fish_color_comment                       brblack
+set -g  fish_color_gray                          brblack
 
 # Status and feedback
-set -U  fish_color_error                         brred
-set -U  fish_color_status                        red
-set -U  fish_color_cancel                        --reverse
-set -U  fish_color_escape                        cyan
-set -U  fish_color_normal                        normal
-set -U  fish_color_dir                           brblue
-set -U  fish_color_valid_path                    --underline
+set -g  fish_color_error                         brred
+set -g  fish_color_status                        red
+set -g  fish_color_cancel                        --reverse
+set -g  fish_color_escape                        cyan
+set -g  fish_color_normal                        normal
+set -g  fish_color_dir                           brblue
+set -g  fish_color_valid_path                    --underline
 
 # Search and selection
-set -U  fish_color_search_match                  --background=brorange
-set -U  fish_color_search_selection              --background=brblue
-set -U  fish_color_match                         --background=brblue
-set -U  fish_color_history_current               --bold
+set -g  fish_color_search_match                  --background=brorange
+set -g  fish_color_search_selection              --background=brblue
+set -g  fish_color_match                         --background=brblue
+set -g  fish_color_history_current               --bold
 
 # Remote host
-set -U  fish_color_host_remote                   yellow
+set -g  fish_color_host_remote                   yellow
 
 # Pager colors
-set -U  fish_pager_color_background              normal
-set -U  fish_pager_color_completion              normal
-set -U  fish_pager_color_description             yellow
-set -U  fish_pager_color_prefix                  cyan --bold
-set -U  fish_pager_color_progress                brwhite --background=blue
-set -U  fish_pager_color_secondary_background    normal
-set -U  fish_pager_color_secondary_completion    brblack
-set -U  fish_pager_color_secondary_description   brblack
-set -U  fish_pager_color_secondary_prefix        brblack
-set -U  fish_pager_color_selected_background     --background=blue
-set -U  fish_pager_color_selected_completion     brwhite
-set -U  fish_pager_color_selected_description    brwhite
-set -U  fish_pager_color_selected_prefix         brwhite
+set -g  fish_pager_color_background              normal
+set -g  fish_pager_color_completion              normal
+set -g  fish_pager_color_description             yellow
+set -g  fish_pager_color_prefix                  cyan --bold
+set -g  fish_pager_color_progress                brwhite --background=blue
+set -g  fish_pager_color_secondary_background    normal
+set -g  fish_pager_color_secondary_completion    brblack
+set -g  fish_pager_color_secondary_description   brblack
+set -g  fish_pager_color_secondary_prefix        brblack
+set -g  fish_pager_color_selected_background     --background=blue
+set -g  fish_pager_color_selected_completion     brwhite
+set -g  fish_pager_color_selected_description    brwhite
+set -g  fish_pager_color_selected_prefix         brwhite
