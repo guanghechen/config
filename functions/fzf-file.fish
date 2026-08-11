@@ -1,7 +1,5 @@
 function fzf-file --description "Search files in current directory"
-    set -l token (commandline --current-token)
-    set -l expanded (eval echo -- $token)
-    set -l unescaped (string unescape -- $expanded)
+    set -l unescaped (commandline --tokens-expanded --current-token)
 
     if string match --quiet -- "*/" $unescaped && test -d "$unescaped"
         set -l result (
