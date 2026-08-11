@@ -93,17 +93,15 @@ struct LineMatch {
     matches: Vec<MatchRange>,
 }
 
-fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
+fn append_line_matches(line: LineMatch, result: &mut Vec<ITextMatch>) {
     if line.text.is_empty() {
-        return Vec::new();
+        return;
     }
 
     let offsets = compute_line_offsets(&line.text);
     if offsets.len() < 2 {
-        return Vec::new();
+        return;
     }
-
-    let mut matches = Vec::new();
 
     for range in line.matches {
         if range.start >= range.end || range.start >= line.text.len() {
@@ -167,7 +165,7 @@ fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
         let cx = (range.start - line_start_rel) as u32;
         let cy = (end_inclusive - end_line_start_rel) as u32;
 
-        matches.push(ITextMatch {
+        result.push(ITextMatch {
             lx,
             ly,
             cx,
@@ -179,8 +177,6 @@ fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
             sy,
         });
     }
-
-    matches
 }
 
 fn trim_line_trailing_newline(bytes: &[u8], start: usize, end: usize) -> usize {
@@ -202,9 +198,10 @@ fn trim_line_trailing_newline(bytes: &[u8], start: usize, end: usize) -> usize {
 }
 
 fn flatten_line_matches(lines: Vec<LineMatch>) -> Vec<ITextMatch> {
-    let mut result = Vec::new();
+    let capacity = lines.iter().map(|line| line.matches.len()).sum();
+    let mut result = Vec::with_capacity(capacity);
     for line in lines {
-        result.extend(convert_line_matches(line));
+        append_line_matches(line, &mut result);
     }
     result
 }
