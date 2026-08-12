@@ -1,100 +1,80 @@
 use super::SEP;
 use super::get_cwd;
-use super::is_absolute;
-use super::normalize_splits;
-use super::split;
-use std::borrow::Cow;
+use super::resolve::resolve_borrowed;
 
 pub fn relative(from: &str, to: &str, keep_tailing_slash: bool) -> String {
     let cwd_guard = get_cwd();
     let cwd: &str = &cwd_guard;
+    let abs_from = resolve_borrowed(cwd, from);
+    let abs_to = resolve_borrowed(cwd, to);
+    let should_append_slash = keep_tailing_slash
+        && to.len() > 1
+        && to.ends_with(['/', '\\'])
+        && abs_to != "/"
+        && abs_to.contains('/');
 
-    let abs_from = if is_absolute(from) {
-        Cow::Borrowed(from)
-    } else {
-        Cow::Owned(format!("{}/{}", cwd, from))
-    };
-
-    let abs_to = if is_absolute(to) {
-        Cow::Borrowed(to)
-    } else {
-        Cow::Owned(format!("{}/{}", cwd, to))
-    };
-
-    let from_pieces = split(abs_from.as_ref(), false);
-    let mut to_pieces = split(abs_to.as_ref(), false);
-
-    let to_has_suffix_sep = keep_tailing_slash && to.len() > 1 && to.ends_with(['/', '\\']);
-    let should_append_slash =
-        to_has_suffix_sep && to_pieces.len() > 1 && !to_pieces.last().is_some_and(|s| s.is_empty());
-
-    let n1 = from_pieces.len();
-    let n2 = to_pieces.len();
-    let n = n1.min(n2);
-    if n < 1 || from_pieces[0] != to_pieces[0] {
-        if should_append_slash {
-            to_pieces.push(String::new());
-        };
-        return normalize_splits(&to_pieces);
+    let mut from_components = abs_from.split_terminator('/');
+    let mut to_components = abs_to.split_terminator('/');
+    if from_components.next() != to_components.next() {
+        return with_tailing_slash(abs_to.into_owned(), should_append_slash);
     }
 
-    let mut m = n;
-    for i in 1..n {
-        if from_pieces[i] != to_pieces[i] {
-            m = i;
-            break;
-        }
-    }
-
-    if m == n {
-        if n1 == n2 {
-            if should_append_slash {
-                return "./".to_string();
+    loop {
+        let from_component = from_components.next();
+        let to_component = to_components.next();
+        if from_component == to_component {
+            if from_component.is_none() {
+                return if should_append_slash {
+                    "./".to_string()
+                } else {
+                    ".".to_string()
+                };
             }
-            return ".".to_string();
+            continue;
         }
 
-        if n1 < n2 {
-            if to_has_suffix_sep
-                && to_pieces.len() > 1
-                && !to_pieces.last().is_some_and(|s| s.is_empty())
-            {
-                to_pieces.push(String::new());
-            };
-            return normalize_splits(&to_pieces[m..]);
+        let parent_count = usize::from(from_component.is_some()) + from_components.count();
+        return build_relative(
+            parent_count,
+            to_component.into_iter().chain(to_components),
+            should_append_slash,
+            abs_to.len(),
+        );
+    }
+}
+
+fn build_relative<'a>(
+    parent_count: usize,
+    to_components: impl Iterator<Item = &'a str>,
+    should_append_slash: bool,
+    to_len: usize,
+) -> String {
+    let mut result = String::with_capacity(parent_count * 3 + to_len);
+    for _ in 0..parent_count {
+        if !result.is_empty() {
+            result.push(SEP);
         }
+        result.push_str("..");
     }
 
-    let d = n1 - m;
-    if n2 == m {
-        if should_append_slash {
-            let mut result = String::with_capacity(d * 3);
-            for _ in 0..d {
-                result.push_str("..");
-                result.push(SEP);
-            }
-            return result;
+    for component in to_components {
+        if !result.is_empty() {
+            result.push(SEP);
         }
-
-        let mut result = String::with_capacity(d * 3 - 1);
-        for i in 0..d {
-            if i > 0 {
-                result.push(SEP);
-            }
-            result.push_str("..");
-        }
-        return result;
+        result.push_str(component);
     }
 
-    let mut prefix = String::with_capacity(d * 3);
-    for _ in 0..d {
-        prefix.push_str("..");
-        prefix.push(SEP);
-    }
     if should_append_slash {
-        to_pieces.push(String::new());
-    };
-    prefix + normalize_splits(&to_pieces[m..]).as_str()
+        result.push(SEP);
+    }
+    result
+}
+
+fn with_tailing_slash(mut filepath: String, should_append_slash: bool) -> String {
+    if should_append_slash {
+        filepath.push(SEP);
+    }
+    filepath
 }
 
 #[cfg(test)]

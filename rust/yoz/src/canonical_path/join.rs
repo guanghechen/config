@@ -1,11 +1,7 @@
-use super::normalize::normalize;
+use super::normalize::normalize_joined;
 
 pub fn join(from: &str, to: &str, keep_tailing_slash: bool) -> String {
-    let mut combined = String::with_capacity(from.len() + 1 + to.len());
-    combined.push_str(from);
-    combined.push('/');
-    combined.push_str(to);
-    normalize(&combined, keep_tailing_slash)
+    normalize_joined(from, to, keep_tailing_slash)
 }
 
 #[cfg(test)]

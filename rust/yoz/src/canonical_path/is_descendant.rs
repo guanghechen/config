@@ -1,7 +1,5 @@
 use super::get_cwd;
-use super::is_absolute;
-use super::split;
-use std::borrow::Cow;
+use super::resolve::resolve_borrowed;
 
 #[cfg(windows)]
 fn components_equal(left: &str, right: &str) -> bool {
@@ -16,35 +14,15 @@ fn components_equal(left: &str, right: &str) -> bool {
 pub fn is_descendant(from: &str, to: &str) -> bool {
     let cwd_guard = get_cwd();
     let cwd: &str = &cwd_guard;
+    let abs_from = resolve_borrowed(cwd, from);
+    let abs_to = resolve_borrowed(cwd, to);
+    let mut to_components = abs_to.split_terminator('/');
 
-    let abs_from = if is_absolute(from) {
-        Cow::Borrowed(from)
-    } else {
-        Cow::Owned(format!("{}/{}", cwd, from))
-    };
-
-    let abs_to = if is_absolute(to) {
-        Cow::Borrowed(to)
-    } else {
-        Cow::Owned(format!("{}/{}", cwd, to))
-    };
-
-    let from_pieces = split(abs_from.as_ref(), false);
-    let to_pieces = split(abs_to.as_ref(), false);
-
-    let n1 = from_pieces.len();
-    let n2 = to_pieces.len();
-
-    if n1 > n2 {
-        return false;
-    }
-
-    for i in 0..n1 {
-        if !components_equal(&from_pieces[i], &to_pieces[i]) {
-            return false;
-        }
-    }
-    true
+    abs_from.split_terminator('/').all(|from_component| {
+        to_components
+            .next()
+            .is_some_and(|to_component| components_equal(from_component, to_component))
+    })
 }
 
 #[cfg(test)]

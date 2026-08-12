@@ -3,10 +3,16 @@ pub fn split(filepath: &str, keep_tailing_slash: bool) -> Vec<String> {
         return vec![".".to_string()];
     }
 
-    let has_prefix_sep = filepath.starts_with(['/', '\\']);
-    let has_suffix_sep = filepath.len() > 1 && filepath.ends_with(['/', '\\']);
+    let bytes = filepath.as_bytes();
+    let has_prefix_sep = matches!(bytes.first(), Some(b'/') | Some(b'\\'));
+    let has_suffix_sep = bytes.len() > 1 && matches!(bytes.last(), Some(b'/') | Some(b'\\'));
 
-    let mut pieces: Vec<String> = Vec::new();
+    let capacity = bytes
+        .iter()
+        .filter(|&&byte| byte == b'/' || byte == b'\\')
+        .count()
+        + 1;
+    let mut pieces: Vec<String> = Vec::with_capacity(capacity);
     if has_prefix_sep {
         pieces.push(String::new());
     }
@@ -61,15 +67,14 @@ pub fn split(filepath: &str, keep_tailing_slash: bool) -> Vec<String> {
 }
 
 pub(crate) fn normalize_drive_segment(segment: &str) -> Option<String> {
-    let mut chars = segment.chars();
-    match (chars.next(), chars.next(), chars.next()) {
-        (Some(letter), Some(':'), None) if letter.is_ascii_alphabetic() => {
-            let mut drive = String::with_capacity(2);
-            drive.push(letter.to_ascii_uppercase());
-            drive.push(':');
-            Some(drive)
-        }
-        _ => None,
+    let bytes = segment.as_bytes();
+    if bytes.len() == 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' {
+        let mut drive = String::with_capacity(2);
+        drive.push(bytes[0].to_ascii_uppercase() as char);
+        drive.push(':');
+        Some(drive)
+    } else {
+        None
     }
 }
 

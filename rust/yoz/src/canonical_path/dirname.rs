@@ -1,6 +1,5 @@
 use super::SEP;
-use super::normalize::normalize_splits;
-use super::split::split;
+use super::normalize;
 
 pub fn dirname(filepath: &str, keep_tailing_slash: bool) -> String {
     if filepath.is_empty() {
@@ -10,34 +9,36 @@ pub fn dirname(filepath: &str, keep_tailing_slash: bool) -> String {
         return "..".to_string();
     }
 
-    let pieces = split(filepath, false);
-    if pieces.len() <= 1 {
-        if pieces[0].is_empty() {
-            return SEP.to_string();
-        }
-
-        if pieces[0].len() == 2 {
-            let bytes = pieces[0].as_bytes();
-            if bytes[0].is_ascii_alphabetic() && bytes[1] == b':' {
-                if keep_tailing_slash {
-                    return format!("{}{}", pieces[0], SEP);
-                }
-                return pieces[0].to_string();
-            }
-        }
-
+    let mut result = normalize(filepath, false);
+    let bytes = result.as_bytes();
+    if bytes.len() == 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' {
         if keep_tailing_slash {
-            return format!("..{}", SEP);
+            result.push(SEP);
         }
-        return "..".to_string();
+        return result;
     }
 
-    let n = pieces.len() - 1;
-    let result = normalize_splits(&pieces[0..n]);
-    if keep_tailing_slash && !pieces[n - 1].is_empty() {
-        return format!("{}{}", result, SEP);
+    let Some(index) = result.rfind(SEP) else {
+        return parent(keep_tailing_slash);
+    };
+    if index == 0 {
+        result.truncate(1);
+        return result;
+    }
+
+    result.truncate(index);
+    if keep_tailing_slash {
+        result.push(SEP);
     }
     result
+}
+
+fn parent(keep_tailing_slash: bool) -> String {
+    if keep_tailing_slash {
+        "../".to_string()
+    } else {
+        "..".to_string()
+    }
 }
 
 #[cfg(test)]
