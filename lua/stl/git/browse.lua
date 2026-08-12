@@ -220,7 +220,7 @@ function M.open(opts)
   filepath = filepath ~= "" and yoz.path.normalize(filepath, true, stl.env.PATH_SEP) or nil
   local stat = filepath and vim.uv.fs_stat(filepath) or nil
   local is_file = stat and stat.type == "file"
-  local git_file = (is_file and filepath) and yoz.path.relative(cwd, filepath, false, stl.env.PATH_SEP) or nil
+  local git_file = (is_file and filepath) and yoz.path.relative(cwd, filepath, false, "/") or nil
 
   local line_start = opts.line_start ---@type integer|nil
   local line_end = opts.line_end ---@type integer|nil

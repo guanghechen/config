@@ -77,7 +77,7 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with boolean
 function M:add_intent_to_add(file, token)
-  local relpath = dot.path.relative(self.toplevel, file)
+  local relpath = self:get_relpath(file)
   return stl.git.act.add_intent_to_add(self.toplevel, relpath, token)
 end
 
@@ -93,15 +93,14 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with stl.git.IFileInfoResult
 function M:get_file_info(file, token)
-  local relpath = dot.path.relative(self.toplevel, file)
+  local relpath = self:get_relpath(file)
   return stl.git.info.get_file_info(self.toplevel, relpath, token)
 end
 
 ---@param file                       string
 ---@return string
 function M:get_relpath(file)
-  -- Git revision paths use forward slashes on every platform.
-  return dot.path.relative(self.toplevel, file, "/")
+  return stl.os.path.relative(self.toplevel, file)
 end
 
 ---@param object                     string
@@ -123,7 +122,7 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with string|nil (hash)
 function M:hash_object(file, content, token)
-  local relpath = dot.path.relative(self.toplevel, file)
+  local relpath = self:get_relpath(file)
   return stl.git.act.hash_object(self.toplevel, relpath, content, token)
 end
 
@@ -151,7 +150,7 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with boolean
 function M:reset_file(file, token)
-  local relpath = dot.path.relative(self.toplevel, file)
+  local relpath = self:get_relpath(file)
   return stl.git.act.reset_file(self.toplevel, relpath, token)
 end
 
@@ -159,7 +158,7 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with boolean
 function M:stage_file(file, token)
-  local relpath = dot.path.relative(self.toplevel, file)
+  local relpath = self:get_relpath(file)
   return stl.git.act.stage_file(self.toplevel, relpath, token)
 end
 
@@ -167,7 +166,7 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with boolean
 function M:unstage_file(file, token)
-  local relpath = dot.path.relative(self.toplevel, file)
+  local relpath = self:get_relpath(file)
   return stl.git.act.unstage_file(self.toplevel, relpath, token)
 end
 
@@ -178,7 +177,7 @@ end
 ---@param add                        ?boolean
 ---@return stl.c.Future              Resolves with boolean
 function M:update_index(mode_bits, object_name, file, token, add)
-  local relpath = dot.path.relative(self.toplevel, file)
+  local relpath = self:get_relpath(file)
   return stl.git.act.update_index(self.toplevel, mode_bits, object_name, relpath, token, add)
 end
 
