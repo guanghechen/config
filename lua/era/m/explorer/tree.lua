@@ -28,7 +28,7 @@ M.__index = M
 ---@param keep_trailing_slash           boolean|nil
 ---@return string
 local function normalize_filepath(filepath, keep_trailing_slash)
-  return dot.path.normalize(filepath, keep_trailing_slash ~= false, "/")
+  return stl.os.path.normalize(filepath, keep_trailing_slash ~= false)
 end
 
 ---@param filepath                      string
@@ -230,6 +230,7 @@ end
 ---@return boolean
 function M:insert(parent_filepath, resource)
   self:__health__()
+  parent_filepath = normalize_dirpath(parent_filepath)
 
   local rm = self._resource_manager ---@type era.m.explorer.resource.IManager
   local resource_node = rm:locate(parent_filepath) ---@type era.m.explorer.resource.INode|nil
@@ -646,8 +647,6 @@ end
 ---@return era.m.explorer.Node
 ---@return boolean
 function M:__insert__(filepath, resource, ensure_resource)
-  filepath = normalize_filepath(filepath, filepath:sub(-1) == "/")
-
   local superroot = self._superroot ---@type era.m.explorer.Node
   local superroot_filepath = superroot.filepath ---@type string
   if superroot_filepath == filepath then

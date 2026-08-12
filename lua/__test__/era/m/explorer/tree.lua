@@ -6,6 +6,7 @@ local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
 
 local t = harness.new("era.m.explorer.tree")
+local canonical_normalize_calls = {} ---@type { filepath: string, keep_trailing_slash: boolean|nil }[]
 
 local function normalize(filepath, keep_trailing_slash)
   local had_trailing_slash = filepath:sub(-1) == "/" or filepath:sub(-1) == "\\" ---@type boolean
@@ -16,6 +17,14 @@ local function normalize(filepath, keep_trailing_slash)
     normalized = normalized .. "/"
   end
   return normalized
+end
+
+local function canonical_normalize(filepath, keep_trailing_slash)
+  canonical_normalize_calls[#canonical_normalize_calls + 1] = {
+    filepath = filepath,
+    keep_trailing_slash = keep_trailing_slash,
+  }
+  return normalize(filepath, keep_trailing_slash)
 end
 
 local Observable = {}
@@ -73,6 +82,11 @@ bootstrap.with_runtime(t, {
         selection_cut = "X",
       },
     },
+    os = {
+      path = {
+        normalize = canonical_normalize,
+      },
+    },
     reporter = {
       error = function() end,
       warn = function() end,
@@ -128,6 +142,34 @@ local function create_tree()
     dir_items = items
   end
 end
+
+t:test("model: canonicalizes ingress once and composes child filepaths lexically", function()
+  local tree = create_tree()
+
+  canonical_normalize_calls = {}
+  local dir = tree:locate("\\project\\dir\\")
+  t.assert_true(dir ~= nil, "canonical lookup")
+  t.assert_eq(1, #canonical_normalize_calls, "locate normalization count")
+  t.assert_eq("\\project\\dir\\", canonical_normalize_calls[1].filepath, "locate normalization input")
+  t.assert_false(canonical_normalize_calls[1].keep_trailing_slash, "backslash lookup trailing slash policy")
+
+  canonical_normalize_calls = {}
+  t.assert_true(tree:insert("\\project\\dir", { nodename = "added", nodetype = "F" }), "canonical insert")
+  t.assert_eq(1, #canonical_normalize_calls, "insert normalization count")
+  t.assert_eq("\\project\\dir", canonical_normalize_calls[1].filepath, "insert normalization input")
+  t.assert_true(canonical_normalize_calls[1].keep_trailing_slash, "directory insert trailing slash policy")
+
+  local added_idx = dir.chidxmap.added
+  t.assert_true(added_idx ~= nil, "inserted child index")
+  t.assert_eq("/project/dir/added", dir.children[added_idx].filepath, "lexical child filepath")
+
+  canonical_normalize_calls = {}
+  t.assert_true(tree:attach("\\project\\dir\\nested\\"), "canonical attach")
+  t.assert_eq(1, #canonical_normalize_calls, "attach normalization count")
+  t.assert_eq("/project/dir/nested/", tree:get_root_filepath(), "canonical attached root")
+
+  tree:dispose()
+end)
 
 t:test("selection: keeps explicit roots without loading directory descendants", function()
   local tree, load_calls, set_dir_items = create_tree()
