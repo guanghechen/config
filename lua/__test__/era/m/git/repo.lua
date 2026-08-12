@@ -96,4 +96,24 @@ t:test("token-owned creates remain isolated", function()
   requests[2].resolve(nil)
 end)
 
+t:test("get_relpath uses Git separators on Windows paths", function()
+  local received = nil ---@type { from: string, to: string, sep: string }|nil
+  t:patch_global("dot", {
+    path = {
+      relative = function(from, to, sep)
+        received = { from = from, to = to, sep = sep }
+        return "lua/era/m/im/wsl.lua"
+      end,
+    },
+  })
+
+  local repo = setmetatable({ toplevel = [[C:\repo]] }, Repo)
+  local filepath = [[C:\repo\lua\era\m\im\wsl.lua]]
+
+  t.assert_eq("lua/era/m/im/wsl.lua", repo:get_relpath(filepath), "Git relative path")
+  t.assert_eq([[C:\repo]], received.from, "relative path root")
+  t.assert_eq(filepath, received.to, "relative path target")
+  t.assert_eq("/", received.sep, "Git separator")
+end)
+
 t:run()

@@ -100,7 +100,8 @@ end
 ---@param file                       string
 ---@return string
 function M:get_relpath(file)
-  return dot.path.relative(self.toplevel, file)
+  -- Git revision paths use forward slashes on every platform.
+  return dot.path.relative(self.toplevel, file, "/")
 end
 
 ---@param object                     string
