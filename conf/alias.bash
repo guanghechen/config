@@ -26,7 +26,7 @@ alias cp='cp -i'
 alias diff='colordiff'
 alias dir='dir --color=auto'
 alias egrep='egrep --color=auto'
-alias fgrep='egrep --color=auto'
+alias fgrep='command grep -F --color=auto'
 alias gdiff='GIT_PAGER=delta git diff'
 alias grep='egrep --color=auto'
 alias ln='ln -i'
@@ -57,8 +57,8 @@ alias ggg='gemini --model="gemini-3-pro-preview" --yolo'
 ## fzf
 if [[ -n "${HOMEBREW_PREFIX:-}" && -x "$HOMEBREW_PREFIX/bin/fzf" ]]; then
   alias fzf='"$HOMEBREW_PREFIX/bin/fzf"'
-  alias fvim='"$HOMEBREW_PREFIX/bin/fzf" --print0 | xargs -0 -o nvim'
 fi
+alias fvim='fzf --print0 | xargs -0 -o nvim'
 
 ## lazygit
 if [[ -f "$HOME/.config/lazygit/local/theme.yml" ]]; then
@@ -71,7 +71,7 @@ fi
 alias lst='lsd --tree -I .git -I node_modules'
 
 ## nvim
-if [[ -n "${NEOVIM_HOME:-}" ]]; then
+if [[ -n "${NEOVIM_HOME:-}" && -x "$NEOVIM_HOME/bin/nvim" ]]; then
   alias vim='"$NEOVIM_HOME/bin/nvim"'
   alias vi='"$NEOVIM_HOME/bin/nvim"'
   alias nvchad='NVIM_APPNAME=nvim-nvchad  "$NEOVIM_HOME/bin/nvim"'
