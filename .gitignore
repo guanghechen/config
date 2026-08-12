@@ -4,3 +4,4 @@ __tmp__.lua
 lua/*.dll
 lua/*.so
 
+/rust/target/

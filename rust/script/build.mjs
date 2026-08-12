@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { copyFileSync, existsSync, mkdirSync, renameSync, rmSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -57,7 +57,15 @@ function parseForce(args) {
   return args.length > 0
 }
 
-export function replaceFileAtomically(source, destination) {
+export function replaceFileIfChanged(source, destination) {
+  if (
+    existsSync(destination) &&
+    statSync(source).size === statSync(destination).size &&
+    readFileSync(source).equals(readFileSync(destination))
+  ) {
+    return false
+  }
+
   const temporary = `${destination}.${randomUUID()}.tmp`
   try {
     copyFileSync(source, temporary)
@@ -65,6 +73,7 @@ export function replaceFileAtomically(source, destination) {
   } finally {
     rmSync(temporary, { force: true })
   }
+  return true
 }
 
 function main() {
@@ -86,11 +95,7 @@ function main() {
   mkdirSync(luaDir, { recursive: true })
   mkdirSync(binDir, { recursive: true })
 
-  if (!force && existsSync(luaOutput) && existsSync(binOutput)) {
-    console.log(`${GREEN}[neovim yoz] ✓ cached${RESET}`)
-    console.log(`${BLUE}[neovim build] done${RESET}`)
-    return
-  }
+  if (force) rmSync(targetDir, { recursive: true, force: true })
 
   console.log(`${CYAN}[neovim yoz] compiling...${RESET}`)
   run("cargo", ["build", "--release", "--quiet"], packageDir)
@@ -104,9 +109,8 @@ function main() {
     run("codesign", ["--force", "--sign", "-", stagedBin], rustDir)
   }
 
-  replaceFileAtomically(stagedLua, luaOutput)
-  replaceFileAtomically(stagedBin, binOutput)
-  rmSync(targetDir, { recursive: true, force: true })
+  replaceFileIfChanged(stagedLua, luaOutput)
+  replaceFileIfChanged(stagedBin, binOutput)
 
   console.log(`${GREEN}[neovim yoz] ✓ built${RESET}`)
   console.log(`${BLUE}[neovim build] done${RESET}`)

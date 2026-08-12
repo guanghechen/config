@@ -15,7 +15,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import test from "node:test"
 
-import { replaceFileAtomically } from "./build.mjs"
+import { replaceFileIfChanged } from "./build.mjs"
 
 function withTempDir(fn) {
   const dir = mkdtempSync(join(tmpdir(), "nvim-build-test-"))
@@ -26,7 +26,7 @@ function withTempDir(fn) {
   }
 }
 
-test("replaceFileAtomically preserves the inode held by a running process", { skip: process.platform === "win32" }, () => {
+test("replaceFileIfChanged preserves the inode held by a running process", { skip: process.platform === "win32" }, () => {
   withTempDir((dir) => {
     const source = join(dir, "source.so")
     const destination = join(dir, "destination.so")
@@ -36,7 +36,7 @@ test("replaceFileAtomically preserves the inode held by a running process", { sk
     const loaded = openSync(destination, "r")
     try {
       const loadedInode = fstatSync(loaded).ino
-      replaceFileAtomically(source, destination)
+      assert.equal(replaceFileIfChanged(source, destination), true)
 
       assert.equal(readFileSync(destination, "utf8"), "new artifact")
       assert.notEqual(statSync(destination).ino, loadedInode)
@@ -47,14 +47,28 @@ test("replaceFileAtomically preserves the inode held by a running process", { sk
   })
 })
 
-test("replaceFileAtomically removes its temporary file when replacement fails", () => {
+test("replaceFileIfChanged skips an identical destination", () => {
+  withTempDir((dir) => {
+    const source = join(dir, "source.so")
+    const destination = join(dir, "destination.so")
+    writeFileSync(source, "same artifact")
+    writeFileSync(destination, "same artifact")
+
+    const destinationInode = statSync(destination).ino
+    assert.equal(replaceFileIfChanged(source, destination), false)
+    assert.equal(statSync(destination).ino, destinationInode)
+    assert.deepEqual(readdirSync(dir).sort(), ["destination.so", "source.so"])
+  })
+})
+
+test("replaceFileIfChanged removes its temporary file when replacement fails", () => {
   withTempDir((dir) => {
     const source = join(dir, "source.so")
     const destination = join(dir, "destination.so")
     writeFileSync(source, "new artifact")
     mkdirSync(destination)
 
-    assert.throws(() => replaceFileAtomically(source, destination))
+    assert.throws(() => replaceFileIfChanged(source, destination))
     assert.deepEqual(readdirSync(dir).sort(), ["destination.so", "source.so"])
   })
 })
