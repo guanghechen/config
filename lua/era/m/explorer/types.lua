@@ -56,6 +56,7 @@
 ---| "partial_failure"
 
 ---@class era.m.explorer.resource.IManager
+---All filepath values crossing this interface are canonical slash-only paths; callers own input normalization.
 ---@field public compare                fun(left: era.m.explorer.resource.INode, right: era.m.explorer.resource.INode): integer
 ---@field public copy                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): era.m.explorer.resource.CopyStatus
 ---@field public create                 fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode|nil

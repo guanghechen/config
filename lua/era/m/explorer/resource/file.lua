@@ -39,19 +39,6 @@ local M = {}
 M.__index = M
 
 ---@param filepath                      string
----@param keep_trailing_slash           boolean|nil
----@return string
-local function normalize_filepath(filepath, keep_trailing_slash)
-  return stl.os.path.normalize(filepath, keep_trailing_slash)
-end
-
----@param filepath                      string
----@return string
-local function to_os_filepath(filepath)
-  return stl.os.path.to_os(filepath)
-end
-
----@param filepath                      string
 ---@return string
 local function strip_trailing_slash(filepath)
   if filepath == "/" or filepath:match("^[A-Za-z]:/$") then
@@ -182,14 +169,13 @@ end
 ---@param filepath                           string
 ---@return era.m.explorer.resource.INode|nil
 function M:create(filepath)
-  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return nil
   end
 
   local is_directory = filepath:sub(-1) == "/" ---@type boolean
   local target_filepath = is_directory and strip_trailing_slash(filepath) or filepath ---@type string
-  local os_filepath = to_os_filepath(target_filepath) ---@type string
+  local os_filepath = stl.os.path.to_os(target_filepath) ---@type string
   local os_parent_dir = vim.fn.fnamemodify(os_filepath, ":h") ---@type string
   if vim.fn.isdirectory(os_parent_dir) == 0 then
     local call_ok, result = pcall(vim.fn.mkdir, os_parent_dir, "p")
@@ -253,15 +239,15 @@ end
 ---@param target_filepath               string
 ---@return era.m.explorer.resource.CopyStatus
 function M:copy(source_filepath, target_filepath)
-  local source_path = strip_trailing_slash(self:__filepath_to_filepath__(source_filepath)) ---@type string
-  local target_path = strip_trailing_slash(self:__filepath_to_filepath__(target_filepath)) ---@type string
+  local source_path = strip_trailing_slash(source_filepath) ---@type string
+  local target_path = strip_trailing_slash(target_filepath) ---@type string
 
   if source_path == "" or target_path == "" then
     return "retryable_failure"
   end
 
-  local source_os_path = to_os_filepath(source_path) ---@type string
-  local target_os_path = to_os_filepath(target_path) ---@type string
+  local source_os_path = stl.os.path.to_os(source_path) ---@type string
+  local target_os_path = stl.os.path.to_os(target_path) ---@type string
 
   local source_stat = vim.uv.fs_lstat(source_os_path)
   if source_stat == nil then
@@ -269,7 +255,7 @@ function M:copy(source_filepath, target_filepath)
   end
 
   if source_stat.type == "directory" then
-    if yoz.path.is_descendant(source_path, target_path) then
+    if yoz.canonical_path.is_descendant(source_path, target_path) then
       stl.reporter.error({
         from = self.fullname,
         subject = "copy",
@@ -339,12 +325,11 @@ end
 ---@param filepath                           string
 ---@return boolean
 function M:insert_if_missing(filepath)
-  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return false
   end
 
-  local os_filepath = to_os_filepath(filepath) ---@type string
+  local os_filepath = stl.os.path.to_os(filepath) ---@type string
   local is_directory = filepath:sub(-1) == "/" ---@type boolean
   if is_directory then
     if vim.fn.isdirectory(os_filepath) == 1 then
@@ -397,12 +382,11 @@ end
 ---@param filepath                           string
 ---@return era.m.explorer.resource.INode[]
 function M:load(filepath)
-  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return {}
   end
 
-  local os_filepath = to_os_filepath(filepath) ---@type string
+  local os_filepath = stl.os.path.to_os(filepath) ---@type string
   local stat = vim.uv.fs_stat(os_filepath)
   if stat == nil or stat.type ~= "directory" then
     return {}
@@ -433,7 +417,7 @@ function M:load(filepath)
         -- which cannot reveal the target type. Follow the link for explorer interaction only;
         -- side-effecting operations use lstat so they still act on the link itself. Dangling
         -- links fall back to a file leaf.
-        local target_stat = vim.uv.fs_stat(to_os_filepath(filepath .. name)) ---@type uv.fs_stat.result|nil
+        local target_stat = vim.uv.fs_stat(stl.os.path.to_os(filepath .. name)) ---@type uv.fs_stat.result|nil
         is_directory = target_stat ~= nil and target_stat.type == "directory"
       end
       local nodetype = is_directory and "D" or "F" ---@type era.m.explorer.NodeTypeEnum
@@ -458,12 +442,11 @@ end
 ---@param filepath                           string
 ---@return era.m.explorer.resource.INode|nil
 function M:locate(filepath)
-  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return nil
   end
 
-  local os_filepath = to_os_filepath(filepath) ---@type string
+  local os_filepath = stl.os.path.to_os(filepath) ---@type string
   local stat = vim.uv.fs_stat(os_filepath)
   if stat == nil then
     return nil
@@ -489,40 +472,42 @@ end
 ---Maps a canonical target back into the current Explorer root's logical namespace.
 ---
 ---Neovim buffer names may resolve symlinks, so a file opened through `root/alias/...`
----can be reported as an unrelated physical path. This method canonicalizes the target,
----the root, and each directly contained visible symlink, then rebuilds the logical path
----from the most specific canonical ancestor and the target's remaining suffix. The scan
----is intentionally non-recursive to bound reveal latency. Returning `nil` leaves the
----caller free to use the existing cross-root fallback.
+---can be reported as an unrelated physical path. The inputs already follow the Explorer
+---canonical filepath contract. This method resolves the target, root, and each directly
+---contained visible symlink, converts their OS realpaths back to canonical paths, then
+---rebuilds the logical path from the most specific canonical ancestor and the target's
+---remaining suffix. The scan is intentionally non-recursive to bound reveal latency.
+---Returning `nil` leaves the caller free to use the existing cross-root fallback.
 ---@param root_filepath                 string
 ---@param target_filepath               string
 ---@return string|nil
 function M:resolve_root_alias(root_filepath, target_filepath)
-  local root = self:__filepath_to_filepath__(root_filepath) ---@type string
-  local target = self:__filepath_to_filepath__(target_filepath) ---@type string
-  if root == "" or target == "" then
+  if root_filepath == "" or target_filepath == "" then
     return nil
   end
+
+  local root = root_filepath ---@type string
+  local target = target_filepath ---@type string
 
   if root:sub(-1) ~= "/" then
     root = root .. "/"
   end
 
   local target_is_directory = target:sub(-1) == "/" ---@type boolean
-  local target_realpath = vim.uv.fs_realpath(to_os_filepath(strip_trailing_slash(target))) ---@type string|nil
+  local target_realpath = vim.uv.fs_realpath(stl.os.path.to_os(strip_trailing_slash(target))) ---@type string|nil
   if target_realpath == nil then
     return nil
   end
 
-  local canonical_target = normalize_filepath(target_realpath, false) ---@type string
+  local canonical_target = stl.os.path.from_os(target_realpath, false) ---@type string
   local best_filepath = nil ---@type string|nil
   local best_specificity = -1 ---@type integer
 
   ---@param logical_alias string
   ---@param alias_realpath string
   local function consider_alias(logical_alias, alias_realpath)
-    local canonical_alias = normalize_filepath(alias_realpath, false) ---@type string
-    if not yoz.path.is_descendant(canonical_alias, canonical_target) then
+    local canonical_alias = stl.os.path.from_os(alias_realpath, false) ---@type string
+    if not yoz.canonical_path.is_descendant(canonical_alias, canonical_target) then
       return
     end
 
@@ -532,7 +517,9 @@ function M:resolve_root_alias(root_filepath, target_filepath)
     end
 
     local candidate = strip_trailing_slash(logical_alias) .. suffix ---@type string
-    candidate = normalize_filepath(candidate, target_is_directory)
+    if target_is_directory then
+      candidate = candidate .. "/"
+    end
 
     local specificity = #canonical_alias ---@type integer
     if
@@ -544,7 +531,7 @@ function M:resolve_root_alias(root_filepath, target_filepath)
     end
   end
 
-  local root_os_path = to_os_filepath(strip_trailing_slash(root)) ---@type string
+  local root_os_path = stl.os.path.to_os(strip_trailing_slash(root)) ---@type string
   local root_realpath = vim.uv.fs_realpath(root_os_path) ---@type string|nil
   if root_realpath ~= nil then
     consider_alias(root, root_realpath)
@@ -563,7 +550,7 @@ function M:resolve_root_alias(root_filepath, target_filepath)
 
     if self._show_hidden or name:sub(1, 1) ~= "." then
       local logical_alias = root .. name ---@type string
-      local alias_os_path = to_os_filepath(logical_alias) ---@type string
+      local alias_os_path = stl.os.path.to_os(logical_alias) ---@type string
       local is_link = ftype == "link" ---@type boolean
       if ftype == "unknown" then
         local stat = vim.uv.fs_lstat(alias_os_path) ---@type uv.fs_stat.result|nil
@@ -586,15 +573,15 @@ end
 ---@param target_filepath                    string
 ---@return boolean
 function M:move(source_filepath, target_filepath)
-  local source_path = strip_trailing_slash(self:__filepath_to_filepath__(source_filepath)) ---@type string
-  local target_path = strip_trailing_slash(self:__filepath_to_filepath__(target_filepath)) ---@type string
+  local source_path = strip_trailing_slash(source_filepath) ---@type string
+  local target_path = strip_trailing_slash(target_filepath) ---@type string
 
   if source_path == "" or target_path == "" then
     return false
   end
 
-  local source_os_path = to_os_filepath(source_path) ---@type string
-  local target_os_path = to_os_filepath(target_path) ---@type string
+  local source_os_path = stl.os.path.to_os(source_path) ---@type string
+  local target_os_path = stl.os.path.to_os(target_path) ---@type string
 
   if vim.uv.fs_lstat(target_os_path) ~= nil then
     stl.reporter.error({
@@ -649,12 +636,12 @@ end
 ---@param on_removed                    fun(): nil
 ---@return boolean
 function M:remove(filepath, on_removed)
-  local filepath = strip_trailing_slash(self:__filepath_to_filepath__(filepath)) ---@type string
   if filepath == "" then
     return false
   end
+  filepath = strip_trailing_slash(filepath)
 
-  local os_filepath = to_os_filepath(filepath) ---@type string
+  local os_filepath = stl.os.path.to_os(filepath) ---@type string
   local stat = vim.uv.fs_lstat(os_filepath)
   if stat == nil then
     return false
@@ -1004,7 +991,7 @@ function M:__start_watch__(dirpath)
     return
   end
 
-  local os_dirpath = to_os_filepath(dirpath) ---@type string
+  local os_dirpath = stl.os.path.to_os(dirpath) ---@type string
   local ok, err = handle:start(os_dirpath, {}, function(watch_err, filename)
     if watch_err then
       return
@@ -1100,22 +1087,6 @@ function M:__trigger_change__()
       end
     end)
   )
-end
-
----@protected
----@param filepath                           string
----@return string
-function M:__filepath_to_filepath__(filepath)
-  if type(filepath) ~= "string" then
-    return ""
-  end
-
-  if #filepath == 0 then
-    return ""
-  end
-
-  local keep_trailing_slash = filepath:sub(-1) == "/" ---@type boolean
-  return normalize_filepath(filepath, keep_trailing_slash)
 end
 
 return M

@@ -10,6 +10,10 @@ local is_win = package.config:sub(1, 1) == "\\" ---@type boolean
 local fs_descendant_result = false ---@type boolean|nil
 local fs_descendant_error = nil ---@type string|nil
 local use_trash = false ---@type boolean
+local normalize_calls = 0 ---@type integer
+local to_os_calls = 0 ---@type integer
+local from_os_calls = 0 ---@type integer
+local canonical_descendant_calls = 0 ---@type integer
 
 local function normalize(filepath, keep_trailing_slash)
   local had_trailing_slash = filepath:sub(-1) == "/" or filepath:sub(-1) == "\\" ---@type boolean
@@ -20,6 +24,12 @@ local function normalize(filepath, keep_trailing_slash)
     normalized = normalized .. "/"
   end
   return normalized
+end
+
+---@param filepath string
+---@return string
+local function to_os(filepath)
+  return is_win and filepath:gsub("/", "\\") or filepath
 end
 
 bootstrap.with_runtime(t, {
@@ -56,9 +66,17 @@ bootstrap.with_runtime(t, {
     },
     os = {
       path = {
-        normalize = normalize,
+        normalize = function(filepath, keep_trailing_slash)
+          normalize_calls = normalize_calls + 1
+          return normalize(filepath, keep_trailing_slash)
+        end,
         to_os = function(filepath)
-          return is_win and filepath:gsub("/", "\\") or filepath
+          to_os_calls = to_os_calls + 1
+          return to_os(filepath)
+        end,
+        from_os = function(filepath, keep_trailing_slash)
+          from_os_calls = from_os_calls + 1
+          return normalize(filepath, keep_trailing_slash)
         end,
       },
     },
@@ -68,16 +86,17 @@ bootstrap.with_runtime(t, {
     },
   },
   yoz = {
-    fs = {
-      is_descendant = function()
-        return fs_descendant_result, fs_descendant_error
-      end,
-    },
-    path = {
+    canonical_path = {
       is_descendant = function(from, to)
+        canonical_descendant_calls = canonical_descendant_calls + 1
         from = normalize(from, false)
         to = normalize(to, false)
         return to == from or to:sub(1, #from + 1) == from .. "/"
+      end,
+    },
+    fs = {
+      is_descendant = function()
+        return fs_descendant_result, fs_descendant_error
       end,
     },
   },
@@ -85,11 +104,16 @@ bootstrap.with_runtime(t, {
 
 local FileManager = require("era.m.explorer.resource.file")
 
+---@return string
+local function canonical_tempname()
+  return stl.os.path.from_os(vim.fn.tempname(), false)
+end
+
 ---@return string root
 ---@return string target
 ---@return string link
 local function create_directory_link_fixture()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local target = root .. "/target" ---@type string
   local link = root .. "/link" ---@type string
   vim.fn.mkdir(target, "p")
@@ -106,7 +130,7 @@ end
 ---@return string root
 ---@return string physical
 local function create_root_alias_fixture()
-  local base = vim.fn.tempname() ---@type string
+  local base = canonical_tempname() ---@type string
   local root = base .. "/explorer" ---@type string
   local physical = base .. "/external/physical" ---@type string
   vim.fn.mkdir(root, "p")
@@ -140,7 +164,7 @@ local function load_link_node(root)
 end
 
 t:test("create: refuses to truncate an existing file", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local filepath = root .. "/existing.txt" ---@type string
   vim.fn.mkdir(root, "p")
   vim.fn.writefile({ "sentinel" }, filepath)
@@ -153,7 +177,7 @@ t:test("create: refuses to truncate an existing file", function()
 end)
 
 t:test("create: refuses an existing directory", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local dirpath = root .. "/existing/" ---@type string
   vim.fn.mkdir(dirpath, "p")
 
@@ -165,7 +189,7 @@ t:test("create: refuses an existing directory", function()
 end)
 
 t:test("create: creates missing entries with nested parents", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local filepath = root .. "/files/nested.txt" ---@type string
   local dirpath = root .. "/directories/nested/" ---@type string
   local manager = FileManager.new({ name = "test" })
@@ -181,7 +205,7 @@ t:test("create: creates missing entries with nested parents", function()
 end)
 
 t:test("create: close failure does not delete a replacement", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local filepath = root .. "/target.txt" ---@type string
   local fs_close = vim.uv.fs_close
   vim.fn.mkdir(root, "p")
@@ -203,6 +227,53 @@ t:test("create: close failure does not delete a replacement", function()
   vim.fn.delete(root, "rf")
 end)
 
+t:test("canonical resource paths cross only the OS boundary", function()
+  local root = canonical_tempname() ---@type string
+  local source = root .. "/source/" ---@type string
+  local source_file = source .. "file" ---@type string
+  local inserted = root .. "/inserted/" ---@type string
+  local copied = root .. "/copied/" ---@type string
+  local moved = root .. "/moved/" ---@type string
+  local manager = FileManager.new({ name = "test", show_hidden = true })
+  vim.fn.mkdir(root, "p")
+
+  normalize_calls = 0
+  canonical_descendant_calls = 0
+
+  to_os_calls = 0
+  t.assert_true(manager:create(source) ~= nil, "create directory")
+  t.assert_true(manager:create(source_file) ~= nil, "create file")
+  t.assert_true(to_os_calls > 0, "create OS conversion")
+
+  to_os_calls = 0
+  t.assert_true(manager:insert_if_missing(inserted), "insert directory")
+  t.assert_true(to_os_calls > 0, "insert OS conversion")
+
+  to_os_calls = 0
+  t.assert_true(#manager:load(root .. "/") > 0, "load directory")
+  t.assert_true(to_os_calls > 0, "load OS conversion")
+
+  to_os_calls = 0
+  t.assert_true(manager:locate(source_file) ~= nil, "locate file")
+  t.assert_true(to_os_calls > 0, "locate OS conversion")
+
+  to_os_calls = 0
+  t.assert_eq("success", manager:copy(source, copied), "copy directory")
+  t.assert_true(to_os_calls > 0, "copy OS conversion")
+
+  to_os_calls = 0
+  t.assert_true(manager:move(copied, moved), "move directory")
+  t.assert_true(to_os_calls > 0, "move OS conversion")
+
+  to_os_calls = 0
+  t.assert_true(manager:remove(moved, function() end), "remove directory")
+  t.assert_true(to_os_calls > 0, "remove OS conversion")
+
+  t.assert_eq(0, normalize_calls, "canonical ingress normalization")
+  t.assert_true(canonical_descendant_calls > 0, "canonical descendant backend")
+  vim.fn.delete(root, "rf")
+end)
+
 t:test("load: directory symlink is expandable", function()
   local root = create_directory_link_fixture()
   local node = load_link_node(root)
@@ -215,10 +286,27 @@ end)
 t:test("resolve_root_alias: rebuilds a canonical target through a root symlink", function()
   local base, root, physical = create_root_alias_fixture()
   local manager = FileManager.new({ name = "test", show_hidden = true })
+  local fs_realpath = vim.uv.fs_realpath
+  local successful_realpaths = 0 ---@type integer
+
+  t:patch_table(vim.uv, "fs_realpath", function(filepath)
+    local realpath, err, code = fs_realpath(filepath)
+    if realpath ~= nil then
+      successful_realpaths = successful_realpaths + 1
+    end
+    return realpath, err, code
+  end)
+
+  normalize_calls = 0
+  from_os_calls = 0
+  to_os_calls = 0
 
   local resolved = manager:resolve_root_alias(root .. "/", physical .. "/direct")
 
   t.assert_eq(root .. "/alias/direct", resolved)
+  t.assert_eq(0, normalize_calls, "canonical ingress normalization")
+  t.assert_eq(successful_realpaths, from_os_calls, "realpath OS conversion")
+  t.assert_true(to_os_calls > 0, "realpath input OS conversion")
   vim.fn.delete(base, "rf")
 end)
 
@@ -229,6 +317,16 @@ t:test("resolve_root_alias: prefers the most specific root symlink", function()
   local resolved = manager:resolve_root_alias(root .. "/", physical .. "/nested/file")
 
   t.assert_eq(root .. "/specific/file", resolved)
+  vim.fn.delete(base, "rf")
+end)
+
+t:test("resolve_root_alias: preserves a canonical directory marker", function()
+  local base, root, physical = create_root_alias_fixture()
+  local manager = FileManager.new({ name = "test", show_hidden = true })
+
+  local resolved = manager:resolve_root_alias(root .. "/", physical .. "/nested/")
+
+  t.assert_eq(root .. "/specific/", resolved)
   vim.fn.delete(base, "rf")
 end)
 
@@ -243,6 +341,52 @@ t:test("resolve_root_alias: ignores unrelated canonical targets", function()
 
   t.assert_nil(resolved)
   vim.fn.delete(base, "rf")
+end)
+
+t:test("realpath boundary: rebuilds canonical aliases from OS paths", function()
+  local root = "C:/workspace/" ---@type string
+  local target = "C:/physical/nested/file" ---@type string
+  local root_os_path = to_os("C:/workspace") ---@type string
+  local target_os_path = to_os(target) ---@type string
+  local alias_os_path = to_os("C:/workspace/alias") ---@type string
+  local scan_handle = {} ---@type table
+  local scan_count = 0 ---@type integer
+
+  t:patch_table(vim.uv, "fs_realpath", function(filepath)
+    if filepath == target_os_path then
+      return to_os("C:/physical/nested/file")
+    elseif filepath == root_os_path then
+      return to_os("C:/workspace")
+    elseif filepath == alias_os_path then
+      return to_os("C:/physical/nested")
+    end
+    return nil
+  end)
+  t:patch_table(vim.uv, "fs_scandir", function(filepath)
+    t.assert_eq(root_os_path, filepath, "scandir OS path")
+    return scan_handle
+  end)
+  t:patch_table(vim.uv, "fs_scandir_next", function(handle)
+    t.assert_eq(scan_handle, handle, "scandir handle")
+    scan_count = scan_count + 1
+    if scan_count == 1 then
+      return "alias", "link"
+    end
+    return nil
+  end)
+
+  normalize_calls = 0
+  from_os_calls = 0
+  to_os_calls = 0
+  canonical_descendant_calls = 0
+
+  local resolved = FileManager.new({ name = "test", show_hidden = true }):resolve_root_alias(root, target)
+
+  t.assert_eq("C:/workspace/alias/file", resolved)
+  t.assert_eq(0, normalize_calls, "canonical ingress normalization")
+  t.assert_eq(3, from_os_calls, "realpath OS conversion")
+  t.assert_eq(3, to_os_calls, "filesystem input OS conversion")
+  t.assert_eq(2, canonical_descendant_calls, "canonical descendant checks")
 end)
 
 t:test("sync_watches: reports each watch-limit transition once", function()
@@ -320,7 +464,7 @@ t:test("copy: copies the symlink without copying its target directory", function
 end)
 
 t:test("copy: reuses scandir types for regular descendants", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(source .. "/nested", "p")
@@ -343,7 +487,7 @@ t:test("copy: reuses scandir types for regular descendants", function()
 end)
 
 t:test("copy: exclusive file copy preserves a target created after preflight", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(root, "p")
@@ -351,7 +495,7 @@ t:test("copy: exclusive file copy preserves a target created after preflight", f
   local fs_open = vim.uv.fs_open
 
   t:patch_table(vim.uv, "fs_open", function(filepath, flags, mode)
-    if filepath == target and flags == "wx" then
+    if filepath == to_os(target) and flags == "wx" then
       vim.fn.writefile({ "sentinel" }, filepath)
     end
     return fs_open(filepath, flags, mode)
@@ -365,7 +509,7 @@ t:test("copy: exclusive file copy preserves a target created after preflight", f
 end)
 
 t:test("copy: exclusive target open failure without a target remains retryable", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(root, "p")
@@ -373,7 +517,7 @@ t:test("copy: exclusive target open failure without a target remains retryable",
 
   local fs_open = vim.uv.fs_open
   t:patch_table(vim.uv, "fs_open", function(filepath, flags, mode)
-    if filepath == target and flags == "wx" then
+    if filepath == to_os(target) and flags == "wx" then
       return nil, "injected open failure", "EIO"
     end
     return fs_open(filepath, flags, mode)
@@ -387,7 +531,7 @@ t:test("copy: exclusive target open failure without a target remains retryable",
 end)
 
 t:test("copy: transfer failure leaves the partial target visible", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(root, "p")
@@ -411,7 +555,7 @@ t:test("copy: transfer failure leaves the partial target visible", function()
 end)
 
 t:test("copy: premature transfer EOF is not reported as success", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(root, "p")
@@ -429,7 +573,7 @@ t:test("copy: premature transfer EOF is not reported as success", function()
 end)
 
 t:test("copy: target close failure does not delete a concurrent replacement", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(root, "p")
@@ -440,7 +584,7 @@ t:test("copy: target close failure does not delete a concurrent replacement", fu
 
   t:patch_table(vim.uv, "fs_open", function(filepath, flags, mode)
     local fd, err, code = fs_open(filepath, flags, mode)
-    if filepath == target and flags == "wx" then
+    if filepath == to_os(target) and flags == "wx" then
       target_fd = fd
     end
     return fd, err, code
@@ -466,7 +610,7 @@ t:test("copy: target close failure does not delete a concurrent replacement", fu
 end)
 
 t:test("copy: missing source with a concurrent target is not retryable", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/missing" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(root, "p")
@@ -480,7 +624,7 @@ t:test("copy: missing source with a concurrent target is not retryable", functio
 end)
 
 t:test("copy: exclusive directory create does not merge a concurrent target", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(source, "p")
@@ -488,7 +632,7 @@ t:test("copy: exclusive directory create does not merge a concurrent target", fu
   local fs_mkdir = vim.uv.fs_mkdir
 
   t:patch_table(vim.uv, "fs_mkdir", function(filepath, mode)
-    if filepath == target then
+    if filepath == to_os(target) then
       assert(fs_mkdir(filepath, mode))
       vim.fn.writefile({ "sentinel" }, filepath .. "/sentinel")
     end
@@ -504,14 +648,14 @@ t:test("copy: exclusive directory create does not merge a concurrent target", fu
 end)
 
 t:test("copy: scandir failure after target creation reports partial failure", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(source, "p")
   local fs_scandir = vim.uv.fs_scandir
 
   t:patch_table(vim.uv, "fs_scandir", function(filepath)
-    if filepath == source then
+    if filepath == to_os(source) then
       return nil, "injected scan failure", "EIO"
     end
     return fs_scandir(filepath)
@@ -525,7 +669,7 @@ t:test("copy: scandir failure after target creation reports partial failure", fu
 end)
 
 t:test("copy: scandir iteration failure reports partial failure", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(source, "p")
@@ -542,7 +686,7 @@ t:test("copy: scandir iteration failure reports partial failure", function()
 end)
 
 t:test("copy: recursive child failure promotes the directory result to partial", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target" ---@type string
   vim.fn.mkdir(source, "p")
@@ -561,7 +705,7 @@ t:test("copy: recursive child failure promotes the directory result to partial",
 end)
 
 t:test("copy: rejects a directory target inside the source before writing", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = source .. "/nested/copy" ---@type string
   vim.fn.mkdir(source, "p")
@@ -576,7 +720,7 @@ t:test("copy: rejects a directory target inside the source before writing", func
 end)
 
 t:test("copy: rejects a filesystem descendant before writing", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/alias/nested/copy" ---@type string
   vim.fn.mkdir(source, "p")
@@ -593,7 +737,7 @@ t:test("copy: rejects a filesystem descendant before writing", function()
 end)
 
 t:test("copy: rejects an unresolved filesystem descendant check", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = canonical_tempname() ---@type string
   local source = root .. "/source" ---@type string
   local target = root .. "/target/copy" ---@type string
   vim.fn.mkdir(source, "p")
