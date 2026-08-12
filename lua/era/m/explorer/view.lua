@@ -574,7 +574,7 @@ end
 ---@return era.m.explorer.view.IGitStatusInfo|nil
 ---@return string|nil
 function M:__get_git_status_info__(node, lnum)
-  local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
+  local filepath = node.filepath ---@type string
   if filepath == "" then
     return nil, nil
   end
@@ -680,7 +680,7 @@ end
 ---@param node                          era.m.explorer.Node
 ---@return boolean
 function M:__is_ignored__(node)
-  local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
+  local filepath = node.filepath ---@type string
   if filepath == "" then
     return false
   end
@@ -708,7 +708,7 @@ function M:__precompute__(root, ctx)
 
     ---@param node                      era.m.explorer.Node
     local function collect_filepaths(node)
-      local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
+      local filepath = node.filepath ---@type string
       if filepath ~= "" then
         filepaths[#filepaths + 1] = filepath
       end
@@ -743,7 +743,7 @@ function M:__precompute__(root, ctx)
       local counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type era.m.explorer.view.IDiagCounts
 
       if node.nodetype == "F" then
-        local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
+        local filepath = node.filepath ---@type string
         if filepath ~= "" then
           local bufnr = stl.nvim.buf.lookup_bufnr(loaded_bufnrs, filepath) ---@type integer|nil
           if bufnr ~= nil then
@@ -869,18 +869,6 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
 
   local line = table.concat(parts) ---@type string
   return line, highlights, git_info, diag_info
-end
-
----@protected
----@param filepath                           string
----@return string
-function M:__filepath_to_filepath__(filepath)
-  if type(filepath) ~= "string" then
-    return ""
-  end
-
-  local keep_trailing_slash = filepath:sub(-1) == "/" ---@type boolean
-  return dot.path.normalize(filepath, keep_trailing_slash, "/")
 end
 
 return M

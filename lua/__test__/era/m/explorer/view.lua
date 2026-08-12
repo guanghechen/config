@@ -6,8 +6,10 @@ local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
 
 local t = harness.new("era.m.explorer.view")
+local normalize_calls = 0 ---@type integer
 
 local function normalize(filepath, keep_trailing_slash)
+  normalize_calls = normalize_calls + 1
   local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
   if keep_trailing_slash == false and normalized ~= "/" then
     normalized = normalized:gsub("/+$", "")
@@ -74,8 +76,10 @@ t:test("render node: resolves Git status once", function()
     show_icons = false,
   } ---@type era.m.explorer.view.IRenderContext
 
+  normalize_calls = 0
   local _, highlights, git_info = view:__render_node__(ctx, node, "", 1, nil, false, false)
 
+  t.assert_eq(0, normalize_calls, "canonical node filepath normalization count")
   t.assert_eq(1, resolve_calls, "resolve count")
   t.assert_eq("m_ft_git_change", highlights[1].hlname, "node name highlight")
   t.assert_true(git_info ~= nil, "Git status info")
@@ -109,11 +113,14 @@ t:test("render: writes range highlights directly as extmarks", function()
     end,
   } ---@type era.m.explorer.Tree
 
-  view:render(bufnr, tree, root, {
+  normalize_calls = 0
+  local result = view:render(bufnr, tree, root, {
     show_diagnostics = false,
     show_git_status = false,
     show_icons = false,
   })
+  t.assert_eq(0, normalize_calls, "canonical render filepath normalization count")
+  t.assert_eq("/project/file.lua", result.lnum_to_filepath[1], "displayed filepath")
 
   local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, view:get_namespace(), 0, -1, { details = true })
   local highlight_extmarks = {} ---@type any[]

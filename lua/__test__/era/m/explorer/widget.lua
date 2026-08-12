@@ -6,6 +6,7 @@ local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
 
 local t = harness.new("era.m.explorer.widget")
+local normalize_calls = 0 ---@type integer
 
 ---@param initial_value                any
 ---@return table
@@ -59,6 +60,7 @@ bootstrap.with_runtime(t, {
     },
     path = {
       normalize = function(filepath, keep_trailing_slash)
+        normalize_calls = normalize_calls + 1
         local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
         if keep_trailing_slash == false and normalized ~= "/" then
           normalized = normalized:gsub("/+$", "")
@@ -409,6 +411,46 @@ t:test("navigation: resolves the visible parent, last child, and last sibling", 
   t.assert_nil(widget:__get_navigation_parent_filepath__("/project/src/"))
   t.assert_eq("/project/src/z.lua", widget:__get_navigation_last_child_filepath__("/project/src/"))
   t.assert_eq("/project/README.md", widget:__get_navigation_last_child_filepath__("/project/README.md"))
+end)
+
+t:test("navigation: consumes canonical render filepaths without normalization", function()
+  local cursor = { 1, 0 } ---@type integer[]
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_get_cursor", function()
+    return cursor
+  end)
+  t:patch_table(vim.api, "nvim_win_set_cursor", function(_, next_cursor)
+    cursor = next_cursor
+  end)
+
+  local o_cursor_filepath = new_observable()
+  local widget = setmetatable({
+    _render_result = {
+      lines = { "dir", "file" },
+      lnum_to_filepath = {
+        [1] = "/project/src/",
+        [2] = "/project/src/main.lua",
+      },
+    },
+    _tree = { o_cursor_filepath = o_cursor_filepath },
+    _tab_wins = { [1] = 101 },
+  }, Widget)
+
+  local filepaths = {} ---@type string[]
+  normalize_calls = 0
+  local found = widget:__goto_matching_file_or_dir__("next", function(filepath)
+    filepaths[#filepaths + 1] = filepath
+    return true
+  end)
+
+  t.assert_true(found, "matching item")
+  t.assert_eq(0, normalize_calls, "canonical navigation filepath normalization count")
+  t.assert_eq("/project/src", filepaths[1], "directory matcher filepath")
+  t.assert_eq("/project/src/main.lua", filepaths[2], "file matcher filepath")
+  t.assert_eq("/project/src/main.lua", o_cursor_filepath:snapshot(), "selected filepath")
+  t.assert_eq(2, cursor[1], "selected line")
 end)
 
 t:test("ignored refresh: updates any visible tab and filters unaffected paths", function()

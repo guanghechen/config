@@ -803,7 +803,6 @@ function M:__goto_matching_item__(direction, include_dirs, matcher)
     if filepath ~= nil then
       local is_dir = filepath:sub(-1) == "/" ---@type boolean
       if include_dirs or not is_dir then
-        filepath = normalize_filepath(filepath, is_dir)
         if is_dir and #filepath > 1 then
           filepath = filepath:sub(1, -2)
         end
