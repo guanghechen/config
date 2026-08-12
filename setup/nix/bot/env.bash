@@ -33,11 +33,6 @@ if [ -n "${HOME_HOMEBREW:-}" ] && [[ ":$PATH:" != *":$HOME_HOMEBREW/bin:"* ]]; t
   export PATH=$PATH:"$HOME_HOMEBREW/bin"
 fi
 
-### Cargo
-if [ -f "$HOME/.cargo/bin/cargo" ] && [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
-  export PATH="$HOME/.cargo/bin:$PATH"
-fi
-
 ### fnm
 if command -v fnm >/dev/null 2>&1; then
   _ghc_fnm_env="$(fnm env --use-on-cd)" || return 1
@@ -54,4 +49,9 @@ if [ -f "$HOME/.app/miniforge3/bin/conda" ] && [ -x "$HOME/.app/miniforge3/bin/c
   _ghc_conda_env="$("$HOME/.app/miniforge3/bin/conda" shell.bash hook)" || return 1
   eval "$_ghc_conda_env" || return 1
   unset _ghc_conda_env
+fi
+
+### Cargo
+if [ -f "$HOME/.cargo/bin/cargo" ]; then
+  export PATH="$HOME/.cargo/bin:$PATH"
 fi

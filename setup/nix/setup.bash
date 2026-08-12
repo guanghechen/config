@@ -75,8 +75,7 @@ ghc_step_optional node ghc_run_script "$setup_nix/env/node.bash"
 ## Refresh PATH after installers ran in isolated shells.
 source "$setup_nix/bot/env.bash" || exit 1
 
-## `kit` comes from the node step and provisions every app config below; `node`
-## also runs the theme step.
+## `kit` provisions every app config below; `node` runs the theme step.
 ghc_require node kit
 
 ## Setup configs
