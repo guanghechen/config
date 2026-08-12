@@ -30,6 +30,7 @@ version.json
 /mcp-oauth-locks/
 /memories/
 /node_repl/active_execs/
+/packages/standalone/
 /plugins/.plugin-appserver/
 /plugins/cache/
 /process_manager/
