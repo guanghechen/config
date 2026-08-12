@@ -1,5 +1,6 @@
 fzf-git-status() {
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    local repo_root
+    if ! repo_root=$(git rev-parse --show-toplevel 2>/dev/null); then
         echo 'fzf-git-status: Not in a git repository.' >&2
         return 1
     fi
@@ -8,33 +9,39 @@ fzf-git-status() {
     local token="$GHC_READLINE_TOKEN"
 
     local preview_cmd
-    preview_cmd="bash -c 'line=\"{}\"; idx_st=\"\${line:0:1}\"; p=\"\${line:3}\"; if [[ \"\$idx_st\" == \"?\" ]]; then bat --line-range=:500 --style=snip --number --color=always \"\$p\" 2>/dev/null || cat -n \"\$p\"; else git diff --color=always -- \"\$p\" 2>/dev/null; git diff --color=always --staged -- \"\$p\" 2>/dev/null; fi'"
+    preview_cmd='bash -c '\''line=$1; status_code=${line:0:2}; p=${line:3}; if [[ "$status_code" == "??" ]]; then bat --line-range=:500 --style=snip --number --color=always "$p" 2>/dev/null || cat -n "$p"; else git diff --color=always -- "$p" 2>/dev/null; git diff --color=always --staged -- "$p" 2>/dev/null; fi'\'' _ {}'
 
     local open_cmd
-    open_cmd="bash -c 'line=\"{}\"; p=\"\${line:3}\"; if [[ \"\${line:0:1}\" == \"R\" ]]; then p=\"\${p##* -> }\"; fi; nvim \"\$p\" < /dev/tty'"
+    open_cmd='bash -c '\''line=$1; nvim -- "${line:3}" < /dev/tty'\'' _ {}'
 
-    local selected
-    selected=$(git status --short |
-        fzf --ansi --multi --prompt="Git Status> " \
+    local entry status_code path old_path
+    local -a selected=()
+    mapfile -d '' -t selected < <(
+        git status --porcelain=v1 --null |
+        while IFS= read -r -d '' entry; do
+            status_code=${entry:0:2}
+            path=${entry:3}
+            printf '%s %s/%s\0' "$status_code" "$repo_root" "$path"
+
+            if [[ "$status_code" == *[RC]* ]]; then
+                IFS= read -r -d '' old_path || break
+            fi
+        done |
+        fzf --read0 --print0 --multi --prompt="Git Status> " \
             --query="$token" \
             --nth=2.. \
             --preview="$preview_cmd" \
             --preview-window="right:60%:wrap" \
-            --bind="ctrl-o:execute($open_cmd)")
+            --bind="ctrl-o:execute($open_cmd)"
+    )
 
-    if [[ -n "$selected" ]]; then
+    if [[ ${#selected[@]} -gt 0 ]]; then
         local paths=()
-        local line path
-        while IFS= read -r line; do
+        local line
+        for line in "${selected[@]}"; do
             [[ -z "$line" ]] && continue
-            if [[ "${line:0:1}" == "R" ]]; then
-                path="${line:3}"
-                path="${path##* -> }"
-            else
-                path="${line:3}"
-            fi
-            paths+=("$path")
-        done <<< "$selected"
+            paths+=("${line:3}")
+        done
 
         if [[ ${#paths[@]} -gt 0 ]]; then
             local replacement
