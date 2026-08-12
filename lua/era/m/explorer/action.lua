@@ -28,23 +28,28 @@ local function to_os_filepath(filepath)
   return stl.os.path.to_os(filepath)
 end
 
+---@param filepath                      string
+---@return string
+local function transfer_filepath_key(filepath)
+  if filepath == "/" or filepath:match("^[A-Za-z]:/$") then
+    return filepath
+  end
+  return filepath:sub(-1) == "/" and filepath:sub(1, -2) or filepath
+end
+
 ---@param source                        era.m.explorer.IPendingTransferSource
 ---@param filepath                      string
 ---@return boolean
 local function transfer_source_covers(source, filepath)
-  local source_filepath = normalize_filepath(source.filepath, false) ---@type string
-  local target_filepath = normalize_filepath(filepath, false) ---@type string
-  return source_filepath == target_filepath
-    or (source.nodetype == "D" and yoz.path.is_descendant(source_filepath, target_filepath))
+  return source.filepath == filepath
+    or (source.nodetype == "D" and yoz.canonical_path.is_descendant(source.filepath, filepath))
 end
 
 ---@param root_filepath                 string
 ---@param filepath                      string
 ---@return boolean
 local function is_same_or_descendant(root_filepath, filepath)
-  local root = normalize_filepath(root_filepath, false) ---@type string
-  local target = normalize_filepath(filepath, false) ---@type string
-  return yoz.path.is_descendant(root, target)
+  return yoz.canonical_path.is_descendant(root_filepath, filepath)
 end
 
 ---@param input                         string
@@ -458,13 +463,8 @@ end
 ---@param node                          era.m.explorer.Node
 ---@return era.m.explorer.IPendingTransferSource
 function M:__create_transfer_source__(node)
-  local is_directory = node.nodetype == "D" ---@type boolean
-  local filepath = normalize_filepath(node.filepath, is_directory) ---@type string
-  if is_directory and filepath:sub(-1) ~= "/" then
-    filepath = filepath .. "/"
-  end
   return {
-    filepath = filepath,
+    filepath = node.filepath,
     nodename = node.nodename,
     nodetype = node.nodetype,
   }
@@ -1382,10 +1382,7 @@ function M:paste()
 
   local target_dir_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath
     or ctx.get_parent_filepath(cursor_filepath) ---@type string
-  local target_dir = normalize_filepath(target_dir_filepath, true) ---@type string
-  if target_dir:sub(-1) ~= "/" then
-    target_dir = target_dir .. "/"
-  end
+  local target_dir = target_dir_filepath ---@type string
 
   local plans, errors = self:__build_transfer_plans__(pending_transfer, target_dir)
   if plans == nil then
@@ -1427,25 +1424,22 @@ function M:__build_transfer_plans__(pending_transfer, target_dir)
     end
 
     local is_directory = current_source.nodetype == "D" ---@type boolean
-    local target_filepath = normalize_filepath(target_dir .. current_source.nodename, is_directory) ---@type string
-    if is_directory and target_filepath:sub(-1) ~= "/" then
-      target_filepath = target_filepath .. "/"
-    end
+    local target_filepath = target_dir .. current_source.nodename .. (is_directory and "/" or "") ---@type string
 
-    local source_comparable = normalize_filepath(current_source.filepath, false) ---@type string
-    local target_comparable = normalize_filepath(target_filepath, false) ---@type string
-    if source_comparable == target_comparable then
+    local source_key = transfer_filepath_key(current_source.filepath) ---@type string
+    local target_key = transfer_filepath_key(target_filepath) ---@type string
+    if source_key == target_key then
       return nil, string.format("Source is already in target directory: %s", current_source.filepath)
     end
 
-    if is_directory and is_same_or_descendant(source_comparable, target_dir) then
+    if is_directory and is_same_or_descendant(current_source.filepath, target_dir) then
       return nil, string.format("Cannot paste a directory into itself: %s", current_source.filepath)
     end
 
-    if target_filepaths[target_comparable] then
+    if target_filepaths[target_key] then
       return nil, string.format("Multiple sources resolve to: %s", target_filepath)
     end
-    target_filepaths[target_comparable] = true
+    target_filepaths[target_key] = true
 
     if ctx.resource_manager:locate(target_filepath) ~= nil then
       return nil, string.format("Target already exists: %s", target_filepath)

@@ -212,7 +212,9 @@ local function setup_transfer(props)
     moves = {},
     removes = {},
     reports = {},
+    canonical_descendant = 0,
     clear_selection = 0,
+    normalize = 0,
     refresh = 0,
     tree_refresh = 0,
   }
@@ -237,7 +239,10 @@ local function setup_transfer(props)
   t:patch_global("stl", {
     os = {
       path = {
-        normalize = normalize,
+        normalize = function(filepath, keep_trailing_slash)
+          calls.normalize = calls.normalize + 1
+          return normalize(filepath, keep_trailing_slash)
+        end,
         to_os = function(filepath)
           return filepath
         end,
@@ -250,8 +255,9 @@ local function setup_transfer(props)
     },
   })
   t:patch_global("yoz", {
-    path = {
+    canonical_path = {
       is_descendant = function(from, to)
+        calls.canonical_descendant = calls.canonical_descendant + 1
         from = normalize(from, false)
         to = normalize(to, false)
         return to == from or to:sub(1, #from + 1) == from .. "/"
@@ -698,6 +704,7 @@ t:test("transfer: paste uses target directory and source basenames without a pro
   t.assert_eq(2, #calls.copies, "copy count")
   t.assert_eq("/target/a.txt", calls.copies[1].target, "first basename target")
   t.assert_eq("/target/b.txt", calls.copies[2].target, "second basename target")
+  t.assert_eq(0, calls.normalize, "canonical transfer normalization count")
   t.assert_eq(1, calls.clear_selection, "selection clear count")
   t.assert_nil(action:get_pending_transfer(), "pending transfer after success")
 end)
@@ -727,7 +734,7 @@ end)
 t:test("transfer: duplicate basenames abort before any write", function()
   local nodes = {
     { filepath = "/project/src/config.lua", nodename = "config.lua", nodetype = "F" },
-    { filepath = "/project/test/config.lua", nodename = "config.lua", nodetype = "F" },
+    { filepath = "/project/test/config.lua/", nodename = "config.lua", nodetype = "D" },
   }
   local resources = {
     [nodes[1].filepath] = nodes[1],
@@ -745,6 +752,7 @@ t:test("transfer: duplicate basenames abort before any write", function()
   action:paste()
 
   t.assert_eq(0, #calls.copies, "copy count")
+  t.assert_eq(0, calls.normalize, "canonical transfer normalization count")
   t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
 end)
 
@@ -765,6 +773,8 @@ t:test("transfer: rejects copying a directory into its descendant", function()
   action:paste()
 
   t.assert_eq(0, #calls.copies, "copy count")
+  t.assert_eq(0, calls.normalize, "canonical transfer normalization count")
+  t.assert_true(calls.canonical_descendant > 0, "canonical descendant check")
   t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
 end)
 
@@ -868,14 +878,16 @@ local function run_name_action(method, input, options)
     },
   })
   t:patch_global("yoz", {
-    path = {
-      extname = function(filepath)
-        return filepath:match("(%.[^./]+)$") or ""
-      end,
+    canonical_path = {
       is_descendant = function(from, to)
         from = normalize(from, false)
         to = normalize(to, false)
         return to == from or to:sub(1, #from + 1) == from .. "/"
+      end,
+    },
+    path = {
+      extname = function(filepath)
+        return filepath:match("(%.[^./]+)$") or ""
       end,
     },
   })
