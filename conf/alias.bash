@@ -58,7 +58,12 @@ alias ggg='gemini --model="gemini-3-pro-preview" --yolo'
 if [[ -n "${HOMEBREW_PREFIX:-}" && -x "$HOMEBREW_PREFIX/bin/fzf" ]]; then
   alias fzf='"$HOMEBREW_PREFIX/bin/fzf"'
 fi
-alias fvim='fzf --print0 | xargs -0 -o nvim'
+fvim() {
+  local -a files=()
+  mapfile -d '' -t files < <(fzf --print0)
+  [[ ${#files[@]} -gt 0 ]] || return 1
+  nvim -- "${files[@]}"
+}
 
 ## lazygit
 if [[ -f "$HOME/.config/lazygit/local/theme.yml" ]]; then
