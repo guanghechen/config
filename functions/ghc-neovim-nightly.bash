@@ -9,6 +9,21 @@ ghc-neovim-nightly() {
         return 1
     fi
 
+    local default_neovim_install_dir="$HOME/.app/neovim"
+    local neovim_install_dir="$default_neovim_install_dir"
+    case "${NEOVIM_HOME:-}" in
+        "")
+            ;;
+        "$default_neovim_install_dir"|/opt/me/app/neovim)
+            neovim_install_dir="$NEOVIM_HOME"
+            ;;
+        *)
+            printf "\e[91m  Error: NEOVIM_HOME is not an allowed nightly installation directory: %s\e[0m\n" "$NEOVIM_HOME" >&2
+            printf "\e[91m  Unset it to use %s, or set it to /opt/me/app/neovim\e[0m\n" "$default_neovim_install_dir" >&2
+            return 1
+            ;;
+    esac
+
     local ps_cmd="ps aux"
     if [[ "$GHC_ENV_PLATFORM" == "nix" || "$GHC_ENV_PLATFORM" == "wsl" ]]; then
         ps_cmd="ps -aux"
@@ -26,14 +41,6 @@ ghc-neovim-nightly() {
         printf "\e[96m  You can kill them with: kill %s\e[0m\n" "$pids"
         return 1
     fi
-
-    local default_neovim_install_dir="$HOME/.app/neovim"
-    local neovim_install_dir="$default_neovim_install_dir"
-    case "${NEOVIM_HOME:-}" in
-        "$default_neovim_install_dir"|/opt/me/app/neovim)
-            neovim_install_dir="$NEOVIM_HOME"
-            ;;
-    esac
 
     local resolved_neovim_install_dir="$neovim_install_dir"
     if [[ -d "$neovim_install_dir" ]]; then
