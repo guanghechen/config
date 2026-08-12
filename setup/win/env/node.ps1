@@ -21,9 +21,6 @@ if ($LASTEXITCODE -eq 0) {
   npm install -g tree-sitter-cli
 }
 
-Write-Host "  [setup node] installing @guanghechen/kit" -ForegroundColor Cyan
-npm install -g @guanghechen/kit
-
 ## Setup agents
 foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli")) {
   npm list -g --depth=0 "$pkg" *> $null

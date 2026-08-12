@@ -12,9 +12,6 @@ fi
 fnm use "$GHC_APP_EDITION_NODE"
 fnm default "$GHC_APP_EDITION_NODE"
 
-printf "\e[96m  [setup node] installing @guanghechen/kit\e[0m\n"
-npm install -g @guanghechen/kit
-
 ## Setup agents
 for pkg in @anthropic-ai/claude-code @google/gemini-cli; do
   if npm list -g "$pkg" &>/dev/null; then
