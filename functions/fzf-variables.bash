@@ -3,15 +3,10 @@ fzf-variables() {
     local token="$GHC_READLINE_TOKEN"
     local query="${token//\$/}"
 
-    local preview_cmd
-    preview_cmd="bash -c 'v=\"{}\"; if declare -p \"\$v\" >/dev/null 2>&1; then declare -p \"\$v\"; else printf \"%s=%q\\n\" \"\$v\" \"\${!v}\"; fi'"
-
     local selected
     selected=$(compgen -v |
         fzf --multi --prompt="Variables> " \
-            --query="$query" \
-            --preview-window="wrap" \
-            --preview="$preview_cmd")
+            --query="$query")
 
     if [[ -n "$selected" ]]; then
         mapfile -t vars <<< "$selected"
