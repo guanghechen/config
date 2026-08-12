@@ -91,6 +91,11 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable> {
     ])
 }
 
+fn set_path_cwd(cwd: &str) {
+    path::set_cwd(cwd);
+    canonical_path::set_cwd(cwd);
+}
+
 fn canonical_path_module(lua: &Lua) -> LuaResult<LuaTable> {
     let table = lua.create_table_from([
         (
@@ -166,7 +171,7 @@ fn canonical_path_module(lua: &Lua) -> LuaResult<LuaTable> {
         (
             "set_cwd",
             f(lua, |_, cwd: String| {
-                canonical_path::set_cwd(&cwd);
+                set_path_cwd(&cwd);
                 Ok(())
             })?,
         ),
@@ -265,7 +270,7 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
         (
             "set_cwd",
             f(lua, |_, cwd: String| {
-                path::set_cwd(&cwd);
+                set_path_cwd(&cwd);
                 Ok(())
             })?,
         ),

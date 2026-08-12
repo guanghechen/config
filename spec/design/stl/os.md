@@ -22,6 +22,7 @@
 2. `relative` 在 CWD contract 完成前保持使用 `yoz.path`。
 3. OS separator 转换使用 `yoz.path`。
 4. `stl.os.path` 不依赖 `dot.path`。
+5. Lua-facing `yoz.path.set_cwd` 与 `yoz.canonical_path.set_cwd` 共用一个 binding 写入路径，同步更新两份 native cache。
 
 ## 路径语义约束
 
