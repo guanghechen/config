@@ -48,7 +48,7 @@ function M.open_file_history(opts)
   end
 
   -- Get relative path
-  local relative = dot.path.relative(workspace, filepath)
+  local relative = yoz.path.relative(workspace, filepath, false, "/")
 
   -- Call commits with path filter
   S.cmd.log({
