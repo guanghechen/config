@@ -5,24 +5,33 @@ _prepend_path_once() {
     [[ -n "$path_item" && ":$PATH:" != *":$path_item:"* ]] && export PATH="$path_item:$PATH"
 }
 
+_append_path_once() {
+    local path_item="$1"
+    [[ -z "$path_item" ]] && return
+
+    local current_path="${PATH:-}"
+    [[ ":$current_path:" == *":$path_item:"* ]] && return
+    export PATH="${current_path:+$current_path:}$path_item"
+}
+
 if command -v starship >/dev/null 2>&1; then
     export STARSHIP_CONFIG="$HOME/.config/starship/bash.toml"
     eval "$(starship init bash)"
 fi
 
+if command -v fnm >/dev/null 2>&1; then
+    eval "$(fnm env --use-on-cd --shell bash)"
+fi
+
 if [[ -d "$HOME/.bun" ]]; then
     export BUN_INSTALL="$HOME/.bun"
     if [[ -x "$BUN_INSTALL/bin/bun" ]]; then
-        _prepend_path_once "$BUN_INSTALL/bin"
+        _append_path_once "$BUN_INSTALL/bin"
     fi
 fi
 
 if [[ -x "$HOME/.cargo/bin/cargo" ]]; then
     _prepend_path_once "$HOME/.cargo/bin"
-fi
-
-if command -v fnm >/dev/null 2>&1; then
-    eval "$(fnm env --use-on-cd --shell bash)"
 fi
 
 if command -v zoxide >/dev/null 2>&1; then

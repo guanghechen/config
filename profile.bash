@@ -65,7 +65,7 @@ if [[ -z "${PREFER_NEOVIM_VERSION:-}" || "$PREFER_NEOVIM_VERSION" != "stable" ]]
   fi
 fi
 
-if [[ -n "${NEOVIM_HOME:-}" ]]; then
+if [[ -n "${NEOVIM_HOME:-}" && -x "$NEOVIM_HOME/bin/nvim" ]]; then
   _append_path "$NEOVIM_HOME/bin"
 fi
 
@@ -80,7 +80,7 @@ _append_path "$HOME/.local/bin"
 export FZF_DEFAULT_COMMAND="fd --hidden --follow --no-ignore-vcs --color=never --exclude=.git --exclude=node_modules --exclude=.DS_Store --type=f"
 export FZF_DEFAULT_OPTS_FILE="$HOME/.config/fzf/fzf.fzfrc"
 
-if [[ -n "${NEOVIM_HOME:-}" ]]; then
+if [[ -n "${NEOVIM_HOME:-}" && -x "$NEOVIM_HOME/bin/nvim" ]]; then
   export EDITOR="$NEOVIM_HOME/bin/nvim"
   export VISUAL="$NEOVIM_HOME/bin/nvim"
   export MYVIMRC="$HOME/.config/nvim/init.lua"
