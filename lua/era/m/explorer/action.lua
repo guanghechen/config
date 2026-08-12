@@ -922,17 +922,11 @@ function M:jump_last_child()
     return
   end
 
-  if filepath:sub(-1) ~= "/" then
+  local target_filepath = ctx.get_navigation_last_child_filepath(filepath) ---@type string|nil
+  if target_filepath == nil then
     return
   end
 
-  local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
-  if node == nil or not node.expanded or #node.children == 0 then
-    return
-  end
-
-  local last_child = node.children[#node.children] ---@type era.m.explorer.Node
-  local target_filepath = last_child.filepath ---@type string
   ctx.tree.o_cursor_filepath:next(target_filepath)
   ctx.sync_cursor_to_filepath(target_filepath)
 end
@@ -945,12 +939,10 @@ function M:jump_parent()
     return
   end
 
-  local parent_filepath = ctx.get_parent_filepath(filepath) ---@type string
-  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
-
-  if parent_filepath ~= filepath and vim.startswith(parent_filepath, root_filepath) then
-    ctx.tree.o_cursor_filepath:next(parent_filepath)
-    ctx.sync_cursor_to_filepath(parent_filepath)
+  local target_filepath = ctx.get_navigation_parent_filepath(filepath) ---@type string|nil
+  if target_filepath ~= nil then
+    ctx.tree.o_cursor_filepath:next(target_filepath)
+    ctx.sync_cursor_to_filepath(target_filepath)
   end
 end
 

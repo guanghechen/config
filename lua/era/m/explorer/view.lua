@@ -77,6 +77,9 @@ function M:render(bufnr, tree, root, options)
   local sign_info_list = {} ---@type era.m.explorer.view.ISignInfo[]
   local lnum_to_filepath = {} ---@type table<integer, string>
   local filepath_to_lnum = {} ---@type table<string, integer>
+  local parent_lnum = {} ---@type table<integer, integer>
+  local lastchild_lnum = {} ---@type table<integer, integer>
+  local root_lastchild_lnum = nil ---@type integer|nil
   local lnum = 0 ---@type integer
   local indent_hln = self._indent_hln ---@type string
   local only_selected = ctx.only_selected ---@type boolean
@@ -87,8 +90,17 @@ function M:render(bufnr, tree, root, options)
   ---@param display_name                string|nil
   ---@param inherited_selected          boolean
   ---@param inherited_transfer_mode     era.m.explorer.TransferModeEnum|nil
-  ---@return nil
-  local function traverse(node, prefix, is_last, display_name, inherited_selected, inherited_transfer_mode)
+  ---@param visible_parent_lnum          integer|nil
+  ---@return integer|nil
+  local function traverse(
+    node,
+    prefix,
+    is_last,
+    display_name,
+    inherited_selected,
+    inherited_transfer_mode,
+    visible_parent_lnum
+  )
     local is_selected = inherited_selected or node.selected ---@type boolean
     local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
     local transfer_mode = inherited_transfer_mode ---@type era.m.explorer.TransferModeEnum|nil
@@ -127,6 +139,7 @@ function M:render(bufnr, tree, root, options)
     lines[current_lnum] = line
     lnum_to_filepath[current_lnum] = node.filepath
     filepath_to_lnum[node.filepath] = current_lnum
+    parent_lnum[current_lnum] = visible_parent_lnum
 
     if #indent > 0 then
       highlights[#highlights + 1] = {
@@ -177,6 +190,7 @@ function M:render(bufnr, tree, root, options)
       local children = node.children ---@type era.m.explorer.Node[]
       local N = #children ---@type integer
       local child_prefix = prefix .. (is_last and INDENT_SPACE or INDENT_PIPE) ---@type string
+      local current_lastchild_lnum = nil ---@type integer|nil
       for i, child in ipairs(children) do
         local child_display_name = nil ---@type string|nil
 
@@ -188,9 +202,13 @@ function M:render(bufnr, tree, root, options)
           end
         end
 
-        traverse(child, child_prefix, i == N, child_display_name, is_selected, transfer_mode)
+        local child_lnum =
+          traverse(child, child_prefix, i == N, child_display_name, is_selected, transfer_mode, current_lnum) ---@type integer|nil
+        current_lastchild_lnum = child_lnum or current_lastchild_lnum
       end
+      lastchild_lnum[current_lnum] = current_lastchild_lnum
     end
+    return current_lnum
   end
 
   local root_is_expanded = root.expanded ---@type boolean
@@ -218,7 +236,8 @@ function M:render(bufnr, tree, root, options)
         end
       end
 
-      traverse(child, "", i == N, child_display_name, root_is_selected, root_transfer_mode)
+      local child_lnum = traverse(child, "", i == N, child_display_name, root_is_selected, root_transfer_mode, nil) ---@type integer|nil
+      root_lastchild_lnum = child_lnum or root_lastchild_lnum
     end
   end
 
@@ -304,6 +323,9 @@ function M:render(bufnr, tree, root, options)
     sign_info_list = sign_info_list,
     lnum_to_filepath = lnum_to_filepath,
     filepath_to_lnum = filepath_to_lnum,
+    parent_lnum = parent_lnum,
+    lastchild_lnum = lastchild_lnum,
+    root_lastchild_lnum = root_lastchild_lnum,
     diag_by_lnum = diag_by_lnum,
     git_by_lnum = git_by_lnum,
     sign_by_lnum = sign_by_lnum,

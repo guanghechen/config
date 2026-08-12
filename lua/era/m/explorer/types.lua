@@ -42,6 +42,8 @@
 ---@field public resource_manager       era.m.explorer.resource.FileManager
 ---@field public fullname               string
 ---@field public get_cursor_filepath         fun(): string|nil
+---@field public get_navigation_parent_filepath fun(filepath: string): string|nil
+---@field public get_navigation_last_child_filepath fun(filepath: string): string|nil
 ---@field public get_parent_filepath         fun(filepath: string): string
 ---@field public get_visual_nodes       fun(): era.m.explorer.Node[]
 ---@field public refresh                fun(skip_refresh: boolean|nil): nil
@@ -127,6 +129,9 @@
 ---@field public highlights             stl.t.IHighlight[]
 ---@field public lines                  string[]
 ---@field public lnum_to_filepath            table<integer, string>
+---@field public parent_lnum            table<integer, integer>
+---@field public lastchild_lnum         table<integer, integer>
+---@field public root_lastchild_lnum    integer|nil
 ---@field public sign_by_lnum           table<integer, era.m.explorer.view.ISignInfo>
 ---@field public sign_info_list         era.m.explorer.view.ISignInfo[]
 ---@field public filepath_to_lnum            table<string, integer>

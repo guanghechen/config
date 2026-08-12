@@ -140,6 +140,12 @@ function M.new(props)
     get_cursor_filepath = function()
       return self:get_cursor_filepath()
     end,
+    get_navigation_parent_filepath = function(filepath)
+      return self:__get_navigation_parent_filepath__(filepath) ---@diagnostic disable-line: invisible
+    end,
+    get_navigation_last_child_filepath = function(filepath)
+      return self:__get_navigation_last_child_filepath__(filepath) ---@diagnostic disable-line: invisible
+    end,
     get_parent_filepath = function(filepath)
       return self:__get_parent_filepath__(filepath) ---@diagnostic disable-line: invisible
     end,
@@ -610,11 +616,47 @@ function M:__get_parent_filepath__(filepath)
   local parent = dot.path.dirname(trimmed) ---@type string
   parent = normalize_filepath(parent, true)
 
-  if parent:match("^[A-Za-z]:$") then
+  if parent:sub(-1) ~= "/" then
     parent = parent .. "/"
   end
 
   return parent
+end
+
+---@protected
+---@param filepath                     string
+---@return string|nil
+function M:__get_navigation_parent_filepath__(filepath)
+  local render_result = self._render_result ---@type era.m.explorer.view.IRenderResult|nil
+  if render_result == nil then
+    return nil
+  end
+
+  local lnum = render_result.filepath_to_lnum[filepath] ---@type integer|nil
+  local parent_lnum = lnum ~= nil and render_result.parent_lnum[lnum] or nil ---@type integer|nil
+  return parent_lnum ~= nil and render_result.lnum_to_filepath[parent_lnum] or nil
+end
+
+---@protected
+---@param filepath                     string
+---@return string|nil
+function M:__get_navigation_last_child_filepath__(filepath)
+  local render_result = self._render_result ---@type era.m.explorer.view.IRenderResult|nil
+  if render_result == nil then
+    return nil
+  end
+
+  local lnum = render_result.filepath_to_lnum[filepath] ---@type integer|nil
+  if lnum == nil then
+    return nil
+  end
+
+  local target_lnum = render_result.lastchild_lnum[lnum] ---@type integer|nil
+  if target_lnum == nil then
+    local parent_lnum = render_result.parent_lnum[lnum] ---@type integer|nil
+    target_lnum = parent_lnum ~= nil and render_result.lastchild_lnum[parent_lnum] or render_result.root_lastchild_lnum
+  end
+  return target_lnum ~= nil and render_result.lnum_to_filepath[target_lnum] or nil
 end
 
 ---@protected
@@ -1142,7 +1184,7 @@ function M:__setup_keymaps__(bufnr)
       callback = function()
         action:jump_last_child()
       end,
-      desc = "explorer: jump to last child",
+      desc = "explorer: jump to last child/last sibling",
     },
     {
       modes = { "i", "n" },

@@ -373,6 +373,44 @@ t:test("reveal: preserves the current root when attach fails", function()
   t.assert_eq(1, calls.render, "failed reveal should render the current root once")
 end)
 
+t:test("parent filepath: directory parents keep a trailing slash", function()
+  t:patch_table(dot.path, "dirname", function()
+    return "/project/src"
+  end)
+
+  local widget = setmetatable({}, Widget)
+
+  t.assert_eq("/project/src/", widget:__get_parent_filepath__("/project/src/main.lua"))
+end)
+
+t:test("navigation: resolves the visible parent, last child, and last sibling", function()
+  local widget = setmetatable({
+    _render_result = {
+      filepath_to_lnum = {
+        ["/project/src/"] = 1,
+        ["/project/src/a.lua"] = 2,
+        ["/project/src/z.lua"] = 3,
+        ["/project/README.md"] = 4,
+      },
+      lnum_to_filepath = {
+        [1] = "/project/src/",
+        [2] = "/project/src/a.lua",
+        [3] = "/project/src/z.lua",
+        [4] = "/project/README.md",
+      },
+      parent_lnum = { [2] = 1, [3] = 1 },
+      lastchild_lnum = { [1] = 3 },
+      root_lastchild_lnum = 4,
+    },
+  }, Widget)
+
+  t.assert_eq("/project/src/", widget:__get_navigation_parent_filepath__("/project/src/a.lua"))
+  t.assert_eq("/project/src/z.lua", widget:__get_navigation_last_child_filepath__("/project/src/a.lua"))
+  t.assert_nil(widget:__get_navigation_parent_filepath__("/project/src/"))
+  t.assert_eq("/project/src/z.lua", widget:__get_navigation_last_child_filepath__("/project/src/"))
+  t.assert_eq("/project/README.md", widget:__get_navigation_last_child_filepath__("/project/README.md"))
+end)
+
 t:test("ignored refresh: updates any visible tab and filters unaffected paths", function()
   local valid_wins = { [101] = true } ---@type table<integer, boolean>
   t:patch_table(vim.api, "nvim_get_current_tabpage", function()

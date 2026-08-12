@@ -254,4 +254,59 @@ t:test("file icons: restores modifiable when a buffer update fails", function()
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
+t:test("render: records visible parent and last-child navigation", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local view = View.new("navigation-test")
+  local first = {
+    filepath = "/project/src/a.lua",
+    nodename = "a.lua",
+    nodetype = "F",
+  } ---@type era.m.explorer.Node
+  local last = {
+    filepath = "/project/src/z.lua",
+    nodename = "z.lua",
+    nodetype = "F",
+  } ---@type era.m.explorer.Node
+  local directory = {
+    filepath = "/project/src/",
+    nodename = "src",
+    nodetype = "D",
+    expanded = true,
+    loaded = true,
+    children = { first, last },
+  } ---@type era.m.explorer.Node
+  local root_last = {
+    filepath = "/project/README.md",
+    nodename = "README.md",
+    nodetype = "F",
+  } ---@type era.m.explorer.Node
+  local root = {
+    filepath = "/project/",
+    nodename = "project",
+    nodetype = "D",
+    expanded = true,
+    loaded = true,
+    children = { directory, root_last },
+  } ---@type era.m.explorer.Node
+  local tree = {
+    ticks = { structure = 1 },
+    is_selected = function()
+      return false
+    end,
+  } ---@type era.m.explorer.Tree
+
+  local result = view:render(bufnr, tree, root, {
+    foldempty = false,
+    show_diagnostics = false,
+    show_git_status = false,
+    show_icons = false,
+  })
+
+  t.assert_eq(1, result.parent_lnum[2], "first child parent")
+  t.assert_eq(1, result.parent_lnum[3], "last child parent")
+  t.assert_eq(3, result.lastchild_lnum[1], "directory last child")
+  t.assert_eq(4, result.root_lastchild_lnum, "root last child")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
 t:run()

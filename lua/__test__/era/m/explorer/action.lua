@@ -137,6 +137,60 @@ t:test("create_file: no trailing slash creates file path", function()
   t.assert_eq("/project/foo", calls.opened_filepath, "file should open")
 end)
 
+---@param method                        "jump_parent"|"jump_last_child"
+---@param parent_filepath               string|nil
+---@param parent_last_child_filepath    string|nil
+---@return table
+local function run_navigation(method, parent_filepath, parent_last_child_filepath)
+  local calls = { cursor = "/project/src/current.lua", synced = nil }
+  local ctx = {
+    get_cursor_filepath = function()
+      return calls.cursor
+    end,
+    get_navigation_parent_filepath = function()
+      return parent_filepath
+    end,
+    get_navigation_last_child_filepath = function()
+      return parent_last_child_filepath
+    end,
+    sync_cursor_to_filepath = function(filepath)
+      calls.synced = filepath
+    end,
+    tree = {
+      o_cursor_filepath = {
+        next = function(_, filepath)
+          calls.cursor = filepath
+        end,
+      },
+    },
+  }
+
+  local action = Action.new(ctx)
+  action[method](action)
+  return calls
+end
+
+t:test("jump parent: focuses the visible parent", function()
+  local calls = run_navigation("jump_parent", "/project/src/", nil)
+
+  t.assert_eq("/project/src/", calls.cursor)
+  t.assert_eq("/project/src/", calls.synced)
+end)
+
+t:test("jump parent: keeps the cursor when the visible parent is the hidden root", function()
+  local calls = run_navigation("jump_parent", nil, nil)
+
+  t.assert_eq("/project/src/current.lua", calls.cursor)
+  t.assert_nil(calls.synced)
+end)
+
+t:test("jump last child: focuses the resolved child or sibling", function()
+  local calls = run_navigation("jump_last_child", nil, "/project/src/z.lua")
+
+  t.assert_eq("/project/src/z.lua", calls.cursor)
+  t.assert_eq("/project/src/z.lua", calls.synced)
+end)
+
 local function normalize(filepath, keep_trailing_slash)
   local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
   if keep_trailing_slash == false and normalized ~= "/" then
