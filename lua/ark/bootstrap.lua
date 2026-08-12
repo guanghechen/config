@@ -108,7 +108,6 @@ function M.setup_workspace()
 
     if A == nil then
       local ok, err = pcall(function()
-        yoz.path.set_cwd(p)
         vim.api.nvim_set_current_dir(p)
       end)
       if not ok then
@@ -152,6 +151,8 @@ function M.setup_workspace()
       end
     end
   end
+
+  yoz.path.set_cwd(vim.fn.getcwd())
 
   ---! Clear jumplist. See https://superuser.com/questions/1642954/how-to-start-vim-with-a-clean-jumplist
   vim.schedule(function()

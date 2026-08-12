@@ -23,6 +23,7 @@
 3. OS separator 转换使用 `yoz.path`。
 4. `stl.os.path` 不依赖 `dot.path`。
 5. Lua-facing `yoz.path.set_cwd` 与 `yoz.canonical_path.set_cwd` 共用一个 binding 写入路径，同步更新两份 native cache。
+6. `ark.bootstrap` 在 workspace 选择结束后，以 Neovim effective CWD 一次性初始化 native cache；运行期 CWD 变更不在当前契约内。
 
 ## 路径语义约束
 
