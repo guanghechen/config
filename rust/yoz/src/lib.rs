@@ -1,4 +1,5 @@
 pub mod algorithm;
+pub mod canonical_path;
 pub mod dict;
 pub mod find;
 pub mod r#fn;
@@ -88,6 +89,106 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable> {
             })?,
         ),
     ])
+}
+
+fn canonical_path_module(lua: &Lua) -> LuaResult<LuaTable> {
+    let table = lua.create_table_from([
+        (
+            "basename",
+            f(lua, |_, filepath: String| {
+                Ok(canonical_path::basename(&filepath))
+            })?,
+        ),
+        (
+            "dirname",
+            f(lua, |_, (filepath, keep_tailing_slash): (String, bool)| {
+                Ok(canonical_path::dirname(&filepath, keep_tailing_slash))
+            })?,
+        ),
+        (
+            "extname",
+            f(lua, |_, filepath: String| {
+                Ok(canonical_path::extname(&filepath))
+            })?,
+        ),
+        (
+            "is_absolute",
+            f(lua, |_, filepath: String| {
+                Ok(canonical_path::is_absolute(&filepath))
+            })?,
+        ),
+        (
+            "is_descendant",
+            f(lua, |_, (from, to): (String, String)| {
+                Ok(canonical_path::is_descendant(&from, &to))
+            })?,
+        ),
+        (
+            "is_dirpath",
+            f(lua, |_, filepath: String| {
+                Ok(canonical_path::is_dirpath(&filepath))
+            })?,
+        ),
+        (
+            "join",
+            f(
+                lua,
+                |_, (from, to, keep_trailing_slash): (String, String, bool)| {
+                    Ok(canonical_path::join(&from, &to, keep_trailing_slash))
+                },
+            )?,
+        ),
+        (
+            "relative",
+            f(
+                lua,
+                |_, (from, to, keep_trailing_slash): (String, String, bool)| {
+                    Ok(canonical_path::relative(&from, &to, keep_trailing_slash))
+                },
+            )?,
+        ),
+        (
+            "resolve",
+            f(
+                lua,
+                |_, (from, to, keep_trailing_slash): (String, String, bool)| {
+                    Ok(canonical_path::resolve(&from, &to, keep_trailing_slash))
+                },
+            )?,
+        ),
+        (
+            "get_cwd",
+            f(lua, |_, ()| {
+                let cwd = canonical_path::get_cwd();
+                Ok(cwd.as_ref().to_owned())
+            })?,
+        ),
+        (
+            "set_cwd",
+            f(lua, |_, cwd: String| {
+                canonical_path::set_cwd(&cwd);
+                Ok(())
+            })?,
+        ),
+        (
+            "normalize",
+            f(lua, |_, (filepath, keep_trailing_slash): (String, bool)| {
+                Ok(canonical_path::normalize(&filepath, keep_trailing_slash))
+            })?,
+        ),
+        (
+            "split",
+            f(
+                lua,
+                |lua, (filepath, keep_trailing_slash): (String, bool)| {
+                    let segments = canonical_path::split(&filepath, keep_trailing_slash);
+                    segments.into_lua(lua)
+                },
+            )?,
+        ),
+    ])?;
+    table.set("SEP", canonical_path::SEP.to_string())?;
+    Ok(table)
 }
 
 fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
@@ -806,6 +907,7 @@ fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
 #[mlua::lua_module]
 fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
+    exports.set("canonical_path", canonical_path_module(lua)?)?;
     exports.set("dict", dict_module(lua)?)?;
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;
