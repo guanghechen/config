@@ -2,6 +2,13 @@
 # ghc-neovim-nightly - Build and install Neovim nightly
 
 ghc-neovim-nightly() {
+    local neovim_source_dir
+    neovim_source_dir=$(pwd -P) || return 1
+    if [[ ! -f "$neovim_source_dir/src/nvim/main.c" ]]; then
+        printf "\e[91m  Error: current directory is not a Neovim source tree\e[0m\n"
+        return 1
+    fi
+
     local ps_cmd="ps aux"
     if [[ "$GHC_ENV_PLATFORM" == "nix" || "$GHC_ENV_PLATFORM" == "wsl" ]]; then
         ps_cmd="ps -aux"
@@ -20,23 +27,45 @@ ghc-neovim-nightly() {
         return 1
     fi
 
-    if [[ -z "$NEOVIM_HOME" ]]; then
-        printf "\e[91m  Error: NEOVIM_HOME environment variable is not set\e[0m\n"
+    local default_neovim_install_dir="$HOME/.app/neovim"
+    local neovim_install_dir="$default_neovim_install_dir"
+    case "${NEOVIM_HOME:-}" in
+        "$default_neovim_install_dir"|/opt/me/app/neovim)
+            neovim_install_dir="$NEOVIM_HOME"
+            ;;
+    esac
+
+    local resolved_neovim_install_dir="$neovim_install_dir"
+    if [[ -d "$neovim_install_dir" ]]; then
+        resolved_neovim_install_dir=$(cd -P -- "$neovim_install_dir" && pwd) || return 1
+    fi
+    if [[ "$neovim_source_dir" == "$resolved_neovim_install_dir" || "$neovim_source_dir" == "$resolved_neovim_install_dir/"* ]]; then
+        printf "\e[91m  Error: Neovim installation directory contains the source tree: %s\e[0m\n" "$neovim_install_dir"
         return 1
     fi
 
-    printf "\e[94m  Building Neovim nightly...\e[0m\n\n"
+    printf "\e[94m  Building Neovim nightly for %s...\e[0m\n\n" "$neovim_install_dir"
 
-    printf "\e[96m  Fetching tags and checking out nightly branch...\e[0m\n"
-    git fetch origin --tags --force && git checkout nightly || return 1
+    printf "\e[96m  Fetching and checking out the nightly tag...\e[0m\n"
+    git fetch origin +refs/tags/nightly:refs/tags/nightly && git checkout --detach refs/tags/nightly || return 1
 
     printf "\n\e[96m  Building with CMake (RelWithDebInfo)...\e[0m\n"
-    make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="$NEOVIM_HOME" || return 1
+    make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="$neovim_install_dir" || return 1
 
-    printf "\n\e[96m  Removing old installation...\e[0m\n"
-    rm -rf "$NEOVIM_HOME" || return 1
+    if [[ -e "$neovim_install_dir" || -L "$neovim_install_dir" ]]; then
+        printf "\n\e[93m  Existing installation will be removed: %s\e[0m\n" "$neovim_install_dir"
+        local confirmation
+        read -r -p "Remove it and continue? [y/N] " confirmation
+        confirmation=${confirmation,,}
+        if [[ "$confirmation" != "y" && "$confirmation" != "yes" ]]; then
+            printf "\e[91m  Installation cancelled\e[0m\n"
+            return 1
+        fi
 
-    printf "\n\e[96m  Installing to %s...\e[0m\n" "$NEOVIM_HOME"
+        command rm -rf -- "$neovim_install_dir" || return 1
+    fi
+
+    printf "\n\e[96m  Installing to %s...\e[0m\n" "$neovim_install_dir"
     make install || return 1
 
     printf "\n\e[92m  Neovim nightly installed successfully!\e[0m\n"
