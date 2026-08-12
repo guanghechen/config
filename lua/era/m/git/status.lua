@@ -106,7 +106,7 @@ local function normalize_status_path(filepath)
   -- Git status cache keys use forward slashes on Windows. On POSIX, backslash is a legal filename
   -- byte and must not be interpreted as a separator.
   if stl.env.PATH_SEP == "\\" then
-    return dot.path.normalize(filepath, false, "/")
+    return yoz.canonical_path.normalize(filepath, false)
   end
   if filepath ~= "/" then
     local normalized = filepath:gsub("/+$", "") ---@type string
@@ -119,9 +119,6 @@ end
 ---@param relative                   string
 ---@return string
 local function join_status_path(workspace, relative)
-  if stl.env.PATH_SEP == "\\" then
-    return normalize_status_path(dot.path.join(workspace, relative))
-  end
   local prefix = workspace:sub(-1) == "/" and workspace or (workspace .. "/")
   return prefix .. relative
 end
@@ -607,6 +604,7 @@ function M.collect(opts, token)
   if not dot.path.is_git_repo() then
     return stl.c.Future.resolve({ status_map = {}, status_groups = create_status_groups(), numstats = nil })
   end
+  local canonical_workspace = normalize_status_path(workspace) ---@type string
 
   local base = opts and opts.base
   local include_numstat = opts ~= nil and opts.include_numstat == true
@@ -680,7 +678,7 @@ function M.collect(opts, token)
       end
       for _, record in ipairs(staged_records) do
         local relative = record.relative
-        local absolute = join_status_path(workspace, relative)
+        local absolute = join_status_path(canonical_workspace, relative)
         local entry = ensure_entry(status_map, absolute, relative)
         apply_status_code(entry, "staged", record.status)
         entry.staged_prev_relative = record.previous
@@ -697,7 +695,7 @@ function M.collect(opts, token)
       end
       for _, record in ipairs(unstaged_records) do
         local relative = record.relative
-        local absolute = join_status_path(workspace, relative)
+        local absolute = join_status_path(canonical_workspace, relative)
         local entry = ensure_entry(status_map, absolute, relative)
         apply_status_code(entry, "unstaged", record.status)
         entry.unstaged_prev_relative = record.previous
@@ -711,7 +709,7 @@ function M.collect(opts, token)
         if untracked_result and untracked_result.lines then
           for _, path in ipairs(parse_path_output(untracked_result.lines)) do
             local relative = path
-            local absolute = join_status_path(workspace, relative)
+            local absolute = join_status_path(canonical_workspace, relative)
             local entry = ensure_entry(status_map, absolute, relative)
             entry.codes["?"] = true
             entry.unstaged["?"] = true
@@ -925,6 +923,7 @@ function M.calc_info(filepath, filetype, offset, highlights)
   return part, highlight
 end
 
+---Build derived indexes from `collect`'s canonical absolute status keys.
 ---@param status_table               table<string, era.m.git.StatusEntry>
 ---@return era.m.git.status.IAggregatedCache
 function M.aggregate(status_table)
@@ -940,23 +939,22 @@ function M.aggregate(status_table)
       goto continue
     end
 
-    local normalized_filepath = normalize_status_path(filepath)
-    entry.path = normalized_filepath
-    status_entries[normalized_filepath] = entry
-    file_display[normalized_filepath] = entry.display or ""
+    entry.path = filepath
+    status_entries[filepath] = entry
+    file_display[filepath] = entry.display or ""
 
     if entry.summary then
-      file_summary[normalized_filepath] = entry.summary
+      file_summary[filepath] = entry.summary
     end
     if entry.stage then
-      file_stage[normalized_filepath] = entry.stage
+      file_stage[filepath] = entry.stage
     end
 
     if entry.stage == "staged" or entry.stage == "mixed" then
-      staged_files[#staged_files + 1] = normalized_filepath
+      staged_files[#staged_files + 1] = filepath
     end
     if entry.stage == "unstaged" or entry.stage == "mixed" then
-      unstaged_files[#unstaged_files + 1] = normalized_filepath
+      unstaged_files[#unstaged_files + 1] = filepath
     end
 
     ::continue::

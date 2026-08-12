@@ -7,6 +7,7 @@ local harness = require("__test__.harness")
 
 local t = harness.new("era.m.git.status")
 local aggregated = nil ---@type era.m.git.status.IAggregatedCache|nil
+local canonical_normalize_calls = 0 ---@type integer
 
 local function normalize(filepath, keep_trailing_slash, sep)
   local had_trailing_slash = filepath:sub(-1) == "/" or filepath:sub(-1) == "\\" ---@type boolean
@@ -25,6 +26,14 @@ end
 bootstrap.with_runtime(t, {
   stl = {
     env = { PATH_SEP = "/" },
+  },
+  yoz = {
+    canonical_path = {
+      normalize = function(filepath, keep_trailing_slash)
+        canonical_normalize_calls = canonical_normalize_calls + 1
+        return normalize(filepath, keep_trailing_slash, "/")
+      end,
+    },
   },
   dot = {
     path = {
@@ -68,22 +77,25 @@ local function create_entry(code)
   }
 end
 
-t:test("compute_dir_status: normalizes Windows separators for descendants", function()
+t:test("compute_dir_status: canonicalizes only the Windows lookup path", function()
   t:patch_table(stl.env, "PATH_SEP", "\\")
+  canonical_normalize_calls = 0
   aggregated = status.aggregate({
-    ["C:\\repo\\dir\\file.lua"] = create_entry("M"),
+    ["C:/repo/dir/file.lua"] = create_entry("M"),
   })
+  t.assert_eq(0, canonical_normalize_calls, "canonical aggregate input")
 
   local info = status.compute_dir_status(aggregated, "C:\\repo\\dir\\")
 
   t.assert_true(info ~= nil, "directory info")
   t.assert_eq("M", info.display, "directory display")
+  t.assert_eq(1, canonical_normalize_calls, "lookup normalization")
 end)
 
 t:test("resolve: Windows-style descendants inherit untracked symlink status", function()
   t:patch_table(stl.env, "PATH_SEP", "\\")
   aggregated = status.aggregate({
-    ["C:\\repo\\link"] = create_entry("?"),
+    ["C:/repo/link"] = create_entry("?"),
   })
 
   local display, highlight = status.resolve("C:\\repo\\link\\nested\\file.lua", "file")
@@ -98,7 +110,7 @@ end)
 t:test("compute_dir_status: includes a directory symlink own entry", function()
   t:patch_table(stl.env, "PATH_SEP", "\\")
   aggregated = status.aggregate({
-    ["C:\\repo\\link"] = create_entry("?"),
+    ["C:/repo/link"] = create_entry("?"),
   })
 
   local info = status.compute_dir_status(aggregated, "C:\\repo\\link\\")
@@ -110,8 +122,8 @@ end)
 t:test("calc_info: mixed directory status keeps untracked U highlight", function()
   t:patch_table(stl.env, "PATH_SEP", "\\")
   aggregated = status.aggregate({
-    ["C:\\repo\\dir\\link"] = create_entry("?"),
-    ["C:\\repo\\dir\\tracked.lua"] = create_entry("M"),
+    ["C:/repo/dir/link"] = create_entry("?"),
+    ["C:/repo/dir/tracked.lua"] = create_entry("M"),
   })
   local highlights = {}
 

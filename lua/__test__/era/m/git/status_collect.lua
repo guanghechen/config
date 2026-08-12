@@ -53,6 +53,7 @@ end
 local commands = {} ---@type string[][]
 local command_opts = {} ---@type stl.git.exec.IExecOpts[]
 local responses = {} ---@type table[]
+local canonical_normalize_calls = 0 ---@type integer
 bootstrap.with_global(t, "stl", {
   env = { PATH_SEP = "/" },
   async = {
@@ -69,6 +70,14 @@ bootstrap.with_global(t, "stl", {
         return responses[#commands] or { code = 0, lines = {} }
       end,
     },
+  },
+})
+bootstrap.with_global(t, "yoz", {
+  canonical_path = {
+    normalize = function(path)
+      canonical_normalize_calls = canonical_normalize_calls + 1
+      return path:gsub("\\", "/"):gsub("/+", "/"):gsub("/+$", "")
+    end,
   },
 })
 bootstrap.with_global(t, "dot", {
@@ -126,6 +135,31 @@ t:test("collect: explicit base remains supported", function()
   status.collect({ base = "HEAD" }):get_result()
 
   t.assert_eq("diff --staged --name-status -z HEAD --", table.concat(commands[1], " "), "staged command")
+end)
+
+t:test("collect: canonicalizes a Windows workspace once without changing Git cwd", function()
+  commands = {}
+  command_opts = {}
+  responses = {
+    { code = 0, lines = { "M\0dir/one.lua\0A\0two.lua\0" } },
+    { code = 0, lines = { "M\0dir/one.lua\0" } },
+    { code = 0, lines = { "untracked.lua\0" } },
+  }
+  canonical_normalize_calls = 0
+  t:patch_table(stl.env, "PATH_SEP", "\\")
+  t:patch_table(dot.path, "workspace", function()
+    return [[C:\repo]]
+  end)
+
+  local result = status.collect(nil):get_result()
+
+  t.assert_eq(1, canonical_normalize_calls, "workspace normalization")
+  t.assert_eq([[C:\repo]], command_opts[1].cwd, "staged Git cwd")
+  t.assert_eq([[C:\repo]], command_opts[2].cwd, "unstaged Git cwd")
+  t.assert_eq([[C:\repo]], command_opts[3].cwd, "untracked Git cwd")
+  t.assert_true(result.status_map["C:/repo/dir/one.lua"] ~= nil, "nested canonical key")
+  t.assert_true(result.status_map["C:/repo/two.lua"] ~= nil, "root canonical key")
+  t.assert_true(result.status_map["C:/repo/untracked.lua"] ~= nil, "untracked canonical key")
 end)
 
 t:test("collect: optional numstat mode returns one coherent tracked snapshot", function()
