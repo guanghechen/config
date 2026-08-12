@@ -102,7 +102,7 @@ end
 ---@param to                            string
 ---@return string
 function M.relative(from, to)
-  return yoz.path.relative(from, to, false, "/")
+  return yoz.canonical_path.relative(from, to, false)
 end
 
 ---@param cwd                           string

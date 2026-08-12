@@ -102,16 +102,34 @@ t:test("dirname matches generic slash operation", function()
   end
 end)
 
-t:test("relative keeps generic slash behavior", function()
-  local cases = {
-    { from = "/workspace/src", to = "/workspace/test/main.lua" },
-    { from = "C:\\workspace\\src", to = "C:\\workspace\\test\\main.lua" },
-    { from = "/项目/源代码", to = "/项目/测试/#fixture.lua" },
-  } ---@type { from: string, to: string }[]
+t:test("relative matches generic slash behavior with synchronized CWD", function()
+  local original_cwd = native.path.get_cwd() ---@type string
+  local test_cwd = native.path.SEP == "\\" and "C:\\workspace" or "/workspace" ---@type string
+  native.path.set_cwd(test_cwd)
 
-  for _, case in ipairs(cases) do
-    local expected = native.path.relative(case.from, case.to, false, "/") ---@type string
-    t.assert_eq(expected, path.relative(case.from, case.to), "relative " .. case.from .. " -> " .. case.to)
+  local ok, err = pcall(function()
+    local cases = {
+      { from = "", to = "" },
+      { from = "", to = "src/main.lua" },
+      { from = ".", to = "../shared/file.lua" },
+      { from = "/workspace//src/./module", to = "/workspace/src/../test/main.lua" },
+      { from = "/workspace/src", to = "/workspace/test/main.lua/" },
+      { from = "C:\\workspace\\src", to = "C:\\workspace\\test\\main.lua" },
+      { from = "C:\\workspace", to = "D:\\archive\\main.lua" },
+      { from = "//server/share/src", to = "//server/share/test/main.lua" },
+      { from = "/workspace/work tree", to = "/workspace/work tree/fixtures/main.lua" },
+      { from = "/项目/源代码", to = "/项目/测试/#fixture.lua" },
+    } ---@type { from: string, to: string }[]
+
+    for _, case in ipairs(cases) do
+      local expected = native.path.relative(case.from, case.to, false, "/") ---@type string
+      t.assert_eq(expected, path.relative(case.from, case.to), "relative " .. case.from .. " -> " .. case.to)
+    end
+  end)
+
+  native.path.set_cwd(original_cwd)
+  if not ok then
+    error(err, 0)
   end
 end)
 
