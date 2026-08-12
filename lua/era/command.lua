@@ -1893,6 +1893,13 @@ command
 --[win] resize--------------------------------------------------------------------------------------
 command
   .implement({
+    uuid = K.win.equalize.uuid,
+    tabtypes = stl.e.TabTypeSet.ALL,
+    action = function()
+      era.nvim.win.equalize()
+    end,
+  })
+  .implement({
     uuid = K.win.resize_horizontal_minus.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()

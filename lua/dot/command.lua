@@ -693,6 +693,7 @@ M.definitions.win = {
   history_backward = D.new("Fwinhistorybackward", "win: history backward"),
   history_forward = D.new("Fwinhistoryforward", "win: history forward"),
 
+  equalize = D.new("Fwinequalize", "win: equalize"),
   resize_horizontal_minus = D.new("Fwinresizehorizontalminus", "win: resize horizontal (minus)"),
   resize_horizontal_plus = D.new("Fwinresizehorizontalplus", "win: resize horizontal (plus)"),
   resize_vertical_minus = D.new("Fwinresizeverticalminus", "win: resize vertical (minus)"),
