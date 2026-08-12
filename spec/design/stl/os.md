@@ -16,7 +16,12 @@
 | `stl.os.fs`      | 文件系统 facade（`stat/rename/delete/scandir` 等）+ adapter 机制 |
 | `stl.os`         | 聚合入口（`stl.os.path`、`stl.os.fs`）                          |
 
-实现约束：`stl.os.path` 仅依赖 `yoz.path`，不依赖 `dot.path`。
+实现约束：
+
+1. 无状态的 slash-only lexical operation 使用 `yoz.canonical_path`。
+2. `relative` 在 CWD contract 完成前保持使用 `yoz.path`。
+3. OS separator 转换使用 `yoz.path`。
+4. `stl.os.path` 不依赖 `dot.path`。
 
 ## 路径语义约束
 

@@ -44,7 +44,7 @@ function M.normalize(filepath, keep_trailing_slash)
     keep_trailing_slash = detect_keep_trailing_slash(filepath)
   end
 
-  return yoz.path.normalize(filepath, keep_trailing_slash, "/")
+  return yoz.canonical_path.normalize(filepath, keep_trailing_slash)
 end
 
 ---@param filepath                      string
@@ -88,14 +88,14 @@ function M.from_os(os_path, keep_trailing_slash)
     keep_trailing_slash = detect_keep_trailing_slash(os_path)
   end
 
-  return yoz.path.normalize(os_path, keep_trailing_slash, "/")
+  return yoz.canonical_path.normalize(os_path, keep_trailing_slash)
 end
 
 ---@param from                          string
 ---@param to                            string
 ---@return string
 function M.join(from, to)
-  return yoz.path.join(from, to, true, "/")
+  return yoz.canonical_path.join(from, to, true)
 end
 
 ---@param from                          string
@@ -109,13 +109,13 @@ end
 ---@param to                            string
 ---@return string
 function M.resolve(cwd, to)
-  return yoz.path.resolve(cwd, to, true, "/")
+  return yoz.canonical_path.resolve(cwd, to, true)
 end
 
 ---@param filepath                      string
 ---@return string
 function M.dirname(filepath)
-  return yoz.path.dirname(filepath, false, "/")
+  return yoz.canonical_path.dirname(filepath, false)
 end
 
 return M
