@@ -7,6 +7,8 @@ fzf-git-status() {
 
     _ghc_readline_context
     local token="$GHC_READLINE_TOKEN"
+    local query
+    query=$(_ghc_unquote_token "$token")
 
     local preview_cmd
     preview_cmd='bash -c '\''line=$1; status_code=${line:0:2}; p=${line:3}; if [[ "$status_code" == "??" ]]; then bat --line-range=:500 --style=snip --number --color=always "$p" 2>/dev/null || cat -n "$p"; else git diff --color=always -- "$p" 2>/dev/null; git diff --color=always --staged -- "$p" 2>/dev/null; fi'\'' _ {}'
@@ -28,7 +30,7 @@ fzf-git-status() {
             fi
         done |
         fzf --read0 --print0 --multi --prompt="Git Status> " \
-            --query="$token" \
+            --query="$query" \
             --nth=2.. \
             --preview="$preview_cmd" \
             --preview-window="right:60%:wrap" \
