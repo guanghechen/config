@@ -7,7 +7,16 @@ local CancellationToken = require("stl.c.cancellation_token")
 
 local t = harness.new("stl.git.exec")
 
-t:patch_global("stl", { c = { Future = Future } })
+t:patch_global("stl", {
+  c = { Future = Future },
+})
+t:patch_global("yoz", {
+  canonical_path = {
+    to_os_path = function(filepath)
+      return filepath
+    end,
+  },
+})
 t:patch_table(vim, "schedule", function(callback)
   callback()
 end)
@@ -33,6 +42,42 @@ t:test("exec_async forwards Git stderr on failure", function()
   t.assert_eq(0, #actual.lines, "stdout lines")
   t.assert_eq(128, actual.code, "exit code")
   t.assert_eq("fatal: index is locked\n", actual.stderr, "stderr")
+end)
+
+t:test("exec_async converts only the Git working directory to an OS path", function()
+  local command = {} ---@type string[]
+  t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
+    t.assert_eq("C:/repo", filepath, "canonical cwd")
+    return [[C:\repo]]
+  end)
+  t:patch_table(vim, "system", function(cmd, _, callback)
+    command = cmd
+    callback({ code = 0, stdout = "", stderr = "" })
+    return {}
+  end)
+
+  exec.exec_async({ "add", "--", "lua/era/m/git/status.lua" }, { cwd = "C:/repo" }, function() end)
+
+  t.assert_eq([[C:\repo]], command[3], "OS cwd")
+  t.assert_eq("lua/era/m/git/status.lua", command[6], "canonical Git pathspec")
+end)
+
+t:test("exec_async preserves canonical and native UNC roots", function()
+  local commands = {} ---@type string[][]
+  t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
+    return filepath:gsub("/", "\\")
+  end)
+  t:patch_table(vim, "system", function(cmd, _, callback)
+    commands[#commands + 1] = cmd
+    callback({ code = 0, stdout = "", stderr = "" })
+    return {}
+  end)
+
+  exec.exec_async({ "status" }, { cwd = "//server/share/repo" }, function() end)
+  exec.exec_async({ "status" }, { cwd = [[\\server\share\repo]] }, function() end)
+
+  t.assert_eq([[\\server\share\repo]], commands[1][3], "canonical UNC cwd")
+  t.assert_eq([[\\server\share\repo]], commands[2][3], "native UNC cwd")
 end)
 
 t:test("exec raw mode preserves CRLF bytes inside NUL-delimited paths", function()

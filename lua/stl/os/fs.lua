@@ -25,7 +25,7 @@ local function to_local_os_path(filepath)
     return nil, "bad_scheme"
   end
 
-  local os_path = path.to_os(filepath) ---@type string
+  local os_path = yoz.canonical_path.to_os_path(filepath) ---@type string
   if os_path == "" then
     return nil, "bad_path"
   end
@@ -45,7 +45,7 @@ local function to_local_os_dirpath(dirpath)
     return nil, "bad_scheme"
   end
 
-  local os_path = path.to_os(dirpath, true) ---@type string
+  local os_path = yoz.canonical_path.to_os_path(dirpath) ---@type string
   if os_path == "" then
     return nil, "bad_path"
   end

@@ -18,14 +18,14 @@
 1. 内部只使用 `filepath`，不使用 URI。
 2. 内部路径分隔符固定为 `/`（Windows 内部同样如此）。
 3. 目录路径在内部以 `/` 结尾，文件路径不以 `/` 结尾。
-4. 仅在系统边界做一次路径转换（`/` -> `PATH_SEP`），统一使用 `stl.os.path.to_os(...)`。
+4. 仅在系统边界做一次路径转换（`/` -> OS separator），统一使用 `yoz.canonical_path.to_os_path(...)`。
 5. `#` 是普通文件名字符，不参与路径解析语义。
 6. `/` 与 `C:/` 视为 root，不再向上回退。
 
 系统边界包括：
 
 - `stl.os.fs.*` 文件系统 facade（推荐）
-- `vim.fn.*` / `vim.uv.fs_*` / `vim.system(...)`（若直接调用，调用前必须先 `stl.os.path.to_os(...)`）
+- `vim.fn.*` / `vim.uv.fs_*` / `vim.system(...)`（若直接调用，调用前必须先 `yoz.canonical_path.to_os_path(...)`）
 - `vim.ui.open(...)`
 - `vim.cmd("split/tabnew/vsplit ...")`
 - `dot.win.open_filepath(...)`
@@ -91,15 +91,16 @@ Delete 只要删除了至少一项，就清空 selection 与 pending；失败项
 ### 打开文件
 
 1. 从 render 状态获取内部 filepath。
-2. 调用 `stl.os.path.to_os(...)` 转为 OS 路径。
+2. 调用 `yoz.canonical_path.to_os_path(...)` 转为 OS 路径。
 3. 执行 `open/split/tabnew/vsplit/system-open`。
 
 ### 读写文件系统
 
 1. `Action/Tree` 层传入内部 filepath（slash-only）。
-2. `FileManager` 在边界通过 `stl.os.path.to_os(...)` 做路径转换。
+2. `FileManager` 在边界通过 `yoz.canonical_path.to_os_path(...)` 做路径转换。
 3. 文件系统调用优先走 `stl.os.fs`。
-4. 返回值与节点状态仍保持内部 slash-only。
+4. 文件系统返回的 OS path 通过 `yoz.canonical_path.from_os_path(..., keep_trailing_slash)` normalize 为内部 filepath。
+5. 返回值与节点状态仍保持内部 slash-only。
 
 ### 创建路径
 
@@ -178,7 +179,7 @@ Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目�
 后续改动必须保持上述路径与状态不变式：
 
 1. 新增路径字段时，命名统一使用 `filepath`。
-2. 新增系统调用时，必须先执行 `stl.os.path.to_os(...)`，或直接使用 `stl.os.fs`。
+2. 新增系统调用时，必须先执行 `yoz.canonical_path.to_os_path(...)`，或直接使用 `stl.os.fs`。
 3. 测试优先覆盖：
    - `#head`、`a#1.txt`、`a#2.txt`
    - 含空格与中文路径

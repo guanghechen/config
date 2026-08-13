@@ -74,15 +74,18 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
       end,
     },
   })
-  bootstrap.with_global(
-    t,
-    "yoz",
-    { path = {
+  bootstrap.with_global(t, "yoz", {
+    canonical_path = {
+      to_os_path = function(filepath)
+        return filepath
+      end,
+    },
+    path = {
       is_exist = function(path)
         return vim.uv.fs_stat(path) ~= nil
       end,
-    } }
-  )
+    },
+  })
   bootstrap.with_global(t, "era", {
     m = {
       git = {

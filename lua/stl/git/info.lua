@@ -42,7 +42,7 @@ local M = {}
 ---@param path                          string
 ---@return string|nil
 local function read_all(path)
-  local f = io.open(path, "r")
+  local f = io.open(yoz.canonical_path.to_os_path(path), "r")
   if not f then
     return nil
   end
@@ -54,7 +54,7 @@ end
 ---@param path                          string
 ---@return string|nil
 local function read_first_line(path)
-  local f = io.open(path, "r")
+  local f = io.open(yoz.canonical_path.to_os_path(path), "r")
   if not f then
     return nil
   end
@@ -190,6 +190,7 @@ end
 ---@param callback                      fun(abbrev_head: string): nil
 ---@return vim.SystemObj
 local function start_short_head(cwd, token, callback)
+  cwd = yoz.canonical_path.to_os_path(cwd)
   return vim.system({ "git", "-C", cwd, "rev-parse", "--short", "HEAD" }, { text = true }, function(obj)
     vim.schedule(function()
       if token and token:is_cancelled() then
@@ -246,6 +247,7 @@ function M.get_object_name(cwd, object, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     proc = vim.system({ "git", "-C", cwd, "rev-parse", "--verify", "--quiet", object }, { text = true }, function(obj)
       vim.schedule(function()
         if finished then
@@ -315,6 +317,7 @@ function M.get_show_blob(cwd, object, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = false }, function(obj)
       vim.schedule(function()
         if finished then
@@ -447,6 +450,7 @@ function M.get_abbrev_head(cwd, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc ---@type vim.SystemObj|nil
     proc = vim.system({ "git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD" }, { text = true }, function(obj)
       vim.schedule(function()
@@ -507,6 +511,7 @@ function M.get_file_info(cwd, relpath, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     proc = vim.system(
       { "git", "-C", cwd, "--literal-pathspecs", "ls-files", "--stage", "--", relpath },
       { text = true },
@@ -592,6 +597,7 @@ function M.get_head_file_mode(cwd, relpath, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     proc = vim.system(
       { "git", "-C", cwd, "--literal-pathspecs", "ls-tree", "HEAD", "--", relpath },
       { text = true },
@@ -658,6 +664,7 @@ function M.get_show_text(cwd, object, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc ---@type vim.SystemObj|nil
     proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = true }, function(obj)
       vim.schedule(function()
@@ -707,6 +714,7 @@ function M.get_repo_info(cwd, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc ---@type vim.SystemObj|nil
     proc = vim.system(
       { "git", "-C", cwd, "rev-parse", "--show-toplevel", "--absolute-git-dir", "--abbrev-ref", "HEAD" },

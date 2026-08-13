@@ -12,7 +12,7 @@
 
 | 模块             | 职责                                                            |
 |:-----------------|:----------------------------------------------------------------|
-| `stl.os.path`    | 维护 `filepath <-> os_path` 转换，统一 slash-only 路径语义      |
+| `stl.os.path`    | 提供 canonical path 的 Lua runtime wrapper                     |
 | `stl.os.fs`      | 文件系统 facade（`stat/rename/delete/scandir` 等）+ adapter 机制 |
 | `stl.os`         | 聚合入口（`stl.os.path`、`stl.os.fs`）                          |
 
@@ -20,7 +20,7 @@
 
 1. 无状态的 slash-only lexical operation 使用 `yoz.canonical_path`。
 2. `relative` 使用与 Neovim startup CWD snapshot 同步的 `yoz.canonical_path`。
-3. OS separator 转换使用 `yoz.path`。
+3. `yoz.canonical_path.from_os_path` 委托既有 canonical normalization；`to_os_path` 只转换 separator，不重复 normalize；两者不重新定义 canonical operation contract。
 4. `stl.os.path` 不依赖 `dot.path`。
 5. Lua-facing `yoz.path.set_cwd` 与 `yoz.canonical_path.set_cwd` 共用一个 binding 写入路径，同步更新两份 native cache。
 6. `ark.bootstrap` 在 workspace 选择结束后，以 Neovim effective CWD 一次性初始化 native cache；运行期 CWD 变更不在当前契约内。
@@ -37,8 +37,6 @@
 | API                                 | 说明                                           |
 |:------------------------------------|:-----------------------------------------------|
 | `normalize(filepath, keep?)`        | 归一化为 slash path                            |
-| `to_os(filepath, keep?)`            | slash path 转 os_path                          |
-| `from_os(os_path, keep?)`           | os_path 转 slash path                          |
 | `join(from, to)`                    | 以 slash 语义拼接路径                          |
 | `relative(from, to)`                | 以 slash 语义计算相对路径                      |
 | `resolve(cwd, to)`                  | 以 slash 语义解析绝对路径                      |
@@ -76,11 +74,11 @@
 ## 使用规范
 
 1. 业务模块（例如 explorer）内部只保留 `filepath`。
-2. 对系统的读写调用统一通过 `stl.os.fs`，或在调用前用 `stl.os.path.to_os`。
+2. 对系统的读写调用统一通过 `stl.os.fs`，或在调用前用 `yoz.canonical_path.to_os_path`。
 3. 禁止在业务层散落私有 `to_os_filepath` 实现。
 
 ## 迁移建议
 
-1. 先收口路径转换：统一改为 `stl.os.path.to_os`。
+1. 先收口路径转换：统一改为 `yoz.canonical_path.to_os_path`。
 2. 再收口系统调用：逐步从 `vim.fn`/`vim.uv` 迁到 `stl.os.fs`。
 3. 最后增加 remote adapter，并保持业务层调用不变。

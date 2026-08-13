@@ -8,10 +8,7 @@ local native = require("yoz")
 
 local t = harness.new("stl.os.path")
 
-bootstrap.with_runtime(t, {
-  stl = { env = { PATH_SEP = native.path.SEP } },
-  yoz = native,
-})
+bootstrap.with_runtime(t, { yoz = native })
 
 local path = require("stl.os.path")
 
@@ -25,56 +22,24 @@ local UNARY_CASES = {
   { input = "//server/share/folder/../file", keep = false },
 } ---@type { input: string, keep: boolean }[]
 
-t:test("normalize and from_os match generic slash normalization", function()
+t:test("normalize matches generic slash normalization", function()
   for _, case in ipairs(UNARY_CASES) do
     local expected = native.path.normalize(case.input, case.keep, "/") ---@type string
     t.assert_eq(expected, path.normalize(case.input, case.keep), "normalize " .. case.input)
-    t.assert_eq(expected, path.from_os(case.input, case.keep), "from_os " .. case.input)
   end
 end)
 
-t:test("normalize and from_os preserve wrapper boundary behavior", function()
+t:test("normalize preserves wrapper boundary behavior", function()
   for _, input in ipairs({ "folder/", "folder\\" }) do
     t.assert_eq("folder/", path.normalize(input), "normalize inferred trailing slash")
-    t.assert_eq("folder/", path.from_os(input), "from_os inferred trailing slash")
   end
 
   for _, input in ipairs({ "", false }) do
     t.assert_eq("", path.normalize(input), "normalize empty or non-string")
-    t.assert_eq("", path.from_os(input), "from_os empty or non-string")
   end
 
   for _, input in ipairs({ "diffview://null", "git+ssh://example/repo" }) do
     t.assert_eq(input, path.normalize(input), "normalize URI-like")
-    t.assert_eq(input, path.from_os(input), "from_os URI-like")
-  end
-end)
-
-t:test("to_os emits the native separator and preserves wrapper boundaries", function()
-  local cases = {
-    { input = "/home/alice/work tree/../项目/#notes", keep = false },
-    { input = "C:\\Users\\alice\\..\\项目\\#notes", keep = false },
-    { input = "folder/", keep = true },
-  } ---@type { input: string, keep: boolean }[]
-
-  for _, case in ipairs(cases) do
-    local slash_path = native.path.normalize(case.input, case.keep, "/") ---@type string
-    local expected = native.path.normalize(slash_path, case.keep, native.path.SEP) ---@type string
-    t.assert_eq(expected, path.to_os(case.input, case.keep), "to_os " .. case.input)
-  end
-
-  t.assert_eq(
-    native.path.normalize("folder/", true, native.path.SEP),
-    path.to_os("folder/"),
-    "to_os inferred trailing slash"
-  )
-
-  for _, input in ipairs({ "", false }) do
-    t.assert_eq("", path.to_os(input), "to_os empty or non-string")
-  end
-
-  for _, input in ipairs({ "diffview://null", "git+ssh://example/repo" }) do
-    t.assert_eq(input, path.to_os(input), "to_os URI-like")
   end
 end)
 

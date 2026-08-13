@@ -28,7 +28,7 @@ function M.exec(args, opts, token)
     local cmd = { "git" }
     if opts and opts.cwd then
       cmd[#cmd + 1] = "-C"
-      cmd[#cmd + 1] = opts.cwd
+      cmd[#cmd + 1] = yoz.canonical_path.to_os_path(opts.cwd)
     end
     for _, arg in ipairs(args) do
       cmd[#cmd + 1] = arg
@@ -78,7 +78,7 @@ function M.exec_async(args, opts, callback)
   local cmd = { "git" }
   if opts and opts.cwd then
     cmd[#cmd + 1] = "-C"
-    cmd[#cmd + 1] = opts.cwd
+    cmd[#cmd + 1] = yoz.canonical_path.to_os_path(opts.cwd)
   end
   for _, arg in ipairs(args) do
     cmd[#cmd + 1] = arg
@@ -107,7 +107,7 @@ function M.exec_sync(args, opts)
   local cmd = { "git" }
   if opts and opts.cwd then
     cmd[#cmd + 1] = "-C"
-    cmd[#cmd + 1] = opts.cwd
+    cmd[#cmd + 1] = yoz.canonical_path.to_os_path(opts.cwd)
   end
   for _, arg in ipairs(args) do
     cmd[#cmd + 1] = arg

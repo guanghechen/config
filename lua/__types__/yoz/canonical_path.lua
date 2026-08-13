@@ -20,6 +20,11 @@ function M.dirname(filepath, keep_tailing_slash) end
 ---@return string
 function M.extname(filepath) end
 
+---@param os_path                       string OS path
+---@param keep_trailing_slash           boolean
+---@return string                       canonical path
+function M.from_os_path(os_path, keep_trailing_slash) end
+
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath) end
@@ -67,5 +72,9 @@ function M.normalize(filepath, keep_trailing_slash) end
 ---@param keep_trailing_slash           boolean
 ---@return string[]
 function M.split(filepath, keep_trailing_slash) end
+
+---@param filepath                      string canonical path
+---@return string                       OS path
+function M.to_os_path(filepath) end
 
 return M

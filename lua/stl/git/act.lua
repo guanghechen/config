@@ -15,11 +15,16 @@ function M.add_intent_to_add(cwd, relpath, token)
       return
     end
 
-    local proc = vim.system({ "git", "-C", cwd, "add", "--intent-to-add", "--", relpath }, { text = true }, function(obj)
-      vim.schedule(function()
-        resolve(obj.code == 0)
-      end)
-    end)
+    cwd = yoz.canonical_path.to_os_path(cwd)
+    local proc = vim.system(
+      { "git", "-C", cwd, "add", "--intent-to-add", "--", relpath },
+      { text = true },
+      function(obj)
+        vim.schedule(function()
+          resolve(obj.code == 0)
+        end)
+      end
+    )
 
     if token then
       token:on_cancel(function()
@@ -41,6 +46,7 @@ function M.apply_patch(cwd, patch, reverse, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local args = { "git", "-C", cwd, "apply", "--cached", "--unidiff-zero", "-" }
     if reverse then
       table.insert(args, 5, "--reverse")
@@ -84,6 +90,7 @@ function M.clone(url, path, branch, token)
       return
     end
 
+    path = yoz.canonical_path.to_os_path(path)
     local args = {
       "clone",
       url,
@@ -131,6 +138,7 @@ function M.hash_object(cwd, file, content, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc = vim.system(
       { "git", "-C", cwd, "hash-object", "-w", "--path", file, "--stdin" },
       { stdin = content, text = false },
@@ -171,6 +179,7 @@ function M.reset_file(cwd, relpath, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc = vim.system({ "git", "-C", cwd, "checkout", "--", relpath }, { text = true }, function(obj)
       vim.schedule(function()
         if obj.code ~= 0 then
@@ -204,6 +213,7 @@ function M.stage_file(cwd, relpath, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc = vim.system({ "git", "-C", cwd, "add", "--", relpath }, { text = true }, function(obj)
       vim.schedule(function()
         if obj.code ~= 0 then
@@ -237,6 +247,7 @@ function M.unstage_file(cwd, relpath, token)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc = vim.system({ "git", "-C", cwd, "reset", "HEAD", "--", relpath }, { text = true }, function(obj)
       vim.schedule(function()
         if obj.code ~= 0 then
@@ -273,6 +284,7 @@ function M.update_index(cwd, mode_bits, object_name, relpath, token, add)
       return
     end
 
+    cwd = yoz.canonical_path.to_os_path(cwd)
     local cacheinfo = string.format("%s,%s,%s", mode_bits, object_name, relpath)
     local args = { "git", "-C", cwd, "update-index" } ---@type string[]
     if add then

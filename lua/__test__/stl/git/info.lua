@@ -6,6 +6,7 @@ local bootstrap = require("__test__.bootstrap")
 local CancellationToken = require("stl.c.cancellation_token")
 local Future = require("stl.c.future")
 local harness = require("__test__.harness")
+local native = require("yoz")
 
 local t = harness.new("stl.git.info")
 
@@ -22,6 +23,11 @@ bootstrap.with_runtime(t, {
     env = { PATH_SEP = "/" },
   },
   yoz = {
+    canonical_path = {
+      to_os_path = function(filepath)
+        return filepath
+      end,
+    },
     path = {
       normalize = function(path)
         return path
@@ -61,6 +67,74 @@ local function wait_future(future)
     return future:is_done()
   end, 1000, "future should resolve")
 end
+
+t:test("filesystem and Git boundaries convert canonical roots without changing revision paths", function()
+  local opened = nil ---@type string|nil
+  local requests = mock_system()
+  t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
+    return filepath:gsub("/", "\\")
+  end)
+  t:patch_table(io, "open", function(filepath)
+    opened = filepath
+    return {
+      close = function() end,
+      read = function()
+        return "ref: refs/heads/main"
+      end,
+    }
+  end)
+
+  t.assert_eq("ref: refs/heads/main", info.head("C:/repo"), "HEAD content")
+  t.assert_eq([[C:\repo\.git\HEAD]], opened, "OS filesystem path")
+
+  local future = info.get_show_blob("C:/repo", "HEAD:lua/era/m/git/status.lua")
+  t.assert_eq([[C:\repo]], requests[1].argv[3], "OS Git cwd")
+  t.assert_eq("HEAD:lua/era/m/git/status.lua", requests[1].argv[6], "canonical revision path")
+  requests[1].callback({ code = 0, stdout = "content" })
+  wait_future(future)
+  t.assert_true(future:get_result().ok, "blob result")
+
+  local unc_future = info.get_show_blob("//server/share/repo", "HEAD:lua/era/m/git/status.lua")
+  t.assert_eq([[\\server\share\repo]], requests[2].argv[3], "UNC Git cwd")
+  requests[2].callback({ code = 0, stdout = "content" })
+  wait_future(unc_future)
+  t.assert_true(unc_future:get_result().ok, "UNC blob result")
+end)
+
+t:test("canonical Windows-style roots keep nested HEAD paths slash-only with real Git", function()
+  local sep = package.config:sub(1, 1) ---@type string
+  local repo = vim.fn.tempname() ---@type string
+  local canonical_repo = native.path.normalize(repo, false, "/") ---@type string
+  local relpath = "lua/era/m/im/wsl.lua" ---@type string
+  local filepath = native.path.normalize(canonical_repo .. "/" .. relpath, false, sep) ---@type string
+  t:patch_table(yoz.canonical_path, "to_os_path", function(path)
+    return path:gsub("/", sep)
+  end)
+
+  vim.fn.mkdir(vim.fs.dirname(filepath), "p")
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+    vim.fn.writefile({ "content" }, filepath)
+    t.assert_eq(0, git(repo, "add", "--", relpath).code, "git add")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
+      "git commit"
+    )
+
+    local future = info.get_show_blob(canonical_repo, "HEAD:" .. relpath)
+    wait_future(future)
+
+    local result = future:get_result()
+    t.assert_true(result.ok, "HEAD blob")
+    t.assert_eq("content\n", result.bytes, "HEAD bytes")
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
 
 t:test("get_object_name: resolves immutable identity and classifies absence", function()
   local requests = mock_system()

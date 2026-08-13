@@ -31,10 +31,15 @@ local function run_create_file(input, cursor_filepath, parent_filepath)
           end
           return normalized
         end,
-        to_os = function(filepath)
-          return filepath
-        end,
       },
+    },
+  })
+
+  t:patch_global("yoz", {
+    canonical_path = {
+      to_os_path = function(filepath)
+        return filepath
+      end,
     },
   })
 
@@ -243,9 +248,6 @@ local function setup_transfer(props)
           calls.normalize = calls.normalize + 1
           return normalize(filepath, keep_trailing_slash)
         end,
-        to_os = function(filepath)
-          return filepath
-        end,
       },
     },
     reporter = {
@@ -261,6 +263,9 @@ local function setup_transfer(props)
         from = normalize(from, false)
         to = normalize(to, false)
         return to == from or to:sub(1, #from + 1) == from .. "/"
+      end,
+      to_os_path = function(filepath)
+        return filepath
       end,
     },
   })
@@ -863,9 +868,6 @@ local function run_name_action(method, input, options)
     os = {
       path = {
         normalize = normalize,
-        to_os = function(filepath)
-          return filepath
-        end,
       },
     },
     reporter = {
@@ -883,6 +885,9 @@ local function run_name_action(method, input, options)
         from = normalize(from, false)
         to = normalize(to, false)
         return to == from or to:sub(1, #from + 1) == from .. "/"
+      end,
+      to_os_path = function(filepath)
+        return filepath
       end,
     },
     path = {

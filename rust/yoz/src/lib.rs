@@ -96,6 +96,41 @@ fn set_path_cwd(cwd: &str) {
     canonical_path::set_cwd(cwd);
 }
 
+#[inline]
+fn canonical_to_os_path(lua: &Lua, filepath: LuaString) -> LuaResult<LuaString> {
+    #[cfg(not(windows))]
+    {
+        let _ = lua;
+        Ok(filepath)
+    }
+
+    #[cfg(windows)]
+    {
+        if !filepath.as_bytes().contains(&b'/') {
+            return Ok(filepath);
+        }
+
+        let filepath = filepath.to_str()?;
+        lua.create_string(canonical_path::to_os_path(filepath.as_ref()).as_bytes())
+    }
+}
+
+#[inline]
+fn canonical_from_os_path(
+    lua: &Lua,
+    (os_path, keep_tailing_slash): (LuaString, bool),
+) -> LuaResult<LuaString> {
+    {
+        let value = os_path.to_str()?;
+        let normalized = canonical_path::from_os_path(value.as_ref(), keep_tailing_slash);
+        if normalized.as_str() != value.as_ref() {
+            return lua.create_string(normalized.as_bytes());
+        }
+    }
+
+    Ok(os_path)
+}
+
 fn canonical_path_module(lua: &Lua) -> LuaResult<LuaTable> {
     let table = lua.create_table_from([
         (
@@ -116,6 +151,7 @@ fn canonical_path_module(lua: &Lua) -> LuaResult<LuaTable> {
                 Ok(canonical_path::extname(&filepath))
             })?,
         ),
+        ("from_os_path", f(lua, canonical_from_os_path)?),
         (
             "is_absolute",
             f(lua, |_, filepath: String| {
@@ -191,6 +227,7 @@ fn canonical_path_module(lua: &Lua) -> LuaResult<LuaTable> {
                 },
             )?,
         ),
+        ("to_os_path", f(lua, canonical_to_os_path)?),
     ])?;
     table.set("SEP", canonical_path::SEP.to_string())?;
     Ok(table)

@@ -1,8 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.os.path" ---@type string
 
-local OS_SEP = stl.env.PATH_SEP ---@type string
-
 ---@param filepath                      string
 ---@return boolean
 local function is_uri_like(filepath)
@@ -45,50 +43,6 @@ function M.normalize(filepath, keep_trailing_slash)
   end
 
   return yoz.canonical_path.normalize(filepath, keep_trailing_slash)
-end
-
----@param filepath                      string
----@param keep_trailing_slash           ?boolean
----@return string
-function M.to_os(filepath, keep_trailing_slash)
-  if type(filepath) ~= "string" or filepath == "" then
-    return ""
-  end
-
-  if is_uri_like(filepath) then
-    return filepath
-  end
-
-  local normalized = M.normalize(filepath, keep_trailing_slash) ---@type string
-  if normalized == "" then
-    return ""
-  end
-
-  local keep = keep_trailing_slash
-  if keep == nil then
-    keep = normalized:sub(-1) == "/"
-  end
-
-  return yoz.path.normalize(normalized, keep, OS_SEP)
-end
-
----@param os_path                       string
----@param keep_trailing_slash           ?boolean
----@return string
-function M.from_os(os_path, keep_trailing_slash)
-  if type(os_path) ~= "string" or os_path == "" then
-    return ""
-  end
-
-  if is_uri_like(os_path) then
-    return os_path
-  end
-
-  if keep_trailing_slash == nil then
-    keep_trailing_slash = detect_keep_trailing_slash(os_path)
-  end
-
-  return yoz.canonical_path.normalize(os_path, keep_trailing_slash)
 end
 
 ---@param from                          string

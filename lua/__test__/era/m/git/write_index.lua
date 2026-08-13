@@ -15,6 +15,13 @@ bootstrap.with_global(t, "stl", {
   git = { act = require("stl.git.act"), info = require("stl.git.info") },
   reporter = { warn = function() end },
 })
+bootstrap.with_global(t, "yoz", {
+  canonical_path = {
+    to_os_path = function(filepath)
+      return filepath
+    end,
+  },
+})
 bootstrap.with_global(t, "era", {
   m = { git = { diff = require("era.m.git.diff"), staging = require("era.m.git.staging") } },
 })

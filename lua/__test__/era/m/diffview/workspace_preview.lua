@@ -13,6 +13,7 @@ bootstrap.with_global(t, "stl", {
   async = require("stl.async"),
   c = { Future = Future },
   e = { TabTypeEnum = { DIFFVIEW_COMMITS = 1, DIFFVIEW_WORKSPACE = 2 } },
+  env = { PATH_SEP = "/" },
   git = { info = {} },
   nvim = { buf = {
     locate_bufnr = function()
@@ -21,6 +22,13 @@ bootstrap.with_global(t, "stl", {
   } },
   reporter = {
     error = function() end,
+  },
+})
+bootstrap.with_global(t, "yoz", {
+  canonical_path = {
+    to_os_path = function(filepath)
+      return filepath
+    end,
   },
 })
 bootstrap.with_global(t, "dot", {

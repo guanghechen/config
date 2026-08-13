@@ -70,14 +70,6 @@ bootstrap.with_runtime(t, {
           normalize_calls = normalize_calls + 1
           return normalize(filepath, keep_trailing_slash)
         end,
-        to_os = function(filepath)
-          to_os_calls = to_os_calls + 1
-          return to_os(filepath)
-        end,
-        from_os = function(filepath, keep_trailing_slash)
-          from_os_calls = from_os_calls + 1
-          return normalize(filepath, keep_trailing_slash)
-        end,
       },
     },
     reporter = {
@@ -93,6 +85,14 @@ bootstrap.with_runtime(t, {
         to = normalize(to, false)
         return to == from or to:sub(1, #from + 1) == from .. "/"
       end,
+      from_os_path = function(filepath, keep_trailing_slash)
+        from_os_calls = from_os_calls + 1
+        return normalize(is_win and filepath:gsub("\\", "/") or filepath, keep_trailing_slash)
+      end,
+      to_os_path = function(filepath)
+        to_os_calls = to_os_calls + 1
+        return to_os(filepath)
+      end,
     },
     fs = {
       is_descendant = function()
@@ -106,7 +106,7 @@ local FileManager = require("era.m.explorer.resource.file")
 
 ---@return string
 local function canonical_tempname()
-  return stl.os.path.from_os(vim.fn.tempname(), false)
+  return yoz.canonical_path.from_os_path(vim.fn.tempname(), false)
 end
 
 ---@return string root
