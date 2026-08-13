@@ -1750,7 +1750,7 @@ function M:mark_result_flags_dirty()
   return self
 end
 
----@param cwd                           string
+---@param cwd                           string Canonical cwd or OS cwd at ingress.
 ---@param filepaths                     string[]
 ---@param with_positions                boolean
 ---@return era.m.picker.FiletreeComposer
@@ -1760,7 +1760,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type era.m.picker.FiletreeView
 
-  cwd = dot.path.normalize(cwd) ---@type string
+  cwd = yoz.canonical_path.from_os_path(cwd, false) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
 
   local uuid_cwd = stl.c.Filetree.uuid(cwd) ---@type string
@@ -1966,7 +1966,10 @@ function M:__match__(input)
     return
   end
 
-  local pattern = input:gsub("[/\\]", stl.env.PATH_SEP) ---@type string
+  local pattern = input ---@type string
+  if pattern:find("\\", 1, true) ~= nil then
+    pattern = pattern:gsub("\\", "/")
+  end
 
   ---@type string[]
   local uuids_order = treeview:match({

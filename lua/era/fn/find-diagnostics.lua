@@ -302,26 +302,28 @@ picker = era.m.picker.FiletreeComposer.new({
 })
 
 stl.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
-  local cwd = dot.path.cwd() ---@type string
+  local cwd = yoz.canonical_path.get_cwd() ---@type string
   local flag_buffer = o_flag_buffer:snapshot() ---@type boolean
   if flag_buffer then
     local bufnr = o_bufnr_sourcefile:snapshot() ---@type integer|nil
     if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local relpath = dot.path.relative(cwd, filepath) ---@type string
+      local filepath = yoz.canonical_path.from_os_path(vim.api.nvim_buf_get_name(bufnr), false) ---@type string
+      local relpath = yoz.canonical_path.relative(cwd, filepath, false) ---@type string
       picker.finder:set_title(string.format("%s (%s)", title, relpath))
       return
     end
   end
 
-  local rootpath = o_rootpath:snapshot() ---@type string
-  local workspace = dot.path.workspace() ---@type string
+  local rootpath = yoz.canonical_path.from_os_path(o_rootpath:snapshot(), false) ---@type string
+  local workspace = yoz.canonical_path.from_os_path(dot.path.workspace(), false) ---@type string
   if rootpath == workspace then
     picker.finder:set_title(string.format("%s (workspace)", title))
   elseif rootpath == cwd then
     picker.finder:set_title(string.format("%s (cwd)", title))
   else
-    local relative_path = yoz.path.is_descendant(workspace, rootpath) and dot.path.relative(cwd, rootpath) or rootpath ---@type string
+    local relative_path = yoz.canonical_path.is_descendant(workspace, rootpath)
+        and yoz.canonical_path.relative(cwd, rootpath, false)
+      or rootpath ---@type string
     picker.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)
