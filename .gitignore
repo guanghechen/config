@@ -34,6 +34,7 @@ version.json
 /plugins/.plugin-appserver/
 /plugins/cache/
 /process_manager/
+/proxy/
 /rules/
 /skills/.system
 /skills/kit-*
