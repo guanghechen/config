@@ -382,9 +382,9 @@ function M.new(props)
 
       local rootpath = rootnode.data.filepath ---@type string
       local nodepath = filenode.data.filepath ---@type string
-      local relpath = dot.path.relative(rootpath, nodepath) ---@type string
+      local relpath = yoz.canonical_path.relative(rootpath, nodepath, false) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. stl.env.PATH_SEP ---@type string
+        relpath = relpath .. "/" ---@type string
       end
 
       ---@param filepath                string|nil
@@ -394,10 +394,11 @@ function M.new(props)
           return
         end
 
-        local isdir = yoz.path.is_dirpath(filepath) ---@type boolean
-        filepath = dot.path.resolve(rootpath, filepath) ---@type string
+        local isdir = yoz.canonical_path.is_dirpath(filepath) ---@type boolean
+        filepath = yoz.canonical_path.resolve(rootpath, filepath, true) ---@type string
+        local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
 
-        if yoz.path.is_exist(filepath) then
+        if yoz.path.is_exist(os_filepath) then
           stl.reporter.error({
             from = fullname,
             subject = "create_node",
@@ -408,11 +409,11 @@ function M.new(props)
         end
 
         if isdir then
-          stl.env.mkdirs(filepath, true)
+          stl.env.mkdirs(os_filepath, true)
           treeview:insert_dirpath(filepath)
         else
-          stl.env.mkdirs(filepath, false)
-          vim.fn.writefile({}, filepath)
+          stl.env.mkdirs(os_filepath, false)
+          vim.fn.writefile({}, os_filepath)
           treeview:insert_filepath(filepath, false)
 
           local uuid = stl.c.Filetree.uuid(filepath)
@@ -426,7 +427,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         vim.ui.input({
-          prompt = string.format(" New file / directory ", stl.env.PATH_SEP),
+          prompt = " New file / directory ",
           default = relpath,
           relative = "cursor",
         }, function(filepath)
@@ -504,9 +505,9 @@ function M.new(props)
 
       local nodepath = filenode.data.filepath ---@type string
       local rootpath = rootnode.data.filepath ---@type string
-      local relpath = dot.path.relative(rootpath, nodepath) ---@type string
+      local relpath = yoz.canonical_path.relative(rootpath, nodepath, false) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. stl.env.PATH_SEP ---@type string
+        relpath = relpath .. "/" ---@type string
       end
 
       ---@param answer                  string|nil
@@ -522,12 +523,13 @@ function M.new(props)
         end
 
         local isdir = filenode.data.filetype == "directory" ---@type boolean
+        local os_nodepath = yoz.canonical_path.to_os_path(nodepath) ---@type string
 
         local success = false ---@type boolean
         if isdir then
-          success = vim.fn.delete(nodepath, "rf") == 0
+          success = vim.fn.delete(os_nodepath, "rf") == 0
         else
-          success = vim.fn.delete(nodepath) == 0
+          success = vim.fn.delete(os_nodepath) == 0
         end
 
         if not success then
@@ -597,8 +599,8 @@ function M.new(props)
 
       local filepath = filenode.data.filepath ---@type string
       local rootpath = rootnode.data.filepath ---@type string
-      local dirname = dot.path.dirname(filepath) ---@type string
-      local filename = yoz.path.basename(filepath) ---@type string
+      local dirname = yoz.canonical_path.dirname(filepath, false) ---@type string
+      local filename = yoz.canonical_path.basename(filepath) ---@type string
 
       ---@param next_filename           string|nil
       ---@return nil
@@ -607,12 +609,12 @@ function M.new(props)
           return
         end
 
-        local next_filepath = next_filename:match("[/\\]") and dot.path.resolve(rootpath, next_filename)
-          or dot.path.join(dirname, next_filename)
+        local next_filepath = next_filename:match("[/\\]") and yoz.canonical_path.resolve(rootpath, next_filename, true)
+          or yoz.canonical_path.join(dirname, next_filename, true)
 
         -- Validate that source and destination types match
         local source_is_dir = filenode.data.filetype == "directory"
-        local dest_is_dir = yoz.path.is_dirpath(next_filepath)
+        local dest_is_dir = yoz.canonical_path.is_dirpath(next_filepath)
 
         if source_is_dir ~= dest_is_dir then
           local source_type = source_is_dir and "directory" or "file"
@@ -633,12 +635,15 @@ function M.new(props)
         end
 
         -- Ensure destination directory exists
-        local dest_dir = dot.path.dirname(next_filepath)
-        if not yoz.path.is_exist(dest_dir) then
-          stl.env.mkdirs(dest_dir, true)
+        local dest_dir = yoz.canonical_path.dirname(next_filepath, false) ---@type string
+        local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+        local os_next_filepath = yoz.canonical_path.to_os_path(next_filepath) ---@type string
+        local os_dest_dir = yoz.canonical_path.to_os_path(dest_dir) ---@type string
+        if not yoz.path.is_exist(os_dest_dir) then
+          stl.env.mkdirs(os_dest_dir, true)
         end
 
-        if yoz.path.is_exist(next_filepath) then
+        if yoz.path.is_exist(os_next_filepath) then
           -- Ask user if they want to overwrite
           vim.ui.select({ "No", "Yes" }, {
             prompt = string.format('File "%s" already exists. Overwrite?', next_filename),
@@ -649,8 +654,8 @@ function M.new(props)
             if choice == "Yes" then
               local isdir = filenode.data.filetype == "directory"
               local success = era.fn.rename({
-                from = filepath,
-                to = next_filepath,
+                from = os_filepath,
+                to = os_next_filepath,
                 isdir = isdir,
                 force = true,
               })
@@ -665,8 +670,8 @@ function M.new(props)
 
         local isdir = filenode.data.filetype == "directory"
         local success = era.fn.rename({
-          from = filepath,
-          to = next_filepath,
+          from = os_filepath,
+          to = os_next_filepath,
           isdir = isdir,
         })
 
@@ -729,12 +734,12 @@ function M.new(props)
           return
         end
 
-        -- Normalize the new filepath to absolute path
-        next_filepath = dot.path.normalize(next_filepath)
+        -- Canonicalize the destination at UI ingress.
+        next_filepath = yoz.canonical_path.from_os_path(next_filepath, true)
 
         -- Validate that source and destination types match
         local source_is_dir = filenode.data.filetype == "directory"
-        local dest_is_dir = yoz.path.is_dirpath(next_filepath)
+        local dest_is_dir = yoz.canonical_path.is_dirpath(next_filepath)
 
         if source_is_dir ~= dest_is_dir then
           local source_type = source_is_dir and "directory" or "file"
@@ -755,15 +760,18 @@ function M.new(props)
         end
 
         -- Ensure destination directory exists
-        local dest_dir = dot.path.dirname(next_filepath)
-        if not yoz.path.is_exist(dest_dir) then
-          stl.env.mkdirs(dest_dir, true)
+        local dest_dir = yoz.canonical_path.dirname(next_filepath, false) ---@type string
+        local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+        local os_next_filepath = yoz.canonical_path.to_os_path(next_filepath) ---@type string
+        local os_dest_dir = yoz.canonical_path.to_os_path(dest_dir) ---@type string
+        if not yoz.path.is_exist(os_dest_dir) then
+          stl.env.mkdirs(os_dest_dir, true)
         end
 
-        if yoz.path.is_exist(next_filepath) then
+        if yoz.path.is_exist(os_next_filepath) then
           -- Ask user if they want to overwrite
           vim.ui.select({ "No", "Yes" }, {
-            prompt = string.format('File "%s" already exists. Overwrite?', yoz.path.basename(next_filepath)),
+            prompt = string.format('File "%s" already exists. Overwrite?', yoz.canonical_path.basename(next_filepath)),
             format_item = function(item)
               return item
             end,
@@ -771,8 +779,8 @@ function M.new(props)
             if choice == "Yes" then
               local isdir = filenode.data.filetype == "directory"
               local success = era.fn.rename({
-                from = filepath,
-                to = next_filepath,
+                from = os_filepath,
+                to = os_next_filepath,
                 isdir = isdir,
                 force = true,
               })
@@ -787,8 +795,8 @@ function M.new(props)
 
         local isdir = filenode.data.filetype == "directory"
         local success = era.fn.rename({
-          from = filepath,
-          to = next_filepath,
+          from = os_filepath,
+          to = os_next_filepath,
           isdir = isdir,
         })
 
@@ -803,7 +811,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         vim.ui.input({
-          prompt = string.format(' Move "%s" to: ', yoz.path.basename(filepath)),
+          prompt = string.format(' Move "%s" to: ', yoz.canonical_path.basename(filepath)),
           default = filepath,
           relative = "cursor",
         }, function(next_filepath)
@@ -2180,8 +2188,8 @@ function M:__retrieve_filenode__()
   return node
 end
 
----@param from                          string
----@param to                            string
+---@param from                          string Canonical filepath.
+---@param to                            string Canonical filepath.
 ---@param isdir                         boolean
 ---@return nil
 function M:__update_tree_after_rename__(from, to, isdir)
@@ -2191,7 +2199,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
   local filepaths = {} ---@type string[]
 
   if isdir then
-    local result, err = yoz.fs.collect_files(to, true)
+    local result, err = yoz.fs.collect_files(yoz.canonical_path.to_os_path(to), true)
     if err ~= nil then
       stl.reporter.error({
         from = __module_name__,
@@ -2206,7 +2214,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
 
     if result ~= nil and result.files ~= nil then
       for _, relative_filepath in ipairs(result.files) do
-        local to_filepath = to .. stl.env.PATH_SEP .. relative_filepath ---@type string
+        local to_filepath = yoz.canonical_path.join(to, relative_filepath, false) ---@type string
         filepaths[#filepaths + 1] = to_filepath
       end
     end
