@@ -109,12 +109,10 @@ notification_condition = "always"
 status_line = [
   "current-dir",
   "git-branch",
-  "branch-changes",
   "pull-request-number",
   "model-with-reasoning",
-  "context-remaining",
   "context-window-size",
-  "approval-mode"
+  "codex-version"
 ]
 terminal_title = ["activity", "project-name", "git-branch", "model-with-reasoning"]
 
