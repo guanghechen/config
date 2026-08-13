@@ -208,8 +208,9 @@ end
 ---@return yoz.search.ISearchInFilesOptions
 function M:build_search_options(params)
   local excludes = params.flag_exclude and params.excludes or {} ---@type string[]
+  local specified_filepath = params.specified_filepath ---@type string|nil
   return {
-    cwd = params.cwd,
+    cwd = yoz.canonical_path.to_os_path(params.cwd),
     flag_case_sensitive = params.flag_case_sensitive,
     flag_gitignore = params.flag_gitignore,
     flag_regex = params.flag_regex,
@@ -219,7 +220,7 @@ function M:build_search_options(params)
     search_paths = "",
     include_patterns = table.concat(params.includes, ","),
     exclude_patterns = table.concat(excludes, ","),
-    specified_filepath = params.specified_filepath,
+    specified_filepath = specified_filepath and yoz.canonical_path.to_os_path(specified_filepath) or nil,
   }
 end
 
@@ -265,7 +266,7 @@ function M:normalize_search_result(params, results)
   local flag_regex = params.flag_regex ---@type boolean
   local flag_replace = params.flag_replace ---@type boolean
 
-  local cwd = params.cwd ---@type string
+  local cwd = yoz.canonical_path.from_os_path(params.cwd, false) ---@type string
   local search_pattern = params.search_pattern ---@type string
   local replace_pattern = params.replace_pattern ---@type string|nil
 
@@ -273,13 +274,13 @@ function M:normalize_search_result(params, results)
   local search_highlight = has_replace_preview and "m_ss_search" or "m_ss_matches"
 
   local function resolve_filepath(relpath)
-    if relpath == nil or relpath == "" then
+    if relpath == "" then
       return cwd
     end
-    if yoz.path.is_absolute(relpath) then
+    if yoz.canonical_path.is_absolute(relpath) then
       return relpath
     end
-    return dot.path.join(cwd, relpath)
+    return yoz.canonical_path.join(cwd, relpath, false)
   end
 
   local items = {} ---@type era.m.searcher.view.filetree.ISearchedItem[]
@@ -287,6 +288,9 @@ function M:normalize_search_result(params, results)
 
   for _, filematch in ipairs(results.items) do
     local relpath = filematch.p or "" ---@type string
+    if relpath:find("\\", 1, true) ~= nil then
+      relpath = yoz.canonical_path.from_os_path(relpath, false)
+    end
     local filepath = resolve_filepath(relpath) ---@type string
     local uuid = stl.c.Filetree.uuid(filepath) ---@type string
 

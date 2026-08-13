@@ -120,6 +120,68 @@ local function benchmark(flag_replace, max_matches)
   return assert(timing)
 end
 
+t:test("native search paths cross the OS boundary and publish canonical identities", function()
+  local composer = new_composer("canonical-search-paths", 500)
+  local ok, err = pcall(function()
+    composer.rootpath:next([[C:\workspace\project]], { silent = true })
+    local inputs = composer:__snapshot_search_inputs__()
+    t.assert_eq("C:/workspace/project", inputs.rootpath, "canonical request identity")
+    composer._published_search_inputs = inputs
+    composer.rootpath:next("C:/workspace/project", { silent = true })
+    t.assert_true(composer:__is_search_projection_current__(), "canonical writeback identity")
+    composer.rootpath:next("", { silent = true })
+    t.assert_eq("", composer:__snapshot_search_inputs__().rootpath, "empty root identity")
+
+    ---@type era.m.searcher.view.filetree.ISearchParams
+    local params = {
+      cwd = "C:/workspace/project",
+      specified_filepath = "C:/workspace/project/src/main.lua",
+      excludes = {},
+      includes = { "*.lua" },
+      flag_case_sensitive = true,
+      flag_exclude = false,
+      flag_gitignore = false,
+      flag_regex = false,
+      flag_replace = false,
+      max_filesize = "1M",
+      max_matches = 500,
+      search_pattern = "needle",
+      replace_pattern = nil,
+    }
+
+    t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
+      return "OS<" .. filepath .. ">"
+    end)
+    local options = composer._treeview:build_search_options(params)
+    t.assert_eq("OS<C:/workspace/project>", options.cwd, "native search cwd")
+    t.assert_eq("OS<C:/workspace/project/src/main.lua>", options.specified_filepath, "native specified filepath")
+
+    local result = composer._treeview:normalize_search_result(params, {
+      items = {
+        { p = [[src\main.lua]], matches = {} },
+        { p = [[D:\archive\outside.lua]], matches = {} },
+      },
+      limit_reached = false,
+    })
+    local expected = {
+      "C:/workspace/project/src/main.lua",
+      "D:/archive/outside.lua",
+    } ---@type string[]
+    for _, filepath in ipairs(expected) do
+      local filematch = result.filematch_map[stl.c.Filetree.uuid(filepath)]
+      t.assert_true(filematch ~= nil, "published filepath: " .. filepath)
+      t.assert_eq(filepath, filematch and filematch.filepath, "canonical published filepath")
+      t.assert_false(filematch and filematch.relative:find("\\", 1, true) ~= nil, "canonical relative filepath")
+    end
+  end)
+
+  composer:dispose()
+  vim.wait(20)
+  if not ok then
+    error(err, 0)
+  end
+end)
+
 t:test("Finder renders a highlighted title accent without changing its plain-title contract", function()
   local input = observable("")
   local finder = era.m.searcher.Finder.new({

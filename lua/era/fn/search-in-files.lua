@@ -1,7 +1,7 @@
 local name = "era.fn.search_in_files" ---@type string
 local title = "Search Files" ---@type string
 local MAX_MATCHES = 2147483647 ---@type integer
-local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())
+local o_rootpath = stl.c.Observable.from_value(yoz.canonical_path.from_os_path(dot.path.cwd(), false))
 
 local o_excludes = dot.context.select.search_file.excludes
 local o_flag_exclude = dot.context.select.search_file.flag_exclude
@@ -128,6 +128,7 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function attach(searcher, rootpath)
+  rootpath = yoz.canonical_path.from_os_path(rootpath, false)
   o_rootpath:next(rootpath)
   local rootuuid = stl.c.Filetree.uuid(rootpath) ---@type string
   if searcher:isexistent(rootuuid) then
@@ -246,15 +247,17 @@ searcher = era.m.searcher.FiletreeComposer.new({
 })
 
 stl.fn.observe({ o_rootpath }, function()
-  local rootpath = o_rootpath:snapshot() ---@type string
-  local workspace = dot.path.workspace() ---@type string
-  local cwd = dot.path.cwd() ---@type string
+  local rootpath = yoz.canonical_path.from_os_path(o_rootpath:snapshot(), false) ---@type string
+  local workspace = yoz.canonical_path.from_os_path(dot.path.workspace(), false) ---@type string
+  local cwd = yoz.canonical_path.get_cwd() ---@type string
   if rootpath == workspace then
     searcher.finder:set_title(string.format("%s (workspace)", title))
   elseif rootpath == cwd then
     searcher.finder:set_title(string.format("%s (cwd)", title))
   else
-    local relative_path = yoz.path.is_descendant(workspace, rootpath) and dot.path.relative(cwd, rootpath) or rootpath ---@type string
+    local relative_path = yoz.canonical_path.is_descendant(workspace, rootpath)
+        and yoz.canonical_path.relative(cwd, rootpath, false)
+      or rootpath ---@type string
     searcher.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)

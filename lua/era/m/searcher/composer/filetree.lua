@@ -1923,8 +1923,8 @@ function M:mark_result_flags_dirty()
   return self
 end
 
----@param rootpath                      string
----@param cwd                           string
+---@param rootpath                      string Canonical rootpath or OS rootpath at ingress.
+---@param cwd                           string Canonical cwd or OS cwd at ingress.
 ---@param filepaths                     string[]
 ---@return era.m.searcher.FiletreeComposer
 function M:reset_filepaths(rootpath, cwd, filepaths)
@@ -1937,7 +1937,8 @@ function M:reset_filepaths(rootpath, cwd, filepaths)
   local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
 
-  cwd = dot.path.normalize(cwd) ---@type string
+  rootpath = yoz.canonical_path.from_os_path(rootpath, false) ---@type string
+  cwd = yoz.canonical_path.from_os_path(cwd, false) ---@type string
   treeview:reset_filepaths(cwd, filepaths)
 
   local uuid_root = stl.c.Filetree.uuid(rootpath) ---@type string
@@ -2147,6 +2148,10 @@ end
 ---@protected
 ---@return era.m.searcher.composer.filetree.ISearchInputs
 function M:__snapshot_search_inputs__()
+  local rootpath = self.rootpath:snapshot() ---@type string
+  if rootpath ~= "" then
+    rootpath = yoz.canonical_path.from_os_path(rootpath, false)
+  end
   return {
     excludes = vim.list_slice(self.excludes:snapshot()),
     flag_case_sensitive = self.flag_case_sensitive:snapshot(),
@@ -2159,7 +2164,7 @@ function M:__snapshot_search_inputs__()
     max_filesize = self.max_filesize:snapshot(),
     max_matches = self.max_matches:snapshot(),
     replace_pattern = self.replace_pattern:snapshot(),
-    rootpath = self.rootpath:snapshot(),
+    rootpath = rootpath,
     search_pattern = self.search_pattern:snapshot(),
   }
 end
@@ -2220,16 +2225,17 @@ end
 ---@return string|nil
 function M:__snapshot_search_request__()
   local inputs = self:__snapshot_search_inputs__()
-  local rootpath = inputs.rootpath
-  if not yoz.path.is_exist(rootpath) then
+  local rootpath = inputs.rootpath ---@type string
+  local os_rootpath = yoz.canonical_path.to_os_path(rootpath) ---@type string
+  if not yoz.path.is_exist(os_rootpath) then
     return nil, string.format("Root path does not exist: %s", rootpath)
   end
 
   local cwd = rootpath ---@type string
   local specified_filepath = nil ---@type string|nil
 
-  if not yoz.path.is_exist_directory(rootpath) then
-    cwd = dot.path.dirname(rootpath) ---@type string
+  if not yoz.path.is_exist_directory(os_rootpath) then
+    cwd = yoz.canonical_path.dirname(rootpath, false) ---@type string
     specified_filepath = rootpath ---@type string
   end
 
@@ -2287,14 +2293,14 @@ end
 ---@protected
 ---@return nil
 function M:__clear_search_projection__()
-  local rootpath = self.rootpath:snapshot() ---@type string
+  local rootpath = yoz.canonical_path.from_os_path(self.rootpath:snapshot(), false) ---@type string
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
   self._published_search_inputs = nil
   self._published_search_limit_reached = false
   treeview:reset_filepaths(rootpath, {})
 
   self._last_preview_filepath = nil
-  self._uuid_root = yoz.path.is_absolute(rootpath) and stl.c.Filetree.uuid(rootpath) or nil
+  self._uuid_root = yoz.canonical_path.is_absolute(rootpath) and stl.c.Filetree.uuid(rootpath) or nil
   self._uuids_file = {}
   self._uuids_order = {}
   self:mark_result_flags_dirty()
