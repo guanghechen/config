@@ -30,8 +30,8 @@ local __module_name__ = "stl.c.filetree" ---@type string
 ---@field public basename               string
 ---@field public fileicon               string
 ---@field public fileicon_hln           string
----@field public filepath               string
----@field public filepath_lower         string
+---@field public filepath               string Canonical slash-only absolute filepath.
+---@field public filepath_lower         string Lowercase canonical filepath.
 ---@field public filetype               "directory" | "file"
 
 ----------------------------------------------------------------------------------------------------
@@ -109,9 +109,21 @@ M.__index = M
 setmetatable(M, stl.c.Tree)
 
 ---@param filepath                      string
+---@return string
+local function from_os_path(filepath)
+  if filepath:find("\\", 1, true) == nil then
+    return filepath
+  end
+  return yoz.canonical_path.from_os_path(filepath, false)
+end
+
+---@param filepath                      string
 ---@return boolean
 local function is_cwd_chain(filepath)
-  local cwd = vim.fn.getcwd() ---@type string
+  local cwd = yoz.canonical_path.get_cwd() ---@type string
+  if cwd ~= "/" and cwd:sub(-1) == "/" then
+    cwd = cwd:sub(1, -2)
+  end
   if cwd == filepath or filepath == FILETREE_ROOT_FILEPATH then
     return true
   end
@@ -119,18 +131,19 @@ local function is_cwd_chain(filepath)
   local N1 = #cwd ---@type integer
   local N2 = #filepath ---@type integer
   if N1 < N2 then
-    return filepath:sub(1, N1 + 1) == cwd .. stl.env.PATH_SEP
+    return filepath:sub(1, N1 + 1) == cwd .. "/"
   end
 
-  return cwd:sub(1, N2 + 1) == filepath .. stl.env.PATH_SEP
+  return cwd:sub(1, N2 + 1) == filepath .. "/"
 end
 
----@param filepath                      string
+---@param filepath                      string Canonical filepath or OS filepath at ingress.
 ---@return string
 function M.uuid(filepath)
+  filepath = from_os_path(filepath)
   local uuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
   if uuid == nil then
-    if not yoz.path.is_absolute(filepath) then
+    if not yoz.canonical_path.is_absolute(filepath) then
       error(string.format("[%s.uuid] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
 
@@ -150,9 +163,10 @@ end
 ---@return stl.c.IFiletreeNodeData
 ---@return string
 function M.resolve(filepath, filetype, force)
+  filepath = from_os_path(filepath)
   local nodeuuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
   if nodeuuid == nil then
-    if not yoz.path.is_absolute(filepath) then
+    if not yoz.canonical_path.is_absolute(filepath) then
       error(string.format("[%s.resolve] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
     nodeuuid = yoz.fn.md5(filepath) ---@type string
@@ -160,7 +174,7 @@ function M.resolve(filepath, filetype, force)
 
   local nodedata = FILENODE_DATAMAP[nodeuuid]
   if nodedata == nil then
-    local basename = yoz.path.basename(filepath) ---@type string
+    local basename = yoz.canonical_path.basename(filepath) ---@type string
     local fileicon, fileicon_hln ---@type string, string
     if filetype == "directory" then
       fileicon, fileicon_hln = stl.fileicon.get_directory_icon(basename) ---@type string, string
@@ -239,7 +253,7 @@ function M:insert_directory_absolute(dirpath)
   local nodeuuid = M.uuid(dirpath) ---@type string
   local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "directory" then
-    local pieces = yoz.path.split(dirpath, false) ---@type string[]
+    local pieces = yoz.canonical_path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
 
     local p = "" ---@type string
@@ -257,7 +271,7 @@ function M:insert_directory_absolute(dirpath)
     end
 
     for index = 2, N, 1 do
-      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. "/" .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -286,17 +300,17 @@ function M:insert_directory_relative(cwd, dirpath)
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
-  local nodeuuid = M.uuid(cwd .. stl.env.PATH_SEP .. dirpath) ---@type string
+  local nodeuuid = M.uuid(cwd .. "/" .. dirpath) ---@type string
   local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "directory" then
-    local pieces = yoz.path.split(dirpath, false) ---@type string[]
+    local pieces = yoz.canonical_path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
 
     local p = cwd ---@type string
     local uuid_parent = cwduuid ---@type string
 
     for index = 1, N, 1 do
-      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. "/" .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -321,7 +335,7 @@ function M:insert_file_absolute(filepath)
   local nodeuuid = M.uuid(filepath) ---@type string
   local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "file" then
-    local pieces = yoz.path.split(filepath, false) ---@type string[]
+    local pieces = yoz.canonical_path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
     local p = "" ---@type string
@@ -339,7 +353,7 @@ function M:insert_file_absolute(filepath)
     end
 
     for index = 2, N, 1 do
-      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. "/" .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -351,7 +365,7 @@ function M:insert_file_absolute(filepath)
     end
 
     local basename = pieces[N + 1] ---@type string
-    p = p .. stl.env.PATH_SEP .. basename ---@type string
+    p = p .. "/" .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
     node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
@@ -378,17 +392,17 @@ function M:insert_file_relative(cwd, filepath)
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
-  local nodeuuid = M.uuid(cwd .. stl.env.PATH_SEP .. filepath) ---@type string
+  local nodeuuid = M.uuid(cwd .. "/" .. filepath) ---@type string
   local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "file" then
-    local pieces = yoz.path.split(filepath, false) ---@type string[]
+    local pieces = yoz.canonical_path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
     local p = cwd ---@type string
     local uuid_parent = cwduuid ---@type string
 
     for index = 1, N, 1 do
-      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. "/" .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -400,7 +414,7 @@ function M:insert_file_relative(cwd, filepath)
     end
 
     local basename = pieces[N + 1] ---@type string
-    p = p .. stl.env.PATH_SEP .. basename ---@type string
+    p = p .. "/" .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
     node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
@@ -412,8 +426,8 @@ function M:insert_file_relative(cwd, filepath)
   return node
 end
 
----@param cwd                           string
----@param filepaths                     string[]
+---@param cwd                           string Canonical cwd or OS cwd at ingress.
+---@param filepaths                     string[] Canonical relative/absolute filepaths; OS separators are accepted at ingress.
 ---@param with_locations                boolean
 ---@return stl.c.Filetree
 function M:reset(cwd, filepaths, with_locations)
@@ -427,8 +441,8 @@ function M:reset(cwd, filepaths, with_locations)
   local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type stl.c.IFiletreeNodeData, string
   self:insert(rootuuid, rootuuid, rootdata)
 
-  cwd = yoz.path.normalize(cwd, true, stl.env.PATH_SEP)
-  local P = cwd == "/" and "/" or (cwd .. stl.env.PATH_SEP) ---@type string
+  cwd = yoz.canonical_path.from_os_path(cwd, false)
+  local P = cwd == "/" and "/" or (cwd .. "/") ---@type string
   local L = #P ---@type integer
 
   local visited_filepaths = {} ---@type table<string, boolean>
@@ -446,7 +460,8 @@ function M:reset(cwd, filepaths, with_locations)
   if with_locations then
     for _, p in ipairs(filepaths) do
       local filepath = stl.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
-      if yoz.path.is_absolute(filepath) then
+      filepath = from_os_path(filepath)
+      if yoz.canonical_path.is_absolute(filepath) then
         if filepath:sub(1, L) ~= P then
           self:insert_file_absolute(filepath)
         else
@@ -459,7 +474,8 @@ function M:reset(cwd, filepaths, with_locations)
     end
   else
     for _, filepath in ipairs(filepaths) do
-      if yoz.path.is_absolute(filepath) then
+      filepath = from_os_path(filepath)
+      if yoz.canonical_path.is_absolute(filepath) then
         if filepath:sub(1, L) ~= P then
           self:insert_file_absolute(filepath)
         else
