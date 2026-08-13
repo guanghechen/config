@@ -4,11 +4,14 @@ model_provider = "copilot-dev"
 [model_providers.copilot-dev]
 name = "copilot-dev"
 base_url = "http://127.0.0.1:4848/api/codex"
-env_key = "OPENAI_CODEX_AUTH_TOKEN"
 wire_api = "responses"
 supports_websockets = true
 websocket_connect_timeout_ms = 30000
 request_max_retries = 3
 stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
+
+[model_providers.copilot-dev.auth]
+command = "/usr/bin/printenv"
+args = ["OPENAI_CODEX_AUTH_TOKEN"]
 
