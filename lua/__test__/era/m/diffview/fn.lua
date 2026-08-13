@@ -7,7 +7,7 @@ local harness = require("__test__.harness")
 
 local t = harness.new("era.m.diffview.fn")
 
-local relative_args = nil ---@type { from: string, to: string, keep: boolean, sep: string }|nil
+local relative_args = nil ---@type { from: string, to: string }|nil
 local log_opts = nil ---@type { layout: integer|nil, path: string|nil }|nil
 
 bootstrap.with_runtime(t, {
@@ -29,15 +29,15 @@ bootstrap.with_runtime(t, {
       },
     },
   },
-  yoz = {
-    path = {
-      relative = function(from, to, keep, sep)
-        relative_args = { from = from, to = to, keep = keep, sep = sep }
-        return "lua/era/m/im/wsl.lua"
-      end,
-    },
-  },
   stl = {
+    os = {
+      path = {
+        relative = function(from, to)
+          relative_args = { from = from, to = to }
+          return "lua/era/m/im/wsl.lua"
+        end,
+      },
+    },
     reporter = { warn = function() end },
   },
 })
@@ -51,8 +51,6 @@ t:test("open_file_history uses Git separators for Windows paths", function()
 
   t.assert_eq([[C:\repo]], relative_args.from, "relative path root")
   t.assert_eq(filepath, relative_args.to, "relative path target")
-  t.assert_false(relative_args.keep, "relative path trailing slash")
-  t.assert_eq("/", relative_args.sep, "relative path separator")
   t.assert_eq("lua/era/m/im/wsl.lua", log_opts.path, "Git path filter")
   t.assert_eq(3, log_opts.layout, "layout")
 end)

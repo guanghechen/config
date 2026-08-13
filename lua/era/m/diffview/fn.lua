@@ -48,7 +48,7 @@ function M.open_file_history(opts)
   end
 
   -- Get relative path
-  local relative = yoz.path.relative(workspace, filepath, false, "/")
+  local relative = stl.os.path.relative(workspace, filepath)
 
   -- Call commits with path filter
   S.cmd.log({
