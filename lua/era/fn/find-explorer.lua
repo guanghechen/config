@@ -17,8 +17,8 @@ local title = "Find Explorer" ---@type string
 ---@class era.fn.find_explorer.IFileItem
 ---@field public type                   string
 ---@field public name                   string
----@field public path                   string
----@field public dir                    string
+---@field public path                   string Canonical filepath.
+---@field public dir                    string Canonical dirpath.
 ---@field public perm                   string
 ---@field public size                   string
 ---@field public owner                  string
@@ -37,10 +37,13 @@ local dir_datamap = {} ---@type table<string, era.fn.find_explorer.IDirItem>
 local file_datamap = {} ---@type table<string, era.fn.find_explorer.IFileItem>
 
 ---@param raw_item                      yoz.fs.IFileItemWithStatus
----@param dirpath                       string
+---@param dirpath                       string Canonical dirpath.
 ---@return era.fn.find_explorer.IFileItem
 local function create_file_item(raw_item, dirpath)
-  local filepath = dirpath .. "/" .. raw_item.name ---@type string
+  local filepath = raw_item.name ---@type string
+  if dirpath ~= "." then
+    filepath = (dirpath == "/" and dirpath or dirpath .. "/") .. filepath
+  end
   local icon, icon_hl ---@type string, string
 
   if raw_item.type == "directory" then
@@ -274,7 +277,8 @@ local function fetch_diritem(dirpath, force)
   end
 
   local items = {} ---@type era.fn.find_explorer.IFileItem[]
-  local raw_data, raw_err = yoz.fs.readdir(dirpath) ---@type yoz.fs.IReaddirResult|nil, yoz.fs.IReaddirError|nil
+  local os_dirpath = yoz.canonical_path.to_os_path(dirpath) ---@type string
+  local raw_data, raw_err = yoz.fs.readdir(os_dirpath) ---@type yoz.fs.IReaddirResult|nil, yoz.fs.IReaddirError|nil
 
   if raw_data == nil and raw_err ~= nil then
     stl.reporter.error({
@@ -318,7 +322,9 @@ local function fetch_diritem(dirpath, force)
   return diritem
 end
 
-local state_cwd = stl.c.Observable.from_value(dot.path.cwd()) ---@type stl.c.Observable
+local cwd = yoz.canonical_path.from_os_path(yoz.canonical_path.get_cwd(), false) ---@type string
+local workspace = yoz.canonical_path.from_os_path(dot.path.workspace(), false) ---@type string
+local state_cwd = stl.c.Observable.from_value(cwd) ---@type stl.c.Observable
 local search_pattern = stl.c.Observable.from_value("") ---@type stl.c.Observable
 local flag_fuzzy = stl.c.Observable.from_value(true) ---@type stl.c.Observable
 local flag_regex = stl.c.Observable.from_value(false) ---@type stl.c.Observable
@@ -326,18 +332,16 @@ local flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Ob
 
 ---@return string
 local function gen_title()
-  local cwd = dot.path.cwd() ---@type string
   local dirpath = state_cwd:snapshot() ---@type string
   if dirpath == cwd then
     return "File explorer (cwd)" ---@type string
   end
 
-  local relative_dirpath = dot.path.relative(cwd, dirpath)
+  local relative_dirpath = yoz.canonical_path.relative(cwd, dirpath, false) ---@type string
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer (cwd)" ---@type string
   end
 
-  local workspace = dot.path.workspace() ---@type string
   if dirpath == workspace then
     return "Find files (workspace)" ---@type string
   end
@@ -348,8 +352,8 @@ end
 
 ---@return era.m.picker.composer.list.IResetData
 local function fetch_data()
-  local dirpath = dot.path.normalize(state_cwd:snapshot()) ---@type string
-  local parent_dirpath = dot.path.dirname(dirpath) ---@type string
+  local dirpath = state_cwd:snapshot() ---@type string
+  local parent_dirpath = yoz.canonical_path.dirname(dirpath, false) ---@type string
   local diritem = fetch_diritem(dirpath, false) ---@type era.fn.find_explorer.IDirItem
   fetch_diritem(parent_dirpath, false)
 
@@ -393,7 +397,7 @@ local function fetch_data()
     local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
     local filepath_sourcefile = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
     if #filepath_sourcefile > 0 then
-      filepath_sourcefile = dot.path.normalize(filepath_sourcefile)
+      filepath_sourcefile = yoz.canonical_path.from_os_path(filepath_sourcefile, false)
       for _, item in ipairs(items) do
         if item.uuid == filepath_sourcefile then
           uuid_current = item.uuid
@@ -466,7 +470,8 @@ local function preview_render(composer, bufnr)
     local is_text_file = stl.filetype.is_printable_file(fileitem.name) ---@type boolean
     if is_text_file then
       local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
-      local lines = stl.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
+      local os_filepath = yoz.canonical_path.to_os_path(fileitem.path) ---@type string
+      local lines = stl.fs.read_file_as_lines({ filepath = os_filepath, max_lines = 300, silent = true }) ---@type string[]
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
       if filetype then
@@ -477,7 +482,7 @@ local function preview_render(composer, bufnr)
       local result = {
         cursorline = true,
         number = true,
-        title = dot.path.relative(dot.path.cwd(), fileitem.path),
+        title = yoz.canonical_path.relative(cwd, fileitem.path, false),
         whitespaces = true,
         wrap = false,
       }
@@ -579,9 +584,9 @@ local function preview_render(composer, bufnr)
       end
     end
 
-    local result_title = dot.path.relative(dot.path.cwd(), fileitem.path) ---@type string
+    local result_title = yoz.canonical_path.relative(cwd, fileitem.path, false) ---@type string
     if #result_title < 1 or string.sub(result_title, 1, 1) == "." then
-      result_title = dot.path.normalize(fileitem.path)
+      result_title = fileitem.path
     end
 
     ---@type era.m.picker.preview.IDrawResult
@@ -679,7 +684,7 @@ end
 ---@param name                          string
 ---@return string
 local function build_target_path(from_dir, name)
-  return yoz.path.join(from_dir, name, false, stl.env.PATH_SEP)
+  return yoz.canonical_path.join(from_dir, name, false)
 end
 
 ---@return integer
@@ -701,7 +706,7 @@ end
 ---@param lnum_hint                     integer|nil
 ---@return nil
 local function refresh_current_dir(target_uuid, lnum_hint)
-  local dirpath = dot.path.normalize(state_cwd:snapshot()) ---@type string
+  local dirpath = state_cwd:snapshot() ---@type string
   dir_datamap[dirpath] = nil
 
   local data = fetch_data() ---@type era.m.picker.composer.list.IResetData
@@ -741,14 +746,14 @@ end
 local function create_entry()
   local item, fileitem = retrieve_current_item()
 
-  local parent_dir = dot.path.normalize(state_cwd:snapshot()) ---@type string
+  local parent_dir = state_cwd:snapshot() ---@type string
   if item ~= nil and fileitem ~= nil then
     if item.text == "../" then
-      parent_dir = dot.path.normalize(state_cwd:snapshot()) ---@type string
+      parent_dir = state_cwd:snapshot() ---@type string
     elseif fileitem.type == "directory" then
-      parent_dir = dot.path.normalize(fileitem.path) ---@type string
+      parent_dir = fileitem.path ---@type string
     else
-      parent_dir = dot.path.normalize(fileitem.dir) ---@type string
+      parent_dir = fileitem.dir ---@type string
     end
   end
 
@@ -776,7 +781,8 @@ local function create_entry()
     end
 
     local target = build_target_path(parent_dir, name) ---@type string
-    if yoz.path.is_exist(target) then
+    local os_target = yoz.canonical_path.to_os_path(target) ---@type string
+    if yoz.path.is_exist(os_target) then
       stl.reporter.error({
         from = __module_name__,
         subject = "create",
@@ -788,12 +794,12 @@ local function create_entry()
 
     local success = false ---@type boolean
     if is_directory then
-      stl.env.mkdirs(target, true)
-      success = yoz.path.is_exist_directory(target)
+      stl.env.mkdirs(os_target, true)
+      success = yoz.path.is_exist_directory(os_target)
     else
-      stl.env.mkdirs(target, false)
-      local ok = pcall(vim.fn.writefile, {}, target) ---@type boolean
-      success = ok and yoz.path.is_exist_file(target)
+      stl.env.mkdirs(os_target, false)
+      local ok = pcall(vim.fn.writefile, {}, os_target) ---@type boolean
+      success = ok and yoz.path.is_exist_file(os_target)
     end
 
     if not success then
@@ -864,6 +870,7 @@ local function delete_entry()
   end
 
   local target = fileitem.path ---@type string
+  local os_target = yoz.canonical_path.to_os_path(target) ---@type string
   local is_directory = fileitem.type == "directory" ---@type boolean
   local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
   local winnr_current = vim.api.nvim_get_current_win() ---@type integer
@@ -883,9 +890,9 @@ local function delete_entry()
 
     local ok = false ---@type boolean
     if is_directory then
-      ok = vim.fn.delete(target, "rf") == 0
+      ok = vim.fn.delete(os_target, "rf") == 0
     else
-      ok = vim.fn.delete(target) == 0
+      ok = vim.fn.delete(os_target) == 0
     end
 
     if not ok then
@@ -974,7 +981,7 @@ local function copy_entry_as()
   end
 
   local source = fileitem.path ---@type string
-  local parent_dir = dot.path.normalize(fileitem.dir) ---@type string
+  local parent_dir = fileitem.dir ---@type string
   local is_directory = fileitem.type == "directory" ---@type boolean
   local suggested_name = suggest_copy_name(fileitem.name, is_directory) ---@type string
   local winnr_current = vim.api.nvim_get_current_win() ---@type integer
@@ -1004,7 +1011,9 @@ local function copy_entry_as()
       return
     end
 
-    if yoz.path.is_exist(target) then
+    local os_source = yoz.canonical_path.to_os_path(source) ---@type string
+    local os_target = yoz.canonical_path.to_os_path(target) ---@type string
+    if yoz.path.is_exist(os_target) then
       stl.reporter.error({
         from = __module_name__,
         subject = "copy_as",
@@ -1014,7 +1023,8 @@ local function copy_entry_as()
       return
     end
 
-    local ok = is_directory and stl.fs.copy_directory(source, target, true) or stl.fs.copy_file(source, target, true)
+    local ok = is_directory and stl.fs.copy_directory(os_source, os_target, true)
+      or stl.fs.copy_file(os_source, os_target, true)
     if not ok then
       return
     end
@@ -1078,7 +1088,7 @@ local function rename_entry()
   end
 
   local source = fileitem.path ---@type string
-  local parent_dir = dot.path.normalize(fileitem.dir) ---@type string
+  local parent_dir = fileitem.dir ---@type string
   local is_directory = fileitem.type == "directory" ---@type boolean
   local winnr_current = vim.api.nvim_get_current_win() ---@type integer
   local winnr_result = picker.result:get_winnr() ---@type integer|nil
@@ -1107,7 +1117,9 @@ local function rename_entry()
       return
     end
 
-    if yoz.path.is_exist(target) then
+    local os_source = yoz.canonical_path.to_os_path(source) ---@type string
+    local os_target = yoz.canonical_path.to_os_path(target) ---@type string
+    if yoz.path.is_exist(os_target) then
       stl.reporter.error({
         from = __module_name__,
         subject = "rename",
@@ -1117,7 +1129,7 @@ local function rename_entry()
       return
     end
 
-    local ok = era.fn.rename({ from = source, to = target, isdir = is_directory }) ---@type boolean
+    local ok = era.fn.rename({ from = os_source, to = os_target, isdir = is_directory }) ---@type boolean
     if not ok then
       return
     end
@@ -1354,7 +1366,7 @@ picker = era.m.picker.ListComposer.new({
       modes = { "n", "x" },
       key = "<Backspace>",
       callback = function()
-        local next_cwd = dot.path.dirname(state_cwd:snapshot())
+        local next_cwd = yoz.canonical_path.dirname(state_cwd:snapshot(), false) ---@type string
         state_cwd:next(next_cwd)
       end,
       desc = "file explorer: goto the parent dir",
@@ -1379,12 +1391,13 @@ state_cwd:subscribe(
 local function find_explorer(specified_filepath)
   local dirpath_resolved = false ---@type boolean
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    if yoz.path.is_exist_directory(specified_filepath) then
-      local dirpath = dot.path.normalize(specified_filepath) ---@type string
-      state_cwd:next(dirpath, { force = true })
+    local filepath = yoz.canonical_path.from_os_path(specified_filepath, false) ---@type string
+    local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+    if yoz.path.is_exist_directory(os_filepath) then
+      state_cwd:next(filepath, { force = true })
       dirpath_resolved = true
-    elseif yoz.path.is_exist_file(specified_filepath) then
-      local dirpath = dot.path.dirname(specified_filepath) ---@type string
+    elseif yoz.path.is_exist_file(os_filepath) then
+      local dirpath = yoz.canonical_path.dirname(filepath, false) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
     end
@@ -1396,10 +1409,12 @@ local function find_explorer(specified_filepath)
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then
-        if yoz.path.is_exist_directory(filepath) then
+        filepath = yoz.canonical_path.from_os_path(filepath, false)
+        local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+        if yoz.path.is_exist_directory(os_filepath) then
           state_cwd:next(filepath, { force = true })
-        elseif yoz.path.is_exist_file(filepath) then
-          state_cwd:next(dot.path.dirname(filepath), { force = true })
+        elseif yoz.path.is_exist_file(os_filepath) then
+          state_cwd:next(yoz.canonical_path.dirname(filepath, false), { force = true })
         end
       end
     end

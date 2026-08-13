@@ -53,6 +53,8 @@
 
 设计原则：
 
+- `state_cwd`、`IFileItem.path/dir` 与 cache key 使用 slash-only canonical path；仅在命令参数、buffer name 等入口执行一次 canonicalize。
+- filesystem/native API 调用前临时转换为 OS path，转换结果不进入状态或 cache。
 - 动作执行采用“即时计算 + 强制刷新”模型，不新增全局状态机。
 
 ## 键位契约
