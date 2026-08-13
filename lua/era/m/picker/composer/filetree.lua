@@ -965,8 +965,8 @@ function M.new(props)
       end
 
       local filepath = filenode.data.filepath
-      local cwd = dot.path.cwd()
-      local relative = dot.path.relative(cwd, filepath, "/")
+      local cwd = yoz.canonical_path.get_cwd()
+      local relative = yoz.canonical_path.relative(cwd, filepath, false)
       stl.nvim.fn.copy(relative)
       stl.reporter.info({
         from = fullname,
@@ -1025,7 +1025,7 @@ function M.new(props)
       self._composer:mark_result_dirty()
     end,
     send_to_qflist = function()
-      local cwd = dot.path.cwd() ---@type string
+      local cwd = yoz.canonical_path.get_cwd() ---@type string
       local quickfix_items = {} ---@type dot.state.qflist.IItem[]
 
       local linecount = retriever:linecount() ---@type integer
@@ -1035,7 +1035,7 @@ function M.new(props)
           local node = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
-            local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
+            local relative_filepath = yoz.canonical_path.relative(cwd, filepath, false) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type era.m.picker.view.filetree.INodeState|nil
             local locations = nodestate and nodestate.locations or nil ---@type era.m.picker.view.filetree.ILocationNodeState[]|nil
@@ -1829,8 +1829,8 @@ function M:render_preview(bufnr, force)
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
   local filepath = node.data.filepath ---@type string
-  local relative_filepath = rootnode ~= nil and dot.path.relative(rootnode.data.filepath or dot.path.cwd(), filepath)
-    or filepath
+  local relative_filepath = rootnode ~= nil and yoz.canonical_path.relative(rootnode.data.filepath, filepath, false)
+    or filepath ---@type string
 
   if nodestate.nodetype == "container" then
     treeview:render_treeview({
@@ -2141,7 +2141,7 @@ function M:__resolve_confirmation__(nodeuuid)
     end
   end
 
-  local filepath = rootnode ~= nil and dot.path.relative(rootnode.data.filepath, node.data.filepath)
+  local filepath = rootnode ~= nil and yoz.canonical_path.relative(rootnode.data.filepath, node.data.filepath, false)
     or node.data.filepath
   composer:close()
   self._on_confirm(self, { filepath })

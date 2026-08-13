@@ -14,8 +14,9 @@ end
 
 ---@param name                          string
 ---@param on_attached                   fun(_: era.m.picker.FiletreeComposer, rootpath: string)|nil
+---@param on_confirm                    era.m.picker.composer.filetree.IOnConfirm|nil
 ---@return era.m.picker.FiletreeComposer
-local function new_composer(name, on_attached)
+local function new_composer(name, on_attached, on_confirm)
   return era.m.picker.FiletreeComposer.new({
     name = name,
     permanent = false,
@@ -29,14 +30,16 @@ local function new_composer(name, on_attached)
     flag_selected = observable(false),
     flag_viewtype = observable("tree"),
     on_attached = on_attached,
+    on_confirm = on_confirm,
   })
 end
 
 ---@param name                          string
 ---@param callback                      fun(composer: era.m.picker.FiletreeComposer)
 ---@param on_attached                   fun(_: era.m.picker.FiletreeComposer, rootpath: string)|nil
-local function with_composer(name, callback, on_attached)
-  local composer = new_composer(name, on_attached)
+---@param on_confirm                    era.m.picker.composer.filetree.IOnConfirm|nil
+local function with_composer(name, callback, on_attached, on_confirm)
+  local composer = new_composer(name, on_attached, on_confirm)
   local ok, err = pcall(callback, composer)
   composer:dispose()
   vim.wait(20)
@@ -234,6 +237,80 @@ t:test("directory refresh canonicalizes native scan results", function()
       t.assert_eq(filepath, node and node.data.filepath, "scanned filepath")
     end
   end)
+end)
+
+t:test("lexical consumers emit slash-only relative paths", function()
+  local confirmed = nil ---@type string[]|nil
+  with_composer(
+    "canonical-consumers",
+    function(composer)
+      local rootpath = stl.env.IS_WIN and "C:/workspace/project" or "/workspace/project"
+      local main_filepath = rootpath .. "/src/main.lua"
+      local util_filepath = rootpath .. "/src/lib/util.lua"
+      t:patch_table(composer._scheduler_match, "schedule", function() end)
+      t:patch_table(yoz.canonical_path, "get_cwd", function()
+        return rootpath
+      end)
+      composer:reset_filepaths(rootpath, {
+        main_filepath,
+        util_filepath,
+      }, false)
+
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      local ok, err = pcall(function()
+        composer.result.draw(bufnr)
+
+        local copied = nil ---@type string|nil
+        t:patch_table(stl.nvim.fn, "copy", function(filepath)
+          copied = filepath
+        end)
+        t:patch_table(stl.reporter, "info", function() end)
+        composer.__retrieve_filenode__ = function()
+          return composer._filetree:retrieve(stl.c.Filetree.uuid(main_filepath))
+        end
+        retrieve_action(composer, "filetree: copy filepath (relative)")()
+        t.assert_eq("src/main.lua", copied, "copied relative filepath")
+
+        local quickfix_items = nil ---@type dot.state.qflist.IItem[]|nil
+        t:patch_table(composer._composer, "close", function() end)
+        t:patch_table(dot.state.qflist, "push", function(items)
+          quickfix_items = items
+        end)
+        t:patch_table(dot.state.qflist, "open_qflist", function() end)
+        retrieve_action(composer, "filetree: send to qflist")()
+        t.assert_eq(2, quickfix_items and #quickfix_items, "quickfix item count")
+        local quickfix_filenames = {} ---@type table<string, true>
+        for _, item in ipairs(quickfix_items or {}) do
+          t.assert_false(item.filename:find("\\", 1, true) ~= nil, "slash-only quickfix filename")
+          quickfix_filenames[item.filename] = true
+        end
+        t.assert_true(quickfix_filenames["src/main.lua"], "main quickfix filename")
+        t.assert_true(quickfix_filenames["src/lib/util.lua"], "util quickfix filename")
+
+        local directory_uuid = stl.c.Filetree.uuid(rootpath .. "/src")
+        composer.__retrieve_nodeuuid__ = function()
+          return directory_uuid, 1
+        end
+        local preview = composer:render_preview(bufnr, true)
+        t.assert_eq("src", preview.title, "relative preview title")
+
+        composer:__resolve_confirmation__(stl.c.Filetree.uuid(main_filepath))
+        t.assert_eq(1, confirmed and #confirmed, "confirmation count")
+        t.assert_eq("src/main.lua", confirmed and confirmed[1], "relative confirmation filepath")
+      end)
+
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+      if not ok then
+        error(err, 0)
+      end
+    end,
+    nil,
+    function(_, filepaths)
+      confirmed = filepaths
+    end
+  )
 end)
 
 t:run()
