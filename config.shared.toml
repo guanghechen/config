@@ -115,7 +115,8 @@ status_line = [
   "pull-request-number",
   "model-with-reasoning",
   "context-window-size",
-  "codex-version"
+  "codex-version",
+  "thread-id"
 ]
 terminal_title = ["activity", "project-name", "git-branch", "model-with-reasoning"]
 
