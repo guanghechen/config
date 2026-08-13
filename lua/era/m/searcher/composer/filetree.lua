@@ -728,7 +728,6 @@ function M.new(props)
         return
       end
 
-      local cwd = rootnode.data.filepath ---@type string
       local dirtied = false ---@type boolean
       local lnum_total = self.result.lnum_total:snapshot() ---@type integer
       for lnum = 1, lnum_total, 1 do
@@ -739,7 +738,7 @@ function M.new(props)
           if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
             ---@cast leafnode         stl.c.IFiletreeNode
             ---@cast leafnodestate    era.m.searcher.view.filetree.IFileNodeState
-            dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
+            dirtied = self:__replace_file__(leafnode, leafnodestate) or dirtied ---@type boolean
           end
         end
       end
@@ -770,7 +769,6 @@ function M.new(props)
         return
       end
 
-      local cwd = rootnode.data.filepath ---@type string
       local flag_case_sensitive = o_flag_case_sensitive:snapshot() ---@type boolean
       local flag_regex = o_flag_regex:snapshot() ---@type boolean
       local search_pattern = o_search_pattern:snapshot() ---@type string
@@ -847,7 +845,7 @@ function M.new(props)
           end
         end
 
-        local filepath = dot.path.resolve(cwd, leafnode.data.filepath) ---@type string
+        local filepath = yoz.canonical_path.to_os_path(leafnode.data.filepath) ---@type string
         local advance_result, advance_error = yoz.replace.replace_file_by_matches_advance({
           filepath = filepath,
           search_pattern = search_pattern,
@@ -913,7 +911,7 @@ function M.new(props)
       if nodestate.nodetype == "leaf" then
         ---@cast nodestate              era.m.searcher.view.filetree.IFileNodeState
 
-        local dirtied = self:__replace_file__(cwd, node, nodestate) ---@type boolean
+        local dirtied = self:__replace_file__(node, nodestate) ---@type boolean
         if dirtied then
           plainfile:mark_dirty()
           self:mark_result_dirty()
@@ -932,7 +930,7 @@ function M.new(props)
             if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
               ---@cast leafnode         stl.c.IFiletreeNode
               ---@cast leafnodestate    era.m.searcher.view.filetree.IFileNodeState
-              dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
+              dirtied = self:__replace_file__(leafnode, leafnodestate) or dirtied ---@type boolean
             end
           end
         end
@@ -945,7 +943,7 @@ function M.new(props)
       end
     end,
     send_to_qflist = function()
-      local cwd = dot.path.cwd() ---@type string
+      local cwd = yoz.canonical_path.get_cwd() ---@type string
       local quickfix_items = {} ---@type dot.state.qflist.IItem[]
 
       local linecount = retriever:linecount() ---@type integer
@@ -955,7 +953,7 @@ function M.new(props)
           local node = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
-            local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
+            local relative_filepath = yoz.canonical_path.relative(cwd, filepath, false) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type era.m.searcher.view.filetree.INodeState|nil
             local locations = nodestate and nodestate.locations or nil ---@type era.m.searcher.view.filetree.ILeafLocationState[]|nil
@@ -1506,7 +1504,7 @@ function M.new(props)
           local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
           local filepath = node.data.filepath ---@type string
           local relative_filepath = rootnode ~= nil
-              and dot.path.relative(rootnode.data.filepath or dot.path.cwd(), filepath)
+              and yoz.canonical_path.relative(rootnode.data.filepath, filepath, false)
             or filepath
 
           if nodestate.nodetype == "container" then
@@ -2542,11 +2540,10 @@ function M:__open_node__(nodeuuid)
   dot.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
 
----@param cwd                           string
 ---@param node                          stl.c.IFiletreeNode
 ---@param nodestate                     era.m.searcher.view.filetree.IFileNodeState
 ---@return boolean
-function M:__replace_file__(cwd, node, nodestate)
+function M:__replace_file__(node, nodestate)
   local locations = nodestate.locations ---@type era.m.searcher.view.filetree.ILeafLocationState[]|nil
   if locations == nil then
     return false
@@ -2570,9 +2567,9 @@ function M:__replace_file__(cwd, node, nodestate)
   local flag_regex = self.flag_regex:snapshot() ---@type boolean
   local search_pattern = self.search_pattern:snapshot() ---@type string
   local replace_pattern = self.replace_pattern:snapshot() ---@type string
+  local filepath = yoz.canonical_path.to_os_path(node.data.filepath) ---@type string
 
   if count == L and not self._published_search_limit_reached then
-    local filepath = dot.path.resolve(cwd, node.data.filepath) ---@type string
     local succeed, replace_error = yoz.replace.replace_file({
       filepath = filepath,
       search_pattern = search_pattern,
@@ -2589,7 +2586,6 @@ function M:__replace_file__(cwd, node, nodestate)
         subject = "replace_file",
         message = replace_error,
         details = {
-          cwd = cwd,
           filepath = node.data.filepath,
         },
       })
@@ -2605,7 +2601,6 @@ function M:__replace_file__(cwd, node, nodestate)
     end
   end
 
-  local filepath = dot.path.resolve(cwd, node.data.filepath) ---@type string
   local succeed, replace_error = yoz.replace.replace_file_by_matches({
     filepath = filepath,
     search_pattern = search_pattern,
@@ -2678,7 +2673,8 @@ function M:__resolve_confirmation__(nodeuuid)
     end
   end
 
-  local filepath = rootnode ~= nil and dot.path.relative(rootnode.data.filepath, node.data.filepath)
+  local filepath = rootnode ~= nil
+      and yoz.canonical_path.relative(rootnode.data.filepath, node.data.filepath, false)
     or node.data.filepath
   composer:close()
   self._on_confirm(self, { filepath })

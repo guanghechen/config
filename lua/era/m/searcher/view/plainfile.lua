@@ -8,7 +8,7 @@ local __module_name__ = "era.m.searcher.view.plainfile" ---@type string
 ---@field public search_pattern         stl.c.Observable
 ---@field public replace_pattern        stl.c.Observable
 ---
----@field public filepath               string
+---@field public filepath               string Canonical filepath.
 ---@field public filematch              era.m.searcher.view.filetree.IResolvedFileMatch|nil
 ---@field public offset_current         integer
 ---@field public match_offsets          integer[]
@@ -17,7 +17,7 @@ local __module_name__ = "era.m.searcher.view.plainfile" ---@type string
 ---@field public offset                 integer
 
 ---@class era.m.searcher.IPlainfileViewData
----@field public filepath               string
+---@field public filepath               string Canonical filepath.
 ---@field public filetype               string|nil
 ---@field public lines                  string[]
 ---@field public highlights             era.m.searcher.IPlainfileViewHighlight[]
@@ -81,7 +81,7 @@ end
 ---@return era.m.searcher.IPlainfileViewData
 function M:calc_preview_data(context)
   local filepath = context.filepath ---@type string
-  local filename = yoz.path.basename(filepath) ---@type string
+  local filename = yoz.canonical_path.basename(filepath) ---@type string
   if not stl.filetype.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
@@ -99,6 +99,7 @@ function M:calc_preview_data(context)
     return result
   end
 
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
   local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
   local flag_case_sensitive = context.flag_case_sensitive:snapshot() ---@type boolean
   local flag_regex = context.flag_regex:snapshot() ---@type boolean
@@ -111,7 +112,7 @@ function M:calc_preview_data(context)
 
   if flag_replace then
     local preview_result, preview_error = yoz.replace.replace_file_preview_by_matches_advance({
-      filepath = filepath,
+      filepath = os_filepath,
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
       keep_search_pieces = true,
@@ -128,7 +129,7 @@ function M:calc_preview_data(context)
           message = preview_error,
         })
       end
-      local fallback_lines = stl.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
+      local fallback_lines = stl.fs.read_file_as_lines({ filepath = os_filepath, silent = true }) or {} ---@type string[]
       preview_result = { text = table.concat(fallback_lines, "\n"), matches = {} }
     end
 
@@ -175,7 +176,7 @@ function M:calc_preview_data(context)
       end
     end
   else
-    lines = stl.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
+    lines = stl.fs.read_file_as_lines({ filepath = os_filepath, silent = true }) or {} ---@type string[]
     highlights = {} ---@type era.m.searcher.IPlainfileViewHighlight[]
 
     if context.filematch ~= nil then

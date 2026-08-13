@@ -182,6 +182,55 @@ t:test("native search paths cross the OS boundary and publish canonical identiti
   end
 end)
 
+t:test("preview keeps canonical identity across filesystem boundaries", function()
+  local composer, controls = new_composer("canonical-preview-paths", 500)
+  local ok, err = pcall(function()
+    local filepath = "C:/workspace/project/src/main.lua"
+    t:patch_table(yoz.canonical_path, "to_os_path", function(value)
+      return "OS<" .. value .. ">"
+    end)
+
+    local preview_filepath = nil ---@type string|nil
+    t:patch_table(yoz.replace, "replace_file_preview_by_matches_advance", function(params)
+      preview_filepath = params.filepath
+      return { text = "needle", matches = {} }, nil
+    end)
+    controls.flag_replace:next(true, { silent = true })
+    controls.replace_pattern:next("replacement", { silent = true })
+
+    local context = {
+      flag_case_sensitive = composer.flag_case_sensitive,
+      flag_regex = composer.flag_regex,
+      flag_replace = composer.flag_replace,
+      search_pattern = composer.search_pattern,
+      replace_pattern = composer.replace_pattern,
+      filepath = filepath,
+      filematch = nil,
+      offset_current = -1,
+      match_offsets = {},
+    } ---@type era.m.searcher.IPlainfileViewContext
+    local data = composer._plainfile:calc_preview_data(context)
+    t.assert_eq("OS<" .. filepath .. ">", preview_filepath, "native preview filepath")
+    t.assert_eq(filepath, data.filepath, "canonical preview identity")
+
+    local read_filepath = nil ---@type string|nil
+    t:patch_table(stl.fs, "read_file_as_lines", function(params)
+      read_filepath = params.filepath
+      return {}
+    end)
+    controls.flag_replace:next(false, { silent = true })
+    data = composer._plainfile:calc_preview_data(context)
+    t.assert_eq("OS<" .. filepath .. ">", read_filepath, "filesystem preview filepath")
+    t.assert_eq(filepath, data.filepath, "canonical read identity")
+  end)
+
+  composer:dispose()
+  vim.wait(20)
+  if not ok then
+    error(err, 0)
+  end
+end)
+
 t:test("Finder renders a highlighted title accent without changing its plain-title contract", function()
   local input = observable("")
   local finder = era.m.searcher.Finder.new({
@@ -367,13 +416,15 @@ t:test("match limit status follows the published projection and blocks replace a
 
   local replace_file_calls = 0
   local replace_match_calls = 0
+  local replace_match_filepath = nil ---@type string|nil
   local warnings = 0
   t:patch_table(yoz.replace, "replace_file", function()
     replace_file_calls = replace_file_calls + 1
     return false, nil
   end)
-  t:patch_table(yoz.replace, "replace_file_by_matches", function()
+  t:patch_table(yoz.replace, "replace_file_by_matches", function(params)
     replace_match_calls = replace_match_calls + 1
+    replace_match_filepath = params.filepath
     return false, nil
   end)
   t:patch_table(stl.reporter, "warn", function()
@@ -397,9 +448,40 @@ t:test("match limit status follows the published projection and blocks replace a
   local leafnode = composer._filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode
   local leafstate = composer._treeview:retrieve(leafuuid) ---@type era.m.searcher.view.filetree.IFileNodeState
   assert(leafnode ~= nil and leafstate ~= nil, "limited result leaf should exist")
-  composer:__replace_file__(fixture_dir, leafnode, leafstate)
+  composer:__replace_file__(leafnode, leafstate)
   t.assert_eq(0, replace_file_calls, "limited node replacement must not replace undiscovered matches")
   t.assert_eq(1, replace_match_calls, "limited node replacement should use explicit visible match offsets")
+  t.assert_eq(
+    yoz.canonical_path.to_os_path(leafnode.data.filepath),
+    replace_match_filepath,
+    "limited replace filesystem boundary"
+  )
+
+  local advance_filepath = nil ---@type string|nil
+  t:patch_table(yoz.replace, "replace_file_by_matches_advance", function(params)
+    advance_filepath = params.filepath
+    return { locations = {} }, nil
+  end)
+  local result_bufnr = vim.api.nvim_create_buf(false, true)
+  composer.result.draw(result_bufnr)
+  local location = assert(leafstate.locations and leafstate.locations[#leafstate.locations])
+  local location_lnum = assert(composer._retriever:retrieve_lnum(location.locationuuid))
+  composer.result.lnum_current:next(location_lnum, { force = true })
+  local replace_in_node ---@type fun(): nil
+  for _, keymap in ipairs(composer.finder.keymaps) do
+    if keymap.desc == "search: replace file" then
+      replace_in_node = keymap.callback
+      break
+    end
+  end
+  assert(replace_in_node ~= nil, "replace-in-node action should be bound")
+  replace_in_node()
+  t.assert_eq(
+    yoz.canonical_path.to_os_path(leafnode.data.filepath),
+    advance_filepath,
+    "single-match replace filesystem boundary"
+  )
+  vim.api.nvim_buf_delete(result_bufnr, { force = true })
 
   local winnr = composer.result:create_win({
     border = "single",
