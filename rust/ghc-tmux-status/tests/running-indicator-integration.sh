@@ -105,7 +105,7 @@ tmux_server new-session -d -s beta -n main
 tmux_server source-file "$repo_dir/conf/variable.tmux.conf"
 terminal_title_format=$(
   sed -n \
-    "s/^[[:space:]]*set[[:space:]]\+-g[[:space:]]\+set-titles-string[[:space:]]\+'\(.*\)'$/\1/p" \
+    "s/^[[:space:]]*set[[:space:]][[:space:]]*-g[[:space:]][[:space:]]*set-titles-string[[:space:]][[:space:]]*'\(.*\)'$/\1/p" \
     "$repo_dir/tmux.conf"
 )
 if [ -z "$terminal_title_format" ]; then
@@ -147,9 +147,8 @@ publish_session_states
 assert_format "⠸ " alpha:worker '#{E:@GHC_WINDOW_PREFIX_FMT}' \
   "running worker window prefix"
 assert_format "1" alpha "$alpha_running_format" "running session"
-initial_session_prefix=$(
-  tmux_server display-message -p -t alpha "$alpha_running_prefix"
-)
+tmux_server set-option -g status-left "$alpha_running_prefix"
+initial_session_prefix=$(tmux_server display-message -p -t alpha '#{T:status-left}')
 assert_spinner_prefix "$initial_session_prefix" "running session prefix"
 
 # Animation phase is derived from the existing one-second status clock. It
@@ -157,9 +156,7 @@ assert_spinner_prefix "$initial_session_prefix" "running session prefix"
 advanced_session_prefix=$initial_session_prefix
 for _ in $(seq 1 20); do
   sleep 0.1
-  advanced_session_prefix=$(
-    tmux_server display-message -p -t alpha "$alpha_running_prefix"
-  )
+  advanced_session_prefix=$(tmux_server display-message -p -t alpha '#{T:status-left}')
   if [ "$advanced_session_prefix" != "$initial_session_prefix" ]; then
     break
   fi
