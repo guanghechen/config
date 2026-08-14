@@ -22,7 +22,7 @@
 2. `relative` 使用与 Neovim startup CWD snapshot 同步的 `yoz.canonical_path`。
 3. `yoz.canonical_path.from_os_path` 委托既有 canonical normalization；`to_os_path` 只转换 separator，不重复 normalize；两者不重新定义 canonical operation contract。
 4. `stl.os.path` 不依赖 `dot.path`。
-5. Lua-facing `yoz.path.set_cwd` 与 `yoz.canonical_path.set_cwd` 共用一个 binding 写入路径，同步更新两份 native cache。
+5. Lua-facing `yoz.path.set_cwd` 与 `yoz.canonical_path.set_cwd` 共用一个 binding 写入路径，同步更新两份 native CWD state；canonical state 同时缓存有、无 trailing separator 的表示。
 6. `ark.bootstrap` 在 workspace 选择结束后，以 Neovim effective CWD 一次性初始化 native cache；运行期 CWD 变更不在当前契约内。
 
 ## 路径语义约束

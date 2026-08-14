@@ -302,7 +302,7 @@ picker = era.m.picker.FiletreeComposer.new({
 })
 
 stl.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
-  local cwd = yoz.canonical_path.get_cwd() ---@type string
+  local cwd = yoz.canonical_path.get_cwd_without_trailing() ---@type string
   local flag_buffer = o_flag_buffer:snapshot() ---@type boolean
   if flag_buffer then
     local bufnr = o_bufnr_sourcefile:snapshot() ---@type integer|nil

@@ -59,6 +59,9 @@ function M.resolve(from, to, keep_trailing_slash) end
 ---@return string
 function M.get_cwd() end
 
+---@return string
+function M.get_cwd_without_trailing() end
+
 ---@param cwd                           string
 ---@return nil
 function M.set_cwd(cwd) end

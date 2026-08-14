@@ -237,7 +237,7 @@ picker = era.m.picker.FiletreeComposer.new({
 stl.fn.observe({ o_rootpath }, function()
   local rootpath = yoz.canonical_path.from_os_path(o_rootpath:snapshot(), false) ---@type string
   local workspace = yoz.canonical_path.from_os_path(dot.path.workspace(), false) ---@type string
-  local cwd = yoz.canonical_path.get_cwd() ---@type string
+  local cwd = yoz.canonical_path.get_cwd_without_trailing() ---@type string
   if rootpath == workspace then
     picker.finder:set_title(string.format("%s (workspace)", title))
   elseif rootpath == cwd then

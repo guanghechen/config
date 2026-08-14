@@ -205,6 +205,13 @@ fn canonical_path_module(lua: &Lua) -> LuaResult<LuaTable> {
             })?,
         ),
         (
+            "get_cwd_without_trailing",
+            f(lua, |lua, ()| {
+                let cwd = canonical_path::get_cwd_without_trailing();
+                lua.create_string(cwd.as_bytes())
+            })?,
+        ),
+        (
             "set_cwd",
             f(lua, |_, cwd: String| {
                 set_path_cwd(&cwd);
