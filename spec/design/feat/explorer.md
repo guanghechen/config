@@ -38,6 +38,7 @@
 - `view.lua`：计算 line、highlight、diagnostic、Git status 等渲染数据。
 - `widget.lua`：管理窗口生命周期与 keymap。
 - `action.lua`：执行 open、create、delete、copy、move、rename、paste 等用户动作。
+- `nvimbar/component/explorer.lua`：只读消费 canonical root；启动时缓存稳定的 CWD/workspace display context，不写 Explorer state。
 
 ## 数据模型
 

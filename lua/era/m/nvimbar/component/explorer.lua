@@ -6,38 +6,61 @@ local txt = stl.nvim.fn.txt
 ---@field public callback               string
 ---@field public snapshot               fun(): string, string
 
----@type { prefix: string, replacement: string }[]
-local PATH_PREFIX_MAP = {
-  { prefix = stl.env.HOME_USER, replacement = "~" },
-}
+local ICON_CWD = stl.icon.filetype.FolderWithHeart ---@type string
+local ICON_FOLDER = stl.icon.filetype.Folder ---@type string
+local ICON_DETACHED = stl.icon.ui.CircleMedium ---@type string
 
----@param filepath                      string
----@param keep_trailing_slash           boolean|nil
----@return string
-local function normalize_filepath(filepath, keep_trailing_slash)
-  return dot.path.normalize(filepath, keep_trailing_slash ~= false, "/")
-end
-
----@param filepath                      string
----@return string
-local function normalize_dirpath(filepath)
-  local normalized = normalize_filepath(filepath, true) ---@type string
-  if normalized:sub(-1) ~= "/" then
-    normalized = normalized .. "/"
+---@param path                          string Canonical filepath.
+---@param prefix                        string Canonical filepath.
+---@return boolean
+local function has_path_prefix(path, prefix)
+  if prefix == "" then
+    return false
   end
-  return normalized
+  if path == prefix then
+    return true
+  end
+  if prefix == "/" then
+    return path:sub(1, 1) == "/"
+  end
+  return path:sub(1, #prefix + 1) == prefix .. "/"
 end
 
----@param path                          string
+local CWD = yoz.canonical_path.from_os_path(yoz.canonical_path.get_cwd(), false) ---@type string
+local WORKSPACE = yoz.canonical_path.from_os_path(dot.path.workspace(), false) ---@type string
+local WORKSPACE_DIRPATH = WORKSPACE == "/" and "/" or WORKSPACE .. "/" ---@type string
+local WORKSPACE_NAME = yoz.canonical_path.basename(WORKSPACE) ---@type string
+local HOME_USER = yoz.canonical_path.from_os_path(stl.env.HOME_USER, false) ---@type string
+local CWD_IN_WORKSPACE = CWD ~= WORKSPACE and has_path_prefix(CWD, WORKSPACE) ---@type boolean
+local CWD_RELATIVE_TO_WORKSPACE = CWD_IN_WORKSPACE and yoz.canonical_path.relative(WORKSPACE, CWD, false) or "" ---@type string
+
+---@param path                          string Canonical filepath.
 ---@return string
 local function shorten_path(path)
-  for _, item in ipairs(PATH_PREFIX_MAP) do
-    if vim.startswith(path, item.prefix) then
-      path = item.replacement .. path:sub(#item.prefix + 1)
-      break
-    end
+  if has_path_prefix(path, HOME_USER) then
+    path = "~" .. path:sub(#HOME_USER + 1)
   end
   return dot.path.shorten(path)
+end
+
+---@param root_filepath                 string Canonical dirpath.
+---@param root_path                     string Canonical display path.
+---@return string
+---@return boolean
+local function resolve_path_display(root_filepath, root_path)
+  local is_cwd = has_path_prefix(root_filepath, CWD) ---@type boolean
+  local icon = is_cwd and ICON_CWD or ICON_FOLDER ---@type string
+
+  if is_cwd then
+    if CWD == WORKSPACE then
+      return icon .. " " .. WORKSPACE_NAME, true
+    end
+    if CWD_IN_WORKSPACE then
+      return icon .. " " .. CWD_RELATIVE_TO_WORKSPACE, true
+    end
+  end
+
+  return icon .. " " .. shorten_path(root_path), is_cwd
 end
 
 ---@return integer
@@ -104,9 +127,6 @@ function M.winbar(o_root_filepath, position, flags, get_width)
   local hln_path = position .. "_explorer_path" ---@type string
   local hln_path_detached = position .. "_explorer_path_detached" ---@type string
   local hln_detached = position .. "_explorer_detached" ---@type string
-  local icon_cwd = stl.icon.filetype.FolderWithHeart ---@type string
-  local icon_folder = stl.icon.filetype.Folder ---@type string
-  local icon_detached = stl.icon.ui.CircleMedium ---@type string
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
@@ -117,29 +137,9 @@ function M.winbar(o_root_filepath, position, flags, get_width)
 
       local root_filepath = o_root_filepath:snapshot() ---@type string
       local root_path = root_filepath ---@type string
+      local display_path, is_cwd = resolve_path_display(root_filepath, root_path) ---@type string, boolean
 
-      local cwd = dot.path.cwd() ---@type string
-      local cwd_filepath = normalize_dirpath(cwd) ---@type string
-      local workspace = dot.path.workspace() ---@type string
-      local workspace_filepath = normalize_dirpath(workspace) ---@type string
-      local workspace_name = vim.fn.fnamemodify(workspace, ":t") ---@type string
-      local is_cwd = vim.startswith(root_filepath, cwd_filepath) ---@type boolean
-      local icon = is_cwd and icon_cwd or icon_folder ---@type string
-      local display_path ---@type string
-
-      if is_cwd then
-        if cwd_filepath == workspace_filepath then
-          display_path = icon .. " " .. workspace_name
-        elseif vim.startswith(cwd_filepath, workspace_filepath) then
-          display_path = icon .. " " .. cwd:sub(#workspace + 2)
-        else
-          display_path = icon .. " " .. shorten_path(root_path)
-        end
-      else
-        display_path = icon .. " " .. shorten_path(root_path)
-      end
-
-      local detached_text = is_cwd and "" or (" " .. icon_detached) ---@type string
+      local detached_text = is_cwd and "" or (" " .. ICON_DETACHED) ---@type string
       local path_text = " " .. display_path .. detached_text ---@type string
       local path_hln = is_cwd and hln_path or hln_path_detached ---@type string
       local path_hl_text = txt(" " .. display_path, path_hln) .. txt(detached_text, hln_detached) ---@type string
@@ -180,9 +180,6 @@ function M.path(o_root_filepath)
   local hln_path = "f_tl_explorer_path" ---@type string
   local hln_path_detached = "f_tl_explorer_path_detached" ---@type string
   local hln_detached = "f_tl_explorer_detached" ---@type string
-  local icon_cwd = stl.icon.filetype.FolderWithHeart ---@type string
-  local icon_folder = stl.icon.filetype.Folder ---@type string
-  local icon_detached = stl.icon.ui.CircleMedium ---@type string
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
@@ -191,29 +188,9 @@ function M.path(o_root_filepath)
     render = function()
       local root_filepath = o_root_filepath:snapshot() ---@type string
       local root_path = root_filepath ---@type string
+      local display_path, is_cwd = resolve_path_display(root_filepath, root_path) ---@type string, boolean
 
-      local cwd = dot.path.cwd() ---@type string
-      local cwd_filepath = normalize_dirpath(cwd) ---@type string
-      local workspace = dot.path.workspace() ---@type string
-      local workspace_filepath = normalize_dirpath(workspace) ---@type string
-      local workspace_name = vim.fn.fnamemodify(workspace, ":t") ---@type string
-      local is_cwd = vim.startswith(root_filepath, cwd_filepath) ---@type boolean
-      local icon = is_cwd and icon_cwd or icon_folder ---@type string
-      local display_path ---@type string
-
-      if is_cwd then
-        if cwd_filepath == workspace_filepath then
-          display_path = icon .. " " .. workspace_name
-        elseif vim.startswith(cwd_filepath, workspace_filepath) then
-          display_path = icon .. " " .. cwd:sub(#workspace + 2)
-        else
-          display_path = icon .. " " .. shorten_path(root_path)
-        end
-      else
-        display_path = icon .. " " .. shorten_path(root_path)
-      end
-
-      local detached_text = is_cwd and "" or (" " .. icon_detached) ---@type string
+      local detached_text = is_cwd and "" or (" " .. ICON_DETACHED) ---@type string
       local text = " " .. display_path .. detached_text ---@type string
       local path_hln = is_cwd and hln_path or hln_path_detached ---@type string
       local hl_text = txt(" " .. display_path, path_hln) .. txt(detached_text, hln_detached) ---@type string
@@ -231,9 +208,6 @@ function M.tabline(position)
   local hln_path = position .. "_explorer_path" ---@type string
   local hln_path_detached = position .. "_explorer_path_detached" ---@type string
   local hln_detached = position .. "_explorer_detached" ---@type string
-  local icon_cwd = stl.icon.filetype.FolderWithHeart ---@type string
-  local icon_folder = stl.icon.filetype.Folder ---@type string
-  local icon_detached = stl.icon.ui.CircleMedium ---@type string
 
   -- Register callbacks once at component creation, not on every render
   local cb_flag_selected = dot.G.register_anonymous_fn(function()
@@ -273,30 +247,12 @@ function M.tabline(position)
       root_filepath = tree.o_root_filepath:snapshot() ---@type string
       root_path = root_filepath ---@type string
     else
-      root_filepath = normalize_dirpath(dot.path.workspace()) ---@type string
-      root_path = dot.path.workspace() ---@type string
+      root_filepath = WORKSPACE_DIRPATH
+      root_path = WORKSPACE
     end
 
-    local cwd = dot.path.cwd() ---@type string
-    local cwd_filepath = normalize_dirpath(cwd) ---@type string
-    local workspace = dot.path.workspace() ---@type string
-    local workspace_filepath = normalize_dirpath(workspace) ---@type string
-    local workspace_name = vim.fn.fnamemodify(workspace, ":t") ---@type string
-    local is_cwd = vim.startswith(root_filepath, cwd_filepath) ---@type boolean
-    local icon = is_cwd and icon_cwd or icon_folder ---@type string
+    local display, is_cwd = resolve_path_display(root_filepath, root_path) ---@type string, boolean
     local path_hln = is_cwd and hln_path or hln_path_detached ---@type string
-
-    if is_cwd then
-      if cwd_filepath == workspace_filepath then
-        local display = icon .. " " .. workspace_name ---@type string
-        return display, txt(display, path_hln), is_cwd
-      elseif vim.startswith(cwd_filepath, workspace_filepath) then
-        local display = icon .. " " .. cwd:sub(#workspace + 2) ---@type string
-        return display, txt(display, path_hln), is_cwd
-      end
-    end
-
-    local display = icon .. " " .. shorten_path(root_path) ---@type string
     return display, txt(display, path_hln), is_cwd
   end
 
@@ -370,7 +326,7 @@ function M.tabline(position)
       end
 
       local path_text, path_hl_text, is_cwd = get_path_text() ---@type string, string, boolean
-      local detached_text = is_cwd and "" or (" " .. icon_detached) ---@type string
+      local detached_text = is_cwd and "" or (" " .. ICON_DETACHED) ---@type string
       local detached_hl_text = txt(detached_text, hln_detached) ---@type string
       local flags_text, flags_hl_text = get_flags_text() ---@type string, string
 
