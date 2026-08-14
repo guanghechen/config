@@ -34,6 +34,7 @@ const OVERFLOW_LITERAL: &str = " … ";
 // This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
 // uses literal_text as a tmux-width shadow, so update it with the rich item shape.
 const ARROW_LITERAL: char = '\u{e0b0}';
+const SPINNER_LITERAL: char = '\u{00a4}';
 const BELL_LITERAL: char = '\u{00a4}';
 
 pub struct SessionListWidget;
@@ -137,6 +138,7 @@ fn render_session_window(context: &RenderContext, start: usize, end: usize) -> R
         ));
         rich_text.push_str(&render_item_body_with_last_focus(
             &display_name,
+            &session.id,
             index,
             session.has_bell,
             is_active,
@@ -298,41 +300,50 @@ fn render_right_edge(last_active: bool) -> String {
 }
 
 fn render_item_body_literal(session_name: &str, index: usize, has_bell: bool) -> String {
-    // Active (` name | N `) and inactive (` name  N `) bodies are equal width, so the
-    // literal width shadow is active-invariant: one form covers every client's render.
+    // Budget the maximum dynamic prefix. Idle omits its gap and SPINNER_LITERAL;
+    // active (`name | N`) and inactive (`name  N`) bodies remain equal width.
     if has_bell {
-        return format!(" {session_name}  {index} {BELL_LITERAL}");
+        return format!(" {SPINNER_LITERAL}{BELL_LITERAL} {session_name}  {index} ");
     }
 
-    format!(" {session_name}  {index} ")
+    format!(" {SPINNER_LITERAL} {session_name}  {index} ")
 }
 
 fn render_item_body_with_last_focus(
     session_name: &str,
+    session_id: &str,
     index: usize,
     has_bell: bool,
     is_active: bool,
     last_focus_session_name: Option<&str>,
 ) -> String {
     if is_active {
-        return active_item_body(session_name, index, has_bell);
+        return active_item_body(session_name, session_id, index, has_bell);
     }
-    inactive_item_body_with_last_focus(session_name, index, has_bell, last_focus_session_name)
+    inactive_item_body_with_last_focus(
+        session_name,
+        session_id,
+        index,
+        has_bell,
+        last_focus_session_name,
+    )
 }
 
-fn active_item_body(session_name: &str, index: usize, has_bell: bool) -> String {
+fn active_item_body(session_name: &str, session_id: &str, index: usize, has_bell: bool) -> String {
     let name = display_literal(session_name);
+    let running_prefix = running_spinner_prefix(session_id);
     if has_bell {
         return format!(
-            "#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold] {name} | {index} #[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]"
+            "#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]{running_prefix}#{{@GHC_SYM_WIN_BELL}} {name} | {index} "
         );
     }
 
-    format!("#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold] {name} | {index} ")
+    format!("#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]{running_prefix} {name} | {index} ")
 }
 
 fn inactive_item_body_with_last_focus(
     session_name: &str,
+    session_id: &str,
     index: usize,
     has_bell: bool,
     last_focus_session_name: Option<&str>,
@@ -346,14 +357,23 @@ fn inactive_item_body_with_last_focus(
         |name| last_focus_fg(name, INACTIVE_NUM_FG),
     );
     let name = display_literal(session_name);
+    let running_prefix = running_spinner_prefix(session_id);
     if has_bell {
         return format!(
-            "#[fg={name_fg}#,bg={INACTIVE_NAME_BG}] {name} #[fg={num_fg}#,bg={INACTIVE_NUM_BG}] {index} #[fg={INACTIVE_BELL_FG}#,bg={INACTIVE_NUM_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}"
+            "#[fg={name_fg}#,bg={INACTIVE_NAME_BG}]{running_prefix}#[fg={INACTIVE_BELL_FG}#,bg={INACTIVE_NAME_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={name_fg}#,bg={INACTIVE_NAME_BG}] {name} #[fg={num_fg}#,bg={INACTIVE_NUM_BG}] {index} "
         );
     }
 
     format!(
-        "#[fg={name_fg}#,bg={INACTIVE_NAME_BG}] {name} #[fg={num_fg}#,bg={INACTIVE_NUM_BG}] {index} "
+        "#[fg={name_fg}#,bg={INACTIVE_NAME_BG}]{running_prefix} {name} #[fg={num_fg}#,bg={INACTIVE_NUM_BG}] {index} "
+    )
+}
+
+/// Adds a leading gap plus one live cell before the title only while running.
+/// `render_item_body_literal` budgets that maximum width without drawing idle padding.
+fn running_spinner_prefix(session_id: &str) -> String {
+    format!(
+        "#{{?#{{&&:#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},#{{m:*|{session_id}|*,#{{@GHC_SL_RUNNING_SESSIONS}}}}}},#{{=2:#{{E:@GHC_SESSION_RUNNING_PREFIX_FMT}}}},}}"
     )
 }
 
@@ -366,7 +386,7 @@ mod tests {
         MAX_SESSION_LIST_RICH_BYTES, RenderedSegment, active_item_body, compare_literal,
         display_literal, inactive_item_body_with_last_focus, render_item_body_literal,
         render_item_body_with_last_focus, render_join_separator, render_left_edge,
-        render_right_edge, render_session_list,
+        render_right_edge, render_session_list, running_spinner_prefix,
     };
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
@@ -375,52 +395,72 @@ mod tests {
 
     #[test]
     fn item_body_bakes_the_owner_active_branch() {
-        let active = render_item_body_with_last_focus("tmux", 2, false, true, Some("tmux"));
+        let active = render_item_body_with_last_focus("tmux", "$2", 2, false, true, Some("tmux"));
         assert!(active.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
         assert!(!active.contains("client_last_session"));
 
-        let inactive = render_item_body_with_last_focus("tmux", 2, false, false, Some("tmux"));
+        let inactive =
+            render_item_body_with_last_focus("tmux", "$2", 2, false, false, Some("tmux"));
         assert!(inactive.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
         assert!(inactive.contains("#{==:#{client_last_session},#{l:tmux}}"));
-        assert!(!inactive.contains("#{session_id}"));
+        assert!(inactive.contains(&running_spinner_prefix("$2")));
     }
 
     #[test]
-    fn active_branch_uses_pipe_and_active_palette_without_last_marker() {
-        let active = active_item_body("tmux", 2, false);
+    fn active_branch_places_running_prefix_before_title() {
+        let active = active_item_body("tmux", "$2", 2, false);
+        let running_prefix = running_spinner_prefix("$2");
         assert_eq!(
             active,
-            "#[fg=#{@GHC_SL_FG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bold] #{l:tmux} | 2 "
+            format!(
+                "#[fg=#{{@GHC_SL_FG_SESSION_LIST_ACTIVE}}#,bg=#{{@GHC_SL_BG_SESSION_LIST_ACTIVE}}#,bold]{running_prefix} #{{l:tmux}} | 2 "
+            )
         );
         assert!(!active.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
     }
 
     #[test]
     fn inactive_branch_splits_name_and_number_with_last_focus_fg() {
-        let inactive = inactive_item_body_with_last_focus("dev", 2, false, Some("dev"));
+        let inactive = inactive_item_body_with_last_focus("dev", "$2", 2, false, Some("dev"));
+        let running_prefix = running_spinner_prefix("$2");
         assert_eq!(
             inactive,
-            "#[fg=#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}] #{l:dev} #[fg=#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NUM}}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NUM}] 2 "
+            format!(
+                "#[fg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NAME}}}}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}]{running_prefix} #{{l:dev}} #[fg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NUM}}}}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NUM}}] 2 "
+            )
         );
     }
 
     #[test]
-    fn active_branch_with_bell_renders_bell_after_number() {
-        let active = active_item_body("tmux", 2, true);
-        assert!(active.contains("@GHC_SYM_WIN_BELL"));
-        assert!(active.contains(" #{l:tmux} | 2 "));
-        assert_eq!(render_item_body_literal("tmux", 2, true), " tmux  2 ¤");
+    fn active_branch_places_running_and_bell_before_title() {
+        let active = active_item_body("tmux", "$2", 2, true);
+        let running = active.find("@GHC_SESSION_RUNNING_PREFIX_FMT").unwrap();
+        let bell = active.find("@GHC_SYM_WIN_BELL").unwrap();
+        let title = active.find("#{l:tmux}").unwrap();
+        assert!(running < bell && bell < title);
+        assert!(active.contains(" | 2 "));
+        assert_eq!(render_item_body_literal("tmux", 2, true), " ¤¤ tmux  2 ");
     }
 
     #[test]
-    fn inactive_branch_with_bell_renders_bell_without_pipe() {
-        let inactive = inactive_item_body_with_last_focus("dev", 2, true, Some("dev"));
-        assert!(inactive.contains("@GHC_SYM_WIN_BELL"));
+    fn inactive_branch_places_running_and_bell_before_title_without_pipe() {
+        let inactive = inactive_item_body_with_last_focus("dev", "$2", 2, true, Some("dev"));
+        let running = inactive.find("@GHC_SESSION_RUNNING_PREFIX_FMT").unwrap();
+        let bell = inactive.find("@GHC_SYM_WIN_BELL").unwrap();
+        let title = inactive.rfind("#{l:dev}").unwrap();
+        assert!(running < bell && bell < title);
         assert!(inactive.contains("@GHC_SL_FG_SESSION_ITEM_BELL"));
         assert!(inactive.contains(" #{l:dev} "));
-        assert!(inactive.contains(" 2 "));
         assert!(!inactive.contains("| 2 "));
-        assert_eq!(render_item_body_literal("dev", 2, true), " dev  2 ¤");
+        assert_eq!(render_item_body_literal("dev", 2, true), " ¤¤ dev  2 ");
+    }
+
+    #[test]
+    fn running_prefix_targets_one_session_and_has_no_idle_padding() {
+        assert_eq!(
+            running_spinner_prefix("$2"),
+            "#{?#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{m:*|$2|*,#{@GHC_SL_RUNNING_SESSIONS}}},#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}},}"
+        );
     }
 
     #[test]
@@ -447,9 +487,9 @@ mod tests {
     #[test]
     fn item_bodies_use_draw_safe_display_and_expand_safe_compare() {
         // Display text takes the draw-safe (quadrupled) form in both branches...
-        let active = active_item_body("a#b", 1, false);
-        assert!(active.contains(" #{l:a####b} | 1 "));
-        let inactive = inactive_item_body_with_last_focus("a#b", 1, false, Some("a#b"));
+        let active = active_item_body("a#b", "$1", 1, false);
+        assert!(active.contains(" #{l:a####b} "));
+        let inactive = inactive_item_body_with_last_focus("a#b", "$1", 1, false, Some("a#b"));
         assert!(inactive.contains(" #{l:a####b} "));
         // ...while the last-focus compare right-value keeps the expand-only (doubled) form.
         assert!(inactive.contains("#{==:#{client_last_session},#{l:a##b}}"));
@@ -486,7 +526,7 @@ mod tests {
 
         assert_eq!(
             segment.literal_text,
-            "\u{e0b0} dev  1 \u{e0b0} yui  2 \u{e0b0} "
+            "\u{e0b0} ¤ dev  1 \u{e0b0} ¤ yui  2 \u{e0b0} "
         );
     }
 
@@ -503,8 +543,8 @@ mod tests {
 
         assert_eq!(on_dev.literal_text, on_yui.literal_text);
         assert_ne!(on_dev.rich_text, on_yui.rich_text);
-        assert!(on_dev.rich_text.contains("#{l:dev} | 1"));
-        assert!(on_yui.rich_text.contains("#{l:yui} | 2"));
+        assert!(on_dev.rich_text.contains(&running_spinner_prefix("$1")));
+        assert!(on_yui.rich_text.contains(&running_spinner_prefix("$2")));
     }
 
     #[test]
@@ -514,7 +554,7 @@ mod tests {
 
         assert!(segment.rich_text.contains("#[range=session|$1]"));
         assert!(segment.rich_text.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
-        assert_eq!(segment.literal_text, "\u{e0b0} dev  1 \u{e0b0} ");
+        assert_eq!(segment.literal_text, "\u{e0b0} ¤ dev  1 \u{e0b0} ");
     }
 
     #[test]
@@ -543,7 +583,7 @@ mod tests {
         assert!(segment.rich_text.contains("#[range=session|$2]"));
         assert_eq!(
             segment.literal_text,
-            "\u{e0b0} dev  1 \u{e0b0} yui  2 \u{e0b0} "
+            "\u{e0b0} ¤ dev  1 \u{e0b0} ¤ yui  2 \u{e0b0} "
         );
     }
 
@@ -557,7 +597,7 @@ mod tests {
         assert!(segment.rich_text.contains("#[range=session|$2]"));
         assert_eq!(
             segment.literal_text,
-            "\u{e0b0} dev  1 \u{e0b0} yui  2 ¤\u{e0b0} "
+            "\u{e0b0} ¤ dev  1 \u{e0b0} ¤¤ yui  2 \u{e0b0} "
         );
     }
 
@@ -575,7 +615,8 @@ mod tests {
             "session list cache grew to {} bytes",
             segment.rich_text.len()
         );
-        assert!(segment.rich_text.contains("#{l:s20} | 20"));
+        assert!(segment.rich_text.contains("#{l:s20}"));
+        assert!(segment.rich_text.contains(&running_spinner_prefix("$20")));
         assert!(segment.literal_text.starts_with("\u{e0b0} … "));
         assert!(segment.literal_text.contains("… \u{e0b0} "));
     }
@@ -589,8 +630,8 @@ mod tests {
         let first = render_session_list(&context_with_session_infos("s01", "", sessions.clone()));
         let last = render_session_list(&context_with_session_infos("s40", "", sessions));
 
-        assert!(first.rich_text.contains("#{l:s01} | 1"));
-        assert!(last.rich_text.contains("#{l:s40} | 40"));
+        assert!(first.rich_text.contains(&running_spinner_prefix("$1")));
+        assert!(last.rich_text.contains(&running_spinner_prefix("$40")));
         assert!(first.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
         assert!(last.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
     }

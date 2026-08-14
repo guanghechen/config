@@ -1,0 +1,301 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
+socket="ghc-tmux-running-indicator-test-$$"
+
+cleanup() {
+  env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+}
+trap cleanup EXIT
+
+fail() {
+  printf '%s\n' "$*" >&2
+  exit 1
+}
+
+tmux_server() {
+  env -u TMUX tmux -L "$socket" "$@"
+}
+
+assert_equal() {
+  local expected=$1
+  local actual=$2
+  local context=$3
+  if [ "$actual" != "$expected" ]; then
+    fail "$context: expected '$expected', got '$actual'"
+  fi
+}
+
+assert_format() {
+  local expected=$1
+  local target=$2
+  local format=$3
+  local context=$4
+  assert_equal "$expected" \
+    "$(tmux_server display-message -p -t "$target" "$format")" "$context"
+}
+
+assert_contains() {
+  local value=$1
+  local expected=$2
+  local context=$3
+  if [[ "$value" != *"$expected"* ]]; then
+    fail "$context: expected '$value' to contain '$expected'"
+  fi
+}
+
+assert_not_contains() {
+  local value=$1
+  local rejected=$2
+  local context=$3
+  if [[ "$value" = *"$rejected"* ]]; then
+    fail "$context: expected '$value' not to contain '$rejected'"
+  fi
+}
+
+assert_spinner_prefix() {
+  local value=$1
+  local context=$2
+  case "$value" in
+    " ⠋" | " ⠹" | " ⠴" | " ⠧") ;;
+    *) fail "$context: expected a padded session spinner, got '$value'" ;;
+  esac
+}
+
+strip_styles() {
+  sed -E 's/#\[[^]]*\]//g'
+}
+
+wait_for_dead_pane() {
+  local target=$1
+  local state
+  for _ in $(seq 1 100); do
+    state=$(tmux_server display-message -p -t "$target" '#{pane_dead}')
+    if [ "$state" = "1" ]; then
+      return 0
+    fi
+    sleep 0.02
+  done
+  fail "pane $target did not become dead"
+}
+
+publish_running_sessions() {
+  local ttl_seconds=${1:-12}
+  env \
+    TMUX="$server_environment" \
+    GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 \
+    GHC_TMUX_STATUS_RUNNING_TTL_SECONDS="$ttl_seconds" \
+    "$repo_dir/script/status-scheduler.sh" \
+    >/dev/null
+}
+
+tmux_server -f /dev/null new-session -d -s alpha -n main
+tmux_server new-session -d -s beta -n main
+tmux_server source-file "$repo_dir/conf/variable.tmux.conf"
+terminal_title_format=$(
+  sed -n \
+    "s/^[[:space:]]*set[[:space:]]\+-g[[:space:]]\+set-titles-string[[:space:]]\+'\(.*\)'$/\1/p" \
+    "$repo_dir/tmux.conf"
+)
+if [ -z "$terminal_title_format" ]; then
+  fail "set-titles-string format not found in tmux.conf"
+fi
+tmux_server set-option -g set-titles-string "$terminal_title_format"
+tmux_server set-option -g @GHC_SL_MODE 02 ';' \
+  set-option -s @GHC_SL_SCHED_ACTIVE 1
+server_environment=$(tmux_server display-message -p '#{socket_path},#{pid},0')
+
+session_running_prefix="#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}}"
+assert_format "2" alpha "#{w:${session_running_prefix}}" \
+  "session running prefix width"
+
+alpha_id=$(tmux_server display-message -p -t alpha '#{session_id}')
+beta_id=$(tmux_server display-message -p -t beta '#{session_id}')
+alpha_membership_format="#{m:*|${alpha_id}|*,#{@GHC_SL_RUNNING_SESSIONS}}"
+alpha_running_format="#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},${alpha_membership_format}}"
+alpha_running_prefix="#{?${alpha_running_format},${session_running_prefix},}"
+
+publish_running_sessions
+assert_format "" alpha:main '#{E:@GHC_WINDOW_PREFIX_FMT}' "idle window"
+assert_format "0" alpha "$alpha_running_format" "idle session"
+assert_format "" alpha "$alpha_running_prefix" "idle session prefix"
+
+# A running pane in another session must not leak into alpha's aggregate.
+tmux_server select-pane -t beta:main.0 -T '⠙ beta'
+publish_running_sessions
+assert_format "⠙ " beta:main '#{E:@GHC_WINDOW_PREFIX_FMT}' \
+  "running window prefix in another session"
+assert_format "0" alpha "$alpha_running_format" "target-session isolation"
+
+# The same cached format changes with pane_title and sees non-active windows.
+tmux_server new-window -d -t alpha -n worker
+tmux_server select-pane -t alpha:worker.0 -T '⠸ alpha'
+publish_running_sessions
+assert_format "⠸ " alpha:worker '#{E:@GHC_WINDOW_PREFIX_FMT}' \
+  "running worker window prefix"
+assert_format "1" alpha "$alpha_running_format" "running session"
+initial_session_prefix=$(
+  tmux_server display-message -p -t alpha "$alpha_running_prefix"
+)
+assert_spinner_prefix "$initial_session_prefix" "running session prefix"
+
+# Animation phase is derived from the existing one-second status clock. It
+# advances without another scheduler sample or renderer/cache mutation.
+advanced_session_prefix=$initial_session_prefix
+for _ in $(seq 1 20); do
+  sleep 0.1
+  advanced_session_prefix=$(
+    tmux_server display-message -p -t alpha "$alpha_running_prefix"
+  )
+  if [ "$advanced_session_prefix" != "$initial_session_prefix" ]; then
+    break
+  fi
+done
+assert_spinner_prefix "$advanced_session_prefix" "advanced session spinner prefix"
+if [ "$advanced_session_prefix" = "$initial_session_prefix" ]; then
+  fail "session spinner did not advance from '$initial_session_prefix'"
+fi
+
+# Missing or malformed animation format degrades to no marker.
+session_prefix_format=$(
+  tmux_server show-option -gqv @GHC_SESSION_RUNNING_PREFIX_FMT
+)
+tmux_server set-option -gu @GHC_SESSION_RUNNING_PREFIX_FMT
+assert_format "" alpha "$alpha_running_prefix" \
+  "missing session spinner format"
+tmux_server set-option -g @GHC_SESSION_RUNNING_PREFIX_FMT '#{broken'
+assert_format "" alpha "$alpha_running_prefix" \
+  "malformed session spinner format"
+tmux_server set-option -g @GHC_SESSION_RUNNING_PREFIX_FMT \
+  "$session_prefix_format"
+
+tmux_server select-pane -t alpha:worker.0 -T 'idle'
+publish_running_sessions
+assert_format "" alpha:worker '#{E:@GHC_WINDOW_PREFIX_FMT}' "settled worker window"
+assert_format "0" alpha "$alpha_running_format" "settled session"
+assert_format "" alpha "$alpha_running_prefix" "settled session prefix"
+
+# remain-on-exit panes retain their last title; pane_dead must suppress stale spinners.
+tmux_server new-window -d -t alpha -n dead 'sleep 1'
+tmux_server set-option -w -t alpha:dead remain-on-exit on
+tmux_server select-pane -t alpha:dead.0 -T '⠋ stale'
+wait_for_dead_pane alpha:dead.0
+publish_running_sessions
+assert_format "" alpha:dead.0 '#{E:@GHC_PANE_RUNNING_FMT}' "dead pane frame"
+assert_format "" alpha:dead '#{E:@GHC_WINDOW_PREFIX_FMT}' "dead pane window"
+
+# The configured current-window item preserves the original idle layout and
+# prepends the live frame only while running.
+tmux_server source-file "$repo_dir/theme/catppuccin-mocha.tmux.conf"
+tmux_server source-file "$repo_dir/conf/theme.tmux.conf"
+tmux_server select-pane -t beta:main -T 'idle'
+idle_window_item=$(
+  tmux_server display-message -p -t beta:main \
+    '#{T:window-status-current-format}' | strip_styles
+)
+assert_contains "$idle_window_item" "main | " "idle window item matches baseline layout"
+
+tmux_server select-pane -t beta:main -T '⠧ beta'
+running_window_item=$(
+  tmux_server display-message -p -t beta:main \
+    '#{T:window-status-current-format}' | strip_styles
+)
+assert_contains "$running_window_item" "⠧ main | " "running window frame before title"
+
+# Window items consume pane_title directly, so a frame change needs no scheduler
+# sample or Rust cache rewrite.
+tmux_server select-pane -t beta:main -T '⠇ beta'
+spun_window_item=$(
+  tmux_server display-message -p -t beta:main \
+    '#{T:window-status-current-format}' | strip_styles
+)
+assert_contains "$spun_window_item" "⠇ main | " "advanced spinner frame before title"
+assert_not_contains "$spun_window_item" "⠧" "stale window spinner frame"
+
+# Bell and zoom share the window prefix contract. They stay ahead of the title
+# but do not become running evidence when no pane title has a spinner.
+tmux_server set-window-option -g monitor-bell on
+tmux_server set-option -g bell-action any
+tmux_server new-window -d -t beta -n alert \
+  "sleep 0.3; printf '\\007'; sleep 10"
+alert_pane=$(tmux_server display-message -p -t beta:alert '#{pane_id}')
+tmux_server select-pane -t "$alert_pane" -T '⠋ alert'
+tmux_server split-window -d -t beta:alert 'sleep 10'
+tmux_server resize-pane -Z -t "$alert_pane"
+window_bell_flag=0
+for _ in $(seq 1 20); do
+  window_bell_flag=$(
+    tmux_server display-message -p -t beta:alert '#{window_bell_flag}'
+  )
+  if [ "$window_bell_flag" = "1" ]; then
+    break
+  fi
+  sleep 0.1
+done
+assert_equal "1" "$window_bell_flag" "alert window bell flag"
+bell_symbol=$(tmux_server show-option -gqv @GHC_SYM_WIN_BELL)
+zoom_symbol=$(tmux_server show-option -gqv @GHC_SYM_WIN_ZOOM)
+decorated_window_item=$(
+  tmux_server display-message -p -t beta:alert \
+    '#{T:window-status-format}' | strip_styles
+)
+assert_contains "$decorated_window_item" \
+  "⠋ $bell_symbol $zoom_symbol alert" \
+  "window spinner bell zoom prefix order"
+terminal_title_before=$(
+  tmux_server display-message -p -t beta:alert '#{pane_title}'
+)
+terminal_title=$(
+  tmux_server display-message -p -t beta:alert '#{T:set-titles-string}'
+)
+assert_contains "$terminal_title" \
+  "⠋ $bell_symbol beta:alert" \
+  "terminal title spinner bell prefix order"
+assert_equal "$terminal_title_before" \
+  "$(tmux_server display-message -p -t beta:alert '#{pane_title}')" \
+  "terminal title does not rewrite pane title"
+
+tmux_server select-pane -t beta:main -T 'idle'
+tmux_server select-pane -t "$alert_pane" -T 'idle'
+publish_running_sessions
+assert_not_contains \
+  "$(tmux_server show-option -sqv @GHC_SL_RUNNING_SESSIONS)" \
+  "|${beta_id}|" \
+  "bell and zoom do not imply running"
+
+# A delayed expiry may clear only its own sample, never a newer refresh.
+tmux_server select-pane -t alpha:main -T '⠴ expiring'
+publish_running_sessions 0.3
+assert_format "1" alpha "$alpha_running_format" "sampled running session"
+old_sample=$(tmux_server show-option -sqv @GHC_SL_RUNNING_SESSIONS)
+sleep 0.1
+publish_running_sessions 0.8
+refreshed_sample=$(tmux_server show-option -sqv @GHC_SL_RUNNING_SESSIONS)
+if [ "$old_sample" = "$refreshed_sample" ]; then
+  fail "running-session sample token did not refresh"
+fi
+sleep 0.3
+assert_equal "$refreshed_sample" \
+  "$(tmux_server show-option -sqv @GHC_SL_RUNNING_SESSIONS)" \
+  "old delayed timer preserves refreshed sample"
+sleep 0.6
+assert_equal "" \
+  "$(tmux_server show-option -sqv @GHC_SL_RUNNING_SESSIONS)" \
+  "refreshed running-session sample expires"
+assert_format "" alpha "$alpha_running_prefix" "expired session prefix"
+
+publish_running_sessions
+refreshed_session_prefix=$(
+  tmux_server display-message -p -t alpha "$alpha_running_prefix"
+)
+assert_spinner_prefix "$refreshed_session_prefix" "refreshed session prefix"
+tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 0
+assert_format "" alpha "$alpha_running_prefix" \
+  "fenced scheduler hides session marker"
+publish_running_sessions
+assert_equal "" \
+  "$(tmux_server show-option -sqv @GHC_SL_RUNNING_SESSIONS)" \
+  "inactive lifecycle clears sampled sessions"
+
+printf '%s\n' "running indicator integration: ok"

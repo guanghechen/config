@@ -16,10 +16,12 @@ bash -n \
   "$crate_dir/tests/driver-fault-integration.sh" \
   "$crate_dir/tests/focus-session-integration.sh" \
   "$crate_dir/tests/renderer-lifecycle-integration.sh" \
+  "$crate_dir/tests/running-indicator-integration.sh" \
   "$crate_dir/tests/scheduler-integration.sh"
 "$crate_dir/tests/client-hooks-integration.sh"
 "$crate_dir/tests/driver-fault-integration.sh"
 "$crate_dir/tests/focus-session-integration.sh"
 "$crate_dir/tests/renderer-lifecycle-integration.sh"
+"$crate_dir/tests/running-indicator-integration.sh"
 "$crate_dir/tests/scheduler-integration.sh"
 git -C "$repo_dir" diff --check

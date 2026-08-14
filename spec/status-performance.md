@@ -117,6 +117,62 @@ commit median 25.010 -> 12.280 ms
 total median  37.385 -> 25.930 ms
 ```
 
+### 4.7 Aggregate running-session state
+
+每个 visible session item 重复执行 `S/W/P` traversal，在 4/10/20 items 下的 isolated
+median 增量为 `+0.756 / +1.541 / +5.121 ms`，因此拒绝该方案。最终由 scheduler
+single-flight owner 每 tick 聚合一次；session item 做 token membership 并从现有 1 Hz
+status clock 派生 animation phase，window item 保持 native live expansion。
+
+2026-08-12，tmux 3.7b，20 sessions、1 attached client、300 paired runs。Baseline 与
+sample 使用相同的 publish、delayed-CAS queue；baseline 发布 literal token set，sample
+执行 `S/W/P` traversal：
+
+```text
+                 mean     median      p95
+paired delta   +1.115    +0.903   +1.946 ms
+```
+
+该结果只隔离 traversal cost，不是 feature-enabled 对 no-sampler 的总 overhead。测量来自
+精简前的 two-option queue；control queue 在 paired 两侧相同，因此仍可用于 traversal
+预算判断，但不能作为当前 single-option implementation 的精确总成本。
+
+真实 4 秒 scheduler cadence 的 31 秒 probe 中，1/4 attached clients 均只有 8 次 owner
+sample，interval median 分别为 `4.141 / 4.170 s`。该数据只证明 multi-client contention
+未增加 sampler cadence；不构成普遍 tail-latency claim。
+
+Running state 不进入 Rust snapshot/cache。Sample 使用单 option delayed CAS，producer 停止后
+marker 最多保留 12 秒。
+
+2026-08-14，tmux 3.7b，isolated server、300 paired runs。所有 item 均为 running；两侧执行
+相同 membership match，candidate 额外展开四帧 clock format。相对静态 glyph：
+
+```text
+items             4       10       20       40
+median delta  +0.124   +0.181   +0.391   +0.884 ms
+p95 delta     +1.076   +1.267   +1.684   +2.031 ms
+```
+
+该 measurement 是 per-expansion directional evidence，不是完整 tmux CPU throughput claim。
+Animation 不增加 timer、process、IPC、option write 或 `S/W/P` traversal；成本随 visible item、
+client 与实际 status expansion 次数增长。
+
+2026-08-14，tmux 3.7b，isolated server、300 paired runs。Baseline 通过 `list-windows`
+展开 title；candidate 在相同 workload 中额外展开 `@GHC_WINDOW_PREFIX_FMT`。所有 pane title
+均包含 spinner，bell/zoom 为 false：
+
+```text
+windows       panes/window   median delta   p95 delta
+4             1                +0.389 ms     +1.896 ms
+10            1                +1.003 ms     +2.566 ms
+20            1                +1.949 ms     +3.971 ms
+10            4                +1.910 ms     +4.052 ms
+```
+
+该结果隔离 per-window prefix expansion，仍是 directional evidence，不等于完整 status draw。
+成本随 window/pane 数和实际 redraw 次数增长；多 client 各自展开，但 running-session publish
+仍由 single-flight lock 去重。
+
 ## 5. 明确拒绝或延后的方向
 
 | Direction | Final decision | Revisit condition |

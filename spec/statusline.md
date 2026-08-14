@@ -36,6 +36,7 @@ cache、commit 与降级策略。Session 的分组、排序和导航规则见
 | 持久状态 | tmux options | 无额外文件或服务，且可直接观察 |
 | layout state | session-scoped | 不同 session 可独立持有 rows、lengths 与 formats |
 | metrics | scheduler-owned samples | 避免 widget render 触发外部 IO |
+| running indicator | tmux title-derived state | window live-expand；session lock-owner sampled |
 | commit | guarded delta plan | 减少 tmux IPC，并阻止 stale writer |
 | fallback | `status01` | Rust 或 scheduler 不可用时保持可用状态栏 |
 | theme | generated `@GHC_*` options | renderer 不硬编码 palette |
@@ -87,6 +88,7 @@ tmux event / status tick
 | lifecycle generation | `@GHC_SL_SCHED_ACTIVE/GEN` | `load-theme.sh` |
 | scheduler task state | server-scoped task options | guarded Rust scheduler commit |
 | rendered session cache | session-scoped `@GHC_SL_*` | guarded Rust commit |
+| running sessions | server-scoped `@GHC_SL_RUNNING_SESSIONS` | scheduler lock owner；loader lifecycle reset |
 | session virtual order | `@GHC_SL_SESSION_ORDER` | session swap command |
 | palette/symbols | generated theme options | external theme generator |
 | native window list | tmux | tmux |
@@ -284,9 +286,37 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - active style 优先于 last-session style；
 - `client_last_session` 仅在当前 group 可见且非 active 时高亮；
 - bell source 为 tmux `session_alerts`，包含 `!` 即表示该 session 有 bell；
-- bell icon 位于 item body 内，不改变 slant edge；
+- session item prefix 顺序为 running spinner、bell、title；bell 仍位于 item body 内，不改变
+  slant edge；
 - `literal_text` 必须包含每个可见 icon 的 width placeholder；
 - 超长 session name 在固定 byte budget 内截断。
+
+### 8.1 Running indicator
+
+- Source of truth：live pane 的 `pane_title` 以 Braille spinner
+  `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 之一开头；`pane_dead=1` 始终视为 idle。
+- `@GHC_WINDOW_PREFIX_FMT` 组合完整 window prefix：native `P:` 动态聚合的 live frame、
+  bell、zoom、title；显示顺序为 spinner、bell、zoom、title。Running membership 只读取独立的
+  frame helper，bell/zoom 不构成 running evidence。
+- Terminal title 复用同一 live frame helper，并从 `session_alerts` 派生 session bell；显示顺序
+  为 spinner、bell、`session:window`。Terminal title 不反写 `pane_title`。
+- Scheduler lock owner 用一条 command queue 发布
+  `@GHC_SL_RUNNING_SESSIONS = <sample-token><|$session_id|...>`；contender 不采样。
+- Session item 检查 lifecycle active 与 exact session-id membership。Sample 默认由 tmux
+  server 在 12 秒后以 token prefix CAS 清理；正常 freshness 约为 4–5 秒。
+- Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 4` 派生
+  `⠋/⠹/⠴/⠧`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
+  malformed 时不显示 marker。
+- Session spinner 仅在 running 时作为 title prefix 增加 2 列（左侧 gap + frame）；idle 不绘制
+  padding、保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count 不变；
+  `literal_text` shadow 按 spinner + bell 的最大宽度预算，接受 running transition 引起的
+  session-list reflow。
+- Window live frame 仅在 running 时增加 2 列，idle 不预留 frame、保持 baseline layout；
+  接受由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，
+  各自的 glyph count 和 palette 不变。
+- 该状态不进入 Rust snapshot、render key 或 session cache；spinner frame 变化不触发 renderer
+  apply/commit。
+- Lifecycle fence 清空 sampled state；format expansion failure 保持空 marker。
 
 ## 9. Length 与 cache contract
 
@@ -340,8 +370,9 @@ Server state：
 generation:sequence:next_due_seconds:lease_until_seconds
 ```
 
-Status format 通过 `#()` 调用 `script/status-scheduler.sh`。Shell driver 只负责
-single-flight 与 process supervision，Rust 负责 task state transition 和实际工作。
+Status format 通过 `#()` 调用 `script/status-scheduler.sh`。Shell driver 先取得 scheduler
+single-flight ownership，再 materialize running-session derived state，并负责 process
+supervision；Rust 负责 task state transition 和实际 scheduler work。
 
 ### 10.2 State transition
 
@@ -395,6 +426,8 @@ Plan 在 32 KiB command budget 内分 chunk：
 | snapshot read/parse failure | abort | 保留旧 status |
 | widget/composition failure | abort | 保留旧 status |
 | metric unsupported/failure | degrade | hidden 或 last-known value |
+| running membership expansion failure | degrade | marker absent；下一位 lock owner 重试 |
+| running producer missing/hung | expire | active fence 立即隐藏，否则 last sample 最多保留 12 s |
 | guarded commit skipped | retry later | 新er writer 胜出 |
 | tmux commit failure | retry later | guards 允许的旧状态保持可见 |
 | renderer/driver unavailable on load | fallback | 使用 `status01` |
