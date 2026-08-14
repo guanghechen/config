@@ -29,8 +29,9 @@ function M.loadfile(filepath)
     return bufnr_sourcefile
   end
 
-  if yoz.path.is_exist_file(filepath) then
-    local bufnr = vim.fn.bufadd(filepath) ---@type integer
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  if yoz.path.is_exist_file(os_filepath) then
+    local bufnr = vim.fn.bufadd(os_filepath) ---@type integer
     if bufnr == 0 or not vim.api.nvim_buf_is_valid(bufnr) then
       return nil
     end
