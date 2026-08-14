@@ -286,8 +286,7 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - active style 优先于 last-session style；
 - `client_last_session` 仅在当前 group 可见且非 active 时高亮；
 - bell source 为 tmux `session_alerts`，包含 `!` 即表示该 session 有 bell；
-- session item prefix 顺序为 running spinner、bell、title；bell 仍位于 item body 内，不改变
-  slant edge；
+- session item state prefix 为互斥的 running spinner 或 bell，位于 title 前且不改变 slant edge；
 - `literal_text` 必须包含每个可见 icon 的 width placeholder；
 - 超长 session name 在固定 byte budget 内截断。
 
@@ -295,11 +294,32 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 
 - Source of truth：live pane 的 `pane_title` 以 Braille spinner
   `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 之一开头；`pane_dead=1` 始终视为 idle。
-- `@GHC_WINDOW_PREFIX_FMT` 组合完整 window prefix：native `P:` 动态聚合的 live frame、
-  bell、zoom、title；显示顺序为 spinner、bell、zoom、title。Running membership 只读取独立的
-  frame helper，bell/zoom 不构成 running evidence。
-- Terminal title 复用同一 live frame helper，并从 `session_alerts` 派生 session bell；显示顺序
-  为 spinner、bell、`session:window`。Terminal title 不反写 `pane_title`。
+- 状态按以下定义逐级聚合，且每一级均满足 `spinning > bell > idle`：
+
+  ```text
+  pane_spinning(p)
+    = !pane_dead(p) && pane_title(p) 以 Braille spinner 开头
+
+  window_spinning(w)
+    = 存在 p ∈ panes(w): pane_spinning(p)
+
+  window_bell(w)
+    = window_bell_flag(w) && !window_spinning(w)
+
+  session_spinning(s)
+    = 存在 w ∈ windows(s): window_spinning(w)
+
+  session_bell(s)
+    = session_alerts(s) 包含 "!" && !session_spinning(s)
+  ```
+
+  tmux 不提供持久的 pane-level bell；`window_bell_flag` 已表示该 window 下任意 pane 触发的
+  bell。
+- `@GHC_WINDOW_PREFIX_FMT` 用 native `P:` 动态聚合 live frame，并在同一个两列 state slot
+  中以 bell 作为 fallback；因此 spinner 与 bell 不会同时显示，也不需要第二次 pane traversal。
+  Zoom 是独立 decorator，显示顺序为 state、zoom、title。
+- Terminal title 使用 session scope：sampled running membership 命中时显示 spinner，否则从
+  `session_alerts` 派生 bell，最后显示 `session:window`。Terminal title 不反写 `pane_title`。
 - Scheduler lock owner 用一条 command queue 发布
   `@GHC_SL_RUNNING_SESSIONS = <sample-token><|$session_id|...>`；contender 不采样。
 - Session item 检查 lifecycle active 与 exact session-id membership。Sample 默认由 tmux
@@ -308,15 +328,18 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   `⠋/⠹/⠴/⠧`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
   malformed 时不显示 marker。
 - Session spinner 仅在 running 时作为 title prefix 增加 2 列（左侧 gap + frame）；idle 不绘制
-  padding、保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count 不变；
-  `literal_text` shadow 按 spinner + bell 的最大宽度预算，接受 running transition 引起的
+  padding、保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count 不变；bell
+  只占用 spinner 的 fallback branch。`literal_text` shadow 按两种状态的最大宽度预算，接受
+  running transition 引起的
   session-list reflow。
 - Window live frame 仅在 running 时增加 2 列，idle 不预留 frame、保持 baseline layout；
   接受由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，
   各自的 glyph count 和 palette 不变。
 - 该状态不进入 Rust snapshot、render key 或 session cache；spinner frame 变化不触发 renderer
   apply/commit。
-- Lifecycle fence 清空 sampled state；format expansion failure 保持空 marker。
+- Session item 与 terminal title 是上述 session 定义的 freshness-bounded projection：sample
+  更新前可能暂时保留上一状态；不额外执行 `S/W/P` traversal。Lifecycle fence 清空 sampled
+  state；format expansion failure 保持空 marker，并继续抑制低优先级 bell。
 
 ## 9. Length 与 cache contract
 

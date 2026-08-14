@@ -63,6 +63,16 @@ assert_spinner_prefix() {
   esac
 }
 
+assert_spinner_title() {
+  local value=$1
+  local title=$2
+  local context=$3
+  case "$value" in
+    "⠋ $title" | "⠹ $title" | "⠴ $title" | "⠧ $title") ;;
+    *) fail "$context: expected a session spinner before '$title', got '$value'" ;;
+  esac
+}
+
 strip_styles() {
   sed -E 's/#\[[^]]*\]//g'
 }
@@ -212,15 +222,16 @@ spun_window_item=$(
 )
 assert_contains "$spun_window_item" "⠇ main | " "advanced spinner frame before title"
 assert_not_contains "$spun_window_item" "⠧" "stale window spinner frame"
+publish_running_sessions
 
-# Bell and zoom share the window prefix contract. They stay ahead of the title
-# but do not become running evidence when no pane title has a spinner.
+# Window state is mutually exclusive: spinner wins over bell, while zoom remains
+# an independent decorator. Session state follows the same priority in terminal title.
 tmux_server set-window-option -g monitor-bell on
 tmux_server set-option -g bell-action any
 tmux_server new-window -d -t beta -n alert \
   "sleep 0.3; printf '\\007'; sleep 10"
 alert_pane=$(tmux_server display-message -p -t beta:alert '#{pane_id}')
-tmux_server select-pane -t "$alert_pane" -T '⠋ alert'
+tmux_server select-pane -t "$alert_pane" -T 'idle alert'
 tmux_server split-window -d -t beta:alert 'sleep 10'
 tmux_server resize-pane -Z -t "$alert_pane"
 window_bell_flag=0
@@ -241,24 +252,41 @@ decorated_window_item=$(
     '#{T:window-status-format}' | strip_styles
 )
 assert_contains "$decorated_window_item" \
-  "⠋ $bell_symbol $zoom_symbol alert" \
-  "window spinner bell zoom prefix order"
+  "$bell_symbol $zoom_symbol alert" \
+  "bell-only window state before zoom and title"
 terminal_title_before=$(
   tmux_server display-message -p -t beta:alert '#{pane_title}'
 )
 terminal_title=$(
   tmux_server display-message -p -t beta:alert '#{T:set-titles-string}'
 )
-assert_contains "$terminal_title" \
-  "⠋ $bell_symbol beta:alert" \
-  "terminal title spinner bell prefix order"
+assert_spinner_title "$terminal_title" "beta:alert" \
+  "running session suppresses bell in terminal title"
+assert_not_contains "$terminal_title" "$bell_symbol" \
+  "running terminal title omits lower-priority bell"
 assert_equal "$terminal_title_before" \
   "$(tmux_server display-message -p -t beta:alert '#{pane_title}')" \
   "terminal title does not rewrite pane title"
 
+tmux_server select-pane -t "$alert_pane" -T '⠋ alert'
+decorated_window_item=$(
+  tmux_server display-message -p -t beta:alert \
+    '#{T:window-status-format}' | strip_styles
+)
+assert_contains "$decorated_window_item" \
+  "⠋ $zoom_symbol alert" \
+  "window spinner wins over bell before zoom and title"
+assert_not_contains "$decorated_window_item" "$bell_symbol" \
+  "running window omits lower-priority bell"
+
 tmux_server select-pane -t beta:main -T 'idle'
 tmux_server select-pane -t "$alert_pane" -T 'idle'
 publish_running_sessions
+terminal_title=$(
+  tmux_server display-message -p -t beta:alert '#{T:set-titles-string}'
+)
+assert_equal "$bell_symbol beta:alert" "$terminal_title" \
+  "settled session falls back to bell in terminal title"
 assert_not_contains \
   "$(tmux_server show-option -sqv @GHC_SL_RUNNING_SESSIONS)" \
   "|${beta_id}|" \
