@@ -12,7 +12,7 @@ fi
 
 readonly active_option='@GHC_SL_SCHED_ACTIVE'
 readonly generation_option='@GHC_SL_SCHED_GEN'
-readonly running_sessions_option='@GHC_SL_RUNNING_SESSIONS'
+readonly session_states_option='@GHC_SL_SESSION_STATES'
 readonly recovery_owner_option='@GHC_SL_LOCK_RECOVERY_OWNER'
 readonly renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
 
@@ -230,30 +230,30 @@ acquire_driver_lock() {
 
 acquire_driver_lock || exit 0
 
-publish_running_sessions() {
+publish_session_states() {
   local enabled_format nonce sample_prefix stale_clear_command ttl_seconds
   enabled_format='#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{||:#{==:#{@GHC_SL_MODE},02},#{==:#{@GHC_SL_MODE},12}}}'
   nonce=${EPOCHREALTIME:-${RANDOM}${RANDOM}}
   sample_prefix="${server_pid}:$$:${nonce/./}:"
-  ttl_seconds=${GHC_TMUX_STATUS_RUNNING_TTL_SECONDS:-12}
+  ttl_seconds=${GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS:-12}
   if ! [[ "$ttl_seconds" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
     ttl_seconds=12
   fi
 
   # run-shell expands once when it is scheduled. Double hashes preserve the
   # sample comparison for if-shell to expand when the delayed command executes.
-  stale_clear_command="if-shell -F '##{m:${sample_prefix}*,##{${running_sessions_option}}}' 'set-option -s ${running_sessions_option} \"\"'"
+  stale_clear_command="if-shell -F '##{m:${sample_prefix}*,##{${session_states_option}}}' 'set-option -s ${session_states_option} \"\"'"
 
   # Only the scheduler lock owner samples. Clearing before format expansion makes
   # a malformed sample degrade to no marker without blocking scheduler work.
   tmux run-shell -bC -d "$ttl_seconds" "$stale_clear_command" ';' \
-    set-option -s "$running_sessions_option" "" ';' \
-    set-option -sF "$running_sessions_option" \
-    "#{?${enabled_format},${sample_prefix}#{E:@GHC_RUNNING_SESSIONS_FMT},}" \
+    set-option -s "$session_states_option" "" ';' \
+    set-option -sF "$session_states_option" \
+    "#{?${enabled_format},${sample_prefix}#{E:@GHC_SESSION_STATES_FMT},}" \
     >/dev/null 2>&1 || true
 }
 
-publish_running_sessions
+publish_session_states
 
 delay_seconds=${GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS:-4}
 if ! [[ "$delay_seconds" =~ ^[0-9]+([.][0-9]+)?$ ]]; then

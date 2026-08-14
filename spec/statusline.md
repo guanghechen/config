@@ -88,7 +88,7 @@ tmux event / status tick
 | lifecycle generation | `@GHC_SL_SCHED_ACTIVE/GEN` | `load-theme.sh` |
 | scheduler task state | server-scoped task options | guarded Rust scheduler commit |
 | rendered session cache | session-scoped `@GHC_SL_*` | guarded Rust commit |
-| running sessions | server-scoped `@GHC_SL_RUNNING_SESSIONS` | scheduler lock owner；loader lifecycle reset |
+| sampled session states | server-scoped `@GHC_SL_SESSION_STATES` | scheduler lock owner；loader lifecycle reset |
 | session virtual order | `@GHC_SL_SESSION_ORDER` | session swap command |
 | palette/symbols | generated theme options | external theme generator |
 | native window list | tmux | tmux |
@@ -318,12 +318,15 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - `@GHC_WINDOW_PREFIX_FMT` 用 native `P:` 动态聚合 live frame，并在同一个两列 state slot
   中以 bell 作为 fallback；因此 spinner 与 bell 不会同时显示，也不需要第二次 pane traversal。
   Zoom 是独立 decorator，显示顺序为 state、zoom、title。
-- Terminal title 使用 session scope：sampled running membership 命中时显示 spinner，否则从
-  `session_alerts` 派生 bell，最后显示 `session:window`。Terminal title 不反写 `pane_title`。
+- Terminal title 使用 session scope：scheduler active 时读取同一份 sampled running/bell
+  membership，否则用 live `W/P` aggregation 保持 status01/fallback 可用；两条路径均按
+  `spinning > bell > idle` 选择，最后显示 `session:window`。Terminal title 不反写 `pane_title`。
 - Scheduler lock owner 用一条 command queue 发布
-  `@GHC_SL_RUNNING_SESSIONS = <sample-token><|$session_id|...>`；contender 不采样。
-- Session item 检查 lifecycle active 与 exact session-id membership。Sample 默认由 tmux
-  server 在 12 秒后以 token prefix CAS 清理；正常 freshness 约为 4–5 秒。
+  `@GHC_SL_SESSION_STATES = <sample-token><|R$session_id|...><|B$session_id|...>`；`R`/`B`
+  分别表示 running/bell evidence，contender 不采样。
+- Session item 检查 lifecycle active 与 exact typed session-id membership；先匹配 `R`，只有
+  false branch 才匹配 `B`。Sample 默认由 tmux server 在 12 秒后以 token prefix CAS 清理；
+  正常 freshness 约为 4–5 秒。
 - Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 4` 派生
   `⠋/⠹/⠴/⠧`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
   malformed 时不显示 marker。
@@ -335,10 +338,11 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Window live frame 仅在 running 时增加 2 列，idle 不预留 frame、保持 baseline layout；
   接受由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，
   各自的 glyph count 和 palette 不变。
-- 该状态不进入 Rust snapshot、render key 或 session cache；spinner frame 变化不触发 renderer
-  apply/commit。
-- Session item 与 terminal title 是上述 session 定义的 freshness-bounded projection：sample
-  更新前可能暂时保留上一状态；不额外执行 `S/W/P` traversal。Lifecycle fence 清空 sampled
+- Typed `R/B` membership 与 frame 不进入 Rust snapshot、render key 或 session cache；indicator
+  不消费既有 `SessionInfo.has_bell` transport，状态变化不触发 renderer apply/commit。
+- Session item 与 active-scheduler terminal title 是上述 session 定义的 freshness-bounded
+  projection：sample 更新前可能暂时保留上一状态，且 consumer 不额外执行 `S/W/P` traversal。
+  Scheduler inactive 时 terminal title 改用 live aggregation。Lifecycle fence 清空 sampled
   state；format expansion failure 保持空 marker，并继续抑制低优先级 bell。
 
 ## 9. Length 与 cache contract

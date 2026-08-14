@@ -117,12 +117,13 @@ commit median 25.010 -> 12.280 ms
 total median  37.385 -> 25.930 ms
 ```
 
-### 4.7 Aggregate running-session state
+### 4.7 Aggregate session display state
 
 每个 visible session item 重复执行 `S/W/P` traversal，在 4/10/20 items 下的 isolated
 median 增量为 `+0.756 / +1.541 / +5.121 ms`，因此拒绝该方案。最终由 scheduler
-single-flight owner 每 tick 聚合一次；session item 做 token membership 并从现有 1 Hz
-status clock 派生 animation phase，window item 保持 native live expansion。
+single-flight owner 每 tick 聚合一次 running 与 bell evidence；session item 做 typed token
+membership 并从现有 1 Hz status clock 派生 animation phase，window item 保持 native live
+expansion。Bell evidence 读取同一 `S:` pass 的 `session_alerts`，不增加 `W/P` traversal。
 
 2026-08-12，tmux 3.7b，20 sessions、1 attached client、300 paired runs。Baseline 与
 sample 使用相同的 publish、delayed-CAS queue；baseline 发布 literal token set，sample
@@ -141,8 +142,13 @@ paired delta   +1.115    +0.903   +1.946 ms
 sample，interval median 分别为 `4.141 / 4.170 s`。该数据只证明 multi-client contention
 未增加 sampler cadence；不构成普遍 tail-latency claim。
 
-Running state 不进入 Rust snapshot/cache。Sample 使用单 option delayed CAS，producer 停止后
-marker 最多保留 12 秒。
+Session display state 不进入 Rust snapshot/cache。Sample 使用单 option delayed CAS，producer
+停止后 marker 最多保留 12 秒。
+
+2026-08-14，tmux 3.7b，20 sessions、15 paired blocks、每侧 50 次 isolated expansion。
+在相同 running `S/W/P` aggregation 上增加 `session_alerts` bell match，median delta 为
+`+0.515 ms/sample`；默认约每 4 秒采样一次。该结果包含两侧相同的外部
+`display-message` 开销，只作为 bell evidence 增量的 directional evidence。
 
 2026-08-14，tmux 3.7b，isolated server、300 paired runs。所有 item 均为 running；两侧执行
 相同 membership match，candidate 额外展开四帧 clock format。相对静态 glyph：
@@ -153,9 +159,14 @@ median delta  +0.124   +0.181   +0.391   +0.884 ms
 p95 delta     +1.076   +1.267   +1.684   +2.031 ms
 ```
 
+最终 typed `R/B` state 在非-running item 的 false branch 增加一次 bell membership match。
+2026-08-14，20 个 belling items、15 paired blocks、每侧 80 次 expansion，相对旧 static-bell
+branch 的 median delta 为 `+0.364 ms/expansion`。Running item 不进入该 false branch。
+
 该 measurement 是 per-expansion directional evidence，不是完整 tmux CPU throughput claim。
-Animation 不增加 timer、process、IPC、option write 或 `S/W/P` traversal；成本随 visible item、
-client 与实际 status expansion 次数增长。
+Active-scheduler animation 不增加 timer、process、IPC、option write 或 `S/W/P` traversal；
+成本随 visible item、client 与实际 status expansion 次数增长。Scheduler inactive 时 terminal
+title 才执行一次 live `W/P` fallback；该成本不进入 status02 active hot path。
 
 2026-08-14，tmux 3.7b，isolated server、300 paired runs。Baseline 通过 `list-windows`
 展开 title；candidate 在相同 workload 中额外展开 `@GHC_WINDOW_PREFIX_FMT`。所有 pane title

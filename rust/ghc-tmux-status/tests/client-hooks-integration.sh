@@ -200,8 +200,19 @@ EOF
 chmod +x "$loader_root/script/status-scheduler.sh"
 
 tmux_server set-environment -g HOME "$loader_home"
-tmux_server set -g @GHC_SL_MODE 02 ';' set -g @GHC_SL_ROWS auto
+tmux_server set -g @GHC_SL_MODE 02 ';' \
+  set -g @GHC_SL_ROWS auto ';' \
+  set -s @GHC_SL_RUNNING_SESSIONS legacy-state ';' \
+  set -g @GHC_RUNNING_SESSIONS_FMT legacy-format ';' \
+  set-hook -g 'alert-bell[40]' 'display-message legacy-bell-hook'
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
+if [ -n "$(tmux_server show -sqv @GHC_SL_RUNNING_SESSIONS)" ] \
+  || [ -n "$(tmux_server show -gqv @GHC_RUNNING_SESSIONS_FMT)" ]; then
+  fail "loader did not remove legacy running-session options"
+fi
+if [ -n "$(tmux_server show-hooks -gv 'alert-bell[40]' 2>/dev/null)" ]; then
+  fail "loader did not remove legacy alert-bell hook"
+fi
 
 assert_background_hook 'client-attached[40]' client-resized "$renderer"
 assert_background_hook 'client-detached[40]' client-resized "$renderer"

@@ -69,6 +69,8 @@ function _ghc_tmux_unset_status_layout_hooks_ {
   for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
     tmux set-hook -gu "$layout_hook" 2>/dev/null || true
   done
+  # Remove the short-lived bell reconcile hook from the previous state transport.
+  tmux set-hook -gu 'alert-bell[40]' 2>/dev/null || true
 }
 
 # The renderer writes both render cache and LAYOUT (rows / status-format / lengths /
@@ -124,7 +126,9 @@ function _ghc_tmux_fence_scheduler_ {
     if tmux set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
             set -s @GHC_SL_SCHED_GEN "$generation" ';' \
             set -s @GHC_SL_RENDER_REV "fenced:$generation" ';' \
-            set -s @GHC_SL_RUNNING_SESSIONS ""; then
+            set -su @GHC_SL_RUNNING_SESSIONS ';' \
+            set -gu @GHC_RUNNING_SESSIONS_FMT ';' \
+            set -s @GHC_SL_SESSION_STATES ""; then
       _GHC_TMUX_STATUS_FENCED_GENERATION=$generation
       return 0
     fi
