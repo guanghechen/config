@@ -294,8 +294,8 @@ fn render_right_edge(last_active: bool) -> String {
 }
 
 fn render_item_body_literal(session_name: &str, index: usize) -> String {
-    // Spinner is the widest state prefix (leading gap + frame). Bell occupies
-    // its fallback branch, so one placeholder budgets every dynamic state.
+    // Spinner and bell both occupy a leading gap plus one marker cell, so one
+    // placeholder budgets every dynamic state.
     format!(" {SPINNER_LITERAL} {session_name}  {index} ")
 }
 
@@ -314,7 +314,7 @@ fn render_item_body_with_last_focus(
 
 fn active_item_body(session_name: &str, session_id: &str, index: usize) -> String {
     let name = display_literal(session_name);
-    let state_prefix = session_state_prefix(session_id, "#{@GHC_SYM_WIN_BELL}");
+    let state_prefix = session_state_prefix(session_id, " #{@GHC_SYM_WIN_BELL}");
 
     format!("#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]{state_prefix} {name} | {index} ")
 }
@@ -335,7 +335,7 @@ fn inactive_item_body_with_last_focus(
     );
     let name = display_literal(session_name);
     let bell_prefix = format!(
-        "#[fg={INACTIVE_BELL_FG}#,bg={INACTIVE_NAME_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={name_fg}#,bg={INACTIVE_NAME_BG}#,nobold]"
+        " #[fg={INACTIVE_BELL_FG}#,bg={INACTIVE_NAME_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={name_fg}#,bg={INACTIVE_NAME_BG}#,nobold]"
     );
     let state_prefix = session_state_prefix(session_id, &bell_prefix);
 
@@ -383,7 +383,7 @@ mod tests {
     #[test]
     fn active_branch_places_state_prefix_before_title() {
         let active = active_item_body("tmux", "$2", 2);
-        let state_prefix = session_state_prefix("$2", "#{@GHC_SYM_WIN_BELL}");
+        let state_prefix = session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}");
         assert_eq!(
             active,
             format!(
@@ -398,7 +398,7 @@ mod tests {
         let inactive = inactive_item_body_with_last_focus("dev", "$2", 2, Some("dev"));
         let name_fg = "#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}";
         let bell_prefix = format!(
-            "#[fg=#{{@GHC_SL_FG_SESSION_ITEM_BELL}}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={name_fg}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,nobold]"
+            " #[fg=#{{@GHC_SL_FG_SESSION_ITEM_BELL}}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={name_fg}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,nobold]"
         );
         let state_prefix = session_state_prefix("$2", &bell_prefix);
         assert_eq!(
@@ -412,8 +412,8 @@ mod tests {
     #[test]
     fn state_prefix_prioritizes_running_membership_over_bell() {
         assert_eq!(
-            session_state_prefix("$2", "#{@GHC_SYM_WIN_BELL}"),
-            "#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?#{m:*|R$2|*,#{@GHC_SL_SESSION_STATES}},#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}},#{?#{m:*|B$2|*,#{@GHC_SL_SESSION_STATES}},#{@GHC_SYM_WIN_BELL},}},}"
+            session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}"),
+            "#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?#{m:*|R$2|*,#{@GHC_SL_SESSION_STATES}},#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}},#{?#{m:*|B$2|*,#{@GHC_SL_SESSION_STATES}}, #{@GHC_SYM_WIN_BELL},}},}"
         );
     }
 
@@ -500,12 +500,12 @@ mod tests {
         assert!(
             on_dev
                 .rich_text
-                .contains(&session_state_prefix("$1", "#{@GHC_SYM_WIN_BELL}"))
+                .contains(&session_state_prefix("$1", " #{@GHC_SYM_WIN_BELL}"))
         );
         assert!(
             on_yui
                 .rich_text
-                .contains(&session_state_prefix("$2", "#{@GHC_SYM_WIN_BELL}"))
+                .contains(&session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}"))
         );
     }
 
@@ -582,7 +582,7 @@ mod tests {
         assert!(
             segment
                 .rich_text
-                .contains(&session_state_prefix("$20", "#{@GHC_SYM_WIN_BELL}"))
+                .contains(&session_state_prefix("$20", " #{@GHC_SYM_WIN_BELL}"))
         );
         assert!(segment.literal_text.starts_with("\u{e0b0} … "));
         assert!(segment.literal_text.contains("… \u{e0b0} "));
@@ -600,11 +600,11 @@ mod tests {
         assert!(
             first
                 .rich_text
-                .contains(&session_state_prefix("$1", "#{@GHC_SYM_WIN_BELL}"))
+                .contains(&session_state_prefix("$1", " #{@GHC_SYM_WIN_BELL}"))
         );
         assert!(
             last.rich_text
-                .contains(&session_state_prefix("$40", "#{@GHC_SYM_WIN_BELL}"))
+                .contains(&session_state_prefix("$40", " #{@GHC_SYM_WIN_BELL}"))
         );
         assert!(first.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
         assert!(last.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);

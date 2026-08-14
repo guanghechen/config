@@ -330,9 +330,9 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 4` 派生
   `⠋/⠹/⠴/⠧`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
   malformed 时不显示 marker。
-- Session spinner 仅在 running 时作为 title prefix 增加 2 列（左侧 gap + frame）；idle 不绘制
-  padding、保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count 不变；bell
-  只占用 spinner 的 fallback branch。`literal_text` shadow 按两种状态的最大宽度预算，接受
+- Session spinner 与 bell 均使用 2 列 title prefix（左侧 gap + marker）；idle 不绘制 padding、
+  保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count 不变，并只占用 spinner
+  的 fallback branch。`literal_text` shadow 按两种状态的相同宽度预算，接受
   running transition 引起的
   session-list reflow。
 - Window live frame 仅在 running 时增加 2 列，idle 不预留 frame、保持 baseline layout；
