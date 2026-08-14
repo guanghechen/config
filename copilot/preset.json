@@ -1,5 +1,5 @@
 {
-  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/commander@latest/lib/schema/preset.schema.json",
+  "$schema": "https://raw.githubusercontent.com/guanghechen/config/kit/schema/preset.schema.json",
   "version": 1,
   "profiles": {
     "auth": {

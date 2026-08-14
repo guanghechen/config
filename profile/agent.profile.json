@@ -1,5 +1,5 @@
 {
-  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/kit-profile@latest/lib/schema/profile.schema.json",
+  "$schema": "https://raw.githubusercontent.com/guanghechen/config/kit/profile/schema/config.schema.json",
   "name": "agent",
   "envs": {
     "ANTHROPIC_BASE_URL": "http://${host}:${port}/api/claude",
