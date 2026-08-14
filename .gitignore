@@ -38,6 +38,7 @@ version.json
 /rules/
 /skills/.system
 /skills/kit-*
+/skills/ms-*
 /skills/yui-*
 /themes/local.tmTheme
 /thread-writer-locks/
