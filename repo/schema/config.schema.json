@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/repo/schema/config.schema.json",
+  "title": "Kit Repo Configuration",
+  "description": "Simple or full repository definitions for kit-repo.",
+  "type": "object",
+  "required": ["repos"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repos": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/simpleRepo"
+          },
+          {
+            "$ref": "#/$defs/fullRepo"
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branchName": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "edition": {
+      "type": "string",
+      "enum": ["nix", "nix-remote", "osx", "win"]
+    },
+    "editions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/edition"
+      }
+    },
+    "nonEmptyEditions": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/editions"
+        },
+        {
+          "minItems": 1
+        }
+      ]
+    },
+    "link": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "to": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "hard": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "links": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/link"
+      }
+    },
+    "hook": {
+      "type": "object",
+      "properties": {
+        "synced": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "failed": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "link": {
+          "$ref": "#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "hookOverlay": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "synced": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failed": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "link": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/links"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "simpleOverlay": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "remote": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "location": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "on": {
+          "$ref": "#/$defs/hookOverlay"
+        }
+      },
+      "additionalProperties": false
+    },
+    "simplePlatforms": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "nix": {
+          "$ref": "#/$defs/simpleOverlay"
+        },
+        "osx": {
+          "$ref": "#/$defs/simpleOverlay"
+        },
+        "win": {
+          "$ref": "#/$defs/simpleOverlay"
+        },
+        "wsl": {
+          "$ref": "#/$defs/simpleOverlay"
+        }
+      },
+      "additionalProperties": false
+    },
+    "simpleRepo": {
+      "type": "object",
+      "required": ["name", "remote", "main", "location", "editions"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "remote": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "main": {
+          "$ref": "#/$defs/branchName"
+        },
+        "location": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "editions": {
+          "$ref": "#/$defs/nonEmptyEditions"
+        },
+        "on": {
+          "$ref": "#/$defs/hook"
+        },
+        "platforms": {
+          "$ref": "#/$defs/simplePlatforms"
+        }
+      },
+      "additionalProperties": false
+    },
+    "worktree": {
+      "type": "object",
+      "required": ["remote", "template", "main"],
+      "properties": {
+        "remote": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "template": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "main": {
+          "$ref": "#/$defs/branchName"
+        }
+      },
+      "additionalProperties": false
+    },
+    "branch": {
+      "type": "object",
+      "required": ["branch", "editions"],
+      "properties": {
+        "branch": {
+          "$ref": "#/$defs/branchName"
+        },
+        "location": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "editions": {
+          "$ref": "#/$defs/editions"
+        },
+        "on": {
+          "$ref": "#/$defs/hook"
+        }
+      },
+      "additionalProperties": false
+    },
+    "worktreeOverlay": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "remote": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "template": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "branchOverlay": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "location": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "on": {
+          "$ref": "#/$defs/hookOverlay"
+        }
+      },
+      "additionalProperties": false
+    },
+    "branchOverlays": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/branchOverlay"
+      }
+    },
+    "fullOverlay": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "worktree": {
+          "$ref": "#/$defs/worktreeOverlay"
+        },
+        "branches": {
+          "$ref": "#/$defs/branchOverlays"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fullPlatforms": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "nix": {
+          "$ref": "#/$defs/fullOverlay"
+        },
+        "osx": {
+          "$ref": "#/$defs/fullOverlay"
+        },
+        "win": {
+          "$ref": "#/$defs/fullOverlay"
+        },
+        "wsl": {
+          "$ref": "#/$defs/fullOverlay"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fullRepo": {
+      "type": "object",
+      "required": ["name", "worktree", "branches"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "worktree": {
+          "$ref": "#/$defs/worktree"
+        },
+        "branches": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/branch"
+          }
+        },
+        "platforms": {
+          "$ref": "#/$defs/fullPlatforms"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

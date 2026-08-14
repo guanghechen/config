@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/profile/schema/config.schema.json",
+  "title": "Kit Profile Configuration",
+  "description": "Environment profile and variant configuration for kit-profile.",
+  "type": "object",
+  "required": ["name", "envs"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!\\s*$)(?!\\.{1,2}$)(?!.*[:/\\\\]).+$",
+      "not": {
+        "enum": ["__proto__", "constructor", "prototype"]
+      }
+    },
+    "envs": {
+      "$ref": "#/$defs/values"
+    },
+    "vars": {
+      "$ref": "#/$defs/values"
+    },
+    "variants": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/variantName"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/variant"
+      }
+    }
+  },
+  "$defs": {
+    "safeKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+      "not": {
+        "enum": ["__proto__", "constructor", "prototype"]
+      }
+    },
+    "value": {
+      "type": ["string", "number", "boolean"]
+    },
+    "values": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/safeKey"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/value"
+      }
+    },
+    "variantName": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!\\s*$)(?!.*:).+$",
+      "not": {
+        "enum": ["__proto__", "constructor", "prototype"]
+      }
+    },
+    "variant": {
+      "type": "object",
+      "properties": {
+        "envs": {
+          "$ref": "#/$defs/values"
+        },
+        "vars": {
+          "$ref": "#/$defs/values"
+        }
+      }
+    }
+  }
+}

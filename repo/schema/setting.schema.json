@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/repo/schema/setting.schema.json",
+  "title": "Kit Repo Setting",
+  "description": "Active edition setting managed by kit-repo.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "edition": {
+          "type": "string",
+          "enum": ["nix", "nix-remote", "osx", "win"]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

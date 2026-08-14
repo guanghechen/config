@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/schema/preset.schema.json",
+  "title": "Kit Commander Preset",
+  "description": "Shared version-1 preset manifest for Kit commands.",
+  "type": "object",
+  "required": ["version", "profiles"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "const": 1
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?::[A-Za-z0-9][A-Za-z0-9._-]*)?$"
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/profile"
+      }
+    }
+  },
+  "$defs": {
+    "environment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "optionScalar": {
+      "type": ["boolean", "string", "number"]
+    },
+    "optionValue": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/optionScalar"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": ["string", "number"]
+          }
+        }
+      ]
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/optionValue"
+      }
+    },
+    "variant": {
+      "type": "object",
+      "properties": {
+        "envFile": {
+          "type": "string"
+        },
+        "envs": {
+          "$ref": "#/$defs/environment"
+        },
+        "opts": {
+          "$ref": "#/$defs/options"
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "properties": {
+        "envFile": {
+          "type": "string"
+        },
+        "envs": {
+          "$ref": "#/$defs/environment"
+        },
+        "opts": {
+          "$ref": "#/$defs/options"
+        },
+        "defaultVariant": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "variants": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/variant"
+          }
+        }
+      }
+    }
+  }
+}

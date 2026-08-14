@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/pm/schema/config.schema.json",
+  "title": "Kit PM Configuration",
+  "description": "Declarative process configuration for kit-pm and kit pm.",
+  "type": "object",
+  "required": ["apps"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "system": {
+      "$ref": "#/$defs/system"
+    },
+    "apps": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "$ref": "#/$defs/app"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "system": {
+      "type": "object",
+      "properties": {
+        "defaults": {
+          "$ref": "#/$defs/systemDefaults"
+        },
+        "env": {
+          "$ref": "#/$defs/systemEnvironment"
+        }
+      },
+      "additionalProperties": false
+    },
+    "systemDefaults": {
+      "type": "object",
+      "properties": {
+        "env": {
+          "$ref": "#/$defs/systemEnvironment"
+        }
+      },
+      "additionalProperties": false
+    },
+    "systemEnvironment": {
+      "type": "object",
+      "maxProperties": 4096,
+      "propertyNames": {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[^\\u0000]*$"
+      }
+    },
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "not": {
+        "enum": [".", ".."]
+      }
+    },
+    "environment": {
+      "type": "object",
+      "maxProperties": 4096,
+      "propertyNames": {
+        "minLength": 1,
+        "pattern": "^[^=]+$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "app": {
+      "type": "object",
+      "required": ["name", "cmd"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identity"
+        },
+        "cmd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group": {
+          "$ref": "#/$defs/identity"
+        },
+        "args": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "env": {
+          "$ref": "#/$defs/environment"
+        },
+        "logsRotateStrategy": {
+          "enum": ["size", "time"],
+          "default": "size"
+        },
+        "logsRotateSize": {
+          "type": "string",
+          "pattern": "^[0-9]+([Kk][Bb]|[Mm][Bb]|[Gg][Bb])$",
+          "default": "10MB"
+        },
+        "logsRotateTime": {
+          "type": "string",
+          "pattern": "^[0-9]+([Ss]|[Mm]|[Hh]|[Dd][Aa][Yy])$",
+          "default": "7day"
+        },
+        "logDateFormat": {
+          "type": ["string", "null"],
+          "maxLength": 1024
+        },
+        "logType": {
+          "enum": ["plain", "json", null]
+        },
+        "autostart": {
+          "type": "boolean",
+          "default": false
+        },
+        "autorestart": {
+          "type": "boolean",
+          "default": true
+        },
+        "maxRestarts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "default": 16
+        },
+        "minUptime": {
+          "$ref": "#/$defs/delay",
+          "default": 1000
+        },
+        "restartDelay": {
+          "$ref": "#/$defs/delay"
+        },
+        "killTimeout": {
+          "$ref": "#/$defs/delay",
+          "default": 5000
+        },
+        "expBackoffRestartDelay": {
+          "$ref": "#/$defs/delay",
+          "default": 100
+        },
+        "shutdownWithMessage": {
+          "type": "boolean"
+        },
+        "stopExitCodes": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "treekill": {
+          "const": true,
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "delay": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 60000
+    }
+  }
+}
