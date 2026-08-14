@@ -159,6 +159,10 @@ median delta  +0.124   +0.181   +0.391   +0.884 ms
 p95 delta     +1.076   +1.267   +1.684   +2.031 ms
 ```
 
+最终两帧 clock 将完整周期从 4 秒缩短到 2 秒。2026-08-14，20 items、15 paired blocks、
+每侧 80 次 expansion，相对四帧 format 的 median delta 为 `-0.365 ms/expansion`；redraw
+仍为 1 Hz，不增加 timer、process 或 IPC。
+
 最终 typed `R/B` state 在非-running item 的 false branch 增加一次 bell membership match。
 2026-08-14，20 个 belling items、15 paired blocks、每侧 80 次 expansion，相对旧 static-bell
 branch 的 median delta 为 `+0.364 ms/expansion`。Running item 不进入该 false branch。

@@ -58,7 +58,7 @@ assert_spinner_prefix() {
   local value=$1
   local context=$2
   case "$value" in
-    " ⠋" | " ⠹" | " ⠴" | " ⠧") ;;
+    " ⠋" | " ⠴") ;;
     *) fail "$context: expected a padded session spinner, got '$value'" ;;
   esac
 }
@@ -68,7 +68,7 @@ assert_spinner_title() {
   local title=$2
   local context=$3
   case "$value" in
-    "⠋ $title" | "⠹ $title" | "⠴ $title" | "⠧ $title") ;;
+    "⠋ $title" | "⠴ $title") ;;
     *) fail "$context: expected a session spinner before '$title', got '$value'" ;;
   esac
 }

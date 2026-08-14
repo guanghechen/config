@@ -327,8 +327,8 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Session item 检查 lifecycle active 与 exact typed session-id membership；先匹配 `R`，只有
   false branch 才匹配 `B`。Sample 默认由 tmux server 在 12 秒后以 token prefix CAS 清理；
   正常 freshness 约为 4–5 秒。
-- Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 4` 派生
-  `⠋/⠹/⠴/⠧`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
+- Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 2` 派生
+  `⠋/⠴`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
   malformed 时不显示 marker。
 - Session spinner 与 bell 均使用 2 列 title prefix（左侧 gap + marker）；idle 不绘制 padding、
   保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count 不变，并只占用 spinner
