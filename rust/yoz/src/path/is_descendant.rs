@@ -3,16 +3,6 @@ use super::is_absolute;
 use super::split;
 use std::borrow::Cow;
 
-#[cfg(windows)]
-fn components_equal(left: &str, right: &str) -> bool {
-    left.eq_ignore_ascii_case(right)
-}
-
-#[cfg(not(windows))]
-fn components_equal(left: &str, right: &str) -> bool {
-    left == right
-}
-
 pub fn is_descendant(from: &str, to: &str) -> bool {
     let cwd_guard = get_cwd();
     let cwd: &str = &cwd_guard;
@@ -40,7 +30,7 @@ pub fn is_descendant(from: &str, to: &str) -> bool {
     }
 
     for i in 0..n1 {
-        if !components_equal(&from_pieces[i], &to_pieces[i]) {
+        if from_pieces[i] != to_pieces[i] {
             return false;
         }
     }
@@ -56,14 +46,10 @@ mod tests {
     use super::is_descendant;
 
     #[test]
-    fn t_is_descendant_uses_platform_case_sensitivity() {
+    fn t_is_descendant_is_case_sensitive() {
         let from = "C:\\Repo";
         let to = "c:/repo/child";
 
-        #[cfg(windows)]
-        assert!(is_descendant(from, to));
-
-        #[cfg(not(windows))]
         assert!(!is_descendant(from, to));
     }
 

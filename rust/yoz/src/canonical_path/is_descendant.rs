@@ -1,16 +1,6 @@
 use super::get_cwd;
 use super::resolve::resolve_borrowed;
 
-#[cfg(windows)]
-fn components_equal(left: &str, right: &str) -> bool {
-    left.eq_ignore_ascii_case(right)
-}
-
-#[cfg(not(windows))]
-fn components_equal(left: &str, right: &str) -> bool {
-    left == right
-}
-
 pub fn is_descendant(from: &str, to: &str) -> bool {
     let cwd_guard = get_cwd();
     let cwd: &str = &cwd_guard;
@@ -21,7 +11,7 @@ pub fn is_descendant(from: &str, to: &str) -> bool {
     abs_from.split_terminator('/').all(|from_component| {
         to_components
             .next()
-            .is_some_and(|to_component| components_equal(from_component, to_component))
+            .is_some_and(|to_component| from_component == to_component)
     })
 }
 
@@ -33,14 +23,10 @@ mod tests {
     use super::is_descendant;
 
     #[test]
-    fn t_is_descendant_uses_platform_case_sensitivity() {
+    fn t_is_descendant_is_case_sensitive() {
         let from = "C:\\Repo";
         let to = "c:/repo/child";
 
-        #[cfg(windows)]
-        assert!(is_descendant(from, to));
-
-        #[cfg(not(windows))]
         assert!(!is_descendant(from, to));
     }
 
