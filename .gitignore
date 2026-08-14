@@ -24,6 +24,7 @@ version.json
 /.sandbox-bin/
 /.sandbox-secrets/
 /archived_sessions/
+/artifacts/
 /automations/
 /cache/
 /computer-use/
