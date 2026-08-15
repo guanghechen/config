@@ -32,6 +32,14 @@
 3. `URI-like` 名称（例如 `diffview://null`）不参与路径转换。
 4. 本地 adapter（`stl.os.fs` 默认实现）不接受 `URI-like` 输入，统一返回 `bad_scheme`。
 
+## 适用前提与非目标
+
+以下约束是当前个人配置的明确使用前提；满足这些前提时，不为对应的极端路径增加额外兼容逻辑：
+
+1. Windows repo 不位于 drive root（例如 `C:\`）；repo 和 workspace 路径至少包含一个非 root component。
+2. 文件或目录名称不包含字面量 `\` 字符。Windows `os_path` 中作为 separator 的 `\` 不受此限制，进入业务层后仍统一转换为 `/`。
+3. Windows 下不混用仅大小写不同的文件或目录名；lexical path identity 和 descendant comparison 保持 case-sensitive。
+
 ## stl.os.path API
 
 | API                                 | 说明                                           |
