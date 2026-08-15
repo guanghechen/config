@@ -102,6 +102,7 @@ local __module_name__ = "stl.view.treeview" ---@type string
 ---@field public tree                   stl.c.ITree
 
 ---@class stl.view.Treeview
+---@field public layout fun(props: stl.view.treeview.ILayoutProps): stl.view.TreeLayout
 ---@field public fullname               string
 ---@field protected _disposed           boolean
 ---@field protected _tree               stl.c.ITree
@@ -1372,5 +1373,7 @@ function M:__health__()
     error(message)
   end
 end
+
+M.layout = require("stl.view.treeview.layout").layout
 
 return M

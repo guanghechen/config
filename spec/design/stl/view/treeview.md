@@ -1,316 +1,203 @@
-# Treeview 设计规范
+# Tree / Treeview 设计规范
 
-Treeview 是 picker/searcher 的底层视图组件，提供统一的树形数据展示与交互能力。
+## 目标
 
-## 核心概念
+`Tree` 与 `Treeview` 只统一多个 feature 真实共享的两项能力：
 
-| 概念        | 说明                                                                 |
-|:------------|:---------------------------------------------------------------------|
-| `superroot` | 超级根节点，treeview 中所有节点的共同祖先，不可变更                  |
-| `root`      | 当前视图根节点，仅展示其子孙节点；支持通过 attach/detach 切换        |
-| `container` | 容器节点，拥有子节点的非终端节点                                     |
-| `leaf`      | 叶子节点，无子节点的终端节点                                         |
-| `location`  | 位置节点，leaf 节点下的子位置（如搜索结果中的行位置）                |
+1. `Tree` 维护有序、可变、无环的层级结构。
+2. `Treeview` 将当前可见 tree topology 计算为紧凑、可导航的 `TreeLayout`。
 
-## 架构
+Explorer、Picker、Searcher、Diffview 保留各自的业务状态、node data、render 和 UI 生命周期。
 
-```
-stl.c.Tree (数据层，节点增删改查)
+## 数据流
+
+```text
+feature topology/state
     │
     ▼
-stl.view.Treeview (视图层，状态管理 + 渲染)
+Treeview.layout()
     │
-    ├── era.m.picker (匹配、高亮)
-    └── era.m.searcher (搜索、替换)
+    ▼
+TreeLayout
+    │
+    ▼
+feature renderer / surface
 ```
 
-**职责划分**：
+- `Treeview.layout()` 是纯函数：不修改输入、不保存状态、不执行 IO。
+- Layout 只包含 node ID、层级和 navigation，不包含 node data、text 或 highlight。
+- Renderer 和 surface 负责读取业务数据、生成文字，并写入 buffer/extmark。
 
-| 模块                | 职责                                               |
-|:--------------------|:---------------------------------------------------|
-| `stl.c.Tree`        | 纯数据结构，节点增删改查、遍历                     |
-| `stl.view.Treeview` | 视图状态 + root 切换 + 渲染 + navigation 索引构建  |
-| `picker/searcher`   | 业务逻辑、UI 交互、匹配/搜索功能                   |
+## `Tree`
 
-## 数据结构
-
-### INodeStatus
-
-节点状态，存储在 Treeview 的 `_statusmap` 中，与 Tree 节点数据分离：
+`stl.c.Tree` 是默认可变 topology owner，只拥有结构：
 
 ```lua
----@class stl.view.treeview.INodeStatus
----@field public nodetype               "container"|"leaf"
----@field public collapsed              boolean
----@field public tick_visible           integer
----@field public tick_matched           integer
----@field public tick_selected          integer
----@field public tick_selected_maximum  integer   -- 子树最大选中 tick
----@field public locations              ILocationStatus[]|nil  -- leaf 专用
----@field public cache_listview         INodeRenderCache|nil
----@field public cache_treeview         INodeRenderCache|nil
+Tree.new(root_id, root_data?)
+
+tree:get(id)
+tree:contains(id)
+tree:parent(id)
+tree:children(id)
+
+tree:insert(parent_id, id, data, index?)
+tree:update(id, data)
+tree:move(id, parent_id, index?)
+tree:remove(id)
+tree:clear()
 ```
 
-### ILocationStatus
+结构不变式：
 
-位置状态，用于 leaf 节点下的子位置：
+1. ID 是 opaque string 且全局唯一。
+2. Root 不可移除或 reparent。
+3. 新 parent 必须存在。
+4. `move` 不得形成 cycle。
+5. Child order 由 mutation call 显式决定；Tree 不持有 sorter。
+6. 结构字段只有 Tree 可以写；node data 由 consumer 持有。
+7. Tree 不存储 `selected/matched/expanded/loaded/visible` 等业务状态。
+
+## `Treeview.layout`
 
 ```lua
----@class stl.view.treeview.ILocationStatus
----@field public nodetype               "location"
----@field public leafuuid               string
----@field public locationuuid           string
----@field public tick_visible           integer
----@field public data                   unknown|nil
+---@class stl.view.treeview.ILayoutProps
+---@field public roots string[]
+---@field public children fun(id: string): string[]
+---@field public collapsed table<string, true>|nil
+---@field public can_fold ?fun(parent_id: string, child_id: string): boolean
 ```
 
-### INavigation
+- `roots` 定义有序 forest。
+- `children(id)` 返回该次 layout 的可见、已排序 children；Layout 不复制返回数组。
+- `collapsed[id] == true` 时保留当前 node，但不读取其 children。
+- `can_fold(parent_id, child_id)` 仅在 parent 恰有一个可见 child 时调用；返回 `true` 将两者合并到同一行。
+- Filter、list order 和 root attachment 均由 feature 在调用 layout 前决定。
+- 同一 ID 在一次 layout 中不得重复出现；重复 ID 同时覆盖 cycle 和 multi-parent DAG 错误。
 
-渲染时构建的跳转索引，支持 `[i` / `]i` 等导航：
+复杂度 contract 假设 `children(id)` 与 `can_fold(parent_id, child_id)` 为 `O(1)`，且 `children(id)` 返回 source
+已持有的 dense array。Feature 若需要动态 filter，应在 layout 前构建或复用 projected children；其计算和
+allocation 不计入 layout 本身的复杂度。
+
+高性能约束：
+
+1. 使用 iterative DFS，不使用递归。
+2. Hot path 不创建 per-node object、context 或 render result table。
+3. 每个展开 node 最多调用一次 `children(id)`。
+4. 每条 eligible single-child edge 最多调用一次 `can_fold(parent_id, child_id)`。
+5. 不复制 node ID string 或 children array。
+6. 利用必需的 `id_to_lnum` 同时检测重复 ID，不额外维护 visited set。
+
+## `TreeLayout`
+
+`TreeLayout` 是 opaque object。Consumer 只能使用公开方法，不得读取内部字段。
 
 ```lua
----@class stl.view.treeview.INavigation
----@field public parent_lnum            integer[]     -- lnum -> parent_lnum
----@field public firstchild_lnum        integer[]     -- lnum -> firstchild_lnum
----@field public lastchild_lnum         integer[]     -- lnum -> lastchild_lnum
----@field public prev_sibling_lnum      integer[]     -- lnum -> prev_sibling_lnum
----@field public next_sibling_lnum      integer[]     -- lnum -> next_sibling_lnum
+layout:len()
+
+layout:id(lnum)
+layout:lnum(id)
+layout:depth(lnum)
+layout:folded_ids(lnum)
+
+layout:parent_lnum(lnum)
+layout:first_child_lnum(lnum)
+layout:last_descendant_lnum(lnum)
+layout:prev_sibling_lnum(lnum)
+layout:next_sibling_lnum(lnum)
+layout:is_last(lnum)
 ```
 
-### IRenderResult
-
-渲染结果，包含行内容、高亮、索引映射和导航信息：
+内部使用紧凑平行数组，而不是 per-row table：
 
 ```lua
----@class stl.view.treeview.IRenderResult
----@field public lines                  string[]
----@field public highlights             IHighlightInline[][]
----@field public indents                string[]
----@field public lnum2uuid              string[]
----@field public uuid2lnum              table<string, integer>
----@field public childline              integer[]
----@field public navigation             INavigation
+{
+  _ids = string[],
+  _depths = integer[],
+  _parent_lnums = integer[],
+  _last_descendant_lnums = integer[],
+  _prev_sibling_lnums = integer[],
+  _id_to_lnum = table<string, integer>,
+  _folded_ids_by_lnum = table<integer, string[]>,
+}
 ```
 
-## 方法设计
+`0` 是内部 navigation sentinel，确保 numeric arrays 保持 dense；公开方法将其转换为 `nil`。
 
-### 构造与生命周期
+可由现有数组以 `O(1)` 推导的 navigation 不重复存储：
 
-| 方法         | 签名                              | 说明                         |
-|:-------------|:----------------------------------|:-----------------------------|
-| `new`        | `(props: IProps) -> Treeview`     | 创建实例                     |
-| `dispose`    | `() -> nil`                       | 释放资源                     |
-| `isdisposed` | `() -> boolean`                   | 检查是否已释放               |
+- `first_child_lnum = lnum + 1`，前提是下一行 parent 等于当前行。
+- `next_sibling_lnum = last_descendant_lnum + 1`，前提是候选行 parent 相同。
+- `is_last = next_sibling_lnum == nil`。
 
-### Root 管理
+## 复杂度 Contract
 
-| 方法         | 签名                              | 说明                         |
-|:-------------|:----------------------------------|:-----------------------------|
-| `root`       | `() -> string`                    | 获取当前 root uuid           |
-| `superroot`  | `() -> string`                    | 获取 superroot uuid          |
-| `attach`     | `(uuid: string) -> self`          | 将指定节点设为新的 root      |
-| `detach`     | `() -> self`                      | 回退到上一个 root            |
-| `reset_root` | `() -> self`                      | 重置到 superroot             |
+令：
 
-**attach/detach 行为**：
+- `V` 为 fold 前的可见 source node 数。
+- `R` 为 fold 后的输出 row 数，且 `R <= V`。
+- `E` 为实际遍历的 parent-child edge 数；tree 中 `E < V`。
+- `H` 为可见 tree 最大深度。
 
-```
-初始状态: root = superroot, history = []
+| 操作                         | 时间复杂度       | 额外空间复杂度 |
+|:-----------------------------|:-----------------|:---------------|
+| `Treeview.layout`            | `O(V + E)`       | `O(V + H)`     |
+| Layout row arrays            | -                | `O(R)`         |
+| ID map 与 folded chain       | -                | `O(V)`         |
+| Iterative traversal stack    | -                | `O(H)`         |
+| `id(lnum)` / `depth(lnum)`   | `O(1)`           | `O(1)`         |
+| `lnum(id)`                   | average `O(1)`   | `O(1)`         |
+| Parent/child/sibling 查询    | `O(1)`           | `O(1)`         |
 
-attach(A) -> root = A, history = [superroot]
-attach(B) -> root = B, history = [superroot, A]
-detach()  -> root = A, history = [superroot]
-detach()  -> root = superroot, history = []
-```
+实现预算以当前开发机为基准：
 
-### 状态管理
+- 5,000 nodes layout `< 1ms`。
+- 50,000 nodes layout `< 8ms`。
+- 50,000 nodes layout heap `< 8MiB`。
+- Depth 10,000 不得 stack overflow。
 
-| 方法                | 签名                                          | 说明                   |
-|:--------------------|:----------------------------------------------|:-----------------------|
-| `ensure_status`     | `(uuid, nodetype) -> INodeStatus`             | 确保节点状态存在       |
-| `retrieve_status`   | `(uuid) -> INodeStatus\|nil`                  | 获取节点状态           |
-| `remove_status`     | `(uuid) -> nil`                               | 删除节点状态           |
-| `clear_statusmap`   | `() -> nil`                                   | 清空所有状态           |
+Regular test 使用更宽松的 regression ceiling，避免硬件差异导致 flaky；精确预算由 benchmark 验证。
 
-### 可见性状态
+## Fold-single-child
 
-| 方法               | 签名                              | 说明                         |
-|:-------------------|:----------------------------------|:-----------------------------|
-| `is_visible`       | `(uuid) -> boolean`               | 检查节点是否可见             |
-| `mark_invisible`   | `(uuid) -> nil`                   | 标记节点及子孙不可见         |
-| `reset_visibility` | `() -> nil`                       | 重置可见性（所有节点变可见） |
-
-### 匹配状态
-
-| 方法           | 签名                              | 说明                         |
-|:---------------|:----------------------------------|:-----------------------------|
-| `is_matched`   | `(uuid) -> boolean`               | 检查节点是否匹配             |
-| `mark_matched` | `(uuid) -> nil`                   | 标记节点为匹配               |
-| `reset_match`  | `() -> nil`                       | 重置匹配状态                 |
-
-### 选中状态
-
-| 方法                       | 签名                                    | 说明                   |
-|:---------------------------|:----------------------------------------|:-----------------------|
-| `is_selected`              | `(uuid) -> boolean`                     | 检查节点是否选中       |
-| `set_selected`             | `(uuid, selected, recursive) -> nil`    | 设置选中状态           |
-| `toggle_selected`          | `(uuid, recursive) -> nil`              | 切换选中状态           |
-| `reset_selection`          | `() -> nil`                             | 重置选中状态           |
-| `refresh_selected_maximum` | `() -> nil`                             | 刷新子树选中 tick      |
-
-### 折叠状态
-
-| 方法           | 签名                                    | 说明                         |
-|:---------------|:----------------------------------------|:-----------------------------|
-| `is_collapsed` | `(uuid) -> boolean`                     | 检查节点是否折叠             |
-| `collapse`     | `(uuid, action, recursive) -> nil`      | 设置折叠状态                 |
-
-**action 取值**：`"collapse"` | `"expand"` | `"toggle"`
-
-### Location 管理
-
-| 方法            | 签名                                    | 说明                         |
-|:----------------|:----------------------------------------|:-----------------------------|
-| `set_locations` | `(leafuuid, locations) -> nil`          | 设置 leaf 的 locations       |
-| `get_locations` | `(leafuuid) -> ILocationStatus[]\|nil`  | 获取 leaf 的 locations       |
-
-### 渲染
-
-| 方法              | 签名                                              | 说明           |
-|:------------------|:--------------------------------------------------|:---------------|
-| `render_listview` | `(params: IRenderListviewParams) -> IRenderResult`| 渲染列表视图   |
-| `render_treeview` | `(params: IRenderTreeviewParams) -> IRenderResult`| 渲染树形视图   |
-
-**渲染参数**：
+Fold 不得丢失 node identity：
 
 ```lua
----@class stl.view.treeview.IRenderListviewParams
----@field public bufnr                  integer
----@field public orders                 string[]|nil  -- 自定义顺序
----@field public only_visible           boolean
----@field public only_matched           boolean
----@field public only_selected          boolean
----@field public render_leaf            ILeafRenderer
----@field public render_location        ILocationRenderer|nil
-
----@class stl.view.treeview.IRenderTreeviewParams
----@field public bufnr                  integer
----@field public foldempty              boolean       -- 是否折叠单子节点路径
----@field public only_expanded          boolean       -- 是否只渲染展开节点
----@field public only_visible           boolean
----@field public only_matched           boolean
----@field public only_selected          boolean
----@field public render_container       IContainerRenderer
----@field public render_leaf            ILeafRenderer
----@field public render_location        ILocationRenderer|nil
+layout:folded_ids(lnum)
 ```
 
-### 缓存管理
+- Fold predicate 只决定单子节点 edge 是否可折叠，不承担 filter、sort 或 render。
+- 一条 folded chain 使用最深层 ID 作为该行的 representative，即 `layout:id(lnum)` 的返回值。
+- `folded_ids(lnum)` 返回包含 representative 在内的完整 source ID chain；返回数组为只读 borrowed view。
+- Fold chain 中所有 ID 都映射到同一 `lnum`。
+- 只有实际发生 fold 的行才分配 ID array，总时间和空间仍保持 `O(V)`。
 
-| 方法                      | 签名           | 说明                   |
-|:--------------------------|:---------------|:-----------------------|
-| `mark_cache_listview_dirty` | `() -> nil`  | 标记列表缓存为脏       |
-| `mark_cache_treeview_dirty` | `() -> nil`  | 标记树形缓存为脏       |
-| `mark_cache_all_dirty`    | `() -> nil`    | 标记所有缓存为脏       |
+## 状态所有权
 
-### 收集辅助
+公共层不拥有业务状态：
 
-| 方法              | 签名                              | 说明                   |
-|:------------------|:----------------------------------|:-----------------------|
-| `collect_leafs`   | `(root?) -> string[]`             | 收集所有叶子节点       |
-| `collect_selected`| `(root?) -> table<string, true>`  | 收集所有选中节点       |
-| `collect_matched` | `(root?) -> string[]`             | 收集所有匹配节点       |
-| `collect_visible` | `(root?) -> string[]`             | 收集所有可见节点       |
+- Explorer：`loaded/expanded/selection/pending transfer/watch`。
+- Picker：`matched/order/selection`。
+- Searcher：request generation、location、replace、visibility。
+- Diffview：collapsed directory set 和 stage-specific state。
 
-### 导航辅助（静态方法）
+Feature 将状态转换为 `roots/children/collapsed` 后调用 layout。Treeview 不提供 selection、match、root
+history、render cache 或 lazy-load API。
 
-| 方法              | 签名                                    | 说明               |
-|:------------------|:----------------------------------------|:-------------------|
-| `nav_parent`      | `(navigation, lnum) -> integer\|nil`    | 获取父节点行号     |
-| `nav_firstchild`  | `(navigation, lnum) -> integer\|nil`    | 获取首子节点行号   |
-| `nav_lastchild`   | `(navigation, lnum) -> integer\|nil`    | 获取末子节点行号   |
-| `nav_prev_sibling`| `(navigation, lnum) -> integer\|nil`    | 获取前兄弟行号     |
-| `nav_next_sibling`| `(navigation, lnum) -> integer\|nil`    | 获取后兄弟行号     |
+## 渲染边界
 
-## Tick 机制
+Layout 不接收 `bufnr`，不调用 `vim.api`、`vim.fn` 或 filesystem API。
 
-采用全局 tick + 节点 tick 对比实现高效脏检测：
+Renderer 后续使用 positional arguments 和 multiple returns，避免 per-node context/result table：
 
 ```lua
--- 全局 tick（在 Treeview 实例上）
-_tick_visible = 1
-_tick_matched = 0
-_tick_selected = 1
-
--- 节点 tick（在 INodeStatus 上）
-tick_visible = 0   -- 当 tick_visible == _tick_visible 时，节点不可见
-tick_matched = 0   -- 当 tick_matched == _tick_matched 时，节点匹配
-tick_selected = 0  -- 当 tick_selected == _tick_selected 时，节点选中
+text, highlights, metadata = renderer(id, lnum, depth, is_last)
 ```
 
-**优势**：
-- 重置状态只需 `tick + 1`，无需遍历所有节点
-- 状态检查是 O(1) 的整数比较
+Surface 负责批量写入 lines、应用 highlights，并根据 metadata 添加 sign、virt text、diagnostic 或异步 icon。
 
-## fold_empty 支持
+## 非目标
 
-当 `foldempty = true` 时，单子节点路径会被折叠显示：
-
-```
-正常显示:          fold_empty 显示:
-├── src            ├── src/components/
-│   └── components │   ├── Button.tsx
-│       ├── Button │   └── Input.tsx
-│       └── Input
-```
-
-**实现细节**：
-- 遍历时检测 `onlychild` 参数
-- 如果唯一子节点也是 container，进入 dry 模式（不渲染当前节点）
-- 累积 `folded_depth`，在最终渲染时传递给 renderer
-
-## 设计原则
-
-1. **数据与状态分离**：Tree 存储数据，Treeview 存储状态
-2. **tick 脏检测**：避免全量遍历判断状态变更
-3. **root 历史栈**：支持多级 attach/detach 导航
-4. **渲染时构建索引**：navigation 索引在渲染时计算，确保与视觉布局一致
-5. **不直接写入 buffer**：渲染方法返回 IRenderResult，调用者决定如何使用
-
-## 使用示例
-
-```lua
--- 创建 Treeview
-local tree = stl.c.Tree.new({ name = "example" })
-local treeview = stl.view.Treeview.new({ name = "example", tree = tree })
-
--- 构建树
-tree:insert(tree.root, "dir1", { type = "dir", name = "src" })
-tree:insert("dir1", "file1", { type = "file", name = "main.lua" })
-
--- 初始化状态
-treeview:ensure_status("dir1", "container")
-treeview:ensure_status("file1", "leaf")
-
--- 渲染
-local result = treeview:render_treeview({
-  bufnr = bufnr,
-  foldempty = true,
-  only_expanded = true,
-  only_visible = true,
-  only_matched = false,
-  only_selected = false,
-  render_container = function(ctx, node, status, is_lastchild, folded_depth)
-    return { text = node.data.name, highlights = nil }
-  end,
-  render_leaf = function(ctx, node, status, is_lastchild)
-    return { text = node.data.name, highlights = nil }
-  end,
-})
-
--- 写入 buffer
-vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, result.lines)
-
--- 使用导航
-local parent_lnum = stl.view.Treeview.nav_parent(result.navigation, current_lnum)
-```
+1. 不提供通用 filesystem tree 或 remote filesystem adapter。
+2. 不定义 selection、match、search、replace 或 lazy-load 语义。
+3. 第一版不提供 tick-based cache 或 incremental render。
+4. 不兼容旧 `era.view.Tree` / stateful `stl.view.Treeview` API；迁移完成后删除旧实现。
