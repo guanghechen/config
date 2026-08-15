@@ -138,13 +138,11 @@
         "$ref": "#/$defs/linkGroupValue"
       }
     },
-    "hook": {
+    "event": {
       "type": "object",
+      "minProperties": 1,
       "properties": {
-        "synced": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
-        "failed": {
+        "action": {
           "$ref": "#/$defs/nonEmptyString"
         },
         "link": {
@@ -153,14 +151,40 @@
       },
       "additionalProperties": false
     },
-    "hookOverlay": {
+    "events": {
       "type": "object",
       "minProperties": 1,
       "properties": {
+        "changed": {
+          "$ref": "#/$defs/event"
+        },
+        "synced": {
+          "$ref": "#/$defs/event"
+        },
+        "failed": {
+          "$ref": "#/$defs/event"
+        }
+      },
+      "additionalProperties": false
+    },
+    "eventsOverlay": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "changed": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/event"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "synced": {
           "oneOf": [
             {
-              "$ref": "#/$defs/nonEmptyString"
+              "$ref": "#/$defs/event"
             },
             {
               "type": "null"
@@ -170,17 +194,7 @@
         "failed": {
           "oneOf": [
             {
-              "$ref": "#/$defs/nonEmptyString"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "link": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/links"
+              "$ref": "#/$defs/event"
             },
             {
               "type": "null"
@@ -201,7 +215,7 @@
           "$ref": "#/$defs/nonEmptyString"
         },
         "on": {
-          "$ref": "#/$defs/hookOverlay"
+          "$ref": "#/$defs/eventsOverlay"
         }
       },
       "additionalProperties": false
@@ -245,7 +259,7 @@
           "$ref": "#/$defs/nonEmptyEditions"
         },
         "on": {
-          "$ref": "#/$defs/hook"
+          "$ref": "#/$defs/events"
         },
         "platforms": {
           "$ref": "#/$defs/simplePlatforms"
@@ -283,7 +297,7 @@
           "$ref": "#/$defs/editions"
         },
         "on": {
-          "$ref": "#/$defs/hook"
+          "$ref": "#/$defs/events"
         }
       },
       "additionalProperties": false
@@ -316,7 +330,7 @@
           ]
         },
         "on": {
-          "$ref": "#/$defs/hookOverlay"
+          "$ref": "#/$defs/eventsOverlay"
         }
       },
       "additionalProperties": false
