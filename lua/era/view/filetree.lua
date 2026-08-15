@@ -1,3 +1,5 @@
+local treeview_layout = require("stl.view.treeview.layout")
+
 ---@class era.view.filetree
 local M = {}
 
@@ -9,6 +11,7 @@ local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
 local INDENT_PIPE = "│ " ---@type string
 local INDENT_SPACE = "  " ---@type string
+local EMPTY_CHILDREN = {} ---@type era.view.filetree.ITreeNode[]
 
 ----------------------------------------------------------------------------------------------------
 -- Types
@@ -20,6 +23,8 @@ local INDENT_SPACE = "  " ---@type string
 ---@field public nodetype               "directory" | "file"
 ---@field public children               era.view.filetree.ITreeNode[]
 ---@field public data                   unknown|nil
+
+---@alias era.view.filetree.INodeMap table<string, era.view.filetree.ITreeNode>
 
 ---@class era.view.filetree.IFileItem
 ---@field public filepath               string
@@ -48,6 +53,7 @@ local INDENT_SPACE = "  " ---@type string
 ---@field public lines                  string[]
 ---@field public highlights             stl.t.IHighlight[]
 ---@field public line_map               era.view.filetree.ILineMapItem[]
+---@field public layout                 stl.view.TreeLayout
 
 ----------------------------------------------------------------------------------------------------
 -- Tree building
@@ -56,6 +62,7 @@ local INDENT_SPACE = "  " ---@type string
 ---Build a tree structure from file items
 ---@param items                         era.view.filetree.IFileItem[]
 ---@return era.view.filetree.ITreeNode
+---@return era.view.filetree.INodeMap
 function M.build_tree(items)
   ---@type era.view.filetree.ITreeNode
   local root = {
@@ -65,28 +72,21 @@ function M.build_tree(items)
     children = {},
     data = nil,
   }
+  local node_map = { [root.filepath] = root } ---@type era.view.filetree.INodeMap
 
   for _, item in ipairs(items) do
     local filepath = item.filepath ---@type string
     local parts = vim.split(filepath, "/", { plain = true }) ---@type string[]
     local current = root ---@type era.view.filetree.ITreeNode
+    local dir_path = "" ---@type string
 
     for i = 1, #parts - 1 do
       local part = parts[i] ---@type string
-      local dir_path = table.concat(parts, "/", 1, i) ---@type string
-      local found = false ---@type boolean
-
-      for _, child in ipairs(current.children) do
-        if child.nodetype == "directory" and child.name == part then
-          current = child
-          found = true
-          break
-        end
-      end
-
-      if not found then
+      dir_path = dir_path == "" and part or (dir_path .. "/" .. part)
+      local dir_node = node_map[dir_path] ---@type era.view.filetree.ITreeNode|nil
+      if dir_node == nil then
         ---@type era.view.filetree.ITreeNode
-        local dir_node = {
+        dir_node = {
           name = part,
           filepath = dir_path,
           nodetype = "directory",
@@ -94,8 +94,17 @@ function M.build_tree(items)
           data = nil,
         }
         current.children[#current.children + 1] = dir_node
-        current = dir_node
+        node_map[dir_path] = dir_node
+      elseif dir_node.nodetype ~= "directory" then
+        error(string.format("[era.view.filetree] path '%s' is both a file and a directory", dir_path))
       end
+      current = dir_node
+    end
+
+    local existing = node_map[filepath] ---@type era.view.filetree.ITreeNode|nil
+    if existing ~= nil then
+      local reason = existing.nodetype == "directory" and "is both a file and a directory" or "appears more than once"
+      error(string.format("[era.view.filetree] path '%s' %s", filepath, reason))
     end
 
     ---@type era.view.filetree.ITreeNode
@@ -107,9 +116,10 @@ function M.build_tree(items)
       data = item.data,
     }
     current.children[#current.children + 1] = file_node
+    node_map[filepath] = file_node
   end
 
-  return root
+  return root, node_map
 end
 
 ---Sort tree children (directories first, then alphabetically)
@@ -131,35 +141,6 @@ function M.sort_tree(node)
       M.sort_tree(child)
     end
   end
-end
-
----Fold empty directories (single child directory becomes "dir1/dir2")
----@param node                          era.view.filetree.ITreeNode
----@return era.view.filetree.ITreeNode
----@return string
-function M.fold_empty_dirs(node)
-  local path_parts = { node.name } ---@type string[]
-  local current = node ---@type era.view.filetree.ITreeNode
-
-  while true do
-    if #current.children ~= 1 then
-      break
-    end
-
-    local child = current.children[1] ---@type era.view.filetree.ITreeNode
-    if child.nodetype ~= "directory" then
-      break
-    end
-
-    path_parts[#path_parts + 1] = child.name
-    current = child
-  end
-
-  if #path_parts == 1 then
-    return node, node.name
-  end
-
-  return current, table.concat(path_parts, "/")
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -250,89 +231,6 @@ end
 -- Rendering
 ----------------------------------------------------------------------------------------------------
 
----@class era.view.filetree.IRenderContext
----@field public lines                  string[]
----@field public highlights             stl.t.IHighlight[]
----@field public line_map               era.view.filetree.ILineMapItem[]
----@field public base_indent            string
----@field public start_lnum             integer
----@field public foldempty              boolean
----@field public render_directory       era.view.filetree.IDirectoryRenderer
----@field public render_file            era.view.filetree.IFileRenderer
----@field public is_collapsed           era.view.filetree.IIsCollapsed|nil
-
----Render tree nodes recursively
----@param ctx                           era.view.filetree.IRenderContext
----@param node                          era.view.filetree.ITreeNode
----@param prefix                        string
----@param is_last                       boolean
----@param display_name                  string|nil
-local function render_tree_node(ctx, node, prefix, is_last, display_name)
-  local lnum = ctx.start_lnum + #ctx.lines ---@type integer
-
-  local indent ---@type string
-  if prefix == "" then
-    indent = ctx.base_indent .. (is_last and INDENT_LAST or INDENT_BRANCH)
-  else
-    indent = ctx.base_indent .. prefix .. (is_last and INDENT_LAST or INDENT_BRANCH)
-  end
-
-  -- Create a temporary node with display_name if provided
-  local render_node = node ---@type era.view.filetree.ITreeNode
-  if display_name then
-    render_node = {
-      name = display_name,
-      filepath = node.filepath,
-      nodetype = node.nodetype,
-      children = node.children,
-      data = node.data,
-    }
-  end
-
-  if node.nodetype == "directory" then
-    local line, highlights = ctx.render_directory(render_node, lnum, indent)
-    ctx.lines[#ctx.lines + 1] = line
-    vim.list_extend(ctx.highlights, highlights)
-    ctx.line_map[#ctx.line_map + 1] = {
-      nodetype = "directory",
-      filepath = node.filepath,
-      data = node.data,
-    }
-
-    -- Skip children if collapsed
-    if ctx.is_collapsed and ctx.is_collapsed(node) then
-      return
-    end
-
-    -- Render children
-    local child_prefix = prefix .. (is_last and INDENT_SPACE or INDENT_PIPE) ---@type string
-    local N = #node.children ---@type integer
-
-    for i, child in ipairs(node.children) do
-      local child_display_name = nil ---@type string|nil
-
-      if ctx.foldempty and child.nodetype == "directory" then
-        local folded_node, folded_path = M.fold_empty_dirs(child)
-        if folded_node ~= child then
-          child = folded_node
-          child_display_name = folded_path
-        end
-      end
-
-      render_tree_node(ctx, child, child_prefix, i == N, child_display_name)
-    end
-  else
-    local line, highlights = ctx.render_file(render_node, lnum, indent)
-    ctx.lines[#ctx.lines + 1] = line
-    vim.list_extend(ctx.highlights, highlights)
-    ctx.line_map[#ctx.line_map + 1] = {
-      nodetype = "file",
-      filepath = node.filepath,
-      data = node.data,
-    }
-  end
-end
-
 ---Render file items as a tree
 ---@param items                         era.view.filetree.IFileItem[]
 ---@param opts                          era.view.filetree.IRenderOpts|nil
@@ -340,45 +238,88 @@ end
 function M.render(items, opts)
   opts = opts or {}
 
-  local tree = M.build_tree(items)
+  local tree, node_map = M.build_tree(items)
   M.sort_tree(tree)
 
   local lines = {} ---@type string[]
   local highlights = {} ---@type stl.t.IHighlight[]
   local line_map = {} ---@type era.view.filetree.ILineMapItem[]
 
-  ---@type era.view.filetree.IRenderContext
-  local ctx = {
-    lines = lines,
-    highlights = highlights,
-    line_map = line_map,
-    base_indent = opts.base_indent or "",
-    start_lnum = opts.start_lnum or 0,
-    foldempty = opts.foldempty ~= false,
-    render_directory = opts.render_directory or default_render_directory,
-    render_file = opts.render_file or default_render_file,
-    is_collapsed = opts.is_collapsed,
-  }
+  local is_collapsed = opts.is_collapsed ---@type era.view.filetree.IIsCollapsed|nil
+  local can_fold = nil ---@type (fun(parent: era.view.filetree.ITreeNode, child: era.view.filetree.ITreeNode): boolean)|nil
+  if opts.foldempty ~= false then
+    can_fold = function(_, child)
+      return child.nodetype == "directory"
+    end
+  end
 
-  local N = #tree.children ---@type integer
-  for i, child in ipairs(tree.children) do
-    local child_display_name = nil ---@type string|nil
-
-    if ctx.foldempty and child.nodetype == "directory" then
-      local folded_node, folded_path = M.fold_empty_dirs(child)
-      if folded_node ~= child then
-        child = folded_node
-        child_display_name = folded_path
+  local layout = treeview_layout.layout({
+    roots = tree.children,
+    id = function(node)
+      return node.filepath
+    end,
+    children = function(node)
+      if node.nodetype == "directory" and is_collapsed ~= nil and is_collapsed(node) then
+        return EMPTY_CHILDREN
       end
+      return node.children
+    end,
+    can_fold = can_fold,
+  })
+
+  local base_indent = opts.base_indent or "" ---@type string
+  local start_lnum = opts.start_lnum or 0 ---@type integer
+  local render_directory = opts.render_directory or default_render_directory ---@type era.view.filetree.IDirectoryRenderer
+  local render_file = opts.render_file or default_render_file ---@type era.view.filetree.IFileRenderer
+  local prefixes = { [0] = "" } ---@type table<integer, string>
+
+  for row = 1, layout:len() do
+    local depth = layout:depth(row) ---@type integer
+    local prefix = prefixes[depth] ---@type string
+    local is_last = layout:is_last(row) ---@type boolean
+    local indent = base_indent .. prefix .. (is_last and INDENT_LAST or INDENT_BRANCH) ---@type string
+    prefixes[depth + 1] = prefix .. (is_last and INDENT_SPACE or INDENT_PIPE)
+
+    local id = layout:id(row) ---@type string
+    local node = node_map[id] ---@type era.view.filetree.ITreeNode
+    local render_node = node ---@type era.view.filetree.ITreeNode
+    local folded_ids = layout:folded_ids(row) ---@type string[]|nil
+    if folded_ids ~= nil then
+      local names = {} ---@type string[]
+      for index, folded_id in ipairs(folded_ids) do
+        names[index] = node_map[folded_id].name
+      end
+      render_node = {
+        name = table.concat(names, "/"),
+        filepath = node.filepath,
+        nodetype = node.nodetype,
+        children = node.children,
+        data = node.data,
+      }
     end
 
-    render_tree_node(ctx, child, "", i == N, child_display_name)
+    local lnum = start_lnum + row - 1 ---@type integer
+    local line, line_highlights ---@type string, stl.t.IHighlight[]
+    if node.nodetype == "directory" then
+      line, line_highlights = render_directory(render_node, lnum, indent)
+    else
+      line, line_highlights = render_file(render_node, lnum, indent)
+    end
+
+    lines[row] = line
+    vim.list_extend(highlights, line_highlights)
+    line_map[row] = {
+      nodetype = node.nodetype,
+      filepath = node.filepath,
+      data = node.data,
+    }
   end
 
   return {
     lines = lines,
     highlights = highlights,
     line_map = line_map,
+    layout = layout,
   }
 end
 

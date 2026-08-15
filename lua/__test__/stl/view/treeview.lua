@@ -55,6 +55,32 @@ t:test("layout: builds an ordered forest and O(1) navigation", function()
   t.assert_nil(result:first_child_lnum(0), "invalid line has no child")
 end)
 
+t:test("layout: traverses object-backed topology without copying children", function()
+  local leaf = { id = "leaf", children = {} }
+  local branch = { id = "branch", children = { leaf } }
+  local id_calls = {} ---@type table<string, integer>
+
+  local result = Treeview.layout({
+    roots = { branch },
+    id = function(node)
+      id_calls[node.id] = (id_calls[node.id] or 0) + 1
+      return node.id
+    end,
+    children = function(node)
+      return node.children
+    end,
+    can_fold = function(parent, child)
+      return parent == branch and child == leaf
+    end,
+  })
+
+  t.assert_eq(1, result:len(), "object-backed folded length")
+  t.assert_eq("leaf", result:id(1), "object-backed representative")
+  t.assert_eq(1, result:lnum("branch"), "object-backed parent lookup")
+  t.assert_eq(1, id_calls.branch, "parent ID resolution count")
+  t.assert_eq(1, id_calls.leaf, "child ID resolution count")
+end)
+
 t:test("layout: collapsed nodes remain visible and skip child lookup", function()
   local child_calls = {} ---@type table<string, integer>
   local result = Treeview.layout({

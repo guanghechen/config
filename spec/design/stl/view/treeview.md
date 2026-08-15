@@ -61,31 +61,34 @@ tree:clear()
 
 ```lua
 ---@class stl.view.treeview.ILayoutProps
----@field public roots string[]
----@field public children fun(id: string): string[]
+---@field public roots any[]
+---@field public id ?fun(node: any): string
+---@field public children fun(node: any): any[]
 ---@field public collapsed table<string, true>|nil
----@field public can_fold ?fun(parent_id: string, child_id: string): boolean
+---@field public can_fold ?fun(parent: any, child: any): boolean
 ```
 
-- `roots` 定义有序 forest。
-- `children(id)` 返回该次 layout 的可见、已排序 children；Layout 不复制返回数组。
+- `roots` 定义有序 forest；元素可以直接是 string ID，也可以是 source node。
+- `id(node)` 将 source node 映射到 string ID；省略时，source node 本身必须是 string ID。
+- `children(node)` 返回该次 layout 的可见、已排序 children；Layout 不复制返回数组。
 - `collapsed[id] == true` 时保留当前 node，但不读取其 children。
-- `can_fold(parent_id, child_id)` 仅在 parent 恰有一个可见 child 时调用；返回 `true` 将两者合并到同一行。
+- `can_fold(parent, child)` 仅在 parent 恰有一个可见 child 时调用；返回 `true` 将两者合并到同一行。
 - Filter、list order 和 root attachment 均由 feature 在调用 layout 前决定。
 - 同一 ID 在一次 layout 中不得重复出现；重复 ID 同时覆盖 cycle 和 multi-parent DAG 错误。
 
-复杂度 contract 假设 `children(id)` 与 `can_fold(parent_id, child_id)` 为 `O(1)`，且 `children(id)` 返回 source
-已持有的 dense array。Feature 若需要动态 filter，应在 layout 前构建或复用 projected children；其计算和
-allocation 不计入 layout 本身的复杂度。
+复杂度 contract 假设 `id(node)`、`children(node)` 与 `can_fold(parent, child)` 为 `O(1)`，且
+`children(node)` 返回 source 已持有的 dense array。Feature 若需要动态 filter，应在 layout 前构建或复用
+projected children；其计算和 allocation 不计入 layout 本身的复杂度。
 
 高性能约束：
 
 1. 使用 iterative DFS，不使用递归。
 2. Hot path 不创建 per-node object、context 或 render result table。
-3. 每个展开 node 最多调用一次 `children(id)`。
-4. 每条 eligible single-child edge 最多调用一次 `can_fold(parent_id, child_id)`。
-5. 不复制 node ID string 或 children array。
-6. 利用必需的 `id_to_lnum` 同时检测重复 ID，不额外维护 visited set。
+3. 每个 source node 最多调用一次 `id(node)`。
+4. 每个展开 node 最多调用一次 `children(node)`。
+5. 每条 eligible single-child edge 最多调用一次 `can_fold(parent, child)`。
+6. 不复制 node ID string、source node 或 children array。
+7. 利用必需的 `id_to_lnum` 同时检测重复 ID，不额外维护 visited set。
 
 ## `TreeLayout`
 

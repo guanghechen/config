@@ -2,10 +2,11 @@
 local __module_name__ = "stl.view.treeview.layout" ---@type string
 
 ---@class stl.view.treeview.ILayoutProps
----@field public roots string[]
----@field public children fun(id: string): string[]
+---@field public roots any[]
+---@field public id ?fun(node: any): string
+---@field public children fun(node: any): any[]
 ---@field public collapsed table<string, true>|nil
----@field public can_fold ?fun(parent_id: string, child_id: string): boolean
+---@field public can_fold ?fun(parent: any, child: any): boolean
 
 ---@class stl.view.TreeLayout
 ---@field private _len integer
@@ -129,9 +130,14 @@ function M.layout(props)
     fail("props must be a table")
   end
 
-  local roots = props.roots ---@type string[]
+  local roots = props.roots ---@type any[]
   if type(roots) ~= "table" then
     fail("roots must be a table")
+  end
+
+  local resolve_id = props.id
+  if resolve_id ~= nil and type(resolve_id) ~= "function" then
+    fail("id must be a function")
   end
 
   local children = props.children
@@ -158,17 +164,17 @@ function M.layout(props)
   local folded_ids_by_lnum = {} ---@type table<integer, string[]>
 
   -- Each stack slot is one active sibling list. Slot 1 is the virtual forest root.
-  local stack_children = { roots } ---@type string[][]
+  local stack_children = { roots } ---@type any[][]
   local stack_indexes = { 1 } ---@type integer[]
   local stack_owner_lnums = { 0 } ---@type integer[]
   local stack_prev_lnums = { 0 } ---@type integer[]
   local stack_size = 1 ---@type integer
 
   while stack_size > 0 do
-    local child_ids = stack_children[stack_size] ---@type string[]
+    local child_nodes = stack_children[stack_size] ---@type any[]
     local child_index = stack_indexes[stack_size] ---@type integer
 
-    if child_index > #child_ids then
+    if child_index > #child_nodes then
       local owner_lnum = stack_owner_lnums[stack_size] ---@type integer
       if owner_lnum > 0 then
         last_descendant_lnums[owner_lnum] = #ids
@@ -182,7 +188,8 @@ function M.layout(props)
     else
       stack_indexes[stack_size] = child_index + 1
 
-      local id = child_ids[child_index] ---@type string
+      local node = child_nodes[child_index]
+      local id = resolve_id ~= nil and resolve_id(node) or node ---@type any
       if type(id) ~= "string" then
         fail(string.format("node id must be a string, got %s", type(id)))
       end
@@ -212,7 +219,7 @@ function M.layout(props)
           break
         end
 
-        local next_children = children(id) ---@type string[]
+        local next_children = children(node) ---@type any[]
         if type(next_children) ~= "table" then
           fail(string.format("children result for node '%s' must be a table", id))
         end
@@ -224,21 +231,23 @@ function M.layout(props)
         end
 
         local folded_child_id = nil ---@type string|nil
+        local folded_child = nil
         if child_count == 1 and can_fold ~= nil then
-          local child_id = next_children[1] ---@type string
-          if type(child_id) ~= "string" then
-            fail(string.format("node id must be a string, got %s", type(child_id)))
-          end
-          if id_to_lnum[child_id] ~= nil then
-            fail(string.format("node '%s' appears more than once", child_id))
-          end
-
-          local should_fold = can_fold(id, child_id) ---@type boolean
+          local child = next_children[1]
+          local should_fold = can_fold(node, child) ---@type boolean
           if type(should_fold) ~= "boolean" then
-            fail(string.format("can_fold result for edge '%s' -> '%s' must be a boolean", id, child_id))
+            fail(string.format("can_fold result for node '%s' must be a boolean", id))
           end
           if should_fold then
+            local child_id = resolve_id ~= nil and resolve_id(child) or child ---@type any
+            if type(child_id) ~= "string" then
+              fail(string.format("node id must be a string, got %s", type(child_id)))
+            end
+            if id_to_lnum[child_id] ~= nil then
+              fail(string.format("node '%s' appears more than once", child_id))
+            end
             folded_child_id = child_id
+            folded_child = child
           end
         end
 
@@ -248,6 +257,7 @@ function M.layout(props)
             folded_ids_by_lnum[lnum] = folded_ids
           end
           id = folded_child_id
+          node = folded_child
         else
           stack_size = stack_size + 1
           stack_children[stack_size] = next_children
