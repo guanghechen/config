@@ -1,6 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.tree.selection" ---@type string
 
+local tree_traversal = require("era.view.tree.traversal")
+
 local EMPTY_CHILDREN = {} ---@type string[]
 
 ---@class era.view.tree.selection.IView
@@ -30,10 +32,10 @@ function M.collect_selected(view, root)
   local statemap = view.statemap ---@type table<string, era.view.tree.INodeState>
   local tick_selected = view._tick_selected ---@type integer
   local selected_set = {} ---@type table<string, true>
-  view._tree:quick_traverse(root, function(_, node)
-    local state = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
+  tree_traversal.preorder(view._tree, root, function(uuid)
+    local state = statemap[uuid] ---@type era.view.tree.INodeState|nil
     if state ~= nil and state.tick_selected == tick_selected then
-      selected_set[node.uuid] = true
+      selected_set[uuid] = true
     end
   end)
   return selected_set
@@ -75,8 +77,8 @@ function M.toggle_select(view, uuid, selected, only_visible)
   local tick_invisible = only_visible and view._tick_invisible or -1 ---@type integer
   local tick_selected = view._tick_selected ---@type integer
 
-  tree:quick_traverse(uuid, function(_, node)
-    local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
+  tree_traversal.preorder(tree, uuid, function(nodeuuid)
+    local nodestate = statemap[nodeuuid] ---@type era.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_invisible ~= tick_invisible then
       if selected and nodestate.tick_selected ~= tick_selected then
         nodestate.tick_selected = tick_selected ---@type integer

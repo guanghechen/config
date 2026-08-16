@@ -1,6 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.tree.collapse" ---@type string
 
+local tree_traversal = require("era.view.tree.traversal")
+
 ---@class era.view.tree.collapse.IView
 ---@field public fullname               string
 ---@field public statemap               table<string, era.view.tree.INodeState>
@@ -50,8 +52,8 @@ function M.collapse(view, uuid, value, recursive)
   end
 
   if recursive then
-    tree:quick_traverse(uuid, function(_, node)
-      local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState
+    tree_traversal.preorder(tree, uuid, function(nodeuuid)
+      local nodestate = statemap[nodeuuid] ---@type era.view.tree.INodeState
       if nodestate.collapsed ~= collapsed then
         nodestate.collapsed = collapsed
         nodestate.cache_listview = nil

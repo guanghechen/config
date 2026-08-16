@@ -106,6 +106,15 @@ t:test("reset_filepaths restores each location once across top-level subtrees", 
   }
   local filetree = {
     root = "/",
+    children = function(_, uuid)
+      if uuid == "/" then
+        return { nodes[1].uuid, nodes[3].uuid }
+      end
+      if uuid == nodes[1].uuid then
+        return { fileuuid }
+      end
+      return {}
+    end,
     reset = function() end,
     retrieve = function(_, uuid)
       return uuid == fileuuid and nodes[2] or nil

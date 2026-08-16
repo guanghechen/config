@@ -1,6 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.tree.store" ---@type string
 
+local tree_traversal = require("era.view.tree.traversal")
+
 ---@class era.view.tree.store.IView
 ---@field public statemap               table<string, era.view.tree.INodeState>
 ---@field protected _tree               stl.c.IReadonlyTree
@@ -15,10 +17,10 @@ function M.collect_leafs(view, root)
   view:__health__()
   local statemap = view.statemap ---@type table<string, era.view.tree.INodeState>
   local uuids = {} ---@type string[]
-  view._tree:quick_traverse(root, function(_, node)
-    local state = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
+  tree_traversal.preorder(view._tree, root, function(uuid)
+    local state = statemap[uuid] ---@type era.view.tree.INodeState|nil
     if state ~= nil and state.nodetype == "leaf" then
-      uuids[#uuids + 1] = node.uuid
+      uuids[#uuids + 1] = uuid
     end
   end)
   return uuids
@@ -53,10 +55,10 @@ end
 function M.remove(view, uuid)
   view:__health__()
   local statemap = view.statemap ---@type table<string, era.view.tree.INodeState>
-  view._tree:quick_traverse(uuid, function(_, node)
-    local state = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
+  tree_traversal.preorder(view._tree, uuid, function(nodeuuid)
+    local state = statemap[nodeuuid] ---@type era.view.tree.INodeState|nil
     if state ~= nil then
-      statemap[node.uuid] = nil
+      statemap[nodeuuid] = nil
       if state.locations ~= nil then
         for _, location in ipairs(state.locations) do
           statemap[location.locationuuid] = nil
