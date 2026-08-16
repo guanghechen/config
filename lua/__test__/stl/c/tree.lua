@@ -55,8 +55,8 @@ t:test("strict API: update and move preserve identity and reject invalid topolog
 
   tree:move("a", "side", 1)
   t.assert_eq("side", tree:parent("a"), "moved parent")
-  t.assert_eq(2, tree:retrieve("a").depth, "moved depth")
-  t.assert_eq(3, tree:retrieve("leaf").depth, "descendant depth")
+  t.assert_true(tree:isdescendant("side", "a"), "moved node ancestry")
+  t.assert_true(tree:isdescendant("side", "leaf"), "moved descendant ancestry")
 
   tree:insert("root", "stable", {})
   assert_error(function()
@@ -94,7 +94,7 @@ t:test("strict API: deep move, clear, and dispose are iterative", function()
   end
   tree:insert("root", "side", {})
   tree:move("1", "side")
-  t.assert_eq(10001, tree:retrieve("10000").depth, "deep moved depth")
+  t.assert_true(tree:isdescendant("side", "10000"), "deep moved ancestry")
   tree:clear()
   t.assert_true(tree:contains("root"), "clear preserves root")
   t.assert_eq(0, #tree:children("root"), "clear removes descendants")

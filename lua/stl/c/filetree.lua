@@ -227,7 +227,8 @@ end
 function M:insert(parent, uuid, data)
   self:__health__()
 
-  local node = self:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
+  local nodemap = self._nodemap ---@type table<string, stl.c.IFiletreeNode>
+  local node = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
   if node ~= nil then
     if self:parent(uuid) == parent then
       return self:update(uuid, data) ---@type stl.c.IFiletreeNode
@@ -237,7 +238,7 @@ function M:insert(parent, uuid, data)
   else
     node = stl.c.Tree.insert(self, parent, uuid, data) ---@type stl.c.IFiletreeNode
   end
-  local parentnode = self:retrieve(parent) ---@type stl.c.IFiletreeNode
+  local parentnode = nodemap[parent] ---@type stl.c.IFiletreeNode
   parentnode.dirty_co = true
   return node
 end

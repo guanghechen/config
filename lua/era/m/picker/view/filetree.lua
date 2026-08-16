@@ -359,9 +359,9 @@ function M:insert_dirpath(dirpath)
   local filestate = statemap[fileuuid] ---@type era.m.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "container" then
-    local node = filetree:retrieve(filenode.parent) ---@type stl.c.IFiletreeNode|nil
-    while node ~= nil and node.uuid ~= node.parent do
-      local nodestate = statemap[node.uuid] ---@type era.m.picker.view.filetree.INodeState|nil
+    local parentuuid = filetree:parent(fileuuid) ---@type string|nil
+    while parentuuid ~= nil and parentuuid ~= filetree.root do
+      local nodestate = statemap[parentuuid] ---@type era.m.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
         break
       end
@@ -375,8 +375,8 @@ function M:insert_dirpath(dirpath)
         tick_selected = 0,
         tick_selected_maximum = 0,
       }
-      statemap[node.uuid] = nodestate
-      node = filetree:retrieve(node.parent) ---@type stl.c.IFiletreeNode|nil
+      statemap[parentuuid] = nodestate
+      parentuuid = filetree:parent(parentuuid)
     end
 
     ---@type era.m.picker.view.filetree.IDirectoryNodeState
@@ -415,9 +415,9 @@ function M:insert_filepath(filepath, with_locations)
   local filestate = statemap[fileuuid] ---@type era.m.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "leaf" then
-    local node = filetree:retrieve(filenode.parent) ---@type stl.c.IFiletreeNode|nil
-    while node ~= nil and node.uuid ~= node.parent do
-      local nodestate = statemap[node.uuid] ---@type era.m.picker.view.filetree.INodeState|nil
+    local parentuuid = filetree:parent(fileuuid) ---@type string|nil
+    while parentuuid ~= nil and parentuuid ~= filetree.root do
+      local nodestate = statemap[parentuuid] ---@type era.m.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
         break
       end
@@ -431,8 +431,8 @@ function M:insert_filepath(filepath, with_locations)
         tick_selected = 0,
         tick_selected_maximum = 0,
       }
-      statemap[node.uuid] = nodestate
-      node = filetree:retrieve(node.parent) ---@type stl.c.IFiletreeNode|nil
+      statemap[parentuuid] = nodestate
+      parentuuid = filetree:parent(parentuuid)
     end
 
     ---@type era.m.picker.view.filetree.IFileNodeState
@@ -534,10 +534,9 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
         end
 
         local fileuuid = stl.c.Filetree.uuid(filepath) ---@type string
-        local filenode = filetree:retrieve(fileuuid) ---@type stl.c.IFiletreeNode|nil
         local nodestate = statemap[fileuuid]
 
-        if filenode ~= nil and nodestate ~= nil then
+        if filetree:contains(fileuuid) and nodestate ~= nil then
           local locationuuid = string.format("%s:%d:%d", fileuuid, lnum, col or 0) ---@type string
 
           ---@type era.m.picker.view.filetree.ILocationNodeState
@@ -657,8 +656,8 @@ function M:render_listview(params)
   local tick_matched = self._tick_matched ---@type integer
 
   local rootuuid = params.rootuuid ~= nil and params.rootuuid or filetree.root ---@type string
-  local rootnode = filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
-  if rootnode == nil then
+  local rootdata = filetree:get(rootuuid) ---@type stl.c.IFiletreeNodeData|nil
+  if rootdata == nil then
     stl.reporter.error({
       from = self.fullname,
       subject = "render_listview",
@@ -677,14 +676,14 @@ function M:render_listview(params)
       local uuid = uuids[lnum] ---@type string
       local nodestate = statemap[uuid] ---@type era.m.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-        local node = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
-        if node ~= nil then
+        local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+        if data ~= nil then
           local row = lnum - 1 ---@type integer
-          local offset_final = #indents[lnum] + #node.data.fileicon + 1 ---@type integer
-          local rootpath = rootnode.data.filepath ---@type string
-          local displayed_filepath = #rootpath < 2 and node.data.filepath or node.data.filepath:sub(#rootpath + 2) ---@type string
+          local offset_final = #indents[lnum] + #data.fileicon + 1 ---@type integer
+          local rootpath = rootdata.filepath ---@type string
+          local displayed_filepath = #rootpath < 2 and data.filepath or data.filepath:sub(#rootpath + 2) ---@type string
           local L = #displayed_filepath ---@type integer
-          local offset_filepath = #node.data.filepath - L ---@type integer
+          local offset_filepath = #data.filepath - L ---@type integer
 
           local matches = nodestate.cache_match.matches ---@type dot.t.IMatchPoint[]
           for _, m in ipairs(matches) do
@@ -737,13 +736,13 @@ function M:render_treeview(params)
         and nodestate.tick_matched == tick_matched
         and nodestate.cache_match ~= nil
       then
-        local node = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
-        if node ~= nil then
+        local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+        if data ~= nil then
           local row = lnum - 1 ---@type integer
-          local offset_final = #indents[lnum] + #node.data.fileicon + 1 ---@type integer
-          local basename = node.data.basename ---@type string
+          local offset_final = #indents[lnum] + #data.fileicon + 1 ---@type integer
+          local basename = data.basename ---@type string
           local L = #basename ---@type integer
-          local offset_basename = #node.data.filepath - L ---@type integer
+          local offset_basename = #data.filepath - L ---@type integer
 
           local matches = nodestate.cache_match.matches ---@type dot.t.IMatchPoint[]
           for _, m in ipairs(matches) do
@@ -846,11 +845,16 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   local basenames = {} ---@type string[]
   basenames[folded_depth + 1] = basename ---@type string
 
-  local o = node ---@type stl.c.IFiletreeNode
+  local uuid = node.uuid ---@type string
+  local current_basename = basename ---@type string
   for index = folded_depth, 1, -1 do
-    local uuid_parent = o.parent ---@type string
-    o = tree:retrieve(uuid_parent) or o ---@type stl.c.IFiletreeNode
-    basenames[index] = o.data.basename ---@type string
+    local parentuuid = tree:parent(uuid) ---@type string|nil
+    local parentdata = parentuuid ~= nil and tree:get(parentuuid) or nil ---@type stl.c.IFiletreeNodeData|nil
+    if parentuuid ~= nil and parentdata ~= nil then
+      uuid = parentuuid
+      current_basename = parentdata.basename
+    end
+    basenames[index] = current_basename
   end
 
   local start_index = 1 ---@type integer

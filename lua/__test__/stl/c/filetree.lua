@@ -67,13 +67,13 @@ t:test("reset stores slash-only relative and location identities", function()
       "space dir/项目/#notes.lua",
     }, true)
 
-    local cwdnode = tree:retrieve(Filetree.uuid(canonical_cwd))
-    t.assert_true(cwdnode ~= nil and cwdnode.data.filetype == "directory", "canonical cwd node")
+    local cwddata = tree:get(Filetree.uuid(canonical_cwd))
+    t.assert_true(cwddata ~= nil and cwddata.filetype == "directory", "canonical cwd node")
 
     for _, filepath in ipairs(expected) do
-      local node = tree:retrieve(Filetree.uuid(filepath))
-      t.assert_true(node ~= nil, "node exists: " .. filepath)
-      t.assert_eq(filepath, node.data.filepath, "stored filepath")
+      local data = tree:get(Filetree.uuid(filepath))
+      t.assert_true(data ~= nil, "node exists: " .. filepath)
+      t.assert_eq(filepath, data.filepath, "stored filepath")
     end
 
     local stack = { tree.root }
@@ -107,9 +107,9 @@ t:test("reset stores slash-only drive and UNC-style identities", function()
     tree:reset(cwd, { absolute, outside, unc }, false)
 
     for _, filepath in ipairs(expected) do
-      local node = tree:retrieve(Filetree.uuid(filepath))
-      t.assert_true(node ~= nil, "node exists: " .. filepath)
-      t.assert_eq(filepath, node.data.filepath, "stored filepath")
+      local data = tree:get(Filetree.uuid(filepath))
+      t.assert_true(data ~= nil, "node exists: " .. filepath)
+      t.assert_eq(filepath, data.filepath, "stored filepath")
     end
   end)
 end)

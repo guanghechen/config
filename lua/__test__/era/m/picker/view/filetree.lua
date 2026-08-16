@@ -27,14 +27,16 @@ local function setup(inserted)
   local ancestor = { uuid = "/a", parent = "/" }
   local nodes = { [root.uuid] = root, [ancestor.uuid] = ancestor }
   local filetree = {
+    root = root.uuid,
     insert_directory_absolute = function()
       return inserted
     end,
     insert_file_absolute = function()
       return inserted
     end,
-    retrieve = function(_, uuid)
-      return nodes[uuid]
+    parent = function(_, uuid)
+      local node = nodes[uuid] or inserted
+      return node.uuid == root.uuid and nil or node.parent
     end,
   }
 
@@ -122,6 +124,14 @@ t:test("reset_filepaths restores each location once across top-level subtrees", 
   }
   local filetree = {
     root = "/",
+    contains = function(_, uuid)
+      for _, node in ipairs(nodes) do
+        if node.uuid == uuid then
+          return true
+        end
+      end
+      return false
+    end,
     children = function(_, uuid)
       if uuid == "/" then
         return { nodes[1].uuid, nodes[3].uuid }

@@ -652,11 +652,16 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   local basenames = {} ---@type string[]
   basenames[folded_depth + 1] = basename ---@type string
 
-  local o = node ---@type stl.c.IFiletreeNode
+  local uuid = node.uuid ---@type string
+  local current_basename = basename ---@type string
   for index = folded_depth, 1, -1 do
-    local uuid_parent = o.parent ---@type string
-    o = tree:retrieve(uuid_parent) or o ---@type stl.c.IFiletreeNode
-    basenames[index] = o.data.basename ---@type string
+    local parentuuid = tree:parent(uuid) ---@type string|nil
+    local parentdata = parentuuid ~= nil and tree:get(parentuuid) or nil ---@type stl.c.IFiletreeNodeData|nil
+    if parentuuid ~= nil and parentdata ~= nil then
+      uuid = parentuuid
+      current_basename = parentdata.basename
+    end
+    basenames[index] = current_basename
   end
 
   local start_index = 1 ---@type integer
