@@ -1,9 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.tree" ---@type string
 
----@alias stl.c.ITreeNodeSorter
----| fun(left: stl.c.ITreeNode, right: stl.c.ITreeNode): boolean
-
 ---@class stl.c.ITreeNode
 ---@field public uuid                   string
 ---@field public parent                 string

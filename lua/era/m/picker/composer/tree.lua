@@ -39,6 +39,9 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field public toggle_node_recursively fun(): nil
 ---@field public toggle_selection       fun(): nil
 
+---@alias era.m.picker.composer.tree.INodeSorter
+---| fun(left: table, right: table): boolean
+
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.m.picker.ITreeComposerProps
@@ -48,7 +51,7 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
----@field public node_sorter            stl.c.ITreeNodeSorter
+---@field public node_sorter            era.m.picker.composer.tree.INodeSorter
 ---
 ---@field public keymaps_common         ?stl.t.IKeymap[]
 ---@field public keymaps_finder         ?stl.t.IKeymap[]
@@ -101,7 +104,7 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field public flag_viewtype          stl.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _node_sorter        stl.c.ITreeNodeSorter
+---@field protected _node_sorter        era.m.picker.composer.tree.INodeSorter
 ---@field protected _tree               stl.c.Tree
 ---@field protected _composer           era.m.picker.BasicComposer
 ---@field protected _plainfile          era.view.Plainfile
@@ -132,7 +135,7 @@ function M.new(props)
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
-  local node_sorter = props.node_sorter ---@type stl.c.ITreeNodeSorter
+  local node_sorter = props.node_sorter ---@type era.m.picker.composer.tree.INodeSorter
 
   local o_search_pattern = props.search_pattern ---@type stl.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
@@ -333,8 +336,7 @@ function M.new(props)
         end
 
         local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-        local leafnode = tree:retrieve(leafuuid) ---@type stl.c.ITreeNode|nil
-        if leafnode == nil then
+        if not tree:contains(leafuuid) then
           return
         end
 
@@ -346,13 +348,13 @@ function M.new(props)
     end,
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = tree:retrieve(rootuuid) ---@type stl.c.ITreeNode|nil
-      if rootnode and rootnode.parent ~= rootuuid then
+      local parentuuid = tree:parent(rootuuid) ---@type string|nil
+      if parentuuid ~= nil then
         treeview:mark_cache_listview_dirty()
-        self._uuid_root = rootnode.parent ---@type string
+        self._uuid_root = parentuuid ---@type string
         self:mark_result_dirty()
 
-        on_attached(self, rootnode.parent)
+        on_attached(self, parentuuid)
       end
     end,
     goto_lnum_lastchild = function()
@@ -963,40 +965,21 @@ function M:insert(parentuuid, uuid, data)
   self:__health__()
 
   local tree = self._tree ---@type stl.c.Tree
-  local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
-  if node ~= nil then
+  if tree:contains(uuid) then
     if tree:parent(uuid) == parentuuid then
       return tree:update(uuid, data)
     end
-    local parent = tree:retrieve(parentuuid) ---@type stl.c.ITreeNode|nil
-    if parent == nil then
+    if not tree:contains(parentuuid) then
       error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
     end
-    local candidate = {
-      uuid = uuid,
-      parent = parentuuid,
-      children = node.children,
-      depth = parent.depth + 1,
-      data = data,
-      dirty_co = false,
-    } ---@type stl.c.ITreeNode
-    tree:move(uuid, parentuuid, self:__resolve_insert_index__(parentuuid, candidate))
+    tree:move(uuid, parentuuid, self:__resolve_insert_index__(parentuuid, data))
     return tree:update(uuid, data)
   end
 
-  local parent = tree:retrieve(parentuuid) ---@type stl.c.ITreeNode|nil
-  if parent == nil then
+  if not tree:contains(parentuuid) then
     error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
   end
-  local candidate = {
-    uuid = uuid,
-    parent = parentuuid,
-    children = {},
-    depth = parent.depth + 1,
-    data = data,
-    dirty_co = false,
-  } ---@type stl.c.ITreeNode
-  return tree:insert(parentuuid, uuid, data, self:__resolve_insert_index__(parentuuid, candidate))
+  return tree:insert(parentuuid, uuid, data, self:__resolve_insert_index__(parentuuid, data))
 end
 
 ---@return boolean
@@ -1039,8 +1022,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._tree:retrieve(rootuuid) ---@type stl.c.ITreeNode|nil
-  if node == nil then
+  if not self._tree:contains(rootuuid) then
     stl.reporter.error({
       from = __module_name__,
       subject = "attach",
@@ -1102,14 +1084,14 @@ end
 
 ---@protected
 ---@param parentuuid                    string
----@param candidate                     stl.c.ITreeNode
+---@param candidate                     table
 ---@return integer
 function M:__resolve_insert_index__(parentuuid, candidate)
   local tree = self._tree ---@type stl.c.Tree
   local children = tree:children(parentuuid) ---@type string[]
-  local sorter = self._node_sorter ---@type stl.c.ITreeNodeSorter
+  local sorter = self._node_sorter ---@type era.m.picker.composer.tree.INodeSorter
   for index, childuuid in ipairs(children) do
-    local child = tree:retrieve(childuuid) ---@type stl.c.ITreeNode
+    local child = tree:get(childuuid) ---@type table
     if sorter(candidate, child) then
       return index
     end
@@ -1184,25 +1166,6 @@ function M:__resolve_confirmation__(nodeuuid)
   self._on_confirm(self, { nodeuuid })
 end
 
----@param nodeuuid                      string
----@return stl.c.ITreeNode
----@return era.view.tree.INodeState
-function M:__retrieve__(nodeuuid)
-  ---@type era.view.tree.INodeState|nil
-  local nodestate = self._treeview:retrieve(nodeuuid)
-  if nodestate == nil then
-    error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
-  end
-
-  ---@type stl.c.ITreeNode|nil
-  local node = self._tree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
-  if node == nil then
-    error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
-  end
-
-  return node, nodestate
-end
-
 ---@return string|nil
 ---@return integer
 function M:__retrieve_nodeuuid__()
@@ -1256,12 +1219,15 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  local node = self._tree:retrieve(nodeuuid) ---@type stl.c.ITreeNode|nil
-  if node == nil then
+  local tree = self._tree ---@type stl.c.IReadonlyTree
+  if not tree:contains(nodeuuid) then
     return nil, nil
   end
 
-  local parentuuid = node.parent ---@type string
+  local parentuuid = tree:parent(nodeuuid) ---@type string|nil
+  if parentuuid == nil then
+    return nil, nil
+  end
   local lnum_parent = self._retriever:retrieve_lnum(parentuuid) ---@type integer|nil
   return lnum_parent, parentuuid
 end
@@ -1271,18 +1237,28 @@ end
 ---@param recursively                   boolean
 ---@return nil
 function M:__toggle_node__(nodeuuid, open, recursively)
-  local node, nodestate = self:__retrieve__(nodeuuid)
+  local nodestate = self._treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
+  if nodestate == nil then
+    error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
+  end
+
+  local treeuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
+  local tree = self._tree ---@type stl.c.IReadonlyTree
+  if not tree:contains(treeuuid) then
+    error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
+  end
 
   local composer = self._composer ---@type era.m.picker.BasicComposer
   local treeview = self._treeview ---@type era.m.picker.TreeView
   if nodestate.nodetype == "container" then
-    treeview:collapse(node.uuid, "toggle", recursively)
+    treeview:collapse(treeuuid, "toggle", recursively)
     composer:mark_result_dirty()
     return
   end
 
-  if nodestate.nodetype == "leaf" and #node.children > 0 then
-    treeview:collapse(node.uuid, "toggle", false)
+  local children = tree:children(treeuuid) ---@type string[]
+  if nodestate.nodetype == "leaf" and #children > 0 then
+    treeview:collapse(treeuuid, "toggle", false)
     composer:mark_result_dirty()
     return
   end

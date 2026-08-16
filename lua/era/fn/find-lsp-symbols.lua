@@ -773,8 +773,8 @@ picker = era.m.picker.TreeComposer.new({
   height = 0.9,
   width = 0.9,
   node_sorter = function(a, b)
-    local ad = a.data or {} ---@type era.fn.find_lsp_symbols.ISymbolData
-    local bd = b.data or {} ---@type era.fn.find_lsp_symbols.ISymbolData
+    local ad = a or {} ---@type era.fn.find_lsp_symbols.ISymbolData
+    local bd = b or {} ---@type era.fn.find_lsp_symbols.ISymbolData
 
     local a_line = ad.lnum or 0
     local b_line = bd.lnum or 0
