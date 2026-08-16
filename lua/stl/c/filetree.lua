@@ -62,6 +62,18 @@ local FILETYPE_PRIORITY_MAP = {
   file = 3,
 }
 
+---@param left                          stl.c.IFiletreeNode
+---@param right                         stl.c.IFiletreeNode
+---@return boolean
+local function compare_nodes(left, right)
+  if left.data.filetype == right.data.filetype then
+    return left.data.basename < right.data.basename
+  end
+  local left_priority = FILETYPE_PRIORITY_MAP[left.data.filetype] or 0 ---@type integer
+  local right_priority = FILETYPE_PRIORITY_MAP[right.data.filetype] or 0 ---@type integer
+  return left_priority > right_priority
+end
+
 ---@class stl.c.IFiletreeProps
 ---@field public name                   string
 
@@ -220,27 +232,65 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
-  ---@type stl.c.Tree
-  local tree = stl.c.Tree.new({
-    name = name,
-    fullname = fullname,
-    rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true),
-    node_sorter = function(left, right)
-      ---@cast left                     stl.c.IFiletreeNode
-      ---@cast right                    stl.c.IFiletreeNode
-      if left.data.filetype == right.data.filetype then
-        return left.data.basename < right.data.basename
-      end
-
-      local left_priority = FILETYPE_PRIORITY_MAP[left.data.filetype] or 0 ---@type integer
-      local right_priority = FILETYPE_PRIORITY_MAP[right.data.filetype] or 0 ---@type integer
-      return left_priority > right_priority
-    end,
-  })
+  local rootdata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true)
+  local tree = stl.c.Tree.new("__virtual_root__", rootdata)
+  tree.fullname = fullname
 
   local self = setmetatable(tree, M)
   ---@cast self                         stl.c.Filetree
 
+  self:insert(self.root, FILETREE_ROOT_UUID, rootdata)
+
+  return self
+end
+
+---@return stl.c.Filetree
+function M:clear()
+  stl.c.Tree.clear(self)
+  local rootdata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true)
+  self:insert(self.root, FILETREE_ROOT_UUID, rootdata)
+  return self
+end
+
+---@param parent                        string
+---@param uuid                          string
+---@param data                          stl.c.IFiletreeNodeData
+---@return stl.c.IFiletreeNode
+function M:insert(parent, uuid, data)
+  self:__health__()
+
+  local node = self:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
+  if node ~= nil then
+    if self:parent(uuid) == parent then
+      return self:update(uuid, data) ---@type stl.c.IFiletreeNode
+    end
+    stl.c.Tree.move(self, uuid, parent)
+    node = self:update(uuid, data) ---@type stl.c.IFiletreeNode
+  else
+    node = stl.c.Tree.insert(self, parent, uuid, data) ---@type stl.c.IFiletreeNode
+  end
+  local parentnode = self:retrieve(parent) ---@type stl.c.IFiletreeNode
+  parentnode.dirty_co = true
+  return node
+end
+
+---@param nodeuuid                      string
+---@return stl.c.Filetree
+function M:remove(nodeuuid)
+  self:__health__()
+  if nodeuuid == FILETREE_ROOT_UUID then
+    return self:clear()
+  end
+  if not self:contains(nodeuuid) then
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "remove",
+      message = string.format("Node with uuid '%s' does not exist.", nodeuuid),
+      details = { uuid = nodeuuid },
+    })
+    return self
+  end
+  stl.c.Tree.remove(self, nodeuuid)
   return self
 end
 
@@ -261,7 +311,7 @@ function M:insert_directory_absolute(dirpath)
     local p = "" ---@type string
     local uuid_parent = FILETREE_ROOT_UUID ---@type string
 
-    if stl.env.IS_WIN then
+    if #pieces[1] == 2 and pieces[1]:sub(2, 2) == ":" then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
@@ -343,7 +393,7 @@ function M:insert_file_absolute(filepath)
     local p = "" ---@type string
     local uuid_parent = FILETREE_ROOT_UUID ---@type string
 
-    if stl.env.IS_WIN then
+    if #pieces[1] == 2 and pieces[1]:sub(2, 2) == ":" then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
@@ -440,9 +490,6 @@ function M:reset(cwd, filepaths, with_locations)
     return self
   end
 
-  local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type stl.c.IFiletreeNodeData, string
-  self:insert(rootuuid, rootuuid, rootdata)
-
   cwd = yoz.canonical_path.from_os_path(cwd, false)
   local P = cwd == "/" and "/" or (cwd .. "/") ---@type string
   local L = #P ---@type integer
@@ -490,6 +537,19 @@ function M:reset(cwd, filepaths, with_locations)
     end
   end
   return self
+end
+
+---@protected
+---@param node                          stl.c.IFiletreeNode
+---@return nil
+function M:__sort_children__(node)
+  node.dirty_co = false
+  if #node.children > 1 then
+    local nodemap = self._nodemap ---@type table<string, stl.c.IFiletreeNode>
+    table.sort(node.children, function(left_uuid, right_uuid)
+      return compare_nodes(nodemap[left_uuid], nodemap[right_uuid])
+    end)
+  end
 end
 
 ----------------------------------------------------------------------------------------------------

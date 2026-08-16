@@ -106,4 +106,38 @@ t:test("reset stores slash-only drive and UNC-style identities", function()
   end)
 end)
 
+t:test("strict topology keeps filesystem ordering feature-owned", function()
+  local tree = Filetree.new({ name = "order" })
+  local root = tree:children(tree.root)[1]
+  local zfile = tree:insert_file_absolute("/z.lua")
+  local bdir = tree:insert_directory_absolute("/b")
+  local afile = tree:insert_file_absolute("/a.lua")
+  local adir = tree:insert_directory_absolute("/a")
+
+  local children = tree:children(root)
+  t.assert_eq(adir.uuid, children[1], "alphabetical first directory")
+  t.assert_eq(bdir.uuid, children[2], "alphabetical second directory")
+  t.assert_eq(afile.uuid, children[3], "alphabetical first file")
+  t.assert_eq(zfile.uuid, children[4], "alphabetical second file")
+end)
+
+t:test("empty reset preserves the actual filesystem root", function()
+  local tree = Filetree.new({ name = "empty-reset" })
+  tree:reset("/workspace", {}, false)
+  local root = tree:children(tree.root)[1]
+  t.assert_true(root ~= nil, "actual root remains after empty reset")
+  local file = tree:insert_file_absolute("/after.lua")
+  t.assert_true(file ~= nil and tree:contains(file.uuid), "insert works after empty reset")
+end)
+
+t:test("clear preserves the actual filesystem root", function()
+  local tree = Filetree.new({ name = "clear" })
+  tree:insert_file_absolute("/before.lua")
+  tree:clear()
+  local root = tree:children(tree.root)[1]
+  t.assert_true(root ~= nil, "actual root remains after clear")
+  local file = tree:insert_file_absolute("/after.lua")
+  t.assert_true(file ~= nil and tree:contains(file.uuid), "insert works after clear")
+end)
+
 t:run()
