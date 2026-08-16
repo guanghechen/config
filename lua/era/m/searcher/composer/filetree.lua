@@ -2335,7 +2335,6 @@ function M:__apply_search_result__(context, result)
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
 
   local items = result.items ---@type era.m.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = result.filematch_map ---@type table<string, era.m.searcher.view.filetree.IResolvedFileMatch>
 
   local filepaths = {} ---@type string[]
   local uuids = {} ---@type string[]
@@ -2359,86 +2358,7 @@ function M:__apply_search_result__(context, result)
   end
 
   self:reset_filepaths(rootpath, cwd, filepaths)
-  treeview:mark_cache_match_dirty()
-
-  local tick_matched = treeview._tick_matched ---@type integer
-  local statemap = treeview.statemap ---@type table<string, era.m.searcher.view.filetree.INodeState>
-
-  do
-    local N, i, j = #items, 1, 0 ---@type integer, integer, integer
-    while i <= N do
-      local nodeuuid = items[i].uuid ---@type string
-
-      j = i + 1 ---@type integer
-      while j <= N and items[j].uuid == nodeuuid do
-        j = j + 1
-      end
-
-      local leafnode = statemap[nodeuuid] ---@type era.m.searcher.view.filetree.INodeState|nil
-      if leafnode == nil then
-        stl.reporter.error({
-          from = self.fullname,
-          subject = "__search__",
-          message = string.format("Cannot retrieve node state by the given uuid: %s", nodeuuid),
-          details = {
-            nodeuuid = nodeuuid,
-            items = vim.list_slice(items, i, j - 1),
-            N = N,
-          },
-        })
-      else
-        leafnode.filematch = filematch_map[nodeuuid]
-
-        local L = 0 ---@type integer
-        local locations = leafnode.locations or {} ---@type era.m.searcher.view.filetree.ILeafLocationState[]
-        for k = i, j - 1, 1 do
-          local item = items[k] ---@type era.m.searcher.view.filetree.ISearchedItem
-
-          ---@type era.m.searcher.view.filetree.ILeafLocationState
-          local location = {
-            nodetype = "location",
-            leafuuid = nodeuuid,
-            locationuuid = string.format("%s:%d:%d", nodeuuid, item.lnum, item.col),
-            tick_invisible = 0,
-            lnum = item.lnum,
-            col = item.col,
-            text = item.text,
-            highlights = item.highlights,
-
-            match = item,
-          }
-
-          statemap[location.locationuuid] = location
-
-          L = L + 1 ---@type integer
-          locations[L] = location
-        end
-        stl.table.truncate_inline(locations, L)
-        leafnode.locations = locations
-        leafnode.tick_matched = tick_matched
-      end
-
-      i = j
-    end
-  end
-
-  filetree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
-    for _, uuid in ipairs(uuids) do
-      local o = nodemap[uuid] ---@type stl.c.IFiletreeNode
-
-      for _ = o.depth - 1, 1, -1 do
-        o = nodemap[o.parent] ---@type stl.c.IFiletreeNode
-
-        local s = statemap[o.uuid]
-        if s == nil or s.tick_matched == tick_matched then
-          break
-        end
-
-        s.tick_matched = tick_matched
-      end
-    end
-  end)
+  treeview:publish_search_result(result, uuids)
 
   if frecency ~= nil then
     stl.table.stable_sort(uuids, function(a, b)
@@ -2451,7 +2371,6 @@ function M:__apply_search_result__(context, result)
   self._published_search_inputs = context.inputs
   self._published_search_limit_reached = result.limit_reached
   self._uuids_order = uuids
-  treeview:mark_cache_treeview_dirty()
   self:mark_result_flags_dirty()
   self:mark_result_dirty()
 end
@@ -2615,19 +2534,7 @@ function M:__replace_file__(node, nodestate)
   })
 
   if succeed == true then
-    local k = 0 ---@type integer
-    local statemap = treeview.statemap ---@type table<string, era.m.searcher.view.filetree.INodeState>
-
-    for i = 1, L, 1 do
-      local location = locations[i] ---@type era.m.searcher.view.filetree.ILeafLocationState
-      if treeview:isvisible(location.locationuuid) then
-        statemap[location.locationuuid] = nil
-      else
-        k = k + 1 ---@type integer
-        locations[k] = location ---@type era.m.searcher.view.filetree.ILeafLocationState
-      end
-    end
-    stl.table.truncate_inline(locations, k)
+    treeview:remove_visible_locations(nodestate)
   elseif replace_error ~= nil then
     stl.reporter.error({
       from = self.fullname,

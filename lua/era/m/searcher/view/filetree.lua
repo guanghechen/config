@@ -477,6 +477,109 @@ function M:reset_filepaths(cwd, filepaths)
   return self
 end
 
+---@param result                        era.m.searcher.view.filetree.ISearchResult
+---@param uuids                         string[]
+---@return era.m.searcher.FiletreeView
+function M:publish_search_result(result, uuids)
+  self:__health__()
+  self:mark_cache_match_dirty()
+
+  local filetree = self._tree ---@type stl.c.IFiletree
+  local tick_matched = self._tick_matched ---@type integer
+  local statemap = self.statemap ---@type table<string, era.m.searcher.view.filetree.INodeState>
+  local items = result.items ---@type era.m.searcher.view.filetree.ISearchedItem[]
+  local filematch_map = result.filematch_map ---@type table<string, era.m.searcher.view.filetree.IResolvedFileMatch>
+
+  local N, i, j = #items, 1, 0 ---@type integer, integer, integer
+  while i <= N do
+    local nodeuuid = items[i].uuid ---@type string
+    j = i + 1
+    while j <= N and items[j].uuid == nodeuuid do
+      j = j + 1
+    end
+
+    local leafnode = statemap[nodeuuid] ---@type era.m.searcher.view.filetree.INodeState|nil
+    if leafnode == nil then
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "publish_search_result",
+        message = string.format("Cannot retrieve node state by the given uuid: %s", nodeuuid),
+        details = { nodeuuid = nodeuuid, items = vim.list_slice(items, i, j - 1), N = N },
+      })
+    else
+      leafnode.filematch = filematch_map[nodeuuid]
+
+      local L = 0 ---@type integer
+      local locations = leafnode.locations or {} ---@type era.m.searcher.view.filetree.ILeafLocationState[]
+      for k = i, j - 1, 1 do
+        local item = items[k] ---@type era.m.searcher.view.filetree.ISearchedItem
+        local location = {
+          nodetype = "location",
+          leafuuid = nodeuuid,
+          locationuuid = string.format("%s:%d:%d", nodeuuid, item.lnum, item.col),
+          tick_invisible = 0,
+          lnum = item.lnum,
+          col = item.col,
+          text = item.text,
+          highlights = item.highlights,
+          match = item,
+        } ---@type era.m.searcher.view.filetree.ILeafLocationState
+        statemap[location.locationuuid] = location
+        L = L + 1
+        locations[L] = location
+      end
+      stl.table.truncate_inline(locations, L)
+      leafnode.locations = locations
+      leafnode.tick_matched = tick_matched
+    end
+
+    i = j
+  end
+
+  filetree:unsafe_traverse(nil, function(ctx)
+    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
+    for _, uuid in ipairs(uuids) do
+      local node = nodemap[uuid] ---@type stl.c.IFiletreeNode
+      for _ = node.depth - 1, 1, -1 do
+        node = nodemap[node.parent] ---@type stl.c.IFiletreeNode
+        local state = statemap[node.uuid]
+        if state == nil or state.tick_matched == tick_matched then
+          break
+        end
+        state.tick_matched = tick_matched
+      end
+    end
+  end)
+
+  self:mark_cache_treeview_dirty()
+  return self
+end
+
+---@param leafstate                     era.m.searcher.view.filetree.IFileNodeState
+---@return era.m.searcher.FiletreeView
+function M:remove_visible_locations(leafstate)
+  self:__health__()
+
+  local locations = leafstate.locations ---@type era.m.searcher.view.filetree.ILeafLocationState[]|nil
+  if locations == nil then
+    return self
+  end
+
+  local statemap = self.statemap ---@type table<string, era.m.searcher.view.filetree.INodeState>
+  local tick_invisible = self._tick_invisible ---@type integer
+  local count = 0 ---@type integer
+  for _, location in ipairs(locations) do
+    if location.tick_invisible ~= tick_invisible then
+      statemap[location.locationuuid] = nil
+    else
+      count = count + 1
+      locations[count] = location
+    end
+  end
+  stl.table.truncate_inline(locations, count)
+  return self
+end
+
 ----------------------------------------------------------------------------------------------------
 
 ---@type era.m.searcher.view.filetree.IListviewFileRenderer
