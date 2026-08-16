@@ -5,7 +5,7 @@ local view__mods = {
 
 ---@class stl.view
 ---@field public __mods                 stl.view.__mods
----@field public Treeview               stl.view.Treeview
+---@field public Treeview               stl.view.treeview
 local view = setmetatable({ __mods = view__mods }, {
   __index = function(t, k)
     local m = view__mods[k] ---@type string|nil

@@ -233,7 +233,6 @@ end
 ---@field protected _indent_hln         string
 ---@field protected _tree               stl.c.IReadonlyTree
 ---
----@field protected _count_selected     integer
 ---@field protected _dirty_selected     boolean
 ---@field protected _tick_invisible     integer
 ---@field protected _tick_matched       integer
@@ -274,7 +273,6 @@ function M.new(props)
   self._indent_hln = indent_hln
   self._tree = tree
 
-  self._count_selected = 0
   self._dirty_selected = false
   self._tick_invisible = 1
   self._tick_matched = 0
@@ -295,7 +293,6 @@ function M:clear()
   self:__health__()
 
   table.clear(self.statemap)
-  self._count_selected = 0
   self._dirty_selected = false
   self._tick_invisible = self._tick_invisible + 1
   self._tick_matched = self._tick_matched + 1
@@ -317,7 +314,6 @@ function M:dispose()
   self._indent_hln = nil
   self._tree = nil
 
-  self._count_selected = 0
   self._dirty_selected = nil
   self._tick_invisible = nil
   self._tick_matched = nil
@@ -339,13 +335,6 @@ end
 
 ---@param uuid                          string
 ---@return boolean
-function M:ismatched(uuid)
-  local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type era.view.tree.INodeState|nil
-  return nodestate ~= nil and nodestate.tick_matched ~= self._tick_matched
-end
-
----@param uuid                          string
----@return boolean
 function M:isselected(uuid)
   local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type era.view.tree.INodeState|nil
   return nodestate ~= nil and nodestate.tick_selected == self._tick_selected
@@ -356,11 +345,6 @@ end
 function M:isvisible(uuid)
   local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type era.view.tree.INodeState|nil
   return nodestate ~= nil and nodestate.tick_invisible ~= self._tick_invisible
-end
-
----@return integer
-function M:count_selected()
-  return self._count_selected
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -907,28 +891,6 @@ function M:collect_selected(root)
 end
 
 ---@param uuid                          string
----@return era.view.Tree
-function M:empty(uuid)
-  self:__health__()
-  local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
-
-  self._tree:quick_traverse(uuid, function(_, node)
-    if node.uuid ~= uuid then
-      local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-      if nodestate ~= nil then
-        if nodestate.locations ~= nil then
-          statemap[node.uuid] = nil
-          for _, location in ipairs(nodestate.locations) do
-            statemap[location.locationuuid] = nil ---@type nil
-          end
-        end
-      end
-    end
-  end)
-  return self
-end
-
----@param uuid                          string
 ---@param state                         era.view.tree.INodeState
 ---@return era.view.Tree
 function M:insert(uuid, state)
@@ -1033,12 +995,10 @@ function M:set_selected(nodeuuid, selected)
   if nodestate ~= nil then
     if selected then
       if nodestate.tick_selected ~= tick_selected then
-        self._count_selected = self._count_selected + 1
         nodestate.tick_selected = tick_selected ---@type integer
       end
     else
       if nodestate.tick_selected == tick_selected then
-        self._count_selected = self._count_selected - 1
         nodestate.tick_selected = -1 ---@type integer
       end
     end
@@ -1057,7 +1017,6 @@ function M:toggle_select(uuid, selected, only_visible)
 
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
   local tree = self._tree ---@type stl.c.IReadonlyTree
-  local count_selected = self._count_selected ---@type integer
   local tick_invisible = only_visible and self._tick_invisible or -1 ---@type integer
   local tick_selected = self._tick_selected ---@type integer
 
@@ -1069,7 +1028,6 @@ function M:toggle_select(uuid, selected, only_visible)
         and nodestate.tick_invisible ~= tick_invisible
         and nodestate.tick_selected ~= tick_selected
       then
-        count_selected = count_selected + 1
         nodestate.tick_selected = tick_selected ---@type integer
       end
     end)
@@ -1081,13 +1039,11 @@ function M:toggle_select(uuid, selected, only_visible)
         and nodestate.tick_invisible ~= tick_invisible
         and nodestate.tick_selected == tick_selected
       then
-        count_selected = count_selected + 1
         nodestate.tick_selected = -1 ---@type integer
       end
     end)
   end
 
-  self._count_selected = count_selected
   self._dirty_selected = true ---@type boolean
   return self
 end
@@ -1165,37 +1121,10 @@ function M:mark_node_invisible(nodeuuid)
   return self
 end
 
----@param uuid                          string
----@return era.view.Tree
-function M:mark_subroot_invisible(uuid)
-  self:__health__()
-
-  local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
-  local tree = self._tree ---@type stl.c.IReadonlyTree
-  local tick_invisible = self._tick_invisible ---@type integer
-
-  tree:quick_traverse(uuid, function(_, node)
-    local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-    if nodestate ~= nil then
-      nodestate.tick_invisible = tick_invisible ---@type integer
-    end
-  end)
-
-  return self
-end
-
 ---@return era.view.Tree
 function M:mark_cache_invisible_dirty()
   self:__health__()
   self._tick_invisible = self._tick_invisible + 1
-  return self
-end
-
----@return era.view.Tree
-function M:mark_cache_selected_dirty()
-  self:__health__()
-  self._dirty_selected = true
-  self._tick_selected = self._tick_selected + 1
   return self
 end
 
