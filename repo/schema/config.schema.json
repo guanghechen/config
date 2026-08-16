@@ -138,12 +138,97 @@
         "$ref": "#/$defs/linkGroupValue"
       }
     },
+    "relativeStepCwd": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/relativeWorktreePath"
+        },
+        {
+          "not": {
+            "pattern": "\\$\\{"
+          }
+        },
+        {
+          "not": {
+            "pattern": "(^\\s|\\s$|\\u0000)"
+          }
+        }
+      ]
+    },
+    "stepRun": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        {
+          "not": {
+            "pattern": "(^\\s|\\s$|\\u0000)"
+          }
+        }
+      ]
+    },
+    "environmentName": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "stepEnvironment": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/environmentName"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "not": {
+          "pattern": "\\u0000"
+        }
+      }
+    },
+    "stepObject": {
+      "type": "object",
+      "required": ["run"],
+      "properties": {
+        "run": {
+          "$ref": "#/$defs/stepRun"
+        },
+        "cwd": {
+          "$ref": "#/$defs/relativeStepCwd"
+        },
+        "env": {
+          "$ref": "#/$defs/stepEnvironment"
+        }
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/stepRun"
+        },
+        {
+          "$ref": "#/$defs/stepObject"
+        }
+      ]
+    },
+    "steps": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/step"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        }
+      ]
+    },
     "event": {
       "type": "object",
       "minProperties": 1,
       "properties": {
-        "action": {
-          "$ref": "#/$defs/nonEmptyString"
+        "steps": {
+          "$ref": "#/$defs/steps"
         },
         "link": {
           "$ref": "#/$defs/links"
