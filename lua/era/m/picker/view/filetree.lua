@@ -494,95 +494,79 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
   ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, with_locations)
-  filetree:unsafe_traverse(filetree.root, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
-    local rootnode = ctx.rootnode ---@type stl.c.IFiletreeNode
-
-    ---@param node                      stl.c.IFiletreeNode
-    ---@return nil
-    local function traverse(node)
-      if node.data.filetype == "directory" then
-        ---@type era.m.picker.view.filetree.IDirectoryNodeState
-        local nodestate = {
-          nodetype = "container",
-          collapsed = false,
-          tick_invisible = 0,
-          tick_matched = 0,
-          tick_selected = selected_set[node.uuid] and tick_selected or 0,
-          tick_selected_maximum = 0,
-        }
-        statemap[node.uuid] = nodestate
-
-        for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
-          if childnode ~= nil then
-            traverse(childnode)
-          end
-        end
-        return
-      end
-
-      if node.data.filetype == "file" then
-        ---@type era.m.picker.view.filetree.IFileNodeState
-        local nodestate = {
-          nodetype = "leaf",
-          collapsed = false,
-          tick_invisible = 0,
-          tick_matched = 0,
-          tick_selected = selected_set[node.uuid] and tick_selected or 0,
-        }
-        statemap[node.uuid] = nodestate
-        return
-      end
-
-      stl.reporter.error({
-        from = self.fullname,
-        subject = "reset_filepaths",
-        message = "Unexpected filetype",
-        details = {
-          nodeuuid = node.uuid,
-          nodedata = node.data,
-        },
-      })
+  filetree:quick_traverse(filetree.root, function(_, node)
+    if node.data.filetype == "directory" then
+      ---@type era.m.picker.view.filetree.IDirectoryNodeState
+      local nodestate = {
+        nodetype = "container",
+        collapsed = false,
+        tick_invisible = 0,
+        tick_matched = 0,
+        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected_maximum = 0,
+      }
+      statemap[node.uuid] = nodestate
+      return
     end
 
-    traverse(rootnode)
-
-    if with_locations then
-      for _, p in ipairs(filepaths) do
-        local filepath, lnum, col, col_end = stl.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
-        if lnum ~= nil then
-          if not yoz.path.is_absolute(filepath) then
-            filepath = cwd .. stl.env.PATH_SEP .. filepath ---@type string
-          end
-
-          local fileuuid = stl.c.Filetree.uuid(filepath) ---@type string
-          local filenode = nodemap[fileuuid] ---@type stl.c.IFiletreeNode|nil
-          local nodestate = statemap[fileuuid]
-
-          if filenode ~= nil and nodestate ~= nil then
-            local locationuuid = string.format("%s:%d:%d", fileuuid, lnum, col or 0) ---@type string
-
-            ---@type era.m.picker.view.filetree.ILocationNodeState
-            local location = {
-              nodetype = "location",
-              leafuuid = fileuuid,
-              locationuuid = locationuuid,
-              tick_invisible = 0,
-              lnum = lnum,
-              col = col,
-              col_end = col_end,
-            }
-            statemap[locationuuid] = location
-
-            local locations = nodestate.locations or {} ---@type era.m.picker.view.filetree.ILocationNodeState[]
-            locations[#locations + 1] = location ---@type era.m.picker.view.filetree.ILocationNodeState
-            nodestate.locations = locations ---@type era.m.picker.view.filetree.ILocationNodeState[]
-          end
-        end
-      end
+    if node.data.filetype == "file" then
+      ---@type era.m.picker.view.filetree.IFileNodeState
+      local nodestate = {
+        nodetype = "leaf",
+        collapsed = false,
+        tick_invisible = 0,
+        tick_matched = 0,
+        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+      }
+      statemap[node.uuid] = nodestate
+      return
     end
+
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "reset_filepaths",
+      message = "Unexpected filetype",
+      details = {
+        nodeuuid = node.uuid,
+        nodedata = node.data,
+      },
+    })
   end)
+
+  if with_locations then
+    for _, p in ipairs(filepaths) do
+      local filepath, lnum, col, col_end = stl.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
+      if lnum ~= nil then
+        if not yoz.path.is_absolute(filepath) then
+          filepath = cwd .. stl.env.PATH_SEP .. filepath ---@type string
+        end
+
+        local fileuuid = stl.c.Filetree.uuid(filepath) ---@type string
+        local filenode = filetree:retrieve(fileuuid) ---@type stl.c.IFiletreeNode|nil
+        local nodestate = statemap[fileuuid]
+
+        if filenode ~= nil and nodestate ~= nil then
+          local locationuuid = string.format("%s:%d:%d", fileuuid, lnum, col or 0) ---@type string
+
+          ---@type era.m.picker.view.filetree.ILocationNodeState
+          local location = {
+            nodetype = "location",
+            leafuuid = fileuuid,
+            locationuuid = locationuuid,
+            tick_invisible = 0,
+            lnum = lnum,
+            col = col,
+            col_end = col_end,
+          }
+          statemap[locationuuid] = location
+
+          local locations = nodestate.locations or {} ---@type era.m.picker.view.filetree.ILocationNodeState[]
+          locations[#locations + 1] = location ---@type era.m.picker.view.filetree.ILocationNodeState
+          nodestate.locations = locations ---@type era.m.picker.view.filetree.ILocationNodeState[]
+        end
+      end
+    end
+  end
 
   return self
 end
@@ -598,49 +582,36 @@ function M:restore_subtree(rootuuid, selected_set)
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
-  filetree:unsafe_traverse(rootuuid, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
-
-    ---@param node                      stl.c.IFiletreeNode
-    local function traverse(node)
-      if node.data.filetype == "directory" then
-        statemap[node.uuid] = {
-          nodetype = "container",
-          collapsed = false,
-          tick_invisible = 0,
-          tick_matched = 0,
-          tick_selected = selected_set[node.uuid] and tick_selected or 0,
-          tick_selected_maximum = 0,
-        }
-        for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
-          if childnode ~= nil then
-            traverse(childnode)
-          end
-        end
-        return
-      end
-
-      if node.data.filetype == "file" then
-        statemap[node.uuid] = {
-          nodetype = "leaf",
-          collapsed = false,
-          tick_invisible = 0,
-          tick_matched = 0,
-          tick_selected = selected_set[node.uuid] and tick_selected or 0,
-        }
-        return
-      end
-
-      stl.reporter.error({
-        from = self.fullname,
-        subject = "restore_subtree",
-        message = "Unexpected filetype",
-        details = { nodeuuid = node.uuid, nodedata = node.data },
-      })
+  filetree:quick_traverse(rootuuid, function(_, node)
+    if node.data.filetype == "directory" then
+      statemap[node.uuid] = {
+        nodetype = "container",
+        collapsed = false,
+        tick_invisible = 0,
+        tick_matched = 0,
+        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected_maximum = 0,
+      }
+      return
     end
 
-    traverse(ctx.rootnode)
+    if node.data.filetype == "file" then
+      statemap[node.uuid] = {
+        nodetype = "leaf",
+        collapsed = false,
+        tick_invisible = 0,
+        tick_matched = 0,
+        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+      }
+      return
+    end
+
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "restore_subtree",
+      message = "Unexpected filetype",
+      details = { nodeuuid = node.uuid, nodedata = node.data },
+    })
   end)
 
   self:mark_cache_treeview_dirty()

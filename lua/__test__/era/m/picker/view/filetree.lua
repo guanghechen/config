@@ -76,10 +76,10 @@ end)
 t:test("restore_subtree owns rebuilt state and selection ticks", function()
   local root = { uuid = "/a", children = { "/a/file" }, data = { filetype = "directory" } }
   local leaf = { uuid = "/a/file", children = {}, data = { filetype = "file" } }
-  local nodes = { [root.uuid] = root, [leaf.uuid] = leaf }
   local filetree = {
-    unsafe_traverse = function(_, _, callback)
-      callback({ nodemap = nodes, rootnode = root })
+    quick_traverse = function(_, _, callback)
+      callback(nil, root)
+      callback(nil, leaf)
     end,
   }
   t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
@@ -94,6 +94,62 @@ t:test("restore_subtree owns rebuilt state and selection ticks", function()
   t.assert_eq("leaf", view.statemap[leaf.uuid].nodetype, "file state")
   t.assert_eq(1, view.statemap[leaf.uuid].tick_selected, "selected file")
   t.assert_eq(1, view._tick_render_treeview, "tree cache invalidated")
+end)
+
+t:test("reset_filepaths restores each location once across top-level subtrees", function()
+  local filepath = "/workspace/a.lua"
+  local fileuuid = "file:" .. filepath
+  local nodes = {
+    { uuid = "/workspace", data = { filetype = "directory" } },
+    { uuid = fileuuid, data = { filetype = "file" } },
+    { uuid = "/archive", data = { filetype = "directory" } },
+  }
+  local filetree = {
+    root = "/",
+    reset = function() end,
+    retrieve = function(_, uuid)
+      return uuid == fileuuid and nodes[2] or nil
+    end,
+    quick_traverse = function(_, _, callback)
+      for _, node in ipairs(nodes) do
+        callback(nil, node)
+      end
+    end,
+  }
+  t:patch_table(table, "clear", function(target)
+    for key in pairs(target) do
+      target[key] = nil
+    end
+  end)
+  t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
+  t:patch_global("era", { view = { Tree = Tree } })
+  t:patch_global("stl", {
+    c = { Filetree = {
+      uuid = function(path)
+        return "file:" .. path
+      end,
+    } },
+    env = { PATH_SEP = "/" },
+    string = {
+      parse_filepath_with_location = function()
+        return filepath, 12, 3, nil
+      end,
+    },
+  })
+  t:patch_global("yoz", { path = {
+    is_absolute = function()
+      return true
+    end,
+  } })
+  local FiletreeView = assert(loadfile("lua/era/m/picker/view/filetree.lua"))()
+  local view = FiletreeView.new({ name = "test", tree = filetree })
+
+  view:reset_filepaths("/workspace", { filepath .. ":12:3" }, true)
+
+  local locations = view.statemap[fileuuid].locations
+  t.assert_eq(1, #locations, "location count")
+  t.assert_eq(12, locations[1].lnum, "location line")
+  t.assert_eq(3, locations[1].col, "location column")
 end)
 
 t:run()
