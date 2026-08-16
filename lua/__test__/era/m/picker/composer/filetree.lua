@@ -104,11 +104,11 @@ t:test("mutation actions cross only the OS boundary", function()
     local rootpath = "C:/workspace/project"
     local current_node = create_node(rootpath, "directory")
     local rootnode = current_node
-    composer.__retrieve_filenode__ = function()
-      return current_node
+    composer.__retrieve_file__ = function()
+      return current_node.uuid, current_node.data
     end
-    composer.__retrieve_rootnode__ = function()
-      return rootnode
+    composer.__retrieve_rootdata__ = function()
+      return rootnode.data
     end
 
     t:patch_table(composer.result, "get_winnr", function()
@@ -265,8 +265,9 @@ t:test("lexical consumers emit slash-only relative paths", function()
           copied = filepath
         end)
         t:patch_table(stl.reporter, "info", function() end)
-        composer.__retrieve_filenode__ = function()
-          return composer._filetree:retrieve(stl.c.Filetree.uuid(main_filepath))
+        composer.__retrieve_file__ = function()
+          local uuid = stl.c.Filetree.uuid(main_filepath)
+          return uuid, composer._filetree:get(uuid)
         end
         retrieve_action(composer, "filetree: copy filepath (relative)")()
         t.assert_eq("src/main.lua", copied, "copied relative filepath")

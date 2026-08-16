@@ -364,13 +364,13 @@ function M.new(props)
       on_attached(self, data.filepath)
     end,
     create_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
-      if filenode == nil then
+      local _, filedata = self:__retrieve_file__()
+      if filedata == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
-      if rootnode == nil then
+      local rootdata = self:__retrieve_rootdata__() ---@type stl.c.IFiletreeNodeData|nil
+      if rootdata == nil then
         return
       end
 
@@ -380,10 +380,10 @@ function M.new(props)
         return
       end
 
-      local rootpath = rootnode.data.filepath ---@type string
-      local nodepath = filenode.data.filepath ---@type string
+      local rootpath = rootdata.filepath ---@type string
+      local nodepath = filedata.filepath ---@type string
       local relpath = yoz.canonical_path.relative(rootpath, nodepath, false) ---@type string
-      if filenode.data.filetype == "directory" and #relpath > 0 then
+      if filedata.filetype == "directory" and #relpath > 0 then
         relpath = relpath .. "/" ---@type string
       end
 
@@ -487,13 +487,13 @@ function M.new(props)
       end
     end,
     remove_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
-      if filenode == nil then
+      local fileuuid, filedata = self:__retrieve_file__()
+      if fileuuid == nil or filedata == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
-      if rootnode == nil then
+      local rootdata = self:__retrieve_rootdata__() ---@type stl.c.IFiletreeNodeData|nil
+      if rootdata == nil then
         return
       end
 
@@ -503,10 +503,10 @@ function M.new(props)
         return
       end
 
-      local nodepath = filenode.data.filepath ---@type string
-      local rootpath = rootnode.data.filepath ---@type string
+      local nodepath = filedata.filepath ---@type string
+      local rootpath = rootdata.filepath ---@type string
       local relpath = yoz.canonical_path.relative(rootpath, nodepath, false) ---@type string
-      if filenode.data.filetype == "directory" and #relpath > 0 then
+      if filedata.filetype == "directory" and #relpath > 0 then
         relpath = relpath .. "/" ---@type string
       end
 
@@ -522,7 +522,7 @@ function M.new(props)
           return
         end
 
-        local isdir = filenode.data.filetype == "directory" ---@type boolean
+        local isdir = filedata.filetype == "directory" ---@type boolean
         local os_nodepath = yoz.canonical_path.to_os_path(nodepath) ---@type string
 
         local success = false ---@type boolean
@@ -542,7 +542,6 @@ function M.new(props)
           return
         end
 
-        local fileuuid = filenode.uuid ---@type string
         treeview:remove(fileuuid)
         if not isdir then
           stl.table.filter_inline(self._uuids_file, function(uuid)
@@ -581,13 +580,13 @@ function M.new(props)
       end
     end,
     rename_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
-      if filenode == nil then
+      local _, filedata = self:__retrieve_file__()
+      if filedata == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
-      if rootnode == nil then
+      local rootdata = self:__retrieve_rootdata__() ---@type stl.c.IFiletreeNodeData|nil
+      if rootdata == nil then
         return
       end
 
@@ -597,8 +596,8 @@ function M.new(props)
         return
       end
 
-      local filepath = filenode.data.filepath ---@type string
-      local rootpath = rootnode.data.filepath ---@type string
+      local filepath = filedata.filepath ---@type string
+      local rootpath = rootdata.filepath ---@type string
       local dirname = yoz.canonical_path.dirname(filepath, false) ---@type string
       local filename = yoz.canonical_path.basename(filepath) ---@type string
 
@@ -613,7 +612,7 @@ function M.new(props)
           or yoz.canonical_path.join(dirname, next_filename, true)
 
         -- Validate that source and destination types match
-        local source_is_dir = filenode.data.filetype == "directory"
+        local source_is_dir = filedata.filetype == "directory"
         local dest_is_dir = yoz.canonical_path.is_dirpath(next_filepath)
 
         if source_is_dir ~= dest_is_dir then
@@ -652,7 +651,7 @@ function M.new(props)
             end,
           }, function(choice)
             if choice == "Yes" then
-              local isdir = filenode.data.filetype == "directory"
+              local isdir = filedata.filetype == "directory"
               local success = era.fn.rename({
                 from = os_filepath,
                 to = os_next_filepath,
@@ -668,7 +667,7 @@ function M.new(props)
           return
         end
 
-        local isdir = filenode.data.filetype == "directory"
+        local isdir = filedata.filetype == "directory"
         local success = era.fn.rename({
           from = os_filepath,
           to = os_next_filepath,
@@ -709,13 +708,13 @@ function M.new(props)
       end
     end,
     move_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
-      if filenode == nil then
+      local _, filedata = self:__retrieve_file__()
+      if filedata == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
-      if rootnode == nil then
+      local rootdata = self:__retrieve_rootdata__() ---@type stl.c.IFiletreeNodeData|nil
+      if rootdata == nil then
         return
       end
 
@@ -725,7 +724,7 @@ function M.new(props)
         return
       end
 
-      local filepath = filenode.data.filepath ---@type string
+      local filepath = filedata.filepath ---@type string
 
       ---@param next_filepath           string|nil
       ---@return nil
@@ -738,7 +737,7 @@ function M.new(props)
         next_filepath = yoz.canonical_path.from_os_path(next_filepath, true)
 
         -- Validate that source and destination types match
-        local source_is_dir = filenode.data.filetype == "directory"
+        local source_is_dir = filedata.filetype == "directory"
         local dest_is_dir = yoz.canonical_path.is_dirpath(next_filepath)
 
         if source_is_dir ~= dest_is_dir then
@@ -777,7 +776,7 @@ function M.new(props)
             end,
           }, function(choice)
             if choice == "Yes" then
-              local isdir = filenode.data.filetype == "directory"
+              local isdir = filedata.filetype == "directory"
               local success = era.fn.rename({
                 from = os_filepath,
                 to = os_next_filepath,
@@ -793,7 +792,7 @@ function M.new(props)
           return
         end
 
-        local isdir = filenode.data.filetype == "directory"
+        local isdir = filedata.filetype == "directory"
         local success = era.fn.rename({
           from = os_filepath,
           to = os_next_filepath,
@@ -907,8 +906,8 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
-      if filenode == nil then
+      local _, filedata = self:__retrieve_file__()
+      if filedata == nil then
         return
       end
 
@@ -921,7 +920,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         era.fn.select_copy_filepath({
-          filepath = filenode.data.filepath,
+          filepath = filedata.filepath,
           winopts = {
             relative = "cursor",
             row = 1,
@@ -946,12 +945,12 @@ function M.new(props)
       end
     end,
     copy_node_filepath_absolute = function()
-      local filenode = self:__retrieve_filenode__()
-      if filenode == nil then
+      local _, filedata = self:__retrieve_file__()
+      if filedata == nil then
         return
       end
 
-      local filepath = filenode.data.filepath
+      local filepath = filedata.filepath
       stl.nvim.fn.copy(filepath)
       stl.reporter.info({
         from = fullname,
@@ -959,12 +958,12 @@ function M.new(props)
       })
     end,
     copy_node_filepath_relative = function()
-      local filenode = self:__retrieve_filenode__()
-      if filenode == nil then
+      local _, filedata = self:__retrieve_file__()
+      if filedata == nil then
         return
       end
 
-      local filepath = filenode.data.filepath
+      local filepath = filedata.filepath
       local cwd = yoz.canonical_path.get_cwd()
       local relative = yoz.canonical_path.relative(cwd, filepath, false)
       stl.nvim.fn.copy(relative)
@@ -2168,8 +2167,9 @@ function M:__retrieve__(nodeuuid)
   return treeuuid, data, nodestate
 end
 
----@return stl.c.IFiletreeNode|nil
-function M:__retrieve_filenode__()
+---@return string|nil
+---@return stl.c.IFiletreeNodeData|nil
+function M:__retrieve_file__()
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
     return
@@ -2186,8 +2186,8 @@ function M:__retrieve_filenode__()
   end
 
   local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type stl.c.IFiletreeNode|nil
-  return node
+  local data = self._filetree:get(fileuuid) ---@type stl.c.IFiletreeNodeData|nil
+  return fileuuid, data
 end
 
 ---@param from                          string Canonical filepath.
@@ -2241,11 +2241,9 @@ function M:__update_tree_after_rename__(from, to, isdir)
   scheduler_match:schedule()
 end
 
----@return stl.c.IFiletreeNode|nil
-function M:__retrieve_rootnode__()
-  local rootuuid = self._uuid_root ---@type string
-  local rootnode = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
-  return rootnode
+---@return stl.c.IFiletreeNodeData|nil
+function M:__retrieve_rootdata__()
+  return self._filetree:get(self._uuid_root) ---@type stl.c.IFiletreeNodeData|nil
 end
 
 ---@return string|nil
