@@ -101,6 +101,15 @@ t:test("restore_subtree owns rebuilt state and selection ticks", function()
   t.assert_eq("leaf", view.statemap[leaf.uuid].nodetype, "file state")
   t.assert_eq(1, view.statemap[leaf.uuid].tick_selected, "selected file")
   t.assert_eq(1, view._tick_render_treeview, "tree cache invalidated")
+
+  local visited = 0
+  view:traverse_filenode(root.uuid, function(uuid, data, nodestate)
+    visited = visited + 1
+    t.assert_eq(leaf.uuid, uuid, "visited file uuid")
+    t.assert_true(data == leaf.data, "visited file data")
+    t.assert_true(nodestate == view.statemap[leaf.uuid], "visited file state")
+  end)
+  t.assert_eq(1, visited, "visited file count")
 end)
 
 t:test("reset_filepaths restores each location once across top-level subtrees", function()

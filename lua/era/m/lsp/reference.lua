@@ -214,7 +214,7 @@ local function focus(title, method, additional_params)
 
     vim.schedule(function()
       local treeview = picker._treeview ---@type era.m.picker.FiletreeView
-      treeview:traverse_filenode(nil, function(node, nodestate)
+      treeview:traverse_filenode(nil, function(_, data, nodestate)
         if nodestate ~= nil and nodestate.locations ~= nil then
           local locations = nodestate.locations ---@type era.m.picker.view.filetree.ILocationNodeState[]
           local lnum_maximum = 1 ---@type integer
@@ -222,7 +222,7 @@ local function focus(title, method, additional_params)
             lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum
           end
 
-          local lines = vim.fn.readfile(node.data.filepath, "", lnum_maximum) ---@type string[]
+          local lines = vim.fn.readfile(data.filepath, "", lnum_maximum) ---@type string[]
           for _, location in ipairs(locations) do
             local line = lines[location.lnum] or "" ---@type string
             location.text = line

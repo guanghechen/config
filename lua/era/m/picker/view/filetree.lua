@@ -612,22 +612,21 @@ function M:restore_subtree(rootuuid, selected_set)
 end
 
 ---@param root                          string|nil
----@param handle                        fun(node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState): nil
----@return string[]
+---@param handle                        fun(uuid: string, data: stl.c.IFiletreeNodeData, nodestate: era.m.picker.view.filetree.IFileNodeState): nil
+---@return nil
 function M:traverse_filenode(root, handle)
   self:__health__()
 
+  local tree = self._tree ---@type stl.c.IReadonlyFiletree
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
-  local uuids = {} ---@type string[]
-
-  self._tree:quick_traverse(root, function(_, node)
-    local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
+  tree_traversal.preorder(tree, root, function(uuid)
+    local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.nodetype == "leaf" then
       ---@cast nodestate                era.m.picker.view.filetree.IFileNodeState
-      handle(node, nodestate)
+      local data = tree:get(uuid) ---@type stl.c.IFiletreeNodeData
+      handle(uuid, data, nodestate)
     end
   end)
-  return uuids
 end
 
 ----------------------------------------------------------------------------------------------------
