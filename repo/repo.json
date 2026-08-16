@@ -13,7 +13,9 @@
           "branch": "guanghechen",
           "editions": ["nix", "nix-remote", "osx", "win"],
           "on": {
-            "synced": "node cli/sync-config-vscode.mjs"
+            "synced": {
+              "steps": "node cli/sync-config-vscode.mjs"
+            }
           }
         },
         {
@@ -44,7 +46,9 @@
           "branch": "codex",
           "editions": ["nix", "osx", "win"],
           "on": {
-            "synced": "node script/cli/sync.mjs"
+            "synced": {
+              "steps": "node script/cli/sync.mjs"
+            }
           }
         },
         {
@@ -92,7 +96,9 @@
           "branch": "herdr",
           "editions": ["nix", "nix-remote", "osx"],
           "on": {
-            "synced": "node script/sync.mjs"
+            "synced": {
+              "steps": "node script/sync.mjs"
+            }
           }
         },
         {
@@ -131,7 +137,12 @@
           "branch": "nvim",
           "editions": ["nix", "nix-remote", "osx", "win"],
           "on": {
-            "synced": "node rust/script/build.mjs --force"
+            "changed": {
+              "steps": "node rust/script/build.mjs --force"
+            },
+            "synced": {
+              "steps": "node rust/script/build.mjs"
+            }
           }
         },
         {
@@ -142,7 +153,12 @@
           "branch": "nvim-nvchad",
           "editions": ["nix", "osx"],
           "on": {
-            "synced": "node rust/script/build.mjs --force"
+            "changed": {
+              "steps": "node rust/script/build.mjs --force"
+            },
+            "synced": {
+              "steps": "node rust/script/build.mjs"
+            }
           }
         },
         {
@@ -153,7 +169,9 @@
           "branch": "ora",
           "editions": ["nix", "nix-remote", "osx", "win"],
           "on": {
-            "synced": "pnpm install -y"
+            "changed": {
+              "steps": "pnpm install -y"
+            }
           }
         },
         {
@@ -184,21 +202,32 @@
           "branch": "tmux",
           "editions": ["nix", "nix-remote", "osx"],
           "on": {
-            "synced": "cd rust/ghc-tmux-status && cargo build --release"
+            "changed": {
+              "steps": [
+                {
+                  "cwd": "rust/ghc-tmux-status",
+                  "run": "cargo build --release"
+                }
+              ]
+            }
           }
         },
         {
           "branch": "tsuki",
           "editions": ["nix", "osx", "win"],
           "on": {
-            "synced": "pnpm install -y && pnpm build"
+            "changed": {
+              "steps": ["pnpm install -y", "pnpm build"]
+            }
           }
         },
         {
           "branch": "vsgit",
           "editions": ["nix", "osx", "win"],
           "on": {
-            "synced": "pnpm install -y && pnpm build && pnpm package"
+            "changed": {
+              "steps": ["pnpm install -y", "pnpm build", "pnpm package"]
+            }
           }
         },
         {
@@ -225,7 +254,9 @@
           "branch": "yoz",
           "editions": ["nix", "osx"],
           "on": {
-            "synced": "pnpm install -y"
+            "changed": {
+              "steps": "pnpm install -y"
+            }
           }
         },
         {
