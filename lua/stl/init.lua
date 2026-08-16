@@ -1,23 +1,3 @@
----@class stl.view.__mods
-local view__mods = {
-  Treeview = "stl.view.treeview",
-}
-
----@class stl.view
----@field public __mods                 stl.view.__mods
----@field public Treeview               stl.view.treeview
-local view = setmetatable({ __mods = view__mods }, {
-  __index = function(t, k)
-    local m = view__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class stl.c.__mods
 local c__mods = {
   BatchDisposable = "stl.c.batch_disposable",
@@ -240,7 +220,6 @@ local __mods = {
 ---@field public table                  stl.table
 ---@field public timer                  stl.timer
 ---@field public tmux                   stl.tmux
----@field public view                   stl.view
 ---@field public winhint                stl.winhint
 local M = setmetatable({
   __mods = __mods,
@@ -250,7 +229,6 @@ local M = setmetatable({
   git = git,
   lang = lang,
   nvim = nvim,
-  view = view,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

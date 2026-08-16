@@ -2,7 +2,7 @@
 --- Run with: nvim -l lua/__test__/stl/view/treeview.lua
 
 local harness = require("__test__.harness")
-local Treeview = require("stl.view.treeview")
+local treeview = require("stl.view.treeview")
 
 local t = harness.new("stl.view.treeview")
 
@@ -19,7 +19,7 @@ local CHILDREN = {
 ---@param collapsed? table<string, true>
 ---@return stl.view.TreeLayout
 local function layout(children_by_id, roots, collapsed)
-  return Treeview.layout({
+  return treeview.layout({
     roots = roots or { "a", "b" },
     children = function(id)
       return children_by_id[id] or {}
@@ -66,7 +66,7 @@ t:test("layout: traverses object-backed topology without copying children", func
   local branch = { id = "branch", children = { leaf } }
   local id_calls = {} ---@type table<string, integer>
 
-  local result = Treeview.layout({
+  local result = treeview.layout({
     roots = { branch },
     id = function(node)
       id_calls[node.id] = (id_calls[node.id] or 0) + 1
@@ -89,7 +89,7 @@ end)
 
 t:test("layout: collapsed nodes remain visible and skip child lookup", function()
   local child_calls = {} ---@type table<string, integer>
-  local result = Treeview.layout({
+  local result = treeview.layout({
     roots = { "a", "b" },
     collapsed = { a = true },
     children = function(id)
@@ -118,7 +118,7 @@ t:test("layout: folds single-child chains without losing node identity", functio
     x = {},
   } ---@type table<string, string[]>
 
-  local result = Treeview.layout({
+  local result = treeview.layout({
     roots = { "a", "x" },
     children = function(id)
       return children_by_id[id]
@@ -150,7 +150,7 @@ t:test("layout: folds single-child chains without losing node identity", functio
 end)
 
 t:test("layout: fold predicate controls each eligible edge", function()
-  local result = Treeview.layout({
+  local result = treeview.layout({
     roots = { "a" },
     children = function(id)
       return ({
@@ -172,7 +172,7 @@ end)
 
 t:test("layout: folded collapsed node skips child lookup", function()
   local child_calls = {} ---@type table<string, integer>
-  local result = Treeview.layout({
+  local result = treeview.layout({
     roots = { "a" },
     children = function(id)
       child_calls[id] = (child_calls[id] or 0) + 1
