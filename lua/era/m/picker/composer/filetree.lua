@@ -2238,65 +2238,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
     filetree:insert_file_absolute(filepath)
   end
 
-  local tick_selected = treeview._tick_selected ---@type integer
-  local statemap = treeview.statemap ---@type table<string, era.view.tree.INodeState>
-  ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
-
-  filetree:unsafe_traverse(to_nodeuuid, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
-
-    ---@param node                      stl.c.IFiletreeNode
-    ---@return nil
-    local function traverse(node)
-      if node.data.filetype == "directory" then
-        ---@type era.m.picker.view.filetree.IDirectoryNodeState
-        local nodestate = {
-          nodetype = "container",
-          collapsed = false,
-          tick_invisible = 0,
-          tick_matched = 0,
-          tick_selected = selected_set[node.uuid] and tick_selected or 0,
-          tick_selected_maximum = 0,
-        }
-        statemap[node.uuid] = nodestate
-
-        for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
-          if childnode ~= nil then
-            traverse(childnode)
-          end
-        end
-        return
-      end
-
-      if node.data.filetype == "file" then
-        ---@type era.m.picker.view.filetree.IFileNodeState
-        local nodestate = {
-          nodetype = "leaf",
-          collapsed = false,
-          tick_invisible = 0,
-          tick_matched = 0,
-          tick_selected = selected_set[node.uuid] and tick_selected or 0,
-        }
-        statemap[node.uuid] = nodestate
-        return
-      end
-
-      stl.reporter.error({
-        from = self.fullname,
-        subject = "reset_filepaths",
-        message = "Unexpected filetype",
-        details = {
-          nodeuuid = node.uuid,
-          nodedata = node.data,
-        },
-      })
-    end
-
-    traverse(ctx.rootnode)
-  end)
-
-  treeview:mark_cache_treeview_dirty()
+  treeview:restore_subtree(to_nodeuuid, selected_set)
   self:mark_result_dirty()
   scheduler_match:schedule()
 end

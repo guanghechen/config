@@ -564,6 +564,66 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
   return self
 end
 
+---@param rootuuid                     string
+---@param selected_set                 table<string, true>
+---@return era.m.picker.FiletreeView
+function M:restore_subtree(rootuuid, selected_set)
+  self:__health__()
+
+  local filetree = self._tree ---@type stl.c.IFiletree
+  local tick_selected = self._tick_selected ---@type integer
+  local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
+  ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
+
+  filetree:unsafe_traverse(rootuuid, function(ctx)
+    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
+
+    ---@param node                      stl.c.IFiletreeNode
+    local function traverse(node)
+      if node.data.filetype == "directory" then
+        statemap[node.uuid] = {
+          nodetype = "container",
+          collapsed = false,
+          tick_invisible = 0,
+          tick_matched = 0,
+          tick_selected = selected_set[node.uuid] and tick_selected or 0,
+          tick_selected_maximum = 0,
+        }
+        for _, uuid in ipairs(node.children) do
+          local childnode = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
+          if childnode ~= nil then
+            traverse(childnode)
+          end
+        end
+        return
+      end
+
+      if node.data.filetype == "file" then
+        statemap[node.uuid] = {
+          nodetype = "leaf",
+          collapsed = false,
+          tick_invisible = 0,
+          tick_matched = 0,
+          tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        }
+        return
+      end
+
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "restore_subtree",
+        message = "Unexpected filetype",
+        details = { nodeuuid = node.uuid, nodedata = node.data },
+      })
+    end
+
+    traverse(ctx.rootnode)
+  end)
+
+  self:mark_cache_treeview_dirty()
+  return self
+end
+
 ---@param root                          string|nil
 ---@param handle                        fun(node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState): nil
 ---@return string[]
