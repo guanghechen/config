@@ -587,8 +587,8 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
-      if filenode == nil then
+      local data = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNodeData|nil
+      if data == nil then
         return
       end
 
@@ -601,7 +601,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         era.fn.select_copy_filepath({
-          filepath = filenode.data.filepath,
+          filepath = data.filepath,
           winopts = {
             relative = "cursor",
             row = 1,
@@ -2608,7 +2608,7 @@ function M:__retrieve__(nodeuuid)
   return treeuuid, data, nodestate
 end
 
----@return stl.c.IFiletreeNode|nil
+---@return stl.c.IFiletreeNodeData|nil
 function M:__retrieve_filenode__()
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
@@ -2626,15 +2626,7 @@ function M:__retrieve_filenode__()
   end
 
   local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type stl.c.IFiletreeNode|nil
-  return node
-end
-
----@return stl.c.IFiletreeNode|nil
-function M:__retrieve_rootnode__()
-  local rootuuid = self._uuid_root ---@type string
-  local rootnode = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
-  return rootnode
+  return self._filetree:get(fileuuid) ---@type stl.c.IFiletreeNodeData|nil
 end
 
 ---@return string|nil
