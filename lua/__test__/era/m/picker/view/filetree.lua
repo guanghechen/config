@@ -76,10 +76,17 @@ end)
 t:test("restore_subtree owns rebuilt state and selection ticks", function()
   local root = { uuid = "/a", children = { "/a/file" }, data = { filetype = "directory" } }
   local leaf = { uuid = "/a/file", children = {}, data = { filetype = "file" } }
+  local nodes = { [root.uuid] = root, [leaf.uuid] = leaf }
   local filetree = {
-    quick_traverse = function(_, _, callback)
-      callback(nil, root)
-      callback(nil, leaf)
+    root = "/",
+    contains = function(_, uuid)
+      return nodes[uuid] ~= nil
+    end,
+    children = function(_, uuid)
+      return nodes[uuid] and nodes[uuid].children or nil
+    end,
+    get = function(_, uuid)
+      return nodes[uuid] and nodes[uuid].data or nil
     end,
   }
   t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
@@ -115,14 +122,17 @@ t:test("reset_filepaths restores each location once across top-level subtrees", 
       end
       return {}
     end,
+    get = function(_, uuid)
+      for _, node in ipairs(nodes) do
+        if node.uuid == uuid then
+          return node.data
+        end
+      end
+      return nil
+    end,
     reset = function() end,
     retrieve = function(_, uuid)
       return uuid == fileuuid and nodes[2] or nil
-    end,
-    quick_traverse = function(_, _, callback)
-      for _, node in ipairs(nodes) do
-        callback(nil, node)
-      end
     end,
   }
   t:patch_table(table, "clear", function(target)

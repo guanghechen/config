@@ -485,31 +485,32 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
   ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, with_locations)
-  filetree:quick_traverse(filetree.root, function(_, node)
-    if node.data.filetype == "directory" then
+  tree_traversal.preorder(filetree, filetree.root, function(uuid)
+    local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData
+    if data.filetype == "directory" then
       ---@type era.m.picker.view.filetree.IDirectoryNodeState
       local nodestate = {
         nodetype = "container",
         collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
-        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected = selected_set[uuid] and tick_selected or 0,
         tick_selected_maximum = 0,
       }
-      statemap[node.uuid] = nodestate
+      statemap[uuid] = nodestate
       return
     end
 
-    if node.data.filetype == "file" then
+    if data.filetype == "file" then
       ---@type era.m.picker.view.filetree.IFileNodeState
       local nodestate = {
         nodetype = "leaf",
         collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
-        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected = selected_set[uuid] and tick_selected or 0,
       }
-      statemap[node.uuid] = nodestate
+      statemap[uuid] = nodestate
       return
     end
 
@@ -518,8 +519,8 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
       subject = "reset_filepaths",
       message = "Unexpected filetype",
       details = {
-        nodeuuid = node.uuid,
-        nodedata = node.data,
+        nodeuuid = uuid,
+        nodedata = data,
       },
     })
   end)
@@ -573,26 +574,27 @@ function M:restore_subtree(rootuuid, selected_set)
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
-  filetree:quick_traverse(rootuuid, function(_, node)
-    if node.data.filetype == "directory" then
-      statemap[node.uuid] = {
+  tree_traversal.preorder(filetree, rootuuid, function(uuid)
+    local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData
+    if data.filetype == "directory" then
+      statemap[uuid] = {
         nodetype = "container",
         collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
-        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected = selected_set[uuid] and tick_selected or 0,
         tick_selected_maximum = 0,
       }
       return
     end
 
-    if node.data.filetype == "file" then
-      statemap[node.uuid] = {
+    if data.filetype == "file" then
+      statemap[uuid] = {
         nodetype = "leaf",
         collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
-        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected = selected_set[uuid] and tick_selected or 0,
       }
       return
     end
@@ -601,7 +603,7 @@ function M:restore_subtree(rootuuid, selected_set)
       from = self.fullname,
       subject = "restore_subtree",
       message = "Unexpected filetype",
-      details = { nodeuuid = node.uuid, nodedata = node.data },
+      details = { nodeuuid = uuid, nodedata = data },
     })
   end)
 

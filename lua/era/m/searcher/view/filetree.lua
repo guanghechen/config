@@ -6,6 +6,7 @@ local tree_collapse = require("era.view.tree.collapse")
 local tree_lifecycle = require("era.view.tree.lifecycle")
 local tree_selection = require("era.view.tree.selection")
 local tree_store = require("era.view.tree.store")
+local tree_traversal = require("era.view.tree.traversal")
 local tree_visibility = require("era.view.tree.visibility")
 
 ---@alias era.m.searcher.view.filetree.INodeState
@@ -444,31 +445,32 @@ function M:reset_filepaths(cwd, filepaths)
   ---@cast statemap                     table<string, era.m.searcher.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, false)
-  filetree:quick_traverse(filetree.root, function(_, node)
-    if node.data.filetype == "directory" then
+  tree_traversal.preorder(filetree, filetree.root, function(uuid)
+    local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData
+    if data.filetype == "directory" then
       ---@type era.m.searcher.view.filetree.IDirectoryNodeState
       local nodestate = {
         nodetype = "container",
         collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
-        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected = selected_set[uuid] and tick_selected or 0,
         tick_selected_maximum = 0,
       }
-      statemap[node.uuid] = nodestate
+      statemap[uuid] = nodestate
       return
     end
 
-    if node.data.filetype == "file" then
+    if data.filetype == "file" then
       ---@type era.m.searcher.view.filetree.IFileNodeState
       local nodestate = {
         nodetype = "leaf",
         collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
-        tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        tick_selected = selected_set[uuid] and tick_selected or 0,
       }
-      statemap[node.uuid] = nodestate
+      statemap[uuid] = nodestate
       return
     end
 
@@ -477,8 +479,8 @@ function M:reset_filepaths(cwd, filepaths)
       subject = "reset_filepaths",
       message = "Unexpected filetype",
       details = {
-        nodeuuid = node.uuid,
-        nodedata = node.data,
+        nodeuuid = uuid,
+        nodedata = data,
       },
     })
   end)
