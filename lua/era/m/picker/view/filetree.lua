@@ -15,19 +15,19 @@ local tree_visibility = require("era.view.tree.visibility")
 ---| era.m.picker.view.filetree.ILocationNodeState
 
 ---@alias era.m.picker.view.filetree.IListviewFileRenderer
----| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, uuid: string, data: stl.c.IFiletreeNodeData, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.IListviewLocationRenderer
----| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, uuid: string, data: stl.c.IFiletreeNodeData, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, uuid: string, data: stl.c.IFiletreeNodeData, nodestate: era.m.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.ITreeviewFileRenderer
----| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, uuid: string, data: stl.c.IFiletreeNodeData, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, uuid: string, data: stl.c.IFiletreeNodeData, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@class era.m.picker.view.filetree.IDirectoryNodeState : era.view.tree.IContainerNodeState
 
@@ -43,13 +43,13 @@ local tree_visibility = require("era.view.tree.visibility")
 ---@field public highlights             ?stl.t.IHighlightInline[]
 
 ---@class era.m.picker.view.filetree.IListviewRendererContext : era.view.tree.IListviewRendererContext
----@field public rootnode               stl.c.IFiletreeNode
+---@field public rootdata               stl.c.IFiletreeNodeData
 ---@field public rootstate              era.m.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
 ---@field public view                   era.m.picker.FiletreeView
 
 ---@class era.m.picker.view.filetree.ITreeviewRendererContext : era.view.tree.IListviewRendererContext
----@field public rootnode               stl.c.IFiletreeNode
+---@field public rootdata               stl.c.IFiletreeNodeData
 ---@field public rootstate              era.m.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
 ---@field public view                   era.m.picker.FiletreeView
@@ -765,12 +765,11 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@type era.m.picker.view.filetree.IListviewFileRenderer
-function M.default_render_listview_leaf(ctx, node)
-  local rootnode = ctx.rootnode ---@type stl.c.IFiletreeNode
-  local fileicon = node.data.fileicon ---@type string
-  local fileicon_hln = node.data.fileicon_hln ---@type string
-  local filepath = #rootnode.data.filepath < 2 and node.data.filepath
-    or node.data.filepath:sub(#rootnode.data.filepath + 2)
+function M.default_render_listview_leaf(ctx, _, data)
+  local rootdata = ctx.rootdata ---@type stl.c.IFiletreeNodeData
+  local fileicon = data.fileicon ---@type string
+  local fileicon_hln = data.fileicon_hln ---@type string
+  local filepath = #rootdata.filepath < 2 and data.filepath or data.filepath:sub(#rootdata.filepath + 2)
   local text = string.format("%s %s", fileicon, filepath) ---@type string
 
   ---@type stl.t.IHighlightInline[]
@@ -782,20 +781,19 @@ function M.default_render_listview_leaf(ctx, node)
   highlights[highlight_index] = { coll = #fileicon + 1, colr = #text, hlname = "m_ft_text" }
 
   ---@type string, string|nil
-  local git_text, git_name_highlight =
-    era.m.git.status.calc_info(node.data.filepath, node.data.filetype, #text, highlights)
+  local git_text, git_name_highlight = era.m.git.status.calc_info(data.filepath, data.filetype, #text, highlights)
   if git_name_highlight ~= nil then
     highlights[highlight_index].hlname = git_name_highlight
   end
   text = text .. git_text ---@type string
 
-  local diagnostic_text = era.m.lsp.diagnostic.render(node.data.filepath, #text, highlights) ---@type string
+  local diagnostic_text = era.m.lsp.diagnostic.render(data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
   return text, highlights
 end
 
 ---@type era.m.picker.view.filetree.IListviewLocationRenderer
-function M.default_render_listview_location(_, _, _, locationstate)
+function M.default_render_listview_location(_, _, _, _, locationstate)
   local lnum = locationstate.lnum ---@type integer
   local col = locationstate.col ---@type integer|nil
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
@@ -820,10 +818,10 @@ function M.default_render_listview_location(_, _, _, locationstate)
 end
 
 ---@type era.m.picker.view.filetree.ITreeviewDirectoryRenderer
-function M.default_render_treeview_container(ctx, node, nodestate, _, folded_depth)
-  local basename = node.data.basename ---@type string
-  local fileicon = node.data.fileicon ---@type string
-  local fileicon_hln = node.data.fileicon_hln ---@type string
+function M.default_render_treeview_container(ctx, uuid, data, nodestate, _, folded_depth)
+  local basename = data.basename ---@type string
+  local fileicon = data.fileicon ---@type string
+  local fileicon_hln = data.fileicon_hln ---@type string
   if not nodestate.collapsed then
     fileicon = stl.icon.filetype.FolderOpen
   end
@@ -845,7 +843,6 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   local basenames = {} ---@type string[]
   basenames[folded_depth + 1] = basename ---@type string
 
-  local uuid = node.uuid ---@type string
   local current_basename = basename ---@type string
   for index = folded_depth, 1, -1 do
     local parentuuid = tree:parent(uuid) ---@type string|nil
@@ -884,10 +881,10 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
 end
 
 ---@type era.m.picker.view.filetree.ITreeviewFileRenderer
-function M.default_render_treeview_leaf(_, node)
-  local basename = node.data.basename ---@type string
-  local fileicon = node.data.fileicon ---@type string
-  local fileicon_hln = node.data.fileicon_hln ---@type string
+function M.default_render_treeview_leaf(_, _, data)
+  local basename = data.basename ---@type string
+  local fileicon = data.fileicon ---@type string
+  local fileicon_hln = data.fileicon_hln ---@type string
   local text = string.format("%s %s", fileicon, basename) ---@type string
 
   ---@type stl.t.IHighlightInline[]
@@ -897,20 +894,19 @@ function M.default_render_treeview_leaf(_, node)
   }
 
   ---@type string, string|nil
-  local git_text, git_name_highlight =
-    era.m.git.status.calc_info(node.data.filepath, node.data.filetype, #text, highlights)
+  local git_text, git_name_highlight = era.m.git.status.calc_info(data.filepath, data.filetype, #text, highlights)
   if git_name_highlight ~= nil then
     highlights[2].hlname = git_name_highlight
   end
   text = text .. git_text ---@type string
 
-  local diagnostic_text = era.m.lsp.diagnostic.render(node.data.filepath, #text, highlights) ---@type string
+  local diagnostic_text = era.m.lsp.diagnostic.render(data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
   return text, highlights
 end
 
 ---@type era.m.picker.view.filetree.ITreeviewLocationRenderer
-function M.default_render_treeview_location(_, _, _, locationstate)
+function M.default_render_treeview_location(_, _, _, _, locationstate)
   local lnum = locationstate.lnum ---@type integer
   local col = locationstate.col ---@type integer|nil
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string

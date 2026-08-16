@@ -586,9 +586,9 @@ local function refresh()
 end
 
 ---@param _                             any
----@param node                          stl.c.ITreeNode
-local function render_symbol(_, node)
-  local data = node.data ---@type era.fn.find_lsp_symbols.ISymbolData
+---@param _                             string
+---@param data                          era.fn.find_lsp_symbols.ISymbolData
+local function render_symbol(_, _, data)
   local icon = data.icon or "●"
   local text = icon .. " " .. (data.name or "Unknown")
   return text,
@@ -599,22 +599,22 @@ local function render_symbol(_, node)
 end
 
 ---@type era.m.picker.view.tree.ITreeviewContainerNodeRenderer
-local function render_treeview_container(_, node, _, _, folded_depth)
+local function render_treeview_container(_, uuid, data, _, _, folded_depth)
   if folded_depth == 0 then
-    return render_symbol(_, node)
+    return render_symbol(_, uuid, data)
   end
 
   local limit = folded_depth + 1
   local items = {} ---@type era.fn.find_lsp_symbols.ISymbolData[]
   local tree = picker._tree ---@type stl.c.IReadonlyTree
-  local uuid = node.uuid ---@type string|nil
-  while uuid ~= nil and #items < limit do
-    local data = tree:get(uuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
-    if data == nil then
+  local current_uuid = uuid ---@type string|nil
+  while current_uuid ~= nil and #items < limit do
+    local current_data = tree:get(current_uuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+    if current_data == nil then
       break
     end
-    table.insert(items, 1, data)
-    uuid = tree:parent(uuid)
+    table.insert(items, 1, current_data)
+    current_uuid = tree:parent(current_uuid)
   end
   local item_count = #items
 
@@ -658,8 +658,8 @@ local function render_treeview_container(_, node, _, _, folded_depth)
   return text, highlights
 end
 
-local function render_location(_, node)
-  local symbol_data = node.data ---@type era.fn.find_lsp_symbols.ISymbolData
+local function render_location(_, _, symbol_data)
+  ---@cast symbol_data                 era.fn.find_lsp_symbols.ISymbolData
   if symbol_data and symbol_data.lnum then
     return string.format(":%d", symbol_data.lnum), { { coll = 0, colr = 10, hlname = "LineNr" } }
   end

@@ -30,43 +30,36 @@ local EMPTY_LAYOUT = treeview_layout.layout({
 ---| era.view.tree.ILeafLocationState
 
 ---@alias era.view.tree.IRenderListviewLeafNode
----| fun(leafnode: stl.c.ITreeNode, leafstate: era.view.tree.ILeafNodeState): nil
+---| fun(leafuuid: string, leafdata: table, leafstate: era.view.tree.ILeafNodeState): nil
 
 ---@alias era.view.tree.IRenderListviewLeafLocations
----| fun(leafnode: stl.c.ITreeNode, leafstate: era.view.tree.ILeafNodeState): nil
-
----@alias era.view.tree.IRenderTreeviewContainerNode
----| fun(containernode: stl.c.ITreeNode, containerstate: era.view.tree.IContainerNodeState, is_lastchild: boolean, cur: integer, dry: boolean): nil
-
----@alias era.view.tree.IRenderTreeviewLeafNode
----| fun(leafnode: stl.c.ITreeNode, leafstate: era.view.tree.ILeafNodeState, is_lastchild: boolean, cur: integer): nil
-
----@alias era.view.tree.IRenderTreeviewLeafLocations
----| fun(leafnode: stl.c.ITreeNode, leafstate: era.view.tree.ILeafNodeState, leafindent: string): nil
+---| fun(leafuuid: string, leafdata: table, leafstate: era.view.tree.ILeafNodeState): nil
 
 ---@alias era.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: era.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: era.view.tree.ILeafNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.view.tree.IListviewRendererContext, uuid: string, data: table, nodestate: era.view.tree.ILeafNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: era.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: era.view.tree.ILeafNodeState, location: era.view.tree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.view.tree.IListviewRendererContext, uuid: string, data: table, nodestate: era.view.tree.ILeafNodeState, location: era.view.tree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: era.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.view.tree.ITreeviewRendererContext, uuid: string, data: table, nodestate: era.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: era.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.view.tree.ILeafNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.view.tree.ITreeviewRendererContext, uuid: string, data: table, nodestate: era.view.tree.ILeafNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: era.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.view.tree.ILeafNodeState, location: era.view.tree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
+---| fun(ctx: era.view.tree.ITreeviewRendererContext, uuid: string, data: table, nodestate: era.view.tree.ILeafNodeState, location: era.view.tree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@class era.view.tree.IListviewRendererContext
----@field public rootnode               stl.c.ITreeNode
+---@field public rootuuid               string
+---@field public rootdata               table
 ---@field public rootstate              era.view.tree.IContainerNodeState
 ---@field public tree                   stl.c.IReadonlyTree
 ---@field public view                   era.view.tree.IRenderView
 
 ---@class era.view.tree.ITreeviewRendererContext
----@field public rootnode               stl.c.ITreeNode
+---@field public rootuuid               string
+---@field public rootdata               table
 ---@field public rootstate              era.view.tree.INodeState
 ---@field public tree                   stl.c.IReadonlyTree
 ---@field public view                   era.view.tree.IRenderView
@@ -271,9 +264,9 @@ function M:render_listview(params)
   local tick_selected = self._tick_selected ---@type integer
   local tick_render_listview = self._tick_render_listview ---@type integer
 
-  local rootnode = tree:retrieve(rootuuid) ---@type stl.c.ITreeNode|nil
+  local rootdata = tree:get(rootuuid) ---@type table|nil
   local rootstate = statemap[rootuuid] ---@type era.view.tree.INodeState|nil
-  if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
+  if rootdata == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
     local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type era.view.tree.IRenderResult
     return result
@@ -286,7 +279,8 @@ function M:render_listview(params)
   ---@cast rootstate                    era.view.tree.IContainerNodeState
   ---@type era.view.tree.IListviewRendererContext
   local ctx = {
-    rootnode = rootnode,
+    rootuuid = rootuuid,
+    rootdata = rootdata,
     rootstate = rootstate,
     tree = tree,
     view = self,
@@ -313,7 +307,7 @@ function M:render_listview(params)
   local lnum = 0 ---@type integer
 
   ---@type era.view.tree.IRenderListviewLeafLocations
-  local function render_leaf_locations(leafnode, leafstate)
+  local function render_leaf_locations(leafuuid, leafdata, leafstate)
     if leafstate.locations == nil or #leafstate.locations <= 0 then
       return
     end
@@ -335,7 +329,7 @@ function M:render_listview(params)
         if location.tick_invisible ~= tick_invisible then
           lnum = lnum + 1 ---@type integer
           local indent = index == last_child_index and indent_location_lastchild or indent_location ---@type string
-          local text, highlights = render_listview_location(ctx, leafnode, leafstate, location, lnum)
+          local text, highlights = render_listview_location(ctx, leafuuid, leafdata, leafstate, location, lnum)
 
           indents[lnum] = indent ---@type string
           lines[lnum] = indent .. text ---@type string
@@ -354,7 +348,7 @@ function M:render_listview(params)
   end
 
   ---@type era.view.tree.IRenderListviewLeafNode
-  local function render_leafnode(leafnode, leafstate)
+  local function render_leafnode(leafuuid, leafdata, leafstate)
     local indent = indent_leaf ---@type string
 
     lnum = lnum + 1 ---@type integer
@@ -362,7 +356,7 @@ function M:render_listview(params)
 
     local cache = leafstate.cache_listview ---@type era.view.tree.INodeListviewResultCache|nil
     if cache == nil or cache.tick ~= tick_render_listview then
-      local text, highlights = render_listview_leaf(ctx, leafnode, leafstate, lnum)
+      local text, highlights = render_listview_leaf(ctx, leafuuid, leafdata, leafstate, lnum)
       ---@type era.view.tree.INodeListviewResultCache
       cache = {
         tick = tick_render_listview,
@@ -376,16 +370,16 @@ function M:render_listview(params)
     indents[lnum] = indent ---@type string
     lines[lnum] = indent .. cache.text ---@type string
     highlights_list[lnum] = cache.highlights ---@type stl.t.IHighlightInline[]|nil
-    lnum2uuid[lnum] = leafnode.uuid
-    uuid2lnum[leafnode.uuid] = lnum
+    lnum2uuid[lnum] = leafuuid
+    uuid2lnum[leafuuid] = lnum
 
-    local lnum_last_location = render_leaf_locations(leafnode, leafstate) ---@type integer|nil
+    local lnum_last_location = render_leaf_locations(leafuuid, leafdata, leafstate) ---@type integer|nil
     if lnum_last_location ~= nil then
       childline[lnum_leaf] = lnum_last_location ---@type integer
       leaf_has_location[lnum_leaf] = true
     end
 
-    track_parent_leaf_line(parent_leaf_lines, leafnode.parent, lnum_leaf)
+    track_parent_leaf_line(parent_leaf_lines, tree:parent(leafuuid), lnum_leaf)
 
     return lnum
   end
@@ -422,11 +416,11 @@ function M:render_listview(params)
 
   if orders ~= nil then
     for _, uuid in ipairs(orders) do
-      local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
+      local data = tree:get(uuid) ---@type table|nil
       local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
-      if node ~= nil and includes_leaf(nodestate) then
+      if data ~= nil and includes_leaf(nodestate) then
         ---@cast nodestate              era.view.tree.ILeafNodeState
-        render_leafnode(node, nodestate)
+        render_leafnode(uuid, data, nodestate)
       end
     end
   else
@@ -448,9 +442,9 @@ function M:render_listview(params)
         local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
         if includes_subtree(nodestate) then
           if includes_leaf(nodestate) then
-            local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode
+            local data = tree:get(uuid) ---@type table
             ---@cast nodestate          era.view.tree.ILeafNodeState
-            render_leafnode(node, nodestate)
+            render_leafnode(uuid, data, nodestate)
           else
             local descendants = tree:children(uuid) or EMPTY_CHILDREN ---@type string[]
             if #descendants > 0 then
@@ -514,9 +508,9 @@ function M:render_treeview(params)
   local tick_selected = self._tick_selected ---@type integer
   local tick_render_treeview = self._tick_render_treeview ---@type integer
 
-  local rootnode = tree:retrieve(root) ---@type stl.c.ITreeNode|nil
+  local rootdata = tree:get(root) ---@type table|nil
   local rootstate = statemap[root] ---@type era.view.tree.INodeState|nil
-  if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
+  if rootdata == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
     local result = { childline = {}, indents = {}, layout = EMPTY_LAYOUT } ---@type era.view.tree.IRenderResult
     return result
@@ -529,7 +523,8 @@ function M:render_treeview(params)
   ---@cast rootstate                    era.view.tree.IContainerNodeState
   ---@type era.view.tree.ITreeviewRendererContext
   local ctx = {
-    rootnode = rootnode,
+    rootuuid = root,
+    rootdata = rootdata,
     rootstate = rootstate,
     tree = tree,
     view = self,
@@ -660,17 +655,17 @@ function M:render_treeview(params)
     local text ---@type string
     local highlights ---@type stl.t.IHighlightInline[]|nil
     if nodestate.nodetype == "location" then
-      local leafnode = tree:retrieve(nodestate.leafuuid) ---@type stl.c.ITreeNode
+      local leafdata = tree:get(nodestate.leafuuid) ---@type table
       local leafstate = statemap[nodestate.leafuuid] ---@type era.view.tree.ILeafNodeState
-      text, highlights = render_treeview_location(ctx, leafnode, leafstate, nodestate, lnum)
+      text, highlights = render_treeview_location(ctx, nodestate.leafuuid, leafdata, leafstate, nodestate, lnum)
 
       local parent_lnum = layout:parent_lnum(lnum) ---@type integer
       childline[lnum] = layout:last_child_lnum(parent_lnum) or lnum
     elseif nodestate.nodetype == "leaf" then
-      local leafnode = tree:retrieve(uuid) ---@type stl.c.ITreeNode
+      local leafdata = tree:get(uuid) ---@type table
       local cache = nodestate.cache_treeview ---@type era.view.tree.INodeTreeviewResultCache|nil
       if cache == nil or cache.tick ~= tick_render_treeview then
-        local rendered_text, rendered_highlights = render_treeview_leaf(ctx, leafnode, nodestate, lnum)
+        local rendered_text, rendered_highlights = render_treeview_leaf(ctx, uuid, leafdata, nodestate, lnum)
         cache = {
           tick = tick_render_treeview,
           text = rendered_text,
@@ -686,16 +681,17 @@ function M:render_treeview(params)
       if lnum_last_location > lnum then
         leaf_has_location[lnum] = true
       end
-      track_parent_leaf_line(parent_leaf_lines, leafnode.parent, lnum)
+      track_parent_leaf_line(parent_leaf_lines, tree:parent(uuid), lnum)
     elseif nodestate.nodetype == "container" then
-      local containernode = tree:retrieve(uuid) ---@type stl.c.ITreeNode
+      local containerdata = tree:get(uuid) ---@type table
       local folded_depth = folded_ids ~= nil and #folded_ids - 1 or 0 ---@type integer
       if folded_depth > 0 then
-        text, highlights = render_treeview_container(ctx, containernode, nodestate, lnum, folded_depth)
+        text, highlights = render_treeview_container(ctx, uuid, containerdata, nodestate, lnum, folded_depth)
       else
         local cache = nodestate.cache_treeview ---@type era.view.tree.INodeTreeviewResultCache|nil
         if cache == nil or cache.tick ~= tick_render_treeview then
-          local rendered_text, rendered_highlights = render_treeview_container(ctx, containernode, nodestate, lnum, 0)
+          local rendered_text, rendered_highlights =
+            render_treeview_container(ctx, uuid, containerdata, nodestate, lnum, 0)
           cache = {
             tick = tick_render_treeview,
             text = rendered_text,

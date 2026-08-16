@@ -88,6 +88,7 @@ end
 ---@class __test__.era.view.tree.INodeSpec
 ---@field public uuid string
 ---@field public parent? string
+---@field public data? table
 ---@field public state era.view.tree.INodeState
 
 ---@param specs __test__.era.view.tree.INodeSpec[]
@@ -95,29 +96,55 @@ end
 ---@return era.view.tree.IRenderView
 ---@return table<string, integer>
 local function setup(specs)
-  local tree = Tree.new("__virtual_root__")
+  local tree = Tree.new("__virtual_root__", { uuid = "__virtual_root__" })
   local calls = { container = 0, leaf = 0, location = 0, list_leaf = 0, list_location = 0 }
+  local checked = {} ---@type table<string, true>
   local view = tree_lifecycle.create({
     name = "test",
     tree = tree,
-    render_listview_leaf = function(_, node)
+    render_listview_leaf = function(ctx, uuid, data)
+      if not checked.list_leaf then
+        checked.list_leaf = true
+        t.assert_eq(uuid, data.uuid, "renderer node data")
+        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+      end
       calls.list_leaf = calls.list_leaf + 1
-      return node.uuid
+      return uuid
     end,
-    render_listview_location = function(_, _, _, location)
+    render_listview_location = function(ctx, uuid, data, _, location)
+      if not checked.list_location then
+        checked.list_location = true
+        t.assert_eq(uuid, data.uuid, "renderer node data")
+        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+      end
       calls.list_location = calls.list_location + 1
       return location.locationuuid
     end,
-    render_treeview_container = function(_, node, _, _, folded_depth)
+    render_treeview_container = function(ctx, uuid, data, _, _, folded_depth)
+      if not checked.container then
+        checked.container = true
+        t.assert_eq(uuid, data.uuid, "renderer node data")
+        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+      end
       calls.container = calls.container + 1
-      local text = folded_depth > 0 and string.format("%s:%d", node.uuid, folded_depth) or node.uuid
+      local text = folded_depth > 0 and string.format("%s:%d", uuid, folded_depth) or uuid
       return text
     end,
-    render_treeview_leaf = function(_, node)
+    render_treeview_leaf = function(ctx, uuid, data)
+      if not checked.leaf then
+        checked.leaf = true
+        t.assert_eq(uuid, data.uuid, "renderer node data")
+        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+      end
       calls.leaf = calls.leaf + 1
-      return node.uuid
+      return uuid
     end,
-    render_treeview_location = function(_, _, _, location)
+    render_treeview_location = function(ctx, uuid, data, _, location)
+      if not checked.location then
+        checked.location = true
+        t.assert_eq(uuid, data.uuid, "renderer node data")
+        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+      end
       calls.location = calls.location + 1
       return location.locationuuid
     end,
@@ -134,7 +161,7 @@ local function setup(specs)
         break
       end
     end
-    tree:insert(parent, spec.uuid, {}, index)
+    tree:insert(parent, spec.uuid, spec.data or { uuid = spec.uuid }, index)
     view:insert(spec.uuid, spec.state)
   end
   return tree, view, calls
@@ -190,7 +217,7 @@ t:test("render: consumes sorted borrowed children", function()
   local bufnr = vim.api.nvim_create_buf(false, true)
 
   local children = assert(tree:children("root"))
-  t.assert_true(children == assert(tree:retrieve("root")).children, "children are borrowed")
+  t.assert_true(children == tree:children("root"), "children are borrowed")
   assert_array({ "a", "z" }, children, "sorted children")
   t.assert_nil(tree:children("missing"), "missing node children")
 
