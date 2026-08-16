@@ -52,9 +52,9 @@
     },
     {
       "name": "yozora-rust",
-      "remote": "https://github.com/guanghechen/yozora-rust.git",
+      "remote": "https://github.com/yozorajs/yozora-rust.git",
       "main": "main",
-      "location": "${HOME}/ws/github/guanghechen/yozora-rust",
+      "location": "${HOME}/ws/github/yozora/yozora-rust",
       "editions": ["nix", "osx"]
     }
   ]
