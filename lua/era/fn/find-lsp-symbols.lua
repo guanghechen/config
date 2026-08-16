@@ -606,14 +606,15 @@ local function render_treeview_container(_, node, _, _, folded_depth)
 
   local limit = folded_depth + 1
   local items = {} ---@type era.fn.find_lsp_symbols.ISymbolData[]
-  local curr = node ---@type stl.c.ITreeNode|nil
-  while curr ~= nil and #items < limit do
-    table.insert(items, 1, curr.data)
-    local parentuuid = curr.parent
-    if parentuuid == nil then
+  local tree = picker._tree ---@type stl.c.IReadonlyTree
+  local uuid = node.uuid ---@type string|nil
+  while uuid ~= nil and #items < limit do
+    local data = tree:get(uuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+    if data == nil then
       break
     end
-    curr = picker._tree:retrieve(parentuuid)
+    table.insert(items, 1, data)
+    uuid = tree:parent(uuid)
   end
   local item_count = #items
 
@@ -697,8 +698,8 @@ local function render_preview(bufnr, force)
     }
   end
 
-  local node = picker._tree:retrieve(nodeuuid) ---@type stl.c.ITreeNode|nil
-  if node == nil or node.data == nil then
+  local data = picker._tree:get(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+  if data == nil then
     if force then
       local lines = { "Invalid symbol data" }
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -718,7 +719,6 @@ local function render_preview(bufnr, force)
   local nsnr = dot.var.nsnr.picker_preview_visual ---@type integer
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
 
-  local data = node.data ---@type era.fn.find_lsp_symbols.ISymbolData
   if data.end_lnum and data.end_col and data.lnum and data.col then
     vim.hl.range(bufnr, nsnr, "Visual", { data.lnum - 1, data.col }, { data.end_lnum - 1, data.end_col })
   end
@@ -737,14 +737,13 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 local function goto_symbol(nodeuuid)
-  local node = picker._tree:retrieve(nodeuuid)
-  if not (node and node.data and filepath_sourcefile) then
+  local symbol_data = picker._tree:get(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+  if symbol_data == nil or filepath_sourcefile == nil then
     return
   end
 
   picker:close()
 
-  local symbol_data = node.data ---@type era.fn.find_lsp_symbols.ISymbolData
   local target_bufnr = dot.buf.loadfile(filepath_sourcefile)
   if not target_bufnr then
     return
