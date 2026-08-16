@@ -74,6 +74,7 @@ local Nvimbar = nvimbar.Nvimbar
 ---@field protected _scheduler_lnum_current stl.c.Scheduler
 ---@field protected _scheduler_lnum_present stl.c.Scheduler
 ---@field protected _scheduler_lnums_selected stl.c.Scheduler
+---@field protected _unregister_fns     (fun(): nil)[]
 local M = {}
 M.__index = M
 
@@ -100,6 +101,7 @@ function M.new(props)
   local _o_lnum_total = stl.c.Observable.from_value(0) ---@type stl.c.Observable
 
   local flags = {} ---@type era.view.picker.result.IFlagItem[]
+  local unregister_fns = {} ---@type (fun(): nil)[]
   if props.flags ~= nil and #props.flags > 0 then
     for _, flag in ipairs(props.flags) do
       ---@cast flag                     era.view.picker.result.IFlagItemRaw
@@ -119,7 +121,8 @@ function M.new(props)
         end
       end
 
-      local callback_fn = dot.G.register_anonymous_fn(callback) or "dot.G.noop" ---@type string
+      local callback_fn, unregister = dot.G.register_anonymous_fn(callback)
+      unregister_fns[#unregister_fns + 1] = unregister
 
       ---@type era.view.picker.result.IFlagItem
       local item = {
@@ -342,6 +345,7 @@ function M.new(props)
   self._scheduler_lnum_current = scheduler_lnum_current
   self._scheduler_lnum_present = scheduler_lnum_present
   self._scheduler_lnums_selected = scheduler_lnums_selected
+  self._unregister_fns = unregister_fns
 
   stl.fn.observe({ _o_lnum_total }, function()
     local winnr = self._winnr ---@type integer|nil
@@ -409,6 +413,7 @@ function M:dispose()
   local scheduler_lnum_current = self._scheduler_lnum_current ---@type stl.c.Scheduler
   local scheduler_lnum_present = self._scheduler_lnum_present ---@type stl.c.Scheduler
   local scheduler_lnums_selected = self._scheduler_lnums_selected ---@type stl.c.Scheduler
+  local unregister_fns = self._unregister_fns ---@type (fun(): nil)[]
 
   self.draw = nil
   self.keymaps = nil
@@ -423,6 +428,7 @@ function M:dispose()
   self._scheduler_lnum_current = nil
   self._scheduler_lnum_present = nil
   self._scheduler_lnums_selected = nil
+  self._unregister_fns = nil
 
   local ok1, error1 = pcall(lnum_current.dispose, lnum_current)
   local ok2, error2 = pcall(lnum_present.dispose, lnum_present)
@@ -435,7 +441,12 @@ function M:dispose()
   local ok9, error9 = pcall(scheduler_lnum_current.dispose, scheduler_lnum_current)
   local ok10, error10 = pcall(scheduler_lnum_present.dispose, scheduler_lnum_present)
   local ok11, error11 = pcall(scheduler_lnums_selected.dispose, scheduler_lnums_selected)
-  if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7 and ok8 and ok9 and ok10 and ok11) then
+  local ok12, error12 = pcall(function()
+    for _, unregister in ipairs(unregister_fns) do
+      unregister()
+    end
+  end)
+  if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7 and ok8 and ok9 and ok10 and ok11 and ok12) then
     stl.reporter.error({
       from = fullname,
       subject = "dispose",
@@ -454,6 +465,7 @@ function M:dispose()
         error9 = not ok9 and error9 or nil,
         error10 = not ok10 and error10 or nil,
         error11 = not ok11 and error11 or nil,
+        error12 = not ok12 and error12 or nil,
       },
     })
   end

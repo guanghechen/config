@@ -91,6 +91,61 @@ t:test("shared result applies status and diagnostic policies", function()
   end
 end)
 
+t:test("shared result unregisters flag callbacks on dispose", function()
+  local registered_names = {} ---@type string[]
+  local register_anonymous_fn = dot.G.register_anonymous_fn
+  t:patch_table(dot.G, "register_anonymous_fn", function(...)
+    local path, unregister = register_anonymous_fn(...)
+    registered_names[#registered_names + 1] = assert(path:match("^dot%.G%.(.+)$"))
+    return path, unregister
+  end)
+
+  local callback_count = 0 ---@type integer
+  local result = era.view.PickerResult.new({
+    uuid = "shared-result-flags-contract",
+    name = "shared result flags contract",
+    diagnostic_scope = "contract.result",
+    augroup_prefix = "contract.result",
+    winline_hl = "f_wl_picker",
+    draw = function()
+      return { lnum_current = 0 }
+    end,
+    keymaps = {},
+    flags = {
+      {
+        desc = "first",
+        callback = function()
+          callback_count = callback_count + 1
+        end,
+        snapshot = function()
+          return "1", "Normal"
+        end,
+      },
+      {
+        desc = "second",
+        callback = function()
+          callback_count = callback_count + 1
+        end,
+        snapshot = function()
+          return "2", "Normal"
+        end,
+      },
+    },
+  })
+
+  t.assert_eq(2, #registered_names, "registered flag callback count")
+  for _, name in ipairs(registered_names) do
+    t.assert_true(type(dot.G[name]) == "function", "registered flag callback")
+    dot.G[name]()
+  end
+  t.assert_eq(2, callback_count, "flag callback invocation count")
+
+  result:dispose()
+  for _, name in ipairs(registered_names) do
+    t.assert_true(dot.G[name] == nil, "unregistered flag callback")
+  end
+end)
+
 ---@param case                         { name: string, new: fun(props: table): table, policy: table|nil }
 local function verify_schedule_counts(case)
   local desired_lnum_current = 1 ---@type integer

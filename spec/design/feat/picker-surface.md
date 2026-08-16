@@ -68,7 +68,7 @@ Feature 通过 props 提供 `draw`、`on_drawed`、keymaps、`diagnostic_scope` 
 
 1. `create_buf/create_win` 幂等，返回既有 resource 时不重复绑定。
 2. `hide` 只关闭 window，保留 reusable buffer 与 scheduler。
-3. `dispose` 只执行一次，并释放 window、buffer、observable、autocmd、nvimbar 与 scheduler。
+3. `dispose` 只执行一次，并释放 window、buffer、observable、autocmd、nvimbar、scheduler 与 registered flag callbacks。
 4. queued observable/scheduler callback 在 dispose 后不得读取已释放字段或写入 buffer/window。
 5. draw 或 callback failure 只报告，不得留下 `modifiable/readonly` 错误状态。
 6. reporter `from` 保持迁移前的 feature identity。
