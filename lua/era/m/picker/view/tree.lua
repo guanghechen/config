@@ -1,7 +1,12 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.view.tree" ---@type string
 
+local tree_cache = require("era.view.tree.cache")
+local tree_collapse = require("era.view.tree.collapse")
 local tree_lifecycle = require("era.view.tree.lifecycle")
+local tree_selection = require("era.view.tree.selection")
+local tree_store = require("era.view.tree.store")
+local tree_visibility = require("era.view.tree.visibility")
 
 ---@alias era.m.picker.view.tree.INodeState
 ---| era.m.picker.view.tree.IContainerNodeState
@@ -79,30 +84,30 @@ local tree_lifecycle = require("era.view.tree.lifecycle")
 ---@field public render_treeview_leaf   era.m.picker.view.tree.ITreeviewLeafNodeRenderer
 ---@field public render_treeview_location   era.m.picker.view.tree.ITreeviewLeafLocationRenderer
 
-local P = era.view.Tree ---@type era.view.Tree
+local tree_render = era.view.TreeRenderer ---@type era.view.TreeRenderer
 
 ---@class era.m.picker.TreeView
 ---@field protected _last_match_result  era.m.picker.view.tree.INodeMatchResult
 local M = {}
 M.__index = M
-M.isselected = P.isselected
-M.collect_selected = P.collect_selected
-M.set_selected = P.set_selected
-M.toggle_select = P.toggle_select
-M.__refresh_selected_maximum__ = P.__refresh_selected_maximum__
-M.isvisible = P.isvisible
-M.mark_node_invisible = P.mark_node_invisible
-M.mark_cache_invisible_dirty = P.mark_cache_invisible_dirty
-M.collapse = P.collapse
-M.mark_cache_listview_dirty = P.mark_cache_listview_dirty
-M.mark_cache_treeview_dirty = P.mark_cache_treeview_dirty
-M.collect_leafs = P.collect_leafs
-M.insert = P.insert
-M.remove = P.remove
-M.remove_all_locations = P.remove_all_locations
-M.remove_location = P.remove_location
-M.isdisposed = P.isdisposed
-M.__health__ = P.__health__
+M.isselected = tree_selection.isselected
+M.collect_selected = tree_selection.collect_selected
+M.set_selected = tree_selection.set_selected
+M.toggle_select = tree_selection.toggle_select
+M.__refresh_selected_maximum__ = tree_selection.refresh_selected_maximum
+M.isvisible = tree_visibility.isvisible
+M.mark_node_invisible = tree_visibility.mark_node_invisible
+M.mark_cache_invisible_dirty = tree_visibility.mark_cache_invisible_dirty
+M.collapse = tree_collapse.collapse
+M.mark_cache_listview_dirty = tree_cache.mark_listview_dirty
+M.mark_cache_treeview_dirty = tree_cache.mark_treeview_dirty
+M.collect_leafs = tree_store.collect_leafs
+M.insert = tree_store.insert
+M.remove = tree_store.remove
+M.remove_all_locations = tree_store.remove_all_locations
+M.remove_location = tree_store.remove_location
+M.isdisposed = tree_lifecycle.isdisposed
+M.__health__ = tree_lifecycle.health
 
 ---@param props                         era.m.picker.view.ITreeProps
 ---@return era.m.picker.TreeView
@@ -333,7 +338,7 @@ function M:render_listview(params)
 
   local bufnr = params.bufnr ---@type integer
   local only_matched = params.only_matched ---@type boolean
-  local result = P.render_listview(self, params)
+  local result = tree_render.render_listview(self, params)
 
   if not only_matched then
     return result
@@ -392,7 +397,7 @@ function M:render_treeview(params)
 
   local bufnr = params.bufnr ---@type integer
   local only_matched = params.only_matched ---@type boolean
-  local result = P.render_treeview(self, params)
+  local result = tree_render.render_treeview(self, params)
 
   if not only_matched then
     return result

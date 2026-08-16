@@ -2,12 +2,6 @@
 local __module_name__ = "era.view.treeview" ---@type string
 
 local treeview_layout = require("stl.view.treeview.layout")
-local tree_cache = require("era.view.tree.cache")
-local tree_collapse = require("era.view.tree.collapse")
-local tree_lifecycle = require("era.view.tree.lifecycle")
-local tree_selection = require("era.view.tree.selection")
-local tree_store = require("era.view.tree.store")
-local tree_visibility = require("era.view.tree.visibility")
 
 local EMPTY_CHILDREN = {} ---@type string[]
 local EMPTY_LAYOUT = treeview_layout.layout({
@@ -69,13 +63,13 @@ local EMPTY_LAYOUT = treeview_layout.layout({
 ---@field public rootnode               stl.c.ITreeNode
 ---@field public rootstate              era.view.tree.IContainerNodeState
 ---@field public tree                   stl.c.IReadonlyTree
----@field public view                   era.view.Tree
+---@field public view                   era.view.tree.IRenderView
 
 ---@class era.view.tree.ITreeviewRendererContext
 ---@field public rootnode               stl.c.ITreeNode
 ---@field public rootstate              era.view.tree.INodeState
 ---@field public tree                   stl.c.IReadonlyTree
----@field public view                   era.view.Tree
+---@field public view                   era.view.tree.IRenderView
 
 ---@class era.view.tree.IContainerNodeState
 ---@field public nodetype               "container"
@@ -218,7 +212,7 @@ local function finalize_parent_leaf_childline(childline, parent_leaf_lines, leaf
   end
 end
 
----@class era.view.ITreeProps
+---@class era.view.tree.IViewProps
 ---@field public name                   string
 ---@field public fullname               ?string
 ---@field public indent                 ?string
@@ -230,7 +224,7 @@ end
 ---@field public render_treeview_leaf   era.view.tree.ITreeviewLeafNodeRenderer
 ---@field public render_treeview_location   era.view.tree.ITreeviewLeafLocationRenderer
 
----@class era.view.Tree
+---@class era.view.tree.IRenderView
 ---@field public fullname               string
 ---@field public statemap               table<string, era.view.tree.INodeState>
 ---
@@ -251,35 +245,13 @@ end
 ---@field protected _render_treeview_container  era.view.tree.ITreeviewContainerNodeRenderer
 ---@field protected _render_treeview_leaf       era.view.tree.ITreeviewLeafNodeRenderer
 ---@field protected _render_treeview_location   era.view.tree.ITreeviewLeafLocationRenderer
-local M = {}
-M.__index = M
-M.isselected = tree_selection.isselected
-M.collect_selected = tree_selection.collect_selected
-M.set_selected = tree_selection.set_selected
-M.toggle_select = tree_selection.toggle_select
-M.__refresh_selected_maximum__ = tree_selection.refresh_selected_maximum
-M.isvisible = tree_visibility.isvisible
-M.mark_node_invisible = tree_visibility.mark_node_invisible
-M.mark_cache_invisible_dirty = tree_visibility.mark_cache_invisible_dirty
-M.collapse = tree_collapse.collapse
-M.mark_cache_listview_dirty = tree_cache.mark_listview_dirty
-M.mark_cache_treeview_dirty = tree_cache.mark_treeview_dirty
-M.collect_leafs = tree_store.collect_leafs
-M.insert = tree_store.insert
-M.remove = tree_store.remove
-M.remove_all_locations = tree_store.remove_all_locations
-M.remove_location = tree_store.remove_location
-M.retrieve = tree_store.retrieve
-M.clear = tree_lifecycle.clear
-M.dispose = tree_lifecycle.dispose
-M.isdisposed = tree_lifecycle.isdisposed
-M.__health__ = tree_lifecycle.health
+---@field protected __health__          fun(self: era.view.tree.IRenderView): nil
+---@field protected __refresh_selected_maximum__ fun(self: era.view.tree.IRenderView): nil
 
----@param props                         era.view.ITreeProps
----@return era.view.Tree
-function M.new(props)
-  return setmetatable(tree_lifecycle.create(props, __module_name__), M)
-end
+---@class era.view.TreeRenderer
+---@field public render_listview fun(view: era.view.tree.IRenderView, params: era.view.tree.IRenderListviewParams): era.view.tree.IRenderResult
+---@field public render_treeview fun(view: era.view.tree.IRenderView, params: era.view.tree.IRenderTreeviewParams): era.view.tree.IRenderResult
+local M = {}
 
 ----------------------------------------------------------------------------------------------------
 

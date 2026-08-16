@@ -3,9 +3,9 @@ local __module_name__ = "era.view.tree.lifecycle" ---@type string
 
 local M = {}
 
----@param props                         era.view.ITreeProps
+---@param props                         era.view.tree.IViewProps
 ---@param owner_name                    string
----@return era.view.Tree
+---@return era.view.tree.IRenderView
 function M.create(props, owner_name)
   local name = props.name ---@type string
   local self = {
@@ -26,12 +26,12 @@ function M.create(props, owner_name)
     _render_treeview_container = props.render_treeview_container,
     _render_treeview_leaf = props.render_treeview_leaf,
     _render_treeview_location = props.render_treeview_location,
-  } ---@type era.view.Tree
+  } ---@type era.view.tree.IRenderView
   return self
 end
 
----@param view                          era.view.Tree
----@return era.view.Tree
+---@param view                          era.view.tree.IRenderView
+---@return era.view.tree.IRenderView
 function M.clear(view)
   view:__health__()
   table.clear(view.statemap)
@@ -44,7 +44,7 @@ function M.clear(view)
   return view
 end
 
----@param view                          era.view.Tree
+---@param view                          era.view.tree.IRenderView
 ---@return nil
 function M.dispose(view)
   if view._disposed then
@@ -69,13 +69,13 @@ function M.dispose(view)
   view._render_treeview_location = nil
 end
 
----@param view                          era.view.Tree
+---@param view                          era.view.tree.IRenderView
 ---@return boolean
 function M.isdisposed(view)
   return view._disposed
 end
 
----@param view                          era.view.Tree
+---@param view                          era.view.tree.IRenderView
 ---@return nil
 function M.health(view)
   if view._disposed then

@@ -214,7 +214,7 @@ local __view__mods = {
   Printer = "era.view.printer",
   Setting = "era.view.setting",
   Textarea = "era.view.textarea",
-  Tree = "era.view.tree",
+  TreeRenderer = "era.view.tree",
 }
 
 ---@class era.view
@@ -227,7 +227,7 @@ local __view__mods = {
 ---@field public Printer                era.view.Printer
 ---@field public Setting                era.view.Setting
 ---@field public Textarea               era.view.Textarea
----@field public Tree                   era.view.Tree
+---@field public TreeRenderer           era.view.TreeRenderer
 local view = setmetatable({
   __mods = __view__mods,
 }, {

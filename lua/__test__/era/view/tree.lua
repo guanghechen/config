@@ -4,6 +4,12 @@
 local harness = require("__test__.harness")
 local bootstrap = require("__test__.bootstrap")
 local Tree = require("stl.c.tree")
+local tree_cache = require("era.view.tree.cache")
+local tree_collapse = require("era.view.tree.collapse")
+local tree_lifecycle = require("era.view.tree.lifecycle")
+local tree_selection = require("era.view.tree.selection")
+local tree_store = require("era.view.tree.store")
+local tree_visibility = require("era.view.tree.visibility")
 
 local t = harness.new("era.view.tree")
 
@@ -25,7 +31,31 @@ bootstrap.with_runtime(t, {
   },
 })
 
-local TreeView = assert(loadfile("lua/era/view/tree.lua"))()
+local TreeRenderer = assert(loadfile("lua/era/view/tree.lua"))()
+local TestView = {
+  isselected = tree_selection.isselected,
+  collect_selected = tree_selection.collect_selected,
+  set_selected = tree_selection.set_selected,
+  toggle_select = tree_selection.toggle_select,
+  __refresh_selected_maximum__ = tree_selection.refresh_selected_maximum,
+  isvisible = tree_visibility.isvisible,
+  mark_node_invisible = tree_visibility.mark_node_invisible,
+  mark_cache_invisible_dirty = tree_visibility.mark_cache_invisible_dirty,
+  collapse = tree_collapse.collapse,
+  mark_cache_listview_dirty = tree_cache.mark_listview_dirty,
+  mark_cache_treeview_dirty = tree_cache.mark_treeview_dirty,
+  collect_leafs = tree_store.collect_leafs,
+  insert = tree_store.insert,
+  remove = tree_store.remove,
+  remove_all_locations = tree_store.remove_all_locations,
+  remove_location = tree_store.remove_location,
+  retrieve = tree_store.retrieve,
+  isdisposed = tree_lifecycle.isdisposed,
+  __health__ = tree_lifecycle.health,
+  render_listview = TreeRenderer.render_listview,
+  render_treeview = TreeRenderer.render_treeview,
+}
+TestView.__index = TestView
 
 ---@param expected any[]
 ---@param actual any[]
@@ -62,7 +92,7 @@ end
 
 ---@param specs __test__.era.view.tree.INodeSpec[]
 ---@return stl.c.Tree
----@return era.view.Tree
+---@return era.view.tree.IRenderView
 ---@return table<string, integer>
 local function setup(specs)
   local tree = Tree.new({
@@ -72,7 +102,7 @@ local function setup(specs)
     end,
   })
   local calls = { container = 0, leaf = 0, location = 0, list_leaf = 0, list_location = 0 }
-  local view = TreeView.new({
+  local view = tree_lifecycle.create({
     name = "test",
     tree = tree,
     render_listview_leaf = function(_, node)
@@ -96,7 +126,8 @@ local function setup(specs)
       calls.location = calls.location + 1
       return { text = location.locationuuid }
     end,
-  })
+  }, "era.view.treeview")
+  setmetatable(view, TestView)
 
   for _, spec in ipairs(specs) do
     tree:insert(spec.parent or tree.root, spec.uuid, {})
@@ -105,7 +136,7 @@ local function setup(specs)
   return tree, view, calls
 end
 
----@param view era.view.Tree
+---@param view era.view.tree.IRenderView
 ---@param bufnr integer
 ---@param rootuuid string|nil
 ---@param overrides? table
@@ -126,7 +157,7 @@ local function render(view, bufnr, rootuuid, overrides)
   return view:render_treeview(params)
 end
 
----@param view era.view.Tree
+---@param view era.view.tree.IRenderView
 ---@param bufnr integer
 ---@param rootuuid string|nil
 ---@param overrides? table

@@ -1,7 +1,12 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.view.filetree" ---@type string
 
+local tree_cache = require("era.view.tree.cache")
+local tree_collapse = require("era.view.tree.collapse")
 local tree_lifecycle = require("era.view.tree.lifecycle")
+local tree_selection = require("era.view.tree.selection")
+local tree_store = require("era.view.tree.store")
+local tree_visibility = require("era.view.tree.visibility")
 
 ---@alias era.m.searcher.view.filetree.INodeState
 ---| era.m.searcher.view.filetree.IDirectoryNodeState
@@ -117,7 +122,7 @@ end
 ---@field public render_treeview_leaf   ?era.m.searcher.view.filetree.ITreeviewFileRenderer
 ---@field public render_treeview_location   ?era.m.searcher.view.filetree.ITreeviewLocationRenderer
 
-local P = era.view.Tree ---@type era.view.Tree
+local tree_render = era.view.TreeRenderer ---@type era.view.TreeRenderer
 
 ---@class era.m.searcher.FiletreeView
 ---@field protected _tree               stl.c.IFiletree
@@ -125,26 +130,26 @@ local P = era.view.Tree ---@type era.view.Tree
 ---@field public insert                 fun(self: era.m.searcher.FiletreeView, uuid: string, state: era.view.tree.INodeState): era.m.searcher.FiletreeView
 local M = {}
 M.__index = M
-M.isselected = P.isselected
-M.collect_selected = P.collect_selected
-M.set_selected = P.set_selected
-M.toggle_select = P.toggle_select
-M.__refresh_selected_maximum__ = P.__refresh_selected_maximum__
-M.isvisible = P.isvisible
-M.mark_node_invisible = P.mark_node_invisible
-M.mark_cache_invisible_dirty = P.mark_cache_invisible_dirty
-M.collapse = P.collapse
-M.mark_cache_listview_dirty = P.mark_cache_listview_dirty
-M.mark_cache_treeview_dirty = P.mark_cache_treeview_dirty
-M.collect_leafs = P.collect_leafs
-M.insert = P.insert
-M.remove = P.remove
-M.remove_all_locations = P.remove_all_locations
-M.remove_location = P.remove_location
-M.isdisposed = P.isdisposed
-M.__health__ = P.__health__
-M.render_listview = P.render_listview
-M.render_treeview = P.render_treeview
+M.isselected = tree_selection.isselected
+M.collect_selected = tree_selection.collect_selected
+M.set_selected = tree_selection.set_selected
+M.toggle_select = tree_selection.toggle_select
+M.__refresh_selected_maximum__ = tree_selection.refresh_selected_maximum
+M.isvisible = tree_visibility.isvisible
+M.mark_node_invisible = tree_visibility.mark_node_invisible
+M.mark_cache_invisible_dirty = tree_visibility.mark_cache_invisible_dirty
+M.collapse = tree_collapse.collapse
+M.mark_cache_listview_dirty = tree_cache.mark_listview_dirty
+M.mark_cache_treeview_dirty = tree_cache.mark_treeview_dirty
+M.collect_leafs = tree_store.collect_leafs
+M.insert = tree_store.insert
+M.remove = tree_store.remove
+M.remove_all_locations = tree_store.remove_all_locations
+M.remove_location = tree_store.remove_location
+M.isdisposed = tree_lifecycle.isdisposed
+M.__health__ = tree_lifecycle.health
+M.render_listview = tree_render.render_listview
+M.render_treeview = tree_render.render_treeview
 
 ---@param props                         era.m.searcher.view.IFiletreeProps
 ---@return era.m.searcher.FiletreeView
