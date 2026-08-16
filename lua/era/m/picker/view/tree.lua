@@ -1,6 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.view.tree" ---@type string
 
+local tree_lifecycle = require("era.view.tree.lifecycle")
+
 ---@alias era.m.picker.view.tree.INodeState
 ---| era.m.picker.view.tree.IContainerNodeState
 ---| era.m.picker.view.tree.ILeafNodeState
@@ -79,11 +81,28 @@ local __module_name__ = "era.m.picker.view.tree" ---@type string
 
 local P = era.view.Tree ---@type era.view.Tree
 
----@class era.m.picker.TreeView : era.view.Tree
+---@class era.m.picker.TreeView
 ---@field protected _last_match_result  era.m.picker.view.tree.INodeMatchResult
 local M = {}
 M.__index = M
-setmetatable(M, P)
+M.isselected = P.isselected
+M.collect_selected = P.collect_selected
+M.set_selected = P.set_selected
+M.toggle_select = P.toggle_select
+M.__refresh_selected_maximum__ = P.__refresh_selected_maximum__
+M.isvisible = P.isvisible
+M.mark_node_invisible = P.mark_node_invisible
+M.mark_cache_invisible_dirty = P.mark_cache_invisible_dirty
+M.collapse = P.collapse
+M.mark_cache_listview_dirty = P.mark_cache_listview_dirty
+M.mark_cache_treeview_dirty = P.mark_cache_treeview_dirty
+M.collect_leafs = P.collect_leafs
+M.insert = P.insert
+M.remove = P.remove
+M.remove_all_locations = P.remove_all_locations
+M.remove_location = P.remove_location
+M.isdisposed = P.isdisposed
+M.__health__ = P.__health__
 
 ---@param props                         era.m.picker.view.ITreeProps
 ---@return era.m.picker.TreeView
@@ -99,7 +118,7 @@ function M.new(props)
   local render_treeview_leaf = props.render_treeview_leaf ---@type era.m.picker.view.tree.ITreeviewLeafNodeRenderer
   local render_treeview_location = props.render_treeview_location ---@type era.m.picker.view.tree.ITreeviewLeafLocationRenderer
 
-  local super = P.new({
+  local self = tree_lifecycle.create({
     name = fullname,
     indent = indent,
     indent_hln = indent_hln,
@@ -109,9 +128,8 @@ function M.new(props)
     render_treeview_container = render_treeview_container,
     render_treeview_leaf = render_treeview_leaf,
     render_treeview_location = render_treeview_location,
-  })
-
-  local self = setmetatable(super, M)
+  }, "era.view.treeview")
+  setmetatable(self, M)
   ---@cast self                         era.m.picker.TreeView
 
   self._last_match_result = nil
@@ -122,7 +140,7 @@ end
 function M:clear()
   self:__health__()
 
-  P.clear(self)
+  tree_lifecycle.clear(self)
   self._last_match_result = nil
 end
 
@@ -132,7 +150,7 @@ function M:dispose()
     return nil
   end
 
-  P.dispose(self)
+  tree_lifecycle.dispose(self)
   self._last_match_result = nil
 end
 

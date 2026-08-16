@@ -1,6 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.view.filetree" ---@type string
 
+local tree_lifecycle = require("era.view.tree.lifecycle")
+
 ---@alias era.m.picker.view.filetree.INodeState
 ---| era.m.picker.view.filetree.IDirectoryNodeState
 ---| era.m.picker.view.filetree.IFileNodeState
@@ -85,13 +87,30 @@ local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 
 local P = era.view.Tree ---@type era.view.Tree
 
----@class era.m.picker.FiletreeView : era.view.Tree
+---@class era.m.picker.FiletreeView
 ---@field protected _tree               stl.c.IFiletree
 ---@field protected _last_match_result  era.m.picker.view.filetree.INodeMatchResult
 ---@field public insert                 fun(self: era.m.picker.FiletreeView, uuid: string, state: era.view.tree.INodeState): era.m.picker.FiletreeView
 local M = {}
 M.__index = M
-setmetatable(M, P)
+M.isselected = P.isselected
+M.collect_selected = P.collect_selected
+M.set_selected = P.set_selected
+M.toggle_select = P.toggle_select
+M.__refresh_selected_maximum__ = P.__refresh_selected_maximum__
+M.isvisible = P.isvisible
+M.mark_node_invisible = P.mark_node_invisible
+M.mark_cache_invisible_dirty = P.mark_cache_invisible_dirty
+M.collapse = P.collapse
+M.mark_cache_listview_dirty = P.mark_cache_listview_dirty
+M.mark_cache_treeview_dirty = P.mark_cache_treeview_dirty
+M.collect_leafs = P.collect_leafs
+M.insert = P.insert
+M.remove = P.remove
+M.remove_all_locations = P.remove_all_locations
+M.remove_location = P.remove_location
+M.isdisposed = P.isdisposed
+M.__health__ = P.__health__
 
 ---@param props                         era.m.picker.view.IFiletreeProps
 ---@return era.m.picker.FiletreeView
@@ -108,7 +127,7 @@ function M.new(props)
   local render_treeview_leaf = props.render_treeview_leaf or M.default_render_treeview_leaf ---@type era.m.picker.view.filetree.ITreeviewFileRenderer
   local render_treeview_location = props.render_treeview_location or M.default_render_treeview_location ---@type era.m.picker.view.filetree.ITreeviewLocationRenderer
 
-  local super = era.view.Tree.new({
+  local self = tree_lifecycle.create({
     name = name,
     fullname = fullname,
     indent = indent,
@@ -119,9 +138,8 @@ function M.new(props)
     render_treeview_container = render_treeview_container,
     render_treeview_leaf = render_treeview_leaf,
     render_treeview_location = render_treeview_location,
-  })
-
-  local self = setmetatable(super, M)
+  }, __module_name__)
+  setmetatable(self, M)
   ---@cast self                         era.m.picker.FiletreeView
 
   self._last_match_result = nil
@@ -134,7 +152,7 @@ end
 function M:clear()
   self:__health__()
 
-  P.clear(self)
+  tree_lifecycle.clear(self)
   self._last_match_result = nil
   return self
 end
@@ -145,7 +163,7 @@ function M:dispose()
     return nil
   end
 
-  P.dispose(self)
+  tree_lifecycle.dispose(self)
   self._last_match_result = nil
 end
 
