@@ -6,6 +6,7 @@ local tree_collapse = require("era.view.tree.collapse")
 local tree_lifecycle = require("era.view.tree.lifecycle")
 local tree_selection = require("era.view.tree.selection")
 local tree_store = require("era.view.tree.store")
+local tree_traversal = require("era.view.tree.traversal")
 local tree_visibility = require("era.view.tree.visibility")
 
 ---@alias era.m.picker.view.filetree.INodeState
@@ -246,15 +247,13 @@ function M:match(params)
     local k = 0 ---@type integer
     uuids = {} ---@type string[]
 
-    ---@type stl.c.ITreeQuickTraverseHandler
-    local collect = function(_, node)
-      local state = statemap[node.uuid]
+    tree_traversal.preorder(tree, root, function(uuid)
+      local state = statemap[uuid]
       if state.nodetype == "leaf" then
         k = k + 1
-        uuids[k] = node.uuid
+        uuids[k] = uuid
       end
-    end
-    tree:quick_traverse(root, collect)
+    end)
   end
 
   local lines = {} ---@type string[]

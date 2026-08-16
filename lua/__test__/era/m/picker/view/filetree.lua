@@ -172,16 +172,20 @@ t:test("match reads leaf data and marks ancestors without matching the root", fu
   local parents = { [parentuuid] = rootuuid, [leafuuid] = parentuuid }
   local filetree = {
     root = rootuuid,
+    children = function(_, uuid)
+      if uuid == rootuuid then
+        return { parentuuid }
+      end
+      if uuid == parentuuid then
+        return { leafuuid }
+      end
+      return {}
+    end,
     get = function(_, uuid)
       return uuid == leafuuid and nodes[2].data or nil
     end,
     parent = function(_, uuid)
       return parents[uuid]
-    end,
-    quick_traverse = function(_, _, callback)
-      for _, node in ipairs(nodes) do
-        callback(nil, node)
-      end
     end,
   }
   t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
