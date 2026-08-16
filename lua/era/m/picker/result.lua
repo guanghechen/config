@@ -333,6 +333,10 @@ function M.new(props)
   end)
 
   stl.fn.observe({ _o_lnum_current }, function()
+    if self._disposed then
+      return
+    end
+
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
@@ -343,12 +347,6 @@ function M.new(props)
       nvimbar:render()
     end
     self._scheduler_lnum_current:schedule()
-  end)
-
-  stl.fn.observe({ _o_lnum_current }, function()
-    if not self._disposed then
-      self._scheduler_lnum_current:schedule()
-    end
   end)
 
   stl.fn.observe({ _o_lnum_present }, function()
