@@ -10,6 +10,7 @@ local __module_name__ = "stl.c.tree_retriever" ---@type string
 ---@field protected _bufnr              integer
 ---@field protected _linecount          integer
 ---@field protected _childline          ?integer[]
+---@field protected _layout             stl.view.TreeLayout|nil
 ---@field protected _lnum2uuid          string[]
 ---@field protected _uuid2lnum          ?table<string, integer>
 local M = {}
@@ -27,6 +28,7 @@ function M.new(props)
   self._bufnr = nil
   self._linecount = 0
   self._childline = nil
+  self._layout = nil
   self._lnum2uuid = {}
   self._uuid2lnum = {}
   return self
@@ -42,6 +44,7 @@ function M:dispose()
   self._bufnr = nil
   self._linecount = 0
   self._childline = nil
+  self._layout = nil
   self._lnum2uuid = nil
   self._uuid2lnum = nil
 end
@@ -59,12 +62,18 @@ end
 ---@param lnum                          integer
 ---@return string|nil
 function M:retrieve_uuid(lnum)
+  if self._layout ~= nil then
+    return self._layout:id(lnum)
+  end
   return self._lnum2uuid ~= nil and self._lnum2uuid[lnum] or nil
 end
 
 ---@param uuid                          string
 ---@return integer|nil
 function M:retrieve_lnum(uuid)
+  if self._layout ~= nil then
+    return self._layout:lnum(uuid)
+  end
   return self._uuid2lnum ~= nil and self._uuid2lnum[uuid] or nil
 end
 
@@ -82,9 +91,23 @@ function M:attach(bufnr, lnum2uuid, uuid2lnum, childline)
   self:__health__()
   self._bufnr = bufnr
   self._childline = childline
+  self._layout = nil
   self._linecount = #lnum2uuid
   self._lnum2uuid = lnum2uuid
   self._uuid2lnum = uuid2lnum
+end
+
+---@param bufnr                         integer
+---@param layout                        stl.view.TreeLayout
+---@param childline                     integer[]|nil
+function M:attach_layout(bufnr, layout, childline)
+  self:__health__()
+  self._bufnr = bufnr
+  self._childline = childline
+  self._layout = layout
+  self._linecount = layout:len()
+  self._lnum2uuid = nil
+  self._uuid2lnum = nil
 end
 
 ----------------------------------------------------------------------------------------------------

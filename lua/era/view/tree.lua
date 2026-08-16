@@ -1,6 +1,16 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.treeview" ---@type string
 
+local treeview_layout = require("stl.view.treeview.layout")
+
+local EMPTY_CHILDREN = {} ---@type string[]
+local EMPTY_LAYOUT = treeview_layout.layout({
+  roots = EMPTY_CHILDREN,
+  children = function()
+    return EMPTY_CHILDREN
+  end,
+})
+
 ---@alias era.view.tree.CollapseActionEnum
 ---| "collapse"
 ---| "expand"
@@ -104,8 +114,9 @@ local __module_name__ = "era.view.treeview" ---@type string
 ---@class era.view.tree.IRenderResult
 ---@field public childline              integer[]|nil
 ---@field public indents                string[]
----@field public lnum2uuid              table<integer, string>
----@field public uuid2lnum              table<string, integer>
+---@field public layout                 stl.view.TreeLayout|nil Tree mode only.
+---@field public lnum2uuid              table<integer, string>|nil List mode only.
+---@field public uuid2lnum              table<string, integer>|nil List mode only.
 
 ---@class era.view.tree.IRenderListviewParams
 ---@field public bufnr                  integer
@@ -493,177 +504,74 @@ function M:render_listview(params)
     return lnum
   end
 
-  if orders == nil then
-    local conditional ---@type stl.c.ITreeTraverseConditional
-    if only_matched then
-      if only_selected then
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_matched ~= tick_matched
-            or nodestate.tick_selected_maximum ~= tick_selected
-          then
-            return "badroot"
-          end
-          return "goodroot"
-        end
-      else
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_matched ~= tick_matched
-          then
-            return "badroot"
-          end
-          return "goodroot"
-        end
-      end
-    else
-      if only_selected then
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_selected_maximum ~= tick_selected
-          then
-            return "badroot"
-          end
-          return "goodroot"
-        end
-      else
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if nodestate == nil or nodestate.tick_invisible == tick_invisible then
-            return "badroot"
-          end
-          return "goodroot"
-        end
+  ---@param nodestate                   era.view.tree.INodeState|nil
+  ---@return boolean
+  local function includes_subtree(nodestate)
+    if nodestate == nil or nodestate.tick_invisible == tick_invisible then
+      return false
+    end
+    if only_matched and nodestate.tick_matched ~= tick_matched then
+      return false
+    end
+    if only_selected and nodestate.tick_selected_maximum ~= tick_selected then
+      return false
+    end
+    return true
+  end
+
+  ---@param nodestate                   era.view.tree.INodeState|nil
+  ---@return boolean
+  local function includes_leaf(nodestate)
+    if nodestate == nil or nodestate.nodetype ~= "leaf" or nodestate.tick_invisible == tick_invisible then
+      return false
+    end
+    if only_matched and nodestate.tick_matched ~= tick_matched then
+      return false
+    end
+    if only_selected and nodestate.tick_selected ~= tick_selected then
+      return false
+    end
+    return true
+  end
+
+  if orders ~= nil then
+    for _, uuid in ipairs(orders) do
+      local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
+      local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
+      if node ~= nil and includes_leaf(nodestate) then
+        ---@cast nodestate              era.view.tree.ILeafNodeState
+        render_leafnode(node, nodestate)
       end
     end
-
-    local traverse ---@type stl.c.ITreeTraverseHandler
-    if only_matched then
-      if only_selected then
-        ---@type stl.c.ITreeTraverseHandler
-        traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate ~= nil
-            and nodestate.nodetype == "leaf"
-            and nodestate.tick_invisible ~= tick_invisible
-            and nodestate.tick_matched == tick_matched
-            and nodestate.tick_selected == tick_selected
-          then
-            render_leafnode(node, nodestate)
-          end
-        end
-      else
-        ---@type stl.c.ITreeTraverseHandler
-        traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate ~= nil
-            and nodestate.nodetype == "leaf"
-            and nodestate.tick_invisible ~= tick_invisible
-            and nodestate.tick_matched == tick_matched
-          then
-            render_leafnode(node, nodestate)
-          end
-        end
-      end
-    else
-      if only_selected then
-        ---@type stl.c.ITreeTraverseHandler
-        traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate ~= nil
-            and nodestate.nodetype == "leaf"
-            and nodestate.tick_invisible ~= tick_invisible
-            and nodestate.tick_selected == tick_selected
-          then
-            render_leafnode(node, nodestate)
-          end
-        end
-      else
-        ---@type stl.c.ITreeTraverseHandler
-        traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if nodestate ~= nil and nodestate.nodetype == "leaf" and nodestate.tick_invisible ~= tick_invisible then
-            render_leafnode(node, nodestate)
-          end
-        end
-      end
-    end
-
-    tree:traverse(rootuuid, traverse, conditional)
   else
-    if only_matched then
-      if only_selected then
-        for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
-          local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
-          if
-            node ~= nil
-            and nodestate ~= nil
-            and nodestate.nodetype == "leaf"
-            and nodestate.tick_invisible ~= tick_invisible
-            and nodestate.tick_matched == tick_matched
-            and nodestate.tick_selected == tick_selected
-          then
-            render_leafnode(node, nodestate)
-          end
-        end
+    local roots = rootuuid == tree.root and (tree:children(rootuuid) or EMPTY_CHILDREN) or { rootuuid } ---@type string[]
+    local stack_children = { roots } ---@type string[][]
+    local stack_indexes = { 1 } ---@type integer[]
+    local stack_size = 1 ---@type integer
+
+    while stack_size > 0 do
+      local childids = stack_children[stack_size] ---@type string[]
+      local child_index = stack_indexes[stack_size] ---@type integer
+      if child_index > #childids then
+        stack_children[stack_size] = nil
+        stack_indexes[stack_size] = nil
+        stack_size = stack_size - 1
       else
-        for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
-          local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
-          if
-            node ~= nil
-            and nodestate ~= nil
-            and nodestate.nodetype == "leaf"
-            and nodestate.tick_invisible ~= tick_invisible
-            and nodestate.tick_matched == tick_matched
-          then
+        stack_indexes[stack_size] = child_index + 1
+        local uuid = childids[child_index] ---@type string
+        local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
+        if includes_subtree(nodestate) then
+          if includes_leaf(nodestate) then
+            local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode
+            ---@cast nodestate          era.view.tree.ILeafNodeState
             render_leafnode(node, nodestate)
-          end
-        end
-      end
-    else
-      if only_selected then
-        for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
-          local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
-          if
-            node ~= nil
-            and nodestate ~= nil
-            and nodestate.nodetype == "leaf"
-            and nodestate.tick_invisible ~= tick_invisible
-            and nodestate.tick_selected == tick_selected
-          then
-            render_leafnode(node, nodestate)
-          end
-        end
-      else
-        for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
-          local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
-          if
-            node ~= nil
-            and nodestate ~= nil
-            and nodestate.nodetype == "leaf"
-            and nodestate.tick_invisible ~= tick_invisible
-          then
-            render_leafnode(node, nodestate)
+          else
+            local descendants = tree:children(uuid) or EMPTY_CHILDREN ---@type string[]
+            if #descendants > 0 then
+              stack_size = stack_size + 1
+              stack_children[stack_size] = descendants
+              stack_indexes[stack_size] = 1
+            end
           end
         end
       end
@@ -724,7 +632,7 @@ function M:render_treeview(params)
   local rootstate = statemap[root] ---@type era.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-    local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type era.view.tree.IRenderResult
+    local result = { childline = {}, indents = {}, layout = EMPTY_LAYOUT } ---@type era.view.tree.IRenderResult
     return result
   end
 
@@ -751,433 +659,184 @@ function M:render_treeview(params)
   local indents = {} ---@type string[]
   local lines = {} ---@type string[]
   local highlights_list = {} ---@type (stl.t.IHighlightInline[]|nil)[]
-  local lnum2uuid = {} ---@type string[]
-  local uuid2lnum = {} ---@type table<string, integer>
   local parent_leaf_lines = {} ---@type table<string, integer[]>
   local leaf_has_location = {} ---@type table<integer, boolean>
 
-  local folded_depth = 0 ---@type integer
-  local folded_indent = INDENT_COMMON ---@type string
-  local last_cur = 0 ---@type integer
-  local lnum = 0 ---@type integer
-  local stack_indent = {} ---@type string[]
-  local stack_depth = {} ---@type integer[]
-  local stack_lnum_roots = {} ---@type integer[]
-
-  ---@type era.view.tree.IRenderTreeviewLeafLocations
-  local function render_leaf_locations(leafnode, leafstate, leafindent)
-    if leafstate.locations == nil or #leafstate.locations <= 0 or (leafstate.collapsed and only_expanded) then
-      return
+  ---@param uuid                        string
+  ---@return boolean
+  local function includes(uuid)
+    local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
+    if nodestate == nil or nodestate.tick_invisible == tick_invisible then
+      return false
     end
+    if only_matched and nodestate.tick_matched ~= tick_matched then
+      return false
+    end
+    if only_selected and nodestate.tick_selected_maximum ~= tick_selected then
+      return false
+    end
+    return true
+  end
 
-    local N = #leafstate.locations ---@type integer
-    local last_child_index = 0 ---@type integer
-    for index = N, 1, -1 do
-      local location = leafstate.locations[index] ---@type era.view.tree.ILeafLocationState
-      if location.tick_invisible ~= tick_invisible then
-        last_child_index = index ---@type integer
+  ---@param uuid                        string
+  ---@return string[]
+  local function project_tree_children(uuid)
+    local source = tree:children(uuid) or EMPTY_CHILDREN ---@type string[]
+    local N = #source ---@type integer
+    local first_excluded = nil ---@type integer|nil
+    for index = 1, N, 1 do
+      if not includes(source[index]) then
+        first_excluded = index
         break
       end
     end
-
-    if last_child_index > 0 then
-      local location_lnums = {} ---@type integer[]
-      for index = 1, N, 1 do
-        local location = leafstate.locations[index] ---@type era.view.tree.ILeafLocationState
-        if location.tick_invisible ~= tick_invisible then
-          lnum = lnum + 1 ---@type integer
-          local indent = leafindent .. (index == last_child_index and "╰─" or "├─") ---@type string
-          local result = render_treeview_location(ctx, leafnode, leafstate, location, lnum)
-
-          lines[lnum] = indent .. result.text ---@type string
-          highlights_list[lnum] = result.highlights ---@type stl.t.IHighlightInline[]|nil
-          indents[lnum] = indent ---@type string
-          lnum2uuid[lnum] = location.locationuuid
-          uuid2lnum[location.locationuuid] = lnum
-          location_lnums[#location_lnums + 1] = lnum ---@type integer
-        end
-      end
-      if #location_lnums > 0 then
-        return assign_childline_location(childline, location_lnums)
-      end
+    if first_excluded == nil then
+      return source
     end
 
-    return nil
+    local projected = {} ---@type string[]
+    for index = 1, first_excluded - 1, 1 do
+      projected[index] = source[index]
+    end
+    for index = first_excluded + 1, N, 1 do
+      local uuid_child = source[index] ---@type string
+      if includes(uuid_child) then
+        projected[#projected + 1] = uuid_child
+      end
+    end
+    return projected
   end
 
-  ---@type era.view.tree.IRenderTreeviewLeafNode
-  local function render_leaf(leafnode, leafstate, is_lastchild, cur)
-    local depth = cur == 1 and 1 or (stack_depth[cur - 1] + 1) ---@type integer
-    local indent = INDENT_COMMON ---@type string
-    local child_indent = INDENT_COMMON ---@type string
-
-    if cur > 1 then
-      local last_stack_indent = stack_indent[cur - 1] ---@type string
-      indent = last_stack_indent .. (is_lastchild and "╰─" or "├─") ---@type string
-      child_indent = last_stack_indent .. (is_lastchild and "  " or "│ ") ---@type string
+  ---@param uuid                        string
+  ---@return string[]
+  local function children(uuid)
+    local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
+    if nodestate == nil or nodestate.nodetype == "location" then
+      return EMPTY_CHILDREN
+    end
+    if only_expanded and nodestate.collapsed then
+      return EMPTY_CHILDREN
+    end
+    if nodestate.nodetype == "container" then
+      return project_tree_children(uuid)
     end
 
-    last_cur = cur ---@type integer
-    stack_depth[cur] = depth ---@type integer
-    stack_indent[cur] = child_indent ---@type string
-    stack_lnum_roots[cur] = lnum + 1 ---@type integer
-
-    lnum = lnum + 1 ---@type integer
-    local lnum_leaf = lnum ---@type integer
-
-    local cache = leafstate.cache_treeview ---@type era.view.tree.INodeTreeviewResultCache|nil
-    if cache == nil or cache.tick ~= tick_render_treeview then
-      local result = render_treeview_leaf(ctx, leafnode, leafstate, lnum) ---@type era.view.tree.INodeRenderResult
-      ---@type era.view.tree.INodeTreeviewResultCache
-      cache = {
-        tick = tick_render_treeview,
-        text = result.text,
-        highlights = result.highlights or {},
-      }
-      leafstate.cache_treeview = cache
+    local locations = nodestate.locations ---@type era.view.tree.ILeafLocationState[]|nil
+    if locations == nil or #locations == 0 then
+      return EMPTY_CHILDREN
     end
 
-    lines[lnum] = indent .. cache.text ---@type string
-    highlights_list[lnum] = cache.highlights ---@type stl.t.IHighlightInline[]|nil
-    indents[lnum] = indent ---@type string
-    childline[lnum_leaf] = lnum
-    lnum2uuid[lnum] = leafnode.uuid
-    uuid2lnum[leafnode.uuid] = lnum
-
-    local lnum_last_location = render_leaf_locations(leafnode, leafstate, child_indent) ---@type integer|nil
-    if lnum_last_location ~= nil then
-      childline[lnum_leaf] = lnum_last_location ---@type integer
-      leaf_has_location[lnum_leaf] = true
+    local projected = {} ---@type string[]
+    for _, location in ipairs(locations) do
+      if location.tick_invisible ~= tick_invisible then
+        projected[#projected + 1] = location.locationuuid
+      end
     end
-
-    track_parent_leaf_line(parent_leaf_lines, leafnode.parent, lnum_leaf)
-
-    return lnum
+    return projected
   end
 
-  local render_container ---@type era.view.tree.IRenderTreeviewContainerNode
-  if foldempty then
-    ---@type era.view.tree.IRenderTreeviewContainerNode
-    render_container = function(containernode, containerstate, is_lastchild, cur, dry)
-      local depth = cur == 1 and 1 or (stack_depth[cur - 1] + 1) ---@type integer
-      local indent = INDENT_COMMON ---@type string
-      local child_indent = INDENT_COMMON ---@type string
-
-      if cur > 1 then
-        local last_stack_indent = stack_indent[cur - 1] ---@type string
-        if folded_depth == 0 then
-          indent = last_stack_indent .. (is_lastchild and "╰─" or "├─") ---@type string
-          child_indent = last_stack_indent .. (is_lastchild and "  " or "│ ") ---@type string
-          folded_indent = indent
-        else
-          indent = last_stack_indent ---@type string
-          child_indent = last_stack_indent ---@type string
-        end
-      end
-
-      last_cur = cur ---@type integer
-      stack_depth[cur] = depth ---@type integer
-      stack_indent[cur] = child_indent ---@type string
-      stack_lnum_roots[cur] = lnum + 1 ---@type integer
-      if dry then
-        uuid2lnum[containernode.uuid] = lnum
-        return lnum
-      end
-
-      lnum = lnum + 1 ---@type integer
-
-      local nodestate = statemap[containernode.uuid] ---@type era.view.tree.INodeState
-      local result ---@type era.view.tree.INodeTreeviewResultCache|era.view.tree.INodeRenderResult
-
-      if folded_depth > 0 then
-        result = render_treeview_container(ctx, containernode, containerstate, lnum, folded_depth)
-      else
-        local cache = nodestate.cache_treeview ---@type era.view.tree.INodeTreeviewResultCache|nil
-        if cache == nil or cache.tick ~= tick_render_treeview then
-          result = render_treeview_container(ctx, containernode, containerstate, lnum, folded_depth)
-          ---@type era.view.tree.INodeTreeviewResultCache
-          cache = {
-            tick = tick_render_treeview,
-            text = result.text,
-            highlights = result.highlights or {},
-          }
-          nodestate.cache_treeview = cache
-        else
-          result = cache
-        end
-      end
-
-      indent = folded_depth > 0 and folded_indent or indent ---@type string
-
-      lines[lnum] = indent .. result.text ---@type string
-      highlights_list[lnum] = result.highlights ---@type stl.t.IHighlightInline[]|nil
-      indents[lnum] = indent ---@type string
-      uuid2lnum[containernode.uuid] = lnum
-      lnum2uuid[lnum] = containernode.uuid
-      return lnum
-    end
+  local roots ---@type string[]
+  if root == tree.root then
+    roots = project_tree_children(root)
+  elseif includes(root) then
+    roots = { root }
   else
-    ---@type era.view.tree.IRenderTreeviewContainerNode
-    render_container = function(containernode, containerstate, is_lastchild, cur, dry)
-      local depth = cur == 1 and 1 or (stack_depth[cur - 1] + 1) ---@type integer
-      local indent = INDENT_COMMON ---@type string
-      local child_indent = INDENT_COMMON ---@type string
+    roots = EMPTY_CHILDREN
+  end
 
-      if cur > 1 then
-        local last_stack_indent = stack_indent[cur - 1] ---@type string
-        indent = last_stack_indent .. (is_lastchild and "╰─" or "├─") ---@type string
-        child_indent = last_stack_indent .. (is_lastchild and "  " or "│ ") ---@type string
-      end
+  local layout = treeview_layout.layout({
+    roots = roots,
+    children = children,
+    can_fold = foldempty and function(parentuuid, childuuid)
+      local parentstate = statemap[parentuuid] ---@type era.view.tree.INodeState|nil
+      local childstate = statemap[childuuid] ---@type era.view.tree.INodeState|nil
+      return parentstate ~= nil
+        and parentstate.nodetype == "container"
+        and childstate ~= nil
+        and childstate.nodetype == "container"
+    end or nil,
+  })
 
-      last_cur = cur ---@type integer
-      stack_depth[cur] = depth ---@type integer
-      stack_indent[cur] = child_indent ---@type string
-      stack_lnum_roots[cur] = lnum + 1 ---@type integer
-      if dry then
-        uuid2lnum[containernode.uuid] = lnum
-        return lnum
-      end
+  local prefixes = { [0] = INDENT_COMMON } ---@type table<integer, string>
+  for lnum = 1, layout:len(), 1 do
+    local uuid = layout:id(lnum) ---@type string
+    local nodestate = statemap[uuid] ---@type era.view.tree.INodeState
+    local depth = layout:depth(lnum) ---@type integer
+    local is_lastchild = layout:is_last(lnum) ---@type boolean
+    local prefix = prefixes[depth] or INDENT_COMMON ---@type string
+    local indent = depth == 0 and INDENT_COMMON or (prefix .. (is_lastchild and "╰─" or "├─")) ---@type string
+    local child_indent = depth == 0 and INDENT_COMMON or (prefix .. (is_lastchild and "  " or "│ ")) ---@type string
+    prefixes[depth + 1] = child_indent
 
-      lnum = lnum + 1 ---@type integer
+    local folded_ids = layout:folded_ids(lnum) ---@type string[]|nil
+    indents[lnum] = indent
 
-      local nodestate = statemap[containernode.uuid] ---@type era.view.tree.INodeState
-      local result ---@type era.view.tree.INodeTreeviewResultCache|era.view.tree.INodeRenderResult
+    local text ---@type string
+    local highlights ---@type stl.t.IHighlightInline[]|nil
+    if nodestate.nodetype == "location" then
+      local leafnode = tree:retrieve(nodestate.leafuuid) ---@type stl.c.ITreeNode
+      local leafstate = statemap[nodestate.leafuuid] ---@type era.view.tree.ILeafNodeState
+      local result = render_treeview_location(ctx, leafnode, leafstate, nodestate, lnum)
+      text = result.text
+      highlights = result.highlights
 
+      local parent_lnum = layout:parent_lnum(lnum) ---@type integer
+      childline[lnum] = layout:last_child_lnum(parent_lnum) or lnum
+    elseif nodestate.nodetype == "leaf" then
+      local leafnode = tree:retrieve(uuid) ---@type stl.c.ITreeNode
       local cache = nodestate.cache_treeview ---@type era.view.tree.INodeTreeviewResultCache|nil
       if cache == nil or cache.tick ~= tick_render_treeview then
-        result = render_treeview_container(ctx, containernode, containerstate, lnum, 0)
-        ---@type era.view.tree.INodeTreeviewResultCache
+        local result = render_treeview_leaf(ctx, leafnode, nodestate, lnum) ---@type era.view.tree.INodeRenderResult
         cache = {
           tick = tick_render_treeview,
           text = result.text,
           highlights = result.highlights or {},
         }
         nodestate.cache_treeview = cache
+      end
+      text = cache.text
+      highlights = cache.highlights
+
+      local lnum_last_location = layout:last_descendant_lnum(lnum) ---@type integer
+      childline[lnum] = lnum_last_location
+      if lnum_last_location > lnum then
+        leaf_has_location[lnum] = true
+      end
+      track_parent_leaf_line(parent_leaf_lines, leafnode.parent, lnum)
+    elseif nodestate.nodetype == "container" then
+      local containernode = tree:retrieve(uuid) ---@type stl.c.ITreeNode
+      local folded_depth = folded_ids ~= nil and #folded_ids - 1 or 0 ---@type integer
+      local result ---@type era.view.tree.INodeTreeviewResultCache|era.view.tree.INodeRenderResult
+      if folded_depth > 0 then
+        result = render_treeview_container(ctx, containernode, nodestate, lnum, folded_depth)
       else
+        local cache = nodestate.cache_treeview ---@type era.view.tree.INodeTreeviewResultCache|nil
+        if cache == nil or cache.tick ~= tick_render_treeview then
+          local rendered = render_treeview_container(ctx, containernode, nodestate, lnum, 0)
+          cache = {
+            tick = tick_render_treeview,
+            text = rendered.text,
+            highlights = rendered.highlights or {},
+          }
+          nodestate.cache_treeview = cache
+        end
         result = cache
       end
-
-      lines[lnum] = indent .. result.text ---@type string
-      highlights_list[lnum] = result.highlights ---@type stl.t.IHighlightInline[]|nil
-      indents[lnum] = indent ---@type string
-      uuid2lnum[containernode.uuid] = lnum
-      lnum2uuid[lnum] = containernode.uuid
-      return lnum
-    end
-  end
-
-  local conditional ---@type stl.c.ITreeTraverseConditional
-  if only_expanded then
-    if only_matched then
-      if only_selected then
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_matched ~= tick_matched
-            or nodestate.tick_selected_maximum ~= tick_selected
-          then
-            return "badroot"
-          end
-          return nodestate.collapsed and "goodnode" or "goodroot"
-        end
-      else
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_matched ~= tick_matched
-          then
-            return "badroot"
-          end
-          return nodestate.collapsed and "goodnode" or "goodroot"
-        end
+      text = result.text
+      highlights = result.highlights
+      local lnum_last_descendant = layout:last_descendant_lnum(lnum) ---@type integer
+      if lnum_last_descendant > lnum then
+        childline[lnum] = lnum_last_descendant
       end
     else
-      if only_selected then
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_selected_maximum ~= tick_selected
-          then
-            return "badroot"
-          end
-          return nodestate.collapsed and "goodnode" or "goodroot"
-        end
-      else
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if nodestate == nil or nodestate.tick_invisible == tick_invisible then
-            return "badroot"
-          end
-          return nodestate.collapsed and "goodnode" or "goodroot"
-        end
-      end
+      error(string.format("[%s] unknown nodetype for '%s': %s", __module_name__, uuid, tostring(nodestate.nodetype)))
     end
-  else
-    if only_matched then
-      if only_selected then
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_matched ~= tick_matched
-            or nodestate.tick_selected_maximum ~= tick_selected
-          then
-            return "badroot"
-          end
-          return "goodroot"
-        end
-      else
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_matched ~= tick_matched
-          then
-            return "badroot"
-          end
-          return "goodroot"
-        end
-      end
-    else
-      if only_selected then
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if
-            nodestate == nil
-            or nodestate.tick_invisible == tick_invisible
-            or nodestate.tick_selected_maximum ~= tick_selected
-          then
-            return "badroot"
-          end
-          return "goodroot"
-        end
-      else
-        ---@type stl.c.ITreeTraverseConditional
-        conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-          if nodestate == nil or nodestate.tick_invisible == tick_invisible then
-            return "badroot"
-          end
-          return "goodroot"
-        end
-      end
-    end
+
+    lines[lnum] = indent .. text
+    highlights_list[lnum] = highlights
   end
 
-  local traverse ---@type stl.c.ITreeTraverseHandler
-  if foldempty then
-    ---@type stl.c.ITreeTraverseHandler
-    traverse = function(_, node, cur, is_lastchild, onlychild)
-      if cur < last_cur then
-        for index = cur, last_cur, 1 do
-          local lnum_root = stack_lnum_roots[index] ---@type integer
-          childline[lnum_root] = lnum ---@type integer
-        end
-      end
-
-      local nodestate = statemap[node.uuid]
-
-      if onlychild ~= nil then
-        local state_onlychild = statemap[onlychild] ---@type era.view.tree.INodeState
-        if state_onlychild.nodetype == "container" then
-          ---@cast nodestate            era.view.tree.IContainerNodeState
-          render_container(node, nodestate, is_lastchild, cur, true)
-          folded_depth = folded_depth + 1 ---@type integer
-          return
-        end
-      end
-
-      if nodestate.nodetype == "leaf" then
-        folded_depth = 0 ---@type integer
-        return render_leaf(node, nodestate, is_lastchild, cur)
-      end
-
-      if nodestate.nodetype == "container" then
-        local result = render_container(node, nodestate, is_lastchild, cur, false)
-        folded_depth = 0 ---@type integer
-        return result
-      end
-
-      stl.reporter.error({
-        from = self.fullname,
-        subject = "render_treeview",
-        message = "Unknown nodetype",
-        details = {
-          node = node,
-          nodestate = nodestate,
-          foldempty = foldempty,
-          cur = cur,
-          is_lastchild = is_lastchild,
-          onlychild = onlychild,
-        },
-      })
-    end
-  else
-    ---@type stl.c.ITreeTraverseHandler
-    traverse = function(_, node, cur, is_lastchild)
-      if cur < last_cur then
-        for index = cur, last_cur, 1 do
-          local lnum_root = stack_lnum_roots[index] ---@type integer
-          childline[lnum_root] = lnum ---@type integer
-        end
-      end
-
-      local nodestate = statemap[node.uuid] ---@type era.view.tree.INodeState|nil
-
-      if nodestate.nodetype == "leaf" then
-        return render_leaf(node, nodestate, is_lastchild, cur)
-      end
-
-      if nodestate.nodetype == "container" then
-        return render_container(node, nodestate, is_lastchild, cur, false)
-      end
-
-      stl.reporter.error({
-        from = self.fullname,
-        subject = "render_treeview",
-        message = "Unknown nodetype",
-        details = {
-          node = node,
-          nodestate = nodestate,
-          foldempty = foldempty,
-          cur = cur,
-          is_lastchild = is_lastchild,
-        },
-      })
-    end
-  end
-
-  tree:traverse(root, traverse, conditional)
-  for index = 1, last_cur, 1 do
-    local lnum_container = stack_lnum_roots[index] ---@type integer
-    childline[lnum_container] = lnum ---@type integer
-  end
-
-  for _, leaflines in pairs(parent_leaf_lines) do
-    local last_leaf = leaflines[#leaflines] ---@type integer|nil
-    if last_leaf ~= nil then
-      for _, leafline in ipairs(leaflines) do
-        if not leaf_has_location[leafline] then
-          childline[leafline] = last_leaf ---@type integer
-        end
-      end
-    end
-  end
+  finalize_parent_leaf_childline(childline, parent_leaf_lines, leaf_has_location)
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -1202,7 +861,11 @@ function M:render_treeview(params)
   end
 
   ---@type era.view.tree.IRenderResult
-  local result = { childline = childline, indents = indents, lnum2uuid = lnum2uuid, uuid2lnum = uuid2lnum }
+  local result = {
+    childline = childline,
+    indents = indents,
+    layout = layout,
+  }
   return result
 end
 
@@ -1566,34 +1229,47 @@ function M:__refresh_selected_maximum__()
   if not self._dirty_selected then
     return
   end
-  self._dirty_selected = false ---@type boolean
 
   local tree = self._tree ---@type stl.c.IReadonlyTree
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
+  local roots = tree:children(tree.root) or EMPTY_CHILDREN ---@type string[]
+  local stack_uuids = {} ---@type string[]
+  local stack_indexes = {} ---@type integer[]
+  local stack_maximums = {} ---@type integer[]
 
-  tree:unsafe_traverse(nil, function(ctx)
-    local rootnode = ctx.rootnode ---@type stl.c.ITreeNode
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.ITreeNode>
+  for _, rootuuid in ipairs(roots) do
+    local stack_size = 1 ---@type integer
+    local rootstate = statemap[rootuuid] ---@type era.view.tree.INodeState
+    stack_uuids[1] = rootuuid
+    stack_indexes[1] = 1
+    stack_maximums[1] = rootstate.tick_selected
 
-    ---@param node                      stl.c.ITreeNode
-    ---@return integer
-    local function recursive(node)
-      local childstate = statemap[node.uuid] ---@type era.view.tree.INodeState
-      local tick = childstate.tick_selected ---@type integer
-      for _, childuuid in ipairs(node.children) do
-        local childnode = nodemap[childuuid] ---@type stl.c.ITreeNode
-        local t = recursive(childnode) ---@type integer
-        tick = tick < t and t or tick ---@type integer
+    while stack_size > 0 do
+      local uuid = stack_uuids[stack_size] ---@type string
+      local children = tree:children(uuid) or EMPTY_CHILDREN ---@type string[]
+      local child_index = stack_indexes[stack_size] ---@type integer
+      if child_index <= #children then
+        local childuuid = children[child_index] ---@type string
+        local childstate = statemap[childuuid] ---@type era.view.tree.INodeState
+        stack_indexes[stack_size] = child_index + 1
+        stack_size = stack_size + 1
+        stack_uuids[stack_size] = childuuid
+        stack_indexes[stack_size] = 1
+        stack_maximums[stack_size] = childstate.tick_selected
+      else
+        local maximum = stack_maximums[stack_size] ---@type integer
+        statemap[uuid].tick_selected_maximum = maximum
+        stack_uuids[stack_size] = nil
+        stack_indexes[stack_size] = nil
+        stack_maximums[stack_size] = nil
+        stack_size = stack_size - 1
+        if stack_size > 0 and stack_maximums[stack_size] < maximum then
+          stack_maximums[stack_size] = maximum
+        end
       end
-      childstate.tick_selected_maximum = tick ---@type integer
-      return tick
     end
-
-    for _, childuuid in ipairs(rootnode.children) do
-      local childnode = nodemap[childuuid] ---@type stl.c.ITreeNode
-      recursive(childnode) ---@type integer
-    end
-  end)
+  end
+  self._dirty_selected = false ---@type boolean
 end
 
 return M

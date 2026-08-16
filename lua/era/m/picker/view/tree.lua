@@ -381,8 +381,8 @@ function M:render_treeview(params)
   end
 
   local nsnr = dot.var.nsnr.picker_matches ---@type integer
-  local uuids = result.lnum2uuid ---@type string[]
-  local N = #uuids ---@type integer
+  local layout = result.layout ---@type stl.view.TreeLayout
+  local N = layout:len() ---@type integer
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
 
@@ -397,7 +397,7 @@ function M:render_treeview(params)
   ---@cast statemap                     table<string, era.m.picker.view.tree.INodeState>
 
   for lnum = 1, N, 1 do
-    local uuid = uuids[lnum] ---@type string
+    local uuid = layout:id(lnum) ---@type string
     local nodestate = statemap[uuid] ---@type era.m.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
       local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil

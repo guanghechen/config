@@ -756,7 +756,11 @@ function M.new(props)
         })
       end
 
-      retriever:attach(bufnr, result.lnum2uuid, result.uuid2lnum, result.childline)
+      if result.layout ~= nil then
+        retriever:attach_layout(bufnr, result.layout, result.childline)
+      else
+        retriever:attach(bufnr, result.lnum2uuid, result.uuid2lnum, result.childline)
+      end
 
       local uuid_current = self._uuid_current ---@type string|nil
       local lnum_current = uuid_current ~= nil and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil

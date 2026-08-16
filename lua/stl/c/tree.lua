@@ -54,6 +54,7 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public isdescendant           fun(self: stl.c.IReadonlyTree, ancestor: string, uuid: string): boolean
 ---@field public isexistent             fun(self: stl.c.IReadonlyTree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.IReadonlyTree, uuid: string): stl.c.ITreeNode|nil
+---@field public children               fun(self: stl.c.IReadonlyTree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.IReadonlyTree, root: string|nil, fn: stl.c.ITreeQuickTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.IReadonlyTree
 ---@field public traverse               fun(self: stl.c.IReadonlyTree, root: string|nil, fn: stl.c.ITreeTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.IReadonlyTree
 ---@field public unsafe_traverse        fun(self: stl.c.IReadonlyTree, root: string|nil, traverse: stl.c.ITreeUnsafeTraverseCallback): stl.c.IReadonlyTree
@@ -68,6 +69,7 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public isdescendant           fun(self: stl.c.ITree, ancestor: string, uuid: string): boolean
 ---@field public isexistent             fun(self: stl.c.ITree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.ITree, uuid: string): stl.c.ITreeNode|nil
+---@field public children               fun(self: stl.c.ITree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.ITree, root: string|nil, fn: stl.c.ITreeQuickTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.ITree
 ---@field public traverse               fun(self: stl.c.ITree, root: string|nil, fn: stl.c.ITreeTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.ITree
 ---@field public unsafe_traverse        fun(self: stl.c.ITree, root: string|nil, traverse: stl.c.ITreeUnsafeTraverseCallback): stl.c.ITree
@@ -198,6 +200,22 @@ end
 function M:retrieve(uuid)
   self:__health__()
   return self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
+end
+
+---@param uuid                          string
+---@return string[]|nil Read-only borrowed child IDs in traversal order.
+function M:children(uuid)
+  self:__health__()
+
+  local node = self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
+  if node == nil then
+    return nil
+  end
+
+  if node.dirty_co then
+    self:__sort_children__(node)
+  end
+  return node.children
 end
 
 ---@param root                          string

@@ -666,8 +666,8 @@ function M:render_treeview(params)
   local only_matched = params.only_matched ---@type boolean
 
   local result = P.render_treeview(self, params)
-  local uuids = result.lnum2uuid ---@type string[]
-  local N = #uuids ---@type integer
+  local layout = result.layout ---@type stl.view.TreeLayout
+  local N = layout:len() ---@type integer
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
 
@@ -683,7 +683,7 @@ function M:render_treeview(params)
 
   if only_matched then
     for lnum = 1, N, 1 do
-      local uuid = uuids[lnum] ---@type string
+      local uuid = layout:id(lnum) ---@type string
       local nodestate = statemap[uuid] ---@type era.m.picker.view.filetree.INodeState|nil
       if
         nodestate ~= nil
