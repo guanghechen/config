@@ -101,6 +101,7 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field public flag_viewtype          stl.c.Observable
 ---
 ---@field protected _disposed           boolean
+---@field protected _node_sorter        stl.c.ITreeNodeSorter
 ---@field protected _tree               stl.c.Tree
 ---@field protected _composer           era.m.picker.BasicComposer
 ---@field protected _plainfile          era.view.Plainfile
@@ -168,10 +169,7 @@ function M.new(props)
   local on_hidden = props.on_hidden or stl.fn.noop ---@type era.m.picker.composer.tree.IOnHidden
   local on_refresh = props.on_refresh or stl.fn.noop ---@type era.m.picker.composer.tree.IOnRefresh
 
-  local tree = stl.c.Tree.new({
-    name = fullname,
-    node_sorter = node_sorter,
-  })
+  local tree = stl.c.Tree.new("__virtual_root__")
 
   local self = setmetatable({}, M)
 
@@ -812,6 +810,7 @@ function M.new(props)
   self.flag_viewtype = o_flag_viewtype
 
   self._disposed = false
+  self._node_sorter = node_sorter
   self._tree = tree
   self._composer = composer
   self._plainfile = plainfile
@@ -869,6 +868,7 @@ function M:dispose()
     return
   end
   self._disposed = true
+  self._node_sorter = nil
 
   local fullname = self.fullname
   local on_dispose = self._on_disposed ---@type era.m.picker.composer.tree.IOnDisposed
@@ -952,7 +952,51 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:isexistent(uuid)
-  return self._tree:isexistent(uuid)
+  return self._tree:contains(uuid)
+end
+
+---@param parentuuid                    string
+---@param uuid                          string
+---@param data                          table
+---@return stl.c.ITreeNode
+function M:insert(parentuuid, uuid, data)
+  self:__health__()
+
+  local tree = self._tree ---@type stl.c.Tree
+  local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
+  if node ~= nil then
+    if tree:parent(uuid) == parentuuid then
+      return tree:update(uuid, data)
+    end
+    local parent = tree:retrieve(parentuuid) ---@type stl.c.ITreeNode|nil
+    if parent == nil then
+      error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
+    end
+    local candidate = {
+      uuid = uuid,
+      parent = parentuuid,
+      children = node.children,
+      depth = parent.depth + 1,
+      data = data,
+      dirty_co = false,
+    } ---@type stl.c.ITreeNode
+    tree:move(uuid, parentuuid, self:__resolve_insert_index__(parentuuid, candidate))
+    return tree:update(uuid, data)
+  end
+
+  local parent = tree:retrieve(parentuuid) ---@type stl.c.ITreeNode|nil
+  if parent == nil then
+    error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
+  end
+  local candidate = {
+    uuid = uuid,
+    parent = parentuuid,
+    children = {},
+    depth = parent.depth + 1,
+    data = data,
+    dirty_co = false,
+  } ---@type stl.c.ITreeNode
+  return tree:insert(parentuuid, uuid, data, self:__resolve_insert_index__(parentuuid, candidate))
 end
 
 ---@return boolean
@@ -1054,6 +1098,23 @@ function M:__has_selected_node__()
     end
   end
   return false
+end
+
+---@protected
+---@param parentuuid                    string
+---@param candidate                     stl.c.ITreeNode
+---@return integer
+function M:__resolve_insert_index__(parentuuid, candidate)
+  local tree = self._tree ---@type stl.c.Tree
+  local children = tree:children(parentuuid) ---@type string[]
+  local sorter = self._node_sorter ---@type stl.c.ITreeNodeSorter
+  for index, childuuid in ipairs(children) do
+    local child = tree:retrieve(childuuid) ---@type stl.c.ITreeNode
+    if sorter(candidate, child) then
+      return index
+    end
+  end
+  return #children + 1
 end
 
 ---@protected

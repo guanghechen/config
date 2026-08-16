@@ -357,7 +357,7 @@ local function fetch_symbols(tree, callback)
       return nil
     end
     local uuid = make_uuid(parent_uuid)
-    tree:insert(parent_uuid, uuid, data)
+    picker:insert(parent_uuid, uuid, data)
     seen[full_key] = true
     seen[pos_key .. ":" .. data.kind] = true
     return uuid
