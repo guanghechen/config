@@ -49,6 +49,13 @@
       "main": "main",
       "location": "${HOME}/ws/github/yozora/yozora-react",
       "editions": ["nix", "osx"]
+    },
+    {
+      "name": "yozora-rust",
+      "remote": "https://github.com/guanghechen/yozora-rust.git",
+      "main": "main",
+      "location": "${HOME}/ws/github/guanghechen/yozora-rust",
+      "editions": ["nix", "osx"]
     }
   ]
 }
