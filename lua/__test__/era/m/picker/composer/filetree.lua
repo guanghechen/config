@@ -15,8 +15,9 @@ end
 ---@param name                          string
 ---@param on_attached                   fun(_: era.m.picker.FiletreeComposer, rootpath: string)|nil
 ---@param on_confirm                    era.m.picker.composer.filetree.IOnConfirm|nil
+---@param on_preview_rendered           era.m.picker.composer.filetree.IOnPreviewRendered|nil
 ---@return era.m.picker.FiletreeComposer
-local function new_composer(name, on_attached, on_confirm)
+local function new_composer(name, on_attached, on_confirm, on_preview_rendered)
   return era.m.picker.FiletreeComposer.new({
     name = name,
     permanent = false,
@@ -31,6 +32,7 @@ local function new_composer(name, on_attached, on_confirm)
     flag_viewtype = observable("tree"),
     on_attached = on_attached,
     on_confirm = on_confirm,
+    on_preview_rendered = on_preview_rendered,
   })
 end
 
@@ -38,8 +40,9 @@ end
 ---@param callback                      fun(composer: era.m.picker.FiletreeComposer)
 ---@param on_attached                   fun(_: era.m.picker.FiletreeComposer, rootpath: string)|nil
 ---@param on_confirm                    era.m.picker.composer.filetree.IOnConfirm|nil
-local function with_composer(name, callback, on_attached, on_confirm)
-  local composer = new_composer(name, on_attached, on_confirm)
+---@param on_preview_rendered           era.m.picker.composer.filetree.IOnPreviewRendered|nil
+local function with_composer(name, callback, on_attached, on_confirm, on_preview_rendered)
+  local composer = new_composer(name, on_attached, on_confirm, on_preview_rendered)
   local ok, err = pcall(callback, composer)
   composer:dispose()
   vim.wait(20)
@@ -47,6 +50,38 @@ local function with_composer(name, callback, on_attached, on_confirm)
     error(err, 0)
   end
 end
+
+t:test("preview callback receives the resolved file data", function()
+  local basic_props = nil ---@type era.m.picker.composer.basic.IProps|nil
+  local original_new = era.m.picker.BasicComposer.new
+  t:patch_table(era.m.picker.BasicComposer, "new", function(props)
+    basic_props = props
+    return original_new(props)
+  end)
+
+  local expected = {
+    filepath = "/workspace/main.lua",
+    filetype = "file",
+  }
+  local actual = nil ---@type stl.c.IFiletreeNodeData|nil
+  with_composer(
+    "preview-data",
+    function(composer)
+      composer.__retrieve_file__ = function()
+        return "leaf", expected
+      end
+      assert(basic_props ~= nil, "basic composer props should be captured")
+      basic_props.on_preview_rendered(composer._composer, 84)
+    end,
+    nil,
+    nil,
+    function(_, _, data)
+      actual = data
+    end
+  )
+
+  t.assert_true(actual == expected, "preview data identity")
+end)
 
 ---@param composer                      era.m.picker.FiletreeComposer
 ---@param desc                          string

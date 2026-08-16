@@ -27,7 +27,7 @@ local __module_name__ = "era.m.picker.composer.filetree" ---@type string
 ---| fun(self: era.m.picker.FiletreeComposer, bufnr: integer): nil
 
 ---@alias era.m.picker.composer.filetree.IOnPreviewRendered
----| fun(self: era.m.picker.FiletreeComposer, bufnr: integer): nil
+---| fun(self: era.m.picker.FiletreeComposer, bufnr: integer, data: stl.c.IFiletreeNodeData|nil): nil
 
 ---@class era.m.picker.composer.filetree.ISelectedItemLocation
 ---@field public lnum                   integer
@@ -1516,7 +1516,8 @@ function M.new(props)
       picker:mark_result_dirty()
     end,
     on_preview_rendered = function(_, bufnr)
-      on_preview_rendered(self, bufnr)
+      local _, data = self:__retrieve_file__()
+      on_preview_rendered(self, bufnr, data)
     end,
     on_result_rendered = function(_, bufnr)
       on_result_rendered(self, bufnr)

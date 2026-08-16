@@ -265,13 +265,12 @@ picker = era.m.picker.FiletreeComposer.new({
     refresh(false)
   end,
 
-  on_preview_rendered = function(_, bufnr)
-    local filenode = picker:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
-    if filenode == nil then
+  on_preview_rendered = function(_, bufnr, filedata)
+    if filedata == nil then
       return
     end
 
-    local bufnr_sourcefile = dot.buf.loadfile(filenode.data.filepath) ---@type integer|nil)
+    local bufnr_sourcefile = dot.buf.loadfile(filedata.filepath) ---@type integer|nil
     if bufnr_sourcefile == nil then
       return
     end
