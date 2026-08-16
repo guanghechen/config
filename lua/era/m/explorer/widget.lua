@@ -243,7 +243,7 @@ function M:get_cursor_filepath()
 
   local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
   local lnum = cursor[1] ---@type integer
-  return render_result.lnum_to_filepath[lnum]
+  return render_result.layout:id(lnum)
 end
 
 ---@return era.m.explorer.view.IRenderResult|nil
@@ -632,9 +632,9 @@ function M:__get_navigation_parent_filepath__(filepath)
     return nil
   end
 
-  local lnum = render_result.filepath_to_lnum[filepath] ---@type integer|nil
-  local parent_lnum = lnum ~= nil and render_result.parent_lnum[lnum] or nil ---@type integer|nil
-  return parent_lnum ~= nil and render_result.lnum_to_filepath[parent_lnum] or nil
+  local lnum = render_result.layout:lnum(filepath) ---@type integer|nil
+  local parent_lnum = lnum ~= nil and render_result.layout:parent_lnum(lnum) or nil ---@type integer|nil
+  return parent_lnum ~= nil and render_result.layout:id(parent_lnum) or nil
 end
 
 ---@protected
@@ -646,17 +646,18 @@ function M:__get_navigation_last_child_filepath__(filepath)
     return nil
   end
 
-  local lnum = render_result.filepath_to_lnum[filepath] ---@type integer|nil
+  local layout = render_result.layout ---@type stl.view.TreeLayout
+  local lnum = layout:lnum(filepath) ---@type integer|nil
   if lnum == nil then
     return nil
   end
 
-  local target_lnum = render_result.lastchild_lnum[lnum] ---@type integer|nil
+  local target_lnum = layout:last_child_lnum(lnum) ---@type integer|nil
   if target_lnum == nil then
-    local parent_lnum = render_result.parent_lnum[lnum] ---@type integer|nil
-    target_lnum = parent_lnum ~= nil and render_result.lastchild_lnum[parent_lnum] or render_result.root_lastchild_lnum
+    local parent_lnum = layout:parent_lnum(lnum) ---@type integer|nil
+    target_lnum = parent_lnum ~= nil and layout:last_child_lnum(parent_lnum) or layout:last_root_lnum()
   end
-  return target_lnum ~= nil and render_result.lnum_to_filepath[target_lnum] or nil
+  return target_lnum ~= nil and layout:id(target_lnum) or nil
 end
 
 ---@protected
@@ -698,7 +699,7 @@ function M:__get_visual_nodes__()
 
   local nodes = {} ---@type era.m.explorer.Node[]
   for lnum = start_lnum, end_lnum do
-    local filepath = render_result.lnum_to_filepath[lnum] ---@type string|nil
+    local filepath = render_result.layout:id(lnum) ---@type string|nil
     if filepath ~= nil then
       local node = self._tree:locate(filepath) ---@type era.m.explorer.Node|nil
       if node ~= nil then
@@ -799,7 +800,7 @@ function M:__goto_matching_item__(direction, include_dirs, matcher)
 
   local matching_lnums = {} ---@type integer[]
   for lnum = 1, total_lines do
-    local filepath = render_result.lnum_to_filepath[lnum] ---@type string|nil
+    local filepath = render_result.layout:id(lnum) ---@type string|nil
     if filepath ~= nil then
       local is_dir = filepath:sub(-1) == "/" ---@type boolean
       if include_dirs or not is_dir then
@@ -841,7 +842,7 @@ function M:__goto_matching_item__(direction, include_dirs, matcher)
   end
 
   if target_lnum ~= nil then
-    local target_filepath = render_result.lnum_to_filepath[target_lnum] ---@type string|nil
+    local target_filepath = render_result.layout:id(target_lnum) ---@type string|nil
     if target_filepath ~= nil then
       self._tree.o_cursor_filepath:next(target_filepath)
       pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
@@ -1663,10 +1664,10 @@ function M:__setup_subscriptions__()
           return
         end
 
-        local filepath_to_lnum = render_result.filepath_to_lnum ---@type table<string, integer>
+        local layout = render_result.layout ---@type stl.view.TreeLayout
         for _, filepath in ipairs(filepaths) do
           local normalized = dot.path.normalize(filepath, false, "/") ---@type string
-          if filepath_to_lnum[normalized] ~= nil or filepath_to_lnum[normalized .. "/"] ~= nil then
+          if layout:lnum(normalized) ~= nil or layout:lnum(normalized .. "/") ~= nil then
             self:__render__()
             return
           end
@@ -1701,7 +1702,7 @@ function M:__sync_cursor_to_filepath__(filepath)
     return
   end
 
-  local lnum = render_result.filepath_to_lnum[filepath] ---@type integer|nil
+  local lnum = render_result.layout:lnum(filepath) ---@type integer|nil
   if lnum ~= nil then
     pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
   end

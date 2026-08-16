@@ -51,6 +51,20 @@ bootstrap.with_runtime(t, {
       PATH_SEP = "/",
     },
     fileicon = Fileicon,
+    icon = {
+      symbols = {
+        selection = "S",
+        selection_copy = "C",
+        selection_cut = "X",
+      },
+    },
+    nvim = {
+      buf = {
+        get_loaded_bufnrs = function()
+          return {}
+        end,
+      },
+    },
   },
 })
 
@@ -120,7 +134,7 @@ t:test("render: writes range highlights directly as extmarks", function()
     show_icons = false,
   })
   t.assert_eq(0, normalize_calls, "canonical render filepath normalization count")
-  t.assert_eq("/project/file.lua", result.lnum_to_filepath[1], "displayed filepath")
+  t.assert_eq("/project/file.lua", result.layout:id(1), "displayed filepath")
 
   local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, view:get_namespace(), 0, -1, { details = true })
   local highlight_extmarks = {} ---@type any[]
@@ -309,11 +323,94 @@ t:test("render: records visible parent and last-child navigation", function()
     show_icons = false,
   })
 
-  t.assert_eq(1, result.parent_lnum[2], "first child parent")
-  t.assert_eq(1, result.parent_lnum[3], "last child parent")
-  t.assert_eq(3, result.lastchild_lnum[1], "directory last child")
-  t.assert_eq(4, result.root_lastchild_lnum, "root last child")
+  t.assert_eq(1, result.layout:parent_lnum(2), "first child parent")
+  t.assert_eq(1, result.layout:parent_lnum(3), "last child parent")
+  t.assert_eq(3, result.layout:last_child_lnum(1), "directory last child")
+  t.assert_eq(4, result.layout:last_root_lnum(), "root last child")
   vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("render: only-selected keeps source sibling connectors", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local view = View.new("only-selected-connectors-test")
+  local selected = {
+    filepath = "/project/a.lua",
+    nodename = "a.lua",
+    nodetype = "F",
+    selected = true,
+  } ---@type era.m.explorer.Node
+  local hidden_last = {
+    filepath = "/project/z.lua",
+    nodename = "z.lua",
+    nodetype = "F",
+    selected = false,
+  } ---@type era.m.explorer.Node
+  local root = {
+    filepath = "/project/",
+    nodename = "project",
+    nodetype = "D",
+    expanded = true,
+    loaded = true,
+    selected = false,
+    children = { selected, hidden_last },
+  } ---@type era.m.explorer.Node
+  selected.parent = root
+  hidden_last.parent = root
+  local tree = {
+    ticks = { structure = 1 },
+    is_selected = function()
+      return false
+    end,
+  } ---@type era.m.explorer.Tree
+
+  local result = view:render(bufnr, tree, root, {
+    only_selected = true,
+    show_diagnostics = false,
+    show_git_status = false,
+    show_icons = false,
+  })
+
+  t.assert_eq(1, #result.lines, "visible row count")
+  t.assert_eq("├─a.lua", result.lines[1], "connector follows source sibling position")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("precompute: handles depth 10000 iteratively", function()
+  local root = {
+    filepath = "/root/",
+    nodename = "root",
+    nodetype = "D",
+    expanded = true,
+    loaded = true,
+    children = {},
+  } ---@type era.m.explorer.Node
+  local parent = root ---@type era.m.explorer.Node
+  for index = 1, 10000 do
+    local node = {
+      filepath = "/" .. index .. "/",
+      nodename = tostring(index),
+      nodetype = "D",
+      expanded = true,
+      loaded = true,
+      children = {},
+      parent = parent,
+    } ---@type era.m.explorer.Node
+    parent.children[1] = node
+    parent = node
+  end
+  local view = View.new("deep-precompute-test")
+  local ctx = {
+    tree = { ticks = { structure = 1 } },
+    diag_counts = {},
+    show_diagnostics = true,
+    show_git_status = false,
+    show_icons = false,
+  } ---@type era.m.explorer.view.IRenderContext
+
+  view:__precompute__(root, ctx)
+
+  t.assert_eq(10000, #view._cached_filepaths, "deep filepath count")
+  t.assert_true(ctx.diag_counts[root.filepath] ~= nil, "deep root diagnostics")
 end)
 
 t:run()

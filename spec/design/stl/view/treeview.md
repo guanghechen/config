@@ -96,6 +96,7 @@ projected children；其计算和 allocation 不计入 layout 本身的复杂度
 
 ```lua
 layout:len()
+layout:last_root_lnum()
 
 layout:id(lnum)
 layout:lnum(id)
@@ -116,6 +117,7 @@ layout:is_last(lnum)
 ```lua
 {
   _ids = string[],
+  _last_root_lnum = integer,
   _depths = integer[],
   _parent_lnums = integer[],
   _last_child_lnums = integer[],

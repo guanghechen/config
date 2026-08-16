@@ -10,6 +10,7 @@ local __module_name__ = "stl.view.treeview.layout" ---@type string
 
 ---@class stl.view.TreeLayout
 ---@field private _len integer
+---@field private _last_root_lnum integer
 ---@field private _ids string[]
 ---@field private _depths integer[]
 ---@field private _parent_lnums integer[]
@@ -21,11 +22,12 @@ local __module_name__ = "stl.view.treeview.layout" ---@type string
 local TreeLayout = {}
 TreeLayout.__index = TreeLayout
 
----@param state { ids: string[], depths: integer[], parent_lnums: integer[], last_child_lnums: integer[], last_descendant_lnums: integer[], prev_sibling_lnums: integer[], id_to_lnum: table<string, integer>, folded_ids_by_lnum: table<integer, string[]> }
+---@param state { ids: string[], depths: integer[], parent_lnums: integer[], last_root_lnum: integer, last_child_lnums: integer[], last_descendant_lnums: integer[], prev_sibling_lnums: integer[], id_to_lnum: table<string, integer>, folded_ids_by_lnum: table<integer, string[]> }
 ---@return stl.view.TreeLayout
 function TreeLayout.__new(state)
   return setmetatable({
     _len = #state.ids,
+    _last_root_lnum = state.last_root_lnum,
     _ids = state.ids,
     _depths = state.depths,
     _parent_lnums = state.parent_lnums,
@@ -40,6 +42,11 @@ end
 ---@return integer
 function TreeLayout:len()
   return self._len
+end
+
+---@return integer|nil
+function TreeLayout:last_root_lnum()
+  return self._last_root_lnum > 0 and self._last_root_lnum or nil
 end
 
 ---@param lnum integer
@@ -172,6 +179,7 @@ function M.layout(props)
   local prev_sibling_lnums = {} ---@type integer[]
   local id_to_lnum = {} ---@type table<string, integer>
   local folded_ids_by_lnum = {} ---@type table<integer, string[]>
+  local last_root_lnum = 0 ---@type integer
 
   -- Each stack slot is one active sibling list. Slot 1 is the virtual forest root.
   local stack_children = { roots } ---@type any[][]
@@ -212,6 +220,8 @@ function M.layout(props)
       last_child_lnums[lnum] = 0
       if parent_lnum > 0 then
         last_child_lnums[parent_lnum] = lnum
+      else
+        last_root_lnum = lnum
       end
       prev_sibling_lnums[lnum] = stack_prev_lnums[stack_size]
       stack_prev_lnums[stack_size] = lnum
@@ -288,6 +298,7 @@ function M.layout(props)
     ids = ids,
     depths = depths,
     parent_lnums = parent_lnums,
+    last_root_lnum = last_root_lnum,
     last_child_lnums = last_child_lnums,
     last_descendant_lnums = last_descendant_lnums,
     prev_sibling_lnums = prev_sibling_lnums,

@@ -1,10 +1,13 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.explorer.view" ---@type string
 
+local treeview_layout = require("stl.view.treeview.layout")
+
 local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
 local INDENT_PIPE = "│ " ---@type string
 local INDENT_SPACE = "  " ---@type string
+local EMPTY_CHILDREN = {} ---@type era.m.explorer.Node[]
 
 -- Virtual text IDs start at 1M to avoid collision with extmark IDs (typically small integers).
 -- This ensures clear separation between line-based extmarks and virtual text decorations.
@@ -75,35 +78,84 @@ function M:render(bufnr, tree, root, options)
   local diagnostic_info_list = {} ---@type era.m.explorer.view.IDiagnosticInfo[]
   local git_status_list = {} ---@type era.m.explorer.view.IGitStatusInfo[]
   local sign_info_list = {} ---@type era.m.explorer.view.ISignInfo[]
-  local lnum_to_filepath = {} ---@type table<integer, string>
-  local filepath_to_lnum = {} ---@type table<string, integer>
-  local parent_lnum = {} ---@type table<integer, integer>
-  local lastchild_lnum = {} ---@type table<integer, integer>
-  local root_lastchild_lnum = nil ---@type integer|nil
-  local lnum = 0 ---@type integer
   local indent_hln = self._indent_hln ---@type string
   local only_selected = ctx.only_selected ---@type boolean
 
+  local root_is_selected = tree:is_selected(root_filepath) ---@type boolean
+  local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
+  local root_transfer_mode = pending_transfer ~= nil
+      and (root_is_selected or pending_transfer.source_filepaths[root_filepath])
+      and pending_transfer.mode
+    or nil ---@type era.m.explorer.TransferModeEnum|nil
+
+  local node_by_filepath = {} ---@type table<string, era.m.explorer.Node>
+  local inherited_selected_by_node = only_selected and { [root] = root_is_selected } or nil ---@type table<era.m.explorer.Node, boolean>|nil
+
   ---@param node                        era.m.explorer.Node
-  ---@param prefix                      string
-  ---@param is_last                     boolean
-  ---@param display_name                string|nil
-  ---@param inherited_selected          boolean
-  ---@param inherited_transfer_mode     era.m.explorer.TransferModeEnum|nil
-  ---@param visible_parent_lnum          integer|nil
-  ---@return integer|nil
-  local function traverse(
-    node,
-    prefix,
-    is_last,
-    display_name,
-    inherited_selected,
-    inherited_transfer_mode,
-    visible_parent_lnum
-  )
+  ---@return era.m.explorer.Node[]
+  local function children(node)
+    if node.nodetype ~= "D" or not node.expanded then
+      return EMPTY_CHILDREN
+    end
+
+    if not node.loaded and ctx.resource_manager ~= nil then
+      ctx.tree:load_node(node, false)
+    end
+
+    local source = node.children ---@type era.m.explorer.Node[]
+    if not only_selected then
+      return source
+    end
+
+    local current_selected = inherited_selected_by_node[node] or node.selected ---@type boolean
+    if current_selected then
+      for _, child in ipairs(source) do
+        inherited_selected_by_node[child] = true
+      end
+      return source
+    end
+
+    local projected = {} ---@type era.m.explorer.Node[]
+    for _, child in ipairs(source) do
+      if child.selected or (child.nodetype == "D" and child.has_selected) then
+        projected[#projected + 1] = child
+        inherited_selected_by_node[child] = false
+      end
+    end
+    return projected
+  end
+
+  local roots = children(root) ---@type era.m.explorer.Node[]
+  local layout = treeview_layout.layout({
+    roots = roots,
+    id = function(node)
+      node_by_filepath[node.filepath] = node
+      return node.filepath
+    end,
+    children = children,
+    can_fold = ctx.foldempty and function(parent, child)
+      return child.nodetype == "D"
+        and #parent.children == 1
+        and not parent.selected
+        and (pending_transfer == nil or not pending_transfer.source_filepaths[parent.filepath])
+    end or nil,
+  })
+
+  local prefixes = { [0] = "" } ---@type table<integer, string>
+  local selected_by_lnum = {} ---@type table<integer, boolean>
+  local transfer_mode_by_lnum = {} ---@type table<integer, era.m.explorer.TransferModeEnum>
+
+  for lnum = 1, layout:len() do
+    local filepath = layout:id(lnum) ---@type string
+    local node = node_by_filepath[filepath] ---@type era.m.explorer.Node
+    local depth = layout:depth(lnum) ---@type integer
+    local visible_parent_lnum = layout:parent_lnum(lnum) ---@type integer|nil
+    local inherited_selected = visible_parent_lnum ~= nil and selected_by_lnum[visible_parent_lnum] or root_is_selected ---@type boolean
     local is_selected = inherited_selected or node.selected ---@type boolean
-    local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-    local transfer_mode = inherited_transfer_mode ---@type era.m.explorer.TransferModeEnum|nil
+    selected_by_lnum[lnum] = is_selected
+
+    local transfer_mode = visible_parent_lnum ~= nil and transfer_mode_by_lnum[visible_parent_lnum]
+      or root_transfer_mode ---@type era.m.explorer.TransferModeEnum|nil
     if
       transfer_mode == nil
       and pending_transfer ~= nil
@@ -111,45 +163,39 @@ function M:render(bufnr, tree, root, options)
     then
       transfer_mode = pending_transfer.mode
     end
+    transfer_mode_by_lnum[lnum] = transfer_mode
 
-    if only_selected and not is_selected then
-      if node.nodetype == "F" then
-        return
-      end
-      if not node.has_selected then
-        return
-      end
+    local folded_ids = layout:folded_ids(lnum) ---@type string[]|nil
+    local source_node = folded_ids ~= nil and node_by_filepath[folded_ids[1]] or node ---@type era.m.explorer.Node
+    local prefix = prefixes[depth] ---@type string
+    local is_last = layout:is_last(lnum) ---@type boolean
+    if only_selected then
+      is_last = source_node.parent.children[#source_node.parent.children] == source_node
     end
+    local indent = prefix .. (is_last and INDENT_LAST or INDENT_BRANCH) ---@type string
+    prefixes[depth + 1] = prefix .. (is_last and INDENT_SPACE or INDENT_PIPE)
 
-    lnum = lnum + 1
-    local current_lnum = lnum ---@type integer
-
-    local is_expanded = node.expanded ---@type boolean
-
-    local indent ---@type string
-    if prefix == "" then
-      indent = is_last and INDENT_LAST or INDENT_BRANCH
-    else
-      indent = prefix .. (is_last and INDENT_LAST or INDENT_BRANCH)
+    local display_name = nil ---@type string|nil
+    if folded_ids ~= nil then
+      local names = {} ---@type string[]
+      for index, folded_id in ipairs(folded_ids) do
+        local folded_node = node_by_filepath[folded_id] ---@type era.m.explorer.Node
+        names[index] = folded_node.nodename
+      end
+      display_name = table.concat(names, "/")
     end
 
     local line, line_highlights, git_info, diag_info =
-      self:__render_node__(ctx, node, indent, current_lnum, display_name, is_expanded, is_selected)
+      self:__render_node__(ctx, node, indent, lnum, display_name, node.expanded, is_selected)
 
-    lines[current_lnum] = line
-    lnum_to_filepath[current_lnum] = node.filepath
-    filepath_to_lnum[node.filepath] = current_lnum
-    parent_lnum[current_lnum] = visible_parent_lnum
+    lines[lnum] = line
 
-    if #indent > 0 then
-      highlights[#highlights + 1] = {
-        lnum = current_lnum,
-        coll = 0,
-        colr = #indent,
-        hlname = indent_hln,
-      }
-    end
-
+    highlights[#highlights + 1] = {
+      lnum = lnum,
+      coll = 0,
+      colr = #indent,
+      hlname = indent_hln,
+    }
     for _, hl in ipairs(line_highlights) do
       highlights[#highlights + 1] = hl
     end
@@ -157,7 +203,6 @@ function M:render(bufnr, tree, root, options)
     if git_info ~= nil then
       git_status_list[#git_status_list + 1] = git_info
     end
-
     if diag_info ~= nil then
       diagnostic_info_list[#diagnostic_info_list + 1] = diag_info
     end
@@ -176,68 +221,10 @@ function M:render(bufnr, tree, root, options)
         sign_hl_group = "m_ex_selected"
       end
       sign_info_list[#sign_info_list + 1] = {
-        lnum = current_lnum,
+        lnum = lnum,
         sign_text = sign_text,
         sign_hl_group = sign_hl_group,
       }
-    end
-
-    if node.nodetype == "D" and is_expanded then
-      if not node.loaded and ctx.resource_manager ~= nil then
-        ctx.tree:load_node(node, false)
-      end
-
-      local children = node.children ---@type era.m.explorer.Node[]
-      local N = #children ---@type integer
-      local child_prefix = prefix .. (is_last and INDENT_SPACE or INDENT_PIPE) ---@type string
-      local current_lastchild_lnum = nil ---@type integer|nil
-      for i, child in ipairs(children) do
-        local child_display_name = nil ---@type string|nil
-
-        if ctx.foldempty and child.nodetype == "D" then
-          local folded_node, folded_path = self:__fold_empty_dirs__(child, ctx)
-          if folded_node ~= child then
-            child = folded_node
-            child_display_name = folded_path
-          end
-        end
-
-        local child_lnum =
-          traverse(child, child_prefix, i == N, child_display_name, is_selected, transfer_mode, current_lnum) ---@type integer|nil
-        current_lastchild_lnum = child_lnum or current_lastchild_lnum
-      end
-      lastchild_lnum[current_lnum] = current_lastchild_lnum
-    end
-    return current_lnum
-  end
-
-  local root_is_expanded = root.expanded ---@type boolean
-  local root_is_selected = tree:is_selected(root_filepath) ---@type boolean
-  local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-  local root_transfer_mode = pending_transfer ~= nil
-      and (root_is_selected or pending_transfer.source_filepaths[root_filepath])
-      and pending_transfer.mode
-    or nil ---@type era.m.explorer.TransferModeEnum|nil
-  if root_is_expanded then
-    if not root.loaded and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(root, false)
-    end
-
-    local children = root.children ---@type era.m.explorer.Node[]
-    local N = #children ---@type integer
-    for i, child in ipairs(children) do
-      local child_display_name = nil ---@type string|nil
-
-      if ctx.foldempty and child.nodetype == "D" then
-        local folded_node, folded_path = self:__fold_empty_dirs__(child, ctx)
-        if folded_node ~= child then
-          child = folded_node
-          child_display_name = folded_path
-        end
-      end
-
-      local child_lnum = traverse(child, "", i == N, child_display_name, root_is_selected, root_transfer_mode, nil) ---@type integer|nil
-      root_lastchild_lnum = child_lnum or root_lastchild_lnum
     end
   end
 
@@ -321,11 +308,7 @@ function M:render(bufnr, tree, root, options)
     diagnostic_info_list = diagnostic_info_list,
     git_status_list = git_status_list,
     sign_info_list = sign_info_list,
-    lnum_to_filepath = lnum_to_filepath,
-    filepath_to_lnum = filepath_to_lnum,
-    parent_lnum = parent_lnum,
-    lastchild_lnum = lastchild_lnum,
-    root_lastchild_lnum = root_lastchild_lnum,
+    layout = layout,
     diag_by_lnum = diag_by_lnum,
     git_by_lnum = git_by_lnum,
     sign_by_lnum = sign_by_lnum,
@@ -452,52 +435,6 @@ function M:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
     virt_text_pos = "right_align",
     priority = 10,
   })
-end
-
-----------------------------------------------------------------------------------------------------
-
----@protected
----@param node                          era.m.explorer.Node
----@param ctx                           era.m.explorer.view.IRenderContext
----@return era.m.explorer.Node
----@return string
-function M:__fold_empty_dirs__(node, ctx)
-  local path_parts = { node.nodename } ---@type string[]
-  local current = node ---@type era.m.explorer.Node
-
-  while true do
-    local pending_transfer = ctx.pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-    if current.selected or (pending_transfer ~= nil and pending_transfer.source_filepaths[current.filepath]) then
-      break
-    end
-
-    if not current.expanded then
-      break
-    end
-
-    if not current.loaded and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(current, false)
-    end
-
-    local children = current.children ---@type era.m.explorer.Node[]
-    if #children ~= 1 then
-      break
-    end
-
-    local child = children[1] ---@type era.m.explorer.Node
-    if child.nodetype ~= "D" then
-      break
-    end
-
-    path_parts[#path_parts + 1] = child.nodename
-    current = child
-  end
-
-  if #path_parts == 1 then
-    return node, node.nodename
-  end
-
-  return current, table.concat(path_parts, "/")
 end
 
 ---@protected
@@ -706,29 +643,38 @@ function M:__precompute__(root, ctx)
   else
     filepaths = {}
 
-    ---@param node                      era.m.explorer.Node
-    local function collect_filepaths(node)
-      local filepath = node.filepath ---@type string
-      if filepath ~= "" then
-        filepaths[#filepaths + 1] = filepath
-      end
-
-      if node.nodetype == "D" and node.expanded then
-        if not node.loaded and ctx.resource_manager ~= nil then
-          ctx.tree:load_node(node, false)
-        end
-        for _, child in ipairs(node.children) do
-          collect_filepaths(child)
-        end
-      end
-    end
-
     if root.expanded then
       if not root.loaded and ctx.resource_manager ~= nil then
         ctx.tree:load_node(root, false)
       end
-      for _, child in ipairs(root.children) do
-        collect_filepaths(child)
+
+      local stack_children = { root.children } ---@type era.m.explorer.Node[][]
+      local stack_indexes = { 1 } ---@type integer[]
+      local stack_size = 1 ---@type integer
+      while stack_size > 0 do
+        local children = stack_children[stack_size] ---@type era.m.explorer.Node[]
+        local index = stack_indexes[stack_size] ---@type integer
+        if index > #children then
+          stack_children[stack_size] = nil
+          stack_indexes[stack_size] = nil
+          stack_size = stack_size - 1
+        else
+          stack_indexes[stack_size] = index + 1
+          local node = children[index] ---@type era.m.explorer.Node
+          if node.filepath ~= "" then
+            filepaths[#filepaths + 1] = node.filepath
+          end
+          if node.nodetype == "D" and node.expanded then
+            if not node.loaded and ctx.resource_manager ~= nil then
+              ctx.tree:load_node(node, false)
+            end
+            if #node.children > 0 then
+              stack_size = stack_size + 1
+              stack_children[stack_size] = node.children
+              stack_indexes[stack_size] = 1
+            end
+          end
+        end
       end
     end
 
@@ -737,53 +683,52 @@ function M:__precompute__(root, ctx)
   end
 
   if show_diagnostics then
-    ---@param node                      era.m.explorer.Node
-    ---@return era.m.explorer.view.IDiagCounts
-    local function compute_diagnostics(node)
-      local counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type era.m.explorer.view.IDiagCounts
-
-      if node.nodetype == "F" then
-        local filepath = node.filepath ---@type string
-        if filepath ~= "" then
-          local bufnr = stl.nvim.buf.lookup_bufnr(loaded_bufnrs, filepath) ---@type integer|nil
-          if bufnr ~= nil then
-            local cached = bufnr_counts[bufnr] ---@type era.m.explorer.view.IDiagCounts|nil
-            if cached ~= nil then
-              counts = cached
-            else
-              local diag_data = era.m.lsp.diagnostic.get_by_bufnr(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
-              counts.error = diag_data.error
-              counts.warn = diag_data.warn
-              counts.hint = diag_data.hint
-              counts.info = diag_data.info
-              bufnr_counts[bufnr] = counts
+    if root.expanded then
+      local stack_nodes = { root } ---@type era.m.explorer.Node[]
+      local stack_indexes = { 0 } ---@type integer[]
+      local stack_size = 1 ---@type integer
+      while stack_size > 0 do
+        local node = stack_nodes[stack_size] ---@type era.m.explorer.Node
+        local index = stack_indexes[stack_size] ---@type integer
+        local children = node.children ---@type era.m.explorer.Node[]
+        if node.nodetype == "D" and node.expanded and index < #children then
+          index = index + 1
+          stack_indexes[stack_size] = index
+          stack_size = stack_size + 1
+          stack_nodes[stack_size] = children[index]
+          stack_indexes[stack_size] = 0
+        else
+          local counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type era.m.explorer.view.IDiagCounts
+          if node.nodetype == "F" and node.filepath ~= "" then
+            local bufnr = stl.nvim.buf.lookup_bufnr(loaded_bufnrs, node.filepath) ---@type integer|nil
+            if bufnr ~= nil then
+              local cached = bufnr_counts[bufnr] ---@type era.m.explorer.view.IDiagCounts|nil
+              if cached ~= nil then
+                counts = cached
+              else
+                local diag_data = era.m.lsp.diagnostic.get_by_bufnr(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
+                counts.error = diag_data.error
+                counts.warn = diag_data.warn
+                counts.hint = diag_data.hint
+                counts.info = diag_data.info
+                bufnr_counts[bufnr] = counts
+              end
+            end
+          elseif node.nodetype == "D" and node.expanded then
+            for _, child in ipairs(children) do
+              local child_counts = diag_counts[child.filepath] ---@type era.m.explorer.view.IDiagCounts
+              counts.error = counts.error + child_counts.error
+              counts.warn = counts.warn + child_counts.warn
+              counts.hint = counts.hint + child_counts.hint
+              counts.info = counts.info + child_counts.info
             end
           end
-        end
-      elseif node.nodetype == "D" and node.expanded then
-        for _, child in ipairs(node.children) do
-          local child_counts = compute_diagnostics(child) ---@type era.m.explorer.view.IDiagCounts
-          counts.error = counts.error + child_counts.error
-          counts.warn = counts.warn + child_counts.warn
-          counts.hint = counts.hint + child_counts.hint
-          counts.info = counts.info + child_counts.info
+          diag_counts[node.filepath] = counts
+          stack_nodes[stack_size] = nil
+          stack_indexes[stack_size] = nil
+          stack_size = stack_size - 1
         end
       end
-
-      diag_counts[node.filepath] = counts
-      return counts
-    end
-
-    if root.expanded then
-      local root_counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type era.m.explorer.view.IDiagCounts
-      for _, child in ipairs(root.children) do
-        local child_counts = compute_diagnostics(child) ---@type era.m.explorer.view.IDiagCounts
-        root_counts.error = root_counts.error + child_counts.error
-        root_counts.warn = root_counts.warn + child_counts.warn
-        root_counts.hint = root_counts.hint + child_counts.hint
-        root_counts.info = root_counts.info + child_counts.info
-      end
-      diag_counts[root.filepath] = root_counts
     end
   end
 

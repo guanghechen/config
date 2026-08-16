@@ -4,6 +4,7 @@
 
 local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
+local treeview_layout = require("stl.view.treeview.layout")
 
 local t = harness.new("era.m.explorer.widget")
 local normalize_calls = 0 ---@type integer
@@ -386,23 +387,15 @@ t:test("parent filepath: directory parents keep a trailing slash", function()
 end)
 
 t:test("navigation: resolves the visible parent, last child, and last sibling", function()
+  local layout = treeview_layout.layout({
+    roots = { "/project/src/", "/project/README.md" },
+    children = function(filepath)
+      return filepath == "/project/src/" and { "/project/src/a.lua", "/project/src/z.lua" } or {}
+    end,
+  })
   local widget = setmetatable({
     _render_result = {
-      filepath_to_lnum = {
-        ["/project/src/"] = 1,
-        ["/project/src/a.lua"] = 2,
-        ["/project/src/z.lua"] = 3,
-        ["/project/README.md"] = 4,
-      },
-      lnum_to_filepath = {
-        [1] = "/project/src/",
-        [2] = "/project/src/a.lua",
-        [3] = "/project/src/z.lua",
-        [4] = "/project/README.md",
-      },
-      parent_lnum = { [2] = 1, [3] = 1 },
-      lastchild_lnum = { [1] = 3 },
-      root_lastchild_lnum = 4,
+      layout = layout,
     },
   }, Widget)
 
@@ -426,13 +419,16 @@ t:test("navigation: consumes canonical render filepaths without normalization", 
   end)
 
   local o_cursor_filepath = new_observable()
+  local layout = treeview_layout.layout({
+    roots = { "/project/src/", "/project/src/main.lua" },
+    children = function()
+      return {}
+    end,
+  })
   local widget = setmetatable({
     _render_result = {
       lines = { "dir", "file" },
-      lnum_to_filepath = {
-        [1] = "/project/src/",
-        [2] = "/project/src/main.lua",
-      },
+      layout = layout,
     },
     _tree = { o_cursor_filepath = o_cursor_filepath },
     _tab_wins = { [1] = 101 },
@@ -468,13 +464,16 @@ t:test("ignored refresh: updates any visible tab and filters unaffected paths", 
     o_root_filepath = new_observable(),
   }
   local renders = 0 ---@type integer
+  local layout = treeview_layout.layout({
+    roots = { "/project/file", "/project/dir/" },
+    children = function()
+      return {}
+    end,
+  })
   local widget = setmetatable({
     _o_width = new_observable(),
     _render_result = {
-      filepath_to_lnum = {
-        ["/project/dir/"] = 2,
-        ["/project/file"] = 1,
-      },
+      layout = layout,
     },
     _resource_manager = {},
     _subscriptions = {},

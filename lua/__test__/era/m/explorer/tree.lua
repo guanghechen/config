@@ -261,7 +261,7 @@ t:test("selection: empty-directory folding preserves an explicit selection root"
     show_icons = false,
   })
 
-  t.assert_true(result.filepath_to_lnum[dir.filepath] ~= nil, "folding must not hide the explicit selection root")
+  t.assert_true(result.layout:lnum(dir.filepath) ~= nil, "folding must not hide the explicit selection root")
 
   vim.api.nvim_buf_delete(bufnr, { force = true })
   tree:dispose()

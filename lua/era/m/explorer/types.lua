@@ -128,14 +128,10 @@
 ---@field public git_by_lnum            table<integer, era.m.explorer.view.IGitStatusInfo>
 ---@field public git_status_list        era.m.explorer.view.IGitStatusInfo[]
 ---@field public highlights             stl.t.IHighlight[]
+---@field public layout                 stl.view.TreeLayout
 ---@field public lines                  string[]
----@field public lnum_to_filepath            table<integer, string>
----@field public parent_lnum            table<integer, integer>
----@field public lastchild_lnum         table<integer, integer>
----@field public root_lastchild_lnum    integer|nil
 ---@field public sign_by_lnum           table<integer, era.m.explorer.view.ISignInfo>
 ---@field public sign_info_list         era.m.explorer.view.ISignInfo[]
----@field public filepath_to_lnum            table<string, integer>
 
 ---@class era.m.explorer.view.ISignInfo
 ---@field public lnum                   integer
