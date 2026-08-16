@@ -445,14 +445,14 @@ t:test("match limit status follows the published projection and blocks replace a
   t.assert_eq(1, warnings, "limited bulk replacement should explain why it was rejected")
 
   local leafuuid = composer._uuids_order[1] ---@type string
-  local leafnode = composer._filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode
+  local leafdata = composer._filetree:get(leafuuid) ---@type stl.c.IFiletreeNodeData
   local leafstate = composer._treeview:retrieve(leafuuid) ---@type era.m.searcher.view.filetree.IFileNodeState
-  assert(leafnode ~= nil and leafstate ~= nil, "limited result leaf should exist")
-  composer:__replace_file__(leafnode, leafstate)
+  assert(leafdata ~= nil and leafstate ~= nil, "limited result leaf should exist")
+  composer:__replace_file__(leafdata, leafstate)
   t.assert_eq(0, replace_file_calls, "limited node replacement must not replace undiscovered matches")
   t.assert_eq(1, replace_match_calls, "limited node replacement should use explicit visible match offsets")
   t.assert_eq(
-    yoz.canonical_path.to_os_path(leafnode.data.filepath),
+    yoz.canonical_path.to_os_path(leafdata.filepath),
     replace_match_filepath,
     "limited replace filesystem boundary"
   )
@@ -477,7 +477,7 @@ t:test("match limit status follows the published projection and blocks replace a
   assert(replace_in_node ~= nil, "replace-in-node action should be bound")
   replace_in_node()
   t.assert_eq(
-    yoz.canonical_path.to_os_path(leafnode.data.filepath),
+    yoz.canonical_path.to_os_path(leafdata.filepath),
     advance_filepath,
     "single-match replace filesystem boundary"
   )

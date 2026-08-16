@@ -253,9 +253,9 @@ function M.new(props)
   })
 
   ---@param nodeuuid                    string
-  ---@return stl.c.IFiletreeNode|nil
+  ---@return stl.c.IFiletreeNodeData|nil
   ---@return era.m.searcher.view.filetree.INodeState|nil
-  local function retrieve_node_and_state(nodeuuid)
+  local function retrieve_data_and_state(nodeuuid)
     local nodestate = treeview:retrieve(nodeuuid) ---@type era.m.searcher.view.filetree.INodeState|nil
     local baseuuid = nodeuuid ---@type string
 
@@ -266,8 +266,8 @@ function M.new(props)
       end
     end
 
-    local node = filetree:retrieve(baseuuid) ---@type stl.c.IFiletreeNode|nil
-    return node, nodestate
+    local data = filetree:get(baseuuid) ---@type stl.c.IFiletreeNodeData|nil
+    return data, nodestate
   end
 
   ---@param filepath                    string
@@ -315,15 +315,14 @@ function M.new(props)
   end
 
   ---@param target                      dot.t.ILocation[]
-  ---@param node                        stl.c.IFiletreeNode|nil
+  ---@param data                        stl.c.IFiletreeNodeData|nil
   ---@param nodestate                   era.m.searcher.view.filetree.INodeState|nil
   ---@param include_directory           boolean
-  local function append_location_payload(target, node, nodestate, include_directory)
-    if node == nil then
+  local function append_location_payload(target, data, nodestate, include_directory)
+    if data == nil then
       return
     end
 
-    local data = node.data ---@type table<string, any>
     local filepath = data.filepath ---@type string|nil
     local filetype = data.filetype ---@type string|nil
     if type(filepath) ~= "string" or #filepath == 0 then
@@ -505,8 +504,8 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local node, nodestate = retrieve_node_and_state(nodeuuid)
-          append_location_payload(locations, node, nodestate, false)
+          local data, nodestate = retrieve_data_and_state(nodeuuid)
+          append_location_payload(locations, data, nodestate, false)
         end
       end
       era.fn.add_locations_to_ai(locations)
@@ -522,11 +521,11 @@ function M.new(props)
       while lnum <= lnum_to do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local node, nodestate = retrieve_node_and_state(nodeuuid)
-          append_location_payload(locations, node, nodestate, true)
+          local data, nodestate = retrieve_data_and_state(nodeuuid)
+          append_location_payload(locations, data, nodestate, true)
 
-          if node ~= nil then
-            if node.data.filetype == "directory" then
+          if data ~= nil then
+            if data.filetype == "directory" then
               local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
               if lnum_childline ~= nil and lnum_childline > 0 then
                 lnum = lnum_childline
@@ -587,7 +586,7 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local data = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNodeData|nil
+      local data = self:__retrieve_filedata__() ---@type stl.c.IFiletreeNodeData|nil
       if data == nil then
         return
       end
@@ -723,8 +722,8 @@ function M.new(props)
       end
 
       local rootuuid = self._uuid_root ---@type string|nil
-      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type stl.c.IFiletreeNode|nil
-      if rootnode == nil then
+      local rootdata = rootuuid ~= nil and filetree:get(rootuuid) or nil ---@type stl.c.IFiletreeNodeData|nil
+      if rootdata == nil then
         return
       end
 
@@ -733,12 +732,11 @@ function M.new(props)
       for lnum = 1, lnum_total, 1 do
         local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if leafuuid ~= nil then
-          local leafnode = filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode|nil
+          local leafdata = filetree:get(leafuuid) ---@type stl.c.IFiletreeNodeData|nil
           local leafnodestate = treeview:retrieve(leafuuid) ---@type era.m.searcher.view.filetree.INodeState|nil
-          if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
-            ---@cast leafnode         stl.c.IFiletreeNode
+          if leafdata ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
             ---@cast leafnodestate    era.m.searcher.view.filetree.IFileNodeState
-            dirtied = self:__replace_file__(leafnode, leafnodestate) or dirtied ---@type boolean
+            dirtied = self:__replace_file__(leafdata, leafnodestate) or dirtied ---@type boolean
           end
         end
       end
@@ -764,8 +762,8 @@ function M.new(props)
       end
 
       local rootuuid = self._uuid_root ---@type string|nil
-      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type stl.c.IFiletreeNode|nil
-      if rootnode == nil then
+      local rootdata = rootuuid ~= nil and filetree:get(rootuuid) or nil ---@type stl.c.IFiletreeNodeData|nil
+      if rootdata == nil then
         return
       end
 
@@ -777,17 +775,17 @@ function M.new(props)
       if nodestate.nodetype == "location" then
         ---@cast nodestate              era.m.searcher.view.filetree.ILeafLocationState
 
-        local leafnode = filetree:retrieve(nodestate.leafuuid) ---@type stl.c.IFiletreeNode|nil
-        if leafnode == nil then
+        local leafdata = filetree:get(nodestate.leafuuid) ---@type stl.c.IFiletreeNodeData|nil
+        if leafdata == nil then
           stl.reporter.error({
             from = self.fullname,
             subject = "replace_in_node",
-            message = string.format("Cannot retrieve the leaf node by the given leafuuid (%s)", nodestate.leafuuid),
+            message = string.format("Cannot retrieve the leaf data by the given leafuuid (%s)", nodestate.leafuuid),
             details = {
               nodeuuid = nodeuuid,
               nodestate = nodestate,
               rootuuid = rootuuid,
-              rootnode = rootnode,
+              rootdata = rootdata,
             },
           })
           return
@@ -806,7 +804,7 @@ function M.new(props)
               nodeuuid = nodeuuid,
               nodestate = nodestate,
               rootuuid = rootuuid,
-              rootnode = rootnode,
+              rootdata = rootdata,
             },
           })
           return
@@ -826,7 +824,7 @@ function M.new(props)
               nodeuuid = nodeuuid,
               nodestate = nodestate,
               rootuuid = rootuuid,
-              rootnode = rootnode,
+              rootdata = rootdata,
             },
           })
           return
@@ -845,7 +843,7 @@ function M.new(props)
           end
         end
 
-        local filepath = yoz.canonical_path.to_os_path(leafnode.data.filepath) ---@type string
+        local filepath = yoz.canonical_path.to_os_path(leafdata.filepath) ---@type string
         local advance_result, advance_error = yoz.replace.replace_file_by_matches_advance({
           filepath = filepath,
           search_pattern = search_pattern,
@@ -865,7 +863,7 @@ function M.new(props)
                 nodeuuid = nodeuuid,
                 nodestate = nodestate,
                 rootuuid = rootuuid,
-                rootnode = rootnode,
+                rootdata = rootdata,
               },
             })
           end
@@ -892,17 +890,17 @@ function M.new(props)
         return
       end
 
-      local node = filetree:retrieve(nodeuuid) ---@type stl.c.IFiletreeNode|nil
-      if node == nil then
+      local data = filetree:get(nodeuuid) ---@type stl.c.IFiletreeNodeData|nil
+      if data == nil then
         stl.reporter.error({
           from = self.fullname,
           subject = "replace_in_node",
-          message = string.format("Cannot retrieve the filetree node by the given nodeuuid (%s)", nodeuuid),
+          message = string.format("Cannot retrieve file data by the given nodeuuid (%s)", nodeuuid),
           details = {
             nodeuuid = nodeuuid,
             nodestate = nodestate,
             rootuuid = rootuuid,
-            rootnode = rootnode,
+            rootdata = rootdata,
           },
         })
         return
@@ -911,7 +909,7 @@ function M.new(props)
       if nodestate.nodetype == "leaf" then
         ---@cast nodestate              era.m.searcher.view.filetree.IFileNodeState
 
-        local dirtied = self:__replace_file__(node, nodestate) ---@type boolean
+        local dirtied = self:__replace_file__(data, nodestate) ---@type boolean
         if dirtied then
           plainfile:mark_dirty()
           self:mark_result_dirty()
@@ -925,12 +923,11 @@ function M.new(props)
         for lnum = lnum_current, lnum_childline, 1 do
           local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
           if leafuuid ~= nil then
-            local leafnode = filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode|nil
+            local leafdata = filetree:get(leafuuid) ---@type stl.c.IFiletreeNodeData|nil
             local leafnodestate = treeview:retrieve(leafuuid) ---@type era.m.searcher.view.filetree.INodeState|nil
-            if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
-              ---@cast leafnode         stl.c.IFiletreeNode
+            if leafdata ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
               ---@cast leafnodestate    era.m.searcher.view.filetree.IFileNodeState
-              dirtied = self:__replace_file__(leafnode, leafnodestate) or dirtied ---@type boolean
+              dirtied = self:__replace_file__(leafdata, leafnodestate) or dirtied ---@type boolean
             end
           end
         end
@@ -2460,10 +2457,10 @@ function M:__open_node__(nodeuuid)
   dot.win.open_filepath(winnr_sourcefile, data.filepath, lnum, col)
 end
 
----@param node                          stl.c.IFiletreeNode
+---@param data                          stl.c.IFiletreeNodeData
 ---@param nodestate                     era.m.searcher.view.filetree.IFileNodeState
 ---@return boolean
-function M:__replace_file__(node, nodestate)
+function M:__replace_file__(data, nodestate)
   local locations = nodestate.locations ---@type era.m.searcher.view.filetree.ILeafLocationState[]|nil
   if locations == nil then
     return false
@@ -2487,7 +2484,7 @@ function M:__replace_file__(node, nodestate)
   local flag_regex = self.flag_regex:snapshot() ---@type boolean
   local search_pattern = self.search_pattern:snapshot() ---@type string
   local replace_pattern = self.replace_pattern:snapshot() ---@type string
-  local filepath = yoz.canonical_path.to_os_path(node.data.filepath) ---@type string
+  local filepath = yoz.canonical_path.to_os_path(data.filepath) ---@type string
 
   if count == L and not self._published_search_limit_reached then
     local succeed, replace_error = yoz.replace.replace_file({
@@ -2506,7 +2503,7 @@ function M:__replace_file__(node, nodestate)
         subject = "replace_file",
         message = replace_error,
         details = {
-          filepath = node.data.filepath,
+          filepath = data.filepath,
         },
       })
     end
@@ -2537,7 +2534,7 @@ function M:__replace_file__(node, nodestate)
       from = self.fullname,
       subject = "replace_file_by_matches",
       message = replace_error,
-      details = { filepath = node.data.filepath },
+      details = { filepath = data.filepath },
     })
   end
   return succeed == true
@@ -2609,7 +2606,7 @@ function M:__retrieve__(nodeuuid)
 end
 
 ---@return stl.c.IFiletreeNodeData|nil
-function M:__retrieve_filenode__()
+function M:__retrieve_filedata__()
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
     return
