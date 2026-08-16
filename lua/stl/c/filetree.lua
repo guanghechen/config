@@ -4,12 +4,6 @@ local __module_name__ = "stl.c.filetree" ---@type string
 ---@alias stl.c.IFiletreeTraverseConditional
 ---| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer): stl.c.ITreeTraverseConditionalEnum
 
----@alias stl.c.IFiletreeTraverseHandler
----| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
-
----@alias stl.c.IFiletreeTraverseRecursive
----| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer, is_lastchild: boolean): nil
-
 ---@alias stl.c.IFiletreeQuickTraverseHandler
 ---| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer): nil
 
@@ -86,9 +80,7 @@ end
 ---@field public retrieve               fun(self: stl.c.IReadonlyFiletree, uuid: string): stl.c.IFiletreeNode|nil
 ---@field public children               fun(self: stl.c.IReadonlyFiletree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.IReadonlyFiletree, root: string|nil, fn: stl.c.IFiletreeQuickTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IReadonlyFiletree
----@field public traverse               fun(self: stl.c.IReadonlyFiletree, root: string|nil, fn: stl.c.IFiletreeTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IReadonlyFiletree
 ---@field public unsafe_traverse        fun(self: stl.c.IReadonlyFiletree, root: string|nil, traverse: stl.c.IFiletreeUnsafeTraverseCallback): stl.c.IReadonlyFiletree
----@field public calc_include_uuid_set  fun(self: stl.c.IReadonlyFiletree, uuids: string[]): table<string, boolean>
 
 ---@class stl.c.IFiletree : stl.c.ITree , stl.c.IReadonlyFiletree
 ---@field public fullname               string
@@ -101,16 +93,12 @@ end
 ---@field public retrieve               fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletreeNode|nil
 ---@field public children               fun(self: stl.c.IFiletree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.IFiletree, root: string|nil, fn: stl.c.IFiletreeQuickTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IFiletree
----@field public traverse               fun(self: stl.c.IFiletree, root: string|nil, fn: stl.c.IFiletreeTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IFiletree
 ---@field public unsafe_traverse        fun(self: stl.c.IFiletree, root: string|nil, traverse: stl.c.IFiletreeUnsafeTraverseCallback): stl.c.IFiletree
----@field public calc_include_uuid_set  fun(self: stl.c.IFiletree, uuids: string[]): table<string, boolean>
----@field public empty                  fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletree
 ---@field public insert                 fun(self: stl.c.IFiletree, parent: string, uuid: string, data: stl.c.IFiletreeNodeData): stl.c.IFiletreeNode
 ---@field public insert_directory_absolute fun(self: stl.c.IFiletree, dirpath: string): stl.c.IFiletreeNode
 ---@field public insert_directory_relative fun(self: stl.c.IFiletree, cwd: string, dirpath: string): stl.c.IFiletreeNode
 ---@field public insert_file_absolute   fun(self: stl.c.IFiletree, filepath: string): stl.c.IFiletreeNode
 ---@field public insert_file_relative   fun(self: stl.c.IFiletree, cwd: string, filepath: string): stl.c.IFiletreeNode
----@field public print                  fun(self: stl.c.IFiletree, rootuuid: string|nil): string[]
 ---@field public remove                 fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletree
 ---@field public reset                  fun(self: stl.c.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): stl.c.IFiletree
 
