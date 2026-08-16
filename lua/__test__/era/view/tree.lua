@@ -95,12 +95,7 @@ end
 ---@return era.view.tree.IRenderView
 ---@return table<string, integer>
 local function setup(specs)
-  local tree = Tree.new({
-    name = "test",
-    node_sorter = function(left, right)
-      return left.uuid < right.uuid
-    end,
-  })
+  local tree = Tree.new("__virtual_root__")
   local calls = { container = 0, leaf = 0, location = 0, list_leaf = 0, list_location = 0 }
   local view = tree_lifecycle.create({
     name = "test",
@@ -130,7 +125,16 @@ local function setup(specs)
   setmetatable(view, TestView)
 
   for _, spec in ipairs(specs) do
-    tree:insert(spec.parent or tree.root, spec.uuid, {})
+    local parent = spec.parent or tree.root ---@type string
+    local children = tree:children(parent) ---@type string[]
+    local index = #children + 1 ---@type integer
+    for i, childuuid in ipairs(children) do
+      if spec.uuid < childuuid then
+        index = i
+        break
+      end
+    end
+    tree:insert(parent, spec.uuid, {}, index)
     view:insert(spec.uuid, spec.state)
   end
   return tree, view, calls

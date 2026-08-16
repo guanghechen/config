@@ -41,12 +41,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class stl.c.ITreeProps
----@field public fullname               string|nil
----@field public name                   string
----@field public node_sorter            stl.c.ITreeNodeSorter
----@field public rootnodedata           unknown|nil
-
 ---@class stl.c.IReadonlyTree
 ---@field public fullname               string
 ---@field public root                   string
@@ -80,7 +74,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public traverse               fun(self: stl.c.ITree, root: string|nil, fn: stl.c.ITreeTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.ITree
 ---@field public unsafe_traverse        fun(self: stl.c.ITree, root: string|nil, traverse: stl.c.ITreeUnsafeTraverseCallback): stl.c.ITree
 ---@field public calc_include_uuid_set  fun(self: stl.c.ITree, uuids: string[]): table<string, boolean>
----@field public empty                  fun(self: stl.c.ITree, uuid: string): stl.c.ITree
 ---@field public insert                 fun(self: stl.c.ITree, parent: string, uuid: string, data: table|nil, index?: integer): stl.c.ITreeNode
 ---@field public update                 fun(self: stl.c.ITree, uuid: string, data: table): stl.c.ITreeNode
 ---@field public move                   fun(self: stl.c.ITree, uuid: string, parent: string, index?: integer): stl.c.ITreeNode
@@ -89,44 +82,26 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@class stl.c.Tree : stl.c.ITree
 ---@field public fullname               string
 ---@field public root                   string
----@field public node_sorter            stl.c.ITreeNodeSorter|nil
 ---@field protected _disposed           boolean
----@field protected _strict_mutations   boolean
 ---@field protected _nodemap            table<string, stl.c.ITreeNode>
 ---@field protected _rootnode           stl.c.ITreeNode
 local M = {}
 M.__index = M
 
----@overload fun(root: string, rootdata?: table): stl.c.Tree
----@param props                         stl.c.ITreeProps|string
+---@param root                          string
 ---@param rootdata?                     table
 ---@return stl.c.Tree
-function M.new(props, rootdata)
-  if type(props) ~= "string" and type(props) ~= "table" then
-    error(string.format("[%s] root or props must be a string or table", __module_name__), 2)
+function M.new(root, rootdata)
+  if type(root) ~= "string" then
+    error(string.format("[%s] root must be a string", __module_name__), 2)
   end
-  local strict_mutations = type(props) == "string" ---@type boolean
-  local uuid_root ---@type string
-  local fullname ---@type string
-  local node_sorter ---@type stl.c.ITreeNodeSorter|nil
-  local rootnodedata ---@type unknown
-  if strict_mutations then
-    uuid_root = props ---@type string
-    fullname = string.format("%s@%s", __module_name__, uuid_root)
-    rootnodedata = rootdata ~= nil and rootdata or {}
-  else
-    ---@cast props                      stl.c.ITreeProps
-    local name = props.name ---@type string
-    fullname = props.fullname or string.format("%s@%s", __module_name__, name)
-    node_sorter = props.node_sorter
-    rootnodedata = props.rootnodedata or {}
-    uuid_root = "__virtual_root__"
-  end
+  local fullname = string.format("%s@%s", __module_name__, root) ---@type string
+  local rootnodedata = rootdata ~= nil and rootdata or {} ---@type unknown
 
   ---@type stl.c.ITreeNode
   local noderoot = {
-    uuid = uuid_root,
-    parent = uuid_root,
+    uuid = root,
+    parent = root,
     children = {},
     depth = 0,
     data = rootnodedata,
@@ -135,15 +110,13 @@ function M.new(props, rootdata)
 
   ---@type table<string, stl.c.ITreeNode>
   local nodemap = {
-    [uuid_root] = noderoot,
+    [root] = noderoot,
   }
 
   local self = setmetatable({}, M)
   self.fullname = fullname
-  self.root = uuid_root
-  self.node_sorter = node_sorter
+  self.root = root
   self._disposed = false
-  self._strict_mutations = strict_mutations
   self._nodemap = nodemap
   self._rootnode = noderoot
   return self
@@ -174,8 +147,6 @@ function M:dispose()
   self:__remove_recursive__(self._rootnode)
 
   self.root = nil
-  self.node_sorter = nil
-  self._strict_mutations = nil
   self._nodemap = nil
   self._rootnode = nil
 end
@@ -574,40 +545,6 @@ function M:calc_include_uuid_set(uuids)
   return uuidset
 end
 
----@param uuid                          string
----@return stl.c.Tree
-function M:empty(uuid)
-  self:__health__()
-
-  local rootnode = self._rootnode ---@type stl.c.ITreeNode
-  if uuid == rootnode.uuid then
-    return self:clear()
-  end
-
-  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
-  local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
-  if node == nil then
-    stl.reporter.error({
-      from = self.fullname,
-      subject = "clear",
-      message = string.format("Node with uuid '%s' does not exist.", uuid),
-      details = {
-        uuid = uuid,
-      },
-    })
-    return self
-  end
-
-  for _, childuuid in ipairs(node.children) do
-    local childnode = nodemap[childuuid] ---@type stl.c.ITreeNode
-    self:__remove_recursive__(childnode)
-  end
-  node.children = {}
-  node.dirty_co = false
-
-  return self
-end
-
 ---@generic T : table
 ---@param parent                        string
 ---@param uuid                          string
@@ -620,69 +557,32 @@ function M:insert(parent, uuid, data, index)
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
   local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
 
-  if self._strict_mutations then
-    local node_parent = nodemap[parent] ---@type stl.c.ITreeNode|nil
-    if node_parent == nil then
-      error(string.format("[%s] parent '%s' does not exist", __module_name__, parent), 2)
-    end
-    if node ~= nil then
-      error(string.format("[%s] node '%s' already exists", __module_name__, uuid), 2)
-    end
-    local insertion_index = index or (#node_parent.children + 1) ---@type integer
-    if
-      type(insertion_index) ~= "number"
-      or insertion_index % 1 ~= 0
-      or insertion_index < 1
-      or insertion_index > #node_parent.children + 1
-    then
-      error(string.format("[%s] child index out of range: %s", __module_name__, tostring(index)), 2)
-    end
-    node = {
-      uuid = uuid,
-      parent = parent,
-      children = {},
-      depth = node_parent.depth + 1,
-      data = data,
-      dirty_co = false,
-    }
-    nodemap[uuid] = node
-    table.insert(node_parent.children, insertion_index, uuid)
-    return node
+  local node_parent = nodemap[parent] ---@type stl.c.ITreeNode|nil
+  if node_parent == nil then
+    error(string.format("[%s] parent '%s' does not exist", __module_name__, parent), 2)
   end
-
-  local node_parent = parent ~= uuid and nodemap[parent] or self._rootnode ---@type stl.c.ITreeNode
-  parent = node_parent.uuid ---@type string
-
-  if node == nil then
-    ---@type stl.c.ITreeNode
-    node = {
-      uuid = uuid,
-      parent = node_parent.uuid,
-      children = {},
-      depth = node_parent.depth + 1,
-      data = data,
-      dirty_co = false,
-    }
-    nodemap[uuid] = node
-  else
-    node.data = data
-    if node.parent == node_parent.uuid then
-      return node
-    end
-
-    local old_node_parent = nodemap[node.parent] ---@type stl.c.ITreeNode
-    stl.table.filter_inline(old_node_parent.children, function(childuuid)
-      return childuuid ~= node.uuid
-    end)
-
-    node.parent = node_parent.uuid
-    if old_node_parent.depth ~= node_parent.depth then
-      self:__resolve_depth_recursive__(node, node_parent.depth + 1)
-    end
+  if node ~= nil then
+    error(string.format("[%s] node '%s' already exists", __module_name__, uuid), 2)
   end
-
-  node_parent.children[#node_parent.children + 1] = uuid
-  node_parent.dirty_co = true
+  local insertion_index = index or (#node_parent.children + 1) ---@type integer
+  if
+    type(insertion_index) ~= "number"
+    or insertion_index % 1 ~= 0
+    or insertion_index < 1
+    or insertion_index > #node_parent.children + 1
+  then
+    error(string.format("[%s] child index out of range: %s", __module_name__, tostring(index)), 2)
+  end
+  node = {
+    uuid = uuid,
+    parent = parent,
+    children = {},
+    depth = node_parent.depth + 1,
+    data = data,
+    dirty_co = false,
+  }
+  nodemap[uuid] = node
+  table.insert(node_parent.children, insertion_index, uuid)
   return node
 end
 
@@ -758,27 +658,13 @@ function M:remove(nodeuuid)
 
   local rootnode = self._rootnode ---@type stl.c.ITreeNode
   if nodeuuid == rootnode.uuid then
-    if self._strict_mutations then
-      error(string.format("[%s] root cannot be removed", __module_name__), 2)
-    end
-    return self:clear()
+    error(string.format("[%s] root cannot be removed", __module_name__), 2)
   end
 
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
   local node = nodemap[nodeuuid] ---@type stl.c.ITreeNode|nil
   if node == nil then
-    if self._strict_mutations then
-      error(string.format("[%s] node '%s' does not exist", __module_name__, nodeuuid), 2)
-    end
-    stl.reporter.error({
-      from = self.fullname,
-      subject = "remove",
-      message = string.format("Node with uuid '%s' does not exist.", nodeuuid),
-      details = {
-        uuid = nodeuuid,
-      },
-    })
-    return self
+    error(string.format("[%s] node '%s' does not exist", __module_name__, nodeuuid), 2)
   end
 
   local node_parent = nodemap[node.parent] ---@type stl.c.ITreeNode
@@ -867,15 +753,6 @@ end
 ---@return nil
 function M:__sort_children__(node)
   node.dirty_co = false
-  if #node.children > 1 then
-    local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
-    local node_sorter = self.node_sorter ---@type stl.c.ITreeNodeSorter
-    table.sort(node.children, function(left_uuid, right_uuid)
-      local left = nodemap[left_uuid] ---@type stl.c.ITreeNode
-      local right = nodemap[right_uuid] ---@type stl.c.ITreeNode
-      return node_sorter(left, right)
-    end)
-  end
 end
 
 return M

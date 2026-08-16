@@ -40,7 +40,7 @@ end)
 t:test("constructor rejects invalid ingress", function()
   assert_error(function()
     Tree.new(nil)
-  end, "string or table")
+  end, "root must be a string")
 end)
 
 t:test("strict API: update and move preserve identity and reject invalid topology", function()
@@ -100,20 +100,6 @@ t:test("strict API: deep move, clear, and dispose are iterative", function()
   t.assert_eq(0, #tree:children("root"), "clear removes descendants")
   tree:dispose()
   t.assert_true(tree:isdisposed(), "dispose succeeds")
-end)
-
-t:test("legacy props constructor keeps sorter and upsert behavior", function()
-  local tree = Tree.new({
-    name = "legacy",
-    node_sorter = function(left, right)
-      return left.data.order < right.data.order
-    end,
-  })
-  tree:insert(tree.root, "b", { order = 2 })
-  tree:insert(tree.root, "a", { order = 1 })
-  t.assert_eq("a", tree:children(tree.root)[1], "legacy sorter")
-  local node = tree:insert(tree.root, "a", { order = 3 })
-  t.assert_eq(3, node.data.order, "legacy upsert")
 end)
 
 t:run()
