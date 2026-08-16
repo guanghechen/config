@@ -1482,9 +1482,21 @@ function M.new(props)
         and function(bufnr)
           local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
           if nodeuuid == nil then
+            self._last_preview_filepath = nil
+            if lnum == 0 then
+              -- An empty result set has no current row; keep the preview empty instead of presenting it as an invariant failure.
+              vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+              return {
+                cursorline = false,
+                number = false,
+                title = "",
+                wrap = false,
+                whitespaces = false,
+              }
+            end
+
             local lines = { string.format("Error: cannot retrieve node by the given lnum: %d", lnum) } ---@type string[]
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-            self._last_preview_filepath = nil
 
             ---@type era.m.searcher.preview.IDrawResult
             local result = {

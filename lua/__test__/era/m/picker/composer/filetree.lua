@@ -83,6 +83,77 @@ t:test("preview callback receives the resolved file data", function()
   t.assert_true(actual == expected, "preview data identity")
 end)
 
+t:test("preview treats an empty result as a normal state", function()
+  with_composer("empty-preview", function(composer)
+    local bufnr = vim.api.nvim_create_buf(false, true)
+    local ok, err = pcall(function()
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "stale preview" })
+      composer._last_preview_filepath = "stale.lua"
+      composer.__retrieve_nodeuuid__ = function()
+        return nil, 0
+      end
+
+      local result = composer:render_preview(bufnr, false)
+      t.assert_eq("", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "empty preview content")
+      t.assert_eq("", result.title, "empty preview title")
+      t.assert_false(result.cursorline, "empty preview cursorline")
+      t.assert_false(result.number, "empty preview number")
+      t.assert_false(result.wrap, "empty preview wrap")
+      t.assert_false(result.whitespaces, "empty preview whitespace markers")
+      t.assert_nil(composer._last_preview_filepath, "empty preview invalidates cached filepath")
+
+      composer.__retrieve_nodeuuid__ = function()
+        return nil, -1
+      end
+      result = composer:render_preview(bufnr, false)
+      t.assert_eq("Unknown lnum(-1)", result.title, "invalid nonzero line remains diagnostic")
+    end)
+
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+    if not ok then
+      error(err, 0)
+    end
+  end)
+end)
+
+t:test("preview updates absolute and relative number options together", function()
+  local preview = era.m.picker.Preview.new({
+    name = "number-options",
+    draw = function()
+      return {
+        cursorline = false,
+        number = false,
+        title = "",
+        wrap = false,
+      }
+    end,
+    keymaps = {},
+  })
+  local ok, err = pcall(function()
+    local winnr = preview:create_win({ border = "", winhighlight = "" }, { row = 0, col = 0, width = 20, height = 2 })
+    t.assert_true(vim.api.nvim_get_option_value("number", { win = winnr }), "initial absolute number")
+    t.assert_true(vim.api.nvim_get_option_value("relativenumber", { win = winnr }), "initial relative number")
+
+    preview._last_result = {
+      cursorline = false,
+      number = false,
+      title = "",
+      wrap = false,
+    }
+    preview:__update_winopts__()
+    t.assert_false(vim.api.nvim_get_option_value("number", { win = winnr }), "updated absolute number")
+    t.assert_false(vim.api.nvim_get_option_value("relativenumber", { win = winnr }), "updated relative number")
+  end)
+
+  preview:dispose()
+  vim.wait(20)
+  if not ok then
+    error(err, 0)
+  end
+end)
+
 ---@param composer                      era.m.picker.FiletreeComposer
 ---@param desc                          string
 ---@return fun()

@@ -383,6 +383,7 @@ function M:__update_winopts__()
   end
   if result.number ~= nil then
     vim.api.nvim_set_option_value("number", result.number, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", result.number, { win = winnr, scope = "local" })
   end
   if result.wrap ~= nil then
     vim.api.nvim_set_option_value("wrap", result.wrap, { win = winnr, scope = "local" })

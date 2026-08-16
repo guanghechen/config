@@ -23,9 +23,10 @@ end
 
 ---@param name                          string
 ---@param max_matches                   integer
+---@param preview                       boolean|nil
 ---@return era.m.searcher.FiletreeComposer
 ---@return table
-local function new_composer(name, max_matches)
+local function new_composer(name, max_matches, preview)
   local controls = {
     search_pattern = observable(""),
     replace_pattern = observable(""),
@@ -37,7 +38,7 @@ local function new_composer(name, max_matches)
   local composer = era.m.searcher.FiletreeComposer.new({
     name = name,
     permanent = false,
-    preview = false,
+    preview = preview == true,
     title = "file-search test",
 
     excludes = observable({}),
@@ -59,6 +60,51 @@ local function new_composer(name, max_matches)
   })
   return composer, controls
 end
+
+t:test("preview treats an empty result as a normal state", function()
+  local basic_props = nil ---@type era.m.searcher.composer.basic.IProps|nil
+  local original_new = era.m.searcher.BasicComposer.new
+  t:patch_table(era.m.searcher.BasicComposer, "new", function(props)
+    basic_props = props
+    return original_new(props)
+  end)
+
+  local composer = new_composer("empty-preview", 500, true)
+
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  local ok, err = pcall(function()
+    assert(basic_props ~= nil and basic_props.render_preview ~= nil, "preview renderer should be captured")
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "stale preview" })
+    composer._last_preview_filepath = "stale.lua"
+    composer.__retrieve_nodeuuid__ = function()
+      return nil, 0
+    end
+
+    local result = basic_props.render_preview(bufnr, false)
+    t.assert_eq("", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "empty preview content")
+    t.assert_eq("", result.title, "empty preview title")
+    t.assert_false(result.cursorline, "empty preview cursorline")
+    t.assert_false(result.number, "empty preview number")
+    t.assert_false(result.wrap, "empty preview wrap")
+    t.assert_false(result.whitespaces, "empty preview whitespace markers")
+    t.assert_nil(composer._last_preview_filepath, "empty preview invalidates cached filepath")
+
+    composer.__retrieve_nodeuuid__ = function()
+      return nil, -1
+    end
+    result = basic_props.render_preview(bufnr, false)
+    t.assert_eq("Unknown lnum(-1)", result.title, "invalid nonzero line remains diagnostic")
+  end)
+
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+  composer:dispose()
+  vim.wait(20)
+  if not ok then
+    error(err, 0)
+  end
+end)
 
 ---@param flag_replace                  boolean
 ---@param max_matches                   integer
