@@ -14,19 +14,19 @@ local tree_visibility = require("era.view.tree.visibility")
 ---| era.m.picker.view.tree.ILeafLocationState
 
 ---@alias era.m.picker.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: era.m.picker.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: era.m.picker.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, location: era.m.picker.view.tree.ILeafLocationState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, location: era.m.picker.view.tree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: era.m.picker.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: era.m.picker.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: era.m.picker.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, location: era.m.picker.view.tree.ILeafLocationState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: era.m.picker.view.tree.ILeafNodeState, location: era.m.picker.view.tree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@class era.m.picker.view.tree.IContainerNodeState : era.view.tree.IContainerNodeState
 

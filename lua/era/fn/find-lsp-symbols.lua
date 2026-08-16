@@ -589,13 +589,11 @@ local function render_symbol(_, node)
   local data = node.data ---@type era.fn.find_lsp_symbols.ISymbolData
   local icon = data.icon or "●"
   local text = icon .. " " .. (data.name or "Unknown")
-  return {
-    text = text,
-    highlights = {
+  return text,
+    {
       { coll = 0, colr = #icon + 1, hlname = data.icon_hln or "DiagnosticInfo" },
       { coll = #icon + 1, colr = #text, hlname = "f_lsp_symbol_text" },
-    },
-  }
+    }
 end
 
 ---@type era.m.picker.view.tree.ITreeviewContainerNodeRenderer
@@ -654,21 +652,15 @@ local function render_treeview_container(_, node, _, _, folded_depth)
     offset = offset + #part_text
   end
 
-  return {
-    text = text,
-    highlights = highlights,
-  }
+  return text, highlights
 end
 
 local function render_location(_, node)
   local symbol_data = node.data ---@type era.fn.find_lsp_symbols.ISymbolData
   if symbol_data and symbol_data.lnum then
-    return {
-      text = string.format(":%d", symbol_data.lnum),
-      highlights = { { coll = 0, colr = 10, hlname = "LineNr" } },
-    }
+    return string.format(":%d", symbol_data.lnum), { { coll = 0, colr = 10, hlname = "LineNr" } }
   end
-  return { text = "", highlights = {} }
+  return "", {}
 end
 
 local function render_preview(bufnr, force)

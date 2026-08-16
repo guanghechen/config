@@ -14,19 +14,19 @@ local tree_visibility = require("era.view.tree.visibility")
 ---| era.m.searcher.view.filetree.ILeafLocationState
 
 ---@alias era.m.searcher.view.filetree.IListviewFileRenderer
----| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.searcher.view.filetree.IListviewLocationRenderer
----| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.searcher.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.searcher.view.filetree.ITreeviewFileRenderer
----| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.searcher.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@class era.m.searcher.view.filetree.IDirectoryNodeState : era.view.tree.IContainerNodeState
 
@@ -616,7 +616,7 @@ function M.default_render_listview_leaf(ctx, node)
     or node.data.filepath:sub(#rootnode.data.filepath + 2)
   local text = string.format("%s %s", fileicon, filepath) ---@type string
   local highlights = { { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln } } ---@type stl.t.IHighlightInline[]
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.searcher.view.filetree.IListviewLocationRenderer
@@ -641,7 +641,7 @@ function M.default_render_listview_location(_, _, _, locationstate)
         { coll = offset + 1 + hl.coll, colr = hl.colr < 0 and -1 or offset + 1 + hl.colr, hlname = hl.hlname }
     end
   end
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.searcher.view.filetree.ITreeviewDirectoryRenderer
@@ -661,7 +661,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
       { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
       { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
     }
-    return { text = text, highlights = highlights }
+    return text, highlights
   end
 
   local tree = ctx.tree ---@type stl.c.IReadonlyFiletree
@@ -699,7 +699,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "m_ft_dirname" }
   end
 
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.searcher.view.filetree.ITreeviewFileRenderer
@@ -714,7 +714,7 @@ function M.default_render_treeview_leaf(_, node)
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "m_ft_filename" },
   }
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.searcher.view.filetree.ITreeviewLocationRenderer
@@ -739,7 +739,7 @@ function M.default_render_treeview_location(_, _, _, locationstate)
         { coll = offset + 1 + hl.coll, colr = hl.colr < 0 and -1 or offset + 1 + hl.colr, hlname = hl.hlname }
     end
   end
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 return M

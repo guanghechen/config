@@ -14,19 +14,19 @@ local tree_visibility = require("era.view.tree.visibility")
 ---| era.m.picker.view.filetree.ILocationNodeState
 
 ---@alias era.m.picker.view.filetree.IListviewFileRenderer
----| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.IListviewLocationRenderer
----| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.ITreeviewFileRenderer
----| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@alias era.m.picker.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): era.view.tree.INodeRenderResult
+---| fun(ctx: era.m.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.picker.view.filetree.IFileNodeState, locationstate: era.m.picker.view.filetree.ILocationNodeState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@class era.m.picker.view.filetree.IDirectoryNodeState : era.view.tree.IContainerNodeState
 
@@ -829,7 +829,7 @@ function M.default_render_listview_leaf(ctx, node)
 
   local diagnostic_text = era.m.lsp.diagnostic.render(node.data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.picker.view.filetree.IListviewLocationRenderer
@@ -854,7 +854,7 @@ function M.default_render_listview_location(_, _, _, locationstate)
         { coll = offset + 1 + hl.coll, colr = hl.colr < 0 and -1 or offset + 1 + hl.colr, hlname = hl.hlname }
     end
   end
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.picker.view.filetree.ITreeviewDirectoryRenderer
@@ -875,7 +875,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
       { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
     }
 
-    return { text = text, highlights = highlights }
+    return text, highlights
   end
 
   local tree = ctx.tree ---@type stl.c.IReadonlyFiletree
@@ -913,7 +913,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "m_ft_dirname" }
   end
 
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.picker.view.filetree.ITreeviewFileRenderer
@@ -939,7 +939,7 @@ function M.default_render_treeview_leaf(_, node)
 
   local diagnostic_text = era.m.lsp.diagnostic.render(node.data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 ---@type era.m.picker.view.filetree.ITreeviewLocationRenderer
@@ -964,7 +964,7 @@ function M.default_render_treeview_location(_, _, _, locationstate)
         { coll = offset + 1 + hl.coll, colr = hl.colr < 0 and -1 or offset + 1 + hl.colr, hlname = hl.hlname }
     end
   end
-  return { text = text, highlights = highlights }
+  return text, highlights
 end
 
 return M

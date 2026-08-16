@@ -102,24 +102,24 @@ local function setup(specs)
     tree = tree,
     render_listview_leaf = function(_, node)
       calls.list_leaf = calls.list_leaf + 1
-      return { text = node.uuid }
+      return node.uuid
     end,
     render_listview_location = function(_, _, _, location)
       calls.list_location = calls.list_location + 1
-      return { text = location.locationuuid }
+      return location.locationuuid
     end,
     render_treeview_container = function(_, node, _, _, folded_depth)
       calls.container = calls.container + 1
       local text = folded_depth > 0 and string.format("%s:%d", node.uuid, folded_depth) or node.uuid
-      return { text = text }
+      return text
     end,
     render_treeview_leaf = function(_, node)
       calls.leaf = calls.leaf + 1
-      return { text = node.uuid }
+      return node.uuid
     end,
     render_treeview_location = function(_, _, _, location)
       calls.location = calls.location + 1
-      return { text = location.locationuuid }
+      return location.locationuuid
     end,
   }, "era.view.treeview")
   setmetatable(view, TestView)
