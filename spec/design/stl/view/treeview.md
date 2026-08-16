@@ -200,13 +200,20 @@ history、render cache 或 lazy-load API。
 
 Layout 不接收 `bufnr`，不调用 `vim.api`、`vim.fn` 或 filesystem API。
 
-Renderer 后续使用 positional arguments 和 multiple returns，避免 per-node context/result table：
+Renderer 使用 positional arguments 和 multiple returns，避免 per-node context/result table。允许每次 render 创建一个共享、只读的
+render-scoped context，用于 root data 与 feature-owned source；同一 context 复用于所有 row，不进入 `TreeLayout`：
 
 ```lua
-text, highlights, metadata = renderer(id, lnum, depth, is_last)
+text, highlights = renderer(ctx, id, data, state, lnum, metadata...)
 ```
 
-Surface 负责批量写入 lines、应用 highlights，并根据 metadata 添加 sign、virt text、diagnostic 或异步 icon。
+- `data/state` 由 surface 在调用前解析，renderer 不反向 lookup。
+- `metadata...` 只传当前 node kind 实际需要的 positional value，例如 `location_state` 或 `folded_depth`。
+- `depth/is_last` 若只用于生成 tree connector，应由 surface 直接消费，不要求 feature renderer 重复接收。
+- Renderer 不返回 per-row object；额外 surface metadata 确有 consumer 时才增加 multiple return value。
+
+Surface 负责批量写入 lines、应用 highlights，以及添加 sign、virt text、diagnostic 或异步 icon；只有这些 surface
+能力确实需要 feature renderer 提供额外信息时，才扩展 multiple return contract。
 
 ## 非目标
 

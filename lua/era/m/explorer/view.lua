@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.explorer.view" ---@type string
 
-local treeview_layout = require("stl.view.treeview.layout")
+local treeview = require("stl.view.treeview")
 
 local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
@@ -126,7 +126,7 @@ function M:render(bufnr, tree, root, options)
   end
 
   local roots = children(root) ---@type era.m.explorer.Node[]
-  local layout = treeview_layout.layout({
+  local layout = treeview.layout({
     roots = roots,
     id = function(node)
       node_by_filepath[node.filepath] = node

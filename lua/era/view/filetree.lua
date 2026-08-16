@@ -1,4 +1,4 @@
-local treeview_layout = require("stl.view.treeview.layout")
+local treeview = require("stl.view.treeview")
 
 ---@class era.view.filetree
 local M = {}
@@ -253,7 +253,7 @@ function M.render(items, opts)
     end
   end
 
-  local layout = treeview_layout.layout({
+  local layout = treeview.layout({
     roots = tree.children,
     id = function(node)
       return node.filepath

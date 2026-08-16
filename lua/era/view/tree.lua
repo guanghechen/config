@@ -1,10 +1,10 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.treeview" ---@type string
 
-local treeview_layout = require("stl.view.treeview.layout")
+local treeview = require("stl.view.treeview")
 
 local EMPTY_CHILDREN = {} ---@type string[]
-local EMPTY_LAYOUT = treeview_layout.layout({
+local EMPTY_LAYOUT = treeview.layout({
   roots = EMPTY_CHILDREN,
   children = function()
     return EMPTY_CHILDREN
@@ -625,7 +625,7 @@ function M:render_treeview(params)
     roots = EMPTY_CHILDREN
   end
 
-  local layout = treeview_layout.layout({
+  local layout = treeview.layout({
     roots = roots,
     children = children,
     can_fold = foldempty and function(parentuuid, childuuid)

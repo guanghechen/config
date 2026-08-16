@@ -4,7 +4,7 @@
 
 local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
-local treeview_layout = require("stl.view.treeview.layout")
+local treeview = require("stl.view.treeview")
 
 local t = harness.new("era.m.explorer.widget")
 local normalize_calls = 0 ---@type integer
@@ -387,7 +387,7 @@ t:test("parent filepath: directory parents keep a trailing slash", function()
 end)
 
 t:test("navigation: resolves the visible parent, last child, and last sibling", function()
-  local layout = treeview_layout.layout({
+  local layout = treeview.layout({
     roots = { "/project/src/", "/project/README.md" },
     children = function(filepath)
       return filepath == "/project/src/" and { "/project/src/a.lua", "/project/src/z.lua" } or {}
@@ -419,7 +419,7 @@ t:test("navigation: consumes canonical render filepaths without normalization", 
   end)
 
   local o_cursor_filepath = new_observable()
-  local layout = treeview_layout.layout({
+  local layout = treeview.layout({
     roots = { "/project/src/", "/project/src/main.lua" },
     children = function()
       return {}
@@ -464,7 +464,7 @@ t:test("ignored refresh: updates any visible tab and filters unaffected paths", 
     o_root_filepath = new_observable(),
   }
   local renders = 0 ---@type integer
-  local layout = treeview_layout.layout({
+  local layout = treeview.layout({
     roots = { "/project/file", "/project/dir/" },
     children = function()
       return {}

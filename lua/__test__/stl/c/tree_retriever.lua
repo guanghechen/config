@@ -3,7 +3,7 @@
 
 local harness = require("__test__.harness")
 local TreeRetriever = require("stl.c.tree_retriever")
-local treeview_layout = require("stl.view.treeview.layout")
+local treeview = require("stl.view.treeview")
 
 local t = harness.new("stl.c.tree_retriever")
 
@@ -15,7 +15,7 @@ t:test("attach: switches between flat maps and TreeLayout", function()
   t.assert_eq(2, retriever:retrieve_lnum("b"), "flat line")
   t.assert_eq(2, retriever:retrieve_lastchild_lnum(1), "flat range")
 
-  local layout = treeview_layout.layout({
+  local layout = treeview.layout({
     roots = { "root" },
     children = function(uuid)
       return ({ root = { "branch" }, branch = { "leaf" }, leaf = {} })[uuid]
