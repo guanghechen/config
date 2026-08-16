@@ -54,6 +54,9 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public isdescendant           fun(self: stl.c.IReadonlyTree, ancestor: string, uuid: string): boolean
 ---@field public isexistent             fun(self: stl.c.IReadonlyTree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.IReadonlyTree, uuid: string): stl.c.ITreeNode|nil
+---@field public get                    fun(self: stl.c.IReadonlyTree, uuid: string): unknown|nil
+---@field public contains               fun(self: stl.c.IReadonlyTree, uuid: string): boolean
+---@field public parent                 fun(self: stl.c.IReadonlyTree, uuid: string): string|nil
 ---@field public children               fun(self: stl.c.IReadonlyTree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.IReadonlyTree, root: string|nil, fn: stl.c.ITreeQuickTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.IReadonlyTree
 ---@field public traverse               fun(self: stl.c.IReadonlyTree, root: string|nil, fn: stl.c.ITreeTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.IReadonlyTree
@@ -69,33 +72,56 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public isdescendant           fun(self: stl.c.ITree, ancestor: string, uuid: string): boolean
 ---@field public isexistent             fun(self: stl.c.ITree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.ITree, uuid: string): stl.c.ITreeNode|nil
+---@field public get                    fun(self: stl.c.ITree, uuid: string): unknown|nil
+---@field public contains               fun(self: stl.c.ITree, uuid: string): boolean
+---@field public parent                 fun(self: stl.c.ITree, uuid: string): string|nil
 ---@field public children               fun(self: stl.c.ITree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.ITree, root: string|nil, fn: stl.c.ITreeQuickTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.ITree
 ---@field public traverse               fun(self: stl.c.ITree, root: string|nil, fn: stl.c.ITreeTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.ITree
 ---@field public unsafe_traverse        fun(self: stl.c.ITree, root: string|nil, traverse: stl.c.ITreeUnsafeTraverseCallback): stl.c.ITree
 ---@field public calc_include_uuid_set  fun(self: stl.c.ITree, uuids: string[]): table<string, boolean>
 ---@field public empty                  fun(self: stl.c.ITree, uuid: string): stl.c.ITree
----@field public insert                 fun(self: stl.c.ITree, parent: string, uuid: string, data: table|nil): stl.c.ITreeNode
+---@field public insert                 fun(self: stl.c.ITree, parent: string, uuid: string, data: table|nil, index?: integer): stl.c.ITreeNode
+---@field public update                 fun(self: stl.c.ITree, uuid: string, data: table): stl.c.ITreeNode
+---@field public move                   fun(self: stl.c.ITree, uuid: string, parent: string, index?: integer): stl.c.ITreeNode
 ---@field public remove                 fun(self: stl.c.ITree, uuid: string): stl.c.ITree
 
 ---@class stl.c.Tree : stl.c.ITree
 ---@field public fullname               string
 ---@field public root                   string
----@field public node_sorter            stl.c.ITreeNodeSorter
+---@field public node_sorter            stl.c.ITreeNodeSorter|nil
 ---@field protected _disposed           boolean
+---@field protected _strict_mutations   boolean
 ---@field protected _nodemap            table<string, stl.c.ITreeNode>
 ---@field protected _rootnode           stl.c.ITreeNode
 local M = {}
 M.__index = M
 
----@param props                         stl.c.ITreeProps
+---@overload fun(root: string, rootdata?: table): stl.c.Tree
+---@param props                         stl.c.ITreeProps|string
+---@param rootdata?                     table
 ---@return stl.c.Tree
-function M.new(props)
-  local name = props.name ---@type string
-  local fullname = props.fullname or string.format("%s@%s", __module_name__, name) ---@type string
-  local node_sorter = props.node_sorter ---@type stl.c.ITreeNodeSorter
-  local rootnodedata = props.rootnodedata or {} ---@type unknown
-  local uuid_root = "__virtual_root__" ---@type string
+function M.new(props, rootdata)
+  if type(props) ~= "string" and type(props) ~= "table" then
+    error(string.format("[%s] root or props must be a string or table", __module_name__), 2)
+  end
+  local strict_mutations = type(props) == "string" ---@type boolean
+  local uuid_root ---@type string
+  local fullname ---@type string
+  local node_sorter ---@type stl.c.ITreeNodeSorter|nil
+  local rootnodedata ---@type unknown
+  if strict_mutations then
+    uuid_root = props ---@type string
+    fullname = string.format("%s@%s", __module_name__, uuid_root)
+    rootnodedata = rootdata ~= nil and rootdata or {}
+  else
+    ---@cast props                      stl.c.ITreeProps
+    local name = props.name ---@type string
+    fullname = props.fullname or string.format("%s@%s", __module_name__, name)
+    node_sorter = props.node_sorter
+    rootnodedata = props.rootnodedata or {}
+    uuid_root = "__virtual_root__"
+  end
 
   ---@type stl.c.ITreeNode
   local noderoot = {
@@ -117,6 +143,7 @@ function M.new(props)
   self.root = uuid_root
   self.node_sorter = node_sorter
   self._disposed = false
+  self._strict_mutations = strict_mutations
   self._nodemap = nodemap
   self._rootnode = noderoot
   return self
@@ -148,6 +175,7 @@ function M:dispose()
 
   self.root = nil
   self.node_sorter = nil
+  self._strict_mutations = nil
   self._nodemap = nil
   self._rootnode = nil
 end
@@ -203,6 +231,29 @@ function M:retrieve(uuid)
 end
 
 ---@param uuid                          string
+---@return unknown|nil
+function M:get(uuid)
+  local node = self:retrieve(uuid)
+  return node ~= nil and node.data or nil
+end
+
+---@param uuid                          string
+---@return boolean
+function M:contains(uuid)
+  return self:isexistent(uuid)
+end
+
+---@param uuid                          string
+---@return string|nil
+function M:parent(uuid)
+  local node = self:retrieve(uuid)
+  if node == nil or node == self._rootnode then
+    return nil
+  end
+  return node.parent
+end
+
+---@param uuid                          string
 ---@return string[]|nil Read-only borrowed child IDs in traversal order.
 function M:children(uuid)
   self:__health__()
@@ -216,6 +267,67 @@ function M:children(uuid)
     self:__sort_children__(node)
   end
   return node.children
+end
+
+---@param uuid                          string
+---@param data                          table
+---@return stl.c.ITreeNode
+function M:update(uuid, data)
+  self:__health__()
+  local node = self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
+  if node == nil then
+    error(string.format("[%s] node '%s' does not exist", __module_name__, uuid), 2)
+  end
+  node.data = data
+  return node
+end
+
+---@param uuid                          string
+---@param parent                        string
+---@param index?                        integer
+---@return stl.c.ITreeNode
+function M:move(uuid, parent, index)
+  self:__health__()
+  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
+  local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
+  local next_parent = nodemap[parent] ---@type stl.c.ITreeNode|nil
+  if node == nil then
+    error(string.format("[%s] node '%s' does not exist", __module_name__, uuid), 2)
+  end
+  if next_parent == nil then
+    error(string.format("[%s] parent '%s' does not exist", __module_name__, parent), 2)
+  end
+  if node == self._rootnode then
+    error(string.format("[%s] root cannot be moved", __module_name__), 2)
+  end
+  if self:isdescendant(uuid, parent) then
+    error(string.format("[%s] moving '%s' below '%s' would create a cycle", __module_name__, uuid, parent), 2)
+  end
+  if node.parent == parent and index == nil then
+    return node
+  end
+
+  local old_parent = nodemap[node.parent] ---@type stl.c.ITreeNode
+  local max_index = old_parent == next_parent and #next_parent.children or (#next_parent.children + 1) ---@type integer
+  local insertion_index = index or max_index ---@type integer
+  if
+    type(insertion_index) ~= "number"
+    or insertion_index % 1 ~= 0
+    or insertion_index < 1
+    or insertion_index > max_index
+  then
+    error(string.format("[%s] child index out of range: %s", __module_name__, tostring(index)), 2)
+  end
+
+  stl.table.filter_inline(old_parent.children, function(child_id)
+    return child_id ~= uuid
+  end)
+  table.insert(next_parent.children, insertion_index, uuid)
+  node.parent = parent
+  if node.depth ~= next_parent.depth + 1 then
+    self:__resolve_depth_recursive__(node, next_parent.depth + 1)
+  end
+  return node
 end
 
 ---@param root                          string
@@ -500,12 +612,43 @@ end
 ---@param parent                        string
 ---@param uuid                          string
 ---@param data                          T
+---@param index?                        integer
 ---@return stl.c.ITreeNode
-function M:insert(parent, uuid, data)
+function M:insert(parent, uuid, data, index)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
   local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
+
+  if self._strict_mutations then
+    local node_parent = nodemap[parent] ---@type stl.c.ITreeNode|nil
+    if node_parent == nil then
+      error(string.format("[%s] parent '%s' does not exist", __module_name__, parent), 2)
+    end
+    if node ~= nil then
+      error(string.format("[%s] node '%s' already exists", __module_name__, uuid), 2)
+    end
+    local insertion_index = index or (#node_parent.children + 1) ---@type integer
+    if
+      type(insertion_index) ~= "number"
+      or insertion_index % 1 ~= 0
+      or insertion_index < 1
+      or insertion_index > #node_parent.children + 1
+    then
+      error(string.format("[%s] child index out of range: %s", __module_name__, tostring(index)), 2)
+    end
+    node = {
+      uuid = uuid,
+      parent = parent,
+      children = {},
+      depth = node_parent.depth + 1,
+      data = data,
+      dirty_co = false,
+    }
+    nodemap[uuid] = node
+    table.insert(node_parent.children, insertion_index, uuid)
+    return node
+  end
 
   local node_parent = parent ~= uuid and nodemap[parent] or self._rootnode ---@type stl.c.ITreeNode
   parent = node_parent.uuid ---@type string
@@ -615,12 +758,18 @@ function M:remove(nodeuuid)
 
   local rootnode = self._rootnode ---@type stl.c.ITreeNode
   if nodeuuid == rootnode.uuid then
+    if self._strict_mutations then
+      error(string.format("[%s] root cannot be removed", __module_name__), 2)
+    end
     return self:clear()
   end
 
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
   local node = nodemap[nodeuuid] ---@type stl.c.ITreeNode|nil
   if node == nil then
+    if self._strict_mutations then
+      error(string.format("[%s] node '%s' does not exist", __module_name__, nodeuuid), 2)
+    end
     stl.reporter.error({
       from = self.fullname,
       subject = "remove",
@@ -658,18 +807,31 @@ end
 ---@return nil
 function M:__remove_recursive__(node)
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
-  for _, childuuid in ipairs(node.children) do
-    local child = nodemap[childuuid] ---@type stl.c.ITreeNode|nil
-    if child ~= nil then
-      self:__remove_recursive__(child)
+  local stack_nodes = { node } ---@type stl.c.ITreeNode[]
+  local stack_indexes = { 1 } ---@type integer[]
+  local stack_size = 1 ---@type integer
+  while stack_size > 0 do
+    local current = stack_nodes[stack_size] ---@type stl.c.ITreeNode
+    local child_index = stack_indexes[stack_size] ---@type integer
+    if child_index <= #current.children then
+      stack_indexes[stack_size] = child_index + 1
+      local child = nodemap[current.children[child_index]] ---@type stl.c.ITreeNode|nil
+      if child ~= nil then
+        stack_size = stack_size + 1
+        stack_nodes[stack_size] = child
+        stack_indexes[stack_size] = 1
+      end
+    else
+      nodemap[current.uuid] = nil
+      current.uuid = nil
+      current.parent = nil
+      current.children = nil
+      current.depth = nil
+      stack_nodes[stack_size] = nil
+      stack_indexes[stack_size] = nil
+      stack_size = stack_size - 1
     end
   end
-
-  nodemap[node.uuid] = nil
-  node.uuid = nil
-  node.parent = nil
-  node.children = nil
-  node.depth = nil
 end
 
 ---@protected
@@ -677,10 +839,26 @@ end
 ---@param depth                         integer
 ---@return nil
 function M:__resolve_depth_recursive__(node, depth)
+  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
+  local stack_nodes = { node } ---@type stl.c.ITreeNode[]
+  local stack_indexes = { 1 } ---@type integer[]
+  local stack_size = 1 ---@type integer
   node.depth = depth
-  for _, childuuid in ipairs(node.children) do
-    local child = self._nodemap[childuuid] ---@type stl.c.ITreeNode
-    self:__resolve_depth_recursive__(child, depth + 1)
+  while stack_size > 0 do
+    local current = stack_nodes[stack_size] ---@type stl.c.ITreeNode
+    local child_index = stack_indexes[stack_size] ---@type integer
+    if child_index <= #current.children then
+      stack_indexes[stack_size] = child_index + 1
+      local child = nodemap[current.children[child_index]] ---@type stl.c.ITreeNode
+      child.depth = current.depth + 1
+      stack_size = stack_size + 1
+      stack_nodes[stack_size] = child
+      stack_indexes[stack_size] = 1
+    else
+      stack_nodes[stack_size] = nil
+      stack_indexes[stack_size] = nil
+      stack_size = stack_size - 1
+    end
   end
 end
 
