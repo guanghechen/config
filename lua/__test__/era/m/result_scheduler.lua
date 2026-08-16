@@ -108,8 +108,38 @@ local function verify_schedule_counts(case)
   local result = case.new(props)
 
   local ok, err = pcall(function()
+    local initial_task_counts = { current = 0, present = 0, selected = 0 } ---@type table<string, integer>
+    for name, scheduler in pairs({
+      current = result._scheduler_lnum_current,
+      present = result._scheduler_lnum_present,
+      selected = result._scheduler_lnums_selected,
+    }) do
+      local task = scheduler._task
+      scheduler._task = function(...)
+        initial_task_counts[name] = initial_task_counts[name] + 1
+        return task(...)
+      end
+    end
+
+    vim.wait(150)
+    t.assert_eq(0, initial_task_counts.current, case.name .. " pre-buffer current task count")
+    t.assert_eq(0, initial_task_counts.present, case.name .. " pre-buffer present task count")
+    t.assert_eq(0, initial_task_counts.selected, case.name .. " pre-buffer selected task count")
+
     result:create_buf()
-    vim.wait(50)
+    t.wait_until(function()
+      return initial_task_counts.current > 0
+        and initial_task_counts.present > 0
+        and initial_task_counts.selected > 0
+        and result._scheduler_lnum_current._tick_settled == result._scheduler_lnum_current._tick_pending
+        and result._scheduler_lnum_present._tick_settled == result._scheduler_lnum_present._tick_pending
+        and result._scheduler_lnums_selected._tick_settled == result._scheduler_lnums_selected._tick_pending
+    end, 1000, case.name .. " initial line tasks did not settle")
+    vim.wait(10)
+    t.assert_eq(1, initial_task_counts.current, case.name .. " initial current task count")
+    t.assert_eq(1, initial_task_counts.present, case.name .. " initial present task count")
+    t.assert_eq(1, initial_task_counts.selected, case.name .. " initial selected task count")
+
     result._scheduler_lnum_current:cancel()
     result._scheduler_lnum_present:cancel()
 

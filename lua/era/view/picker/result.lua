@@ -350,7 +350,7 @@ function M.new(props)
       vim.api.nvim_set_option_value("cursorline", lnum_total > 0, { win = winnr, scope = "local" })
       nvimbar:render()
     end
-  end)
+  end, true)
 
   stl.fn.observe({ _o_lnum_current }, function()
     if self._disposed then
@@ -367,13 +367,13 @@ function M.new(props)
       nvimbar:render()
     end
     self._scheduler_lnum_current:schedule()
-  end)
+  end, true)
 
   stl.fn.observe({ _o_lnum_present }, function()
     if not self._disposed then
       self._scheduler_lnum_present:schedule()
     end
-  end)
+  end, true)
 
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = augroup_CursorMoved,
@@ -518,9 +518,6 @@ function M:create_buf()
   stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   self._scheduler_content:schedule({ immediate = true })
-  self._scheduler_lnum_current:schedule({ immediate = true })
-  self._scheduler_lnum_present:schedule({ immediate = true })
-  self._scheduler_lnums_selected:schedule({ immediate = true })
   return bufnr, true
 end
 
