@@ -1,14 +1,14 @@
 ---@diagnostic disable: invisible
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.picker.preview" ---@type string
+local __module_name__ = "era.view.picker.preview" ---@type string
 
----@alias era.m.picker.preview.IDraw
----| fun(bufnr: integer, force: boolean): era.m.picker.preview.IDrawResult
+---@alias era.view.picker.preview.IDraw
+---| fun(bufnr: integer, force: boolean): era.view.picker.preview.IDrawResult
 
----@alias era.m.picker.preview.IOnDrawed
+---@alias era.view.picker.preview.IOnDrawed
 ---| fun(bufnr: integer): nil
 
----@class era.m.picker.preview.IDrawResult
+---@class era.view.picker.preview.IDrawResult
 ---@field public cursorline             boolean
 ---@field public number                 boolean
 ---@field public title                  string
@@ -17,38 +17,43 @@ local __module_name__ = "era.m.picker.preview" ---@type string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class era.m.picker.preview.IWinOpts
+---@class era.view.picker.preview.IWinOpts
 ---@field public border                 string|string[]
 ---@field public winhighlight           string
 ---@field public zindex                 ?integer
 
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.picker.IPreviewProps
+---@class era.view.picker.preview.IProps
 ---@field public name                   string
----@field public draw                   era.m.picker.preview.IDraw
+---@field public draw                   era.view.picker.preview.IDraw
 ---@field public keymaps                stl.t.IKeymap[]
----@field public on_drawed              ?era.m.picker.preview.IOnDrawed
+---@field public on_drawed              ?era.view.picker.preview.IOnDrawed
+---@field public diagnostic_scope       string
+---@field public relative_number        boolean
 
----@class era.m.picker.Preview
+---@class era.view.PickerPreview
 ---@field public fullname               string
 ---@field public keymaps                stl.t.IKeymap[]
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected _last_result        era.m.picker.preview.IDrawResult|nil
+---@field protected _last_result        era.view.picker.preview.IDrawResult|nil
+---@field protected _relative_number    boolean
 ---@field protected _scheduler_content  stl.c.Scheduler
 local M = {}
 M.__index = M
 
----@param props                         era.m.picker.IPreviewProps
----@return era.m.picker.Preview
+---@param props                         era.view.picker.preview.IProps
+---@return era.view.PickerPreview
 function M.new(props)
   local name = props.name ---@type string
-  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local draw = props.draw ---@type era.m.picker.preview.IDraw
+  local diagnostic_scope = props.diagnostic_scope ---@type string
+  local fullname = string.format("%s -> %s", name, diagnostic_scope) ---@type string
+  local draw = props.draw ---@type era.view.picker.preview.IDraw
   local keymaps = props.keymaps ---@type stl.t.IKeymap[]
-  local on_drawed = props.on_drawed or stl.fn.noop ---@type era.m.picker.preview.IOnDrawed
+  local relative_number = props.relative_number ---@type boolean
+  local on_drawed = props.on_drawed or stl.fn.noop ---@type era.view.picker.preview.IOnDrawed
 
   local self = setmetatable({}, M)
 
@@ -67,7 +72,7 @@ function M.new(props)
 
       vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
       vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
-      local ok, result = pcall(draw, bufnr, false) ---@type boolean, era.m.picker.preview.IDrawResult
+      local ok, result = pcall(draw, bufnr, false) ---@type boolean, era.view.picker.preview.IDrawResult
       vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
       vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
@@ -110,6 +115,7 @@ function M.new(props)
   self._bufnr = nil
   self._winnr = nil
   self._scheduler_content = scheduler_content
+  self._relative_number = relative_number
   return self
 end
 
@@ -128,6 +134,7 @@ function M:dispose()
   self._bufnr = nil
   self._winnr = nil
   self._last_result = nil
+  self._relative_number = nil
   self._scheduler_content = nil
 
   local ok1, error1 = pcall(stl.nvim.win.close, winnr)
@@ -209,7 +216,7 @@ function M:create_buf()
   return bufnr, true
 end
 
----@param winopts                       era.m.picker.preview.IWinOpts
+---@param winopts                       era.view.picker.preview.IWinOpts
 ---@param dimension                     dot.t.IWinDimension
 ---@return integer
 ---@return boolean
@@ -221,7 +228,7 @@ function M:create_win(winopts, dimension)
     return winnr, false
   end
 
-  local result = self._last_result ---@type era.m.picker.preview.IDrawResult|nil
+  local result = self._last_result ---@type era.view.picker.preview.IDrawResult|nil
   local bufnr = self:create_buf() ---@type integer
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local wincfg = {
@@ -263,7 +270,7 @@ function M:create_win(winopts, dimension)
   if result == nil then
     vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
-    vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", self._relative_number, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("list", true, { win = winnr, scope = "local" })
   else
@@ -272,7 +279,8 @@ function M:create_win(winopts, dimension)
     end
     if result.number ~= nil then
       vim.api.nvim_set_option_value("number", result.number, { win = winnr, scope = "local" })
-      vim.api.nvim_set_option_value("relativenumber", result.number, { win = winnr, scope = "local" })
+      local relative_number = self._relative_number and result.number ---@type boolean
+      vim.api.nvim_set_option_value("relativenumber", relative_number, { win = winnr, scope = "local" })
     end
     if result.wrap ~= nil then
       vim.api.nvim_set_option_value("wrap", result.wrap, { win = winnr, scope = "local" })
@@ -289,7 +297,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return era.m.picker.Preview
+---@return era.view.PickerPreview
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -299,7 +307,7 @@ function M:focus()
   return self
 end
 
----@return era.m.picker.Preview
+---@return era.view.PickerPreview
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -323,7 +331,7 @@ function M:hide()
 end
 
 ---@param dimension                     dot.t.IWinDimension,
----@return era.m.picker.Preview
+---@return era.view.PickerPreview
 function M:resize(dimension)
   self:__health__()
 
@@ -345,7 +353,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return era.m.picker.Preview
+---@return era.view.PickerPreview
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
@@ -362,9 +370,9 @@ function M:__health__()
   end
 end
 
----@return era.m.picker.Preview
+---@return era.view.PickerPreview
 function M:__update_winopts__()
-  local result = self._last_result ---@type era.m.picker.preview.IDrawResult
+  local result = self._last_result ---@type era.view.picker.preview.IDrawResult
   if result == nil then
     return self
   end
@@ -383,7 +391,8 @@ function M:__update_winopts__()
   end
   if result.number ~= nil then
     vim.api.nvim_set_option_value("number", result.number, { win = winnr, scope = "local" })
-    vim.api.nvim_set_option_value("relativenumber", result.number, { win = winnr, scope = "local" })
+    local relative_number = self._relative_number and result.number ---@type boolean
+    vim.api.nvim_set_option_value("relativenumber", relative_number, { win = winnr, scope = "local" })
   end
   if result.wrap ~= nil then
     vim.api.nvim_set_option_value("wrap", result.wrap, { win = winnr, scope = "local" })

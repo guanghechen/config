@@ -5,7 +5,7 @@ local txt = stl.nvim.fn.txt
 local M = {}
 
 ---@param position                      stl.t.NvimbarPositionEnum
----@param flags                         era.m.picker.result.IFlagItem[]
+---@param flags                         era.view.picker.result.IFlagItem[]
 ---@param flags_start_index             integer
 ---@return era.m.nvimbar.IRawComponent
 function M.result_flags(position, flags, flags_start_index)
@@ -62,7 +62,7 @@ function M.result_pos(position, result_lnum, result_total)
 end
 
 ---@param position                      stl.t.NvimbarPositionEnum
----@param snapshot                      era.m.searcher.result.IStatusSnapshot
+---@param snapshot                      era.view.picker.result.IStatusSnapshot
 ---@return era.m.nvimbar.IRawComponent
 function M.result_status(position, snapshot)
   ---@type era.m.nvimbar.IRawComponent

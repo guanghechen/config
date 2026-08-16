@@ -211,6 +211,8 @@ local __view__mods = {
   Keysheet = "era.view.keysheet",
   notifications = "era.view.notifications",
   Plainfile = "era.view.plainfile",
+  PickerPreview = "era.view.picker.preview",
+  PickerResult = "era.view.picker.result",
   Printer = "era.view.printer",
   Setting = "era.view.setting",
   Textarea = "era.view.textarea",
@@ -224,6 +226,8 @@ local __view__mods = {
 ---@field public Keysheet               era.view.Keysheet
 ---@field public notifications          { open: fun(): nil, close: fun(): nil }
 ---@field public Plainfile              era.view.Plainfile
+---@field public PickerPreview          era.view.PickerPreview
+---@field public PickerResult           era.view.PickerResult
 ---@field public Printer                era.view.Printer
 ---@field public Setting                era.view.Setting
 ---@field public Textarea               era.view.Textarea

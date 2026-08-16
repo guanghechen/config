@@ -1,8 +1,24 @@
+---@alias era.m.picker.result.IDraw era.view.picker.result.IDraw
+---@alias era.m.picker.result.IIsSelected era.view.picker.result.IIsSelected
+---@alias era.m.picker.result.IOnDrawed era.view.picker.result.IOnDrawed
+---@alias era.m.picker.result.IDrawResult era.view.picker.result.IDrawResult
+---@alias era.m.picker.result.IFlagItemRaw era.view.picker.result.IFlagItemRaw
+---@alias era.m.picker.result.IFlagItem era.view.picker.result.IFlagItem
+---@alias era.m.picker.result.IWinOpts era.view.picker.result.IWinOpts
+---@alias era.m.picker.IResultProps era.view.picker.result.IProps
+---@alias era.m.picker.Result era.view.PickerResult
+---@alias era.m.picker.preview.IDraw era.view.picker.preview.IDraw
+---@alias era.m.picker.preview.IOnDrawed era.view.picker.preview.IOnDrawed
+---@alias era.m.picker.preview.IDrawResult era.view.picker.preview.IDrawResult
+---@alias era.m.picker.preview.IWinOpts era.view.picker.preview.IWinOpts
+---@alias era.m.picker.IPreviewProps era.view.picker.preview.IProps
+---@alias era.m.picker.Preview era.view.PickerPreview
+
 ---@class era.m.picker.__mods
 local __mods = {
   Finder = "era.m.picker.finder",
-  Preview = "era.m.picker.preview",
-  Result = "era.m.picker.result",
+  Preview = "era.view.picker.preview",
+  Result = "era.view.picker.result",
 
   BasicComposer = "era.m.picker.composer.basic",
   FiletreeComposer = "era.m.picker.composer.filetree",

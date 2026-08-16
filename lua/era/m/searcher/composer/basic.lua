@@ -275,6 +275,9 @@ function M.new(props)
   local result = era.m.searcher.Result.new({
     uuid = uuid,
     name = name,
+    augroup_prefix = "searcher.result",
+    diagnostic_scope = "era.m.searcher.result",
+    winline_hl = "f_wl_searcher",
     draw = function(bufnr)
       if search_pattern_history ~= nil then
         local keyword = search_pattern:snapshot() ---@type string
@@ -312,6 +315,8 @@ function M.new(props)
     preview = era.m.searcher.Preview.new({
       uuid = uuid,
       name = name,
+      diagnostic_scope = "era.m.searcher.preview",
+      relative_number = false,
       draw = render_preview,
       keymaps = self:__resolve_keymaps_preview__(
         flags,

@@ -219,6 +219,9 @@ function M.new(props)
   local result = era.m.picker.Result.new({
     uuid = uuid,
     name = name,
+    augroup_prefix = "picker.result",
+    diagnostic_scope = "era.m.picker.result",
+    winline_hl = "f_wl_picker",
     draw = function(bufnr)
       if search_pattern_history ~= nil then
         local keyword = search_pattern:snapshot() ---@type string
@@ -249,6 +252,8 @@ function M.new(props)
     preview = era.m.picker.Preview.new({
       uuid = uuid,
       name = name,
+      diagnostic_scope = "era.m.picker.preview",
+      relative_number = true,
       draw = render_preview,
       keymaps = self:__resolve_keymaps_preview__(
         flags,

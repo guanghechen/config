@@ -1,33 +1,40 @@
 ---@diagnostic disable: invisible
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.picker.result" ---@type string
+local __module_name__ = "era.view.picker.result" ---@type string
 
----@alias era.m.picker.result.IDraw
----| fun(bufnr: integer): era.m.picker.result.IDrawResult
+local nvimbar = require("era.m.nvimbar")
+local c = nvimbar.component
+local Nvimbar = nvimbar.Nvimbar
 
----@alias era.m.picker.result.IIsSelected
+---@alias era.view.picker.result.IDraw
+---| fun(bufnr: integer): era.view.picker.result.IDrawResult
+
+---@alias era.view.picker.result.IIsSelected
 ---| fun(bufnr: integer, lnum: integer): boolean
 
----@alias era.m.picker.result.IOnDrawed
+---@alias era.view.picker.result.IOnDrawed
 ---| fun(bufnr: integer): nil
 
----@class era.m.picker.result.IDrawResult
+---@alias era.view.picker.result.IStatusSnapshot
+---| fun(): string|nil, string|nil
+
+---@class era.view.picker.result.IDrawResult
 ---@field public lnum_current           integer|nil
 ---@field public lnum_present           integer|nil
 
----@class era.m.picker.result.IFlagItemRaw
+---@class era.view.picker.result.IFlagItemRaw
 ---@field public desc                   string
 ---@field public callback               fun(): nil
 ---@field public disabled               (fun(): boolean)|boolean|nil
 ---@field public snapshot               fun(): string, string
 
----@class era.m.picker.result.IFlagItem
+---@class era.view.picker.result.IFlagItem
 ---@field public desc                   string
 ---@field public callback               string
 ---@field public disabled               fun(): boolean
 ---@field public snapshot               fun(): string, string
 
----@class era.m.picker.result.IWinOpts
+---@class era.view.picker.result.IWinOpts
 ---@field public border                 string|string[]
 ---@field public number                 boolean
 ---@field public winhighlight           string
@@ -35,21 +42,25 @@ local __module_name__ = "era.m.picker.result" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.picker.IResultProps
+---@class era.view.picker.result.IProps
 ---@field public uuid                   string
 ---@field public name                   string
----@field public draw                   era.m.picker.result.IDraw
----@field public isselected             ?era.m.picker.result.IIsSelected
+---@field public draw                   era.view.picker.result.IDraw
+---@field public isselected             ?era.view.picker.result.IIsSelected
 ---@field public keymaps                stl.t.IKeymap[]
----@field public flags                  era.m.picker.result.IFlagItemRaw[]
+---@field public flags                  era.view.picker.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
----@field public on_drawed              ?era.m.picker.result.IOnDrawed
+---@field public on_drawed              ?era.view.picker.result.IOnDrawed
+---@field public status                 ?era.view.picker.result.IStatusSnapshot
+---@field public winline_hl             string
+---@field public diagnostic_scope       string
+---@field public augroup_prefix         string
 
----@class era.m.picker.Result
+---@class era.view.PickerResult
 ---@field public uuid                   string
 ---@field public fullname               string
----@field public draw                   era.m.picker.result.IDraw
----@field public flags                  era.m.picker.result.IFlagItem[]
+---@field public draw                   era.view.picker.result.IDraw
+---@field public flags                  era.view.picker.result.IFlagItem[]
 ---@field public keymaps                stl.t.IKeymap[]
 ---@field public lnum_current           stl.c.Observable
 ---@field public lnum_present           stl.c.Observable
@@ -66,28 +77,32 @@ local __module_name__ = "era.m.picker.result" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         era.m.picker.IResultProps
----@return era.m.picker.Result
+---@param props                         era.view.picker.result.IProps
+---@return era.view.PickerResult
 function M.new(props)
   local uuid = props.uuid ---@type string
   local name = props.name ---@type string
-  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local draw = props.draw ---@type era.m.picker.result.IDraw
-  local isselected = props.isselected or stl.fn.falsy ---@type era.m.picker.result.IIsSelected
+  local diagnostic_scope = props.diagnostic_scope ---@type string
+  local fullname = string.format("%s -> %s", name, diagnostic_scope) ---@type string
+  local draw = props.draw ---@type era.view.picker.result.IDraw
+  local isselected = props.isselected or stl.fn.falsy ---@type era.view.picker.result.IIsSelected
   local keymaps = props.keymaps ---@type stl.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
+  local status = props.status ---@type era.view.picker.result.IStatusSnapshot|nil
+  local winline_hl = props.winline_hl ---@type string
+  local augroup_prefix = props.augroup_prefix ---@type string
 
-  local on_drawed = props.on_drawed or stl.fn.noop ---@type era.m.picker.result.IOnDrawed
-  local augroup_CursorMoved = stl.nvim.fn.augroup(string.format("picker.result:CursorMoved#%s", uuid)) ---@type integer
+  local on_drawed = props.on_drawed or stl.fn.noop ---@type era.view.picker.result.IOnDrawed
+  local augroup_CursorMoved = stl.nvim.fn.augroup(string.format("%s:CursorMoved#%s", augroup_prefix, uuid)) ---@type integer
 
   local _o_lnum_current = stl.c.Observable.from_value(0) ---@type stl.c.Observable
   local _o_lnum_present = stl.c.Observable.from_value(-1) ---@type stl.c.Observable
   local _o_lnum_total = stl.c.Observable.from_value(0) ---@type stl.c.Observable
 
-  local flags = {} ---@type era.m.picker.result.IFlagItem[]
+  local flags = {} ---@type era.view.picker.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
     for _, flag in ipairs(props.flags) do
-      ---@cast flag                     era.m.picker.result.IFlagItemRaw
+      ---@cast flag                     era.view.picker.result.IFlagItemRaw
       local raw_disabled = flag.disabled ---@type boolean|nil|(fun(): boolean)
       local callback = flag.callback ---@type fun(): nil
       local snapshot = flag.snapshot ---@type fun(): boolean, string
@@ -106,7 +121,7 @@ function M.new(props)
 
       local callback_fn = dot.G.register_anonymous_fn(callback) or "dot.G.noop" ---@type string
 
-      ---@type era.m.picker.result.IFlagItem
+      ---@type era.view.picker.result.IFlagItem
       local item = {
         desc = flag.desc,
         callback = callback_fn,
@@ -119,17 +134,14 @@ function M.new(props)
 
   local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 
-  local c = era.m.nvimbar.component
-  local Nvimbar = era.m.nvimbar.Nvimbar
-
   local self = setmetatable({}, M)
 
   ---@type era.m.nvimbar.Nvimbar
   local nvimbar = Nvimbar.new({
     name = string.format("%s#winline", fullname),
     comp_sep = "",
-    comp_sep_hlname = "f_wl_picker",
-    comp_sep_hlname_active = "f_wl_picker",
+    comp_sep_hlname = winline_hl,
+    comp_sep_hlname_active = winline_hl,
     delay = 128,
     silent = stl.fn.falsy,
     get_max_width = function()
@@ -156,6 +168,10 @@ function M.new(props)
   })
     :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
     :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
+
+  if status ~= nil then
+    nvimbar:place("center", c.picker.result_status(position, status), 200)
+  end
 
   ---@type stl.c.Scheduler
   local scheduler_lnum_current = stl.c.Scheduler.new({
@@ -252,7 +268,7 @@ function M.new(props)
 
       vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
       vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
-      local ok, result = pcall(draw, bufnr) ---@type boolean, era.m.picker.result.IDrawResult
+      local ok, result = pcall(draw, bufnr) ---@type boolean, era.view.picker.result.IDrawResult
       vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
       vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
@@ -280,12 +296,16 @@ function M.new(props)
       local lnum_current = math.min(lnum_total, math.max(1, result.lnum_current or _o_lnum_current:snapshot())) ---@type integer
       local lnum_present = result.lnum_present or -1 ---@type integer
 
-      _o_lnum_current:next(lnum_current)
-      _o_lnum_present:next(lnum_present)
+      local lnum_current_changed = _o_lnum_current:next(lnum_current) ---@type boolean
+      local lnum_present_changed = _o_lnum_present:next(lnum_present) ---@type boolean
       _o_lnum_total:next(lnum_total)
 
-      self._scheduler_lnum_current:schedule()
-      self._scheduler_lnum_present:schedule()
+      if not lnum_current_changed then
+        self._scheduler_lnum_current:schedule()
+      end
+      if not lnum_present_changed then
+        self._scheduler_lnum_present:schedule()
+      end
       self._scheduler_lnums_selected:schedule()
 
       local on_drawed_ok, on_drawed_result = pcall(on_drawed, bufnr)
@@ -504,7 +524,7 @@ function M:create_buf()
   return bufnr, true
 end
 
----@param winopts                       era.m.picker.result.IWinOpts
+---@param winopts                       era.view.picker.result.IWinOpts
 ---@param dimension                     dot.t.IWinDimension,
 ---@return integer
 ---@return boolean
@@ -548,15 +568,31 @@ function M:create_win(winopts, dimension)
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
 
   vim.schedule(function()
-    local lnum = self.lnum_current:snapshot() ---@type integer
-    pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
+    self:__restore_cursor__(winnr)
   end)
   return winnr, true
 end
 
+---@protected
+---@param winnr                        integer
+---@return nil
+function M:__restore_cursor__(winnr)
+  if self._disposed or self._winnr ~= winnr or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local lnum_current = self.lnum_current ---@type stl.c.Observable|nil
+  if lnum_current == nil then
+    return
+  end
+
+  local lnum = lnum_current:snapshot() ---@type integer
+  pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
+end
+
 ----------------------------------------------------------------------------------------------------
 
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -566,7 +602,7 @@ function M:focus()
   return self
 end
 
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -590,7 +626,7 @@ function M:hide()
 end
 
 ---@param dimension                     dot.t.IWinDimension,
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:resize(dimension)
   self:__health__()
 
@@ -614,14 +650,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
   return self
 end
 
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:mark_nvimbar_dirty()
   self:__health__()
   self._nvimbar:render()
@@ -650,7 +686,7 @@ function M:moveto(next_lnum)
 end
 
 ---@param lnum                          integer
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:set_lnum_current(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -660,7 +696,7 @@ function M:set_lnum_current(lnum)
 end
 
 ---@param lnum                          integer
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:set_lnum_present(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -669,7 +705,7 @@ function M:set_lnum_present(lnum)
   return self
 end
 
----@return era.m.picker.Result
+---@return era.view.PickerResult
 function M:refresh_signs()
   self:__health__()
   self._scheduler_lnum_current:schedule()
