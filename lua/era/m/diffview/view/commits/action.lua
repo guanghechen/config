@@ -53,7 +53,7 @@ local function update_lnum_present(ctx, hash)
   end
 end
 
----Find actual commit object in state by hash (line_map commit may be a copy due to vim.b serialization)
+---Find the authoritative commit object in state by hash.
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@param hash                           string
 ---@return era.m.diffview.ICommit|nil
@@ -765,7 +765,7 @@ function M.switch_to_layout(ctx, layout_type)
 
       local item = pane_commits.get_item_at_line(new_lyt.commits_bufnr, lnum)
       if item and item.commit then
-        -- Find the actual commit object in state (line_map commit may be a copy)
+        -- Resolve against the authoritative state snapshot.
         local commits = ctx.state:get_commits()
         for _, c in ipairs(commits) do
           if c.hash == item.commit.hash then
@@ -844,7 +844,7 @@ function M.cycle_layout(ctx)
       local item = pane_commits.get_item_at_line(new_lyt.commits_bufnr, lnum)
 
       if item and item.commit then
-        -- Find the actual commit object in state (line_map commit may be a copy)
+        -- Resolve against the authoritative state snapshot.
         local commits = ctx.state:get_commits()
         for _, c in ipairs(commits) do
           if c.hash == item.commit.hash then
@@ -923,7 +923,7 @@ function M.prev_layout(ctx)
       local item = pane_commits.get_item_at_line(new_lyt.commits_bufnr, lnum)
 
       if item and item.commit then
-        -- Find the actual commit object in state (line_map commit may be a copy)
+        -- Resolve against the authoritative state snapshot.
         local commits = ctx.state:get_commits()
         for _, c in ipairs(commits) do
           if c.hash == item.commit.hash then

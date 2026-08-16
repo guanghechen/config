@@ -104,6 +104,7 @@ layout:folded_ids(lnum)
 
 layout:parent_lnum(lnum)
 layout:first_child_lnum(lnum)
+layout:last_child_lnum(lnum)
 layout:last_descendant_lnum(lnum)
 layout:prev_sibling_lnum(lnum)
 layout:next_sibling_lnum(lnum)
@@ -117,6 +118,7 @@ layout:is_last(lnum)
   _ids = string[],
   _depths = integer[],
   _parent_lnums = integer[],
+  _last_child_lnums = integer[],
   _last_descendant_lnums = integer[],
   _prev_sibling_lnums = integer[],
   _id_to_lnum = table<string, integer>,
@@ -126,7 +128,8 @@ layout:is_last(lnum)
 
 `0` 是内部 navigation sentinel，确保 numeric arrays 保持 dense；公开方法将其转换为 `nil`。
 
-可由现有数组以 `O(1)` 推导的 navigation 不重复存储：
+只有无法由现有数组以 `O(1)` 推导的 navigation 才存储。`last_child_lnum` 在 traversal 时顺手维护；以下
+navigation 不重复存储：
 
 - `first_child_lnum = lnum + 1`，前提是下一行 parent 等于当前行。
 - `next_sibling_lnum = last_descendant_lnum + 1`，前提是候选行 parent 相同。

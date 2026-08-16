@@ -445,9 +445,12 @@ local function render_files_tree(commit, files, lines, highlights, line_map, fol
     local global_lnum = offset + row ---@type integer
     local local_parent_lnum = result.layout:parent_lnum(row) ---@type integer|nil
     local parent_lnum = local_parent_lnum ~= nil and (offset + local_parent_lnum) or commit_lnum ---@type integer
+    local local_last_child_lnum = result.layout:last_child_lnum(row) ---@type integer|nil
     navigation.parent_lnums[global_lnum] = parent_lnum
-    navigation.last_child_lnums[global_lnum] = 0
-    navigation.last_child_lnums[parent_lnum] = global_lnum
+    navigation.last_child_lnums[global_lnum] = local_last_child_lnum ~= nil and (offset + local_last_child_lnum) or 0
+    if local_parent_lnum == nil then
+      navigation.last_child_lnums[commit_lnum] = global_lnum
+    end
   end
 
   vim.list_extend(lines, result.lines)

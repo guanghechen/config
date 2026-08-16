@@ -13,6 +13,7 @@ local __module_name__ = "stl.view.treeview.layout" ---@type string
 ---@field private _ids string[]
 ---@field private _depths integer[]
 ---@field private _parent_lnums integer[]
+---@field private _last_child_lnums integer[]
 ---@field private _last_descendant_lnums integer[]
 ---@field private _prev_sibling_lnums integer[]
 ---@field private _id_to_lnum table<string, integer>
@@ -20,7 +21,7 @@ local __module_name__ = "stl.view.treeview.layout" ---@type string
 local TreeLayout = {}
 TreeLayout.__index = TreeLayout
 
----@param state { ids: string[], depths: integer[], parent_lnums: integer[], last_descendant_lnums: integer[], prev_sibling_lnums: integer[], id_to_lnum: table<string, integer>, folded_ids_by_lnum: table<integer, string[]> }
+---@param state { ids: string[], depths: integer[], parent_lnums: integer[], last_child_lnums: integer[], last_descendant_lnums: integer[], prev_sibling_lnums: integer[], id_to_lnum: table<string, integer>, folded_ids_by_lnum: table<integer, string[]> }
 ---@return stl.view.TreeLayout
 function TreeLayout.__new(state)
   return setmetatable({
@@ -28,6 +29,7 @@ function TreeLayout.__new(state)
     _ids = state.ids,
     _depths = state.depths,
     _parent_lnums = state.parent_lnums,
+    _last_child_lnums = state.last_child_lnums,
     _last_descendant_lnums = state.last_descendant_lnums,
     _prev_sibling_lnums = state.prev_sibling_lnums,
     _id_to_lnum = state.id_to_lnum,
@@ -79,6 +81,13 @@ function TreeLayout:first_child_lnum(lnum)
   end
   local candidate = lnum + 1 ---@type integer
   return self._parent_lnums[candidate] == lnum and candidate or nil
+end
+
+---@param lnum integer
+---@return integer|nil
+function TreeLayout:last_child_lnum(lnum)
+  local last_child_lnum = self._last_child_lnums[lnum]
+  return last_child_lnum ~= nil and last_child_lnum > 0 and last_child_lnum or nil
 end
 
 ---@param lnum integer
@@ -158,6 +167,7 @@ function M.layout(props)
   local ids = {} ---@type string[]
   local depths = {} ---@type integer[]
   local parent_lnums = {} ---@type integer[]
+  local last_child_lnums = {} ---@type integer[]
   local last_descendant_lnums = {} ---@type integer[]
   local prev_sibling_lnums = {} ---@type integer[]
   local id_to_lnum = {} ---@type table<string, integer>
@@ -199,6 +209,10 @@ function M.layout(props)
 
       depths[lnum] = stack_size - 1
       parent_lnums[lnum] = parent_lnum
+      last_child_lnums[lnum] = 0
+      if parent_lnum > 0 then
+        last_child_lnums[parent_lnum] = lnum
+      end
       prev_sibling_lnums[lnum] = stack_prev_lnums[stack_size]
       stack_prev_lnums[stack_size] = lnum
 
@@ -274,6 +288,7 @@ function M.layout(props)
     ids = ids,
     depths = depths,
     parent_lnums = parent_lnums,
+    last_child_lnums = last_child_lnums,
     last_descendant_lnums = last_descendant_lnums,
     prev_sibling_lnums = prev_sibling_lnums,
     id_to_lnum = id_to_lnum,
