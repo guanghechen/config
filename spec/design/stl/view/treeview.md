@@ -47,6 +47,11 @@ tree:remove(id)
 tree:clear()
 ```
 
+Base mutation 返回 topology owner 本身，支持 chaining，但不暴露内部 node object。Consumer 通过
+`get/contains/parent/children` 读取 data 与 topology。
+
+`Filetree.insert_*` 返回最终 canonical UUID；调用方无需读取内部 node，也无需重复计算 path hash。
+
 结构不变式：
 
 1. ID 是 opaque string 且全局唯一。

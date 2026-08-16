@@ -16,7 +16,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public root                   string
 ---@field public isdisposed             fun(self: stl.c.IReadonlyTree): boolean
 ---@field public isdescendant           fun(self: stl.c.IReadonlyTree, ancestor: string, uuid: string): boolean
----@field public retrieve               fun(self: stl.c.IReadonlyTree, uuid: string): stl.c.ITreeNode|nil
 ---@field public get                    fun(self: stl.c.IReadonlyTree, uuid: string): unknown|nil
 ---@field public contains               fun(self: stl.c.IReadonlyTree, uuid: string): boolean
 ---@field public parent                 fun(self: stl.c.IReadonlyTree, uuid: string): string|nil
@@ -29,14 +28,13 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public dispose                fun(self: stl.c.ITree): nil
 ---@field public isdisposed             fun(self: stl.c.ITree): boolean
 ---@field public isdescendant           fun(self: stl.c.ITree, ancestor: string, uuid: string): boolean
----@field public retrieve               fun(self: stl.c.ITree, uuid: string): stl.c.ITreeNode|nil
 ---@field public get                    fun(self: stl.c.ITree, uuid: string): unknown|nil
 ---@field public contains               fun(self: stl.c.ITree, uuid: string): boolean
 ---@field public parent                 fun(self: stl.c.ITree, uuid: string): string|nil
 ---@field public children               fun(self: stl.c.ITree, uuid: string): string[]|nil
----@field public insert                 fun(self: stl.c.ITree, parent: string, uuid: string, data: table|nil, index?: integer): stl.c.ITreeNode
----@field public update                 fun(self: stl.c.ITree, uuid: string, data: table): stl.c.ITreeNode
----@field public move                   fun(self: stl.c.ITree, uuid: string, parent: string, index?: integer): stl.c.ITreeNode
+---@field public insert                 fun(self: stl.c.ITree, parent: string, uuid: string, data: table|nil, index?: integer): stl.c.ITree
+---@field public update                 fun(self: stl.c.ITree, uuid: string, data: table): stl.c.ITree
+---@field public move                   fun(self: stl.c.ITree, uuid: string, parent: string, index?: integer): stl.c.ITree
 ---@field public remove                 fun(self: stl.c.ITree, uuid: string): stl.c.ITree
 
 ---@class stl.c.Tree : stl.c.ITree
@@ -148,13 +146,6 @@ function M:isdescendant(ancestor, uuid)
 end
 
 ---@param uuid                          string
----@return stl.c.ITreeNode|nil
-function M:retrieve(uuid)
-  self:__health__()
-  return self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
-end
-
----@param uuid                          string
 ---@return unknown|nil
 function M:get(uuid)
   self:__health__()
@@ -198,7 +189,7 @@ end
 
 ---@param uuid                          string
 ---@param data                          table
----@return stl.c.ITreeNode
+---@return stl.c.Tree
 function M:update(uuid, data)
   self:__health__()
   local node = self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
@@ -206,13 +197,13 @@ function M:update(uuid, data)
     error(string.format("[%s] node '%s' does not exist", __module_name__, uuid), 2)
   end
   node.data = data
-  return node
+  return self
 end
 
 ---@param uuid                          string
 ---@param parent                        string
 ---@param index?                        integer
----@return stl.c.ITreeNode
+---@return stl.c.Tree
 function M:move(uuid, parent, index)
   self:__health__()
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
@@ -231,7 +222,7 @@ function M:move(uuid, parent, index)
     error(string.format("[%s] moving '%s' below '%s' would create a cycle", __module_name__, uuid, parent), 2)
   end
   if node.parent == parent and index == nil then
-    return node
+    return self
   end
 
   local old_parent = nodemap[node.parent] ---@type stl.c.ITreeNode
@@ -254,7 +245,7 @@ function M:move(uuid, parent, index)
   if node.depth ~= next_parent.depth + 1 then
     self:__resolve_depth_recursive__(node, next_parent.depth + 1)
   end
-  return node
+  return self
 end
 
 ---@generic T : table
@@ -262,7 +253,7 @@ end
 ---@param uuid                          string
 ---@param data                          T
 ---@param index?                        integer
----@return stl.c.ITreeNode
+---@return stl.c.Tree
 function M:insert(parent, uuid, data, index)
   self:__health__()
 
@@ -295,7 +286,7 @@ function M:insert(parent, uuid, data, index)
   }
   nodemap[uuid] = node
   table.insert(node_parent.children, insertion_index, uuid)
-  return node
+  return self
 end
 
 ---@param nodeuuid                      string

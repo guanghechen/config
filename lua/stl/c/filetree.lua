@@ -61,7 +61,6 @@ end
 ---@field public isdisposed             fun(self: stl.c.IReadonlyFiletree): boolean
 ---@field public isdescendant           fun(self: stl.c.IReadonlyFiletree, ancestor: string, uuid: string): boolean
 ---@field public get                    fun(self: stl.c.IReadonlyFiletree, uuid: string): stl.c.IFiletreeNodeData|nil
----@field public retrieve               fun(self: stl.c.IReadonlyFiletree, uuid: string): stl.c.IFiletreeNode|nil
 ---@field public children               fun(self: stl.c.IReadonlyFiletree, uuid: string): string[]|nil
 
 ---@class stl.c.IFiletree : stl.c.ITree , stl.c.IReadonlyFiletree
@@ -72,13 +71,12 @@ end
 ---@field public isdisposed             fun(self: stl.c.IFiletree): boolean
 ---@field public isdescendant           fun(self: stl.c.IFiletree, ancestor: string, uuid: string): boolean
 ---@field public get                    fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletreeNodeData|nil
----@field public retrieve               fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletreeNode|nil
 ---@field public children               fun(self: stl.c.IFiletree, uuid: string): string[]|nil
----@field public insert                 fun(self: stl.c.IFiletree, parent: string, uuid: string, data: stl.c.IFiletreeNodeData): stl.c.IFiletreeNode
----@field public insert_directory_absolute fun(self: stl.c.IFiletree, dirpath: string): stl.c.IFiletreeNode
----@field public insert_directory_relative fun(self: stl.c.IFiletree, cwd: string, dirpath: string): stl.c.IFiletreeNode
----@field public insert_file_absolute   fun(self: stl.c.IFiletree, filepath: string): stl.c.IFiletreeNode
----@field public insert_file_relative   fun(self: stl.c.IFiletree, cwd: string, filepath: string): stl.c.IFiletreeNode
+---@field public insert                 fun(self: stl.c.IFiletree, parent: string, uuid: string, data: stl.c.IFiletreeNodeData): stl.c.IFiletree
+---@field public insert_directory_absolute fun(self: stl.c.IFiletree, dirpath: string): string
+---@field public insert_directory_relative fun(self: stl.c.IFiletree, cwd: string, dirpath: string): string
+---@field public insert_file_absolute   fun(self: stl.c.IFiletree, filepath: string): string
+---@field public insert_file_relative   fun(self: stl.c.IFiletree, cwd: string, filepath: string): string
 ---@field public remove                 fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletree
 ---@field public reset                  fun(self: stl.c.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): stl.c.IFiletree
 
@@ -223,7 +221,7 @@ end
 ---@param parent                        string
 ---@param uuid                          string
 ---@param data                          stl.c.IFiletreeNodeData
----@return stl.c.IFiletreeNode
+---@return stl.c.Filetree
 function M:insert(parent, uuid, data)
   self:__health__()
 
@@ -231,16 +229,17 @@ function M:insert(parent, uuid, data)
   local node = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
   if node ~= nil then
     if self:parent(uuid) == parent then
-      return self:update(uuid, data) ---@type stl.c.IFiletreeNode
+      self:update(uuid, data)
+      return self
     end
     stl.c.Tree.move(self, uuid, parent)
-    node = self:update(uuid, data) ---@type stl.c.IFiletreeNode
+    self:update(uuid, data)
   else
-    node = stl.c.Tree.insert(self, parent, uuid, data) ---@type stl.c.IFiletreeNode
+    stl.c.Tree.insert(self, parent, uuid, data)
   end
   local parentnode = nodemap[parent] ---@type stl.c.IFiletreeNode
   parentnode.dirty_co = true
-  return node
+  return self
 end
 
 ---@param nodeuuid                      string
@@ -264,7 +263,7 @@ function M:remove(nodeuuid)
 end
 
 ---@param dirpath                       string
----@return stl.c.IFiletreeNode
+---@return string
 function M:insert_directory_absolute(dirpath)
   self:__health__()
 
@@ -286,7 +285,7 @@ function M:insert_directory_absolute(dirpath)
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
-        node = self:insert(uuid_parent, nodeuuid, nodedata)
+        self:insert(uuid_parent, nodeuuid, nodedata)
       end
       uuid_parent = nodeuuid ---@type string
     end
@@ -297,18 +296,18 @@ function M:insert_directory_absolute(dirpath)
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
-        node = self:insert(uuid_parent, nodeuuid, nodedata)
+        self:insert(uuid_parent, nodeuuid, nodedata)
       end
       uuid_parent = nodeuuid ---@type string
     end
   end
 
-  return node
+  return nodeuuid
 end
 
 ---@param cwd                           string
 ---@param dirpath                       string
----@return stl.c.IFiletreeNode
+---@return string
 function M:insert_directory_relative(cwd, dirpath)
   self:__health__()
 
@@ -318,7 +317,7 @@ function M:insert_directory_relative(cwd, dirpath)
   local cwduuid = M.uuid(cwd) ---@type string
   local cwdnode = nodemap[cwduuid] ---@type stl.c.IFiletreeNode|nil
   if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
-    cwdnode = self:insert_directory_absolute(cwd)
+    self:insert_directory_absolute(cwd)
   end
 
   local nodeuuid = M.uuid(cwd .. "/" .. dirpath) ---@type string
@@ -336,17 +335,17 @@ function M:insert_directory_relative(cwd, dirpath)
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
-        node = self:insert(uuid_parent, nodeuuid, nodedata)
+        self:insert(uuid_parent, nodeuuid, nodedata)
       end
       uuid_parent = nodeuuid ---@type string
     end
   end
 
-  return node
+  return nodeuuid
 end
 
 ---@param filepath                      string
----@return stl.c.IFiletreeNode
+---@return string
 function M:insert_file_absolute(filepath)
   self:__health__()
 
@@ -368,7 +367,7 @@ function M:insert_file_absolute(filepath)
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
-        node = self:insert(uuid_parent, nodeuuid, nodedata)
+        self:insert(uuid_parent, nodeuuid, nodedata)
       end
       uuid_parent = nodeuuid ---@type string
     end
@@ -379,7 +378,7 @@ function M:insert_file_absolute(filepath)
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
-        node = self:insert(uuid_parent, nodeuuid, nodedata)
+        self:insert(uuid_parent, nodeuuid, nodedata)
       end
 
       uuid_parent = nodeuuid ---@type string
@@ -391,16 +390,16 @@ function M:insert_file_absolute(filepath)
     node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
       local nodedata = M.resolve(p, "file", true)
-      node = self:insert(uuid_parent, nodeuuid, nodedata)
+      self:insert(uuid_parent, nodeuuid, nodedata)
     end
   end
 
-  return node
+  return nodeuuid
 end
 
 ---@param cwd                           string
 ---@param filepath                      string
----@return stl.c.IFiletreeNode
+---@return string
 function M:insert_file_relative(cwd, filepath)
   self:__health__()
 
@@ -410,7 +409,7 @@ function M:insert_file_relative(cwd, filepath)
   local cwduuid = M.uuid(cwd) ---@type string
   local cwdnode = nodemap[cwduuid] ---@type stl.c.IFiletreeNode|nil
   if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
-    cwdnode = self:insert_directory_absolute(cwd)
+    self:insert_directory_absolute(cwd)
   end
 
   local nodeuuid = M.uuid(cwd .. "/" .. filepath) ---@type string
@@ -428,7 +427,7 @@ function M:insert_file_relative(cwd, filepath)
       node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
-        node = self:insert(uuid_parent, nodeuuid, nodedata)
+        self:insert(uuid_parent, nodeuuid, nodedata)
       end
 
       uuid_parent = nodeuuid ---@type string
@@ -440,11 +439,11 @@ function M:insert_file_relative(cwd, filepath)
     node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
       local nodedata = M.resolve(p, "file", true)
-      node = self:insert(uuid_parent, nodeuuid, nodedata)
+      self:insert(uuid_parent, nodeuuid, nodedata)
     end
   end
 
-  return node
+  return nodeuuid
 end
 
 ---@param cwd                           string Canonical cwd or OS cwd at ingress.

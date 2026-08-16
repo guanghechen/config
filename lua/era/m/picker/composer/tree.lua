@@ -960,26 +960,29 @@ end
 ---@param parentuuid                    string
 ---@param uuid                          string
 ---@param data                          table
----@return stl.c.ITreeNode
+---@return era.m.picker.TreeComposer
 function M:insert(parentuuid, uuid, data)
   self:__health__()
 
   local tree = self._tree ---@type stl.c.Tree
   if tree:contains(uuid) then
     if tree:parent(uuid) == parentuuid then
-      return tree:update(uuid, data)
+      tree:update(uuid, data)
+      return self
     end
     if not tree:contains(parentuuid) then
       error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
     end
     tree:move(uuid, parentuuid, self:__resolve_insert_index__(parentuuid, data))
-    return tree:update(uuid, data)
+    tree:update(uuid, data)
+    return self
   end
 
   if not tree:contains(parentuuid) then
     error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
   end
-  return tree:insert(parentuuid, uuid, data, self:__resolve_insert_index__(parentuuid, data))
+  tree:insert(parentuuid, uuid, data, self:__resolve_insert_index__(parentuuid, data))
+  return self
 end
 
 ---@return boolean

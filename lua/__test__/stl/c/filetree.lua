@@ -22,6 +22,15 @@ local function with_tree(name, callback)
   end
 end
 
+t:test("strict API does not expose raw nodes", function()
+  with_tree("strict-api", function(tree)
+    t.assert_nil(tree.retrieve, "raw nodes are not public")
+    local root = tree:children(tree.root)[1]
+    local data, uuid = Filetree.resolve("/inserted.lua", "file", true)
+    t.assert_true(tree:insert(root, uuid, data) == tree, "generic insert returns owner")
+  end)
+end)
+
 t:test("UUID and node identity canonicalize Windows separator ingress", function()
   local canonical = "C:/workspace/project/src/main.lua"
   local os_path = [[C:\workspace\project\src\main.lua]]
@@ -46,6 +55,16 @@ t:test("UUID and node identity canonicalize Windows separator ingress", function
   t.assert_eq(canonical_uuid, nodeuuid, "resolved UUID")
   t.assert_eq(canonical, data.filepath, "resolved canonical filepath")
   t.assert_eq(3, calls, "OS resolve conversion count")
+end)
+
+t:test("path insertions return canonical UUIDs", function()
+  with_tree("insert-uuids", function(tree)
+    local cwd = "/workspace"
+    t.assert_eq(Filetree.uuid(cwd .. "/src"), tree:insert_directory_absolute(cwd .. "/src"), "absolute directory")
+    t.assert_eq(Filetree.uuid(cwd .. "/main.lua"), tree:insert_file_absolute(cwd .. "/main.lua"), "absolute file")
+    t.assert_eq(Filetree.uuid(cwd .. "/test"), tree:insert_directory_relative(cwd, "test"), "relative directory")
+    t.assert_eq(Filetree.uuid(cwd .. "/spec.lua"), tree:insert_file_relative(cwd, "spec.lua"), "relative file")
+  end)
 end)
 
 t:test("reset stores slash-only relative and location identities", function()
@@ -123,10 +142,10 @@ t:test("strict topology keeps filesystem ordering feature-owned", function()
   local adir = tree:insert_directory_absolute("/a")
 
   local children = tree:children(root)
-  t.assert_eq(adir.uuid, children[1], "alphabetical first directory")
-  t.assert_eq(bdir.uuid, children[2], "alphabetical second directory")
-  t.assert_eq(afile.uuid, children[3], "alphabetical first file")
-  t.assert_eq(zfile.uuid, children[4], "alphabetical second file")
+  t.assert_eq(adir, children[1], "alphabetical first directory")
+  t.assert_eq(bdir, children[2], "alphabetical second directory")
+  t.assert_eq(afile, children[3], "alphabetical first file")
+  t.assert_eq(zfile, children[4], "alphabetical second file")
 end)
 
 t:test("empty reset preserves the actual filesystem root", function()
@@ -134,8 +153,8 @@ t:test("empty reset preserves the actual filesystem root", function()
   tree:reset("/workspace", {}, false)
   local root = tree:children(tree.root)[1]
   t.assert_true(root ~= nil, "actual root remains after empty reset")
-  local file = tree:insert_file_absolute("/after.lua")
-  t.assert_true(file ~= nil and tree:contains(file.uuid), "insert works after empty reset")
+  local fileuuid = tree:insert_file_absolute("/after.lua")
+  t.assert_true(tree:contains(fileuuid), "insert works after empty reset")
 end)
 
 t:test("clear preserves the actual filesystem root", function()
@@ -144,8 +163,8 @@ t:test("clear preserves the actual filesystem root", function()
   tree:clear()
   local root = tree:children(tree.root)[1]
   t.assert_true(root ~= nil, "actual root remains after clear")
-  local file = tree:insert_file_absolute("/after.lua")
-  t.assert_true(file ~= nil and tree:contains(file.uuid), "insert works after clear")
+  local fileuuid = tree:insert_file_absolute("/after.lua")
+  t.assert_true(tree:contains(fileuuid), "insert works after clear")
 end)
 
 t:run()

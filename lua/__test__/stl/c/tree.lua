@@ -26,6 +26,7 @@ end
 t:test("strict API: owns explicit root, data, parent, and child order", function()
   local rootdata = { label = "root" }
   local tree = Tree.new("root", rootdata)
+  t.assert_nil(tree.retrieve, "raw nodes are not public")
   t.assert_true(tree:get("root") == rootdata, "root data identity")
   t.assert_true(tree:contains("root"), "root exists")
   t.assert_nil(tree:parent("root"), "root parent is private")
@@ -43,17 +44,17 @@ t:test("constructor rejects invalid ingress", function()
   end, "root must be a string")
 end)
 
-t:test("strict API: update and move preserve identity and reject invalid topology", function()
+t:test("strict API: mutations return owner and reject invalid topology", function()
   local tree = Tree.new("root")
-  local a = tree:insert("root", "a", { value = 1 })
+  t.assert_true(tree:insert("root", "a", { value = 1 }) == tree, "insert returns owner")
   tree:insert("a", "leaf", { value = 2 })
   tree:insert("root", "side", {})
 
   local updated = { value = 3 }
-  t.assert_true(tree:update("a", updated) == a, "update node identity")
+  t.assert_true(tree:update("a", updated) == tree, "update returns owner")
   t.assert_true(tree:get("a") == updated, "update data identity")
 
-  tree:move("a", "side", 1)
+  t.assert_true(tree:move("a", "side", 1) == tree, "move returns owner")
   t.assert_eq("side", tree:parent("a"), "moved parent")
   t.assert_true(tree:isdescendant("side", "a"), "moved node ancestry")
   t.assert_true(tree:isdescendant("side", "leaf"), "moved descendant ancestry")

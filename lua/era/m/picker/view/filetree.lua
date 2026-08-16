@@ -354,8 +354,7 @@ function M:insert_dirpath(dirpath)
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
-  local filenode = filetree:insert_directory_absolute(dirpath)
-  local fileuuid = filenode.uuid ---@type string
+  local fileuuid = filetree:insert_directory_absolute(dirpath) ---@type string
   local filestate = statemap[fileuuid] ---@type era.m.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "container" then
@@ -388,7 +387,7 @@ function M:insert_dirpath(dirpath)
       tick_selected = 0,
       tick_selected_maximum = 0,
     }
-    statemap[filenode.uuid] = filestate
+    statemap[fileuuid] = filestate
   end
 
   return self
@@ -410,8 +409,7 @@ function M:insert_filepath(filepath, with_locations)
     filepath, lnum, col, col_end = stl.string.parse_filepath_with_location(filepath)
   end
 
-  local filenode = filetree:insert_file_absolute(filepath)
-  local fileuuid = filenode.uuid ---@type string
+  local fileuuid = filetree:insert_file_absolute(filepath) ---@type string
   local filestate = statemap[fileuuid] ---@type era.m.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "leaf" then
@@ -443,7 +441,7 @@ function M:insert_filepath(filepath, with_locations)
       tick_matched = 0,
       tick_selected = 0,
     }
-    statemap[filenode.uuid] = filestate
+    statemap[fileuuid] = filestate
   end
 
   if lnum ~= nil then

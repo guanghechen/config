@@ -30,7 +30,7 @@ t:test("insert: owns explicit sorted child order on strict Tree", function()
     fullname = "test",
   }, TreeComposer)
 
-  composer:insert("root", "b", { order = 2 })
+  t.assert_true(composer:insert("root", "b", { order = 2 }) == composer, "insert returns composer")
   composer:insert("root", "a", { order = 1 })
   t.assert_eq("a", tree:children("root")[1], "sorted first child")
   t.assert_eq("b", tree:children("root")[2], "sorted second child")

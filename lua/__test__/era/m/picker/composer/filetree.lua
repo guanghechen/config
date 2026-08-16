@@ -126,9 +126,9 @@ t:test("canonicalizes reset ingress and matches either separator", function()
     restore_path_sep()
 
     t.assert_eq(1, #composer._uuids_order, "backslash query match count")
-    local node = composer._filetree:retrieve(composer._uuids_order[1]) ---@type stl.c.IFiletreeNode|nil
-    t.assert_true(node ~= nil, "matched node")
-    t.assert_eq(canonical_rootpath .. "/src/lib/util.lua", node and node.data.filepath, "matched canonical filepath")
+    local data = composer._filetree:get(composer._uuids_order[1]) ---@type stl.c.IFiletreeNodeData|nil
+    t.assert_true(data ~= nil, "matched data")
+    t.assert_eq(canonical_rootpath .. "/src/lib/util.lua", data and data.filepath, "matched canonical filepath")
   end, function(_, rootpath)
     attached_rootpath = rootpath
   end)
@@ -267,9 +267,9 @@ t:test("directory refresh canonicalizes native scan results", function()
       target .. "/nested/child.lua",
       target .. "/root.lua",
     }) do
-      local node = composer._filetree:retrieve(stl.c.Filetree.uuid(filepath))
-      t.assert_true(node ~= nil, "canonical scanned node: " .. filepath)
-      t.assert_eq(filepath, node and node.data.filepath, "scanned filepath")
+      local data = composer._filetree:get(stl.c.Filetree.uuid(filepath))
+      t.assert_true(data ~= nil, "canonical scanned data: " .. filepath)
+      t.assert_eq(filepath, data and data.filepath, "scanned filepath")
     end
   end)
 end)
