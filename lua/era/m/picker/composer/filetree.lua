@@ -1681,7 +1681,7 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:isexistent(uuid)
-  return self._filetree:isexistent(uuid)
+  return self._filetree:contains(uuid)
 end
 
 ---@return boolean

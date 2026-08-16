@@ -37,7 +37,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public root                   string
 ---@field public isdisposed             fun(self: stl.c.IReadonlyTree): boolean
 ---@field public isdescendant           fun(self: stl.c.IReadonlyTree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: stl.c.IReadonlyTree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.IReadonlyTree, uuid: string): stl.c.ITreeNode|nil
 ---@field public get                    fun(self: stl.c.IReadonlyTree, uuid: string): unknown|nil
 ---@field public contains               fun(self: stl.c.IReadonlyTree, uuid: string): boolean
@@ -53,7 +52,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public dispose                fun(self: stl.c.ITree): nil
 ---@field public isdisposed             fun(self: stl.c.ITree): boolean
 ---@field public isdescendant           fun(self: stl.c.ITree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: stl.c.ITree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.ITree, uuid: string): stl.c.ITreeNode|nil
 ---@field public get                    fun(self: stl.c.ITree, uuid: string): unknown|nil
 ---@field public contains               fun(self: stl.c.ITree, uuid: string): boolean
@@ -175,13 +173,6 @@ function M:isdescendant(ancestor, uuid)
 end
 
 ---@param uuid                          string
----@return boolean
-function M:isexistent(uuid)
-  self:__health__()
-  return self._nodemap[uuid] ~= nil
-end
-
----@param uuid                          string
 ---@return stl.c.ITreeNode|nil
 function M:retrieve(uuid)
   self:__health__()
@@ -198,7 +189,8 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:contains(uuid)
-  return self:isexistent(uuid)
+  self:__health__()
+  return self._nodemap[uuid] ~= nil
 end
 
 ---@param uuid                          string

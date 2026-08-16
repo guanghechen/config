@@ -76,7 +76,6 @@ end
 ---@field public root                   string
 ---@field public isdisposed             fun(self: stl.c.IReadonlyFiletree): boolean
 ---@field public isdescendant           fun(self: stl.c.IReadonlyFiletree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: stl.c.IReadonlyFiletree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.IReadonlyFiletree, uuid: string): stl.c.IFiletreeNode|nil
 ---@field public children               fun(self: stl.c.IReadonlyFiletree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.IReadonlyFiletree, root: string|nil, fn: stl.c.IFiletreeQuickTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IReadonlyFiletree
@@ -89,7 +88,6 @@ end
 ---@field public dispose                fun(self: stl.c.IFiletree): nil
 ---@field public isdisposed             fun(self: stl.c.IFiletree): boolean
 ---@field public isdescendant           fun(self: stl.c.IFiletree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: stl.c.IFiletree, uuid: string): boolean
 ---@field public retrieve               fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletreeNode|nil
 ---@field public children               fun(self: stl.c.IFiletree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.IFiletree, root: string|nil, fn: stl.c.IFiletreeQuickTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IFiletree

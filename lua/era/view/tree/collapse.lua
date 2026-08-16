@@ -18,7 +18,7 @@ function M.collapse(view, uuid, value, recursive)
   view:__health__()
 
   local tree = view._tree ---@type stl.c.IReadonlyTree
-  if not tree:isexistent(uuid) then
+  if not tree:contains(uuid) then
     stl.reporter.error({
       from = view.fullname,
       subject = "collapse",
