@@ -554,35 +554,35 @@ function M.new(props)
         self._uuid_root = nodeuuid ---@type string
         self:mark_result_dirty()
 
-        local next_rootnode = filetree:retrieve(nodeuuid)
-        if next_rootnode ~= nil then
-          on_attached(self, next_rootnode.data.filepath)
+        local data = filetree:get(nodeuuid) ---@type stl.c.IFiletreeNodeData|nil
+        if data ~= nil then
+          on_attached(self, data.filepath)
         end
         return
       end
 
       local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-      local leafnode = filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode|nil
-      if leafnode == nil then
+      local data = filetree:get(leafuuid) ---@type stl.c.IFiletreeNodeData|nil
+      if data == nil then
         return
       end
 
       treeview:mark_cache_listview_dirty()
       self._uuid_root = leafuuid ---@type string
       self:mark_result_dirty()
-      on_attached(self, leafnode.data.filepath)
+      on_attached(self, data.filepath)
     end,
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
-      if rootnode and rootnode.parent ~= rootuuid then
+      local parentuuid = filetree:parent(rootuuid) ---@type string|nil
+      if parentuuid ~= nil then
         treeview:mark_cache_listview_dirty()
-        self._uuid_root = rootnode.parent ---@type string
+        self._uuid_root = parentuuid ---@type string
         self:mark_result_dirty()
 
-        local next_rootnode = filetree:retrieve(rootnode.parent)
-        if next_rootnode ~= nil then
-          on_attached(self, next_rootnode.data.filepath)
+        local parentdata = filetree:get(parentuuid) ---@type stl.c.IFiletreeNodeData|nil
+        if parentdata ~= nil then
+          on_attached(self, parentdata.filepath)
         end
       end
     end,
@@ -950,9 +950,9 @@ function M.new(props)
       for lnum = 1, linecount, 1 do
         local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if uuid ~= nil then
-          local node = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
-          if node ~= nil and node.data.filetype == "file" then
-            local filepath = node.data.filepath ---@type string
+          local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+          if data ~= nil and data.filetype == "file" then
+            local filepath = data.filepath ---@type string
             local relative_filepath = yoz.canonical_path.relative(cwd, filepath, false) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type era.m.searcher.view.filetree.INodeState|nil
@@ -1501,14 +1501,14 @@ function M.new(props)
             return result
           end
 
-          local node, nodestate = self:__retrieve__(nodeuuid)
-          local force = node.data.filepath ~= self._last_preview_filepath ---@type boolean
-          self._last_preview_filepath = node.data.filepath ---@type string|nil
+          local _, data, nodestate = self:__retrieve__(nodeuuid)
+          local force = data.filepath ~= self._last_preview_filepath ---@type boolean
+          self._last_preview_filepath = data.filepath ---@type string|nil
 
-          local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
-          local filepath = node.data.filepath ---@type string
-          local relative_filepath = rootnode ~= nil
-              and yoz.canonical_path.relative(rootnode.data.filepath, filepath, false)
+          local rootdata = filetree:get(self._uuid_root) ---@type stl.c.IFiletreeNodeData|nil
+          local filepath = data.filepath ---@type string
+          local relative_filepath = rootdata ~= nil
+              and yoz.canonical_path.relative(rootdata.filepath, filepath, false)
             or filepath
 
           if nodestate.nodetype == "container" then
@@ -1887,8 +1887,9 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
-  if node == nil then
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local data = filetree:get(rootuuid) ---@type stl.c.IFiletreeNodeData|nil
+  if data == nil then
     stl.reporter.error({
       from = __module_name__,
       subject = "attach",
@@ -1897,17 +1898,13 @@ function M:attach(rootuuid)
     return self
   end
 
-  local filetree = self._filetree ---@type stl.c.Filetree
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
   self:schedule_search()
 
-  local next_rootnode = filetree:retrieve(rootuuid)
-  if next_rootnode ~= nil then
-    self._on_attached(self, next_rootnode.data.filepath)
-  end
+  self._on_attached(self, data.filepath)
   return self
 end
 
@@ -2378,7 +2375,7 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 function M:__open_node__(nodeuuid)
-  local node, nodestate = self:__retrieve__(nodeuuid)
+  local treeuuid, data, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type era.m.searcher.BasicComposer
   local filetree = self._filetree ---@type stl.c.Filetree
@@ -2395,10 +2392,10 @@ function M:__open_node__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
+          local selected_data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
           treeview:set_selected(uuid, false)
-          if o ~= nil and o.data.filetype == "file" then
-            filepaths[#filepaths + 1] = o.data.filepath
+          if selected_data ~= nil and selected_data.filetype == "file" then
+            filepaths[#filepaths + 1] = selected_data.filepath
 
             local s = treeview:retrieve(nodeuuid) ---@type era.m.searcher.view.filetree.INodeState|nil
             if s ~= nil then
@@ -2430,13 +2427,13 @@ function M:__open_node__(nodeuuid)
   end
 
   if nodestate.nodetype == "container" then
-    self._treeview:collapse(node.uuid, "toggle", false)
+    self._treeview:collapse(treeuuid, "toggle", false)
     composer:mark_result_dirty()
     return
   end
 
   if nodestate.nodetype == "leaf" and nodestate.collapsed then
-    self._treeview:collapse(node.uuid, "expand", false)
+    self._treeview:collapse(treeuuid, "expand", false)
     composer:mark_result_dirty()
     return
   end
@@ -2460,7 +2457,7 @@ function M:__open_node__(nodeuuid)
   end
 
   composer:close()
-  dot.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
+  dot.win.open_filepath(winnr_sourcefile, data.filepath, lnum, col)
 end
 
 ---@param node                          stl.c.IFiletreeNode
@@ -2549,14 +2546,14 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
-  local node = self:__retrieve__(nodeuuid)
+  local _, data = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type era.m.searcher.BasicComposer
   local filetree = self._filetree ---@type stl.c.Filetree
   local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
 
-  local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
+  local rootdata = filetree:get(self._uuid_root) ---@type stl.c.IFiletreeNodeData|nil
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
@@ -2567,10 +2564,10 @@ function M:__resolve_confirmation__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
+          local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
           treeview:set_selected(uuid, false)
-          if o ~= nil and o.data.filetype == "file" then
-            filepaths[#filepaths + 1] = o.data.filepath
+          if data ~= nil and data.filetype == "file" then
+            filepaths[#filepaths + 1] = data.filepath
           end
         end
       end
@@ -2584,15 +2581,16 @@ function M:__resolve_confirmation__(nodeuuid)
     end
   end
 
-  local filepath = rootnode ~= nil
-      and yoz.canonical_path.relative(rootnode.data.filepath, node.data.filepath, false)
-    or node.data.filepath
+  local filepath = rootdata ~= nil
+      and yoz.canonical_path.relative(rootdata.filepath, data.filepath, false)
+    or data.filepath
   composer:close()
   self._on_confirm(self, { filepath })
 end
 
 ---@param nodeuuid                      string
----@return stl.c.IFiletreeNode
+---@return string
+---@return stl.c.IFiletreeNodeData
 ---@return era.m.searcher.view.filetree.INodeState
 function M:__retrieve__(nodeuuid)
   ---@type era.m.searcher.view.filetree.INodeState|nil
@@ -2601,13 +2599,13 @@ function M:__retrieve__(nodeuuid)
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
-  ---@type stl.c.IFiletreeNode|nil
-  local node = self._filetree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
-  if node == nil then
+  local treeuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
+  local data = self._filetree:get(treeuuid) ---@type stl.c.IFiletreeNodeData|nil
+  if data == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
   end
 
-  return node, nodestate
+  return treeuuid, data, nodestate
 end
 
 ---@return stl.c.IFiletreeNode|nil
@@ -2693,13 +2691,15 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  ---@type stl.c.IFiletreeNode|nil
-  local node = self._filetree:retrieve(nodeuuid)
-  if node == nil then
+  local filetree = self._filetree ---@type stl.c.IReadonlyFiletree
+  if not filetree:contains(nodeuuid) then
     return nil, nil
   end
 
-  local parentuuid = node.parent ---@type string
+  local parentuuid = filetree:parent(nodeuuid) ---@type string|nil
+  if parentuuid == nil then
+    return nil, nil
+  end
   local lnum_parent = self._retriever:retrieve_lnum(parentuuid) ---@type integer|nil
   return lnum_parent, parentuuid
 end
@@ -2709,18 +2709,19 @@ end
 ---@param recursively                   boolean
 ---@return nil
 function M:__toggle_node__(nodeuuid, open, recursively)
-  local node, nodestate = self:__retrieve__(nodeuuid)
+  local treeuuid, data, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type era.m.searcher.BasicComposer
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
   if nodestate.nodetype == "container" then
-    treeview:collapse(node.uuid, "toggle", recursively)
+    treeview:collapse(treeuuid, "toggle", recursively)
     composer:mark_result_dirty()
     return
   end
 
-  if nodestate.nodetype == "leaf" and #node.children > 0 then
-    treeview:collapse(node.uuid, "toggle", false)
+  local children = self._filetree:children(treeuuid) ---@type string[]
+  if nodestate.nodetype == "leaf" and #children > 0 then
+    treeview:collapse(treeuuid, "toggle", false)
     composer:mark_result_dirty()
     return
   end
@@ -2748,7 +2749,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
   end
 
   composer:close()
-  dot.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
+  dot.win.open_filepath(winnr_sourcefile, data.filepath, lnum, col)
 end
 
 return M

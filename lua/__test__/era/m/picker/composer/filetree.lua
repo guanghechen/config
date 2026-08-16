@@ -313,4 +313,27 @@ t:test("lexical consumers emit slash-only relative paths", function()
   )
 end)
 
+t:test("retrieve: resolves location state to leaf data", function()
+  local data = { filepath = "/workspace/main.lua" }
+  local state = { nodetype = "location", leafuuid = "leaf" }
+  local composer = setmetatable({
+    _treeview = {
+      retrieve = function(_, uuid)
+        return uuid == "location" and state or nil
+      end,
+    },
+    _filetree = {
+      get = function(_, uuid)
+        return uuid == "leaf" and data or nil
+      end,
+    },
+  }, era.m.picker.FiletreeComposer)
+
+  local treeuuid, actual_data, actual_state = composer:__retrieve__("location")
+
+  t.assert_eq("leaf", treeuuid, "resolved tree uuid")
+  t.assert_true(actual_data == data, "resolved data identity")
+  t.assert_true(actual_state == state, "resolved state identity")
+end)
+
 t:run()
