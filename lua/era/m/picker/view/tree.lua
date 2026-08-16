@@ -300,23 +300,14 @@ function M:match(params)
   end
 
   for _, uuid in ipairs(uuids) do
-    local o = tree:retrieve(uuid)
-    ---@cast o                          stl.c.ITreeNode
-
-    for _ = o.depth - 1, 1, -1 do
-      local parent = tree:retrieve(o.parent)
-      if not parent then
+    local parentuuid = tree:parent(uuid) ---@type string|nil
+    while parentuuid ~= nil and parentuuid ~= tree.root do
+      local state = statemap[parentuuid]
+      if state.tick_matched == tick_matched then
         break
       end
-      o = parent
-
-      ---@cast o                        stl.c.ITreeNode
-      local s = statemap[o.uuid]
-      if s.tick_matched == tick_matched then
-        break
-      end
-
-      s.tick_matched = tick_matched
+      state.tick_matched = tick_matched
+      parentuuid = tree:parent(parentuuid)
     end
   end
 
@@ -363,8 +354,7 @@ function M:render_listview(params)
     local uuid = uuids[lnum] ---@type string
     local nodestate = statemap[uuid] ---@type era.m.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-      local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
-      if node ~= nil then
+      if tree:contains(uuid) then
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
         local L = #text ---@type integer
@@ -422,8 +412,7 @@ function M:render_treeview(params)
     local uuid = layout:id(lnum) ---@type string
     local nodestate = statemap[uuid] ---@type era.m.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-      local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
-      if node ~= nil then
+      if tree:contains(uuid) then
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
         local L = #text ---@type integer
