@@ -2,6 +2,8 @@
 local name = "era.fn.find_lsp_symbols" ---@type string
 local title = "LSP Symbols" ---@type string
 
+local tree_traversal = require("era.view.tree.traversal")
+
 ---@class era.fn.find_lsp_symbols.ISymbolData
 ---@field public name                   string
 ---@field public kind                   string
@@ -562,11 +564,11 @@ local function refresh()
     if _tick_refresh ~= tick_refresh then
       return
     end
-    tree:quick_traverse(tree.root, function(_, node)
-      local data = node.data ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+    tree_traversal.preorder(tree, tree.root, function(uuid, children)
+      local data = tree:get(uuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
       local text = data and data.name or ""
-      local has_children = #node.children > 0
-      treeview:insert(node.uuid, {
+      local has_children = #children > 0
+      treeview:insert(uuid, {
         nodetype = has_children and "container" or "leaf",
         collapsed = false,
         tick_invisible = 0,
