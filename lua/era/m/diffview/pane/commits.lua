@@ -17,6 +17,39 @@ local M = {}
 local BASE_INDENT = "   " ---@type string (3 spaces for commit child indent)
 local NS = config.NS
 
+---@class era.m.diffview.pane.commits.IRenderState
+---@field public line_map               era.m.diffview.ICommitsLineMap[]
+---@field public navigation             era.m.diffview.ITreeNavigation
+
+local EMPTY_NAVIGATION = {
+  parent_lnums = {},
+  last_child_lnums = {},
+  root_last_lnum = 0,
+} ---@type era.m.diffview.ITreeNavigation
+
+-- Keep layout-sized render state in Lua. Reading nested arrays from vim.b copies them on every access.
+local RENDER_STATE_BY_BUFNR = {} ---@type table<integer, era.m.diffview.pane.commits.IRenderState>
+local RENDER_STATE_CLEANUP_REGISTERED = {} ---@type table<integer, true>
+
+---@param bufnr                         integer
+---@return nil
+local function ensure_render_state_cleanup(bufnr)
+  if RENDER_STATE_CLEANUP_REGISTERED[bufnr] then
+    return
+  end
+
+  vim.api.nvim_create_autocmd("BufWipeout", {
+    buffer = bufnr,
+    once = true,
+    desc = "diffview: release commits render state",
+    callback = function()
+      RENDER_STATE_BY_BUFNR[bufnr] = nil
+      RENDER_STATE_CLEANUP_REGISTERED[bufnr] = nil
+    end,
+  })
+  RENDER_STATE_CLEANUP_REGISTERED[bufnr] = true
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Buffer creation
 ----------------------------------------------------------------------------------------------------
@@ -253,7 +286,8 @@ end
 ---@param lines                         string[]
 ---@param highlights                    stl.t.IHighlight[]
 ---@param line_map                      era.m.diffview.ICommitsLineMap[]
-local function render_files_list(commit, files, lines, highlights, line_map)
+---@param navigation                   era.m.diffview.ITreeNavigation
+local function render_files_list(commit, files, lines, highlights, line_map, navigation)
   -- Sort files by filepath
   local sorted = {} ---@type era.m.diffview.IFileEntry[]
   for _, entry in ipairs(files) do
@@ -298,6 +332,10 @@ local function render_files_list(commit, files, lines, highlights, line_map)
 
     local line = table.concat(parts) ---@type string
     lines[#lines + 1] = line
+    local row = #lines ---@type integer
+    navigation.parent_lnums[row] = 0
+    navigation.last_child_lnums[row] = 0
+    navigation.root_last_lnum = row
 
     -- Highlight indent
     highlights[#highlights + 1] = {
@@ -382,7 +420,9 @@ end
 ---@param highlights                    stl.t.IHighlight[]
 ---@param line_map                      era.m.diffview.ICommitsLineMap[]
 ---@param foldempty                     boolean
-local function render_files_tree(commit, files, lines, highlights, line_map, foldempty)
+---@param navigation                    era.m.diffview.ITreeNavigation
+---@param commit_lnum                  integer
+local function render_files_tree(commit, files, lines, highlights, line_map, foldempty, navigation, commit_lnum)
   -- Convert file entries to file items
   local items = {} ---@type era.view.filetree.IFileItem[]
   for _, entry in ipairs(files) do
@@ -399,6 +439,16 @@ local function render_files_tree(commit, files, lines, highlights, line_map, fol
     render_directory = create_directory_renderer(commit, line_map),
     render_file = create_file_renderer(commit, line_map),
   })
+
+  local offset = #lines ---@type integer
+  for row = 1, result.layout:len() do
+    local global_lnum = offset + row ---@type integer
+    local local_parent_lnum = result.layout:parent_lnum(row) ---@type integer|nil
+    local parent_lnum = local_parent_lnum ~= nil and (offset + local_parent_lnum) or commit_lnum ---@type integer
+    navigation.parent_lnums[global_lnum] = parent_lnum
+    navigation.last_child_lnums[global_lnum] = 0
+    navigation.last_child_lnums[parent_lnum] = global_lnum
+  end
 
   vim.list_extend(lines, result.lines)
   vim.list_extend(highlights, result.highlights)
@@ -425,6 +475,11 @@ function M.render(commits, expanded, opts)
   local highlights = {} ---@type stl.t.IHighlight[]
   local line_map = {} ---@type era.m.diffview.ICommitsLineMap[]
   local overlays = {} ---@type era.m.diffview.IOverlay[]
+  local navigation = {
+    parent_lnums = {},
+    last_child_lnums = {},
+    root_last_lnum = 0,
+  } ---@type era.m.diffview.ITreeNavigation
 
   -- Get view flags from opts or context
   local viewtype = (opts and opts.viewtype) or dot.context.diffview.flag_panel_viewtype:snapshot() ---@type stl.m.diffview.PanelViewTypeEnum
@@ -463,6 +518,10 @@ function M.render(commits, expanded, opts)
       line, line_highlights, overlay = M.__render_commit_vertical__(commit, #lines, expanded[commit.hash])
     end
     lines[#lines + 1] = line
+    local commit_lnum = #lines ---@type integer
+    navigation.parent_lnums[commit_lnum] = 0
+    navigation.last_child_lnums[commit_lnum] = 0
+    navigation.root_last_lnum = commit_lnum
     vim.list_extend(highlights, line_highlights)
     if overlay then
       overlays[#overlays + 1] = overlay
@@ -472,9 +531,9 @@ function M.render(commits, expanded, opts)
     -- Render expanded files (for both log and file_history view)
     if expanded[commit.hash] and commit.files then
       if viewtype == "list" then
-        render_files_list(commit, commit.files, lines, highlights, line_map)
+        render_files_list(commit, commit.files, lines, highlights, line_map, navigation)
       else
-        render_files_tree(commit, commit.files, lines, highlights, line_map, foldempty)
+        render_files_tree(commit, commit.files, lines, highlights, line_map, foldempty, navigation, commit_lnum)
       end
     end
   end
@@ -484,6 +543,7 @@ function M.render(commits, expanded, opts)
     highlights = highlights,
     line_map = line_map,
     overlays = overlays,
+    navigation = navigation,
   }
 end
 
@@ -495,10 +555,20 @@ function M.apply_to_buffer(bufnr, result)
     return
   end
 
+  -- Register cleanup before mutating the buffer. Once lines change, their semantic state must publish too.
+  ensure_render_state_cleanup(bufnr)
+
   -- Set lines
   local was_modifiable = vim.api.nvim_get_option_value("modifiable", { buf = bufnr })
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, result.lines)
+
+  -- Publish line identity and navigation together before fallible decoration work.
+  RENDER_STATE_BY_BUFNR[bufnr] = {
+    line_map = result.line_map,
+    navigation = result.navigation or EMPTY_NAVIGATION,
+  }
+
   vim.api.nvim_set_option_value("modifiable", was_modifiable, { buf = bufnr })
   vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
 
@@ -518,8 +588,6 @@ function M.apply_to_buffer(bufnr, result)
     end
   end
 
-  -- Store line_map
-  M.set_line_map(bufnr, result.line_map)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -530,7 +598,8 @@ end
 ---@param bufnr                         integer
 ---@return era.m.diffview.ICommitsLineMap[]|nil
 function M.get_line_map(bufnr)
-  return vim.b[bufnr].diffview_commits_line_map
+  local state = RENDER_STATE_BY_BUFNR[bufnr] ---@type era.m.diffview.pane.commits.IRenderState|nil
+  return state ~= nil and state.line_map or nil
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -566,11 +635,71 @@ function M.clear_signs(bufnr)
   vim.fn.sign_unplace(dot.var.sign.GROUP_DIFFVIEW_COMMITS, { buffer = bufnr })
 end
 
----Set line map for commits buffer
+---Get navigation index for commits buffer.
 ---@param bufnr                         integer
----@param line_map                      era.m.diffview.ICommitsLineMap[]
-function M.set_line_map(bufnr, line_map)
-  vim.b[bufnr].diffview_commits_line_map = line_map
+---@return era.m.diffview.ITreeNavigation|nil
+function M.get_navigation(bufnr)
+  local state = RENDER_STATE_BY_BUFNR[bufnr] ---@type era.m.diffview.pane.commits.IRenderState|nil
+  return state ~= nil and state.navigation or nil
+end
+
+---@param navigation                    era.m.diffview.ITreeNavigation|nil
+---@param lnum                          integer
+---@return integer|nil
+function M.resolve_parent_lnum(navigation, lnum)
+  local parent_lnum = navigation ~= nil and navigation.parent_lnums[lnum] or 0 ---@type integer
+  return parent_lnum ~= nil and parent_lnum > 0 and parent_lnum or nil
+end
+
+---@param navigation                    era.m.diffview.ITreeNavigation|nil
+---@param lnum                          integer
+---@return integer|nil
+function M.resolve_last_child_or_sibling_lnum(navigation, lnum)
+  if navigation == nil or navigation.parent_lnums[lnum] == nil then
+    return nil
+  end
+
+  local target_lnum = navigation.last_child_lnums[lnum] or 0 ---@type integer
+  if target_lnum <= 0 then
+    local parent_lnum = navigation.parent_lnums[lnum] or 0 ---@type integer
+    if parent_lnum > 0 then
+      target_lnum = navigation.last_child_lnums[parent_lnum] or 0
+    else
+      target_lnum = navigation.root_last_lnum
+    end
+  end
+
+  return target_lnum > 0 and target_lnum ~= lnum and target_lnum or nil
+end
+
+---@param target_lnum                   integer|nil
+---@return nil
+local function goto_lnum(target_lnum)
+  if target_lnum == nil then
+    return
+  end
+
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local line = vim.api.nvim_buf_get_lines(bufnr, target_lnum - 1, target_lnum, false)[1] or "" ---@type string
+  local content_start = line:find("[^ │├╰─]") or 1 ---@type integer
+  vim.api.nvim_win_set_cursor(winnr, { target_lnum, content_start - 1 })
+end
+
+---@return nil
+function M.goto_parent_node()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+  goto_lnum(M.resolve_parent_lnum(M.get_navigation(bufnr), lnum))
+end
+
+---@return nil
+function M.goto_last_child_or_sibling()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+  goto_lnum(M.resolve_last_child_or_sibling_lnum(M.get_navigation(bufnr), lnum))
 end
 
 ---Get item at cursor position

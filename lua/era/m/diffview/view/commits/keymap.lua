@@ -2,18 +2,11 @@
 local __module_name__ = "era.m.diffview.view.commits.keymap" ---@type string
 
 local action = require("era.m.diffview.view.commits.action")
-local filetree = require("era.view.filetree")
+local pane_commits = require("era.m.diffview.pane.commits")
 
 ---Commits view keymaps.
 ---@class era.m.diffview.view.commits.keymap
 local M = {}
-
-----------------------------------------------------------------------------------------------------
--- Local helpers
-----------------------------------------------------------------------------------------------------
-
----Base indent used in commits pane (3 spaces)
-local BASE_INDENT_LEN = 3 ---@type integer
 
 ----------------------------------------------------------------------------------------------------
 -- Keymap generators
@@ -50,8 +43,8 @@ function M.gen_commits(ctx)
     { modes = { "n" }, key = "K", desc = "diffview(commits): Show commit details", callback = function() action.show_details(ctx) end },
     { modes = { "n" }, key = "[[", desc = "diffview(commits): Previous page", callback = function() action.prev_page(ctx) end },
     { modes = { "n" }, key = "]]", desc = "diffview(commits): Next page", callback = function() action.next_page(ctx) end },
-    { modes = { "n" }, key = "[i", desc = "diffview(commits): Go to parent node", callback = function() filetree.goto_parent_node(BASE_INDENT_LEN) end },
-    { modes = { "n" }, key = "]i", desc = "diffview(commits): Go to last child/sibling", callback = function() filetree.goto_last_child_or_sibling(BASE_INDENT_LEN) end },
+    { modes = { "n" }, key = "[i", desc = "diffview(commits): Go to parent node", callback = pane_commits.goto_parent_node },
+    { modes = { "n" }, key = "]i", desc = "diffview(commits): Go to last child/sibling", callback = pane_commits.goto_last_child_or_sibling },
     { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
     { modes = { "n" }, key = "gH", desc = "diffview(commits): Collapse all commits", callback = function() action.collapse_all(ctx) end },
