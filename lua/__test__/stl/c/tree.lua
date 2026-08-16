@@ -102,4 +102,84 @@ t:test("strict API: deep move, clear, and dispose are iterative", function()
   t.assert_true(tree:isdisposed(), "dispose succeeds")
 end)
 
+t:test("quick_traverse: preserves preorder, conditional pruning, and root context", function()
+  local tree = Tree.new("root")
+  tree:insert("root", "a", {})
+  tree:insert("a", "b", {})
+  tree:insert("b", "d", {})
+  tree:insert("a", "c", {})
+  local visited = {}
+  tree:quick_traverse("a", function(ctx, node, depth)
+    visited[#visited + 1] = string.format("%s:%d:%s", node.uuid, depth, ctx.rootnode.uuid)
+  end, function(_, node)
+    return node.uuid == "b" and "goodnode" or "goodroot"
+  end)
+  t.assert_eq("a:1:a", visited[1], "root visit")
+  t.assert_eq("b:2:a", visited[2], "goodnode visit")
+  t.assert_eq("c:2:a", visited[3], "pruned sibling order")
+  t.assert_eq(3, #visited, "pruned descendant count")
+end)
+
+t:test("quick_traverse: handles depth 10000 iteratively", function()
+  local tree = Tree.new("root")
+  local parent = "root"
+  for index = 1, 10000 do
+    local id = tostring(index)
+    tree:insert(parent, id, {})
+    parent = id
+  end
+  local count = 0
+  local last_depth = 0
+  tree:quick_traverse("1", function(_, _, depth)
+    count = count + 1
+    last_depth = depth
+  end)
+  t.assert_eq(10000, count, "deep visit count")
+  t.assert_eq(10000, last_depth, "deep relative depth")
+end)
+
+t:test("quick_traverse: snapshots child count after parent callback", function()
+  local tree = Tree.new("root")
+  tree:insert("root", "a", {})
+  tree:insert("a", "b", {})
+  local visited = {}
+  tree:quick_traverse("a", function(_, node)
+    visited[#visited + 1] = node.uuid
+    if node.uuid == "b" then
+      tree:insert("a", "late", {})
+    end
+  end)
+  t.assert_eq(2, #visited, "late sibling is outside traversal snapshot")
+  t.assert_eq("b", visited[2], "existing child visited")
+  t.assert_true(tree:contains("late"), "late sibling was inserted")
+end)
+
+t:test("quick_traverse: 50000-node time and heap regression ceiling", function()
+  local node_count = 50000
+  local fanout = 8
+  local tree = Tree.new("root")
+  for index = 1, node_count do
+    local id = tostring(index)
+    local parent = index == 1 and "root" or tostring(math.floor((index - 2) / fanout) + 1)
+    tree:insert(parent, id, {})
+  end
+
+  collectgarbage("collect")
+  collectgarbage("stop")
+  local heap_before = collectgarbage("count")
+  local started_at = vim.uv.hrtime()
+  local count = 0
+  tree:quick_traverse("1", function()
+    count = count + 1
+  end)
+  local elapsed_ms = (vim.uv.hrtime() - started_at) / 1e6
+  local heap_kib = collectgarbage("count") - heap_before
+  collectgarbage("restart")
+
+  print(string.format("BENCH tree-quick-traverse 50000 time=%.3fms heap=%.1fKiB", elapsed_ms, heap_kib))
+  t.assert_eq(node_count, count, "benchmark visit count")
+  t.assert_true(elapsed_ms < 100, "50000-node traversal should stay below regression ceiling")
+  t.assert_true(heap_kib < 4096, "50000-node traversal heap should stay below regression ceiling")
+end)
+
 t:run()

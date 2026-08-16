@@ -21,9 +21,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@alias stl.c.ITreeQuickTraverseHandler
 ---| fun(ctx: stl.c.ITreeTraverseContext, node: stl.c.ITreeNode, cur: integer): nil
 
----@alias stl.c.ITreeQuickTraverseRecursive
----| fun(ctx: stl.c.ITreeTraverseContext, node: stl.c.ITreeNode, cur: integer): nil
-
 ---@alias stl.c.ITreeUnsafeTraverseCallback
 ---| fun(ctx: stl.c.ITreeTraverseContext): nil
 
@@ -309,51 +306,63 @@ function M:quick_traverse(root, fn, conditional)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
-  local recursive ---@type stl.c.ITreeQuickTraverseRecursive
   local rootnode = root and nodemap[root] or self._rootnode ---@type stl.c.ITreeNode
 
-  if conditional == nil then
-    ---@type stl.c.ITreeQuickTraverseRecursive
-    recursive = function(ctx, node, cur)
-      fn(ctx, node, cur)
+  local stack_nodes = {} ---@type stl.c.ITreeNode[]
+  local stack_indexes = {} ---@type integer[]
+  local stack_counts = {} ---@type integer[]
+  local stack_depths = {} ---@type integer[]
 
-      if node.dirty_co then
-        self:__sort_children__(node)
-      end
+  ---@param start                       stl.c.ITreeNode
+  local function traverse_root(start)
+    local ctx = { nodemap = nodemap, rootnode = start } ---@type stl.c.ITreeTraverseContext
+    local stack_size = 1 ---@type integer
+    stack_nodes[1] = start
+    stack_indexes[1] = 0
+    stack_counts[1] = 0
+    stack_depths[1] = 1
 
-      local next_cur = cur + 1 ---@type integer
-      local N = #node.children ---@type integer
-      for index = 1, N, 1 do
-        local childuuid = node.children[index] ---@type string
-        local child = nodemap[childuuid] ---@type stl.c.ITreeNode
-        recursive(ctx, child, next_cur)
-      end
-    end
-  else
-    ---@type stl.c.ITreeQuickTraverseRecursive
-    recursive = function(ctx, node, cur)
-      local condition = conditional(ctx, node, cur) ---@type stl.c.ITreeTraverseConditionalEnum
-      if condition == "badroot" then
-        return
-      end
-
-      if condition == "goodnode" then
-        fn(ctx, node, cur)
-        return
-      end
-
-      fn(ctx, node, cur)
-
-      if node.dirty_co then
-        self:__sort_children__(node)
-      end
-
-      local next_cur = cur + 1 ---@type integer
-      local N = #node.children ---@type integer
-      for index = 1, N, 1 do
-        local childuuid = node.children[index] ---@type string
-        local child = nodemap[childuuid] ---@type stl.c.ITreeNode
-        recursive(ctx, child, next_cur)
+    while stack_size > 0 do
+      local node = stack_nodes[stack_size] ---@type stl.c.ITreeNode
+      local child_index = stack_indexes[stack_size] ---@type integer
+      if child_index == 0 then
+        local condition = conditional ~= nil and conditional(ctx, node, stack_depths[stack_size]) or "goodroot"
+        if condition == "badroot" then
+          stack_nodes[stack_size] = nil
+          stack_indexes[stack_size] = nil
+          stack_counts[stack_size] = nil
+          stack_depths[stack_size] = nil
+          stack_size = stack_size - 1
+        else
+          fn(ctx, node, stack_depths[stack_size])
+          if condition == "goodnode" then
+            stack_nodes[stack_size] = nil
+            stack_indexes[stack_size] = nil
+            stack_counts[stack_size] = nil
+            stack_depths[stack_size] = nil
+            stack_size = stack_size - 1
+          else
+            if node.dirty_co then
+              self:__sort_children__(node)
+            end
+            stack_indexes[stack_size] = 1
+            stack_counts[stack_size] = #node.children
+          end
+        end
+      elseif child_index > stack_counts[stack_size] then
+        stack_nodes[stack_size] = nil
+        stack_indexes[stack_size] = nil
+        stack_counts[stack_size] = nil
+        stack_depths[stack_size] = nil
+        stack_size = stack_size - 1
+      else
+        stack_indexes[stack_size] = child_index + 1
+        local child = nodemap[node.children[child_index]] ---@type stl.c.ITreeNode
+        stack_size = stack_size + 1
+        stack_nodes[stack_size] = child
+        stack_indexes[stack_size] = 0
+        stack_counts[stack_size] = 0
+        stack_depths[stack_size] = stack_depths[stack_size - 1] + 1
       end
     end
   end
@@ -365,12 +374,10 @@ function M:quick_traverse(root, fn, conditional)
 
     for _, childuuid in ipairs(rootnode.children) do
       local childnode = nodemap[childuuid] ---@type stl.c.ITreeNode
-      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type stl.c.ITreeTraverseContext
-      recursive(ctx, childnode, 1)
+      traverse_root(childnode)
     end
   else
-    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type stl.c.ITreeTraverseContext
-    recursive(ctx, rootnode, 1)
+    traverse_root(rootnode)
   end
 
   return self
