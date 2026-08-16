@@ -15,9 +15,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@alias stl.c.ITreeQuickTraverseHandler
 ---| fun(ctx: stl.c.ITreeTraverseContext, node: stl.c.ITreeNode, cur: integer): nil
 
----@alias stl.c.ITreeUnsafeTraverseCallback
----| fun(ctx: stl.c.ITreeTraverseContext): nil
-
 ---@class stl.c.ITreeTraverseContext
 ---@field public nodemap                table<string, stl.c.ITreeNode>
 ---@field public rootnode               stl.c.ITreeNode
@@ -43,7 +40,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public parent                 fun(self: stl.c.IReadonlyTree, uuid: string): string|nil
 ---@field public children               fun(self: stl.c.IReadonlyTree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.IReadonlyTree, root: string|nil, fn: stl.c.ITreeQuickTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.IReadonlyTree
----@field public unsafe_traverse        fun(self: stl.c.IReadonlyTree, root: string|nil, traverse: stl.c.ITreeUnsafeTraverseCallback): stl.c.IReadonlyTree
 
 ---@class stl.c.ITree : stl.c.IReadonlyTree
 ---@field public fullname               string
@@ -58,7 +54,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public parent                 fun(self: stl.c.ITree, uuid: string): string|nil
 ---@field public children               fun(self: stl.c.ITree, uuid: string): string[]|nil
 ---@field public quick_traverse         fun(self: stl.c.ITree, root: string|nil, fn: stl.c.ITreeQuickTraverseHandler, conditional: stl.c.ITreeTraverseConditional|nil): stl.c.ITree
----@field public unsafe_traverse        fun(self: stl.c.ITree, root: string|nil, traverse: stl.c.ITreeUnsafeTraverseCallback): stl.c.ITree
 ---@field public insert                 fun(self: stl.c.ITree, parent: string, uuid: string, data: table|nil, index?: integer): stl.c.ITreeNode
 ---@field public update                 fun(self: stl.c.ITree, uuid: string, data: table): stl.c.ITreeNode
 ---@field public move                   fun(self: stl.c.ITree, uuid: string, parent: string, index?: integer): stl.c.ITreeNode
@@ -182,7 +177,8 @@ end
 ---@param uuid                          string
 ---@return unknown|nil
 function M:get(uuid)
-  local node = self:retrieve(uuid)
+  self:__health__()
+  local node = self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
   return node ~= nil and node.data or nil
 end
 
@@ -196,7 +192,8 @@ end
 ---@param uuid                          string
 ---@return string|nil
 function M:parent(uuid)
-  local node = self:retrieve(uuid)
+  self:__health__()
+  local node = self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
   if node == nil or node == self._rootnode then
     return nil
   end
@@ -360,32 +357,6 @@ function M:quick_traverse(root, fn, conditional)
     end
   else
     traverse_root(rootnode)
-  end
-
-  return self
-end
-
----@param root                          string|nil
----@param traverse                      stl.c.ITreeUnsafeTraverseCallback
----@return stl.c.Tree
-function M:unsafe_traverse(root, traverse)
-  self:__health__()
-  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
-
-  local rootnode = nodemap[root] or self._rootnode ---@type stl.c.ITreeNode
-  if rootnode == self._rootnode then
-    if rootnode.dirty_co then
-      self:__sort_children__(rootnode)
-    end
-
-    for _, childuuid in ipairs(rootnode.children) do
-      local childnode = nodemap[childuuid] ---@type stl.c.ITreeNode
-      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type stl.c.ITreeTraverseContext
-      traverse(ctx)
-    end
-  else
-    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type stl.c.ITreeTraverseContext
-    traverse(ctx)
   end
 
   return self

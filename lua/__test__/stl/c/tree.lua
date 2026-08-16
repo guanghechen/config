@@ -154,12 +154,14 @@ t:test("quick_traverse: snapshots child count after parent callback", function()
   t.assert_true(tree:contains("late"), "late sibling was inserted")
 end)
 
-t:test("quick_traverse: 50000-node time and heap regression ceiling", function()
+t:test("hot paths: 50000-node time and heap regression ceiling", function()
   local node_count = 50000
   local fanout = 8
   local tree = Tree.new("root")
+  local ids = {}
   for index = 1, node_count do
     local id = tostring(index)
+    ids[index] = id
     local parent = index == 1 and "root" or tostring(math.floor((index - 2) / fanout) + 1)
     tree:insert(parent, id, {})
   end
@@ -180,6 +182,26 @@ t:test("quick_traverse: 50000-node time and heap regression ceiling", function()
   t.assert_eq(node_count, count, "benchmark visit count")
   t.assert_true(elapsed_ms < 100, "50000-node traversal should stay below regression ceiling")
   t.assert_true(heap_kib < 4096, "50000-node traversal heap should stay below regression ceiling")
+
+  collectgarbage("collect")
+  collectgarbage("stop")
+  heap_before = collectgarbage("count")
+  started_at = vim.uv.hrtime()
+  count = 0
+  for index = 1, node_count do
+    local id = ids[index]
+    if tree:get(id) ~= nil and tree:parent(id) ~= nil then
+      count = count + 1
+    end
+  end
+  elapsed_ms = (vim.uv.hrtime() - started_at) / 1e6
+  heap_kib = collectgarbage("count") - heap_before
+  collectgarbage("restart")
+
+  print(string.format("BENCH tree-accessors 50000 time=%.3fms heap=%.1fKiB", elapsed_ms, heap_kib))
+  t.assert_eq(node_count, count, "benchmark accessor count")
+  t.assert_true(elapsed_ms < 100, "50000-node accessors should stay below regression ceiling")
+  t.assert_true(heap_kib < 4096, "50000-node accessors heap should stay below regression ceiling")
 end)
 
 t:run()

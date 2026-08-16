@@ -545,20 +545,17 @@ function M:publish_search_result(result, uuids)
     i = j
   end
 
-  filetree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
-    for _, uuid in ipairs(uuids) do
-      local node = nodemap[uuid] ---@type stl.c.IFiletreeNode
-      for _ = node.depth - 1, 1, -1 do
-        node = nodemap[node.parent] ---@type stl.c.IFiletreeNode
-        local state = statemap[node.uuid]
-        if state == nil or state.tick_matched == tick_matched then
-          break
-        end
-        state.tick_matched = tick_matched
+  for _, uuid in ipairs(uuids) do
+    local parentuuid = filetree:parent(uuid) ---@type string|nil
+    while parentuuid ~= nil and parentuuid ~= filetree.root do
+      local state = statemap[parentuuid]
+      if state == nil or state.tick_matched == tick_matched then
+        break
       end
+      state.tick_matched = tick_matched
+      parentuuid = filetree:parent(parentuuid)
     end
-  end)
+  end
 
   self:mark_cache_treeview_dirty()
   return self

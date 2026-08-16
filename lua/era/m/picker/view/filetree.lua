@@ -258,24 +258,21 @@ function M:match(params)
   end
 
   local lines = {} ---@type string[]
-  tree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
-    if case_sensitive then
-      for index, uuid in ipairs(uuids) do
-        local node = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
-        if node ~= nil then
-          lines[index] = node.data.filepath ---@type string
-        end
-      end
-    else
-      for index, uuid in ipairs(uuids) do
-        local node = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
-        if node ~= nil then
-          lines[index] = node.data.filepath_lower ---@type string
-        end
+  if case_sensitive then
+    for index, uuid in ipairs(uuids) do
+      local data = tree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+      if data ~= nil then
+        lines[index] = data.filepath ---@type string
       end
     end
-  end)
+  else
+    for index, uuid in ipairs(uuids) do
+      local data = tree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+      if data ~= nil then
+        lines[index] = data.filepath_lower ---@type string
+      end
+    end
+  end
 
   ---@type yoz.search.ISearchInLinesOptions
   local search_params = {
@@ -326,23 +323,18 @@ function M:match(params)
     end
   end
 
-  tree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
-    for _, uuid in ipairs(uuids) do
-      local o = nodemap[uuid] ---@type stl.c.IFiletreeNode
-
-      for _ = o.depth - 1, 1, -1 do
-        o = nodemap[o.parent] ---@type stl.c.IFiletreeNode
-
-        local s = statemap[o.uuid]
-        if s.tick_matched == tick_matched then
-          break
-        end
-
-        s.tick_matched = tick_matched
+  for _, uuid in ipairs(uuids) do
+    local parentuuid = tree:parent(uuid) ---@type string|nil
+    while parentuuid ~= nil and parentuuid ~= tree.root do
+      local state = statemap[parentuuid]
+      if state.tick_matched == tick_matched then
+        break
       end
+
+      state.tick_matched = tick_matched
+      parentuuid = tree:parent(parentuuid)
     end
-  end)
+  end
 
   ---@type era.m.picker.view.filetree.INodeMatchResult
   local match_result = {

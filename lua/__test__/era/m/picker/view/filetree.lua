@@ -152,4 +152,77 @@ t:test("reset_filepaths restores each location once across top-level subtrees", 
   t.assert_eq(3, locations[1].col, "location column")
 end)
 
+t:test("match reads leaf data and marks ancestors without matching the root", function()
+  local rootuuid = "/"
+  local parentuuid = "/workspace"
+  local leafuuid = "/workspace/a.lua"
+  local nodes = {
+    { uuid = parentuuid, data = { filetype = "directory" } },
+    { uuid = leafuuid, data = { filetype = "file", filepath = leafuuid, filepath_lower = leafuuid } },
+  }
+  local parents = { [parentuuid] = rootuuid, [leafuuid] = parentuuid }
+  local filetree = {
+    root = rootuuid,
+    get = function(_, uuid)
+      return uuid == leafuuid and nodes[2].data or nil
+    end,
+    parent = function(_, uuid)
+      return parents[uuid]
+    end,
+    quick_traverse = function(_, _, callback)
+      for _, node in ipairs(nodes) do
+        callback(nil, node)
+      end
+    end,
+  }
+  t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
+  t:patch_global("era", { view = { Tree = Tree } })
+  t:patch_global("stl", {
+    reporter = {
+      error = function(report)
+        error(report.message or report.subject)
+      end,
+    },
+    table = { truncate_inline = function() end },
+  })
+  t:patch_global("yoz", {
+    search = {
+      search_in_lines = function(params)
+        t.assert_eq(leafuuid, params.lines[1], "searched filepath")
+        return { lines = { { lnum = 1, score = 1, matches = {} } } }, nil
+      end,
+    },
+  })
+  local FiletreeView = assert(loadfile("lua/era/m/picker/view/filetree.lua"))()
+  local view = FiletreeView.new({ name = "test", tree = filetree })
+  view.statemap[parentuuid] = {
+    nodetype = "container",
+    collapsed = false,
+    tick_invisible = 0,
+    tick_matched = 0,
+    tick_selected = 0,
+    tick_selected_maximum = 0,
+  }
+  view.statemap[leafuuid] = {
+    nodetype = "leaf",
+    collapsed = false,
+    tick_invisible = 0,
+    tick_matched = 0,
+    tick_selected = 0,
+  }
+
+  local matched = view:match({
+    rootuuid = rootuuid,
+    pattern = "a",
+    case_sensitive = true,
+    fuzzy = false,
+    regex = false,
+  })
+
+  t.assert_eq(leafuuid, matched[1], "matched leaf")
+  t.assert_eq(view._tick_matched, view.statemap[leafuuid].tick_matched, "leaf matched tick")
+  t.assert_eq(view._tick_matched, view.statemap[parentuuid].tick_matched, "ancestor matched tick")
+  t.assert_nil(view.statemap[rootuuid], "synthetic root state")
+end)
+
 t:run()

@@ -76,11 +76,19 @@ t:test("reset stores slash-only relative and location identities", function()
       t.assert_eq(filepath, node.data.filepath, "stored filepath")
     end
 
-    tree:unsafe_traverse(nil, function(ctx)
-      for _, node in pairs(ctx.nodemap) do
-        t.assert_false(node.data.filepath:find("\\", 1, true) ~= nil, "slash-only node filepath")
+    local stack = { tree.root }
+    local stack_size = 1
+    while stack_size > 0 do
+      local uuid = stack[stack_size]
+      stack[stack_size] = nil
+      stack_size = stack_size - 1
+      local data = tree:get(uuid)
+      t.assert_false(data.filepath:find("\\", 1, true) ~= nil, "slash-only node filepath")
+      for _, childuuid in ipairs(tree:children(uuid) or {}) do
+        stack_size = stack_size + 1
+        stack[stack_size] = childuuid
       end
-    end)
+    end
   end)
 end)
 
