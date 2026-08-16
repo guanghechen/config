@@ -16,6 +16,14 @@ local EMPTY_CHILDREN = {} ---@type string[]
 local M = {}
 
 ---@param view                          era.view.tree.selection.IView
+---@return era.view.tree.selection.IView
+function M.mark_dirty(view)
+  view:__health__()
+  view._dirty_selected = true
+  return view
+end
+
+---@param view                          era.view.tree.selection.IView
 ---@param uuid                          string
 ---@return boolean
 function M.isselected(view, uuid)

@@ -99,6 +99,7 @@ M.isselected = tree_selection.isselected
 M.collect_selected = tree_selection.collect_selected
 M.set_selected = tree_selection.set_selected
 M.toggle_select = tree_selection.toggle_select
+M.mark_cache_selected_dirty = tree_selection.mark_dirty
 M.__refresh_selected_maximum__ = tree_selection.refresh_selected_maximum
 M.isvisible = tree_visibility.isvisible
 M.mark_node_invisible = tree_visibility.mark_node_invisible
@@ -107,8 +108,6 @@ M.collapse = tree_collapse.collapse
 M.mark_cache_listview_dirty = tree_cache.mark_listview_dirty
 M.mark_cache_treeview_dirty = tree_cache.mark_treeview_dirty
 M.collect_leafs = tree_store.collect_leafs
-M.insert = tree_store.insert
-M.remove = tree_store.remove
 M.remove_all_locations = tree_store.remove_all_locations
 M.remove_location = tree_store.remove_location
 M.isdisposed = tree_lifecycle.isdisposed
@@ -174,6 +173,21 @@ function M:mark_cache_match_dirty()
   self:__health__()
   self._last_match_result = nil ---@type era.m.picker.view.filetree.INodeMatchResult|nil
   return self
+end
+
+---@param uuid                          string
+---@param state                         era.view.tree.INodeState
+---@return era.m.picker.FiletreeView
+function M:insert(uuid, state)
+  self:mark_cache_match_dirty()
+  return tree_store.insert(self, uuid, state)
+end
+
+---@param uuid                          string
+---@return era.m.picker.FiletreeView
+function M:remove(uuid)
+  self:mark_cache_match_dirty()
+  return tree_store.remove(self, uuid)
 end
 
 ---@param uuid                          string
@@ -345,12 +359,14 @@ end
 ---@return era.m.picker.FiletreeView
 function M:insert_dirpath(dirpath)
   self:__health__()
+  self:mark_cache_match_dirty()
 
   local filetree = self._tree ---@type stl.c.IFiletree
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
   local fileuuid = filetree:insert_directory_absolute(dirpath) ---@type string
+  self:mark_cache_selected_dirty()
   local filestate = statemap[fileuuid] ---@type era.m.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "container" then
@@ -394,6 +410,7 @@ end
 ---@return era.m.picker.FiletreeView
 function M:insert_filepath(filepath, with_locations)
   self:__health__()
+  self:mark_cache_match_dirty()
 
   local filetree = self._tree ---@type stl.c.IFiletree
   local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
@@ -406,6 +423,7 @@ function M:insert_filepath(filepath, with_locations)
   end
 
   local fileuuid = filetree:insert_file_absolute(filepath) ---@type string
+  self:mark_cache_selected_dirty()
   local filestate = statemap[fileuuid] ---@type era.m.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "leaf" then
@@ -436,6 +454,7 @@ function M:insert_filepath(filepath, with_locations)
       tick_invisible = 0,
       tick_matched = 0,
       tick_selected = 0,
+      tick_selected_maximum = 0,
     }
     statemap[fileuuid] = filestate
   end
@@ -472,6 +491,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
 
   local selected_set = self:collect_selected() ---@type table<string, true>
   self:clear()
+  self:mark_cache_selected_dirty()
 
   local filetree = self._tree ---@type stl.c.IFiletree
   local tick_selected = self._tick_selected ---@type integer
@@ -503,6 +523,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
         tick_invisible = 0,
         tick_matched = 0,
         tick_selected = selected_set[uuid] and tick_selected or 0,
+        tick_selected_maximum = 0,
       }
       statemap[uuid] = nodestate
       return
@@ -561,6 +582,8 @@ end
 ---@return era.m.picker.FiletreeView
 function M:restore_subtree(rootuuid, selected_set)
   self:__health__()
+  self:mark_cache_match_dirty()
+  self:mark_cache_selected_dirty()
 
   local filetree = self._tree ---@type stl.c.IFiletree
   local tick_selected = self._tick_selected ---@type integer
@@ -588,6 +611,7 @@ function M:restore_subtree(rootuuid, selected_set)
         tick_invisible = 0,
         tick_matched = 0,
         tick_selected = selected_set[uuid] and tick_selected or 0,
+        tick_selected_maximum = 0,
       }
       return
     end

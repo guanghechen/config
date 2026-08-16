@@ -6,6 +6,7 @@ local tree_traversal = require("era.view.tree.traversal")
 ---@class era.view.tree.store.IView
 ---@field public statemap               table<string, era.view.tree.INodeState>
 ---@field protected _tree               stl.c.IReadonlyTree
+---@field protected mark_cache_selected_dirty fun(self: era.view.tree.store.IView): era.view.tree.store.IView
 ---@field protected __health__          fun(self: era.view.tree.store.IView): nil
 
 local M = {}
@@ -32,6 +33,7 @@ end
 ---@return era.view.tree.store.IView
 function M.insert(view, uuid, state)
   view:__health__()
+  view:mark_cache_selected_dirty()
   local statemap = view.statemap ---@type table<string, era.view.tree.INodeState>
   local oldstate = statemap[uuid] ---@type era.view.tree.INodeState|nil
   if oldstate ~= nil and oldstate.locations ~= nil then
@@ -54,6 +56,7 @@ end
 ---@return era.view.tree.store.IView
 function M.remove(view, uuid)
   view:__health__()
+  view:mark_cache_selected_dirty()
   local statemap = view.statemap ---@type table<string, era.view.tree.INodeState>
   tree_traversal.preorder(view._tree, uuid, function(nodeuuid)
     local state = statemap[nodeuuid] ---@type era.view.tree.INodeState|nil

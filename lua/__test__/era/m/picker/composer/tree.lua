@@ -17,6 +17,7 @@ bootstrap.with_runtime(t, {
 })
 
 local Tree = require("stl.c.tree")
+local tree_selection = require("era.view.tree.selection")
 local TreeComposer = assert(loadfile("lua/era/m/picker/composer/tree.lua"))()
 
 t:test("insert: owns explicit sorted child order on strict Tree", function()
@@ -24,6 +25,10 @@ t:test("insert: owns explicit sorted child order on strict Tree", function()
   local composer = setmetatable({
     _disposed = false,
     _tree = tree,
+    _treeview = {
+      mark_cache_match_dirty = function() end,
+      mark_cache_selected_dirty = function() end,
+    },
     _node_sorter = function(left, right)
       return left.order < right.order
     end,
@@ -51,6 +56,50 @@ t:test("insert: owns explicit sorted child order on strict Tree", function()
   t.assert_false(ok, "cycle upsert must fail")
   t.assert_eq(0, tree:get("group").order, "failed upsert keeps old data")
   t.assert_eq("root", tree:parent("group"), "failed upsert keeps old parent")
+end)
+
+t:test("insert: reparent invalidates the selection aggregate", function()
+  local tree = Tree.new("root")
+  tree:insert("root", "left", { order = 1 })
+  tree:insert("root", "right", { order = 2 })
+  tree:insert("left", "chosen", { order = 1 })
+
+  local tick_selected = 1
+  local treeview = {
+    _dirty_selected = true,
+    _tick_selected = tick_selected,
+    _tree = tree,
+    statemap = {
+      left = { tick_selected = 0, tick_selected_maximum = 0 },
+      right = { tick_selected = 0, tick_selected_maximum = 0 },
+      chosen = { tick_selected = tick_selected, tick_selected_maximum = 0 },
+    },
+    __health__ = function() end,
+    mark_cache_match_dirty = function() end,
+    mark_cache_selected_dirty = tree_selection.mark_dirty,
+    __refresh_selected_maximum__ = tree_selection.refresh_selected_maximum,
+  }
+  treeview:__refresh_selected_maximum__()
+  t.assert_false(treeview._dirty_selected, "initial aggregate clean")
+  t.assert_eq(tick_selected, treeview.statemap.left.tick_selected_maximum, "initial selected ancestor")
+  t.assert_eq(0, treeview.statemap.right.tick_selected_maximum, "initial unselected ancestor")
+
+  local composer = setmetatable({
+    _disposed = false,
+    _tree = tree,
+    _treeview = treeview,
+    _node_sorter = function(left, right)
+      return left.order < right.order
+    end,
+    fullname = "test",
+  }, TreeComposer)
+
+  composer:insert("right", "chosen", { order = 1 })
+
+  t.assert_true(treeview._dirty_selected, "reparent invalidates aggregate")
+  treeview:__refresh_selected_maximum__()
+  t.assert_eq(0, treeview.statemap.left.tick_selected_maximum, "old ancestor aggregate")
+  t.assert_eq(tick_selected, treeview.statemap.right.tick_selected_maximum, "new ancestor aggregate")
 end)
 
 t:test("attach: validates roots through strict topology accessors", function()

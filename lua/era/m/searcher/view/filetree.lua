@@ -131,6 +131,7 @@ M.isselected = tree_selection.isselected
 M.collect_selected = tree_selection.collect_selected
 M.set_selected = tree_selection.set_selected
 M.toggle_select = tree_selection.toggle_select
+M.mark_cache_selected_dirty = tree_selection.mark_dirty
 M.__refresh_selected_maximum__ = tree_selection.refresh_selected_maximum
 M.isvisible = tree_visibility.isvisible
 M.mark_node_invisible = tree_visibility.mark_node_invisible
@@ -434,6 +435,7 @@ function M:reset_filepaths(cwd, filepaths)
 
   local selected_set = self:collect_selected() ---@type table<string, true>
   self:clear()
+  self:mark_cache_selected_dirty()
 
   local filetree = self._tree ---@type stl.c.IFiletree
   local tick_selected = self._tick_selected ---@type integer
@@ -465,6 +467,7 @@ function M:reset_filepaths(cwd, filepaths)
         tick_invisible = 0,
         tick_matched = 0,
         tick_selected = selected_set[uuid] and tick_selected or 0,
+        tick_selected_maximum = 0,
       }
       statemap[uuid] = nodestate
       return

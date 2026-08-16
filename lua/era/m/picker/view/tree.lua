@@ -91,6 +91,7 @@ M.isselected = tree_selection.isselected
 M.collect_selected = tree_selection.collect_selected
 M.set_selected = tree_selection.set_selected
 M.toggle_select = tree_selection.toggle_select
+M.mark_cache_selected_dirty = tree_selection.mark_dirty
 M.__refresh_selected_maximum__ = tree_selection.refresh_selected_maximum
 M.isvisible = tree_visibility.isvisible
 M.mark_node_invisible = tree_visibility.mark_node_invisible
@@ -99,8 +100,6 @@ M.collapse = tree_collapse.collapse
 M.mark_cache_listview_dirty = tree_cache.mark_listview_dirty
 M.mark_cache_treeview_dirty = tree_cache.mark_treeview_dirty
 M.collect_leafs = tree_store.collect_leafs
-M.insert = tree_store.insert
-M.remove = tree_store.remove
 M.remove_all_locations = tree_store.remove_all_locations
 M.remove_location = tree_store.remove_location
 M.isdisposed = tree_lifecycle.isdisposed
@@ -130,7 +129,7 @@ function M.new(props)
     render_treeview_container = render_treeview_container,
     render_treeview_leaf = render_treeview_leaf,
     render_treeview_location = render_treeview_location,
-  }, "era.view.treeview")
+  }, "era.view.tree")
   setmetatable(self, M)
   ---@cast self                         era.m.picker.TreeView
 
@@ -161,6 +160,21 @@ function M:mark_cache_match_dirty()
   self:__health__()
   self._last_match_result = nil ---@type era.m.picker.view.tree.INodeMatchResult|nil
   return self
+end
+
+---@param uuid                          string
+---@param state                         era.view.tree.INodeState
+---@return era.m.picker.TreeView
+function M:insert(uuid, state)
+  self:mark_cache_match_dirty()
+  return tree_store.insert(self, uuid, state)
+end
+
+---@param uuid                          string
+---@return era.m.picker.TreeView
+function M:remove(uuid)
+  self:mark_cache_match_dirty()
+  return tree_store.remove(self, uuid)
 end
 
 ---@param uuid                          string

@@ -43,6 +43,15 @@ local __module_name__ = "stl.c.tree" ---@type string
 local M = {}
 M.__index = M
 
+---@param value                         unknown
+---@param subject                       string
+---@return nil
+local function assert_string_id(value, subject)
+  if type(value) ~= "string" then
+    error(string.format("[%s] %s id must be a string", __module_name__, subject), 3)
+  end
+end
+
 ---@param root                          string
 ---@param rootdata?                     table
 ---@return stl.c.Tree
@@ -155,6 +164,7 @@ end
 ---@return stl.c.Tree
 function M:update(uuid, data)
   self:__health__()
+  assert_string_id(uuid, "node")
   local node = self._nodemap[uuid] ---@type stl.c.ITreeNode|nil
   if node == nil then
     error(string.format("[%s] node '%s' does not exist", __module_name__, uuid), 2)
@@ -169,6 +179,8 @@ end
 ---@return stl.c.Tree
 function M:move(uuid, parent, index)
   self:__health__()
+  assert_string_id(uuid, "node")
+  assert_string_id(parent, "parent")
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
   local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
   local next_parent = nodemap[parent] ---@type stl.c.ITreeNode|nil
@@ -219,6 +231,8 @@ end
 ---@return stl.c.Tree
 function M:insert(parent, uuid, data, index)
   self:__health__()
+  assert_string_id(parent, "parent")
+  assert_string_id(uuid, "node")
 
   local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
   local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
@@ -255,6 +269,7 @@ end
 ---@return stl.c.Tree
 function M:remove(nodeuuid)
   self:__health__()
+  assert_string_id(nodeuuid, "node")
 
   local rootnode = self._rootnode ---@type stl.c.ITreeNode
   if nodeuuid == rootnode.uuid then

@@ -74,6 +74,7 @@ local EMPTY_LAYOUT = treeview.layout({
 ---@field public tick_invisible         integer
 ---@field public tick_matched           integer
 ---@field public tick_selected          integer
+---@field public tick_selected_maximum  integer
 ---@field public cache_listview         era.view.tree.INodeListviewResultCache|nil
 ---@field public cache_treeview         era.view.tree.INodeTreeviewResultCache|nil
 
@@ -229,6 +230,7 @@ end
 ---@field protected _render_treeview_leaf       era.view.tree.ITreeviewLeafNodeRenderer
 ---@field protected _render_treeview_location   era.view.tree.ITreeviewLeafLocationRenderer
 ---@field protected __health__          fun(self: era.view.tree.IRenderView): nil
+---@field protected mark_cache_selected_dirty fun(self: era.view.tree.IRenderView): era.view.tree.IRenderView
 ---@field protected __refresh_selected_maximum__ fun(self: era.view.tree.IRenderView): nil
 
 ---@class era.view.TreeRenderer

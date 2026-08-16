@@ -9,7 +9,14 @@ local Tree = {}
 Tree.__index = Tree
 
 function Tree.new(props)
-  return { _disposed = false, _tree = props.tree, _tick_selected = 1, _tick_render_treeview = 0, statemap = {} }
+  return {
+    _disposed = false,
+    _dirty_selected = false,
+    _tree = props.tree,
+    _tick_selected = 1,
+    _tick_render_treeview = 0,
+    statemap = {},
+  }
 end
 
 function Tree:__health__() end
@@ -64,6 +71,7 @@ t:test("inserting a file preserves existing ancestor state", function()
 
   t.assert_true(view.statemap["/a"] == ancestor_state, "ancestor state identity")
   t.assert_true(view.statemap["/a"].collapsed, "ancestor collapsed state")
+  t.assert_true(view._dirty_selected, "file insert invalidates selected aggregate")
 end)
 
 t:test("inserting a directory preserves existing ancestor state", function()
@@ -73,9 +81,10 @@ t:test("inserting a directory preserves existing ancestor state", function()
 
   t.assert_true(view.statemap["/a"] == ancestor_state, "ancestor state identity")
   t.assert_true(view.statemap["/a"].collapsed, "ancestor collapsed state")
+  t.assert_true(view._dirty_selected, "directory insert invalidates selected aggregate")
 end)
 
-t:test("restore_subtree owns rebuilt state and selection ticks", function()
+t:test("restore_subtree owns rebuilt state and selection aggregate", function()
   local root = { uuid = "/a", children = { "/a/file" }, data = { filetype = "directory" } }
   local leaf = { uuid = "/a/file", children = {}, data = { filetype = "file" } }
   local nodes = { [root.uuid] = root, [leaf.uuid] = leaf }
@@ -85,6 +94,9 @@ t:test("restore_subtree owns rebuilt state and selection ticks", function()
       return nodes[uuid] ~= nil
     end,
     children = function(_, uuid)
+      if uuid == "/" then
+        return { root.uuid }
+      end
       return nodes[uuid] and nodes[uuid].children or nil
     end,
     get = function(_, uuid)
@@ -102,6 +114,10 @@ t:test("restore_subtree owns rebuilt state and selection ticks", function()
   t.assert_eq(0, view.statemap[root.uuid].tick_selected, "unselected directory")
   t.assert_eq("leaf", view.statemap[leaf.uuid].nodetype, "file state")
   t.assert_eq(1, view.statemap[leaf.uuid].tick_selected, "selected file")
+  t.assert_true(view._dirty_selected, "restored subtree invalidates selected aggregate")
+  view:__refresh_selected_maximum__()
+  t.assert_eq(1, view.statemap[root.uuid].tick_selected_maximum, "restored directory selected maximum")
+  t.assert_eq(1, view.statemap[leaf.uuid].tick_selected_maximum, "restored file selected maximum")
   t.assert_eq(1, view._tick_render_treeview, "tree cache invalidated")
 
   local visited = 0
@@ -114,7 +130,7 @@ t:test("restore_subtree owns rebuilt state and selection ticks", function()
   t.assert_eq(1, visited, "visited file count")
 end)
 
-t:test("reset_filepaths restores each location once across top-level subtrees", function()
+t:test("reset_filepaths restores locations and selection aggregate", function()
   local filepath = "/workspace/a.lua"
   local fileuuid = "file:" .. filepath
   local nodes = {
@@ -181,6 +197,30 @@ t:test("reset_filepaths restores each location once across top-level subtrees", 
   } })
   local FiletreeView = assert(loadfile("lua/era/m/picker/view/filetree.lua"))()
   local view = FiletreeView.new({ name = "test", tree = filetree })
+  view.statemap[nodes[1].uuid] = {
+    nodetype = "container",
+    collapsed = false,
+    tick_invisible = 0,
+    tick_matched = 0,
+    tick_selected = 0,
+    tick_selected_maximum = 1,
+  }
+  view.statemap[fileuuid] = {
+    nodetype = "leaf",
+    collapsed = false,
+    tick_invisible = 0,
+    tick_matched = 0,
+    tick_selected = view._tick_selected,
+    tick_selected_maximum = view._tick_selected,
+  }
+  view.statemap[nodes[3].uuid] = {
+    nodetype = "container",
+    collapsed = false,
+    tick_invisible = 0,
+    tick_matched = 0,
+    tick_selected = 0,
+    tick_selected_maximum = 0,
+  }
 
   view:reset_filepaths("/workspace", { filepath .. ":12:3" }, true)
 
@@ -188,6 +228,11 @@ t:test("reset_filepaths restores each location once across top-level subtrees", 
   t.assert_eq(1, #locations, "location count")
   t.assert_eq(12, locations[1].lnum, "location line")
   t.assert_eq(3, locations[1].col, "location column")
+  t.assert_eq(view._tick_selected, view.statemap[fileuuid].tick_selected, "selected file restored")
+  t.assert_true(view._dirty_selected, "reset invalidates selected aggregate")
+  view:__refresh_selected_maximum__()
+  t.assert_eq(view._tick_selected, view.statemap[fileuuid].tick_selected_maximum, "reset file selected maximum")
+  t.assert_eq(view._tick_selected, view.statemap[nodes[1].uuid].tick_selected_maximum, "reset parent selected maximum")
 end)
 
 t:test("match reads leaf data and marks ancestors without matching the root", function()
@@ -251,6 +296,7 @@ t:test("match reads leaf data and marks ancestors without matching the root", fu
     tick_invisible = 0,
     tick_matched = 0,
     tick_selected = 0,
+    tick_selected_maximum = 0,
   }
 
   local matched = view:match({

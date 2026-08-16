@@ -963,6 +963,7 @@ end
 ---@return era.m.picker.TreeComposer
 function M:insert(parentuuid, uuid, data)
   self:__health__()
+  self._treeview:mark_cache_match_dirty()
 
   local tree = self._tree ---@type stl.c.Tree
   if tree:contains(uuid) then
@@ -973,7 +974,9 @@ function M:insert(parentuuid, uuid, data)
     if not tree:contains(parentuuid) then
       error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
     end
-    tree:move(uuid, parentuuid, self:__resolve_insert_index__(parentuuid, data))
+    local insertion_index = self:__resolve_insert_index__(parentuuid, data) ---@type integer
+    self._treeview:mark_cache_selected_dirty()
+    tree:move(uuid, parentuuid, insertion_index)
     tree:update(uuid, data)
     return self
   end

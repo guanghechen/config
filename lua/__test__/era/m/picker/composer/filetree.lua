@@ -197,6 +197,7 @@ t:test("mutation actions cross only the OS boundary", function()
     local delete_filepath = nil ---@type string|nil
     local inserted_filepath = nil ---@type string|nil
     local removed_uuid = nil ---@type string|nil
+    local removed_tree_uuid = nil ---@type string|nil
     local rename_params = nil ---@type dot.t.IRenameParams|nil
     local update_params = nil ---@type table|nil
     t:patch_table(stl.env, "mkdirs", function(filepath, isdir)
@@ -215,6 +216,10 @@ t:test("mutation actions cross only the OS boundary", function()
     t:patch_table(composer._treeview, "remove", function(_, uuid)
       removed_uuid = uuid
     end)
+    t:patch_table(composer._filetree, "remove", function(_, uuid)
+      removed_tree_uuid = uuid
+    end)
+    t:patch_table(composer, "__refresh_file_indexes__", function() end)
     t:patch_table(era.fn, "rename", function(params)
       rename_params = params
       return true
@@ -243,6 +248,7 @@ t:test("mutation actions cross only the OS boundary", function()
     submit("filetree: remove node", "yes")
     t.assert_eq("OS<" .. source_filepath .. ">", delete_filepath, "delete boundary")
     t.assert_eq(current_uuid, removed_uuid, "removed canonical UUID")
+    t.assert_eq(current_uuid, removed_tree_uuid, "removed topology UUID")
 
     rename_params = nil
     update_params = nil
@@ -267,6 +273,44 @@ t:test("mutation actions cross only the OS boundary", function()
   end)
 end)
 
+t:test("directory removal synchronizes topology state and indexes", function()
+  with_composer("directory-remove-refresh", function(composer)
+    local root = "/workspace"
+    local directory = root .. "/remove"
+    local filepath = directory .. "/file.lua"
+    local directory_uuid = stl.c.Filetree.uuid(directory)
+    local fileuuid = stl.c.Filetree.uuid(filepath)
+    t:patch_table(composer.result, "get_winnr", function()
+      return vim.api.nvim_get_current_win()
+    end)
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
+    t:patch_table(vim.fn, "delete", function()
+      return 0
+    end)
+    t:patch_table(vim.ui, "input", function(_, callback)
+      callback("yes")
+    end)
+    composer:reset_filepaths(root, { filepath }, false)
+    composer:__match__("file")
+    local directory_data = composer._filetree:get(directory_uuid) ---@type stl.c.IFiletreeNodeData
+    composer.__retrieve_file__ = function()
+      return directory_uuid, directory_data
+    end
+
+    retrieve_action(composer, "filetree: remove node")()
+
+    t.assert_false(composer._filetree:contains(directory_uuid), "removed directory topology")
+    t.assert_false(composer._filetree:contains(fileuuid), "removed child topology")
+    t.assert_nil(composer._treeview:retrieve(directory_uuid), "removed directory state")
+    t.assert_nil(composer._treeview:retrieve(fileuuid), "removed child state")
+    t.assert_eq(0, #composer._uuids_file, "removed file index")
+    t.assert_eq(0, #composer._uuids_order, "removed order index")
+    composer:__match__("file")
+    t.assert_eq(0, #composer._uuids_order, "removed match index")
+    composer._treeview:__refresh_selected_maximum__()
+  end)
+end)
+
 t:test("directory refresh canonicalizes native scan results", function()
   with_composer("canonical-directory-refresh", function(composer)
     local rootpath = "C:/workspace/project"
@@ -276,6 +320,7 @@ t:test("directory refresh canonicalizes native scan results", function()
     composer:reset_filepaths(rootpath, {
       source .. "/old.lua",
     }, false)
+    composer._treeview:set_selected(stl.c.Filetree.uuid(source .. "/old.lua"), true)
 
     local scanned = nil ---@type string|nil
     t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
@@ -286,22 +331,186 @@ t:test("directory refresh canonicalizes native scan results", function()
       return {
         files = {
           [[nested\child.lua]],
+          "old.lua",
           "root.lua",
         },
-      }, nil
+      },
+        nil
     end)
 
-    composer:__update_tree_after_rename__(source, target, true)
+    composer:__update_tree_after_rename__(source, target .. "/", true)
 
     t.assert_eq("OS<" .. target .. ">", scanned, "directory scan boundary")
     for _, filepath in ipairs({
       target .. "/nested/child.lua",
+      target .. "/old.lua",
       target .. "/root.lua",
     }) do
       local data = composer._filetree:get(stl.c.Filetree.uuid(filepath))
       t.assert_true(data ~= nil, "canonical scanned data: " .. filepath)
       t.assert_eq(filepath, data and data.filepath, "scanned filepath")
     end
+
+    local fileuuid = stl.c.Filetree.uuid(target .. "/old.lua")
+    local ancestor_uuid = stl.c.Filetree.uuid(yoz.canonical_path.dirname(target, false))
+    t.assert_true(composer._treeview:retrieve(ancestor_uuid) ~= nil, "destination ancestor state")
+    t.assert_true(composer._treeview:isselected(fileuuid), "moved file selection")
+
+    local bufnr = vim.api.nvim_create_buf(false, true)
+    local ok, err = pcall(function()
+      local result = composer._treeview:render_treeview({
+        bufnr = bufnr,
+        rootuuid = composer._filetree.root,
+        foldempty = false,
+        only_expanded = true,
+        only_matched = false,
+        only_selected = true,
+        only_visible = true,
+      })
+      t.assert_true(assert(result.layout):lnum(fileuuid) ~= nil, "selected moved file projection")
+    end)
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+    if not ok then
+      error(err, 0)
+    end
+  end)
+end)
+
+t:test("file refresh preserves selection at the new identity", function()
+  with_composer("selected-file-refresh", function(composer)
+    local source = "/workspace/foo.lua"
+    local target = "/workspace/foobar.lua"
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
+    composer:reset_filepaths("/workspace", { source }, false)
+    composer._treeview:set_selected(stl.c.Filetree.uuid(source), true)
+    composer._uuid_current = stl.c.Filetree.uuid(source)
+    composer:__match__("foo")
+
+    composer:__update_tree_after_rename__(source, target, false)
+    composer:__match__("foo")
+
+    local source_uuid = stl.c.Filetree.uuid(source)
+    local target_uuid = stl.c.Filetree.uuid(target)
+    t.assert_true(composer._treeview:isselected(target_uuid), "renamed file selection")
+    t.assert_eq(target_uuid, composer._uuid_current, "renamed current identity")
+    t.assert_eq(target_uuid, composer._uuids_file[1], "renamed file index")
+    t.assert_eq(target_uuid, composer._uuids_order[1], "renamed order index")
+    t.assert_false(vim.list_contains(composer._uuids_file, source_uuid), "old file index removed")
+    composer._treeview:__refresh_selected_maximum__()
+    t.assert_eq(
+      composer._treeview._tick_selected,
+      composer._treeview:retrieve(target_uuid).tick_selected_maximum,
+      "renamed file selected aggregate"
+    )
+  end)
+end)
+
+t:test("root directory refresh remaps composer indexes", function()
+  local attached = nil ---@type string|nil
+  with_composer("root-directory-refresh", function(composer)
+    local source = "/workspace/root"
+    local target = "/archive/root"
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
+    t:patch_table(yoz.fs, "collect_files", function()
+      return { files = { "file.lua" } }, nil
+    end)
+    composer:reset_filepaths(source, { source .. "/file.lua" }, false)
+    composer._uuid_current = stl.c.Filetree.uuid(source .. "/file.lua")
+
+    composer:__update_tree_after_rename__(source, target .. "/", true)
+
+    local target_root_uuid = stl.c.Filetree.uuid(target)
+    local target_file_uuid = stl.c.Filetree.uuid(target .. "/file.lua")
+    t.assert_eq(target_root_uuid, composer._uuid_root, "renamed attached root")
+    t.assert_eq(target_file_uuid, composer._uuid_current, "renamed current child")
+    t.assert_eq(target_file_uuid, composer._uuids_file[1], "renamed root file index")
+    t.assert_eq(target, attached, "renamed attached callback")
+  end, function(_, rootpath)
+    attached = rootpath
+  end)
+end)
+
+t:test("directory refresh preserves an empty destination", function()
+  with_composer("empty-directory-refresh", function(composer)
+    local source = "/workspace/empty"
+    local target = "/archive/empty"
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
+    t:patch_table(yoz.fs, "collect_files", function()
+      return { files = {} }, nil
+    end)
+    composer._treeview:insert_dirpath(source)
+
+    composer:__update_tree_after_rename__(source, target .. "/", true)
+
+    local target_uuid = stl.c.Filetree.uuid(target)
+    local data = composer._filetree:get(target_uuid) ---@type stl.c.IFiletreeNodeData|nil
+    local state = composer._treeview:retrieve(target_uuid) ---@type era.m.picker.view.filetree.INodeState|nil
+    t.assert_eq(target, data and data.filepath, "empty destination data")
+    t.assert_eq("container", state and state.nodetype, "empty destination state")
+  end)
+end)
+
+t:test("directory overwrite removes the replaced target subtree", function()
+  with_composer("directory-overwrite-refresh", function(composer)
+    local source = "/workspace/source"
+    local target = "/archive/target"
+    local source_file = source .. "/moved.lua"
+    local target_file = target .. "/moved.lua"
+    local stale_file = target .. "/stale.lua"
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
+    t:patch_table(yoz.fs, "collect_files", function()
+      return { files = { "moved.lua" } }, nil
+    end)
+    composer:reset_filepaths("/workspace", { source_file, stale_file }, false)
+    composer._treeview:set_selected(stl.c.Filetree.uuid(source_file), true)
+    composer._treeview:set_selected(stl.c.Filetree.uuid(stale_file), true)
+
+    composer:__update_tree_after_rename__(source, target .. "/", true)
+
+    local target_uuid = stl.c.Filetree.uuid(target_file)
+    local stale_uuid = stl.c.Filetree.uuid(stale_file)
+    t.assert_true(composer._filetree:contains(target_uuid), "overwritten target file")
+    t.assert_true(composer._treeview:isselected(target_uuid), "source selection remapped")
+    t.assert_false(composer._filetree:contains(stale_uuid), "stale target topology removed")
+    t.assert_nil(composer._treeview:retrieve(stale_uuid), "stale target state removed")
+    t.assert_false(composer._treeview:isselected(stale_uuid), "stale target selection removed")
+  end)
+end)
+
+t:test("directory scan failure rebuilds from known source leafs", function()
+  with_composer("directory-scan-failure", function(composer)
+    local source = "/workspace/source"
+    local target = "/archive/target"
+    local source_file = source .. "/known.lua"
+    local target_file = target .. "/known.lua"
+    local report = nil ---@type table|nil
+    local schedule_count = 0
+    t:patch_table(composer._scheduler_match, "schedule", function()
+      schedule_count = schedule_count + 1
+    end)
+    t:patch_table(stl.reporter, "error", function(value)
+      report = value
+    end)
+    t:patch_table(yoz.fs, "collect_files", function()
+      return nil, { error = "permission denied" }
+    end)
+    composer:reset_filepaths("/workspace", { source_file }, false)
+    composer._treeview:set_selected(stl.c.Filetree.uuid(source_file), true)
+    schedule_count = 0
+
+    composer:__update_tree_after_rename__(source, target .. "/", true)
+
+    local source_uuid = stl.c.Filetree.uuid(source)
+    local target_uuid = stl.c.Filetree.uuid(target)
+    local target_file_uuid = stl.c.Filetree.uuid(target_file)
+    t.assert_false(composer._filetree:contains(source_uuid), "failed scan removes stale source")
+    t.assert_true(composer._filetree:contains(target_uuid), "failed scan keeps target root")
+    t.assert_true(composer._filetree:contains(target_file_uuid), "failed scan restores known file")
+    t.assert_true(composer._treeview:isselected(target_file_uuid), "failed scan remaps selection")
+    t.assert_eq("collect_files_failed", report and report.subject, "failed scan report")
+    t.assert_eq(1, schedule_count, "failed scan schedules match refresh")
   end)
 end)
 

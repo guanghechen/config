@@ -37,6 +37,7 @@ local TestView = {
   collect_selected = tree_selection.collect_selected,
   set_selected = tree_selection.set_selected,
   toggle_select = tree_selection.toggle_select,
+  mark_cache_selected_dirty = tree_selection.mark_dirty,
   __refresh_selected_maximum__ = tree_selection.refresh_selected_maximum,
   isvisible = tree_visibility.isvisible,
   mark_node_invisible = tree_visibility.mark_node_invisible,
@@ -280,6 +281,44 @@ t:test("selected maximum: failed refresh remains dirty for recovery", function()
   view:insert("late", new_state("leaf"))
   local result = render(view, bufnr, "root", { only_selected = true })
   t.assert_eq("root", assert(result.layout):id(1), "retry recomputes selected root")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("selected maximum: state rebuild and removal invalidate aggregate", function()
+  t:patch_table(table, "clear", function(target)
+    for key in pairs(target) do
+      target[key] = nil
+    end
+  end)
+
+  local tree, view = setup({
+    { uuid = "root", state = new_state("container") },
+    { uuid = "branch", parent = "root", state = new_state("container") },
+    { uuid = "chosen", parent = "branch", state = new_state("leaf") },
+  })
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  view:set_selected("chosen", true)
+  render(view, bufnr, "root", { only_selected = true })
+
+  tree_lifecycle.clear(view)
+  view:insert("root", new_state("container"))
+  view:insert("branch", new_state("container"))
+  view:insert("chosen", new_state("leaf", { tick_selected = view._tick_selected }))
+
+  local rebuilt = render(view, bufnr, "root", { only_selected = true })
+  assert_array(
+    { "root", "╰─branch", "  ╰─chosen" },
+    vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
+    "rebuilt selected lines"
+  )
+  t.assert_eq(view._tick_selected, view.statemap.chosen.tick_selected_maximum, "leaf selected maximum")
+  t.assert_eq(view._tick_selected, view.statemap.root.tick_selected_maximum, "root selected maximum")
+  t.assert_eq(3, assert(rebuilt.layout):len(), "rebuilt selected layout")
+
+  view:remove("chosen")
+  tree:remove("chosen")
+  local removed = render(view, bufnr, "root", { only_selected = true })
+  t.assert_eq(0, assert(removed.layout):len(), "removed selected layout")
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 

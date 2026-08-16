@@ -106,6 +106,39 @@ t:test("preview treats an empty result as a normal state", function()
   end
 end)
 
+t:test("search publication rebuild preserves only-selected projection", function()
+  local composer = new_composer("selected-publication", 500)
+  local view = composer._treeview
+  local fileuuid = stl.c.Filetree.uuid(fixture_path)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  local ok, err = pcall(function()
+    view:reset_filepaths(fixture_dir, { fixture_path })
+    view:set_selected(fileuuid, true)
+    view:reset_filepaths(fixture_dir, { fixture_path })
+
+    t.assert_true(view:isselected(fileuuid), "selected file restored")
+    local result = view:render_listview({
+      bufnr = bufnr,
+      rootuuid = view._tree.root,
+      orders = nil,
+      only_matched = false,
+      only_selected = true,
+      only_visible = true,
+    })
+    t.assert_true(#result.lnum2uuid > 0, "only-selected projection")
+    t.assert_eq(fileuuid, result.lnum2uuid[#result.lnum2uuid], "selected file projection")
+  end)
+
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+  composer:dispose()
+  vim.wait(20)
+  if not ok then
+    error(err, 0)
+  end
+end)
+
 ---@param flag_replace                  boolean
 ---@param max_matches                   integer
 ---@return { total: number, poll: number, normalize: number, apply: number, render: number }

@@ -133,6 +133,7 @@ local __module_name__ = "era.m.picker.composer.filetree" ---@type string
 ---@field protected _on_confirm         era.m.picker.composer.filetree.IOnConfirm|nil
 ---@field protected _on_disposed        era.m.picker.composer.filetree.IOnDisposed
 ---@field protected _observer_unsubs    stl.c.IUnsubscribable[]|nil
+---@field protected __refresh_file_indexes__ fun(self: era.m.picker.FiletreeComposer): nil
 local M = {}
 M.__index = M
 
@@ -543,14 +544,8 @@ function M.new(props)
         end
 
         treeview:remove(fileuuid)
-        if not isdir then
-          stl.table.filter_inline(self._uuids_file, function(uuid)
-            return uuid ~= fileuuid
-          end)
-          stl.table.filter_inline(self._uuids_order, function(uuid)
-            return uuid ~= fileuuid
-          end)
-        end
+        filetree:remove(fileuuid)
+        self:__refresh_file_indexes__()
         scheduler_match:schedule()
       end
 
@@ -1766,28 +1761,15 @@ end
 function M:reset_filepaths(cwd, filepaths, with_positions)
   self:__health__()
 
-  local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type era.m.picker.FiletreeView
 
   cwd = yoz.canonical_path.from_os_path(cwd, false) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
 
   local uuid_cwd = stl.c.Filetree.uuid(cwd) ---@type string
-  local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
-  local uuids_order = vim.list_slice(uuids_file) ---@type string[]
-
-  if frecency ~= nil then
-    table.sort(uuids_order, function(a, b)
-      local sa = frecency:score(a) or 0 ---@type integer
-      local sb = frecency:score(b) or 0 ---@type integer
-      return sa > sb
-    end)
-  end
-
   self._last_preview_filepath = nil
   self._uuid_root = uuid_cwd
-  self._uuids_file = uuids_file
-  self._uuids_order = uuids_order
+  self:__refresh_file_indexes__()
   self._scheduler_match:schedule()
 
   self._on_attached(self, cwd)
@@ -1965,6 +1947,17 @@ function M:__health__()
     local message = string.format("[%s#%s] already been disposed.", __module_name__, self.fullname) ---@type string
     error(message)
   end
+end
+
+---@protected
+---@return nil
+function M:__refresh_file_indexes__()
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local treeview = self._treeview ---@type era.m.picker.FiletreeView
+  local uuid_root = self._uuid_root ---@type string|nil
+  local uuids_file = uuid_root ~= nil and filetree:contains(uuid_root) and treeview:collect_file_uuids(uuid_root) or {} ---@type string[]
+  self._uuids_file = uuids_file
+  self:__match__("")
 end
 
 ---@protected
@@ -2208,8 +2201,33 @@ end
 ---@param isdir                         boolean
 ---@return nil
 function M:__update_tree_after_rename__(from, to, isdir)
+  from = yoz.canonical_path.from_os_path(from, false)
+  to = yoz.canonical_path.from_os_path(to, false)
   local from_nodeuuid = stl.c.Filetree.uuid(from) ---@type string
   local to_nodeuuid = stl.c.Filetree.uuid(to) ---@type string
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local treeview = self._treeview ---@type era.m.picker.FiletreeView
+
+  ---@param filepath                    string
+  ---@return string
+  local function rebase_filepath(filepath)
+    local relative = yoz.canonical_path.relative(from, filepath, false) ---@type string
+    return relative == "" and to or yoz.canonical_path.join(to, relative, false)
+  end
+
+  ---@param uuid                        string|nil
+  ---@return string|nil
+  local function remap_uuid(uuid)
+    local data = uuid ~= nil and filetree:get(uuid) or nil ---@type stl.c.IFiletreeNodeData|nil
+    if data ~= nil and (data.filepath == from or yoz.canonical_path.is_descendant(from, data.filepath)) then
+      return stl.c.Filetree.uuid(rebase_filepath(data.filepath))
+    end
+    return uuid
+  end
+
+  local uuid_root_before = self._uuid_root ---@type string|nil
+  local uuid_root = remap_uuid(uuid_root_before) ---@type string|nil
+  local uuid_current = remap_uuid(self._uuid_current) ---@type string|nil
 
   local filepaths = {} ---@type string[]
 
@@ -2224,32 +2242,62 @@ function M:__update_tree_after_rename__(from, to, isdir)
           directory = to,
         },
       })
-      return
-    end
-
-    if result ~= nil and result.files ~= nil then
+      for _, uuid in ipairs(treeview:collect_leafs(from_nodeuuid)) do
+        local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+        if data ~= nil then
+          filepaths[#filepaths + 1] = rebase_filepath(data.filepath)
+        end
+      end
+    elseif result ~= nil and result.files ~= nil then
       for _, relative_filepath in ipairs(result.files) do
         local to_filepath = yoz.canonical_path.join(to, relative_filepath, false) ---@type string
         filepaths[#filepaths + 1] = to_filepath
       end
     end
-  else
-    filepaths[#filepaths + 1] = to ---@type string
   end
 
-  local filetree = self._filetree ---@type stl.c.Filetree
-  local treeview = self._treeview ---@type era.m.picker.FiletreeView
-  local selected_set = treeview:collect_selected() ---@type table<string, true>
+  local selected_set_current = treeview:collect_selected() ---@type table<string, true>
+  local selected_set = {} ---@type table<string, true>
+  for uuid in pairs(selected_set_current) do
+    local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+    if data ~= nil and (data.filepath == from or yoz.canonical_path.is_descendant(from, data.filepath)) then
+      selected_set[stl.c.Filetree.uuid(rebase_filepath(data.filepath))] = true
+    elseif data == nil or (data.filepath ~= to and not yoz.canonical_path.is_descendant(to, data.filepath)) then
+      selected_set[uuid] = true
+    end
+  end
   local scheduler_match = self._scheduler_match
 
+  if to_nodeuuid ~= from_nodeuuid and filetree:contains(to_nodeuuid) then
+    treeview:remove(to_nodeuuid)
+    filetree:remove(to_nodeuuid)
+  end
   treeview:remove(from_nodeuuid)
   filetree:remove(from_nodeuuid)
 
-  for _, filepath in ipairs(filepaths) do
-    filetree:insert_file_absolute(filepath)
+  if isdir then
+    treeview:insert_dirpath(to)
+    for _, filepath in ipairs(filepaths) do
+      filetree:insert_file_absolute(filepath)
+    end
+  else
+    treeview:insert_filepath(to, false)
   end
 
   treeview:restore_subtree(to_nodeuuid, selected_set)
+
+  self._uuid_root = uuid_root ~= nil and filetree:contains(uuid_root) and uuid_root or nil
+  self._uuid_current = uuid_current ~= nil and filetree:contains(uuid_current) and uuid_current or nil
+
+  self:__refresh_file_indexes__()
+
+  if self._uuid_root ~= uuid_root_before and self._uuid_root ~= nil then
+    local rootdata = filetree:get(self._uuid_root) ---@type stl.c.IFiletreeNodeData|nil
+    if rootdata ~= nil then
+      self._on_attached(self, rootdata.filepath)
+    end
+  end
+
   self:mark_result_dirty()
   scheduler_match:schedule()
 end
