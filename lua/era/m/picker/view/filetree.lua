@@ -32,7 +32,7 @@ local tree_visibility = require("era.view.tree.visibility")
 ---@class era.m.picker.view.filetree.IDirectoryNodeState : era.view.tree.IContainerNodeState
 
 ---@class era.m.picker.view.filetree.IFileNodeState : era.view.tree.ILeafNodeState
----@field public locations              era.m.picker.view.filetree.ILocationNodeState|nil
+---@field public locations              era.m.picker.view.filetree.ILocationNodeState[]|nil
 ---@field public cache_match            era.m.picker.view.filetree.INodeMatchResultCache|nil
 
 ---@class era.m.picker.view.filetree.ILocationNodeState : era.view.tree.ILeafLocationState
@@ -44,15 +44,11 @@ local tree_visibility = require("era.view.tree.visibility")
 
 ---@class era.m.picker.view.filetree.IListviewRendererContext : era.view.tree.IListviewRendererContext
 ---@field public rootdata               stl.c.IFiletreeNodeData
----@field public rootstate              era.m.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
----@field public view                   era.m.picker.FiletreeView
 
----@class era.m.picker.view.filetree.ITreeviewRendererContext : era.view.tree.IListviewRendererContext
+---@class era.m.picker.view.filetree.ITreeviewRendererContext : era.view.tree.ITreeviewRendererContext
 ---@field public rootdata               stl.c.IFiletreeNodeData
----@field public rootstate              era.m.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
----@field public view                   era.m.picker.FiletreeView
 
 ---@class era.m.picker.view.filetree.INodeMatchContext
 ---@field public rootuuid               string

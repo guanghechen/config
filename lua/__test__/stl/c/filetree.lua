@@ -146,6 +146,12 @@ t:test("strict topology keeps filesystem ordering feature-owned", function()
   t.assert_eq(bdir, children[2], "alphabetical second directory")
   t.assert_eq(afile, children[3], "alphabetical first file")
   t.assert_eq(zfile, children[4], "alphabetical second file")
+
+  local zdirdata = Filetree.resolve("/z.lua", "directory", true)
+  tree:insert(root, zfile, zdirdata)
+  children = tree:children(root)
+  t.assert_eq(zfile, children[3], "type change reorders directory")
+  t.assert_eq(afile, children[4], "type change moves file after directories")
 end)
 
 t:test("empty reset preserves the actual filesystem root", function()

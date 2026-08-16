@@ -59,7 +59,6 @@ end
 ---@field public fullname               string
 ---@field public root                   string
 ---@field public isdisposed             fun(self: stl.c.IReadonlyFiletree): boolean
----@field public isdescendant           fun(self: stl.c.IReadonlyFiletree, ancestor: string, uuid: string): boolean
 ---@field public get                    fun(self: stl.c.IReadonlyFiletree, uuid: string): stl.c.IFiletreeNodeData|nil
 ---@field public children               fun(self: stl.c.IReadonlyFiletree, uuid: string): string[]|nil
 
@@ -69,7 +68,6 @@ end
 ---@field public clear                  fun(self: stl.c.IFiletree): stl.c.IFiletree
 ---@field public dispose                fun(self: stl.c.IFiletree): nil
 ---@field public isdisposed             fun(self: stl.c.IFiletree): boolean
----@field public isdescendant           fun(self: stl.c.IFiletree, ancestor: string, uuid: string): boolean
 ---@field public get                    fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletreeNodeData|nil
 ---@field public children               fun(self: stl.c.IFiletree, uuid: string): string[]|nil
 ---@field public insert                 fun(self: stl.c.IFiletree, parent: string, uuid: string, data: stl.c.IFiletreeNodeData): stl.c.IFiletree
@@ -83,6 +81,7 @@ end
 ---@class stl.c.Filetree : stl.c.IFiletree
 ---@field public fullname               string
 ---@field protected _disposed           boolean
+---@field protected _dirty_children     table<string, true>
 ---@field protected _nodemap            table<string, stl.c.ITreeNode>
 local M = {}
 M.__index = M
@@ -205,6 +204,7 @@ function M.new(props)
   local self = setmetatable(tree, M)
   ---@cast self                         stl.c.Filetree
 
+  self._dirty_children = {}
   self:insert(self.root, FILETREE_ROOT_UUID, rootdata)
 
   return self
@@ -213,9 +213,42 @@ end
 ---@return stl.c.Filetree
 function M:clear()
   stl.c.Tree.clear(self)
+  self._dirty_children = {}
   local rootdata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true)
   self:insert(self.root, FILETREE_ROOT_UUID, rootdata)
   return self
+end
+
+---@return nil
+function M:dispose()
+  if self._disposed then
+    return
+  end
+  self._dirty_children = nil
+  stl.c.Tree.dispose(self)
+end
+
+---@param uuid                          string
+---@return string[]|nil Read-only borrowed child IDs in filesystem order.
+function M:children(uuid)
+  self:__health__()
+
+  local node = self._nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
+  if node == nil then
+    return nil
+  end
+
+  local dirty_children = self._dirty_children ---@type table<string, true>
+  if dirty_children[uuid] then
+    dirty_children[uuid] = nil
+    if #node.children > 1 then
+      local nodemap = self._nodemap ---@type table<string, stl.c.IFiletreeNode>
+      table.sort(node.children, function(left_uuid, right_uuid)
+        return compare_nodes(nodemap[left_uuid], nodemap[right_uuid])
+      end)
+    end
+  end
+  return node.children
 end
 
 ---@param parent                        string
@@ -230,6 +263,7 @@ function M:insert(parent, uuid, data)
   if node ~= nil then
     if self:parent(uuid) == parent then
       self:update(uuid, data)
+      self._dirty_children[parent] = true
       return self
     end
     stl.c.Tree.move(self, uuid, parent)
@@ -237,8 +271,7 @@ function M:insert(parent, uuid, data)
   else
     stl.c.Tree.insert(self, parent, uuid, data)
   end
-  local parentnode = nodemap[parent] ---@type stl.c.IFiletreeNode
-  parentnode.dirty_co = true
+  self._dirty_children[parent] = true
   return self
 end
 
@@ -259,6 +292,13 @@ function M:remove(nodeuuid)
     return self
   end
   stl.c.Tree.remove(self, nodeuuid)
+  local dirty_children = self._dirty_children ---@type table<string, true>
+  local nodemap = self._nodemap ---@type table<string, stl.c.IFiletreeNode>
+  for uuid in pairs(dirty_children) do
+    if nodemap[uuid] == nil then
+      dirty_children[uuid] = nil
+    end
+  end
   return self
 end
 
@@ -505,19 +545,6 @@ function M:reset(cwd, filepaths, with_locations)
     end
   end
   return self
-end
-
----@protected
----@param node                          stl.c.IFiletreeNode
----@return nil
-function M:__sort_children__(node)
-  node.dirty_co = false
-  if #node.children > 1 then
-    local nodemap = self._nodemap ---@type table<string, stl.c.IFiletreeNode>
-    table.sort(node.children, function(left_uuid, right_uuid)
-      return compare_nodes(nodemap[left_uuid], nodemap[right_uuid])
-    end)
-  end
 end
 
 ----------------------------------------------------------------------------------------------------

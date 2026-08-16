@@ -105,12 +105,4 @@ function M.remove_location(view, leafstate, locationuuid)
   stl.table.truncate_inline(locations, count)
 end
 
----@param view                          era.view.tree.store.IView
----@param uuid                          string
----@return era.view.tree.INodeState|nil
-function M.retrieve(view, uuid)
-  view:__health__()
-  return view.statemap[uuid]
-end
-
 return M

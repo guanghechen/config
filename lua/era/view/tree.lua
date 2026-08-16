@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.view.treeview" ---@type string
+local __module_name__ = "era.view.tree" ---@type string
 
 local treeview = require("stl.view.treeview")
 
@@ -51,18 +51,12 @@ local EMPTY_LAYOUT = treeview.layout({
 ---| fun(ctx: era.view.tree.ITreeviewRendererContext, uuid: string, data: table, nodestate: era.view.tree.ILeafNodeState, location: era.view.tree.ILeafLocationState, lnum: integer): string, stl.t.IHighlightInline[]|nil
 
 ---@class era.view.tree.IListviewRendererContext
----@field public rootuuid               string
 ---@field public rootdata               table
----@field public rootstate              era.view.tree.IContainerNodeState
 ---@field public tree                   stl.c.IReadonlyTree
----@field public view                   era.view.tree.IRenderView
 
 ---@class era.view.tree.ITreeviewRendererContext
----@field public rootuuid               string
 ---@field public rootdata               table
----@field public rootstate              era.view.tree.INodeState
 ---@field public tree                   stl.c.IReadonlyTree
----@field public view                   era.view.tree.IRenderView
 
 ---@class era.view.tree.IContainerNodeState
 ---@field public nodetype               "container"
@@ -276,14 +270,10 @@ function M:render_listview(params)
     self:__refresh_selected_maximum__()
   end
 
-  ---@cast rootstate                    era.view.tree.IContainerNodeState
   ---@type era.view.tree.IListviewRendererContext
   local ctx = {
-    rootuuid = rootuuid,
     rootdata = rootdata,
-    rootstate = rootstate,
     tree = tree,
-    view = self,
   }
 
   local nsnr = NSNR_DEFAULT ---@type integer
@@ -520,14 +510,10 @@ function M:render_treeview(params)
     self:__refresh_selected_maximum__()
   end
 
-  ---@cast rootstate                    era.view.tree.IContainerNodeState
   ---@type era.view.tree.ITreeviewRendererContext
   local ctx = {
-    rootuuid = root,
     rootdata = rootdata,
-    rootstate = rootstate,
     tree = tree,
-    view = self,
   }
 
   local nsnr = NSNR_DEFAULT ---@type integer

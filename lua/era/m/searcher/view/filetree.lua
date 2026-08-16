@@ -32,7 +32,7 @@ local tree_visibility = require("era.view.tree.visibility")
 ---@class era.m.searcher.view.filetree.IDirectoryNodeState : era.view.tree.IContainerNodeState
 
 ---@class era.m.searcher.view.filetree.IFileNodeState : era.view.tree.ILeafNodeState
----@field public locations              era.m.searcher.view.filetree.ILeafLocationState|nil
+---@field public locations              era.m.searcher.view.filetree.ILeafLocationState[]|nil
 ---@field public filematch              era.m.searcher.view.filetree.IResolvedFileMatch|nil
 
 ---@class era.m.searcher.view.filetree.ILeafLocationState : era.view.tree.ILeafLocationState
@@ -51,15 +51,11 @@ local tree_visibility = require("era.view.tree.visibility")
 
 ---@class era.m.searcher.view.filetree.IListviewRendererContext : era.view.tree.IListviewRendererContext
 ---@field public rootdata               stl.c.IFiletreeNodeData
----@field public rootstate              era.m.searcher.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
----@field public view                   era.m.searcher.FiletreeView
 
----@class era.m.searcher.view.filetree.ITreeviewRendererContext : era.view.tree.IListviewRendererContext
+---@class era.m.searcher.view.filetree.ITreeviewRendererContext : era.view.tree.ITreeviewRendererContext
 ---@field public rootdata               stl.c.IFiletreeNodeData
----@field public rootstate              era.m.searcher.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
----@field public view                   era.m.searcher.FiletreeView
 
 ---@class era.m.searcher.view.filetree.ISearchParams
 ---@field public flag_case_sensitive    boolean

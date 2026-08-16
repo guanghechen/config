@@ -112,7 +112,6 @@ layout:parent_lnum(lnum)
 layout:first_child_lnum(lnum)
 layout:last_child_lnum(lnum)
 layout:last_descendant_lnum(lnum)
-layout:prev_sibling_lnum(lnum)
 layout:next_sibling_lnum(lnum)
 layout:is_last(lnum)
 ```
@@ -127,7 +126,6 @@ layout:is_last(lnum)
   _parent_lnums = integer[],
   _last_child_lnums = integer[],
   _last_descendant_lnums = integer[],
-  _prev_sibling_lnums = integer[],
   _id_to_lnum = table<string, integer>,
   _folded_ids_by_lnum = table<integer, string[]>,
 }

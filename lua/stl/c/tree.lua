@@ -7,7 +7,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public children               string[]
 ---@field public depth                  integer
 ---@field public data                   table
----@field public dirty_co               boolean children order dirty
 
 ----------------------------------------------------------------------------------------------------
 
@@ -15,7 +14,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public fullname               string
 ---@field public root                   string
 ---@field public isdisposed             fun(self: stl.c.IReadonlyTree): boolean
----@field public isdescendant           fun(self: stl.c.IReadonlyTree, ancestor: string, uuid: string): boolean
 ---@field public get                    fun(self: stl.c.IReadonlyTree, uuid: string): unknown|nil
 ---@field public contains               fun(self: stl.c.IReadonlyTree, uuid: string): boolean
 ---@field public parent                 fun(self: stl.c.IReadonlyTree, uuid: string): string|nil
@@ -27,7 +25,6 @@ local __module_name__ = "stl.c.tree" ---@type string
 ---@field public clear                  fun(self: stl.c.ITree): stl.c.ITree
 ---@field public dispose                fun(self: stl.c.ITree): nil
 ---@field public isdisposed             fun(self: stl.c.ITree): boolean
----@field public isdescendant           fun(self: stl.c.ITree, ancestor: string, uuid: string): boolean
 ---@field public get                    fun(self: stl.c.ITree, uuid: string): unknown|nil
 ---@field public contains               fun(self: stl.c.ITree, uuid: string): boolean
 ---@field public parent                 fun(self: stl.c.ITree, uuid: string): string|nil
@@ -63,7 +60,6 @@ function M.new(root, rootdata)
     children = {},
     depth = 0,
     data = rootnodedata,
-    dirty_co = false,
   }
 
   ---@type table<string, stl.c.ITreeNode>
@@ -91,7 +87,6 @@ function M:clear()
     self:__remove_recursive__(child)
   end
   rootnode.children = {}
-  rootnode.dirty_co = false
   return self
 end
 
@@ -115,35 +110,6 @@ function M:isdisposed()
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@param ancestor                      string
----@param uuid                          string
----@return boolean
-function M:isdescendant(ancestor, uuid)
-  self:__health__()
-
-  if ancestor == uuid then
-    return true
-  end
-
-  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
-
-  local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
-  local node_ancestor = nodemap[ancestor] ---@type stl.c.ITreeNode|nil
-  if node == nil or node_ancestor == nil then
-    return false
-  end
-
-  if node.depth <= node_ancestor.depth then
-    return false
-  end
-
-  local distance = node.depth - node_ancestor.depth ---@type integer
-  for _ = 1, distance, 1 do
-    node = nodemap[node.parent] ---@type stl.c.ITreeNode
-  end
-  return node.uuid == ancestor
-end
 
 ---@param uuid                          string
 ---@return unknown|nil
@@ -181,9 +147,6 @@ function M:children(uuid)
     return nil
   end
 
-  if node.dirty_co then
-    self:__sort_children__(node)
-  end
   return node.children
 end
 
@@ -218,7 +181,7 @@ function M:move(uuid, parent, index)
   if node == self._rootnode then
     error(string.format("[%s] root cannot be moved", __module_name__), 2)
   end
-  if self:isdescendant(uuid, parent) then
+  if self:__is_descendant__(uuid, parent) then
     error(string.format("[%s] moving '%s' below '%s' would create a cycle", __module_name__, uuid, parent), 2)
   end
   if node.parent == parent and index == nil then
@@ -282,7 +245,6 @@ function M:insert(parent, uuid, data, index)
     children = {},
     depth = node_parent.depth + 1,
     data = data,
-    dirty_co = false,
   }
   nodemap[uuid] = node
   table.insert(node_parent.children, insertion_index, uuid)
@@ -316,6 +278,29 @@ function M:remove(nodeuuid)
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param ancestor                      string
+---@param uuid                          string
+---@return boolean
+function M:__is_descendant__(ancestor, uuid)
+  if ancestor == uuid then
+    return true
+  end
+
+  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
+  local node = nodemap[uuid] ---@type stl.c.ITreeNode|nil
+  local node_ancestor = nodemap[ancestor] ---@type stl.c.ITreeNode|nil
+  if node == nil or node_ancestor == nil or node.depth <= node_ancestor.depth then
+    return false
+  end
+
+  local distance = node.depth - node_ancestor.depth ---@type integer
+  for _ = 1, distance, 1 do
+    node = nodemap[node.parent] ---@type stl.c.ITreeNode
+  end
+  return node.uuid == ancestor
+end
 
 ---@protected
 ---@return nil
@@ -384,13 +369,6 @@ function M:__resolve_depth_recursive__(node, depth)
       stack_size = stack_size - 1
     end
   end
-end
-
----@protected
----@param node                          stl.c.ITreeNode
----@return nil
-function M:__sort_children__(node)
-  node.dirty_co = false
 end
 
 return M

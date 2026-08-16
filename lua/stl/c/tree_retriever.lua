@@ -7,7 +7,6 @@ local __module_name__ = "stl.c.tree_retriever" ---@type string
 ---@class stl.c.TreeRetriever
 ---@field public fullname               string
 ---@field protected _disposed           boolean
----@field protected _bufnr              integer
 ---@field protected _linecount          integer
 ---@field protected _childline          ?integer[]
 ---@field protected _layout             stl.view.TreeLayout|nil
@@ -25,7 +24,6 @@ function M.new(props)
   local self = setmetatable({}, M)
   self.fullname = fullname
   self._disposed = false
-  self._bufnr = nil
   self._linecount = 0
   self._childline = nil
   self._layout = nil
@@ -41,7 +39,6 @@ function M:dispose()
   end
   self._disposed = true
 
-  self._bufnr = nil
   self._linecount = 0
   self._childline = nil
   self._layout = nil
@@ -83,13 +80,11 @@ function M:retrieve_lastchild_lnum(lnum)
   return self._childline ~= nil and self._childline[lnum] or nil
 end
 
----@param bufnr                         integer
 ---@param lnum2uuid                     table<integer, string>
 ---@param uuid2lnum                     table<string, integer>
 ---@param childline                     integer[]|nil
-function M:attach(bufnr, lnum2uuid, uuid2lnum, childline)
+function M:attach(lnum2uuid, uuid2lnum, childline)
   self:__health__()
-  self._bufnr = bufnr
   self._childline = childline
   self._layout = nil
   self._linecount = #lnum2uuid
@@ -97,12 +92,10 @@ function M:attach(bufnr, lnum2uuid, uuid2lnum, childline)
   self._uuid2lnum = uuid2lnum
 end
 
----@param bufnr                         integer
 ---@param layout                        stl.view.TreeLayout
 ---@param childline                     integer[]|nil
-function M:attach_layout(bufnr, layout, childline)
+function M:attach_layout(layout, childline)
   self:__health__()
-  self._bufnr = bufnr
   self._childline = childline
   self._layout = layout
   self._linecount = layout:len()

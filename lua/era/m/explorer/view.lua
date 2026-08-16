@@ -98,10 +98,6 @@ function M:render(bufnr, tree, root, options)
       return EMPTY_CHILDREN
     end
 
-    if not node.loaded and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(node, false)
-    end
-
     local source = node.children ---@type era.m.explorer.Node[]
     if not only_selected then
       return source

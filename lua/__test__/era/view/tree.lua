@@ -49,7 +49,6 @@ local TestView = {
   remove = tree_store.remove,
   remove_all_locations = tree_store.remove_all_locations,
   remove_location = tree_store.remove_location,
-  retrieve = tree_store.retrieve,
   isdisposed = tree_lifecycle.isdisposed,
   __health__ = tree_lifecycle.health,
   render_listview = TreeRenderer.render_listview,
@@ -106,7 +105,7 @@ local function setup(specs)
       if not checked.list_leaf then
         checked.list_leaf = true
         t.assert_eq(uuid, data.uuid, "renderer node data")
-        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+        t.assert_true(ctx.tree:get(ctx.rootdata.uuid) == ctx.rootdata, "renderer root data")
       end
       calls.list_leaf = calls.list_leaf + 1
       return uuid
@@ -115,7 +114,7 @@ local function setup(specs)
       if not checked.list_location then
         checked.list_location = true
         t.assert_eq(uuid, data.uuid, "renderer node data")
-        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+        t.assert_true(ctx.tree:get(ctx.rootdata.uuid) == ctx.rootdata, "renderer root data")
       end
       calls.list_location = calls.list_location + 1
       return location.locationuuid
@@ -124,7 +123,7 @@ local function setup(specs)
       if not checked.container then
         checked.container = true
         t.assert_eq(uuid, data.uuid, "renderer node data")
-        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+        t.assert_true(ctx.tree:get(ctx.rootdata.uuid) == ctx.rootdata, "renderer root data")
       end
       calls.container = calls.container + 1
       local text = folded_depth > 0 and string.format("%s:%d", uuid, folded_depth) or uuid
@@ -134,7 +133,7 @@ local function setup(specs)
       if not checked.leaf then
         checked.leaf = true
         t.assert_eq(uuid, data.uuid, "renderer node data")
-        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+        t.assert_true(ctx.tree:get(ctx.rootdata.uuid) == ctx.rootdata, "renderer root data")
       end
       calls.leaf = calls.leaf + 1
       return uuid
@@ -143,12 +142,12 @@ local function setup(specs)
       if not checked.location then
         checked.location = true
         t.assert_eq(uuid, data.uuid, "renderer node data")
-        t.assert_eq(ctx.rootuuid, ctx.rootdata.uuid, "renderer root data")
+        t.assert_true(ctx.tree:get(ctx.rootdata.uuid) == ctx.rootdata, "renderer root data")
       end
       calls.location = calls.location + 1
       return location.locationuuid
     end,
-  }, "era.view.treeview")
+  }, "era.view.tree")
   setmetatable(view, TestView)
 
   for _, spec in ipairs(specs) do

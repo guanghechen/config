@@ -97,15 +97,11 @@ end
 
 ---@param filepath                      string
 ---@param filetype                      "directory"|"file"
----@return stl.c.IFiletreeNode
-local function create_node(filepath, filetype)
-  return {
-    uuid = stl.c.Filetree.uuid(filepath),
-    data = {
-      filepath = filepath,
-      filetype = filetype,
-    },
-  }
+---@return string
+---@return stl.c.IFiletreeNodeData
+local function create_file(filepath, filetype)
+  local data, uuid = stl.c.Filetree.resolve(filepath, filetype, true)
+  return uuid, data
 end
 
 t:test("canonicalizes reset ingress and matches either separator", function()
@@ -137,13 +133,13 @@ end)
 t:test("mutation actions cross only the OS boundary", function()
   with_composer("canonical-mutations", function(composer)
     local rootpath = "C:/workspace/project"
-    local current_node = create_node(rootpath, "directory")
-    local rootnode = current_node
+    local current_uuid, current_data = create_file(rootpath, "directory")
+    local rootdata = current_data
     composer.__retrieve_file__ = function()
-      return current_node.uuid, current_node.data
+      return current_uuid, current_data
     end
     composer.__retrieve_rootdata__ = function()
-      return rootnode.data
+      return rootdata
     end
 
     t:patch_table(composer.result, "get_winnr", function()
@@ -208,10 +204,10 @@ t:test("mutation actions cross only the OS boundary", function()
     t.assert_false(mkdir_calls[1].isdir, "create file mkdir mode")
 
     local source_filepath = rootpath .. "/src/main.lua"
-    current_node = create_node(source_filepath, "file")
+    current_uuid, current_data = create_file(source_filepath, "file")
     submit("filetree: remove node", "yes")
     t.assert_eq("OS<" .. source_filepath .. ">", delete_filepath, "delete boundary")
-    t.assert_eq(current_node.uuid, removed_uuid, "removed canonical UUID")
+    t.assert_eq(current_uuid, removed_uuid, "removed canonical UUID")
 
     rename_params = nil
     update_params = nil

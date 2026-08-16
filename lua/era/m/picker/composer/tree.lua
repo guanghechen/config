@@ -757,9 +757,9 @@ function M.new(props)
       end
 
       if result.layout ~= nil then
-        retriever:attach_layout(bufnr, result.layout, result.childline)
+        retriever:attach_layout(result.layout, result.childline)
       else
-        retriever:attach(bufnr, result.lnum2uuid, result.uuid2lnum, result.childline)
+        retriever:attach(result.lnum2uuid, result.uuid2lnum, result.childline)
       end
 
       local uuid_current = self._uuid_current ---@type string|nil

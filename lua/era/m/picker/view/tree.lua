@@ -40,15 +40,11 @@ local tree_visibility = require("era.view.tree.visibility")
 
 ---@class era.m.picker.view.tree.IListviewRendererContext : era.view.tree.IListviewRendererContext
 ---@field public rootdata               table
----@field public rootstate              era.m.picker.view.tree.IContainerNodeState
 ---@field public tree                   stl.c.IReadonlyTree
----@field public view                   era.m.picker.TreeView
 
 ---@class era.m.picker.view.tree.ITreeviewRendererContext : era.view.tree.ITreeviewRendererContext
 ---@field public rootdata               table
----@field public rootstate              era.m.picker.view.tree.IContainerNodeState
 ---@field public tree                   stl.c.IReadonlyTree
----@field public view                   era.m.picker.TreeView
 
 ---@class era.m.picker.view.tree.INodeMatchContext
 ---@field public rootuuid               string
