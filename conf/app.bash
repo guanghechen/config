@@ -30,9 +30,10 @@ if [[ -d "$HOME/.bun" ]]; then
     fi
 fi
 
-if [[ -x "$HOME/.cargo/bin/cargo" ]]; then
-    _prepend_path_once "$HOME/.cargo/bin"
-fi
+_ghc_cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+_prepend_path_once "$_ghc_cargo_home/bin"
+_prepend_path_once "$_ghc_cargo_home/local/bin"
+unset _ghc_cargo_home
 
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash)"
