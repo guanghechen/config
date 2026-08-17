@@ -16,9 +16,13 @@ if test -d "$HOME/.bun"
 end
 
 ### cargo
-if test -f "$HOME/.cargo/bin/cargo"
-    fish_add_path --prepend --move "$HOME/.cargo/bin/"
+set -l cargo_home "$HOME/.cargo"
+if set -q CARGO_HOME; and test -n "$CARGO_HOME"
+    set cargo_home "$CARGO_HOME"
 end
+fish_add_path --path --prepend --move \
+    "$cargo_home/local/bin" \
+    "$cargo_home/bin"
 
 ### flutter
 if test -f "$ROOT_SOURCECODES/github/flutter/flutter/bin/flutter"
