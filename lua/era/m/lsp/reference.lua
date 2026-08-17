@@ -80,6 +80,7 @@ local function fetch_data(method, additional_params, token)
 
       local errors = {} ---@type string[]
       local items = {} ---@type era.m.lsp.reference.IItem[]
+      local seen_locations = {} ---@type table<string, true>
 
       local uri_cur = params.textDocument.uri ---@type string
       local line_cur = params.position.line ---@type integer
@@ -117,8 +118,9 @@ local function fetch_data(method, additional_params, token)
                 local filepath = dot.path.normalize(vim.uri_to_fname(uri)) ---@type string
                 local lnum = range.start.line + 1 ---@type integer
                 local col = range.start.character ---@type integer
-                local last_item = items[#items] ---@type era.m.lsp.reference.IItem|nil
-                if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
+                local location_key = string.format("%s:%d:%d", filepath, lnum, col) ---@type string
+                if not seen_locations[location_key] then
+                  seen_locations[location_key] = true
                   local lnum_end = range["end"].line + 1 ---@type integer
 
                   ---@type era.m.lsp.reference.IItem
