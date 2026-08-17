@@ -58,8 +58,10 @@ ghc_step_optional node ghc_run_script "$setup_nix/env/node.bash"
 ## Refresh PATH after installers ran in isolated shells.
 source "$setup_nix/bot/env.bash" || exit 1
 
-## `kit` provisions every app config below; `node` runs the theme step.
-ghc_require node kit
+## The published `kit-repo` provisions every app config below.
+ghc_require cargo
+ghc_step kit-repo ghc_run_script "$setup_nix/env/kit-repo.bash"
+kit_repo_bin="${CARGO_HOME:-$HOME/.cargo}/bin/kit-repo"
 
 ## Setup configs
 ### ensure kit worktree
@@ -67,7 +69,7 @@ ghc_ensure_kit_worktree() {
   if [ -e "$repoworktree/.git" ]; then
     printf "\e[93m  [setup config] %s already exists. (skipped worktree).\e[0m\n" "$repoworktree"
     ## Having the worktree is what the later steps need; it is also what
-    ## `kit repo sync` writes into, so a dirty tree here is normal and a
+    ## `kit-repo sync` writes into, so a dirty tree here is normal and a
     ## non-fast-forward pull must not take the bootstrap down.
     git -C "$repoworktree" pull --ff-only origin kit ||
       printf "\e[93m  [setup config] pull failed for %s. (continuing).\e[0m\n" "$repoworktree"
@@ -82,8 +84,8 @@ ghc_ensure_kit_worktree() {
 }
 
 ghc_sync_kit_repo() {
-  kit repo set config.edition "osx" || return 1
-  kit repo sync
+  "$kit_repo_bin" set config.edition "osx" || return 1
+  "$kit_repo_bin" sync
 }
 
 ## Without the worktree and synced local settings there is no app config for
@@ -102,6 +104,7 @@ ghc_step_optional tmux ghc_run_script "$setup_nix/app/tmux.bash"
 ghc_step_optional font ghc_run_script "$setup_osx/bot/font-maple.bash"
 
 ## Setup themes
+ghc_require node
 ghc_step_optional theme node "$repomain/cli/theme.mjs" apply
 
 ghc_step_summary

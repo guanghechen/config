@@ -144,6 +144,15 @@ Set-Location -Path $repomain
 Set-Location -Path $repomain
 . .\setup\win\env\node.ps1
 
+Set-Location -Path $repomain
+& .\setup\win\env\kit-repo.ps1
+$cargoHome = if ([string]::IsNullOrWhiteSpace($env:CARGO_HOME)) {
+  Join-Path $env:USERPROFILE ".cargo"
+} else {
+  $env:CARGO_HOME
+}
+$kitRepoBin = Join-Path $cargoHome "bin\kit-repo.exe"
+
 ## Setup configs
 ### ensure kit worktree
 if (Test-Path "$repoworktree\.git") {
@@ -162,10 +171,16 @@ if (Test-Path "$repoworktree\.git") {
 }
 
 ### Setup settings
-kit repo set config.edition "win"
-kit repo sync
+& $kitRepoBin set config.edition "win"
+if ($LASTEXITCODE -ne 0) {
+  throw "[setup settings] failed to set config.edition (exit code: $LASTEXITCODE)."
+}
+& $kitRepoBin sync
+if ($LASTEXITCODE -ne 0) {
+  throw "[setup settings] kit-repo sync failed (exit code: $LASTEXITCODE)."
+}
 
-# The installer writes under CODEX_HOME, so run it after kit prepares the directory.
+# The installer writes under CODEX_HOME, so run it after kit-repo prepares the directory.
 Set-Location -Path $repomain
 . .\setup\win\env\codex.ps1
 

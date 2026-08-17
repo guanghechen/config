@@ -75,14 +75,16 @@ ghc_step_optional node ghc_run_script "$setup_nix/env/node.bash"
 ## Refresh PATH after installers ran in isolated shells.
 source "$setup_nix/bot/env.bash" || exit 1
 
-## `kit` provisions every app config below; `node` runs the theme step.
-ghc_require node kit
+## The published `kit-repo` provisions every app config below.
+ghc_require cargo
+ghc_step kit-repo ghc_run_script "$setup_nix/env/kit-repo.bash"
+kit_repo_bin="${CARGO_HOME:-$HOME/.cargo}/bin/kit-repo"
 
 ## Setup configs
 ghc_ensure_kit_worktree() {
   if [ -e "$repoworktree/.git" ]; then
     printf "\e[93m  [setup config] %s already exists. (skipped worktree).\e[0m\n" "$repoworktree"
-    ## `kit repo sync` writes into this worktree, so a dirty tree is normal and
+    ## `kit-repo sync` writes into this worktree, so a dirty tree is normal and
     ## a non-fast-forward pull must not take the bootstrap down.
     git -C "$repoworktree" pull --ff-only origin kit ||
       printf "\e[93m  [setup config] pull failed for %s. (continuing).\e[0m\n" "$repoworktree"
@@ -97,8 +99,8 @@ ghc_ensure_kit_worktree() {
 }
 
 ghc_sync_kit_repo() {
-  kit repo set config.edition "nix" || return 1
-  kit repo sync
+  "$kit_repo_bin" set config.edition "nix" || return 1
+  "$kit_repo_bin" sync
 }
 
 ghc_step worktree ghc_ensure_kit_worktree
@@ -114,8 +116,11 @@ if [ "$GHC_ENV_PLATFORM" = "wsl" ]; then
   ghc_step_optional windows-terminal ghc_run_script "$setup_nix/app/windows-terminal.bash"
 fi
 
-## Setup font and themes
+## Setup font
 ghc_step_optional font ghc_run_script "$setup_nix/bot/font-maple.bash"
+
+## Setup themes
+ghc_require node
 ghc_step_optional theme node "$repomain/cli/theme.mjs" apply
 
 ghc_step_summary

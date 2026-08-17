@@ -52,6 +52,7 @@ if [ -f "$HOME/.app/miniforge3/bin/conda" ] && [ -x "$HOME/.app/miniforge3/bin/c
 fi
 
 ### Cargo
-if [ -f "$HOME/.cargo/bin/cargo" ]; then
-  export PATH="$HOME/.cargo/bin:$PATH"
-fi
+_ghc_cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+[[ ":$PATH:" == *":$_ghc_cargo_home/bin:"* ]] || export PATH="$_ghc_cargo_home/bin:$PATH"
+[[ ":$PATH:" == *":$_ghc_cargo_home/local/bin:"* ]] || export PATH="$_ghc_cargo_home/local/bin:$PATH"
+unset _ghc_cargo_home
