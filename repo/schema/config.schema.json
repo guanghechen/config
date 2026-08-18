@@ -30,6 +30,10 @@
       "type": "string",
       "minLength": 1
     },
+    "linkMode": {
+      "type": "string",
+      "enum": ["soft", "hard", "copy"]
+    },
     "relativeWorktreePath": {
       "allOf": [
         {
@@ -88,8 +92,11 @@
             "to": {
               "$ref": "#/$defs/nonEmptyString"
             },
-            "hard": {
-              "type": "boolean"
+            "mode": {
+              "$ref": "#/$defs/linkMode"
+            },
+            "winMode": {
+              "$ref": "#/$defs/linkMode"
             }
           },
           "additionalProperties": false
@@ -107,9 +114,16 @@
             "$ref": "#/$defs/linkTarget"
           }
         },
-        "hard": {
-          "type": "boolean",
-          "default": false
+        "mode": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/linkMode"
+            }
+          ],
+          "default": "soft"
+        },
+        "winMode": {
+          "$ref": "#/$defs/linkMode"
         }
       },
       "additionalProperties": false
