@@ -130,7 +130,7 @@ function M.dressing()
         process_task(task)
       end, debug.traceback)
       if not ok then
-        report_task_error(task, err)
+        report_task_error(task, tostring(err))
       end
     end
     tasks = {}

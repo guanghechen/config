@@ -136,21 +136,24 @@ t:test("queued debounce task cannot submit after generation invalidation", funct
       return job({ { "completed", { items = {} }, nil } })
     end,
   })
+  ---@diagnostic disable-next-line: missing-fields -- Scheduler only needs next/snapshot from this test double.
+  local scheduler_value = {
+    next = function() end,
+    snapshot = function()
+      return true
+    end,
+  } --[[@as stl.c.Observable]]
   local scheduler = Scheduler.new({
     name = "test#debounce",
     mode = "debounce",
-    delay = 10_000,
+    delay = 10000,
     timeout = 0,
     silent = function()
       return false
     end,
-    value = {
-      next = function() end,
-      snapshot = function()
-        return true
-      end,
-    },
-    task = function(_, generation)
+    value = scheduler_value,
+    task = function(_, context)
+      local generation = context --[[@as integer]]
       if controller:is_current_generation(generation) then
         controller:submit(request(tostring(generation)))
       end

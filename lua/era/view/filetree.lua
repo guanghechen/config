@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.view.filetree" ---@type string
+
 local treeview = require("stl.view.treeview")
 
 ---@class era.view.filetree
@@ -274,14 +277,17 @@ function M.render(items, opts)
   local prefixes = { [0] = "" } ---@type table<integer, string>
 
   for row = 1, layout:len() do
-    local depth = layout:depth(row) ---@type integer
-    local prefix = prefixes[depth] ---@type string
-    local is_last = layout:is_last(row) ---@type boolean
+    local depth = layout:depth(row) --[[@as integer]]
+    local prefix = prefixes[depth] or "" ---@type string
+    local is_last = layout:is_last(row) ---@type boolean|nil
+    if is_last == nil then
+      error(string.format("[%s] missing last-child state for line %d", __module_name__, row))
+    end
     local indent = base_indent .. prefix .. (is_last and INDENT_LAST or INDENT_BRANCH) ---@type string
     prefixes[depth + 1] = prefix .. (is_last and INDENT_SPACE or INDENT_PIPE)
 
-    local id = layout:id(row) ---@type string
-    local node = node_map[id] ---@type era.view.filetree.ITreeNode
+    local id = layout:id(row) --[[@as string]]
+    local node = node_map[id] --[[@as era.view.filetree.ITreeNode]]
     local render_node = node ---@type era.view.filetree.ITreeNode
     local folded_ids = layout:folded_ids(row) ---@type string[]|nil
     if folded_ids ~= nil then

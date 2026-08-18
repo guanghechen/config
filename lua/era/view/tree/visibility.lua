@@ -1,3 +1,4 @@
+---@diagnostic disable: invisible
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.tree.visibility" ---@type string
 

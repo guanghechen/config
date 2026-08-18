@@ -121,7 +121,7 @@ end
 
 local tree_render = era.view.TreeRenderer ---@type era.view.TreeRenderer
 
----@class era.m.searcher.FiletreeView
+---@class era.m.searcher.FiletreeView : era.view.tree.IRenderView, era.view.tree.cache.IView, era.view.tree.collapse.IView, era.view.tree.lifecycle.IView, era.view.tree.selection.IView, era.view.tree.store.IView, era.view.tree.visibility.IView
 ---@field protected _tree               stl.c.IFiletree
 ---@field public statemap               table<string, era.m.searcher.view.filetree.INodeState>
 ---@field public insert                 fun(self: era.m.searcher.FiletreeView, uuid: string, state: era.view.tree.INodeState): era.m.searcher.FiletreeView
@@ -444,7 +444,7 @@ function M:reset_filepaths(cwd, filepaths)
 
   filetree:reset(cwd, filepaths, false)
   tree_traversal.preorder(filetree, filetree.root, function(uuid)
-    local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData
+    local data = filetree:get(uuid) --[[@as stl.c.IFiletreeNodeData]]
     if data.filetype == "directory" then
       ---@type era.m.searcher.view.filetree.IDirectoryNodeState
       local nodestate = {

@@ -254,7 +254,7 @@ function M.calc_signs_all(hunks, min_lnum, max_lnum)
 
   max_lnum = max_lnum or math.huge
 
-  for i, hunk in ipairs(hunks) do
+  for _, hunk in ipairs(hunks) do
     local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     if effective_start > max_lnum then
       break

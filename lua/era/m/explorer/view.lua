@@ -103,10 +103,12 @@ function M:render(bufnr, tree, root, options)
       return source
     end
 
-    local current_selected = inherited_selected_by_node[node] or node.selected ---@type boolean
+    local selected_by_node = inherited_selected_by_node --[[@as table<era.m.explorer.Node, boolean>]]
+    local inherited_selected = selected_by_node[node] == true ---@type boolean
+    local current_selected = inherited_selected or node.selected == true ---@type boolean
     if current_selected then
       for _, child in ipairs(source) do
-        inherited_selected_by_node[child] = true
+        selected_by_node[child] = true
       end
       return source
     end
@@ -115,7 +117,7 @@ function M:render(bufnr, tree, root, options)
     for _, child in ipairs(source) do
       if child.selected or (child.nodetype == "D" and child.has_selected) then
         projected[#projected + 1] = child
-        inherited_selected_by_node[child] = false
+        selected_by_node[child] = false
       end
     end
     return projected
@@ -142,9 +144,9 @@ function M:render(bufnr, tree, root, options)
   local transfer_mode_by_lnum = {} ---@type table<integer, era.m.explorer.TransferModeEnum>
 
   for lnum = 1, layout:len() do
-    local filepath = layout:id(lnum) ---@type string
-    local node = node_by_filepath[filepath] ---@type era.m.explorer.Node
-    local depth = layout:depth(lnum) ---@type integer
+    local filepath = layout:id(lnum) --[[@as string]]
+    local node = node_by_filepath[filepath] --[[@as era.m.explorer.Node]]
+    local depth = layout:depth(lnum) --[[@as integer]]
     local visible_parent_lnum = layout:parent_lnum(lnum) ---@type integer|nil
     local inherited_selected = visible_parent_lnum ~= nil and selected_by_lnum[visible_parent_lnum] or root_is_selected ---@type boolean
     local is_selected = inherited_selected or node.selected ---@type boolean
@@ -162,9 +164,12 @@ function M:render(bufnr, tree, root, options)
     transfer_mode_by_lnum[lnum] = transfer_mode
 
     local folded_ids = layout:folded_ids(lnum) ---@type string[]|nil
-    local source_node = folded_ids ~= nil and node_by_filepath[folded_ids[1]] or node ---@type era.m.explorer.Node
-    local prefix = prefixes[depth] ---@type string
-    local is_last = layout:is_last(lnum) ---@type boolean
+    local source_node = folded_ids ~= nil and node_by_filepath[folded_ids[1]] or node --[[@as era.m.explorer.Node]]
+    local prefix = prefixes[depth] or "" ---@type string
+    local is_last = layout:is_last(lnum) ---@type boolean|nil
+    if is_last == nil then
+      error(string.format("[%s] missing last-child state for line %d", __module_name__, lnum))
+    end
     if only_selected then
       is_last = source_node.parent.children[#source_node.parent.children] == source_node
     end

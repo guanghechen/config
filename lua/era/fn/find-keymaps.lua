@@ -96,7 +96,7 @@ local function fetch_data()
           lhs = lhs,
           rhs = rhs,
           desc = desc,
-          source = km.buffer and "buffer" or "global",
+          source = "global",
         }
 
         ---@type era.fn.find_keymaps.IItem

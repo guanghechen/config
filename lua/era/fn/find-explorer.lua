@@ -637,17 +637,17 @@ end
 ---@return string|nil
 ---@return string|nil
 local function validate_same_dir_name(value)
-  local name = vim.trim(value) ---@type string
-  if name == "" then
+  local trimmed_name = vim.trim(value) ---@type string
+  if trimmed_name == "" then
     return nil, "Name cannot be empty"
   end
-  if name == "." or name == ".." then
+  if trimmed_name == "." or trimmed_name == ".." then
     return nil, "Invalid name"
   end
-  if name:find("[/\\]") ~= nil then
+  if trimmed_name:find("[/\\]") ~= nil then
     return nil, "Path separator is not allowed"
   end
-  return name, nil
+  return trimmed_name, nil
 end
 
 ---@param value                         string
@@ -672,19 +672,19 @@ local function parse_create_input(value)
     input = input:sub(1, -2)
   end
 
-  local name, err = validate_same_dir_name(input)
-  if name == nil then
+  local entry_name, err = validate_same_dir_name(input)
+  if entry_name == nil then
     return nil, false, err
   end
 
-  return name, is_directory, nil
+  return entry_name, is_directory, nil
 end
 
 ---@param from_dir                      string
----@param name                          string
+---@param entry_name                    string
 ---@return string
-local function build_target_path(from_dir, name)
-  return yoz.canonical_path.join(from_dir, name, false)
+local function build_target_path(from_dir, entry_name)
+  return yoz.canonical_path.join(from_dir, entry_name, false)
 end
 
 ---@return integer
@@ -767,7 +767,7 @@ local function create_entry()
       return
     end
 
-    local name, is_directory, parse_err = parse_create_input(input)
+    local entry_name, is_directory, parse_err = parse_create_input(input)
     if parse_err ~= nil then
       stl.reporter.error({
         from = __module_name__,
@@ -776,11 +776,11 @@ local function create_entry()
       })
       return
     end
-    if name == nil then
+    if entry_name == nil then
       return
     end
 
-    local target = build_target_path(parent_dir, name) ---@type string
+    local target = build_target_path(parent_dir, entry_name) ---@type string
     local os_target = yoz.canonical_path.to_os_path(target) ---@type string
     if yoz.path.is_exist(os_target) then
       stl.reporter.error({

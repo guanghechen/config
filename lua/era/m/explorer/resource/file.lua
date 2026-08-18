@@ -44,7 +44,7 @@ local function strip_trailing_slash(filepath)
   if filepath == "/" or filepath:match("^[A-Za-z]:/$") then
     return filepath
   end
-  return filepath:gsub("/+$", "")
+  return (filepath:gsub("/+$", ""))
 end
 
 ---@param props                         era.m.explorer.resource.file.IProps
@@ -739,7 +739,9 @@ function M:remove(filepath, on_removed)
   if not use_trash then
     local err ---@type any
     if stat.type == "link" then
-      ok, err = vim.uv.fs_unlink(os_filepath)
+      local unlink_ok
+      unlink_ok, err = vim.uv.fs_unlink(os_filepath)
+      ok = unlink_ok == true
     elseif stat.type == "directory" then
       local call_ok, result = pcall(vim.fn.delete, os_filepath, "rf")
       ok = call_ok and result == 0

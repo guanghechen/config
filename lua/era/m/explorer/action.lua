@@ -103,8 +103,8 @@ function M:add_locations_to_ai()
     if filepath == nil then
       return
     end
-    local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-    locations[#locations + 1] = { filepath = filepath }
+    local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+    locations[#locations + 1] = { filepath = os_filepath }
   end
 
   era.fn.add_locations_to_ai(locations)
@@ -277,8 +277,8 @@ function M:copy_path()
     if filepath == nil then
       return
     end
-    local filepath = normalize_filepath(filepath) ---@type string
-    filepaths[#filepaths + 1] = filepath
+    local normalized_filepath = normalize_filepath(filepath) ---@type string
+    filepaths[#filepaths + 1] = normalized_filepath
   end
 
   era.fn.select_copy_filepaths({
@@ -981,13 +981,13 @@ function M:open()
     ctx.tree:toggle_expanded(filepath, false, nil)
     ctx.refresh()
   else
-    local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+    local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
       vim.api.nvim_set_current_win(winnr_sourcefile)
     end
-    dot.win.open_filepath(winnr_sourcefile, filepath)
+    dot.win.open_filepath(winnr_sourcefile, os_filepath)
   end
 end
 
@@ -999,8 +999,8 @@ function M:open_file_explorer()
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  era.fn.find_explorer(filepath)
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  era.fn.find_explorer(os_filepath)
 end
 
 ---@return nil
@@ -1029,8 +1029,8 @@ function M:open_searcher()
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  era.fn.search_in_files(filepath)
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  era.fn.search_in_files(os_filepath)
 end
 
 ---@return nil
@@ -1093,8 +1093,8 @@ function M:open_split()
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.cmd("split " .. vim.fn.fnameescape(filepath))
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  vim.cmd("split " .. vim.fn.fnameescape(os_filepath))
 end
 
 ---@return nil
@@ -1105,8 +1105,8 @@ function M:open_system_explorer()
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.ui.open(filepath)
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  vim.ui.open(os_filepath)
 end
 
 ---@return nil
@@ -1117,8 +1117,8 @@ function M:open_tab()
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  vim.cmd("tabnew " .. vim.fn.fnameescape(os_filepath))
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
@@ -1132,8 +1132,8 @@ function M:open_vsplit()
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.cmd("vsplit " .. vim.fn.fnameescape(filepath))
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  vim.cmd("vsplit " .. vim.fn.fnameescape(os_filepath))
 end
 
 ---@param winnr                         integer|nil
@@ -1145,13 +1145,13 @@ function M:pick_win_open(winnr)
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
   end
 
-  dot.win.open_filepath(picked_winnr, filepath)
+  dot.win.open_filepath(picked_winnr, os_filepath)
   vim.api.nvim_set_current_win(picked_winnr)
 end
 
@@ -1164,14 +1164,14 @@ function M:pick_win_split(winnr)
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
   end
 
   vim.api.nvim_set_current_win(picked_winnr)
-  vim.cmd("split " .. vim.fn.fnameescape(filepath))
+  vim.cmd("split " .. vim.fn.fnameescape(os_filepath))
 end
 
 ---@param winnr                         integer|nil
@@ -1183,14 +1183,14 @@ function M:pick_win_vsplit(winnr)
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
   end
 
   vim.api.nvim_set_current_win(picked_winnr)
-  vim.cmd("vsplit " .. vim.fn.fnameescape(filepath))
+  vim.cmd("vsplit " .. vim.fn.fnameescape(os_filepath))
 end
 
 ---@return nil
@@ -1271,10 +1271,10 @@ function M:send_to_quickfix()
     if filepath == nil then
       return
     end
-    local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+    local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
     vim.fn.setqflist({}, "r", {
       title = "Explorer",
-      items = { { filename = filepath, lnum = 1, col = 1 } },
+      items = { { filename = os_filepath, lnum = 1, col = 1 } },
     })
   else
     local items = {} ---@type table[]
@@ -1330,9 +1330,9 @@ function M:show_file_info()
     return
   end
 
-  local filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
 
-  local fileinfo = era.view.Fileinfo.new({ filepath = filepath })
+  local fileinfo = era.view.Fileinfo.new({ filepath = os_filepath })
   fileinfo:open()
 end
 
@@ -1409,8 +1409,7 @@ function M:__build_transfer_plans__(pending_transfer, target_dir)
   local target_filepaths = {} ---@type table<string, boolean>
 
   ---@param source                      era.m.explorer.IPendingTransferSource
-  ---@return era.m.explorer.action.ITransferPlan|nil
-  ---@return string|nil
+  ---@return era.m.explorer.action.ITransferPlan|nil, string|nil
   local function build_plan(source)
     local current_source = ctx.resource_manager:locate(source.filepath) ---@type era.m.explorer.resource.INode|nil
     if current_source == nil then
@@ -1447,6 +1446,7 @@ function M:__build_transfer_plans__(pending_transfer, target_dir)
       },
       target_filepath = target_filepath,
     } ---@type era.m.explorer.action.ITransferPlan
+    ---@diagnostic disable-next-line: return-type-mismatch -- LuaLS assigns the table to the second slot of this nested tuple.
     return plan, nil
   end
 

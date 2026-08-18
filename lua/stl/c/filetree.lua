@@ -82,7 +82,7 @@ end
 ---@field public fullname               string
 ---@field protected _disposed           boolean
 ---@field protected _dirty_children     table<string, true>
----@field protected _nodemap            table<string, stl.c.ITreeNode>
+---@field protected _nodemap            table<string, stl.c.IFiletreeNode>
 local M = {}
 M.__index = M
 setmetatable(M, stl.c.Tree)
@@ -516,7 +516,7 @@ function M:reset(cwd, filepaths, with_locations)
 
   if with_locations then
     for _, p in ipairs(filepaths) do
-      local filepath = stl.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
+      local filepath = stl.string.parse_filepath_with_location(p) ---@type string
       filepath = from_os_path(filepath)
       if yoz.canonical_path.is_absolute(filepath) then
         if filepath:sub(1, L) ~= P then

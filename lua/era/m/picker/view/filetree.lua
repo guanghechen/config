@@ -89,7 +89,7 @@ local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 
 local tree_render = era.view.TreeRenderer ---@type era.view.TreeRenderer
 
----@class era.m.picker.FiletreeView
+---@class era.m.picker.FiletreeView : era.view.tree.IRenderView, era.view.tree.cache.IView, era.view.tree.collapse.IView, era.view.tree.lifecycle.IView, era.view.tree.selection.IView, era.view.tree.store.IView, era.view.tree.visibility.IView
 ---@field protected _tree               stl.c.IFiletree
 ---@field protected _last_match_result  era.m.picker.view.filetree.INodeMatchResult
 ---@field public insert                 fun(self: era.m.picker.FiletreeView, uuid: string, state: era.view.tree.INodeState): era.m.picker.FiletreeView
@@ -180,14 +180,16 @@ end
 ---@return era.m.picker.FiletreeView
 function M:insert(uuid, state)
   self:mark_cache_match_dirty()
-  return tree_store.insert(self, uuid, state)
+  tree_store.insert(self, uuid, state)
+  return self
 end
 
 ---@param uuid                          string
 ---@return era.m.picker.FiletreeView
 function M:remove(uuid)
   self:mark_cache_match_dirty()
-  return tree_store.remove(self, uuid)
+  tree_store.remove(self, uuid)
+  return self
 end
 
 ---@param uuid                          string
@@ -500,7 +502,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
 
   filetree:reset(cwd, filepaths, with_locations)
   tree_traversal.preorder(filetree, filetree.root, function(uuid)
-    local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData
+    local data = filetree:get(uuid) --[[@as stl.c.IFiletreeNodeData]]
     if data.filetype == "directory" then
       ---@type era.m.picker.view.filetree.IDirectoryNodeState
       local nodestate = {
@@ -591,7 +593,7 @@ function M:restore_subtree(rootuuid, selected_set)
   ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
   tree_traversal.preorder(filetree, rootuuid, function(uuid)
-    local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData
+    local data = filetree:get(uuid) --[[@as stl.c.IFiletreeNodeData]]
     if data.filetype == "directory" then
       statemap[uuid] = {
         nodetype = "container",
@@ -640,7 +642,7 @@ function M:traverse_filenode(root, handle)
     local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.nodetype == "leaf" then
       ---@cast nodestate                era.m.picker.view.filetree.IFileNodeState
-      local data = tree:get(uuid) ---@type stl.c.IFiletreeNodeData
+      local data = tree:get(uuid) --[[@as stl.c.IFiletreeNodeData]]
       handle(uuid, data, nodestate)
     end
   end)
@@ -746,7 +748,7 @@ function M:render_treeview(params)
 
   if only_matched then
     for lnum = 1, N, 1 do
-      local uuid = layout:id(lnum) ---@type string
+      local uuid = layout:id(lnum) --[[@as string]]
       local nodestate = statemap[uuid] ---@type era.m.picker.view.filetree.INodeState|nil
       if
         nodestate ~= nil

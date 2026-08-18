@@ -79,7 +79,7 @@ function M:dispose()
     self._debounced = nil
   end
   if self._flag_unsub then
-    self._flag_unsub.unsubscribe()
+    self._flag_unsub:unsubscribe()
     self._flag_unsub = nil
   end
   pcall(vim.api.nvim_del_augroup_by_id, self._augroup)

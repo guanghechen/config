@@ -53,15 +53,13 @@ local function to_local_os_dirpath(dirpath)
   return os_path, nil
 end
 
----@class stl.os.fs.IStatResult : uv.fs_stat.result
-
 ---@class stl.os.fs.IScandirEntry
 ---@field public name                   string
 ---@field public ftype                  string
 
 ---@class stl.os.fs.IAdapter
 ---@field public name                   string
----@field public stat                   fun(filepath: string): stl.os.fs.IStatResult|nil, any|nil
+---@field public stat                   fun(filepath: string): uv.fs_stat.result|nil, any|nil
 ---@field public exists                 fun(filepath: string): boolean
 ---@field public is_dir                 fun(filepath: string): boolean
 ---@field public mkdir_p                fun(dirpath: string): boolean, any|nil
@@ -86,7 +84,7 @@ local local_adapter = {
     if os_path == nil then
       return false
     end
-    local stat = vim.uv.fs_stat(os_path) ---@type stl.os.fs.IStatResult|nil
+    local stat = vim.uv.fs_stat(os_path) ---@type uv.fs_stat.result|nil
     return stat ~= nil
   end,
 
@@ -95,19 +93,19 @@ local local_adapter = {
     if os_path == nil then
       return false
     end
-    local stat = vim.uv.fs_stat(os_path) ---@type stl.os.fs.IStatResult|nil
+    local stat = vim.uv.fs_stat(os_path) ---@type uv.fs_stat.result|nil
     return stat ~= nil and stat.type == "directory"
   end,
 
   mkdir_p = function(dirpath)
-    local os_dirpath, err = to_local_os_dirpath(dirpath) ---@type string|nil, string|nil
+    local os_dirpath, path_err = to_local_os_dirpath(dirpath) ---@type string|nil, string|nil
     if os_dirpath == nil then
-      return false, err
+      return false, path_err
     end
 
-    local ok, err = pcall(vim.fn.mkdir, os_dirpath, "p")
+    local ok, mkdir_err = pcall(vim.fn.mkdir, os_dirpath, "p")
     if not ok then
-      return false, err
+      return false, mkdir_err
     end
 
     if vim.fn.isdirectory(os_dirpath) == 1 then
@@ -221,7 +219,7 @@ function M.reset_adapter()
 end
 
 ---@param filepath                      string
----@return stl.os.fs.IStatResult|nil
+---@return uv.fs_stat.result|nil
 ---@return any|nil
 function M.stat(filepath)
   return adapter.stat(filepath)

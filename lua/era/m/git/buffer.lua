@@ -23,7 +23,11 @@ local repo = nil
 ---@class era.m.git.buffer.IUpdateLock
 ---@field public running              boolean
 ---@field public scheduled            boolean
----@field public pending             { resolve: fun(result: nil): nil, reject: fun(err: string): nil }[]
+---@field public pending              era.m.git.buffer.IUpdateWaiter[]
+
+---@class era.m.git.buffer.IUpdateWaiter
+---@field public resolve              fun(result: nil): nil
+---@field public reject               fun(err: string): nil
 
 ---@type table<integer, era.m.git.buffer.IUpdateLock>
 local update_locks = {}
@@ -167,6 +171,7 @@ end
 ---@param buf_cache                  era.m.git.buffer.ICache
 ---@return stl.c.Future              Resolves with nil when done
 local function update_hunks(buf_cache)
+  ---@diagnostic disable-next-line: redundant-parameter -- LuaLS selects the one-argument overload for Future.new.
   return stl.c.Future.new(function(resolve, reject)
     local bufnr = buf_cache.bufnr ---@type integer
 
@@ -219,7 +224,7 @@ local function update_hunks(buf_cache)
         return
       end
       lock.scheduled = false
-      local pending = lock.pending
+      local pending = lock.pending ---@type era.m.git.buffer.IUpdateWaiter[]
       lock.pending = {}
       vim.schedule(function()
         local current_cache = cache[bufnr]
@@ -648,6 +653,7 @@ end
 ---@param invalidate_index          ?boolean
 ---@return stl.c.Future              Resolves with nil when done; rejects when refresh fails
 function M.refresh(bufnr, invalidate_index)
+  ---@diagnostic disable-next-line: redundant-parameter -- LuaLS selects the one-argument overload for Future.new.
   return stl.c.Future.new(function(resolve, reject)
     local buf_cache = cache[bufnr]
     if not buf_cache then
@@ -754,6 +760,7 @@ end
 ---@param template                      era.m.git.Document
 ---@return stl.c.Future
 local function load_index_context(toplevel, relpath, template)
+  ---@diagnostic disable-next-line: redundant-parameter -- LuaLS selects the one-argument overload for Future.new.
   return stl.c.Future.new(function(resolve, reject)
     stl.git.info.get_file_info(toplevel, relpath):finally(protected_callback(reject, function(resolved, result)
       if not resolved then
@@ -789,12 +796,12 @@ local function load_index_context(toplevel, relpath, template)
 
       stl.git.info
         .get_show_blob(toplevel, file_info.object_name)
-        :finally(protected_callback(reject, function(blob_resolved, result)
+        :finally(protected_callback(reject, function(blob_resolved, blob_result)
           if not blob_resolved then
-            reject(result or "Failed to read index blob")
+            reject(blob_result or "Failed to read index blob")
             return
           end
-          local document, err = document_from_blob_result(result, template, false)
+          local document, err = document_from_blob_result(blob_result, template, false)
           if not document then
             reject(err or "Failed to read index blob")
             return
@@ -815,6 +822,7 @@ end
 ---@param template                      era.m.git.Document
 ---@return stl.c.Future
 local function load_head_document(toplevel, relpath, template)
+  ---@diagnostic disable-next-line: redundant-parameter -- LuaLS selects the one-argument overload for Future.new.
   return stl.c.Future.new(function(resolve, reject)
     stl.git.info
       .get_show_blob(toplevel, "HEAD:" .. relpath)
@@ -1167,6 +1175,7 @@ end
 ---@param bufnr                      integer
 ---@param range                      ?{ [1]: integer, [2]: integer }
 ---@return stl.c.Future
+---@diagnostic disable-next-line: unused-local -- Signature is retained for the public hunk action contract.
 function M.unstage_hunk(bufnr, range)
   return stl.c.Future.resolve({
     ok = false,

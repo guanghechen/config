@@ -41,6 +41,7 @@ local MATH_BASELINE_GAP = 6
 ---@field public src                     string
 ---@field public info                    ?era.m.image.Info
 ---@field public pdf                     ?string
+---@field public kind                    ?string
 
 ---@class era.m.image.Proc
 ---@field public cmd                     string
@@ -197,9 +198,14 @@ local commands = {
       local convert_args = { "{src}", "-trim", "+repage" }
       if step.meta.kind == "math" then
         vim.list_extend(magick_args, {
-          "-background", "none", "-gravity", "south",
-          "-splice", "0x" .. MATH_BASELINE_GAP,
-          "-extent", "x%[fx:max(" .. MATH_INLINE_H .. ",h)]",
+          "-background",
+          "none",
+          "-gravity",
+          "south",
+          "-splice",
+          "0x" .. MATH_BASELINE_GAP,
+          "-extent",
+          "x%[fx:max(" .. MATH_INLINE_H .. ",h)]",
         })
       end
       magick_args[#magick_args + 1] = "{file}"

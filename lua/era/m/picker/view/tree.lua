@@ -83,7 +83,7 @@ local tree_visibility = require("era.view.tree.visibility")
 
 local tree_render = era.view.TreeRenderer ---@type era.view.TreeRenderer
 
----@class era.m.picker.TreeView
+---@class era.m.picker.TreeView : era.view.tree.IRenderView, era.view.tree.cache.IView, era.view.tree.collapse.IView, era.view.tree.lifecycle.IView, era.view.tree.selection.IView, era.view.tree.store.IView, era.view.tree.visibility.IView
 ---@field protected _last_match_result  era.m.picker.view.tree.INodeMatchResult
 local M = {}
 M.__index = M
@@ -167,14 +167,16 @@ end
 ---@return era.m.picker.TreeView
 function M:insert(uuid, state)
   self:mark_cache_match_dirty()
-  return tree_store.insert(self, uuid, state)
+  tree_store.insert(self, uuid, state)
+  return self
 end
 
 ---@param uuid                          string
 ---@return era.m.picker.TreeView
 function M:remove(uuid)
   self:mark_cache_match_dirty()
-  return tree_store.remove(self, uuid)
+  tree_store.remove(self, uuid)
+  return self
 end
 
 ---@param uuid                          string
@@ -419,7 +421,7 @@ function M:render_treeview(params)
   ---@cast statemap                     table<string, era.m.picker.view.tree.INodeState>
 
   for lnum = 1, N, 1 do
-    local uuid = layout:id(lnum) ---@type string
+    local uuid = layout:id(lnum) --[[@as string]]
     local nodestate = statemap[uuid] ---@type era.m.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
       if tree:contains(uuid) then

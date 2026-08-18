@@ -140,7 +140,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   ---@type era.m.nvimbar.Nvimbar
-  local nvimbar = Nvimbar.new({
+  local result_nvimbar = Nvimbar.new({
     name = string.format("%s#winline", fullname),
     comp_sep = "",
     comp_sep_hlname = winline_hl,
@@ -173,7 +173,7 @@ function M.new(props)
     :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
 
   if status ~= nil then
-    nvimbar:place("center", c.picker.result_status(position, status), 200)
+    result_nvimbar:place("center", c.picker.result_status(position, status), 200)
   end
 
   ---@type stl.c.Scheduler
@@ -340,7 +340,7 @@ function M.new(props)
   self._bufnr = nil
   self._winnr = nil
   self._augroup_CursorMoved = augroup_CursorMoved
-  self._nvimbar = nvimbar
+  self._nvimbar = result_nvimbar
   self._scheduler_content = scheduler_content
   self._scheduler_lnum_current = scheduler_lnum_current
   self._scheduler_lnum_present = scheduler_lnum_present
@@ -352,7 +352,7 @@ function M.new(props)
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local lnum_total = _o_lnum_total:snapshot() ---@type integer
       vim.api.nvim_set_option_value("cursorline", lnum_total > 0, { win = winnr, scope = "local" })
-      nvimbar:render()
+      result_nvimbar:render()
     end
   end, true)
 
@@ -368,7 +368,7 @@ function M.new(props)
       if cursor[1] ~= lnum_current then
         pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_current, 0 })
       end
-      nvimbar:render()
+      result_nvimbar:render()
     end
     self._scheduler_lnum_current:schedule()
   end, true)
@@ -408,7 +408,7 @@ function M:dispose()
   local lnum_present = self.lnum_present ---@type stl.c.Observable
   local lnum_total = self.lnum_total ---@type stl.c.Observable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
-  local nvimbar = self._nvimbar ---@type era.m.nvimbar.Nvimbar
+  local owned_nvimbar = self._nvimbar ---@type era.m.nvimbar.Nvimbar
   local scheduler_content = self._scheduler_content ---@type stl.c.Scheduler
   local scheduler_lnum_current = self._scheduler_lnum_current ---@type stl.c.Scheduler
   local scheduler_lnum_present = self._scheduler_lnum_present ---@type stl.c.Scheduler
@@ -436,7 +436,7 @@ function M:dispose()
   local ok4, error4 = pcall(stl.nvim.win.close, winnr)
   local ok5, error5 = pcall(stl.nvim.buf.close, bufnr)
   local ok6, error6 = pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
-  local ok7, error7 = pcall(nvimbar.dispose, nvimbar)
+  local ok7, error7 = pcall(owned_nvimbar.dispose, owned_nvimbar)
   local ok8, error8 = pcall(scheduler_content.dispose, scheduler_content)
   local ok9, error9 = pcall(scheduler_lnum_current.dispose, scheduler_lnum_current)
   local ok10, error10 = pcall(scheduler_lnum_present.dispose, scheduler_lnum_present)

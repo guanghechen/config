@@ -49,7 +49,9 @@ function M.paste_image_from_clipboard(filepath)
     "sh",
     filepath,
   } ---@type string[]
-  return exec.run(__module_name__, "paste_image_from_clipboard", cmd, nil, { filepath = filepath }) ~= nil
+  ---@type vim.SystemCompleted|nil
+  local exec_result = exec.run(__module_name__, "paste_image_from_clipboard", cmd, nil, { filepath = filepath })
+  return exec_result ~= nil
 end
 
 return M

@@ -122,21 +122,23 @@ local function update_visible_message(id, content, replace_last, append)
   if group ~= nil and ref ~= nil then
     group.parts[ref.index] = { id = id, content = content }
   elseif append and states.message.last_ref ~= nil then
-    local last_ref = states.message.last_ref
+    local last_ref = states.message.last_ref --[[@as era.m.ui_attach.message.IRef]]
     group = states.message.groups[last_ref.group]
     if group ~= nil then
       ref = { group = group.key, index = #group.parts + 1 }
       group.parts[ref.index] = { id = id, content = content }
     end
   elseif replace_last and states.message.last_ref ~= nil then
-    ref = states.message.last_ref
-    group = states.message.groups[ref.group]
+    local last_ref = states.message.last_ref --[[@as era.m.ui_attach.message.IRef]]
+    ref = last_ref
+    group = states.message.groups[last_ref.group]
     if group ~= nil then
-      local previous_id = group.parts[ref.index].id
+      local previous_part = group.parts[last_ref.index] --[[@as era.m.ui_attach.message.IPart]]
+      local previous_id = previous_part.id
       if previous_id ~= id then
         states.message.id_refs[previous_id] = nil
       end
-      group.parts[ref.index] = { id = id, content = content }
+      group.parts[last_ref.index] = { id = id, content = content }
     end
   end
 

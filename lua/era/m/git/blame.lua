@@ -145,6 +145,7 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with table<integer, era.m.git.BlameInfo>
 local function run_blame(file, cwd, token)
+  ---@diagnostic disable-next-line: redundant-parameter -- LuaLS selects the one-argument overload for Future.new.
   return stl.c.Future.new(function(resolve, reject)
     if token and token:is_cancelled() then
       reject(CANCELLED)

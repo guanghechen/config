@@ -1,7 +1,28 @@
+---@diagnostic disable: invisible
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.tree.lifecycle" ---@type string
 
 local M = {}
+
+---@class era.view.tree.lifecycle.IView
+---@field public fullname               string
+---@field public statemap               table<string, era.view.tree.INodeState>
+---@field protected _disposed           boolean
+---@field protected _indent             string
+---@field protected _indent_hln         string
+---@field protected _tree               stl.c.IReadonlyTree
+---@field protected _dirty_selected     boolean
+---@field protected _tick_invisible     integer
+---@field protected _tick_matched       integer
+---@field protected _tick_selected      integer
+---@field protected _tick_render_listview integer
+---@field protected _tick_render_treeview integer
+---@field protected _render_listview_leaf       era.view.tree.IListviewLeafNodeRenderer
+---@field protected _render_listview_location   era.view.tree.IListviewLeafLocationRenderer
+---@field protected _render_treeview_container  era.view.tree.ITreeviewContainerNodeRenderer
+---@field protected _render_treeview_leaf       era.view.tree.ITreeviewLeafNodeRenderer
+---@field protected _render_treeview_location   era.view.tree.ITreeviewLeafLocationRenderer
+---@field protected __health__          fun(self: era.view.tree.lifecycle.IView): nil
 
 ---@param props                         era.view.tree.IViewProps
 ---@param owner_name                    string
@@ -30,8 +51,8 @@ function M.create(props, owner_name)
   return self
 end
 
----@param view                          era.view.tree.IRenderView
----@return era.view.tree.IRenderView
+---@param view                          era.view.tree.lifecycle.IView
+---@return era.view.tree.lifecycle.IView
 function M.clear(view)
   view:__health__()
   table.clear(view.statemap)
@@ -44,7 +65,7 @@ function M.clear(view)
   return view
 end
 
----@param view                          era.view.tree.IRenderView
+---@param view                          era.view.tree.lifecycle.IView
 ---@return nil
 function M.dispose(view)
   if view._disposed then
@@ -69,13 +90,13 @@ function M.dispose(view)
   view._render_treeview_location = nil
 end
 
----@param view                          era.view.tree.IRenderView
+---@param view                          era.view.tree.lifecycle.IView
 ---@return boolean
 function M.isdisposed(view)
   return view._disposed
 end
 
----@param view                          era.view.tree.IRenderView
+---@param view                          era.view.tree.lifecycle.IView
 ---@return nil
 function M.health(view)
   if view._disposed then

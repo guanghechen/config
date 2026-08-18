@@ -352,7 +352,8 @@ function M.new(props)
     timeout = 0,
     silent = stl.fn.falsy,
     value = stl.c.Observable.from_value(true),
-    task = function(_, generation)
+    task = function(_, context)
+      local generation = context --[[@as integer]]
       if not self._disposed and self._file_search:is_current_generation(generation) then
         self:__submit_search__()
       end
@@ -2099,8 +2100,9 @@ function M:__collect_remain_offsets__(offset_current, leafnodestate)
   local offsets_remain = {} ---@type integer[]
   if leafnodestate.locations ~= nil then
     for _, location in ipairs(leafnodestate.locations) do
-      if location.s_offset ~= offset_current and treeview:isvisible(location.locationuuid) then
-        offsets_remain[#offsets_remain + 1] = location.s_offset ---@type integer
+      local offset = location.match.preview.offset ---@type integer
+      if offset ~= offset_current and treeview:isvisible(location.locationuuid) then
+        offsets_remain[#offsets_remain + 1] = offset
       end
     end
   end
@@ -2336,7 +2338,6 @@ function M:__apply_search_result__(context, result)
   local params = context.params ---@type era.m.searcher.view.filetree.ISearchParams
   local cwd = params.cwd ---@type string
 
-  local filetree = self._filetree ---@type stl.c.Filetree
   local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
 
@@ -2454,7 +2455,7 @@ function M:__open_node__(nodeuuid)
     col = nodestate.col ---@type integer|nil
   else
     if nodestate.locations ~= nil and #nodestate.locations > 0 then
-      local first_location = nodestate.locations[1] ---@type era.m.picker.view.filetree.ILocationNodeState
+      local first_location = nodestate.locations[1] ---@type era.m.searcher.view.filetree.ILeafLocationState
       lnum = first_location.lnum ---@type integer|nil
       col = first_location.col ---@type integer|nil
     end
@@ -2573,10 +2574,10 @@ function M:__resolve_confirmation__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+          local selected_data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
           treeview:set_selected(uuid, false)
-          if data ~= nil and data.filetype == "file" then
-            filepaths[#filepaths + 1] = data.filepath
+          if selected_data ~= nil and selected_data.filetype == "file" then
+            filepaths[#filepaths + 1] = selected_data.filepath
           end
         end
       end
@@ -2720,7 +2721,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
     return
   end
 
-  local children = self._filetree:children(treeuuid) ---@type string[]
+  local children = self._filetree:children(treeuuid) --[[@as string[] ]]
   if nodestate.nodetype == "leaf" and #children > 0 then
     treeview:collapse(treeuuid, "toggle", false)
     composer:mark_result_dirty()
@@ -2738,7 +2739,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
     col = nodestate.col ---@type integer|nil
   else
     if nodestate.locations ~= nil and #nodestate.locations > 0 then
-      local first_location = nodestate.locations[1] ---@type era.m.picker.view.filetree.ILocationNodeState
+      local first_location = nodestate.locations[1] ---@type era.m.searcher.view.filetree.ILeafLocationState
       lnum = first_location.lnum ---@type integer|nil
       col = first_location.col ---@type integer|nil
     end

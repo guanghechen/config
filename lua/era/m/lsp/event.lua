@@ -184,9 +184,11 @@ function M.get_capabilities()
 
   -- Capability negotiation belongs to the LSP boundary. Loading the completion UI here would
   -- bypass its InsertEnter/CmdlineEnter lazy lifecycle.
-  local completion = capabilities.textDocument.completion
-  local completion_item = completion.completionItem
-  local resolve_properties = completion_item.resolveSupport.properties
+  local text_document = capabilities.textDocument --[[@as lsp.TextDocumentClientCapabilities]]
+  local completion = text_document.completion --[[@as lsp.CompletionClientCapabilities]]
+  local completion_item = completion.completionItem --[[@as lsp.ClientCompletionItemOptions]]
+  local resolve_support = completion_item.resolveSupport --[[@as lsp.ClientCompletionItemResolveOptions]]
+  local resolve_properties = resolve_support.properties
   for _, property in ipairs({ "detail", "data" }) do
     if not vim.list_contains(resolve_properties, property) then
       resolve_properties[#resolve_properties + 1] = property
@@ -194,7 +196,8 @@ function M.get_capabilities()
   end
   completion_item.insertTextModeSupport = { valueSet = { 1 } }
 
-  local item_defaults = completion.completionList.itemDefaults
+  local completion_list = completion.completionList --[[@as lsp.CompletionListCapabilities]]
+  local item_defaults = completion_list.itemDefaults --[[@as string[] ]]
   if not vim.list_contains(item_defaults, "commitCharacters") then
     item_defaults[#item_defaults + 1] = "commitCharacters"
   end

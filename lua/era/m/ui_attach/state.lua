@@ -77,6 +77,10 @@ local __module_name__ = "era.m.ui_attach.state" ---@type string
 ---@field public winnr                  integer|nil
 
 ---@class era.m.ui_attach.state
+---@field public cmdline                era.m.ui_attach.cmdline.IState[]
+---@field public message                era.m.ui_attach.message.IState
+---@field public popupmenu              era.m.ui_attach.popupmenu.IState|nil
+---@field public cmdline_block          era.m.ui_attach.cmdline_block.IState
 local M = {}
 
 M.cmdline = {} ---@type era.m.ui_attach.cmdline.IState[]

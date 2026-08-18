@@ -585,10 +585,11 @@ local function refresh()
   end)
 end
 
----@param _                             any
----@param _                             string
+---@param _ctx                          any
+---@param _uuid                         string
 ---@param data                          era.fn.find_lsp_symbols.ISymbolData
-local function render_symbol(_, _, data)
+---@diagnostic disable-next-line: unused-local -- Renderer signature is shared with tree callbacks.
+local function render_symbol(_ctx, _uuid, data)
   local icon = data.icon or "●"
   local text = icon .. " " .. (data.name or "Unknown")
   return text,
@@ -599,9 +600,10 @@ local function render_symbol(_, _, data)
 end
 
 ---@type era.m.picker.view.tree.ITreeviewContainerNodeRenderer
-local function render_treeview_container(_, uuid, data, _, _, folded_depth)
+---@diagnostic disable-next-line: unused-local -- Renderer signature is defined by the shared tree view contract.
+local function render_treeview_container(ctx, uuid, data, _nodestate, _lnum, folded_depth)
   if folded_depth == 0 then
-    return render_symbol(_, uuid, data)
+    return render_symbol(ctx, uuid, data)
   end
 
   local limit = folded_depth + 1

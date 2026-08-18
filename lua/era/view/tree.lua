@@ -1,3 +1,4 @@
+---@diagnostic disable: invisible
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.tree" ---@type string
 
@@ -240,13 +241,14 @@ local M = {}
 
 ----------------------------------------------------------------------------------------------------
 
+---@param view                          era.view.tree.IRenderView
 ---@param params                        era.view.tree.IRenderListviewParams
 ---@return era.view.tree.IRenderResult
-function M:render_listview(params)
-  self:__health__()
+function M.render_listview(view, params)
+  view:__health__()
 
-  local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
-  local tree = self._tree ---@type stl.c.IReadonlyTree
+  local statemap = view.statemap ---@type table<string, era.view.tree.INodeState>
+  local tree = view._tree ---@type stl.c.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
   local rootuuid = params.rootuuid ~= nil and params.rootuuid or tree.root ---@type string
@@ -255,10 +257,10 @@ function M:render_listview(params)
   local only_matched = params.only_matched ---@type boolean
   local only_selected = params.only_selected ---@type boolean
 
-  local tick_invisible = only_visible and self._tick_invisible or -1 ---@type integer
-  local tick_matched = self._tick_matched ---@type integer
-  local tick_selected = self._tick_selected ---@type integer
-  local tick_render_listview = self._tick_render_listview ---@type integer
+  local tick_invisible = only_visible and view._tick_invisible or -1 ---@type integer
+  local tick_matched = view._tick_matched ---@type integer
+  local tick_selected = view._tick_selected ---@type integer
+  local tick_render_listview = view._tick_render_listview ---@type integer
 
   local rootdata = tree:get(rootuuid) ---@type table|nil
   local rootstate = statemap[rootuuid] ---@type era.view.tree.INodeState|nil
@@ -269,7 +271,7 @@ function M:render_listview(params)
   end
 
   if only_selected then
-    self:__refresh_selected_maximum__()
+    view:__refresh_selected_maximum__()
   end
 
   ---@type era.view.tree.IListviewRendererContext
@@ -279,9 +281,9 @@ function M:render_listview(params)
   }
 
   local nsnr = NSNR_DEFAULT ---@type integer
-  local INDENT_COMMON = self._indent ---@type string
-  local render_listview_leaf = self._render_listview_leaf ---@type era.view.tree.IListviewLeafNodeRenderer
-  local render_listview_location = self._render_listview_location ---@type era.view.tree.IListviewLeafLocationRenderer
+  local INDENT_COMMON = view._indent ---@type string
+  local render_listview_leaf = view._render_listview_leaf ---@type era.view.tree.IListviewLeafNodeRenderer
+  local render_listview_location = view._render_listview_location ---@type era.view.tree.IListviewLeafLocationRenderer
 
   local indent_leaf = INDENT_COMMON ---@type string
   local indent_location = indent_leaf .. "├─" ---@type string
@@ -434,7 +436,7 @@ function M:render_listview(params)
         local nodestate = statemap[uuid] ---@type era.view.tree.INodeState|nil
         if includes_subtree(nodestate) then
           if includes_leaf(nodestate) then
-            local data = tree:get(uuid) ---@type table
+            local data = tree:get(uuid) --[[@as table]]
             ---@cast nodestate          era.view.tree.ILeafNodeState
             render_leafnode(uuid, data, nodestate)
           else
@@ -460,7 +462,7 @@ function M:render_listview(params)
     local indent = indents[index] ---@type string
     local offset = #indent
     local line_length = #lines[index] ---@type integer
-    set_inline_highlight(bufnr, nsnr, self._indent_hln, row, #INDENT_COMMON, offset, line_length)
+    set_inline_highlight(bufnr, nsnr, view._indent_hln, row, #INDENT_COMMON, offset, line_length)
 
     if highlights ~= nil then
       local H = #highlights ---@type integer
@@ -479,13 +481,14 @@ function M:render_listview(params)
   return result
 end
 
+---@param view                          era.view.tree.IRenderView
 ---@param params                        era.view.tree.IRenderTreeviewParams
 ---@return era.view.tree.IRenderResult
-function M:render_treeview(params)
-  self:__health__()
+function M.render_treeview(view, params)
+  view:__health__()
 
-  local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
-  local tree = self._tree ---@type stl.c.IReadonlyTree
+  local statemap = view.statemap ---@type table<string, era.view.tree.INodeState>
+  local tree = view._tree ---@type stl.c.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
   local root = params.rootuuid ~= nil and params.rootuuid or tree.root ---@type string
@@ -495,10 +498,10 @@ function M:render_treeview(params)
   local only_matched = params.only_matched ---@type boolean
   local only_selected = params.only_selected ---@type boolean
 
-  local tick_invisible = only_visible and self._tick_invisible or -1 ---@type integer
-  local tick_matched = self._tick_matched ---@type integer
-  local tick_selected = self._tick_selected ---@type integer
-  local tick_render_treeview = self._tick_render_treeview ---@type integer
+  local tick_invisible = only_visible and view._tick_invisible or -1 ---@type integer
+  local tick_matched = view._tick_matched ---@type integer
+  local tick_selected = view._tick_selected ---@type integer
+  local tick_render_treeview = view._tick_render_treeview ---@type integer
 
   local rootdata = tree:get(root) ---@type table|nil
   local rootstate = statemap[root] ---@type era.view.tree.INodeState|nil
@@ -509,7 +512,7 @@ function M:render_treeview(params)
   end
 
   if only_selected then
-    self:__refresh_selected_maximum__()
+    view:__refresh_selected_maximum__()
   end
 
   ---@type era.view.tree.ITreeviewRendererContext
@@ -519,10 +522,10 @@ function M:render_treeview(params)
   }
 
   local nsnr = NSNR_DEFAULT ---@type integer
-  local INDENT_COMMON = self._indent ---@type string
-  local render_treeview_container = self._render_treeview_container ---@type era.view.tree.ITreeviewContainerNodeRenderer
-  local render_treeview_leaf = self._render_treeview_leaf ---@type era.view.tree.ITreeviewLeafNodeRenderer
-  local render_treeview_location = self._render_treeview_location ---@type era.view.tree.ITreeviewLeafLocationRenderer
+  local INDENT_COMMON = view._indent ---@type string
+  local render_treeview_container = view._render_treeview_container ---@type era.view.tree.ITreeviewContainerNodeRenderer
+  local render_treeview_leaf = view._render_treeview_leaf ---@type era.view.tree.ITreeviewLeafNodeRenderer
+  local render_treeview_location = view._render_treeview_location ---@type era.view.tree.ITreeviewLeafLocationRenderer
 
   local childline = {} ---@type integer[]
   local indents = {} ---@type string[]
@@ -628,10 +631,13 @@ function M:render_treeview(params)
 
   local prefixes = { [0] = INDENT_COMMON } ---@type table<integer, string>
   for lnum = 1, layout:len(), 1 do
-    local uuid = layout:id(lnum) ---@type string
-    local nodestate = statemap[uuid] ---@type era.view.tree.INodeState
-    local depth = layout:depth(lnum) ---@type integer
-    local is_lastchild = layout:is_last(lnum) ---@type boolean
+    local uuid = layout:id(lnum) --[[@as string]]
+    local nodestate = statemap[uuid] --[[@as era.view.tree.INodeState]]
+    local depth = layout:depth(lnum) --[[@as integer]]
+    local is_lastchild = layout:is_last(lnum) ---@type boolean|nil
+    if is_lastchild == nil then
+      error(string.format("[%s] missing last-child state for line %d", __module_name__, lnum))
+    end
     local prefix = prefixes[depth] or INDENT_COMMON ---@type string
     local indent = depth == 0 and INDENT_COMMON or (prefix .. (is_lastchild and "╰─" or "├─")) ---@type string
     local child_indent = depth == 0 and INDENT_COMMON or (prefix .. (is_lastchild and "  " or "│ ")) ---@type string
@@ -643,14 +649,14 @@ function M:render_treeview(params)
     local text ---@type string
     local highlights ---@type stl.t.IHighlightInline[]|nil
     if nodestate.nodetype == "location" then
-      local leafdata = tree:get(nodestate.leafuuid) ---@type table
-      local leafstate = statemap[nodestate.leafuuid] ---@type era.view.tree.ILeafNodeState
+      local leafdata = tree:get(nodestate.leafuuid) --[[@as table]]
+      local leafstate = statemap[nodestate.leafuuid] --[[@as era.view.tree.ILeafNodeState]]
       text, highlights = render_treeview_location(ctx, nodestate.leafuuid, leafdata, leafstate, nodestate, lnum)
 
-      local parent_lnum = layout:parent_lnum(lnum) ---@type integer
+      local parent_lnum = layout:parent_lnum(lnum) --[[@as integer]]
       childline[lnum] = layout:last_child_lnum(parent_lnum) or lnum
     elseif nodestate.nodetype == "leaf" then
-      local leafdata = tree:get(uuid) ---@type table
+      local leafdata = tree:get(uuid) --[[@as table]]
       local cache = nodestate.cache_treeview ---@type era.view.tree.INodeTreeviewResultCache|nil
       if cache == nil or cache.tick ~= tick_render_treeview then
         local rendered_text, rendered_highlights = render_treeview_leaf(ctx, uuid, leafdata, nodestate, lnum)
@@ -664,14 +670,14 @@ function M:render_treeview(params)
       text = cache.text
       highlights = cache.highlights
 
-      local lnum_last_location = layout:last_descendant_lnum(lnum) ---@type integer
+      local lnum_last_location = layout:last_descendant_lnum(lnum) --[[@as integer]]
       childline[lnum] = lnum_last_location
       if lnum_last_location > lnum then
         leaf_has_location[lnum] = true
       end
       track_parent_leaf_line(parent_leaf_lines, tree:parent(uuid), lnum)
     elseif nodestate.nodetype == "container" then
-      local containerdata = tree:get(uuid) ---@type table
+      local containerdata = tree:get(uuid) --[[@as table]]
       local folded_depth = folded_ids ~= nil and #folded_ids - 1 or 0 ---@type integer
       if folded_depth > 0 then
         text, highlights = render_treeview_container(ctx, uuid, containerdata, nodestate, lnum, folded_depth)
@@ -690,12 +696,12 @@ function M:render_treeview(params)
         text = cache.text
         highlights = cache.highlights
       end
-      local lnum_last_descendant = layout:last_descendant_lnum(lnum) ---@type integer
+      local lnum_last_descendant = layout:last_descendant_lnum(lnum) --[[@as integer]]
       if lnum_last_descendant > lnum then
         childline[lnum] = lnum_last_descendant
       end
     else
-      error(string.format("[%s] unknown nodetype for '%s': %s", __module_name__, uuid, tostring(nodestate.nodetype)))
+      error(string.format("[%s] unknown nodetype for '%s'", __module_name__, uuid))
     end
 
     lines[lnum] = indent .. text
@@ -712,7 +718,7 @@ function M:render_treeview(params)
     local indent = indents[index] ---@type string
     local offset = #indent
     local line_length = #lines[index] ---@type integer
-    set_inline_highlight(bufnr, nsnr, self._indent_hln, row, #INDENT_COMMON, offset, line_length)
+    set_inline_highlight(bufnr, nsnr, view._indent_hln, row, #INDENT_COMMON, offset, line_length)
 
     if highlights ~= nil then
       local H = #highlights ---@type integer

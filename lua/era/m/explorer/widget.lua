@@ -1471,8 +1471,10 @@ function M:__setup_keymaps__(bufnr)
       modes = { "i" },
       key = "j",
       callback = function()
-        local winnr = self:get_winnr() ---@type integer
-        stl.nvim.win.move_cursor_down(winnr)
+        local winnr = self:get_winnr() ---@type integer|nil
+        if winnr ~= nil then
+          stl.nvim.win.move_cursor_down(winnr)
+        end
       end,
       desc = "explorer: move cursor down",
     },
@@ -1480,8 +1482,10 @@ function M:__setup_keymaps__(bufnr)
       modes = { "i" },
       key = "k",
       callback = function()
-        local winnr = self:get_winnr() ---@type integer
-        stl.nvim.win.move_cursor_up(winnr)
+        local winnr = self:get_winnr() ---@type integer|nil
+        if winnr ~= nil then
+          stl.nvim.win.move_cursor_up(winnr)
+        end
       end,
       desc = "explorer: move cursor up",
     },
@@ -1490,8 +1494,10 @@ function M:__setup_keymaps__(bufnr)
       modes = { "i" },
       key = "gg",
       callback = function()
-        local winnr = self:get_winnr() ---@type integer
-        stl.nvim.win.move_cursor_to(winnr)
+        local winnr = self:get_winnr() ---@type integer|nil
+        if winnr ~= nil then
+          stl.nvim.win.move_cursor_to(winnr)
+        end
       end,
       desc = "explorer: go to first line in insert mode",
     },
@@ -1499,8 +1505,10 @@ function M:__setup_keymaps__(bufnr)
       modes = { "i" },
       key = "G",
       callback = function()
-        local winnr = self:get_winnr() ---@type integer
-        stl.nvim.win.move_cursor_last_line(winnr)
+        local winnr = self:get_winnr() ---@type integer|nil
+        if winnr ~= nil then
+          stl.nvim.win.move_cursor_last_line(winnr)
+        end
       end,
       desc = "explorer: go to last line in insert mode",
     },

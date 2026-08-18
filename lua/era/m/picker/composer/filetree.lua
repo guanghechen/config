@@ -2130,10 +2130,10 @@ function M:__resolve_confirmation__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
+          local selected_data = filetree:get(uuid) ---@type stl.c.IFiletreeNodeData|nil
           treeview:set_selected(uuid, false)
-          if data ~= nil and data.filetype == "file" then
-            filepaths[#filepaths + 1] = data.filepath
+          if selected_data ~= nil and selected_data.filetype == "file" then
+            filepaths[#filepaths + 1] = selected_data.filepath
           end
         end
       end
@@ -2389,7 +2389,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
     return
   end
 
-  local children = self._filetree:children(treeuuid) ---@type string[]
+  local children = self._filetree:children(treeuuid) --[[@as string[] ]]
   if nodestate.nodetype == "leaf" and #children > 0 then
     treeview:collapse(treeuuid, "toggle", false)
     composer:mark_result_dirty()

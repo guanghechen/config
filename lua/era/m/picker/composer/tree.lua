@@ -1094,10 +1094,10 @@ end
 ---@return integer
 function M:__resolve_insert_index__(parentuuid, candidate)
   local tree = self._tree ---@type stl.c.Tree
-  local children = tree:children(parentuuid) ---@type string[]
+  local children = tree:children(parentuuid) --[[@as string[] ]]
   local sorter = self._node_sorter ---@type era.m.picker.composer.tree.INodeSorter
   for index, childuuid in ipairs(children) do
-    local child = tree:get(childuuid) ---@type table
+    local child = tree:get(childuuid) --[[@as table]]
     if sorter(candidate, child) then
       return index
     end
@@ -1262,7 +1262,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
     return
   end
 
-  local children = tree:children(treeuuid) ---@type string[]
+  local children = tree:children(treeuuid) --[[@as string[] ]]
   if nodestate.nodetype == "leaf" and #children > 0 then
     treeview:collapse(treeuuid, "toggle", false)
     composer:mark_result_dirty()

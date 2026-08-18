@@ -127,7 +127,6 @@ end
 local M = {}
 
 ---@param message string
----@return never
 local function fail(message)
   error(string.format("[%s] %s", __module_name__, message), 3)
 end

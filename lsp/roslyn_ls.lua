@@ -225,6 +225,10 @@ local function handle_completion_complex_edit(client, command, bufnr)
     })
     return
   end
+  ---@cast edit lsp.TextEdit
+  ---@cast range lsp.Range
+  ---@cast is_snippet boolean
+  ---@cast new_offset integer
 
   local winnr = vim.fn.bufwinid(bufnr) ---@type integer
   if (is_snippet or new_offset >= 0) and winnr == -1 then
@@ -243,7 +247,9 @@ local function handle_completion_complex_edit(client, command, bufnr)
       vim.api.nvim_win_call(winnr, function()
         vim.lsp.util.apply_text_edits({ { range = range, newText = "" } }, bufnr, client.offset_encoding)
         vim.api.nvim_win_set_cursor(winnr, { range.start.line + 1, start_col })
-        pcall(vim.cmd, "undojoin")
+        pcall(function()
+          vim.cmd("undojoin")
+        end)
         vim.snippet.expand(edit.newText)
       end)
       return
