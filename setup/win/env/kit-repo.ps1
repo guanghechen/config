@@ -61,7 +61,10 @@ if (-not (Test-Path -LiteralPath $installedBinary -PathType Leaf)) {
 New-Item -ItemType Directory -Path $cargoLocalBin -Force -ErrorAction Stop | Out-Null
 $env:Path = Get-CargoPath -Value $env:Path -LocalBin $cargoLocalBin -CargoBin $cargoBin
 
-$userEnvironment = Get-Item -LiteralPath "Registry::HKEY_CURRENT_USER\Environment" -ErrorAction Stop
+$userEnvironment = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey("Environment", $true)
+if ($null -eq $userEnvironment) {
+  throw "[setup kit-repo] failed to open the User Environment registry key for writing."
+}
 try {
   $hasUserPath = $userEnvironment.GetValueNames() -contains "Path"
   $userPath = [string]$userEnvironment.GetValue(
@@ -69,23 +72,15 @@ try {
     "",
     [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames
   )
-  $userPathKind = if ($hasUserPath) {
-    $userEnvironment.GetValueKind("Path")
-  } else {
-    [Microsoft.Win32.RegistryValueKind]::String
-  }
   $nextUserPath = Get-CargoPath -Value $userPath -LocalBin $cargoLocalBin -CargoBin $cargoBin
 
   if (-not [string]::Equals($userPath, $nextUserPath, [StringComparison]::Ordinal)) {
-    $userEnvironment.SetValue("Path", $nextUserPath, $userPathKind)
-    $verifiedUserPath = [string]$userEnvironment.GetValue(
-      "Path",
-      "",
-      [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames
-    )
-    if (-not [string]::Equals($verifiedUserPath, $nextUserPath, [StringComparison]::Ordinal)) {
-      throw "[setup kit-repo] failed to verify the updated User PATH."
+    $userPathKind = if ($hasUserPath) {
+      $userEnvironment.GetValueKind("Path")
+    } else {
+      [Microsoft.Win32.RegistryValueKind]::String
     }
+    $userEnvironment.SetValue("Path", $nextUserPath, $userPathKind)
   }
 } finally {
   $userEnvironment.Close()
