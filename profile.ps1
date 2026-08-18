@@ -24,7 +24,11 @@ Get-ChildItem "$env:XDG_CONFIG_HOME\pwsh\completions\*.ps1" | ForEach-Object { .
 
 ## setup starship
 $env:STARSHIP_CONFIG = "$env:XDG_CONFIG_HOME\starship\pwsh.toml"
-Invoke-Expression (&starship init powershell)
+if (Get-Command starship -ErrorAction SilentlyContinue) {
+  Invoke-Expression (&starship init powershell)
+}
 
 ## Setup fnm
-fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
+if (Get-Command fnm -ErrorAction SilentlyContinue) {
+  fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
+}

@@ -15,6 +15,11 @@ function ghc-update-agents {
     foreach ($agent in $agents) {
       Write-Host "  Installing $agent..." -ForegroundColor Cyan
       npm install -g $agent | Out-Null
+      if ($LASTEXITCODE -ne 0) {
+        $installExitCode = $LASTEXITCODE
+        Write-Host "  Failed to install $agent" -ForegroundColor Red
+        return $installExitCode
+      }
       $pkg_ver = (npm list -g $agent --depth=0 2>$null | Select-String $agent) -replace '.*@', ''
       Write-Host "  $agent installed: v$pkg_ver`n" -ForegroundColor Green
     }
