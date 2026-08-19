@@ -72,7 +72,7 @@ end
 
 ---Execute git command asynchronously with callback (for simple fire-and-forget operations).
 ---@param args                          string[]
----@param opts                          { cwd: string|nil }|nil
+---@param opts                          { cwd: string|nil, stdin: string|nil }|nil
 ---@param callback                      fun(lines: string[], code: integer, stderr: string): nil
 function M.exec_async(args, opts, callback)
   local cmd = { "git" }
@@ -84,7 +84,7 @@ function M.exec_async(args, opts, callback)
     cmd[#cmd + 1] = arg
   end
 
-  vim.system(cmd, { text = true }, function(obj)
+  vim.system(cmd, { text = true, stdin = opts and opts.stdin or nil }, function(obj)
     vim.schedule(function()
       local lines = {}
       if obj.code == 0 and obj.stdout then

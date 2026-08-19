@@ -319,40 +319,142 @@ function M.goto_prev_entry(ctx)
   goto_adjacent_entry(ctx, -1)
 end
 
+---Move to the visible parent in the active Changes tree.
+function M.goto_parent_node()
+  pane_changes.goto_parent_node()
+end
+
+---Move to the last child or sibling in the active Changes tree.
+function M.goto_last_child_or_sibling()
+  pane_changes.goto_last_child_or_sibling()
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Git operations
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.m.diffview.view.workspace.ITransferContext
----@field public entry_id               string
+---@field public entry_ids              table<string, true>
 ---@field public fallback               era.m.diffview.IFileEntry|nil
 ---@field public source_stage_type      stl.m.diffview.StageTypeEnum
 ---@field public destination_stage_type stl.m.diffview.StageTypeEnum
 
----Capture the next visible item in the source work queue before Git moves the entry.
+---@class era.m.diffview.view.workspace.ITransferTarget
+---@field public entries                era.m.diffview.IFileEntry[]
+---@field public filepath               string
+---@field public anchor_lnum            integer|nil
+
+---@param filepath                      string
+---@param directory                     string
+---@return boolean
+local function is_directory_descendant(filepath, directory)
+  local prefix = directory:sub(-1) == "/" and directory or (directory .. "/") ---@type string
+  return filepath:sub(1, #prefix) == prefix
+end
+
+---Resolve a file or directory transfer target from the active workspace pane.
 ---@param ctx                            era.m.diffview.view.workspace.IContext
----@param entry                          era.m.diffview.IFileEntry
+---@param source_stage_type              stl.m.diffview.StageTypeEnum
+---@return era.m.diffview.view.workspace.ITransferTarget|nil
+local function get_transfer_target(ctx, source_stage_type)
+  local entry = get_action_entry(ctx)
+  if entry then
+    if entry.stage_type ~= source_stage_type then
+      return nil
+    end
+    return {
+      entries = { entry },
+      filepath = entry.filepath,
+      anchor_lnum = nil,
+    }
+  end
+
+  if not workspace_view.is_changes_buffer(ctx.layout, vim.api.nvim_get_current_buf()) then
+    return nil
+  end
+
+  local bufnr, lnum = get_cursor_info()
+  local item = pane_changes.get_item_at_line(bufnr, lnum)
+  if not item or item.type ~= "directory" or item.stage_type ~= source_stage_type or not item.uuid then
+    return nil
+  end
+
+  local entries = {} ---@type era.m.diffview.IFileEntry[]
+  for _, candidate in ipairs(ctx.state:get_entries()) do
+    if candidate.stage_type == source_stage_type and is_directory_descendant(candidate.filepath, item.uuid) then
+      entries[#entries + 1] = candidate
+    end
+  end
+  if #entries == 0 then
+    return nil
+  end
+
+  return {
+    entries = entries,
+    filepath = item.uuid,
+    anchor_lnum = lnum,
+  }
+end
+
+---Build exact NUL-delimited pathspec input without placing repository paths in argv.
+---@param target                         era.m.diffview.view.workspace.ITransferTarget
+---@return string
+local function build_transfer_pathspec_input(target)
+  local paths = {} ---@type string[]
+  local seen = {} ---@type table<string, boolean>
+
+  ---@param filepath                    string|nil
+  local function append(filepath)
+    if filepath and not seen[filepath] then
+      seen[filepath] = true
+      paths[#paths + 1] = filepath
+    end
+  end
+
+  for _, entry in ipairs(target.entries) do
+    if entry.status == "R" then
+      append(entry.prev_filepath)
+    end
+    append(entry.filepath)
+  end
+
+  return table.concat(paths, "\0") .. "\0"
+end
+
+---Capture the next visible item in the source work queue before Git moves the target.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param target                         era.m.diffview.view.workspace.ITransferTarget
 ---@param destination_stage_type         stl.m.diffview.StageTypeEnum
 ---@return era.m.diffview.view.workspace.ITransferContext
-local function capture_transfer(ctx, entry, destination_stage_type)
-  local source_stage_type = assert(entry.stage_type) ---@type stl.m.diffview.StageTypeEnum
+local function capture_transfer(ctx, target, destination_stage_type)
+  local source_stage_type = assert(target.entries[1].stage_type) ---@type stl.m.diffview.StageTypeEnum
+  local entry_ids = {} ---@type table<string, true>
+  for _, entry in ipairs(target.entries) do
+    entry_ids[get_entry_id(entry)] = true
+  end
+
   local pane = workspace_view.get_changes_pane(ctx.layout, source_stage_type)
   local fallback = nil ---@type era.m.diffview.IFileEntry|nil
   if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
     local line_map = pane_changes.get_line_map(pane.bufnr)
     if line_map then
-      local entry_lnum = pane_changes.find_entry_line(line_map, entry)
-      if entry_lnum then
-        for i = entry_lnum + 1, #line_map do
-          if line_map[i].type == "file" and line_map[i].entry then
-            fallback = line_map[i].entry
+      local anchor_lnum = target.anchor_lnum
+      if anchor_lnum == nil and #target.entries == 1 then
+        anchor_lnum = pane_changes.find_entry_line(line_map, target.entries[1])
+      end
+      if anchor_lnum then
+        for i = anchor_lnum + 1, #line_map do
+          local candidate = line_map[i].entry ---@type era.m.diffview.IFileEntry|nil
+          if line_map[i].type == "file" and candidate and not entry_ids[get_entry_id(candidate)] then
+            fallback = candidate
             break
           end
         end
         if not fallback then
-          for i = entry_lnum - 1, 1, -1 do
-            if line_map[i].type == "file" and line_map[i].entry then
-              fallback = line_map[i].entry
+          for i = anchor_lnum - 1, 1, -1 do
+            local candidate = line_map[i].entry ---@type era.m.diffview.IFileEntry|nil
+            if line_map[i].type == "file" and candidate and not entry_ids[get_entry_id(candidate)] then
+              fallback = candidate
               break
             end
           end
@@ -362,7 +464,7 @@ local function capture_transfer(ctx, entry, destination_stage_type)
   end
 
   return {
-    entry_id = get_entry_id(entry),
+    entry_ids = entry_ids,
     fallback = fallback,
     source_stage_type = source_stage_type,
     destination_stage_type = destination_stage_type,
@@ -377,7 +479,7 @@ local function refresh_after_transfer(ctx, transfer)
     return
   end
   local current = ctx.state:get_current_entry()
-  if current and get_entry_id(current) == transfer.entry_id and transfer.fallback then
+  if current and transfer.entry_ids[get_entry_id(current)] and transfer.fallback then
     ctx.state:set_current_entry(transfer.fallback)
   end
 
@@ -409,24 +511,26 @@ local function refresh_after_transfer(ctx, transfer)
   end)
 end
 
----Stage the file targeted by the active workspace pane
+---Stage the file or directory targeted by the active workspace pane
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.stage(ctx)
-  local entry = get_action_entry(ctx)
-  if not entry or entry.stage_type ~= "unstaged" then
+  local target = get_transfer_target(ctx, "unstaged")
+  if not target then
     return
   end
 
-  local args = { "--literal-pathspecs", "add", "--" } ---@type string[]
-  if entry.status == "R" and entry.prev_filepath then
-    args[#args + 1] = entry.prev_filepath
-  end
-  args[#args + 1] = entry.filepath
-  local transfer = capture_transfer(ctx, entry, "staged")
+  local args = {
+    "--literal-pathspecs",
+    "add",
+    "--pathspec-from-file=-",
+    "--pathspec-file-nul",
+  } ---@type string[]
+  local pathspec_input = build_transfer_pathspec_input(target)
+  local transfer = capture_transfer(ctx, target, "staged")
 
-  stl.git.exec.exec_async(args, { cwd = dot.path.workspace() }, function(_, code, stderr)
+  stl.git.exec.exec_async(args, { cwd = dot.path.workspace(), stdin = pathspec_input }, function(_, code, stderr)
     if code ~= 0 then
-      report_git_failure("stage", entry.filepath, code, stderr)
+      report_git_failure("stage", target.filepath, code, stderr)
       return
     end
 
@@ -434,19 +538,19 @@ function M.stage(ctx)
   end)
 end
 
----Unstage the file targeted by the active workspace pane
+---Unstage the file or directory targeted by the active workspace pane
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.unstage(ctx)
-  local entry = get_action_entry(ctx)
-  if not entry or entry.stage_type ~= "staged" then
+  local target = get_transfer_target(ctx, "staged")
+  if not target then
     return
   end
-  local transfer = capture_transfer(ctx, entry, "unstaged")
+  local transfer = capture_transfer(ctx, target, "unstaged")
 
   local workspace = dot.path.workspace()
   local function on_unstage(_, code, stderr)
     if code ~= 0 then
-      report_git_failure("unstage", entry.filepath, code, stderr)
+      report_git_failure("unstage", target.filepath, code, stderr)
       return
     end
 
@@ -458,24 +562,30 @@ function M.unstage(ctx)
     { cwd = workspace },
     function(_, code, stderr)
       if code == 1 then
-        stl.git.exec.exec_async(
-          { "--literal-pathspecs", "rm", "--cached", "-f", "--", entry.filepath },
-          { cwd = workspace },
-          on_unstage
-        )
+        local args = {
+          "--literal-pathspecs",
+          "rm",
+          "--cached",
+          "-f",
+          "--pathspec-from-file=-",
+          "--pathspec-file-nul",
+        } ---@type string[]
+        stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, on_unstage)
         return
       end
       if code ~= 0 then
-        report_git_failure("unstage", entry.filepath, code, stderr)
+        report_git_failure("unstage", target.filepath, code, stderr)
         return
       end
 
-      local args = { "--literal-pathspecs", "reset", "HEAD", "--" } ---@type string[]
-      if entry.status == "R" and entry.prev_filepath then
-        args[#args + 1] = entry.prev_filepath
-      end
-      args[#args + 1] = entry.filepath
-      stl.git.exec.exec_async(args, { cwd = workspace }, on_unstage)
+      local args = {
+        "--literal-pathspecs",
+        "reset",
+        "HEAD",
+        "--pathspec-from-file=-",
+        "--pathspec-file-nul",
+      } ---@type string[]
+      stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, on_unstage)
     end
   )
 end

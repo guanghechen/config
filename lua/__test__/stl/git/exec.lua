@@ -44,6 +44,21 @@ t:test("exec_async forwards Git stderr on failure", function()
   t.assert_eq("fatal: index is locked\n", actual.stderr, "stderr")
 end)
 
+t:test("exec_async forwards NUL-delimited stdin", function()
+  t:patch_table(vim, "system", function(_, opts, callback)
+    t.assert_true(opts.text, "text output")
+    t.assert_eq("old.lua\0new.lua\0", opts.stdin, "stdin")
+    callback({ code = 0, stdout = "", stderr = "" })
+    return {}
+  end)
+
+  exec.exec_async(
+    { "add", "--pathspec-from-file=-", "--pathspec-file-nul" },
+    { cwd = "/repo", stdin = "old.lua\0new.lua\0" },
+    function() end
+  )
+end)
+
 t:test("exec_async converts only the Git working directory to an OS path", function()
   local command = {} ---@type string[]
   t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)

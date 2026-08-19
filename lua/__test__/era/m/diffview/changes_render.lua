@@ -28,6 +28,8 @@ bootstrap.with_global(t, "stl", {
 })
 t:patch_table(package.loaded, "era.m.diffview.config", {
   NS = ns,
+  BUFOPTS_PANEL = {},
+  FT = { CHANGES = "diffview-changes-test" },
   ICONS = { SEPARATOR = "-" },
   FILETREE_WIDTH = 40,
   WINOPTS_PANEL = {},
@@ -88,6 +90,18 @@ local function render(viewtype, stage_type)
   })
 end
 
+---@param line_map                      era.m.diffview.IFiletreeLineMap[]
+---@param uuid                          string
+---@return integer
+local function find_uuid_line(line_map, uuid)
+  for lnum, item in ipairs(line_map) do
+    if item.uuid == uuid then
+      return lnum
+    end
+  end
+  error("missing line for " .. uuid)
+end
+
 ---@param viewtype                     stl.m.diffview.PanelViewTypeEnum
 local function assert_aligned_columns(viewtype)
   local overlays = {} ---@type table<string, era.m.diffview.IOverlay>
@@ -108,6 +122,60 @@ end)
 
 t:test("render: tree uses the same metadata columns", function()
   assert_aligned_columns("tree")
+end)
+
+t:test("create buffer disables mini.surround locally", function()
+  local bufnr = changes.create_buffer("unstaged")
+
+  t.assert_true(vim.b[bufnr].minisurround_disable, "mini.surround disabled")
+  t.assert_eq("unstaged", changes.get_stage_type(bufnr), "stage ownership")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("tree navigation matches explorer parent and last-child semantics", function()
+  local tree_entries = {
+    { filepath = "src/a.lua", stage_type = "unstaged", status = "M" },
+    { filepath = "src/sub/b.lua", stage_type = "unstaged", status = "M" },
+    { filepath = "src/z.lua", stage_type = "unstaged", status = "M" },
+    { filepath = "tail.lua", stage_type = "unstaged", status = "M" },
+  }
+  local result = changes.render(tree_entries, {
+    stage_type = "unstaged",
+    viewtype = "tree",
+    foldempty = false,
+    collapsed_dirs = {},
+    panel_width = 40,
+  })
+  local src_lnum = find_uuid_line(result.line_map, "src")
+  local sub_lnum = find_uuid_line(result.line_map, "src/sub")
+  local a_lnum = find_uuid_line(result.line_map, "src/a.lua")
+  local b_lnum = find_uuid_line(result.line_map, "src/sub/b.lua")
+  local z_lnum = find_uuid_line(result.line_map, "src/z.lua")
+  local tail_lnum = find_uuid_line(result.line_map, "tail.lua")
+  local navigation = result.navigation
+
+  t.assert_nil(changes.resolve_parent_lnum(navigation, src_lnum), "top-level parent is hidden")
+  t.assert_eq(sub_lnum, changes.resolve_parent_lnum(navigation, b_lnum), "visible parent")
+  t.assert_eq(z_lnum, changes.resolve_last_child_or_sibling_lnum(navigation, src_lnum), "last direct child")
+  t.assert_eq(z_lnum, changes.resolve_last_child_or_sibling_lnum(navigation, a_lnum), "last sibling")
+  t.assert_nil(changes.resolve_last_child_or_sibling_lnum(navigation, tail_lnum), "last root is a no-op")
+
+  local winnr = vim.api.nvim_get_current_win()
+  local original_bufnr = vim.api.nvim_win_get_buf(winnr)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  changes.apply_to_buffer(bufnr, result)
+
+  vim.api.nvim_win_set_cursor(winnr, { b_lnum, 0 })
+  changes.goto_parent_node()
+  t.assert_eq(sub_lnum, vim.api.nvim_win_get_cursor(winnr)[1], "parent cursor")
+
+  vim.api.nvim_win_set_cursor(winnr, { a_lnum, 0 })
+  changes.goto_last_child_or_sibling()
+  t.assert_eq(z_lnum, vim.api.nvim_win_get_cursor(winnr)[1], "last sibling cursor")
+
+  vim.api.nvim_win_set_buf(winnr, original_bufnr)
+  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("render: narrow pane keeps status when full metadata cannot fit", function()
@@ -200,6 +268,45 @@ t:test("apply: installs right-aligned virtual text", function()
 
   t.assert_eq(2, right_aligned, "one right-aligned overlay per staged file")
   vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("apply: publishes semantic state before fallible decorations", function()
+  local old_result = render("tree", "staged")
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  changes.apply_to_buffer(bufnr, old_result)
+
+  local new_line_map = {
+    {
+      type = "file",
+      entry = { filepath = "new.lua", stage_type = "staged", status = "M" },
+      stage_type = "staged",
+      uuid = "new.lua",
+    },
+  }
+  local new_navigation = {
+    parent_lnums = { 0 },
+    last_child_lnums = { 0 },
+    root_last_lnum = 1,
+  } ---@type era.m.diffview.ITreeNavigation
+  local restore_range = t:patch_table(vim.hl, "range", function()
+    error("injected decoration failure")
+  end)
+  local ok = pcall(changes.apply_to_buffer, bufnr, {
+    lines = { "new line" },
+    highlights = { { lnum = 0, coll = 0, colr = 1, hlname = "test" } },
+    line_map = new_line_map,
+    navigation = new_navigation,
+  })
+  restore_range()
+
+  t.assert_false(ok, "decoration failure propagates")
+  t.assert_eq("new line", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1], "new lines remain applied")
+  t.assert_true(rawequal(new_line_map, changes.get_line_map(bufnr)), "line map matches new lines")
+  t.assert_true(rawequal(new_navigation, changes.get_navigation(bufnr)), "navigation matches new lines")
+
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+  t.assert_nil(changes.get_line_map(bufnr), "wiped buffer releases line map")
+  t.assert_nil(changes.get_navigation(bufnr), "wiped buffer releases navigation")
 end)
 
 t:test("window options keep the Changes column width fixed", function()

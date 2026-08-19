@@ -22,6 +22,16 @@ local function git(repo, ...)
   return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
 end
 
+---@param args                          string[]
+---@param opts                          { cwd: string, stdin: string|nil }
+---@param callback                      fun(lines: string[], code: integer, stderr: string)
+local function exec_real_git(args, opts, callback)
+  local cmd = { "git", "-C", opts.cwd }
+  vim.list_extend(cmd, args)
+  local result = vim.system(cmd, { text = true, stdin = opts.stdin }):wait()
+  callback({}, result.code, result.stderr or "")
+end
+
 bootstrap.with_global(t, "stl", {
   env = { PATH_SEP = "/" },
   async = {
@@ -77,6 +87,9 @@ t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
   end,
   get_entry_at_line = function(bufnr, lnum)
     return entries_at_line[bufnr] and entries_at_line[bufnr][lnum]
+  end,
+  get_item_at_line = function(bufnr, lnum)
+    return line_maps[bufnr] and line_maps[bufnr][lnum]
   end,
   get_line_map = function(bufnr)
     return line_maps[bufnr]
@@ -145,6 +158,31 @@ local function assert_git_call(call, command, filepath)
   t.assert_eq("/repo", call.opts.cwd, "cwd")
 end
 
+---@param call                          table
+---@return string[]
+local function get_pathspecs(call)
+  local input = assert(call.opts.stdin, "pathspec stdin")
+  t.assert_eq("\0", input:sub(-1), "trailing NUL")
+  return vim.split(input:sub(1, -2), "\0", { plain = true })
+end
+
+---@param call                          table
+---@param command                       string
+---@param expected                      string[]
+local function assert_transfer_call(call, command, expected)
+  t.assert_eq("--literal-pathspecs", call.args[1], "literal pathspecs")
+  t.assert_eq(command, call.args[2], "git command")
+  t.assert_eq("--pathspec-from-file=-", call.args[#call.args - 1], "pathspec stdin")
+  t.assert_eq("--pathspec-file-nul", call.args[#call.args], "NUL pathspecs")
+  t.assert_eq("/repo", call.opts.cwd, "cwd")
+
+  local actual = get_pathspecs(call)
+  t.assert_eq(#expected, #actual, "pathspec count")
+  for i, filepath in ipairs(expected) do
+    t.assert_eq(filepath, actual[i], "pathspec " .. i)
+  end
+end
+
 t:test("changes pane routes stage and unstage to the entry at cursor", function()
   reset_calls()
   local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -170,9 +208,9 @@ t:test("changes pane routes stage and unstage to the entry at cursor", function(
   action.unstage(ctx)
 
   t.assert_eq(3, #git_calls, "git calls")
-  assert_git_call(git_calls[1], "add", "cursor-unstaged.txt")
+  assert_transfer_call(git_calls[1], "add", { "cursor-unstaged.txt" })
   t.assert_eq("rev-parse", git_calls[2].args[1], "HEAD probe")
-  assert_git_call(git_calls[3], "reset", "cursor-staged.txt")
+  assert_transfer_call(git_calls[3], "reset", { "cursor-staged.txt" })
   t.assert_eq("HEAD", git_calls[3].args[3], "reset target")
   t.assert_eq(2, refreshed, "refresh calls")
   entries_at_line[changes_bufnr] = nil
@@ -231,6 +269,9 @@ t:test("stage transfers keep the source work queue stable and move focus only wh
   local root_unstaged = { filepath = "root.lua", stage_type = "unstaged", status = "M" }
   local root_staged = { filepath = "root.lua", stage_type = "staged", status = "M" }
   local hidden_unstaged = { filepath = "hidden/inside.lua", stage_type = "unstaged", status = "M" }
+  local nested_unstaged = { filepath = "src/a.lua", stage_type = "unstaged", status = "M" }
+  local nested_staged = { filepath = "src/a.lua", stage_type = "staged", status = "M" }
+  local remaining_unstaged = { filepath = "remaining.lua", stage_type = "unstaged", status = "M" }
   local current = first_unstaged ---@type era.m.diffview.IFileEntry
   local entries = { first_unstaged, second_unstaged } ---@type era.m.diffview.IFileEntry[]
   local phase = 1
@@ -266,12 +307,23 @@ t:test("stage transfers keep the source work queue stable and move focus only wh
         line_maps[unstaged_bufnr] = {
           { type = "header", stage_type = "unstaged" },
         }
-      else
+      elseif phase == 4 then
         entries = { root_staged, hidden_unstaged, third_staged }
         current = root_staged
         line_maps[unstaged_bufnr] = {
           { type = "header", stage_type = "unstaged" },
           { type = "directory", uuid = "hidden", stage_type = "unstaged" },
+        }
+      else
+        entries = { nested_staged, remaining_unstaged, third_staged }
+        line_maps[staged_bufnr] = {
+          { type = "header", stage_type = "staged" },
+          { type = "file", entry = nested_staged, stage_type = "staged" },
+          { type = "file", entry = third_staged, stage_type = "staged" },
+        }
+        line_maps[unstaged_bufnr] = {
+          { type = "header", stage_type = "unstaged" },
+          { type = "file", entry = remaining_unstaged, stage_type = "unstaged" },
         }
       end
       callback()
@@ -341,6 +393,22 @@ t:test("stage transfers keep the source work queue stable and move focus only wh
   action.stage(ctx)
   t.assert_eq(root_staged, current, "hidden source entries follow the canonical destination entry")
   t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "hidden-only source moves focus to destination")
+
+  phase = 5
+  current = nested_unstaged
+  entries = { nested_unstaged, remaining_unstaged, third_staged }
+  vim.api.nvim_buf_set_lines(unstaged_bufnr, 0, -1, false, { "Unstaged", "src", "remaining.lua" })
+  entries_at_line[unstaged_bufnr] = {}
+  line_maps[unstaged_bufnr] = {
+    { type = "header", stage_type = "unstaged" },
+    { type = "directory", uuid = "src", stage_type = "unstaged" },
+    { type = "file", entry = remaining_unstaged, stage_type = "unstaged" },
+  }
+  vim.api.nvim_set_current_win(unstaged_winnr)
+  vim.api.nvim_win_set_cursor(unstaged_winnr, { 2, 0 })
+  action.stage(ctx)
+  t.assert_eq(remaining_unstaged, current, "directory stage selects the next source entry")
+  t.assert_eq(unstaged_winnr, vim.api.nvim_get_current_win(), "directory stage keeps source focus")
 
   entries_at_line[staged_bufnr] = nil
   entries_at_line[unstaged_bufnr] = nil
@@ -413,9 +481,9 @@ t:test("sbs routes stage and unstage to the canonical current entry", function()
   action.unstage(ctx)
 
   t.assert_eq(3, #git_calls, "git calls")
-  assert_git_call(git_calls[1], "add", "preview-unstaged.txt")
+  assert_transfer_call(git_calls[1], "add", { "preview-unstaged.txt" })
   t.assert_eq("rev-parse", git_calls[2].args[1], "HEAD probe")
-  assert_git_call(git_calls[3], "reset", "preview-staged.txt")
+  assert_transfer_call(git_calls[3], "reset", { "preview-staged.txt" })
   t.assert_eq(2, refreshed, "refresh calls")
   vim.api.nvim_buf_delete(ctx.layout.changes_bufnr, { force = true })
   vim.api.nvim_buf_delete(sbs_bufnr, { force = true })
@@ -443,12 +511,8 @@ t:test("rename unstage resets both source and destination", function()
   action.unstage(ctx)
 
   t.assert_eq("rev-parse", git_calls[1].args[1], "HEAD probe")
-  t.assert_eq("--literal-pathspecs", git_calls[2].args[1], "literal pathspecs")
-  t.assert_eq("reset", git_calls[2].args[2], "git command")
+  assert_transfer_call(git_calls[2], "reset", { "old.lua", "new.lua" })
   t.assert_eq("HEAD", git_calls[2].args[3], "reset target")
-  t.assert_eq("--", git_calls[2].args[4], "path separator")
-  t.assert_eq("old.lua", git_calls[2].args[5], "rename source")
-  t.assert_eq("new.lua", git_calls[2].args[6], "rename destination")
   t.assert_eq(1, refreshed, "refresh calls")
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
@@ -468,12 +532,137 @@ t:test("rename stage adds both source and destination", function()
 
   action.stage(ctx)
 
-  t.assert_eq("--literal-pathspecs", git_calls[1].args[1], "literal pathspecs")
-  t.assert_eq("add", git_calls[1].args[2], "git command")
-  t.assert_eq("--", git_calls[1].args[3], "path separator")
-  t.assert_eq("old.lua", git_calls[1].args[4], "rename source")
-  t.assert_eq("new.lua", git_calls[1].args[5], "rename destination")
+  assert_transfer_call(git_calls[1], "add", { "old.lua", "new.lua" })
   t.assert_eq(1, refreshed, "refresh calls")
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("changes directory stage includes every unstaged descendant", function()
+  reset_calls()
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "Unstaged", "src" })
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  line_maps[changes_bufnr] = {
+    { type = "header", stage_type = "unstaged" },
+    { type = "directory", stage_type = "unstaged", uuid = "src" },
+  }
+  local entries = {
+    { filepath = "src/a.lua", stage_type = "unstaged", status = "M" },
+    { filepath = "src/nested/b.lua", stage_type = "unstaged", status = "M" },
+    {
+      filepath = "src/new.lua",
+      prev_filepath = "legacy.lua",
+      stage_type = "unstaged",
+      status = "R",
+    },
+    { filepath = "outside.lua", stage_type = "unstaged", status = "M" },
+    { filepath = "src/already.lua", stage_type = "staged", status = "M" },
+  }
+  for i = 1, 20000 do
+    entries[#entries + 1] = {
+      filepath = string.format("src/generated/%05d.lua", i),
+      prev_filepath = string.format("legacy/generated/%05d.lua", i),
+      stage_type = "unstaged",
+      status = "R",
+    }
+  end
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      get_current_entry = function()
+        return nil
+      end,
+      get_entries = function()
+        return entries
+      end,
+      request_refresh = request_refresh,
+    },
+  }
+
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  action.stage(ctx)
+
+  local call = git_calls[1]
+  t.assert_eq(4, #call.args, "argv stays fixed as external renames grow")
+  local pathspecs = get_pathspecs(call)
+  t.assert_eq(40004, #pathspecs, "all exact snapshot paths")
+  t.assert_eq("src/a.lua", pathspecs[1], "direct child")
+  t.assert_eq("src/nested/b.lua", pathspecs[2], "nested child")
+  t.assert_eq("legacy.lua", pathspecs[3], "rename source")
+  t.assert_eq("src/new.lua", pathspecs[4], "rename destination")
+  t.assert_eq("legacy/generated/00001.lua", pathspecs[5], "first generated source")
+  t.assert_eq("src/generated/00001.lua", pathspecs[6], "first generated destination")
+  t.assert_eq("src/generated/20000.lua", pathspecs[#pathspecs], "last generated destination")
+  t.assert_eq(1, refreshed, "refresh calls")
+
+  line_maps[changes_bufnr] = nil
+  vim.cmd.enew()
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("changes directory unstage handles HEAD and unborn repositories", function()
+  reset_calls()
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "Staged", "src" })
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  line_maps[changes_bufnr] = {
+    { type = "header", stage_type = "staged" },
+    { type = "directory", stage_type = "staged", uuid = "src" },
+  }
+  local entries = {
+    { filepath = "src/a.lua", stage_type = "staged", status = "M" },
+    {
+      filepath = "src/new.lua",
+      prev_filepath = "legacy.lua",
+      stage_type = "staged",
+      status = "R",
+    },
+    { filepath = "outside.lua", stage_type = "staged", status = "M" },
+  }
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      get_current_entry = function()
+        return nil
+      end,
+      get_entries = function()
+        return entries
+      end,
+      request_refresh = request_refresh,
+    },
+  }
+
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  action.unstage(ctx)
+
+  t.assert_eq("rev-parse", git_calls[1].args[1], "HEAD probe")
+  assert_transfer_call(git_calls[2], "reset", { "src/a.lua", "legacy.lua", "src/new.lua" })
+  t.assert_eq("HEAD", git_calls[2].args[3], "reset target")
+  t.assert_eq(1, refreshed, "HEAD refresh")
+
+  reset_calls()
+  entries = {
+    { filepath = "src/new.lua", stage_type = "staged", status = "A" },
+  }
+  line_maps[changes_bufnr] = {
+    { type = "header", stage_type = "staged" },
+    { type = "directory", stage_type = "staged", uuid = "src" },
+  }
+  git_results = {
+    { code = 1, stderr = "" },
+    { code = 0, stderr = "" },
+  }
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  action.unstage(ctx)
+
+  t.assert_eq("rev-parse", git_calls[1].args[1], "unborn HEAD probe")
+  assert_transfer_call(git_calls[2], "rm", { "src/new.lua" })
+  t.assert_eq("--cached", git_calls[2].args[3], "cached only")
+  t.assert_eq("-f", git_calls[2].args[4], "force index removal")
+  t.assert_eq(1, refreshed, "unborn refresh")
+
+  line_maps[changes_bufnr] = nil
+  vim.cmd.enew()
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 
@@ -497,12 +686,7 @@ t:test("stage, unstage, and discard treat pathspec-magic filenames literally", f
     vim.fn.writefile({ "other changed" }, repo .. "/other.txt")
     workspace = repo
 
-    t:patch_table(stl.git.exec, "exec_async", function(args, opts, callback)
-      local cmd = { "git", "-C", assert(opts.cwd) }
-      vim.list_extend(cmd, args)
-      local result = vim.system(cmd, { text = true }):wait()
-      callback({}, result.code, result.stderr or "")
-    end)
+    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
     local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "magic" })
@@ -563,12 +747,7 @@ t:test("rename stage updates both paths in a real Git index", function()
     t.assert_eq(0, git(repo, "add", "-N", "--", "new.lua").code, "intent-to-add destination")
     workspace = repo
 
-    t:patch_table(stl.git.exec, "exec_async", function(args, opts, callback)
-      local cmd = { "git", "-C", assert(opts.cwd) }
-      vim.list_extend(cmd, args)
-      local result = vim.system(cmd, { text = true }):wait()
-      callback({}, result.code, result.stderr or "")
-    end)
+    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
     local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     local ctx = {
@@ -617,12 +796,7 @@ t:test("rename unstage clears both paths from a real Git index", function()
     t.assert_eq(0, git(repo, "mv", "old.lua", "new.lua").code, "git mv")
     workspace = repo
 
-    t:patch_table(stl.git.exec, "exec_async", function(args, opts, callback)
-      local cmd = { "git", "-C", assert(opts.cwd) }
-      vim.list_extend(cmd, args)
-      local result = vim.system(cmd, { text = true }):wait()
-      callback({}, result.code, result.stderr or "")
-    end)
+    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
     local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     local ctx = {
@@ -662,12 +836,7 @@ t:test("unborn unstage removes only the index entry", function()
     t.assert_eq(0, git(repo, "add", "--", "staged.lua").code, "git add")
     workspace = repo
 
-    t:patch_table(stl.git.exec, "exec_async", function(args, opts, callback)
-      local cmd = { "git", "-C", assert(opts.cwd) }
-      vim.list_extend(cmd, args)
-      local result = vim.system(cmd, { text = true }):wait()
-      callback({}, result.code, result.stderr or "")
-    end)
+    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
     local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     local ctx = {
@@ -842,6 +1011,51 @@ t:test("sbs keymaps route whole-file stage and unstage", function()
     end
     t.assert_true(has_stage, "gs installed in sibling buffer")
     t.assert_true(has_unstage, "gu installed in sibling buffer")
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+end)
+
+t:test("changes keymaps route explorer-style tree navigation", function()
+  local calls = {} ---@type string[]
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
+    goto_parent_node = function()
+      calls[#calls + 1] = "parent"
+    end,
+    goto_last_child_or_sibling = function()
+      calls[#calls + 1] = "last"
+    end,
+  })
+
+  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  for _, mapping in ipairs(keymap.gen_changes({})) do
+    if mapping.key == "[i" or mapping.key == "]i" then
+      mapping.callback()
+    end
+  end
+
+  t.assert_eq("parent", calls[1], "[i routing")
+  t.assert_eq("last", calls[2], "]i routing")
+
+  local staged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local unstaged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  keymap.setup_changes({
+    layout = {
+      changes = {
+        staged = { stage_type = "staged", bufnr = staged_bufnr },
+        unstaged = { stage_type = "unstaged", bufnr = unstaged_bufnr },
+      },
+    },
+  })
+  for _, bufnr in ipairs({ staged_bufnr, unstaged_bufnr }) do
+    local mappings = vim.api.nvim_buf_get_keymap(bufnr, "n")
+    local has_parent = false
+    local has_last = false
+    for _, mapping in ipairs(mappings) do
+      has_parent = has_parent or mapping.lhs == "[i"
+      has_last = has_last or mapping.lhs == "]i"
+    end
+    t.assert_true(has_parent, "[i installed in sibling buffer")
+    t.assert_true(has_last, "]i installed in sibling buffer")
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end)

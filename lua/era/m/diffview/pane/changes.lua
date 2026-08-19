@@ -16,6 +16,38 @@ local M = {}
 
 local NS = config.NS
 
+---@class era.m.diffview.pane.changes.IRenderState
+---@field public line_map               era.m.diffview.IFiletreeLineMap[]
+---@field public navigation             era.m.diffview.ITreeNavigation
+
+local EMPTY_NAVIGATION = {
+  parent_lnums = {},
+  last_child_lnums = {},
+  root_last_lnum = 0,
+} ---@type era.m.diffview.ITreeNavigation
+
+-- Keep layout-sized render state in Lua. Reading nested arrays from vim.b copies them on every access.
+local RENDER_STATE_BY_BUFNR = {} ---@type table<integer, era.m.diffview.pane.changes.IRenderState>
+local RENDER_STATE_CLEANUP_REGISTERED = {} ---@type table<integer, true>
+
+---@param bufnr                         integer
+local function ensure_render_state_cleanup(bufnr)
+  if RENDER_STATE_CLEANUP_REGISTERED[bufnr] then
+    return
+  end
+
+  vim.api.nvim_create_autocmd("BufWipeout", {
+    buffer = bufnr,
+    once = true,
+    desc = "diffview: release changes render state",
+    callback = function()
+      RENDER_STATE_BY_BUFNR[bufnr] = nil
+      RENDER_STATE_CLEANUP_REGISTERED[bufnr] = nil
+    end,
+  })
+  RENDER_STATE_CLEANUP_REGISTERED[bufnr] = true
+end
+
 ---@class era.m.diffview.pane.changes.IOverlayEntry
 ---@field public lnum                   integer
 ---@field public entry                  era.m.diffview.IFileEntry
@@ -131,6 +163,7 @@ function M.create_buffer(stage_type)
   end
   vim.api.nvim_set_option_value("filetype", config.FT.CHANGES, { buf = bufnr })
   vim.b[bufnr].diffview_changes_stage_type = stage_type
+  vim.b[bufnr].minisurround_disable = true
 
   return bufnr
 end
@@ -356,7 +389,8 @@ local function render_section_tree(
   line_map,
   collapsed_dirs,
   foldempty,
-  overlay_entries
+  overlay_entries,
+  navigation
 )
   if #entries == 0 then
     return
@@ -381,6 +415,18 @@ local function render_section_tree(
     end,
   })
 
+  local offset = #lines ---@type integer
+  for row = 1, result.layout:len() do
+    local lnum = offset + row ---@type integer
+    local parent_lnum = result.layout:parent_lnum(row) ---@type integer|nil
+    local last_child_lnum = result.layout:last_child_lnum(row) ---@type integer|nil
+    navigation.parent_lnums[lnum] = parent_lnum ~= nil and (offset + parent_lnum) or 0
+    navigation.last_child_lnums[lnum] = last_child_lnum ~= nil and (offset + last_child_lnum) or 0
+    if parent_lnum == nil then
+      navigation.root_last_lnum = lnum
+    end
+  end
+
   vim.list_extend(lines, result.lines)
   vim.list_extend(highlights, result.highlights)
 end
@@ -392,7 +438,7 @@ end
 ---@param highlights                    stl.t.IHighlight[]
 ---@param line_map                      era.m.diffview.IFiletreeLineMap[]
 ---@param overlay_entries               era.m.diffview.pane.changes.IOverlayEntry[]
-local function render_section_list(entries, stage_type, lines, highlights, line_map, overlay_entries)
+local function render_section_list(entries, stage_type, lines, highlights, line_map, overlay_entries, navigation)
   for _, entry in ipairs(get_sorted_section_entries(entries)) do
     local lnum = #lines ---@type integer
     local col = 0 ---@type integer
@@ -433,6 +479,10 @@ local function render_section_list(entries, stage_type, lines, highlights, line_
     }
 
     lines[#lines + 1] = line
+    local row = #lines ---@type integer
+    navigation.parent_lnums[row] = 0
+    navigation.last_child_lnums[row] = 0
+    navigation.root_last_lnum = row
     line_map[#line_map + 1] = {
       type = "file",
       entry = entry,
@@ -464,12 +514,20 @@ function M.render(entries, opts)
   local highlights = {} ---@type stl.t.IHighlight[]
   local line_map = {} ---@type era.m.diffview.IFiletreeLineMap[]
   local overlay_entries = {} ---@type era.m.diffview.pane.changes.IOverlayEntry[]
+  local navigation = {
+    parent_lnums = {},
+    last_child_lnums = {},
+    root_last_lnum = 0,
+  } ---@type era.m.diffview.ITreeNavigation
 
   -- Get options
   local stage_type = opts.stage_type
   local viewtype = opts.viewtype or dot.context.diffview.flag_panel_viewtype:snapshot() ---@type stl.m.diffview.PanelViewTypeEnum
   local foldempty_opt = opts.foldempty
-  local foldempty = foldempty_opt ~= nil and foldempty_opt or dot.context.diffview.flag_foldempty:snapshot() ---@type boolean
+  local foldempty = foldempty_opt ---@type boolean|nil
+  if foldempty == nil then
+    foldempty = dot.context.diffview.flag_foldempty:snapshot()
+  end
   local collapsed_dirs = opts.collapsed_dirs or {} ---@type table<string, boolean>
   local panel_width = opts.panel_width or config.FILETREE_WIDTH ---@type integer
   local section_entries = {} ---@type era.m.diffview.IFileEntry[]
@@ -490,9 +548,11 @@ function M.render(entries, opts)
     colr = #header,
   }
   line_map[#line_map + 1] = { type = "header", entry = nil, stage_type = stage_type, uuid = nil }
+  navigation.parent_lnums[1] = 0
+  navigation.last_child_lnums[1] = 0
 
   if viewtype == "list" then
-    render_section_list(section_entries, stage_type, lines, highlights, line_map, overlay_entries)
+    render_section_list(section_entries, stage_type, lines, highlights, line_map, overlay_entries, navigation)
   else
     render_section_tree(
       section_entries,
@@ -502,7 +562,8 @@ function M.render(entries, opts)
       line_map,
       collapsed_dirs,
       foldempty,
-      overlay_entries
+      overlay_entries,
+      navigation
     )
   end
 
@@ -511,6 +572,7 @@ function M.render(entries, opts)
     highlights = highlights,
     line_map = line_map,
     overlays = build_overlays(overlay_entries, panel_width, opts.metadata_widths or M.measure_metadata(entries)),
+    navigation = navigation,
   }
 end
 
@@ -522,10 +584,19 @@ function M.apply_to_buffer(bufnr, result)
     return
   end
 
+  ensure_render_state_cleanup(bufnr)
+
   -- Set lines
   local was_modifiable = vim.api.nvim_get_option_value("modifiable", { buf = bufnr })
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, result.lines)
+
+  -- Publish line identity and navigation together before fallible decoration work.
+  RENDER_STATE_BY_BUFNR[bufnr] = {
+    line_map = result.line_map,
+    navigation = result.navigation or EMPTY_NAVIGATION,
+  }
+
   vim.api.nvim_set_option_value("modifiable", was_modifiable, { buf = bufnr })
   vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
 
@@ -544,9 +615,6 @@ function M.apply_to_buffer(bufnr, result)
       })
     end
   end
-
-  -- Store line_map
-  M.set_line_map(bufnr, result.line_map)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -557,14 +625,75 @@ end
 ---@param bufnr                         integer
 ---@return era.m.diffview.IFiletreeLineMap[]|nil
 function M.get_line_map(bufnr)
-  return vim.b[bufnr].diffview_changes_line_map
+  local state = RENDER_STATE_BY_BUFNR[bufnr] ---@type era.m.diffview.pane.changes.IRenderState|nil
+  return state ~= nil and state.line_map or nil
 end
 
----Set line map for changes buffer
+---Get tree navigation for changes buffer.
 ---@param bufnr                         integer
----@param line_map                      era.m.diffview.IFiletreeLineMap[]
-function M.set_line_map(bufnr, line_map)
-  vim.b[bufnr].diffview_changes_line_map = line_map
+---@return era.m.diffview.ITreeNavigation|nil
+function M.get_navigation(bufnr)
+  local state = RENDER_STATE_BY_BUFNR[bufnr] ---@type era.m.diffview.pane.changes.IRenderState|nil
+  return state ~= nil and state.navigation or nil
+end
+
+---@param navigation                    era.m.diffview.ITreeNavigation|nil
+---@param lnum                          integer
+---@return integer|nil
+function M.resolve_parent_lnum(navigation, lnum)
+  local parent_lnum = navigation ~= nil and navigation.parent_lnums[lnum] or 0 ---@type integer
+  return parent_lnum ~= nil and parent_lnum > 0 and parent_lnum or nil
+end
+
+---@param navigation                    era.m.diffview.ITreeNavigation|nil
+---@param lnum                          integer
+---@return integer|nil
+function M.resolve_last_child_or_sibling_lnum(navigation, lnum)
+  if navigation == nil or navigation.parent_lnums[lnum] == nil then
+    return nil
+  end
+
+  local target_lnum = navigation.last_child_lnums[lnum] or 0 ---@type integer
+  if target_lnum <= 0 then
+    local parent_lnum = navigation.parent_lnums[lnum] or 0 ---@type integer
+    if parent_lnum > 0 then
+      target_lnum = navigation.last_child_lnums[parent_lnum] or 0
+    else
+      target_lnum = navigation.root_last_lnum
+    end
+  end
+
+  return target_lnum > 0 and target_lnum ~= lnum and target_lnum or nil
+end
+
+---@param target_lnum                   integer|nil
+local function goto_lnum(target_lnum)
+  if target_lnum == nil then
+    return
+  end
+  vim.api.nvim_win_set_cursor(0, { target_lnum, 0 })
+end
+
+---Move to the visible parent, matching explorer tree navigation.
+function M.goto_parent_node()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local lnum = vim.api.nvim_win_get_cursor(0)[1] ---@type integer
+  local item = M.get_item_at_line(bufnr, lnum)
+  if item == nil or item.type == "header" then
+    return
+  end
+  goto_lnum(M.resolve_parent_lnum(M.get_navigation(bufnr), lnum))
+end
+
+---Move to the last child, or the last sibling for a leaf, matching explorer tree navigation.
+function M.goto_last_child_or_sibling()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local lnum = vim.api.nvim_win_get_cursor(0)[1] ---@type integer
+  local item = M.get_item_at_line(bufnr, lnum)
+  if item == nil or item.type == "header" then
+    return
+  end
+  goto_lnum(M.resolve_last_child_or_sibling_lnum(M.get_navigation(bufnr), lnum))
 end
 
 ---Get collapsed dirs map for changes buffer
