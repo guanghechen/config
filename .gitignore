@@ -1,6 +1,7 @@
 /.last-cleanup
 /.claude.json*
 /.claude*.json*
+/CLAUDE.md
 
 
 *.local.json
