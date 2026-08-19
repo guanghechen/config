@@ -1,7 +1,6 @@
 ---@alias era.m.ai.AgentName
 ---| "claude"
 ---| "codex"
----| "copilot"
 ---| "gemini"
 ---| "opencode"
 

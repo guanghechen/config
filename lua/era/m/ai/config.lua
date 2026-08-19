@@ -2,13 +2,12 @@
 local M = {}
 
 ---@type era.m.ai.AgentName[]
-M.agents = { "claude", "codex", "copilot", "gemini", "opencode" }
+M.agents = { "claude", "codex", "gemini", "opencode" }
 
 ---@type table<era.m.ai.AgentName, string>
 M.agent_labels = {
   claude = "claude",
   codex = "codex",
-  copilot = "copilot",
   gemini = "gemini",
   opencode = "opencode",
 }
@@ -44,18 +43,6 @@ M.tools = {
     end,
     proc_pattern = "\\<codex\\>",
     url = "https://github.com/openai/codex",
-    vim_mode = false,
-  },
-  copilot = {
-    cmd = "copilot",
-    args = function()
-      return { "--banner" }
-    end,
-    env = function()
-      return {}
-    end,
-    proc_pattern = "\\<copilot\\>",
-    url = "https://github.com/github/copilot-cli",
     vim_mode = false,
   },
   gemini = {

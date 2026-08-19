@@ -168,7 +168,6 @@ local __mods = {
 ---@field public setup_breakpoints      fun(): nil
 ---@field public setup_context          fun(storage: dot.context.storage|nil): nil
 ---@field public setup_diagnostics      fun(): nil
----@field public setup_lsp              fun(): nil
 local M = setmetatable({
   __mods = __mods,
   state = state,
@@ -283,13 +282,6 @@ function M.setup_diagnostics()
     end
     vim.diagnostic.config(config)
   end)
-end
-
----@return nil
-function M.setup_lsp()
-  if not vim.g.vscode and M.context.flight.ai_copilot:snapshot() then
-    vim.lsp.enable("copilot")
-  end
 end
 
 return M

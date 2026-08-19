@@ -203,9 +203,7 @@ function M.restart_server()
   })
 
   for _, client in ipairs(clients) do
-    if client.name ~= "copilot" then
-      client:stop(true)
-    end
+    client:stop(true)
   end
 
   vim.defer_fn(function()

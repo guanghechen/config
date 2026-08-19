@@ -48,7 +48,6 @@ statusline
   :place("right", era.m.nvimbar.component.lsp.client(position), 100)
   :place("right", era.m.nvimbar.component.lint.status(position), 95)
   :place("right", era.m.nvimbar.component.ai.status(position), 95)
-  :place("right", era.m.nvimbar.component.copilot.status(position), 95)
   :place("right", era.m.nvimbar.component.lsp.diagnostics(position), 95)
   :place("right", era.m.nvimbar.component.nvim.msg_mode(position), 95)
   :place("right", era.m.nvimbar.component.nvim.msg_command(position), 80)

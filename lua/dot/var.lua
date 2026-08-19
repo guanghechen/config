@@ -149,7 +149,6 @@ M.toggler = {
   "theme_variant_ux",
   "username_ux",
 
-  "ai_copilot_flight",
   "autoformat_flight",
   "autoload_flight",
   "autosave_flight",

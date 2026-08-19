@@ -39,15 +39,11 @@ local function refresh_all()
   local clients = vim.lsp.get_clients({ bufnr = bufnr_sourcefile }) ---@type vim.lsp.Client[]
   if #clients > 0 then
     for _, client in ipairs(clients) do
-      if client.name ~= "copilot" then
-        vim.lsp.enable(client.name, false)
-      end
+      vim.lsp.enable(client.name, false)
     end
 
     for _, client in ipairs(clients) do
-      if client.name ~= "copilot" then
-        vim.lsp.enable(client.name, true)
-      end
+      vim.lsp.enable(client.name, true)
     end
 
     vim.defer_fn(function()

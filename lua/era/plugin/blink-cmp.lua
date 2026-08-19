@@ -203,7 +203,7 @@ return {
             end
           end,
           function()
-            -- Priority 3: Accept copilot inline completion
+            -- Priority 3: Accept LSP inline completion
             return vim.lsp.inline_completion.get()
           end,
           actions.tab_fallback,
@@ -228,7 +228,7 @@ return {
         },
         ["<C-y>"] = {
           function()
-            -- Accept copilot inline completion first if available
+            -- Accept LSP inline completion first if available
             return vim.lsp.inline_completion.get()
           end,
           "select_and_accept",
@@ -242,7 +242,7 @@ return {
         ["<C-h>"] = { "hide", "fallback" },
         ["<C-l>"] = {
           function()
-            -- Accept copilot inline completion first if available
+            -- Accept LSP inline completion first if available
             return vim.lsp.inline_completion.get()
           end,
           "select_and_accept",

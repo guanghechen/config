@@ -30,7 +30,6 @@
 ---@field public msg_mode               stl.c.Observable
 ---@field public msg_transient          stl.c.Observable
 ---
----@field public copilots               table<integer, string>
 ---@field public lsp_symbol_ready       table<integer, boolean>
 ---@field public notification_paused    stl.c.Observable
 ---@field public notification_level     stl.c.Observable
@@ -55,7 +54,6 @@ local M = {
   msg_mode = stl.c.Observable.from_value(""),
   msg_transient = stl.c.Observable.from_value(""),
 
-  copilots = {}, -- Plain object for copilot status per client
   lsp_symbol_ready = {}, -- LSP clients that have responded (success or error) to documentSymbol
   notification_paused = stl.c.Observable.from_value(false),
   notification_level = stl.c.Observable.from_value("TRACE"),
@@ -127,11 +125,6 @@ function M.reset()
   M.msg_lsp:next("")
   M.msg_mode:next("")
   M.msg_transient:next("")
-
-  -- Reset copilot status (plain object)
-  for k in pairs(M.copilots) do
-    M.copilots[k] = nil
-  end
 
   -- Reset LSP symbol ready status (plain object)
   for k in pairs(M.lsp_symbol_ready) do

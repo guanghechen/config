@@ -26,7 +26,6 @@ function M.gen_hlgroup_map(context)
     BlinkCmpKindColor = { fg = c.tokenCssPropertyValue, bg = c.none },
     BlinkCmpKindConstant = { fg = c.tokenConstantsAndEnums, bg = c.none },
     BlinkCmpKindConstructor = { fg = c.tokenFunctionDeclarations, bg = c.none },
-    BlinkCmpKindCopilot = { fg = c.success, bg = c.none },
     BlinkCmpKindDefault = { fg = c.textDim, bg = c.none },
     BlinkCmpKindEnum = { fg = c.tokenConstantsAndEnums, bg = c.none },
     BlinkCmpKindEnumMember = { fg = c.tokenConstantsAndEnums, bg = c.none },

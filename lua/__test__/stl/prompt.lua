@@ -233,11 +233,6 @@ t:test("render: opencode keeps slash commands unchanged", function()
   t.assert_eq("/test", prompt.render(input, "opencode"))
 end)
 
-t:test("render: copilot keeps slash commands unchanged", function()
-  local input = "/help"
-  t.assert_eq("/help", prompt.render(input, "copilot"))
-end)
-
 t:test("render: codex transforms slash commands", function()
   local input = "/commit"
   t.assert_eq("/prompts:commit", prompt.render(input, "codex"))

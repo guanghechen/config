@@ -27,7 +27,6 @@ function M.gen_hlgroup_map(context)
     BlinkCmpKindColor = { fg = c.fg, bg = item_kind_bg },
     BlinkCmpKindConstant = { fg = c.orange, bg = item_kind_bg },
     BlinkCmpKindConstructor = { fg = c.magenta, bg = item_kind_bg },
-    BlinkCmpKindCopilot = { fg = c.teal, bg = item_kind_bg },
     BlinkCmpKindDefault = { fg = c.fg_dark, bg = item_kind_bg },
     BlinkCmpKindEnum = { fg = c.orange, bg = item_kind_bg },
     BlinkCmpKindEnumMember = { fg = c.teal, bg = item_kind_bg },

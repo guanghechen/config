@@ -6,7 +6,6 @@ A custom implementation replacing sidekick.nvim for AI agent CLI integration.
 
 - claude (Claude Code)
 - codex (OpenAI Codex)
-- copilot (GitHub Copilot CLI)
 - gemini (Google Gemini CLI)
 - opencode (SST OpenCode)
 
@@ -114,7 +113,6 @@ Different AI agents have different slash command formats. When sending prompts, 
 | Agent    | Format                 | Example                       |
 |:---------|:-----------------------|:------------------------------|
 | claude   | `/command` (unchanged) | `/commit` → `/commit`         |
-| copilot  | `/command` (unchanged) | `/fix` → `/fix`               |
 | gemini   | `/command` (unchanged) | `/chat` → `/chat`             |
 | opencode | `/command` (unchanged) | `/init` → `/init`             |
 | codex    | `/prompts:command`     | `/commit` → `/prompts:commit` |

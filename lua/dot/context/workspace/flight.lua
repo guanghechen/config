@@ -1,5 +1,4 @@
 ---@class dot.context.flight.data
----@field public ai_copilot             boolean
 ---@field public autoformat             boolean
 ---@field public autoload               boolean
 ---@field public autosave               boolean
@@ -21,7 +20,6 @@
 ---@field public gitdiff_expand_all     boolean
 
 ---@class dot.context.flight.state
----@field public ai_copilot             stl.c.Observable
 ---@field public autoformat             stl.c.Observable
 ---@field public autoload               stl.c.Observable
 ---@field public autosave               stl.c.Observable
@@ -57,7 +55,6 @@ function M.defaults()
 
   ---@type dot.context.flight.data
   return {
-    ai_copilot = false, -- copilot is too heavy, let's disable it by default
     autoformat = is_git_repo,
     autoload = false,
     autosave = is_git_repo,
@@ -85,9 +82,6 @@ end
 function M.normalize(data)
   local resolved = M.defaults() ---@type dot.context.flight.data
   if type(data) == "table" then
-    if type(data.ai_copilot) == "boolean" then
-      resolved.ai_copilot = data.ai_copilot
-    end
     if type(data.autoformat) == "boolean" then
       resolved.autoformat = data.autoformat
     end
@@ -149,7 +143,6 @@ end
 function M.dump()
   ---@type dot.context.flight.data
   return {
-    ai_copilot = M.ai_copilot:snapshot(),
     autoformat = M.autoformat:snapshot(),
     autoload = M.autoload:snapshot(),
     autosave = M.autosave:snapshot(),
@@ -177,7 +170,6 @@ end
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.flight.data
 
-  M.ai_copilot:next(data.ai_copilot)
   M.autoformat:next(data.autoformat)
   M.autoload:next(data.autoload)
   M.autosave:next(data.autosave)
@@ -202,7 +194,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.flight.data
-M.ai_copilot = stl.c.Observable.from_value(_defaults.ai_copilot)
 M.autoformat = stl.c.Observable.from_value(_defaults.autoformat)
 M.autoload = stl.c.Observable.from_value(_defaults.autoload)
 M.autosave = stl.c.Observable.from_value(_defaults.autosave)

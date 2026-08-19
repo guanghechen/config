@@ -10,7 +10,6 @@ local function get_mason_ensure_installed()
     -- lsp --
     "bash-language-server", -- bashls
     -- "clangd", -- clangd
-    "copilot-language-server", -- copilot
     "css-lsp", -- cssls
     "dockerfile-language-server", -- docker
     "emmet-language-server", -- emmet_language_server

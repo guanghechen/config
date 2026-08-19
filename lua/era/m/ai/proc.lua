@@ -96,10 +96,6 @@ function M.is_agent(proc, agent)
     return false
   end
 
-  if proc.cmd:find("mason/bin/copilot%-language%-server") then
-    return false
-  end
-
   local re = vim.regex(tool_config.proc_pattern)
   return re:match_str(proc.cmd) ~= nil
 end

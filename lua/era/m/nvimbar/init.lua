@@ -25,7 +25,6 @@
 local __component__mods = {
   ai = "era.m.nvimbar.component.ai",
   buf = "era.m.nvimbar.component.buf",
-  copilot = "era.m.nvimbar.component.copilot",
   cwd = "era.m.nvimbar.component.cwd",
   devmode = "era.m.nvimbar.component.devmode",
   dir = "era.m.nvimbar.component.dir",
@@ -47,7 +46,6 @@ local __component__mods = {
 ---@field public __mods                 era.m.nvimbar.component.__mods
 ---@field public ai                     era.m.nvimbar.component.ai
 ---@field public buf                    era.m.nvimbar.component.buf
----@field public copilot                era.m.nvimbar.component.copilot
 ---@field public cwd                    era.m.nvimbar.component.cwd
 ---@field public devmode                era.m.nvimbar.component.devmode
 ---@field public dir                    era.m.nvimbar.component.dir

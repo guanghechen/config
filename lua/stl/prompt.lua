@@ -5,7 +5,7 @@ local VAR_ASSIGN_PATTERN = "^(__[A-Z_]+__)=(.*)$"
 -- Reference pattern: ${__VAR__}
 local VAR_REF_PATTERN = "%${(__[A-Z_]+__)}"
 
----@alias stl.prompt.AgentEnum "claude"|"codex"|"copilot"|"gemini"|"opencode"
+---@alias stl.prompt.AgentEnum "claude"|"codex"|"gemini"|"opencode"
 
 ---Builtin slash commands per agent (these are NOT transformed).
 ---@type table<stl.prompt.AgentEnum, table<string, boolean>>
@@ -40,18 +40,6 @@ local BUILTIN_COMMANDS = {
     ["/history"] = true,
     ["/clear"] = true,
     ["/compact"] = true,
-  },
-  copilot = {
-    ["/clear"] = true,
-    ["/clearHistory"] = true,
-    ["/explain"] = true,
-    ["/fix"] = true,
-    ["/generate"] = true,
-    ["/help"] = true,
-    ["/new"] = true,
-    ["/newNotebook"] = true,
-    ["/search"] = true,
-    ["/tests"] = true,
   },
   gemini = {
     ["/about"] = true,

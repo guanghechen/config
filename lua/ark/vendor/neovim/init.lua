@@ -53,6 +53,5 @@ vim.schedule(function()
 
   dot.setup_breakpoints()
   dot.setup_diagnostics()
-  dot.setup_lsp()
   dot.context.watch_changes()
 end)

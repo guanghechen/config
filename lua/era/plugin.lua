@@ -10,10 +10,6 @@ local conds = {
     return false
   end,
   ---@return boolean
-  ai_copilot = function()
-    return not vim.g.vscode and not vim.g.yozvim and dot.context.flight.ai_copilot:snapshot()
-  end,
-  ---@return boolean
   cmp = function()
     return not vim.g.vscode and not vim.g.yozvim
   end,

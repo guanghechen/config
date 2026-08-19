@@ -10,7 +10,6 @@ local modules = {
   ["dot.context.editor.theme"] = { theme = {}, transparency = {}, username = {} },
   ["dot.context.workspace.bookmark"] = { pinned = {} },
   ["dot.context.workspace.flight"] = {
-    ai_copilot = {},
     autoformat = {},
     autoload = {},
     autosave = {},
