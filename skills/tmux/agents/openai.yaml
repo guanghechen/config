@@ -1,4 +1,0 @@
-interface:
-  display_name: "Tmux"
-  short_description: "Operate explicit tmux panes safely"
-  default_prompt: "Use $tmux to inspect or operate an explicit tmux pane."
