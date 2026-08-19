@@ -1,4 +1,0 @@
-interface:
-  display_name: "Code Design"
-  short_description: "Core design principles to check a change's structure against: pluggable peers, one-way data flow, single ownership, narrow interfaces, explicit failure paths, testability"
-  default_prompt: "Use $code-design to check the structure of a change against core design principles: pluggable peer modules, abstract-on-demand, single responsibility, self-explaining and similar structure, one-way data flow, single source and single writer, narrow interfaces, explicit over implicit, symmetric paired operations, explicit failure paths, and testability as a design probe. Apply the ones that fit; this is positive guidance, not a process gate."
