@@ -11,8 +11,11 @@ stats-cache.json
 /ide/
 /image-cache/
 /sessions/
+/skills/.system
 /skills/kit-*
+/skills/ms-*
 /skills/yui-*
+
 /usage-data/
 
 cache/
