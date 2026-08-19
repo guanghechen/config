@@ -45,6 +45,26 @@ multi_agent = true
 prevent_idle_sleep = true
 realtime_conversation = true
 
+[[skills.config]]
+name = "imagegen"
+enabled = false
+
+[[skills.config]]
+name = "plugin-creator"
+enabled = false
+
+[[skills.config]]
+name = "skill-creator"
+enabled = false
+
+[[skills.config]]
+name = "skill-installer"
+enabled = false
+
+[[skills.config]]
+name = "review-agent"
+enabled = false
+
 [memories]
 generate_memories = false
 disable_on_external_context = true
