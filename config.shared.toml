@@ -122,6 +122,7 @@ type = "conversational"
 
 [tui]
 theme = "local"
+vim_mode_default = true
 notifications = true
 notification_method = "bel"
 notification_condition = "always"
