@@ -1,6 +1,0 @@
-interface:
-  display_name: "Review Loop"
-  short_description: "Run an explicitly requested iterative adversarial review"
-  default_prompt: "Use $review-loop to review the current completed changes with bounded fresh adversarial-review passes until Converged, clearly blocked, or user input is required."
-policy:
-  allow_implicit_invocation: false
