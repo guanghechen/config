@@ -1,4 +1,0 @@
-interface:
-  display_name: "Refine"
-  short_description: "Polish text while preserving meaning"
-  default_prompt: "Use $refine to polish this text while preserving its meaning and tone."
