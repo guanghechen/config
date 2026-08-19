@@ -4,6 +4,7 @@
 /queue_*.sqlite*
 /thread_history_*.sqlite*
 /state*.sqlite*
+/AGENTS.md
 
 .codex-global-state.json
 .codex-global-state.json.*
