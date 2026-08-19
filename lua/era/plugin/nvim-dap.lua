@@ -16,99 +16,6 @@ local function get_args(config)
   return config
 end
 
----@return nil
-local function setup_python()
-  local dap = require("dap")
-
-  local function resolve_python_path()
-    local python_path = dot.context.lsp.get_python_bin_path() ---@type string|nil
-    return python_path
-  end
-
-  dap.adapters.debugpy = dap.adapters.python
-  dap.adapters.python = function(cb, config)
-    if config.request == "attach" then
-      local host = (config.connect or config).host or "127.0.0.1" ---@type string
-      local port = (config.connect or config).port ---@type integer|nil
-
-      local adapter = {
-        type = "server",
-        host = host,
-        port = assert(port, "`connect.port` is required for a python `attach` configuration"),
-        options = {
-          source_filetype = "python",
-        },
-      }
-      cb(adapter)
-    else
-      local adapter = {
-        type = "executable",
-        command = resolve_python_path(),
-        args = { "-m", "debugpy.adapter" },
-        options = {
-          source_filetype = "python",
-        },
-      }
-      cb(adapter)
-    end
-  end
-
-  dap.configurations.python = {
-    {
-      type = "python",
-      request = "attach",
-      name = "python: attach",
-      description = "python: attach",
-      cwd = "${workspaceFolder}",
-      connect = function()
-        local host = dot.context.lsp.python_debug_host:snapshot() ---@type string
-        local port = dot.context.lsp.python_debug_port:snapshot() ---@type integer
-        return { host = host, port = port }
-      end,
-    },
-    {
-      type = "python",
-      request = "launch",
-      name = "python: file",
-      description = "python: launch file",
-      program = "${file}",
-      cwd = "${workspaceFolder}",
-      console = "integratedTerminal",
-      pythonPath = resolve_python_path,
-    },
-    {
-      type = "python",
-      request = "launch",
-      name = "python: file:args",
-      description = "python: launch file with args",
-      program = "${file}",
-      cwd = "${workspaceFolder}",
-      console = "integratedTerminal",
-      args = function()
-        local text = vim.fn.input("args: ")
-        local utils = require("dap.utils")
-        if utils.splitstr then
-          return utils.splitstr(text)
-        end
-        return vim.split(text, " +")
-      end,
-      pythonPath = resolve_python_path,
-    },
-    {
-      type = "python",
-      request = "launch",
-      name = "python: file:doctest",
-      description = "python: launch doctest",
-      module = "doctest",
-      args = { "${file}" },
-      noDebug = true,
-      cwd = "${workspaceFolder}",
-      console = "integratedTerminal",
-      pythonPath = resolve_python_path,
-    },
-  }
-end
-
 return {
   name = "nvim-dap",
   dependencies = {
@@ -147,7 +54,5 @@ return {
     vscode.json_decode = function(text)
       return stl.json.decode(text, { luanil = { object = true, array = true } })
     end
-
-    setup_python()
   end,
 }

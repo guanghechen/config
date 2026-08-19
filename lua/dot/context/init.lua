@@ -309,8 +309,6 @@ function M.watch_changes()
     M.lsp.code_lens,
     M.lsp.diagnostics_virt_lines,
     M.lsp.inlay_hints,
-    M.lsp.python_debug_host,
-    M.lsp.python_debug_port,
     M.lsp.python_venv_path,
   }
   stl.fn.observe(select_states, function()

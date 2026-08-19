@@ -26,8 +26,6 @@ local modules = {
     code_lens = {},
     diagnostics_virt_lines = {},
     inlay_hints = {},
-    python_debug_host = {},
-    python_debug_port = {},
     python_venv_path = {},
   },
   ["dot.context.workspace.option"] = { expandtab = {}, relativenumber = {} },

@@ -405,38 +405,6 @@ local group_items = {
     },
   },
   lsp = {
-    python_debug_host = {
-      title = "python debug host",
-      snapshot = function()
-        local host = dot.context.lsp.python_debug_host:snapshot() ---@type string
-        if host == nil then
-          return "nil", "Keyword"
-        end
-        return host, "String"
-      end,
-      action = function()
-        local default_host = dot.context.lsp.python_debug_host:snapshot() or "" ---@type string
-        local input_host = vim.fn.input("host [" .. default_host .. "]", default_host)
-        local host = #input_host > 0 and input_host or default_host ---@type string
-        dot.context.lsp.python_debug_host:next(host)
-      end,
-    },
-    python_debug_port = {
-      title = "python debug port",
-      snapshot = function()
-        local port = dot.context.lsp.python_debug_port:snapshot() ---@type integer
-        if port == nil then
-          return "nil", "Keyword"
-        end
-        return tostring(port), "Number"
-      end,
-      action = function()
-        local default_port = dot.context.lsp.python_debug_port:snapshot() or 0 ---@type integer
-        local input_port = vim.fn.input("port [" .. tostring(default_port) .. "]", tostring(default_port))
-        local port = #input_port > 0 and tonumber(input_port) or default_port ---@type integer
-        dot.context.lsp.python_debug_port:next(port)
-      end,
-    },
     python_venv = {
       title = "python venv path",
       snapshot = function()

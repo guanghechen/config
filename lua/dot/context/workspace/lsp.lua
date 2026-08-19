@@ -13,8 +13,6 @@ local __module_name__ = "dot.context.workspace.lsp" ---@type string
 ---@field public code_lens              boolean
 ---@field public diagnostics_virt_lines boolean
 ---@field public inlay_hints            boolean
----@field public python_debug_host      string
----@field public python_debug_port      integer
 ---@field public python_venv_path       string|nil
 ---@field public spellcheck             boolean
 
@@ -23,8 +21,6 @@ local __module_name__ = "dot.context.workspace.lsp" ---@type string
 ---@field public code_lens              stl.c.Observable
 ---@field public diagnostics_virt_lines stl.c.Observable
 ---@field public inlay_hints            stl.c.Observable
----@field public python_debug_host      stl.c.Observable
----@field public python_debug_port      stl.c.Observable
 ---@field public python_venv_path       stl.c.Observable
 ---@field public spellcheck             stl.c.Observable
 ---
@@ -66,8 +62,6 @@ function M.defaults()
     code_lens = false,
     diagnostics_virt_lines = true,
     inlay_hints = is_git_repo,
-    python_debug_host = "127.0.0.1",
-    python_debug_port = 9527,
     python_venv_path = nil,
     spellcheck = is_repo_personal,
   }
@@ -104,12 +98,6 @@ function M.normalize(data)
     if type(data.inlay_hints) == "boolean" then
       resolved.inlay_hints = data.inlay_hints
     end
-    if type(data.python_debug_host) == "string" then
-      resolved.python_debug_host = data.python_debug_host
-    end
-    if type(data.python_debug_port) == "number" then
-      resolved.python_debug_port = data.python_debug_port
-    end
     if type(data.python_venv_path) == "string" then
       resolved.python_venv_path = data.python_venv_path
     end
@@ -128,8 +116,6 @@ function M.dump()
     code_lens = M.code_lens:snapshot(),
     diagnostics_virt_lines = M.diagnostics_virt_lines:snapshot(),
     inlay_hints = M.inlay_hints:snapshot(),
-    python_debug_host = M.python_debug_host:snapshot(),
-    python_debug_port = M.python_debug_port:snapshot(),
     python_venv_path = M.python_venv_path:snapshot(),
     spellcheck = M.spellcheck:snapshot(),
   }
@@ -144,8 +130,6 @@ function M.load(raw_data)
   M.code_lens:next(data.code_lens)
   M.diagnostics_virt_lines:next(data.diagnostics_virt_lines)
   M.inlay_hints:next(data.inlay_hints)
-  M.python_debug_host:next(data.python_debug_host)
-  M.python_debug_port:next(data.python_debug_port)
   M.python_venv_path:next(data.python_venv_path)
   M.spellcheck:next(data.spellcheck)
   return M
@@ -158,8 +142,6 @@ M.breakpoints = stl.c.Observable.from_value(data.breakpoints)
 M.code_lens = stl.c.Observable.from_value(data.code_lens)
 M.diagnostics_virt_lines = stl.c.Observable.from_value(data.diagnostics_virt_lines)
 M.inlay_hints = stl.c.Observable.from_value(data.inlay_hints)
-M.python_debug_host = stl.c.Observable.from_value(data.python_debug_host)
-M.python_debug_port = stl.c.Observable.from_value(data.python_debug_port)
 M.python_venv_path = stl.c.Observable.from_value(data.python_venv_path)
 M.spellcheck = stl.c.Observable.from_value(data.spellcheck)
 

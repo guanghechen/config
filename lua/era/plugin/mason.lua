@@ -28,9 +28,6 @@ local function get_mason_ensure_installed()
     "vtsls", -- vtsls
     "yaml-language-server", -- yamlls
 
-    -- dap --
-    "debugpy",
-
     -- lint --
     "cspell",
     "ruff",

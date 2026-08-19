@@ -163,8 +163,6 @@ M.toggler = {
   "code_lens_lsp",
   "diagnostics_virt_lines_lsp",
   "inlay_hints_lsp",
-  "python_debug_host_lsp",
-  "python_debug_port_lsp",
   "python_venv_lsp",
   "spellcheck_lsp",
 
