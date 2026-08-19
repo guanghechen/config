@@ -1,4 +1,0 @@
-interface:
-  display_name: "PR Review"
-  short_description: "Review PR changes via adversarial core and give a verdict"
-  default_prompt: "Use $pr-review to acquire and review a PR or base-to-worktree changeset, then return a read-only Merge Verdict."
