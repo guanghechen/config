@@ -1,6 +1,0 @@
-interface:
-  display_name: "Triage Issues"
-  short_description: "Triage listed issues, suggestions, questions, and decisions"
-  default_prompt: "Use $triage-issues to save the listed issues, suggestions, questions, or decisions and review them one at a time."
-policy:
-  allow_implicit_invocation: false
