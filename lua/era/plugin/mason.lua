@@ -30,7 +30,6 @@ local function get_mason_ensure_installed()
 
     -- dap --
     "debugpy",
-    "js-debug-adapter",
 
     -- lint --
     "cspell",
