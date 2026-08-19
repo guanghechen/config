@@ -54,10 +54,6 @@ name = "plugin-creator"
 enabled = false
 
 [[skills.config]]
-name = "skill-creator"
-enabled = false
-
-[[skills.config]]
 name = "skill-installer"
 enabled = false
 
