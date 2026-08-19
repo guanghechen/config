@@ -23,7 +23,6 @@ local function get_mason_ensure_installed()
     "roslyn-language-server", -- roslyn_ls
     "rust-analyzer", -- rust_analyzer
     -- "sqls", -- sqls
-    "svelte-language-server", -- svelte
     "tailwindcss-language-server", --  tailwindcss
     "taplo", -- taplo
     "vtsls", -- vtsls

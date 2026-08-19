@@ -36,7 +36,6 @@ local linters_by_ft = {
   less              = { "stylelint", "cspell" },
   markdown          = { "cspell" },
   ["markdown.mdx"]  = { "cspell" },
-  svelte            = { "cspell" },
   typescript        = { "cspell" },
   typescriptreact   = { "cspell" },
   yaml              = { "cspell" },
