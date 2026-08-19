@@ -165,7 +165,6 @@ local __mods = {
 ---@field public win                    dot.win
 ---
 ---@field public get_default_storage    fun(): dot.context.storage
----@field public setup_breakpoints      fun(): nil
 ---@field public setup_context          fun(storage: dot.context.storage|nil): nil
 ---@field public setup_diagnostics      fun(): nil
 local M = setmetatable({
@@ -194,36 +193,6 @@ function M.get_default_storage()
     nvim_session = is_git_repo and M.path.locate_workspace_filepath("session.vim") or nil,
     nvim_session_autosaved = is_git_repo and M.path.locate_workspace_filepath("session.autosaved.vim") or nil,
   }
-end
-
----@return nil
-function M.setup_breakpoints()
-  local breakpoints = M.context.lsp.breakpoints:snapshot() ---@type dot.context.lsp.IBreakpointData
-  if #breakpoints < 1 then
-    return
-  end
-
-  local filepath_set = {} ---@type table<string, true>
-  for _, breakpoint in ipairs(breakpoints) do
-    filepath_set[breakpoint.filepath] = true
-  end
-  local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
-
-  M.win.open_filepaths(0, filepaths)
-
-  stl.timer.delay(function()
-    local bps = require("dap.breakpoints")
-    for _, breakpoint in ipairs(breakpoints) do
-      local bufnr = M.buf.loadfile(breakpoint.filepath) ---@type integer|nil
-      if bufnr ~= nil then
-        bps.set({
-          condition = breakpoint.condition,
-          hit_condition = breakpoint.hit_condition,
-          log_message = breakpoint.log_message,
-        }, bufnr, breakpoint.lnum)
-      end
-    end
-  end, 100)
 end
 
 ---@param storage                       dot.context.storage|nil

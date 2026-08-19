@@ -214,13 +214,6 @@ M.sign = {
   ---! diffview commits
   DIFFVIEW_COMMITS_PRESENT              = "DiffviewCommitsPresent",
   GROUP_DIFFVIEW_COMMITS                = "a1b2c3d4-e5f6-7890-abcd-diffvcommits",
-
-  ---! dap
-  DAP_BREAKPOINT                        = "DapBreakpoint",
-  DAP_BREAKPOINT_CONDITION              = "DapBreakpointCondition",
-  DAP_BREAKPOINT_REJECTED               = "DapBreakpointRejected",
-  DAP_LOG_POINT                         = "DapLogPoint",
-  DAP_STOPPED                           = "DapStopped",
   -- stylua: ignore end
 }
 
@@ -245,11 +238,6 @@ sd(M.sign.CHOICES_CURRENT,                  { text = stl.icon.ui.ArrowPresent,  
 
 sd(M.sign.DIFFVIEW_COMMITS_PRESENT,         { text = stl.icon.ui.ArrowPresent,         texthl = "m_dv_sign_present"               })
 
-sd(M.sign.DAP_BREAKPOINT,                   { text = stl.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
-sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = stl.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
-sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = stl.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",          linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
-sd(M.sign.DAP_LOG_POINT,                    { text = stl.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
-sd(M.sign.DAP_STOPPED,                      { text = stl.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 -- stylua: ignore end
 
 ----------------------------------------------------------------------------------------------------

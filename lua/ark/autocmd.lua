@@ -168,8 +168,6 @@ vim.api.nvim_create_autocmd("FileType", {
   group = augroup("close_filetypes_with_q"),
   pattern = {
     "checkhealth",
-    "dap-float",
-    "dap-repl",
     "explorer",
     "gitcommit",
     "help",

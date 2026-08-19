@@ -193,10 +193,6 @@ function M.save(storage)
   end
 
   if storage.workspace then
-    if package.loaded["dap"] then
-      M.lsp.refresh_breakpoints()
-    end
-
     local data = {
       bookmark = M.bookmark.dump(),
       colorpicker = M.colorpicker.dump(),
@@ -305,7 +301,6 @@ function M.watch_changes()
     M.flight.dressing_select,
     M.flight.dressing_winsep,
     M.flight.gitdiff_expand_all,
-    M.lsp.breakpoints,
     M.lsp.code_lens,
     M.lsp.diagnostics_virt_lines,
     M.lsp.inlay_hints,

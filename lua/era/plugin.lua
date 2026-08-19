@@ -14,10 +14,6 @@ local conds = {
     return not vim.g.vscode and not vim.g.yozvim
   end,
   ---@return boolean
-  dap = function()
-    return not vim.g.vscode and not vim.g.yozvim
-  end,
-  ---@return boolean
   lsp = function()
     return not vim.g.vscode and not vim.g.yozvim
   end,
@@ -53,11 +49,7 @@ local raw_specs = {
   { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode_or_yozvim   },
   { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common                 },
   { name = "mini.surround",               main = "mini.surround",                 cond = conds.common                 },
-  { name = "nvim-dap",                    main = "dap",                           cond = conds.dap                    },
-  { name = "nvim-dap-ui",                 main = "dapui",                         cond = conds.dap                    },
-  { name = "nvim-dap-virtual-text",       main = "nvim-dap-virtual-text",         cond = conds.dap                    },
   { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                    },
-  { name = "nvim-nio",                    main = "nio",                           cond = conds.not_vscode_or_yozvim   },
   { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.not_vscode_or_yozvim   },
   { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context     },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.not_vscode_or_yozvim   },
@@ -68,7 +60,6 @@ local raw_specs = {
 ---@type string[]
 local no_details_module_names = {
   "friendly-snippets",
-  "nvim-nio",
 }
 
 ---@type era.m.plugin.IPluginSpec[]

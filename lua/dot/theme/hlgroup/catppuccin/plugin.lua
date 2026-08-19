@@ -10,7 +10,6 @@ function M.gen_hlgroup_map(context)
   local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local cmp_panel_bg = cs.mix(t and c.none or c.mantle, c.surface0, 65)
   local panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
-  local dap_virtual_bg = cs.mix(t and c.none or c.surface0, c.peach, 25)
   local treesitter_context_bg = t and c.none or c.surface0
   local badge_fg = u.bg1 ---@type string
   local badge_bg = u.pink ---@type string
@@ -101,69 +100,6 @@ function M.gen_hlgroup_map(context)
     ---! mini.indentscope
     MiniIndentscopeSymbol = { fg = c.pink },
     MiniIndentscopeSymbolOff = { fg = c.red },
-
-    ---! nvim-dap
-    DapBreakpoint = { fg = c.red },
-    DapBreakpointCondition = { fg = c.yellow },
-    DapBreakpointRejected = { fg = c.overlay1 },
-    DapLogPoint = { fg = c.blue },
-    DapStopped = { fg = c.peach },
-    DapStoppedLine = { bg = cs.mix(t and c.none or c.surface0, c.peach, 25), blend = 40 },
-
-    ---! nvim-dap-ui
-    DapUIBreakpointsCurrentLine = { fg = c.green, bold = true },
-    DapUIBreakpointsDisabledLine = { fg = c.overlay1 },
-    DapUIBreakpointsInfo = { fg = c.green },
-    DapUIBreakpointsLine = { fg = c.blue },
-    DapUIBreakpointsPath = { fg = c.blue, bold = true },
-    DapUICurrentFrameName = { fg = c.green, bold = true },
-    DapUIDecoration = { fg = c.blue },
-    DapUIFloatBorder = { fg = c.overlay1, bg = t and c.none or c.mantle },
-    DapUILineNumber = { fg = c.blue },
-    DapUIModifiedValue = { fg = c.peach },
-    DapUIPlayPause = { fg = c.green },
-    DapUIRestart = { fg = c.blue },
-    DapUIScope = { fg = c.blue },
-    DapUISource = { fg = c.lavender },
-    DapUIStepBack = { fg = c.yellow },
-    DapUIStepInto = { fg = c.blue },
-    DapUIStepOut = { fg = c.blue },
-    DapUIStepOver = { fg = c.blue },
-    DapUIStop = { fg = c.red },
-    DapUIStopNC = { fg = c.red },
-    DapUIThread = { fg = c.green },
-    DapUIEndofBuffer = { link = "EndOfBuffer" },
-    DapUIFloatNormal = { link = "NormalFloat" },
-    DapUIFrameName = { link = "Normal" },
-    DapUINormal = { link = "Normal" },
-    DapUIPlayPauseNC = { fg = c.green },
-    DapUIRestartNC = { fg = c.green },
-    DapUIStepBackNC = { fg = c.blue },
-    DapUIStepIntoNC = { fg = c.blue },
-    DapUIStepOutNC = { fg = c.blue },
-    DapUIStepOverNC = { fg = c.blue },
-    DapUIStoppedThread = { fg = c.teal },
-    DapUIType = { fg = c.mauve },
-    DapUIUnavailable = { fg = c.overlay2 },
-    DapUIUnavailableNC = { fg = c.overlay2 },
-    DapUIValue = { fg = c.teal },
-    DapUIVariable = { fg = c.text },
-    DapUIWatchesEmpty = { fg = c.red },
-    DapUIWatchesError = { fg = c.red },
-    DapUIWatchesValue = { fg = c.green },
-    DapUIWinSelect = { fg = c.teal, bold = true },
-
-    ---! nvim-dap-virtual-text
-    NvimDapVirtualText = {
-      fg = c.overlay1,
-      bg = dap_virtual_bg,
-      italic = true,
-    },
-    NvimDapVirtualTextChanged = {
-      fg = c.text,
-      bg = dap_virtual_bg,
-      italic = true,
-    },
 
     ---! snacks.nvim
     SnacksPickerLabel = { fg = c.blue, bold = true },

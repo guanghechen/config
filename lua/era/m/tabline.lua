@@ -38,14 +38,6 @@ normal_tabline = era.m.nvimbar.Nvimbar.new({
     end),
     95
   )
-  :place(
-    "left",
-    era.m.nvimbar.component.sidebar.of(position, stl.filetype.DAP_UI_SCOPES, function()
-      local title = stl.icon.ui.Bug .. " Debug" ---@type string
-      return title
-    end),
-    95
-  )
   :place("left", era.m.nvimbar.component.buf.bufs(position), 95)
   --
   :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)

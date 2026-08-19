@@ -21,14 +21,6 @@ local DISABLED_BUFTYPES = {
 ---@type table<string, boolean>
 local DISABLED_FILETYPES = {
   [stl.filetype.BIGFILE] = true,
-  [stl.filetype.DAP_FLOAT] = true,
-  [stl.filetype.DAP_REPL] = true,
-  [stl.filetype.DAP_UI_BREAKPOINTS] = true,
-  [stl.filetype.DAP_UI_CONSOLE] = true,
-  [stl.filetype.DAP_UI_HOVER] = true,
-  [stl.filetype.DAP_UI_SCOPES] = true,
-  [stl.filetype.DAP_UI_STACKS] = true,
-  [stl.filetype.DAP_UI_WATCHES] = true,
   [stl.filetype.DIFFVIEW_FILES] = true,
   [stl.filetype.DIFFVIEW_COMMITS] = true,
   [stl.filetype.EXPLORER] = true,

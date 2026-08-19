@@ -22,7 +22,6 @@ local modules = {
     gitdiff_expand_all = {},
   },
   ["dot.context.workspace.lsp"] = {
-    breakpoints = {},
     code_lens = {},
     diagnostics_virt_lines = {},
     inlay_hints = {},

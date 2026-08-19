@@ -51,7 +51,6 @@ vim.schedule(function()
 
   pcall(require, "ark.vendor.local.dressing")
 
-  dot.setup_breakpoints()
   dot.setup_diagnostics()
   dot.context.watch_changes()
 end)
