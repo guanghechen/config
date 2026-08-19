@@ -116,7 +116,6 @@ function M.gen_hlgroup_map(context)
     lsp_icon_tailwindcss = { fg = c.brightAqua, bg = "bg_bar" },
     lsp_icon_taplo = { fg = c.brightOrange, bg = "bg_bar" },
     lsp_icon_vtsls = { fg = c.brightBlue, bg = "bg_bar" },
-    lsp_icon_vue_ls = { fg = c.brightGreen, bg = "bg_bar" },
     lsp_icon_yamlls = { fg = c.brightYellow, bg = "bg_bar" },
     lsp_diagnostics_error = { fg = c.brightRed, bg = "bg_bar" },
     lsp_diagnostics_warn = { fg = c.brightYellow, bg = "bg_bar" },

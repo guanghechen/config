@@ -276,7 +276,6 @@ M.lsp = {
   tailwindcss = "󱏿",
   taplo = "",
   vtsls = "󰛦",
-  vue_ls = "󰡄",
   yamlls = "",
 }
 

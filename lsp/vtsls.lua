@@ -188,23 +188,6 @@ local function on_init(client, config)
   era.m.lsp.event.on_init(client, config)
 end
 
-local paths = {
-  vue_ls = era.m.lsp.fn.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
-}
-
-local vue_plugin = paths.vue_ls and {
-  name = "@vue/typescript-plugin",
-  location = paths.vue_ls,
-  languages = { "vue" },
-  configNamespace = "typescript",
-  enableForWorkspaceTypeScriptVersions = true,
-} or nil
-
-local global_plugins = {} ---@type table[]
-if vue_plugin then
-  global_plugins[#global_plugins + 1] = vue_plugin
-end
-
 ---@type vim.lsp.Config
 return {
   capabilities = era.m.lsp.event.get_capabilities(),
@@ -228,9 +211,6 @@ return {
         completion = {
           enableServerSideFuzzyMatch = true,
         },
-      },
-      tsserver = {
-        globalPlugins = global_plugins,
       },
     },
     typescript = {

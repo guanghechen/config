@@ -139,13 +139,9 @@ t:test("locate_js_project_root: keeps Node and Deno roots mutually exclusive", f
 end)
 
 t:test("locate_mason_pkg_path: resolves the conventional path without loading Mason", function()
-  local filepath = Fn.locate_mason_pkg_path("vue-language-server", "node_modules/@vue/language-server", true)
+  local filepath = Fn.locate_mason_pkg_path("vtsls", "node_modules/@vtsls/language-server", true)
 
-  t.assert_eq(
-    "/__nvim_test_data__/mason/packages/vue-language-server/node_modules/@vue/language-server",
-    filepath,
-    "package path"
-  )
+  t.assert_eq("/__nvim_test_data__/mason/packages/vtsls/node_modules/@vtsls/language-server", filepath, "package path")
   t.assert_eq(0, mason_loads, "Mason load count")
 end)
 

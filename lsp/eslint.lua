@@ -90,7 +90,6 @@ return {
     "javascriptreact",
     "typescript",
     "typescriptreact",
-    "vue",
     "svelte",
     "astro",
     "htmlangular",

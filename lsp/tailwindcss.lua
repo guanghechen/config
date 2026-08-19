@@ -40,7 +40,6 @@ local filetypes = {
   "templ",
   "typescript",
   "typescriptreact",
-  "vue",
 }
 
 ---@param bufnr                         integer

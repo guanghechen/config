@@ -72,7 +72,6 @@ local ft_to_lsp_map = {
   toml = { "taplo" },
   typescript = { "vtsls", "denols", "eslint", "tailwindcss" },
   typescriptreact = { "vtsls", "denols", "eslint", "tailwindcss", "emmet_language_server" },
-  vue = { "vue_ls", "eslint", "tailwindcss", "emmet_language_server" },
   yaml = { "yamlls" },
   ["yaml.docker-compose"] = { "yamlls", "docker_compose_language_service" },
   ["yaml.gitlab"] = { "yamlls" },
