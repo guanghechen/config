@@ -78,7 +78,7 @@ local function get_lsp_clients(position)
   local client_names = {} ---@type string[]
   local client_icons = {} ---@type era.m.nvimbar.component.lsp.ILspIcon[]
   for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
-    if client.attached_buffers[bufnr] and client.name ~= "null-ls" then
+    if client.attached_buffers[bufnr] then
       local icon = stl.icon.lsp[client.name] or "" ---@type string
       local hln_icon = position .. "_lsp_icon_" .. client.name ---@type string
       if vim.fn.hlexists(hln_icon) == 0 then
@@ -104,7 +104,7 @@ local function get_lsp_client_names()
   end
 
   for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
-    if client.attached_buffers[bufnr] and client.name ~= "null-ls" then
+    if client.attached_buffers[bufnr] then
       names[#names + 1] = client.name
     end
   end
