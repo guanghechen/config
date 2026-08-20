@@ -402,6 +402,7 @@
     "**/*.http_response": true
   },
   "workbench.panel.defaultLocation": "bottom",
+  "workbench.secondarySideBar.defaultVisibility": "hidden",
   "workbench.settings.openDefaultKeybindings": true,
   "workbench.settings.openDefaultSettings": true,
   "workbench.startupEditor": "none",
