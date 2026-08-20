@@ -41,7 +41,6 @@ gui:
       - '#ED8796'
 
 git:
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --paging=never --dark
-
+      command: delta --paging=never --dark

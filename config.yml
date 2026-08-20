@@ -28,8 +28,6 @@ git:
     - colorArg: always
       command: delta --paging=never
   parseEmoji: true # Render emoji strings like :rocket: as 🚀
-  pull:
-    mode: ff-only # Only allow fast-forward, abort otherwise
   remoteBranchSortOrder: alphabetical # Sort remote branches alphabetically
   skipHookPrefix: WIP # Prefix to skip pre-commit hooks
   truncateCopiedCommitHashesTo: 40 # Copy full commit hash (40 chars)
@@ -126,9 +124,4 @@ keybinding:
     prevBlock-alt2: <disabled> # Disable backtab for panel switching
     prevScreenMode: <backtab> # Use backtab for screen mode switching
 os:
-  edit: "nvim" # Editor command
-  editAtLine: "nvim --line={{line}} {{filename}}" # Editor command with line number
-  editAtLineAndWait: "nvim --block --line={{line}} {{filename}}" # Editor command with line number (blocking)
-  editInTerminal: true # Run editor in terminal
   editPreset: "nvim-remote" # Use nvim-remote preset
-  openDirInEditor: "nvim {{dir}}" # Command to open directory in editor

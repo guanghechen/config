@@ -41,7 +41,6 @@ gui:
       - '#F85149'
 
 git:
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --paging=never --dark
-
+      command: delta --paging=never --dark
