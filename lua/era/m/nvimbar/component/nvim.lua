@@ -202,6 +202,32 @@ end
 
 ---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
+function M.search_count(position)
+  local hln_text = position .. "_nvim_search_count" ---@type string
+
+  ---@type era.m.nvimbar.IRawComponent
+  local component = {
+    name = "nvim:search_count",
+    atomic = true,
+    condition = function(context)
+      return dot.state.status.get_search_count(context.winnr) ~= nil
+    end,
+    render = function(context)
+      local count = dot.state.status.get_search_count(context.winnr) ---@type string|nil
+      if count == nil then
+        return "", "", true
+      end
+
+      local text = " " .. count ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      stl.t.NvimbarPositionEnum
+---@return era.m.nvimbar.IRawComponent
 function M.nr(position)
   local hln_sep = position .. "_nvim_nr_sep" ---@type string
   local hln_text = position .. "_nvim_nr_text" ---@type string

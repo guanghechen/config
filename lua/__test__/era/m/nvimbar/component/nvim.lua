@@ -20,6 +20,9 @@ local function setup(message)
             return message
           end,
         },
+        get_search_count = function(winnr)
+          return winnr == 42 and message or nil
+        end,
       },
     },
   })
@@ -89,6 +92,19 @@ t:test("command messages remain visible until the API clears them", function()
   t.assert_eq("2,1 All", component.render(), "initial command message")
   now = 10
   t.assert_eq("2,1 All", component.render(), "persistent command message")
+end)
+
+t:test("search count renders at the right edge for its source window", function()
+  local nvim = setup("[2/10]")
+  local component = nvim.search_count("f_wl")
+  local context = { winnr = 42 } ---@type era.m.nvimbar.INvimbarContext
+
+  t.assert_true(component.condition(context, 20), "source window")
+  local text, _, full = component.render(context, 20)
+  t.assert_eq(" [2/10]", text, "search count")
+  t.assert_true(full, "atomic result")
+
+  t.assert_false(component.condition({ winnr = 43 }, 20), "other window")
 end)
 
 t:run()

@@ -10,6 +10,9 @@ local t = harness.new("era.m.ui_attach")
 ---@field events                         string[]
 ---@field fail_id                        integer|nil
 ---@field fast                           boolean
+---@field escape                         fun(): string
+---@field search_count_clears            integer
+---@field searching                      boolean
 ---@field timer                          table
 
 ---@return era.m.ui_attach.init.test.IRuntime
@@ -18,6 +21,8 @@ local function setup()
     errors = {},
     events = {},
     fast = false,
+    search_count_clears = 0,
+    searching = false,
     timer = {},
   } ---@type era.m.ui_attach.init.test.IRuntime
 
@@ -46,10 +51,15 @@ local function setup()
       status = {
         searching = {
           snapshot = function()
-            return false
+            return runtime.searching
           end,
-          next = function() end,
+          next = function(_, value)
+            runtime.searching = value
+          end,
         },
+        clear_search_count = function()
+          runtime.search_count_clears = runtime.search_count_clears + 1
+        end,
       },
     },
     var = { nsnr = { attach = 1 } },
@@ -57,7 +67,15 @@ local function setup()
   t:patch_global("stl", {
     c = { CircularQueue = CircularQueue },
     debug = { log_silent = function() end },
-    nvim = { fn = { make_keys = function() end } },
+    nvim = {
+      fn = {
+        make_keys = function(_, lhs, callback)
+          if lhs == "<esc>" then
+            runtime.escape = callback
+          end
+        end,
+      },
+    },
     reporter = {
       error = function(options)
         runtime.errors[#runtime.errors + 1] = options
@@ -105,6 +123,9 @@ local function setup()
   t:patch_table(vim, "schedule_wrap", function(callback)
     return callback
   end)
+  t:patch_table(vim, "schedule", function(callback)
+    callback()
+  end)
   t:patch_table(vim, "ui_attach", function(_, _, callback)
     runtime.callback = callback
   end)
@@ -125,6 +146,17 @@ t:test("fast event queue is lossless and ordered", function()
   t.assert_eq(600, #runtime.events, "event count")
   t.assert_eq("msg_show:1", runtime.events[1], "first event")
   t.assert_eq("msg_show:600", runtime.events[600], "last event")
+end)
+
+t:test("escape clears search count together with hlsearch", function()
+  local runtime = setup()
+  runtime.searching = true
+
+  local key = runtime.escape()
+
+  t.assert_eq("<esc>", key, "mapped key")
+  t.assert_false(runtime.searching, "searching state")
+  t.assert_eq(1, runtime.search_count_clears, "search count clear")
 end)
 
 t:test("cmdline hide and show remain distinct ordered events", function()

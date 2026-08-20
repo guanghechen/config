@@ -75,7 +75,6 @@ M.nsnr = {
   searcher_result       = cn("ux:searcher:result"),
   searcher_searched     = cn("ux:searcher:searched"),
   searcher_searched_cur = cn("ux:searcher:searched:cur"),
-  search_count          = cn("ux:search_count"),
   select                = cn("ux:select"),
   popupmenu             = cn("ux:popupmenu"),
   popupmenu_selected    = cn("ux:popupmenu_selected"),

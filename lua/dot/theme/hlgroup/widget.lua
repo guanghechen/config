@@ -249,9 +249,6 @@ function M.default_gen_hlgroup_map(context)
     f_lsp_symbol_sep = { fg = u.bg4 },
     f_lsp_symbol_text = { fg = u.fg2 },
 
-    ---message
-    f_um_search_count = { fg = u.yellow },
-
     ---notepad
     f_np_cursorline = { bg = u.bg2 },
     f_np_normal = { bg = bg_pane },

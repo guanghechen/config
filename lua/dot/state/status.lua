@@ -11,6 +11,11 @@
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
+---@class dot.state.status.ISearchCount
+---@field public bufnr                  integer
+---@field public text                   string
+---@field public winnr                  integer
+
 ---@class dot.state.status
 ---@field protected _disposables        stl.c.BatchDisposable
 ---
@@ -62,6 +67,8 @@ local M = {
   tmux_zen_mode = stl.c.Observable.from_value(true),
 }
 
+local search_count = nil ---@type dot.state.status.ISearchCount|nil
+
 M._disposables
   :add_disposable(M.winnr_command)
   :add_disposable(M.dirtier_statusline)
@@ -88,6 +95,7 @@ end
 
 ---@return nil
 function M.dispose()
+  search_count = nil
   M._disposables:dispose()
 end
 
@@ -111,6 +119,7 @@ end
 
 ---@return nil
 function M.reset()
+  M.clear_search_count()
   M.winnr_command:next(0)
 
   M.dirtier_statusline:mark_dirty()
@@ -136,6 +145,55 @@ function M.reset()
   M.searching:next(false)
   M.suppress_warning:next(false)
   M.tmux_zen_mode:next(true)
+end
+
+---@param winnr                         integer
+local function redraw_winline(winnr)
+  if vim.api.nvim_win_is_valid(winnr) then
+    M.dirty_winline_nr:next(winnr, { force = true })
+  end
+end
+
+---@return nil
+function M.clear_search_count()
+  local winnr = search_count ~= nil and search_count.winnr or nil ---@type integer|nil
+  search_count = nil
+  if winnr ~= nil then
+    redraw_winline(winnr)
+  end
+end
+
+---@param winnr                         integer
+---@param bufnr                         integer
+---@param text                          string
+---@return nil
+function M.set_search_count(winnr, bufnr, text)
+  if text == "" or not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+    M.clear_search_count()
+    return
+  end
+
+  local winnr_previous = search_count ~= nil and search_count.winnr or nil ---@type integer|nil
+  search_count = { winnr = winnr, bufnr = bufnr, text = text }
+  if winnr_previous ~= nil and winnr_previous ~= winnr then
+    redraw_winline(winnr_previous)
+  end
+  redraw_winline(winnr)
+end
+
+---@param winnr                         integer
+---@return string|nil
+function M.get_search_count(winnr)
+  local state = search_count
+  if
+    state == nil
+    or state.winnr ~= winnr
+    or not vim.api.nvim_win_is_valid(winnr)
+    or vim.api.nvim_win_get_buf(winnr) ~= state.bufnr
+  then
+    return nil
+  end
+  return state.text
 end
 
 ---@return integer|nil

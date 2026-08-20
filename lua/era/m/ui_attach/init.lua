@@ -197,12 +197,9 @@ function M.dressing()
     local searching = dot.state.status.searching:snapshot() or vim.v.hlsearch == 1 ---@type boolean
     if searching then
       dot.state.status.searching:next(false)
+      dot.state.status.clear_search_count()
       vim.schedule(function()
         vim.cmd("noh")
-        local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-        for _, bufnr in ipairs(bufnrs) do
-          vim.api.nvim_buf_clear_namespace(bufnr, dot.var.nsnr.search_count, 0, -1)
-        end
       end)
     end
     if vim.snippet then

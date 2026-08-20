@@ -80,6 +80,7 @@ local function resolve_nvimbar(winnr)
       ---
       :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
       ---
+      :place("right", era.m.nvimbar.component.nvim.search_count(position), 120)
       :place("right", era.m.nvimbar.component.git.hunk_nav(position), 110)
   end
 

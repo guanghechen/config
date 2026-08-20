@@ -362,22 +362,23 @@ function M.show(task)
     return
   end
 
-  if kind == "search_count" or kind == "search_cmd" then
+  if kind == "search_cmd" then
     dot.state.status.searching:next(true)
+    dot.state.status.clear_search_count()
+    return
+  end
+
+  if kind == "search_count" then
+    dot.state.status.searching:next(true)
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    local line = vim.fn.line(".") - 1
-    local virt_text = {} ---@type string[][]
+    local texts = {} ---@type string[]
     for _, piece in ipairs(content) do
       local text = vim.trim(piece[2]) ---@type string
-      table.insert(virt_text, { text, "f_um_search_count" })
+      texts[#texts + 1] = text
     end
 
-    vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.search_count, 0, -1)
-    vim.api.nvim_buf_set_extmark(bufnr, nsnrs.search_count, line, -1, {
-      virt_text = virt_text,
-      virt_text_pos = "eol",
-      hl_mode = "combine",
-    })
+    dot.state.status.set_search_count(winnr, bufnr, table.concat(texts))
     return
   end
 
