@@ -64,4 +64,92 @@ t:test("textobject: anchors a pure deletion to a selectable line", function()
   t.assert_eq("V", regions[1].vis_mode, "linewise")
 end)
 
+t:test("navigation publishes transient winline state", function()
+  local winnr = vim.api.nvim_get_current_win()
+  local bufnr_previous = vim.api.nvim_win_get_buf(winnr)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  local dirty_calls = {} ---@type { winnr: integer, force: boolean }[]
+
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "one", "two", "three", "four" })
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.api.nvim_win_set_cursor(winnr, { 1, 0 })
+
+  t:patch_global("era", {
+    m = {
+      git = {
+        buffer = {
+          is_attached = function()
+            return true
+          end,
+          get_unstaged_hunks = function()
+            return {
+              { added = { start = 2 }, vend = 2 },
+              { added = { start = 4 }, vend = 4 },
+            }
+          end,
+        },
+      },
+    },
+  })
+  t:patch_global("dot", {
+    state = {
+      status = {
+        dirty_winline_nr = {
+          next = function(_, dirty_winnr, opts)
+            dirty_calls[#dirty_calls + 1] = { winnr = dirty_winnr, force = opts ~= nil and opts.force == true }
+          end,
+        },
+      },
+    },
+  })
+
+  hunk.nav("next")
+
+  local index, total = hunk.get_nav_indicator(winnr)
+  t.assert_eq(1, index, "current hunk")
+  t.assert_eq(2, total, "total hunks")
+  t.assert_eq(2, vim.api.nvim_win_get_cursor(winnr)[1], "target line")
+  t.assert_eq(winnr, dirty_calls[#dirty_calls].winnr, "dirty window")
+  t.assert_true(dirty_calls[#dirty_calls].force, "force redraw for repeated window")
+
+  hunk.clear_nav()
+  t.assert_nil(hunk.get_nav_indicator(winnr), "cleared indicator")
+
+  vim.api.nvim_win_set_buf(winnr, bufnr_previous)
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("git winline component renders hunk navigation position", function()
+  t:patch_global("stl", {
+    nvim = {
+      fn = {
+        txt = function(text)
+          return text
+        end,
+      },
+    },
+  })
+  t:patch_global("era", {
+    m = {
+      git = {
+        hunk = {
+          get_nav_indicator = function(winnr)
+            t.assert_eq(42, winnr, "component window")
+            return 2, 10
+          end,
+        },
+      },
+    },
+  })
+
+  local git_component = assert(loadfile("lua/era/m/nvimbar/component/git.lua"))()
+  local component = git_component.hunk_nav("f_wl")
+
+  local context = { winnr = 42 } ---@type era.m.nvimbar.INvimbarContext
+  t.assert_true(component.condition(context, 20), "visible with navigation state")
+  local text, _, full = component.render(context, 20)
+  t.assert_eq("[2/10]", text, "rendered position")
+  t.assert_true(full, "atomic result")
+end)
+
 t:run()

@@ -33,4 +33,31 @@ function M.branch(position)
   return component
 end
 
+---@param position                      stl.t.NvimbarPositionEnum
+---@return era.m.nvimbar.IRawComponent
+function M.hunk_nav(position)
+  local hln_text = "m_git_hunk_indicator" ---@type string
+
+  ---@type era.m.nvimbar.IRawComponent
+  local component = {
+    name = "git:hunk_nav",
+    atomic = true,
+    condition = function(context)
+      local index = era.m.git.hunk.get_nav_indicator(context.winnr) ---@type integer|nil
+      return index ~= nil
+    end,
+    render = function(context)
+      local index, total = era.m.git.hunk.get_nav_indicator(context.winnr) ---@type integer|nil, integer|nil
+      if index == nil or total == nil then
+        return "", "", true
+      end
+
+      local text = string.format("[%d/%d]", index, total) ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
 return M

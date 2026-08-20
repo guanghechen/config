@@ -258,6 +258,10 @@ M.reset_buffer()             -- Reset 整个文件
 `ih`/`ah` 以 linewise Visual mode 选择当前或下一个 unstaged hunk；可用 `vihghs` 在 stage 前确认完整范围。
 纯删除没有 modified-side 行，因此选择其 sign 所在的 anchor line，以保持 `ghs` 等 hunk 操作可用。
 
+Hunk navigation 的 `[index/total]` 是由 hunk module 持有的 transient state。当前 source window 的 winline
+在右侧读取并展示该 state；`CursorMoved` 或显式 clear 后移除。Indicator 不使用 buffer virtual text，因此不受
+line length、horizontal scroll 或 inline blame 影响。
+
 ### 操作模式规则
 
 **Normal Mode:**

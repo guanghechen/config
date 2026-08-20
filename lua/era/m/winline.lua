@@ -79,8 +79,8 @@ local function resolve_nvimbar(winnr)
       :place("left", era.m.nvimbar.component.lsp.symbols(position), 90)
       ---
       :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
-    ---
-    -- :place("right", era.m.nvimbar.component.dirpath_prominent(position), 100)
+      ---
+      :place("right", era.m.nvimbar.component.git.hunk_nav(position), 110)
   end
 
   if winline ~= nil then

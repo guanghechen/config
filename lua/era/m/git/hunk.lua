@@ -337,34 +337,58 @@ end
 -- Navigation
 ----------------------------------------------------------------------------------------------------
 
-local nav_ns = vim.api.nvim_create_namespace("dot_git_hunk_nav") ---@type integer
+---@class era.m.git.hunk.INavIndicator
+---@field public bufnr                  integer
+---@field public index                  integer
+---@field public total                  integer
+---@field public winnr                  integer
+
 local nav_autocmd_id = nil ---@type integer|nil
-local nav_bufnr = nil ---@type integer|nil
+local nav_indicator = nil ---@type era.m.git.hunk.INavIndicator|nil
+
+---@param winnr                         integer
+local function redraw_nav_winline(winnr)
+  if vim.api.nvim_win_is_valid(winnr) then
+    dot.state.status.dirty_winline_nr:next(winnr, { force = true })
+  end
+end
 
 local function clear_nav_indicator()
-  if nav_bufnr and vim.api.nvim_buf_is_valid(nav_bufnr) then
-    vim.api.nvim_buf_clear_namespace(nav_bufnr, nav_ns, 0, -1)
-  end
+  local winnr = nav_indicator ~= nil and nav_indicator.winnr or nil ---@type integer|nil
   if nav_autocmd_id then
     pcall(vim.api.nvim_del_autocmd, nav_autocmd_id)
     nav_autocmd_id = nil
   end
-  nav_bufnr = nil
+  nav_indicator = nil
+  if winnr ~= nil then
+    redraw_nav_winline(winnr)
+  end
 end
 
+---@param winnr                         integer
+---@return integer|nil index
+---@return integer|nil total
+function M.get_nav_indicator(winnr)
+  local indicator = nav_indicator
+  if
+    indicator == nil
+    or indicator.winnr ~= winnr
+    or not vim.api.nvim_win_is_valid(winnr)
+    or vim.api.nvim_win_get_buf(winnr) ~= indicator.bufnr
+  then
+    return nil, nil
+  end
+  return indicator.index, indicator.total
+end
+
+---@param winnr                         integer
 ---@param bufnr                         integer
----@param lnum                          integer
 ---@param index                         integer
 ---@param total                         integer
-local function show_nav_indicator(bufnr, lnum, index, total)
+local function show_nav_indicator(winnr, bufnr, index, total)
   clear_nav_indicator()
-  nav_bufnr = bufnr
-
-  local text = string.format("[%d/%d]", index, total) ---@type string
-  pcall(vim.api.nvim_buf_set_extmark, bufnr, nav_ns, lnum - 1, 0, {
-    virt_text = { { text, "m_git_hunk_indicator" } },
-    virt_text_pos = "eol",
-  })
+  nav_indicator = { winnr = winnr, bufnr = bufnr, index = index, total = total }
+  redraw_nav_winline(winnr)
 
   vim.schedule(function()
     nav_autocmd_id = vim.api.nvim_create_autocmd("CursorMoved", {
@@ -435,7 +459,7 @@ local function nav_impl(direction, include_staged)
 
   local target = hunks[target_idx]
   vim.api.nvim_win_set_cursor(winnr, { target.lnum, 0 })
-  show_nav_indicator(bufnr, target.lnum, target_idx, #hunks)
+  show_nav_indicator(winnr, bufnr, target_idx, #hunks)
 end
 
 ---@param direction                     "next"|"prev"
