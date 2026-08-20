@@ -61,16 +61,30 @@ local linters = {
   },
 }
 
+local pending_bufnrs = {} ---@type table<integer, true>
+local deferred_bufnrs = {} ---@type table<integer, true>
 local lint_debounced = nil ---@type stl.timer.IDisposableCallable|nil
+local lint_schedule_subscription = nil ---@type stl.c.IUnsubscribable|nil
 
 ---@param bufnr                         integer
-local function do_lint(bufnr)
-  local spellcheck = dot.context.lsp.spellcheck:snapshot() ---@type boolean
-  if not spellcheck then
-    return
+---@return boolean
+local function is_buf_visible(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return false
   end
 
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+  for _, winnr in ipairs(vim.fn.win_findbuf(bufnr)) do
+    if vim.fn.win_gettype(winnr) ~= "autocmd" then
+      return true
+    end
+  end
+  return false
+end
+
+---@param bufnr                         integer
+local function do_lint_current(bufnr)
+  local spellcheck = dot.context.lsp.spellcheck:snapshot() ---@type boolean
+  if not spellcheck then
     return
   end
 
@@ -145,6 +159,69 @@ local function do_lint(bufnr)
   end
 end
 
+---@param bufnr                         integer
+local function do_lint(bufnr)
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_buf_is_loaded(bufnr) then
+    return
+  end
+
+  vim.api.nvim_buf_call(bufnr, function()
+    do_lint_current(bufnr)
+  end)
+end
+
+---@return nil
+local function flush_pending_lints()
+  local bufnrs = pending_bufnrs ---@type table<integer, true>
+  pending_bufnrs = {}
+
+  for bufnr in pairs(bufnrs) do
+    local ok, err = pcall(do_lint, bufnr)
+    if not ok then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "lint buffer",
+        message = "Failed to lint buffer.",
+        details = { bufnr = bufnr, error = err },
+      })
+    end
+  end
+end
+
+---@param bufnr                         integer
+---@return nil
+local function schedule_lint(bufnr)
+  if type(bufnr) ~= "number" or bufnr < 1 or lint_debounced == nil then
+    return
+  end
+
+  deferred_bufnrs[bufnr] = nil
+  pending_bufnrs[bufnr] = true
+  lint_debounced()
+end
+
+---@param bufnr                         integer
+---@return nil
+local function schedule_passive_lint(bufnr)
+  if type(bufnr) ~= "number" or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  if is_buf_visible(bufnr) then
+    schedule_lint(bufnr)
+  else
+    deferred_bufnrs[bufnr] = true
+  end
+end
+
+---@param bufnr                         integer
+---@return nil
+local function schedule_deferred_lint(bufnr)
+  if deferred_bufnrs[bufnr] and is_buf_visible(bufnr) then
+    schedule_lint(bufnr)
+  end
+end
+
 return {
   name = "nvim-lint",
   event = { "BufReadPost", "BufNewFile" },
@@ -166,27 +243,58 @@ return {
     if lint_debounced ~= nil then
       lint_debounced:dispose()
     end
-    lint_debounced = stl.timer.debounce(do_lint, 128)
+    if lint_schedule_subscription ~= nil then
+      lint_schedule_subscription:unsubscribe()
+    end
 
-    stl.fn.observe({ dot.state.status.lint_schedule_nr }, function()
-      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-      lint_debounced(bufnr)
-    end)
+    pending_bufnrs = {}
+    deferred_bufnrs = {}
+    lint_debounced = stl.timer.debounce(flush_pending_lints, 128)
 
-    vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
-      group = stl.nvim.fn.augroup("nvim-lint-on-file-load-save"),
-      callback = function()
-        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-        lint_debounced(bufnr)
+    lint_schedule_subscription = dot.state.status.lint_schedule_nr:subscribe(
+      stl.c.Subscriber.new({
+        on_next = function(bufnr)
+          schedule_lint(bufnr)
+        end,
+      }),
+      true
+    )
+
+    local group_visible = stl.nvim.fn.augroup("nvim-lint-on-file-visible") ---@type integer
+    vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+      group = group_visible,
+      callback = function(event)
+        schedule_passive_lint(event.buf)
+      end,
+    })
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+      group = group_visible,
+      callback = function(event)
+        schedule_deferred_lint(event.buf)
+      end,
+    })
+    vim.api.nvim_create_autocmd("BufDelete", {
+      group = group_visible,
+      callback = function(event)
+        pending_bufnrs[event.buf] = nil
+        deferred_bufnrs[event.buf] = nil
+      end,
+    })
+
+    vim.api.nvim_create_autocmd("BufWritePost", {
+      group = stl.nvim.fn.augroup("nvim-lint-on-file-save"),
+      callback = function(event)
+        schedule_lint(event.buf)
       end,
     })
 
     vim.api.nvim_create_autocmd({ "InsertLeave" }, {
       group = stl.nvim.fn.augroup("nvim-lint-on-insert-leave"),
-      callback = function()
-        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-        lint_debounced(bufnr)
+      callback = function(event)
+        schedule_lint(event.buf)
       end,
     })
+
+    schedule_passive_lint(vim.api.nvim_get_current_buf())
   end,
 }
