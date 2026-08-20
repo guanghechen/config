@@ -2,6 +2,8 @@
 # user@host ~/path ( main|+1•?) 12:34:56 (conda)
 #   $
 
+command_timeout = 2000
+
 format = """$character$os$username${custom.separator}$hostname$directory$git_branch$git_status $time$conda
 PS> """
 
