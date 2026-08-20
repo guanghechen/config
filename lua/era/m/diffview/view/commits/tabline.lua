@@ -40,21 +40,25 @@ local ICON_FLAG_FOLD_UNCHANGED = stl.icon.symbols.flag_fold_unchanged ---@type s
 -- Helpers
 ----------------------------------------------------------------------------------------------------
 
----Get commits pane width for current tab
+---Get the width allocated to the commits status for current tab.
+---Use the commits pane when present; SBS-only layouts inherit the left diff pane width.
 ---@return integer
 local function get_pane_width()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-    if filetype == config.FT.COMMITS then
-      if not stl.nvim.win.is_float(winnr) then
-        return vim.api.nvim_win_get_width(winnr)
-      end
-    end
+  local lyt = commits_view.get_layout(tabnr)
+  if not lyt then
+    return 0
   end
-  return 0
+
+  local winnr = lyt.commits_winnr ---@type integer|nil
+  if not winnr or not vim.api.nvim_win_is_valid(winnr) then
+    winnr = lyt.sbs_left_winnr
+  end
+  if not winnr or not vim.api.nvim_win_is_valid(winnr) or stl.nvim.win.is_float(winnr) then
+    return 0
+  end
+
+  return vim.api.nvim_win_get_width(winnr)
 end
 
 ----------------------------------------------------------------------------------------------------
