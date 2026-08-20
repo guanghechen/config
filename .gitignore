@@ -1,1 +1,6 @@
 .git-credentials
+.gitconfig
+
+!/guanghechen/.gitconfig
+!/yozora/.gitconfig
+
