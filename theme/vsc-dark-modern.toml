@@ -22,11 +22,10 @@ btn_no                  = {}
 btn_labels              = [ "  [Y]es  ", "  (N)o  " ]
 
 [help]
-on                      = { fg = "#4EC9B0" }
-run                     = { fg = "#C586C0" }
-desc                    = {}
+border                  = { fg = "#0078D4" }
+chord                   = { fg = "#4EC9B0" }
+action                  = {}
 hovered                 = { reversed = true,    bold = true }
-footer                  = { fg = "#CCCCCC",     bg = "#0078D4" }
 
 [input]
 border                  = { fg = "#868686" }
@@ -114,16 +113,16 @@ separator_style         = { fg = "#313131" }
 [filetype]
 rules = [
   # Images
-  { mime = "image/*", fg = "#DCDCAA" },
+  { mime = "**/image/*", fg = "#DCDCAA" },
 
   # Media
-  { mime = "{audio,video}/*", fg = "#C586C0" },
+  { mime = "**/{audio,video}/*", fg = "#C586C0" },
 
   # Archives
-  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#F85149" },
+  { mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#F85149" },
 
   # Documents
-  { mime = "application/{pdf,doc,rtf}", fg = "#4EC9B0" },
+  { mime = "**/application/{pdf,doc,rtf}", fg = "#4EC9B0" },
 
   # Empty files
   # { mime = "inode/empty", fg = "#F85149" },
