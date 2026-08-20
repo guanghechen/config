@@ -96,8 +96,14 @@
 ---@field public spec                   era.m.plugin.IPluginSpec
 ---@field public loaded                 boolean
 ---@field public loading                boolean
+---@field public startup                boolean
 ---@field public load_time              number|nil
 ---@field public path                   string|nil
+
+---@class era.m.plugin.IStartupProfile
+---@field public plugins                era.m.plugin.IPluginState[]
+---@field public total_time             number
+---@field public finalized              boolean
 
 ---@class era.m.plugin.IRawSpec
 ---@field public name                   string

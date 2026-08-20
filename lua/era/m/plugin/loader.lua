@@ -5,11 +5,17 @@ local __module_name__ = "era.m.plugin.loader" ---@type string
 ---@field public plugins                table<string, era.m.plugin.IPluginState>
 ---@field protected _module_to_plugin   table<string, string>
 ---@field protected _initialized        boolean
+---@field protected _load_depth         integer
+---@field protected _startup_complete   boolean
+---@field protected _startup_load_time  number
 local M = {}
 
 M.plugins = {}
 M._module_to_plugin = {}
 M._initialized = false
+M._load_depth = 0
+M._startup_complete = false
+M._startup_load_time = 0
 
 ---@param name                          string
 ---@return era.m.plugin.IPluginState|nil
@@ -20,6 +26,22 @@ end
 ---@return table<string, era.m.plugin.IPluginState>
 function M.get_all()
   return M.plugins
+end
+
+---@return era.m.plugin.IStartupProfile
+function M.get_startup_profile()
+  local plugins = {} ---@type era.m.plugin.IPluginState[]
+  for _, state in pairs(M.plugins) do
+    if state.startup then
+      plugins[#plugins + 1] = state
+    end
+  end
+
+  return {
+    plugins = plugins,
+    total_time = M._startup_load_time,
+    finalized = M._startup_complete,
+  }
 end
 
 ---@param name                          string
@@ -68,6 +90,7 @@ function M.__register_plugins__(specs)
       spec = spec,
       loaded = false,
       loading = false,
+      startup = false,
       path = M.__resolve_plugin_path__(spec),
     }
     M.plugins[spec.name] = state
@@ -154,7 +177,9 @@ function M.__load_plugin__(state)
 
   local start_time = vim.uv.hrtime() ---@type integer
   local main_loaded_before = spec.main and package.loaded[spec.main] or nil
+  local is_root_load = M._load_depth == 0 ---@type boolean
 
+  M._load_depth = M._load_depth + 1
   state.loading = true
   local ok, err = pcall(function()
     local has_path = state.path ~= nil and yoz.path.is_exist(state.path) ---@type boolean
@@ -202,7 +227,9 @@ function M.__load_plugin__(state)
       end
     end
   end)
+  local load_time = (vim.uv.hrtime() - start_time) / 1e6 ---@type number
   state.loading = false
+  M._load_depth = M._load_depth - 1
 
   if not ok then
     if spec.main then
@@ -214,11 +241,25 @@ function M.__load_plugin__(state)
   end
 
   state.loaded = true
-  state.load_time = (vim.uv.hrtime() - start_time) / 1e6
+  state.load_time = load_time
+
+  if not M._startup_complete then
+    state.startup = true
+    if is_root_load then
+      -- Root spans already include nested plugin loads, so accumulating them once avoids
+      -- counting dependency time in both the parent and the dependency.
+      M._startup_load_time = M._startup_load_time + load_time
+    end
+  end
 
   vim.schedule(function()
     vim.api.nvim_exec_autocmds("User", { pattern = "PluginLoad", modeline = false, data = spec.name })
   end)
+end
+
+---@return nil
+function M.__complete_startup__()
+  M._startup_complete = true
 end
 
 ---@param spec                          era.m.plugin.IPluginSpec
@@ -236,6 +277,7 @@ function M.__schedule_very_lazy__()
         return
       end
       vim.api.nvim_exec_autocmds("User", { pattern = "VeryLazy", modeline = false })
+      M.__complete_startup__()
     end)
   end
 

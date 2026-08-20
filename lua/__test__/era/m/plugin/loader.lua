@@ -14,7 +14,7 @@ t:patch_table(vim, "schedule", function() end)
 local function states_of(specs)
   local states = {} ---@type table<string, era.m.plugin.IPluginState>
   for name, spec in pairs(specs) do
-    states[name] = { spec = spec, loaded = false, loading = false } ---@type era.m.plugin.IPluginState
+    states[name] = { spec = spec, loaded = false, loading = false, startup = false } ---@type era.m.plugin.IPluginState
   end
   return states
 end
@@ -24,6 +24,9 @@ end
 local function use_states(specs)
   local states = states_of(specs)
   t:patch_table(loader, "plugins", states)
+  t:patch_table(loader, "_load_depth", 0)
+  t:patch_table(loader, "_startup_complete", false)
+  t:patch_table(loader, "_startup_load_time", 0)
   return states
 end
 
@@ -103,6 +106,65 @@ t:test("mutual dependencies each run once", function()
   t.assert_true(states.b.loaded, "plugin b loaded")
   t.assert_false(states.a.loading, "plugin a loading")
   t.assert_false(states.b.loading, "plugin b loading")
+end)
+
+t:test("startup total counts a nested dependency once", function()
+  local times = { 0, 10e6, 30e6, 50e6 }
+  local time_index = 0
+  t:patch_table(vim.uv, "hrtime", function()
+    time_index = time_index + 1
+    return times[time_index]
+  end)
+
+  local states = use_states({
+    parent = {
+      name = "parent",
+      dependencies = { "child" },
+      config = function() end,
+    },
+    child = {
+      name = "child",
+      config = function() end,
+    },
+  })
+
+  loader.__load_plugin__(states.parent)
+
+  local profile = loader.get_startup_profile()
+  local names = vim.tbl_map(function(state)
+    return state.spec.name
+  end, profile.plugins)
+  table.sort(names)
+
+  t.assert_eq("child,parent", table.concat(names, ","), "startup plugins")
+  t.assert_eq(20, states.child.load_time, "dependency inclusive load time")
+  t.assert_eq(50, states.parent.load_time, "parent inclusive load time")
+  t.assert_eq(50, profile.total_time, "startup total")
+end)
+
+t:test("startup profile ignores plugins loaded after finalization", function()
+  local times = { 0, 10e6, 20e6, 50e6 }
+  local time_index = 0
+  t:patch_table(vim.uv, "hrtime", function()
+    time_index = time_index + 1
+    return times[time_index]
+  end)
+
+  local states = use_states({
+    startup = { name = "startup", config = function() end },
+    runtime = { name = "runtime", config = function() end },
+  })
+
+  loader.__load_plugin__(states.startup)
+  loader.__complete_startup__()
+  loader.__load_plugin__(states.runtime)
+
+  local profile = loader.get_startup_profile()
+  t.assert_eq(1, #profile.plugins, "startup plugin count")
+  t.assert_eq("startup", profile.plugins[1].spec.name, "startup plugin")
+  t.assert_eq(10, profile.total_time, "frozen startup total")
+  t.assert_true(profile.finalized, "profile finalized")
+  t.assert_false(states.runtime.startup, "runtime plugin startup membership")
 end)
 
 t:test("a config failure releases the plugin state", function()

@@ -136,7 +136,11 @@ Displays all plugins grouped by status:
 
 ### Profile
 
-Shows loaded plugins sorted by load time (slowest first).
+Shows the startup plugin snapshot sorted by inclusive load time (slowest first).
+
+- The snapshot is finalized after `VeryLazy`; plugins loaded by later runtime triggers are excluded.
+- `Total` accumulates top-level plugin load spans, so nested dependencies are counted once.
+- Individual plugin times remain inclusive and may contain dependency load time.
 
 ### Update
 

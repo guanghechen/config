@@ -369,12 +369,9 @@ end
 
 ---@return nil
 function M:__profile__()
-  local loaded, _ = self:__collect_plugins__()
-
-  local total_time = 0 ---@type number
-  for _, state in ipairs(loaded) do
-    total_time = total_time + (state.load_time or 0)
-  end
+  local Loader = require("era.m.plugin.loader")
+  local profile = Loader.get_startup_profile() ---@type era.m.plugin.IStartupProfile
+  local loaded = profile.plugins ---@type era.m.plugin.IPluginState[]
 
   table.sort(loaded, function(a, b)
     return (a.load_time or 0) > (b.load_time or 0)
@@ -382,7 +379,7 @@ function M:__profile__()
 
   self
     :__append__("Total:", "m_pl_h2")
-    :__append__(" " .. string.format("%.2fms", total_time), "m_pl_comment")
+    :__append__(" " .. string.format("%.2fms", profile.total_time), "m_pl_comment")
     :__nl__()
     :__nl__()
 
@@ -392,7 +389,7 @@ function M:__profile__()
       self:__render_plugin__(state, true)
     end
   else
-    self:__append__("  No plugins loaded yet", "m_pl_comment"):__nl__()
+    self:__append__("  No plugins loaded during startup", "m_pl_comment"):__nl__()
   end
 end
 
