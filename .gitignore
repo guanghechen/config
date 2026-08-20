@@ -38,12 +38,16 @@ version.json
 /process_manager/
 /proxy/
 /rules/
+/themes/local.tmTheme
+/thread-writer-locks/
+
+/agents/kit-*
+/agents/ms-*
+/agents/yui-*
 /skills/.system
 /skills/kit-*
 /skills/ms-*
 /skills/yui-*
-/themes/local.tmTheme
-/thread-writer-locks/
 
 .tmp/
 log/
