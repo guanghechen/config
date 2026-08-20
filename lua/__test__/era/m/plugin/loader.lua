@@ -25,6 +25,7 @@ local function use_states(specs)
   local states = states_of(specs)
   t:patch_table(loader, "plugins", states)
   t:patch_table(loader, "_load_depth", 0)
+  t:patch_table(loader, "_nvim_startup_time", nil)
   t:patch_table(loader, "_startup_complete", false)
   t:patch_table(loader, "_startup_load_time", 0)
   return states
@@ -106,6 +107,27 @@ t:test("mutual dependencies each run once", function()
   t.assert_true(states.b.loaded, "plugin b loaded")
   t.assert_false(states.a.loading, "plugin a loading")
   t.assert_false(states.b.loading, "plugin b loading")
+end)
+
+t:test("nvim startup time uses the process start timestamp once", function()
+  use_states({})
+
+  local current_time = vim.v.starttime + 25e6 ---@type number
+  local seconds = math.floor(current_time / 1e9) ---@type integer
+  local microseconds = math.floor((current_time - seconds * 1e9) / 1e3 + 0.5) ---@type integer
+  t:patch_table(vim.uv, "gettimeofday", function()
+    return seconds, microseconds
+  end)
+
+  loader.__record_nvim_startup__()
+  local recorded = loader.get_startup_profile().nvim_startup_time ---@type number|nil
+  t.assert_true(recorded ~= nil and math.abs(recorded - 25) < 0.001, "nvim startup time")
+
+  t:patch_table(vim.uv, "gettimeofday", function()
+    return seconds + 1, microseconds
+  end)
+  loader.__record_nvim_startup__()
+  t.assert_eq(recorded, loader.get_startup_profile().nvim_startup_time, "nvim startup time recorded once")
 end)
 
 t:test("startup total counts a nested dependency once", function()

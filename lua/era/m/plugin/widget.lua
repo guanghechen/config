@@ -377,8 +377,12 @@ function M:__profile__()
     return (a.load_time or 0) > (b.load_time or 0)
   end)
 
+  local nvim_startup_time = profile.nvim_startup_time ---@type number|nil
   self
-    :__append__("Total:", "m_pl_h2")
+    :__append__("Neovim (UIEnter):", "m_pl_h2")
+    :__append__(nvim_startup_time and (" " .. string.format("%.2fms", nvim_startup_time)) or " pending", "m_pl_comment")
+    :__nl__()
+    :__append__("Plugins (Startup):", "m_pl_h2")
     :__append__(" " .. string.format("%.2fms", profile.total_time), "m_pl_comment")
     :__nl__()
     :__nl__()

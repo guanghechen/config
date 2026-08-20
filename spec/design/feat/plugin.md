@@ -138,8 +138,11 @@ Displays all plugins grouped by status:
 
 Shows the startup plugin snapshot sorted by inclusive load time (slowest first).
 
+- `Neovim (UIEnter)` measures process start (`v:starttime`) through `UIEnter`.
+- `Plugins (Startup)` measures top-level plugin load spans through `VeryLazy`.
+- These metrics have different boundaries and are not additive.
 - The snapshot is finalized after `VeryLazy`; plugins loaded by later runtime triggers are excluded.
-- `Total` accumulates top-level plugin load spans, so nested dependencies are counted once.
+- Plugin total counts nested dependencies once.
 - Individual plugin times remain inclusive and may contain dependency load time.
 
 ### Update

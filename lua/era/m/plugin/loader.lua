@@ -6,6 +6,7 @@ local __module_name__ = "era.m.plugin.loader" ---@type string
 ---@field protected _module_to_plugin   table<string, string>
 ---@field protected _initialized        boolean
 ---@field protected _load_depth         integer
+---@field protected _nvim_startup_time  number|nil
 ---@field protected _startup_complete   boolean
 ---@field protected _startup_load_time  number
 local M = {}
@@ -14,6 +15,7 @@ M.plugins = {}
 M._module_to_plugin = {}
 M._initialized = false
 M._load_depth = 0
+M._nvim_startup_time = nil
 M._startup_complete = false
 M._startup_load_time = 0
 
@@ -39,6 +41,7 @@ function M.get_startup_profile()
 
   return {
     plugins = plugins,
+    nvim_startup_time = M._nvim_startup_time,
     total_time = M._startup_load_time,
     finalized = M._startup_complete,
   }
@@ -262,6 +265,17 @@ function M.__complete_startup__()
   M._startup_complete = true
 end
 
+---@return nil
+function M.__record_nvim_startup__()
+  if M._nvim_startup_time ~= nil then
+    return
+  end
+
+  local seconds, microseconds = vim.uv.gettimeofday() ---@type integer, integer
+  local current_time = seconds * 1e9 + microseconds * 1e3 ---@type number
+  M._nvim_startup_time = (current_time - vim.v.starttime) / 1e6
+end
+
 ---@param spec                          era.m.plugin.IPluginSpec
 ---@return string
 function M.__resolve_plugin_path__(spec)
@@ -282,11 +296,15 @@ function M.__schedule_very_lazy__()
   end
 
   if vim.v.vim_did_enter == 1 then
+    M.__record_nvim_startup__()
     fire()
   else
     vim.api.nvim_create_autocmd("UIEnter", {
       once = true,
-      callback = fire,
+      callback = function()
+        M.__record_nvim_startup__()
+        fire()
+      end,
     })
   end
 end

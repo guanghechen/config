@@ -102,6 +102,7 @@
 
 ---@class era.m.plugin.IStartupProfile
 ---@field public plugins                era.m.plugin.IPluginState[]
+---@field public nvim_startup_time      number|nil
 ---@field public total_time             number
 ---@field public finalized              boolean
 
