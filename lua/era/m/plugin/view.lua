@@ -200,7 +200,11 @@ function M:__mount__()
   vim.api.nvim_set_option_value("foldenable", false, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", true, { win = self.winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winhighlight", "Normal:m_pl_normal,FloatBorder:FloatActiveBorder,FloatTitle:m_pl_title", { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    "Normal:m_pl_normal,FloatBorder:FloatActiveBorder,FloatTitle:m_pl_title",
+    { win = self.winnr, scope = "local" }
+  )
   vim.api.nvim_set_option_value("colorcolumn", "", { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("winbar", "", { win = self.winnr, scope = "local" })
 
@@ -235,6 +239,57 @@ function M:__mount__()
   })
 end
 
+---@param mode                          era.m.plugin.ViewModeEnum
+---@return nil
+function M:__select_mode__(mode)
+  self.state.mode = mode
+  self.widget:update()
+end
+
+---@param mode                          era.m.plugin.ViewModeEnum
+---@return nil
+function M:__run_mode_action__(mode)
+  self:__select_mode__(mode)
+  if mode == "home" or mode == "profile" then
+    return
+  end
+
+  local Action = require("era.m.plugin.action")
+  if Action.is_running() then
+    return
+  end
+
+  local function update()
+    if self:isvisible() then
+      self.widget:update()
+    end
+  end
+
+  if mode == "install" then
+    Action.install(update):finally(update)
+  elseif mode == "update" then
+    Action.update(update):finally(update)
+  else
+    Action.clean():finally(update)
+  end
+  self.widget:update()
+end
+
+---@return nil
+function M:__on_left_mouse__()
+  local mouse = vim.fn.getmousepos()
+  if mouse.winid == self.winnr then
+    local mode = self.widget:get_mode_at(mouse.line, mouse.column)
+    if mode then
+      self:__select_mode__(mode)
+      return
+    end
+  end
+
+  local key = vim.api.nvim_replace_termcodes("<LeftMouse>", true, false, true) ---@type string
+  vim.api.nvim_feedkeys(key, "n", false)
+end
+
 ---@return nil
 function M:__setup_keymaps__()
   local bufnr = self.bufnr ---@type integer
@@ -259,8 +314,7 @@ function M:__setup_keymaps__()
       modes = { "n" },
       key = "H",
       callback = function()
-        self.state.mode = "home"
-        self.widget:update()
+        self:__select_mode__("home")
       end,
       desc = "Home",
     },
@@ -268,21 +322,7 @@ function M:__setup_keymaps__()
       modes = { "n" },
       key = "I",
       callback = function()
-        local Action = require("era.m.plugin.action")
-        self.state.mode = "install"
-        self.widget:update()
-        if not Action.is_running() then
-          Action.install(function()
-            if self:isvisible() then
-              self.widget:update()
-            end
-          end):finally(function()
-            if self:isvisible() then
-              self.widget:update()
-            end
-          end)
-          self.widget:update()
-        end
+        self:__run_mode_action__("install")
       end,
       desc = "Install",
     },
@@ -290,8 +330,7 @@ function M:__setup_keymaps__()
       modes = { "n" },
       key = "P",
       callback = function()
-        self.state.mode = "profile"
-        self.widget:update()
+        self:__select_mode__("profile")
       end,
       desc = "Profile",
     },
@@ -299,21 +338,7 @@ function M:__setup_keymaps__()
       modes = { "n" },
       key = "U",
       callback = function()
-        local Action = require("era.m.plugin.action")
-        self.state.mode = "update"
-        self.widget:update()
-        if not Action.is_running() then
-          Action.update(function()
-            if self:isvisible() then
-              self.widget:update()
-            end
-          end):finally(function()
-            if self:isvisible() then
-              self.widget:update()
-            end
-          end)
-          self.widget:update()
-        end
+        self:__run_mode_action__("update")
       end,
       desc = "Update",
     },
@@ -321,19 +346,17 @@ function M:__setup_keymaps__()
       modes = { "n" },
       key = "X",
       callback = function()
-        local Action = require("era.m.plugin.action")
-        self.state.mode = "clean"
-        self.widget:update()
-        if not Action.is_running() then
-          Action.clean():finally(function()
-            if self:isvisible() then
-              self.widget:update()
-            end
-          end)
-          self.widget:update()
-        end
+        self:__run_mode_action__("clean")
       end,
       desc = "Clean",
+    },
+    {
+      modes = { "n" },
+      key = "<LeftMouse>",
+      callback = function()
+        self:__on_left_mouse__()
+      end,
+      desc = "Activate tab",
     },
     {
       modes = { "n" },

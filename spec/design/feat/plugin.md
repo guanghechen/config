@@ -123,6 +123,7 @@ require("era.m.plugin").setup(specs)
 | `P` | Switch to Profile view                 |
 | `U` | Switch to Update view and start update |
 | `X` | Switch to Clean view and start clean   |
+| Mouse click | Switch header tab without starting its action |
 | `q` | Close window                           |
 
 ## Views

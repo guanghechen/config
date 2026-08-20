@@ -65,6 +65,11 @@
 ---@field public str                    string
 ---@field public hl                     string|nil
 
+---@class era.m.plugin.IButtonRange
+---@field public mode                   era.m.plugin.ViewModeEnum
+---@field public start_col              integer
+---@field public end_col                integer
+
 ---@class era.m.plugin.IKeySpec
 ---@field public lhs                    string
 ---@field public rhs                    (string|fun())|nil

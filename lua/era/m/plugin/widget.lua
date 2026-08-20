@@ -5,6 +5,7 @@ local State = require("era.m.plugin.state")
 ---@field public wrap                   integer
 ---@field protected _view               era.m.plugin.View
 ---@field protected _lines              era.m.plugin.ITextSegment[][]
+---@field protected _button_ranges      table<integer, era.m.plugin.IButtonRange[]>
 ---@field protected _required_by        table<string, string[]>
 ---@field protected _line_to_plugin     table<integer, string>
 local M = {}
@@ -16,6 +17,7 @@ function M.new(view)
   local self = setmetatable({}, M)
   self._view = view
   self._lines = {}
+  self._button_ranges = {}
   self._required_by = {}
   self._line_to_plugin = {}
   self.padding = 2
@@ -26,6 +28,7 @@ end
 ---@return nil
 function M:update()
   self._lines = {}
+  self._button_ranges = {}
   self._line_to_plugin = {}
   self:__build_required_by__()
   self:__title__()
@@ -48,6 +51,17 @@ function M:update()
   vim.api.nvim_set_option_value("modifiable", true, { buf = self._view.bufnr })
   self:__render__(self._view.bufnr)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self._view.bufnr })
+end
+
+---@param line                          integer
+---@param col                           integer
+---@return era.m.plugin.ViewModeEnum|nil
+function M:get_mode_at(line, col)
+  for _, range in ipairs(self._button_ranges[line] or {}) do
+    if col >= range.start_col and col <= range.end_col then
+      return range.mode
+    end
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -84,6 +98,31 @@ function M:__append__(str, hl)
   end
   table.insert(self._lines[#self._lines], { str = str, hl = hl })
   return self
+end
+
+---@param mode                          era.m.plugin.ViewModeEnum
+---@param str                           string
+---@param hl                            string
+---@return era.m.plugin.Widget
+function M:__append_button__(mode, str, hl)
+  if #self._lines == 0 then
+    self:__nl__()
+  end
+
+  local line = #self._lines ---@type integer
+  local start_col = self.padding + 1 ---@type integer
+  for _, segment in ipairs(self._lines[line]) do
+    start_col = start_col + #segment.str
+  end
+
+  self._button_ranges[line] = self._button_ranges[line] or {}
+  self._button_ranges[line][#self._button_ranges[line] + 1] = {
+    mode = mode,
+    start_col = start_col,
+    end_col = start_col + #str - 1,
+  }
+
+  return self:__append__(str, hl)
 end
 
 ---@return era.m.plugin.Widget
@@ -139,43 +178,23 @@ function M:__title__()
   self:__nl__():__nl__()
 
   local icons = State.options.ui.icons
+  local buttons = {
+    { mode = "home", label = "Home", key = "H" },
+    { mode = "profile", label = "Profile", key = "P" },
+    { mode = "install", label = "Install", key = "I" },
+    { mode = "update", label = "Update", key = "U" },
+    { mode = "clean", label = "Clean", key = "X" },
+  } ---@type { mode: era.m.plugin.ViewModeEnum, label: string, key: string }[]
 
-  if self._view.state.mode == "home" then
-    self:__append__(" Home " .. icons.lazy, "m_pl_h1")
-  else
-    self:__append__(" Home (H) ", "m_pl_button")
-  end
+  for index, button in ipairs(buttons) do
+    if index > 1 then
+      self:__append__(" ")
+    end
 
-  self:__append__(" ")
-
-  if self._view.state.mode == "profile" then
-    self:__append__(" Profile " .. icons.lazy, "m_pl_h1")
-  else
-    self:__append__(" Profile (P) ", "m_pl_button")
-  end
-
-  self:__append__(" ")
-
-  if self._view.state.mode == "install" then
-    self:__append__(" Install " .. icons.lazy, "m_pl_h1")
-  else
-    self:__append__(" Install (I) ", "m_pl_button")
-  end
-
-  self:__append__(" ")
-
-  if self._view.state.mode == "update" then
-    self:__append__(" Update " .. icons.lazy, "m_pl_h1")
-  else
-    self:__append__(" Update (U) ", "m_pl_button")
-  end
-
-  self:__append__(" ")
-
-  if self._view.state.mode == "clean" then
-    self:__append__(" Clean " .. icons.lazy, "m_pl_h1")
-  else
-    self:__append__(" Clean (X) ", "m_pl_button")
+    local active = self._view.state.mode == button.mode ---@type boolean
+    local text = active and (" " .. button.label .. " " .. icons.lazy)
+      or (" " .. button.label .. " (" .. button.key .. ") ") ---@type string
+    self:__append_button__(button.mode, text, active and "m_pl_h1" or "m_pl_button")
   end
 
   self:__nl__():__nl__()
@@ -379,10 +398,10 @@ function M:__profile__()
 
   local nvim_startup_time = profile.nvim_startup_time ---@type number|nil
   self
-    :__append__("Neovim (UIEnter):", "m_pl_h2")
+    :__append__("Neovim (UIEnter):", "m_pl_bold")
     :__append__(nvim_startup_time and (" " .. string.format("%.2fms", nvim_startup_time)) or " pending", "m_pl_comment")
     :__nl__()
-    :__append__("Plugins (Startup):", "m_pl_h2")
+    :__append__("Plugins (Startup):", "m_pl_bold")
     :__append__(" " .. string.format("%.2fms", profile.total_time), "m_pl_comment")
     :__nl__()
     :__nl__()
