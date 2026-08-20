@@ -41,7 +41,6 @@ gui:
       - '{{vsc?.editorGutter_deletedBackground || unified.red}}'
 
 git:
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --paging=never --{{darken ? 'dark' : 'light'}}
-
+      command: delta --paging=never --{{darken ? 'dark' : 'light'}}
