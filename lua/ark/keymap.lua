@@ -96,3 +96,8 @@ mk({ "n", "x" }, "zk", "zt", "scroll: line to top")
 
 ---! quit
 mk({ "n", "x" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
+
+---! native
+if not vim.g.vscode then
+  mk({ "i", "n", "x" }, { "<C-a>q", "<D-q>", "<M-q>" }, "<cmd>qa<cr>", "quit: quit all")
+end
