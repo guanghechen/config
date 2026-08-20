@@ -22,11 +22,10 @@ btn_no                  = {}
 btn_labels              = [ "  [Y]es  ", "  (N)o  " ]
 
 [help]
-on                      = { fg = "{{unified.aqua}}" }
-run                     = { fg = "{{unified.purple}}" }
-desc                    = {}
+border                  = { fg = "{{unified.blue}}" }
+chord                   = { fg = "{{unified.aqua}}" }
+action                  = {}
 hovered                 = { reversed = true,    bold = true }
-footer                  = { fg = "{{unified.fg1}}",     bg = "{{unified.blue}}" }
 
 [input]
 border                  = { fg = "{{unified.fg3}}" }
@@ -114,16 +113,16 @@ separator_style         = { fg = "{{unified.bg2}}" }
 [filetype]
 rules = [
   # Images
-  { mime = "image/*", fg = "{{unified.yellow}}" },
+  { mime = "**/image/*", fg = "{{unified.yellow}}" },
 
   # Media
-  { mime = "{audio,video}/*", fg = "{{unified.purple}}" },
+  { mime = "**/{audio,video}/*", fg = "{{unified.purple}}" },
 
   # Archives
-  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "{{unified.red}}" },
+  { mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "{{unified.red}}" },
 
   # Documents
-  { mime = "application/{pdf,doc,rtf}", fg = "{{unified.aqua}}" },
+  { mime = "**/application/{pdf,doc,rtf}", fg = "{{unified.aqua}}" },
 
   # Empty files
   # { mime = "inode/empty", fg = "{{unified.red}}" },
