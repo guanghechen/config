@@ -38,18 +38,6 @@ brew install -y yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship 
 printf "\e[96m  [setup homebrew] installing hardware utilities (cpu/memo/disk/network)...\e[0m\n"
 brew install -y btop fastfetch httpie
 
-### Install github cli
-printf "\e[96m  [setup homebrew] installing github cli...\e[0m\n"
-brew install -y gh
-
-### Install GitHub Copilot CLI
-printf "\e[96m  [setup homebrew] installing github copilot cli...\e[0m\n"
-brew install -y --cask copilot-cli
-
-### Install Codex
-printf "\e[96m  [setup homebrew] installing codex...\e[0m\n"
-brew install -y --cask codex
-
 ### Install usual tools
 printf "\e[96m  [setup homebrew] installing usual tools...\e[0m\n"
 brew install -y automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tree tty-clock unzip yt-dlp zoxide
