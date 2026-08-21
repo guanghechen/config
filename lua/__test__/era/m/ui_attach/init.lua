@@ -11,7 +11,7 @@ local t = harness.new("era.m.ui_attach")
 ---@field fail_id                        integer|nil
 ---@field fast                           boolean
 ---@field escape                         fun(): string
----@field search_count_clears            integer
+---@field search_clears                  integer
 ---@field searching                      boolean
 ---@field timer                          table
 
@@ -21,7 +21,7 @@ local function setup()
     errors = {},
     events = {},
     fast = false,
-    search_count_clears = 0,
+    search_clears = 0,
     searching = false,
     timer = {},
   } ---@type era.m.ui_attach.init.test.IRuntime
@@ -57,8 +57,8 @@ local function setup()
             runtime.searching = value
           end,
         },
-        clear_search_count = function()
-          runtime.search_count_clears = runtime.search_count_clears + 1
+        clear_search = function()
+          runtime.search_clears = runtime.search_clears + 1
         end,
       },
     },
@@ -148,7 +148,7 @@ t:test("fast event queue is lossless and ordered", function()
   t.assert_eq("msg_show:600", runtime.events[600], "last event")
 end)
 
-t:test("escape clears search count together with hlsearch", function()
+t:test("escape clears search state together with hlsearch", function()
   local runtime = setup()
   runtime.searching = true
 
@@ -156,7 +156,7 @@ t:test("escape clears search count together with hlsearch", function()
 
   t.assert_eq("<esc>", key, "mapped key")
   t.assert_false(runtime.searching, "searching state")
-  t.assert_eq(1, runtime.search_count_clears, "search count clear")
+  t.assert_eq(1, runtime.search_clears, "search clear")
 end)
 
 t:test("cmdline hide and show remain distinct ordered events", function()

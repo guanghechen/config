@@ -13,8 +13,8 @@ local t = harness.new("era.m.ui_attach.messages")
 ---@field mode                          string
 ---@field dismissed                     string[]
 ---@field dirtied                       integer
----@field search_count                  { bufnr: integer, text: string, winnr: integer }|nil
----@field search_count_clears           integer
+---@field search                        { bufnr: integer, count: string|nil, pattern: string, winnr: integer }|nil
+---@field search_pattern                string
 ---@field searching_updates             integer
 
 ---@return era.m.ui_attach.messages, era.m.ui_attach.messages.test.IRuntime
@@ -28,8 +28,8 @@ local function setup()
     mode = "",
     dismissed = {},
     dirtied = 0,
-    search_count = nil,
-    search_count_clears = 0,
+    search = nil,
+    search_pattern = "foo",
     searching_updates = 0,
   } ---@type era.m.ui_attach.messages.test.IRuntime
 
@@ -63,12 +63,8 @@ local function setup()
         msg_command = msg_command,
         msg_mode = msg_mode,
         searching = searching,
-        clear_search_count = function()
-          runtime.search_count = nil
-          runtime.search_count_clears = runtime.search_count_clears + 1
-        end,
-        set_search_count = function(winnr, bufnr, text)
-          runtime.search_count = { winnr = winnr, bufnr = bufnr, text = text }
+        set_search = function(winnr, bufnr, pattern, count)
+          runtime.search = { winnr = winnr, bufnr = bufnr, pattern = pattern, count = count }
         end,
         dirtier_statusline = {
           mark_dirty = function()
@@ -97,6 +93,10 @@ local function setup()
   end)
   t:patch_table(vim, "schedule", function(callback)
     runtime.scheduled[#runtime.scheduled + 1] = callback
+  end)
+  t:patch_table(vim.fn, "getreg", function(register)
+    t.assert_eq("/", register, "search register")
+    return runtime.search_pattern
   end)
 
   local states = require("era.m.ui_attach.state")
@@ -273,23 +273,34 @@ end)
 t:test("search count publishes window-scoped winline state", function()
   local messages, runtime = setup()
 
-  messages.show(create_task("search_count", " [2/10] "))
+  messages.show(create_task("search_count", " /foo            [2/10] "))
 
   t.assert_eq(1, runtime.searching_updates, "search state")
-  t.assert_eq(vim.api.nvim_get_current_win(), runtime.search_count.winnr, "search window")
-  t.assert_eq(vim.api.nvim_get_current_buf(), runtime.search_count.bufnr, "search buffer")
-  t.assert_eq("[2/10]", runtime.search_count.text, "search count")
+  t.assert_eq(vim.api.nvim_get_current_win(), runtime.search.winnr, "search window")
+  t.assert_eq(vim.api.nvim_get_current_buf(), runtime.search.bufnr, "search buffer")
+  t.assert_eq("foo", runtime.search.pattern, "search pattern")
+  t.assert_eq("2/10", runtime.search.count, "search count")
 end)
 
-t:test("a new search command clears the previous count", function()
+t:test("count-only navigation keeps the current search pattern", function()
   local messages, runtime = setup()
-  runtime.search_count = { winnr = 1, bufnr = 1, text = "[2/10]" }
+
+  messages.show(create_task("search_count", " [3/10] "))
+
+  t.assert_eq("foo", runtime.search.pattern, "search pattern")
+  t.assert_eq("3/10", runtime.search.count, "search count")
+end)
+
+t:test("a new search command replaces the pattern and clears the previous count", function()
+  local messages, runtime = setup()
+  runtime.search = { winnr = 1, bufnr = 1, pattern = "foo", count = "2/10" }
+  runtime.search_pattern = "next"
 
   messages.show(create_task("search_cmd", "/next"))
 
   t.assert_eq(1, runtime.searching_updates, "search state")
-  t.assert_nil(runtime.search_count, "stale search count")
-  t.assert_eq(1, runtime.search_count_clears, "clear count")
+  t.assert_eq("next", runtime.search.pattern, "new pattern")
+  t.assert_nil(runtime.search.count, "stale search count")
 end)
 
 t:test("emsg is reported as an error instead of waiting for a prompt", function()

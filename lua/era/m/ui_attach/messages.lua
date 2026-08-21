@@ -364,7 +364,10 @@ function M.show(task)
 
   if kind == "search_cmd" then
     dot.state.status.searching:next(true)
-    dot.state.status.clear_search_count()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local pattern = vim.fn.getreg("/") ---@type string
+    dot.state.status.set_search(winnr, bufnr, pattern, nil)
     return
   end
 
@@ -372,13 +375,9 @@ function M.show(task)
     dot.state.status.searching:next(true)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    local texts = {} ---@type string[]
-    for _, piece in ipairs(content) do
-      local text = vim.trim(piece[2]) ---@type string
-      texts[#texts + 1] = text
-    end
-
-    dot.state.status.set_search_count(winnr, bufnr, table.concat(texts))
+    local pattern = vim.fn.getreg("/") ---@type string
+    local count = vim.trim(concat_content(content)):match("%[([^%]]+)%]%s*$") ---@type string|nil
+    dot.state.status.set_search(winnr, bufnr, pattern, count)
     return
   end
 

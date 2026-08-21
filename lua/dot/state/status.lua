@@ -11,9 +11,10 @@
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
----@class dot.state.status.ISearchCount
+---@class dot.state.status.ISearch
 ---@field public bufnr                  integer
----@field public text                   string
+---@field public count                  string|nil
+---@field public pattern                string
 ---@field public winnr                  integer
 
 ---@class dot.state.status
@@ -67,7 +68,7 @@ local M = {
   tmux_zen_mode = stl.c.Observable.from_value(true),
 }
 
-local search_count = nil ---@type dot.state.status.ISearchCount|nil
+local search = nil ---@type dot.state.status.ISearch|nil
 
 M._disposables
   :add_disposable(M.winnr_command)
@@ -95,7 +96,7 @@ end
 
 ---@return nil
 function M.dispose()
-  search_count = nil
+  search = nil
   M._disposables:dispose()
 end
 
@@ -119,7 +120,7 @@ end
 
 ---@return nil
 function M.reset()
-  M.clear_search_count()
+  M.clear_search()
   M.winnr_command:next(0)
 
   M.dirtier_statusline:mark_dirty()
@@ -155,9 +156,9 @@ local function redraw_winline(winnr)
 end
 
 ---@return nil
-function M.clear_search_count()
-  local winnr = search_count ~= nil and search_count.winnr or nil ---@type integer|nil
-  search_count = nil
+function M.clear_search()
+  local winnr = search ~= nil and search.winnr or nil ---@type integer|nil
+  search = nil
   if winnr ~= nil then
     redraw_winline(winnr)
   end
@@ -165,16 +166,17 @@ end
 
 ---@param winnr                         integer
 ---@param bufnr                         integer
----@param text                          string
+---@param pattern                       string
+---@param count                         string|nil
 ---@return nil
-function M.set_search_count(winnr, bufnr, text)
-  if text == "" or not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
-    M.clear_search_count()
+function M.set_search(winnr, bufnr, pattern, count)
+  if pattern == "" or not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+    M.clear_search()
     return
   end
 
-  local winnr_previous = search_count ~= nil and search_count.winnr or nil ---@type integer|nil
-  search_count = { winnr = winnr, bufnr = bufnr, text = text }
+  local winnr_previous = search ~= nil and search.winnr or nil ---@type integer|nil
+  search = { winnr = winnr, bufnr = bufnr, pattern = pattern, count = count }
   if winnr_previous ~= nil and winnr_previous ~= winnr then
     redraw_winline(winnr_previous)
   end
@@ -182,9 +184,10 @@ function M.set_search_count(winnr, bufnr, text)
 end
 
 ---@param winnr                         integer
----@return string|nil
-function M.get_search_count(winnr)
-  local state = search_count
+---@return string|nil pattern
+---@return string|nil count
+function M.get_search(winnr)
+  local state = search
   if
     state == nil
     or state.winnr ~= winnr
@@ -193,7 +196,7 @@ function M.get_search_count(winnr)
   then
     return nil
   end
-  return state.text
+  return state.pattern, state.count
 end
 
 ---@return integer|nil

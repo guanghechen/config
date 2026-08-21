@@ -208,19 +208,25 @@ function M.search_count(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:search_count",
-    atomic = true,
+    atomic = false,
     condition = function(context)
-      return dot.state.status.get_search_count(context.winnr) ~= nil
+      return dot.state.status.get_search(context.winnr) ~= nil
     end,
-    render = function(context)
-      local count = dot.state.status.get_search_count(context.winnr) ---@type string|nil
-      if count == nil then
+    render = function(context, remain_width)
+      local pattern, count = dot.state.status.get_search(context.winnr) ---@type string|nil, string|nil
+      if pattern == nil then
         return "", "", true
       end
 
-      local text = " " .. count ---@type string
+      local text = string.format(" %s %s", stl.icon.ui.Search, pattern) ---@type string
+      if count ~= nil then
+        text = string.format("%s %s", text, count)
+      end
+
+      local full ---@type boolean
+      text, full = truncate_middle(text, remain_width)
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return text, hl_text, full
     end,
   }
   return component

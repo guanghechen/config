@@ -197,7 +197,7 @@ function M.dressing()
     local searching = dot.state.status.searching:snapshot() or vim.v.hlsearch == 1 ---@type boolean
     if searching then
       dot.state.status.searching:next(false)
-      dot.state.status.clear_search_count()
+      dot.state.status.clear_search()
       vim.schedule(function()
         vim.cmd("noh")
       end)
