@@ -8,8 +8,8 @@ function ghc-upgrade
     end
 
     set -l edition ""
-    if type -q kit
-        set edition (kit repo get config.edition 2>/dev/null | string trim)
+    if type -q kit-repo
+        set edition (kit-repo get config.edition 2>/dev/null | string trim)
     end
 
     if test -z "$edition"

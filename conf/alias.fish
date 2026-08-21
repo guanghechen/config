@@ -88,7 +88,7 @@ alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 abbr -a ghc-clock 'tty-clock -DSbcnrs -C5'
 abbr -a ghc-ports 'netstat -tulanp'
 abbr -a ghc-today 'cal -C3'
-abbr -a ghc-update 'git -C ~/.config/kit pull origin kit && kit repo sync'
+abbr -a ghc-update 'git -C ~/.config/kit pull origin kit && kit-repo sync'
 
 ## Run python server with poetry
 # alias pydemo-server='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run uvicorn <server_entry> --host localhost --port 9528'
