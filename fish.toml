@@ -2,10 +2,10 @@
 # [I] user@host ~/path ( main|+1•?) 12:34:56 (conda)
 #   $
 
-command_timeout = 2000
+"$schema" = "https://starship.rs/config-schema.json"
 
 format = """$character$os$username${custom.separator}$hostname$directory$git_branch$git_status $time$conda
-  ${custom.shell_icon} """
+  [󰈺](cyan) """
 
 [character]
 format = "$symbol "
@@ -41,12 +41,6 @@ format = "[$output](white)"
 when = true
 shell = ["sh"]
 
-[custom.shell_icon]
-command = "printf '󰈺'"
-format = "[$output](cyan)"
-when = true
-shell = ["sh"]
-
 [hostname]
 format = "[$hostname]($style) "
 style = "bold bright-cyan"
@@ -67,9 +61,10 @@ style = "bold bright-purple"
 symbol = ""
 
 [git_status]
-format = " $ahead_behind$staged$modified$untracked$conflicted$renamed$deleted$stashed"
+format = "( $ahead_behind$staged$modified$typechanged$untracked$conflicted$renamed$deleted$stashed)"
 staged = "[+${count}](bright-blue)"
 modified = "[󰧞${count}](yellow)"
+typechanged = "[T${count}](yellow)"
 untracked = "[?${count}](white)"
 stashed = "[⚑${count}](cyan)"
 conflicted = "[=${count}](red)"

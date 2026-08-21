@@ -2,9 +2,9 @@
 # user@host ~/path ( main|+1•?) 12:34:56 (conda)
 #   $
 
-command_timeout = 2000
+"$schema" = "https://starship.rs/config-schema.json"
 
-format = """$character$os$username${custom.separator}$hostname$directory$git_branch$git_status $time$conda
+format = """$character$os$username[@](white)$hostname$directory$git_branch$git_status $time$conda
 PS> """
 
 [username]
@@ -12,11 +12,6 @@ format = "[$user]($style)"
 style_user = "bold bright-purple"
 style_root = "bold bright-red"
 show_always = true
-
-[custom.separator]
-format = "[@](white)"
-when = true
-shell = ["powershell", "-NoProfile", "-Command"]
 
 [hostname]
 format = "[$hostname]($style) "
@@ -38,9 +33,10 @@ style = "bold bright-purple"
 symbol = ""
 
 [git_status]
-format = " $ahead_behind$staged$modified$untracked$conflicted$renamed$deleted$stashed"
+format = "( $ahead_behind$staged$modified$typechanged$untracked$conflicted$renamed$deleted$stashed)"
 staged = "[+${count}](bright-blue)"
 modified = "[󰧞${count}](yellow)"
+typechanged = "[T${count}](yellow)"
 untracked = "[?${count}](white)"
 stashed = "[⚑${count}](cyan)"
 conflicted = "[=${count}](red)"
