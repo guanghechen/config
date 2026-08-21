@@ -40,4 +40,4 @@ brew install -y btop fastfetch httpie
 
 ### Install usual tools
 printf "\e[96m  [setup homebrew] installing usual tools...\e[0m\n"
-brew install -y automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tree tty-clock unzip yt-dlp zoxide
+brew install -y automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd tree unzip yt-dlp zoxide
