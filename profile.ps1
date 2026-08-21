@@ -24,6 +24,16 @@ if (Test-Path $localEnvPath) {
 Get-ChildItem "$env:XDG_CONFIG_HOME\pwsh\completions\*.ps1" | ForEach-Object { . $_.FullName }
 
 ## setup starship
+if ([Environment]::GetEnvironmentVariable("STARSHIP_OS_ICON") -eq $null) {
+  if ($env:OS -eq "Windows_NT") {
+    $env:STARSHIP_OS_ICON = ""
+  } elseif ($PSVersionTable.PSEdition -eq "Core" -and $IsMacOS) {
+    $env:STARSHIP_OS_ICON = ""
+  } else {
+    $env:STARSHIP_OS_ICON = ""
+  }
+}
+
 $env:STARSHIP_CONFIG = "$env:XDG_CONFIG_HOME\starship\pwsh.toml"
 if (Get-Command starship -ErrorAction SilentlyContinue) {
   Invoke-Expression (&starship init powershell)
