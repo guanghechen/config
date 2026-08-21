@@ -14,6 +14,14 @@ _append_path_once() {
     export PATH="${current_path:+$current_path:}$path_item"
 }
 
+if [[ -z "${STARSHIP_OS_ICON+x}" ]]; then
+    if [[ "${GHC_ENV_PLATFORM:-nix}" == "osx" ]]; then
+        export STARSHIP_OS_ICON=""
+    else
+        export STARSHIP_OS_ICON=""
+    fi
+fi
+
 if command -v starship >/dev/null 2>&1; then
     export STARSHIP_CONFIG="$HOME/.config/starship/bash.toml"
     eval "$(starship init bash)"
