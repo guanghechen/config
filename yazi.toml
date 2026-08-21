@@ -4,20 +4,11 @@
 "$schema" = "https://starship.rs/config-schema.json"
 add_newline = false
 
-format = "$os$username[@](white)$hostname$directory$git_branch$git_status $time"
+format = "${env_var.STARSHIP_OS_ICON}$username[@](white)$hostname$directory$git_branch$git_status $time"
 
-[os]
-format = "[$symbol]($style) "
-style = "cyan"
-disabled = false
-
-[os.symbols]
-Macos = ""
-NixOS = ""
-Windows = ""
-Linux = ""
-Ubuntu = ""
-Unknown = ""
+[env_var.STARSHIP_OS_ICON]
+format = "([$env_value](cyan) )"
+default = ""
 
 [username]
 format = "[$user]($style)"

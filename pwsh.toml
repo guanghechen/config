@@ -4,7 +4,7 @@
 
 "$schema" = "https://starship.rs/config-schema.json"
 
-format = """$character$os$username[@](white)$hostname$directory$git_branch$git_status $time$conda
+format = """$character${env_var.STARSHIP_OS_ICON}$username[@](white)$hostname$directory$git_branch$git_status $time$conda
 PS> """
 
 [username]
@@ -63,15 +63,6 @@ success_symbol = "[\\[I\\]](bold green)"
 error_symbol = "[\\[I\\]](bold red)"
 vimcmd_symbol = "[\\[N\\]](bold cyan)"
 
-[os]
-format = "[$symbol]($style) "
-style = "cyan"
-disabled = false
-
-[os.symbols]
-Macos = ""
-NixOS = ""
-Windows = ""
-Linux = ""
-Ubuntu = ""
-Unknown = ""
+[env_var.STARSHIP_OS_ICON]
+format = "([$env_value](cyan) )"
+default = ""

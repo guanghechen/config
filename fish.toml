@@ -4,7 +4,7 @@
 
 "$schema" = "https://starship.rs/config-schema.json"
 
-format = """$character$os$username${custom.separator}$hostname$directory$git_branch$git_status $time$conda
+format = """$character${env_var.STARSHIP_OS_ICON}$username${custom.separator}$hostname$directory$git_branch$git_status $time$conda
   [󰈺](cyan) """
 
 [character]
@@ -16,18 +16,9 @@ vimcmd_replace_one_symbol = "[\\[R\\]](bold purple)"
 vimcmd_replace_symbol = "[\\[R\\]](bold purple)"
 vimcmd_visual_symbol = "[\\[V\\]](bold yellow)"
 
-[os]
-format = "[$symbol]($style) "
-style = "cyan"
-disabled = false
-
-[os.symbols]
-Macos = ""
-NixOS = ""
-Windows = ""
-Linux = ""
-Ubuntu = ""
-Unknown = ""
+[env_var.STARSHIP_OS_ICON]
+format = "([$env_value](cyan) )"
+default = ""
 
 [username]
 format = "[$user]($style)"
