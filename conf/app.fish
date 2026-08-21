@@ -1,4 +1,12 @@
 ### starship (prompt)
+if not set -q STARSHIP_OS_ICON
+    if test "$GHC_ENV_PLATFORM" = osx
+        set -gx STARSHIP_OS_ICON ''
+    else
+        set -gx STARSHIP_OS_ICON ''
+    end
+end
+
 set -gx STARSHIP_CONFIG "$HOME/.config/starship/fish.toml"
 if type -q starship
     starship init fish | source
