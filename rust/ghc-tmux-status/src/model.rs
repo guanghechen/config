@@ -253,6 +253,9 @@ pub struct SessionLayout {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionRenderedStatus {
     pub session_layout: SessionLayout,
+    /// Group cardinality used by the status-length policy to reserve a possible
+    /// second session-state prefix without changing responsive metric thresholds.
+    pub session_group_count: usize,
     pub render_key: String,
     pub status: RenderedStatus,
 }

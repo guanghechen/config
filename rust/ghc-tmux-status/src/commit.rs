@@ -204,8 +204,11 @@ impl CommitPlanner {
             let session_layout = &rendered_session.session_layout;
             let status = &rendered_session.status;
             let session_target = &session_layout.session_id;
-            let left_length =
-                status_left_length_for_width(status, session_layout.status_length_width);
+            let left_length = status_left_length_for_width(
+                status,
+                session_layout.status_length_width,
+                rendered_session.session_group_count,
+            );
             let right_length =
                 status_right_length_for_width(status, session_layout.status_length_width);
             if session_render_state_settled(session_layout, &rendered_session.render_key, options) {
@@ -416,8 +419,8 @@ mod tests {
     };
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderEventKind, RenderedSegment,
-        RenderedStatus, SessionGroupView, SessionLayout, SessionRenderedStatus, StatusMode,
-        StatusPosition, TmuxSnapshot,
+        RenderedStatus, SessionGroupView, SessionInfo, SessionLayout, SessionRenderedStatus,
+        StatusMode, StatusPosition, TmuxSnapshot,
     };
 
     #[test]
@@ -684,6 +687,29 @@ mod tests {
     }
 
     #[test]
+    fn writes_combined_session_state_width_reserve() {
+        let status = rendered_status(&"x".repeat(68));
+        let mut context = context_with_options(BTreeMap::new());
+        context.group.sessions = (0..3).map(session_info).collect();
+        context.session_layouts = vec![session_layout(
+            "$2",
+            LayoutKind::Wide,
+            "on",
+            "02:wide",
+            "on",
+            "02:wide",
+        )];
+
+        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetSessionTarget { target, name, value }
+                if target == "$2" && name == "status-left-length" && value == "76"
+        )));
+    }
+
+    #[test]
     fn writes_only_stale_right_length_when_render_state_is_settled() {
         let status = rendered_status("body");
         let mut session_layout =
@@ -941,6 +967,7 @@ mod tests {
             .cloned()
             .map(|session_layout| SessionRenderedStatus {
                 session_layout,
+                session_group_count: context.group.sessions.len(),
                 render_key: render_key.clone(),
                 status: status.clone(),
             })
@@ -1009,6 +1036,23 @@ mod tests {
             sessions: Vec::new(),
             client_widths: Vec::new(),
             options,
+        }
+    }
+
+    fn session_info(index: usize) -> SessionInfo {
+        SessionInfo {
+            id: format!("${index}"),
+            name: format!("s{index}"),
+            has_bell: false,
+            status: "on".to_string(),
+            layout_key: String::new(),
+            left_length: String::new(),
+            right_length: String::new(),
+            format_0: String::new(),
+            format_1: String::new(),
+            render_key: String::new(),
+            cache_witnesses: std::array::from_fn(|_| String::new()),
+            created: 1,
         }
     }
 }

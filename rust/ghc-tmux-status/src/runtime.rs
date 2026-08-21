@@ -1102,6 +1102,7 @@ fn render_session_statuses(
             let status = render_status02(&render_context, metrics_supported)?;
             Ok(SessionRenderedStatus {
                 session_layout: session_layout.clone(),
+                session_group_count: render_context.group.sessions.len(),
                 render_key: render_cache_key(&status),
                 status,
             })
@@ -1322,6 +1323,9 @@ mod tests {
         assert!(!grouped.status.status_left.rich_text.contains("#{l:main}"));
         assert!(main.status.status_right.rich_text.contains(" 0m "));
         assert!(work.status.status_right.rich_text.contains(" 1h 00m "));
+        assert_eq!(main.session_group_count, 2);
+        assert_eq!(work.session_group_count, 2);
+        assert_eq!(grouped.session_group_count, 2);
         assert_ne!(main.render_key, work.render_key);
     }
 

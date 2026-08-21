@@ -34,7 +34,7 @@ const OVERFLOW_LITERAL: &str = " … ";
 // This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
 // uses literal_text as a tmux-width shadow, so update it with the rich item shape.
 const ARROW_LITERAL: char = '\u{e0b0}';
-const SPINNER_LITERAL: char = '\u{00a4}';
+const STATE_LITERAL: char = '\u{00a4}';
 
 pub struct SessionListWidget;
 
@@ -294,9 +294,10 @@ fn render_right_edge(last_active: bool) -> String {
 }
 
 fn render_item_body_literal(session_name: &str, index: usize) -> String {
-    // Spinner and bell both occupy a leading gap plus one marker cell, so one
-    // placeholder budgets every dynamic state.
-    format!(" {SPINNER_LITERAL} {session_name}  {index} ")
+    // Keep one state slot in the responsive-layout shadow so idle/single-state
+    // metric thresholds remain stable. status-left-length separately reserves
+    // the possible second slot when running and bell coexist.
+    format!(" {STATE_LITERAL} {session_name}  {index} ")
 }
 
 fn render_item_body_with_last_focus(
@@ -344,11 +345,11 @@ fn inactive_item_body_with_last_focus(
     )
 }
 
-/// Selects one mutually exclusive sampled state before the title. Running
-/// membership wins; only its false branch checks bell membership.
+/// Renders each sampled state independently before the title, so running and
+/// bell evidence remain visible when both memberships are present.
 fn session_state_prefix(session_id: &str, bell_prefix: &str) -> String {
     format!(
-        "#{{?#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},#{{?#{{m:*|R{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},#{{=2:#{{E:@GHC_SESSION_RUNNING_PREFIX_FMT}}}},#{{?#{{m:*|B{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},{bell_prefix},}}}},}}"
+        "#{{?#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},#{{?#{{m:*|R{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},#{{=2:#{{E:@GHC_SESSION_RUNNING_PREFIX_FMT}}}},}}#{{?#{{m:*|B{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},{bell_prefix},}},}}"
     )
 }
 
@@ -410,10 +411,10 @@ mod tests {
     }
 
     #[test]
-    fn state_prefix_prioritizes_running_membership_over_bell() {
+    fn state_prefix_renders_running_and_bell_memberships_independently() {
         assert_eq!(
             session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}"),
-            "#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?#{m:*|R$2|*,#{@GHC_SL_SESSION_STATES}},#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}},#{?#{m:*|B$2|*,#{@GHC_SL_SESSION_STATES}}, #{@GHC_SYM_WIN_BELL},}},}"
+            "#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?#{m:*|R$2|*,#{@GHC_SL_SESSION_STATES}},#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}},}#{?#{m:*|B$2|*,#{@GHC_SL_SESSION_STATES}}, #{@GHC_SYM_WIN_BELL},},}"
         );
     }
 
@@ -550,7 +551,7 @@ mod tests {
     }
 
     #[test]
-    fn rendered_list_includes_dynamic_bell_fallback_and_literal_width() {
+    fn rendered_list_includes_independent_state_prefixes_and_literal_width() {
         let context =
             context_with_session_states("dev", [("$1", "dev", false), ("$2", "yui", false)]);
         let segment = render_session_list(&context);

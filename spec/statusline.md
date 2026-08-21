@@ -235,7 +235,8 @@ pub struct RenderedSegment {
 }
 ```
 
-- `literal_text` 是无 style 的可见字符 shadow，仅用于 width calculation。
+- `literal_text` 是无 style 的可见字符 shadow，用于 steady-layout width calculation；
+  dynamic maximum reserve 可由对应 length policy 单独补充。
 - `rich_text` 是最终 tmux format fragment。
 - `TemplateWidget` 只组合 cheap native tmux templates。
 - `ComputedWidget` 只执行 cheap in-process computation。
@@ -286,7 +287,7 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - active style 优先于 last-session style；
 - `client_last_session` 仅在当前 group 可见且非 active 时高亮；
 - bell source 为 tmux `session_alerts`，包含 `!` 即表示该 session 有 bell；
-- session item state prefix 为互斥的 running spinner 或 bell，位于 title 前且不改变 slant edge；
+- session item state prefix 可同时包含 running spinner 与 bell，位于 title 前且不改变 slant edge；
 - `literal_text` 必须包含每个可见 icon 的 width placeholder；
 - 超长 session name 在固定 byte budget 内截断。
 
@@ -294,7 +295,8 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 
 - Source of truth：live pane 的 `pane_title` 以 Braille spinner
   `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 之一开头；`pane_dead=1` 始终视为 idle。
-- 状态按以下定义逐级聚合，且每一级均满足 `spinning > bell > idle`：
+- Running 与 bell evidence 按以下定义聚合；window item 与 terminal title 仍按
+  `spinning > bell > idle` 选择单一状态，session item 独立展示两类 evidence：
 
   ```text
   pane_spinning(p)
@@ -310,7 +312,7 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
     = 存在 w ∈ windows(s): window_spinning(w)
 
   session_bell(s)
-    = session_alerts(s) 包含 "!" && !session_spinning(s)
+    = session_alerts(s) 包含 "!"
   ```
 
   tmux 不提供持久的 pane-level bell；`window_bell_flag` 已表示该 window 下任意 pane 触发的
@@ -324,17 +326,17 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Scheduler lock owner 用一条 command queue 发布
   `@GHC_SL_SESSION_STATES = <sample-token><|R$session_id|...><|B$session_id|...>`；`R`/`B`
   分别表示 running/bell evidence，contender 不采样。
-- Session item 检查 lifecycle active 与 exact typed session-id membership；先匹配 `R`，只有
-  false branch 才匹配 `B`。Sample 默认由 tmux server 在 12 秒后以 token prefix CAS 清理；
-  正常 freshness 约为 4–5 秒。
+- Session item 检查 lifecycle active 与 exact typed session-id membership；`R` 与 `B`
+  分别匹配并按 spinner、bell 顺序拼接，因此两类 evidence 可同时显示。Sample 默认由 tmux
+  server 在 12 秒后以 token prefix CAS 清理；正常 freshness 约为 4–5 秒。
 - Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 2` 派生
   `⠋/⠴`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
   malformed 时不显示 marker。
-- Session spinner 与 bell 均使用 2 列 title prefix（左侧 gap + marker）；idle 不绘制 padding、
-  保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count 不变，并只占用 spinner
-  的 fallback branch。`literal_text` shadow 按两种状态的相同宽度预算，接受
-  running transition 引起的
-  session-list reflow。
+- Session spinner 与 bell 各使用 2 列 title prefix（左侧 gap + marker）；同时存在时共占 4 列，
+  idle 不绘制 padding、保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count
+  不变。Session-list `literal_text` 保留单 prefix baseline，避免 idle/单状态下提前提升
+  responsive metric threshold；`status-left-length` 另按每个 group session 增加 2 列上界，
+  容纳可能出现的第二个 prefix。接受状态 transition 引起的 session-list reflow。
 - Window live frame 仅在 running 时增加 2 列，idle 不预留 frame、保持 baseline layout；
   接受由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，
   各自的 glyph count 和 palette 不变。
@@ -343,7 +345,8 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Session item 与 active-scheduler terminal title 是上述 session 定义的 freshness-bounded
   projection：sample 更新前可能暂时保留上一状态，且 consumer 不额外执行 `S/W/P` traversal。
   Scheduler inactive 时 terminal title 改用 live aggregation。Lifecycle fence 清空 sampled
-  state；format expansion failure 保持空 marker，并继续抑制低优先级 bell。
+  state；session item 的 running 与 bell branch 独立 degrade，terminal title 仍按单一状态
+  priority degrade。
 
 ## 9. Length 与 cache contract
 
@@ -353,7 +356,9 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 left floor  = 64
 right floor = 84
 padding     = 2
-desired     = max(floor, display_width(literal_text) + padding)
+left reserve = 2 * session_group_count
+left desired = max(left floor, display_width(literal_text) + left reserve + padding)
+right desired = max(right floor, display_width(literal_text) + padding)
 result      = min(desired, max(client_width, floor))
 ```
 
@@ -380,6 +385,8 @@ status 与 row formats 全部匹配时，session 才视为 settled。
 
 - 仅 length drift：允许走 length-only fast path。
 - 任意其他 drift：提交完整 session reconcile bundle。
+- `SessionRenderedStatus` 携带对应 `session_group_count`，commit planner 使用同一 length policy
+  计算实际写入的 `status-left-length`。
 - Global rendered options：仅作为新 attach session 的稳定 fallback，不拥有 session layout。
 
 ## 10. Scheduler 与 metrics

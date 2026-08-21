@@ -163,9 +163,11 @@ p95 delta     +1.076   +1.267   +1.684   +2.031 ms
 每侧 80 次 expansion，相对四帧 format 的 median delta 为 `-0.365 ms/expansion`；redraw
 仍为 1 Hz，不增加 timer、process 或 IPC。
 
-最终 typed `R/B` state 在非-running item 的 false branch 增加一次 bell membership match。
+旧互斥实现中的 typed `R/B` state 仅在非-running item 的 false branch 增加一次 bell
+membership match。
 2026-08-14，20 个 belling items、15 paired blocks、每侧 80 次 expansion，相对旧 static-bell
-branch 的 median delta 为 `+0.364 ms/expansion`。Running item 不进入该 false branch。
+branch 的 median delta 为 `+0.364 ms/expansion`。该 measurement 记录的是 2026-08-14
+实现；当前 session item 为同时展示两类 evidence，会独立执行两次 membership match。
 
 该 measurement 是 per-expansion directional evidence，不是完整 tmux CPU throughput claim。
 Active-scheduler animation 不增加 timer、process、IPC、option write 或 `S/W/P` traversal；

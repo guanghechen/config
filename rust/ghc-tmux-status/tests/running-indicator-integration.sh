@@ -63,6 +63,16 @@ assert_spinner_prefix() {
   esac
 }
 
+assert_spinner_bell_prefix() {
+  local value=$1
+  local bell=$2
+  local context=$3
+  case "$value" in
+    " ⠋ $bell" | " ⠴ $bell") ;;
+    *) fail "$context: expected a padded session spinner and bell, got '$value'" ;;
+  esac
+}
+
 assert_spinner_title() {
   local value=$1
   local title=$2
@@ -224,7 +234,8 @@ assert_not_contains "$spun_window_item" "⠧" "stale window spinner frame"
 publish_session_states
 
 # Window state is mutually exclusive: spinner wins over bell, while zoom remains
-# an independent decorator. Session state follows the same priority in terminal title.
+# an independent decorator. Session items preserve both evidence types, while the
+# terminal title keeps the same priority as window state.
 tmux_server set-window-option -g monitor-bell on
 tmux_server set-option -g bell-action any
 tmux_server new-window -d -t beta -n alert \
@@ -251,6 +262,14 @@ assert_format "1" beta "$beta_running_membership_format" \
   "sample contains running beta session"
 assert_format "1" beta "$beta_bell_membership_format" \
   "sample contains belling beta session"
+beta_session_item_prefix="#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?${beta_running_membership_format},${session_running_prefix},}#{?${beta_bell_membership_format}, ${bell_symbol},},}"
+session_item_prefix=$(
+  tmux_server display-message -p -t beta:alert "$beta_session_item_prefix"
+)
+assert_spinner_bell_prefix "$session_item_prefix" "$bell_symbol" \
+  "session item shows running and bell states"
+assert_format "4" beta:alert "#{w:${beta_session_item_prefix}}" \
+  "combined session item prefix width"
 decorated_window_item=$(
   tmux_server display-message -p -t beta:alert \
     '#{T:window-status-format}' | strip_styles
@@ -296,6 +315,9 @@ assert_format "0" beta "$beta_running_membership_format" \
   "settled beta session is not running"
 assert_format "1" beta "$beta_bell_membership_format" \
   "settled beta session retains bell"
+assert_equal " $bell_symbol" \
+  "$(tmux_server display-message -p -t beta:alert "$beta_session_item_prefix")" \
+  "settled session item retains bell without spinner"
 terminal_title=$(
   tmux_server display-message -p -t beta:alert '#{T:set-titles-string}'
 )
