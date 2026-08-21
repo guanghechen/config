@@ -22,9 +22,10 @@ use crate::model::{SessionInfo, SessionNavigationSnapshot, TmuxSnapshot};
 use crate::process::{OperationDeadline, output_with_timeout};
 
 const TMUX_COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
-// This budget applies before the nested `if-shell` quoting pass. Keeping it far
-// below macOS ARG_MAX also leaves room for argv, environment, and escaping growth.
-const MAX_PLAN_CHUNK_BYTES: usize = 32 * 1024;
+// This budget applies before two nested `if-shell` quoting passes. tmux 3.7c
+// rejects the fully wrapped client command near 16 KiB, so retain enough room
+// for argv framing and content-dependent escaping rather than relying on ARG_MAX.
+const MAX_PLAN_CHUNK_BYTES: usize = 8 * 1024;
 
 pub struct TmuxAdapter;
 
@@ -1341,6 +1342,39 @@ $2	90"
         assert_eq!(chunks[0].range, 0..1);
         assert_eq!(chunks[3].range, 3..4);
         assert!(chunks.iter().all(|chunk| chunk.command_list.len() < 100));
+    }
+
+    #[test]
+    fn configured_chunks_leave_room_for_nested_guard_quoting() {
+        const TMUX_CLIENT_COMMAND_LIMIT: usize = 16 * 1024;
+        let command = TmuxCommand::SetGlobal {
+            name: "@CACHE".to_string(),
+            value: "x".repeat(4 * 1024),
+        };
+        let plan = TmuxCommandPlan {
+            commands: vec![command; 4],
+        };
+        let guards = [TmuxOptionGuard {
+            option: "@ACTIVE",
+            expected: "1",
+        }];
+
+        let chunks = serialized_plan_chunks(&plan, super::MAX_PLAN_CHUNK_BYTES);
+
+        assert!(chunks.len() > 1);
+        for chunk in chunks {
+            let args = nested_render_guard_args(42, &chunk.command_list, &guards, false);
+            let command_bytes = "tmux".len()
+                + 1
+                + args
+                    .iter()
+                    .map(|argument| argument.len() + 1)
+                    .sum::<usize>();
+            assert!(
+                command_bytes < TMUX_CLIENT_COMMAND_LIMIT,
+                "nested command grew to {command_bytes} bytes"
+            );
+        }
     }
 
     #[test]
