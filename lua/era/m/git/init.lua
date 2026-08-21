@@ -6,6 +6,7 @@ local __mods = {
   buffer = "era.m.git.buffer",
   diff = "era.m.git.diff",
   hunk = "era.m.git.hunk",
+  hunk_nav = "era.m.git.hunk_nav",
   Hunkview = "era.m.git.hunkview",
   repo = "era.m.git.repo",
   sign = "era.m.git.sign",
@@ -21,6 +22,7 @@ local __mods = {
 ---@field public buffer                 era.m.git.buffer
 ---@field public diff                   era.m.git.diff
 ---@field public hunk                   era.m.git.hunk
+---@field public hunk_nav               era.m.git.hunk_nav
 ---@field public Hunkview               era.m.git.Hunkview
 ---@field public repo                   era.m.git.repo
 ---@field public sign                   era.m.git.sign

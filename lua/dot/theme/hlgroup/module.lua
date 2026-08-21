@@ -152,7 +152,7 @@ function M.default_gen_hlgroup_map(context)
 
     ---module/git (signs, blame)
     m_git_buffer_blame = { fg = u.bg4, italic = true },
-    m_git_hunk_indicator = { fg = u.orange },
+    m_git_hunk_indicator = { fg = u.red },
     m_git_inline_blame = { fg = u.fg4, italic = true },
     m_git_sign_add = { fg = u.green },
     m_git_sign_add_staged = { fg = cs.mix(u.bg0, u.green, 50) },

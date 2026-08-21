@@ -12,7 +12,8 @@ era.m.git/
 ├── cmd.lua       -- Git 命令封装（async/sync）
 ├── watcher.lua   -- 文件系统监听（gitdir、index、commondir）
 ├── buffer.lua    -- Buffer 级别的 Hunk 计算和缓存
-├── hunk.lua      -- Hunk 操作（查找、导航、创建 patch、stage/unstage）
+├── hunk.lua      -- Hunk 数据、查询和 stage/unstage/reset 操作
+├── hunk_nav.lua  -- Hunk navigation state、普通 buffer 与 diff window 导航
 ├── sign.lua      -- Sign 显示（使用 decoration provider）
 ├── diff.lua      -- Diff 算法（基于 vim.diff + word-level diff）
 ├── status.lua    -- Git status 解析和聚合
@@ -240,14 +241,12 @@ Sign 类型：
 
 ### hunk.lua
 
-提供 hunk 的查找、导航和操作：
+提供 hunk 的查找和修改操作：
 
 ```lua
 M.find(lnum, hunks)          -- 查找光标所在的 hunk
 M.find_nearest(lnum, hunks, direction, opts)  -- 查找最近的 hunk
 M.ai_textobject()              -- mini.ai 的 unstaged hunk regions
-M.nav(direction)             -- 导航到下一个/上一个 unstaged hunk
-M.nav_all(direction)         -- 导航到下一个/上一个 hunk（包含 staged）
 M.stage(range, callback)     -- Stage hunk
 M.unstage(range, callback)   -- Unstage hunk
 M.reset(range)               -- Reset hunk（恢复到 index 内容）
@@ -258,9 +257,51 @@ M.reset_buffer()             -- Reset 整个文件
 `ih`/`ah` 以 linewise Visual mode 选择当前或下一个 unstaged hunk；可用 `vihghs` 在 stage 前确认完整范围。
 纯删除没有 modified-side 行，因此选择其 sign 所在的 anchor line，以保持 `ghs` 等 hunk 操作可用。
 
-Hunk navigation 的 `[index/total]` 是由 hunk module 持有的 transient state。当前 source window 的 winline
-在右侧读取并展示该 state；`CursorMoved` 或显式 clear 后移除。Indicator 不使用 buffer virtual text，因此不受
-line length、horizontal scroll 或 inline blame 影响。
+### hunk_nav.lua
+
+提供普通 buffer 与 diff window 的 hunk navigation：
+
+```lua
+M.nav(direction)             -- 导航到下一个/上一个 unstaged hunk
+M.nav_all(direction)         -- 导航到下一个/上一个 hunk（包含 staged）
+M.nav_diff(direction)        -- 使用原生 [c/]c 导航当前 diff window
+M.get_nav_indicator(winnr)   -- 读取指定 window 的 transient index/total
+M.clear_nav()                -- 显式清理 transient navigation state
+```
+
+Hunk navigation module 持有单一 transient state `{ winnr, bufnr, index, total }`。普通 buffer navigation
+从 attached hunks 计算位置；two-pane diff navigation 先执行一次原生 `[c`/`]c`，再从两侧
+`era.m.git.staging.from_buffer()` document lines 构建共享的 canonical hunk map。Document contract
+保留 empty bytes、single final newline 与 missing final newline 的差异。Diff 输入按 layout semantic order
+排列：side-by-side 为 left→right，stacked layout 为 top→bottom，不依赖 buffer allocation order。Map
+复用普通 buffer 的 `era.m.git.diff.run_diff()` histogram contract；pane-local `linematch` 只影响 native
+cursor target，不拆分 canonical Git hunk。每个 hunk 在两侧具有同一 index/total，zero-count side 映射到
+BOF、ordinary filler 或 EOF anchor。同一 anchor 可对应多个 hunk；native motion no-op/error 时不合成额外
+logical selection。Source 精确位于 canonical hunk 时 no-op 可继续显示 current index；source 位于所有
+canonical ranges 外时不发布 indicator。
+非 two-pane diff layout fallback 到 pane-local native enumeration；内部 fallback motion 使用 `keepjumps`，
+并临时关闭、恢复 `cursorbind`/`scrollbind`。
+
+Canonical map 由 hunk navigation module 单独缓存。Cache identity 包含 ordered window pair、两侧 `bufnr`、
+`changedtick` 和 `endofline`；任一输入变化都会重建。一次构建生成两侧有序 line ranges。Navigation
+在 motion 前解析两侧共享 canonical source。每侧优先以 native target line 做 binary lookup；target 落在
+alignment gap 时，根据 source line 和 direction 单调推进，并在 canonical 边界 clamp 到 current hunk。
+两侧 `cursorbind` 时，target candidate 冲突由 shared resolver 统一处理：next 取较大 index，prev 取较小
+index。若一次 native motion 仍停留在精确命中的 source hunk 内，则以 `keepjumps` 继续同方向 native motion，
+直到 canonical index 改变或 active cursor no-op；从精确 source hunk 发生的 transition 最终 clamp 为相邻
+canonical index，target candidate 只证明已经离开 current hunk，不能造成跨级跳转。Continuation 次数由
+`linematch:N` 限定。Source 位于 hunk 外时首次到达 estimated index 即停止，避免跳过首个 hunk。首次
+motion 保留用户 jump，continuation 不写入额外 jumplist entry。后续按键不再同步遍历所有 hunks。
+
+右侧 presentation 统一为红色 `<git-icon> index/total`，不带方括号。普通 source window 使用 winline
+component；`diffview://` static winbar 复用同一 renderer。Indicator 不使用 buffer virtual text，因此不受 line
+length、horizontal scroll 或 inline blame 影响。
+
+State 只对仍显示 captured buffer 的 source window 可见。Cursor movement、window focus、Git refresh 和
+同一 buffer 的 peer window lifecycle 都不清理 indicator。新 navigation 会替换旧 state；source window
+进入不同 buffer、source window 关闭或统一 `<Esc>` handler 调用 `clear_nav()` 时才清理。Buffer lifecycle
+监听通过 `BufEnter` 验证 captured `winnr + bufnr` identity，并通过 `WinClosed` event match 识别
+captured window，避免 `BufLeave` 把单纯的 window focus change 误判为 source buffer replacement。
 
 ### 操作模式规则
 
@@ -352,8 +393,10 @@ git.state.status_table()            -- 获取完整 status 表
 git.hunk.stage(range, callback)     -- Stage hunk/selection
 git.hunk.unstage(range, callback)   -- Unstage hunk/selection
 git.hunk.reset(range)               -- Reset hunk/selection
-git.hunk.nav("next")                -- 跳转到下一个 hunk
-git.hunk.nav("prev")                -- 跳转到上一个 hunk
+git.hunk_nav.nav("next")            -- 跳转到下一个 hunk
+git.hunk_nav.nav("prev")            -- 跳转到上一个 hunk
+git.hunk_nav.nav_diff("next")       -- 使用原生 ]c 跳转并发布 diff hunk position
+git.hunk_nav.nav_diff("prev")       -- 使用原生 [c 跳转并发布 diff hunk position
 git.show_hunk()                     -- 显示当前 hunk 的 diff 预览
 
 -- Blame

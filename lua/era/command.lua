@@ -801,9 +801,9 @@ command
     action = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if vim.api.nvim_get_option_value("diff", { win = winnr }) then
-        vim.cmd.normal({ "[c", bang = true })
+        era.m.git.hunk_nav.nav_diff("prev")
       else
-        era.m.git.hunk.nav("prev")
+        era.m.git.hunk_nav.nav("prev")
       end
     end,
   })
@@ -813,9 +813,9 @@ command
     action = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if vim.api.nvim_get_option_value("diff", { win = winnr }) then
-        vim.cmd.normal({ "]c", bang = true })
+        era.m.git.hunk_nav.nav_diff("next")
       else
-        era.m.git.hunk.nav("next")
+        era.m.git.hunk_nav.nav("next")
       end
     end,
   })
@@ -825,9 +825,9 @@ command
     action = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if vim.api.nvim_get_option_value("diff", { win = winnr }) then
-        vim.cmd.normal({ "[c", bang = true })
+        era.m.git.hunk_nav.nav_diff("prev")
       else
-        era.m.git.hunk.nav_all("prev")
+        era.m.git.hunk_nav.nav_all("prev")
       end
     end,
   })
@@ -837,9 +837,9 @@ command
     action = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if vim.api.nvim_get_option_value("diff", { win = winnr }) then
-        vim.cmd.normal({ "]c", bang = true })
+        era.m.git.hunk_nav.nav_diff("next")
       else
-        era.m.git.hunk.nav_all("next")
+        era.m.git.hunk_nav.nav_all("next")
       end
     end,
   })

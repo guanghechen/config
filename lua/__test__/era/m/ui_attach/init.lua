@@ -11,6 +11,7 @@ local t = harness.new("era.m.ui_attach")
 ---@field fail_id                        integer|nil
 ---@field fast                           boolean
 ---@field escape                         fun(): string
+---@field hunk_nav_clears                integer
 ---@field search_clears                  integer
 ---@field searching                      boolean
 ---@field timer                          table
@@ -21,6 +22,7 @@ local function setup()
     errors = {},
     events = {},
     fast = false,
+    hunk_nav_clears = 0,
     search_clears = 0,
     searching = false,
     timer = {},
@@ -113,6 +115,11 @@ local function setup()
     select = record,
     show = record,
   })
+  t:patch_table(package.loaded, "era.m.git.hunk_nav", {
+    clear_nav = function()
+      runtime.hunk_nav_clears = runtime.hunk_nav_clears + 1
+    end,
+  })
 
   t:patch_table(vim.uv, "new_timer", function()
     return runtime.timer
@@ -156,7 +163,18 @@ t:test("escape clears search state together with hlsearch", function()
 
   t.assert_eq("<esc>", key, "mapped key")
   t.assert_false(runtime.searching, "searching state")
+  t.assert_eq(1, runtime.hunk_nav_clears, "hunk navigation clear")
   t.assert_eq(1, runtime.search_clears, "search clear")
+end)
+
+t:test("escape clears hunk navigation without active search", function()
+  local runtime = setup()
+
+  local key = runtime.escape()
+
+  t.assert_eq("<esc>", key, "mapped key")
+  t.assert_eq(1, runtime.hunk_nav_clears, "hunk navigation clear")
+  t.assert_eq(0, runtime.search_clears, "search remains inactive")
 end)
 
 t:test("cmdline hide and show remain distinct ordered events", function()

@@ -143,7 +143,7 @@ function M.gen_hlgroup_map(context)
 
     ---module/git (signs, blame)
     m_git_buffer_blame = { fg = cs.mix(c.editor_background, c.textDim, 30), italic = true },
-    m_git_hunk_indicator = { fg = c.editorGutter_modifiedBackground },
+    m_git_hunk_indicator = { fg = c.editorGutter_deletedBackground },
     m_git_inline_blame = { fg = cs.mix(c.editor_background, c.textDim, 60), italic = true },
     m_git_sign_add = { fg = c.editorGutter_addedBackground },
     m_git_sign_add_staged = { fg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 50) },

@@ -159,7 +159,12 @@ local function render(winnr)
         text = "<NVIM_HOME>" .. string.sub(text, #stl.env.HOME_NVIM_CONFIG + 1)
       end
       local winbar = "diffview://" .. text
-      vim.api.nvim_set_option_value("winbar", txt(winbar, "f_wl_text"), { win = winnr, scope = "local" })
+      local _, hunk_nav = era.m.nvimbar.component.git.render_hunk_nav(winnr) ---@type string|nil, string|nil
+      local rendered = txt(winbar, "f_wl_text") ---@type string
+      if hunk_nav ~= nil then
+        rendered = rendered .. "%=" .. hunk_nav
+      end
+      vim.api.nvim_set_option_value("winbar", rendered, { win = winnr, scope = "local" })
     end
     return
   end

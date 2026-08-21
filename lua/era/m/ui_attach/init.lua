@@ -190,6 +190,11 @@ function M.dressing()
   end
 
   stl.nvim.fn.make_keys({ "i", "n", "s" }, "<esc>", function()
+    local hunk_nav = package.loaded["era.m.git.hunk_nav"] ---@type era.m.git.hunk_nav|nil
+    if hunk_nav ~= nil then
+      hunk_nav.clear_nav()
+    end
+
     -- WHY: gate on v:hlsearch (ground truth) too — the `searching` flag is
     -- derived from ext_messages search_count events and desyncs for searches
     -- that don't emit one (`:s`, `:g`, `:vimgrep`, `let @/=...`), leaving
