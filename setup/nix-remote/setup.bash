@@ -62,13 +62,12 @@ printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
 source "$setup_nix/bot/env.bash" || exit 1
 
 if [ -z "${HOME_HOMEBREW:-}" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
-  ghc_step_optional homebrew ghc_run_script "$setup_nix/bot/homebrew.bash"
+  ghc_step_optional homebrew ghc_run_script "$setup_nix_remote/bot/homebrew.bash"
 fi
 
 ## Setup envs
 printf "\n\e[95m ===== [setup env] =====\e[0m\n"
 ghc_step_optional rust ghc_run_script "$setup_nix/env/rust.bash"
-ghc_step_optional miniforge ghc_run_script "$setup_nix/env/miniforge.bash"
 ghc_step_optional node ghc_run_script "$setup_nix_remote/env/node.bash"
 
 ## Refresh PATH after installers ran in isolated shells.
