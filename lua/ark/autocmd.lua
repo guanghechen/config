@@ -216,14 +216,12 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 })
 
 --- Cache buffer filepath mapping
-vim.api.nvim_create_autocmd("BufWinEnter", {
+vim.api.nvim_create_autocmd({ "BufWinEnter", "BufFilePost" }, {
   group = augroup("cache_buf_filepath"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if filepath ~= "" then
-      stl.nvim.buf.on_buf_open(bufnr, filepath)
-    end
+    stl.nvim.buf.on_buf_open(bufnr, filepath)
   end,
 })
 

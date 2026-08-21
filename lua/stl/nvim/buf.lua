@@ -69,8 +69,21 @@ local function make_fallback_bufpath(filepath)
     return nil
   end
 
-  local fallback = filepath:lower() ---@type string
-  return fallback ~= filepath and fallback or nil
+  return filepath:lower()
+end
+
+---@param bufnr                         integer
+---@param filepath                      string
+---@return nil
+local function remove_cached_bufpath(bufnr, filepath)
+  if filepath_to_bufnr[filepath] == bufnr then
+    filepath_to_bufnr[filepath] = nil
+  end
+
+  local fallback = make_fallback_bufpath(filepath) ---@type string|nil
+  if fallback ~= nil and filepath_fallback_to_bufnr[fallback] == bufnr then
+    filepath_fallback_to_bufnr[fallback] = nil
+  end
 end
 
 ---@class stl.nvim.buf
@@ -227,17 +240,17 @@ end
 ---@return nil
 function M.on_buf_open(bufnr, filepath)
   local key = normalize_bufpath(filepath) ---@type string
-  if bufnr < 1 or key == "" then
+  if bufnr < 1 then
+    return
+  end
+  if key == "" then
+    M.on_buf_close(bufnr)
     return
   end
 
   local old_filepath = bufnr_to_filepath[bufnr] ---@type string|nil
   if old_filepath ~= nil and old_filepath ~= key then
-    filepath_to_bufnr[old_filepath] = nil
-    local old_fallback = make_fallback_bufpath(old_filepath) ---@type string|nil
-    if old_fallback ~= nil then
-      filepath_fallback_to_bufnr[old_fallback] = nil
-    end
+    remove_cached_bufpath(bufnr, old_filepath)
   end
 
   filepath_to_bufnr[key] = bufnr
@@ -253,11 +266,7 @@ end
 function M.on_buf_close(bufnr)
   local old_filepath = bufnr_to_filepath[bufnr] ---@type string|nil
   if old_filepath ~= nil then
-    filepath_to_bufnr[old_filepath] = nil
-    local old_fallback = make_fallback_bufpath(old_filepath) ---@type string|nil
-    if old_fallback ~= nil then
-      filepath_fallback_to_bufnr[old_fallback] = nil
-    end
+    remove_cached_bufpath(bufnr, old_filepath)
     bufnr_to_filepath[bufnr] = nil
   end
 end

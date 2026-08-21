@@ -8,6 +8,7 @@ local t = harness.new("ark.autocmd")
 
 ---@class ark.autocmd.test.IRuntime
 ---@field autocmds                      table<string, table>
+---@field autocmd_events                table<string, string|string[]>
 ---@field scheduled                     fun()[]
 ---@field bufnr                         integer
 ---@field valid                         boolean
@@ -19,6 +20,7 @@ local t = harness.new("ark.autocmd")
 local function setup()
   local runtime = {
     autocmds = {},
+    autocmd_events = {},
     scheduled = {},
     bufnr = 1,
     valid = true,
@@ -62,8 +64,9 @@ local function setup()
   t:patch_table(vim.api, "nvim_create_augroup", function(name)
     return name
   end)
-  t:patch_table(vim.api, "nvim_create_autocmd", function(_, opts)
+  t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
     runtime.autocmds[opts.group] = opts
+    runtime.autocmd_events[opts.group] = events
     return 1
   end)
   t:patch_table(vim.api, "nvim_get_current_win", function()
@@ -129,6 +132,13 @@ t:test("does not accept a baseline when restoring the cursor fails", function()
 
   t.assert_eq(0, runtime.cursor_updates, "cursor updates")
   t.assert_eq(0, runtime.accepted, "accepted views")
+end)
+
+t:test("refreshes the filepath cache after a buffer rename", function()
+  local runtime = setup()
+  local events = runtime.autocmd_events.ark_cache_buf_filepath
+
+  t.assert_true(vim.deep_equal({ "BufWinEnter", "BufFilePost" }, events), "cache refresh events")
 end)
 
 t:run()
