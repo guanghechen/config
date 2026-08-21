@@ -98,7 +98,7 @@ alias tattach='tmux attach -t'        # Attach to a session
 alias tdetach-others='tmux detach -a' # Detach other clients from the session
 ## misc
 alias ghc-ora='node $HOME/.config/ora/cli/http.mjs'
-alias ghc-update='kit repo sync'
+alias ghc-update='kit-repo sync'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 alias ghc-clock='tty-clock -DSbcnrs -C5'

@@ -7,8 +7,8 @@ ghc-upgrade() {
   [[ -n "$GHC_CONFIG_ROOT" ]] && config_root="$GHC_CONFIG_ROOT"
 
   local edition=""
-  if command -v kit &>/dev/null; then
-    edition=$(kit repo get config.edition 2>/dev/null | tr -d '[:space:]')
+  if command -v kit-repo &>/dev/null; then
+    edition=$(kit-repo get config.edition 2>/dev/null | tr -d '[:space:]')
   fi
 
   if [[ -z "$edition" ]]; then
