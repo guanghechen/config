@@ -162,6 +162,16 @@ function M.open(opts, on_confirm)
   contexts[bufnr] = { completion = opts.completion }
 
   local disposed = false ---@type boolean
+  local focus_revoked = false ---@type boolean
+  local focus_autocmd_id = nil ---@type integer|nil
+
+  ---@return nil
+  local function clear_focus_watch()
+    if focus_autocmd_id ~= nil then
+      pcall(vim.api.nvim_del_autocmd, focus_autocmd_id)
+      focus_autocmd_id = nil
+    end
+  end
 
   ---@param text                        ?string
   local function dispose(text)
@@ -170,16 +180,16 @@ function M.open(opts, on_confirm)
     end
     disposed = true
     contexts[bufnr] = nil
-    vim.cmd("stopinsert")
+    clear_focus_watch()
+
+    if vim.api.nvim_get_current_win() == winnr then
+      vim.cmd("stopinsert")
+    end
 
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
     end
     vim.schedule(function()
-      if vim.api.nvim_win_is_valid(parent_winnr) then
-        vim.api.nvim_set_current_win(parent_winnr)
-        pcall(vim.api.nvim_win_set_cursor, parent_winnr, parent_cursor)
-      end
       on_confirm(text)
     end)
   end
@@ -301,11 +311,32 @@ function M.open(opts, on_confirm)
   vim.api.nvim_create_autocmd("BufLeave", {
     buffer = bufnr,
     callback = function()
+      focus_revoked = true
+      clear_focus_watch()
       vim.schedule(action.cancel)
     end,
   })
 
+  focus_autocmd_id = vim.api.nvim_create_autocmd("WinEnter", {
+    callback = function()
+      if disposed or vim.api.nvim_get_current_win() == winnr then
+        return
+      end
+      focus_revoked = true
+      focus_autocmd_id = nil
+      return true
+    end,
+  })
+
   vim.schedule(function()
+    clear_focus_watch()
+    if disposed then
+      return
+    end
+    if focus_revoked then
+      action.cancel()
+      return
+    end
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_set_current_win(winnr)
     end

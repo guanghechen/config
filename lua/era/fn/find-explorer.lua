@@ -831,14 +831,6 @@ local function create_entry()
       col = 4,
     }, function(input)
       on_confirmed(input)
-
-      if winnr_current ~= vim.api.nvim_get_current_win() then
-        vim.schedule(function()
-          if vim.api.nvim_win_is_valid(winnr_current) then
-            vim.api.nvim_set_current_win(winnr_current)
-          end
-        end)
-      end
     end)
   end
 
@@ -925,14 +917,6 @@ local function delete_entry()
       col = 4,
     }, function(input)
       on_confirmed(input)
-
-      if winnr_current ~= vim.api.nvim_get_current_win() then
-        vim.schedule(function()
-          if vim.api.nvim_win_is_valid(winnr_current) then
-            vim.api.nvim_set_current_win(winnr_current)
-          end
-        end)
-      end
     end)
   end
 
@@ -1049,14 +1033,6 @@ local function copy_entry_as()
       col = 4,
     }, function(input)
       on_confirmed(input)
-
-      if winnr_current ~= vim.api.nvim_get_current_win() then
-        vim.schedule(function()
-          if vim.api.nvim_win_is_valid(winnr_current) then
-            vim.api.nvim_set_current_win(winnr_current)
-          end
-        end)
-      end
     end)
   end
 
@@ -1154,14 +1130,6 @@ local function rename_entry()
       col = 4,
     }, function(input)
       on_confirmed(input)
-
-      if winnr_current ~= vim.api.nvim_get_current_win() then
-        vim.schedule(function()
-          if vim.api.nvim_win_is_valid(winnr_current) then
-            vim.api.nvim_set_current_win(winnr_current)
-          end
-        end)
-      end
     end)
   end
 
@@ -1201,15 +1169,6 @@ local function copy_current_filepath()
       relative = "cursor",
       row = 1,
       col = 4,
-      on_completed = function()
-        if winnr_current ~= winnr_result then
-          vim.schedule(function()
-            if vim.api.nvim_win_is_valid(winnr_current) then
-              vim.api.nvim_set_current_win(winnr_current)
-            end
-          end)
-        end
-      end,
     })
   end
 

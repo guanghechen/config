@@ -607,15 +607,6 @@ function M.new(props)
             row = 1,
             col = 4,
           },
-          on_completed = function()
-            if winnr_current ~= winnr_result then
-              vim.schedule(function()
-                if vim.api.nvim_win_is_valid(winnr_current) then
-                  vim.api.nvim_set_current_win(winnr_current)
-                end
-              end)
-            end
-          end,
         })
       end
 
