@@ -12,8 +12,8 @@
   "mini.splitjoin": { "branch": "nvim@mini.splitjoin", "commit": "9301717c7612ccb72e89629df89416585dd54c9b" },
   "mini.surround": { "branch": "nvim@mini.surround", "commit": "8d5d0c5aa92449368ac251e85451d79d8f69d296" },
   "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "a219b2c9e5b4765e5c845aba119dad55806fcaf1" },
-  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "7248feaca45e4d944591497964bc19afa89ad1c6" },
-  "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "b311b30818951d01f7b4bf650521b868b3fece16" },
+  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "3d3321b560a63ff92a8692401f303a5123336b86" },
+  "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "f3061339b8eaf9fda873600bc425b8d2d8502533" },
   "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "898ee307df58f854d11cd7edd06472574d48014e" },
   "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "f422cb5c6855f150e2ddcfaf44e7157b98b34f6a" }
 }
