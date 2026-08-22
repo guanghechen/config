@@ -2,7 +2,7 @@
   "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "78336bc89ee5365633bcf754d93df01678b5c08f" },
   "blink.indent": { "branch": "nvim@blink.indent", "commit": "8b69b9262891fe81fe728fe6a52fa2a84dd5d5e0" },
   "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "4e43012356d33a26f69eae475f746fbe9f325f44" },
-  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "619363c30309d29ffa631e67c8183f2a72caa373" },
+  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "016802de402556da54c36bd7359b441266b01cdd" },
   "flash.nvim": { "branch": "nvim@flash.nvim", "commit": "b6346946d10d07998efee029fb0f7a593806d0cd" },
   "friendly-snippets": { "branch": "nvim@friendly-snippets", "commit": "6cd7280adead7f586db6fccbd15d2cac7e2188b9" },
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d" },
@@ -11,9 +11,9 @@
   "mini.indentscope": { "branch": "nvim@mini.indentscope", "commit": "92fbaf895f83c59575ec599df532b297ebf62b14" },
   "mini.splitjoin": { "branch": "nvim@mini.splitjoin", "commit": "9301717c7612ccb72e89629df89416585dd54c9b" },
   "mini.surround": { "branch": "nvim@mini.surround", "commit": "8d5d0c5aa92449368ac251e85451d79d8f69d296" },
-  "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "a219b2c9e5b4765e5c845aba119dad55806fcaf1" },
-  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "3d3321b560a63ff92a8692401f303a5123336b86" },
+  "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "0370fe965697aa8f04252a1562441bdc13723cd1" },
+  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "074aa4422bf029908338e855d0c0f71470a971bb" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "f3061339b8eaf9fda873600bc425b8d2d8502533" },
   "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "898ee307df58f854d11cd7edd06472574d48014e" },
-  "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "f422cb5c6855f150e2ddcfaf44e7157b98b34f6a" }
+  "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "4663eb3ecd538bd5062628fb6d95bbe6bdca78f6" }
 }
