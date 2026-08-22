@@ -75,6 +75,7 @@ end
 if set -q NEOVIM_HOME; and test -x "$NEOVIM_HOME/bin/nvim"
     set -gx EDITOR "$NEOVIM_HOME/bin/nvim"
     set -gx VISUAL "$NEOVIM_HOME/bin/nvim"
+    set -gx SUDO_EDITOR "$NEOVIM_HOME/bin/nvim"
     set -gx MYVIMRC "$HOME/.config/nvim/init.lua"
     set -gx VIM "$NEOVIM_HOME/share/nvim"
     set -gx VIMRUNTIME "$NEOVIM_HOME/share/nvim/runtime"
