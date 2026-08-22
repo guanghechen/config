@@ -83,6 +83,7 @@ export FZF_DEFAULT_OPTS_FILE="$HOME/.config/fzf/fzf.fzfrc"
 if [[ -n "${NEOVIM_HOME:-}" && -x "$NEOVIM_HOME/bin/nvim" ]]; then
   export EDITOR="$NEOVIM_HOME/bin/nvim"
   export VISUAL="$NEOVIM_HOME/bin/nvim"
+  export SUDO_EDITOR="$NEOVIM_HOME/bin/nvim"
   export MYVIMRC="$HOME/.config/nvim/init.lua"
   export VIM="$NEOVIM_HOME/share/nvim"
   export VIMRUNTIME="$NEOVIM_HOME/share/nvim/runtime"
