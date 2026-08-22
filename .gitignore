@@ -1,7 +1,9 @@
+/bin/
+/rust/target/
+
 local.*/
 __tmp__.lua
 
 lua/*.dll
 lua/*.so
 
-/rust/target/
