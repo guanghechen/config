@@ -1,3 +1,11 @@
+function global:winget {
+  if ([string]::IsNullOrWhiteSpace($global:ghc_winget_proxy)) {
+    & winget.exe @args
+  } else {
+    & winget.exe @args --proxy $global:ghc_winget_proxy
+  }
+}
+
 function ghc-proxy {
   param (
     [string]$action
@@ -23,6 +31,7 @@ function ghc-proxy {
     npm config set https-proxy $proxy
 
     $global:PSDefaultParameterValues[$proxyParameter] = $proxy
+    $global:ghc_winget_proxy = $proxy
 
     Write-Host "  Proxy enabled: $proxy" -ForegroundColor Green
 
@@ -37,6 +46,7 @@ function ghc-proxy {
     npm config delete https-proxy
 
     $global:PSDefaultParameterValues.Remove($proxyParameter)
+    Remove-Variable ghc_winget_proxy -Scope Global -ErrorAction SilentlyContinue
 
     Write-Host "  Proxy disabled." -ForegroundColor Yellow
 
