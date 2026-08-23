@@ -4,10 +4,13 @@ function ghc-proxy {
   )
 
   # $env:ghc_vpn_host_ip = ipconfig | Select-String "IPv4 Address" | ForEach-Object { $_.Line.Split(":")[1].Trim() } | Where-Object { $_ -like "192*" } | Select-Object -First 1
-  $env:ghc_vpn_host_ip = '127.0.0.1'
-  setx ghc_vpn_host_ip "$env:ghc_vpn_host_ip"
+  if ([string]::IsNullOrWhiteSpace($env:ghc_vpn_host_ip)) {
+    $env:ghc_vpn_host_ip = "127.0.0.1"
+    setx ghc_vpn_host_ip "$env:ghc_vpn_host_ip"
+  }
 
   $proxy = "http://$env:ghc_vpn_host_ip`:$env:ghc_vpn_host_port"
+  $proxyParameter = "Invoke-RestMethod:Proxy"
 
   if ($action -eq "on") {
     [System.Environment]::SetEnvironmentVariable("HTTP_PROXY", $proxy, [System.EnvironmentVariableTarget]::User)
@@ -18,6 +21,8 @@ function ghc-proxy {
 
     npm config set proxy $proxy
     npm config set https-proxy $proxy
+
+    $global:PSDefaultParameterValues[$proxyParameter] = $proxy
 
     Write-Host "  Proxy enabled: $proxy" -ForegroundColor Green
 
@@ -30,6 +35,8 @@ function ghc-proxy {
 
     npm config delete proxy
     npm config delete https-proxy
+
+    $global:PSDefaultParameterValues.Remove($proxyParameter)
 
     Write-Host "  Proxy disabled." -ForegroundColor Yellow
 
