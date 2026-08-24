@@ -42,11 +42,17 @@ set -gx FZF_DEFAULT_COMMAND "fd --hidden --follow --no-ignore-vcs --color=never 
 set -gx FZF_DEFAULT_OPTS_FILE "$HOME/.config/fzf/fzf.fzfrc"
 
 ### miniforge3
-set -l conda_exe "$HOME/.app/miniforge3/bin/conda"
+set -l conda_root "$HOME/.app/miniforge3"
+set -l conda_exe "$conda_root/bin/conda"
+set -l conda_hook "$conda_root/etc/fish/conf.d/conda.fish"
 if test -x "$conda_exe"
     set -gx CONDA_CHANGEPS1 false
     set -gx CONDA_PROMPT_MODIFIER ""
-    "$conda_exe" shell.fish hook | source
+    if test -f "$conda_hook"
+        source "$conda_hook"
+    else
+        "$conda_exe" shell.fish hook | source
+    end
 
     # if status is-interactive
     #   if set -q CONDA_PREFIX
