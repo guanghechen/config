@@ -535,6 +535,18 @@ export interface IAppConfig {
   local?: string | null
   active: (app: IAppConfig) => boolean
   render: (app: IAppConfig, template: string, scheme: IThemeScheme) => Promise<string>
+  prepare?: (
+    app: IAppConfig,
+    content: string,
+    scheme: IThemeScheme,
+    reporter: IReporter,
+  ) => Promise<void>
+  apply?: (
+    app: IAppConfig,
+    content: string,
+    scheme: IThemeScheme,
+    reporter: IReporter,
+  ) => Promise<void>
   after_apply?: (app: IAppConfig, scheme: IThemeScheme, reporter: IReporter) => Promise<void>
   after_gen?: (app: IAppConfig, reporter: IReporter) => Promise<void>
 }

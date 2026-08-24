@@ -131,25 +131,46 @@ export async function load_theme_scheme(reporter, theme) {
  * @param {IReporter} reporter
  * @param {IAppConfig} app
  * @param {IThemeScheme} scheme
- * @return {Promise<void>}
+ * @return {Promise<() => Promise<void>>}
  */
-export async function apply_theme_per_app(reporter, app, scheme) {
-  if (!app.active(app)) return
+export async function prepare_theme_per_app(reporter, app, scheme) {
+  if (!app.active(app)) return async () => {}
+
+  let content
   if (app.local) {
     const template_filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_APP_DIR, `${app.name}.hbs`)
     if (!existsSync(template_filepath)) {
-      reporter.error('Cannot find the template.', { app: app.name })
-      return
+      throw new Error(`Cannot find the template for app: ${app.name}`)
     }
     const template = await fs.readFile(template_filepath, 'utf8')
-    const content = await app.render(app, template, scheme)
-
-    const theme_filepath = path.resolve(app.home, app.local)
-    mkdirSync(path.dirname(theme_filepath), { recursive: true })
-    await fs.writeFile(theme_filepath, content, 'utf8')
+    content = await app.render(app, template, scheme)
+    await app.prepare?.(app, content, scheme, reporter)
   }
 
-  await app.after_apply?.(app, scheme, reporter)
+  return async () => {
+    if (app.local && content !== undefined) {
+      if (app.apply) {
+        await app.apply(app, content, scheme, reporter)
+      } else {
+        const theme_filepath = path.resolve(app.home, app.local)
+        mkdirSync(path.dirname(theme_filepath), { recursive: true })
+        await fs.writeFile(theme_filepath, content, 'utf8')
+      }
+    }
+
+    await app.after_apply?.(app, scheme, reporter)
+  }
+}
+
+/**
+ * @param {IReporter} reporter
+ * @param {IAppConfig} app
+ * @param {IThemeScheme} scheme
+ * @return {Promise<void>}
+ */
+export async function apply_theme_per_app(reporter, app, scheme) {
+  const apply = await prepare_theme_per_app(reporter, app, scheme)
+  await apply()
 }
 
 /**

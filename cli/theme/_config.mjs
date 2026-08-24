@@ -11,6 +11,10 @@ import {
 import { command_exists, exec } from '#util/command'
 import { is_directory, is_file, touch } from '#util/path'
 
+import {
+  applyGhosttyThemeAppearance,
+  validateGhosttyThemeAppearance,
+} from '../ghostty-shader/_state.mjs'
 import { gen_full_theme_name, render_template } from './_util.mjs'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
@@ -114,6 +118,19 @@ export const apps = [
     local: 'local/theme.conf',
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
+    prepare: async (app, _content, scheme) => {
+      await validateGhosttyThemeAppearance({
+        home: app.home,
+        appearance: scheme.darken ? 'dark' : 'light',
+      })
+    },
+    apply: async (app, content, scheme) => {
+      await applyGhosttyThemeAppearance({
+        home: app.home,
+        appearance: scheme.darken ? 'dark' : 'light',
+        themeContent: content,
+      })
+    },
     after_apply: async (_app, _scheme, reporter) => {
       // Send SIGUSR2 to ghostty to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (PLATFORM !== 'win') {
