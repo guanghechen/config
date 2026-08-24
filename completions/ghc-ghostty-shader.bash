@@ -3,8 +3,9 @@
 
 _ghc_ghostty_shader() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
-    local shaders="off cubes cubes-light fireworks-rockets gears-and-belts inside-the-matrix matrix-hallway mnoise sparks-from-fire starfield"
-    local opts="--silent --prev --next -s -p -n"
+    local shaders
+    shaders="$(ghc-ghostty-shader --list 2>/dev/null)"
+    local opts="--silent --prev --next -s"
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=($(compgen -W "$opts" -- "$cur"))
