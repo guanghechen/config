@@ -71,15 +71,19 @@ else
 fi
 
 ## miniforge3
-if [[ -x "$HOME/.app/miniforge3/bin/conda" ]]; then
+_ghc_conda_root="$HOME/.app/miniforge3"
+_ghc_conda_exe="$_ghc_conda_root/bin/conda"
+_ghc_conda_hook="$_ghc_conda_root/etc/profile.d/conda.sh"
+if [[ -x "$_ghc_conda_exe" ]]; then
     export CONDA_CHANGEPS1=false
     export CONDA_PROMPT_MODIFIER=""
 
-    # Prefer conda's generated hook; retain the profile script as a compatibility fallback.
-    if __conda_setup="$("$HOME/.app/miniforge3/bin/conda" "shell.bash" "hook" 2>/dev/null)"; then
+    # Avoid spawning Conda/Python on startup; generate the hook only when the static script is absent.
+    if [[ -f "$_ghc_conda_hook" ]]; then
+        source "$_ghc_conda_hook"
+    elif __conda_setup="$("$_ghc_conda_exe" "shell.bash" "hook" 2>/dev/null)"; then
         eval "$__conda_setup"
-    elif [[ -f "$HOME/.app/miniforge3/etc/profile.d/conda.sh" ]]; then
-        source "$HOME/.app/miniforge3/etc/profile.d/conda.sh"
     fi
     unset __conda_setup
 fi
+unset _ghc_conda_root _ghc_conda_exe _ghc_conda_hook
