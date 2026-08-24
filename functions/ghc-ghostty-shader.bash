@@ -25,10 +25,10 @@ ghc-ghostty-shader() {
     local shaders=(
         off
         cubes
+        cubes-light
         fireworks-rockets
         gears-and-belts
         inside-the-matrix
-        just-snow
         matrix-hallway
         mnoise
         sparks-from-fire

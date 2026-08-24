@@ -3,7 +3,7 @@
 
 _ghc_ghostty_shader() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
-    local shaders="off cubes fireworks-rockets gears-and-belts inside-the-matrix just-snow matrix-hallway mnoise sparks-from-fire starfield"
+    local shaders="off cubes cubes-light fireworks-rockets gears-and-belts inside-the-matrix matrix-hallway mnoise sparks-from-fire starfield"
     local opts="--silent --prev --next -s -p -n"
 
     if [[ "$cur" == -* ]]; then
