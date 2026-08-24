@@ -10,7 +10,16 @@ local bufnr_sourcefile = nil ---@type integer|nil
 local winnr_sourcefile = nil ---@type integer|nil
 
 bootstrap.with_runtime(t, {
+  era = {
+    m = {
+      diffview = {},
+    },
+  },
   stl = {
+    e = require("stl.e"),
+    env = {
+      PATH_SEP = "/",
+    },
     nvim = {
       buf = {
         retrieve_visual_lnum_range = function()
@@ -43,6 +52,9 @@ bootstrap.with_runtime(t, {
       cwd = function()
         return "/workspace"
       end,
+      workspace = function()
+        return "/workspace"
+      end,
       relative = function(_, filepath)
         return filepath:gsub("^/workspace/", "")
       end,
@@ -65,6 +77,7 @@ bootstrap.with_runtime(t, {
   },
 })
 
+era.m.diffview.util = assert(loadfile("lua/era/m/diffview/util.lua"))()
 local copy = assert(loadfile("lua/era/m/copy.lua"))()
 
 ---@param filepath                      string
@@ -155,6 +168,36 @@ t:test("copies an absolute filepath when the scope is provided", function()
   copy.copy_filepath_location("absolute")
 
   t.assert_eq("/workspace/lua/test.lua#L7", copied, "clipboard content")
+end)
+
+t:test("resolves a diffview index buffer as its working tree filepath", function()
+  use_buffer("diffview:///workspace/index/lua/test.lua")
+  vim.api.nvim_win_set_cursor(0, { 13, 0 })
+
+  copied = nil
+  copy.copy_filepath_location("absolute")
+  t.assert_eq("/workspace/lua/test.lua#L13", copied, "absolute content")
+
+  copy.copy_filepath_location("relative")
+  t.assert_eq("lua/test.lua#L13", copied, "relative content")
+
+  copy.copy_filepath_location("filename")
+  t.assert_eq("test.lua#L13", copied, "filename content")
+
+  use_buffer("diffview:/workspace/index/lua/normalized.lua")
+  vim.api.nvim_win_set_cursor(0, { 5, 0 })
+  copy.copy_filepath_location("absolute")
+  t.assert_eq("/workspace/lua/normalized.lua#L5", copied, "normalized absolute content")
+end)
+
+t:test("preserves non-index diffview buffer names", function()
+  use_buffer("diffview:///workspace/HEAD/workspace/index/test.lua")
+  vim.api.nvim_win_set_cursor(0, { 9, 0 })
+
+  copied = nil
+  copy.copy_filepath_location("absolute")
+
+  t.assert_eq("diffview:///workspace/HEAD/workspace/index/test.lua#L9", copied, "clipboard content")
 end)
 
 t:test("uses the tab sourcefile filepath and cursor outside the sourcefile buffer", function()

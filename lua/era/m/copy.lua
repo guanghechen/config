@@ -1,11 +1,21 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.copy" ---@type string
 
+---@param filepath                      string
+---@return string
+local function resolve_filepath(filepath)
+  if filepath:sub(1, 9) == "diffview:" then
+    return era.m.diffview.util.resolve_index_filepath(filepath) or filepath
+  end
+  return filepath
+end
+
 ---@param candidate                     dot.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@param location                      string|nil
 ---@return nil
 local function copy_current_filepath(candidate, filepath, location)
+  filepath = resolve_filepath(filepath)
   location = location or ""
 
   if candidate == "absolute" then

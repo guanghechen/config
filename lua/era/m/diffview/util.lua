@@ -148,6 +148,29 @@ function M.gen_index_bufname(filepath)
   return string.format("diffview://%s/index/%s", workspace, filepath)
 end
 
+---Resolve an index buffer name to its working tree filepath.
+---@param bufname                      string
+---@return string|nil
+function M.resolve_index_filepath(bufname)
+  if bufname:sub(1, 9) ~= "diffview:" then
+    return
+  end
+
+  local workspace = dot.path.workspace() ---@type string
+  local index_path = workspace .. (workspace:sub(-1) == "/" and "" or "/") .. "index/" ---@type string
+  local prefix = "diffview://" .. index_path ---@type string
+  local normalized_prefix = prefix:gsub("^diffview://+", "diffview:/") ---@type string
+
+  for _, candidate in ipairs({ prefix, normalized_prefix }) do
+    if bufname:sub(1, #candidate) == candidate then
+      local filepath = bufname:sub(#candidate + 1) ---@type string
+      if filepath ~= "" then
+        return M.workspace_path(filepath)
+      end
+    end
+  end
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Stat formatting
 ----------------------------------------------------------------------------------------------------
