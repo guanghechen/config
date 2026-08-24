@@ -5,11 +5,11 @@ function ghc-ghostty-shader
     set -l shaders \
         off \
         cubes \
+        cubes-light \
         fireworks-rockets \
         gears-and-belts \
         inside-the-matrix \
         inside-the-matrix-light \
-        just-snow \
         matrix-hallway \
         mnoise \
         sparks-from-fire \
