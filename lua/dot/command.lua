@@ -361,6 +361,12 @@ M.definitions.copy = {
 
   filepath = D.new("Fcopyfilepath", "copy: current filepath", "?", { "absolute", "relative", "filename" }),
   filepath_absolute = D.new("Fcopyfilepathabsolute", "copy: current filepath (absolute)"),
+  filepath_location = D.new(
+    "Fcopyfilepathlocation",
+    "copy: current filepath with location",
+    "?",
+    { "absolute", "relative", "filename" }
+  ),
   filepath_relative = D.new("Fcopyfilepathrelative", "copy: current filepath (relative)"),
 }
 

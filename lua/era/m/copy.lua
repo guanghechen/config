@@ -3,10 +3,13 @@ local __module_name__ = "era.m.copy" ---@type string
 
 ---@param candidate                     dot.command.definitions.copy.Scope
 ---@param filepath                      string
+---@param location                      string|nil
 ---@return nil
-local function copy_current_filepath(candidate, filepath)
+local function copy_current_filepath(candidate, filepath, location)
+  location = location or ""
+
   if candidate == "absolute" then
-    local content = filepath ---@type string
+    local content = filepath .. location ---@type string
 
     stl.nvim.fn.copy(content)
     stl.reporter.info({
@@ -15,7 +18,7 @@ local function copy_current_filepath(candidate, filepath)
     })
   elseif candidate == "relative" then
     local cwd = dot.path.cwd() ---@type string
-    local content = dot.path.relative(cwd, filepath, "/") ---@type string
+    local content = dot.path.relative(cwd, filepath, "/") .. location ---@type string
 
     stl.nvim.fn.copy(content)
     stl.reporter.info({
@@ -23,7 +26,7 @@ local function copy_current_filepath(candidate, filepath)
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
   elseif candidate == "filename" then
-    local content = yoz.path.basename(filepath) ---@type string
+    local content = yoz.path.basename(filepath) .. location ---@type string
 
     stl.nvim.fn.copy(content)
     stl.reporter.info({
@@ -37,6 +40,27 @@ local function copy_current_filepath(candidate, filepath)
       details = { candidate = candidate },
     })
   end
+end
+
+---@param bufnr_sourcefile              integer
+---@param winnr_sourcefile              integer
+---@return string
+local function retrieve_location(bufnr_sourcefile, winnr_sourcefile)
+  local mode = vim.api.nvim_get_mode().mode ---@type string
+  local lnum_start = nil ---@type integer|nil
+  local lnum_end = nil ---@type integer|nil
+
+  if vim.api.nvim_get_current_buf() == bufnr_sourcefile and (mode == "v" or mode == "V" or mode == "\22") then
+    lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
+  else
+    lnum_start = vim.api.nvim_win_get_cursor(winnr_sourcefile)[1]
+    lnum_end = lnum_start
+  end
+
+  if lnum_start == lnum_end then
+    return string.format("#L%d", lnum_start)
+  end
+  return string.format("#L%d-L%d", lnum_start, lnum_end)
 end
 
 ---@class era.m.copy
@@ -75,6 +99,44 @@ function M.copy_filepath(arg)
     }, function(choice)
       if choice then
         copy_current_filepath(choice, filepath)
+      end
+    end)
+  end
+end
+
+---@param arg                           unknown|nil
+---@return nil
+function M.copy_filepath_location(arg)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if
+    bufnr_sourcefile == nil
+    or winnr_sourcefile == nil
+    or not vim.api.nvim_win_is_valid(winnr_sourcefile)
+    or vim.api.nvim_win_get_buf(winnr_sourcefile) ~= bufnr_sourcefile
+  then
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
+  local location = retrieve_location(bufnr_sourcefile, winnr_sourcefile) ---@type string
+  local scopes = dot.command.definitions.copy.filepath_location.candidates ---@type string[]|nil
+  local scope = type(arg) == "string" and arg:lower() or "" ---@type string
+  if scopes and vim.list_contains(scopes, scope) then
+    copy_current_filepath(scope, filepath, location)
+  elseif scopes then
+    vim.ui.select(scopes, {
+      name = __module_name__,
+      prompt = "Copy Filepath (" .. location .. ")",
+      uuid_current = "relative",
+      dimension = {
+        row = 3,
+        width = math.max(30, #location + 18),
+      },
+    }, function(choice)
+      if choice then
+        copy_current_filepath(choice, filepath, location)
       end
     end)
   end

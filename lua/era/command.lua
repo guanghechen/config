@@ -381,6 +381,13 @@ command
     end,
   })
   .implement({
+    uuid = K.copy.filepath_location.uuid,
+    tabtypes = stl.e.TabTypeSet.ALL,
+    action = function(arg)
+      era.m.copy.copy_filepath_location(arg)
+    end,
+  })
+  .implement({
     uuid = K.copy.filepath_relative.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
