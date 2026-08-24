@@ -4,7 +4,7 @@ complete ghc-theme --no-files
 complete ghc-theme -n "__fish_use_subcommand" -a apply -d "Apply a theme"
 complete ghc-theme -n "__fish_use_subcommand" -a gen -d "Generate theme files"
 complete ghc-theme -n "__fish_use_subcommand" -a generate -d "Generate theme files"
-complete ghc-theme -n "__fish_use_subcommand" -a toggle -d "Toggle light/dark"
+complete ghc-theme -n "__fish_use_subcommand" -a toggle -d "Toggle theme"
 
 # Global options
 complete ghc-theme -s s -l silent -d "Suppress all output"

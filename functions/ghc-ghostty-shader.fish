@@ -1,66 +1,9 @@
-function ghc-ghostty-shader
-    argparse 'silent' 'prev' 'next' -- $argv
-    or return 1
-
-    set -l shaders \
-        off \
-        cubes \
-        cubes-light \
-        fireworks-rockets \
-        gears-and-belts \
-        inside-the-matrix \
-        inside-the-matrix-light \
-        matrix-hallway \
-        mnoise \
-        sparks-from-fire \
-        starfield
-
-    set config_dir "$HOME/.config/ghostty/local"
-    set config_path "$config_dir/shader.conf"
-    mkdir -p "$config_dir"
-
-    if test (count $argv) -eq 0
-        set -l current off
-        if test -f "$config_path"
-            set -l matched (string match -r 'shaders/(.+)\.glsl' < "$config_path" | tail -1)
-            if test -n "$matched"
-                set current $matched
-            end
-        end
-
-        set -l idx 0
-        for i in (seq (count $shaders))
-            if test "$shaders[$i]" = "$current"
-                set idx $i
-                break
-            end
-        end
-
-        set -l max (count $shaders)
-        if test -n "$_flag_prev"
-            if test $idx -le 1
-                set shader_name $shaders[$max]
-            else
-                set shader_name $shaders[(math $idx - 1)]
-            end
-        else
-            if test $idx -eq 0 -o $idx -eq $max
-                set shader_name $shaders[1]
-            else
-                set shader_name $shaders[(math $idx + 1)]
-            end
-        end
+function ghc-ghostty-shader --description 'Manage Ghostty shaders per appearance'
+    set script_path "$HOME/.config/guanghechen/cli/ghostty-shader.mjs"
+    if test -f "$script_path"
+        node "$script_path" $argv
     else
-        set shader_name $argv[1]
+        printf "\e[91m  Cannot find %s.\e[0m\n" "$script_path" >&2
+        return 1
     end
-
-    if test "$shader_name" = off
-        echo -n >"$config_path"
-        test -z "$_flag_silent"; and printf "\e[96m  Shader disabled\e[0m\n"
-    else
-        echo "custom-shader = ../shaders/$shader_name.glsl" >"$config_path"
-        test -z "$_flag_silent"; and printf "\e[92m  Shader: %s\e[0m\n" "$shader_name"
-    end
-
-    pkill -USR2 ghostty
 end
