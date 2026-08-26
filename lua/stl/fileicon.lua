@@ -3,6 +3,7 @@
 -- stylua: ignore start
 local BYTE_SLASH      = 0x2f ---@type integer '/'
 local BYTE_BACKSLASH  = 0x5c ---@type integer '\\'
+local BYTE_DOT        = 0x2e ---@type integer '.'
 -- stylua: ignore end
 
 -- stylua: ignore start
@@ -173,14 +174,34 @@ local ICONS_EXTENSION = {
 
   -- Test
   ["spec.js"]             = { glyph = "󰙨", hl = "MiniIconsYellow" },
+  ["spec.cjs"]            = { glyph = "󰙨", hl = "MiniIconsYellow" },
   ["spec.mjs"]            = { glyph = "󰙨", hl = "MiniIconsYellow" },
   ["spec.ts"]             = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+  ["spec.cts"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
   ["spec.mts"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
   ["spec.tsx"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+  ["test.js"]             = { glyph = "󰙨", hl = "MiniIconsYellow" },
+  ["test.cjs"]            = { glyph = "󰙨", hl = "MiniIconsYellow" },
+  ["test.mjs"]            = { glyph = "󰙨", hl = "MiniIconsYellow" },
+  ["test.ts"]             = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+  ["test.cts"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+  ["test.mts"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+  ["test.tsx"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
 
   unknown                 = { glyph = "󰈔", hl = "MiniIconsGrey"   },
 }
 -- stylua: ignore end
+
+local JS_TS_EXTNAMES = {
+  [".js"] = true,
+  [".cjs"] = true,
+  [".mjs"] = true,
+  [".ts"] = true,
+  [".cts"] = true,
+  [".mts"] = true,
+  [".tsx"] = true,
+}
+local JS_TS_TEST_MARKER_LENGTH = #".spec" ---@type integer
 
 -- stylua: ignore start
 ---@class stl.fileicon.category_file
@@ -1386,26 +1407,30 @@ function M.get_file_icon(filepath, filetype)
   end
 
   if item == nil then
-    local spec_key ---@type string|nil
-    if filename:sub(-8) == ".spec.js" then
-      spec_key = "spec.js"
-    elseif filename:sub(-9) == ".spec.mjs" then
-      spec_key = "spec.mjs"
-    elseif filename:sub(-8) == ".spec.ts" then
-      spec_key = "spec.ts"
-    elseif filename:sub(-9) == ".spec.mts" then
-      spec_key = "spec.mts"
-    elseif filename:sub(-9) == ".spec.tsx" then
-      spec_key = "spec.tsx"
+    -- Resolve the final extension once instead of branching over every
+    -- `spec/test x JS/TS extension` combination.
+    local ext_index ---@type integer|nil
+    for index = #filename, 1, -1 do
+      if filename:byte(index) == BYTE_DOT then
+        ext_index = index
+        break
+      end
     end
 
-    if spec_key ~= nil then
-      local spec_item = ICONS_EXTENSION[spec_key]
-      if type(spec_item) == "string" then
-        spec_item = ICONS_FILETYPE[spec_item]
-      end
-      if spec_item ~= nil then
-        return spec_item.glyph, spec_item.hl, false
+    if ext_index ~= nil then
+      local extname = filename:sub(ext_index) ---@type string
+      -- Both markers are four-byte segments. Requiring their leading dot
+      -- prevents partial matches such as `contest.mjs`; the table lookup then
+      -- validates `spec`/`test` and selects the language-specific icon.
+      if JS_TS_EXTNAMES[extname] and filename:byte(ext_index - JS_TS_TEST_MARKER_LENGTH) == BYTE_DOT then
+        local test_key = filename:sub(ext_index - JS_TS_TEST_MARKER_LENGTH + 1) ---@type string
+        local test_item = ICONS_EXTENSION[test_key]
+        if type(test_item) == "string" then
+          test_item = ICONS_FILETYPE[test_item]
+        end
+        if test_item ~= nil then
+          return test_item.glyph, test_item.hl, false
+        end
       end
     end
 
