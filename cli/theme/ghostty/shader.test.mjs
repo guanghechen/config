@@ -13,7 +13,7 @@ import {
   listGhosttyShaders,
   selectGhosttyShader,
   withGhosttyShaderStateLock,
-} from './ghostty-shader/_state.mjs'
+} from './state.mjs'
 
 const tempDirs = []
 
@@ -446,7 +446,7 @@ describe('Ghostty shader CLI', () => {
     )
     fs.chmodSync(pkillPath, 0o755)
 
-    const moduleUrl = new URL('./ghostty-shader.mjs', import.meta.url).href
+    const moduleUrl = new URL('./shader.mjs', import.meta.url).href
     const invoke = shader => spawnSync(
       process.execPath,
       [

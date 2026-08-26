@@ -11,9 +11,9 @@ import { exec } from '#util/command'
 import {
   listGhosttyShaders,
   selectGhosttyShader,
-} from './ghostty-shader/_state.mjs'
+} from './state.mjs'
 
-/** @typedef {import("./theme/types.d.ts").IReporter} IReporter */
+/** @typedef {import("../types.d.ts").IReporter} IReporter */
 
 const silentReporter = {
   debug() {},

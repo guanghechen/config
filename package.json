@@ -14,8 +14,8 @@
     "#cli/patch/*": "./cli/patch/*/*.mjs"
   },
   "scripts": {
-    "test": "node --test **/*.test.mjs",
-    "test:coverage": "node --test --experimental-test-coverage **/*.test.mjs"
+    "test": "node --test 'cli/**/*.test.mjs'",
+    "test:coverage": "node --test --experimental-test-coverage 'cli/**/*.test.mjs'"
   },
   "devDependencies": {}
 }

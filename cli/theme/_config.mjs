@@ -14,7 +14,7 @@ import { is_directory, is_file, touch } from '#util/path'
 import {
   applyGhosttyThemeAppearance,
   validateGhosttyThemeAppearance,
-} from '../ghostty-shader/_state.mjs'
+} from './ghostty/state.mjs'
 import { gen_full_theme_name, render_template } from './_util.mjs'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
