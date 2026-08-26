@@ -2,7 +2,6 @@
 local __module_name__ = "era.m.diffview.view.workspace.refresh" ---@type string
 
 ---@class era.m.diffview.view.workspace.refresh.IProps
----@field public debounce_ms             integer
 ---@field public is_stale               fun(): boolean
 ---@field public is_valid               fun(): boolean
 ---@field public run                    async fun(token: stl.c.CancellationToken): nil
@@ -10,7 +9,6 @@ local __module_name__ = "era.m.diffview.view.workspace.refresh" ---@type string
 ---Owns refresh scheduling for one workspace view.
 ---@class era.m.diffview.view.workspace.Refresh
 ---@field protected _callbacks           (fun(): nil)[]
----@field protected _check_debounced     stl.timer.IDisposableCallable
 ---@field protected _current_token       stl.c.CancellationToken|nil
 ---@field protected _disposed            boolean
 ---@field protected _is_stale            fun(): boolean
@@ -35,19 +33,7 @@ function Refresh.new(props)
   self._pending_force = false
   self._run = props.run
   self._running = false
-  self._check_debounced = stl.timer.debounce(function()
-    self:__request_check__()
-  end, props.debounce_ms)
   return self
-end
-
----@return nil
-function Refresh:__request_check__()
-  if self._disposed or not self._is_valid() then
-    return
-  end
-  self._pending_check = true
-  self:__drain__()
 end
 
 ---@return nil
@@ -167,13 +153,15 @@ function Refresh:request(callback)
   self:__drain__()
 end
 
----Request a debounced refresh only when the current entries are stale.
+---Request a refresh only when the current entries are stale.
+---Checks received while one is running collapse into one trailing check against the applied snapshot.
 ---@return nil
 function Refresh:request_if_stale()
-  if self._disposed then
+  if self._disposed or not self._is_valid() then
     return
   end
-  self._check_debounced()
+  self._pending_check = true
+  self:__drain__()
 end
 
 ---@return nil
@@ -182,7 +170,6 @@ function Refresh:dispose()
     return
   end
   self._disposed = true
-  self._check_debounced:dispose()
   if self._current_token then
     self._current_token:cancel()
     self._current_token = nil

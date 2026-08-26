@@ -7,8 +7,8 @@ local M = {}
 ---@type stl.c.Observable<string>
 M.o_branch = stl.c.Observable.from_value("")
 
----@type stl.c.Observable<integer>
-M.o_refreshed = stl.c.Observable.from_value(0)
+---@type stl.c.Observable<era.m.git.state.IRefreshEvent>
+M.o_refreshed = stl.c.Observable.from_value({ change_scope = "unknown", generation = 0 })
 
 ---@type stl.c.Observable<string[]>
 M.o_ignored_refreshed = stl.c.Observable.from_value({})
@@ -73,6 +73,9 @@ local pending_refresh = false
 ---@type boolean
 local pending_force = false
 
+---@type boolean
+local pending_unknown_change = false
+
 ---@type (fun(): nil)[]
 local queued_refresh_callbacks = {}
 
@@ -97,8 +100,10 @@ local function do_refresh()
   end
 
   local force = pending_force ---@type boolean
+  local change_scope = pending_unknown_change and "unknown" or "index" ---@type era.m.git.StatusChangeScope
   pending_force = false
   pending_refresh = false
+  pending_unknown_change = false
   refreshing = true
 
   if force then
@@ -133,7 +138,7 @@ local function do_refresh()
       initialized = true
       last_refresh = vim.uv.now()
       refresh_generation = refresh_generation + 1
-      M.o_refreshed:next(refresh_generation)
+      M.o_refreshed:next({ change_scope = change_scope, generation = refresh_generation })
 
       if status_changed then
         M.o_staged_files:next(aggregated_cache.staged_files)
@@ -434,7 +439,8 @@ end
 
 ---@param force                      ?boolean
 ---@param callback                   ?(fun(): nil)
-local function __refresh__(force, callback)
+---@param change_scope               ?era.m.git.StatusChangeScope
+local function __refresh__(force, callback, change_scope)
   if callback then
     queued_refresh_callbacks[#queued_refresh_callbacks + 1] = callback
   end
@@ -442,8 +448,29 @@ local function __refresh__(force, callback)
   if force then
     pending_force = true
   end
+  -- Only an exclusively index-triggered collection can be compared with raw blob identities.
+  -- Any coalesced request with broader or unknown provenance keeps the published event conservative.
+  if change_scope ~= "index" then
+    pending_unknown_change = true
+  end
 
   refresh_throttled()
+end
+
+---@param force                      ?boolean
+---@param token                      ?stl.c.CancellationToken
+---@param change_scope               era.m.git.StatusChangeScope
+---@return stl.c.Future              Resolves with nil when refresh completes
+local function refresh(force, token, change_scope)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
+      return
+    end
+    __refresh__(force, function()
+      resolve(nil)
+    end, change_scope)
+  end)
 end
 
 ---Refresh git status (Future variant).
@@ -454,15 +481,14 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with nil when refresh completes
 function M.refresh(force, token)
-  return stl.c.Future.new(function(resolve)
-    if token and token:is_cancelled() then
-      resolve(nil)
-      return
-    end
-    __refresh__(force, function()
-      resolve(nil)
-    end)
-  end)
+  return refresh(force, token, "unknown")
+end
+
+---Refresh after a known Git index mutation, allowing consumers to compare blob identities.
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with nil when refresh completes
+function M.refresh_index(token)
+  return refresh(false, token, "index")
 end
 
 ---@param base                       ?string

@@ -285,46 +285,7 @@ local function create_status_groups()
   return groups
 end
 
----@param line                       string
----@return string|nil                status
----@return string|nil                relative_path
----@return string|nil                previous_relative_path
-local function parse_name_status_line(line)
-  if type(line) ~= "string" or #line < 3 then
-    return nil, nil
-  end
-
-  local parts = vim.split(line, "\t")
-  if #parts < 2 then
-    return nil, nil
-  end
-
-  local status = parts[1]
-  local relative = parts[2]
-  local previous = nil ---@type string|nil
-
-  if status:match("^[RC]") then
-    previous = relative
-    relative = parts[3]
-  end
-
-  if type(relative) ~= "string" then
-    return nil, nil
-  end
-
-  relative = relative:gsub('^"', ""):gsub('"$', "")
-  relative = stl.string.octal_to_utf8(relative)
-  relative = normalize_status_path(relative)
-  if previous ~= nil then
-    previous = previous:gsub('^"', ""):gsub('"$', "")
-    previous = stl.string.octal_to_utf8(previous)
-    previous = normalize_status_path(previous)
-  end
-
-  return status, relative, previous
-end
-
----@class era.m.git.status.INameStatusRecord
+---@class era.m.git.status.IRawStatusRecord
 ---@field public new_object_name        string|nil
 ---@field public old_object_name        string|nil
 ---@field public previous               string|nil
@@ -340,67 +301,15 @@ local function normalize_object_name(object_name)
   return object_name
 end
 
----Parse name-status output, preserving literal paths from Git's NUL protocol.
----@param lines                         string[]
----@return era.m.git.status.INameStatusRecord[]
-local function parse_name_status_output(lines)
-  local output = table.concat(lines, "\n") ---@type string
-  local records = {} ---@type era.m.git.status.INameStatusRecord[]
-
-  if not output:find("\0", 1, true) then
-    for _, line in ipairs(lines) do
-      local status, relative, previous = parse_name_status_line(line)
-      if status ~= nil and relative ~= nil then
-        records[#records + 1] = {
-          status = status,
-          relative = relative,
-          previous = previous,
-          old_object_name = nil,
-          new_object_name = nil,
-        }
-      end
-    end
-    return records
-  end
-
-  local fields = vim.split(output, "\0", { plain = true }) ---@type string[]
-  local index = 1 ---@type integer
-  while index <= #fields do
-    local status = fields[index]
-    local relative = nil ---@type string|nil
-    local previous = nil ---@type string|nil
-    if status:match("^[RC]") then
-      previous = fields[index + 1]
-      relative = fields[index + 2]
-      index = index + 3
-    else
-      relative = fields[index + 1]
-      index = index + 2
-    end
-
-    if status ~= "" and relative ~= nil and relative ~= "" then
-      records[#records + 1] = {
-        status = status,
-        relative = relative,
-        previous = previous,
-        old_object_name = nil,
-        new_object_name = nil,
-      }
-    end
-  end
-
-  return records
-end
-
----Parse combined `--raw --numstat -z` output. Raw records precede numstat records;
----both sections use Git's NUL protocol, including separate source/destination fields for renames.
+---Parse the leading `--raw -z` records, preserving blob identities and literal paths.
 ---@param lines                       string[]
----@return era.m.git.status.INameStatusRecord[] records
----@return table<string, era.m.git.status.INumstat> numstats
-local function parse_raw_numstat_output(lines)
+---@return era.m.git.status.IRawStatusRecord[] records
+---@return string[] fields
+---@return integer next_index
+local function parse_raw_records(lines)
   local output = table.concat(lines, "\n") ---@type string
   local fields = vim.split(output, "\0", { plain = true }) ---@type string[]
-  local records = {} ---@type era.m.git.status.INameStatusRecord[]
+  local records = {} ---@type era.m.git.status.IRawStatusRecord[]
   local index = 1 ---@type integer
 
   while index <= #fields do
@@ -436,6 +345,17 @@ local function parse_raw_numstat_output(lines)
       }
     end
   end
+
+  return records, fields, index
+end
+
+---Parse combined `--raw --numstat -z` output. Raw records precede numstat records;
+---both sections use Git's NUL protocol, including separate source/destination fields for renames.
+---@param lines                       string[]
+---@return era.m.git.status.IRawStatusRecord[] records
+---@return table<string, era.m.git.status.INumstat> numstats
+local function parse_raw_numstat_output(lines)
+  local records, fields, index = parse_raw_records(lines)
 
   local numstats = {} ---@type table<string, era.m.git.status.INumstat>
   while index <= #fields do
@@ -620,14 +540,11 @@ function M.collect(opts, token)
       local status_map = {} ---@type table<string, era.m.git.StatusEntry>
       local status_groups = create_status_groups()
 
-      local staged_args = { "diff", "--staged" } ---@type string[]
-      local unstaged_args = { "diff" } ---@type string[]
+      local staged_args = { "diff", "--staged", "--raw", "--abbrev=64" } ---@type string[]
+      local unstaged_args = { "diff", "--raw", "--abbrev=64" } ---@type string[]
       if include_numstat then
-        vim.list_extend(staged_args, { "--raw", "--abbrev=64", "--numstat" })
-        vim.list_extend(unstaged_args, { "--raw", "--abbrev=64", "--numstat" })
-      else
-        staged_args[#staged_args + 1] = "--name-status"
-        unstaged_args[#unstaged_args + 1] = "--name-status"
+        staged_args[#staged_args + 1] = "--numstat"
+        unstaged_args[#unstaged_args + 1] = "--numstat"
       end
       staged_args[#staged_args + 1] = "-z"
       unstaged_args[#unstaged_args + 1] = "-z"
@@ -664,8 +581,8 @@ function M.collect(opts, token)
         end
       end
 
-      local staged_records = nil ---@type era.m.git.status.INameStatusRecord[]|nil
-      local unstaged_records = nil ---@type era.m.git.status.INameStatusRecord[]|nil
+      local staged_records = nil ---@type era.m.git.status.IRawStatusRecord[]|nil
+      local unstaged_records = nil ---@type era.m.git.status.IRawStatusRecord[]|nil
       local staged_numstats = nil ---@type table<string, era.m.git.status.INumstat>|nil
       local unstaged_numstats = nil ---@type table<string, era.m.git.status.INumstat>|nil
 
@@ -674,7 +591,7 @@ function M.collect(opts, token)
       if include_numstat then
         staged_records, staged_numstats = parse_raw_numstat_output(staged_result.lines)
       else
-        staged_records = parse_name_status_output(staged_result.lines)
+        staged_records = parse_raw_records(staged_result.lines)
       end
       for _, record in ipairs(staged_records) do
         local relative = record.relative
@@ -691,7 +608,7 @@ function M.collect(opts, token)
       if include_numstat then
         unstaged_records, unstaged_numstats = parse_raw_numstat_output(unstaged_result.lines)
       else
-        unstaged_records = parse_name_status_output(unstaged_result.lines)
+        unstaged_records = parse_raw_records(unstaged_result.lines)
       end
       for _, record in ipairs(unstaged_records) do
         local relative = record.relative

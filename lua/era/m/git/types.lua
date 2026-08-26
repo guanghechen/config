@@ -148,6 +148,12 @@
 ---@field public status_groups          table<string, table<string, boolean>>
 ---@field public numstats               { staged: table<string, era.m.git.status.INumstat>, unstaged: table<string, era.m.git.status.INumstat> }|nil
 
+---@alias era.m.git.StatusChangeScope "index"|"unknown"
+
+---@class era.m.git.state.IRefreshEvent
+---@field public change_scope           era.m.git.StatusChangeScope
+---@field public generation             integer
+
 ---@class era.m.git.StatusEntry
 ---@field public categories             table<string, boolean>
 ---@field public codes                  table<string, boolean>

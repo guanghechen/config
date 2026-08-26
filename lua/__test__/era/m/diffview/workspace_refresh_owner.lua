@@ -7,7 +7,6 @@ local Future = require("stl.c.future")
 
 local t = harness.new("era.m.diffview.workspace_refresh_owner")
 
-local timers = {} ---@type table[]
 local reported_errors = {} ---@type table[]
 local CancellationToken = {}
 CancellationToken.__index = CancellationToken
@@ -32,29 +31,6 @@ t:patch_global("stl", {
       reported_errors[#reported_errors + 1] = opts
     end,
   },
-  timer = {
-    debounce = function(callback)
-      local timer = { disposed = false, pending = false }
-      function timer:dispose()
-        self.disposed = true
-        self.pending = false
-      end
-      function timer:fire()
-        if self.pending and not self.disposed then
-          self.pending = false
-          callback()
-        end
-      end
-      timers[#timers + 1] = setmetatable(timer, {
-        __call = function(self)
-          if not self.disposed then
-            self.pending = true
-          end
-        end,
-      })
-      return timers[#timers]
-    end,
-  },
 })
 
 local Refresh = assert(loadfile("lua/era/m/diffview/view/workspace/refresh.lua"))()
@@ -71,7 +47,6 @@ local function new_owner()
     fail_runs = {},
   }
   local owner = Refresh.new({
-    debounce_ms = 300,
     is_stale = function()
       return state.stale
     end,
@@ -90,7 +65,6 @@ local function new_owner()
       end
     end,
   })
-  state.timer = timers[#timers]
   return owner, state
 end
 
@@ -118,7 +92,6 @@ t:test("local trailing refresh consumes an older watcher check", function()
   owner:request()
   state.stale = true
   owner:request_if_stale()
-  state.timer:fire()
   owner:request()
 
   state.completions[1]()
@@ -132,16 +105,32 @@ t:test("watcher requests refresh only when entries remain stale", function()
 
   owner:request()
   owner:request_if_stale()
-  state.timer:fire()
   state.stale = false
   state.completions[1]()
   t.assert_eq(1, state.runs, "matching watcher event coalesced")
 
   state.stale = true
   owner:request_if_stale()
-  state.timer:fire()
   t.assert_eq(2, state.runs, "stale watcher event refreshed")
   state.completions[2]()
+end)
+
+t:test("watcher refreshes stale peer views without repeating the originating view", function()
+  local originating, originating_state = new_owner()
+  local peer, peer_state = new_owner()
+
+  originating:request()
+  originating_state.stale = true
+  originating:request_if_stale()
+
+  peer_state.stale = true
+  peer:request_if_stale()
+  t.assert_eq(1, peer_state.runs, "stale peer refreshed")
+
+  originating_state.stale = false
+  originating_state.completions[1]()
+  t.assert_eq(1, originating_state.runs, "matching origin coalesced")
+  peer_state.completions[1]()
 end)
 
 t:test("deferred failure releases the owner", function()
@@ -168,7 +157,6 @@ t:test("asynchronous rejection reports once, preserves state, and permits recove
   local runs = 0
   local futures = {} ---@type stl.c.Future[]
   local owner = Refresh.new({
-    debounce_ms = 300,
     is_stale = function()
       return false
     end,
@@ -228,9 +216,7 @@ t:test("dispose cancels owned resources and pending work", function()
   owner:dispose()
 
   t.assert_true(state.tokens[1].cancelled, "running refresh cancelled")
-  t.assert_true(state.timer.disposed, "debounce disposed")
   state.completions[1]()
-  state.timer:fire()
   owner:request()
   t.assert_eq(1, state.runs, "no refresh after dispose")
 end)
@@ -238,17 +224,33 @@ end)
 t:test("status matching ignores order and diff statistics", function()
   local data = assert(loadfile("lua/era/m/diffview/data.lua"))()
   local status_map = {
-    ["a.lua"] = { relative = "a.lua", stage = "staged", staged = { M = true } },
+    ["a.lua"] = {
+      relative = "a.lua",
+      stage = "staged",
+      staged = { M = true },
+      staged_old_object_name = "head-a",
+      staged_new_object_name = "index-a",
+    },
     ["b.lua"] = { relative = "b.lua", codes = { ["?"] = true }, unstaged = { ["?"] = true } },
   }
   local entries = {
     { filepath = "b.lua", stage_type = "unstaged", status = "?", insertions = 3 },
-    { filepath = "a.lua", stage_type = "staged", status = "M", deletions = 2 },
+    {
+      filepath = "a.lua",
+      stage_type = "staged",
+      status = "M",
+      deletions = 2,
+      old_object_name = "head-a",
+      new_object_name = "index-a",
+    },
   }
 
   t.assert_true(data.matches_status_entries(entries, status_map), "matching status entries")
   entries[1].status = "D"
   t.assert_false(data.matches_status_entries(entries, status_map), "changed status entry")
+  entries[1].status = "?"
+  entries[2].new_object_name = "index-b"
+  t.assert_false(data.matches_status_entries(entries, status_map), "changed staged blob identity")
 
   local renamed = {
     ["new.lua"] = {
@@ -264,16 +266,20 @@ t:test("status matching ignores order and diff statistics", function()
   )
 end)
 
-t:test("workspace subscribes to every successful Git refresh", function()
+t:test("workspace coalesces index refreshes and forces broader refreshes", function()
   local subscriber = nil ---@type table|nil
   local ignore_initial = nil ---@type boolean|nil
-  local refresh_requests = 0 ---@type integer
+  local forced_requests = 0 ---@type integer
+  local stale_checks = 0 ---@type integer
   local state = {
     get_entries = function()
       return {}
     end,
     request_refresh = function()
-      refresh_requests = refresh_requests + 1
+      forced_requests = forced_requests + 1
+    end,
+    request_refresh_if_stale = function()
+      stale_checks = stale_checks + 1
     end,
     set_git_subscription = function() end,
     set_refresh = function() end,
@@ -332,8 +338,13 @@ t:test("workspace subscribes to every successful Git refresh", function()
 
   t.assert_true(subscriber ~= nil, "Git refresh subscriber")
   t.assert_true(ignore_initial, "initial generation ignored")
-  assert(subscriber).on_next()
-  t.assert_eq(1, refresh_requests, "successful Git refresh forces workspace refresh")
+  assert(subscriber).on_next({ change_scope = "index", generation = 1 })
+  t.assert_eq(1, stale_checks, "index refresh checks workspace snapshot")
+  t.assert_eq(0, forced_requests, "index refresh is not forced")
+
+  assert(subscriber).on_next({ change_scope = "unknown", generation = 2 })
+  t.assert_eq(1, stale_checks, "broader refresh skips identity-only check")
+  t.assert_eq(1, forced_requests, "broader refresh preserves worktree freshness")
 end)
 
 t:run()

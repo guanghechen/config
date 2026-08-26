@@ -315,15 +315,22 @@ end
 ---@param left                        era.m.diffview.IFileEntry
 ---@param right                       era.m.diffview.IFileEntry
 ---@return boolean
-local function equal_diff_entry(left, right)
+local function equal_status_identity(left, right)
   return left.filepath == right.filepath
     and left.stage_type == right.stage_type
     and left.status == right.status
-    and left.insertions == right.insertions
-    and left.deletions == right.deletions
     and left.prev_filepath == right.prev_filepath
     and left.old_object_name == right.old_object_name
     and left.new_object_name == right.new_object_name
+end
+
+---@param left                        era.m.diffview.IFileEntry
+---@param right                       era.m.diffview.IFileEntry
+---@return boolean
+local function equal_diff_entry(left, right)
+  return equal_status_identity(left, right)
+    and left.insertions == right.insertions
+    and left.deletions == right.deletions
 end
 
 ---Compare complete semantic snapshots independent of Git collection order.
@@ -368,17 +375,22 @@ function M.matches_status_entries(entries, status_map)
     return false
   end
 
-  local entry_ids = {} ---@type table<string, boolean>
-  for _, entry in ipairs(entries) do
-    local id = table.concat({ entry.stage_type or "", entry.status, entry.filepath, entry.prev_filepath or "" }, "\0")
-    entry_ids[id] = true
-  end
-
+  local expected_by_id = {} ---@type table<string, era.m.diffview.IFileEntry>
   for _, entry in ipairs(expected) do
-    local id = table.concat({ entry.stage_type or "", entry.status, entry.filepath, entry.prev_filepath or "" }, "\0")
-    if not entry_ids[id] then
+    local id = get_diff_entry_id(entry)
+    if expected_by_id[id] then
       return false
     end
+    expected_by_id[id] = entry
+  end
+
+  local seen = {} ---@type table<string, boolean>
+  for _, entry in ipairs(entries) do
+    local id = get_diff_entry_id(entry)
+    if seen[id] or not expected_by_id[id] or not equal_status_identity(entry, expected_by_id[id]) then
+      return false
+    end
+    seen[id] = true
   end
   return true
 end

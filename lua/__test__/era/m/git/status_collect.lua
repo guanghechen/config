@@ -116,16 +116,24 @@ end
 t:test("collect: default staged diff does not require HEAD", function()
   commands = {}
   command_opts = {}
-  responses = {}
+  responses = {
+    { code = 0, lines = { ":100644 100644 aaaaaaa bbbbbbb M\0staged.lua\0" } },
+    { code = 0, lines = { ":100644 100644 ccccccc 0000000 M\0unstaged.lua\0" } },
+    { code = 0, lines = {} },
+  }
   local result = status.collect(nil):get_result()
 
   t.assert_true(result ~= nil, "collection result")
-  t.assert_eq("diff --staged --name-status -z --", table.concat(commands[1], " "), "staged command")
-  t.assert_eq("diff --name-status -z --", table.concat(commands[2], " "), "unstaged command")
+  t.assert_eq("diff --staged --raw --abbrev=64 -z --", table.concat(commands[1], " "), "staged command")
+  t.assert_eq("diff --raw --abbrev=64 -z --", table.concat(commands[2], " "), "unstaged command")
   t.assert_eq("ls-files --exclude-standard --others -z", table.concat(commands[3], " "), "untracked command")
   t.assert_true(command_opts[1].raw, "staged raw output")
   t.assert_true(command_opts[2].raw, "unstaged raw output")
   t.assert_true(command_opts[3].raw, "untracked raw output")
+  t.assert_eq("aaaaaaa", result.status_map["/repo/staged.lua"].staged_old_object_name, "staged source identity")
+  t.assert_eq("bbbbbbb", result.status_map["/repo/staged.lua"].staged_new_object_name, "staged target identity")
+  t.assert_eq("ccccccc", result.status_map["/repo/unstaged.lua"].unstaged_old_object_name, "index identity")
+  t.assert_nil(result.status_map["/repo/unstaged.lua"].unstaged_new_object_name, "worktree identity omitted")
 end)
 
 t:test("collect: explicit base remains supported", function()
@@ -134,15 +142,20 @@ t:test("collect: explicit base remains supported", function()
   responses = {}
   status.collect({ base = "HEAD" }):get_result()
 
-  t.assert_eq("diff --staged --name-status -z HEAD --", table.concat(commands[1], " "), "staged command")
+  t.assert_eq("diff --staged --raw --abbrev=64 -z HEAD --", table.concat(commands[1], " "), "staged command")
 end)
 
 t:test("collect: canonicalizes a Windows workspace once without changing Git cwd", function()
   commands = {}
   command_opts = {}
   responses = {
-    { code = 0, lines = { "M\0dir/one.lua\0A\0two.lua\0" } },
-    { code = 0, lines = { "M\0dir/one.lua\0" } },
+    {
+      code = 0,
+      lines = {
+        ":100644 100644 aaaaaaa bbbbbbb M\0dir/one.lua\0" .. ":000000 100644 0000000 ccccccc A\0two.lua\0",
+      },
+    },
+    { code = 0, lines = { ":100644 100644 bbbbbbb 0000000 M\0dir/one.lua\0" } },
     { code = 0, lines = { "untracked.lua\0" } },
   }
   canonical_normalize_calls = 0
@@ -218,7 +231,14 @@ t:test("collect: NUL protocol preserves special paths and rename destinations", 
   commands = {}
   command_opts = {}
   responses = {
-    { code = 0, lines = { "A\0back\\slash.lua\0A\0cr\r\nlf.lua\0R100\0old\tname.lua\0new\tname.lua\0" } },
+    {
+      code = 0,
+      lines = {
+        ":000000 100644 0000000 aaaaaaa A\0back\\slash.lua\0"
+          .. ":000000 100644 0000000 bbbbbbb A\0cr\r\nlf.lua\0"
+          .. ":100644 100644 ccccccc ddddddd R100\0old\tname.lua\0new\tname.lua\0",
+      },
+    },
     { code = 0, lines = {} },
     { code = 0, lines = { "untracked\nname.lua\0untracked\\name.lua\0" } },
   }
@@ -310,13 +330,21 @@ t:test("collect: real Git snapshot keeps staged, unstaged, rename, and numstat a
     end)
     t:patch_table(stl.git.exec, "exec", exec_real_git)
 
-    local result = status.collect({ include_numstat = true }):get_result()
-    local renamed = result.status_map[repo .. "/new.txt"]
-    local mixed = result.status_map[repo .. "/mixed.txt"]
     local head_rename_object = vim.trim(git("rev-parse", "HEAD:old.txt").stdout or "") ---@type string
     local index_rename_object = vim.trim(git("rev-parse", ":new.txt").stdout or "") ---@type string
     local head_mixed_object = vim.trim(git("rev-parse", "HEAD:mixed.txt").stdout or "") ---@type string
     local index_mixed_object = vim.trim(git("rev-parse", ":mixed.txt").stdout or "") ---@type string
+
+    local identity_result = status.collect(nil):get_result()
+    local identity_renamed = identity_result.status_map[repo .. "/new.txt"]
+    local identity_mixed = identity_result.status_map[repo .. "/mixed.txt"]
+    t.assert_eq(head_rename_object, identity_renamed.staged_old_object_name, "default rename source identity")
+    t.assert_eq(index_rename_object, identity_renamed.staged_new_object_name, "default rename target identity")
+    t.assert_eq(index_mixed_object, identity_mixed.unstaged_old_object_name, "default index identity")
+
+    local result = status.collect({ include_numstat = true }):get_result()
+    local renamed = result.status_map[repo .. "/new.txt"]
+    local mixed = result.status_map[repo .. "/mixed.txt"]
 
     t.assert_true(renamed ~= nil and renamed.staged.R == true, "real rename status")
     t.assert_eq("old.txt", renamed.staged_prev_relative, "real rename source")
@@ -352,10 +380,16 @@ t:test("collect: real Git numstat snapshot supports an unborn HEAD", function()
     end)
     t:patch_table(stl.git.exec, "exec", exec_real_git)
 
-    local result = status.collect({ include_numstat = true }):get_result()
-    local first = result.status_map[repo .. "/first.txt"]
     local index_result = vim.system({ "git", "-C", repo, "rev-parse", ":first.txt" }, { text = true }):wait()
     local index_object = vim.trim(index_result.stdout or "") ---@type string
+
+    local identity_result = status.collect(nil):get_result()
+    local identity_first = identity_result.status_map[repo .. "/first.txt"]
+    t.assert_nil(identity_first.staged_old_object_name, "default unborn source identity omitted")
+    t.assert_eq(index_object, identity_first.staged_new_object_name, "default unborn index identity")
+
+    local result = status.collect({ include_numstat = true }):get_result()
+    local first = result.status_map[repo .. "/first.txt"]
     t.assert_true(first.staged.A == true, "unborn staged add")
     t.assert_nil(first.staged_old_object_name, "unborn source identity omitted")
     t.assert_eq(index_object, first.staged_new_object_name, "unborn index identity")

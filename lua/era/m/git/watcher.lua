@@ -167,7 +167,7 @@ local function trigger_index_refresh()
 
       era.m.git.buffer.invalidate_index_all()
       era.m.git.blame.clear_failed() -- staging an untracked file makes blame valid w/o a changedtick bump
-      era.m.git.state.refresh(false)
+      era.m.git.state.refresh_index()
     end)
   )
 end

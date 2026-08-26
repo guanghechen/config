@@ -382,9 +382,10 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
   local staged_before = next_count(state.o_staged_files)
   local unstaged_before = next_count(state.o_unstaged_files)
 
-  wait_future(state.refresh(false))
+  wait_future(state.refresh_index())
   t.assert_false(collect_base, "global refresh must support unborn HEAD")
   t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "initial changed status notification")
+  t.assert_eq("index", state.o_refreshed:snapshot().change_scope, "index-only refresh provenance")
   t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "initial staged files notification")
   t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "initial unstaged files notification")
 
@@ -394,6 +395,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
 
   wait_future(state.refresh(false))
   t.assert_eq(refreshed_before + 2, next_count(state.o_refreshed), "unchanged status notification")
+  t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "default refresh provenance")
   t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "unchanged staged files notification")
   t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "unchanged unstaged files notification")
   t.assert_true(aggregated.dir_cache["/project"] == dir_status, "unchanged status should preserve directory cache")
@@ -435,6 +437,37 @@ t:test("refresh: failed collect reports once, preserves status, and permits reco
   t.assert_eq(2, attempts, "later refresh retried")
   t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "successful retry published")
   t.assert_eq(1, #reports, "successful retry emits no additional error")
+end)
+
+t:test("refresh: trailing provenance stays conservative", function()
+  local resolvers = {} ---@type (fun(result: table): nil)[]
+  t:patch_table(era.m.git.status, "collect", function()
+    return Future.new(function(resolve)
+      resolvers[#resolvers + 1] = resolve
+    end)
+  end)
+  t:patch_table(era.m.git.status, "aggregate", function(status_map)
+    return {
+      dir_cache = {},
+      file_display = {},
+      file_stage = {},
+      file_summary = {},
+      staged_files = {},
+      status_table = status_map,
+      unstaged_files = {},
+    }
+  end)
+
+  state.refresh_index()
+  state.refresh(false)
+  t.assert_eq(1, #resolvers, "index collection started")
+
+  resolvers[1]({ status_map = {} })
+  t.assert_eq("index", state.o_refreshed:snapshot().change_scope, "running collection keeps its provenance")
+  t.assert_eq(2, #resolvers, "broader request starts a trailing collection")
+
+  resolvers[2]({ status_map = {} })
+  t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "trailing collection stays conservative")
 end)
 
 t:test("status: propagates collection failures", function()

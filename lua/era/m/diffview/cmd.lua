@@ -346,8 +346,6 @@ end
 -- Git subscription for auto-refresh (workspace only)
 ----------------------------------------------------------------------------------------------------
 
-local GIT_REFRESH_DEBOUNCE_MS = 300 ---@type integer
-
 ---Setup git subscription for auto-refresh on index changes
 ---@param st                          era.m.diffview.view.workspace.State
 ---@param ctx                         era.m.diffview.view.workspace.IContext
@@ -359,7 +357,6 @@ function M.__setup_git_subscription_workspace__(st, ctx)
   local workspace_state = require("era.m.diffview.view.workspace.state")
 
   local refresh = Refresh.new({
-    debounce_ms = GIT_REFRESH_DEBOUNCE_MS,
     is_stale = function()
       return not data.matches_status_entries(st:get_entries(), era.m.git.state.status_table())
     end,
@@ -375,12 +372,16 @@ function M.__setup_git_subscription_workspace__(st, ctx)
   })
   st:set_refresh(refresh)
 
-  -- Every successful Git state collection is a new index snapshot, even when
-  -- its paths and status codes are unchanged.
+  -- Index-only snapshots carry enough blob identity to absorb the originating view's event.
+  -- Broader refreshes may include worktree changes, whose raw target object is unavailable.
   local subscription = era.m.git.state.o_refreshed:subscribe(
     stl.c.Subscriber.new({
-      on_next = function()
-        st:request_refresh()
+      on_next = function(event)
+        if event.change_scope == "index" then
+          st:request_refresh_if_stale()
+        else
+          st:request_refresh()
+        end
       end,
     }),
     true -- ignoreInitial: avoid triggering on subscribe
