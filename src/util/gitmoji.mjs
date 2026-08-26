@@ -1,6 +1,7 @@
 /** @type {Record<string, string>} */
 const GITMOJI_MAP = {
   ':adhesive_bandage:': '🩹',
+  ':airplane:': '✈️',
   ':alembic:': '⚗️',
   ':alien:': '👽️',
   ':ambulance:': '🚑️',
@@ -61,6 +62,7 @@ const GITMOJI_MAP = {
   ':sparkles:': '✨',
   ':speech_balloon:': '💬',
   ':stethoscope:': '🩺',
+  ':t-rex:': '🦖',
   ':tada:': '🎉',
   ':technologist:': '🧑‍💻',
   ':test_tube:': '🧪',
