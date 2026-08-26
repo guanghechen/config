@@ -48,6 +48,7 @@ vim.schedule(function()
   era.m.image.dressing()
   era.m.wk.dressing()
   era.m.paste.dressing()
+  era.m.surrounds.setup()
 
   pcall(require, "ark.vendor.local.dressing")
 

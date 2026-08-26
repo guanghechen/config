@@ -124,10 +124,9 @@ t:test("render: tree uses the same metadata columns", function()
   assert_aligned_columns("tree")
 end)
 
-t:test("create buffer disables mini.surround locally", function()
+t:test("create buffer records stage ownership", function()
   local bufnr = changes.create_buffer("unstaged")
 
-  t.assert_true(vim.b[bufnr].minisurround_disable, "mini.surround disabled")
   t.assert_eq("unstaged", changes.get_stage_type(bufnr), "stage ownership")
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)

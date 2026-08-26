@@ -217,6 +217,9 @@ local filetypes = {
     [M.UX_CMDLINE] = true,
     [M.UX_POPUPMENU] = true,
   },
+  no_surround = {
+    [M.DIFFVIEW_CHANGES] = true,
+  },
 }
 
 local extnames = {
@@ -266,6 +269,15 @@ end
 ---@return string[]
 function M.get_no_flash_filetypes()
   return vim.tbl_keys(filetypes.no_flash)
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_surround_enabled(filetype)
+  if filetype == nil or #filetype < 1 then
+    return true
+  end
+  return filetypes.no_surround[filetype] ~= true
 end
 
 ---@param filetype                      string|nil

@@ -163,7 +163,6 @@ function M.create_buffer(stage_type)
   end
   vim.api.nvim_set_option_value("filetype", config.FT.CHANGES, { buf = bufnr })
   vim.b[bufnr].diffview_changes_stage_type = stage_type
-  vim.b[bufnr].minisurround_disable = true
 
   return bufnr
 end

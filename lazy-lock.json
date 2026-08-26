@@ -10,7 +10,6 @@
   "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "7c840c71d6a91f53d734cab2b6fe2290d285ec3b" },
   "mini.indentscope": { "branch": "nvim@mini.indentscope", "commit": "92fbaf895f83c59575ec599df532b297ebf62b14" },
   "mini.splitjoin": { "branch": "nvim@mini.splitjoin", "commit": "9301717c7612ccb72e89629df89416585dd54c9b" },
-  "mini.surround": { "branch": "nvim@mini.surround", "commit": "8d5d0c5aa92449368ac251e85451d79d8f69d296" },
   "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "0370fe965697aa8f04252a1562441bdc13723cd1" },
   "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "074aa4422bf029908338e855d0c0f71470a971bb" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "f3061339b8eaf9fda873600bc425b8d2d8502533" },

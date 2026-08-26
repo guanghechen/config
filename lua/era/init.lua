@@ -107,6 +107,7 @@ local __m__mods = {
   splitline = "era.m.splitline",
   statuscolumn = "era.m.statuscolumn",
   statusline = "era.m.statusline",
+  surrounds = "era.m.surrounds",
   tabline = "era.m.tabline",
   term = "era.m.term",
   toggle = "era.m.toggle",
@@ -154,6 +155,7 @@ local __m__mods = {
 ---@field public splitline              era.m.splitline
 ---@field public statuscolumn           era.m.statuscolumn
 ---@field public statusline             era.m.statusline
+---@field public surrounds              era.m.surrounds
 ---@field public tabline                era.m.tabline
 ---@field public term                   era.m.term
 ---@field public toggle                 era.m.toggle
