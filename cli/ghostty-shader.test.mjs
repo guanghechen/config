@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import os from 'node:os'
@@ -419,5 +420,68 @@ describe('Ghostty shader state owner', () => {
 
     const appearance = readLocal(home, 'appearance').trim()
     assert.equal(readLocal(home, 'theme.conf'), `${appearance}\n`)
+  })
+})
+
+describe('Ghostty shader CLI', () => {
+  it('reloads managed config without requiring the Ghostty executable in PATH', {
+    skip: process.platform === 'win32',
+  }, () => {
+    const home = createHome()
+    const localDir = path.join(home, 'local')
+    const binDir = path.join(home, 'bin')
+    const pkillArgsPath = path.join(home, 'pkill-args')
+    fs.mkdirSync(binDir)
+    fs.writeFileSync(path.join(home, '.git'), 'gitdir: test\n')
+    fs.writeFileSync(path.join(localDir, 'appearance'), 'dark\n')
+    fs.writeFileSync(path.join(localDir, 'shader-dark.conf'), '')
+    fs.writeFileSync(path.join(localDir, 'shader-light.conf'), '')
+    fs.writeFileSync(path.join(localDir, 'shader.conf'), '')
+    createShader(home, 'cubes')
+
+    const pkillPath = path.join(binDir, 'pkill')
+    fs.writeFileSync(
+      pkillPath,
+      '#!/bin/sh\nprintf "%s\\n" "$@" > "$GHC_TEST_PKILL_ARGS"\n',
+    )
+    fs.chmodSync(pkillPath, 0o755)
+
+    const moduleUrl = new URL('./ghostty-shader.mjs', import.meta.url).href
+    const invoke = shader => spawnSync(
+      process.execPath,
+      [
+        '--input-type=module',
+        '--eval',
+        `import { handleGhosttyShader } from ${JSON.stringify(moduleUrl)}
+const reporter = { debug() {}, info() {}, warn() {}, error() {} }
+await handleGhosttyShader(reporter, process.env.GHC_TEST_GHOSTTY_HOME, {}, process.env.GHC_TEST_SHADER || undefined)`,
+      ],
+      {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          GHC_TEST_GHOSTTY_HOME: home,
+          GHC_TEST_PKILL_ARGS: pkillArgsPath,
+          GHC_TEST_SHADER: shader ?? '',
+          PATH: binDir,
+        },
+      },
+    )
+
+    const result = invoke()
+
+    assert.equal(result.status, 0, result.stderr)
+    assert.equal(fs.readFileSync(pkillArgsPath, 'utf8'), '-USR2\n-x\nghostty\n')
+    assert.equal(
+      fs.readFileSync(path.join(localDir, 'shader.conf'), 'utf8'),
+      'custom-shader = ../shaders/cubes.glsl\n',
+    )
+
+    fs.rmSync(path.join(home, '.git'))
+    fs.rmSync(pkillArgsPath)
+    const unmanagedResult = invoke('off')
+
+    assert.equal(unmanagedResult.status, 0, unmanagedResult.stderr)
+    assert.equal(fs.existsSync(pkillArgsPath), false)
   })
 })

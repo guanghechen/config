@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 
 import { PLATFORM, XDG_CONFIG_HOME } from '#env'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'
-import { command_exists, exec } from '#util/command'
+import { exec } from '#util/command'
 
 import {
   listGhosttyShaders,
@@ -21,10 +22,10 @@ const silentReporter = {
   error() {},
 }
 
-/** @param {IReporter} reporter */
-async function reloadGhostty(reporter) {
+/** @param {IReporter} reporter @param {string} home */
+async function reloadGhostty(reporter, home) {
   if (PLATFORM === 'win') return
-  if (!await command_exists(reporter, 'ghostty')) return
+  if (!existsSync(path.join(home, '.git'))) return
 
   try {
     await exec({ reporter, cmd: 'pkill', args: ['-USR2', '-x', 'ghostty'], silent: true })
@@ -69,7 +70,7 @@ export async function handleGhosttyShader(reporter, home, options, shader) {
   } else {
     reporter.info(`Shader (${selected.appearance}):`, selected.shader)
   }
-  await reloadGhostty(reporter)
+  await reloadGhostty(reporter, home)
 }
 
 if (process.argv[1] === import.meta.filename) {
