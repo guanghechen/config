@@ -9,12 +9,12 @@ local __module_name__ = "dot.command" ---@type string
 ---@class dot.command.ICommand
 ---@field public uuid                   string
 ---@field public tabtypes               stl.e.TabTypeEnum[]
----@field public action                 fun(args?: string): nil
+---@field public action                 fun(args?: string, fargs?: string[]): nil
 
 ---@class dot.command.IImplementation
 ---@field public uuid                   string
 ---@field public tabtypes               stl.e.TabTypeEnum[]
----@field public action                 fun(args?: string): nil
+---@field public action                 fun(args?: string, fargs?: string[]): nil
 ---@field public override               ?boolean
 
 local definition_map = {} ---@type table<string, dot.command.IRawDefinition>
@@ -30,9 +30,10 @@ local M = {
 
 ---@param uuid                          string
 ---@param args                          ?string
+---@param fargs                         ?string[]
 ---@param silent                        ?boolean
 ---@return nil
-function M.execute(uuid, args, silent)
+function M.execute(uuid, args, fargs, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = vim.t[tabnr].tabtype or stl.e.TabTypeEnum.NORMAL ---@type stl.e.TabTypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
@@ -50,7 +51,7 @@ function M.execute(uuid, args, silent)
     return
   end
 
-  command.action(args)
+  command.action(args, fargs)
 end
 
 ---@param raw_definition                dot.command.IRawDefinition
@@ -81,7 +82,7 @@ function M.define(raw_definition, overwrite)
   local function handle(opts)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     dot.state.status.set_winnr_command(winnr)
-    M.execute(definition.uuid, opts.args, false)
+    M.execute(definition.uuid, opts.args, opts.fargs, false)
   end
 
   ---@param argLead                     string
@@ -114,7 +115,7 @@ end
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
   local tabtypes = implementation.tabtypes ---@type stl.e.TabTypeEnum[]
-  local action = implementation.action ---@type fun(args?: string): nil
+  local action = implementation.action ---@type fun(args?: string, fargs?: string[]): nil
   local override = implementation.override ---@type boolean|nil
   local definition = definition_map[uuid] ---@type dot.command.IRawDefinition|nil
   if definition == nil then
@@ -196,7 +197,7 @@ D.__index = D
 
 ---@param uuid                          string
 ---@param desc                          string
----@param nargs                         ?0|1|"?"
+---@param nargs                         ?0|1|"?"|"+"|"*"
 ---@param candidates                    ?string[]
 ---@return dot.command.IDefinition
 function D.new(uuid, desc, nargs, candidates)
@@ -211,10 +212,11 @@ function D.new(uuid, desc, nargs, candidates)
 end
 
 ---@param args                          ?string
+---@param fargs                         ?string[]
 ---@param silent                        ?boolean
 ---@return nil
-function D:execute(args, silent)
-  M.execute(self.uuid, args, silent or false)
+function D:execute(args, fargs, silent)
+  M.execute(self.uuid, args, fargs, silent or false)
 end
 
 ---@class dot.command.definitions
