@@ -1,11 +1,9 @@
 ---@class dot.context.plugin.data
----@field public minimap                boolean
 ---@field public render_markdown        boolean
 ---@field public treesitter_context     boolean
 ---@field public which_key              boolean
 
 ---@class dot.context.plugin.state
----@field public minimap                stl.c.Observable
 ---@field public render_markdown        stl.c.Observable
 ---@field public treesitter_context     stl.c.Observable
 ---@field public which_key              stl.c.Observable
@@ -23,7 +21,6 @@ function M.defaults()
 
   ---@type dot.context.plugin.data
   return {
-    minimap = false,
     render_markdown = true,
     treesitter_context = is_git_repo,
     which_key = true,
@@ -35,9 +32,6 @@ end
 function M.normalize(data)
   local resolved = M.defaults() ---@type dot.context.plugin.data
   if type(data) == "table" then
-    if type(data.minimap) == "boolean" then
-      resolved.minimap = data.minimap
-    end
     if type(data.render_markdown) == "boolean" then
       resolved.render_markdown = data.render_markdown
     end
@@ -55,7 +49,6 @@ end
 function M.dump()
   ---@type dot.context.plugin.data
   return {
-    minimap = M.minimap:snapshot(),
     render_markdown = M.render_markdown:snapshot(),
     treesitter_context = M.treesitter_context:snapshot(),
     which_key = M.which_key:snapshot(),
@@ -67,7 +60,6 @@ end
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.plugin.data
 
-  M.minimap:next(data.minimap)
   M.render_markdown:next(data.render_markdown)
   M.treesitter_context:next(data.treesitter_context)
   M.which_key:next(data.which_key)
@@ -76,7 +68,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.plugin.data
-M.minimap = stl.c.Observable.from_value(_defaults.minimap)
 M.render_markdown = stl.c.Observable.from_value(_defaults.render_markdown)
 M.treesitter_context = stl.c.Observable.from_value(_defaults.treesitter_context)
 M.which_key = stl.c.Observable.from_value(_defaults.which_key)

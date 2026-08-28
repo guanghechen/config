@@ -5,10 +5,10 @@ Status: draft, review pending
 ## Scope
 
 This audit covers repository-owned window creation and delayed focus, cursor, view, and mode mutations.
-The current implementation has 35 direct floating-window creation sites: 18 enter the window immediately
-and 17 create it in the background.
+The current implementation has 32 direct floating-window creation sites: 16 enter the window immediately
+and 16 create it in the background.
 
-Passive floats such as ext-cmdline, popupmenu, notifier toasts, win separators, and minimap overlays do not
+Passive floats such as ext-cmdline, popupmenu, notifier toasts, and win separators do not
 normally enter themselves. The material risks are concentrated in modal lifecycle code and scheduled commands
 that lose their target window.
 

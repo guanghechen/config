@@ -482,17 +482,6 @@ M.definitions.lsp = {
   select_python_venv = D.new("Flspselectpythonvenv", "lsp: select python venv"),
 }
 
----@class dot.command.definitions.minimap
-M.definitions.minimap = {
-  disable = D.new("Fminimapdisable", "minimap: disable"),
-  disable_local = D.new("Fminimapdisablelocal", "minimap: disable (local)"),
-  enable = D.new("Fminimapenable", "minimap: enable"),
-  enable_local = D.new("Fminimapenablelocal", "minimap: enable (local)"),
-  refresh = D.new("Fminimaprefresh", "minimap: refresh"),
-  toggle = D.new("Fminimaptoggle", "minimap: toggle"),
-  toggle_local = D.new("Fminimaptogglelocal", "minimap: toggle (local)"),
-}
-
 ---@class dot.command.definitions.notepad
 M.definitions.notepad = {
   append_content = D.new("Fnotepadappendcontent", "notepad: append content", 1),
@@ -642,8 +631,6 @@ M.definitions.toggle = {
   markdown = D.new("Ftogglemarkdown", "toggle: markdown"),
   markdown_local = D.new("Ftogglemarkdownlocal", "toggle: markdown (local)"),
   maximize = D.new("Ftogglemaximize", "toggle: maximize"),
-  minimap = D.new("Ftoggleminimap", "toggle: minimap"),
-  minimap_local = D.new("Ftoggleminimaplocal", "toggle: minimap (local)"),
   number_local = D.new("Ftogglenumberlocal", "toggle: number (local)"),
   relativenumber = D.new("Ftogglerelativenumber", "toggle: relativenumber"),
   relativenumber_local = D.new("Ftogglerelativenumberlocal", "toggle: relativenumber (local)"),

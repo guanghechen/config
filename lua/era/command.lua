@@ -1557,24 +1557,6 @@ command
     end,
   })
   .implement({
-    uuid = K.toggle.minimap.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      era.m.minimap.toggle()
-    end,
-  })
-  .implement({
-    uuid = K.toggle.minimap_local.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-      if winnr ~= nil then
-        era.m.minimap.toggle_local(winnr)
-      end
-    end,
-  })
-  .implement({
     uuid = K.toggle.number_local.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()

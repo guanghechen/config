@@ -92,7 +92,6 @@ local __m__mods = {
   lint = "era.m.lint",
   lsp = "era.m.lsp",
   maximize = "era.m.maximize",
-  minimap = "era.m.minimap",
   notepad = "era.m.notepad",
   notifier = "era.m.notifier",
   nvimbar = "era.m.nvimbar",
@@ -139,7 +138,6 @@ local __m__mods = {
 ---@field public lint                   era.m.lint
 ---@field public lsp                    era.m.lsp
 ---@field public maximize               era.m.maximize
----@field public minimap                era.m.minimap
 ---@field public notepad                era.m.notepad
 ---@field public notifier               era.m.notifier
 ---@field public nvimbar                era.m.nvimbar

@@ -32,13 +32,13 @@ nvim --headless \
 ```bash
 # 指定单个文件
 nvim --headless \
-  -c "lua FILE_PATHS={'lua/era/m/minimap/handler/search.lua'}" \
+  -c "lua FILE_PATHS={'lua/era/m/nvimbar/nvimbar.lua'}" \
   -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
   -c "luafile ./init-debug-lsp.lua"
 
 # 指定多个文件
 nvim --headless \
-  -c "lua FILE_PATHS={'lua/era/m/minimap/handler/search.lua', 'lua/era/m/nvimbar/nvimbar.lua'}" \
+  -c "lua FILE_PATHS={'lua/era/m/nvimbar/nvimbar.lua', 'lua/era/m/statusline.lua'}" \
   -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
   -c "luafile ./init-debug-lsp.lua"
 ```

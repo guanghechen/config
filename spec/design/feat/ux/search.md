@@ -3,7 +3,7 @@
 ## Scope
 
 This design covers Neovim's native `/`, `?`, `n`, and `N` search feedback. It does not cover
-`era.m.searcher`, picker result positions, or minimap search markers.
+`era.m.searcher` or picker result positions.
 
 Neovim remains responsible for the active search pattern and formatted count. The search register
 is the pattern source of truth. Native `search_count` payloads provide the terminal bracketed

@@ -127,7 +127,6 @@ mvs({ "n", "x" }, "<leader>ue", "workbench.action.toggleSidebarVisibility", "ui:
 mvs({ "n", "x" }, "<leader>up", "workbench.action.togglePanel", "ui: toggle panel")
 mvs({ "n", "x" }, "<leader>uz", "workbench.action.toggleZenMode", "ui: toggle zen mode")
 mvs({ "n", "x" }, "<leader>uZ", "workbench.action.toggleMaximizedPanel", "ui: toggle maximized panel")
-mvs({ "n", "x" }, "<leader>um", "workbench.action.toggleMinimap", "ui: toggle minimap")
 mvs({ "n", "x" }, "<leader>uw", "editor.action.toggleWordWrap", "ui: toggle word wrap")
 mvs({ "i", "n", "x" }, { "<C-a>T", "<D-T>", "<M-T>" }, "workbench.action.selectTheme", "ui: select theme")
 --------------------------------------------------------------------------------------#[u]i/toggle--
