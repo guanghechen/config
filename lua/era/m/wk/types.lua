@@ -98,4 +98,4 @@
 ---@field public cols                   integer                         -- number of columns
 ---@field public col_width              integer                         -- width of each column
 ---@field public key_width              integer                         -- max key width for alignment
----@field public content_width          integer                         -- total content width for centering
+---@field public content_width          integer                         -- total content width for popup sizing

@@ -11,7 +11,10 @@ local nsnr = vim.api.nvim_create_namespace("m_wk") ---@type integer
 local PADDING_Y = 1
 local PADDING_X = 2
 local COL_SPACING = 3
+local MAX_WIDTH = 100
+local WINBLEND = 15
 local BOTTOM_OFFSET = 1
+local RIGHT_OFFSET = 1
 
 ----------------------------------------------------------------------------------------------------
 -- View
@@ -59,10 +62,7 @@ local function build_footer()
     .. esc_block
     .. footer_gap
     .. bs_block
-  local footer_pad = math.floor((vim.o.columns - vim.fn.strdisplaywidth(footer_content)) / 2)
-  local footer = string.rep(" ", footer_pad) .. footer_content
-
-  local cursor = footer_pad
+  local cursor = 0
   local footer_hl = {}
 
   if pressed_keys ~= "" then
@@ -76,7 +76,7 @@ local function build_footer()
   footer_hl[#footer_hl + 1] = { cursor, cursor + #bs_key, "m_wk_key" }
   footer_hl[#footer_hl + 1] = { cursor + #bs_key + 1, cursor + #bs_key + 1 + #bs_desc, "m_wk_separator" }
 
-  return footer, footer_hl
+  return footer_content, footer_hl
 end
 
 ---Render which-key window
@@ -136,9 +136,10 @@ end
 ---@param layout                         era.m.wk.ILayout
 ---@return integer, integer
 function M.__create_win__(layout)
-  local width = vim.o.columns
+  local width = math.min(layout.content_width + PADDING_X * 2, vim.o.columns - RIGHT_OFFSET)
   local height = layout.rows + PADDING_Y * 2 + 1
   local row = vim.o.lines - height - vim.o.cmdheight - BOTTOM_OFFSET
+  local col = vim.o.columns - width - RIGHT_OFFSET
   if row < 0 then
     row = 0
   end
@@ -151,7 +152,7 @@ function M.__create_win__(layout)
   local winnr = vim.api.nvim_open_win(bufnr, false, {
     relative = "editor",
     row = row,
-    col = 0,
+    col = col,
     width = width,
     height = height,
     style = "minimal",
@@ -159,6 +160,8 @@ function M.__create_win__(layout)
     zindex = WK_ZINDEX,
   })
 
+  vim.api.nvim_set_option_value("winblend", WINBLEND, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", "Normal:m_wk_normal", { win = winnr, scope = "local" })
 
   return winnr, bufnr
@@ -171,8 +174,7 @@ function M.__draw__(bufnr, layout)
   local lines = {}
   local highlights = {}
 
-  local content_width = layout.content_width
-  local padding_x = math.max(PADDING_X, math.floor((vim.o.columns - content_width) / 2))
+  local padding_x = PADDING_X
 
   -- Top padding
   for _ = 1, PADDING_Y do
@@ -238,7 +240,11 @@ function M.__draw__(bufnr, layout)
 
   -- Footer (help line)
   local footer, footer_hl = build_footer()
-  lines[#lines + 1] = footer
+  lines[#lines + 1] = string.rep(" ", padding_x) .. footer
+  for _, hl in ipairs(footer_hl) do
+    hl[1] = hl[1] + padding_x
+    hl[2] = hl[2] + padding_x
+  end
   highlights[#lines] = footer_hl
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -262,20 +268,22 @@ function M.__layout__(items)
     max_key_w = math.max(max_key_w, vim.fn.strdisplaywidth(item.key))
     local desc_w = vim.fn.strdisplaywidth(item.desc)
     if item.icon then
-      desc_w = desc_w + vim.fn.strdisplaywidth(item.icon)
+      desc_w = desc_w + vim.fn.strdisplaywidth(item.icon) + 1
     end
     max_desc_w = math.max(max_desc_w, desc_w)
   end
 
   -- Column width: key + " → " + icon + desc
   local col_width = max_key_w + 3 + max_desc_w
-  local available_width = vim.o.columns - PADDING_X * 2
+  local available_width = math.min(MAX_WIDTH, vim.o.columns - RIGHT_OFFSET) - PADDING_X * 2
 
   -- Calculate number of columns
   local max_cols = math.max(1, math.floor((available_width + COL_SPACING) / (col_width + COL_SPACING)))
   local num_cols = math.min(max_cols, #items)
   local num_rows = math.ceil(#items / num_cols)
-  local content_width = num_cols * col_width + (num_cols - 1) * COL_SPACING
+  local grid_width = num_cols * col_width + (num_cols - 1) * COL_SPACING
+  local footer = build_footer()
+  local content_width = math.max(grid_width, vim.fn.strdisplaywidth(footer))
 
   -- Build grid (column-major order)
   local grid = {}
