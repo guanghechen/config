@@ -374,6 +374,24 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
 fn fs_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         (
+            "is_same_file",
+            f(
+                lua,
+                |lua, (left, right): (String, String)| -> LuaResult<LuaMultiValue> {
+                    match fs::is_same_file(&left, &right) {
+                        Ok(result) => Ok(LuaMultiValue::from_vec(vec![
+                            result.into_lua(lua)?,
+                            LuaValue::Nil,
+                        ])),
+                        Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::Nil,
+                            LuaValue::String(lua.create_string(error)?),
+                        ])),
+                    }
+                },
+            )?,
+        ),
+        (
             "is_descendant",
             f(
                 lua,

@@ -1,3 +1,4 @@
+use super::identity::FileIdentity;
 use std::fs;
 use std::io;
 use std::path::{Component, Path, PathBuf};
@@ -70,7 +71,7 @@ pub fn is_descendant(source: &str, target: &str) -> Result<bool, String> {
         return Ok(true);
     }
 
-    let source_handle = same_file::Handle::from_path(&source_canonical).map_err(|error| {
+    let source_identity = FileIdentity::from_path(&source_canonical).map_err(|error| {
         format!(
             "[is_descendant] Failed to identify source {}: {error}",
             source_canonical.display()
@@ -78,13 +79,13 @@ pub fn is_descendant(source: &str, target: &str) -> Result<bool, String> {
     })?;
 
     for ancestor in target_canonical.ancestors() {
-        let ancestor_handle = same_file::Handle::from_path(ancestor).map_err(|error| {
+        let matches = source_identity.matches_path(ancestor).map_err(|error| {
             format!(
                 "[is_descendant] Failed to identify target ancestor {}: {error}",
                 ancestor.display()
             )
         })?;
-        if ancestor_handle == source_handle {
+        if matches {
             return Ok(true);
         }
     }

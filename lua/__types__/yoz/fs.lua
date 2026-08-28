@@ -34,6 +34,13 @@ local M = {}
 ---@class yoz.fs.IMoveError
 ---@field public error                  string
 
+---Checks whether two native absolute paths identify the same filesystem object.
+---@param left                         string
+---@param right                        string
+---@return boolean|nil
+---@return string|nil
+function M.is_same_file(left, right) end
+
 ---Checks whether target is at or below source after resolving filesystem aliases.
 ---Both arguments must be native absolute local paths. Source must exist; target may not
 ---exist, but it must not contain `..` components.
