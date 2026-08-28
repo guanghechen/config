@@ -66,6 +66,22 @@ local function find_commit_in_state(ctx, hash)
   return nil
 end
 
+---@param ctx                            era.m.diffview.view.commits.IContext
+---@param commit                         era.m.diffview.ICommit
+---@return string|nil
+local function get_current_entry_filepath(ctx, commit)
+  local current = ctx.state:get_current_entry()
+  if not current or not commit.files then
+    return nil
+  end
+  for _, entry in ipairs(commit.files) do
+    if rawequal(entry, current) then
+      return entry.filepath
+    end
+  end
+  return nil
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Selection actions
 ----------------------------------------------------------------------------------------------------
@@ -516,6 +532,30 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Focus actions
 ----------------------------------------------------------------------------------------------------
+
+---Reveal the active commit or file in Commits, or hide Commits when it is already focused.
+---@param ctx                            era.m.diffview.view.commits.IContext
+function M.reveal(ctx)
+  if ctx.layout.commits_winnr == vim.api.nvim_get_current_win() then
+    commits_view.hide_commits(ctx.layout)
+    return
+  end
+
+  commits_view.show_commits(ctx.layout)
+  require("era.m.diffview.view.commits.keymap").setup_commits(ctx)
+
+  local current = ctx.state:get_current_commit()
+  local filepath = current and get_current_entry_filepath(ctx, current) or nil
+  if current and filepath and not ctx.state:is_commit_expanded(current.hash) then
+    ctx.state:toggle_commit_expanded(current.hash)
+  end
+
+  commits_view.render_commits(ctx)
+  if current then
+    M.__update_commits_cursor__(ctx, current.hash, filepath)
+  end
+  commits_view.focus_commits(ctx.layout)
+end
 
 ---Focus commits panel
 ---@param ctx                            era.m.diffview.view.commits.IContext
@@ -1238,7 +1278,8 @@ end
 ---Update cursor in commits pane to match commit hash
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@param hash                           string
-function M.__update_commits_cursor__(ctx, hash)
+---@param filepath                       string|nil
+function M.__update_commits_cursor__(ctx, hash, filepath)
   local lyt = ctx.layout
 
   if not lyt.commits_bufnr or not vim.api.nvim_buf_is_valid(lyt.commits_bufnr) then
@@ -1250,7 +1291,8 @@ function M.__update_commits_cursor__(ctx, hash)
     return
   end
 
-  local target_lnum = pane_commits.find_commit_line(line_map, hash)
+  local target_lnum = filepath and pane_commits.find_file_line(line_map, hash, filepath) or nil
+  target_lnum = target_lnum or pane_commits.find_commit_line(line_map, hash)
   if target_lnum and lyt.commits_winnr and vim.api.nvim_win_is_valid(lyt.commits_winnr) then
     vim.api.nvim_win_set_cursor(lyt.commits_winnr, { target_lnum, 0 })
   end

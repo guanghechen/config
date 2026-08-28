@@ -9,6 +9,8 @@ local t = harness.new("era.command")
 t:test("command definitions and implementations stay symmetric", function()
   local next_info_calls = 0
   local prev_info_calls = 0
+  local explorer_reveal_calls = 0
+  local diffview_reveal_calls = 0
   local resolve_stage = nil ---@type (fun(result: table): nil)|nil
   local stage_range = nil ---@type integer[]|nil
   local enums = require("stl.e")
@@ -31,6 +33,13 @@ t:test("command definitions and implementations stay symmetric", function()
   })
   t:patch_global("era", {
     m = {
+      diffview = {
+        fn = {
+          reveal = function()
+            diffview_reveal_calls = diffview_reveal_calls + 1
+          end,
+        },
+      },
       git = {
         hunk = {
           stage = function(range)
@@ -52,6 +61,13 @@ t:test("command definitions and implementations stay symmetric", function()
         },
       },
     },
+    widget = {
+      explorer = {
+        reveal = function()
+          explorer_reveal_calls = explorer_reveal_calls + 1
+        end,
+      },
+    },
   })
   t:patch_table(vim.api, "nvim_create_user_command", function() end)
 
@@ -64,6 +80,20 @@ t:test("command definitions and implementations stay symmetric", function()
 
   t.assert_eq(1, next_info_calls, "next info implementation")
   t.assert_eq(1, prev_info_calls, "previous info implementation")
+
+  local tabnr = vim.api.nvim_get_current_tabpage()
+  for _, tabtype in ipairs({ enums.TabTypeEnum.NORMAL, enums.TabTypeEnum.ACP }) do
+    vim.t[tabnr].tabtype = tabtype
+    Command.definitions.explorer.reveal:execute()
+  end
+  for _, tabtype in ipairs({ enums.TabTypeEnum.DIFFVIEW_WORKSPACE, enums.TabTypeEnum.DIFFVIEW_COMMITS }) do
+    vim.t[tabnr].tabtype = tabtype
+    Command.definitions.explorer.reveal:execute()
+  end
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
+
+  t.assert_eq(2, explorer_reveal_calls, "normal and ACP explorer reveal")
+  t.assert_eq(2, diffview_reveal_calls, "Diffview navigation reveal")
 
   local test_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, { "one", "two" })

@@ -7,6 +7,7 @@
 - `<C-a>r` : Refresh (aliases: `<D-r>`, `<M-r>`) the whole diffview-commits view
 - `<C-j>` : Next commit, set the next commit (based from the last active commit) as active
 - `<C-k>` : Prev commit, set the prev commit (based from the last active commit) as active
+- `<leader>er` : Reveal the active commit/file in the Commits pane, or hide the pane when already focused
 - `P` : Previous layout
 - `p1` : Layout 1: 󰯋 commits top + sbs
 - `p2` : Layout 2: 󰕭 commits left + sbs

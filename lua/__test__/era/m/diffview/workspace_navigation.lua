@@ -58,6 +58,9 @@ local function load_action(line_map, opened, ordered_entries)
     end,
   })
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
+    setup_changes = function() end,
+  })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
     focus_changes = function(lyt, stage_type)
@@ -75,6 +78,9 @@ local function load_action(line_map, opened, ordered_entries)
       end
       return { lyt.changes.staged, lyt.changes.unstaged }
     end,
+    hide_changes = function(lyt)
+      lyt.changes_hidden = true
+    end,
     is_changes_buffer = function(lyt, bufnr)
       if not lyt.changes then
         return false
@@ -83,6 +89,10 @@ local function load_action(line_map, opened, ordered_entries)
     end,
     open_entry = function(_, entry)
       opened[#opened + 1] = entry
+    end,
+    render_changes = function() end,
+    show_changes = function(lyt)
+      lyt.changes_hidden = false
     end,
   })
   return assert(loadfile("lua/era/m/diffview/view/workspace/action.lua"))()
@@ -253,6 +263,57 @@ t:test("navigation does not enter entries hidden by the rendered panel", functio
   t.assert_eq(hidden, current, "selection unchanged")
   t.assert_eq(0, #opened, "no hidden preview")
 
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("reveal expands hidden entry ancestors, focuses the entry, then hides Changes", function()
+  local current = { filepath = "middle/hidden.lua", stage_type = "unstaged", status = "M" }
+  local collapsed = true
+  local sbs_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local original_bufnr = vim.api.nvim_win_get_buf(sbs_winnr) ---@type integer
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "Unstaged", "hidden.lua" })
+  vim.cmd("belowright split")
+  local changes_winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_buf(changes_winnr, changes_bufnr)
+  vim.api.nvim_set_current_win(sbs_winnr)
+
+  local action = load_action(function()
+    if collapsed then
+      return { { type = "header" }, { type = "directory", uuid = "middle" } }
+    end
+    return { { type = "header" }, { type = "file", entry = current } }
+  end, {})
+  local lyt = {
+    changes = {
+      staged = { stage_type = "staged" },
+      unstaged = { stage_type = "unstaged", bufnr = changes_bufnr, winnr = changes_winnr },
+    },
+  }
+  local ctx = {
+    layout = lyt,
+    state = {
+      expand_dir = function(_, stage_type, dir)
+        t.assert_eq("unstaged", stage_type, "expanded stage")
+        t.assert_eq("middle", dir, "expanded ancestor")
+        collapsed = false
+      end,
+      get_current_entry = function()
+        return current
+      end,
+    },
+  }
+
+  action.reveal(ctx)
+  t.assert_false(collapsed, "ancestor expanded")
+  t.assert_eq(changes_winnr, vim.api.nvim_get_current_win(), "Changes focused")
+  t.assert_eq(2, vim.api.nvim_win_get_cursor(changes_winnr)[1], "entry cursor")
+
+  action.reveal(ctx)
+  t.assert_true(lyt.changes_hidden, "Changes hidden")
+
+  vim.api.nvim_win_close(changes_winnr, true)
+  vim.api.nvim_win_set_buf(sbs_winnr, original_bufnr)
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 

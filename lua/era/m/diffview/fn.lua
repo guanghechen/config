@@ -73,6 +73,36 @@ function M.refresh()
   S.cmd.refresh()
 end
 
+---Reveal the active item in the view's navigation panel, or hide that panel when already focused.
+function M.reveal()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
+
+  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
+    local workspace_action = require("era.m.diffview.view.workspace.action")
+    local workspace_state = require("era.m.diffview.view.workspace.state")
+    local workspace_view = require("era.m.diffview.view.workspace.view")
+
+    local st = workspace_state.get(tabnr)
+    local lyt = workspace_view.get_layout(tabnr)
+    if not st or not lyt then
+      return
+    end
+    workspace_action.reveal({ layout = lyt, state = st })
+  elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
+    local commits_action = require("era.m.diffview.view.commits.action")
+    local commits_state = require("era.m.diffview.view.commits.state")
+    local commits_view = require("era.m.diffview.view.commits.view")
+
+    local st = commits_state.get(tabnr)
+    local lyt = commits_view.get_layout(tabnr)
+    if not st or not lyt then
+      return
+    end
+    commits_action.reveal({ layout = lyt, state = st })
+  end
+end
+
 ---Toggle commits panel visibility (for commits view)
 function M.toggle_commits()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

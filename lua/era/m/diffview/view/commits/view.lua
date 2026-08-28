@@ -424,6 +424,12 @@ end
 ---@param lyt                            era.m.diffview.view.commits.ILayout
 ---@return era.m.diffview.view.commits.ILayout
 function M.hide_commits(lyt)
+  local has_reference = (lyt.filetree_winnr and vim.api.nvim_win_is_valid(lyt.filetree_winnr))
+    or (lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr))
+    or (lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr))
+  if not has_reference then
+    return lyt
+  end
   if lyt.commits_winnr and vim.api.nvim_win_is_valid(lyt.commits_winnr) then
     vim.api.nvim_win_hide(lyt.commits_winnr)
     lyt.commits_winnr = nil

@@ -605,9 +605,19 @@ command
   })
   .implement({
     uuid = K.explorer.reveal.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = {
+      stl.e.TabTypeEnum.ACP,
+      stl.e.TabTypeEnum.NORMAL,
+    },
     action = function()
       era.widget.explorer.reveal()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.reveal.uuid,
+    tabtypes = stl.e.TabTypeSet.DIFFVIEW,
+    action = function()
+      era.m.diffview.fn.reveal()
     end,
   })
   .implement({

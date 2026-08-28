@@ -38,6 +38,7 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@field public open_commits           fun(opts: { layout: stl.m.diffview.LayoutTypeEnum|nil }|nil): nil
 ---@field public close                  fun(): nil
 ---@field public refresh                fun(): nil
+---@field public reveal                 fun(): nil
 ---@field public toggle_commits         fun(): nil
 ---@field public toggle_files           fun(): nil
 

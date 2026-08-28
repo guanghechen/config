@@ -817,6 +817,36 @@ end
 -- Focus actions
 ----------------------------------------------------------------------------------------------------
 
+---Reveal the active entry in Changes, or hide Changes when it is already focused.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.reveal(ctx)
+  local current_winnr = vim.api.nvim_get_current_win()
+  for _, pane in ipairs(workspace_view.get_changes_panes(ctx.layout)) do
+    if pane.winnr == current_winnr then
+      workspace_view.hide_changes(ctx.layout)
+      return
+    end
+  end
+
+  workspace_view.show_changes(ctx.layout)
+  require("era.m.diffview.view.workspace.keymap").setup_changes(ctx)
+
+  local current = ctx.state:get_current_entry()
+  if current and current.stage_type then
+    local dir = vim.fn.fnamemodify(current.filepath, ":h")
+    while dir ~= "." and dir ~= "" do
+      ctx.state:expand_dir(current.stage_type, dir)
+      dir = vim.fn.fnamemodify(dir, ":h")
+    end
+  end
+
+  workspace_view.render_changes(ctx)
+  if current then
+    M.__update_changes_cursor__(ctx, current)
+  end
+  workspace_view.focus_changes(ctx.layout, current and current.stage_type or nil)
+end
+
 ---Focus changes panel
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.focus_changes(ctx)

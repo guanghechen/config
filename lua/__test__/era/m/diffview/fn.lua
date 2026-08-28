@@ -6,6 +6,7 @@ local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
 
 local t = harness.new("era.m.diffview.fn")
+local enums = require("stl.e")
 
 local relative_args = nil ---@type { from: string, to: string }|nil
 local log_opts = nil ---@type { layout: integer|nil, path: string|nil }|nil
@@ -30,6 +31,7 @@ bootstrap.with_runtime(t, {
     },
   },
   stl = {
+    e = enums,
     os = {
       path = {
         relative = function(from, to)
@@ -53,6 +55,50 @@ t:test("open_file_history uses Git separators for Windows paths", function()
   t.assert_eq(filepath, relative_args.to, "relative path target")
   t.assert_eq("lua/era/m/im/wsl.lua", log_opts.path, "Git path filter")
   t.assert_eq(3, log_opts.layout, "layout")
+end)
+
+t:test("reveal dispatches to the active Diffview action", function()
+  local tabnr = vim.api.nvim_get_current_tabpage()
+  local calls = {} ---@type string[]
+
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
+    reveal = function()
+      calls[#calls + 1] = "workspace"
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {
+    get = function()
+      return {}
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
+    get_layout = function()
+      return {}
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
+    reveal = function()
+      calls[#calls + 1] = "commits"
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.state", {
+    get = function()
+      return {}
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.view", {
+    get_layout = function()
+      return {}
+    end,
+  })
+
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.DIFFVIEW_WORKSPACE
+  Fn.reveal()
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.DIFFVIEW_COMMITS
+  Fn.reveal()
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
+
+  t.assert_eq("workspace,commits", table.concat(calls, ","), "action dispatch")
 end)
 
 t:run()

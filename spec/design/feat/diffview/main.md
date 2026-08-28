@@ -299,6 +299,7 @@ fetch_log_page(page, 50)
 |:---------|:-----------------------|
 | `g?`     | 显示快捷键帮助         |
 | `<C-a>r` | 刷新（别名 `<D-r>`）   |
+| `<leader>er` | 在 navigation panel 定位当前项；已位于该 panel 时隐藏 |
 
 ### workspace 快捷键
 
