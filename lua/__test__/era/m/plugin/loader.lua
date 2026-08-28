@@ -130,6 +130,30 @@ t:test("nvim startup time uses the process start timestamp once", function()
   t.assert_eq(recorded, loader.get_startup_profile().nvim_startup_time, "nvim startup time recorded once")
 end)
 
+t:test("nvim startup time retries after gettimeofday failure", function()
+  use_states({})
+
+  local current_time = vim.v.starttime + 25e6 ---@type number
+  local seconds = math.floor(current_time / 1e9) ---@type integer
+  local microseconds = math.floor((current_time - seconds * 1e9) / 1e3 + 0.5) ---@type integer
+  local attempts = 0 ---@type integer
+  t:patch_table(vim.uv, "gettimeofday", function()
+    attempts = attempts + 1
+    if attempts == 1 then
+      return nil, "gettimeofday failed"
+    end
+    return seconds, microseconds
+  end)
+
+  loader.__record_nvim_startup__()
+  t.assert_nil(loader.get_startup_profile().nvim_startup_time, "failed startup time read")
+
+  loader.__record_nvim_startup__()
+  local recorded = loader.get_startup_profile().nvim_startup_time ---@type number|nil
+  t.assert_true(recorded ~= nil and math.abs(recorded - 25) < 0.001, "retried nvim startup time")
+  t.assert_eq(2, attempts, "gettimeofday attempts")
+end)
+
 t:test("startup total counts a nested dependency once", function()
   local times = { 0, 10e6, 30e6, 50e6 }
   local time_index = 0

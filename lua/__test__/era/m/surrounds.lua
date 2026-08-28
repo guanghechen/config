@@ -20,6 +20,7 @@ bootstrap.with_runtime(t, {
 })
 
 local Surrounds = require("era.m.surrounds")
+local Buffer = require("era.m.surrounds.buffer")
 local Keymap = require("era.m.surrounds.keymap")
 era.m.surrounds = Surrounds
 Surrounds.setup()
@@ -167,6 +168,28 @@ t:test("unlisted buffer wipeout releases attachment state", function()
 
   local ok = pcall(Keymap.refresh, bufnr)
   t.assert_true(ok, "wiped buffer state released")
+end)
+
+t:test("neighborhood conversions preserve empty and multiline regions", function()
+  with_buffer({ "alpha", "beta", "gamma" }, function()
+    local reference = { from = { line = 2, col = 2 } } ---@type era.m.surrounds.IRegion
+    local neighborhood = Buffer.get_neighborhood(reference, 1)
+
+    local empty_span = neighborhood.region_to_span(reference)
+    t.assert_eq(empty_span.from, empty_span.to, "empty region span")
+    t.assert_eq(vim.inspect(reference), vim.inspect(neighborhood.span_to_region(empty_span)), "empty region round trip")
+
+    local multiline = {
+      from = { line = 1, col = 2 },
+      to = { line = 3, col = 3 },
+    } ---@type era.m.surrounds.IRegion
+    local multiline_span = neighborhood.region_to_span(multiline)
+    t.assert_eq(
+      vim.inspect(multiline),
+      vim.inspect(neighborhood.span_to_region(multiline_span)),
+      "multiline region round trip"
+    )
+  end)
 end)
 
 t:test("add delete and replace surrounding", function()

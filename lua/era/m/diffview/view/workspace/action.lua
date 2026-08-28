@@ -519,12 +519,13 @@ function M.stage(ctx)
     return
   end
 
+  ---@type string[]
   local args = {
     "--literal-pathspecs",
     "add",
     "--pathspec-from-file=-",
     "--pathspec-file-nul",
-  } ---@type string[]
+  }
   local pathspec_input = build_transfer_pathspec_input(target)
   local transfer = capture_transfer(ctx, target, "staged")
 
@@ -562,6 +563,7 @@ function M.unstage(ctx)
     { cwd = workspace },
     function(_, code, stderr)
       if code == 1 then
+        ---@type string[]
         local args = {
           "--literal-pathspecs",
           "rm",
@@ -569,7 +571,7 @@ function M.unstage(ctx)
           "-f",
           "--pathspec-from-file=-",
           "--pathspec-file-nul",
-        } ---@type string[]
+        }
         stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, on_unstage)
         return
       end
@@ -578,13 +580,14 @@ function M.unstage(ctx)
         return
       end
 
+      ---@type string[]
       local args = {
         "--literal-pathspecs",
         "reset",
         "HEAD",
         "--pathspec-from-file=-",
         "--pathspec-file-nul",
-      } ---@type string[]
+      }
       stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, on_unstage)
     end
   )

@@ -22,7 +22,7 @@ local function user_input(prompt, default)
   return result
 end
 
----@type table<string, { input: table|fun(): table|nil, output: era.m.surrounds.IOutputDefinition|fun(): era.m.surrounds.IOutputDefinition|nil }>
+---@type table<string, { input: table|fun(): (table|nil), output: era.m.surrounds.IOutputDefinition|fun(): (era.m.surrounds.IOutputDefinition|nil) }>
 local BUILTIN = {
   -- Opening brackets include inner edge whitespace; closing brackets do not.
   ["("] = { input = { "%b()", "^.%s*().-()%s*.$" }, output = { left = "( ", right = " )" } },
@@ -100,11 +100,14 @@ end
 ---@param id                            string
 ---@return era.m.surrounds.IInputDefinition|nil
 function M.resolve_input(id)
-  local value = BUILTIN[id] and BUILTIN[id].input or nil ---@type table|fun(): table|nil
-  if value == nil then
+  local source = BUILTIN[id] and BUILTIN[id].input or nil ---@type table|fun(): (table|nil)
+  local value ---@type table|nil
+  if source == nil then
     value = { vim.pesc(id) .. "().-()" .. vim.pesc(id) }
-  elseif type(value) == "function" then
-    value = value()
+  elseif type(source) == "function" then
+    value = source()
+  else
+    value = source
   end
   if value == nil then
     return nil
@@ -115,11 +118,14 @@ end
 ---@param id                            string
 ---@return era.m.surrounds.IOutputDefinition|nil
 function M.resolve_output(id)
-  local value = BUILTIN[id] and BUILTIN[id].output or nil ---@type era.m.surrounds.IOutputDefinition|fun(): era.m.surrounds.IOutputDefinition|nil
-  if value == nil then
+  local source = BUILTIN[id] and BUILTIN[id].output or nil ---@type era.m.surrounds.IOutputDefinition|fun(): (era.m.surrounds.IOutputDefinition|nil)
+  local value ---@type era.m.surrounds.IOutputDefinition|nil
+  if source == nil then
     value = { left = id, right = id }
-  elseif type(value) == "function" then
-    value = value()
+  elseif type(source) == "function" then
+    value = source()
+  else
+    value = source
   end
   return value and vim.deepcopy(value) or nil
 end

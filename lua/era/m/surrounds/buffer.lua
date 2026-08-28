@@ -183,7 +183,12 @@ function M.region_replace(region, text)
     end
   end
 
-  local lines = type(text) == "string" and { text } or text ---@type string[]
+  local lines ---@type string[]
+  if type(text) == "string" then
+    lines = { text }
+  else
+    lines = text
+  end
   if #lines > 0 then
     lines = vim.split(table.concat(lines, "\n"), "\n", { plain = true })
   end
@@ -311,12 +316,9 @@ function M.get_neighborhood(reference, neighbors)
   end
   local text = table.concat(lines) ---@type string
 
-  ---@param pos                         era.m.surrounds.IPosition|nil
-  ---@return integer|nil
+  ---@param pos                         era.m.surrounds.IPosition
+  ---@return integer
   local function position_to_offset(pos)
-    if pos == nil then
-      return nil
-    end
     local line = line_start ---@type integer
     local offset = 0 ---@type integer
     while line < pos.line do
@@ -326,12 +328,9 @@ function M.get_neighborhood(reference, neighbors)
     return offset + pos.col
   end
 
-  ---@param offset                      integer|nil
-  ---@return era.m.surrounds.IPosition|nil
+  ---@param offset                      integer
+  ---@return era.m.surrounds.IPosition
   local function offset_to_position(offset)
-    if offset == nil then
-      return nil
-    end
     local line = 1 ---@type integer
     local line_offset = 0 ---@type integer
     while line <= #lines and line_offset + #lines[line] < offset do
@@ -341,12 +340,9 @@ function M.get_neighborhood(reference, neighbors)
     return { line = line_start + line - 1, col = offset - line_offset }
   end
 
-  ---@param region                      era.m.surrounds.IRegion|nil
-  ---@return era.m.surrounds.ISpan|nil
+  ---@param region                      era.m.surrounds.IRegion
+  ---@return era.m.surrounds.ISpan
   local function region_to_span(region)
-    if region == nil then
-      return nil
-    end
     local is_empty = region.to == nil ---@type boolean
     local target = region.to or region.from ---@type era.m.surrounds.IPosition
     return {
@@ -355,12 +351,9 @@ function M.get_neighborhood(reference, neighbors)
     }
   end
 
-  ---@param span                        era.m.surrounds.ISpan|nil
-  ---@return era.m.surrounds.IRegion|nil
+  ---@param span                        era.m.surrounds.ISpan
+  ---@return era.m.surrounds.IRegion
   local function span_to_region(span)
-    if span == nil then
-      return nil
-    end
     local region = { from = offset_to_position(span.from) } ---@type era.m.surrounds.IRegion
     if span.from < span.to then
       region.to = offset_to_position(span.to - 1)

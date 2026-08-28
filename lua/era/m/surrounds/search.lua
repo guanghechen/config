@@ -50,7 +50,7 @@ end
 local function compare_covering(candidate, current, reference)
   local candidate_covering = is_covering(candidate, reference) ---@type boolean
   local current_covering = is_covering(current, reference) ---@type boolean
-  if candidate_covering and current_covering then
+  if candidate_covering and current_covering and current ~= nil then
     return candidate.to - candidate.from < current.to - current.from
   end
   if candidate_covering then

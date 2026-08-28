@@ -44,7 +44,7 @@ local __module_name__ = "era.m.surrounds.types" ---@type string
 ---@field public n_neighbors            integer
 ---@field public text                   string
 ---@field public lines                  string[]
----@field public region_to_span         fun(region: era.m.surrounds.IRegion|nil): era.m.surrounds.ISpan|nil
----@field public span_to_region         fun(span: era.m.surrounds.ISpan|nil): era.m.surrounds.IRegion|nil
+---@field public region_to_span         fun(region: era.m.surrounds.IRegion): era.m.surrounds.ISpan
+---@field public span_to_region         fun(span: era.m.surrounds.ISpan): era.m.surrounds.IRegion
 
 return {}

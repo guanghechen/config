@@ -271,7 +271,10 @@ function M.__record_nvim_startup__()
     return
   end
 
-  local seconds, microseconds = vim.uv.gettimeofday() ---@type integer, integer
+  local seconds, microseconds = vim.uv.gettimeofday()
+  if type(seconds) ~= "number" or type(microseconds) ~= "number" then
+    return
+  end
   local current_time = seconds * 1e9 + microseconds * 1e3 ---@type number
   M._nvim_startup_time = (current_time - vim.v.starttime) / 1e6
 end
