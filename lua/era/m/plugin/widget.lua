@@ -5,7 +5,6 @@ local State = require("era.m.plugin.state")
 ---@field public wrap                   integer
 ---@field protected _view               era.m.plugin.View
 ---@field protected _lines              era.m.plugin.ITextSegment[][]
----@field protected _button_ranges      table<integer, era.m.plugin.IButtonRange[]>
 ---@field protected _required_by        table<string, string[]>
 ---@field protected _line_to_plugin     table<integer, string>
 local M = {}
@@ -17,7 +16,6 @@ function M.new(view)
   local self = setmetatable({}, M)
   self._view = view
   self._lines = {}
-  self._button_ranges = {}
   self._required_by = {}
   self._line_to_plugin = {}
   self.padding = 2
@@ -28,40 +26,16 @@ end
 ---@return nil
 function M:update()
   self._lines = {}
-  self._button_ranges = {}
   self._line_to_plugin = {}
   self:__build_required_by__()
-  self:__title__()
-
-  local mode = self._view.state.mode ---@type era.m.plugin.ViewModeEnum
-  if mode == "profile" then
-    self:__profile__()
-  elseif mode == "install" then
-    self:__install__()
-  elseif mode == "update" then
-    self:__update__()
-  elseif mode == "clean" then
-    self:__clean__()
-  else
-    self:__home__()
-  end
+  self:__header__()
+  self:__home__()
 
   self:__trim__()
 
   vim.api.nvim_set_option_value("modifiable", true, { buf = self._view.bufnr })
   self:__render__(self._view.bufnr)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self._view.bufnr })
-end
-
----@param line                          integer
----@param col                           integer
----@return era.m.plugin.ViewModeEnum|nil
-function M:get_mode_at(line, col)
-  for _, range in ipairs(self._button_ranges[line] or {}) do
-    if col >= range.start_col and col <= range.end_col then
-      return range.mode
-    end
-  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -98,31 +72,6 @@ function M:__append__(str, hl)
   end
   table.insert(self._lines[#self._lines], { str = str, hl = hl })
   return self
-end
-
----@param mode                          era.m.plugin.ViewModeEnum
----@param str                           string
----@param hl                            string
----@return era.m.plugin.Widget
-function M:__append_button__(mode, str, hl)
-  if #self._lines == 0 then
-    self:__nl__()
-  end
-
-  local line = #self._lines ---@type integer
-  local start_col = self.padding + 1 ---@type integer
-  for _, segment in ipairs(self._lines[line]) do
-    start_col = start_col + #segment.str
-  end
-
-  self._button_ranges[line] = self._button_ranges[line] or {}
-  self._button_ranges[line][#self._button_ranges[line] + 1] = {
-    mode = mode,
-    start_col = start_col,
-    end_col = start_col + #str - 1,
-  }
-
-  return self:__append__(str, hl)
 end
 
 ---@return era.m.plugin.Widget
@@ -174,28 +123,36 @@ function M:__trim__()
 end
 
 ---@return nil
-function M:__title__()
+function M:__header__()
   self:__nl__():__nl__()
 
-  local icons = State.options.ui.icons
-  local buttons = {
-    { mode = "home", label = "Home", key = "H" },
-    { mode = "profile", label = "Profile", key = "P" },
-    { mode = "install", label = "Install", key = "I" },
-    { mode = "update", label = "Update", key = "U" },
-    { mode = "clean", label = "Clean", key = "X" },
-  } ---@type { mode: era.m.plugin.ViewModeEnum, label: string, key: string }[]
+  local gap = "      "
+  local install_icon = stl.icon.ui.CloudDownload
+  local update_icon = stl.icon.ui.ArrowUp
+  local clean_icon = stl.icon.ui.Trash
+  local shortcuts =
+    table.concat({ install_icon .. " I Install", update_icon .. " U Update", clean_icon .. " X Clean" }, gap)
+  local available_width = self._view.win_opts.width - self.padding * 2 ---@type integer
+  local shortcut_padding = math.max(0, math.floor((available_width - vim.fn.strdisplaywidth(shortcuts)) / 2))
 
-  for index, button in ipairs(buttons) do
-    if index > 1 then
-      self:__append__(" ")
-    end
+  self:__append__(string.rep(" ", shortcut_padding))
+  self:__append__(install_icon .. " ", "m_pl_loaded")
+  self:__append__("I", "m_pl_key"):__append__(" Install" .. gap, "m_pl_comment")
+  self:__append__(update_icon .. " ", "m_pl_time")
+  self:__append__("U", "m_pl_key"):__append__(" Update" .. gap, "m_pl_comment")
+  self:__append__(clean_icon .. " ", "m_pl_error")
+  self:__append__("X", "m_pl_key"):__append__(" Clean", "m_pl_comment")
+  self:__nl__():__nl__()
 
-    local active = self._view.state.mode == button.mode ---@type boolean
-    local text = active and (" " .. button.label .. " " .. icons.lazy)
-      or (" " .. button.label .. " (" .. button.key .. ") ") ---@type string
-    self:__append_button__(button.mode, text, active and "m_pl_h1" or "m_pl_button")
-  end
+  local Loader = require("era.m.plugin.loader")
+  local profile = Loader.get_startup_profile() ---@type era.m.plugin.IStartupProfile
+  local nvim_startup_time = profile.nvim_startup_time ---@type number|nil
+
+  self
+    :__append__("Neovim", "m_pl_bold")
+    :__append__(nvim_startup_time and (" " .. string.format("%.2fms", nvim_startup_time)) or " pending", "m_pl_comment")
+    :__append__("    Startup", "m_pl_bold")
+    :__append__(" " .. string.format("%.2fms", profile.total_time), "m_pl_comment")
 
   self:__nl__():__nl__()
 end
@@ -263,10 +220,81 @@ function M:__append_triggers__(spec)
   end
 end
 
----@param state                         era.m.plugin.IPluginState
----@param show_time                     boolean
+---@class era.m.plugin.IPluginGroups
+---@field public startup                era.m.plugin.IPluginState[]
+---@field public runtime                era.m.plugin.IPluginState[]
+---@field public not_loaded             era.m.plugin.IPluginState[]
+---@field public missing                era.m.plugin.IPluginState[]
+---@field public by_name                table<string, era.m.plugin.IPluginState>
+
+---@param task                          era.m.plugin.ITaskState|nil
+---@return boolean
+function M:__task_is_visible__(task)
+  if task == nil then
+    return false
+  end
+  return task.status ~= "done" or task.from_commit == nil or task.from_commit ~= task.to_commit
+end
+
+---@param task                          era.m.plugin.ITaskState
 ---@return nil
-function M:__render_plugin__(state, show_time)
+function M:__render_task__(task)
+  local icons = State.options.ui.icons
+  local status_icon = "" ---@type string
+  local status_hl = "" ---@type string
+
+  if task.status == "running" then
+    status_icon = icons.lazy
+    status_hl = "m_pl_running"
+  elseif task.status == "error" then
+    status_icon = icons.not_loaded
+    status_hl = "m_pl_error"
+  else
+    status_icon = icons.loaded
+    status_hl = "m_pl_loaded"
+  end
+
+  self:__append__("    └─ ", "m_pl_comment")
+  self:__append__(status_icon .. " ", status_hl)
+
+  if task.step then
+    self:__append__("[", "m_pl_comment")
+    self:__append__(task.step, "m_pl_step")
+    self:__append__("] ", "m_pl_comment")
+  end
+
+  if task.from_commit and task.to_commit and task.from_commit ~= task.to_commit then
+    self:__append__(task.from_commit, "m_pl_commit_from")
+    self:__append__(" → ", "m_pl_comment")
+    self:__append__(task.to_commit .. " ", "m_pl_commit_to")
+  end
+
+  if task.message and task.message ~= "" then
+    self:__append__(task.message, task.status == "error" and "m_pl_error" or "m_pl_comment")
+  end
+
+  self._line_to_plugin[#self._lines] = task.name
+  self:__nl__()
+
+  if task.commits and #task.commits > 0 then
+    for _, commit in ipairs(task.commits) do
+      self:__render_commit__(commit, task.name)
+    end
+  end
+
+  if task.status ~= "done" and task.output and #task.output > 0 then
+    for _, line in ipairs(task.output) do
+      self:__append__("          " .. line, "m_pl_output")
+      self._line_to_plugin[#self._lines] = task.name
+      self:__nl__()
+    end
+  end
+end
+
+---@param state                         era.m.plugin.IPluginState
+---@param task                          era.m.plugin.ITaskState|nil
+---@return nil
+function M:__render_plugin__(state, task)
   local spec = state.spec ---@type era.m.plugin.IPluginSpec
   local icons = State.options.ui.icons
 
@@ -277,424 +305,140 @@ function M:__render_plugin__(state, show_time)
   end
 
   self:__append__(spec.name, "m_pl_bold")
-
-  if show_time and state.load_time then
+  if state.loaded and state.load_time then
     self:__append__(" " .. string.format("%.2fms", state.load_time), "m_pl_time")
   end
-
   self:__append_triggers__(spec)
 
   self._line_to_plugin[#self._lines] = spec.name
-
   self:__nl__()
+
+  if task ~= nil and self:__task_is_visible__(task) then
+    self:__render_task__(task)
+  end
 end
 
----@return era.m.plugin.IPluginState[], era.m.plugin.IPluginState[]
+---@param name                          string
+---@param task                          era.m.plugin.ITaskState|nil
+---@return nil
+function M:__render_orphan__(name, task)
+  local icons = State.options.ui.icons
+  self:__append__("  " .. icons.not_loaded .. " ", "m_pl_not_loaded")
+  self:__append__(name, "m_pl_bold")
+  self._line_to_plugin[#self._lines] = name
+  self:__nl__()
+
+  if task ~= nil and self:__task_is_visible__(task) then
+    self:__render_task__(task)
+  end
+end
+
+---@return era.m.plugin.IPluginGroups
 function M:__collect_plugins__()
   local Loader = require("era.m.plugin.loader")
   local plugins = Loader.get_all() ---@type table<string, era.m.plugin.IPluginState>
-
-  local loaded = {} ---@type era.m.plugin.IPluginState[]
-  local not_loaded = {} ---@type era.m.plugin.IPluginState[]
+  local groups = {
+    startup = {},
+    runtime = {},
+    not_loaded = {},
+    missing = {},
+    by_name = plugins,
+  } ---@type era.m.plugin.IPluginGroups
 
   for _, state in pairs(plugins) do
-    if state.loaded then
-      loaded[#loaded + 1] = state
+    if state.loaded and state.startup then
+      groups.startup[#groups.startup + 1] = state
+    elseif state.loaded then
+      groups.runtime[#groups.runtime + 1] = state
     else
-      not_loaded[#not_loaded + 1] = state
+      local path = state.path or dot.path.join(State.options.root, state.spec.name) ---@type string
+      local target = yoz.path.is_exist(path) and groups.not_loaded or groups.missing
+      target[#target + 1] = state
     end
   end
 
-  return loaded, not_loaded
-end
-
----@return string[]
-function M:__collect_to_clean__()
-  return State.collect_orphan_plugins()
-end
-
----@return era.m.plugin.ITaskState[]
-function M:__collect_working__()
-  local Action = require("era.m.plugin.action")
-  local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
-  local working = {} ---@type era.m.plugin.ITaskState[]
-
-  for _, task in pairs(tasks) do
-    if task.status == "running" or task.status == "done" or task.status == "error" then
-      working[#working + 1] = task
-    end
+  local function sort_by_name(states)
+    table.sort(states, function(a, b)
+      return a.spec.name < b.spec.name
+    end)
   end
 
-  table.sort(working, function(a, b)
-    return a.name < b.name
-  end)
+  local function sort_by_time(states)
+    table.sort(states, function(a, b)
+      local left = a.load_time or 0 ---@type number
+      local right = b.load_time or 0 ---@type number
+      return left == right and a.spec.name < b.spec.name or left > right
+    end)
+  end
 
-  return working
+  sort_by_time(groups.startup)
+  sort_by_time(groups.runtime)
+  sort_by_name(groups.not_loaded)
+  sort_by_name(groups.missing)
+  return groups
+end
+
+---@param title                         string
+---@param states                        era.m.plugin.IPluginState[]
+---@param tasks                         table<string, era.m.plugin.ITaskState>
+---@return nil
+function M:__render_plugin_section__(title, states, tasks)
+  if #states == 0 then
+    return
+  end
+
+  self:__append__(title, "m_pl_h2"):__append__(" (" .. #states .. ")", "m_pl_comment"):__nl__()
+  for _, state in ipairs(states) do
+    self:__render_plugin__(state, tasks[state.spec.name])
+  end
+  self:__nl__()
 end
 
 ---@return nil
 function M:__home__()
-  local loaded, not_loaded = self:__collect_plugins__()
-  local to_clean = self:__collect_to_clean__()
-  local working = self:__collect_working__()
-  local total = #loaded + #not_loaded ---@type integer
-
-  table.sort(loaded, function(a, b)
-    return a.spec.name < b.spec.name
-  end)
-  table.sort(not_loaded, function(a, b)
-    return a.spec.name < b.spec.name
-  end)
+  local Action = require("era.m.plugin.action")
+  local groups = self:__collect_plugins__()
+  local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
+  local total = #groups.startup + #groups.runtime + #groups.not_loaded + #groups.missing ---@type integer
 
   self:__append__("Total:", "m_pl_h2"):__append__(" " .. total .. " plugins", "m_pl_comment"):__nl__():__nl__()
 
-  if #working > 0 then
-    self:__append__("Working", "m_pl_h2"):__append__(" (" .. #working .. ")", "m_pl_comment"):__nl__()
-    for _, task in ipairs(working) do
-      self:__render_task_progress__(task)
+  self:__render_plugin_section__("Missing", groups.missing, tasks)
+
+  local orphan_set = {} ---@type table<string, boolean>
+  for _, name in ipairs(State.collect_orphan_plugins()) do
+    orphan_set[name] = true
+  end
+  for name, task in pairs(tasks) do
+    if groups.by_name[name] == nil and self:__task_is_visible__(task) then
+      orphan_set[name] = true
+    end
+  end
+
+  local orphans = vim.tbl_keys(orphan_set) ---@type string[]
+  table.sort(orphans)
+  if #orphans > 0 then
+    self:__append__("Orphans", "m_pl_h2"):__append__(" (" .. #orphans .. ")", "m_pl_comment"):__nl__()
+    for _, name in ipairs(orphans) do
+      self:__render_orphan__(name, tasks[name])
     end
     self:__nl__()
   end
 
-  if #to_clean > 0 then
-    self:__append__("Clean", "m_pl_h2"):__append__(" (" .. #to_clean .. ")", "m_pl_comment"):__nl__()
-    local icons = State.options.ui.icons
-    for _, name in ipairs(to_clean) do
-      self:__append__("  " .. icons.not_loaded .. " ", "m_pl_not_loaded")
-      self:__append__(name, "m_pl_bold"):__nl__()
-    end
-    self:__nl__()
-  end
-
-  if #loaded > 0 then
-    self:__append__("Loaded", "m_pl_h2"):__append__(" (" .. #loaded .. ")", "m_pl_comment"):__nl__()
-    for _, state in ipairs(loaded) do
-      self:__render_plugin__(state, true)
-    end
-    self:__nl__()
-  end
-
-  if #not_loaded > 0 then
-    self:__append__("Not Loaded", "m_pl_h2"):__append__(" (" .. #not_loaded .. ")", "m_pl_comment"):__nl__()
-    for _, state in ipairs(not_loaded) do
-      self:__render_plugin__(state, false)
-    end
-  end
+  self:__render_plugin_section__("Startup", groups.startup, tasks)
+  self:__render_plugin_section__("Runtime Loaded", groups.runtime, tasks)
+  self:__render_plugin_section__("Not Loaded", groups.not_loaded, tasks)
 
   if total == 0 then
     self:__append__("  No plugins found", "m_pl_comment"):__nl__()
   end
 end
 
----@return nil
-function M:__profile__()
-  local Loader = require("era.m.plugin.loader")
-  local profile = Loader.get_startup_profile() ---@type era.m.plugin.IStartupProfile
-  local loaded = profile.plugins ---@type era.m.plugin.IPluginState[]
-
-  table.sort(loaded, function(a, b)
-    return (a.load_time or 0) > (b.load_time or 0)
-  end)
-
-  local nvim_startup_time = profile.nvim_startup_time ---@type number|nil
-  self
-    :__append__("Neovim (UIEnter):", "m_pl_bold")
-    :__append__(nvim_startup_time and (" " .. string.format("%.2fms", nvim_startup_time)) or " pending", "m_pl_comment")
-    :__nl__()
-    :__append__("Plugins (Startup):", "m_pl_bold")
-    :__append__(" " .. string.format("%.2fms", profile.total_time), "m_pl_comment")
-    :__nl__()
-    :__nl__()
-
-  if #loaded > 0 then
-    self:__append__("Startup Profile", "m_pl_h2"):__nl__()
-    for _, state in ipairs(loaded) do
-      self:__render_plugin__(state, true)
-    end
-  else
-    self:__append__("  No plugins loaded during startup", "m_pl_comment"):__nl__()
-  end
-end
-
----@return nil
-function M:__install__()
-  local Action = require("era.m.plugin.action")
-  local Loader = require("era.m.plugin.loader")
-  local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
-  local history = Action.get_history() ---@type table<string, era.m.plugin.ITaskState>
-  local is_running = Action.is_running() ---@type boolean
-
-  if is_running then
-    self:__append__("Installing plugins...", "m_pl_h2"):__nl__():__nl__()
-
-    local names = vim.tbl_keys(tasks) ---@type string[]
-    table.sort(names)
-
-    for _, name in ipairs(names) do
-      local task = tasks[name]
-      self:__render_task_progress__(task)
-    end
-    return
-  end
-
-  -- Use current tasks if available, otherwise use history
-  local display_tasks = vim.tbl_isempty(tasks) and history or tasks ---@type table<string, era.m.plugin.ITaskState>
-
-  if vim.tbl_isempty(display_tasks) then
-    self:__append__("Press ", "m_pl_comment")
-    self:__append__("I", "m_pl_key")
-    self:__append__(" to install missing plugins", "m_pl_comment"):__nl__()
-    return
-  end
-
-  self:__append__("Install Complete", "m_pl_h2"):__nl__():__nl__()
-
-  local names = vim.tbl_keys(display_tasks) ---@type string[]
-  table.sort(names)
-
-  local installed = {} ---@type era.m.plugin.ITaskState[]
-  local errors = {} ---@type era.m.plugin.ITaskState[]
-
-  for _, name in ipairs(names) do
-    local task = display_tasks[name]
-    if task.status == "error" then
-      errors[#errors + 1] = task
-    else
-      installed[#installed + 1] = task
-    end
-  end
-
-  if #errors > 0 then
-    self:__append__("Errors", "m_pl_h2"):__append__(" (" .. #errors .. ")", "m_pl_comment"):__nl__()
-    for _, task in ipairs(errors) do
-      self:__render_task_result__(task, Loader.get(task.name))
-    end
-    self:__nl__()
-  end
-
-  if #installed > 0 then
-    self:__append__("Installed", "m_pl_h2"):__append__(" (" .. #installed .. ")", "m_pl_comment"):__nl__()
-    for _, task in ipairs(installed) do
-      self:__render_task_result__(task, Loader.get(task.name))
-    end
-  end
-end
-
----@return nil
-function M:__update__()
-  local Action = require("era.m.plugin.action")
-  local Loader = require("era.m.plugin.loader")
-  local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
-  local history = Action.get_history() ---@type table<string, era.m.plugin.ITaskState>
-  local is_running = Action.is_running() ---@type boolean
-
-  if is_running then
-    self:__append__("Updating plugins...", "m_pl_h2"):__nl__():__nl__()
-
-    local names = vim.tbl_keys(tasks) ---@type string[]
-    table.sort(names)
-
-    for _, name in ipairs(names) do
-      local task = tasks[name]
-      self:__render_task_progress__(task)
-    end
-    return
-  end
-
-  -- Use current tasks if available, otherwise use history
-  local display_tasks = vim.tbl_isempty(tasks) and history or tasks ---@type table<string, era.m.plugin.ITaskState>
-
-  if vim.tbl_isempty(display_tasks) then
-    self:__append__("Press ", "m_pl_comment")
-    self:__append__("U", "m_pl_key")
-    self:__append__(" to update all plugins", "m_pl_comment"):__nl__()
-    return
-  end
-
-  self:__append__("Update Complete", "m_pl_h2"):__nl__():__nl__()
-
-  local names = vim.tbl_keys(display_tasks) ---@type string[]
-  table.sort(names)
-
-  local updated = {} ---@type era.m.plugin.ITaskState[]
-  local unchanged = {} ---@type era.m.plugin.ITaskState[]
-  local errors = {} ---@type era.m.plugin.ITaskState[]
-
-  for _, name in ipairs(names) do
-    local task = display_tasks[name]
-    if task.status == "error" then
-      errors[#errors + 1] = task
-    elseif task.from_commit and task.to_commit and task.from_commit ~= task.to_commit then
-      updated[#updated + 1] = task
-    else
-      unchanged[#unchanged + 1] = task
-    end
-  end
-
-  if #errors > 0 then
-    self:__append__("Errors", "m_pl_h2"):__append__(" (" .. #errors .. ")", "m_pl_comment"):__nl__()
-    for _, task in ipairs(errors) do
-      self:__render_task_result__(task, Loader.get(task.name))
-    end
-    self:__nl__()
-  end
-
-  if #updated > 0 then
-    self:__append__("Updated", "m_pl_h2"):__append__(" (" .. #updated .. ")", "m_pl_comment"):__nl__()
-    for _, task in ipairs(updated) do
-      self:__render_task_result__(task, Loader.get(task.name))
-    end
-    self:__nl__()
-  end
-
-  if #unchanged > 0 then
-    self:__append__("Unchanged", "m_pl_h2"):__append__(" (" .. #unchanged .. ")", "m_pl_comment"):__nl__()
-    for _, task in ipairs(unchanged) do
-      self:__render_task_result__(task, Loader.get(task.name))
-    end
-  end
-end
-
----@return nil
-function M:__clean__()
-  local Action = require("era.m.plugin.action")
-  local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
-  local is_running = Action.is_running() ---@type boolean
-
-  if is_running then
-    self:__append__("Cleaning plugins...", "m_pl_h2"):__nl__():__nl__()
-    return
-  end
-
-  local to_clean = State.collect_orphan_plugins() ---@type string[]
-
-  if not vim.tbl_isempty(tasks) then
-    self:__append__("Clean Complete", "m_pl_h2"):__nl__():__nl__()
-    local names = vim.tbl_keys(tasks) ---@type string[]
-    table.sort(names)
-    for _, name in ipairs(names) do
-      local task = tasks[name]
-      self:__render_task_progress__(task)
-    end
-    return
-  end
-
-  if #to_clean == 0 then
-    self:__append__("No plugins to clean", "m_pl_comment"):__nl__()
-    return
-  end
-
-  self:__append__("Plugins to clean:", "m_pl_h2"):__append__(" (" .. #to_clean .. ")", "m_pl_comment"):__nl__():__nl__()
-  self:__append__("Press ", "m_pl_comment")
-  self:__append__("X", "m_pl_key")
-  self:__append__(" to remove these plugins:", "m_pl_comment"):__nl__():__nl__()
-
-  for _, name in ipairs(to_clean) do
-    self:__append__("  ", nil)
-    self:__append__(name, "m_pl_bold")
-    self._line_to_plugin[#self._lines] = name
-    self:__nl__()
-  end
-end
-
----@param task                          era.m.plugin.ITaskState
----@return nil
-function M:__render_task_progress__(task)
-  local icons = State.options.ui.icons
-  local status_icon = "" ---@type string
-  local status_hl = "" ---@type string
-
-  if task.status == "running" then
-    status_icon = icons.lazy
-    status_hl = "m_pl_running"
-  elseif task.status == "done" then
-    status_icon = icons.loaded
-    status_hl = "m_pl_loaded"
-  else
-    status_icon = ""
-    status_hl = "m_pl_error"
-  end
-
-  self:__append__("  " .. status_icon .. " ", status_hl)
-  self:__append__(task.name, "m_pl_bold")
-
-  if task.step then
-    self:__append__(" [", "m_pl_comment")
-    self:__append__(task.step, "m_pl_step")
-    self:__append__("]", "m_pl_comment")
-  end
-
-  if task.message and task.message ~= "" then
-    self:__append__(" ", nil)
-    self:__append__(task.message, "m_pl_comment")
-  end
-
-  self._line_to_plugin[#self._lines] = task.name
-
-  self:__nl__()
-
-  if task.output and #task.output > 0 then
-    for _, line in ipairs(task.output) do
-      self:__append__("      " .. line, "m_pl_output"):__nl__()
-    end
-  end
-end
-
----@param task                          era.m.plugin.ITaskState
----@param plugin_state                  era.m.plugin.IPluginState|nil
----@return nil
-function M:__render_task_result__(task, plugin_state)
-  local icons = State.options.ui.icons
-  local status_icon = "" ---@type string
-  local status_hl = "" ---@type string
-
-  if task.status == "error" then
-    status_icon = ""
-    status_hl = "m_pl_error"
-  elseif plugin_state and plugin_state.loaded then
-    status_icon = icons.loaded
-    status_hl = "m_pl_loaded"
-  else
-    status_icon = icons.not_loaded
-    status_hl = "m_pl_not_loaded"
-  end
-
-  self:__append__("  " .. status_icon .. " ", status_hl)
-  self:__append__(task.name, "m_pl_bold")
-
-  if task.from_commit and task.to_commit and task.from_commit ~= task.to_commit then
-    self:__append__(" ", nil)
-    self:__append__(task.from_commit, "m_pl_commit_from")
-    self:__append__(" → ", "m_pl_comment")
-    self:__append__(task.to_commit, "m_pl_commit_to")
-  end
-
-  if task.message and task.message ~= "" then
-    self:__append__(" ", nil)
-    self:__append__(task.message, "m_pl_comment")
-  end
-
-  self._line_to_plugin[#self._lines] = task.name
-
-  self:__nl__()
-
-  if task.commits and #task.commits > 0 then
-    for _, commit in ipairs(task.commits) do
-      self:__render_commit__(commit)
-    end
-  end
-
-  if task.status == "error" and task.output and #task.output > 0 then
-    for _, line in ipairs(task.output) do
-      self:__append__("      " .. line, "m_pl_output"):__nl__()
-    end
-  end
-end
-
 ---@param commit                        era.m.plugin.ICommitInfo
+---@param plugin_name                   string
 ---@return nil
-function M:__render_commit__(commit)
-  self:__append__("      ", nil)
+function M:__render_commit__(commit, plugin_name)
+  self:__append__("          ", nil)
   self:__append__(commit.hash .. " ", "m_pl_commit")
 
   local msg = commit.message ---@type string
@@ -707,6 +451,7 @@ function M:__render_commit__(commit)
   end
 
   self:__append__(" " .. commit.time, "m_pl_commit_time")
+  self._line_to_plugin[#self._lines] = plugin_name
   self:__nl__()
 end
 

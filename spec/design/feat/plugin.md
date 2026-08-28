@@ -10,7 +10,7 @@
 - **Plugin Update**: Fetch and checkout latest commits from remote
 - **Plugin Clean**: Remove unused plugin directories
 - **Lock File**: Compatible with `lazy-lock.json` format
-- **Profile View**: Show plugin load times for performance analysis
+- **Unified Status View**: Show plugin inventory, startup profile, and inline operation progress
 
 ## Architecture
 
@@ -20,10 +20,9 @@ era.m.plugin/
 ├── types.lua    # Type definitions
 ├── state.lua    # Global state and configuration
 ├── loader.lua   # Plugin loading and lazy trigger setup
-├── git.lua      # Git operations (info, branch, commit)
-├── action.lua   # Update and clean actions
+├── action.lua   # Install, update, clean, and build actions
 ├── view.lua     # Floating window management
-└── widget.lua   # UI rendering (Home/Profile/Update/Clean views)
+└── widget.lua   # Unified status and operation rendering
 ```
 
 ### Module Dependencies
@@ -33,11 +32,9 @@ types.lua (pure types)
     ↓
 state.lua (config, lock, specs)
     ↓
-git.lua (git operations)
-    ↓
 loader.lua (plugin loading)
     ↓
-action.lua (update/clean)
+action.lua (install/update/clean/build)
     ↓
 widget.lua (rendering)
     ↓
@@ -99,37 +96,33 @@ require("era.m.plugin").setup(specs)
 
 ### Commands
 
-| Command           | Description                    |
-|:------------------|:-------------------------------|
-| `:Plugin`         | Open plugin window (Home view) |
-| `:Plugin home`    | Open Home view                 |
-| `:Plugin profile` | Open Profile view              |
-| `:Plugin update`  | Open Update view               |
-| `:Plugin clean`   | Open Clean view                |
+| Command   | Description               |
+|:----------|:--------------------------|
+| `:Plugin` | Open the plugin status UI |
 
 ### Keymaps (in plugin window)
 
-| Key | Description                            |
-|:----|:---------------------------------------|
-| `H` | Switch to Home view                    |
-| `P` | Switch to Profile view                 |
-| `U` | Switch to Update view and start update |
-| `X` | Switch to Clean view and start clean   |
-| Mouse click | Switch header tab without starting its action |
-| `q` | Close window                           |
+| Key  | Description                |
+|:-----|:---------------------------|
+| `I`  | Install missing plugins    |
+| `U`  | Update all plugins         |
+| `X`  | Remove orphan plugins      |
+| `gb` | Build the selected plugin  |
+| `q`  | Close the window           |
 
-## Views
+## Status View
 
-### Home
+The plugin window has one stable surface. It displays:
 
-Displays all plugins grouped by status:
-- **Clean**: Plugins to be removed (directories not in specs)
-- **Loaded**: Plugins that have been loaded with load times
-- **Not Loaded**: Plugins awaiting lazy triggers
+- Neovim and startup-plugin timing summaries.
+- Missing plugins and orphan directories before installed plugins.
+- Startup plugins sorted by inclusive load time (slowest first).
+- Runtime-loaded and not-loaded plugins as separate groups.
+- Install, update, clean, and build tasks directly below their owning plugin or orphan row.
 
-### Profile
+Completed no-op updates are omitted. Meaningful results and errors remain visible until the next operation replaces the task snapshot.
 
-Shows the startup plugin snapshot sorted by inclusive load time (slowest first).
+Startup profile semantics:
 
 - `Neovim (UIEnter)` measures process start (`v:starttime`) through `UIEnter`.
 - `Plugins (Startup)` measures top-level plugin load spans through `VeryLazy`.
@@ -138,14 +131,7 @@ Shows the startup plugin snapshot sorted by inclusive load time (slowest first).
 - Plugin total counts nested dependencies once.
 - Individual plugin times remain inclusive and may contain dependency load time.
 
-### Update
-
-Updates all plugins by fetching and checking out latest commits.
-Shows update progress and results (updated/unchanged/errors).
-
-### Clean
-
-Removes plugin directories that are not in the current specs.
+Opening the window is read-only. Missing plugins are installed only after `I`; update and clean run only after `U` and `X` respectively.
 
 ## Highlight Groups
 
@@ -153,9 +139,7 @@ All highlight groups use the `m_pl_` prefix:
 
 | Group             | Description            |
 |:------------------|:-----------------------|
-| `m_pl_h1`         | Active tab header      |
 | `m_pl_h2`         | Section header         |
-| `m_pl_button`     | Inactive tab header    |
 | `m_pl_bold`       | Bold text              |
 | `m_pl_comment`    | Muted/comment text     |
 | `m_pl_loaded`     | Loaded plugin icon     |

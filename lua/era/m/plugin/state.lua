@@ -11,7 +11,7 @@ local M = {
     ui = {
       size = { width = 132, height = 0.8 },
       border = "rounded",
-      title = " Plugin ",
+      title = string.format(" %s Plugin ", stl.icon.ui.Plugin),
       icons = {
         cmd = " ",
         dep = " ",

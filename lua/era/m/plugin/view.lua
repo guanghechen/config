@@ -1,15 +1,11 @@
 local State = require("era.m.plugin.state")
 local Widget = require("era.m.plugin.widget")
 
----@class era.m.plugin.IViewState
----@field public mode                   era.m.plugin.ViewModeEnum
-
 ---@class era.m.plugin.View : dot.t.IWidget
 ---@field public name                   string
 ---@field public bufnr                  ?integer
 ---@field public winnr                  ?integer
 ---@field public win_opts               vim.api.keyset.win_config
----@field public state                  era.m.plugin.IViewState
 ---@field public widget                 era.m.plugin.Widget
 ---@field protected _augroup            ?integer
 ---@field protected _disposed           boolean
@@ -24,13 +20,12 @@ function M.visible()
   return _instance ~= nil and _instance:isvisible()
 end
 
----@param mode                          ?era.m.plugin.ViewModeEnum
 ---@return nil
-function M.show(mode)
+function M.show()
   if _instance ~= nil and not _instance._disposed then
+    local was_visible = _instance:isvisible() ---@type boolean
     _instance:focus()
-    if mode then
-      _instance.state.mode = mode
+    if was_visible then
       _instance.widget:update()
     end
     return
@@ -38,30 +33,12 @@ function M.show(mode)
 
   _instance = setmetatable({}, M)
   _instance.name = "plugin"
-  _instance.state = { mode = mode or "profile" }
   _instance._augroup = nil
   _instance._disposed = false
   _instance.bufnr = nil
   _instance.winnr = nil
   _instance.win_opts = {}
   _instance:focus()
-
-  -- Auto-detect missing plugins and show install mode
-  if not mode then
-    local PluginState = require("era.m.plugin.state")
-    local has_missing = false ---@type boolean
-    for _, spec in ipairs(PluginState.specs) do
-      local path = dot.path.join(PluginState.options.root, spec.name) ---@type string
-      if not yoz.path.is_exist(path) then
-        has_missing = true
-        break
-      end
-    end
-    if has_missing then
-      _instance.state.mode = "install"
-      _instance.widget:update()
-    end
-  end
 end
 
 ---@return nil
@@ -239,21 +216,9 @@ function M:__mount__()
   })
 end
 
----@param mode                          era.m.plugin.ViewModeEnum
+---@param action                        era.m.plugin.ActionEnum
 ---@return nil
-function M:__select_mode__(mode)
-  self.state.mode = mode
-  self.widget:update()
-end
-
----@param mode                          era.m.plugin.ViewModeEnum
----@return nil
-function M:__run_mode_action__(mode)
-  self:__select_mode__(mode)
-  if mode == "home" or mode == "profile" then
-    return
-  end
-
+function M:__run_action__(action)
   local Action = require("era.m.plugin.action")
   if Action.is_running() then
     return
@@ -265,29 +230,14 @@ function M:__run_mode_action__(mode)
     end
   end
 
-  if mode == "install" then
+  if action == "install" then
     Action.install(update):finally(update)
-  elseif mode == "update" then
+  elseif action == "update" then
     Action.update(update):finally(update)
   else
-    Action.clean():finally(update)
+    Action.clean(update):finally(update)
   end
   self.widget:update()
-end
-
----@return nil
-function M:__on_left_mouse__()
-  local mouse = vim.fn.getmousepos()
-  if mouse.winid == self.winnr then
-    local mode = self.widget:get_mode_at(mouse.line, mouse.column)
-    if mode then
-      self:__select_mode__(mode)
-      return
-    end
-  end
-
-  local key = vim.api.nvim_replace_termcodes("<LeftMouse>", true, false, true) ---@type string
-  vim.api.nvim_feedkeys(key, "n", false)
 end
 
 ---@return nil
@@ -312,33 +262,17 @@ function M:__setup_keymaps__()
   local keymaps = {
     {
       modes = { "n" },
-      key = "H",
-      callback = function()
-        self:__select_mode__("home")
-      end,
-      desc = "Home",
-    },
-    {
-      modes = { "n" },
       key = "I",
       callback = function()
-        self:__run_mode_action__("install")
+        self:__run_action__("install")
       end,
       desc = "Install",
     },
     {
       modes = { "n" },
-      key = "P",
-      callback = function()
-        self:__select_mode__("profile")
-      end,
-      desc = "Profile",
-    },
-    {
-      modes = { "n" },
       key = "U",
       callback = function()
-        self:__run_mode_action__("update")
+        self:__run_action__("update")
       end,
       desc = "Update",
     },
@@ -346,17 +280,9 @@ function M:__setup_keymaps__()
       modes = { "n" },
       key = "X",
       callback = function()
-        self:__run_mode_action__("clean")
+        self:__run_action__("clean")
       end,
       desc = "Clean",
-    },
-    {
-      modes = { "n" },
-      key = "<LeftMouse>",
-      callback = function()
-        self:__on_left_mouse__()
-      end,
-      desc = "Activate tab",
     },
     {
       modes = { "n" },

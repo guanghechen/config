@@ -36,7 +36,6 @@ local Action = require("era.m.plugin.action")
 local function reset_action()
   t:patch_table(Action, "_running", false)
   t:patch_table(Action, "_tasks", {})
-  t:patch_table(Action, "_history", {})
 end
 
 t:test("string build resolves spawn failures", function()
@@ -76,8 +75,29 @@ t:test("build releases state after an unexpected rejection", function()
     Action.get_tasks()["blink.cmp"].message:find("unexpected build rejection", 1, true) ~= nil,
     "task diagnostic"
   )
-  t.assert_eq("error", Action.get_history()["blink.cmp"].status, "history status")
   t.assert_eq(2, progress_count, "progress notifications")
+end)
+
+t:test("clean reports inline task progress and retains its result", function()
+  reset_action()
+  t:patch_table(State, "collect_orphan_plugins", function()
+    return { "unused.nvim" }
+  end)
+  t:patch_table(State, "remove_orphan_lock_entries", function() end)
+  t:patch_table(Action, "__rm_recursive__", function()
+    return true
+  end)
+
+  local progress_count = 0
+  local future = Action.clean(function()
+    progress_count = progress_count + 1
+  end)
+
+  t.assert_true(future:is_resolved(), "clean future")
+  t.assert_false(Action.is_running(), "clean lock")
+  t.assert_eq("done", Action.get_tasks()["unused.nvim"].status, "clean task status")
+  t.assert_eq("Removed", Action.get_tasks()["unused.nvim"].message, "clean task message")
+  t.assert_eq(2, progress_count, "clean progress notifications")
 end)
 
 t:test("non-zero string build preserves the last streamed diagnostic", function()

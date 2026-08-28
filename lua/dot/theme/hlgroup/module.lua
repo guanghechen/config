@@ -217,8 +217,6 @@ function M.default_gen_hlgroup_map(context)
 
     ---module/plugin
     m_pl_bold = { bold = true },
-    m_pl_button = { fg = u.fg2, bg = u.none },
-    m_pl_button_active = { fg = u.pink, bg = u.none },
     m_pl_cmd = { fg = u.blue },
     m_pl_comment = { fg = u.fg4, italic = true },
     m_pl_commit = { fg = u.blue },
@@ -231,7 +229,6 @@ function M.default_gen_hlgroup_map(context)
     m_pl_error = { fg = u.red },
     m_pl_event = { fg = u.yellow },
     m_pl_ft = { fg = u.aqua },
-    m_pl_h1 = { fg = u.bg1, bg = u.pink, bold = true },
     m_pl_h2 = { fg = u.fg2, bold = true, underline = true },
     m_pl_icon_cmd = { fg = u.blue },
     m_pl_icon_dep = { fg = u.red },

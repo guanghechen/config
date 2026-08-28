@@ -11,7 +11,6 @@ function M.gen_hlgroup_map(context)
 
   local bg = t and c.none or u.bg0 ---@type string
   local bg_pane = t and u.bg0 or c.none ---@type string
-  local badge_fg = u.bg1 ---@type string
   local panel_bg = cs.mix(t and c.none or c.base, t and c.none or c.overlay, 60) ---@type string
 
   return {
@@ -208,8 +207,6 @@ function M.gen_hlgroup_map(context)
 
     ---module/plugin
     m_pl_bold = { bold = true },
-    m_pl_button = { fg = c.text, bg = c.none },
-    m_pl_button_active = { fg = u.pink, bg = c.none },
     m_pl_cmd = { fg = c.accentBlue },
     m_pl_comment = { fg = c.textMuted, italic = true },
     m_pl_commit = { fg = c.accentBlue },
@@ -222,7 +219,6 @@ function M.gen_hlgroup_map(context)
     m_pl_error = { fg = c.accentRed },
     m_pl_event = { fg = c.accentYellow },
     m_pl_ft = { fg = c.accentAqua },
-    m_pl_h1 = { fg = badge_fg, bg = u.pink, bold = true },
     m_pl_h2 = { fg = c.text, bold = true, underline = true },
     m_pl_icon_cmd = { fg = c.accentBlue },
     m_pl_icon_dep = { fg = c.accentRed },

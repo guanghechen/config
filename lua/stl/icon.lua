@@ -355,6 +355,7 @@ M.ui = {
   ArrowClosed = "",
   ArrowOpen = "",
   ArrowPresent = "",
+  ArrowUp = "",
   BigCircle = "",
   BigUnfilledCircle = "",
   BookMark = "󰃃",
@@ -415,6 +416,7 @@ M.ui = {
   Table = "",
   Telescope = "",
   Terminal = "",
+  Trash = "󰆴",
   Window = "",
 }
 

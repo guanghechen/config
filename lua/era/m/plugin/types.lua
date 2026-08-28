@@ -1,6 +1,4 @@
----@alias era.m.plugin.ViewModeEnum
----| "home"
----| "profile"
+---@alias era.m.plugin.ActionEnum
 ---| "install"
 ---| "update"
 ---| "clean"
@@ -64,11 +62,6 @@
 ---@class era.m.plugin.ITextSegment
 ---@field public str                    string
 ---@field public hl                     string|nil
-
----@class era.m.plugin.IButtonRange
----@field public mode                   era.m.plugin.ViewModeEnum
----@field public start_col              integer
----@field public end_col                integer
 
 ---@class era.m.plugin.IKeySpec
 ---@field public lhs                    string

@@ -9,11 +9,8 @@ local M = {}
 ---@type integer
 local CONCURRENCY = 8
 
----@type table<string, era.m.plugin.ITaskState>
+---@type table<string, era.m.plugin.ITaskState> Current operation snapshot, retained until the next action starts
 M._tasks = {}
-
----@type table<string, era.m.plugin.ITaskState>
-M._history = {}
 
 ---@type boolean
 M._running = false
@@ -26,11 +23,6 @@ end
 ---@return table<string, era.m.plugin.ITaskState>
 function M.get_tasks()
   return M._tasks
-end
-
----@return table<string, era.m.plugin.ITaskState>
-function M.get_history()
-  return M._history
 end
 
 ---@param on_progress                   ?fun(): nil
@@ -83,8 +75,9 @@ function M.update(on_progress)
   end)
 end
 
+---@param on_progress                   ?fun(): nil
 ---@return stl.c.Future Resolves with nil when clean completes
-function M.clean()
+function M.clean(on_progress)
   if M._running then
     return stl.c.Future.resolve(nil)
   end
@@ -109,6 +102,9 @@ function M.clean()
       to_commit = nil,
     }
     M._tasks[name] = task
+    if on_progress then
+      on_progress()
+    end
 
     local path = dot.path.join(State.options.root, name) ---@type string
     local ok = M.__rm_recursive__(path) ---@type boolean
@@ -118,6 +114,9 @@ function M.clean()
     else
       task.status = "error"
       task.message = "Failed to remove"
+    end
+    if on_progress then
+      on_progress()
     end
   end
 
@@ -184,7 +183,6 @@ function M.build(name, on_progress)
       task.message = "Build failed: " .. tostring(result and result.err or "unknown error")
     end
 
-    M.__save_to_history__()
     M._running = false
     if on_progress then
       on_progress()
@@ -366,13 +364,6 @@ function M.__run_build__(spec, path, task, on_output, token)
   end)
 end
 
----@return nil
-function M.__save_to_history__()
-  for name, task in pairs(M._tasks) do
-    M._history[name] = vim.deepcopy(task)
-  end
-end
-
 ---@param path                          string
 ---@param token                         ?stl.c.CancellationToken
 ---@return stl.c.Future                 Resolves with { ok: boolean, err: ?string }
@@ -547,7 +538,6 @@ function M.__install_plugins__(specs, on_progress)
 
   return M.__throttle_futures__(futures):map(function()
     State.update_lock(new_lock)
-    M.__save_to_history__()
     return nil
   end)
 end
@@ -774,7 +764,6 @@ function M.__update_plugins__(specs, on_progress)
 
   return M.__throttle_futures__(futures):map(function()
     State.update_lock(new_lock)
-    M.__save_to_history__()
     return nil
   end)
 end

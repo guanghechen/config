@@ -12,31 +12,16 @@ function M.setup(specs)
     require("era.m.plugin.loader").setup(specs)
   end
 
-  vim.api.nvim_create_user_command("Plugin", function(cmd)
-    local mode = "home" ---@type era.m.plugin.ViewModeEnum
-    if cmd.args == "profile" then
-      mode = "profile"
-    elseif cmd.args == "install" then
-      mode = "install"
-    elseif cmd.args == "update" then
-      mode = "update"
-    elseif cmd.args == "clean" then
-      mode = "clean"
-    end
-    M.show(mode)
+  vim.api.nvim_create_user_command("Plugin", function()
+    M.show()
   end, {
-    nargs = "?",
-    complete = function()
-      return { "home", "profile", "install", "update", "clean" }
-    end,
     desc = "Open plugin info window",
   })
 end
 
----@param mode                          era.m.plugin.ViewModeEnum|nil
 ---@return nil
-function M.show(mode)
-  require("era.m.plugin.view").show(mode)
+function M.show()
+  require("era.m.plugin.view").show()
 end
 
 ---@return nil
