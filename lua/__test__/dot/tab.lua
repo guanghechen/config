@@ -272,6 +272,42 @@ t:test("TabClosed deletes only buffers owned exclusively by closed tabs", functi
   t.assert_true(unrelated_modified, "unrelated buffer modified option")
 end)
 
+t:test("TabClosed preserves modified buffers owned exclusively by the closed tab", function()
+  local Tab = setup()
+  vim.cmd.tabnew()
+
+  local tabnr = vim.api.nvim_get_current_tabpage()
+  local bufnr = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_win_set_buf(0, bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved" })
+  Tab.resolve(tabnr, true)
+
+  local scheduled = nil ---@type fun()|nil
+  t:patch_table(vim, "schedule", function(callback)
+    scheduled = callback
+  end)
+  local tabclosed_autocmd = vim.api.nvim_create_autocmd("TabClosed", {
+    callback = function()
+      Tab.on_close()
+    end,
+  })
+
+  vim.cmd.tabclose()
+  assert(scheduled)()
+  local valid = vim.api.nvim_buf_is_valid(bufnr)
+  local modified = valid and vim.api.nvim_get_option_value("modified", { buf = bufnr }) or false
+  local line = valid and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] or nil
+
+  pcall(vim.api.nvim_del_autocmd, tabclosed_autocmd)
+  if valid then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+
+  t.assert_true(valid, "modified buffer remains valid")
+  t.assert_true(modified, "modified flag is preserved")
+  t.assert_eq("unsaved", line, "unsaved content is preserved")
+end)
+
 t:test("multiple TabClosed events coalesce into one refresh", function()
   local Tab = setup()
   local tabnr_first = vim.api.nvim_get_current_tabpage()

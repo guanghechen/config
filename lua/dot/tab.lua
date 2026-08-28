@@ -245,7 +245,11 @@ function M.refresh(bufnrs)
 
   local bufnrs_unreferenced = M.retrieve_unreferenced_bufnrs(bufnrs) ---@type integer[]
   for _, bufnr in ipairs(bufnrs_unreferenced) do
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+    -- A tab close must never discard unsaved edits owned only by that tab.
+    local modified = vim.api.nvim_get_option_value("modified", { buf = bufnr }) ---@type boolean
+    if not modified then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
   end
 end
 
