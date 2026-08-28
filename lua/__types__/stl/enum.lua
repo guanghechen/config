@@ -103,7 +103,6 @@
 ----------------------------------------------------------------------------------------------------
 
 ---@alias stl.t.TabTypeEnum
----| "acp"
 ---| "diffview_commits"
 ---| "diffview_workspace"
 ---| "normal"
@@ -111,13 +110,11 @@
 ---@alias stl.e.TabTypeEnum stl.t.TabTypeEnum
 
 ---@class stl.e.ITabTypeEnum
----@field public ACP                    "acp"
 ---@field public DIFFVIEW_COMMITS       "diffview_commits"
 ---@field public DIFFVIEW_WORKSPACE     "diffview_workspace"
 ---@field public NORMAL                 "normal"
 
 ---@class stl.e.ITabTypeSet
----@field public ACP                    stl.t.TabTypeEnum[]
 ---@field public ALL                    stl.t.TabTypeEnum[]
 ---@field public DIFFVIEW               stl.t.TabTypeEnum[]
 ---@field public DIFFVIEW_COMMITS       stl.t.TabTypeEnum[]

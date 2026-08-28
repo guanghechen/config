@@ -10,15 +10,6 @@
   "language": "en",
   "version": "0.2",
   "words": [
-    "Facpcancel",
-    "Facpclear",
-    "Facpclose",
-    "Facpfocus",
-    "Facpnew",
-    "Facpopen",
-    "Facpselectprovider",
-    "Facpsubmit",
-    "Facptoggle",
     "Faiattachagent",
     "Faidetachagent",
     "Faiedit",
@@ -1073,4 +1064,3 @@
     "zindex"
   ]
 }
-

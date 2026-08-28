@@ -6,7 +6,6 @@
 
 ```lua
 ---@alias stl.e.TabTypeEnum
----| "acp"
 ---| "diffview_commits"
 ---| "diffview_workspace"
 ---| "normal"
@@ -15,7 +14,6 @@
 | Type                 | 描述                                                      |
 |:---------------------|:----------------------------------------------------------|
 | `normal`             | 普通编辑 tab                                              |
-| `acp`                | ACP (Anthropic Claude Panel) 交互界面                     |
 | `diffview_workspace` | Git Diff 视图（staged/unstaged）                          |
 | `diffview_commits`   | Git Log 视图（支持 path_filter 实现单文件/目录历史过滤）  |
 
@@ -24,14 +22,12 @@
 ```lua
 -- 具体类型枚举
 stl.e.TabTypeEnum.NORMAL               -- "normal"
-stl.e.TabTypeEnum.ACP                  -- "acp"
 stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE   -- "diffview_workspace"
 stl.e.TabTypeEnum.DIFFVIEW_COMMITS     -- "diffview_commits"
 
 -- 类型集合（便捷常量，均为数组）
 stl.e.TabTypeSet.ALL                   -- 所有类型
 stl.e.TabTypeSet.NORMAL                -- { "normal" }
-stl.e.TabTypeSet.ACP                   -- { "acp" }
 stl.e.TabTypeSet.DIFFVIEW              -- 所有 diffview 类型
 stl.e.TabTypeSet.DIFFVIEW_WORKSPACE    -- { "diffview_workspace" }
 stl.e.TabTypeSet.DIFFVIEW_COMMITS      -- { "diffview_commits" }
@@ -115,7 +111,6 @@ era.m.tabline.register(stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE, nvimbar)
 | tabtype              | 显示内容                                          |
 |:---------------------|:--------------------------------------------------|
 | `normal`             | buffer 列表 + tab 指示器                          |
-| `acp`                | ACP 专用标题（会话信息）                          |
 | `diffview_workspace` | Diffview 专用标题                                 |
 | `diffview_commits`   | Diffview 专用标题（带 path_filter 时显示文件名）  |
 | 其他                 | fallback 到 normal 渲染                           |

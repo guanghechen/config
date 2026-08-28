@@ -16,8 +16,6 @@ local css_filetypes = {
 
 ---@type table<string, true>
 local md_filetypes = {
-  ["acp-chatbox"] = true,
-  ["acp-main"] = true,
   ["image-viewer"] = true,
   ["markdown"] = true,
   ["notepad"] = true,

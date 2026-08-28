@@ -87,7 +87,6 @@ M.VimModeNameEnum = {
 ---@class stl.e.ITabTypeEnum
 M.TabTypeEnum = {
   -- stylua: ignore start
-  ACP                = "acp",
   DIFFVIEW_COMMITS   = "diffview_commits",
   DIFFVIEW_WORKSPACE = "diffview_workspace",
   NORMAL             = "normal",
@@ -96,10 +95,8 @@ M.TabTypeEnum = {
 
 ---@class stl.e.ITabTypeSet
 M.TabTypeSet = {
-  ACP = { M.TabTypeEnum.ACP },
   ALL = {
     M.TabTypeEnum.NORMAL,
-    M.TabTypeEnum.ACP,
     M.TabTypeEnum.DIFFVIEW_COMMITS,
     M.TabTypeEnum.DIFFVIEW_WORKSPACE,
   },

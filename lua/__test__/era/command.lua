@@ -82,17 +82,15 @@ t:test("command definitions and implementations stay symmetric", function()
   t.assert_eq(1, prev_info_calls, "previous info implementation")
 
   local tabnr = vim.api.nvim_get_current_tabpage()
-  for _, tabtype in ipairs({ enums.TabTypeEnum.NORMAL, enums.TabTypeEnum.ACP }) do
-    vim.t[tabnr].tabtype = tabtype
-    Command.definitions.explorer.reveal:execute()
-  end
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
+  Command.definitions.explorer.reveal:execute()
   for _, tabtype in ipairs({ enums.TabTypeEnum.DIFFVIEW_WORKSPACE, enums.TabTypeEnum.DIFFVIEW_COMMITS }) do
     vim.t[tabnr].tabtype = tabtype
     Command.definitions.explorer.reveal:execute()
   end
   vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
 
-  t.assert_eq(2, explorer_reveal_calls, "normal and ACP explorer reveal")
+  t.assert_eq(1, explorer_reveal_calls, "normal explorer reveal")
   t.assert_eq(2, diffview_reveal_calls, "Diffview navigation reveal")
 
   local test_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

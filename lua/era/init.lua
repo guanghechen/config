@@ -74,7 +74,6 @@ local fn = setmetatable({
 
 ---@class era.m.__mods
 local __m__mods = {
-  acp = "era.m.acp",
   ai = "era.m.ai",
   clipboard = "era.m.clipboard",
   colorpicker = "era.m.colorpicker",
@@ -122,7 +121,6 @@ local __m__mods = {
 
 ---@class era.m
 ---@field public __mods                 era.m.__mods
----@field public acp                    era.m.acp
 ---@field public ai                     era.m.ai
 ---@field public clipboard              era.m.clipboard
 ---@field public colorpicker            era.m.colorpicker

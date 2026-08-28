@@ -2,75 +2,6 @@ local command = dot.command ---@type dot.command
 local K = dot.command.definitions ---@type dot.command.definitions
 local git_visual = require("era.m.git.visual")
 
---[acp] --------------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.acp.cancel.uuid,
-    tabtypes = stl.e.TabTypeSet.ACP,
-    action = function()
-      era.m.acp.cancel()
-    end,
-  })
-  .implement({
-    uuid = K.acp.clear.uuid,
-    tabtypes = stl.e.TabTypeSet.ACP,
-    action = function()
-      era.m.acp.clear()
-    end,
-  })
-  .implement({
-    uuid = K.acp.close.uuid,
-    tabtypes = stl.e.TabTypeSet.ACP,
-    action = function()
-      era.m.acp.close()
-    end,
-  })
-  .implement({
-    uuid = K.acp.focus.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      era.m.acp.focus()
-    end,
-  })
-  .implement({
-    uuid = K.acp.new.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      era.m.acp.new_session()
-    end,
-  })
-  .implement({
-    uuid = K.acp.open.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function(args)
-      local provider = args ~= "" and args or nil
-      era.m.acp.open({ provider = provider })
-    end,
-  })
-  .implement({
-    uuid = K.acp.select_provider.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      era.m.acp.select_provider()
-    end,
-  })
-  .implement({
-    uuid = K.acp.submit.uuid,
-    tabtypes = stl.e.TabTypeSet.ACP,
-    action = function(args)
-      local content = args ~= "" and args or nil
-      era.m.acp.submit(content)
-    end,
-  })
-  .implement({
-    uuid = K.acp.toggle.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function(args)
-      local provider = args ~= "" and args or nil
-      era.m.acp.toggle({ provider = provider })
-    end,
-  })
-
 --[ai] ---------------------------------------------------------------------------------------------
 command
   .implement({
@@ -605,10 +536,7 @@ command
   })
   .implement({
     uuid = K.explorer.reveal.uuid,
-    tabtypes = {
-      stl.e.TabTypeEnum.ACP,
-      stl.e.TabTypeEnum.NORMAL,
-    },
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.widget.explorer.reveal()
     end,

@@ -169,17 +169,6 @@ ms({ "n", "x" }, "<leader>it", K.inspect.inspect_tab)
 ms({ "n", "x" }, "<leader>iw", K.inspect.inspect_window)
 ----------------------------------------------------------------------------------------#[i]nspect--
 
---#[o]pencode/acp-----------------------------------------------------------------------------------
-ms({ "i", "n", "t", "x" }, { "<C-a>;", "<D-;>", "<M-;>" }, K.acp.toggle)
-ms({ "n", "x" }, "<leader>oa", K.acp.select_provider)
-ms({ "n", "x" }, "<leader>oC", K.acp.clear)
-ms({ "n", "x" }, "<leader>od", K.acp.close)
-ms({ "n", "x" }, "<leader>of", K.acp.focus)
-ms({ "n", "x" }, "<leader>on", K.acp.new)
-ms({ "n", "x" }, "<leader>oo", K.acp.toggle)
-ms({ "n", "x" }, "<leader>ox", K.acp.cancel)
------------------------------------------------------------------------------------#[o]pencode/acp--
-
 --#[e]xplorer---------------------------------------------------------------------------------------
 ms({ "n", "x" }, "<leader>ec", K.explorer.focus_cwd)
 ms({ "n", "x" }, "<leader>er", K.explorer.reveal)
