@@ -4,6 +4,8 @@ pub mod dict;
 pub mod find;
 pub mod r#fn;
 pub mod fs;
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+mod im;
 pub mod path;
 pub mod replace;
 pub mod search;
@@ -19,6 +21,11 @@ use mlua::IntoLuaMulti;
 use mlua::MultiValue as LuaMultiValue;
 use mlua::Value as LuaValue;
 use mlua::prelude::*;
+
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+use std::cell::RefCell;
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+use std::rc::Rc;
 
 use crate::dict::search::SearchResultKind;
 
@@ -37,6 +44,141 @@ fn fn_module(lua: &Lua) -> LuaResult<LuaTable> {
         ("uuid", f(lua, |_, ()| Ok(r#fn::uuid()))?),
         ("md5", f(lua, |_, input: String| Ok(r#fn::md5(&input)))?),
     ])
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
+    let state = Rc::new(RefCell::new(im::Backend::default()));
+
+    #[cfg(target_os = "linux")]
+    let setup_state = Rc::clone(&state);
+    #[cfg(target_os = "linux")]
+    let setup = lua.create_function(move |lua, params: LuaTable| -> LuaResult<LuaMultiValue> {
+        let executable = params.get::<String>("executable")?;
+        let result = setup_state
+            .try_borrow_mut()
+            .map_err(|_| {
+                LuaError::RuntimeError("IM state is already borrowed".to_owned())
+            })?
+            .setup(&executable);
+        match result {
+            Ok(()) => Ok(LuaMultiValue::from_vec(vec![
+                true.into_lua(lua)?,
+                LuaValue::Nil,
+            ])),
+            Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                LuaValue::Nil,
+                error.into_lua(lua)?,
+            ])),
+        }
+    })?;
+
+    let current_state = Rc::clone(&state);
+    let current = lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
+        let result = current_state
+            .try_borrow_mut()
+            .map_err(|_| {
+                LuaError::RuntimeError("IM state is already borrowed".to_owned())
+            })?
+            .current();
+        match result {
+            Ok(source_id) => Ok(LuaMultiValue::from_vec(vec![
+                source_id.into_lua(lua)?,
+                LuaValue::Nil,
+            ])),
+            Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                LuaValue::Nil,
+                error.into_lua(lua)?,
+            ])),
+        }
+    })?;
+
+    let select_state = Rc::clone(&state);
+    let select =
+        lua.create_function(move |lua, source_id: String| -> LuaResult<LuaMultiValue> {
+            let result = select_state
+                .try_borrow_mut()
+                .map_err(|_| {
+                    LuaError::RuntimeError("IM state is already borrowed".to_owned())
+                })?
+                .select(&source_id);
+            match result {
+                Ok(()) => Ok(LuaMultiValue::from_vec(vec![
+                    true.into_lua(lua)?,
+                    LuaValue::Nil,
+                ])),
+                Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                    LuaValue::Nil,
+                    error.into_lua(lua)?,
+                ])),
+            }
+        })?;
+
+    let get_input_method_state = Rc::clone(&state);
+    let get_input_method = lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
+        let result = get_input_method_state
+            .try_borrow_mut()
+            .map_err(|_| {
+                LuaError::RuntimeError("IM state is already borrowed".to_owned())
+            })?
+            .get_input_method();
+        match result {
+            Ok(input_method) => Ok(LuaMultiValue::from_vec(vec![
+                input_method.as_str().into_lua(lua)?,
+                LuaValue::Nil,
+            ])),
+            Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                LuaValue::Nil,
+                error.into_lua(lua)?,
+            ])),
+        }
+    })?;
+
+    let set_input_method_state = Rc::clone(&state);
+    let set_input_method = lua.create_function(
+        move |lua, input_method: String| -> LuaResult<LuaMultiValue> {
+            let result = match im::InputMethod::parse(&input_method) {
+                Ok(input_method) => set_input_method_state
+                    .try_borrow_mut()
+                    .map_err(|_| {
+                        LuaError::RuntimeError("IM state is already borrowed".to_owned())
+                    })?
+                    .set_input_method(input_method),
+                Err(error) => Err(error),
+            };
+            match result {
+                Ok(()) => Ok(LuaMultiValue::from_vec(vec![
+                    true.into_lua(lua)?,
+                    LuaValue::Nil,
+                ])),
+                Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                    LuaValue::Nil,
+                    error.into_lua(lua)?,
+                ])),
+            }
+        },
+    )?;
+
+    let is_input_method = lua.create_function(
+        |_, (source_id, input_method): (String, String)| -> LuaResult<bool> {
+            let Ok(input_method) = im::InputMethod::parse(&input_method) else {
+                return Ok(false);
+            };
+            Ok(im::is_input_method(&source_id, input_method))
+        },
+    )?;
+
+    let exports = lua.create_table()?;
+    #[cfg(target_os = "linux")]
+    exports.set("setup", setup)?;
+    exports.set("current", current.clone())?;
+    exports.set("capture", current)?;
+    exports.set("select", select.clone())?;
+    exports.set("restore", select)?;
+    exports.set("is_input_method", is_input_method)?;
+    exports.set("get_input_method", get_input_method)?;
+    exports.set("set_input_method", set_input_method)?;
+    Ok(exports)
 }
 
 fn dict_module(lua: &Lua) -> LuaResult<LuaTable> {
@@ -980,6 +1122,12 @@ fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("fn", fn_module(lua)?)?;
     exports.set("path", path_module(lua)?)?;
     exports.set("fs", fs_module(lua)?)?;
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    exports.set("im", im_module(lua)?)?;
+    #[cfg(target_os = "linux")]
+    if im::is_available() {
+        exports.set("im", im_module(lua)?)?;
+    }
     exports.set("replace", replace_module(lua)?)?;
     exports.set("find", find_module(lua)?)?;
     exports.set("search", search_module(lua)?)?;

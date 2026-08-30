@@ -39,6 +39,7 @@ Submodules:
 - `yoz.find`: file finding (fd-like)
 - `yoz.fn`: utility functions (uuid, md5)
 - `yoz.fs`: filesystem operations (collect_files, readdir, move, get_filesize)
+- `yoz.im`: platform IM source-token access plus thin semantic mapping (macOS, Windows, and WSL)
 - `yoz.path`: path handling (normalize, join, relative, resolve, split, basename)
 - `yoz.replace`: text replacement with regex support and preview
 - `yoz.search`: content search (ripgrep-like, search_in_files, search_in_lines)
