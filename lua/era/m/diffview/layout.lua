@@ -5,6 +5,12 @@ local __module_name__ = "era.m.diffview.layout" ---@type string
 ---@class era.m.diffview.layout
 local M = {}
 
+---@type table<"down"|"up", string>
+local MOUSE_SCROLL_KEYS = {
+  down = "\5", -- <C-e>
+  up = "\25", -- <C-y>
+}
+
 ----------------------------------------------------------------------------------------------------
 -- Types
 ----------------------------------------------------------------------------------------------------
@@ -311,6 +317,30 @@ function M.sync_scroll(left_winnr, right_winnr)
   -- Trigger scrollbind sync
   vim.api.nvim_win_call(left_winnr, function()
     vim.cmd("normal! \14\25") -- <C-e><C-y>
+  end)
+end
+
+---Scroll the window under the mouse while preserving the currently focused window.
+---@param direction                     "down"|"up"
+function M.scroll_mouse(direction)
+  local key = MOUSE_SCROLL_KEYS[direction]
+  if not key then
+    return
+  end
+
+  local winnr = vim.fn.getmousepos().winid ---@type integer
+  if winnr == 0 or not M.is_valid_win(winnr) then
+    return
+  end
+
+  local mousescroll = vim.api.nvim_get_option_value("mousescroll", { scope = "global" }) ---@type string
+  local lines = tonumber(mousescroll:match("ver:(%d+)")) or 3 ---@type integer
+  if lines <= 0 then
+    return
+  end
+
+  vim.api.nvim_win_call(winnr, function()
+    vim.cmd(("normal! %d%s"):format(lines, key))
   end)
 end
 

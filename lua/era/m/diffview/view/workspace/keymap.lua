@@ -15,6 +15,8 @@ function M.gen_changes(ctx)
   ---@type stl.t.IKeymap[]
   return {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(workspace): Select entry / Toggle directory", callback = function() action.select(ctx) end },
+    { modes = { "n" }, key = "<ScrollWheelDown>", desc = "diffview(workspace): Scroll window under mouse down", callback = function() action.scroll_mouse("down") end },
+    { modes = { "n" }, key = "<ScrollWheelUp>", desc = "diffview(workspace): Scroll window under mouse up", callback = function() action.scroll_mouse("up") end },
     { modes = { "n" }, key = "<C-j>", desc = "diffview(workspace): Next file diff", callback = function() action.goto_next_entry(ctx) end },
     { modes = { "n" }, key = "<C-k>", desc = "diffview(workspace): Prev file diff", callback = function() action.goto_prev_entry(ctx) end },
     { modes = { "n" }, key = "<CR>", desc = "diffview(workspace): Select entry / Toggle directory", callback = function() action.select(ctx) end },

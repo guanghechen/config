@@ -115,13 +115,11 @@ function M.toggle_commits()
     local st = commits_state.get(tabnr)
     local lyt = commits_view.get_layout(tabnr)
     if st and lyt then
-      commits_view.toggle_commits(lyt)
+      local ctx = { layout = lyt, state = st } ---@type era.m.diffview.view.commits.IContext
+      commits_view.toggle_commits(ctx)
       -- Re-render if shown
       if lyt.commits_winnr and vim.api.nvim_win_is_valid(lyt.commits_winnr) then
-        commits_view.render_commits({
-          layout = lyt,
-          state = st,
-        })
+        commits_view.render_commits(ctx)
         vim.api.nvim_set_current_win(lyt.commits_winnr)
       end
     end
@@ -168,13 +166,11 @@ function M.toggle_files()
     local st = commits_state.get(tabnr)
     local lyt = commits_view.get_layout(tabnr)
     if st and lyt then
-      commits_view.toggle_filetree(lyt)
+      local ctx = { layout = lyt, state = st } ---@type era.m.diffview.view.commits.IContext
+      commits_view.toggle_filetree(ctx)
       -- Re-render if shown
       if lyt.filetree_winnr and vim.api.nvim_win_is_valid(lyt.filetree_winnr) then
-        commits_view.render_filetree({
-          layout = lyt,
-          state = st,
-        })
+        commits_view.render_filetree(ctx)
         vim.api.nvim_set_current_win(lyt.filetree_winnr)
       end
     end

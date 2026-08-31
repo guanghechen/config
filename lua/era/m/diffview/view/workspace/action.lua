@@ -2,6 +2,7 @@
 local __module_name__ = "era.m.diffview.view.workspace.action" ---@type string
 
 local data = require("era.m.diffview.data")
+local layout_util = require("era.m.diffview.layout")
 local pane_changes = require("era.m.diffview.pane.changes")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 local util = require("era.m.diffview.util")
@@ -866,6 +867,12 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.focus_right(ctx)
   workspace_view.focus_right(ctx.layout)
+end
+
+---Scroll the window under the mouse without changing focus.
+---@param direction                      "down"|"up"
+function M.scroll_mouse(direction)
+  layout_util.scroll_mouse(direction)
 end
 
 ---Cycle focus between panels

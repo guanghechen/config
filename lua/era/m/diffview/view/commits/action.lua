@@ -3,6 +3,7 @@ local __module_name__ = "era.m.diffview.view.commits.action" ---@type string
 
 local config = require("era.m.diffview.config")
 local data = require("era.m.diffview.data")
+local layout_util = require("era.m.diffview.layout")
 local pane_commits = require("era.m.diffview.pane.commits")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 local commits_state = require("era.m.diffview.view.commits.state")
@@ -541,7 +542,7 @@ function M.reveal(ctx)
     return
   end
 
-  commits_view.show_commits(ctx.layout)
+  commits_view.show_commits(ctx)
   require("era.m.diffview.view.commits.keymap").setup_commits(ctx)
 
   local current = ctx.state:get_current_commit()
@@ -581,6 +582,12 @@ function M.focus_right(ctx)
   commits_view.focus_right(ctx.layout)
 end
 
+---Scroll the window under the mouse without changing focus.
+---@param direction                      "down"|"up"
+function M.scroll_mouse(direction)
+  layout_util.scroll_mouse(direction)
+end
+
 ---Cycle focus between panels
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.cycle_focus(ctx)
@@ -594,14 +601,14 @@ end
 ---Toggle commits panel visibility
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.toggle_commits(ctx)
-  ctx.layout = commits_view.toggle_commits(ctx.layout)
+  ctx.layout = commits_view.toggle_commits(ctx)
   commits_view.set_layout(ctx.layout.tabnr, ctx.layout)
 end
 
 ---Toggle filetree panel visibility
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.toggle_filetree(ctx)
-  ctx.layout = commits_view.toggle_filetree(ctx.layout)
+  ctx.layout = commits_view.toggle_filetree(ctx)
   commits_view.set_layout(ctx.layout.tabnr, ctx.layout)
 end
 

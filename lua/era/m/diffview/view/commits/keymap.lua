@@ -38,6 +38,8 @@ function M.gen_commits(ctx)
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(commits): Select / Toggle expand", callback = function() action.select(ctx) end },
+    { modes = { "n" }, key = "<ScrollWheelDown>", desc = "diffview(commits): Scroll window under mouse down", callback = function() action.scroll_mouse("down") end },
+    { modes = { "n" }, key = "<ScrollWheelUp>", desc = "diffview(commits): Scroll window under mouse up", callback = function() action.scroll_mouse("up") end },
     { modes = { "n" }, key = "<CR>", desc = "diffview(commits): Select / Toggle expand", callback = function() action.select(ctx) end },
     { modes = { "n" }, key = "<Tab>", desc = "diffview(commits): Set as active commit", callback = function() action.set_active_commit(ctx) end },
     { modes = { "n" }, key = "K", desc = "diffview(commits): Show commit details", callback = function() action.show_details(ctx) end },
@@ -77,6 +79,8 @@ function M.gen_filetree(ctx)
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(commits): Select file", callback = function() action.view_diff(ctx) end },
+    { modes = { "n" }, key = "<ScrollWheelDown>", desc = "diffview(commits): Scroll window under mouse down", callback = function() action.scroll_mouse("down") end },
+    { modes = { "n" }, key = "<ScrollWheelUp>", desc = "diffview(commits): Scroll window under mouse up", callback = function() action.scroll_mouse("up") end },
     { modes = { "n" }, key = "<CR>", desc = "diffview(commits): Select file", callback = function() action.view_diff(ctx) end },
     { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },

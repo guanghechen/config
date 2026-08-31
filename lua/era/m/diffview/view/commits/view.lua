@@ -390,9 +390,10 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Show commits panel (if hidden)
----@param lyt                            era.m.diffview.view.commits.ILayout
+---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return era.m.diffview.view.commits.ILayout
-function M.show_commits(lyt)
+function M.show_commits(ctx)
+  local lyt = ctx.layout
   if lyt.commits_winnr and vim.api.nvim_win_is_valid(lyt.commits_winnr) then
     return lyt
   end
@@ -416,6 +417,7 @@ function M.show_commits(lyt)
   pane_commits.apply_winopts(commits_winnr)
 
   lyt.commits_winnr = commits_winnr
+  require("era.m.diffview.view.commits.keymap").setup_commits(ctx)
 
   return lyt
 end
@@ -438,20 +440,22 @@ function M.hide_commits(lyt)
 end
 
 ---Toggle commits panel visibility
----@param lyt                            era.m.diffview.view.commits.ILayout
+---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return era.m.diffview.view.commits.ILayout
-function M.toggle_commits(lyt)
+function M.toggle_commits(ctx)
+  local lyt = ctx.layout
   if lyt.commits_winnr and vim.api.nvim_win_is_valid(lyt.commits_winnr) then
     return M.hide_commits(lyt)
   else
-    return M.show_commits(lyt)
+    return M.show_commits(ctx)
   end
 end
 
 ---Show filetree panel (if hidden)
----@param lyt                            era.m.diffview.view.commits.ILayout
+---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return era.m.diffview.view.commits.ILayout
-function M.show_filetree(lyt)
+function M.show_filetree(ctx)
+  local lyt = ctx.layout
   if lyt.filetree_winnr and vim.api.nvim_win_is_valid(lyt.filetree_winnr) then
     return lyt
   end
@@ -475,6 +479,7 @@ function M.show_filetree(lyt)
   pane_filetree.apply_winopts(filetree_winnr)
 
   lyt.filetree_winnr = filetree_winnr
+  require("era.m.diffview.view.commits.keymap").setup_filetree(ctx)
 
   return lyt
 end
@@ -491,13 +496,14 @@ function M.hide_filetree(lyt)
 end
 
 ---Toggle filetree panel visibility
----@param lyt                            era.m.diffview.view.commits.ILayout
+---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return era.m.diffview.view.commits.ILayout
-function M.toggle_filetree(lyt)
+function M.toggle_filetree(ctx)
+  local lyt = ctx.layout
   if lyt.filetree_winnr and vim.api.nvim_win_is_valid(lyt.filetree_winnr) then
     return M.hide_filetree(lyt)
   else
-    return M.show_filetree(lyt)
+    return M.show_filetree(ctx)
   end
 end
 
