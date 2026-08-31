@@ -10,7 +10,7 @@ theme[main_fg]="#464261"
 theme[title]="#464261"
 
 # Highlight color for keyboard shortcuts
-theme[hi_fg]="#286983"
+theme[hi_fg]="#56949F"
 
 # Background color of selected item in processes box
 theme[selected_bg]="#F2E9E1"
@@ -22,7 +22,7 @@ theme[selected_fg]="#464261"
 theme[inactive_fg]="#9893A5"
 
 # Misc colors for processes box including mini cpu graphs, details memory graph and details status text
-theme[proc_misc]="#286983"
+theme[proc_misc]="#56949F"
 
 # Color of text in graphs
 theme[graph_text]="#9893A5"
@@ -46,39 +46,39 @@ theme[proc_box]="#DFDAD9"
 theme[div_line]="#DFDAD9"
 
 # Temperature graph colors (green -> yellow -> red)
-theme[temp_start]="#6D8F89"
+theme[temp_start]="#286983"
 theme[temp_mid]="#EA9D34"
 theme[temp_end]="#B4637A"
 
 # CPU graph colors
-theme[cpu_start]="#6D8F89"
+theme[cpu_start]="#286983"
 theme[cpu_mid]="#EA9D34"
 theme[cpu_end]="#B4637A"
 
 # Mem/Disk free meter
-theme[free_start]="#6D8F89"
+theme[free_start]="#286983"
 theme[free_mid]="#EA9D34"
 theme[free_end]="#B4637A"
 
 # Mem/Disk cached meter
-theme[cached_start]="#56949F"
-theme[cached_mid]="#286983"
+theme[cached_start]="#D7827E"
+theme[cached_mid]="#56949F"
 theme[cached_end]="#907AA9"
 
 # Mem/Disk available meter
-theme[available_start]="#6D8F89"
+theme[available_start]="#286983"
 theme[available_mid]="#EA9D34"
 theme[available_end]="#D7827E"
 
 # Mem/Disk used meter
-theme[used_start]="#6D8F89"
+theme[used_start]="#286983"
 theme[used_mid]="#EA9D34"
 theme[used_end]="#B4637A"
 
 # Download graph colors
-theme[download_start]="#6D8F89"
-theme[download_mid]="#56949F"
-theme[download_end]="#286983"
+theme[download_start]="#286983"
+theme[download_mid]="#D7827E"
+theme[download_end]="#56949F"
 
 # Upload graph colors
 theme[upload_start]="#907AA9"
@@ -86,8 +86,8 @@ theme[upload_mid]="#B4637A"
 theme[upload_end]="#B4637A"
 
 # Process box gradient
-theme[process_start]="#56949F"
-theme[process_mid]="#286983"
+theme[process_start]="#D7827E"
+theme[process_mid]="#56949F"
 theme[process_end]="#907AA9"
 
 # Background color when process is paused (e.g. after pressing 'p')
