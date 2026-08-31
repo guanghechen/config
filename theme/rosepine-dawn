@@ -14,15 +14,15 @@ color article             default        default
 # List Colors
 # -----------------------------------------------------------------------------
 color listnormal          color59        default
-color listnormal_unread   color66      default
+color listnormal_unread   color24      default
 color listfocus           color59        color188
-color listfocus_unread    color66      color188
+color listfocus_unread    color24      color188
 
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-color title               color66       color188
-color info                color24       color188
+color title               color24       color188
+color info                color67       color188
 color hint-key            color132       color188          bold
 color hint-keys-delimiter color103        color188
 color hint-separator      default                           color188
@@ -37,14 +37,14 @@ color end-of-text-marker  color103        default
 # Article Content Highlights
 # -----------------------------------------------------------------------------
 # Metadata lines (Feed, Title, Author, Link, Date)
-highlight article "^(Feed|Title|Author|Link|Date): .+" color24       default bold
-highlight article "^(Feed|Title|Author|Link|Date):"    color67       default bold
+highlight article "^(Feed|Title|Author|Link|Date): .+" color67       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color174       default bold
 
 # URLs
-highlight article "https?://[^ ]+"                     color24       default
+highlight article "https?://[^ ]+"                     color67       default
 
 # Reference numbers [1], [2], etc.
-highlight article "\\[[0-9]+\\]"                       color67       default bold
+highlight article "\\[[0-9]+\\]"                       color174       default bold
 
 # Media indicators
 highlight article "\\((link|image|video)\\)"           color103        default

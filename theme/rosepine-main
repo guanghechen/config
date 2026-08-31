@@ -14,15 +14,15 @@ color article             default        default
 # List Colors
 # -----------------------------------------------------------------------------
 color listnormal          color189        default
-color listnormal_unread   color109      default
+color listnormal_unread   color66      default
 color listfocus           color189        color17
-color listfocus_unread    color109      color17
+color listfocus_unread    color66      color17
 
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-color title               color109       color17
-color info                color66       color17
+color title               color66       color17
+color info                color152       color17
 color hint-key            color204       color17          bold
 color hint-keys-delimiter color60        color17
 color hint-separator      default                           color17
@@ -37,14 +37,14 @@ color end-of-text-marker  color60        default
 # Article Content Highlights
 # -----------------------------------------------------------------------------
 # Metadata lines (Feed, Title, Author, Link, Date)
-highlight article "^(Feed|Title|Author|Link|Date): .+" color66       default bold
-highlight article "^(Feed|Title|Author|Link|Date):"    color152       default bold
+highlight article "^(Feed|Title|Author|Link|Date): .+" color152       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color217       default bold
 
 # URLs
-highlight article "https?://[^ ]+"                     color66       default
+highlight article "https?://[^ ]+"                     color152       default
 
 # Reference numbers [1], [2], etc.
-highlight article "\\[[0-9]+\\]"                       color152       default bold
+highlight article "\\[[0-9]+\\]"                       color217       default bold
 
 # Media indicators
 highlight article "\\((link|image|video)\\)"           color60        default
