@@ -933,6 +933,12 @@ function M.close_all_folds(_)
   execute_fold("close_all")
 end
 
+---Toggle all folds in the side-by-side preview without changing focus.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.toggle_all_folds(ctx)
+  layout_util.toggle_all_folds(ctx.layout.sbs_left_winnr, ctx.layout.sbs_right_winnr)
+end
+
 ----------------------------------------------------------------------------------------------------
 -- SBS panel collapse/expand actions
 ----------------------------------------------------------------------------------------------------

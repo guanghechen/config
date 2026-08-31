@@ -41,7 +41,7 @@ function M.gen_changes(ctx)
     { modes = { "n" }, key = "zM", desc = "diffview(workspace): Close all folds", callback = function() action.close_all_folds(ctx) end },
     { modes = { "n" }, key = "zo", desc = "diffview(workspace): Open fold", callback = function() action.open_fold(ctx) end },
     { modes = { "n" }, key = "zO", desc = "diffview(workspace): Open all folds", callback = function() action.open_all_folds(ctx) end },
-    { modes = { "n" }, key = "zR", desc = "diffview(workspace): Open all folds", callback = function() action.open_all_folds(ctx) end },
+    { modes = { "n" }, key = "zR", desc = "diffview(workspace): Toggle all diff folds", callback = function() action.toggle_all_folds(ctx) end },
     { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() ctx.state:request_refresh() end, aliases = { "<D-r>", "<M-r>" } },
   }
 end
