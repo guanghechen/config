@@ -1,0 +1,43 @@
+# kanagawa-lotus
+
+# ANSI Colors
+# Dark themes: palette 0 = surface1, palette 7 = subtext0
+# Light theme: palette 0 = subtext1, palette 7 = surface2
+palette =  0=#F2ECBC
+palette =  1=#C84053
+palette =  2=#6F894E
+palette =  3=#77713F
+palette =  4=#4D699B
+palette =  5=#B35B79
+palette =  6=#597B75
+palette =  7=#716E61
+
+# Bright colors
+# Dark themes: palette 8 = surface2, palette 15 = subtext1
+# Light theme: palette 8 = subtext0, palette 15 = surface1
+palette =  8=#8A8980
+palette =  9=#D7474B
+palette = 10=#6E915F
+palette = 11=#836F4A
+palette = 12=#6693BF
+palette = 13=#624C83
+palette = 14=#5E857A
+palette = 15=#43436C
+
+# Primary colors
+background = #F2ECBC
+foreground = #545464
+
+# Cursor colors
+cursor-color = #B35B79
+cursor-text = #E7DBA0
+
+# Selection colors
+selection-background = #C9CBD1
+selection-foreground = #545464
+
+# Split divider color
+split-divider-color = #E4D794
+
+# Unfocused split fill color
+unfocused-split-fill = #E7DBA0
