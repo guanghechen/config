@@ -4,9 +4,9 @@
 
 ## 主题模版位置(改 app 主题从这里找)
 
-- **默认应用模版**:`asset/theme/app/{app}/default.hbs` —— 每个应用必须提供一个 fallback 模版。
-- **theme family 模版**:`asset/theme/app/{app}/{family}.hbs` —— 可选;`family` 来自 scheme 的 `theme` 字段(如 `kanagawa`、`catppuccin`)。存在时优先于 `default.hbs`,同一 family 的 variants 共用该模版。
 - **配色方案**:`asset/theme/scheme/{theme}.json` —— 每个配色一个文件(如 `catppuccin-mocha.json`、`gruvbox-dark.json`、`tokyonight-night.json` 等)。
+- **默认应用模版**:`asset/theme/template/{app}/default.hbs` —— 每个应用必须提供一个 fallback 模版。
+- **theme family 模版**:`asset/theme/template/{app}/{family}.hbs` —— 可选;`family` 来自 scheme 的 `theme` 字段(如 `kanagawa`、`catppuccin`)。存在时优先于 `default.hbs`,同一 family 的 variants 共用该模版。
 - **渲染器**:`cli/theme/_util.mjs`(`render_template` / `gen_themes_per_app` / `apply_theme_per_app`);CLI 入口 `cli/theme.mjs`;各 app 的输出目录、扩展名等在 `cli/theme/_config.mjs` 定义。
 
 修改通用 app 主题时改 `default.hbs`;只有某个 theme family 确实需要独立映射时才新增或修改 `{family}.hbs`。family 模版是完整模版,不与 `default.hbs` merge 或继承。这些模版会被渲染成对应 app 的主题配置,并写入该 app 的 config 目录。
@@ -15,7 +15,7 @@
 
 ## 渲染流程
 
-`asset/theme/app/{app}/{family}.hbs`(优先)或 `default.hbs`(fallback)+ `asset/theme/scheme/{theme}.json`(配色)→ 渲染 → 写入该 app 的主题配置。
+`asset/theme/scheme/{theme}.json`(配色)+ `asset/theme/template/{app}/{family}.hbs`(优先)或 `default.hbs`(fallback)→ 渲染 → 写入该 app 的主题配置。
 
 - `gen` / `generate`:对**所有** scheme 渲染,输出到 `app.home/app.themes/{theme}{app.extname}`。
 - `apply [theme]`:对**当前(或指定)** scheme 渲染,输出到 `app.home/app.local`(单一 active 主题)。

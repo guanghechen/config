@@ -326,7 +326,7 @@ describe('theme app template resolution', () => {
           app,
           /** @type {never} */ ({ theme: 'missing-family' }),
         ),
-        path.resolve('asset/theme/app', app.name, 'default.hbs'),
+        path.resolve('asset/theme/template', app.name, 'default.hbs'),
       )
     }
   })

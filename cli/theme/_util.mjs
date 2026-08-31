@@ -7,8 +7,8 @@ import {
   IS_OSX,
   IS_WIN,
   IS_WSL,
-  XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
+  XDG_CONFIG_NODE_ASSET_THEME_TEMPLATE_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
 } from '#env'
 import { hex2ansi256 } from '#util/color'
@@ -38,7 +38,7 @@ const templateSegmentPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 export function resolve_app_template_filepath(
   app,
   scheme,
-  templateRoot = XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
+  templateRoot = XDG_CONFIG_NODE_ASSET_THEME_TEMPLATE_DIR,
 ) {
   for (const [kind, segment] of [['app', app.name], ['theme family', scheme.theme]]) {
     if (!templateSegmentPattern.test(segment)) {

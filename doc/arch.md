@@ -11,15 +11,13 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 ├── asset/                    # Static assets
 │   ├── app/                  # App-specific generated configs
 │   ├── theme/                # Theme definitions
-│   │   ├── app/              # Per-app theme templates
-│   │   └── scheme/           # Color scheme JSON files
+│   │   ├── scheme/           # Color scheme JSON files
+│   │   └── template/         # Per-app theme templates
 │   └── wallpaper/            # Wallpaper assets
 ├── cli/                      # CLI entry points
 │   ├── setting.mjs           # Setting management CLI
 │   ├── theme.mjs             # Theme application CLI
 │   └── ...
-├── config/                   # Static config templates
-│   └── theme/app/            # Handlebars templates for themed configs
 ├── doc/                      # Documentation
 ├── env/                      # Environment configs (generated)
 │   ├── env.mjs               # Path constants and platform detection
@@ -150,8 +148,8 @@ echo $env:GHC_THEME
         ┌─────────────────┼─────────────────┐
         ▼                 ▼                 ▼
 ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-│   scheme/   │   │    app/     │   │  template   │
-│   *.json    │   │   *.hbs     │   │   render    │
+│   scheme/   │   │  template/  │   │  template   │
+│   *.json    │   │ {app}/*.hbs │   │   render    │
 └─────────────┘   └─────────────┘   └─────────────┘
                           │
                           ▼
@@ -159,21 +157,6 @@ echo $env:GHC_THEME
 │                Generated config files                 │
 │    (alacritty, ghostty, tmux, nvim, vscode, etc.)     │
 └───────────────────────────────────────────────────────┘
-```
-
-### Theme Templates
-
-Templates use Handlebars syntax with color scheme variables:
-
-```hbs
-# Example: config/theme/app/alacritty.hbs
-[colors.primary]
-background = "{{background}}"
-foreground = "{{foreground}}"
-
-[colors.normal]
-black = "{{black}}"
-red = "{{red}}"
 ```
 
 ### Color Scheme Format
@@ -191,6 +174,21 @@ red = "{{red}}"
   "cyan": "#94e2d5",
   "white": "#bac2de"
 }
+```
+
+### Theme Templates
+
+Templates use Handlebars syntax with color scheme variables:
+
+```hbs
+# Example: asset/theme/template/alacritty/default.hbs
+[colors.primary]
+background = "{{background}}"
+foreground = "{{foreground}}"
+
+[colors.normal]
+black = "{{black}}"
+red = "{{red}}"
 ```
 
 ## Setup Scripts
