@@ -34,6 +34,9 @@ local theme_scheme__mods = {
   ["catppuccin-mocha"] = "dot.theme.scheme.catppuccin-mocha",
   ["gruvbox-dark"] = "dot.theme.scheme.gruvbox-dark",
   ["gruvbox-light"] = "dot.theme.scheme.gruvbox-light",
+  ["kanagawa-dragon"] = "dot.theme.scheme.kanagawa-dragon",
+  ["kanagawa-lotus"] = "dot.theme.scheme.kanagawa-lotus",
+  ["kanagawa-wave"] = "dot.theme.scheme.kanagawa-wave",
   ["rosepine-dawn"] = "dot.theme.scheme.rosepine-dawn",
   ["rosepine-main"] = "dot.theme.scheme.rosepine-main",
   ["rosepine-moon"] = "dot.theme.scheme.rosepine-moon",
@@ -53,6 +56,9 @@ local theme_scheme__mods = {
 ---@field public ["catppuccin-mocha"]   stl.t.theme.IScheme
 ---@field public ["gruvbox-dark"]       stl.t.theme.IScheme
 ---@field public ["gruvbox-light"]      stl.t.theme.IScheme
+---@field public ["kanagawa-dragon"]    stl.t.theme.IScheme
+---@field public ["kanagawa-lotus"]     stl.t.theme.IScheme
+---@field public ["kanagawa-wave"]      stl.t.theme.IScheme
 ---@field public ["rosepine-dawn"]      stl.t.theme.IScheme
 ---@field public ["rosepine-main"]      stl.t.theme.IScheme
 ---@field public ["rosepine-moon"]      stl.t.theme.IScheme
