@@ -3,21 +3,21 @@
 gui:
   authorColors:
     '*': '#908CAA'
-    guanghechen: '#31748F'
+    guanghechen: '#9CCFD8'
   branchColorPatterns:
     "^(main|master)$": '#C4A7E7'
     "^(user/[^/]+/)?chore": '#6E6A86'
-    "^(user/[^/]+/)?feat": '#95B1AC'
-    "^(user/[^/]+/)?feature": '#95B1AC'
+    "^(user/[^/]+/)?feat": '#31748F'
+    "^(user/[^/]+/)?feature": '#31748F'
     "^(user/[^/]+/)?fix": '#EB6F92'
     "^(user/[^/]+/)?refactor": '#EBBCBA'
-    "^(user/[^/]+/)?release": '#31748F'
+    "^(user/[^/]+/)?release": '#9CCFD8'
   theme:
     activeBorderColor:
       - '#C4A7E7'
       - bold
     cherryPickedCommitBgColor:
-      - '#9CCFD8'
+      - '#EBBCBA'
     cherryPickedCommitFgColor:
       - '#191724'
     defaultFgColor:
@@ -33,7 +33,7 @@ gui:
     optionsTextColor:
       - '#EBBCBA'
     searchingActiveBorderColor:
-      - '#9CCFD8'
+      - '#EBBCBA'
       - bold
     selectedLineBgColor:
       - '#403D52'
