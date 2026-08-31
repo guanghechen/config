@@ -63,59 +63,6 @@ export interface IThemeGruvboxPalette {
   yellow: string
 }
 
-export interface IThemeNordPalette {
-  nord0: string
-  nord1: string
-  nord2: string
-  nord3: string
-  nord4: string
-  nord5: string
-  nord6: string
-  nord7: string
-  nord8: string
-  nord9: string
-  nord10: string
-  nord11: string
-  nord12: string
-  nord13: string
-  nord14: string
-  nord15: string
-  polarNight0: string
-  polarNight1: string
-  polarNight2: string
-  polarNight3: string
-  snowStorm0: string
-  snowStorm1: string
-  snowStorm2: string
-  frost0: string
-  frost1: string
-  frost2: string
-  frost3: string
-  aurora0: string
-  aurora1: string
-  aurora2: string
-  aurora3: string
-  aurora4: string
-}
-
-export interface IThemeOnehalfPalette {
-  background: string
-  black: string
-  blue: string
-  comment: string
-  cyan: string
-  foreground: string
-  green: string
-  gutter: string
-  guide: string
-  orange: string
-  purple: string
-  red: string
-  selection: string
-  white: string
-  yellow: string
-}
-
 export interface IThemeRosepinePalette {
   base: string
   foam: string
@@ -508,8 +455,6 @@ export interface IThemeUnifiedPalette {
 export interface IThemePalette {
   catppuccin?: IThemeCatppuccinPalette
   gruvbox?: IThemeGruvboxPalette
-  nord?: IThemeNordPalette
-  onehalf?: IThemeOnehalfPalette
   rosepine?: IThemeRosepinePalette
   tokyonight?: IThemeTokyonightPalette
   vsc?: IThemeVscPalette

@@ -48,8 +48,8 @@ function createSchemeLoader() {
       opposite: 'latte',
       darken: true,
     },
-    nord: {
-      theme: 'nord',
+    standalone: {
+      theme: 'standalone',
       variant: '',
       opposite: '',
       darken: true,
@@ -89,11 +89,11 @@ describe('theme toggle resolution', () => {
     const { reporter } = createReporter()
     const result = await resolveThemeToggle(
       reporter,
-      'nord',
+      'standalone',
       createSchemeLoader(),
     )
 
-    assert.equal(result.ok && result.theme, 'nord')
+    assert.equal(result.ok && result.theme, 'standalone')
   })
 
   it('returns an explicit failure when the source theme cannot be loaded', async () => {

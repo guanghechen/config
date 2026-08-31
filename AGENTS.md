@@ -34,7 +34,7 @@ node cli/theme.mjs apply    # 应用当前 scheme
 
 - 元信息:`name`、`theme`、`variant`、`opposite`、`darken`、`uuid`
 - 平台标志:`IS_OSX`、`IS_WIN`、`IS_NIX`、`IS_WSL`
-- 配色 palette:`catppuccin`、`gruvbox`、`nord`、`onehalf`、`rosepine`、`tokyonight`、`vsc`、`unified`(以及聚合对象 `palette`)
+- 配色 palette:`catppuccin`、`gruvbox`、`rosepine`、`tokyonight`、`vsc`、`unified`(以及聚合对象 `palette`)
 - 工具:`c256`(hex → ansi256 转换)
 
 约定:
