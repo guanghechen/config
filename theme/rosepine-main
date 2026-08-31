@@ -5,23 +5,23 @@
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#191724
 palette =  1=#EB6F92
-palette =  2=#95B1AC
+palette =  2=#31748F
 palette =  3=#F6C177
-palette =  4=#31748F
+palette =  4=#9CCFD8
 palette =  5=#C4A7E7
-palette =  6=#9CCFD8
+palette =  6=#EBBCBA
 palette =  7=#908CAA
 
 # Bright colors
 # Dark themes: palette 8 = surface2, palette 15 = subtext1
 # Light theme: palette 8 = subtext0, palette 15 = surface1
-palette =  8=#908CAA
+palette =  8=#6E6A86
 palette =  9=#EB6F92
-palette = 10=#95B1AC
+palette = 10=#31748F
 palette = 11=#F6C177
-palette = 12=#31748F
+palette = 12=#9CCFD8
 palette = 13=#C4A7E7
-palette = 14=#9CCFD8
+palette = 14=#EBBCBA
 palette = 15=#E0DEF4
 
 # Primary colors
