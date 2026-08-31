@@ -40,8 +40,6 @@
 ---@alias dot.e.ThemeFamily
 ---| "catppuccin"
 ---| "gruvbox"
----| "nord"
----| "onehalf"
 ---| "rosepine"
 ---| "tokyonight"
 ---| "vsc"
@@ -53,9 +51,6 @@
 ---| "catppuccin-mocha"
 ---| "gruvbox-light"
 ---| "gruvbox-dark"
----| "nord"
----| "onehalf-light"
----| "onehalf-dark"
 ---| "rosepine-main"
 ---| "rosepine-moon"
 ---| "rosepine-dawn"
@@ -91,4 +86,3 @@
 ---| "day"
 ---| "night"
 ---| "storm"
-
