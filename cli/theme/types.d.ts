@@ -577,6 +577,12 @@ export interface IThemeScheme {
   palette: IThemePalette
 }
 
+export type IThemeAppCondition =
+  | { env: string }
+  | { file: string }
+  | { directory: string }
+  | { all: IThemeAppCondition[] }
+
 export type { IReporter } from '../../src/stl/src/reporter.d.ts'
 
 export interface IAppConfig {
@@ -584,7 +590,7 @@ export interface IAppConfig {
   home: string
   themes: string | null
   extname: string
-  local?: string | null
+  local: string | null
   active: (app: IAppConfig) => boolean
   render: (app: IAppConfig, template: string, scheme: IThemeScheme) => Promise<string>
   prepare?: (
@@ -601,4 +607,18 @@ export interface IAppConfig {
   ) => Promise<void>
   after_apply?: (app: IAppConfig, scheme: IThemeScheme, reporter: IReporter) => Promise<void>
   after_gen?: (app: IAppConfig, reporter: IReporter) => Promise<void>
+}
+
+export interface IThemeAppDefinition {
+  name: string
+  location: string
+  active: IThemeAppCondition
+  themes: string | null
+  extname: string
+  local: string | null
+  on_render?: IAppConfig['render']
+  on_prepare?: IAppConfig['prepare']
+  on_apply?: IAppConfig['apply']
+  on_after_apply?: IAppConfig['after_apply']
+  on_after_gen?: IAppConfig['after_gen']
 }

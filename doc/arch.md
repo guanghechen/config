@@ -12,7 +12,8 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 │   ├── app/                  # App-specific generated configs
 │   ├── theme/                # Theme definitions
 │   │   ├── scheme/           # Color scheme JSON files
-│   │   └── template/         # Per-app theme templates
+│   │   └── template/         # Per-app theme metadata and templates
+│   │       └── {app}/        # meta.mjs, default.hbs, family.hbs
 │   └── wallpaper/            # Wallpaper assets
 ├── cli/                      # CLI entry points
 │   ├── setting.mjs           # Setting management CLI
@@ -147,10 +148,10 @@ echo $env:GHC_THEME
                           │
         ┌─────────────────┼─────────────────┐
         ▼                 ▼                 ▼
-┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-│   scheme/   │   │  template/  │   │  template   │
-│   *.json    │   │ {app}/*.hbs │   │   render    │
-└─────────────┘   └─────────────┘   └─────────────┘
+┌─────────────┐   ┌─────────────────┐   ┌─────────────┐
+│   scheme/   │   │    template/    │   │  template   │
+│   *.json    │   │ meta.mjs,*.hbs  │   │   render    │
+└─────────────┘   └─────────────────┘   └─────────────┘
                           │
                           ▼
 ┌───────────────────────────────────────────────────────┐
@@ -178,7 +179,27 @@ echo $env:GHC_THEME
 
 ### Theme Templates
 
-Templates use Handlebars syntax with color scheme variables:
+Each app directory contains validated metadata and Handlebars templates:
+
+```js
+import path from 'node:path'
+
+import { XDG_CONFIG_HOME } from '#env'
+import { touch } from '#util/path'
+
+export default {
+  location: path.join(XDG_CONFIG_HOME, 'alacritty'),
+  active: { directory: '.' },
+  themes: 'theme/',
+  extname: '.toml',
+  local: 'local/theme.toml',
+  on_after_apply: async function (app, _scheme, reporter) {
+    await touch(path.join(app.home, 'alacritty.toml'), reporter)
+  },
+}
+```
+
+Templates use color scheme variables:
 
 ```hbs
 # Example: asset/theme/template/alacritty/default.hbs

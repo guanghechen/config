@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { IS_WIN } from '#env'
+import { IS_WIN, PLATFORM } from '#env'
 
 /** @import { IReporter } from '#stl/reporter' */
 
@@ -124,4 +124,27 @@ export async function command_exists(reporter, cmd) {
   } catch {
     return false
   }
+}
+
+/**
+ * @param {IReporter} reporter
+ * @param {'SIGHUP' | 'SIGUSR1' | 'SIGUSR2'} signal
+ * @param {string} processName
+ * @param {{platform?: string, execute?: typeof exec}} [options]
+ * @return {Promise<void>}
+ */
+export async function signal_process(
+  reporter,
+  signal,
+  processName,
+  options = {},
+) {
+  if ((options.platform ?? PLATFORM) === 'win') return
+
+  await (options.execute ?? exec)({
+    reporter,
+    cmd: 'pkill',
+    args: [`-${signal.slice(3)}`, '-x', processName],
+    silent: true,
+  })
 }
