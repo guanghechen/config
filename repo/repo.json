@@ -138,26 +138,22 @@
           "editions": ["nix", "nix-remote", "osx", "win"],
           "on": {
             "changed": {
-              "steps": "node rust/script/build.mjs --force"
+              "steps": "node script/build.mjs --force"
             },
             "synced": {
-              "steps": "node rust/script/build.mjs"
+              "steps": "node script/build.mjs"
             }
           }
-        },
-        {
-          "branch": "nvim-lazy",
-          "editions": []
         },
         {
           "branch": "nvim-nvchad",
           "editions": ["nix", "osx"],
           "on": {
             "changed": {
-              "steps": "node rust/script/build.mjs --force"
+              "steps": "node script/build.mjs --force"
             },
             "synced": {
-              "steps": "node rust/script/build.mjs"
+              "steps": "node script/build.mjs"
             }
           }
         },
