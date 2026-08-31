@@ -36,30 +36,30 @@
       "fg4":            "{{muted}}",
 
       "red":            "{{love}}",
-      "green":          "#95B1AC",
+      "green":          "{{pine}}",
       "yellow":         "{{gold}}",
-      "blue":           "{{pine}}",
+      "blue":           "{{foam}}",
       "purple":         "{{iris}}",
-      "aqua":           "{{foam}}",
+      "aqua":           "{{rose}}",
       "orange":         "{{rose}}",
 
       "brightRed":      "{{love}}",
-      "brightGreen":    "#95B1AC",
+      "brightGreen":    "{{pine}}",
       "brightYellow":   "{{gold}}",
-      "brightBlue":     "{{pine}}",
+      "brightBlue":     "{{foam}}",
       "brightPurple":   "{{iris}}",
-      "brightAqua":     "{{foam}}",
+      "brightAqua":     "{{rose}}",
       "brightOrange":   "{{rose}}",
 
-      "black":          "{{base}}",
+      "black":          "{{overlay}}",
       "white":          "{{text}}",
-      "grey":           "{{subtle}}",
+      "grey":           "{{muted}}",
       "pink":           "{{love}}",
 
-      "diffDel":        "#362436",
-      "diffDelInline":  "#442430",
-      "diffAdd":        "#2A3645",
-      "diffAddInline":  "#254055",
+      "diffDel":        "#4B3148",
+      "diffDelInline":  "#73405B",
+      "diffAdd":        "#3B4456",
+      "diffAddInline":  "#536777",
 
       "tokenKeyword":     "{{pine}}",
       "tokenString":      "{{gold}}",
@@ -68,7 +68,7 @@
       "tokenConstant":    "{{gold}}",
       "tokenVariable":    "{{text}}",
       "tokenParameter":   "{{iris}}",
-      "tokenComment":     "{{muted}}",
+      "tokenComment":     "{{subtle}}",
       "tokenOperator":    "{{subtle}}",
       "tokenPunctuation": "{{subtle}}",
       "tokenNumber":      "{{gold}}",
@@ -79,4 +79,3 @@
     }
   }
 }
-

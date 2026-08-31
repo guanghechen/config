@@ -10,7 +10,7 @@
       "foam":           "#56949F",
       "gold":           "#EA9D34",
       "highlightHigh":  "#CECACD",
-      "highlightLow":   "#F4F0E7",
+      "highlightLow":   "#F4EDE8",
       "highlightMed":   "#DFDAD9",
       "iris":           "#907AA9",
       "love":           "#B4637A",
@@ -20,7 +20,7 @@
       "rose":           "#D7827E",
       "subtle":         "#797593",
       "surface":        "#FFFAF3",
-      "text":           "#575279"
+      "text":           "#464261"
     },
     "unified": {
       "bg0":            "{{base}}",
@@ -29,37 +29,37 @@
       "bg3":            "{{highlightMed}}",
       "bg4":            "{{highlightHigh}}",
 
-      "fg0":            "#464261",
-      "fg1":            "#464261",
+      "fg0":            "{{text}}",
+      "fg1":            "{{text}}",
       "fg2":            "{{subtle}}",
       "fg3":            "{{muted}}",
       "fg4":            "{{muted}}",
 
       "red":            "{{love}}",
-      "green":          "#6D8F89",
+      "green":          "{{pine}}",
       "yellow":         "{{gold}}",
-      "blue":           "{{pine}}",
+      "blue":           "{{foam}}",
       "purple":         "{{iris}}",
-      "aqua":           "{{foam}}",
+      "aqua":           "{{rose}}",
       "orange":         "{{rose}}",
 
-      "brightRed":      "{{rose}}",
-      "brightGreen":    "#6D8F89",
+      "brightRed":      "{{love}}",
+      "brightGreen":    "{{pine}}",
       "brightYellow":   "{{gold}}",
-      "brightBlue":     "{{pine}}",
+      "brightBlue":     "{{foam}}",
       "brightPurple":   "{{iris}}",
-      "brightAqua":     "{{foam}}",
+      "brightAqua":     "{{rose}}",
       "brightOrange":   "{{rose}}",
 
-      "black":          "#464261",
-      "white":          "{{base}}",
+      "black":          "{{overlay}}",
+      "white":          "{{text}}",
       "grey":           "{{muted}}",
       "pink":           "{{love}}",
 
-      "diffDel":        "#F5D8E0",
-      "diffDelInline":  "#F0C6D2",
-      "diffAdd":        "#E4EBE4",
-      "diffAddInline":  "#D5E0D5",
+      "diffDel":        "#ECD7D6",
+      "diffDelInline":  "#DEBABF",
+      "diffAdd":        "#D9E1DD",
+      "diffAddInline":  "#B8CECE",
 
       "tokenKeyword":     "{{pine}}",
       "tokenString":      "{{gold}}",
@@ -68,7 +68,7 @@
       "tokenConstant":    "{{gold}}",
       "tokenVariable":    "{{text}}",
       "tokenParameter":   "{{iris}}",
-      "tokenComment":     "{{muted}}",
+      "tokenComment":     "{{subtle}}",
       "tokenOperator":    "{{subtle}}",
       "tokenPunctuation": "{{subtle}}",
       "tokenNumber":      "{{gold}}",
@@ -79,4 +79,3 @@
     }
   }
 }
-

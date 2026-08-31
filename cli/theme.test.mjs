@@ -110,6 +110,95 @@ describe('theme toggle resolution', () => {
   })
 })
 
+describe('rosepine theme schemes', () => {
+  const variants = [
+    [
+      'rosepine-main',
+      '#21202E',
+      ['#43293A', '#6D3A50', '#333C48', '#4D616C'],
+    ],
+    [
+      'rosepine-moon',
+      '#2A283E',
+      ['#4B3148', '#73405B', '#3B4456', '#536777'],
+    ],
+    [
+      'rosepine-dawn',
+      '#F4EDE8',
+      ['#ECD7D6', '#DEBABF', '#D9E1DD', '#B8CECE'],
+    ],
+  ]
+
+  for (const [name, highlightLow, diff] of variants) {
+    it(`follows the semantic role mapping for ${name}`, async () => {
+      const { errors, reporter } = createReporter()
+      const scheme = await load_theme_scheme(reporter, /** @type {string} */ (name))
+
+      assert.equal(errors.length, 0)
+      assert.ok(scheme)
+      assert.ok(scheme.palette.rosepine)
+      const { rosepine, unified } = scheme.palette
+      assert.equal(rosepine.highlightLow, highlightLow)
+      assert.deepEqual(
+        [unified.bg0, unified.bg1, unified.bg2, unified.bg3, unified.bg4],
+        [
+          rosepine.base,
+          rosepine.surface,
+          rosepine.overlay,
+          rosepine.highlightMed,
+          rosepine.highlightHigh,
+        ],
+      )
+      assert.deepEqual(
+        [unified.fg0, unified.fg1, unified.fg2, unified.fg3, unified.fg4],
+        [rosepine.text, rosepine.text, rosepine.subtle, rosepine.muted, rosepine.muted],
+      )
+      const accents = [
+        rosepine.love,
+        rosepine.pine,
+        rosepine.gold,
+        rosepine.foam,
+        rosepine.iris,
+        rosepine.rose,
+        rosepine.rose,
+      ]
+      assert.deepEqual(
+        [
+          unified.red,
+          unified.green,
+          unified.yellow,
+          unified.blue,
+          unified.purple,
+          unified.aqua,
+          unified.orange,
+        ],
+        accents,
+      )
+      assert.deepEqual(
+        [
+          unified.brightRed,
+          unified.brightGreen,
+          unified.brightYellow,
+          unified.brightBlue,
+          unified.brightPurple,
+          unified.brightAqua,
+          unified.brightOrange,
+        ],
+        accents,
+      )
+      assert.deepEqual(
+        [unified.black, unified.white, unified.grey, unified.pink],
+        [rosepine.overlay, rosepine.text, rosepine.muted, rosepine.love],
+      )
+      assert.equal(unified.tokenComment, rosepine.subtle)
+      assert.deepEqual(
+        [unified.diffDel, unified.diffDelInline, unified.diffAdd, unified.diffAddInline],
+        diff,
+      )
+    })
+  }
+})
+
 describe('kanagawa theme schemes', () => {
   const variants = [
     ['kanagawa-wave', true, 'lotus', '#1F1F28'],
