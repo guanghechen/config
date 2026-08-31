@@ -1,0 +1,24 @@
+{
+  "name":           "kanagawa-wave",
+  "type":           "custom",
+  "Background":     "#1F1F28",
+  "Foreground":     "#C8C093",
+  "LightBlue":      "#7FB4CA",
+  "AccentBlue":     "#7E9CD8",
+  "AccentPurple":   "#957FB8",
+  "AccentCyan":     "#6A9589",
+  "AccentGreen":    "#76946A",
+  "AccentYellow":   "#C0A36E",
+  "AccentRed":      "#C34043",
+  "Comment":        "#727169",
+  "Gray":           "#727169",
+  "DiffAdded":      "#2B3328",
+  "DiffRemoved":    "#43242B",
+  "DiffModified":   "#7FB4CA",
+  "GradientColors": [
+    "#7E9CD8",
+    "#7FB4CA",
+    "#957FB8",
+    "#938AA9"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name":           "kanagawa-lotus",
+  "type":           "custom",
+  "Background":     "#F2ECBC",
+  "Foreground":     "#43436C",
+  "LightBlue":      "#6693BF",
+  "AccentBlue":     "#4D699B",
+  "AccentPurple":   "#B35B79",
+  "AccentCyan":     "#597B75",
+  "AccentGreen":    "#6F894E",
+  "AccentYellow":   "#77713F",
+  "AccentRed":      "#C84053",
+  "Comment":        "#A09CAC",
+  "Gray":           "#8A8980",
+  "DiffAdded":      "#B7D0AE",
+  "DiffRemoved":    "#D9A594",
+  "DiffModified":   "#6693BF",
+  "GradientColors": [
+    "#4D699B",
+    "#6693BF",
+    "#B35B79",
+    "#624C83"
+  ]
+}
