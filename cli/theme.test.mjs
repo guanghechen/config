@@ -6,7 +6,11 @@ import { describe, it } from 'node:test'
 
 import { applyThemeToApps, resolveThemeToggle } from './theme.mjs'
 import { apps } from './theme/_config.mjs'
-import { load_theme_scheme, render_template } from './theme/_util.mjs'
+import {
+  load_theme_scheme,
+  render_template,
+  resolve_app_template_filepath,
+} from './theme/_util.mjs'
 
 function createReporter() {
   const errors = []
@@ -229,6 +233,102 @@ describe('kanagawa theme schemes', () => {
 
     assert.equal(errors.length, 0)
     assert.equal(result.ok && result.theme, 'kanagawa-lotus')
+  })
+})
+
+describe('theme app template resolution', () => {
+  it('prefers an exact theme-family template', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-template-'))
+    const appDir = path.join(root, 'tmux')
+
+    try {
+      fs.mkdirSync(appDir, { recursive: true })
+      fs.writeFileSync(path.join(appDir, 'default.hbs'), 'default\n')
+      fs.writeFileSync(path.join(appDir, 'kanagawa.hbs'), 'kanagawa\n')
+
+      assert.equal(
+        resolve_app_template_filepath(
+          /** @type {never} */ ({ name: 'tmux' }),
+          /** @type {never} */ ({ theme: 'kanagawa' }),
+          root,
+        ),
+        path.join(appDir, 'kanagawa.hbs'),
+      )
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('falls back to the app default template', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-template-'))
+    const appDir = path.join(root, 'tmux')
+
+    try {
+      fs.mkdirSync(appDir, { recursive: true })
+      fs.writeFileSync(path.join(appDir, 'default.hbs'), 'default\n')
+
+      assert.equal(
+        resolve_app_template_filepath(
+          /** @type {never} */ ({ name: 'tmux' }),
+          /** @type {never} */ ({ theme: 'kanagawa' }),
+          root,
+        ),
+        path.join(appDir, 'default.hbs'),
+      )
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('reports missing templates with both attempted paths', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-template-'))
+
+    try {
+      assert.throws(
+        () => resolve_app_template_filepath(
+          /** @type {never} */ ({ name: 'tmux' }),
+          /** @type {never} */ ({ theme: 'kanagawa' }),
+          root,
+        ),
+        error => {
+          assert.match(error.message, /tmux/)
+          assert.match(error.message, /kanagawa\.hbs/)
+          assert.match(error.message, /default\.hbs/)
+          return true
+        },
+      )
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects unsafe app and family path segments', () => {
+    assert.throws(
+      () => resolve_app_template_filepath(
+        /** @type {never} */ ({ name: '../tmux' }),
+        /** @type {never} */ ({ theme: 'kanagawa' }),
+      ),
+      /Invalid app template path segment/,
+    )
+    assert.throws(
+      () => resolve_app_template_filepath(
+        /** @type {never} */ ({ name: 'tmux' }),
+        /** @type {never} */ ({ theme: '../kanagawa' }),
+      ),
+      /Invalid theme family template path segment/,
+    )
+  })
+
+  it('provides a default template for every configured app', () => {
+    for (const app of apps) {
+      assert.equal(
+        resolve_app_template_filepath(
+          app,
+          /** @type {never} */ ({ theme: 'missing-family' }),
+        ),
+        path.resolve('asset/theme/app', app.name, 'default.hbs'),
+      )
+    }
   })
 })
 

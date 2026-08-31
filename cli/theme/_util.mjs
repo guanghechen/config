@@ -26,6 +26,40 @@ export function gen_full_theme_name(theme, variant) {
   return variant ? `${theme}-${variant}` : theme
 }
 
+const templateSegmentPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+/**
+ * Resolve an app template by theme family, falling back to the app default.
+ * @param {Pick<IAppConfig, 'name'>} app
+ * @param {Pick<IThemeScheme, 'theme'>} scheme
+ * @param {string} [templateRoot]
+ * @return {string}
+ */
+export function resolve_app_template_filepath(
+  app,
+  scheme,
+  templateRoot = XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
+) {
+  for (const [kind, segment] of [['app', app.name], ['theme family', scheme.theme]]) {
+    if (!templateSegmentPattern.test(segment)) {
+      throw new Error(`Invalid ${kind} template path segment: ${segment}`)
+    }
+  }
+
+  const templateDir = path.join(templateRoot, app.name)
+  const candidates = [
+    path.join(templateDir, `${scheme.theme}.hbs`),
+    path.join(templateDir, 'default.hbs'),
+  ]
+  const filepath = candidates.find(candidate => existsSync(candidate))
+  if (filepath) return filepath
+
+  throw new Error(
+    `Cannot find the template for app "${app.name}" and theme family "${scheme.theme}". ` +
+    `Tried: ${candidates.join(', ')}`,
+  )
+}
+
 /**
  * @param {string} template
  * @param {IThemeScheme} scheme
@@ -137,10 +171,7 @@ export async function prepare_theme_per_app(reporter, app, scheme) {
 
   let content
   if (app.local) {
-    const template_filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_APP_DIR, `${app.name}.hbs`)
-    if (!existsSync(template_filepath)) {
-      throw new Error(`Cannot find the template for app: ${app.name}`)
-    }
+    const template_filepath = resolve_app_template_filepath(app, scheme)
     const template = await fs.readFile(template_filepath, 'utf8')
     content = await app.render(app, template, scheme)
     await app.prepare?.(app, content, scheme, reporter)
@@ -180,15 +211,14 @@ export async function apply_theme_per_app(reporter, app, scheme) {
 export async function gen_themes_per_app(reporter, app) {
   if (!app.active(app)) return
 
-  const template_filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_APP_DIR, `${app.name}.hbs`)
-  if (!existsSync(template_filepath)) {
-    reporter.error('Cannot find the template.', { app: app.name })
-    return
-  }
-  const template = await fs.readFile(template_filepath, 'utf8')
-
   const tasks_gen_theme = XDG_CONFIG_NODE_ASSET_THEMES.map(theme => gen_theme(theme))
-  await Promise.allSettled(tasks_gen_theme)
+  const results = await Promise.allSettled(tasks_gen_theme)
+  const errors = results
+    .filter(result => result.status === 'rejected')
+    .map(result => result.reason)
+  if (errors.length > 0) {
+    throw new AggregateError(errors, `Failed to generate themes for app: ${app.name}`)
+  }
   await app.after_gen?.(app, reporter)
 
   /**
@@ -200,6 +230,8 @@ export async function gen_themes_per_app(reporter, app) {
     const scheme = await load_theme_scheme(reporter, theme)
     if (!scheme) return
 
+    const template_filepath = resolve_app_template_filepath(app, scheme)
+    const template = await fs.readFile(template_filepath, 'utf8')
     const content = await app.render(app, template, scheme)
 
     if (app.themes) {
