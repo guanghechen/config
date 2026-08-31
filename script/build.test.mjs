@@ -1,3 +1,4 @@
+// Run with: node --test script/build.test.mjs
 import assert from "node:assert/strict"
 import {
   closeSync,

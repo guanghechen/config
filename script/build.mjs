@@ -75,7 +75,7 @@ function capture(command, args, cwd) {
 function parseForce(args) {
   const invalid = args.find((arg) => arg !== "--force" && arg !== "-f")
   if (invalid) {
-    throw new Error(`unknown option: ${invalid}\nusage: node rust/script/build.mjs [--force|-f]`)
+    throw new Error(`unknown option: ${invalid}\nusage: node script/build.mjs [--force|-f]`)
   }
   return args.length > 0
 }
@@ -204,7 +204,7 @@ function buildWslImHelper(rustDir, targetDir, stagedBin) {
 function main() {
   const force = parseForce(process.argv.slice(2))
   const build = getPlatformBuild(process.platform)
-  const rustDir = resolve(dirname(fileURLToPath(import.meta.url)), "..")
+  const rustDir = resolve(dirname(fileURLToPath(import.meta.url)), "..", "rust")
   const packageDir = join(rustDir, "yoz")
   const targetDir = join(rustDir, "target")
   const luaDir = join(rustDir, "..", "lua")
