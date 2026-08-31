@@ -138,6 +138,7 @@ t:test("show refreshes an already visible view", function()
 
   View.show()
   t.assert_eq(1, updates, "initial render")
+  t.assert_false(vim.api.nvim_get_option_value("wrap", { win = vim.api.nvim_get_current_win() }), "plugin view wrap")
 
   View.show()
   t.assert_eq(2, updates, "visible refresh")

@@ -178,7 +178,7 @@ function M:__mount__()
   vim.api.nvim_set_option_value("conceallevel", 3, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("foldenable", false, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = self.winnr, scope = "local" })
-  vim.api.nvim_set_option_value("wrap", true, { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value(
     "winhighlight",
     "Normal:m_pl_normal,FloatBorder:FloatActiveBorder,FloatTitle:m_pl_title",

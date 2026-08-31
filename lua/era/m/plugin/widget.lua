@@ -2,7 +2,6 @@ local State = require("era.m.plugin.state")
 
 ---@class era.m.plugin.Widget
 ---@field public padding                integer
----@field public wrap                   integer
 ---@field protected _view               era.m.plugin.View
 ---@field protected _lines              era.m.plugin.ITextSegment[][]
 ---@field protected _required_by        table<string, string[]>
@@ -19,7 +18,6 @@ function M.new(view)
   self._required_by = {}
   self._line_to_plugin = {}
   self.padding = 2
-  self.wrap = view.win_opts.width
   return self
 end
 
