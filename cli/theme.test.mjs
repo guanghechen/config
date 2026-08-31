@@ -6,6 +6,7 @@ import { describe, it } from 'node:test'
 
 import { applyThemeToApps, resolveThemeToggle } from './theme.mjs'
 import { apps } from './theme/_config.mjs'
+import { load_theme_scheme, render_template } from './theme/_util.mjs'
 
 function createReporter() {
   const errors = []
@@ -106,6 +107,39 @@ describe('theme toggle resolution', () => {
 
     assert.equal(result.ok, false)
     assert.equal(errors.length, 1)
+  })
+})
+
+describe('kanagawa theme schemes', () => {
+  const variants = [
+    ['kanagawa-wave', true, 'lotus', '#1F1F28'],
+    ['kanagawa-dragon', true, '', '#181616'],
+    ['kanagawa-lotus', false, 'wave', '#F2ECBC'],
+  ]
+
+  for (const [name, darken, opposite, background] of variants) {
+    it(`loads and renders ${name}`, async () => {
+      const { errors, reporter } = createReporter()
+      const scheme = await load_theme_scheme(reporter, /** @type {string} */ (name))
+
+      assert.equal(errors.length, 0)
+      assert.ok(scheme)
+      assert.equal(scheme.theme, 'kanagawa')
+      assert.equal(scheme.darken, darken)
+      assert.equal(scheme.opposite, opposite)
+      assert.equal(
+        await render_template('{{kanagawa.crystalBlue}} {{unified.bg0}}', scheme),
+        `#7E9CD8 ${background}`,
+      )
+    })
+  }
+
+  it('toggles wave to lotus through the real scheme files', async () => {
+    const { errors, reporter } = createReporter()
+    const result = await resolveThemeToggle(reporter, 'kanagawa-wave')
+
+    assert.equal(errors.length, 0)
+    assert.equal(result.ok && result.theme, 'kanagawa-lotus')
   })
 })
 

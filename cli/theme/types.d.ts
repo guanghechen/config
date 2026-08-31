@@ -63,6 +63,112 @@ export interface IThemeGruvboxPalette {
   yellow: string
 }
 
+export interface IThemeKanagawaPalette {
+  sumiInk0: string
+  sumiInk1: string
+  sumiInk2: string
+  sumiInk3: string
+  sumiInk4: string
+  sumiInk5: string
+  sumiInk6: string
+  waveBlue1: string
+  waveBlue2: string
+  winterGreen: string
+  winterYellow: string
+  winterRed: string
+  winterBlue: string
+  autumnGreen: string
+  autumnRed: string
+  autumnYellow: string
+  samuraiRed: string
+  roninYellow: string
+  waveAqua1: string
+  dragonBlue: string
+  oldWhite: string
+  fujiWhite: string
+  fujiGray: string
+  oniViolet: string
+  oniViolet2: string
+  crystalBlue: string
+  springViolet1: string
+  springViolet2: string
+  springBlue: string
+  lightBlue: string
+  waveAqua2: string
+  springGreen: string
+  boatYellow1: string
+  boatYellow2: string
+  carpYellow: string
+  sakuraPink: string
+  waveRed: string
+  peachRed: string
+  surimiOrange: string
+  katanaGray: string
+  dragonBlack0: string
+  dragonBlack1: string
+  dragonBlack2: string
+  dragonBlack3: string
+  dragonBlack4: string
+  dragonBlack5: string
+  dragonBlack6: string
+  dragonWhite: string
+  dragonGreen: string
+  dragonGreen2: string
+  dragonPink: string
+  dragonOrange: string
+  dragonOrange2: string
+  dragonGray: string
+  dragonGray2: string
+  dragonGray3: string
+  dragonBlue2: string
+  dragonViolet: string
+  dragonRed: string
+  dragonAqua: string
+  dragonAsh: string
+  dragonTeal: string
+  dragonYellow: string
+  lotusInk1: string
+  lotusInk2: string
+  lotusGray: string
+  lotusGray2: string
+  lotusGray3: string
+  lotusWhite0: string
+  lotusWhite1: string
+  lotusWhite2: string
+  lotusWhite3: string
+  lotusWhite4: string
+  lotusWhite5: string
+  lotusViolet1: string
+  lotusViolet2: string
+  lotusViolet3: string
+  lotusViolet4: string
+  lotusBlue1: string
+  lotusBlue2: string
+  lotusBlue3: string
+  lotusBlue4: string
+  lotusBlue5: string
+  lotusGreen: string
+  lotusGreen2: string
+  lotusGreen3: string
+  lotusPink: string
+  lotusOrange: string
+  lotusOrange2: string
+  lotusYellow: string
+  lotusYellow2: string
+  lotusYellow3: string
+  lotusYellow4: string
+  lotusRed: string
+  lotusRed2: string
+  lotusRed3: string
+  lotusRed4: string
+  lotusAqua: string
+  lotusAqua2: string
+  lotusTeal1: string
+  lotusTeal2: string
+  lotusTeal3: string
+  lotusCyan: string
+}
+
 export interface IThemeRosepinePalette {
   base: string
   foam: string
@@ -455,6 +561,7 @@ export interface IThemeUnifiedPalette {
 export interface IThemePalette {
   catppuccin?: IThemeCatppuccinPalette
   gruvbox?: IThemeGruvboxPalette
+  kanagawa?: IThemeKanagawaPalette
   rosepine?: IThemeRosepinePalette
   tokyonight?: IThemeTokyonightPalette
   vsc?: IThemeVscPalette

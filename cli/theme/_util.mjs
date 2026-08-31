@@ -41,12 +41,13 @@ export async function render_template(template, scheme) {
 
   const catppuccin = scheme.palette.catppuccin
   const gruvbox = scheme.palette.gruvbox
+  const kanagawa = scheme.palette.kanagawa
   const rosepine = scheme.palette.rosepine
   const tokyonight = scheme.palette.tokyonight
   const vsc = scheme.palette.vsc
   const unified = scheme.palette.unified
   /** @type {Record<string, unknown>} */
-  const palette = { catppuccin, gruvbox, rosepine, tokyonight, vsc, unified }
+  const palette = { catppuccin, gruvbox, kanagawa, rosepine, tokyonight, vsc, unified }
   const schemes = Object.keys(palette)
 
   const c256 = hex2ansi256
