@@ -1,4 +1,4 @@
-//! WSL input-method backend using a Windows helper executable.
+//! WSL backend using the yoz-owned Windows bridge.
 
 use std::env;
 use std::fs;
@@ -12,15 +12,13 @@ pub(super) use super::win::{input_method, source_id_for};
 
 const HELPER_PROCESS_TIMEOUT: Duration = Duration::from_secs(1);
 const HELPER_PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(2);
-const SELECT_READBACK_TIMEOUT: Duration = Duration::from_millis(100);
-const SELECT_READBACK_POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 fn release_is_wsl(release: &str) -> bool {
     let release = release.to_ascii_lowercase();
     release.contains("microsoft") || release.contains("wsl")
 }
 
-pub(crate) fn is_available() -> bool {
+pub fn is_available() -> bool {
     env::var_os("WSL_INTEROP").is_some()
         || env::var_os("WSL_DISTRO_NAME").is_some()
         || fs::read_to_string("/proc/sys/kernel/osrelease")
@@ -57,42 +55,13 @@ fn kill_and_reap(child: &mut Child) {
     let _ = child.wait();
 }
 
-fn verify_selection<F>(requested: u16, mut current_source_id: F) -> Result<(), String>
-where
-    F: FnMut() -> Result<u16, String>,
-{
-    let deadline = Instant::now() + SELECT_READBACK_TIMEOUT;
-    let mut attempts = 0;
-    loop {
-        attempts += 1;
-        let readback = current_source_id();
-        if matches!(readback, Ok(current) if current == requested) {
-            return Ok(());
-        }
-
-        let remaining = deadline.saturating_duration_since(Instant::now());
-        if attempts >= 2 && remaining.is_zero() {
-            return match readback {
-                Ok(current) => Err(format!(
-                    "[im.select] Helper did not select {requested} within {}ms; current input source is {current}",
-                    SELECT_READBACK_TIMEOUT.as_millis()
-                )),
-                Err(error) => Err(error),
-            };
-        }
-        if !remaining.is_zero() {
-            thread::sleep(remaining.min(SELECT_READBACK_POLL_INTERVAL));
-        }
-    }
-}
-
 #[derive(Default)]
-pub(crate) struct Backend {
+pub struct Backend {
     executable: Option<PathBuf>,
 }
 
 impl Backend {
-    pub(crate) fn setup(&mut self, executable: &str) -> Result<(), String> {
+    pub fn setup(&mut self, executable: &str) -> Result<(), String> {
         if executable.is_empty() {
             return Err("[im.setup] Executable path must not be empty".to_owned());
         }
@@ -182,12 +151,12 @@ impl Backend {
         parse_source_id(source_id, subject)
     }
 
-    pub(crate) fn current(&mut self) -> Result<String, String> {
+    pub fn current(&mut self) -> Result<String, String> {
         self.current_source_id("im.current")
             .map(|source_id| source_id.to_string())
     }
 
-    pub(crate) fn select(&mut self, source_id: &str) -> Result<(), String> {
+    pub fn select(&mut self, source_id: &str) -> Result<(), String> {
         let requested = parse_source_id(source_id, "im.select")?;
         let requested_source_id = requested.to_string();
         let output = self.run(&[&requested_source_id], "im.select")?;
@@ -197,14 +166,13 @@ impl Backend {
                 String::from_utf8_lossy(&output.stdout).trim()
             ));
         }
-
-        verify_selection(requested, || self.current_source_id("im.select"))
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Backend, is_available, parse_source_id, release_is_wsl, verify_selection};
+    use super::{Backend, is_available, parse_source_id, release_is_wsl};
 
     #[cfg(unix)]
     static PROCESS_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -284,12 +252,6 @@ mod tests {
         std::fs::remove_file(executable).expect("remove helper");
     }
 
-    #[test]
-    fn t_polls_multiple_readbacks_within_the_deadline() {
-        let mut readbacks = [Ok(1033), Ok(1033), Ok(1033), Ok(2052)].into_iter();
-        assert!(verify_selection(2052, || readbacks.next().expect("readback")).is_ok());
-    }
-
     #[cfg(unix)]
     #[test]
     fn t_invokes_the_configured_helper_with_argv() {
@@ -334,7 +296,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn t_rejects_a_false_success_after_bounded_readback() {
+    fn t_rejects_unexpected_selection_output() {
         use std::os::unix::fs::PermissionsExt;
         use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -344,12 +306,12 @@ mod tests {
             .expect("system time")
             .as_nanos();
         let executable = std::env::temp_dir().join(format!(
-            "yoz-wsl-im-false-success-{}-{nonce}.sh",
+            "yoz-wsl-im-output-{}-{nonce}.sh",
             std::process::id()
         ));
         std::fs::write(
             &executable,
-            "#!/bin/sh\nif [ \"$#\" -eq 0 ]; then printf '1033\\n'; fi\n",
+            "#!/bin/sh\nif [ \"$#\" -eq 0 ]; then printf '1033\\n'; else printf 'unexpected\\n'; fi\n",
         )
         .expect("write helper");
         let mut permissions = std::fs::metadata(&executable)
@@ -363,54 +325,10 @@ mod tests {
             .expect("configure helper");
         assert!(
             im.select("2052")
-                .expect_err("unchanged readback must fail")
-                .contains("did not select")
+                .expect_err("selection output must fail")
+                .contains("unexpected output")
         );
 
         std::fs::remove_file(executable).expect("remove helper");
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn t_polls_until_delayed_selection_is_observed() {
-        use std::os::unix::fs::PermissionsExt;
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        let _guard = lock_process_test();
-        let nonce = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("system time")
-            .as_nanos();
-        let executable = std::env::temp_dir().join(format!(
-            "yoz-wsl-im-delayed-{}-{nonce}.sh",
-            std::process::id()
-        ));
-        let state = std::env::temp_dir().join(format!(
-            "yoz-wsl-im-delayed-state-{}-{nonce}",
-            std::process::id()
-        ));
-        std::fs::write(&state, "pending\n").expect("write helper state");
-        std::fs::write(
-            &executable,
-            format!(
-                "#!/bin/sh\nstate='{}'\nif [ \"$#\" -gt 0 ]; then exit 0; fi\nvalue=$(cat \"$state\")\nif [ \"$value\" = pending ]; then printf '1033\\n'; printf '2052\\n' > \"$state\"; else printf '%s\\n' \"$value\"; fi\n",
-                state.display()
-            ),
-        )
-        .expect("write helper");
-        let mut permissions = std::fs::metadata(&executable)
-            .expect("helper metadata")
-            .permissions();
-        permissions.set_mode(0o700);
-        std::fs::set_permissions(&executable, permissions).expect("make helper executable");
-
-        let mut im = Backend::default();
-        im.setup(executable.to_str().expect("UTF-8 helper path"))
-            .expect("configure helper");
-        assert!(im.select("2052").is_ok());
-        assert_eq!(im.current(), Ok("2052".to_owned()));
-
-        std::fs::remove_file(executable).expect("remove helper");
-        std::fs::remove_file(state).expect("remove helper state");
     }
 }

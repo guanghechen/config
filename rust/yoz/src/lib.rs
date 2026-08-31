@@ -4,8 +4,6 @@ pub mod dict;
 pub mod find;
 pub mod r#fn;
 pub mod fs;
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
-mod im;
 pub mod path;
 pub mod replace;
 pub mod search;
@@ -28,6 +26,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::dict::search::SearchResultKind;
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+use yoz_im as im;
 
 #[inline]
 fn f<A, R, F>(lua: &Lua, func: F) -> LuaResult<Function>

@@ -45,13 +45,7 @@ elseif stl.env.IS_WSL then
   elseif im.setup == nil then
     report_error("setup", "WSL IM backend cannot be configured.", "yoz.im.setup is unavailable.")
   else
-    local app_home = dot.path.locate_app_config_home("guanghechen")
-    local executable = dot.path.join(
-      app_home,
-      (stl.env.IS_X64 and "cli/im-select/win/x64/im-select.exe")
-        or (stl.env.IS_X86 and "cli/im-select/win/x86/im-select.exe")
-        or "cli/im-select/win/x64/im-select.exe"
-    )
+    local executable = dot.path.locate_config_filepath("bin/wsl.yoz-im.exe")
     local configured, err = im.setup({ executable = executable })
     if configured then
       backend = im

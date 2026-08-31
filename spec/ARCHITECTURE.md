@@ -29,6 +29,11 @@ Four global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
 
 ## Core Module Structure
 
+### `rust/im` (Input Method Domain)
+
+Standalone `yoz-im` crate owning macOS, Windows, and WSL input-method backends. It also owns the
+repository-built Windows bridge used by WSL; the crate has no dependency on Lua or `rust/yoz`.
+
 ### `lua/yoz` (Rust Native Module)
 
 Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
@@ -39,7 +44,7 @@ Submodules:
 - `yoz.find`: file finding (fd-like)
 - `yoz.fn`: utility functions (uuid, md5)
 - `yoz.fs`: filesystem operations (collect_files, readdir, move, get_filesize)
-- `yoz.im`: platform IM source-token access plus thin semantic mapping (macOS, Windows, and WSL)
+- `yoz.im`: Lua adapter for the `rust/im` source-token and semantic mapping contract
 - `yoz.path`: path handling (normalize, join, relative, resolve, split, basename)
 - `yoz.replace`: text replacement with regex support and preview
 - `yoz.search`: content search (ripgrep-like, search_in_files, search_in_lines)

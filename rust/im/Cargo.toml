@@ -1,0 +1,13 @@
+[package]
+name = "yoz-im"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+autobins = false
+
+[lib]
+name = "yoz_im"
+path = "src/lib.rs"
+
+[dependencies]

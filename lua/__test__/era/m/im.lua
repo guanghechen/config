@@ -11,11 +11,8 @@ local reports = {} ---@type table[]
 bootstrap.with_runtime(t, {
   dot = {
     path = {
-      locate_app_config_home = function()
-        return "/app"
-      end,
-      join = function(...)
-        return table.concat({ ... }, "/")
+      locate_config_filepath = function(filename)
+        return "/config/" .. filename
       end,
     },
   },
@@ -316,7 +313,7 @@ end)
 t:test("wsl: composition installs the lifecycle", function()
   local ctx = setup_lifecycle(true)
 
-  t.assert_eq("/app/cli/im-select/win/x64/im-select.exe", ctx.setup_executables[1], "helper executable")
+  t.assert_eq("/config/bin/wsl.yoz-im.exe", ctx.setup_executables[1], "helper executable")
   t.assert_eq("function", type(ctx.callbacks.InsertLeave), "InsertLeave callback")
   t.assert_eq("function", type(ctx.callbacks.InsertEnter), "InsertEnter callback")
   t.assert_eq("function", type(ctx.callbacks.FocusGained), "FocusGained callback")
@@ -325,7 +322,7 @@ end)
 t:test("wsl: setup failure reports and leaves lifecycle disabled", function()
   local ctx = setup_lifecycle(true, "setup failed")
 
-  t.assert_eq("/app/cli/im-select/win/x64/im-select.exe", ctx.setup_executables[1], "helper executable")
+  t.assert_eq("/config/bin/wsl.yoz-im.exe", ctx.setup_executables[1], "helper executable")
   t.assert_nil(ctx.callbacks.InsertLeave, "InsertLeave callback")
   t.assert_eq(1, #ctx.reports, "setup report count")
   t.assert_eq("setup", ctx.reports[1].subject, "setup report subject")

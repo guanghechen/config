@@ -1,4 +1,6 @@
 /bin/
+!rust/im/src/bin/
+!rust/im/src/bin/yoz-im.rs
 /rust/target/
 
 local.*/
@@ -6,4 +8,3 @@ __tmp__.lua
 
 lua/*.dll
 lua/*.so
-

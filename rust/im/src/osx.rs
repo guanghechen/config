@@ -1,4 +1,4 @@
-//! macOS input-method backend using Text Input Source Services.
+//! macOS backend using Text Input Source Services.
 
 use std::collections::HashMap;
 use std::ffi::{CStr, c_char, c_void};
@@ -292,18 +292,18 @@ fn resolve(source_id: &str) -> Result<OwnedCFRef, String> {
 }
 
 #[derive(Default)]
-pub(crate) struct Backend {
+pub struct Backend {
     cache: HashMap<String, OwnedCFRef>,
 }
 
 impl Backend {
-    pub(crate) fn current(&mut self) -> Result<String, String> {
+    pub fn current(&mut self) -> Result<String, String> {
         let (source_id, im) = copy_current()?;
         self.cache.insert(source_id.clone(), im);
         Ok(source_id)
     }
 
-    pub(crate) fn select(&mut self, source_id: &str) -> Result<(), String> {
+    pub fn select(&mut self, source_id: &str) -> Result<(), String> {
         validate_source_id(source_id)?;
         if !self.cache.contains_key(source_id) {
             self.current()?;

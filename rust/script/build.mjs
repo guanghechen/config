@@ -1,6 +1,15 @@
 import { spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from "node:fs"
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+} from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -49,6 +58,20 @@ function run(command, args, cwd) {
   throw error
 }
 
+function capture(command, args, cwd) {
+  const result = spawnSync(command, args, { cwd, encoding: "utf8" })
+
+  if (result.error) throw result.error
+  if (result.status === 0) return result.stdout.trim()
+
+  const details = result.stderr.trim() || result.stdout.trim()
+  const error = new Error(
+    `${command} exited with status ${result.status ?? "unknown"}${details ? `: ${details}` : ""}`,
+  )
+  error.exitCode = result.status ?? 1
+  throw error
+}
+
 function parseForce(args) {
   const invalid = args.find((arg) => arg !== "--force" && arg !== "-f")
   if (invalid) {
@@ -76,6 +99,108 @@ export function replaceFileIfChanged(source, destination) {
   return true
 }
 
+function findCaseInsensitive(dirpath, filename) {
+  const matched = readdirSync(dirpath).find((entry) => entry.toLowerCase() === filename.toLowerCase())
+  return matched ? join(dirpath, matched) : null
+}
+
+export function findWindowsSdkLibraries(root) {
+  const versions = readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort((left, right) => right.localeCompare(left, undefined, { numeric: true }))
+
+  for (const version of versions) {
+    const libDir = join(root, version, "um", "x64")
+    if (!existsSync(libDir)) continue
+
+    const kernel32 = findCaseInsensitive(libDir, "kernel32.lib")
+    const user32 = findCaseInsensitive(libDir, "user32.lib")
+    if (kernel32 && user32) return { kernel32, user32, version }
+  }
+  throw new Error(`Windows SDK x64 import libraries not found under: ${root}`)
+}
+
+export function isWslRuntime(env, kernelRelease) {
+  const release = kernelRelease.toLowerCase()
+  return Boolean(env.WSL_INTEROP || env.WSL_DISTRO_NAME || release.includes("microsoft") || release.includes("wsl"))
+}
+
+function readKernelRelease() {
+  try {
+    return readFileSync("/proc/sys/kernel/osrelease", "utf8")
+  } catch {
+    return ""
+  }
+}
+
+function buildWslImHelper(rustDir, targetDir, stagedBin) {
+  const source = join(rustDir, "im", "src", "bin", "yoz-im.rs")
+  const buildDir = join(targetDir, "release", "yoz-im")
+  const object = join(buildDir, "yoz-im.obj")
+  const executable = join(buildDir, "wsl.yoz-im.exe")
+  mkdirSync(buildDir, { recursive: true })
+
+  const programFilesX86 = capture("wslpath", ["-u", "C:\\Program Files (x86)"], rustDir)
+  const sdk = findWindowsSdkLibraries(join(programFilesX86, "Windows Kits", "10", "Lib"))
+  const sysroot = capture("rustc", ["--print", "sysroot"], rustDir)
+  const host = capture("rustc", ["-vV"], rustDir)
+    .split("\n")
+    .find((line) => line.startsWith("host: "))
+    ?.slice("host: ".length)
+  if (!host) throw new Error("rustc host triple is unavailable")
+  const linker = join(sysroot, "lib", "rustlib", host, "bin", "rust-lld")
+  if (!existsSync(linker)) throw new Error(`Rust linker not found: ${linker}`)
+
+  run(
+    "rustc",
+    [
+      source,
+      "--crate-name",
+      "yoz_im_helper",
+      "--target",
+      "x86_64-pc-windows-gnu",
+      "--emit=obj",
+      "-D",
+      "warnings",
+      "-C",
+      "panic=abort",
+      "-C",
+      "opt-level=3",
+      "-o",
+      object,
+    ],
+    rustDir,
+  )
+  run(
+    linker,
+    [
+      "-flavor",
+      "link",
+      "/entry:mainCRTStartup",
+      "/subsystem:console",
+      "/nodefaultlib",
+      "/opt:ref",
+      "/opt:icf",
+      `/out:${executable}`,
+      object,
+      sdk.kernel32,
+      sdk.user32,
+    ],
+    rustDir,
+  )
+
+  const smoke = spawnSync(executable, ["invalid"], { encoding: "utf8" })
+  if (smoke.error) throw smoke.error
+  if (smoke.status !== 1 || !smoke.stderr.includes("Expected one decimal input locale")) {
+    throw new Error(`WSL IM bridge smoke test failed with status ${smoke.status ?? "unknown"}`)
+  }
+
+  mkdirSync(dirname(stagedBin), { recursive: true })
+  copyFileSync(executable, stagedBin)
+  console.log(`${GREEN}[neovim im] ✓ built with Windows SDK ${sdk.version}${RESET}`)
+}
+
 function main() {
   const force = parseForce(process.argv.slice(2))
   const build = getPlatformBuild(process.platform)
@@ -87,8 +212,11 @@ function main() {
   const source = join(targetDir, "release", build.source)
   const stagedLua = join(targetDir, "deploy", "lua", build.lua)
   const stagedBin = join(targetDir, "deploy", "bin", build.bin)
+  const wslImStagedBin = join(targetDir, "deploy", "bin", "wsl.yoz-im.exe")
   const luaOutput = join(luaDir, build.lua)
   const binOutput = join(binDir, build.bin)
+  const wslImBinOutput = join(binDir, "wsl.yoz-im.exe")
+  const isWslBuild = process.platform === "linux" && isWslRuntime(process.env, readKernelRelease())
 
   if (!existsSync(packageDir)) throw new Error(`package not found: ${packageDir}`)
 
@@ -109,6 +237,13 @@ function main() {
     run("codesign", ["--force", "--sign", "-", stagedBin], rustDir)
   }
 
+  if (isWslBuild) {
+    buildWslImHelper(rustDir, targetDir, wslImStagedBin)
+  }
+
+  if (isWslBuild) {
+    replaceFileIfChanged(wslImStagedBin, wslImBinOutput)
+  }
   replaceFileIfChanged(stagedLua, luaOutput)
   replaceFileIfChanged(stagedBin, binOutput)
 

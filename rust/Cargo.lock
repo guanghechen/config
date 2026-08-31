@@ -824,7 +824,12 @@ dependencies = [
  "serde",
  "time",
  "uuid",
+ "yoz-im",
 ]
+
+[[package]]
+name = "yoz-im"
+version = "0.1.0"
 
 [[package]]
 name = "zerocopy"

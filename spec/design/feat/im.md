@@ -1,12 +1,13 @@
 # Input Method Switching
 
-`era.m.im` owns editor lifecycle while `yoz.im` exposes both source-ID primitives and a thin platform mapping for `English` / `Chinese`.
+`era.m.im` owns editor lifecycle, `yoz.im` exposes the Lua contract, and the standalone `rust/im` crate owns platform input-method access.
 
 ## Ownership and lifecycle
 
-- `yoz.im` owns source-token access, snapshot restoration, and the thin semantic mapping for macOS, Windows, and WSL.
+- `rust/im` owns source-token access, snapshot restoration, platform mapping, WSL process supervision, and the Windows bridge source.
+- `yoz.im` is a thin Lua adapter over the `yoz-im` crate and preserves the source-ID plus semantic `English` / `Chinese` contract.
 - Public `era.m.im` keeps the semantic `get_input_method()` / `set_input_method()` interface.
-- `era.m.im` consumes the `yoz.im` contract directly. On WSL it injects the existing `im-select.exe` path once; process execution and mapping remain inside `yoz`.
+- `era.m.im` consumes the `yoz.im` contract directly. On WSL it injects the repository-built `bin/wsl.yoz-im.exe` path once; no third-party IM executable is required.
 - One `era.m.im.dressing()` instance owns the opaque Insert-mode snapshot and restore generation.
 - `dressing()` replaces its augroup and registers lifecycle handlers synchronously; repeated setup cannot leave delayed duplicate handlers.
 - `InsertLeave` invalidates pending restores, captures the current backend token, and selects semantic `English` mode only when needed.
@@ -19,11 +20,11 @@
 
 ## Platform mappings
 
-- Native macOS mapping lives in `yoz.im`: `English` maps to `com.apple.keylayout.ABC`, `Chinese` maps to `com.apple.inputmethod.SCIM.ITABC`, and snapshots retain any exact Text Input Source Services ID.
-- Native Windows mapping lives in `yoz.im`: semantic methods use the low 16-bit language ID while snapshots retain the full decimal `HKL`.
+- Native macOS mapping lives in `rust/im`: `English` maps to `com.apple.keylayout.ABC`, `Chinese` maps to `com.apple.inputmethod.SCIM.ITABC`, and snapshots retain any exact Text Input Source Services ID.
+- Native Windows mapping lives in `rust/im`: semantic methods use the low 16-bit language ID while snapshots retain the full decimal `HKL`.
 - Native Windows selection uses a bounded `SendMessageTimeoutW` request and verifies the foreground thread's resulting layout before reporting success.
-- WSL uses the existing architecture-specific `im-select.exe`. Its snapshots are decimal Windows language IDs rather than full HKLs.
-- Because the helper posts selection asynchronously and does not report delivery failures, WSL reads back at least twice and polls the observed language ID for up to 100ms at 10ms intervals before reporting failure.
+- WSL uses the x64 `wsl.yoz-im.exe` artifact built from `rust/im/src/bin/yoz-im.rs`. Its snapshots are decimal Windows language IDs rather than full HKLs.
+- The WSL bridge submits a bounded `SendMessageTimeoutW` request and polls the foreground thread in-process for up to 100ms at 10ms intervals. The Linux backend therefore starts one bridge process per query or selection and trusts a zero exit status only after bridge-side verification.
 - The helper-backed capability is exported only when WSL detection succeeds; ordinary Linux has no IM backend.
 
 ## Failure strategy

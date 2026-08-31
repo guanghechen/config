@@ -1,4 +1,4 @@
-//! Cross-platform input-method access.
+//! Cross-platform input-method domain.
 
 #[cfg(target_os = "macos")]
 mod osx;
@@ -15,20 +15,20 @@ use win as platform;
 use wsl as platform;
 
 #[cfg(target_os = "macos")]
-pub(crate) use osx::Backend;
+pub use osx::Backend;
 #[cfg(target_os = "windows")]
-pub(crate) use win::Backend;
+pub use win::Backend;
 #[cfg(target_os = "linux")]
-pub(crate) use wsl::{Backend, is_available};
+pub use wsl::{Backend, is_available};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum InputMethod {
+pub enum InputMethod {
     English,
     Chinese,
 }
 
 impl InputMethod {
-    pub(crate) fn parse(input_method: &str) -> Result<Self, String> {
+    pub fn parse(input_method: &str) -> Result<Self, String> {
         match input_method {
             "English" => Ok(Self::English),
             "Chinese" => Ok(Self::Chinese),
@@ -38,7 +38,7 @@ impl InputMethod {
         }
     }
 
-    pub(crate) fn as_str(self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             Self::English => "English",
             Self::Chinese => "Chinese",
@@ -47,18 +47,18 @@ impl InputMethod {
 }
 
 impl Backend {
-    pub(crate) fn get_input_method(&mut self) -> Result<InputMethod, String> {
+    pub fn get_input_method(&mut self) -> Result<InputMethod, String> {
         let source_id = self.current()?;
         platform::input_method(&source_id)
             .ok_or_else(|| format!("[im.get_input_method] Unknown input source: {source_id:?}"))
     }
 
-    pub(crate) fn set_input_method(&mut self, input_method: InputMethod) -> Result<(), String> {
+    pub fn set_input_method(&mut self, input_method: InputMethod) -> Result<(), String> {
         self.select(platform::source_id_for(input_method))
     }
 }
 
-pub(crate) fn is_input_method(source_id: &str, input_method: InputMethod) -> bool {
+pub fn is_input_method(source_id: &str, input_method: InputMethod) -> bool {
     platform::input_method(source_id) == Some(input_method)
 }
 

@@ -11,7 +11,7 @@
 ---@field public executable             string
 
 ---@class yoz.im
----@field public setup?                 fun(options: yoz.im.ISetupOptions): boolean|nil, string|nil WSL-only helper configuration.
+---@field public setup?                 fun(options: yoz.im.ISetupOptions): boolean|nil, string|nil WSL-only repository bridge configuration.
 local M = {}
 
 ---Returns the current platform IM source token.

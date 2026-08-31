@@ -1,4 +1,4 @@
-//! Windows input-method backend and language-ID mapping shared with WSL.
+//! Windows backend and language-ID mapping shared with WSL.
 
 use super::InputMethod;
 
@@ -72,6 +72,7 @@ mod native {
     #[link(name = "kernel32")]
     unsafe extern "system" {
         fn GetLastError() -> Dword;
+        fn SetLastError(error_code: Dword);
     }
 
     fn last_error(subject: &str) -> String {
@@ -114,17 +115,17 @@ mod native {
     }
 
     #[derive(Default)]
-    pub(crate) struct Backend;
+    pub struct Backend;
 
     impl Backend {
-        pub(crate) fn current(&mut self) -> Result<String, String> {
+        pub fn current(&mut self) -> Result<String, String> {
             let hwnd = foreground_window("im.current")?;
             let thread_id = window_thread(hwnd, "im.current")?;
             let input_locale = keyboard_layout(thread_id, "im.current")?;
             Ok(input_locale.to_string())
         }
 
-        pub(crate) fn select(&mut self, source_id: &str) -> Result<(), String> {
+        pub fn select(&mut self, source_id: &str) -> Result<(), String> {
             let input_locale = parse_source_id(source_id)?;
             let hwnd = foreground_window("im.select")?;
             let thread_id = window_thread(hwnd, "im.select")?;
@@ -136,6 +137,7 @@ mod native {
             }
 
             let mut result = 0;
+            unsafe { SetLastError(0) };
             let sent = unsafe {
                 SendMessageTimeoutW(
                     hwnd,
@@ -148,7 +150,12 @@ mod native {
                 )
             };
             if sent == 0 {
-                return Err(last_error("im.select"));
+                let error_code = unsafe { GetLastError() };
+                return if error_code == 0 {
+                    Err("[im.select] Failed to request input locale".to_owned())
+                } else {
+                    Err(format!("[im.select] Windows error {error_code}"))
+                };
             }
             let selected = keyboard_layout(thread_id, "im.select")?;
             if !input_locale_matches(selected as u64, input_locale as u64) {
@@ -190,7 +197,7 @@ mod native {
 }
 
 #[cfg(target_os = "windows")]
-pub(crate) use native::Backend;
+pub use native::Backend;
 
 #[cfg(test)]
 mod tests {
