@@ -35,23 +35,23 @@ function M.setup(config)
     ansi = {
       "#232136",  -- black (surface1 for dark themes, subtext1 for latte)
       "#EB6F92",
-      "#95B1AC",
-      "#F6C177",
       "#3E8FB0",
-      "#C4A7E7",
+      "#F6C177",
       "#9CCFD8",
+      "#C4A7E7",
+      "#EA9A97",
       "#E0DEF4",  -- white (subtext1 for dark themes, surface2 for latte)
     },
 
     -- Bright colors
     brights = {
-      "#908CAA",  -- bright black (surface2 for dark themes, subtext0 for latte)
+      "#6E6A86",  -- bright black (surface2 for dark themes, subtext0 for latte)
       "#EB6F92",
-      "#95B1AC",
-      "#F6C177",
       "#3E8FB0",
-      "#C4A7E7",
+      "#F6C177",
       "#9CCFD8",
+      "#C4A7E7",
+      "#EA9A97",
       "#908CAA",  -- bright white (subtext0 for dark themes, surface1 for latte)
     },
 
