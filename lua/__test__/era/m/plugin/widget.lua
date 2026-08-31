@@ -78,6 +78,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
   local tasks = {
     ["slow.nvim"] = {
       name = "slow.nvim",
+      action = "update",
       status = "done",
       message = "Updated",
       from_commit = "aaaaaaa",
@@ -85,6 +86,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
     },
     ["runtime.nvim"] = {
       name = "runtime.nvim",
+      action = "update",
       status = "done",
       message = "Already up to date",
       from_commit = "ccccccc",
@@ -92,6 +94,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
     },
     ["missing.nvim"] = {
       name = "missing.nvim",
+      action = "install",
       status = "running",
       step = "cloning",
       message = "Cloning...",
@@ -101,8 +104,17 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
     },
     ["orphan.nvim"] = {
       name = "orphan.nvim",
+      action = "clean",
       status = "done",
       message = "Removed",
+      from_commit = nil,
+      to_commit = nil,
+    },
+    ["idle.nvim"] = {
+      name = "idle.nvim",
+      action = "install",
+      status = "queued",
+      message = "Queued",
       from_commit = nil,
       to_commit = nil,
     },
@@ -117,6 +129,12 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
     end,
   })
   t:patch_table(package.loaded, "era.m.plugin.action", {
+    is_running = function()
+      return true
+    end,
+    get_progress = function()
+      return { action = "install", total = 2, queued = 1, running = 1, done = 0, error = 0 }
+    end,
     get_tasks = function()
       return tasks
     end,
@@ -137,9 +155,10 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
   local shortcut_line = find_line(lines, stl.icon.ui.CloudDownload)
   local shortcut_text = table.concat({
     stl.icon.ui.CloudDownload .. " I Install",
+    stl.icon.ui.Lock .. " S Sync",
     stl.icon.ui.ArrowUp .. " U Update",
     stl.icon.ui.Trash .. " X Clean",
-  }, "      ")
+  }, "    ")
   local shortcut_padding = math.floor((132 - widget.padding * 2 - vim.fn.strdisplaywidth(shortcut_text)) / 2)
 
   t.assert_true(State.options.ui.title:find(stl.icon.ui.Plugin, 1, true) ~= nil, "title icon")
@@ -148,12 +167,66 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
   t.assert_eq("", lines[shortcut_line + 1], "action spacing")
   t.assert_eq(shortcut_line + 2, find_line(lines, "Neovim 30.00ms"), "header order")
   t.assert_true(text:find("Neovim 30.00ms    Startup 22.00ms", 1, true) ~= nil, "startup profile")
+  t.assert_true(text:find("Installing 0/2    Queued 1", 1, true) ~= nil, "operation progress")
+  t.assert_true(find_line(lines, "Installing (1)") < find_line(lines, "missing.nvim"), "installing section")
+  t.assert_true(find_line(lines, "Queued (1)") < find_line(lines, "idle.nvim"), "queued section")
   t.assert_true(find_line(lines, "slow.nvim") < find_line(lines, "fast.nvim"), "startup order")
   t.assert_true(find_line(lines, "slow.nvim") + 1 == find_line(lines, "Updated"), "updated task nesting")
-  t.assert_true(find_line(lines, "missing.nvim") + 1 == find_line(lines, "Cloning..."), "install task nesting")
+  t.assert_eq(find_line(lines, "missing.nvim"), find_line(lines, "Cloning..."), "install task row")
+  local idle_line = find_line(lines, "idle.nvim")
+  t.assert_true(lines[idle_line]:find("Queued", 1, true) ~= nil, "queued task row")
   t.assert_eq("missing.nvim", widget:get_plugin_at_line(find_line(lines, "receiving objects")), "nested line owner")
   t.assert_true(find_line(lines, "orphan.nvim") + 1 == find_line(lines, "Removed"), "clean task nesting")
+  t.assert_true(text:find("╰─", 1, true) ~= nil, "rounded tree connector")
   t.assert_true(text:find("Already up to date", 1, true) == nil, "unchanged result hidden")
+end)
+
+t:test("cursor ownership follows a plugin across section moves", function()
+  local restored = nil ---@type integer[]|nil
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_get_cursor", function()
+    return { 3, 0 }
+  end)
+  t:patch_table(vim.api, "nvim_win_set_cursor", function(_, cursor)
+    restored = cursor
+  end)
+
+  local widget = Widget.new({ win_opts = { width = 80 }, winnr = 7 } --[[@as era.m.plugin.View]])
+  widget._line_to_plugin = { [3] = "target.nvim" }
+  t.assert_eq("target.nvim", widget:__cursor_plugin__(), "cursor owner")
+
+  widget._lines = { {}, {}, {}, {} }
+  widget._line_to_plugin = { [2] = "other.nvim", [4] = "target.nvim" }
+  widget:__restore_cursor__("target.nvim")
+  t.assert_eq(4, restored[1], "restored line")
+end)
+
+t:test("normalized multiline task errors render successfully", function()
+  local widget = Widget.new({ win_opts = { width = 80 } } --[[@as era.m.plugin.View]])
+  widget:__render_task__({
+    name = "clone-error.nvim",
+    action = "sync",
+    status = "error",
+    message = "Clone failed: Cloning into 'plugin'...",
+    output = { "fatal: Remote branch missing not found" },
+    from_commit = nil,
+    to_commit = nil,
+  })
+  widget:__trim__()
+
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:_register_cleanup(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+
+  local ok, err = pcall(widget.__render__, widget, bufnr)
+  t.assert_true(ok, tostring(err))
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  t.assert_true(table.concat(lines, "\n"):find("Remote branch missing", 1, true) ~= nil, "rendered detail")
 end)
 
 t:run()

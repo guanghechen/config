@@ -9,6 +9,7 @@ local Widget = require("era.m.plugin.widget")
 ---@field public widget                 era.m.plugin.Widget
 ---@field protected _augroup            ?integer
 ---@field protected _disposed           boolean
+---@field protected _update_scheduled   boolean
 local M = {}
 M.__index = M
 
@@ -35,6 +36,7 @@ function M.show()
   _instance.name = "plugin"
   _instance._augroup = nil
   _instance._disposed = false
+  _instance._update_scheduled = false
   _instance.bufnr = nil
   _instance.winnr = nil
   _instance.win_opts = {}
@@ -210,10 +212,24 @@ function M:__mount__()
     pattern = "PluginLoad",
     callback = function()
       if self:isvisible() then
-        self.widget:update()
+        self:__request_update__()
       end
     end,
   })
+end
+
+---@return nil
+function M:__request_update__()
+  if self._update_scheduled or not self:isvisible() then
+    return
+  end
+  self._update_scheduled = true
+  vim.schedule(function()
+    self._update_scheduled = false
+    if self:isvisible() then
+      self.widget:update()
+    end
+  end)
 end
 
 ---@param action                        era.m.plugin.ActionEnum
@@ -225,13 +241,13 @@ function M:__run_action__(action)
   end
 
   local function update()
-    if self:isvisible() then
-      self.widget:update()
-    end
+    self:__request_update__()
   end
 
   if action == "install" then
     Action.install(update):finally(update)
+  elseif action == "sync" then
+    Action.sync(update):finally(update)
   elseif action == "update" then
     Action.update(update):finally(update)
   else
@@ -270,6 +286,14 @@ function M:__setup_keymaps__()
     },
     {
       modes = { "n" },
+      key = "S",
+      callback = function()
+        self:__run_action__("sync")
+      end,
+      desc = "Sync",
+    },
+    {
+      modes = { "n" },
       key = "U",
       callback = function()
         self:__run_action__("update")
@@ -301,13 +325,9 @@ function M:__setup_keymaps__()
         end
 
         Action.build(name, function()
-          if self:isvisible() then
-            self.widget:update()
-          end
+          self:__request_update__()
         end):finally(function()
-          if self:isvisible() then
-            self.widget:update()
-          end
+          self:__request_update__()
         end)
         self.widget:update()
       end,

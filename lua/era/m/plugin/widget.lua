@@ -25,6 +25,7 @@ end
 
 ---@return nil
 function M:update()
+  local cursor_plugin = self:__cursor_plugin__() ---@type string|nil
   self._lines = {}
   self._line_to_plugin = {}
   self:__build_required_by__()
@@ -36,6 +37,37 @@ function M:update()
   vim.api.nvim_set_option_value("modifiable", true, { buf = self._view.bufnr })
   self:__render__(self._view.bufnr)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self._view.bufnr })
+  self:__restore_cursor__(cursor_plugin)
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@return string|nil
+function M:__cursor_plugin__()
+  local winnr = self._view.winnr ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return nil
+  end
+  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+  return self._line_to_plugin[cursor[1]]
+end
+
+---@param plugin_name                   string|nil
+---@return nil
+function M:__restore_cursor__(plugin_name)
+  if plugin_name == nil then
+    return
+  end
+  local winnr = self._view.winnr ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+  for line = 1, #self._lines do
+    if self._line_to_plugin[line] == plugin_name then
+      vim.api.nvim_win_set_cursor(winnr, { line, 0 })
+      return
+    end
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -126,18 +158,25 @@ end
 function M:__header__()
   self:__nl__():__nl__()
 
-  local gap = "      "
+  local gap = "    "
   local install_icon = stl.icon.ui.CloudDownload
+  local sync_icon = stl.icon.ui.Lock
   local update_icon = stl.icon.ui.ArrowUp
   local clean_icon = stl.icon.ui.Trash
-  local shortcuts =
-    table.concat({ install_icon .. " I Install", update_icon .. " U Update", clean_icon .. " X Clean" }, gap)
+  local shortcuts = table.concat({
+    install_icon .. " I Install",
+    sync_icon .. " S Sync",
+    update_icon .. " U Update",
+    clean_icon .. " X Clean",
+  }, gap)
   local available_width = self._view.win_opts.width - self.padding * 2 ---@type integer
   local shortcut_padding = math.max(0, math.floor((available_width - vim.fn.strdisplaywidth(shortcuts)) / 2))
 
   self:__append__(string.rep(" ", shortcut_padding))
   self:__append__(install_icon .. " ", "m_pl_loaded")
   self:__append__("I", "m_pl_key"):__append__(" Install" .. gap, "m_pl_comment")
+  self:__append__(sync_icon .. " ", "m_pl_event")
+  self:__append__("S", "m_pl_key"):__append__(" Sync" .. gap, "m_pl_comment")
   self:__append__(update_icon .. " ", "m_pl_time")
   self:__append__("U", "m_pl_key"):__append__(" Update" .. gap, "m_pl_comment")
   self:__append__(clean_icon .. " ", "m_pl_error")
@@ -153,6 +192,27 @@ function M:__header__()
     :__append__(nvim_startup_time and (" " .. string.format("%.2fms", nvim_startup_time)) or " pending", "m_pl_comment")
     :__append__("    Startup", "m_pl_bold")
     :__append__(" " .. string.format("%.2fms", profile.total_time), "m_pl_comment")
+
+  local Action = require("era.m.plugin.action")
+  if Action.is_running() then
+    local progress = Action.get_progress() ---@type era.m.plugin.IOperationProgress
+    local labels = {
+      install = "Installing",
+      sync = "Syncing",
+      update = "Updating",
+      clean = "Cleaning",
+      build = "Building",
+    } ---@type table<era.m.plugin.ActionEnum, string>
+    local completed = progress.done + progress.error ---@type integer
+    self:__append__("    " .. (labels[progress.action] or "Running"), "m_pl_bold")
+    self:__append__(string.format(" %d/%d", completed, progress.total), "m_pl_comment")
+    if progress.queued > 0 then
+      self:__append__("    Queued " .. progress.queued, "m_pl_comment")
+    end
+    if progress.error > 0 then
+      self:__append__("    Failed " .. progress.error, "m_pl_error")
+    end
+  end
 
   self:__nl__():__nl__()
 end
@@ -243,7 +303,10 @@ function M:__render_task__(task)
   local status_icon = "" ---@type string
   local status_hl = "" ---@type string
 
-  if task.status == "running" then
+  if task.status == "queued" then
+    status_icon = icons.not_loaded
+    status_hl = "m_pl_not_loaded"
+  elseif task.status == "running" then
     status_icon = icons.lazy
     status_hl = "m_pl_running"
   elseif task.status == "error" then
@@ -254,7 +317,7 @@ function M:__render_task__(task)
     status_hl = "m_pl_loaded"
   end
 
-  self:__append__("    └─ ", "m_pl_comment")
+  self:__append__("    ╰─ ", "m_pl_comment")
   self:__append__(status_icon .. " ", status_hl)
 
   if task.step then
@@ -277,14 +340,15 @@ function M:__render_task__(task)
   self:__nl__()
 
   if task.commits and #task.commits > 0 then
-    for _, commit in ipairs(task.commits) do
-      self:__render_commit__(commit, task.name)
+    for index, commit in ipairs(task.commits) do
+      self:__render_commit__(commit, task.name, index == #task.commits)
     end
   end
 
   if task.status ~= "done" and task.output and #task.output > 0 then
-    for _, line in ipairs(task.output) do
-      self:__append__("          " .. line, "m_pl_output")
+    for index, line in ipairs(task.output) do
+      local prefix = index == #task.output and "       ╰─ " or "       ├─ "
+      self:__append__(prefix .. line, "m_pl_output")
       self._line_to_plugin[#self._lines] = task.name
       self:__nl__()
     end
@@ -331,6 +395,85 @@ function M:__render_orphan__(name, task)
   if task ~= nil and self:__task_is_visible__(task) then
     self:__render_task__(task)
   end
+end
+
+---@param task                          era.m.plugin.ITaskState
+---@return nil
+function M:__render_operation_task__(task)
+  local icons = State.options.ui.icons
+  local icon = task.status == "queued" and icons.not_loaded or icons.lazy
+  local icon_hl = task.status == "queued" and "m_pl_not_loaded" or "m_pl_running"
+
+  self:__append__("  " .. icon .. " ", icon_hl)
+  self:__append__(task.name, "m_pl_bold")
+  if task.step then
+    self:__append__(" [", "m_pl_comment")
+    self:__append__(task.step, "m_pl_step")
+    self:__append__("]", "m_pl_comment")
+  end
+  if task.message and task.message ~= "" then
+    self:__append__(" " .. task.message, "m_pl_comment")
+  end
+  self._line_to_plugin[#self._lines] = task.name
+  self:__nl__()
+
+  if task.output and #task.output > 0 then
+    for index, line in ipairs(task.output) do
+      local prefix = index == #task.output and "    ╰─ " or "    ├─ "
+      self:__append__(prefix .. line, "m_pl_output")
+      self._line_to_plugin[#self._lines] = task.name
+      self:__nl__()
+    end
+  end
+end
+
+---@param title                         string
+---@param tasks                         era.m.plugin.ITaskState[]
+---@return nil
+function M:__render_task_section__(title, tasks)
+  if #tasks == 0 then
+    return
+  end
+  table.sort(tasks, function(a, b)
+    return a.name < b.name
+  end)
+  self:__append__(title, "m_pl_h2"):__append__(" (" .. #tasks .. ")", "m_pl_comment"):__nl__()
+  for _, task in ipairs(tasks) do
+    self:__render_operation_task__(task)
+  end
+  self:__nl__()
+end
+
+---@param tasks                         table<string, era.m.plugin.ITaskState>
+---@return table<string, boolean>
+function M:__render_operation_sections__(tasks)
+  local queued = {} ---@type era.m.plugin.ITaskState[]
+  local running = {} ---@type era.m.plugin.ITaskState[]
+  local active = {} ---@type table<string, boolean>
+  local action = nil ---@type era.m.plugin.ActionEnum|nil
+
+  for name, task in pairs(tasks) do
+    if task.status == "queued" then
+      queued[#queued + 1] = task
+      active[name] = true
+      action = action or task.action
+    elseif task.status == "running" then
+      running[#running + 1] = task
+      active[name] = true
+      action = action or task.action
+    end
+  end
+
+  local titles = {
+    install = "Installing",
+    sync = "Syncing",
+    update = "Updating",
+    clean = "Cleaning",
+    build = "Building",
+  } ---@type table<era.m.plugin.ActionEnum, string>
+  self:__render_task_section__(titles[action] or "Running", running)
+  self:__render_task_section__("Queued", queued)
+  return active
 end
 
 ---@return era.m.plugin.IPluginGroups
@@ -381,14 +524,21 @@ end
 ---@param title                         string
 ---@param states                        era.m.plugin.IPluginState[]
 ---@param tasks                         table<string, era.m.plugin.ITaskState>
+---@param excluded                      table<string, boolean>
 ---@return nil
-function M:__render_plugin_section__(title, states, tasks)
-  if #states == 0 then
+function M:__render_plugin_section__(title, states, tasks, excluded)
+  local visible = {} ---@type era.m.plugin.IPluginState[]
+  for _, state in ipairs(states) do
+    if not excluded[state.spec.name] then
+      visible[#visible + 1] = state
+    end
+  end
+  if #visible == 0 then
     return
   end
 
-  self:__append__(title, "m_pl_h2"):__append__(" (" .. #states .. ")", "m_pl_comment"):__nl__()
-  for _, state in ipairs(states) do
+  self:__append__(title, "m_pl_h2"):__append__(" (" .. #visible .. ")", "m_pl_comment"):__nl__()
+  for _, state in ipairs(visible) do
     self:__render_plugin__(state, tasks[state.spec.name])
   end
   self:__nl__()
@@ -403,7 +553,9 @@ function M:__home__()
 
   self:__append__("Total:", "m_pl_h2"):__append__(" " .. total .. " plugins", "m_pl_comment"):__nl__():__nl__()
 
-  self:__render_plugin_section__("Missing", groups.missing, tasks)
+  local active = self:__render_operation_sections__(tasks) ---@type table<string, boolean>
+
+  self:__render_plugin_section__("Missing", groups.missing, tasks, active)
 
   local orphan_set = {} ---@type table<string, boolean>
   for _, name in ipairs(State.collect_orphan_plugins()) do
@@ -417,17 +569,23 @@ function M:__home__()
 
   local orphans = vim.tbl_keys(orphan_set) ---@type string[]
   table.sort(orphans)
-  if #orphans > 0 then
-    self:__append__("Orphans", "m_pl_h2"):__append__(" (" .. #orphans .. ")", "m_pl_comment"):__nl__()
-    for _, name in ipairs(orphans) do
+  local visible_orphans = {} ---@type string[]
+  for _, name in ipairs(orphans) do
+    if not active[name] then
+      visible_orphans[#visible_orphans + 1] = name
+    end
+  end
+  if #visible_orphans > 0 then
+    self:__append__("Orphans", "m_pl_h2"):__append__(" (" .. #visible_orphans .. ")", "m_pl_comment"):__nl__()
+    for _, name in ipairs(visible_orphans) do
       self:__render_orphan__(name, tasks[name])
     end
     self:__nl__()
   end
 
-  self:__render_plugin_section__("Startup", groups.startup, tasks)
-  self:__render_plugin_section__("Runtime Loaded", groups.runtime, tasks)
-  self:__render_plugin_section__("Not Loaded", groups.not_loaded, tasks)
+  self:__render_plugin_section__("Startup", groups.startup, tasks, active)
+  self:__render_plugin_section__("Runtime Loaded", groups.runtime, tasks, active)
+  self:__render_plugin_section__("Not Loaded", groups.not_loaded, tasks, active)
 
   if total == 0 then
     self:__append__("  No plugins found", "m_pl_comment"):__nl__()
@@ -436,9 +594,10 @@ end
 
 ---@param commit                        era.m.plugin.ICommitInfo
 ---@param plugin_name                   string
+---@param is_last                       boolean
 ---@return nil
-function M:__render_commit__(commit, plugin_name)
-  self:__append__("          ", nil)
+function M:__render_commit__(commit, plugin_name, is_last)
+  self:__append__("       " .. (is_last and "╰─ " or "├─ "), "m_pl_comment")
   self:__append__(commit.hash .. " ", "m_pl_commit")
 
   local msg = commit.message ---@type string

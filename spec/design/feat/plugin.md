@@ -7,6 +7,7 @@
 ## Features
 
 - **Lazy Loading**: Load plugins on demand via events, commands, filetypes, or keymaps
+- **Plugin Sync**: Reconcile configured plugins to the exact commits in `lazy-lock.json`
 - **Plugin Update**: Fetch and checkout latest commits from remote
 - **Plugin Clean**: Remove unused plugin directories
 - **Lock File**: Compatible with `lazy-lock.json` format
@@ -20,7 +21,7 @@ era.m.plugin/
 ├── types.lua    # Type definitions
 ├── state.lua    # Global state and configuration
 ├── loader.lua   # Plugin loading and lazy trigger setup
-├── action.lua   # Install, update, clean, and build actions
+├── action.lua   # Install, sync, update, clean, and build actions
 ├── view.lua     # Floating window management
 └── widget.lua   # Unified status and operation rendering
 ```
@@ -34,7 +35,7 @@ state.lua (config, lock, specs)
     ↓
 loader.lua (plugin loading)
     ↓
-action.lua (install/update/clean/build)
+action.lua (install/sync/update/clean/build)
     ↓
 widget.lua (rendering)
     ↓
@@ -105,6 +106,7 @@ require("era.m.plugin").setup(specs)
 | Key  | Description                |
 |:-----|:---------------------------|
 | `I`  | Install missing plugins    |
+| `S`  | Sync plugins to lock file  |
 | `U`  | Update all plugins         |
 | `X`  | Remove orphan plugins      |
 | `gb` | Build the selected plugin  |
@@ -116,9 +118,12 @@ The plugin window has one stable surface. It displays:
 
 - Neovim and startup-plugin timing summaries.
 - Missing plugins and orphan directories before installed plugins.
+- Active operations grouped into action-aware `Installing` / `Syncing` / `Updating` / `Building` and `Queued` sections.
 - Startup plugins sorted by inclusive load time (slowest first).
 - Runtime-loaded and not-loaded plugins as separate groups.
-- Install, update, clean, and build tasks directly below their owning plugin or orphan row.
+- Completed install, sync, update, clean, and build tasks render directly below their owning plugin or orphan row.
+- Operation progress is summarized in the header; queued jobs become running only when one of eight concurrency slots is available.
+- Cursor ownership follows the selected plugin across section moves, and progress refreshes are coalesced per event-loop tick.
 
 Completed no-op updates are omitted. Meaningful results and errors remain visible until the next operation replaces the task snapshot.
 
@@ -131,7 +136,7 @@ Startup profile semantics:
 - Plugin total counts nested dependencies once.
 - Individual plugin times remain inclusive and may contain dependency load time.
 
-Opening the window is read-only. Missing plugins are installed only after `I`; update and clean run only after `U` and `X` respectively.
+Opening the window is read-only. Missing plugins are installed only after `I`; sync, update, and clean run only after `S`, `U`, and `X` respectively.
 
 ## Highlight Groups
 
@@ -164,6 +169,8 @@ Compatible with lazy.nvim's `lazy-lock.json`:
   "plugin-name": { "branch": "main", "commit": "abc1234..." }
 }
 ```
+
+Sync treats the lock file as read-only. Commit values must be canonical full Git object IDs: 40 hexadecimal characters for SHA-1 repositories or 64 for SHA-256 repositories; abbreviated IDs are rejected as `Invalid lock entry` before any Git operation. Configured plugins without lock entries are reported as `Unpinned`; installed plugins with local worktree changes are reported as `Dirty worktree` and are not checked out. Successful sync verifies the exact full commit after checkout and runs the plugin build step for a new installation or when the checkout changes.
 
 ## Integration with fml/plugin.lua
 

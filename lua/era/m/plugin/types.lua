@@ -1,14 +1,18 @@
 ---@alias era.m.plugin.ActionEnum
 ---| "install"
+---| "sync"
 ---| "update"
 ---| "clean"
+---| "build"
 
 ---@alias era.m.plugin.TaskStatusEnum
+---| "queued"
 ---| "running"
 ---| "done"
 ---| "error"
 
 ---@alias era.m.plugin.TaskStepEnum
+---| "checking"
 ---| "cloning"
 ---| "fetching"
 ---| "checkout"
@@ -51,6 +55,7 @@
 
 ---@class era.m.plugin.ITaskState
 ---@field public name                   string
+---@field public action                 era.m.plugin.ActionEnum
 ---@field public status                 era.m.plugin.TaskStatusEnum
 ---@field public step                   era.m.plugin.TaskStepEnum|nil
 ---@field public message                string
@@ -58,6 +63,14 @@
 ---@field public from_commit            string|nil
 ---@field public to_commit              string|nil
 ---@field public commits                era.m.plugin.ICommitInfo[]|nil
+
+---@class era.m.plugin.IOperationProgress
+---@field public action                 era.m.plugin.ActionEnum|nil
+---@field public total                  integer
+---@field public queued                 integer
+---@field public running                integer
+---@field public done                   integer
+---@field public error                  integer
 
 ---@class era.m.plugin.ITextSegment
 ---@field public str                    string

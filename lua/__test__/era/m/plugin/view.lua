@@ -10,7 +10,7 @@ local t = harness.new("era.m.plugin.view")
 
 ---@return table, table
 local function fake_action()
-  local calls = { install = 0, update = 0, clean = 0, finally = 0 }
+  local calls = { install = 0, sync = 0, update = 0, clean = 0, finally = 0 }
   local future = {
     finally = function(self)
       calls.finally = calls.finally + 1
@@ -23,6 +23,10 @@ local function fake_action()
     end,
     install = function()
       calls.install = calls.install + 1
+      return future
+    end,
+    sync = function()
+      calls.sync = calls.sync + 1
       return future
     end,
     update = function()
@@ -47,6 +51,9 @@ local function fake_view()
       end,
     },
     winnr = 42,
+    __request_update__ = function(self)
+      self.widget:update()
+    end,
   }, View) ---@type era.m.plugin.View
   return view, function()
     return updates
@@ -59,14 +66,46 @@ t:test("actions update the single view without changing UI mode", function()
   local view, updates = fake_view()
 
   view:__run_action__("install")
+  view:__run_action__("sync")
   view:__run_action__("update")
   view:__run_action__("clean")
 
   t.assert_eq(1, calls.install, "install calls")
+  t.assert_eq(1, calls.sync, "sync calls")
   t.assert_eq(1, calls.update, "update calls")
   t.assert_eq(1, calls.clean, "clean calls")
-  t.assert_eq(3, calls.finally, "finally registrations")
-  t.assert_eq(3, updates(), "view updates")
+  t.assert_eq(4, calls.finally, "finally registrations")
+  t.assert_eq(4, updates(), "view updates")
+end)
+
+t:test("progress updates are coalesced per event-loop tick", function()
+  local scheduled = {} ---@type fun()[]
+  local updates = 0
+  t:patch_table(vim, "schedule", function(callback)
+    scheduled[#scheduled + 1] = callback
+  end)
+
+  local view = setmetatable({
+    _update_scheduled = false,
+    widget = {
+      update = function()
+        updates = updates + 1
+      end,
+    },
+    isvisible = function()
+      return true
+    end,
+  }, View) ---@type era.m.plugin.View
+
+  view:__request_update__()
+  view:__request_update__()
+  t.assert_eq(1, #scheduled, "scheduled updates")
+  t.assert_eq(0, updates, "updates before flush")
+  table.remove(scheduled, 1)()
+  t.assert_eq(1, updates, "coalesced update")
+
+  view:__request_update__()
+  t.assert_eq(1, #scheduled, "next tick update")
 end)
 
 t:test("actions are ignored while another operation is running", function()

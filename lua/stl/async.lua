@@ -7,31 +7,52 @@ local yield_marker = {}
 ----------------------------------------------------------------------------------------------------
 
 ---@param thread                      thread
+---@param on_error                    fun(err: string)|nil
+---@param err                         any
+---@return nil
+local function report_error(thread, on_error, err)
+  local message = debug.traceback(thread, tostring(err)) ---@type string
+  if on_error then
+    on_error(message)
+    return
+  end
+  error(message, 0)
+end
+
+---@param thread                      thread
+---@param on_complete                 fun(result: any)|nil
+---@param on_error                    fun(err: string)|nil
 ---@param ...                         any
-local function resume(thread, ...)
+local function resume(thread, on_complete, on_error, ...)
   ---@type [boolean, {}, string|fun(callback: fun(...))]
   local ret = { coroutine.resume(thread, ...) }
   local stat = ret[1]
 
   if not stat then
-    error(debug.traceback(thread, ret[2]), 0)
+    report_error(thread, on_error, ret[2])
+    return
   elseif coroutine.status(thread) == "dead" then
+    if on_complete then
+      on_complete(ret[2])
+    end
     return
   end
 
   local marker, fn = ret[2], ret[3]
 
-  assert(type(fn) == "function", "type error :: expected func")
-
-  if marker ~= yield_marker or not vim.is_callable(fn) then
-    return error("Unexpected coroutine.yield")
+  if type(fn) ~= "function" then
+    report_error(thread, on_error, "type error :: expected func")
+    return
+  elseif marker ~= yield_marker or not vim.is_callable(fn) then
+    report_error(thread, on_error, "Unexpected coroutine.yield")
+    return
   end
 
   local ok, perr = pcall(fn, function(...)
-    resume(thread, ...)
+    resume(thread, on_complete, on_error, ...)
   end)
   if not ok then
-    resume(thread, perr)
+    resume(thread, on_complete, on_error, perr)
   end
 end
 
@@ -51,7 +72,19 @@ end
 ---@param async_fn                    async fun()
 ---@param ...                         any
 function M.run(async_fn, ...)
-  resume(coroutine.create(async_fn), ...)
+  resume(coroutine.create(async_fn), nil, nil, ...)
+end
+
+---Execute an async function and settle a Future when its coroutine completes or fails.
+---@param async_fn                    async fun(...): any
+---@param ...                         any
+---@return stl.c.Future
+function M.run_future(async_fn, ...)
+  local args = { ... }
+  local argc = select("#", ...)
+  return stl.c.Future.new(function(resolve, reject)
+    resume(coroutine.create(async_fn), resolve, reject, unpack(args, 1, argc))
+  end)
 end
 
 ---@async
