@@ -1,3 +1,5 @@
 /app/config.json
 /data/
+/skills/ms-*
+/skills/yui-*
 /themes/local.toml
