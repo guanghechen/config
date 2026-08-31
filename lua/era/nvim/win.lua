@@ -39,6 +39,20 @@ local function __vim_navigate_window__(direction)
 end
 
 ---@param direction                     "p"|"n"|"h"|"j"|"k"|"l"
+---@return boolean
+local function __diffview_navigate_window__(direction)
+  if direction ~= "h" then
+    return false
+  end
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  if vim.t[tabnr].tabtype ~= stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
+    return false
+  end
+  return require("era.m.diffview.fn").navigate_window(direction)
+end
+
+---@param direction                     "p"|"n"|"h"|"j"|"k"|"l"
 local function __vim_navigate__(direction)
   if direction == "p" then
     pcall(__vim_navigate_window_prev__)
@@ -47,6 +61,10 @@ local function __vim_navigate__(direction)
 
   if direction == "n" then
     pcall(__vim_navigate_window_next__)
+    return
+  end
+
+  if __diffview_navigate_window__(direction) then
     return
   end
 

@@ -25,6 +25,7 @@ local M = {}
 ---@field public unstaged                era.m.diffview.view.workspace.IChangesPane
 ---@field public expanded_staged_height  integer|nil                    Restored after an empty pane expands again
 ---@field public both_nonempty           boolean                        Last rendered occupancy state
+---@field public last_focused_stage_type stl.m.diffview.StageTypeEnum
 
 ---@class era.m.diffview.view.workspace.ILayout
 ---@field public tabnr                   integer
@@ -51,7 +52,22 @@ local function create_empty_changes_layout()
     unstaged = { stage_type = "unstaged", winnr = nil, bufnr = nil },
     expanded_staged_height = nil,
     both_nonempty = false,
+    last_focused_stage_type = "unstaged",
   }
+end
+
+---@param changes                        era.m.diffview.view.workspace.IChangesLayout
+---@param stage_type                     stl.m.diffview.StageTypeEnum
+---@return integer
+local function create_changes_buffer(changes, stage_type)
+  local bufnr = pane_changes.create_buffer(stage_type) ---@type integer
+  vim.api.nvim_create_autocmd("WinEnter", {
+    buffer = bufnr,
+    callback = function()
+      changes.last_focused_stage_type = stage_type
+    end,
+  })
+  return bufnr
 end
 
 ---Create the vertically stacked Staged and Unstaged sibling panes in one Changes column.
@@ -64,7 +80,7 @@ local function create_changes_layout(anchor_winnr)
   for _, stage_type in ipairs({ "staged", "unstaged" }) do
     local pane = changes[stage_type] ---@type era.m.diffview.view.workspace.IChangesPane
     pane.winnr = result.winnrs[stage_type]
-    pane.bufnr = pane_changes.create_buffer(stage_type)
+    pane.bufnr = create_changes_buffer(changes, stage_type)
     if pane.winnr then
       vim.api.nvim_win_set_buf(pane.winnr, pane.bufnr)
       pane_changes.apply_winopts(pane.winnr)
@@ -328,7 +344,7 @@ function M.show_changes(lyt)
     local pane = M.get_changes_pane(lyt, stage_type)
     pane.winnr = result.winnrs[stage_type]
     if not pane.bufnr or not vim.api.nvim_buf_is_valid(pane.bufnr) then
-      pane.bufnr = pane_changes.create_buffer(stage_type)
+      pane.bufnr = create_changes_buffer(lyt.changes, stage_type)
     end
     if pane.winnr then
       vim.api.nvim_win_set_buf(pane.winnr, pane.bufnr)
@@ -376,18 +392,23 @@ end
 -- Focus management
 ----------------------------------------------------------------------------------------------------
 
----Focus one Changes pane, defaulting to the Unstaged work queue.
+---Focus one Changes pane, defaulting to the last focused sibling.
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 ---@param stage_type                     stl.m.diffview.StageTypeEnum|nil
+---@return boolean
 function M.focus_changes(lyt, stage_type)
-  local preferred = M.get_changes_pane(lyt, stage_type or "unstaged")
-  local fallback = M.get_changes_pane(lyt, stage_type == "staged" and "unstaged" or "staged")
+  local preferred_stage_type = stage_type or lyt.changes.last_focused_stage_type or "unstaged"
+  local fallback_stage_type = preferred_stage_type == "staged" and "unstaged" or "staged"
+  local preferred = M.get_changes_pane(lyt, preferred_stage_type)
+  local fallback = M.get_changes_pane(lyt, fallback_stage_type)
   for _, pane in ipairs({ preferred, fallback }) do
     if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      lyt.changes.last_focused_stage_type = pane.stage_type
       vim.api.nvim_set_current_win(pane.winnr)
-      return
+      return true
     end
   end
+  return false
 end
 
 ---Focus left sbs window
@@ -410,6 +431,12 @@ end
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.cycle_focus(lyt)
   local current_winnr = vim.api.nvim_get_current_win()
+  local right_valid = lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
+  if current_winnr == lyt.sbs_right_winnr or (current_winnr == lyt.sbs_left_winnr and not right_valid) then
+    if M.focus_changes(lyt) then
+      return
+    end
+  end
   local valid = {} ---@type integer[]
   local current_idx = nil ---@type integer|nil
 

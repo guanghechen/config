@@ -98,6 +98,42 @@ t:test("layout creates staged above unstaged with independent buffers and focus"
   end)
 end)
 
+t:test("Changes restores the last focused sibling across SBS navigation and panel recreation", function()
+  local original_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  vim.cmd.tabnew()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local lyt = view.__create_layout_full__(tabnr)
+  local staged_winnr = assert(lyt.changes.staged.winnr) ---@type integer
+  local unstaged_winnr = assert(lyt.changes.unstaged.winnr) ---@type integer
+  local left_winnr = assert(lyt.sbs_left_winnr) ---@type integer
+  local right_winnr = assert(lyt.sbs_right_winnr) ---@type integer
+
+  vim.api.nvim_set_current_win(staged_winnr)
+  vim.api.nvim_set_current_win(left_winnr)
+  view.focus_changes(lyt)
+  t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "staged restored")
+
+  vim.api.nvim_set_current_win(unstaged_winnr)
+  vim.api.nvim_set_current_win(left_winnr)
+  view.focus_changes(lyt)
+  t.assert_eq(unstaged_winnr, vim.api.nvim_get_current_win(), "unstaged restored")
+
+  vim.api.nvim_set_current_win(staged_winnr)
+  vim.api.nvim_set_current_win(right_winnr)
+  view.cycle_focus(lyt)
+  t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "cycle restores staged")
+
+  vim.api.nvim_set_current_win(unstaged_winnr)
+  vim.api.nvim_set_current_win(left_winnr)
+  view.hide_changes(lyt)
+  view.show_changes(lyt)
+  view.focus_changes(lyt)
+  t.assert_eq(lyt.changes.unstaged.winnr, vim.api.nvim_get_current_win(), "recreated panel restores unstaged")
+
+  view.destroy(lyt)
+  t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")
+end)
+
 t:test("render shares metadata widths and restores the split after an empty pane", function()
   with_changes_layout(function(lyt)
     local entries = {

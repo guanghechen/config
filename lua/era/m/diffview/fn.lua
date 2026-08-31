@@ -73,6 +73,27 @@ function M.refresh()
   S.cmd.refresh()
 end
 
+---Handle window navigation that depends on the active Diffview layout.
+---@param direction                    "h"|"j"|"k"|"l"
+---@return boolean
+function M.navigate_window(direction)
+  if direction ~= "h" then
+    return false
+  end
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  if vim.t[tabnr].tabtype ~= stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
+    return false
+  end
+
+  local workspace_view = require("era.m.diffview.view.workspace.view")
+  local lyt = workspace_view.get_layout(tabnr)
+  if not lyt or vim.api.nvim_get_current_win() ~= lyt.sbs_left_winnr then
+    return false
+  end
+  return workspace_view.focus_changes(lyt)
+end
+
 ---Reveal the active item in the view's navigation panel, or hide that panel when already focused.
 function M.reveal()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

@@ -101,4 +101,27 @@ t:test("reveal dispatches to the active Diffview action", function()
   t.assert_eq("workspace,commits", table.concat(calls, ","), "action dispatch")
 end)
 
+t:test("left navigation from Workspace SBS restores the remembered Changes pane", function()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local left_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local calls = 0
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
+    focus_changes = function()
+      calls = calls + 1
+      return true
+    end,
+    get_layout = function()
+      return { sbs_left_winnr = left_winnr }
+    end,
+  })
+
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.DIFFVIEW_WORKSPACE
+  t.assert_true(Fn.navigate_window("h"), "workspace left handled")
+  t.assert_eq(1, calls, "Changes focus")
+  t.assert_false(Fn.navigate_window("l"), "workspace right native")
+
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
+  t.assert_false(Fn.navigate_window("h"), "normal tab native")
+end)
+
 t:run()
