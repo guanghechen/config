@@ -1,0 +1,50 @@
+# kanagawa-lotus
+
+# =============================================================================
+# Newsboat Color Theme (Catppuccin Style)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Main Interface Elements
+# -----------------------------------------------------------------------------
+color background          default        default
+color article             default        default
+
+# -----------------------------------------------------------------------------
+# List Colors
+# -----------------------------------------------------------------------------
+color listnormal          color59        default
+color listnormal_unread   color65      default
+color listfocus           color59        color152
+color listfocus_unread    color65      color152
+
+# -----------------------------------------------------------------------------
+# Title & Info Bar
+# -----------------------------------------------------------------------------
+color title               color65       color152
+color info                color67       color152
+color hint-key            color132       color152          bold
+color hint-keys-delimiter color102        color152
+color hint-separator      default                           color152
+color hint-description    default                           color152
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+color end-of-text-marker  color145        default
+
+# -----------------------------------------------------------------------------
+# Article Content Highlights
+# -----------------------------------------------------------------------------
+# Metadata lines (Feed, Title, Author, Link, Date)
+highlight article "^(Feed|Title|Author|Link|Date): .+" color67       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color66       default bold
+
+# URLs
+highlight article "https?://[^ ]+"                     color67       default
+
+# Reference numbers [1], [2], etc.
+highlight article "\\[[0-9]+\\]"                       color66       default bold
+
+# Media indicators
+highlight article "\\((link|image|video)\\)"           color145        default
