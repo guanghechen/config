@@ -9,13 +9,13 @@ import { Setting } from '#setting'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'
 
-import { apps } from './theme/_config.mjs'
+import { apps } from './theme/config.mjs'
 import {
   gen_full_theme_name,
   gen_themes_per_app,
   load_theme_scheme,
   prepare_theme_per_app,
-} from './theme/_util.mjs'
+} from './theme/util.mjs'
 
 /** @typedef {import("./theme/types.d.ts").IThemeScheme} IThemeScheme */
 /** @typedef {import("./theme/types.d.ts").IReporter} IReporter */

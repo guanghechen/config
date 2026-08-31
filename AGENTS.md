@@ -8,7 +8,7 @@
 - App definition：`asset/theme/template/{app}/meta.mjs`
 - Fallback template：`asset/theme/template/{app}/default.hbs`
 - Family template：`asset/theme/template/{app}/{family}.hbs`
-- Runtime：`cli/theme.mjs`、`cli/theme/_config.mjs`、`cli/theme/_util.mjs`
+- Runtime：`cli/theme.mjs`、`cli/theme/config.mjs`、`cli/theme/util.mjs`
 
 ## Rules
 

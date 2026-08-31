@@ -13,9 +13,9 @@ import {
 } from '#env'
 import { hex2ansi256 } from '#util/color'
 
-/** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
-/** @typedef {import("./types.d.ts").IReporter} IReporter */
-/** @typedef {import("./types.d.ts").IThemeScheme} IThemeScheme */
+/** @typedef {import('./types.d.ts').IAppConfig} IAppConfig */
+/** @typedef {import('./types.d.ts').IReporter} IReporter */
+/** @typedef {import('./types.d.ts').IThemeScheme} IThemeScheme */
 
 /**
  * @param {string} theme

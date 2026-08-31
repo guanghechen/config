@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { gen_full_theme_name } from '#cli/theme/_util'
+import { gen_full_theme_name } from '#cli/theme/util'
 import { XDG_CONFIG_HOME } from '#env'
 import { exec } from '#util/command'
 

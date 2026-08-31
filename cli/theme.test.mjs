@@ -5,12 +5,12 @@ import path from 'node:path'
 import { describe, it } from 'node:test'
 
 import { applyThemeToApps, resolveThemeToggle } from './theme.mjs'
-import { apps } from './theme/_config.mjs'
+import { apps } from './theme/config.mjs'
 import {
   load_theme_scheme,
   render_template,
   resolve_app_template_filepath,
-} from './theme/_util.mjs'
+} from './theme/util.mjs'
 
 function createReporter() {
   const errors = []

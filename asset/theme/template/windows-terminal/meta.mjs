@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import { render_template } from '#cli/theme/_util'
+import { render_template } from '#cli/theme/util'
 import {
   F_WINDOWS_TERMINAL_SETTINGS,
   XDG_CONFIG_HOME,
