@@ -1,0 +1,46 @@
+# kanagawa-wave
+
+gui:
+  authorColors:
+    '*': '#9CABCA'
+    guanghechen: '#7E9CD8'
+  branchColorPatterns:
+    "^(main|master)$": '#957FB8'
+    "^(user/[^/]+/)?chore": '#727169'
+    "^(user/[^/]+/)?feat": '#76946A'
+    "^(user/[^/]+/)?feature": '#76946A'
+    "^(user/[^/]+/)?fix": '#C34043'
+    "^(user/[^/]+/)?refactor": '#FFA066'
+    "^(user/[^/]+/)?release": '#7E9CD8'
+  theme:
+    activeBorderColor:
+      - '#957FB8'
+      - bold
+    cherryPickedCommitBgColor:
+      - '#6A9589'
+    cherryPickedCommitFgColor:
+      - '#1F1F28'
+    defaultFgColor:
+      - '#9CABCA'
+    inactiveBorderColor:
+      - '#727169'
+    inactiveViewSelectedLineBgColor:
+      - '#363646'
+    markedBaseCommitBgColor:
+      - '#C0A36E'
+    markedBaseCommitFgColor:
+      - '#1F1F28'
+    optionsTextColor:
+      - '#FFA066'
+    searchingActiveBorderColor:
+      - '#6A9589'
+      - bold
+    selectedLineBgColor:
+      - '#223249'
+    unstagedChangesColor:
+      - '#C34043'
+
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --paging=never --dark

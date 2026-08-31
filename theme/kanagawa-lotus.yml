@@ -1,0 +1,46 @@
+# kanagawa-lotus
+
+gui:
+  authorColors:
+    '*': '#716E61'
+    guanghechen: '#4D699B'
+  branchColorPatterns:
+    "^(main|master)$": '#B35B79'
+    "^(user/[^/]+/)?chore": '#A09CAC'
+    "^(user/[^/]+/)?feat": '#6F894E'
+    "^(user/[^/]+/)?feature": '#6F894E'
+    "^(user/[^/]+/)?fix": '#C84053'
+    "^(user/[^/]+/)?refactor": '#CC6D00'
+    "^(user/[^/]+/)?release": '#4D699B'
+  theme:
+    activeBorderColor:
+      - '#B35B79'
+      - bold
+    cherryPickedCommitBgColor:
+      - '#597B75'
+    cherryPickedCommitFgColor:
+      - '#F2ECBC'
+    defaultFgColor:
+      - '#716E61'
+    inactiveBorderColor:
+      - '#A09CAC'
+    inactiveViewSelectedLineBgColor:
+      - '#E4D794'
+    markedBaseCommitBgColor:
+      - '#77713F'
+    markedBaseCommitFgColor:
+      - '#F2ECBC'
+    optionsTextColor:
+      - '#CC6D00'
+    searchingActiveBorderColor:
+      - '#597B75'
+      - bold
+    selectedLineBgColor:
+      - '#C9CBD1'
+    unstagedChangesColor:
+      - '#C84053'
+
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --paging=never --light
