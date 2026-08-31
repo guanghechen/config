@@ -1,2 +1,3 @@
-themes/local.toml
-data/
+/app/config.json
+/data/
+/themes/local.toml
