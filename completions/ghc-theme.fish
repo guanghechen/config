@@ -18,9 +18,9 @@ complete ghc-theme -n "__fish_seen_subcommand_from apply toggle" -a "
     catppuccin-mocha
     gruvbox-dark
     gruvbox-light
-    nord
-    onehalf-dark
-    onehalf-light
+    kanagawa-dragon
+    kanagawa-lotus
+    kanagawa-wave
     rosepine-dawn
     rosepine-main
     rosepine-moon
