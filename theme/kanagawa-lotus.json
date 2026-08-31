@@ -1,0 +1,21 @@
+{
+  "name": "kanagawa-lotus",
+  "custom": {
+    "panel_bg": "#F2ECBC",
+    "surface_dim": "#E4D794",
+    "surface0": "#C9CBD1",
+    "surface1": "#B5CBD2",
+    "overlay0": "#A09CAC",
+    "overlay1": "#8A8980",
+    "text": "#43436C",
+    "subtext0": "#716E61",
+    "accent": "#B35B79",
+    "mauve": "#B35B79",
+    "green": "#6F894E",
+    "yellow": "#77713F",
+    "red": "#C84053",
+    "blue": "#4D699B",
+    "teal": "#597B75",
+    "peach": "#CC6D00"
+  }
+}
