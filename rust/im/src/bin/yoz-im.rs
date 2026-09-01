@@ -3,6 +3,7 @@
 
 use core::convert::TryFrom;
 use core::ffi::c_void;
+use core::mem::MaybeUninit;
 use core::ptr;
 
 type Bool = i32;
@@ -10,12 +11,15 @@ type Dword = u32;
 type Handle = *mut c_void;
 type Hkl = *mut c_void;
 type Hwnd = *mut c_void;
+type Int = i32;
 type Lparam = isize;
 type Lresult = isize;
 type Uint = u32;
 type Wparam = usize;
 
 const INVALID_HANDLE_VALUE: Handle = usize::MAX as Handle;
+const ENGLISH_PRIMARY_LANGUAGE_ID: usize = 0x09;
+const MAX_INPUT_LOCALES: usize = 64;
 const SELECT_READBACK_ATTEMPTS: usize = 11;
 const SELECT_READBACK_INTERVAL_MS: Dword = 10;
 const SELECT_TIMEOUT_MS: Uint = 50;
@@ -46,6 +50,7 @@ unsafe extern "system" {
 unsafe extern "system" {
     fn GetForegroundWindow() -> Hwnd;
     fn GetKeyboardLayout(thread_id: Dword) -> Hkl;
+    fn GetKeyboardLayoutList(buffer_size: Int, input_locales: *mut Hkl) -> Int;
     fn GetWindowThreadProcessId(hwnd: Hwnd, process_id: *mut Dword) -> Dword;
     fn SendMessageTimeoutW(
         hwnd: Hwnd,
@@ -65,6 +70,13 @@ enum CurrentError {
     Windows(Dword),
 }
 
+#[derive(Clone, Copy)]
+struct Foreground {
+    hwnd: Hwnd,
+    thread_id: Dword,
+    input_locale: usize,
+}
+
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     unsafe { ExitProcess(70) }
@@ -78,7 +90,13 @@ fn is_digit(value: u16) -> bool {
     value >= b'0' as u16 && value <= b'9' as u16
 }
 
-fn requested_input_locale() -> Result<Option<u16>, ()> {
+enum Request {
+    Current,
+    English,
+    Restore(usize),
+}
+
+fn request() -> Result<Request, ()> {
     let mut cursor = unsafe { GetCommandLineW() };
     if cursor.is_null() {
         return Err(());
@@ -103,19 +121,36 @@ fn requested_input_locale() -> Result<Option<u16>, ()> {
         cursor = unsafe { cursor.add(1) };
     }
     if unsafe { *cursor } == 0 {
-        return Ok(None);
+        return Ok(Request::Current);
     }
 
-    let mut value = 0_u32;
+    let argument = cursor;
+    let mut english_cursor = cursor;
+    let mut english = true;
+    for expected in b"--english" {
+        if unsafe { *english_cursor } != u16::from(*expected) {
+            english = false;
+            break;
+        }
+        english_cursor = unsafe { english_cursor.add(1) };
+    }
+    if english {
+        while is_space(unsafe { *english_cursor }) {
+            english_cursor = unsafe { english_cursor.add(1) };
+        }
+        if unsafe { *english_cursor } == 0 {
+            return Ok(Request::English);
+        }
+    }
+
+    cursor = argument;
+    let mut value = 0_usize;
     let mut digits = 0_usize;
     while is_digit(unsafe { *cursor }) {
         value = value
             .checked_mul(10)
-            .and_then(|current| current.checked_add(u32::from(unsafe { *cursor } - b'0' as u16)))
+            .and_then(|current| current.checked_add(usize::from(unsafe { *cursor } - b'0' as u16)))
             .ok_or(())?;
-        if value > u32::from(u16::MAX) {
-            return Err(());
-        }
         digits += 1;
         cursor = unsafe { cursor.add(1) };
     }
@@ -128,10 +163,10 @@ fn requested_input_locale() -> Result<Option<u16>, ()> {
     if unsafe { *cursor } != 0 {
         return Err(());
     }
-    Ok(Some(value as u16))
+    Ok(Request::Restore(value))
 }
 
-fn current_input_locale() -> Result<u16, CurrentError> {
+fn current_input_locale() -> Result<Foreground, CurrentError> {
     let hwnd = unsafe { GetForegroundWindow() };
     if hwnd.is_null() {
         return Err(CurrentError::NoForegroundWindow);
@@ -144,7 +179,11 @@ fn current_input_locale() -> Result<u16, CurrentError> {
     if layout.is_null() {
         return Err(CurrentError::NoInputLocale);
     }
-    Ok((layout as usize & usize::from(u16::MAX)) as u16)
+    Ok(Foreground {
+        hwnd,
+        thread_id,
+        input_locale: layout as usize,
+    })
 }
 
 fn std_handle(kind: Dword) -> Option<Handle> {
@@ -180,8 +219,8 @@ fn write_bytes(handle: Handle, bytes: &[u8]) -> bool {
     write_raw(handle, bytes.as_ptr(), bytes.len())
 }
 
-fn write_decimal(handle: Handle, value: u32) -> bool {
-    let mut buffer = [0_u8; 11];
+fn write_decimal(handle: Handle, value: usize) -> bool {
+    let mut buffer = [0_u8; 21];
     let buffer_ptr = buffer.as_mut_ptr();
     let mut cursor = buffer.len() - 1;
     unsafe { *buffer_ptr.add(cursor) = b'\n' };
@@ -206,7 +245,7 @@ fn exit_error(message: &[u8], windows_error: Option<Dword>) -> ! {
         let _ = write_bytes(stderr, message);
         if let Some(code) = windows_error {
             let _ = write_bytes(stderr, b": Windows error ");
-            let _ = write_decimal(stderr, code);
+            let _ = write_decimal(stderr, code as usize);
         } else {
             let _ = write_bytes(stderr, b"\n");
         }
@@ -214,9 +253,9 @@ fn exit_error(message: &[u8], windows_error: Option<Dword>) -> ! {
     unsafe { ExitProcess(1) }
 }
 
-fn current_or_exit() -> u16 {
+fn current_or_exit() -> Foreground {
     match current_input_locale() {
-        Ok(input_locale) => input_locale,
+        Ok(foreground) => foreground,
         Err(CurrentError::NoForegroundWindow) => exit_error(b"No foreground window", None),
         Err(CurrentError::NoInputLocale) => {
             exit_error(b"Foreground thread has no input locale", None)
@@ -227,23 +266,68 @@ fn current_or_exit() -> u16 {
     }
 }
 
-fn select_input_locale(requested: u16) -> ! {
-    let hwnd = unsafe { GetForegroundWindow() };
-    if hwnd.is_null() {
-        exit_error(b"No foreground window", None);
+fn write_source_or_exit(source_id: usize) {
+    let Some(stdout) = std_handle(STD_OUTPUT_HANDLE) else {
+        unsafe { ExitProcess(1) }
+    };
+    if !write_decimal(stdout, source_id) {
+        unsafe { ExitProcess(1) }
     }
-    let thread_id = unsafe { GetWindowThreadProcessId(hwnd, ptr::null_mut()) };
-    if thread_id == 0 {
+}
+
+fn is_english(input_locale: usize) -> bool {
+    let language_id = input_locale & usize::from(u16::MAX);
+    language_id & 0x03ff == ENGLISH_PRIMARY_LANGUAGE_ID
+}
+
+fn input_locale_matches(current: usize, requested: usize) -> bool {
+    current == requested
+}
+
+fn english_input_locale_or_exit() -> usize {
+    unsafe { SetLastError(0) };
+    let count = unsafe { GetKeyboardLayoutList(0, ptr::null_mut()) };
+    if count <= 0 {
         exit_error(
-            b"Failed to inspect foreground window",
+            b"Failed to enumerate input locales",
             Some(unsafe { GetLastError() }),
         );
     }
-    let current = unsafe { GetKeyboardLayout(thread_id) };
-    if current.is_null() {
-        exit_error(b"Foreground thread has no input locale", None);
+    if count as usize > MAX_INPUT_LOCALES {
+        exit_error(b"Too many loaded input locales", None);
     }
-    if (current as usize & usize::from(u16::MAX)) as u16 == requested {
+
+    let mut input_locales = [const { MaybeUninit::<Hkl>::uninit() }; MAX_INPUT_LOCALES];
+    let copied = unsafe { GetKeyboardLayoutList(count, input_locales.as_mut_ptr().cast()) };
+    if copied <= 0 {
+        exit_error(
+            b"Failed to read input locales",
+            Some(unsafe { GetLastError() }),
+        );
+    }
+    if copied as usize > MAX_INPUT_LOCALES {
+        exit_error(b"Input locale count exceeded buffer", None);
+    }
+    let mut index = 0_usize;
+    while index < copied as usize {
+        let input_locale =
+            unsafe { input_locales.as_ptr().add(index).read().assume_init() } as usize;
+        if is_english(input_locale) {
+            return input_locale;
+        }
+        index += 1;
+    }
+    exit_error(b"No loaded English input locale", None)
+}
+
+fn select_input_locale(foreground: Foreground, requested: usize, english: bool) -> ! {
+    let current = foreground.input_locale;
+    let matches = if english {
+        is_english(current)
+    } else {
+        input_locale_matches(current, requested)
+    };
+    if matches {
         unsafe { ExitProcess(0) }
     }
 
@@ -251,7 +335,7 @@ fn select_input_locale(requested: u16) -> ! {
     unsafe { SetLastError(0) };
     let sent = unsafe {
         SendMessageTimeoutW(
-            hwnd,
+            foreground.hwnd,
             WM_INPUTLANGCHANGEREQUEST,
             0,
             requested as isize,
@@ -269,9 +353,17 @@ fn select_input_locale(requested: u16) -> ! {
     }
 
     for attempt in 0..SELECT_READBACK_ATTEMPTS {
-        let selected = unsafe { GetKeyboardLayout(thread_id) };
-        if !selected.is_null() && (selected as usize & usize::from(u16::MAX)) as u16 == requested {
-            unsafe { ExitProcess(0) }
+        let selected = unsafe { GetKeyboardLayout(foreground.thread_id) };
+        if !selected.is_null() {
+            let selected = selected as usize;
+            let matches = if english {
+                is_english(selected)
+            } else {
+                input_locale_matches(selected, requested)
+            };
+            if matches {
+                unsafe { ExitProcess(0) }
+            }
         }
         if attempt + 1 < SELECT_READBACK_ATTEMPTS {
             unsafe { Sleep(SELECT_READBACK_INTERVAL_MS) };
@@ -282,18 +374,24 @@ fn select_input_locale(requested: u16) -> ! {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn mainCRTStartup() -> ! {
-    match requested_input_locale() {
-        Ok(None) => {
-            let current = current_or_exit();
-            let Some(stdout) = std_handle(STD_OUTPUT_HANDLE) else {
-                unsafe { ExitProcess(1) }
-            };
-            if !write_decimal(stdout, u32::from(current)) {
-                unsafe { ExitProcess(1) }
-            }
+    match request() {
+        Ok(Request::Current) => {
+            let foreground = current_or_exit();
+            write_source_or_exit(foreground.input_locale);
             unsafe { ExitProcess(0) }
         }
-        Ok(Some(requested)) => select_input_locale(requested),
-        Err(()) => exit_error(b"Expected one decimal input locale in range 1..65535", None),
+        Ok(Request::English) => {
+            let foreground = current_or_exit();
+            write_source_or_exit(foreground.input_locale);
+            if is_english(foreground.input_locale) {
+                unsafe { ExitProcess(0) }
+            }
+            select_input_locale(foreground, english_input_locale_or_exit(), true)
+        }
+        Ok(Request::Restore(requested)) => {
+            let foreground = current_or_exit();
+            select_input_locale(foreground, requested, false)
+        }
+        Err(()) => exit_error(b"Expected no argument, --english, or one decimal HKL", None),
     }
 }

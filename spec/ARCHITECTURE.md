@@ -44,7 +44,7 @@ Submodules:
 - `yoz.find`: file finding (fd-like)
 - `yoz.fn`: utility functions (uuid, md5)
 - `yoz.fs`: filesystem operations (collect_files, readdir, move, get_filesize)
-- `yoz.im`: Lua adapter for the `rust/im` source-token and semantic mapping contract
+- `yoz.im`: Lua adapter for the `rust/im` source-oriented capture/restore contract
 - `yoz.path`: path handling (normalize, join, relative, resolve, split, basename)
 - `yoz.replace`: text replacement with regex support and preview
 - `yoz.search`: content search (ripgrep-like, search_in_files, search_in_lines)

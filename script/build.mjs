@@ -192,7 +192,7 @@ function buildWslImHelper(rustDir, targetDir, stagedBin) {
 
   const smoke = spawnSync(executable, ["invalid"], { encoding: "utf8" })
   if (smoke.error) throw smoke.error
-  if (smoke.status !== 1 || !smoke.stderr.includes("Expected one decimal input locale")) {
+  if (smoke.status !== 1 || !smoke.stderr.includes("Expected no argument, --english, or one decimal HKL")) {
     throw new Error(`WSL IM bridge smoke test failed with status ${smoke.status ?? "unknown"}`)
   }
 

@@ -9,6 +9,7 @@ pcall(require, "ark.vendor.local.keymap")
 
 era.m.notifier.dressing()
 era.m.ui_attach.dressing()
+era.m.im.dressing()
 require("era.command")
 
 if dot.path.is_git_repo() then
@@ -40,7 +41,6 @@ vim.schedule(function()
   era.m.winsep.dressing()
 
   era.m.dim.dressing()
-  era.m.im.dressing()
   era.m.input.dressing()
   era.m.lsp.dressing()
   era.m.select.dressing()

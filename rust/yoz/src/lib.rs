@@ -73,14 +73,14 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
         }
     })?;
 
-    let current_state = Rc::clone(&state);
-    let current = lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
-        let result = current_state
+    let capture_state = Rc::clone(&state);
+    let capture = lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
+        let result = capture_state
             .try_borrow_mut()
             .map_err(|_| {
                 LuaError::RuntimeError("IM state is already borrowed".to_owned())
             })?
-            .current();
+            .capture();
         match result {
             Ok(source_id) => Ok(LuaMultiValue::from_vec(vec![
                 source_id.into_lua(lua)?,
@@ -93,15 +93,47 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
         }
     })?;
 
-    let select_state = Rc::clone(&state);
-    let select =
-        lua.create_function(move |lua, source_id: String| -> LuaResult<LuaMultiValue> {
-            let result = select_state
+    let capture_and_select_state = Rc::clone(&state);
+    let capture_and_select_english =
+        lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
+            let result = capture_and_select_state
                 .try_borrow_mut()
                 .map_err(|_| {
                     LuaError::RuntimeError("IM state is already borrowed".to_owned())
                 })?
-                .select(&source_id);
+                .capture_and_select_english();
+            match result {
+                Ok(snapshot) => Ok(LuaMultiValue::from_vec(vec![
+                    snapshot.into_lua(lua)?,
+                    true.into_lua(lua)?,
+                    LuaValue::Nil,
+                ])),
+                Err(im::CaptureAndSelectError::Capture(error)) => {
+                    Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        false.into_lua(lua)?,
+                        error.into_lua(lua)?,
+                    ]))
+                }
+                Err(im::CaptureAndSelectError::Select { snapshot, error }) => {
+                    Ok(LuaMultiValue::from_vec(vec![
+                        snapshot.into_lua(lua)?,
+                        false.into_lua(lua)?,
+                        error.into_lua(lua)?,
+                    ]))
+                }
+            }
+        })?;
+
+    let restore_state = Rc::clone(&state);
+    let restore = lua.create_function(
+        move |lua, source_id: String| -> LuaResult<LuaMultiValue> {
+            let result = restore_state
+                .try_borrow_mut()
+                .map_err(|_| {
+                    LuaError::RuntimeError("IM state is already borrowed".to_owned())
+                })?
+                .restore(&source_id);
             match result {
                 Ok(()) => Ok(LuaMultiValue::from_vec(vec![
                     true.into_lua(lua)?,
@@ -112,72 +144,27 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
                     error.into_lua(lua)?,
                 ])),
             }
-        })?;
+        },
+    )?;
 
-    let get_input_method_state = Rc::clone(&state);
-    let get_input_method = lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
-        let result = get_input_method_state
+    let is_english_state = Rc::clone(&state);
+    let is_english = lua.create_function(move |_, source_id: String| -> LuaResult<bool> {
+        let is_english = is_english_state
             .try_borrow_mut()
             .map_err(|_| {
                 LuaError::RuntimeError("IM state is already borrowed".to_owned())
             })?
-            .get_input_method();
-        match result {
-            Ok(input_method) => Ok(LuaMultiValue::from_vec(vec![
-                input_method.as_str().into_lua(lua)?,
-                LuaValue::Nil,
-            ])),
-            Err(error) => Ok(LuaMultiValue::from_vec(vec![
-                LuaValue::Nil,
-                error.into_lua(lua)?,
-            ])),
-        }
+            .is_english(&source_id);
+        Ok(is_english)
     })?;
-
-    let set_input_method_state = Rc::clone(&state);
-    let set_input_method = lua.create_function(
-        move |lua, input_method: String| -> LuaResult<LuaMultiValue> {
-            let result = match im::InputMethod::parse(&input_method) {
-                Ok(input_method) => set_input_method_state
-                    .try_borrow_mut()
-                    .map_err(|_| {
-                        LuaError::RuntimeError("IM state is already borrowed".to_owned())
-                    })?
-                    .set_input_method(input_method),
-                Err(error) => Err(error),
-            };
-            match result {
-                Ok(()) => Ok(LuaMultiValue::from_vec(vec![
-                    true.into_lua(lua)?,
-                    LuaValue::Nil,
-                ])),
-                Err(error) => Ok(LuaMultiValue::from_vec(vec![
-                    LuaValue::Nil,
-                    error.into_lua(lua)?,
-                ])),
-            }
-        },
-    )?;
-
-    let is_input_method = lua.create_function(
-        |_, (source_id, input_method): (String, String)| -> LuaResult<bool> {
-            let Ok(input_method) = im::InputMethod::parse(&input_method) else {
-                return Ok(false);
-            };
-            Ok(im::is_input_method(&source_id, input_method))
-        },
-    )?;
 
     let exports = lua.create_table()?;
     #[cfg(target_os = "linux")]
     exports.set("setup", setup)?;
-    exports.set("current", current.clone())?;
-    exports.set("capture", current)?;
-    exports.set("select", select.clone())?;
-    exports.set("restore", select)?;
-    exports.set("is_input_method", is_input_method)?;
-    exports.set("get_input_method", get_input_method)?;
-    exports.set("set_input_method", set_input_method)?;
+    exports.set("capture", capture)?;
+    exports.set("capture_and_select_english", capture_and_select_english)?;
+    exports.set("restore", restore)?;
+    exports.set("is_english", is_english)?;
     Ok(exports)
 }
 

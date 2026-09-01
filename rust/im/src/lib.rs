@@ -8,68 +8,14 @@ mod win;
 mod wsl;
 
 #[cfg(target_os = "macos")]
-use osx as platform;
-#[cfg(target_os = "windows")]
-use win as platform;
-#[cfg(target_os = "linux")]
-use wsl as platform;
-
-#[cfg(target_os = "macos")]
 pub use osx::Backend;
 #[cfg(target_os = "windows")]
 pub use win::Backend;
 #[cfg(target_os = "linux")]
 pub use wsl::{Backend, is_available};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum InputMethod {
-    English,
-    Chinese,
-}
-
-impl InputMethod {
-    pub fn parse(input_method: &str) -> Result<Self, String> {
-        match input_method {
-            "English" => Ok(Self::English),
-            "Chinese" => Ok(Self::Chinese),
-            _ => Err(format!(
-                "[im.set_input_method] Unknown input method: {input_method:?}"
-            )),
-        }
-    }
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::English => "English",
-            Self::Chinese => "Chinese",
-        }
-    }
-}
-
-impl Backend {
-    pub fn get_input_method(&mut self) -> Result<InputMethod, String> {
-        let source_id = self.current()?;
-        platform::input_method(&source_id)
-            .ok_or_else(|| format!("[im.get_input_method] Unknown input source: {source_id:?}"))
-    }
-
-    pub fn set_input_method(&mut self, input_method: InputMethod) -> Result<(), String> {
-        self.select(platform::source_id_for(input_method))
-    }
-}
-
-pub fn is_input_method(source_id: &str, input_method: InputMethod) -> bool {
-    platform::input_method(source_id) == Some(input_method)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::InputMethod;
-
-    #[test]
-    fn t_parses_input_methods() {
-        assert_eq!(InputMethod::parse("English"), Ok(InputMethod::English));
-        assert_eq!(InputMethod::parse("Chinese"), Ok(InputMethod::Chinese));
-        assert!(InputMethod::parse("Japanese").is_err());
-    }
+#[derive(Debug, Eq, PartialEq)]
+pub enum CaptureAndSelectError {
+    Capture(String),
+    Select { snapshot: String, error: String },
 }

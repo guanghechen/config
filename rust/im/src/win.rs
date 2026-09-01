@@ -1,37 +1,26 @@
-//! Windows backend and language-ID mapping shared with WSL.
+//! Windows backend and English-source classification shared with WSL.
 
-use super::InputMethod;
+const ENGLISH_PRIMARY_LANGUAGE_ID: u16 = 0x09;
 
-const ENGLISH_LANGUAGE_ID: u16 = 1033;
-const CHINESE_LANGUAGE_ID: u16 = 2052;
-
-fn language_id(source_id: &str) -> Option<u16> {
-    let input_locale = source_id.parse::<u64>().ok()?;
-    Some((input_locale & u64::from(u16::MAX)) as u16)
+pub(super) fn is_english(source_id: &str) -> bool {
+    source_id.parse::<u64>().is_ok_and(is_english_input_locale)
 }
 
-pub(super) fn input_method(source_id: &str) -> Option<InputMethod> {
-    match language_id(source_id) {
-        Some(ENGLISH_LANGUAGE_ID) => Some(InputMethod::English),
-        Some(CHINESE_LANGUAGE_ID) => Some(InputMethod::Chinese),
-        _ => None,
-    }
+fn is_english_input_locale(input_locale: u64) -> bool {
+    let language_id = (input_locale & u64::from(u16::MAX)) as u16;
+    language_id & 0x03ff == ENGLISH_PRIMARY_LANGUAGE_ID
 }
 
-pub(super) fn source_id_for(input_method: InputMethod) -> &'static str {
-    match input_method {
-        InputMethod::English => "1033",
-        InputMethod::Chinese => "2052",
-    }
+#[cfg(any(target_os = "windows", test))]
+fn first_english_input_locale(input_locales: impl IntoIterator<Item = u64>) -> Option<u64> {
+    input_locales
+        .into_iter()
+        .find(|input_locale| is_english_input_locale(*input_locale))
 }
 
 #[cfg(any(target_os = "windows", test))]
 pub(super) fn input_locale_matches(current: u64, requested: u64) -> bool {
-    if requested <= u64::from(u16::MAX) {
-        current & u64::from(u16::MAX) == requested
-    } else {
-        current == requested
-    }
+    current == requested
 }
 
 #[cfg(target_os = "windows")]
@@ -39,10 +28,13 @@ mod native {
     use std::ffi::c_void;
     use std::ptr;
 
+    use crate::CaptureAndSelectError;
+
     use super::input_locale_matches;
     type Dword = u32;
     type Hkl = *mut c_void;
     type Hwnd = *mut c_void;
+    type Int = i32;
     type Lparam = isize;
     type Lresult = isize;
     type Uint = u32;
@@ -58,6 +50,7 @@ mod native {
         fn GetForegroundWindow() -> Hwnd;
         fn GetWindowThreadProcessId(hwnd: Hwnd, process_id: *mut Dword) -> Dword;
         fn GetKeyboardLayout(thread_id: Dword) -> Hkl;
+        fn GetKeyboardLayoutList(buffer_size: Int, input_locales: *mut Hkl) -> Int;
         fn SendMessageTimeoutW(
             hwnd: Hwnd,
             message: Uint,
@@ -75,95 +68,149 @@ mod native {
         fn SetLastError(error_code: Dword);
     }
 
-    fn last_error(subject: &str) -> String {
-        let code = unsafe { GetLastError() };
-        format!("[{subject}] Windows error {code}")
+    #[derive(Clone, Copy)]
+    struct Foreground {
+        hwnd: Hwnd,
+        thread_id: Dword,
+        input_locale: usize,
     }
 
-    fn foreground_window(subject: &str) -> Result<Hwnd, String> {
+    fn foreground(subject: &str) -> Result<Foreground, String> {
         let hwnd = unsafe { GetForegroundWindow() };
         if hwnd.is_null() {
             return Err(format!("[{subject}] No foreground window"));
         }
-        Ok(hwnd)
-    }
-
-    fn window_thread(hwnd: Hwnd, subject: &str) -> Result<Dword, String> {
         let thread_id = unsafe { GetWindowThreadProcessId(hwnd, ptr::null_mut()) };
         if thread_id == 0 {
-            return Err(last_error(subject));
+            let code = unsafe { GetLastError() };
+            return Err(format!("[{subject}] Windows error {code}"));
         }
-        Ok(thread_id)
-    }
-
-    fn keyboard_layout(thread_id: Dword, subject: &str) -> Result<usize, String> {
         let layout = unsafe { GetKeyboardLayout(thread_id) };
         if layout.is_null() {
             return Err(format!("[{subject}] Foreground thread has no input locale"));
         }
-        Ok(layout as usize)
+        Ok(Foreground {
+            hwnd,
+            thread_id,
+            input_locale: layout as usize,
+        })
     }
 
-    fn parse_source_id(source_id: &str) -> Result<usize, String> {
+    fn parse_source_id(source_id: &str, subject: &str) -> Result<usize, String> {
         let input_locale = source_id.parse::<usize>().map_err(|error| {
-            format!("[im.select] Invalid Windows input locale {source_id:?}: {error}")
+            format!("[{subject}] Invalid Windows input locale {source_id:?}: {error}")
         })?;
         if input_locale == 0 {
-            return Err("[im.select] Windows input locale must not be zero".to_owned());
+            return Err(format!("[{subject}] Windows input locale must not be zero"));
         }
         Ok(input_locale)
+    }
+
+    fn english_input_locale(subject: &str) -> Result<usize, String> {
+        unsafe { SetLastError(0) };
+        let count = unsafe { GetKeyboardLayoutList(0, ptr::null_mut()) };
+        if count <= 0 {
+            let code = unsafe { GetLastError() };
+            return Err(format!(
+                "[{subject}] Failed to enumerate input locales: Windows error {code}"
+            ));
+        }
+
+        let mut input_locales = vec![ptr::null_mut(); count as usize];
+        let copied = unsafe { GetKeyboardLayoutList(count, input_locales.as_mut_ptr()) };
+        if copied <= 0 {
+            let code = unsafe { GetLastError() };
+            return Err(format!(
+                "[{subject}] Failed to read input locales: Windows error {code}"
+            ));
+        }
+        let english_input_locale = super::first_english_input_locale(
+            input_locales
+                .into_iter()
+                .take(copied as usize)
+                .map(|input_locale| input_locale as usize as u64),
+        );
+        english_input_locale
+            .map(|input_locale| input_locale as usize)
+            .ok_or_else(|| format!("[{subject}] No loaded English input locale"))
+    }
+
+    fn select(foreground: Foreground, input_locale: usize, subject: &str) -> Result<(), String> {
+        if input_locale_matches(foreground.input_locale as u64, input_locale as u64) {
+            return Ok(());
+        }
+
+        let mut result = 0;
+        unsafe { SetLastError(0) };
+        let sent = unsafe {
+            SendMessageTimeoutW(
+                foreground.hwnd,
+                WM_INPUTLANGCHANGEREQUEST,
+                0,
+                input_locale as Lparam,
+                SMTO_BLOCK | SMTO_ABORTIFHUNG,
+                SELECT_TIMEOUT_MS,
+                &mut result,
+            )
+        };
+        if sent == 0 {
+            let error_code = unsafe { GetLastError() };
+            return if error_code == 0 {
+                Err(format!("[{subject}] Failed to request input locale"))
+            } else {
+                Err(format!("[{subject}] Windows error {error_code}"))
+            };
+        }
+        let selected = unsafe { GetKeyboardLayout(foreground.thread_id) };
+        if selected.is_null() {
+            return Err(format!("[{subject}] Foreground thread has no input locale"));
+        }
+        let selected = selected as usize;
+        if !input_locale_matches(selected as u64, input_locale as u64) {
+            return Err(format!(
+                "[{subject}] Foreground window did not select {input_locale}; current input locale is {selected}"
+            ));
+        }
+        Ok(())
     }
 
     #[derive(Default)]
     pub struct Backend;
 
     impl Backend {
-        pub fn current(&mut self) -> Result<String, String> {
-            let hwnd = foreground_window("im.current")?;
-            let thread_id = window_thread(hwnd, "im.current")?;
-            let input_locale = keyboard_layout(thread_id, "im.current")?;
-            Ok(input_locale.to_string())
+        pub fn capture(&mut self) -> Result<String, String> {
+            foreground("im.capture").map(|foreground| foreground.input_locale.to_string())
         }
 
-        pub fn select(&mut self, source_id: &str) -> Result<(), String> {
-            let input_locale = parse_source_id(source_id)?;
-            let hwnd = foreground_window("im.select")?;
-            let thread_id = window_thread(hwnd, "im.select")?;
-            if input_locale_matches(
-                keyboard_layout(thread_id, "im.select")? as u64,
-                input_locale as u64,
-            ) {
-                return Ok(());
+        pub fn capture_and_select_english(&mut self) -> Result<String, CaptureAndSelectError> {
+            let subject = "im.capture_and_select_english";
+            let foreground = foreground(subject).map_err(CaptureAndSelectError::Capture)?;
+            let snapshot = foreground.input_locale.to_string();
+            if super::is_english_input_locale(foreground.input_locale as u64) {
+                return Ok(snapshot);
             }
+            let english_input_locale =
+                english_input_locale(subject).map_err(|error| CaptureAndSelectError::Select {
+                    snapshot: snapshot.clone(),
+                    error,
+                })?;
+            select(foreground, english_input_locale, subject).map_err(|error| {
+                CaptureAndSelectError::Select {
+                    snapshot: snapshot.clone(),
+                    error,
+                }
+            })?;
+            Ok(snapshot)
+        }
 
-            let mut result = 0;
-            unsafe { SetLastError(0) };
-            let sent = unsafe {
-                SendMessageTimeoutW(
-                    hwnd,
-                    WM_INPUTLANGCHANGEREQUEST,
-                    0,
-                    input_locale as Lparam,
-                    SMTO_BLOCK | SMTO_ABORTIFHUNG,
-                    SELECT_TIMEOUT_MS,
-                    &mut result,
-                )
-            };
-            if sent == 0 {
-                let error_code = unsafe { GetLastError() };
-                return if error_code == 0 {
-                    Err("[im.select] Failed to request input locale".to_owned())
-                } else {
-                    Err(format!("[im.select] Windows error {error_code}"))
-                };
-            }
-            let selected = keyboard_layout(thread_id, "im.select")?;
-            if !input_locale_matches(selected as u64, input_locale as u64) {
-                return Err(format!(
-                    "[im.select] Foreground window did not select {source_id}; current input locale is {selected}"
-                ));
-            }
-            Ok(())
+        pub fn restore(&mut self, source_id: &str) -> Result<(), String> {
+            let subject = "im.restore";
+            let input_locale = parse_source_id(source_id, subject)?;
+            select(foreground(subject)?, input_locale, subject)
+        }
+
+        pub fn is_english(&mut self, source_id: &str) -> bool {
+            super::is_english(source_id)
         }
     }
 
@@ -174,23 +221,24 @@ mod native {
 
         #[test]
         fn t_parses_decimal_input_locales() {
-            assert_eq!(parse_source_id("1033"), Ok(1033));
-            assert_eq!(parse_source_id("2052"), Ok(2052));
-            assert_eq!(parse_source_id("67699721"), Ok(67699721));
+            assert_eq!(parse_source_id("1033", "test"), Ok(1033));
+            assert_eq!(parse_source_id("2052", "test"), Ok(2052));
+            assert_eq!(parse_source_id("67699721", "test"), Ok(67699721));
         }
 
         #[test]
         fn t_rejects_invalid_input_locales() {
-            assert!(parse_source_id("").is_err());
-            assert!(parse_source_id("0").is_err());
-            assert!(parse_source_id("english").is_err());
+            assert!(parse_source_id("", "test").is_err());
+            assert!(parse_source_id("0", "test").is_err());
+            assert!(parse_source_id("english", "test").is_err());
         }
 
         #[test]
         fn t_matches_language_ids_and_exact_layouts() {
-            assert!(input_locale_matches(67_699_721, 1033));
-            assert!(input_locale_matches(134_481_924, 2052));
+            assert!(input_locale_matches(1033, 1033));
             assert!(input_locale_matches(67_699_721, 67_699_721));
+            assert!(!input_locale_matches(67_699_721, 1033));
+            assert!(!input_locale_matches(134_481_924, 2052));
             assert!(!input_locale_matches(67_699_721, 134_481_924));
         }
     }
@@ -201,29 +249,36 @@ pub use native::Backend;
 
 #[cfg(test)]
 mod tests {
-    use super::{InputMethod, input_locale_matches, input_method, source_id_for};
+    use super::{first_english_input_locale, input_locale_matches, is_english};
 
     #[test]
-    fn t_maps_language_ids_and_full_input_locales() {
-        assert_eq!(input_method("1033"), Some(InputMethod::English));
-        assert_eq!(input_method("2052"), Some(InputMethod::Chinese));
-        assert_eq!(input_method("67699721"), Some(InputMethod::English));
-        assert_eq!(input_method("134481924"), Some(InputMethod::Chinese));
-        assert_eq!(input_method("18446744073709552649"), None);
-        assert_eq!(input_method("invalid"), None);
+    fn t_classifies_english_language_ids_and_full_input_locales() {
+        assert!(is_english("1033"));
+        assert!(is_english("2057"));
+        assert!(is_english("67699721"));
+        assert!(is_english(
+            &((u64::from(2057_u16) << 16) | u64::from(2057_u16)).to_string()
+        ));
+        assert!(!is_english("1041"));
+        assert!(!is_english("2052"));
+        assert!(!is_english("invalid"));
     }
 
     #[test]
-    fn t_maps_semantic_methods_to_language_ids() {
-        assert_eq!(source_id_for(InputMethod::English), "1033");
-        assert_eq!(source_id_for(InputMethod::Chinese), "2052");
-    }
-
-    #[test]
-    fn t_matches_semantic_language_ids_and_exact_input_locales() {
-        assert!(input_locale_matches(67_699_721, 1033));
-        assert!(input_locale_matches(134_481_924, 2052));
+    fn t_matches_language_ids_and_exact_input_locales() {
+        assert!(input_locale_matches(1033, 1033));
         assert!(input_locale_matches(67_699_721, 67_699_721));
+        assert!(!input_locale_matches(67_699_721, 1033));
+        assert!(!input_locale_matches(134_481_924, 2052));
         assert!(!input_locale_matches(67_699_721, 134_481_924));
+    }
+
+    #[test]
+    fn t_selects_an_available_english_variant() {
+        assert_eq!(
+            first_english_input_locale([134_481_924, 134_809_609]),
+            Some(134_809_609)
+        );
+        assert_eq!(first_english_input_locale([134_481_924, 68_224_017]), None);
     }
 }

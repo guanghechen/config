@@ -1,10 +1,6 @@
 ---@meta
 
 ---@module 'yoz.im'
----@alias yoz.im.InputMethod
----| "English"
----| "Chinese"
-
 ---@alias yoz.im.Snapshot string
 
 ---@class yoz.im.ISetupOptions
@@ -14,45 +10,28 @@
 ---@field public setup?                 fun(options: yoz.im.ISetupOptions): boolean|nil, string|nil WSL-only repository bridge configuration.
 local M = {}
 
----Returns the current platform IM source token.
----On macOS this is a TIS source ID; on Windows it is a full decimal HKL; on WSL it is the helper's decimal LANGID.
----@return string|nil
----@return string|nil
-function M.current() end
-
----Requests selection of an IM source by its platform token.
----A true result means the operating system accepted the request; visibility may be asynchronous.
----@param source_id                     string
----@return boolean|nil
----@return string|nil
-function M.select(source_id) end
-
----Captures the backend-visible IM source token for later restoration.
+---Captures the current platform input-source ID without changing it.
+---macOS uses a TIS source ID; Windows and WSL use a full decimal HKL.
 ---@return yoz.im.Snapshot|nil
 ---@return string|nil
 function M.capture() end
 
----Restores a snapshot returned by `capture()`.
+---Captures the current source and ensures an English-capable source in one platform operation.
+---A non-nil snapshot is preserved even when selection fails.
+---@return yoz.im.Snapshot|nil
+---@return boolean ready
+---@return string|nil
+function M.capture_and_select_english() end
+
+---Restores an exact snapshot returned by `capture()` or `capture_and_select_english()`.
 ---@param snapshot                      yoz.im.Snapshot
 ---@return boolean|nil
 ---@return string|nil
 function M.restore(snapshot) end
 
----Returns whether a captured source maps to the semantic input method.
+---Returns whether a captured source is English-capable.
 ---@param snapshot                      yoz.im.Snapshot
----@param input_method                  yoz.im.InputMethod
 ---@return boolean
-function M.is_input_method(snapshot, input_method) end
-
----Returns the semantic input method mapped from the current platform source.
----@return yoz.im.InputMethod|nil
----@return string|nil
-function M.get_input_method() end
-
----Selects the platform source mapped from a semantic input method.
----@param input_method                  yoz.im.InputMethod
----@return boolean|nil
----@return string|nil
-function M.set_input_method(input_method) end
+function M.is_english(snapshot) end
 
 return M

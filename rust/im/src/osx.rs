@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::ffi::{CStr, c_char, c_void};
 use std::ptr::{self, NonNull};
 
-use super::InputMethod;
+use super::CaptureAndSelectError;
 
 type Boolean = u8;
 type CFHashCode = usize;
@@ -13,6 +13,7 @@ type CFStringEncoding = u32;
 type CFTypeRef = *const c_void;
 type CFAllocatorRef = *const c_void;
 type CFStringRef = *const c_void;
+type CFBooleanRef = *const c_void;
 type CFDictionaryRef = *const c_void;
 type CFArrayRef = *const c_void;
 type TISInputSourceRef = *const c_void;
@@ -48,12 +49,11 @@ struct CFDictionaryValueCallBacks {
 
 const CF_STRING_ENCODING_UTF8: CFStringEncoding = 0x0800_0100;
 const NO_ERR: OSStatus = 0;
-const ENGLISH_SOURCE_ID: &str = "com.apple.keylayout.ABC";
-const CHINESE_SOURCE_ID: &str = "com.apple.inputmethod.SCIM.ITABC";
 
 #[link(name = "Carbon", kind = "framework")]
 unsafe extern "C" {
     static kTISPropertyInputSourceID: CFStringRef;
+    static kTISPropertyInputSourceIsASCIICapable: CFStringRef;
 
     fn TISCopyCurrentKeyboardInputSource() -> TISInputSourceRef;
     fn TISCopyCurrentASCIICapableKeyboardInputSource() -> TISInputSourceRef;
@@ -73,6 +73,7 @@ unsafe extern "C" {
 
     fn CFRetain(cf: CFTypeRef) -> CFTypeRef;
     fn CFRelease(cf: CFTypeRef);
+    fn CFBooleanGetValue(boolean: CFBooleanRef) -> Boolean;
     fn CFStringCreateWithBytes(
         allocator: CFAllocatorRef,
         bytes: *const u8,
@@ -135,21 +136,6 @@ fn validate_source_id(source_id: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub(super) fn input_method(source_id: &str) -> Option<InputMethod> {
-    match source_id {
-        ENGLISH_SOURCE_ID => Some(InputMethod::English),
-        CHINESE_SOURCE_ID => Some(InputMethod::Chinese),
-        _ => None,
-    }
-}
-
-pub(super) fn source_id_for(input_method: InputMethod) -> &'static str {
-    match input_method {
-        InputMethod::English => ENGLISH_SOURCE_ID,
-        InputMethod::Chinese => CHINESE_SOURCE_ID,
-    }
-}
-
 fn cf_string_to_string(string: CFStringRef, subject: &str) -> Result<String, String> {
     if string.is_null() {
         return Err(format!("[{subject}] Input source has no ID property"));
@@ -201,22 +187,41 @@ fn source_id(im: TISInputSourceRef, subject: &str) -> Result<String, String> {
     cf_string_to_string(property.cast(), subject)
 }
 
+fn is_ascii_capable(im: TISInputSourceRef, subject: &str) -> Result<bool, String> {
+    if im.is_null() {
+        return Err(format!("[{subject}] Input source reference is null"));
+    }
+    let property_key = unsafe { kTISPropertyInputSourceIsASCIICapable };
+    if property_key.is_null() {
+        return Err(format!(
+            "[{subject}] ASCII-capable input source property key is null"
+        ));
+    }
+    let property = unsafe { TISGetInputSourceProperty(im, property_key) };
+    if property.is_null() {
+        return Err(format!(
+            "[{subject}] Input source has no ASCII-capable property"
+        ));
+    }
+    Ok(unsafe { CFBooleanGetValue(property.cast()) } != 0)
+}
+
 fn copy_current() -> Result<(String, OwnedCFRef), String> {
     let reference = unsafe { TISCopyCurrentKeyboardInputSource() };
-    let im = unsafe { OwnedCFRef::from_created(reference.cast(), "im.current")? };
-    let source_id = source_id(im.as_ptr().cast(), "im.current")?;
+    let im = unsafe { OwnedCFRef::from_created(reference.cast(), "im.capture")? };
+    let source_id = source_id(im.as_ptr().cast(), "im.capture")?;
     Ok((source_id, im))
 }
 
-fn copy_ascii_capable() -> Option<(String, OwnedCFRef)> {
+fn copy_ascii_capable() -> Result<(String, OwnedCFRef), String> {
     let reference = unsafe { TISCopyCurrentASCIICapableKeyboardInputSource() };
-    let im = unsafe { OwnedCFRef::from_created(reference.cast(), "im.select").ok()? };
-    let source_id = source_id(im.as_ptr().cast(), "im.select").ok()?;
-    Some((source_id, im))
+    let im = unsafe { OwnedCFRef::from_created(reference.cast(), "im.select")? };
+    let source_id = source_id(im.as_ptr().cast(), "im.select")?;
+    Ok((source_id, im))
 }
 
 fn resolve(source_id: &str) -> Result<OwnedCFRef, String> {
-    if let Some((ascii_source_id, im)) = copy_ascii_capable()
+    if let Ok((ascii_source_id, im)) = copy_ascii_capable()
         && ascii_source_id == source_id
     {
         return Ok(im);
@@ -291,22 +296,34 @@ fn resolve(source_id: &str) -> Result<OwnedCFRef, String> {
     OwnedCFRef::retain(reference.cast(), "im.select")
 }
 
+fn select_input_source(im: TISInputSourceRef, source_id: &str) -> Result<(), String> {
+    // Selection becomes observable asynchronously. Always submit the latest request;
+    // a current-source read may still reflect an earlier pending selection.
+    let status = unsafe { TISSelectInputSource(im) };
+    if status != NO_ERR {
+        return Err(format!(
+            "[im.select] Failed to select {source_id}: OSStatus {status}"
+        ));
+    }
+    Ok(())
+}
+
 #[derive(Default)]
 pub struct Backend {
     cache: HashMap<String, OwnedCFRef>,
 }
 
 impl Backend {
-    pub fn current(&mut self) -> Result<String, String> {
+    pub fn capture(&mut self) -> Result<String, String> {
         let (source_id, im) = copy_current()?;
         self.cache.insert(source_id.clone(), im);
         Ok(source_id)
     }
 
-    pub fn select(&mut self, source_id: &str) -> Result<(), String> {
+    fn resolve_cached(&mut self, source_id: &str) -> Result<&OwnedCFRef, String> {
         validate_source_id(source_id)?;
         if !self.cache.contains_key(source_id) {
-            self.current()?;
+            self.capture()?;
             if !self.cache.contains_key(source_id) {
                 self.cache.insert(source_id.to_owned(), resolve(source_id)?);
             }
@@ -314,25 +331,60 @@ impl Backend {
         let im = self.cache.get(source_id).ok_or_else(|| {
             format!("[im.select] Resolved input source was not cached: {source_id}")
         })?;
-        let im = im.as_ptr();
-        // Selection becomes observable asynchronously. Always submit the latest request;
-        // a current-source read may still reflect an earlier pending selection.
-        let status = unsafe { TISSelectInputSource(im.cast()) };
-        if status != NO_ERR {
+        Ok(im)
+    }
+
+    fn select(&mut self, source_id: &str) -> Result<(), String> {
+        let im = self.resolve_cached(source_id)?.as_ptr();
+        if let Err(error) = select_input_source(im.cast(), source_id) {
             self.cache.remove(source_id);
-            return Err(format!(
-                "[im.select] Failed to select {source_id}: OSStatus {status}"
-            ));
+            return Err(error);
         }
         Ok(())
+    }
+
+    pub fn capture_and_select_english(&mut self) -> Result<String, CaptureAndSelectError> {
+        let (snapshot, current) = copy_current().map_err(CaptureAndSelectError::Capture)?;
+        let english = is_ascii_capable(current.as_ptr().cast(), "im.capture_and_select_english")
+            .map_err(|error| CaptureAndSelectError::Select {
+                snapshot: snapshot.clone(),
+                error,
+            })?;
+        self.cache.insert(snapshot.clone(), current);
+        if english {
+            return Ok(snapshot);
+        }
+
+        let (english_source_id, english_source) =
+            copy_ascii_capable().map_err(|error| CaptureAndSelectError::Select {
+                snapshot: snapshot.clone(),
+                error,
+            })?;
+        select_input_source(english_source.as_ptr().cast(), &english_source_id).map_err(
+            |error| CaptureAndSelectError::Select {
+                snapshot: snapshot.clone(),
+                error,
+            },
+        )?;
+        self.cache.insert(english_source_id, english_source);
+        Ok(snapshot)
+    }
+
+    pub fn restore(&mut self, source_id: &str) -> Result<(), String> {
+        self.select(source_id)
+    }
+
+    pub fn is_english(&mut self, source_id: &str) -> bool {
+        self.resolve_cached(source_id)
+            .and_then(|im| is_ascii_capable(im.as_ptr().cast(), "im.is_english"))
+            .unwrap_or(false)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        Backend, InputMethod, copy_ascii_capable, input_method, resolve, source_id,
-        validate_source_id,
+        Backend, copy_ascii_capable, is_ascii_capable, resolve, source_id, validate_source_id,
     };
 
     #[test]
@@ -342,32 +394,25 @@ mod tests {
     }
 
     #[test]
-    fn t_maps_input_methods() {
-        assert_eq!(
-            input_method("com.apple.keylayout.ABC"),
-            Some(InputMethod::English)
-        );
-        assert_eq!(
-            input_method("com.apple.inputmethod.SCIM.ITABC"),
-            Some(InputMethod::Chinese)
-        );
-        assert_eq!(input_method("com.apple.inputmethod.Kotoeri.Japanese"), None);
+    fn t_identifies_the_current_ascii_capable_source() {
+        let (_, im) = copy_ascii_capable().expect("read current ASCII-capable source");
+        assert_eq!(is_ascii_capable(im.as_ptr().cast(), "im.test"), Ok(true));
     }
 
     #[test]
     fn t_reads_current_ascii_and_unknown_sources_without_changing_current_source() {
         let mut im = Backend::default();
-        let before = im.current().expect("read current input source");
+        let before = im.capture().expect("read current input source");
 
         let (expected, _) = copy_ascii_capable().expect("read current ASCII-capable source");
         let resolved = resolve(&expected).expect("resolve current ASCII-capable source");
         assert_eq!(source_id(resolved.as_ptr().cast(), "im.test"), Ok(expected));
 
         let error = im
-            .select("dev.yoz.im.does-not-exist")
+            .restore("dev.yoz.im.does-not-exist")
             .expect_err("unknown source must fail");
 
         assert!(error.contains("Enabled input source not found"));
-        assert_eq!(im.current(), Ok(before));
+        assert_eq!(im.capture(), Ok(before));
     }
 }
