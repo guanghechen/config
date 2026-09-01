@@ -1,0 +1,55 @@
+--- {{name}}
+
+---@type stl.t.theme.IScheme
+local M = {
+  theme = "{{theme}}",
+  variant = {{variant ? `"${variant}"` : "nil"}},
+  opposite = {{opposite ? `"${opposite}"` : "nil"}},
+  darken = {{darken ? "true" : "false"}},
+  -- stylua: ignore start
+  palette = {
+    unified = {
+      none          = "none",
+
+      bg0           = "{{rosepine.base}}",
+      bg1           = "{{rosepine.surface}}",
+      bg2           = "{{rosepine.overlay}}",
+      bg3           = "{{rosepine.highlightMed}}",
+      bg4           = "{{rosepine.highlightHigh}}",
+
+      fg0           = "{{rosepine.text}}",
+      fg1           = "{{rosepine.text}}",
+      fg2           = "{{rosepine.subtle}}",
+      fg3           = "{{rosepine.muted}}",
+      fg4           = "{{rosepine.muted}}",
+
+      red           = "{{rosepine.love}}",
+      green         = "{{rosepine.pine}}",
+      yellow        = "{{rosepine.gold}}",
+      blue          = "{{rosepine.foam}}",
+      purple        = "{{rosepine.iris}}",
+      aqua          = "{{rosepine.rose}}",
+      orange        = "{{rosepine.rose}}",
+
+      brightRed     = "{{rosepine.love}}",
+      brightGreen   = "{{rosepine.pine}}",
+      brightYellow  = "{{rosepine.gold}}",
+      brightBlue    = "{{rosepine.foam}}",
+      brightPurple  = "{{rosepine.iris}}",
+      brightAqua    = "{{rosepine.rose}}",
+      brightOrange  = "{{rosepine.rose}}",
+
+      grey          = "{{rosepine.muted}}",
+      pink          = "{{rosepine.love}}",
+
+      diffDel       = "{{unified.diffDel}}",
+      diffDelInline = "{{unified.diffDelInline}}",
+      diffAdd       = "{{unified.diffAdd}}",
+      diffAddInline = "{{unified.diffAddInline}}",
+    },
+    {{Object.entries(palette).filter(([t, c]) => !!c && t !== 'unified').map(([t, c]) => `${t} = {\n      none          = "none",\n\n` +  Object.entries(c).map(([k, v]) => `      ${k.padEnd(13, ' ')} = "${v}",`).join('\n') + '\n    },').join('\n')}}
+  },
+  -- stylua: ignore end
+}
+
+return M

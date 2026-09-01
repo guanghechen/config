@@ -1,0 +1,47 @@
+# {{name}}
+
+gui:
+  authorColors:
+    '*': '{{rosepine.subtle}}'
+    guanghechen: '{{rosepine.foam}}'
+  branchColorPatterns:
+    "^(main|master)$": '{{rosepine.iris}}'
+    "^(user/[^/]+/)?chore": '{{rosepine.muted}}'
+    "^(user/[^/]+/)?feat": '{{rosepine.pine}}'
+    "^(user/[^/]+/)?feature": '{{rosepine.pine}}'
+    "^(user/[^/]+/)?fix": '{{rosepine.love}}'
+    "^(user/[^/]+/)?refactor": '{{rosepine.rose}}'
+    "^(user/[^/]+/)?release": '{{rosepine.foam}}'
+  theme:
+    activeBorderColor:
+      - '{{rosepine.pine}}'
+      - bold
+    cherryPickedCommitBgColor:
+      - '{{rosepine.rose}}'
+    cherryPickedCommitFgColor:
+      - '{{rosepine.surface}}'
+    defaultFgColor:
+      - '{{rosepine.text}}'
+    inactiveBorderColor:
+      - '{{rosepine.muted}}'
+    inactiveViewSelectedLineBgColor:
+      - '{{rosepine.surface}}'
+    markedBaseCommitBgColor:
+      - '{{rosepine.gold}}'
+    markedBaseCommitFgColor:
+      - '{{rosepine.foam}}'
+    optionsTextColor:
+      - '{{rosepine.foam}}'
+    searchingActiveBorderColor:
+      - '{{rosepine.rose}}'
+      - bold
+    selectedLineBgColor:
+      - '{{rosepine.highlightMed}}'
+      - bold
+    unstagedChangesColor:
+      - '{{rosepine.love}}'
+
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --paging=never --{{darken ? 'dark' : 'light'}}

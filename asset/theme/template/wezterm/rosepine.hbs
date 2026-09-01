@@ -1,0 +1,112 @@
+-- {{name}}
+
+---@class theme.{{name.replace(/-/g, '_')}}
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
+    -- Primary colors
+    background    = "{{rosepine.base}}",
+    foreground    = "{{rosepine.text}}",
+
+    -- Cursor colors
+    cursor_bg     = "{{rosepine.text}}",
+    cursor_fg     = "{{rosepine.base}}",
+    cursor_border = "{{rosepine.text}}",
+
+    -- Selection colors
+    selection_bg  = "{{rosepine.highlightMed}}",
+    selection_fg  = "{{rosepine.text}}",
+
+    -- Split separator color
+    split         = "{{rosepine.highlightHigh}}",
+
+    -- Scrollbar thumb color
+    scrollbar_thumb = "{{rosepine.highlightHigh}}",
+
+    -- Visual bell color
+    visual_bell   = "{{rosepine.overlay}}",
+
+    -- Compose cursor (for IME)
+    compose_cursor = "{{rosepine.rose}}",
+
+    -- Normal colors
+    ansi = {
+      "{{rosepine.overlay}}",
+      "{{rosepine.love}}",
+      "{{rosepine.pine}}",
+      "{{rosepine.gold}}",
+      "{{rosepine.foam}}",
+      "{{rosepine.iris}}",
+      "{{rosepine.rose}}",
+      "{{rosepine.text}}",
+    },
+
+    -- Bright colors
+    brights = {
+      "{{rosepine.muted}}",
+      "{{rosepine.love}}",
+      "{{rosepine.pine}}",
+      "{{rosepine.gold}}",
+      "{{rosepine.foam}}",
+      "{{rosepine.iris}}",
+      "{{rosepine.rose}}",
+      "{{rosepine.text}}",
+    },
+
+    -- Indexed colors (extended palette)
+    indexed = {
+      [16] = "{{rosepine.rose}}",
+      [17] = "{{rosepine.love}}",
+    },
+
+    -- Tab bar colors
+    tab_bar = {
+      background = "{{rosepine.surface}}",
+
+      active_tab = {
+        bg_color = "{{rosepine.overlay}}",
+        fg_color = "{{rosepine.text}}",
+      },
+
+      inactive_tab = {
+        bg_color = "{{rosepine.base}}",
+        fg_color = "{{rosepine.muted}}",
+      },
+
+      inactive_tab_hover = {
+        bg_color = "{{rosepine.surface}}",
+        fg_color = "{{rosepine.text}}",
+      },
+
+      new_tab = {
+        bg_color = "{{rosepine.surface}}",
+        fg_color = "{{rosepine.muted}}",
+      },
+
+      new_tab_hover = {
+        bg_color = "{{rosepine.overlay}}",
+        fg_color = "{{rosepine.text}}",
+      },
+
+      inactive_tab_edge = "{{rosepine.highlightMed}}",
+    },
+  }
+
+  -- Window frame colors
+  config.window_frame = {
+    active_titlebar_bg = "{{rosepine.surface}}",
+    active_titlebar_fg = "{{rosepine.text}}",
+    inactive_titlebar_bg = "{{rosepine.surface}}",
+    inactive_titlebar_fg = "{{rosepine.muted}}",
+    button_fg = "{{rosepine.text}}",
+    button_bg = "{{rosepine.base}}",
+  }
+
+  -- Command palette colors
+  config.command_palette_bg_color = "{{rosepine.surface}}"
+  config.command_palette_fg_color = "{{rosepine.text}}"
+end
+
+return M
