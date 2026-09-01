@@ -21,18 +21,20 @@
           <string>#191724</string>
           <key>foreground</key>
           <string>#E0DEF4</string>
+          <key>invisibles</key>
+          <string>#1F1D2E</string>
           <key>caret</key>
-          <string>#E0DEF4</string>
+          <string>#524F67</string>
           <key>lineHighlight</key>
-          <string>#26233A</string>
+          <string>#21202E</string>
           <key>misspelling</key>
           <string>#EB6F92</string>
           <key>accent</key>
-          <string>#C4A7E7</string>
+          <string>#EBBCBA</string>
           <key>selection</key>
-          <string>#6E6A8640</string>
-          <key>activeGuide</key>
           <string>#403D52</string>
+          <key>activeGuide</key>
+          <string>#524F67</string>
           <key>findHighlight</key>
           <string>#403D52</string>
           <key>gutterForeground</key>
@@ -783,7 +785,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#9CCFD8</string>
+          <string>#31748F</string>
           <key>fontStyle</key>
           <string/>
         </dict>
