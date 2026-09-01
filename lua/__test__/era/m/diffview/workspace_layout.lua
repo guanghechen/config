@@ -12,6 +12,11 @@ local panel_width = 40
 t:patch_global("dot", {
   context = {
     diffview = {
+      flag_untracked = {
+        snapshot = function()
+          return true
+        end,
+      },
       panel_width = {
         snapshot = function()
           return panel_width

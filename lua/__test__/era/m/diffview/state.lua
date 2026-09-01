@@ -51,7 +51,7 @@ local function verify_invalid_handle_cleanup(path, field)
   end)
 
   local State = assert(loadfile(path))()
-  local state = State.create(101)
+  local state = State.create(101, true)
 
   callback({ file = "1" })
   local retained_while_valid = State.get(101) == state
@@ -73,6 +73,41 @@ t:test("commits state cleanup follows tabpage handle validity", function()
   verify_invalid_handle_cleanup("lua/era/m/diffview/view/commits/state.lua", "commits")
 end)
 
+t:test("diffview context persists the untracked visibility default", function()
+  t:patch_global("stl", { c = { Observable = Observable } })
+  local context = assert(loadfile("lua/dot/context/workspace/diffview.lua"))()
+
+  t.assert_true(context.defaults().flag_untracked, "default visibility")
+  t.assert_false(context.normalize({ flag_untracked = false }).flag_untracked, "normalized visibility")
+  t.assert_true(context.normalize({ flag_untracked = "invalid" }).flag_untracked, "invalid visibility fallback")
+
+  context.flag_untracked:next(false)
+  t.assert_false(context.dump().flag_untracked, "dumped visibility")
+  context.load({ flag_untracked = true })
+  t.assert_true(context.flag_untracked:snapshot(), "loaded visibility")
+end)
+
+t:test("workspace and commits keep independent per-view diff fold policies", function()
+  t:patch_global("stl", { c = { Observable = Observable } })
+  t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
+
+  local WorkspaceState = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
+  local CommitsState = assert(loadfile("lua/era/m/diffview/view/commits/state.lua"))()
+  local workspace = WorkspaceState.State.new(101, false)
+  local commits = CommitsState.State.new(102, true)
+
+  t.assert_false(workspace:get_fold_unchanged(), "workspace expands from its default")
+  t.assert_true(commits:get_fold_unchanged(), "commits folds from its default")
+
+  workspace:set_fold_unchanged(true)
+  commits:set_fold_unchanged(false)
+  t.assert_true(workspace:get_fold_unchanged(), "workspace override")
+  t.assert_false(commits:get_fold_unchanged(), "commits override")
+
+  workspace:dispose()
+  commits:dispose()
+end)
+
 t:test("workspace state disposes its refresh owner after unsubscribing", function()
   local disposed = {} ---@type string[]
   local deleted_autocmd = nil ---@type integer|nil
@@ -81,11 +116,11 @@ t:test("workspace state disposes its refresh owner after unsubscribing", functio
     deleted_autocmd = autocmd_id
   end)
   local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
-  local uninitialized = State.State.new(100)
+  local uninitialized = State.State.new(100, true)
   t.assert_false(pcall(uninitialized.request_refresh, uninitialized), "uninitialized refresh still rejected")
   uninitialized:dispose()
 
-  local state = State.State.new(101)
+  local state = State.State.new(101, true)
 
   state:set_refresh({
     dispose = function()
@@ -114,7 +149,7 @@ end)
 t:test("workspace keeps staged and unstaged tree state independent", function()
   t:patch_global("stl", { c = { Observable = Observable } })
   local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
-  local state = State.State.new(101)
+  local state = State.State.new(101, true)
 
   state:collapse_dir("staged", "src")
   t.assert_true(state:is_collapsed("staged", "src"), "staged collapsed")
@@ -138,7 +173,7 @@ end)
 t:test("workspace entries snapshot becomes applied only after commit", function()
   t:patch_global("stl", { c = { Observable = Observable } })
   local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
-  local state = State.State.new(101)
+  local state = State.State.new(101, true)
 
   t.assert_false(state:is_entries_snapshot_applied(), "initial empty value is not applied")
   state:set_entries({})

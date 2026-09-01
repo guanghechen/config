@@ -112,6 +112,9 @@ local function load_refresh_case(opts)
     get_changes_panes = function()
       return { { bufnr = changes_bufnr } }
     end,
+    get_visible_entries = function(items)
+      return items
+    end,
     is_changes_buffer = function()
       return false
     end,

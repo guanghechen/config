@@ -25,49 +25,36 @@ local WINOPTS_SBS = config.WINOPTS_SBS
 ---@type string[]
 local TRACKED_WINOPTS = config.TRACKED_WINOPTS
 
----@type table<integer, integer>
-local fold_cache = {}
-
+---@param fold_unchanged                boolean
 ---@return integer
-local function get_foldlevel()
-  if dot.context.diffview.flag_fold_unchanges:snapshot() then
+local function get_foldlevel(fold_unchanged)
+  if fold_unchanged then
     return WINOPTS_SBS.foldlevel
   end
   return 99
 end
 
 ---@param winnr                         integer
----@param force                         ?boolean
-local function apply_foldlevel(winnr, force)
+---@param fold_unchanged                boolean
+local function apply_foldlevel(winnr, fold_unchanged)
   if not vim.api.nvim_win_is_valid(winnr) then
     return
   end
 
-  local level = get_foldlevel()
-  local cached_level = fold_cache[winnr]
-  if not force and cached_level == level then
-    return
-  end
-
+  local level = get_foldlevel(fold_unchanged)
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local current = vim.api.nvim_get_option_value("foldlevel", { win = winnr, scope = "local" }) ---@type integer
   if current ~= level then
     vim.api.nvim_set_option_value("foldlevel", level, { win = winnr, scope = "local" })
   end
 
-  fold_cache[winnr] = level
-
+  local command = level <= 0 and "zM" or "zR" ---@type string
   vim.schedule(function()
-    if not vim.api.nvim_win_is_valid(winnr) then
+    if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
       return
     end
-    if level <= 0 then
-      pcall(function()
-        vim.cmd("silent! normal! zM")
-      end)
-      return
-    end
-    pcall(function()
-      vim.cmd("silent! normal! zR")
+    pcall(vim.api.nvim_win_call, winnr, function()
+      vim.cmd("silent! normal! " .. command)
     end)
   end)
 end
@@ -500,7 +487,8 @@ end
 
 ---Apply diff-related window options (deferred to avoid blocking UI)
 ---@param winnr                         integer
-function M.apply_sbs_diff_winopts(winnr)
+---@param fold_unchanged                boolean
+function M.apply_sbs_diff_winopts(winnr, fold_unchanged)
   if not vim.api.nvim_win_is_valid(winnr) then
     return
   end
@@ -511,25 +499,18 @@ function M.apply_sbs_diff_winopts(winnr)
   vim.api.nvim_set_option_value("foldenable", WINOPTS_SBS.foldenable, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("foldmethod", WINOPTS_SBS.foldmethod, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("diff", WINOPTS_SBS.diff, { win = winnr, scope = "local" })
-  apply_foldlevel(winnr, true)
-end
-
----@param winnr                         integer|nil
-function M.apply_fold_unchanged(winnr)
-  if not winnr then
-    return
-  end
-  apply_foldlevel(winnr)
+  apply_foldlevel(winnr, fold_unchanged)
 end
 
 ---@param left_winnr                    integer|nil
 ---@param right_winnr                   integer|nil
-function M.apply_fold_unchanged_pair(left_winnr, right_winnr)
+---@param fold_unchanged                boolean
+function M.apply_fold_unchanged_pair(left_winnr, right_winnr, fold_unchanged)
   if left_winnr then
-    apply_foldlevel(left_winnr)
+    apply_foldlevel(left_winnr, fold_unchanged)
   end
   if right_winnr then
-    apply_foldlevel(right_winnr)
+    apply_foldlevel(right_winnr, fold_unchanged)
   end
 end
 
@@ -544,6 +525,7 @@ end
 ---@field public token                  ?stl.c.CancellationToken
 ---@field public is_current             (fun(): boolean)|nil
 ---@field public preserve_view           boolean|nil
+---@field public get_fold_unchanged      (fun(): boolean)|nil
 
 ---Open file entry in side-by-side view (for Git Diff staged/unstaged).
 ---@async
@@ -560,6 +542,7 @@ function M.open_diff_entry(opts)
   end
 
   local apply_opts = {
+    get_fold_unchanged = opts.get_fold_unchanged,
     is_current = is_current,
     preserve_view = opts.preserve_view,
     refresh_diff = entry.stage_type ~= "staged",
@@ -812,6 +795,7 @@ end
 ---@field public entry                  era.m.diffview.IFileEntry
 ---@field public commit                 era.m.diffview.ICommit
 ---@field public token                  ?stl.c.CancellationToken
+---@field public get_fold_unchanged      (fun(): boolean)|nil
 
 ---Open commit file entry in side-by-side view (for File History / Git Log).
 ---@async
@@ -822,6 +806,7 @@ function M.open_commit_entry(opts)
   local entry = opts.entry
   local commit = opts.commit
   local token = opts.token
+  local apply_opts = { get_fold_unchanged = opts.get_fold_unchanged } ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
 
   local filepath = entry.filepath
   local parent_filepath = commit.parent_filepath or entry.prev_filepath or filepath
@@ -841,7 +826,7 @@ function M.open_commit_entry(opts)
     right_bufnr = M.get_null_buffer()
 
     M.load_git_content(era.m.diffview.util.commit_object(parent_hash, parent_filepath), left_bufnr, token)
-    M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+    M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   elseif status == "A" then
     -- Added in this commit
     left_bufnr = M.get_null_buffer()
@@ -849,7 +834,7 @@ function M.open_commit_entry(opts)
     right_bufnr = M.create_sbs_buffer(right_name)
 
     M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token)
-    M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+    M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   else
     -- Modified
     local left_name = era.m.diffview.util.gen_old_bufname(parent_filepath, parent_hash)
@@ -860,17 +845,24 @@ function M.open_commit_entry(opts)
     M.load_git_content(era.m.diffview.util.commit_object(parent_hash, parent_filepath), left_bufnr, token)
     M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token)
 
-    M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr)
+    M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   end
 end
+
+---@class era.m.diffview.pane.sbs.IClearOpts
+---@field public is_current             (fun(): boolean)|nil
+---@field public get_fold_unchanged      (fun(): boolean)|nil
 
 ---Clear side-by-side view (show null buffers on both sides)
 ---@param left_winnr                    integer
 ---@param right_winnr                   integer
----@param is_current                    (fun(): boolean)|nil
-function M.clear(left_winnr, right_winnr, is_current)
+---@param opts                           era.m.diffview.pane.sbs.IClearOpts|nil
+function M.clear(left_winnr, right_winnr, opts)
   local null_buf = M.get_null_buffer()
-  M.__apply_buffers__(left_winnr, right_winnr, null_buf, null_buf, { is_current = is_current })
+  M.__apply_buffers__(left_winnr, right_winnr, null_buf, null_buf, {
+    get_fold_unchanged = opts and opts.get_fold_unchanged,
+    is_current = opts and opts.is_current,
+  })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -881,6 +873,7 @@ end
 ---@field public left_view              vim.fn.winsaveview.ret|nil
 ---@field public right_view             vim.fn.winsaveview.ret|nil
 ---@field public refresh_diff           boolean|nil
+---@field public get_fold_unchanged      (fun(): boolean)|nil
 
 ---Apply buffers to side-by-side windows
 ---@param left_winnr                    integer
@@ -956,8 +949,12 @@ function M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, o
     end
 
     -- Apply diff-related options (triggers diff calculation)
-    M.apply_sbs_diff_winopts(left_winnr)
-    M.apply_sbs_diff_winopts(right_winnr)
+    local fold_unchanged = true
+    if opts and opts.get_fold_unchanged then
+      fold_unchanged = opts.get_fold_unchanged()
+    end
+    M.apply_sbs_diff_winopts(left_winnr, fold_unchanged)
+    M.apply_sbs_diff_winopts(right_winnr, fold_unchanged)
 
     -- Detect filetype for syntax highlighting
     if vim.api.nvim_buf_is_valid(left_bufnr) then

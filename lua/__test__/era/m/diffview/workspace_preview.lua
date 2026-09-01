@@ -8,6 +8,7 @@ local harness = require("__test__.harness")
 local staging = require("era.m.git.staging")
 
 local t = harness.new("era.m.diffview.workspace_preview")
+local show_untracked = true
 
 bootstrap.with_global(t, "stl", {
   async = require("stl.async"),
@@ -34,6 +35,11 @@ bootstrap.with_global(t, "yoz", {
 bootstrap.with_global(t, "dot", {
   context = {
     diffview = {
+      flag_untracked = {
+        snapshot = function()
+          return show_untracked
+        end,
+      },
       flag_fold_unchanges = {
         snapshot = function()
           return false
@@ -132,14 +138,34 @@ local function close_windows(left_winnr, right_winnr)
   end
 end
 
+t:test("workspace visibility filters untracked files without mutating the snapshot", function()
+  t:patch_table(package.loaded, "era.m.diffview.layout", {})
+  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
+  t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
+  local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
+  local tracked = { filepath = "tracked.lua", stage_type = "unstaged", status = "M" }
+  local untracked = { filepath = "untracked.lua", stage_type = "unstaged", status = "?" }
+  local entries = { tracked, untracked }
+
+  show_untracked = false
+  local visible = view.get_visible_entries(entries)
+  t.assert_eq(1, #visible, "filtered count")
+  t.assert_eq(tracked, visible[1], "tracked entry retained")
+  t.assert_eq(2, #entries, "source snapshot retained")
+
+  show_untracked = true
+  t.assert_eq(entries, view.get_visible_entries(entries), "visible projection reuses the complete snapshot")
+end)
+
 t:test("workspace preview generation makes the latest request the sole writer", function()
   local requests = {} ---@type era.m.diffview.pane.sbs.IOpenDiffOpts[]
   local clear_is_current = nil ---@type (fun(): boolean)|nil
+  local fold_unchanged = false
   t:patch_table(package.loaded, "era.m.diffview.layout", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
-    clear = function(_, _, is_current)
-      clear_is_current = is_current
+    clear = function(_, _, opts)
+      clear_is_current = opts.is_current
     end,
     open_diff_entry = function(opts)
       requests[#requests + 1] = opts
@@ -161,6 +187,9 @@ t:test("workspace preview generation makes the latest request the sole writer", 
       preview_generation = 0,
     },
     state = {
+      get_fold_unchanged = function()
+        return fold_unchanged
+      end,
       is_disposed = function()
         return disposed
       end,
@@ -175,6 +204,9 @@ t:test("workspace preview generation makes the latest request the sole writer", 
   t.assert_false(requests[1].is_current(), "older request invalidated")
   t.assert_true(requests[2].is_current(), "latest request current")
   t.assert_true(requests[1].preserve_view, "preserve option forwarded")
+  t.assert_false(requests[1].get_fold_unchanged(), "initial fold policy")
+  fold_unchanged = true
+  t.assert_true(requests[1].get_fold_unchanged(), "latest fold policy")
 
   disposed = true
   t.assert_false(requests[2].is_current(), "disposed workspace invalidates preview")

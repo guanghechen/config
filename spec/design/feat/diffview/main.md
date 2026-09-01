@@ -213,6 +213,7 @@ local winopts = {
 ---@class era.m.diffview.view.workspace.State
 ---@field public tabnr             integer                 -- Tab 页号
 ---@field public layout            integer                 -- 当前布局 (1-3)
+---@field public fold_unchanged    boolean                 -- 当前 view 是否折叠 unchanged hunks
 ---@field public entries           stl.c.Observable        -- IFileEntry[] (staged + unstaged)
 ---@field public current_entry     stl.c.Observable        -- IFileEntry|nil
 ---@field public collapsed_dirs    table<string, boolean>  -- 折叠的目录
@@ -224,6 +225,7 @@ local winopts = {
 ```lua
 ---@class era.m.diffview.view.commits.State
 ---@field public tabnr             integer                 -- Tab 页号
+---@field public fold_unchanged    boolean                 -- 当前 view 是否折叠 unchanged hunks
 ---@field public layout            integer                 -- 当前布局 (1-5)
 ---@field public path_filter       string|nil              -- 路径过滤（文件/目录），nil 为全量
 ---@field public commits           stl.c.Observable        -- ICommit[]
@@ -233,6 +235,27 @@ local winopts = {
 ---@field public page              stl.c.Observable        -- integer (1-indexed)
 ---@field public total             stl.c.Observable        -- integer (commit 总数)
 ```
+
+### Diff fold state
+
+`dot.context.diffview.flag_fold_unchanges` 是持久的 global default。创建 workspace 或 commits view 时，
+其值被复制到对应 `State.fold_unchanged`，之后由该 view 独立持有当前 fold policy。
+
+- `t3` / status flag：切换 global default，并立即同步当前 view。
+- `zR`：只展开当前 view 的 left/right diff panes，不修改 global default。
+- `zM`：只折叠当前 view 的 left/right diff panes，不修改 global default。
+- 当前 view 内切换文件或 layout 时保留 per-view policy；关闭后重新打开则再次使用 global default。
+
+### Untracked visibility
+
+`dot.context.diffview.flag_untracked` 持久化 workspace Changes pane 是否显示 untracked files，默认开启。
+该 flag 只过滤 view projection；完整 Git snapshot 仍保留在 workspace state，refresh identity、staging 和
+discard contract 不受影响。隐藏当前选中的 untracked entry 时，workspace 会选择 Changes pane 中第一个
+剩余可见 file row，或在没有可见 file row 时清空 SBS preview。
+
+- `t4` / status flag：显示或隐藏 untracked files。
+- `³`：新 Diffview 的默认 fold policy。
+- `󰡯⁴`：untracked visibility。
 
 ## Commits 分页
 
@@ -316,7 +339,13 @@ fetch_log_page(page, 50)
 | `gr`            | Reset 文件           |
 | `oc`            | 复制文件路径         |
 | `t1`            | 切换显示模式         |
-| `t2`            | 切换折叠空目录       |
+| `t2`            | 切换紧凑目录路径     |
+| `t3`            | 切换默认 diff 折叠   |
+| `t4`            | 显示/隐藏 untracked  |
+| `zC`            | 折叠当前 view diff   |
+| `zM`            | 折叠当前 view diff   |
+| `zO`            | 展开当前 view diff   |
+| `zR`            | 展开当前 view diff   |
 | `gf`            | 在之前的 tab 打开    |
 | `gF`            | 在新 tab 打开        |
 
@@ -329,8 +358,12 @@ fetch_log_page(page, 50)
 | `za`     | 切换折叠               |
 | `zo`     | 展开折叠               |
 | `zc`     | 收起折叠               |
-| `zO`     | 展开所有折叠           |
-| `zM`     | 收起所有折叠           |
+| `t3`     | 切换默认 diff 折叠     |
+| `t4`     | 显示/隐藏 untracked    |
+| `zC`     | 折叠当前 view diff     |
+| `zM`     | 折叠当前 view diff     |
+| `zO`     | 展开当前 view diff     |
+| `zR`     | 展开当前 view diff     |
 | `gf`     | 在之前的 tab 打开      |
 | `gF`     | 在新 tab 打开          |
 

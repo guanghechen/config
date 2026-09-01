@@ -78,6 +78,9 @@ local function load_action(line_map, opened, ordered_entries)
       end
       return { lyt.changes.staged, lyt.changes.unstaged }
     end,
+    get_visible_entries = function(entries)
+      return entries
+    end,
     hide_changes = function(lyt)
       lyt.changes_hidden = true
     end,
@@ -115,6 +118,80 @@ t:test("changes panel order groups stages and follows filetree traversal", funct
   t.assert_eq(staged_nested, ordered[1], "nested staged entry")
   t.assert_eq(staged_root, ordered[2], "root staged entry")
   t.assert_eq(unstaged, ordered[3], "unstaged entry")
+end)
+
+t:test("hiding untracked files selects the first remaining rendered entry", function()
+  local show_untracked = true
+  local dirty = 0
+  t:patch_table(dot, "context", {
+    diffview = {
+      flag_untracked = {
+        snapshot = function()
+          return show_untracked
+        end,
+        next = function(_, value)
+          show_untracked = value
+        end,
+      },
+    },
+  })
+  t:patch_table(dot, "state", {
+    status = {
+      dirtier_tabline = {
+        mark_dirty = function()
+          dirty = dirty + 1
+        end,
+      },
+    },
+  })
+
+  local untracked = { filepath = "new.lua", stage_type = "unstaged", status = "?" }
+  local hidden = { filepath = "hidden.lua", stage_type = "unstaged", status = "M" }
+  local tracked = { filepath = "tracked.lua", stage_type = "unstaged", status = "M" }
+  local entries = { untracked, hidden, tracked }
+  local current = untracked
+  local opened = {} ---@type era.m.diffview.IFileEntry[]
+  local action = load_action(
+    { { type = "directory" }, { type = "file", entry = tracked } },
+    opened,
+    { hidden, tracked }
+  )
+  local view = package.loaded["era.m.diffview.view.workspace.view"]
+  view.get_visible_entries = function(items)
+    local visible = {} ---@type era.m.diffview.IFileEntry[]
+    for _, entry in ipairs(items) do
+      if show_untracked or entry.status ~= "?" then
+        visible[#visible + 1] = entry
+      end
+    end
+    return visible
+  end
+  local ctx = {
+    layout = {
+      changes = {
+        staged = { stage_type = "staged" },
+        unstaged = { stage_type = "unstaged", bufnr = vim.api.nvim_get_current_buf() },
+      },
+    },
+    state = {
+      get_current_entry = function()
+        return current
+      end,
+      get_entries = function()
+        return entries
+      end,
+      set_current_entry = function(_, entry)
+        current = entry
+      end,
+    },
+  }
+
+  action.toggle_untracked(ctx)
+
+  t.assert_false(show_untracked, "untracked visibility")
+  t.assert_eq(tracked, current, "remaining selection")
+  t.assert_eq(tracked, opened[1], "remaining preview")
+  t.assert_eq(1, dirty, "tabline dirtied")
 end)
 
 t:test("cross-pane navigation follows visible changes order and wraps", function()

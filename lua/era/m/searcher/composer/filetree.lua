@@ -434,7 +434,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
-      desc = string.format("%s: fold empty path", name),
+      desc = string.format("%s: compact directory paths", name),
       disabled = function()
         local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
         return viewtype ~= "tree"

@@ -742,6 +742,9 @@ function M.open_entry(ctx, commit, entry, token)
     commit = commit,
     entry = entry,
     token = token,
+    get_fold_unchanged = function()
+      return ctx.state:get_fold_unchanged()
+    end,
   })
 end
 
@@ -756,7 +759,11 @@ function M.clear_sbs(ctx)
     and lyt.sbs_right_winnr
     and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
   then
-    pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
+    pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr, {
+      get_fold_unchanged = function()
+        return ctx.state:get_fold_unchanged()
+      end,
+    })
   end
 end
 

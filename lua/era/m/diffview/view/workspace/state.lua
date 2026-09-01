@@ -12,6 +12,7 @@ local M = {}
 ---@class era.m.diffview.view.workspace.State
 ---@field public tabnr                   integer
 ---@field public layout_type             integer                         Current layout (1-3)
+---@field public fold_unchanged          boolean                         Current diff fold policy
 ---@field public entries                 stl.c.Observable                Observable<era.m.diffview.IFileEntry[]>
 ---@field public current_entry           stl.c.Observable                Observable<era.m.diffview.IFileEntry|nil>
 ---@field public collapsed_dirs          table<stl.m.diffview.StageTypeEnum, table<string, boolean>> Per-pane tree state
@@ -26,12 +27,14 @@ State.__index = State
 
 ---Create a new workspace state instance
 ---@param tabnr                          integer
+---@param fold_unchanged                 boolean
 ---@return era.m.diffview.view.workspace.State
-function State.new(tabnr)
+function State.new(tabnr, fold_unchanged)
   local self = setmetatable({}, State)
 
   self.tabnr = tabnr
   self.layout_type = 1 -- Default: changes + sbs
+  self.fold_unchanged = fold_unchanged
 
   self.entries = stl.c.Observable.from_value({})
   self.current_entry = stl.c.Observable.from_value(nil)
@@ -115,6 +118,18 @@ end
 ---@param layout_type                    integer
 function State:set_layout_type(layout_type)
   self.layout_type = layout_type
+end
+
+---Whether unchanged diff hunks are folded in this view.
+---@return boolean
+function State:get_fold_unchanged()
+  return self.fold_unchanged
+end
+
+---Set whether unchanged diff hunks are folded in this view.
+---@param fold_unchanged                 boolean
+function State:set_fold_unchanged(fold_unchanged)
+  self.fold_unchanged = fold_unchanged
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -324,9 +339,10 @@ end
 
 ---Create new state for tab
 ---@param tabnr                          integer
+---@param fold_unchanged                 boolean
 ---@return era.m.diffview.view.workspace.State
-function M.create(tabnr)
-  local state = State.new(tabnr)
+function M.create(tabnr, fold_unchanged)
+  local state = State.new(tabnr, fold_unchanged)
   M.set(tabnr, state)
 
   -- Setup TabClosed autocmd to clean up state when tab is closed directly

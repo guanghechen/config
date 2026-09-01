@@ -18,7 +18,7 @@ local DEFAULT_OPTS = {
       ---@diagnostic disable: missing-fields, assign-type-mismatch
       { "g", group = "goto", icon = { icon = stl.icon.ui.Location, color = "blue" } },
       { "gs", group = "surround", icon = { icon = stl.icon.ui.Circle, color = "purple" } },
-      { "z", group = "fold", icon = { icon = stl.icon.symbols.flag_fold_empty_path, color = "yellow" } },
+      { "z", group = "fold", icon = { icon = stl.icon.symbols.flag_fold, color = "yellow" } },
       { "]", group = "next", icon = { icon = stl.icon.ui.Right, color = "cyan" } },
       { "[", group = "prev", icon = { icon = stl.icon.ui.Left, color = "cyan" } },
       { "<leader>a", group = "ai", icon = { icon = stl.icon.app.Copilot, color = "purple" } },

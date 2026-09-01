@@ -621,12 +621,10 @@ local FOLD_ACTIONS = {
   toggle = "za",
   open = "zo",
   close = "zc",
-  open_all = "zR",
-  close_all = "zM",
 }
 
 ---Execute fold action
----@param action                         "toggle"|"open"|"close"|"open_all"|"close_all"
+---@param action                         "toggle"|"open"|"close"
 local function execute_fold(action)
   local cmd = FOLD_ACTIONS[action]
   if cmd then
@@ -652,16 +650,24 @@ function M.close_fold(_)
   execute_fold("close")
 end
 
----Open all folds
----@param _                             era.m.diffview.view.commits.IContext
-function M.open_all_folds(_)
-  execute_fold("open_all")
+---@param ctx                            era.m.diffview.view.commits.IContext
+---@param fold_unchanged                 boolean
+local function set_fold_unchanged(ctx, fold_unchanged)
+  ctx.state:set_fold_unchanged(fold_unchanged)
+  local lyt = ctx.layout
+  pane_sbs.apply_fold_unchanged_pair(lyt.sbs_left_winnr, lyt.sbs_right_winnr, fold_unchanged)
 end
 
----Close all folds
----@param _                             era.m.diffview.view.commits.IContext
-function M.close_all_folds(_)
-  execute_fold("close_all")
+---Open all diff folds in the current view.
+---@param ctx                            era.m.diffview.view.commits.IContext
+function M.open_all_folds(ctx)
+  set_fold_unchanged(ctx, false)
+end
+
+---Close all diff folds in the current view.
+---@param ctx                            era.m.diffview.view.commits.IContext
+function M.close_all_folds(ctx)
+  set_fold_unchanged(ctx, true)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -741,7 +747,7 @@ function M.toggle_viewtype(ctx)
   commits_view.render_commits(ctx)
 end
 
----Toggle fold empty directories
+---Toggle compact directory paths
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.toggle_foldempty(ctx)
   local current = dot.context.diffview.flag_foldempty:snapshot() ---@type boolean
@@ -749,14 +755,14 @@ function M.toggle_foldempty(ctx)
   commits_view.render_commits(ctx)
 end
 
----Toggle folding unchanged hunks in sbs
+---Toggle the persisted default diff fold policy and apply it to this view.
 ---@param ctx                            era.m.diffview.view.commits.IContext
-function M.toggle_fold_unchanged(ctx)
+function M.toggle_default_folds(ctx)
   local current = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
-  dot.context.diffview.flag_fold_unchanges:next(not current)
-
-  local lyt = ctx.layout
-  pane_sbs.apply_fold_unchanged_pair(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
+  local fold_unchanged = not current
+  dot.context.diffview.flag_fold_unchanges:next(fold_unchanged)
+  set_fold_unchanged(ctx, fold_unchanged)
+  dot.state.status.dirtier_tabline:mark_dirty()
 end
 
 ---Switch to specific layout directly

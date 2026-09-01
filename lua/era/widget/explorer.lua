@@ -133,7 +133,7 @@ function M.__get_flags__()
       end,
     },
     {
-      desc = "explorer: toggle fold empty",
+      desc = "explorer: toggle compact directory paths",
       callback = function()
         local viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
         if viewtype ~= "tree" then

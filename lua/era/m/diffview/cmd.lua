@@ -45,7 +45,7 @@ function M.open(opts)
   workspace_view.set_layout(lyt.tabnr, lyt)
 
   -- Create state
-  local st = workspace_state.create(lyt.tabnr)
+  local st = workspace_state.create(lyt.tabnr, dot.context.diffview.flag_fold_unchanges:snapshot())
 
   ---@type era.m.diffview.view.workspace.IContext
   local ctx = {
@@ -69,7 +69,7 @@ function M.open(opts)
   -- Fetch and render data
   st:request_refresh(function()
     -- Auto-select first entry if any
-    local entries = st:get_entries()
+    local entries = workspace_view.get_visible_entries(st:get_entries())
     if #entries > 0 then
       local first_entry = entries[1] ---@type era.m.diffview.IFileEntry
 
@@ -204,7 +204,7 @@ function M.log(opts)
   commits_view.set_layout(lyt.tabnr, lyt)
 
   -- Create state
-  local st = commits_state.create(lyt.tabnr)
+  local st = commits_state.create(lyt.tabnr, dot.context.diffview.flag_fold_unchanges:snapshot())
 
   -- Set path filter if provided
   if path_filter then

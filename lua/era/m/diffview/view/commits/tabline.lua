@@ -4,7 +4,6 @@ local __module_name__ = "era.m.diffview.view.commits.tabline" ---@type string
 local config = require("era.m.diffview.config")
 local commits_state = require("era.m.diffview.view.commits.state")
 local commits_view = require("era.m.diffview.view.commits.view")
-local pane_sbs = require("era.m.diffview.pane.sbs")
 
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
@@ -34,7 +33,7 @@ local ICON_FILTER = stl.icon.ui.Search ---@type string
 local ICON_FLAG_TREE = stl.icon.symbols.flag_tree ---@type string
 local ICON_FLAG_LIST = stl.icon.symbols.flag_list ---@type string
 local ICON_FLAG_FOLD_EMPTY = stl.icon.symbols.flag_fold_empty_path ---@type string
-local ICON_FLAG_FOLD_UNCHANGED = stl.icon.symbols.flag_fold_unchanged ---@type string
+local ICON_FLAG_FOLD = stl.icon.symbols.flag_fold ---@type string
 
 ----------------------------------------------------------------------------------------------------
 -- Helpers
@@ -121,20 +120,17 @@ local function get_cb_foldempty()
   end)
 end
 
----Get callback path for fold unchanged toggle
+---Get callback path for the default diff fold toggle.
 ---@return string
-local function get_cb_fold_unchanged()
-  return get_or_create_callback("commits_fold_unchanged", function()
-    local current = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
-    dot.context.diffview.flag_fold_unchanges:next(not current)
-
+local function get_cb_default_folds()
+  return get_or_create_callback("commits_default_folds", function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local state = commits_state.get(tabnr)
     local lyt = commits_view.get_layout(tabnr)
-    if not lyt then
+    if not state or not lyt then
       return
     end
-    pane_sbs.apply_fold_unchanged_pair(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
-    dot.state.status.dirtier_tabline:mark_dirty()
+    require("era.m.diffview.view.commits.action").toggle_default_folds({ layout = lyt, state = state })
   end)
 end
 
@@ -175,7 +171,7 @@ function M.status_component()
   local cb_viewtype = get_cb_viewtype()
   local cb_foldempty = get_cb_foldempty()
   local cb_layout = get_cb_layout()
-  local cb_fold_unchanged = get_cb_fold_unchanged()
+  local cb_default_folds = get_cb_default_folds()
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
@@ -213,7 +209,7 @@ function M.status_component()
       -- Get flags state
       local viewtype = dot.context.diffview.flag_panel_viewtype:snapshot() ---@type stl.m.diffview.PanelViewTypeEnum
       local foldempty = dot.context.diffview.flag_foldempty:snapshot() ---@type boolean
-      local fold_unchanged = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
+      local default_folds = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
       local is_tree = viewtype == "tree" ---@type boolean
 
       -- Get current layout type from layout
@@ -230,11 +226,11 @@ function M.status_component()
       if is_tree then
         flag2_text = " " .. ICON_FLAG_FOLD_EMPTY .. "²"
       end
-      local flag3_text = " " .. ICON_FLAG_FOLD_UNCHANGED .. "³" ---@type string
+      local flag3_text = " " .. ICON_FLAG_FOLD .. "³" ---@type string
       local flag0_hln = hln_flag_layout ---@type string
       local flag1_hln = is_tree and hln_flag_on or hln_flag_off ---@type string
       local flag2_hln = foldempty and hln_flag_on or hln_flag_off ---@type string
-      local flag3_hln = fold_unchanged and hln_flag_on or hln_flag_off ---@type string
+      local flag3_hln = default_folds and hln_flag_on or hln_flag_off ---@type string
 
       -- Build content
       -- Pad index to match total width, and page to match page_count width
@@ -270,7 +266,7 @@ function M.status_component()
         if is_tree then
           hl_text = hl_text .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
         end
-        hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_fold_unchanged)
+        hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
         hl_text = hl_text .. txt(right_split, hln_split)
         return text, hl_text, true
       end
@@ -284,7 +280,7 @@ function M.status_component()
       if is_tree then
         hl_text = hl_text .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
       end
-      hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_fold_unchanged)
+      hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
       hl_text = hl_text .. txt(right_split, hln_split)
       return text, hl_text, true
     end,

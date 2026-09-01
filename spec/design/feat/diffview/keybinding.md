@@ -15,6 +15,9 @@
 - `p4` : Layout 4: 󰊢 commits only
 - `p5` : Layout 5: 󰙅 commits + filetree
 - `pp` : Next layout
+- `zM` : Close all diff folds in the current view
+- `zR` : Open all diff folds in the current view
+- `t3` : Toggle the default diff fold policy and apply it to the current view
 
 ### Commits Pane
 
@@ -35,8 +38,7 @@
 - `gl` : Expand commit
 - `t0` : Cycle layout (5 types)
 - `t1` : Toggle viewtype (tree/list)
-- `t2` : Toggle fold empty dirs
-- `t3` : Toggle fold unchanged hunks
+- `t2` : Toggle compact directory paths
 - `yy` : Yank commit hash
 
 ### Filetree Pane
@@ -48,19 +50,15 @@
 - `gR` : Restore file to commit version
 - `gf` : Open file in previous tab
 - `t1` : Toggle viewtype (tree/list)
-- `t2` : Toggle fold empty dirs
-- `t3` : Toggle fold unchanged hunks
+- `t2` : Toggle compact directory paths
 
 ### SBS Pane
 
 - `g?` : Show keymap sheet of the sbs pane (include shared cross pane keybindings)
 - `gF` : Open file in new tab
 - `gf` : Open file in previous tab
-- `zC` : Close all folds
-- `zM` : Close all folds
-- `zO` : Open all folds
-- `zR` : Open all folds
+- `zC` : Close all diff folds in the current view (`zM` alias)
+- `zO` : Open all diff folds in the current view (`zR` alias)
 - `za` : Toggle expand commit
 - `zc` : Collapse commit
 - `zo` : Expand commit
-- `t3` : Toggle fold unchanged hunks

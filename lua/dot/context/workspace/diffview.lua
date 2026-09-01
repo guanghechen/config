@@ -3,6 +3,7 @@
 ---@class dot.context.diffview.data
 ---@field public flag_fold_unchanges     boolean
 ---@field public flag_foldempty           boolean
+---@field public flag_untracked           boolean
 ---@field public flag_panel_viewtype      stl.m.diffview.PanelViewTypeEnum
 ---@field public flag_commits_layout      stl.m.diffview.CommitsPanelLayoutEnum
 ---@field public layout_type              stl.m.diffview.LayoutTypeEnum
@@ -12,6 +13,7 @@
 ---@class dot.context.diffview.state
 ---@field public flag_fold_unchanges     stl.c.Observable
 ---@field public flag_foldempty           stl.c.Observable
+---@field public flag_untracked           stl.c.Observable
 ---@field public flag_panel_viewtype      stl.c.Observable
 ---@field public flag_commits_layout      stl.c.Observable
 ---@field public layout_type              stl.c.Observable
@@ -31,6 +33,7 @@ function M.defaults()
   return {
     flag_fold_unchanges = true,
     flag_foldempty = true,
+    flag_untracked = true,
     flag_panel_viewtype = "tree",
     flag_commits_layout = "left",
     layout_type = "diff2_hor",
@@ -49,6 +52,9 @@ function M.normalize(data)
     end
     if type(data.flag_foldempty) == "boolean" then
       resolved.flag_foldempty = data.flag_foldempty
+    end
+    if type(data.flag_untracked) == "boolean" then
+      resolved.flag_untracked = data.flag_untracked
     end
     if type(data.flag_panel_viewtype) == "string" then
       if data.flag_panel_viewtype == "tree" or data.flag_panel_viewtype == "list" then
@@ -92,6 +98,7 @@ function M.dump()
   return {
     flag_fold_unchanges = M.flag_fold_unchanges:snapshot(),
     flag_foldempty = M.flag_foldempty:snapshot(),
+    flag_untracked = M.flag_untracked:snapshot(),
     flag_panel_viewtype = M.flag_panel_viewtype:snapshot(),
     flag_commits_layout = M.flag_commits_layout:snapshot(),
     layout_type = M.layout_type:snapshot(),
@@ -107,6 +114,7 @@ function M.load(raw_data)
 
   M.flag_fold_unchanges:next(data.flag_fold_unchanges)
   M.flag_foldempty:next(data.flag_foldempty)
+  M.flag_untracked:next(data.flag_untracked)
   M.flag_panel_viewtype:next(data.flag_panel_viewtype)
   M.flag_commits_layout:next(data.flag_commits_layout)
   M.layout_type:next(data.layout_type)
@@ -123,6 +131,9 @@ M.flag_fold_unchanges = stl.c.Observable.from_value(_defaults.flag_fold_unchange
 
 ---@type stl.c.Observable
 M.flag_foldempty = stl.c.Observable.from_value(_defaults.flag_foldempty)
+
+---@type stl.c.Observable
+M.flag_untracked = stl.c.Observable.from_value(_defaults.flag_untracked)
 
 ---@type stl.c.Observable
 M.flag_panel_viewtype = stl.c.Observable.from_value(_defaults.flag_panel_viewtype)

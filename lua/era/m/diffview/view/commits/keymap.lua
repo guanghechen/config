@@ -28,6 +28,9 @@ function M.gen_cross_pane(ctx)
     { modes = { "n" }, key = "p4", desc = "diffview(commits): Layout 4: 󰊢 commits only", callback = function() action.switch_to_layout(ctx, 4) end },
     { modes = { "n" }, key = "p5", desc = "diffview(commits): Layout 5: 󰙅 commits + filetree", callback = function() action.switch_to_layout(ctx, 5) end },
     { modes = { "n" }, key = "pp", desc = "diffview(commits): Next layout", callback = function() action.cycle_layout(ctx) end },
+    { modes = { "n" }, key = "zM", desc = "diffview(commits): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
+    { modes = { "n" }, key = "zR", desc = "diffview(commits): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
+    { modes = { "n" }, key = "t3", desc = "diffview(commits): Toggle default diff folds", callback = function() action.toggle_default_folds(ctx) end },
   }
 end
 
@@ -59,8 +62,7 @@ function M.gen_commits(ctx)
     { modes = { "n" }, key = "oo", desc = "diffview(commits): Toggle expand commit", callback = function() action.toggle_expand(ctx) end },
     { modes = { "n" }, key = "t0", desc = "diffview(commits): Cycle layout (5 types)", callback = function() action.cycle_layout(ctx) end },
     { modes = { "n" }, key = "t1", desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
-    { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle fold empty dirs", callback = function() action.toggle_foldempty(ctx) end },
-    { modes = { "n" }, key = "t3", desc = "diffview(commits): Toggle fold unchanged hunks", callback = function() action.toggle_fold_unchanged(ctx) end },
+    { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
     { modes = { "n" }, key = "yy", desc = "diffview(commits): Yank commit hash", callback = function() action.yank_hash(ctx) end },
   }
 
@@ -87,8 +89,7 @@ function M.gen_filetree(ctx)
     { modes = { "n" }, key = "gR", desc = "diffview(commits): Restore file to commit version", callback = function() action.restore_file(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(commits): Open file in previous tab", callback = function() action.goto_file(ctx) end },
     { modes = { "n" }, key = "t1", desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
-    { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle fold empty dirs", callback = function() action.toggle_foldempty(ctx) end },
-    { modes = { "n" }, key = "t3", desc = "diffview(commits): Toggle fold unchanged hunks", callback = function() action.toggle_fold_unchanged(ctx) end },
+    { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
   }
 
   -- Append cross-pane keymaps
@@ -108,14 +109,11 @@ function M.gen_sbs(ctx)
     { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(commits): Open file in previous tab", callback = function() action.goto_file(ctx) end },
-    { modes = { "n" }, key = "zC", desc = "diffview(commits): Close all folds", callback = function() action.close_all_folds(ctx) end },
-    { modes = { "n" }, key = "zM", desc = "diffview(commits): Close all folds", callback = function() action.close_all_folds(ctx) end },
-    { modes = { "n" }, key = "zO", desc = "diffview(commits): Open all folds", callback = function() action.open_all_folds(ctx) end },
-    { modes = { "n" }, key = "zR", desc = "diffview(commits): Open all folds", callback = function() action.open_all_folds(ctx) end },
+    { modes = { "n" }, key = "zC", desc = "diffview(commits): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
+    { modes = { "n" }, key = "zO", desc = "diffview(commits): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
     { modes = { "n" }, key = "za", desc = "diffview(commits): Toggle expand commit", callback = function() action.sbs_toggle_expand(ctx) end },
     { modes = { "n" }, key = "zc", desc = "diffview(commits): Collapse commit", callback = function() action.sbs_collapse(ctx) end },
     { modes = { "n" }, key = "zo", desc = "diffview(commits): Expand commit", callback = function() action.sbs_expand(ctx) end },
-    { modes = { "n" }, key = "t3", desc = "diffview(commits): Toggle fold unchanged hunks", callback = function() action.toggle_fold_unchanged(ctx) end },
   }
 
   -- Append cross-pane keymaps

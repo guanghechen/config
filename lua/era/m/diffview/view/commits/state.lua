@@ -13,6 +13,7 @@ local M = {}
 
 ---@class era.m.diffview.view.commits.State
 ---@field public tabnr                   integer
+---@field public fold_unchanged          boolean                         Current diff fold policy
 ---@field public commits                 stl.c.Observable                Observable<era.m.diffview.ICommit[]>
 ---@field public current_commit          stl.c.Observable                Observable<era.m.diffview.ICommit|nil>
 ---@field public current_entry           stl.c.Observable                Observable<era.m.diffview.IFileEntry|nil>
@@ -31,11 +32,13 @@ State.__index = State
 
 ---Create a new commits state instance
 ---@param tabnr                          integer
+---@param fold_unchanged                 boolean
 ---@return era.m.diffview.view.commits.State
-function State.new(tabnr)
+function State.new(tabnr, fold_unchanged)
   local self = setmetatable({}, State)
 
   self.tabnr = tabnr
+  self.fold_unchanged = fold_unchanged
 
   self.commits = stl.c.Observable.from_value({})
   self.current_commit = stl.c.Observable.from_value(nil)
@@ -98,6 +101,18 @@ end
 ---@param entry                          era.m.diffview.IFileEntry|nil
 function State:set_current_entry(entry)
   self.current_entry:next(entry)
+end
+
+---Whether unchanged diff hunks are folded in this view.
+---@return boolean
+function State:get_fold_unchanged()
+  return self.fold_unchanged
+end
+
+---Set whether unchanged diff hunks are folded in this view.
+---@param fold_unchanged                 boolean
+function State:set_fold_unchanged(fold_unchanged)
+  self.fold_unchanged = fold_unchanged
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -390,9 +405,10 @@ end
 
 ---Create new state for tab
 ---@param tabnr                          integer
+---@param fold_unchanged                 boolean
 ---@return era.m.diffview.view.commits.State
-function M.create(tabnr)
-  local state = State.new(tabnr)
+function M.create(tabnr, fold_unchanged)
+  local state = State.new(tabnr, fold_unchanged)
   M.set(tabnr, state)
 
   -- Setup TabClosed autocmd to clean up state when tab is closed directly

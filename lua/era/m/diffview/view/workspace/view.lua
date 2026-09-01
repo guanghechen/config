@@ -527,6 +527,23 @@ end
 -- Rendering
 ----------------------------------------------------------------------------------------------------
 
+---Project the complete workspace snapshot into the entries visible in the Changes panes.
+---@param entries                        era.m.diffview.IFileEntry[]
+---@return era.m.diffview.IFileEntry[]
+function M.get_visible_entries(entries)
+  if dot.context.diffview.flag_untracked:snapshot() then
+    return entries
+  end
+
+  local visible = {} ---@type era.m.diffview.IFileEntry[]
+  for _, entry in ipairs(entries) do
+    if entry.status ~= "?" then
+      visible[#visible + 1] = entry
+    end
+  end
+  return visible
+end
+
 ---Collapse an empty sibling to its header and restore the prior split when both have entries.
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 ---@param staged_count                   integer
@@ -570,7 +587,7 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.sync_changes_heights(ctx)
   local counts = { staged = 0, unstaged = 0 } ---@type table<stl.m.diffview.StageTypeEnum, integer>
-  for _, entry in ipairs(ctx.state:get_entries()) do
+  for _, entry in ipairs(M.get_visible_entries(ctx.state:get_entries())) do
     if entry.stage_type then
       counts[entry.stage_type] = counts[entry.stage_type] + 1
     end
@@ -583,7 +600,7 @@ end
 function M.render_changes(ctx)
   local lyt = ctx.layout
   local state = ctx.state
-  local entries = state:get_entries()
+  local entries = M.get_visible_entries(state:get_entries())
   local metadata_widths = pane_changes.measure_metadata(entries)
 
   for _, pane in ipairs(M.get_changes_panes(lyt)) do
@@ -636,6 +653,9 @@ function M.open_entry(ctx, entry, token, opts)
     token = token,
     is_current = is_current,
     preserve_view = opts and opts.preserve_view,
+    get_fold_unchanged = function()
+      return ctx.state:get_fold_unchanged()
+    end,
   })
 
   if not is_current() then
@@ -659,12 +679,17 @@ function M.clear_sbs(ctx)
     and lyt.sbs_right_winnr
     and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
   then
-    pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr, function()
-      return lyt.preview_generation == generation
-        and not ctx.state:is_disposed()
-        and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr)
-        and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
-    end)
+    pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr, {
+      is_current = function()
+        return lyt.preview_generation == generation
+          and not ctx.state:is_disposed()
+          and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr)
+          and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
+      end,
+      get_fold_unchanged = function()
+        return ctx.state:get_fold_unchanged()
+      end,
+    })
   end
 end
 

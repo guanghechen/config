@@ -803,6 +803,9 @@ t:test("workspace view binds keymaps after replacing null buffers", function()
   view.open_entry({
     layout = { sbs_left_winnr = left_winnr, sbs_right_winnr = right_winnr },
     state = {
+      get_fold_unchanged = function()
+        return true
+      end,
       is_disposed = function()
         return false
       end,

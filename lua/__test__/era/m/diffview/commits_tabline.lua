@@ -22,8 +22,8 @@ bootstrap.with_global(t, "stl", {
   icon = {
     git = { Git = "G" },
     symbols = {
+      flag_fold = "F",
       flag_fold_empty_path = "E",
-      flag_fold_unchanged = "U",
       flag_layout_1 = "L",
       flag_layout_2 = "L",
       flag_layout_3 = "L",
@@ -118,6 +118,7 @@ t:test("layout 3 renders status buttons against the left SBS pane", function()
   local text = tabline.status_component().render({}, 120)
 
   t.assert_true(text:find("L₃", 1, true) ~= nil, "layout button")
+  t.assert_true(text:find("F³", 1, true) ~= nil, "fold default button")
 end)
 
 t:test("commits pane remains the preferred status width", function()

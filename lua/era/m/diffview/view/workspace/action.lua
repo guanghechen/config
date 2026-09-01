@@ -79,7 +79,7 @@ end
 ---@return era.m.diffview.IFileEntry[] entries
 ---@return table<string, boolean>|nil visible_entry_ids
 local function get_navigation_entries(ctx)
-  local entries = ctx.state:get_entries()
+  local entries = workspace_view.get_visible_entries(ctx.state:get_entries())
   local visible_entry_ids = {} ---@type table<string, boolean>
   local has_line_map = false
   for _, pane in ipairs(workspace_view.get_changes_panes(ctx.layout)) do
@@ -890,12 +890,10 @@ local FOLD_ACTIONS = {
   toggle = "za",
   open = "zo",
   close = "zc",
-  open_all = "zR",
-  close_all = "zM",
 }
 
 ---Execute fold action
----@param action                         "toggle"|"open"|"close"|"open_all"|"close_all"
+---@param action                         "toggle"|"open"|"close"
 local function execute_fold(action)
   local cmd = FOLD_ACTIONS[action]
   if cmd then
@@ -921,22 +919,24 @@ function M.close_fold(_)
   execute_fold("close")
 end
 
----Open all folds
----@param _                             era.m.diffview.view.workspace.IContext
-function M.open_all_folds(_)
-  execute_fold("open_all")
-end
-
----Close all folds
----@param _                             era.m.diffview.view.workspace.IContext
-function M.close_all_folds(_)
-  execute_fold("close_all")
-end
-
----Toggle all folds in the side-by-side preview without changing focus.
 ---@param ctx                            era.m.diffview.view.workspace.IContext
-function M.toggle_all_folds(ctx)
-  layout_util.toggle_all_folds(ctx.layout.sbs_left_winnr, ctx.layout.sbs_right_winnr)
+---@param fold_unchanged                 boolean
+local function set_fold_unchanged(ctx, fold_unchanged)
+  ctx.state:set_fold_unchanged(fold_unchanged)
+  local lyt = ctx.layout
+  pane_sbs.apply_fold_unchanged_pair(lyt.sbs_left_winnr, lyt.sbs_right_winnr, fold_unchanged)
+end
+
+---Open all diff folds in the current view.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.open_all_folds(ctx)
+  set_fold_unchanged(ctx, false)
+end
+
+---Close all diff folds in the current view.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.close_all_folds(ctx)
+  set_fold_unchanged(ctx, true)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1032,7 +1032,7 @@ function M.toggle_viewtype(ctx)
   workspace_view.render_changes(ctx)
 end
 
----Toggle fold empty directories
+---Toggle compact directory paths
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.toggle_foldempty(ctx)
   local current = dot.context.diffview.flag_foldempty:snapshot() ---@type boolean
@@ -1040,14 +1040,48 @@ function M.toggle_foldempty(ctx)
   workspace_view.render_changes(ctx)
 end
 
----Toggle folding unchanged hunks in sbs
+---Toggle whether untracked files are visible in the Changes panes.
 ---@param ctx                            era.m.diffview.view.workspace.IContext
-function M.toggle_fold_unchanged(ctx)
-  local current = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
-  dot.context.diffview.flag_fold_unchanges:next(not current)
+function M.toggle_untracked(ctx)
+  local current = dot.context.diffview.flag_untracked:snapshot() ---@type boolean
+  local show_untracked = not current
+  dot.context.diffview.flag_untracked:next(show_untracked)
+  workspace_view.render_changes(ctx)
+  dot.state.status.dirtier_tabline:mark_dirty()
 
-  local lyt = ctx.layout
-  pane_sbs.apply_fold_unchanged_pair(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
+  local selected = ctx.state:get_current_entry()
+  if show_untracked or selected == nil or selected.status ~= "?" then
+    return
+  end
+
+  local entries, visible_entry_ids = get_navigation_entries(ctx)
+  local target = nil ---@type era.m.diffview.IFileEntry|nil
+  for _, entry in ipairs(entries) do
+    if not visible_entry_ids or visible_entry_ids[get_entry_id(entry)] then
+      target = entry
+      break
+    end
+  end
+  ctx.state:set_current_entry(target)
+  if target == nil then
+    workspace_view.clear_sbs(ctx)
+    return
+  end
+
+  M.__update_changes_cursor__(ctx, target)
+  stl.async.run(function()
+    workspace_view.open_entry(ctx, target)
+  end)
+end
+
+---Toggle the persisted default diff fold policy and apply it to this view.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.toggle_default_folds(ctx)
+  local current = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
+  local fold_unchanged = not current
+  dot.context.diffview.flag_fold_unchanges:next(fold_unchanged)
+  set_fold_unchanged(ctx, fold_unchanged)
+  dot.state.status.dirtier_tabline:mark_dirty()
 end
 
 ----------------------------------------------------------------------------------------------------

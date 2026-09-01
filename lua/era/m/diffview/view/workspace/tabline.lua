@@ -4,7 +4,6 @@ local __module_name__ = "era.m.diffview.view.workspace.tabline" ---@type string
 local config = require("era.m.diffview.config")
 local workspace_state = require("era.m.diffview.view.workspace.state")
 local workspace_view = require("era.m.diffview.view.workspace.view")
-local pane_sbs = require("era.m.diffview.pane.sbs")
 
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
@@ -113,17 +112,23 @@ function M.status_component()
 
   local cb_viewtype = get_cb_viewtype()
   local cb_foldempty = get_cb_foldempty()
-  local cb_fold_unchanged = get_or_create_callback("workspace_fold_unchanged", function()
-    local current = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
-    dot.context.diffview.flag_fold_unchanges:next(not current)
-
+  local cb_untracked = get_or_create_callback("workspace_untracked", function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local state = workspace_state.get(tabnr)
     local lyt = workspace_view.get_layout(tabnr)
-    if not lyt then
+    if not state or not lyt then
       return
     end
-    pane_sbs.apply_fold_unchanged_pair(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
-    dot.state.status.dirtier_tabline:mark_dirty()
+    require("era.m.diffview.view.workspace.action").toggle_untracked({ layout = lyt, state = state })
+  end)
+  local cb_default_folds = get_or_create_callback("workspace_default_folds", function()
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local state = workspace_state.get(tabnr)
+    local lyt = workspace_view.get_layout(tabnr)
+    if not state or not lyt then
+      return
+    end
+    require("era.m.diffview.view.workspace.action").toggle_default_folds({ layout = lyt, state = state })
   end)
 
   ---@type era.m.nvimbar.IRawComponent
@@ -140,19 +145,21 @@ function M.status_component()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local state = workspace_state.get(tabnr)
 
-      local entries = state and state:get_entries() or {} ---@type era.m.diffview.IFileEntry[]
+      local entries = state and workspace_view.get_visible_entries(state:get_entries()) or {} ---@type era.m.diffview.IFileEntry[]
       local total = #entries ---@type integer
 
       -- Get flags state
       local viewtype = dot.context.diffview.flag_panel_viewtype:snapshot() ---@type stl.m.diffview.PanelViewTypeEnum
       local foldempty = dot.context.diffview.flag_foldempty:snapshot() ---@type boolean
-      local fold_unchanged = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
+      local untracked = dot.context.diffview.flag_untracked:snapshot() ---@type boolean
+      local default_folds = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
       local is_tree = viewtype == "tree" ---@type boolean
 
       -- Build flag texts
       local viewtype_icon = is_tree and stl.icon.symbols.flag_tree or stl.icon.symbols.flag_list ---@type string
       local flag1_text = " " .. viewtype_icon .. "¹" ---@type string
-      local flag3_text = " " .. stl.icon.symbols.flag_fold_unchanged .. "³" ---@type string
+      local flag3_text = " " .. stl.icon.symbols.flag_fold .. "³" ---@type string
+      local flag4_text = " " .. stl.icon.symbols.flag_untracked .. "⁴" ---@type string
 
       -- Build content: " Git Changes (N)  [flags]"
       local git_icon = stl.icon.git.Git ---@type string
@@ -162,7 +169,9 @@ function M.status_component()
       local title_width = vim.api.nvim_strwidth(title_text) ---@type integer
 
       -- Calculate flags width (flag2 only shown in tree mode)
-      local flags_width = vim.api.nvim_strwidth(flag1_text) + vim.api.nvim_strwidth(flag3_text) ---@type integer
+      local flags_width = vim.api.nvim_strwidth(flag1_text)
+        + vim.api.nvim_strwidth(flag3_text)
+        + vim.api.nvim_strwidth(flag4_text) ---@type integer
       local flag2_text = "" ---@type string
       if is_tree then
         local foldempty_icon = stl.icon.symbols.flag_fold_empty_path ---@type string
@@ -180,14 +189,18 @@ function M.status_component()
       local padding = string.rep(" ", padding_width) ---@type string
       local right_split = " " ---@type string
 
-      local text = title_text .. padding .. flag1_text .. flag2_text .. flag3_text .. right_split ---@type string
-      local hl_text = txt(title_text, hln_pink) .. txt(padding, hln_blank) .. btn(txt(flag1_text, hln_flag_viewtype), cb_viewtype)
+      local text = title_text .. padding .. flag1_text .. flag2_text .. flag3_text .. flag4_text .. right_split ---@type string
+      local hl_text = txt(title_text, hln_pink)
+        .. txt(padding, hln_blank)
+        .. btn(txt(flag1_text, hln_flag_viewtype), cb_viewtype)
       if is_tree then
         local flag2_hln = foldempty and hln_flag_on or hln_flag_off ---@type string
         hl_text = hl_text .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
       end
-      local flag3_hln = fold_unchanged and hln_flag_on or hln_flag_off ---@type string
-      hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_fold_unchanged)
+      local flag3_hln = default_folds and hln_flag_on or hln_flag_off ---@type string
+      local flag4_hln = untracked and hln_flag_on or hln_flag_off ---@type string
+      hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
+      hl_text = hl_text .. btn(txt(flag4_text, flag4_hln), cb_untracked)
       hl_text = hl_text .. txt(right_split, hln_split)
       return text, hl_text, true
     end,

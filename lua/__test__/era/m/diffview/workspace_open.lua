@@ -20,6 +20,11 @@ bootstrap.with_global(t, "stl", {
 bootstrap.with_global(t, "dot", {
   context = {
     diffview = {
+      flag_fold_unchanges = {
+        snapshot = function()
+          return true
+        end,
+      },
       panel_width = {
         next = function(_, width)
           remembered_widths[#remembered_widths + 1] = width
@@ -42,6 +47,7 @@ t:test("open selects and previews the first visible file", function()
   }
   local selected = nil ---@type era.m.diffview.IFileEntry|nil
   local previewed = nil ---@type era.m.diffview.IFileEntry|nil
+  local initial_fold_unchanged = nil ---@type boolean|nil
 
   local state = {
     get_entries = function()
@@ -91,6 +97,15 @@ t:test("open selects and previews the first visible file", function()
     get_changes_panes = function()
       return { layout.changes.staged, layout.changes.unstaged }
     end,
+    get_visible_entries = function(items)
+      local visible = {} ---@type era.m.diffview.IFileEntry[]
+      for _, entry in ipairs(items) do
+        if entry.status ~= "?" then
+          visible[#visible + 1] = entry
+        end
+      end
+      return visible
+    end,
   }
 
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
@@ -108,7 +123,8 @@ t:test("open selects and previews the first visible file", function()
   })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {
     active_states = {},
-    create = function()
+    create = function(_, fold_unchanged)
+      initial_fold_unchanged = fold_unchanged
       return state
     end,
   })
@@ -124,6 +140,7 @@ t:test("open selects and previews the first visible file", function()
 
   t.assert_eq(entries[2], selected, "selected entry")
   t.assert_eq(entries[2], previewed, "previewed entry")
+  t.assert_true(initial_fold_unchanged, "global fold default forwarded")
   t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "staged focus")
   t.assert_eq(2, vim.api.nvim_win_get_cursor(staged_winnr)[1], "changes cursor")
 
