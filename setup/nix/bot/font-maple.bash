@@ -23,24 +23,24 @@ ghc_setup_font_maple() {
   done
 
   if [ "$force" = false ] && ghc_font_files_exist "$font_dir" "${GHC_MAPLE_FONT_FILES[@]}"; then
-    printf "\e[93m  [setup font (%s)] already installed. (skipped)\e[0m\n" "$label"
+    printf "\e[93m%s is already installed (skipped)\e[0m\n" "$label"
     return 0
   fi
 
   if [ "$force" = true ]; then
-    printf "\e[96m  [setup font (%s)] force reinstalling...\e[0m\n" "$label"
+    printf "\e[96mforce reinstalling %s...\e[0m\n" "$label"
   fi
 
   ## Fonts are reproducible artifacts: verify before replacing them, and rerun
   ## setup after any install or cache failure.
   ghc_font_fetch "$label" "$url" "$sha256" "$workdir" || return 1
 
-  printf "\e[96m  [setup font (%s)] installing into %s...\e[0m\n" "$label" "$font_dir"
+  printf "\e[96minstalling %s into %s...\e[0m\n" "$label" "$font_dir"
   sudo rm -rf "${font_dir:?}" || return 1
   sudo install -d -m 0755 "$font_dir" || return 1
   sudo install -m 0644 "$workdir"/*.ttf "$font_dir/" || return 1
   sudo fc-cache -f || return 1
-  printf "\e[92m  [setup font (%s)] installed %s fonts into %s.\e[0m\n" \
+  printf "\e[92m%s: installed %s fonts into %s\e[0m\n" \
     "$label" "${#GHC_MAPLE_FONT_FILES[@]}" "$font_dir"
 }
 

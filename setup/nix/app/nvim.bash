@@ -11,7 +11,7 @@ ghc_activate_python() {
     return 0
   fi
 
-  printf "\e[91m [setup nvim] neither conda nor python3 is available.\e[0m\n" >&2
+  printf "\e[91mneither conda nor python3 is available\e[0m\n" >&2
   return 1
 }
 

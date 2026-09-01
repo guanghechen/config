@@ -55,18 +55,18 @@ ghc_font_fetch() {
   local actual count=0 path
 
   if ! rm -rf "${workdir:?}" || [ -e "$workdir" ]; then
-    printf "\e[91m  [setup font (%s)] failed to clean staging directory: %s\e[0m\n" \
+    printf "\e[91m%s: failed to clean staging directory: %s\e[0m\n" \
       "$label" "$workdir"
     return 1
   fi
   mkdir -p "$workdir" || return 1
 
-  printf "\e[96m  [setup font (%s)] downloading %s...\e[0m\n" "$label" "${url##*/}"
+  printf "\e[96m%s: downloading %s...\e[0m\n" "$label" "${url##*/}"
   curl -fsSL --retry 3 -o "$archive" "$url" || return 1
 
   actual="$(ghc_font_sha256 "$archive")" || return 1
   if [ "$actual" != "$expected" ]; then
-    printf "\e[91m  [setup font (%s)] checksum mismatch, refusing to install.\e[0m\n" "$label"
+    printf "\e[91m%s: checksum mismatch, refusing to install\e[0m\n" "$label"
     printf "\e[91m    expected: %s\n    actual:   %s\e[0m\n" "$expected" "$actual"
     return 1
   fi
@@ -78,8 +78,8 @@ ghc_font_fetch() {
     count=$((count + 1))
   done
   if [ "$count" -eq 0 ]; then
-    printf "\e[91m  [setup font (%s)] archive contains no ttf files.\e[0m\n" "$label"
+    printf "\e[91m%s: archive contains no ttf files\e[0m\n" "$label"
     return 1
   fi
-  printf "\e[96m  [setup font (%s)] verified, %s ttf files.\e[0m\n" "$label" "$count"
+  printf "\e[96m%s: verified %s ttf files\e[0m\n" "$label" "$count"
 }

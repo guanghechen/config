@@ -25,6 +25,7 @@ ghc_bootstrap_repo() {
   git clone https://github.com/guanghechen/config.git --branch=guanghechen "$repomain"
 }
 
+printf "\n\e[1;95m󰒓 setup\e[0m\n"
 printf "\n\e[96m  [setup repo] preparing...\e[0m\n"
 if ! ghc_bootstrap_repo; then
   printf "\e[91m  [setup repo] FAILED to sync %s. aborting.\e[0m\n" "$repomain"
@@ -37,47 +38,21 @@ source "$setup_nix/bot/step.bash" || {
   exit 1
 }
 
-## Bootstrap
-printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
-source "$setup_nix/bot/env.bash" || exit 1
-
-### Setup homebrew
-if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
-  ghc_step_optional homebrew ghc_run_script "$setup_nix/bot/homebrew.bash"
-  ghc_step_optional "homebrew (osx)" ghc_run_script "$setup_osx/bot/homebrew-patch.bash"
-fi
-
-## Setup envs
-printf "\n\e[95m ===== [setup env] =====\e[0m\n"
-ghc_step_optional rust ghc_run_script "$setup_nix/env/rust.bash"
-ghc_step_optional miniforge ghc_run_script "$setup_nix/env/miniforge.bash"
-ghc_step_optional bun ghc_run_script "$setup_nix/env/bun.bash"
-ghc_step_optional fish ghc_run_script "$setup_nix/bot/fish.bash"
-ghc_step_optional node ghc_run_script "$setup_nix/env/node.bash"
-
-## Refresh PATH after installers ran in isolated shells.
-source "$setup_nix/bot/env.bash" || exit 1
-
-## The published `kit-repo` provisions every app config below.
-ghc_require cargo
-ghc_step kit-repo ghc_run_script "$setup_nix/env/kit-repo.bash"
-kit_repo_bin="${CARGO_HOME:-$HOME/.cargo}/bin/kit-repo"
-
-## Setup configs
+## Configuration helpers
 ### ensure kit worktree
 ghc_ensure_kit_worktree() {
   if [ -e "$repoworktree/.git" ]; then
-    printf "\e[93m  [setup config] %s already exists. (skipped worktree).\e[0m\n" "$repoworktree"
+    printf "\e[93m%s already exists (skipped worktree creation)\e[0m\n" "$repoworktree"
     ## Having the worktree is what the later steps need; it is also what
     ## `kit-repo sync` writes into, so a dirty tree here is normal and a
     ## non-fast-forward pull must not take the bootstrap down.
     git -C "$repoworktree" pull --ff-only origin kit ||
-      printf "\e[93m  [setup config] pull failed for %s. (continuing).\e[0m\n" "$repoworktree"
+      printf "\e[93mpull failed for %s (continuing)\e[0m\n" "$repoworktree"
   elif git -C "$repomain" show-ref --verify --quiet refs/heads/kit; then
-    printf "\e[96m  [setup config] attaching existing branch kit to %s...\e[0m\n" "$repoworktree"
+    printf "\e[96mattaching existing branch kit to %s...\e[0m\n" "$repoworktree"
     git -C "$repomain" worktree add "$repoworktree" kit
   else
-    printf "\e[96m  [setup config] creating worktree %s from origin/kit...\e[0m\n" "$repoworktree"
+    printf "\e[96mcreating worktree %s from origin/kit...\e[0m\n" "$repoworktree"
     git -C "$repomain" fetch origin &&
       git -C "$repomain" worktree add --track -b kit "$repoworktree" origin/kit
   fi
@@ -90,21 +65,42 @@ ghc_sync_kit_repo() {
 
 ## Without the worktree and synced local settings there is no app config for
 ## any step below, so these two failures abort instead of joining the summary.
-ghc_step worktree ghc_ensure_kit_worktree
-ghc_step "local settings" ghc_sync_kit_repo
-ghc_step_optional config ghc_run_script "$setup_nix/bot/config.bash"
+## Bootstrap
+ghc_section "" bootstrap
+ghc_step_in_place "" "runtime environment" source "$setup_nix/bot/env.bash"
+if [ -z "${HOME_HOMEBREW:-}" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
+  ghc_step_optional "" homebrew ghc_run_script "$setup_nix/bot/homebrew.bash"
+  ghc_step_optional "" "homebrew (osx)" ghc_run_script "$setup_osx/bot/homebrew-patch.bash"
+else
+  ghc_step_skip "" homebrew "lock directory is not writable"
+fi
 
-## Setup apps
-printf "\n\e[95m ===== [setup app] =====\e[0m\n"
-ghc_step_optional newsboat ghc_run_script "$setup_nix/app/newsboat.bash"
-ghc_step_optional nvim ghc_run_script "$setup_nix/app/nvim.bash"
-ghc_step_optional tmux ghc_run_script "$setup_nix/app/tmux.bash"
+## Environment
+ghc_section "" environment
+ghc_step_optional "" rust ghc_run_script "$setup_nix/env/rust.bash"
+ghc_step_optional "" miniforge ghc_run_script "$setup_nix/env/miniforge.bash"
+ghc_step_optional "" bun ghc_run_script "$setup_nix/env/bun.bash"
+ghc_step_optional "󰈺" fish ghc_run_script "$setup_nix/bot/fish.bash"
+ghc_step_optional "" node ghc_run_script "$setup_nix/env/node.bash"
+ghc_step_in_place "" "runtime environment" source "$setup_nix/bot/env.bash"
 
-## Setup font
-ghc_step_optional font ghc_run_script "$setup_osx/bot/font-maple.bash"
+## Configuration
+ghc_section "" configuration
+ghc_step "" "cargo available" ghc_require cargo
+ghc_step "󰏗" kit-repo ghc_run_script "$setup_nix/env/kit-repo.bash"
+kit_repo_bin="${CARGO_HOME:-$HOME/.cargo}/bin/kit-repo"
+ghc_step "󰙅" worktree ghc_ensure_kit_worktree
+printf "\n"
+ghc_sync_kit_repo || exit $?
+ghc_step_optional "" config ghc_run_script "$setup_nix/bot/config.bash"
 
-## Setup themes
-ghc_require node
-ghc_step_optional theme node "$repomain/cli/theme.mjs" apply
+## Applications
+ghc_section "󱧺" applications
+ghc_step_optional "" newsboat ghc_run_script "$setup_nix/app/newsboat.bash"
+ghc_step_optional "" nvim ghc_run_script "$setup_nix/app/nvim.bash"
+ghc_step_optional "" tmux ghc_run_script "$setup_nix/app/tmux.bash"
+ghc_step_optional "" font ghc_run_script "$setup_osx/bot/font-maple.bash"
+ghc_step "" "node available" ghc_require node
+ghc_step_optional "" theme node "$repomain/cli/theme.mjs" apply
 
 ghc_step_summary

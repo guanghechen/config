@@ -3,7 +3,7 @@
 source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 ## Set environment variables
-printf "\e[96m  [setup miniforge] set environment variables...\e[0m\n"
+printf "\e[96msetting environment variables...\e[0m\n"
 export PYTHONIOENCODING=utf8
 export PYTHONUTF8=1
 export HOME_MINIFORGE="$HOME/.app/miniforge3"
@@ -11,33 +11,33 @@ miniforge_conda="$HOME_MINIFORGE/bin/conda"
 miniforge_profile="$HOME_MINIFORGE/etc/profile.d/conda.sh"
 
 if [ -z "${GHC_APP_PYTHON_ENV:-}" ]; then
-  printf "\e[91m [setup miniforge] GHC_APP_PYTHON_ENV is not configured.\e[0m\n" >&2
+  printf "\e[91mGHC_APP_PYTHON_ENV is not configured\e[0m\n" >&2
   exit 1
 fi
 
 if [ -e "$HOME_MINIFORGE" ] || [ -L "$HOME_MINIFORGE" ]; then
   if [ ! -f "$miniforge_conda" ]; then
-    printf "\e[91m [setup miniforge] conda executable is missing or not a regular file: %s\e[0m\n" \
+    printf "\e[91mconda executable is missing or not a regular file: %s\e[0m\n" \
       "$miniforge_conda" >&2
     printf "\e[91m   repair the existing prefix manually before rerunning setup: %s\e[0m\n" \
       "$HOME_MINIFORGE" >&2
     exit 1
   fi
   if [ ! -x "$miniforge_conda" ]; then
-    printf "\e[91m [setup miniforge] conda executable is not executable: %s\e[0m\n" \
+    printf "\e[91mconda executable is not executable: %s\e[0m\n" \
       "$miniforge_conda" >&2
     printf "\e[91m   repair the existing prefix manually before rerunning setup: %s\e[0m\n" \
       "$HOME_MINIFORGE" >&2
     exit 1
   fi
   if [ ! -r "$miniforge_profile" ]; then
-    printf "\e[91m [setup miniforge] conda profile is missing or unreadable: %s\e[0m\n" \
+    printf "\e[91mconda profile is missing or unreadable: %s\e[0m\n" \
       "$miniforge_profile" >&2
     printf "\e[91m   repair the existing prefix manually before rerunning setup: %s\e[0m\n" \
       "$HOME_MINIFORGE" >&2
     exit 1
   fi
-  printf "\e[93m  [setup miniforge] miniforge is already installed. (skipped)\e[0m\n"
+  printf "\e[93mMiniforge is already installed (skipped)\e[0m\n"
 else
   miniforge_version="26.3.2-3"
   miniforge_system="$(uname)-$(uname -m)"
@@ -63,7 +63,7 @@ else
       miniforge_sha256="39273e4c89a0a1af4538010615d44ae8f44e1af41007e02def593d20f316b003"
       ;;
     *)
-      printf "\e[91m [setup miniforge] unsupported platform: %s\e[0m\n" "$miniforge_system" >&2
+      printf "\e[91munsupported platform: %s\e[0m\n" "$miniforge_system" >&2
       exit 1
       ;;
   esac
@@ -75,7 +75,7 @@ else
   mkdir -p ~/download/app/
 
   ## Download and install the miniforge3
-  printf "\e[96m  [setup miniforge] downloading %s...\e[0m\n" "$miniforge_setup_sh"
+  printf "\e[96mdownloading %s...\e[0m\n" "$miniforge_setup_sh"
   miniforge_setup_tmp="$(mktemp "$HOME/download/app/${miniforge_setup_sh}.XXXXXX")"
   trap 'rm -f "$miniforge_setup_tmp"' EXIT
   curl -fL "$miniforge_setup_url" -o "$miniforge_setup_tmp"
@@ -85,15 +85,15 @@ else
   elif command -v shasum &>/dev/null; then
     miniforge_actual_sha256="$(shasum -a 256 "$miniforge_setup_tmp" | awk '{print $1}')"
   else
-    printf "\e[91m [setup miniforge] sha256sum or shasum is required.\e[0m\n" >&2
+    printf "\e[91msha256sum or shasum is required\e[0m\n" >&2
     exit 1
   fi
   if [ "$miniforge_actual_sha256" != "$miniforge_sha256" ]; then
-    printf "\e[91m [setup miniforge] checksum mismatch for %s.\e[0m\n" "$miniforge_setup_sh" >&2
+    printf "\e[91mchecksum mismatch for %s\e[0m\n" "$miniforge_setup_sh" >&2
     exit 1
   fi
 
-  printf "\e[96m  [setup miniforge] installing...\e[0m\n"
+  printf "\e[96minstalling Miniforge...\e[0m\n"
   bash "$miniforge_setup_tmp" -b -p "$HOME_MINIFORGE" -c
   rm -f "$miniforge_setup_tmp"
   trap - EXIT
@@ -101,15 +101,15 @@ fi
 export PATH=$HOME_MINIFORGE/bin:$PATH
 
 ### Setup conda
-printf "\e[96m  [setup miniforge] setting up conda...\e[0m\n"
+printf "\e[96msetting up conda...\e[0m\n"
 source "$miniforge_profile"
 conda config --set auto_activate_base false
 
 if conda env list | awk -v target="$GHC_APP_PYTHON_ENV" '$1 == target { found = 1 } END { exit !found }'; then
-  printf "\e[93m  [setup miniforge] the '%s' env is already created. (skipped)\e[0m\n" \
+  printf "\e[93mthe '%s' env already exists (skipped)\e[0m\n" \
     "$GHC_APP_PYTHON_ENV"
 else
-  printf "\e[96m  [setup miniforge] creating '%s' env with conda...\e[0m\n" \
+  printf "\e[96mcreating '%s' env with conda...\e[0m\n" \
     "$GHC_APP_PYTHON_ENV"
   conda create --yes --name "$GHC_APP_PYTHON_ENV" python=3.12
   conda activate "$GHC_APP_PYTHON_ENV"
@@ -119,9 +119,9 @@ fi
 ### Setup ipython
 ipython_config_path="$HOME/.ipython/profile_default/ipython_config.py"
 if [ -f "$ipython_config_path" ]; then
-  printf "\e[93m  [setup miniforge] %s already exists. (skipped).\e[0m\n" "$ipython_config_path"
+  printf "\e[93m%s already exists (skipped)\e[0m\n" "$ipython_config_path"
 else
-  printf "\e[96m  [setup miniforge] setting up ipython...\e[0m\n"
+  printf "\e[96msetting up IPython...\e[0m\n"
   conda run --name "$GHC_APP_PYTHON_ENV" ipython profile create
   printf "\nc.TerminalInteractiveShell.editing_mode = 'vi'\n" >>"$ipython_config_path"
 fi

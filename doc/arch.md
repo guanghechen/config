@@ -221,32 +221,43 @@ setup/nix/setup.bash
     ├── require sudo + apt [fatal]
     ├── apt update/upgrade + system packages [fatal]
     ├── clone or fast-forward this repo [fatal]
-    ├── source bot/step.bash + bot/env.bash [fatal]
-    ├── bot/homebrew.bash [optional, conditional]
-    ├── environment steps [optional]
+    ├── source bot/step.bash [fatal]
+    ├── bootstrap
+    │   ├── source bot/env.bash [fatal]
+    │   └── bot/homebrew.bash [optional, conditional]
+    ├── environment
     │   ├── env/rust.bash
     │   ├── env/miniforge.bash
     │   ├── env/bun.bash
     │   ├── bot/fish.bash
-    │   └── env/node.bash
-    ├── refresh bot/env.bash; require node + kit [fatal]
+    │   ├── env/node.bash
+    │   └── refresh bot/env.bash [fatal]
     ├── configuration
+    │   ├── require cargo + install published kit-repo [fatal]
     │   ├── create/attach kit worktree [fatal]
     │   ├── kit repo set config.edition nix + kit repo sync [fatal]
     │   └── bot/config.bash [optional]
-    ├── application steps [optional]
+    ├── applications
     │   ├── app/newsboat.bash
     │   ├── app/nvim.bash
     │   ├── app/tmux.bash
-    │   └── app/windows-terminal.bash
-    ├── bot/font-maple.bash [optional]
-    ├── node cli/theme.mjs apply [optional]
+    │   ├── app/windows-terminal.bash [WSL only]
+    │   ├── bot/font-maple.bash
+    │   ├── require node [fatal]
+    │   └── node cli/theme.mjs apply
     └── ghc_step_summary
 ```
 
 Fatal steps abort immediately. Optional leaf scripts run in isolated
 `bash -e -o pipefail` processes; optional failures are collected and make
 `ghc_step_summary` return non-zero.
+
+`setup/nix/bot/step.bash` renders a flat output forest: composition roots pass
+explicit section/step icons, and each step owns one rounded tree. Output is
+color-preserving, normalized into indented lines, and separated from adjacent
+steps by one blank line. Ordinary steps run in isolated shells; environment
+refreshes run in place. The local-settings sync remains unwrapped because
+`kit-repo` owns that output, while a non-zero status is still fatal.
 
 ### Environment Bootstrap (setup/nix/bot/env.bash)
 
