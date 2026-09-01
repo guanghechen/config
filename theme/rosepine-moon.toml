@@ -1,59 +1,59 @@
 # rosepine-moon
 
 [bell]
-color = "#EA9A97"
+color = "#EB6F92"
 
 [colors]
 draw_bold_text_with_bright_colors = false
 transparent_background_colors = true
 
 [colors.cursor]
-text              = "#232136"
-cursor            = "#EB6F92"
+text              = "#E0DEF4"
+cursor            = "#56526E"
 
 [colors.vi_mode_cursor]
-text              = "#232136"
-cursor            = "#E0DEF4"
+text              = "#E0DEF4"
+cursor            = "#56526E"
 
 [colors.search.matches]
-foreground        = "#232136"
-background        = "#908CAA"
+foreground        = "#908CAA"
+background        = "#393552"
 
 [colors.search.focused_match]
 foreground        = "#232136"
-background        = "#3E8FB0"
+background        = "#EA9A97"
 
 [colors.hints.start]
-foreground        = "#232136"
-background        = "#F6C177"
+foreground        = "#908CAA"
+background        = "#2A273F"
 
 [colors.hints.end]
-foreground        = "#232136"
-background        = "#908CAA"
+foreground        = "#6E6A86"
+background        = "#2A273F"
 
 [colors.selection]
-text              = "#232136"
-background        = "#EB6F92"
+text              = "#E0DEF4"
+background        = "#44415A"
 
 [colors.footer_bar]
-foreground        = "#232136"
-background        = "#393552"
+foreground        = "#E0DEF4"
+background        = "#2A273F"
 
 [colors.primary]
 background        = "#232136"
 foreground        = "#E0DEF4"
-dim_foreground    = "#6E6A86"
+dim_foreground    = "#908CAA"
 bright_foreground = "#E0DEF4"
 
 [colors.normal]
-black             = "#232136"
+black             = "#393552"
 red               = "#EB6F92"
 green             = "#3E8FB0"
 yellow            = "#F6C177"
 blue              = "#9CCFD8"
 magenta           = "#C4A7E7"
 cyan              = "#EA9A97"
-white             = "#6E6A86"
+white             = "#E0DEF4"
 
 [colors.bright]
 black             = "#6E6A86"
@@ -63,17 +63,17 @@ yellow            = "#F6C177"
 blue              = "#9CCFD8"
 magenta           = "#C4A7E7"
 cyan              = "#EA9A97"
-white             = "#908CAA"
+white             = "#E0DEF4"
 
 [colors.dim]
-black             = "#232136"
+black             = "#6E6A86"
 red               = "#EB6F92"
 green             = "#3E8FB0"
 yellow            = "#F6C177"
 blue              = "#9CCFD8"
 magenta           = "#C4A7E7"
 cyan              = "#EA9A97"
-white             = "#6E6A86"
+white             = "#E0DEF4"
 
 [[colors.indexed_colors]]
 index = 16
