@@ -272,6 +272,17 @@ describe('windows setup step forest', { skip: !hasPowerShell }, () => {
     assert.doesNotMatch(content, /Invoke-GhcStep[^\n]*local settings/)
   })
 
+  it('runs shared configuration before the Windows-only Codex installer', () => {
+    const content = fs.readFileSync(powershellSetupPath, 'utf8')
+    const sync = content.indexOf('\nSync-GhcKitRepo\n')
+    const config = content.indexOf('Invoke-GhcStep "" config')
+    const codex = content.indexOf('Invoke-GhcStep "󰚩" codex')
+
+    assert.ok(sync >= 0)
+    assert.ok(sync < config)
+    assert.ok(config < codex)
+  })
+
   it('validates PowerShell and the Rust toolchain before persistent mutation', () => {
     const content = fs.readFileSync(powershellSetupPath, 'utf8')
     const firstPersistentMutation = content.indexOf(

@@ -273,9 +273,9 @@ $kitRepoBin = Join-Path $cargoHome "bin\kit-repo.exe"
 Invoke-GhcStep "󰙅" worktree { Ensure-GhcKitWorktree }
 Write-Host ""
 Sync-GhcKitRepo
+Invoke-GhcStep "" config { & (Join-Path $setupWin "config.ps1") } -Optional
 # The installer writes under CODEX_HOME, so run it after kit-repo prepares the directory.
 Invoke-GhcStep "󰚩" codex { & (Join-Path $setupWin "env\codex.ps1") } -Optional
-Invoke-GhcStep "" config { & (Join-Path $setupWin "config.ps1") } -Optional
 
 ## Applications
 Start-GhcSection "󱧺" applications

@@ -277,8 +277,8 @@ setup/win/setup.ps1
     │   ├── require cargo + install published kit-repo [fatal]
     │   ├── create/attach kit worktree [fatal]
     │   ├── kit repo set config.edition win + kit repo sync [fatal]
-    │   ├── env/codex.ps1
-    │   └── config.ps1
+    │   ├── config.ps1
+    │   └── env/codex.ps1
     ├── applications
     │   ├── app/newsboat.ps1
     │   ├── app/nvim.ps1
