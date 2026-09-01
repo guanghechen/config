@@ -107,6 +107,9 @@
       "type": "object",
       "required": ["targets"],
       "properties": {
+        "editions": {
+          "$ref": "#/$defs/nonEmptyEditions"
+        },
         "targets": {
           "type": "array",
           "minItems": 1,
