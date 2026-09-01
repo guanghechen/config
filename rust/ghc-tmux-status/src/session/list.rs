@@ -4,6 +4,8 @@ use crate::model::SessionInfo;
 use crate::session::item::{FocusTarget, MoveDirection, SwapOutcome};
 
 pub const SESSION_ORDER_OPTION: &str = "@GHC_SL_SESSION_ORDER";
+pub const SESSION_ORDER_OPERATION_OPTION: &str = "@GHC_SL_SESSION_ORDER_OP";
+pub const SESSION_ORDER_REVISION_OPTION: &str = "@GHC_SL_SESSION_ORDER_REV";
 const ORDER_SEPARATOR: char = '\t';
 
 pub fn ordered_sessions(sessions: &[SessionInfo], order_value: Option<&str>) -> Vec<SessionInfo> {

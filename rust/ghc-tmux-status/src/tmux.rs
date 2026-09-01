@@ -41,6 +41,24 @@ pub enum GuardedMutationOutcome {
     Skipped,
 }
 
+#[derive(Debug)]
+pub enum CompareAndSetOutcome {
+    Applied,
+    Skipped,
+    Unknown(AppError),
+}
+
+pub struct GlobalOptionCas<'a> {
+    pub option: &'a str,
+    pub expected_value: &'a str,
+    pub next_value: &'a str,
+    pub revision_option: &'a str,
+    pub expected_revision: &'a str,
+    pub next_revision: &'a str,
+    pub operation_option: &'a str,
+    pub operation_token: &'a str,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TmuxOptionScope {
     GlobalSession,
@@ -108,13 +126,78 @@ impl TmuxAdapter {
         ])
     }
 
-    pub fn set_global_option(&self, name: &str, value: &str) -> AppResult<()> {
-        self.tmux_status([
-            "set".to_string(),
-            "-g".to_string(),
-            name.to_string(),
-            value.to_string(),
-        ])
+    /// Updates a global user option only while its server-owned revision witness
+    /// remains current. The value, next revision, and applied marker are emitted
+    /// in one tmux command queue.
+    pub fn compare_and_set_global_option(
+        &self,
+        mutation: GlobalOptionCas<'_>,
+    ) -> AppResult<CompareAndSetOutcome> {
+        let command_list = tmux_command_sequence(&[
+            tmux_command_string(&[
+                "set".to_string(),
+                "-g".to_string(),
+                mutation.option.to_string(),
+                mutation.next_value.to_string(),
+            ]),
+            tmux_command_string(&[
+                "set".to_string(),
+                "-s".to_string(),
+                mutation.revision_option.to_string(),
+                mutation.next_revision.to_string(),
+            ]),
+            tmux_command_string(&[
+                "set".to_string(),
+                "-s".to_string(),
+                mutation.operation_option.to_string(),
+                mutation.operation_token.to_string(),
+            ]),
+            marker_command(SCHEDULER_APPLIED_MARK),
+        ]);
+        let result = self.guarded_mutation(
+            &[TmuxOptionGuard {
+                option: mutation.revision_option,
+                expected: mutation.expected_revision,
+            }],
+            command_list,
+        );
+        match result {
+            Ok(GuardedMutationOutcome::Applied) => Ok(CompareAndSetOutcome::Applied),
+            Ok(GuardedMutationOutcome::Skipped) => Ok(CompareAndSetOutcome::Skipped),
+            Err(error) => self.reconcile_global_option_cas(mutation, error),
+        }
+    }
+
+    fn reconcile_global_option_cas(
+        &self,
+        mutation: GlobalOptionCas<'_>,
+        error: AppError,
+    ) -> AppResult<CompareAndSetOutcome> {
+        let observed = match self.show_options(&[
+            (TmuxOptionScope::GlobalSession, mutation.option),
+            (TmuxOptionScope::Server, mutation.revision_option),
+            (TmuxOptionScope::Server, mutation.operation_option),
+        ]) {
+            Ok(observed) => observed,
+            Err(reconcile_error) => {
+                return Ok(CompareAndSetOutcome::Unknown(AppError::Render(format!(
+                    "global option CAS failed ambiguously: {error}; reconciliation failed: {reconcile_error}"
+                ))));
+            }
+        };
+        let [value, revision, operation] = observed.as_slice() else {
+            return Ok(CompareAndSetOutcome::Unknown(error));
+        };
+        if value == mutation.next_value
+            && revision == mutation.next_revision
+            && operation == mutation.operation_token
+        {
+            return Ok(CompareAndSetOutcome::Applied);
+        }
+        if value == mutation.expected_value && revision == mutation.expected_revision {
+            return Err(error);
+        }
+        Ok(CompareAndSetOutcome::Unknown(error))
     }
 
     /// Reads explicitly scoped options in one tmux invocation. Marker-delimited
@@ -485,7 +568,10 @@ fn session_navigation_command_args() -> Vec<String> {
     );
     append_options_commands(
         &mut args,
-        &[(TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER")],
+        &[
+            (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
+            (TmuxOptionScope::Server, "@GHC_SL_SESSION_ORDER_REV"),
+        ],
     );
     push_tmux_command(
         &mut args,
@@ -838,16 +924,16 @@ fn parse_session_navigation_output(output: &str) -> AppResult<SessionNavigationS
         .filter(|name| !name.is_empty())
         .ok_or_else(|| AppError::TmuxParse("invalid navigation context".to_string()))?
         .to_string();
-    let order_value = parse_option_values(&mut lines, 1)?
-        .into_iter()
-        .next()
-        .unwrap_or_default();
+    let mut option_values = parse_option_values(&mut lines, 2)?.into_iter();
+    let order_value = option_values.next().unwrap_or_default();
+    let order_revision = option_values.next().unwrap_or_default();
     expect_marker(lines.next(), SESSIONS_MARK)?;
     let sessions = lines.filter_map(parse_navigation_session_line).collect();
     Ok(SessionNavigationSnapshot {
         current_session_name,
         sessions,
         order_value,
+        order_revision,
     })
 }
 
@@ -1182,7 +1268,7 @@ $2	90"
 
     #[test]
     fn parses_minimal_session_navigation_snapshot() {
-        let options = option_section(&["$2\t$1"]);
+        let options = option_section(&["$2\t$1", "7"]);
         let output = format!(
             "{NAVIGATION_MARK}{FIELD_SEP}main\n{options}\n{SESSIONS_MARK}\n$1\tmain\n$2\twork"
         );
@@ -1190,6 +1276,7 @@ $2	90"
         let snapshot = parse_session_navigation_output(&output).unwrap();
         assert_eq!(snapshot.current_session_name, "main");
         assert_eq!(snapshot.order_value, "$2\t$1");
+        assert_eq!(snapshot.order_revision, "7");
         assert_eq!(snapshot.sessions.len(), 2);
         assert_eq!(snapshot.sessions[1].name, "work");
     }

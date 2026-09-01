@@ -103,6 +103,7 @@ pub struct SessionNavigationSnapshot {
     pub current_session_name: String,
     pub sessions: Vec<SessionInfo>,
     pub order_value: String,
+    pub order_revision: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

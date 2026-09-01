@@ -30,6 +30,8 @@ Status rendering 和 commit contract 仍由 `statusline.md` 定义。
 |---|---|---|
 | group classification | `session::group` | pure derivation |
 | virtual order | `@GHC_SL_SESSION_ORDER` | `session swap` command |
+| order CAS revision | server `@GHC_SL_SESSION_ORDER_REV` | `session swap` command |
+| last order operation | server `@GHC_SL_SESSION_ORDER_OP` | `session swap` command |
 | focus target | `session::list` | pure derivation |
 | client current session | tmux client | `switch-client` |
 | client last session | tmux client | tmux native history |
@@ -67,10 +69,14 @@ swap 和 numeric index 必须共享同一个 group result。
 
 ```text
 @GHC_SL_SESSION_ORDER = $2\t$7\t$1...
+@GHC_SL_SESSION_ORDER_REV = 42
+@GHC_SL_SESSION_ORDER_OP = <process-id>:<unique-revision>
 ```
 
-只存 tmux session id，不存 name。ID 在 server 生命周期内稳定，因此 rename 不会改变
-顺序。
+Order 是 global-session option，只存 tmux session id，不存 name。Revision 是 server option，
+只作为 compare-and-set witness。Operation token 是 server option，用于 client 在 applied marker
+丢失或 timeout 后确认本次 mutation 是否已经提交。ID 在 server 生命周期内稳定，因此 rename
+不会改变顺序。
 
 ### 4.2 Normalization
 
@@ -112,8 +118,17 @@ ghc-tmux-status session swap <prev|next>
 
 - visible group 多于一个 session 时，prev/next 与 focus 一样 wrap；
 - 只有一个 visible session 时返回 typed no-op，并显示边界 message；
-- changed order 先写入 `@GHC_SL_SESSION_ORDER`；
-- 写入成功后触发 `manual-apply` 刷新 statusline；
+- changed order 基于读取到的旧值计算；
+- CAS witness 使用 server-owned `@GHC_SL_SESSION_ORDER_REV`；order 与 revision 在同一
+  guarded tmux queue 内提交，不受 session-local user option shadow；每次提交同时写入唯一
+  `@GHC_SL_SESSION_ORDER_OP`；
+- CAS conflict 时重新读取并计算，最多尝试三次；超限时显示 retry message，不覆盖新值；
+- CAS client result 为 timeout、IO 或 parse error 时读取 order/revision/operation token reconcile：
+  精确命中本次 token 表示 committed；状态未变表示 pre-commit failure；其他状态为 `Unknown`；
+- order 写入成功是 mutation terminal point，随后触发 `manual-apply` 刷新 statusline；
+- post-commit render 在独立 binary child 中执行并受 10 秒 timeout 约束，避免 parent 的全局
+  watchdog 越过 mutation terminal point；失败时不 rollback，也不把已完成的 swap 报告为失败；显示
+  `Session order updated; status refresh pending`，等待后续 reconcile；
 - persistence 失败时，旧 order 继续作为 source of truth。
 
 Swap 只改变展示/导航顺序，不切换 current session。
@@ -156,6 +171,11 @@ Render、focus 与 swap 必须调用同一 `ordered_group` path，禁止各自�
 | current session 不可见 | no-op / abort boundary | 不产生错误切换 |
 | focus target 不存在 | no-op | 显示 message |
 | order persistence 失败 | abort mutation | 旧 order 保持有效 |
+| concurrent order conflict | bounded retry | 最多三次；超限后显示 retry message |
+| CAS result ambiguous, operation matched | reconcile committed | 继续 post-commit render |
+| CAS result ambiguous, state unknown | preserve external state | 显示 inspect-order message，不自动重试 |
+| post-commit render 失败 | preserve committed order | 返回成功并显示 refresh pending |
+| swap binary unavailable/failure | isolate | wrapper 显示 message，不泄漏 command output |
 | Rust focus unavailable | fallback | shell 使用 tmux 当前顺序 |
 | native last session 不存在 | native error | tmux 显示 message/error |
 
@@ -164,6 +184,8 @@ Render、focus 与 swap 必须调用同一 `ordered_group` path，禁止各自�
 - Rendered index 与 numeric focus index 完全一致。
 - Reorder 不改变 group membership。
 - Persisted order 只包含 session ids。
+- Order revision 与 order 在同一 guarded tmux queue 内推进。
+- 每个 committed order 写入对应的 server operation token。
 - Rename 不改变 order。
 - Focus 不修改 order。
 - Swap 修改 order，但不切换 session。
@@ -175,7 +197,12 @@ Render、focus 与 swap 必须调用同一 `ordered_group` path，禁止各自�
 
 - stale、duplicate、missing-new ids；
 - index focus 与 wrapped prev/next；
-- wrapped swap、single-session no-op；
+- wrapped swap、single-session no-op、unset order；
+- concurrent swap serializability 与 CAS conflict；
+- applied marker timeout 后的 committed/unknown outcome reconciliation；
+- order committed / render failed 的 partial-success；
+- post-commit render child timeout 的 recoverable boundary；
+- swap wrapper 的 success、failure 与 unavailable isolation；
 - 其他 group interleaved slots 不变；
 - render/focus/swap 共享 ordered group；
 - last-session snapshot 与 visible/invisible marker；

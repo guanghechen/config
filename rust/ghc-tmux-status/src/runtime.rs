@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use crate::commit::{CommitPlanner, TmuxCommandPlan};
 use crate::composer::{render_cache_key, render_status02};
@@ -23,14 +23,18 @@ use crate::model::{
 };
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::platform::current_platform;
-use crate::process::OperationDeadline;
+use crate::process::{OperationDeadline, output_with_timeout};
 use crate::scheduler::{ClaimPlan, SchedulerSnapshot, SchedulerTask, plan_claim};
 use crate::session::{
-    FocusTarget, MoveDirection, SESSION_ORDER_OPTION, SessionGrouper, SwapOutcome, focus_target,
-    ordered_sessions, swap_current,
+    FocusTarget, MoveDirection, SESSION_ORDER_OPERATION_OPTION, SESSION_ORDER_OPTION,
+    SESSION_ORDER_REVISION_OPTION, SessionGrouper, SwapOutcome, focus_target, ordered_sessions,
+    swap_current,
 };
 use crate::status_length::{status_left_length, status_right_length};
-use crate::tmux::{GuardedMutationOutcome, TmuxAdapter, TmuxOptionGuard, TmuxOptionScope};
+use crate::tmux::{
+    CompareAndSetOutcome, GlobalOptionCas, GuardedMutationOutcome, TmuxAdapter, TmuxOptionGuard,
+    TmuxOptionScope,
+};
 use crate::util::format::format_percent_width_2;
 use crate::util::time::unix_timestamp_seconds;
 use crate::util::width::display_width;
@@ -42,6 +46,9 @@ use crate::widget::{
 pub struct StatusRuntime {
     tmux: TmuxAdapter,
 }
+
+const MAX_SESSION_SWAP_ATTEMPTS: usize = 3;
+const SESSION_SWAP_RENDER_TIMEOUT: Duration = Duration::from_secs(10);
 
 const METRIC_CLAIM_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
@@ -631,30 +638,78 @@ impl StatusRuntime {
     }
 
     pub fn swap_session(&self, direction: MoveDirection) -> AppResult<()> {
-        let snapshot = self.tmux.read_session_navigation()?;
-        let group = ordered_group(
-            &snapshot.current_session_name,
-            &snapshot.sessions,
-            Some(&snapshot.order_value),
-        );
-        let order_value = Some(snapshot.order_value.as_str());
-        match swap_current(
-            &snapshot.sessions,
-            &group.sessions,
-            &snapshot.current_session_name,
-            order_value,
-            direction,
-        ) {
-            SwapOutcome::Changed(order) => {
-                self.tmux.set_global_option(SESSION_ORDER_OPTION, &order)?;
-                self.apply(RenderEvent::manual_apply())
-            }
-            SwapOutcome::AlreadyFirst => self.tmux.display_message("Already first session"),
-            SwapOutcome::AlreadyLast => self.tmux.display_message("Already last session"),
-            SwapOutcome::CurrentMissing => {
-                self.tmux.display_message("Current session is not visible")
+        for _ in 0..MAX_SESSION_SWAP_ATTEMPTS {
+            let snapshot = self.tmux.read_session_navigation()?;
+            let group = ordered_group(
+                &snapshot.current_session_name,
+                &snapshot.sessions,
+                Some(&snapshot.order_value),
+            );
+            let order_value = Some(snapshot.order_value.as_str());
+            match swap_current(
+                &snapshot.sessions,
+                &group.sessions,
+                &snapshot.current_session_name,
+                order_value,
+                direction,
+            ) {
+                SwapOutcome::Changed(order) => {
+                    let next_revision = next_session_order_revision(&snapshot.order_revision);
+                    let operation_token = next_session_order_operation_token();
+                    let outcome = self.tmux.compare_and_set_global_option(GlobalOptionCas {
+                        option: SESSION_ORDER_OPTION,
+                        expected_value: &snapshot.order_value,
+                        next_value: &order,
+                        revision_option: SESSION_ORDER_REVISION_OPTION,
+                        expected_revision: &snapshot.order_revision,
+                        next_revision: &next_revision,
+                        operation_option: SESSION_ORDER_OPERATION_OPTION,
+                        operation_token: &operation_token,
+                    })?;
+                    match outcome {
+                        CompareAndSetOutcome::Skipped => continue,
+                        CompareAndSetOutcome::Unknown(error) => {
+                            if trace_enabled() {
+                                trace_line(
+                                    "session",
+                                    format!("action=swap-outcome-unknown error={error}"),
+                                );
+                            }
+                            let _ = self.tmux.display_message(
+                                "Session swap outcome unknown; inspect session order",
+                            );
+                            return Ok(());
+                        }
+                        CompareAndSetOutcome::Applied => {}
+                    }
+
+                    if let Err(error) = render_session_order_change() {
+                        if trace_enabled() {
+                            trace_line(
+                                "session",
+                                format!("action=swap-render-pending error={error}"),
+                            );
+                        }
+                        let _ = self
+                            .tmux
+                            .display_message("Session order updated; status refresh pending");
+                    }
+                    return Ok(());
+                }
+                SwapOutcome::AlreadyFirst => {
+                    return self.tmux.display_message("Already first session");
+                }
+                SwapOutcome::AlreadyLast => {
+                    return self.tmux.display_message("Already last session");
+                }
+                SwapOutcome::CurrentMissing => {
+                    return self.tmux.display_message("Current session is not visible");
+                }
             }
         }
+
+        self.tmux
+            .display_message("Session order changed concurrently; retry")
     }
 
     fn commit_plan(
@@ -1047,6 +1102,43 @@ fn next_render_revision() -> u64 {
     time_bits ^ process_bits ^ counter
 }
 
+fn next_session_order_revision(current: &str) -> String {
+    current
+        .parse::<u64>()
+        .map(|revision| revision.wrapping_add(1))
+        .unwrap_or(1)
+        .to_string()
+}
+
+fn next_session_order_operation_token() -> String {
+    format!("{}:{}", std::process::id(), next_render_revision())
+}
+
+fn render_session_order_change() -> AppResult<()> {
+    let executable = std::env::current_exe()?;
+    let executable = executable.to_str().ok_or_else(|| {
+        AppError::Render("current executable path is not valid UTF-8".to_string())
+    })?;
+    run_bounded_command(
+        executable,
+        &["apply", "manual-apply"],
+        SESSION_SWAP_RENDER_TIMEOUT,
+    )
+}
+
+fn run_bounded_command(program: &str, args: &[&str], timeout: Duration) -> AppResult<()> {
+    let output = output_with_timeout(program, args, timeout)?;
+    if output.status.success() {
+        return Ok(());
+    }
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    Err(AppError::Render(if stderr.is_empty() {
+        format!("post-commit render process exited with {}", output.status)
+    } else {
+        format!("post-commit render process failed: {stderr}")
+    }))
+}
+
 fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
     ordered_group_for_session(snapshot, &snapshot.current_session_name)
 }
@@ -1128,17 +1220,19 @@ fn focus_missing_message(target: FocusTarget) -> String {
 mod tests {
     use std::collections::BTreeMap;
     use std::rc::Rc;
+    use std::time::Duration;
 
     use super::{
         LiveContextState, MetricPublishSummary, context_state_from_snapshot,
         current_session_context_from_snapshot, metric_health_sets, next_render_revision,
-        normalize_network_interface, ordered_group_from_snapshot, parse_metric_error_count,
-        render_session_statuses, resolve_session_layouts, sanitize_metric_error,
-        scheduler_outcome_value,
+        next_session_order_revision, normalize_network_interface, ordered_group_from_snapshot,
+        parse_metric_error_count, render_session_statuses, resolve_session_layouts,
+        run_bounded_command, sanitize_metric_error, scheduler_outcome_value,
     };
     use crate::config::{
         METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
     };
+    use crate::error::AppError;
     use crate::layout::LayoutEngine;
     use crate::model::{LayoutKind, RenderContext, RowsOverride, SessionInfo, TmuxSnapshot};
 
@@ -1332,6 +1426,23 @@ mod tests {
     #[test]
     fn render_revisions_are_unique_within_a_process() {
         assert_ne!(next_render_revision(), next_render_revision());
+    }
+
+    #[test]
+    fn session_order_revision_advances_and_repairs_invalid_values() {
+        assert_eq!(next_session_order_revision(""), "1");
+        assert_eq!(next_session_order_revision("invalid"), "1");
+        assert_eq!(next_session_order_revision("41"), "42");
+        assert_eq!(next_session_order_revision(&u64::MAX.to_string()), "0");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn post_commit_render_timeout_is_a_recoverable_error() {
+        let error = run_bounded_command("/bin/sh", &["-c", "sleep 1"], Duration::from_millis(20))
+            .unwrap_err();
+
+        assert!(matches!(error, AppError::CommandTimeout { .. }));
     }
 
     #[test]
