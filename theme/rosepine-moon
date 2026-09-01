@@ -1,20 +1,17 @@
 # rosepine-moon
 
 # ANSI Colors
-# Dark themes: palette 0 = surface1, palette 7 = subtext0
-# Light theme: palette 0 = subtext1, palette 7 = surface2
-palette =  0=#232136
+# Rosé Pine ANSI palette
+palette =  0=#393552
 palette =  1=#EB6F92
 palette =  2=#3E8FB0
 palette =  3=#F6C177
 palette =  4=#9CCFD8
 palette =  5=#C4A7E7
 palette =  6=#EA9A97
-palette =  7=#908CAA
+palette =  7=#E0DEF4
 
 # Bright colors
-# Dark themes: palette 8 = surface2, palette 15 = subtext1
-# Light theme: palette 8 = subtext0, palette 15 = surface1
 palette =  8=#6E6A86
 palette =  9=#EB6F92
 palette = 10=#3E8FB0
@@ -29,15 +26,15 @@ background = #232136
 foreground = #E0DEF4
 
 # Cursor colors
-cursor-color = #EB6F92
-cursor-text = #2A273F
+cursor-color = #E0DEF4
+cursor-text = #232136
 
 # Selection colors
 selection-background = #44415A
 selection-foreground = #E0DEF4
 
 # Split divider color
-split-divider-color = #393552
+split-divider-color = #56526E
 
 # Unfocused split fill color
 unfocused-split-fill = #2A273F
