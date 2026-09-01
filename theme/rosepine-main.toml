@@ -2,10 +2,13 @@
 
 # rosepine-main
 
+[app]
+overall                 = { bg = "#191724" }
+
 [cmp]
-border                  = { fg = "#9CCFD8" }
-active                  = { reversed = true }
-inactive                = {}
+border                  = { fg = "#31748F" }
+active                  = { fg = "#E0DEF4", bg = "#403D52", bold = true }
+inactive                = { fg = "#908CAA" }
 
 # Icons
 icon_file               = ""
@@ -13,52 +16,54 @@ icon_folder             = ""
 icon_command            = ""
 
 [confirm]
-border                  = { fg = "#9CCFD8" }
-title                   = { fg = "#9CCFD8" }
-body                    = {}
-list                    = {}
-btn_yes                 = { reversed = true }
-btn_no                  = {}
+border                  = { fg = "#524F67" }
+title                   = { fg = "#EB6F92", bold = true }
+body                    = { fg = "#E0DEF4" }
+list                    = { fg = "#E0DEF4" }
+btn_yes                 = { fg = "#191724", bg = "#31748F", bold = true }
+btn_no                  = { fg = "#191724", bg = "#E0DEF4", bold = true }
 btn_labels              = [ "  [Y]es  ", "  (N)o  " ]
 
 [help]
-border                  = { fg = "#9CCFD8" }
-chord                   = { fg = "#EBBCBA" }
-action                  = {}
-hovered                 = { reversed = true,    bold = true }
+border                  = { fg = "#524F67" }
+chord                   = { fg = "#9CCFD8" }
+action                  = { fg = "#F6C177" }
+hovered                 = { fg = "#E0DEF4", bg = "#403D52", bold = true }
 
 [input]
-border                  = { fg = "#6E6A86" }
-title                   = {}
-value                   = {}
-selected                = { reversed = true }
+border                  = { fg = "#31748F" }
+title                   = { bold = true }
+value                   = { fg = "#E0DEF4" }
+selected                = { fg = "#E0DEF4", bg = "#403D52" }
 
 [mgr]
-cwd                     = { fg = "#EBBCBA" }
+cwd                     = { fg = "#9CCFD8" }
 border_symbol           = "│"
 border_style            = { fg = "#524F67" }
-count_copied            = { fg = "#1F1D2E",     bg = "#31748F" }
-count_cut               = { fg = "#1F1D2E",     bg = "#EB6F92" }
-count_selected          = { fg = "#1F1D2E",     bg = "#EB6F92" }
+count_copied            = { fg = "#E0DEF4", bg = "#31748F" }
+count_cut               = { fg = "#E0DEF4", bg = "#EB6F92" }
+count_selected          = { fg = "#191724", bg = "#F6C177" }
 find_keyword            = { fg = "#F6C177",  bold = true, italic = true }
 find_position           = { fg = "#C4A7E7",  bg = "reset", bold = true, italic = true }
 marker_copied           = { fg = "#31748F",   bg = "#31748F" }
 marker_cut              = { fg = "#EB6F92",     bg = "#EB6F92" }
 marker_marked           = { fg = "#EBBCBA",    bg = "#EBBCBA" }
-marker_selected         = { fg = "#EB6F92",    bg = "#EB6F92", dim = true, blink = true }
+marker_selected         = { fg = "#F6C177", bg = "#F6C177", dim = true, blink = true }
+symlink_target          = { italic = true }
 syntect_theme           = ""
 
 [indicator]
-current                 = { fg = "#1F1D2E",     bg = "#EB6F92", bold = true }
-preview                 = { fg = "#EB6F92",    underline = true }
+parent                  = { fg = "#908CAA", bg = "#21202E" }
+current                 = { fg = "#E0DEF4", bg = "#403D52", bold = true }
+preview                 = { fg = "#EBBCBA", underline = true }
 
 [mode]
-normal_main             = { fg = "#1F1D2E",     bg = "#EBBCBA",    bold = true }
-normal_alt              = { fg = "#908CAA",     bg = "#26233A" }
-select_main             = { fg = "#1F1D2E",     bg = "#EB6F92",    bold = true }
-select_alt              = { fg = "#908CAA",     bg = "#26233A" }
-unset_main              = { fg = "#1F1D2E",     bg = "#31748F",  bold = true }
-unset_alt               = { fg = "#908CAA",     bg = "#26233A",  bold = true }
+normal_main             = { fg = "#191724", bg = "#9CCFD8", bold = true }
+normal_alt              = { fg = "#191724", bg = "#E0DEF4", bold = true }
+select_main             = { fg = "#191724", bg = "#EB6F92", bold = true }
+select_alt              = { fg = "#191724", bg = "#E0DEF4", bold = true }
+unset_main              = { fg = "#191724", bg = "#EB6F92", bold = true }
+unset_alt               = { fg = "#191724", bg = "#E0DEF4", bold = true }
 
 [notify]
 title_info              = { fg = "#31748F" }
@@ -69,54 +74,54 @@ icon_warn               = ""
 icon_error              = ""
 
 [pick]
-border                  = { fg = "#9CCFD8" }
+border                  = { fg = "#31748F" }
 active                  = { fg = "#C4A7E7",  bold = true }
-inactive                = {}
+inactive                = { fg = "#908CAA" }
 
 [spot]
-border                  = { fg = "#9CCFD8" }
-title                   = { fg = "#9CCFD8" }
+border                  = { fg = "#524F67" }
+title                   = { fg = "#9CCFD8", bold = true }
 
 [status]
-overall                 = { fg = "#908CAA" }
-perm_exec               = { fg = "#EB6F92",     bold = true }
-perm_read               = { fg = "#908CAA",     bold = true }
-perm_sep                = { fg = "#6E6A86",     bold = true }
-perm_write              = { fg = "#F6C177",  bold = true }
-perm_type               = { fg = "#9CCFD8",    bold = true }
-progress_error          = { fg = "#EB6F92",     bg = "#1F1D2E" }
-progress_label          = { fg = "#908CAA",     bold = true }
-progress_normal         = { fg = "#908CAA",     bg = "#1F1D2E" }
+overall                 = { fg = "#908CAA", bg = "#191724" }
+perm_exec               = { fg = "#9CCFD8", bold = true }
+perm_read               = { fg = "#F6C177", bold = true }
+perm_sep                = { fg = "#6E6A86", bold = true }
+perm_write              = { fg = "#EB6F92", bold = true }
+perm_type               = { fg = "#C4A7E7", bold = true }
+progress_error          = { fg = "#EB6F92", bg = "#21202E" }
+progress_label          = { fg = "#E0DEF4", bold = true }
+progress_normal         = { fg = "#31748F", bg = "#21202E" }
 sep_left                = { open = "",         close = "" }
 sep_right               = { open = "",         close = "" }
 
 [tabs]
-active                  = { fg = "#1F1D2E",     bg = "#EB6F92", bold = true }
-inactive                = { fg = "#EB6F92",    bg = "#26233A" }
+active                  = { fg = "#EBBCBA", bg = "#26233A", bold = true }
+inactive                = { fg = "#6E6A86", bg = "#1F1D2E" }
 sep_inner               = { open = "",         close = "" }
 sep_outer               = { open = "",         close = "" }
 
 [tasks]
-border                  = { fg = "#9CCFD8" }
-title                   = {}
-hovered                 = { fg = "#C4A7E7",  underline = true }
+border                  = { fg = "#31748F" }
+title                   = { bold = true }
+hovered                 = { fg = "#C4A7E7", bg = "#403D52", bold = true }
 
 [which]
 cols                    = 3
 mask                    = { bg = "#1F1D2E" }
 cand                    = { fg = "#EBBCBA" }
-rest                    = { fg = "#908CAA" }
-desc                    = { fg = "#C4A7E7" }
+rest                    = { fg = "#6E6A86" }
+desc                    = { fg = "#F6C177" }
 separator               = "  "
-separator_style         = { fg = "#26233A" }
+separator_style         = { fg = "#6E6A86" }
 
 [filetype]
 rules = [
   # Images
-  { mime = "**/image/*", fg = "#F6C177" },
+  { mime = "**/image/*", fg = "#C4A7E7" },
 
   # Media
-  { mime = "**/{audio,video}/*", fg = "#C4A7E7" },
+  { mime = "**/{audio,video}/*", fg = "#F6C177" },
 
   # Archives
   { mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#EB6F92" },
@@ -128,16 +133,16 @@ rules = [
   # { mime = "inode/empty", fg = "#EB6F92" },
 
   # Special files
-  { url = "*", is = "orphan", bg = "#EB6F92" },
+  { url = "*", is = "orphan", fg = "#191724", bg = "#EB6F92" },
   { url = "*", is = "exec"  , fg = "#31748F" },
 
   # Dummy files
-  { url = "*", is = "dummy", bg = "#EB6F92" },
-  { url = "*/", is = "dummy", bg = "#EB6F92" },
+  { url = "*", is = "dummy", fg = "#191724", bg = "#EB6F92" },
+  { url = "*/", is = "dummy", fg = "#191724", bg = "#EB6F92" },
 
   # Fallback
-  # { url = "*", fg = "#908CAA" },
-  { url = "*/", fg = "#9CCFD8" }
+  { url = "*", fg = "#E0DEF4" },
+  { url = "*/", fg = "#31748F" }
 ]
 
 [icon]
