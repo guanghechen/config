@@ -2,20 +2,20 @@
   "name": "rosepine-moon",
   "custom": {
     "panel_bg": "#232136",
-    "surface_dim": "#393552",
-    "surface0": "#44415A",
-    "surface1": "#56526E",
+    "surface_dim": "#2A273F",
+    "surface0": "#393552",
+    "surface1": "#44415A",
     "overlay0": "#6E6A86",
-    "overlay1": "#6E6A86",
+    "overlay1": "#908CAA",
     "text": "#E0DEF4",
     "subtext0": "#908CAA",
-    "accent": "#EB6F92",
+    "accent": "#EA9A97",
     "mauve": "#C4A7E7",
     "green": "#3E8FB0",
     "yellow": "#F6C177",
     "red": "#EB6F92",
     "blue": "#9CCFD8",
     "teal": "#EA9A97",
-    "peach": "#EA9A97"
+    "peach": "#F6C177"
   }
 }

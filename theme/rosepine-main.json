@@ -2,20 +2,20 @@
   "name": "rosepine-main",
   "custom": {
     "panel_bg": "#191724",
-    "surface_dim": "#26233A",
-    "surface0": "#403D52",
-    "surface1": "#524F67",
+    "surface_dim": "#1F1D2E",
+    "surface0": "#26233A",
+    "surface1": "#403D52",
     "overlay0": "#6E6A86",
-    "overlay1": "#6E6A86",
+    "overlay1": "#908CAA",
     "text": "#E0DEF4",
     "subtext0": "#908CAA",
-    "accent": "#EB6F92",
+    "accent": "#EBBCBA",
     "mauve": "#C4A7E7",
     "green": "#31748F",
     "yellow": "#F6C177",
     "red": "#EB6F92",
     "blue": "#9CCFD8",
     "teal": "#EBBCBA",
-    "peach": "#EBBCBA"
+    "peach": "#F6C177"
   }
 }
