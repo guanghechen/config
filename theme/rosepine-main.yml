@@ -14,29 +14,30 @@ gui:
     "^(user/[^/]+/)?release": '#9CCFD8'
   theme:
     activeBorderColor:
-      - '#C4A7E7'
+      - '#31748F'
       - bold
     cherryPickedCommitBgColor:
       - '#EBBCBA'
     cherryPickedCommitFgColor:
-      - '#191724'
+      - '#1F1D2E'
     defaultFgColor:
-      - '#908CAA'
+      - '#E0DEF4'
     inactiveBorderColor:
       - '#6E6A86'
     inactiveViewSelectedLineBgColor:
-      - '#26233A'
+      - '#1F1D2E'
     markedBaseCommitBgColor:
       - '#F6C177'
     markedBaseCommitFgColor:
-      - '#191724'
+      - '#9CCFD8'
     optionsTextColor:
-      - '#EBBCBA'
+      - '#9CCFD8'
     searchingActiveBorderColor:
       - '#EBBCBA'
       - bold
     selectedLineBgColor:
       - '#403D52'
+      - bold
     unstagedChangesColor:
       - '#EB6F92'
 
