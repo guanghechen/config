@@ -49,7 +49,7 @@ if ($null -ne $installedItem -and ($installedItem.Attributes -band [IO.FileAttri
   throw "[setup kit-repo] legacy development link found at $installedBinary. Run: `$env:BIN_DIR='$cargoBin'; cargo unlink"
 }
 
-Write-Host "`n  [setup kit-repo] installing the latest published version..." -ForegroundColor Cyan
+Write-Host "installing the latest published version..." -ForegroundColor Cyan
 cargo install --locked --root "$cargoHome" guanghechen-kit-repo
 if ($LASTEXITCODE -ne 0) {
   throw "[setup kit-repo] cargo install failed (exit code: $LASTEXITCODE)."

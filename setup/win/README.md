@@ -20,6 +20,11 @@
   - Install [App Installer](https://learn.microsoft.com/en-us/windows/package-manager/winget/) if it is not already available.
   - Ensure `winget` is available on `PATH` before running the bootstrap script.
 
+* Install PowerShell 7.4 or newer
+
+  - Run `winget install -e --source winget --id Microsoft.PowerShell`.
+  - Ensure `pwsh` is available on `PATH` and run the bootstrap from `pwsh`.
+
 * Install rust
 
   - Download exe from https://www.rust-lang.org/tools/install
@@ -70,4 +75,3 @@
     sudo apt-get upgrade -y
     sudo usermod -a -G docker $USER
     ```
-

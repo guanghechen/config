@@ -259,6 +259,49 @@ steps by one blank line. Ordinary steps run in isolated shells; environment
 refreshes run in place. The local-settings sync remains unwrapped because
 `kit-repo` owns that output, while a non-zero status is still fatal.
 
+### Bootstrap Flow (Windows)
+
+```
+setup/win/setup.ps1
+    ├── require PowerShell 7.4+ + git + winget + cargo + rustc [fatal]
+    ├── persist base environment + clone or fast-forward this repo [fatal]
+    ├── source bot/step.ps1 [fatal]
+    ├── bootstrap
+    │   ├── load env/setting.ps1 [fatal]
+    │   └── winget.ps1 [optional]
+    ├── environment
+    │   ├── env/miniforge.ps1
+    │   ├── env/bun.ps1
+    │   └── env/node.ps1
+    ├── configuration
+    │   ├── require cargo + install published kit-repo [fatal]
+    │   ├── create/attach kit worktree [fatal]
+    │   ├── kit repo set config.edition win + kit repo sync [fatal]
+    │   ├── env/codex.ps1
+    │   └── config.ps1
+    ├── applications
+    │   ├── app/newsboat.ps1
+    │   ├── app/nvim.ps1
+    │   ├── bot/font-maple.ps1
+    │   ├── require node [fatal]
+    │   └── theme.ps1
+    └── Complete-GhcSetup
+```
+
+`setup/win/bot/step.ps1` implements the same forest and optional-failure
+collection as the Bash helper. PowerShell and native-command errors are
+terminating by default; required failures throw an exception carrying the
+original exit code in `Exception.Data["ExitCode"]`, so an
+`Invoke-Expression` caller keeps its PowerShell process. Output streams are
+combined, color-preserved, and rendered beneath the step rail. Steps execute in
+child scopes within the setup process, so process environment mutations
+persist; scripts that require shell functions initialize them locally.
+Expected non-zero probes opt out of native error promotion at their call site.
+The entrypoint rejects PowerShell versions older than 7.4 before any mutation.
+The `kit-repo` local-settings sync remains unwrapped and fatal. Environment
+and application leaves, plus Codex and config setup, are optional and collected
+in the final summary.
+
 ### Environment Bootstrap (setup/nix/bot/env.bash)
 
 The `setup/nix/bot/env.bash` script is sourced by most setup scripts to ensure PATH and environment variables are properly configured:

@@ -180,12 +180,12 @@ $installedInSystemScope = Test-MapleInstalledAt -FontDir $systemFontDir
 $installedInAnyScope = $installedInUserScope -or $installedInSystemScope
 
 if ((-not $Force) -and $installedInAnyScope) {
-  Write-Host "  [setup font (Maple)] Maple is already installed in user/system scope. (skipped)" -ForegroundColor Yellow
+  Write-Host "Maple is already installed in user/system scope (skipped)" -ForegroundColor Yellow
   return
 }
 
 if (-not (Test-IsAdmin)) {
-  Write-Host "  [setup font (Maple)] requesting Administrator permission..." -ForegroundColor Cyan
+  Write-Host "requesting Administrator permission..." -ForegroundColor Cyan
   Invoke-ElevatedSelf -Force:$Force
   return
 }
@@ -193,7 +193,7 @@ if (-not (Test-IsAdmin)) {
 New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
 Remove-Item -Path (Join-Path $downloadDir "*") -Recurse -Force -ErrorAction SilentlyContinue
 
-Write-Host "  [setup font (Maple)] downloading MapleMono-NF-CN fonts..." -ForegroundColor Cyan
+Write-Host "downloading MapleMono-NF-CN fonts..." -ForegroundColor Cyan
 Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
 
 $zipSha256 = (Get-FileHash -Path $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -201,7 +201,7 @@ if ($zipSha256 -ne $expectedZipSha256) {
   throw "Maple font archive checksum mismatch. Expected: $expectedZipSha256, Actual: $zipSha256"
 }
 
-Write-Host "  [setup font (Maple)] installing MapleMono fonts..." -ForegroundColor Cyan
+Write-Host "installing MapleMono fonts..." -ForegroundColor Cyan
 Expand-Archive -Path $zipPath -DestinationPath $downloadDir -Force
 Remove-Item -Path $zipPath -Force
 
@@ -217,7 +217,7 @@ if ($missingFontFiles.Count -gt 0) {
 }
 
 if ($Force -and $installedInAnyScope) {
-  Write-Host "  [setup font (Maple)] force removing existing MapleMono-NF-CN fonts..." -ForegroundColor Cyan
+  Write-Host "force removing existing MapleMono-NF-CN fonts..." -ForegroundColor Cyan
 }
 
 Remove-MapleFontsAt -FontDir $userFontDir -RegistryPath $userRegistryPath
@@ -250,4 +250,4 @@ if ($installedRegistryItems.Count -ne $expectedMapleFontFiles.Count) {
   throw "Maple font registry entries are incomplete. Expected $($expectedMapleFontFiles.Count), actual $($installedRegistryItems.Count)."
 }
 
-Write-Host "  [setup font (Maple)] done. Installed to $systemFontDir" -ForegroundColor Green
+Write-Host "installed MapleMono fonts into $systemFontDir" -ForegroundColor Green

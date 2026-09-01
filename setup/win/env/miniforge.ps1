@@ -1,5 +1,5 @@
 # Setting up conda
-Write-Host "`n  [setup miniforge] setting up conda..." -ForegroundColor Cyan
+Write-Host "setting up conda..." -ForegroundColor Cyan
 
 $pythonEnv = $env:GHC_APP_PYTHON_ENV
 if ([string]::IsNullOrWhiteSpace($pythonEnv)) {
@@ -33,9 +33,9 @@ if ($LASTEXITCODE -ne 0) {
   throw "[setup miniforge] failed to list conda environments (exit code: $LASTEXITCODE)."
 }
 if ($condaEnvList | Select-String -Pattern $pythonEnvPattern) {
-    Write-Host "  [setup miniforge] the '$pythonEnv' env is already created. (skipped)" -ForegroundColor Yellow
+    Write-Host "the '$pythonEnv' env already exists (skipped)" -ForegroundColor Yellow
 } else {
-    Write-Host "  [setup miniforge] creating '$pythonEnv' env with conda..." -ForegroundColor Cyan
+    Write-Host "creating '$pythonEnv' env with conda..." -ForegroundColor Cyan
     conda create --yes --name $pythonEnv python=3.12
     if ($LASTEXITCODE -ne 0) {
       throw "[setup miniforge] failed to create the '$pythonEnv' environment (exit code: $LASTEXITCODE)."
@@ -55,9 +55,9 @@ if ($condaEnvList | Select-String -Pattern $pythonEnvPattern) {
 # Setup ipython configuration
 $ipythonConfigPath = "$env:USERPROFILE\.ipython\profile_default\ipython_config.py"
 if (Test-Path $ipythonConfigPath) {
-    Write-Host "  [setup miniforge] $ipythonConfigPath already exists. (skipped)" -ForegroundColor Yellow
+    Write-Host "$ipythonConfigPath already exists (skipped)" -ForegroundColor Yellow
 } else {
-    Write-Host "  [setup miniforge] setting up ipython..." -ForegroundColor Cyan
+    Write-Host "setting up IPython..." -ForegroundColor Cyan
     conda run --name $pythonEnv ipython profile create
     if ($LASTEXITCODE -ne 0) {
       throw "[setup miniforge] failed to create the IPython profile in '$pythonEnv' (exit code: $LASTEXITCODE)."
@@ -65,5 +65,3 @@ if (Test-Path $ipythonConfigPath) {
 
     Add-Content $ipythonConfigPath "`nc.TerminalInteractiveShell.editing_mode = 'vi'" -ErrorAction Stop
 }
-
-Write-Host "  [setup miniforge] done." -ForegroundColor Green

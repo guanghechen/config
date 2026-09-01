@@ -1,6 +1,6 @@
 if (Get-Command bun -ErrorAction SilentlyContinue) {
-  Write-Host "  [setup bun] bun is already installed. (skipped)" -ForegroundColor Yellow
+  Write-Host "Bun is already installed (skipped)" -ForegroundColor Yellow
 } else {
-  Write-Host "  [setup bun] installing bun..." -ForegroundColor Cyan
+  Write-Host "installing Bun..." -ForegroundColor Cyan
   irm bun.sh/install.ps1 | iex
 }

@@ -29,7 +29,15 @@
 * Windows: [Windows Setup](./setup/win/README.md)
 
   ```powershell
-  Invoke-Expression ((Invoke-WebRequest -Uri "https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/win/setup.ps1" -Headers @{ 'Cache-Control' = 'no-cache'; 'Pragma' = 'no-cache'; 'Expires' = '0' }).Content)
+  pwsh -NoProfile -Command {
+    $headers = @{
+      "Cache-Control" = "no-cache"
+      "Pragma" = "no-cache"
+      "Expires" = "0"
+    }
+    $setupScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/win/setup.ps1" -Headers $headers).Content
+    Invoke-Expression $setupScript
+  }
   ```
 
 * Wsl:

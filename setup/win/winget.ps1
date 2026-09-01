@@ -1,35 +1,65 @@
-Write-Host "`n  [setup winget] preparing..." -ForegroundColor Cyan
+param(
+  [scriptblock]$InstallPackage = {
+    param(
+      [string]$Package
+    )
 
-# winget install -e --source winget --id Git.Git
-winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
-# winget install -e --source winget --id wez.wezterm
-winget install -e --source winget --id Microsoft.PowerShell
-winget install -e --source winget --id Microsoft.PowerToys
-winget install -e --source winget --id Neovim.Neovim
-winget install -e --source winget --id GitHub.Copilot
+    winget install -e --source winget --id "$Package"
+  }
+)
 
-winget install -e --source winget --id Schniz.fnm
-# winget install -e --source winget --id LLVM.LLVM
-winget install -e --source winget --id astral-sh.uv
-winget install -e --source winget --id pnpm.pnpm
+Write-Host "installing Windows packages..." -ForegroundColor Cyan
 
-# winget install -e --source winget --id Gyan.FFmpeg
-winget install -e --source winget --id ImageMagick.ImageMagick
-winget install -e --source winget --id junegunn.fzf
-winget install -e --source winget --id jqlang.jq
-winget install -e --source winget --id JesseDuffield.lazygit
+$noApplicableUpgradeExitCode = -1978335189
 
-winget install -e --source winget --id sharkdp.bat
-winget install -e --source winget --id dandavison.delta
-winget install -e --source winget --id sharkdp.fd
-winget install -e --source winget --id lsd-rs.lsd
-winget install -e --source winget --id BurntSushi.ripgrep.MSVC
-winget install -e --source winget --id Starship.Starship
-winget install -e --source winget --id sxyazi.yazi
-winget install -e --source winget --id ajeetdsouza.zoxide
+# Managed separately as setup prerequisites: Git.Git, Microsoft.PowerShell.
+# Disabled: wez.wezterm, LLVM.LLVM, Gyan.FFmpeg, LGUG2Z.komorebi, AmN.yasb.
+$packages = @(
+  "Microsoft.WindowsTerminal.Preview"
+  "Microsoft.PowerToys"
+  "Neovim.Neovim"
+  "GitHub.Copilot"
 
-winget install -e --source winget --id Cloudflare.cloudflared
-# winget install -e --source winget --id LGUG2Z.komorebi
-# winget install -e --source winget --id AmN.yasb
+  "Schniz.fnm"
+  "astral-sh.uv"
+  "pnpm.pnpm"
 
-Write-Host "  [setup winget] done." -ForegroundColor Green
+  "ImageMagick.ImageMagick"
+  "junegunn.fzf"
+  "jqlang.jq"
+  "JesseDuffield.lazygit"
+
+  "sharkdp.bat"
+  "dandavison.delta"
+  "sharkdp.fd"
+  "lsd-rs.lsd"
+  "BurntSushi.ripgrep.MSVC"
+  "Starship.Starship"
+  "sxyazi.yazi"
+  "ajeetdsouza.zoxide"
+
+  "Cloudflare.cloudflared"
+)
+
+foreach ($package in $packages) {
+  $nativeErrorPreference = $PSNativeCommandUseErrorActionPreference
+  try {
+    # WinGet uses a non-zero status when an installed package has no available
+    # upgrade, so inspect its exit code before promoting failures.
+    $PSNativeCommandUseErrorActionPreference = $false
+    & $InstallPackage $package
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $PSNativeCommandUseErrorActionPreference = $nativeErrorPreference
+  }
+
+  if ($exitCode -eq 0) {
+    continue
+  }
+  if ($exitCode -eq $noApplicableUpgradeExitCode) {
+    Write-Host "$package is already current (skipped)" -ForegroundColor Yellow
+    $global:LASTEXITCODE = 0
+    continue
+  }
+  throw "[setup winget] failed to install $package (exit code: $exitCode)."
+}

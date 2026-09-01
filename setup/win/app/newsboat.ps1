@@ -10,7 +10,7 @@ if (Test-Path $newsboat_config_dir) {
 
   $newsboat_platform_source = Join-Path $newsboat_platform_dir "win"
   if (Test-Path $newsboat_platform_source) {
-    Write-Host "  [setup newsboat] setting up platform symlink (win)..." -ForegroundColor Cyan
+    Write-Host "setting up the Windows platform symlink..." -ForegroundColor Cyan
     if (Test-Path $newsboat_platform_link) {
       Remove-Item $newsboat_platform_link -Force
     }

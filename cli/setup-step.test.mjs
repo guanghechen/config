@@ -6,21 +6,36 @@ import { describe, it } from 'node:test'
 
 const helperPath = path.join(import.meta.dirname, '../setup/nix/bot/step.bash')
 const ansiPattern = /\u001B\[[0-9;]*m/g
+const bashExecutable = process.platform === 'win32'
+  ? [
+      process.env.APP_HOME_GIT && path.join(process.env.APP_HOME_GIT, 'bin/bash.exe'),
+      'C:\\app\\git\\bin\\bash.exe',
+      'C:\\Program Files\\Git\\bin\\bash.exe',
+    ].find(candidate => candidate && fs.existsSync(candidate)) ?? 'bash'
+  : 'bash'
+function normalizeOutput(value) {
+  return value.replaceAll('\r\n', '\n').trim()
+}
 
 function runStepScript(body) {
   const result = spawnSync(
-    'bash',
-    ['--noprofile', '--norc', '-c', `source ${JSON.stringify(helperPath)}\n${body}`],
+    bashExecutable,
+    [
+      '--noprofile',
+      '--norc',
+      '-c',
+      `source ${JSON.stringify(helperPath.replaceAll('\\', '/'))}\n${body}`,
+    ],
     { encoding: 'utf8' },
   )
   return {
     status: result.status,
-    rawOutput: result.stdout.trim(),
-    output: result.stdout.replaceAll(ansiPattern, '').trim(),
+    rawOutput: normalizeOutput(result.stdout),
+    output: normalizeOutput(result.stdout.replaceAll(ansiPattern, '')),
   }
 }
 
-describe('setup step forest', () => {
+describe('bash setup step forest', () => {
   it('renders flat sections containing independent rounded trees', () => {
     const result = runStepScript(String.raw`
       ghc_section '' demo
