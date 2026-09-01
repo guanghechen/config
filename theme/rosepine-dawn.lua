@@ -10,17 +10,17 @@ function M.setup(config)
     background    = "#FAF4ED",
     foreground    = "#464261",
 
-    -- Cursor colors (following official catppuccin theme)
-    cursor_bg     = "#B4637A",
-    cursor_fg     = "#FFFAF3",
-    cursor_border = "#B4637A",
+    -- Cursor colors
+    cursor_bg     = "#464261",
+    cursor_fg     = "#FAF4ED",
+    cursor_border = "#464261",
 
-    -- Selection colors (following official catppuccin theme)
-    selection_bg  = "#CECACD",
+    -- Selection colors
+    selection_bg  = "#DFDAD9",
     selection_fg  = "#464261",
 
     -- Split separator color
-    split         = "#9893A5",
+    split         = "#CECACD",
 
     -- Scrollbar thumb color
     scrollbar_thumb = "#CECACD",
@@ -33,26 +33,26 @@ function M.setup(config)
 
     -- Normal colors
     ansi = {
-      "#FAF4ED",  -- black (surface1 for dark themes, subtext1 for latte)
+      "#F2E9E1",
       "#B4637A",
       "#286983",
       "#EA9D34",
       "#56949F",
       "#907AA9",
       "#D7827E",
-      "#464261",  -- white (subtext1 for dark themes, surface2 for latte)
+      "#464261",
     },
 
     -- Bright colors
     brights = {
-      "#9893A5",  -- bright black (surface2 for dark themes, subtext0 for latte)
+      "#9893A5",
       "#B4637A",
       "#286983",
       "#EA9D34",
       "#56949F",
       "#907AA9",
       "#D7827E",
-      "#797593",  -- bright white (subtext0 for dark themes, surface1 for latte)
+      "#464261",
     },
 
     -- Indexed colors (extended palette)
@@ -61,36 +61,36 @@ function M.setup(config)
       [17] = "#B4637A",
     },
 
-    -- Tab bar colors (following official catppuccin theme)
+    -- Tab bar colors
     tab_bar = {
       background = "#FFFAF3",
 
       active_tab = {
-        bg_color = "#907AA9",
-        fg_color = "#FFFAF3",
-      },
-
-      inactive_tab = {
-        bg_color = "#FFFAF3",
-        fg_color = "#464261",
-      },
-
-      inactive_tab_hover = {
-        bg_color = "#FAF4ED",
-        fg_color = "#464261",
-      },
-
-      new_tab = {
         bg_color = "#F2E9E1",
         fg_color = "#464261",
       },
 
-      new_tab_hover = {
-        bg_color = "#DFDAD9",
+      inactive_tab = {
+        bg_color = "#FAF4ED",
+        fg_color = "#9893A5",
+      },
+
+      inactive_tab_hover = {
+        bg_color = "#FFFAF3",
         fg_color = "#464261",
       },
 
-      inactive_tab_edge = "#F2E9E1",
+      new_tab = {
+        bg_color = "#FFFAF3",
+        fg_color = "#9893A5",
+      },
+
+      new_tab_hover = {
+        bg_color = "#F2E9E1",
+        fg_color = "#464261",
+      },
+
+      inactive_tab_edge = "#DFDAD9",
     },
   }
 
@@ -99,7 +99,7 @@ function M.setup(config)
     active_titlebar_bg = "#FFFAF3",
     active_titlebar_fg = "#464261",
     inactive_titlebar_bg = "#FFFAF3",
-    inactive_titlebar_fg = "#464261",
+    inactive_titlebar_fg = "#9893A5",
     button_fg = "#464261",
     button_bg = "#FAF4ED",
   }
