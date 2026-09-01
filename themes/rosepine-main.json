@@ -1,24 +1,39 @@
 {
-  "name":           "rosepine-main",
-  "type":           "custom",
-  "Background":     "#191724",
-  "Foreground":     "#E0DEF4",
-  "LightBlue":      "#9CCFD8",
-  "AccentBlue":     "#9CCFD8",
-  "AccentPurple":   "#C4A7E7",
-  "AccentCyan":     "#EBBCBA",
-  "AccentGreen":    "#31748F",
-  "AccentYellow":   "#F6C177",
-  "AccentRed":      "#EB6F92",
-  "Comment":        "#6E6A86",
-  "Gray":           "#6E6A86",
-  "DiffAdded":      "#333C48",
-  "DiffRemoved":    "#43293A",
-  "DiffModified":   "#9CCFD8",
-  "GradientColors": [
-    "#9CCFD8",
-    "#9CCFD8",
-    "#C4A7E7",
-    "#C4A7E7"
-  ]
+  "name": "rosepine-main",
+  "type": "custom",
+  "background": {
+    "primary": "#191724",
+    "diff": {
+      "added": "#333C48",
+      "removed": "#43293A"
+    }
+  },
+  "text": {
+    "primary": "#E0DEF4",
+    "secondary": "#908CAA",
+    "link": "#C4A7E7",
+    "accent": "#EBBCBA",
+    "response": "#E0DEF4"
+  },
+  "border": {
+    "default": "#403D52",
+    "focused": "#EBBCBA"
+  },
+  "status": {
+    "success": "#31748F",
+    "warning": "#F6C177",
+    "error": "#EB6F92"
+  },
+  "ui": {
+    "comment": "#908CAA",
+    "symbol": "#9CCFD8",
+    "active": "#EBBCBA",
+    "focus": "#C4A7E7",
+    "gradient": [
+      "#31748F",
+      "#9CCFD8",
+      "#EBBCBA",
+      "#C4A7E7"
+    ]
+  }
 }
