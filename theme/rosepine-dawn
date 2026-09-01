@@ -1,7 +1,7 @@
 # rosepine-dawn
 
 # =============================================================================
-# Newsboat Color Theme (Catppuccin Style)
+# Newsboat Color Theme (Rosé Pine)
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -13,38 +13,38 @@ color article             default        default
 # -----------------------------------------------------------------------------
 # List Colors
 # -----------------------------------------------------------------------------
-color listnormal          color59        default
-color listnormal_unread   color24      default
+color listnormal          color102      default
+color listnormal_unread   color59        default                           bold
 color listfocus           color59        color188
-color listfocus_unread    color24      color188
+color listfocus_unread    color174        color188 bold
 
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-color title               color24       color188
-color info                color67       color188
-color hint-key            color132       color188          bold
-color hint-keys-delimiter color103        color188
-color hint-separator      default                           color188
-color hint-description    default                           color188
+color title               color174        color231     bold
+color info                color67        color231
+color hint-key            color103        color231     bold
+color hint-keys-delimiter color103       color231
+color hint-separator      default                             color231
+color hint-description    default                             color231
 
 # -----------------------------------------------------------------------------
 # Misc
 # -----------------------------------------------------------------------------
-color end-of-text-marker  color103        default
+color end-of-text-marker  color103       default
 
 # -----------------------------------------------------------------------------
 # Article Content Highlights
 # -----------------------------------------------------------------------------
 # Metadata lines (Feed, Title, Author, Link, Date)
-highlight article "^(Feed|Title|Author|Link|Date): .+" color67       default bold
-highlight article "^(Feed|Title|Author|Link|Date):"    color174       default bold
+highlight article "^(Feed|Title|Author|Link|Date): .+" color67        default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color174        default bold
 
 # URLs
-highlight article "https?://[^ ]+"                     color67       default
+highlight article "https?://[^ ]+"                     color67        default
 
 # Reference numbers [1], [2], etc.
-highlight article "\\[[0-9]+\\]"                       color174       default bold
+highlight article "\\[[0-9]+\\]"                       color174        default bold
 
 # Media indicators
-highlight article "\\((link|image|video)\\)"           color103        default
+highlight article "\\((link|image|video)\\)"           color103       default
