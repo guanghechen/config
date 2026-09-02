@@ -64,11 +64,18 @@ t:test("registered themes apply through the highlight pipeline", function()
       local scheme = dot.context.theme.apply_theme({
         theme = theme,
         transparency = transparency,
-        persistent = false,
       })
       t.assert_true(type(scheme) == "table", "failed to apply " .. theme)
     end
   end
+
+  local applied ---@type dot.context.theme.ILoadThemeParams|nil
+  t:patch_table(dot.context.theme, "apply_theme", function(params)
+    applied = params
+  end)
+  dot.context.theme.reload_theme()
+  t.assert_eq(dot.context.theme.theme:snapshot(), applied and applied.theme, "reload theme")
+  t.assert_eq(dot.context.theme.transparency:snapshot(), applied and applied.transparency, "reload transparency")
 end)
 
 t:run()

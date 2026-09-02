@@ -10,7 +10,6 @@ local __module_name__ = "dot.context.editor.theme" ---@type string
 ---@class dot.context.theme.ILoadThemeParams
 ---@field public theme                  dot.e.ThemeFullName
 ---@field public transparency           boolean
----@field public persistent             boolean
 ---@field public nsnr                   ?integer
 
 ---@class dot.context.theme.data
@@ -26,9 +25,9 @@ local __module_name__ = "dot.context.editor.theme" ---@type string
 ---@field public get_float_winblend     fun(): integer
 ---
 ---@field public apply_integration      fun(params: dot.context.theme.ILoadIntegrationParams): nil
----@field public apply_theme            fun(params: dot.context.theme.ILoadThemeParams): nil
+---@field public apply_theme            fun(params: dot.context.theme.ILoadThemeParams): stl.t.theme.IScheme|nil
 ---@field public get_scheme             fun(theme: dot.e.ThemeFullName): stl.t.theme.IScheme | nil
----@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
+---@field public reload_theme           fun(): nil
 ---@field public set_term_colors        fun(scheme: stl.t.theme.IScheme): nil
 
 ---@class dot.context.theme :  dot.context.theme.state
@@ -49,11 +48,6 @@ local integrations = {
   "treesitter",
   "plugin",
 }
-
----@return string
-local function get_theme_path()
-  return dot.path.locate_context_filepath("theme")
-end
 
 ---@return dot.context.theme.data
 function M.defaults()
@@ -141,11 +135,10 @@ function M.apply_integration(params)
 end
 
 ---@param params                        dot.context.theme.ILoadThemeParams
----@return nil
+---@return stl.t.theme.IScheme|nil
 function M.apply_theme(params)
   local theme = params.theme ---@type dot.e.ThemeFullName
   local transparency = params.transparency ---@type boolean
-  local persistent = params.persistent ---@type boolean
   local nsnr = params.nsnr or 0 ---@type integer
 
   local scheme = M.get_scheme(theme)
@@ -202,10 +195,6 @@ function M.apply_theme(params)
     end
 
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
-    if persistent then
-      local theme_path = get_theme_path() ---@type string
-      uxTheme:compile({ nsnr = 0, scheme = scheme, filepath = theme_path })
-    end
     -- M.set_term_colors(scheme)
   end
 
@@ -227,43 +216,11 @@ function M.get_scheme(theme)
   return dot.theme.scheme[theme]
 end
 
----@param force                         boolean
----@param reload_plugins                boolean
 ---@return nil
-function M.reload_theme(force, reload_plugins)
+function M.reload_theme()
   local theme = M.theme:snapshot() ---@type dot.e.ThemeFullName
   local transparency = M.transparency:snapshot() ---@type boolean
-
-  local scheme = M.get_scheme(theme) ---@type stl.t.theme.IScheme|nil
-  if scheme ~= nil then
-    vim.g.colors_name = theme
-    vim.o.background = scheme.darken and "dark" or "light"
-  end
-
-  local theme_path = get_theme_path() ---@type string
-  if force or not yoz.path.is_exist(theme_path) then
-    M.apply_theme({
-      theme = theme,
-      transparency = transparency,
-      persistent = true,
-      filepath = theme_path,
-    })
-  else
-    local ok, err = pcall(dofile, theme_path)
-    if not ok then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "reload_theme",
-        message = "Bad theme file.",
-        details = { force = force, reload_plugins = reload_plugins, theme_path = theme_path, error = err },
-      })
-    end
-
-    -- local scheme = M.get_scheme(theme) ---@type stl.t.theme.IScheme|nil
-    -- if scheme ~= nil then
-    -- M.set_term_colors(scheme)
-    -- end
-  end
+  M.apply_theme({ theme = theme, transparency = transparency })
 end
 
 --- Set the term color with the specific value (hex).

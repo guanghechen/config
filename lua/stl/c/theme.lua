@@ -2,17 +2,10 @@
 ---@field public scheme                 stl.t.theme.IScheme
 ---@field public nsnr                   integer
 
----@class stl.c.theme.ICompileParams
----@field public scheme                 stl.t.theme.IScheme
----@field public filepath               string
----@field public nsnr                   integer
-
 ---@class stl.c.Theme
 ---@field protected hlgroup_map         table<string, stl.t.theme.IHlgroup>
 local M = {}
 M.__index = M
-
-local BYTE_AT = 0x40 ---@type integer '@'
 
 ---@return stl.c.Theme
 function M.new()
@@ -47,50 +40,6 @@ function M:registers(hlgroup_map)
     end
   end
   return self
-end
-
----@param params                        stl.c.theme.ICompileParams
----@return nil
-function M:compile(params)
-  local filepath = params.filepath ---@type string
-  local nsnr = tostring(params.nsnr or 0) ---@type string
-
-  local hlgroup_strs = {} ---@type string[]
-  for hlname, hlgroup in pairs(self.hlgroup_map) do
-    local hlgroup_fields = {} ---@type string[]
-    for key, value in pairs(hlgroup) do
-      local value_type = type(value) ---@type string
-      local value_stringified = (value_type == "boolean" or value_type == "number") and tostring(value)
-        or '"' .. value .. '"'
-      local field = key .. "=" .. value_stringified ---@type string
-      table.insert(hlgroup_fields, field)
-    end
-
-    local hlname_stringified = string.byte(hlname, 1, 1) == BYTE_AT and '["' .. hlname .. '"]' or hlname
-    local hlgroup_str = hlname_stringified .. "={" .. table.concat(hlgroup_fields, ",") .. "}"
-    table.insert(hlgroup_strs, hlgroup_str)
-  end
-
-  local code = string.format(
-    "return string.dump(function()\nlocal hls={%s}\n"
-      .. "for k, v in pairs(hls) do\n"
-      .. "vim.api.nvim_set_hl(%s,k,v)\n"
-      .. "end\nend, true)\n",
-    table.concat(hlgroup_strs, ","),
-    nsnr
-  )
-
-  local dirpath = vim.fn.fnamemodify(filepath, ":p:h") ---@type string
-  local dirpath_stat = vim.uv.fs_stat(filepath)
-  if dirpath_stat == nil or vim.tbl_isempty(dirpath_stat) then
-    vim.fn.mkdir(dirpath, "p")
-  end
-
-  local file = io.open(filepath, "wb")
-  if file then
-    file:write(loadstring(code)())
-    file:close()
-  end
 end
 
 return M

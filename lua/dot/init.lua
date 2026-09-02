@@ -202,7 +202,7 @@ function M.setup_context(storage)
   M.context.set_storage(storage)
   M.context.load(storage, false)
 
-  M.context.theme.reload_theme(false, false)
+  M.context.theme.reload_theme()
 end
 
 ---@return nil

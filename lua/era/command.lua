@@ -1686,9 +1686,8 @@ command
   .implement({
     uuid = K.ux.reload_theme.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
-    action = function(arg)
-      local force = type(arg) == "string" and arg:lower() == "force" ---@type boolean
-      dot.context.theme.reload_theme(force, true)
+    action = function()
+      dot.context.theme.reload_theme()
     end,
   })
   .implement({

@@ -247,10 +247,10 @@ function M.watch_changes()
   local ticker_workspace = stl.c.Ticker.new({ start = 0 })
 
   stl.fn.observe({ M.theme.theme }, function()
-    dot.context.theme.reload_theme(false, true)
+    dot.context.theme.reload_theme()
   end, true)
   stl.fn.observe({ M.theme.transparency }, function()
-    dot.context.theme.reload_theme(true, true)
+    dot.context.theme.reload_theme()
   end, true)
 
   stl.fn.observe({

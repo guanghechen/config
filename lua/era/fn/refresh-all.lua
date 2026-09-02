@@ -27,7 +27,7 @@ local function refresh_all()
     pcall(function()
       stl.hot.reload_module("stl.lang")
       stl.hot.reload_module("dot.theme")
-      dot.command.definitions.ux.reload_theme:execute("force")
+      dot.command.definitions.ux.reload_theme:execute()
     end)
   end
 

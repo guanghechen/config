@@ -9,12 +9,6 @@ local theme = vim.env.GHC_THEME or "vsc-dark-modern" ---@type dot.e.ThemeFullNam
 if not vim.list_contains(dot.var.themes, theme) then
   print("Unknown theme: " .. theme)
 else
-  dot.context.theme.apply_theme({
-    theme = theme,
-    transparency = dot.context.theme.transparency:snapshot(),
-    persistent = true,
-  })
-
   dot.context.theme.theme:next(theme)
   dot.context.save(storage)
 end
