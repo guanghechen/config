@@ -90,14 +90,6 @@ config_file = "agents/repair.toml"
 description = "Refines recently changed code for clarity and maintainability without changing behavior."
 config_file = "agents/code-simplifier.toml"
 
-[agents.yui-review-reviewer]
-description = "Read-only adversarial reviewer for yui-deep-review snapshots."
-config_file = "agents/yui-review-reviewer.toml"
-
-[agents.yui-review-adjudicator]
-description = "Read-only adjudicator for findings challenged inside yui-deep-review."
-config_file = "agents/yui-review-adjudicator.toml"
-
 [[hooks.PreToolUse]]
 matcher = "apply_patch"
 
