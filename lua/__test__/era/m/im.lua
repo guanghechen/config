@@ -31,7 +31,7 @@ local function unload(module_name)
   t:patch_table(package.loaded, module_name, nil)
 end
 
----@param options                       { use_wsl?: boolean, setup_error?: string, initial_snapshot?: era.m.im.Snapshot, with_ui?: boolean, ui_count?: integer, capture_and_select_error?: string, capture_failed?: boolean }|nil
+---@param options                       { use_wsl?: boolean, setup_error?: string, initial_snapshot?: era.m.im.Snapshot, with_ui?: boolean, ui_count?: integer, capture_and_select_error?: string, capture_failed?: boolean, defer_ui_enter?: boolean }|nil
 local function setup_lifecycle(options)
   options = options or {}
   reports = {}
@@ -45,6 +45,7 @@ local function setup_lifecycle(options)
   local capture_and_select_count = 0 ---@type integer
   local restore_count = 0 ---@type integer
   local english_switch_count = 0 ---@type integer
+  local scheduled = {} ---@type function[]
   local ui_count = options.ui_count or 1 ---@type integer
   if options.with_ui == false then
     ui_count = 0
@@ -181,6 +182,9 @@ local function setup_lifecycle(options)
     end
     return uis
   end)
+  t:patch_table(vim, "schedule", function(callback)
+    scheduled[#scheduled + 1] = callback
+  end)
   t:patch_global("yoz", { im = backend })
   unload("era.m.im")
 
@@ -190,12 +194,23 @@ local function setup_lifecycle(options)
     callbacks.UIEnter()
   end
 
+  local function flush_scheduled()
+    while #scheduled > 0 do
+      local callback = table.remove(scheduled, 1)
+      callback()
+    end
+  end
+  if not options.defer_ui_enter then
+    flush_scheduled()
+  end
+
   return {
     im = im,
     callbacks = callbacks,
     reports = reports,
     restored_snapshots = restored_snapshots,
     setup_executables = setup_executables,
+    flush_scheduled = flush_scheduled,
     get_backend_call_count = function()
       return capture_count + capture_and_select_count + restore_count
     end,
@@ -213,6 +228,9 @@ local function setup_lifecycle(options)
     end,
     get_restore_count = function()
       return restore_count
+    end,
+    get_scheduled_count = function()
+      return #scheduled
     end,
     get_unsubscribe_count = function()
       return unsubscribe_count
@@ -258,6 +276,46 @@ t:test("focus entry: command mode selects English with one fused call", function
   t.assert_eq(1, ctx.get_backend_call_count(), "single backend call")
   t.assert_eq(1, ctx.get_english_switch_count(), "English selection")
   t.assert_eq("source.english", ctx.get_current_snapshot(), "focused command source")
+end)
+
+t:test("UI entry: owns focus synchronously and defers backend reconciliation", function()
+  local ctx = setup_lifecycle({
+    initial_snapshot = "source.non_english.entry",
+    defer_ui_enter = true,
+  })
+
+  ctx.callbacks.FocusGained()
+  t.assert_eq(0, ctx.get_backend_call_count(), "deferred backend calls")
+  t.assert_eq(1, ctx.get_scheduled_count(), "single scheduled reconciliation")
+
+  ctx.flush_scheduled()
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "scheduled reconciliation")
+end)
+
+t:test("UI entry: focus exit cancels deferred reconciliation", function()
+  local ctx = setup_lifecycle({
+    initial_snapshot = "source.non_english.entry",
+    defer_ui_enter = true,
+  })
+
+  ctx.callbacks.FocusLost()
+  ctx.flush_scheduled()
+
+  t.assert_eq(0, ctx.get_backend_call_count(), "stale backend calls")
+end)
+
+t:test("UI entry: refocus supersedes deferred reconciliation", function()
+  local ctx = setup_lifecycle({
+    initial_snapshot = "source.non_english.entry",
+    defer_ui_enter = true,
+  })
+
+  ctx.callbacks.FocusLost()
+  ctx.callbacks.FocusGained()
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "synchronous refocus reconciliation")
+
+  ctx.flush_scheduled()
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "superseded UI reconciliation")
 end)
 
 t:test("focus entry: fused capture failure reports once", function()
@@ -439,6 +497,7 @@ t:test("focus lifecycle: only the last UILeave releases ownership", function()
   ctx.set_current_snapshot("source.non_english.next")
   ctx.set_ui_count(1)
   ctx.callbacks.UIEnter()
+  ctx.flush_scheduled()
   t.assert_eq(2, ctx.get_capture_and_select_count(), "reattach reconciles source")
 end)
 

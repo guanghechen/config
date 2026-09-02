@@ -51,6 +51,7 @@ end
 local backend = setup_backend()
 local auto_im_subscription = nil ---@type stl.c.IUnsubscribable|nil
 local focused = false ---@type boolean
+local focus_generation = 0 ---@type integer
 local insert_snapshot = nil ---@type era.m.im.Snapshot|nil
 
 ---@return boolean
@@ -152,18 +153,49 @@ local function on_insert_enter()
   restore_non_english_insert_snapshot("InsertEnter")
 end
 
-local function on_focus_gained()
+---@return integer|nil
+local function acquire_focus()
   if focused or #vim.api.nvim_list_uis() == 0 then
+    return nil
+  end
+  focus_generation = focus_generation + 1
+  focused = true
+  return focus_generation
+end
+
+---@return nil
+local function on_focus_gained()
+  if acquire_focus() == nil then
     return
   end
-  focused = true
   reconcile_focused_source("FocusGained")
 end
 
+---@return nil
+local function on_ui_enter()
+  local generation = acquire_focus()
+  if generation == nil then
+    return
+  end
+
+  vim.schedule(function()
+    if generation ~= focus_generation then
+      return
+    end
+    reconcile_focused_source("UIEnter")
+  end)
+end
+
+---@return nil
 local function on_focus_lost()
+  if not focused then
+    return
+  end
+  focus_generation = focus_generation + 1
   focused = false
 end
 
+---@return nil
 local function on_ui_leave()
   if #vim.api.nvim_list_uis() == 0 then
     on_focus_lost()
@@ -185,7 +217,8 @@ function M.dressing()
 
   vim.api.nvim_create_autocmd("InsertLeave", { group = augroup, callback = on_insert_leave })
   vim.api.nvim_create_autocmd("InsertEnter", { group = augroup, callback = on_insert_enter })
-  vim.api.nvim_create_autocmd({ "UIEnter", "FocusGained", "VimResume" }, {
+  vim.api.nvim_create_autocmd("UIEnter", { group = augroup, callback = on_ui_enter })
+  vim.api.nvim_create_autocmd({ "FocusGained", "VimResume" }, {
     group = augroup,
     callback = on_focus_gained,
   })
