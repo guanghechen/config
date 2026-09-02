@@ -1,0 +1,84 @@
+# {{name}}
+
+[bell]
+color = "{{vsc.accentOrange}}"
+
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
+
+[colors.cursor]
+text              = "{{vsc.editor_background}}"
+cursor            = "{{vsc.accentPink}}"
+
+[colors.vi_mode_cursor]
+text              = "{{vsc.editor_background}}"
+cursor            = "{{vsc.inputOption_activeForeground}}"
+
+[colors.search.matches]
+foreground        = "{{vsc.editor_background}}"
+background        = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}"
+
+[colors.search.focused_match]
+foreground        = "{{vsc.editor_background}}"
+background        = "{{vsc.accentGreen}}"
+
+[colors.hints.start]
+foreground        = "{{vsc.editor_background}}"
+background        = "{{vsc.accentYellow}}"
+
+[colors.hints.end]
+foreground        = "{{vsc.editor_background}}"
+background        = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}"
+
+[colors.selection]
+text              = "{{vsc.editor_background}}"
+background        = "{{vsc.accentPink}}"
+
+[colors.footer_bar]
+foreground        = "{{vsc.editor_background}}"
+background        = "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+
+[colors.primary]
+background        = "{{vsc.editor_background}}"
+foreground        = "{{vsc.foreground}}"
+dim_foreground    = "{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}"
+bright_foreground = "{{vsc.foreground}}"
+
+[colors.normal]
+black             = "{{vsc.editor_background}}"
+red               = "{{vsc.accentRed}}"
+green             = "{{vsc.accentGreen}}"
+yellow            = "{{vsc.accentYellow}}"
+blue              = "{{vsc.accentBlue}}"
+magenta           = "{{vsc.accentPurple}}"
+cyan              = "{{vsc.accentAqua}}"
+white             = "{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}"
+
+[colors.bright]
+black             = "{{vsc.editorIndentGuide_activeBackground1}}"
+red               = "{{vsc.brightRed}}"
+green             = "{{vsc.brightGreen}}"
+yellow            = "{{vsc.brightYellow}}"
+blue              = "{{vsc.brightBlue}}"
+magenta           = "{{vsc.brightPurple}}"
+cyan              = "{{vsc.brightAqua}}"
+white             = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}"
+
+[colors.dim]
+black             = "{{vsc.editor_background}}"
+red               = "{{vsc.accentRed}}"
+green             = "{{vsc.accentGreen}}"
+yellow            = "{{vsc.accentYellow}}"
+blue              = "{{vsc.accentBlue}}"
+magenta           = "{{vsc.accentPurple}}"
+cyan              = "{{vsc.accentAqua}}"
+white             = "{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}"
+
+[[colors.indexed_colors]]
+index = 16
+color = "{{vsc.accentOrange}}"
+
+[[colors.indexed_colors]]
+index = 17
+color = "{{vsc.accentPink}}"

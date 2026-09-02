@@ -1,0 +1,112 @@
+-- {{name}}
+
+---@class theme.{{name.replace(/-/g, '_')}}
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
+    -- Primary colors
+    background    = "{{vsc.editor_background}}",
+    foreground    = "{{vsc.inputOption_activeForeground}}",
+
+    -- Cursor colors (following official catppuccin theme)
+    cursor_bg     = "{{vsc.accentPink}}",
+    cursor_fg     = "{{vsc.overlay}}",
+    cursor_border = "{{vsc.accentPink}}",
+
+    -- Selection colors (following official catppuccin theme)
+    selection_bg  = "{{(darken ? vsc.menu_border : vsc.badge_background)}}",
+    selection_fg  = "{{vsc.inputOption_activeForeground}}",
+
+    -- Split separator color
+    split         = "{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}",
+
+    -- Scrollbar thumb color
+    scrollbar_thumb = "{{(darken ? vsc.menu_border : vsc.badge_background)}}",
+
+    -- Visual bell color
+    visual_bell   = "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}",
+
+    -- Compose cursor (for IME)
+    compose_cursor = "{{vsc.accentOrange}}",
+
+    -- Normal colors
+    ansi = {
+      "{{vsc.editor_background}}",  -- black (surface1 for dark themes, subtext1 for latte)
+      "{{vsc.accentRed}}",
+      "{{vsc.accentGreen}}",
+      "{{vsc.accentYellow}}",
+      "{{vsc.accentBlue}}",
+      "{{vsc.accentPurple}}",
+      "{{vsc.accentAqua}}",
+      "{{vsc.foreground}}",  -- white (subtext1 for dark themes, surface2 for latte)
+    },
+
+    -- Bright colors
+    brights = {
+      "{{vsc.editorIndentGuide_activeBackground1}}",  -- bright black (surface2 for dark themes, subtext0 for latte)
+      "{{vsc.brightRed}}",
+      "{{vsc.brightGreen}}",
+      "{{vsc.brightYellow}}",
+      "{{vsc.brightBlue}}",
+      "{{vsc.brightPurple}}",
+      "{{vsc.brightAqua}}",
+      "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}",  -- bright white (subtext0 for dark themes, surface1 for latte)
+    },
+
+    -- Indexed colors (extended palette)
+    indexed = {
+      [16] = "{{vsc.accentOrange}}",
+      [17] = "{{vsc.accentPink}}",
+    },
+
+    -- Tab bar colors (following official catppuccin theme)
+    tab_bar = {
+      background = "{{vsc.overlay}}",
+
+      active_tab = {
+        bg_color = "{{vsc.accentPurple}}",
+        fg_color = "{{vsc.overlay}}",
+      },
+
+      inactive_tab = {
+        bg_color = "{{vsc.overlay}}",
+        fg_color = "{{vsc.inputOption_activeForeground}}",
+      },
+
+      inactive_tab_hover = {
+        bg_color = "{{vsc.editor_background}}",
+        fg_color = "{{vsc.inputOption_activeForeground}}",
+      },
+
+      new_tab = {
+        bg_color = "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}",
+        fg_color = "{{vsc.inputOption_activeForeground}}",
+      },
+
+      new_tab_hover = {
+        bg_color = "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}",
+        fg_color = "{{vsc.inputOption_activeForeground}}",
+      },
+
+      inactive_tab_edge = "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}",
+    },
+  }
+
+  -- Window frame colors
+  config.window_frame = {
+    active_titlebar_bg = "{{vsc.overlay}}",
+    active_titlebar_fg = "{{vsc.inputOption_activeForeground}}",
+    inactive_titlebar_bg = "{{vsc.overlay}}",
+    inactive_titlebar_fg = "{{vsc.inputOption_activeForeground}}",
+    button_fg = "{{vsc.inputOption_activeForeground}}",
+    button_bg = "{{vsc.editor_background}}",
+  }
+
+  -- Command palette colors
+  config.command_palette_bg_color = "{{vsc.overlay}}"
+  config.command_palette_fg_color = "{{vsc.inputOption_activeForeground}}"
+end
+
+return M

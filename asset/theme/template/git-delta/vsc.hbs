@@ -1,0 +1,62 @@
+# https://github.com/dandavison/delta/blob/main/themes.gitconfig
+# {{name}}
+
+[delta]
+{{darken ? "dark                          = true" : "light                         = true"}}
+syntax-theme                  = {{name}}
+
+side-by-side                  = true
+navigate                      = true
+paging                        = never
+tabs                          = 2
+relative-paths                = true
+wrap-max-lines                = 2
+width                         = -0
+line-buffer-size              = 64
+line-fill-method              = ansi
+max-line-distance             = 0.5
+word-diff-regex               = "[a-zA-Z_][a-zA-Z0-9_]*|[0-9]+|."
+inline-hint-style             = "{{vsc.accentBlue}}"
+
+####################################################################################################
+
+file-style                    = "{{vsc.foreground}}" bold
+file-decoration-style         = ul
+
+hunk-header-style             = line-number syntax
+hunk-header-decoration-style  = ul
+hunk-header-line-number-style = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}"
+
+line-numbers                  = true
+line-numbers-left-style       = normal normal
+line-numbers-right-style      = normal normal
+line-numbers-zero-style       = normal normal
+line-numbers-minus-style      = "{{vsc.accentRed}}" normal bold
+line-numbers-plus-style       = "{{vsc.accentGreen}}" normal bold
+
+zero-style                    = syntax normal
+minus-style                   = syntax "{{vsc.diffDel}}"
+plus-style                    = syntax "{{vsc.diffAdd}}"
+minus-non-emph-style          = syntax "{{vsc.diffDel}}"
+plus-non-emph-style           = syntax "{{vsc.diffAdd}}"
+minus-emph-style              = syntax "{{vsc.diffDelInline}}" bold
+plus-emph-style               = syntax "{{vsc.diffAddInline}}" bold
+
+plus-empty-line-marker-style  = "{{vsc.diffAdd}}" "{{vsc.diffAdd}}"
+minus-empty-line-marker-style = "{{vsc.diffDel}}" "{{vsc.diffDel}}"
+
+####################################################################################################
+
+commit-style                  = "{{vsc.accentYellow}}" bold
+commit-decoration-style       = none
+
+blame-palette                 = "{{vsc.editor_background}}" "{{vsc.overlay}}" "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+blame-format                  = "{author:<12} {commit:<8} {timestamp:<10}"
+blame-code-style              = syntax
+blame-separator-style         = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}" dim
+
+hyperlinks                    = true
+hyperlinks-file-link-format   = file://{path}:{line}
+
+merge-conflict-begin-symbol   = ⟵
+merge-conflict-end-symbol     = ⟶

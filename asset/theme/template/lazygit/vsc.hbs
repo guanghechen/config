@@ -1,0 +1,46 @@
+# {{name}}
+
+gui:
+  authorColors:
+    '*': '{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}'
+    guanghechen: '{{vsc.textLink_foreground}}'
+  branchColorPatterns:
+    "^(main|master)$": '{{vsc.tokenControlFlowSpecialKeywords}}'
+    "^(user/[^/]+/)?chore": '{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}'
+    "^(user/[^/]+/)?feat": '{{vsc.editorGutter_addedBackground}}'
+    "^(user/[^/]+/)?feature": '{{vsc.editorGutter_addedBackground}}'
+    "^(user/[^/]+/)?fix": '{{vsc.editorGutter_deletedBackground}}'
+    "^(user/[^/]+/)?refactor": '{{vsc.accentOrange}}'
+    "^(user/[^/]+/)?release": '{{vsc.editorGutter_modifiedBackground}}'
+  theme:
+    activeBorderColor:
+      - '{{vsc.tokenControlFlowSpecialKeywords}}'
+      - bold
+    cherryPickedCommitBgColor:
+      - '{{vsc.accentAqua}}'
+    cherryPickedCommitFgColor:
+      - '{{vsc.editor_background}}'
+    defaultFgColor:
+      - '{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}'
+    inactiveBorderColor:
+      - '{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}'
+    inactiveViewSelectedLineBgColor:
+      - '{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}'
+    markedBaseCommitBgColor:
+      - '{{vsc.accentYellow}}'
+    markedBaseCommitFgColor:
+      - '{{vsc.editor_background}}'
+    optionsTextColor:
+      - '{{vsc.tokenFunctionDeclarations}}'
+    searchingActiveBorderColor:
+      - '{{vsc.focusBorder}}'
+      - bold
+    selectedLineBgColor:
+      - '{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}'
+    unstagedChangesColor:
+      - '{{vsc.editorGutter_deletedBackground}}'
+
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --paging=never --{{darken ? 'dark' : 'light'}}

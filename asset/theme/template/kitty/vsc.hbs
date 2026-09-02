@@ -1,0 +1,54 @@
+# {{name}}
+
+# Primary colors
+background              {{vsc.editor_background}}
+foreground              {{vsc.foreground}}
+selection_background    {{vsc.accentPink}}
+selection_foreground    {{vsc.editor_background}}
+
+# Cursor colors
+cursor                  {{vsc.accentPink}}
+cursor_text_color       {{vsc.editor_background}}
+
+# URL underline color when hovering with mouse
+url_color               {{vsc.accentPink}}
+
+# Border colors
+active_border_color     {{vsc.inputOption_activeForeground}}
+inactive_border_color   {{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}
+bell_border_color       {{vsc.accentYellow}}
+
+# Tab bar colors
+active_tab_foreground   {{vsc.editor_background}}
+active_tab_background   {{vsc.accentPink}}
+inactive_tab_foreground {{vsc.inputOption_activeForeground}}
+inactive_tab_background {{vsc.overlay}}
+tab_bar_background      {{vsc.overlay}}
+
+# Colors for marks (marked text in the terminal)
+mark1_foreground        {{vsc.editor_background}}
+mark1_background        {{vsc.inputOption_activeForeground}}
+mark2_foreground        {{vsc.editor_background}}
+mark2_background        {{vsc.accentPurple}}
+mark3_foreground        {{vsc.editor_background}}
+mark3_background        {{vsc.accentBlue}}
+
+# Normal colors
+color0                  {{vsc.editor_background}}
+color1                  {{vsc.accentRed}}
+color2                  {{vsc.accentGreen}}
+color3                  {{vsc.accentYellow}}
+color4                  {{vsc.accentBlue}}
+color5                  {{vsc.accentPurple}}
+color6                  {{vsc.accentAqua}}
+color7                  {{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}
+
+# Bright colors
+color8                  {{vsc.editorIndentGuide_activeBackground1}}
+color9                  {{vsc.brightRed}}
+color10                 {{vsc.brightGreen}}
+color11                 {{vsc.brightYellow}}
+color12                 {{vsc.brightBlue}}
+color13                 {{vsc.brightPurple}}
+color14                 {{vsc.brightAqua}}
+color15                 {{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}

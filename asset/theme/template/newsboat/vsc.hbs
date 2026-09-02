@@ -1,0 +1,50 @@
+# {{name}}
+
+# =============================================================================
+# Newsboat Color Theme (Catppuccin Style)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Main Interface Elements
+# -----------------------------------------------------------------------------
+color background          default        default
+color article             default        default
+
+# -----------------------------------------------------------------------------
+# List Colors
+# -----------------------------------------------------------------------------
+color listnormal          color{{c256(vsc.foreground)}}        default
+color listnormal_unread   color{{c256(vsc.brightGreen)}}      default
+color listfocus           color{{c256(vsc.inputOption_activeForeground)}}        color{{c256(darken ? vsc.subtle : vsc.badge_background)}}
+color listfocus_unread    color{{c256(vsc.brightGreen)}}      color{{c256(darken ? vsc.subtle : vsc.badge_background)}}
+
+# -----------------------------------------------------------------------------
+# Title & Info Bar
+# -----------------------------------------------------------------------------
+color title               color{{c256(vsc.brightGreen)}}       color{{c256(darken ? vsc.subtle : vsc.badge_background)}}
+color info                color{{c256(vsc.brightBlue)}}       color{{c256(darken ? vsc.subtle : vsc.badge_background)}}
+color hint-key            color{{c256(vsc.accentPink)}}       color{{c256(darken ? vsc.subtle : vsc.badge_background)}}          bold
+color hint-keys-delimiter color{{c256((darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground))}}        color{{c256(darken ? vsc.subtle : vsc.badge_background)}}
+color hint-separator      default                           color{{c256(darken ? vsc.subtle : vsc.badge_background)}}
+color hint-description    default                           color{{c256(darken ? vsc.subtle : vsc.badge_background)}}
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+color end-of-text-marker  color{{c256((darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground))}}        default
+
+# -----------------------------------------------------------------------------
+# Article Content Highlights
+# -----------------------------------------------------------------------------
+# Metadata lines (Feed, Title, Author, Link, Date)
+highlight article "^(Feed|Title|Author|Link|Date): .+" color{{c256(vsc.brightBlue)}}       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color{{c256(vsc.accentAqua)}}       default bold
+
+# URLs
+highlight article "https?://[^ ]+"                     color{{c256(vsc.brightBlue)}}       default
+
+# Reference numbers [1], [2], etc.
+highlight article "\\[[0-9]+\\]"                       color{{c256(vsc.accentAqua)}}       default bold
+
+# Media indicators
+highlight article "\\((link|image|video)\\)"           color{{c256((darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground))}}        default

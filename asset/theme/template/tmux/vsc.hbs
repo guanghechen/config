@@ -1,0 +1,146 @@
+# {{name}}
+
+set -g @GHC_SL_BG                       "default"
+set -g @GHC_PSL_BG                      "default"
+
+## Cmdline
+set -g @GHC_SL_BG_CMDLINE               "{{vsc.brightAqua}}"
+set -g @GHC_SL_FG_CMDLINE               "{{vsc.overlay}}"
+set -g prompt-cursor-colour             "{{vsc.accentOrange}}"
+
+## Message
+set -g @GHC_SL_BG_MESSAGE               "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_MESSAGE               "{{vsc.foreground}}"
+
+## Menu
+set -g @GHC_MENU_BG                     "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_MENU_FG                     "{{vsc.foreground}}"
+set -g @GHC_MENU_BG_SELECTED            "{{vsc.accentPink}}"
+set -g @GHC_MENU_FG_SELECTED            "{{vsc.editor_background}}"
+
+## Copy Mode
+set -g @GHC_SL_BG_COPY_MODE             "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_COPY_MODE             "{{vsc.foreground}}"
+set -g @GHC_SL_BG_COPY_MODE_MATCH       "{{vsc.accentYellow}}"
+set -g @GHC_SL_FG_COPY_MODE_MATCH       "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_COPY_MODE_CUR_MATCH   "{{vsc.accentOrange}}"
+set -g @GHC_SL_FG_COPY_MODE_CUR_MATCH   "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_COPY_MODE_MARK        "{{vsc.brightPurple}}"
+set -g @GHC_SL_FG_COPY_MODE_MARK        "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_COPY_MODE_POS         "{{vsc.accentYellow}}"
+set -g @GHC_SL_FG_COPY_MODE_POS         "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_COPY_MODE_SEL         "{{vsc.accentAqua}}"
+set -g @GHC_SL_FG_COPY_MODE_SEL         "{{vsc.editor_background}}"
+
+## Pane
+set -g @GHC_PANE_BG                     "{{vsc.overlay}}"
+set -g @GHC_PANE_BG_ACTIVE              "{{vsc.editor_background}}"
+
+set -g @GHC_PSL_FG_BORDER               "{{(darken ? vsc.menu_border : vsc.badge_background)}}"
+set -g @GHC_PSL_FG_BORDER_CUR           "{{vsc.accentPink}}"
+
+set -g @GHC_PSL_BG_SYM                  "default"
+set -g @GHC_PSL_FG_SYM                  "{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}"
+set -g @GHC_PSL_BG_TXT                  "default"
+set -g @GHC_PSL_FG_TXT                  "{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}"
+
+set -g @GHC_PSL_BG_SYM_ACTIVE           "default"
+set -g @GHC_PSL_FG_SYM_ACTIVE           "{{vsc.accentPink}}"
+set -g @GHC_PSL_BG_TXT_ACTIVE           "default"
+set -g @GHC_PSL_FG_TXT_ACTIVE           "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
+
+set -g @GHC_PSL_BG_COPY_MODE            "default"
+set -g @GHC_PSL_FG_COPY_MODE            "{{vsc.brightYellow}}"
+
+set -g @GHC_PSL_FG_PANE_ID              "{{vsc.brightAqua}}"
+set -g @GHC_PSL_FG_PANE_INDEX           "{{vsc.brightOrange}}"
+set -g @GHC_PSL_FG_MARKER               "{{vsc.brightPurple}}"
+
+## Statusbar
+
+set -g @GHC_SL_FG_BORDER                "{{(darken ? vsc.menu_border : vsc.badge_background)}}"
+set -g @GHC_SL_FG_BORDER_CUR            "{{vsc.accentPink}}"
+
+set -g @GHC_SL_BG_SYM                   "default"
+set -g @GHC_SL_FG_SYM                   "{{vsc.accentPink}}"
+set -g @GHC_SL_BG_TXT                   "default"
+set -g @GHC_SL_FG_TXT                   "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
+
+set -g @GHC_SL_BG_OS_SYM                "{{vsc.editor_background}}"
+set -g @GHC_SL_FG_OS_SYM                "{{vsc.accentPink}}"
+
+set -g @GHC_SL_BG_PREFIX                "default"
+set -g @GHC_SL_FG_PREFIX                "{{vsc.brightBlue}}"
+set -g @GHC_SL_BG_ALERT                 "{{vsc.brightRed}}"
+set -g @GHC_SL_FG_ALERT                 "{{vsc.overlay}}"
+
+set -g @GHC_SL_FG_PILL_TXT              "{{vsc.foreground}}"
+set -g @GHC_SL_FG_PILL_HOST_TXT         "{{vsc.editor_background}}"
+set -g @GHC_SL_FG_PILL_ICON             "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_PILL_DURATION         "{{vsc.brightBlue}}"
+set -g @GHC_SL_BG_PILL_DATE             "{{vsc.brightBlue}}"
+set -g @GHC_SL_BG_PILL_TIME             "{{vsc.brightBlue}}"
+set -g @GHC_SL_BG_PILL_SESSION          "{{vsc.brightOrange}}"
+set -g @GHC_SL_FG_PILL_WINNR            "{{vsc.brightOrange}}"
+set -g @GHC_SL_FG_SESSION_LIST_ACTIVE   "{{vsc.overlay}}"
+set -g @GHC_SL_BG_SESSION_LIST_ACTIVE   "{{vsc.accentPurple}}"
+set -g @GHC_SL_FG_SESSION_LIST_INACTIVE "{{vsc.inputOption_activeForeground}}"
+set -g @GHC_SL_BG_SESSION_LIST_INACTIVE "{{vsc.overlay}}"
+set -g @GHC_SL_BG_SESSION_LIST_SURFACE  "{{vsc.overlay}}"
+set -g @GHC_SL_BG_SESSION_ITEM_NAME     "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_SESSION_ITEM_NAME     "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
+set -g @GHC_SL_BG_SESSION_ITEM_NUM      "{{(darken ? vsc.menu_border : vsc.badge_background)}}"
+set -g @GHC_SL_FG_SESSION_ITEM_NUM      "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
+set -g @GHC_SL_FG_SESSION_ITEM_LAST     "{{vsc.brightOrange}}"
+set -g @GHC_SL_FG_SESSION_ITEM_BELL     "{{vsc.brightOrange}}"
+set -g @GHC_SL_BG_STATUS02_LABEL        "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_STATUS02_LABEL        "{{vsc.accentPink}}"
+set -g @GHC_SL_BG_PILL_USER             "{{vsc.brightOrange}}"
+set -g @GHC_SL_BG_PILL_HOST             "{{vsc.brightBlue}}"
+set -g @GHC_SL_BG_PILL_ZOOM             "{{vsc.accentYellow}}"
+
+set -g @GHC_SL_BG_PRIMARY_SEP           "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_PRIMARY_SEP           "{{vsc.accentPink}}"
+set -g @GHC_SL_BG_PRIMARY_SYM           "{{vsc.accentPink}}"
+set -g @GHC_SL_FG_PRIMARY_SYM           "{{vsc.overlay}}"
+set -g @GHC_SL_BG_PRIMARY_TXT           "{{vsc.accentPink}}"
+set -g @GHC_SL_FG_PRIMARY_TXT           "{{vsc.overlay}}"
+set -g @GHC_SL_BG_SECONDARY_SEP         "default"
+set -g @GHC_SL_FG_SECONDARY_SEP         "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_BG_SECONDARY_SYM         "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_SECONDARY_SYM         "{{vsc.accentPink}}"
+set -g @GHC_SL_BG_SECONDARY_TXT         "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_SECONDARY_TXT         "{{vsc.accentPink}}"
+
+set -g @GHC_SL_BG_WIN_NAME              "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_WIN_NAME              "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
+set -g @GHC_SL_BG_WIN_NUM               "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_WIN_NUM               "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
+set -g @GHC_SL_BG_WIN_ICON_BELL         "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_WIN_ICON_BELL         "{{vsc.brightOrange}}"
+set -g @GHC_SL_FG_WIN_ICON_ACTIVITY     "{{vsc.brightYellow}}"
+set -g @GHC_SL_BG_WIN_ICON_LAST         "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_WIN_ICON_LAST         "{{vsc.accentOrange}}"
+set -g @GHC_SL_BG_WIN_ICON_ZOOM         "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_WIN_ICON_ZOOM         "{{vsc.brightRed}}"
+set -g @GHC_SL_FG_WIN_ICON_MARKED       "{{vsc.brightPurple}}"
+set -g @GHC_SL_FG_WIN_ICON_SILENCE      "{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}"
+set -g @GHC_SL_FG_TREE_PANE_ID          "{{vsc.brightBlue}}"
+
+set -g @GHC_SL_BG_WIN_ACTIVE_NAME       "{{vsc.accentPink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_NAME       "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_NUM        "{{vsc.accentPink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_NUM        "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_ICON_BELL  "{{vsc.accentPink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_ICON_BELL  "{{vsc.editor_background}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_ICON_ZOOM  "{{vsc.accentPink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_ICON_ZOOM  "{{vsc.editor_background}}"
+
+set -g @GHC_SL_BG_WIN_LAST_NAME         "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_FG_WIN_LAST_NAME         "{{vsc.accentOrange}}"
+set -g @GHC_SL_BG_WIN_LAST_NUM          "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_WIN_LAST_NUM          "{{vsc.accentOrange}}"
+set -g @GHC_SL_BG_WIN_LAST_ICON_BELL    "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_WIN_LAST_ICON_BELL    "{{vsc.accentOrange}}"
+set -g @GHC_SL_BG_WIN_LAST_ICON_ZOOM    "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
+set -g @GHC_SL_FG_WIN_LAST_ICON_ZOOM    "{{vsc.accentOrange}}"

@@ -203,6 +203,79 @@ describe('rosepine theme schemes', () => {
   }
 })
 
+describe('vsc theme schemes', () => {
+  const variants = [
+    [
+      'vsc-dark-modern',
+      '#264F78',
+      ['#AEAFAD', '#E3E4E229', '#9CCC2C33', '#FF000033'],
+      [
+        '#000000', '#CD3131', '#0DBC79', '#DCDCAA',
+        '#2472C8', '#BC3FBC', '#11A8CD', '#E5E5E5',
+        '#666666', '#F14C4C', '#23D18B', '#F5F543',
+        '#3B8EEA', '#D670D6', '#29B8DB', '#E5E5E5',
+      ],
+    ],
+    [
+      'vsc-light-modern',
+      '#ADD6FF',
+      ['#000000', '#33333333', '#9CCC2C40', '#FF000033'],
+      [
+        '#000000', '#CD3131', '#107C10', '#795E26',
+        '#0451A5', '#BC05BC', '#0598BC', '#555555',
+        '#666666', '#CD3131', '#14CE14', '#B5BA00',
+        '#0451A5', '#BC05BC', '#0598BC', '#A5A5A5',
+      ],
+    ],
+  ]
+
+  for (const [name, selection, editor, ansi] of variants) {
+    it(`follows the upstream editor and terminal roles for ${name}`, async () => {
+      const { errors, reporter } = createReporter()
+      const scheme = await load_theme_scheme(reporter, /** @type {string} */ (name))
+
+      assert.equal(errors.length, 0)
+      assert.ok(scheme)
+      const { unified, vsc } = scheme.palette
+      assert.equal(vsc.editor_selectionBackground, selection)
+      assert.deepEqual(
+        [
+          vsc.editorCursor_foreground,
+          vsc.editorWhitespace_foreground,
+          vsc.diffEditor_insertedTextBackground,
+          vsc.diffEditor_removedTextBackground,
+        ],
+        editor,
+      )
+      assert.deepEqual(
+        [unified.diffDel, unified.diffDelInline, unified.diffAdd, unified.diffAddInline],
+        [vsc.diffDel, vsc.diffDelInline, vsc.diffAdd, vsc.diffAddInline],
+      )
+      assert.deepEqual(
+        [
+          vsc.terminal_ansiBlack,
+          vsc.terminal_ansiRed,
+          vsc.terminal_ansiGreen,
+          vsc.terminal_ansiYellow,
+          vsc.terminal_ansiBlue,
+          vsc.terminal_ansiMagenta,
+          vsc.terminal_ansiCyan,
+          vsc.terminal_ansiWhite,
+          vsc.terminal_ansiBrightBlack,
+          vsc.terminal_ansiBrightRed,
+          vsc.terminal_ansiBrightGreen,
+          vsc.terminal_ansiBrightYellow,
+          vsc.terminal_ansiBrightBlue,
+          vsc.terminal_ansiBrightMagenta,
+          vsc.terminal_ansiBrightCyan,
+          vsc.terminal_ansiBrightWhite,
+        ],
+        ansi,
+      )
+    })
+  }
+})
+
 describe('kanagawa theme schemes', () => {
   const variants = [
     ['kanagawa-wave', true, 'lotus', '#1F1F28'],
@@ -329,6 +402,87 @@ describe('theme app template resolution', () => {
         path.resolve('asset/theme/template', app.name, 'default.hbs'),
       )
     }
+  })
+
+  it('provides resolved VSC templates for every non-Neovim app', async () => {
+    const { errors, reporter } = createReporter()
+    const schemes = await Promise.all([
+      load_theme_scheme(reporter, 'vsc-dark-modern'),
+      load_theme_scheme(reporter, 'vsc-light-modern'),
+    ])
+    assert.equal(errors.length, 0)
+
+    for (const app of apps.filter(app => !['nvim', 'nvim-nvchad'].includes(app.name))) {
+      const templatePath = resolve_app_template_filepath(
+        app,
+        /** @type {never} */ ({ theme: 'vsc' }),
+      )
+      assert.equal(
+        templatePath,
+        path.resolve('asset/theme/template', app.name, 'vsc.hbs'),
+      )
+
+      const template = fs.readFileSync(templatePath, 'utf8')
+      for (const scheme of schemes) {
+        assert.ok(scheme)
+        const content = await render_template(template, scheme)
+        assert.doesNotMatch(content, /\{\{[^\n]+\}\}/, `${app.name}/${scheme.variant}`)
+      }
+    }
+  })
+
+  it('keeps the Codex VSC theme equal to Bat plus explicit Codex extensions', () => {
+    const templateRoot = path.resolve('asset/theme/template')
+    const bat = fs.readFileSync(path.join(templateRoot, 'bat/vsc.hbs'), 'utf8')
+    const codex = fs.readFileSync(path.join(templateRoot, 'codex/vsc.hbs'), 'utf8')
+    const extensionPattern =
+      /      <!-- BEGIN Codex extensions:[\s\S]*?      <!-- END Codex extensions\. -->\n/
+    const extension = codex.match(extensionPattern)?.[0]
+
+    assert.ok(extension)
+    assert.match(extension, /markup\.inserted, markup\.inserted\.diff, diff\.inserted/)
+    assert.match(extension, /markup\.deleted, markup\.deleted\.diff, diff\.deleted/)
+    assert.match(extension, /entity\.name\.section/)
+    assert.equal(codex.replace(extensionPattern, ''), bat)
+  })
+
+  it('owns VSC colors per app while preserving default output', async () => {
+    const templateRoot = path.resolve('asset/theme/template')
+    const { errors, reporter } = createReporter()
+    const schemes = await Promise.all([
+      load_theme_scheme(reporter, 'vsc-dark-modern'),
+      load_theme_scheme(reporter, 'vsc-light-modern'),
+    ])
+
+    for (const app of apps.filter(app => !['nvim', 'nvim-nvchad'].includes(app.name))) {
+      const defaultTemplate = fs.readFileSync(
+        path.join(templateRoot, app.name, 'default.hbs'),
+        'utf8',
+      )
+      const vscTemplate = fs.readFileSync(
+        path.join(templateRoot, app.name, 'vsc.hbs'),
+        'utf8',
+      )
+      assert.doesNotMatch(
+        vscTemplate,
+        /\b(?:unified|catppuccin|gruvbox|kanagawa|rosepine|tokyonight)\??\./,
+        app.name,
+      )
+
+      if (['bat', 'codex'].includes(app.name)) {
+        assert.notEqual(vscTemplate, defaultTemplate, app.name)
+      } else {
+        for (const scheme of schemes) {
+          assert.ok(scheme)
+          assert.equal(
+            await render_template(vscTemplate, scheme),
+            await render_template(defaultTemplate, scheme),
+            `${app.name}/${scheme.variant}`,
+          )
+        }
+      }
+    }
+    assert.equal(errors.length, 0)
   })
 })
 
