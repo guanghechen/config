@@ -52,6 +52,47 @@ normal_tabline = era.m.nvimbar.Nvimbar.new({
 --
 -- :place("right", era.m.nvimbar.component.cwd.cwd(position), 100)
 
+local function create_maximize_tabline()
+  local content = "󰓩 MAXIMIZED" ---@type string
+  local text = stl.icon.symbols.sep_left .. content .. stl.icon.symbols.sep_right ---@type string
+  local hl_text = stl.nvim.fn.txt(stl.icon.symbols.sep_left, position .. "_nvim_tabtype_sep")
+    .. stl.nvim.fn.txt(content, position .. "_nvim_tabtype_text")
+    .. stl.nvim.fn.txt(stl.icon.symbols.sep_right, position .. "_nvim_tabtype_sep") ---@type string
+
+  ---@type era.m.nvimbar.IRawComponent
+  local indicator = {
+    name = "maximize:indicator",
+    atomic = true,
+    render = function()
+      return text, hl_text, true
+    end,
+  }
+
+  local nvimbar ---@type era.m.nvimbar.Nvimbar
+  nvimbar = era.m.nvimbar.Nvimbar
+    .new({
+      name = "tabline_maximize",
+      comp_sep = "",
+      comp_sep_hlname = position .. "_bg",
+      comp_sep_hlname_active = position .. "_bg",
+      delay = 256,
+      silent = function()
+        return not dot.context.flight.devmode:snapshot()
+      end,
+      get_max_width = function()
+        return vim.o.columns
+      end,
+      is_active = stl.fn.falsy,
+      on_fulfilled = function()
+        if vim.t.tabtype == stl.e.TabTypeEnum.MAXIMIZE then
+          vim.o.tabline = nvimbar:snapshot()
+        end
+      end,
+    })
+    :place("center", indicator, 100)
+  return nvimbar
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Nvimbar registry
 ----------------------------------------------------------------------------------------------------
@@ -59,6 +100,7 @@ normal_tabline = era.m.nvimbar.Nvimbar.new({
 ---@type table<stl.e.TabTypeEnum, era.m.nvimbar.Nvimbar|fun(): era.m.nvimbar.Nvimbar>
 local tabline_nvimbar_map = {
   [stl.e.TabTypeEnum.NORMAL] = normal_tabline,
+  [stl.e.TabTypeEnum.MAXIMIZE] = create_maximize_tabline,
 }
 
 ---Register a nvimbar factory for a specific tabtype (idempotent).

@@ -223,6 +223,24 @@ function M.set_storage(storage)
   M._storage = storage
 end
 
+---Persist exit state before runtime observables are disposed.
+---@return nil
+function M.save_on_exit()
+  local autosave = M.flight.autosave:snapshot() ---@type boolean
+
+  ---@type dot.context.storage
+  local storage = {
+    session = autosave and M._storage.session or nil,
+    workspace = M._storage.workspace,
+  }
+
+  if autosave and M._storage.nvim_session_autosaved then
+    dot.session.save_session(M._storage.nvim_session_autosaved)
+  end
+
+  M.save(storage)
+end
+
 ---@return nil
 function M.watch_changes()
   local ticker_editor = stl.c.Ticker.new({ start = 0 })
@@ -362,25 +380,6 @@ function M.watch_changes()
     }),
     true
   )
-
-  ---! Save when leave the editor.
-  dot.state.status.add_disposable(stl.c.Disposable.new({
-    on_dispose = function()
-      local autosave = M.flight.autosave:snapshot() ---@type boolean
-
-      ---@type dot.context.storage
-      local storage = {
-        session = autosave and M._storage.session or nil,
-        workspace = M._storage.workspace,
-      }
-
-      if autosave and M._storage.nvim_session_autosaved then
-        dot.session.save_session(M._storage.nvim_session_autosaved)
-      end
-
-      M.save(storage)
-    end,
-  }))
 
   ---! watch the editor states file changes.
   if M._storage.editor and vim.fn.filereadable(M._storage.editor) ~= 0 then

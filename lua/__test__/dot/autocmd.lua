@@ -18,6 +18,11 @@ local t = harness.new("dot.autocmd")
 ---@field term_delete_bufnr            integer|nil
 ---@field current_tabnr                integer
 ---@field equalized_tabnrs             integer[]
+---@field status_updates               integer
+---@field saved_on_exit                integer
+---@field save_on_exit_error           boolean
+---@field save_errors                  integer
+---@field shutdown_steps               string[]
 
 ---@param vim_did_enter                ?integer
 ---@return dot.autocmd.test.IRuntime
@@ -34,6 +39,11 @@ local function setup(vim_did_enter)
     term_delete_bufnr = nil,
     current_tabnr = 1,
     equalized_tabnrs = {},
+    status_updates = 0,
+    saved_on_exit = 0,
+    save_on_exit_error = false,
+    save_errors = 0,
+    shutdown_steps = {},
   } ---@type dot.autocmd.test.IRuntime
 
   t:patch_global("stl", {
@@ -44,6 +54,11 @@ local function setup(vim_did_enter)
           return name
         end,
       },
+      win = {
+        is_fixed = function()
+          return true
+        end,
+      },
     },
     tmux = {
       query_tmux_pane_zoomed = function(callback)
@@ -52,6 +67,11 @@ local function setup(vim_did_enter)
             callback(is_zoomed)
           end
         end
+      end,
+    },
+    reporter = {
+      error = function()
+        runtime.save_errors = runtime.save_errors + 1
       end,
     },
   })
@@ -66,16 +86,44 @@ local function setup(vim_did_enter)
       on_close = function(...)
         runtime.tab_close_argc = select("#", ...)
       end,
+      resolve = function()
+        return nil
+      end,
     },
     buf = {
       on_close = function(bufnr)
         runtime.buf_close_bufnr = bufnr
       end,
     },
+    context = {
+      save_on_exit = function()
+        runtime.saved_on_exit = runtime.saved_on_exit + 1
+        runtime.shutdown_steps[#runtime.shutdown_steps + 1] = "context"
+        if runtime.save_on_exit_error then
+          error("injected context save failure")
+        end
+      end,
+    },
     state = {
       status = {
-        dirtier_statusline = { mark_dirty = function() end },
-        dirtier_tabline = { mark_dirty = function() end },
+        dirty_winline_nr = {
+          next = function()
+            runtime.status_updates = runtime.status_updates + 1
+          end,
+        },
+        dirtier_statusline = {
+          mark_dirty = function()
+            runtime.status_updates = runtime.status_updates + 1
+          end,
+        },
+        dirtier_tabline = {
+          mark_dirty = function()
+            runtime.status_updates = runtime.status_updates + 1
+          end,
+        },
+        isdisposed = function()
+          return runtime.disposed > 0
+        end,
         tmux_zen_mode = {
           next = function(_, value)
             runtime.updates[#runtime.updates + 1] = value
@@ -83,9 +131,15 @@ local function setup(vim_did_enter)
         },
         dispose = function()
           runtime.disposed = runtime.disposed + 1
+          runtime.shutdown_steps[#runtime.shutdown_steps + 1] = "status"
         end,
       },
       widget = { resize = function() end },
+    },
+    win = {
+      is_sourcefile = function()
+        return false
+      end,
     },
   })
   t:patch_global("era", {
@@ -110,6 +164,15 @@ local function setup(vim_did_enter)
   end)
   t:patch_table(vim.api, "nvim_get_current_tabpage", function()
     return runtime.current_tabnr
+  end)
+  t:patch_table(vim.api, "nvim_tabpage_get_win", function()
+    return 10
+  end)
+  t:patch_table(vim.api, "nvim_tabpage_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return true
   end)
 
   assert(loadfile("lua/dot/autocmd.lua"))()
@@ -222,6 +285,40 @@ t:test("VimLeavePre prevents an in-flight query from updating disposed state", f
 
   t.assert_eq(1, runtime.disposed, "dispose calls")
   t.assert_eq(0, #runtime.updates, "updates after dispose")
+end)
+
+t:test("VimLeavePre saves context before disposing status", function()
+  local runtime = setup()
+
+  runtime.autocmds.state_on_VimLeavePre.callback()
+
+  t.assert_eq(1, runtime.saved_on_exit, "context save calls")
+  t.assert_eq("context", runtime.shutdown_steps[1], "first shutdown step")
+  t.assert_eq("status", runtime.shutdown_steps[2], "second shutdown step")
+end)
+
+t:test("VimLeavePre still disposes status when context save fails", function()
+  local runtime = setup()
+  runtime.save_on_exit_error = true
+
+  runtime.autocmds.state_on_VimLeavePre.callback()
+
+  t.assert_eq(1, runtime.saved_on_exit, "context save attempts")
+  t.assert_eq(1, runtime.disposed, "status dispose calls")
+  t.assert_eq(1, runtime.save_errors, "reported save failures")
+end)
+
+t:test("VimLeavePre drops deferred window updates after status disposal", function()
+  local runtime = setup()
+
+  runtime.autocmds.bootstrap_on_WinEnter.callback()
+  t.assert_eq(1, #runtime.scheduled, "deferred window updates")
+
+  runtime.autocmds.state_on_VimLeavePre.callback()
+  run_scheduled(runtime)
+
+  t.assert_eq(1, runtime.disposed, "dispose calls")
+  t.assert_eq(0, runtime.status_updates, "status updates after dispose")
 end)
 
 t:run()

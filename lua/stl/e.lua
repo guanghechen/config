@@ -89,6 +89,7 @@ M.TabTypeEnum = {
   -- stylua: ignore start
   DIFFVIEW_COMMITS   = "diffview_commits",
   DIFFVIEW_WORKSPACE = "diffview_workspace",
+  MAXIMIZE           = "maximize",
   NORMAL             = "normal",
   -- stylua: ignore end
 }
@@ -99,6 +100,7 @@ M.TabTypeSet = {
     M.TabTypeEnum.NORMAL,
     M.TabTypeEnum.DIFFVIEW_COMMITS,
     M.TabTypeEnum.DIFFVIEW_WORKSPACE,
+    M.TabTypeEnum.MAXIMIZE,
   },
   DIFFVIEW = {
     M.TabTypeEnum.DIFFVIEW_COMMITS,
@@ -106,6 +108,12 @@ M.TabTypeSet = {
   },
   DIFFVIEW_COMMITS = { M.TabTypeEnum.DIFFVIEW_COMMITS },
   DIFFVIEW_WORKSPACE = { M.TabTypeEnum.DIFFVIEW_WORKSPACE },
+  MAXIMIZE = { M.TabTypeEnum.MAXIMIZE },
+  NAVIGABLE = {
+    M.TabTypeEnum.NORMAL,
+    M.TabTypeEnum.DIFFVIEW_COMMITS,
+    M.TabTypeEnum.DIFFVIEW_WORKSPACE,
+  },
   NORMAL = { M.TabTypeEnum.NORMAL },
 }
 

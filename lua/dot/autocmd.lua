@@ -182,7 +182,17 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   callback = function()
     tmux_zen_refresh_active = false
     tmux_zen_refresh_pending = false
+
+    local ok, err = pcall(dot.context.save_on_exit) ---@type boolean, any
     dot.state.status.dispose()
+    if not ok then
+      pcall(stl.reporter.error, {
+        from = "dot.autocmd",
+        subject = "VimLeavePre",
+        message = "Failed to save context on exit",
+        details = { error = tostring(err) },
+      })
+    end
   end,
 })
 
@@ -219,7 +229,11 @@ vim.api.nvim_create_autocmd("WinEnter", {
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
 
     vim.schedule(function()
-      if not vim.api.nvim_tabpage_is_valid(tabnr) or not vim.api.nvim_win_is_valid(winnr) then
+      if
+        dot.state.status.isdisposed()
+        or not vim.api.nvim_tabpage_is_valid(tabnr)
+        or not vim.api.nvim_win_is_valid(winnr)
+      then
         return
       end
 
@@ -263,6 +277,9 @@ vim.api.nvim_create_autocmd("WinResized", {
   group = stl.nvim.fn.augroup("bootstrap_on_WinResized"),
   callback = function()
     vim.schedule(function()
+      if dot.state.status.isdisposed() then
+        return
+      end
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       dot.state.status.dirty_winline_nr:next(winnr)
     end)

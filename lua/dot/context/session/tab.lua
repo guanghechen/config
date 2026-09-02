@@ -64,7 +64,7 @@ function M.dump()
   for _, tabnr in ipairs(tabnrs) do
     local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
     local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
-    if meta ~= nil and tabtype ~= nil then
+    if meta ~= nil and tabtype ~= nil and tabtype ~= stl.e.TabTypeEnum.MAXIMIZE then
       local bufs = {} ---@type dot.context.tab.buf.data[]
       local meta_data = { tabtype = tabtype, bufs = bufs } ---@type dot.context.tab.meta.data
       for _, buf in ipairs(meta.bufs) do

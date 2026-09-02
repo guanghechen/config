@@ -1,5 +1,7 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.maximize" ---@type string
+
 local WINHIGHLIGHT_FLOAT = "NormalFloat:f_maximize_float_normal,FloatBorder:f_maximize_float_border"
-local WINHIGHLIGHT_NORMAL = "NormalFloat:f_maximize_normal,FloatBorder:f_maximize_normal"
 
 ---@class era.m.maximize
 local M = {}
@@ -73,140 +75,171 @@ end
 -- Normal window maximize
 ----------------------------------------------------------------------------------------------------
 
----@return { row: integer, height: integer }
-local function calc_main_area()
-  local top = stl.nvim.fn.is_tabline_visible() and 1 or 0 ---@type integer
-  local bottom = vim.o.cmdheight + (stl.nvim.fn.is_statusline_visible() and 1 or 0) ---@type integer
-  local height = vim.o.lines - top - bottom - 2 ---@type integer
-  return { row = top, height = math.max(1, height) }
+---@param normal                        dot.state.maximized.INormalContext
+---@return nil
+local function dispose_normal(normal)
+  if dot.state.maximized.dispose_normal(normal) then
+    dot.state.status.dirtier_tabline:mark_dirty()
+  end
 end
 
+---@param tabnr                         integer
+---@return boolean
+local function close_tab(tabnr)
+  if not vim.api.nvim_tabpage_is_valid(tabnr) then
+    return true
+  end
+  if #vim.api.nvim_list_tabpages() <= 1 then
+    return false
+  end
+
+  local tabid = vim.api.nvim_tabpage_get_number(tabnr) ---@type integer
+  local ok, err = pcall(vim.api.nvim_cmd, { cmd = "tabclose", args = { tostring(tabid) } }, {})
+  local closed = not vim.api.nvim_tabpage_is_valid(tabnr) ---@type boolean
+  if not ok then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "close_normal",
+      message = closed and "Maximize tab closed with errors" or "Failed to close maximize tab",
+      details = { error = tostring(err) },
+    })
+  elseif not closed then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "close_normal",
+      message = "Failed to close maximize tab",
+    })
+  end
+  return closed
+end
+
+local close_normal ---@type fun(return_to_source: boolean): boolean
+
+---@param normal                        dot.state.maximized.INormalContext
 ---@return nil
-local function close_normal()
-  local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
-  if original == nil then
+local function on_normal_tab_leave(normal)
+  if
+    dot.state.maximized.get_normal() ~= normal
+    or normal.closing
+    or vim.api.nvim_get_current_tabpage() ~= normal.maximize_tabnr
+  then
     return
   end
 
-  dot.state.maximized.clear_original_normal()
-  pcall(vim.api.nvim_del_augroup_by_id, original.augroup)
+  dot.state.maximized.sync_normal(normal)
+  vim.schedule(function()
+    if dot.state.maximized.get_normal() ~= normal or normal.closing then
+      return
+    end
 
-  if vim.api.nvim_win_is_valid(original.float_winnr) then
-    vim.api.nvim_win_close(original.float_winnr, true)
+    if not vim.api.nvim_tabpage_is_valid(normal.maximize_tabnr) then
+      dispose_normal(normal)
+      return
+    end
+
+    if vim.api.nvim_get_current_tabpage() == normal.maximize_tabnr then
+      close_normal(true)
+      return
+    end
+
+    normal.closing = true
+    if close_tab(normal.maximize_tabnr) then
+      dispose_normal(normal)
+    else
+      normal.closing = false
+    end
+  end)
+end
+
+---@param return_to_source              boolean
+---@return boolean
+close_normal = function(return_to_source)
+  local normal = dot.state.maximized.get_normal() ---@type dot.state.maximized.INormalContext|nil
+  if normal == nil then
+    return false
   end
 
-  if vim.api.nvim_win_is_valid(original.parent_winnr) then
-    vim.api.nvim_set_current_win(original.parent_winnr)
+  normal.closing = true
+  dot.state.maximized.sync_normal(normal)
+
+  if return_to_source and vim.api.nvim_tabpage_is_valid(normal.source_tabnr) then
+    vim.api.nvim_set_current_tabpage(normal.source_tabnr)
+    if vim.api.nvim_win_is_valid(normal.source_winnr) then
+      vim.api.nvim_set_current_win(normal.source_winnr)
+    end
   end
+
+  if vim.api.nvim_tabpage_is_valid(normal.maximize_tabnr) and #vim.api.nvim_list_tabpages() == 1 then
+    vim.t[normal.maximize_tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
+    dot.tab.resolve(normal.maximize_tabnr, true)
+    dispose_normal(normal)
+    return true
+  end
+
+  if close_tab(normal.maximize_tabnr) then
+    dispose_normal(normal)
+    return true
+  end
+
+  normal.closing = false
+  if vim.api.nvim_tabpage_is_valid(normal.maximize_tabnr) then
+    vim.api.nvim_set_current_tabpage(normal.maximize_tabnr)
+  end
+  return false
 end
 
 ---@param winnr                         integer
 ---@return nil
 local function maximize_normal(winnr)
-  local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
-  if original ~= nil and vim.api.nvim_win_is_valid(original.float_winnr) then
-    close_normal()
-    return
+  local normal = dot.state.maximized.get_normal() ---@type dot.state.maximized.INormalContext|nil
+  if normal ~= nil then
+    if vim.api.nvim_get_current_tabpage() == normal.maximize_tabnr then
+      close_normal(true)
+      return
+    end
+    if not close_normal(false) then
+      return
+    end
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local view = vim.fn.winsaveview() ---@type table
-  local main = calc_main_area() ---@type { row: integer, height: integer }
+  local source_tabnr = vim.api.nvim_win_get_tabpage(winnr) ---@type integer
+  if source_tabnr ~= vim.api.nvim_get_current_tabpage() then
+    return
+  end
+  if vim.api.nvim_get_current_win() ~= winnr then
+    vim.api.nvim_set_current_win(winnr)
+  end
 
-  ---@type integer
-  local float_winnr = vim.api.nvim_open_win(bufnr, true, {
-    relative = "editor",
-    row = main.row,
-    col = 0,
-    width = vim.o.columns,
-    height = main.height,
-    style = "minimal",
-    zindex = dot.win.resolve_zindex(),
-  })
-
-  local wo = winnr
-  vim.api.nvim_set_option_value("winhighlight", WINHIGHLIGHT_NORMAL, { win = wo, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", dot.context.theme.get_float_winblend(), { win = wo, scope = "local" })
-  vim.api.nvim_set_option_value("number", true, { win = wo, scope = "local" })
-  vim.api.nvim_set_option_value("relativenumber", dot.context.option.relativenumber:snapshot(), { win = wo, scope = "local" })
-  vim.api.nvim_set_option_value("signcolumn", "yes", { win = wo, scope = "local" })
-  vim.api.nvim_set_option_value("cursorline", true, { win = wo, scope = "local" })
-  vim.api.nvim_set_option_value("wrap", false, { win = wo, scope = "local" })
-  vim.api.nvim_set_option_value("foldcolumn", "0", { win = wo, scope = "local" })
-
-  vim.fn.winrestview(view)
+  vim.cmd("tab split")
+  local maximize_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local maximize_winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.t[maximize_tabnr].tabtype = stl.e.TabTypeEnum.MAXIMIZE
 
   local augroup = vim.api.nvim_create_augroup("era_maximize_normal", { clear = true }) ---@type integer
-  dot.state.maximized.set_original_normal({
-    parent_winnr = winnr,
-    float_winnr = float_winnr,
+  normal = {
+    source_tabnr = source_tabnr,
+    source_winnr = winnr,
+    maximize_tabnr = maximize_tabnr,
+    maximize_winnr = maximize_winnr,
     augroup = augroup,
-  })
+    closing = false,
+  }
+  dot.state.maximized.set_normal(normal)
+  dot.tab.resolve(maximize_tabnr, true)
+  dot.state.status.dirtier_tabline:mark_dirty()
 
-  vim.api.nvim_create_autocmd("CursorMoved", {
+  vim.api.nvim_create_autocmd("TabLeave", {
     group = augroup,
     callback = function()
-      local o = dot.state.maximized.get_original_normal()
-      if o ~= nil and vim.api.nvim_win_is_valid(o.parent_winnr) then
-        local cursor = vim.api.nvim_win_get_cursor(o.float_winnr) ---@type integer[]
-        pcall(vim.api.nvim_win_set_cursor, o.parent_winnr, cursor)
-      end
+      on_normal_tab_leave(normal)
     end,
   })
-
-  vim.api.nvim_create_autocmd("BufWinEnter", {
+  vim.api.nvim_create_autocmd("TabClosed", {
     group = augroup,
     callback = function()
-      local o = dot.state.maximized.get_original_normal()
-      if o ~= nil and vim.api.nvim_win_is_valid(o.parent_winnr) then
-        local buf = vim.api.nvim_win_get_buf(o.float_winnr) ---@type integer
-        pcall(vim.api.nvim_win_set_buf, o.parent_winnr, buf)
+      if not vim.api.nvim_tabpage_is_valid(normal.maximize_tabnr) then
+        dispose_normal(normal)
       end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("WinEnter", {
-    group = augroup,
-    callback = function()
-      local o = dot.state.maximized.get_original_normal()
-      if o == nil then
-        return
-      end
-
-      local cur_winnr = vim.api.nvim_get_current_win() ---@type integer
-      if cur_winnr == o.float_winnr then
-        return
-      end
-
-      local cfg = vim.api.nvim_win_get_config(cur_winnr) ---@type vim.api.keyset.win_config
-      if cfg.relative == "" then
-        vim.schedule(close_normal)
-      end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("WinClosed", {
-    group = augroup,
-    pattern = tostring(float_winnr),
-    callback = close_normal,
-  })
-
-  vim.api.nvim_create_autocmd("VimResized", {
-    group = augroup,
-    callback = function()
-      local o = dot.state.maximized.get_original_normal()
-      if o == nil or not vim.api.nvim_win_is_valid(o.float_winnr) then
-        return
-      end
-
-      local new_main = calc_main_area() ---@type { row: integer, height: integer }
-      pcall(vim.api.nvim_win_set_config, o.float_winnr, {
-        relative = "editor",
-        row = new_main.row,
-        col = 0,
-        width = vim.o.columns,
-        height = new_main.height,
-      })
     end,
   })
 end
@@ -222,12 +255,6 @@ function M.toggle()
     return
   end
 
-  local original_normal = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
-  if original_normal ~= nil and original_normal.float_winnr == winnr then
-    close_normal()
-    return
-  end
-
   if stl.nvim.win.is_float(winnr) then
     maximize_float(winnr)
   else
@@ -237,13 +264,15 @@ end
 
 ---@return boolean
 function M.is_zoomed()
-  local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
-  if original == nil then
+  local normal = dot.state.maximized.get_normal() ---@type dot.state.maximized.INormalContext|nil
+  if normal == nil then
     return false
   end
 
-  if not vim.api.nvim_win_is_valid(original.float_winnr) then
-    dot.state.maximized.clear_original_normal()
+  if
+    not vim.api.nvim_tabpage_is_valid(normal.maximize_tabnr) or not vim.api.nvim_win_is_valid(normal.maximize_winnr)
+  then
+    dispose_normal(normal)
     return false
   end
 
@@ -252,7 +281,7 @@ end
 
 ---@return nil
 function M.close()
-  close_normal()
+  close_normal(true)
 end
 
 return M

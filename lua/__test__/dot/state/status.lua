@@ -28,6 +28,7 @@ t:test("search state is scoped to its source window and buffer", function()
   t.assert_eq(winnr, status.dirty_winline_nr:snapshot(), "cleared window")
 
   status.dispose()
+  t.assert_true(status.isdisposed(), "disposed status")
 end)
 
 t:run()

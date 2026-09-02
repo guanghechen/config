@@ -94,6 +94,12 @@ function M.add_disposable(disposable)
   M._disposables:add_disposable(disposable)
 end
 
+---Check whether status observables have entered terminal disposal.
+---@return boolean
+function M.isdisposed()
+  return M._disposables:isdisposed()
+end
+
 ---@return nil
 function M.dispose()
   search = nil

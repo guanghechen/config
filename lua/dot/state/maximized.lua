@@ -4,14 +4,17 @@
 ---@field public winhighlight           string
 ---@field public wincfg                 vim.api.keyset.win_config
 
----@class dot.state.maximized.IOriginalNormalWindow
----@field public parent_winnr           integer
----@field public float_winnr            integer
+---@class dot.state.maximized.INormalContext
+---@field public source_tabnr           integer
+---@field public source_winnr           integer
+---@field public maximize_tabnr         integer
+---@field public maximize_winnr         integer
 ---@field public augroup                integer
+---@field public closing                boolean
 
 ---@class dot.state.maximized.IContext
 ---@field public original_float         ?dot.state.maximized.IOriginalFloatWindow
----@field public original_normal        ?dot.state.maximized.IOriginalNormalWindow
+---@field public normal                 ?dot.state.maximized.INormalContext
 
 ---@class dot.state.maximized.ResolveResizeOpts
 ---@field public winblend               ?integer
@@ -24,7 +27,7 @@
 ---@type dot.state.maximized.IContext
 local context = {
   original_float = nil,
-  original_normal = nil,
+  normal = nil,
 }
 
 ---@class dot.state.maximized
@@ -49,20 +52,66 @@ function M.clear_original_float()
   context.original_float = nil
 end
 
----@param original                      dot.state.maximized.IOriginalNormalWindow
+---@param normal                        dot.state.maximized.INormalContext
 ---@return nil
-function M.set_original_normal(original)
-  context.original_normal = original
+function M.set_normal(normal)
+  context.normal = normal
 end
 
----@return dot.state.maximized.IOriginalNormalWindow|nil
-function M.get_original_normal()
-  return context.original_normal
+---@return dot.state.maximized.INormalContext|nil
+function M.get_normal()
+  return context.normal
+end
+
+---Synchronize the maximize projection back to its source window.
+---@param normal                        dot.state.maximized.INormalContext
+---@return nil
+function M.sync_normal(normal)
+  if
+    context.normal ~= normal
+    or not vim.api.nvim_win_is_valid(normal.maximize_winnr)
+    or not vim.api.nvim_win_is_valid(normal.source_winnr)
+  then
+    return
+  end
+
+  local bufnr = vim.api.nvim_win_get_buf(normal.maximize_winnr) ---@type integer
+  local view_ok, view = pcall(vim.api.nvim_win_call, normal.maximize_winnr, function()
+    return vim.fn.winsaveview()
+  end)
+  if not view_ok then
+    return
+  end
+
+  local buf_ok = pcall(vim.api.nvim_win_set_buf, normal.source_winnr, bufnr) ---@type boolean
+  if not buf_ok then
+    return
+  end
+
+  if vim.api.nvim_tabpage_is_valid(normal.source_tabnr) then
+    dot.tab.add_buf(normal.source_tabnr, bufnr, false)
+  end
+  pcall(vim.api.nvim_win_call, normal.source_winnr, function()
+    vim.fn.winrestview(view)
+  end)
+end
+
+---Dispose the active normal context only when identity still matches.
+---@param normal                        dot.state.maximized.INormalContext
+---@return boolean
+function M.dispose_normal(normal)
+  if context.normal ~= normal then
+    return false
+  end
+
+  context.normal = nil
+  pcall(vim.api.nvim_del_augroup_by_id, normal.augroup)
+  return true
 end
 
 ---@return nil
-function M.clear_original_normal()
-  context.original_normal = nil
+function M.clear_normal()
+  context.normal = nil
 end
 
 ---@param wincfg                        vim.api.keyset.win_config

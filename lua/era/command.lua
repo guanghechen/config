@@ -1278,33 +1278,43 @@ command
   })
 
 --[tab] close---------------------------------------------------------------------------------------
+---@param close_tab                     fun(): nil
+---@return nil
+local function close_tab_or_maximize(close_tab)
+  if vim.t.tabtype == stl.e.TabTypeEnum.MAXIMIZE then
+    era.m.maximize.close()
+  else
+    close_tab()
+  end
+end
+
 command
   .implement({
     uuid = K.tab.close.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.nvim.tab.close()
+      close_tab_or_maximize(era.nvim.tab.close)
     end,
   })
   .implement({
     uuid = K.tab.close_to_leftest.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.nvim.tab.close_to_leftest()
+      close_tab_or_maximize(era.nvim.tab.close_to_leftest)
     end,
   })
   .implement({
     uuid = K.tab.close_to_rightest.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.nvim.tab.close_to_rightest()
+      close_tab_or_maximize(era.nvim.tab.close_to_rightest)
     end,
   })
   .implement({
     uuid = K.tab.close_others.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.nvim.tab.close_others()
+      close_tab_or_maximize(era.nvim.tab.close_others)
     end,
   })
 
@@ -1312,7 +1322,7 @@ command
 for i = 1, 10, 1 do
   command.implement({
     uuid = K.tab["focus_" .. tostring(i)].uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NAVIGABLE,
     action = function()
       era.nvim.tab.focus(i)
     end,
@@ -1322,7 +1332,7 @@ end
 command
   .implement({
     uuid = K.tab.focus.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NAVIGABLE,
     action = function(args)
       local tabid = tonumber(args) ---@type integer|nil
       if tabid ~= nil then
@@ -1332,7 +1342,7 @@ command
   })
   .implement({
     uuid = K.tab.focus_left.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NAVIGABLE,
     action = function(args)
       local ok, step = pcall(tonumber, args)
       era.nvim.tab.focus_left(ok and step or nil)
@@ -1340,7 +1350,7 @@ command
   })
   .implement({
     uuid = K.tab.focus_right.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NAVIGABLE,
     action = function(args)
       local ok, step = pcall(tonumber, args)
       era.nvim.tab.focus_right(ok and step or nil)
@@ -1351,14 +1361,14 @@ command
 command
   .implement({
     uuid = K.tab.new.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NAVIGABLE,
     action = function()
       era.nvim.tab.new()
     end,
   })
   .implement({
     uuid = K.tab.new_with_buf.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NAVIGABLE,
     action = function()
       era.nvim.tab.new_with_buf()
     end,

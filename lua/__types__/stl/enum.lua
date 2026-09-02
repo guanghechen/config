@@ -105,6 +105,7 @@
 ---@alias stl.t.TabTypeEnum
 ---| "diffview_commits"
 ---| "diffview_workspace"
+---| "maximize"
 ---| "normal"
 
 ---@alias stl.e.TabTypeEnum stl.t.TabTypeEnum
@@ -112,6 +113,7 @@
 ---@class stl.e.ITabTypeEnum
 ---@field public DIFFVIEW_COMMITS       "diffview_commits"
 ---@field public DIFFVIEW_WORKSPACE     "diffview_workspace"
+---@field public MAXIMIZE               "maximize"
 ---@field public NORMAL                 "normal"
 
 ---@class stl.e.ITabTypeSet
@@ -119,6 +121,8 @@
 ---@field public DIFFVIEW               stl.t.TabTypeEnum[]
 ---@field public DIFFVIEW_COMMITS       stl.t.TabTypeEnum[]
 ---@field public DIFFVIEW_WORKSPACE     stl.t.TabTypeEnum[]
+---@field public MAXIMIZE               stl.t.TabTypeEnum[]
+---@field public NAVIGABLE              stl.t.TabTypeEnum[]
 ---@field public NORMAL                 stl.t.TabTypeEnum[]
 
 ----------------------------------------------------------------------------------------------------

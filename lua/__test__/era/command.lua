@@ -11,9 +11,11 @@ t:test("command definitions and implementations stay symmetric", function()
   local prev_info_calls = 0
   local explorer_reveal_calls = 0
   local diffview_reveal_calls = 0
+  local maximize_close_calls = 0
+  local tab_close_calls = 0
   local resolve_stage = nil ---@type (fun(result: table): nil)|nil
   local stage_range = nil ---@type integer[]|nil
-  local enums = require("stl.e")
+  local enums = assert(loadfile("lua/stl/e.lua"))()
 
   t:patch_global("stl", {
     e = enums,
@@ -60,6 +62,18 @@ t:test("command definitions and implementations stay symmetric", function()
           end,
         },
       },
+      maximize = {
+        close = function()
+          maximize_close_calls = maximize_close_calls + 1
+        end,
+      },
+    },
+    nvim = {
+      tab = {
+        close = function()
+          tab_close_calls = tab_close_calls + 1
+        end,
+      },
     },
     widget = {
       explorer = {
@@ -89,6 +103,23 @@ t:test("command definitions and implementations stay symmetric", function()
     Command.definitions.explorer.reveal:execute()
   end
   vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
+
+  Command.definitions.tab.close:execute()
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.MAXIMIZE
+  Command.definitions.tab.close:execute()
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
+
+  t.assert_eq(1, tab_close_calls, "normal tab close")
+  t.assert_eq(1, maximize_close_calls, "maximize tab close")
+
+  local focus_uuid = Command.definitions.tab.focus.uuid ---@type string
+  local new_uuid = Command.definitions.tab.new.uuid ---@type string
+  local split_uuid = Command.definitions.win.split_right.uuid ---@type string
+  t.assert_true(Command.__command_map__[focus_uuid .. ":" .. enums.TabTypeEnum.NORMAL] ~= nil, "normal tab focus")
+  t.assert_nil(Command.__command_map__[focus_uuid .. ":" .. enums.TabTypeEnum.MAXIMIZE], "maximize tab focus")
+  t.assert_true(Command.__command_map__[new_uuid .. ":" .. enums.TabTypeEnum.NORMAL] ~= nil, "normal tab new")
+  t.assert_nil(Command.__command_map__[new_uuid .. ":" .. enums.TabTypeEnum.MAXIMIZE], "maximize tab new")
+  t.assert_nil(Command.__command_map__[split_uuid .. ":" .. enums.TabTypeEnum.MAXIMIZE], "maximize window split")
 
   t.assert_eq(1, explorer_reveal_calls, "normal explorer reveal")
   t.assert_eq(2, diffview_reveal_calls, "Diffview navigation reveal")
