@@ -263,7 +263,9 @@ function M.log(opts)
 
   -- Fetch and render data
   stl.async.run(function()
-    commits_action.refresh(ctx)
+    if not commits_action.refresh(ctx) then
+      return
+    end
 
     -- Set first commit as default current_commit
     local commits = st:get_commits()

@@ -76,6 +76,11 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@field public total_insertions       integer|nil                     total insertions for commit
 ---@field public total_deletions        integer|nil                     total deletions for commit
 
+---@class era.m.diffview.ICommitSearchMatch
+---@field public hash                   string                          full commit hash
+---@field public position               integer                         1-based position in the current log
+---@field public total                  integer                         total commits in the same log snapshot
+
 ----------------------------------------------------------------------------------------------------
 -- Filetree line mapping types
 ----------------------------------------------------------------------------------------------------

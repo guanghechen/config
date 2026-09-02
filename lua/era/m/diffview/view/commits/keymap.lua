@@ -55,6 +55,7 @@ function M.gen_commits(ctx)
     { modes = { "n" }, key = "gH", desc = "diffview(commits): Collapse all commits", callback = function() action.collapse_all(ctx) end },
     { modes = { "n" }, key = "gK", desc = "diffview(commits): Show commit details", callback = function() action.show_details(ctx) end },
     { modes = { "n" }, key = "gL", desc = "diffview(commits): Expand all commits", callback = function() action.expand_all(ctx) end },
+    { modes = { "n" }, key = "g/", desc = "diffview(commits): Search commit", callback = function() action.search_commit(ctx) end },
     { modes = { "n" }, key = "gR", desc = "diffview(commits): Restore file to commit version", callback = function() action.restore_file(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(commits): Open file in previous tab", callback = function() action.goto_file(ctx) end },
     { modes = { "n" }, key = "gh", desc = "diffview(commits): Collapse commit", callback = function() action.collapse(ctx) end },

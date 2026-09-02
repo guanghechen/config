@@ -27,6 +27,9 @@ local M = {}
 ---@field protected _git_debounce        stl.timer.IDisposableCallable|nil
 ---@field protected _tab_closed_autocmd  integer|nil
 ---@field protected _scheduler_lnum_present stl.c.Scheduler|nil
+---@field protected _content_generation integer
+---@field protected _disposed           boolean
+---@field protected _commits_page_applied integer
 local State = {}
 State.__index = State
 
@@ -59,6 +62,9 @@ function State.new(tabnr, fold_unchanged)
   self._git_debounce = nil
   self._tab_closed_autocmd = nil
   self._scheduler_lnum_present = nil
+  self._content_generation = 0
+  self._disposed = false
+  self._commits_page_applied = 1
 
   return self
 end
@@ -184,7 +190,17 @@ end
 ---Set current page
 ---@param page                           integer
 function State:set_commits_page(page)
+  self._commits_page_applied = page
   self.commits_page:next(page)
+end
+
+---@param page                           integer
+function State:request_commits_page(page)
+  self.commits_page:next(page)
+end
+
+function State:reset_commits_page()
+  self.commits_page:next(self._commits_page_applied)
 end
 
 ---Get total commit count
@@ -277,6 +293,25 @@ function State:set_path_filter(path)
 end
 
 ----------------------------------------------------------------------------------------------------
+-- Content request ownership
+----------------------------------------------------------------------------------------------------
+
+---@return integer|nil
+function State:begin_content_request()
+  if self._disposed then
+    return nil
+  end
+  self._content_generation = self._content_generation + 1
+  return self._content_generation
+end
+
+---@param generation                    integer
+---@return boolean
+function State:owns_content_request(generation)
+  return not self._disposed and self._content_generation == generation
+end
+
+----------------------------------------------------------------------------------------------------
 -- Sign line management
 ----------------------------------------------------------------------------------------------------
 
@@ -339,6 +374,12 @@ end
 
 ---Dispose all subscriptions and resources
 function State:dispose()
+  if self._disposed then
+    return
+  end
+  self._disposed = true
+  self._content_generation = self._content_generation + 1
+
   -- Dispose git subscription and debounce timer
   if self._git_subscription then
     self._git_subscription:unsubscribe()

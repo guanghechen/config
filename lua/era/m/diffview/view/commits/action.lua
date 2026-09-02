@@ -54,17 +54,24 @@ local function update_lnum_present(ctx, hash)
   end
 end
 
----Find the authoritative commit object in state by hash.
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param commits                        era.m.diffview.ICommit[]
 ---@param hash                           string
 ---@return era.m.diffview.ICommit|nil
-local function find_commit_in_state(ctx, hash)
-  for _, c in ipairs(ctx.state:get_commits()) do
+local function find_commit(commits, hash)
+  for _, c in ipairs(commits) do
     if c.hash == hash then
       return c
     end
   end
   return nil
+end
+
+---Find the authoritative commit object in state by hash.
+---@param ctx                            era.m.diffview.view.commits.IContext
+---@param hash                           string
+---@return era.m.diffview.ICommit|nil
+local function find_commit_in_state(ctx, hash)
+  return find_commit(ctx.state:get_commits(), hash)
 end
 
 ---@param ctx                            era.m.diffview.view.commits.IContext
@@ -266,6 +273,80 @@ end
 -- Navigation actions
 ----------------------------------------------------------------------------------------------------
 
+---Find and jump to a commit across all pages.
+---@param ctx                            era.m.diffview.view.commits.IContext
+function M.search_commit(ctx)
+  vim.ui.input({ prompt = "Commit hash or message: " }, function(input)
+    if input == nil then
+      return
+    end
+
+    local query = vim.trim(input)
+    if query == "" then
+      return
+    end
+
+    local generation = ctx.state:begin_content_request()
+    if generation == nil then
+      return
+    end
+    ctx.state:reset_commits_page()
+    stl.async.run(function()
+      local path_filter = ctx.state:get_path_filter()
+      local match, err = data.find_log_commit(query, path_filter)
+
+      if not ctx.state:owns_content_request(generation) then
+        return
+      end
+      if match == nil then
+        stl.async.scheduler()
+        if not ctx.state:owns_content_request(generation) then
+          return
+        end
+        stl.reporter.warn({
+          from = __module_name__,
+          subject = "search_commit",
+          message = err and string.format("Failed to search commits: %s", err)
+            or string.format("No commit matched %q.", query),
+          details = err and { error = err } or nil,
+        })
+        return
+      end
+
+      local per_page = config.COMMITS_PER_PAGE
+      local page = math.floor((match.position - 1) / per_page) + 1
+      local commits = data.fetch_log_page(page, per_page, path_filter)
+      local commit = find_commit(commits, match.hash)
+
+      stl.async.scheduler()
+      if not ctx.state:owns_content_request(generation) then
+        return
+      end
+      if commit == nil then
+        stl.reporter.warn({
+          from = __module_name__,
+          subject = "search_commit",
+          message = string.format("Failed to load commit %s.", match.hash),
+        })
+        return
+      end
+
+      ctx.state:set_commits_total(match.total)
+      ctx.state:set_commits_page(page)
+      ctx.state.expanded_commits:next({})
+      ctx.state:set_commits(commits)
+      ctx.state:set_current_commit(commit)
+      ctx.state:set_current_entry(nil)
+      commits_view.render_commits(ctx)
+      commits_view.render_filetree(ctx)
+      commits_view.clear_sbs(ctx)
+      update_lnum_present(ctx, commit.hash)
+      M.__update_commits_cursor__(ctx, commit.hash)
+      dot.state.status.dirtier_tabline:mark_dirty()
+    end)
+  end)
+end
+
 ---Move to next item in commits panel
 ---@param _                             era.m.diffview.view.commits.IContext
 function M.next(_)
@@ -301,13 +382,14 @@ function M.next_page(ctx)
   end
 
   local next_page = page + 1
-  ctx.state:set_commits_page(next_page)
-
-  -- Clear expanded commits when switching pages
+  local generation = ctx.state:begin_content_request()
+  if generation == nil then
+    return
+  end
+  ctx.state:request_commits_page(next_page)
   ctx.state.expanded_commits:next({})
-
   stl.async.run(function()
-    M.__refresh_page__(ctx, next_page)
+    M.__refresh_page__(ctx, next_page, generation)
   end)
 end
 
@@ -321,13 +403,14 @@ function M.prev_page(ctx)
   end
 
   local prev_page = page - 1
-  ctx.state:set_commits_page(prev_page)
-
-  -- Clear expanded commits when switching pages
+  local generation = ctx.state:begin_content_request()
+  if generation == nil then
+    return
+  end
+  ctx.state:request_commits_page(prev_page)
   ctx.state.expanded_commits:next({})
-
   stl.async.run(function()
-    M.__refresh_page__(ctx, prev_page)
+    M.__refresh_page__(ctx, prev_page, generation)
   end)
 end
 
@@ -1087,37 +1170,43 @@ end
 ---@async
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@param token                          ?stl.c.CancellationToken
+---@return boolean
 function M.refresh(ctx, token)
+  local generation = ctx.state:begin_content_request()
+  if generation == nil then
+    return false
+  end
+  ctx.state:reset_commits_page()
   local path_filter = ctx.state:get_path_filter()
 
   -- Fetch total count first
   local total = data.fetch_log_count(path_filter, token)
 
-  if token and token:is_cancelled() then
-    return
+  if (token and token:is_cancelled()) or not ctx.state:owns_content_request(generation) then
+    return false
   end
-
-  stl.async.scheduler()
-  ctx.state:set_commits_total(total)
-
-  -- Reset to page 1 on refresh
-  ctx.state:set_commits_page(1)
-  ctx.state.expanded_commits:next({})
 
   -- Fetch first page
   local per_page = config.COMMITS_PER_PAGE
   local commits = data.fetch_log_page(1, per_page, path_filter, token)
 
-  if token and token:is_cancelled() then
-    return
+  if (token and token:is_cancelled()) or not ctx.state:owns_content_request(generation) then
+    return false
   end
 
   stl.async.scheduler()
+  if not ctx.state:owns_content_request(generation) then
+    return false
+  end
+  ctx.state:set_commits_total(total)
+  ctx.state:set_commits_page(1)
+  ctx.state.expanded_commits:next({})
   ctx.state:set_commits(commits)
   commits_view.render_commits(ctx)
 
   -- Update tabline
   dot.state.status.dirtier_tabline:mark_dirty()
+  return true
 end
 
 ---Close the diffview
@@ -1270,17 +1359,22 @@ end
 ---@async
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@param page                           integer
+---@param generation                     integer
 ---@param token                          ?stl.c.CancellationToken
-function M.__refresh_page__(ctx, page, token)
+function M.__refresh_page__(ctx, page, generation, token)
   local path_filter = ctx.state:get_path_filter()
   local per_page = config.COMMITS_PER_PAGE
   local commits = data.fetch_log_page(page, per_page, path_filter, token)
 
-  if token and token:is_cancelled() then
+  if (token and token:is_cancelled()) or not ctx.state:owns_content_request(generation) then
     return
   end
 
   stl.async.scheduler()
+  if not ctx.state:owns_content_request(generation) then
+    return
+  end
+  ctx.state:set_commits_page(page)
   ctx.state:set_commits(commits)
   commits_view.render_commits(ctx)
 

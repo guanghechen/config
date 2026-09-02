@@ -32,6 +32,7 @@
 - `gH` : Collapse all commits
 - `gK` : Show commit details
 - `gL` : Expand all commits
+- `g/` : Search all commits by hash prefix or commit message and jump to the matching page
 - `gR` : Restore file to commit version
 - `gf` : Open file in previous tab
 - `gh` : Collapse commit

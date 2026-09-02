@@ -294,6 +294,10 @@ fetch_log_page(page, 50)
 - 带 path_filter 时也支持分页（单文件历史可能很长）
 - 翻页时清除所有 expanded_commits 状态
 - 每次翻页都重新获取 shortstat 数据
+- `g/` 在当前 log（包括 path_filter）中跨页搜索：至少 4 位 hash prefix 优先匹配且必须唯一，否则按 commit message 进行 case-insensitive substring 匹配并选择最新结果
+- search、翻页和 refresh 共享 per-view content generation；只有最新 request 可以提交 state，关闭 view 会使所有在途 request 失效并拒绝后续 request
+- 搜索使用同一 Git-log snapshot 的 position 与 total，并原子更新 total、page、commits 和 current commit
+- 分页分别跟踪 requested page 与 applied page：连续翻页累积 intent，search/refresh supersede pending page 时恢复 applied page
 
 ## Buffer 管理
 

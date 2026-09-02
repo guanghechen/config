@@ -473,6 +473,60 @@ function M.fetch_log_count(path_filter, token)
   return 0
 end
 
+---Find a commit by hash prefix or message in the current log.
+---@async
+---@param query                        string
+---@param path_filter                  string|nil                      Optional path filter
+---@param token                        ?stl.c.CancellationToken
+---@return era.m.diffview.ICommitSearchMatch|nil match, string|nil err
+function M.find_log_commit(query, path_filter, token)
+  check_token(token)
+
+  local workspace = dot.path.workspace()
+  local args = { "log", "--pretty=format:%H%x00%s" }
+  if path_filter then
+    vim.list_extend(args, { "--follow", "--", path_filter })
+  end
+
+  local result = stl.git.exec.exec(args, { cwd = workspace }, token):await()
+
+  check_token(token)
+
+  if result.code ~= 0 then
+    local err = vim.trim(result.stderr or "")
+    if err == "" then
+      err = string.format("git log exited with code %d", result.code)
+    end
+    return nil, err
+  end
+
+  local normalized = query:lower()
+  local is_hash_query = #normalized >= 4 and #normalized <= 40 and normalized:match("^%x+$") ~= nil
+  local total = #result.lines
+  local hash_match = nil ---@type era.m.diffview.ICommitSearchMatch|nil
+  local message_match = nil ---@type era.m.diffview.ICommitSearchMatch|nil
+
+  for position, line in ipairs(result.lines) do
+    local hash, message = line:match("^([^%z]+)%z(.*)$")
+    if hash then
+      if is_hash_query and hash:lower():sub(1, #normalized) == normalized then
+        if #normalized == 40 then
+          return { hash = hash, position = position, total = total }, nil
+        end
+        if hash_match ~= nil then
+          return nil, string.format("Ambiguous commit hash prefix: %s", query)
+        end
+        hash_match = { hash = hash, position = position, total = total }
+      end
+      if message_match == nil and message:lower():find(normalized, 1, true) then
+        message_match = { hash = hash, position = position, total = total }
+      end
+    end
+  end
+
+  return hash_match or message_match, nil
+end
+
 ---Fetch commits for a specific page (with shortstat).
 ---@async
 ---@param page                         integer                         Page number (1-indexed)
