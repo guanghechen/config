@@ -67,6 +67,7 @@ t:test("string build resolves spawn failures", function()
     error("injected spawn failure", 0)
   end)
 
+  ---@diagnostic disable-next-line: missing-fields
   local future = Action.__run_build__({ build = "cargo build --release" }, "/plugin")
 
   t.assert_true(future:is_resolved(), "spawn failure future")
@@ -132,6 +133,7 @@ t:test("non-zero string build preserves the last streamed diagnostic", function(
   end)
 
   local task = {}
+  ---@diagnostic disable-next-line: missing-fields
   local future = Action.__run_build__({ build = "cargo build --release" }, "/plugin", task)
   t.wait_until(function()
     return future:is_done()
@@ -394,6 +396,7 @@ t:test("sync checks out the exact locked commit in a clean repository", function
   local plugin = plugins .. "/exact.nvim"
   vim.fn.mkdir(source, "p")
   vim.fn.mkdir(plugins, "p")
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     vim.fn.delete(root, "rf")
   end)
@@ -449,6 +452,7 @@ t:test("sync fetches a lock branch outside the installed single-branch refspec",
   local plugin = plugins .. "/branch.nvim"
   vim.fn.mkdir(source, "p")
   vim.fn.mkdir(plugins, "p")
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     vim.fn.delete(root, "rf")
   end)

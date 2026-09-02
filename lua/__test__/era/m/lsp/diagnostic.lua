@@ -78,8 +78,10 @@ t:test("refresh: unchanged counts do not notify subscribers", function()
   local diagnostics = {
     { bufnr = bufnr, severity = vim.diagnostic.severity.ERROR },
   } ---@type vim.Diagnostic[]
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local buffer_notifications = 0 ---@type integer
   local state = reset_state()
+  ---@diagnostic disable-next-line: missing-fields
   Diagnostic._subscribers_bufnr[bufnr] = {
     notify = function()
       buffer_notifications = buffer_notifications + 1
@@ -204,6 +206,7 @@ t:test("setup: buffer deletion removes totals and pending refreshes", function()
   local state = reset_state()
   local buffer_notifications = 0 ---@type integer
   local disposals = 0 ---@type integer
+  ---@diagnostic disable-next-line: missing-fields
   Diagnostic._subscribers_bufnr[bufnr] = {
     notify = function()
       buffer_notifications = buffer_notifications + 1

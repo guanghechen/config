@@ -108,7 +108,9 @@ t:test("get_relpath delegates to the Git path boundary", function()
   local filepath = [[C:\repo\lua\era\m\im\wsl.lua]]
 
   t.assert_eq("lua/era/m/im/wsl.lua", repo:get_relpath(filepath), "Git relative path")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq([[C:\repo]], received.from, "relative path root")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(filepath, received.to, "relative path target")
 end)
 

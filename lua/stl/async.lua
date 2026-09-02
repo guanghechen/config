@@ -82,9 +82,12 @@ end
 function M.run_future(async_fn, ...)
   local args = { ... }
   local argc = select("#", ...)
-  return stl.c.Future.new(function(resolve, reject)
+  ---@param resolve                     fun(result: any): nil
+  ---@param reject                      fun(err: string): nil
+  local function executor(resolve, reject)
     resume(coroutine.create(async_fn), resolve, reject, unpack(args, 1, argc))
-  end)
+  end
+  return stl.c.Future.new(executor)
 end
 
 ---@async

@@ -287,6 +287,7 @@ t:test("apply: publishes semantic state before fallible decorations", function()
     last_child_lnums = { 0 },
     root_last_lnum = 1,
   } ---@type era.m.diffview.ITreeNavigation
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local restore_range = t:patch_table(vim.hl, "range", function()
     error("injected decoration failure")
   end)

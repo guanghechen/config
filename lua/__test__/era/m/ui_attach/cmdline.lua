@@ -92,7 +92,9 @@ t:test("nested hide restores the highest active cmdline position", function()
   local cmdline, states = setup()
   local confirming_task = states.message.confirming_task
   states.message.confirming_task = nil
+  ---@diagnostic disable-next-line: missing-fields
   states.cmdline[1] = { level = 1, winnr = 11, type = "confirm", confirming_task = confirming_task }
+  ---@diagnostic disable-next-line: missing-fields
   states.cmdline[2] = { level = 2, winnr = 22 }
   cmdline._update_cmdline_position = function(state, winnr)
     vim.g.ui_cmdline_pos = { state.level, winnr }
@@ -119,6 +121,7 @@ t:test("cmdline position uses original content origin", function()
     strdisplaywidth = vim.fn.strdisplaywidth,
   })
 
+  ---@diagnostic disable-next-line: missing-fields
   cmdline._update_cmdline_position({
     pos = 5,
     first = "edit ",
@@ -145,6 +148,7 @@ t:test("cmdline position follows a horizontally scrolled cursor", function()
     strdisplaywidth = vim.fn.strdisplaywidth,
   })
 
+  ---@diagnostic disable-next-line: missing-fields
   cmdline._update_cmdline_position({
     pos = 79,
     first = string.rep("a", 120),
@@ -170,9 +174,13 @@ t:test("cmdline show preserves protocol content and indent", function()
   cmdline.show({ event = "cmdline_show", args = { content, 3, "=", "Prompt:", 2, 1, 9 } })
 
   t.assert_true(rendered ~= nil, "rendered state")
+  ---@diagnostic disable-next-line: need-check-nil, undefined-field
   t.assert_true(rendered.content == content, "content identity")
+  ---@diagnostic disable-next-line: need-check-nil, undefined-field
   t.assert_eq("Prompt:", rendered.prompt, "prompt")
+  ---@diagnostic disable-next-line: need-check-nil, undefined-field
   t.assert_eq(2, rendered.indent, "indent")
+  ---@diagnostic disable-next-line: need-check-nil, undefined-field
   t.assert_nil(rendered.special, "special char")
 end)
 
@@ -182,6 +190,7 @@ t:test("cmdline render keeps byte highlight offsets", function()
     return "Group" .. hlid
   end)
 
+  ---@diagnostic disable-next-line: missing-fields
   local render = cmdline._resolve_render({
     content = { { 0, "文", 11 }, { 0, "x", 12 } },
     pos = 4,
@@ -204,6 +213,7 @@ end)
 
 t:test("special char is retained until the next cmdline show", function()
   local cmdline, states = setup()
+  ---@diagnostic disable-next-line: missing-fields
   states.cmdline[1] = { level = 1 }
   local rendered = nil
   cmdline._show = function(state)
@@ -212,7 +222,9 @@ t:test("special char is retained until the next cmdline show", function()
 
   cmdline.special_char({ event = "cmdline_special_char", args = { '"', true, 1 } })
 
+  ---@diagnostic disable-next-line: need-check-nil, undefined-field
   t.assert_eq('"', rendered.special.c, "special char")
+  ---@diagnostic disable-next-line: need-check-nil, undefined-field
   t.assert_true(rendered.special.shift, "special shift")
 end)
 
@@ -333,6 +345,7 @@ t:test("cursor movement inside a confirm prompt keeps the confirm renderer", fun
   cmdline._show_confirm = function()
     rendered = "confirm"
   end
+  ---@diagnostic disable-next-line: missing-fields
   states.cmdline[1] = {
     level = 1,
     pos = 0,
@@ -349,6 +362,7 @@ end)
 t:test("special chars inside a confirm prompt keep the confirm renderer", function()
   local cmdline, states = setup()
   local rendered
+  ---@diagnostic disable-next-line: missing-fields
   states.cmdline[1] = {
     level = 1,
     type = "confirm",
@@ -370,6 +384,7 @@ end)
 t:test("nested expression cmdlines do not inherit an outer confirmation", function()
   local cmdline, states = setup()
   local rendered
+  ---@diagnostic disable-next-line: missing-fields
   states.cmdline[1] = {
     level = 1,
     type = "confirm",

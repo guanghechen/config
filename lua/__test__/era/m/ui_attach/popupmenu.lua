@@ -22,6 +22,7 @@ local function setup()
     },
   })
 
+  ---@diagnostic disable-next-line: redundant-return-value
   return assert(loadfile("lua/era/m/ui_attach/popupmenu.lua"))(), states
 end
 
@@ -67,7 +68,9 @@ t:test("selection scrolls the popup window to the selected item", function()
 
   popupmenu.select({ event = "popupmenu_select", args = { 2 } })
 
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(3, cursor[1], "selected cursor row")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(0, cursor[2], "selected cursor column")
 end)
 

@@ -58,6 +58,7 @@ end
 ---@return string
 local function render_path(component, root_filepath)
   local root = stl.c.Observable.from_value(root_filepath)
+  ---@diagnostic disable-next-line: missing-parameter
   return component.path(root).render()
 end
 
@@ -99,6 +100,7 @@ t:test("render reuses startup path context without recanonicalizing", function()
   t.assert_eq(3, context.from_os_calls(), "startup canonicalization count")
   t.assert_eq(1, context.workspace_calls(), "startup workspace read count")
   for _ = 1, 100 do
+    ---@diagnostic disable-next-line: missing-parameter
     component.render()
   end
   t.assert_eq(3, context.from_os_calls(), "render canonicalization count")

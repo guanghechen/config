@@ -208,6 +208,7 @@ end)
 t:test("compute_hunk_word_diff: large hunks stay within the popup latency budget", function()
   local old_line = string.rep("a", 500) ---@type string
   local new_line = string.rep("b", 500) ---@type string
+  ---@diagnostic disable-next-line: missing-fields
   local hunk = { type = "change", removed = { lines = {} }, added = { lines = {} } } ---@type era.m.git.Hunk
   for index = 1, 200 do
     hunk.removed.lines[index] = old_line

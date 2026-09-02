@@ -12,6 +12,7 @@ local t = harness.new("era.m.plugin.widget")
 ---@return string[]
 local function lines_of(widget)
   local lines = {} ---@type string[]
+  ---@diagnostic disable-next-line: invisible
   for _, segments in ipairs(widget._lines) do
     local line = ""
     for _, segment in ipairs(segments) do
@@ -76,6 +77,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
     },
   } ---@type table<string, era.m.plugin.IPluginState>
   local tasks = {
+    ---@diagnostic disable-next-line: missing-fields
     ["slow.nvim"] = {
       name = "slow.nvim",
       action = "update",
@@ -84,6 +86,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
       from_commit = "aaaaaaa",
       to_commit = "bbbbbbb",
     },
+    ---@diagnostic disable-next-line: missing-fields
     ["runtime.nvim"] = {
       name = "runtime.nvim",
       action = "update",
@@ -92,6 +95,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
       from_commit = "ccccccc",
       to_commit = "ccccccc",
     },
+    ---@diagnostic disable-next-line: missing-fields
     ["missing.nvim"] = {
       name = "missing.nvim",
       action = "install",
@@ -102,6 +106,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
       from_commit = nil,
       to_commit = nil,
     },
+    ---@diagnostic disable-next-line: missing-fields
     ["orphan.nvim"] = {
       name = "orphan.nvim",
       action = "clean",
@@ -110,6 +115,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
       from_commit = nil,
       to_commit = nil,
     },
+    ---@diagnostic disable-next-line: missing-fields
     ["idle.nvim"] = {
       name = "idle.nvim",
       action = "install",
@@ -146,6 +152,7 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
     return path ~= "/plugins/missing.nvim"
   end)
 
+  ---@diagnostic disable-next-line: missing-fields
   local widget = Widget.new({ win_opts = { width = 132 } } --[[@as era.m.plugin.View]])
   widget:__build_required_by__()
   widget:__header__()
@@ -193,17 +200,23 @@ t:test("cursor ownership follows a plugin across section moves", function()
     restored = cursor
   end)
 
+  ---@diagnostic disable-next-line: missing-fields
   local widget = Widget.new({ win_opts = { width = 80 }, winnr = 7 } --[[@as era.m.plugin.View]])
+  ---@diagnostic disable-next-line: invisible
   widget._line_to_plugin = { [3] = "target.nvim" }
   t.assert_eq("target.nvim", widget:__cursor_plugin__(), "cursor owner")
 
+  ---@diagnostic disable-next-line: invisible
   widget._lines = { {}, {}, {}, {} }
+  ---@diagnostic disable-next-line: invisible
   widget._line_to_plugin = { [2] = "other.nvim", [4] = "target.nvim" }
   widget:__restore_cursor__("target.nvim")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(4, restored[1], "restored line")
 end)
 
 t:test("normalized multiline task errors render successfully", function()
+  ---@diagnostic disable-next-line: missing-fields
   local widget = Widget.new({ win_opts = { width = 80 } } --[[@as era.m.plugin.View]])
   widget:__render_task__({
     name = "clone-error.nvim",
@@ -217,6 +230,7 @@ t:test("normalized multiline task errors render successfully", function()
   widget:__trim__()
 
   local bufnr = vim.api.nvim_create_buf(false, true)
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_delete(bufnr, { force = true })

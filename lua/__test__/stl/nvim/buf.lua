@@ -22,6 +22,7 @@ local buf = assert(loadfile("lua/stl/nvim/buf.lua"))()
 ---@return integer
 local function create_buffer()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     buf.on_buf_close(bufnr)
     if vim.api.nvim_buf_is_valid(bufnr) then

@@ -169,9 +169,10 @@ function M.status_component()
       local title_width = vim.api.nvim_strwidth(title_text) ---@type integer
 
       -- Calculate flags width (flag2 only shown in tree mode)
+      ---@type integer
       local flags_width = vim.api.nvim_strwidth(flag1_text)
         + vim.api.nvim_strwidth(flag3_text)
-        + vim.api.nvim_strwidth(flag4_text) ---@type integer
+        + vim.api.nvim_strwidth(flag4_text)
       local flag2_text = "" ---@type string
       if is_tree then
         local foldempty_icon = stl.icon.symbols.flag_fold_empty_path ---@type string

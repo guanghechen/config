@@ -61,6 +61,7 @@ end)
 local function update_registrations(registrations, ctx, supported)
   local client = clients[ctx.client_id]
   for _, registration in ipairs(registrations) do
+    ---@diagnostic disable-next-line: undefined-field
     client.methods[registration.method] = supported
   end
   return vim.NIL
@@ -138,15 +139,23 @@ end
 
 t:test("capabilities: include completion deltas without loading blink", function()
   local capabilities = Event.get_capabilities()
+  ---@diagnostic disable-next-line: missing-fields
   Event.before_init({ capabilities = capabilities }, {})
 
   local completion = capabilities.textDocument.completion
+  ---@diagnostic disable-next-line: need-check-nil
   local completion_item = completion.completionItem
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(vim.list_contains(completion_item.resolveSupport.properties, "detail"), "resolve detail")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(vim.list_contains(completion_item.resolveSupport.properties, "data"), "resolve data")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, completion_item.insertTextModeSupport.valueSet[1], "insert text mode support")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(vim.list_contains(completion.completionList.itemDefaults, "commitCharacters"), "item defaults")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, completion.insertTextMode, "insert text mode")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(completion_item.snippetSupport, "snippet support")
   t.assert_eq(0, blink_loads, "blink load count")
 end)
@@ -178,6 +187,7 @@ t:test("keymaps: reconcile dynamic capability changes with bounded writes", func
   keymap_dels = 0
   local result = vim.lsp.handlers[Methods.client_registerCapability](nil, {
     registrations = { { id = "code-action", method = "textDocument/codeAction" } },
+    ---@diagnostic disable-next-line: missing-fields
   }, { client_id = client.id })
 
   t.assert_eq(vim.NIL, result, "register handler result")
@@ -190,6 +200,7 @@ t:test("keymaps: reconcile dynamic capability changes with bounded writes", func
   keymap_dels = 0
   vim.lsp.handlers[Methods.client_registerCapability](nil, {
     registrations = { { id = "watcher", method = "workspace/didChangeWatchedFiles" } },
+    ---@diagnostic disable-next-line: missing-fields
   }, { client_id = client.id })
 
   t.assert_eq(0, keymap_sets, "irrelevant registration writes")
@@ -199,6 +210,7 @@ t:test("keymaps: reconcile dynamic capability changes with bounded writes", func
   keymap_dels = 0
   vim.lsp.handlers[Methods.client_unregisterCapability](nil, {
     unregisterations = { { id = "code-action", method = "textDocument/codeAction" } },
+    ---@diagnostic disable-next-line: missing-fields
   }, { client_id = client.id })
 
   t.assert_eq(3, keymap_sets, "unregistered mapping writes")
@@ -308,12 +320,14 @@ if vim.env.NVIM_LSP_EVENT_BENCHMARK == "1" then
     local function register(method)
       vim.lsp.handlers[Methods.client_registerCapability](nil, {
         registrations = { { id = method, method = method } },
+        ---@diagnostic disable-next-line: missing-fields
       }, { client_id = client.id })
     end
 
     local function unregister(method)
       vim.lsp.handlers[Methods.client_unregisterCapability](nil, {
         unregisterations = { { id = method, method = method } },
+        ---@diagnostic disable-next-line: missing-fields
       }, { client_id = client.id })
     end
 

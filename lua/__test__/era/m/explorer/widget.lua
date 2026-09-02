@@ -137,7 +137,9 @@ t:test("hide: invalidates the tree when the last watched window closes", functio
     widget:hide(1)
     t.assert_eq(1, calls.pause_watch, "last window should pause watchers")
     t.assert_eq(1, calls.mark_all_dirty, "last window should invalidate the tree snapshot")
+    ---@diagnostic disable-next-line: invisible
     t.assert_eq(1, widget._render_generation, "last window should invalidate deferred decoration")
+    ---@diagnostic disable-next-line: invisible
     t.assert_eq(0, #widget._render_result.deferred_file_icons, "last window should release deferred decoration")
 
     widget:hide(1)
@@ -153,6 +155,7 @@ t:test("hide: preserves watcher coverage while another window remains", function
     widget:hide(1)
     t.assert_eq(0, calls.pause_watch, "remaining window should keep watchers active")
     t.assert_eq(0, calls.mark_all_dirty, "remaining window should keep the tree snapshot valid")
+    ---@diagnostic disable-next-line: invisible
     t.assert_eq(0, widget._render_generation, "remaining window should preserve deferred decoration")
 
     widget:hide(2)
@@ -187,18 +190,26 @@ end
 t:test("file icons: stale generation cannot update the current render", function()
   local widget, get_scheduled = new_scheduled_icon_widget()
   local updated = {} ---@type string[]
+  ---@diagnostic disable-next-line: invisible
   widget._view.update_file_icons = function(_, _, result)
+    ---@diagnostic disable-next-line: undefined-field
     updated[#updated + 1] = result.id
   end
 
   local stale = { id = "stale", deferred_file_icons = { {} } }
+  ---@diagnostic disable-next-line: invisible
   local stale_generation = widget:__invalidate_render__()
+  ---@diagnostic disable-next-line: invisible
   widget._render_result = stale
+  ---@diagnostic disable-next-line: invisible
   widget:__schedule_file_icons__(1, stale, stale_generation)
 
   local current = { id = "current", deferred_file_icons = { {} } }
+  ---@diagnostic disable-next-line: invisible
   local current_generation = widget:__invalidate_render__()
+  ---@diagnostic disable-next-line: invisible
   widget._render_result = current
+  ---@diagnostic disable-next-line: invisible
   widget:__schedule_file_icons__(1, current, current_generation)
 
   local scheduled = get_scheduled()
@@ -214,6 +225,7 @@ end)
 t:test("file icons: decoration yields between bounded batches", function()
   local widget, get_scheduled = new_scheduled_icon_widget()
   local batches = {} ---@type integer[][]
+  ---@diagnostic disable-next-line: invisible
   widget._view.update_file_icons = function(_, _, _, index_start, index_end)
     batches[#batches + 1] = { index_start, index_end }
   end
@@ -223,8 +235,11 @@ t:test("file icons: decoration yields between bounded batches", function()
     icons[#icons + 1] = {}
   end
   local result = { deferred_file_icons = icons }
+  ---@diagnostic disable-next-line: invisible
   local generation = widget:__invalidate_render__()
+  ---@diagnostic disable-next-line: invisible
   widget._render_result = result
+  ---@diagnostic disable-next-line: invisible
   widget:__schedule_file_icons__(1, result, generation)
 
   local scheduled = get_scheduled()
@@ -243,11 +258,15 @@ end)
 
 t:test("file icons: hidden widgets release decoration without scheduling", function()
   local widget, get_scheduled = new_scheduled_icon_widget()
+  ---@diagnostic disable-next-line: invisible
   widget._tab_wins = {}
 
   local result = { deferred_file_icons = { {} } }
+  ---@diagnostic disable-next-line: invisible
   local generation = widget:__invalidate_render__()
+  ---@diagnostic disable-next-line: invisible
   widget._render_result = result
+  ---@diagnostic disable-next-line: invisible
   widget:__schedule_file_icons__(1, result, generation)
 
   t.assert_eq(0, #get_scheduled(), "hidden widget should not schedule decoration")
@@ -308,7 +327,9 @@ local function new_reveal_widget(initial_root, attach_ok, alias_filepath)
 
   widget.focus = function(self)
     calls.focus = calls.focus + 1
+    ---@diagnostic disable-next-line: invisible
     self._tree:refresh(false)
+    ---@diagnostic disable-next-line: invisible
     self:__render__()
   end
 
@@ -324,6 +345,7 @@ t:test("reveal: refreshes and renders once after preparing the target", function
   t.assert_eq(0, calls.resolve_root_alias, "same-root reveal should skip alias resolution")
   t.assert_eq(1, calls.expand_path, "target path should expand once")
   t.assert_eq("/project/src/", calls.expanded_filepath)
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/src/main.lua", widget._tree.o_cursor_filepath:snapshot())
   t.assert_eq(1, calls.focus, "reveal should focus once")
   t.assert_eq(1, calls.refresh, "reveal should refresh once")
@@ -338,7 +360,9 @@ t:test("reveal: changes root without an intermediate refresh", function()
   t.assert_eq(1, calls.attach, "cross-root reveal should attach once")
   t.assert_eq(1, calls.resolve_root_alias, "cross-root reveal should try the current root aliases")
   t.assert_eq("/outside/", calls.attached_filepath)
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/", widget._tree.prev_root_filepath)
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/outside/", widget._tree.o_root_filepath:snapshot())
   t.assert_eq("/outside/", calls.expanded_filepath)
   t.assert_eq(1, calls.focus, "cross-root reveal should focus once")
@@ -356,6 +380,7 @@ t:test("reveal: preserves the root when the canonical target has a logical alias
   t.assert_eq("/physical/local/main.lua", calls.alias_target_filepath)
   t.assert_eq(0, calls.attach, "logical alias should preserve the current root")
   t.assert_eq("/project/local/", calls.expanded_filepath)
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/local/main.lua", widget._tree.o_cursor_filepath:snapshot())
   t.assert_eq(1, calls.focus, "logical reveal should focus once")
   t.assert_eq(1, calls.refresh, "logical reveal should refresh once")
@@ -368,7 +393,9 @@ t:test("reveal: preserves the current root when attach fails", function()
   widget:reveal("/missing/main.lua")
 
   t.assert_eq(1, calls.attach, "failed root should be attempted once")
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/", widget._tree.o_root_filepath:snapshot())
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq(nil, widget._tree.prev_root_filepath)
   t.assert_eq(0, calls.expand_path, "failed root should abort target expansion")
   t.assert_eq(1, calls.focus, "failed reveal should preserve focus behavior")
@@ -383,6 +410,7 @@ t:test("parent filepath: directory parents keep a trailing slash", function()
 
   local widget = setmetatable({}, Widget)
 
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/src/", widget:__get_parent_filepath__("/project/src/main.lua"))
 end)
 
@@ -399,10 +427,15 @@ t:test("navigation: resolves the visible parent, last child, and last sibling", 
     },
   }, Widget)
 
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/src/", widget:__get_navigation_parent_filepath__("/project/src/a.lua"))
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/src/z.lua", widget:__get_navigation_last_child_filepath__("/project/src/a.lua"))
+  ---@diagnostic disable-next-line: invisible
   t.assert_nil(widget:__get_navigation_parent_filepath__("/project/src/"))
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/src/z.lua", widget:__get_navigation_last_child_filepath__("/project/src/"))
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("/project/README.md", widget:__get_navigation_last_child_filepath__("/project/README.md"))
 end)
 
@@ -436,6 +469,7 @@ t:test("navigation: consumes canonical render filepaths without normalization", 
 
   local filepaths = {} ---@type string[]
   normalize_calls = 0
+  ---@diagnostic disable-next-line: invisible
   local found = widget:__goto_matching_file_or_dir__("next", function(filepath)
     filepaths[#filepaths + 1] = filepath
     return true
@@ -484,6 +518,7 @@ t:test("ignored refresh: updates any visible tab and filters unaffected paths", 
     end,
   }, Widget)
 
+  ---@diagnostic disable-next-line: invisible
   widget:__setup_subscriptions__()
   t.assert_eq(true, tree.o_flag_hidden:get_ignore_initial(), "initial hidden state should not refresh the tree")
 

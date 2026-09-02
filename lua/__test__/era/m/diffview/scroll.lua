@@ -46,6 +46,7 @@ t:test("mouse scroll keeps focus and routes through the hovered window", functio
   local bufnrs = {} ---@type integer[]
   local original_panel_bufnr = vim.api.nvim_win_get_buf(panel_winnr) ---@type integer
 
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     for _, winnr in ipairs({ right_winnr, left_winnr }) do
       if vim.api.nvim_win_is_valid(winnr) then
@@ -130,6 +131,7 @@ t:test("panel buffers route mouse scrolling without leaking mappings to side-by-
   t:patch_table(package.loaded, "era.m.git.visual", {})
 
   local workspace_keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  ---@diagnostic disable-next-line: missing-fields
   local ctx = {} ---@type era.m.diffview.view.workspace.IContext
   local workspace_panel_keymaps = workspace_keymap.gen_changes(ctx)
   assert(find_keymap(workspace_panel_keymaps, "<ScrollWheelDown>")).callback()
@@ -146,6 +148,7 @@ t:test("panel buffers route mouse scrolling without leaking mappings to side-by-
   t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
 
   local commits_keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
+  ---@diagnostic disable-next-line: missing-fields
   local commits_ctx = {} ---@type era.m.diffview.view.commits.IContext
   for _, keymaps in ipairs({ commits_keymap.gen_commits(commits_ctx), commits_keymap.gen_filetree(commits_ctx) }) do
     assert(find_keymap(keymaps, "<ScrollWheelDown>")).callback()
@@ -159,6 +162,7 @@ t:test("panel buffers route mouse scrolling without leaking mappings to side-by-
   t.assert_eq("down,up,down,up", table.concat(calls, ","), "commits scroll directions")
 
   local shared_sbs_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     if vim.api.nvim_buf_is_valid(shared_sbs_bufnr) then
       vim.api.nvim_buf_delete(shared_sbs_bufnr, { force = true })
@@ -214,6 +218,7 @@ t:test("commits panel recreation installs mouse mappings", function()
     state = {},
   } ---@type era.m.diffview.view.commits.IContext
 
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     if vim.api.nvim_win_is_valid(anchor_winnr) then
       vim.api.nvim_set_current_win(anchor_winnr)

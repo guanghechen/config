@@ -132,12 +132,14 @@ t:test("canonicalizes ingress and crosses scan and preview boundaries", function
   t.assert_eq("OS<C:/workspace/project>", fixture.scans[2], "parent scan boundary")
 
   local data = assert(fixture.data)
+  ---@diagnostic disable-next-line: undefined-field
   local fileitem = assert(data.items[2]).data.fileitem
   local filepath = "C:/workspace/project/src/main.lua"
   t.assert_eq(filepath, data.items[2].uuid, "canonical item uuid")
   t.assert_eq(filepath, fileitem.path, "canonical item filepath")
   t.assert_eq("C:/workspace/project/src", fileitem.dir, "canonical item dirpath")
 
+  ---@diagnostic disable-next-line: assign-type-mismatch
   fixture.current_item = data.items[2]
   local read_filepath = nil ---@type string|nil
   t:patch_table(stl.fs, "read_file_as_lines", function(params)
@@ -167,6 +169,7 @@ end)
 t:test("mutation actions keep canonical identity and convert only at OS boundaries", function()
   local fixture = new_fixture()
   fixture.find_explorer([[C:\workspace\project\src\]])
+  ---@diagnostic disable-next-line: assign-type-mismatch
   fixture.current_item = assert(fixture.data).items[2]
 
   local source = "C:/workspace/project/src/main.lua"

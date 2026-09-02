@@ -418,9 +418,13 @@ t:test("transfer: stage includes the selection and focused item", function()
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("move", pending.mode, "pending mode")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(3, #pending.sources, "pending source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths["/project/src/a.txt"], "pending source map")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[focused.filepath], "focused source")
   t.assert_true(is_selected(focused.filepath), "focused selection")
 end)
@@ -440,9 +444,13 @@ t:test("transfer: visual stage includes the existing selection", function()
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("copy", pending.mode, "pending mode")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(2, #pending.sources, "pending source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[selected.filepath], "selected source")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[visual.filepath], "visual source")
 end)
 
@@ -461,9 +469,13 @@ t:test("transfer: tab adds focused item to pending mode and selection", function
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("move", pending.mode, "inherited mode")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(2, #pending.sources, "pending source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[first.filepath], "first source")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[second.filepath], "new source")
   t.assert_true(is_selected(first.filepath), "original pending selection")
   t.assert_true(is_selected(second.filepath), "new selection")
@@ -499,7 +511,9 @@ t:test("transfer: unselecting a child removes its collapsed ancestor source", fu
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer before cancellation")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #pending.sources, "collapsed source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[parent.filepath], "collapsed ancestor source")
 
   set_cursor(child.filepath)
@@ -524,9 +538,13 @@ t:test("transfer: copy replaces an unselected cut item with focused item", funct
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("copy", pending.mode, "pending mode")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #pending.sources, "pending source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(pending.source_filepaths[cut.filepath] == true, "old cut source")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[focused.filepath], "focused copy source")
 end)
 
@@ -552,10 +570,15 @@ t:test("transfer: copy includes promoted pending selection and focused item", fu
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("copy", pending.mode, "pending mode")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(3, #pending.sources, "pending source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[old_cut.filepath], "promoted copy source")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[selected.filepath], "selected copy source")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[focused.filepath], "focused copy source")
   t.assert_true(is_selected(old_cut.filepath), "promoted selection")
   t.assert_true(is_selected(focused.filepath), "focused selection")
@@ -595,8 +618,11 @@ t:test("transfer: copy cancellation keeps other selected copy items", function()
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #pending.sources, "pending source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[selected.filepath], "remaining copy source")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(pending.source_filepaths[focused.filepath] == true, "cancelled copy source")
   t.assert_true(is_selected(selected.filepath), "remaining selection")
   t.assert_false(is_selected(focused.filepath), "cancelled selection")
@@ -678,8 +704,11 @@ t:test("transfer: renaming an ancestor removes only covered pending sources", fu
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #pending.sources, "pending source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(pending.source_filepaths[unrelated.filepath], "unrelated source")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(pending.source_filepaths[child.filepath] == true, "renamed descendant source")
 end)
 
@@ -806,7 +835,9 @@ t:test("transfer: partial failure retains only failed sources", function()
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "failed pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #pending.sources, "failed source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("/project/b.txt", pending.sources[1].filepath, "failed source")
   t.assert_eq(1, calls.clear_selection, "selection clear count")
 end)
@@ -838,7 +869,9 @@ t:test("transfer: copy retains only retryable failures and exposes partial targe
 
   local pending = action:get_pending_transfer()
   t.assert_true(pending ~= nil, "retryable pending transfer")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #pending.sources, "retryable source count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(nodes[2].filepath, pending.sources[1].filepath, "retryable source")
   t.assert_eq(1, calls.clear_selection, "selection clear count")
   t.assert_eq(1, calls.tree_refresh, "tree refresh count")

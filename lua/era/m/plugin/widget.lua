@@ -194,13 +194,14 @@ function M:__header__()
   local Action = require("era.m.plugin.action")
   if Action.is_running() then
     local progress = Action.get_progress() ---@type era.m.plugin.IOperationProgress
+    ---@type table<era.m.plugin.ActionEnum, string>
     local labels = {
       install = "Installing",
       sync = "Syncing",
       update = "Updating",
       clean = "Cleaning",
       build = "Building",
-    } ---@type table<era.m.plugin.ActionEnum, string>
+    }
     local completed = progress.done + progress.error ---@type integer
     self:__append__("    " .. (labels[progress.action] or "Running"), "m_pl_bold")
     self:__append__(string.format(" %d/%d", completed, progress.total), "m_pl_comment")

@@ -349,6 +349,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
     { ["/project/file"] = { display = "M" } },
     { ["/project/file"] = { display = "D" } },
   } ---@type table<string, table>[]
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local collect_index = 0 ---@type integer
   local collect_base = "unset" ---@type string|false
 
@@ -363,6 +364,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
     local filepath, entry = next(status_map)
     return {
       dir_cache = {},
+      ---@diagnostic disable-next-line: need-check-nil
       file_display = { [filepath] = entry.display },
       file_stage = {},
       file_summary = {},
@@ -385,6 +387,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
   wait_future(state.refresh_index())
   t.assert_false(collect_base, "global refresh must support unborn HEAD")
   t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "initial changed status notification")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq("index", state.o_refreshed:snapshot().change_scope, "index-only refresh provenance")
   t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "initial staged files notification")
   t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "initial unstaged files notification")
@@ -395,6 +398,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
 
   wait_future(state.refresh(false))
   t.assert_eq(refreshed_before + 2, next_count(state.o_refreshed), "unchanged status notification")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "default refresh provenance")
   t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "unchanged staged files notification")
   t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "unchanged unstaged files notification")
@@ -463,10 +467,12 @@ t:test("refresh: trailing provenance stays conservative", function()
   t.assert_eq(1, #resolvers, "index collection started")
 
   resolvers[1]({ status_map = {} })
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq("index", state.o_refreshed:snapshot().change_scope, "running collection keeps its provenance")
   t.assert_eq(2, #resolvers, "broader request starts a trailing collection")
 
   resolvers[2]({ status_map = {} })
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "trailing collection stays conservative")
 end)
 

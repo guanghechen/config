@@ -127,6 +127,7 @@ t:test("cancel: a callback that unsubscribes itself does not skip the next one",
   for i = 1, 4 do
     subs[i] = token:on_cancel(function()
       fired[#fired + 1] = i
+      ---@diagnostic disable-next-line: missing-parameter
       subs[i].unsubscribe()
     end)
   end

@@ -945,6 +945,7 @@ t:test("finally: a settled future still delivers a falsy result", function()
   -- tests truthiness -- it accepts `nil`, so it passes against the unfixed implementation.
   local after_ok, after_result = "unset", "unset"
   Future.resolve(false):finally(function(ok, result)
+    ---@diagnostic disable-next-line: cast-local-type
     after_ok, after_result = ok, result
   end)
   t.assert_eq(true, after_ok, "resolved")
@@ -954,6 +955,7 @@ t:test("finally: a settled future still delivers a falsy result", function()
   local before_ok, before_result = "unset", "unset"
   local pending = Future.new()
   pending:finally(function(ok, result)
+    ---@diagnostic disable-next-line: cast-local-type
     before_ok, before_result = ok, result
   end)
   pending:__resolve__(false)
@@ -964,6 +966,7 @@ t:test("finally: a settled future still delivers a falsy result", function()
   -- cannot fail against the old code. The rejected side is what tells the two slots apart.
   local nil_ok, nil_result = "unset", "unset"
   Future.resolve(nil):finally(function(ok, result)
+    ---@diagnostic disable-next-line: cast-local-type
     nil_ok, nil_result = ok, result
   end)
   t.assert_eq(true, nil_ok, "a nil result still reports success")
@@ -971,6 +974,7 @@ t:test("finally: a settled future still delivers a falsy result", function()
 
   local rejected_ok, rejected_result = "unset", "unset"
   Future.reject("boom"):finally(function(ok, result)
+    ---@diagnostic disable-next-line: cast-local-type
     rejected_ok, rejected_result = ok, result
   end)
   t.assert_eq(false, rejected_ok, "a settled rejection still reports failure")

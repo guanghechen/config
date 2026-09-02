@@ -96,6 +96,7 @@ t:test("references: deduplicates overlapping clients and renders unique location
 
   local resolved_picker = assert(picker) ---@type era.m.picker.FiletreeComposer
   local fileuuid = stl.c.Filetree.uuid(filepath_target) ---@type string
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local filestate = resolved_picker._treeview.statemap[fileuuid] ---@type era.m.picker.view.filetree.IFileNodeState
   local locations = assert(filestate.locations) ---@type era.m.picker.view.filetree.ILocationNodeState[]
   t.assert_eq(3, #locations, "unique location count")

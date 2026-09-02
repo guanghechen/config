@@ -149,6 +149,7 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
   restore()
 
   local failed = assert(buffer.get_cache(bufnr))
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(refresh_outcome.resolved, "refresh rejected")
   t.assert_true(failed.dirty, "cache remains dirty")
   t.assert_nil(failed.head_document, "HEAD is not replaced with an empty document")
@@ -165,6 +166,7 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
   end, 5000, "missing-index refresh")
 
   local missing = assert(buffer.get_cache(bufnr))
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(recovery.resolved, "refresh resolved")
   t.assert_eq("a\nb\n", missing.head_document.text, "HEAD remains independent")
   t.assert_eq("", missing.index_document.text, "missing index is empty")
@@ -177,6 +179,7 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
   t.wait_until(function()
     return staged ~= nil
   end, 5000, "stage from missing index")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(staged.ok, "real stage_hunk path: " .. tostring(staged.err))
   t.assert_eq("A\n", git("cat-file", "-p", ":f.txt").stdout or "", "selected line staged")
 
@@ -193,6 +196,7 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
   restore_info()
 
   local unavailable = assert(buffer.get_cache(bufnr))
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(metadata_failure.resolved, "metadata refresh rejected")
   t.assert_true(unavailable.dirty, "metadata failure remains dirty")
   t.assert_nil(unavailable.index_document, "stale index document discarded")

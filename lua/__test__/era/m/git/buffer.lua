@@ -163,18 +163,23 @@ local function setup(initial_visible, get_file_info)
       pending_debounce = nil
       if callback then
         callback()
+        ---@diagnostic disable-next-line: missing-return
       end
     end,
+    ---@diagnostic disable-next-line: redundant-return-value
     function(bufnr, value)
       visible[bufnr] = value
     end,
+    ---@diagnostic disable-next-line: redundant-return-value
     function(bufnr, value)
       valid[bufnr] = value
     end,
+    ---@diagnostic disable-next-line: redundant-return-value
     file_info_calls
 end
 
 t:test("setup initializes visible buffers immediately", function()
+  ---@diagnostic disable-next-line: missing-parameter
   local Buffer, _, _, _, _, calls = setup({ [11] = true })
 
   t.assert_true(Buffer.is_attached(11), "visible buffer attached")
@@ -183,6 +188,7 @@ t:test("setup initializes visible buffers immediately", function()
 end)
 
 t:test("setup defers hidden buffers and refreshes every buffer that becomes visible", function()
+  ---@diagnostic disable-next-line: missing-parameter
   local Buffer, callbacks, flush, set_visible, _, calls = setup({ [11] = false, [12] = false })
 
   t.assert_true(Buffer.is_attached(11), "first hidden buffer attached")
@@ -210,6 +216,7 @@ t:test("setup defers hidden buffers and refreshes every buffer that becomes visi
 end)
 
 t:test("deferred refresh ignores buffers invalidated before becoming visible", function()
+  ---@diagnostic disable-next-line: missing-parameter
   local Buffer, callbacks, flush, set_visible, set_valid, calls = setup({ [11] = false })
 
   set_visible(11, true)
@@ -304,6 +311,7 @@ t:test("working-buffer unstage refuses unsafe coordinate projection", function()
   end)
 
   t.assert_true(outcome ~= nil, "settled")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(outcome.ok, "refused")
 end)
 
@@ -319,14 +327,18 @@ t:test("reset_hunk preserves unchanged gaps between nearby hunks", function()
     "return M",
     "",
   } ---@type string[]
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local bufnr = seed_reset_buffer(cache, diff, staging, head, edited)
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   t.assert_true(Buffer.reset_hunk(bufnr, { 3, 5 }), "reset")
   t.assert_eq(
     table.concat(head, "|", 1, #head - 1),
+    ---@diagnostic disable-next-line: param-type-mismatch
     table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "|"),
     "HEAD round-trip"
   )
+  ---@diagnostic disable-next-line: param-type-mismatch
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 

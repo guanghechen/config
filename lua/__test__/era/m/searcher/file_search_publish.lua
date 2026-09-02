@@ -62,7 +62,7 @@ local function new_composer(name, max_matches, preview)
 end
 
 t:test("preview treats an empty result as a normal state", function()
-  local basic_props = nil ---@type era.m.searcher.composer.basic.IProps|nil
+  local basic_props = nil ---@type era.m.searcher.composer.IBasicProps|nil
   local original_new = era.m.searcher.BasicComposer.new
   t:patch_table(era.m.searcher.BasicComposer, "new", function(props)
     basic_props = props
@@ -73,13 +73,16 @@ t:test("preview treats an empty result as a normal state", function()
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   local ok, err = pcall(function()
+    ---@diagnostic disable-next-line: undefined-field
     assert(basic_props ~= nil and basic_props.render_preview ~= nil, "preview renderer should be captured")
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "stale preview" })
     composer._last_preview_filepath = "stale.lua"
+    ---@diagnostic disable-next-line: duplicate-set-field
     composer.__retrieve_nodeuuid__ = function()
       return nil, 0
     end
 
+    ---@diagnostic disable-next-line: undefined-field
     local result = basic_props.render_preview(bufnr, false)
     t.assert_eq("", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "empty preview content")
     t.assert_eq("", result.title, "empty preview title")
@@ -89,9 +92,11 @@ t:test("preview treats an empty result as a normal state", function()
     t.assert_false(result.whitespaces, "empty preview whitespace markers")
     t.assert_nil(composer._last_preview_filepath, "empty preview invalidates cached filepath")
 
+    ---@diagnostic disable-next-line: duplicate-set-field
     composer.__retrieve_nodeuuid__ = function()
       return nil, -1
     end
+    ---@diagnostic disable-next-line: undefined-field
     result = basic_props.render_preview(bufnr, false)
     t.assert_eq("Unknown lnum(-1)", result.title, "invalid nonzero line remains diagnostic")
   end)
@@ -168,6 +173,7 @@ local function benchmark(flag_replace, max_matches)
     local poll_ms = (vim.uv.hrtime() - poll_started) / 1e6
     local context = request.context
     local normalize_started = vim.uv.hrtime()
+    ---@diagnostic disable-next-line: param-type-mismatch
     local normalized = composer._treeview:normalize_search_result(context.params, result)
     local normalize_ms = (vim.uv.hrtime() - normalize_started) / 1e6
 
@@ -235,6 +241,7 @@ t:test("native search paths cross the OS boundary and publish canonical identiti
     t.assert_eq("OS<C:/workspace/project>", options.cwd, "native search cwd")
     t.assert_eq("OS<C:/workspace/project/src/main.lua>", options.specified_filepath, "native specified filepath")
 
+    ---@diagnostic disable-next-line: missing-fields
     local result = composer._treeview:normalize_search_result(params, {
       items = {
         { p = [[src\main.lua]], matches = {} },
@@ -288,6 +295,7 @@ t:test("preview keeps canonical identity across filesystem boundaries", function
       offset_current = -1,
       match_offsets = {},
     } ---@type era.m.searcher.IPlainfileViewContext
+    ---@diagnostic disable-next-line: assign-type-mismatch
     local data = composer._plainfile:calc_preview_data(context)
     t.assert_eq("OS<" .. filepath .. ">", preview_filepath, "native preview filepath")
     t.assert_eq(filepath, data.filepath, "canonical preview identity")
@@ -298,6 +306,7 @@ t:test("preview keeps canonical identity across filesystem boundaries", function
       return {}
     end)
     controls.flag_replace:next(false, { silent = true })
+    ---@diagnostic disable-next-line: cast-local-type
     data = composer._plainfile:calc_preview_data(context)
     t.assert_eq("OS<" .. filepath .. ">", read_filepath, "filesystem preview filepath")
     t.assert_eq(filepath, data.filepath, "canonical read identity")
@@ -334,15 +343,21 @@ t:test("Finder renders a highlighted title accent without changing its plain-tit
   })
   local title = vim.api.nvim_win_get_config(winnr).title
   t.assert_eq(" ⡀ Search Files ", finder.title)
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(" ⡀", title[1][1])
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("m_pk_search_spinner_aqua", title[1][2])
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(" Search Files ", title[2][1])
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(nil, title[2][2], "title text must retain the window's FloatTitle highlight")
 
   finder:set_title("Search Files")
   title = vim.api.nvim_win_get_config(winnr).title
   t.assert_eq(" Search Files ", finder._title_render)
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(" Search Files ", title[1][1])
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(nil, title[1][2])
 
   finder:dispose()
@@ -397,6 +412,7 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
   local replace_all, replace_in_node ---@type fun(): nil, fun(): nil
   for _, keymap in ipairs(composer.finder.keymaps) do
     if keymap.desc == "searcher: replace all files" then
+      ---@diagnostic disable-next-line: cast-local-type
       replace_all = keymap.callback
     elseif keymap.desc == "search: replace file" then
       replace_in_node = keymap.callback
@@ -513,6 +529,7 @@ t:test("match limit status follows the published projection and blocks replace a
   local replace_all ---@type fun(): nil
   for _, keymap in ipairs(composer.finder.keymaps) do
     if keymap.desc == "searcher: replace all files" then
+      ---@diagnostic disable-next-line: cast-local-type
       replace_all = keymap.callback
       break
     end
@@ -524,7 +541,9 @@ t:test("match limit status follows the published projection and blocks replace a
   t.assert_eq(1, warnings, "limited bulk replacement should explain why it was rejected")
 
   local leafuuid = composer._uuids_order[1] ---@type string
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local leafdata = composer._filetree:get(leafuuid) ---@type stl.c.IFiletreeNodeData
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local leafstate = composer._treeview:retrieve(leafuuid) ---@type era.m.searcher.view.filetree.IFileNodeState
   assert(leafdata ~= nil and leafstate ~= nil, "limited result leaf should exist")
   composer:__replace_file__(leafdata, leafstate)
@@ -549,6 +568,7 @@ t:test("match limit status follows the published projection and blocks replace a
   local replace_in_node ---@type fun(): nil
   for _, keymap in ipairs(composer.finder.keymaps) do
     if keymap.desc == "search: replace file" then
+      ---@diagnostic disable-next-line: cast-local-type
       replace_in_node = keymap.callback
       break
     end

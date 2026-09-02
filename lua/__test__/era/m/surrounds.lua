@@ -183,9 +183,11 @@ t:test("neighborhood conversions preserve empty and multiline regions", function
       from = { line = 1, col = 2 },
       to = { line = 3, col = 3 },
     } ---@type era.m.surrounds.IRegion
+    ---@diagnostic disable-next-line: assign-type-mismatch
     local multiline_span = neighborhood.region_to_span(multiline)
     t.assert_eq(
       vim.inspect(multiline),
+      ---@diagnostic disable-next-line: param-type-mismatch
       vim.inspect(neighborhood.span_to_region(multiline_span)),
       "multiline region round trip"
     )

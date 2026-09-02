@@ -99,6 +99,7 @@ t:test("dressing attaches existing and future supported buffers", function()
   t.assert_true(filetype_callback ~= nil, "future FileType callback")
 
   buffers[12].filetype = "markdown"
+  ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ buf = 12 })
   t.assert_eq(1, #scheduled, "future supported schedule")
   table.remove(scheduled, 1)()

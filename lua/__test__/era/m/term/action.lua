@@ -69,8 +69,11 @@ t:test("create: launches the shell directly", function()
 
   t.assert_true(focused, "widget should focus")
   t.assert_true(created ~= nil, "terminal should be created")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("table", type(created.cmd), "command type")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(vim.o.shell, created.cmd[1], "shell executable")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #created.cmd, "argument count")
 end)
 
@@ -80,9 +83,13 @@ t:test("lazygit_cwd: launches lazygit directly", function()
   action.lazygit_cwd()
 
   t.assert_true(toggled ~= nil, "terminal should toggle")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("/repo", toggled.cwd, "cwd")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("table", type(toggled.cmd), "command type")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("lazygit", toggled.cmd[1], "executable")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, #toggled.cmd, "argument count")
 end)
 
@@ -98,9 +105,13 @@ t:test("lazygit_file_history: preserves the filepath as one argument", function(
   action.lazygit_file_history()
 
   t.assert_true(toggled ~= nil, "terminal should toggle")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("lazygit", toggled.cmd[1], "executable")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("-f", toggled.cmd[2], "file-history flag")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("/repo/file with spaces.lua", toggled.cmd[3], "filepath")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(3, #toggled.cmd, "argument count")
 end)
 
@@ -110,9 +121,13 @@ t:test("yazi_cwd: preserves paths as argv entries", function()
   action.yazi_cwd()
 
   t.assert_true(toggled ~= nil, "terminal should toggle")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("yazi", toggled.cmd[1], "executable")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("/repo/parent", toggled.cmd[2], "directory argument")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("--chooser-file=/cache/yazi chooser.txt", toggled.cmd[3], "chooser argument")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(3, #toggled.cmd, "argument count")
 end)
 

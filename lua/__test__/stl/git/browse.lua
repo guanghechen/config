@@ -60,11 +60,17 @@ t:test("open uses Git separators for Windows remote paths", function()
   Browse.open({ cwd = [[C:\repo]], commit = "abcdef0", line_start = 1, line_end = 1 })
 
   t.assert_eq("\\", normalize_sep, "filesystem separator")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq([[C:\repo]], relative_args.from, "relative path root")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(filepath, relative_args.to, "relative path target")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(relative_args.keep, "relative path trailing slash")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("/", relative_args.sep, "relative path separator")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("lua/era/m/im/wsl.lua", fields_opts.file, "remote Git path")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("origin", opened.name, "remote opened")
 end)
 

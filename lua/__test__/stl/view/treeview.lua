@@ -134,6 +134,7 @@ t:test("layout: folds single-child chains without losing node identity", functio
   t.assert_eq(1, result:lnum("b"), "middle folded ID lookup")
   t.assert_eq(1, result:lnum("c"), "representative ID lookup")
 
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local folded_ids = result:folded_ids(1) ---@type string[]
   t.assert_eq(3, #folded_ids, "folded ID count")
   t.assert_eq("a", folded_ids[1], "folded chain start")

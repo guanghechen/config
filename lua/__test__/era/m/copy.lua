@@ -95,6 +95,7 @@ local function use_buffer(filepath)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_win_set_buf(0, bufnr)
 
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     if vim.api.nvim_buf_is_valid(bufnr_previous) then
       vim.api.nvim_win_set_buf(0, bufnr_previous)
@@ -216,6 +217,7 @@ t:test("uses the tab sourcefile filepath and cursor outside the sourcefile buffe
   vim.api.nvim_win_set_cursor(winnr_sourcefile, { 17, 0 })
   vim.api.nvim_set_current_win(winnr_current)
 
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
       vim.api.nvim_win_close(winnr_sourcefile, true)

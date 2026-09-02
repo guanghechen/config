@@ -11,6 +11,7 @@ local t = harness.new("era.m.wk.view")
 ---@param bufnr                         integer
 ---@return nil
 local function register_popup(winnr, bufnr)
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)

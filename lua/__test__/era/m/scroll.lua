@@ -30,11 +30,11 @@ end
 local Timer = {}
 Timer.__index = Timer
 
----@param _                             integer
----@param _                             integer
+---@param _timeout                      integer
+---@param _interval                     integer
 ---@param callback                      fun()
 ---@return nil
-function Timer:start(_, _, callback)
+function Timer:start(_timeout, _interval, callback)
   self.callback = callback
 end
 

@@ -83,6 +83,7 @@ t:test("render node: resolves Git status once", function()
     nodename = "file.lua",
     nodetype = "F",
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local ctx = {
     diag_counts = {},
     show_diagnostics = false,
@@ -91,12 +92,14 @@ t:test("render node: resolves Git status once", function()
   } ---@type era.m.explorer.view.IRenderContext
 
   normalize_calls = 0
+  ---@diagnostic disable-next-line: invisible, param-type-mismatch
   local _, highlights, git_info = view:__render_node__(ctx, node, "", 1, nil, false, false)
 
   t.assert_eq(0, normalize_calls, "canonical node filepath normalization count")
   t.assert_eq(1, resolve_calls, "resolve count")
   t.assert_eq("m_ft_git_change", highlights[1].hlname, "node name highlight")
   t.assert_true(git_info ~= nil, "Git status info")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(" M", git_info.text, "Git status text")
 end)
 
@@ -112,6 +115,7 @@ t:test("render: writes range highlights directly as extmarks", function()
     nodename = "file.lua",
     nodetype = "F",
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local root = {
     filepath = "/project/",
     nodename = "project",
@@ -120,6 +124,7 @@ t:test("render: writes range highlights directly as extmarks", function()
     loaded = true,
     children = { child },
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local tree = {
     ticks = { structure = 1 },
     is_selected = function()
@@ -128,6 +133,7 @@ t:test("render: writes range highlights directly as extmarks", function()
   } ---@type era.m.explorer.Tree
 
   normalize_calls = 0
+  ---@diagnostic disable-next-line: param-type-mismatch
   local result = view:render(bufnr, tree, root, {
     show_diagnostics = false,
     show_git_status = false,
@@ -172,6 +178,7 @@ t:test("render: defers file icons and applies exact icons by byte range", functi
     nodename = "file.lua",
     nodetype = "F",
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local root = {
     filepath = "/project/",
     nodename = "project",
@@ -180,6 +187,7 @@ t:test("render: defers file icons and applies exact icons by byte range", functi
     loaded = true,
     children = { child },
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local tree = {
     ticks = { structure = 1 },
     is_selected = function()
@@ -187,6 +195,7 @@ t:test("render: defers file icons and applies exact icons by byte range", functi
     end,
   } ---@type era.m.explorer.Tree
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   local result = view:render(bufnr, tree, root, {
     defer_file_icons = true,
     show_diagnostics = false,
@@ -219,6 +228,7 @@ t:test("render: defers file icons and applies exact icons by byte range", functi
   end
   t.assert_eq(#("╰─" .. "" .. " "), name_start, "name highlight should follow the resolved icon")
 
+  ---@diagnostic disable-next-line: invisible
   local icon_extmarks = vim.api.nvim_buf_get_extmarks(bufnr, view._file_icon_nsnr, 0, -1, { details = true })
   t.assert_eq(1, #icon_extmarks, "icon highlight count")
   t.assert_eq("IconExact", icon_extmarks[1][4].hl_group, "resolved icon highlight")
@@ -243,6 +253,7 @@ t:test("file icons: restores modifiable when a buffer update fails", function()
     nodename = "file.lua",
     nodetype = "F",
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local root = {
     filepath = "/project/",
     nodename = "project",
@@ -251,6 +262,7 @@ t:test("file icons: restores modifiable when a buffer update fails", function()
     loaded = true,
     children = { child },
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local tree = {
     ticks = { structure = 1 },
     is_selected = function()
@@ -258,6 +270,7 @@ t:test("file icons: restores modifiable when a buffer update fails", function()
     end,
   } ---@type era.m.explorer.Tree
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   local result = view:render(bufnr, tree, root, {
     defer_file_icons = true,
     show_diagnostics = false,
@@ -283,11 +296,13 @@ t:test("render: records visible parent and last-child navigation", function()
     nodename = "a.lua",
     nodetype = "F",
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local last = {
     filepath = "/project/src/z.lua",
     nodename = "z.lua",
     nodetype = "F",
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local directory = {
     filepath = "/project/src/",
     nodename = "src",
@@ -296,11 +311,13 @@ t:test("render: records visible parent and last-child navigation", function()
     loaded = true,
     children = { first, last },
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local root_last = {
     filepath = "/project/README.md",
     nodename = "README.md",
     nodetype = "F",
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local root = {
     filepath = "/project/",
     nodename = "project",
@@ -309,6 +326,7 @@ t:test("render: records visible parent and last-child navigation", function()
     loaded = true,
     children = { directory, root_last },
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local tree = {
     ticks = { structure = 1 },
     is_selected = function()
@@ -316,6 +334,7 @@ t:test("render: records visible parent and last-child navigation", function()
     end,
   } ---@type era.m.explorer.Tree
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   local result = view:render(bufnr, tree, root, {
     foldempty = false,
     show_diagnostics = false,
@@ -339,12 +358,14 @@ t:test("render: only-selected keeps source sibling connectors", function()
     nodetype = "F",
     selected = true,
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local hidden_last = {
     filepath = "/project/z.lua",
     nodename = "z.lua",
     nodetype = "F",
     selected = false,
   } ---@type era.m.explorer.Node
+  ---@diagnostic disable-next-line: missing-fields
   local root = {
     filepath = "/project/",
     nodename = "project",
@@ -407,8 +428,10 @@ t:test("precompute: handles depth 10000 iteratively", function()
     show_icons = false,
   } ---@type era.m.explorer.view.IRenderContext
 
+  ---@diagnostic disable-next-line: invisible
   view:__precompute__(root, ctx)
 
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq(10000, #view._cached_filepaths, "deep filepath count")
   t.assert_true(ctx.diag_counts[root.filepath] ~= nil, "deep root diagnostics")
 end)

@@ -88,6 +88,7 @@ t:test("compute_dir_status: canonicalizes only the Windows lookup path", functio
   local info = status.compute_dir_status(aggregated, "C:\\repo\\dir\\")
 
   t.assert_true(info ~= nil, "directory info")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("M", info.display, "directory display")
   t.assert_eq(1, canonical_normalize_calls, "lookup normalization")
 end)
@@ -104,6 +105,7 @@ t:test("resolve: Windows-style descendants inherit untracked symlink status", fu
   t.assert_eq("U", display, "file display")
   t.assert_eq(status.GIT_STATUS_HIGHLIGHT["?"], highlight, "file highlight")
   t.assert_true(dir_info ~= nil, "nested directory info")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("U", dir_info.display, "nested directory display")
 end)
 
@@ -116,6 +118,7 @@ t:test("compute_dir_status: includes a directory symlink own entry", function()
   local info = status.compute_dir_status(aggregated, "C:\\repo\\link\\")
 
   t.assert_true(info ~= nil, "directory info")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("U", info.display, "directory display")
 end)
 

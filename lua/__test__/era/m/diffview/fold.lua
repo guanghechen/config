@@ -92,6 +92,7 @@ t:test("side-by-side fold policy is deterministic and preserves panel focus", fu
   local right_bufnr = setup_fold_buffer(right_winnr, lines) ---@type integer
   normal(panel_winnr, "zR")
 
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     for _, winnr in ipairs({ right_winnr, left_winnr }) do
       if vim.api.nvim_win_is_valid(winnr) then
@@ -232,6 +233,7 @@ t:test("workspace status assigns fold default to flag 3 and untracked to flag 4"
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local previous_filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   vim.api.nvim_set_option_value("filetype", "diffview-changes-test", { buf = bufnr })
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     vim.api.nvim_set_option_value("filetype", previous_filetype, { buf = bufnr })
   end)
@@ -338,6 +340,7 @@ t:test("workspace fold keys control the current view while t3 changes the defaul
   t:patch_table(package.loaded, "era.m.git.visual", {})
 
   local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  ---@diagnostic disable-next-line: missing-fields
   local ctx = {} ---@type era.m.diffview.view.workspace.IContext
 
   local changes = keymap.gen_changes(ctx)
@@ -375,6 +378,7 @@ t:test("commits exposes current-view fold commands from every pane", function()
   t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
 
   local keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
+  ---@diagnostic disable-next-line: missing-fields
   local ctx = {} ---@type era.m.diffview.view.commits.IContext
 
   for _, keymaps in ipairs({ keymap.gen_commits(ctx), keymap.gen_filetree(ctx), keymap.gen_sbs(ctx) }) do

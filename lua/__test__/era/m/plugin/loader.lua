@@ -43,7 +43,9 @@ t:test("plugin registration maps only explicit main modules", function()
     { name = "data-only" },
   })
 
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq("explicit", loader._module_to_plugin["explicit.main"], "explicit main mapping")
+  ---@diagnostic disable-next-line: invisible
   t.assert_nil(loader._module_to_plugin["data-only"], "inferred main mapping")
   t.assert_false(loader.plugins.explicit.loaded, "initial loaded state")
   t.assert_false(loader.plugins.explicit.loading, "initial loading state")

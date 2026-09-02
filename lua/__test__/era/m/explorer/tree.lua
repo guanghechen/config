@@ -154,13 +154,16 @@ t:test("model: canonicalizes ingress once and composes child filepaths lexically
   t.assert_false(canonical_normalize_calls[1].keep_trailing_slash, "backslash lookup trailing slash policy")
 
   canonical_normalize_calls = {}
+  ---@diagnostic disable-next-line: missing-fields
   t.assert_true(tree:insert("\\project\\dir", { nodename = "added", nodetype = "F" }), "canonical insert")
   t.assert_eq(1, #canonical_normalize_calls, "insert normalization count")
   t.assert_eq("\\project\\dir", canonical_normalize_calls[1].filepath, "insert normalization input")
   t.assert_true(canonical_normalize_calls[1].keep_trailing_slash, "directory insert trailing slash policy")
 
+  ---@diagnostic disable-next-line: need-check-nil
   local added_idx = dir.chidxmap.added
   t.assert_true(added_idx ~= nil, "inserted child index")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("/project/dir/added", dir.children[added_idx].filepath, "lexical child filepath")
 
   canonical_normalize_calls = {}
@@ -178,22 +181,30 @@ t:test("selection: keeps explicit roots without loading directory descendants", 
   dir.loaded = false
   dir.children = {}
   dir.chidxmap = {}
+  ---@diagnostic disable-next-line: need-check-nil
   load_calls[dir.filepath] = nil
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(dir.loaded, "collapsed directory should start unloaded")
 
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(dir.filepath, "select")
 
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_nil(load_calls[dir.filepath], "selection must not load the directory")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(dir.loaded, "selection must preserve unloaded state")
   local selected = tree:get_selected_nodes()
   t.assert_eq(1, #selected, "top-level selection count")
   t.assert_true(selected[1] == dir, "directory should be the explicit selection root")
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   tree:load_node(dir, false)
   dir.expanded = true
   local child = tree:locate("/project/dir/child")
   t.assert_true(child ~= nil, "child fixture")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(child.selected, "loaded descendant must not become explicitly selected")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(tree:is_selected(child.filepath), "descendant should inherit selection")
 
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -208,11 +219,15 @@ t:test("selection: keeps explicit roots without loading directory descendants", 
   t.assert_eq(2, #result.lines, "only-selected view should show the selected directory and loaded child")
   t.assert_eq(2, #result.sign_info_list, "inherited descendant should display selection")
 
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(child.filepath, "unselect")
   t.assert_eq(0, #tree:get_selected_nodes(), "unselecting an inherited descendant should clear its root")
 
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(child.filepath, "select")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(dir.has_selected, "directory should expose partial descendant selection")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(dir.selected, "partial ancestor must not become explicitly selected")
   result = view:render(bufnr, tree, tree:get_root_node(), {
     foldempty = false,
@@ -224,17 +239,22 @@ t:test("selection: keeps explicit roots without loading directory descendants", 
   t.assert_eq(2, #result.lines, "only-selected view should retain the path to an explicit child")
   t.assert_eq(1, #result.sign_info_list, "partial ancestor should not display as selected")
 
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(dir.filepath, "select")
   selected = tree:get_selected_nodes()
   t.assert_eq(1, #selected, "selecting an ancestor should replace descendant selections")
   t.assert_true(selected[1] == dir, "ancestor should become the only explicit root")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(child.selected, "descendant selection should be cleared")
 
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(dir.filepath, "unselect")
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(child.filepath, "select")
   set_dir_items({})
   tree:refresh(true)
   t.assert_eq(0, #tree:get_selected_nodes(), "refresh should remove selections for vanished descendants")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_false(dir.has_selected, "refresh should recompute partial selection state")
 
   vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -246,9 +266,11 @@ t:test("selection: empty-directory folding preserves an explicit selection root"
   local dir = tree:locate("/project/dir/")
   t.assert_true(dir ~= nil, "directory fixture")
 
+  ---@diagnostic disable-next-line: missing-fields
   set_dir_items({ { nodename = "nested", nodetype = "D" } })
   dir.expanded = true
   tree:refresh(true)
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(dir.filepath, "select")
 
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -261,6 +283,7 @@ t:test("selection: empty-directory folding preserves an explicit selection root"
     show_icons = false,
   })
 
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(result.layout:lnum(dir.filepath) ~= nil, "folding must not hide the explicit selection root")
 
   vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -271,6 +294,7 @@ t:test("render: pending transfer renders without explicit selection", function()
   local tree = create_tree()
   local dir = tree:locate("/project/dir/")
   t.assert_true(dir ~= nil, "directory fixture")
+  ---@diagnostic disable-next-line: param-type-mismatch
   tree:load_node(dir, false)
   dir.expanded = true
 
@@ -280,7 +304,9 @@ t:test("render: pending transfer renders without explicit selection", function()
     foldempty = false,
     pending_transfer = {
       mode = "move",
+      ---@diagnostic disable-next-line: need-check-nil
       sources = { { filepath = dir.filepath, nodename = dir.nodename, nodetype = dir.nodetype } },
+      ---@diagnostic disable-next-line: need-check-nil
       source_filepaths = { [dir.filepath] = true },
     },
     show_diagnostics = false,
@@ -302,6 +328,7 @@ t:test("selection: remains consistent when attaching below a selected directory"
   local dir = tree:locate("/project/dir/")
   t.assert_true(dir ~= nil, "directory fixture")
 
+  ---@diagnostic disable-next-line: need-check-nil
   tree:toggle_selected(dir.filepath, "select")
   t.assert_true(tree:attach("/project/dir/nested/"), "attach below selected directory")
 
@@ -314,6 +341,7 @@ t:test("selection: remains consistent when attaching below a selected directory"
 
   local filepaths = tree:get_selected_filepaths()
   t.assert_eq(1, #filepaths, "selected filepath count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(dir.filepath, filepaths[1], "selected filepath should remain the explicit root")
 
   tree:toggle_selected(root.filepath, "unselect")
@@ -329,12 +357,15 @@ t:test("refresh: reloads expanded directories after invalidation", function()
 
   dir.expanded = true
   tree:refresh(false)
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(1, load_calls[dir.filepath], "expanded directory should load once")
 
+  ---@diagnostic disable-next-line: missing-fields
   set_dir_items({ { nodename = "new-child", nodetype = "F" } })
   tree:mark_all_dirty()
   tree:refresh(false)
 
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(2, load_calls[dir.filepath], "invalidated directory should reload on refresh")
   t.assert_true(tree:locate("/project/dir/new-child") ~= nil, "reloaded directory should expose new entries")
 

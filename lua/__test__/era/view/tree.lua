@@ -153,6 +153,7 @@ local function setup(specs)
 
   for _, spec in ipairs(specs) do
     local parent = spec.parent or tree.root ---@type string
+    ---@diagnostic disable-next-line: assign-type-mismatch
     local children = tree:children(parent) ---@type string[]
     local index = #children + 1 ---@type integer
     for i, childuuid in ipairs(children) do
@@ -162,6 +163,7 @@ local function setup(specs)
       end
     end
     tree:insert(parent, spec.uuid, spec.data or { uuid = spec.uuid }, index)
+    ---@diagnostic disable-next-line: undefined-field
     view:insert(spec.uuid, spec.state)
   end
   return tree, view, calls
@@ -185,6 +187,7 @@ local function render(view, bufnr, rootuuid, overrides)
   for key, value in pairs(overrides or {}) do
     params[key] = value
   end
+  ---@diagnostic disable-next-line: undefined-field
   return view:render_treeview(params)
 end
 
@@ -205,6 +208,7 @@ local function render_list(view, bufnr, rootuuid, overrides)
   for key, value in pairs(overrides or {}) do
     params[key] = value
   end
+  ---@diagnostic disable-next-line: undefined-field
   return view:render_listview(params)
 end
 
@@ -249,6 +253,7 @@ t:test("render: projects visible matched selected expanded topology", function()
     { uuid = "hidden", parent = "root", state = new_state("leaf", { tick_invisible = 1 }) },
   })
   local bufnr = vim.api.nvim_create_buf(false, true)
+  ---@diagnostic disable-next-line: undefined-field
   view:set_selected("chosen", true)
 
   local result = render(view, bufnr, "root", { only_matched = true, only_selected = true })
@@ -272,12 +277,14 @@ t:test("selected maximum: failed refresh remains dirty for recovery", function()
     { uuid = "root", state = new_state("container") },
   })
   tree:insert("root", "late", {})
+  ---@diagnostic disable-next-line: undefined-field
   view:set_selected("root", true)
   local bufnr = vim.api.nvim_create_buf(false, true)
 
   local ok = pcall(render, view, bufnr, "root", { only_selected = true })
   t.assert_false(ok, "missing state should fail refresh")
 
+  ---@diagnostic disable-next-line: undefined-field
   view:insert("late", new_state("leaf"))
   local result = render(view, bufnr, "root", { only_selected = true })
   t.assert_eq("root", assert(result.layout):id(1), "retry recomputes selected root")
@@ -297,12 +304,17 @@ t:test("selected maximum: state rebuild and removal invalidate aggregate", funct
     { uuid = "chosen", parent = "branch", state = new_state("leaf") },
   })
   local bufnr = vim.api.nvim_create_buf(false, true)
+  ---@diagnostic disable-next-line: undefined-field
   view:set_selected("chosen", true)
   render(view, bufnr, "root", { only_selected = true })
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   tree_lifecycle.clear(view)
+  ---@diagnostic disable-next-line: undefined-field
   view:insert("root", new_state("container"))
+  ---@diagnostic disable-next-line: undefined-field
   view:insert("branch", new_state("container"))
+  ---@diagnostic disable-next-line: invisible, undefined-field
   view:insert("chosen", new_state("leaf", { tick_selected = view._tick_selected }))
 
   local rebuilt = render(view, bufnr, "root", { only_selected = true })
@@ -311,10 +323,13 @@ t:test("selected maximum: state rebuild and removal invalidate aggregate", funct
     vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
     "rebuilt selected lines"
   )
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq(view._tick_selected, view.statemap.chosen.tick_selected_maximum, "leaf selected maximum")
+  ---@diagnostic disable-next-line: invisible
   t.assert_eq(view._tick_selected, view.statemap.root.tick_selected_maximum, "root selected maximum")
   t.assert_eq(3, assert(rebuilt.layout):len(), "rebuilt selected layout")
 
+  ---@diagnostic disable-next-line: undefined-field
   view:remove("chosen")
   tree:remove("chosen")
   local removed = render(view, bufnr, "root", { only_selected = true })
@@ -337,6 +352,7 @@ t:test("list render: preserves subtree filters and explicit orders", function()
     { uuid = "hidden", parent = "root", state = new_state("leaf", { tick_invisible = 1 }) },
   })
   local bufnr = vim.api.nvim_create_buf(false, true)
+  ---@diagnostic disable-next-line: undefined-field
   view:set_selected("chosen", true)
 
   local result = render_list(view, bufnr, "root", { only_matched = true, only_selected = true })
@@ -414,6 +430,7 @@ t:test("render: caches nodes but not location rows", function()
   t.assert_eq(1, calls.leaf, "leaf cache")
   t.assert_eq(2, calls.location, "location rerender")
 
+  ---@diagnostic disable-next-line: undefined-field
   view:mark_cache_treeview_dirty()
   render(view, bufnr, "root")
   t.assert_eq(2, calls.container, "dirty container cache")
@@ -425,6 +442,7 @@ t:test("render: caches nodes but not location rows", function()
   t.assert_eq(1, calls.list_leaf, "list leaf cache")
   t.assert_eq(2, calls.list_location, "list location rerender")
 
+  ---@diagnostic disable-next-line: undefined-field
   view:mark_cache_listview_dirty()
   render_list(view, bufnr, "root")
   t.assert_eq(2, calls.list_leaf, "dirty list leaf cache")
@@ -444,6 +462,7 @@ t:test("render: folds depth 10000 without Lua recursion", function()
   specs[#specs + 1] = { uuid = "leaf", parent = "10000", state = new_state("leaf") }
   local _, view = setup(specs)
   local bufnr = vim.api.nvim_create_buf(false, true)
+  ---@diagnostic disable-next-line: undefined-field
   view:set_selected("leaf", true)
 
   local result = render(view, bufnr, "1", { foldempty = true, only_selected = true })

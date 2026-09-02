@@ -86,6 +86,7 @@ local function setup(opts)
 
   local Paste = assert(loadfile("lua/era/m/paste.lua"))()
   Paste.dressing()
+  ---@diagnostic disable-next-line: redundant-return-value
   return vim.paste, calls, Paste, runtime
 end
 
@@ -296,6 +297,7 @@ t:test("rewraps a later image handler around complete streamed text", function()
   local optimized_paste, calls, Paste = setup()
   local image_path = nil ---@type string|nil
 
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.paste = function(lines, phase)
     if phase == -1 and #lines == 1 and lines[1]:match("%.png$") then
       image_path = lines[1]

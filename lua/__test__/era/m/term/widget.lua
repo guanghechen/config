@@ -132,6 +132,7 @@ t:test("spawn failure cleans a non-permanent terminal on the next tick", functio
     error("spawn failed")
   end)
 
+  ---@diagnostic disable-next-line: invisible
   widget:__start_job__(termmeta)
 
   t.assert_eq(1, #callbacks, "scheduled cleanup count")
@@ -154,6 +155,7 @@ t:test("spawn failure keeps only the registry entry for a permanent terminal", f
     error("spawn failed")
   end)
 
+  ---@diagnostic disable-next-line: invisible
   widget:__start_job__(termmeta)
   callbacks[1]()
 
@@ -179,7 +181,9 @@ t:test("a successful retry supersedes scheduled failure cleanup", function()
     return 73
   end)
 
+  ---@diagnostic disable-next-line: invisible
   widget:__start_job__(termmeta)
+  ---@diagnostic disable-next-line: invisible
   widget:__start_job__(termmeta)
   callbacks[1]()
 

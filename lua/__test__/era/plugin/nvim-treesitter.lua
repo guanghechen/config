@@ -124,6 +124,7 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
     active[bufnr] = nil
   end)
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   Treesitter.spec.config(nil, Treesitter.spec.opts)
   return callbacks, started, stopped, active, registrations
 end
@@ -141,6 +142,7 @@ t:test("notepad owns its markdown mapping", function()
 end)
 
 t:test("C# filetype uses the c_sharp parser", function()
+  ---@diagnostic disable-next-line: missing-parameter
   local _, _, _, _, registrations = setup({}, {}, {})
 
   t.assert_eq("c_sharp", registrations.cs, "C# parser mapping")
@@ -153,6 +155,7 @@ t:test("existing visible buffer starts on idle exactly once", function()
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, { 101 })
 
   t.assert_eq(0, #started, "startup must only queue visible buffers")
@@ -177,6 +180,7 @@ t:test("future FileType starts synchronously", function()
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
     [102] = { valid = true, bufnr = 12, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, { 101 })
 
   callbacks.FileType({ buf = 12 })
@@ -211,6 +215,7 @@ t:test("existing matching highlighter is reused", function()
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, { 101 }, nil, { [11] = "lua" })
 
   callbacks.CursorHold({ buf = 11 })
@@ -227,6 +232,7 @@ t:test("FileType restarts a mismatched parser", function()
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started, stopped, active = setup(buffers, windows, { 101 })
 
   callbacks.CursorHold({ buf = 11 })
@@ -247,6 +253,7 @@ t:test("hidden buffer waits until it enters a window", function()
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
   local winnrs = { 101 }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, winnrs)
 
   callbacks.CursorHold({ buf = 12 })
@@ -272,6 +279,7 @@ t:test("ineligible buffers never start", function()
     [102] = { valid = true, bufnr = 12, foldexpr = "0" },
     [103] = { valid = true, bufnr = 13, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, { 101, 102, 103 })
 
   callbacks.FileType({ buf = 11 })
@@ -291,6 +299,7 @@ t:test("buffer becoming ineligible drops its pending start", function()
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, { 101 })
 
   buffers[11].filetype = "bigfile"
@@ -308,6 +317,7 @@ t:test("start failure does not write options", function()
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks = setup(buffers, windows, { 101 }, function()
     error("missing parser")
   end)
@@ -326,6 +336,7 @@ t:test("BufUnload permits the same buffer to restart", function()
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started, _, active = setup(buffers, windows, { 101 })
 
   callbacks.CursorHold({ buf = 11 })
@@ -347,6 +358,7 @@ t:test("delayed start preserves LSP folding", function()
     [101] = { valid = true, bufnr = 11, foldexpr = "v:lua.vim.lsp.foldexpr()" },
     [102] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  ---@diagnostic disable-next-line: missing-parameter
   local callbacks = setup(buffers, windows, { 101, 102 })
 
   callbacks.CursorHold({ buf = 11 })

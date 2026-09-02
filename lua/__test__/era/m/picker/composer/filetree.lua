@@ -52,7 +52,7 @@ local function with_composer(name, callback, on_attached, on_confirm, on_preview
 end
 
 t:test("preview callback receives the resolved file data", function()
-  local basic_props = nil ---@type era.m.picker.composer.basic.IProps|nil
+  local basic_props = nil ---@type era.m.picker.composer.IBasicProps|nil
   local original_new = era.m.picker.BasicComposer.new
   t:patch_table(era.m.picker.BasicComposer, "new", function(props)
     basic_props = props
@@ -71,6 +71,7 @@ t:test("preview callback receives the resolved file data", function()
         return "leaf", expected
       end
       assert(basic_props ~= nil, "basic composer props should be captured")
+      ---@diagnostic disable-next-line: undefined-field
       basic_props.on_preview_rendered(composer._composer, 84)
     end,
     nil,
@@ -89,6 +90,7 @@ t:test("preview treats an empty result as a normal state", function()
     local ok, err = pcall(function()
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "stale preview" })
       composer._last_preview_filepath = "stale.lua"
+      ---@diagnostic disable-next-line: duplicate-set-field
       composer.__retrieve_nodeuuid__ = function()
         return nil, 0
       end
@@ -102,6 +104,7 @@ t:test("preview treats an empty result as a normal state", function()
       t.assert_false(result.whitespaces, "empty preview whitespace markers")
       t.assert_nil(composer._last_preview_filepath, "empty preview invalidates cached filepath")
 
+      ---@diagnostic disable-next-line: duplicate-set-field
       composer.__retrieve_nodeuuid__ = function()
         return nil, -1
       end
@@ -124,6 +127,7 @@ end)
 local function retrieve_action(composer, desc)
   for _, keymap in ipairs(composer.result.keymaps) do
     if keymap.desc == desc then
+      ---@diagnostic disable-next-line: return-type-mismatch
       return keymap.callback
     end
   end
@@ -292,6 +296,7 @@ t:test("directory removal synchronizes topology state and indexes", function()
     end)
     composer:reset_filepaths(root, { filepath }, false)
     composer:__match__("file")
+    ---@diagnostic disable-next-line: assign-type-mismatch
     local directory_data = composer._filetree:get(directory_uuid) ---@type stl.c.IFiletreeNodeData
     composer.__retrieve_file__ = function()
       return directory_uuid, directory_data

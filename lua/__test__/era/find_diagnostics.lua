@@ -7,7 +7,7 @@ local t = harness.new("era.fn.find_diagnostics")
 
 t:test("preview resolves the selected file through the data contract", function()
   local filepath = "/workspace/main.lua"
-  local props = nil ---@type era.m.picker.composer.filetree.IProps|nil
+  local props = nil ---@type era.m.picker.IFiletreeComposerProps|nil
   local picker = {}
 
   t:patch_table(era.m.picker.FiletreeComposer, "new", function(actual_props)
@@ -37,6 +37,7 @@ t:test("preview resolves the selected file through the data contract", function(
   t.assert_eq("function", type(find_diagnostics), "module contract")
   assert(props ~= nil, "picker props should be captured")
 
+  ---@diagnostic disable-next-line: missing-fields, undefined-field
   props.on_preview_rendered(picker, 84, {
     filepath = filepath,
     filetype = "file",

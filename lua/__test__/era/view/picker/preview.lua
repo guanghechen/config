@@ -52,8 +52,10 @@ t:test("shared preview applies picker number and diagnostic policies", function(
     t.assert_false(vim.api.nvim_get_option_value("relativenumber", { win = winnr }), "updated relative number")
 
     fail_draw = true
+    ---@diagnostic disable-next-line: missing-parameter
     preview._scheduler_content._task()
     t.assert_eq("shared preview contract -> contract.preview", reported_from, "diagnostic scope")
+    ---@diagnostic disable-next-line: assign-type-mismatch
     local bufnr = preview:get_bufnr() ---@type integer
     t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }), "draw failure restores modifiable")
     t.assert_true(vim.api.nvim_get_option_value("readonly", { buf = bufnr }), "draw failure restores readonly")

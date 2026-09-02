@@ -49,11 +49,16 @@ local Fn = require("era.m.diffview.fn")
 t:test("open_file_history uses Git separators for Windows paths", function()
   local filepath = [[C:\repo\lua\era\m\im\wsl.lua]]
 
+  ---@diagnostic disable-next-line: assign-type-mismatch
   Fn.open_file_history({ filepath = filepath, layout = 3 })
 
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq([[C:\repo]], relative_args.from, "relative path root")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(filepath, relative_args.to, "relative path target")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("lua/era/m/im/wsl.lua", log_opts.path, "Git path filter")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(3, log_opts.layout, "layout")
 end)
 

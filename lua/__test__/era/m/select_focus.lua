@@ -71,6 +71,7 @@ local function create_window_pair()
   local origin_winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.cmd("vsplit")
   local other_winnr = vim.api.nvim_get_current_win() ---@type integer
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     if vim.api.nvim_win_is_valid(other_winnr) then
       vim.api.nvim_win_close(other_winnr, true)
@@ -98,6 +99,7 @@ t:test("vim.ui.select preserves a newer focus when the picker no longer owns it"
 
   picker_focused = false
   vim.api.nvim_set_current_win(other_winnr)
+  ---@diagnostic disable-next-line: need-check-nil
   picker_props.on_confirm(picker, { uuid = "1", data = { original_item = "one" } })
 
   t.assert_eq(other_winnr, vim.api.nvim_get_current_win(), "current window")
@@ -111,6 +113,7 @@ t:test("vim.ui.select restores its origin while the picker still owns focus", fu
 
   picker_focused = true
   vim.api.nvim_set_current_win(picker_winnr)
+  ---@diagnostic disable-next-line: need-check-nil
   picker_props.on_confirm(picker, nil)
 
   t.assert_eq(origin_winnr, vim.api.nvim_get_current_win(), "origin window")

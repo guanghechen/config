@@ -198,8 +198,10 @@ t:test("create: creates missing entries with nested parents", function()
   local dir_node = manager:create(dirpath)
 
   t.assert_true(file_node ~= nil, "file should be created")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("F", file_node.nodetype, "file node type")
   t.assert_true(dir_node ~= nil, "directory should be created")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("D", dir_node.nodetype, "directory node type")
   vim.fn.delete(root, "rf")
 end)
@@ -779,6 +781,7 @@ t:test("remove with trash: passes a slash-free symlink path to the native tool",
 
   t.assert_true(ok, "remove result")
   t.assert_true(command ~= nil, "trash command")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(link, command[3], "trash target should not have a trailing slash")
   t.assert_true(vim.uv.fs_lstat(link) ~= nil, "mocked trash should leave the symlink")
   t.assert_true(vim.uv.fs_stat(target .. "/sentinel") ~= nil, "target should remain")

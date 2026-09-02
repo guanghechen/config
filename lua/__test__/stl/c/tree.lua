@@ -26,6 +26,7 @@ end
 t:test("strict API: owns explicit root, data, parent, and child order", function()
   local rootdata = { label = "root" }
   local tree = Tree.new("root", rootdata)
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_nil(tree.retrieve, "raw nodes are not public")
   t.assert_true(tree:get("root") == rootdata, "root data identity")
   t.assert_true(tree:contains("root"), "root exists")
@@ -40,6 +41,7 @@ end)
 
 t:test("constructor rejects invalid ingress", function()
   assert_error(function()
+    ---@diagnostic disable-next-line: param-type-mismatch
     Tree.new(nil)
   end, "root must be a string")
 end)

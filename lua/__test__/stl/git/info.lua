@@ -51,6 +51,7 @@ local info = require("stl.git.info")
 local function mock_system()
   local requests = {} ---@type stl.git.info.test.IRequest[]
   t:patch_table(vim, "system", function(argv, _, callback)
+    ---@diagnostic disable-next-line: missing-fields
     local proc = { killed = false } ---@type stl.git.info.test.IProcess
     function proc:kill()
       self.killed = true

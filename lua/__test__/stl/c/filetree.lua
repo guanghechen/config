@@ -24,6 +24,7 @@ end
 
 t:test("strict API does not expose raw nodes", function()
   with_tree("strict-api", function(tree)
+    ---@diagnostic disable-next-line: undefined-field
     t.assert_nil(tree.retrieve, "raw nodes are not public")
     local root = tree:children(tree.root)[1]
     local data, uuid = Filetree.resolve("/inserted.lua", "file", true)
@@ -92,6 +93,7 @@ t:test("reset stores slash-only relative and location identities", function()
     for _, filepath in ipairs(expected) do
       local data = tree:get(Filetree.uuid(filepath))
       t.assert_true(data ~= nil, "node exists: " .. filepath)
+      ---@diagnostic disable-next-line: need-check-nil
       t.assert_eq(filepath, data.filepath, "stored filepath")
     end
 
@@ -102,6 +104,7 @@ t:test("reset stores slash-only relative and location identities", function()
       stack[stack_size] = nil
       stack_size = stack_size - 1
       local data = tree:get(uuid)
+      ---@diagnostic disable-next-line: need-check-nil
       t.assert_false(data.filepath:find("\\", 1, true) ~= nil, "slash-only node filepath")
       for _, childuuid in ipairs(tree:children(uuid) or {}) do
         stack_size = stack_size + 1
@@ -128,6 +131,7 @@ t:test("reset stores slash-only drive and UNC-style identities", function()
     for _, filepath in ipairs(expected) do
       local data = tree:get(Filetree.uuid(filepath))
       t.assert_true(data ~= nil, "node exists: " .. filepath)
+      ---@diagnostic disable-next-line: need-check-nil
       t.assert_eq(filepath, data.filepath, "stored filepath")
     end
   end)
@@ -142,15 +146,21 @@ t:test("strict topology keeps filesystem ordering feature-owned", function()
   local adir = tree:insert_directory_absolute("/a")
 
   local children = tree:children(root)
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(adir, children[1], "alphabetical first directory")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(bdir, children[2], "alphabetical second directory")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(afile, children[3], "alphabetical first file")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(zfile, children[4], "alphabetical second file")
 
   local zdirdata = Filetree.resolve("/z.lua", "directory", true)
   tree:insert(root, zfile, zdirdata)
   children = tree:children(root)
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(zfile, children[3], "type change reorders directory")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(afile, children[4], "type change moves file after directories")
 end)
 

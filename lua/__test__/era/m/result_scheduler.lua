@@ -71,8 +71,10 @@ t:test("shared result applies status and diagnostic policies", function()
     t.assert_true(winbar:find("READY", 1, true) ~= nil, "shared result status")
 
     fail_draw = true
+    ---@diagnostic disable-next-line: missing-parameter
     result._scheduler_content._task()
     t.assert_eq("shared result contract -> contract.result", reported_from, "diagnostic scope")
+    ---@diagnostic disable-next-line: assign-type-mismatch
     local bufnr = result:get_bufnr() ---@type integer
     t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }), "draw failure restores modifiable")
     t.assert_true(vim.api.nvim_get_option_value("readonly", { buf = bufnr }), "draw failure restores readonly")
@@ -159,6 +161,7 @@ local function verify_schedule_counts(case)
     end,
     keymaps = {},
     flags = {},
+    ---@diagnostic disable-next-line: undefined-field
   }, case.policy or {})
   local result = case.new(props)
 

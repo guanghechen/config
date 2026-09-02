@@ -54,9 +54,9 @@ end
 
 ---@param harness                       __test__.Harness
 ---@param spec                          table<string, table>
----@return fun[]
+---@return (fun())[]
 function M.with_runtime(harness, spec)
-  local cleanups = {} ---@type fun[]
+  local cleanups = {} ---@type (fun())[]
   for name, value in pairs(spec) do
     cleanups[#cleanups + 1] = M.with_global(harness, name, value)
   end

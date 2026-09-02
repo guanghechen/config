@@ -44,6 +44,7 @@ t:test("tab-local close deletes only requested unreferenced buffers", function()
   Buf.close_others()
 
   t.assert_eq(1, #assert(candidates), "candidate count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(requested_bufnr, candidates[1], "candidate buffer")
   t.assert_eq(1, #deleted, "deleted buffer count")
   t.assert_eq(requested_bufnr, deleted[1], "deleted buffer")
@@ -169,6 +170,7 @@ t:test("find-buffers close deletes only the selected buffer", function()
   assert(props).keymaps_result[1].callback()
 
   t.assert_eq(1, #assert(candidates), "candidate count")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(selected_bufnr, candidates[1], "candidate buffer")
   t.assert_eq(1, #deleted, "deleted buffer count")
   t.assert_eq(selected_bufnr, deleted[1], "deleted buffer")

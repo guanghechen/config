@@ -42,6 +42,7 @@ local cache = upvalue(buffer.reset_hunk, "cache") ---@type table<integer, era.m.
 local function setup(index_text, buffer_text)
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   staging.replace_buffer_text(bufnr, buffer_text)
+  ---@diagnostic disable-next-line: missing-fields
   cache[bufnr] = {
     index_document = staging.from_text(index_text),
     untracked = false,

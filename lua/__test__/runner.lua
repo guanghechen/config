@@ -15,7 +15,7 @@ local EXCLUDED = {
 ---@param path                          string
 ---@return string
 local function normalize(path)
-  return path:gsub("\\", "/")
+  return (path:gsub("\\", "/"))
 end
 
 ---@param root                          string
@@ -38,7 +38,7 @@ end
 local function collect_lua_files(root, dirpath, result)
   local ok, iter = pcall(vim.fs.dir, dirpath)
   if not ok or iter == nil then
-    vim.api.nvim_err_writeln("WARN test runner cannot read root: " .. dirpath)
+    io.stderr:write("WARN test runner cannot read root: " .. dirpath .. "\n")
     return
   end
 
@@ -102,7 +102,7 @@ local function run_suites(suites)
   return failed
 end
 
----@param opts                          ?{ root: string, filter: string }
+---@param opts                          ?{ root?: string, filter?: string }
 ---@return integer
 function M.run_all(opts)
   opts = opts or {}

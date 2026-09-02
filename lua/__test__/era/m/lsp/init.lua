@@ -113,9 +113,13 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
 
   Lsp.dressing()
 
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.lua_ls, "existing Lua buffer")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.basedpyright, "existing Python buffer")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.ruff, "existing Python buffer secondary LSP")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_nil(enabled.rust_analyzer, "unloaded buffer")
   t.assert_true(filetype_callback ~= nil, "future FileType callback")
   t.assert_eq(2, #enable_batches, "existing buffer batches")
@@ -125,18 +129,26 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
   t.assert_eq("basedpyright", enable_batches[2][1], "Python primary LSP")
   t.assert_eq("ruff", enable_batches[2][2], "Python secondary LSP")
 
+  ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ match = "templ" })
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.html, "direct Templ buffer")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.tailwindcss, "direct Templ Tailwind LSP")
   t.assert_eq(3, #enable_batches, "Templ batch")
   t.assert_eq(2, #enable_batches[3], "Templ batch size")
   t.assert_eq("html", enable_batches[3][1], "Templ HTML LSP")
   t.assert_eq("tailwindcss", enable_batches[3][2], "Templ Tailwind LSP")
 
+  ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ match = "typescript" })
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.vtsls, "future TypeScript buffer")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.denols, "future Deno buffer")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.eslint, "future TypeScript secondary LSP")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.tailwindcss, "future TypeScript secondary LSP")
   t.assert_eq(4, #enable_batches, "future buffer batch")
   t.assert_eq(3, #enable_batches[4], "TypeScript batch size")
@@ -144,38 +156,50 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
   t.assert_eq("denols", enable_batches[4][2], "Deno LSP")
   t.assert_eq("eslint", enable_batches[4][3], "TypeScript secondary LSP")
 
+  ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ match = "lua" })
   Lsp.dressing()
 
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.lua_ls, "repeated enable")
   t.assert_eq(4, #enable_batches, "repeated enable batches")
   t.assert_eq(0, edits, "buffer re-edit")
 
+  ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ match = "eruby" })
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.emmet_language_server, "direct Eruby buffer")
   t.assert_eq(5, #enable_batches, "Eruby batch")
   t.assert_eq("emmet_language_server", enable_batches[5][1], "Eruby LSP")
 
   fail_next_enable = true
+  ---@diagnostic disable-next-line: param-type-mismatch
   local ok = pcall(filetype_callback, { match = "yaml.docker-compose" })
 
   t.assert_false(ok, "enable failure")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_nil(enabled.yamlls, "failed primary LSP")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_nil(enabled.docker_compose_language_service, "failed secondary LSP")
   t.assert_eq(6, #enable_batches, "failed batch")
   t.assert_eq(2, #enable_batches[6], "failed batch size")
   t.assert_eq("yamlls", enable_batches[6][1], "failed primary LSP batch")
   t.assert_eq("docker_compose_language_service", enable_batches[6][2], "failed secondary LSP batch")
 
+  ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ match = "yaml.docker-compose" })
 
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.yamlls, "retried primary LSP")
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.docker_compose_language_service, "retried secondary LSP")
   t.assert_eq(7, #enable_batches, "retried batch")
   t.assert_eq("yamlls", enable_batches[7][1], "retried primary LSP batch")
   t.assert_eq("docker_compose_language_service", enable_batches[7][2], "retried secondary LSP batch")
 
+  ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ match = "cs" })
+  ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.roslyn_ls, "future C# buffer")
   t.assert_eq(8, #enable_batches, "C# batch")
   t.assert_eq(1, #enable_batches[8], "C# batch size")

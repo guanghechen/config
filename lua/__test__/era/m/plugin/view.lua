@@ -55,6 +55,7 @@ local function fake_view()
       self.widget:update()
     end,
   }, View) ---@type era.m.plugin.View
+  ---@diagnostic disable-next-line: return-type-mismatch
   return view, function()
     return updates
   end
@@ -131,6 +132,7 @@ t:test("show refreshes an already visible view", function()
       end,
     }
   end)
+  ---@diagnostic disable-next-line: invisible
   t:_register_cleanup(function()
     View.close_view()
     vim.wait(10)

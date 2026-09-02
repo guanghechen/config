@@ -19,7 +19,9 @@ t:test("detect: matches by filename without a buffer", function()
 
   t.assert_eq("lua", result, "detected filetype")
   t.assert_true(received ~= nil, "match options")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq("init.lua", received.filename, "filename")
+  ---@diagnostic disable-next-line: need-check-nil
   t.assert_nil(received.buf, "buffer")
 end)
 

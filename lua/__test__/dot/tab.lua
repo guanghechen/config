@@ -199,8 +199,11 @@ t:test("TabClosed disposes metadata synchronously and defers buffer deletion", f
     callback = function()
       Tab.on_close()
       buffer_valid_during_event = vim.api.nvim_buf_is_valid(bufnr)
+      ---@diagnostic disable-next-line: need-check-nil, undefined-field
       metadata_disposed_during_event = meta.winnr_fixed.disposed
+        ---@diagnostic disable-next-line: need-check-nil, undefined-field
         and meta.winnr_float.disposed
+        ---@diagnostic disable-next-line: need-check-nil, undefined-field
         and meta.winnr_sourcefile.disposed
     end,
   })

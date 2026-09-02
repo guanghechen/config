@@ -84,7 +84,9 @@ t:test("render: 5000-file regression benchmark", function()
     render_directory = render_node,
     render_file = render_node,
   }) ---@type boolean, era.view.filetree.IRenderResult|string
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local elapsed_ms = (vim.uv.hrtime() - started_at) / 1e6 ---@type number
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local heap_kib = collectgarbage("count") - heap_before ---@type number
   collectgarbage("restart")
 
