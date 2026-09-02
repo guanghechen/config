@@ -25,8 +25,8 @@
     "diffHunkHeader": "#AF00DB",
     "diffHighlightAdded": "#098658",
     "diffHighlightRemoved": "#F85149",
-    "diffAddedBg": "#E8E8E8",
-    "diffRemovedBg": "#E8E8E8",
+    "diffAddedBg": "#9CCC2C40",
+    "diffRemovedBg": "#FF000033",
 
     "markdownText": "#3B3B3B",
     "markdownHeading": "#C72E0F",
