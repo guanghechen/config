@@ -269,7 +269,10 @@ $cargoHome = if ([string]::IsNullOrWhiteSpace($env:CARGO_HOME)) {
 } else {
   $env:CARGO_HOME
 }
-$kitRepoBin = Join-Path $cargoHome "bin\kit-repo.exe"
+$kitRepoBin = Join-Path $cargoHome "local\bin\kit-repo.exe"
+if (-not (Test-Path -LiteralPath $kitRepoBin -PathType Leaf)) {
+  $kitRepoBin = Join-Path $cargoHome "bin\kit-repo.exe"
+}
 Invoke-GhcStep "󰙅" worktree { Ensure-GhcKitWorktree }
 Write-Host ""
 Sync-GhcKitRepo

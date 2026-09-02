@@ -43,19 +43,24 @@ if (-not [IO.Path]::IsPathRooted($cargoHome)) {
 $cargoBin = Join-Path $cargoHome "bin"
 $cargoLocalBin = Join-Path $cargoHome "local\bin"
 $installedBinary = Join-Path $cargoBin "kit-repo.exe"
+$localBinary = Join-Path $cargoLocalBin "kit-repo.exe"
 
-$installedItem = Get-Item -LiteralPath $installedBinary -Force -ErrorAction SilentlyContinue
-if ($null -ne $installedItem -and ($installedItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
-  throw "[setup kit-repo] legacy development link found at $installedBinary. Run: `$env:BIN_DIR='$cargoBin'; cargo unlink"
-}
+if (Test-Path -LiteralPath $localBinary -PathType Leaf) {
+  Write-Host "using local development binary: $localBinary" -ForegroundColor Cyan
+} else {
+  $installedItem = Get-Item -LiteralPath $installedBinary -Force -ErrorAction SilentlyContinue
+  if ($null -ne $installedItem -and ($installedItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+    throw "[setup kit-repo] legacy development link found at $installedBinary. Run: `$env:BIN_DIR='$cargoBin'; cargo unlink"
+  }
 
-Write-Host "installing the latest published version..." -ForegroundColor Cyan
-cargo install --locked --root "$cargoHome" guanghechen-kit-repo
-if ($LASTEXITCODE -ne 0) {
-  throw "[setup kit-repo] cargo install failed (exit code: $LASTEXITCODE)."
-}
-if (-not (Test-Path -LiteralPath $installedBinary -PathType Leaf)) {
-  throw "[setup kit-repo] cargo completed without installing $installedBinary."
+  Write-Host "installing the latest published version..." -ForegroundColor Cyan
+  cargo install --locked --root "$cargoHome" guanghechen-kit-repo
+  if ($LASTEXITCODE -ne 0) {
+    throw "[setup kit-repo] cargo install failed (exit code: $LASTEXITCODE)."
+  }
+  if (-not (Test-Path -LiteralPath $installedBinary -PathType Leaf)) {
+    throw "[setup kit-repo] cargo completed without installing $installedBinary."
+  }
 }
 
 New-Item -ItemType Directory -Path $cargoLocalBin -Force -ErrorAction Stop | Out-Null

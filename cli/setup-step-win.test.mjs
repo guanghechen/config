@@ -272,6 +272,13 @@ describe('windows setup step forest', { skip: !hasPowerShell }, () => {
     assert.doesNotMatch(content, /Invoke-GhcStep[^\n]*local settings/)
   })
 
+  it('prefers the local kit-repo binary', () => {
+    const content = fs.readFileSync(powershellSetupPath, 'utf8')
+    assert.match(content, /Join-Path \$cargoHome "local\\bin\\kit-repo\.exe"/)
+    assert.match(content, /Test-Path -LiteralPath \$kitRepoBin -PathType Leaf/)
+    assert.match(content, /Join-Path \$cargoHome "bin\\kit-repo\.exe"/)
+  })
+
   it('runs shared configuration before the Windows-only Codex installer', () => {
     const content = fs.readFileSync(powershellSetupPath, 'utf8')
     const sync = content.indexOf('\nSync-GhcKitRepo\n')

@@ -102,7 +102,9 @@ ghc_step_in_place "" "runtime environment" source "$setup_nix/bot/env.bash"
 ghc_section "" configuration
 ghc_step "" "cargo available" ghc_require cargo
 ghc_step "󰏗" kit-repo ghc_run_script "$setup_nix/env/kit-repo.bash"
-kit_repo_bin="${CARGO_HOME:-$HOME/.cargo}/bin/kit-repo"
+cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+kit_repo_bin="$cargo_home/local/bin/kit-repo"
+[ -x "$kit_repo_bin" ] || kit_repo_bin="$cargo_home/bin/kit-repo"
 ghc_step "󰙅" worktree ghc_ensure_kit_worktree
 printf "\n"
 ghc_sync_kit_repo || exit $?

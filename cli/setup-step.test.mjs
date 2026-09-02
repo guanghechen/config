@@ -140,4 +140,19 @@ describe('bash setup step forest', () => {
       assert.doesNotMatch(content, /ghc_step[^\n]*local settings/)
     }
   })
+
+  it('prefers the local kit-repo binary on Unix platforms', () => {
+    for (const relativePath of [
+      '../setup/nix/setup.bash',
+      '../setup/nix-remote/setup.bash',
+      '../setup/osx/setup.bash',
+    ]) {
+      const content = fs.readFileSync(path.join(import.meta.dirname, relativePath), 'utf8')
+      assert.match(content, /kit_repo_bin="\$cargo_home\/local\/bin\/kit-repo"/)
+      assert.match(
+        content,
+        /\[ -x "\$kit_repo_bin" \] \|\| kit_repo_bin="\$cargo_home\/bin\/kit-repo"/,
+      )
+    }
+  })
 })
