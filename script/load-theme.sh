@@ -202,7 +202,7 @@ function _ghc_tmux_load_theme_ {
   local panestatus_mode
   panestatus_mode=$(tmux show -gqv @GHC_PSL_MODE)
   if [ -z "$panestatus_mode" ]; then
-    panestatus_mode="01"
+    panestatus_mode="02"
     tmux set -g @GHC_PSL_MODE "$panestatus_mode"
   fi
 
