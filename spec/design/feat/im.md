@@ -1,49 +1,84 @@
-# Input Method Switching
+# 输入法切换
 
-`era.m.im` owns editor lifecycle, `yoz.im` exposes a source-oriented Lua contract, and the standalone `rust/im` crate owns platform input-source access.
+`era.m.im` 管理 editor lifecycle，`yoz.im` 提供面向 input source 的 Lua contract，独立 crate `rust/im` 负责访问各平台的 input source。
 
-## Ownership and lifecycle
+## 职责边界
 
-- `rust/im` owns opaque source IDs, English-source classification, exact restoration, WSL process supervision, and the Windows bridge source.
-- `yoz.im` exposes only `capture()`, `capture_and_select_english()`, `restore()`, `is_english()`, plus WSL-only `setup()`.
-- `Non-English` is only `not is_english(snapshot)`. It is never a selectable target; every return to a non-English source uses its exact captured source ID.
-- Public `era.m.im` exposes only `dressing()` and owns one opaque Insert snapshot, one active focus-session record, and the restore generation. The focus session contains its entry snapshot, latest observed editing snapshot, and monotonic entry time.
-- `dressing()` is registered after `era.m.ui_attach.dressing()` and before plugin setup, so focus handlers exist before `UIEnter` without depending on plugins.
-- `InsertLeave` invalidates pending restores and calls `capture_and_select_english()` once. Any returned snapshot becomes the cross-mode Insert snapshot and the active session's latest editing snapshot, including when English selection fails after capture.
-- `InsertEnter` schedules exact restoration for the next event-loop tick. It skips known English snapshots; otherwise it restores only when the generation is current, auto switching remains enabled, and Neovim is still in Insert or Replace mode.
-- Each idempotent `UIEnter` / `FocusGained` / `VimResume` entry with an attached UI samples its monotonic start time before backend I/O and starts one focus session. Command modes use the fused capture-and-select operation. Other modes capture without selecting; Insert or Replace mode then restores the known Neovim Insert snapshot.
-- Each idempotent `FocusLost` / `VimSuspend` / `VimLeavePre` exit, plus the last attached UI's `UILeave`, invalidates pending restores. Sessions lasting at most 60 seconds restore their entry snapshot. Longer sessions restore their latest observed editing snapshot, falling back to the entry snapshot when no editing source was observed. A `UILeave` with another UI still attached keeps the session active.
-- Focus exit deliberately does not capture a source: native Windows and the WSL bridge inspect the foreground thread, which may already belong to the destination application when `FocusLost` is delivered.
-- Disabling auto switching immediately invalidates pending restores and clears the Insert and focus-session snapshots. Re-enabling starts a new session from the source visible at that moment.
-- tmux focus-event propagation remains responsible for delivering focus boundaries; overlapping native and tmux events are safe because focus sessions are paired and idempotent.
+- `rust/im` 负责 opaque source ID、English source 判定、精确恢复、WSL process supervision，以及 Windows bridge source。
+- `yoz.im` 仅暴露 `capture()`、`capture_and_select_english()`、`restore()`、`is_english()`，以及仅 WSL 可用的 `setup()`。
+- `era.m.im` 仅暴露 `dressing()`，并持有一个 Insert snapshot 和 editor focus state。
+- `Non-English` 仅表示 `not is_english(snapshot)`，不是可选择的目标。恢复非 English source 时，必须使用此前捕获的精确 source ID。
 
-## Backend contract
+## 状态模型
 
-- `capture()` returns `(snapshot, error)` without changing the source.
-- `capture_and_select_english()` returns `(snapshot, ready, error)`:
-  - capture failure: `(nil, false, error)` and no selection is attempted;
-  - already English or successful selection: `(snapshot, true, nil)`;
-  - capture success followed by selection failure: `(snapshot, false, error)`.
-- `restore(snapshot)` selects the exact captured source ID.
-- `is_english(snapshot)` is a predicate only; no `InputMethod` enum or semantic non-English setter exists.
+```text
+Focused + command mode    -> English source
+Focused + Insert/Replace  -> last Insert snapshot
+Unfocused                 -> 不管理 input source
+```
 
-## Platform mappings
+Neovim 只在 focused 时管理 input source；unfocused 后不读取或修改目标应用的 input source。
 
-- macOS snapshots are exact Text Input Source Services IDs. English means ASCII-capable; selection uses the system's current ASCII-capable keyboard input source instead of a hard-coded source ID.
-- Native Windows snapshots are full decimal HKLs. English classification accepts every standard LANGID whose primary language is English; selection uses the first loaded English HKL reported by Windows.
-- WSL snapshots are also full decimal HKLs. The Linux backend no longer truncates them to 16-bit LANGIDs.
-- The WSL helper protocol is: no argument queries the current HKL, `--english` captures the current HKL and selects a loaded English HKL, and a decimal HKL performs exact restoration. Its no-allocator bridge accepts at most 64 loaded layouts and fails explicitly above that bound.
-- The `--english` helper writes the original HKL before requesting selection. The Linux backend therefore preserves a snapshot even when selection exits with an error or times out after the helper entered its selection phase.
-- A normal command-mode entry or `InsertLeave` starts one WSL helper process instead of a query process followed by a selection process.
-- The helper submits a bounded `SendMessageTimeoutW` request and polls the captured foreground thread for up to 100ms at 10ms intervals. The Linux parent kills and reaps a helper that exceeds its 1s process deadline.
-- The helper-backed capability is exported only when WSL detection succeeds; ordinary Linux has no IM backend.
+## 生命周期
 
-## Failure strategy
+- `dressing()` 在 `era.m.ui_attach.dressing()` 之后、plugin setup 之前注册，确保 focus handler 先于 `UIEnter` 就绪，且不依赖 plugin。
+- `UIEnter`、`FocusGained` 和 `VimResume` 幂等地获取 ownership，并按当前 mode 对齐：
+  - command mode 调用一次 fused `capture_and_select_english()`；
+  - Insert/Replace mode 精确恢复已知 Insert snapshot，包括 English snapshot；
+  - 其他 mode 不处理。
+- `FocusLost`、`VimSuspend`、`VimLeavePre`，以及最后一个 UI 的 `UILeave`，只释放 ownership，不调用 backend。仍有其他 UI 时，`UILeave` 不释放 ownership。
+- focused 状态下的 `InsertLeave` 调用一次 `capture_and_select_english()`。只要成功捕获 snapshot，就将其保存为新的 Insert snapshot，即使后续选择 English source 失败。
+- focused 状态下的 `InsertEnter` 同步恢复精确 Insert snapshot，确保 Neovim 接受后续 Insert-mode input 前完成切换。已知 snapshot 为 English 时跳过恢复，因为 `InsertLeave` 已将 source 保持为 English。
+- 关闭 `auto_im` 会清除 Insert snapshot，但不改变 focus ownership。重新开启时：
+  - focused：立即按当前 mode 对齐；
+  - unfocused：等待下一次 focus entry。
+- tmux 负责传递 focus event。native event 与 tmux event 即使重叠也安全，因为 ownership transition 是幂等的。
 
-- Native and WSL backends return values and errors; `era.m.im` is the single reporter for lifecycle failures.
-- One fused operation produces at most one report. A capture failure is not followed by a second selection process.
-- A selection failure preserves its captured snapshot so focus exit can still restore the original source.
-- A failed `InsertLeave` capture clears the cross-mode Insert restore target but preserves the active focus session's latest successful editing snapshot.
-- Selection and restoration failures never replace an existing snapshot with a guessed source.
-- macOS source selection may become visible asynchronously; generation checks prevent stale deferred restores from crossing later mode transitions.
-- Windows HKL classification describes keyboard-layout language, not IME-internal conversion state; richer IME state remains outside this contract.
+## Backend 契约
+
+- `capture()` 返回 `(snapshot, error)`，不修改 input source。
+- `capture_and_select_english()` 返回 `(snapshot, ready, error)`：
+  - 捕获失败：`(nil, false, error)`，不再尝试选择；
+  - 已是 English 或选择成功：`(snapshot, true, nil)`；
+  - 捕获成功但选择失败：`(snapshot, false, error)`。
+- `restore(snapshot)` 选择 snapshot 对应的精确 source ID。
+- `is_english(snapshot)` 仅用于判定；不存在 `InputMethod` enum 或 semantic non-English setter。
+
+## 平台映射
+
+### macOS
+
+- snapshot 是精确的 Text Input Source Services ID。
+- ASCII-capable source 视为 English。
+- 选择 English 时使用系统当前的 ASCII-capable keyboard input source，不硬编码 source ID。
+
+### Native Windows
+
+- snapshot 是完整的十进制 HKL。
+- primary language 为 English 的标准 LANGID 均视为 English。
+- 选择 English 时使用 Windows 返回的第一个已加载 English HKL。
+- HKL classification 只描述 keyboard-layout language，不包含 IME 内部 conversion state。
+
+### WSL
+
+- snapshot 同样是完整的十进制 HKL；Linux backend 不截断为 16-bit LANGID。
+- helper protocol：
+  - 无参数：查询当前 HKL；
+  - `--english`：捕获当前 HKL，并选择一个已加载的 English HKL；
+  - 十进制 HKL：精确恢复对应 source。
+- no-allocator bridge 最多接受 64 个已加载 layout；超过上限时明确失败。
+- `--english` 在请求选择前先输出原始 HKL。因此，即使选择阶段失败或超时，Linux backend 仍能保留 snapshot。
+- command-mode focus entry 或 `InsertLeave` 只启动一个 fused helper process。
+- focus exit 不启动 helper process。
+- focused `InsertEnter` 仅在已知 snapshot 为 non-English 时启动一个 restore process；Insert/Replace mode 的 focus entry 会精确恢复任意已知 snapshot。
+- helper 使用有界的 `SendMessageTimeoutW`，并以 10ms 间隔轮询捕获的 foreground thread，最长 100ms。Linux parent 会 kill 并 reap 超过 1s deadline 的 helper。
+- 仅在检测到 WSL 时导出 helper-backed capability；普通 Linux 不提供 IM backend。
+
+## 失败策略
+
+- Native 和 WSL backend 返回 value 与 error；`era.m.im` 是 lifecycle failure 的唯一 reporter。
+- 一次 fused operation 最多生成一条 report；捕获失败后不再启动 selection process。
+- selection failure 保留已捕获的 snapshot，以便下一次 focused `InsertEnter` 精确恢复 editing source。
+- `InsertLeave` 捕获失败会清除 Insert restore target。
+- selection 或 restoration failure 不得用猜测值覆盖已有 snapshot。
+- 同步恢复消除了可能跨越后续 mode 或 focus transition 的 deferred restore。macOS platform boundary 仍可能异步呈现已完成的 source selection。

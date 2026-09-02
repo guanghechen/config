@@ -31,12 +31,11 @@ local function unload(module_name)
   t:patch_table(package.loaded, module_name, nil)
 end
 
----@param options                       { use_wsl?: boolean, setup_error?: string, initial_snapshot?: era.m.im.Snapshot, with_ui?: boolean, ui_count?: integer, capture_and_select_error?: string, capture_failed?: boolean, capture_duration_ms?: number }|nil
+---@param options                       { use_wsl?: boolean, setup_error?: string, initial_snapshot?: era.m.im.Snapshot, with_ui?: boolean, ui_count?: integer, capture_and_select_error?: string, capture_failed?: boolean }|nil
 local function setup_lifecycle(options)
   options = options or {}
   reports = {}
   local callbacks = {} ---@type table<string, fun()>
-  local scheduled = {} ---@type fun()[]
   local restored_snapshots = {} ---@type era.m.im.Snapshot[]
   local current_snapshot = options.initial_snapshot or "source.english" ---@type era.m.im.Snapshot
   local auto_im = true ---@type boolean
@@ -44,20 +43,19 @@ local function setup_lifecycle(options)
   local unsubscribe_count = 0 ---@type integer
   local capture_count = 0 ---@type integer
   local capture_and_select_count = 0 ---@type integer
-  local capture_duration_ms = options.capture_duration_ms or 0 ---@type number
+  local restore_count = 0 ---@type integer
   local english_switch_count = 0 ---@type integer
-  local now = 0 ---@type number
   local ui_count = options.ui_count or 1 ---@type integer
   if options.with_ui == false then
     ui_count = 0
   end
   local mode = "n" ---@type string
+  ---@type table<string, string|nil>
   local backend_errors = {
     capture_and_select_english = options.capture_and_select_error,
-  } ---@type table<string, string|nil>
-  local capture_failures = {
-    capture_and_select_english = options.capture_failed,
-  } ---@type table<string, boolean|nil>
+  }
+  ---@type boolean
+  local capture_and_select_failed = options.capture_failed == true
   local setup_executables = {} ---@type string[]
 
   local auto_im_observable = {
@@ -92,20 +90,14 @@ local function setup_lifecycle(options)
     end,
     capture = function()
       capture_count = capture_count + 1
-      now = now + capture_duration_ms * 1e6
-      local err = backend_errors.capture
-      if err ~= nil then
-        return nil, err
-      end
       return current_snapshot, nil
     end,
     capture_and_select_english = function()
       capture_and_select_count = capture_and_select_count + 1
-      now = now + capture_duration_ms * 1e6
       local snapshot = current_snapshot
       local err = backend_errors.capture_and_select_english
       if err ~= nil then
-        if capture_failures.capture_and_select_english then
+        if capture_and_select_failed then
           return nil, false, err
         end
         return snapshot, false, err
@@ -117,6 +109,7 @@ local function setup_lifecycle(options)
       return snapshot, true, nil
     end,
     restore = function(snapshot)
+      restore_count = restore_count + 1
       local err = backend_errors.restore
       if err ~= nil then
         return nil, err
@@ -188,12 +181,6 @@ local function setup_lifecycle(options)
     end
     return uis
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
-  t:patch_table(vim.uv, "hrtime", function()
-    return now
-  end)
   t:patch_global("yoz", { im = backend })
   unload("era.m.im")
 
@@ -208,28 +195,27 @@ local function setup_lifecycle(options)
     callbacks = callbacks,
     reports = reports,
     restored_snapshots = restored_snapshots,
-    scheduled = scheduled,
     setup_executables = setup_executables,
-    advance_ms = function(duration)
-      now = now + duration * 1e6
-    end,
-    flush = function()
-      local callback = table.remove(scheduled, 1)
-      if callback ~= nil then
-        callback()
-      end
-    end,
-    get_unsubscribe_count = function()
-      return unsubscribe_count
+    get_backend_call_count = function()
+      return capture_count + capture_and_select_count + restore_count
     end,
     get_capture_count = function()
-      return capture_count + capture_and_select_count
+      return capture_count
     end,
     get_capture_and_select_count = function()
       return capture_and_select_count
     end,
+    get_current_snapshot = function()
+      return current_snapshot
+    end,
     get_english_switch_count = function()
       return english_switch_count
+    end,
+    get_restore_count = function()
+      return restore_count
+    end,
+    get_unsubscribe_count = function()
+      return unsubscribe_count
     end,
     set_auto_im = function(enabled)
       local previous = auto_im
@@ -240,13 +226,12 @@ local function setup_lifecycle(options)
     end,
     set_backend_error = function(subject, err, capture_failed)
       backend_errors[subject] = err
-      capture_failures[subject] = capture_failed
+      if subject == "capture_and_select_english" then
+        capture_and_select_failed = capture_failed == true
+      end
     end,
     set_current_snapshot = function(snapshot)
       current_snapshot = snapshot
-    end,
-    set_capture_duration_ms = function(duration)
-      capture_duration_ms = duration
     end,
     set_mode = function(next_mode)
       mode = next_mode
@@ -260,13 +245,22 @@ end
 t:test("public interface exposes only lifecycle setup", function()
   local ctx = setup_lifecycle()
 
-  t.assert_nil(ctx.im.capture, "capture implementation")
-  t.assert_nil(ctx.im.capture_and_select_english, "capture and select implementation")
-  t.assert_nil(ctx.im.restore, "restore implementation")
-  t.assert_nil(ctx.im.is_english, "English predicate implementation")
+  t.assert_nil(rawget(ctx.im, "capture"), "capture implementation")
+  t.assert_nil(rawget(ctx.im, "capture_and_select_english"), "capture and select implementation")
+  t.assert_nil(rawget(ctx.im, "restore"), "restore implementation")
+  t.assert_nil(rawget(ctx.im, "is_english"), "English predicate implementation")
 end)
 
-t:test("focus lifecycle: fused capture failure reports once without a fallback process", function()
+t:test("focus entry: command mode selects English with one fused call", function()
+  local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry" })
+
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "single fused call")
+  t.assert_eq(1, ctx.get_backend_call_count(), "single backend call")
+  t.assert_eq(1, ctx.get_english_switch_count(), "English selection")
+  t.assert_eq("source.english", ctx.get_current_snapshot(), "focused command source")
+end)
+
+t:test("focus entry: fused capture failure reports once", function()
   local ctx = setup_lifecycle({
     initial_snapshot = "source.non_english.entry",
     capture_and_select_error = "capture timed out",
@@ -275,11 +269,9 @@ t:test("focus lifecycle: fused capture failure reports once without a fallback p
 
   t.assert_eq(1, ctx.get_capture_and_select_count(), "single fused attempt")
   t.assert_eq(1, #ctx.reports, "single failure report")
-  ctx.callbacks.FocusLost()
-  t.assert_eq(0, #ctx.restored_snapshots, "missing entry snapshot")
 end)
 
-t:test("focus lifecycle: selection failure preserves the entry snapshot", function()
+t:test("focus entry: selection failure reports once", function()
   local ctx = setup_lifecycle({
     initial_snapshot = "source.non_english.entry",
     capture_and_select_error = "selection failed",
@@ -287,64 +279,76 @@ t:test("focus lifecycle: selection failure preserves the entry snapshot", functi
 
   t.assert_eq(1, ctx.get_capture_and_select_count(), "single fused attempt")
   t.assert_eq(1, #ctx.reports, "single failure report")
-  ctx.callbacks.FocusLost()
-  t.assert_eq("source.non_english.entry", ctx.restored_snapshots[1], "preserved entry snapshot")
+  t.assert_eq("source.non_english.entry", ctx.get_current_snapshot(), "unchanged source")
 end)
 
-t:test("lifecycle: captures and restores the insert snapshot", function()
+t:test("insert lifecycle: captures and synchronously restores its source", function()
   local ctx = setup_lifecycle()
 
+  -- InsertEnter callbacks observe the preceding mode through nvim_get_mode().
   ctx.callbacks.InsertEnter()
-  t.assert_eq(0, #ctx.scheduled, "first insert restore")
+  t.assert_eq(0, ctx.get_restore_count(), "first InsertEnter")
 
-  ctx.set_current_snapshot("source.non_english.token")
+  ctx.set_current_snapshot("source.non_english.editing")
+  ctx.set_mode("n")
   ctx.callbacks.InsertLeave()
   t.assert_eq(1, ctx.get_english_switch_count(), "English selection")
 
-  ctx.set_mode("i")
+  local fused_calls = ctx.get_capture_and_select_count()
   ctx.callbacks.InsertEnter()
-  t.assert_eq(1, #ctx.scheduled, "deferred restore")
-  ctx.flush()
-  t.assert_eq("source.non_english.token", ctx.restored_snapshots[1], "restored snapshot")
+  t.assert_eq("source.non_english.editing", ctx.restored_snapshots[1], "synchronous restore")
+  t.assert_eq(fused_calls, ctx.get_capture_and_select_count(), "no InsertEnter capture")
 end)
 
-t:test("lifecycle: invalidates stale restores on mode and setting changes", function()
+t:test("insert lifecycle: failed capture clears the restore target", function()
   local ctx = setup_lifecycle()
 
-  ctx.set_current_snapshot("source.non_english.first")
+  ctx.set_current_snapshot("source.non_english.observed")
   ctx.callbacks.InsertLeave()
-  ctx.set_mode("i")
-  ctx.callbacks.InsertEnter()
-  ctx.set_mode("n")
+  ctx.set_backend_error("capture_and_select_english", "capture failed", true)
   ctx.callbacks.InsertLeave()
-  ctx.flush()
-  t.assert_eq(0, #ctx.restored_snapshots, "mode-invalidated restore")
 
-  ctx.set_current_snapshot("source.non_english.next")
-  ctx.callbacks.InsertLeave()
-  ctx.set_mode("i")
   ctx.callbacks.InsertEnter()
-  ctx.set_auto_im(false)
-  ctx.flush()
-  t.assert_eq(0, #ctx.restored_snapshots, "setting-invalidated restore")
-
-  ctx.set_auto_im(true)
-  ctx.callbacks.InsertEnter()
-  t.assert_eq(0, #ctx.scheduled, "cleared snapshot")
+  t.assert_eq(0, ctx.get_restore_count(), "cleared restore target")
 end)
 
-t:test("lifecycle: skips restore for an English snapshot", function()
+t:test("insert lifecycle: skips redundant restore for an English source", function()
   local ctx = setup_lifecycle()
 
-  ctx.set_current_snapshot("source.english")
   ctx.callbacks.InsertLeave()
+  ctx.callbacks.InsertEnter()
+
   t.assert_eq(0, ctx.get_english_switch_count(), "redundant English selection")
-  ctx.set_mode("i")
-  ctx.callbacks.InsertEnter()
-  t.assert_eq(0, #ctx.scheduled, "English snapshot restore")
+  t.assert_eq(0, ctx.get_restore_count(), "redundant English restore")
 end)
 
-t:test("lifecycle: FocusGained affects command modes only", function()
+t:test("setting lifecycle: disabling clears the Insert source", function()
+  local ctx = setup_lifecycle()
+
+  ctx.set_current_snapshot("source.non_english.editing")
+  ctx.callbacks.InsertLeave()
+  ctx.set_mode("i")
+  ctx.set_auto_im(false)
+  local calls = ctx.get_backend_call_count()
+  ctx.callbacks.InsertEnter()
+  ctx.set_auto_im(true)
+
+  t.assert_eq(calls, ctx.get_backend_call_count(), "disabled and re-enabled calls")
+end)
+
+t:test("setting lifecycle: enabling reconciles a focused command mode", function()
+  local ctx = setup_lifecycle()
+
+  ctx.set_auto_im(false)
+  ctx.set_current_snapshot("source.non_english.current")
+  local calls = ctx.get_capture_and_select_count()
+  ctx.set_auto_im(true)
+
+  t.assert_eq(calls + 1, ctx.get_capture_and_select_count(), "reconcile call")
+  t.assert_eq("source.english", ctx.get_current_snapshot(), "reconciled source")
+end)
+
+t:test("focus entry: only command modes select English", function()
   local ctx = setup_lifecycle()
   local initial_fused_count = ctx.get_capture_and_select_count()
 
@@ -358,7 +362,7 @@ t:test("lifecycle: FocusGained affects command modes only", function()
   for _, mode in ipairs({ "n", "no", "nov", "noV", "no" .. string.char(22), "v", "V", string.char(22) }) do
     refocus(mode)
   end
-  t.assert_eq(initial_fused_count + 8, ctx.get_capture_and_select_count(), "command-mode fused captures")
+  t.assert_eq(initial_fused_count + 8, ctx.get_capture_and_select_count(), "command-mode fused calls")
   local command_fused_count = ctx.get_capture_and_select_count()
 
   for _, mode in ipairs({
@@ -380,85 +384,35 @@ t:test("lifecycle: FocusGained affects command modes only", function()
   }) do
     refocus(mode)
   end
-  t.assert_eq(command_fused_count, ctx.get_capture_and_select_count(), "text-entry-mode captures")
+  t.assert_eq(command_fused_count, ctx.get_capture_and_select_count(), "other-mode fused calls")
 end)
 
-t:test("focus lifecycle: short sessions restore the entry snapshot", function()
+t:test("focus exit: leaves the external source untouched", function()
   local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry" })
+  local calls = ctx.get_backend_call_count()
 
-  t.assert_eq(1, ctx.get_capture_count(), "entry capture count")
-  t.assert_eq(1, ctx.get_english_switch_count(), "command-mode English selection")
-
-  ctx.set_current_snapshot("source.non_english.editing")
-  ctx.callbacks.InsertLeave()
-  ctx.advance_ms(60 * 1000)
+  ctx.set_current_snapshot("source.external.current")
   ctx.callbacks.FocusLost()
 
-  t.assert_eq("source.non_english.entry", ctx.restored_snapshots[1], "short-session restore")
+  t.assert_eq(calls, ctx.get_backend_call_count(), "focus exit backend calls")
+  t.assert_eq("source.external.current", ctx.get_current_snapshot(), "external source")
 end)
 
-t:test("focus lifecycle: long sessions restore only observed editing state", function()
-  local edited = setup_lifecycle({ initial_snapshot = "source.english" })
-  edited.set_current_snapshot("source.non_english.editing")
-  edited.callbacks.InsertLeave()
-  edited.advance_ms(60 * 1000 + 1)
-  edited.callbacks.FocusLost()
-  t.assert_eq("source.non_english.editing", edited.restored_snapshots[1], "long edited session")
-
-  local read_only = setup_lifecycle({ initial_snapshot = "source.non_english.entry" })
-  read_only.advance_ms(60 * 1000 + 1)
-  read_only.callbacks.FocusLost()
-  t.assert_eq("source.non_english.entry", read_only.restored_snapshots[1], "long read-only session")
-end)
-
-t:test("focus lifecycle: session duration includes entry backend latency", function()
-  local ctx = setup_lifecycle({
-    initial_snapshot = "source.non_english.entry",
-    capture_duration_ms = 1000,
-  })
-  ctx.set_capture_duration_ms(0)
-  ctx.set_current_snapshot("source.non_english.editing")
-  ctx.callbacks.InsertLeave()
-  ctx.advance_ms(59 * 1000 + 1)
-  ctx.callbacks.FocusLost()
-
-  t.assert_eq("source.non_english.editing", ctx.restored_snapshots[1], "actual long-session restore")
-end)
-
-t:test("focus lifecycle: failed capture preserves the latest observed editing state", function()
-  local ctx = setup_lifecycle({ initial_snapshot = "source.english" })
-  ctx.set_current_snapshot("source.non_english.observed")
-  ctx.callbacks.InsertLeave()
-
-  ctx.set_backend_error("capture_and_select_english", "capture failed", true)
-  ctx.callbacks.InsertLeave()
-  ctx.set_mode("i")
-  ctx.callbacks.InsertEnter()
-  t.assert_eq(0, #ctx.scheduled, "failed capture clears Insert restore target")
-
-  ctx.advance_ms(60 * 1000 + 1)
-  ctx.callbacks.FocusLost()
-  t.assert_eq("source.non_english.observed", ctx.restored_snapshots[1], "latest observed editing state")
-end)
-
-t:test("focus lifecycle: Insert mode restores Neovim state and preserves the new entry snapshot", function()
+t:test("focus entry: Insert mode restores the Neovim source", function()
   local ctx = setup_lifecycle()
   ctx.set_current_snapshot("source.non_english.editing")
   ctx.callbacks.InsertLeave()
   ctx.callbacks.FocusLost()
 
-  ctx.set_current_snapshot("source.external.entry")
+  ctx.set_current_snapshot("source.external.current")
   ctx.set_mode("i")
   ctx.callbacks.FocusGained()
-  t.assert_eq(1, #ctx.scheduled, "focused Insert restore")
-  ctx.flush()
-  t.assert_eq("source.non_english.editing", ctx.restored_snapshots[2], "Neovim Insert source")
 
-  ctx.callbacks.FocusLost()
-  t.assert_eq("source.external.entry", ctx.restored_snapshots[3], "external entry source")
+  t.assert_eq("source.non_english.editing", ctx.restored_snapshots[1], "Neovim Insert source")
+  t.assert_eq("source.non_english.editing", ctx.get_current_snapshot(), "focused source")
 end)
 
-t:test("focus lifecycle: focused Insert mode restores a known English snapshot", function()
+t:test("focus entry: Insert mode restores a known English source", function()
   local ctx = setup_lifecycle()
   ctx.callbacks.InsertLeave()
   ctx.callbacks.FocusLost()
@@ -466,27 +420,26 @@ t:test("focus lifecycle: focused Insert mode restores a known English snapshot",
   ctx.set_current_snapshot("source.non_english.external")
   ctx.set_mode("i")
   ctx.callbacks.FocusGained()
-  t.assert_eq(1, #ctx.scheduled, "focused English restore")
-  ctx.flush()
 
-  t.assert_eq("source.english", ctx.restored_snapshots[2], "restored English snapshot")
+  t.assert_eq("source.english", ctx.restored_snapshots[1], "English Insert source")
 end)
 
-t:test("focus lifecycle: only the last UILeave closes the session", function()
+t:test("focus lifecycle: only the last UILeave releases ownership", function()
   local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry", ui_count = 2 })
 
   ctx.set_ui_count(1)
   ctx.callbacks.UILeave()
-  t.assert_eq(0, #ctx.restored_snapshots, "remaining UI keeps session")
+  ctx.callbacks.FocusGained()
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "remaining UI keeps focus state")
 
   ctx.set_ui_count(0)
   ctx.callbacks.UILeave()
-  t.assert_eq("source.non_english.entry", ctx.restored_snapshots[1], "last UI restores entry")
+  t.assert_eq(0, ctx.get_restore_count(), "last UI does not restore")
 
   ctx.set_current_snapshot("source.non_english.next")
   ctx.set_ui_count(1)
   ctx.callbacks.UIEnter()
-  t.assert_eq(2, ctx.get_capture_count(), "reattach starts a new session")
+  t.assert_eq(2, ctx.get_capture_and_select_count(), "reattach reconciles source")
 end)
 
 t:test("focus lifecycle: duplicate boundary events are idempotent", function()
@@ -494,54 +447,44 @@ t:test("focus lifecycle: duplicate boundary events are idempotent", function()
 
   ctx.callbacks.FocusGained()
   ctx.callbacks.VimResume()
-  t.assert_eq(1, ctx.get_capture_count(), "duplicate entry capture")
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "duplicate focus entry")
 
   ctx.callbacks.FocusLost()
   ctx.callbacks.VimSuspend()
   ctx.callbacks.VimLeavePre()
-  t.assert_eq(1, #ctx.restored_snapshots, "duplicate exit restore")
-  t.assert_eq(1, ctx.get_capture_count(), "exit capture count")
+  t.assert_eq(0, ctx.get_restore_count(), "duplicate focus exit")
 
   ctx.callbacks.FocusGained()
   ctx.callbacks.VimResume()
-  t.assert_eq(2, ctx.get_capture_count(), "next entry capture")
+  t.assert_eq(2, ctx.get_capture_and_select_count(), "next focus entry")
 end)
 
-t:test("focus lifecycle: headless setup does not touch the foreground source", function()
+t:test("focus lifecycle: headless setup does not touch the source", function()
   local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry", with_ui = false })
 
-  t.assert_eq(0, ctx.get_capture_count(), "headless capture")
-  t.assert_eq(0, ctx.get_capture_and_select_count(), "headless selection")
-  t.assert_eq(0, #ctx.restored_snapshots, "headless restore")
+  t.assert_eq(0, ctx.get_backend_call_count(), "headless backend calls")
 end)
 
-t:test("focus lifecycle: exit invalidates a pending Insert restore", function()
+t:test("restore failure is reported", function()
   local ctx = setup_lifecycle()
   ctx.set_current_snapshot("source.non_english.editing")
   ctx.callbacks.InsertLeave()
-  ctx.set_mode("i")
+  ctx.set_backend_error("restore", "restore failed")
+
   ctx.callbacks.InsertEnter()
 
-  ctx.callbacks.FocusLost()
-  t.assert_eq("source.english", ctx.restored_snapshots[1], "focus exit restore")
-  ctx.flush()
-  t.assert_eq(1, #ctx.restored_snapshots, "stale Insert restore")
+  t.assert_eq(1, ctx.get_restore_count(), "restore attempt")
+  t.assert_eq("InsertEnter", ctx.reports[1].subject, "restore report subject")
 end)
 
 t:test("lifecycle: repeated dressing replaces the auto-im subscription", function()
-  local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry" })
+  local ctx = setup_lifecycle()
+  local calls = ctx.get_backend_call_count()
 
-  ctx.set_current_snapshot("source.non_english.stale")
-  ctx.callbacks.InsertLeave()
-  ctx.set_mode("i")
-  ctx.callbacks.InsertEnter()
   ctx.im.dressing()
-  ctx.flush()
 
   t.assert_eq(1, ctx.get_unsubscribe_count(), "previous subscription")
-  t.assert_eq(0, #ctx.restored_snapshots, "previous scheduled restore")
-  ctx.callbacks.FocusLost()
-  t.assert_eq("source.non_english.entry", ctx.restored_snapshots[1], "preserved entry snapshot")
+  t.assert_eq(calls, ctx.get_backend_call_count(), "redundant backend calls")
 end)
 
 t:test("wsl: composition installs the lifecycle", function()
