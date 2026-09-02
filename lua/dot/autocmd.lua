@@ -186,10 +186,11 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   end,
 })
 
----! Refresh resize-dependent state after editor resize.
+---! Equalize the current tab and refresh resize-dependent state after editor resize.
 vim.api.nvim_create_autocmd("VimResized", {
   group = stl.nvim.fn.augroup("bootstrap_on_VimResized"),
   callback = function()
+    dot.tab.equalize(vim.api.nvim_get_current_tabpage())
     vim.schedule(function()
       refresh_tmux_zen_mode()
 

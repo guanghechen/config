@@ -16,7 +16,8 @@ local t = harness.new("dot.autocmd")
 ---@field tab_delete_bufnr             integer|nil
 ---@field buf_close_bufnr              integer|nil
 ---@field term_delete_bufnr            integer|nil
----@field commands                     integer
+---@field current_tabnr                integer
+---@field equalized_tabnrs             integer[]
 
 ---@param vim_did_enter                ?integer
 ---@return dot.autocmd.test.IRuntime
@@ -31,7 +32,8 @@ local function setup(vim_did_enter)
     tab_delete_bufnr = nil,
     buf_close_bufnr = nil,
     term_delete_bufnr = nil,
-    commands = 0,
+    current_tabnr = 1,
+    equalized_tabnrs = {},
   } ---@type dot.autocmd.test.IRuntime
 
   t:patch_global("stl", {
@@ -55,6 +57,9 @@ local function setup(vim_did_enter)
   })
   t:patch_global("dot", {
     tab = {
+      equalize = function(tabnr)
+        runtime.equalized_tabnrs[#runtime.equalized_tabnrs + 1] = tabnr
+      end,
       on_buf_delete = function(bufnr)
         runtime.tab_delete_bufnr = bufnr
       end,
@@ -103,8 +108,8 @@ local function setup(vim_did_enter)
     runtime.autocmds[opts.group] = opts
     return 1
   end)
-  t:patch_table(vim, "cmd", function()
-    runtime.commands = runtime.commands + 1
+  t:patch_table(vim.api, "nvim_get_current_tabpage", function()
+    return runtime.current_tabnr
   end)
 
   assert(loadfile("lua/dot/autocmd.lua"))()
@@ -180,12 +185,13 @@ t:test("concurrent refreshes keep one query in flight and apply the final result
   t.assert_true(runtime.updates[1], "final state")
 end)
 
-t:test("VimResized refreshes state without changing window layouts", function()
+t:test("VimResized equalizes only the current tab and refreshes state", function()
   local runtime = setup()
 
   runtime.autocmds.bootstrap_on_VimResized.callback()
   t.assert_eq(1, #runtime.scheduled, "scheduled resize callbacks")
-  t.assert_eq(0, runtime.commands, "layout commands")
+  t.assert_eq(1, #runtime.equalized_tabnrs, "equalized tabs")
+  t.assert_eq(1, runtime.equalized_tabnrs[1], "current tab")
   t.assert_eq(0, #runtime.queries, "before scheduled resize work")
 
   table.remove(runtime.scheduled, 1)()

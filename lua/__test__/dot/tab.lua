@@ -71,6 +71,58 @@ local function setup()
   end
 end
 
+t:test("equalize applies once through a normal window in the requested tab", function()
+  local Tab = setup()
+  local listed_tabnr = nil ---@type integer|nil
+  local called_winnr = nil ---@type integer|nil
+  local command = nil ---@type string|nil
+  t:patch_table(stl.nvim.win, "is_float", function(winnr)
+    return winnr == 11
+  end)
+  t:patch_table(vim.api, "nvim_tabpage_is_valid", function(tabnr)
+    return tabnr == 42
+  end)
+  t:patch_table(vim.api, "nvim_tabpage_list_wins", function(tabnr)
+    listed_tabnr = tabnr
+    return { 11, 12, 13 }
+  end)
+  t:patch_table(vim.api, "nvim_win_call", function(winnr, callback)
+    called_winnr = winnr
+    return callback()
+  end)
+  t:patch_table(vim, "cmd", function(value)
+    command = value
+  end)
+
+  Tab.equalize(42)
+
+  t.assert_eq(42, listed_tabnr, "listed tab")
+  t.assert_eq(12, called_winnr, "normal window context")
+  t.assert_eq("wincmd =", command, "layout command")
+end)
+
+t:test("equalize skips invalid tabs and tabs without multiple normal windows", function()
+  local Tab = setup()
+  local calls = 0 ---@type integer
+  t:patch_table(stl.nvim.win, "is_float", function(winnr)
+    return winnr == 12
+  end)
+  t:patch_table(vim.api, "nvim_tabpage_is_valid", function(tabnr)
+    return tabnr == 42
+  end)
+  t:patch_table(vim.api, "nvim_tabpage_list_wins", function()
+    return { 11, 12 }
+  end)
+  t:patch_table(vim.api, "nvim_win_call", function()
+    calls = calls + 1
+  end)
+
+  Tab.equalize(0)
+  Tab.equalize(42)
+
+  t.assert_eq(0, calls, "window calls")
+end)
+
 t:test("on_bufs_close marks the tabline dirty only when entries are removed", function()
   local Tab, get_dirty_count = setup()
   local tabnr = vim.api.nvim_get_current_tabpage()

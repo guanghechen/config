@@ -48,6 +48,30 @@ function M.focus_win_sourcefile(tabnr)
   end
 end
 
+---@param tabnr                         integer
+---@return nil
+function M.equalize(tabnr)
+  if tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
+    return
+  end
+
+  local target_winnr = nil ---@type integer|nil
+  local normal_count = 0 ---@type integer
+  for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(tabnr)) do
+    if not stl.nvim.win.is_float(winnr) then
+      target_winnr = target_winnr or winnr
+      normal_count = normal_count + 1
+    end
+  end
+  if target_winnr == nil or normal_count < 2 then
+    return
+  end
+
+  pcall(vim.api.nvim_win_call, target_winnr, function()
+    vim.cmd("wincmd =")
+  end)
+end
+
 ---@param bufnrs                        ?integer[]
 ---@return integer[]
 function M.retrieve_unreferenced_bufnrs(bufnrs)
