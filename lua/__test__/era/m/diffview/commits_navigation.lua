@@ -8,6 +8,9 @@ local t = harness.new("era.m.diffview.commits_navigation")
 local ns = vim.api.nvim_create_namespace("era.m.diffview.commits_navigation.test")
 
 bootstrap.with_global(t, "stl", {
+  e = {
+    TabTypeEnum = { DIFFVIEW_WORKSPACE = "diffview_workspace" },
+  },
   fileicon = {
     get_file_icon = function()
       return "F", "file_icon"
@@ -73,14 +76,40 @@ local commit_b = {
 }
 
 ---@param viewtype stl.m.diffview.PanelViewTypeEnum
+---@param tabtype stl.e.TabTypeEnum|nil
 ---@return era.m.diffview.IRenderResult
-local function render(viewtype)
+local function render(viewtype, tabtype)
   return commits.render({ commit_a, commit_b }, { [commit_a.hash] = true }, {
     viewtype = viewtype,
     foldempty = false,
     layout = 2,
+    tabtype = tabtype,
   })
 end
+
+t:test("render: workspace History starts commit rows with the hash", function()
+  local history = commits.render({ commit_b }, {}, {
+    viewtype = "tree",
+    foldempty = false,
+    layout = 2,
+    tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE,
+  })
+  t.assert_eq("bbbb second B, now", history.lines[1], "History row")
+
+  local hash_highlight = history.highlights[1]
+  t.assert_eq("m_dv_cm_hash", hash_highlight.hlname, "first highlight")
+  t.assert_eq(0, hash_highlight.coll, "hash starts at first column")
+
+  local standalone = commits.render({ commit_b }, {}, { viewtype = "tree", foldempty = false, layout = 2 })
+  t.assert_eq("> | bbbb second B, now", standalone.lines[1], "standalone Commits keeps chevron")
+
+  local expanded_history = render("tree", stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE)
+  t.assert_false(expanded_history.lines[2]:sub(1, 1) == " ", "History tree starts at the hash column")
+
+  local expanded_standalone = render("tree")
+  t.assert_eq("   ", expanded_standalone.lines[2]:sub(1, 3), "standalone child indent")
+  t.assert_false(expanded_standalone.lines[2]:sub(4, 4) == " ", "standalone indent remains unchanged")
+end)
 
 t:test("render: projects nested TreeLayout navigation into buffer lines", function()
   local result = render("tree")

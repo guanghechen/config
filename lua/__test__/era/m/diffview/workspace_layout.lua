@@ -70,6 +70,22 @@ t:patch_table(package.loaded, "era.m.diffview.pane.commits", {
 
 local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
 
+---@param lyt era.m.diffview.view.workspace.ILayout
+---@return integer
+local function get_navigation_height(lyt)
+  local height = 0 ---@type integer
+  for _, winnr in ipairs({
+    lyt.changes.staged.winnr,
+    lyt.changes.unstaged.winnr,
+    lyt.history.commits_winnr,
+  }) do
+    if winnr and vim.api.nvim_win_is_valid(winnr) then
+      height = height + vim.api.nvim_win_get_height(winnr)
+    end
+  end
+  return height
+end
+
 local function with_changes_layout(callback)
   local original_winnr = vim.api.nvim_get_current_win() ---@type integer
   local original_bufnr = vim.api.nvim_win_get_buf(original_winnr) ---@type integer
@@ -118,6 +134,16 @@ t:test("layout creates staged above unstaged with independent buffers and focus"
     local history_row = vim.api.nvim_win_get_position(lyt.history.commits_winnr)[1]
     t.assert_true(staged_row < unstaged_row, "staged is above unstaged")
     t.assert_true(unstaged_row < history_row, "History is below Changes")
+    t.assert_eq(
+      "no",
+      vim.api.nvim_get_option_value("signcolumn", { win = lyt.history.commits_winnr }),
+      "History hides signs"
+    )
+    t.assert_eq(
+      " ",
+      vim.api.nvim_get_option_value("statuscolumn", { win = lyt.history.commits_winnr }),
+      "History keeps one leading screen column"
+    )
 
     view.focus_changes(lyt)
     t.assert_eq(unstaged.winnr, vim.api.nvim_get_current_win(), "default focus is unstaged")
@@ -149,6 +175,21 @@ t:test("History toggles at the bottom and shares preview ownership", function()
 
     view.show_history(lyt)
     t.assert_eq(history_bufnr, lyt.history.commits_bufnr, "History buffer reused")
+    t.assert_eq(
+      "no",
+      vim.api.nvim_get_option_value("signcolumn", { win = lyt.history.commits_winnr }),
+      "restored History hides signs"
+    )
+    t.assert_eq(
+      " ",
+      vim.api.nvim_get_option_value("statuscolumn", { win = lyt.history.commits_winnr }),
+      "restored History window options"
+    )
+    t.assert_eq(
+      view.__history_target_height__(get_navigation_height(lyt)),
+      vim.api.nvim_win_get_height(lyt.history.commits_winnr),
+      "History restored at quarter height"
+    )
     t.assert_true(vim.api.nvim_win_get_height(lyt.changes.staged.winnr) >= 2, "restored staged remains visible")
     t.assert_eq(2, vim.api.nvim_win_get_height(lyt.changes.unstaged.winnr), "restored unstaged remains visible")
     local unstaged_row = vim.api.nvim_win_get_position(lyt.changes.unstaged.winnr)[1]
@@ -230,7 +271,11 @@ t:test("Changes restores the last focused sibling across SBS navigation and pane
   view.show_changes(lyt)
   view.focus_changes(lyt)
   t.assert_eq(lyt.changes.unstaged.winnr, vim.api.nvim_get_current_win(), "recreated panel restores unstaged")
-  t.assert_eq(12, vim.api.nvim_win_get_height(assert(lyt.history.commits_winnr)), "History height restored")
+  t.assert_eq(
+    view.__history_target_height__(get_navigation_height(lyt)),
+    vim.api.nvim_win_get_height(assert(lyt.history.commits_winnr)),
+    "History quarter height restored"
+  )
 
   view.destroy(lyt)
   t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")
@@ -252,26 +297,29 @@ t:test("direct tab close releases the hidden History buffer and workspace layout
   t.assert_nil(view.__layout_cleanup_autocmds__[tabnr], "layout cleanup released")
 end)
 
-t:test("height allocation content-fits small panes and preserves History", function()
-  local compact = view.__allocate_changes_heights__(30, 8, 2, 12)
-  t.assert_eq(8, compact.staged, "staged content height")
+t:test("height allocation caps History near one quarter", function()
+  t.assert_eq(7, view.__history_target_height__(30), "normal History target")
+  t.assert_eq(3, view.__history_target_height__(10), "small-screen History target")
+
+  local compact = view.__allocate_changes_heights__(30, 8, 2, 7)
+  t.assert_eq(21, compact.staged, "larger staged pane receives slack")
   t.assert_eq(2, compact.unstaged, "unstaged content height")
-  t.assert_eq(20, compact.history, "History receives slack")
+  t.assert_eq(7, compact.history, "History stays at target")
 
-  local one_large = view.__allocate_changes_heights__(30, 50, 2, 12)
-  t.assert_eq(16, one_large.staged, "large staged receives remaining budget")
+  local one_large = view.__allocate_changes_heights__(30, 50, 2, 7)
+  t.assert_eq(21, one_large.staged, "large staged receives remaining budget")
   t.assert_eq(2, one_large.unstaged, "small unstaged remains fully visible")
-  t.assert_eq(12, one_large.history, "History minimum")
+  t.assert_eq(7, one_large.history, "History target")
 
-  local both_large = view.__allocate_changes_heights__(30, 50, 40, 12)
-  t.assert_eq(9, both_large.staged, "overflow staged share")
-  t.assert_eq(9, both_large.unstaged, "overflow unstaged share")
-  t.assert_eq(12, both_large.history, "overflow History minimum")
+  local both_large = view.__allocate_changes_heights__(30, 50, 40, 7)
+  t.assert_eq(12, both_large.staged, "overflow staged share")
+  t.assert_eq(11, both_large.unstaged, "overflow unstaged share")
+  t.assert_eq(7, both_large.history, "overflow History target")
 
-  local constrained = view.__allocate_changes_heights__(10, 2, 2, 12)
-  t.assert_eq(2, constrained.staged, "constrained staged entry remains visible")
-  t.assert_eq(2, constrained.unstaged, "constrained unstaged entry remains visible")
-  t.assert_eq(6, constrained.history, "constrained History yields below its preferred minimum")
+  local balanced = view.__allocate_changes_heights__(10, 2, 2, 3)
+  t.assert_eq(3, balanced.staged, "equal Changes panes share slack")
+  t.assert_eq(4, balanced.unstaged, "equal Changes panes share remainder")
+  t.assert_eq(3, balanced.history, "small-screen History minimum")
 end)
 
 t:test("render shares metadata widths and content-fits sibling panes", function()
@@ -302,9 +350,14 @@ t:test("render shares metadata widths and content-fits sibling panes", function(
 
     local staged_winnr = lyt.changes.staged.winnr
     local unstaged_winnr = lyt.changes.unstaged.winnr
-    t.assert_eq(2, vim.api.nvim_win_get_height(staged_winnr), "staged header and entry")
-    t.assert_eq(2, vim.api.nvim_win_get_height(unstaged_winnr), "unstaged header and entry")
-    t.assert_true(vim.api.nvim_win_get_height(lyt.history.commits_winnr) >= 12, "History keeps its minimum height")
+    local history_winnr = lyt.history.commits_winnr
+    t.assert_true(vim.api.nvim_win_get_height(staged_winnr) >= 2, "staged header and entry remain visible")
+    t.assert_true(vim.api.nvim_win_get_height(unstaged_winnr) >= 2, "unstaged header and entry remain visible")
+    t.assert_eq(
+      view.__history_target_height__(get_navigation_height(lyt)),
+      vim.api.nvim_win_get_height(history_winnr),
+      "History uses quarter height"
+    )
     vim.api.nvim_win_set_height(staged_winnr, 2)
     view.render_changes(ctx)
     entries = { entries[2] }
@@ -321,8 +374,8 @@ t:test("render shares metadata widths and content-fits sibling panes", function(
       { filepath = "b.lua", stage_type = "unstaged", status = "M" },
     }
     view.render_changes(ctx)
-    t.assert_eq(2, vim.api.nvim_win_get_height(staged_winnr), "refilled staged content height")
-    t.assert_eq(2, vim.api.nvim_win_get_height(unstaged_winnr), "refilled unstaged content height")
+    t.assert_true(vim.api.nvim_win_get_height(staged_winnr) >= 2, "refilled staged remains visible")
+    t.assert_true(vim.api.nvim_win_get_height(unstaged_winnr) >= 2, "refilled unstaged remains visible")
 
     entries = { entries[1] }
     view.render_changes(ctx)

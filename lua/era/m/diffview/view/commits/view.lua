@@ -683,8 +683,9 @@ function M.render_commits(ctx)
   local commits = state:get_commits()
   local expanded = state:get_expanded_commits()
   local layout_type = lyt.layout_type or 1
+  local tabtype = vim.t[lyt.tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
 
-  local result = pane_commits.render(commits, expanded, { layout = layout_type })
+  local result = pane_commits.render(commits, expanded, { layout = layout_type, tabtype = tabtype })
   pane_commits.apply_to_buffer(lyt.commits_bufnr, result)
   if ctx.render_winline then
     ctx.render_winline()

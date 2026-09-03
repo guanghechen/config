@@ -14,7 +14,8 @@ local M = {}
 -- Constants
 ----------------------------------------------------------------------------------------------------
 
-local BASE_INDENT = "   " ---@type string (3 spaces for commit child indent)
+local HISTORY_BASE_INDENT = "" ---@type string (align tree roots with the first hash character)
+local STANDALONE_BASE_INDENT = "   " ---@type string
 local NS = config.NS
 
 ---@class era.m.diffview.pane.commits.IRenderState
@@ -287,7 +288,8 @@ end
 ---@param highlights                    stl.t.IHighlight[]
 ---@param line_map                      era.m.diffview.ICommitsLineMap[]
 ---@param navigation                   era.m.diffview.ITreeNavigation
-local function render_files_list(commit, files, lines, highlights, line_map, navigation)
+---@param base_indent                   string
+local function render_files_list(commit, files, lines, highlights, line_map, navigation, base_indent)
   -- Sort files by filepath
   local sorted = {} ---@type era.m.diffview.IFileEntry[]
   for _, entry in ipairs(files) do
@@ -308,7 +310,7 @@ local function render_files_list(commit, files, lines, highlights, line_map, nav
     local status_hl = util.get_status_hlgroup(status) ---@type string
 
     -- Build line: "    icon filepath +N -M [status]"
-    local parts = { BASE_INDENT, fileicon, " ", filepath } ---@type string[]
+    local parts = { base_indent, fileicon, " ", filepath } ---@type string[]
 
     -- Add stats if available
     if entry.insertions or entry.deletions then
@@ -342,9 +344,9 @@ local function render_files_list(commit, files, lines, highlights, line_map, nav
       hlname = "m_dv_winsep",
       lnum = lnum,
       coll = col,
-      colr = #BASE_INDENT,
+      colr = #base_indent,
     }
-    col = #BASE_INDENT
+    col = #base_indent
 
     -- Highlight file icon
     highlights[#highlights + 1] = {
@@ -421,8 +423,19 @@ end
 ---@param line_map                      era.m.diffview.ICommitsLineMap[]
 ---@param foldempty                     boolean
 ---@param navigation                    era.m.diffview.ITreeNavigation
----@param commit_lnum                  integer
-local function render_files_tree(commit, files, lines, highlights, line_map, foldempty, navigation, commit_lnum)
+---@param commit_lnum                   integer
+---@param base_indent                   string
+local function render_files_tree(
+  commit,
+  files,
+  lines,
+  highlights,
+  line_map,
+  foldempty,
+  navigation,
+  commit_lnum,
+  base_indent
+)
   -- Convert file entries to file items
   local items = {} ---@type era.view.filetree.IFileItem[]
   for _, entry in ipairs(files) do
@@ -434,7 +447,7 @@ local function render_files_tree(commit, files, lines, highlights, line_map, fol
 
   local result = view_filetree.render(items, {
     foldempty = foldempty,
-    base_indent = BASE_INDENT,
+    base_indent = base_indent,
     start_lnum = #lines,
     render_directory = create_directory_renderer(commit, line_map),
     render_file = create_file_renderer(commit, line_map),
@@ -489,6 +502,9 @@ function M.render(commits, expanded, opts)
   local foldempty_opt = opts and opts.foldempty
   local foldempty = foldempty_opt ~= nil and foldempty_opt or dot.context.diffview.flag_foldempty:snapshot() ---@type boolean
   local layout = (opts and opts.layout) or 1 ---@type integer
+  local is_workspace_history = opts and opts.tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE ---@type boolean|nil
+  local show_expand_icon = not is_workspace_history ---@type boolean
+  local base_indent = is_workspace_history and HISTORY_BASE_INDENT or STANDALONE_BASE_INDENT ---@type string
 
   -- Determine if layout is horizontal (wider) or vertical (narrower)
   -- Layout 1,4: horizontal (commits pane is wide) - use detailed format
@@ -518,7 +534,8 @@ function M.render(commits, expanded, opts)
     if is_horizontal then
       line, line_highlights, overlay = M.__render_commit_horizontal__(commit, #lines, max_files_width, max_ins_width, max_del_width, max_date_width, expanded[commit.hash])
     else
-      line, line_highlights, overlay = M.__render_commit_vertical__(commit, #lines, expanded[commit.hash])
+      line, line_highlights, overlay =
+        M.__render_commit_vertical__(commit, #lines, expanded[commit.hash], show_expand_icon)
     end
     lines[#lines + 1] = line
     local commit_lnum = #lines ---@type integer
@@ -534,9 +551,19 @@ function M.render(commits, expanded, opts)
     -- Render expanded files (for both log and file_history view)
     if expanded[commit.hash] and commit.files then
       if viewtype == "list" then
-        render_files_list(commit, commit.files, lines, highlights, line_map, navigation)
+        render_files_list(commit, commit.files, lines, highlights, line_map, navigation, base_indent)
       else
-        render_files_tree(commit, commit.files, lines, highlights, line_map, foldempty, navigation, commit_lnum)
+        render_files_tree(
+          commit,
+          commit.files,
+          lines,
+          highlights,
+          line_map,
+          foldempty,
+          navigation,
+          commit_lnum,
+          base_indent
+        )
       end
     end
   end
@@ -894,31 +921,32 @@ function M.__render_commit_horizontal__(commit, lnum, max_files_width, max_ins_w
 end
 
 ---Render a single commit line for vertical layout (layout 2,5 - narrower panel)
----Format: <expand icon> | <hash> <message> {author} {time ago}
+---Format: [<expand icon> | ]<hash> <message> {author} {time ago}
 ---@param commit                        era.m.diffview.ICommit
 ---@param lnum                          integer                         0-indexed line number
 ---@param is_expanded                   boolean|nil
+---@param show_expand_icon              boolean
 ---@return string, stl.t.IHighlight[], era.m.diffview.IOverlay|nil
-function M.__render_commit_vertical__(commit, lnum, is_expanded)
+function M.__render_commit_vertical__(commit, lnum, is_expanded, show_expand_icon)
   local parts = {} ---@type string[]
   local col = 0 ---@type integer
   local highlights = {} ---@type stl.t.IHighlight[]
 
-  -- Expand/collapse icon
-  local icon = is_expanded and stl.icon.ui.ArrowOpen or stl.icon.ui.ArrowClosed
-  parts[#parts + 1] = icon
-  col = col + #icon
+  if show_expand_icon then
+    local icon = is_expanded and stl.icon.ui.ArrowOpen or stl.icon.ui.ArrowClosed
+    parts[#parts + 1] = icon
+    col = col + #icon
 
-  -- Separator " | "
-  local sep = " | "
-  parts[#parts + 1] = sep
-  highlights[#highlights + 1] = {
-    hlname = "m_dv_cm_sep",
-    lnum = lnum,
-    coll = col,
-    colr = col + #sep,
-  }
-  col = col + #sep
+    local sep = " | "
+    parts[#parts + 1] = sep
+    highlights[#highlights + 1] = {
+      hlname = "m_dv_cm_sep",
+      lnum = lnum,
+      coll = col,
+      colr = col + #sep,
+    }
+    col = col + #sep
+  end
 
   -- Hash
   local hash = commit.abbrev_hash

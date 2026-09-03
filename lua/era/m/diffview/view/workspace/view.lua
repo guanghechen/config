@@ -7,6 +7,9 @@ local pane_changes = require("era.m.diffview.pane.changes")
 local pane_commits = require("era.m.diffview.pane.commits")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 
+local HISTORY_HEIGHT_DIVISOR = 4 ---@type integer
+local HISTORY_MIN_HEIGHT = 3 ---@type integer
+
 ---Workspace view controller.
 ---Manages Changes, History, shared preview, and workspace lifecycle.
 ---@class era.m.diffview.view.workspace.view
@@ -61,6 +64,13 @@ function M.owns_preview(lyt, generation)
   return lyt.preview_generation == generation and vim.api.nvim_tabpage_is_valid(lyt.tabnr)
 end
 
+---Keep workspace History compact without coupling standalone Commits to the same height policy.
+---@param total_height                   integer
+---@return integer
+function M.__history_target_height__(total_height)
+  return math.max(HISTORY_MIN_HEIGHT, math.floor(total_height / HISTORY_HEIGHT_DIVISOR))
+end
+
 ---@return era.m.diffview.view.workspace.IChangesLayout
 local function create_empty_changes_layout()
   return {
@@ -106,6 +116,14 @@ local function create_history_buffer(history)
   return bufnr
 end
 
+---@param winnr                         integer
+local function apply_history_winopts(winnr)
+  pane_commits.apply_winopts(winnr)
+  -- History does not need the active-commit sign; keep one visual spacer before its content.
+  vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("statuscolumn", " ", { win = winnr, scope = "local" })
+end
+
 ---@param history                        era.m.diffview.view.commits.ILayout
 ---@param anchor_winnr                   integer
 ---@return nil
@@ -125,8 +143,9 @@ local function create_history_below(history, anchor_winnr)
     bufnr = create_history_buffer(history)
   end
   vim.api.nvim_win_set_buf(history_winnr, bufnr)
-  pane_commits.apply_winopts(history_winnr)
-  vim.api.nvim_win_set_height(history_winnr, config.COMMITS_HEIGHT)
+  apply_history_winopts(history_winnr)
+  local lines = vim.api.nvim_get_option_value("lines", {}) ---@type integer
+  vim.api.nvim_win_set_height(history_winnr, M.__history_target_height__(lines))
 end
 
 ---@param changes                        era.m.diffview.view.workspace.IChangesLayout
@@ -457,9 +476,7 @@ function M.show_changes(lyt)
       pane_changes.apply_winopts(pane.winnr)
     end
   end
-  if history_winnr then
-    vim.api.nvim_win_set_height(history_winnr, config.COMMITS_HEIGHT)
-  end
+  M.sync_changes_heights(lyt)
 
   return lyt
 end
@@ -526,7 +543,7 @@ function M.show_history(lyt)
     bufnr = create_history_buffer(history)
   end
   vim.api.nvim_win_set_buf(history_winnr, bufnr)
-  pane_commits.apply_winopts(history_winnr)
+  apply_history_winopts(history_winnr)
   return lyt
 end
 
@@ -768,38 +785,38 @@ end
 ---@field public unstaged               integer
 ---@field public history                integer
 
----Allocate the navigation column: content-fit smaller Changes panes, then give remaining space to
----History. When content overflows, preserve History's minimum and split the Changes budget fairly.
+---Allocate the navigation column: keep History near its target, content-fit the smaller Changes
+---pane, and give remaining space to the larger Changes pane.
 ---@param total_height                   integer
 ---@param staged_lines                   integer
 ---@param unstaged_lines                 integer
----@param history_min_height             integer|nil
+---@param history_target_height          integer|nil
 ---@return era.m.diffview.view.workspace.IHeightAllocation
-function M.__allocate_changes_heights__(total_height, staged_lines, unstaged_lines, history_min_height)
+function M.__allocate_changes_heights__(total_height, staged_lines, unstaged_lines, history_target_height)
   total_height = math.max(2, total_height)
   local staged_required = math.max(1, staged_lines) ---@type integer
   local unstaged_required = math.max(1, unstaged_lines) ---@type integer
   local history_height = 0 ---@type integer
   local changes_budget = total_height ---@type integer
 
-  if history_min_height ~= nil and total_height >= 3 then
+  if history_target_height ~= nil and total_height >= 3 then
     local staged_floor = math.min(staged_required, 2) ---@type integer
     local unstaged_floor = math.min(unstaged_required, 2) ---@type integer
     local history_ceiling = math.max(1, total_height - staged_floor - unstaged_floor) ---@type integer
-    history_height = math.min(math.max(1, history_min_height), history_ceiling)
+    history_height = math.min(math.max(1, history_target_height), history_ceiling)
     changes_budget = total_height - history_height
   end
 
   if staged_required + unstaged_required <= changes_budget then
-    if history_min_height ~= nil then
-      history_height = total_height - staged_required - unstaged_required
+    local slack = changes_budget - staged_required - unstaged_required ---@type integer
+    if history_target_height ~= nil and staged_required == unstaged_required then
+      local staged_slack = math.floor(slack / 2) ---@type integer
+      staged_required = staged_required + staged_slack
+      unstaged_required = unstaged_required + slack - staged_slack
+    elseif staged_required >= unstaged_required then
+      staged_required = staged_required + slack
     else
-      local slack = changes_budget - staged_required - unstaged_required ---@type integer
-      if staged_required >= unstaged_required then
-        staged_required = staged_required + slack
-      else
-        unstaged_required = unstaged_required + slack
-      end
+      unstaged_required = unstaged_required + slack
     end
     return { staged = staged_required, unstaged = unstaged_required, history = history_height }
   end
@@ -852,7 +869,7 @@ function M.__sync_changes_heights__(lyt, staged_lines, unstaged_lines)
     total_height,
     staged_lines,
     unstaged_lines,
-    history_winnr and config.COMMITS_HEIGHT or nil
+    history_winnr and M.__history_target_height__(total_height) or nil
   )
   vim.api.nvim_win_set_height(staged_winnr, allocation.staged)
   if history_winnr then

@@ -32,12 +32,15 @@ Changes column 的宽度由 workspace-scoped `dot.context.diffview.panel_width` 
     navigation       sbs-left         sbs-right
 ```
 
-History 默认位于左侧最下方，`COMMITS_HEIGHT` 是其 preferred minimum。Staged/Unstaged 根据各自实际
-rendered line count 自动收缩：empty pane 只保留 header，non-empty pane 优先保证 header 与一个 item；空余
-高度交给 History。内容超出可用高度时，在满足 Changes visibility floor 后尽量保留 History minimum，再优先
-完整显示较小的 Changes pane，其余空间由较大 pane 使用并允许滚动。Terminal height resize 会重新应用该
-分配。History 可以独立隐藏或恢复；隐藏 Changes 时仍作为左侧 navigation panel。三个 panes 共享列宽，但
-分别持有 buffer 与 domain state。
+History 默认位于左侧最下方，target height 是 navigation column 的 `1/4`，最低 3 行；standalone Commits
+仍使用独立的 `COMMITS_HEIGHT`。Staged/Unstaged 根据各自 rendered line count 分配剩余高度：优先完整显示
+较小的 pane，其余空间由较大的 pane 使用并允许滚动；需求相同时平均分配。Terminal height resize 会重新
+应用该分配。History 可以独立隐藏或恢复；隐藏 Changes 时仍作为左侧 navigation panel。三个 panes 共享列宽，
+但分别持有 buffer 与 domain state。
+
+workspace History 的 commit row 直接从 buffer 第一列显示 abbreviated hash，不显示 expand/collapse chevron
+或 active-commit sign；pane 只保留 1 个 screen column 作为视觉边距。展开的 file tree root 与 hash 第一个字符
+位于同一 screen column；展开状态由其下方是否存在 file rows 表达。Standalone Commits 保留原有 chevron 与 sign。
 
 ### commits (diffview_commits)
 
