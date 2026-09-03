@@ -524,8 +524,9 @@ end
 ---@param states                        era.m.plugin.IPluginState[]
 ---@param tasks                         table<string, era.m.plugin.ITaskState>
 ---@param excluded                      table<string, boolean>
+---@param show_load_time                boolean|nil
 ---@return nil
-function M:__render_plugin_section__(title, states, tasks, excluded)
+function M:__render_plugin_section__(title, states, tasks, excluded, show_load_time)
   local visible = {} ---@type era.m.plugin.IPluginState[]
   for _, state in ipairs(states) do
     if not excluded[state.spec.name] then
@@ -536,7 +537,15 @@ function M:__render_plugin_section__(title, states, tasks, excluded)
     return
   end
 
-  self:__append__(title, "m_pl_h2"):__append__(" (" .. #visible .. ")", "m_pl_comment"):__nl__()
+  self:__append__(title, "m_pl_h2"):__append__(" (" .. #visible .. ")", "m_pl_comment")
+  if show_load_time then
+    local total_load_time = 0
+    for _, state in ipairs(visible) do
+      total_load_time = total_load_time + (state.load_time or 0)
+    end
+    self:__append__(" " .. string.format("%.2fms", total_load_time), "m_pl_comment")
+  end
+  self:__nl__()
   for _, state in ipairs(visible) do
     self:__render_plugin__(state, tasks[state.spec.name])
   end
@@ -582,8 +591,8 @@ function M:__home__()
     self:__nl__()
   end
 
-  self:__render_plugin_section__("Startup", groups.startup, tasks, active)
-  self:__render_plugin_section__("Runtime Loaded", groups.runtime, tasks, active)
+  self:__render_plugin_section__("Startup", groups.startup, tasks, active, true)
+  self:__render_plugin_section__("Runtime Loaded", groups.runtime, tasks, active, true)
   self:__render_plugin_section__("Not Loaded", groups.not_loaded, tasks, active)
 
   if total == 0 then

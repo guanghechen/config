@@ -68,6 +68,13 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
       startup = false,
       path = "/plugins/idle.nvim",
     },
+    dormant = {
+      spec = { name = "dormant.nvim" },
+      loaded = false,
+      loading = false,
+      startup = false,
+      path = "/plugins/dormant.nvim",
+    },
     missing = {
       spec = { name = "missing.nvim" },
       loaded = false,
@@ -177,6 +184,22 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
   t.assert_true(text:find("Installing 0/2    Queued 1", 1, true) ~= nil, "operation progress")
   t.assert_true(find_line(lines, "Installing (1)") < find_line(lines, "missing.nvim"), "installing section")
   t.assert_true(find_line(lines, "Queued (1)") < find_line(lines, "idle.nvim"), "queued section")
+  t.assert_true(text:find("Startup (2) 22.00ms", 1, true) ~= nil, "startup section load time")
+  t.assert_true(text:find("Runtime Loaded (1) 5.00ms", 1, true) ~= nil, "runtime section load time")
+  t.assert_true(text:find("Not Loaded (1)", 1, true) ~= nil, "not loaded section")
+  t.assert_true(text:find("Not Loaded (1) 0.00ms", 1, true) == nil, "not loaded section has no load time")
+
+  ---@diagnostic disable-next-line: invisible
+  local startup_segments = widget._lines[find_line(lines, "Startup (2)")]
+  local summary_time_hl = nil ---@type string|nil
+  for _, segment in ipairs(startup_segments) do
+    if segment.str == " 22.00ms" then
+      summary_time_hl = segment.hl
+      break
+    end
+  end
+  t.assert_eq("m_pl_comment", summary_time_hl, "summary time highlight")
+
   t.assert_true(find_line(lines, "slow.nvim") < find_line(lines, "fast.nvim"), "startup order")
   t.assert_true(find_line(lines, "slow.nvim") + 1 == find_line(lines, "Updated"), "updated task nesting")
   t.assert_eq(find_line(lines, "missing.nvim"), find_line(lines, "Cloning..."), "install task row")
