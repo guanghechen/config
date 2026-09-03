@@ -412,4 +412,25 @@ t:test("commits keymap exposes cross-page search", function()
   t.assert_true(found, "g/ search keymap")
 end)
 
+t:test("commits help keeps mappings with the same key in different modes", function()
+  t:patch_table(keymap, "gen_commits", function()
+    return { { modes = { "n" }, key = "test", desc = "normal", callback = function() end } }
+  end)
+  t:patch_table(keymap, "gen_filetree", function()
+    return { { modes = { "x" }, key = "test", desc = "visual", callback = function() end } }
+  end)
+  t:patch_table(keymap, "gen_sbs", function()
+    return {}
+  end)
+
+  local modes = {} ---@type table<string, boolean>
+  for _, mapping in ipairs(keymap.get_help_keymaps({})) do
+    for _, mode in ipairs(mapping.modes) do
+      modes[mode] = true
+    end
+  end
+  t.assert_true(modes.n, "normal mapping")
+  t.assert_true(modes.x, "visual mapping")
+end)
+
 t:run()

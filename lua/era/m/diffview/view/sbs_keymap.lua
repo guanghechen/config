@@ -6,6 +6,35 @@ local __module_name__ = "era.m.diffview.view.sbs_keymap" ---@type string
 ---@class era.m.diffview.view.sbs_keymap
 local M = {}
 
+local DESCRIPTIONS = {
+  ["<C-a>r"] = "diffview(sbs): Refresh current view",
+  ["<C-j>"] = "diffview(sbs): Next item in active preview",
+  ["<C-k>"] = "diffview(sbs): Previous item in active preview",
+  ["P"] = "diffview(sbs): Previous standalone commits layout",
+  ["g?"] = "diffview(sbs): Show current view keymap help",
+  ["gF"] = "diffview(sbs): Open active preview file in new tab",
+  ["gf"] = "diffview(sbs): Open active preview file in previous tab",
+  ["ghu"] = "diffview(sbs): Unstage selected workspace index lines",
+  ["gs"] = "diffview(sbs): Stage active workspace file",
+  ["gu"] = "diffview(sbs): Unstage active workspace file",
+  ["p1"] = "diffview(sbs): Use standalone commits layout 1",
+  ["p2"] = "diffview(sbs): Use standalone commits layout 2",
+  ["p3"] = "diffview(sbs): Use standalone commits layout 3",
+  ["p4"] = "diffview(sbs): Use standalone commits layout 4",
+  ["p5"] = "diffview(sbs): Use standalone commits layout 5",
+  ["pp"] = "diffview(sbs): Next standalone commits layout",
+  ["t0"] = "diffview(sbs): Cycle standalone commits layout",
+  ["t3"] = "diffview(sbs): Toggle active preview default folds",
+  ["t4"] = "diffview(sbs): Toggle workspace untracked files",
+  ["zC"] = "diffview(sbs): Close all active preview folds",
+  ["zM"] = "diffview(sbs): Close all active preview folds",
+  ["zO"] = "diffview(sbs): Open all active preview folds",
+  ["zR"] = "diffview(sbs): Open all active preview folds",
+  ["za"] = "diffview(sbs): Toggle active preview item",
+  ["zc"] = "diffview(sbs): Collapse active preview item",
+  ["zo"] = "diffview(sbs): Expand active preview item",
+} ---@type table<string, string>
+
 ---@param mode                           string
 ---@param key                            string
 ---@return stl.t.IKeymap|nil
@@ -48,15 +77,29 @@ end
 
 ---@param mode                           string
 ---@param key                            string
+---@return boolean handled
 function M.dispatch(mode, key)
   local keymap = get_current_mapping(mode, key)
-  if keymap then
-    return keymap.callback()
+  if not keymap then
+    return false
   end
+  keymap.callback()
+  return true
 end
 
----Install one view's SBS key set. Reused buffers may accumulate both sets, but every callback is
----dispatched against the view in the current tab.
+---@param mode                           string
+---@param key                            string
+---@return string
+local function plug_name(mode, key)
+  local encoded_key = key:gsub(".", function(char)
+    return string.format("%02x", string.byte(char))
+  end)
+  return string.format("<Plug>(diffview-sbs-%s-%s)", mode, encoded_key)
+end
+
+---Install the explicit union of keys used by each view as the shared SBS buffer encounters them.
+---An expression mapping preserves counts/registers while selecting either the original key or a
+---non-expression <Plug> callback, keeping action side effects outside expression-map textlock.
 ---@param keymaps                        stl.t.IKeymap[]
 ---@param bufnr                          integer
 local function setup(keymaps, bufnr)
@@ -66,22 +109,32 @@ local function setup(keymaps, bufnr)
 
   for _, keymap in ipairs(keymaps) do
     for _, mode in ipairs(keymap.modes) do
-      local function callback()
+      local plug = plug_name(mode, keymap.key) ---@type string
+      vim.keymap.set(mode, plug, function()
         M.dispatch(mode, keymap.key)
-      end
-      vim.keymap.set(mode, keymap.key, callback, {
+      end, {
         buffer = bufnr,
-        desc = keymap.desc,
-        nowait = true,
         silent = true,
       })
-      for _, alias in ipairs(keymap.aliases or {}) do
-        vim.keymap.set(mode, alias, callback, {
+
+      local function bind(key)
+        vim.keymap.set(mode, key, function()
+          if get_current_mapping(mode, keymap.key) then
+            return plug
+          end
+          return key
+        end, {
           buffer = bufnr,
-          desc = keymap.desc,
+          desc = DESCRIPTIONS[keymap.key] or keymap.desc,
+          expr = true,
           nowait = true,
+          replace_keycodes = true,
           silent = true,
         })
+      end
+      bind(keymap.key)
+      for _, alias in ipairs(keymap.aliases or {}) do
+        bind(alias)
       end
     end
   end

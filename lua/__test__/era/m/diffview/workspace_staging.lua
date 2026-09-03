@@ -1015,7 +1015,7 @@ t:test("sbs keymaps route whole-file stage and unstage", function()
   end
 end)
 
-t:test("sbs keymaps follow the active History preview owner", function()
+t:test("sbs keymaps expose workspace mutations only for a Changes preview", function()
   local workspace_stage_calls = 0
   local history_next_calls = 0
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
@@ -1032,14 +1032,62 @@ t:test("sbs keymaps follow the active History preview owner", function()
 
   local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
   local ctx = { layout = { preview_source = "history" }, history = {} }
+  local history_has_stage = false
   for _, mapping in ipairs(keymap.gen_sbs(ctx)) do
-    if mapping.key == "gs" or mapping.key == "<C-j>" then
+    if mapping.key == "gs" then
+      history_has_stage = true
+    elseif mapping.key == "<C-j>" then
       mapping.callback()
     end
   end
 
-  t.assert_eq(0, workspace_stage_calls, "History preview blocks workspace mutation")
+  t.assert_false(history_has_stage, "History preview excludes workspace mutation")
   t.assert_eq(1, history_next_calls, "History navigation")
+
+  ctx.layout.preview_source = "changes"
+  for _, mapping in ipairs(keymap.gen_sbs(ctx)) do
+    if mapping.key == "gs" then
+      mapping.callback()
+    end
+  end
+  t.assert_eq(1, workspace_stage_calls, "Changes preview exposes workspace mutation")
+end)
+
+t:test("History keymaps explicitly exclude standalone layout controls", function()
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {})
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {})
+  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
+
+  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  local keymaps = keymap.gen_history({ history = {} })
+  local keys = {} ---@type table<string, boolean>
+  for _, mapping in ipairs(keymaps) do
+    keys[mapping.key] = true
+  end
+
+  t.assert_true(keys["K"], "History details")
+  t.assert_true(keys["yy"], "History commit hash")
+  for _, key in ipairs({ "P", "p1", "p2", "p3", "p4", "p5", "pp", "t0" }) do
+    t.assert_false(keys[key], "standalone layout key " .. key)
+  end
+end)
+
+t:test("workspace help keeps normal and visual mappings for the same key", function()
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {})
+  t:patch_table(package.loaded, "era.m.git.visual", {})
+
+  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  local modes = {} ---@type table<string, boolean>
+  for _, mapping in ipairs(keymap.get_help_keymaps({})) do
+    if mapping.key == "ghu" then
+      for _, mode in ipairs(mapping.modes) do
+        modes[mode] = true
+      end
+    end
+  end
+
+  t.assert_true(modes.n, "normal ghu")
+  t.assert_true(modes.x, "visual ghu")
 end)
 
 t:test("shared sbs keymaps resolve the view in the current tab", function()
@@ -1105,12 +1153,93 @@ t:test("shared sbs keymaps resolve the view in the current tab", function()
   local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
 
   vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE
-  sbs_keymap.dispatch("n", "<C-j>")
+  t.assert_true(sbs_keymap.dispatch("n", "<C-j>"), "workspace mapping handled")
   vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_COMMITS
-  sbs_keymap.dispatch("n", "<C-j>")
+  t.assert_true(sbs_keymap.dispatch("n", "<C-j>"), "commits mapping handled")
 
   t.assert_eq(1, workspace_next_calls, "workspace action")
   t.assert_eq(1, commits_next_calls, "commits action")
+end)
+
+t:test("shared sbs mappings preserve counts for handled and fallback keys", function()
+  local handled_count = nil ---@type integer|nil
+  t:patch_table(stl, "e", {
+    TabTypeEnum = {
+      DIFFVIEW_WORKSPACE = "diffview_workspace",
+      DIFFVIEW_COMMITS = "diffview_commits",
+    },
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
+    gen_sbs = function(ctx)
+      if ctx.layout.preview_source == "history" then
+        return {}
+      end
+      return {
+        {
+          modes = { "n" },
+          key = "P",
+          desc = "test dispatch",
+          callback = function()
+            handled_count = vim.v.count
+          end,
+        },
+      }
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {
+    get = function()
+      return {}
+    end,
+  })
+  local current_layout = { preview_source = "changes" }
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
+    get_layout = function()
+      return current_layout
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.state", {
+    get = function()
+      return nil
+    end,
+  })
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local previous_tabtype = vim.t[tabnr].tabtype
+  local previous_register = vim.fn.getreg('"') ---@type string
+  local previous_register_type = vim.fn.getregtype('"') ---@type string
+  ---@diagnostic disable-next-line: invisible
+  t:_register_cleanup(function()
+    vim.t[tabnr].tabtype = previous_tabtype
+    vim.fn.setreg('"', previous_register, previous_register_type)
+  end)
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE
+
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  ---@diagnostic disable-next-line: invisible
+  t:_register_cleanup(function()
+    if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_buf_is_valid(previous_bufnr) then
+      vim.api.nvim_win_set_buf(winnr, previous_bufnr)
+    end
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "a" })
+  vim.fn.setreg('"', "x", "v")
+
+  local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
+  sbs_keymap.setup_workspace({ layout = { preview_source = "changes" } }, bufnr)
+
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("4P", true, false, true), "xt", false)
+  t.assert_eq(4, handled_count, "handled mapping count")
+  t.assert_eq("a", vim.api.nvim_get_current_line(), "handled mapping does not execute fallback")
+
+  current_layout.preview_source = "history"
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("3P", true, false, true), "xt", false)
+  t.assert_eq("xxxa", vim.api.nvim_get_current_line(), "fallback preserves native count")
 end)
 
 t:test("workspace refresh updates Changes and History together", function()

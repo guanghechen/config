@@ -205,27 +205,21 @@ function M.get_help_keymaps(ctx)
   local all = {} ---@type stl.t.IKeymap[]
   local seen = {} ---@type table<string, boolean>
 
-  -- Add commits keymaps
-  for _, km in ipairs(M.gen_commits(ctx)) do
-    if not seen[km.key] then
-      seen[km.key] = true
-      all[#all + 1] = km
-    end
-  end
-
-  -- Add filetree keymaps (only if not already added)
-  for _, km in ipairs(M.gen_filetree(ctx)) do
-    if not seen[km.key] then
-      seen[km.key] = true
-      all[#all + 1] = km
-    end
-  end
-
-  -- Add sbs keymaps (only if not already added)
-  for _, km in ipairs(M.gen_sbs(ctx)) do
-    if not seen[km.key] then
-      seen[km.key] = true
-      all[#all + 1] = km
+  for _, keymaps in ipairs({ M.gen_commits(ctx), M.gen_filetree(ctx), M.gen_sbs(ctx) }) do
+    for _, km in ipairs(keymaps) do
+      local unseen_modes = {} ---@type string[]
+      for _, mode in ipairs(km.modes) do
+        local identity = mode .. "\0" .. km.key ---@type string
+        if not seen[identity] then
+          seen[identity] = true
+          unseen_modes[#unseen_modes + 1] = mode
+        end
+      end
+      if #unseen_modes == #km.modes then
+        all[#all + 1] = km
+      elseif #unseen_modes > 0 then
+        all[#all + 1] = vim.tbl_extend("force", {}, km, { modes = unseen_modes })
+      end
     end
   end
 

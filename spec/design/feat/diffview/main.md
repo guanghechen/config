@@ -336,62 +336,9 @@ fetch_log_page(page, 50)
 
 ## 快捷键
 
-快捷键按 view 独立定义在 `view/*/keymap.lua` 中。
-
-### 通用快捷键（所有 view 共享）
-
-| 按键         | 功能                                                  |
-|:-------------|:------------------------------------------------------|
-| `g?`         | 显示快捷键帮助                                        |
-| `<C-a>r`     | 刷新（别名 `<D-r>`）                                  |
-| `<leader>er` | 在 navigation panel 定位当前项；已位于该 panel 时隐藏 |
-
-### workspace 快捷键
-
-**changes pane**
-
-| 按键            | 功能                |
-|:----------------|:--------------------|
-| `<CR>`          | 选择文件 / 切换展开 |
-| `<2-LeftMouse>` | 选择文件 / 切换展开 |
-| `J`             | 向下移动并选择      |
-| `K`             | 向上移动并选择      |
-| `gs`            | Stage 文件          |
-| `gu`            | Unstage 文件        |
-| `gr`            | Reset 文件          |
-| `oc`            | 复制文件路径        |
-| `t1`            | 切换显示模式        |
-| `t2`            | 切换紧凑目录路径    |
-| `t3`            | 切换默认 diff 折叠  |
-| `t4`            | 显示/隐藏 untracked |
-| `zC`            | 折叠当前 view diff  |
-| `zM`            | 折叠当前 view diff  |
-| `zO`            | 展开当前 view diff  |
-| `zR`            | 展开当前 view diff  |
-| `gf`            | 在之前的 tab 打开   |
-| `gF`            | 在新 tab 打开       |
-
-**sbs pane**
-
-| 按键    | 功能                |
-|:--------|:--------------------|
-| `<C-j>` | 下一个 diff         |
-| `<C-k>` | 上一个 diff         |
-| `za`    | 切换折叠            |
-| `zo`    | 展开折叠            |
-| `zc`    | 收起折叠            |
-| `t3`    | 切换默认 diff 折叠  |
-| `t4`    | 显示/隐藏 untracked |
-| `zC`    | 折叠当前 view diff  |
-| `zM`    | 折叠当前 view diff  |
-| `zO`    | 展开当前 view diff  |
-| `zR`    | 展开当前 view diff  |
-| `gf`    | 在之前的 tab 打开   |
-| `gF`    | 在新 tab 打开       |
-
-### commits 快捷键
-
-> 详见 [keybinding.md](./keybinding.md)
+快捷键由各 view 的 `keymap.lua` 显式组装；共享 SBS buffer 只持有 context-neutral dispatcher，
+执行时再解析当前 view 和 active preview。完整 key scope、bindings 与 fallback contract 详见
+[keybinding.md](./keybinding.md)。
 
 ## 设计决策
 
