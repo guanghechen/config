@@ -51,3 +51,29 @@ export function hex2rgba(hex, alpha) {
   const bb = Number.parseInt(b, 16)
   return `rgba(${rr}, ${gg}, ${bb}, ${alpha})`
 }
+
+/**
+ * Composite a #RRGGBB or #RRGGBBAA foreground over an opaque #RRGGBB background.
+ * @param {string} foreground
+ * @param {string} background
+ * @return {string} an opaque #RRGGBB color
+ */
+export function compositeHex(foreground, background) {
+  const foregroundMatch = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})(?:([0-9a-f]{2}))?$/i.exec(foreground)
+  const backgroundMatch = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(background)
+  if (!foregroundMatch || !backgroundMatch) {
+    throw new TypeError('Expected #RRGGBB or #RRGGBBAA foreground and #RRGGBB background')
+  }
+
+  const alpha = foregroundMatch[4] ? Number.parseInt(foregroundMatch[4], 16) : 255
+  const channels = [1, 2, 3].map(index => {
+    const foregroundChannel = Number.parseInt(foregroundMatch[index], 16)
+    const backgroundChannel = Number.parseInt(backgroundMatch[index], 16)
+    return Math.round(
+      (foregroundChannel * alpha + backgroundChannel * (255 - alpha)) / 255,
+    )
+      .toString(16)
+      .padStart(2, '0')
+  })
+  return `#${channels.join('')}`.toUpperCase()
+}

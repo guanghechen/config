@@ -446,6 +446,32 @@ describe('theme app template resolution', () => {
     assert.equal(codex.replace(extensionPattern, ''), bat)
   })
 
+  it('composites Codex VSC diff backgrounds for its RGB-only renderer', async () => {
+    const template = fs.readFileSync(
+      path.resolve('asset/theme/template/codex/vsc.hbs'),
+      'utf8',
+    )
+    const cases = [
+      ['vsc-dark-modern', '#384222', '#4C1919'],
+      ['vsc-light-modern', '#E6F2CA', '#FFCCCC'],
+    ]
+
+    for (const [name, inserted, deleted] of cases) {
+      const { errors, reporter } = createReporter()
+      const scheme = await load_theme_scheme(reporter, name)
+      assert.equal(errors.length, 0)
+      assert.ok(scheme)
+
+      const content = await render_template(template, scheme)
+      const extension = content.match(
+        /      <!-- BEGIN Codex extensions:[\s\S]*?      <!-- END Codex extensions\. -->\n/,
+      )?.[0]
+      assert.ok(extension)
+      assert.match(extension, new RegExp(`<string>${inserted}</string>`))
+      assert.match(extension, new RegExp(`<string>${deleted}</string>`))
+    }
+  })
+
   it('owns VSC colors per app while preserving default output', async () => {
     const templateRoot = path.resolve('asset/theme/template')
     const { errors, reporter } = createReporter()

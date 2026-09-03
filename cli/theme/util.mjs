@@ -11,7 +11,7 @@ import {
   XDG_CONFIG_NODE_ASSET_THEME_TEMPLATE_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
 } from '#env'
-import { hex2ansi256 } from '#util/color'
+import { compositeHex, hex2ansi256 } from '#util/color'
 
 /** @typedef {import('./types.d.ts').IAppConfig} IAppConfig */
 /** @typedef {import('./types.d.ts').IReporter} IReporter */
@@ -102,6 +102,7 @@ export async function render_template(template, scheme) {
         'darken',
         'palette',
         'c256',
+        'compositeHex',
         ...schemes,
         'expression',
         `try { return (${expression}) ?? expression; } catch (error) { console.log({ expression, error }); return \`{{\${expression}}}\`; }`,
@@ -119,6 +120,7 @@ export async function render_template(template, scheme) {
         darken,
         palette,
         c256,
+        compositeHex,
         ...schemes.map(t => palette[t]),
         expression,
       )

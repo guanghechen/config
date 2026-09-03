@@ -908,7 +908,7 @@
           <key>foreground</key>
           <string>{{vsc.tokenMarkupInserted}}</string>
           <key>background</key>
-          <string>{{vsc.diffEditor_insertedTextBackground}}</string>
+          <string>{{compositeHex(vsc.diffEditor_insertedTextBackground, vsc.editor_background)}}</string>
         </dict>
       </dict>
       <dict>
@@ -921,7 +921,7 @@
           <key>foreground</key>
           <string>{{vsc.tokenMarkupDeleted}}</string>
           <key>background</key>
-          <string>{{vsc.diffEditor_removedTextBackground}}</string>
+          <string>{{compositeHex(vsc.diffEditor_removedTextBackground, vsc.editor_background)}}</string>
         </dict>
       </dict>
       <dict>
