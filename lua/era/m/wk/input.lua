@@ -281,11 +281,14 @@ function M.__loop__(prefix)
   local node = S.state.get_node(new_prefix)
   if node then
     local has_children = node.is_group or next(node.children) ~= nil
-    local has_explicit_action = node.action ~= nil or node.rhs ~= nil
-    local is_nowait = node.nowait or (timedout and has_explicit_action)
+    local has_declared_action = node.action ~= nil or node.rhs ~= nil
+    local passthrough = not has_declared_action and S.state.__get_keymap__(S.state.bufnr, S.state.mode, new_prefix)
+    local is_executable = has_declared_action or passthrough ~= nil
+    local is_nowait = (has_declared_action and node.nowait) or (passthrough ~= nil and passthrough.nowait == 1)
+    is_nowait = is_nowait or (timedout and is_executable)
 
-    -- If nowait is set or timed out with explicit action, execute immediately
-    if is_nowait and has_explicit_action then
+    -- Native mappings keep their action in Neovim; execute the exact current mapping through feedkeys.
+    if is_nowait and is_executable then
       M.__execute__(node, new_prefix)
       return
     elseif has_children then

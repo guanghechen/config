@@ -401,6 +401,28 @@ function M.__is_valid_keymap__(km)
   return true
 end
 
+---Resolve the currently effective exact Neovim mapping, preferring buffer-local mappings.
+---@param bufnr                          integer
+---@param mode                           string
+---@param lhs                            string
+---@return table|nil
+function M.__get_keymap__(bufnr, mode, lhs)
+  local function find(keymaps)
+    for _, keymap in ipairs(keymaps) do
+      if S.util.normalize_lhs(keymap.lhs) == lhs then
+        return keymap
+      end
+    end
+  end
+
+  local buffer_keymap = find(vim.api.nvim_buf_get_keymap(bufnr, mode)) ---@type table|nil
+  if buffer_keymap then
+    return M.__is_valid_keymap__(buffer_keymap) and buffer_keymap or nil
+  end
+  local global_keymap = find(vim.api.nvim_get_keymap(mode)) ---@type table|nil
+  return global_keymap and M.__is_valid_keymap__(global_keymap) and global_keymap or nil
+end
+
 ---Load keymaps from Neovim into tree
 ---@param bufnr                          integer
 ---@param mode                           string
