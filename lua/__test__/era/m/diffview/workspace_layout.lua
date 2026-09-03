@@ -28,7 +28,9 @@ t:patch_global("dot", {
 
 t:patch_table(package.loaded, "era.m.diffview.config", { FILETREE_WIDTH = 40, COMMITS_HEIGHT = 12 })
 t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
-  apply_to_buffer = function() end,
+  apply_to_buffer = function(bufnr, result)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, result.lines)
+  end,
   apply_winopts = function() end,
   create_buffer = function(stage_type)
     local bufnr = vim.api.nvim_create_buf(false, true)
@@ -39,9 +41,15 @@ t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
   measure_metadata = function()
     return metadata_widths
   end,
-  render = function(_, opts)
+  render = function(entries, opts)
     render_calls[#render_calls + 1] = opts
-    return { lines = {}, highlights = {}, line_map = {} }
+    local lines = { opts.stage_type == "staged" and "Staged" or "Unstaged" }
+    for _, entry in ipairs(entries) do
+      if entry.stage_type == opts.stage_type then
+        lines[#lines + 1] = entry.filepath
+      end
+    end
+    return { lines = lines, highlights = {}, line_map = {} }
   end,
 })
 t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
@@ -123,12 +131,26 @@ end)
 t:test("History toggles at the bottom and shares preview ownership", function()
   with_changes_layout(function(lyt)
     local history_bufnr = lyt.history.commits_bufnr
+    vim.api.nvim_buf_set_lines(lyt.changes.staged.bufnr, 0, -1, false, {
+      "staged-1",
+      "staged-2",
+      "staged-3",
+      "staged-4",
+      "staged-5",
+      "staged-6",
+      "staged-7",
+      "staged-8",
+    })
+    vim.api.nvim_buf_set_lines(lyt.changes.unstaged.bufnr, 0, -1, false, { "unstaged-header", "unstaged-1" })
     view.hide_history(lyt)
     t.assert_nil(lyt.history.commits_winnr, "History hidden")
     t.assert_true(vim.api.nvim_buf_is_valid(history_bufnr), "History buffer preserved")
+    t.assert_eq(2, vim.api.nvim_win_get_height(lyt.changes.unstaged.winnr), "hidden History content-fit")
 
     view.show_history(lyt)
     t.assert_eq(history_bufnr, lyt.history.commits_bufnr, "History buffer reused")
+    t.assert_true(vim.api.nvim_win_get_height(lyt.changes.staged.winnr) >= 2, "restored staged remains visible")
+    t.assert_eq(2, vim.api.nvim_win_get_height(lyt.changes.unstaged.winnr), "restored unstaged remains visible")
     local unstaged_row = vim.api.nvim_win_get_position(lyt.changes.unstaged.winnr)[1]
     local history_row = vim.api.nvim_win_get_position(lyt.history.commits_winnr)[1]
     t.assert_true(unstaged_row < history_row, "History restored below Changes")
@@ -230,7 +252,29 @@ t:test("direct tab close releases the hidden History buffer and workspace layout
   t.assert_nil(view.__layout_cleanup_autocmds__[tabnr], "layout cleanup released")
 end)
 
-t:test("render shares metadata widths and restores the split after an empty pane", function()
+t:test("height allocation content-fits small panes and preserves History", function()
+  local compact = view.__allocate_changes_heights__(30, 8, 2, 12)
+  t.assert_eq(8, compact.staged, "staged content height")
+  t.assert_eq(2, compact.unstaged, "unstaged content height")
+  t.assert_eq(20, compact.history, "History receives slack")
+
+  local one_large = view.__allocate_changes_heights__(30, 50, 2, 12)
+  t.assert_eq(16, one_large.staged, "large staged receives remaining budget")
+  t.assert_eq(2, one_large.unstaged, "small unstaged remains fully visible")
+  t.assert_eq(12, one_large.history, "History minimum")
+
+  local both_large = view.__allocate_changes_heights__(30, 50, 40, 12)
+  t.assert_eq(9, both_large.staged, "overflow staged share")
+  t.assert_eq(9, both_large.unstaged, "overflow unstaged share")
+  t.assert_eq(12, both_large.history, "overflow History minimum")
+
+  local constrained = view.__allocate_changes_heights__(10, 2, 2, 12)
+  t.assert_eq(2, constrained.staged, "constrained staged entry remains visible")
+  t.assert_eq(2, constrained.unstaged, "constrained unstaged entry remains visible")
+  t.assert_eq(6, constrained.history, "constrained History yields below its preferred minimum")
+end)
+
+t:test("render shares metadata widths and content-fits sibling panes", function()
   with_changes_layout(function(lyt)
     local entries = {
       { filepath = "a.lua", stage_type = "staged", status = "M" },
@@ -258,6 +302,9 @@ t:test("render shares metadata widths and restores the split after an empty pane
 
     local staged_winnr = lyt.changes.staged.winnr
     local unstaged_winnr = lyt.changes.unstaged.winnr
+    t.assert_eq(2, vim.api.nvim_win_get_height(staged_winnr), "staged header and entry")
+    t.assert_eq(2, vim.api.nvim_win_get_height(unstaged_winnr), "unstaged header and entry")
+    t.assert_true(vim.api.nvim_win_get_height(lyt.history.commits_winnr) >= 12, "History keeps its minimum height")
     vim.api.nvim_win_set_height(staged_winnr, 2)
     view.render_changes(ctx)
     entries = { entries[2] }
@@ -265,7 +312,7 @@ t:test("render shares metadata widths and restores the split after an empty pane
     t.assert_eq(1, vim.api.nvim_win_get_height(staged_winnr), "empty staged header")
     local rendered = #render_calls
     vim.api.nvim_win_set_height(staged_winnr, 2)
-    view.sync_changes_heights(ctx)
+    view.sync_changes_heights(lyt)
     t.assert_eq(1, vim.api.nvim_win_get_height(staged_winnr), "height-only drift corrected")
     t.assert_eq(rendered, #render_calls, "height sync does not rebuild pane buffers")
 
@@ -274,7 +321,8 @@ t:test("render shares metadata widths and restores the split after an empty pane
       { filepath = "b.lua", stage_type = "unstaged", status = "M" },
     }
     view.render_changes(ctx)
-    t.assert_eq(2, vim.api.nvim_win_get_height(staged_winnr), "restored staged height")
+    t.assert_eq(2, vim.api.nvim_win_get_height(staged_winnr), "refilled staged content height")
+    t.assert_eq(2, vim.api.nvim_win_get_height(unstaged_winnr), "refilled unstaged content height")
 
     entries = { entries[1] }
     view.render_changes(ctx)

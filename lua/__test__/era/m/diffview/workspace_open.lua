@@ -248,14 +248,16 @@ t:test("standalone log ignores the workspace embedded History state", function()
   t.assert_eq(1, layouts_created, "standalone layout created")
 end)
 
-t:test("resize watcher rerenders only when the Changes pane width changes", function()
+t:test("resize watcher rerenders widths and resyncs content heights after terminal resize", function()
   remembered_widths = {}
   local widths = { [42] = 40, [43] = 40 } ---@type table<integer, integer>
   local columns = 200
+  local lines = 60
   local disposed = false ---@type boolean
   local callback = nil ---@type function|nil
   local autocmd_id = nil ---@type integer|nil
   local renders = 0 ---@type integer
+  local height_syncs = 0 ---@type integer
   local ctx = {
     layout = {
       changes = {
@@ -284,6 +286,8 @@ t:test("resize watcher rerenders only when the Changes pane width changes", func
   t:patch_table(vim.api, "nvim_get_option_value", function(name, opts)
     if name == "columns" then
       return columns
+    elseif name == "lines" then
+      return lines
     end
     return get_option_value(name, opts)
   end)
@@ -300,6 +304,10 @@ t:test("resize watcher rerenders only when the Changes pane width changes", func
       t.assert_eq(ctx, actual_ctx, "render context")
       renders = renders + 1
     end,
+    sync_changes_heights = function(actual_layout)
+      t.assert_eq(ctx.layout, actual_layout, "height sync layout")
+      height_syncs = height_syncs + 1
+    end,
   })
 
   local cmd = assert(loadfile("lua/era/m/diffview/cmd.lua"))()
@@ -309,6 +317,14 @@ t:test("resize watcher rerenders only when the Changes pane width changes", func
 
   resize()
   t.assert_eq(0, renders, "same width")
+  t.assert_eq(0, height_syncs, "same terminal height")
+
+  lines = 70
+  resize()
+  resize()
+  t.assert_eq(0, renders, "height-only resize avoids buffer render")
+  t.assert_eq(1, height_syncs, "terminal height resync")
+
   widths[42] = 5
   widths[43] = 5
   resize()

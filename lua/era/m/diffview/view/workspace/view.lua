@@ -24,8 +24,6 @@ local M = {}
 ---@class era.m.diffview.view.workspace.IChangesLayout
 ---@field public staged                  era.m.diffview.view.workspace.IChangesPane
 ---@field public unstaged                era.m.diffview.view.workspace.IChangesPane
----@field public expanded_staged_height  integer|nil                    Restored after an empty pane expands again
----@field public both_nonempty           boolean                        Last rendered occupancy state
 ---@field public last_focused_stage_type stl.m.diffview.StageTypeEnum
 
 ---@class era.m.diffview.view.workspace.ILayout
@@ -68,8 +66,6 @@ local function create_empty_changes_layout()
   return {
     staged = { stage_type = "staged", winnr = nil, bufnr = nil },
     unstaged = { stage_type = "unstaged", winnr = nil, bufnr = nil },
-    expanded_staged_height = nil,
-    both_nonempty = false,
     last_focused_stage_type = "unstaged",
   }
 end
@@ -164,9 +160,6 @@ local function create_changes_layout(anchor_winnr)
     end
   end
 
-  if changes.staged.winnr then
-    changes.expanded_staged_height = vim.api.nvim_win_get_height(changes.staged.winnr)
-  end
   return changes
 end
 
@@ -464,9 +457,6 @@ function M.show_changes(lyt)
       pane_changes.apply_winopts(pane.winnr)
     end
   end
-  if staged.winnr then
-    lyt.changes.expanded_staged_height = vim.api.nvim_win_get_height(staged.winnr)
-  end
   if history_winnr then
     vim.api.nvim_win_set_height(history_winnr, config.COMMITS_HEIGHT)
   end
@@ -517,6 +507,7 @@ function M.show_history(lyt)
   local changes_anchor = first_valid_window(lyt.changes.unstaged.winnr, lyt.changes.staged.winnr)
   if changes_anchor then
     create_history_below(history, changes_anchor)
+    M.sync_changes_heights(lyt)
     return lyt
   end
 
@@ -557,6 +548,7 @@ function M.hide_history(lyt)
     vim.api.nvim_win_hide(history.commits_winnr)
   end
   history.commits_winnr = nil
+  M.sync_changes_heights(lyt)
   return lyt
 end
 
@@ -771,11 +763,70 @@ function M.get_visible_entries(entries)
   return visible
 end
 
----Collapse an empty sibling to its header and restore the prior split when both have entries.
+---@class era.m.diffview.view.workspace.IHeightAllocation
+---@field public staged                 integer
+---@field public unstaged               integer
+---@field public history                integer
+
+---Allocate the navigation column: content-fit smaller Changes panes, then give remaining space to
+---History. When content overflows, preserve History's minimum and split the Changes budget fairly.
+---@param total_height                   integer
+---@param staged_lines                   integer
+---@param unstaged_lines                 integer
+---@param history_min_height             integer|nil
+---@return era.m.diffview.view.workspace.IHeightAllocation
+function M.__allocate_changes_heights__(total_height, staged_lines, unstaged_lines, history_min_height)
+  total_height = math.max(2, total_height)
+  local staged_required = math.max(1, staged_lines) ---@type integer
+  local unstaged_required = math.max(1, unstaged_lines) ---@type integer
+  local history_height = 0 ---@type integer
+  local changes_budget = total_height ---@type integer
+
+  if history_min_height ~= nil and total_height >= 3 then
+    local staged_floor = math.min(staged_required, 2) ---@type integer
+    local unstaged_floor = math.min(unstaged_required, 2) ---@type integer
+    local history_ceiling = math.max(1, total_height - staged_floor - unstaged_floor) ---@type integer
+    history_height = math.min(math.max(1, history_min_height), history_ceiling)
+    changes_budget = total_height - history_height
+  end
+
+  if staged_required + unstaged_required <= changes_budget then
+    if history_min_height ~= nil then
+      history_height = total_height - staged_required - unstaged_required
+    else
+      local slack = changes_budget - staged_required - unstaged_required ---@type integer
+      if staged_required >= unstaged_required then
+        staged_required = staged_required + slack
+      else
+        unstaged_required = unstaged_required + slack
+      end
+    end
+    return { staged = staged_required, unstaged = unstaged_required, history = history_height }
+  end
+
+  local half_budget = math.floor(changes_budget / 2) ---@type integer
+  if staged_required <= unstaged_required then
+    local staged_height = math.min(staged_required, half_budget) ---@type integer
+    return {
+      staged = staged_height,
+      unstaged = changes_budget - staged_height,
+      history = history_height,
+    }
+  end
+
+  local unstaged_height = math.min(unstaged_required, half_budget) ---@type integer
+  return {
+    staged = changes_budget - unstaged_height,
+    unstaged = unstaged_height,
+    history = history_height,
+  }
+end
+
+---Synchronize the navigation column from the rendered Changes line counts.
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
----@param staged_count                   integer
----@param unstaged_count                 integer
-function M.__sync_changes_heights__(lyt, staged_count, unstaged_count)
+---@param staged_lines                   integer
+---@param unstaged_lines                 integer
+function M.__sync_changes_heights__(lyt, staged_lines, unstaged_lines)
   local changes = lyt.changes
   local staged_winnr = changes.staged.winnr
   local unstaged_winnr = changes.unstaged.winnr
@@ -788,38 +839,37 @@ function M.__sync_changes_heights__(lyt, staged_count, unstaged_count)
     return
   end
 
-  local staged_height = vim.api.nvim_win_get_height(staged_winnr)
-  local unstaged_height = vim.api.nvim_win_get_height(unstaged_winnr)
-  local both_nonempty = staged_count > 0 and unstaged_count > 0
-  if changes.both_nonempty then
-    changes.expanded_staged_height = staged_height
+  local history_winnr = lyt.history and lyt.history.commits_winnr or nil ---@type integer|nil
+  if history_winnr and not vim.api.nvim_win_is_valid(history_winnr) then
+    history_winnr = nil
+  end
+  local total_height = vim.api.nvim_win_get_height(staged_winnr) + vim.api.nvim_win_get_height(unstaged_winnr)
+  if history_winnr then
+    total_height = total_height + vim.api.nvim_win_get_height(history_winnr)
   end
 
-  if both_nonempty then
-    if not changes.both_nonempty then
-      local max_staged_height = math.max(1, staged_height + unstaged_height - 1)
-      local restored_height =
-        math.min(changes.expanded_staged_height or math.floor((staged_height + unstaged_height) / 2), max_staged_height)
-      vim.api.nvim_win_set_height(staged_winnr, math.max(1, restored_height))
-    end
-  elseif staged_count == 0 then
-    vim.api.nvim_win_set_height(staged_winnr, 1)
-  elseif unstaged_count == 0 then
-    vim.api.nvim_win_set_height(unstaged_winnr, 1)
+  local allocation = M.__allocate_changes_heights__(
+    total_height,
+    staged_lines,
+    unstaged_lines,
+    history_winnr and config.COMMITS_HEIGHT or nil
+  )
+  vim.api.nvim_win_set_height(staged_winnr, allocation.staged)
+  if history_winnr then
+    vim.api.nvim_win_set_height(history_winnr, allocation.history)
   end
-  changes.both_nonempty = both_nonempty
 end
 
 ---Synchronize Changes split heights without rebuilding either pane buffer.
----@param ctx                            era.m.diffview.view.workspace.IContext
-function M.sync_changes_heights(ctx)
-  local counts = { staged = 0, unstaged = 0 } ---@type table<stl.m.diffview.StageTypeEnum, integer>
-  for _, entry in ipairs(M.get_visible_entries(ctx.state:get_entries())) do
-    if entry.stage_type then
-      counts[entry.stage_type] = counts[entry.stage_type] + 1
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+function M.sync_changes_heights(lyt)
+  local line_counts = { staged = 1, unstaged = 1 } ---@type table<stl.m.diffview.StageTypeEnum, integer>
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
+      line_counts[pane.stage_type] = vim.api.nvim_buf_line_count(pane.bufnr)
     end
   end
-  M.__sync_changes_heights__(ctx.layout, counts.staged, counts.unstaged)
+  M.__sync_changes_heights__(lyt, line_counts.staged, line_counts.unstaged)
 end
 
 ---Render the sibling Changes panes from one workspace snapshot.
@@ -846,7 +896,7 @@ function M.render_changes(ctx)
     end
   end
 
-  M.sync_changes_heights(ctx)
+  M.sync_changes_heights(lyt)
 end
 
 ---Open file entry in sbs view

@@ -160,7 +160,7 @@ function M.open(opts)
   end)
 end
 
----Re-render the Changes pane only when its own window crosses to a new width.
+---Re-render on Changes width changes and resync content-fit heights after terminal height changes.
 ---@param st                          era.m.diffview.view.workspace.State
 ---@param ctx                         era.m.diffview.view.workspace.IContext
 function M.__setup_changes_resize_workspace__(st, ctx)
@@ -181,6 +181,7 @@ function M.__setup_changes_resize_workspace__(st, ctx)
   end
   local last_winnr_signature, last_width_signature = get_changes_measurement()
   local last_columns = vim.api.nvim_get_option_value("columns", {}) ---@type integer
+  local last_lines = vim.api.nvim_get_option_value("lines", {}) ---@type integer
 
   local autocmd_id = vim.api.nvim_create_autocmd("WinResized", {
     callback = function()
@@ -189,11 +190,17 @@ function M.__setup_changes_resize_workspace__(st, ctx)
       end
 
       local columns = vim.api.nvim_get_option_value("columns", {}) ---@type integer
-      local terminal_resized = columns ~= last_columns ---@type boolean
+      local terminal_width_resized = columns ~= last_columns ---@type boolean
       last_columns = columns
+      local lines = vim.api.nvim_get_option_value("lines", {}) ---@type integer
+      local terminal_height_resized = lines ~= last_lines ---@type boolean
+      last_lines = lines
 
       local winnr_signature, width_signature, width = get_changes_measurement()
       if winnr_signature == last_winnr_signature and width_signature == last_width_signature then
+        if terminal_height_resized then
+          workspace_view.sync_changes_heights(ctx.layout)
+        end
         return
       end
 
@@ -204,7 +211,7 @@ function M.__setup_changes_resize_workspace__(st, ctx)
         return
       end
       -- A rebuilt pane inherits the preference; its clamped width is not a user resize.
-      if same_windows and not terminal_resized and width then
+      if same_windows and not terminal_width_resized and width then
         dot.context.diffview.panel_width:next(width)
       end
       workspace_view.render_changes(ctx)

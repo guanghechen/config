@@ -32,8 +32,12 @@ Changes column 的宽度由 workspace-scoped `dot.context.diffview.panel_width` 
     navigation       sbs-left         sbs-right
 ```
 
-History 默认位于左侧最下方，高度使用 `COMMITS_HEIGHT`。History 可以独立隐藏或恢复；隐藏 Changes 时
-History 保留为左侧 navigation panel。Staged/Unstaged 与 History 共享列宽，但分别持有 buffer 与 domain state。
+History 默认位于左侧最下方，`COMMITS_HEIGHT` 是其 preferred minimum。Staged/Unstaged 根据各自实际
+rendered line count 自动收缩：empty pane 只保留 header，non-empty pane 优先保证 header 与一个 item；空余
+高度交给 History。内容超出可用高度时，在满足 Changes visibility floor 后尽量保留 History minimum，再优先
+完整显示较小的 Changes pane，其余空间由较大 pane 使用并允许滚动。Terminal height resize 会重新应用该
+分配。History 可以独立隐藏或恢复；隐藏 Changes 时仍作为左侧 navigation panel。三个 panes 共享列宽，但
+分别持有 buffer 与 domain state。
 
 ### commits (diffview_commits)
 
