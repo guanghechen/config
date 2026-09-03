@@ -270,8 +270,8 @@ function M.locate_workspace_filepath(filename)
   local workspace_path = M.workspace() ---@type string
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path) ---@type string
   local hash = yoz.fn.md5(workspace_path) ---@type string
-  local session_dir = workspace_name .. "@" .. hash ---@type string
-  return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
+  local workspace_dir = workspace_name .. "@" .. hash ---@type string
+  return M.locate_context_filepath("workspaces" .. SEP .. workspace_dir .. SEP .. filename)
 end
 
 return M

@@ -124,7 +124,7 @@ local function refresh_tmux_zen_mode()
   end)
 end
 
-vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
+vim.api.nvim_create_autocmd("VimEnter", {
   group = stl.nvim.fn.augroup("state_on_VimEnter"),
   callback = function()
     vim.schedule(function()
@@ -165,15 +165,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
   group = stl.nvim.fn.augroup("state_tmux_zen_mode_on_VimEnter"),
   once = true,
   callback = refresh_tmux_zen_mode,
-})
-
-vim.api.nvim_create_autocmd("SessionLoadPost", {
-  group = stl.nvim.fn.augroup("state_tmux_zen_mode_on_SessionLoadPost"),
-  callback = function()
-    if vim.v.vim_did_enter == 1 then
-      refresh_tmux_zen_mode()
-    end
-  end,
 })
 
 vim.api.nvim_create_autocmd("VimLeavePre", {

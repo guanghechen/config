@@ -11,8 +11,6 @@ local modules = {
   ["dot.context.workspace.bookmark"] = { pinned = {} },
   ["dot.context.workspace.flight"] = {
     autoformat = {},
-    autoload = {},
-    autosave = {},
     devmode = {},
     dressing_clipboard = {},
     dressing_illuminate = {},
@@ -114,32 +112,16 @@ t:test("watch_changes watches only an existing editor state file", function()
   t.assert_eq(1, watches_when_readable, "watch count for readable file")
 end)
 
-t:test("save_on_exit owns autosave policy and preserves workspace persistence", function()
-  local autosave = true
-  local nvim_session_filepath = nil ---@type string|nil
+t:test("save_on_exit persists workspace context", function()
   local saved_storage = nil ---@type table|nil
 
   for name, value in pairs(modules) do
     t:patch_table(package.loaded, name, value)
   end
-  modules["dot.context.workspace.flight"].autosave = {
-    snapshot = function()
-      return autosave
-    end,
-  }
-  t:patch_global("dot", {
-    session = {
-      save_session = function(filepath)
-        nvim_session_filepath = filepath
-      end,
-    },
-  })
 
   local Context = assert(loadfile("lua/dot/context/init.lua"))()
   Context.set_storage({
-    session = "session.json",
     workspace = "workspace.json",
-    nvim_session_autosaved = "session.vim",
   })
   t:patch_table(Context, "save", function(storage)
     saved_storage = storage
@@ -147,18 +129,7 @@ t:test("save_on_exit owns autosave policy and preserves workspace persistence", 
 
   Context.save_on_exit()
 
-  t.assert_eq("session.vim", nvim_session_filepath, "native autosave")
-  t.assert_eq("session.json", saved_storage.session, "session context")
   t.assert_eq("workspace.json", saved_storage.workspace, "workspace context")
-
-  autosave = false
-  nvim_session_filepath = nil
-  saved_storage = nil
-  Context.save_on_exit()
-
-  t.assert_nil(nvim_session_filepath, "disabled native autosave")
-  t.assert_nil(saved_storage.session, "disabled session context")
-  t.assert_eq("workspace.json", saved_storage.workspace, "persistent workspace context")
 end)
 
 t:run()

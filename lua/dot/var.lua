@@ -86,27 +86,6 @@ M.nsnr = {
   -- stylua: ignore end
 }
 
-----------------------------------------------------------------------------------------------------
-
----@class dot.var.session
-M.session = {
-  persistent_options = table.concat({
-    "blank",
-    "buffers",
-    "curdir",
-    "folds",
-    "globals",
-    "help",
-    "resize",
-    "slash",
-    "skiprtp",
-    "tabpages",
-    "unix",
-    "winpos",
-    "winsize",
-  }, ","),
-}
-
 ---@class dot.var.themes
 M.themes = {
   "catppuccin-frappe",
@@ -149,8 +128,6 @@ M.toggler = {
   "username_ux",
 
   "autoformat_flight",
-  "autoload_flight",
-  "autosave_flight",
   "devmode_flight",
   "dressing_clipboard_flight",
   "dressing_illuminate_flight",

@@ -31,8 +31,6 @@ local group_flags = {
   ---flight
   flight = {
     autoformat = dot.context.flight.autoformat,
-    autoload = dot.context.flight.autoload,
-    autosave = dot.context.flight.autosave,
     devmode = dot.context.flight.devmode,
     dressing_clipboard = dot.context.flight.dressing_clipboard,
     dressing_dim = dot.context.flight.dressing_dim,

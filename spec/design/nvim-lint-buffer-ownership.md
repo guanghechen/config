@@ -115,7 +115,7 @@ Valid but not recommended.
 
 - Advantage: independent debounce deadlines.
 - Cost: timer map, per-buffer cleanup, reconfiguration cleanup, and more libuv handles.
-- Result: a session-load burst can still launch all linters concurrently when the timers expire.
+- Result: a multi-buffer load burst can still launch all linters concurrently when the timers expire.
 
 The additional lifecycle state does not solve a measured requirement that the simpler batching design cannot satisfy.
 
@@ -381,7 +381,7 @@ events for one buffer.
 ### 12.4 Updated conclusion
 
 The implementation's Lua scheduling cost is negligible. The material cost is unbounded process fan-out across distinct
-buffers, especially during session restore or bulk hidden-buffer loading.
+buffers, especially during bulk hidden-buffer loading.
 
 The previous decision to leave process concurrency unchanged was superseded by this evidence. At that review checkpoint,
 a product-level scheduling policy still had to be selected:
@@ -393,7 +393,7 @@ a product-level scheduling policy still had to be selected:
    around upstream `nvim-lint` and materially increases scheduler complexity.
 
 Recommendation: revise passive event semantics to active/visible gating. It retains correct target ownership for work the
-user can observe, avoids hidden session-load bursts, and does not introduce a custom process lifecycle layer.
+user can observe, avoids hidden-buffer load bursts, and does not introduce a custom process lifecycle layer.
 
 ## 13. Active/Visible Gating Revision
 
@@ -432,4 +432,4 @@ Interpretation:
 - an explicit write request for another hidden buffer started exactly one additional process;
 - both processes completed successfully.
 
-This removes the measured session-load fan-out without reverting target-buffer correctness.
+This removes the measured bulk-load fan-out without reverting target-buffer correctness.

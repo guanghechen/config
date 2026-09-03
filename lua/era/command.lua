@@ -1253,30 +1253,6 @@ command
     end,
   })
 
---[session] ----------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.session.restore.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      dot.session.restore()
-    end,
-  })
-  .implement({
-    uuid = K.session.restore_autosaved.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      dot.session.restore_autosaved()
-    end,
-  })
-  .implement({
-    uuid = K.session.save.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      dot.session.save()
-    end,
-  })
-
 --[tab] close---------------------------------------------------------------------------------------
 ---@param close_tab                     fun(): nil
 ---@return nil

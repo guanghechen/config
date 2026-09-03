@@ -71,9 +71,9 @@ Key capabilities:
 
 Key areas:
 
-- Context system (`dot.context.*`) for persistent/editor/session/workspace state
+- Context system (`dot.context.*`) for persistent editor/workspace state
 - Command system (`dot.command`) with definition/implementation separation
-- Core runtime helpers (`dot.buf`, `dot.win`, `dot.tab`, `dot.path`, `dot.var`, `dot.session`, `dot.lsp`)
+- Core runtime helpers (`dot.buf`, `dot.win`, `dot.tab`, `dot.path`, `dot.var`, `dot.lsp`)
 - Theme and highlight composition (`dot.theme.*`)
 - Runtime state (`dot.state.*`)
 

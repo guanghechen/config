@@ -124,36 +124,6 @@ function M.dump()
   return data
 end
 
----@return nil
-function M.reset()
-  M.clear_search()
-  M.winnr_command:next(0)
-
-  M.dirtier_statusline:mark_dirty()
-  M.dirtier_tabline:mark_dirty()
-  M.dirtier_termline:mark_dirty()
-  M.dirtier_notepadline:mark_dirty()
-  M.dirty_winline_nr:next(0)
-
-  M.lint_schedule_nr:next(0)
-
-  M.msg_command:next("")
-  M.msg_lsp:next("")
-  M.msg_mode:next("")
-  M.msg_transient:next("")
-
-  -- Reset LSP symbol ready status (plain object)
-  for k in pairs(M.lsp_symbol_ready) do
-    M.lsp_symbol_ready[k] = nil
-  end
-
-  M.notification_paused:next(false)
-  M.notification_level:next("TRACE")
-  M.searching:next(false)
-  M.suppress_warning:next(false)
-  M.tmux_zen_mode:next(true)
-end
-
 ---@param winnr                         integer
 local function redraw_winline(winnr)
   if vim.api.nvim_win_is_valid(winnr) then

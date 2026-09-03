@@ -8,10 +8,6 @@ local __mods = {
 
   --------------------------------------------------------------------------------------------------
 
-  tab = "dot.context.session.tab",
-
-  --------------------------------------------------------------------------------------------------
-
   bookmark = "dot.context.workspace.bookmark",
   colorpicker = "dot.context.workspace.colorpicker",
   diffview = "dot.context.workspace.diffview",
@@ -32,16 +28,11 @@ local __mods = {
 
 ---@class dot.context.storage
 ---@field public editor                 ?string
----@field public session                ?string
 ---@field public workspace              ?string
----@field public nvim_session           ?string
----@field public nvim_session_autosaved ?string
 
 ---@class dot.context.data
 ---@field public behavior               dot.context.behavior.data
 ---@field public theme                  dot.context.theme.data
----
----@field public tab                    dot.context.tab.data
 ---
 ---@field public bookmark               dot.context.bookmark.data
 ---@field public colorpicker            dot.context.colorpicker.data
@@ -73,8 +64,6 @@ local __mods = {
 ---@class dot.context : dot.context.state
 ---@field public behavior               dot.context.behavior
 ---@field public theme                  dot.context.theme
----
----@field public tab                    dot.context.tab
 ---
 ---@field public bookmark               dot.context.bookmark
 ---@field public colorpicker            dot.context.colorpicker
@@ -109,8 +98,6 @@ function M.dump()
     behavior = M.behavior.dump(),
     theme = M.theme.dump(),
 
-    tab = M.tab.dump(),
-
     bookmark = M.bookmark.dump(),
     colorpicker = M.colorpicker.dump(),
     diffview = M.diffview.dump(),
@@ -129,10 +116,9 @@ function M.dump()
 end
 
 ---@param storage                       dot.context.storage
----@param initialize                    boolean
 ---@return nil
-function M.load(storage, initialize)
-  if storage.editor or initialize then
+function M.load(storage)
+  if storage.editor then
     local data_editor = (
       storage.editor
       and vim.fn.filereadable(storage.editor) ~= 0
@@ -142,7 +128,7 @@ function M.load(storage, initialize)
     M.theme.load(data_editor.theme)
   end
 
-  if storage.workspace or initialize then
+  if storage.workspace then
     local data_workspace = (
       storage.workspace
       and vim.fn.filereadable(storage.workspace) ~= 0
@@ -162,16 +148,6 @@ function M.load(storage, initialize)
     M.search_file.load(data_workspace.search_file)
     M.select.load(data_workspace.select)
   end
-
-  if storage.session or initialize then
-    local data_session = (
-      storage.session
-      and vim.fn.filereadable(storage.session) ~= 0
-      and stl.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
-    ) or {}
-    dot.state.status.reset()
-    M.tab.load(data_session.tab)
-  end
 end
 
 ---@param storage                       dot.context.storage
@@ -183,13 +159,6 @@ function M.save(storage)
       theme = M.theme.dump(),
     }
     stl.fs.write_json(storage.editor, data, true)
-  end
-
-  if storage.session then
-    local data = {
-      tab = M.tab.dump(),
-    }
-    stl.fs.write_json(storage.session, data, true)
   end
 
   if storage.workspace then
@@ -223,22 +192,10 @@ function M.set_storage(storage)
   M._storage = storage
 end
 
----Persist exit state before runtime observables are disposed.
+---Persist workspace state before runtime observables are disposed.
 ---@return nil
 function M.save_on_exit()
-  local autosave = M.flight.autosave:snapshot() ---@type boolean
-
-  ---@type dot.context.storage
-  local storage = {
-    session = autosave and M._storage.session or nil,
-    workspace = M._storage.workspace,
-  }
-
-  if autosave and M._storage.nvim_session_autosaved then
-    dot.session.save_session(M._storage.nvim_session_autosaved)
-  end
-
-  M.save(storage)
+  M.save({ workspace = M._storage.workspace })
 end
 
 ---@return nil
@@ -310,8 +267,6 @@ function M.watch_changes()
   local select_states = {
     M.bookmark.pinned,
     M.flight.autoformat,
-    M.flight.autoload,
-    M.flight.autosave,
     M.flight.devmode,
     M.flight.dressing_clipboard,
     M.flight.dressing_illuminate,
@@ -389,7 +344,7 @@ function M.watch_changes()
       on_event = function(p, event)
         if type(event) == "table" and event.change == true then
           vim.schedule(function()
-            M.load({ editor = M._storage.editor }, false)
+            M.load({ editor = M._storage.editor })
           end)
         end
       end,

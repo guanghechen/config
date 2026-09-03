@@ -140,7 +140,6 @@ local __mods = {
   context = "dot.context",
   G = "dot.G",
   path = "dot.path",
-  session = "dot.session",
   tab = "dot.tab",
   uri = "dot.uri",
   var = "dot.var",
@@ -153,7 +152,6 @@ local __mods = {
 ---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public G                      dot.G
----@field public session                dot.session
 ---@field public state                  dot.state
 ---@field public theme                  dot.theme
 ---@field public uri                    dot.uri
@@ -188,10 +186,7 @@ function M.get_default_storage()
   ---@type dot.context.storage
   return {
     editor = M.path.locate_context_filepath("editor.json"),
-    session = is_git_repo and M.path.locate_workspace_filepath("session.json") or nil,
     workspace = is_git_repo and M.path.locate_workspace_filepath("workspace.json") or nil,
-    nvim_session = is_git_repo and M.path.locate_workspace_filepath("session.vim") or nil,
-    nvim_session_autosaved = is_git_repo and M.path.locate_workspace_filepath("session.autosaved.vim") or nil,
   }
 end
 
@@ -200,7 +195,7 @@ end
 function M.setup_context(storage)
   storage = storage or M.get_default_storage() ---@type dot.context.storage
   M.context.set_storage(storage)
-  M.context.load(storage, false)
+  M.context.load(storage)
 
   M.context.theme.reload_theme()
 end

@@ -122,7 +122,7 @@ function M.dressing()
     refresh_debounced(winnr_fixed)
   end, true)
 
-  vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
+  vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
     group = stl.nvim.fn.augroup("era.winsep_on_resize"),
     callback = function()
       vim.schedule(function()

@@ -32,7 +32,7 @@ local DEFAULT_OPTS = {
       { "<leader>i", group = "inspect", icon = { icon = stl.icon.ui.Indicator, color = "purple" } },
       { "<leader>n", group = "notepad", icon = { icon = stl.icon.notepad.Notebook, color = "yellow" } },
       { "<leader>p", group = "paste/plugin", icon = { icon = stl.icon.ui.Plugin, color = "cyan" } },
-      { "<leader>q", group = "quit/session", icon = { icon = stl.icon.ui.SignOut, color = "red" } },
+      { "<leader>q", group = "quit", icon = { icon = stl.icon.ui.SignOut, color = "red" } },
       { "<leader>s", group = "search/replace", icon = { icon = stl.icon.symbols.flag_replace, color = "purple" } },
       { "<leader>t", group = "tab/toggle", icon = { icon = stl.icon.ui.TabPage, color = "yellow" } },
       { "<leader>u", group = "ui", icon = { icon = stl.icon.ui.Gear, color = "orange" } },

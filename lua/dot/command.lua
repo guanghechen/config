@@ -556,14 +556,6 @@ M.definitions.search = {
   in_workspace = D.new("Fsearchinworkspace", "search: in workspace"),
 }
 
----@class dot.command.definitions.session
-M.definitions.session = {
-  restore = D.new("Fsessionrestore", "session: restore"),
-  restore_autosaved = D.new("Fsessionrestoreautosaved", "session: restore autosaved"),
-
-  save = D.new("Fsessionsave", "session: save"),
-}
-
 ---@class dot.command.definitions.tab
 M.definitions.tab = {
   close = D.new("Ftabclose", "tab: close"),

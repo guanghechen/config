@@ -1,7 +1,5 @@
 ---@class dot.context.flight.data
 ---@field public autoformat             boolean
----@field public autoload               boolean
----@field public autosave               boolean
 ---@field public devmode                boolean
 ---
 ---@field public dressing_clipboard     boolean
@@ -21,8 +19,6 @@
 
 ---@class dot.context.flight.state
 ---@field public autoformat             stl.c.Observable
----@field public autoload               stl.c.Observable
----@field public autosave               stl.c.Observable
 ---@field public devmode                stl.c.Observable
 ---
 ---@field public dressing_clipboard     stl.c.Observable
@@ -56,8 +52,6 @@ function M.defaults()
   ---@type dot.context.flight.data
   return {
     autoformat = is_git_repo,
-    autoload = false,
-    autosave = is_git_repo,
     devmode = is_home_config_dir,
 
     dressing_clipboard = false,
@@ -84,12 +78,6 @@ function M.normalize(data)
   if type(data) == "table" then
     if type(data.autoformat) == "boolean" then
       resolved.autoformat = data.autoformat
-    end
-    if type(data.autoload) == "boolean" then
-      resolved.autoload = data.autoload
-    end
-    if type(data.autosave) == "boolean" then
-      resolved.autosave = data.autosave
     end
     if type(data.devmode) == "boolean" then
       resolved.devmode = data.devmode
@@ -144,8 +132,6 @@ function M.dump()
   ---@type dot.context.flight.data
   return {
     autoformat = M.autoformat:snapshot(),
-    autoload = M.autoload:snapshot(),
-    autosave = M.autosave:snapshot(),
     devmode = M.devmode:snapshot(),
 
     dressing_clipboard = M.dressing_clipboard:snapshot(),
@@ -171,8 +157,6 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.flight.data
 
   M.autoformat:next(data.autoformat)
-  M.autoload:next(data.autoload)
-  M.autosave:next(data.autosave)
   M.devmode:next(data.devmode)
 
   M.dressing_clipboard:next(data.dressing_clipboard)
@@ -195,8 +179,6 @@ end
 
 local _defaults = M.defaults() ---@type dot.context.flight.data
 M.autoformat = stl.c.Observable.from_value(_defaults.autoformat)
-M.autoload = stl.c.Observable.from_value(_defaults.autoload)
-M.autosave = stl.c.Observable.from_value(_defaults.autosave)
 M.devmode = stl.c.Observable.from_value(_defaults.devmode)
 
 M.dressing_clipboard = stl.c.Observable.from_value(_defaults.dressing_clipboard)

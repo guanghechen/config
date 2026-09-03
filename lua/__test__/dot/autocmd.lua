@@ -24,9 +24,8 @@ local t = harness.new("dot.autocmd")
 ---@field save_errors                  integer
 ---@field shutdown_steps               string[]
 
----@param vim_did_enter                ?integer
 ---@return dot.autocmd.test.IRuntime
-local function setup(vim_did_enter)
+local function setup()
   local runtime = {
     autocmds = {},
     queries = {},
@@ -154,7 +153,6 @@ local function setup(vim_did_enter)
     },
   })
   t:patch_global("yoz", {})
-  t:patch_table(vim.v, "vim_did_enter", vim_did_enter or 0)
   t:patch_table(vim, "schedule", function(callback)
     runtime.scheduled[#runtime.scheduled + 1] = callback
   end)
@@ -187,29 +185,6 @@ local function run_scheduled(runtime)
     callback()
   end
 end
-
-t:test("startup SessionLoadPost does not duplicate the VimEnter query", function()
-  local runtime = setup(0)
-
-  runtime.autocmds.state_tmux_zen_mode_on_SessionLoadPost.callback()
-
-  t.assert_eq(0, #runtime.queries, "tmux queries")
-end)
-
-t:test("runtime SessionLoadPost corrects state reset during restore", function()
-  local runtime = setup(1)
-
-  runtime.autocmds.state_tmux_zen_mode_on_SessionLoadPost.callback()
-  t.assert_eq(1, #runtime.queries, "tmux queries")
-
-  runtime.queries[1](false)
-  dot.state.status.tmux_zen_mode:next(true)
-  run_scheduled(runtime)
-
-  t.assert_eq(2, #runtime.updates, "state updates")
-  t.assert_true(runtime.updates[1], "session reset")
-  t.assert_false(runtime.updates[2], "restored tmux state")
-end)
 
 t:test("TabClosed delegates without passing the ordinal as a handle", function()
   local runtime = setup()

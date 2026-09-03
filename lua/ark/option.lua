@@ -177,6 +177,6 @@ vim.opt.shortmess:append({ W = true, I = true, c = true, C = true })
 vim.opt.fillchars:append(stl.icon.fillchars)
 vim.opt.listchars:append(stl.icon.listchars)
 
--- Session & Persistence ---------------------------------------------------------------------------
+-- Persistence -------------------------------------------------------------------------------------
 
 vim.o.shada = "!,'100,<50,s10,h,rv" -- Exclude 'v' register from shada persistence
