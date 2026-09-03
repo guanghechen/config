@@ -63,6 +63,8 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@class era.m.diffview.ICommit
 ---@field public hash                   string                          full commit hash
 ---@field public abbrev_hash            string                          abbreviated hash
+---@field public parents               string[]                        full parent hashes
+---@field public graph                 string|nil                      compact topology row for unfiltered logs
 ---@field public author                 string                          author name
 ---@field public date                   integer                         unix timestamp
 ---@field public message                string                          commit message (first line)
@@ -112,6 +114,8 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@field public type                   stl.m.diffview.CommitsLineTypeEnum
 ---@field public commit                 era.m.diffview.ICommit|nil
 ---@field public entry                  era.m.diffview.IFileEntry|nil
+---@field public filepath               string|nil                      display-semantic directory path
+---@field public uuid                   string|nil                      directory identity within one commit
 
 ----------------------------------------------------------------------------------------------------
 -- Window options types

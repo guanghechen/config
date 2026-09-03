@@ -128,6 +128,9 @@ t:test("external winline delegates dirty renders to its owned nvimbar", function
       },
     },
     win = {
+      render_winline = function()
+        renders = renders + 1
+      end,
       resolve = function()
         return {
           winline = {
@@ -136,7 +139,7 @@ t:test("external winline delegates dirty renders to its owned nvimbar", function
                 return false
               end,
               render = function()
-                renders = renders + 1
+                error("external render should delegate through dot.win")
               end,
             },
           },

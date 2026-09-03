@@ -17,14 +17,12 @@ Changes column 的宽度由 workspace-scoped `dot.context.diffview.panel_width` 
 
 ```
 ┌─────────────┬─────────────────┬─────────────────┐
-│             │                 │                 │
-│   Staged    │   Left (old)    │   Right (new)   │
-│   Changes   │                 │                 │
+│󰊢 Staged (N) │   Left (old)    │   Right (new)   │
+│ staged tree │                 │                 │
 │             │                 │                 │
 ├─────────────┤                 │                 │
-│             │                 │                 │
-│  Unstaged   │                 │                 │
-│   Changes   │                 │                 │
+│󰊢 Unstaged(N)│                 │                 │
+│unstaged tree│                 │                 │
 │             │                 │                 │
 ├─────────────┤                 │                 │
 │   History   │                 │                 │
@@ -32,15 +30,21 @@ Changes column 的宽度由 workspace-scoped `dot.context.diffview.panel_width` 
     navigation       sbs-left         sbs-right
 ```
 
-History 默认位于左侧最下方，target height 是 navigation column 的 `1/4`，最低 3 行；standalone Commits
-仍使用独立的 `COMMITS_HEIGHT`。Staged/Unstaged 根据各自 rendered line count 分配剩余高度：优先完整显示
-较小的 pane，其余空间由较大的 pane 使用并允许滚动；需求相同时平均分配。Terminal height resize 会重新
-应用该分配。History 可以独立隐藏或恢复；隐藏 Changes 时仍作为左侧 navigation panel。三个 panes 共享列宽，
-但分别持有 buffer 与 domain state。
+History 默认位于左侧最下方，只显示 1 行 commit content；加上 winline 后，Neovim window height 为 2。
+Standalone Commits 仍使用独立的 `COMMITS_HEIGHT`。Staged 与 Unstaged 平分剩余高度，奇数余量交给默认
+work queue Unstaged。Terminal height resize 与 sidebar 恢复会重新应用该分配；History 隐藏时两者平分完整
+navigation column。三个 panes 共享列宽，但分别持有 buffer 与 domain state。
 
-workspace History 的 commit row 直接从 buffer 第一列显示 abbreviated hash，不显示 expand/collapse chevron
-或 active-commit sign；pane 只保留 1 个 screen column 作为视觉边距。展开的 file tree root 与 hash 第一个字符
-位于同一 screen column；展开状态由其下方是否存在 file rows 表达。Standalone Commits 保留原有 chevron 与 sign。
+Staged 与 Unstaged 各自持有 window-owned Nvimbar：左侧显示 `󰊢 Staged (N)` / `󰊢 Unstaged (N)`，右侧使用
+通用 `search_count` component。文件树 buffer 只包含 domain rows，不再渲染重复的 section header。空 pane
+仍保留一个最小 window row，entry 数量不影响 pane height。
+
+workspace History 的 commit row 直接从 buffer 第一列显示 abbreviated hash，不显示 active-commit sign；pane
+只保留 1 个 screen column 作为视觉边距。未过滤 log 按 `hash -> short author -> graph -> message -> date` 渲染，
+graph 使用 `○` / `◎` 与 box-drawing pipes；已知 gitmoji shortcode 渲染为 emoji。展开的 file tree root 与 hash
+第一个字符位于同一 screen column。directory collapse state 按 commit hash 隔离；compact directory row 保留稳定
+collapse identity，并将完整显示路径用于 `oc`。带 path_filter 的 File History 不生成 graph，并保留
+expand/collapse chevron。
 
 ### commits (diffview_commits)
 

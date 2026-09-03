@@ -21,7 +21,8 @@ local M = {}
 ---@field public commits_page            stl.c.Observable                Observable<integer> (1-indexed)
 ---@field public commits_total           stl.c.Observable                Observable<integer>
 ---@field public lnum_present            stl.c.Observable                Observable<integer> line of currently displayed commit
----@field public collapsed_dirs          table<string, boolean>          Collapsed directory paths (for filetree in expanded commits)
+---@field public collapsed_dirs          table<string, boolean>          Collapsed directory paths in the standalone filetree pane
+---@field public collapsed_commit_dirs   table<string, table<string, boolean>> Per-commit inline tree collapse state
 ---@field public path_filter             string|nil                      Path filter (file or directory path)
 ---@field protected _git_subscription    stl.c.IUnsubscribable|nil
 ---@field protected _git_debounce        stl.timer.IDisposableCallable|nil
@@ -56,6 +57,7 @@ function State.new(tabnr, fold_unchanged)
   self.lnum_present = stl.c.Observable.from_value(-1)
 
   self.collapsed_dirs = {}
+  self.collapsed_commit_dirs = {}
   self.path_filter = nil
 
   self._git_subscription = nil
@@ -274,6 +276,53 @@ end
 ---@param collapsed_dirs                 table<string, boolean>
 function State:set_collapsed_dirs(collapsed_dirs)
   self.collapsed_dirs = collapsed_dirs
+end
+
+---Check whether a directory in one expanded commit is collapsed.
+---@param hash                           string
+---@param dir_path                       string
+---@return boolean
+function State:is_commit_dir_collapsed(hash, dir_path)
+  local collapsed_dirs = self.collapsed_commit_dirs[hash]
+  return collapsed_dirs ~= nil and collapsed_dirs[dir_path] == true
+end
+
+---Toggle one directory without affecting the same path under another commit.
+---@param hash                           string
+---@param dir_path                       string
+function State:toggle_commit_dir(hash, dir_path)
+  local collapsed_dirs = self.collapsed_commit_dirs[hash]
+  if collapsed_dirs == nil then
+    collapsed_dirs = {}
+    self.collapsed_commit_dirs[hash] = collapsed_dirs
+  end
+  collapsed_dirs[dir_path] = not collapsed_dirs[dir_path]
+end
+
+---@param hash                           string
+---@param dir_path                       string
+function State:expand_commit_dir(hash, dir_path)
+  local collapsed_dirs = self.collapsed_commit_dirs[hash]
+  if collapsed_dirs ~= nil then
+    collapsed_dirs[dir_path] = nil
+  end
+end
+
+---@param hash                           string
+---@param dir_path                       string
+function State:collapse_commit_dir(hash, dir_path)
+  local collapsed_dirs = self.collapsed_commit_dirs[hash]
+  if collapsed_dirs == nil then
+    collapsed_dirs = {}
+    self.collapsed_commit_dirs[hash] = collapsed_dirs
+  end
+  collapsed_dirs[dir_path] = true
+end
+
+---@param hash                           string
+---@return table<string, boolean>
+function State:get_commit_collapsed_dirs(hash)
+  return vim.tbl_extend("force", {}, self.collapsed_commit_dirs[hash] or {})
 end
 
 ----------------------------------------------------------------------------------------------------

@@ -213,6 +213,7 @@ local function maximize_normal(winnr)
   vim.cmd("tab split")
   local maximize_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local maximize_winnr = vim.api.nvim_get_current_win() ---@type integer
+  dot.win.fork(winnr, maximize_winnr)
   vim.t[maximize_tabnr].tabtype = stl.e.TabTypeEnum.MAXIMIZE
 
   local augroup = vim.api.nvim_create_augroup("era_maximize_normal", { clear = true }) ---@type integer

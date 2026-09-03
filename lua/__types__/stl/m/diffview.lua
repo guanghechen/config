@@ -37,6 +37,7 @@
 
 ---@alias stl.m.diffview.CommitsLineTypeEnum
 ---| "commit"
+---| "directory"
 ---| "file"
 
 ---@alias stl.m.diffview.CommitsPanelLayoutEnum

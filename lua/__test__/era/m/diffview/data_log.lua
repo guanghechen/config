@@ -51,7 +51,7 @@ t:test("log search: hash prefix takes precedence over an earlier message match",
   t.assert_eq("b26839d69ead84834128d8490e7c2d65447de712", match.hash, "matched hash")
   t.assert_eq(2, match.position, "log position")
   t.assert_eq(2, match.total, "log total")
-  t.assert_eq("log --pretty=format:%H%x00%s", table.concat(git_args, " "), "git arguments")
+  t.assert_eq("log --topo-order --pretty=format:%H%x00%s", table.concat(git_args, " "), "git arguments")
   t.assert_eq("/repo", git_cwd, "git cwd")
 end)
 
@@ -72,7 +72,7 @@ t:test("log search: message matching is case insensitive and respects path histo
   t.assert_eq(2, match.position, "log position")
   t.assert_eq(2, match.total, "log total")
   t.assert_eq(
-    "log --pretty=format:%H%x00%s --follow -- lua/ark/autocmd.lua",
+    "log --topo-order --pretty=format:%H%x00%s --follow -- lua/ark/autocmd.lua",
     table.concat(git_args, " "),
     "path-filtered arguments"
   )

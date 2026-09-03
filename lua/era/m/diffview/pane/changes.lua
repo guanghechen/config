@@ -537,19 +537,6 @@ function M.render(entries, opts)
     end
   end
 
-  local label = stage_type == "staged" and "Staged" or "Unstaged"
-  local header = string.format("%s (%d)", label, #section_entries)
-  lines[#lines + 1] = header
-  highlights[#highlights + 1] = {
-    hlname = "m_dv_ft_header",
-    lnum = #lines - 1,
-    coll = 0,
-    colr = #header,
-  }
-  line_map[#line_map + 1] = { type = "header", entry = nil, stage_type = stage_type, uuid = nil }
-  navigation.parent_lnums[1] = 0
-  navigation.last_child_lnums[1] = 0
-
   if viewtype == "list" then
     render_section_list(section_entries, stage_type, lines, highlights, line_map, overlay_entries, navigation)
   else

@@ -105,6 +105,7 @@ local filetypes = {
     [M.UX_SEARCHER_FINDER] = true,
   },
   has_external_winline = {
+    [M.DIFFVIEW_CHANGES] = true,
     [M.DIFFVIEW_COMMITS] = true,
     [M.EXPLORER] = true,
     [M.NOTEPAD] = true,

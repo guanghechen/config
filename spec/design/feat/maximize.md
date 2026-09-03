@@ -10,6 +10,9 @@ Maximize 是当前 window 的临时全屏投影。任意时刻最多存在一个
 - transient tab 使用 `TabTypeEnum.MAXIMIZE`；专属 nvimbar 只显示 `MAXIMIZED`，不显示其他 tabs。
 - application-level tab focus/new 与 window split 在该 tabtype 下不可用。
 - source 与 maximize window 初始显示同一个 buffer；buffer 内容天然共享。
+- `dot.win.fork()` 复制 window metadata；window-owned Winline 通过 feature-owned fork factory 为 maximize
+  window 创建独立 Nvimbar。Source render 同时驱动 live forks，target search state 只重绘 target owner。
+  Target 拥有并释放自己的 Nvimbar/scheduler；source 只保留 borrowed render link，任一端关闭时解除连接。
 - 退出时将 maximize window 的最终 buffer 和 view 同步回 source window。
 - 通过 toggle/close 退出时，关闭 transient tab 并返回原 source tab/window。
 - native command/API 绕过限制切换 tab 时，自动关闭 transient tab，同时保留用户新选择的 tab focus。

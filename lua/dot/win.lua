@@ -11,6 +11,9 @@ local __module_name__ = "dot.win" ---@type string
 ---@field public locate_scheduler       ?stl.c.Scheduler
 ---@field public lsp_symbols            ?dot.t.ILspSymbol[]
 ---@field public nvimbar                era.m.nvimbar.Nvimbar
+---@field public fork                   ?fun(winnr: integer): era.m.nvimbar.Nvimbar|nil
+---@field public fork_source_winnr      integer|nil
+---@field public forks                  ?table<integer, era.m.nvimbar.Nvimbar>
 
 ---@class dot.win.IMeta
 ---@field public history                ?stl.c.History
@@ -288,7 +291,52 @@ function M.fork(winnr_source, winnr_target)
     meta_target.history = history_forked
   end
 
+  local source_winline = meta_source.winline
+  if source_winline ~= nil and source_winline.fork ~= nil then
+    local ok, nvimbar = pcall(source_winline.fork, winnr_target)
+    if ok and nvimbar ~= nil and not nvimbar:isdisposed() then
+      source_winline.forks = source_winline.forks or {}
+      source_winline.forks[winnr_target] = nvimbar
+      if meta_target.winline ~= nil then
+        meta_target.winline.fork_source_winnr = winnr_source
+      end
+      nvimbar:render()
+    elseif not ok then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "fork_winline",
+        message = "Failed to fork window-owned Nvimbar",
+        details = { error = nvimbar, winnr_source = winnr_source, winnr_target = winnr_target },
+      })
+    end
+  end
+
   return meta_target
+end
+
+---Render one window-owned Nvimbar and any live window forks.
+---@param winnr                         integer
+---@return nil
+function M.render_winline(winnr)
+  local meta = M.resolve(winnr, false)
+  local winline = meta and meta.winline or nil ---@type dot.win.IWinline|nil
+  if winline == nil then
+    return
+  end
+
+  if not winline.nvimbar:isdisposed() then
+    winline.nvimbar:render()
+  end
+  local forks = winline.forks
+  if forks ~= nil then
+    for fork_winnr, nvimbar in pairs(forks) do
+      if not vim.api.nvim_win_is_valid(fork_winnr) or nvimbar:isdisposed() then
+        forks[fork_winnr] = nil
+      else
+        nvimbar:render()
+      end
+    end
+  end
 end
 
 ---@param winnr                         ?integer
@@ -584,6 +632,12 @@ function M.on_close(winnr)
     return
   end
 
+  local fork_source_winnr = meta.winline and meta.winline.fork_source_winnr or nil ---@type integer|nil
+  local fork_source = fork_source_winnr and meta_map[fork_source_winnr] or nil ---@type dot.win.IMeta|nil
+  if fork_source and fork_source.winline and fork_source.winline.forks then
+    fork_source.winline.forks[winnr] = nil
+  end
+
   meta_map[winnr] = nil
 
   if meta.history ~= nil then
@@ -599,6 +653,17 @@ function M.on_close(winnr)
     if meta.winline.nvimbar ~= nil then
       meta.winline.nvimbar:dispose()
     end
+
+    local forks = meta.winline.forks
+    if forks ~= nil then
+      for fork_winnr in pairs(forks) do
+        local fork_meta = meta_map[fork_winnr] ---@type dot.win.IMeta|nil
+        if fork_meta and fork_meta.winline then
+          fork_meta.winline.fork_source_winnr = nil
+        end
+      end
+    end
+    meta.winline.forks = nil
 
     if meta.winline.locate_scheduler ~= nil then
       meta.winline.locate_scheduler:dispose()

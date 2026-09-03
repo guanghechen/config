@@ -318,20 +318,33 @@ t:test("window options keep the Changes column width fixed", function()
   vim.api.nvim_set_option_value("winfixwidth", winfixwidth, { win = winnr, scope = "local" })
 end)
 
-t:test("render: each pane contains only its own header and entries", function()
+t:test("render: each pane contains only its own entries", function()
   local staged = render("list", "staged")
   local unstaged = render("list", "unstaged")
 
-  t.assert_eq("Staged (2)", staged.lines[1], "staged header")
-  t.assert_eq("Unstaged (2)", unstaged.lines[1], "unstaged header")
-  t.assert_eq(3, #staged.lines, "staged lines")
-  t.assert_eq(3, #unstaged.lines, "unstaged lines")
+  t.assert_eq(2, #staged.lines, "staged lines")
+  t.assert_eq(2, #unstaged.lines, "unstaged lines")
   for _, item in ipairs(staged.line_map) do
+    t.assert_false(item.type == "header", "staged has no section header")
     t.assert_eq("staged", item.stage_type, "staged line ownership")
   end
   for _, item in ipairs(unstaged.line_map) do
+    t.assert_false(item.type == "header", "unstaged has no section header")
     t.assert_eq("unstaged", item.stage_type, "unstaged line ownership")
   end
+end)
+
+t:test("render: an empty pane has no synthetic buffer row", function()
+  local result = changes.render({}, {
+    stage_type = "staged",
+    viewtype = "list",
+    foldempty = true,
+    collapsed_dirs = {},
+    panel_width = 40,
+  })
+
+  t.assert_eq(0, #result.lines, "no section header")
+  t.assert_eq(0, #result.line_map, "no synthetic line identity")
 end)
 
 t:test("status highlight mapping distinguishes conflicts and untracked files", function()

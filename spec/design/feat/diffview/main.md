@@ -61,7 +61,7 @@ era.m.diffview/
     │   ├── view.lua      # 布局管理、pane 组合、生命周期
     │   ├── state.lua     # workspace 专属状态
     │   ├── tabline.lua   # workspace tabline
-    │   ├── winline.lua   # History pane winline
+    │   ├── winline.lua   # workspace sidebar winlines
     │   ├── action.lua    # workspace 用户操作
     │   └── keymap.lua    # workspace 快捷键
     └── commits/
@@ -204,6 +204,8 @@ local winopts = {
 ---@class era.m.diffview.ICommit
 ---@field public hash           string              -- 完整 commit hash
 ---@field public abbrev_hash    string              -- 缩写 hash
+---@field public parents        string[]            -- parent commit hashes
+---@field public graph          string|nil          -- 未过滤 log 的 compact topology row
 ---@field public author         string              -- 作者名
 ---@field public date           integer             -- Unix 时间戳
 ---@field public message        string              -- Commit 消息 (首行)
@@ -247,6 +249,7 @@ workspace view 拥有组合 layout 与 panel buffers；无论通过 close action
 ---@field public current_commit    stl.c.Observable        -- ICommit|nil
 ---@field public current_file      stl.c.Observable        -- IFileEntry|nil (布局5用)
 ---@field public expanded_commits  stl.c.Observable        -- table<string, boolean>
+---@field public collapsed_commit_dirs table<string, table<string, boolean>> -- inline commit tree state
 ---@field public page              stl.c.Observable        -- integer (1-indexed)
 ---@field public total             stl.c.Observable        -- integer (commit 总数)
 ```
@@ -276,13 +279,14 @@ discard contract 不受影响。隐藏当前选中的 untracked entry 时，work
 
 workspace History 与 Git Log 视图 (`diffview_commits`) 复用同一套分页 commit state：
 
-History pane 使用 window-owned Nvimbar composition：左侧显示 commit 总数和当前 `page/page_count`，
-右侧复用通用 `search_count` component；pagination 与 search state 均驱动同一 Nvimbar 更新。
+Staged、Unstaged 与 History 各自使用 window-owned Nvimbar composition。Changes winline 左侧显示 Git icon、
+stage label 与 visible entry count，History 左侧显示 commit 总数和当前 `page/page_count`；三个 window 右侧均
+复用通用 `search_count` component。Changes buffer 不再渲染重复的 section header。
 
 ### 分页设计
 
-- **每页数量**：`config.COMMITS_PER_PAGE = 50`
-- **Tabline 显示**：`󰊢 Commits (1523) | Page 1/31`
+- **每页数量**：`config.COMMITS_PER_PAGE = 100`
+- **Tabline 显示**：`󰊢 Commits (1523) | Page 1/16`
 - **翻页快捷键**：
   - `]]` - 下一页
   - `[[` - 上一页
@@ -294,15 +298,15 @@ History pane 使用 window-owned Nvimbar composition：左侧显示 commit 总�
     ↓
 fetch_log_count() - 获取 commit 总数
     ↓
-fetch_log_page(1, 50) - 获取第一页（含 shortstat）
+fetch_log_page(1, 100) - 获取第一页（含 shortstat）
     ↓
 渲染 commits 面板 + 更新 tabline 分页信息
 
-用户按 ]p
+用户按 ]]
     ↓
 page = min(page + 1, total_pages)
     ↓
-fetch_log_page(page, 50)
+fetch_log_page(page, 100)
     ↓
 重绘 commits 面板 + 更新 tabline
 ```
@@ -310,6 +314,8 @@ fetch_log_page(page, 50)
 ### 注意事项
 
 - 带 path_filter 时也支持分页（单文件历史可能很长）
+- 未过滤 log 使用 `--topo-order` 和 parent hashes 生成 compact commit graph；为保证跨页 lane 连续，先读取
+  `HEAD..page_end` 的轻量 metadata，再只为当前页获取 shortstat。带 path_filter 的 File History 不生成 graph。
 - 翻页时清除所有 expanded_commits 状态
 - 每次翻页都重新获取 shortstat 数据
 - `g/` 在当前 log（包括 path_filter）中跨页搜索：至少 4 位 hash prefix 优先匹配且必须唯一，否则按 commit message 进行 case-insensitive substring 匹配并选择最新结果

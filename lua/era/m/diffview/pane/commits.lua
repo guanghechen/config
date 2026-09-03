@@ -2,11 +2,12 @@
 local __module_name__ = "era.m.diffview.pane.commits" ---@type string
 
 local view_filetree = require("era.view.filetree")
+local commit_format = require("era.m.diffview.commit_format")
 local config = require("era.m.diffview.config")
 local util = require("era.m.diffview.util")
 
 ---Commits pane for diffview.
----Renders commit list with optional expanded file trees.
+---Renders commit topology rows with optional expanded file trees.
 ---@class era.m.diffview.pane.commits
 local M = {}
 
@@ -110,14 +111,15 @@ end
 ---Create directory renderer for commit files
 ---@param commit                        era.m.diffview.ICommit
 ---@param line_map                      era.m.diffview.ICommitsLineMap[]
+---@param collapsed_dirs                table<string, boolean>
 ---@return era.view.filetree.IDirectoryRenderer
-local function create_directory_renderer(commit, line_map)
+local function create_directory_renderer(commit, line_map, collapsed_dirs)
   ---@param node                        era.view.filetree.ITreeNode
   ---@param lnum                        integer
   ---@param indent                      string
   ---@return string, stl.t.IHighlight[]
   return function(node, lnum, indent)
-    local icon = stl.icon.filetype.FolderOpen ---@type string
+    local icon = collapsed_dirs[node.filepath] and stl.icon.filetype.Folder or stl.icon.filetype.FolderOpen ---@type string
     local line = indent .. icon .. " " .. node.name ---@type string
 
     local col = 0 ---@type integer
@@ -149,11 +151,12 @@ local function create_directory_renderer(commit, line_map)
       colr = #line,
     }
 
-    -- Add to line_map (directories are treated as "file" type in commits view)
     line_map[#line_map + 1] = {
-      type = "file",
+      type = "directory",
       commit = commit,
       entry = nil,
+      filepath = node.filepath,
+      uuid = node.filepath,
     }
 
     return line, highlights
@@ -425,6 +428,7 @@ end
 ---@param navigation                    era.m.diffview.ITreeNavigation
 ---@param commit_lnum                   integer
 ---@param base_indent                   string
+---@param collapsed_dirs                table<string, boolean>
 local function render_files_tree(
   commit,
   files,
@@ -434,7 +438,8 @@ local function render_files_tree(
   foldempty,
   navigation,
   commit_lnum,
-  base_indent
+  base_indent,
+  collapsed_dirs
 )
   -- Convert file entries to file items
   local items = {} ---@type era.view.filetree.IFileItem[]
@@ -449,8 +454,11 @@ local function render_files_tree(
     foldempty = foldempty,
     base_indent = base_indent,
     start_lnum = #lines,
-    render_directory = create_directory_renderer(commit, line_map),
+    render_directory = create_directory_renderer(commit, line_map, collapsed_dirs),
     render_file = create_file_renderer(commit, line_map),
+    is_collapsed = function(node)
+      return collapsed_dirs[node.filepath] == true
+    end,
   })
 
   local offset = #lines ---@type integer
@@ -480,8 +488,9 @@ end
 ---@field public viewtype               stl.m.diffview.PanelViewTypeEnum|nil
 ---@field public foldempty              boolean|nil
 ---@field public layout                 integer|nil                     Layout type (1-5)
+---@field public collapsed_dirs         table<string, table<string, boolean>>|nil Per-commit directory state
 
----Render commits panel with optional expanded file lists
+---Render commits panel with optional expanded file trees.
 ---@param commits                       era.m.diffview.ICommit[]
 ---@param expanded                      table<string, boolean>
 ---@param opts                          era.m.diffview.pane.commits.IRenderOpts|nil
@@ -505,6 +514,7 @@ function M.render(commits, expanded, opts)
   local is_workspace_history = opts and opts.tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE ---@type boolean|nil
   local show_expand_icon = not is_workspace_history ---@type boolean
   local base_indent = is_workspace_history and HISTORY_BASE_INDENT or STANDALONE_BASE_INDENT ---@type string
+  local collapsed_dirs = (opts and opts.collapsed_dirs) or {} ---@type table<string, table<string, boolean>>
 
   -- Determine if layout is horizontal (wider) or vertical (narrower)
   -- Layout 1,4: horizontal (commits pane is wide) - use detailed format
@@ -562,7 +572,8 @@ function M.render(commits, expanded, opts)
           foldempty,
           navigation,
           commit_lnum,
-          base_indent
+          base_indent,
+          collapsed_dirs[commit.hash] or {}
         )
       end
     end
@@ -779,8 +790,53 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param parts                          string[]
+---@param highlights                     stl.t.IHighlight[]
+---@param commit                         era.m.diffview.ICommit
+---@param lnum                           integer
+---@param col                            integer
+---@return integer
+local function append_short_author(parts, highlights, commit, lnum, col)
+  local author = commit_format.short_author(commit.author) ---@type string
+  parts[#parts + 1] = author
+  if author ~= "" then
+    highlights[#highlights + 1] = {
+      hlname = "m_dv_cm_author",
+      lnum = lnum,
+      coll = col,
+      colr = col + #author,
+    }
+  end
+  col = col + #author
+
+  local padding = string.rep(" ", math.max(0, 2 - vim.fn.strdisplaywidth(author))) ---@type string
+  parts[#parts + 1] = padding
+  return col + #padding
+end
+
+---@param parts                          string[]
+---@param highlights                     stl.t.IHighlight[]
+---@param graph                          string|nil
+---@param lnum                           integer
+---@param col                            integer
+---@return integer
+local function append_graph(parts, highlights, graph, lnum, col)
+  if not graph or graph == "" then
+    return col
+  end
+  parts[#parts + 1] = graph
+  highlights[#highlights + 1] = {
+    hlname = "m_dv_cm_graph",
+    lnum = lnum,
+    coll = col,
+    colr = col + #graph,
+  }
+  parts[#parts + 1] = " "
+  return col + #graph + 1
+end
+
 ---Render a single commit line for horizontal layout (layout 1,4 - wider panel)
----Format: <expand icon> <files> +<ins> -<del> | <hash> <message> | {author} {time ago} (overlay)
+---Format: [<expand icon> ]<files> +<ins> -<del> | <hash> <author> [<graph> ]<message>
 ---@param commit                        era.m.diffview.ICommit
 ---@param lnum                          integer                         0-indexed line number
 ---@param max_files_width               integer
@@ -794,14 +850,12 @@ function M.__render_commit_horizontal__(commit, lnum, max_files_width, max_ins_w
   local col = 0 ---@type integer
   local highlights = {} ---@type stl.t.IHighlight[]
 
-  -- Expand/collapse icon
-  local icon = is_expanded and stl.icon.ui.ArrowOpen or stl.icon.ui.ArrowClosed
-  parts[#parts + 1] = icon
-  col = col + #icon
-
-  -- Space
-  parts[#parts + 1] = " "
-  col = col + 1
+  if not commit.graph then
+    local icon = is_expanded and stl.icon.ui.ArrowOpen or stl.icon.ui.ArrowClosed
+    parts[#parts + 1] = icon
+    parts[#parts + 1] = " "
+    col = col + #icon + 1
+  end
 
   -- File count (right-aligned)
   local files = commit.total_files_changed or 0
@@ -893,8 +947,13 @@ function M.__render_commit_horizontal__(commit, lnum, max_files_width, max_ins_w
   parts[#parts + 1] = " "
   col = col + 1
 
+  col = append_short_author(parts, highlights, commit, lnum, col)
+  parts[#parts + 1] = " "
+  col = col + 1
+  col = append_graph(parts, highlights, commit.graph, lnum, col)
+
   -- Message (full, no truncation)
-  local message = commit.message
+  local message = commit_format.render_gitmoji(commit.message) ---@type string
   parts[#parts + 1] = message
   highlights[#highlights + 1] = {
     hlname = "m_dv_cm_message",
@@ -903,16 +962,13 @@ function M.__render_commit_horizontal__(commit, lnum, max_files_width, max_ins_w
     colr = col + #message,
   }
 
-  -- Overlay: author, time ago (right-aligned virtual text, padded)
-  local author = commit.author
+  -- Overlay: time ago (right-aligned virtual text, padded)
   local date = util.format_relative_time(commit.date)
   local date_padded = string.format("%-" .. max_date_width .. "s", date)
   ---@type era.m.diffview.IOverlay
   local overlay = {
     lnum = lnum,
     virt_text = {
-      { author, "m_dv_cm_author" },
-      { " ", "m_dv_cm_date" },
       { date_padded, "m_dv_cm_date" },
     },
   }
@@ -921,7 +977,7 @@ function M.__render_commit_horizontal__(commit, lnum, max_files_width, max_ins_w
 end
 
 ---Render a single commit line for vertical layout (layout 2,5 - narrower panel)
----Format: [<expand icon> | ]<hash> <message> {author} {time ago}
+---Format: [<expand icon> | ]<hash> <author> [<graph> ]<message> {time ago}
 ---@param commit                        era.m.diffview.ICommit
 ---@param lnum                          integer                         0-indexed line number
 ---@param is_expanded                   boolean|nil
@@ -932,7 +988,7 @@ function M.__render_commit_vertical__(commit, lnum, is_expanded, show_expand_ico
   local col = 0 ---@type integer
   local highlights = {} ---@type stl.t.IHighlight[]
 
-  if show_expand_icon then
+  if show_expand_icon and not commit.graph then
     local icon = is_expanded and stl.icon.ui.ArrowOpen or stl.icon.ui.ArrowClosed
     parts[#parts + 1] = icon
     col = col + #icon
@@ -963,8 +1019,13 @@ function M.__render_commit_vertical__(commit, lnum, is_expanded, show_expand_ico
   parts[#parts + 1] = " "
   col = col + 1
 
+  col = append_short_author(parts, highlights, commit, lnum, col)
+  parts[#parts + 1] = " "
+  col = col + 1
+  col = append_graph(parts, highlights, commit.graph, lnum, col)
+
   -- Message (full, no truncation)
-  local message = commit.message
+  local message = commit_format.render_gitmoji(commit.message) ---@type string
   parts[#parts + 1] = message
   highlights[#highlights + 1] = {
     hlname = "m_dv_cm_message",
@@ -974,26 +1035,9 @@ function M.__render_commit_vertical__(commit, lnum, is_expanded, show_expand_ico
   }
   col = col + #message
 
-  -- Space
   parts[#parts + 1] = " "
   col = col + 1
 
-  -- Author
-  local author = commit.author
-  parts[#parts + 1] = author
-  highlights[#highlights + 1] = {
-    hlname = "m_dv_cm_author",
-    lnum = lnum,
-    coll = col,
-    colr = col + #author,
-  }
-  col = col + #author
-
-  -- ", "
-  parts[#parts + 1] = ", "
-  col = col + 2
-
-  -- Date
   local date = util.format_relative_time(commit.date)
   parts[#parts + 1] = date
   highlights[#highlights + 1] = {

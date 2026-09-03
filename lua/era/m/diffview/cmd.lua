@@ -103,7 +103,7 @@ function M.open(opts)
   M.__setup_git_subscription_workspace__(st, ctx)
   M.__setup_changes_resize_workspace__(st, ctx)
   M.__setup_commits_signs__(history_ctx)
-  workspace_winline.setup(history_ctx)
+  workspace_winline.setup(ctx)
 
   -- Fetch and render data
   st:request_refresh(function()
@@ -160,7 +160,7 @@ function M.open(opts)
   end)
 end
 
----Re-render on Changes width changes and resync content-fit heights after terminal height changes.
+---Re-render on Changes width changes and resync sidebar proportions after terminal height changes.
 ---@param st                          era.m.diffview.view.workspace.State
 ---@param ctx                         era.m.diffview.view.workspace.IContext
 function M.__setup_changes_resize_workspace__(st, ctx)

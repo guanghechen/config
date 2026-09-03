@@ -4,6 +4,8 @@ local __module_name__ = "era.m.diffview.data" ---@type string
 ---@class era.m.diffview.data
 local M = {}
 
+local LOG_FORMAT = "--pretty=format:%H%x00%h%x00%P%x00%an%x00%ai%x00%s" ---@type string
+
 ----------------------------------------------------------------------------------------------------
 -- Local helper functions
 ----------------------------------------------------------------------------------------------------
@@ -14,6 +16,28 @@ local function check_token(token)
   if token then
     token:throw_if_cancelled()
   end
+end
+
+---@param line                         string
+---@return era.m.diffview.ICommit|nil
+local function parse_log_commit(line)
+  local hash, abbrev, parents_text, author, date_str, message =
+    line:match("^([^%z]+)%z([^%z]+)%z([^%z]*)%z([^%z]*)%z([^%z]+)%z(.*)$")
+  if not hash then
+    return nil
+  end
+
+  return {
+    hash = hash,
+    abbrev_hash = abbrev,
+    parents = parents_text == "" and {} or vim.split(parents_text, " ", { plain = true, trimempty = true }),
+    author = author,
+    date = M.__parse_git_date__(date_str),
+    message = message,
+    files = nil,
+    total_insertions = nil,
+    total_deletions = nil,
+  }
 end
 
 ---Convert era.m.git.StatusEntry to era.m.diffview.IFileEntry
@@ -483,7 +507,7 @@ function M.find_log_commit(query, path_filter, token)
   check_token(token)
 
   local workspace = dot.path.workspace()
-  local args = { "log", "--pretty=format:%H%x00%s" }
+  local args = { "log", "--topo-order", "--pretty=format:%H%x00%s" }
   if path_filter then
     vim.list_extend(args, { "--follow", "--", path_filter })
   end
@@ -545,40 +569,38 @@ function M.fetch_log_page(page, per_page, path_filter, token)
     return M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, token)
   end
 
+  local limit = skip + per_page ---@type integer
   local args = {
     "log",
-    "--pretty=format:%H%x00%h%x00%an%x00%ai%x00%s",
-    "--skip=" .. tostring(skip),
+    "--topo-order",
+    LOG_FORMAT,
     "-n",
-    tostring(per_page),
+    tostring(limit),
   }
 
   local result = stl.git.exec.exec(args, { cwd = workspace }, token):await()
 
   check_token(token)
 
-  local commits = {} ---@type era.m.diffview.ICommit[]
-  local commits_map = {} ---@type table<string, era.m.diffview.ICommit>
+  local all_commits = {} ---@type era.m.diffview.ICommit[]
 
   if result.code == 0 then
     for _, line in ipairs(result.lines) do
-      local hash, abbrev, author, date_str, message = line:match("^([^%z]+)%z([^%z]+)%z([^%z]+)%z([^%z]+)%z(.*)$")
-      if hash then
-        ---@type era.m.diffview.ICommit
-        local commit = {
-          hash = hash,
-          abbrev_hash = abbrev,
-          author = author,
-          date = M.__parse_git_date__(date_str),
-          message = message,
-          files = nil,
-          total_insertions = nil,
-          total_deletions = nil,
-        }
-        commits[#commits + 1] = commit
-        commits_map[hash] = commit
+      local commit = parse_log_commit(line)
+      if commit then
+        all_commits[#all_commits + 1] = commit
       end
     end
+  end
+
+  local graph_lines = require("era.m.diffview.commit_graph").render(all_commits)
+  local commits = {} ---@type era.m.diffview.ICommit[]
+  local commits_map = {} ---@type table<string, era.m.diffview.ICommit>
+  for index = skip + 1, math.min(#all_commits, limit) do
+    local commit = all_commits[index]
+    commit.graph = graph_lines[index]
+    commits[#commits + 1] = commit
+    commits_map[commit.hash] = commit
   end
 
   -- Fetch shortstat for this page
@@ -599,7 +621,8 @@ function M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, 
   -- Fetch with --name-status for file status
   local args_status = {
     "log",
-    "--pretty=format:%H%x00%h%x00%an%x00%ai%x00%s",
+    "--topo-order",
+    LOG_FORMAT,
     "--name-status",
     "--follow",
     "--skip=" .. tostring(skip),
@@ -620,22 +643,13 @@ function M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, 
     local i = 1
     while i <= #status_result.lines do
       local line = status_result.lines[i]
-      local hash, abbrev, author, date_str, message = line:match("^([^%z]+)%z([^%z]+)%z([^%z]+)%z([^%z]+)%z(.*)$")
-      if hash then
-        ---@type era.m.diffview.ICommit
-        local commit = {
-          hash = hash,
-          abbrev_hash = abbrev,
-          author = author,
-          date = M.__parse_git_date__(date_str),
-          message = message,
-          files = nil,
-          file_status = nil,
-          filepath = nil,
-          parent_filepath = nil,
-          file_insertions = nil,
-          file_deletions = nil,
-        }
+      local commit = parse_log_commit(line)
+      if commit then
+        commit.file_status = nil
+        commit.filepath = nil
+        commit.parent_filepath = nil
+        commit.file_insertions = nil
+        commit.file_deletions = nil
 
         -- Next non-empty line should be the status line
         i = i + 1
@@ -654,8 +668,8 @@ function M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, 
           i = i + 1
         end
 
-        commits_map[hash] = commit
-        commits_order[#commits_order + 1] = hash
+        commits_map[commit.hash] = commit
+        commits_order[#commits_order + 1] = commit.hash
       else
         i = i + 1
       end
@@ -665,6 +679,7 @@ function M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, 
   -- Now fetch numstat for insertions/deletions
   local args_numstat = {
     "log",
+    "--topo-order",
     "--pretty=format:%H",
     "--numstat",
     "--follow",
@@ -734,6 +749,7 @@ function M.__fetch_log_page_with_path_shortstat__(commits, commits_map, path_fil
 
   local args = {
     "log",
+    "--topo-order",
     "--pretty=format:%H",
     "--shortstat",
     "--follow",
@@ -798,6 +814,7 @@ function M.__fetch_log_page_shortstat__(commits, commits_map, skip, per_page, wo
 
   local args = {
     "log",
+    "--topo-order",
     "--pretty=format:%H",
     "--shortstat",
     "--skip=" .. tostring(skip),
@@ -829,7 +846,8 @@ function M.fetch_log(opts, token)
 
   local args = {
     "log",
-    "--pretty=format:%H%x00%h%x00%an%x00%ai%x00%s",
+    "--topo-order",
+    LOG_FORMAT,
     "-n",
     tostring(limit),
   }
@@ -839,27 +857,20 @@ function M.fetch_log(opts, token)
   check_token(token)
 
   local commits = {} ---@type era.m.diffview.ICommit[]
-  local commits_map = {} ---@type table<string, era.m.diffview.ICommit>
-
   if result.code == 0 then
     for _, line in ipairs(result.lines) do
-      local hash, abbrev, author, date_str, message = line:match("^([^%z]+)%z([^%z]+)%z([^%z]+)%z([^%z]+)%z(.*)$")
-      if hash then
-        ---@type era.m.diffview.ICommit
-        local commit = {
-          hash = hash,
-          abbrev_hash = abbrev,
-          author = author,
-          date = M.__parse_git_date__(date_str),
-          message = message,
-          files = nil,
-          total_insertions = nil,
-          total_deletions = nil,
-        }
+      local commit = parse_log_commit(line)
+      if commit then
         commits[#commits + 1] = commit
-        commits_map[hash] = commit
       end
     end
+  end
+
+  local graph_lines = require("era.m.diffview.commit_graph").render(commits)
+  local commits_map = {} ---@type table<string, era.m.diffview.ICommit>
+  for index, commit in ipairs(commits) do
+    commit.graph = graph_lines[index]
+    commits_map[commit.hash] = commit
   end
 
   -- Fetch shortstat for total insertions/deletions per commit
@@ -883,6 +894,7 @@ function M.__fetch_log_shortstat__(commits, commits_map, limit, workspace, token
 
   local args = {
     "log",
+    "--topo-order",
     "--pretty=format:%H",
     "--shortstat",
     "-n",

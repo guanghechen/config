@@ -107,6 +107,23 @@ t:test("commits pagination separates requested and applied pages", function()
   state:dispose()
 end)
 
+t:test("expanded commits keep directory collapse state independent", function()
+  t:patch_global("stl", { c = { Observable = Observable } })
+  t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
+  local State = assert(loadfile("lua/era/m/diffview/view/commits/state.lua"))()
+  local state = State.State.new(101, true)
+
+  state:collapse_commit_dir("commit-a", "src")
+  t.assert_true(state:is_commit_dir_collapsed("commit-a", "src"), "first commit collapsed")
+  t.assert_false(state:is_commit_dir_collapsed("commit-b", "src"), "peer commit remains expanded")
+
+  state:toggle_commit_dir("commit-b", "src")
+  state:expand_commit_dir("commit-a", "src")
+  t.assert_false(state:is_commit_dir_collapsed("commit-a", "src"), "first commit expanded")
+  t.assert_true(state:get_commit_collapsed_dirs("commit-b").src, "peer commit collapsed")
+  state:dispose()
+end)
+
 t:test("diffview context persists the untracked visibility default", function()
   t:patch_global("stl", { c = { Observable = Observable } })
   local context = assert(loadfile("lua/dot/context/workspace/diffview.lua"))()

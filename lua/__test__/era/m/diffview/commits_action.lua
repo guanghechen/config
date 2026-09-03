@@ -41,6 +41,10 @@ local pane_commits = {
   get_line_map = function(bufnr)
     return line_maps[bufnr]
   end,
+  get_item_at_line = function(bufnr, lnum)
+    local line_map = line_maps[bufnr]
+    return line_map and line_map[lnum] or nil
+  end,
   render = function(commits, expanded)
     local lines = {} ---@type string[]
     local line_map = {} ---@type era.m.diffview.ICommitsLineMap[]
@@ -83,7 +87,7 @@ t:patch_global("stl", {
     end,
   },
 })
-t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 50, COMMITS_WIDTH = 20 })
+t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100, COMMITS_WIDTH = 20 })
 local action_data = {
   find_log_commit = function(query, path_filter)
     search_query = query
@@ -101,6 +105,11 @@ t:patch_table(package.loaded, "era.m.diffview.layout", {})
 t:patch_table(package.loaded, "era.m.diffview.pane.commits", pane_commits)
 t:patch_table(package.loaded, "era.m.diffview.pane.filetree", {})
 t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
+t:patch_table(package.loaded, "era.m.diffview.util", {
+  workspace_path = function(filepath)
+    return "/repo/" .. filepath
+  end,
+})
 t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", {
   setup_commits = function() end,
 })
@@ -132,7 +141,7 @@ local function new_search_state()
     current_entry = { filepath = "stale.lua" },
     expanded = { stale = true },
     page = 1,
-    total = 50,
+    total = 100,
     path_filter = "lua/ark/autocmd.lua",
     content_generation = 0,
     page_applied = 1,
@@ -148,6 +157,9 @@ local function new_search_state()
   function state:get_expanded_commits()
     return self.expanded
   end
+  function state:get_commit_collapsed_dirs()
+    return {}
+  end
   function state:get_path_filter()
     return self.path_filter
   end
@@ -155,7 +167,7 @@ local function new_search_state()
     return self.page
   end
   function state:get_commits_page_count()
-    return math.max(1, math.ceil(self.total / 50))
+    return math.max(1, math.ceil(self.total / 100))
   end
   function state:request_commits_page(value)
     self.page = value
@@ -256,6 +268,9 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
     get_expanded_commits = function()
       return expanded and { [commit.hash] = true } or {}
     end,
+    get_commit_collapsed_dirs = function()
+      return {}
+    end,
     is_commit_expanded = function()
       return expanded
     end,
@@ -299,10 +314,10 @@ t:test("search jumps across pages and selects the matching commit", function()
   local commits_winnr = vim.api.nvim_get_current_win()
   local commits_bufnr = pane_commits.create_buffer()
   vim.api.nvim_win_set_buf(commits_winnr, commits_bufnr)
-  local target = { hash = "target", abbrev_hash = "target", author = "A", date = 0, message = "target" }
+  local target = { hash = "target", abbrev_hash = "target", parents = {}, author = "A", date = 0, message = "target" }
   search_match = { hash = target.hash, position = 103, total = 151 }
   page_commits = {
-    { hash = "other", abbrev_hash = "other", author = "A", date = 0, message = "other" },
+    { hash = "other", abbrev_hash = "other", parents = {}, author = "A", date = 0, message = "other" },
     target,
   }
   local state = new_search_state()
@@ -319,9 +334,9 @@ t:test("search jumps across pages and selects the matching commit", function()
 
   t.assert_eq("target", search_query, "trimmed query")
   t.assert_eq("lua/ark/autocmd.lua", search_path, "path filter")
-  t.assert_eq(3, fetched_page, "target page")
-  t.assert_eq(50, fetched_per_page, "page size")
-  t.assert_eq(3, state.page, "state page")
+  t.assert_eq(2, fetched_page, "target page")
+  t.assert_eq(100, fetched_per_page, "page size")
+  t.assert_eq(2, state.page, "state page")
   t.assert_eq(151, state.total, "state total")
   t.assert_true(state.current_commit == target, "current commit")
   t.assert_nil(state.current_entry, "stale entry")
@@ -386,7 +401,7 @@ end)
 t:test("rapid page commands preserve every requested step", function()
   reset_search()
   local state = new_search_state()
-  state.total = 200
+  state.total = 300
   local ctx = { layout = { layout_type = 4 }, state = state }
   local pending = {} ---@type function[]
   t:patch_table(stl.async, "run", function(callback)
@@ -401,15 +416,69 @@ t:test("rapid page commands preserve every requested step", function()
   t.assert_eq(2, #pending, "page requests")
 end)
 
+t:test("commit pane directories toggle independently and copy their displayed path", function()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local original_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+
+  local commit = { hash = "commit-a", abbrev_hash = "commit-a" }
+  line_maps[bufnr] = {
+    { type = "directory", commit = commit, entry = nil, filepath = "lua/era", uuid = "lua" },
+  }
+  local operations = {} ---@type string[]
+  local copied = nil ---@type table|nil
+  local ctx = {
+    layout = { commits_bufnr = bufnr, commits_winnr = winnr },
+    state = {
+      toggle_commit_dir = function(_, hash, uuid)
+        operations[#operations + 1] = "toggle:" .. hash .. ":" .. uuid
+      end,
+      collapse_commit_dir = function(_, hash, uuid)
+        operations[#operations + 1] = "collapse:" .. hash .. ":" .. uuid
+      end,
+      expand_commit_dir = function(_, hash, uuid)
+        operations[#operations + 1] = "expand:" .. hash .. ":" .. uuid
+      end,
+    },
+  }
+  local renders = 0
+  local restore_render = t:patch_table(view, "render_commits", function()
+    renders = renders + 1
+  end)
+  local restore_fn = t:patch_table(era, "fn", {
+    select_copy_filepath = function(opts)
+      copied = opts
+    end,
+  })
+
+  action.select(ctx)
+  action.collapse(ctx)
+  action.expand(ctx)
+  action.copy_filepath(ctx)
+
+  t.assert_eq("toggle:commit-a:lua", operations[1], "select toggles directory")
+  t.assert_eq("collapse:commit-a:lua", operations[2], "collapse action")
+  t.assert_eq("expand:commit-a:lua", operations[3], "expand action")
+  t.assert_eq(3, renders, "directory actions rerender")
+  local copy_opts = assert(copied)
+  t.assert_eq("/repo/lua/era", copy_opts.filepath, "displayed directory path")
+  t.assert_eq("cursor", copy_opts.relative, "copy picker anchor")
+
+  restore_fn()
+  restore_render()
+  vim.api.nvim_win_set_buf(winnr, original_bufnr)
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
 t:test("commits keymap exposes cross-page search", function()
-  local found = false
+  local found = {} ---@type table<string, boolean>
   for _, candidate in ipairs(keymap.gen_commits({ layout = {}, state = new_search_state() })) do
-    if candidate.key == "g/" then
-      found = candidate.desc == "diffview(commits): Search commit"
-      break
-    end
+    found[candidate.key] = true
   end
-  t.assert_true(found, "g/ search keymap")
+  t.assert_true(found["g/"], "g/ search keymap")
+  t.assert_true(found.oc, "oc copy path keymap")
+  t.assert_true(found.za and found.zc and found.zo, "directory fold keymaps")
 end)
 
 t:test("commits help keeps mappings with the same key in different modes", function()

@@ -6,6 +6,7 @@ local data = require("era.m.diffview.data")
 local layout_util = require("era.m.diffview.layout")
 local pane_commits = require("era.m.diffview.pane.commits")
 local pane_sbs = require("era.m.diffview.pane.sbs")
+local util = require("era.m.diffview.util")
 local commits_state = require("era.m.diffview.view.commits.state")
 local commits_view = require("era.m.diffview.view.commits.view")
 
@@ -139,7 +140,9 @@ function M.select(ctx)
     return
   end
 
-  if item.type == "commit" and item.commit then
+  if item.type == "directory" then
+    M.toggle_expand(ctx)
+  elseif item.type == "commit" and item.commit then
     -- In file history mode (path_filter set), directly open target file diff
     local path_filter = ctx.state:get_path_filter()
     if path_filter then
@@ -196,7 +199,16 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.toggle_expand(ctx)
   local item = get_item_at_cursor()
-  if not item or item.type ~= "commit" or not item.commit then
+  if not item or not item.commit then
+    return
+  end
+
+  if item.type == "directory" and item.uuid then
+    ctx.state:toggle_commit_dir(item.commit.hash, item.uuid)
+    commits_view.render_commits(ctx)
+    return
+  end
+  if item.type ~= "commit" then
     return
   end
 
@@ -217,7 +229,16 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.expand(ctx)
   local item = get_item_at_cursor()
-  if not item or item.type ~= "commit" or not item.commit then
+  if not item or not item.commit then
+    return
+  end
+
+  if item.type == "directory" and item.uuid then
+    ctx.state:expand_commit_dir(item.commit.hash, item.uuid)
+    commits_view.render_commits(ctx)
+    return
+  end
+  if item.type ~= "commit" then
     return
   end
 
@@ -232,7 +253,16 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.collapse(ctx)
   local item = get_item_at_cursor()
-  if not item or item.type ~= "commit" or not item.commit then
+  if not item or not item.commit then
+    return
+  end
+
+  if item.type == "directory" and item.uuid then
+    ctx.state:collapse_commit_dir(item.commit.hash, item.uuid)
+    commits_view.render_commits(ctx)
+    return
+  end
+  if item.type ~= "commit" then
     return
   end
 
@@ -491,6 +521,26 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Utility actions
 ----------------------------------------------------------------------------------------------------
+
+---Copy the file or directory path at cursor.
+---@param _                             era.m.diffview.view.commits.IContext
+function M.copy_filepath(_)
+  local item = get_item_at_cursor()
+  if not item then
+    return
+  end
+  local filepath = item.entry and item.entry.filepath or item.filepath ---@type string|nil
+  if not filepath then
+    return
+  end
+
+  era.fn.select_copy_filepath({
+    filepath = util.workspace_path(filepath),
+    relative = "cursor",
+    row = 1,
+    col = 4,
+  })
+end
 
 ---Yank commit hash at cursor to clipboard
 ---@param _                             era.m.diffview.view.commits.IContext

@@ -17,7 +17,7 @@ bootstrap.with_global(t, "stl", {
     end,
   },
   icon = {
-    filetype = { FolderOpen = "D" },
+    filetype = { Folder = "d", FolderOpen = "D" },
     ui = { ArrowClosed = ">", ArrowOpen = "v" },
   },
 })
@@ -51,6 +51,11 @@ t:patch_table(package.loaded, "era.m.diffview.util", {
     return "status_" .. status
   end,
 })
+t:patch_table(
+  package.loaded,
+  "era.m.diffview.commit_format",
+  assert(loadfile("lua/era/m/diffview/commit_format.lua"))()
+)
 
 local commits = assert(loadfile("lua/era/m/diffview/pane/commits.lua"))()
 
@@ -77,15 +82,49 @@ local commit_b = {
 
 ---@param viewtype stl.m.diffview.PanelViewTypeEnum
 ---@param tabtype stl.e.TabTypeEnum|nil
+---@param collapsed_dirs table<string, table<string, boolean>>|nil
 ---@return era.m.diffview.IRenderResult
-local function render(viewtype, tabtype)
+local function render(viewtype, tabtype, collapsed_dirs)
   return commits.render({ commit_a, commit_b }, { [commit_a.hash] = true }, {
+    collapsed_dirs = collapsed_dirs,
     viewtype = viewtype,
     foldempty = false,
     layout = 2,
     tabtype = tabtype,
   })
 end
+
+t:test("render: expanded commit directories preserve identity and collapse independently", function()
+  local result = render("tree", nil, { [commit_a.hash] = { src = true } })
+
+  t.assert_eq(4, #result.lines, "collapsed subtree hidden")
+  t.assert_true(result.lines[2]:find("d src", 1, true) ~= nil, "collapsed directory icon")
+  t.assert_eq("directory", result.line_map[2].type, "directory line identity")
+  t.assert_eq("src", result.line_map[2].uuid, "collapse identity")
+  t.assert_eq("src", result.line_map[2].filepath, "copy path")
+  t.assert_eq(1, commits.resolve_parent_lnum(result.navigation, 2), "directory remains under commit")
+
+  local compact_commit = vim.tbl_extend("force", {}, commit_a, {
+    files = { { filepath = "src/sub/b.lua", status = "A" } },
+  })
+  local compact = commits.render({ compact_commit }, { [compact_commit.hash] = true }, {
+    collapsed_dirs = {},
+    viewtype = "tree",
+    foldempty = true,
+    layout = 2,
+  })
+  t.assert_eq("src/sub", compact.line_map[2].filepath, "compacted directory exposes its displayed path")
+  t.assert_eq("src/sub", compact.line_map[2].uuid, "compacted directory keeps stable identity")
+
+  local collapsed_compact = commits.render({ compact_commit }, { [compact_commit.hash] = true }, {
+    collapsed_dirs = { [compact_commit.hash] = { ["src/sub"] = true } },
+    viewtype = "tree",
+    foldempty = true,
+    layout = 2,
+  })
+  t.assert_eq(2, #collapsed_compact.lines, "compacted directory collapse hides its file")
+  t.assert_true(collapsed_compact.lines[2]:find("d src/sub", 1, true) ~= nil, "compacted collapse icon")
+end)
 
 t:test("render: workspace History starts commit rows with the hash", function()
   local history = commits.render({ commit_b }, {}, {
@@ -94,14 +133,27 @@ t:test("render: workspace History starts commit rows with the hash", function()
     layout = 2,
     tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE,
   })
-  t.assert_eq("bbbb second B, now", history.lines[1], "History row")
+  t.assert_eq("bbbb B  second now", history.lines[1], "History row")
 
   local hash_highlight = history.highlights[1]
   t.assert_eq("m_dv_cm_hash", hash_highlight.hlname, "first highlight")
   t.assert_eq(0, hash_highlight.coll, "hash starts at first column")
 
   local standalone = commits.render({ commit_b }, {}, { viewtype = "tree", foldempty = false, layout = 2 })
-  t.assert_eq("> | bbbb second B, now", standalone.lines[1], "standalone Commits keeps chevron")
+  t.assert_eq("> | bbbb B  second now", standalone.lines[1], "filtered Commits keeps chevron")
+
+  local graph_commit = vim.tbl_extend("force", {}, commit_b, {
+    author = "Jesse Duffield",
+    graph = "◎─╮",
+    message = ":sparkles: merge graph",
+  })
+  local graph_result = commits.render({ graph_commit }, {}, {
+    viewtype = "tree",
+    foldempty = false,
+    layout = 2,
+    tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE,
+  })
+  t.assert_eq("bbbb JD ◎─╮ ✨ merge graph now", graph_result.lines[1], "graph row metadata")
 
   local expanded_history = render("tree", stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE)
   t.assert_false(expanded_history.lines[2]:sub(1, 1) == " ", "History tree starts at the hash column")

@@ -51,15 +51,17 @@ Changes 与 History pane 支持 mouse wheel scrolling。
 
 History 显式定义以下 bindings，不继承 standalone commits 的 layout controls：
 
-- `<CR>`、`<2-LeftMouse>`：选择或展开 commit。
+- `<CR>`、`<2-LeftMouse>`：选择 commit/file，或切换 expanded commit 下的 directory。
 - `<Tab>`：将当前 commit 设为 active commit。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 commit。
 - `[[` / `]]`：上一页 / 下一页。
 - `[i` / `]i`：跳到 parent / last child-or-sibling。
 - `K`、`gK`：显示 commit details。
 - `g/`：按 hash prefix 或 commit message 搜索并跳转。
+- `oc`：复制当前 file/directory path。
 - `yy`：复制完整 commit hash。
-- `gh` / `gl` / `oo`：collapse / expand / toggle 当前 commit。
+- `gh` / `gl` / `oo`：collapse / expand / toggle 当前 commit 或 directory。
+- `za` / `zc` / `zo`：toggle / collapse / expand 当前 commit 或 directory。
 - `gH` / `gL`：collapse / expand 所有 commits。
 - `gf` / `gF`：打开当前 commit file。
 - `gR`：将文件恢复到当前 commit 版本。

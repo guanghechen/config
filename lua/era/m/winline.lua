@@ -70,6 +70,9 @@ local function resolve_nvimbar(winnr)
 
     winline.nvimbar = nvimbar
     meta.winline = winline
+    winline.fork = function(target_winnr)
+      return resolve_nvimbar(target_winnr)
+    end
 
     winline.lsp_symbols = {}
     nvimbar
@@ -147,11 +150,7 @@ local function render(winnr)
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if stl.filetype.has_external_winline(filetype) then
-    local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
-    local winline = meta and meta.winline or nil ---@type dot.win.IWinline|nil
-    if winline and not winline.nvimbar:isdisposed() then
-      winline.nvimbar:render()
-    end
+    dot.win.render_winline(winnr)
     return
   end
 
@@ -188,7 +187,7 @@ local function render(winnr)
 
   local nvimbar = resolve_nvimbar(winnr) ---@type era.m.nvimbar.Nvimbar|nil
   if nvimbar ~= nil then
-    nvimbar:render()
+    dot.win.render_winline(winnr)
     return
   end
 

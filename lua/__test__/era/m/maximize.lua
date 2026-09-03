@@ -12,6 +12,7 @@ local winnr_command = 0 ---@type integer
 local warnings = {} ---@type table[]
 local session_storage = nil ---@type table|nil
 local saved_context_bufnr = nil ---@type integer|nil
+local forked_winnrs = nil ---@type integer[]|nil
 
 bootstrap.with_runtime(t, {
   dot = {
@@ -45,6 +46,11 @@ bootstrap.with_runtime(t, {
     tab = {
       add_buf = function() end,
       resolve = function() end,
+    },
+    win = {
+      fork = function(source_winnr, target_winnr)
+        forked_winnrs = { source_winnr, target_winnr }
+      end,
     },
     var = {
       session = { persistent_options = "blank,buffers,tabpages" },
@@ -129,6 +135,7 @@ local function register_cleanup(tabnr, winnr, bufnr, created_bufnrs, extra_tabnr
     winnr_command = 0
     session_storage = nil
     saved_context_bufnr = nil
+    forked_winnrs = nil
     warnings = {}
   end)
 end
@@ -157,6 +164,9 @@ t:test("normal maximize uses a transient tab and syncs final buffer view", funct
   t.assert_eq(enums.TabTypeEnum.MAXIMIZE, vim.t[normal.maximize_tabnr].tabtype, "maximize tabtype")
   t.assert_eq(1, #vim.api.nvim_tabpage_list_wins(normal.maximize_tabnr), "maximize window count")
   t.assert_eq(source_bufnr, vim.api.nvim_win_get_buf(normal.maximize_winnr), "shared source buffer")
+  local forks = assert(forked_winnrs)
+  t.assert_eq(source_winnr, forks[1], "forked source window metadata")
+  t.assert_eq(normal.maximize_winnr, forks[2], "forked maximize window metadata")
   t.assert_false(vim.t[source_tabnr].tabtype == enums.TabTypeEnum.MAXIMIZE, "open source tabtype")
 
   vim.api.nvim_win_set_buf(normal.maximize_winnr, final_bufnr)

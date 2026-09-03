@@ -50,7 +50,7 @@ t:test("open selects and previews the first visible file", function()
   local initial_fold_unchanged = nil ---@type boolean|nil
   local history_fold_unchanged = nil ---@type boolean|nil
   local history_refreshed = false
-  local history_winline_setup = false
+  local workspace_winline_setup = false
 
   local state = {
     get_entries = function()
@@ -75,11 +75,11 @@ t:test("open selects and previews the first visible file", function()
   local original_bufnr = vim.api.nvim_win_get_buf(staged_winnr) ---@type integer
   local staged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local unstaged_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_lines(staged_bufnr, 0, -1, false, { "Staged", "a-first.lua" })
+  vim.api.nvim_buf_set_lines(staged_bufnr, 0, -1, false, { "a-first.lua" })
   vim.api.nvim_win_set_buf(staged_winnr, staged_bufnr)
   vim.cmd("belowright split")
   local unstaged_winnr = vim.api.nvim_get_current_win() ---@type integer
-  vim.api.nvim_buf_set_lines(unstaged_bufnr, 0, -1, false, { "Unstaged", "z-last.lua" })
+  vim.api.nvim_buf_set_lines(unstaged_bufnr, 0, -1, false, { "z-last.lua" })
   vim.api.nvim_win_set_buf(unstaged_winnr, unstaged_bufnr)
 
   local layout = {
@@ -118,7 +118,7 @@ t:test("open selects and previews the first visible file", function()
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
     get_line_map = function(bufnr)
       local entry = bufnr == staged_bufnr and entries[2] or entries[1]
-      return { { type = "header" }, { type = "file", entry = vim.deepcopy(entry) } }
+      return { { type = "file", entry = vim.deepcopy(entry) } }
     end,
   })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
@@ -156,8 +156,8 @@ t:test("open selects and previews the first visible file", function()
     register = function() end,
   })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.winline", {
-    setup = function()
-      history_winline_setup = true
+    setup = function(setup_ctx)
+      workspace_winline_setup = setup_ctx.history ~= nil
     end,
   })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", workspace_view)
@@ -173,9 +173,9 @@ t:test("open selects and previews the first visible file", function()
   t.assert_true(initial_fold_unchanged, "global fold default forwarded")
   t.assert_true(history_fold_unchanged, "History fold default forwarded")
   t.assert_true(history_refreshed, "History refresh")
-  t.assert_true(history_winline_setup, "History winline setup")
+  t.assert_true(workspace_winline_setup, "workspace sidebar winlines setup")
   t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "staged focus")
-  t.assert_eq(2, vim.api.nvim_win_get_cursor(staged_winnr)[1], "changes cursor")
+  t.assert_eq(1, vim.api.nvim_win_get_cursor(staged_winnr)[1], "changes cursor")
 
   vim.api.nvim_win_close(unstaged_winnr, true)
   vim.api.nvim_win_set_buf(staged_winnr, original_bufnr)
@@ -248,7 +248,7 @@ t:test("standalone log ignores the workspace embedded History state", function()
   t.assert_eq(1, layouts_created, "standalone layout created")
 end)
 
-t:test("resize watcher rerenders widths and resyncs content heights after terminal resize", function()
+t:test("resize watcher rerenders widths and resyncs sidebar proportions after terminal resize", function()
   remembered_widths = {}
   local widths = { [42] = 40, [43] = 40 } ---@type table<integer, integer>
   local columns = 200

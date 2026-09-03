@@ -59,12 +59,16 @@ function M.gen_commit_pane(ctx)
     { modes = { "n" }, key = "g/", desc = "diffview(commits): Search commit", callback = function() action.search_commit(ctx) end },
     { modes = { "n" }, key = "gR", desc = "diffview(commits): Restore file to commit version", callback = function() action.restore_file(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(commits): Open file in previous tab", callback = function() action.goto_file(ctx) end },
-    { modes = { "n" }, key = "gh", desc = "diffview(commits): Collapse commit", callback = function() action.collapse(ctx) end },
-    { modes = { "n" }, key = "gl", desc = "diffview(commits): Expand commit", callback = function() action.expand(ctx) end },
-    { modes = { "n" }, key = "oo", desc = "diffview(commits): Toggle expand commit", callback = function() action.toggle_expand(ctx) end },
+    { modes = { "n" }, key = "gh", desc = "diffview(commits): Collapse commit / directory", callback = function() action.collapse(ctx) end },
+    { modes = { "n" }, key = "gl", desc = "diffview(commits): Expand commit / directory", callback = function() action.expand(ctx) end },
+    { modes = { "n" }, key = "oc", desc = "diffview(commits): Copy filepath", callback = function() action.copy_filepath(ctx) end },
+    { modes = { "n" }, key = "oo", desc = "diffview(commits): Toggle commit / directory", callback = function() action.toggle_expand(ctx) end },
     { modes = { "n" }, key = "t1", desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
     { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
     { modes = { "n" }, key = "yy", desc = "diffview(commits): Yank commit hash", callback = function() action.yank_hash(ctx) end },
+    { modes = { "n" }, key = "za", desc = "diffview(commits): Toggle commit / directory", callback = function() action.toggle_expand(ctx) end },
+    { modes = { "n" }, key = "zc", desc = "diffview(commits): Collapse commit / directory", callback = function() action.collapse(ctx) end },
+    { modes = { "n" }, key = "zo", desc = "diffview(commits): Expand commit / directory", callback = function() action.expand(ctx) end },
   }
 
   return keymaps

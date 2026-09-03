@@ -684,8 +684,18 @@ function M.render_commits(ctx)
   local expanded = state:get_expanded_commits()
   local layout_type = lyt.layout_type or 1
   local tabtype = vim.t[lyt.tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
+  local collapsed_dirs = {} ---@type table<string, table<string, boolean>>
+  for _, commit in ipairs(commits) do
+    if expanded[commit.hash] then
+      collapsed_dirs[commit.hash] = state:get_commit_collapsed_dirs(commit.hash)
+    end
+  end
 
-  local result = pane_commits.render(commits, expanded, { layout = layout_type, tabtype = tabtype })
+  local result = pane_commits.render(commits, expanded, {
+    collapsed_dirs = collapsed_dirs,
+    layout = layout_type,
+    tabtype = tabtype,
+  })
   pane_commits.apply_to_buffer(lyt.commits_bufnr, result)
   if ctx.render_winline then
     ctx.render_winline()

@@ -310,7 +310,6 @@ function M.default_gen_hlgroup_map(context)
     m_dv_ft_deletions = { fg = u.red },
     m_dv_ft_dirname = { fg = u.brightBlue },
     m_dv_ft_filename = { fg = u.fg2 },
-    m_dv_ft_header = { fg = u.purple, bold = true },
     m_dv_ft_insertions = { fg = u.green },
     m_dv_ft_separator = { fg = u.bg4 },
     m_dv_ft_status_add = { fg = u.brightGreen },
@@ -325,7 +324,8 @@ function M.default_gen_hlgroup_map(context)
     m_dv_cm_current = { bg = u.bg3 },
     m_dv_cm_date = { fg = u.fg4 },
     m_dv_cm_files = { fg = u.aqua },
-    m_dv_cm_hash = { fg = u.brightBlue },
+    m_dv_cm_graph = { fg = u.brightBlue },
+    m_dv_cm_hash = { fg = u.brightYellow },
     m_dv_cm_message = { fg = u.fg1 },
     m_dv_cm_sep = { fg = u.bg4 },
 
