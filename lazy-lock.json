@@ -1,5 +1,4 @@
 {
-  "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "78336bc89ee5365633bcf754d93df01678b5c08f" },
   "blink.indent": { "branch": "nvim@blink.indent", "commit": "8b69b9262891fe81fe728fe6a52fa2a84dd5d5e0" },
   "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "4e43012356d33a26f69eae475f746fbe9f325f44" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "016802de402556da54c36bd7359b441266b01cdd" },

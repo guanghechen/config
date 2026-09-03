@@ -410,13 +410,9 @@ function M.locate_symbols(winnr, token)
       return
     end
 
-    local cmp = package.loaded["blink.cmp"]
-    if type(cmp) == "table" and type(cmp.is_visible) == "function" then
-      local ok, visible = pcall(cmp.is_visible)
-      if ok and visible then
-        do_resolve(false, nil)
-        return
-      end
+    if vim.fn.pumvisible() ~= 0 then
+      do_resolve(false, nil)
+      return
     end
 
     local textDocument = vim.lsp.util.make_text_document_params(bufnr) ---@type lsp.TextDocumentIdentifier

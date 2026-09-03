@@ -184,6 +184,150 @@ t:test("cmdline show preserves protocol content and indent", function()
   t.assert_nil(rendered.special, "special char")
 end)
 
+t:test("programmatic cmdline sync reuses the active render surface", function()
+  local cmdline, states = setup()
+  local rendered = nil ---@type era.m.ui_attach.cmdline.IState|nil
+  states.cmdline[1] = {
+    level = 1,
+    firstc = ":",
+    prompt = "",
+    indent = 0,
+    hlid = 9,
+    icon = "C  ",
+    first = "edit ",
+    second = "source/",
+    type = "command",
+    language = "vim",
+    concealable = false,
+  }
+  cmdline._sync = function(state)
+    rendered = state
+  end
+
+  cmdline.sync("edit source/file.lua", 21)
+
+  local synced = assert(rendered)
+  t.assert_eq("edit ", synced.first, "command prefix")
+  t.assert_eq("source/file.lua", synced.second, "command argument")
+  t.assert_eq(20, synced.pos, "zero-based cursor")
+end)
+
+t:test("completion preview sync defers and coalesces its redraw", function()
+  local cmdline, states = setup()
+  local immediate = nil ---@type boolean|nil
+  local scheduled = {} ---@type function[]
+  local redraws = 0
+  states.cmdline[1] = {
+    level = 1,
+    firstc = "@",
+    prompt = "bench> ",
+    indent = 0,
+    hlid = 9,
+    icon = "C  ",
+    first = "item001",
+    second = "",
+    type = "command",
+    language = nil,
+    concealable = false,
+    preview_redraw_pending = false,
+  }
+  t:patch_table(vim, "schedule", function(callback)
+    scheduled[#scheduled + 1] = callback
+  end)
+  t:patch_table(vim.api, "nvim__redraw", function(opts)
+    t.assert_true(opts.cursor, "cursor redraw")
+    t.assert_true(opts.flush, "flushed redraw")
+    redraws = redraws + 1
+  end)
+  cmdline._sync = function(_, value_immediate)
+    immediate = value_immediate
+  end
+
+  cmdline.sync_preview("item002", 8)
+  cmdline.sync_preview("item003", 8)
+
+  t.assert_false(immediate, "deferred position and redraw")
+  t.assert_eq("item003", states.cmdline[1].echo_text, "expected protocol echo")
+  t.assert_eq(7, states.cmdline[1].echo_pos, "expected protocol cursor")
+  t.assert_eq(1, #scheduled, "coalesced redraw")
+  scheduled[1]()
+  t.assert_eq(1, redraws, "deferred redraw")
+end)
+
+t:test("matching programmatic cmdline echo does not render twice", function()
+  local cmdline, states = setup()
+  states.message.confirming_task = nil
+  local content = { { 0, "item002", 9 } }
+  states.cmdline[1] = {
+    level = 1,
+    firstc = "@",
+    prompt = "bench> ",
+    indent = 0,
+    hlid = 9,
+    icon = "C  ",
+    first = "item002",
+    second = "",
+    type = "command",
+    language = nil,
+    concealable = false,
+    ghost = "tail",
+    echo_text = "item002",
+    echo_pos = 7,
+  }
+  cmdline._show = function()
+    error("matching protocol echo must not render")
+  end
+
+  cmdline.show({ event = "cmdline_show", args = { content, 7, "@", "bench> ", 0, 1, 9 } })
+
+  t.assert_true(states.cmdline[1].content == content, "protocol content")
+  t.assert_eq("tail", states.cmdline[1].ghost, "preview ghost")
+  t.assert_nil(states.cmdline[1].echo_text, "consumed echo text")
+  t.assert_nil(states.cmdline[1].echo_pos, "consumed echo cursor")
+
+  local rendered = false
+  states.cmdline[1].echo_text = "item003"
+  states.cmdline[1].echo_pos = 7
+  cmdline._show = function()
+    rendered = true
+  end
+  cmdline.show({ event = "cmdline_show", args = { { { 0, "user", 9 } }, 4, "@", "bench> ", 0, 1, 9 } })
+  t.assert_true(rendered, "mismatched user input renders")
+end)
+
+t:test("programmatic cmdline sync falls back when display structure changes", function()
+  local cmdline, states = setup()
+  local rendered = nil ---@type era.m.ui_attach.cmdline.IState|nil
+  states.cmdline[1] = {
+    level = 1,
+    firstc = ":",
+    prompt = "",
+    indent = 0,
+    hlid = 9,
+    icon = "C  ",
+    first = "lu",
+    second = "",
+    type = "command",
+    language = "vim",
+    concealable = false,
+  }
+  cmdline._sync = function()
+    error("fast path must not retain stale display structure")
+  end
+  cmdline._show = function(state)
+    rendered = state
+  end
+
+  cmdline.sync("lua print('ok')", 16)
+
+  local synced = assert(rendered)
+  t.assert_eq("command_lua", synced.type, "display type")
+  t.assert_eq("lua", synced.language, "display language")
+  t.assert_true(synced.concealable, "concealed command prefix")
+  t.assert_eq("lua ", synced.first, "command prefix")
+  t.assert_eq("print('ok')", synced.second, "command argument")
+end)
+
 t:test("cmdline render keeps byte highlight offsets", function()
   local cmdline = setup()
   t:patch_table(vim.fn, "synIDattr", function(hlid)
@@ -199,16 +343,47 @@ t:test("cmdline render keeps byte highlight offsets", function()
     indent = 2,
     icon = "> ",
     concealable = false,
+    ghost = "yz",
   })
 
   t.assert_eq(">   文x ", render.line, "rendered line")
   t.assert_eq(8, render.cursor_col, "cursor byte column")
+  t.assert_eq(8, render.ghost_col, "ghost byte column")
+  t.assert_eq("yz", render.ghost, "ghost text")
   t.assert_eq(4, render.content_offset, "content offset")
   t.assert_false(render.concealed, "concealed content")
   t.assert_eq(4, render.highlights[1].coll, "first highlight start")
   t.assert_eq(7, render.highlights[1].colr, "first highlight end")
   t.assert_eq(7, render.highlights[2].coll, "second highlight start")
   t.assert_eq(8, render.highlights[2].colr, "second highlight end")
+end)
+
+t:test("cmdline ghost updates the active surface without changing content", function()
+  local cmdline, states = setup()
+  local rendered = nil ---@type era.m.ui_attach.cmdline.IState|nil
+  states.cmdline[1] = {
+    level = 1,
+    firstc = ":",
+    prompt = "",
+    indent = 0,
+    hlid = 9,
+    icon = "C  ",
+    first = "ed",
+    second = "",
+    type = "command",
+    language = "vim",
+    concealable = false,
+    ghost = nil,
+  }
+  cmdline._sync = function(state)
+    rendered = state
+  end
+
+  cmdline.set_ghost("it")
+
+  local state = assert(rendered)
+  t.assert_eq("ed", state.first, "content")
+  t.assert_eq("it", state.ghost, "ghost")
 end)
 
 t:test("special char is retained until the next cmdline show", function()

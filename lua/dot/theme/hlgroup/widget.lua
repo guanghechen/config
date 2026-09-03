@@ -209,6 +209,7 @@ function M.default_gen_hlgroup_map(context)
     -- stylua: ignore end
 
     ---popupmenu
+    f_cmp_border = { fg = u.bg2, bg = bg_pane },
     f_up_normal = { fg = u.fg2, bg = bg_pane },
     f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },
     f_up_selected = { fg = u.bg1, bg = u.blue, bold = true, italic = true },

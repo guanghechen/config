@@ -7,6 +7,7 @@ local __module_name__ = "era.m.ui_attach.state" ---@type string
 
 ---@alias era.m.ui_attach.IContentChunk [integer, string, integer]
 ---@alias era.m.ui_attach.IContent era.m.ui_attach.IContentChunk[]
+---@alias era.m.ui_attach.popupmenu.ILabelHighlight { [1]: integer, [2]: integer, [3]: string, [4]: integer }
 
 ---@alias era.m.ui_attach.IHandleTask
 ---| fun(task: era.m.ui_attach.ITask): nil
@@ -30,6 +31,10 @@ local __module_name__ = "era.m.ui_attach.state" ---@type string
 ---@field public first                  string
 ---@field public second                 string
 ---@field public special                era.m.ui_attach.cmdline.ISpecial|nil
+---@field public ghost                  string|nil
+---@field public echo_text              string|nil one-shot programmatic cmdline echo
+---@field public echo_pos               integer|nil 0-indexed programmatic cmdline echo
+---@field public preview_redraw_pending boolean|nil
 ---@field public confirming_task        era.m.ui_attach.ITask|nil
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
@@ -62,6 +67,8 @@ local __module_name__ = "era.m.ui_attach.state" ---@type string
 ---@field public index                  integer
 
 ---@class era.m.ui_attach.popupmenu.IState
+---@field public owner                  string
+---@field public generation             integer
 ---@field public items                  string[][]
 ---@field public selected               integer
 ---@field public row                    integer
@@ -69,6 +76,17 @@ local __module_name__ = "era.m.ui_attach.state" ---@type string
 ---@field public grid                   integer
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
+---@field public layout                 table|nil
+---@field public doc_bufnr              integer|nil
+---@field public doc_winnr              integer|nil
+---@field public doc_timer              uv.uv_timer_t|nil
+---@field public doc_generation         integer|nil
+---@field public doc_enabled            boolean|nil
+---@field public scrollbar_bufnr        integer|nil
+---@field public scrollbar_winnr        integer|nil
+---@field public resolve_highlights     (fun(indices: integer[]): table<integer, era.m.ui_attach.popupmenu.ILabelHighlight[]>)|nil
+---@field public highlighted_rows       table<integer, boolean>|nil
+---@field public label_geometry         { start_col: integer, visible_bytes: integer }[]|nil
 
 ---@class era.m.ui_attach.cmdline_block.IState
 ---@field public lines                  string[]

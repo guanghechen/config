@@ -78,6 +78,7 @@ local __m__mods = {
   clipboard = "era.m.clipboard",
   colorpicker = "era.m.colorpicker",
   commentstring = "era.m.commentstring",
+  cmp = "era.m.cmp",
   copy = "era.m.copy",
   diffview = "era.m.diffview",
   dim = "era.m.dim",
@@ -124,6 +125,7 @@ local __m__mods = {
 ---@field public clipboard              era.m.clipboard
 ---@field public colorpicker            era.m.colorpicker
 ---@field public commentstring          era.m.commentstring
+---@field public cmp                    era.m.cmp
 ---@field public copy                   era.m.copy
 ---@field public diffview               era.m.diffview
 ---@field public dim                    era.m.dim

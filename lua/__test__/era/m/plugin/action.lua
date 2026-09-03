@@ -80,7 +80,7 @@ t:test("build releases state after an unexpected rejection", function()
   reset_action()
   t:patch_table(package.loaded, "era.m.plugin.loader", {
     get = function()
-      return { spec = { name = "blink.cmp", build = "cargo build --release" } }
+      return { spec = { name = "native-plugin", build = "cargo build --release" } }
     end,
   })
   t:patch_table(Action, "__run_build__", function()
@@ -88,15 +88,15 @@ t:test("build releases state after an unexpected rejection", function()
   end)
 
   local progress_count = 0
-  local future = Action.build("blink.cmp", function()
+  local future = Action.build("native-plugin", function()
     progress_count = progress_count + 1
   end)
 
   t.assert_true(future:is_resolved(), "build should consume worker rejection")
   t.assert_false(Action.is_running(), "build lock")
-  t.assert_eq("error", Action.get_tasks()["blink.cmp"].status, "task status")
+  t.assert_eq("error", Action.get_tasks()["native-plugin"].status, "task status")
   t.assert_true(
-    Action.get_tasks()["blink.cmp"].message:find("unexpected build rejection", 1, true) ~= nil,
+    Action.get_tasks()["native-plugin"].message:find("unexpected build rejection", 1, true) ~= nil,
     "task diagnostic"
   )
   t.assert_eq(2, progress_count, "progress notifications")
@@ -127,7 +127,7 @@ end)
 t:test("non-zero string build preserves the last streamed diagnostic", function()
   reset_action()
   t:patch_table(vim, "system", function(_, opts, callback)
-    opts.stderr(nil, "first diagnostic\nblink-build-diagnostic\n")
+    opts.stderr(nil, "first diagnostic\nnative-build-diagnostic\n")
     callback({ code = 1, stderr = nil })
     return {}
   end)
@@ -142,9 +142,9 @@ t:test("non-zero string build preserves the last streamed diagnostic", function(
   t.assert_true(future:is_resolved(), "non-zero future")
   local result = future:get_result()
   t.assert_false(result.ok, "non-zero result")
-  t.assert_eq("blink-build-diagnostic", result.err, "final diagnostic")
+  t.assert_eq("native-build-diagnostic", result.err, "final diagnostic")
   t.assert_eq(2, #task.output, "bounded output")
-  t.assert_eq("blink-build-diagnostic", task.output[2], "streamed diagnostic")
+  t.assert_eq("native-build-diagnostic", task.output[2], "streamed diagnostic")
 end)
 
 t:test("lazy job scheduler starts only the concurrency window", function()

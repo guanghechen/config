@@ -10,10 +10,6 @@ local conds = {
     return false
   end,
   ---@return boolean
-  cmp = function()
-    return not vim.g.vscode and not vim.g.yozvim
-  end,
-  ---@return boolean
   lsp = function()
     return not vim.g.vscode and not vim.g.yozvim
   end,
@@ -37,7 +33,6 @@ local conds = {
 ---@type era.m.plugin.IRawSpec[]
 local raw_specs = {
   -- stylua: ignore start
-  { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                    },
   { name = "blink.indent",                main = "blink.indent",                  cond = conds.not_vscode_or_yozvim   },
   { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode_or_yozvim   },
   { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode_or_yozvim   },

@@ -1,5 +1,13 @@
 ---@see https://github.com/MeanderingProgrammer/render-markdown.nvim
 
+---@param bufnr                         integer
+---@return boolean
+local function ignore_buffer(bufnr)
+  return vim.b[bufnr][dot.var.N_CMP_DOCUMENTATION] == true
+end
+
+vim.g.render_markdown_config = { ignore = ignore_buffer }
+
 return {
   name = "render-markdown.nvim",
   ft = stl.filetype.get_markdown_filetypes(),
@@ -307,10 +315,7 @@ return {
         wip = { pattern = "WIP", icon = "🚧", background = "DiagnosticWarn" },
       },
     },
-    ---@diagnostic disable-next-line: unused-local
-    ignore = function(bufnr)
-      return false
-    end,
+    ignore = ignore_buffer,
     inline_highlight = {
       enabled = true,
       highlight = "f_md_text_inline_highlight",

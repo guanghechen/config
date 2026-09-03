@@ -8,65 +8,12 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.tokyonight ---@type stl.t.theme.ITokyonightPalette
   local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
-  local item_kind_bg = c.none ---@type string
-  local cmp_panel_bg = cs.mix(c.bg_dark, c.bg, 80) ---@type string
   local treesitter_context_bg = t and c.none or c.bg_highlight ---@type string
   local badge_fg = u.bg1 ---@type string
   local badge_bg = u.pink ---@type string
 
   ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
-    ---! blink.cmp
-    BlinkCmpDoc = { fg = c.fg, bg = cmp_panel_bg },
-    BlinkCmpDocBorder = { fg = c.border_highlight, bg = cmp_panel_bg },
-    BlinkCmpDocSeparator = { fg = c.dark3, bg = cmp_panel_bg },
-    BlinkCmpGhostText = { fg = c.terminal_black, default = true },
-    BlinkCmpItemIdx = { fg = c.dark5, bg = item_kind_bg },
-    BlinkCmpKindClass = { fg = c.orange, bg = item_kind_bg },
-    BlinkCmpKindCodeium = { fg = c.teal, bg = item_kind_bg },
-    BlinkCmpKindColor = { fg = c.fg, bg = item_kind_bg },
-    BlinkCmpKindConstant = { fg = c.orange, bg = item_kind_bg },
-    BlinkCmpKindConstructor = { fg = c.magenta, bg = item_kind_bg },
-    BlinkCmpKindDefault = { fg = c.fg_dark, bg = item_kind_bg },
-    BlinkCmpKindEnum = { fg = c.orange, bg = item_kind_bg },
-    BlinkCmpKindEnumMember = { fg = c.teal, bg = item_kind_bg },
-    BlinkCmpKindEvent = { fg = c.orange, bg = item_kind_bg },
-    BlinkCmpKindField = { fg = c.green1, bg = item_kind_bg },
-    BlinkCmpKindFile = { fg = c.fg, bg = item_kind_bg },
-    BlinkCmpKindFolder = { fg = c.blue, bg = item_kind_bg },
-    BlinkCmpKindFunction = { fg = c.blue, bg = item_kind_bg },
-    BlinkCmpKindIdentifier = { fg = c.magenta, bg = item_kind_bg },
-    BlinkCmpKindInterface = { fg = cs.mix(c.bg, c.blue1, 80), bg = item_kind_bg },
-    BlinkCmpKindKeyword = { fg = c.cyan, bg = item_kind_bg },
-    BlinkCmpKindMethod = { fg = c.blue, bg = item_kind_bg },
-    BlinkCmpKindModule = { fg = c.yellow, bg = item_kind_bg },
-    BlinkCmpKindOperator = { fg = c.blue5, bg = item_kind_bg },
-    BlinkCmpKindProperty = { fg = c.green1, bg = item_kind_bg },
-    BlinkCmpKindReference = { fg = c.teal, bg = item_kind_bg },
-    BlinkCmpKindSnippet = { fg = c.dark5, bg = item_kind_bg },
-    BlinkCmpKindStruct = { fg = c.orange, bg = item_kind_bg },
-    BlinkCmpKindStructure = { fg = c.orange, bg = item_kind_bg },
-    BlinkCmpKindSupermaven = { fg = c.teal, bg = item_kind_bg },
-    BlinkCmpKindTabNine = { fg = c.teal, bg = item_kind_bg },
-    BlinkCmpKindText = { fg = c.green, bg = item_kind_bg },
-    BlinkCmpKindType = { fg = c.blue1, bg = item_kind_bg },
-    BlinkCmpKindTypeParameter = { fg = c.teal, bg = item_kind_bg },
-    BlinkCmpKindUnit = { fg = c.orange, bg = item_kind_bg },
-    BlinkCmpKindValue = { fg = c.green, bg = item_kind_bg },
-    BlinkCmpKindVariable = { fg = c.fg, bg = item_kind_bg },
-    BlinkCmpLabel = { fg = c.fg, bg = item_kind_bg },
-    BlinkCmpLabelDeprecated = { fg = c.fg_gutter, bg = item_kind_bg, strikethrough = true },
-    BlinkCmpLabelMatch = { fg = c.blue1, bg = item_kind_bg },
-    BlinkCmpMenu = { fg = c.fg, bg = cmp_panel_bg },
-    BlinkCmpMenuBorder = { fg = c.border_highlight, bg = cmp_panel_bg },
-    BlinkCmpMenuSelection = { fg = c.fg, bg = c.bg_visual },
-    BlinkCmpScrollBarGutter = { bg = cmp_panel_bg },
-    BlinkCmpScrollBarThumb = { bg = c.bg_highlight },
-    BlinkCmpSignatureHelp = { fg = c.fg, bg = cmp_panel_bg },
-    BlinkCmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
-    BlinkCmpSignatureHelpBorder = { fg = c.border_highlight, bg = cmp_panel_bg },
-    BlinkCmpSource = { fg = c.dark5, bg = item_kind_bg },
-
     ---! flash.nvim
     FlashBackdrop = { fg = c.dark3 },
     FlashCurrent = { fg = c.orange, bg = c.none, italic = true },

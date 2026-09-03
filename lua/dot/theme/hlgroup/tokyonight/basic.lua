@@ -158,6 +158,8 @@ function M.gen_hlgroup_map(context)
     Operator = { fg = c.blue5 },
     Parameter = { fg = c.blue },
     Pmenu = { fg = c.fg, bg = c.bg_dark },
+    PmenuMatch = { fg = c.blue1 },
+    PmenuMatchSel = { fg = c.yellow, bold = true },
     PmenuSbar = { bg = cs.mix(c.bg_dark, c.fg_gutter, 5) },
     PmenuSel = { bg = cs.mix(c.bg_dark, c.fg_gutter, 80), bold = true },
     PmenuThumb = { bg = c.fg_gutter },

@@ -40,6 +40,7 @@ Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
 
 Submodules:
 
+- `yoz.cmp`: Unicode keyword extraction, buffer word collection, and fuzzy scoring
 - `yoz.dict`: dictionary search for English word completion
 - `yoz.find`: file finding (fd-like)
 - `yoz.fn`: utility functions (uuid, md5)
@@ -83,7 +84,7 @@ Key areas:
 
 Highlights:
 
-- Feature modules in `era/m/*` (`explorer`, `picker`, `searcher`, `ai`, `git`, `term`, etc.)
+- Feature modules in `era/m/*` (`cmp`, `explorer`, `picker`, `searcher`, `ai`, `git`, `term`, etc.)
 - Callable functions in `era/fn/*` (`find-*`, `search-*`, `select-*`, `rename`, `run-code`, etc.)
 - View components in `era/view/*` (`act`, `filetree`, `keysheet`, `notifications`, etc.)
 

@@ -1,11 +1,16 @@
 ---@class dot.var
+---@field public CMP_DOCUMENTATION_PREVIEW   string
+---@field public CMP_DOCUMENTATION_SEPARATOR string
 ---@field public N_BUF_DISABLE_LINT     string
+---@field public N_CMP_DOCUMENTATION    string
 ---@field public N_IMAGE_ATTACHED       string
 ---@field public N_IMAGE_CONCEAL        string
 ---@field public N_WINLINE_DISABLED     string
 local M = {}
 
 M.BUF_UNTITLED = "untitled"
+M.CMP_DOCUMENTATION_PREVIEW = string.char(30) .. "cmp-preview" .. string.char(30)
+M.CMP_DOCUMENTATION_SEPARATOR = string.char(30) .. "cmp-separator" .. string.char(30)
 M.EDITING_INPUT_PREFIX = "@#!dot!#@"
 M.WIN_BUF_HISTORY_CAPACITY = 99
 M.WIN_HISTORY_CAPACITY = 99
@@ -17,6 +22,7 @@ M.K_CODE_INSERT_SPLITLINE = "g;"
 ----------------------------------------------------------------------------------------------------
 
 M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
+M.N_CMP_DOCUMENTATION = "dot_cmp_documentation"
 M.N_IMAGE_ATTACHED = "dot_image_attached"
 M.N_IMAGE_CONCEAL = "dot_image_conceal"
 M.N_WINLINE_DISABLED = "dot_winline_disabled"

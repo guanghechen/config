@@ -66,6 +66,48 @@ local _cmdline_type_map = {
 }
 -- stylua: ignore end
 
+---@param firstc                        string
+---@param text                          string
+---@param confirming_task               era.m.ui_attach.ITask|nil
+---@return string type
+---@return string|nil language
+---@return boolean concealable
+---@return string first
+---@return string second
+local function resolve_display(firstc, text, confirming_task)
+  local typ = "command" ---@type string
+  local language = nil ---@type string|nil
+  if firstc == ":" then
+    language = "vim"
+  elseif firstc == "/" then
+    typ = "search_forward"
+    language = "regex"
+  elseif firstc == "?" then
+    typ = "search_backward"
+    language = "regex"
+  elseif confirming_task ~= nil then
+    typ = "confirm"
+  end
+
+  local concealable = false ---@type boolean
+  local first = text ---@type string
+  local second = "" ---@type string
+  if typ == "command" then
+    local command, argument = text:match("^(%S+) (.*)$")
+    if command == "lua" then
+      typ = "command_lua"
+      language = "lua"
+      concealable = true
+    elseif command == "h" or command == "he" or command == "hel" or command == "help" then
+      typ = "command_help"
+      concealable = true
+    end
+    first = command and (command .. " ") or text
+    second = argument or ""
+  end
+  return typ, language, concealable, first, second
+end
+
 ---@class era.m.ui_attach.cmdline
 local M = {}
 
@@ -121,8 +163,9 @@ function M.pos(task)
   local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
+    state.ghost = nil
     render_state(state)
-    -- Update position for blink.cmp after position change
+    -- Update the native popupmenu anchor after position changes.
     if state.winnr and vim.api.nvim_win_is_valid(state.winnr) then
       M._update_cmdline_position(state, state.winnr)
     end
@@ -144,28 +187,12 @@ function M.show(task)
 
   local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
   local confirming_task = state and state.confirming_task or nil ---@type era.m.ui_attach.ITask|nil
-  local typ = "command" ---@type string
-  local language = nil ---@type string|nil
-  if firstc == ":" then
-    language = "vim" ---@type string
+  if firstc == ":" or firstc == "/" or firstc == "?" then
     states.message.confirming_task = nil
     confirming_task = nil
-  elseif firstc == "/" then
-    typ = "search_forward" ---@type string
-    language = "regex" ---@type string
-    states.message.confirming_task = nil
-    confirming_task = nil
-  elseif firstc == "?" then
-    typ = "search_backward" ---@type string
-    language = "regex" ---@type string
-    states.message.confirming_task = nil
-    confirming_task = nil
-  elseif confirming_task ~= nil then
-    typ = "confirm"
   elseif states.message.confirming_task ~= nil then
     confirming_task = states.message.confirming_task
     states.message.confirming_task = nil
-    typ = "confirm"
   end
 
   local text = "" ---@type string
@@ -173,26 +200,25 @@ function M.show(task)
     text = text .. piece[2]
   end
 
-  local concealable = false ---@type boolean
-  local first = text ---@type string
-  local second = "" ---@type string
-
-  if typ == "command" then
-    local f, s = text:match("^(%S+) (.*)$")
-    if f == "lua" then
-      typ = "command_lua" ---@type string
-      language = "lua" ---@type string
-      concealable = true
-    elseif f == "h" or f == "he" or f == "hel" or f == "help" then
-      typ = "command_help" ---@type string
-      concealable = true
-    end
-
-    first = f and (f .. " ") or text ---@type string
-    second = s or "" ---@type string
-  end
-
+  local typ, language, concealable, first, second = resolve_display(firstc, text, confirming_task)
   local icon = _cmdline_type_map[typ] ---@type string
+
+  local echoed = state ~= nil
+    and state.echo_text == text
+    and state.echo_pos == pos
+    and state.firstc == firstc
+    and state.prompt == prompt
+    and state.indent == indent
+    and state.hlid == hlid
+    and state.confirming_task == confirming_task
+  if state ~= nil then
+    state.echo_text = nil
+    state.echo_pos = nil
+    if echoed then
+      state.content = content
+      return
+    end
+  end
 
   if state == nil then
     ---@type era.m.ui_attach.cmdline.IState
@@ -211,6 +237,10 @@ function M.show(task)
       first = first,
       second = second,
       special = nil,
+      ghost = nil,
+      echo_text = nil,
+      echo_pos = nil,
+      preview_redraw_pending = false,
       confirming_task = confirming_task,
       bufnr = nil,
       winnr = nil,
@@ -231,6 +261,7 @@ function M.show(task)
     state.first = first
     state.second = second
     state.special = nil
+    state.ghost = nil
     state.confirming_task = confirming_task
   end
 
@@ -242,6 +273,8 @@ end
 ---@field public cursor_col             integer
 ---@field public content_offset         integer
 ---@field public concealed              boolean
+---@field public ghost                  string|nil
+---@field public ghost_col              integer
 ---@field public highlights             stl.t.IHighlight[]
 
 ---@param state                         era.m.ui_attach.cmdline.IState
@@ -273,13 +306,65 @@ function M._resolve_render(state)
     offset = offset_next
   end
 
+  local cursor_col = content_offset + math.max(0, state.pos - concealed_size) ---@type integer
   return {
     line = state.icon .. indent_text .. visible_content .. " ",
-    cursor_col = content_offset + math.max(0, state.pos - concealed_size),
+    cursor_col = cursor_col,
     content_offset = content_offset,
     concealed = concealed,
+    ghost = type(state.ghost) == "string" and state.ghost ~= "" and state.ghost or nil,
+    ghost_col = cursor_col,
     highlights = highlights,
   }
+end
+
+---@param state                         era.m.ui_attach.cmdline.IState
+---@param bufnr                         integer
+---@param winnr                         integer
+---@param reset_syntax                  boolean
+---@param immediate                     boolean
+local function render_content(state, bufnr, winnr, reset_syntax, immediate)
+  local hln_icon = "f_uc_icon_" .. state.type ---@type string
+  local render = M._resolve_render(state)
+
+  if reset_syntax then
+    vim.api.nvim_set_option_value("syntax", nil, { buf = bufnr })
+  end
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { render.line })
+
+  if reset_syntax and state.language ~= nil and not vim.b[bufnr].ts_highlight then
+    vim.api.nvim_set_option_value("syntax", state.language, { buf = bufnr })
+  end
+
+  vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, 0 }, { 0, #state.icon })
+  if not render.concealed then
+    local offset = render.content_offset ---@type integer
+    vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, offset }, { 0, offset + #state.first })
+  end
+  for _, hl in ipairs(render.highlights) do
+    vim.hl.range(bufnr, nsnrs.cmdline, hl.hlname, { 0, hl.coll }, { 0, hl.colr })
+  end
+  if render.ghost ~= nil then
+    vim.api.nvim_buf_set_extmark(bufnr, nsnrs.cmdline, 0, render.ghost_col, {
+      virt_text = { { render.ghost, "Comment" } },
+      virt_text_pos = "inline",
+      hl_mode = "combine",
+    })
+  end
+  if state.special ~= nil then
+    vim.api.nvim_buf_set_extmark(bufnr, nsnrs.cmdline, 0, render.cursor_col, {
+      virt_text = { { state.special.c, "SpecialKey" } },
+      virt_text_pos = state.special.shift and "inline" or "overlay",
+      hl_mode = "combine",
+    })
+  end
+
+  vim.api.nvim_win_set_cursor(winnr, { 1, render.cursor_col })
+  if immediate then
+    vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
+    M._update_cmdline_position(state, winnr)
+  end
 end
 
 ---@param state                         era.m.ui_attach.cmdline.IState
@@ -348,38 +433,92 @@ function M._show(state)
     vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   end
 
-  local hln_icon = "f_uc_icon_" .. state.type ---@type string
-  local render = M._resolve_render(state)
+  render_content(state, bufnr, winnr, true, true)
+end
 
-  vim.api.nvim_set_option_value("syntax", nil, { buf = bufnr })
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { render.line })
-
-  if state.language ~= nil and not vim.b[bufnr].ts_highlight then
-    vim.api.nvim_set_option_value("syntax", state.language, { buf = bufnr })
+---@param state                         era.m.ui_attach.cmdline.IState
+---@param immediate?                    boolean
+function M._sync(state, immediate)
+  local bufnr = state.bufnr ---@type integer|nil
+  local winnr = state.winnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) or winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    render_state(state)
+    return
   end
+  render_content(state, bufnr, winnr, false, immediate ~= false)
+end
 
-  vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, 0 }, { 0, #state.icon })
-  if not render.concealed then
-    local offset = render.content_offset ---@type integer
-    vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, offset }, { 0, offset + #state.first })
+---@param state                         era.m.ui_attach.cmdline.IState
+local function schedule_preview_redraw(state)
+  if state.preview_redraw_pending then
+    return
   end
-  for _, hl in ipairs(render.highlights) do
-    vim.hl.range(bufnr, nsnrs.cmdline, hl.hlname, { 0, hl.coll }, { 0, hl.colr })
-  end
-  if state.special ~= nil then
-    vim.api.nvim_buf_set_extmark(bufnr, nsnrs.cmdline, 0, render.cursor_col, {
-      virt_text = { { state.special.c, "SpecialKey" } },
-      virt_text_pos = state.special.shift and "inline" or "overlay",
-      hl_mode = "combine",
-    })
-  end
+  state.preview_redraw_pending = true
+  vim.schedule(function()
+    state.preview_redraw_pending = false
+    if states.get_active_cmdline() == state then
+      vim.api.nvim__redraw({ cursor = true, flush = true })
+    end
+  end)
+end
 
-  vim.api.nvim_win_set_cursor(winnr, { 1, render.cursor_col })
-  vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
+---@param text                          string
+---@param pos                           integer 1-based command-line cursor position
+---@param ghost                         string|nil
+---@param preview                       boolean
+local function sync(text, pos, ghost, preview)
+  local state = states.get_active_cmdline()
+  if state == nil then
+    return
+  end
+  local typ, language, concealable, first, second = resolve_display(state.firstc, text, state.confirming_task)
+  local stable = state.type == typ and state.language == language and state.concealable == concealable
+  state.content = { { 0, text, state.hlid } }
+  state.pos = math.max(0, pos - 1)
+  state.icon = _cmdline_type_map[typ]
+  state.type = typ
+  state.language = language
+  state.concealable = concealable
+  state.first = first
+  state.second = second
+  state.special = nil
+  state.ghost = ghost
+  state.echo_text = preview and text or nil
+  state.echo_pos = preview and state.pos or nil
+  if stable then
+    M._sync(state, not preview)
+  else
+    render_state(state)
+  end
+  if preview then
+    schedule_preview_redraw(state)
+  end
+end
 
-  -- Refresh the cmdline position for blink.cmp compatibility
-  M._update_cmdline_position(state, winnr)
+---@param text                          string
+---@param pos                           integer 1-based command-line cursor position
+---@param ghost                         string|nil
+function M.sync(text, pos, ghost)
+  sync(text, pos, ghost, false)
+end
+
+---Synchronize a completion preview without recomputing its stable popup anchor
+---or flushing the TUI. The input loop submits the completed frame.
+---@param text                          string
+---@param pos                           integer 1-based command-line cursor position
+---@param ghost                         string|nil
+function M.sync_preview(text, pos, ghost)
+  sync(text, pos, ghost, true)
+end
+
+---@param ghost                         string|nil
+function M.set_ghost(ghost)
+  local state = states.get_active_cmdline()
+  if state == nil then
+    return
+  end
+  state.ghost = type(ghost) == "string" and ghost ~= "" and ghost or nil
+  M._sync(state)
 end
 
 ---@param state                         era.m.ui_attach.cmdline.IState
@@ -403,8 +542,8 @@ function M._update_cmdline_position(state, winnr)
   local prefix_width = vim.fn.strdisplaywidth(content:sub(1, state.pos)) ---@type integer
   local content_col = screenpos.col - 1 - prefix_width ---@type integer
 
-  -- blink.cmp expects a 1-indexed row and 0-indexed column for the original
-  -- cmdline content; completion offsets are applied by the consumer.
+  -- The external popupmenu uses a 1-indexed row and 0-indexed column for the
+  -- original cmdline content; completion offsets are applied by the UI event.
   vim.g.ui_cmdline_pos = {
     screenpos.row,
     content_col,
@@ -669,7 +808,7 @@ function M._show_confirm(state, msg_show_task)
   end
   vim.api.nvim__redraw({ cursor = false, win = winnr, flush = true })
 
-  -- Set the cmdline position for blink.cmp compatibility (confirm dialog)
+  -- Set the native popupmenu anchor for confirm dialogs.
   M._update_cmdline_position(state, winnr)
 end
 
@@ -686,6 +825,7 @@ function M.special_char(task)
   end
 
   state.special = { c = c, shift = shift }
+  state.ghost = nil
   render_state(state)
 end
 

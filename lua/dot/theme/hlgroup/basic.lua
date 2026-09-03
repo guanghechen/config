@@ -224,6 +224,8 @@ function M.default_gen_hlgroup_map(context)
     NormalNC = { fg = c.fg1, bg = c.bg1, blend = t and 50 or 0 },
     NvimInternalError = { fg = c.red },
     Pmenu = { fg = c.fg1, bg = c.bg2 },
+    PmenuMatch = { fg = c.blue, italic = true },
+    PmenuMatchSel = { fg = c.yellow, bold = true },
     PmenuSbar = { bg = c.bg2 },
     PmenuSel = { fg = c.fg1, bg = cs.mix(c.bg0, c.blue, 70), bold = true, italic = true },
     PmenuThumb = { bg = cs.mix(c.bg0, c.blue, 60) },

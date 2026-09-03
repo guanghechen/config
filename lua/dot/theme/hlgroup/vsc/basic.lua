@@ -197,6 +197,8 @@ function M.gen_hlgroup_map(context)
     Operator = { fg = c.semanticNewOperator },
     Parameter = { fg = c.tokenVariableAndParameterName },
     Pmenu = { fg = c.menu_foreground, bg = c.menu_background, blend = t and 50 or 0 },
+    PmenuMatch = { fg = c.accentBlue, bold = true },
+    PmenuMatchSel = { fg = c.tokenFunctionDeclarations, bold = true },
     PmenuSbar = { bg = c.menu_separatorBackground },
     PmenuSel = { fg = c.menu_foreground, bg = c.menu_selectionBackground, bold = true },
     PmenuThumb = { bg = c.menu_border },

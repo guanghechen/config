@@ -104,6 +104,10 @@ local function resolve_nvimbar(winnr)
             winline.locate_token:cancel()
             winline.locate_token = nil
           end
+          if era.m.cmp.visible(bufnr) then
+            callback(false)
+            return
+          end
 
           local token = stl.c.CancellationToken.new()
           winline.locate_token = token

@@ -120,9 +120,10 @@ vim.o.smartcase = true
 
 -- Completion & Command Line -----------------------------------------------------------------------
 
-vim.o.completeopt = "menuone,noselect,popup"
+vim.o.completeopt = "menuone,noinsert,popup,fuzzy,nosort"
 vim.o.inccommand = "nosplit" -- Preview incremental substitute
-vim.o.wildmode = "longest:full,full"
+vim.o.wildmode = "noselect:lastused,full"
+vim.o.wildoptions = "pum,tagfile,fuzzy"
 
 -- Popup & Window ----------------------------------------------------------------------------------
 
