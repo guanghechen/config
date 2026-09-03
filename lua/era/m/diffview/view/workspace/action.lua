@@ -20,6 +20,7 @@ local M = {}
 ---@class era.m.diffview.view.workspace.IContext
 ---@field public layout                  era.m.diffview.view.workspace.ILayout
 ---@field public state                   era.m.diffview.view.workspace.State
+---@field public history                 era.m.diffview.view.commits.IContext|nil
 
 ----------------------------------------------------------------------------------------------------
 -- Local helpers
@@ -1147,6 +1148,7 @@ end
 ---Close the diffview
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.close(ctx)
+  require("era.m.diffview.view.commits.state").remove(ctx.layout.tabnr)
   workspace_state.remove(ctx.layout.tabnr)
   workspace_view.remove_layout(ctx.layout.tabnr)
   workspace_view.destroy(ctx.layout)

@@ -147,6 +147,11 @@ local function render(winnr)
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if stl.filetype.has_external_winline(filetype) then
+    local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
+    local winline = meta and meta.winline or nil ---@type dot.win.IWinline|nil
+    if winline and not winline.nvimbar:isdisposed() then
+      winline.nvimbar:render()
+    end
     return
   end
 

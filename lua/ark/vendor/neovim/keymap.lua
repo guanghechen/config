@@ -218,7 +218,6 @@ ms({ "n", "x" }, "<leader>gB", K.git.browse)
 ms({ "n", "x" }, "<leader>gP", K.git.browse_permalink)
 ms({ "n", "x" }, "<leader>gR", K.git.browse_repo)
 ms({ "n", "x" }, "<leader>gf", K.diffview.open_file_history)
-ms({ "n", "x" }, "<leader>gG", K.diffview.open_commits)
 ms({ "n", "x" }, "<leader>gg", K.diffview.open_workspace)
 --------------------------------------------------------------------------------------------#[g]it--
 

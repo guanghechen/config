@@ -520,6 +520,14 @@ function M.show_details(_)
   local commit = item.commit ---@type era.m.diffview.ICommit
   local hash = commit.hash
   local abbrev_hash = commit.abbrev_hash
+  local source_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local source_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(source_winnr) ---@type integer[]
+  local screenpos = vim.fn.screenpos(source_winnr, cursor[1], cursor[2] + 1)
+  local anchor = {
+    row = math.max(0, screenpos.row - 1),
+    col = math.max(0, screenpos.col - 1),
+  } ---@type era.m.diffview.view.commits.ICommitPopupAnchor
 
   stl.async.run(function()
     -- Fetch full commit details
@@ -543,7 +551,14 @@ function M.show_details(_)
     end
 
     stl.async.scheduler()
-    M.__show_commit_popup__(abbrev_hash, result.lines)
+    if
+      not vim.api.nvim_tabpage_is_valid(source_tabnr)
+      or vim.api.nvim_get_current_tabpage() ~= source_tabnr
+      or not vim.api.nvim_win_is_valid(source_winnr)
+    then
+      return
+    end
+    M.__show_commit_popup__(abbrev_hash, result.lines, anchor)
   end)
 end
 
@@ -1405,10 +1420,15 @@ function M.__update_commits_cursor__(ctx, hash, filepath)
   end
 end
 
----Show commit details in a floating popup
+---@class era.m.diffview.view.commits.ICommitPopupAnchor
+---@field public row                    integer                         0-based editor screen row
+---@field public col                    integer                         0-based editor screen column
+
+---Show commit details in a floating popup near its trigger position.
 ---@param abbrev_hash                    string
 ---@param lines                          string[]
-function M.__show_commit_popup__(abbrev_hash, lines)
+---@param anchor                         era.m.diffview.view.commits.ICommitPopupAnchor
+function M.__show_commit_popup__(abbrev_hash, lines, anchor)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
@@ -1417,11 +1437,22 @@ function M.__show_commit_popup__(abbrev_hash, lines)
 
   local width = math.min(80, vim.o.columns - 4)
   local height = math.min(#lines + 2, vim.o.lines - 4)
+  local row = anchor.row + 1 ---@type integer
+  if row + height + 2 > vim.o.lines then
+    row = anchor.row - height - 2
+  end
+  row = math.max(0, math.min(row, vim.o.lines - height - 2))
+
+  local col = anchor.col + 2 ---@type integer
+  if col + width + 2 > vim.o.columns then
+    col = anchor.col - width - 2
+  end
+  col = math.max(0, math.min(col, vim.o.columns - width - 2))
 
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
-    row = math.floor((vim.o.lines - height) / 2),
-    col = math.floor((vim.o.columns - width) / 2),
+    row = row,
+    col = col,
     width = width,
     height = height,
     border = "rounded",

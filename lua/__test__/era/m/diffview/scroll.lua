@@ -168,6 +168,8 @@ t:test("panel buffers route mouse scrolling without leaking mappings to side-by-
       vim.api.nvim_buf_delete(shared_sbs_bufnr, { force = true })
     end
   end)
+  local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
+  t:patch_table(package.loaded, "era.m.diffview.view.sbs_keymap", sbs_keymap)
   workspace_keymap.setup_sbs(ctx, shared_sbs_bufnr)
   commits_keymap.setup_sbs(commits_ctx, shared_sbs_bufnr)
   t.assert_false(has_buffer_keymap(shared_sbs_bufnr, "<ScrollWheelDown>"), "shared sbs wheel mapping")

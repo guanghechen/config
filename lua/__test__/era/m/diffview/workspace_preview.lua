@@ -104,6 +104,7 @@ t:patch_table(package.loaded, "era.m.diffview.util", {
     return "/repo/" .. filepath
   end,
 })
+t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
 
 ---@param predicate                     fun(): boolean
 local function wait(predicate)
@@ -215,6 +216,81 @@ t:test("workspace preview generation makes the latest request the sole writer", 
   view.clear_sbs(ctx)
   t.assert_false(requests[2].is_current(), "clear invalidates open request")
   t.assert_true(assert(clear_is_current)(), "clear owns latest generation")
+  close_windows(left_winnr, right_winnr)
+end)
+
+t:test("workspace and History share latest preview ownership", function()
+  local changes_requests = {} ---@type era.m.diffview.pane.sbs.IOpenDiffOpts[]
+  local history_requests = {} ---@type era.m.diffview.pane.sbs.IOpenCommitOpts[]
+  t:patch_table(package.loaded, "era.m.diffview.layout", {})
+  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
+  t:patch_table(package.loaded, "era.m.diffview.pane.filetree", {})
+  t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
+    open_diff_entry = function(opts)
+      changes_requests[#changes_requests + 1] = opts
+    end,
+    open_commit_entry = function(opts)
+      history_requests[#history_requests + 1] = opts
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
+    setup_sbs = function() end,
+  })
+
+  local workspace_view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
+  local commits_view = assert(loadfile("lua/era/m/diffview/view/commits/view.lua"))()
+  local left_winnr, right_winnr = create_windows()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local layout = {
+    tabnr = tabnr,
+    layout_type = 1,
+    changes = {},
+    history = {
+      tabnr = tabnr,
+      layout_type = 2,
+      commits_winnr = nil,
+      commits_bufnr = nil,
+      filetree_winnr = nil,
+      filetree_bufnr = nil,
+      sbs_left_winnr = left_winnr,
+      sbs_right_winnr = right_winnr,
+      title = "History",
+    },
+    sbs_left_winnr = left_winnr,
+    sbs_right_winnr = right_winnr,
+    preview_generation = 0,
+    preview_source = nil,
+  } ---@type era.m.diffview.view.workspace.ILayout
+  ---@diagnostic disable-next-line: missing-fields
+  local workspace_state = {
+    get_fold_unchanged = function()
+      return false
+    end,
+    is_disposed = function()
+      return false
+    end,
+  }
+  local history_state = {
+    get_fold_unchanged = function()
+      return false
+    end,
+    is_disposed = function()
+      return false
+    end,
+  }
+  local history = workspace_view.history_context(layout, workspace_state, history_state)
+  local ctx = { layout = layout, state = workspace_state, history = history }
+
+  workspace_view.open_entry(ctx, { filepath = "work.lua", stage_type = "unstaged", status = "M" })
+  commits_view.open_entry(history, { hash = "abc" }, { filepath = "old.lua", status = "M" })
+  t.assert_false(changes_requests[1].is_current(), "History supersedes Changes")
+  t.assert_true(history_requests[1].is_current(), "History owns shared preview")
+  t.assert_eq("history", layout.preview_source, "History source")
+
+  workspace_view.open_entry(ctx, { filepath = "new.lua", stage_type = "unstaged", status = "M" })
+  t.assert_false(history_requests[1].is_current(), "Changes supersedes History")
+  t.assert_true(changes_requests[2].is_current(), "Changes owns shared preview")
+  t.assert_eq("changes", layout.preview_source, "Changes source")
   close_windows(left_winnr, right_winnr)
 end)
 

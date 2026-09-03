@@ -80,4 +80,78 @@ t:test("diffview winbar renders hunk navigation on the right", function()
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
+t:test("external winline delegates dirty renders to its owned nvimbar", function()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr_previous = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local on_dirty = nil ---@type fun(winnr: integer)|nil
+  local renders = 0
+
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "diffview-commits-test", { buf = bufnr })
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+
+  t:patch_global("stl", {
+    c = {
+      Subscriber = {
+        new = function(spec)
+          return spec
+        end,
+      },
+    },
+    filetype = {
+      has_external_winline = function(filetype)
+        return filetype == "diffview-commits-test"
+      end,
+    },
+    nvim = {
+      fn = {
+        txt = function(text)
+          return text
+        end,
+      },
+      win = {
+        is_valid = function(target_winnr)
+          return target_winnr == winnr
+        end,
+      },
+    },
+  })
+  t:patch_global("dot", {
+    state = {
+      status = {
+        dirty_winline_nr = {
+          subscribe = function(_, subscriber)
+            on_dirty = subscriber.on_next
+          end,
+        },
+      },
+    },
+    win = {
+      resolve = function()
+        return {
+          winline = {
+            nvimbar = {
+              isdisposed = function()
+                return false
+              end,
+              render = function()
+                renders = renders + 1
+              end,
+            },
+          },
+        }
+      end,
+    },
+  })
+
+  local winline = assert(loadfile("lua/era/m/winline.lua"))()
+  winline.dressing()
+  assert(on_dirty)(winnr)
+  t.assert_eq(1, renders, "external nvimbar render")
+
+  vim.api.nvim_win_set_buf(winnr, bufnr_previous)
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
 t:run()

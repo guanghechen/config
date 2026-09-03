@@ -25,10 +25,14 @@ local M = {}
 ---@field public filetree_bufnr          integer|nil
 ---@field public sbs_left_winnr          integer|nil
 ---@field public sbs_right_winnr         integer|nil
+---@field public title                   string|nil
 
 ---@class era.m.diffview.view.commits.IContext
 ---@field public layout                  era.m.diffview.view.commits.ILayout
 ---@field public state                   era.m.diffview.view.commits.State
+---@field public begin_preview           (fun(): fun(): boolean)|nil
+---@field public setup_sbs               (fun(bufnr: integer): nil)|nil
+---@field public render_winline          (fun(): nil)|nil
 
 ----------------------------------------------------------------------------------------------------
 -- Layout creation
@@ -682,6 +686,9 @@ function M.render_commits(ctx)
 
   local result = pane_commits.render(commits, expanded, { layout = layout_type })
   pane_commits.apply_to_buffer(lyt.commits_bufnr, result)
+  if ctx.render_winline then
+    ctx.render_winline()
+  end
 end
 
 ---Render filetree pane (for expanded commit files)
@@ -735,6 +742,7 @@ function M.open_entry(ctx, commit, entry, token)
   if not lyt.sbs_right_winnr or not vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
     return
   end
+  local is_current = ctx.begin_preview and ctx.begin_preview() or nil ---@type (fun(): boolean)|nil
 
   pane_sbs.open_commit_entry({
     left_winnr = lyt.sbs_left_winnr,
@@ -742,16 +750,33 @@ function M.open_entry(ctx, commit, entry, token)
     commit = commit,
     entry = entry,
     token = token,
+    is_current = is_current,
     get_fold_unchanged = function()
       return ctx.state:get_fold_unchanged()
     end,
   })
+  if is_current and not is_current() then
+    return
+  end
+  if not vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) or not vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
+    return
+  end
+
+  local setup_sbs = ctx.setup_sbs ---@type (fun(bufnr: integer): nil)|nil
+  if setup_sbs == nil then
+    setup_sbs = function(bufnr)
+      require("era.m.diffview.view.commits.keymap").setup_sbs(ctx, bufnr)
+    end
+  end
+  setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
+  setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
 end
 
 ---Clear sbs view
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.clear_sbs(ctx)
   local lyt = ctx.layout
+  local is_current = ctx.begin_preview and ctx.begin_preview() or nil ---@type (fun(): boolean)|nil
 
   if
     lyt.sbs_left_winnr
@@ -760,6 +785,7 @@ function M.clear_sbs(ctx)
     and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
   then
     pane_sbs.clear(lyt.sbs_left_winnr, lyt.sbs_right_winnr, {
+      is_current = is_current,
       get_fold_unchanged = function()
         return ctx.state:get_fold_unchanged()
       end,

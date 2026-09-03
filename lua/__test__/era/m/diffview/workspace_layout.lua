@@ -26,7 +26,7 @@ t:patch_global("dot", {
   },
 })
 
-t:patch_table(package.loaded, "era.m.diffview.config", { FILETREE_WIDTH = 40 })
+t:patch_table(package.loaded, "era.m.diffview.config", { FILETREE_WIDTH = 40, COMMITS_HEIGHT = 12 })
 t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
   apply_to_buffer = function() end,
   apply_winopts = function() end,
@@ -51,6 +51,14 @@ t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
   end,
   restore_winopts = function() end,
 })
+t:patch_table(package.loaded, "era.m.diffview.pane.commits", {
+  apply_winopts = function() end,
+  create_buffer = function()
+    local bufnr = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+    return bufnr
+  end,
+})
 
 local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
 
@@ -65,6 +73,10 @@ local function with_changes_layout(callback)
 
   local staged = lyt.changes.staged
   local unstaged = lyt.changes.unstaged
+  local history = lyt.history
+  if history.commits_winnr and vim.api.nvim_win_is_valid(history.commits_winnr) then
+    vim.api.nvim_win_close(history.commits_winnr, true)
+  end
   if unstaged.winnr and vim.api.nvim_win_is_valid(unstaged.winnr) then
     vim.api.nvim_win_close(unstaged.winnr, true)
   end
@@ -74,6 +86,9 @@ local function with_changes_layout(callback)
     if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
       vim.api.nvim_buf_delete(pane.bufnr, { force = true })
     end
+  end
+  if history.commits_bufnr and vim.api.nvim_buf_is_valid(history.commits_bufnr) then
+    vim.api.nvim_buf_delete(history.commits_bufnr, { force = true })
   end
   if not ok then
     error(err)
@@ -92,15 +107,74 @@ t:test("layout creates staged above unstaged with independent buffers and focus"
 
     local staged_row = vim.api.nvim_win_get_position(staged.winnr)[1]
     local unstaged_row = vim.api.nvim_win_get_position(unstaged.winnr)[1]
+    local history_row = vim.api.nvim_win_get_position(lyt.history.commits_winnr)[1]
     t.assert_true(staged_row < unstaged_row, "staged is above unstaged")
+    t.assert_true(unstaged_row < history_row, "History is below Changes")
 
     view.focus_changes(lyt)
     t.assert_eq(unstaged.winnr, vim.api.nvim_get_current_win(), "default focus is unstaged")
     view.cycle_focus(lyt)
-    t.assert_eq(staged.winnr, vim.api.nvim_get_current_win(), "changes-only cycle wraps to staged")
+    t.assert_eq(lyt.history.commits_winnr, vim.api.nvim_get_current_win(), "cycle reaches History")
     view.cycle_focus(lyt)
-    t.assert_eq(unstaged.winnr, vim.api.nvim_get_current_win(), "cycle reaches unstaged")
+    t.assert_eq(staged.winnr, vim.api.nvim_get_current_win(), "cycle wraps to staged")
   end)
+end)
+
+t:test("History toggles at the bottom and shares preview ownership", function()
+  with_changes_layout(function(lyt)
+    local history_bufnr = lyt.history.commits_bufnr
+    view.hide_history(lyt)
+    t.assert_nil(lyt.history.commits_winnr, "History hidden")
+    t.assert_true(vim.api.nvim_buf_is_valid(history_bufnr), "History buffer preserved")
+
+    view.show_history(lyt)
+    t.assert_eq(history_bufnr, lyt.history.commits_bufnr, "History buffer reused")
+    local unstaged_row = vim.api.nvim_win_get_position(lyt.changes.unstaged.winnr)[1]
+    local history_row = vim.api.nvim_win_get_position(lyt.history.commits_winnr)[1]
+    t.assert_true(unstaged_row < history_row, "History restored below Changes")
+
+    local history_ctx = view.history_context(lyt, {
+      is_disposed = function()
+        return false
+      end,
+    }, {
+      is_disposed = function()
+        return false
+      end,
+    })
+    local history_is_current = assert(history_ctx.begin_preview)()
+    t.assert_true(history_is_current(), "History owns preview")
+    view.begin_preview(lyt, "changes")
+    t.assert_false(history_is_current(), "Changes supersedes History preview")
+  end)
+end)
+
+t:test("sidebar toggles Changes and History as one unit", function()
+  local original_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  vim.cmd.tabnew()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local lyt = view.__create_layout_full__(tabnr)
+  local staged_bufnr = assert(lyt.changes.staged.bufnr) ---@type integer
+  local unstaged_bufnr = assert(lyt.changes.unstaged.bufnr) ---@type integer
+  local history_bufnr = assert(lyt.history.commits_bufnr) ---@type integer
+
+  local _, visible = view.toggle_sidebar(lyt)
+  t.assert_false(visible, "sidebar hidden")
+  t.assert_nil(lyt.changes.staged.winnr, "Staged hidden")
+  t.assert_nil(lyt.changes.unstaged.winnr, "Unstaged hidden")
+  t.assert_nil(lyt.history.commits_winnr, "History hidden")
+
+  _, visible = view.toggle_sidebar(lyt)
+  t.assert_true(visible, "sidebar restored")
+  t.assert_true(staged_bufnr ~= lyt.changes.staged.bufnr, "Staged buffer recreated")
+  t.assert_true(unstaged_bufnr ~= lyt.changes.unstaged.bufnr, "Unstaged buffer recreated")
+  t.assert_eq(history_bufnr, lyt.history.commits_bufnr, "History buffer reused")
+  t.assert_true(vim.api.nvim_win_is_valid(assert(lyt.changes.staged.winnr)), "Staged restored")
+  t.assert_true(vim.api.nvim_win_is_valid(assert(lyt.changes.unstaged.winnr)), "Unstaged restored")
+  t.assert_true(vim.api.nvim_win_is_valid(assert(lyt.history.commits_winnr)), "History restored")
+
+  view.destroy(lyt)
+  t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")
 end)
 
 t:test("Changes restores the last focused sibling across SBS navigation and panel recreation", function()
@@ -134,9 +208,26 @@ t:test("Changes restores the last focused sibling across SBS navigation and pane
   view.show_changes(lyt)
   view.focus_changes(lyt)
   t.assert_eq(lyt.changes.unstaged.winnr, vim.api.nvim_get_current_win(), "recreated panel restores unstaged")
+  t.assert_eq(12, vim.api.nvim_win_get_height(assert(lyt.history.commits_winnr)), "History height restored")
 
   view.destroy(lyt)
   t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")
+end)
+
+t:test("direct tab close releases the hidden History buffer and workspace layout", function()
+  local original_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  vim.cmd.tabnew()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local lyt = view.__create_layout_full__(tabnr)
+  local history_bufnr = assert(lyt.history.commits_bufnr) ---@type integer
+  view.set_layout(tabnr, lyt)
+
+  vim.cmd.tabclose()
+
+  t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "previous tab restored")
+  t.assert_false(vim.api.nvim_buf_is_valid(history_bufnr), "History buffer deleted")
+  t.assert_nil(view.get_layout(tabnr), "closed layout removed")
+  t.assert_nil(view.__layout_cleanup_autocmds__[tabnr], "layout cleanup released")
 end)
 
 t:test("render shares metadata widths and restores the split after an empty pane", function()

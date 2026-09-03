@@ -311,6 +311,11 @@ function State:owns_content_request(generation)
   return not self._disposed and self._content_generation == generation
 end
 
+---@return boolean
+function State:is_disposed()
+  return self._disposed
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Sign line management
 ----------------------------------------------------------------------------------------------------

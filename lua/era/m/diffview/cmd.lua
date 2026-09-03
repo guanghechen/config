@@ -4,17 +4,50 @@ local __module_name__ = "era.m.diffview.cmd" ---@type string
 ---@class era.m.diffview.cmd
 local M = {}
 
+---@param ctx                            era.m.diffview.view.commits.IContext
+function M.__setup_commits_signs__(ctx)
+  local lyt = ctx.layout
+  local st = ctx.state
+  local commits_bufnr = lyt.commits_bufnr ---@type integer|nil
+  if not commits_bufnr then
+    return
+  end
+
+  local pane_commits = require("era.m.diffview.pane.commits")
+  pane_commits.clear_signs(commits_bufnr)
+  local scheduler_lnum_present = stl.c.Scheduler.new({
+    name = string.format("diffview:commits#%d#lnum_present", lyt.tabnr),
+    mode = "debounce",
+    delay = 64,
+    timeout = 0,
+    silent = stl.fn.truthy,
+    value = stl.c.Observable.from_value(true),
+    task = function()
+      if vim.api.nvim_buf_is_valid(commits_bufnr) then
+        pane_commits.update_sign_present(commits_bufnr, st:get_lnum_present())
+      end
+    end,
+  })
+  st:set_sign_scheduler(scheduler_lnum_present)
+  stl.fn.observe({ st.lnum_present }, function()
+    st:schedule_sign_present()
+  end)
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Command implementations: workspace (Git Diff)
 ----------------------------------------------------------------------------------------------------
 
----Open Git Diff view (staged/unstaged changes)
+---Open the Git workspace with Changes, History, and side-by-side preview.
 ---@param opts                        { layout: integer|nil }|nil
 function M.open(opts)
+  local commits_action = require("era.m.diffview.view.commits.action")
+  local commits_state = require("era.m.diffview.view.commits.state")
   local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
   local workspace_state = require("era.m.diffview.view.workspace.state")
   local workspace_tabline = require("era.m.diffview.view.workspace.tabline")
   local workspace_view = require("era.m.diffview.view.workspace.view")
+  local workspace_winline = require("era.m.diffview.view.workspace.winline")
 
   -- Register tabline nvimbar for workspace (idempotent)
   workspace_tabline.register()
@@ -46,15 +79,19 @@ function M.open(opts)
 
   -- Create state
   local st = workspace_state.create(lyt.tabnr, dot.context.diffview.flag_fold_unchanges:snapshot())
+  local history_state = commits_state.create(lyt.tabnr, dot.context.diffview.flag_fold_unchanges:snapshot())
+  local history_ctx = workspace_view.history_context(lyt, st, history_state)
 
   ---@type era.m.diffview.view.workspace.IContext
   local ctx = {
     layout = lyt,
     state = st,
+    history = history_ctx,
   }
 
   -- Setup keymaps
   workspace_keymap.setup_changes(ctx)
+  workspace_keymap.setup_history(ctx)
   if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
     workspace_keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
   end
@@ -65,6 +102,8 @@ function M.open(opts)
   -- Setup git subscription for auto-refresh
   M.__setup_git_subscription_workspace__(st, ctx)
   M.__setup_changes_resize_workspace__(st, ctx)
+  M.__setup_commits_signs__(history_ctx)
+  workspace_winline.setup(history_ctx)
 
   -- Fetch and render data
   st:request_refresh(function()
@@ -101,6 +140,22 @@ function M.open(opts)
 
       st:set_current_entry(first_entry)
       workspace_view.open_entry(ctx, first_entry)
+    end
+  end)
+
+  stl.async.run(function()
+    if not commits_action.refresh(history_ctx) then
+      return
+    end
+    local commits = history_state:get_commits()
+    local first_commit = commits[1] ---@type era.m.diffview.ICommit|nil
+    if first_commit then
+      history_state:set_current_commit(first_commit)
+      local line_map = require("era.m.diffview.pane.commits").get_line_map(lyt.history.commits_bufnr)
+      history_state:set_lnum_present(
+        line_map and require("era.m.diffview.pane.commits").find_commit_line(line_map, first_commit.hash) or 1
+      )
+      history_state:schedule_sign_present()
     end
   end)
 end
@@ -170,7 +225,6 @@ function M.log(opts)
   local commits_state = require("era.m.diffview.view.commits.state")
   local commits_tabline = require("era.m.diffview.view.commits.tabline")
   local commits_view = require("era.m.diffview.view.commits.view")
-  local pane_commits = require("era.m.diffview.pane.commits")
 
   -- Register tabline nvimbar for commits (idempotent)
   commits_tabline.register()
@@ -190,7 +244,10 @@ function M.log(opts)
 
   -- Check if commits diffview already open with same path_filter
   for tabnr, st in pairs(commits_state.active_states) do
-    if vim.api.nvim_tabpage_is_valid(tabnr) then
+    if
+      vim.api.nvim_tabpage_is_valid(tabnr)
+      and vim.t[tabnr].tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS
+    then
       if st:get_path_filter() == path_filter then
         -- Switch to existing tab with same filter
         vim.api.nvim_set_current_tabpage(tabnr)
@@ -217,37 +274,7 @@ function M.log(opts)
     state = st,
   }
 
-  -- Setup sign scheduler for statuscolumn (present sign only)
-  if lyt.commits_bufnr then
-    local fullname = string.format("diffview:commits#%d", lyt.tabnr)
-    local commits_bufnr = lyt.commits_bufnr ---@type integer
-
-    -- Clear any existing signs first
-    pane_commits.clear_signs(commits_bufnr)
-
-    ---@type stl.c.Scheduler
-    local scheduler_lnum_present = stl.c.Scheduler.new({
-      name = string.format("%s#lnum_present", fullname),
-      mode = "debounce",
-      delay = 64,
-      timeout = 0,
-      silent = stl.fn.truthy,
-      value = stl.c.Observable.from_value(true),
-      task = function()
-        if vim.api.nvim_buf_is_valid(commits_bufnr) then
-          local lnum_present = st:get_lnum_present()
-          pane_commits.update_sign_present(commits_bufnr, lnum_present)
-        end
-      end,
-    })
-
-    st:set_sign_scheduler(scheduler_lnum_present)
-
-    -- Observe lnum_present changes to update sign
-    stl.fn.observe({ st.lnum_present }, function()
-      st:schedule_sign_present()
-    end)
-  end
+  M.__setup_commits_signs__(ctx)
 
   -- Setup keymaps
   commits_keymap.setup_commits(ctx)
@@ -321,6 +348,8 @@ function M.refresh()
   local tabtype = vim.t[tabnr].tabtype
 
   if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
+    local commits_action = require("era.m.diffview.view.commits.action")
+    local commits_state = require("era.m.diffview.view.commits.state")
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
 
@@ -328,6 +357,13 @@ function M.refresh()
     local lyt = workspace_view.get_layout(tabnr)
     if st and lyt then
       st:request_refresh()
+      local history_state = commits_state.get(tabnr)
+      if history_state then
+        local history_ctx = workspace_view.history_context(lyt, st, history_state)
+        stl.async.run(function()
+          commits_action.refresh(history_ctx)
+        end)
+      end
     end
   elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_action = require("era.m.diffview.view.commits.action")
@@ -410,7 +446,9 @@ function M.get_help_keymaps()
     local st = workspace_state.get(tabnr)
     local lyt = workspace_view.get_layout(tabnr)
     if st and lyt then
-      return workspace_keymap.get_help_keymaps({ layout = lyt, state = st })
+      local history_state = require("era.m.diffview.view.commits.state").get(tabnr)
+      local history = history_state and workspace_view.history_context(lyt, st, history_state) or nil
+      return workspace_keymap.get_help_keymaps({ layout = lyt, state = st, history = history })
     end
   elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_keymap = require("era.m.diffview.view.commits.keymap")

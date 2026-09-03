@@ -44,7 +44,7 @@ bootstrap.with_runtime(t, {
   },
 })
 
-local Fn = require("era.m.diffview.fn")
+local Fn = assert(loadfile("lua/era/m/diffview/fn.lua"))()
 
 t:test("open_file_history uses Git separators for Windows paths", function()
   local filepath = [[C:\repo\lua\era\m\im\wsl.lua]]
@@ -78,6 +78,9 @@ t:test("reveal dispatches to the active Diffview action", function()
   })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
     get_layout = function()
+      return {}
+    end,
+    history_context = function()
       return {}
     end,
   })
@@ -127,6 +130,70 @@ t:test("left navigation from Workspace SBS restores the remembered Changes pane"
 
   vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
   t.assert_false(Fn.navigate_window("h"), "normal tab native")
+end)
+
+t:test("workspace toggle_files restores the complete sidebar", function()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local calls = {} ---@type string[]
+  local layout = { history = {} }
+  local history = {}
+  local state = {
+    get_current_entry = function()
+      return { stage_type = "unstaged" }
+    end,
+  }
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {
+    get = function()
+      return state
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
+    get_layout = function()
+      return layout
+    end,
+    history_context = function()
+      return history
+    end,
+    toggle_sidebar = function()
+      calls[#calls + 1] = "toggle"
+      return layout, true
+    end,
+    render_changes = function()
+      calls[#calls + 1] = "render_changes"
+    end,
+    focus_changes = function(_, stage_type)
+      calls[#calls + 1] = "focus_" .. stage_type
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
+    setup_changes = function()
+      calls[#calls + 1] = "setup_changes"
+    end,
+    setup_history = function()
+      calls[#calls + 1] = "setup_history"
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.state", {
+    get = function()
+      return {}
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.view", {
+    render_commits = function(actual_history)
+      t.assert_eq(history, actual_history, "History context")
+      calls[#calls + 1] = "render_history"
+    end,
+  })
+
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.DIFFVIEW_WORKSPACE
+  Fn.toggle_files()
+  vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
+
+  t.assert_eq(
+    "toggle,setup_changes,render_changes,setup_history,render_history,focus_unstaged",
+    table.concat(calls, ","),
+    "sidebar restore pipeline"
+  )
 end)
 
 t:run()

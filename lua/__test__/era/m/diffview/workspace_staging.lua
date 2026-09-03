@@ -1015,6 +1015,134 @@ t:test("sbs keymaps route whole-file stage and unstage", function()
   end
 end)
 
+t:test("sbs keymaps follow the active History preview owner", function()
+  local workspace_stage_calls = 0
+  local history_next_calls = 0
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
+    goto_next_entry = function() end,
+    stage = function()
+      workspace_stage_calls = workspace_stage_calls + 1
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
+    goto_next_commit = function()
+      history_next_calls = history_next_calls + 1
+    end,
+  })
+
+  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  local ctx = { layout = { preview_source = "history" }, history = {} }
+  for _, mapping in ipairs(keymap.gen_sbs(ctx)) do
+    if mapping.key == "gs" or mapping.key == "<C-j>" then
+      mapping.callback()
+    end
+  end
+
+  t.assert_eq(0, workspace_stage_calls, "History preview blocks workspace mutation")
+  t.assert_eq(1, history_next_calls, "History navigation")
+end)
+
+t:test("shared sbs keymaps resolve the view in the current tab", function()
+  local workspace_next_calls = 0
+  local commits_next_calls = 0
+  t:patch_table(stl, "e", {
+    TabTypeEnum = {
+      DIFFVIEW_WORKSPACE = "diffview_workspace",
+      DIFFVIEW_COMMITS = "diffview_commits",
+    },
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
+    goto_next_entry = function()
+      workspace_next_calls = workspace_next_calls + 1
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
+    goto_next_commit = function()
+      commits_next_calls = commits_next_calls + 1
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
+
+  local workspace_keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  local commits_keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", workspace_keymap)
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", commits_keymap)
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local workspace_layout = { preview_source = "changes" }
+  local workspace_state = {}
+  local commits_layout = {}
+  local commits_state = {}
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {
+    get = function()
+      return workspace_state
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
+    get_layout = function()
+      return workspace_layout
+    end,
+    history_context = function()
+      return {}
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.state", {
+    get = function()
+      return commits_state
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.view", {
+    get_layout = function()
+      return commits_layout
+    end,
+  })
+
+  local previous_tabtype = vim.t[tabnr].tabtype
+  ---@diagnostic disable-next-line: invisible
+  t:_register_cleanup(function()
+    vim.t[tabnr].tabtype = previous_tabtype
+  end)
+  local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
+
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE
+  sbs_keymap.dispatch("n", "<C-j>")
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_COMMITS
+  sbs_keymap.dispatch("n", "<C-j>")
+
+  t.assert_eq(1, workspace_next_calls, "workspace action")
+  t.assert_eq(1, commits_next_calls, "commits action")
+end)
+
+t:test("workspace refresh updates Changes and History together", function()
+  local changes_refreshes = 0
+  local history_refreshes = 0
+  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {})
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
+    refresh = function()
+      history_refreshes = history_refreshes + 1
+    end,
+  })
+
+  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
+  local ctx = {
+    layout = {},
+    state = {
+      request_refresh = function()
+        changes_refreshes = changes_refreshes + 1
+      end,
+    },
+    history = {},
+  }
+  for _, mapping in ipairs(keymap.gen_changes(ctx)) do
+    if mapping.key == "<C-a>r" then
+      mapping.callback()
+    end
+  end
+
+  t.assert_eq(1, changes_refreshes, "Changes refresh")
+  t.assert_eq(1, history_refreshes, "History refresh")
+end)
+
 t:test("changes keymaps route explorer-style tree navigation", function()
   local calls = {} ---@type string[]
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {

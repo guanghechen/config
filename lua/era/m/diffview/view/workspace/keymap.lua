@@ -8,6 +8,29 @@ local git_visual = require("era.m.git.visual")
 ---@class era.m.diffview.view.workspace.keymap
 local M = {}
 
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param workspace_callback             fun(ctx: era.m.diffview.view.workspace.IContext): any
+---@param history_action                 string|nil
+local function dispatch_preview(ctx, workspace_callback, history_action)
+  if ctx.layout and ctx.layout.preview_source == "history" then
+    if ctx.history and history_action then
+      return require("era.m.diffview.view.commits.action")[history_action](ctx.history)
+    end
+    return
+  end
+  return workspace_callback(ctx)
+end
+
+---@param ctx                            era.m.diffview.view.workspace.IContext
+local function refresh_workspace(ctx)
+  ctx.state:request_refresh()
+  if ctx.history then
+    stl.async.run(function()
+      require("era.m.diffview.view.commits.action").refresh(ctx.history)
+    end)
+  end
+end
+
 ---Generate keymaps for changes buffer
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@return stl.t.IKeymap[]
@@ -43,7 +66,7 @@ function M.gen_changes(ctx)
     { modes = { "n" }, key = "zo", desc = "diffview(workspace): Open fold", callback = function() action.open_fold(ctx) end },
     { modes = { "n" }, key = "zO", desc = "diffview(workspace): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
     { modes = { "n" }, key = "zR", desc = "diffview(workspace): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
-    { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() ctx.state:request_refresh() end, aliases = { "<D-r>", "<M-r>" } },
+    { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() refresh_workspace(ctx) end, aliases = { "<D-r>", "<M-r>" } },
   }
 end
 
@@ -53,26 +76,65 @@ end
 function M.gen_sbs(ctx)
   ---@type stl.t.IKeymap[]
   return {
-    { modes = { "n" }, key = "<C-j>", desc = "diffview(workspace): Next file diff", callback = function() action.goto_next_entry(ctx) end },
-    { modes = { "n" }, key = "<C-k>", desc = "diffview(workspace): Prev file diff", callback = function() action.goto_prev_entry(ctx) end },
-    { modes = { "n" }, key = "gf", desc = "diffview(workspace): Open file in previous tab", callback = function() action.goto_file(ctx) end },
-    { modes = { "n" }, key = "gF", desc = "diffview(workspace): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
-    { modes = { "n" }, key = "gs", desc = "diffview(workspace): Stage file", callback = function() action.stage(ctx) end },
-    { modes = { "n" }, key = "gu", desc = "diffview(workspace): Unstage file", callback = function() action.unstage(ctx) end },
+    { modes = { "n" }, key = "<C-j>", desc = "diffview(workspace): Next file diff", callback = function() dispatch_preview(ctx, action.goto_next_entry, "goto_next_commit") end },
+    { modes = { "n" }, key = "<C-k>", desc = "diffview(workspace): Prev file diff", callback = function() dispatch_preview(ctx, action.goto_prev_entry, "goto_prev_commit") end },
+    { modes = { "n" }, key = "gf", desc = "diffview(workspace): Open file in previous tab", callback = function() dispatch_preview(ctx, action.goto_file, "goto_file") end },
+    { modes = { "n" }, key = "gF", desc = "diffview(workspace): Open file in new tab", callback = function() dispatch_preview(ctx, action.goto_file_tab, "goto_file_tab") end },
+    { modes = { "n" }, key = "gs", desc = "diffview(workspace): Stage file", callback = function() dispatch_preview(ctx, action.stage, nil) end },
+    { modes = { "n" }, key = "gu", desc = "diffview(workspace): Unstage file", callback = function() dispatch_preview(ctx, action.unstage, nil) end },
     { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help(ctx) end },
-    { modes = { "n" }, key = "za", desc = "diffview(workspace): Toggle panel collapse", callback = function() action.sbs_toggle_collapse(ctx) end },
-    { modes = { "n" }, key = "zc", desc = "diffview(workspace): Collapse panel item", callback = function() action.sbs_collapse(ctx) end },
-    { modes = { "n" }, key = "zo", desc = "diffview(workspace): Expand panel item", callback = function() action.sbs_expand(ctx) end },
-    { modes = { "n" }, key = "zC", desc = "diffview(workspace): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
-    { modes = { "n" }, key = "zM", desc = "diffview(workspace): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
-    { modes = { "n" }, key = "zO", desc = "diffview(workspace): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
-    { modes = { "n" }, key = "zR", desc = "diffview(workspace): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
-    { modes = { "n" }, key = "t3", desc = "diffview(workspace): Toggle default diff folds", callback = function() action.toggle_default_folds(ctx) end },
+    { modes = { "n" }, key = "za", desc = "diffview(workspace): Toggle panel collapse", callback = function() dispatch_preview(ctx, action.sbs_toggle_collapse, "sbs_toggle_expand") end },
+    { modes = { "n" }, key = "zc", desc = "diffview(workspace): Collapse panel item", callback = function() dispatch_preview(ctx, action.sbs_collapse, "sbs_collapse") end },
+    { modes = { "n" }, key = "zo", desc = "diffview(workspace): Expand panel item", callback = function() dispatch_preview(ctx, action.sbs_expand, "sbs_expand") end },
+    { modes = { "n" }, key = "zC", desc = "diffview(workspace): Close all diff folds", callback = function() dispatch_preview(ctx, action.close_all_folds, "close_all_folds") end },
+    { modes = { "n" }, key = "zM", desc = "diffview(workspace): Close all diff folds", callback = function() dispatch_preview(ctx, action.close_all_folds, "close_all_folds") end },
+    { modes = { "n" }, key = "zO", desc = "diffview(workspace): Open all diff folds", callback = function() dispatch_preview(ctx, action.open_all_folds, "open_all_folds") end },
+    { modes = { "n" }, key = "zR", desc = "diffview(workspace): Open all diff folds", callback = function() dispatch_preview(ctx, action.open_all_folds, "open_all_folds") end },
+    { modes = { "n" }, key = "t3", desc = "diffview(workspace): Toggle default diff folds", callback = function() dispatch_preview(ctx, action.toggle_default_folds, "toggle_default_folds") end },
     { modes = { "n" }, key = "t4", desc = "diffview(workspace): Toggle untracked files", callback = function() action.toggle_untracked(ctx) end },
-    { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() ctx.state:request_refresh() end, aliases = { "<D-r>", "<M-r>" } },
-    { modes = { "n" }, key = "ghu", desc = "diffview(workspace): Unstage selected index line", callback = function() action.unstage_hunk(ctx) end },
-    { modes = { "x" }, key = "ghu", desc = "diffview(workspace): Unstage selected index lines", callback = function() local start_lnum, end_lnum = stl.nvim.buf.retrieve_visual_lnum_range() local future = action.unstage_hunk(ctx, { start_lnum, end_lnum }) if future then git_visual.leave_on_success(future) end end },
+    { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() refresh_workspace(ctx) end, aliases = { "<D-r>", "<M-r>" } },
+    { modes = { "n" }, key = "ghu", desc = "diffview(workspace): Unstage selected index line", callback = function() dispatch_preview(ctx, action.unstage_hunk, nil) end },
+    { modes = { "x" }, key = "ghu", desc = "diffview(workspace): Unstage selected index lines", callback = function() if ctx.layout and ctx.layout.preview_source == "history" then return end local start_lnum, end_lnum = stl.nvim.buf.retrieve_visual_lnum_range() local future = action.unstage_hunk(ctx, { start_lnum, end_lnum }) if future then git_visual.leave_on_success(future) end end },
   }
+end
+
+---Generate History bindings without the standalone commits view's layout controls.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return stl.t.IKeymap[]
+function M.gen_history(ctx)
+  if ctx.history == nil then
+    return {}
+  end
+
+  local commits_action = require("era.m.diffview.view.commits.action")
+  local commits_keymap = require("era.m.diffview.view.commits.keymap")
+  local keymaps = {} ---@type stl.t.IKeymap[]
+  for _, km in ipairs(commits_keymap.gen_commit_pane(ctx.history)) do
+    if km.key == "g?" then
+      keymaps[#keymaps + 1] = {
+        modes = km.modes,
+        key = km.key,
+        desc = "diffview(workspace): Show keymap help",
+        callback = function()
+          action.show_help(ctx)
+        end,
+      }
+    else
+      keymaps[#keymaps + 1] = vim.tbl_extend("force", {}, km, {
+        desc = km.desc:gsub("^diffview%(commits%)", "diffview(history)"),
+      })
+    end
+  end
+
+  vim.list_extend(keymaps, {
+    { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() refresh_workspace(ctx) end, aliases = { "<D-r>", "<M-r>" } },
+    { modes = { "n" }, key = "<C-j>", desc = "diffview(history): Next commit", callback = function() commits_action.goto_next_commit(ctx.history) end },
+    { modes = { "n" }, key = "<C-k>", desc = "diffview(history): Prev commit", callback = function() commits_action.goto_prev_commit(ctx.history) end },
+    { modes = { "n" }, key = "zM", desc = "diffview(history): Close all diff folds", callback = function() commits_action.close_all_folds(ctx.history) end },
+    { modes = { "n" }, key = "zR", desc = "diffview(history): Open all diff folds", callback = function() commits_action.open_all_folds(ctx.history) end },
+    { modes = { "n" }, key = "t3", desc = "diffview(history): Toggle default diff folds", callback = function() commits_action.toggle_default_folds(ctx.history) end },
+  })
+  return keymaps
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -118,12 +180,16 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@param bufnr                          integer
 function M.setup_sbs(ctx, bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then
+  require("era.m.diffview.view.sbs_keymap").setup_workspace(ctx, bufnr)
+end
+
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.setup_history(ctx)
+  local bufnr = ctx.layout.history.commits_bufnr ---@type integer|nil
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
-
-  local keymaps = M.gen_sbs(ctx)
-  apply_keymaps(bufnr, keymaps)
+  apply_keymaps(bufnr, M.gen_history(ctx))
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -143,6 +209,14 @@ function M.get_help_keymaps(ctx)
   end
 
   for _, km in ipairs(M.gen_sbs(ctx)) do
+    if not seen[km.key] then
+      seen[km.key] = true
+      all[#all + 1] = km
+    end
+  end
+
+
+  for _, km in ipairs(M.gen_history(ctx)) do
     if not seen[km.key] then
       seen[km.key] = true
       all[#all + 1] = km

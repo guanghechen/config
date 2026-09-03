@@ -28,16 +28,17 @@ function M.gen_cross_pane(ctx)
     { modes = { "n" }, key = "p4", desc = "diffview(commits): Layout 4: 󰊢 commits only", callback = function() action.switch_to_layout(ctx, 4) end },
     { modes = { "n" }, key = "p5", desc = "diffview(commits): Layout 5: 󰙅 commits + filetree", callback = function() action.switch_to_layout(ctx, 5) end },
     { modes = { "n" }, key = "pp", desc = "diffview(commits): Next layout", callback = function() action.cycle_layout(ctx) end },
+    { modes = { "n" }, key = "t0", desc = "diffview(commits): Cycle layout (5 types)", callback = function() action.cycle_layout(ctx) end },
     { modes = { "n" }, key = "zM", desc = "diffview(commits): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
     { modes = { "n" }, key = "zR", desc = "diffview(commits): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
     { modes = { "n" }, key = "t3", desc = "diffview(commits): Toggle default diff folds", callback = function() action.toggle_default_folds(ctx) end },
   }
 end
 
----Generate keymaps for commits buffer
+---Generate domain actions for a commits buffer without standalone-view layout bindings.
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return stl.t.IKeymap[]
-function M.gen_commits(ctx)
+function M.gen_commit_pane(ctx)
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(commits): Select / Toggle expand", callback = function() action.select(ctx) end },
@@ -61,13 +62,19 @@ function M.gen_commits(ctx)
     { modes = { "n" }, key = "gh", desc = "diffview(commits): Collapse commit", callback = function() action.collapse(ctx) end },
     { modes = { "n" }, key = "gl", desc = "diffview(commits): Expand commit", callback = function() action.expand(ctx) end },
     { modes = { "n" }, key = "oo", desc = "diffview(commits): Toggle expand commit", callback = function() action.toggle_expand(ctx) end },
-    { modes = { "n" }, key = "t0", desc = "diffview(commits): Cycle layout (5 types)", callback = function() action.cycle_layout(ctx) end },
     { modes = { "n" }, key = "t1", desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
     { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
     { modes = { "n" }, key = "yy", desc = "diffview(commits): Yank commit hash", callback = function() action.yank_hash(ctx) end },
   }
 
-  -- Append cross-pane keymaps
+  return keymaps
+end
+
+---Generate keymaps for the standalone commits view.
+---@param ctx                            era.m.diffview.view.commits.IContext
+---@return stl.t.IKeymap[]
+function M.gen_commits(ctx)
+  local keymaps = M.gen_commit_pane(ctx) ---@type stl.t.IKeymap[]
   for _, km in ipairs(M.gen_cross_pane(ctx)) do
     keymaps[#keymaps + 1] = km
   end
@@ -184,12 +191,7 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@param bufnr                          integer
 function M.setup_sbs(ctx, bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-
-  local keymaps = M.gen_sbs(ctx)
-  apply_keymaps(bufnr, keymaps)
+  require("era.m.diffview.view.sbs_keymap").setup_commits(ctx, bufnr)
 end
 
 ----------------------------------------------------------------------------------------------------

@@ -792,6 +792,7 @@ t:test("workspace view binds keymaps after replacing null buffers", function()
   t:patch_table(package.loaded, "era.m.diffview.config", {})
   t:patch_table(package.loaded, "era.m.diffview.layout", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
+  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", pane)
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", keymap)
 

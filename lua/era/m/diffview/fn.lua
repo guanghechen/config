@@ -10,7 +10,7 @@ local M = {}
 -- Public API
 ----------------------------------------------------------------------------------------------------
 
----Open workspace view (staged/unstaged)
+---Open the repository Git workspace.
 ---@param opts                        { layout: integer|nil }|nil
 function M.open_workspace(opts)
   S.cmd.open(opts)
@@ -109,7 +109,9 @@ function M.reveal()
     if not st or not lyt then
       return
     end
-    workspace_action.reveal({ layout = lyt, state = st })
+    local history_state = require("era.m.diffview.view.commits.state").get(tabnr)
+    local history = history_state and workspace_view.history_context(lyt, st, history_state) or nil
+    workspace_action.reveal({ layout = lyt, state = st, history = history })
   elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_action = require("era.m.diffview.view.commits.action")
     local commits_state = require("era.m.diffview.view.commits.state")
@@ -124,12 +126,32 @@ function M.reveal()
   end
 end
 
----Toggle commits panel visibility (for commits view)
+---Toggle repository History in workspace or commits in the standalone log view.
 function M.toggle_commits()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
 
-  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
+  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
+    local commits_state = require("era.m.diffview.view.commits.state")
+    local commits_view = require("era.m.diffview.view.commits.view")
+    local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
+    local workspace_state = require("era.m.diffview.view.workspace.state")
+    local workspace_view = require("era.m.diffview.view.workspace.view")
+
+    local st = workspace_state.get(tabnr)
+    local history_state = commits_state.get(tabnr)
+    local lyt = workspace_view.get_layout(tabnr)
+    if st and history_state and lyt then
+      local history = workspace_view.history_context(lyt, st, history_state)
+      local ctx = { layout = lyt, state = st, history = history } ---@type era.m.diffview.view.workspace.IContext
+      workspace_view.toggle_history(lyt)
+      if lyt.history.commits_winnr and vim.api.nvim_win_is_valid(lyt.history.commits_winnr) then
+        workspace_keymap.setup_history(ctx)
+        commits_view.render_commits(history)
+        workspace_view.focus_history(lyt)
+      end
+    end
+  elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_state = require("era.m.diffview.view.commits.state")
     local commits_view = require("era.m.diffview.view.commits.view")
 
@@ -145,37 +167,33 @@ function M.toggle_commits()
       end
     end
   end
-  -- DIFFVIEW_WORKSPACE doesn't have a commits panel
 end
 
----Toggle files panel visibility (changes for workspace, filetree for commits)
+---Toggle the workspace sidebar or the standalone commits filetree.
 function M.toggle_files()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
 
   if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
+    local commits_view = require("era.m.diffview.view.commits.view")
+    local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
 
     local st = workspace_state.get(tabnr)
     local lyt = workspace_view.get_layout(tabnr)
     if st and lyt then
-      workspace_view.toggle_changes(lyt)
-      -- Re-render if shown
-      local changes_visible = false
-      for _, pane in ipairs(workspace_view.get_changes_panes(lyt)) do
-        if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
-          changes_visible = true
-          break
-        end
-      end
-      if changes_visible then
-        local ctx = {
-          layout = lyt,
-          state = st,
-        }
-        require("era.m.diffview.view.workspace.keymap").setup_changes(ctx)
+      local history_state = require("era.m.diffview.view.commits.state").get(tabnr)
+      local history = history_state and workspace_view.history_context(lyt, st, history_state) or nil
+      local ctx = { layout = lyt, state = st, history = history } ---@type era.m.diffview.view.workspace.IContext
+      local _, sidebar_visible = workspace_view.toggle_sidebar(lyt)
+      if sidebar_visible then
+        workspace_keymap.setup_changes(ctx)
         workspace_view.render_changes(ctx)
+        if history then
+          workspace_keymap.setup_history(ctx)
+          commits_view.render_commits(history)
+        end
         local current = st:get_current_entry()
         workspace_view.focus_changes(lyt, current and current.stage_type or nil)
       end

@@ -4,10 +4,11 @@ local __module_name__ = "era.m.diffview.view.workspace.view" ---@type string
 local config = require("era.m.diffview.config")
 local layout_util = require("era.m.diffview.layout")
 local pane_changes = require("era.m.diffview.pane.changes")
+local pane_commits = require("era.m.diffview.pane.commits")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 
 ---Workspace view controller.
----Manages layout, pane composition, and lifecycle for Git Diff (staged/unstaged) view.
+---Manages Changes, History, shared preview, and workspace lifecycle.
 ---@class era.m.diffview.view.workspace.view
 local M = {}
 
@@ -31,9 +32,11 @@ local M = {}
 ---@field public tabnr                   integer
 ---@field public layout_type             integer                         1=changes+sbs, 2=changes only, 3=sbs only
 ---@field public changes                 era.m.diffview.view.workspace.IChangesLayout
+---@field public history                 era.m.diffview.view.commits.ILayout
 ---@field public sbs_left_winnr          integer|nil
 ---@field public sbs_right_winnr         integer|nil
 ---@field public preview_generation      integer
+---@field public preview_source          "changes"|"history"|nil
 
 ---@class era.m.diffview.view.workspace.IOpenEntryOpts
 ---@field public preserve_view           boolean|nil
@@ -45,6 +48,21 @@ local function next_preview_generation(lyt)
   return lyt.preview_generation
 end
 
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param source                         "changes"|"history"|nil
+---@return integer
+function M.begin_preview(lyt, source)
+  lyt.preview_source = source
+  return next_preview_generation(lyt)
+end
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param generation                     integer
+---@return boolean
+function M.owns_preview(lyt, generation)
+  return lyt.preview_generation == generation and vim.api.nvim_tabpage_is_valid(lyt.tabnr)
+end
+
 ---@return era.m.diffview.view.workspace.IChangesLayout
 local function create_empty_changes_layout()
   return {
@@ -54,6 +72,65 @@ local function create_empty_changes_layout()
     both_nonempty = false,
     last_focused_stage_type = "unstaged",
   }
+end
+
+---@param ...                            integer|nil
+---@return integer|nil
+local function first_valid_window(...)
+  for index = 1, select("#", ...) do
+    local winnr = select(index, ...) ---@type integer|nil
+    if winnr and vim.api.nvim_win_is_valid(winnr) then
+      return winnr
+    end
+  end
+end
+
+---@param tabnr                          integer
+---@return era.m.diffview.view.commits.ILayout
+local function create_empty_history_layout(tabnr)
+  return {
+    tabnr = tabnr,
+    layout_type = 2,
+    commits_winnr = nil,
+    commits_bufnr = nil,
+    filetree_winnr = nil,
+    filetree_bufnr = nil,
+    sbs_left_winnr = nil,
+    sbs_right_winnr = nil,
+    title = "History",
+  }
+end
+
+---@param history                        era.m.diffview.view.commits.ILayout
+---@return integer
+local function create_history_buffer(history)
+  local bufnr = pane_commits.create_buffer() ---@type integer
+  vim.api.nvim_set_option_value("bufhidden", "hide", { buf = bufnr })
+  history.commits_bufnr = bufnr
+  return bufnr
+end
+
+---@param history                        era.m.diffview.view.commits.ILayout
+---@param anchor_winnr                   integer
+---@return nil
+local function create_history_below(history, anchor_winnr)
+  local history_winnr = nil ---@type integer|nil
+  vim.api.nvim_win_call(anchor_winnr, function()
+    vim.cmd("belowright split")
+    history_winnr = vim.api.nvim_get_current_win()
+  end)
+  if history_winnr == nil then
+    return
+  end
+
+  history.commits_winnr = history_winnr
+  local bufnr = history.commits_bufnr ---@type integer|nil
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = create_history_buffer(history)
+  end
+  vim.api.nvim_win_set_buf(history_winnr, bufnr)
+  pane_commits.apply_winopts(history_winnr)
+  vim.api.nvim_win_set_height(history_winnr, config.COMMITS_HEIGHT)
 end
 
 ---@param changes                        era.m.diffview.view.workspace.IChangesLayout
@@ -137,9 +214,11 @@ function M.create_layout(layout_type)
     tabnr = tabnr,
     layout_type = layout_type,
     changes = create_empty_changes_layout(),
+    history = create_empty_history_layout(tabnr),
     sbs_left_winnr = nil,
     sbs_right_winnr = nil,
     preview_generation = 0,
+    preview_source = nil,
   } ---@type era.m.diffview.view.workspace.ILayout
 
   if layout_type == 1 then
@@ -171,6 +250,11 @@ function M.__create_layout_full__(tabnr)
   local changes_anchor_winnr = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_width(changes_anchor_winnr, dot.context.diffview.panel_width:snapshot())
   local changes = create_changes_layout(changes_anchor_winnr)
+  local history = create_empty_history_layout(tabnr)
+  local history_anchor = changes.unstaged.winnr or changes.staged.winnr ---@type integer|nil
+  if history_anchor then
+    create_history_below(history, history_anchor)
+  end
 
   -- Go back to pivot and create sbs windows
   vim.api.nvim_set_current_win(pivot_winnr)
@@ -181,6 +265,8 @@ function M.__create_layout_full__(tabnr)
 
   local sbs_left_winnr = result.winnrs.sbs_left
   local sbs_right_winnr = result.winnrs.sbs_right
+  history.sbs_left_winnr = sbs_left_winnr
+  history.sbs_right_winnr = sbs_right_winnr
 
   -- Create null buffers for sbs
   local null_bufnr = pane_sbs.get_null_buffer()
@@ -202,9 +288,11 @@ function M.__create_layout_full__(tabnr)
     tabnr = tabnr,
     layout_type = 1,
     changes = changes,
+    history = history,
     sbs_left_winnr = sbs_left_winnr,
     sbs_right_winnr = sbs_right_winnr,
     preview_generation = 0,
+    preview_source = nil,
   }
 end
 
@@ -213,14 +301,25 @@ end
 ---@return era.m.diffview.view.workspace.ILayout
 function M.__create_layout_changes_only__(tabnr)
   local changes = create_changes_layout(vim.api.nvim_get_current_win())
+  local history = create_empty_history_layout(tabnr)
+  local history_anchor = changes.unstaged.winnr or changes.staged.winnr ---@type integer|nil
+  if history_anchor then
+    create_history_below(history, history_anchor)
+  end
+
+  if changes.unstaged.winnr then
+    vim.api.nvim_set_current_win(changes.unstaged.winnr)
+  end
 
   return {
     tabnr = tabnr,
     layout_type = 2,
     changes = changes,
+    history = history,
     sbs_left_winnr = nil,
     sbs_right_winnr = nil,
     preview_generation = 0,
+    preview_source = nil,
   }
 end
 
@@ -235,6 +334,9 @@ function M.__create_layout_sbs_only__(tabnr)
 
   local sbs_left_winnr = result.winnrs.sbs_left
   local sbs_right_winnr = result.winnrs.sbs_right
+  local history = create_empty_history_layout(tabnr)
+  history.sbs_left_winnr = sbs_left_winnr
+  history.sbs_right_winnr = sbs_right_winnr
 
   local null_bufnr = pane_sbs.get_null_buffer()
   if sbs_left_winnr then
@@ -250,9 +352,11 @@ function M.__create_layout_sbs_only__(tabnr)
     tabnr = tabnr,
     layout_type = 3,
     changes = create_empty_changes_layout(),
+    history = history,
     sbs_left_winnr = sbs_left_winnr,
     sbs_right_winnr = sbs_right_winnr,
     preview_generation = 0,
+    preview_source = nil,
   }
 end
 
@@ -293,6 +397,10 @@ function M.close_windows(lyt)
     end
     pane.winnr = nil
   end
+  if lyt.history.commits_winnr and vim.api.nvim_win_is_valid(lyt.history.commits_winnr) then
+    pcall(vim.api.nvim_win_close, lyt.history.commits_winnr, true)
+  end
+  lyt.history.commits_winnr = nil
   if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
     pcall(vim.api.nvim_win_close, lyt.sbs_left_winnr, true)
   end
@@ -328,14 +436,19 @@ function M.show_changes(lyt)
     end
   end
 
-  -- Find reference window
-  local ref_winnr = lyt.sbs_left_winnr or lyt.sbs_right_winnr
-  if not ref_winnr or not vim.api.nvim_win_is_valid(ref_winnr) then
+  -- Recreate Changes above History when it is visible; otherwise restore the left column from SBS.
+  local history_winnr = first_valid_window(lyt.history.commits_winnr)
+  local ref_winnr = first_valid_window(history_winnr, lyt.sbs_left_winnr, lyt.sbs_right_winnr)
+  if not ref_winnr then
     return lyt
   end
 
   vim.api.nvim_set_current_win(ref_winnr)
-  vim.cmd("topleft vsplit")
+  if history_winnr and vim.api.nvim_win_is_valid(history_winnr) then
+    vim.cmd("aboveleft split")
+  else
+    vim.cmd("topleft vsplit")
+  end
   local anchor_winnr = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_width(anchor_winnr, dot.context.diffview.panel_width:snapshot())
   local result = layout_util.create(layout_util.vertical("staged", "unstaged", 0.5), anchor_winnr)
@@ -354,6 +467,9 @@ function M.show_changes(lyt)
   if staged.winnr then
     lyt.changes.expanded_staged_height = vim.api.nvim_win_get_height(staged.winnr)
   end
+  if history_winnr then
+    vim.api.nvim_win_set_height(history_winnr, config.COMMITS_HEIGHT)
+  end
 
   return lyt
 end
@@ -364,6 +480,7 @@ end
 function M.hide_changes(lyt)
   local has_reference = (lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr))
     or (lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr))
+    or (lyt.history.commits_winnr and vim.api.nvim_win_is_valid(lyt.history.commits_winnr))
   if not has_reference then
     return lyt
   end
@@ -386,6 +503,98 @@ function M.toggle_changes(lyt)
     end
   end
   return M.show_changes(lyt)
+end
+
+---Show the repository History pane at the bottom of the workspace navigation column.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return era.m.diffview.view.workspace.ILayout
+function M.show_history(lyt)
+  local history = lyt.history
+  if history.commits_winnr and vim.api.nvim_win_is_valid(history.commits_winnr) then
+    return lyt
+  end
+
+  local changes_anchor = first_valid_window(lyt.changes.unstaged.winnr, lyt.changes.staged.winnr)
+  if changes_anchor then
+    create_history_below(history, changes_anchor)
+    return lyt
+  end
+
+  local ref_winnr = first_valid_window(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
+  if not ref_winnr then
+    return lyt
+  end
+
+  vim.api.nvim_set_current_win(ref_winnr)
+  vim.cmd("topleft vsplit")
+  local history_winnr = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_width(history_winnr, dot.context.diffview.panel_width:snapshot())
+  history.commits_winnr = history_winnr
+  local bufnr = history.commits_bufnr ---@type integer|nil
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = create_history_buffer(history)
+  end
+  vim.api.nvim_win_set_buf(history_winnr, bufnr)
+  pane_commits.apply_winopts(history_winnr)
+  return lyt
+end
+
+---Hide the repository History pane while preserving its buffer and state.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return era.m.diffview.view.workspace.ILayout
+function M.hide_history(lyt)
+  local has_reference = (lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr))
+    or (lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr))
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    has_reference = has_reference or (pane.winnr ~= nil and vim.api.nvim_win_is_valid(pane.winnr))
+  end
+  if not has_reference then
+    return lyt
+  end
+
+  local history = lyt.history
+  if history.commits_winnr and vim.api.nvim_win_is_valid(history.commits_winnr) then
+    vim.api.nvim_win_hide(history.commits_winnr)
+  end
+  history.commits_winnr = nil
+  return lyt
+end
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return era.m.diffview.view.workspace.ILayout
+function M.toggle_history(lyt)
+  if lyt.history.commits_winnr and vim.api.nvim_win_is_valid(lyt.history.commits_winnr) then
+    return M.hide_history(lyt)
+  end
+  return M.show_history(lyt)
+end
+
+---Toggle Changes and History as one workspace sidebar.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return era.m.diffview.view.workspace.ILayout
+---@return boolean visible
+function M.toggle_sidebar(lyt)
+  local visible = lyt.history.commits_winnr ~= nil and vim.api.nvim_win_is_valid(lyt.history.commits_winnr)
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    visible = visible or (pane.winnr ~= nil and vim.api.nvim_win_is_valid(pane.winnr))
+  end
+
+  if visible then
+    if not first_valid_window(lyt.sbs_left_winnr, lyt.sbs_right_winnr) then
+      return lyt, true
+    end
+    M.hide_changes(lyt)
+    M.hide_history(lyt)
+    return lyt, false
+  end
+
+  M.show_changes(lyt)
+  M.show_history(lyt)
+  visible = lyt.history.commits_winnr ~= nil and vim.api.nvim_win_is_valid(lyt.history.commits_winnr)
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    visible = visible or (pane.winnr ~= nil and vim.api.nvim_win_is_valid(pane.winnr))
+  end
+  return lyt, visible
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -411,6 +620,17 @@ function M.focus_changes(lyt, stage_type)
   return false
 end
 
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return boolean
+function M.focus_history(lyt)
+  local winnr = lyt.history.commits_winnr
+  if winnr and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_set_current_win(winnr)
+    return true
+  end
+  return false
+end
+
 ---Focus left sbs window
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.focus_left(lyt)
@@ -427,7 +647,7 @@ function M.focus_right(lyt)
   end
 end
 
----Cycle focus: staged -> unstaged -> left -> right -> staged.
+---Cycle focus: staged -> unstaged -> History -> left -> right -> staged.
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.cycle_focus(lyt)
   local current_winnr = vim.api.nvim_get_current_win()
@@ -451,6 +671,7 @@ function M.cycle_focus(lyt)
   end
   append(lyt.changes.staged.winnr)
   append(lyt.changes.unstaged.winnr)
+  append(lyt.history.commits_winnr)
   append(lyt.sbs_left_winnr)
   append(lyt.sbs_right_winnr)
 
@@ -478,6 +699,9 @@ function M.is_valid(lyt)
     if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
       has_valid = true
     end
+  end
+  if lyt.history.commits_winnr and vim.api.nvim_win_is_valid(lyt.history.commits_winnr) then
+    has_valid = true
   end
   if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
     has_valid = true
@@ -509,6 +733,9 @@ function M.destroy(lyt)
     if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
       pcall(vim.api.nvim_buf_delete, pane.bufnr, { force = true })
     end
+  end
+  if lyt.history.commits_bufnr and vim.api.nvim_buf_is_valid(lyt.history.commits_bufnr) then
+    pcall(vim.api.nvim_buf_delete, lyt.history.commits_bufnr, { force = true })
   end
 
   -- Close tab if it still exists
@@ -638,7 +865,7 @@ function M.open_entry(ctx, entry, token, opts)
     return
   end
 
-  local generation = next_preview_generation(lyt)
+  local generation = M.begin_preview(lyt, "changes")
   local function is_current()
     return lyt.preview_generation == generation
       and not ctx.state:is_disposed()
@@ -671,7 +898,7 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.clear_sbs(ctx)
   local lyt = ctx.layout
-  local generation = next_preview_generation(lyt)
+  local generation = M.begin_preview(lyt, "changes")
 
   if
     lyt.sbs_left_winnr
@@ -693,6 +920,38 @@ function M.clear_sbs(ctx)
   end
 end
 
+---Compose the repository History controller against the workspace-owned layout and SBS generation.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param workspace_state                era.m.diffview.view.workspace.State
+---@param history_state                  era.m.diffview.view.commits.State
+---@return era.m.diffview.view.commits.IContext
+function M.history_context(lyt, workspace_state, history_state)
+  local history ---@type era.m.diffview.view.commits.IContext
+  history = {
+    layout = lyt.history,
+    state = history_state,
+    begin_preview = function()
+      local generation = M.begin_preview(lyt, "history") ---@type integer
+      return function()
+        return M.owns_preview(lyt, generation)
+          and not workspace_state:is_disposed()
+          and not history_state:is_disposed()
+      end
+    end,
+    setup_sbs = function(bufnr)
+      require("era.m.diffview.view.workspace.keymap").setup_sbs({
+        layout = lyt,
+        state = workspace_state,
+        history = history,
+      }, bufnr)
+    end,
+    render_winline = function()
+      require("era.m.diffview.view.workspace.winline").render(history)
+    end,
+  }
+  return history
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Storage
 ----------------------------------------------------------------------------------------------------
@@ -700,11 +959,34 @@ end
 ---@type table<integer, era.m.diffview.view.workspace.ILayout>
 M.__layouts__ = {}
 
+---@type table<integer, integer>
+M.__layout_cleanup_autocmds__ = {}
+
 ---Store layout instance
 ---@param tabnr                          integer
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.set_layout(tabnr, lyt)
   M.__layouts__[tabnr] = lyt
+  if M.__layout_cleanup_autocmds__[tabnr] then
+    return
+  end
+
+  M.__layout_cleanup_autocmds__[tabnr] = vim.api.nvim_create_autocmd("TabClosed", {
+    desc = "diffview: release closed workspace layout",
+    callback = function()
+      if vim.api.nvim_tabpage_is_valid(tabnr) then
+        return
+      end
+
+      M.__layout_cleanup_autocmds__[tabnr] = nil
+      local closed_layout = M.__layouts__[tabnr]
+      M.__layouts__[tabnr] = nil
+      if closed_layout then
+        M.destroy(closed_layout)
+      end
+      return true
+    end,
+  })
 end
 
 ---Get layout instance
@@ -719,6 +1001,11 @@ end
 ---@param tabnr                          integer
 function M.remove_layout(tabnr)
   M.__layouts__[tabnr] = nil
+  local autocmd_id = M.__layout_cleanup_autocmds__[tabnr]
+  M.__layout_cleanup_autocmds__[tabnr] = nil
+  if autocmd_id then
+    pcall(vim.api.nvim_del_autocmd, autocmd_id)
+  end
 end
 
 return M

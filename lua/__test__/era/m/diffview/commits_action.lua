@@ -192,6 +192,22 @@ local function new_search_state()
   return state
 end
 
+t:test("commit details popup opens above a trigger near the bottom", function()
+  local anchor_row = vim.o.lines - 3 ---@type integer
+  action.__show_commit_popup__("abc123", { "commit abc123", "Author: Alice" }, {
+    row = anchor_row,
+    col = 1,
+  })
+
+  local popup_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local config = vim.api.nvim_win_get_config(popup_winnr)
+  t.assert_eq("editor", config.relative, "editor-relative captured position")
+  t.assert_eq(anchor_row - config.height - 2, config.row, "popup above trigger row")
+  t.assert_true(config.row ~= math.floor((vim.o.lines - config.height) / 2), "popup is not centered")
+
+  vim.api.nvim_win_close(popup_winnr, true)
+end)
+
 t:test("hide_commits keeps a commits-only tab alive", function()
   local original_tabnr = vim.api.nvim_get_current_tabpage()
   vim.cmd.tabnew()

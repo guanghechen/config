@@ -795,6 +795,7 @@ end
 ---@field public entry                  era.m.diffview.IFileEntry
 ---@field public commit                 era.m.diffview.ICommit
 ---@field public token                  ?stl.c.CancellationToken
+---@field public is_current             (fun(): boolean)|nil
 ---@field public get_fold_unchanged      (fun(): boolean)|nil
 
 ---Open commit file entry in side-by-side view (for File History / Git Log).
@@ -806,7 +807,11 @@ function M.open_commit_entry(opts)
   local entry = opts.entry
   local commit = opts.commit
   local token = opts.token
-  local apply_opts = { get_fold_unchanged = opts.get_fold_unchanged } ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
+  local is_current = opts.is_current
+  local apply_opts = {
+    get_fold_unchanged = opts.get_fold_unchanged,
+    is_current = is_current,
+  } ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
 
   local filepath = entry.filepath
   local parent_filepath = commit.parent_filepath or entry.prev_filepath or filepath
@@ -825,7 +830,16 @@ function M.open_commit_entry(opts)
     left_bufnr = M.create_sbs_buffer(left_name)
     right_bufnr = M.get_null_buffer()
 
-    M.load_git_content(era.m.diffview.util.commit_object(parent_hash, parent_filepath), left_bufnr, token)
+    if
+      not M.load_git_content(
+        era.m.diffview.util.commit_object(parent_hash, parent_filepath),
+        left_bufnr,
+        token,
+        is_current
+      )
+    then
+      return
+    end
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   elseif status == "A" then
     -- Added in this commit
@@ -833,7 +847,9 @@ function M.open_commit_entry(opts)
     local right_name = era.m.diffview.util.gen_old_bufname(filepath, hash)
     right_bufnr = M.create_sbs_buffer(right_name)
 
-    M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token)
+    if not M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token, is_current) then
+      return
+    end
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   else
     -- Modified
@@ -842,8 +858,19 @@ function M.open_commit_entry(opts)
     left_bufnr = M.create_sbs_buffer(left_name)
     right_bufnr = M.create_sbs_buffer(right_name)
 
-    M.load_git_content(era.m.diffview.util.commit_object(parent_hash, parent_filepath), left_bufnr, token)
-    M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token)
+    if
+      not M.load_git_content(
+        era.m.diffview.util.commit_object(parent_hash, parent_filepath),
+        left_bufnr,
+        token,
+        is_current
+      )
+    then
+      return
+    end
+    if not M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token, is_current) then
+      return
+    end
 
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   end
