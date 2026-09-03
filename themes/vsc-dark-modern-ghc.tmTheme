@@ -908,7 +908,7 @@
           <key>foreground</key>
           <string>#B5CEA8</string>
           <key>background</key>
-          <string>#9CCC2C33</string>
+          <string>#384222</string>
         </dict>
       </dict>
       <dict>
@@ -921,7 +921,7 @@
           <key>foreground</key>
           <string>#CE9178</string>
           <key>background</key>
-          <string>#FF000033</string>
+          <string>#4C1919</string>
         </dict>
       </dict>
       <dict>
