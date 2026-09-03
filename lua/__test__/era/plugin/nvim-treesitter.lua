@@ -29,6 +29,10 @@ bootstrap.with_dot(t, {
 
 local Treesitter = require("era.plugin.nvim-treesitter")
 
+t:test("treesitter does not eagerly own textobjects", function()
+  t.assert_nil(Treesitter.spec.dependencies, "dependencies")
+end)
+
 ---@param buffers                      table<integer, { valid: boolean, loaded: boolean, filetype: string, indentexpr: string? }>
 ---@param windows                      table<integer, { valid: boolean, bufnr: integer, foldexpr: string }>
 ---@param winnrs                       integer[]

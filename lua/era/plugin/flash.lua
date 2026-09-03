@@ -4,8 +4,17 @@
 -- at the end of each match, letting you quickly jump to a specific location.
 return {
   name = "flash.nvim",
-  event = "VeryLazy",
   keys = {
+    {
+      lhs = "/",
+      mode = { "n", "x", "o" },
+      desc = "flash: search",
+    },
+    {
+      lhs = "?",
+      mode = { "n", "x", "o" },
+      desc = "flash: search backward",
+    },
     {
       lhs = "s",
       mode = { "n", "x", "o" },

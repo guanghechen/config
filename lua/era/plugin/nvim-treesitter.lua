@@ -418,9 +418,6 @@ M.spec = {
       end
     end
   end,
-  dependencies = {
-    "nvim-treesitter-textobjects",
-  },
 }
 
 return M
