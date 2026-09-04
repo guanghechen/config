@@ -146,6 +146,12 @@ local function resolve_draw_options(options)
   return resolved
 end
 
+---@param bufnr                         integer
+---@return boolean
+function M.is_enabled(bufnr)
+  return get_draw_module().is_enabled(bufnr)
+end
+
 ---@param line                          ?integer
 ---@param col                           ?integer
 ---@param options                       ?era.dressing.indentscope.IOptionsOverride

@@ -8,6 +8,54 @@ local M = {}
 
 local namespace = vim.api.nvim_create_namespace("era.dressing.indentscope") ---@type integer
 
+---@type table<string, boolean>
+local DISABLED_BUFTYPES = {
+  help = true,
+  prompt = true,
+  quickfix = true,
+  terminal = true,
+}
+
+---@type table<string, boolean>
+local DISABLED_FILETYPES = {
+  [""] = true,
+  ["diff"] = true,
+  [stl.filetype.AI_TERMINAL] = true,
+  [stl.filetype.BIGFILE] = true,
+  [stl.filetype.BOARD] = true,
+  [stl.filetype.CHECKHEALTH] = true,
+  [stl.filetype.DIFFVIEW_CHANGES] = true,
+  [stl.filetype.DIFFVIEW_COMMITS] = true,
+  [stl.filetype.DIFFVIEW_FILES] = true,
+  [stl.filetype.DIFFVIEW_SBS] = true,
+  [stl.filetype.EXPLORER] = true,
+  [stl.filetype.GITCOMMIT] = true,
+  [stl.filetype.HELP] = true,
+  [stl.filetype.IMAGE_VIEWER] = true,
+  [stl.filetype.LSPINFO] = true,
+  [stl.filetype.MAN] = true,
+  [stl.filetype.MASON] = true,
+  [stl.filetype.NOTIFY] = true,
+  [stl.filetype.QUICKFIX] = true,
+  [stl.filetype.SELECT] = true,
+  [stl.filetype.STARTUPTIME] = true,
+  [stl.filetype.TEMP_VIEWER] = true,
+  [stl.filetype.TERM] = true,
+  [stl.filetype.TERM_MASK] = true,
+  [stl.filetype.UX_CMDLINE] = true,
+  [stl.filetype.UX_INPUT] = true,
+  [stl.filetype.UX_MESSAGE_HISTORY] = true,
+  [stl.filetype.UX_PICKER_FINDER] = true,
+  [stl.filetype.UX_PICKER_PREVIEW] = true,
+  [stl.filetype.UX_PICKER_RESULT] = true,
+  [stl.filetype.UX_POPUPMENU] = true,
+  [stl.filetype.UX_SEARCHER_FINDER] = true,
+  [stl.filetype.UX_SEARCHER_PREVIEW] = true,
+  [stl.filetype.UX_SEARCHER_RESULT] = true,
+  [stl.filetype.WINPICKER_MASK] = true,
+  [stl.filetype.WINSEP] = true,
+}
+
 ---@class era.dressing.indentscope.draw.IState
 ---@field public generation             integer
 ---@field public scope                  era.dressing.indentscope.IScope|nil
@@ -88,8 +136,14 @@ function M.is_enabled(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
+
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
+  if DISABLED_BUFTYPES[buftype] then
+    return false
+  end
+
   local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-  return stl.filetype.is_indentscope_enabled(filetype)
+  return DISABLED_FILETYPES[filetype] ~= true
 end
 
 ---@return integer

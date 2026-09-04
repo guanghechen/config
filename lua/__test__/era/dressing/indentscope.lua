@@ -608,6 +608,21 @@ t:test("waiting refresh restarts delay with the latest reference", function()
   end)
 end)
 
+t:test("eligibility is owned by indentscope", function()
+  with_buffer({ "if ok then", "  one()", "end" }, function(bufnr)
+    t.assert_true(Indentscope.is_enabled(bufnr), "source buffer")
+
+    for _, filetype in ipairs({ "", stl.filetype.BIGFILE, stl.filetype.BOARD, "diff" }) do
+      vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
+      t.assert_false(Indentscope.is_enabled(bufnr), filetype == "" and "empty filetype" or filetype)
+    end
+
+    vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "prompt", { buf = bufnr })
+    t.assert_false(Indentscope.is_enabled(bufnr), "prompt buffer")
+  end)
+end)
+
 t:test("excluded filetype suppresses drawing", function()
   with_buffer({ "if ok then", "  one()", "end" }, function(bufnr)
     with_render_capture(function(render)

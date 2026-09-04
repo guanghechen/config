@@ -39,8 +39,7 @@ local function is_buf_enabled(bufnr)
     return false
   end
   local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-  return buftype == "" and stl.filetype.is_indentscope_enabled(filetype)
+  return buftype == "" and era.dressing.indentscope.is_enabled(bufnr)
 end
 
 ---@param winnr                         integer
