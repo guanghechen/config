@@ -1,7 +1,10 @@
----@class era.m.virtcolumn
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.virtcolumn" ---@type string
+
+---@class era.dressing.virtcolumn
 local M = {}
 
----@class era.m.virtcolumn.config
+---@class era.dressing.virtcolumn.config
 local config = {
   nsnr = dot.var.nsnr.virtcolumn,
   virt_char = "╎",
@@ -9,6 +12,8 @@ local config = {
   hlgroups = { "h_virtcolumn_1", "h_virtcolumn_2" },
   priority = 10,
 }
+
+local initialized = false ---@type boolean
 
 ---@type table<string, boolean>
 local DISABLED_BUFTYPES = {
@@ -153,6 +158,11 @@ end, 50)
 
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   stl.fn.observe({ dot.context.flight.dressing_virtcolumn }, function()
     local enabled = dot.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
     if not enabled then
@@ -179,7 +189,7 @@ function M.dressing()
     "FileType",
     "CursorHold",
   }, {
-    group = stl.nvim.fn.augroup("era.virtcolumn"),
+    group = stl.nvim.fn.augroup(__module_name__),
     callback = function()
       refresh_debounced()
     end,

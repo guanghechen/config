@@ -76,12 +76,14 @@ local fn = setmetatable({
 local __dressing__mods = {
   commentstring = "era.dressing.commentstring",
   indentscope = "era.dressing.indentscope",
+  virtcolumn = "era.dressing.virtcolumn",
 }
 
 ---@class era.dressing
 ---@field public __mods                 era.dressing.__mods
 ---@field public commentstring          era.dressing.commentstring
 ---@field public indentscope            era.dressing.indentscope
+---@field public virtcolumn             era.dressing.virtcolumn
 local dressing = setmetatable({
   __mods = __dressing__mods,
 }, {
@@ -135,7 +137,6 @@ local __m__mods = {
   toggle = "era.m.toggle",
   trailspace = "era.m.trailspace",
   ui_attach = "era.m.ui_attach",
-  virtcolumn = "era.m.virtcolumn",
   winline = "era.m.winline",
   winpicker = "era.m.winpicker",
   winsep = "era.m.winsep",
@@ -181,7 +182,6 @@ local __m__mods = {
 ---@field public toggle                 era.m.toggle
 ---@field public trailspace             era.m.trailspace
 ---@field public ui_attach              era.m.ui_attach
----@field public virtcolumn             era.m.virtcolumn
 ---@field public winline                era.m.winline
 ---@field public winpicker              era.m.winpicker
 ---@field public winsep                 era.m.winsep
