@@ -9,6 +9,7 @@ use super::CaptureAndSelectError;
 type Boolean = u8;
 type CFHashCode = usize;
 type CFIndex = isize;
+type CFTimeInterval = f64;
 type CFStringEncoding = u32;
 type CFTypeRef = *const c_void;
 type CFAllocatorRef = *const c_void;
@@ -68,9 +69,15 @@ unsafe extern "C" {
 
 #[link(name = "CoreFoundation", kind = "framework")]
 unsafe extern "C" {
+    static kCFRunLoopDefaultMode: CFStringRef;
     static kCFTypeDictionaryKeyCallBacks: CFDictionaryKeyCallBacks;
     static kCFTypeDictionaryValueCallBacks: CFDictionaryValueCallBacks;
 
+    fn CFRunLoopRunInMode(
+        mode: CFStringRef,
+        seconds: CFTimeInterval,
+        return_after_source_handled: Boolean,
+    ) -> i32;
     fn CFRetain(cf: CFTypeRef) -> CFTypeRef;
     fn CFRelease(cf: CFTypeRef);
     fn CFBooleanGetValue(boolean: CFBooleanRef) -> Boolean;
@@ -207,6 +214,9 @@ fn is_ascii_capable(im: TISInputSourceRef, subject: &str) -> Result<bool, String
 }
 
 fn copy_current() -> Result<(String, OwnedCFRef), String> {
+    // TIS refreshes its process-local state through CFRunLoop notifications, while Neovim drives
+    // libuv. Drain pending callbacks so a long-lived process observes external source changes.
+    unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, 1) };
     let reference = unsafe { TISCopyCurrentKeyboardInputSource() };
     let im = unsafe { OwnedCFRef::from_created(reference.cast(), "im.capture")? };
     let source_id = source_id(im.as_ptr().cast(), "im.capture")?;
