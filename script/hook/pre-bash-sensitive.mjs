@@ -10,12 +10,7 @@
  */
 
 import { readFileSync } from "node:fs"
-import {
-  allow,
-  denyPreToolUse,
-  SENSITIVE_PATHS,
-  SENSITIVE_PATTERNS,
-} from "../util.mjs"
+import { allow, denyPreToolUse, isSensitiveFile } from "../util.mjs"
 
 const DANGEROUS_COMMANDS = new Set([
   "cat", "bat", "less", "more", "head", "tail", "tac", "nl", "od", "xxd", "hexdump", "strings",
@@ -34,9 +29,7 @@ function looksSensitive(token) {
   let cleaned = token.replace(/^[']|[']$/g, "").replace(/^[\"]|[\"]$/g, "")
   cleaned = cleaned.replace(/^@/, "")
   if (!cleaned || cleaned.startsWith("-")) return false
-  if (SENSITIVE_PATHS.some((p) => p.test(cleaned))) return true
-  const base = cleaned.includes("/") ? cleaned.slice(cleaned.lastIndexOf("/") + 1) : cleaned
-  return SENSITIVE_PATTERNS.some((p) => p.test(base))
+  return isSensitiveFile(cleaned)
 }
 
 function tokenize(subcommand) {

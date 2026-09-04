@@ -1,10 +1,13 @@
 import path from "node:path"
 
+const SAFE_ENV_TEMPLATE_PATTERN = /^\.env\.(?:example|sample|template)$/
+
 export const SENSITIVE_PATTERNS = [
   /\.http_request$/,
   /\.http_response$/,
-  /^\.env/,
+  /^\.env(?:$|\.)/,
   /^\.git-credentials$/,
+  /^auth\.json$/,
 ]
 
 export const SENSITIVE_PATHS = [
@@ -15,10 +18,9 @@ export const SENSITIVE_PATHS = [
 
 export function isSensitiveFile(filepath) {
   const base = path.basename(filepath)
-  return (
-    SENSITIVE_PATTERNS.some((pattern) => pattern.test(base))
-    || SENSITIVE_PATHS.some((pattern) => pattern.test(filepath))
-  )
+  if (SENSITIVE_PATHS.some((pattern) => pattern.test(filepath))) return true
+  if (SAFE_ENV_TEMPLATE_PATTERN.test(base)) return false
+  return SENSITIVE_PATTERNS.some((pattern) => pattern.test(base))
 }
 
 export function allow() {
