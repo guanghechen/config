@@ -63,6 +63,7 @@ local DISABLED_FILETYPES = {
   ["dashboard"] = true,
   ["lazy"] = true,
   ["packer"] = true,
+  [filetype.BIGFILE] = true,
   [filetype.CHECKHEALTH] = true,
   [filetype.GITCOMMIT] = true,
   [filetype.HELP] = true,
@@ -119,7 +120,7 @@ function M.dressing()
   local augroup = stl.nvim.fn.augroup(__module_name__) ---@type integer
   vim.api.nvim_create_autocmd("OptionSet", {
     group = augroup,
-    pattern = { "breakindent", "listchars", "shiftwidth", "tabstop" },
+    pattern = { "breakindent", "buftype", "filetype", "list", "listchars", "shiftwidth", "tabstop", "vartabstop" },
     callback = refresh,
   })
   vim.api.nvim_create_autocmd("WinClosed", {

@@ -75,7 +75,7 @@ local function render(winnr)
   local extmarks = {} ---@type table[]
   local restore = t:patch_table(vim.api, "nvim_buf_set_extmark", function(bufnr, ns_id, row, col, options)
     if ns_id == namespace and options.ephemeral == true then
-      extmarks[#extmarks + 1] = { bufnr = bufnr, row = row, col = col, options = options }
+      extmarks[#extmarks + 1] = { bufnr = bufnr, row = row, col = col, options = vim.deepcopy(options) }
     end
     return original(bufnr, ns_id, row, col, options)
   end)
@@ -141,6 +141,91 @@ t:test("provider keeps horizontal scroll state window-local", function()
     if not ok then
       error(err, 0)
     end
+  end)
+end)
+
+t:test("provider repaints blank lines affected by an adjacent edit", function()
+  with_buffer({ "  one", "", "    two", "tail" }, function(bufnr, winnr)
+    render(winnr)
+
+    local namespace = vim.api.nvim_get_namespaces()["era.dressing.indentline"] ---@type integer
+    local original = vim.api.nvim_buf_set_extmark
+    local extmarks = {} ---@type table<integer, table>
+    local restore = t:patch_table(vim.api, "nvim_buf_set_extmark", function(target_bufnr, ns_id, row, col, options)
+      if ns_id == namespace and options.ephemeral == true then
+        extmarks[row] = { bufnr = target_bufnr, col = col, options = vim.deepcopy(options) }
+      end
+      return original(target_bufnr, ns_id, row, col, options)
+    end)
+
+    vim.api.nvim_buf_set_lines(bufnr, 2, 3, false, { "      two" })
+    vim.api.nvim__redraw({ win = winnr, flush = true })
+    restore()
+
+    t.assert_true(extmarks[1] ~= nil, "dependent blank line repainted")
+    t.assert_eq("│ │ │ ", extmarks[1].options.virt_text[1][1], "updated blank guide")
+  end)
+end)
+
+t:test("provider renders tabs using tabstop and listchars", function()
+  with_buffer({ "\tvalue", "tail" }, function(bufnr, winnr)
+    vim.api.nvim_set_option_value("tabstop", 8, { buf = bufnr })
+    vim.api.nvim_set_option_value("list", true, { win = winnr })
+    vim.api.nvim_set_option_value("listchars", "tab:>-,space:·", { win = winnr })
+
+    Render.invalidate()
+    local extmarks = render(winnr)
+    t.assert_eq(1, #extmarks, "guide count")
+    t.assert_eq("│-│-│-│-", extmarks[1].options.virt_text[1][1], "tab guides")
+  end)
+end)
+
+t:test("provider uses the tab end glyph for a one-column tab", function()
+  with_buffer({ " \tvalue", "tail" }, function(bufnr, winnr)
+    vim.api.nvim_set_option_value("tabstop", 2, { buf = bufnr })
+    vim.api.nvim_set_option_value("list", true, { win = winnr })
+    vim.api.nvim_set_option_value("listchars", "tab:>-<,space:·", { win = winnr })
+
+    Render.invalidate()
+    local extmarks = render(winnr)
+    t.assert_eq(1, #extmarks, "guide count")
+    t.assert_eq("│<", extmarks[1].options.virt_text[1][1], "one-column tab guide")
+  end)
+end)
+
+t:test("provider preserves native tabs when listchars.tab is absent", function()
+  with_buffer({ "\tvalue", "tail" }, function(bufnr, winnr)
+    vim.api.nvim_set_option_value("tabstop", 8, { buf = bufnr })
+    vim.api.nvim_set_option_value("list", true, { win = winnr })
+    vim.api.nvim_set_option_value("listchars", "space:·", { win = winnr })
+
+    Render.invalidate()
+    t.assert_eq(0, #render(winnr), "native tab row has no overlay")
+  end)
+end)
+
+t:test("provider preserves leading and trailing listchars", function()
+  with_buffer({ "    value", "    ", "tail" }, function(_, winnr)
+    vim.api.nvim_set_option_value("list", true, { win = winnr })
+    vim.api.nvim_set_option_value("listchars", "leadmultispace:ab,trail:x,tab:>-", { win = winnr })
+
+    Render.invalidate()
+    local extmarks = render(winnr)
+    t.assert_eq(2, #extmarks, "guide count")
+    t.assert_eq("│b│b", extmarks[1].options.virt_text[1][1], "leading multispace")
+    t.assert_eq("│x│x", extmarks[2].options.virt_text[1][1], "blank trail")
+  end)
+end)
+
+t:test("provider gives lead precedence over multispace", function()
+  with_buffer({ "    value", "tail" }, function(_, winnr)
+    vim.api.nvim_set_option_value("list", true, { win = winnr })
+    vim.api.nvim_set_option_value("listchars", "lead:x,multispace:ab,tab:>-", { win = winnr })
+
+    Render.invalidate()
+    local extmarks = render(winnr)
+    t.assert_eq(1, #extmarks, "guide count")
+    t.assert_eq("│x│x", extmarks[1].options.virt_text[1][1], "leading spaces")
   end)
 end)
 
