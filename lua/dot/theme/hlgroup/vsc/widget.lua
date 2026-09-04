@@ -88,15 +88,6 @@ function M.gen_hlgroup_map(context)
     f_indentscope_6 = { fg = cs.mix(u.bg0, u.blue, 80), bold = true },
     f_indentscope_7 = { fg = cs.mix(u.bg0, u.purple, 80), bold = true },
 
-    ---indent underline
-    f_indent_underline_1 = { sp = cs.mix(u.bg0, u.red, 50), underline = true },
-    f_indent_underline_2 = { sp = cs.mix(u.bg0, u.orange, 50), underline = true },
-    f_indent_underline_3 = { sp = cs.mix(u.bg0, u.yellow, 50), underline = true },
-    f_indent_underline_4 = { sp = cs.mix(u.bg0, u.green, 50), underline = true },
-    f_indent_underline_5 = { sp = cs.mix(u.bg0, u.aqua, 50), underline = true },
-    f_indent_underline_6 = { sp = cs.mix(u.bg0, u.blue, 50), underline = true },
-    f_indent_underline_7 = { sp = cs.mix(u.bg0, u.purple, 50), underline = true },
-
     ---lsp
     f_lsp_diagnostic_error = { fg = u.red },
     f_lsp_diagnostic_error_cl = { fg = u.red, bg = u.bg3 },

@@ -26,6 +26,7 @@ vim.schedule(function()
 
   era.dressing.commentstring.dressing()
   era.m.foldtext.dressing()
+  era.dressing.indentline.dressing()
   era.dressing.indentscope.dressing()
   era.dressing.hipattern.dressing()
   era.m.scroll.dressing()
