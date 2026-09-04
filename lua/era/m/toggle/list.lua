@@ -278,13 +278,18 @@ local group_items = {
     hipatterns = {
       title = "hipatterns",
       snapshot = function()
-        return "unknown", "Boolean"
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return "unknown", "Boolean"
+        end
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
+        return tostring(era.dressing.hipattern.is_enabled(bufnr)), "Boolean"
       end,
       action = function()
         local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command ~= nil then
           local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-          require("mini.hipatterns").toggle(bufnr)
+          era.dressing.hipattern.toggle(bufnr)
         end
       end,
     },

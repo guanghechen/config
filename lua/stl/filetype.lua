@@ -111,7 +111,6 @@ local filetypes = {
     [M.NOTEPAD] = true,
     [M.TERM] = true,
   },
-  hipattern = {},
   language = {
     -- stylua: ignore start
     assembly         = true,
@@ -254,12 +253,6 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return string[]
-function M.get_hipattern_filetypes()
-  return vim.tbl_keys(filetypes.hipattern)
-end
-
----@return string[]
 function M.get_markdown_filetypes()
   return vim.tbl_keys(filetypes.markdown)
 end

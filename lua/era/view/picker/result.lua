@@ -518,7 +518,6 @@ function M:create_buf()
   self._bufnr = bufnr
 
   vim.b[bufnr].miniai_disable = true
-  vim.b[bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
   vim.api.nvim_set_option_value("filetype", stl.filetype.UX_PICKER_RESULT, { buf = bufnr })

@@ -735,7 +735,6 @@ function M:__create_finder_buffer_as_needed__()
   self._bufnr_finder = bufnr
 
   vim.b[bufnr].miniai_disable = true
-  vim.b[bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
@@ -780,7 +779,6 @@ function M:__create_replacer_buffer_as_needed__()
   self._bufnr_replacer = bufnr
 
   vim.b[bufnr].miniai_disable = true
-  vim.b[bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })

@@ -93,7 +93,6 @@ function M:open()
   self._bufnr = bufnr
 
   vim.b[bufnr].miniai_disable = true
-  vim.b[bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })

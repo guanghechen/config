@@ -75,6 +75,7 @@ local fn = setmetatable({
 ---@class era.dressing.__mods
 local __dressing__mods = {
   commentstring = "era.dressing.commentstring",
+  hipattern = "era.dressing.hipattern",
   indentscope = "era.dressing.indentscope",
   virtcolumn = "era.dressing.virtcolumn",
 }
@@ -82,6 +83,7 @@ local __dressing__mods = {
 ---@class era.dressing
 ---@field public __mods                 era.dressing.__mods
 ---@field public commentstring          era.dressing.commentstring
+---@field public hipattern              era.dressing.hipattern
 ---@field public indentscope            era.dressing.indentscope
 ---@field public virtcolumn             era.dressing.virtcolumn
 local dressing = setmetatable({
