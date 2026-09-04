@@ -37,13 +37,16 @@ trace_exporter = "none"
 log_user_prompt = false
 
 [features]
+apps = false
 goals = true
 hooks = true
 image_generation = false
 memories = true
 multi_agent = true
+plugin_sharing = false
 prevent_idle_sleep = true
 realtime_conversation = true
+remote_plugin = false
 
 [[skills.config]]
 name = "imagegen"
