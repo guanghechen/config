@@ -75,6 +75,7 @@ local fn = setmetatable({
 ---@class era.dressing.__mods
 local __dressing__mods = {
   commentstring = "era.dressing.commentstring",
+  foldtext = "era.dressing.foldtext",
   hipattern = "era.dressing.hipattern",
   indentline = "era.dressing.indentline",
   indentscope = "era.dressing.indentscope",
@@ -84,6 +85,7 @@ local __dressing__mods = {
 ---@class era.dressing
 ---@field public __mods                 era.dressing.__mods
 ---@field public commentstring          era.dressing.commentstring
+---@field public foldtext               era.dressing.foldtext
 ---@field public hipattern              era.dressing.hipattern
 ---@field public indentline             era.dressing.indentline
 ---@field public indentscope            era.dressing.indentscope
@@ -111,7 +113,6 @@ local __m__mods = {
   diffview = "era.m.diffview",
   dim = "era.m.dim",
   explorer = "era.m.explorer",
-  foldtext = "era.m.foldtext",
   git = "era.m.git",
   illuminate = "era.m.illuminate",
   im = "era.m.im",
@@ -156,7 +157,6 @@ local __m__mods = {
 ---@field public diffview               era.m.diffview
 ---@field public dim                    era.m.dim
 ---@field public explorer               era.m.explorer
----@field public foldtext               era.m.foldtext
 ---@field public git                    era.m.git
 ---@field public illuminate             era.m.illuminate
 ---@field public im                     era.m.im
