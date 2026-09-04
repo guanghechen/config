@@ -47,7 +47,6 @@ local raw_specs = {
   { name = "mini.ai",                     main = "mini.ai",                       cond = conds.not_vscode_or_yozvim   },
   { name = "mini.hipatterns",             main = "mini.hipatterns",               cond = conds.not_vscode_or_yozvim   },
   { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode_or_yozvim   },
-  { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common                 },
   { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                    },
   { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.not_vscode_or_yozvim   },
   { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context     },

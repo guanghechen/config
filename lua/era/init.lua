@@ -103,6 +103,7 @@ local __m__mods = {
   searcher = "era.m.searcher",
   select = "era.m.select",
   splitline = "era.m.splitline",
+  splitjoin = "era.m.splitjoin",
   statuscolumn = "era.m.statuscolumn",
   statusline = "era.m.statusline",
   surrounds = "era.m.surrounds",
@@ -149,6 +150,7 @@ local __m__mods = {
 ---@field public searcher               era.m.searcher
 ---@field public select                 era.m.select
 ---@field public splitline              era.m.splitline
+---@field public splitjoin              era.m.splitjoin
 ---@field public statuscolumn           era.m.statuscolumn
 ---@field public statusline             era.m.statusline
 ---@field public surrounds              era.m.surrounds
