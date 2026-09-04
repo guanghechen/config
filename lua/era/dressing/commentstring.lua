@@ -1,16 +1,20 @@
----! see https://github.com/folke/ts-comments.nvim/blob/2002692ad1d3f6518d016550c20c2a890f0cbf0e/lua/ts-comments/comments.lua#L1
+---@see https://github.com/folke/ts-comments.nvim/blob/2002692ad1d3f6518d016550c20c2a890f0cbf0e/lua/ts-comments/comments.lua
+---@see https://github.com/folke/ts-comments.nvim/blob/2002692ad1d3f6518d016550c20c2a890f0cbf0e/lua/ts-comments/config.lua
+--- Derived from ts-comments.nvim under Apache-2.0.
+--- SPDX-License-Identifier: Apache-2.0
 
----@alias era.m.commentstring.ISpec
+---@alias era.dressing.commentstring.ISpec
 ---| string
 ---| string[]
 ---| table<string, string | string[]>
 
----@class era.m.commentstring
+---@class era.dressing.commentstring
 local M = {}
 
 local native_get_option = vim.filetype.get_option
+local initialized = false ---@type boolean
 
----@type table<string, era.m.commentstring.ISpec>
+---@type table<string, era.dressing.commentstring.ISpec>
 local language_map = {
   astro = "<!-- %s -->",
   axaml = "<!-- %s -->",
@@ -43,6 +47,7 @@ local language_map = {
     spread_element = "// %s",
     statement_block = "// %s",
   },
+  just = "# %s",
   php = "// %s",
   proto = { "// %s", "/* %s */" },
   rego = "# %s",
@@ -82,13 +87,22 @@ end
 ---@param filetype                      string
 ---@return string[]
 local function get_comments(filetype)
-  local cc = native_get_option(filetype, "comments")
-  if cc == vim.opt.comments._info.default or type(cc) ~= "string" then
+  local comments_option = native_get_option(filetype, "comments")
+  if type(comments_option) ~= "string" then
+    return {}
+  end
+
+  ---@type vim.api.keyset.get_option_info
+  local option_info = vim.api.nvim_get_option_info2("comments", {
+    buf = vim.api.nvim_get_current_buf(),
+    scope = "local",
+  })
+  if comments_option == option_info.default then
     return {}
   end
 
   local comments = {} ---@type string[]
-  local pieces = vim.split(cc, ",", { plain = true }) or {} ---@type string[]
+  local pieces = vim.split(comments_option, ",", { plain = true }) or {} ---@type string[]
   for _, piece in ipairs(pieces) do
     local flags, str = piece:match("^(.-):(.*)$")
     if flags and not flags:match("[fsme]") then
@@ -133,7 +147,7 @@ end
 ---@return string[]
 local function resolve_commentstring(filetype)
   local lang = vim.treesitter.language.get_lang(filetype) or filetype
-  local spec = language_map[lang] ---@type era.m.commentstring.ISpec
+  local spec = language_map[lang] ---@type era.dressing.commentstring.ISpec
 
   local ret = {} ---@type string[]
   local have = {} ---@type table<string, boolean>
@@ -197,6 +211,10 @@ end
 
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+
   ---@param filetype                    string
   ---@param option                      string
   ---@return boolean|integer|string
@@ -213,6 +231,7 @@ function M.dressing()
 
     return native_get_option(filetype, option)
   end
+  initialized = true
 end
 
 return M

@@ -74,11 +74,13 @@ local fn = setmetatable({
 
 ---@class era.dressing.__mods
 local __dressing__mods = {
+  commentstring = "era.dressing.commentstring",
   indentscope = "era.dressing.indentscope",
 }
 
 ---@class era.dressing
 ---@field public __mods                 era.dressing.__mods
+---@field public commentstring          era.dressing.commentstring
 ---@field public indentscope            era.dressing.indentscope
 local dressing = setmetatable({
   __mods = __dressing__mods,
@@ -99,7 +101,6 @@ local __m__mods = {
   ai = "era.m.ai",
   clipboard = "era.m.clipboard",
   colorpicker = "era.m.colorpicker",
-  commentstring = "era.m.commentstring",
   copy = "era.m.copy",
   diffview = "era.m.diffview",
   dim = "era.m.dim",
@@ -146,7 +147,6 @@ local __m__mods = {
 ---@field public ai                     era.m.ai
 ---@field public clipboard              era.m.clipboard
 ---@field public colorpicker            era.m.colorpicker
----@field public commentstring          era.m.commentstring
 ---@field public copy                   era.m.copy
 ---@field public diffview               era.m.diffview
 ---@field public dim                    era.m.dim
