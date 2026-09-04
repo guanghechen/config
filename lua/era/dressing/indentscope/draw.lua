@@ -1,21 +1,21 @@
-local Scope = require("era.m.indentscope.scope")
+local Scope = require("era.dressing.indentscope.scope")
 
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.indentscope.draw" ---@type string
+local __module_name__ = "era.dressing.indentscope.draw" ---@type string
 
----@class era.m.indentscope.draw
+---@class era.dressing.indentscope.draw
 local M = {}
 
-local namespace = vim.api.nvim_create_namespace("era.m.indentscope") ---@type integer
+local namespace = vim.api.nvim_create_namespace("era.dressing.indentscope") ---@type integer
 
----@class era.m.indentscope.draw.IState
+---@class era.dressing.indentscope.draw.IState
 ---@field public generation             integer
----@field public scope                  era.m.indentscope.IScope|nil
+---@field public scope                  era.dressing.indentscope.IScope|nil
 ---@field public status                 "none"|"waiting"|"drawing"|"finished"
 ---@field public delay_timer            uv.uv_timer_t|nil
 ---@field public animation_timer        uv.uv_timer_t|nil
----@field public options                era.m.indentscope.IDrawOptions|nil
----@field public indicator              era.m.indentscope.draw.IIndicator|nil
+---@field public options                era.dressing.indentscope.IDrawOptions|nil
+---@field public indicator              era.dressing.indentscope.draw.IIndicator|nil
 ---@field public drawn_distance         integer
 local state = {
   generation = 0,
@@ -42,7 +42,7 @@ local function clear_animation_timer()
   stl.timer.clear_timer(timer)
 end
 
----@param scope                         era.m.indentscope.IScope|nil
+---@param scope                         era.dressing.indentscope.IScope|nil
 ---@return nil
 local function redraw_scope(scope)
   if scope ~= nil and vim.api.nvim_win_is_valid(scope.winnr) then
@@ -50,8 +50,8 @@ local function redraw_scope(scope)
   end
 end
 
----@param scope                         era.m.indentscope.IScope
----@param indicator                     era.m.indentscope.draw.IIndicator
+---@param scope                         era.dressing.indentscope.IScope
+---@param indicator                     era.dressing.indentscope.draw.IIndicator
 ---@param from_distance                 integer
 ---@param to_distance                   integer
 ---@return nil
@@ -137,7 +137,7 @@ vim.api.nvim_set_decoration_provider(namespace, {
 
 ---@return nil
 function M.undraw()
-  local previous = state.scope ---@type era.m.indentscope.IScope|nil
+  local previous = state.scope ---@type era.dressing.indentscope.IScope|nil
   next_generation()
   clear_delay_timer()
   clear_animation_timer()
@@ -149,9 +149,9 @@ function M.undraw()
   redraw_scope(previous)
 end
 
----@param scope                         era.m.indentscope.IScope
----@param options                       era.m.indentscope.IDrawOptions
----@return era.m.indentscope.draw.IIndicator|nil
+---@param scope                         era.dressing.indentscope.IScope
+---@param options                       era.dressing.indentscope.IDrawOptions
+---@return era.dressing.indentscope.draw.IIndicator|nil
 local function make_indicator(scope, options)
   local draw_col = Scope.get_draw_col(scope) ---@type integer
   if draw_col < 0 or not vim.api.nvim_win_is_valid(scope.winnr) then
@@ -237,8 +237,8 @@ local function make_indicator(scope, options)
   }
 end
 
----@param scope                         era.m.indentscope.IScope
----@param options                       era.m.indentscope.IDrawOptions
+---@param scope                         era.dressing.indentscope.IScope
+---@param options                       era.dressing.indentscope.IDrawOptions
 ---@param generation                    integer
 ---@return nil
 local function start_drawing(scope, options, generation)
@@ -315,12 +315,12 @@ local function start_drawing(scope, options, generation)
   )
 end
 
----@param scope                         era.m.indentscope.IScope
----@param options                       era.m.indentscope.IDrawOptions
+---@param scope                         era.dressing.indentscope.IScope
+---@param options                       era.dressing.indentscope.IDrawOptions
 ---@param delay                         integer
 ---@return nil
 local function schedule_drawing(scope, options, delay)
-  local previous = state.scope ---@type era.m.indentscope.IScope|nil
+  local previous = state.scope ---@type era.dressing.indentscope.IScope|nil
   local generation = next_generation() ---@type integer
   clear_delay_timer()
   clear_animation_timer()
@@ -349,8 +349,8 @@ local function schedule_drawing(scope, options, delay)
   end, delay)
 end
 
----@param scope                         era.m.indentscope.IScope
----@param options                       era.m.indentscope.IDrawOptions
+---@param scope                         era.dressing.indentscope.IScope
+---@param options                       era.dressing.indentscope.IDrawOptions
 ---@return nil
 function M.draw(scope, options)
   if not M.is_enabled(scope.bufnr) then
@@ -360,8 +360,8 @@ function M.draw(scope, options)
   schedule_drawing(scope, options, 0)
 end
 
----@param scope                         era.m.indentscope.IScope
----@param options                       era.m.indentscope.IDrawOptions
+---@param scope                         era.dressing.indentscope.IScope
+---@param options                       era.dressing.indentscope.IDrawOptions
 ---@param lazy                          boolean
 ---@return nil
 function M.refresh(scope, options, lazy)
@@ -379,7 +379,7 @@ function M.refresh(scope, options, lazy)
     return
   end
 
-  local resolved = vim.tbl_extend("force", {}, options) ---@type era.m.indentscope.IDrawOptions
+  local resolved = vim.tbl_extend("force", {}, options) ---@type era.dressing.indentscope.IDrawOptions
   if
     state.scope ~= nil
     and state.status ~= "none"
@@ -394,8 +394,8 @@ end
 
 ---@return boolean
 function M.relayout()
-  local scope = state.scope ---@type era.m.indentscope.IScope|nil
-  local options = state.options ---@type era.m.indentscope.IDrawOptions|nil
+  local scope = state.scope ---@type era.dressing.indentscope.IScope|nil
+  local options = state.options ---@type era.dressing.indentscope.IDrawOptions|nil
   if scope == nil or options == nil then
     return false
   end
@@ -404,7 +404,7 @@ function M.relayout()
     return true
   end
 
-  local resolved = vim.tbl_extend("force", {}, options, { delay = 0, interval = 0 }) ---@type era.m.indentscope.IDrawOptions
+  local resolved = vim.tbl_extend("force", {}, options, { delay = 0, interval = 0 }) ---@type era.dressing.indentscope.IDrawOptions
   schedule_drawing(scope, resolved, 0)
   return true
 end

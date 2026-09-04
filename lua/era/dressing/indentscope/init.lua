@@ -23,69 +23,69 @@
 --- SOFTWARE.
 
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.indentscope" ---@type string
+local __module_name__ = "era.dressing.indentscope" ---@type string
 
----@alias era.m.indentscope.Border "both"|"top"|"bottom"|"none"
----@alias era.m.indentscope.Side "top"|"bottom"
+---@alias era.dressing.indentscope.Border "both"|"top"|"bottom"|"none"
+---@alias era.dressing.indentscope.Side "top"|"bottom"
 
----@class era.m.indentscope.IOptions
----@field public border                 era.m.indentscope.Border
+---@class era.dressing.indentscope.IOptions
+---@field public border                 era.dressing.indentscope.Border
 ---@field public indent_at_cursor       boolean
 ---@field public try_as_border          boolean
 
----@class era.m.indentscope.IOptionsOverride
----@field public border                 ?era.m.indentscope.Border
+---@class era.dressing.indentscope.IOptionsOverride
+---@field public border                 ?era.dressing.indentscope.Border
 ---@field public indent_at_cursor       ?boolean
 ---@field public try_as_border          ?boolean
 
----@class era.m.indentscope.IDrawConfig
+---@class era.dressing.indentscope.IDrawConfig
 ---@field public delay                  integer
 ---@field public interval               integer
 ---@field public max_duration           integer
 ---@field public priority               integer
 
----@class era.m.indentscope.IDrawOptions: era.m.indentscope.IDrawConfig
+---@class era.dressing.indentscope.IDrawOptions: era.dressing.indentscope.IDrawConfig
 ---@field public symbol                 string
 ---@field public highlights             string[]
 
----@class era.m.indentscope.IConfig
----@field public draw                   era.m.indentscope.IDrawConfig
----@field public options                era.m.indentscope.IOptions
+---@class era.dressing.indentscope.IConfig
+---@field public draw                   era.dressing.indentscope.IDrawConfig
+---@field public options                era.dressing.indentscope.IOptions
 ---@field public symbol                 string
 ---@field public highlights             string[]
 
----@class era.m.indentscope.IBody
+---@class era.dressing.indentscope.IBody
 ---@field public top                    integer
 ---@field public bottom                 integer
 ---@field public indent                 integer
 
----@class era.m.indentscope.IBorder
+---@class era.dressing.indentscope.IBorder
 ---@field public top                    integer|nil
 ---@field public bottom                 integer|nil
 ---@field public indent                 integer|nil
 
----@class era.m.indentscope.IReference
+---@class era.dressing.indentscope.IReference
 ---@field public line                   integer
 ---@field public col                    integer
 ---@field public indent                 integer
 
----@class era.m.indentscope.IScope
+---@class era.dressing.indentscope.IScope
 ---@field public bufnr                  integer
 ---@field public winnr                  integer
----@field public body                   era.m.indentscope.IBody
----@field public border                 era.m.indentscope.IBorder
----@field public reference              era.m.indentscope.IReference
+---@field public body                   era.dressing.indentscope.IBody
+---@field public border                 era.dressing.indentscope.IBorder
+---@field public reference              era.dressing.indentscope.IReference
 
----@class era.m.indentscope.draw.IIndicator
+---@class era.dressing.indentscope.draw.IIndicator
 ---@field public rows                   integer[]
 ---@field public row_indexes            table<integer, integer>
 ---@field public origin_index           integer
 ---@field public extmark_options        vim.api.keyset.set_extmark
 
----@class era.m.indentscope
+---@class era.dressing.indentscope
 local M = {}
 
----@type era.m.indentscope.IConfig
+---@type era.dressing.indentscope.IConfig
 M.config = {
   draw = {
     delay = 100,
@@ -112,25 +112,25 @@ M.config = {
 
 local initialized = false ---@type boolean
 
----@return era.m.indentscope.scope
+---@return era.dressing.indentscope.scope
 local function get_scope_module()
-  return require("era.m.indentscope.scope")
+  return require("era.dressing.indentscope.scope")
 end
 
----@return era.m.indentscope.draw
+---@return era.dressing.indentscope.draw
 local function get_draw_module()
-  return require("era.m.indentscope.draw")
+  return require("era.dressing.indentscope.draw")
 end
 
----@return era.m.indentscope.action
+---@return era.dressing.indentscope.action
 local function get_action_module()
-  return require("era.m.indentscope.action")
+  return require("era.dressing.indentscope.action")
 end
 
----@param options                       ?era.m.indentscope.IOptionsOverride
----@return era.m.indentscope.IOptions
+---@param options                       ?era.dressing.indentscope.IOptionsOverride
+---@return era.dressing.indentscope.IOptions
 local function resolve_options(options)
-  local resolved = vim.tbl_extend("force", {}, M.config.options, options or {}) ---@type era.m.indentscope.IOptions
+  local resolved = vim.tbl_extend("force", {}, M.config.options, options or {}) ---@type era.dressing.indentscope.IOptions
   if not vim.list_contains({ "both", "top", "bottom", "none" }, resolved.border) then
     error("invalid indentscope border: " .. tostring(resolved.border), 2)
   end
@@ -138,9 +138,9 @@ local function resolve_options(options)
 end
 
 ---@param options                       ?table
----@return era.m.indentscope.IDrawOptions
+---@return era.dressing.indentscope.IDrawOptions
 local function resolve_draw_options(options)
-  local resolved = vim.tbl_extend("force", {}, M.config.draw, options or {}) ---@type era.m.indentscope.IDrawOptions
+  local resolved = vim.tbl_extend("force", {}, M.config.draw, options or {}) ---@type era.dressing.indentscope.IDrawOptions
   resolved.symbol = M.config.symbol
   resolved.highlights = M.config.highlights
   return resolved
@@ -148,13 +148,13 @@ end
 
 ---@param line                          ?integer
 ---@param col                           ?integer
----@param options                       ?era.m.indentscope.IOptionsOverride
----@return era.m.indentscope.IScope
+---@param options                       ?era.dressing.indentscope.IOptionsOverride
+---@return era.dressing.indentscope.IScope
 function M.get_scope(line, col, options)
   return get_scope_module().get(line, col, resolve_options(options))
 end
 
----@param scope                         ?era.m.indentscope.IScope
+---@param scope                         ?era.dressing.indentscope.IScope
 ---@param options                       ?table
 ---@return nil
 function M.draw(scope, options)
@@ -166,15 +166,15 @@ function M.undraw()
   get_draw_module().undraw()
 end
 
----@param side                          era.m.indentscope.Side
+---@param side                          era.dressing.indentscope.Side
 ---@param use_border                    ?boolean
----@param scope                         ?era.m.indentscope.IScope
+---@param scope                         ?era.dressing.indentscope.IScope
 ---@return nil
 function M.move_cursor(side, use_border, scope)
   get_action_module().move_cursor(side, use_border == true, scope or M.get_scope())
 end
 
----@param side                          era.m.indentscope.Side
+---@param side                          era.dressing.indentscope.Side
 ---@param add_to_jumplist               ?boolean
 ---@return nil
 function M.operator(side, add_to_jumplist)
@@ -191,19 +191,19 @@ end
 ---@param immediate                     boolean
 ---@return nil
 local function refresh(lazy, immediate)
-  local draw = get_draw_module() ---@type era.m.indentscope.draw
+  local draw = get_draw_module() ---@type era.dressing.indentscope.draw
   if not draw.is_enabled(vim.api.nvim_get_current_buf()) then
     draw.undraw()
     return
   end
 
-  local options = resolve_draw_options(immediate and { delay = 0 } or nil) ---@type era.m.indentscope.IDrawOptions
+  local options = resolve_draw_options(immediate and { delay = 0 } or nil) ---@type era.dressing.indentscope.IDrawOptions
   draw.refresh(M.get_scope(), options, lazy)
 end
 
 ---@return nil
 local function relayout()
-  local draw = get_draw_module() ---@type era.m.indentscope.draw
+  local draw = get_draw_module() ---@type era.dressing.indentscope.draw
   if not draw.relayout() then
     refresh(false, true)
   end
@@ -224,37 +224,37 @@ local function setup_keymaps()
       modes = { "n" },
       key = "[i",
       desc = "indentscope: goto top",
-      callback = "<Cmd>lua era.m.indentscope.operator('top', true)<CR>",
+      callback = "<Cmd>lua era.dressing.indentscope.operator('top', true)<CR>",
     },
     {
       modes = { "n" },
       key = "]i",
       desc = "indentscope: goto bottom",
-      callback = "<Cmd>lua era.m.indentscope.operator('bottom', true)<CR>",
+      callback = "<Cmd>lua era.dressing.indentscope.operator('bottom', true)<CR>",
     },
     {
       modes = { "x", "o" },
       key = "[i",
       desc = "indentscope: goto top",
-      callback = "<Cmd>lua era.m.indentscope.operator('top')<CR>",
+      callback = "<Cmd>lua era.dressing.indentscope.operator('top')<CR>",
     },
     {
       modes = { "x", "o" },
       key = "]i",
       desc = "indentscope: goto bottom",
-      callback = "<Cmd>lua era.m.indentscope.operator('bottom')<CR>",
+      callback = "<Cmd>lua era.dressing.indentscope.operator('bottom')<CR>",
     },
     {
       modes = { "x", "o" },
       key = "ii",
       desc = "indentscope: inner scope",
-      callback = "<Cmd>lua era.m.indentscope.textobject()<CR>",
+      callback = "<Cmd>lua era.dressing.indentscope.textobject()<CR>",
     },
     {
       modes = { "x", "o" },
       key = "ai",
       desc = "indentscope: around scope",
-      callback = "<Cmd>lua era.m.indentscope.textobject(true)<CR>",
+      callback = "<Cmd>lua era.dressing.indentscope.textobject(true)<CR>",
     },
   }
   stl.nvim.fn.bindkeys(keymaps, { noremap = true, silent = true })

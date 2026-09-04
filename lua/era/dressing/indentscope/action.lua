@@ -1,14 +1,14 @@
-local Scope = require("era.m.indentscope.scope")
+local Scope = require("era.dressing.indentscope.scope")
 
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.indentscope.action" ---@type string
+local __module_name__ = "era.dressing.indentscope.action" ---@type string
 
----@class era.m.indentscope.action
+---@class era.dressing.indentscope.action
 local M = {}
 
----@param side                          era.m.indentscope.Side
+---@param side                          era.dressing.indentscope.Side
 ---@param use_border                    boolean
----@param scope                         era.m.indentscope.IScope
+---@param scope                         era.dressing.indentscope.IScope
 ---@return nil
 function M.move_cursor(side, use_border, scope)
   local target = use_border and scope.border[side] or nil ---@type integer|nil
@@ -20,12 +20,12 @@ function M.move_cursor(side, use_border, scope)
   end)
 end
 
----@param side                          era.m.indentscope.Side
+---@param side                          era.dressing.indentscope.Side
 ---@param add_to_jumplist               boolean
----@param get_scope                     fun(line: integer|nil, col: integer|nil, options: era.m.indentscope.IOptionsOverride|nil): era.m.indentscope.IScope
+---@param get_scope                     fun(line: integer|nil, col: integer|nil, options: era.dressing.indentscope.IOptionsOverride|nil): era.dressing.indentscope.IScope
 ---@return nil
 function M.operator(side, add_to_jumplist, get_scope)
-  local scope = get_scope(nil, nil, nil) ---@type era.m.indentscope.IScope
+  local scope = get_scope(nil, nil, nil) ---@type era.dressing.indentscope.IScope
   if Scope.get_draw_col(scope) < 0 then
     return
   end
@@ -56,18 +56,18 @@ local function exit_visual_mode()
 end
 
 ---@param use_border                    boolean
----@param get_scope                     fun(line: integer|nil, col: integer|nil, options: era.m.indentscope.IOptionsOverride|nil): era.m.indentscope.IScope
+---@param get_scope                     fun(line: integer|nil, col: integer|nil, options: era.dressing.indentscope.IOptionsOverride|nil): era.dressing.indentscope.IScope
 ---@return nil
 function M.textobject(use_border, get_scope)
-  local scope = get_scope(nil, nil, nil) ---@type era.m.indentscope.IScope
+  local scope = get_scope(nil, nil, nil) ---@type era.dressing.indentscope.IScope
   if Scope.get_draw_col(scope) < 0 then
     return
   end
 
   local count = use_border and vim.v.count1 or 1 ---@type integer
   for _ = 1, count do
-    local first = "top" ---@type era.m.indentscope.Side
-    local last = "bottom" ---@type era.m.indentscope.Side
+    local first = "top" ---@type era.dressing.indentscope.Side
+    local last = "bottom" ---@type era.dressing.indentscope.Side
     if use_border and scope.border.bottom == nil then
       first, last = last, first
     end

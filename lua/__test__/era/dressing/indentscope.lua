@@ -1,10 +1,10 @@
 ---@diagnostic disable: undefined-global
---- Run with: nvim -l lua/__test__/era/m/indentscope.lua
+--- Run with: nvim -l lua/__test__/era/dressing/indentscope.lua
 
 local bootstrap = require("__test__.bootstrap")
 local harness = require("__test__.harness")
 
-local t = harness.new("era.m.indentscope")
+local t = harness.new("era.dressing.indentscope")
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -15,12 +15,12 @@ bootstrap.with_runtime(t, {
     timer = require("stl.timer"),
   },
   era = {
-    m = {},
+    dressing = {},
   },
 })
 
-local Indentscope = require("era.m.indentscope")
-era.m.indentscope = Indentscope
+local Indentscope = require("era.dressing.indentscope")
+era.dressing.indentscope = Indentscope
 
 ---@param lines                         string[]
 ---@param callback                      fun(bufnr: integer): nil
@@ -56,8 +56,8 @@ end
 ---@param callback                      fun(render: fun(winnr: integer|nil): integer[]): nil
 ---@return nil
 local function with_render_capture(callback)
-  require("era.m.indentscope.draw")
-  local namespace = vim.api.nvim_get_namespaces()["era.m.indentscope"] ---@type integer
+  require("era.dressing.indentscope.draw")
+  local namespace = vim.api.nvim_get_namespaces()["era.dressing.indentscope"] ---@type integer
   local original = vim.api.nvim_buf_set_extmark
   local rendered_rows = {} ---@type integer[]
 
@@ -79,8 +79,8 @@ local function with_render_capture(callback)
 end
 
 t:test("init keeps rendering and actions lazy", function()
-  t.assert_nil(package.loaded["era.m.indentscope.draw"], "draw loaded during init")
-  t.assert_nil(package.loaded["era.m.indentscope.action"], "action loaded during init")
+  t.assert_nil(package.loaded["era.dressing.indentscope.draw"], "draw loaded during init")
+  t.assert_nil(package.loaded["era.dressing.indentscope.action"], "action loaded during init")
 end)
 
 t:test("try_as_border resolves the nested scope from its header", function()
@@ -179,7 +179,7 @@ t:test("draw renders one guide on every scope body line", function()
       t.assert_eq(1, rows[1], "first guide row")
       t.assert_eq(2, rows[2], "second guide row")
 
-      local namespace = vim.api.nvim_get_namespaces()["era.m.indentscope"] ---@type integer
+      local namespace = vim.api.nvim_get_namespaces()["era.dressing.indentscope"] ---@type integer
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, {}) ---@type table[]
       t.assert_eq(0, #extmarks, "persistent extmark count")
     end)
@@ -581,7 +581,7 @@ t:test("waiting refresh restarts delay with the latest reference", function()
     end)
 
     with_render_capture(function(render)
-      local Draw = require("era.m.indentscope.draw")
+      local Draw = require("era.dressing.indentscope.draw")
       local options = {
         delay = 100,
         interval = 10,
@@ -589,7 +589,7 @@ t:test("waiting refresh restarts delay with the latest reference", function()
         priority = 2,
         symbol = "╎",
         highlights = { "Normal" },
-      } ---@type era.m.indentscope.IDrawOptions
+      } ---@type era.dressing.indentscope.IDrawOptions
 
       vim.api.nvim_win_set_cursor(0, { 2, 2 })
       Draw.refresh(Indentscope.get_scope(nil, nil, { try_as_border = false }), options, true)
@@ -678,7 +678,7 @@ end)
 
 t:test("excluded CursorMoved skips scope computation", function()
   with_buffer({ "  one()", "  two()" }, function(bufnr)
-    local Scope = require("era.m.indentscope.scope")
+    local Scope = require("era.dressing.indentscope.scope")
     local calls = 0 ---@type integer
     t:patch_table(Scope, "get", function()
       calls = calls + 1
@@ -695,7 +695,7 @@ end)
 
 t:test("window and buffer entry refresh the active scope", function()
   with_buffer({ "if ok then", "  one()", "end" }, function()
-    local Scope = require("era.m.indentscope.scope")
+    local Scope = require("era.dressing.indentscope.scope")
     local original = Scope.get
     local calls = 0 ---@type integer
     t:patch_table(Scope, "get", function(...)
@@ -716,7 +716,7 @@ t:test("WinScrolled updates layout without recomputing scope", function()
     vim.api.nvim_win_set_cursor(0, { 2, 2 })
     Indentscope.draw(Indentscope.get_scope(nil, nil, { try_as_border = false }), { interval = 0 })
 
-    local Scope = require("era.m.indentscope.scope")
+    local Scope = require("era.dressing.indentscope.scope")
     local calls = 0 ---@type integer
     t:patch_table(Scope, "get", function()
       calls = calls + 1

@@ -55,9 +55,9 @@ local function get_scope(winnr)
     return nil
   end
 
-  local scope = nil ---@type era.m.indentscope.IScope|nil
+  local scope = nil ---@type era.dressing.indentscope.IScope|nil
   vim.api.nvim_win_call(winnr, function()
-    scope = era.m.indentscope.get_scope()
+    scope = era.dressing.indentscope.get_scope()
   end)
 
   if scope and scope.body then

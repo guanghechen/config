@@ -72,6 +72,28 @@ local fn = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
+---@class era.dressing.__mods
+local __dressing__mods = {
+  indentscope = "era.dressing.indentscope",
+}
+
+---@class era.dressing
+---@field public __mods                 era.dressing.__mods
+---@field public indentscope            era.dressing.indentscope
+local dressing = setmetatable({
+  __mods = __dressing__mods,
+}, {
+  __index = function(t, k)
+    local mod = __dressing__mods[k] ---@type string|nil
+    if mod == nil then
+      return rawget(t, k)
+    end
+    return require(mod)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class era.m.__mods
 local __m__mods = {
   ai = "era.m.ai",
@@ -87,7 +109,6 @@ local __m__mods = {
   illuminate = "era.m.illuminate",
   im = "era.m.im",
   image = "era.m.image",
-  indentscope = "era.m.indentscope",
   input = "era.m.input",
   inspect = "era.m.inspect",
   lint = "era.m.lint",
@@ -135,7 +156,6 @@ local __m__mods = {
 ---@field public illuminate             era.m.illuminate
 ---@field public im                     era.m.im
 ---@field public image                  era.m.image
----@field public indentscope            era.m.indentscope
 ---@field public input                  era.m.input
 ---@field public inspect                era.m.inspect
 ---@field public lint                   era.m.lint
@@ -275,12 +295,14 @@ local widget = setmetatable({
 ----------------------------------------------------------------------------------------------------
 
 ---@class era
+---@field public dressing               era.dressing
 ---@field public fn                     era.fn
 ---@field public m                      era.m
 ---@field public nvim                   era.nvim
 ---@field public view                   era.view
 ---@field public widget                 era.widget
 local M = {
+  dressing = dressing,
   fn = fn,
   m = m,
   nvim = nvim,
