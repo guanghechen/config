@@ -38,7 +38,9 @@ local function is_buf_enabled(bufnr)
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
-  return vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+  return buftype == "" and stl.filetype.is_indentscope_enabled(filetype)
 end
 
 ---@param winnr                         integer
@@ -53,19 +55,10 @@ local function get_scope(winnr)
     return nil
   end
 
-  local MiniIndentscope = require("mini.indentscope")
-
-  local pos = vim.api.nvim_win_get_cursor(winnr)
-  local line, col = pos[1], pos[2] + 1
-  local scope ---@type table|nil
-
-  if vim.api.nvim_get_current_buf() == bufnr then
-    scope = MiniIndentscope.get_scope(line, col)
-  else
-    vim.api.nvim_buf_call(bufnr, function()
-      scope = MiniIndentscope.get_scope(line, col)
-    end)
-  end
+  local scope = nil ---@type era.m.indentscope.IScope|nil
+  vim.api.nvim_win_call(winnr, function()
+    scope = era.m.indentscope.get_scope()
+  end)
 
   if scope and scope.body then
     return { bufnr = bufnr, from = scope.body.top, to = scope.body.bottom }

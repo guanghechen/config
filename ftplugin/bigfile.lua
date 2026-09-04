@@ -6,7 +6,6 @@ local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
 vim.b[bufnr].completion = false
 vim.b[bufnr].minihipatterns_disable = true
-vim.b[bufnr].miniindentscope_disable = true
 
 vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 vim.api.nvim_set_option_value("undolevels", 100, { buf = bufnr })

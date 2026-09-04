@@ -66,9 +66,6 @@ function M.create_buffer()
   end
   vim.api.nvim_set_option_value("filetype", config.FT.COMMITS, { buf = bufnr })
 
-  -- Disable mini plugins
-  vim.b[bufnr].miniindentscope_disable = true
-
   return bufnr
 end
 

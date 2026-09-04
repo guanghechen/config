@@ -263,7 +263,6 @@ function M:__show_popup__(hunk, is_staged)
   local board_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   self._board_bufnr = board_bufnr
 
-  vim.b[board_bufnr].miniindentscope_disable = true
   vim.b[board_bufnr].miniai_disable = true
   vim.b[board_bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = board_bufnr })

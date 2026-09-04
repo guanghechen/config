@@ -356,7 +356,6 @@ function M:__create_input_buf__()
   bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   self._input_bufnr = bufnr
 
-  vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
@@ -403,7 +402,6 @@ function M:__create_preview_buf__()
   bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   self._preview_bufnr = bufnr
 
-  vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })

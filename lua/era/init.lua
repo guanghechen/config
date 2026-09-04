@@ -87,6 +87,7 @@ local __m__mods = {
   illuminate = "era.m.illuminate",
   im = "era.m.im",
   image = "era.m.image",
+  indentscope = "era.m.indentscope",
   input = "era.m.input",
   inspect = "era.m.inspect",
   lint = "era.m.lint",
@@ -134,6 +135,7 @@ local __m__mods = {
 ---@field public illuminate             era.m.illuminate
 ---@field public im                     era.m.im
 ---@field public image                  era.m.image
+---@field public indentscope            era.m.indentscope
 ---@field public input                  era.m.input
 ---@field public inspect                era.m.inspect
 ---@field public lint                   era.m.lint

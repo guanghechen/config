@@ -202,7 +202,6 @@ function M:create_buf()
   bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   self._bufnr = bufnr
 
-  vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })

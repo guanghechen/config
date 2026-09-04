@@ -107,10 +107,6 @@ function M.default_gen_hlgroup_map(context)
     MiniIconsRed = { fg = c.brightRed },
     MiniIconsYellow = { fg = c.brightYellow },
 
-    ---! mini.indentscope
-    MiniIndentscopeSymbol = { fg = c.pink },
-    MiniIndentscopeSymbolOff = { fg = c.red },
-
     NotifyERRORIcon = { fg = c.red },
     NotifyWARNIcon = { fg = c.yellow },
     NotifyINFOIcon = { fg = c.green },

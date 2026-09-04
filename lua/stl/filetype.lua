@@ -215,6 +215,10 @@ local filetypes = {
     [M.UX_CMDLINE] = true,
     [M.UX_POPUPMENU] = true,
   },
+  no_indentscope = {
+    [M.BIGFILE] = true,
+    ["diff"] = true,
+  },
   no_surround = {
     [M.DIFFVIEW_CHANGES] = true,
   },
@@ -297,6 +301,15 @@ function M.is_cmp_enabled(filetype)
     return true
   end
   return false
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_indentscope_enabled(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.not_sourcefile[filetype] ~= true and filetypes.no_indentscope[filetype] ~= true
 end
 
 ---@param filetype                      string|nil

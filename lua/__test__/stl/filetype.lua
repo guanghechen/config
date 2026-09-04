@@ -31,4 +31,13 @@ t:test("C# uses Neovim's cs filetype", function()
   t.assert_false(Filetype.is_cmp_enabled("csharp"), "nonexistent alias")
 end)
 
+t:test("indentscope is enabled only for eligible source filetypes", function()
+  t.assert_true(Filetype.is_indentscope_enabled("lua"), "lua")
+  t.assert_false(Filetype.is_indentscope_enabled(Filetype.BIGFILE), "bigfile")
+  t.assert_false(Filetype.is_indentscope_enabled("diff"), "diff")
+  t.assert_false(Filetype.is_indentscope_enabled(Filetype.BOARD), "board")
+  t.assert_false(Filetype.is_indentscope_enabled(""), "empty")
+  t.assert_false(Filetype.is_indentscope_enabled(nil), "nil")
+end)
+
 t:run()

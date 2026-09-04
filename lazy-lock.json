@@ -8,7 +8,6 @@
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d" },
   "mini.ai": { "branch": "nvim@mini.ai", "commit": "25248c6aa002391936a6200f12d1466015987133" },
   "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "7c840c71d6a91f53d734cab2b6fe2290d285ec3b" },
-  "mini.indentscope": { "branch": "nvim@mini.indentscope", "commit": "92fbaf895f83c59575ec599df532b297ebf62b14" },
   "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "3d55c8f67c6ae5c15e1042571e107c7a3d5c5f4e" },
   "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "857651fce37eba032ebe28f3a206283cdc65c45a" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "f3061339b8eaf9fda873600bc425b8d2d8502533" },

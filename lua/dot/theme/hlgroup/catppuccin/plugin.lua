@@ -97,10 +97,6 @@ function M.gen_hlgroup_map(context)
     MiniIconsRed = { fg = c.red },
     MiniIconsYellow = { fg = c.yellow },
 
-    ---! mini.indentscope
-    MiniIndentscopeSymbol = { fg = c.pink },
-    MiniIndentscopeSymbolOff = { fg = c.red },
-
     ---! snacks.nvim
     SnacksPickerLabel = { fg = c.blue, bold = true },
     SnacksPickerFile = { fg = c.teal },
