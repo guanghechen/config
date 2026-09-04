@@ -1,4 +1,4 @@
-model = "gpt-5.6-sol"
+model = "gpt-5.6-sol-fast"
 model_provider = "copilot"
 
 [model_providers.copilot]
