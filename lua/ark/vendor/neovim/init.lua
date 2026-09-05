@@ -33,7 +33,7 @@ vim.schedule(function()
   era.dressing.statuscolumn.dressing()
   era.dressing.trailspace.dressing()
   era.dressing.virtcolumn.dressing()
-  era.m.winsep.dressing()
+  era.dressing.winsep.dressing()
 
   era.m.dim.dressing()
   era.m.input.dressing()

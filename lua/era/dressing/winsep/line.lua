@@ -1,4 +1,7 @@
----@class era.m.winsep.line.highlights
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.winsep.line" ---@type string
+
+---@class era.dressing.winsep.line.highlights
 local config = {
   zindex = dot.var.zindex.WINSEP,
   h = {
@@ -35,33 +38,33 @@ local config = {
   },
 }
 
----@alias era.m.winsep.line.Direction
+---@alias era.dressing.winsep.line.Direction
 ---| "h" left
 ---| "k" top
 ---| "l" right
 ---| "j" bottom
 
----@class era.m.winsep.line.IProps
----@field public direction              era.m.winsep.line.Direction
+---@class era.dressing.winsep.line.IProps
+---@field public direction              era.dressing.winsep.line.Direction
 ---@field public winhighlight           ?string
 ---@field public zindex                 ?integer
 
----@class era.m.winsep.Line
+---@class era.dressing.winsep.Line
 ---@field public _cfg                   vim.api.keyset.win_config
 ---@field public _size                  integer
 ---@field public _winnr                 integer|nil
 ---@field public _bufnr                 integer|nil
 ---@field public _winhighlight          string
----@field public _direction             era.m.winsep.line.Direction
+---@field public _direction             era.dressing.winsep.line.Direction
 local M = {}
 M.__index = M
 
----@param props                         era.m.winsep.line.IProps
----@return era.m.winsep.Line
+---@param props                         era.dressing.winsep.line.IProps
+---@return era.dressing.winsep.Line
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local direction = props.direction ---@type era.m.winsep.line.Direction
+  local direction = props.direction ---@type era.dressing.winsep.line.Direction
   local winhighlight = props.winhighlight or config[direction].winhighlight ---@type string
   local zindex = props.zindex or config.zindex ---@type integer
 
@@ -143,7 +146,7 @@ end
 function M:move(row, col, size)
   local bufnr = self:create_buf_as_needed() ---@type integer
   local cfg = self._cfg ---@type vim.api.keyset.win_config
-  local direction = self._direction ---@type era.m.winsep.line.Direction
+  local direction = self._direction ---@type era.dressing.winsep.line.Direction
 
   cfg.row = row
   cfg.col = col

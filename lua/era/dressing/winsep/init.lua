@@ -1,12 +1,15 @@
-local Line = require("era.m.winsep.line")
+local __module_name__ = "era.dressing.winsep" ---@type string
+local initialized = false ---@type boolean
 
----@class era.m.winsep.Winsep
----@field public left                   era.m.winsep.Line
----@field public top                    era.m.winsep.Line
----@field public right                  era.m.winsep.Line
----@field public bottom                 era.m.winsep.Line
----@field public hide                   fun(self: era.m.winsep.Winsep):nil
----@field public show                   fun(self: era.m.winsep.Winsep, winnr: integer):nil
+local Line = require("era.dressing.winsep.line")
+
+---@class era.dressing.winsep.Winsep
+---@field public left                   era.dressing.winsep.Line
+---@field public top                    era.dressing.winsep.Line
+---@field public right                  era.dressing.winsep.Line
+---@field public bottom                 era.dressing.winsep.Line
+---@field public hide                   fun(self: era.dressing.winsep.Winsep):nil
+---@field public show                   fun(self: era.dressing.winsep.Winsep, winnr: integer):nil
 local winsep = {
   left = Line.new({ direction = "h" }),
   top = Line.new({ direction = "k" }),
@@ -93,17 +96,23 @@ local winsep = {
   end,
 }
 
----@class era.m.winsep
+---@class era.dressing.winsep
 ---@field public dressing               fun(): nil
----@field public Line                   era.m.winsep.Line
----@field public Winsep                 era.m.winsep.Winsep
+---@field public Line                   era.dressing.winsep.Line
+---@field public Winsep                 era.dressing.winsep.Winsep
 local M = {
   Line = Line,
   Winsep = winsep,
 }
 
+--- Register one debounce and observer; flight changes control visibility separately.
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   local refresh_debounced = stl.timer.debounce(function(winnr)
     local enabled = dot.context.flight.dressing_winsep:snapshot() ---@type boolean
     if not enabled then
@@ -123,7 +132,7 @@ function M.dressing()
   end, true)
 
   vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
-    group = stl.nvim.fn.augroup("era.winsep_on_resize"),
+    group = stl.nvim.fn.augroup(__module_name__ .. "_on_resize"),
     callback = function()
       vim.schedule(function()
         local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -134,7 +143,7 @@ function M.dressing()
   })
 
   vim.api.nvim_create_autocmd("WinEnter", {
-    group = stl.nvim.fn.augroup("era.winsep_on_WinEnter"),
+    group = stl.nvim.fn.augroup(__module_name__ .. "_on_WinEnter"),
     callback = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if stl.nvim.win.is_fixed(winnr) then

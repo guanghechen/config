@@ -83,6 +83,7 @@ local __dressing__mods = {
   statuscolumn = "era.dressing.statuscolumn",
   trailspace = "era.dressing.trailspace",
   virtcolumn = "era.dressing.virtcolumn",
+  winsep = "era.dressing.winsep",
 }
 
 ---@class era.dressing
@@ -96,6 +97,7 @@ local __dressing__mods = {
 ---@field public statuscolumn           era.dressing.statuscolumn
 ---@field public trailspace             era.dressing.trailspace
 ---@field public virtcolumn             era.dressing.virtcolumn
+---@field public winsep                 era.dressing.winsep
 local dressing = setmetatable({
   __mods = __dressing__mods,
 }, {
@@ -147,7 +149,6 @@ local __m__mods = {
   ui_attach = "era.m.ui_attach",
   winline = "era.m.winline",
   winpicker = "era.m.winpicker",
-  winsep = "era.m.winsep",
   wk = "era.m.wk",
 }
 
@@ -188,7 +189,6 @@ local __m__mods = {
 ---@field public ui_attach              era.m.ui_attach
 ---@field public winline                era.m.winline
 ---@field public winpicker              era.m.winpicker
----@field public winsep                 era.m.winsep
 ---@field public wk                     era.m.wk
 local m = setmetatable({
   __mods = __m__mods,
