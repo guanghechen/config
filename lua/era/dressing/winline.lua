@@ -1,4 +1,8 @@
----@class era.m.winline
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.winline" ---@type string
+local initialized = false ---@type boolean
+
+---@class era.dressing.winline
 local M = {}
 
 local txt = stl.nvim.fn.txt
@@ -197,8 +201,14 @@ local function render(winnr)
   end
 end
 
+--- Subscribe once; dirty events render the current and previous windows.
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   dot.state.status.dirty_winline_nr:subscribe(
     stl.c.Subscriber.new({
       on_next = function(winnr, winnr_prev)

@@ -1,9 +1,10 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/winline_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/winline_spec.lua
 ---@diagnostic disable: undefined-global
 
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.winline")
+local module_name = "era.dressing.winline"
+local t = harness.new(module_name)
 
 t:test("diffview winbar renders hunk navigation on the right", function()
   local winnr = vim.api.nvim_get_current_win()
@@ -69,7 +70,7 @@ t:test("diffview winbar renders hunk navigation on the right", function()
     },
   })
 
-  local winline = assert(loadfile("lua/era/m/winline.lua"))()
+  local winline = assert(loadfile("lua/era/dressing/winline.lua"))()
   winline.dressing()
   assert(on_dirty)(winnr)
 
@@ -148,13 +149,98 @@ t:test("external winline delegates dirty renders to its owned nvimbar", function
     },
   })
 
-  local winline = assert(loadfile("lua/era/m/winline.lua"))()
+  local winline = assert(loadfile("lua/era/dressing/winline.lua"))()
   winline.dressing()
   assert(on_dirty)(winnr)
   t.assert_eq(1, renders, "external nvimbar render")
 
   vim.api.nvim_win_set_buf(winnr, bufnr_previous)
   vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("dressing subscribes once and routes dirty updates to valid current and previous windows", function()
+  local winnr = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  local previous_winnr = vim.api.nvim_open_win(bufnr, false, { split = "right" })
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(previous_winnr) then
+      vim.api.nvim_win_close(previous_winnr, true)
+    end
+  end)
+
+  local subscribers = {}
+  local rendered_winnrs = {}
+  t:patch_global("stl", {
+    c = { Subscriber = {
+      new = function(props)
+        return props
+      end,
+    } },
+    filetype = {
+      has_external_winline = function()
+        return true
+      end,
+    },
+    nvim = {
+      fn = {
+        txt = function(text)
+          return text
+        end,
+      },
+      win = { is_valid = vim.api.nvim_win_is_valid },
+    },
+  })
+  t:patch_global("dot", {
+    state = {
+      status = {
+        dirty_winline_nr = {
+          subscribe = function(_, subscriber, ignore_initial)
+            t.assert_true(ignore_initial, "initial notification ignored")
+            subscribers[#subscribers + 1] = subscriber
+          end,
+        },
+      },
+    },
+    win = {
+      render_winline = function(target_winnr)
+        rendered_winnrs[#rendered_winnrs + 1] = target_winnr
+      end,
+    },
+  })
+  t:patch_global("era", require("era"))
+  t:patch_table(package.loaded, module_name, nil)
+  t.assert_eq(module_name, era.dressing.__mods.winline, "module registration")
+  t.assert_nil(era.m.__mods.winline, "old registration removed")
+  local winline = era.dressing.winline
+
+  local function notify(winnr, winnr_prev)
+    for _, subscriber in ipairs(subscribers) do
+      subscriber.on_next(winnr, winnr_prev)
+    end
+  end
+
+  winline.dressing()
+  winline.dressing()
+  t.assert_eq(1, #subscribers, "dirty subscriptions")
+  t.assert_eq(0, #rendered_winnrs, "setup keeps rendering lazy")
+
+  notify(winnr, previous_winnr)
+  t.assert_true(vim.deep_equal({ winnr, previous_winnr }, rendered_winnrs), "both dirty windows render once")
+  rendered_winnrs = {}
+  notify(winnr, winnr)
+  t.assert_true(vim.deep_equal({ winnr }, rendered_winnrs), "identical windows render once")
+
+  vim.api.nvim_win_close(previous_winnr, true)
+  rendered_winnrs = {}
+  notify(winnr, previous_winnr)
+  notify(previous_winnr, winnr)
+  notify(nil, nil)
+  t.assert_true(vim.deep_equal({ winnr, winnr }, rendered_winnrs), "closed and missing windows are ignored")
 end)
 
 t:run()
