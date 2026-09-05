@@ -73,37 +73,40 @@ tabtypes = stl.e.TabTypeSet.ALL
 
 ### 注册模式
 
-`era.m.tabline` 提供注册 API，允许各模块为特定 `tabtype` 注册自定义 nvimbar：
+`era.dressing.tabline` 提供注册 API，允许各模块为特定 `tabtype` 注册自定义 nvimbar factory：
 
 ```lua
 ---@param tabtype stl.e.TabTypeEnum
----@param nvimbar era.m.nvimbar.Nvimbar
----@return boolean success
-era.m.tabline.register(tabtype, nvimbar)
+---@param factory fun(): era.m.nvimbar.Nvimbar
+---@return nil
+era.dressing.tabline.register(tabtype, factory)
 ```
 
 特点：
 
-- 每个 tabtype 只能注册一次，重复注册返回 false
+- 每个 tabtype 只能注册一次，重复注册被忽略
+- factory 在对应 tabtype 首次渲染时调用，创建的实例随后复用
 - 未注册的 tabtype 使用默认 nvimbar（normal 类型）
 - 保持单向依赖：调用方依赖 tabline，而非反向
 
 ### 渲染流程
 
 1. 获取当前 tab 的 `tabtype`
-2. 从 `tabline_nvimbar_map` 查找已注册的 nvimbar
+2. 从 `tabline_nvimbar_map` 查找已注册的 nvimbar 或 factory
 3. 若未找到，使用默认 nvimbar
-4. 调用 `nvimbar:render()` 渲染
+4. 若找到 factory，调用并缓存其返回的 nvimbar
+5. 调用 `nvimbar:render()` 渲染
 
 ### 注册示例
 
 ```lua
 -- 在 diffview 模块中注册
-local nvimbar = era.m.nvimbar.Nvimbar.new({
-  name = "tabline_diffview_workspace",
-  -- ... 配置
-})
-era.m.tabline.register(stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE, nvimbar)
+era.dressing.tabline.register(stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE, function()
+  return era.m.nvimbar.Nvimbar.new({
+    name = "tabline_diffview_workspace",
+    -- ... 配置
+  })
+end)
 ```
 
 ### 各 tabtype 的 tabline 内容

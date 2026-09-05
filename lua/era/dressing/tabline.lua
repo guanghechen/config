@@ -1,4 +1,8 @@
----@class era.m.tabline
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.tabline" ---@type string
+local initialized = false ---@type boolean
+
+---@class era.dressing.tabline
 local M = {}
 
 local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
@@ -9,26 +13,30 @@ local position = "f_tl" ---@type stl.t.NvimbarPositionEnum
 ----------------------------------------------------------------------------------------------------
 
 local normal_tabline ---@type era.m.nvimbar.Nvimbar
-normal_tabline = era.m.nvimbar.Nvimbar.new({
-  name = "tabline",
-  comp_sep = "",
-  comp_sep_hlname = position .. "_bg",
-  comp_sep_hlname_active = position .. "_bg",
-  delay = 256,
-  silent = function()
-    local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
-    return not devmode
-  end,
-  get_max_width = function()
-    return vim.o.columns
-  end,
-  is_active = stl.fn.falsy,
-  on_fulfilled = function()
-    if vim.t.tabtype == nil or vim.t.tabtype == stl.e.TabTypeEnum.NORMAL then
-      vim.o.tabline = normal_tabline:snapshot()
-    end
-  end,
-})
+normal_tabline = era
+  .m
+  .nvimbar
+  .Nvimbar
+  .new({
+    name = "tabline",
+    comp_sep = "",
+    comp_sep_hlname = position .. "_bg",
+    comp_sep_hlname_active = position .. "_bg",
+    delay = 256,
+    silent = function()
+      local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
+      return not devmode
+    end,
+    get_max_width = function()
+      return vim.o.columns
+    end,
+    is_active = stl.fn.falsy,
+    on_fulfilled = function()
+      if vim.t.tabtype == nil or vim.t.tabtype == stl.e.TabTypeEnum.NORMAL then
+        vim.o.tabline = normal_tabline:snapshot()
+      end
+    end,
+  })
   :place("left", era.m.nvimbar.component.explorer.tabline(position), 95)
   :place(
     "left",
@@ -169,8 +177,14 @@ end
 -- Dressing
 ----------------------------------------------------------------------------------------------------
 
+--- Subscribe once; dirty updates own subsequent rendering and visibility transitions.
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   local last_showtabline = 0 ---@type integer
   dirtier:subscribe(stl.c.Subscriber.new({
     on_next = function()

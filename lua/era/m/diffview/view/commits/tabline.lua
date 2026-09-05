@@ -402,7 +402,7 @@ end
 ---Register nvimbar for DIFFVIEW_COMMITS tabtype (idempotent)
 ---@return nil
 function M.register()
-  era.m.tabline.register(stl.e.TabTypeEnum.DIFFVIEW_COMMITS, M.create_tabline())
+  era.dressing.tabline.register(stl.e.TabTypeEnum.DIFFVIEW_COMMITS, M.create_tabline())
 end
 
 return M

@@ -21,7 +21,7 @@ pcall(require, "ark.vendor.local.plugin")
 
 vim.schedule(function()
   era.dressing.statusline.dressing()
-  era.m.tabline.dressing()
+  era.dressing.tabline.dressing()
   era.m.winline.dressing()
 
   era.dressing.commentstring.dressing()
