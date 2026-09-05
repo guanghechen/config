@@ -1,8 +1,11 @@
 ---@see https://github.com/folke/snacks.nvim/blob/85b8ec210975aa137af4b7bef1fb7b7098be331a/lua/snacks/statuscolumn.lua
 
----@class era.m.statuscolumn.IConfig
----@field public left                   era.m.statuscolumn.IComponents
----@field public right                  era.m.statuscolumn.IComponents
+local __module_name__ = "era.dressing.statuscolumn" ---@type string
+local initialized = false ---@type boolean
+
+---@class era.dressing.statuscolumn.IConfig
+---@field public left                   era.dressing.statuscolumn.IComponents
+---@field public right                  era.dressing.statuscolumn.IComponents
 ---@field public refresh                integer
 ---@field public folds                  { open: boolean, git_hl: boolean }
 local config = {
@@ -15,26 +18,26 @@ local config = {
   },
 }
 
----@alias era.m.statuscolumn.IComponents
----| era.m.statuscolumn.SignType[]
----| fun(winnr: number, bufnr: number,lnum:number): era.m.statuscolumn.SignType[]
+---@alias era.dressing.statuscolumn.IComponents
+---| era.dressing.statuscolumn.SignType[]
+---| fun(winnr: number, bufnr: number,lnum:number): era.dressing.statuscolumn.SignType[]
 
----@alias era.m.statuscolumn.IWanted table<era.m.statuscolumn.SignType, boolean>
+---@alias era.dressing.statuscolumn.IWanted table<era.dressing.statuscolumn.SignType, boolean>
 
----@alias era.m.statuscolumn.SignType
+---@alias era.dressing.statuscolumn.SignType
 ---| "mark"
 ---| "sign"
 ---| "fold"
 ---| "git"
 
----@class era.m.statuscolumn.ISign
----@field public type                   era.m.statuscolumn.SignType
+---@class era.dressing.statuscolumn.ISign
+---@field public type                   era.dressing.statuscolumn.SignType
 ---@field public text                   string
 ---@field public texthl                 string|nil
 ---@field public name                   string|nil
 ---@field public priority               number|nil
 
----@class era.m.statuscolumn.IFoldInfo
+---@class era.dressing.statuscolumn.IFoldInfo
 ---@field public start                  number Line number where deepest fold starts
 ---@field public level                  number Fold level, when zero other fields are N/A
 ---@field public llevel                 number Lowest level that starts in v:lnum
@@ -65,7 +68,7 @@ end
 
 ---@param winnr                         number
 ---@param lnum                          number
----@return era.m.statuscolumn.IFoldInfo|nil
+---@return era.dressing.statuscolumn.IFoldInfo|nil
 local function fold_info(winnr, lnum)
   pcall(_ffi)
   if not C then
@@ -77,11 +80,11 @@ local function fold_info(winnr, lnum)
   if wp == nil then
     return
   end
-  return C.fold_info(wp, lnum) ---@type era.m.statuscolumn.IFoldInfo
+  return C.fold_info(wp, lnum) ---@type era.dressing.statuscolumn.IFoldInfo
 end
 
 -- Cache for signs per buffer and line
-local sign_cache = {} ---@type table<number,table<number, era.m.statuscolumn.ISign[]>>
+local sign_cache = {} ---@type table<number,table<number, era.dressing.statuscolumn.ISign[]>>
 local icon_cache = {} ---@type table<string, string>
 local cache = {} ---@type table<string, string>
 
@@ -101,12 +104,12 @@ local function schedule_cache_expiration()
   end)
 end
 
----@param signs_by_type                 table<era.m.statuscolumn.SignType, era.m.statuscolumn.ISign>
----@param types                         era.m.statuscolumn.SignType[]
----@return era.m.statuscolumn.ISign|nil
+---@param signs_by_type                 table<era.dressing.statuscolumn.SignType, era.dressing.statuscolumn.ISign>
+---@param types                         era.dressing.statuscolumn.SignType[]
+---@return era.dressing.statuscolumn.ISign|nil
 local function find_sign(signs_by_type, types)
   for _, t in ipairs(types) do
-    local sign = signs_by_type[t] ---@type era.m.statuscolumn.ISign|nil
+    local sign = signs_by_type[t] ---@type era.dressing.statuscolumn.ISign|nil
     if sign ~= nil then
       return sign
     end
@@ -121,16 +124,16 @@ end
 
 -- Returns buffer signs grouped by line
 ---@param bufnr                         integer
----@return table<integer, era.m.statuscolumn.ISign[]>
+---@return table<integer, era.dressing.statuscolumn.ISign[]>
 local function collect_buf_signs(bufnr)
-  local signs_by_lnum = {} ---@type table<integer, era.m.statuscolumn.ISign[]>
+  local signs_by_lnum = {} ---@type table<integer, era.dressing.statuscolumn.ISign[]>
 
   -- Get extmark signs (includes both legacy and extmark signs in nvim 0.10+)
   local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true, type = "sign" })
   for _, extmark in ipairs(extmarks) do
     local lnum = extmark[2] + 1
     local name = extmark[4].sign_hl_group or extmark[4].sign_name or ""
-    ---@type era.m.statuscolumn.ISign
+    ---@type era.dressing.statuscolumn.ISign
     local sign = {
       name = name,
       type = is_git_sign(name) and "git" or "sign",
@@ -148,7 +151,7 @@ local function collect_buf_signs(bufnr)
   vim.list_extend(marks, vim.fn.getmarklist())
   for _, mark in ipairs(marks) do
     if mark.pos[1] == bufnr and mark.mark:match("[a-zA-Z]") then
-      ---@type era.m.statuscolumn.ISign
+      ---@type era.dressing.statuscolumn.ISign
       local sign = { type = "mark", text = string.sub(mark.mark, 2), texthl = "StatusColumnMark" }
       local lnum = mark.pos[2]
       signs_by_lnum[lnum] = signs_by_lnum[lnum] or {}
@@ -163,15 +166,15 @@ end
 ---@param winnr                         integer
 ---@param bufnr                         integer
 ---@param lnum                          integer
----@param wanted                        era.m.statuscolumn.IWanted
----@return era.m.statuscolumn.ISign[]
+---@param wanted                        era.dressing.statuscolumn.IWanted
+---@return era.dressing.statuscolumn.ISign[]
 local function line_signs(winnr, bufnr, lnum, wanted)
-  local signs_by_lnum = sign_cache[bufnr] ---@type table<integer, era.m.statuscolumn.ISign[]>|nil
+  local signs_by_lnum = sign_cache[bufnr] ---@type table<integer, era.dressing.statuscolumn.ISign[]>|nil
   if not signs_by_lnum then
     signs_by_lnum = collect_buf_signs(bufnr)
     sign_cache[bufnr] = signs_by_lnum
   end
-  local signs = {} ---@type era.m.statuscolumn.ISign[]
+  local signs = {} ---@type era.dressing.statuscolumn.ISign[]
   for _, sign in ipairs(signs_by_lnum[lnum] or {}) do
     if wanted[sign.type] then
       signs[#signs + 1] = sign
@@ -183,11 +186,11 @@ local function line_signs(winnr, bufnr, lnum, wanted)
     local info = fold_info(winnr, lnum)
     if info and info.level > 0 then
       if info.lines > 0 then
-        ---@type era.m.statuscolumn.ISign
+        ---@type era.dressing.statuscolumn.ISign
         local sign = { type = "fold", text = stl.icon.fillchars.foldclose, texthl = "Folded" }
         signs[#signs + 1] = sign
       elseif config.folds.open and info.start == lnum then
-        ---@type era.m.statuscolumn.ISign
+        ---@type era.dressing.statuscolumn.ISign
         local sign = { type = "fold", text = stl.icon.fillchars.foldopen }
         signs[#signs + 1] = sign
       end
@@ -201,7 +204,7 @@ local function line_signs(winnr, bufnr, lnum, wanted)
   return signs
 end
 
----@param sign                          ?era.m.statuscolumn.ISign
+---@param sign                          ?era.dressing.statuscolumn.ISign
 ---@return string
 local function get_icon(sign)
   if not sign then
@@ -230,10 +233,10 @@ local function statuscolumn()
     return ""
   end
 
-  local left_c = config.left --[[@as era.m.statuscolumn.SignType[] ]]
-  local right_c = config.right --[[@as era.m.statuscolumn.SignType[] ]]
+  local left_c = config.left --[[@as era.dressing.statuscolumn.SignType[] ]]
+  local right_c = config.right --[[@as era.dressing.statuscolumn.SignType[] ]]
 
-  ---@type era.m.statuscolumn.IWanted
+  ---@type era.dressing.statuscolumn.IWanted
   local wanted = { sign = show_signs }
   for _, component in ipairs(left_c) do
     wanted[component] = wanted[component] ~= false
@@ -248,10 +251,10 @@ local function statuscolumn()
   local git_hl ---@type string|nil
 
   if show_signs or show_folds then
-    local signs = line_signs(winnr, bufnr, vim.v.lnum, wanted) ---@type era.m.statuscolumn.ISign[]
+    local signs = line_signs(winnr, bufnr, vim.v.lnum, wanted) ---@type era.dressing.statuscolumn.ISign[]
 
     if #signs > 0 then
-      local signs_by_type = {} ---@type table<era.m.statuscolumn.SignType, era.m.statuscolumn.ISign>
+      local signs_by_type = {} ---@type table<era.dressing.statuscolumn.SignType, era.dressing.statuscolumn.ISign>
       for _, sign in ipairs(signs) do
         signs_by_type[sign.type] = signs_by_type[sign.type] or sign
       end
@@ -297,10 +300,10 @@ local function statuscolumn()
   components[3] = vim.b[bufnr].era_statuscolumn_right ~= false and components[3] or ""
 
   local ret = table.concat(components, "")
-  return "%@v:lua.era.m.statuscolumn.click_fold@" .. ret .. "%T"
+  return "%@v:lua.era.dressing.statuscolumn.click_fold@" .. ret .. "%T"
 end
 
----@class era.m.statuscolumn
+---@class era.dressing.statuscolumn
 local M = {}
 
 ---@return nil
@@ -331,9 +334,15 @@ function M.statuscolumn()
   return ""
 end
 
+--- Initialize the default and current-window expression once, preserving later overrides.
 ---@return nil
 function M.dressing()
-  vim.o.statuscolumn = "%!v:lua.era.m.statuscolumn.statuscolumn()"
+  if initialized then
+    return
+  end
+  initialized = true
+
+  vim.api.nvim_set_option_value("statuscolumn", "%!v:lua." .. __module_name__ .. ".statuscolumn()", {})
 end
 
 return M
