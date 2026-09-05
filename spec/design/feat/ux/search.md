@@ -14,7 +14,7 @@ count, including boundary forms such as `[1/>99]` and `[?/??]`.
 ```text
 Neovim ext_messages
   └─ msg_show(search_cmd/search_count)
-       └─ era.m.ui_attach.messages
+       └─ era.dressing.ui_attach.messages
             └─ dot.state.status search state
                  ├─ dirty_winline_nr
                  └─ era.m.nvimbar.component.nvim.search_count
@@ -72,8 +72,8 @@ and inline blame therefore cannot move or cover it.
 ## Verification
 
 - `__test__/specs/dot/state/status_spec.lua`: ownership, window/buffer scope, publish, and clear.
-- `__test__/specs/era/m/ui_attach/messages_spec.lua`: native event transitions.
-- `__test__/specs/era/m/ui_attach/init_spec.lua`: `<Esc>` cleanup.
+- `__test__/specs/era/dressing/ui_attach/messages_spec.lua`: native event transitions.
+- `__test__/specs/era/dressing/ui_attach/init_spec.lua`: `<Esc>` cleanup.
 - `__test__/specs/era/m/nvimbar/component/nvim_spec.lua`: rendering and window scope.
 - Nvimbar component tests verify the search icon, persistent pattern, unbracketed count, truncation,
   right-side placement, and source-window scope.

@@ -1,11 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/ui_attach/popupmenu_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/ui_attach/popupmenu_spec.lua
 ---@diagnostic disable: undefined-global
 
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.ui_attach.popupmenu")
+local t = harness.new("era.dressing.ui_attach.popupmenu")
 
----@return era.m.ui_attach.popupmenu
+---@return era.dressing.ui_attach.popupmenu
 local function setup()
   t:patch_global("dot", {
     var = {
@@ -14,7 +14,7 @@ local function setup()
   })
   t:patch_table(vim, "g", { ui_cmdline_pos = { 4, 10 } })
 
-  local states = require("era.m.ui_attach.state")
+  local states = require("era.dressing.ui_attach.state")
   t:patch_table(states, "cmdline", {
     [1] = {
       level = 1,
@@ -24,7 +24,7 @@ local function setup()
   })
 
   ---@diagnostic disable-next-line: redundant-return-value
-  return assert(loadfile("lua/era/m/ui_attach/popupmenu.lua"))(), states
+  return assert(loadfile("lua/era/dressing/ui_attach/popupmenu.lua"))(), states
 end
 
 t:test("external cmdline popup applies byte column as display width", function()

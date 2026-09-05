@@ -1,6 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.ui_attach.messages" ---@type string
-local states = require("era.m.ui_attach.state")
+local __module_name__ = "era.dressing.ui_attach.messages" ---@type string
+local states = require("era.dressing.ui_attach.state")
 
 local KIND_MAP = {
   TRANSIENT = {
@@ -39,7 +39,7 @@ local kind_2_level_map = {
   debug = vim.log.levels.DEBUG,
 }
 
----@class era.m.ui_attach.messages
+---@class era.dressing.ui_attach.messages
 local M = {}
 
 ---@param observable                    stl.c.Observable
@@ -111,29 +111,29 @@ local function create_group(id)
 end
 
 ---@param id                            integer|string
----@param content                       era.m.ui_attach.IContent
+---@param content                       era.dressing.ui_attach.IContent
 ---@param replace_last                  boolean
 ---@param append                        boolean
----@return era.m.ui_attach.message.IGroup
+---@return era.dressing.ui_attach.message.IGroup
 local function update_visible_message(id, content, replace_last, append)
-  local ref = states.message.id_refs[id] ---@type era.m.ui_attach.message.IRef|nil
-  local group = ref ~= nil and states.message.groups[ref.group] or nil ---@type era.m.ui_attach.message.IGroup|nil
+  local ref = states.message.id_refs[id] ---@type era.dressing.ui_attach.message.IRef|nil
+  local group = ref ~= nil and states.message.groups[ref.group] or nil ---@type era.dressing.ui_attach.message.IGroup|nil
 
   if group ~= nil and ref ~= nil then
     group.parts[ref.index] = { id = id, content = content }
   elseif append and states.message.last_ref ~= nil then
-    local last_ref = states.message.last_ref --[[@as era.m.ui_attach.message.IRef]]
+    local last_ref = states.message.last_ref --[[@as era.dressing.ui_attach.message.IRef]]
     group = states.message.groups[last_ref.group]
     if group ~= nil then
       ref = { group = group.key, index = #group.parts + 1 }
       group.parts[ref.index] = { id = id, content = content }
     end
   elseif replace_last and states.message.last_ref ~= nil then
-    local last_ref = states.message.last_ref --[[@as era.m.ui_attach.message.IRef]]
+    local last_ref = states.message.last_ref --[[@as era.dressing.ui_attach.message.IRef]]
     ref = last_ref
     group = states.message.groups[last_ref.group]
     if group ~= nil then
-      local previous_part = group.parts[last_ref.index] --[[@as era.m.ui_attach.message.IPart]]
+      local previous_part = group.parts[last_ref.index] --[[@as era.dressing.ui_attach.message.IPart]]
       local previous_id = previous_part.id
       if previous_id ~= id then
         states.message.id_refs[previous_id] = nil
@@ -155,7 +155,7 @@ local function update_visible_message(id, content, replace_last, append)
   return group
 end
 
----@param group                         era.m.ui_attach.message.IGroup
+---@param group                         era.dressing.ui_attach.message.IGroup
 ---@return string
 ---@return stl.t.IHighlight[]
 local function render_group(group)
@@ -206,7 +206,7 @@ local function show_transient_message(message)
   end, TRANSIENT_TIMEOUT)
 end
 
----@param content                      era.m.ui_attach.IContent
+---@param content                      era.dressing.ui_attach.IContent
 ---@return string
 local function concat_content(content)
   local text = ""
@@ -228,7 +228,7 @@ local function refresh_command_status()
   update_statusline_message(dot.state.status.msg_command, table.concat(values, "  "))
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.clear(task)
@@ -236,16 +236,16 @@ function M.clear(task)
   reset_visible_messages()
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.history_show(task)
   local entries = unpack(task.args)
-  ---@cast entries                      [string, era.m.ui_attach.IContent, boolean][]
+  ---@cast entries                      [string, era.dressing.ui_attach.IContent, boolean][]
 
   local lines = {} ---@type string[]
   local positions = {} ---@type { row: integer, offset: integer }[]
   for index, entry in ipairs(entries) do
-    local content = entry[2] ---@type era.m.ui_attach.IContent
+    local content = entry[2] ---@type era.dressing.ui_attach.IContent
     local text = "" ---@type string
     for _, item in ipairs(content) do
       text = text .. item[2]
@@ -339,12 +339,12 @@ function M.history_show(task)
   end
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.show(task)
   local kind, content, replace_last, history, append, id = unpack(task.args)
   ---@cast kind                         string
-  ---@cast content                      era.m.ui_attach.IContent
+  ---@cast content                      era.dressing.ui_attach.IContent
   ---@cast replace_last                 boolean
   ---@cast history                      boolean
   ---@cast append                       boolean
@@ -405,26 +405,26 @@ function M.show(task)
   })
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.showcmd(task)
   local contents = unpack(task.args)
-  ---@cast contents                     era.m.ui_attach.IContent
+  ---@cast contents                     era.dressing.ui_attach.IContent
   states.message.showcmd = concat_content(contents)
   refresh_command_status()
 end
 
 function M.ruler(task)
   local contents = unpack(task.args)
-  ---@cast contents                     era.m.ui_attach.IContent|nil
+  ---@cast contents                     era.dressing.ui_attach.IContent|nil
   states.message.ruler = contents ~= nil and concat_content(contents) or ""
   refresh_command_status()
 end
 
 function M.showmode(task)
   local contents = unpack(task.args)
-  ---@cast contents                     era.m.ui_attach.IContent
+  ---@cast contents                     era.dressing.ui_attach.IContent
   update_statusline_message(dot.state.status.msg_mode, concat_content(contents))
 end
 

@@ -84,6 +84,7 @@ local __dressing__mods = {
   statusline = "era.dressing.statusline",
   tabline = "era.dressing.tabline",
   trailspace = "era.dressing.trailspace",
+  ui_attach = "era.dressing.ui_attach",
   virtcolumn = "era.dressing.virtcolumn",
   winline = "era.dressing.winline",
   winsep = "era.dressing.winsep",
@@ -101,6 +102,7 @@ local __dressing__mods = {
 ---@field public statusline             era.dressing.statusline
 ---@field public tabline                era.dressing.tabline
 ---@field public trailspace             era.dressing.trailspace
+---@field public ui_attach              era.dressing.ui_attach
 ---@field public virtcolumn             era.dressing.virtcolumn
 ---@field public winline                era.dressing.winline
 ---@field public winsep                 era.dressing.winsep
@@ -150,7 +152,6 @@ local __m__mods = {
   surrounds = "era.m.surrounds",
   term = "era.m.term",
   toggle = "era.m.toggle",
-  ui_attach = "era.m.ui_attach",
   winpicker = "era.m.winpicker",
   wk = "era.m.wk",
 }
@@ -187,7 +188,6 @@ local __m__mods = {
 ---@field public surrounds              era.m.surrounds
 ---@field public term                   era.m.term
 ---@field public toggle                 era.m.toggle
----@field public ui_attach              era.m.ui_attach
 ---@field public winpicker              era.m.winpicker
 ---@field public wk                     era.m.wk
 local m = setmetatable({

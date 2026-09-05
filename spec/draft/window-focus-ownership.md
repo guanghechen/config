@@ -58,7 +58,7 @@ that lose their target window.
 
 ### F-005: popupmenu focusability contract is inconsistent
 
-- Locations: `lua/dot/win.lua` and `lua/era/m/ui_attach/popupmenu.lua`.
+- Locations: `lua/dot/win.lua` and `lua/era/dressing/ui_attach/popupmenu.lua`.
 - Trigger: window picking runs while the ext-popupmenu is visible.
 - Evidence: popupmenu is configured with `focusable = false`, while `dot.win.is_focusable()` classifies its
   semantic window type as focusable.

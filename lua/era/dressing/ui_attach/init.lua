@@ -1,11 +1,17 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.ui_attach" ---@type string
+local __module_name__ = "era.dressing.ui_attach" ---@type string
+local initialized = false ---@type boolean
 
----@class era.m.ui_attach
+---@class era.dressing.ui_attach
 local M = {}
 
+--- Initialize after a successful attach so disabled or skipped setup can be retried.
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+
   local enabled = dot.context.flight.dressing_ui_attach:snapshot() ---@type boolean
   if not enabled then
     return
@@ -19,7 +25,7 @@ function M.dressing()
   -- `vim.ui_attach` is the single writer into this lossless FIFO. Handlers
   -- consume in order; after an event is claimed there is no remote fallback,
   -- so failures are reported with context and the stream degrades by continuing.
-  local tasks = {} ---@type era.m.ui_attach.ITask[]
+  local tasks = {} ---@type era.dressing.ui_attach.ITask[]
   local task_head = 1
   local processing = false ---@type boolean
 
@@ -39,63 +45,63 @@ function M.dressing()
 
   local handlers = {
     cmdline_hide = function(task)
-      require("era.m.ui_attach.cmdline").hide(task)
+      require("era.dressing.ui_attach.cmdline").hide(task)
     end,
     cmdline_special_char = function(task)
-      require("era.m.ui_attach.cmdline").special_char(task)
+      require("era.dressing.ui_attach.cmdline").special_char(task)
     end,
     cmdline_pos = function(task)
-      require("era.m.ui_attach.cmdline").pos(task)
+      require("era.dressing.ui_attach.cmdline").pos(task)
     end,
     cmdline_show = function(task)
-      require("era.m.ui_attach.cmdline").show(task)
+      require("era.dressing.ui_attach.cmdline").show(task)
     end,
     cmdline_block_show = function(task)
-      require("era.m.ui_attach.cmdline").block_show(task)
+      require("era.dressing.ui_attach.cmdline").block_show(task)
     end,
     cmdline_block_append = function(task)
-      require("era.m.ui_attach.cmdline").block_append(task)
+      require("era.dressing.ui_attach.cmdline").block_append(task)
     end,
     cmdline_block_hide = function(task)
-      require("era.m.ui_attach.cmdline").block_hide(task)
+      require("era.dressing.ui_attach.cmdline").block_hide(task)
     end,
     msg_clear = function(task)
-      require("era.m.ui_attach.messages").clear(task)
+      require("era.dressing.ui_attach.messages").clear(task)
     end,
     msg_history_show = function(task)
-      require("era.m.ui_attach.messages").history_show(task)
+      require("era.dressing.ui_attach.messages").history_show(task)
     end,
     msg_show = function(task)
-      require("era.m.ui_attach.messages").show(task)
+      require("era.dressing.ui_attach.messages").show(task)
     end,
     msg_showcmd = function(task)
-      require("era.m.ui_attach.messages").showcmd(task)
+      require("era.dressing.ui_attach.messages").showcmd(task)
     end,
     msg_showmode = function(task)
-      require("era.m.ui_attach.messages").showmode(task)
+      require("era.dressing.ui_attach.messages").showmode(task)
     end,
     msg_ruler = function(task)
-      require("era.m.ui_attach.messages").ruler(task)
+      require("era.dressing.ui_attach.messages").ruler(task)
     end,
     popupmenu_hide = function(task)
-      require("era.m.ui_attach.popupmenu").hide(task)
+      require("era.dressing.ui_attach.popupmenu").hide(task)
     end,
     popupmenu_select = function(task)
-      require("era.m.ui_attach.popupmenu").select(task)
+      require("era.dressing.ui_attach.popupmenu").select(task)
     end,
     popupmenu_show = function(task)
-      require("era.m.ui_attach.popupmenu").show(task)
+      require("era.dressing.ui_attach.popupmenu").show(task)
     end,
   }
 
-  ---@param task                        era.m.ui_attach.ITask
+  ---@param task                        era.dressing.ui_attach.ITask
   ---@return nil
   local function process_task(task)
-    local handle = handlers[task.event] ---@type era.m.ui_attach.IHandleTask
+    local handle = handlers[task.event] ---@type era.dressing.ui_attach.IHandleTask
     handle(task)
   end
 
-  ---@param task                        era.m.ui_attach.ITask
+  ---@param task                        era.dressing.ui_attach.ITask
   ---@param err                         string
   ---@return nil
   local function report_task_error(task, err)
@@ -123,7 +129,7 @@ function M.dressing()
 
     processing = true
     while task_head <= #tasks do
-      local task = tasks[task_head] ---@type era.m.ui_attach.ITask
+      local task = tasks[task_head] ---@type era.dressing.ui_attach.ITask
       task_head = task_head + 1
 
       local ok, err = xpcall(function()
@@ -171,7 +177,7 @@ function M.dressing()
       return
     end
 
-    ---@type era.m.ui_attach.ITask
+    ---@type era.dressing.ui_attach.ITask
     local task = {
       event = event,
       args = { kind, ... },
@@ -218,6 +224,7 @@ function M.dressing()
     ext_messages = true,
     ext_popupmenu = true,
   }, ui_attach_callback)
+  initialized = true
 end
 
 return M

@@ -1,11 +1,11 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.ui_attach.cmdline" ---@type string
+local __module_name__ = "era.dressing.ui_attach.cmdline" ---@type string
 
-local states = require("era.m.ui_attach.state")
+local states = require("era.dressing.ui_attach.state")
 
 local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
----@param entries                       era.m.ui_attach.IContent[]|nil
+---@param entries                       era.dressing.ui_attach.IContent[]|nil
 ---@return string[]
 ---@return stl.t.IHighlight[]
 local function parse_block_entries(entries)
@@ -66,10 +66,10 @@ local _cmdline_type_map = {
 }
 -- stylua: ignore end
 
----@class era.m.ui_attach.cmdline
+---@class era.dressing.ui_attach.cmdline
 local M = {}
 
----@param state                          era.m.ui_attach.cmdline.IState
+---@param state                          era.dressing.ui_attach.cmdline.IState
 ---@return nil
 local function render_state(state)
   if state.type == "confirm" and state.confirming_task ~= nil then
@@ -79,11 +79,11 @@ local function render_state(state)
   end
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.hide(task)
   local level, abort = unpack(task.args) ---@type integer, boolean
-  local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type era.dressing.ui_attach.cmdline.IState|nil
   states.cmdline[level] = nil
 
   if state ~= nil then
@@ -114,11 +114,11 @@ function M.hide(task)
   end
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.pos(task)
   local pos, level = unpack(task.args) ---@type integer
-  local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type era.dressing.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
     render_state(state)
@@ -129,12 +129,12 @@ function M.pos(task)
   end
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.show(task)
   ---@diagnostic disable-next-line: unused-local
   local content, pos, firstc, prompt, indent, level, hlid = unpack(task.args)
-  ---@cast content                      era.m.ui_attach.IContent
+  ---@cast content                      era.dressing.ui_attach.IContent
   ---@cast pos                          integer             -- Cursor position in the command line (0-based)
   ---@cast firstc                       string              -- Command line prefix character, e.g., ':', '/', '?'
   ---@cast prompt                       string              -- Prompt text (optional)
@@ -142,8 +142,8 @@ function M.show(task)
   ---@cast level                        integer             -- Nesting level, 1 means top level
   ---@cast hlid                         integer             -- hlgroup id
 
-  local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
-  local confirming_task = state and state.confirming_task or nil ---@type era.m.ui_attach.ITask|nil
+  local state = states.cmdline[level] ---@type era.dressing.ui_attach.cmdline.IState|nil
+  local confirming_task = state and state.confirming_task or nil ---@type era.dressing.ui_attach.ITask|nil
   local typ = "command" ---@type string
   local language = nil ---@type string|nil
   if firstc == ":" then
@@ -195,7 +195,7 @@ function M.show(task)
   local icon = _cmdline_type_map[typ] ---@type string
 
   if state == nil then
-    ---@type era.m.ui_attach.cmdline.IState
+    ---@type era.dressing.ui_attach.cmdline.IState
     state = {
       content = content,
       pos = pos,
@@ -237,15 +237,15 @@ function M.show(task)
   render_state(state)
 end
 
----@class era.m.ui_attach.cmdline.IRender
+---@class era.dressing.ui_attach.cmdline.IRender
 ---@field public line                   string
 ---@field public cursor_col             integer
 ---@field public content_offset         integer
 ---@field public concealed              boolean
 ---@field public highlights             stl.t.IHighlight[]
 
----@param state                         era.m.ui_attach.cmdline.IState
----@return era.m.ui_attach.cmdline.IRender
+---@param state                         era.dressing.ui_attach.cmdline.IState
+---@return era.dressing.ui_attach.cmdline.IRender
 function M._resolve_render(state)
   local indent_text = string.rep(" ", state.indent) ---@type string
   local concealed = state.concealable and state.pos >= #state.first ---@type boolean
@@ -282,7 +282,7 @@ function M._resolve_render(state)
   }
 end
 
----@param state                         era.m.ui_attach.cmdline.IState
+---@param state                         era.dressing.ui_attach.cmdline.IState
 ---@return nil
 function M._show(state)
   local bufnr = state.bufnr ---@type integer|nil
@@ -382,7 +382,7 @@ function M._show(state)
   M._update_cmdline_position(state, winnr)
 end
 
----@param state                         era.m.ui_attach.cmdline.IState
+---@param state                         era.dressing.ui_attach.cmdline.IState
 ---@param winnr                         integer
 ---@return nil
 function M._update_cmdline_position(state, winnr)
@@ -411,7 +411,7 @@ function M._update_cmdline_position(state, winnr)
   }
 end
 
----@param block                         era.m.ui_attach.cmdline_block.IState
+---@param block                         era.dressing.ui_attach.cmdline_block.IState
 ---@return nil
 function M._render_block(block)
   if #block.lines < 1 then
@@ -500,8 +500,8 @@ function M._render_block(block)
   vim.api.nvim__redraw({ win = winnr, flush = true })
 end
 
----@param state                         era.m.ui_attach.cmdline.IState
----@param msg_show_task                 era.m.ui_attach.ITask
+---@param state                         era.dressing.ui_attach.cmdline.IState
+---@param msg_show_task                 era.dressing.ui_attach.ITask
 ---@return nil
 function M._show_confirm(state, msg_show_task)
   local bufnr = state.bufnr ---@type integer|nil
@@ -530,7 +530,7 @@ function M._show_confirm(state, msg_show_task)
   ---! resolve the lines and highlights
   do
     local lnum, col_offset = 1, 0 ---@type integer, integer
-    local content = msg_show_task.args[2] ---@type era.m.ui_attach.IContent
+    local content = msg_show_task.args[2] ---@type era.dressing.ui_attach.IContent
     for index, item in ipairs(content) do
       local _, text, hlid = unpack(item) ---@type integer, string, integer
       if index == 1 then
@@ -673,14 +673,14 @@ function M._show_confirm(state, msg_show_task)
   M._update_cmdline_position(state, winnr)
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.special_char(task)
   local c, shift, level = unpack(task.args)
   ---@cast c                            string
   ---@cast shift                        boolean
   ---@cast level                        integer
-  local state = states.cmdline[level] ---@type era.m.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type era.dressing.ui_attach.cmdline.IState|nil
   if state == nil then
     return
   end
@@ -689,11 +689,11 @@ function M.special_char(task)
   render_state(state)
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.block_show(task)
   local entries = unpack(task.args)
-  ---@cast entries                      era.m.ui_attach.IContent[]|nil
+  ---@cast entries                      era.dressing.ui_attach.IContent[]|nil
   local lines, highlights = parse_block_entries(entries)
   local block = states.cmdline_block
   block.lines = lines
@@ -701,11 +701,11 @@ function M.block_show(task)
   M._render_block(block)
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.block_append(task)
   local entry = unpack(task.args)
-  ---@cast entry                        era.m.ui_attach.IContent|nil
+  ---@cast entry                        era.dressing.ui_attach.IContent|nil
   local lines, highlights = parse_block_entries(entry ~= nil and { entry } or nil)
   local block = states.cmdline_block
   local base = #block.lines
@@ -719,7 +719,7 @@ function M.block_append(task)
   M._render_block(block)
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.block_hide(task)

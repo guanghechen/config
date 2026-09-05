@@ -1,12 +1,19 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/ui_attach/init_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/ui_attach/init_spec.lua
 ---@diagnostic disable: undefined-global
 
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.ui_attach.init")
+local module_name = "era.dressing.ui_attach"
+local t = harness.new(module_name .. ".init")
 
----@class era.m.ui_attach.init.test.IRuntime
+---@class era.dressing.ui_attach.init.test.IRuntime
 ---@field callback                       fun(event: string, ...): boolean|nil
+---@field module                         era.dressing.ui_attach
+---@field enabled                        boolean
+---@field attach_calls                   integer
+---@field keymap_calls                   integer
+---@field timer_calls                    integer
+---@field timer_available                boolean
 ---@field errors                         table[]
 ---@field events                         string[]
 ---@field fail_id                        integer|nil
@@ -17,9 +24,15 @@ local t = harness.new("era.m.ui_attach.init")
 ---@field searching                      boolean
 ---@field timer                          table
 
----@return era.m.ui_attach.init.test.IRuntime
-local function setup()
+---@param initially_enabled              ?boolean
+---@return era.dressing.ui_attach.init.test.IRuntime
+local function setup(initially_enabled)
   local runtime = {
+    enabled = initially_enabled ~= false,
+    attach_calls = 0,
+    keymap_calls = 0,
+    timer_calls = 0,
+    timer_available = true,
     errors = {},
     events = {},
     fast = false,
@@ -27,7 +40,7 @@ local function setup()
     search_clears = 0,
     searching = false,
     timer = {},
-  } ---@type era.m.ui_attach.init.test.IRuntime
+  } ---@type era.dressing.ui_attach.init.test.IRuntime
 
   function runtime.timer:stop() end
   function runtime.timer:start(_, _, callback)
@@ -40,7 +53,7 @@ local function setup()
       flight = {
         dressing_ui_attach = {
           snapshot = function()
-            return true
+            return runtime.enabled
           end,
         },
         devmode = {
@@ -73,6 +86,7 @@ local function setup()
     nvim = {
       fn = {
         make_keys = function(_, lhs, callback)
+          runtime.keymap_calls = runtime.keymap_calls + 1
           if lhs == "<esc>" then
             runtime.escape = callback
           end
@@ -94,7 +108,7 @@ local function setup()
     end
     runtime.events[#runtime.events + 1] = string.format("%s:%s", task.event, tostring(id or task.args[1]))
   end
-  t:patch_table(package.loaded, "era.m.ui_attach.cmdline", {
+  t:patch_table(package.loaded, "era.dressing.ui_attach.cmdline", {
     block_append = record,
     block_hide = record,
     block_show = record,
@@ -103,7 +117,7 @@ local function setup()
     show = record,
     special_char = record,
   })
-  t:patch_table(package.loaded, "era.m.ui_attach.messages", {
+  t:patch_table(package.loaded, "era.dressing.ui_attach.messages", {
     clear = record,
     history_show = record,
     ruler = record,
@@ -111,7 +125,7 @@ local function setup()
     showcmd = record,
     showmode = record,
   })
-  t:patch_table(package.loaded, "era.m.ui_attach.popupmenu", {
+  t:patch_table(package.loaded, "era.dressing.ui_attach.popupmenu", {
     hide = record,
     select = record,
     show = record,
@@ -123,7 +137,8 @@ local function setup()
   })
 
   t:patch_table(vim.uv, "new_timer", function()
-    return runtime.timer
+    runtime.timer_calls = runtime.timer_calls + 1
+    return runtime.timer_available and runtime.timer or nil
   end)
   t:patch_table(vim, "in_fast_event", function()
     return runtime.fast
@@ -135,12 +150,67 @@ local function setup()
     callback()
   end)
   t:patch_table(vim, "ui_attach", function(_, _, callback)
+    runtime.attach_calls = runtime.attach_calls + 1
     runtime.callback = callback
   end)
 
-  assert(loadfile("lua/era/m/ui_attach/init.lua"))().dressing()
+  t:patch_global("era", require("era"))
+  t:patch_table(package.loaded, module_name, nil)
+  t.assert_eq(module_name, era.dressing.__mods.ui_attach, "module registration")
+  t.assert_nil(era.m.__mods.ui_attach, "old registration removed")
+  runtime.module = era.dressing.ui_attach
+  runtime.module.dressing()
   return runtime
 end
+
+t:test("dressing attaches once and preserves queued UI events and the escape binding", function()
+  local runtime = setup()
+  local callback = runtime.callback
+  local escape = runtime.escape
+  runtime.fast = true
+  runtime.callback("msg_show", "echo", {}, false, false, false, 1, "")
+
+  runtime.module.dressing()
+  t.assert_eq(1, runtime.timer_calls, "timer allocation count")
+  t.assert_eq(1, runtime.attach_calls, "UI attachment count")
+  t.assert_eq(1, runtime.keymap_calls, "escape binding count")
+  t.assert_eq(callback, runtime.callback, "UI callback preserved")
+  t.assert_eq(escape, runtime.escape, "escape callback preserved")
+
+  runtime.callback("msg_show", "echo", {}, false, false, false, 2, "")
+  runtime.timer.callback()
+  t.assert_true(vim.deep_equal({ "msg_show:1", "msg_show:2" }, runtime.events), "pending events remain ordered")
+
+  runtime.enabled = false
+  runtime.module.dressing()
+  runtime.enabled = true
+  runtime.module.dressing()
+  t.assert_eq(1, runtime.timer_calls, "timer reused after repeated setup")
+  t.assert_eq(1, runtime.attach_calls, "attachment reused after repeated setup")
+  t.assert_eq(1, runtime.keymap_calls, "escape binding reused after repeated setup")
+end)
+
+t:test("skipped setup can retry after enabling and timer allocation recovers", function()
+  local runtime = setup(false)
+  runtime.module.dressing()
+  t.assert_eq(0, runtime.timer_calls, "disabled setup does not allocate a timer")
+  t.assert_eq(0, runtime.attach_calls, "disabled setup does not attach")
+  t.assert_eq(0, runtime.keymap_calls, "disabled setup does not bind keys")
+
+  runtime.enabled = true
+  runtime.timer_available = false
+  runtime.module.dressing()
+  t.assert_eq(1, runtime.timer_calls, "failed allocation attempt")
+  t.assert_eq(0, runtime.attach_calls, "allocation failure does not attach")
+  t.assert_eq(0, runtime.keymap_calls, "allocation failure does not bind keys")
+
+  runtime.timer_available = true
+  runtime.module.dressing()
+  runtime.module.dressing()
+  t.assert_eq(2, runtime.timer_calls, "allocation retried once")
+  t.assert_eq(1, runtime.attach_calls, "successful retry attaches once")
+  t.assert_eq(1, runtime.keymap_calls, "successful retry binds keys once")
+end)
 
 t:test("fast event queue is lossless and ordered", function()
   local runtime = setup()
@@ -200,6 +270,7 @@ t:test("handler failures are reported and later events continue", function()
   runtime.callback("msg_show", "echo", {}, false, false, false, 2, "")
 
   t.assert_eq(1, #runtime.errors, "reported errors")
+  t.assert_eq(module_name, runtime.errors[1].from, "diagnostic namespace")
   t.assert_eq("msg_show:2", runtime.events[1], "continued event")
 end)
 

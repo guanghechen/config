@@ -1,11 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/ui_attach/cmdline_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/ui_attach/cmdline_spec.lua
 ---@diagnostic disable: undefined-global
 
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.ui_attach.cmdline")
+local t = harness.new("era.dressing.ui_attach.cmdline")
 
----@return era.m.ui_attach.cmdline, era.m.ui_attach.state
+---@return era.dressing.ui_attach.cmdline, era.dressing.ui_attach.state
 local function setup()
   t:patch_global("dot", {
     var = {
@@ -24,14 +24,14 @@ local function setup()
   })
   t:patch_table(vim, "g", { ui_cmdline_pos = { 5, 7 } })
 
-  local states = require("era.m.ui_attach.state")
+  local states = require("era.dressing.ui_attach.state")
   t:patch_table(states, "cmdline", {})
   t:patch_table(states, "cmdline_block", { lines = {}, highlights = {} })
   t:patch_table(states, "message", {
     confirming_task = { event = "msg_show", args = {} },
   })
 
-  local cmdline = assert(loadfile("lua/era/m/ui_attach/cmdline.lua"))()
+  local cmdline = assert(loadfile("lua/era/dressing/ui_attach/cmdline.lua"))()
   return cmdline, states
 end
 
@@ -69,7 +69,7 @@ local function resolve_popup_col(concealable, pos)
   states.cmdline[1] = state
   cmdline._update_cmdline_position(state, state.winnr)
 
-  local popupmenu = assert(loadfile("lua/era/m/ui_attach/popupmenu.lua"))()
+  local popupmenu = assert(loadfile("lua/era/dressing/ui_attach/popupmenu.lua"))()
   local _, col = popupmenu._resolve_position({
     items = {},
     selected = -1,
@@ -265,7 +265,7 @@ t:test("latest Neovim emits block events with one-line append payloads", functio
     append = {},
     show = {},
   }
-  local nsnr = vim.api.nvim_create_namespace("era.m.ui_attach.cmdline.protocol")
+  local nsnr = vim.api.nvim_create_namespace("era.dressing.ui_attach.cmdline.protocol")
   vim.ui_attach(nsnr, { ext_cmdline = true }, function(event, ...)
     if event == "cmdline_block_show" then
       events.show[#events.show + 1] = { ... }

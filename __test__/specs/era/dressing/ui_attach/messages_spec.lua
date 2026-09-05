@@ -1,11 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/ui_attach/messages_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/ui_attach/messages_spec.lua
 ---@diagnostic disable: undefined-global
 
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.ui_attach.messages")
+local t = harness.new("era.dressing.ui_attach.messages")
 
----@class era.m.ui_attach.messages.test.IRuntime
+---@class era.dressing.ui_attach.messages.test.IRuntime
 ---@field deferred                      fun()[]
 ---@field reports                       { level: integer, options: table }[]
 ---@field scheduled                     fun()[]
@@ -18,7 +18,7 @@ local t = harness.new("era.m.ui_attach.messages")
 ---@field search_pattern                string
 ---@field searching_updates             integer
 
----@return era.m.ui_attach.messages, era.m.ui_attach.messages.test.IRuntime
+---@return era.dressing.ui_attach.messages, era.dressing.ui_attach.messages.test.IRuntime
 local function setup()
   local runtime = {
     deferred = {},
@@ -32,7 +32,7 @@ local function setup()
     search = nil,
     search_pattern = "foo",
     searching_updates = 0,
-  } ---@type era.m.ui_attach.messages.test.IRuntime
+  } ---@type era.dressing.ui_attach.messages.test.IRuntime
 
   local msg_transient = {} ---@type table
   function msg_transient:next(value)
@@ -100,20 +100,20 @@ local function setup()
     return runtime.search_pattern
   end)
 
-  local states = require("era.m.ui_attach.state")
+  local states = require("era.dressing.ui_attach.state")
   t:patch_table(states, "message", {
     generation = 0,
     groups = {},
     id_refs = {},
   })
 
-  local messages = assert(loadfile("lua/era/m/ui_attach/messages.lua"))()
+  local messages = assert(loadfile("lua/era/dressing/ui_attach/messages.lua"))()
   return messages, runtime
 end
 
 local next_task_id = 0
 
----@param runtime                       era.m.ui_attach.messages.test.IRuntime
+---@param runtime                       era.dressing.ui_attach.messages.test.IRuntime
 ---@return nil
 local function run_scheduled(runtime)
   while #runtime.scheduled > 0 do
@@ -125,7 +125,7 @@ end
 ---@param kind                          string
 ---@param message                       string
 ---@param opts                          { append: boolean?, history: boolean?, id: integer|string?, replace_last: boolean? }|nil
----@return era.m.ui_attach.ITask
+---@return era.dressing.ui_attach.ITask
 local function create_task(kind, message, opts)
   opts = opts or {}
   local id = opts.id ---@type integer|string|nil
@@ -306,7 +306,7 @@ end)
 
 t:test("emsg is reported as an error instead of waiting for a prompt", function()
   local messages, runtime = setup()
-  local states = require("era.m.ui_attach.state")
+  local states = require("era.dressing.ui_attach.state")
 
   messages.show(create_task("emsg", "failure", { id = 1 }))
 

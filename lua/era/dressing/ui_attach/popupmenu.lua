@@ -1,14 +1,14 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.ui_attach.popupmenu" ---@type string
+local __module_name__ = "era.dressing.ui_attach.popupmenu" ---@type string
 
-local states = require("era.m.ui_attach.state")
+local states = require("era.dressing.ui_attach.state")
 
 local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
----@class era.m.ui_attach.popupmenu
+---@class era.dressing.ui_attach.popupmenu
 local M = {}
 
----@param state                         era.m.ui_attach.popupmenu.IState
+---@param state                         era.dressing.ui_attach.popupmenu.IState
 ---@return nil
 local function render_selection(state)
   local bufnr = state.bufnr ---@type integer|nil
@@ -29,7 +29,7 @@ local function render_selection(state)
   end
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.hide(task)
@@ -49,7 +49,7 @@ function M.hide(task)
   end
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.select(task)
   if states.popupmenu == nil then
@@ -66,7 +66,7 @@ function M.select(task)
   end
 end
 
----@param task                          era.m.ui_attach.ITask
+---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.show(task)
   local items, selected, row, col, grid = unpack(task.args)
@@ -77,7 +77,7 @@ function M.show(task)
   ---@cast grid                         integer
 
   if states.popupmenu == nil then
-    ---@type era.m.ui_attach.popupmenu.IState
+    ---@type era.dressing.ui_attach.popupmenu.IState
     states.popupmenu = {
       items = items,
       selected = selected,
@@ -98,7 +98,7 @@ function M.show(task)
   M._show(states.popupmenu)
 end
 
----@param state                         era.m.ui_attach.popupmenu.IState
+---@param state                         era.dressing.ui_attach.popupmenu.IState
 ---@return integer
 ---@return integer
 function M._resolve_position(state)
@@ -122,7 +122,7 @@ function M._resolve_position(state)
   return row, col
 end
 
----@param state                         era.m.ui_attach.popupmenu.IState
+---@param state                         era.dressing.ui_attach.popupmenu.IState
 ---@return nil
 function M._show(state)
   local bufnr = state.bufnr ---@type integer|nil
