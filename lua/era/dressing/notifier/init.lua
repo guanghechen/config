@@ -1,5 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.notifier" ---@type string
+local __module_name__ = "era.dressing.notifier" ---@type string
+local initialized = false ---@type boolean
 
 ---@class era.t.INotifierTask
 ---@field public uuid                   string
@@ -33,7 +34,7 @@ local __module_name__ = "era.m.notifier" ---@type string
 ---@field public row                    integer
 ---@field public dirty                  boolean
 
----@class era.m.notifier.Levels
+---@class era.dressing.notifier.Levels
 local Levels = {
   TRACE = vim.log.levels.TRACE,
   DEBUG = vim.log.levels.DEBUG,
@@ -42,7 +43,7 @@ local Levels = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@class era.m.notifier.LevelMap
+---@class era.dressing.notifier.LevelMap
 local LevelMap = {
   TRACE = "TRACE",
   DEBUG = "DEBUG",
@@ -56,7 +57,7 @@ local LevelMap = {
   [vim.log.levels.ERROR] = "ERROR",
 }
 
----@class era.m.notifier.LevelTitleMap
+---@class era.dressing.notifier.LevelTitleMap
 local LevelTitleMap = {
   TRACE = "Trace",
   DEBUG = "Debug",
@@ -138,10 +139,10 @@ local function measure_task_height(task)
   return math.min(height, 42, math.floor(vim.o.lines * 0.4)) ---@type integer
 end
 
----@class era.m.notifier
+---@class era.dressing.notifier
 local M = {}
 setmetatable(M, {
-  ---@param _                           era.m.notifier
+  ---@param _                           era.dressing.notifier
   ---@param msg                         string
   ---@param level0                      integer
   ---@param opts                        any
@@ -401,13 +402,42 @@ function M.notify(params)
   end)
 end
 
+--- Install notify, observers, and UI event hooks once; history reads do not activate them.
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   vim.notify = M
 
   stl.fn.observe({ dot.state.status.notification_level, dot.state.status.notification_paused }, function()
     M.schedule()
   end)
+
+  vim.api.nvim_create_autocmd("WinEnter", {
+    group = stl.nvim.fn.augroup(__module_name__ .. "_on_WinEnter"),
+    callback = function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local wintype = vim.w[winnr].wintype ---@type stl.e.WinTypeEnum|nil
+      if wintype == stl.e.WinTypeEnum.NOTIFY then
+        for _, win in ipairs(__WINS__) do
+          if win.winnr == winnr then
+            win.tick = win.tick + 1
+            break
+          end
+        end
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("VimResized", {
+    group = stl.nvim.fn.augroup(__module_name__ .. "_on_VimResized"),
+    callback = function()
+      M.schedule()
+    end,
+  })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -739,28 +769,5 @@ function M.__handle__()
     end
   end
 end
-
-vim.api.nvim_create_autocmd("WinEnter", {
-  group = stl.nvim.fn.augroup("era.notifier_on_WinEnter"),
-  callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local wintype = vim.w[winnr].wintype ---@type stl.e.WinTypeEnum|nil
-    if wintype == stl.e.WinTypeEnum.NOTIFY then
-      for _, win in ipairs(__WINS__) do
-        if win.winnr == winnr then
-          win.tick = win.tick + 1
-          break
-        end
-      end
-    end
-  end,
-})
-
-vim.api.nvim_create_autocmd("VimResized", {
-  group = stl.nvim.fn.augroup("era.notifier_on_VimResized"),
-  callback = function()
-    M.schedule()
-  end,
-})
 
 return M

@@ -18,7 +18,7 @@ local function fetch_data()
   dirty_data = false
 
   local items = {} ---@type era.fn.find_notifications.IItem[]
-  local tasks = era.m.notifier.history() ---@type era.t.INotifierTask[]
+  local tasks = era.dressing.notifier.history() ---@type era.t.INotifierTask[]
 
   for index = #tasks, 1, -1 do
     local task = tasks[index] ---@type era.t.INotifierTask

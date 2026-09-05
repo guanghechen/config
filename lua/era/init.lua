@@ -79,6 +79,7 @@ local __dressing__mods = {
   hipattern = "era.dressing.hipattern",
   indentline = "era.dressing.indentline",
   indentscope = "era.dressing.indentscope",
+  notifier = "era.dressing.notifier",
   scroll = "era.dressing.scroll",
   statuscolumn = "era.dressing.statuscolumn",
   statusline = "era.dressing.statusline",
@@ -97,6 +98,7 @@ local __dressing__mods = {
 ---@field public hipattern              era.dressing.hipattern
 ---@field public indentline             era.dressing.indentline
 ---@field public indentscope            era.dressing.indentscope
+---@field public notifier               era.dressing.notifier
 ---@field public scroll                 era.dressing.scroll
 ---@field public statuscolumn           era.dressing.statuscolumn
 ---@field public statusline             era.dressing.statusline
@@ -139,7 +141,6 @@ local __m__mods = {
   lsp = "era.m.lsp",
   maximize = "era.m.maximize",
   notepad = "era.m.notepad",
-  notifier = "era.m.notifier",
   nvimbar = "era.m.nvimbar",
   paste = "era.m.paste",
   picker = "era.m.picker",
@@ -175,7 +176,6 @@ local __m__mods = {
 ---@field public lsp                    era.m.lsp
 ---@field public maximize               era.m.maximize
 ---@field public notepad                era.m.notepad
----@field public notifier               era.m.notifier
 ---@field public nvimbar                era.m.nvimbar
 ---@field public paste                  era.m.paste
 ---@field public picker                 era.m.picker
@@ -235,7 +235,6 @@ local __view__mods = {
   Act = "era.view.act",
   Fileinfo = "era.view.fileinfo",
   Keysheet = "era.view.keysheet",
-  notifications = "era.view.notifications",
   Plainfile = "era.view.plainfile",
   PickerPreview = "era.view.picker.preview",
   PickerResult = "era.view.picker.result",
@@ -250,7 +249,6 @@ local __view__mods = {
 ---@field public Act                    era.view.Act
 ---@field public Fileinfo               era.view.Fileinfo
 ---@field public Keysheet               era.view.Keysheet
----@field public notifications          { open: fun(): nil, close: fun(): nil }
 ---@field public Plainfile              era.view.Plainfile
 ---@field public PickerPreview          era.view.PickerPreview
 ---@field public PickerResult           era.view.PickerResult

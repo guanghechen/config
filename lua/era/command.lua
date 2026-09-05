@@ -1649,14 +1649,14 @@ command
     uuid = K.ux.copy_notifications.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.m.notifier.copy_history()
+      era.dressing.notifier.copy_history()
     end,
   })
   .implement({
     uuid = K.ux.dismiss_notifications.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.m.notifier.dismiss_all()
+      era.dressing.notifier.dismiss_all()
     end,
   })
   .implement({
@@ -1679,7 +1679,7 @@ command.implement({
   uuid = K.view.notifications.uuid,
   tabtypes = stl.e.TabTypeSet.ALL,
   action = function()
-    era.view.notifications.open()
+    require("era.dressing.notifier.view").open()
   end,
 })
 

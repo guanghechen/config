@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.view.notifications" ---@type string
+local __module_name__ = "era.dressing.notifier.view" ---@type string
 
----@class era.view.notifications.IConfig
+---@class era.dressing.notifier.view.IConfig
 local config = {
   winhighlight = table.concat({
     "CursorLine:m_nf_current",
@@ -32,7 +32,7 @@ local config = {
   },
 }
 
----@class era.view.notifications.IState
+---@class era.dressing.notifier.view.IState
 ---@field protected _bufnr                integer|nil
 ---@field protected _winnr                integer|nil
 ---@field protected _ns                   integer
@@ -40,16 +40,16 @@ local config = {
 ---@field protected _task_line_map        table<integer, integer>
 ---@field protected _cursor               integer
 
----@class era.view.Notifications : era.view.notifications.IState
+---@class era.dressing.notifier.view.View : era.dressing.notifier.view.IState
 local M = {}
 M.__index = M
 
----@return era.view.Notifications
+---@return era.dressing.notifier.view.View
 function M.new()
   local self = setmetatable({}, M)
   self._bufnr = nil
   self._winnr = nil
-  self._ns = vim.api.nvim_create_namespace("era.view.notifications")
+  self._ns = vim.api.nvim_create_namespace(__module_name__)
   self._tasks = {}
   self._task_line_map = {}
   self._cursor = 1
@@ -64,7 +64,7 @@ end
 
 ---@return nil
 function M:open()
-  self._tasks = era.m.notifier.history()
+  self._tasks = era.dressing.notifier.history()
   self._cursor = 1
 
   if #self._tasks == 0 then
@@ -99,7 +99,7 @@ end
 
 ---@return nil
 function M:refresh()
-  self._tasks = era.m.notifier.history()
+  self._tasks = era.dressing.notifier.history()
   if #self._tasks == 0 then
     self:close()
     return
@@ -171,6 +171,7 @@ function M:__render__()
   local winnr = self._winnr ---@type integer|nil
   local win_width = winnr and vim.api.nvim_win_get_width(winnr) or 100 ---@type integer
 
+  vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, self._ns, 0, -1)
 
@@ -201,8 +202,10 @@ function M:__render__()
 
     highlights[#highlights + 1] = { lnum = lnum, coll = 1, colr = icon_end, hlname = config.icon_hlgroup[task.level] }
     highlights[#highlights + 1] = { lnum = lnum, coll = icon_end + 1, colr = time_end, hlname = "m_nf_time" }
-    highlights[#highlights + 1] = { lnum = lnum, coll = time_end + 2, colr = level_end, hlname = config.level_hlgroup[task.level] }
-    highlights[#highlights + 1] = { lnum = lnum, coll = level_end + 2, colr = -1, hlname = config.title_hlgroup[task.level] }
+    highlights[#highlights + 1] =
+      { lnum = lnum, coll = time_end + 2, colr = level_end, hlname = config.level_hlgroup[task.level] }
+    highlights[#highlights + 1] =
+      { lnum = lnum, coll = level_end + 2, colr = -1, hlname = config.title_hlgroup[task.level] }
 
     for _, content_line in ipairs(task.lines) do
       local body_lnum = #lines ---@type integer
@@ -275,7 +278,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local __instance__ = nil ---@type era.view.Notifications|nil
+local __instance__ = nil ---@type era.dressing.notifier.view.View|nil
 
 ---@return nil
 local function open()
