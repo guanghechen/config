@@ -72,7 +72,6 @@ local ICONS_DIRECTORY = {
   snippets                = { glyph = "󱁽", hl = "MiniIconsYellow" },
   syntax                  = { glyph = "󱁽", hl = "MiniIconsGreen"  },
   tmp                     = { glyph = "󰪺", hl = "MiniIconsYellow" },
-  __test__                = { glyph = "󱞊", hl = "MiniIconsBlue"   },
   test                    = { glyph = "󱞊", hl = "MiniIconsBlue"   },
   tests                   = { glyph = "󱞊", hl = "MiniIconsBlue"   },
   tutor                   = { glyph = "󱁽", hl = "MiniIconsGreen"  },

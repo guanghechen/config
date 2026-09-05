@@ -53,7 +53,7 @@ Design reference: [`../design/feat/yoz/search.md`](../design/feat/yoz/search.md)
   pre-cancel, typed read
   cancellation, request-only cancel acknowledgement, disconnected worker, repeatable terminal poll,
   and disposed misuse.
-- Lua: the complete `lua/__test__/run.lua` suite passes (79 suites), including deterministic
+- Lua: the complete `__test__/run.lua` suite passes (79 suites), including deterministic
   controller failures/races and a real composer-to-native-job integration.
 - Native module: forced release build and fresh-process `yoz.search` Job polling pass.
 - Full 500-result publish boundary in the aggregate suite: normal 6.344 ms; replacement preview

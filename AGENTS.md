@@ -33,6 +33,8 @@ yoz -> stl -> dot -> era -> ark/vendor
 - Mason binaries live under `~/.local/share/nvim/mason/bin/`; `stylua` is available there and should be invoked directly from shell automation when it is not on `PATH`.
 - `mason.nvim` is configured with `PATH = "skip"`; `stl.env` prepends Mason's bin dir inside Neovim runtime, but external shells may not inherit it.
 - `luac` is not a Mason-managed Lua formatter/checker here; when system `luac` is unavailable, use `nvim -l <test-file>` or headless Neovim loading for Lua validation.
+- All test code and shared fixtures live under `__test__/`; production `lua/` must not reference `__test__` or expose test-only hooks.
+- Lua specs use `__test__/specs/**/*_spec.lua`; run them with `nvim -l __test__/run.lua [path-filter]`. Node/Rust tests use `__test__/node/` and `__test__/rust/` with their native runners. See `__test__/README.md`.
 
 ## Module Usage Guidance (`yoz` / `stl` / `dot`)
 

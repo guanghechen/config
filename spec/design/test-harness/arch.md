@@ -1,100 +1,118 @@
-# Test Harness Architecture Spec
+# Test Architecture
 
-## 1. Module Boundary (SRP)
+## Scope and layout
 
-| Module               | Responsibility                             | Public Ports                                                                    | Private Runtime                        |
-| -------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------------- |
-| `__test__.harness`   | Register cases, assert, patch, run, report | `new`, `test`, `assert_*`, `patch_*`, `wait_until`, `run`                       | suite state, case list, patch stack    |
-| `__test__.bootstrap` | Prepare declared runtime globals           | `with_global`, `with_runtime`, `with_stl_c`, `with_stl`, `with_dot`, `with_era` | saved globals, require mapping helpers |
-| `__test__.runner`    | Discover and run suites                    | `discover`, `run_all`, `main`                                                   | suite paths, subprocess exit codes     |
-| `__test__.run`       | Script entry for run-all mode              | top-level `runner.main()` call                                                  | none                                   |
-| suite files          | Express behavior examples and regressions  | top-level `t.test(...)` registrations                                           | fixture data, local mocks              |
+All Lua, Node, and Rust test code and shared fixtures live under top-level
+`__test__/`, outside the production `lua/` runtime. Lua specs are grouped by the
+module or feature under test and use the `*_spec.lua` suffix. Related behaviors may share a feature directory,
+such as `__test__/specs/era/m/diffview/workspace/`.
 
-## 2. Dependency Graph
+- `__test__/run.lua` is the public CLI and the entry used by suite subprocesses.
+- `__test__/support/` contains reusable execution and fixture support.
+- `__test__/specs/` is the only Lua discovery root.
+- `__test__/specs/support/` tests the infrastructure itself.
+- `__test__/node/*.test.mjs` contains Node tests, run with `node --test`.
+- `__test__/rust/<crate>/**/*_test.rs` contains Rust unit tests, run with `cargo test`.
+- `__test__/fixtures/` contains fixtures shared across specs or languages.
+- Small fixtures stay local to their spec. Shared helpers need multiple real consumers.
 
-- one-way dependencies:
+The local harness remains dependency-free. Test infrastructure does not introduce
+production abstractions or a runtime plugin system.
+
+## Ownership and dependencies
+
+| Component                    | Responsibility                                        | Owned state                         |
+| ---------------------------- | ----------------------------------------------------- | ----------------------------------- |
+| `__test__/run.lua`           | Resolve checkout, prepare runtime, dispatch execution | Process CWD, runtime and Lua paths  |
+| `__test__.support.runner`    | Discover, select, launch, time out, report suites     | Suite list, child process results   |
+| `__test__.support.harness`   | Register cases, assert, run, clean up, report         | Case registry, case/suite cleanups  |
+| `__test__.support.bootstrap` | Prepare explicitly requested application globals      | Harness-owned global substitutions  |
+| `*_spec.lua`                 | Specify observable behavior and regressions           | Local fixtures and resource handles |
+
+Within a process, dependencies remain one-way:
 
 ```text
-suite files -> __test__.harness
-suite files -> __test__.bootstrap
-__test__.run -> __test__.runner
-__test__.runner -> suite files by subprocess path
-__test__.bootstrap -> production modules by explicit request
+CLI entry -> runner
+suite entry -> spec -> harness
+                   -> bootstrap -> explicitly requested production modules
+                   -> production modules under test
 ```
 
-- forbidden reverse dependencies:
+The runner starts a new entry process with `--suite`; that branch loads the spec
+without importing the runner. Production Lua modules never import test support,
+reference `__test__`, or expose test-only hooks. Pure logic needed by production
+and tests belongs to normal domain modules, such as `era.m.ai.capture`.
+Neither harness nor runner imports production modules. Bootstrap does not import
+runner or suites.
 
-```text
-production modules -/> __test__
-__test__.harness -/> suite files
-__test__.harness -/> production modules
-__test__.bootstrap -/> __test__.runner
-__test__.runner -/> __test__.harness
-```
+Rust source modules retain only `#[cfg(test)] mod ... { include!(...); }` wiring
+for their extracted unit tests. Include paths start from `CARGO_MANIFEST_DIR` and
+point into `__test__/rust/`; module names, private access, and platform gates stay
+unchanged. No test code is included in a normal build. Node specs import the
+production scripts directly. Shared fixture paths resolve from the checkout root.
 
-## 3. Interaction Lifecycle Model
+## Execution contract
 
-### Lifecycle
+The public command is `nvim -l __test__/run.lua [--list] [--timeout ms] [path-filter]`.
+The selector is a literal substring of the spec path. A complete file path selects
+one suite; a directory selects its specs. Discovery is recursive and sorted, and
+only includes regular files ending in `_spec.lua`. Helpers are not excluded by a
+filename blacklist.
+Directory reads and entry inspection are checked; a failure at any depth aborts
+discovery before launching suites.
 
-- init: load `__test__.harness`; create one suite context for the current file.
-- start: suite registers cases and optional bootstrap declarations.
-- stop: harness runs registered cases, computes suite result, and prints summary.
-- dispose: restore all case patches and suite patches, then release suite state.
+The entry resolves the repository's canonical path from its own file location,
+sets CWD to that checkout, and installs its runtime and Lua paths alongside
+Neovim's built-in runtime and library directories. Bundled parsers remain available
+when Neovim installs them separately from `$VIMRUNTIME`. Each suite starts in a separate
+Neovim process with `--headless -u NONE -i NONE -n`. Application configuration and
+plugin startup are not automatic; a composed runtime spec may explicitly request
+`ark.bootstrap` when that runtime is part of the tested contract.
 
-### Interaction Transitions
+Suites run sequentially through argv-based `vim.system` calls, with a 30-second
+per-suite timeout that the CLI can override. A failed or timed-out suite is
+reported and later suites still run. There are no automatic retries, dependency
+installation, or implicit native builds.
 
-| From       | To         | Event                  | Guard                    | Timeout | Error Handling                           |
-| ---------- | ---------- | ---------------------- | ------------------------ | ------- | ---------------------------------------- |
-| init       | start      | suite file loads       | harness module available | none    | fail suite load                          |
-| start      | case_run   | `t.run()` or auto main | cases registered         | none    | invalid case becomes failed case         |
-| case_run   | case_clean | case returns or errors | cleanup stack exists     | none    | failure captured, cleanup still runs     |
-| case_clean | case_run   | next case selected     | next case exists         | none    | continue after recording cleanup failure |
-| case_clean | stop       | no case remains        | result computed          | none    | fail suite if result cannot be computed  |
-| stop       | dispose    | summary emitted        | patch stacks drained     | none    | exit non-zero if any failure exists      |
+Zero selected suites, missing directories, invalid CLI arguments, empty specs,
+forgotten `t:run()` calls, load errors, case/cleanup failures, failed launches,
+nonzero child exits, and timeouts must produce a nonzero exit status.
 
-## 4. Interface Contracts
+## Harness and resource lifecycle
 
-| Port                    | Input                        | Output             | Idempotency                            | Timeout    | Error Contract                                   |
-| ----------------------- | ---------------------------- | ------------------ | -------------------------------------- | ---------- | ------------------------------------------------ |
-| `harness.test`          | name, callback               | registered case    | not idempotent by name                 | none       | invalid input raises suite load error            |
-| `harness.assert_eq`     | expected, actual, message    | nil                | idempotent                             | none       | raises assertion error                           |
-| `harness.patch_global`  | global name, replacement     | cleanup handle     | idempotent cleanup                     | none       | cleanup error is attached to case result         |
-| `harness.patch_table`   | table, key, replacement      | cleanup handle     | idempotent cleanup                     | none       | cleanup error is attached to case result         |
-| `harness.wait_until`    | predicate, timeout ms        | nil                | idempotent by predicate                | caller set | timeout raises assertion error                   |
-| `harness.run`           | `exit`, `quiet` opts         | suite result       | not idempotent after side-effect cases | suite set  | failures are captured in the suite result        |
-| `bootstrap.with_global` | global name, table spec      | patched global     | idempotent cleanup                     | none       | invalid or missing module raises bootstrap error |
-| `bootstrap.with_stl_c`  | harness                      | patched `_G.stl.c` | idempotent cleanup                     | none       | missing module raises bootstrap error            |
-| `bootstrap.with_stl`    | module map or default subset | patched `_G.stl`   | idempotent cleanup                     | none       | missing module raises bootstrap error            |
-| `runner.discover`       | root path, filter            | suite path list    | idempotent                             | none       | unreadable root returns empty list plus warning  |
-| `runner.run_all`        | root path, filter            | failed suite count | idempotent if tests are deterministic  | suite set  | non-zero subprocess exits increment failed count |
+- One harness owns each suite's case registry. A spec ends with `t:run()`.
+- `t:defer(fn)` registers cleanup and returns an idempotent early-disposal handle.
+- `patch_global` and `patch_table` use the same cleanup ownership.
+- Registrations made during a case belong to that case. Top-level registrations
+  belong to the suite and remain available to every case.
+- Cleanup runs in reverse order after both success and failure. A cleanup error
+  is retained alongside the original failure and does not skip other cleanups.
+- A suite with no registered cases fails but still disposes suite resources.
+- Specs own their temporary files, repositories, buffers, windows, and async work.
+  Async work must settle or be cancelled before its resources are disposed.
 
-## 5. Minimal Core + Plugin Contract
+`harness:run({ exit = false, quiet = true })` remains available for harness
+self-tests. Ordinary specs use the default process-exiting mode. Bootstrap
+helpers remain explicit declarations and register restoration through the harness.
 
-### Minimal Core
+## Test boundaries and naming
 
-- baseline capabilities: case registration, assertions, patch cleanup, direct
-  suite execution, run-all execution, and aggregate reporting.
-- works without optional plugins: true
-- external framework dependency: none
+Prefer focused specs for distinct contracts. The indentline feature illustrates
+this with `parser_spec.lua`, `render_spec.lua`, `frame_spec.lua`,
+`provider_spec.lua`, and `setup_spec.lua`. Pure calculations, buffer/cache state,
+native rendering, and lifecycle registration have separate fixtures and failure
+signals while remaining together under the feature directory.
 
-### Plugin Contract
+Case names describe observable behavior. Regression tests include the triggering
+input and assert the affected result. New shared support is extracted only for
+actual repeated needs. All Lua specs use the same harness and resource lifecycle.
 
-No runtime plugin contract is defined for the initial harness. The minimal core
-is intentionally self-contained. If future work adds optional adapters, that
-adapter lifecycle must be designed in a separate spec before implementation.
+## Validation
 
-## 6. Observability and Degrade Strategy
+Infrastructure specs cover discovery boundaries, deterministic ordering, literal
+selection, empty selection, child state isolation, paths containing spaces and
+Unicode, execution from another CWD, load/case/cleanup failures, empty specs,
+missing run calls, process failures, timeouts, and CLI diagnostics.
 
-- Print case names and failures in deterministic order.
-- Print one suite summary and one aggregate summary in run-all mode.
-- Include file path and case name for each failure.
-- Do not print secret-like environment values or credential files.
-- Degrade by failing only the current suite when bootstrap or suite load fails.
-- Abort only when harness state is internally inconsistent and cleanup cannot be
-  trusted.
-
-## 7. Open Decisions
-
-| Topic | Options | Owner | Deadline | Blocking | Decision Rule |
-| ----- | ------- | ----- | -------- | -------- | ------------- |
-| None  | none    | none  | none     | false    | none          |
+See [flow](flow.md) for state transitions and
+[the test guide](../../../__test__/README.md) for executable commands and examples.

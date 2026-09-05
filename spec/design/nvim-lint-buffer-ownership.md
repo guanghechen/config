@@ -250,7 +250,7 @@ No per-buffer timer cleanup autocmd is required: pending integers live for at mo
 
 ## 8. Test Matrix
 
-Add `lua/__test__/era/plugin/nvim-lint.lua` using the existing harness and an isolated plugin spec load.
+Add `__test__/specs/era/plugin/nvim-lint_spec.lua` using the existing harness and an isolated plugin spec load.
 
 Required cases:
 
@@ -267,14 +267,14 @@ Required cases:
 Validation commands after implementation:
 
 ```sh
-nvim -l lua/__test__/era/plugin/nvim-lint.lua
-nvim -l lua/__test__/run.lua
+nvim -l __test__/run.lua __test__/specs/era/plugin/nvim-lint_spec.lua
+nvim -l __test__/run.lua
 ```
 
 ## 9. Expected Changeset
 
 - Modify `lua/era/plugin/nvim-lint.lua`.
-- Add `lua/__test__/era/plugin/nvim-lint.lua`.
+- Add `__test__/specs/era/plugin/nvim-lint_spec.lua`.
 - Update this design with implementation and validation results.
 
 No other runtime module or interface contract should change.
@@ -295,7 +295,7 @@ No other runtime module or interface contract should change.
 Implemented files:
 
 - `lua/era/plugin/nvim-lint.lua`
-- `lua/__test__/era/plugin/nvim-lint.lua`
+- `__test__/specs/era/plugin/nvim-lint_spec.lua`
 
 The implementation follows the final contract:
 
@@ -309,10 +309,10 @@ The implementation follows the final contract:
 Validation results:
 
 ```text
-nvim -l lua/__test__/era/plugin/nvim-lint.lua
+nvim -l __test__/run.lua __test__/specs/era/plugin/nvim-lint_spec.lua
 6 passed, 0 failed
 
-nvim -l lua/__test__/run.lua
+nvim -l __test__/run.lua
 108 suites, 0 failed
 ```
 
@@ -323,7 +323,7 @@ restored as current afterwards.
 Formatting and whitespace validation:
 
 ```text
-stylua --syntax LuaJIT --check lua/era/plugin/nvim-lint.lua lua/__test__/era/plugin/nvim-lint.lua
+stylua --syntax LuaJIT --check lua/era/plugin/nvim-lint.lua __test__/specs/era/plugin/nvim-lint_spec.lua
 passed
 
 git diff --check

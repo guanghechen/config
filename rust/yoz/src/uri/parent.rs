@@ -37,22 +37,8 @@ fn parent_path(path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn t_parent_cases() {
-        let cases = [
-            ("file:///usr/bin/nvim", Some("file:///usr/bin/")),
-            ("file:///foo/bar#section", Some("file:///foo/")),
-            ("file:///foo", Some("file:///")),
-            ("file:///", Some("file:///")),
-            ("/usr/bin", None),
-            ("", None),
-        ];
-
-        for (input, expected) in cases {
-            let result = parent(input);
-            assert_eq!(result.as_deref(), expected, "input: {}", input);
-        }
-    }
+    include!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../__test__/rust/yoz/uri/parent_test.rs"
+    ));
 }

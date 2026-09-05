@@ -1,81 +1,59 @@
-# Test Harness Flow Spec
+# Test Execution Flow
 
-## 1. Scope
+This document defines the execution and failure flow for the test structure
+specified in [architecture](arch.md). All test sources live under `__test__/`.
 
-This spec defines the dataflow for Lua test execution under `lua/__test__/`.
-It covers single-suite execution, run-all execution, runtime preparation, case
-cleanup, reporting, and process exit status.
+The repository health check runs Node specs from `__test__/node/` with
+`node --test`, Lua specs through `__test__/run.lua`, and Rust unit tests through
+`cargo test --workspace --all-targets`. Cargo compiles the files in
+`__test__/rust/` through their original source modules' `cfg(test)` includes.
+Each check retains its runner's exit status; a failed check does not skip later checks.
 
-It does not define production module behavior or external CI wiring.
+## Lua CLI and suite processes
 
-## 2. Boundary
+1. `__test__/run.lua` resolves its canonical checkout and prepares CWD, runtimepath,
+   packpath, and the Lua module path, preserving Neovim's built-in runtime and library directories.
+2. The parent process parses a literal path filter, `--list`, and `--timeout`.
+   Invalid arguments or an unreadable/empty selection fail before spawning.
+3. Discovery collects and sorts `__test__/specs/**/*_spec.lua`. List mode prints the
+   selected paths and exits without running them.
+4. For each selected path, the runner starts a clean Neovim process executing
+   `__test__/run.lua --suite <path>`. The child's entry prepares the same checkout.
+5. The child loads its spec, which declares globals, creates one harness,
+   registers cases, and calls `t:run()`.
+6. Each case runs, then its cleanup stack drains. Failures retain diagnostics.
+   After the last case, suite cleanup drains and the child reports and exits.
+7. The parent records the child's output and exit status. A failed launch,
+   nonzero exit, or timeout increments the failed-suite count. Later suites run.
+8. The parent reports the aggregate result and exits nonzero if any suite failed.
 
-- Input Boundary: suite files under `lua/__test__/`, optional runner filters,
-  explicit bootstrap requests from each suite, and test case callbacks.
-- Output Boundary: stdout test report, suite result records, failed suite count,
-  process exit status, and restored runtime patches after each case.
+## Case lifecycle
 
-## 3. Dataflow State Machine
+| State          | Owner     | Output / invariant                                    |
+| -------------- | --------- | ----------------------------------------------------- |
+| Registered     | Spec      | Named callable cases and declared suite resources     |
+| Running        | Harness   | One active case cleanup stack                         |
+| Case cleanup   | Harness   | All case cleanups attempted in reverse order          |
+| Suite cleanup  | Harness   | All suite cleanups attempted after the final case      |
+| Reported       | Harness   | Counts and original/cleanup failure diagnostics        |
+| Process ended  | Runner    | Exit status recorded; subsequent suite may start      |
 
-### States
+Suite resources outlive case resources. Cleanup handles run at most once even
+when invoked early. Empty suites still release their suite resources and fail.
 
-| State           | Owner                | Read Set                    | Write Set                        | Side Effects                   |
-| --------------- | -------------------- | --------------------------- | -------------------------------- | ------------------------------ |
-| Discovered      | `__test__.runner`    | `lua/__test__` file paths   | suite path list                  | none                           |
-| RuntimePrepared | `__test__.bootstrap` | suite bootstrap declaration | runtime globals, package path    | optional global assignment     |
-| SuiteLoaded     | `__test__.harness`   | suite file, harness API     | suite registry, case registry    | suite module execution         |
-| CaseRunning     | `__test__.harness`   | case callback, patch stack  | case result, patch stack         | test callback execution        |
-| CaseCleaned     | `__test__.harness`   | patch stack, case result    | restored runtime, cleanup result | global and vim API restoration |
-| SuiteReported   | `__test__.harness`   | case results                | suite result                     | stdout suite report            |
-| RunReported     | `__test__.runner`    | subprocess exit codes       | failed suite count               | stdout run report, `os.exit`   |
+## Failure contract
 
-### Transitions
+| Trigger                         | Required behavior                                    |
+| ------------------------------- | ---------------------------------------------------- |
+| Missing root / zero matches      | Nonzero CLI exit; no successful zero-test result      |
+| Invalid option / timeout         | Actionable diagnostic before spawning                |
+| Empty file / missing `t:run()`   | Child exits nonzero                                  |
+| Zero registered cases            | Harness reports failure and runs suite cleanup        |
+| Spec load or assertion error     | Child reports failure; later suites run               |
+| Case cleanup error               | Keep both errors; run remaining cleanups              |
+| Process launch error             | Record failed suite; later suites run                 |
+| Suite exceeds deadline           | Terminate child, report timeout, continue             |
 
-| From            | To              | Trigger                     | Guard                        | On Failure                                  |
-| --------------- | --------------- | --------------------------- | ---------------------------- | ------------------------------------------- |
-| Discovered      | RuntimePrepared | runner starts suite process | suite path exists            | record non-zero suite exit and continue     |
-| RuntimePrepared | SuiteLoaded     | bootstrap returns           | required globals available   | record bootstrap failure and continue       |
-| SuiteLoaded     | CaseRunning     | harness dequeues case       | case callback is callable    | record invalid case failure and continue    |
-| CaseRunning     | CaseCleaned     | case returns or errors      | patch stack is owned by case | run cleanup; attach cleanup error to case   |
-| CaseCleaned     | CaseRunning     | next case exists            | suite has pending cases      | record failure and continue                 |
-| CaseCleaned     | SuiteReported   | no pending case remains     | suite result can be computed | abort current suite report                  |
-| SuiteReported   | RuntimePrepared | next suite exists           | runner has pending suites    | continue with next suite                    |
-| SuiteReported   | RunReported     | no pending suite remains    | suite results complete       | emit fatal runner failure and exit non-zero |
-
-## 4. Failure Path
-
-- retry: no automatic retry; tests must be deterministic.
-- rollback: case-owned patches are restored in reverse registration order.
-- degrade: a suite load, bootstrap failure, or failed case returns non-zero from
-  the suite process; the run-all runner records one failed suite and continues.
-- abort: harness internal invariant failures abort the current process with a
-  non-zero exit code after printing the failing invariant.
-
-## 5. Invariants
-
-- Each suite owns its case registry; cases do not write into another suite.
-- Each case owns its patch stack; cleanup runs after every case even when the
-  case fails.
-- A suite file can be executed directly with `nvim -l <suite-file>`.
-- Run-all output is the sum of suite results and uses non-zero exit status when
-  any suite or case fails.
-- Bootstrap is explicit; a test must not depend on full config side effects
-  unless the suite declares that mode.
-
-## 6. Test Matrix
-
-| Scenario             | Input                             | Expected Output                       |
-| -------------------- | --------------------------------- | ------------------------------------- |
-| Direct passing suite | one suite with passing cases      | zero failures, exit code 0            |
-| Direct failing suite | one suite with failing case       | failure details, exit code 1          |
-| Run-all mixed suites | one pass, one fail                | both reported, exit code 1            |
-| Patch cleanup        | case patches `_G` or `vim`        | original value restored after case    |
-| Suite load failure   | syntax or require error           | failed suite record, runner continues |
-| Minimal bootstrap    | suite requests `stl.c.Future`     | `_G.stl.c.Future` available in case   |
-| Async case           | callback completes before timeout | pass result without leaking timers    |
-
-## 7. Open Decisions
-
-| Topic | Options | Owner | Deadline | Blocking | Decision Rule |
-| ----- | ------- | ----- | -------- | -------- | ------------- |
-| None  | none    | none  | none     | false    | none          |
+There is no retry or silent skip. Missing dependencies are failures with their
+original diagnostics; the test runner never installs or replaces dependencies.
+Application bootstrap is explicit and state does not cross suite processes.

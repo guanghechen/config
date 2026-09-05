@@ -4,12 +4,8 @@ pub fn calc_linewidths(text: &str) -> Vec<u32> {
 
 #[cfg(test)]
 mod tests {
-    use super::calc_linewidths;
-
-    #[test]
-    fn t_computes_per_line_widths() {
-        let text = "abc\ndef\nghi";
-        let widths = calc_linewidths(text);
-        assert_eq!(widths, vec![3, 3, 3]);
-    }
+    include!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../__test__/rust/yoz/string/calc_linewidths_test.rs"
+    ));
 }

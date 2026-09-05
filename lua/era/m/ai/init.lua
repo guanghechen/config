@@ -1,6 +1,7 @@
 ---@class era.m.ai.__mods
 local __mods = {
   action = "era.m.ai.action",
+  capture = "era.m.ai.capture",
   config = "era.m.ai.config",
   picker = "era.m.ai.picker",
   proc = "era.m.ai.proc",
@@ -14,6 +15,7 @@ local __mods = {
 ---@class era.m.ai
 ---@field public __mods                 era.m.ai.__mods
 ---@field public action                 era.m.ai.action
+---@field public capture                era.m.ai.capture
 ---@field public config                 era.m.ai.config
 ---@field public picker                 era.m.ai.picker
 ---@field public proc                   era.m.ai.proc

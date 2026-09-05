@@ -1,3 +1,6 @@
 {
-  "workspace.ignoreDir": ["lua/stl/dict", "lua/__test__"]
+  "workspace.ignoreDir": [
+    "lua/stl/dict",
+    "__test__"
+  ]
 }

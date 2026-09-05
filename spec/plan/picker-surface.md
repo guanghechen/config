@@ -28,7 +28,7 @@ nvim --cmd "set runtimepath^=$baseline_root/nvim-nvchad" \
 
 ## 自动验证
 
-- `nvim -l lua/__test__/run.lua`：103 suites，0 failed。
+- `nvim -l __test__/run.lua`：103 suites，0 failed。
 - LuaLS Error-level：509 files，0 problems。
 - Stylua、`git diff --check`、shared dependency checks：通过。
 

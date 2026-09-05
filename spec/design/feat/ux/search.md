@@ -71,10 +71,10 @@ and inline blame therefore cannot move or cover it.
 
 ## Verification
 
-- `lua/__test__/dot/state/status.lua`: ownership, window/buffer scope, publish, and clear.
-- `lua/__test__/era/m/ui_attach/messages.lua`: native event transitions.
-- `lua/__test__/era/m/ui_attach/init.lua`: `<Esc>` cleanup.
-- `lua/__test__/era/m/nvimbar/component/nvim.lua`: rendering and window scope.
+- `__test__/specs/dot/state/status_spec.lua`: ownership, window/buffer scope, publish, and clear.
+- `__test__/specs/era/m/ui_attach/messages_spec.lua`: native event transitions.
+- `__test__/specs/era/m/ui_attach/init_spec.lua`: `<Esc>` cleanup.
+- `__test__/specs/era/m/nvimbar/component/nvim_spec.lua`: rendering and window scope.
 - Nvimbar component tests verify the search icon, persistent pattern, unbracketed count, truncation,
   right-side placement, and source-window scope.
 - UI attach tests verify complete snapshots for `search_cmd`, composite `search_count`, and

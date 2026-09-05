@@ -2,6 +2,7 @@
 local __module_name__ = "era.m.ai.sender" ---@type string
 
 local S = era.m.ai
+local capture = require("era.m.ai.capture")
 
 ---@class era.m.ai.sender
 local M = {}
@@ -16,9 +17,6 @@ local VERIFY_INTERVAL = 120 ---@type integer Between verification captures.
 local IDLE_TIMEOUT = 12000 ---@type integer Budget to wait for a busy agent to go idle before sending.
 local IDLE_INTERVAL = 400 ---@type integer Between idle checks.
 local INSERT_TRIES = 3 ---@type integer Attempts to reach INSERT mode before giving up and pasting anyway.
-local BOTTOM_LINES = 10 ---@type integer Capture lines treated as the footer region for state detection.
-local SIGNATURE_LEN = 24 ---@type integer Prefix of the payload used to detect whether text is still pending in the box.
-local RULE_MIN = 20 ---@type integer Minimum horizontal-rule chars for a line to count as an input-box border.
 
 ---@class era.m.ai.sender.IDeliverOpts
 ---@field public pane_id                string
@@ -27,123 +25,6 @@ local RULE_MIN = 20 ---@type integer Minimum horizontal-rule chars for a line to
 ---@field public vim_mode               boolean
 ---@field public insert_pattern         ?string Lua pattern; presence in the capture means the modal editor is in INSERT mode.
 ---@field public busy_pattern           ?string Lua pattern (per trimmed bottom line); presence means the agent is processing.
-
-----------------------------------------------------------------------------------------------------
---- State detection (pure functions over a plain-text capture)
-----------------------------------------------------------------------------------------------------
-
----@param content                       string
----@param n                             integer
----@return string[]
-local function bottom_lines(content, n)
-  local lines = vim.split(content, "\n", { plain = true })
-  -- `tmux capture-pane -p` pads the frame with blank rows up to the pane height, and
-  -- the TUI footer is not pinned to the bottom of the pane (early in a conversation it
-  -- sits well above it). Drop trailing blank lines before taking the last n, or the
-  -- footer region (insert / busy markers) falls outside the window and footer_has
-  -- silently never matches.
-  local last = #lines
-  while last > 0 and vim.trim(lines[last]) == "" do
-    last = last - 1
-  end
-  local out = {} ---@type string[]
-  for i = math.max(1, last - n + 1), last do
-    out[#out + 1] = lines[i]
-  end
-  return out
-end
-
---- Whether any line of the capture's footer region matches `pattern` (a Lua
---- pattern). Lines are trimmed first, so a `^`-anchored pattern keys off the first
---- non-space glyph; both `insert_pattern` and `busy_pattern` go through here.
----@param content                       string|nil
----@param pattern                       string|nil
----@return boolean
-local function footer_has(content, pattern)
-  if not content or not pattern then
-    return false
-  end
-  for _, line in ipairs(bottom_lines(content, BOTTOM_LINES)) do
-    if vim.trim(line):find(pattern) then
-      return true
-    end
-  end
-  return false
-end
-
---- Extract the text currently pending in the input box: the region between the
---- last two horizontal-rule borders, with the prompt marker stripped. Returns nil
---- when the layout cannot be recognized (then submission cannot be judged here).
----@param content                       string|nil
----@return string|nil
-local function extract_input(content)
-  if not content then
-    return nil
-  end
-
-  local lines = vim.split(content, "\n", { plain = true })
-  local rules = {} ---@type integer[]
-  for i, line in ipairs(lines) do
-    local _, dashes = vim.trim(line):gsub("─", "")
-    if dashes >= RULE_MIN then
-      rules[#rules + 1] = i
-    end
-  end
-  if #rules < 2 then
-    return nil
-  end
-
-  local top, bottom = rules[#rules - 1], rules[#rules]
-  local parts = {} ---@type string[]
-  for i = top + 1, bottom - 1 do
-    -- Strip exactly one UI prompt marker (❯ or >), never a second one: a leading
-    -- ">" can be the user's own content (Markdown quote, shell redirection), and
-    -- over-stripping it desyncs extract_input from make_signature, which would
-    -- misclassify still-pending text as "submitted" (a false success).
-    local t = vim.trim(lines[i]) ---@type string
-    local stripped = t:gsub("^❯%s*", "") ---@type string
-    if stripped == t then
-      stripped = t:gsub("^>%s*", "")
-    end
-    if stripped ~= "" then
-      parts[#parts + 1] = stripped
-    end
-  end
-  return vim.trim(table.concat(parts, "\n"))
-end
-
----@param text                          string
----@return string
-local function make_signature(text)
-  local first = vim.split(text or "", "\n", { plain = true })[1] or ""
-  return vim.trim(first):sub(1, SIGNATURE_LEN)
-end
-
---- Classify what a capture says about our submission:
----  - "submitted": the agent is processing, or our text has left the input box.
----  - "pending":   our text is still sitting in the input box.
----  - "unknown":   no capture, or the input-box layout could not be parsed.
----@param content                       string|nil
----@param signature                     string
----@param busy_pattern                  string|nil
----@return "submitted"|"pending"|"unknown"
-local function classify(content, signature, busy_pattern)
-  if not content then
-    return "unknown"
-  end
-  if footer_has(content, busy_pattern) then
-    return "submitted"
-  end
-
-  local pending = extract_input(content)
-  if pending == nil then
-    return "unknown"
-  end
-  if signature == "" then
-    return pending == "" and "submitted" or "pending"
-  end
-  return pending:find(signature, 1, true) and "pending" or "submitted"
-end
 
 ----------------------------------------------------------------------------------------------------
 --- Async polling
@@ -196,7 +77,7 @@ function M.deliver(opts, on_done)
   local vim_mode = opts.vim_mode and true or false
   local insert_pat = opts.insert_pattern
   local busy_pat = opts.busy_pattern
-  local signature = make_signature(opts.text)
+  local signature = capture.make_signature(opts.text)
   local can_verify = (insert_pat ~= nil) or (busy_pat ~= nil)
 
   local finished = false
@@ -238,7 +119,7 @@ function M.deliver(opts, on_done)
     poll(
       pane,
       function(c)
-        if classify(c, signature, busy_pat) == "submitted" then
+        if capture.classify(c, signature, busy_pat) == "submitted" then
           submitted_streak = submitted_streak + 1
           return submitted_streak >= 2
         end
@@ -252,7 +133,7 @@ function M.deliver(opts, on_done)
           return done(true, "submitted")
         end
         S.tmux.capture(pane, function(c)
-          local state = classify(c, signature, busy_pat)
+          local state = capture.classify(c, signature, busy_pat)
           if state == "submitted" then
             return done(true, "submitted")
           end
@@ -306,7 +187,7 @@ function M.deliver(opts, on_done)
         poll(
           pane,
           function(c)
-            return footer_has(c, insert_pat)
+            return capture.footer_has(c, insert_pat)
           end,
           VERIFY_TIMEOUT,
           VERIFY_INTERVAL,
@@ -341,7 +222,7 @@ function M.deliver(opts, on_done)
     poll(
       pane,
       function(c)
-        return c ~= nil and not footer_has(c, busy_pat)
+        return c ~= nil and not capture.footer_has(c, busy_pat)
       end,
       IDLE_TIMEOUT,
       IDLE_INTERVAL,
@@ -356,15 +237,5 @@ function M.deliver(opts, on_done)
     start()
   end
 end
-
---- Test-only: expose the pure capture-parsing helpers for headless unit tests
---- (see lua/__test__/era/m/ai/sender.lua). Not part of the runtime API.
-M.__test = {
-  bottom_lines = bottom_lines,
-  footer_has = footer_has,
-  extract_input = extract_input,
-  make_signature = make_signature,
-  classify = classify,
-}
 
 return M

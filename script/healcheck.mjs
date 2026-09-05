@@ -123,10 +123,11 @@ function checkGitWhitespace(cwd) {
 }
 
 function getChecks() {
-  const nodeTests = readdirSync(scriptDir)
+  const nodeTestDir = join(rootDir, "__test__", "node")
+  const nodeTests = readdirSync(nodeTestDir)
     .filter((filename) => filename.endsWith(".test.mjs"))
     .sort()
-    .map((filename) => join(scriptDir, filename))
+    .map((filename) => join(nodeTestDir, filename))
 
   return [
     {
@@ -143,7 +144,7 @@ function getChecks() {
     },
     {
       name: "Lua tests",
-      run: () => runCommand("nvim", ["-l", "lua/__test__/run.lua"], rootDir),
+      run: () => runCommand("nvim", ["-l", "__test__/run.lua"], rootDir),
     },
     {
       name: "Rust tests",

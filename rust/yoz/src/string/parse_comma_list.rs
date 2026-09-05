@@ -9,11 +9,8 @@ pub fn parse_comma_list(input: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_comma_list;
-
-    #[test]
-    fn t_splits_and_trims_segments() {
-        let items = parse_comma_list("foo, bar , ,baz,,");
-        assert_eq!(items, vec!["foo", "bar", "baz"]);
-    }
+    include!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../__test__/rust/yoz/string/parse_comma_list_test.rs"
+    ));
 }

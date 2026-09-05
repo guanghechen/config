@@ -1,0 +1,2 @@
+# Preserve line endings used by the search tests; CRLF is intentional input.
+*.txt -text whitespace=cr-at-eol

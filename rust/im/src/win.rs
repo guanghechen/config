@@ -216,31 +216,10 @@ mod native {
 
     #[cfg(test)]
     mod tests {
-        use super::super::input_locale_matches;
-        use super::parse_source_id;
-
-        #[test]
-        fn t_parses_decimal_input_locales() {
-            assert_eq!(parse_source_id("1033", "test"), Ok(1033));
-            assert_eq!(parse_source_id("2052", "test"), Ok(2052));
-            assert_eq!(parse_source_id("67699721", "test"), Ok(67699721));
-        }
-
-        #[test]
-        fn t_rejects_invalid_input_locales() {
-            assert!(parse_source_id("", "test").is_err());
-            assert!(parse_source_id("0", "test").is_err());
-            assert!(parse_source_id("english", "test").is_err());
-        }
-
-        #[test]
-        fn t_matches_language_ids_and_exact_layouts() {
-            assert!(input_locale_matches(1033, 1033));
-            assert!(input_locale_matches(67_699_721, 67_699_721));
-            assert!(!input_locale_matches(67_699_721, 1033));
-            assert!(!input_locale_matches(134_481_924, 2052));
-            assert!(!input_locale_matches(67_699_721, 134_481_924));
-        }
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../__test__/rust/im/win/native_test.rs"
+        ));
     }
 }
 
@@ -249,36 +228,8 @@ pub use native::Backend;
 
 #[cfg(test)]
 mod tests {
-    use super::{first_english_input_locale, input_locale_matches, is_english};
-
-    #[test]
-    fn t_classifies_english_language_ids_and_full_input_locales() {
-        assert!(is_english("1033"));
-        assert!(is_english("2057"));
-        assert!(is_english("67699721"));
-        assert!(is_english(
-            &((u64::from(2057_u16) << 16) | u64::from(2057_u16)).to_string()
-        ));
-        assert!(!is_english("1041"));
-        assert!(!is_english("2052"));
-        assert!(!is_english("invalid"));
-    }
-
-    #[test]
-    fn t_matches_language_ids_and_exact_input_locales() {
-        assert!(input_locale_matches(1033, 1033));
-        assert!(input_locale_matches(67_699_721, 67_699_721));
-        assert!(!input_locale_matches(67_699_721, 1033));
-        assert!(!input_locale_matches(134_481_924, 2052));
-        assert!(!input_locale_matches(67_699_721, 134_481_924));
-    }
-
-    #[test]
-    fn t_selects_an_available_english_variant() {
-        assert_eq!(
-            first_english_input_locale([134_481_924, 134_809_609]),
-            Some(134_809_609)
-        );
-        assert_eq!(first_english_input_locale([134_481_924, 68_224_017]), None);
-    }
+    include!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../__test__/rust/im/win_test.rs"
+    ));
 }

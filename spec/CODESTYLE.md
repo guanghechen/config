@@ -71,11 +71,15 @@ Use `stl.reporter.{debug|info|warn|error}` for structured diagnostics.
 
 ## Lua Tests
 
-- Lua test suites live under `lua/__test__/` and use `__test__.harness`.
-- Run one suite with `nvim -l lua/__test__/<suite>.lua`.
-- Run all suites with `nvim -l lua/__test__/run.lua`.
-- Use `__test__.bootstrap` for explicit runtime globals; do not rely on full config bootstrap unless a suite is specifically validating bootstrap behavior.
-- Use harness patch helpers for `_G`, `vim`, and table mocks so cleanup runs after each case.
+- All tests and shared fixtures live under `__test__/`. Production `lua/` has no test-directory references or test-only hooks.
+- Lua specs live under `__test__/specs/`, grouped by module and named `*_spec.lua`.
+- Run all specs with `nvim -l __test__/run.lua`; append a literal path filter to run a directory or one spec.
+- Use `__test__.support.harness` for cases, assertions, and cleanup. Each spec ends with `t:run()`.
+- Use `__test__.support.bootstrap` for declared runtime globals. Composed runtime tests may explicitly load the application bootstrap.
+- Register resource cleanup with `t:defer()` immediately after acquisition. Use `patch_global` / `patch_table` for mocks.
+- Helpers stay beside the relevant cases until multiple specs need them; shared support lives under `__test__/support/`.
+- Test behavior and failure paths; keep pure calculations, buffer state, and native rendering in focused specs.
+- See `__test__/README.md` for commands and `spec/design/test-harness/` for the execution contract.
 
 ## Keymap Style
 
@@ -105,3 +109,5 @@ stl.nvim.fn.bindkeys(keymaps, {
 - Follow existing `mlua` serialization/deserialization patterns.
 - Keep Lua-facing APIs synchronized with Lua call sites.
 - Prefix Rust unit tests with `t_` (for example `fn t_parses_config()`).
+- Put Rust test bodies in `__test__/rust/<crate>/**/*_test.rs`; source modules retain only `cfg(test)` include wiring, preserving module scope and platform gates. Format extracted files with `rustfmt --edition 2024`.
+- Put Node specs in `__test__/node/*.test.mjs` and run them with `node --test`.

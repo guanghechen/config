@@ -1,0 +1,560 @@
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/data/numstat_spec.lua
+---@diagnostic disable: undefined-global, missing-fields
+
+local bootstrap = require("__test__.support.bootstrap")
+local CancellationToken = require("stl.c.cancellation_token")
+local harness = require("__test__.support.harness")
+
+local t = harness.new("era.m.diffview.data.numstat")
+
+bootstrap.with_global(t, "stl", { env = { IS_WIN = false } })
+bootstrap.with_global(t, "dot", {})
+bootstrap.with_global(t, "era", {})
+
+local data = assert(loadfile("lua/era/m/diffview/data.lua"))()
+
+---@param repo                          string
+---@param ...                           string
+---@return vim.SystemCompleted
+local function git(repo, ...)
+  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
+end
+
+t:test("numstat: parses NUL-delimited normal and rename records", function()
+  local normal = { filepath = "src/foo.lua", stage_type = "staged", status = "M" }
+  local renamed = { filepath = "src/new.lua", stage_type = "staged", status = "R" }
+  local binary = { filepath = "asset.bin", stage_type = "staged", status = "M" }
+  local output = "12\t3\tsrc/foo.lua\0" .. "4\t5\t\0src/old.lua\0src/new.lua\0" .. "-\t-\tasset.bin\0"
+
+  data.__apply_numstat_stats__({ normal, renamed, binary }, { code = 0, lines = { output } }, "staged")
+
+  t.assert_eq(12, normal.insertions, "normal insertions")
+  t.assert_eq(3, normal.deletions, "normal deletions")
+  t.assert_eq(4, renamed.insertions, "rename insertions")
+  t.assert_eq(5, renamed.deletions, "rename deletions")
+  t.assert_nil(binary.insertions, "binary insertions")
+  t.assert_nil(binary.deletions, "binary deletions")
+end)
+
+t:test("numstat: applies stats only to the requested stage", function()
+  local staged = { filepath = "same.lua", stage_type = "staged", status = "M" }
+  local unstaged = { filepath = "same.lua", stage_type = "unstaged", status = "M" }
+
+  data.__apply_numstat_stats__({ staged, unstaged }, { code = 0, lines = { "7\t2\tsame.lua\0" } }, "staged")
+
+  t.assert_eq(7, staged.insertions, "staged insertions")
+  t.assert_eq(2, staged.deletions, "staged deletions")
+  t.assert_nil(unstaged.insertions, "unstaged insertions")
+  t.assert_nil(unstaged.deletions, "unstaged deletions")
+end)
+
+t:test("numstat: preserves literal special paths from the NUL protocol", function()
+  local tabbed = { filepath = "tab\tname.lua", stage_type = "staged", status = "A" }
+  local multiline = { filepath = "multi\nline.lua", stage_type = "staged", status = "A" }
+  local output = "3\t1\ttab\tname.lua\0" .. "4\t2\tmulti\nline.lua\0"
+
+  data.__apply_numstat_stats__({ tabbed, multiline }, { code = 0, lines = vim.split(output, "\n") }, "staged")
+
+  t.assert_eq(3, tabbed.insertions, "tab path insertions")
+  t.assert_eq(1, tabbed.deletions, "tab path deletions")
+  t.assert_eq(4, multiline.insertions, "newline path insertions")
+  t.assert_eq(2, multiline.deletions, "newline path deletions")
+end)
+
+t:test("fetch: applies tracked stats from the shared status snapshot", function()
+  local collect_opts = nil ---@type era.m.git.status.ICollectOpts|nil
+  era.m = {
+    git = {
+      status = {
+        collect = function(opts)
+          collect_opts = opts
+          return {
+            await = function()
+              return {
+                status_map = {
+                  ["/repo/a.lua"] = {
+                    relative = "a.lua",
+                    staged = { A = true },
+                    unstaged = {},
+                    staged_new_object_name = "index-a",
+                  },
+                  ["/repo/b.lua"] = {
+                    relative = "b.lua",
+                    staged = {},
+                    unstaged = { M = true },
+                    unstaged_old_object_name = "index-b",
+                  },
+                },
+                numstats = {
+                  staged = { ["a.lua"] = { insertions = 7, deletions = 0 } },
+                  unstaged = { ["b.lua"] = { insertions = 2, deletions = 3 } },
+                },
+              }
+            end,
+          }
+        end,
+      },
+    },
+  }
+  dot.path = {
+    workspace = function()
+      return "/repo"
+    end,
+  }
+
+  local entries = data.fetch_diff_entries()
+  local by_stage = {} ---@type table<string, era.m.diffview.IFileEntry>
+  for _, entry in ipairs(entries) do
+    by_stage[assert(entry.stage_type)] = entry
+  end
+
+  t.assert_true(collect_opts ~= nil and collect_opts.include_numstat == true, "single tracked snapshot requested")
+  t.assert_eq(7, by_stage.staged.insertions, "staged insertions")
+  t.assert_eq(0, by_stage.staged.deletions, "staged deletions")
+  t.assert_eq(2, by_stage.unstaged.insertions, "unstaged insertions")
+  t.assert_eq(3, by_stage.unstaged.deletions, "unstaged deletions")
+  t.assert_eq("index-a", by_stage.staged.new_object_name, "staged snapshot identity")
+  t.assert_eq("index-b", by_stage.unstaged.old_object_name, "unstaged snapshot identity")
+end)
+
+t:test("entries: equality ignores order and compares the complete semantic snapshot", function()
+  local staged = {
+    filepath = "new.lua",
+    stage_type = "staged",
+    status = "R",
+    insertions = 7,
+    deletions = 2,
+    prev_filepath = "old.lua",
+    old_object_name = "head-a",
+    new_object_name = "index-a",
+  } ---@type era.m.diffview.IFileEntry
+  local unstaged = {
+    filepath = "work.lua",
+    stage_type = "unstaged",
+    status = "M",
+    insertions = 3,
+    deletions = 1,
+  } ---@type era.m.diffview.IFileEntry
+  local entries = { staged, unstaged }
+
+  t.assert_true(
+    data.equal_diff_entries(entries, { vim.deepcopy(unstaged), vim.deepcopy(staged) }),
+    "collection order ignored"
+  )
+
+  local mutations = {
+    { "filepath", "other.lua" },
+    { "stage_type", "unstaged" },
+    { "status", "M" },
+    { "insertions", 8 },
+    { "deletions", 3 },
+    { "prev_filepath", "older.lua" },
+    { "old_object_name", "head-b" },
+    { "new_object_name", "index-b" },
+  }
+  for _, mutation in ipairs(mutations) do
+    local changed = vim.deepcopy(entries)
+    changed[1][mutation[1]] = mutation[2]
+    t.assert_false(data.equal_diff_entries(entries, changed), "changed " .. mutation[1])
+  end
+
+  t.assert_false(data.equal_diff_entries(entries, { staged }), "different entry count")
+  t.assert_false(
+    data.equal_diff_entries(
+      { { filepath = "binary.dat", stage_type = "unstaged", status = "M" } },
+      { { filepath = "binary.dat", stage_type = "unstaged", status = "M", insertions = 0, deletions = 0 } }
+    ),
+    "unknown and zero stats stay distinct"
+  )
+end)
+
+t:test("numstat: batches all untracked files through one isolated index", function()
+  local commands = {} ---@type string[][]
+  local command_opts = {} ---@type stl.git.exec.IExecOpts[]
+  stl.git = {
+    exec = {
+      exec = function(args, opts)
+        commands[#commands + 1] = args
+        command_opts[#command_opts + 1] = opts
+        if #commands == 2 then
+          return { code = 0, lines = { "3\t0\tnew.lua\0" }, stderr = "" }
+        end
+        return { code = 0, lines = {}, stderr = "" }
+      end,
+    },
+  }
+  stl.async = {
+    await_all = function(futures)
+      return futures
+    end,
+  }
+  dot.path = {
+    workspace = function()
+      return "/repo"
+    end,
+  }
+  local entries = {} ---@type era.m.diffview.IFileEntry[]
+  for index = 1, 100 do
+    entries[index] =
+      { filepath = index == 1 and "new.lua" or ("bulk/" .. index), stage_type = "unstaged", status = "?" }
+  end
+
+  data.__fetch_untracked_numstat__(entries)
+
+  t.assert_eq(2, #commands, "fixed Git process count")
+  t.assert_eq(
+    "--literal-pathspecs add -N --pathspec-from-file=- --pathspec-file-nul",
+    table.concat(commands[1], " "),
+    "intent-to-add command"
+  )
+  t.assert_eq("diff --numstat -z --", table.concat(commands[2], " "), "untracked diff command")
+  t.assert_eq(command_opts[1].env.GIT_INDEX_FILE, command_opts[2].env.GIT_INDEX_FILE, "isolated index reused")
+  t.assert_true(command_opts[1].env.GIT_INDEX_FILE ~= "/repo/.git/index", "main index untouched")
+  t.assert_true(command_opts[1].stdin:sub(1, 8) == "new.lua\0", "NUL pathspec stdin")
+  t.assert_true(command_opts[2].raw, "raw output")
+  t.assert_eq(3, entries[1].insertions, "untracked insertions")
+  t.assert_eq(0, entries[1].deletions, "untracked deletions")
+end)
+
+t:test("numstat: degrades an untracked temporary-index query failure", function()
+  local responses = {
+    { code = 0, lines = {}, stderr = "" },
+    { code = 128, lines = {}, stderr = "fatal: cannot hash unreadable.lua\n" },
+  }
+  local index = 0 ---@type integer
+  stl.git = {
+    exec = {
+      exec = function()
+        index = index + 1
+        return responses[index]
+      end,
+    },
+  }
+  stl.async = {
+    await_all = function(futures)
+      return futures
+    end,
+  }
+  dot.path = {
+    workspace = function()
+      return "/repo"
+    end,
+  }
+
+  local staged = { filepath = "staged.lua", stage_type = "staged", status = "M", insertions = 7, deletions = 2 }
+  local modified = { filepath = "modified.lua", stage_type = "unstaged", status = "M", insertions = 3, deletions = 1 }
+  local untracked = { filepath = "unreadable.lua", stage_type = "unstaged", status = "?" }
+  local result = data.__fetch_untracked_numstat__({ staged, modified, untracked })
+
+  t.assert_true(result[1] == staged and result[2] == modified and result[3] == untracked, "entries preserved")
+  t.assert_eq(7, staged.insertions, "staged stats preserved")
+  t.assert_eq(2, staged.deletions, "staged deletions preserved")
+  t.assert_eq(3, modified.insertions, "unstaged stats preserved")
+  t.assert_eq(1, modified.deletions, "unstaged deletions preserved")
+  t.assert_nil(untracked.insertions, "failed untracked insertions remain unknown")
+  t.assert_nil(untracked.deletions, "failed untracked deletions remain unknown")
+end)
+
+t:test("numstat: cancellation stops the isolated-index pipeline and removes its temp directory", function()
+  local command_count = 0 ---@type integer
+  local temp_index = nil ---@type string|nil
+  local token = CancellationToken.new()
+  stl.git = {
+    exec = {
+      exec = function(_, opts, exec_token)
+        command_count = command_count + 1
+        if command_count == 1 then
+          temp_index = opts.env.GIT_INDEX_FILE
+          exec_token:cancel()
+          return { code = -1, lines = {}, stderr = "Operation cancelled" }
+        end
+        return { code = 0, lines = {}, stderr = "" }
+      end,
+    },
+  }
+  stl.async = {
+    await_all = function(futures)
+      return futures
+    end,
+  }
+  dot.path = {
+    workspace = function()
+      return "/repo"
+    end,
+  }
+
+  local ok = pcall(data.__fetch_untracked_numstat__, {
+    { filepath = "new.lua", stage_type = "unstaged", status = "?" },
+  }, token)
+
+  t.assert_false(ok, "cancelled query rejected")
+  t.assert_eq(1, command_count, "later temporary-index commands skipped")
+  local temp_dir = assert(temp_index):match("^(.*)/index$")
+  t.assert_true(temp_dir ~= nil and vim.uv.fs_stat(temp_dir) == nil, "temporary index removed")
+end)
+
+t:test("numstat: unexpected temporary-index errors propagate after cleanup", function()
+  local command_count = 0 ---@type integer
+  local temp_index = nil ---@type string|nil
+  stl.git = {
+    exec = {
+      exec = function(_, opts)
+        command_count = command_count + 1
+        if command_count == 1 then
+          temp_index = opts.env.GIT_INDEX_FILE
+          error("unexpected executor bug")
+        end
+        return { code = 0, lines = {}, stderr = "" }
+      end,
+    },
+  }
+  stl.async = {
+    await_all = function(futures)
+      return futures
+    end,
+  }
+  dot.path = {
+    workspace = function()
+      return "/repo"
+    end,
+  }
+
+  local ok, err = pcall(data.__fetch_untracked_numstat__, {
+    { filepath = "new.lua", stage_type = "unstaged", status = "?" },
+  })
+
+  t.assert_false(ok, "unexpected error propagated")
+  t.assert_true(tostring(err):find("unexpected executor bug", 1, true) ~= nil, "original error preserved")
+  local temp_dir = assert(temp_index):match("^(.*)/index$")
+  t.assert_true(temp_dir ~= nil and vim.uv.fs_stat(temp_dir) == nil, "temporary index removed")
+end)
+
+t:test("status conversion keeps stage-specific rename sources", function()
+  local entries = data.__convert_status_to_entries__({
+    ["/repo/new.lua"] = {
+      relative = "new.lua",
+      stage = "mixed",
+      staged = { R = true },
+      unstaged = { R = true },
+      staged_prev_relative = "head.lua",
+      unstaged_prev_relative = "index.lua",
+      staged_old_object_name = "head-old",
+      staged_new_object_name = "index-new",
+      unstaged_old_object_name = "index-old",
+    },
+  })
+
+  local sources = {} ---@type table<string, string>
+  local identities = {} ---@type table<string, era.m.diffview.IFileEntry>
+  for _, entry in ipairs(entries) do
+    sources[assert(entry.stage_type)] = assert(entry.prev_filepath)
+    identities[assert(entry.stage_type)] = entry
+  end
+  t.assert_eq("head.lua", sources.staged, "staged source")
+  t.assert_eq("index.lua", sources.unstaged, "unstaged source")
+  t.assert_eq("head-old", identities.staged.old_object_name, "staged old identity")
+  t.assert_eq("index-new", identities.staged.new_object_name, "staged new identity")
+  t.assert_eq("index-old", identities.unstaged.old_object_name, "unstaged old identity")
+  t.assert_nil(identities.unstaged.new_object_name, "unstaged worktree identity")
+
+  local staged_only = data.__convert_status_to_entries__({
+    ["/repo/plain.lua"] = {
+      relative = "plain.lua",
+      stage = "mixed",
+      staged = { M = true },
+      unstaged = { R = true },
+      unstaged_prev_relative = "index.lua",
+    },
+  })
+  for _, entry in ipairs(staged_only) do
+    if entry.stage_type == "staged" then
+      t.assert_nil(entry.prev_filepath, "staged source does not fall through")
+    end
+  end
+end)
+
+t:test("status conversion keeps staged deletion and same-path untracked replacement", function()
+  local entries = data.__convert_status_to_entries__({
+    ["/repo/replaced.lua"] = {
+      relative = "replaced.lua",
+      stage = "staged",
+      staged = { D = true },
+      unstaged = { ["?"] = true },
+      codes = { D = true, ["?"] = true },
+    },
+  })
+
+  local statuses = {} ---@type table<string, string>
+  for _, entry in ipairs(entries) do
+    statuses[assert(entry.stage_type)] = entry.status
+  end
+
+  t.assert_eq(2, #entries, "independent stage entries")
+  t.assert_eq("D", statuses.staged, "staged deletion")
+  t.assert_eq("?", statuses.unstaged, "unstaged replacement")
+end)
+
+t:test("numstat: consumes Git's real NUL-delimited rename format", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo .. "/src", "p")
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+
+    local original = {} ---@type string[]
+    for index = 1, 20 do
+      original[index] = "line " .. index
+    end
+    vim.fn.writefile(original, repo .. "/src/old.lua")
+    t.assert_eq(0, git(repo, "add", "--", "src/old.lua").code, "initial add")
+    t.assert_eq(
+      0,
+      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
+      "initial commit"
+    )
+
+    t.assert_eq(0, git(repo, "mv", "src/old.lua", "src/new.lua").code, "git mv")
+    vim.fn.writefile({ "added one", "added two" }, repo .. "/src/new.lua", "a")
+    t.assert_eq(0, git(repo, "add", "--", "src/new.lua").code, "stage rename")
+
+    local result = git(repo, "diff", "--staged", "--numstat", "-z", "--")
+    t.assert_eq(0, result.code, "numstat")
+    local lines = vim.split(result.stdout or "", "\n", { plain = true })
+    if lines[#lines] == "" then
+      lines[#lines] = nil
+    end
+
+    local renamed = { filepath = "src/new.lua", stage_type = "staged", status = "R" }
+    data.__apply_numstat_stats__({ renamed }, { code = result.code, lines = lines }, "staged")
+
+    t.assert_eq(2, renamed.insertions, "rename insertions")
+    t.assert_eq(0, renamed.deletions, "rename deletions")
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
+
+t:test("numstat: reads real untracked text while preserving binary and empty semantics", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+    vim.fn.writefile({ "one", "two", "three" }, repo .. "/plain.txt")
+    vim.fn.writefile({}, repo .. "/empty.txt")
+    local special = "tab\tand\nnewline.txt" ---@type string
+    vim.fn.writefile({ "one", "two" }, repo .. "/" .. special)
+    local magic = ":(glob)o*.txt" ---@type string
+    vim.fn.writefile({ "magic", "only" }, repo .. "/" .. magic)
+    vim.fn.writefile({ "other" }, repo .. "/other.txt")
+    local binary = assert(io.open(repo .. "/binary.dat", "wb"))
+    binary:write("before\0after")
+    binary:close()
+
+    stl.git = {
+      exec = {
+        exec = function(args, opts)
+          local cmd = { "git", "-C", opts.cwd }
+          vim.list_extend(cmd, args)
+          local result = vim.system(cmd, { env = opts.env, stdin = opts.stdin, text = false }):wait()
+          return {
+            code = result.code,
+            lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
+            stderr = result.stderr or "",
+          }
+        end,
+      },
+    }
+    stl.async = {
+      await_all = function(futures)
+        return futures
+      end,
+    }
+    dot.path = {
+      workspace = function()
+        return repo
+      end,
+    }
+
+    local plain = { filepath = "plain.txt", stage_type = "unstaged", status = "?" }
+    local empty = { filepath = "empty.txt", stage_type = "unstaged", status = "?" }
+    local binary_entry = { filepath = "binary.dat", stage_type = "unstaged", status = "?" }
+    local special_entry = { filepath = special, stage_type = "unstaged", status = "?" }
+    local magic_entry = { filepath = magic, stage_type = "unstaged", status = "?" }
+    local other_entry = { filepath = "other.txt", stage_type = "unstaged", status = "?" }
+    data.__fetch_untracked_numstat__({ plain, empty, binary_entry, special_entry, magic_entry, other_entry })
+
+    t.assert_eq(3, plain.insertions, "text insertions")
+    t.assert_eq(0, plain.deletions, "text deletions")
+    t.assert_eq(0, empty.insertions, "empty insertions")
+    t.assert_eq(0, empty.deletions, "empty deletions")
+    t.assert_nil(binary_entry.insertions, "binary insertions")
+    t.assert_nil(binary_entry.deletions, "binary deletions")
+    t.assert_eq(2, special_entry.insertions, "special-path insertions")
+    t.assert_eq(0, special_entry.deletions, "special-path deletions")
+    t.assert_eq(2, magic_entry.insertions, "pathspec-magic filename insertions")
+    t.assert_eq(0, magic_entry.deletions, "pathspec-magic filename deletions")
+    t.assert_eq(1, other_entry.insertions, "glob target remains independent")
+    t.assert_eq(0, other_entry.deletions, "glob target deletions")
+  end, debug.traceback)
+
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
+
+t:test("numstat: an unreadable untracked file does not block the Changes snapshot", function()
+  local repo = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(repo, "p")
+  local unreadable = repo .. "/unreadable.txt" ---@type string
+
+  local ok, err = xpcall(function()
+    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
+    vim.fn.writefile({ "cannot read this" }, unreadable)
+    t.assert_true(vim.uv.fs_chmod(unreadable, 0) == true, "make fixture unreadable")
+
+    stl.git = {
+      exec = {
+        exec = function(args, opts)
+          local cmd = { "git", "-C", opts.cwd }
+          vim.list_extend(cmd, args)
+          local result = vim.system(cmd, { env = opts.env, stdin = opts.stdin, text = false }):wait()
+          return {
+            code = result.code,
+            lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
+            stderr = result.stderr or "",
+          }
+        end,
+      },
+    }
+    stl.async = {
+      await_all = function(futures)
+        return futures
+      end,
+    }
+    dot.path = {
+      workspace = function()
+        return repo
+      end,
+    }
+
+    local entry = { filepath = "unreadable.txt", stage_type = "unstaged", status = "?" }
+    local result = data.__fetch_untracked_numstat__({ entry })
+
+    t.assert_true(result[1] == entry, "entry preserved")
+    t.assert_nil(entry.insertions, "insertions remain unknown")
+    t.assert_nil(entry.deletions, "deletions remain unknown")
+  end, debug.traceback)
+
+  vim.uv.fs_chmod(unreadable, 384)
+  vim.fn.delete(repo, "rf")
+  if not ok then
+    error(err)
+  end
+end)
+
+t:run()
