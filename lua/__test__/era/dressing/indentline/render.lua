@@ -277,4 +277,110 @@ t:test("frame resolves blank indentation beyond viewport boundaries", function()
   end
 end)
 
+---@param lines                         string[]
+---@param callback                      fun(bufnr: integer, winnr: integer): nil
+---@return nil
+local function with_context_buffer(lines, callback)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_set_option_value("filetype", "text", { buf = bufnr })
+  vim.api.nvim_set_option_value("shiftwidth", 2, { buf = bufnr })
+  render.invalidate()
+
+  local ok, err = pcall(callback, bufnr, winnr)
+  render.invalidate()
+  if vim.api.nvim_buf_is_valid(previous_bufnr) then
+    vim.api.nvim_win_set_buf(winnr, previous_bufnr)
+  end
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+  if not ok then
+    error(err, 0)
+  end
+end
+
+t:test("blank context avoids repeated scans and follows edits and run boundaries", function()
+  local lines = { "        deep" } ---@type string[]
+  for index = 2, 10001 do
+    lines[index] = ""
+  end
+  lines[10002] = "  shallow"
+
+  with_context_buffer(lines, function(bufnr, winnr)
+    local previous_calls, following_calls = 0, 0
+    local previous, following = vim.fn.prevnonblank, vim.fn.nextnonblank
+    t:patch_table(vim.fn, "prevnonblank", function(...)
+      previous_calls = previous_calls + 1
+      return previous(...)
+    end)
+    t:patch_table(vim.fn, "nextnonblank", function(...)
+      following_calls = following_calls + 1
+      return following(...)
+    end)
+
+    for _, start_row in ipairs({ 100, 101, 99 }) do
+      local value = assert(render.build_frame(winnr, bufnr, start_row, start_row + 50))
+      t.assert_eq(4, value.levels[start_row], "inherited indent while scrolling")
+    end
+    t.assert_eq(1, previous_calls, "previous boundary searched once")
+    t.assert_eq(1, following_calls, "following boundary searched once")
+
+    vim.api.nvim_buf_set_lines(bufnr, 10001, 10002, false, { "          deeper" })
+    local edited = assert(render.build_frame(winnr, bufnr, 100, 150))
+    t.assert_eq(5, edited.levels[100], "offscreen edit invalidates context")
+    t.assert_eq(2, previous_calls, "previous boundary refreshed after edit")
+    t.assert_eq(2, following_calls, "following boundary refreshed after edit")
+
+    vim.api.nvim_buf_set_lines(bufnr, 200, 201, false, { "  boundary" })
+    local before_boundary = assert(render.build_frame(winnr, bufnr, 100, 150))
+    t.assert_eq(4, before_boundary.levels[100], "new boundary splits the blank run")
+
+    local after_boundary = assert(render.build_frame(winnr, bufnr, 202, 252))
+    t.assert_eq(5, after_boundary.levels[202], "context follows the next blank run")
+    t.assert_eq(4, previous_calls, "each run has its own previous boundary")
+    t.assert_eq(4, following_calls, "each run has its own following boundary")
+
+    vim.api.nvim_set_option_value("shiftwidth", 4, { buf = bufnr })
+    render.invalidate()
+    local reconfigured = assert(render.build_frame(winnr, bufnr, 202, 252))
+    t.assert_eq(2, reconfigured.levels[202], "option invalidation drops derived context")
+  end)
+end)
+
+t:test("blank context preserves native nonblank boundaries inside parsed whitespace", function()
+  local lines = { "      deep" } ---@type string[]
+  for index = 2, 70 do
+    lines[index] = ""
+  end
+  -- Lua's whitespace pattern accepts form feed, but prevnonblank/nextnonblank do not.
+  lines[40] = "\f"
+  lines[71] = "  shallow"
+
+  with_context_buffer(lines, function(bufnr, winnr)
+    local spanning = assert(render.build_frame(winnr, bufnr, 30, 50))
+    t.assert_eq(3, spanning.levels[35], "parsed whitespace keeps the surrounding context")
+    local following = assert(render.build_frame(winnr, bufnr, 45, 55))
+    t.assert_eq(1, following.levels[45], "native nonblank boundary is not cached as blank")
+  end)
+end)
+
+t:test("blank context preserves buffer edge semantics", function()
+  with_context_buffer({ "", "", "", "  tail" }, function(bufnr, winnr)
+    local first = assert(render.build_frame(winnr, bufnr, 0, 1))
+    local following = assert(render.build_frame(winnr, bufnr, 1, 2))
+    t.assert_eq(1, first.levels[0], "blank prefix uses the following line")
+    t.assert_eq(1, following.levels[1], "blank prefix context survives scrolling")
+  end)
+  with_context_buffer({ "    head", "", "", "" }, function(bufnr, winnr)
+    local first = assert(render.build_frame(winnr, bufnr, 2, 3))
+    local following = assert(render.build_frame(winnr, bufnr, 3, 4))
+    t.assert_eq(0, first.levels[2], "blank EOF keeps its literal indentation")
+    t.assert_eq(0, following.levels[3], "blank EOF context survives scrolling")
+  end)
+end)
+
 t:run()

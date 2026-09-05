@@ -98,6 +98,39 @@ t:test("provider renders visible indentation with ephemeral extmarks", function(
   end)
 end)
 
+t:test("provider renders indented EOF on cold and cached redraws", function()
+  for _, lines in ipairs({ { "    value" }, { "root", "    value" } }) do
+    with_buffer(lines, function(_, winnr)
+      Render.invalidate()
+      for _ = 1, 2 do
+        local extmarks = render(winnr)
+        local row = #lines - 1 ---@type integer
+        t.assert_eq(1, #extmarks, "EOF guide count")
+        t.assert_eq(row, extmarks[1].row, "EOF guide row")
+        local info = vim.fn.getwininfo(winnr)[1]
+        t.assert_eq("│", vim.fn.screenstring(info.winrow + row, info.wincol + info.textoff), "EOF screen guide")
+      end
+    end)
+  end
+end)
+
+t:test("provider preserves EOF guides when lines are appended or deleted", function()
+  with_buffer({ "    one", "tail" }, function(bufnr, winnr)
+    t.assert_eq(1, #render(winnr), "initial guide")
+
+    vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, {})
+    t.assert_eq(1, #render(winnr), "guide after deleting the last line")
+
+    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "    last" })
+    t.assert_eq(2, #render(winnr), "guide after appending an indented line")
+
+    vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, {})
+    local extmarks = render(winnr)
+    t.assert_eq(1, #extmarks, "remaining EOF guide")
+    t.assert_eq(0, extmarks[1].row, "remaining EOF row")
+  end)
+end)
+
 t:test("provider keeps horizontal scroll state window-local", function()
   with_buffer({ string.rep(" ", 100) .. string.rep("x", 200), "tail" }, function(bufnr, first_winnr)
     vim.api.nvim_set_option_value("wrap", false, { win = first_winnr, scope = "local" })

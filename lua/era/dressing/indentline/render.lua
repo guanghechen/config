@@ -12,6 +12,11 @@ local parser = require("era.dressing.indentline.parser")
 ---@field public tab_fill               string|nil
 ---@field public tab_end                string|nil
 
+---@class era.dressing.indentline.render.IBlankContext
+---@field public start_row              integer
+---@field public end_row                integer
+---@field public context                era.dressing.indentline.parser.IContext
+
 ---@class era.dressing.indentline.render.IFrame
 ---@field public bufnr                  integer
 ---@field public changedtick            integer
@@ -23,6 +28,7 @@ local parser = require("era.dressing.indentline.parser")
 ---@field public whitespace_style       era.dressing.indentline.render.IWhitespaceStyle
 ---@field public breakindent            boolean
 ---@field public filetype               string
+---@field public blank_context          era.dressing.indentline.render.IBlankContext|nil
 ---@field public levels                 table<integer, integer>
 ---@field public blank_rows             table<integer, true>
 ---@field public tab_whitespaces        table<integer, string>
@@ -128,14 +134,20 @@ end
 ---@param parse_end_row                 integer
 ---@param line_count                    integer
 ---@param options                       era.dressing.indentline.parser.IOptions
+---@param cached                        ?era.dressing.indentline.render.IBlankContext
 ---@return era.dressing.indentline.parser.IContext|nil
-local function get_parse_context(bufnr, lines, parse_start_row, parse_end_row, line_count, options)
+---@return era.dressing.indentline.render.IBlankContext|nil
+local function get_parse_context(bufnr, lines, parse_start_row, parse_end_row, line_count, options, cached)
+  if cached ~= nil and parse_start_row >= cached.start_row and parse_end_row <= cached.end_row then
+    return cached.context, cached
+  end
+
   local first_line = lines[1] ---@type string|nil
   local last_line = lines[#lines] ---@type string|nil
   local needs_previous = parse_start_row > 0 and first_line ~= nil and first_line:find("^%s*$") ~= nil ---@type boolean
   local needs_following = parse_end_row < line_count and last_line ~= nil and last_line:find("^%s*$") ~= nil ---@type boolean
   if not needs_previous and not needs_following then
-    return nil
+    return nil, cached
   end
 
   local previous_lnum = 0 ---@type integer
@@ -149,10 +161,24 @@ local function get_parse_context(bufnr, lines, parse_start_row, parse_end_row, l
     end
   end)
 
-  return {
+  local context = {
     previous_level = get_line_level(bufnr, previous_lnum, options),
     following_level = get_line_level(bufnr, following_lnum, options),
-  }
+  } ---@type era.dressing.indentline.parser.IContext
+
+  for _, line in ipairs(lines) do
+    -- Native nonblank searches only skip spaces/tabs, unlike Lua's broader %s.
+    if line:find("^[ \t]*$") == nil then
+      return context, cached
+    end
+  end
+
+  return context,
+    {
+      start_row = previous_lnum,
+      end_row = following_lnum > 0 and following_lnum - 1 or line_count,
+      context = context,
+    }
 end
 
 ---@param frame                         era.dressing.indentline.render.IFrame
@@ -251,7 +277,15 @@ function M.build_frame(winnr, bufnr, start_row, end_row)
   local parse_start_row = math.max(0, start_row - 1) ---@type integer
   local parse_end_row = math.min(line_count, end_row + 1) ---@type integer
   local lines = vim.api.nvim_buf_get_lines(bufnr, parse_start_row, parse_end_row, false) ---@type string[]
-  local context = get_parse_context(bufnr, lines, parse_start_row, parse_end_row, line_count, indent_options)
+  -- Keep one proven blank interval per window; edits and option invalidation discard it.
+  local blank_context = cached ~= nil
+      and cached.bufnr == bufnr
+      and cached.changedtick == changedtick
+      and cached.blank_context
+    or nil ---@type era.dressing.indentline.render.IBlankContext|nil
+  local context ---@type era.dressing.indentline.parser.IContext|nil
+  context, blank_context =
+    get_parse_context(bufnr, lines, parse_start_row, parse_end_row, line_count, indent_options, blank_context)
   local result = parser.parse(lines, parse_start_row, indent_options, parser.is_dedent_scoped(filetype), context)
   local frame = {
     bufnr = bufnr,
@@ -264,6 +298,7 @@ function M.build_frame(winnr, bufnr, start_row, end_row)
     whitespace_style = whitespace_style,
     breakindent = breakindent,
     filetype = filetype,
+    blank_context = blank_context,
     levels = result.levels,
     blank_rows = result.blank_rows,
     tab_whitespaces = result.tab_whitespaces,
@@ -470,6 +505,12 @@ function M.setup(config, is_enabled)
       if not is_enabled(bufnr) then
         frames[winnr] = nil
         return false
+      end
+      -- on_win's exclusive bottom is clamped to the last buffer row at EOF.
+      -- Normalize it to the half-open ranges used by frames and on_range.
+      local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+      if end_row == line_count - 1 then
+        end_row = line_count
       end
       local frame, rebuilt = M.build_frame(winnr, bufnr, start_row, end_row)
       if frame == nil then
