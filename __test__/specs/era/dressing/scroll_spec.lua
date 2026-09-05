@@ -1,10 +1,10 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/scroll_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/scroll_spec.lua
 ---@diagnostic disable: undefined-global
---- Test for era.m.scroll module
+--- Test for era.dressing.scroll module
 
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.scroll")
+local t = harness.new("era.dressing.scroll")
 
 ---@param callback                     function
 ---@param name                         string
@@ -24,7 +24,7 @@ local function get_upvalue(callback, name)
   error("missing upvalue: " .. name)
 end
 
----@class era.m.scroll.test.ITimer
+---@class era.dressing.scroll.test.ITimer
 ---@field callback                     fun()|nil
 ---@field cleared                      boolean
 local Timer = {}
@@ -38,22 +38,23 @@ function Timer:start(_timeout, _interval, callback)
   self.callback = callback
 end
 
----@class era.m.scroll.test.IRuntime
+---@class era.dressing.scroll.test.IRuntime
 ---@field autocmds                      table<string, table>
 ---@field bufnr                         integer
 ---@field valid                         boolean
 ---@field view                          vim.fn.winsaveview.ret
 ---@field options                       table<string, any>
 ---@field scheduled                     fun()[]
----@field timers                        era.m.scroll.test.ITimer[]
+---@field timers                        era.dressing.scroll.test.ITimer[]
 ---@field observer                      fun()
+---@field observe_calls                 integer
 ---@field enabled                       boolean
----@field Scroll                        era.m.scroll
+---@field Scroll                        era.dressing.scroll
 ---@field check_scroll                  fun(winnr: integer)
----@field states                        table<integer, era.m.scroll.IState>
----@field get_states                    fun(): table<integer, era.m.scroll.IState>
+---@field states                        table<integer, era.dressing.scroll.IState>
+---@field get_states                    fun(): table<integer, era.dressing.scroll.IState>
 
----@return era.m.scroll.test.IRuntime
+---@return era.dressing.scroll.test.IRuntime
 local function setup()
   local runtime = {
     autocmds = {},
@@ -63,8 +64,9 @@ local function setup()
     options = { virtualedit = "", scrolloff = 4 },
     scheduled = {},
     timers = {},
+    observe_calls = 0,
     enabled = true,
-  } ---@type era.m.scroll.test.IRuntime
+  } ---@type era.dressing.scroll.test.IRuntime
 
   t:patch_global("stl", {
     easing = {
@@ -74,6 +76,7 @@ local function setup()
     },
     fn = {
       observe = function(_, callback)
+        runtime.observe_calls = runtime.observe_calls + 1
         runtime.observer = callback
         callback()
       end,
@@ -168,7 +171,7 @@ local function setup()
     return pos[2] + 1
   end)
 
-  runtime.Scroll = assert(loadfile("lua/era/m/scroll.lua"))()
+  runtime.Scroll = assert(loadfile("lua/era/dressing/scroll.lua"))()
   runtime.Scroll.dressing()
 
   local win_scrolled = runtime.autocmds.WinScrolled.callback ---@type function
@@ -180,6 +183,25 @@ local function setup()
   end
   return runtime
 end
+
+t:test("dressing subscribes once across repeated setup and feature toggles", function()
+  local runtime = setup()
+
+  runtime.Scroll.dressing()
+  t.assert_eq(1, runtime.observe_calls, "observer registrations while enabled")
+
+  runtime.enabled = false
+  runtime.observer()
+  runtime.Scroll.dressing()
+  t.assert_eq(1, runtime.observe_calls, "observer registrations while disabled")
+  t.assert_nil(runtime.get_states()[1], "disabled window state")
+
+  runtime.enabled = true
+  runtime.observer()
+  runtime.Scroll.dressing()
+  t.assert_eq(1, runtime.observe_calls, "observer registrations after re-enabling")
+  t.assert_true(runtime.get_states()[1] ~= nil, "re-enabled window state")
+end)
 
 t:test("animates an unaccepted programmatic view change", function()
   local runtime = setup()

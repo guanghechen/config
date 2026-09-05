@@ -141,7 +141,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 
         local ok = pcall(vim.api.nvim_win_set_cursor, winnr, mark)
         if ok then
-          era.m.scroll.accept_current_view(winnr)
+          era.dressing.scroll.accept_current_view(winnr)
         end
       end)
     end

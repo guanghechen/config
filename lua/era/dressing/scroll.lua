@@ -1,13 +1,13 @@
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/scroll.lua
 
-local __module_name__ = "era.m.scroll" ---@type string
+local __module_name__ = "era.dressing.scroll" ---@type string
 
 local SCROLL_UP = vim.api.nvim_replace_termcodes("<C-y>", true, true, true)
 local SCROLL_DOWN = vim.api.nvim_replace_termcodes("<C-e>", true, true, true)
 local MOUSE_SCROLL_DOWN = vim.api.nvim_replace_termcodes("<ScrollWheelDown>", true, true, true)
 local MOUSE_SCROLL_UP = vim.api.nvim_replace_termcodes("<ScrollWheelUp>", true, true, true)
 
----@class era.m.scroll.IState
+---@class era.dressing.scroll.IState
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public view                   vim.fn.winsaveview.ret
@@ -16,13 +16,13 @@ local MOUSE_SCROLL_UP = vim.api.nvim_replace_termcodes("<ScrollWheelUp>", true, 
 ---@field public changedtick            integer
 ---@field public last                   integer
 ---@field public timer                  uv.uv_timer_t|nil
----@field public wincfg                 era.m.scroll.IWincfg
+---@field public wincfg                 era.dressing.scroll.IWincfg
 
----@class era.m.scroll.IWincfg : vim.api.keyset.win_config
+---@class era.dressing.scroll.IWincfg : vim.api.keyset.win_config
 ---@field public virtualedit            string|nil
 ---@field public scrolloff              integer|nil
 
----@class era.m.scroll.IConfig
+---@class era.dressing.scroll.IConfig
 ---@field public duration               integer
 ---@field public step                   integer
 ---@field public easing                 string
@@ -40,9 +40,10 @@ local config = {
 
 local augroup = stl.nvim.fn.augroup(__module_name__)
 
-local states = {} ---@type table<integer, era.m.scroll.IState>
+local states = {} ---@type table<integer, era.dressing.scroll.IState>
 local mouse_scrolling = false ---@type boolean
 local on_key_ns = nil ---@type integer|nil
+local initialized = false ---@type boolean
 local enabled = false ---@type boolean
 
 ---@param bufnr                         integer
@@ -67,7 +68,7 @@ local function is_enabled(bufnr)
   return true
 end
 
----@param state                         era.m.scroll.IState
+---@param state                         era.dressing.scroll.IState
 ---@return boolean
 local function is_state_valid(state)
   if states[state.winnr] ~= state then
@@ -93,7 +94,7 @@ local function is_state_valid(state)
   return true
 end
 
----@param state                         era.m.scroll.IState
+---@param state                         era.dressing.scroll.IState
 ---@return nil
 local function stop_animation(state)
   if state.timer then
@@ -139,7 +140,7 @@ local function calc_scroll_lines(winnr, from, to)
 end
 
 ---@param winnr                         integer
----@return era.m.scroll.IState|nil
+---@return era.dressing.scroll.IState|nil
 local function get_state(winnr)
   local bufnr = vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr)
   if not bufnr or not is_enabled(bufnr) then
@@ -148,14 +149,14 @@ local function get_state(winnr)
   end
 
   local view = vim.api.nvim_win_call(winnr, vim.fn.winsaveview)
-  local state = states[winnr] ---@type era.m.scroll.IState|nil
+  local state = states[winnr] ---@type era.dressing.scroll.IState|nil
 
   if not (state and is_state_valid(state)) then
     if state then
       stop_animation(state)
     end
 
-    ---@type era.m.scroll.IState
+    ---@type era.dressing.scroll.IState
     state = {
       winnr = winnr,
       bufnr = bufnr,
@@ -178,12 +179,15 @@ end
 ---@param winnr                         integer
 ---@return nil
 local function check_scroll(winnr)
-  local state = get_state(winnr) ---@type era.m.scroll.IState|nil
+  local state = get_state(winnr) ---@type era.dressing.scroll.IState|nil
   if not state then
     return
   end
 
-  if vim.api.nvim_get_option_value("scrollbind", { win = state.winnr }) and vim.api.nvim_get_current_win() ~= state.winnr then
+  if
+    vim.api.nvim_get_option_value("scrollbind", { win = state.winnr })
+    and vim.api.nvim_get_current_win() ~= state.winnr
+  then
     stop_animation(state)
     return
   end
@@ -203,7 +207,8 @@ local function check_scroll(winnr)
   state.target = vim.deepcopy(state.view)
   stop_animation(state)
 
-  state.wincfg.virtualedit = state.wincfg.virtualedit or vim.api.nvim_get_option_value("virtualedit", { win = state.winnr })
+  state.wincfg.virtualedit = state.wincfg.virtualedit
+    or vim.api.nvim_get_option_value("virtualedit", { win = state.winnr })
   state.wincfg.scrolloff = state.wincfg.scrolloff or vim.api.nvim_get_option_value("scrolloff", { win = state.winnr })
   vim.api.nvim_set_option_value("virtualedit", "all", { win = state.winnr, scope = "local" })
   vim.api.nvim_set_option_value("scrolloff", 0, { win = state.winnr, scope = "local" })
@@ -394,7 +399,7 @@ local function disable()
   vim.api.nvim_clear_autocmds({ group = augroup })
 end
 
----@class era.m.scroll
+---@class era.dressing.scroll
 local M = {}
 
 ---@param winnr                         integer
@@ -404,7 +409,7 @@ function M.accept_current_view(winnr)
     return
   end
 
-  local state = get_state(winnr) ---@type era.m.scroll.IState|nil
+  local state = get_state(winnr) ---@type era.dressing.scroll.IState|nil
   if not state then
     return
   end
@@ -418,8 +423,14 @@ function M.accept_current_view(winnr)
   state.last = 0
 end
 
+--- Register the observer once; workspace toggles control activation separately.
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   stl.fn.observe({ dot.context.flight.dressing_scroll }, function()
     if dot.context.flight.dressing_scroll:snapshot() then
       enable()

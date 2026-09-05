@@ -79,6 +79,7 @@ local __dressing__mods = {
   hipattern = "era.dressing.hipattern",
   indentline = "era.dressing.indentline",
   indentscope = "era.dressing.indentscope",
+  scroll = "era.dressing.scroll",
   virtcolumn = "era.dressing.virtcolumn",
 }
 
@@ -89,6 +90,7 @@ local __dressing__mods = {
 ---@field public hipattern              era.dressing.hipattern
 ---@field public indentline             era.dressing.indentline
 ---@field public indentscope            era.dressing.indentscope
+---@field public scroll                 era.dressing.scroll
 ---@field public virtcolumn             era.dressing.virtcolumn
 local dressing = setmetatable({
   __mods = __dressing__mods,
@@ -129,7 +131,6 @@ local __m__mods = {
   picker = "era.m.picker",
   plugin = "era.m.plugin",
   python_venv = "era.m.python_venv",
-  scroll = "era.m.scroll",
   searcher = "era.m.searcher",
   select = "era.m.select",
   splitline = "era.m.splitline",
@@ -173,7 +174,6 @@ local __m__mods = {
 ---@field public picker                 era.m.picker
 ---@field public plugin                 era.m.plugin
 ---@field public python_venv            era.m.python_venv
----@field public scroll                 era.m.scroll
 ---@field public searcher               era.m.searcher
 ---@field public select                 era.m.select
 ---@field public splitline              era.m.splitline

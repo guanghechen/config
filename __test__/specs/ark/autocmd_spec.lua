@@ -39,13 +39,15 @@ local function setup()
   })
   t:patch_global("dot", {})
   t:patch_global("era", {
-    m = {
-      python_venv = { dressing = function() end },
+    dressing = {
       scroll = {
         accept_current_view = function()
           runtime.accepted = runtime.accepted + 1
         end,
       },
+    },
+    m = {
+      python_venv = { dressing = function() end },
     },
   })
   t:patch_global("yoz", {
