@@ -141,6 +141,9 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
       return { plugins = { plugins.slow, plugins.fast }, nvim_startup_time = 30, total_time = 22, finalized = true }
     end,
   })
+  t:patch_table(era.dressing, "get_load_times", function()
+    return { statusline = 3, indentscope = 3, notifier = 0.75 }
+  end)
   t:patch_table(package.loaded, "era.m.plugin.action", {
     is_running = function()
       return true
@@ -188,6 +191,14 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
   t.assert_true(text:find("Runtime Loaded (1) 5.00ms", 1, true) ~= nil, "runtime section load time")
   t.assert_true(text:find("Not Loaded (1)", 1, true) ~= nil, "not loaded section")
   t.assert_true(text:find("Not Loaded (1) 0.00ms", 1, true) == nil, "not loaded section has no load time")
+  t.assert_true(text:find("Total: 6 plugins", 1, true) ~= nil, "dressing excluded from plugin count")
+  t.assert_true(text:find("Dressing (3) 6.75ms", 1, true) ~= nil, "dressing total")
+  t.assert_true(find_line(lines, "indentscope 3.00ms") < find_line(lines, "statusline 3.00ms"), "timing ties use names")
+  t.assert_true(find_line(lines, "statusline 3.00ms") < find_line(lines, "notifier 0.75ms"), "slow dressings first")
+  t.assert_nil(
+    widget:get_plugin_at_line(find_line(lines, "indentscope 3.00ms")),
+    "dressing is not a plugin action target"
+  )
 
   ---@diagnostic disable-next-line: invisible
   local startup_segments = widget._lines[find_line(lines, "Startup (2)")]
@@ -209,6 +220,23 @@ t:test("home merges startup profile, inventory, and nested tasks", function()
   t.assert_true(find_line(lines, "orphan.nvim") + 1 == find_line(lines, "Removed"), "clean task nesting")
   t.assert_true(text:find("╰─", 1, true) ~= nil, "rounded tree connector")
   t.assert_true(text:find("Already up to date", 1, true) == nil, "unchanged result hidden")
+end)
+
+t:test("dressing timing section is omitted when empty and renders zero durations", function()
+  local timings = {}
+  t:patch_table(era.dressing, "get_load_times", function()
+    return timings
+  end)
+  ---@diagnostic disable-next-line: missing-fields
+  local widget = Widget.new({ win_opts = { width = 80 } } --[[@as era.m.plugin.View]])
+  widget:__render_dressings__()
+  t.assert_eq(0, #lines_of(widget), "empty section omitted")
+
+  timings.virtcolumn = 0
+  widget:__render_dressings__()
+  local text = table.concat(lines_of(widget), "\n")
+  t.assert_true(text:find("Dressing (1) 0.00ms", 1, true) ~= nil, "zero total shown")
+  t.assert_true(text:find("virtcolumn 0.00ms", 1, true) ~= nil, "zero module duration shown")
 end)
 
 t:test("cursor ownership follows a plugin across section moves", function()

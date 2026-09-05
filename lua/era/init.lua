@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era" ---@type string
+
 ---@class era.fn.__mods
 local __fn__mods = {
   add_locations_to_ai = "era.fn.add-locations-to-ai",
@@ -67,56 +70,6 @@ local fn = setmetatable({
       return rawget(t, k)
     end
     return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
----@class era.dressing.__mods
-local __dressing__mods = {
-  commentstring = "era.dressing.commentstring",
-  foldtext = "era.dressing.foldtext",
-  hipattern = "era.dressing.hipattern",
-  indentline = "era.dressing.indentline",
-  indentscope = "era.dressing.indentscope",
-  notifier = "era.dressing.notifier",
-  scroll = "era.dressing.scroll",
-  statuscolumn = "era.dressing.statuscolumn",
-  statusline = "era.dressing.statusline",
-  tabline = "era.dressing.tabline",
-  trailspace = "era.dressing.trailspace",
-  ui_attach = "era.dressing.ui_attach",
-  virtcolumn = "era.dressing.virtcolumn",
-  winline = "era.dressing.winline",
-  winsep = "era.dressing.winsep",
-}
-
----@class era.dressing
----@field public __mods                 era.dressing.__mods
----@field public commentstring          era.dressing.commentstring
----@field public foldtext               era.dressing.foldtext
----@field public hipattern              era.dressing.hipattern
----@field public indentline             era.dressing.indentline
----@field public indentscope            era.dressing.indentscope
----@field public notifier               era.dressing.notifier
----@field public scroll                 era.dressing.scroll
----@field public statuscolumn           era.dressing.statuscolumn
----@field public statusline             era.dressing.statusline
----@field public tabline                era.dressing.tabline
----@field public trailspace             era.dressing.trailspace
----@field public ui_attach              era.dressing.ui_attach
----@field public virtcolumn             era.dressing.virtcolumn
----@field public winline                era.dressing.winline
----@field public winsep                 era.dressing.winsep
-local dressing = setmetatable({
-  __mods = __dressing__mods,
-}, {
-  __index = function(t, k)
-    local mod = __dressing__mods[k] ---@type string|nil
-    if mod == nil then
-      return rawget(t, k)
-    end
-    return require(mod)
   end,
 })
 
@@ -304,7 +257,7 @@ local widget = setmetatable({
 ---@field public view                   era.view
 ---@field public widget                 era.widget
 local M = {
-  dressing = dressing,
+  dressing = require("era.dressing"),
   fn = fn,
   m = m,
   nvim = nvim,

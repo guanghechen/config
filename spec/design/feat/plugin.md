@@ -95,6 +95,16 @@ local specs = {
 require("era.m.plugin").setup(specs)
 ```
 
+### Dressing Timing
+
+Dressing owns its initialization and timing in `era.dressing`. Vendor entry points supply ordered
+module lists; the plugin window only reads the resulting snapshot:
+
+```lua
+era.dressing.setup({ "notifier", "ui_attach" })
+local timings = era.dressing.get_load_times() -- module name -> milliseconds
+```
+
 ### Commands
 
 | Command   | Description               |
@@ -121,6 +131,7 @@ The plugin window has one stable surface. It displays:
 - Active operations grouped into action-aware `Installing` / `Syncing` / `Updating` / `Building` and `Queued` sections.
 - Startup plugins sorted by inclusive load time (slowest first).
 - Runtime-loaded and not-loaded plugins as separate groups.
+- A read-only Dressing section, sorted by load time (slowest first, then name), with per-module timings and their sum.
 - Completed install, sync, update, clean, and build tasks render directly below their owning plugin or orphan row.
 - Operation progress is summarized in the header; queued jobs become running only when one of eight concurrency slots is available.
 - Cursor ownership follows the selected plugin across section moves, and progress refreshes are coalesced per event-loop tick.
@@ -135,6 +146,20 @@ Startup profile semantics:
 - The snapshot is finalized after `VeryLazy`; plugins loaded by later runtime triggers are excluded.
 - Plugin total counts nested dependencies once.
 - Individual plugin times remain inclusive and may contain dependency load time.
+
+Dressing timing semantics:
+
+- `era.dressing.setup(names)` runs modules in order. Each span starts before resolving the module
+  and ends when its `dressing()` returns; direct module access remains lazy and does not run setup.
+- The first call that returns normally is retained, including cold `require`, synchronous dependencies,
+  and feature-gate checks. Scheduled callbacks and later rendering are outside the span.
+- Repeated calls still reach the module but preserve the first timing. Errors propagate unchanged and
+  stop the sequence; completed modules retain their timings and events. There is no automatic retry.
+- Dressing timing is independent of plugin setup and `VeryLazy`. `DressingLoad` refreshes an open
+  status view when a new timing is recorded.
+- The Dressing total sums its recorded spans. Spans are inclusive, so nested work may overlap;
+  Dressing, plugin, and Neovim totals are not additive.
+- Dressing entries are excluded from plugin inventory counts and cursor-based plugin actions.
 
 Opening the window is read-only. Missing plugins are installed only after `I`; sync, update, and clean run only after `S`, `U`, and `X` respectively.
 

@@ -7,8 +7,7 @@ require("ark.vendor.neovide.keymap")
 pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
-era.dressing.notifier.dressing()
-era.dressing.ui_attach.dressing()
+era.dressing.setup({ "notifier", "ui_attach" })
 era.m.im.dressing()
 require("era.command")
 
@@ -21,20 +20,21 @@ pcall(require, "ark.vendor.neovide.plugin")
 pcall(require, "ark.vendor.local.plugin")
 
 vim.schedule(function()
-  era.dressing.statusline.dressing()
-  era.dressing.tabline.dressing()
-  era.dressing.winline.dressing()
-
-  era.dressing.commentstring.dressing()
-  era.dressing.foldtext.dressing()
-  era.dressing.indentline.dressing()
-  era.dressing.indentscope.dressing()
-  era.dressing.hipattern.dressing()
-  era.dressing.scroll.dressing()
-  era.dressing.statuscolumn.dressing()
-  era.dressing.trailspace.dressing()
-  era.dressing.virtcolumn.dressing()
-  era.dressing.winsep.dressing()
+  era.dressing.setup({
+    "statusline",
+    "tabline",
+    "winline",
+    "commentstring",
+    "foldtext",
+    "indentline",
+    "indentscope",
+    "hipattern",
+    "scroll",
+    "statuscolumn",
+    "trailspace",
+    "virtcolumn",
+    "winsep",
+  })
 
   era.m.dim.dressing()
   era.m.input.dressing()

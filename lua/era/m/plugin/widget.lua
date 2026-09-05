@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.plugin.widget" ---@type string
+
 local State = require("era.m.plugin.state")
 
 ---@class era.m.plugin.Widget
@@ -553,6 +556,32 @@ function M:__render_plugin_section__(title, states, tasks, excluded, show_load_t
 end
 
 ---@return nil
+function M:__render_dressings__()
+  local timings = era.dressing.get_load_times() ---@type table<string, number>
+  local names = vim.tbl_keys(timings) ---@type string[]
+  if #names == 0 then
+    return
+  end
+
+  table.sort(names, function(left, right)
+    return timings[left] == timings[right] and left < right or timings[left] > timings[right]
+  end)
+  local total_time = 0 ---@type number
+  for _, name in ipairs(names) do
+    total_time = total_time + timings[name]
+  end
+
+  self
+    :__append__("Dressing", "m_pl_h2")
+    :__append__(string.format(" (%d) %.2fms", #names, total_time), "m_pl_comment")
+    :__nl__()
+  for _, name in ipairs(names) do
+    self:__append__("  " .. name, "m_pl_bold"):__append__(string.format(" %.2fms", timings[name]), "m_pl_time"):__nl__()
+  end
+  self:__nl__()
+end
+
+---@return nil
 function M:__home__()
   local Action = require("era.m.plugin.action")
   local groups = self:__collect_plugins__()
@@ -598,6 +627,8 @@ function M:__home__()
   if total == 0 then
     self:__append__("  No plugins found", "m_pl_comment"):__nl__()
   end
+
+  self:__render_dressings__()
 end
 
 ---@param commit                        era.m.plugin.ICommitInfo

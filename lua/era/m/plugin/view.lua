@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.plugin.view" ---@type string
+
 local State = require("era.m.plugin.state")
 local Widget = require("era.m.plugin.widget")
 
@@ -209,7 +212,7 @@ function M:__mount__()
 
   vim.api.nvim_create_autocmd("User", {
     group = self._augroup,
-    pattern = "PluginLoad",
+    pattern = { "PluginLoad", "DressingLoad" },
     callback = function()
       if self:isvisible() then
         self:__request_update__()

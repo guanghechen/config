@@ -144,6 +144,11 @@ t:test("show refreshes an already visible view", function()
 
   View.show()
   t.assert_eq(2, updates, "visible refresh")
+
+  vim.api.nvim_exec_autocmds("User", { pattern = "DressingLoad", modeline = false, data = "notifier" })
+  t.wait_until(function()
+    return updates == 3
+  end, 1000, "dressing load refreshes the visible view")
 end)
 
 t:run()
