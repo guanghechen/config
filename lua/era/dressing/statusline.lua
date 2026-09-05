@@ -1,4 +1,7 @@
----@class era.m.statusline
+local __module_name__ = "era.dressing.statusline" ---@type string
+local initialized = false ---@type boolean
+
+---@class era.dressing.statusline
 local M = {}
 
 local dirtier = dot.state.status.dirtier_statusline ---@type stl.c.Dirtier
@@ -54,8 +57,14 @@ statusline
   :place("right", era.m.nvimbar.component.nvim.msg_transient(position), 85)
   :place("right", era.m.nvimbar.component.nvim.msg_lsp(position), 90)
 
+--- Initialize once; dirty and mode events own subsequent refreshes.
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   local statusline_snapshot = statusline:render(true) ---@type string
   vim.o.statusline = statusline_snapshot
   dirtier:mark_clean()
@@ -69,7 +78,7 @@ function M.dressing()
   }))
 
   vim.api.nvim_create_autocmd("ModeChanged", {
-    group = stl.nvim.fn.augroup("statusline_on_ModeChanged"),
+    group = stl.nvim.fn.augroup(__module_name__),
     callback = function(evt)
       local m = evt.match ---@type string
       if string.sub(m, 1, 2) == "c:" or string.sub(m, #m - 1, #m) == ":c" then

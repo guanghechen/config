@@ -81,6 +81,7 @@ local __dressing__mods = {
   indentscope = "era.dressing.indentscope",
   scroll = "era.dressing.scroll",
   statuscolumn = "era.dressing.statuscolumn",
+  statusline = "era.dressing.statusline",
   trailspace = "era.dressing.trailspace",
   virtcolumn = "era.dressing.virtcolumn",
   winsep = "era.dressing.winsep",
@@ -95,6 +96,7 @@ local __dressing__mods = {
 ---@field public indentscope            era.dressing.indentscope
 ---@field public scroll                 era.dressing.scroll
 ---@field public statuscolumn           era.dressing.statuscolumn
+---@field public statusline             era.dressing.statusline
 ---@field public trailspace             era.dressing.trailspace
 ---@field public virtcolumn             era.dressing.virtcolumn
 ---@field public winsep                 era.dressing.winsep
@@ -141,7 +143,6 @@ local __m__mods = {
   select = "era.m.select",
   splitline = "era.m.splitline",
   splitjoin = "era.m.splitjoin",
-  statusline = "era.m.statusline",
   surrounds = "era.m.surrounds",
   tabline = "era.m.tabline",
   term = "era.m.term",
@@ -181,7 +182,6 @@ local __m__mods = {
 ---@field public select                 era.m.select
 ---@field public splitline              era.m.splitline
 ---@field public splitjoin              era.m.splitjoin
----@field public statusline             era.m.statusline
 ---@field public surrounds              era.m.surrounds
 ---@field public tabline                era.m.tabline
 ---@field public term                   era.m.term

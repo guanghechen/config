@@ -20,7 +20,7 @@ require("era.plugin")
 pcall(require, "ark.vendor.local.plugin")
 
 vim.schedule(function()
-  era.m.statusline.dressing()
+  era.dressing.statusline.dressing()
   era.m.tabline.dressing()
   era.m.winline.dressing()
 

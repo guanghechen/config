@@ -38,7 +38,7 @@ nvim --headless \
 
 # 指定多个文件
 nvim --headless \
-  -c "lua FILE_PATHS={'lua/era/m/nvimbar/nvimbar.lua', 'lua/era/m/statusline.lua'}" \
+  -c "lua FILE_PATHS={'lua/era/m/nvimbar/nvimbar.lua', 'lua/era/dressing/statusline.lua'}" \
   -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
   -c "luafile ./init-debug-lsp.lua"
 ```
