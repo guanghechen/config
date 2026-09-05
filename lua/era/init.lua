@@ -80,6 +80,7 @@ local __dressing__mods = {
   indentline = "era.dressing.indentline",
   indentscope = "era.dressing.indentscope",
   scroll = "era.dressing.scroll",
+  trailspace = "era.dressing.trailspace",
   virtcolumn = "era.dressing.virtcolumn",
 }
 
@@ -91,6 +92,7 @@ local __dressing__mods = {
 ---@field public indentline             era.dressing.indentline
 ---@field public indentscope            era.dressing.indentscope
 ---@field public scroll                 era.dressing.scroll
+---@field public trailspace             era.dressing.trailspace
 ---@field public virtcolumn             era.dressing.virtcolumn
 local dressing = setmetatable({
   __mods = __dressing__mods,
@@ -141,7 +143,6 @@ local __m__mods = {
   tabline = "era.m.tabline",
   term = "era.m.term",
   toggle = "era.m.toggle",
-  trailspace = "era.m.trailspace",
   ui_attach = "era.m.ui_attach",
   winline = "era.m.winline",
   winpicker = "era.m.winpicker",
@@ -184,7 +185,6 @@ local __m__mods = {
 ---@field public tabline                era.m.tabline
 ---@field public term                   era.m.term
 ---@field public toggle                 era.m.toggle
----@field public trailspace             era.m.trailspace
 ---@field public ui_attach              era.m.ui_attach
 ---@field public winline                era.m.winline
 ---@field public winpicker              era.m.winpicker

@@ -31,7 +31,7 @@ vim.schedule(function()
   era.dressing.hipattern.dressing()
   era.dressing.scroll.dressing()
   era.m.statuscolumn.dressing()
-  era.m.trailspace.dressing()
+  era.dressing.trailspace.dressing()
   era.dressing.virtcolumn.dressing()
   era.m.winsep.dressing()
 

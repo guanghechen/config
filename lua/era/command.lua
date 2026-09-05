@@ -290,8 +290,8 @@ command
     uuid = K.code.trim_trailspace.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.m.trailspace.trim()
-      era.m.trailspace.trim_last_lines()
+      era.dressing.trailspace.trim()
+      era.dressing.trailspace.trim_last_lines()
     end,
   })
 

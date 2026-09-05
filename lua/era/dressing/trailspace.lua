@@ -1,8 +1,11 @@
----@class era.m.trailspace
+local __module_name__ = "era.dressing.trailspace" ---@type string
+
+---@class era.dressing.trailspace
 local M = {}
 
 local PATTERN = [[\s\+$]]
 local HLGROUP = "f_ux_trailspace"
+local initialized = false ---@type boolean
 local match_ids = {} ---@type table<integer, integer>
 
 ---@return nil
@@ -75,9 +78,15 @@ function M.trim_last_lines()
   end
 end
 
+--- Register lifecycle hooks once; workspace toggles reuse the observer.
 ---@return nil
 function M.dressing()
-  local group = stl.nvim.fn.augroup("era.trailspace")
+  if initialized then
+    return
+  end
+  initialized = true
+
+  local group = stl.nvim.fn.augroup(__module_name__)
   vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter", "InsertLeave" }, {
     group = group,
     callback = highlight,
