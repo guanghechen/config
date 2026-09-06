@@ -41,6 +41,7 @@ abbr -a ccc 'claude --dangerously-skip-permissions'
 ### codex
 abbr -a cx0 'codex -p copilot --dangerously-bypass-approvals-and-sandbox'
 abbr -a cxd 'codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox'
+abbr -a cxm 'codex -p copilot-max --dangerously-bypass-approvals-and-sandbox'
 
 ### gemini
 abbr -a ggg 'gemini --model="gemini-3-pro-preview" --yolo'
