@@ -1,94 +1,54 @@
 # tokyonight-day
 
-# Main bg
+# Text and neutral surfaces
 theme[main_bg]="#e1e2e7"
+theme[main_fg]="#293552"
+theme[title]="#293552"
+theme[hi_fg]="#663999"
+theme[selected_bg]="#ccd1df"
+theme[selected_fg]="#293552"
+theme[inactive_fg]="#56627e"
+theme[proc_misc]="#254e96"
+theme[graph_text]="#445270"
+theme[meter_bg]="#d5d9e4"
 
-# Main text color
-theme[main_fg]="#3054a8"
+# Keep the process focus distinct from the surrounding boxes.
+theme[cpu_box]="#9ca6be"
+theme[mem_box]="#9ca6be"
+theme[net_box]="#9ca6be"
+theme[proc_box]="#663999"
+theme[div_line]="#ccd1df"
 
-# Title color for boxes
-theme[title]="#3054a8"
+# Temperature and CPU load
+theme[temp_start]="#3e5d2c"
+theme[temp_mid]="#6b4d25"
+theme[temp_end]="#a21d49"
+theme[cpu_start]="#254e96"
+theme[cpu_mid]="#663999"
+theme[cpu_end]="#a21d49"
 
-# Highlight color for keyboard shortcuts
-theme[hi_fg]="#2e7de9"
+# Give each memory meter a stable color.
+theme[free_start]="#3e5d2c"
+theme[free_mid]="#3e5d2c"
+theme[free_end]="#3e5d2c"
+theme[cached_start]="#0f586f"
+theme[cached_mid]="#0f586f"
+theme[cached_end]="#0f586f"
+theme[available_start]="#254e96"
+theme[available_mid]="#254e96"
+theme[available_end]="#254e96"
+theme[used_start]="#663999"
+theme[used_mid]="#663999"
+theme[used_end]="#663999"
 
-# Background color of selected item in processes box
-theme[selected_bg]="#c4c8da"
-
-# Foreground color of selected item in processes box
-theme[selected_fg]="#3760bf"
-
-# Color of inactive/disabled text
-theme[inactive_fg]="#1e3469"
-
-# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
-theme[proc_misc]="#2e7de9"
-
-# Color of text in graphs
-theme[graph_text]="#233e7c"
-
-# Background color of meters
-theme[meter_bg]="#d0d5e3"
-
-# Cpu box outline color
-theme[cpu_box]="#c1c9df"
-
-# Memory/disks box outline color
-theme[mem_box]="#c1c9df"
-
-# Net up/down box outline color
-theme[net_box]="#c1c9df"
-
-# Processes box outline color
-theme[proc_box]="#c1c9df"
-
-# Box divider line and small boxes line color
-theme[div_line]="#c1c9df"
-
-# Temperature graph colors (green -> yellow -> red)
-theme[temp_start]="#587539"
-theme[temp_mid]="#8c6c3e"
-theme[temp_end]="#f52a65"
-
-# CPU graph colors
-theme[cpu_start]="#587539"
-theme[cpu_mid]="#8c6c3e"
-theme[cpu_end]="#f52a65"
-
-# Mem/Disk free meter
-theme[free_start]="#587539"
-theme[free_mid]="#8c6c3e"
-theme[free_end]="#f52a65"
-
-# Mem/Disk cached meter
-theme[cached_start]="#007197"
-theme[cached_mid]="#2e7de9"
-theme[cached_end]="#7847bd"
-
-# Mem/Disk available meter
-theme[available_start]="#587539"
-theme[available_mid]="#8c6c3e"
-theme[available_end]="#b15c00"
-
-# Mem/Disk used meter
-theme[used_start]="#587539"
-theme[used_mid]="#8c6c3e"
-theme[used_end]="#f52a65"
-
-# Download graph colors
-theme[download_start]="#587539"
-theme[download_mid]="#007197"
-theme[download_end]="#2e7de9"
-
-# Upload graph colors
-theme[upload_start]="#7847bd"
-theme[upload_mid]="#9854f1"
-theme[upload_end]="#f52a65"
-
-# Process box gradient
-theme[process_start]="#007197"
-theme[process_mid]="#2e7de9"
-theme[process_end]="#7847bd"
-
-# Background color when process is paused (e.g. after pressing 'p')
-theme[proc_pause_bg]="#f52a65"
+# Network directions and process load
+theme[download_start]="#3e5d2c"
+theme[download_mid]="#0f586f"
+theme[download_end]="#254e96"
+theme[upload_start]="#7d4005"
+theme[upload_mid]="#943468"
+theme[upload_end]="#663999"
+theme[process_start]="#445270"
+theme[process_mid]="#254e96"
+theme[process_end]="#663999"
+theme[proc_pause_bg]="#ccd1df"
