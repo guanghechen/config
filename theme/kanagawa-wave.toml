@@ -9,51 +9,52 @@ transparent_background_colors = true
 
 [colors.cursor]
 text              = "#1F1F28"
-cursor            = "#D27E99"
+cursor            = "#E6C384"
 
 [colors.vi_mode_cursor]
 text              = "#1F1F28"
-cursor            = "#DCD7BA"
+cursor            = "#7E9CD8"
 
 [colors.search.matches]
 foreground        = "#1F1F28"
-background        = "#9CABCA"
+background        = "#E6C384"
 
 [colors.search.focused_match]
 foreground        = "#1F1F28"
-background        = "#76946A"
+background        = "#FFA066"
 
 [colors.hints.start]
 foreground        = "#1F1F28"
-background        = "#C0A36E"
+background        = "#AC96CC"
 
 [colors.hints.end]
 foreground        = "#1F1F28"
-background        = "#9CABCA"
+background        = "#7E9CD8"
 
 [colors.selection]
-text              = "#1F1F28"
-background        = "#D27E99"
+text              = "#DCD7BA"
+background        = "#223249"
 
 [colors.footer_bar]
-foreground        = "#1F1F28"
-background        = "#363646"
+foreground        = "#DCD7BA"
+background        = "#16161D"
 
 [colors.primary]
 background        = "#1F1F28"
-foreground        = "#C8C093"
-dim_foreground    = "#727169"
-bright_foreground = "#C8C093"
+foreground        = "#DCD7BA"
+dim_foreground    = "#C8C093"
+bright_foreground = "#DCD7BA"
 
+# Keep ANSI slots independent from the readable app accents in unified.
 [colors.normal]
-black             = "#1F1F28"
+black             = "#16161D"
 red               = "#C34043"
 green             = "#76946A"
 yellow            = "#C0A36E"
 blue              = "#7E9CD8"
 magenta           = "#957FB8"
 cyan              = "#6A9589"
-white             = "#727169"
+white             = "#C8C093"
 
 [colors.bright]
 black             = "#727169"
@@ -63,17 +64,17 @@ yellow            = "#E6C384"
 blue              = "#7FB4CA"
 magenta           = "#938AA9"
 cyan              = "#7AA89F"
-white             = "#9CABCA"
+white             = "#DCD7BA"
 
 [colors.dim]
-black             = "#1F1F28"
+black             = "#16161D"
 red               = "#C34043"
 green             = "#76946A"
 yellow            = "#C0A36E"
 blue              = "#7E9CD8"
 magenta           = "#957FB8"
 cyan              = "#6A9589"
-white             = "#727169"
+white             = "#C8C093"
 
 [[colors.indexed_colors]]
 index = 16
@@ -81,4 +82,4 @@ color = "#FFA066"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#D27E99"
+color = "#FF5D62"

@@ -1,7 +1,7 @@
 # kanagawa-lotus
 
 [bell]
-color = "#CC6D00"
+color = "#914600"
 
 [colors]
 draw_bold_text_with_bright_colors = false
@@ -9,51 +9,52 @@ transparent_background_colors = true
 
 [colors.cursor]
 text              = "#F2ECBC"
-cursor            = "#B35B79"
+cursor            = "#655A35"
 
 [colors.vi_mode_cursor]
 text              = "#F2ECBC"
-cursor            = "#545464"
+cursor            = "#3E5A87"
 
 [colors.search.matches]
 foreground        = "#F2ECBC"
-background        = "#716E61"
+background        = "#655A35"
 
 [colors.search.focused_match]
 foreground        = "#F2ECBC"
-background        = "#6F894E"
+background        = "#914600"
 
 [colors.hints.start]
 foreground        = "#F2ECBC"
-background        = "#77713F"
+background        = "#624C83"
 
 [colors.hints.end]
 foreground        = "#F2ECBC"
-background        = "#716E61"
+background        = "#3E5A87"
 
 [colors.selection]
-text              = "#F2ECBC"
-background        = "#B35B79"
+text              = "#38384D"
+background        = "#D5D6CE"
 
 [colors.footer_bar]
-foreground        = "#F2ECBC"
-background        = "#E4D794"
+foreground        = "#38384D"
+background        = "#E5DDB0"
 
 [colors.primary]
 background        = "#F2ECBC"
-foreground        = "#43436C"
-dim_foreground    = "#A09CAC"
-bright_foreground = "#43436C"
+foreground        = "#38384D"
+dim_foreground    = "#545464"
+bright_foreground = "#38384D"
 
+# Keep ANSI slots independent from the readable app accents in unified.
 [colors.normal]
-black             = "#F2ECBC"
+black             = "#1F1F28"
 red               = "#C84053"
 green             = "#6F894E"
 yellow            = "#77713F"
 blue              = "#4D699B"
 magenta           = "#B35B79"
 cyan              = "#597B75"
-white             = "#A09CAC"
+white             = "#545464"
 
 [colors.bright]
 black             = "#8A8980"
@@ -63,22 +64,22 @@ yellow            = "#836F4A"
 blue              = "#6693BF"
 magenta           = "#624C83"
 cyan              = "#5E857A"
-white             = "#716E61"
+white             = "#43436C"
 
 [colors.dim]
-black             = "#F2ECBC"
+black             = "#1F1F28"
 red               = "#C84053"
 green             = "#6F894E"
 yellow            = "#77713F"
 blue              = "#4D699B"
 magenta           = "#B35B79"
 cyan              = "#597B75"
-white             = "#A09CAC"
+white             = "#545464"
 
 [[colors.indexed_colors]]
 index = 16
-color = "#CC6D00"
+color = "#E98A00"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#B35B79"
+color = "#E82424"
