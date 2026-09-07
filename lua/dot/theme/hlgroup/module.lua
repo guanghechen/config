@@ -22,8 +22,9 @@ function M.default_gen_hlgroup_map(context)
 
   local bg = t and u.none or u.bg0 ---@type string
   local bg_pane = t and u.bg0 or u.none ---@type string
-  -- Pair Catppuccin's stronger inline fills with a readable foreground.
-  local diff_inline_fg = context.scheme.theme == "catppuccin" and u.fg1 or nil
+  local is_kanagawa = context.scheme.theme == "kanagawa"
+  -- Pair tinted inline fills with a readable foreground.
+  local diff_inline_fg = (context.scheme.theme == "catppuccin" or is_kanagawa) and u.fg1 or nil
 
   return {
     ---module/ai
@@ -123,11 +124,11 @@ function M.default_gen_hlgroup_map(context)
     m_ft_git_delete_cl = { fg = u.brightRed, bg = u.bg3, bold = true },
     m_ft_git_delete_clb = { fg = u.brightRed, bg = u.bg2, bold = true },
     m_ft_git_ignored = { fg = u.fg4, bold = true },
-    m_ft_git_ignored_cl = { fg = u.fg4, bg = u.bg3, bold = true },
-    m_ft_git_ignored_clb = { fg = u.fg4, bg = u.bg2, bold = true },
+    m_ft_git_ignored_cl = { fg = is_kanagawa and u.fg1 or u.fg4, bg = u.bg3, bold = true },
+    m_ft_git_ignored_clb = { fg = is_kanagawa and u.fg1 or u.fg4, bg = u.bg2, bold = true },
     m_ft_git_other = { fg = u.fg3, bold = true },
-    m_ft_git_other_cl = { fg = u.fg3, bg = u.bg3, bold = true },
-    m_ft_git_other_clb = { fg = u.fg3, bg = u.bg2, bold = true },
+    m_ft_git_other_cl = { fg = is_kanagawa and u.fg1 or u.fg3, bg = u.bg3, bold = true },
+    m_ft_git_other_clb = { fg = is_kanagawa and u.fg1 or u.fg3, bg = u.bg2, bold = true },
     m_ft_git_rename = { fg = u.brightBlue, bold = true },
     m_ft_git_rename_cl = { fg = u.brightBlue, bg = u.bg3, bold = true },
     m_ft_git_rename_clb = { fg = u.brightBlue, bg = u.bg2, bold = true },
@@ -141,8 +142,8 @@ function M.default_gen_hlgroup_map(context)
     m_ft_git_unstaged_cl = { fg = u.brightYellow, bg = u.bg3, bold = true },
     m_ft_git_unstaged_clb = { fg = u.brightYellow, bg = u.bg2, bold = true },
     m_ft_git_untracked = { fg = u.fg4, bold = true },
-    m_ft_git_untracked_cl = { fg = u.fg4, bg = u.bg3, bold = true },
-    m_ft_git_untracked_clb = { fg = u.fg4, bg = u.bg2, bold = true },
+    m_ft_git_untracked_cl = { fg = is_kanagawa and u.fg1 or u.fg4, bg = u.bg3, bold = true },
+    m_ft_git_untracked_clb = { fg = is_kanagawa and u.fg1 or u.fg4, bg = u.bg2, bold = true },
     m_ft_pathsep = { fg = u.fg4 },
     m_ft_position = { fg = u.bg4 },
     m_ft_reference = { fg = u.purple, bold = true, italic = true },
@@ -291,7 +292,7 @@ function M.default_gen_hlgroup_map(context)
     m_dv_eob = { fg = bg, bg = bg },
     m_dv_normal = { fg = u.fg1, bg = bg },
     m_dv_winbar = { fg = u.fg2, bg = u.bg1, bold = true },
-    m_dv_winbar_dim = { fg = u.fg4, bg = u.bg1 },
+    m_dv_winbar_dim = { fg = is_kanagawa and u.fg2 or u.fg4, bg = u.bg1 },
     m_dv_winbar_flag_aqua = { fg = u.bg0, bg = u.brightAqua },
     m_dv_winbar_flag_blue = { fg = u.bg0, bg = u.brightBlue },
     m_dv_winbar_flag_dim = { fg = u.fg3, bg = u.bg2 },

@@ -22,8 +22,9 @@ function M.default_gen_hlgroup_map(context)
 
   local bg = t and u.none or u.bg0 ---@type string
   local bg_pane = t and u.bg0 or u.none ---@type string
-  -- Pair Catppuccin's stronger inline fills with a readable foreground.
-  local diff_inline_fg = context.scheme.theme == "catppuccin" and u.fg1 or nil
+  local is_kanagawa = context.scheme.theme == "kanagawa"
+  -- Pair tinted inline fills with a readable foreground.
+  local diff_inline_fg = (context.scheme.theme == "catppuccin" or is_kanagawa) and u.fg1 or nil
 
   return {
     ---buffers
@@ -65,7 +66,7 @@ function M.default_gen_hlgroup_map(context)
     f_dim = { fg = u.fg4 },
 
     ---matched pairs
-    f_matched_pairs_0 = { fg = u.green, bg = u.bg4, bold = true, italic = true },
+    f_matched_pairs_0 = { fg = u.green, bg = is_kanagawa and u.bg3 or u.bg4, bold = true, italic = true },
     f_matched_pairs_1 = { fg = cs.mix(u.bg0, u.brightPurple, 90) },
     f_matched_pairs_2 = { fg = cs.mix(u.bg0, u.brightBlue, 90) },
     f_matched_pairs_3 = { fg = cs.mix(u.bg0, u.brightYellow, 90) },
@@ -217,9 +218,9 @@ function M.default_gen_hlgroup_map(context)
     f_md_callout_warn = { fg = u.yellow, bold = true },
     f_md_code = { bg = u.bg2 },
     f_md_code_border = { fg = u.aqua, bg = u.bg2 },
-    f_md_code_fallback = { fg = u.fg4 },
+    f_md_code_fallback = { fg = is_kanagawa and u.fg1 or u.fg4 },
     f_md_code_header = { fg = u.purple, bg = u.bg2 },
-    f_md_code_inline = { fg = u.orange, bg = u.bg4 },
+    f_md_code_inline = { fg = u.orange, bg = is_kanagawa and u.bg2 or u.bg4 },
     f_md_dash = { fg = u.orange },
     f_md_titled_separator = { fg = u.purple, bold = true },
     f_md_heading_h1 = { fg = u.purple, bold = true },
@@ -248,7 +249,7 @@ function M.default_gen_hlgroup_map(context)
     f_md_task_cancelled_text = { fg = u.bg4, italic = true, strikethrough = true },
     f_md_task_important = { fg = u.purple, bold = true },
     f_md_task_favorite = { fg = cs.mix(u.yellow, u.orange, 60), bold = true },
-    f_md_text_inline_highlight = { fg = u.bg0, bg = cs.mix(u.bg0, u.yellow, 45) },
+    f_md_text_inline_highlight = { fg = u.bg0, bg = is_kanagawa and u.yellow or cs.mix(u.bg0, u.yellow, 45) },
 
     ---signs
     fs_input_prompt = { fg = u.red, bg = bg },

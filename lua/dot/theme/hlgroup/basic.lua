@@ -250,6 +250,20 @@ function M.default_gen_hlgroup_map(context)
     WinBarNC = { fg = c.blue, bg = c.bg1 },
     WinSeparator = { fg = c.bg2, bg = c.none },
   }
+  if context.scheme.theme == "kanagawa" then
+    -- Pair neutral selections and tinted inline diffs with the body foreground.
+    hlgroup_map.DiffWordLeft.fg = c.fg1
+    hlgroup_map.DiffWordRight.fg = c.fg1
+    hlgroup_map.PmenuSel.bg = c.bg3
+    hlgroup_map.MatchWord.bg = c.bg3
+    hlgroup_map.Visual.fg = c.fg1
+    hlgroup_map.Visual.bg = c.bg3
+
+    hlgroup_map.ComplHint.fg = c.fg3
+    hlgroup_map.ComplHintMore.fg = c.fg4
+    hlgroup_map.LspCodeLens.fg = c.fg3
+    hlgroup_map.LineNr.fg = c.fg4
+  end
   return hlgroup_map
 end
 
