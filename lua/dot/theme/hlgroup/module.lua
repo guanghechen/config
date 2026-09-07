@@ -22,6 +22,8 @@ function M.default_gen_hlgroup_map(context)
 
   local bg = t and u.none or u.bg0 ---@type string
   local bg_pane = t and u.bg0 or u.none ---@type string
+  -- Pair Catppuccin's stronger inline fills with a readable foreground.
+  local diff_inline_fg = context.scheme.theme == "catppuccin" and u.fg1 or nil
 
   return {
     ---module/ai
@@ -301,10 +303,10 @@ function M.default_gen_hlgroup_map(context)
     ---module/diffview (diff highlights for sbs view)
     m_dv_add = { bg = u.diffAdd or cs.mix(bg, u.aqua, 30) },
     m_dv_add_dim = { bg = u.diffAdd or cs.mix(bg, u.aqua, 30) },
-    m_dv_add_inline = { bg = u.diffAddInline or cs.mix(bg, u.brightGreen, 60) },
+    m_dv_add_inline = { fg = diff_inline_fg, bg = u.diffAddInline or cs.mix(bg, u.brightGreen, 60) },
     m_dv_del = { bg = u.diffDel or cs.mix(bg, u.red, 30) },
     m_dv_del_dim = { bg = u.diffDel or cs.mix(bg, u.red, 30) },
-    m_dv_del_inline = { bg = u.diffDelInline or cs.mix(bg, u.brightRed, 60) },
+    m_dv_del_inline = { fg = diff_inline_fg, bg = u.diffDelInline or cs.mix(bg, u.brightRed, 60) },
 
     ---module/diffview (filetree)
     m_dv_ft_deletions = { fg = u.red },

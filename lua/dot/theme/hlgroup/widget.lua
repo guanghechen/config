@@ -22,6 +22,8 @@ function M.default_gen_hlgroup_map(context)
 
   local bg = t and u.none or u.bg0 ---@type string
   local bg_pane = t and u.bg0 or u.none ---@type string
+  -- Pair Catppuccin's stronger inline fills with a readable foreground.
+  local diff_inline_fg = context.scheme.theme == "catppuccin" and u.fg1 or nil
 
   return {
     ---buffers
@@ -56,8 +58,8 @@ function M.default_gen_hlgroup_map(context)
     f_diff_del_right = { bg = u.diffDel },
     f_diff_mod_left = { bg = u.diffDel },
     f_diff_mod_right = { bg = u.diffAdd },
-    f_diff_word_left = { bg = u.diffDelInline },
-    f_diff_word_right = { bg = u.diffAddInline },
+    f_diff_word_left = { fg = diff_inline_fg, bg = u.diffDelInline },
+    f_diff_word_right = { fg = diff_inline_fg, bg = u.diffAddInline },
 
     ---dim
     f_dim = { fg = u.fg4 },
