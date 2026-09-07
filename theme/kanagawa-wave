@@ -1,7 +1,7 @@
 # kanagawa-wave
 
 # =============================================================================
-# Newsboat Color Theme (Catppuccin Style)
+# Newsboat Color Theme (Kanagawa)
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -13,38 +13,41 @@ color article             default        default
 # -----------------------------------------------------------------------------
 # List Colors
 # -----------------------------------------------------------------------------
-color listnormal          color180        default
-color listnormal_unread   color107      default
-color listfocus           color187        color59
-color listfocus_unread    color107      color59
+color listnormal          color180      default
+# Keep the terminal foreground for Lotus; dark variants need bright ANSI 256 text.
+color listnormal_unread   color187 default bold
+# Use a grayscale slot for Dragon; the color cube rounds its selection too bright.
+color listfocus           color187 color23
+color listfocus_unread    color187 color23 bold
 
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-color title               color107       color59
-color info                color110       color59
-color hint-key            color174       color59          bold
-color hint-keys-delimiter color103        color59
-color hint-separator      default                           color59
-color hint-description    default                           color59
+# Preserve Lotus's paper background instead of quantizing it to a darker surface.
+color title               color140        color16 bold
+color info                color110        color16
+color hint-key            color140        color16 bold
+color hint-keys-delimiter color180       color16
+color hint-separator      default                             color16
+color hint-description    default                             color16
 
 # -----------------------------------------------------------------------------
 # Misc
 # -----------------------------------------------------------------------------
-color end-of-text-marker  color59        default
+color end-of-text-marker  color180       default
 
 # -----------------------------------------------------------------------------
 # Article Content Highlights
 # -----------------------------------------------------------------------------
 # Metadata lines (Feed, Title, Author, Link, Date)
-highlight article "^(Feed|Title|Author|Link|Date): .+" color110       default bold
-highlight article "^(Feed|Title|Author|Link|Date):"    color66       default bold
+highlight article "^(Feed|Title|Author|Link|Date): .+" color110        default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color140        default bold
 
 # URLs
-highlight article "https?://[^ ]+"                     color110       default
+highlight article "https?://[^ ]+"                     color110        default
 
 # Reference numbers [1], [2], etc.
-highlight article "\\[[0-9]+\\]"                       color66       default bold
+highlight article "\\[[0-9]+\\]"                       color140        default bold
 
 # Media indicators
-highlight article "\\((link|image|video)\\)"           color59        default
+highlight article "\\((link|image|video)\\)"           color180       default
