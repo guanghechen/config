@@ -1,24 +1,36 @@
 {
-  "name":           "catppuccin-mocha",
-  "type":           "custom",
-  "Background":     "#1E1E2E",
-  "Foreground":     "#BAC2DE",
-  "LightBlue":      "#89B4FA",
-  "AccentBlue":     "#89B4FA",
-  "AccentPurple":   "#F5C2E7",
-  "AccentCyan":     "#94E2D5",
-  "AccentGreen":    "#A6E3A1",
-  "AccentYellow":   "#F9E2AF",
-  "AccentRed":      "#F38BA8",
-  "Comment":        "#7F849C",
-  "Gray":           "#585B70",
-  "DiffAdded":      "#293232",
-  "DiffRemoved":    "#362424",
-  "DiffModified":   "#89B4FA",
-  "GradientColors": [
-    "#89B4FA",
-    "#89B4FA",
-    "#F5C2E7",
-    "#F5C2E7"
-  ]
+  "name": "catppuccin-mocha",
+  "type": "custom",
+  "DarkGray": "#585B70",
+  "background": {
+    "primary": "#1E1E2E",
+    "diff": {
+      "added": "#2E363C",
+      "removed": "#382B3D"
+    }
+  },
+  "text": {
+    "primary": "#CDD6F4",
+    "secondary": "#BAC2DE",
+    "link": "#89B4FA",
+    "accent": "#CBA6F7",
+    "response": "#CDD6F4"
+  },
+  "status": {
+    "success": "#A6E3A1",
+    "warning": "#F9E2AF",
+    "error": "#F38BA8"
+  },
+  "ui": {
+    "comment": "#BAC2DE",
+    "symbol": "#89B4FA",
+    "active": "#CBA6F7",
+    "focus": "#89B4FA",
+    "gradient": [
+      "#89B4FA",
+      "#94E2D5",
+      "#F5C2E7",
+      "#CBA6F7"
+    ]
+  }
 }

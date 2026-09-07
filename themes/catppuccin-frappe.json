@@ -1,24 +1,36 @@
 {
-  "name":           "catppuccin-frappe",
-  "type":           "custom",
-  "Background":     "#303446",
-  "Foreground":     "#B5BFE2",
-  "LightBlue":      "#8CAAEE",
-  "AccentBlue":     "#8CAAEE",
-  "AccentPurple":   "#F4B8E4",
-  "AccentCyan":     "#81C8BE",
-  "AccentGreen":    "#A6D189",
-  "AccentYellow":   "#E5C890",
-  "AccentRed":      "#E78284",
-  "Comment":        "#838BA7",
-  "Gray":           "#626880",
-  "DiffAdded":      "#3A4C3A",
-  "DiffRemoved":    "#4C3A3A",
-  "DiffModified":   "#8CAAEE",
-  "GradientColors": [
-    "#8CAAEE",
-    "#8CAAEE",
-    "#F4B8E4",
-    "#F4B8E4"
-  ]
+  "name": "catppuccin-frappe",
+  "type": "custom",
+  "DarkGray": "#626880",
+  "background": {
+    "primary": "#303446",
+    "diff": {
+      "added": "#373D4A",
+      "removed": "#3B394A"
+    }
+  },
+  "text": {
+    "primary": "#C6D0F5",
+    "secondary": "#B5BFE2",
+    "link": "#8CAAEE",
+    "accent": "#CA9EE6",
+    "response": "#C6D0F5"
+  },
+  "status": {
+    "success": "#A6D189",
+    "warning": "#E5C890",
+    "error": "#E78284"
+  },
+  "ui": {
+    "comment": "#B5BFE2",
+    "symbol": "#8CAAEE",
+    "active": "#CA9EE6",
+    "focus": "#8CAAEE",
+    "gradient": [
+      "#8CAAEE",
+      "#81C8BE",
+      "#F4B8E4",
+      "#CA9EE6"
+    ]
+  }
 }
