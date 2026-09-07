@@ -1,94 +1,54 @@
 # catppuccin-latte
 
-# Main bg
+# Text and neutral surfaces
 theme[main_bg]="#EFF1F5"
-
-# Main text color
-theme[main_fg]="#4C4F69"
-
-# Title color for boxes
-theme[title]="#4C4F69"
-
-# Highlight color for keyboard shortcuts
-theme[hi_fg]="#1E66F5"
-
-# Background color of selected item in processes box
+theme[main_fg]="#303446"
+theme[title]="#303446"
+theme[hi_fg]="#722FBC"
 theme[selected_bg]="#CCD0DA"
-
-# Foreground color of selected item in processes box
-theme[selected_fg]="#4C4F69"
-
-# Color of inactive/disabled text
+theme[selected_fg]="#303446"
 theme[inactive_fg]="#9CA0B0"
+theme[proc_misc]="#2451B5"
+theme[graph_text]="#4C4F69"
+theme[meter_bg]="#DCE0E8"
 
-# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
-theme[proc_misc]="#1E66F5"
-
-# Color of text in graphs
-theme[graph_text]="#6C6F85"
-
-# Background color of meters
-theme[meter_bg]="#CCD0DA"
-
-# Cpu box outline color
+# Keep the process focus distinct from the surrounding boxes.
 theme[cpu_box]="#BCC0CC"
-
-# Memory/disks box outline color
 theme[mem_box]="#BCC0CC"
-
-# Net up/down box outline color
 theme[net_box]="#BCC0CC"
+theme[proc_box]="#722FBC"
+theme[div_line]="#CCD0DA"
 
-# Processes box outline color
-theme[proc_box]="#BCC0CC"
+# Temperature and CPU load
+theme[temp_start]="#25651C"
+theme[temp_mid]="#7B4D0D"
+theme[temp_end]="#AD1635"
+theme[cpu_start]="#2451B5"
+theme[cpu_mid]="#722FBC"
+theme[cpu_end]="#AD1635"
 
-# Box divider line and small boxes line color
-theme[div_line]="#BCC0CC"
+# Give each memory meter a stable color.
+theme[free_start]="#25651C"
+theme[free_mid]="#25651C"
+theme[free_end]="#25651C"
+theme[cached_start]="#106168"
+theme[cached_mid]="#106168"
+theme[cached_end]="#106168"
+theme[available_start]="#2451B5"
+theme[available_mid]="#2451B5"
+theme[available_end]="#2451B5"
+theme[used_start]="#722FBC"
+theme[used_mid]="#722FBC"
+theme[used_end]="#722FBC"
 
-# Temperature graph colors (green -> yellow -> red)
-theme[temp_start]="#40A02B"
-theme[temp_mid]="#DF8E1D"
-theme[temp_end]="#D20F39"
-
-# CPU graph colors
-theme[cpu_start]="#40A02B"
-theme[cpu_mid]="#DF8E1D"
-theme[cpu_end]="#D20F39"
-
-# Mem/Disk free meter
-theme[free_start]="#40A02B"
-theme[free_mid]="#DF8E1D"
-theme[free_end]="#D20F39"
-
-# Mem/Disk cached meter
-theme[cached_start]="#179299"
-theme[cached_mid]="#1E66F5"
-theme[cached_end]="#EA76CB"
-
-# Mem/Disk available meter
-theme[available_start]="#40A02B"
-theme[available_mid]="#DF8E1D"
-theme[available_end]="#FE640B"
-
-# Mem/Disk used meter
-theme[used_start]="#40A02B"
-theme[used_mid]="#DF8E1D"
-theme[used_end]="#D20F39"
-
-# Download graph colors
-theme[download_start]="#40A02B"
-theme[download_mid]="#179299"
-theme[download_end]="#1E66F5"
-
-# Upload graph colors
-theme[upload_start]="#EA76CB"
-theme[upload_mid]="#EA76CB"
-theme[upload_end]="#D20F39"
-
-# Process box gradient
-theme[process_start]="#179299"
-theme[process_mid]="#7287FD"
-theme[process_end]="#8839EF"
-
-# Background color when process is paused (e.g. after pressing 'p')
-theme[proc_pause_bg]="#D20F39"
+# Network directions and process load
+theme[download_start]="#25651C"
+theme[download_mid]="#106168"
+theme[download_end]="#2451B5"
+theme[upload_start]="#973C0F"
+theme[upload_mid]="#91377D"
+theme[upload_end]="#722FBC"
+theme[process_start]="#4C4F69"
+theme[process_mid]="#2451B5"
+theme[process_end]="#722FBC"
+theme[proc_pause_bg]="#CCD0DA"
