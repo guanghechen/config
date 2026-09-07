@@ -24,7 +24,7 @@ local M = {
       fg4           = "#6E6A86",
 
       red           = "#EB6F92",
-      green         = "#31748F",
+      green         = "#6FA3B6",
       yellow        = "#F6C177",
       blue          = "#9CCFD8",
       purple        = "#C4A7E7",
@@ -32,20 +32,20 @@ local M = {
       orange        = "#EBBCBA",
 
       brightRed     = "#EB6F92",
-      brightGreen   = "#31748F",
+      brightGreen   = "#6FA3B6",
       brightYellow  = "#F6C177",
       brightBlue    = "#9CCFD8",
       brightPurple  = "#C4A7E7",
       brightAqua    = "#EBBCBA",
       brightOrange  = "#EBBCBA",
 
-      grey          = "#6E6A86",
+      grey          = "#908CAA",
       pink          = "#EB6F92",
 
-      diffDel       = "#43293A",
-      diffDelInline = "#6D3A50",
-      diffAdd       = "#333C48",
-      diffAddInline = "#4D616C",
+      diffDel       = "#35222F",
+      diffDelInline = "#513343",
+      diffAdd       = "#233039",
+      diffAddInline = "#354A54",
     },
     rosepine = {
       none          = "none",
