@@ -6,107 +6,83 @@ local M = {}
 ---@param config table
 function M.setup(config)
   config.colors = {
-    -- Primary colors
     background    = "#F2ECBC",
-    foreground    = "#545464",
+    foreground    = "#38384D",
 
-    -- Cursor colors (following official catppuccin theme)
-    cursor_bg     = "#B35B79",
-    cursor_fg     = "#E7DBA0",
-    cursor_border = "#B35B79",
+    cursor_bg     = "#655A35",
+    cursor_fg     = "#F2ECBC",
+    cursor_border = "#655A35",
 
-    -- Selection colors (following official catppuccin theme)
-    selection_bg  = "#B5CBD2",
-    selection_fg  = "#545464",
+    selection_bg  = "#D5D6CE",
+    selection_fg  = "#38384D",
+    split         = "#ACA99A",
+    scrollbar_thumb = "#ACA99A",
+    visual_bell   = "#DCD5AC",
+    compose_cursor = "#914600",
 
-    -- Split separator color
-    split         = "#A09CAC",
-
-    -- Scrollbar thumb color
-    scrollbar_thumb = "#B5CBD2",
-
-    -- Visual bell color
-    visual_bell   = "#E4D794",
-
-    -- Compose cursor (for IME)
-    compose_cursor = "#CC6D00",
-
-    -- Normal colors
+    -- Official Kanagawa ANSI colors, independent from readable app accents.
     ansi = {
-      "#F2ECBC",  -- black (surface1 for dark themes, subtext1 for latte)
+      "#1F1F28",
       "#C84053",
       "#6F894E",
       "#77713F",
       "#4D699B",
       "#B35B79",
       "#597B75",
-      "#43436C",  -- white (subtext1 for dark themes, surface2 for latte)
+      "#545464",
     },
-
-    -- Bright colors
     brights = {
-      "#8A8980",  -- bright black (surface2 for dark themes, subtext0 for latte)
+      "#8A8980",
       "#D7474B",
       "#6E915F",
       "#836F4A",
       "#6693BF",
       "#624C83",
       "#5E857A",
-      "#716E61",  -- bright white (subtext0 for dark themes, surface1 for latte)
+      "#43436C",
     },
-
-    -- Indexed colors (extended palette)
     indexed = {
-      [16] = "#CC6D00",
-      [17] = "#B35B79",
+      [16] = "#E98A00",
+      [17] = "#E82424",
     },
 
-    -- Tab bar colors (following official catppuccin theme)
     tab_bar = {
-      background = "#E7DBA0",
-
+      background = "#E5DDB0",
       active_tab = {
-        bg_color = "#B35B79",
-        fg_color = "#E7DBA0",
+        bg_color = "#655A35",
+        fg_color = "#F2ECBC",
       },
-
       inactive_tab = {
-        bg_color = "#E7DBA0",
+        bg_color = "#E5DDB0",
         fg_color = "#545464",
       },
-
       inactive_tab_hover = {
-        bg_color = "#F2ECBC",
-        fg_color = "#545464",
+        bg_color = "#DCD5AC",
+        fg_color = "#38384D",
       },
-
       new_tab = {
-        bg_color = "#E4D794",
-        fg_color = "#545464",
+        bg_color = "#E5DDB0",
+        fg_color = "#3E5A87",
       },
-
       new_tab_hover = {
-        bg_color = "#C9CBD1",
-        fg_color = "#545464",
+        bg_color = "#D5D6CE",
+        fg_color = "#38384D",
       },
-
-      inactive_tab_edge = "#E4D794",
+      inactive_tab_edge = "#DCD5AC",
     },
   }
 
-  -- Window frame colors
   config.window_frame = {
-    active_titlebar_bg = "#E7DBA0",
-    active_titlebar_fg = "#545464",
-    inactive_titlebar_bg = "#E7DBA0",
+    active_titlebar_bg = "#E5DDB0",
+    active_titlebar_fg = "#38384D",
+    inactive_titlebar_bg = "#E5DDB0",
     inactive_titlebar_fg = "#545464",
-    button_fg = "#545464",
-    button_bg = "#F2ECBC",
+    button_fg = "#38384D",
+    button_bg = "#E5DDB0",
   }
 
-  -- Command palette colors
-  config.command_palette_bg_color = "#E7DBA0"
-  config.command_palette_fg_color = "#545464"
+  config.command_palette_bg_color = "#DCD5AC"
+  config.command_palette_fg_color = "#38384D"
 end
 
 return M
