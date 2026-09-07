@@ -6,16 +6,16 @@
     "surface0": "#F2E9E1",
     "surface1": "#DFDAD9",
     "overlay0": "#9893A5",
-    "overlay1": "#797593",
-    "text": "#464261",
-    "subtext0": "#797593",
-    "accent": "#D7827E",
-    "mauve": "#907AA9",
-    "green": "#286983",
-    "yellow": "#EA9D34",
-    "red": "#B4637A",
-    "blue": "#56949F",
-    "teal": "#D7827E",
-    "peach": "#EA9D34"
+    "overlay1": "#545064",
+    "text": "#2C283B",
+    "subtext0": "#545064",
+    "accent": "#853C3A",
+    "mauve": "#634873",
+    "green": "#205569",
+    "yellow": "#714A12",
+    "red": "#8A344D",
+    "blue": "#235965",
+    "teal": "#205569",
+    "peach": "#714A12"
   }
 }

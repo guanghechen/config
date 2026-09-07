@@ -6,16 +6,16 @@
     "surface0": "#393552",
     "surface1": "#44415A",
     "overlay0": "#6E6A86",
-    "overlay1": "#908CAA",
+    "overlay1": "#A5A0BB",
     "text": "#E0DEF4",
-    "subtext0": "#908CAA",
+    "subtext0": "#A5A0BB",
     "accent": "#EA9A97",
     "mauve": "#C4A7E7",
-    "green": "#3E8FB0",
+    "green": "#75ADC1",
     "yellow": "#F6C177",
-    "red": "#EB6F92",
+    "red": "#F080A0",
     "blue": "#9CCFD8",
-    "teal": "#EA9A97",
+    "teal": "#75ADC1",
     "peach": "#F6C177"
   }
 }
