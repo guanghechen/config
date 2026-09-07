@@ -1,7 +1,7 @@
 # tokyonight-day
 
 [bell]
-color = "#b15c00"
+color = "#7d4005"
 
 [colors]
 draw_bold_text_with_bright_colors = false
@@ -9,71 +9,72 @@ transparent_background_colors = true
 
 [colors.cursor]
 text              = "#e1e2e7"
-cursor            = "#9854f1"
+cursor            = "#663999"
 
 [colors.vi_mode_cursor]
 text              = "#e1e2e7"
-cursor            = "#3760bf"
+cursor            = "#254e96"
 
 [colors.search.matches]
 foreground        = "#e1e2e7"
-background        = "#294891"
+background        = "#6b4d25"
 
 [colors.search.focused_match]
 foreground        = "#e1e2e7"
-background        = "#587539"
+background        = "#7d4005"
 
 [colors.hints.start]
 foreground        = "#e1e2e7"
-background        = "#8c6c3e"
+background        = "#663999"
 
 [colors.hints.end]
 foreground        = "#e1e2e7"
-background        = "#294891"
+background        = "#254e96"
 
 [colors.selection]
-text              = "#e1e2e7"
-background        = "#9854f1"
+text              = "#293552"
+background        = "#ccd1df"
 
 [colors.footer_bar]
-foreground        = "#e1e2e7"
-background        = "#c4c8da"
+foreground        = "#293552"
+background        = "#d0d5e3"
 
 [colors.primary]
 background        = "#e1e2e7"
-foreground        = "#3054a8"
-dim_foreground    = "#1e3469"
-bright_foreground = "#3054a8"
+foreground        = "#293552"
+dim_foreground    = "#445270"
+bright_foreground = "#293552"
 
+# Official ANSI slots; bright accents are the upstream HSLuv-generated values.
 [colors.normal]
-black             = "#e1e2e7"
+black             = "#b4b5b9"
 red               = "#f52a65"
 green             = "#587539"
 yellow            = "#8c6c3e"
 blue              = "#2e7de9"
-magenta           = "#7847bd"
+magenta           = "#9854f1"
 cyan              = "#007197"
-white             = "#1e3469"
+white             = "#6172b0"
 
 [colors.bright]
-black             = "#848cb5"
-red               = "#c64343"
-green             = "#387068"
-yellow            = "#8c6c3e"
-blue              = "#188092"
-magenta           = "#9854f1"
-cyan              = "#118c74"
-white             = "#294891"
+black             = "#a1a6c5"
+red               = "#ff4774"
+green             = "#5c8524"
+yellow            = "#a27629"
+blue              = "#358aff"
+magenta           = "#a463ff"
+cyan              = "#007ea8"
+white             = "#3760bf"
 
 [colors.dim]
-black             = "#e1e2e7"
+black             = "#b4b5b9"
 red               = "#f52a65"
 green             = "#587539"
 yellow            = "#8c6c3e"
 blue              = "#2e7de9"
-magenta           = "#7847bd"
+magenta           = "#9854f1"
 cyan              = "#007197"
-white             = "#1e3469"
+white             = "#6172b0"
 
 [[colors.indexed_colors]]
 index = 16
@@ -81,4 +82,4 @@ color = "#b15c00"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#9854f1"
+color = "#c64343"
