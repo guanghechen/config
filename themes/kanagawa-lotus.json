@@ -1,24 +1,36 @@
 {
-  "name":           "kanagawa-lotus",
-  "type":           "custom",
-  "Background":     "#F2ECBC",
-  "Foreground":     "#43436C",
-  "LightBlue":      "#6693BF",
-  "AccentBlue":     "#4D699B",
-  "AccentPurple":   "#B35B79",
-  "AccentCyan":     "#597B75",
-  "AccentGreen":    "#6F894E",
-  "AccentYellow":   "#77713F",
-  "AccentRed":      "#C84053",
-  "Comment":        "#A09CAC",
-  "Gray":           "#8A8980",
-  "DiffAdded":      "#B7D0AE",
-  "DiffRemoved":    "#D9A594",
-  "DiffModified":   "#6693BF",
-  "GradientColors": [
-    "#4D699B",
-    "#6693BF",
-    "#B35B79",
-    "#624C83"
-  ]
+  "name": "kanagawa-lotus",
+  "type": "custom",
+  "DarkGray": "#ACA99A",
+  "background": {
+    "primary": "#F2ECBC",
+    "diff": {
+      "added": "#DEE6B6",
+      "removed": "#EEDBC1"
+    }
+  },
+  "text": {
+    "primary": "#38384D",
+    "secondary": "#545464",
+    "link": "#3E5A87",
+    "accent": "#3E5A87",
+    "response": "#38384D"
+  },
+  "status": {
+    "success": "#4A6037",
+    "warning": "#655A35",
+    "error": "#A1364B"
+  },
+  "ui": {
+    "comment": "#545464",
+    "symbol": "#3F6058",
+    "active": "#3E5A87",
+    "focus": "#3E5A87",
+    "gradient": [
+      "#3E5A87",
+      "#3F6058",
+      "#8E3F62",
+      "#624C83"
+    ]
+  }
 }

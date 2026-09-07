@@ -1,24 +1,36 @@
 {
-  "name":           "kanagawa-dragon",
-  "type":           "custom",
-  "Background":     "#181616",
-  "Foreground":     "#C8C093",
-  "LightBlue":      "#7FB4CA",
-  "AccentBlue":     "#8BA4B0",
-  "AccentPurple":   "#A292A3",
-  "AccentCyan":     "#8EA4A2",
-  "AccentGreen":    "#8A9A7B",
-  "AccentYellow":   "#C4B28A",
-  "AccentRed":      "#C4746E",
-  "Comment":        "#737C73",
-  "Gray":           "#A6A69C",
-  "DiffAdded":      "#2B3328",
-  "DiffRemoved":    "#43242B",
-  "DiffModified":   "#7FB4CA",
-  "GradientColors": [
-    "#8BA4B0",
-    "#7FB4CA",
-    "#A292A3",
-    "#938AA9"
-  ]
+  "name": "kanagawa-dragon",
+  "type": "custom",
+  "DarkGray": "#50534E",
+  "background": {
+    "primary": "#181616",
+    "diff": {
+      "added": "#262E26",
+      "removed": "#322322"
+    }
+  },
+  "text": {
+    "primary": "#C5C9C5",
+    "secondary": "#A6A69C",
+    "link": "#8BA4B0",
+    "accent": "#8BA4B0",
+    "response": "#C5C9C5"
+  },
+  "status": {
+    "success": "#87A987",
+    "warning": "#C4B28A",
+    "error": "#D58C84"
+  },
+  "ui": {
+    "comment": "#A6A69C",
+    "symbol": "#8EA4A2",
+    "active": "#8BA4B0",
+    "focus": "#8BA4B0",
+    "gradient": [
+      "#8BA4B0",
+      "#8EA4A2",
+      "#AE9AAC",
+      "#A49AB2"
+    ]
+  }
 }

@@ -1,24 +1,36 @@
 {
-  "name":           "kanagawa-wave",
-  "type":           "custom",
-  "Background":     "#1F1F28",
-  "Foreground":     "#C8C093",
-  "LightBlue":      "#7FB4CA",
-  "AccentBlue":     "#7E9CD8",
-  "AccentPurple":   "#957FB8",
-  "AccentCyan":     "#6A9589",
-  "AccentGreen":    "#76946A",
-  "AccentYellow":   "#C0A36E",
-  "AccentRed":      "#C34043",
-  "Comment":        "#727169",
-  "Gray":           "#727169",
-  "DiffAdded":      "#2B3328",
-  "DiffRemoved":    "#43242B",
-  "DiffModified":   "#7FB4CA",
-  "GradientColors": [
-    "#7E9CD8",
-    "#7FB4CA",
-    "#957FB8",
-    "#938AA9"
-  ]
+  "name": "kanagawa-wave",
+  "type": "custom",
+  "DarkGray": "#54546D",
+  "background": {
+    "primary": "#1F1F28",
+    "diff": {
+      "added": "#2B3328",
+      "removed": "#43242B"
+    }
+  },
+  "text": {
+    "primary": "#DCD7BA",
+    "secondary": "#C8C093",
+    "link": "#7E9CD8",
+    "accent": "#7E9CD8",
+    "response": "#DCD7BA"
+  },
+  "status": {
+    "success": "#98BB6C",
+    "warning": "#E6C384",
+    "error": "#ED7D86"
+  },
+  "ui": {
+    "comment": "#C8C093",
+    "symbol": "#7AA89F",
+    "active": "#7E9CD8",
+    "focus": "#7E9CD8",
+    "gradient": [
+      "#7E9CD8",
+      "#7AA89F",
+      "#D98BA3",
+      "#AC96CC"
+    ]
+  }
 }
