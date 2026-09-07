@@ -20,6 +20,10 @@ function cxd {
   codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox @args
 }
 
+function cxm {
+  codex -p copilot-max --dangerously-bypass-approvals-and-sandbox @args
+}
+
 
 ## conda (lazy)
 function __conda_init__ {
