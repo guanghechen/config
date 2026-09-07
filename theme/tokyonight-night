@@ -1,28 +1,24 @@
 # tokyonight-night
 
-# ANSI Colors
-# Dark themes: palette 0 = surface1, palette 7 = subtext0
-# Light theme: palette 0 = subtext1, palette 7 = surface2
-palette =  0=#1a1b26
+# Official ANSI mapping: https://github.com/folke/tokyonight.nvim/tree/main/extras/ghostty
+palette =  0=#15161e
 palette =  1=#f7768e
 palette =  2=#9ece6a
 palette =  3=#e0af68
 palette =  4=#7aa2f7
-palette =  5=#9d7cd8
+palette =  5=#bb9af7
 palette =  6=#7dcfff
-palette =  7=#9ba5cf
+palette =  7=#a9b1d6
 
-# Bright colors
-# Dark themes: palette 8 = surface2, palette 15 = subtext1
-# Light theme: palette 8 = subtext0, palette 15 = surface1
-palette =  8=#565f89
-palette =  9=#db4b4b
-palette = 10=#73daca
-palette = 11=#e0af68
-palette = 12=#2ac3de
-palette = 13=#bb9af7
-palette = 14=#1abc9c
-palette = 15=#adb7e2
+# Bright colors use the upstream HSLuv-generated swatches.
+palette =  8=#414868
+palette =  9=#ff899d
+palette = 10=#9fe044
+palette = 11=#faba4a
+palette = 12=#8db0ff
+palette = 13=#c7a9ff
+palette = 14=#a4daff
+palette = 15=#c0caf5
 
 # Primary colors
 background = #1a1b26
@@ -30,14 +26,14 @@ foreground = #c0caf5
 
 # Cursor colors
 cursor-color = #bb9af7
-cursor-text = #16161e
+cursor-text = #1a1b26
 
 # Selection colors
-selection-background = #292e42
+selection-background = #30374e
 selection-foreground = #c0caf5
 
 # Split divider color
-split-divider-color = #0c0e14
+split-divider-color = #48536f
 
 # Unfocused split fill color
 unfocused-split-fill = #16161e
