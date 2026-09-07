@@ -2,44 +2,44 @@
 
 gui:
   authorColors:
-    '*': '#797593'
-    guanghechen: '#56949F'
+    '*': '#545064'
+    guanghechen: '#235965'
   branchColorPatterns:
-    "^(main|master)$": '#907AA9'
-    "^(user/[^/]+/)?chore": '#9893A5'
-    "^(user/[^/]+/)?feat": '#286983'
-    "^(user/[^/]+/)?feature": '#286983'
-    "^(user/[^/]+/)?fix": '#B4637A'
-    "^(user/[^/]+/)?refactor": '#D7827E'
-    "^(user/[^/]+/)?release": '#56949F'
+    "^(main|master)$": '#634873'
+    "^(user/[^/]+/)?chore": '#545064'
+    "^(user/[^/]+/)?feat": '#205569'
+    "^(user/[^/]+/)?feature": '#205569'
+    "^(user/[^/]+/)?fix": '#8A344D'
+    "^(user/[^/]+/)?refactor": '#853C3A'
+    "^(user/[^/]+/)?release": '#235965'
   theme:
     activeBorderColor:
-      - '#286983'
+      - '#853C3A'
       - bold
     cherryPickedCommitBgColor:
-      - '#D7827E'
+      - '#F2E9E1'
     cherryPickedCommitFgColor:
-      - '#FFFAF3'
+      - '#853C3A'
     defaultFgColor:
-      - '#464261'
+      - '#2C283B'
     inactiveBorderColor:
-      - '#9893A5'
+      - '#CECACD'
     inactiveViewSelectedLineBgColor:
       - '#FFFAF3'
     markedBaseCommitBgColor:
-      - '#EA9D34'
+      - '#DFDAD9'
     markedBaseCommitFgColor:
-      - '#56949F'
+      - '#2C283B'
     optionsTextColor:
-      - '#56949F'
+      - '#235965'
     searchingActiveBorderColor:
-      - '#D7827E'
+      - '#714A12'
       - bold
     selectedLineBgColor:
       - '#DFDAD9'
       - bold
     unstagedChangesColor:
-      - '#B4637A'
+      - '#8A344D'
 
 git:
   diffRenderers:
