@@ -199,6 +199,16 @@ Active tmux sessions use blue and active windows use mauve, with a continuous
 fill and base-colored text. Neutral selections retain the body foreground;
 inline diffs use the body foreground over stronger red or green tints.
 
+Kanagawa keeps the upstream named palette and the Wave, Dragon and Lotus ANSI
+mappings from `kanagawa.nvim`. Readability adjustments live in `unified`: Wave
+uses Fuji White body text and clearer muted text; Dragon keeps its neutral ink,
+wood and green tones; Lotus pairs its paper background with deeper ink and
+accents. Terminal named colors stay independent from these app accents.
+Active tmux sessions use blue and active windows use sand gold, both with a
+continuous fill and base-colored text. Neutral selections and inline diffs
+retain the body foreground, including Neovim's native and custom diff groups.
+Lotus uses Medium weight in Windows Terminal, matching the other light themes.
+
 Each app directory contains validated metadata and Handlebars templates:
 
 ```js

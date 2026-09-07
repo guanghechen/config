@@ -1,0 +1,34 @@
+# {{name}}
+
+--cycle
+--highlight-line
+--multi
+--smart-case
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--info-command='echo "$FZF_POS/$FZF_MATCH_COUNT/$FZF_TOTAL_COUNT"'
+--pointer=""
+--marker="▎"
+--scrollbar="┃"
+
+--color="fg:{{unified.fg1}},bg:{{unified.bg0}},hl:{{unified.orange}}"
+--color="fg+:{{unified.fg1}},bg+:{{unified.bg3}},hl+:{{unified.fg1}}:bold:underline"
+--color="border:{{unified.bg4}},header:{{unified.fg2}},gutter:{{unified.bg0}}"
+--color="spinner:{{unified.purple}},info:{{unified.fg2}}"
+--color="pointer:{{unified.yellow}},marker:{{unified.purple}},prompt:{{unified.blue}},query:{{unified.fg1}}"
+--color="preview-fg:{{unified.fg1}},preview-bg:{{unified.bg1}},preview-border:{{unified.bg4}}"
+--preview='bat --line-range=:500 --style=snip --theme={{name}} --number --color=always {} || cat -n {}'
+
+--bind 'ctrl-a:toggle-all'
+--bind 'ctrl-s:toggle-sort'
+--bind 'ctrl-p:toggle-preview'
+--bind 'ctrl-l:clear-query'
+--bind 'ctrl-b:preview-half-page-up'
+--bind 'ctrl-f:preview-half-page-down'
+--bind 'ctrl-o:execute(nvim {+} < /dev/tty)'
+{{IS_OSX && "--bind 'ctrl-y:execute-silent(echo {+} | pbcopy)+bell'" || ""}}
+{{IS_WIN && "--bind 'ctrl-y:execute-silent(echo {+} | clip.exe)+bell'" || ""}}
+{{IS_WSL && "--bind 'ctrl-y:execute-silent(echo {+} | clip.exe)+bell'" || ""}}

@@ -1,0 +1,85 @@
+# {{name}}
+
+[bell]
+color = "{{unified.orange}}"
+
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
+
+[colors.cursor]
+text              = "{{unified.bg0}}"
+cursor            = "{{unified.yellow}}"
+
+[colors.vi_mode_cursor]
+text              = "{{unified.bg0}}"
+cursor            = "{{unified.blue}}"
+
+[colors.search.matches]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.yellow}}"
+
+[colors.search.focused_match]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.orange}}"
+
+[colors.hints.start]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.purple}}"
+
+[colors.hints.end]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.blue}}"
+
+[colors.selection]
+text              = "{{unified.fg1}}"
+background        = "{{unified.bg3}}"
+
+[colors.footer_bar]
+foreground        = "{{unified.fg1}}"
+background        = "{{unified.bg1}}"
+
+[colors.primary]
+background        = "{{unified.bg0}}"
+foreground        = "{{unified.fg1}}"
+dim_foreground    = "{{unified.fg2}}"
+bright_foreground = "{{unified.fg1}}"
+
+# Keep ANSI slots independent from the readable app accents in unified.
+[colors.normal]
+black             = "{{kanagawa[variant === 'wave' ? 'sumiInk0' : variant === 'dragon' ? 'dragonBlack0' : 'sumiInk3']}}"
+red               = "{{kanagawa[variant === 'wave' ? 'autumnRed' : variant === 'dragon' ? 'dragonRed' : 'lotusRed']}}"
+green             = "{{kanagawa[variant === 'wave' ? 'autumnGreen' : variant === 'dragon' ? 'dragonGreen2' : 'lotusGreen']}}"
+yellow            = "{{kanagawa[variant === 'wave' ? 'boatYellow2' : variant === 'dragon' ? 'dragonYellow' : 'lotusYellow']}}"
+blue              = "{{kanagawa[variant === 'wave' ? 'crystalBlue' : variant === 'dragon' ? 'dragonBlue2' : 'lotusBlue4']}}"
+magenta           = "{{kanagawa[variant === 'wave' ? 'oniViolet' : variant === 'dragon' ? 'dragonPink' : 'lotusPink']}}"
+cyan              = "{{kanagawa[variant === 'wave' ? 'waveAqua1' : variant === 'dragon' ? 'dragonAqua' : 'lotusAqua']}}"
+white             = "{{kanagawa[variant === 'lotus' ? 'lotusInk1' : 'oldWhite']}}"
+
+[colors.bright]
+black             = "{{kanagawa[variant === 'wave' ? 'fujiGray' : variant === 'dragon' ? 'dragonGray' : 'lotusGray3']}}"
+red               = "{{kanagawa[variant === 'wave' ? 'samuraiRed' : variant === 'dragon' ? 'waveRed' : 'lotusRed2']}}"
+green             = "{{kanagawa[variant === 'wave' ? 'springGreen' : variant === 'dragon' ? 'dragonGreen' : 'lotusGreen2']}}"
+yellow            = "{{kanagawa[variant === 'lotus' ? 'lotusYellow2' : 'carpYellow']}}"
+blue              = "{{kanagawa[variant === 'lotus' ? 'lotusTeal2' : 'springBlue']}}"
+magenta           = "{{kanagawa[variant === 'lotus' ? 'lotusViolet4' : 'springViolet1']}}"
+cyan              = "{{kanagawa[variant === 'lotus' ? 'lotusAqua2' : 'waveAqua2']}}"
+white             = "{{kanagawa[variant === 'wave' ? 'fujiWhite' : variant === 'dragon' ? 'dragonWhite' : 'lotusInk2']}}"
+
+[colors.dim]
+black             = "{{kanagawa[variant === 'wave' ? 'sumiInk0' : variant === 'dragon' ? 'dragonBlack0' : 'sumiInk3']}}"
+red               = "{{kanagawa[variant === 'wave' ? 'autumnRed' : variant === 'dragon' ? 'dragonRed' : 'lotusRed']}}"
+green             = "{{kanagawa[variant === 'wave' ? 'autumnGreen' : variant === 'dragon' ? 'dragonGreen2' : 'lotusGreen']}}"
+yellow            = "{{kanagawa[variant === 'wave' ? 'boatYellow2' : variant === 'dragon' ? 'dragonYellow' : 'lotusYellow']}}"
+blue              = "{{kanagawa[variant === 'wave' ? 'crystalBlue' : variant === 'dragon' ? 'dragonBlue2' : 'lotusBlue4']}}"
+magenta           = "{{kanagawa[variant === 'wave' ? 'oniViolet' : variant === 'dragon' ? 'dragonPink' : 'lotusPink']}}"
+cyan              = "{{kanagawa[variant === 'wave' ? 'waveAqua1' : variant === 'dragon' ? 'dragonAqua' : 'lotusAqua']}}"
+white             = "{{kanagawa[variant === 'lotus' ? 'lotusInk1' : 'oldWhite']}}"
+
+[[colors.indexed_colors]]
+index = 16
+color = "{{kanagawa[variant === 'wave' ? 'surimiOrange' : variant === 'dragon' ? 'dragonOrange' : 'lotusOrange2']}}"
+
+[[colors.indexed_colors]]
+index = 17
+color = "{{kanagawa[variant === 'wave' ? 'peachRed' : variant === 'dragon' ? 'dragonOrange2' : 'lotusRed3']}}"
