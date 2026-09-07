@@ -9,6 +9,8 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local bg_bufc = t and c.none or c.bg0 ---@type string
   local bg_pos = c.bg2 ---@type string
+  -- Tokyo Night's bg4 needs a stronger foreground for terminal controls.
+  local fg_term_control = context.scheme.theme == "tokyonight" and c.fg1 or c.fg3 ---@type string
 
   local bgs = {
     f_sl = c.none,
@@ -244,8 +246,8 @@ function M.gen_hlgroup_map(context)
     notepadc_sep_right = { link = "ms_b_none" },
 
     ---! term
-    term_button = { fg = c.fg3, bg = c.bg4 },
-    term_index = { fg = c.fg3, bg = c.bg4 },
+    term_button = { fg = fg_term_control, bg = c.bg4 },
+    term_index = { fg = fg_term_control, bg = c.bg4 },
     term_name = { fg = c.fg3, bg = c.bg3 },
     term_sep_left = { fg = c.bg3, bg = "bg_bar" },
     term_sep_right = { fg = c.bg4, bg = "bg_bar" },
