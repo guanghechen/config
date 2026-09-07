@@ -1,15 +1,13 @@
 approval_policy = "on-request"
 personality = "pragmatic"
-model_reasoning_effort = "max"
 project_doc_fallback_filenames = ["CLAUDE.md"]
 sandbox_mode = "workspace-write"
 suppress_unstable_features_warning = true
 web_search = "live"
 
-## -- copilot.config.toml
-
 model = "gpt-5.6-sol"
 model_provider = "copilot"
+model_reasoning_effort = "xhigh"
 
 [model_providers.copilot]
 name = "copilot"
@@ -24,8 +22,6 @@ stream_idle_timeout_ms = 3000000
 [model_providers.copilot.auth]
 command = "/usr/bin/printenv"
 args = ["OPENAI_CODEX_AUTH_TOKEN"]
-
-## copilot.config.toml --
 
 [analytics]
 enabled = false

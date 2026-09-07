@@ -1,16 +1,6 @@
 model = "gpt-6-astra"
 model_provider = "copilot"
+model_reasoning_effort = "max"
 
-[model_providers.copilot]
-name = "copilot"
-base_url = "http://127.0.0.1:4747/api/codex"
-wire_api = "responses"
-supports_websockets = true
-websocket_connect_timeout_ms = 30000
-request_max_retries = 3
-stream_max_retries = 0
-stream_idle_timeout_ms = 3000000
-
-[model_providers.copilot.auth]
-command = "/usr/bin/printenv"
-args = ["OPENAI_CODEX_AUTH_TOKEN"]
+[features.context_management]
+experimental_mode = true
