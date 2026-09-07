@@ -13,10 +13,10 @@ color article             default        default
 # -----------------------------------------------------------------------------
 # List Colors
 # -----------------------------------------------------------------------------
-color listnormal          color103      default
+color listnormal          color145      default
 color listnormal_unread   color189        default                           bold
 color listfocus           color189        color59
-color listfocus_unread    color174        color59 bold
+color listfocus_unread    color189         color59 bold
 
 # -----------------------------------------------------------------------------
 # Title & Info Bar
@@ -24,14 +24,14 @@ color listfocus_unread    color174        color59 bold
 color title               color174        color17     bold
 color info                color152        color17
 color hint-key            color182        color17     bold
-color hint-keys-delimiter color60       color17
+color hint-keys-delimiter color145       color17
 color hint-separator      default                             color17
 color hint-description    default                             color17
 
 # -----------------------------------------------------------------------------
 # Misc
 # -----------------------------------------------------------------------------
-color end-of-text-marker  color60       default
+color end-of-text-marker  color145       default
 
 # -----------------------------------------------------------------------------
 # Article Content Highlights
@@ -47,4 +47,4 @@ highlight article "https?://[^ ]+"                     color152        default
 highlight article "\\[[0-9]+\\]"                       color174        default bold
 
 # Media indicators
-highlight article "\\((link|image|video)\\)"           color60       default
+highlight article "\\((link|image|video)\\)"           color145       default
