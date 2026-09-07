@@ -1,35 +1,35 @@
 # rosepine-moon
 
 [bell]
-color = "#EB6F92"
+color = "#F080A0"
 
 [colors]
 draw_bold_text_with_bright_colors = false
 transparent_background_colors = true
 
 [colors.cursor]
-text              = "#E0DEF4"
-cursor            = "#56526E"
+text              = "#232136"
+cursor            = "#EA9A97"
 
 [colors.vi_mode_cursor]
-text              = "#E0DEF4"
-cursor            = "#56526E"
+text              = "#232136"
+cursor            = "#C4A7E7"
 
 [colors.search.matches]
-foreground        = "#908CAA"
+foreground        = "#E0DEF4"
 background        = "#393552"
 
 [colors.search.focused_match]
 foreground        = "#232136"
-background        = "#EA9A97"
+background        = "#F6C177"
 
 [colors.hints.start]
-foreground        = "#908CAA"
-background        = "#2A273F"
+foreground        = "#232136"
+background        = "#9CCFD8"
 
 [colors.hints.end]
-foreground        = "#6E6A86"
-background        = "#2A273F"
+foreground        = "#E0DEF4"
+background        = "#393552"
 
 [colors.selection]
 text              = "#E0DEF4"
@@ -42,7 +42,7 @@ background        = "#2A273F"
 [colors.primary]
 background        = "#232136"
 foreground        = "#E0DEF4"
-dim_foreground    = "#908CAA"
+dim_foreground    = "#A5A0BB"
 bright_foreground = "#E0DEF4"
 
 [colors.normal]
@@ -81,4 +81,4 @@ color = "#EA9A97"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#EB6F92"
+color = "#F080A0"

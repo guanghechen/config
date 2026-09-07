@@ -8,28 +8,28 @@ draw_bold_text_with_bright_colors = false
 transparent_background_colors = true
 
 [colors.cursor]
-text              = "#E0DEF4"
-cursor            = "#524F67"
+text              = "#191724"
+cursor            = "#EBBCBA"
 
 [colors.vi_mode_cursor]
-text              = "#E0DEF4"
-cursor            = "#524F67"
+text              = "#191724"
+cursor            = "#C4A7E7"
 
 [colors.search.matches]
-foreground        = "#908CAA"
+foreground        = "#E0DEF4"
 background        = "#26233A"
 
 [colors.search.focused_match]
 foreground        = "#191724"
-background        = "#EBBCBA"
+background        = "#F6C177"
 
 [colors.hints.start]
-foreground        = "#908CAA"
-background        = "#1F1D2E"
+foreground        = "#191724"
+background        = "#9CCFD8"
 
 [colors.hints.end]
-foreground        = "#6E6A86"
-background        = "#1F1D2E"
+foreground        = "#E0DEF4"
+background        = "#26233A"
 
 [colors.selection]
 text              = "#E0DEF4"

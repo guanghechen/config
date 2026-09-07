@@ -1,49 +1,49 @@
 # rosepine-dawn
 
 [bell]
-color = "#B4637A"
+color = "#8A344D"
 
 [colors]
 draw_bold_text_with_bright_colors = false
 transparent_background_colors = true
 
 [colors.cursor]
-text              = "#464261"
-cursor            = "#CECACD"
+text              = "#FAF4ED"
+cursor            = "#853C3A"
 
 [colors.vi_mode_cursor]
-text              = "#464261"
-cursor            = "#CECACD"
+text              = "#FAF4ED"
+cursor            = "#634873"
 
 [colors.search.matches]
-foreground        = "#797593"
+foreground        = "#2C283B"
 background        = "#F2E9E1"
 
 [colors.search.focused_match]
 foreground        = "#FAF4ED"
-background        = "#D7827E"
+background        = "#714A12"
 
 [colors.hints.start]
-foreground        = "#797593"
-background        = "#FFFAF3"
+foreground        = "#FAF4ED"
+background        = "#235965"
 
 [colors.hints.end]
-foreground        = "#9893A5"
-background        = "#FFFAF3"
+foreground        = "#2C283B"
+background        = "#F2E9E1"
 
 [colors.selection]
-text              = "#464261"
+text              = "#2C283B"
 background        = "#DFDAD9"
 
 [colors.footer_bar]
-foreground        = "#464261"
+foreground        = "#2C283B"
 background        = "#FFFAF3"
 
 [colors.primary]
 background        = "#FAF4ED"
-foreground        = "#464261"
-dim_foreground    = "#797593"
-bright_foreground = "#464261"
+foreground        = "#2C283B"
+dim_foreground    = "#545064"
+bright_foreground = "#2C283B"
 
 [colors.normal]
 black             = "#F2E9E1"
@@ -53,7 +53,7 @@ yellow            = "#EA9D34"
 blue              = "#56949F"
 magenta           = "#907AA9"
 cyan              = "#D7827E"
-white             = "#464261"
+white             = "#575279"
 
 [colors.bright]
 black             = "#9893A5"
@@ -63,7 +63,7 @@ yellow            = "#EA9D34"
 blue              = "#56949F"
 magenta           = "#907AA9"
 cyan              = "#D7827E"
-white             = "#464261"
+white             = "#575279"
 
 [colors.dim]
 black             = "#9893A5"
@@ -73,12 +73,12 @@ yellow            = "#EA9D34"
 blue              = "#56949F"
 magenta           = "#907AA9"
 cyan              = "#D7827E"
-white             = "#464261"
+white             = "#575279"
 
 [[colors.indexed_colors]]
 index = 16
-color = "#D7827E"
+color = "#853C3A"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#B4637A"
+color = "#8A344D"
