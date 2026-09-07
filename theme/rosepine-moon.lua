@@ -11,9 +11,9 @@ function M.setup(config)
     foreground    = "#E0DEF4",
 
     -- Cursor colors
-    cursor_bg     = "#E0DEF4",
+    cursor_bg     = "#EA9A97",
     cursor_fg     = "#232136",
-    cursor_border = "#E0DEF4",
+    cursor_border = "#EA9A97",
 
     -- Selection colors
     selection_bg  = "#44415A",
@@ -58,7 +58,7 @@ function M.setup(config)
     -- Indexed colors (extended palette)
     indexed = {
       [16] = "#EA9A97",
-      [17] = "#EB6F92",
+      [17] = "#F080A0",
     },
 
     -- Tab bar colors
@@ -67,12 +67,12 @@ function M.setup(config)
 
       active_tab = {
         bg_color = "#393552",
-        fg_color = "#E0DEF4",
+        fg_color = "#EA9A97",
       },
 
       inactive_tab = {
         bg_color = "#232136",
-        fg_color = "#6E6A86",
+        fg_color = "#A5A0BB",
       },
 
       inactive_tab_hover = {
@@ -82,7 +82,7 @@ function M.setup(config)
 
       new_tab = {
         bg_color = "#2A273F",
-        fg_color = "#6E6A86",
+        fg_color = "#A5A0BB",
       },
 
       new_tab_hover = {
@@ -99,7 +99,7 @@ function M.setup(config)
     active_titlebar_bg = "#2A273F",
     active_titlebar_fg = "#E0DEF4",
     inactive_titlebar_bg = "#2A273F",
-    inactive_titlebar_fg = "#6E6A86",
+    inactive_titlebar_fg = "#A5A0BB",
     button_fg = "#E0DEF4",
     button_bg = "#232136",
   }
