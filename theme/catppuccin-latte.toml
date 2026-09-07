@@ -1,7 +1,7 @@
 # catppuccin-latte
 
 [bell]
-color = "#FE640B"
+color = "#973C0F"
 
 [colors]
 draw_bold_text_with_bright_colors = false
@@ -9,71 +9,72 @@ transparent_background_colors = true
 
 [colors.cursor]
 text              = "#EFF1F5"
-cursor            = "#DC8A78"
+cursor            = "#722FBC"
 
 [colors.vi_mode_cursor]
 text              = "#EFF1F5"
-cursor            = "#7287FD"
+cursor            = "#2451B5"
 
 [colors.search.matches]
 foreground        = "#EFF1F5"
-background        = "#6C6F85"
+background        = "#7B4D0D"
 
 [colors.search.focused_match]
 foreground        = "#EFF1F5"
-background        = "#40A02B"
+background        = "#973C0F"
 
 [colors.hints.start]
 foreground        = "#EFF1F5"
-background        = "#DF8E1D"
+background        = "#722FBC"
 
 [colors.hints.end]
 foreground        = "#EFF1F5"
-background        = "#6C6F85"
+background        = "#2451B5"
 
 [colors.selection]
-text              = "#EFF1F5"
-background        = "#DC8A78"
+text              = "#303446"
+background        = "#CCD0DA"
 
 [colors.footer_bar]
-foreground        = "#EFF1F5"
-background        = "#6C6F85"
+foreground        = "#303446"
+background        = "#E6E9EF"
 
 [colors.primary]
 background        = "#EFF1F5"
-foreground        = "#4C4F69"
-dim_foreground    = "#8C8FA1"
-bright_foreground = "#4C4F69"
+foreground        = "#303446"
+dim_foreground    = "#4C4F69"
+bright_foreground = "#303446"
 
+# Keep ANSI slots independent from the readable app accents in unified.
 [colors.normal]
-black             = "#BCC0CC"
+black             = "#5C5F77"
 red               = "#D20F39"
 green             = "#40A02B"
 yellow            = "#DF8E1D"
 blue              = "#1E66F5"
 magenta           = "#EA76CB"
 cyan              = "#179299"
-white             = "#5C5F77"
+white             = "#ACB0BE"
 
 [colors.bright]
-black             = "#ACB0BE"
+black             = "#6C6F85"
 red               = "#D20F39"
 green             = "#40A02B"
 yellow            = "#DF8E1D"
 blue              = "#1E66F5"
 magenta           = "#EA76CB"
 cyan              = "#179299"
-white             = "#6C6F85"
+white             = "#BCC0CC"
 
 [colors.dim]
-black             = "#BCC0CC"
+black             = "#5C5F77"
 red               = "#D20F39"
 green             = "#40A02B"
 yellow            = "#DF8E1D"
 blue              = "#1E66F5"
 magenta           = "#EA76CB"
 cyan              = "#179299"
-white             = "#5C5F77"
+white             = "#ACB0BE"
 
 [[colors.indexed_colors]]
 index = 16

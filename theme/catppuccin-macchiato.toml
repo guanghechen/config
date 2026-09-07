@@ -9,42 +9,43 @@ transparent_background_colors = true
 
 [colors.cursor]
 text              = "#24273A"
-cursor            = "#F4DBD6"
+cursor            = "#C6A0F6"
 
 [colors.vi_mode_cursor]
 text              = "#24273A"
-cursor            = "#B7BDF8"
+cursor            = "#8AADF4"
 
 [colors.search.matches]
 foreground        = "#24273A"
-background        = "#A5ADCB"
+background        = "#EED49F"
 
 [colors.search.focused_match]
 foreground        = "#24273A"
-background        = "#A6DA95"
+background        = "#F5A97F"
 
 [colors.hints.start]
 foreground        = "#24273A"
-background        = "#EED49F"
+background        = "#C6A0F6"
 
 [colors.hints.end]
 foreground        = "#24273A"
-background        = "#A5ADCB"
+background        = "#8AADF4"
 
 [colors.selection]
-text              = "#24273A"
-background        = "#F4DBD6"
+text              = "#CAD3F5"
+background        = "#494D64"
 
 [colors.footer_bar]
-foreground        = "#24273A"
-background        = "#A5ADCB"
+foreground        = "#CAD3F5"
+background        = "#1E2030"
 
 [colors.primary]
 background        = "#24273A"
 foreground        = "#CAD3F5"
-dim_foreground    = "#8087A2"
+dim_foreground    = "#B8C0E0"
 bright_foreground = "#CAD3F5"
 
+# Keep ANSI slots independent from the readable app accents in unified.
 [colors.normal]
 black             = "#494D64"
 red               = "#ED8796"
@@ -53,7 +54,7 @@ yellow            = "#EED49F"
 blue              = "#8AADF4"
 magenta           = "#F5BDE6"
 cyan              = "#8BD5CA"
-white             = "#B8C0E0"
+white             = "#A5ADCB"
 
 [colors.bright]
 black             = "#5B6078"
@@ -63,7 +64,7 @@ yellow            = "#EED49F"
 blue              = "#8AADF4"
 magenta           = "#F5BDE6"
 cyan              = "#8BD5CA"
-white             = "#A5ADCB"
+white             = "#B8C0E0"
 
 [colors.dim]
 black             = "#494D64"
@@ -73,7 +74,7 @@ yellow            = "#EED49F"
 blue              = "#8AADF4"
 magenta           = "#F5BDE6"
 cyan              = "#8BD5CA"
-white             = "#B8C0E0"
+white             = "#A5ADCB"
 
 [[colors.indexed_colors]]
 index = 16
