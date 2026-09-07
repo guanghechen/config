@@ -1,24 +1,36 @@
 {
-  "name":           "tokyonight-storm",
-  "type":           "custom",
-  "Background":     "#24283b",
-  "Foreground":     "#adb7e2",
-  "LightBlue":      "#2ac3de",
-  "AccentBlue":     "#7aa2f7",
-  "AccentPurple":   "#9d7cd8",
-  "AccentCyan":     "#7dcfff",
-  "AccentGreen":    "#9ece6a",
-  "AccentYellow":   "#e0af68",
-  "AccentRed":      "#f7768e",
-  "Comment":        "#707aa4",
-  "Gray":           "#565f89",
-  "DiffAdded":      "#2b485a",
-  "DiffRemoved":    "#52313f",
-  "DiffModified":   "#2ac3de",
-  "GradientColors": [
-    "#7aa2f7",
-    "#2ac3de",
-    "#9d7cd8",
-    "#bb9af7"
-  ]
+  "name": "tokyonight-storm",
+  "type": "custom",
+  "DarkGray": "#48536f",
+  "background": {
+    "primary": "#24283b",
+    "diff": {
+      "added": "#2a3946",
+      "removed": "#422f3b"
+    }
+  },
+  "text": {
+    "primary": "#c0caf5",
+    "secondary": "#a9b1d6",
+    "link": "#7aa2f7",
+    "accent": "#bb9af7",
+    "response": "#c0caf5"
+  },
+  "status": {
+    "success": "#9ece6a",
+    "warning": "#e0af68",
+    "error": "#f78498"
+  },
+  "ui": {
+    "comment": "#a9b1d6",
+    "symbol": "#7aa2f7",
+    "active": "#bb9af7",
+    "focus": "#7aa2f7",
+    "gradient": [
+      "#7aa2f7",
+      "#7dcfff",
+      "#e68fca",
+      "#bb9af7"
+    ]
+  }
 }
