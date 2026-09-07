@@ -4,36 +4,36 @@
   "background": {
     "primary": "#FAF4ED",
     "diff": {
-      "added": "#D9E1DD",
-      "removed": "#ECD7D6"
+      "added": "#E4ECE7",
+      "removed": "#F5E7E5"
     }
   },
   "text": {
-    "primary": "#464261",
-    "secondary": "#797593",
-    "link": "#907AA9",
-    "accent": "#D7827E",
-    "response": "#464261"
+    "primary": "#2C283B",
+    "secondary": "#545064",
+    "link": "#634873",
+    "accent": "#853C3A",
+    "response": "#2C283B"
   },
   "border": {
-    "default": "#DFDAD9",
-    "focused": "#D7827E"
+    "default": "#CECACD",
+    "focused": "#853C3A"
   },
   "status": {
-    "success": "#286983",
-    "warning": "#EA9D34",
-    "error": "#B4637A"
+    "success": "#205569",
+    "warning": "#714A12",
+    "error": "#8A344D"
   },
   "ui": {
-    "comment": "#797593",
-    "symbol": "#56949F",
-    "active": "#D7827E",
-    "focus": "#907AA9",
+    "comment": "#545064",
+    "symbol": "#235965",
+    "active": "#853C3A",
+    "focus": "#634873",
     "gradient": [
-      "#286983",
-      "#56949F",
-      "#D7827E",
-      "#907AA9"
+      "#205569",
+      "#235965",
+      "#853C3A",
+      "#634873"
     ]
   }
 }

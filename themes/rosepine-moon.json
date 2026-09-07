@@ -4,33 +4,33 @@
   "background": {
     "primary": "#232136",
     "diff": {
-      "added": "#3B4456",
-      "removed": "#4B3148"
+      "added": "#2E3B46",
+      "removed": "#3A293B"
     }
   },
   "text": {
     "primary": "#E0DEF4",
-    "secondary": "#908CAA",
+    "secondary": "#A5A0BB",
     "link": "#C4A7E7",
     "accent": "#EA9A97",
     "response": "#E0DEF4"
   },
   "border": {
-    "default": "#44415A",
+    "default": "#56526E",
     "focused": "#EA9A97"
   },
   "status": {
-    "success": "#3E8FB0",
+    "success": "#75ADC1",
     "warning": "#F6C177",
-    "error": "#EB6F92"
+    "error": "#F080A0"
   },
   "ui": {
-    "comment": "#908CAA",
+    "comment": "#A5A0BB",
     "symbol": "#9CCFD8",
     "active": "#EA9A97",
     "focus": "#C4A7E7",
     "gradient": [
-      "#3E8FB0",
+      "#75ADC1",
       "#9CCFD8",
       "#EA9A97",
       "#C4A7E7"

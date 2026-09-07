@@ -4,8 +4,8 @@
   "background": {
     "primary": "#191724",
     "diff": {
-      "added": "#333C48",
-      "removed": "#43293A"
+      "added": "#233039",
+      "removed": "#35222F"
     }
   },
   "text": {
@@ -16,11 +16,11 @@
     "response": "#E0DEF4"
   },
   "border": {
-    "default": "#403D52",
+    "default": "#524F67",
     "focused": "#EBBCBA"
   },
   "status": {
-    "success": "#31748F",
+    "success": "#6FA3B6",
     "warning": "#F6C177",
     "error": "#EB6F92"
   },
@@ -30,7 +30,7 @@
     "active": "#EBBCBA",
     "focus": "#C4A7E7",
     "gradient": [
-      "#31748F",
+      "#6FA3B6",
       "#9CCFD8",
       "#EBBCBA",
       "#C4A7E7"
