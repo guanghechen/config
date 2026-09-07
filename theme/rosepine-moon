@@ -26,7 +26,7 @@ background = #232136
 foreground = #E0DEF4
 
 # Cursor colors
-cursor-color = #E0DEF4
+cursor-color = #EA9A97
 cursor-text = #232136
 
 # Selection colors
