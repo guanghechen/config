@@ -1,0 +1,85 @@
+# {{name}}
+
+[bell]
+color = "{{unified.orange}}"
+
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
+
+[colors.cursor]
+text              = "{{unified.bg0}}"
+cursor            = "{{unified.purple}}"
+
+[colors.vi_mode_cursor]
+text              = "{{unified.bg0}}"
+cursor            = "{{unified.blue}}"
+
+[colors.search.matches]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.yellow}}"
+
+[colors.search.focused_match]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.orange}}"
+
+[colors.hints.start]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.purple}}"
+
+[colors.hints.end]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.blue}}"
+
+[colors.selection]
+text              = "{{unified.fg1}}"
+background        = "{{unified.bg3}}"
+
+[colors.footer_bar]
+foreground        = "{{unified.fg1}}"
+background        = "{{unified.bg1}}"
+
+[colors.primary]
+background        = "{{unified.bg0}}"
+foreground        = "{{unified.fg1}}"
+dim_foreground    = "{{unified.fg2}}"
+bright_foreground = "{{unified.fg1}}"
+
+# Official ANSI slots; bright accents are the upstream HSLuv-generated values.
+[colors.normal]
+black             = "{{tokyonight.black}}"
+red               = "{{tokyonight.red}}"
+green             = "{{tokyonight.green}}"
+yellow            = "{{tokyonight.yellow}}"
+blue              = "{{tokyonight.blue}}"
+magenta           = "{{tokyonight.magenta}}"
+cyan              = "{{tokyonight.cyan}}"
+white             = "{{tokyonight.fg_dark}}"
+
+[colors.bright]
+black             = "{{tokyonight.terminal_black}}"
+red               = "{{variant === 'moon' ? '#ff8d94' : variant === 'day' ? '#ff4774' : '#ff899d'}}"
+green             = "{{variant === 'moon' ? '#c7fb6d' : variant === 'day' ? '#5c8524' : '#9fe044'}}"
+yellow            = "{{variant === 'moon' ? '#ffd8ab' : variant === 'day' ? '#a27629' : '#faba4a'}}"
+blue              = "{{variant === 'moon' ? '#9ab8ff' : variant === 'day' ? '#358aff' : '#8db0ff'}}"
+magenta           = "{{variant === 'moon' ? '#caabff' : variant === 'day' ? '#a463ff' : '#c7a9ff'}}"
+cyan              = "{{variant === 'moon' ? '#b2ebff' : variant === 'day' ? '#007ea8' : '#a4daff'}}"
+white             = "{{tokyonight.fg}}"
+
+[colors.dim]
+black             = "{{tokyonight.black}}"
+red               = "{{tokyonight.red}}"
+green             = "{{tokyonight.green}}"
+yellow            = "{{tokyonight.yellow}}"
+blue              = "{{tokyonight.blue}}"
+magenta           = "{{tokyonight.magenta}}"
+cyan              = "{{tokyonight.cyan}}"
+white             = "{{tokyonight.fg_dark}}"
+
+[[colors.indexed_colors]]
+index = 16
+color = "{{tokyonight.orange}}"
+
+[[colors.indexed_colors]]
+index = 17
+color = "{{tokyonight.red1}}"

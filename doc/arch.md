@@ -209,6 +209,15 @@ continuous fill and base-colored text. Neutral selections and inline diffs
 retain the body foreground, including Neovim's native and custom diff groups.
 Lotus uses Medium weight in Windows Terminal, matching the other light themes.
 
+Tokyo Night preserves its named palette and official terminal mapping, including
+the upstream HSLuv-generated bright ANSI swatches. App colors live in `unified`:
+Night, Storm and Moon retain their blue-violet character with clearer secondary
+text, while Day uses blue-gray ink and deeper accents. The Neovim family maps
+consume these app colors for UI and syntax without modifying the stored palette.
+Neutral selections and inline diffs carry readable foregrounds; tmux sessions
+use blue and windows use violet. Day uses Medium weight in Windows Terminal.
+Yazi progress labels inherit Gauge's foreground inversion on filled cells.
+
 Each app directory contains validated metadata and Handlebars templates:
 
 ```js

@@ -1,0 +1,53 @@
+# {{name}}
+
+# =============================================================================
+# Newsboat Color Theme (Tokyo Night)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Main Interface Elements
+# -----------------------------------------------------------------------------
+color background          default        default
+color article             default        default
+
+# -----------------------------------------------------------------------------
+# List Colors
+# -----------------------------------------------------------------------------
+color listnormal          color{{c256(unified.fg2)}}      default
+# Preserve Day's ink foreground; dark variants need bright ANSI 256 text.
+color listnormal_unread   {{darken ? 'color' + c256(unified.fg1) : 'default'}} default bold
+# Use a grayscale slot for dark selections; color-cube rounding makes them too bright.
+color listfocus           {{darken ? 'color' + c256(unified.fg1) : 'default'}} color{{darken ? 237 : c256(unified.bg3)}}
+color listfocus_unread    {{darken ? 'color' + c256(unified.fg1) : 'default'}} color{{darken ? 237 : c256(unified.bg3)}} bold
+
+# -----------------------------------------------------------------------------
+# Title & Info Bar
+# -----------------------------------------------------------------------------
+# Preserve Day's background instead of quantizing it to a darker surface.
+color title               color{{c256(unified.purple)}}        {{darken ? 'color' + c256(unified.bg1) : 'default'}} bold
+color info                color{{c256(unified.blue)}}        {{darken ? 'color' + c256(unified.bg1) : 'default'}}
+color hint-key            color{{c256(unified.purple)}}        {{darken ? 'color' + c256(unified.bg1) : 'default'}} bold
+color hint-keys-delimiter color{{c256(unified.fg2)}}       {{darken ? 'color' + c256(unified.bg1) : 'default'}}
+color hint-separator      default                             {{darken ? 'color' + c256(unified.bg1) : 'default'}}
+color hint-description    default                             {{darken ? 'color' + c256(unified.bg1) : 'default'}}
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+color end-of-text-marker  color{{c256(unified.fg2)}}       default
+
+# -----------------------------------------------------------------------------
+# Article Content Highlights
+# -----------------------------------------------------------------------------
+# Metadata lines (Feed, Title, Author, Link, Date)
+highlight article "^(Feed|Title|Author|Link|Date): .+" color{{c256(unified.blue)}}        default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color{{c256(unified.purple)}}        default bold
+
+# URLs
+highlight article "https?://[^ ]+"                     color{{c256(unified.blue)}}        default
+
+# Reference numbers [1], [2], etc.
+highlight article "\\[[0-9]+\\]"                       color{{c256(unified.purple)}}        default bold
+
+# Media indicators
+highlight article "\\((link|image|video)\\)"           color{{c256(unified.fg2)}}       default

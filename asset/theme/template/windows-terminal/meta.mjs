@@ -47,8 +47,8 @@ export default {
     settings.profiles.defaults.useAcrylic = true
     settings.profiles.defaults.font = settings.profiles.defaults.font || {}
     settings.profiles.defaults.font.face = 'Maple Mono NF CN'
-    // Latte, Dawn and Lotus need more stroke weight against their pale backgrounds.
-    settings.profiles.defaults.font.weight = !scheme.darken && ['catppuccin', 'rosepine', 'kanagawa'].includes(scheme.theme)
+    // Latte, Dawn, Lotus and Day need more stroke weight against their pale backgrounds.
+    settings.profiles.defaults.font.weight = !scheme.darken && ['catppuccin', 'rosepine', 'kanagawa', 'tokyonight'].includes(scheme.theme)
       ? 'medium'
       : 'normal'
     settings.profiles.defaults.font.features = {

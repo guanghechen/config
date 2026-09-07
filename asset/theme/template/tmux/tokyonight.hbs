@@ -1,0 +1,149 @@
+# {{name}}
+
+set -g @GHC_SL_BG                       "{{unified.bg1}}"
+set -g @GHC_PSL_BG                      "{{unified.bg0}}"
+
+## Cmdline
+# Both vi prompt modes share the cursor color, so keep their backgrounds neutral.
+set -g @GHC_SL_BG_CMDLINE               "{{unified.bg3}}"
+set -g @GHC_SL_FG_CMDLINE               "{{unified.fg1}}"
+set -g prompt-cursor-colour             "{{unified.purple}}"
+
+## Message
+set -g @GHC_SL_BG_MESSAGE               "{{unified.bg1}}"
+set -g @GHC_SL_FG_MESSAGE               "{{unified.fg1}}"
+
+## Menu
+set -g @GHC_MENU_BG                     "{{unified.bg2}}"
+set -g @GHC_MENU_FG                     "{{unified.fg1}}"
+set -g @GHC_MENU_BG_SELECTED            "{{unified.bg3}}"
+set -g @GHC_MENU_FG_SELECTED            "{{unified.fg1}}"
+
+## Copy Mode
+set -g @GHC_SL_BG_COPY_MODE             "{{unified.bg3}}"
+set -g @GHC_SL_FG_COPY_MODE             "{{unified.fg1}}"
+set -g @GHC_SL_BG_COPY_MODE_MATCH       "{{unified.yellow}}"
+set -g @GHC_SL_FG_COPY_MODE_MATCH       "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_CUR_MATCH   "{{unified.orange}}"
+set -g @GHC_SL_FG_COPY_MODE_CUR_MATCH   "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_MARK        "{{unified.purple}}"
+set -g @GHC_SL_FG_COPY_MODE_MARK        "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_POS         "{{unified.yellow}}"
+set -g @GHC_SL_FG_COPY_MODE_POS         "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_SEL         "{{unified.bg3}}"
+set -g @GHC_SL_FG_COPY_MODE_SEL         "{{unified.fg1}}"
+
+## Pane
+set -g @GHC_PANE_BG                     "{{unified.bg1}}"
+set -g @GHC_PANE_BG_ACTIVE              "{{unified.bg0}}"
+
+set -g @GHC_PSL_FG_BORDER               "{{unified.bg4}}"
+set -g @GHC_PSL_FG_BORDER_CUR           "{{unified.purple}}"
+
+set -g @GHC_PSL_BG_SYM                  "default"
+set -g @GHC_PSL_FG_SYM                  "{{unified.fg2}}"
+set -g @GHC_PSL_BG_TXT                  "default"
+set -g @GHC_PSL_FG_TXT                  "{{unified.fg2}}"
+
+set -g @GHC_PSL_BG_SYM_ACTIVE           "default"
+set -g @GHC_PSL_FG_SYM_ACTIVE           "{{unified.purple}}"
+set -g @GHC_PSL_BG_TXT_ACTIVE           "default"
+set -g @GHC_PSL_FG_TXT_ACTIVE           "{{unified.fg1}}"
+
+set -g @GHC_PSL_BG_COPY_MODE            "default"
+set -g @GHC_PSL_FG_COPY_MODE            "{{unified.yellow}}"
+
+set -g @GHC_PSL_FG_PANE_ID              "{{unified.blue}}"
+set -g @GHC_PSL_FG_PANE_INDEX           "{{unified.orange}}"
+set -g @GHC_PSL_FG_MARKER               "{{unified.purple}}"
+
+## Statusbar
+
+set -g @GHC_SL_FG_BORDER                "{{unified.bg4}}"
+set -g @GHC_SL_FG_BORDER_CUR            "{{unified.purple}}"
+
+set -g @GHC_SL_BG_SYM                   "default"
+set -g @GHC_SL_FG_SYM                   "{{unified.purple}}"
+set -g @GHC_SL_BG_TXT                   "default"
+set -g @GHC_SL_FG_TXT                   "{{unified.fg2}}"
+
+set -g @GHC_SL_BG_OS_SYM                "{{unified.bg0}}"
+set -g @GHC_SL_FG_OS_SYM                "{{unified.purple}}"
+
+set -g @GHC_SL_BG_PREFIX                "default"
+set -g @GHC_SL_FG_PREFIX                "{{unified.blue}}"
+set -g @GHC_SL_BG_ALERT                 "{{unified.red}}"
+set -g @GHC_SL_FG_ALERT                 "{{unified.bg0}}"
+
+set -g @GHC_SL_FG_PILL_TXT              "{{unified.fg1}}"
+set -g @GHC_SL_FG_PILL_HOST_TXT         "{{unified.fg1}}"
+set -g @GHC_SL_FG_PILL_ICON             "{{unified.purple}}"
+set -g @GHC_SL_BG_PILL_DURATION         "{{unified.bg2}}"
+set -g @GHC_SL_BG_PILL_DATE             "{{unified.bg2}}"
+set -g @GHC_SL_BG_PILL_TIME             "{{unified.bg2}}"
+set -g @GHC_SL_BG_PILL_SESSION          "{{unified.bg2}}"
+set -g @GHC_SL_FG_PILL_WINNR            "{{unified.purple}}"
+# Distinguish active list items: blue for sessions, violet for windows.
+set -g @GHC_SL_FG_SESSION_LIST_ACTIVE   "{{unified.bg0}}"
+set -g @GHC_SL_BG_SESSION_LIST_ACTIVE   "{{unified.blue}}"
+set -g @GHC_SL_FG_SESSION_LIST_INACTIVE "{{unified.fg1}}"
+set -g @GHC_SL_BG_SESSION_LIST_INACTIVE "{{unified.bg0}}"
+set -g @GHC_SL_BG_SESSION_LIST_SURFACE  "{{unified.bg1}}"
+set -g @GHC_SL_BG_SESSION_ITEM_NAME     "{{unified.bg2}}"
+set -g @GHC_SL_FG_SESSION_ITEM_NAME     "{{unified.fg2}}"
+set -g @GHC_SL_BG_SESSION_ITEM_NUM      "{{unified.bg3}}"
+set -g @GHC_SL_FG_SESSION_ITEM_NUM      "{{unified.fg1}}"
+set -g @GHC_SL_FG_SESSION_ITEM_LAST     "{{unified.purple}}"
+set -g @GHC_SL_FG_SESSION_ITEM_BELL     "{{unified.purple}}"
+set -g @GHC_SL_BG_STATUS02_LABEL        "{{unified.bg2}}"
+set -g @GHC_SL_FG_STATUS02_LABEL        "{{unified.purple}}"
+set -g @GHC_SL_BG_PILL_USER             "{{unified.bg2}}"
+set -g @GHC_SL_BG_PILL_HOST             "{{unified.bg2}}"
+set -g @GHC_SL_BG_PILL_ZOOM             "{{unified.bg2}}"
+
+set -g @GHC_SL_BG_PRIMARY_SEP           "{{unified.bg1}}"
+set -g @GHC_SL_FG_PRIMARY_SEP           "{{unified.purple}}"
+set -g @GHC_SL_BG_PRIMARY_SYM           "{{unified.purple}}"
+set -g @GHC_SL_FG_PRIMARY_SYM           "{{unified.bg0}}"
+set -g @GHC_SL_BG_PRIMARY_TXT           "{{unified.purple}}"
+set -g @GHC_SL_FG_PRIMARY_TXT           "{{unified.bg0}}"
+set -g @GHC_SL_BG_SECONDARY_SEP         "default"
+set -g @GHC_SL_FG_SECONDARY_SEP         "{{unified.bg2}}"
+set -g @GHC_SL_BG_SECONDARY_SYM         "{{unified.bg2}}"
+set -g @GHC_SL_FG_SECONDARY_SYM         "{{unified.purple}}"
+set -g @GHC_SL_BG_SECONDARY_TXT         "{{unified.bg2}}"
+set -g @GHC_SL_FG_SECONDARY_TXT         "{{unified.purple}}"
+
+set -g @GHC_SL_BG_WIN_NAME              "{{unified.bg1}}"
+set -g @GHC_SL_FG_WIN_NAME              "{{unified.fg2}}"
+set -g @GHC_SL_BG_WIN_NUM               "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_NUM               "{{unified.fg2}}"
+set -g @GHC_SL_BG_WIN_ICON_BELL         "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_ICON_BELL         "{{unified.red}}"
+set -g @GHC_SL_FG_WIN_ICON_ACTIVITY     "{{unified.green}}"
+set -g @GHC_SL_BG_WIN_ICON_LAST         "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_ICON_LAST         "{{unified.purple}}"
+set -g @GHC_SL_BG_WIN_ICON_ZOOM         "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_ICON_ZOOM         "{{unified.yellow}}"
+set -g @GHC_SL_FG_WIN_ICON_MARKED       "{{unified.purple}}"
+set -g @GHC_SL_FG_WIN_ICON_SILENCE      "{{unified.fg2}}"
+set -g @GHC_SL_FG_TREE_PANE_ID          "{{unified.blue}}"
+
+# One continuous highlight across the active window's title, number and icons.
+set -g @GHC_SL_BG_WIN_ACTIVE_NAME       "{{unified.purple}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_NAME       "{{unified.bg0}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_NUM        "{{unified.purple}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_NUM        "{{unified.bg0}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_ICON_BELL  "{{unified.purple}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_ICON_BELL  "{{unified.bg0}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_ICON_ZOOM  "{{unified.purple}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_ICON_ZOOM  "{{unified.bg0}}"
+
+set -g @GHC_SL_BG_WIN_LAST_NAME         "{{unified.bg1}}"
+set -g @GHC_SL_FG_WIN_LAST_NAME         "{{unified.purple}}"
+set -g @GHC_SL_BG_WIN_LAST_NUM          "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_LAST_NUM          "{{unified.purple}}"
+set -g @GHC_SL_BG_WIN_LAST_ICON_BELL    "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_LAST_ICON_BELL    "{{unified.purple}}"
+set -g @GHC_SL_BG_WIN_LAST_ICON_ZOOM    "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_LAST_ICON_ZOOM    "{{unified.purple}}"

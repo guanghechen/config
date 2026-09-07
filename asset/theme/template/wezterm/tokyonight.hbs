@@ -1,0 +1,88 @@
+-- {{name}}
+
+---@class theme.{{name.replace(/-/g, '_')}}
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
+    background    = "{{unified.bg0}}",
+    foreground    = "{{unified.fg1}}",
+
+    cursor_bg     = "{{unified.purple}}",
+    cursor_fg     = "{{unified.bg0}}",
+    cursor_border = "{{unified.purple}}",
+
+    selection_bg  = "{{unified.bg3}}",
+    selection_fg  = "{{unified.fg1}}",
+    split         = "{{unified.bg4}}",
+    scrollbar_thumb = "{{unified.bg4}}",
+    visual_bell   = "{{unified.bg2}}",
+    compose_cursor = "{{unified.orange}}",
+
+    -- Official ANSI slots; bright accents use upstream HSLuv-generated values.
+    ansi = {
+      "{{tokyonight.black}}",
+      "{{tokyonight.red}}",
+      "{{tokyonight.green}}",
+      "{{tokyonight.yellow}}",
+      "{{tokyonight.blue}}",
+      "{{tokyonight.magenta}}",
+      "{{tokyonight.cyan}}",
+      "{{tokyonight.fg_dark}}",
+    },
+    brights = {
+      "{{tokyonight.terminal_black}}",
+      "{{variant === 'moon' ? '#ff8d94' : variant === 'day' ? '#ff4774' : '#ff899d'}}",
+      "{{variant === 'moon' ? '#c7fb6d' : variant === 'day' ? '#5c8524' : '#9fe044'}}",
+      "{{variant === 'moon' ? '#ffd8ab' : variant === 'day' ? '#a27629' : '#faba4a'}}",
+      "{{variant === 'moon' ? '#9ab8ff' : variant === 'day' ? '#358aff' : '#8db0ff'}}",
+      "{{variant === 'moon' ? '#caabff' : variant === 'day' ? '#a463ff' : '#c7a9ff'}}",
+      "{{variant === 'moon' ? '#b2ebff' : variant === 'day' ? '#007ea8' : '#a4daff'}}",
+      "{{tokyonight.fg}}",
+    },
+    indexed = {
+      [16] = "{{tokyonight.orange}}",
+      [17] = "{{tokyonight.red1}}",
+    },
+
+    tab_bar = {
+      background = "{{tokyonight.bg_dark1}}",
+      active_tab = {
+        bg_color = "{{unified.purple}}",
+        fg_color = "{{unified.bg0}}",
+      },
+      inactive_tab = {
+        bg_color = "{{unified.bg1}}",
+        fg_color = "{{unified.fg2}}",
+      },
+      inactive_tab_hover = {
+        bg_color = "{{unified.bg2}}",
+        fg_color = "{{unified.fg1}}",
+      },
+      new_tab = {
+        bg_color = "{{unified.bg1}}",
+        fg_color = "{{unified.purple}}",
+      },
+      new_tab_hover = {
+        bg_color = "{{unified.bg3}}",
+        fg_color = "{{unified.fg1}}",
+      },
+      inactive_tab_edge = "{{unified.bg2}}",
+    },
+  }
+
+  config.window_frame = {
+    active_titlebar_bg = "{{unified.bg1}}",
+    active_titlebar_fg = "{{unified.fg1}}",
+    inactive_titlebar_bg = "{{unified.bg1}}",
+    inactive_titlebar_fg = "{{unified.fg2}}",
+    button_fg = "{{unified.fg1}}",
+    button_bg = "{{unified.bg1}}",
+  }
+
+  config.command_palette_bg_color = "{{unified.bg2}}"
+  config.command_palette_fg_color = "{{unified.fg1}}"
+end
+
+return M
