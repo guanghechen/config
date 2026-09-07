@@ -16,14 +16,16 @@ local M = {}
 ---@return string|nil
 function M.capture() end
 
----Captures the current source and ensures an English-capable source in one platform operation.
+---Captures the current source and requests an English-capable source in one platform operation.
 ---A non-nil snapshot is preserved even when selection fails.
+---Success means selection was accepted or unnecessary; macOS IME readiness is not acknowledged.
 ---@return yoz.im.Snapshot|nil
----@return boolean ready
+---@return boolean ok
 ---@return string|nil
 function M.capture_and_select_english() end
 
 ---Restores an exact snapshot returned by `capture()` or `capture_and_select_english()`.
+---macOS may apply an accepted selection asynchronously after this call returns.
 ---@param snapshot                      yoz.im.Snapshot
 ---@return boolean|nil
 ---@return string|nil

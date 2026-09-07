@@ -10,13 +10,14 @@ local M = {}
 ---@param subject                       string
 ---@param message                       string
 ---@param err                           string|nil
+---@param retry_after_ms                ?integer
 ---@return nil
-local function report_error(subject, message, err)
+local function report_error(subject, message, err, retry_after_ms)
   stl.reporter.error({
     from = __module_name__,
     subject = subject,
     message = message,
-    details = { error = err },
+    details = { error = err, retry_after_ms = retry_after_ms },
   })
 end
 
@@ -53,6 +54,40 @@ local auto_im_subscription = nil ---@type stl.c.IUnsubscribable|nil
 local focused = false ---@type boolean
 local focus_generation = 0 ---@type integer
 local insert_snapshot = nil ---@type era.m.im.Snapshot|nil
+-- This permits a local shortcut; it does not acknowledge completion inside the OS IME.
+local can_skip_english_restore = false ---@type boolean
+
+---@class era.m.im.RetryState
+---@field delay_ms                      integer
+---@field retry_at_ns                   integer
+
+local capture_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.m.im.RetryState
+local selection_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.m.im.RetryState
+local restore_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.m.im.RetryState
+local restore_target = nil ---@type era.m.im.Snapshot|nil
+-- WSL can block for the helper's one-second deadline; native failures use a fixed short cooldown.
+local MAX_RETRY_DELAY_MS = stl.env.IS_WSL and 8000 or 1000 ---@type integer
+
+---@param retry                         era.m.im.RetryState
+---@return nil
+local function reset_retry(retry)
+  retry.delay_ms = 0
+  retry.retry_at_ns = 0
+end
+
+---@param retry                         era.m.im.RetryState
+---@return nil
+local function postpone_retry(retry)
+  retry.delay_ms = math.min(retry.delay_ms == 0 and 1000 or retry.delay_ms * 2, MAX_RETRY_DELAY_MS)
+  -- Start the cooldown after the synchronous backend call has returned.
+  retry.retry_at_ns = vim.uv.hrtime() + retry.delay_ms * 1e6
+end
+
+---@param retry                         era.m.im.RetryState
+---@return boolean
+local function can_retry(retry)
+  return retry.retry_at_ns == 0 or vim.uv.hrtime() >= retry.retry_at_ns
+end
 
 ---@return boolean
 local function owns_source()
@@ -63,32 +98,71 @@ end
 ---@return era.m.im.Snapshot|nil
 local function capture_and_select_english(subject)
   local im = backend
-  if im == nil then
+  can_skip_english_restore = false
+  if im == nil or not can_retry(capture_retry) then
     return nil
   end
 
-  local snapshot, ready, err = im.capture_and_select_english()
-  if not ready then
-    report_error(subject, "Failed to capture and select an English input source.", err)
+  if not can_retry(selection_retry) then
+    -- Selection can fail while capture remains healthy; keep observing the Insert source.
+    local snapshot, err = im.capture()
+    if snapshot ~= nil then
+      reset_retry(capture_retry)
+    else
+      postpone_retry(capture_retry)
+      report_error(subject, "Failed to capture the input-source ID.", err, capture_retry.delay_ms)
+    end
+    return snapshot
+  end
+
+  local snapshot, ok, err = im.capture_and_select_english()
+  if snapshot == nil then
+    postpone_retry(capture_retry)
+    report_error(subject, "Failed to capture and select an English input source.", err, capture_retry.delay_ms)
+    return nil
+  end
+
+  reset_retry(capture_retry)
+  if ok then
+    reset_retry(selection_retry)
+    can_skip_english_restore = true
+  else
+    postpone_retry(selection_retry)
+    report_error(subject, "Failed to capture and select an English input source.", err, selection_retry.delay_ms)
   end
   return snapshot
 end
 
 ---@param snapshot                      era.m.im.Snapshot
 ---@param subject                       string
+---@return nil
 local function restore_snapshot(snapshot, subject)
   local im = backend
+  can_skip_english_restore = false
   if im == nil then
     return
   end
 
+  if restore_target ~= snapshot then
+    restore_target = snapshot
+    reset_retry(restore_retry)
+  end
+  if not can_retry(restore_retry) then
+    return
+  end
+
   local restored, err = im.restore(snapshot)
-  if not restored then
-    report_error(subject, "Failed to restore the input-source ID.", err)
+  if restored then
+    reset_retry(restore_retry)
+    can_skip_english_restore = im.is_english(snapshot)
+  else
+    postpone_retry(restore_retry)
+    report_error(subject, "Failed to restore the input-source ID.", err, restore_retry.delay_ms)
   end
 end
 
 ---@param subject                       string
+---@return nil
 local function restore_insert_snapshot(subject)
   if not owns_source() or insert_snapshot == nil then
     return
@@ -97,9 +171,14 @@ local function restore_insert_snapshot(subject)
 end
 
 ---@param subject                       string
-local function restore_non_english_insert_snapshot(subject)
+---@return nil
+local function restore_insert_snapshot_if_needed(subject)
   local im = backend
-  if not owns_source() or insert_snapshot == nil or im == nil or im.is_english(insert_snapshot) then
+  if not owns_source() or insert_snapshot == nil or im == nil then
+    return
+  end
+  -- A read-only capture does not rule out an earlier conflicting selection still taking effect.
+  if can_skip_english_restore and im.is_english(insert_snapshot) then
     return
   end
   restore_snapshot(insert_snapshot, subject)
@@ -118,6 +197,7 @@ local function is_insert_mode(mode)
 end
 
 ---@param subject                       string
+---@return nil
 local function reconcile_focused_source(subject)
   if not owns_source() then
     return
@@ -132,7 +212,13 @@ local function reconcile_focused_source(subject)
 end
 
 ---@param enabled                       boolean
+---@return nil
 local function on_auto_im_changed(enabled)
+  reset_retry(capture_retry)
+  reset_retry(selection_retry)
+  reset_retry(restore_retry)
+  restore_target = nil
+  can_skip_english_restore = false
   if not enabled then
     insert_snapshot = nil
     return
@@ -140,17 +226,21 @@ local function on_auto_im_changed(enabled)
   reconcile_focused_source("auto_im")
 end
 
+---@return nil
 local function on_insert_leave()
   if not owns_source() then
     insert_snapshot = nil
+    can_skip_english_restore = false
     return
   end
+  -- A failed or cooled-down query cannot identify this Insert session's source.
   insert_snapshot = capture_and_select_english("InsertLeave")
 end
 
+---@return nil
 local function on_insert_enter()
   -- InsertEnter fires before nvim_get_mode() reports Insert, so this event is the mode contract.
-  restore_non_english_insert_snapshot("InsertEnter")
+  restore_insert_snapshot_if_needed("InsertEnter")
 end
 
 ---@return integer|nil
@@ -193,6 +283,7 @@ local function on_focus_lost()
   end
   focus_generation = focus_generation + 1
   focused = false
+  can_skip_english_restore = false
 end
 
 ---@return nil

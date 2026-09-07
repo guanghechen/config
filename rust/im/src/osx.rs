@@ -49,6 +49,10 @@ struct CFDictionaryValueCallBacks {
 }
 
 const CF_STRING_ENCODING_UTF8: CFStringEncoding = 0x0800_0100;
+const CF_RUN_LOOP_FINISHED: i32 = 1;
+const CF_RUN_LOOP_TIMED_OUT: i32 = 3;
+const CF_RUN_LOOP_HANDLED_SOURCE: i32 = 4;
+const MAX_NOTIFICATION_PASSES: usize = 32;
 const NO_ERR: OSStatus = 0;
 
 #[link(name = "Carbon", kind = "framework")]
@@ -213,10 +217,30 @@ fn is_ascii_capable(im: TISInputSourceRef, subject: &str) -> Result<bool, String
     Ok(unsafe { CFBooleanGetValue(property.cast()) } != 0)
 }
 
-fn copy_current() -> Result<(String, OwnedCFRef), String> {
+fn refresh_notifications() -> Result<(), String> {
     // TIS refreshes its process-local state through CFRunLoop notifications, while Neovim drives
-    // libuv. Drain pending callbacks so a long-lived process observes external source changes.
-    unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, 1) };
+    // libuv. One zero-time call can handle just one source. Drain the queue without waiting
+    // for future events, but bound the work if a source continually reschedules itself.
+    for _ in 0..MAX_NOTIFICATION_PASSES {
+        let result = unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, 1) };
+        match result {
+            CF_RUN_LOOP_FINISHED | CF_RUN_LOOP_TIMED_OUT => return Ok(()),
+            CF_RUN_LOOP_HANDLED_SOURCE => continue,
+            _ => {
+                return Err(format!(
+                    "[im.capture] Input-source notification refresh was interrupted (CFRunLoop {result})"
+                ));
+            }
+        }
+    }
+    Err(
+        "[im.capture] Input-source notifications are still busy; cannot refresh the snapshot"
+            .to_owned(),
+    )
+}
+
+fn copy_current() -> Result<(String, OwnedCFRef), String> {
+    refresh_notifications()?;
     let reference = unsafe { TISCopyCurrentKeyboardInputSource() };
     let im = unsafe { OwnedCFRef::from_created(reference.cast(), "im.capture")? };
     let source_id = source_id(im.as_ptr().cast(), "im.capture")?;
@@ -307,8 +331,7 @@ fn resolve(source_id: &str) -> Result<OwnedCFRef, String> {
 }
 
 fn select_input_source(im: TISInputSourceRef, source_id: &str) -> Result<(), String> {
-    // Selection becomes observable asynchronously. Always submit the latest request;
-    // a current-source read may still reflect an earlier pending selection.
+    // A successful request can become observable through TIS notifications later.
     let status = unsafe { TISSelectInputSource(im) };
     if status != NO_ERR {
         return Err(format!(
@@ -319,8 +342,29 @@ fn select_input_source(im: TISInputSourceRef, source_id: &str) -> Result<(), Str
 }
 
 #[derive(Default)]
+struct SelectionState {
+    // A matching read can predate queued requests, so it cannot acknowledge a submission.
+    last_submitted_source_id: Option<String>,
+}
+
+impl SelectionState {
+    fn needs_selection(&self, current: &str, requested: &str) -> bool {
+        current != requested
+            || self
+                .last_submitted_source_id
+                .as_deref()
+                .is_some_and(|submitted| submitted != requested)
+    }
+
+    fn record_request(&mut self, source_id: &str) {
+        self.last_submitted_source_id = Some(source_id.to_owned());
+    }
+}
+
+#[derive(Default)]
 pub struct Backend {
     cache: HashMap<String, OwnedCFRef>,
+    selection: SelectionState,
 }
 
 impl Backend {
@@ -345,11 +389,20 @@ impl Backend {
     }
 
     fn select(&mut self, source_id: &str) -> Result<(), String> {
+        validate_source_id(source_id)?;
+        // A failed fresh read disables the shortcut, but still permits exact restoration.
+        if let Ok(current) = self.capture()
+            && !self.selection.needs_selection(&current, source_id)
+        {
+            return Ok(());
+        }
+
         let im = self.resolve_cached(source_id)?.as_ptr();
         if let Err(error) = select_input_source(im.cast(), source_id) {
             self.cache.remove(source_id);
             return Err(error);
         }
+        self.selection.record_request(source_id);
         Ok(())
     }
 
@@ -361,7 +414,8 @@ impl Backend {
                 error,
             })?;
         self.cache.insert(snapshot.clone(), current);
-        if english {
+        // An earlier non-English restore may still be pending despite this English read.
+        if english && !self.selection.needs_selection(&snapshot, &snapshot) {
             return Ok(snapshot);
         }
 
@@ -376,6 +430,7 @@ impl Backend {
                 error,
             },
         )?;
+        self.selection.record_request(&english_source_id);
         self.cache.insert(english_source_id, english_source);
         Ok(snapshot)
     }

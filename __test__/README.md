@@ -50,6 +50,12 @@ Production Lua modules have no test-directory references or test-only exports.
 Shared search fixtures preserve their original line endings through local Git
 attributes; LF and CRLF are part of the tested input.
 
+Manual macOS IM measurements live in `bench/im.lua`. Run
+`nvim --headless -u NONE -i NONE -n -l __test__/bench/im.lua [native-library]`
+to measure capture and restoration to the same current source, excluding cold initialization.
+The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
+The benchmark aborts if the source changes externally and does not measure switching between input methods.
+
 ## Run
 
 Run commands from the repository root:

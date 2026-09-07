@@ -37,6 +37,11 @@ vim.hl.range(bufnr, ns, hlname, { row, col1 }, { row, col2 })
 
 ## Type Annotations
 
+Every non-temporary Lua function, including module functions, methods, and named local helpers,
+must declare at least one `---@return` annotation. Use the actual return types when values are
+returned, and `---@return nil` when the function returns no values. Temporary inline anonymous
+functions, such as callbacks and lambdas, may omit return annotations.
+
 Column-aligned LuaLS annotations (column 40 style):
 
 ```lua
