@@ -28,15 +28,15 @@
           <key>misspelling</key>
           <string>#E78284</string>
           <key>accent</key>
-          <string>#F4B8E4</string>
+          <string>#CA9EE6</string>
           <key>selection</key>
-          <string>#949CBB40</string>
+          <string>#51576D</string>
           <key>activeGuide</key>
           <string>#51576D</string>
           <key>findHighlight</key>
           <string>#51576D</string>
           <key>gutterForeground</key>
-          <string>#838BA7</string>
+          <string>#949CBB</string>
         </dict>
       </dict>
       <dict>
@@ -58,7 +58,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#949CBB</string>
+          <string>#A5ADCE</string>
           <key>fontStyle</key>
           <string/>
         </dict>
@@ -71,7 +71,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#949CBB</string>
+          <string>#A5ADCE</string>
           <key>fontStyle</key>
           <string>italic</string>
         </dict>
@@ -326,7 +326,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#B5BFE2</string>
+          <string>#C6D0F5</string>
         </dict>
       </dict>
       <dict>
@@ -849,7 +849,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#B5BFE2</string>
+          <string>#C6D0F5</string>
         </dict>
       </dict>
       <dict>
@@ -1180,7 +1180,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#A5ADCE</string>
+          <string>#B5BFE2</string>
           <key>fontStyle</key>
           <string/>
         </dict>
@@ -1237,7 +1237,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#949CBB</string>
+          <string>#A5ADCE</string>
         </dict>
       </dict>
       <dict>
@@ -2039,7 +2039,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#949CBB</string>
+          <string>#A5ADCE</string>
         </dict>
       </dict>
       <dict>
