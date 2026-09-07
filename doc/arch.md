@@ -190,6 +190,15 @@ Use `fg1` on neutral selections and `bg0` on solid accent fills;
 reserve `muted` for disabled elements. Diff backgrounds are separate from
 foreground accents so inline changes remain readable.
 
+Catppuccin follows the same separation: `palette.catppuccin` retains the official
+swatches and terminal ANSI mapping, including Latte's reversed neutral slots.
+`palette.unified` uses text for body copy, readable secondary text, mauve for
+purple, and separate pink accents. Latte uses ink-colored text and deeper app
+accents; its neutral surfaces step from mantle through crust to surface0.
+Active tmux sessions use blue and active windows use mauve, with a continuous
+fill and base-colored text. Neutral selections retain the body foreground;
+inline diffs use the body foreground over stronger red or green tints.
+
 Each app directory contains validated metadata and Handlebars templates:
 
 ```js

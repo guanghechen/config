@@ -1,0 +1,88 @@
+-- {{name}}
+
+---@class theme.{{name.replace(/-/g, '_')}}
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
+    background    = "{{catppuccin.base}}",
+    foreground    = "{{unified.fg1}}",
+
+    cursor_bg     = "{{unified.purple}}",
+    cursor_fg     = "{{catppuccin.base}}",
+    cursor_border = "{{unified.purple}}",
+
+    selection_bg  = "{{unified.bg3}}",
+    selection_fg  = "{{unified.fg1}}",
+    split         = "{{unified.bg4}}",
+    scrollbar_thumb = "{{catppuccin.surface2}}",
+    visual_bell   = "{{unified.bg2}}",
+    compose_cursor = "{{unified.orange}}",
+
+    -- Official ANSI colors, including Latte's light-theme neutral slots.
+    ansi = {
+      "{{darken ? catppuccin.surface1 : catppuccin.subtext1}}",
+      "{{catppuccin.red}}",
+      "{{catppuccin.green}}",
+      "{{catppuccin.yellow}}",
+      "{{catppuccin.blue}}",
+      "{{catppuccin.pink}}",
+      "{{catppuccin.teal}}",
+      "{{darken ? catppuccin.subtext0 : catppuccin.surface2}}",
+    },
+    brights = {
+      "{{darken ? catppuccin.surface2 : catppuccin.subtext0}}",
+      "{{catppuccin.red}}",
+      "{{catppuccin.green}}",
+      "{{catppuccin.yellow}}",
+      "{{catppuccin.blue}}",
+      "{{catppuccin.pink}}",
+      "{{catppuccin.teal}}",
+      "{{darken ? catppuccin.subtext1 : catppuccin.surface1}}",
+    },
+    indexed = {
+      [16] = "{{catppuccin.peach}}",
+      [17] = "{{catppuccin.rosewater}}",
+    },
+
+    tab_bar = {
+      background = "{{catppuccin.crust}}",
+      active_tab = {
+        bg_color = "{{unified.purple}}",
+        fg_color = "{{catppuccin.base}}",
+      },
+      inactive_tab = {
+        bg_color = "{{catppuccin.mantle}}",
+        fg_color = "{{unified.fg2}}",
+      },
+      inactive_tab_hover = {
+        bg_color = "{{unified.bg2}}",
+        fg_color = "{{unified.fg1}}",
+      },
+      new_tab = {
+        bg_color = "{{catppuccin.mantle}}",
+        fg_color = "{{unified.purple}}",
+      },
+      new_tab_hover = {
+        bg_color = "{{unified.bg3}}",
+        fg_color = "{{unified.fg1}}",
+      },
+      inactive_tab_edge = "{{unified.bg2}}",
+    },
+  }
+
+  config.window_frame = {
+    active_titlebar_bg = "{{catppuccin.mantle}}",
+    active_titlebar_fg = "{{unified.fg1}}",
+    inactive_titlebar_bg = "{{catppuccin.mantle}}",
+    inactive_titlebar_fg = "{{unified.fg2}}",
+    button_fg = "{{unified.fg1}}",
+    button_bg = "{{catppuccin.mantle}}",
+  }
+
+  config.command_palette_bg_color = "{{unified.bg2}}"
+  config.command_palette_fg_color = "{{unified.fg1}}"
+end
+
+return M

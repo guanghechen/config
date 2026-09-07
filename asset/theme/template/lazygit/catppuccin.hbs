@@ -1,0 +1,47 @@
+# {{name}}
+
+gui:
+  authorColors:
+    '*': '{{unified.fg2}}'
+    guanghechen: '{{unified.blue}}'
+  branchColorPatterns:
+    "^(main|master)$": '{{unified.purple}}'
+    "^(user/[^/]+/)?chore": '{{unified.fg2}}'
+    "^(user/[^/]+/)?feat": '{{unified.green}}'
+    "^(user/[^/]+/)?feature": '{{unified.green}}'
+    "^(user/[^/]+/)?fix": '{{unified.red}}'
+    "^(user/[^/]+/)?refactor": '{{unified.orange}}'
+    "^(user/[^/]+/)?release": '{{unified.blue}}'
+  theme:
+    activeBorderColor:
+      - '{{unified.purple}}'
+      - bold
+    cherryPickedCommitBgColor:
+      - '{{unified.bg2}}'
+    cherryPickedCommitFgColor:
+      - '{{unified.purple}}'
+    defaultFgColor:
+      - '{{unified.fg1}}'
+    inactiveBorderColor:
+      - '{{unified.bg4}}'
+    inactiveViewSelectedLineBgColor:
+      - '{{catppuccin.mantle}}'
+    markedBaseCommitBgColor:
+      - '{{unified.bg3}}'
+    markedBaseCommitFgColor:
+      - '{{unified.fg1}}'
+    optionsTextColor:
+      - '{{unified.blue}}'
+    searchingActiveBorderColor:
+      - '{{unified.yellow}}'
+      - bold
+    selectedLineBgColor:
+      - '{{unified.bg3}}'
+      - bold
+    unstagedChangesColor:
+      - '{{unified.red}}'
+
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --paging=never --{{darken ? 'dark' : 'light'}}

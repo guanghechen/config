@@ -1,0 +1,85 @@
+# {{name}}
+
+[bell]
+color = "{{unified.orange}}"
+
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
+
+[colors.cursor]
+text              = "{{catppuccin.base}}"
+cursor            = "{{unified.purple}}"
+
+[colors.vi_mode_cursor]
+text              = "{{catppuccin.base}}"
+cursor            = "{{unified.blue}}"
+
+[colors.search.matches]
+foreground        = "{{catppuccin.base}}"
+background        = "{{unified.yellow}}"
+
+[colors.search.focused_match]
+foreground        = "{{catppuccin.base}}"
+background        = "{{unified.orange}}"
+
+[colors.hints.start]
+foreground        = "{{catppuccin.base}}"
+background        = "{{unified.purple}}"
+
+[colors.hints.end]
+foreground        = "{{catppuccin.base}}"
+background        = "{{unified.blue}}"
+
+[colors.selection]
+text              = "{{unified.fg1}}"
+background        = "{{unified.bg3}}"
+
+[colors.footer_bar]
+foreground        = "{{unified.fg1}}"
+background        = "{{catppuccin.mantle}}"
+
+[colors.primary]
+background        = "{{catppuccin.base}}"
+foreground        = "{{unified.fg1}}"
+dim_foreground    = "{{unified.fg2}}"
+bright_foreground = "{{unified.fg1}}"
+
+# Keep ANSI slots independent from the readable app accents in unified.
+[colors.normal]
+black             = "{{darken ? catppuccin.surface1 : catppuccin.subtext1}}"
+red               = "{{catppuccin.red}}"
+green             = "{{catppuccin.green}}"
+yellow            = "{{catppuccin.yellow}}"
+blue              = "{{catppuccin.blue}}"
+magenta           = "{{catppuccin.pink}}"
+cyan              = "{{catppuccin.teal}}"
+white             = "{{darken ? catppuccin.subtext0 : catppuccin.surface2}}"
+
+[colors.bright]
+black             = "{{darken ? catppuccin.surface2 : catppuccin.subtext0}}"
+red               = "{{catppuccin.red}}"
+green             = "{{catppuccin.green}}"
+yellow            = "{{catppuccin.yellow}}"
+blue              = "{{catppuccin.blue}}"
+magenta           = "{{catppuccin.pink}}"
+cyan              = "{{catppuccin.teal}}"
+white             = "{{darken ? catppuccin.subtext1 : catppuccin.surface1}}"
+
+[colors.dim]
+black             = "{{darken ? catppuccin.surface1 : catppuccin.subtext1}}"
+red               = "{{catppuccin.red}}"
+green             = "{{catppuccin.green}}"
+yellow            = "{{catppuccin.yellow}}"
+blue              = "{{catppuccin.blue}}"
+magenta           = "{{catppuccin.pink}}"
+cyan              = "{{catppuccin.teal}}"
+white             = "{{darken ? catppuccin.subtext0 : catppuccin.surface2}}"
+
+[[colors.indexed_colors]]
+index = 16
+color = "{{catppuccin.peach}}"
+
+[[colors.indexed_colors]]
+index = 17
+color = "{{catppuccin.rosewater}}"
