@@ -1,8 +1,6 @@
 # catppuccin-mocha
 
-# ANSI Colors
-# Dark themes: palette 0 = surface1, palette 7 = subtext0
-# Light theme: palette 0 = subtext1, palette 7 = surface2
+# Official ANSI mapping: https://github.com/catppuccin/ghostty/blob/main/ghostty.tera
 palette =  0=#45475A
 palette =  1=#F38BA8
 palette =  2=#A6E3A1
@@ -13,8 +11,6 @@ palette =  6=#94E2D5
 palette =  7=#A6ADC8
 
 # Bright colors
-# Dark themes: palette 8 = surface2, palette 15 = subtext1
-# Light theme: palette 8 = subtext0, palette 15 = surface1
 palette =  8=#585B70
 palette =  9=#F38BA8
 palette = 10=#A6E3A1
@@ -29,15 +25,15 @@ background = #1E1E2E
 foreground = #CDD6F4
 
 # Cursor colors
-cursor-color = #F5C2E7
-cursor-text = #11111B
+cursor-color = #CBA6F7
+cursor-text = #1E1E2E
 
 # Selection colors
 selection-background = #45475A
 selection-foreground = #CDD6F4
 
 # Split divider color
-split-divider-color = #313244
+split-divider-color = #585B70
 
 # Unfocused split fill color
 unfocused-split-fill = #181825
