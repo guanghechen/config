@@ -2,11 +2,11 @@
 
 gui:
   authorColors:
-    '*': '#A6ADC8'
+    '*': '#BAC2DE'
     guanghechen: '#89B4FA'
   branchColorPatterns:
-    "^(main|master)$": '#F5C2E7'
-    "^(user/[^/]+/)?chore": '#7F849C'
+    "^(main|master)$": '#CBA6F7'
+    "^(user/[^/]+/)?chore": '#BAC2DE'
     "^(user/[^/]+/)?feat": '#A6E3A1'
     "^(user/[^/]+/)?feature": '#A6E3A1'
     "^(user/[^/]+/)?fix": '#F38BA8'
@@ -14,29 +14,30 @@ gui:
     "^(user/[^/]+/)?release": '#89B4FA'
   theme:
     activeBorderColor:
-      - '#F5C2E7'
+      - '#CBA6F7'
       - bold
     cherryPickedCommitBgColor:
-      - '#94E2D5'
-    cherryPickedCommitFgColor:
-      - '#1E1E2E'
-    defaultFgColor:
-      - '#A6ADC8'
-    inactiveBorderColor:
-      - '#7F849C'
-    inactiveViewSelectedLineBgColor:
       - '#313244'
+    cherryPickedCommitFgColor:
+      - '#CBA6F7'
+    defaultFgColor:
+      - '#CDD6F4'
+    inactiveBorderColor:
+      - '#585B70'
+    inactiveViewSelectedLineBgColor:
+      - '#181825'
     markedBaseCommitBgColor:
-      - '#F9E2AF'
+      - '#45475A'
     markedBaseCommitFgColor:
-      - '#1E1E2E'
+      - '#CDD6F4'
     optionsTextColor:
-      - '#FAB387'
+      - '#89B4FA'
     searchingActiveBorderColor:
-      - '#94E2D5'
+      - '#F9E2AF'
       - bold
     selectedLineBgColor:
       - '#45475A'
+      - bold
     unstagedChangesColor:
       - '#F38BA8'
 
