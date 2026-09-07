@@ -115,34 +115,27 @@ describe('theme toggle resolution', () => {
 })
 
 describe('rosepine theme schemes', () => {
-  const variants = [
-    [
-      'rosepine-main',
-      '#21202E',
-      ['#43293A', '#6D3A50', '#333C48', '#4D616C'],
-    ],
-    [
-      'rosepine-moon',
-      '#2A283E',
-      ['#4B3148', '#73405B', '#3B4456', '#536777'],
-    ],
-    [
-      'rosepine-dawn',
-      '#F4EDE8',
-      ['#ECD7D6', '#DEBABF', '#D9E1DD', '#B8CECE'],
-    ],
-  ]
+  function contrast(foreground, background) {
+    const luminance = color => {
+      const channels = color.slice(1).match(/../g).map(hex => {
+        const value = Number.parseInt(hex, 16) / 255
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+      })
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+    }
+    const values = [luminance(foreground), luminance(background)]
+    return (Math.max(...values) + 0.05) / (Math.min(...values) + 0.05)
+  }
 
-  for (const [name, highlightLow, diff] of variants) {
-    it(`follows the semantic role mapping for ${name}`, async () => {
+  for (const variant of ['main', 'moon', 'dawn']) {
+    it(`keeps foregrounds and selections readable for rosepine-${variant}`, async () => {
       const { errors, reporter } = createReporter()
-      const scheme = await load_theme_scheme(reporter, /** @type {string} */ (name))
+      const scheme = await load_theme_scheme(reporter, `rosepine-${variant}`)
 
       assert.equal(errors.length, 0)
       assert.ok(scheme)
       assert.ok(scheme.palette.rosepine)
       const { rosepine, unified } = scheme.palette
-      assert.equal(rosepine.highlightLow, highlightLow)
       assert.deepEqual(
         [unified.bg0, unified.bg1, unified.bg2, unified.bg3, unified.bg4],
         [
@@ -153,52 +146,37 @@ describe('rosepine theme schemes', () => {
           rosepine.highlightHigh,
         ],
       )
-      assert.deepEqual(
-        [unified.fg0, unified.fg1, unified.fg2, unified.fg3, unified.fg4],
-        [rosepine.text, rosepine.text, rosepine.subtle, rosepine.muted, rosepine.muted],
+
+      const foregrounds = Object.entries(unified).filter(([key]) =>
+        ['fg1', 'fg2', 'grey', 'red', 'green', 'yellow', 'blue', 'purple', 'aqua', 'orange'].includes(key) ||
+        key.startsWith('token') || key.startsWith('bright'),
       )
-      const accents = [
-        rosepine.love,
-        rosepine.pine,
-        rosepine.gold,
-        rosepine.foam,
-        rosepine.iris,
-        rosepine.rose,
-        rosepine.rose,
-      ]
-      assert.deepEqual(
-        [
-          unified.red,
-          unified.green,
-          unified.yellow,
-          unified.blue,
-          unified.purple,
-          unified.aqua,
-          unified.orange,
-        ],
-        accents,
-      )
-      assert.deepEqual(
-        [
-          unified.brightRed,
-          unified.brightGreen,
-          unified.brightYellow,
-          unified.brightBlue,
-          unified.brightPurple,
-          unified.brightAqua,
-          unified.brightOrange,
-        ],
-        accents,
-      )
-      assert.deepEqual(
-        [unified.black, unified.white, unified.grey, unified.pink],
-        [rosepine.overlay, rosepine.text, rosepine.muted, rosepine.love],
-      )
-      assert.equal(unified.tokenComment, rosepine.subtle)
-      assert.deepEqual(
-        [unified.diffDel, unified.diffDelInline, unified.diffAdd, unified.diffAddInline],
-        diff,
-      )
+      for (const [role, color] of foregrounds) {
+        for (const background of [unified.bg0, unified.bg1, unified.bg2]) {
+          const minimum = variant === 'dawn' ? 6 : 4.5
+          assert.ok(contrast(color, background) >= minimum, `${variant}/${role} on ${background}`)
+        }
+      }
+      if (variant === 'dawn') {
+        assert.ok(contrast(unified.fg1, unified.bg0) >= 12)
+        for (const color of [unified.fg3, unified.fg4]) {
+          assert.ok(contrast(color, unified.bg2) >= 4.5)
+        }
+      }
+      for (const background of [
+        unified.bg3,
+        unified.diffAdd,
+        unified.diffAddInline,
+        unified.diffDel,
+        unified.diffDelInline,
+      ]) {
+        assert.ok(contrast(unified.fg1, background) >= 4.5, `${variant}/text on ${background}`)
+      }
+      assert.ok(contrast(unified.green, unified.diffAdd) >= 4.5)
+      assert.ok(contrast(unified.red, unified.diffDel) >= 4.5)
+      assert.ok(contrast(unified.diffAdd, unified.diffAddInline) >= 1.15)
+      assert.ok(contrast(unified.diffDel, unified.diffDelInline) >= 1.15)
+      assert.notEqual(unified.tokenNumber, unified.tokenString)
     })
   }
 })

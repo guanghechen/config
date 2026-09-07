@@ -47,7 +47,10 @@ export default {
     settings.profiles.defaults.useAcrylic = true
     settings.profiles.defaults.font = settings.profiles.defaults.font || {}
     settings.profiles.defaults.font.face = 'Maple Mono NF CN'
-    settings.profiles.defaults.font.weight = 'normal'
+    // Dawn's small text needs more stroke weight against its pale background.
+    settings.profiles.defaults.font.weight = scheme.theme === 'rosepine' && !scheme.darken
+      ? 'medium'
+      : 'normal'
     settings.profiles.defaults.font.features = {
       cv61: 1,
       cv62: 1,

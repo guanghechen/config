@@ -8,16 +8,16 @@ function M.setup(config)
   config.colors = {
     -- Primary colors
     background    = "{{rosepine.base}}",
-    foreground    = "{{rosepine.text}}",
+    foreground    = "{{unified.fg1}}",
 
     -- Cursor colors
-    cursor_bg     = "{{rosepine.text}}",
+    cursor_bg     = "{{unified.aqua}}",
     cursor_fg     = "{{rosepine.base}}",
-    cursor_border = "{{rosepine.text}}",
+    cursor_border = "{{unified.aqua}}",
 
     -- Selection colors
     selection_bg  = "{{rosepine.highlightMed}}",
-    selection_fg  = "{{rosepine.text}}",
+    selection_fg  = "{{unified.fg1}}",
 
     -- Split separator color
     split         = "{{rosepine.highlightHigh}}",
@@ -29,7 +29,7 @@ function M.setup(config)
     visual_bell   = "{{rosepine.overlay}}",
 
     -- Compose cursor (for IME)
-    compose_cursor = "{{rosepine.rose}}",
+    compose_cursor = "{{unified.aqua}}",
 
     -- Normal colors
     ansi = {
@@ -57,8 +57,8 @@ function M.setup(config)
 
     -- Indexed colors (extended palette)
     indexed = {
-      [16] = "{{rosepine.rose}}",
-      [17] = "{{rosepine.love}}",
+      [16] = "{{unified.aqua}}",
+      [17] = "{{unified.red}}",
     },
 
     -- Tab bar colors
@@ -67,27 +67,27 @@ function M.setup(config)
 
       active_tab = {
         bg_color = "{{rosepine.overlay}}",
-        fg_color = "{{rosepine.text}}",
+        fg_color = "{{unified.aqua}}",
       },
 
       inactive_tab = {
         bg_color = "{{rosepine.base}}",
-        fg_color = "{{rosepine.muted}}",
+        fg_color = "{{unified.fg2}}",
       },
 
       inactive_tab_hover = {
         bg_color = "{{rosepine.surface}}",
-        fg_color = "{{rosepine.text}}",
+        fg_color = "{{unified.fg1}}",
       },
 
       new_tab = {
         bg_color = "{{rosepine.surface}}",
-        fg_color = "{{rosepine.muted}}",
+        fg_color = "{{unified.fg2}}",
       },
 
       new_tab_hover = {
         bg_color = "{{rosepine.overlay}}",
-        fg_color = "{{rosepine.text}}",
+        fg_color = "{{unified.fg1}}",
       },
 
       inactive_tab_edge = "{{rosepine.highlightMed}}",
@@ -97,16 +97,16 @@ function M.setup(config)
   -- Window frame colors
   config.window_frame = {
     active_titlebar_bg = "{{rosepine.surface}}",
-    active_titlebar_fg = "{{rosepine.text}}",
+    active_titlebar_fg = "{{unified.fg1}}",
     inactive_titlebar_bg = "{{rosepine.surface}}",
-    inactive_titlebar_fg = "{{rosepine.muted}}",
-    button_fg = "{{rosepine.text}}",
+    inactive_titlebar_fg = "{{unified.fg2}}",
+    button_fg = "{{unified.fg1}}",
     button_bg = "{{rosepine.base}}",
   }
 
   -- Command palette colors
   config.command_palette_bg_color = "{{rosepine.surface}}"
-  config.command_palette_fg_color = "{{rosepine.text}}"
+  config.command_palette_fg_color = "{{unified.fg1}}"
 end
 
 return M

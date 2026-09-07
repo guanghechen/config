@@ -179,6 +179,17 @@ echo $env:GHC_THEME
 
 ### Theme Templates
 
+Rosé Pine keeps its named swatches in `palette.rosepine`; `palette.unified`
+provides custom readable foregrounds for app UI and syntax. Terminal ANSI slots
+reference the original palette directly and follow the official Ghostty port:
+green uses pine, blue uses foam, cyan uses rose; the six accent colors are shared
+between normal and bright slots. Ordinary terminal text uses `unified.fg1`.
+Dawn pairs ink-colored body text with deeper accents and Medium weight in
+Windows Terminal; Main and Moon lift pine and secondary text where needed.
+Use `fg1` on neutral selections and `bg0` on solid accent fills;
+reserve `muted` for disabled elements. Diff backgrounds are separate from
+foreground accents so inline changes remain readable.
+
 Each app directory contains validated metadata and Handlebars templates:
 
 ```js
