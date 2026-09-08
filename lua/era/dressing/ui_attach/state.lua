@@ -76,6 +76,8 @@ local __module_name__ = "era.dressing.ui_attach.state" ---@type string
 ---@field public highlights             stl.t.IHighlight[]
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
+---@field public content_width          integer|nil
+---@field public rendered_width         integer|nil
 
 ---@class era.dressing.ui_attach.state
 ---@field public cmdline                era.dressing.ui_attach.cmdline.IState[]

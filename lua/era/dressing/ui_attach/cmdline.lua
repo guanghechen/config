@@ -447,6 +447,32 @@ function M._update_cmdline_position(state, winnr)
   }
 end
 
+---@param width                         integer
+---@return integer
+local function constrain_block_width(width)
+  return math.max(20, math.min(width, math.floor(vim.o.columns * 0.9)))
+end
+
+---@param width                         integer
+---@param line_count                    integer
+---@return vim.api.keyset.win_config
+local function create_block_window_config(width, line_count)
+  local height = math.min(line_count, math.max(1, math.floor(vim.o.lines * 0.6))) ---@type integer
+  return {
+    zindex = dot.var.zindex.CMDLINE_BLOCK,
+    relative = "editor",
+    width = width,
+    height = height,
+    row = math.max(0, math.floor((vim.o.lines - height) / 2)),
+    col = math.max(0, math.floor((vim.o.columns - width) / 2)),
+    style = "minimal",
+    border = "rounded",
+    title = " Command Window ",
+    title_pos = "center",
+    focusable = false,
+  }
+end
+
 ---@param block                         era.dressing.ui_attach.cmdline_block.IState
 ---@return nil
 function M._render_block(block)
@@ -466,31 +492,14 @@ function M._render_block(block)
     vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
 
-  local width = 0 ---@type integer
+  local content_width = 0 ---@type integer
   for _, line in ipairs(block.lines) do
     local w = vim.api.nvim_strwidth(line)
-    width = w > width and w or width
+    content_width = w > content_width and w or content_width
   end
-  width = math.max(20, math.min(width, math.floor(vim.o.columns * 0.9)))
+  local width = constrain_block_width(content_width) ---@type integer
 
-  local height = math.min(#block.lines, math.max(1, math.floor(vim.o.lines * 0.6))) ---@type integer
-  local row = math.max(0, math.floor((vim.o.lines - height) / 2)) ---@type integer
-  local col = math.max(0, math.floor((vim.o.columns - width) / 2)) ---@type integer
-
-  ---@type vim.api.keyset.win_config
-  local wincfg = {
-    zindex = dot.var.zindex.CMDLINE_BLOCK,
-    relative = "editor",
-    width = width,
-    height = height,
-    row = row,
-    col = col,
-    style = "minimal",
-    border = "rounded",
-    title = " Command Window ",
-    title_pos = "center",
-    focusable = false,
-  }
+  local wincfg = create_block_window_config(width, #block.lines)
 
   local winnr = block.winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -534,6 +543,53 @@ function M._render_block(block)
   end
 
   vim.api.nvim__redraw({ win = winnr, flush = true })
+  block.content_width = content_width
+  block.rendered_width = width
+end
+
+---@param block                         era.dressing.ui_attach.cmdline_block.IState
+---@param line                          string
+---@param highlights                    stl.t.IHighlight[]
+---@param previous_line_count           integer
+---@return boolean
+local function try_append_block_line(block, line, highlights, previous_line_count)
+  local bufnr = block.bufnr ---@type integer|nil
+  local winnr = block.winnr ---@type integer|nil
+  local content_width = block.content_width ---@type integer|nil
+  local width = block.rendered_width ---@type integer|nil
+  if
+    bufnr == nil
+    or winnr == nil
+    or content_width == nil
+    or width == nil
+    or not vim.api.nvim_buf_is_valid(bufnr)
+    or not vim.api.nvim_win_is_valid(winnr)
+    or vim.api.nvim_win_get_buf(winnr) ~= bufnr
+    or vim.api.nvim_buf_line_count(bufnr) ~= previous_line_count
+    or vim.api.nvim_win_get_width(winnr) ~= width
+  then
+    return false
+  end
+
+  local next_content_width = math.max(content_width, vim.api.nvim_strwidth(line)) ---@type integer
+  if constrain_block_width(next_content_width) ~= width then
+    return false
+  end
+
+  local wincfg = create_block_window_config(width, #block.lines)
+  vim.api.nvim_win_set_config(winnr, wincfg)
+
+  vim.api.nvim_buf_set_lines(bufnr, previous_line_count, previous_line_count, false, {
+    stl.string.pad_end(line, width, " "),
+  })
+  for _, hl in ipairs(highlights) do
+    local row = hl.lnum - 1 ---@type integer
+    vim.hl.range(bufnr, nsnrs.cmdline, hl.hlname, { row, hl.coll }, { row, hl.colr })
+  end
+
+  vim.api.nvim__redraw({ win = winnr, flush = true })
+  block.content_width = next_content_width
+  return true
 end
 
 ---@param state                         era.dressing.ui_attach.cmdline.IState
@@ -750,7 +806,9 @@ function M.block_append(task)
     hl.lnum = hl.lnum + base
     block.highlights[#block.highlights + 1] = hl
   end
-  M._render_block(block)
+  if #lines ~= 1 or not try_append_block_line(block, lines[1], highlights, base) then
+    M._render_block(block)
+  end
 end
 
 ---@param task                          era.dressing.ui_attach.ITask
@@ -760,6 +818,8 @@ function M.block_hide(task)
   local block = states.cmdline_block
   block.lines = {}
   block.highlights = {}
+  block.content_width = nil
+  block.rendered_width = nil
 
   local winnr = block.winnr ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then

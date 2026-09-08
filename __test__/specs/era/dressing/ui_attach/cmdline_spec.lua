@@ -10,7 +10,7 @@ local function setup()
   t:patch_global("dot", {
     var = {
       nsnr = { cmdline = 1 },
-      zindex = { CMDLINE = 100 },
+      zindex = { CMDLINE = 100, CMDLINE_BLOCK = 200 },
     },
   })
   t:patch_global("stl", {
@@ -22,6 +22,7 @@ local function setup()
         SearchBackward = "B",
       },
     },
+    string = require("stl.string"),
   })
   t:patch_table(vim, "g", { ui_cmdline_pos = { 5, 7 } })
 
@@ -419,6 +420,111 @@ t:test("cmdline block append accepts one line of chunks", function()
 
   t.assert_eq("function Foo()", states.cmdline_block.lines[1], "block first line")
   t.assert_eq("  echo 'x'", states.cmdline_block.lines[2], "block appended line")
+end)
+
+t:test("cmdline block append renders only the new line when layout width is stable", function()
+  local cmdline, states = setup()
+  local block = states.cmdline_block
+  local buffer_update = nil ---@type table|nil
+  local window_config = nil ---@type table|nil
+  local ranges = {} ---@type table[]
+  local redraws = 0
+  local full_renders = 0
+
+  block.lines = { "existing" }
+  block.highlights = {}
+  block.bufnr = 10
+  block.winnr = 20
+  block.content_width = 8
+  block.rendered_width = 20
+
+  t:patch_table(vim.api, "nvim_buf_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_get_buf", function()
+    return 10
+  end)
+  t:patch_table(vim.api, "nvim_buf_line_count", function()
+    return 1
+  end)
+  t:patch_table(vim.api, "nvim_win_get_width", function()
+    return 20
+  end)
+  t:patch_table(vim.api, "nvim_buf_set_lines", function(bufnr, start, finish, strict, lines)
+    buffer_update = { bufnr, start, finish, strict, lines }
+  end)
+  t:patch_table(vim.api, "nvim_win_set_config", function(_, config)
+    window_config = config
+  end)
+  t:patch_table(vim.api, "nvim__redraw", function()
+    redraws = redraws + 1
+  end)
+  t:patch_table(vim.fn, "synIDattr", function(hlid)
+    return "Group" .. hlid
+  end)
+  t:patch_table(vim.hl, "range", function(_, _, hlname, from, to)
+    ranges[#ranges + 1] = { hlname = hlname, from = from, to = to }
+  end)
+  cmdline._render_block = function()
+    full_renders = full_renders + 1
+  end
+
+  cmdline.block_append({ event = "cmdline_block_append", args = { { { 0, "x", 11 }, { 0, "y", 12 } } } })
+
+  t.assert_eq(0, full_renders, "full render count")
+  t.assert_true(vim.deep_equal({ 10, 1, 1, false }, vim.list_slice(buffer_update, 1, 4)), "buffer range")
+  t.assert_eq("xy                  ", buffer_update[5][1], "padded line")
+  t.assert_eq(2, window_config.height, "window height")
+  t.assert_eq(8, block.content_width, "content width")
+  t.assert_eq(2, #ranges, "highlight count")
+  t.assert_true(vim.deep_equal({ 1, 0 }, ranges[1].from), "first highlight start")
+  t.assert_true(vim.deep_equal({ 1, 1 }, ranges[1].to), "first highlight end")
+  t.assert_true(vim.deep_equal({ 1, 1 }, ranges[2].from), "second highlight start")
+  t.assert_true(vim.deep_equal({ 1, 2 }, ranges[2].to), "second highlight end")
+  t.assert_eq(1, redraws, "redraw count")
+end)
+
+t:test("cmdline block append falls back when the new line changes width", function()
+  local cmdline, states = setup()
+  local block = states.cmdline_block
+  local full_renders = 0
+
+  block.lines = { "existing" }
+  block.highlights = {}
+  block.bufnr = 10
+  block.winnr = 20
+  block.content_width = 8
+  block.rendered_width = 20
+
+  t:patch_table(vim.api, "nvim_buf_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_get_buf", function()
+    return 10
+  end)
+  t:patch_table(vim.api, "nvim_buf_line_count", function()
+    return 1
+  end)
+  t:patch_table(vim.api, "nvim_win_get_width", function()
+    return 20
+  end)
+  cmdline._render_block = function()
+    full_renders = full_renders + 1
+  end
+
+  cmdline.block_append({
+    event = "cmdline_block_append",
+    args = { { { 0, string.rep("x", 21), 0 } } },
+  })
+
+  t.assert_eq(1, full_renders, "full render count")
+  t.assert_eq(2, #block.lines, "line count")
 end)
 
 t:test("cmdline block highlights use hl_id and byte columns", function()
