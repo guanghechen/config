@@ -1,0 +1,6 @@
+model = "gpt-6-astra"
+model_provider = "copilot"
+model_reasoning_effort = "low"
+
+[features.context_management]
+experimental_mode = true
