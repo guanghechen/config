@@ -34,10 +34,11 @@ local __module_name__ = "era.dressing.ui_attach.state" ---@type string
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
----Message state is owned by `era.dressing.ui_attach.messages`: UI events flow into
----ordered groups or status fields, then into their renderers. Clears replace
----state first and schedule notifier dismissal; handler failures abort only the
----current event and are not retried.
+---Message state is owned by `era.dressing.ui_attach.messages`: UI events update
+---ordered groups or status fields synchronously, while notifier snapshots are
+---coalesced per ui_attach task batch. Clears retain historical snapshots
+---silently, discard ephemeral ones, then dismiss groups. A report failure drops
+---only that group's snapshot.
 ---@class era.dressing.ui_attach.message.IState
 ---@field public history_bufnr          integer|nil
 ---@field public history_winnr          integer|nil

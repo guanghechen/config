@@ -7,6 +7,9 @@ local t = harness.new("era.dressing.ui_attach.messages")
 
 ---@class era.dressing.ui_attach.messages.test.IRuntime
 ---@field deferred                      fun()[]
+---@field errors                        table[]
+---@field fail_message                  string|nil
+---@field flush                         fun(): nil
 ---@field reports                       { level: integer, options: table }[]
 ---@field scheduled                     fun()[]
 ---@field transient                     string
@@ -22,6 +25,9 @@ local t = harness.new("era.dressing.ui_attach.messages")
 local function setup()
   local runtime = {
     deferred = {},
+    errors = {},
+    fail_message = nil,
+    flush = function() end,
     reports = {},
     scheduled = {},
     transient = "",
@@ -79,11 +85,20 @@ local function setup()
     },
   })
   t:patch_global("stl", {
+    debug = {
+      log_silent = function() end,
+    },
     reporter = {
       dismiss = function(group)
         runtime.dismissed[#runtime.dismissed + 1] = group
       end,
+      error = function(options)
+        runtime.errors[#runtime.errors + 1] = options
+      end,
       log = function(level, options)
+        if options.message == runtime.fail_message then
+          error("report failure")
+        end
         runtime.reports[#runtime.reports + 1] = { level = level, options = options }
       end,
     },
@@ -108,6 +123,7 @@ local function setup()
   })
 
   local messages = assert(loadfile("lua/era/dressing/ui_attach/messages.lua"))()
+  runtime.flush = messages.flush
   return messages, runtime
 end
 
@@ -116,6 +132,7 @@ local next_task_id = 0
 ---@param runtime                       era.dressing.ui_attach.messages.test.IRuntime
 ---@return nil
 local function run_scheduled(runtime)
+  runtime.flush()
   while #runtime.scheduled > 0 do
     local callback = table.remove(runtime.scheduled, 1)
     callback()
@@ -151,6 +168,7 @@ t:test("progress is shown transiently without a popup", function()
   local messages, runtime = setup()
 
   messages.show(create_task("progress", '"test.json" 31L, 848B'))
+  run_scheduled(runtime)
 
   t.assert_eq('"test.json" 31L, 848B', runtime.transient, "statusline message")
   t.assert_eq(1, #runtime.deferred, "clear callback")
@@ -165,6 +183,7 @@ t:test("a stale timeout does not clear a newer progress message", function()
 
   messages.show(create_task("progress", "first"))
   messages.show(create_task("progress", "second"))
+  run_scheduled(runtime)
 
   runtime.deferred[1]()
   t.assert_eq("second", runtime.transient, "stale timeout")
@@ -178,6 +197,7 @@ t:test("transient display normalizes control characters without changing history
   local message = "first\n\tsecond\rthird"
 
   messages.show(create_task("progress", message))
+  run_scheduled(runtime)
 
   t.assert_eq("first second third", runtime.transient, "statusline message")
   t.assert_eq(message, runtime.reports[1].options.message, "history message")
@@ -187,6 +207,7 @@ t:test("ordinary info remains a popup", function()
   local messages, runtime = setup()
 
   messages.show(create_task("info", "important info"))
+  run_scheduled(runtime)
 
   t.assert_eq("", runtime.transient, "statusline message")
   t.assert_eq(0, #runtime.deferred, "clear callback")
@@ -198,31 +219,78 @@ t:test("same message id updates one notifier group", function()
   local messages, runtime = setup()
 
   messages.show(create_task("echomsg", "first", { id = 7 }))
+  run_scheduled(runtime)
   messages.show(create_task("echomsg", "second", { id = 7 }))
+  run_scheduled(runtime)
 
   t.assert_eq(2, #runtime.reports, "report count")
   t.assert_eq(runtime.reports[1].options.group, runtime.reports[2].options.group, "stable group")
   t.assert_eq("second", runtime.reports[2].options.message, "updated message")
 end)
 
+t:test("coalesced updates retain explicit message history", function()
+  local messages, runtime = setup()
+
+  messages.show(create_task("echomsg", "first", { history = true, id = 7 }))
+  messages.show(create_task("echomsg", "second", { history = false, id = 7 }))
+  run_scheduled(runtime)
+
+  t.assert_eq(1, #runtime.reports, "report count")
+  t.assert_eq("second", runtime.reports[1].options.message, "latest message")
+  t.assert_false(runtime.reports[1].options.anonymous, "history retention")
+end)
+
+t:test("coalesced updates retain history implied by earlier message kinds", function()
+  local messages, runtime = setup()
+
+  messages.show(create_task("progress", "progress", { history = false, id = 7 }))
+  messages.show(create_task("info", "after progress", { history = false, id = 7 }))
+  messages.show(create_task("echo", "echo", { history = false, id = 8 }))
+  messages.show(create_task("info", "after echo", { history = false, id = 8 }))
+  run_scheduled(runtime)
+
+  t.assert_eq(2, #runtime.reports, "report count")
+  t.assert_eq("after progress", runtime.reports[1].options.message, "transient group snapshot")
+  t.assert_false(runtime.reports[1].options.anonymous, "transient history retention")
+  t.assert_eq("after echo", runtime.reports[2].options.message, "echo group snapshot")
+  t.assert_false(runtime.reports[2].options.anonymous, "echo history retention")
+end)
+
 t:test("append combines message ids and preserves later updates", function()
   local messages, runtime = setup()
+  local states = require("era.dressing.ui_attach.state")
 
   messages.show(create_task("echo", "A", { id = 1 }))
   messages.show(create_task("echo", "B", { append = true, id = 2 }))
   messages.show(create_task("echo", "C", { id = 2 }))
+  t.assert_eq(0, #runtime.reports, "reports before batch flush")
+  run_scheduled(runtime)
 
-  t.assert_eq(runtime.reports[1].options.group, runtime.reports[2].options.group, "append group")
-  t.assert_eq(runtime.reports[2].options.group, runtime.reports[3].options.group, "update group")
-  t.assert_eq("AB", runtime.reports[2].options.message, "appended message")
-  t.assert_eq("AC", runtime.reports[3].options.message, "updated appended part")
+  t.assert_eq(1, #runtime.reports, "coalesced report count")
+  t.assert_eq(states.message.id_refs[1].group, states.message.id_refs[2].group, "append group")
+  t.assert_eq(states.message.id_refs[1].group, runtime.reports[1].options.group, "reported group")
+  t.assert_eq("AC", runtime.reports[1].options.message, "updated appended part")
+end)
+
+t:test("large append bursts render once per batch", function()
+  local messages, runtime = setup()
+
+  for id = 1, 1000 do
+    messages.show(create_task("echo", "x", { append = id > 1, id = id }))
+  end
+  run_scheduled(runtime)
+
+  t.assert_eq(1, #runtime.reports, "report count")
+  t.assert_eq(1000, #runtime.reports[1].options.message, "message length")
 end)
 
 t:test("replace_last reuses the previous notifier group", function()
   local messages, runtime = setup()
 
   messages.show(create_task("echo", "first", { id = 1 }))
+  run_scheduled(runtime)
   messages.show(create_task("echo", "second", { id = 2, replace_last = true }))
+  run_scheduled(runtime)
 
   t.assert_eq(runtime.reports[1].options.group, runtime.reports[2].options.group, "replacement group")
   t.assert_eq("second", runtime.reports[2].options.message, "replacement message")
@@ -254,6 +322,7 @@ t:test("standalone empty clears visible message state", function()
   })
   run_scheduled(runtime)
   messages.show(create_task("echo", "B", { append = true, id = 1 }))
+  run_scheduled(runtime)
 
   t.assert_eq(2, #runtime.reports, "report count")
   t.assert_eq("B", runtime.reports[2].options.message, "post-clear append")
@@ -269,6 +338,47 @@ t:test("msg_clear resets transient state without changing search state", functio
 
   t.assert_eq("", runtime.transient, "transient state")
   t.assert_eq(0, runtime.searching_updates, "search state")
+end)
+
+t:test("msg_clear silently retains pending history before dismissing groups", function()
+  local messages, runtime = setup()
+  local states = require("era.dressing.ui_attach.state")
+
+  messages.show(create_task("info", "retained", { history = true, id = 1 }))
+  local group = states.message.id_refs[1].group
+  messages.clear({ event = "msg_clear", args = {} })
+  run_scheduled(runtime)
+
+  t.assert_eq(1, #runtime.reports, "report count")
+  t.assert_eq("retained", runtime.reports[1].options.message, "history snapshot")
+  t.assert_true(runtime.reports[1].options.silent, "hidden notification")
+  t.assert_false(runtime.reports[1].options.anonymous, "history retention")
+  t.assert_eq(group, runtime.reports[1].options.group, "reported group")
+  t.assert_eq(group, runtime.dismissed[1], "dismissed group")
+end)
+
+t:test("msg_clear discards pending anonymous reports", function()
+  local messages, runtime = setup()
+
+  messages.show(create_task("info", "ephemeral", { history = false, id = 1 }))
+  messages.clear({ event = "msg_clear", args = {} })
+  run_scheduled(runtime)
+
+  t.assert_eq(0, #runtime.reports, "report count")
+  t.assert_eq(1, #runtime.dismissed, "dismissed group count")
+end)
+
+t:test("one failed report does not abort later groups", function()
+  local messages, runtime = setup()
+  runtime.fail_message = "failure"
+
+  messages.show(create_task("echo", "failure", { id = 1 }))
+  messages.show(create_task("echo", "success", { id = 2 }))
+  run_scheduled(runtime)
+
+  t.assert_eq(1, #runtime.errors, "reported errors")
+  t.assert_eq(1, #runtime.reports, "successful reports")
+  t.assert_eq("success", runtime.reports[1].options.message, "continued group")
 end)
 
 t:test("search count publishes window-scoped winline state", function()
@@ -309,6 +419,7 @@ t:test("emsg is reported as an error instead of waiting for a prompt", function(
   local states = require("era.dressing.ui_attach.state")
 
   messages.show(create_task("emsg", "failure", { id = 1 }))
+  run_scheduled(runtime)
 
   t.assert_eq(1, #runtime.reports, "error report")
   t.assert_eq(vim.log.levels.ERROR, runtime.reports[1].level, "error level")

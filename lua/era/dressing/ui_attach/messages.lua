@@ -19,11 +19,20 @@ local TRANSIENT_TIMEOUT = 3000
 
 local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 local transient_generation = 0
+
+---@class era.dressing.ui_attach.messages.IPendingReport
+---@field public retain                 boolean
+---@field public task                   era.dressing.ui_attach.ITask
+
+-- State updates remain synchronous; notifier snapshots are coalesced by group
+-- until the ui_attach task queue explicitly flushes them.
 local batch = {
   generation = 0,
   scheduled = false,
   has_empty = false,
   has_message = false,
+  report_order = {}, ---@type string[]
+  reports = {}, ---@type table<string, era.dressing.ui_attach.messages.IPendingReport>
 }
 
 local kind_2_level_map = {
@@ -51,6 +60,12 @@ local function update_statusline_message(observable, value)
 end
 
 ---@return nil
+local function reset_pending_reports()
+  batch.report_order = {}
+  batch.reports = {}
+end
+
+---@return nil
 local function reset_visible_messages()
   local groups = states.message.groups
   transient_generation = transient_generation + 1
@@ -58,6 +73,7 @@ local function reset_visible_messages()
   states.message.groups = {}
   states.message.id_refs = {}
   states.message.last_ref = nil
+  reset_pending_reports()
   update_statusline_message(dot.state.status.msg_transient, "")
 
   if next(groups) ~= nil then
@@ -75,32 +91,6 @@ local function reset_message_batch()
   batch.scheduled = false
   batch.has_empty = false
   batch.has_message = false
-end
-
----@param empty                         boolean
----@return nil
-local function track_message_batch(empty)
-  batch.has_empty = batch.has_empty or empty
-  batch.has_message = batch.has_message or not empty
-  if batch.scheduled then
-    return
-  end
-
-  batch.scheduled = true
-  local generation = batch.generation
-  vim.schedule(function()
-    if batch.generation ~= generation then
-      return
-    end
-
-    local should_clear = batch.has_empty and not batch.has_message
-    batch.scheduled = false
-    batch.has_empty = false
-    batch.has_message = false
-    if should_clear then
-      reset_visible_messages()
-    end
-  end)
 end
 
 ---@param id                            integer|string
@@ -159,14 +149,14 @@ end
 ---@return string
 ---@return stl.t.IHighlight[]
 local function render_group(group)
-  local message = ""
+  local message_parts = {} ---@type string[]
   local highlights = {} ---@type stl.t.IHighlight[]
   local lnum, col_offset = 1, 0 ---@type integer, integer
 
   for _, part in ipairs(group.parts) do
     for _, item in ipairs(part.content) do
       local _, text, hlid = unpack(item) ---@type integer, string, integer
-      message = message .. text
+      message_parts[#message_parts + 1] = text
 
       local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
       local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
@@ -188,7 +178,7 @@ local function render_group(group)
     end
   end
 
-  return message, highlights
+  return table.concat(message_parts), highlights
 end
 
 ---@param message                       string
@@ -204,6 +194,126 @@ local function show_transient_message(message)
       update_statusline_message(dot.state.status.msg_transient, "")
     end
   end, TRANSIENT_TIMEOUT)
+end
+
+---@param group                         era.dressing.ui_attach.message.IGroup
+---@param pending                       era.dressing.ui_attach.messages.IPendingReport
+---@param clearing                      boolean|nil
+---@return nil
+local function report_group(group, pending, clearing)
+  local task = pending.task
+  local kind = task.args[1] ---@type string
+  local message, highlights = render_group(group)
+  local transient = KIND_MAP.TRANSIENT[kind] == true ---@type boolean
+
+  if transient and not clearing then
+    show_transient_message(message)
+  end
+
+  local level = kind_2_level_map[kind] or vim.log.levels.INFO
+  local title = #kind > 0 and string.format("%s | %s", task.event, kind) or task.event ---@type string
+  local anonymous = not pending.retain ---@type boolean
+  local silent = clearing == true or transient ---@type boolean
+  if clearing then
+    anonymous = false
+  end
+  stl.reporter.log(level, {
+    from = __module_name__,
+    title = title,
+    message = message,
+    group = group.key,
+    highlights = highlights,
+    timeout = 3000,
+    anonymous = anonymous,
+    silent = silent,
+  })
+end
+
+---@param task                          era.dressing.ui_attach.ITask
+---@param err                           string
+---@return nil
+local function report_group_error(task, err)
+  local options = {
+    from = __module_name__,
+    message = string.format("failed to report batched UI message | %s", task.event),
+    details = {
+      event = task.event,
+      args = task.args,
+      error = err,
+    },
+    anonymous = false,
+  }
+  local reported = pcall(stl.reporter.error, options)
+  if not reported then
+    stl.debug.log_silent(options.message, options.details)
+  end
+end
+
+---@param clearing                      boolean|nil
+---@return nil
+local function flush_message_reports(clearing)
+  if #batch.report_order == 0 then
+    return
+  end
+
+  local report_order = batch.report_order
+  local reports = batch.reports
+  reset_pending_reports()
+
+  for _, key in ipairs(report_order) do
+    local pending = reports[key] ---@type era.dressing.ui_attach.messages.IPendingReport|nil
+    local group = states.message.groups[key] ---@type era.dressing.ui_attach.message.IGroup|nil
+    if pending ~= nil and group ~= nil and (not clearing or pending.retain) then
+      local ok, err = xpcall(function()
+        report_group(group, pending, clearing)
+      end, debug.traceback)
+      if not ok then
+        report_group_error(pending.task, tostring(err))
+      end
+    end
+  end
+end
+
+---@param group                         era.dressing.ui_attach.message.IGroup
+---@param task                          era.dressing.ui_attach.ITask
+---@return nil
+local function queue_message_report(group, task)
+  local key = group.key
+  local pending = batch.reports[key] ---@type era.dressing.ui_attach.messages.IPendingReport|nil
+  if pending == nil then
+    batch.report_order[#batch.report_order + 1] = key
+    pending = { retain = false, task = task }
+    batch.reports[key] = pending
+  end
+  local kind = task.args[1] ---@type string
+  pending.retain = pending.retain or KIND_MAP.TRANSIENT[kind] == true or kind == "echo" or task.args[4] == true
+  pending.task = task
+end
+
+---@param empty                         boolean
+---@return nil
+local function track_message_batch(empty)
+  batch.has_empty = batch.has_empty or empty
+  batch.has_message = batch.has_message or not empty
+  if batch.scheduled then
+    return
+  end
+
+  batch.scheduled = true
+  local generation = batch.generation
+  vim.schedule(function()
+    if batch.generation ~= generation then
+      return
+    end
+
+    local should_clear = batch.has_empty and not batch.has_message
+    batch.scheduled = false
+    batch.has_empty = false
+    batch.has_message = false
+    if should_clear then
+      reset_visible_messages()
+    end
+  end)
 end
 
 ---@param content                      era.dressing.ui_attach.IContent
@@ -232,8 +342,14 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.clear(task)
+  flush_message_reports(true)
   reset_message_batch()
   reset_visible_messages()
+end
+
+---@return nil
+function M.flush()
+  flush_message_reports()
 end
 
 ---@param task                          era.dressing.ui_attach.ITask
@@ -342,11 +458,10 @@ end
 ---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 function M.show(task)
-  local kind, content, replace_last, history, append, id = unpack(task.args)
+  local kind, content, replace_last, _, append, id = unpack(task.args)
   ---@cast kind                         string
   ---@cast content                      era.dressing.ui_attach.IContent
   ---@cast replace_last                 boolean
-  ---@cast history                      boolean
   ---@cast append                       boolean
   ---@cast id                           integer|string
 
@@ -381,28 +496,8 @@ function M.show(task)
     return
   end
 
-  local level = kind_2_level_map[kind] or vim.log.levels.INFO
-  local title = #kind > 0 and string.format("%s | %s", task.event, kind) or task.event ---@type string
-
   local group = update_visible_message(id, content, replace_last, append)
-  local message, highlights = render_group(group)
-
-  if KIND_MAP.TRANSIENT[kind] == true then
-    show_transient_message(message)
-  end
-
-  local anonymous = KIND_MAP.TRANSIENT[kind] ~= true and kind ~= "echo" and not history ---@type boolean
-  local silent = KIND_MAP.TRANSIENT[kind] == true ---@type boolean
-  stl.reporter.log(level, {
-    from = __module_name__,
-    title = title,
-    message = message,
-    group = group.key,
-    highlights = highlights,
-    timeout = 3000,
-    anonymous = anonymous,
-    silent = silent,
-  })
+  queue_message_report(group, task)
 end
 
 ---@param task                          era.dressing.ui_attach.ITask

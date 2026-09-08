@@ -18,6 +18,7 @@ local t = harness.new(module_name .. ".init")
 ---@field events                         string[]
 ---@field fail_id                        integer|nil
 ---@field fast                           boolean
+---@field flush_calls                    integer
 ---@field escape                         fun(): string
 ---@field hunk_nav_clears                integer
 ---@field search_clears                  integer
@@ -36,6 +37,7 @@ local function setup(initially_enabled)
     errors = {},
     events = {},
     fast = false,
+    flush_calls = 0,
     hunk_nav_clears = 0,
     search_clears = 0,
     searching = false,
@@ -119,6 +121,9 @@ local function setup(initially_enabled)
   })
   t:patch_table(package.loaded, "era.dressing.ui_attach.messages", {
     clear = record,
+    flush = function()
+      runtime.flush_calls = runtime.flush_calls + 1
+    end,
     history_show = record,
     ruler = record,
     show = record,
@@ -180,6 +185,7 @@ t:test("dressing attaches once and preserves queued UI events and the escape bin
   runtime.callback("msg_show", "echo", {}, false, false, false, 2, "")
   runtime.timer.callback()
   t.assert_true(vim.deep_equal({ "msg_show:1", "msg_show:2" }, runtime.events), "pending events remain ordered")
+  t.assert_eq(1, runtime.flush_calls, "message flush count")
 
   runtime.enabled = false
   runtime.module.dressing()
@@ -224,6 +230,7 @@ t:test("fast event queue is lossless and ordered", function()
   t.assert_eq(600, #runtime.events, "event count")
   t.assert_eq("msg_show:1", runtime.events[1], "first event")
   t.assert_eq("msg_show:600", runtime.events[600], "last event")
+  t.assert_eq(1, runtime.flush_calls, "message flush count")
 end)
 
 t:test("escape clears search state together with hlsearch", function()

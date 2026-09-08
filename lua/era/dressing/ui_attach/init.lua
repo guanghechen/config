@@ -142,6 +142,17 @@ function M.dressing()
     tasks = {}
     task_head = 1
     processing = false
+
+    -- Flush once after draining the task queue so api-fast `msg_show` bursts
+    -- expose only their final notifier snapshots.
+    local messages = package.loaded["era.dressing.ui_attach.messages"] ---@type era.dressing.ui_attach.messages|nil
+    if messages ~= nil then
+      local ok, err = xpcall(messages.flush, debug.traceback)
+      if not ok then
+        local task = { event = "msg_flush", args = {} } ---@type era.dressing.ui_attach.ITask
+        report_task_error(task, tostring(err))
+      end
+    end
   end
 
   local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
