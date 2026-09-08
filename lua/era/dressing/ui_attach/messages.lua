@@ -151,6 +151,7 @@ end
 local function render_group(group)
   local message_parts = {} ---@type string[]
   local highlights = {} ---@type stl.t.IHighlight[]
+  local hlnames = {} ---@type table<integer, string>
   local lnum, col_offset = 1, 0 ---@type integer, integer
 
   for _, part in ipairs(group.parts) do
@@ -158,21 +159,62 @@ local function render_group(group)
       local _, text, hlid = unpack(item) ---@type integer, string, integer
       message_parts[#message_parts + 1] = text
 
-      local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
-      local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
-      for i, line in ipairs(lines) do
-        if i > 1 then
-          lnum = lnum + 1
-          col_offset = 0
+      local text_length = #text ---@type integer
+      local hlname = "" ---@type string
+      if hlid > 0 and text_length > 0 then
+        hlname = hlnames[hlid]
+        if hlname == nil then
+          hlname = vim.fn.synIDattr(hlid, "name")
+          hlnames[hlid] = hlname
         end
-        if #line > 0 then
+      end
+
+      local newline = text:find("\n", 1, true) ---@type integer|nil
+      if newline == nil then
+        local colr = col_offset + text_length ---@type integer
+        if #hlname > 0 and colr > col_offset then
           highlights[#highlights + 1] = {
             lnum = lnum,
             coll = col_offset,
-            colr = col_offset + #line,
+            colr = colr,
             hlname = hlname,
           }
-          col_offset = col_offset + #line
+        end
+        col_offset = colr
+      else
+        local from = 1 ---@type integer
+        while newline ~= nil do
+          local size = newline - from ---@type integer
+          if size > 0 then
+            local colr = col_offset + size ---@type integer
+            if #hlname > 0 then
+              highlights[#highlights + 1] = {
+                lnum = lnum,
+                coll = col_offset,
+                colr = colr,
+                hlname = hlname,
+              }
+            end
+            col_offset = colr
+          end
+
+          lnum = lnum + 1
+          col_offset = 0
+          from = newline + 1
+          newline = text:find("\n", from, true)
+        end
+
+        local size = text_length - from + 1 ---@type integer
+        if size > 0 then
+          if #hlname > 0 then
+            highlights[#highlights + 1] = {
+              lnum = lnum,
+              coll = 0,
+              colr = size,
+              hlname = hlname,
+            }
+          end
+          col_offset = size
         end
       end
     end

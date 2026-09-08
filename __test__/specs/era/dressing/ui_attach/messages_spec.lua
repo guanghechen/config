@@ -217,6 +217,53 @@ t:test("ordinary info remains a popup", function()
   t.assert_eq(0, #runtime.deferred, "clear callback")
   t.assert_eq(1, #runtime.reports, "notification report")
   t.assert_false(runtime.reports[1].options.silent, "visible report")
+  t.assert_eq(0, #runtime.reports[1].options.highlights, "default highlight ranges")
+end)
+
+t:test("message rendering preserves multiline byte ranges and caches highlight names", function()
+  local messages, runtime = setup()
+  local calls = {} ---@type table<integer, integer>
+
+  t:patch_table(vim.fn, "synIDattr", function(hlid)
+    calls[hlid] = (calls[hlid] or 0) + 1
+    return "Group" .. hlid
+  end)
+
+  messages.show({
+    event = "msg_show",
+    args = {
+      "echo",
+      {
+        { 0, "A", 0 },
+        { 0, "文", 11 },
+        { 0, "x\n", 11 },
+        { 0, "\n", 0 },
+        { 0, "字", 12 },
+        { 0, "\n", 11 },
+        { 0, "尾", 12 },
+      },
+      false,
+      true,
+      false,
+      7,
+      "",
+    },
+  })
+  run_scheduled(runtime)
+
+  t.assert_eq("A文x\n\n字\n尾", runtime.reports[1].options.message, "message")
+  t.assert_true(
+    vim.deep_equal({
+      { lnum = 1, coll = 1, colr = 4, hlname = "Group11" },
+      { lnum = 1, coll = 4, colr = 5, hlname = "Group11" },
+      { lnum = 3, coll = 0, colr = 3, hlname = "Group12" },
+      { lnum = 4, coll = 0, colr = 3, hlname = "Group12" },
+    }, runtime.reports[1].options.highlights),
+    "highlight byte ranges"
+  )
+  t.assert_eq(1, calls[11], "cached first highlight")
+  t.assert_eq(1, calls[12], "cached second highlight")
+  t.assert_nil(calls[0], "default highlight lookup")
 end)
 
 t:test("same message id updates one notifier group", function()
@@ -286,6 +333,7 @@ t:test("large append bursts render once per batch", function()
 
   t.assert_eq(1, #runtime.reports, "report count")
   t.assert_eq(1000, #runtime.reports[1].options.message, "message length")
+  t.assert_eq(0, #runtime.reports[1].options.highlights, "default highlight ranges")
 end)
 
 t:test("replace_last reuses the previous notifier group", function()
