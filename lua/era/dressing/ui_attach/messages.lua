@@ -338,6 +338,94 @@ local function refresh_command_status()
   update_statusline_message(dot.state.status.msg_command, table.concat(values, "  "))
 end
 
+---@param entries                       [string, era.dressing.ui_attach.IContent, boolean][]
+---@return string[]
+---@return stl.t.IHighlight[]
+local function render_history(entries)
+  local lines = {} ---@type string[]
+  local highlights = {} ---@type stl.t.IHighlight[]
+  local line_text = "" ---@type string
+  local line_parts = nil ---@type string[]|nil
+  local line_length = 0 ---@type integer
+  local active = false ---@type boolean
+
+  ---@return nil
+  local function start_line()
+    line_text = ""
+    line_parts = nil
+    line_length = 0
+    active = true
+  end
+
+  ---@return nil
+  local function finish_line()
+    lines[#lines + 1] = line_parts ~= nil and table.concat(line_parts) or line_text
+    active = false
+  end
+
+  ---@param segment                     string
+  ---@param hlname                      string
+  ---@return nil
+  local function append_segment(segment, hlname)
+    if #segment == 0 then
+      return
+    end
+
+    local coll = line_length ---@type integer
+    if line_parts ~= nil then
+      line_parts[#line_parts + 1] = segment
+    elseif #line_text == 0 then
+      line_text = segment
+    else
+      line_parts = { line_text, segment }
+      line_text = ""
+    end
+    line_length = coll + #segment
+
+    if #hlname > 0 then
+      highlights[#highlights + 1] = {
+        lnum = #lines + 1,
+        coll = coll,
+        colr = line_length,
+        hlname = hlname,
+      }
+    end
+  end
+
+  for _, entry in ipairs(entries) do
+    local append = entry[3] == true ---@type boolean
+    if not append or not active then
+      if active then
+        finish_line()
+      end
+      start_line()
+    end
+
+    for _, item in ipairs(entry[2]) do
+      local _, text, hlid = unpack(item) ---@type integer, string, integer
+      local hlname = hlid > 0 and vim.fn.synIDattr(hlid, "name") or "" ---@type string
+      local from = 1 ---@type integer
+      while true do
+        local newline = text:find("\n", from, true) ---@type integer|nil
+        if newline == nil then
+          append_segment(from == 1 and text or text:sub(from), hlname)
+          break
+        end
+
+        append_segment(text:sub(from, newline - 1), hlname)
+        finish_line()
+        start_line()
+        from = newline + 1
+      end
+    end
+  end
+
+  if active then
+    finish_line()
+  end
+  return lines, highlights
+end
+
 ---@param task                          era.dressing.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
@@ -357,24 +445,7 @@ end
 function M.history_show(task)
   local entries = unpack(task.args)
   ---@cast entries                      [string, era.dressing.ui_attach.IContent, boolean][]
-
-  local lines = {} ---@type string[]
-  local positions = {} ---@type { row: integer, offset: integer }[]
-  for index, entry in ipairs(entries) do
-    local content = entry[2] ---@type era.dressing.ui_attach.IContent
-    local text = "" ---@type string
-    for _, item in ipairs(content) do
-      text = text .. item[2]
-    end
-    local append = entry[3] == true ---@type boolean
-    if append and #lines > 0 then
-      positions[index] = { row = #lines - 1, offset = #lines[#lines] }
-      lines[#lines] = lines[#lines] .. text
-    else
-      table.insert(lines, text)
-      positions[index] = { row = #lines - 1, offset = 0 }
-    end
-  end
+  local lines, highlights = render_history(entries)
 
   local bufnr = states.message.history_bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -393,17 +464,9 @@ function M.history_show(task)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
-  for lnum, entry in ipairs(entries) do
-    local position = positions[lnum]
-    local offset = position.offset ---@type integer
-    local row = position.row ---@type integer
-    for _, item in ipairs(entry[2]) do
-      local _, text_chunk, hlid = unpack(item) ---@type integer, string, integer
-      local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
-      local offset_next = offset + #text_chunk ---@type integer
-      vim.hl.range(bufnr, nsnrs.attach, hlname, { row, offset }, { row, offset_next })
-      offset = offset_next ---@type integer
-    end
+  for _, hl in ipairs(highlights) do
+    local row = hl.lnum - 1 ---@type integer
+    vim.hl.range(bufnr, nsnrs.attach, hl.hlname, { row, hl.coll }, { row, hl.colr })
   end
 
   local win_width = math.min(math.floor(vim.o.columns * 0.8), 120) ---@type integer

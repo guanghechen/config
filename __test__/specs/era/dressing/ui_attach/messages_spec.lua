@@ -81,13 +81,17 @@ local function setup()
       },
     },
     var = {
-      nsnr = {},
+      N_WINLINE_DISABLED = "ui_attach_messages_test_winline_disabled",
+      nsnr = { attach = vim.api.nvim_create_namespace("era.dressing.ui_attach.messages.test") },
+      zindex = { MESSAGES = 100 },
     },
   })
   t:patch_global("stl", {
     debug = {
       log_silent = function() end,
     },
+    e = require("stl.e"),
+    filetype = require("stl.filetype"),
     reporter = {
       dismiss = function(group)
         runtime.dismissed[#runtime.dismissed + 1] = group
@@ -366,6 +370,58 @@ t:test("msg_clear discards pending anonymous reports", function()
 
   t.assert_eq(0, #runtime.reports, "report count")
   t.assert_eq(1, #runtime.dismissed, "dismissed group count")
+end)
+
+t:test("message history renders multiline and appended entries", function()
+  local messages = setup()
+  local states = require("era.dressing.ui_attach.state")
+  local ranges = {} ---@type table[]
+
+  t:patch_table(vim.fn, "synIDattr", function(hlid)
+    return "Group" .. hlid
+  end)
+  t:patch_table(vim.hl, "range", function(_, _, hlname, from, to)
+    ranges[#ranges + 1] = { hlname = hlname, from = from, to = to }
+  end)
+  t:defer(function()
+    local winnr = states.message.history_winnr
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
+    local bufnr = states.message.history_bufnr
+    if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+
+  messages.history_show({
+    event = "msg_history_show",
+    args = {
+      {
+        { "echo", { { 0, "first\n", 11 }, { 0, "second", 12 } }, false },
+        { "echo", { { 0, " + tail\nlast", 13 } }, true },
+        { "echo", { { 0, "文x", 14 } }, false },
+      },
+      false,
+    },
+  })
+
+  local bufnr = states.message.history_bufnr
+  t.assert_true(bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr), "history buffer")
+  t.assert_true(
+    vim.deep_equal({ "first", "second + tail", "last", "文x" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)),
+    "history lines"
+  )
+  t.assert_true(
+    vim.deep_equal({
+      { hlname = "Group11", from = { 0, 0 }, to = { 0, 5 } },
+      { hlname = "Group12", from = { 1, 0 }, to = { 1, 6 } },
+      { hlname = "Group13", from = { 1, 6 }, to = { 1, 13 } },
+      { hlname = "Group13", from = { 2, 0 }, to = { 2, 4 } },
+      { hlname = "Group14", from = { 3, 0 }, to = { 3, 4 } },
+    }, ranges),
+    "history highlights"
+  )
 end)
 
 t:test("one failed report does not abort later groups", function()
