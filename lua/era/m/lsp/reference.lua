@@ -39,6 +39,82 @@ local picker = era.m.picker.FiletreeComposer.new({
   end,
 })
 
+---@param node                          TSNode
+---@return TSNode|nil
+local function lua_field_name(node)
+  local field = node:parent()
+  if node:type() ~= "function_definition" or field == nil or field:type() ~= "field" or field:has_error() then
+    return nil
+  end
+
+  local name = field:field("name")[1]
+  local value = field:field("value")[1]
+  if name ~= nil and field:child(0):type() == "identifier" and value ~= nil and value:id() == node:id() then
+    return name
+  end
+  return nil
+end
+
+---@param items                         era.m.lsp.reference.IItem[]
+---@param encodings                     table<era.m.lsp.reference.IItem, lsp.PositionEncodingKind>
+---@return era.m.lsp.reference.IItem[]
+local function collapse_lua_field_values(items, encodings)
+  local grouped = {} ---@type table<string, era.m.lsp.reference.IItem[]>
+  for _, item in ipairs(items) do
+    if item.filepath:match("%.lua$") and encodings[item] ~= nil then
+      grouped[item.filepath] = grouped[item.filepath] or {}
+      table.insert(grouped[item.filepath], item)
+    end
+  end
+
+  local redundant = {} ---@type table<era.m.lsp.reference.IItem, true>
+  for filepath, definitions in pairs(grouped) do
+    if #definitions > 1 then
+      local bufnr = stl.nvim.buf.locate_bufnr(filepath)
+      local lines = bufnr ~= nil
+          and vim.api.nvim_buf_is_loaded(bufnr)
+          and vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+        or stl.fs.read_file_as_lines({ filepath = filepath, silent = true })
+      local parsed, trees = pcall(function()
+        return vim.treesitter.get_string_parser(table.concat(lines, "\n"), "lua"):parse()
+      end)
+      if parsed and trees ~= nil and trees[1] ~= nil then
+        local root = trees[1]:root() ---@type TSNode
+        local positions = {} ---@type table<integer, table<integer, true>>
+        local nodes = {} ---@type table<era.m.lsp.reference.IItem, TSNode>
+        for _, item in ipairs(definitions) do
+          local line = lines[item.lnum]
+          if line ~= nil then
+            local col = vim.str_byteindex(line, encodings[item], item.col, false)
+            positions[item.lnum] = positions[item.lnum] or {}
+            positions[item.lnum][col] = true
+            local node = root:named_descendant_for_range(item.lnum - 1, col, item.lnum - 1, col)
+            if node ~= nil then
+              local row_start, col_start = node:start()
+              if row_start == item.lnum - 1 and col_start == col then
+                nodes[item] = node
+              end
+            end
+          end
+        end
+
+        for item, node in pairs(nodes) do
+          local name = lua_field_name(node)
+          if name ~= nil then
+            local row, col = name:start()
+            if positions[row + 1] ~= nil and positions[row + 1][col] then
+              redundant[item] = true
+            end
+          end
+        end
+      end
+    end
+  end
+  return vim.tbl_filter(function(item)
+    return not redundant[item]
+  end, items)
+end
+
 ---@param method                        string
 ---@param additional_params             table<string, any>
 ---@param token                         ?stl.c.CancellationToken
@@ -72,6 +148,7 @@ local function fetch_data(method, additional_params, token)
 
     local params =
       vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile, "utf-8"), additional_params)
+    local is_definition = method == "textDocument/definition"
 
     vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
       if token and token:is_cancelled() then
@@ -81,10 +158,12 @@ local function fetch_data(method, additional_params, token)
       local errors = {} ---@type string[]
       local items = {} ---@type era.m.lsp.reference.IItem[]
       local seen_locations = {} ---@type table<string, true>
+      local item_encodings = {} ---@type table<era.m.lsp.reference.IItem, lsp.PositionEncodingKind>
 
       local uri_cur = params.textDocument.uri ---@type string
       local line_cur = params.position.line ---@type integer
       for client_id, result_or_error in pairs(results_per_client) do
+        local client = is_definition and vim.lsp.get_client_by_id(client_id) or nil
         local error, result = result_or_error.err, result_or_error.result
         if error then
           local details = "Failed to executing '" .. method .. "' (" .. client_id .. "): " .. error.message
@@ -131,6 +210,9 @@ local function fetch_data(method, additional_params, token)
                     col_end = lnum == lnum_end and range["end"].character or -1,
                   }
                   items[#items + 1] = item
+                  if client ~= nil then
+                    item_encodings[item] = client.offset_encoding
+                  end
                 end
               end
             end
@@ -147,6 +229,10 @@ local function fetch_data(method, additional_params, token)
         })
         resolve({ ok = false, items = nil })
         return
+      end
+
+      if is_definition and #items > 1 then
+        items = collapse_lua_field_values(items, item_encodings)
       end
 
       if #items <= 0 then
