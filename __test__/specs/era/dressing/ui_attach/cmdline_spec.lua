@@ -9,7 +9,8 @@ local t = harness.new("era.dressing.ui_attach.cmdline")
 local function setup()
   t:patch_global("dot", {
     var = {
-      nsnr = {},
+      nsnr = { cmdline = 1 },
+      zindex = { CMDLINE = 100 },
     },
   })
   t:patch_global("stl", {
@@ -210,6 +211,77 @@ t:test("cmdline render keeps byte highlight offsets", function()
   t.assert_eq(7, render.highlights[1].colr, "first highlight end")
   t.assert_eq(7, render.highlights[2].coll, "second highlight start")
   t.assert_eq(8, render.highlights[2].colr, "second highlight end")
+end)
+
+t:test("cmdline render updates syntax only when the target changes", function()
+  local cmdline = setup()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local winnr = vim.api.nvim_get_current_win()
+  local syntax = ""
+  local syntax_updates = {} ---@type string[]
+  local get_option_value = vim.api.nvim_get_option_value
+
+  t:patch_table(vim.api, "nvim_buf_is_valid", function(candidate)
+    return candidate == bufnr
+  end)
+  t:patch_table(vim.api, "nvim_win_is_valid", function(candidate)
+    return candidate == winnr
+  end)
+  t:patch_table(vim.api, "nvim_get_option_value", function(name, opts)
+    if name == "syntax" then
+      return syntax
+    end
+    return get_option_value(name, opts)
+  end)
+  t:patch_table(vim.api, "nvim_set_option_value", function(name, value)
+    if name == "syntax" then
+      syntax = value or ""
+      syntax_updates[#syntax_updates + 1] = syntax
+    end
+  end)
+  t:patch_table(vim.api, "nvim_win_set_buf", function() end)
+  t:patch_table(vim.api, "nvim_win_set_config", function() end)
+  t:patch_table(vim.api, "nvim_buf_clear_namespace", function() end)
+  t:patch_table(vim.api, "nvim_buf_set_lines", function() end)
+  t:patch_table(vim.api, "nvim_win_set_cursor", function() end)
+  t:patch_table(vim.api, "nvim__redraw", function() end)
+  t:patch_table(vim.hl, "range", function() end)
+  cmdline._update_cmdline_position = function() end
+
+  ---@type era.dressing.ui_attach.cmdline.IState
+  local state = {
+    content = { { 0, "echo 1", 0 } },
+    pos = 6,
+    firstc = ":",
+    prompt = "",
+    indent = 0,
+    level = 1,
+    hlid = 0,
+    icon = "> ",
+    type = "command",
+    language = "vim",
+    concealable = false,
+    first = "echo 1",
+    second = "",
+    special = nil,
+    confirming_task = nil,
+    bufnr = bufnr,
+    winnr = winnr,
+  }
+
+  cmdline._show(state)
+  cmdline._show(state)
+  state.language = "regex"
+  cmdline._show(state)
+  cmdline._show(state)
+  state.language = nil
+  cmdline._show(state)
+  cmdline._show(state)
+
+  t.assert_eq(3, #syntax_updates, "syntax update count")
+  t.assert_eq("vim", syntax_updates[1], "initial syntax")
+  t.assert_eq("regex", syntax_updates[2], "changed syntax")
+  t.assert_eq("", syntax_updates[3], "cleared syntax")
 end)
 
 t:test("special char is retained until the next cmdline show", function()

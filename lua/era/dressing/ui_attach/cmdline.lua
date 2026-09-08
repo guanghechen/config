@@ -5,6 +5,17 @@ local states = require("era.dressing.ui_attach.state")
 
 local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
+---@param bufnr                        integer
+---@param syntax                       string|nil
+---@return nil
+local function update_syntax(bufnr, syntax)
+  local expected = syntax or "" ---@type string
+  local actual = vim.api.nvim_get_option_value("syntax", { buf = bufnr }) ---@type string
+  if actual ~= expected then
+    vim.api.nvim_set_option_value("syntax", syntax, { buf = bufnr })
+  end
+end
+
 ---@param entries                       era.dressing.ui_attach.IContent[]|nil
 ---@return string[]
 ---@return stl.t.IHighlight[]
@@ -351,13 +362,11 @@ function M._show(state)
   local hln_icon = "f_uc_icon_" .. state.type ---@type string
   local render = M._resolve_render(state)
 
-  vim.api.nvim_set_option_value("syntax", nil, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { render.line })
 
-  if state.language ~= nil and not vim.b[bufnr].ts_highlight then
-    vim.api.nvim_set_option_value("syntax", state.language, { buf = bufnr })
-  end
+  local syntax = not vim.b[bufnr].ts_highlight and state.language or nil ---@type string|nil
+  update_syntax(bufnr, syntax)
 
   vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, 0 }, { 0, #state.icon })
   if not render.concealed then
@@ -655,7 +664,6 @@ function M._show_confirm(state, msg_show_task)
     vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   end
 
-  vim.api.nvim_set_option_value("syntax", nil, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
@@ -664,9 +672,8 @@ function M._show_confirm(state, msg_show_task)
     vim.hl.range(bufnr, nsnrs.cmdline, hl.hlname, { row, hl.coll }, { row, hl.colr })
   end
 
-  if state.language ~= nil and not vim.b[bufnr].ts_highlight then
-    vim.api.nvim_set_option_value("syntax", "markdown", { buf = bufnr })
-  end
+  local syntax = state.language ~= nil and not vim.b[bufnr].ts_highlight and "markdown" or nil ---@type string|nil
+  update_syntax(bufnr, syntax)
   vim.api.nvim__redraw({ cursor = false, win = winnr, flush = true })
 
   -- Set the cmdline position for blink.cmp compatibility (confirm dialog)
