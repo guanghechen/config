@@ -6,6 +6,7 @@ local mods = {
   commentstring = "era.dressing.commentstring",
   foldtext = "era.dressing.foldtext",
   hipattern = "era.dressing.hipattern",
+  im = "era.dressing.im",
   indentline = "era.dressing.indentline",
   indentscope = "era.dressing.indentscope",
   notifier = "era.dressing.notifier",
@@ -27,6 +28,7 @@ local load_times = {} ---@type table<string, number>
 ---@field public commentstring          era.dressing.commentstring
 ---@field public foldtext               era.dressing.foldtext
 ---@field public hipattern              era.dressing.hipattern
+---@field public im                     era.dressing.im
 ---@field public indentline             era.dressing.indentline
 ---@field public indentscope            era.dressing.indentscope
 ---@field public notifier               era.dressing.notifier

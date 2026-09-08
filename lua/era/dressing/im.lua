@@ -1,9 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.im" ---@type string
+local __module_name__ = "era.dressing.im" ---@type string
 
----@alias era.m.im.Snapshot string
+---@alias era.dressing.im.Snapshot string
 
----@class era.m.im
+---@class era.dressing.im
 ---@field public dressing               fun(): nil
 local M = {}
 
@@ -53,29 +53,29 @@ local backend = setup_backend()
 local auto_im_subscription = nil ---@type stl.c.IUnsubscribable|nil
 local focused = false ---@type boolean
 local focus_generation = 0 ---@type integer
-local insert_snapshot = nil ---@type era.m.im.Snapshot|nil
+local insert_snapshot = nil ---@type era.dressing.im.Snapshot|nil
 -- This permits a local shortcut; it does not acknowledge completion inside the OS IME.
 local can_skip_english_restore = false ---@type boolean
 
----@class era.m.im.RetryState
+---@class era.dressing.im.RetryState
 ---@field delay_ms                      integer
 ---@field retry_at_ns                   integer
 
-local capture_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.m.im.RetryState
-local selection_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.m.im.RetryState
-local restore_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.m.im.RetryState
-local restore_target = nil ---@type era.m.im.Snapshot|nil
+local capture_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.dressing.im.RetryState
+local selection_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.dressing.im.RetryState
+local restore_retry = { delay_ms = 0, retry_at_ns = 0 } ---@type era.dressing.im.RetryState
+local restore_target = nil ---@type era.dressing.im.Snapshot|nil
 -- WSL can block for the helper's one-second deadline; native failures use a fixed short cooldown.
 local MAX_RETRY_DELAY_MS = stl.env.IS_WSL and 8000 or 1000 ---@type integer
 
----@param retry                         era.m.im.RetryState
+---@param retry                         era.dressing.im.RetryState
 ---@return nil
 local function reset_retry(retry)
   retry.delay_ms = 0
   retry.retry_at_ns = 0
 end
 
----@param retry                         era.m.im.RetryState
+---@param retry                         era.dressing.im.RetryState
 ---@return nil
 local function postpone_retry(retry)
   retry.delay_ms = math.min(retry.delay_ms == 0 and 1000 or retry.delay_ms * 2, MAX_RETRY_DELAY_MS)
@@ -83,7 +83,7 @@ local function postpone_retry(retry)
   retry.retry_at_ns = vim.uv.hrtime() + retry.delay_ms * 1e6
 end
 
----@param retry                         era.m.im.RetryState
+---@param retry                         era.dressing.im.RetryState
 ---@return boolean
 local function can_retry(retry)
   return retry.retry_at_ns == 0 or vim.uv.hrtime() >= retry.retry_at_ns
@@ -95,7 +95,7 @@ local function owns_source()
 end
 
 ---@param subject                       string
----@return era.m.im.Snapshot|nil
+---@return era.dressing.im.Snapshot|nil
 local function capture_and_select_english(subject)
   local im = backend
   can_skip_english_restore = false
@@ -133,7 +133,7 @@ local function capture_and_select_english(subject)
   return snapshot
 end
 
----@param snapshot                      era.m.im.Snapshot
+---@param snapshot                      era.dressing.im.Snapshot
 ---@param subject                       string
 ---@return nil
 local function restore_snapshot(snapshot, subject)

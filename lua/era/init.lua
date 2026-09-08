@@ -86,7 +86,6 @@ local __m__mods = {
   explorer = "era.m.explorer",
   git = "era.m.git",
   illuminate = "era.m.illuminate",
-  im = "era.m.im",
   image = "era.m.image",
   input = "era.m.input",
   inspect = "era.m.inspect",
@@ -121,7 +120,6 @@ local __m__mods = {
 ---@field public explorer               era.m.explorer
 ---@field public git                    era.m.git
 ---@field public illuminate             era.m.illuminate
----@field public im                     era.m.im
 ---@field public image                  era.m.image
 ---@field public input                  era.m.input
 ---@field public inspect                era.m.inspect

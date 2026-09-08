@@ -1,11 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/im_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/im_spec.lua
 ---@diagnostic disable: undefined-global
---- Test for era.m.im composition and lifecycle
+--- Test for era.dressing.im composition and lifecycle
 
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.im")
+local t = harness.new("era.dressing.im")
 local reports = {} ---@type table[]
 
 bootstrap.with_runtime(t, {
@@ -32,14 +32,20 @@ local function unload(module_name)
   t:patch_table(package.loaded, module_name, nil)
 end
 
----@param options                       { use_wsl?: boolean, setup_error?: string, initial_snapshot?: era.m.im.Snapshot, with_ui?: boolean, ui_count?: integer, capture_and_select_error?: string, capture_failed?: boolean, defer_ui_enter?: boolean }|nil
+t:test("module is registered under dressing only", function()
+  local namespace = require("era")
+  t.assert_eq("era.dressing.im", namespace.dressing.__mods.im, "module registration")
+  t.assert_nil(namespace.m.__mods.im, "old registration removed")
+end)
+
+---@param options                       { use_wsl?: boolean, setup_error?: string, initial_snapshot?: era.dressing.im.Snapshot, with_ui?: boolean, ui_count?: integer, capture_and_select_error?: string, capture_failed?: boolean, defer_ui_enter?: boolean }|nil
 ---@return table
 local function setup_lifecycle(options)
   options = options or {}
   reports = {}
   local callbacks = {} ---@type table<string, fun()>
-  local restored_snapshots = {} ---@type era.m.im.Snapshot[]
-  local current_snapshot = options.initial_snapshot or "source.english" ---@type era.m.im.Snapshot
+  local restored_snapshots = {} ---@type era.dressing.im.Snapshot[]
+  local current_snapshot = options.initial_snapshot or "source.english" ---@type era.dressing.im.Snapshot
   local auto_im = true ---@type boolean
   local active_subscriber = nil ---@type stl.c.ISubscriber|nil
   local unsubscribe_count = 0 ---@type integer
@@ -196,9 +202,9 @@ local function setup_lifecycle(options)
     return now_ns
   end)
   t:patch_global("yoz", { im = backend })
-  unload("era.m.im")
+  unload("era.dressing.im")
 
-  local im = require("era.m.im")
+  local im = require("era.dressing.im")
   im.dressing()
   if callbacks.UIEnter ~= nil then
     callbacks.UIEnter()
@@ -895,9 +901,9 @@ t:test("linux: unconditional composition safely no-ops without a backend", funct
     created_autocmd = true
     return 1
   end)
-  unload("era.m.im")
+  unload("era.dressing.im")
 
-  local im = require("era.m.im")
+  local im = require("era.dressing.im")
   im.dressing()
   t.assert_false(created_autocmd, "unsupported lifecycle")
 end)

@@ -1,12 +1,12 @@
 # 输入法切换
 
-`era.m.im` 管理 editor lifecycle，`yoz.im` 提供面向 input source 的 Lua contract，独立 crate `rust/im` 负责访问各平台的 input source。
+`era.dressing.im` 管理 editor lifecycle，`yoz.im` 提供面向 input source 的 Lua contract，独立 crate `rust/im` 负责访问各平台的 input source。
 
 ## 职责边界
 
 - `rust/im` 负责 opaque source ID、English source 判定、精确恢复、WSL process supervision，以及 Windows bridge source。
 - `yoz.im` 仅暴露 `capture()`、`capture_and_select_english()`、`restore()`、`is_english()`，以及仅 WSL 可用的 `setup()`。
-- `era.m.im` 仅暴露 `dressing()`，持有 Insert snapshot、editor focus state，以及最近一次成功的 English 对齐是否仍可用于跳过恢复。
+- `era.dressing.im` 仅暴露 `dressing()`，持有 Insert snapshot、editor focus state，以及最近一次成功的 English 对齐是否仍可用于跳过恢复。
 - `Non-English` 仅表示 `not is_english(snapshot)`，不是可选择的目标。恢复非 English source 时，必须使用此前捕获的精确 source ID。
 
 ## 状态模型
@@ -22,7 +22,9 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
 
 ## 生命周期
 
-- `dressing()` 在 `era.dressing.ui_attach.dressing()` 之后、plugin setup 之前同步注册，确保 focus handler 先于 `UIEnter` 就绪，且不依赖 plugin。
+- `dressing()` 由 vendor composition root 在 plugin setup 之前同步注册，确保 focus handler 先于 `UIEnter` 就绪，且不依赖 plugin：
+  - Neovim/Neovide 调用 `era.dressing.setup({ "notifier", "ui_attach", "im" })`，`im` 在 `ui_attach` 之后注册；
+  - VSCode/Yozvim 调用 `era.dressing.setup({ "im" })`，这两个 environment 不启用 `ui_attach` dressing。
 - `UIEnter` 同步获取 ownership，但将首次 source reconciliation 延至下一 event-loop tick，避免 backend I/O 阻塞 UI startup。失焦会推进 focus generation，使尚未执行的 reconciliation 失效；重复 focus event 不会产生额外调用。
 - `FocusGained` 和 `VimResume` 幂等地获取 ownership，并同步按当前 mode 对齐：
   - command mode 调用一次 fused `capture_and_select_english()`；
@@ -34,7 +36,7 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
 - 关闭 `auto_im` 会清除 Insert snapshot，但不改变 focus ownership。重新开启时：
   - focused：立即按当前 mode 对齐；
   - unfocused：等待下一次 focus entry。
-- tmux 负责传递 focus event。native event 与 tmux event 即使重叠也安全，因为 ownership transition 是幂等的。
+- UI host 负责传递 focus event：terminal Neovim 接收 native/tmux event，VSCode/Yozvim 的 embedded host 必须转发对应 event。重复或重叠 event 安全，因为 ownership transition 是幂等的。
 
 ## Backend 契约
 
@@ -84,7 +86,7 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
 
 ## 失败策略
 
-- Native 和 WSL backend 返回 value 与 error；`era.m.im` 是 lifecycle failure 的唯一 reporter。
+- Native 和 WSL backend 返回 value 与 error；`era.dressing.im` 是 lifecycle failure 的唯一 reporter。
 - 一次 fused operation 最多生成一条 report；捕获失败后不再启动 selection process。
 - selection failure 保留已捕获的 snapshot，以便下一次 focused `InsertEnter` 精确恢复 editing source。
 - `InsertLeave` 查询失败或因 capture 冷却跳过查询时，会清除 Insert restore target，避免恢复本轮 Insert 期间可能已改变的旧 source。仅 selection 冷却时仍查询当前 source，不丢弃健康查询得到的 snapshot。

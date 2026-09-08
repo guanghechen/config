@@ -7,8 +7,7 @@ require("ark.vendor.neovide.keymap")
 pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
-era.dressing.setup({ "notifier", "ui_attach" })
-era.m.im.dressing()
+era.dressing.setup({ "notifier", "ui_attach", "im" })
 require("era.command")
 
 if dot.path.is_git_repo() then
