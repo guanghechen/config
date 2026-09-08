@@ -164,6 +164,115 @@ t:test("cmdline position follows a horizontally scrolled cursor", function()
   t.assert_eq(-64, vim.g.ui_cmdline_pos[2], "scrolled cmdline origin")
 end)
 
+t:test("cmdline position updates only the cursor when layout is unchanged", function()
+  local cmdline, states = setup()
+  local cursor = nil ---@type [integer, integer]|nil
+  local redraw = nil ---@type table|nil
+  local position_updates = 0
+  local renders = 0
+
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_buf_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_set_cursor", function(winnr, value)
+    t.assert_eq(20, winnr, "cursor window")
+    cursor = value
+  end)
+  t:patch_table(vim.api, "nvim__redraw", function(options)
+    redraw = options
+  end)
+  cmdline._show = function()
+    renders = renders + 1
+  end
+  cmdline._update_cmdline_position = function(state, winnr)
+    t.assert_eq(4, state.pos, "updated position")
+    t.assert_eq(20, winnr, "position window")
+    position_updates = position_updates + 1
+  end
+
+  ---@type era.dressing.ui_attach.cmdline.IState
+  states.cmdline[1] = {
+    content = { { 0, "abcdef", 0 } },
+    pos = 1,
+    firstc = ":",
+    prompt = "",
+    indent = 2,
+    level = 1,
+    hlid = 0,
+    icon = "> ",
+    type = "command",
+    language = "vim",
+    concealable = false,
+    first = "abcdef",
+    second = "",
+    special = nil,
+    confirming_task = nil,
+    bufnr = 10,
+    winnr = 20,
+  }
+
+  cmdline.pos({ event = "cmdline_pos", args = { 4, 1 } })
+
+  t.assert_eq(0, renders, "full renders")
+  t.assert_true(vim.deep_equal({ 1, 8 }, cursor), "buffer cursor")
+  t.assert_true(vim.deep_equal({ cursor = true, win = 20, flush = true }, redraw), "cursor redraw")
+  t.assert_eq(1, position_updates, "position update count")
+end)
+
+t:test("cmdline position renders when cursor movement changes layout", function()
+  local cmdline, states = setup()
+  local renders = 0
+  local cursor_updates = 0
+
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_buf_is_valid", function()
+    return true
+  end)
+  t:patch_table(vim.api, "nvim_win_set_cursor", function()
+    cursor_updates = cursor_updates + 1
+  end)
+  cmdline._show = function()
+    renders = renders + 1
+  end
+
+  ---@type era.dressing.ui_attach.cmdline.IState
+  local state = {
+    content = { { 0, "lua print()", 0 } },
+    pos = 4,
+    firstc = ":",
+    prompt = "",
+    indent = 0,
+    level = 1,
+    hlid = 0,
+    icon = "> ",
+    type = "command_lua",
+    language = "lua",
+    concealable = true,
+    first = "lua ",
+    second = "print()",
+    special = nil,
+    confirming_task = nil,
+    bufnr = 10,
+    winnr = 20,
+  }
+  states.cmdline[1] = state
+
+  cmdline.pos({ event = "cmdline_pos", args = { 3, 1 } })
+  state.concealable = false
+  state.first = "lua print()"
+  state.second = ""
+  state.special = { c = "x", shift = false }
+  cmdline.pos({ event = "cmdline_pos", args = { 4, 1 } })
+
+  t.assert_eq(2, renders, "full renders")
+  t.assert_eq(0, cursor_updates, "cursor-only updates")
+end)
+
 t:test("cmdline show preserves protocol content and indent", function()
   local cmdline, states = setup()
   states.message.confirming_task = nil

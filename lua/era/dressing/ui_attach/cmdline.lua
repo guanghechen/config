@@ -80,6 +80,17 @@ local _cmdline_type_map = {
 ---@class era.dressing.ui_attach.cmdline
 local M = {}
 
+---@param state                         era.dressing.ui_attach.cmdline.IState
+---@param pos                           integer
+---@return boolean
+---@return integer
+local function resolve_cursor_position(state, pos)
+  local concealed = state.concealable and pos >= #state.first ---@type boolean
+  local concealed_size = concealed and #state.first or 0 ---@type integer
+  local cursor_col = #state.icon + state.indent + math.max(0, pos - concealed_size) ---@type integer
+  return concealed, cursor_col
+end
+
 ---@param state                          era.dressing.ui_attach.cmdline.IState
 ---@return nil
 local function render_state(state)
@@ -131,12 +142,30 @@ function M.pos(task)
   local pos, level = unpack(task.args) ---@type integer
   local state = states.cmdline[level] ---@type era.dressing.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
+    local previous_pos = state.pos
     state.pos = pos
-    render_state(state)
-    -- Update position for blink.cmp after position change
-    if state.winnr and vim.api.nvim_win_is_valid(state.winnr) then
-      M._update_cmdline_position(state, state.winnr)
+
+    local winnr = state.winnr ---@type integer|nil
+    local bufnr = state.bufnr ---@type integer|nil
+    if
+      state.type ~= "confirm"
+      and state.special == nil
+      and winnr ~= nil
+      and bufnr ~= nil
+      and vim.api.nvim_win_is_valid(winnr)
+      and vim.api.nvim_buf_is_valid(bufnr)
+    then
+      local previously_concealed = state.concealable and previous_pos >= #state.first ---@type boolean
+      local concealed, cursor_col = resolve_cursor_position(state, pos)
+      if concealed == previously_concealed then
+        vim.api.nvim_win_set_cursor(winnr, { 1, cursor_col })
+        vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
+        M._update_cmdline_position(state, winnr)
+        return
+      end
     end
+
+    render_state(state)
   end
 end
 
@@ -259,7 +288,7 @@ end
 ---@return era.dressing.ui_attach.cmdline.IRender
 function M._resolve_render(state)
   local indent_text = string.rep(" ", state.indent) ---@type string
-  local concealed = state.concealable and state.pos >= #state.first ---@type boolean
+  local concealed, cursor_col = resolve_cursor_position(state, state.pos)
   local concealed_size = concealed and #state.first or 0 ---@type integer
   local content = state.first .. state.second ---@type string
   local visible_content = content:sub(concealed_size + 1) ---@type string
@@ -286,7 +315,7 @@ function M._resolve_render(state)
 
   return {
     line = state.icon .. indent_text .. visible_content .. " ",
-    cursor_col = content_offset + math.max(0, state.pos - concealed_size),
+    cursor_col = cursor_col,
     content_offset = content_offset,
     concealed = concealed,
     highlights = highlights,
@@ -399,9 +428,7 @@ function M._update_cmdline_position(state, winnr)
     return
   end
 
-  local concealed = state.concealable and state.pos >= #state.first ---@type boolean
-  local concealed_size = concealed and #state.first or 0 ---@type integer
-  local buffer_cursor_col = #state.icon + state.indent + math.max(0, state.pos - concealed_size)
+  local _, buffer_cursor_col = resolve_cursor_position(state, state.pos)
   local screenpos = vim.fn.screenpos(winnr, 1, buffer_cursor_col + 1)
   if screenpos.row < 1 or screenpos.col < 1 then
     vim.g.ui_cmdline_pos = nil
