@@ -5,6 +5,7 @@ local initialized = false ---@type boolean
 local M = {}
 
 local dirtier = dot.state.status.dirtier_statusline ---@type stl.c.Dirtier
+local c = era.m.nvimbar.component
 local position = "f_sl" ---@type stl.t.NvimbarPositionEnum
 
 local statusline ---@type era.m.nvimbar.Nvimbar
@@ -14,48 +15,182 @@ statusline = era.m.nvimbar.Nvimbar.new({
   comp_sep = "  ",
   comp_sep_hlname = position .. "_bg",
   comp_sep_hlname_active = position .. "_bg",
-  delay = 256,
-  silent = function()
-    local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
-    return not devmode
-  end,
   get_max_width = function()
     return vim.o.columns
   end,
   is_active = stl.fn.falsy,
-  on_fulfilled = function()
-    local result = statusline:snapshot() or "" ---@type string
-    vim.o.statusline = result
-    dirtier:mark_clean()
+  on_fulfilled = function(result)
+    if vim.o.statusline ~= result or vim.api.nvim_get_option_value("statusline", { scope = "local" }) ~= "" then
+      vim.o.statusline = result
+    end
+    -- The built-in cmdline does not redraw after an asynchronous option update.
+    if vim.api.nvim_get_mode().mode:sub(1, 1) == "c" then
+      vim.cmd("redraw")
+    end
   end,
 })
 
 statusline
-  :place("left", era.m.nvimbar.component.host.username(position), 100)
-  :place("left", era.m.nvimbar.component.nvim.mode(position), 100)
-  :place("left", era.m.nvimbar.component.git.branch(position), 100)
-  :place("left", era.m.nvimbar.component.file.readonly(position), 95)
-  :place("left", era.m.nvimbar.component.file.format(position), 95)
-  :place("left", era.m.nvimbar.component.file.indent(position), 95)
-  :place("left", era.m.nvimbar.component.file.encoding(position), 100)
-  :place("left", era.m.nvimbar.component.file.type(position))
-  :place("left", era.m.nvimbar.component.file.size(position))
-  :place("left", era.m.nvimbar.component.file.status(position))
+  :place({
+    position = "left",
+    priority = 100,
+    component = c.lazy(function()
+      return c.host.username(position)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 100,
+    component = c.lazy(function()
+      return c.nvim.mode(position)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 100,
+    component = c.lazy(function()
+      return c.git.branch(position)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 95,
+    component = c.lazy(function()
+      return c.file.readonly(position)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 95,
+    component = c.lazy(function()
+      return c.file.format(position)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 95,
+    component = c.lazy(function()
+      return c.file.indent(position)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 100,
+    component = c.lazy(function()
+      return c.file.encoding(position)
+    end),
+  })
+  :place({
+    position = "left",
+    component = c.lazy(function()
+      return c.file.type(position)
+    end),
+  })
+  :place({
+    position = "left",
+    component = c.lazy(function()
+      return c.file.size(position)
+    end),
+  })
+  :place({
+    position = "left",
+    component = c.lazy(function()
+      return c.file.status(position)
+    end),
+  })
   --
-  :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
+  :place({
+    position = "center",
+    priority = 100,
+    component = c.lazy(function()
+      return c.devmode.render_count(position)
+    end),
+  })
   --
-  :place("right", era.m.nvimbar.component.nvim.pos(position), 100)
-  :place("right", era.m.nvimbar.component.nvim.nr(position), 100)
-  :place("right", era.m.nvimbar.component.nvim.pid(position), 100)
-  :place("right", era.m.nvimbar.component.python.env(position), 100)
-  :place("right", era.m.nvimbar.component.lsp.client(position), 100)
-  :place("right", era.m.nvimbar.component.lint.status(position), 95)
-  :place("right", era.m.nvimbar.component.ai.status(position), 95)
-  :place("right", era.m.nvimbar.component.lsp.diagnostics(position), 95)
-  :place("right", era.m.nvimbar.component.nvim.msg_mode(position), 95)
-  :place("right", era.m.nvimbar.component.nvim.msg_command(position), 80)
-  :place("right", era.m.nvimbar.component.nvim.msg_transient(position), 85)
-  :place("right", era.m.nvimbar.component.nvim.msg_lsp(position), 90)
+  :place({
+    position = "right",
+    priority = 100,
+    component = c.lazy(function()
+      return c.nvim.pos(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 100,
+    component = c.lazy(function()
+      return c.nvim.nr(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 100,
+    component = c.lazy(function()
+      return c.nvim.pid(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 100,
+    component = c.lazy(function()
+      return c.python.env(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 100,
+    component = c.lazy(function()
+      return c.lsp.client(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 95,
+    component = c.lazy(function()
+      return c.lint.status(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 95,
+    component = c.lazy(function()
+      return c.ai.status(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 95,
+    component = c.lazy(function()
+      return c.lsp.diagnostics(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 95,
+    component = c.lazy(function()
+      return c.nvim.msg_mode(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 80,
+    component = c.lazy(function()
+      return c.nvim.msg_command(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 85,
+    component = c.lazy(function()
+      return c.nvim.msg_transient(position)
+    end),
+  })
+  :place({
+    position = "right",
+    priority = 90,
+    component = c.lazy(function()
+      return c.nvim.msg_lsp(position)
+    end),
+  })
 
 --- Initialize once; dirty and mode events own subsequent refreshes.
 ---@return nil
@@ -65,30 +200,34 @@ function M.dressing()
   end
   initialized = true
 
-  local statusline_snapshot = statusline:render(true) ---@type string
-  vim.o.statusline = statusline_snapshot
+  statusline:refresh()
   dirtier:mark_clean()
 
   dirtier:subscribe(stl.c.Subscriber.new({
     on_next = function()
-      if dirtier:is_dirty() then
-        statusline:render()
+      if not statusline:isdisposed() and dirtier:is_dirty() then
+        dirtier:mark_clean()
+        statusline:refresh()
       end
     end,
   }))
 
+  local group = stl.nvim.fn.augroup(__module_name__)
   vim.api.nvim_create_autocmd("ModeChanged", {
-    group = stl.nvim.fn.augroup(__module_name__),
-    callback = function(evt)
-      local m = evt.match ---@type string
-      if string.sub(m, 1, 2) == "c:" or string.sub(m, #m - 1, #m) == ":c" then
-        vim.schedule(function()
-          local result = statusline:render(true) ---@type string
-          vim.o.statusline = result
-          vim.cmd("redraw")
-        end)
-      end
-      statusline:render()
+    group = group,
+    callback = function()
+      vim.schedule(function()
+        if not statusline:isdisposed() then
+          statusline:refresh()
+        end
+      end)
+    end,
+  })
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = group,
+    once = true,
+    callback = function()
+      statusline:dispose()
     end,
   })
 end

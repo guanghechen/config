@@ -304,7 +304,7 @@ function M:attach(winnr_source)
   dot.state.widget.push(self)
 
   self._scheduler_search:schedule()
-  self._nvimbar:render()
+  self._nvimbar:refresh()
 
   -- Ensure replace preview is shown after windows are fully set up
   self:__update_replace_preview__()
@@ -858,8 +858,8 @@ function M:__create_finder_window_as_needed__()
   vim.api.nvim_set_option_value("wrap", false, { win = popup_winnr, scope = "local" })
 
   -- Set nvimbar immediately when finder window is created
-  vim.api.nvim_set_option_value("winbar", self._nvimbar:snapshot(), { win = popup_winnr, scope = "local" })
-  self._nvimbar:render()
+  vim.api.nvim_set_option_value("winbar", self._nvimbar:render(), { win = popup_winnr, scope = "local" })
+  self._nvimbar:refresh()
 
   return popup_winnr, true
 end
@@ -1088,8 +1088,6 @@ function M:__create_nvimbar__(o_match_index, o_match_total, flags)
     comp_sep = "",
     comp_sep_hlname = "f_wl_searcher",
     comp_sep_hlname_active = "f_wl_searcher",
-    delay = 64,
-    silent = stl.fn.falsy,
     get_max_width = function()
       local winnr = self._winnr_finder ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -1117,12 +1115,24 @@ function M:__create_nvimbar__(o_match_index, o_match_total, flags)
     validate = function()
       local winnr = self._winnr_finder ---@type integer|nil
       if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-        return "The window is not valid, winnr=" .. winnr .. "."
+        return "The finder window is not valid."
       end
     end,
   })
-    :place("left", c.picker.result_pos(position, o_match_index, o_match_total), 100)
-    :place("right", c.picker.result_flags(position, flags, 1), 100)
+    :place({
+      position = "left",
+      priority = 100,
+      component = c.lazy(function()
+        return c.picker.result_pos(position, o_match_index, o_match_total)
+      end),
+    })
+    :place({
+      position = "right",
+      priority = 100,
+      component = c.lazy(function()
+        return c.picker.result_flags(position, flags, 1)
+      end),
+    })
 end
 
 ---@protected
@@ -1158,7 +1168,7 @@ function M:__setup_observers__(
     o_match_index,
     o_match_total,
   }, function()
-    nvimbar:render()
+    nvimbar:refresh()
   end, true)
 
   stl.fn.observe({

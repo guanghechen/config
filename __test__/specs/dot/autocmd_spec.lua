@@ -19,6 +19,7 @@ local t = harness.new("dot.autocmd")
 ---@field current_tabnr                integer
 ---@field equalized_tabnrs             integer[]
 ---@field status_updates               integer
+---@field tabline_updates              integer
 ---@field saved_on_exit                integer
 ---@field save_on_exit_error           boolean
 ---@field save_errors                  integer
@@ -39,6 +40,7 @@ local function setup()
     current_tabnr = 1,
     equalized_tabnrs = {},
     status_updates = 0,
+    tabline_updates = 0,
     saved_on_exit = 0,
     save_on_exit_error = false,
     save_errors = 0,
@@ -118,6 +120,7 @@ local function setup()
         dirtier_tabline = {
           mark_dirty = function()
             runtime.status_updates = runtime.status_updates + 1
+            runtime.tabline_updates = runtime.tabline_updates + 1
           end,
         },
         isdisposed = function()
@@ -237,6 +240,18 @@ t:test("VimResized equalizes only the current tab and refreshes state", function
   t.assert_eq(0, #runtime.scheduled, "nested scheduled callbacks")
 end)
 
+t:test("WinResized refreshes winline and tabline after the resize", function()
+  local runtime = setup()
+
+  runtime.autocmds.bootstrap_on_WinResized.callback()
+  t.assert_eq(1, #runtime.scheduled, "scheduled resize callbacks")
+  t.assert_eq(0, runtime.status_updates, "updates before scheduled resize work")
+
+  run_scheduled(runtime)
+  t.assert_eq(1, runtime.tabline_updates, "tabline refreshes")
+  t.assert_eq(2, runtime.status_updates, "winline and tabline refreshes")
+end)
+
 t:test("failed query preserves the current state and permits retry", function()
   local runtime = setup()
 
@@ -287,7 +302,8 @@ t:test("VimLeavePre drops deferred window updates after status disposal", functi
   local runtime = setup()
 
   runtime.autocmds.bootstrap_on_WinEnter.callback()
-  t.assert_eq(1, #runtime.scheduled, "deferred window updates")
+  runtime.autocmds.bootstrap_on_WinResized.callback()
+  t.assert_eq(2, #runtime.scheduled, "deferred window updates")
 
   runtime.autocmds.state_on_VimLeavePre.callback()
   run_scheduled(runtime)

@@ -1,19 +1,22 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.sidebar" ---@type string
+
 local txt = stl.nvim.fn.txt
 
 ---@param filetype                      string
----@return integer
-local function get_pane_width(filetype)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+---@param tabnr                         integer
+---@return integer|nil
+local function get_pane_winnr(filetype, tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype then
       if not stl.nvim.win.is_float(winnr) then
-        return vim.api.nvim_win_get_width(winnr)
+        return winnr
       end
     end
   end
-  return 0
+  return nil
 end
 
 ---@class era.m.nvimbar.component.sidebar
@@ -32,18 +35,29 @@ function M.of(position, filetype, get_title)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "sidebar:of:" .. filetype,
-    atomic = true,
-    render = function(context, remain_width)
-      local width = math.min(remain_width, get_pane_width(filetype)) ---@type integer
+
+    refresh = function(context)
+      return { winnr = get_pane_winnr(filetype, context.tabnr), title = get_title(context) }
+    end,
+    render = function(snapshot, context, remain_width)
+      local winnr = snapshot.winnr
+      if
+        winnr == nil
+        or not vim.api.nvim_win_is_valid(winnr)
+        or vim.api.nvim_win_get_tabpage(winnr) ~= context.tabnr
+      then
+        return "", ""
+      end
+      local width = math.min(remain_width, vim.api.nvim_win_get_width(winnr)) ---@type integer
       if width < 1 then
-        return "", "", true
+        return "", ""
       end
 
-      local title = get_title(context) ---@type string
+      local title = snapshot.title ---@type string
       if width < #title + 4 then
         local text = string.rep(" ", width) ---@type string
         local hl_text = txt(text, hln_blank)
-        return text, hl_text, true
+        return text, hl_text
       end
 
       local text_title = title ---@type string
@@ -68,7 +82,7 @@ function M.of(position, filetype, get_title)
         .. hl_text_title
         .. txt(right_blank, hln_blank)
         .. txt(right_split, hln_split)
-      return text, hl_text, true
+      return text, hl_text
     end,
   }
   return component

@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.devmode" ---@type string
+
 local txt = stl.nvim.fn.txt
 
 ---@class era.m.nvimbar.component.devmode
@@ -11,15 +14,15 @@ function M.devmode(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "devmode:devmode",
-    atomic = true,
+
     condition = function()
       local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
       return devmode
     end,
-    render = function()
+    refresh = function()
       local text = "  devmode " ---@type string
       local hl_text = txt(text, hln_devmode) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -35,10 +38,13 @@ function M.render_count(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "debug_render_count",
-    atomic = true,
+
     condition = function()
       local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
       return devmode
+    end,
+    refresh = function()
+      return true
     end,
     render = function()
       count = count + 1
@@ -51,7 +57,7 @@ function M.render_count(position)
 
       text = text .. stl.icon.symbols.sep_right ---@type string
       hl_text = hl_text .. txt(stl.icon.symbols.sep_right, hln_sep) ---@type string
-      return text, hl_text, true
+      return text, hl_text
     end,
   }
   return component

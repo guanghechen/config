@@ -66,16 +66,7 @@ bootstrap.with_runtime(t, {
 })
 
 local nvimbar = {
-  component = {
-    term = {
-      add_button = function()
-        return {}
-      end,
-      items = function()
-        return {}
-      end,
-    },
-  },
+  component = require("era.m.nvimbar").component,
   Nvimbar = {
     new = function()
       local bar = {}

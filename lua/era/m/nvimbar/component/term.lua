@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.term" ---@type string
+
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
 local decode_btn_args = stl.nvim.fn.decode_btn_args
@@ -105,8 +108,8 @@ function M.items(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "term:items",
-    atomic = false,
-    render = function(_, remain_width)
+
+    refresh = function()
       local entries = {} ---@type { term: era.m.term.IMeta, index: integer }[]
       local total_terms = era.m.term.state.size() ---@type integer
       for idx = 1, total_terms do
@@ -118,7 +121,7 @@ function M.items(position)
 
       local total = #entries ---@type integer
       if total == 0 then
-        return "", "", false
+        return nil
       end
 
       local active_index = era.m.term.state.current() ---@type integer
@@ -149,14 +152,18 @@ function M.items(position)
         }
       end
 
+      return { segments = segments, active = active_display_index, total = total }
+    end,
+    render = function(snapshot, _, remain_width)
+      local segments, active_display_index, total = snapshot.segments, snapshot.active, snapshot.total
       local center = segments[active_display_index]
       if center == nil then
-        return "", "", false
+        return "", ""
       end
 
       remain_width = remain_width - center.width
       if remain_width < 0 then
-        return "", "", false
+        return "", ""
       end
 
       local left_reserved_width = active_display_index > 1 and arrow_reserved_width or 0
@@ -216,7 +223,6 @@ function M.items(position)
 
       local left_hidden_count = first_visible_left - 1 ---@type integer
       local right_hidden_count = total - last_visible_right ---@type integer
-      local is_complete = left_hidden_count == 0 and right_hidden_count == 0 ---@type boolean
 
       if left_hidden_count > 0 then
         local count = math.min(99, left_hidden_count) ---@type integer
@@ -234,7 +240,7 @@ function M.items(position)
         hl_text = hl_text .. btn(arrow_hl, fn_focus_next_term)
       end
 
-      return text, hl_text, is_complete
+      return text, hl_text
     end,
   }
 
@@ -249,16 +255,12 @@ function M.add_button(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "term:add_button",
-    atomic = true,
-    render = function(_, remain_width)
+
+    refresh = function()
       local text = " + " ---@type string
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      if width <= 0 or remain_width < width then
-        return "", "", false
-      end
 
       local hl_text = txt(text, hln_button)
-      return text, btn(hl_text, fn_add_term), true
+      return { text = text, hltext = btn(hl_text, fn_add_term) }
     end,
   }
 

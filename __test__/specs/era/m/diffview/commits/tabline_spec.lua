@@ -115,7 +115,9 @@ t:test("layout 3 renders status buttons against the left SBS pane", function()
     sbs_left_winnr = sbs_left_winnr,
   }
 
-  local text = tabline.status_component().render({}, 120)
+  local component = tabline.status_component()
+  local context = { tabnr = layout.tabnr }
+  local text = component.render(component.refresh(context), context, 120)
 
   t.assert_true(text:find("L₃", 1, true) ~= nil, "layout button")
   t.assert_true(text:find("F³", 1, true) ~= nil, "fold default button")
@@ -135,9 +137,14 @@ t:test("commits pane remains the preferred status width", function()
     sbs_left_winnr = sbs_left_winnr,
   }
 
-  local text = tabline.status_component().render({}, 120)
+  local component = tabline.status_component()
+  local context = { tabnr = layout.tabnr }
+  local snapshot = component.refresh(context)
+  local text = component.render(snapshot, context, 120)
   local commits_width = vim.api.nvim_win_get_width(commits_winnr)
 
+  t.assert_eq(commits_winnr, snapshot.winnr, "preferred pane")
+  t.assert_true(text:find("G", 1, true) ~= nil, "commit count remains visible")
   t.assert_true(vim.api.nvim_strwidth(text) <= commits_width, "status width")
   vim.cmd("tabclose!")
 end)

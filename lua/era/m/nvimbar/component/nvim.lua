@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.nvim" ---@type string
+
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
 
@@ -10,13 +13,12 @@ local location_step = 100 / (#location_levels - 1) ---@type number
 ---@param text                          string
 ---@param max_width                     integer
 ---@return string
----@return boolean
 local function truncate_middle(text, max_width)
   if vim.api.nvim_strwidth(text) <= max_width then
-    return text, true
+    return text
   end
   if max_width <= 1 then
-    return "…", false
+    return "…"
   end
 
   local chars = vim.fn.strchars(text) ---@type integer
@@ -52,7 +54,7 @@ local function truncate_middle(text, max_width)
     right_chars = right_chars + 1
   end
 
-  return left .. "…" .. right, false
+  return left .. "…" .. right
 end
 
 ---@return integer
@@ -60,13 +62,11 @@ end
 ---@return integer
 ---@return string
 ---@return integer
-local function calc_cursor_location()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+local function calc_cursor_location(context)
+  local cursor = context.cursor ---@type integer[]
   local row = cursor[1] ---@type integer
   local col = cursor[2] + 1 ---@type integer
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local total_lines = math.max(vim.api.nvim_buf_line_count(bufnr), 1) ---@type integer
+  local total_lines = math.max(context.line_count, 1) ---@type integer
   local denom = math.max(total_lines - 1, 1) ---@type integer
   local percent = math.floor(math.max(total_lines - row, 0) * 100 / denom) ---@type integer
 
@@ -93,18 +93,18 @@ function M.mode(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:mode",
-    atomic = true,
+
     tight = true,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.mode ~= prev_context.mode
+      return context.mode ~= prev_context.mode
     end,
-    render = function(context)
+    refresh = function(context)
       local text = icon .. context.mode_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
       text = text .. stl.icon.symbols.sep_right ---@type string
       hl_text = hl_text .. txt(stl.icon.symbols.sep_right, hln_sep) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -118,17 +118,21 @@ function M.msg_transient(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_transient",
-    atomic = false,
-    render = function(_, remain_width)
-      local text = dot.state.status.msg_transient:snapshot() ---@type string
+
+    will_change = function(_, _, snapshot)
+      return dot.state.status.msg_transient:snapshot() ~= snapshot
+    end,
+    refresh = function()
+      return dot.state.status.msg_transient:snapshot()
+    end,
+    render = function(text, _, remain_width)
       if text == "" or remain_width < MIN_TRANSIENT_WIDTH then
-        return "", "", false
+        return "", ""
       end
 
-      local full ---@type boolean
-      text, full = truncate_middle(text, remain_width)
+      text = truncate_middle(text, remain_width)
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, full
+      return text, hl_text
     end,
   }
   return component
@@ -142,15 +146,15 @@ function M.msg_command(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_command",
-    atomic = true,
-    render = function()
+
+    refresh = function()
       local text = dot.state.status.msg_command:snapshot() ---@type string
       if text == "" then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -164,15 +168,15 @@ function M.msg_lsp(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_lsp",
-    atomic = true,
-    render = function()
+
+    refresh = function()
       local text = dot.state.status.msg_lsp:snapshot() ---@type string
       if text == "" then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -186,15 +190,15 @@ function M.msg_mode(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_mode",
-    atomic = true,
-    render = function()
+
+    refresh = function()
       local text = dot.state.status.msg_mode:snapshot() ---@type string
       if text == "" then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -208,25 +212,26 @@ function M.search_count(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:search_count",
-    atomic = false,
+
     condition = function(context)
       return dot.state.status.get_search(context.winnr) ~= nil
     end,
-    render = function(context, remain_width)
+    refresh = function(context)
       local pattern, count = dot.state.status.get_search(context.winnr) ---@type string|nil, string|nil
       if pattern == nil then
-        return "", "", true
+        return nil
       end
 
       local text = string.format(" %s %s", stl.icon.ui.Search, pattern) ---@type string
       if count ~= nil then
         text = string.format("%s %s", text, count)
       end
-
-      local full ---@type boolean
-      text, full = truncate_middle(text, remain_width)
+      return text
+    end,
+    render = function(text, _, remain_width)
+      text = truncate_middle(text, remain_width)
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, full
+      return text, hl_text
     end,
   }
   return component
@@ -241,15 +246,18 @@ function M.nr(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:nr",
-    atomic = true,
+
     tight = true,
-    render = function(context)
+    will_change = function(context, prev_context)
+      return context.winnr ~= prev_context.winnr or context.bufnr ~= prev_context.bufnr
+    end,
+    refresh = function(context)
       local winnr = context.winnr ---@type integer
       local bufnr = context.bufnr ---@type integer
       local content = string.format("%d:%d ", winnr, bufnr) ---@type string
       local text = stl.icon.symbols.sep_left .. content ---@type string
       local hl_text = txt(stl.icon.symbols.sep_left, hln_sep) .. txt(content, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -263,17 +271,17 @@ function M.pid(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:pid",
-    atomic = true,
-    render = function(context)
+
+    refresh = function(context)
       local bufnr = context.bufnr ---@type integer
       local pid = vim.b[bufnr].terminal_job_pid ---@type integer|nil
       if pid == nil or pid <= 0 then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       local text = string.format("%s %d", "", pid) ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -288,16 +296,21 @@ function M.pos(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:pos",
-    atomic = true,
+
     tight = true,
-    render = function()
-      local row, col, _, location_icon, bar_index = calc_cursor_location() ---@type integer, integer, integer, string, integer
+    will_change = function(context, prev_context)
+      return context.cursor[1] ~= prev_context.cursor[1]
+        or context.cursor[2] ~= prev_context.cursor[2]
+        or context.line_count ~= prev_context.line_count
+    end,
+    refresh = function(context)
+      local row, col, _, location_icon, bar_index = calc_cursor_location(context) ---@type integer, integer, integer, string, integer
       local hln_bar = position .. "_nvim_pos_bar_" .. tostring(bar_index) ---@type string
       local prefix = string.format("%s %3d·%-2d ", stl.icon.ui.Location, row, col) ---@type string
       local bar = location_icon ---@type string
       local text = stl.icon.symbols.sep_left .. prefix .. bar ---@type string
       local hl_text = txt(stl.icon.symbols.sep_left, hln_sep) .. txt(prefix, hln_text) .. txt(bar, hln_bar) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -311,27 +324,22 @@ function M.tabtype(position, icon)
   local hln_sep = position .. "_nvim_tabtype_sep" ---@type string
 
   icon = icon or "󰓩 " ---@type string
-  local last_tabtype = nil ---@type stl.e.TabTypeEnum|nil
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:tabtype",
-    atomic = true,
+
     tight = false,
-    will_change = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
-      local changed = last_tabtype ~= tabtype ---@type boolean
-      last_tabtype = tabtype
-      return changed
+    will_change = function(context, _, snapshot)
+      return vim.t[context.tabnr].tabtype ~= snapshot.tabtype
     end,
-    render = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    refresh = function(context)
+      local tabnr = context.tabnr ---@type integer
       local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
 
       -- Don't render for normal tabs (tabtype is nil or "normal")
       if tabtype == nil or tabtype == stl.e.TabTypeEnum.NORMAL then
-        return "", "", true
+        return { text = "", hltext = "", tabtype = tabtype }
       end
 
       local content = icon .. tabtype ---@type string
@@ -341,7 +349,7 @@ function M.tabtype(position, icon)
       local hl_text = txt(stl.icon.symbols.sep_left, hln_sep)
         .. txt(content, hln_text)
         .. txt(stl.icon.symbols.sep_right, hln_sep)
-      return text, hl_text, true
+      return { text = text, hltext = hl_text, tabtype = tabtype }
     end,
   }
   return component
@@ -355,8 +363,6 @@ function M.tabs(position)
   local hln_tab_item_cur = position .. "_nvim_tab_item_cur" ---@type string
 
   local folded = false ---@type boolean
-  local last_tab_cur = 0 ---@type integer
-  local last_tab_count = 0 ---@type integer
 
   ---@type string
   local fn_active_tab = dot.G.register_anonymous_fn(function(tabid)
@@ -372,32 +378,31 @@ function M.tabs(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "nvim:tabs",
-    atomic = true,
-    will_change = function()
-      local tab_cur = vim.fn.tabpagenr() ---@type integer
-      local tab_count = vim.fn.tabpagenr("$") ---@type integer
-      local changed = last_tab_cur ~= tab_cur or last_tab_count ~= tab_count ---@type boolean
-      last_tab_cur = tab_cur
-      last_tab_count = tab_count
-      return changed
+
+    will_change = function(context, prev_context, snapshot)
+      return context.tabnr ~= prev_context.tabnr
+        or folded ~= snapshot.folded
+        or not vim.deep_equal(vim.api.nvim_list_tabpages(), snapshot.tabnrs)
     end,
-    render = function()
+    refresh = function(context)
+      local last_tab_cur = vim.api.nvim_tabpage_get_number(context.tabnr)
+      local tabnrs = vim.api.nvim_list_tabpages()
+      local last_tab_count = #tabnrs
       if last_tab_count <= 1 then
-        return "", "", true
+        return { text = "", hltext = "", tabnrs = tabnrs, folded = folded }
       end
 
       if folded then
         local text = " 󰅁 "
         local hl_text = txt(text, hln_toggle)
         hl_text = btn(hl_text, fn_toggle_tabs_folded)
-        return text, hl_text, true
+        return { text = text, hltext = hl_text, tabnrs = tabnrs, folded = folded }
       end
 
       local text = " 󰅂 " ---@type string
       local hl_text = txt(text, hln_toggle)
       hl_text = btn(hl_text, fn_toggle_tabs_folded)
 
-      local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
       for tabid = 1, last_tab_count, 1 do
         local hlname = last_tab_cur == tabid and hln_tab_item_cur or hln_tab_item
         local text_btn = " " .. tabid .. " "
@@ -406,7 +411,7 @@ function M.tabs(position)
         text = text .. text_btn
         hl_text = hl_text .. btn(hl_text_btn, fn_active_tab, tabnrs[tabid])
       end
-      return text, hl_text, true
+      return { text = text, hltext = hl_text, tabnrs = tabnrs, folded = folded }
     end,
   }
   return component

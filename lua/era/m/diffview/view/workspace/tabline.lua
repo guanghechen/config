@@ -18,21 +18,21 @@ M.position = "f_tl" ---@type stl.t.NvimbarPositionEnum
 -- Helpers
 ----------------------------------------------------------------------------------------------------
 
----Get changes pane width for current tab
----@return integer
-local function get_pane_width()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+---Get the Changes pane used to size the current tabline.
+---@param tabnr                         integer
+---@return integer|nil
+local function get_pane_winnr(tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
     if filetype == config.FT.CHANGES then
       if not stl.nvim.win.is_float(winnr) then
-        return vim.api.nvim_win_get_width(winnr)
+        return winnr
       end
     end
   end
-  return 0
+  return nil
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -134,15 +134,10 @@ function M.status_component()
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "diffview:workspace_status",
-    atomic = true,
-    render = function(_, remain_width)
-      local width = math.min(remain_width, get_pane_width()) ---@type integer
-      if width < 1 then
-        return "", "", true
-      end
 
+    refresh = function(context)
       -- Get state from current tab
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local tabnr = context.tabnr ---@type integer
       local state = workspace_state.get(tabnr)
 
       local entries = state and workspace_view.get_visible_entries(state:get_entries()) or {} ---@type era.m.diffview.IFileEntry[]
@@ -166,44 +161,40 @@ function M.status_component()
       local title_prefix = git_icon .. " Changes (" ---@type string
       local title_suffix = tostring(total) .. ")" ---@type string
       local title_text = title_prefix .. title_suffix ---@type string
-      local title_width = vim.api.nvim_strwidth(title_text) ---@type integer
-
-      -- Calculate flags width (flag2 only shown in tree mode)
-      ---@type integer
-      local flags_width = vim.api.nvim_strwidth(flag1_text)
-        + vim.api.nvim_strwidth(flag3_text)
-        + vim.api.nvim_strwidth(flag4_text)
       local flag2_text = "" ---@type string
       if is_tree then
         local foldempty_icon = stl.icon.symbols.flag_fold_empty_path ---@type string
         flag2_text = " " .. foldempty_icon .. "²"
-        flags_width = flags_width + vim.api.nvim_strwidth(flag2_text)
       end
 
-      if width < title_width + flags_width + 2 then
-        local text = string.rep(" ", width) ---@type string
-        local hl_text = txt(text, hln_blank)
-        return text, hl_text, true
-      end
-
-      local padding_width = width - title_width - flags_width - 1 ---@type integer
-      local padding = string.rep(" ", padding_width) ---@type string
-      local right_split = " " ---@type string
-
-      local text = title_text .. padding .. flag1_text .. flag2_text .. flag3_text .. flag4_text .. right_split ---@type string
-      local hl_text = txt(title_text, hln_pink)
-        .. txt(padding, hln_blank)
-        .. btn(txt(flag1_text, hln_flag_viewtype), cb_viewtype)
+      local flags_text = flag1_text .. flag2_text .. flag3_text .. flag4_text
+      local flags_hltext = btn(txt(flag1_text, hln_flag_viewtype), cb_viewtype)
       if is_tree then
-        local flag2_hln = foldempty and hln_flag_on or hln_flag_off ---@type string
-        hl_text = hl_text .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
+        flags_hltext = flags_hltext .. btn(txt(flag2_text, foldempty and hln_flag_on or hln_flag_off), cb_foldempty)
       end
-      local flag3_hln = default_folds and hln_flag_on or hln_flag_off ---@type string
-      local flag4_hln = untracked and hln_flag_on or hln_flag_off ---@type string
-      hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
-      hl_text = hl_text .. btn(txt(flag4_text, flag4_hln), cb_untracked)
-      hl_text = hl_text .. txt(right_split, hln_split)
-      return text, hl_text, true
+      flags_hltext = flags_hltext
+        .. btn(txt(flag3_text, default_folds and hln_flag_on or hln_flag_off), cb_default_folds)
+        .. btn(txt(flag4_text, untracked and hln_flag_on or hln_flag_off), cb_untracked)
+      return { winnr = get_pane_winnr(tabnr), title = title_text, flags = flags_text, flags_hltext = flags_hltext }
+    end,
+    render = function(snapshot, context, remain_width)
+      local winnr = snapshot.winnr
+      if
+        winnr == nil
+        or not vim.api.nvim_win_is_valid(winnr)
+        or vim.api.nvim_win_get_tabpage(winnr) ~= context.tabnr
+      then
+        return "", ""
+      end
+      local width = math.min(remain_width, vim.api.nvim_win_get_width(winnr))
+      local title_width, flags_width = vim.api.nvim_strwidth(snapshot.title), vim.api.nvim_strwidth(snapshot.flags)
+      if width < title_width + flags_width + 2 then
+        local blank = string.rep(" ", width)
+        return blank, txt(blank, hln_blank)
+      end
+      local padding = string.rep(" ", width - title_width - flags_width - 1)
+      return snapshot.title .. padding .. snapshot.flags .. " ",
+        txt(snapshot.title, hln_pink) .. txt(padding, hln_blank) .. snapshot.flags_hltext .. txt(" ", hln_split)
     end,
   }
   return component
@@ -217,6 +208,7 @@ end
 ---@return fun(): era.m.nvimbar.Nvimbar
 function M.create_tabline()
   return function()
+    local c = era.m.nvimbar.component
     local position = M.position
     local nvimbar ---@type era.m.nvimbar.Nvimbar
     local tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE
@@ -226,25 +218,37 @@ function M.create_tabline()
       comp_sep = "",
       comp_sep_hlname = position .. "_bg",
       comp_sep_hlname_active = position .. "_bg",
-      delay = 256,
-      silent = function()
-        return not dot.context.flight.devmode:snapshot()
-      end,
       get_max_width = function()
         return vim.o.columns
       end,
       is_active = stl.fn.falsy,
-      on_fulfilled = function()
+      on_fulfilled = function(result)
         if vim.t.tabtype == tabtype then
-          vim.o.tabline = nvimbar:snapshot()
+          vim.o.tabline = result
         end
       end,
     })
 
     nvimbar
-      :place("left", M.status_component(), 95)
-      :place("center", era.m.nvimbar.component.nvim.tabtype(position, stl.icon.git.Git .. " "), 100)
-      :place("right", era.m.nvimbar.component.nvim.tabs(position), 100)
+      :place({
+        position = "left",
+        priority = 95,
+        component = c.lazy(M.status_component),
+      })
+      :place({
+        position = "center",
+        priority = 100,
+        component = c.lazy(function()
+          return c.nvim.tabtype(position, stl.icon.git.Git .. " ")
+        end),
+      })
+      :place({
+        position = "right",
+        priority = 100,
+        component = c.lazy(function()
+          return c.nvim.tabs(position)
+        end),
+      })
 
     return nvimbar
   end

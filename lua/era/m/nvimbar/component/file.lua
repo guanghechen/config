@@ -36,11 +36,11 @@ function M.encoding(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:encoding",
-    atomic = true,
+
     condition = function(context)
       return stl.filetype.is_sourcefile(context.filetype)
     end,
-    render = function(context)
+    refresh = function(context)
       local bufnr = context.bufnr ---@type integer
       local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ---@type string
 
@@ -51,7 +51,7 @@ function M.encoding(position)
       if buftype == "" or buftype == "nowrite" then
         hl_text = btn(hl_text, fn_on_fileencoding_clicked)
       end
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -65,11 +65,11 @@ function M.format(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:format",
-    atomic = true,
+
     condition = function(context)
       return stl.filetype.is_sourcefile(context.filetype)
     end,
-    render = function(context)
+    refresh = function(context)
       local bufnr = context.bufnr ---@type integer
       local fileformat = vim.api.nvim_get_option_value("fileformat", { buf = bufnr }) ---@type string
 
@@ -82,7 +82,7 @@ function M.format(position)
       if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
         hl_text = btn(hl_text, fn_on_fileformat_clicked)
       end
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -97,15 +97,15 @@ function M.indent(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:indent",
-    atomic = true,
+
     condition = function(context)
       return stl.filetype.is_sourcefile(context.filetype)
     end,
-    render = function(context)
+    refresh = function(context)
       local shiftwidth = vim.api.nvim_get_option_value("shiftwidth", { buf = context.bufnr }) ---@type integer
       local text = string.format("%s %d", icon_shiftwidth, shiftwidth) ---@type string
       local hl_text = txt(text, hln_text)
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -120,27 +120,28 @@ function M.name(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:name",
-    atomic = true,
-    render = function(context)
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+
+    refresh = function(context)
+      local tabnr = context.tabnr ---@type integer
+      local fileicon, fileicon_hl = stl.fileicon.get_file_icon(context.filename, context.filetype)
       local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       local is_mod = vim.api.nvim_get_option_value("modified", { buf = context.bufnr }) ---@type boolean
       local text_mod = is_mod and " " or "" ---@type string
       if context.winnr ~= winnr_sourcefile then
-        local text = context.fileicon .. " " .. context.filename .. text_mod ---@type string
+        local text = fileicon .. " " .. context.filename .. text_mod ---@type string
         local hl_text = txt(text, hln_text) ---@type string
-        return text, hl_text, true
+        return { text = text, hltext = hl_text }
       end
 
-      local text_fileicon = context.fileicon .. " " ---@type string
-      local hl_text_fileicon = txt(text_fileicon, context.fileicon_hl) ---@type string
+      local text_fileicon = fileicon .. " " ---@type string
+      local hl_text_fileicon = txt(text_fileicon, fileicon_hl) ---@type string
 
       local text_filename = context.filename .. text_mod ---@type string
       local hl_text_filename = txt(text_filename, hln_text_active)
 
       local text = text_fileicon .. text_filename ---@type string
       local hl_text = hl_text_fileicon .. hl_text_filename ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -170,23 +171,24 @@ function M.path(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:path",
-    atomic = true,
+
     condition = function(context)
       return #context.filepath > 0 and context.filepath ~= "."
     end,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.filepath ~= prev_context.filepath
+      return context.filepath ~= prev_context.filepath
     end,
-    render = function(context)
+    refresh = function(context)
       local meta = dot.buf.resolve(context.bufnr, false) ---@type dot.buf.IMeta|nil
       if meta == nil then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       local relpath = meta.relpath ---@type string
-      local text = context.fileicon .. " " .. relpath ---@type string
+      local fileicon = stl.fileicon.get_file_icon(context.filename, context.filetype)
+      local text = fileicon .. " " .. relpath ---@type string
       local hl_text = btn(txt(text, hln_text), fn_on_filepath_clicked) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -200,14 +202,14 @@ function M.readonly(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:readonly",
-    atomic = true,
+
     condition = function(context)
       return vim.api.nvim_get_option_value("readonly", { buf = context.bufnr })
     end,
-    render = function()
+    refresh = function()
       local text = stl.icon.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -221,17 +223,17 @@ function M.size(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:size",
-    atomic = true,
+
     will_change = function(context, prev_context)
-      return prev_context == nil or context.filepath ~= prev_context.filepath
+      return context.filepath ~= prev_context.filepath
     end,
-    render = function(context)
+    refresh = function(context)
       if context.filepath == nil or context.filepath == "" then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       if not yoz.path.is_exist(context.filepath) then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       local text, err = yoz.fs.get_filesize(context.filepath)
@@ -247,7 +249,7 @@ function M.size(position)
       end
       text = text or ""
       local hl_text = txt(text, hln_text)
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -261,7 +263,11 @@ function M.status(position)
   ---@param bufnr                       integer
   ---@return string
   local function get_filestatus(bufnr)
-    local summary = era.m.git.hunk.get_summary(bufnr) ---@type era.m.git.HunkSummary
+    local hunk = package.loaded["era.m.git.hunk"]
+    if hunk == nil then
+      return ""
+    end
+    local summary = hunk.get_summary(bufnr) ---@type era.m.git.HunkSummary
     local text = "" ---@type string
     if summary.added > 0 then
       text = text .. " " .. stl.icon.git.Add .. " " .. summary.added ---@type string
@@ -278,15 +284,18 @@ function M.status(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:status",
-    atomic = true,
-    render = function(context)
+
+    will_change = function(context, _, snapshot)
+      return get_filestatus(context.bufnr) ~= snapshot.text
+    end,
+    refresh = function(context)
       local text = get_filestatus(context.bufnr) ---@type string
       if #text < 1 then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -300,17 +309,18 @@ function M.type(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "file:type",
-    atomic = true,
+
     will_change = function(context, prev_context)
-      return prev_context == nil or context.filetype ~= prev_context.filetype
+      return context.filetype ~= prev_context.filetype
     end,
     condition = function(context)
       return context.filetype and #context.filetype > 0
     end,
-    render = function(context)
-      local text = context.fileicon .. " " .. context.filetype ---@type string
+    refresh = function(context)
+      local fileicon = stl.fileicon.get_file_icon(context.filename, context.filetype)
+      local text = fileicon .. " " .. context.filetype ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component

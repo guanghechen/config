@@ -95,7 +95,10 @@ era.dressing.tabline.register(tabtype, factory)
 2. 从 `tabline_nvimbar_map` 查找已注册的 nvimbar 或 factory
 3. 若未找到，使用默认 nvimbar
 4. 若找到 factory，调用并缓存其返回的 nvimbar
-5. 调用 `nvimbar:render()` 渲染
+5. 调用 `nvimbar:refresh()`，各组件独立异步获取数据
+6. 已完成的组件通过合并后的 `on_fulfilled` 分批发布；发布时确认当前 tabtype 仍匹配
+
+`render()` 只排版已有数据；`snapshot()` 只读取最近一次发布的字符串缓存，两者均不触发刷新。完整契约见 [nvimbar](nvimbar.md)。
 
 ### 注册示例
 

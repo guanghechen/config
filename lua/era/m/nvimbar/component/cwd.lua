@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.cwd" ---@type string
+
 local txt = stl.nvim.fn.txt
 
 ---@class era.m.nvimbar.component.cwd
@@ -12,19 +15,19 @@ function M.cwd(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "cwd",
-    atomic = true,
+
     tight = true,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.cwd ~= prev_context.cwd
+      return context.cwd ~= prev_context.cwd
     end,
-    render = function(context)
+    refresh = function(context)
       local cwd_name = yoz.path.basename(context.cwd) ---@type string
       local text = stl.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
       text = stl.icon.symbols.sep_left .. text ---@type string
       hl_text = txt(stl.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component

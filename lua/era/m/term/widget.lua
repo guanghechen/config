@@ -41,11 +41,6 @@ local termline = Nvimbar.new({
   comp_sep = "",
   comp_sep_hlname = "f_wl_bg",
   comp_sep_hlname_active = "f_wl_bg",
-  delay = 128,
-  silent = function()
-    local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
-    return not devmode
-  end,
   get_max_width = function()
     local winnr = _terminal_winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -70,7 +65,21 @@ local termline = Nvimbar.new({
 })
 
 local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
-termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
+termline
+  :place({
+    position = "left",
+    priority = 95,
+    component = c.lazy(function()
+      return c.term.items(position)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 100,
+    component = c.lazy(function()
+      return c.term.add_button(position)
+    end),
+  })
 
 stl.fn.observe({ era.m.term.state.o_termuuid }, function()
   local winnr = _terminal_winnr ---@type integer|nil
@@ -98,7 +107,7 @@ end, true)
 dot.state.status.dirtier_termline:subscribe(
   stl.c.Subscriber.new({
     on_next = function()
-      termline:render()
+      termline:refresh()
     end,
   }),
   true
@@ -111,12 +120,7 @@ local function render_winbar_to(winnr)
     return
   end
 
-  local prev_winnr = _terminal_winnr
-  _terminal_winnr = winnr
-  local result = termline:render(true)
-  _terminal_winnr = prev_winnr
-
-  vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
+  termline:fork(winnr, 2):refresh()
 end
 
 ---@param direction                     'h'|'j'|'k'|'l'

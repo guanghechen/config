@@ -6,6 +6,7 @@ local initialized = false ---@type boolean
 local M = {}
 
 local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
+local c = era.m.nvimbar.component
 local position = "f_tl" ---@type stl.t.NvimbarPositionEnum
 
 ----------------------------------------------------------------------------------------------------
@@ -22,43 +23,60 @@ normal_tabline = era
     comp_sep = "",
     comp_sep_hlname = position .. "_bg",
     comp_sep_hlname_active = position .. "_bg",
-    delay = 256,
-    silent = function()
-      local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
-      return not devmode
-    end,
     get_max_width = function()
       return vim.o.columns
     end,
     is_active = stl.fn.falsy,
-    on_fulfilled = function()
-      if vim.t.tabtype == nil or vim.t.tabtype == stl.e.TabTypeEnum.NORMAL then
-        vim.o.tabline = normal_tabline:snapshot()
+    on_fulfilled = function(result)
+      if (vim.t.tabtype == nil or vim.t.tabtype == stl.e.TabTypeEnum.NORMAL) and vim.o.tabline ~= result then
+        vim.o.tabline = result
       end
     end,
   })
-  :place("left", era.m.nvimbar.component.explorer.tabline(position), 95)
-  :place(
-    "left",
-    era.m.nvimbar.component.sidebar.of(position, stl.filetype.DIFFVIEW_FILES, function()
-      local title = stl.icon.git.Git .. " Git Diffview" ---@type string
-      return title
+  :place({
+    position = "left",
+    priority = 95,
+    component = c.lazy(function()
+      return c.explorer.tabline(position)
     end),
-    95
-  )
-  :place("left", era.m.nvimbar.component.buf.bufs(position), 95)
+  })
+  :place({
+    position = "left",
+    priority = 95,
+    component = c.lazy(function()
+      return c.sidebar.of(position, stl.filetype.DIFFVIEW_FILES, function()
+        local title = stl.icon.git.Git .. " Git Diffview" ---@type string
+        return title
+      end)
+    end),
+  })
+  :place({
+    position = "left",
+    priority = 95,
+    component = c.lazy(function()
+      return c.buf.bufs(position)
+    end),
+  })
   --
-  :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
+  :place({
+    position = "center",
+    priority = 100,
+    component = c.lazy(function()
+      return c.devmode.render_count(position)
+    end),
+  })
   --
-  -- :place("right", era.m.nvimbar.component.cwd.cwd(position), 100)
-  -- :place("right", era.m.nvimbar.component.devmode.devmode(position), 100)
-  :place(
-    "right",
-    era.m.nvimbar.component.nvim.tabs(position),
-    100
-  )
+  -- :place({ position = "right", priority = 100, component = c.lazy(function() return c.cwd.cwd(position) end) })
+  -- :place({ position = "right", priority = 100, component = c.lazy(function() return c.devmode.devmode(position) end) })
+  :place({
+    position = "right",
+    priority = 100,
+    component = c.lazy(function()
+      return c.nvim.tabs(position)
+    end),
+  })
 --
--- :place("right", era.m.nvimbar.component.cwd.cwd(position), 100)
+-- :place({ position = "right", priority = 100, component = c.lazy(function() return c.cwd.cwd(position) end) })
 
 local function create_maximize_tabline()
   local content = "󰓩 MAXIMIZED" ---@type string
@@ -70,9 +88,9 @@ local function create_maximize_tabline()
   ---@type era.m.nvimbar.IRawComponent
   local indicator = {
     name = "maximize:indicator",
-    atomic = true,
-    render = function()
-      return text, hl_text, true
+
+    refresh = function()
+      return { text = text, hltext = hl_text }
     end,
   }
 
@@ -83,21 +101,21 @@ local function create_maximize_tabline()
       comp_sep = "",
       comp_sep_hlname = position .. "_bg",
       comp_sep_hlname_active = position .. "_bg",
-      delay = 256,
-      silent = function()
-        return not dot.context.flight.devmode:snapshot()
-      end,
       get_max_width = function()
         return vim.o.columns
       end,
       is_active = stl.fn.falsy,
-      on_fulfilled = function()
-        if vim.t.tabtype == stl.e.TabTypeEnum.MAXIMIZE then
-          vim.o.tabline = nvimbar:snapshot()
+      on_fulfilled = function(result)
+        if vim.t.tabtype == stl.e.TabTypeEnum.MAXIMIZE and vim.o.tabline ~= result then
+          vim.o.tabline = result
         end
       end,
     })
-    :place("center", indicator, 100)
+    :place({
+      position = "center",
+      priority = 100,
+      component = indicator,
+    })
   return nvimbar
 end
 
@@ -202,7 +220,7 @@ function M.dressing()
         -- Get nvimbar for current tabtype and render
         local tabtype = vim.t.tabtype or stl.e.TabTypeEnum.NORMAL ---@type stl.e.TabTypeEnum
         local nvimbar = resolve_nvimbar(tabtype)
-        nvimbar:render()
+        nvimbar:refresh()
       else
         vim.o.showtabline = 0
 

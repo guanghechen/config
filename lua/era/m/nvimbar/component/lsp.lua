@@ -68,8 +68,10 @@ end)
 ---@return                              string[]
 ---@return                              era.m.nvimbar.component.lsp.ILspIcon[]
 ---@param position                      stl.t.NvimbarPositionEnum
-local function get_lsp_clients(position)
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+local function get_lsp_clients(position, bufnr)
+  if package.loaded["vim.lsp.client"] == nil then
+    return {}, {}
+  end
   if not stl.nvim.buf.is_valid(bufnr) then
     return {}, {}
   end
@@ -95,11 +97,12 @@ local function get_lsp_clients(position)
   return client_names, client_icons
 end
 
----@return                              string[]
-local function get_lsp_client_names()
+---@param bufnr                         ?integer
+---@return string[]
+local function get_lsp_client_names(bufnr)
   local names = {} ---@type string[]
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  if not stl.nvim.buf.is_valid(bufnr) then
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if package.loaded["vim.lsp.client"] == nil or not stl.nvim.buf.is_valid(bufnr) then
     return names
   end
 
@@ -136,18 +139,21 @@ function M.client(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "lsp:client",
-    atomic = true,
-    render = function()
-      local client_names, client_icons = get_lsp_clients(position) ---@type string[], era.m.nvimbar.component.lsp.ILspIcon[]
+
+    will_change = function(context, _, snapshot)
+      return not vim.deep_equal(get_lsp_client_names(context.bufnr), snapshot.client_names)
+    end,
+    refresh = function(context)
+      local client_names, client_icons = get_lsp_clients(position, context.bufnr) ---@type string[], era.m.nvimbar.component.lsp.ILspIcon[]
       if #client_names < 1 then
-        return "", "", true
+        return { text = "", hltext = "", client_names = client_names }
       end
 
       if #client_names == 1 then
         local name = client_names[1] ---@type string
         local text = lsp_icon .. " " .. name ---@type string
         local hl_text = btn(txt(lsp_icon, hln_text) .. txt(" " .. name, hln_text), fn_show_clients) ---@type string
-        return text, hl_text, true
+        return { text = text, hltext = hl_text, client_names = client_names }
       end
 
       local text = lsp_icon .. " (" ---@type string
@@ -165,7 +171,7 @@ function M.client(position)
       text = text .. ")" ---@type string
       hl_text = hl_text .. txt(")", hln_text) ---@type string
       hl_text = btn(hl_text, fn_show_clients) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text, client_names = client_names }
     end,
   }
   return component
@@ -182,11 +188,11 @@ function M.diagnostics(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "lsp:diagnostics",
-    atomic = true,
+
     condition = function()
-      return not not rawget(vim, "lsp")
+      return package.loaded["era.m.lsp.diagnostic"] ~= nil
     end,
-    render = function(context)
+    refresh = function(context)
       local diag_data = era.m.lsp.diagnostic.get_by_bufnr(context.bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
 
       local text_hl = "" ---@type string
@@ -206,7 +212,7 @@ function M.diagnostics(position)
       text_hl = text_hl .. btn(txt(text_count_info, hln_diagnostics_info), fn_show_info)
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info
-      return text, text_hl, true
+      return { text = text, hltext = text_hl }
     end,
   }
   return component
@@ -220,49 +226,40 @@ function M.symbols(position)
   local hln_lsp_text = position .. "_lsp_symbol_text" ---@type string
 
   local sep = " " .. stl.icon.fillchars.foldclose .. " " ---@type string
-  local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "lsp:symbols",
-    atomic = false,
+
     ---@diagnostic disable-next-line: unused-local
-    render = function(context, remain_width)
-      local winnr = context.winnr ---@type integer
-      local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
-      local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
-      if winline == nil then
-        return "", "", false
+    refresh = function(context)
+      local meta = dot.win.resolve(context.winnr, false)
+      local winline = meta and meta.winline
+      local pieces = {}
+      for _, symbol in ipairs(winline and winline.lsp_symbols or {}) do
+        local title = symbol.name or ""
+        local icon = (stl.icon.kind[symbol.kind] or "") .. " "
+        local hln_icon = symbol.kind and hln_lsp_icon .. "_" .. symbol.kind or hln_lsp_icon
+        local text = sep .. icon .. title
+        local hltext = txt(sep, hln_lsp_sep) .. txt(icon, hln_icon) .. txt(title, hln_lsp_text)
+        pieces[#pieces + 1] = {
+          text = text,
+          hltext = btn(hltext, fn_goto_lsp_pos, { context.winnr, symbol.row, symbol.col }),
+          width = vim.api.nvim_strwidth(text),
+        }
       end
-
-      local symbols = winline.lsp_symbols ---@type dot.t.ILspSymbol[]|nil
-      if symbols == nil or #symbols < 1 then
-        return "", "", false
-      end
-
-      local text = "" ---@type string
-      local hl_text = "" ---@type string
-
-      local has_remain = false ---@type boolean
-      for _, symbol in ipairs(symbols) do
-        local title = symbol.name or "" ---@type string
-        local icon = (stl.icon.kind[symbol.kind] or "") .. " " ---@type string
-        local width = width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
-        if width > remain_width then
-          has_remain = true
-          break
+      return pieces
+    end,
+    render = function(pieces, _, remain_width)
+      local text, hltext = "", ""
+      for _, piece in ipairs(pieces) do
+        if piece.width > remain_width then
+          return text, hltext
         end
-
-        remain_width = remain_width - width
-        local hln_icon = symbol.kind and hln_lsp_icon .. "_" .. symbol.kind or hln_lsp_icon ---@type string
-
-        local lsp_piece = sep .. icon .. title ---@type string
-        local hl_lsp_piece = txt(sep, hln_lsp_sep) .. txt(icon, hln_icon) .. txt(title, hln_lsp_text) ---@type string
-
-        text = text .. lsp_piece
-        hl_text = hl_text .. btn(hl_lsp_piece, fn_goto_lsp_pos, { winnr, symbol.row, symbol.col })
+        text, hltext = text .. piece.text, hltext .. piece.hltext
+        remain_width = remain_width - piece.width
       end
-      return text, hl_text, not has_remain
+      return text, hltext
     end,
   }
   return component

@@ -628,6 +628,7 @@ t:test("git winline component renders hunk navigation position", function()
   })
 
   local git_component = assert(loadfile("lua/era/m/nvimbar/component/git.lua"))()
+  t:patch_table(package.loaded, "era.m.git.hunk_nav", era.m.git.hunk_nav)
   local component = git_component.hunk_nav("f_wl")
 
   local context = {
@@ -636,17 +637,12 @@ t:test("git winline component renders hunk navigation position", function()
     cwd = "",
     filename = "",
     filepath = "",
-    fileicon = "",
-    fileicon_hl = "",
     filetype = "",
     mode = "normal",
     mode_name = "NORMAL",
-    git_branch = nil,
   } ---@type era.m.nvimbar.INvimbarContext
-  t.assert_true(component.condition(context, 20), "visible with navigation state")
-  local text, _, full = component.render(context, 20)
-  t.assert_eq("G 2/10", text, "rendered position")
-  t.assert_true(full, "atomic result")
+  t.assert_true(component.condition(context), "visible with navigation state")
+  t.assert_eq("G 2/10", component.refresh(context).text, "rendered position")
 end)
 
 t:run()

@@ -181,6 +181,7 @@ function M:dispose()
   end
   self._disposed = true
   self:__invalidate_render__()
+  self._nvimbar:dispose()
 
   for _, sub in ipairs(self._subscriptions) do
     sub:unsubscribe()
@@ -497,8 +498,6 @@ function M:__create_nvimbar__()
     comp_sep = "",
     comp_sep_hlname = "m_ex_winbar",
     comp_sep_hlname_active = "m_ex_winbar",
-    delay = 128,
-    silent = stl.fn.falsy,
     get_max_width = get_width,
     get_preset_context = function()
       local winnr = self:get_winnr() ---@type integer|nil
@@ -508,13 +507,28 @@ function M:__create_nvimbar__()
       local winnr = self:get_winnr() ---@type integer|nil
       return winnr == vim.api.nvim_get_current_win()
     end,
+    validate = function()
+      if self._disposed or vim.o.showtabline ~= 0 then
+        return "Explorer winbar is hidden."
+      end
+      local winnr = self:get_winnr() ---@type integer|nil
+      if winnr == nil or not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= self._bufnr then
+        return "Explorer window no longer displays its buffer."
+      end
+    end,
     on_fulfilled = function(result)
       local winnr = self:get_winnr() ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
         vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
       end
     end,
-  }):place("left", c.explorer.winbar(self._tree.o_root_filepath, position, nvimbar_flags, get_width), 100)
+  }):place({
+    position = "left",
+    priority = 100,
+    component = c.lazy(function()
+      return c.explorer.winbar(self._tree.o_root_filepath, position, nvimbar_flags)
+    end),
+  })
 
   return nvimbar
 end
@@ -1759,17 +1773,18 @@ end
 function M:__update_winbar__(tabnr)
   tabnr = tabnr or vim.api.nvim_get_current_tabpage()
   local winnr = self._tab_wins[tabnr] ---@type integer|nil
-  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= self._bufnr then
     return
   end
 
   if vim.o.showtabline ~= 0 then
     -- When tabline is shown, hide winbar (info displayed in tabline instead)
+    self._nvimbar:cancel_refresh()
     vim.api.nvim_set_option_value("winbar", "", { win = winnr, scope = "local" })
     return
   end
 
-  self._nvimbar:render(true)
+  self._nvimbar:refresh()
 end
 
 return M

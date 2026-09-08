@@ -67,8 +67,9 @@ t:test("shared result applies status and diagnostic policies", function()
       { border = "", number = false, winhighlight = "" },
       { row = 0, col = 0, width = 40, height = 4 }
     )
-    local winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
-    t.assert_true(winbar:find("READY", 1, true) ~= nil, "shared result status")
+    t.wait_until(function()
+      return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("READY", 1, true) ~= nil
+    end, 1000, "shared result status")
 
     fail_draw = true
     ---@diagnostic disable-next-line: missing-parameter

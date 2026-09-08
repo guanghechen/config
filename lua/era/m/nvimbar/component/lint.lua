@@ -7,14 +7,14 @@ local txt = stl.nvim.fn.txt
 local disabled_linters = {} ---@type table<string, boolean>
 
 ---@return string[]
-local function get_available_linters()
-  local ok, lint = pcall(require, "lint")
-  if not ok then
+local function get_available_linters(context)
+  local lint = package.loaded["lint"]
+  if lint == nil then
     return {}
   end
 
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+  local filetype = context and context.filetype
+    or vim.api.nvim_get_option_value("filetype", { buf = vim.api.nvim_get_current_buf() })
   local names = lint._resolve_linter_by_ft(filetype) ---@type string[]
   names = vim.list_slice(names)
   vim.list_extend(names, lint.linters_by_ft["_"] or {})
@@ -24,8 +24,8 @@ end
 
 ---@return string[]
 local function get_running_linters()
-  local ok, lint = pcall(require, "lint")
-  if not ok then
+  local lint = package.loaded["lint"]
+  if lint == nil then
     return {}
   end
   return lint.get_running()
@@ -38,6 +38,7 @@ local function is_linter_enabled(name)
 end
 
 ---@param name                          string
+---@return nil
 local function toggle_linter(name)
   disabled_linters[name] = not disabled_linters[name]
   dot.state.status.dirtier_statusline:mark_dirty()
@@ -88,10 +89,15 @@ function M.status(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "lint:status",
-    atomic = true,
-    render = function()
+
+    will_change = function(context, _, snapshot)
+      return not vim.deep_equal(get_running_linters(), snapshot.running)
+        or not vim.deep_equal(get_available_linters(context), snapshot.available)
+        or not vim.deep_equal(disabled_linters, snapshot.disabled)
+    end,
+    refresh = function(context)
       local running = get_running_linters() ---@type string[]
-      local available = get_available_linters() ---@type string[]
+      local available = get_available_linters(context) ---@type string[]
 
       local enabled_names = {} ---@type string[]
       for _, name in ipairs(available) do
@@ -117,7 +123,13 @@ function M.status(position)
 
       local text = icon .. display_text ---@type string
       local hl_text = btn(txt(icon, hln_icon) .. txt(display_text, hln_text), fn_open_selector) ---@type string
-      return text, hl_text, true
+      return {
+        text = text,
+        hltext = hl_text,
+        running = vim.list_slice(running),
+        available = available,
+        disabled = vim.deepcopy(disabled_linters),
+      }
     end,
   }
   return component

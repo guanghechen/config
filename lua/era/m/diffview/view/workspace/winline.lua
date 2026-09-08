@@ -13,8 +13,8 @@ local POSITION = "f_wl" ---@type stl.t.NvimbarPositionEnum
 function M.changes_status_component(ctx, stage_type)
   local component = {
     name = "diffview:" .. stage_type .. "_status",
-    atomic = true,
-    render = function()
+
+    refresh = function()
       local count = 0 ---@type integer
       local show_untracked = dot.context.diffview.flag_untracked:snapshot() ---@type boolean
       for _, entry in ipairs(ctx.state:get_entries()) do
@@ -25,7 +25,7 @@ function M.changes_status_component(ctx, stage_type)
 
       local label = stage_type == "staged" and "Staged" or "Unstaged" ---@type string
       local text = string.format(" %s %s (%d) ", stl.icon.git.Git, label, count) ---@type string
-      return text, stl.nvim.fn.txt(text, POSITION .. "_sidebar_pink"), true
+      return { text = text, hltext = stl.nvim.fn.txt(text, POSITION .. "_sidebar_pink") }
     end,
   } ---@type era.m.nvimbar.IRawComponent
   return component
@@ -36,16 +36,19 @@ end
 function M.history_status_component(ctx)
   local component = {
     name = "diffview:history_status",
-    atomic = false,
-    render = function(_, remain_width)
+
+    refresh = function()
       local state = ctx.state
       local title_text = " " .. (ctx.layout.title or "History") .. " " ---@type string
       local count_text = string.format("%s %d", stl.icon.git.Git, state:get_commits_total()) ---@type string
       local page = state:get_commits_page() ---@type integer
       local page_count = state:get_commits_page_count() ---@type integer
       local page_text = string.format("%s %d/%d ", stl.icon.ui.TabPage, page, page_count) ---@type string
-      local separator = " │ " ---@type string
-
+      return { title = title_text, count = count_text, page = page_text }
+    end,
+    render = function(snapshot, _, remain_width)
+      local title_text, count_text, page_text = snapshot.title, snapshot.count, snapshot.page
+      local separator = " │ "
       local show_count = vim.api.nvim_strwidth(title_text .. count_text .. separator .. page_text) <= remain_width
       if vim.api.nvim_strwidth(title_text .. page_text) > remain_width then
         title_text = ""
@@ -61,7 +64,7 @@ function M.history_status_component(ctx)
       end
       text = text .. page_text
       hl_text = hl_text .. stl.nvim.fn.txt(page_text, POSITION .. "_sidebar_dim")
-      return text, hl_text, true
+      return text, hl_text
     end,
   } ---@type era.m.nvimbar.IRawComponent
   return component
@@ -86,14 +89,13 @@ local function resolve_nvimbar(winnr, name, status_component, validate)
     return winline.nvimbar
   end
 
+  local c = era.m.nvimbar.component
   local nvimbar ---@type era.m.nvimbar.Nvimbar
   nvimbar = era.m.nvimbar.Nvimbar.new({
     name = name,
     comp_sep = "",
     comp_sep_hlname = POSITION .. "_bg",
     comp_sep_hlname_active = POSITION .. "_bg",
-    delay = 128,
-    silent = stl.fn.falsy,
     get_max_width = function()
       return vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_width(winnr) or 0
     end,
@@ -110,7 +112,19 @@ local function resolve_nvimbar(winnr, name, status_component, validate)
     end,
     validate = validate,
   })
-  nvimbar:place("left", status_component, 100):place("right", era.m.nvimbar.component.nvim.search_count(POSITION), 120)
+  nvimbar
+    :place({
+      position = "left",
+      priority = 100,
+      component = status_component,
+    })
+    :place({
+      position = "right",
+      priority = 120,
+      component = c.lazy(function()
+        return c.nvim.search_count(POSITION)
+      end),
+    })
 
   winline = winline or { bufnr = vim.api.nvim_win_get_buf(winnr), nvimbar = nvimbar }
   winline.bufnr = vim.api.nvim_win_get_buf(winnr)

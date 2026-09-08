@@ -300,7 +300,7 @@ function M.fork(winnr_source, winnr_target)
       if meta_target.winline ~= nil then
         meta_target.winline.fork_source_winnr = winnr_source
       end
-      nvimbar:render()
+      nvimbar:refresh()
     elseif not ok then
       stl.reporter.error({
         from = __module_name__,
@@ -325,7 +325,7 @@ function M.render_winline(winnr)
   end
 
   if not winline.nvimbar:isdisposed() then
-    winline.nvimbar:render()
+    winline.nvimbar:refresh()
   end
   local forks = winline.forks
   if forks ~= nil then
@@ -333,7 +333,7 @@ function M.render_winline(winnr)
       if not vim.api.nvim_win_is_valid(fork_winnr) or nvimbar:isdisposed() then
         forks[fork_winnr] = nil
       else
-        nvimbar:render()
+        nvimbar:refresh()
       end
     end
   end

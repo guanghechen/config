@@ -26,18 +26,6 @@ local function setup()
   end)
   vim.t[tabnr].tabtype = nil
 
-  local component = setmetatable({}, {
-    __index = function()
-      return setmetatable({}, {
-        __index = function()
-          return function()
-            return {}
-          end
-        end,
-      })
-    end,
-  })
-
   t:patch_global("stl", {
     e = enums,
     filetype = require("stl.filetype"),
@@ -99,21 +87,22 @@ local function setup()
     },
   })
   t:patch_table(era.m, "nvimbar", {
-    component = component,
+    component = require("era.m.nvimbar").component,
     Nvimbar = {
       new = function(props)
         local bar = { render_count = 0 }
         function bar:place()
           return self
         end
-        function bar:render()
+        ---@return nil
+        function bar:refresh()
           self.render_count = self.render_count + 1
         end
         function bar:snapshot()
           return props.name
         end
         function bar:fulfill()
-          props.on_fulfilled()
+          props.on_fulfilled(props.name)
         end
         runtime.bars[props.name] = bar
         return bar
@@ -189,7 +178,7 @@ t:test("custom factories remain lazy and are reused across initialization and ta
   Tabline.register(enums.TabTypeEnum.DIFFVIEW_WORKSPACE, function()
     factory_calls = factory_calls + 1
     return {
-      render = function()
+      refresh = function()
         render_count = render_count + 1
       end,
     }

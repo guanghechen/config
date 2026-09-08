@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.notepad" ---@type string
+
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
 local decode_btn_args = stl.nvim.fn.decode_btn_args
@@ -30,8 +33,10 @@ local fn_focus_next_notepad = dot.G.register_anonymous_fn(function()
   dot.command.definitions.notepad.focus_right:execute()
 end) or "dot.G.noop"
 
----@type table<string, fun(): nil>
-local fn_switch_source_registry = {}
+---@type string
+local fn_switch_source = dot.G.register_anonymous_fn(function()
+  dot.command.definitions.notepad.source_select:execute()
+end) or "dot.G.noop"
 
 ---@class era.m.nvimbar.component.notepad
 local M = {}
@@ -115,8 +120,8 @@ function M.items(position, notepad)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "notepad:items",
-    atomic = false,
-    render = function(_, remain_width)
+
+    refresh = function()
       local entries = {} ---@type { item: era.m.notepad.state.INotepadItemMeta, index: integer }[]
       for item, index in notepad:iterator() do
         entries[#entries + 1] = { item = item, index = index }
@@ -124,7 +129,7 @@ function M.items(position, notepad)
 
       local total = #entries ---@type integer
       if total == 0 then
-        return "", "", false
+        return nil
       end
 
       local active_index, active_uuid = notepad:current()
@@ -167,14 +172,18 @@ function M.items(position, notepad)
         }
       end
 
+      return { segments = segments, active = active_display_index, total = total }
+    end,
+    render = function(snapshot, _, remain_width)
+      local segments, active_display_index, total = snapshot.segments, snapshot.active, snapshot.total
       local center = segments[active_display_index]
       if center == nil then
-        return "", "", false
+        return "", ""
       end
 
       remain_width = remain_width - center.width
       if remain_width < 0 then
-        return "", "", false
+        return "", ""
       end
 
       local left_reserved_width = active_display_index > 1 and arrow_reserved_width or 0
@@ -234,7 +243,6 @@ function M.items(position, notepad)
 
       local left_hidden_count = first_visible_left - 1 ---@type integer
       local right_hidden_count = total - last_visible_right ---@type integer
-      local is_complete = (left_hidden_count == 0 and right_hidden_count == 0) ---@type boolean
 
       if left_hidden_count > 0 then
         local count = math.min(99, left_hidden_count) ---@type integer
@@ -252,7 +260,7 @@ function M.items(position, notepad)
         hl_text = hl_text .. btn(arrow_hl, fn_focus_next_notepad)
       end
 
-      return text, hl_text, is_complete
+      return text, hl_text
     end,
   }
 
@@ -267,15 +275,12 @@ function M.add_button(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "notepad:add_button",
-    atomic = true,
-    render = function(_, remain_width)
+
+    refresh = function()
       local text = " " ---@type string
       local hl_text = txt(text, hln_button)
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      if width <= 0 or remain_width < width then
-        return "", "", false
-      end
-      return text, btn(hl_text, fn_add_notepad), true
+
+      return { text = text, hltext = btn(hl_text, fn_add_notepad) }
     end,
   }
 
@@ -288,24 +293,14 @@ end
 function M.source(position, notepad)
   local hln_source = position .. "_notepad_source" ---@type string
   local hln_source_sep = position .. "_notepad_source_sep" ---@type string
-  local widget_id = tostring(notepad) ---@type string
-
-  if fn_switch_source_registry[widget_id] == nil then
-    fn_switch_source_registry[widget_id] = function()
-      dot.command.definitions.notepad.source_select:execute()
-    end
-  end
-
-  local fn_switch_source = dot.G.register_anonymous_fn(fn_switch_source_registry[widget_id]) or "dot.G.noop"
-
   local text_sep_left = stl.icon.symbols.sep_left ---@type string
   local icon_source = stl.icon.notepad.Source ---@type string
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "notepad:source",
-    atomic = true,
-    render = function(_, remain_width)
+
+    refresh = function()
       local source = notepad:get_source() ---@type era.m.notepad.state.INotepadSource
       local source_name = source.name ---@type string
       local _, config = era.m.notepad.state.retrieve_source(source_name)
@@ -314,11 +309,8 @@ function M.source(position, notepad)
       local text_source = source_name .. "@" .. engine .. " " .. icon_source .. " " ---@type string
       local text = text_sep_left .. text_source ---@type string
       local hl_text = txt(text_sep_left, hln_source_sep) .. btn(txt(text_source, hln_source), fn_switch_source)
-      local width = vim.api.nvim_strwidth(text) ---@type integer
-      if width <= 0 or remain_width < width then
-        return "", "", false
-      end
-      return text, hl_text, true
+
+      return { text = text, hltext = hl_text }
     end,
   }
 

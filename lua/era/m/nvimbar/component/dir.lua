@@ -1,5 +1,23 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.dir" ---@type string
+
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
+
+---@class era.m.nvimbar.component.dir.IPathTarget
+---@field public id                     integer
+---@field public path                   string
+
+-- Current and displayed snapshots own targets; these lookups do not extend their lifetime.
+local targets_by_id = setmetatable({}, { __mode = "v" }) ---@type table<integer, era.m.nvimbar.component.dir.IPathTarget>
+local targets_by_path = setmetatable({}, { __mode = "v" }) ---@type table<string, era.m.nvimbar.component.dir.IPathTarget>
+local target_id = 0
+local fn_open_explorer = dot.G.register_anonymous_fn(function(id)
+  local target = targets_by_id[id]
+  if target ~= nil then
+    dot.command.definitions.find.explorer:execute(vim.fn.fnameescape(target.path))
+  end
+end)
 
 ---@class era.m.nvimbar.component.dir
 local M = {}
@@ -15,41 +33,43 @@ function M.path(position)
   local sep = stl.icon.fillchars.foldclose .. " " ---@type string
   local hl_blur_sep = txt(sep, hln_blur_sep) ---@type string
   local hl_focus_sep = txt(sep, hln_focus_sep) ---@type string
-  local relpath_pieces = {} ---@type string[]
-
-  ---@type string
-  local fn_open_explorer = dot.G.register_anonymous_fn(function(index)
-    local dirpath = table.concat(relpath_pieces, stl.env.PATH_SEP, 1, index) ---@type string
-    dot.command.definitions.find.explorer:execute(vim.fn.fnameescape(dirpath))
-  end) or ""
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "dir:path",
-    atomic = true,
-    render = function(context)
+
+    refresh = function(context)
       local meta = dot.buf.resolve(context.bufnr, false) ---@type dot.buf.IMeta|nil
       if meta == nil then
-        return "", "", true
+        return { text = "", hltext = "" }
       end
 
-      relpath_pieces = vim.split(meta.relpath, stl.env.PATH_SEP, { plain = true }) ---@type string[]
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local relpath_pieces = vim.split(meta.relpath, stl.env.PATH_SEP, { plain = true }) ---@type string[]
+      local tabnr = context.tabnr ---@type integer
       local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
       local hl_text_sep = winnr_sourcefile == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
 
       local text = "" ---@type string
       local hl_text = "" ---@type string
+      local targets = {} ---@type era.m.nvimbar.component.dir.IPathTarget[]
       local N = #relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
         local piece = relpath_pieces[i] ---@type string
-        local hl_text_piece = btn(txt(piece, hln_text), fn_open_explorer, i) ---@type string
+        local path = dot.path.resolve(context.cwd, table.concat(relpath_pieces, stl.env.PATH_SEP, 1, i))
+        local target = targets_by_path[path]
+        if target == nil then
+          target_id = target_id + 1
+          target = { id = target_id, path = path }
+          targets_by_id[target_id], targets_by_path[path] = target, target
+        end
+        targets[i] = target
+        local hl_text_piece = btn(txt(piece, hln_text), fn_open_explorer, target.id) ---@type string
 
         text = text .. piece .. sep
         hl_text = hl_text .. hl_text_piece .. hl_text_sep
       end
-      return text, hl_text, true
+      return { text = text, hltext = hl_text, targets = targets }
     end,
   }
   return component
@@ -71,29 +91,30 @@ function M.path_prominent(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "dir:path_prominent",
-    atomic = false,
+
     condition = function(context)
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local tabnr = context.tabnr ---@type integer
       local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       return context.winnr == winnr_sourcefile
     end,
-    will_change = function(context, prev_context)
-      return prev_context == nil or context.filepath ~= prev_context.filepath
-    end,
-    render = function(context, remain_width)
+    refresh = function(context)
       local meta = dot.buf.resolve(context.bufnr, false) ---@type dot.buf.IMeta|nil
       if meta == nil then
-        return "", "", false
+        return nil
       end
 
       local relpath_pieces = vim.split(meta.relpath, stl.env.PATH_SEP, { plain = true }) ---@type string[]
       local cwd_name = yoz.path.basename(context.cwd) ---@type string
+      return { pieces = relpath_pieces, cwd_name = cwd_name }
+    end,
+    render = function(snapshot, _, remain_width)
+      local relpath_pieces, cwd_name = snapshot.pieces, snapshot.cwd_name
       local N = #relpath_pieces - 1 ---@type integer
       if N < 1 then
         local text = cwd_name .. " " ---@type string
         local hl_text = hl_icon .. txt(text, hln_text) ---@type string
         text = icon .. text
-        return text, hl_text, true
+        return text, hl_text
       end
 
       local is_absolute = relpath_pieces[1] == "" ---@type boolean
@@ -105,7 +126,7 @@ function M.path_prominent(position)
         local text = cwd_name .. " " ---@type string
         local hl_text = hl_icon .. txt(text, hln_text) ---@type string
         text = icon .. text
-        return text, hl_text, false
+        return text, hl_text
       end
 
       local right_text = "" ---@type string
@@ -135,7 +156,7 @@ function M.path_prominent(position)
       local text = left_text .. sep .. right_text ---@type string
       local hl_text = hl_icon .. txt(text, hln_text)
       text = icon .. text
-      return text, hl_text, remain_count < 1
+      return text, hl_text
     end,
   }
   return component

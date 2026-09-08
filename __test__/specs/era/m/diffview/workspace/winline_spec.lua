@@ -15,11 +15,20 @@ local function new_nvimbar(props)
     isdisposed = function()
       return false
     end,
-    place = function(self, position, component, priority)
-      placements[#placements + 1] = { position = position, component = component, priority = priority }
+    place = function(self, placement)
+      placements[#placements + 1] = {
+        position = placement.position,
+        priority = placement.priority,
+        component = placement.component,
+      }
       return self
     end,
-    render = function(self)
+    refresh = function(self)
+      for _, placement in ipairs(placements) do
+        if type(placement.component) == "function" then
+          placement.component = placement.component()
+        end
+      end
       self.render_count = self.render_count + 1
     end,
     render_count = 0,
@@ -68,9 +77,9 @@ t:patch_global("dot", {
       if not winline then
         return
       end
-      winline.nvimbar:render()
+      winline.nvimbar:refresh()
       for _, nvimbar in pairs(winline.forks or {}) do
-        nvimbar:render()
+        nvimbar:refresh()
       end
     end,
   },
@@ -79,16 +88,16 @@ t:patch_global("era", {
   m = {
     nvimbar = {
       Nvimbar = { new = new_nvimbar },
-      component = {
-        nvim = {
-          search_count = function(position)
-            t.assert_eq("f_wl", position, "search position")
-            return { name = "nvim:search_count" }
-          end,
-        },
-      },
+      component = require("era.m.nvimbar").component,
     },
   },
+})
+
+t:patch_table(package.loaded, "era.m.nvimbar.component.nvim", {
+  search_count = function(position)
+    t.assert_eq("f_wl", position, "search position")
+    return { name = "nvim:search_count" }
+  end,
 })
 
 local page = 1
@@ -165,21 +174,22 @@ t:test("workspace sidebar winlines own pane labels and search count", function()
   t.assert_eq("diffview:unstaged_status", unstaged.placements[1].component.name, "Unstaged status component")
   t.assert_eq("diffview:history_status", history_bar.placements[1].component.name, "History status component")
 
-  local text = winline.changes_status_component(ctx, "staged").render({}, 80)
+  local text = winline.changes_status_component(ctx, "staged").refresh().text
   t.assert_eq(" G Staged (1) ", text, "Staged label")
-  text = winline.changes_status_component(ctx, "unstaged").render({}, 80)
+  text = winline.changes_status_component(ctx, "unstaged").refresh().text
   t.assert_eq(" G Unstaged (2) ", text, "Unstaged label")
   show_untracked = false
-  text = winline.changes_status_component(ctx, "unstaged").render({}, 80)
+  text = winline.changes_status_component(ctx, "unstaged").refresh().text
   t.assert_eq(" G Unstaged (1) ", text, "hidden untracked entry excluded")
 
-  text = winline.history_status_component(history).render({}, 80)
+  local history_component = winline.history_status_component(history)
+  text = history_component.render(history_component.refresh(), {}, 80)
   t.assert_eq(" History G 12 │ P 1/1 ", text, "initial History status")
   page = 2
   total = 120
   assert(on_history_state_change)()
   t.assert_eq(2, history_bar.nvimbar.render_count, "History state-triggered render")
-  text = winline.history_status_component(history).render({}, 80)
+  text = history_component.render(history_component.refresh(), {}, 80)
   t.assert_eq(" History G 120 │ P 2/2 ", text, "updated History status")
 
   staged.props.on_fulfilled("rendered Staged winline")

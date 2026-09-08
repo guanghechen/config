@@ -333,7 +333,7 @@ function M:__setup_subscriptions__()
     stl.c.Subscriber.new({
       on_next = function()
         if self._nvimbar ~= nil then
-          self._nvimbar:render()
+          self._nvimbar:refresh()
         end
       end,
     }),
@@ -353,6 +353,7 @@ end
 ---@protected
 ---@return nil
 function M:__setup_nvimbar__()
+  local c = era.m.nvimbar.component
   local widget = self
   self._nvimbar = era.m.nvimbar.Nvimbar
     .new({
@@ -360,7 +361,6 @@ function M:__setup_nvimbar__()
       comp_sep = "",
       comp_sep_hlname = "f_wl_bg",
       comp_sep_hlname_active = "f_wl_bg",
-      delay = 128,
       get_max_width = function()
         local winnr = widget._winnr
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -381,9 +381,27 @@ function M:__setup_nvimbar__()
         end
       end,
     })
-    :place("left", era.m.nvimbar.component.notepad.items("f_wl", widget), 95)
-    :place("left", era.m.nvimbar.component.notepad.add_button("f_wl"), 100)
-    :place("right", era.m.nvimbar.component.notepad.source("f_wl", widget), 100)
+    :place({
+      position = "left",
+      priority = 95,
+      component = c.lazy(function()
+        return c.notepad.items("f_wl", widget)
+      end),
+    })
+    :place({
+      position = "left",
+      priority = 100,
+      component = c.lazy(function()
+        return c.notepad.add_button("f_wl")
+      end),
+    })
+    :place({
+      position = "right",
+      priority = 100,
+      component = c.lazy(function()
+        return c.notepad.source("f_wl", widget)
+      end),
+    })
 end
 
 ---@protected
@@ -471,7 +489,7 @@ function M:attach(source_name)
   self:__mark_dirty__()
 
   if self._nvimbar ~= nil then
-    self._nvimbar:render()
+    self._nvimbar:refresh()
   end
 end
 
@@ -1011,7 +1029,7 @@ function M:__on_active_uuid_changed__(uuid)
   end
 
   if self._nvimbar ~= nil then
-    self._nvimbar:render()
+    self._nvimbar:refresh()
   end
 end
 
@@ -1156,7 +1174,7 @@ function M:ensure_win()
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
 
   if self._nvimbar ~= nil then
-    self._nvimbar:render()
+    self._nvimbar:refresh()
   end
 
   return winnr
@@ -1253,7 +1271,7 @@ function M:resize()
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
 
   if self._nvimbar ~= nil then
-    self._nvimbar:render()
+    self._nvimbar:refresh()
   end
 end
 
@@ -1293,12 +1311,7 @@ function M:render_winbar_to(winnr)
     return
   end
 
-  local prev_winnr = self._winnr
-  self._winnr = winnr
-  local result = self._nvimbar:render(true)
-  self._winnr = prev_winnr
-
-  vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
+  self._nvimbar:fork(winnr):refresh()
 end
 
 M.BUFFER_VAR = BUFFER_VAR_NAME

@@ -592,8 +592,10 @@ t:test("match limit status follows the published projection and blocks replace a
     width = 80,
     height = 10,
   })
+  t.wait_until(function()
+    return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("LIMIT 500", 1, true) ~= nil
+  end, 1000, "limited projection should render a persistent status")
   local winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
-  t.assert_true(winbar:find("LIMIT 500", 1, true) ~= nil, "limited projection should render a persistent status")
   local rendered_winbar = vim.api.nvim_eval_statusline(winbar, { winid = winnr, maxwidth = 80 }).str ---@type string
   local limit_start = assert(rendered_winbar:find(" LIMIT 500 ", 1, true), "limited status should be rendered")
   local limit_prefix = rendered_winbar:sub(1, limit_start - 1) ---@type string
@@ -612,7 +614,9 @@ t:test("match limit status follows the published projection and blocks replace a
       and composer:__is_search_projection_current__()
       and not composer._published_search_limit_reached
   end, 10000, "unlimited search did not replace the limited projection")
-  vim.wait(150)
+  t.wait_until(function()
+    return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("LIMIT", 1, true) == nil
+  end, 1000, "exhaustive projection should clear the limit status")
   winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
   t.assert_true(winbar:find("LIMIT", 1, true) == nil, "exhaustive projection should clear the limit status")
 

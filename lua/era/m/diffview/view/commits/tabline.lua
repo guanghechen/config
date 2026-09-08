@@ -39,14 +39,13 @@ local ICON_FLAG_FOLD = stl.icon.symbols.flag_fold ---@type string
 -- Helpers
 ----------------------------------------------------------------------------------------------------
 
----Get the width allocated to the commits status for current tab.
 ---Use the commits pane when present; SBS-only layouts inherit the left diff pane width.
----@return integer
-local function get_pane_width()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+---@param tabnr                         integer
+---@return integer|nil
+local function get_pane_winnr(tabnr)
   local lyt = commits_view.get_layout(tabnr)
   if not lyt then
-    return 0
+    return nil
   end
 
   local winnr = lyt.commits_winnr ---@type integer|nil
@@ -54,10 +53,10 @@ local function get_pane_width()
     winnr = lyt.sbs_left_winnr
   end
   if not winnr or not vim.api.nvim_win_is_valid(winnr) or stl.nvim.win.is_float(winnr) then
-    return 0
+    return nil
   end
 
-  return vim.api.nvim_win_get_width(winnr)
+  return winnr
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -177,15 +176,10 @@ function M.status_component()
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "diffview:commits_status",
-    atomic = true,
-    render = function(_, remain_width)
-      local width = math.min(remain_width, get_pane_width()) ---@type integer
-      if width < 1 then
-        return "", "", true
-      end
 
+    refresh = function(context)
       -- Get state from current tab
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local tabnr = context.tabnr ---@type integer
       local state = commits_state.get(tabnr)
 
       local total = state and state:get_commits_total() or 0 ---@type integer
@@ -244,46 +238,43 @@ function M.status_component()
       local flags_text = " │ " .. flag0_text .. flag1_text .. flag2_text .. flag3_text ---@type string
       local right_split = " " ---@type string
 
-      local full_width = vim.api.nvim_strwidth(commits_text .. page_text .. flags_text) + 1 ---@type integer
-      if width < full_width then
-        -- Try without pagination if too narrow
-        local no_page_width = vim.api.nvim_strwidth(commits_text .. flags_text) + 1 ---@type integer
-        if width < no_page_width then
-          -- Try without flags if still too narrow
-          local min_width = vim.api.nvim_strwidth(commits_text) + 1 ---@type integer
-          if width < min_width then
-            return "", "", true
-          end
-          local text = commits_text .. right_split ---@type string
-          local hl_text = txt(commits_text, hln_pink) .. txt(right_split, hln_split)
-          return text, hl_text, true
-        end
-        -- Show commits + flags without pagination
-        local text = commits_text .. flags_text .. right_split ---@type string
-        local hl_text = txt(commits_text, hln_pink)
-          .. txt(" │ ", hln_dim)
-          .. btn(txt(flag0_text, flag0_hln), cb_layout)
-          .. btn(txt(flag1_text, flag1_hln), cb_viewtype)
-        if is_tree then
-          hl_text = hl_text .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
-        end
-        hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
-        hl_text = hl_text .. txt(right_split, hln_split)
-        return text, hl_text, true
-      end
-
-      local text = commits_text .. page_text .. flags_text .. right_split ---@type string
-      local hl_text = txt(commits_text, hln_pink)
-        .. txt(page_text, hln_dim)
-        .. txt(" │ ", hln_dim)
+      local flags_hltext = txt(" │ ", hln_dim)
         .. btn(txt(flag0_text, flag0_hln), cb_layout)
         .. btn(txt(flag1_text, flag1_hln), cb_viewtype)
       if is_tree then
-        hl_text = hl_text .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
+        flags_hltext = flags_hltext .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
       end
-      hl_text = hl_text .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
-      hl_text = hl_text .. txt(right_split, hln_split)
-      return text, hl_text, true
+      flags_hltext = flags_hltext .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
+      local split = txt(right_split, hln_split)
+      local commits_hltext = txt(commits_text, hln_pink)
+      return {
+        winnr = get_pane_winnr(tabnr),
+        variants = {
+          {
+            text = commits_text .. page_text .. flags_text .. right_split,
+            hltext = commits_hltext .. txt(page_text, hln_dim) .. flags_hltext .. split,
+          },
+          { text = commits_text .. flags_text .. right_split, hltext = commits_hltext .. flags_hltext .. split },
+          { text = commits_text .. right_split, hltext = commits_hltext .. split },
+        },
+      }
+    end,
+    render = function(snapshot, context, remain_width)
+      local winnr = snapshot.winnr
+      if
+        winnr == nil
+        or not vim.api.nvim_win_is_valid(winnr)
+        or vim.api.nvim_win_get_tabpage(winnr) ~= context.tabnr
+      then
+        return "", ""
+      end
+      local width = math.min(remain_width, vim.api.nvim_win_get_width(winnr))
+      for _, variant in ipairs(snapshot.variants) do
+        if vim.api.nvim_strwidth(variant.text) <= width then
+          return variant.text, variant.hltext
+        end
+      end
+      return "", ""
     end,
   }
   return component
@@ -303,52 +294,34 @@ function M.filter_component()
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "diffview:commits_filter",
-    atomic = true,
-    render = function(_, remain_width)
+
+    refresh = function(context)
+      local state = commits_state.get(context.tabnr)
+      local path = state and state:get_path_filter()
+      if not path then
+        return nil
+      end
+      local stat = vim.uv.fs_stat(dot.path.join(dot.path.workspace() or "", path))
+      return { name = path, icon = stat and stat.type == "directory" and stl.icon.filetype.Folder or ICON_FILTER }
+    end,
+    render = function(snapshot, _, remain_width)
       if remain_width < 10 then
-        return "", "", true
+        return "", ""
       end
-
-      -- Get state from current tab
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local state = commits_state.get(tabnr)
-      local path_filter = state and state:get_path_filter() ---@type string|nil
-
-      if not path_filter then
-        -- No filter, don't show anything (tabtype component will show the badge)
-        return "", "", true
-      end
-
-      -- Has filter: show file path with icon
-      -- Check if it's a directory
-      local is_dir = vim.fn.isdirectory(dot.path.join(dot.path.workspace() or "", path_filter)) == 1 ---@type boolean
-      local filter_icon = is_dir and stl.icon.filetype.Folder or ICON_FILTER ---@type string
-
-      -- Use relative path as display name
-      local filter_name = path_filter ---@type string
-
-      local filter_text = " " .. filter_icon .. " " .. filter_name ---@type string
-      local display_width = vim.api.nvim_strwidth(filter_text) ---@type integer
-
-      -- Truncate path from the left if too long (keep the rightmost part which is more informative)
-      if display_width > remain_width then
-        local prefix_width = vim.api.nvim_strwidth(" " .. filter_icon .. " ...") ---@type integer
-        local max_name_len = remain_width - prefix_width ---@type integer
-        if max_name_len > 3 then
-          -- Truncate from left, keep the end
-          local name_len = vim.api.nvim_strwidth(filter_name) ---@type integer
-          if name_len > max_name_len then
-            filter_name = "..." .. string.sub(filter_name, -(max_name_len - 3))
-          end
-          filter_text = " " .. filter_icon .. " " .. filter_name
-        else
-          -- Too narrow, just show icon
-          filter_text = " " .. filter_icon
-          return filter_text, txt(filter_text, hln_dim), true
+      local name, icon = snapshot.name, snapshot.icon
+      local prefix = " " .. icon .. " "
+      if vim.api.nvim_strwidth(prefix .. name) > remain_width then
+        local available = remain_width - vim.api.nvim_strwidth(prefix .. "...")
+        if available <= 0 then
+          return " " .. icon, txt(" " .. icon, hln_dim)
         end
+        local start = math.max(0, vim.fn.strchars(name) - available)
+        while vim.api.nvim_strwidth(vim.fn.strcharpart(name, start)) > available do
+          start = start + 1
+        end
+        name = "..." .. vim.fn.strcharpart(name, start)
       end
-
-      return filter_text, txt(" " .. filter_icon .. " ", hln_dim) .. txt(filter_name, hln_pink), true
+      return prefix .. name, txt(prefix, hln_dim) .. txt(name, hln_pink)
     end,
   }
   return component
@@ -362,6 +335,7 @@ end
 ---@return fun(): era.m.nvimbar.Nvimbar
 function M.create_tabline()
   return function()
+    local c = era.m.nvimbar.component
     local position = M.position
     local nvimbar ---@type era.m.nvimbar.Nvimbar
     local tabtype = stl.e.TabTypeEnum.DIFFVIEW_COMMITS
@@ -371,26 +345,42 @@ function M.create_tabline()
       comp_sep = "",
       comp_sep_hlname = position .. "_bg",
       comp_sep_hlname_active = position .. "_bg",
-      delay = 256,
-      silent = function()
-        return not dot.context.flight.devmode:snapshot()
-      end,
       get_max_width = function()
         return vim.o.columns
       end,
       is_active = stl.fn.falsy,
-      on_fulfilled = function()
+      on_fulfilled = function(result)
         if vim.t.tabtype == tabtype then
-          vim.o.tabline = nvimbar:snapshot()
+          vim.o.tabline = result
         end
       end,
     })
 
     nvimbar
-      :place("left", M.status_component(), 95)
-      :place("center", era.m.nvimbar.component.nvim.tabtype(position, ICON_GIT .. " "), 100)
-      :place("center", M.filter_component(), 99)
-      :place("right", era.m.nvimbar.component.nvim.tabs(position), 100)
+      :place({
+        position = "left",
+        priority = 95,
+        component = c.lazy(M.status_component),
+      })
+      :place({
+        position = "center",
+        priority = 100,
+        component = c.lazy(function()
+          return c.nvim.tabtype(position, ICON_GIT .. " ")
+        end),
+      })
+      :place({
+        position = "center",
+        priority = 99,
+        component = c.lazy(M.filter_component),
+      })
+      :place({
+        position = "right",
+        priority = 100,
+        component = c.lazy(function()
+          return c.nvim.tabs(position)
+        end),
+      })
 
     return nvimbar
   end

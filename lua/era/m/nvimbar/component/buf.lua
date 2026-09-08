@@ -1,6 +1,21 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.buf" ---@type string
+
 ---@class era.m.nvimbar.component.buf.IBufItem
 ---@field public bufnr                  integer
 ---@field public meta                   dot.buf.IMeta
+
+---@class era.m.nvimbar.component.buf.IBufSnapshot
+---@field public bufnr                  integer
+---@field public filename               string
+---@field public fileicon               string
+---@field public fileicon_hln           string
+---@field public pinned                 boolean
+---@field public modified               boolean
+---@field public error                  integer
+---@field public warn                   integer
+---@field public hint                   integer
+---@field public info                   integer
 
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
@@ -52,22 +67,11 @@ local function cmp_rd_buf(x, y)
   return D1 < D2
 end
 
-local rd_bufs = {} ---@type era.m.nvimbar.component.buf.IBufItem[]
-
 ---Generate disambiguated filename display for buffers with same filenames
----@param bufs                          dot.tab.IBufItem[]
+---@param rd_bufs                       era.m.nvimbar.component.buf.IBufItem[]
 ---@return table<integer, string> -- Map from bufnr to disambiguated filename
-local function resolve_disambiguations(bufs)
-  local N = 0 ---@type integer
-  for _, buf in ipairs(bufs) do
-    local meta = dot.buf.resolve(buf.bufnr, false) ---@type dot.buf.IMeta|nil
-    if meta ~= nil then
-      local item = { bufnr = buf.bufnr, meta = meta } ---@type era.m.nvimbar.component.buf.IBufItem
-      N = N + 1
-      rd_bufs[N] = item
-    end
-  end
-
+local function resolve_disambiguations(rd_bufs)
+  local N = #rd_bufs ---@type integer
   if N <= 1 then
     return {}
   end
@@ -89,7 +93,7 @@ local function resolve_disambiguations(bufs)
     end
 
     local next_depth = 0 ---@type integer
-    if index + 1 < N then
+    if index < N then
       local item2 = rd_bufs[index + 1] ---@type era.m.nvimbar.component.buf.IBufItem
       if item1.meta.filename == item2.meta.filename then
         local dp2 = item2.meta.dirpath_pieces ---@type string[]
@@ -154,27 +158,24 @@ function M.bufs(position)
   local hln_bufc_hint = position .. "_bufc_hint" ---@type string
   local hln_bufc_info = position .. "_bufc_info" ---@type string
 
-  ---@param buf                         dot.tab.IBufItem
+  ---@param buf                         era.m.nvimbar.component.buf.IBufSnapshot|false
   ---@param index                       integer
   ---@param total                       integer
   ---@param disambiguated_paths         table<integer, string>
   ---@return string
   ---@return string
   local function render_bufc(buf, index, total, disambiguated_paths)
-    local bufnr = buf.bufnr ---@type integer
-    local meta = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
-    if meta == nil then
+    if not buf then
       return "", ""
     end
 
+    local bufnr = buf.bufnr ---@type integer
     local is_pinned = buf.pinned ---@type boolean
-    local is_mod = vim.api.nvim_get_option_value("modified", { buf = bufnr }) ---@type boolean
-
-    local diag_data = era.m.lsp.diagnostic.get_by_bufnr(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
-    local count_error = diag_data.error ---@type integer
-    local count_warn = diag_data.warn ---@type integer
-    local count_hint = diag_data.hint ---@type integer
-    local count_info = diag_data.info ---@type integer
+    local is_mod = buf.modified ---@type boolean
+    local count_error = buf.error ---@type integer
+    local count_warn = buf.warn ---@type integer
+    local count_hint = buf.hint ---@type integer
+    local count_info = buf.info ---@type integer
 
     local text_diagnostic = "" ---@type string
     local hl_text_diagnostic = "" ---@type string
@@ -205,9 +206,9 @@ function M.bufs(position)
       slots = slots + 1
     end
 
-    local filename = meta.filename ---@type string
-    local fileicon = meta.fileicon ---@type string
-    local fileicon_hln = meta.fileicon_hln ---@type string
+    local filename = buf.filename ---@type string
+    local fileicon = buf.fileicon ---@type string
+    local fileicon_hln = buf.fileicon_hln ---@type string
     local text_indicator = "▎" ---@type string
     local text_order = total < 2 and "" or (stl.icon.todigit_subscript(index) .. ".") ---@type string
     local text_icon = fileicon .. " " ---@type string
@@ -257,7 +258,7 @@ function M.bufs(position)
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
-  ---@param buf                         dot.tab.IBufItem
+  ---@param buf                         era.m.nvimbar.component.buf.IBufSnapshot|false
   ---@param index                       integer
   ---@param order                       integer
   ---@param marker                      string
@@ -265,20 +266,17 @@ function M.bufs(position)
   ---@return string
   ---@return string
   local function render_buf(buf, index, order, marker, disambiguated_paths)
-    local bufnr = buf.bufnr ---@type integer
-    local meta = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
-    if meta == nil then
+    if not buf then
       return "", ""
     end
 
+    local bufnr = buf.bufnr ---@type integer
     local is_pinned = buf.pinned ---@type boolean
-    local is_mod = vim.api.nvim_get_option_value("modified", { buf = bufnr }) ---@type boolean
-
-    local diag_data = era.m.lsp.diagnostic.get_by_bufnr(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
-    local count_error = diag_data.error ---@type integer
-    local count_warn = diag_data.warn ---@type integer
-    local count_hint = diag_data.hint ---@type integer
-    local count_info = diag_data.info ---@type integer
+    local is_mod = buf.modified ---@type boolean
+    local count_error = buf.error ---@type integer
+    local count_warn = buf.warn ---@type integer
+    local count_hint = buf.hint ---@type integer
+    local count_info = buf.info ---@type integer
 
     local text_diagnostic = "" ---@type string
     local slots = 0 ---@type integer
@@ -299,8 +297,8 @@ function M.bufs(position)
       slots = slots + 1
     end
 
-    local filename = meta.filename ---@type string
-    local fileicon = meta.fileicon ---@type string
+    local filename = buf.filename ---@type string
+    local fileicon = buf.fileicon ---@type string
     local hln_title = hln_buf_text ---@type string
 
     local text_indicator = index == 1 and " " or "▏" ---@type string
@@ -360,41 +358,94 @@ function M.bufs(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "buf:bufs",
-    atomic = false,
+
     ---@diagnostic disable-next-line: unused-local
-    render = function(context, remain_width)
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    refresh = function(context)
+      local tabnr = context.tabnr ---@type integer
       local meta_tab = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
       if meta_tab == nil then
-        return "", "", false
+        return nil
       end
 
       local bufs = meta_tab.bufs ---@type dot.tab.IBufItem[]
       dot.tab.refresh_bufs(bufs)
 
       if #bufs < 1 then
-        return "", "", false
+        return nil
       end
 
       local _, bufid_sourcefile = dot.tab.retrieve_buf_sourcefile(tabnr) ---@type dot.tab.IBufItem|nil, integer|nil
       local bufid_middle = bufid_sourcefile or 1 ---@type integer
       local relative_orders = bufid_middle == bufid_sourcefile and dot.context.behavior.bufs_relative:snapshot() ---@type boolean
-      local N = #bufs ---@type integer
+      local snapshots = {} ---@type (era.m.nvimbar.component.buf.IBufSnapshot|false)[]
+      local rd_bufs = {} ---@type era.m.nvimbar.component.buf.IBufItem[]
+      local first_by_filename = {} ---@type table<string, integer|false>
+      local diagnostic = package.loaded["era.m.lsp.diagnostic"]
+      for bufid, buf in ipairs(bufs) do
+        local bufnr = buf.bufnr ---@type integer
+        local meta = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
+        snapshots[bufid] = false
+        if meta then
+          local diag_data = diagnostic and diagnostic.get_by_bufnr(bufnr)
+          snapshots[bufid] = {
+            bufnr = bufnr,
+            filename = meta.filename,
+            fileicon = meta.fileicon,
+            fileicon_hln = meta.fileicon_hln,
+            pinned = buf.pinned,
+            -- getbufinfo would also collect metadata for unrelated modified buffers.
+            modified = vim.fn.getbufvar(bufnr, "&modified") == 1,
+            error = diag_data and diag_data.error or 0,
+            warn = diag_data and diag_data.warn or 0,
+            hint = diag_data and diag_data.hint or 0,
+            info = diag_data and diag_data.info or 0,
+          }
+          -- Only duplicate filenames need directory comparison and sorting.
+          local first = first_by_filename[meta.filename] ---@type integer|false|nil
+          if first == nil then
+            first_by_filename[meta.filename] = bufnr
+          else
+            if first then
+              local first_meta = dot.buf.resolve(first, false) ---@type dot.buf.IMeta|nil
+              if first_meta then
+                rd_bufs[#rd_bufs + 1] = { bufnr = first, meta = first_meta }
+              end
+              first_by_filename[meta.filename] = false
+            end
+            rd_bufs[#rd_bufs + 1] = { bufnr = bufnr, meta = meta }
+          end
+        end
+      end
+      return {
+        bufs = snapshots,
+        middle = bufid_middle,
+        sourcefile = bufid_sourcefile,
+        relative_orders = relative_orders,
+        disambiguated_paths = resolve_disambiguations(rd_bufs),
+      }
+    end,
+    render = function(snapshot, _, remain_width)
+      local bufs, bufid_middle = snapshot.bufs, snapshot.middle
+      local relative_orders, disambiguated_paths = snapshot.relative_orders, snapshot.disambiguated_paths
+      local N = #bufs
 
-      -- Generate disambiguated filenames for all buffers
-      local disambiguated_filenames = N > 1 and resolve_disambiguations(bufs) or {} ---@type table<integer, string>
-
-      local text ---@type string
-      local hl_text ---@type string
-      if bufid_middle == bufid_sourcefile then
-        text, hl_text = render_bufc(bufs[bufid_middle], bufid_middle, N, disambiguated_filenames)
-      else
-        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_middle, ".", disambiguated_filenames)
+      ---@param bufid                   integer
+      ---@return string
+      ---@return string
+      local function render_item(bufid)
+        if bufid == snapshot.sourcefile then
+          return render_bufc(bufs[bufid], bufid, N, disambiguated_paths)
+        else
+          local order = relative_orders and math.abs(bufid - bufid_middle) or bufid
+          local marker = relative_orders and (bufid < bufid_middle and "₋" or "₊") or "."
+          return render_buf(bufs[bufid], bufid, order, marker, disambiguated_paths)
+        end
       end
 
+      local text, hl_text = render_item(bufid_middle)
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
       if remain_width < 0 then
-        return "", "", false
+        return "", ""
       end
 
       local left_remain_count = bufid_middle - 1 ---@type integer
@@ -404,16 +455,9 @@ function M.bufs(position)
       remain_width = remain_width - left_omitter_width - right_omitter_width ---@type integer
 
       ---@param bufid                   integer
-      ---@param order                   integer
       ---@return boolean
-      local function render_left(bufid, order)
-        local t, hl_t = render_buf(
-          bufs[bufid],
-          bufid,
-          relative_orders and order or bufid,
-          relative_orders and "₋" or ".",
-          disambiguated_filenames
-        )
+      local function render_left(bufid)
+        local t, hl_t = render_item(bufid)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == 1 and remain_width + left_omitter_width >= w then
@@ -436,16 +480,9 @@ function M.bufs(position)
       end
 
       ---@param bufid                   integer
-      ---@param order                   integer
       ---@return boolean
-      local function render_right(bufid, order)
-        local t, hl_t = render_buf(
-          bufs[bufid],
-          bufid,
-          relative_orders and order or bufid,
-          relative_orders and "₊" or ".",
-          disambiguated_filenames
-        )
+      local function render_right(bufid)
+        local t, hl_t = render_item(bufid)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == N and remain_width + right_omitter_width >= w then
@@ -473,11 +510,14 @@ function M.bufs(position)
       for delta = 1, max_delta, 1 do
         if not left_done then
           local bufid = bufid_middle - delta ---@type integer
-          left_done = bufid < 1 or render_left(bufid, delta) ---@type boolean
+          left_done = bufid < 1 or render_left(bufid) ---@type boolean
         end
         if not right_done then
           local bufid = bufid_middle + delta ---@type integer
-          right_done = bufid > N or render_right(bufid, delta) ---@type boolean
+          right_done = bufid > N or render_right(bufid) ---@type boolean
+        end
+        if left_done and right_done then
+          break
         end
       end
 
@@ -500,7 +540,7 @@ function M.bufs(position)
         hl_text = hl_text .. btn(omitter_text_hl, fn_focus_right_buf)
       end
 
-      return text, hl_text, (left_remain_count < 1 and right_remain_count < 1)
+      return text, hl_text
     end,
   }
   return component

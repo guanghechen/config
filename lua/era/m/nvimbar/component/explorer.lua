@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.explorer" ---@type string
+
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
 
@@ -63,22 +66,22 @@ local function resolve_path_display(root_filepath, root_path)
   return icon .. " " .. shorten_path(root_path), is_cwd
 end
 
----@return integer
-local function get_explorer_width()
+---@return integer|nil
+local function get_explorer_winnr()
   if era.widget.explorer.widget == nil then
-    return 0
+    return nil
   end
 
   if not era.widget.explorer.widget:has_win_in_tab() then
-    return 0
+    return nil
   end
 
   local winnr = era.widget.explorer.widget:get_winnr() ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    return 0
+    return nil
   end
 
-  return vim.api.nvim_win_get_width(winnr)
+  return winnr
 end
 
 ---@class era.m.nvimbar.component.explorer
@@ -91,11 +94,11 @@ function M.flags(position, flags)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "explorer:flags",
-    atomic = true,
+
     condition = function()
       return #flags > 0
     end,
-    render = function()
+    refresh = function()
       local text = "" ---@type string
       local hl_text = "" ---@type string
       local index = 1 ---@type integer
@@ -111,7 +114,7 @@ function M.flags(position, flags)
         end
         index = index + 1
       end
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -120,9 +123,8 @@ end
 ---@param o_root_filepath                    stl.c.Observable
 ---@param position                      stl.t.NvimbarPositionEnum
 ---@param flags                         era.m.nvimbar.component.explorer.IFlagItem[]
----@param get_width                     fun(): integer
 ---@return era.m.nvimbar.IRawComponent
-function M.winbar(o_root_filepath, position, flags, get_width)
+function M.winbar(o_root_filepath, position, flags)
   local hln_text = "m_ex_winbar" ---@type string
   local hln_path = position .. "_explorer_path" ---@type string
   local hln_path_detached = position .. "_explorer_path_detached" ---@type string
@@ -131,10 +133,8 @@ function M.winbar(o_root_filepath, position, flags, get_width)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "explorer:winbar",
-    atomic = true,
-    render = function()
-      local width = get_width() ---@type integer
 
+    refresh = function()
       local root_filepath = o_root_filepath:snapshot() ---@type string
       local root_path = root_filepath ---@type string
       local display_path, is_cwd = resolve_path_display(root_filepath, root_path) ---@type string, boolean
@@ -161,6 +161,16 @@ function M.winbar(o_root_filepath, position, flags, get_width)
       flags_text = flags_text .. " "
       flags_hl_text = flags_hl_text .. txt(" ", hln_text)
 
+      return {
+        path_text = path_text,
+        path_hl_text = path_hl_text,
+        flags_text = flags_text,
+        flags_hl_text = flags_hl_text,
+      }
+    end,
+    render = function(snapshot, _, width)
+      local path_text, path_hl_text = snapshot.path_text, snapshot.path_hl_text
+      local flags_text, flags_hl_text = snapshot.flags_text, snapshot.flags_hl_text
       local path_width = vim.api.nvim_strwidth(path_text) ---@type integer
       local flags_width = vim.api.nvim_strwidth(flags_text) ---@type integer
       local padding_width = math.max(0, width - path_width - flags_width) ---@type integer
@@ -168,7 +178,7 @@ function M.winbar(o_root_filepath, position, flags, get_width)
 
       local text = path_text .. padding .. flags_text ---@type string
       local hl_text = path_hl_text .. txt(padding, hln_text) .. flags_hl_text ---@type string
-      return text, hl_text, true
+      return text, hl_text
     end,
   }
   return component
@@ -184,8 +194,8 @@ function M.path(o_root_filepath)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "explorer:path",
-    atomic = true,
-    render = function()
+
+    refresh = function()
       local root_filepath = o_root_filepath:snapshot() ---@type string
       local root_path = root_filepath ---@type string
       local display_path, is_cwd = resolve_path_display(root_filepath, root_path) ---@type string, boolean
@@ -194,7 +204,7 @@ function M.path(o_root_filepath)
       local text = " " .. display_path .. detached_text ---@type string
       local path_hln = is_cwd and hln_path or hln_path_detached ---@type string
       local hl_text = txt(" " .. display_path, path_hln) .. txt(detached_text, hln_detached) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -318,17 +328,37 @@ function M.tabline(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "explorer:tabline",
-    atomic = true,
-    render = function(_, remain_width)
-      local width = math.min(remain_width, get_explorer_width()) ---@type integer
-      if width < 1 then
-        return "", "", true
-      end
 
-      local path_text, path_hl_text, is_cwd = get_path_text() ---@type string, string, boolean
-      local detached_text = is_cwd and "" or (" " .. ICON_DETACHED) ---@type string
-      local detached_hl_text = txt(detached_text, hln_detached) ---@type string
-      local flags_text, flags_hl_text = get_flags_text() ---@type string, string
+    refresh = function()
+      local path_text, path_hl_text, is_cwd = get_path_text()
+      local detached_text = is_cwd and "" or (" " .. ICON_DETACHED)
+      local flags_text, flags_hl_text = get_flags_text()
+      return {
+        winnr = get_explorer_winnr(),
+        path_text = path_text,
+        path_hl_text = path_hl_text,
+        detached_text = detached_text,
+        detached_hl_text = txt(detached_text, hln_detached),
+        flags_text = flags_text,
+        flags_hl_text = flags_hl_text,
+      }
+    end,
+    render = function(snapshot, context, remain_width)
+      local winnr = snapshot.winnr
+      if
+        winnr == nil
+        or not vim.api.nvim_win_is_valid(winnr)
+        or vim.api.nvim_win_get_tabpage(winnr) ~= context.tabnr
+      then
+        return "", ""
+      end
+      local width = math.min(remain_width, vim.api.nvim_win_get_width(winnr))
+      if width < 1 then
+        return "", ""
+      end
+      local path_text, path_hl_text = snapshot.path_text, snapshot.path_hl_text
+      local detached_text, detached_hl_text = snapshot.detached_text, snapshot.detached_hl_text
+      local flags_text, flags_hl_text = snapshot.flags_text, snapshot.flags_hl_text
 
       local path_width = vim.api.nvim_strwidth(path_text) + vim.api.nvim_strwidth(detached_text) ---@type integer
       local flags_width = vim.api.nvim_strwidth(flags_text) ---@type integer
@@ -358,7 +388,7 @@ function M.tabline(position)
         .. flags_hl_text
         .. txt(right_split, hln_split)
 
-      return text, hl_text, true
+      return text, hl_text
     end,
   }
   return component

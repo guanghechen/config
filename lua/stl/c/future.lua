@@ -8,7 +8,7 @@ local __module_name__ = "stl.c.future" ---@type string
 ---| "rejected"
 ---| "cancelled"
 
----@alias stl.c.future.Executor fun(resolve: fun(result: any): nil, reject: fun(err: string): nil): nil
+---@alias stl.c.future.Executor fun(resolve: (fun(result: any): nil), reject: (fun(err: string): nil)): nil
 
 ---@class stl.c.future.IProps
 ---@field public token                  ?stl.c.CancellationToken

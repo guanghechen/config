@@ -272,6 +272,7 @@ vim.api.nvim_create_autocmd("WinResized", {
       end
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       dot.state.status.dirty_winline_nr:next(winnr)
+      dot.state.status.dirtier_tabline:mark_dirty()
     end)
   end,
 })

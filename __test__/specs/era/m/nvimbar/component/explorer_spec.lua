@@ -59,7 +59,7 @@ end
 local function render_path(component, root_filepath)
   local root = stl.c.Observable.from_value(root_filepath)
   ---@diagnostic disable-next-line: missing-parameter
-  return component.path(root).render()
+  return component.path(root).refresh({}).text
 end
 
 t:test("workspace root renders from canonical startup context", function()
@@ -93,15 +93,13 @@ end)
 t:test("render reuses startup path context without recanonicalizing", function()
   local context = setup([[C:\workspace\project\]], [[C:\workspace\project]], [[C:\Users\alice]])
   local root = stl.c.Observable.from_value("C:/workspace/project/")
-  local component = context.component.winbar(root, "f_wl", {}, function()
-    return 80
-  end)
+  local component = context.component.winbar(root, "f_wl", {})
 
   t.assert_eq(3, context.from_os_calls(), "startup canonicalization count")
   t.assert_eq(1, context.workspace_calls(), "startup workspace read count")
   for _ = 1, 100 do
     ---@diagnostic disable-next-line: missing-parameter
-    component.render()
+    component.render(component.refresh({}), {}, 80)
   end
   t.assert_eq(3, context.from_os_calls(), "render canonicalization count")
   t.assert_eq(1, context.workspace_calls(), "render workspace read count")

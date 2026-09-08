@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.picker" ---@type string
+
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
 
@@ -12,11 +15,11 @@ function M.result_flags(position, flags, flags_start_index)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "picker:result_flags",
-    atomic = true,
+
     condition = function()
       return #flags > 0
     end,
-    render = function()
+    refresh = function()
       local text = "" ---@type string
       local hl_text = "" ---@type string
       local index = flags_start_index ---@type integer
@@ -32,7 +35,7 @@ function M.result_flags(position, flags, flags_start_index)
         end
         index = index + 1 ---@type integer
       end
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -48,14 +51,14 @@ function M.result_pos(position, result_lnum, result_total)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "picker:result_pos",
-    atomic = true,
-    render = function()
+
+    refresh = function()
       local lnum = result_lnum:snapshot() ---@type number
       local total = result_total:snapshot() ---@type number
 
       local text = string.format("%s / %s", lnum, total) ---@type string
       local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component
@@ -68,16 +71,16 @@ function M.result_status(position, snapshot)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "picker:result_status",
-    atomic = true,
+
     condition = function()
       local text = snapshot()
       return type(text) == "string" and text ~= ""
     end,
-    render = function()
+    refresh = function()
       local text, hln = snapshot()
       text = string.format(" %s ", text or "")
       local hl_text = txt(text, string.format("%s_%s", position, hln or "picker_result_pos_text"))
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component

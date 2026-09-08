@@ -25,7 +25,7 @@ local function new_nvimbar()
     isdisposed = function(self)
       return self.disposed
     end,
-    render = function(self)
+    refresh = function(self)
       self.renders = self.renders + 1
     end,
   }

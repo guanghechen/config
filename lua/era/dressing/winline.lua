@@ -34,16 +34,13 @@ local function resolve_nvimbar(winnr)
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
   if winline == nil or winline.nvimbar:isdisposed() then
+    local c = era.m.nvimbar.component
     local nvimbar = nil ---@type era.m.nvimbar.Nvimbar|nil
     nvimbar = era.m.nvimbar.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
       comp_sep_hlname = "f_wl_bg",
       comp_sep_hlname_active = "f_wl_bg",
-      delay = 128,
-      silent = function()
-        return silent(winnr)
-      end,
       get_max_width = function()
         if vim.api.nvim_win_is_valid(winnr) then
           local width = vim.api.nvim_win_get_width(winnr) ---@type integer
@@ -58,7 +55,10 @@ local function resolve_nvimbar(winnr)
         return winnr == vim.api.nvim_get_current_win()
       end,
       on_fulfilled = function(result)
-        if vim.api.nvim_win_is_valid(winnr) then
+        if
+          vim.api.nvim_win_is_valid(winnr)
+          and vim.api.nvim_get_option_value("winbar", { win = winnr, scope = "local" }) ~= result
+        then
           vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
         end
       end,
@@ -81,14 +81,50 @@ local function resolve_nvimbar(winnr)
     winline.lsp_symbols = {}
     nvimbar
       ---
-      :place("left", era.m.nvimbar.component.dir.path(position), 95)
-      :place("left", era.m.nvimbar.component.file.name(position), 100)
-      :place("left", era.m.nvimbar.component.lsp.symbols(position), 90)
+      :place({
+        position = "left",
+        priority = 95,
+        component = c.lazy(function()
+          return c.dir.path(position)
+        end),
+      })
+      :place({
+        position = "left",
+        priority = 100,
+        component = c.lazy(function()
+          return c.file.name(position)
+        end),
+      })
+      :place({
+        position = "left",
+        priority = 90,
+        component = c.lazy(function()
+          return c.lsp.symbols(position)
+        end),
+      })
       ---
-      :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
+      :place({
+        position = "center",
+        priority = 100,
+        component = c.lazy(function()
+          return c.devmode.render_count(position)
+        end),
+      })
       ---
-      :place("right", era.m.nvimbar.component.nvim.search_count(position), 120)
-      :place("right", era.m.nvimbar.component.git.hunk_nav(position), 110)
+      :place({
+        position = "right",
+        priority = 120,
+        component = c.lazy(function()
+          return c.nvim.search_count(position)
+        end),
+      })
+      :place({
+        position = "right",
+        priority = 110,
+        component = c.lazy(function()
+          return c.git.hunk_nav(position)
+        end),
+      })
   end
 
   if winline ~= nil then
@@ -128,7 +164,7 @@ local function resolve_nvimbar(winnr)
             winline.lsp_symbols = result.symbols
             vim.schedule(function()
               if not winline.nvimbar:isdisposed() then
-                winline.nvimbar:render()
+                winline.nvimbar:refresh()
               end
             end)
             callback(true, true)

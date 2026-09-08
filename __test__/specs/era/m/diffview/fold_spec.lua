@@ -316,7 +316,9 @@ t:test("workspace status assigns fold default to flag 3 and untracked to flag 4"
   })
 
   local tabline = assert(loadfile("lua/era/m/diffview/view/workspace/tabline.lua"))()
-  local text = tabline.status_component().render({}, 120)
+  local component = tabline.status_component()
+  local context = { tabnr = vim.api.nvim_get_current_tabpage() }
+  local text = component.render(component.refresh(context), context, 120)
   t.assert_true(text:find("F³", 1, true) ~= nil, "fold default flag")
   t.assert_true(text:find("U⁴", 1, true) ~= nil, "untracked flag")
 end)

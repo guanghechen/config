@@ -1,36 +1,12 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.nvimbar.component.python" ---@type string
 
+local Future = require("stl.c.future")
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
-
 local fn_select_python_venv = dot.G.register_anonymous_fn(function()
   dot.command.definitions.lsp.select_python_venv:execute()
 end)
-
-local python_venv = "" ---@type string|nil
-local python_version = "" ---@type string|nil
-stl.fn.observe({ dot.context.lsp.python_venv_path }, function()
-  local python_venv_path = dot.context.lsp.python_venv_path:snapshot() ---@type string
-  python_venv = python_venv_path ~= nil and yoz.path.basename(python_venv_path) or nil ---@type string|nil
-
-  local python_path = dot.context.lsp.get_python_bin_path() ---@type string|nil
-  if python_path ~= nil then
-    local cmd = { python_path, "--version" } ---@type string[]
-    local ok, output = pcall(vim.fn.system, cmd)
-    local exit_code = vim.v.shell_error
-    if ok and exit_code == 0 then
-      python_version = vim.trim(output):match("(%d+%.%d+%.%d+)") or ""
-    else
-      python_version = nil
-      stl.reporter.error({
-        from = __module_name__,
-        message = "Failed to run python version command.",
-        details = { error = output, cmd = cmd, python_path = python_path },
-      })
-    end
-  end
-end, false)
 
 ---@class era.m.nvimbar.component.python
 local M = {}
@@ -38,29 +14,88 @@ local M = {}
 ---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.env(position)
-  local hln_text = position .. "_python_env_text" ---@type string
+  local hln_text = position .. "_python_env_text"
+  local versions = {} ---@type table<string, string>
 
-  ---@type era.m.nvimbar.IRawComponent
-  local component = {
+  ---@param version                     ?string
+  ---@param venv                        ?string
+  ---@param path                        ?string
+  ---@return { text: string, hltext: string, path: string|nil }
+  local function snapshot(version, venv, path)
+    local text = (version and version .. " " or "") .. "(" .. (venv or "unknown") .. ")  "
+    return { text = text, hltext = btn(txt(text, hln_text), fn_select_python_venv), path = path }
+  end
+
+  return {
     name = "python:env",
-    atomic = true,
+
     tight = true,
-    condition = function(context)
-      return context.filetype == "python" or (python_venv ~= nil and python_version ~= nil)
+    will_change = function(context, prev_context, snapshot)
+      return context.filetype ~= prev_context.filetype
+        or (dot.context.lsp.python_venv_path:snapshot() or "") ~= (snapshot and snapshot.path or "")
     end,
-    render = function()
-      local text ---@type string
-      if #python_version > 0 then
-        text = python_version .. " (" .. (python_venv or "unknown") .. ")  " ---@type string
-      else
-        text = "(" .. (python_venv or "unknown") .. ")  " ---@type string
+    refresh = function(context, token)
+      local path = dot.context.lsp.python_venv_path:snapshot()
+      local venv = path and path ~= "" and yoz.path.basename(path) or nil
+      if context.filetype ~= "python" and venv == nil then
+        return nil
+      end
+      local python = dot.context.lsp.get_python_bin_path()
+      if python == nil then
+        return snapshot(nil, venv, path)
+      end
+      if versions[python] then
+        return snapshot(versions[python], venv, path)
       end
 
-      local hl_text = btn(txt(text, hln_text), fn_select_python_venv) ---@type string
-      return text, hl_text, true
+      return Future.new(function(resolve, reject)
+        local finished = false
+        local subscription
+        local process
+        ---@return nil
+        local function finish(ok, result)
+          if finished then
+            return
+          end
+          finished = true
+          if subscription then
+            subscription:unsubscribe()
+          end
+          if ok then
+            resolve(result)
+          else
+            reject(result)
+          end
+        end
+        process = vim.system(
+          { python, "--version" },
+          { text = true },
+          vim.schedule_wrap(function(result)
+            if finished or token:is_cancelled() then
+              return
+            end
+            if result.code ~= 0 then
+              finish(false, result.stderr or "Failed to read Python version")
+              return
+            end
+            local version = (result.stdout or ""):match("(%d+%.%d+%.%d+)")
+            if version == nil then
+              finish(false, "Failed to parse Python version")
+              return
+            end
+            versions[python] = version
+            finish(true, snapshot(version, venv, path))
+          end)
+        )
+        subscription = token:on_cancel(function()
+          if not finished then
+            process:kill(15)
+            finish(false, "Python version request cancelled")
+          end
+        end)
+      end)
     end,
   }
-  return component
 end
 
 return M

@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.host" ---@type string
+
 local txt = stl.nvim.fn.txt
 
 ---@class era.m.nvimbar.component.host
@@ -15,13 +18,13 @@ function M.username(position)
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "host:username",
-    atomic = true,
-    render = function()
+
+    refresh = function()
       local show_username = dot.context.theme.username:snapshot() ---@type boolean
       if not show_username then
         local text = text_icon_only ---@type string
         local hl_text = txt(text, hln_text) ---@type string
-        return text, hl_text, true
+        return { text = text, hltext = hl_text }
       end
 
       local text = text_with_icon ---@type string
@@ -29,7 +32,7 @@ function M.username(position)
 
       text = text .. stl.icon.symbols.sep_right ---@type string
       hl_text = hl_text .. txt(stl.icon.symbols.sep_right, hln_sep) ---@type string
-      return text, hl_text, true
+      return { text = text, hltext = hl_text }
     end,
   }
   return component

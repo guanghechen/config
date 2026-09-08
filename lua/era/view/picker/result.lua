@@ -145,8 +145,6 @@ function M.new(props)
     comp_sep = "",
     comp_sep_hlname = winline_hl,
     comp_sep_hlname_active = winline_hl,
-    delay = 128,
-    silent = stl.fn.falsy,
     get_max_width = function()
       local winnr = self._winnr ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -169,11 +167,29 @@ function M.new(props)
       end
     end,
   })
-    :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
-    :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
+    :place({
+      position = "left",
+      priority = 100,
+      component = c.lazy(function()
+        return c.picker.result_flags(position, flags, flags_start_index)
+      end),
+    })
+    :place({
+      position = "right",
+      priority = 100,
+      component = c.lazy(function()
+        return c.picker.result_pos(position, _o_lnum_current, _o_lnum_total)
+      end),
+    })
 
   if status ~= nil then
-    result_nvimbar:place("center", c.picker.result_status(position, status), 200)
+    result_nvimbar:place({
+      position = "center",
+      priority = 200,
+      component = c.lazy(function()
+        return c.picker.result_status(position, status)
+      end),
+    })
   end
 
   ---@type stl.c.Scheduler
@@ -352,7 +368,7 @@ function M.new(props)
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local lnum_total = _o_lnum_total:snapshot() ---@type integer
       vim.api.nvim_set_option_value("cursorline", lnum_total > 0, { win = winnr, scope = "local" })
-      result_nvimbar:render()
+      result_nvimbar:refresh()
     end
   end, true)
 
@@ -368,7 +384,7 @@ function M.new(props)
       if cursor[1] ~= lnum_current then
         pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_current, 0 })
       end
-      result_nvimbar:render()
+      result_nvimbar:refresh()
     end
     self._scheduler_lnum_current:schedule()
   end, true)
@@ -568,7 +584,7 @@ function M:create_win(winopts, dimension)
   vim.api.nvim_set_option_value("relativenumber", winopts.number, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winbar", self._nvimbar:render(true), { win = winnr, scope = "local" })
+  self._nvimbar:refresh()
   vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", winopts.winhighlight, { win = winnr, scope = "local" })
@@ -637,7 +653,7 @@ end
 function M:resize(dimension)
   self:__health__()
 
-  self._nvimbar:render()
+  self._nvimbar:refresh()
 
   local winnr = self._winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -667,7 +683,7 @@ end
 ---@return era.view.PickerResult
 function M:mark_nvimbar_dirty()
   self:__health__()
-  self._nvimbar:render()
+  self._nvimbar:refresh()
   return self
 end
 

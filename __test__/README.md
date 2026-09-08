@@ -27,6 +27,17 @@ __test__/
         frame_spec.lua     # buffer context, window cache, invalidation
         provider_spec.lua  # real redraws, extmarks, screen contents
         setup_spec.lua     # registration, eligibility, enable/disable
+      dressing/statusline/
+        setup_spec.lua     # dirty events, subscriptions and exit lifecycle
+        loading_spec.lua   # composed runtime and lazy backend loading
+        screen_spec.lua    # native command-line screen updates
+        exit_spec.lua      # pending process cleanup on Neovim exit
+      m/nvimbar/
+        queue_spec.lua     # dispatch order and deadline budget
+        component_spec.lua # component request, snapshot and cancellation state
+        nvimbar_spec.lua   # layout, publication and window ownership
+        init_spec.lua      # lazy constructor declarations
+        component/        # individual data providers and formatters
   node/
     build.test.mjs         # Node tests for script/build.mjs
   rust/
@@ -34,6 +45,10 @@ __test__/
     im/                    # unit tests mirroring rust/im/src/
   fixtures/
     yoz/                   # shared Lua/Rust search fixtures
+    era/dressing/statusline/
+      runtime.lua          # shared runtime assembly for native scenarios
+      cmdline.lua          # command-line screen scenario
+      exit.lua             # pending Python probe scenario
 ```
 
 Directory names follow the module or feature under test. A large feature can
@@ -67,6 +82,10 @@ nvim -l __test__/run.lua
 # One feature or one file (literal path filters)
 nvim -l __test__/run.lua era/dressing/indentline/
 nvim -l __test__/run.lua __test__/specs/era/dressing/indentline/provider_spec.lua
+
+# nvimbar core/providers and statusline integration/native scenarios
+nvim -l __test__/run.lua era/m/nvimbar/
+nvim -l __test__/run.lua era/dressing/statusline/
 
 # Inspect selection, or adjust the per-suite timeout (default: 30 seconds)
 nvim -l __test__/run.lua --list era/dressing/

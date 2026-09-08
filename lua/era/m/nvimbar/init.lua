@@ -1,25 +1,24 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar" ---@type string
+
+---@class era.m.nvimbar.ITextSnapshot
+---@field public text                   string
+---@field public hltext                 string
+
+---@class era.m.nvimbar.INotifyPolicy
+---@field public strategy               "immediate"|"debounce"|"throttle"
+---@field public interval               ?integer Positive milliseconds for debounce/throttle; omitted for immediate.
+
+--- Refresh owns data acquisition; render only formats the committed snapshot.
 ---@class era.m.nvimbar.IRawComponent
----@field public atomic                 boolean
 ---@field public name                   string
 ---@field public tight                  ?boolean
----@field public condition              ?fun(context: era.m.nvimbar.INvimbarContext, remain_width: integer): boolean
----@field public render                 fun(context: era.m.nvimbar.INvimbarContext, remain_width: integer): string, string, boolean
----@field public will_change            ?fun(context: era.m.nvimbar.INvimbarContext, prev_context: era.m.nvimbar.INvimbarContext|nil, remain_width: integer): boolean
-
----@class era.m.nvimbar.IComponent
----@field public last_render_context    era.m.nvimbar.INvimbarContext|nil
----@field public last_result_full       boolean
----@field public last_result_hltext     string
----@field public last_result_text       string
----@field public last_result_width      integer
----@field public atomic                 boolean
----@field public name                   string
----@field public position               dot.e.NvimbarCompPosition
----@field public priority               integer
----@field public tight                  boolean
----@field public condition              fun(context: era.m.nvimbar.INvimbarContext, remain_width: integer): boolean
----@field public render                 fun(context: era.m.nvimbar.INvimbarContext, remain_width: integer): string, string, boolean
----@field public will_change            fun(context: era.m.nvimbar.INvimbarContext, prev_context: era.m.nvimbar.INvimbarContext|nil, remain_width: integer): boolean
+---@field public condition              ?fun(context: era.m.nvimbar.INvimbarContext): boolean
+---@field public will_change            ?fun(context: era.m.nvimbar.INvimbarContext, prev_context: era.m.nvimbar.INvimbarContext, snapshot: any): boolean Pure, cheap check before refresh; defaults to true.
+---@field public timeout                ?integer
+---@field public notify                 ?era.m.nvimbar.INotifyPolicy Defaults to immediate; placement replaces the whole policy.
+---@field public refresh                fun(context: era.m.nvimbar.INvimbarContext, token: stl.c.CancellationToken): any|stl.c.Future
+---@field public render                 ?fun(snapshot: any, context: era.m.nvimbar.INvimbarContext, remain_width: integer): string, string
 
 ---@class era.m.nvimbar.component.__mods
 local __component__mods = {
@@ -72,6 +71,14 @@ local component = setmetatable({
     return require(m)
   end,
 })
+
+--- Mark a typed factory; each runtime owns its initialization and cached definition.
+---@param factory                       fun(): era.m.nvimbar.IRawComponent
+---@return fun(): era.m.nvimbar.IRawComponent
+function component.lazy(factory)
+  assert(type(factory) == "function", "Expected a nvimbar component factory")
+  return factory
+end
 
 ----------------------------------------------------------------------------------------------------
 
