@@ -1,6 +1,8 @@
 ---@class era.m.image.terminal
 local M = {}
 
+local env = require("era.m.image.env")
+
 ---@class era.m.image.terminal.Dim
 ---@field public width                    integer
 ---@field public height                   integer
@@ -104,8 +106,7 @@ end
 ---@param data                            string
 ---@return nil
 function M.write(data)
-  local state = require("era.m.image.state")
-  data = state.env.transform and state.env.transform(data) or data
+  data = env.transform and env.transform(data) or data
   if vim.api.nvim_ui_send then
     vim.api.nvim_ui_send(data)
   else

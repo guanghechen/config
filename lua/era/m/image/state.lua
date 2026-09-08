@@ -1,32 +1,4 @@
----@type string|nil
-local terminal_name = nil
-if stl.env.IS_KITTY then
-  terminal_name = "kitty"
-elseif stl.env.IS_WEZTERM then
-  terminal_name = "wezterm"
-elseif stl.env.IS_GHOSTTY then
-  terminal_name = "ghostty"
-end
-
----@class era.m.image.state.env
----@field public name                    string
----@field public placeholders            boolean
----@field public remote                  boolean
----@field public supported               boolean
----@field public transform               ?fun(data: string): string
-local env = {
-  name = terminal_name or "",
-  placeholders = terminal_name == "kitty" or terminal_name == "ghostty",
-  remote = false,
-  supported = terminal_name ~= nil,
-}
-
-if stl.env.IS_TMUX then
-  env.name = env.name ~= "" and (env.name .. "/tmux") or "tmux"
-  env.transform = function(data)
-    return ("\027Ptmux;" .. data:gsub("\027", "\027\027")) .. "\027\\"
-  end
-end
+local env = require("era.m.image.env")
 
 ---@class era.m.image.state.data
 ---@field public resolve                 ?fun(file: string, src: string): string|nil
@@ -128,7 +100,7 @@ local dims = {}
 ---@class era.m.image.state
 ---@field public data                    era.m.image.state.data
 ---@field public did_setup               boolean
----@field public env                     era.m.image.state.env
+---@field public env                     era.m.image.env
 local M = {
   data = data,
   did_setup = false,
@@ -156,10 +128,10 @@ end
 ---@return era.m.image.Size
 function M.pixels_to_cells(size)
   local terminal = require("era.m.image.terminal")
-  local term_size = terminal.size()
+  local terminal_size = terminal.size()
   return M.norm({
-    width = size.width / term_size.cell_width,
-    height = size.height / term_size.cell_height,
+    width = size.width / terminal_size.cell_width,
+    height = size.height / terminal_size.cell_height,
   })
 end
 
@@ -181,10 +153,10 @@ function M.fit(file, cells, opts)
   local terminal = require("era.m.image.terminal")
   local img_pixels ---@type era.m.image.Size
   if opts.info then
-    local term_size = terminal.size()
+    local terminal_size = terminal.size()
     img_pixels = {}
-    img_pixels.height = opts.info.size.height / opts.info.dpi.height * 96 * term_size.scale
-    img_pixels.width = opts.info.size.width / opts.info.dpi.width * 96 * term_size.scale
+    img_pixels.height = opts.info.size.height / opts.info.dpi.height * 96 * terminal_size.scale
+    img_pixels.width = opts.info.size.width / opts.info.dpi.width * 96 * terminal_size.scale
   else
     img_pixels = M.dim(file)
   end

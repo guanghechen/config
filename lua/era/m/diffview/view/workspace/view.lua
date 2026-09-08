@@ -892,9 +892,10 @@ function M.open_entry(ctx, entry, token, opts)
     return
   end
 
-  local keymap = require("era.m.diffview.view.workspace.keymap")
-  keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
-  keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
+  if ctx.setup_sbs ~= nil then
+    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
+    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
+  end
 end
 
 ---Clear sbs view
@@ -940,13 +941,6 @@ function M.history_context(lyt, workspace_state, history_state)
           and not workspace_state:is_disposed()
           and not history_state:is_disposed()
       end
-    end,
-    setup_sbs = function(bufnr)
-      require("era.m.diffview.view.workspace.keymap").setup_sbs({
-        layout = lyt,
-        state = workspace_state,
-        history = history,
-      }, bufnr)
     end,
     render_winline = function()
       require("era.m.diffview.view.workspace.winline").render_history(history)

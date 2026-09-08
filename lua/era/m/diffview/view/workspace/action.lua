@@ -21,6 +21,11 @@ local M = {}
 ---@field public layout                  era.m.diffview.view.workspace.ILayout
 ---@field public state                   era.m.diffview.view.workspace.State
 ---@field public history                 era.m.diffview.view.commits.IContext|nil
+---@field public get_keymaps             (fun(): stl.t.IKeymap[])|nil
+---@field public setup_changes           (fun(): nil)|nil
+---@field public setup_history           (fun(): nil)|nil
+---@field public setup_keymaps           (fun(): nil)|nil
+---@field public setup_sbs               (fun(bufnr: integer): nil)|nil
 
 ----------------------------------------------------------------------------------------------------
 -- Local helpers
@@ -834,7 +839,9 @@ function M.reveal(ctx)
   end
 
   workspace_view.show_changes(ctx.layout)
-  require("era.m.diffview.view.workspace.keymap").setup_changes(ctx)
+  if ctx.setup_changes ~= nil then
+    ctx.setup_changes()
+  end
 
   local current = ctx.state:get_current_entry()
   if current and current.stage_type then
@@ -1161,8 +1168,7 @@ end
 ---Show keymap help
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.show_help(ctx)
-  local keymap = require("era.m.diffview.view.workspace.keymap")
-  local keymaps = keymap.get_help_keymaps(ctx)
+  local keymaps = ctx.get_keymaps and ctx.get_keymaps() or {} ---@type stl.t.IKeymap[]
 
   local sheet = era.view.Keysheet.new({
     title = "Diffview Workspace Keybindings",

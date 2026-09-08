@@ -110,12 +110,7 @@ end
 ---@param placement                      era.m.image.Placement
 ---@return nil
 function M:place(placement)
-  local _pid = require("era.m.image.placement")._pid
-  if not placement.id then
-    _pid = _pid + 1
-    require("era.m.image.placement")._pid = _pid
-    placement.id = _pid
-  end
+  assert(type(placement.id) == "number", "`Image:place`: placement.id should be a number")
   self.placements[placement.id] = placement
   if self.sent then
     use(self)

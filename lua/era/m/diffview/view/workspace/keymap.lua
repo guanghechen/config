@@ -186,18 +186,11 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.setup_changes(ctx)
   local keymaps = M.gen_changes(ctx)
-  for _, pane in ipairs(require("era.m.diffview.view.workspace.view").get_changes_panes(ctx.layout)) do
+  for _, pane in ipairs({ ctx.layout.changes.staged, ctx.layout.changes.unstaged }) do
     if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
       apply_keymaps(pane.bufnr, keymaps)
     end
   end
-end
-
----Setup keymaps for sbs buffers
----@param ctx                            era.m.diffview.view.workspace.IContext
----@param bufnr                          integer
-function M.setup_sbs(ctx, bufnr)
-  require("era.m.diffview.view.sbs_keymap").setup_workspace(ctx, bufnr)
 end
 
 ---@param ctx                            era.m.diffview.view.workspace.IContext

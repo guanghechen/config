@@ -63,7 +63,7 @@ setmetatable(positions, {
 })
 
 ---@type integer
-M._pid = 10
+local next_placement_id = 10
 
 M.ns = ns
 
@@ -86,10 +86,12 @@ end
 ---@return era.m.image.Placement
 function M.new(bufnr, src, opts)
   local Image = require("era.m.image.image")
-  assert(type(bufnr) == "number", "`Image.new`: bufnr should be a number")
-  assert(type(src) == "string", "`Image.new`: src should be a string")
+  assert(type(bufnr) == "number", "`Placement.new`: bufnr should be a number")
+  assert(type(src) == "string", "`Placement.new`: src should be a string")
   local self = setmetatable({}, M)
 
+  next_placement_id = next_placement_id + 1
+  self.id = next_placement_id
   self.img = Image.new(src)
   self.img:place(self)
   self.opts = opts or {}

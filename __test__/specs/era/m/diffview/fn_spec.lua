@@ -44,6 +44,9 @@ bootstrap.with_runtime(t, {
   },
 })
 
+t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", {})
+t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {})
+
 local Fn = assert(loadfile("lua/era/m/diffview/fn.lua"))()
 
 t:test("open_file_history uses Git separators for Windows paths", function()

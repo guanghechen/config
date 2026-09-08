@@ -1150,12 +1150,12 @@ t:test("shared sbs keymaps resolve the view in the current tab", function()
   t:defer(function()
     vim.t[tabnr].tabtype = previous_tabtype
   end)
-  local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
+  local binding = assert(loadfile("lua/era/m/diffview/view/binding.lua"))()
 
   vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE
-  t.assert_true(sbs_keymap.dispatch("n", "<C-j>"), "workspace mapping handled")
+  assert(binding.resolve("n", "<C-j>")).callback()
   vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_COMMITS
-  t.assert_true(sbs_keymap.dispatch("n", "<C-j>"), "commits mapping handled")
+  assert(binding.resolve("n", "<C-j>")).callback()
 
   t.assert_eq(1, workspace_next_calls, "workspace action")
   t.assert_eq(1, commits_next_calls, "commits action")
@@ -1230,8 +1230,8 @@ t:test("shared sbs mappings preserve counts for handled and fallback keys", func
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "a" })
   vim.fn.setreg('"', "x", "v")
 
-  local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
-  sbs_keymap.setup_workspace({ layout = { preview_source = "changes" } }, bufnr)
+  local binding = assert(loadfile("lua/era/m/diffview/view/binding.lua"))()
+  binding.workspace({ layout = { preview_source = "changes" } }).setup_sbs(bufnr)
 
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("4P", true, false, true), "xt", false)
   t.assert_eq(4, handled_count, "handled mapping count")
@@ -1240,6 +1240,44 @@ t:test("shared sbs mappings preserve counts for handled and fallback keys", func
   current_layout.preview_source = "history"
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("3P", true, false, true), "xt", false)
   t.assert_eq("xxxa", vim.api.nvim_get_current_line(), "fallback preserves native count")
+end)
+
+t:test("shared sbs mappings do not retain their installation context", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  ---@diagnostic disable-next-line: invisible
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+
+  local retained = setmetatable({}, { __mode = "v" })
+  local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
+  local function install()
+    local ctx = { payload = "installation context" }
+    retained.ctx = ctx
+    sbs_keymap.setup(
+      {
+        {
+          modes = { "n" },
+          key = "gz",
+          desc = "gc probe",
+          callback = function()
+            return ctx
+          end,
+        },
+      },
+      bufnr,
+      function()
+        return nil
+      end
+    )
+  end
+
+  install()
+  collectgarbage("collect")
+  collectgarbage("collect")
+  t.assert_nil(retained.ctx, "installation context")
 end)
 
 t:test("workspace refresh updates Changes and History together", function()

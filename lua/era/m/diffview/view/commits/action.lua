@@ -18,6 +18,14 @@ local M = {}
 -- Local helpers
 ----------------------------------------------------------------------------------------------------
 
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
+local function setup_keymaps(ctx)
+  if ctx.setup_keymaps ~= nil then
+    ctx.setup_keymaps()
+  end
+end
+
 ---Get current buffer and cursor line number
 ---@return integer bufnr, integer lnum
 local function get_cursor_info()
@@ -691,7 +699,6 @@ function M.reveal(ctx)
   end
 
   commits_view.show_commits(ctx)
-  require("era.m.diffview.view.commits.keymap").setup_commits(ctx)
 
   local current = ctx.state:get_current_commit()
   local filepath = current and get_current_entry_filepath(ctx, current) or nil
@@ -934,20 +941,7 @@ function M.switch_to_layout(ctx, layout_type)
   commits_view.set_layout(ctx.layout.tabnr, new_lyt)
   ctx.layout = new_lyt
 
-  -- Setup keymaps for new layout components
-  local keymap = require("era.m.diffview.view.commits.keymap")
-  if new_lyt.commits_bufnr then
-    keymap.setup_commits(ctx)
-  end
-  if new_lyt.filetree_bufnr then
-    keymap.setup_filetree(ctx)
-  end
-  if new_lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(new_lyt.sbs_left_winnr) then
-    keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(new_lyt.sbs_left_winnr))
-  end
-  if new_lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(new_lyt.sbs_right_winnr) then
-    keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(new_lyt.sbs_right_winnr))
-  end
+  setup_keymaps(ctx)
 
   -- Re-render and focus
   commits_view.render_commits(ctx)
@@ -1012,20 +1006,7 @@ function M.cycle_layout(ctx)
   commits_view.set_layout(ctx.layout.tabnr, new_lyt)
   ctx.layout = new_lyt
 
-  -- Setup keymaps for new layout components
-  local keymap = require("era.m.diffview.view.commits.keymap")
-  if new_lyt.commits_bufnr then
-    keymap.setup_commits(ctx)
-  end
-  if new_lyt.filetree_bufnr then
-    keymap.setup_filetree(ctx)
-  end
-  if new_lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(new_lyt.sbs_left_winnr) then
-    keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(new_lyt.sbs_left_winnr))
-  end
-  if new_lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(new_lyt.sbs_right_winnr) then
-    keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(new_lyt.sbs_right_winnr))
-  end
+  setup_keymaps(ctx)
 
   -- Re-render and focus
   commits_view.render_commits(ctx)
@@ -1091,20 +1072,7 @@ function M.prev_layout(ctx)
   commits_view.set_layout(ctx.layout.tabnr, new_lyt)
   ctx.layout = new_lyt
 
-  -- Setup keymaps for new layout components
-  local keymap = require("era.m.diffview.view.commits.keymap")
-  if new_lyt.commits_bufnr then
-    keymap.setup_commits(ctx)
-  end
-  if new_lyt.filetree_bufnr then
-    keymap.setup_filetree(ctx)
-  end
-  if new_lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(new_lyt.sbs_left_winnr) then
-    keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(new_lyt.sbs_left_winnr))
-  end
-  if new_lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(new_lyt.sbs_right_winnr) then
-    keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(new_lyt.sbs_right_winnr))
-  end
+  setup_keymaps(ctx)
 
   -- Re-render and focus
   commits_view.render_commits(ctx)
@@ -1289,8 +1257,7 @@ end
 ---Show keymap help
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.show_help(ctx)
-  local keymap = require("era.m.diffview.view.commits.keymap")
-  local keymaps = keymap.get_help_keymaps(ctx)
+  local keymaps = ctx.get_keymaps and ctx.get_keymaps() or {} ---@type stl.t.IKeymap[]
 
   local sheet = era.view.Keysheet.new({
     title = "Diffview Commits Keybindings",

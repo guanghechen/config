@@ -148,8 +148,9 @@ local function get_cb_layout()
       return
     end
 
+    local binding = require("era.m.diffview.view.binding")
     local action = require("era.m.diffview.view.commits.action")
-    action.cycle_layout({ layout = lyt, state = state })
+    action.cycle_layout(binding.commits({ layout = lyt, state = state }))
   end)
 end
 

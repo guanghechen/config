@@ -784,17 +784,11 @@ t:test("workspace view binds keymaps after replacing null buffers", function()
       vim.api.nvim_win_set_buf(opts.right_winnr, right_bufnr)
     end,
   }
-  local keymap = {
-    setup_sbs = function(_, bufnr)
-      mapped[#mapped + 1] = bufnr
-    end,
-  }
   t:patch_table(package.loaded, "era.m.diffview.config", {})
   t:patch_table(package.loaded, "era.m.diffview.layout", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", pane)
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", keymap)
 
   vim.cmd("vnew")
   local left_winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -811,6 +805,9 @@ t:test("workspace view binds keymaps after replacing null buffers", function()
         return false
       end,
     },
+    setup_sbs = function(bufnr)
+      mapped[#mapped + 1] = bufnr
+    end,
   }, {})
 
   t.assert_eq(2, #mapped, "mapped buffers")

@@ -31,6 +31,10 @@ local M = {}
 ---@field public layout                  era.m.diffview.view.commits.ILayout
 ---@field public state                   era.m.diffview.view.commits.State
 ---@field public begin_preview           (fun(): fun(): boolean)|nil
+---@field public get_keymaps             (fun(): stl.t.IKeymap[])|nil
+---@field public setup_commits           (fun(): nil)|nil
+---@field public setup_filetree          (fun(): nil)|nil
+---@field public setup_keymaps           (fun(): nil)|nil
 ---@field public setup_sbs               (fun(bufnr: integer): nil)|nil
 ---@field public render_winline          (fun(): nil)|nil
 
@@ -421,7 +425,9 @@ function M.show_commits(ctx)
   pane_commits.apply_winopts(commits_winnr)
 
   lyt.commits_winnr = commits_winnr
-  require("era.m.diffview.view.commits.keymap").setup_commits(ctx)
+  if ctx.setup_commits ~= nil then
+    ctx.setup_commits()
+  end
 
   return lyt
 end
@@ -483,7 +489,9 @@ function M.show_filetree(ctx)
   pane_filetree.apply_winopts(filetree_winnr)
 
   lyt.filetree_winnr = filetree_winnr
-  require("era.m.diffview.view.commits.keymap").setup_filetree(ctx)
+  if ctx.setup_filetree ~= nil then
+    ctx.setup_filetree()
+  end
 
   return lyt
 end
@@ -773,14 +781,10 @@ function M.open_entry(ctx, commit, entry, token)
     return
   end
 
-  local setup_sbs = ctx.setup_sbs ---@type (fun(bufnr: integer): nil)|nil
-  if setup_sbs == nil then
-    setup_sbs = function(bufnr)
-      require("era.m.diffview.view.commits.keymap").setup_sbs(ctx, bufnr)
-    end
+  if ctx.setup_sbs ~= nil then
+    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
+    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
   end
-  setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
-  setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
 end
 
 ---Clear sbs view

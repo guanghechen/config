@@ -1,24 +1,34 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.image.inline" ---@type string
 
+---@class era.m.image.inline.IDocument
+---@field public find_visible            fun(bufnr: integer, cb: era.m.image.find): nil
+---@field public math_enabled            fun(bufnr: integer): boolean
+
 ---@class era.m.image.inline
 ---@field public bufnr                    integer
 ---@field public imgs                     table<integer, era.m.image.Placement>
 ---@field public idx                      table<integer, era.m.image.Placement>
 ---@field protected __call_debounced__    fun(self: era.m.image.inline): nil
 ---@field protected _debounced            ?stl.timer.IDisposableCallable
+---@field protected _document             era.m.image.inline.IDocument
 ---@field protected _augroup              integer
 ---@field protected _flag_unsub           ?stl.c.IUnsubscribable
 local M = {}
 M.__index = M
 
 ---@param bufnr                           integer
+---@param document                       era.m.image.inline.IDocument
 ---@return era.m.image.inline
-function M.new(bufnr)
+function M.new(bufnr, document)
+  assert(type(document) == "table", "`Inline.new`: document should be a table")
+  assert(type(document.find_visible) == "function", "`Inline.new`: document.find_visible should be a function")
+  assert(type(document.math_enabled) == "function", "`Inline.new`: document.math_enabled should be a function")
   local self = setmetatable({}, M)
   self.bufnr = bufnr
   self.imgs = {}
   self.idx = {}
+  self._document = document
   self._augroup = vim.api.nvim_create_augroup(__module_name__ .. "." .. bufnr, { clear = true })
 
   self._debounced = stl.timer.debounce(function()
@@ -92,7 +102,7 @@ end
 
 ---@return nil
 function M:sync_math()
-  if not require("era.m.image.doc").math_enabled(self.bufnr) then
+  if not self._document.math_enabled(self.bufnr) then
     for id, img in pairs(self.imgs) do
       if img.opts.type == "math" then
         img:close()
@@ -161,7 +171,6 @@ end
 ---@return nil
 function M:update()
   local s = require("era.m.image.state").data
-  local doc = require("era.m.image.doc")
   local placement = require("era.m.image.placement")
 
   local conceal = s.doc.conceal
@@ -169,7 +178,7 @@ function M:update()
     return conceal
   end or conceal
 
-  doc.find_visible(self.bufnr, function(imgs)
+  self._document.find_visible(self.bufnr, function(imgs)
     local visible = self:visible()
     for _, i in ipairs(imgs) do
       local img ---@type era.m.image.Placement|nil

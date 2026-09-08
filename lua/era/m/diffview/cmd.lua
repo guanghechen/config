@@ -41,9 +41,9 @@ end
 ---Open the Git workspace with Changes, History, and side-by-side preview.
 ---@param opts                        { layout: integer|nil }|nil
 function M.open(opts)
+  local binding = require("era.m.diffview.view.binding")
   local commits_action = require("era.m.diffview.view.commits.action")
   local commits_state = require("era.m.diffview.view.commits.state")
-  local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
   local workspace_state = require("era.m.diffview.view.workspace.state")
   local workspace_tabline = require("era.m.diffview.view.workspace.tabline")
   local workspace_view = require("era.m.diffview.view.workspace.view")
@@ -82,22 +82,14 @@ function M.open(opts)
   local history_state = commits_state.create(lyt.tabnr, dot.context.diffview.flag_fold_unchanges:snapshot())
   local history_ctx = workspace_view.history_context(lyt, st, history_state)
 
-  ---@type era.m.diffview.view.workspace.IContext
-  local ctx = {
+  ---@type era.m.diffview.view.binding.IWorkspaceContext
+  local ctx = binding.workspace({
     layout = lyt,
     state = st,
     history = history_ctx,
-  }
+  })
 
-  -- Setup keymaps
-  workspace_keymap.setup_changes(ctx)
-  workspace_keymap.setup_history(ctx)
-  if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
-    workspace_keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
-  end
-  if lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
-    workspace_keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
-  end
+  ctx.setup_keymaps()
 
   -- Setup git subscription for auto-refresh
   M.__setup_git_subscription_workspace__(st, ctx)
@@ -227,8 +219,8 @@ end
 ---Open Git Log view
 ---@param opts                        { layout: integer|nil, path: string|nil }|nil
 function M.log(opts)
+  local binding = require("era.m.diffview.view.binding")
   local commits_action = require("era.m.diffview.view.commits.action")
-  local commits_keymap = require("era.m.diffview.view.commits.keymap")
   local commits_state = require("era.m.diffview.view.commits.state")
   local commits_tabline = require("era.m.diffview.view.commits.tabline")
   local commits_view = require("era.m.diffview.view.commits.view")
@@ -275,25 +267,15 @@ function M.log(opts)
     st:set_path_filter(path_filter)
   end
 
-  ---@type era.m.diffview.view.commits.IContext
-  local ctx = {
+  ---@type era.m.diffview.view.binding.ICommitsContext
+  local ctx = binding.commits({
     layout = lyt,
     state = st,
-  }
+  })
 
   M.__setup_commits_signs__(ctx)
 
-  -- Setup keymaps
-  commits_keymap.setup_commits(ctx)
-  if lyt.filetree_bufnr then
-    commits_keymap.setup_filetree(ctx)
-  end
-  if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
-    commits_keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
-  end
-  if lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
-    commits_keymap.setup_sbs(ctx, vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
-  end
+  ctx.setup_keymaps()
 
   -- Fetch and render data
   stl.async.run(function()
@@ -446,7 +428,7 @@ function M.get_help_keymaps()
   local tabtype = vim.t[tabnr].tabtype
 
   if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
-    local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
+    local binding = require("era.m.diffview.view.binding")
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
 
@@ -455,17 +437,19 @@ function M.get_help_keymaps()
     if st and lyt then
       local history_state = require("era.m.diffview.view.commits.state").get(tabnr)
       local history = history_state and workspace_view.history_context(lyt, st, history_state) or nil
-      return workspace_keymap.get_help_keymaps({ layout = lyt, state = st, history = history })
+      local ctx = binding.workspace({ layout = lyt, state = st, history = history })
+      return ctx.get_keymaps()
     end
   elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
-    local commits_keymap = require("era.m.diffview.view.commits.keymap")
+    local binding = require("era.m.diffview.view.binding")
     local commits_state = require("era.m.diffview.view.commits.state")
     local commits_view = require("era.m.diffview.view.commits.view")
 
     local st = commits_state.get(tabnr)
     local lyt = commits_view.get_layout(tabnr)
     if st and lyt then
-      return commits_keymap.get_help_keymaps({ layout = lyt, state = st })
+      local ctx = binding.commits({ layout = lyt, state = st })
+      return ctx.get_keymaps()
     end
   end
 

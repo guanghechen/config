@@ -170,8 +170,8 @@ t:test("panel buffers route mouse scrolling without leaking mappings to side-by-
   end)
   local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
   t:patch_table(package.loaded, "era.m.diffview.view.sbs_keymap", sbs_keymap)
-  workspace_keymap.setup_sbs(ctx, shared_sbs_bufnr)
-  commits_keymap.setup_sbs(commits_ctx, shared_sbs_bufnr)
+  sbs_keymap.setup(workspace_keymap.gen_sbs(ctx), shared_sbs_bufnr, function() end)
+  sbs_keymap.setup(commits_keymap.gen_sbs(commits_ctx), shared_sbs_bufnr, function() end)
   t.assert_false(has_buffer_keymap(shared_sbs_bufnr, "<ScrollWheelDown>"), "shared sbs wheel mapping")
 end)
 
@@ -203,7 +203,8 @@ t:test("commits panel recreation installs mouse mappings", function()
   t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
     scroll_mouse = function() end,
   })
-  t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", nil)
+  local keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", keymap)
 
   local view = assert(loadfile("lua/era/m/diffview/view/commits/view.lua"))()
   local anchor_winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -219,6 +220,12 @@ t:test("commits panel recreation installs mouse mappings", function()
     },
     state = {},
   } ---@type era.m.diffview.view.commits.IContext
+  ctx.setup_commits = function()
+    keymap.setup_commits(ctx)
+  end
+  ctx.setup_filetree = function()
+    keymap.setup_filetree(ctx)
+  end
 
   ---@diagnostic disable-next-line: invisible
   t:defer(function()

@@ -1,8 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.diffview.view.sbs_keymap" ---@type string
 
----Side-by-side buffers are shared across Diffview tabs. Resolve their actions from the current tab
----instead of retaining the context of whichever view most recently installed buffer-local keymaps.
+---Side-by-side buffers are shared across Diffview tabs. Their binding receives a resolver owned by
+---the higher-level view composition so this adapter retains no view or action dependency.
 ---@class era.m.diffview.view.sbs_keymap
 local M = {}
 
@@ -35,51 +35,15 @@ local DESCRIPTIONS = {
   ["zo"] = "diffview(sbs): Expand active preview item",
 } ---@type table<string, string>
 
----@param mode                           string
----@param key                            string
----@return stl.t.IKeymap|nil
-local function get_current_mapping(mode, key)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
-  local keymaps = nil ---@type stl.t.IKeymap[]|nil
+---@alias era.m.diffview.view.sbs_keymap.IResolve
+---| fun(mode: string, key: string): stl.t.IKeymap|nil
 
-  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
-    local commits_state = require("era.m.diffview.view.commits.state")
-    local workspace_state = require("era.m.diffview.view.workspace.state")
-    local workspace_view = require("era.m.diffview.view.workspace.view")
-    local state = workspace_state.get(tabnr)
-    local layout = workspace_view.get_layout(tabnr)
-    if state and layout then
-      local history_state = commits_state.get(tabnr)
-      local history = history_state and workspace_view.history_context(layout, state, history_state) or nil
-      keymaps = require("era.m.diffview.view.workspace.keymap").gen_sbs({
-        layout = layout,
-        state = state,
-        history = history,
-      })
-    end
-  elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
-    local commits_state = require("era.m.diffview.view.commits.state")
-    local commits_view = require("era.m.diffview.view.commits.view")
-    local state = commits_state.get(tabnr)
-    local layout = commits_view.get_layout(tabnr)
-    if state and layout then
-      keymaps = require("era.m.diffview.view.commits.keymap").gen_sbs({ layout = layout, state = state })
-    end
-  end
-
-  for _, keymap in ipairs(keymaps or {}) do
-    if keymap.key == key and vim.tbl_contains(keymap.modes, mode) then
-      return keymap
-    end
-  end
-end
-
----@param mode                           string
----@param key                            string
+---@param resolve                       era.m.diffview.view.sbs_keymap.IResolve
+---@param mode                          string
+---@param key                           string
 ---@return boolean handled
-function M.dispatch(mode, key)
-  local keymap = get_current_mapping(mode, key)
+function M.dispatch(resolve, mode, key)
+  local keymap = resolve(mode, key)
   if not keymap then
     return false
   end
@@ -102,16 +66,22 @@ end
 ---non-expression <Plug> callback, keeping action side effects outside expression-map textlock.
 ---@param keymaps                        stl.t.IKeymap[]
 ---@param bufnr                          integer
-local function setup(keymaps, bufnr)
+---@param resolve                        era.m.diffview.view.sbs_keymap.IResolve
+---@return nil
+function M.setup(keymaps, bufnr, resolve)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
   for _, keymap in ipairs(keymaps) do
+    -- Generated callbacks close over their view context; mappings retain only scalar metadata.
+    local canonical_key = keymap.key
+    local description = DESCRIPTIONS[canonical_key] or keymap.desc
+    local aliases = keymap.aliases or {}
     for _, mode in ipairs(keymap.modes) do
-      local plug = plug_name(mode, keymap.key) ---@type string
+      local plug = plug_name(mode, canonical_key) ---@type string
       vim.keymap.set(mode, plug, function()
-        M.dispatch(mode, keymap.key)
+        M.dispatch(resolve, mode, canonical_key)
       end, {
         buffer = bufnr,
         silent = true,
@@ -119,37 +89,25 @@ local function setup(keymaps, bufnr)
 
       local function bind(key)
         vim.keymap.set(mode, key, function()
-          if get_current_mapping(mode, keymap.key) then
+          if resolve(mode, canonical_key) then
             return plug
           end
           return key
         end, {
           buffer = bufnr,
-          desc = DESCRIPTIONS[keymap.key] or keymap.desc,
+          desc = description,
           expr = true,
           nowait = true,
           replace_keycodes = true,
           silent = true,
         })
       end
-      bind(keymap.key)
-      for _, alias in ipairs(keymap.aliases or {}) do
+      bind(canonical_key)
+      for _, alias in ipairs(aliases) do
         bind(alias)
       end
     end
   end
-end
-
----@param ctx                            era.m.diffview.view.workspace.IContext
----@param bufnr                          integer
-function M.setup_workspace(ctx, bufnr)
-  setup(require("era.m.diffview.view.workspace.keymap").gen_sbs(ctx), bufnr)
-end
-
----@param ctx                            era.m.diffview.view.commits.IContext
----@param bufnr                          integer
-function M.setup_commits(ctx, bufnr)
-  setup(require("era.m.diffview.view.commits.keymap").gen_sbs(ctx), bufnr)
 end
 
 return M

@@ -45,7 +45,6 @@ era.m.diffview/
 ├── config.lua        # 常量配置
 ├── util.lua          # 通用工具函数 + 窗口辅助函数
 ├── layout.lua        # 窗口分割工具（树形布局描述）
-├── nvimbar.lua       # nvimbar 集成
 ├── data.lua          # Git 数据获取
 ├── fn.lua            # 公共函数入口
 ├── cmd.lua           # 命令定义
@@ -57,6 +56,8 @@ era.m.diffview/
 │   └── sbs.lua       # Side-by-side diff（含 git 内容加载、diff 模式）
 │
 └── view/             # 视图控制器（管理布局+pane组合+状态+交互）
+    ├── binding.lua       # context/keymap composition，唯一 wiring owner
+    ├── sbs_keymap.lua    # context-free SBS buffer binding adapter
     ├── workspace/
     │   ├── view.lua      # 布局管理、pane 组合、生命周期
     │   ├── state.lua     # workspace 专属状态
@@ -82,8 +83,23 @@ era.m.diffview/
 | Tabline | `view/*/tabline.lua` | 该视图的 tabline 渲染                        |
 | Action  | `view/*/action.lua`  | 该视图的用户操作（stage/unstage/选择文件等） |
 | Keymap  | `view/*/keymap.lua`  | 该视图的快捷键绑定                           |
+| Binding | `view/binding.lua`   | 构造 context，组装 keymap 与共享 SBS resolver |
 | Layout  | `layout.lua`         | 工具方法：根据树形结构创建窗口分割           |
-| Nvimbar | `nvimbar.lua`        | nvimbar 集成（被各 tabline 使用）            |
+| Nvimbar | `view/*/{tabline,winline}.lua` | tabline 与 window-owned winline composition |
+
+`binding.lua` 是 view interaction 的 composition root：
+
+```text
+cmd / fn / tabline
+        ↓
+     binding ───────────────> sbs_keymap
+        ↓
+      keymap → action → view → pane/state
+```
+
+- `action` 与 `view` 通过 context callback 请求 keymap refresh，不反向依赖 `keymap`。
+- `sbs_keymap` 只安装 buffer-local mappings；当前 tab/context 的解析由 `binding` 注入。
+- shared SBS buffer 继续在执行时解析当前 view，不持有安装时的 context。
 
 ### 四种 Pane
 

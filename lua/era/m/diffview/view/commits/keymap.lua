@@ -191,13 +191,6 @@ function M.setup_filetree(ctx)
   apply_keymaps(lyt.filetree_bufnr, keymaps)
 end
 
----Setup keymaps for sbs buffers
----@param ctx                            era.m.diffview.view.commits.IContext
----@param bufnr                          integer
-function M.setup_sbs(ctx, bufnr)
-  require("era.m.diffview.view.sbs_keymap").setup_commits(ctx, bufnr)
-end
-
 ----------------------------------------------------------------------------------------------------
 -- Help keymaps
 ----------------------------------------------------------------------------------------------------

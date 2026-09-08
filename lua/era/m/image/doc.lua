@@ -559,7 +559,7 @@ function M.attach(bufnr)
   end
 
   if inline then
-    inline_mod.new(bufnr)
+    inline_mod.new(bufnr, M)
   else
     local group = vim.api.nvim_create_augroup(__module_name__ .. ".doc." .. bufnr, { clear = true })
     vim.api.nvim_create_autocmd({ "CursorMoved" }, {
