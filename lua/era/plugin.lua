@@ -40,7 +40,7 @@ local raw_specs = {
   { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                    },
   { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode_or_yozvim   },
   { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode_or_yozvim   },
-  { name = "flash.nvim",                  main = "flash",                         cond = conds.not_vscode_or_yozvim   },
+  { name = "flash.nvim",                  main = "flash",                         cond = conds.not_yozvim              },
   { name = "friendly-snippets",                                                   cond = conds.not_vscode_or_yozvim   },
   { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                    },
   { name = "mini.ai",                     main = "mini.ai",                       cond = conds.not_vscode_or_yozvim   },
