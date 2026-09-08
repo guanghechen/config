@@ -15,6 +15,7 @@ local c__mods = {
   Observable = "stl.c.observable",
   Proc = "stl.c.proc",
   Scheduler = "stl.c.scheduler",
+  SignalHub = "stl.c.signal_hub",
   Subscriber = "stl.c.subscriber",
   Subscribers = "stl.c.subscribers",
   Theme = "stl.c.theme",
@@ -40,6 +41,7 @@ local c__mods = {
 ---@field public Observable             stl.c.Observable
 ---@field public Proc                   stl.c.Proc
 ---@field public Scheduler              stl.c.Scheduler
+---@field public SignalHub              stl.c.SignalHub
 ---@field public Subscriber             stl.c.Subscriber
 ---@field public Subscribers            stl.c.Subscribers
 ---@field public Theme                  stl.c.Theme
