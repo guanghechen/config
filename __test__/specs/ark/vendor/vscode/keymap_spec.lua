@@ -79,4 +79,11 @@ t:test("keeps core leader mappings aligned with native intent", function()
   end
 end)
 
+t:test("does not bind native Neovim quit chords", function()
+  local mappings = setup()
+  for _, key in ipairs({ "<C-a>q", "<D-q>", "<M-q>" }) do
+    t.assert_nil(mappings[key], "host-owned shortcut: " .. key)
+  end
+end)
+
 t:run()

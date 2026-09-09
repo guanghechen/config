@@ -93,11 +93,3 @@ mk({ "n", "x" }, "zh", "zs", "scroll: line to left")
 mk({ "n", "x" }, "zl", "ze", "scroll: line to right")
 mk({ "n", "x" }, "zj", "zb", "scroll: line to bottom")
 mk({ "n", "x" }, "zk", "zt", "scroll: line to top")
-
----! quit
-mk({ "n", "x" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
-
----! native
-if not vim.g.vscode then
-  mk({ "i", "n", "x" }, { "<C-a>q", "<D-q>", "<M-q>" }, "<cmd>qa<cr>", "quit: quit all")
-end

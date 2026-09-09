@@ -1,3 +1,4 @@
+local mk = stl.nvim.fn.make_keys
 local ms = dot.command.shortcut
 local K = dot.command.definitions ---@type dot.command.definitions
 
@@ -226,6 +227,11 @@ ms({ "n", "x" }, "<leader>pi", K.clipboard.paste_image)
 ms({ "n", "x" }, "<leader>pI", K.clipboard.paste_image_as_base64)
 ms({ "n", "x" }, "<leader>pp", K.plugin.open)
 -----------------------------------------------------------------------------------#[p]aste/plugin--
+
+--#[q]uit-------------------------------------------------------------------------------------------
+mk({ "n", "x" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
+mk({ "i", "n", "x" }, { "<C-a>q", "<D-q>", "<M-q>" }, "<cmd>qa<cr>", "quit: quit all")
+-------------------------------------------------------------------------------------------#[q]uit--
 
 --#[r]efresh----------------------------------------------------------------------------------------
 ms({ "i", "n", "x" }, { "<C-a>r", "<D-r>", "<M-r>" }, K.refresh.all)
