@@ -89,11 +89,6 @@ local function can_retry(retry)
   return retry.retry_at_ns == 0 or vim.uv.hrtime() >= retry.retry_at_ns
 end
 
----@return boolean
-local function owns_source()
-  return focused and dot.context.behavior.auto_im:snapshot()
-end
-
 ---@param subject                       string
 ---@return era.dressing.im.Snapshot|nil
 local function capture_and_select_english(subject)
@@ -163,18 +158,9 @@ end
 
 ---@param subject                       string
 ---@return nil
-local function restore_insert_snapshot(subject)
-  if not owns_source() or insert_snapshot == nil then
-    return
-  end
-  restore_snapshot(insert_snapshot, subject)
-end
-
----@param subject                       string
----@return nil
 local function restore_insert_snapshot_if_needed(subject)
   local im = backend
-  if not owns_source() or insert_snapshot == nil or im == nil then
+  if not dot.context.behavior.auto_im:snapshot() or insert_snapshot == nil or im == nil then
     return
   end
   -- A read-only capture does not rule out an earlier conflicting selection still taking effect.
@@ -199,15 +185,15 @@ end
 ---@param subject                       string
 ---@return nil
 local function reconcile_focused_source(subject)
-  if not owns_source() then
+  if not focused or not dot.context.behavior.auto_im:snapshot() then
     return
   end
 
   local mode = vim.api.nvim_get_mode().mode ---@type string
   if is_command_mode(mode) then
     capture_and_select_english(subject)
-  elseif is_insert_mode(mode) then
-    restore_insert_snapshot(subject)
+  elseif is_insert_mode(mode) and insert_snapshot ~= nil then
+    restore_snapshot(insert_snapshot, subject)
   end
 end
 
@@ -228,7 +214,7 @@ end
 
 ---@return nil
 local function on_insert_leave()
-  if not owns_source() then
+  if not dot.context.behavior.auto_im:snapshot() then
     insert_snapshot = nil
     can_skip_english_restore = false
     return
@@ -289,12 +275,12 @@ end
 
 ---@return nil
 local function on_focus_lost()
+  can_skip_english_restore = false
   if not focused then
     return
   end
   focus_generation = focus_generation + 1
   focused = false
-  can_skip_english_restore = false
 end
 
 ---@return nil

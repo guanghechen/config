@@ -12,14 +12,18 @@
 ## 状态模型
 
 ```text
-Focused + command mode    -> English source
-Focused + Insert/Replace  -> last Insert snapshot
-Unfocused                 -> 不管理 input source
+InsertLeave               -> capture source, select English
+InsertEnter               -> restore last Insert snapshot
+Focus entry + command     -> select English
+Focus entry + Insert      -> restore last Insert snapshot
+Focus exit                -> no backend call
 ```
 
-Neovim 只在 focused 时管理 input source；unfocused 后不读取或修改目标应用的 input source。
-初始状态为 unfocused；headless 初始化或程序触发的 Insert 事件不授予 ownership。
-source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，也不启动后台重试。
+`auto_im` 控制全部 input source 操作。Insert 事件独立触发，不以 focus state 为前置条件；
+未收到 focus event 的 headless host，以及收到 `FocusLost` 后的 mode 切换，均按相同规则处理。
+初始状态为 unfocused，headless 初始化本身不操作 source；mode 事件不改变 focus state。
+focus state 仅用于 focus event 去重、取消延迟的 UI reconciliation，以及设置变更时的立即协调。
+source 操作遵守下述失败冷却策略，不启动后台重试。
 
 ## 生命周期
 
@@ -27,19 +31,19 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
   - Neovim/Neovide 调用 `era.dressing.setup({ "notifier", "ui_attach", "im" })`，`im` 在 `ui_attach` 之后注册；
   - VSCode/Yuivim 调用 `era.dressing.setup({ "im" })`，不启用 `ui_attach` dressing；
   - Yozvim 不启用 `im` 或 `ui_attach` dressing，input source 由宿主管理。
-- `UIEnter` 仅在存在 attached UI 时同步获取 ownership，将首次 source reconciliation 延至下一 event-loop tick，避免 backend I/O 阻塞 UI startup。失焦会推进 focus generation，使尚未执行的 reconciliation 失效；重复 focus event 不会产生额外调用。
-- 显式 `FocusGained` 幂等地获取 ownership，不要求 attached UI，并同步按当前 mode 对齐：
+- `UIEnter` 仅在存在 attached UI 时同步记录 focused 状态，将首次 source reconciliation 延至下一 event-loop tick，避免 backend I/O 阻塞 UI startup。失焦会推进 focus generation，使尚未执行的 reconciliation 失效；重复 focus event 不会产生额外调用。
+- 显式 `FocusGained` 幂等地记录 focused 状态，不要求 attached UI，并同步按当前 mode 对齐：
   - command mode 调用一次 fused `capture_and_select_english()`；
   - Insert/Replace mode 精确恢复已知 Insert snapshot，包括 English snapshot；
   - 其他 mode 不处理。
-- `VimResume` 仅在存在 attached UI 时复用上述获取焦点流程；headless 宿主恢复后仍需显式发送 `FocusGained`。
-- `FocusLost`、`VimSuspend`、`VimLeavePre`，以及最后一个 UI 的 `UILeave`，只释放 ownership，不调用 backend。仍有其他 UI 时，`UILeave` 不释放 ownership。
-- focused 状态下的 `InsertLeave` 正常调用一次 `capture_and_select_english()`；仅 English selection 冷却时改用一次只读 `capture()`。只要成功捕获 snapshot，就将其保存为新的 Insert snapshot，即使后续选择 English source 失败。
-- focused 状态下的 `InsertEnter` 同步调用 backend 恢复精确 Insert snapshot，不在 Lua 中延迟执行。只有最近的 English 对齐或 English restore 成功、之后未发生使 source 不确定的操作或失焦，且 snapshot 为 English 时才跳过恢复。`can_skip_english_restore` 仅表示该快捷路径仍可使用，不代表 OS IME 已完成切换；只读 capture 不建立该条件。
-- 关闭 `auto_im` 会清除 Insert snapshot，但不改变 focus ownership。重新开启时：
+- `VimResume` 仅在存在 attached UI 时复用上述获取焦点流程；headless 的 `VimResume` 不主动协调，后续 Insert 或显式 focus event 各自触发。
+- `FocusLost`、`VimSuspend`、`VimLeavePre`，以及最后一个 UI 的 `UILeave`，清除 focus 状态并取消待执行的 focus 协调，不调用 backend。即使未收到过 focus entry，也会使 English restore 快捷缓存失效。仍有其他 UI 时，`UILeave` 不清除 focus 状态。
+- 启用 `auto_im` 时，`InsertLeave` 正常调用一次 `capture_and_select_english()`；仅 English selection 冷却时改用一次只读 `capture()`。只要成功捕获 snapshot，就将其保存为新的 Insert snapshot，即使后续选择 English source 失败。
+- 启用 `auto_im` 时，`InsertEnter` 同步调用 backend 恢复精确 Insert snapshot，不在 Lua 中延迟执行。只有最近的 English 对齐或 English restore 成功、之后未发生使 source 不确定的操作或失焦，且 snapshot 为 English 时才跳过恢复。`can_skip_english_restore` 仅表示该快捷路径仍可使用，不代表 OS IME 已完成切换；只读 capture 不建立该条件。
+- 关闭 `auto_im` 会清除 Insert snapshot，但不改变 focus 状态。重新开启时：
   - focused：立即按当前 mode 对齐；
-  - unfocused：等待下一次 focus entry。
-- UI host 负责传递 focus event：terminal Neovim 接收 native/tmux event，VSCode/Yuivim 的 embedded host 必须转发对应 event。重复或重叠 event 安全，因为 ownership transition 是幂等的。
+  - unfocused：等待下一次 Insert 或 focus entry 事件。
+- UI host 可传递 focus event 以支持焦点切换时的额外协调：terminal Neovim 接收 native/tmux event，VSCode/Yuivim 的 embedded host 可转发对应 event；未转发不影响 Insert 事件。重复或重叠 event 安全，因为 focus 状态转换 是幂等的。
 
 ## Backend 契约
 
@@ -83,7 +87,7 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
 - `--english` 在请求选择前先输出原始 HKL。因此，即使选择阶段失败或超时，Linux backend 仍能保留 snapshot。
 - command-mode focus entry 或 `InsertLeave` 正常只启动一个 fused helper process；English selection 冷却期间可启动一个 query-only helper，以保留准确 snapshot。
 - focus exit 不启动 helper process。
-- focused `InsertEnter` 在 snapshot 为 non-English、或 English reconciliation 未确认时启动一个 restore process；Insert/Replace mode 的 focus entry 会精确恢复任意已知 snapshot。
+- `InsertEnter` 在 snapshot 为 non-English、或 English reconciliation 未确认时启动一个 restore process；Insert/Replace mode 的 focus entry 会精确恢复任意已知 snapshot。
 - helper 使用有界的 `SendMessageTimeoutW`，并以 10ms 间隔轮询捕获的 foreground thread，最长 100ms。Linux parent 会 kill 并 reap 超过 1s deadline 的 helper。
 - 仅在检测到 WSL 时导出 helper-backed capability；普通 Linux 不提供 IM backend。
 
@@ -91,7 +95,7 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
 
 - Native 和 WSL backend 返回 value 与 error；`era.dressing.im` 是 lifecycle failure 的唯一 reporter。
 - 一次 fused operation 最多生成一条 report；捕获失败后不再启动 selection process。
-- selection failure 保留已捕获的 snapshot，以便下一次 focused `InsertEnter` 精确恢复 editing source。
+- selection failure 保留已捕获的 snapshot，以便下一次 `InsertEnter` 精确恢复 editing source。
 - `InsertLeave` 查询失败或因 capture 冷却跳过查询时，会清除 Insert restore target，避免恢复本轮 Insert 期间可能已改变的旧 source。仅 selection 冷却时仍查询当前 source，不丢弃健康查询得到的 snapshot。
 - selection 或 restoration failure 不得用猜测值覆盖已有 snapshot。
 - Lua 分别管理 capture、English selection 与 restore 的失败冷却。Native backend 固定冷却 1 秒，避免恢复延迟随失败次数增长；WSL helper 存在 1 秒 process deadline，连续失败按 1、2、4、8 秒退避，上限 8 秒。使用 monotonic clock，从 backend 返回后开始计时；report 附带 `retry_after_ms`。

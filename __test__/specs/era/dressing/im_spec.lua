@@ -298,7 +298,7 @@ t:test("focus entry: command mode selects English with one fused call", function
   t.assert_eq("source.english", ctx.get_current_snapshot(), "focused command source")
 end)
 
-t:test("UI entry: owns focus synchronously and defers backend reconciliation", function()
+t:test("UI entry: records focus synchronously and defers backend reconciliation", function()
   local ctx = setup_lifecycle({
     initial_snapshot = "source.non_english.entry",
     defer_ui_enter = true,
@@ -503,7 +503,7 @@ t:test("focus entry: Insert mode restores a known English source", function()
   t.assert_eq("source.english", ctx.restored_snapshots[1], "English Insert source")
 end)
 
-t:test("focus lifecycle: only the last UILeave releases ownership", function()
+t:test("focus lifecycle: only the last UILeave clears focus state", function()
   local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry", ui_count = 2 })
 
   ctx.set_ui_count(1)
@@ -545,18 +545,40 @@ t:test("focus lifecycle: headless setup does not touch the source", function()
   t.assert_eq(0, ctx.get_backend_call_count(), "headless backend calls")
 end)
 
-t:test("focus lifecycle: headless mode and resume events cannot acquire focus", function()
-  local ctx = setup_lifecycle({ initial_snapshot = "source.external.current", with_ui = false })
+t:test("mode lifecycle: headless Insert events work without acquiring focus", function()
+  local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.editing", with_ui = false })
 
   ctx.callbacks.InsertEnter()
+  t.assert_eq(0, ctx.get_backend_call_count(), "no snapshot to restore at startup")
   ctx.callbacks.InsertLeave()
+  t.assert_eq("source.english", ctx.get_current_snapshot(), "InsertLeave selects English without focus")
+  ctx.callbacks.InsertEnter()
+  t.assert_eq("source.non_english.editing", ctx.get_current_snapshot(), "InsertEnter restores without focus")
+
+  local calls = ctx.get_backend_call_count()
   ctx.callbacks.VimResume()
   ctx.set_auto_im(false)
+  ctx.callbacks.InsertLeave()
+  ctx.callbacks.InsertEnter()
   ctx.set_auto_im(true)
   ctx.flush_scheduled()
+  t.assert_eq(calls, ctx.get_backend_call_count(), "disabled mode events and headless resume do no work")
+  ctx.callbacks.InsertEnter()
+  t.assert_eq(calls, ctx.get_backend_call_count(), "disabling cleared the Insert snapshot")
+  ctx.callbacks.InsertLeave()
+  ctx.callbacks.InsertEnter()
+  t.assert_eq(calls + 2, ctx.get_backend_call_count(), "reenabling permits the next mode events")
+end)
 
-  t.assert_eq(0, ctx.get_backend_call_count(), "no explicit focus, no backend calls")
-  t.assert_eq("source.external.current", ctx.get_current_snapshot(), "external source unchanged")
+t:test("focus exit: invalidates the English shortcut without prior focus entry", function()
+  local ctx = setup_lifecycle({ with_ui = false })
+  ctx.callbacks.InsertLeave()
+  ctx.callbacks.FocusLost()
+  ctx.set_current_snapshot("source.non_english.external")
+  ctx.callbacks.InsertEnter()
+
+  t.assert_eq(1, ctx.get_restore_count(), "focus loss invalidates the mode-established shortcut")
+  t.assert_eq("source.english", ctx.get_current_snapshot(), "known English Insert source restored")
 end)
 
 t:test("focus lifecycle: explicit host focus works without an attached UI", function()
@@ -579,11 +601,11 @@ t:test("focus lifecycle: explicit host focus works without an attached UI", func
   ctx.callbacks.InsertLeave()
   ctx.callbacks.InsertEnter()
   ctx.callbacks.VimResume()
-  t.assert_eq(calls, ctx.get_backend_call_count(), "unfocused events cannot touch the source")
+  t.assert_eq(calls + 2, ctx.get_backend_call_count(), "mode events remain active after FocusLost")
   t.assert_eq("source.external.current", ctx.get_current_snapshot(), "external source unchanged")
 
   ctx.callbacks.FocusGained()
-  t.assert_eq(calls + 1, ctx.get_backend_call_count(), "explicit focus permits a new reconciliation")
+  t.assert_eq(calls + 3, ctx.get_backend_call_count(), "explicit focus independently reconciles")
 end)
 
 t:test("focus lifecycle: host refocus restores Insert state without an attached UI", function()
@@ -847,15 +869,16 @@ t:test("retry: failed fused selection invalidates the previous English guarantee
   t.assert_eq("source.english", ctx.restored_snapshots[1], "exact English target")
 end)
 
-t:test("retry: selection cooldown does not cause unfocused queries", function()
+t:test("retry: mode events respect selection cooldown without focus", function()
   local ctx = setup_lifecycle({ capture_and_select_error = "selection failed" })
   ctx.callbacks.FocusLost()
   ctx.callbacks.InsertLeave()
   ctx.callbacks.InsertEnter()
   ctx.advance_time(1000)
   ctx.flush_scheduled()
-  t.assert_eq(0, ctx.get_capture_count(), "no unfocused read-only query")
-  t.assert_eq(1, ctx.get_capture_and_select_count(), "no unfocused fused operation")
+  t.assert_eq(1, ctx.get_capture_count(), "InsertLeave still captures during selection cooldown")
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "cooldown prevents another fused operation")
+  t.assert_eq(1, ctx.get_restore_count(), "InsertEnter restores without focus")
 end)
 
 t:test("retry: restore cooldown preserves its snapshot and permits English capture", function()
