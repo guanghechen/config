@@ -11,10 +11,12 @@ export default {
   local: 'themes/local.toml',
   on_after_apply: async function (_app, _scheme, reporter) {
     if (PLATFORM === 'win') return
+    const process_name =
+      PLATFORM === 'nix' || PLATFORM === 'wsl' ? 'yui-tui' : 'yui'
     try {
-      await signal_process(reporter, 'SIGUSR2', 'yui-tui')
+      await signal_process(reporter, 'SIGUSR2', process_name)
     } catch {
-      reporter.error('Failed to send reload signal. cmd: pkill -USR2 -x yui-tui')
+      reporter.error(`Failed to send reload signal. cmd: pkill -USR2 -x ${process_name}`)
     }
   },
 }
