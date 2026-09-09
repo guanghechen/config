@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "ark.vendor.yui.option" ---@type string
+local __module_name__ = "ark.vendor.yuivim.option" ---@type string
 
 -- Line Numbers & Cursor ---------------------------------------------------------------------------
 vim.api.nvim_set_option_value("relativenumber", dot.context.option.relativenumber:snapshot(), {})

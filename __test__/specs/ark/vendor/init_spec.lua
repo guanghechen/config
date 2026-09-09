@@ -10,11 +10,11 @@ for _, case in ipairs({
   { flags = { vscode = true }, vendor = "vscode" },
   { flags = { neovide = true }, vendor = "neovide" },
   { flags = { yozvim = true }, vendor = "yozvim" },
-  { flags = { yui = true }, vendor = "yui" },
-  { flags = { yui = false }, vendor = "neovim" },
-  { flags = { yui = true, yozvim = true }, vendor = "yui" },
-  { flags = { yui = true, neovide = true }, vendor = "neovide" },
-  { flags = { yui = true, vscode = true }, vendor = "vscode" },
+  { flags = { yuivim = true }, vendor = "yuivim" },
+  { flags = { yuivim = false }, vendor = "neovim" },
+  { flags = { yuivim = true, yozvim = true }, vendor = "yuivim" },
+  { flags = { yuivim = true, neovide = true }, vendor = "neovide" },
+  { flags = { yuivim = true, vscode = true }, vendor = "vscode" },
 }) do
   t:test("routes " .. vim.inspect(case.flags) .. " to " .. case.vendor, function()
     local calls = {} ---@type string[]
@@ -46,11 +46,11 @@ for _, case in ipairs({
   end)
 end
 
-t:test("Yui starts the real minimal profile without taking over host features", function()
-  local previous_yui = vim.g.yui
-  vim.g.yui = true
+t:test("Yuivim starts the real minimal profile without taking over host features", function()
+  local previous_yuivim = vim.g.yuivim
+  vim.g.yuivim = true
   t:defer(function()
-    vim.g.yui = previous_yui
+    vim.g.yuivim = previous_yuivim
   end)
   -- Keep the composed runtime independent of persisted user/workspace settings.
   t:patch_table(require("dot"), "get_default_storage", function()
@@ -74,14 +74,14 @@ t:test("Yui starts the real minimal profile without taking over host features", 
     return package.loaded["era.m.surrounds"] ~= nil
   end, 3000, "deferred minimal setup did not complete")
 
-  t.assert_true(package.loaded["ark.vendor.yui"], "Yui entry loaded")
-  t.assert_nil(package.loaded["ark.vendor.yozvim"], "Yui owns its initialization")
-  t.assert_true(package.loaded["ark.vendor.yui.option"], "Yui options loaded")
-  t.assert_true(package.loaded["ark.vendor.yui.keymap"], "Yui keymaps loaded")
+  t.assert_true(package.loaded["ark.vendor.yuivim"], "Yuivim entry loaded")
+  t.assert_nil(package.loaded["ark.vendor.yozvim"], "Yuivim owns its initialization")
+  t.assert_true(package.loaded["ark.vendor.yuivim.option"], "Yuivim options loaded")
+  t.assert_true(package.loaded["ark.vendor.yuivim.keymap"], "Yuivim keymaps loaded")
   t.assert_nil(package.loaded["ark.vendor.yozvim.option"], "Yozvim options remain independent")
   t.assert_nil(package.loaded["ark.vendor.yozvim.keymap"], "Yozvim keymaps remain independent")
   t.assert_true(package.loaded["era.m.splitjoin"], "splitjoin retained")
-  t.assert_nil(vim.g.yozvim, "Yui does not impersonate Yozvim")
+  t.assert_nil(vim.g.yozvim, "Yuivim does not impersonate Yozvim")
   local dressing_names = vim.tbl_keys(era.dressing.get_load_times())
   table.sort(dressing_names)
   t.assert_true(vim.deep_equal({ "im" }, dressing_names), "only IM dressing is enabled")

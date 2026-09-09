@@ -4,7 +4,7 @@ local __module_name__ = "__test__.specs.era.dressing.im_headless" ---@type strin
 local harness = require("__test__.support.harness")
 local t = harness.new("era.dressing.im headless RPC")
 
-t:test("RPC-only Yui handles real focus and Insert events without attaching a UI", function()
+t:test("RPC-only Yuivim handles real focus and Insert events without attaching a UI", function()
   local root = assert(vim.uv.cwd())
   local channel = vim.fn.jobstart({ vim.v.progpath, "--embed", "--headless", "-u", "NONE", "-i", "NONE", "-n" }, {
     cwd = root,
@@ -24,7 +24,7 @@ t:test("RPC-only Yui handles real focus and Insert events without attaching a UI
     [[
     local root = ...
     vim.opt.runtimepath:prepend(root)
-    vim.g.yui = true
+    vim.g.yuivim = true
     require("ark.bootstrap").setup()
     dot.get_default_storage = function() return {} end
 
@@ -47,7 +47,7 @@ t:test("RPC-only Yui handles real focus and Insert events without attaching a UI
       end,
       is_english = function(source) return source == "english" end,
     }
-    require("ark.vendor.yui")
+    require("ark.vendor.yuivim")
   ]],
     { root }
   )

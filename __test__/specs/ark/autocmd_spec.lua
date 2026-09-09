@@ -143,7 +143,7 @@ t:test("refreshes the filepath cache after a buffer rename", function()
   t.assert_true(vim.deep_equal({ "BufWinEnter", "BufFilePost" }, events), "cache refresh events")
 end)
 
-for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yui" }) do
+for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do
   t:test(host .. " keeps Python environment setup under the correct owner", function()
     t:patch_table(vim, "g", host == "neovim" and {} or { [host] = true })
     local runtime = setup()

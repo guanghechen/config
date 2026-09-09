@@ -24,8 +24,8 @@ t:test("Yozvim starts its minimal profile without loading IM dressing", function
   t.assert_true(vim.deep_equal({ "commentstring" }, vim.tbl_keys(era.dressing.get_load_times())))
   t.assert_nil(package.loaded["era.dressing.im"], "IM lifecycle is not loaded")
   t.assert_nil(package.loaded["era.dressing.ui_attach"], "UI remains host-owned")
-  t.assert_nil(package.loaded["ark.vendor.yui"], "Yui entry is not loaded")
-  t.assert_nil(vim.g.yui, "host identity is unchanged")
+  t.assert_nil(package.loaded["ark.vendor.yuivim"], "Yuivim entry is not loaded")
+  t.assert_nil(vim.g.yuivim, "host identity is unchanged")
 end)
 
 t:run()

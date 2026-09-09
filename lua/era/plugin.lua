@@ -11,23 +11,26 @@ local conds = {
   end,
   ---@return boolean
   cmp = function()
-    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui
+    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yuivim
   end,
   ---@return boolean
   lsp = function()
-    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui
+    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yuivim
   end,
   ---@return boolean
   flash = function()
-    return not vim.g.yozvim and not vim.g.yui
+    return not vim.g.yozvim and not vim.g.yuivim
   end,
   ---@return boolean
   standalone = function()
-    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui
+    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yuivim
   end,
   ---@return boolean
   treesitter_context = function()
-    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui and dot.context.plugin.treesitter_context:snapshot()
+    return not vim.g.vscode
+      and not vim.g.yozvim
+      and not vim.g.yuivim
+      and dot.context.plugin.treesitter_context:snapshot()
   end,
 }
 

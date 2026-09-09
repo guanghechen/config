@@ -20,9 +20,9 @@ local function get_mapping(mode, key)
   return nil
 end
 
-for _, vendor in ipairs({ "common", "neovim", "neovide", "vscode", "yozvim", "yui" }) do
+for _, vendor in ipairs({ "common", "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do
   t:test(vendor .. " installs only its owned quit mappings", function()
-    for _, name in ipairs({ "vscode", "neovide", "yozvim", "yui" }) do
+    for _, name in ipairs({ "vscode", "neovide", "yozvim", "yuivim" }) do
       local previous = vim.g[name]
       vim.g[name] = vendor == name and true or nil
       t:defer(function()

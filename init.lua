@@ -16,8 +16,8 @@ if vim.g.neovide then
   return
 end
 
-if vim.g.yui then
-  require("ark.vendor.yui")
+if vim.g.yuivim then
+  require("ark.vendor.yuivim")
   return
 end
 

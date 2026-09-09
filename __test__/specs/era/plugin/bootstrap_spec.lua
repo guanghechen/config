@@ -17,7 +17,7 @@ local plugin_names = {
   "render-markdown.nvim",
 } ---@type string[]
 
-for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yui" }) do
+for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do
   t:test(host .. " enables only its intended plugins", function()
     local specs = {} ---@type era.m.plugin.IPluginSpec[]
     t:patch_table(vim, "g", host == "neovim" and {} or { [host] = true })
