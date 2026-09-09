@@ -66,6 +66,11 @@ t:test("registered themes apply through the highlight pipeline", function()
         transparency = transparency,
       })
       t.assert_true(type(scheme) == "table", "failed to apply " .. theme)
+      local highlights = require("dot.theme.hlgroup.widget").gen_hlgroup_map({
+        scheme = scheme,
+        transparency = transparency,
+      })
+      t.assert_eq(scheme.palette.unified.bg2, highlights.f_cmp_border.fg, "completion border " .. theme)
     end
   end
 

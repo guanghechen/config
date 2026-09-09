@@ -158,6 +158,8 @@ function M.gen_hlgroup_map(context)
     Operator = { fg = c.sky },
     Parameter = { fg = c.maroon },
     Pmenu = { fg = c.overlay2, bg = c.mantle },
+    PmenuMatch = { fg = c.blue, bold = true },
+    PmenuMatchSel = { fg = c.yellow, bold = true },
     PmenuSbar = { bg = c.surface0 },
     PmenuSel = { bg = c.surface0, bold = true },
     PmenuThumb = { bg = c.overlay0 },

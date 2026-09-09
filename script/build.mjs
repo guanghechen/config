@@ -226,7 +226,7 @@ function main() {
   if (force) rmSync(targetDir, { recursive: true, force: true })
 
   console.log(`${CYAN}[neovim yoz] compiling...${RESET}`)
-  run("cargo", ["build", "--release", "--quiet"], packageDir)
+  run("cargo", ["build", "--release", "--quiet", "--locked"], packageDir)
   mkdirSync(dirname(stagedLua), { recursive: true })
   mkdirSync(dirname(stagedBin), { recursive: true })
   copyFileSync(source, stagedLua)

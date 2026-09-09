@@ -80,6 +80,7 @@ local __m__mods = {
   ai = "era.m.ai",
   clipboard = "era.m.clipboard",
   colorpicker = "era.m.colorpicker",
+  cmp = "era.m.cmp",
   copy = "era.m.copy",
   diffview = "era.m.diffview",
   dim = "era.m.dim",
@@ -114,6 +115,7 @@ local __m__mods = {
 ---@field public ai                     era.m.ai
 ---@field public clipboard              era.m.clipboard
 ---@field public colorpicker            era.m.colorpicker
+---@field public cmp                    era.m.cmp
 ---@field public copy                   era.m.copy
 ---@field public diffview               era.m.diffview
 ---@field public dim                    era.m.dim

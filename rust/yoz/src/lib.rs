@@ -1,5 +1,6 @@
 pub mod algorithm;
 pub mod canonical_path;
+pub mod cmp;
 pub mod dict;
 pub mod find;
 pub mod r#fn;
@@ -19,6 +20,8 @@ use mlua::IntoLuaMulti;
 use mlua::MultiValue as LuaMultiValue;
 use mlua::Value as LuaValue;
 use mlua::prelude::*;
+use std::cmp::Ordering;
+use std::collections::{HashMap, HashSet};
 
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 use std::cell::RefCell;
@@ -188,6 +191,739 @@ fn dict_module(lua: &Lua) -> LuaResult<LuaTable> {
             Ok(LuaValue::Table(table))
         })?,
     )])
+}
+
+fn cmp_count(value: &LuaValue) -> u32 {
+    match value {
+        LuaValue::Integer(value) => (*value).clamp(0, u32::MAX as i64) as u32,
+        LuaValue::Number(value) if value.is_finite() => {
+            value.floor().clamp(0.0, u32::MAX as f64) as u32
+        }
+        _ => 0,
+    }
+}
+
+fn cmp_score(value: &LuaValue) -> Option<f64> {
+    match value {
+        LuaValue::Integer(value) => Some(*value as f64),
+        LuaValue::Number(value) if value.is_finite() => Some(*value),
+        _ => None,
+    }
+}
+
+fn cmp_timestamp(value: &LuaValue) -> i64 {
+    match value {
+        LuaValue::Integer(value) => *value,
+        LuaValue::Number(value) if value.is_finite() => value.floor() as i64,
+        _ => 0,
+    }
+}
+
+fn cmp_usage(value: LuaValue) -> LuaResult<cmp::Usage> {
+    if let LuaValue::Table(value) = value {
+        let last_used = value.get::<LuaValue>("last_used")?;
+        let last_used = cmp_timestamp(&last_used);
+        let score = value.get::<LuaValue>("score")?;
+        if let Some(score) = cmp_score(&score) {
+            return Ok(cmp::Usage::from_score(score, last_used));
+        }
+        let count = value.get::<LuaValue>("count")?;
+        return Ok(cmp::Usage::from_count(cmp_count(&count), last_used));
+    }
+    Ok(cmp::Usage::from_count(cmp_count(&value), 0))
+}
+
+fn cmp_item_usage(value: &LuaTable) -> LuaResult<cmp::Usage> {
+    let last_used = cmp_timestamp(&value.get::<LuaValue>("last_used")?);
+    let score = value.get::<LuaValue>("usage_score")?;
+    if let Some(score) = cmp_score(&score) {
+        return Ok(cmp::Usage::from_score(score, last_used));
+    }
+    let use_count = value.get::<LuaValue>("use_count")?;
+    Ok(cmp::Usage::from_count(cmp_count(&use_count), last_used))
+}
+
+fn cmp_usage_map(usage: LuaTable) -> LuaResult<HashMap<String, cmp::Usage>> {
+    let mut usage_by_key = HashMap::new();
+    for pair in usage.pairs::<LuaString, LuaValue>() {
+        let (key, value) = pair?;
+        usage_by_key.insert(key.to_str()?.to_owned(), cmp_usage(value)?);
+    }
+    Ok(usage_by_key)
+}
+
+struct CmpUsage {
+    values: HashMap<String, cmp::Usage>,
+}
+
+fn cmp_usage_table(lua: &Lua, usage: cmp::Usage) -> LuaResult<LuaTable> {
+    let value = lua.create_table()?;
+    value.set("score", usage.score())?;
+    value.set("last_used", usage.last_used)?;
+    Ok(value)
+}
+
+impl LuaUserData for CmpUsage {
+    fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut(
+            "set",
+            |_, usage, (key, value): (String, LuaValue)| -> LuaResult<()> {
+                usage.values.insert(key, cmp_usage(value)?);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "record",
+            |_, usage, (key, now): (String, Option<i64>)| -> LuaResult<()> {
+                let now = cmp_now(now);
+                let updated = usage
+                    .values
+                    .get(&key)
+                    .copied()
+                    .unwrap_or_default()
+                    .record(now);
+                usage.values.insert(key, updated);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "snapshot",
+            |lua, usage, now: Option<i64>| -> LuaResult<LuaTable> {
+                let now = cmp_now(now);
+                usage.values.retain(|_, value| {
+                    let decayed = value.decayed(now);
+                    if decayed.bonus(now) == 0 {
+                        return false;
+                    }
+                    *value = decayed;
+                    true
+                });
+                let output = lua.create_table_with_capacity(0, usage.values.len())?;
+                for (key, value) in &usage.values {
+                    output.set(key.as_str(), cmp_usage_table(lua, *value)?)?;
+                }
+                Ok(output)
+            },
+        );
+    }
+}
+
+fn cmp_with_usage<T>(
+    usage: LuaValue,
+    callback: impl FnOnce(&HashMap<String, cmp::Usage>) -> LuaResult<T>,
+) -> LuaResult<T> {
+    match usage {
+        LuaValue::Nil => callback(&HashMap::new()),
+        LuaValue::Table(usage) => callback(&cmp_usage_map(usage)?),
+        LuaValue::UserData(usage) => callback(&usage.borrow::<CmpUsage>()?.values),
+        value => Err(LuaError::FromLuaConversionError {
+            from: value.type_name(),
+            to: "completion usage".to_owned(),
+            message: Some("expected a table, usage index, or nil".to_owned()),
+        }),
+    }
+}
+
+fn cmp_now(now: Option<i64>) -> i64 {
+    now.unwrap_or_else(|| {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |duration| duration.as_secs() as i64)
+    })
+}
+
+fn cmp_results_table(lua: &Lua, results: Vec<cmp::MatchResult>) -> LuaResult<LuaTable> {
+    let output = lua.create_table_with_capacity(results.len(), 0)?;
+    for (output_index, result) in results.into_iter().enumerate() {
+        let item = lua.create_table()?;
+        item.set("index", result.index + 1)?;
+        item.set("score", result.score)?;
+        item.set("exact", result.exact)?;
+        output.set(output_index + 1, item)?;
+    }
+    Ok(output)
+}
+
+fn cmp_indices_table(lua: &Lua, results: Vec<cmp::MatchResult>) -> LuaResult<LuaTable> {
+    let output = lua.create_table_with_capacity(results.len(), 0)?;
+    for (output_index, result) in results.into_iter().enumerate() {
+        output.set(output_index + 1, result.index + 1)?;
+    }
+    Ok(output)
+}
+
+fn cmp_rank_with_sort_text(
+    mut results: Vec<cmp::MatchResult>,
+    sort_texts: &[LuaString],
+    limit: Option<usize>,
+) -> Vec<cmp::MatchResult> {
+    let compare = |left: &cmp::MatchResult, right: &cmp::MatchResult| {
+        right
+            .score
+            .cmp(&left.score)
+            .then_with(|| right.exact.cmp(&left.exact))
+            .then_with(|| {
+                let left = sort_texts.get(left.index).map(LuaString::as_bytes);
+                let right = sort_texts.get(right.index).map(LuaString::as_bytes);
+                match (left, right) {
+                    (Some(left), Some(right)) => left.cmp(&right),
+                    (Some(_), None) => Ordering::Greater,
+                    (None, Some(_)) => Ordering::Less,
+                    (None, None) => Ordering::Equal,
+                }
+            })
+            .then_with(|| left.index.cmp(&right.index))
+    };
+    if let Some(limit) = limit {
+        if limit == 0 {
+            return Vec::new();
+        }
+        if results.len() > limit {
+            results.select_nth_unstable_by(limit, compare);
+            results.truncate(limit);
+        }
+    }
+    results.sort_by(compare);
+    results
+}
+
+struct CmpMatcherItem {
+    text: String,
+    proximity_key: String,
+    usage_key: Option<String>,
+    score_offset: i32,
+    usage: cmp::Usage,
+}
+
+struct CmpMatcher {
+    items: Vec<CmpMatcherItem>,
+}
+
+enum CmpIndexSort {
+    None,
+    Text,
+    Values(Vec<String>),
+}
+
+struct CmpIndex {
+    items: Vec<CmpMatcherItem>,
+    sort: CmpIndexSort,
+}
+
+#[inline]
+fn cmp_match_cached_items(
+    query: &cmp::fuzzy::Query,
+    items: &[CmpMatcherItem],
+    usage_by_key: &HashMap<String, cmp::Usage>,
+    nearby_words: &HashSet<String>,
+    now: i64,
+    limit: Option<usize>,
+) -> Vec<cmp::MatchResult> {
+    let mut results = Vec::new();
+    let typo = (limit != Some(0)).then(|| query.typo()).flatten();
+    if let Some(typo) = &typo {
+        let mut matcher = typo.matcher();
+        for (index, item) in items.iter().enumerate() {
+            let usage = item
+                .usage_key
+                .as_ref()
+                .and_then(|key| usage_by_key.get(key))
+                .copied()
+                .unwrap_or(item.usage);
+            let proximity_bonus = i32::from(nearby_words.contains(&item.proximity_key)) * 2;
+            let (strict, repaired) = matcher.score_both(&item.text);
+            if let Some(matched) = strict {
+                results.push(cmp::MatchResult {
+                    index,
+                    score: matched.score + item.score_offset + usage.bonus(now) + proximity_bonus,
+                    exact: matched.exact,
+                });
+            } else if let Some(matched) = repaired {
+                results.push(cmp::MatchResult {
+                    index,
+                    score: matched.score + item.score_offset + usage.bonus(now) + proximity_bonus,
+                    exact: false,
+                });
+            }
+        }
+    } else {
+        for (index, item) in items.iter().enumerate() {
+            let usage = item
+                .usage_key
+                .as_ref()
+                .and_then(|key| usage_by_key.get(key))
+                .copied()
+                .unwrap_or(item.usage);
+            if let Some(mut result) =
+                cmp::match_query(query, &item.text, item.score_offset, usage, now, index)
+            {
+                if nearby_words.contains(&item.proximity_key) {
+                    result.score += 2;
+                }
+                results.push(result);
+            }
+        }
+    }
+    results
+}
+
+type CmpRankArgs = (
+    String,
+    LuaTable,
+    LuaValue,
+    Option<LuaTable>,
+    LuaValue,
+    LuaValue,
+    Option<i64>,
+    Option<usize>,
+);
+
+#[inline]
+fn cmp_rank_usage(
+    usage_by_key: &HashMap<String, cmp::Usage>,
+    usage_keys: Option<&LuaTable>,
+    lua_index: usize,
+) -> LuaResult<cmp::Usage> {
+    if usage_by_key.is_empty() {
+        return Ok(cmp::Usage::default());
+    }
+    Ok(usage_keys
+        .map(|keys| keys.raw_get::<Option<LuaString>>(lua_index))
+        .transpose()?
+        .flatten()
+        .as_ref()
+        .and_then(|key| key.to_str().ok())
+        .and_then(|key| usage_by_key.get(key.as_ref()))
+        .copied()
+        .unwrap_or_default())
+}
+
+#[inline]
+fn cmp_rank_score_offset(
+    constant: Option<i32>,
+    values: Option<&LuaTable>,
+    lua_index: usize,
+) -> i32 {
+    constant.unwrap_or_else(|| {
+        values
+            .expect("score offset table")
+            .raw_get(lua_index)
+            .unwrap_or(0)
+    })
+}
+
+impl LuaUserData for CmpMatcher {
+    fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method(
+            "match",
+            |lua,
+             matcher,
+             (query, usage, now, limit): (
+                String,
+                LuaValue,
+                Option<i64>,
+                Option<usize>,
+            )| {
+                let now = cmp_now(now);
+                cmp_with_usage(usage, |usage_by_key| {
+                    let query = cmp::fuzzy::Query::new(&query);
+                    let results = cmp_match_cached_items(
+                        &query,
+                        &matcher.items,
+                        usage_by_key,
+                        &HashSet::new(),
+                        now,
+                        limit,
+                    );
+                    cmp_results_table(lua, cmp::rank_matches(results, limit))
+                })
+            },
+        );
+    }
+}
+
+impl LuaUserData for CmpIndex {
+    fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method(
+            "rank",
+            |lua,
+             index,
+             (query, usage, now, limit, nearby_words): (
+                String,
+                LuaValue,
+                Option<i64>,
+                Option<usize>,
+                Option<LuaTable>,
+            )| {
+                let now = cmp_now(now);
+                cmp_with_usage(usage, |usage_by_key| {
+                    let query = cmp::fuzzy::Query::new(&query);
+                    let nearby_words = nearby_words
+                        .as_ref()
+                        .map(|values| {
+                            values
+                                .sequence_values::<LuaString>()
+                                .map(|value| value.and_then(|value| Ok(value.to_str()?.to_owned())))
+                                .collect::<LuaResult<HashSet<_>>>()
+                        })
+                        .transpose()?
+                        .unwrap_or_default();
+                    let results = cmp_match_cached_items(
+                        &query,
+                        &index.items,
+                        usage_by_key,
+                        &nearby_words,
+                        now,
+                        limit,
+                    );
+
+                    let results = match &index.sort {
+                        CmpIndexSort::None => cmp::rank_matches(results, limit),
+                        CmpIndexSort::Text => {
+                            cmp_rank_with_owned_sort_text(results, &index.items, None, limit)
+                        }
+                        CmpIndexSort::Values(values) => cmp_rank_with_owned_sort_text(
+                            results,
+                            &index.items,
+                            Some(values),
+                            limit,
+                        ),
+                    };
+                    cmp_indices_table(lua, results)
+                })
+            },
+        );
+    }
+}
+
+fn cmp_rank_with_owned_sort_text(
+    mut results: Vec<cmp::MatchResult>,
+    items: &[CmpMatcherItem],
+    sort_texts: Option<&[String]>,
+    limit: Option<usize>,
+) -> Vec<cmp::MatchResult> {
+    let compare = |left: &cmp::MatchResult, right: &cmp::MatchResult| {
+        let left_sort = sort_texts
+            .and_then(|values| values.get(left.index).map(String::as_bytes))
+            .or_else(|| items.get(left.index).map(|item| item.text.as_bytes()));
+        let right_sort = sort_texts
+            .and_then(|values| values.get(right.index).map(String::as_bytes))
+            .or_else(|| items.get(right.index).map(|item| item.text.as_bytes()));
+        right
+            .score
+            .cmp(&left.score)
+            .then_with(|| right.exact.cmp(&left.exact))
+            .then_with(|| match (left_sort, right_sort) {
+                (Some(left), Some(right)) => left.cmp(right),
+                (Some(_), None) => Ordering::Greater,
+                (None, Some(_)) => Ordering::Less,
+                (None, None) => Ordering::Equal,
+            })
+            .then_with(|| left.index.cmp(&right.index))
+    };
+    if let Some(limit) = limit {
+        if limit == 0 {
+            return Vec::new();
+        }
+        if results.len() > limit {
+            results.select_nth_unstable_by(limit, compare);
+            results.truncate(limit);
+        }
+    }
+    results.sort_by(compare);
+    results
+}
+
+fn cmp_module(lua: &Lua) -> LuaResult<LuaTable> {
+    lua.create_table_from(
+        [
+            (
+                "keyword_range",
+                f(
+                    lua,
+                    |_, (line, cursor_col, include_suffix): (String, usize, Option<bool>)| {
+                        Ok(cmp::keyword::range(
+                            &line,
+                            cursor_col,
+                            include_suffix.unwrap_or(false),
+                        ))
+                    },
+                )?,
+            ),
+            (
+                "matched_ranges",
+                f(lua, |_, (query, labels): (String, Vec<String>)| {
+                    Ok(cmp::fuzzy::matched_ranges(&query, &labels))
+                })?,
+            ),
+            (
+                "matcher",
+                f(lua, |lua, values: LuaTable| {
+                    let mut items = Vec::with_capacity(values.raw_len());
+                    for value in values.sequence_values::<LuaTable>() {
+                        let value = value?;
+                        let text: String = value.get("text")?;
+                        items.push(CmpMatcherItem {
+                            proximity_key: value
+                                .get::<Option<String>>("proximity_key")?
+                                .unwrap_or_else(|| text.clone()),
+                            text,
+                            usage_key: value.get("usage_key")?,
+                            score_offset: value.get("score_offset").unwrap_or(0),
+                            usage: cmp_item_usage(&value)?,
+                        });
+                    }
+                    lua.create_userdata(CmpMatcher { items })
+                })?,
+            ),
+            (
+                "index",
+                f(
+                    lua,
+                    |lua,
+                     (texts, score_offsets, usage_keys, sort_texts, proximity_keys): (
+                        LuaTable,
+                        LuaValue,
+                        Option<LuaTable>,
+                        LuaValue,
+                        Option<LuaTable>,
+                    )| {
+                        let constant_score_offset = match &score_offsets {
+                            LuaValue::Integer(value) => Some(i32::try_from(*value).map_err(|_| {
+                                LuaError::external("completion score offset exceeds i32")
+                            })?),
+                            LuaValue::Nil => Some(0),
+                            LuaValue::Table(_) => None,
+                            value => {
+                                return Err(LuaError::FromLuaConversionError {
+                                    from: value.type_name(),
+                                    to: "completion score offsets".to_owned(),
+                                    message: Some("expected an integer, table, or nil".to_owned()),
+                                });
+                            }
+                        };
+                        let score_offset_values = score_offsets.as_table();
+                        let mut items = Vec::with_capacity(texts.raw_len());
+                        for (index, text) in texts.sequence_values::<LuaString>().enumerate() {
+                            let lua_index = index + 1;
+                            let text = text?.to_str()?.to_owned();
+                            let proximity_key = proximity_keys
+                                .as_ref()
+                                .map(|keys| keys.raw_get::<Option<LuaString>>(lua_index))
+                                .transpose()?
+                                .flatten()
+                                .map(|value| value.to_str().map(|value| value.to_owned()))
+                                .transpose()?
+                                .unwrap_or_else(|| text.clone());
+                            items.push(CmpMatcherItem {
+                                text,
+                                proximity_key,
+                                usage_key: usage_keys
+                                    .as_ref()
+                                    .map(|keys| keys.raw_get(lua_index))
+                                    .transpose()?
+                                    .flatten(),
+                                score_offset: if let Some(value) = constant_score_offset {
+                                    value
+                                } else {
+                                    score_offset_values
+                                        .expect("score offset table")
+                                        .raw_get(lua_index)
+                                        .unwrap_or(0)
+                                },
+                                usage: cmp::Usage::default(),
+                            });
+                        }
+
+                        let sort = if sort_texts == LuaValue::Boolean(true) {
+                            CmpIndexSort::Text
+                        } else if let LuaValue::Table(values) = sort_texts {
+                            let values = values
+                                .sequence_values::<LuaString>()
+                                .map(|value| value.and_then(|value| Ok(value.to_str()?.to_owned())))
+                                .collect::<LuaResult<Vec<_>>>()?;
+                            if values.len() != items.len() {
+                                return Err(LuaError::external(
+                                    "completion sort text count does not match item count",
+                                ));
+                            }
+                            CmpIndexSort::Values(values)
+                        } else if sort_texts.is_nil() || sort_texts == LuaValue::Boolean(false) {
+                            CmpIndexSort::None
+                        } else {
+                            return Err(LuaError::FromLuaConversionError {
+                                from: sort_texts.type_name(),
+                                to: "completion sort texts".to_owned(),
+                                message: Some("expected a table, true, or nil".to_owned()),
+                            });
+                        };
+                        lua.create_userdata(CmpIndex { items, sort })
+                    },
+                )?,
+            ),
+            (
+                "usage",
+                f(lua, |lua, values: LuaTable| {
+                    lua.create_userdata(CmpUsage {
+                        values: cmp_usage_map(values)?,
+                    })
+                })?,
+            ),
+            (
+                "fuzzy_match",
+                f(
+                    lua,
+                    |lua,
+                     (query, values, now, limit): (
+                        String,
+                        LuaTable,
+                        Option<i64>,
+                        Option<usize>,
+                    )| {
+                        let now = cmp_now(now);
+                        let query = cmp::fuzzy::Query::new(&query);
+                        let mut results = Vec::new();
+                        let typo = (limit != Some(0)).then(|| query.typo()).flatten();
+                        if let Some(typo) = &typo {
+                            let mut matcher = typo.matcher();
+                            for (index, value) in values.sequence_values::<LuaTable>().enumerate() {
+                                let value = value?;
+                                let text = value.get::<LuaString>("text")?;
+                                let score_offset = value.get("score_offset").unwrap_or(0);
+                                let usage = cmp_item_usage(&value)?;
+                                let (strict, repaired) = matcher.score_both(text.to_str()?.as_ref());
+                                if let Some(matched) = strict {
+                                    results.push(cmp::MatchResult {
+                                        index,
+                                        score: matched.score + score_offset + usage.bonus(now),
+                                        exact: matched.exact,
+                                    });
+                                } else if let Some(matched) = repaired {
+                                    results.push(cmp::MatchResult {
+                                        index,
+                                        score: matched.score + score_offset + usage.bonus(now),
+                                        exact: false,
+                                    });
+                                }
+                            }
+                        } else {
+                            for (index, value) in values.sequence_values::<LuaTable>().enumerate() {
+                                let value = value?;
+                                let text = value.get::<LuaString>("text")?;
+                                if let Some(result) = cmp::match_query(
+                                    &query,
+                                    text.to_str()?.as_ref(),
+                                    value.get("score_offset").unwrap_or(0),
+                                    cmp_item_usage(&value)?,
+                                    now,
+                                    index,
+                                ) {
+                                    results.push(result);
+                                }
+                            }
+                        }
+                        cmp_results_table(lua, cmp::rank_matches(results, limit))
+                    },
+                )?,
+            ),
+            (
+                "rank",
+                f(
+                    lua,
+                    |lua,
+                     (query, texts, score_offsets, usage_keys, sort_texts, usage, now, limit): CmpRankArgs| {
+                        let now = cmp_now(now);
+                        cmp_with_usage(usage, |usage_by_key| {
+                            let query = cmp::fuzzy::Query::new(&query);
+                            let mut results = Vec::new();
+                            let typo = (limit != Some(0)).then(|| query.typo()).flatten();
+                            let mut matcher = typo.as_ref().map(|typo| typo.matcher());
+                            let constant_score_offset = match &score_offsets {
+                                LuaValue::Integer(value) => Some(
+                                    i32::try_from(*value)
+                                        .map_err(|_| LuaError::external("completion score offset exceeds i32"))?,
+                                ),
+                                LuaValue::Nil => Some(0),
+                                LuaValue::Table(_) => None,
+                                value => {
+                                    return Err(LuaError::FromLuaConversionError {
+                                        from: value.type_name(),
+                                        to: "completion score offsets".to_owned(),
+                                        message: Some("expected an integer, table, or nil".to_owned()),
+                                    });
+                                }
+                            };
+                            let score_offset_values = score_offsets.as_table();
+                            let mut text_sort_values = matches!(sort_texts, LuaValue::Boolean(true))
+                                .then(|| Vec::with_capacity(texts.raw_len()));
+                            for (index, text) in texts.sequence_values::<LuaString>().enumerate() {
+                                let text = text?;
+                                let lua_index = index + 1;
+                                let usage = cmp_rank_usage(usage_by_key, usage_keys.as_ref(), lua_index)?;
+                                let score_offset = cmp_rank_score_offset(
+                                    constant_score_offset,
+                                    score_offset_values,
+                                    lua_index,
+                                );
+                                if let Some(matcher) = &mut matcher {
+                                    let (strict, repaired) =
+                                        matcher.score_both(text.to_str()?.as_ref());
+                                    if let Some(matched) = strict {
+                                        results.push(cmp::MatchResult {
+                                            index,
+                                            score: matched.score + score_offset + usage.bonus(now),
+                                            exact: matched.exact,
+                                        });
+                                    } else if let Some(matched) = repaired {
+                                        results.push(cmp::MatchResult {
+                                            index,
+                                            score: matched.score + score_offset + usage.bonus(now),
+                                            exact: false,
+                                        });
+                                    }
+                                } else if let Some(result) = cmp::match_query(
+                                    &query,
+                                    text.to_str()?.as_ref(),
+                                    score_offset,
+                                    usage,
+                                    now,
+                                    index,
+                                ) {
+                                    results.push(result);
+                                }
+                                if let Some(sort_values) = &mut text_sort_values {
+                                    sort_values.push(text);
+                                }
+                            }
+                            let results = if let Some(sort_texts) = text_sort_values {
+                                cmp_rank_with_sort_text(results, &sort_texts, limit)
+                            } else if let LuaValue::Table(sort_texts) = sort_texts {
+                                let sort_texts = sort_texts
+                                    .sequence_values::<LuaString>()
+                                    .collect::<LuaResult<Vec<_>>>()?;
+                                cmp_rank_with_sort_text(results, &sort_texts, limit)
+                            } else if sort_texts.is_nil() || sort_texts == LuaValue::Boolean(false) {
+                                cmp::rank_matches(results, limit)
+                            } else {
+                                return Err(LuaError::FromLuaConversionError {
+                                    from: sort_texts.type_name(),
+                                    to: "completion sort texts".to_owned(),
+                                    message: Some("expected a table, true, or nil".to_owned()),
+                                });
+                            };
+                            cmp_results_table(lua, results)
+                        })
+                    },
+                )?,
+            ),
+            (
+                "words",
+                f(lua, |_, (value, limit): (String, Option<usize>)| {
+                    Ok(cmp::word::collect(&value, limit.unwrap_or(1000)))
+                })?,
+            ),
+        ],
+    )
 }
 
 fn string_module(lua: &Lua) -> LuaResult<LuaTable> {
@@ -1104,6 +1840,7 @@ fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
 fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("canonical_path", canonical_path_module(lua)?)?;
+    exports.set("cmp", cmp_module(lua)?)?;
     exports.set("dict", dict_module(lua)?)?;
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;

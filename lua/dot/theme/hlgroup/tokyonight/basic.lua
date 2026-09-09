@@ -165,6 +165,8 @@ function M.gen_hlgroup_map(context)
     Operator = { fg = u.aqua },
     Parameter = { fg = u.blue },
     Pmenu = { fg = u.fg1, bg = u.bg1 },
+    PmenuMatch = { fg = u.brightBlue },
+    PmenuMatchSel = { fg = u.yellow, bold = true },
     PmenuSbar = { bg = u.bg2 },
     PmenuSel = { fg = u.fg1, bg = u.bg3, bold = true },
     PmenuThumb = { bg = u.bg4 },
