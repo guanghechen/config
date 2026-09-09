@@ -545,6 +545,84 @@ t:test("focus lifecycle: headless setup does not touch the source", function()
   t.assert_eq(0, ctx.get_backend_call_count(), "headless backend calls")
 end)
 
+t:test("focus lifecycle: headless mode and resume events cannot acquire focus", function()
+  local ctx = setup_lifecycle({ initial_snapshot = "source.external.current", with_ui = false })
+
+  ctx.callbacks.InsertEnter()
+  ctx.callbacks.InsertLeave()
+  ctx.callbacks.VimResume()
+  ctx.set_auto_im(false)
+  ctx.set_auto_im(true)
+  ctx.flush_scheduled()
+
+  t.assert_eq(0, ctx.get_backend_call_count(), "no explicit focus, no backend calls")
+  t.assert_eq("source.external.current", ctx.get_current_snapshot(), "external source unchanged")
+end)
+
+t:test("focus lifecycle: explicit host focus works without an attached UI", function()
+  local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry", with_ui = false })
+
+  ctx.callbacks.FocusGained()
+  ctx.callbacks.FocusGained()
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "one fused call on explicit focus")
+  t.assert_eq("source.english", ctx.get_current_snapshot(), "focused command source")
+
+  ctx.set_current_snapshot("source.non_english.editing")
+  ctx.callbacks.InsertLeave()
+  ctx.callbacks.InsertEnter()
+  t.assert_eq(2, ctx.get_capture_and_select_count(), "InsertLeave captures without a UI")
+  t.assert_eq("source.non_english.editing", ctx.restored_snapshots[1], "InsertEnter restores the captured source")
+
+  local calls = ctx.get_backend_call_count()
+  ctx.callbacks.FocusLost()
+  ctx.set_current_snapshot("source.external.current")
+  ctx.callbacks.InsertLeave()
+  ctx.callbacks.InsertEnter()
+  ctx.callbacks.VimResume()
+  t.assert_eq(calls, ctx.get_backend_call_count(), "unfocused events cannot touch the source")
+  t.assert_eq("source.external.current", ctx.get_current_snapshot(), "external source unchanged")
+
+  ctx.callbacks.FocusGained()
+  t.assert_eq(calls + 1, ctx.get_backend_call_count(), "explicit focus permits a new reconciliation")
+end)
+
+t:test("focus lifecycle: host refocus restores Insert state without an attached UI", function()
+  local ctx = setup_lifecycle({ with_ui = false })
+  ctx.callbacks.FocusGained()
+  ctx.set_current_snapshot("source.non_english.editing")
+  ctx.callbacks.InsertLeave()
+  ctx.callbacks.FocusLost()
+  ctx.set_current_snapshot("source.external.current")
+  ctx.set_mode("i")
+
+  ctx.callbacks.FocusGained()
+
+  t.assert_eq("source.non_english.editing", ctx.restored_snapshots[1], "captured Insert source restored")
+  t.assert_eq(2, ctx.get_capture_and_select_count(), "Insert focus does not select English")
+end)
+
+t:test("focus lifecycle: RPC focus supersedes a detached UI's pending reconciliation", function()
+  local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry", defer_ui_enter = true })
+  ctx.set_ui_count(0)
+  ctx.callbacks.UILeave()
+
+  ctx.callbacks.FocusGained()
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "host focus reconciles synchronously")
+  ctx.flush_scheduled()
+  t.assert_eq(1, ctx.get_capture_and_select_count(), "detached UI callback stays cancelled")
+end)
+
+t:test("focus lifecycle: native resume still reacquires focus with an attached UI", function()
+  local ctx = setup_lifecycle()
+  ctx.callbacks.VimSuspend()
+  ctx.set_current_snapshot("source.non_english.entry")
+
+  ctx.callbacks.VimResume()
+
+  t.assert_eq(2, ctx.get_capture_and_select_count(), "native resume reconciles synchronously")
+  t.assert_eq("source.english", ctx.get_current_snapshot(), "resumed command source")
+end)
+
 t:test("restore failure is reported", function()
   local ctx = setup_lifecycle()
   ctx.set_current_snapshot("source.non_english.editing")

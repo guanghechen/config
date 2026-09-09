@@ -18,6 +18,7 @@ Unfocused                 -> 不管理 input source
 ```
 
 Neovim 只在 focused 时管理 input source；unfocused 后不读取或修改目标应用的 input source。
+初始状态为 unfocused；headless 初始化或程序触发的 Insert 事件不授予 ownership。
 source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，也不启动后台重试。
 
 ## 生命周期
@@ -26,11 +27,12 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
   - Neovim/Neovide 调用 `era.dressing.setup({ "notifier", "ui_attach", "im" })`，`im` 在 `ui_attach` 之后注册；
   - VSCode/Yui 调用 `era.dressing.setup({ "im" })`，不启用 `ui_attach` dressing；
   - Yozvim 不启用 `im` 或 `ui_attach` dressing，input source 由宿主管理。
-- `UIEnter` 同步获取 ownership，但将首次 source reconciliation 延至下一 event-loop tick，避免 backend I/O 阻塞 UI startup。失焦会推进 focus generation，使尚未执行的 reconciliation 失效；重复 focus event 不会产生额外调用。
-- `FocusGained` 和 `VimResume` 幂等地获取 ownership，并同步按当前 mode 对齐：
+- `UIEnter` 仅在存在 attached UI 时同步获取 ownership，将首次 source reconciliation 延至下一 event-loop tick，避免 backend I/O 阻塞 UI startup。失焦会推进 focus generation，使尚未执行的 reconciliation 失效；重复 focus event 不会产生额外调用。
+- 显式 `FocusGained` 幂等地获取 ownership，不要求 attached UI，并同步按当前 mode 对齐：
   - command mode 调用一次 fused `capture_and_select_english()`；
   - Insert/Replace mode 精确恢复已知 Insert snapshot，包括 English snapshot；
   - 其他 mode 不处理。
+- `VimResume` 仅在存在 attached UI 时复用上述获取焦点流程；headless 宿主恢复后仍需显式发送 `FocusGained`。
 - `FocusLost`、`VimSuspend`、`VimLeavePre`，以及最后一个 UI 的 `UILeave`，只释放 ownership，不调用 backend。仍有其他 UI 时，`UILeave` 不释放 ownership。
 - focused 状态下的 `InsertLeave` 正常调用一次 `capture_and_select_english()`；仅 English selection 冷却时改用一次只读 `capture()`。只要成功捕获 snapshot，就将其保存为新的 Insert snapshot，即使后续选择 English source 失败。
 - focused 状态下的 `InsertEnter` 同步调用 backend 恢复精确 Insert snapshot，不在 Lua 中延迟执行。只有最近的 English 对齐或 English restore 成功、之后未发生使 source 不确定的操作或失焦，且 snapshot 为 English 时才跳过恢复。`can_skip_english_restore` 仅表示该快捷路径仍可使用，不代表 OS IME 已完成切换；只读 capture 不建立该条件。

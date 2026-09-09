@@ -245,7 +245,7 @@ end
 
 ---@return integer|nil
 local function acquire_focus()
-  if focused or #vim.api.nvim_list_uis() == 0 then
+  if focused then
     return nil
   end
   focus_generation = focus_generation + 1
@@ -262,7 +262,18 @@ local function on_focus_gained()
 end
 
 ---@return nil
+local function on_vim_resume()
+  -- Resuming a headless process does not establish its host's focus.
+  if #vim.api.nvim_list_uis() > 0 then
+    on_focus_gained()
+  end
+end
+
+---@return nil
 local function on_ui_enter()
+  if #vim.api.nvim_list_uis() == 0 then
+    return
+  end
   local generation = acquire_focus()
   if generation == nil then
     return
@@ -309,10 +320,8 @@ function M.dressing()
   vim.api.nvim_create_autocmd("InsertLeave", { group = augroup, callback = on_insert_leave })
   vim.api.nvim_create_autocmd("InsertEnter", { group = augroup, callback = on_insert_enter })
   vim.api.nvim_create_autocmd("UIEnter", { group = augroup, callback = on_ui_enter })
-  vim.api.nvim_create_autocmd({ "FocusGained", "VimResume" }, {
-    group = augroup,
-    callback = on_focus_gained,
-  })
+  vim.api.nvim_create_autocmd("FocusGained", { group = augroup, callback = on_focus_gained })
+  vim.api.nvim_create_autocmd("VimResume", { group = augroup, callback = on_vim_resume })
   vim.api.nvim_create_autocmd({ "FocusLost", "VimSuspend", "VimLeavePre" }, {
     group = augroup,
     callback = on_focus_lost,
