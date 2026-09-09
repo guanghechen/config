@@ -82,7 +82,6 @@ local __m__mods = {
   colorpicker = "era.m.colorpicker",
   copy = "era.m.copy",
   diffview = "era.m.diffview",
-  dim = "era.m.dim",
   explorer = "era.m.explorer",
   git = "era.m.git",
   illuminate = "era.m.illuminate",
@@ -116,7 +115,6 @@ local __m__mods = {
 ---@field public colorpicker            era.m.colorpicker
 ---@field public copy                   era.m.copy
 ---@field public diffview               era.m.diffview
----@field public dim                    era.m.dim
 ---@field public explorer               era.m.explorer
 ---@field public git                    era.m.git
 ---@field public illuminate             era.m.illuminate

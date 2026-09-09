@@ -1,11 +1,11 @@
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/dim.lua
 
----@class era.m.dim
+---@class era.dressing.dim
 local M = {}
 
-local __module_name__ = "era.m.dim" ---@type string
+local __module_name__ = "era.dressing.dim" ---@type string
 
----@class era.m.dim.IConfig
+---@class era.dressing.dim.IConfig
 ---@field public animate                boolean
 ---@field public duration               integer
 ---@field public step                   integer
@@ -17,20 +17,21 @@ local config = {
   easing = "outQuad",
 }
 
----@class era.m.dim.IScope
+---@class era.dressing.dim.IScope
 ---@field public bufnr                  integer
 ---@field public from                   integer
 ---@field public to                     integer
 
----@class era.m.dim.IListener
----@field public scopes                 table<integer, era.m.dim.IScope>
+---@class era.dressing.dim.IListener
+---@field public scopes                 table<integer, era.dressing.dim.IScope>
 ---@field public scopes_anim            table<integer, { from: integer, to: integer, bufnr: integer }>
 ---@field public timer                  uv.uv_timer_t|nil
 
 local ns = vim.api.nvim_create_namespace(__module_name__)
 local augroup = stl.nvim.fn.augroup(__module_name__)
+local initialized = false ---@type boolean
 local enabled = false ---@type boolean
-local listener = nil ---@type era.m.dim.IListener|nil
+local listener = nil ---@type era.dressing.dim.IListener|nil
 
 ---@param bufnr                         integer
 ---@return boolean
@@ -43,7 +44,7 @@ local function is_buf_enabled(bufnr)
 end
 
 ---@param winnr                         integer
----@return era.m.dim.IScope|nil
+---@return era.dressing.dim.IScope|nil
 local function get_scope(winnr)
   if not vim.api.nvim_win_is_valid(winnr) then
     return nil
@@ -69,6 +70,7 @@ end
 ---@param bufnr                         integer
 ---@param top                           integer
 ---@param bottom                        integer
+---@return nil
 local function on_win(winnr, bufnr, top, bottom)
   if not listener then
     return
@@ -103,6 +105,7 @@ local function on_win(winnr, bufnr, top, bottom)
 end
 
 ---@param winnr                         integer
+---@return nil
 local function check_scope(winnr)
   if not listener then
     return
@@ -180,6 +183,7 @@ local function check_scope(winnr)
 end
 
 ---@param winnr                         integer
+---@return nil
 local function update(winnr)
   if not listener then
     return
@@ -191,6 +195,7 @@ local function update(winnr)
   end, 30)
 end
 
+---@return nil
 local function enable()
   if enabled then
     return
@@ -231,6 +236,7 @@ local function enable()
   update(vim.api.nvim_get_current_win())
 end
 
+---@return nil
 local function disable()
   if not enabled then
     return
@@ -250,6 +256,11 @@ end
 
 ---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   stl.fn.observe({ dot.context.flight.dressing_dim }, function()
     if dot.context.flight.dressing_dim:snapshot() then
       enable()

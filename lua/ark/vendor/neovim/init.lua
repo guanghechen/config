@@ -40,13 +40,13 @@ vim.schedule(function()
     "hipattern",
     "indentline",
     "indentscope",
+    "dim",
     "whichkey",
 
     -- Scrolling behavior.
     "scroll",
   })
 
-  era.m.dim.dressing()
   era.m.input.dressing()
   era.m.lsp.dressing()
   era.m.select.dressing()

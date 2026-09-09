@@ -35,7 +35,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
         end
       end
     end)
-    for _, name in ipairs({ "dim", "input", "lsp", "select", "image", "paste", "splitjoin", "textobject" }) do
+    for _, name in ipairs({ "input", "lsp", "select", "image", "paste", "splitjoin", "textobject" }) do
       t:patch_table(era.m, name, { dressing = function() end, setup = function() end })
     end
     local original_require = require

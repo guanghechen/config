@@ -40,6 +40,7 @@ vim.schedule(function()
     "foldtext",
     "indentline",
     "indentscope",
+    "dim",
     "hipattern",
     "whichkey",
 
@@ -47,7 +48,6 @@ vim.schedule(function()
     "scroll",
   })
 
-  era.m.dim.dressing()
   era.m.input.dressing()
   era.m.lsp.dressing()
   era.m.select.dressing()

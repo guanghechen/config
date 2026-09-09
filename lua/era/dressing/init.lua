@@ -4,6 +4,7 @@ local __module_name__ = "era.dressing" ---@type string
 ---@class era.dressing.__mods
 local mods = {
   commentstring = "era.dressing.commentstring",
+  dim = "era.dressing.dim",
   foldtext = "era.dressing.foldtext",
   hipattern = "era.dressing.hipattern",
   im = "era.dressing.im",
@@ -27,6 +28,7 @@ local load_times = {} ---@type table<string, number>
 ---@class era.dressing
 ---@field public __mods                 era.dressing.__mods
 ---@field public commentstring          era.dressing.commentstring
+---@field public dim                    era.dressing.dim
 ---@field public foldtext               era.dressing.foldtext
 ---@field public hipattern              era.dressing.hipattern
 ---@field public im                     era.dressing.im
