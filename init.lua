@@ -16,6 +16,11 @@ if vim.g.neovide then
   return
 end
 
+if vim.g.yui then
+  require("ark.vendor.yui")
+  return
+end
+
 if vim.g.yozvim then
   require("ark.vendor.yozvim")
   return

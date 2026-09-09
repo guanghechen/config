@@ -11,26 +11,23 @@ local conds = {
   end,
   ---@return boolean
   cmp = function()
-    return not vim.g.vscode and not vim.g.yozvim
+    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui
   end,
   ---@return boolean
   lsp = function()
-    return not vim.g.vscode and not vim.g.yozvim
+    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui
   end,
   ---@return boolean
-  not_vscode = function()
-    return not vim.g.vscode
+  flash = function()
+    return not vim.g.yozvim and not vim.g.yui
   end,
   ---@return boolean
-  not_yozvim = function()
-    return not vim.g.yozvim
+  standalone = function()
+    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui
   end,
   ---@return boolean
-  not_vscode_or_yozvim = function()
-    return not vim.g.vscode and not vim.g.yozvim
-  end,
   treesitter_context = function()
-    return not vim.g.vscode and not vim.g.yozvim and dot.context.plugin.treesitter_context:snapshot()
+    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yui and dot.context.plugin.treesitter_context:snapshot()
   end,
 }
 
@@ -38,15 +35,15 @@ local conds = {
 local raw_specs = {
   -- stylua: ignore start
   { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                    },
-  { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode_or_yozvim   },
-  { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode_or_yozvim   },
-  { name = "flash.nvim",                  main = "flash",                         cond = conds.not_yozvim              },
-  { name = "friendly-snippets",                                                   cond = conds.not_vscode_or_yozvim   },
+  { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.standalone             },
+  { name = "conform.nvim",                main = "conform",                       cond = conds.standalone             },
+  { name = "flash.nvim",                  main = "flash",                         cond = conds.flash                  },
+  { name = "friendly-snippets",                                                   cond = conds.standalone             },
   { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                    },
   { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                    },
-  { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.not_vscode_or_yozvim   },
+  { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.standalone             },
   { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context     },
-  { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode_or_yozvim   },
+  { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.standalone             },
   -- stylua: ignore end
 }
 

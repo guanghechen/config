@@ -139,7 +139,7 @@ local __fn__mods = {
 - 缺失 parser、query 或对象时取消编辑并报告诊断；结构跳转无匹配时保持光标不动。每次操作刷新 parser，不跨编辑缓存节点或范围。选择先查询参考行，未命中再扩大范围；结构跳转先查前后 500 行，目标不足或落在窗口外时搜索整个 buffer。
 
 本地模块位于 `lua/era/m/textobject/`，按输入映射、动作、范围查找、Treesitter、pattern、纯搜索与交换规划分工。
-Neovim / Neovide 在 which-key、indentscope 之后幂等初始化；VSCode / yozvim 不安装映射。
+Neovim / Neovide 在 which-key、indentscope 之后幂等初始化；VSCode / Yozvim / Yui 不安装映射。
 本地 28 个 query 文件来自 [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects/tree/898ee307df58f854d11cd7edd06472574d48014e/queries)，revision 为 `898ee307df58f854d11cd7edd06472574d48014e`，使用 Apache 2.0 license；具体语言见 `queries/*/textobjects.scm`。
 
 ## 验证

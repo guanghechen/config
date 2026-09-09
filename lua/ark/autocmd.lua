@@ -98,7 +98,7 @@ vim.filetype.add({
 })
 
 -- Register synchronously so the initial Python buffer cannot miss FileType; load the implementation on demand.
-if not vim.g.vscode and not vim.g.yozvim then
+if not vim.g.vscode and not vim.g.yozvim and not vim.g.yui then
   vim.api.nvim_create_autocmd("FileType", {
     group = augroup("python_venv"),
     pattern = "python",

@@ -22,9 +22,10 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
 
 ## 生命周期
 
-- `dressing()` 由 vendor composition root 在 plugin setup 之前同步注册，确保 focus handler 先于 `UIEnter` 就绪，且不依赖 plugin：
+- `dressing()` 由 vendor composition root 同步注册，确保 focus handler 先于 `UIEnter` 就绪；如有 plugin setup，IM 先于其注册：
   - Neovim/Neovide 调用 `era.dressing.setup({ "notifier", "ui_attach", "im" })`，`im` 在 `ui_attach` 之后注册；
-  - VSCode/Yozvim 调用 `era.dressing.setup({ "im" })`，这两个 environment 不启用 `ui_attach` dressing。
+  - VSCode/Yui 调用 `era.dressing.setup({ "im" })`，不启用 `ui_attach` dressing；
+  - Yozvim 不启用 `im` 或 `ui_attach` dressing，input source 由宿主管理。
 - `UIEnter` 同步获取 ownership，但将首次 source reconciliation 延至下一 event-loop tick，避免 backend I/O 阻塞 UI startup。失焦会推进 focus generation，使尚未执行的 reconciliation 失效；重复 focus event 不会产生额外调用。
 - `FocusGained` 和 `VimResume` 幂等地获取 ownership，并同步按当前 mode 对齐：
   - command mode 调用一次 fused `capture_and_select_english()`；
@@ -36,7 +37,7 @@ source 操作遵守下述失败冷却策略；冷却不改变 focus ownership，
 - 关闭 `auto_im` 会清除 Insert snapshot，但不改变 focus ownership。重新开启时：
   - focused：立即按当前 mode 对齐；
   - unfocused：等待下一次 focus entry。
-- UI host 负责传递 focus event：terminal Neovim 接收 native/tmux event，VSCode/Yozvim 的 embedded host 必须转发对应 event。重复或重叠 event 安全，因为 ownership transition 是幂等的。
+- UI host 负责传递 focus event：terminal Neovim 接收 native/tmux event，VSCode/Yui 的 embedded host 必须转发对应 event。重复或重叠 event 安全，因为 ownership transition 是幂等的。
 
 ## Backend 契约
 

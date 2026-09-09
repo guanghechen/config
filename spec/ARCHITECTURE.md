@@ -16,7 +16,7 @@ yoz -> stl -> dot -> era -> ark/vendor
 | L1    | `stl`    | Standard library, may use `yoz` and `vim` globals                           |
 | L2    | `dot`    | Core framework: configuration, context, theme, commands; depends on yoz/stl |
 | L3    | `era`    | Business layer: actions, UI modules, plugin configs; depends on yoz/stl/dot |
-| L4    | `vendor` | Environment entry points: neovim/neovide/vscode                             |
+| L4    | `vendor` | Environment entry points: neovim/neovide/vscode/yozvim/yui                  |
 
 ## Global Variables
 
@@ -101,7 +101,12 @@ Highlights:
 
 ## Entry Layer
 
-`ark/vendor/*` contains environment entry points (neovim, neovide, vscode).
+`ark/vendor/*` contains environment entry points (neovim, neovide, vscode, yozvim, yui).
+
+Yui sets `vim.g.yui` before `init.lua`; its entry, options and keymaps live independently under `ark/vendor/yui/`.
+Yui and Yozvim leave UI, completion, LSP and Python environment management to the host.
+Yui synchronously enables IM dressing and schedules splitjoin/surrounds setup; it skips plugin bootstrap,
+commentstring and local plugin/dressing hooks. Yozvim leaves input-method management to the host.
 
 ## Notes
 
