@@ -126,7 +126,7 @@ local timings = era.dressing.get_load_times() -- module name -> milliseconds
 
 The plugin window has one stable surface. It displays:
 
-- Neovim and startup-plugin timing summaries.
+- Neovim, startup-plugin, and Dressing timing summaries, in that order; Dressing uses the same sum as its section.
 - Missing plugins and orphan directories before installed plugins.
 - Active operations grouped into action-aware `Installing` / `Syncing` / `Updating` / `Building` and `Queued` sections.
 - Startup plugins sorted by inclusive load time (slowest first).

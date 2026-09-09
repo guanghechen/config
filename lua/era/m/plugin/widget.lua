@@ -187,12 +187,18 @@ function M:__header__()
   local Loader = require("era.m.plugin.loader")
   local profile = Loader.get_startup_profile() ---@type era.m.plugin.IStartupProfile
   local nvim_startup_time = profile.nvim_startup_time ---@type number|nil
+  local dressing_time = 0 ---@type number
+  for _, load_time in pairs(era.dressing.get_load_times()) do
+    dressing_time = dressing_time + load_time
+  end
 
   self
     :__append__("Neovim", "m_pl_bold")
     :__append__(nvim_startup_time and (" " .. string.format("%.2fms", nvim_startup_time)) or " pending", "m_pl_comment")
     :__append__("    Startup", "m_pl_bold")
     :__append__(" " .. string.format("%.2fms", profile.total_time), "m_pl_comment")
+    :__append__("    Dressing", "m_pl_bold")
+    :__append__(" " .. string.format("%.2fms", dressing_time), "m_pl_comment")
 
   local Action = require("era.m.plugin.action")
   if Action.is_running() then
