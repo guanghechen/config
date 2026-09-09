@@ -33,6 +33,9 @@ local function exec_real_git(args, opts, callback)
 end
 
 bootstrap.with_global(t, "stl", {
+  c = {
+    Future = require("stl.c.future"),
+  },
   env = { PATH_SEP = "/" },
   async = {
     run = function(callback)
@@ -72,7 +75,14 @@ bootstrap.with_global(t, "dot", {
     end,
   },
 })
-bootstrap.with_global(t, "era", { m = { diffview = {} } })
+bootstrap.with_global(t, "era", {
+  m = {
+    diffview = {},
+    git = {
+      index = require("era.m.git.index"),
+    },
+  },
+})
 
 local entries_at_line = {} ---@type table<integer, table<integer, era.m.diffview.IFileEntry>>
 local line_maps = {} ---@type table<integer, era.m.diffview.IFiletreeLineMap[]>
@@ -213,6 +223,40 @@ t:test("changes pane routes stage and unstage to the entry at cursor", function(
   assert_transfer_call(git_calls[3], "reset", { "cursor-staged.txt" })
   t.assert_eq("HEAD", git_calls[3].args[3], "reset target")
   t.assert_eq(2, refreshed, "refresh calls")
+  entries_at_line[changes_bufnr] = nil
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
+end)
+
+t:test("whole-file stage shares the repository index FIFO", function()
+  reset_calls()
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "unstaged" })
+  entries_at_line[changes_bufnr] = {
+    { filepath = "queued.txt", stage_type = "unstaged", status = "M" },
+  }
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      get_current_entry = function()
+        return nil
+      end,
+      request_refresh = request_refresh,
+    },
+  }
+
+  local release = nil ---@type (fun(result: nil): nil)|nil
+  era.m.git.index.run("/repo", function(resolve)
+    release = resolve
+  end)
+
+  action.stage(ctx)
+  t.assert_eq(0, #git_calls, "whole-file stage waits")
+  assert(release)(nil)
+
+  t.assert_eq(1, #git_calls, "whole-file stage starts after release")
+  assert_transfer_call(git_calls[1], "add", { "queued.txt" })
+  t.assert_eq(1, refreshed, "refresh after queued stage")
   entries_at_line[changes_bufnr] = nil
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)

@@ -20,14 +20,17 @@ local function callable(callback)
 end
 
 ---@param initial_visible table<integer, boolean>
----@param get_file_info fun(bufnr: integer): stl.c.Future|nil
----@return era.m.git.buffer, table<string, fun(event: { buf: integer })>, fun(): nil, fun(bufnr: integer, visible: boolean), fun(bufnr: integer, valid: boolean), table<integer, integer>
-local function setup(initial_visible, get_file_info)
+---@param get_file_info (fun(bufnr: integer): stl.c.Future|nil)|nil
+---@param get_buf_name (fun(bufnr: integer): string)|nil
+---@param create_repo (fun(repo: table): stl.c.Future)|nil
+---@return era.m.git.buffer, table<string, fun(event: { buf: integer })>, fun(): nil, fun(bufnr: integer, visible: boolean), fun(bufnr: integer, valid: boolean), table<integer, integer>, { count: integer }
+local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
   local callbacks = {} ---@type table<string, fun(event: { buf: integer })>
   local file_info_calls = {} ---@type table<integer, integer>
   local pending_debounce = nil ---@type fun()|nil
   local valid = {} ---@type table<integer, boolean>
   local visible = vim.deepcopy(initial_visible) ---@type table<integer, boolean>
+  local listener_calls = { count = 0 }
   local bufnrs = vim.tbl_keys(initial_visible) ---@type integer[]
   table.sort(bufnrs)
 
@@ -96,19 +99,21 @@ local function setup(initial_visible, get_file_info)
   })
   t:patch_global("yoz", {
     path = {
-      is_exist = function()
-        return true
+      is_descendant = function(from, to)
+        return to == from or vim.startswith(to, from .. "/")
       end,
     },
   })
   t:patch_global("era", {
     m = {
       git = {
+        hunk = { remove = function() end },
         repo = {
           create = function()
-            return Future.resolve(repo)
+            return create_repo and create_repo(repo) or Future.resolve(repo)
           end,
         },
+        sign = { clear = function() end },
         state = { o_branch = { next = function() end } },
         watcher = { update = function() end },
       },
@@ -116,9 +121,13 @@ local function setup(initial_visible, get_file_info)
   })
 
   t:patch_table(vim.api, "nvim_buf_attach", function()
+    listener_calls.count = listener_calls.count + 1
     return true
   end)
   t:patch_table(vim.api, "nvim_buf_get_name", function(bufnr)
+    if get_buf_name then
+      return get_buf_name(bufnr)
+    end
     return string.format("/repo/file-%d.lua", bufnr)
   end)
   t:patch_table(vim.api, "nvim_buf_is_loaded", function(bufnr)
@@ -175,7 +184,8 @@ local function setup(initial_visible, get_file_info)
       valid[bufnr] = value
     end,
     ---@diagnostic disable-next-line: redundant-return-value
-    file_info_calls
+    file_info_calls,
+    listener_calls
 end
 
 t:test("setup initializes visible buffers immediately", function()
@@ -185,6 +195,84 @@ t:test("setup initializes visible buffers immediately", function()
   t.assert_true(Buffer.is_attached(11), "visible buffer attached")
   t.assert_eq(1, calls[11], "visible file info query")
   t.assert_false(Buffer.is_dirty(11), "visible initialization in flight")
+end)
+
+t:test("attach accepts a workspace file before it exists on disk", function()
+  local Buffer = setup({ [11] = true }, nil, function()
+    return "/repo/new-file.lua"
+  end)
+
+  t.assert_true(Buffer.is_attached(11), "new workspace file attached")
+end)
+
+t:test("attach rejects files outside the repository", function()
+  local Buffer = setup({ [11] = true }, nil, function()
+    return "/outside/file.lua"
+  end)
+
+  t.assert_false(Buffer.is_attached(11), "external file rejected")
+end)
+
+t:test("BufWritePost retries attach after a buffer becomes a repository file", function()
+  local name = "/outside/file.lua" ---@type string
+  local Buffer, callbacks = setup({ [11] = true }, nil, function()
+    return name
+  end)
+  t.assert_false(Buffer.is_attached(11), "initial external file rejected")
+
+  name = "/repo/new-file.lua"
+  callbacks.BufWritePost({ buf = 11 })
+
+  t.assert_true(Buffer.is_attached(11), "written repository file attached")
+end)
+
+t:test("BufFilePost detaches a buffer renamed outside the repository", function()
+  local name = "/repo/file.lua" ---@type string
+  local Buffer, callbacks = setup({ [11] = true }, nil, function()
+    return name
+  end)
+  t.assert_true(Buffer.is_attached(11), "initial repository file attached")
+
+  name = "/outside/file.lua"
+  callbacks.BufFilePost({ buf = 11 })
+
+  t.assert_false(Buffer.is_attached(11), "renamed external file detached")
+end)
+
+t:test("BufFilePost rebinds Git state without duplicating the buffer listener", function()
+  local name = "/repo/old.lua" ---@type string
+  local Buffer, callbacks, _, _, _, _, listener_calls = setup({ [11] = true }, nil, function()
+    return name
+  end)
+
+  name = "/repo/new.lua"
+  callbacks.BufFilePost({ buf = 11 })
+
+  local current = assert(Buffer.get_cache(11))
+  t.assert_eq("/repo/new.lua", current.file, "current filepath")
+  t.assert_eq("new.lua", current.relpath, "current Git path")
+  t.assert_eq(1, listener_calls.count, "one low-level listener")
+end)
+
+t:test("an async attach cannot publish after the buffer leaves the repository", function()
+  local name = "/repo/old.lua" ---@type string
+  local release = nil ---@type (fun(): nil)|nil
+  local Buffer, callbacks = setup({ [11] = true }, nil, function()
+    return name
+  end, function(repo)
+    return Future.new(function(resolve)
+      release = function()
+        resolve(repo)
+      end
+    end)
+  end)
+  t.assert_false(Buffer.is_attached(11), "attach is pending")
+
+  name = "/outside/file.lua"
+  callbacks.BufFilePost({ buf = 11 })
+  assert(release)()
+
+  t.assert_false(Buffer.is_attached(11), "stale attach discarded")
 end)
 
 t:test("setup defers hidden buffers and refreshes every buffer that becomes visible", function()

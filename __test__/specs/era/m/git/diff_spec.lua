@@ -196,6 +196,16 @@ t:test("filter_secondary: original final-newline differences stay visible", func
   t.assert_eq(1, result and #result or 0, "EOF-distinct secondary hunk")
 end)
 
+t:test("filter_secondary: searches every primary hunk sharing an added start", function()
+  local first = diff.run_diff({ "first", "" }, { "buffer", "" })[1]
+  local matching = diff.run_diff({ "matching", "" }, { "buffer", "" })[1]
+  local secondary = diff.run_diff({ "matching", "" }, { "buffer", "" })
+
+  local result = diff.filter_secondary({ first, matching }, secondary)
+
+  t.assert_eq(nil, result, "later matching hunk filtered")
+end)
+
 t:test("compute_word_diff: native byte diff preserves byte-column ranges", function()
   local changes = diff.compute_word_diff("fooBar", "fooBaz")
   t.assert_eq(1, #changes, "change count")

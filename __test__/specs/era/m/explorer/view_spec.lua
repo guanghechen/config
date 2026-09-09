@@ -34,8 +34,12 @@ bootstrap.with_runtime(t, {
     m = {
       git = {
         state = {
-          aggregated = function()
-            return { status_table = {} }
+          snapshot = function()
+            return {
+              lookup = function()
+                return { codes = 4, display = "M", staged_display = "", stage = "unstaged", summary = "M" }
+              end,
+            }
           end,
           is_ignored = function()
             return false
@@ -46,6 +50,7 @@ bootstrap.with_runtime(t, {
       },
     },
   },
+  yoz = require("yoz"),
   stl = {
     env = {
       PATH_SEP = "/",
@@ -72,9 +77,10 @@ local View = require("era.m.explorer.view")
 
 t:test("render node: resolves Git status once", function()
   local resolve_calls = 0 ---@type integer
-  t:patch_table(GitStatus, "resolve", function()
+  t:patch_table(GitStatus, "calc_info", function(_, _, _, highlights)
     resolve_calls = resolve_calls + 1
-    return "M", "m_ft_git_change"
+    highlights[1] = { coll = 0, colr = 2, hlname = "m_ft_git_change" }
+    return " M", "m_ft_git_change"
   end)
 
   local view = View.new("git-resolve-test")

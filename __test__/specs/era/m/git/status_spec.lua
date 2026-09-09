@@ -1,150 +1,72 @@
 --- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/status_spec.lua
 ---@diagnostic disable: undefined-global
---- Test for era.m.git.status module
 
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-
-local t = harness.new("era.m.git.status")
-local aggregated = nil ---@type era.m.git.status.IAggregatedCache|nil
-local canonical_normalize_calls = 0 ---@type integer
-
-local function normalize(filepath, keep_trailing_slash, sep)
-  local had_trailing_slash = filepath:sub(-1) == "/" or filepath:sub(-1) == "\\" ---@type boolean
-  local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
-  if keep_trailing_slash == false and normalized ~= "/" then
-    normalized = normalized:gsub("/+$", "")
-  elseif keep_trailing_slash ~= false and had_trailing_slash and normalized:sub(-1) ~= "/" then
-    normalized = normalized .. "/"
-  end
-  if sep == "\\" then
-    normalized = normalized:gsub("/", "\\")
-  end
-  return normalized
-end
-
+local t = harness.new("era.m.git.status UI")
+local info
+local calls = {}
 bootstrap.with_runtime(t, {
-  stl = {
-    env = { PATH_SEP = "/" },
-  },
-  yoz = {
-    canonical_path = {
-      normalize = function(filepath, keep_trailing_slash)
-        canonical_normalize_calls = canonical_normalize_calls + 1
-        return normalize(filepath, keep_trailing_slash, "/")
-      end,
-    },
-  },
-  dot = {
-    path = {
-      normalize = normalize,
-    },
-  },
+  yoz = require("yoz"),
   era = {
     m = {
       git = {
         state = {
-          aggregated = function()
-            return aggregated
+          snapshot = function()
+            return {
+              lookup = function(_, path, directory)
+                calls[#calls + 1] = { path = path, directory = directory }
+                return info
+              end,
+            }
           end,
         },
       },
     },
   },
 })
-
 local status = require("era.m.git.status")
 
----@param code string
----@return era.m.git.StatusEntry
-local function create_entry(code)
-  local is_untracked = code == "?" ---@type boolean
-  local display = is_untracked and "U" or code ---@type string
-  return {
-    categories = is_untracked and { untracked = true } or { modified = true, unstaged = true },
-    codes = { [code] = true },
-    display = display,
-    path = "",
-    relative = "",
-    stage = is_untracked and nil or "unstaged",
-    staged = {},
-    staged_bits = 0,
-    staged_display = "",
-    summary = code,
-    unstaged = { [code] = true },
-    unstaged_bits = status.STATUS_CODE_BIT_MAP[code],
-    unstaged_display = display,
-  }
-end
-
-t:test("compute_dir_status: canonicalizes only the Windows lookup path", function()
-  t:patch_table(stl.env, "PATH_SEP", "\\")
-  canonical_normalize_calls = 0
-  aggregated = status.aggregate({
-    ["C:/repo/dir/file.lua"] = create_entry("M"),
-  })
-  t.assert_eq(0, canonical_normalize_calls, "canonical aggregate input")
-
-  local info = status.compute_dir_status(aggregated, "C:\\repo\\dir\\")
-
-  t.assert_true(info ~= nil, "directory info")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("M", info.display, "directory display")
-  t.assert_eq(1, canonical_normalize_calls, "lookup normalization")
+t:test("file and directory lookups preserve the literal path at the native boundary", function()
+  calls = {}
+  info = { codes = 4, display = "M", staged_display = "", stage = "unstaged", summary = "M" }
+  local display, highlight = status.resolve("/repo/back\\slash")
+  t.assert_eq("M", display, "display")
+  t.assert_eq("m_ft_git_unstaged", highlight, "unstaged highlight")
+  t.assert_eq("/repo/back\\slash", calls[1].path, "literal POSIX path")
+  status.resolve([[C:\repo\dir\]], "directory")
+  t.assert_true(calls[2].directory, "directory query")
 end)
 
-t:test("resolve: Windows-style descendants inherit untracked symlink status", function()
-  t:patch_table(stl.env, "PATH_SEP", "\\")
-  aggregated = status.aggregate({
-    ["C:/repo/link"] = create_entry("?"),
-  })
-
-  local display, highlight = status.resolve("C:\\repo\\link\\nested\\file.lua", "file")
-  local dir_info = status.compute_dir_status(aggregated, "C:\\repo\\link\\nested\\")
-
-  t.assert_eq("U", display, "file display")
-  t.assert_eq(status.GIT_STATUS_HIGHLIGHT["?"], highlight, "file highlight")
-  t.assert_true(dir_info ~= nil, "nested directory info")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("U", dir_info.display, "nested directory display")
-end)
-
-t:test("compute_dir_status: includes a directory symlink own entry", function()
-  t:patch_table(stl.env, "PATH_SEP", "\\")
-  aggregated = status.aggregate({
-    ["C:/repo/link"] = create_entry("?"),
-  })
-
-  local info = status.compute_dir_status(aggregated, "C:\\repo\\link\\")
-
-  t.assert_true(info ~= nil, "directory info")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("U", info.display, "directory display")
-end)
-
-t:test("calc_info: mixed directory status keeps untracked U highlight", function()
-  t:patch_table(stl.env, "PATH_SEP", "\\")
-  aggregated = status.aggregate({
-    ["C:/repo/dir/link"] = create_entry("?"),
-    ["C:/repo/dir/tracked.lua"] = create_entry("M"),
-  })
+t:test("mixed untracked and tracked directory codes keep their highlights", function()
+  calls = {}
+  info = { codes = 6, display = "UM", staged_display = "", stage = "unstaged", summary = "?" }
   local highlights = {}
-
-  local text = status.calc_info("C:\\repo\\dir\\", "directory", 0, highlights)
-
-  t.assert_eq(" UM", text, "directory status text")
-  t.assert_eq(status.GIT_STATUS_HIGHLIGHT["?"], highlights[2].hlname, "untracked character highlight")
+  local text = status.calc_info("/repo", "directory", 3, highlights)
+  t.assert_eq(" UM", text, "formatted status")
+  t.assert_eq(1, #calls, "one native lookup per row")
+  t.assert_eq(4, highlights[2].coll, "byte offset")
+  t.assert_eq("m_ft_git_untracked", highlights[2].hlname, "untracked U")
+  t.assert_eq("m_ft_git_change", highlights[3].hlname, "modified M")
 end)
 
-t:test("resolve: POSIX preserves literal backslashes", function()
-  t:patch_table(stl.env, "PATH_SEP", "/")
-  aggregated = status.aggregate({
-    ["/repo/back\\slash.lua"] = create_entry("M"),
-  })
+t:test("staged segments and conflicts retain UI priority", function()
+  info = { codes = 4, display = "MM", staged_display = "M", stage = "mixed", summary = "M" }
+  local highlights = {}
+  status.calc_info("/repo/file", "file", 0, highlights)
+  t.assert_eq("m_ft_git_staged", highlights[2].hlname, "staged segment")
+  t.assert_eq("m_ft_git_change", highlights[3].hlname, "unstaged segment")
+  info = { codes = 5, display = "UM", staged_display = "", stage = "mixed", summary = "U" }
+  local _, highlight = status.resolve("/repo/file")
+  t.assert_eq("m_ft_git_unmerged", highlight, "conflict priority")
+end)
 
-  local display = status.resolve("/repo/back\\slash.lua", "file")
-
-  t.assert_eq("M", display, "literal backslash path")
+t:test("missing status leaves the row unchanged", function()
+  info = nil
+  local highlights = {}
+  t.assert_eq("", status.calc_info("/repo/missing", "file", 0, highlights), "empty status")
+  t.assert_eq(0, #highlights, "no status highlights")
+  t.assert_nil(status.resolve(""), "empty path")
 end)
 
 t:run()

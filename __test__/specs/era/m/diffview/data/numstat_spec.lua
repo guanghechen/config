@@ -70,7 +70,7 @@ t:test("fetch: applies tracked stats from the shared status snapshot", function(
           collect_opts = opts
           return {
             await = function()
-              return {
+              local result = {
                 status_map = {
                   ["/repo/a.lua"] = {
                     relative = "a.lua",
@@ -89,6 +89,11 @@ t:test("fetch: applies tracked stats from the shared status snapshot", function(
                   staged = { ["a.lua"] = { insertions = 7, deletions = 0 } },
                   unstaged = { ["b.lua"] = { insertions = 2, deletions = 3 } },
                 },
+              }
+              return {
+                export = function()
+                  return result
+                end,
               }
             end,
           }

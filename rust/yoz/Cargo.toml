@@ -19,3 +19,4 @@ serde = { version = "1.0.228", features = ["derive"] }
 time = { version = "0.3.44", features = ["macros", "formatting", "local-offset"] }
 uuid = { version = "1.18.1", features = ["v4", "fast-rng"] }
 yoz-im = { path = "../im" }
+yoz-git = { path = "../git" }

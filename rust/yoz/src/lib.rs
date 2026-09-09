@@ -4,6 +4,7 @@ pub mod dict;
 pub mod find;
 pub mod r#fn;
 pub mod fs;
+mod git;
 pub mod path;
 pub mod replace;
 pub mod search;
@@ -1109,6 +1110,7 @@ fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("fn", fn_module(lua)?)?;
     exports.set("path", path_module(lua)?)?;
     exports.set("fs", fs_module(lua)?)?;
+    exports.set("git", git::module(lua)?)?;
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     exports.set("im", im_module(lua)?)?;
     #[cfg(target_os = "linux")]

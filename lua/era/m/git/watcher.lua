@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.git.watcher" ---@type string
+
 local DEBOUNCE_MS = 150 ---@type integer
 local INDEX_DEBOUNCE_MS = 100 ---@type integer
 
@@ -10,6 +13,9 @@ local fs_watcher_dir = nil
 ---@type uv.uv_fs_event_t|nil
 local fs_watcher_commondir = nil
 
+---@type uv.uv_fs_event_t|nil
+local fs_watcher_head_ref = nil
+
 ---@type uv.uv_timer_t|nil
 local debounce_timer = nil
 
@@ -21,6 +27,9 @@ local current_gitdir = nil
 
 ---@type string|nil
 local current_commondir = nil
+
+---@type string|nil
+local current_head_ref = nil
 
 ---@type boolean
 local pending_head_change = false
@@ -197,6 +206,101 @@ local function on_index_event()
   trigger_index_refresh()
 end
 
+---@param handle                     uv.uv_fs_event_t|nil
+---@return nil
+local function close_watcher(handle)
+  if handle and not handle:is_closing() then
+    handle:stop()
+    handle:close()
+  end
+end
+
+---@param gitdir                     string
+---@return string|nil
+local function read_head_ref(gitdir)
+  local fd = vim.uv.fs_open(gitdir .. "/HEAD", "r", 438)
+  if not fd then
+    return nil
+  end
+
+  local stat = vim.uv.fs_fstat(fd)
+  local content = stat and vim.uv.fs_read(fd, stat.size, 0) or nil ---@type string|nil
+  vim.uv.fs_close(fd)
+  if not content then
+    return nil
+  end
+
+  return content:match("^ref:%s*(refs/[^\r\n]+)")
+end
+
+---@param dirpath                    string
+---@param root                       string
+---@return string|nil
+local function nearest_existing_dir(dirpath, root)
+  local current = dirpath ---@type string
+  while yoz.path.is_descendant(root, current) do
+    local stat = vim.uv.fs_stat(current) ---@type uv.fs_stat.result|nil
+    if stat and stat.type == "directory" then
+      return current
+    end
+    if current == root then
+      break
+    end
+    local parent = dot.path.dirname(current) ---@type string
+    if parent == "" or parent == current then
+      break
+    end
+    current = parent
+  end
+  return nil
+end
+
+---@param force                      boolean|nil
+---@return nil
+local function sync_head_ref_watcher(force)
+  if not current_gitdir or not current_commondir then
+    return
+  end
+
+  local head_ref = read_head_ref(current_gitdir) ---@type string|nil
+  if not force and head_ref == current_head_ref and fs_watcher_head_ref then
+    return
+  end
+
+  close_watcher(fs_watcher_head_ref)
+  fs_watcher_head_ref = nil
+  current_head_ref = head_ref
+  if not head_ref then
+    return
+  end
+
+  local refpath = dot.path.join(current_commondir, head_ref) ---@type string
+  local watch_dir = nearest_existing_dir(dot.path.dirname(refpath), current_commondir) ---@type string|nil
+  if not watch_dir then
+    return
+  end
+
+  local handle = vim.uv.new_fs_event()
+  if not handle then
+    return
+  end
+  fs_watcher_head_ref = handle
+  handle:start(watch_dir, {}, function(err)
+    if err or fs_watcher_head_ref ~= handle then
+      return
+    end
+    local ref = current_head_ref
+    if ref then
+      on_fs_event(ref)
+    end
+    vim.schedule(function()
+      if fs_watcher_head_ref == handle then
+        sync_head_ref_watcher(true)
+      end
+    end)
+  end)
+end
+
 local function stop_watcher()
   if debounce_timer and not debounce_timer:is_closing() then
     debounce_timer:stop()
@@ -210,25 +314,28 @@ local function stop_watcher()
     index_debounce_timer = nil
   end
 
-  if fs_watcher_dir and not fs_watcher_dir:is_closing() then
-    fs_watcher_dir:stop()
-    fs_watcher_dir:close()
-    fs_watcher_dir = nil
-  end
+  close_watcher(fs_watcher_dir)
+  fs_watcher_dir = nil
 
-  if fs_watcher_commondir and not fs_watcher_commondir:is_closing() then
-    fs_watcher_commondir:stop()
-    fs_watcher_commondir:close()
-    fs_watcher_commondir = nil
-  end
+  close_watcher(fs_watcher_commondir)
+  fs_watcher_commondir = nil
+
+  close_watcher(fs_watcher_head_ref)
+  fs_watcher_head_ref = nil
 
   current_gitdir = nil
   current_commondir = nil
+  current_head_ref = nil
+  pending_head_change = false
+  pending_branch_refresh = false
+  pending_status_change = false
+  pending_index_change = false
 end
 
 ---@param gitdir                     string
 ---@param commondir                  ?string
 local function start_watcher(gitdir, commondir)
+  commondir = commondir or gitdir
   if current_gitdir == gitdir and current_commondir == commondir then
     return
   end
@@ -240,7 +347,14 @@ local function start_watcher(gitdir, commondir)
   fs_watcher_dir = vim.uv.new_fs_event()
   if fs_watcher_dir then
     fs_watcher_dir:start(gitdir, {}, function(err, filename)
-      if err or not filename then
+      if err then
+        return
+      end
+      if not filename then
+        on_fs_event("HEAD")
+        vim.schedule(function()
+          sync_head_ref_watcher(true)
+        end)
         return
       end
       if vim.startswith(filename, "index.lock") or vim.startswith(filename, ".watchman-cookie") then
@@ -251,26 +365,30 @@ local function start_watcher(gitdir, commondir)
         return
       end
       on_fs_event(filename)
+      if filename == "HEAD" then
+        vim.schedule(function()
+          sync_head_ref_watcher(true)
+        end)
+      end
     end)
   end
 
-  -- For worktrees, refs are stored in commondir, not gitdir
-  -- Watch commondir/refs/heads to detect branch updates from local or other worktree commits
-  -- Note: fs_event does not recursively watch subdirectories
-  if commondir and commondir ~= gitdir then
-    local refs_heads_path = commondir .. "/refs/heads" ---@type string
-    if vim.uv.fs_stat(refs_heads_path) then
-      fs_watcher_commondir = vim.uv.new_fs_event()
-      if fs_watcher_commondir then
-        fs_watcher_commondir:start(refs_heads_path, {}, function(err, filename)
-          if err or not filename then
-            return
-          end
-          on_fs_event("refs/heads/" .. filename)
-        end)
-      end
+  -- Linked worktrees keep shared ref storage and packed-refs in commondir.
+  if commondir ~= gitdir then
+    fs_watcher_commondir = vim.uv.new_fs_event()
+    if fs_watcher_commondir then
+      fs_watcher_commondir:start(commondir, {}, function(err, filename)
+        if err then
+          return
+        end
+        if not filename or filename == "packed-refs" or filename == "reftable" then
+          on_fs_event(filename or "packed-refs")
+        end
+      end)
     end
   end
+
+  sync_head_ref_watcher(true)
 end
 
 local function init_watcher()

@@ -824,7 +824,15 @@ dependencies = [
  "serde",
  "time",
  "uuid",
+ "yoz-git",
  "yoz-im",
+]
+
+[[package]]
+name = "yoz-git"
+version = "0.1.0"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

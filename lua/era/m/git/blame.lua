@@ -1,6 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.git.blame" ---@type string
 
+local jobs = require("era.m.git.job")
+local exiting = false ---@type boolean
+
 local NS_INLINE = "dot_module_git_inline_blame"
 local NS_BUFFER = "dot_module_git_buffer_blame"
 
@@ -15,8 +18,10 @@ local M = {}
 --- against. A cached entry is served only while changedtick still matches; any
 --- edit (or an explicit invalidate) makes it miss and re-blame.
 ---@class era.m.git.blame.ICacheEntry
----@field public tick                 integer
----@field public entries             table<integer, era.m.git.BlameInfo>
+---@field public snapshot               yoz.git.BlameSnapshot
+---@field public owner                  era.m.git.buffer.ICache
+---@field public tick                   integer
+---@field public presentation           ?era.m.git.blame.IPresentation
 ---@type table<integer, era.m.git.blame.ICacheEntry>
 local cache = {}
 
@@ -24,158 +29,48 @@ local cache = {}
 --- was started for (so a duplicate request for the same content coalesces instead
 --- of spawning a second git process).
 ---@class era.m.git.blame.IInflight
----@field public token               stl.c.CancellationToken
----@field public tick                integer
+---@field public owner                  era.m.git.buffer.ICache
+---@field public token                  stl.c.CancellationToken
+---@field public tick                   integer
 ---@type table<integer, era.m.git.blame.IInflight>
 local inline_inflight = {}
 ---@type table<integer, era.m.git.blame.IInflight>
 local buffer_inflight = {}
 
---- Per-buffer changedtick whose blame run failed (untracked file, git error). A
---- cache miss for the SAME tick then becomes a no-op instead of re-running git and
---- re-reporting on every cursor move. Cleared whenever content/HEAD changes (a new
---- changedtick misses naturally, invalidate/BufDelete clear it explicitly).
----@type table<integer, integer>
-local failed_tick = {}
+--- Per-attachment changedtick whose blame run failed (untracked file, git error).
+--- The same owner and tick then become a no-op instead of re-running git and
+--- re-reporting on every cursor move. Invalidation and BufDelete clear it explicitly.
+---@class era.m.git.blame.IFailedEntry
+---@field public owner                  era.m.git.buffer.ICache
+---@field public tick                   integer
+---@type table<integer, era.m.git.blame.IFailedEntry>
+local failed = {}
 
----@param output                     string
----@return table<integer, era.m.git.BlameInfo>
-local function parse_blame_output(output)
-  local result = {} ---@type table<integer, era.m.git.BlameInfo>
-  local lines = vim.split(output, "\n", { plain = true })
-
-  local current_sha = nil ---@type string|nil
-  local current_info = nil ---@type era.m.git.BlameInfo|nil
-  local commits = {} ---@type table<string, era.m.git.BlameInfo>
-
-  for _, line in ipairs(lines) do
-    if line == "" then
-      goto continue
-    end
-
-    local sha, orig_lnum, final_lnum, num_lines = line:match("^(%x+)%s+(%d+)%s+(%d+)%s*(%d*)$")
-    if sha then
-      current_sha = sha
-      local existing = commits[sha]
-      if existing then
-        current_info = vim.tbl_extend("force", {}, existing)
-      else
-        current_info = {
-          sha = sha,
-          abbrev_sha = sha:sub(1, 8),
-          author = "",
-          author_mail = "",
-          author_time = 0,
-          author_tz = "",
-          committer = "",
-          committer_mail = "",
-          committer_time = 0,
-          committer_tz = "",
-          summary = "",
-          previous = nil,
-          previous_filename = nil,
-          filename = "",
-          orig_lnum = tonumber(orig_lnum) or 0,
-          final_lnum = tonumber(final_lnum) or 0,
-          num_lines = tonumber(num_lines) or 1,
-        }
+---Capture editor content on the owner thread; query and parsing run in the native worker.
+---@param bufnr                         integer
+---@param relpath                       string
+---@param cwd                           string
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with yoz.git.BlameSnapshot
+local function run_blame(bufnr, relpath, cwd, token)
+  return jobs
+    .run(function()
+      if not vim.api.nvim_buf_is_valid(bufnr) then
+        error(CANCELLED, 0)
       end
-      current_info.orig_lnum = tonumber(orig_lnum) or 0
-      current_info.final_lnum = tonumber(final_lnum) or 0
-      current_info.num_lines = tonumber(num_lines) or 1
-      goto continue
-    end
-
-    if current_info then
-      if line:sub(1, 1) == "\t" then
-        if current_sha and current_info then
-          if not commits[current_sha] then
-            commits[current_sha] = current_info
-          end
-          result[current_info.final_lnum] = current_info
-        end
-        current_info = nil
-        goto continue
+      local contents, err = era.m.git.staging.encode(era.m.git.staging.from_buffer(bufnr))
+      if not contents then
+        error(err or "Failed to encode buffer content", 0)
       end
-
-      local key, value = line:match("^([%w-]+)%s+(.*)$")
-      if key then
-        if key == "author" then
-          current_info.author = value
-        elseif key == "author-mail" then
-          current_info.author_mail = value:gsub("^<", ""):gsub(">$", "")
-        elseif key == "author-time" then
-          current_info.author_time = tonumber(value) or 0
-        elseif key == "author-tz" then
-          current_info.author_tz = value
-        elseif key == "committer" then
-          current_info.committer = value
-        elseif key == "committer-mail" then
-          current_info.committer_mail = value:gsub("^<", ""):gsub(">$", "")
-        elseif key == "committer-time" then
-          current_info.committer_time = tonumber(value) or 0
-        elseif key == "committer-tz" then
-          current_info.committer_tz = value
-        elseif key == "summary" then
-          current_info.summary = value
-        elseif key == "previous" then
-          local prev_sha, prev_file = value:match("^(%x+)%s+(.*)$")
-          if prev_sha then
-            current_info.previous = prev_sha
-            current_info.previous_filename = prev_file
-          end
-        elseif key == "filename" then
-          current_info.filename = value
-        end
-      end
-    end
-
-    ::continue::
-  end
-
-  return result
+      return yoz.git.start_blame({ cwd = cwd, path = relpath, contents = contents })
+    end, token)
+    :then_(nil, function(err)
+      error(err == "Operation cancelled" and CANCELLED or err, 0)
+    end)
 end
 
---- Run `git blame --porcelain` for one file. The returned Future ALWAYS settles:
---- resolve(map) on success, reject(err) on a git error, reject(CANCELLED) when the
---- token fires. Settling on cancel is the whole point - the caller's `:finally`
---- runs in every case, so an in-flight marker can never leak (the historical bug).
----@param file                       string
----@param cwd                        string
----@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with table<integer, era.m.git.BlameInfo>
-local function run_blame(file, cwd, token)
-  ---@diagnostic disable-next-line: redundant-parameter -- LuaLS selects the one-argument overload for Future.new.
-  return stl.c.Future.new(function(resolve, reject)
-    if token and token:is_cancelled() then
-      reject(CANCELLED)
-      return
-    end
-
-    local proc = stl.c.Proc.new({
-      cmd = "git",
-      args = { "-C", cwd, "blame", "--porcelain", "--", file },
-      timeout = 30000,
-      on_exit = function(p, err)
-        if err then
-          reject(tostring(p:err() or "git blame failed"))
-          return
-        end
-        resolve(parse_blame_output(p:out()))
-      end,
-    })
-
-    if token then
-      token:on_cancel(function()
-        proc:kill()
-        reject(CANCELLED)
-      end)
-    end
-  end)
-end
-
----@param bufnr                      integer
----@param result                     string
+---@param bufnr                         integer
+---@param result                        string
 local function report_failure(bufnr, result)
   if result == CANCELLED then
     return
@@ -197,12 +92,12 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.m.git.blame.IInlineConfig
----@field public delay               integer
----@field public enabled             boolean
----@field public formatter           string
----@field public hl_group            string
----@field public prefix              string
----@field public priority            integer
+---@field public delay                  integer
+---@field public enabled                boolean
+---@field public formatter              string
+---@field public hl_group               string
+---@field public prefix                 string
+---@field public priority               integer
 local inline_config = {
   delay = 500,
   enabled = true,
@@ -218,7 +113,7 @@ local inline_ns = vim.api.nvim_create_namespace(NS_INLINE)
 ---@type integer
 local inline_augroup = vim.api.nvim_create_augroup("DotModuleGitInlineBlame", { clear = true })
 
----@param info                       era.m.git.BlameInfo
+---@param info                          yoz.git.BlameCommit
 ---@return boolean
 local function is_current_user(info)
   local user_name = era.m.git.state.get_user_name()
@@ -232,57 +127,47 @@ local function is_current_user(info)
   return false
 end
 
----@param info                       era.m.git.BlameInfo
----@param fmt                        string
+---@param info                          yoz.git.BlameCommit
+---@param fmt                           string
 ---@return string
 local function format_blame(info, fmt)
-  local author = info.author or ""
-  if is_current_user(info) then
-    author = "You"
-  end
-
-  local result = fmt
-  result = result:gsub("<author>", author)
-  result = result:gsub("<author_mail>", info.author_mail or "")
-  result = result:gsub("<committer>", info.committer or "")
-  result = result:gsub("<committer_mail>", info.committer_mail or "")
-  result = result:gsub("<summary>", info.summary or "")
-  result = result:gsub("<sha>", info.sha or "")
-  result = result:gsub("<abbrev_sha>", info.abbrev_sha or "")
-  result = result:gsub("<author_time:([^>]+)>", function(date_fmt)
-    if info.author_time and info.author_time > 0 then
-      return os.date(date_fmt, info.author_time) or ""
-    end
-    return ""
-  end)
-  result = result:gsub("<committer_time:([^>]+)>", function(date_fmt)
-    if info.committer_time and info.committer_time > 0 then
-      return os.date(date_fmt, info.committer_time) or ""
-    end
-    return ""
-  end)
-  return result
+  local values = {
+    author = is_current_user(info) and "You" or info.author,
+    author_mail = info.author_mail,
+    committer = info.committer,
+    committer_mail = info.committer_mail,
+    summary = info.summary,
+    sha = info.sha,
+    abbrev_sha = info.abbrev_sha,
+  }
+  -- Metadata is literal text, not a gsub replacement or another formatter template.
+  return (
+    fmt:gsub("<([^>]+)>", function(field)
+      if values[field] ~= nil then
+        return values[field]
+      end
+      local time_field, date_fmt = field:match("^([%w_]+):(.+)$")
+      if time_field == "author_time" or time_field == "committer_time" then
+        return info[time_field] > 0 and (os.date(date_fmt, info[time_field]) or "") or ""
+      end
+    end)
+  )
 end
 
----@param info                       era.m.git.BlameInfo
----@return boolean
-local function is_uncommitted(info)
-  return info.sha:match("^0+$") ~= nil or info.author == "Not Committed Yet"
-end
-
----@param bufnr                      integer
+---@param bufnr                         integer
 local function inline_reset(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
     pcall(vim.api.nvim_buf_del_extmark, bufnr, inline_ns, 1)
   end
 end
 
----@param bufnr                      integer
----@param lnum                       integer
----@param info                       era.m.git.BlameInfo
+---@param bufnr                         integer
+---@param lnum                          integer
+---@param info                          yoz.git.BlameCommit
+---@return nil
 local function inline_set_extmark(bufnr, lnum, info)
   local text = inline_config.prefix
-    .. (is_uncommitted(info) and "Not committed yet" or format_blame(info, inline_config.formatter))
+    .. (info.uncommitted and "Not committed yet" or format_blame(info, inline_config.formatter))
 
   pcall(vim.api.nvim_buf_set_extmark, bufnr, inline_ns, lnum - 1, 0, {
     id = 1,
@@ -297,9 +182,15 @@ end
 --- when the cache misses. Re-reads bufnr/win/lnum/changedtick on every call, so it
 --- is safe to invoke directly OR from a settled blame `:finally` - it never paints
 --- a result against a line/window/content other than the one current right now.
----@param bufnr                      integer
+---@param bufnr                         integer
+---@return nil
 local function inline_update(bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) or vim.api.nvim_get_mode().mode == "i" then
+  if
+    exiting
+    or not inline_config.enabled
+    or not vim.api.nvim_buf_is_valid(bufnr)
+    or vim.api.nvim_get_mode().mode == "i"
+  then
     return
   end
 
@@ -322,8 +213,8 @@ local function inline_update(bufnr)
   local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
 
   local entry = cache[bufnr]
-  if entry and entry.tick == tick then
-    local info = entry.entries[lnum]
+  if entry and entry.tick == tick and entry.owner == buf_cache then
+    local info = entry.snapshot:commit_at(lnum)
     if info then
       inline_set_extmark(bufnr, lnum, info)
     else
@@ -334,13 +225,14 @@ local function inline_update(bufnr)
 
   -- This exact content already failed to blame; don't re-run git / re-report on
   -- every cursor move. A new changedtick (or invalidate) clears the marker and retries.
-  if failed_tick[bufnr] == tick then
+  local failed_entry = failed[bufnr] ---@type era.m.git.blame.IFailedEntry|nil
+  if failed_entry and failed_entry.tick == tick and failed_entry.owner == buf_cache then
     return
   end
 
   -- A run for this exact content is already going; its :finally re-renders.
   local inflight = inline_inflight[bufnr]
-  if inflight and inflight.tick == tick then
+  if inflight and inflight.tick == tick and inflight.owner == buf_cache and not inflight.token:is_cancelled() then
     return
   end
   if inflight then
@@ -348,12 +240,22 @@ local function inline_update(bufnr)
   end
 
   local token = stl.c.CancellationToken.new()
-  inline_inflight[bufnr] = { token = token, tick = tick }
+  inline_inflight[bufnr] = { owner = buf_cache, token = token, tick = tick }
 
-  run_blame(buf_cache.file, buf_cache.repo.toplevel, token):finally(function(ok, result)
+  run_blame(bufnr, buf_cache.relpath, buf_cache.repo.toplevel, token):finally(function(ok, result)
     local current = inline_inflight[bufnr]
-    if current and current.token == token then
-      inline_inflight[bufnr] = nil
+    if not current or current.token ~= token then
+      return
+    end
+    inline_inflight[bufnr] = nil
+
+    if
+      not inline_config.enabled
+      or not vim.api.nvim_buf_is_valid(bufnr)
+      or vim.api.nvim_buf_get_changedtick(bufnr) ~= tick
+      or era.m.git.buffer.get_cache(bufnr) ~= buf_cache
+    then
+      return
     end
 
     if not ok then
@@ -361,14 +263,14 @@ local function inline_update(bufnr)
       -- failed. invalidate (HEAD move / write) cancels the in-flight run WITHOUT bumping
       -- changedtick, so a stale failed marker would suppress the very refresh it requested.
       if result ~= CANCELLED then
-        failed_tick[bufnr] = tick
+        failed[bufnr] = { owner = buf_cache, tick = tick }
       end
       report_failure(bufnr, result)
       return
     end
 
-    failed_tick[bufnr] = nil
-    cache[bufnr] = { tick = tick, entries = result }
+    failed[bufnr] = nil
+    cache[bufnr] = { snapshot = result, owner = buf_cache, tick = tick }
     inline_update(bufnr)
   end)
 end
@@ -424,14 +326,61 @@ local buffer_ns = vim.api.nvim_create_namespace(NS_BUFFER)
 local buffer_augroup = vim.api.nvim_create_augroup("DotModuleGitBufferBlame", { clear = true })
 
 ---@class era.m.git.blame.IBufferConfig
----@field public formatter           string
----@field public hl_group            string
----@field public priority            integer
+---@field public formatter              string
+---@field public hl_group               string
+---@field public priority               integer
 local buffer_config = {
   formatter = "<author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
   hl_group = "m_git_buffer_blame",
   priority = 100,
 }
+
+---@class era.m.git.blame.IPresentation
+---@field public lines                  string[]
+---@field public formatter              string
+---@field public user_name              ?string
+---@field public user_email             ?string
+---@field public timezone               ?string
+---@field public zone                   ?string
+---@field public locale                 ?string
+
+---Only rendered text is cached in Lua; source blame data remains in the native snapshot.
+---@param entry                         era.m.git.blame.ICacheEntry
+---@return string[]
+local function buffer_annotations(entry)
+  local user_name = era.m.git.state.get_user_name()
+  local user_email = era.m.git.state.get_user_email()
+  local timezone = vim.env.TZ
+  local zone = os.date("%z:%Z")
+  local locale = os.setlocale(nil, "time")
+  local presentation = entry.presentation
+  if
+    presentation
+    and presentation.formatter == buffer_config.formatter
+    and presentation.user_name == user_name
+    and presentation.user_email == user_email
+    and presentation.timezone == timezone
+    and presentation.zone == zone
+    and presentation.locale == locale
+  then
+    return presentation.lines
+  end
+  local labels = {} ---@type string[]
+  for index, info in ipairs(entry.snapshot:commits()) do
+    labels[index] = "    " .. (info.uncommitted and "Not committed yet" or format_blame(info, buffer_config.formatter))
+  end
+  local lines = entry.snapshot:annotations(labels)
+  entry.presentation = {
+    lines = lines,
+    formatter = buffer_config.formatter,
+    user_name = user_name,
+    user_email = user_email,
+    timezone = timezone,
+    zone = zone,
+    locale = locale,
+  }
+  return lines
+end
 
 ---@type table<integer, boolean>
 local buffer_enabled = {}
@@ -439,29 +388,29 @@ local buffer_enabled = {}
 ---@type table<integer, integer>
 local buffer_current_lnum = {}
 
----@param bufnr                      integer
+---@param bufnr                         integer
 local function buffer_clear(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
     pcall(vim.api.nvim_buf_clear_namespace, bufnr, buffer_ns, 0, -1)
   end
 end
 
----@param bufnr                      integer
----@param entries                    table<integer, era.m.git.BlameInfo>
----@param skip_lnum                  integer|nil
-local function buffer_render(bufnr, entries, skip_lnum)
+---@param bufnr                         integer
+---@param entry                         era.m.git.blame.ICacheEntry
+---@param skip_lnum                     ?integer
+---@return nil
+local function buffer_render(bufnr, entry, skip_lnum)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
   buffer_clear(bufnr)
 
+  local annotations = buffer_annotations(entry)
   local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
   for lnum = 1, line_count do
-    local info = entries[lnum]
-    if lnum ~= skip_lnum and info then
-      local text = "    "
-        .. (is_uncommitted(info) and "Not committed yet" or format_blame(info, buffer_config.formatter))
+    local text = annotations[lnum]
+    if lnum ~= skip_lnum and text then
       pcall(vim.api.nvim_buf_set_extmark, bufnr, buffer_ns, lnum - 1, 0, {
         virt_text = { { text, buffer_config.hl_group } },
         virt_text_win_col = 80,
@@ -472,7 +421,7 @@ local function buffer_render(bufnr, entries, skip_lnum)
   end
 end
 
----@param bufnr                      integer
+---@param bufnr                         integer
 ---@return integer|nil
 local function buffer_cursor_lnum(bufnr)
   local winnr = vim.fn.bufwinid(bufnr) ---@type integer
@@ -484,9 +433,10 @@ end
 
 --- Render the overlay from the changedtick-valid cache, fetching blame when the
 --- cache is missing or stale for the current content.
----@param bufnr                      integer
+---@param bufnr                         integer
+---@return nil
 local function buffer_render_or_fetch(bufnr)
-  if not buffer_enabled[bufnr] or not vim.api.nvim_buf_is_valid(bufnr) then
+  if exiting or not buffer_enabled[bufnr] or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
@@ -499,20 +449,21 @@ local function buffer_render_or_fetch(bufnr)
   local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
 
   local entry = cache[bufnr]
-  if entry and entry.tick == tick then
+  if entry and entry.tick == tick and entry.owner == buf_cache then
     local lnum = buffer_cursor_lnum(bufnr)
     buffer_current_lnum[bufnr] = lnum or 0
-    buffer_render(bufnr, entry.entries, lnum)
+    buffer_render(bufnr, entry, lnum)
     return
   end
 
   -- Same content already failed; skip the re-run/re-report (see inline_update).
-  if failed_tick[bufnr] == tick then
+  local failed_entry = failed[bufnr] ---@type era.m.git.blame.IFailedEntry|nil
+  if failed_entry and failed_entry.tick == tick and failed_entry.owner == buf_cache then
     return
   end
 
   local inflight = buffer_inflight[bufnr]
-  if inflight and inflight.tick == tick then
+  if inflight and inflight.tick == tick and inflight.owner == buf_cache and not inflight.token:is_cancelled() then
     return
   end
   if inflight then
@@ -520,37 +471,48 @@ local function buffer_render_or_fetch(bufnr)
   end
 
   local token = stl.c.CancellationToken.new()
-  buffer_inflight[bufnr] = { token = token, tick = tick }
+  buffer_inflight[bufnr] = { owner = buf_cache, token = token, tick = tick }
 
-  run_blame(buf_cache.file, buf_cache.repo.toplevel, token):finally(function(ok, result)
+  run_blame(bufnr, buf_cache.relpath, buf_cache.repo.toplevel, token):finally(function(ok, result)
     local current = buffer_inflight[bufnr]
-    if current and current.token == token then
-      buffer_inflight[bufnr] = nil
+    if not current or current.token ~= token then
+      return
+    end
+    buffer_inflight[bufnr] = nil
+
+    if
+      not buffer_enabled[bufnr]
+      or not vim.api.nvim_buf_is_valid(bufnr)
+      or vim.api.nvim_buf_get_changedtick(bufnr) ~= tick
+      or era.m.git.buffer.get_cache(bufnr) ~= buf_cache
+    then
+      return
     end
 
     if not ok then
-      if result ~= CANCELLED then -- never let a cancel poison failed_tick (see inline_update)
-        failed_tick[bufnr] = tick
+      if result ~= CANCELLED then -- never let a cancel poison the failure cache (see inline_update)
+        failed[bufnr] = { owner = buf_cache, tick = tick }
       end
       report_failure(bufnr, result)
       return
     end
 
-    failed_tick[bufnr] = nil
-    cache[bufnr] = { tick = tick, entries = result }
+    failed[bufnr] = nil
+    cache[bufnr] = { snapshot = result, owner = buf_cache, tick = tick }
     buffer_render_or_fetch(bufnr)
   end)
 end
 
----@param bufnr                      integer
+---@param bufnr                         integer
+---@return nil
 local function buffer_update_current_line(bufnr)
-  if not buffer_enabled[bufnr] then
+  if exiting or not buffer_enabled[bufnr] then
     return
   end
 
   local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
   local entry = cache[bufnr]
-  if not entry or entry.tick ~= tick then
+  if not entry or entry.tick ~= tick or entry.owner ~= era.m.git.buffer.get_cache(bufnr) then
     buffer_render_or_fetch(bufnr) -- stale/missing: re-blame against current content
     return
   end
@@ -561,7 +523,7 @@ local function buffer_update_current_line(bufnr)
   end
 
   buffer_current_lnum[bufnr] = lnum
-  buffer_render(bufnr, entry.entries, lnum)
+  buffer_render(bufnr, entry, lnum)
 end
 
 ---@type stl.timer.IDisposableCallable
@@ -580,7 +542,7 @@ local function buffer_setup_autocmds()
   })
 end
 
----@param bufnr                      integer|nil
+---@param bufnr                         integer|nil
 function M.buffer_hide(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   buffer_enabled[bufnr] = nil
@@ -592,7 +554,7 @@ function M.buffer_hide(bufnr)
   buffer_clear(bufnr)
 end
 
----@param bufnr                      integer|nil
+---@param bufnr                         integer|nil
 function M.buffer_show(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -606,7 +568,7 @@ function M.buffer_show(bufnr)
   buffer_render_or_fetch(bufnr)
 end
 
----@param bufnr                      integer|nil
+---@param bufnr                         integer|nil
 function M.buffer_toggle(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   if buffer_enabled[bufnr] then
@@ -626,10 +588,10 @@ end
 --- computed against the pre-invalidate content/HEAD, and because changedtick is
 --- unchanged it would otherwise coalesce and backfill the cache with that stale
 --- result, defeating the invalidate.
----@param bufnr                      integer
+---@param bufnr                         integer
 function M.invalidate(bufnr)
   cache[bufnr] = nil
-  failed_tick[bufnr] = nil -- content/HEAD changed: a previously-failed blame may now succeed
+  failed[bufnr] = nil -- content/HEAD changed: a previously-failed blame may now succeed
 
   local inline_run = inline_inflight[bufnr]
   if inline_run then
@@ -640,6 +602,8 @@ function M.invalidate(bufnr)
     buffer_run.token:cancel()
   end
 
+  inline_reset(bufnr)
+
   if buffer_enabled[bufnr] then
     buffer_render_or_fetch(bufnr)
   end
@@ -648,7 +612,6 @@ function M.invalidate(bufnr)
   -- so only the active buffer schedules an inline refresh here; other buffers repaint
   -- on their next CursorMoved.
   if inline_config.enabled and bufnr == vim.api.nvim_get_current_buf() and era.m.git.buffer.is_attached(bufnr) then
-    inline_reset(bufnr)
     inline_update_debounced(bufnr)
   end
 end
@@ -680,9 +643,9 @@ function M.invalidate_all()
     add(bufnr)
   end
   -- Also revisit buffers that ONLY hold a failed marker (no cache/inflight/overlay):
-  -- otherwise a HEAD move can't clear failed_tick and the negative cache would suppress
+  -- otherwise a HEAD move can't clear the failure cache, which would suppress
   -- the post-move re-blame on the unchanged changedtick.
-  for bufnr in pairs(failed_tick) do
+  for bufnr in pairs(failed) do
     add(bufnr)
   end
 
@@ -705,8 +668,8 @@ end
 --- cache stays valid - clearing only failures avoids a needless re-blame/flicker.
 ---@return nil
 function M.clear_failed()
-  for bufnr in pairs(failed_tick) do
-    failed_tick[bufnr] = nil
+  for bufnr in pairs(failed) do
+    failed[bufnr] = nil
   end
 end
 
@@ -717,12 +680,20 @@ function M.inline_toggle()
   inline_config.enabled = not inline_config.enabled
   inline_setup_autocmds()
   if not inline_config.enabled then
-    for bufnr in pairs(cache) do
+    local runs = {} ---@type era.m.git.blame.IInflight[]
+    for _, run in pairs(inline_inflight) do
+      runs[#runs + 1] = run
+    end
+    for _, run in ipairs(runs) do
+      run.token:cancel()
+    end
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
       inline_reset(bufnr)
     end
   end
 end
 
+---@return nil
 function M.setup()
   inline_setup_autocmds()
   buffer_setup_autocmds()
@@ -731,7 +702,21 @@ function M.setup()
   -- write-invalidation. After a write the on-disk file changed but changedtick did
   -- not, so the cache must be dropped explicitly.
   vim.api.nvim_clear_autocmds({ group = invalidate_augroup })
-  vim.api.nvim_create_autocmd("BufWritePost", {
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = invalidate_augroup,
+    callback = function()
+      exiting = true
+      inline_update_debounced:dispose()
+      buffer_update_debounced:dispose()
+      for _, run in pairs(inline_inflight) do
+        run.token:cancel()
+      end
+      for _, run in pairs(buffer_inflight) do
+        run.token:cancel()
+      end
+    end,
+  })
+  vim.api.nvim_create_autocmd({ "BufWritePost", "BufFilePost" }, {
     group = invalidate_augroup,
     callback = function(args)
       M.invalidate(args.buf)
@@ -754,7 +739,7 @@ function M.setup()
         buffer_run.token:cancel()
       end
       cache[bufnr] = nil
-      failed_tick[bufnr] = nil
+      failed[bufnr] = nil
       buffer_enabled[bufnr] = nil
       buffer_current_lnum[bufnr] = nil
     end,

@@ -2,10 +2,7 @@
 -- Core types
 ----------------------------------------------------------------------------------------------------
 
----@alias era.m.git.HunkType
----| "add"
----| "change"
----| "delete"
+---@alias era.m.git.HunkType yoz.git.HunkType
 
 ---@alias era.m.git.SignType
 ---| "add"
@@ -25,25 +22,12 @@
 -- Hunk types
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.git.Document
+---@class era.m.git.Document : yoz.git.TextDocument
 ---@field public bomb                   boolean
 ---@field public encoding               string
----@field public eol                    string
----@field public lines                  string[]
----@field public text                   string
 
----@class era.m.git.Hunk
----@field public added                  era.m.git.HunkNode
----@field public head                   string
----@field public removed                era.m.git.HunkNode
----@field public type                   era.m.git.HunkType
----@field public vend                   integer
-
----@class era.m.git.HunkNode
----@field public count                  integer
----@field public lines                  string[]
----@field public no_nl_at_eof           ?boolean
----@field public start                  integer
+---@alias era.m.git.Hunk yoz.git.Hunk
+---@alias era.m.git.HunkNode yoz.git.HunkNode
 
 ---@class era.m.git.HunkSummary
 ---@field public added                  integer
@@ -111,89 +95,21 @@
 -- Blame types
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.git.BlameInfo
----@field public abbrev_sha             string
----@field public author                 string
----@field public author_mail            string
----@field public author_time            integer
----@field public author_tz              string
----@field public committer              string
----@field public committer_mail         string
----@field public committer_time         integer
----@field public committer_tz           string
----@field public filename               string
----@field public final_lnum             integer
----@field public num_lines              integer
----@field public orig_lnum              integer
----@field public previous               ?string
----@field public previous_filename      ?string
----@field public sha                    string
----@field public summary                string
+---@alias era.m.git.BlameInfo yoz.git.BlameInfo
 
 ----------------------------------------------------------------------------------------------------
 -- Status types
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.git.status.ICollectOpts
----@field public base                   ?string
----@field public include_numstat        ?boolean
----@field public include_untracked      ?boolean
-
----@class era.m.git.status.INumstat
----@field public insertions             integer
----@field public deletions              integer
-
----@class era.m.git.status.ICollectResult
----@field public status_map             table<string, era.m.git.StatusEntry>
----@field public status_groups          table<string, table<string, boolean>>
----@field public numstats               { staged: table<string, era.m.git.status.INumstat>, unstaged: table<string, era.m.git.status.INumstat> }|nil
+---@alias era.m.git.status.ICollectOpts yoz.git.IStatusOptions
+---@alias era.m.git.status.INumstat yoz.git.Numstat
+---@alias era.m.git.status.ICollectResult yoz.git.StatusData
+---@alias era.m.git.StatusEntry yoz.git.StatusEntry
 
 ---@alias era.m.git.StatusChangeScope "index"|"unknown"
 
 ---@class era.m.git.state.IRefreshEvent
 ---@field public change_scope           era.m.git.StatusChangeScope
 ---@field public generation             integer
-
----@class era.m.git.StatusEntry
----@field public categories             table<string, boolean>
----@field public codes                  table<string, boolean>
----@field public display                string
----@field public path                   string
----@field public relative               string
----@field public stage                  era.m.git.StageState
----@field public staged                 table<string, boolean>
----@field public staged_bits            integer
----@field public staged_display         string
----@field public staged_new_object_name string|nil
----@field public staged_old_object_name string|nil
----@field public staged_prev_relative   string|nil
----@field public summary                ?string
----@field public unstaged               table<string, boolean>
----@field public unstaged_bits          integer
----@field public unstaged_display       string
----@field public unstaged_new_object_name string|nil
----@field public unstaged_old_object_name string|nil
----@field public unstaged_prev_relative string|nil
-
-----------------------------------------------------------------------------------------------------
--- Aggregated cache types
-----------------------------------------------------------------------------------------------------
-
----@class era.m.git.status.IAggregatedCache
----@field public dir_cache              table<string, era.m.git.status.IDirInfo|false>
----@field public file_display           table<string, string>
----@field public file_stage             table<string, era.m.git.StageState>
----@field public file_summary           table<string, string|nil>
----@field public staged_files           string[]
----@field public status_table           table<string, era.m.git.StatusEntry>
----@field public unstaged_files         string[]
-
----@class era.m.git.status.IDirInfo
----@field public codes                  table<string, boolean>
----@field public display                string
----@field public stage                  era.m.git.StageState
----@field public summary                ?string
-
-----------------------------------------------------------------------------------------------------
 
 return {}

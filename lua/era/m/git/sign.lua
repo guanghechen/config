@@ -29,9 +29,16 @@ local config = {
 ---@field protected _ns                 integer
 ---@field protected _config             table<era.m.git.SignType, { text: string, hl: string }>
 ---@field protected _priority           integer
----@field protected _hl_to_type         table<string, era.m.git.SignType>
+---@field protected _key_to_type        table<string, era.m.git.SignType>
 local Signs = {}
 Signs.__index = Signs
+
+---@param text                          string
+---@param hl                            string
+---@return string
+local function sign_key(text, hl)
+  return text:gsub("%s+$", "") .. "\0" .. hl
+end
 
 ---@param staged                        boolean|nil
 ---@return era.m.git.sign.ISigns
@@ -41,9 +48,9 @@ function Signs.__new__(staged)
   self._config = staged and config.signs_staged or config.signs
   self._priority = staged and config.priority_staged or config.priority
 
-  self._hl_to_type = {}
+  self._key_to_type = {}
   for sign_type, sign_config in pairs(self._config) do
-    self._hl_to_type[sign_config.hl] = sign_type
+    self._key_to_type[sign_key(sign_config.text, sign_config.hl)] = sign_type
   end
 
   return self
@@ -84,7 +91,6 @@ function Signs:add(bufnr, signs, filter)
       local text = self._config[sign.type] and self._config[sign.type].text ---@type string|nil
       if text then
         pcall(vim.api.nvim_buf_set_extmark, bufnr, self._ns, line, 0, {
-          id = lnum,
           priority = self._priority,
           sign_text = text,
           sign_hl_group = self._config[sign.type].hl,
@@ -124,23 +130,28 @@ function Signs:reset()
   end
 end
 
-----------------------------------------------------------------------------------------------------
+---@class era.m.git.sign.IExtmark
+---@field public id                     integer
+---@field public type                   era.m.git.SignType
 
 ---@param bufnr                         integer
----@return table<integer, era.m.git.SignType>
+---@return table<integer, era.m.git.sign.IExtmark>
 function Signs:__get_extmarks__(bufnr)
-  local result = {} ---@type table<integer, era.m.git.SignType>
+  local result = {} ---@type table<integer, era.m.git.sign.IExtmark>
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return result
   end
 
   local marks = vim.api.nvim_buf_get_extmarks(bufnr, self._ns, 0, -1, { details = true })
   for _, mark in ipairs(marks) do
+    local id = mark[1] ---@type integer
     local lnum = mark[2] + 1 ---@type integer
     local details = mark[4] ---@type table
+    local text = details.sign_text ---@type string|nil
     local hl = details.sign_hl_group ---@type string|nil
-    if hl and self._hl_to_type[hl] then
-      result[lnum] = self._hl_to_type[hl]
+    local sign_type = text and hl and self._key_to_type[sign_key(text, hl)] or nil ---@type era.m.git.SignType|nil
+    if sign_type then
+      result[lnum] = { id = id, type = sign_type }
     end
   end
 
@@ -168,12 +179,12 @@ function Signs:__update_incremental__(bufnr, new_signs, filter)
   local to_remove = {} ---@type integer[]
   local to_add = {} ---@type era.m.git.Sign[]
 
-  for lnum, old_type in pairs(old_signs) do
+  for lnum, old_sign in pairs(old_signs) do
     local new_type = new_signs_map[lnum]
     if not new_type then
-      to_remove[#to_remove + 1] = lnum
-    elseif new_type ~= old_type then
-      to_remove[#to_remove + 1] = lnum
+      to_remove[#to_remove + 1] = old_sign.id
+    elseif new_type ~= old_sign.type then
+      to_remove[#to_remove + 1] = old_sign.id
       to_add[#to_add + 1] = { lnum = lnum, type = new_type }
     end
   end
@@ -184,8 +195,8 @@ function Signs:__update_incremental__(bufnr, new_signs, filter)
     end
   end
 
-  for _, lnum in ipairs(to_remove) do
-    pcall(vim.api.nvim_buf_del_extmark, bufnr, self._ns, lnum)
+  for _, id in ipairs(to_remove) do
+    pcall(vim.api.nvim_buf_del_extmark, bufnr, self._ns, id)
   end
 
   for _, sign in ipairs(to_add) do
@@ -194,7 +205,6 @@ function Signs:__update_incremental__(bufnr, new_signs, filter)
     local text = self._config[sign.type] and self._config[sign.type].text ---@type string|nil
     if text then
       pcall(vim.api.nvim_buf_set_extmark, bufnr, self._ns, line, 0, {
-        id = lnum,
         priority = self._priority,
         sign_text = text,
         sign_hl_group = self._config[sign.type].hl,

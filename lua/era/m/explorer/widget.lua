@@ -730,9 +730,7 @@ end
 ---@param direction                     "prev"|"next"
 ---@return nil
 function M:__goto_git_changed__(direction)
-  local aggregated = era.m.git.state.aggregated() ---@type era.m.git.status.IAggregatedCache
-  local staged_files = aggregated.staged_files ---@type string[]
-  local unstaged_files = aggregated.unstaged_files ---@type string[]
+  local staged_files, unstaged_files = era.m.git.state.snapshot():changed_files() ---@type string[], string[]
 
   if #staged_files == 0 and #unstaged_files == 0 then
     stl.reporter.info({

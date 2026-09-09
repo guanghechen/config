@@ -34,6 +34,17 @@ Four global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
 Standalone `yoz-im` crate owning macOS, Windows, and WSL input-method backends. It also owns the
 repository-built Windows bridge used by WSL; the crate has no dependency on Lua or `rust/yoz`.
 
+### `rust/git` (Git Domain)
+
+Standalone `yoz-git` crate owning cancellable Git status/ignore/blame queries, byte-oriented protocol parsing,
+immutable status/blame snapshots, the ignore cache, and pure staging calculations (EOL normalization,
+Unicode codecs/BOM, selection projection and byte reconstruction), plus word-diff byte preparation and
+highlight-range projection. It has no Lua or Neovim dependency.
+`rust/yoz/src/git.rs` provides the Lua binding; `era.m.git` owns editor lifecycle, refresh scheduling,
+and presentation. Staging/word-diff calculations are synchronous; buffer capture, legacy iconv codecs, histogram
+diff and serialized index writes remain in Lua. The binding bounds live Lua references and avoids
+intermediate selected-hunk tables.
+
 ### `lua/yoz` (Rust Native Module)
 
 Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
@@ -44,6 +55,7 @@ Submodules:
 - `yoz.find`: file finding (fd-like)
 - `yoz.fn`: utility functions (uuid, md5)
 - `yoz.fs`: filesystem operations (collect_files, readdir, move, get_filesize)
+- `yoz.git`: asynchronous status/ignore/blame jobs, immutable snapshots, ignore cache and pure staging helpers
 - `yoz.im`: Lua adapter for the `rust/im` source-oriented capture/restore contract
 - `yoz.path`: path handling (normalize, join, relative, resolve, split, basename)
 - `yoz.replace`: text replacement with regex support and preview

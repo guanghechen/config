@@ -283,12 +283,13 @@ end
 
 ---Fetch diff entries (staged and unstaged files).
 ---@async
----@param token                       ?stl.c.CancellationToken
+---@param token                         ?stl.c.CancellationToken
 ---@return era.m.diffview.IFileEntry[]
 function M.fetch_diff_entries(token)
   check_token(token)
 
-  local result = era.m.git.status.collect({ include_numstat = true }, token):await()
+  local snapshot = era.m.git.status.collect({ include_numstat = true }, token):await() ---@type yoz.git.StatusSnapshot
+  local result = snapshot:export()
   local status_map = result and result.status_map or nil
 
   check_token(token)

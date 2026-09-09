@@ -15,6 +15,22 @@ local cache = {}
 ---@type era.m.git.Repo|nil
 local repo = nil
 
+---@type table<integer, table>
+local attach_owners = {}
+
+--- The Neovim listener follows buffer lifetime; Git cache ownership follows the
+--- current pathname and may be rebound by BufFilePost.
+---@type table<integer, true>
+local buffer_listeners = {}
+
+---@param bufnr                      integer
+---@return table
+local function claim_attach(bufnr)
+  local owner = {} ---@type table
+  attach_owners[bufnr] = owner
+  return owner
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Update lock mechanism
 -- Prevents concurrent updates to the same buffer and queues pending updates
@@ -273,7 +289,7 @@ local function update_hunks(buf_cache)
     end
 
     local function finish()
-      if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
+      if not vim.api.nvim_buf_is_valid(bufnr) or cache[bufnr] ~= buf_cache then
         lock.running = false
         lock.scheduled = false
         -- Resolve all pending resolvers
@@ -294,7 +310,7 @@ local function update_hunks(buf_cache)
       buf_cache.untracked = buf_cache.object_name == nil
 
       local function on_diff_complete()
-        if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
+        if not vim.api.nvim_buf_is_valid(bufnr) or cache[bufnr] ~= buf_cache then
           lock.running = false
           lock.scheduled = false
           -- Resolve all pending resolvers
@@ -406,44 +422,136 @@ local function update_hunks(buf_cache)
 end
 
 ---@param bufnr                      integer
+---@return string|nil
+local function resolve_attach_file(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return nil
+  end
+
+  if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ~= "" then
+    return nil
+  end
+
+  local file = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  if file == "" or not dot.path.is_git_repo() then
+    return nil
+  end
+
+  file = dot.path.normalize(file)
+  local workspace = dot.path.normalize(dot.path.workspace()) ---@type string
+  return yoz.path.is_descendant(workspace, file) and file or nil
+end
+
+---@param bufnr                      integer
+---@return boolean
+local function ensure_buffer_listener(bufnr)
+  if buffer_listeners[bufnr] then
+    return true
+  end
+
+  local ok = vim.api.nvim_buf_attach(bufnr, false, {
+    on_detach = function(_, buf)
+      buffer_listeners[buf] = nil
+      M.detach(buf)
+    end,
+    on_lines = function(_, buf, _, first, last_orig, last_new)
+      local buf_cache = cache[buf]
+      if not buf_cache then
+        return
+      end
+
+      era.m.git.sign.on_lines(buf, last_orig, last_new)
+
+      local check_start = first + 1 ---@type integer
+      local check_end = math.max(last_orig, last_new) ---@type integer
+      if buf_cache.hunks and era.m.git.sign.contains_range(buf, check_start, check_end) then
+        buf_cache.force_next_update = true
+      elseif buf_cache.hunks_staged and era.m.git.sign.contains_range(buf, check_start, check_end) then
+        buf_cache.force_next_update = true
+      end
+
+      if is_buf_visible(buf) and buf_cache.update_throttled then
+        buf_cache.update_throttled()
+      else
+        buf_cache.dirty = true
+      end
+    end,
+    on_reload = function(_, buf)
+      local buf_cache = cache[buf]
+      if not buf_cache then
+        return
+      end
+      buf_cache.force_next_update = true
+      if is_buf_visible(buf) and buf_cache.update_throttled then
+        buf_cache.update_throttled()
+      else
+        buf_cache.dirty = true
+      end
+    end,
+  })
+
+  if ok then
+    buffer_listeners[bufnr] = true
+  end
+  return ok
+end
+
+---@param bufnr                      integer
 ---@param opts                       { force: boolean|nil }|nil
 ---@return boolean
 function M.attach(bufnr, opts)
   opts = opts or {}
 
-  if cache[bufnr] and not opts.force then
+  local file = resolve_attach_file(bufnr) ---@type string|nil
+  if not file then
+    M.detach(bufnr)
+    return false
+  end
+
+  local current = cache[bufnr] ---@type era.m.git.buffer.ICache|nil
+  if current and current.file == file and not opts.force then
     return true
   end
-
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return false
+  if current then
+    M.detach(bufnr)
   end
-
-  if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ~= "" then
-    return false
-  end
-
-  local file = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  if file == "" then
-    return false
-  end
-
-  file = dot.path.normalize(file)
-
-  if not yoz.path.is_exist(file) then
-    return false
-  end
-
-  if not dot.path.is_git_repo() then
-    return false
-  end
+  local owner = claim_attach(bufnr) ---@type table
 
   local function do_attach(r)
-    if not r then
+    if attach_owners[bufnr] ~= owner then
       return
     end
 
-    if not vim.api.nvim_buf_is_valid(bufnr) then
+    ---@return nil
+    local function abandon()
+      if attach_owners[bufnr] == owner then
+        attach_owners[bufnr] = nil
+      end
+    end
+
+    if not r then
+      abandon()
+      return
+    end
+
+    if resolve_attach_file(bufnr) ~= file then
+      abandon()
+      return
+    end
+
+    if not yoz.path.is_descendant(r.toplevel, file) then
+      abandon()
+      return
+    end
+
+    if not ensure_buffer_listener(bufnr) then
+      stl.reporter.warn({
+        from = __module_name__,
+        subject = "attach",
+        message = "Failed to attach buffer listener",
+        details = { bufnr = bufnr, file = file },
+      })
+      abandon()
       return
     end
 
@@ -477,61 +585,7 @@ function M.attach(bufnr, opts)
     end, THROTTLE_MS)
 
     cache[bufnr] = buf_cache
-
-    local ok = vim.api.nvim_buf_attach(bufnr, false, {
-      on_detach = function(_, buf)
-        M.detach(buf)
-      end,
-      on_lines = function(_, buf, _, first, last_orig, last_new)
-        local bc = cache[buf]
-        if not bc then
-          return
-        end
-
-        era.m.git.sign.on_lines(buf, last_orig, last_new)
-
-        -- Check if the modified range intersects with existing signs
-        -- first is 0-indexed, convert to 1-indexed for sign checking
-        -- Use max(last_orig, last_new) to cover both insertion and deletion cases
-        local check_start = first + 1 ---@type integer
-        local check_end = math.max(last_orig, last_new) ---@type integer
-        if bc.hunks and era.m.git.sign.contains_range(buf, check_start, check_end) then
-          bc.force_next_update = true
-        elseif bc.hunks_staged and era.m.git.sign.contains_range(buf, check_start, check_end) then
-          bc.force_next_update = true
-        end
-
-        if is_buf_visible(buf) and bc.update_throttled then
-          bc.update_throttled()
-        else
-          bc.dirty = true
-        end
-      end,
-      on_reload = function(_, buf)
-        local bc = cache[buf]
-        if not bc then
-          return
-        end
-        bc.force_next_update = true
-        if is_buf_visible(buf) and bc.update_throttled then
-          bc.update_throttled()
-        else
-          bc.dirty = true
-        end
-      end,
-    })
-
-    if not ok then
-      stl.reporter.warn({
-        from = "era.m.git.buffer",
-        subject = "attach",
-        message = "Failed to attach buffer",
-        details = { bufnr = bufnr, file = file },
-      })
-      M.detach(bufnr)
-      return
-    end
-
+    attach_owners[bufnr] = nil
     refresh_dirty_if_visible(bufnr)
   end
 
@@ -554,7 +608,9 @@ function M.attach(bufnr, opts)
 end
 
 ---@param bufnr                      integer
+---@return nil
 function M.detach(bufnr)
+  attach_owners[bufnr] = nil
   local buf_cache = cache[bufnr]
   if not buf_cache then
     return
@@ -681,7 +737,7 @@ function M.refresh(bufnr, invalidate_index)
 
     if invalidate_index then
       stl.git.info.get_file_info(buf_cache.repo.toplevel, buf_cache.relpath):finally(function(resolved, result)
-        if not cache[bufnr] then
+        if cache[bufnr] ~= buf_cache then
           resolve(nil)
           return
         end
@@ -717,9 +773,6 @@ function M.refresh(bufnr, invalidate_index)
     end
   end)
 end
-
----@type table<string, boolean>
-local index_writes = {}
 
 ---@param on_error                      fun(err: string): nil
 ---@param callback                      function
@@ -892,50 +945,26 @@ local function write_index_document(toplevel, relpath, document, mode_bits, add)
   end)
 end
 
----@param key                           string
+---@param toplevel                      string
 ---@param task                          fun(finish: fun(result: { ok: boolean, err: string|nil }): nil): nil
 ---@return stl.c.Future
-local function with_index_write(key, task)
-  return stl.c.Future.new(function(resolve)
-    if index_writes[key] then
-      resolve({ ok = false, err = "Another hunk write is already running for this file" })
-      return
-    end
-    index_writes[key] = true
+local function with_index_write(toplevel, task)
+  return era.m.git.index.run(toplevel, function(resolve)
     local finished = false ---@type boolean
+    ---@param result                    { ok: boolean, err: string|nil }
     local function finish(result)
       if finished then
         return
       end
       finished = true
-      index_writes[key] = nil
       resolve(result)
     end
+
     local ok, err = pcall(task, finish)
     if not ok then
       finish({ ok = false, err = tostring(err) })
     end
   end)
-end
-
----@param hunks                         era.m.git.Hunk[]
----@param range                         { [1]: integer, [2]: integer }
----@param partial                       boolean
----@return era.m.git.Hunk[]
-local function select_hunks(hunks, range, partial)
-  local selected = {} ---@type era.m.git.Hunk[]
-  for _, hunk in ipairs(hunks) do
-    if partial then
-      local intersected = era.m.git.staging.intersect(hunk, range[1], range[2])
-      if intersected then
-        selected[#selected + 1] = intersected
-      end
-    elseif era.m.git.staging.touches(hunk, range[1], range[2]) then
-      selected[1] = hunk
-      break
-    end
-  end
-  return selected
 end
 
 ---@param bufnr                      integer
@@ -953,8 +982,8 @@ function M.reset_buffer(bufnr)
   return true
 end
 
----@param bufnr                      integer
----@param range                      ?{ [1]: integer, [2]: integer }
+---@param bufnr                         integer
+---@param range                         ?{ [1]: integer, [2]: integer }
 ---@return boolean
 ---@return string|nil
 function M.reset_hunk(bufnr, range)
@@ -974,20 +1003,11 @@ function M.reset_hunk(bufnr, range)
     range = { lnum, lnum }
   end
 
-  local untouched = {} ---@type era.m.git.Hunk[]
-  local touched = false ---@type boolean
-  for _, hunk in ipairs(hunks) do
-    if era.m.git.staging.touches(hunk, range[1], range[2]) then
-      touched = true
-    else
-      untouched[#untouched + 1] = hunk
-    end
-  end
-  if not touched then
+  local text = era.m.git.staging.apply_selection(index_document, buffer_document, hunks, range[1], range[2], "reset")
+  if text == nil then
     return false, "No hunk at cursor"
   end
 
-  local text = era.m.git.staging.apply_line_changes(index_document, buffer_document, untouched) ---@type string
   era.m.git.staging.replace_buffer_text(bufnr, text)
   return true, nil
 end
@@ -995,17 +1015,24 @@ end
 ---@param bufnr                      integer
 ---@return stl.c.Future              Resolves with boolean (success)
 function M.stage_buffer(bufnr)
-  return stl.c.Future.new(function(resolve)
-    local buf_cache = cache[bufnr]
-    if not buf_cache then
-      resolve(false)
-      return
-    end
+  local buf_cache = cache[bufnr]
+  if not buf_cache then
+    return stl.c.Future.resolve(false)
+  end
 
-    local relpath = buf_cache.relpath
-    stl.git.act.stage_file(buf_cache.repo.toplevel, relpath):finally(function(resolved, ok)
-      resolve(resolved and ok == true)
+  local toplevel = buf_cache.repo.toplevel ---@type string
+  local relpath = buf_cache.relpath ---@type string
+  return with_index_write(toplevel, function(finish)
+    stl.git.act.stage_file(toplevel, relpath):finally(function(resolved, ok)
+      local success = resolved and ok == true ---@type boolean
+      local err = nil ---@type string|nil
+      if not success then
+        err = tostring(ok or "Failed to stage file")
+      end
+      finish({ ok = success, err = err })
     end)
+  end):map(function(result)
+    return result.ok
   end)
 end
 
@@ -1020,8 +1047,7 @@ end
 ---@param opts                          era.m.git.buffer.IStageRangeOpts
 ---@return stl.c.Future
 function M.stage_range(opts)
-  local key = opts.toplevel .. "\0" .. opts.relpath ---@type string
-  return with_index_write(key, function(finish)
+  return with_index_write(opts.toplevel, function(finish)
     load_index_context(opts.toplevel, opts.relpath, opts.buffer_document):finally(protected_callback(function(err)
       finish({ ok = false, err = err })
     end, function(loaded, context)
@@ -1040,13 +1066,19 @@ function M.stage_range(opts)
       end
 
       local hunks = era.m.git.diff.run_diff(index_document.lines, opts.buffer_document.lines) ---@type era.m.git.Hunk[]
-      local selected = select_hunks(hunks, opts.range, opts.partial) ---@type era.m.git.Hunk[]
-      if #selected == 0 then
+      local text = era.m.git.staging.apply_selection(
+        index_document,
+        opts.buffer_document,
+        hunks,
+        opts.range[1],
+        opts.range[2],
+        opts.partial and "stage_partial" or "stage"
+      )
+      if text == nil then
         finish({ ok = false, err = "The selection range does not contain any changes" })
         return
       end
 
-      local text = era.m.git.staging.apply_line_changes(index_document, opts.buffer_document, selected) ---@type string
       local document = document_with_text(opts.buffer_document, text) ---@type era.m.git.Document
       write_index_document(opts.toplevel, opts.relpath, document, context.mode_bits, context.add):finally(
         protected_callback(function(err)
@@ -1110,8 +1142,7 @@ end
 ---@param opts                          era.m.git.buffer.IUnstageRangeOpts
 ---@return stl.c.Future
 function M.unstage_range(opts)
-  local key = opts.toplevel .. "\0" .. opts.relpath ---@type string
-  return with_index_write(key, function(finish)
+  return with_index_write(opts.toplevel, function(finish)
     load_index_context(opts.toplevel, opts.relpath, opts.expected_index.document):finally(
       protected_callback(function(err)
         finish({ ok = false, err = err })
@@ -1140,19 +1171,19 @@ function M.unstage_range(opts)
             end
 
             local hunks = era.m.git.diff.run_diff(head_document.lines, index_document.lines) ---@type era.m.git.Hunk[]
-            local selected = select_hunks(hunks, opts.range, true) ---@type era.m.git.Hunk[]
-            if #selected == 0 then
+            local text = era.m.git.staging.apply_selection(
+              head_document,
+              index_document,
+              hunks,
+              opts.range[1],
+              opts.range[2],
+              "unstage"
+            )
+            if text == nil then
               finish({ ok = false, err = "The selection range does not contain any staged changes" })
               return
             end
 
-            local inverted = {} ---@type era.m.git.Hunk[]
-            for _, hunk in ipairs(selected) do
-              inverted[#inverted + 1] = era.m.git.staging.invert(hunk)
-            end
-            table.sort(inverted, era.m.git.staging.less)
-
-            local text = era.m.git.staging.apply_line_changes(index_document, head_document, inverted) ---@type string
             local document = document_with_text(opts.expected_index.document, text) ---@type era.m.git.Document
             write_index_document(opts.toplevel, opts.relpath, document, context.mode_bits, false):finally(
               protected_callback(function(err)
@@ -1183,6 +1214,7 @@ function M.unstage_hunk(bufnr, range)
   })
 end
 
+---@return nil
 function M.setup()
   local augroup = vim.api.nvim_create_augroup("DotModuleGitBuffer", { clear = true }) ---@type integer
 
@@ -1196,7 +1228,7 @@ function M.setup()
     end
   end, 50)
 
-  vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+  vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile", "BufFilePost" }, {
     group = augroup,
     callback = function(args)
       M.attach(args.buf)
@@ -1206,7 +1238,10 @@ function M.setup()
   vim.api.nvim_create_autocmd("BufWritePost", {
     group = augroup,
     callback = function(args)
-      M.refresh(args.buf, true)
+      local current = cache[args.buf] ---@type era.m.git.buffer.ICache|nil
+      if M.attach(args.buf) and current and cache[args.buf] == current then
+        M.refresh(args.buf, true)
+      end
     end,
   })
 

@@ -10,17 +10,24 @@ era.m.git/
 ├── state.lua     -- 全局状态管理（branch、staged/unstaged files、status cache）
 ├── repo.lua      -- Git 仓库抽象，封装常用操作，支持 worktree (commondir)
 ├── cmd.lua       -- Git 命令封装（async/sync）
+├── index.lua     -- 主 index mutation 串行化
+├── ignore.lua    -- Native ignore cache 的事件与 Future adapter
+├── job.lua       -- Status / ignore / blame 共用的 polling、取消与退出清理
 ├── watcher.lua   -- 文件系统监听（gitdir、index、commondir）
 ├── buffer.lua    -- Buffer 级别的 Hunk 计算和缓存
 ├── hunk.lua      -- Hunk 数据、查询和 stage/unstage/reset 操作
 ├── hunk_nav.lua  -- Hunk navigation state、普通 buffer 与 diff window 导航
 ├── sign.lua      -- Sign 显示（使用 decoration provider）
-├── diff.lua      -- Diff 算法（基于 vim.diff + word-level diff）
-├── status.lua    -- Git status 解析和聚合
-├── blame.lua     -- Inline blame 和 buffer blame
+├── diff.lua      -- Neovim histogram diff 与 native word-diff adapter
+├── staging.lua   -- Native staging 接口、buffer capture 与 legacy iconv
+├── status.lua    -- Native status 请求与 UI highlight
+├── blame.lua     -- Blame 的 buffer ownership、UI presentation 与 extmarks
 ├── browse.lua    -- 在浏览器中打开文件
 └── types.lua     -- 类型定义
 ```
+
+Status / ignore / blame、staging 与 word-diff 纯计算位于独立的 `rust/git`（`yoz-git`），不依赖 Lua 或 Neovim；
+`rust/yoz/src/git.rs` 及其子模块负责 `yoz.git` binding。Histogram diff、legacy iconv 与 index 写入仍由 Lua 调用。
 
 ## 状态管理
 
@@ -30,34 +37,26 @@ era.m.git/
 
 ```lua
 M.o_branch          -- Observable<string>: 当前分支名
-M.o_current_blame   -- Observable<BlameInfo|nil>: 当前光标位置的 blame 信息
+M.o_refreshed       -- Observable<IRefreshEvent>: 刷新 generation 与 change_scope
 M.o_staged_files    -- Observable<string[]>: 已暂存的文件列表
 M.o_unstaged_files  -- Observable<string[]>: 未暂存的文件列表
 ```
 
-内部缓存结构 `state_cache`:
-- `status_table`: 文件级别的 git status 详情
-- `file_display/file_stage/file_summary`: 文件状态的快速查询表
-- `dir_display/dir_stage/dir_summary/dir_codes`: 目录状态的聚合信息
-- `ignored`: 被 .gitignore 忽略的文件缓存
+`state.lua` 持有当前 `yoz.git.StatusSnapshot` handle，不再维护第二份 Lua status / directory cache。
+Rust worker 完成查询、解析和 ancestor directory index 后，才发布 immutable snapshot；UI lookup 不触发
+全仓库扫描。刷新失败保留旧 snapshot；状态未变时复用旧 handle，仍发布刷新事件。
+
+Ignore cache 也由 Rust 持有，Lua 只转发编辑器 invalidation 事件。`state.status_table()` 显式导出新的 Lua table，修改它不会
+改变 native snapshot；频繁路径查询应使用 `state.snapshot():lookup()`。
 
 ### 数据流
 
-```
-
-┌─────────────┐              ┌────────────────┐              ┌──────────────────┐
-│   watcher   │  文件变化    │ state.refresh  │    触发      │ buffer.refresh   │
-│             │ ──────────>  │    _async()    │ ──────────>  │     _all()       │
-└─────────────┘              └────────────────┘              └──────────────────┘
-                                    │
-                                    ▼
-                             ┌────────────────┐
-                             │  Observable    │
-                             │    .next()     │
-                             └────────────────┘
-                                    │
-                                    ▼
-                      订阅者（statusline、filetree 等）
+```text
+watcher / index mutation
+  -> state.refresh() / refresh_index()
+  -> status.collect() -> yoz.git worker -> StatusSnapshot
+  -> state snapshot / Observable
+  -> buffer / Explorer / Diffview / statusline
 ```
 
 ## 文件监听
@@ -308,56 +307,150 @@ captured window，避免 `BufLeave` 把单纯的 window focus change 误判为 s
 **Normal Mode:**
 - 只对当前光标所在行所属的 hunk 生效
 - Stage: 作用于 unstaged hunk
-- Unstage: 作用于 staged hunk
+- Unstage: 在 staged Diffview 的 index-side window 中操作；普通 buffer 的 unstage 会提示打开 staged diff
 - Reset: 作用于 unstaged hunk
 
 **Visual Mode:**
 - 选中 [Li, Lj] 行后，找到这些行所覆盖的所有 hunks
-- Stage/Unstage: 依次处理每个被选中的 hunk
+- Stage/Unstage: 裁剪所选 modified-side 行后一次重建；不逐 hunk 写 index
 - Reset: **只作用于 unstaged hunks**，忽略所有 staged hunks
 
 ### Stage/Unstage 实现
 
-**Stage Hunk:**
-1. 如果是 untracked 文件，先执行 `git add --intent-to-add`
-2. 生成 unified diff patch
-3. 执行 `git apply --cached --unidiff-zero`
+`buffer.lua` 在 repository FIFO 内重新读取 index，比较 object ID 和解码后的 text；与绘制时 snapshot
+不一致则拒绝。通过检查后计算 histogram hunks，调用 native staging 重建文本，再按 encoding/BOM 编码，
+经 `hash-object --path` 的 clean filter 和 `update-index --cacheinfo` 写入。保留 executable mode；untracked
+entry 直接创建，不预先写 intent-to-add。失败释放 FIFO；native 计算不执行 Git 或修改 buffer。
 
-**Unstage Hunk:**
-1. 获取 HEAD 和 Index 内容
-2. 应用 inverted hunks 计算新的 index 内容
-3. `git hash-object -w` 写入新内容
-4. `git update-index --cacheinfo` 更新索引
+`yoz.git.staging.apply_selection(original, modified, hunks, top, bot, mode)` 同步返回最终 bytes string：
+
+- `stage` / `stage_partial`：输入 index → buffer；分别选择首个触及的完整 hunk / 所有触及 hunk 的选中行。
+- `unstage`：输入 HEAD → index，按 index-side 行裁剪后反转、排序，重建 index。
+- `reset`：输入 index → buffer，丢弃所有触及的完整 hunk，保留其余变更。
+
+无触及变更返回 `nil`；空字符串是有效的空文件结果。等长 change 可逐行裁剪，不等长 change 保留完整
+removed span，纯删除整块选择；保留 BOF 零锚点和 EOF flag 传播。坐标要求 exact integer；参与重建的 span
+越界或行数不匹配抛错，不会返回部分可写文本。原始 hunks 不被修改；正常生产路径不把中间选区重新展开成 Lua
+hunk tables。
+
+`from_text` 的 EOL majority normalization 也在 Rust，CR/CRLF 票数严格超过 LF 时选择 CRLF，平票选择 LF；
+没有换行则沿用默认 LF/CRLF。`Document.lines` 保留 final empty sentinel；重建以捕获的 lines 为准，保留各行
+来源的 EOL 和 final newline，不重新解析或二次 normalize 最终 text。
+
+Unicode encoding/BOM 由 Rust 标准库实现，按 Neovim 文件写入语义使用明确字节序，不依赖系统 iconv：
+
+- `utf-8`、`utf-16[le]`、`ucs-2[le]`、`ucs-4[le]` 及其 Unicode aliases 归一化；后三类默认 BE，`le` 指定 LE。
+  `utf-16be` 使用 UTF-16 BE，`unicode` 为 UCS-2 BE，`utf-32[be/le]` 对应 UCS-4 BE/LE。
+- 解码只移除一个匹配的 BOM；编码时 `bomb=true` 总是额外前置 marker，保留正文首字符 U+FEFF。
+  无 marker 的正文首 U+FEFF 与 BOM 无法区分，读取时视作 marker，但 byte round-trip 保持不变。
+- UTF-8 继续保留任意 bytes；其他 Unicode codec 拒绝截断 code unit、非法 scalar/surrogate、与给定 encoding
+  冲突的开头 BOM，以及不可表示的 UCS-2 字符。不猜字节序、不做有损替换，返回 `nil, error`，不进入 index 写入。
+  UTF-16/UCS-2 无 BOM 文件开头的 U+FFFE 与反向 BOM 同样无法区分，会被拒绝；正文内部的 noncharacters 仍可保留。
+- Lua 保留 buffer options / 读写和 legacy `vim.iconv`。Native 返回 `nil` 且无 error 才走 legacy fallback；
+  Unicode 错误不 fallback。UTF-8 无 BOM 变化时 binding 直接复用输入 Lua string。
+
+Codec 是同步计算，仍有主线程扫描、native allocation 和 Lua string 构造成本；此次修复不宣称整体 staging 加速。
+
+Binding 使用 packed bytes 和 offsets，live Lua references 不随行数或 hunk 数增长；modified-side 仅读取重建
+所需的行数/EOF metadata，新增行来自 hunks。仍有同步 marshalling/native allocation 成本，不保证每个操作加速。
 
 ## Diff 算法
 
 ### diff.lua
 
-- 使用 `vim.diff()` 配合 histogram 算法计算行级 diff
-- 提供 `filter_common()` 分离 staged/unstaged hunks
+- 使用 `vim.text.diff()` 配合 histogram 算法计算行级 diff；本轮不替换为其他 Rust diff 算法
+- 提供 `filter_secondary()` 分离 staged/unstaged hunks
 - 支持 word-level diff 用于 hunk preview
+
+Word diff 的字节预处理、两次范围归并与边界扩展在 Rust；Lua 保留 Neovim diff 调用、hunk 行配对和 popup 渲染。
+不改变行级 hunks、stage/unstage、signs 或 hunk state。
+
+- 相同文本和单边空字符串仍由 Lua 直接返回，避免 FFI；空边对应的整行范围不受 500-byte 限制。
+- `yoz.git.word_diff.inputs(old, new)` 只取各自前 500 bytes，以 LF 分隔每个 byte；不改为 Unicode character diff。
+- Lua 对这些输入调用原有 `vim.text.diff(..., { algorithm = "histogram", result_type = "indices" })`。
+- `finish(old, new, raw)` 返回 zero-based、end-exclusive byte ranges：先合并两侧 gap 均不超过 2 的范围，
+  按原 ASCII category 规则扩展到完整源文本的边界，再合并重叠范围。扩展可超过 diff 输入的 500-byte 上限。
+- Diff 失败时 `raw=nil` 保留各侧最多 500 bytes 的矩形 fallback；`raw={}` 表示无 word highlights。
+  仅前 500 bytes 之后变化仍可能不显示 word highlights，这是既有行为。Malformed raw coordinates 明确拒绝。
+
+这是同步计算，仍有 FFI 和结果 table allocation 成本；长单词收益明显，短行或离散修改不保证加速。
 
 ## Blame 功能
 
 ### blame.lua
 
-提供两种 blame 模式：
+Lua 捕获当前 buffer 的 `Document` 并按原 encoding / BOM / EOL 编码；Rust worker 执行
+`git blame --porcelain --contents - -- <path>`，解析后发布 immutable `BlameSnapshot`。不改为磁盘文件
+blame，也不启用新的 Git flags。Commit metadata 只存一份，每行保存 attribution 与 source information。
 
-**Inline Blame（虚拟文本）：**
-- 延迟 2000ms 后显示
-- 仅查询当前行（`git blame -L lnum,lnum`）
-- 光标移动时自动更新
+- Inline 延迟 500ms，查询整个 buffer；之后仅查询当前行的 commit metadata，在行尾显示。
+- Buffer overlay 仍位于 window column 80，排除当前 cursor line；与 inline 共用已完成的 snapshot cache。
+- Cache 由 `bufnr + attachment owner + changedtick` 限定；writes / HEAD invalidation 会主动清理。
+  两类 inflight 分别跟踪，已取消的请求不能继续 coalesce，确保同 tick invalidate 和快速 toggle 能立即重试。
+- Lua 仅额外缓存 rendered-text projection，按 commit 格式化后一次性映射到行，避免逐行导出完整 metadata。
+  Snapshot、formatter、当前用户身份、`TZ` / 时区标识或 time locale 改变时重建；日期仍使用 Lua `os.date()`。
+- Metadata 按字面量插入：`%1` 或 `<sha>` 等出现在 author / summary 中时不作为 replacement 或二次模板执行。
+- Native cancellation 等待 worker acknowledgement，由 adapter 映射为原 `blame:cancelled` sentinel；
+  cancelled / stale 结果不落失败缓存。普通失败仍按 owner / tick 去重，诊断保持 silent。
+  退出时统一取消 native jobs，并停止 blame debounce 与后续 UI 更新。
 
-**Buffer Blame（整个文件）：**
-- 一次性获取整个文件的 blame 信息
-- 在第 80 列显示
-- 当前行不显示（配合 inline blame）
+Native API：
+
+- `yoz.git.start_blame({ cwd, path, contents })`：绝对仓库 cwd、Git filename、已编码的内容 bytes；返回
+  `poll/cancel/dispose` job。每个子进程 30s deadline，沿用共享 process cleanup。
+- `snapshot:commit_at(lnum)` / `commits()`：单行 / 去重后的 commit metadata，含 `uncommitted` 标识。
+- `snapshot:annotations(labels)`：将逐 commit 的 UI labels 映射为逐行字符串；数量必须与 commit count 一致。
+  沿用 raw array prefix 校验；labels 在同步调用期间只读。逐项校验后释放 handle，按连续 commit 块借用
+  label 写入结果，辅助 `mlua` handles 为 O(1)，不复制 labels table，也不持有按 commit 数增长的 handle vector。
+- `snapshot:entries()`：显式复制完整逐行记录，供诊断 / 数据对照；filename / previous_filename 保留原
+  porcelain spelling（包括 Git 的引号和转义），不直接作为 filesystem path 使用。
+- `snapshot:stats()`：line count、commit count、native elapsed ms。截断或不一致的协议输出拒绝整份结果。
+
+成本：native heap / worker threads、每个 buffer 的 Lua 行文本 cache、约一个 poll interval 的发布等待。
+Buffer capture/encoding、初次 UI projection 和 extmark 写入仍在主线程；重绘依然是全量 extmarks，不做 viewport virtualization。
 
 ## Git Status 解析
 
-### status.lua
+### 查询语义
 
-解析 `git diff --name-status` 和 `git ls-files` 输出：
+默认 `status.collect()` 使用 `git --no-optional-locks status --porcelain=v2 -z`，一次读取普通文件的
+staged、unstaged 和 untracked 状态。路径按 NUL protocol 保留原始 bytes；HEAD/index object IDs
+只填入发生变化的一侧，全零 ID 仍表示缺失。后台查询不写回 index。
+
+以下场景保留 `git diff --raw --abbrev=64 -z`：
+
+- 指定 `base` 或 `include_numstat`：直接使用原有 raw 查询，numstat 与 object identity 来自同一输出。
+- rename/copy、同一侧存在新增及潜在 source、conflict、submodule：读取 porcelain 后查询两侧 raw diff，
+  复用已取得的 untracked paths。这样保留 `diff.renames` / `diff.renameLimit`、conflict 和 submodule 语义；
+  特殊场景存在额外一轮等待，不保证加速。
+
+任何必需查询失败或 porcelain 输出不完整时，整个 Future 拒绝，不发布部分 snapshot。
+
+### Native contract
+
+- `yoz.git.start_status({ cwd, base?, include_numstat?, include_untracked? })` 启动 worker；`cwd` 是
+  canonical absolute 仓库路径，默认不取 numstat、包含 untracked。环境变量在 Lua 入口捕获，worker
+  不持有 Lua value，也不调用 Neovim API。Unix pathname 保留原始 bytes，Windows 在 binding 统一分隔符。
+- Job 提供 `poll()` / `cancel()` / `dispose()`。`poll()` 返回 `running|completed|cancelled|failed`、snapshot、
+  error；terminal outcome 可重复读取。`dispose()` 幂等、非阻塞并请求取消；之后不可 poll / cancel。
+- 每个 Git 子进程最多执行 30s；取消会终止并回收 Git。Unix 同时终止其 process group，避免 hook 占住 pipes；
+  Windows 当前只终止直接子进程，descendant cleanup 尚未覆盖。
+- Lua 每 5ms poll，一次最多排队一个 scheduled callback；取消后等待 worker acknowledgement，且不会发布
+  与取消竞态的 completed result。`VimLeavePre` 关闭 refresh throttle、settle 等待方并取消 jobs，最多等待
+  100ms 完成 native cleanup，随后释放 Lua handles。
+
+Snapshot API：
+
+- `lookup(path, is_directory?)`：单路径状态，`codes` 为 bitmask；目录返回 code union，文件保留 staged / unstaged 顺序。
+- `equals(other)`：比较 status entries（含 object identity），忽略 numstats 和查询 timing。
+- `changed_files()` / `display()`：按需导出导航列表 / display map；untracked 属于 unstaged 导航列表。
+- `entries()` / `export()`：显式复制为 Lua tables；后者额外包含 status groups 和可选 numstats，供 Diffview 使用。
+- `stats()`：Git process count 与 native elapsed ms，仅用于诊断。`yoz.git.empty_status()` 创建空 snapshot。
+
+代价是 worker/pipe-reader threads、native heap 和至多一个 poll interval 的常规发布延迟。`equals`、单路径
+lookup 与显式 Lua export 仍在调用线程执行；不应把 Lua GC 指标当作整体内存占用。
+重复 lookup 还需跨 Lua/Rust 边界并构造返回 table，比已有 Lua table cache 的直接读取慢；本批不在 Lua
+侧重建另一份 status cache，因此大树的 warm-cache 重绘是明确的性能取舍。
 
 状态码映射：
 
@@ -378,6 +471,29 @@ Stage 状态：
 - `unstaged`: 仅有未暂存变更
 - `mixed`: 同时有已暂存和未暂存变更
 
+## Ignore cache
+
+`ignore.lua` 保留 `state.preload_ignored()` / `is_ignored()` / `clear_ignored_cache()` 与
+`o_ignored_refreshed` 的入口。路径采用 canonical absolute key，末尾斜杠不影响 lookup；Unix 保留原始 bytes。
+
+- `yoz.git.ignore_cache(cwd)` 创建绑定仓库的 cache；`lookup(path)` 只读内存，unknown 返回 false。
+- `cache:start(paths)` 返回 ignore job，共用 `poll/cancel/dispose` contract。Worker 处理 fingerprint、
+  路径去重、symlink ancestor、`git check-ignore --stdin -z`、解析与 cache 构建；调用线程只发布 snapshot。
+  `poll()` 的 result 包含 `changed`、可选 `warning`，以及诊断用 `processes/lstat_calls`。
+- Cache handle 属于创建线程，worker 只接收 immutable snapshot。`clear()` 立即替换当前 snapshot；
+  旧结果或并发发布发生冲突时，native job 用最新 snapshot 重试完整请求，避免覆盖其他请求的 cache。
+- 沿用 2000-entry 容量阈值；超限时重建整个当前 batch，允许单个 batch 超过阈值。完全命中的 batch 不清 cache。
+- Exit 0/1 可缓存 positive / negative；其他 exit code 只接受已输出的 positive，缺失输出仍为 unknown。
+  Spawn、pipe、timeout 等 native failure 拒绝 Future 并报告；取消则保留原来的 nil-result contract，不发布 cache。
+- Symlink descendant 查询最外层 link，避免 Git 穿越 symlink；对共享 ancestor 的探测在单个 batch 内复用。
+- 根 `.gitignore` / `.git/info/exclude` 的 mtime + size fingerprint 在 worker 检查。Lua 将 ignore 文件的
+  `BufWritePost`、`FocusGained` 和已有 watcher 事件转发为 `clear()`；完整 nested / worktree exclude 外部监听仍未扩展。
+- 对查询路径按发布前后的 lookup 值生成变化事件，包含 ignored → visible / unknown，保证异步 invalidation 后重绘。
+  显式 clear 后允许同一路径再次通知；workspace 已切换时不发布旧 cache 的事件。
+
+Warm preload 也异步检查 fingerprint，不再保证立即完成；但同步 lookup 仍然即时可用。取消通常在 worker
+确认后的下一次 poll settle；共享 `job.lua` 在退出时统一取消 status / ignore，最多等待 100ms。
+
 ## 公共 API
 
 ```lua
@@ -387,7 +503,8 @@ local git = era.m.git
 git.get_branch()                    -- 获取当前分支名
 git.state.o_staged_files:snapshot() -- 获取已暂存文件列表
 git.state.o_unstaged_files:snapshot() -- 获取未暂存文件列表
-git.state.status_table()            -- 获取完整 status 表
+git.state.snapshot()                -- 获取 immutable native snapshot
+git.state.status_table()            -- 按需复制完整 status 表
 
 -- Hunk 操作
 git.hunk.stage(range, callback)     -- Stage hunk/selection

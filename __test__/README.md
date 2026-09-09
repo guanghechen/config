@@ -43,6 +43,7 @@ __test__/
   rust/
     yoz/                   # unit tests mirroring rust/yoz/src/
     im/                    # unit tests mirroring rust/im/src/
+    git/                   # Git parsers, snapshots, processes and jobs
   fixtures/
     yoz/                   # shared Lua/Rust search fixtures
     era/dressing/statusline/
@@ -70,6 +71,31 @@ Manual macOS IM measurements live in `bench/im.lua`. Run
 to measure capture and restoration to the same current source, excluding cold initialization.
 The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
 The benchmark aborts if the source changes externally and does not measure switching between input methods.
+
+Git regression coverage lives in `specs/era/m/git/` and `rust/git/`:
+
+- Status, ignore and blame compare real Git query results with independent Lua references, including
+  raw object identity, UI projections, symlinks, invalidation, cancellation and process cleanup.
+- Staging covers byte/EOL normalization, histogram selection, 40k-line / 10k-hunk reference-stack limits,
+  real index writes, clean filters, stale snapshots and FIFO release.
+- Unicode codecs use Neovim's actual file writer as the byte oracle, covering aliases, BOM, leading
+  U+FEFF, LF/CRLF, NUL, BMP/astral text and EOF. Invalid or unrepresentable input must preserve the index.
+- Word diff covers 2,000 seeded byte edits, the 500-byte cap, failure/empty-result contracts, and actual
+  popup text, highlight extmarks, keymap cleanup and source-buffer preservation.
+- The shared `blame_history.lua` fixture builds real history with 10k distinct commits for the former
+  mlua auxiliary-reference-stack failure. Sparse labels, error recovery and arbitrary bytes are tested too.
+
+The Lua reference files retain the algorithms used by differential tests; they are not production
+implementations and should not be used as a source of new features.
+
+For full-config status/signs/ignore/blame smoke coverage, open a changed tracked file in a disposable
+process:
+`nvim --headless -u init.lua -i NONE -n lua/era/m/git/status.lua -c 'luafile __test__/fixtures/era/m/git/status_runtime.lua'`.
+
+For full-config word-highlight E2E, open a tracked file with an unstaged change hunk:
+`nvim --headless -u init.lua -i NONE -n lua/era/m/git/diff.lua -c 'luafile __test__/fixtures/era/m/git/word_diff_runtime.lua'`.
+These fixtures compare actual UI data with the Lua oracle, disable context saving and exit without
+writing source buffers.
 
 ## Run
 
@@ -111,7 +137,9 @@ startup is loaded automatically.
 Requirements are the latest Neovim and the existing repository toolchain.
 Native `yoz` specs need the compiled module in `lua/`; build it through the
 existing `node script/build.mjs` workflow. Git integration specs use temporary
-local repositories. The runner does not install dependencies or build artifacts.
+local repositories. The runner does not install dependencies or build production artifacts.
+The native blame exit spec uses the installed `rustc` to build a tiny controlled Git-process fixture
+in its temporary directory; it is removed during cleanup. Real Git query/parsing parity is tested separately.
 
 Zero matches, an empty spec, a missing `t:run()`, load errors, case or cleanup
 failures, process failures, and timeouts all produce a nonzero exit status. A

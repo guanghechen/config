@@ -81,8 +81,8 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
       end,
     },
     path = {
-      is_exist = function(path)
-        return vim.uv.fs_stat(path) ~= nil
+      is_descendant = function(from, to)
+        return to == from or vim.startswith(to, from .. "/")
       end,
     },
   })
@@ -91,6 +91,7 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
       git = {
         diff = require("era.m.git.diff"),
         hunk = hunk,
+        index = require("era.m.git.index"),
         repo = {
           create = function()
             return Future.resolve(repo)

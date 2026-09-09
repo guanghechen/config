@@ -17,6 +17,10 @@ local M = {}
 -- Type definitions
 ----------------------------------------------------------------------------------------------------
 
+---@class era.m.diffview.view.workspace.IIndexExecResult
+---@field public code                   integer
+---@field public stderr                 string
+
 ---@class era.m.diffview.view.workspace.IContext
 ---@field public layout                  era.m.diffview.view.workspace.ILayout
 ---@field public state                   era.m.diffview.view.workspace.State
@@ -61,6 +65,7 @@ end
 ---@param filepath                      string
 ---@param code                          integer
 ---@param stderr                        string
+---@return nil
 local function report_git_failure(operation, filepath, code, stderr)
   local reason = vim.trim(stderr)
   local message = string.format("Failed to %s `%s` (exit %d)", operation, filepath, code)
@@ -71,6 +76,17 @@ local function report_git_failure(operation, filepath, code, stderr)
     subject = operation,
     message = message,
   })
+end
+
+---@param args                          string[]
+---@param opts                          { cwd: string, stdin?: string }
+---@return stl.c.Future
+local function run_index_command(args, opts)
+  return era.m.git.index.run(opts.cwd, function(resolve)
+    stl.git.exec.exec_async(args, opts, function(_, code, stderr)
+      resolve({ code = code, stderr = stderr })
+    end)
+  end)
 end
 
 ---@param entry                          era.m.diffview.IFileEntry
@@ -520,6 +536,7 @@ end
 
 ---Stage the file or directory targeted by the active workspace pane
 ---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return nil
 function M.stage(ctx)
   local target = get_transfer_target(ctx, "unstaged")
   if not target then
@@ -536,9 +553,13 @@ function M.stage(ctx)
   local pathspec_input = build_transfer_pathspec_input(target)
   local transfer = capture_transfer(ctx, target, "staged")
 
-  stl.git.exec.exec_async(args, { cwd = dot.path.workspace(), stdin = pathspec_input }, function(_, code, stderr)
-    if code ~= 0 then
-      report_git_failure("stage", target.filepath, code, stderr)
+  run_index_command(args, { cwd = dot.path.workspace(), stdin = pathspec_input }):finally(function(resolved, result)
+    if not resolved or type(result) ~= "table" then
+      report_git_failure("stage", target.filepath, -1, tostring(result))
+      return
+    end
+    if result.code ~= 0 then
+      report_git_failure("stage", target.filepath, result.code, result.stderr)
       return
     end
 
@@ -548,6 +569,7 @@ end
 
 ---Unstage the file or directory targeted by the active workspace pane
 ---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return nil
 function M.unstage(ctx)
   local target = get_transfer_target(ctx, "staged")
   if not target then
@@ -556,7 +578,10 @@ function M.unstage(ctx)
   local transfer = capture_transfer(ctx, target, "unstaged")
 
   local workspace = dot.path.workspace()
-  local function on_unstage(_, code, stderr)
+  ---@param code                          integer
+  ---@param stderr                        string
+  ---@return nil
+  local function on_unstage(code, stderr)
     if code ~= 0 then
       report_git_failure("unstage", target.filepath, code, stderr)
       return
@@ -565,39 +590,53 @@ function M.unstage(ctx)
     refresh_after_transfer(ctx, transfer)
   end
 
-  stl.git.exec.exec_async(
-    { "rev-parse", "--verify", "--quiet", "HEAD^{commit}" },
-    { cwd = workspace },
-    function(_, code, stderr)
-      if code == 1 then
-        ---@type string[]
-        local args = {
-          "--literal-pathspecs",
-          "rm",
-          "--cached",
-          "-f",
-          "--pathspec-from-file=-",
-          "--pathspec-file-nul",
-        }
-        stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, on_unstage)
-        return
-      end
-      if code ~= 0 then
-        report_git_failure("unstage", target.filepath, code, stderr)
-        return
-      end
+  era.m.git.index
+    .run(workspace, function(resolve)
+      stl.git.exec.exec_async(
+        { "rev-parse", "--verify", "--quiet", "HEAD^{commit}" },
+        { cwd = workspace },
+        function(_, code, stderr)
+          local function finish(_, result_code, result_stderr)
+            resolve({ code = result_code, stderr = result_stderr })
+          end
 
-      ---@type string[]
-      local args = {
-        "--literal-pathspecs",
-        "reset",
-        "HEAD",
-        "--pathspec-from-file=-",
-        "--pathspec-file-nul",
-      }
-      stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, on_unstage)
-    end
-  )
+          if code == 1 then
+            ---@type string[]
+            local args = {
+              "--literal-pathspecs",
+              "rm",
+              "--cached",
+              "-f",
+              "--pathspec-from-file=-",
+              "--pathspec-file-nul",
+            }
+            stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, finish)
+            return
+          end
+          if code ~= 0 then
+            resolve({ code = code, stderr = stderr })
+            return
+          end
+
+          ---@type string[]
+          local args = {
+            "--literal-pathspecs",
+            "reset",
+            "HEAD",
+            "--pathspec-from-file=-",
+            "--pathspec-file-nul",
+          }
+          stl.git.exec.exec_async(args, { cwd = workspace, stdin = build_transfer_pathspec_input(target) }, finish)
+        end
+      )
+    end)
+    :finally(function(resolved, result)
+      if not resolved or type(result) ~= "table" then
+        report_git_failure("unstage", target.filepath, -1, tostring(result))
+        return
+      end
+      on_unstage(result.code, result.stderr)
+    end)
 end
 
 ---@param ctx                            era.m.diffview.view.workspace.IContext
@@ -696,6 +735,7 @@ end
 
 ---Reset (discard) file at cursor
 ---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return nil
 function M.reset(ctx)
   local entry = get_entry_at_cursor()
   if not entry or entry.stage_type ~= "unstaged" then
@@ -721,12 +761,14 @@ function M.reset(ctx)
   end
 
   -- Tracked files: git checkout
-  stl.git.exec.exec_async(
-    { "--literal-pathspecs", "checkout", "--", entry.filepath },
-    { cwd = dot.path.workspace() },
-    function(_, code, stderr)
-      if code ~= 0 then
-        report_git_failure("discard", entry.filepath, code, stderr)
+  run_index_command({ "--literal-pathspecs", "checkout", "--", entry.filepath }, { cwd = dot.path.workspace() }):finally(
+    function(resolved, result)
+      if not resolved or type(result) ~= "table" then
+        report_git_failure("discard", entry.filepath, -1, tostring(result))
+        return
+      end
+      if result.code ~= 0 then
+        report_git_failure("discard", entry.filepath, result.code, result.stderr)
         return
       end
 

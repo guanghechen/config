@@ -8,6 +8,8 @@ local __mods = {
   hunk = "era.m.git.hunk",
   hunk_nav = "era.m.git.hunk_nav",
   Hunkview = "era.m.git.hunkview",
+  ignore = "era.m.git.ignore",
+  index = "era.m.git.index",
   repo = "era.m.git.repo",
   sign = "era.m.git.sign",
   staging = "era.m.git.staging",
@@ -24,6 +26,8 @@ local __mods = {
 ---@field public hunk                   era.m.git.hunk
 ---@field public hunk_nav               era.m.git.hunk_nav
 ---@field public Hunkview               era.m.git.Hunkview
+---@field public ignore                 era.m.git.ignore
+---@field public index                  era.m.git.index
 ---@field public repo                   era.m.git.repo
 ---@field public sign                   era.m.git.sign
 ---@field public staging                era.m.git.staging
@@ -44,6 +48,8 @@ local M = setmetatable({
 
 ---@return nil
 function M.setup()
+  M.state.setup()
+  require("era.m.git.job").setup()
   M.buffer.setup()
   M.blame.setup()
   M.watcher.setup()

@@ -6,6 +6,21 @@ M.__index = M
 ---@type table<string, stl.c.Future>
 local create_inflight = {}
 
+---@param toplevel                      string
+---@param task                          fun(): stl.c.Future
+---@return stl.c.Future
+local function with_index_write(toplevel, task)
+  return era.m.git.index.run(toplevel, function(resolve, reject)
+    task():finally(function(resolved, result)
+      if resolved then
+        resolve(result)
+      else
+        reject(result)
+      end
+    end)
+  end)
+end
+
 ---@param gitdir                      string
 ---@return string|nil
 local function resolve_commondir(gitdir)
@@ -78,7 +93,9 @@ end
 ---@return stl.c.Future              Resolves with boolean
 function M:add_intent_to_add(file, token)
   local relpath = self:get_relpath(file)
-  return stl.git.act.add_intent_to_add(self.toplevel, relpath, token)
+  return with_index_write(self.toplevel, function()
+    return stl.git.act.add_intent_to_add(self.toplevel, relpath, token)
+  end)
 end
 
 ---@param patch                      string
@@ -86,7 +103,9 @@ end
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with {ok: boolean, err: string|nil}
 function M:apply_patch(patch, reverse, token)
-  return stl.git.act.apply_patch(self.toplevel, patch, reverse, token)
+  return with_index_write(self.toplevel, function()
+    return stl.git.act.apply_patch(self.toplevel, patch, reverse, token)
+  end)
 end
 
 ---@param file                       string
@@ -151,7 +170,9 @@ end
 ---@return stl.c.Future              Resolves with boolean
 function M:reset_file(file, token)
   local relpath = self:get_relpath(file)
-  return stl.git.act.reset_file(self.toplevel, relpath, token)
+  return with_index_write(self.toplevel, function()
+    return stl.git.act.reset_file(self.toplevel, relpath, token)
+  end)
 end
 
 ---@param file                       string
@@ -159,7 +180,9 @@ end
 ---@return stl.c.Future              Resolves with boolean
 function M:stage_file(file, token)
   local relpath = self:get_relpath(file)
-  return stl.git.act.stage_file(self.toplevel, relpath, token)
+  return with_index_write(self.toplevel, function()
+    return stl.git.act.stage_file(self.toplevel, relpath, token)
+  end)
 end
 
 ---@param file                       string
@@ -167,7 +190,9 @@ end
 ---@return stl.c.Future              Resolves with boolean
 function M:unstage_file(file, token)
   local relpath = self:get_relpath(file)
-  return stl.git.act.unstage_file(self.toplevel, relpath, token)
+  return with_index_write(self.toplevel, function()
+    return stl.git.act.unstage_file(self.toplevel, relpath, token)
+  end)
 end
 
 ---@param mode_bits                  string
@@ -178,7 +203,9 @@ end
 ---@return stl.c.Future              Resolves with boolean
 function M:update_index(mode_bits, object_name, file, token, add)
   local relpath = self:get_relpath(file)
-  return stl.git.act.update_index(self.toplevel, mode_bits, object_name, relpath, token, add)
+  return with_index_write(self.toplevel, function()
+    return stl.git.act.update_index(self.toplevel, mode_bits, object_name, relpath, token, add)
+  end)
 end
 
 return M
