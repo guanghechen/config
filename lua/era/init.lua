@@ -104,6 +104,7 @@ local __m__mods = {
   splitjoin = "era.m.splitjoin",
   surrounds = "era.m.surrounds",
   term = "era.m.term",
+  textobject = "era.m.textobject",
   toggle = "era.m.toggle",
   winpicker = "era.m.winpicker",
   wk = "era.m.wk",
@@ -138,6 +139,7 @@ local __m__mods = {
 ---@field public splitjoin              era.m.splitjoin
 ---@field public surrounds              era.m.surrounds
 ---@field public term                   era.m.term
+---@field public textobject             era.m.textobject
 ---@field public toggle                 era.m.toggle
 ---@field public winpicker              era.m.winpicker
 ---@field public wk                     era.m.wk

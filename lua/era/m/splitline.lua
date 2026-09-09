@@ -30,7 +30,10 @@ function M.insert()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
-  if vim.api.nvim_get_option_value("readonly", { buf = bufnr }) or not vim.api.nvim_get_option_value("modifiable", { buf = bufnr }) then
+  if
+    vim.api.nvim_get_option_value("readonly", { buf = bufnr })
+    or not vim.api.nvim_get_option_value("modifiable", { buf = bufnr })
+  then
     local FEEDBACK_KEY = dot.var.K_CODE_INSERT_SPLITLINE ---@type string
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(FEEDBACK_KEY, true, false, true), "n", false)
     return
@@ -86,8 +89,8 @@ function M.retrieve_block(winnr)
 end
 
 ---@param ai_type                       "a"|"i"
----@return { from: { line: integer, col: integer }, to: { line: integer, col: integer } }|nil
-function M.ai_textobject(ai_type)
+---@return era.m.textobject.Range|nil
+function M.textobject(ai_type)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
@@ -126,8 +129,7 @@ function M.ai_textobject(ai_type)
     return nil
   end
 
-  local to_col = math.max(#lines[end_line], 1) ---@type integer
-  return { from = { line = start_line, col = 1 }, to = { line = end_line, col = to_col } }
+  return { start_line - 1, 0, end_line - 1, #lines[end_line] }
 end
 
 return M

@@ -166,8 +166,8 @@ function M.compare_heads(a, b)
   return false
 end
 
----@return table[]                     mini.ai regions for unstaged hunks
-function M.ai_textobject()
+---@return era.m.textobject.Range[]     Linewise ranges for unstaged hunks
+function M.textobjects()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local hunks = buffer_hunks[bufnr]
   if not hunks then
@@ -175,17 +175,18 @@ function M.ai_textobject()
   end
 
   local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-  local regions = {} ---@type table[]
+  local regions = {} ---@type era.m.textobject.Range[]
   for _, hunk in ipairs(hunks) do
     local start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     local vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
     start = math.min(math.max(start, 1), line_count)
     vend = math.min(math.max(vend, start), line_count)
 
-    local last_line = vim.api.nvim_buf_get_lines(bufnr, vend - 1, vend, true)[1] or "" ---@type string
     regions[#regions + 1] = {
-      from = { line = start, col = 1 },
-      to = { line = vend, col = math.max(#last_line, 1) },
+      start - 1,
+      0,
+      vend,
+      0,
       vis_mode = "V",
     }
   end

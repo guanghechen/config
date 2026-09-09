@@ -92,7 +92,6 @@ function M:open()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   self._bufnr = bufnr
 
-  vim.b[bufnr].miniai_disable = true
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })

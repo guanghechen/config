@@ -43,11 +43,9 @@ local raw_specs = {
   { name = "flash.nvim",                  main = "flash",                         cond = conds.not_yozvim              },
   { name = "friendly-snippets",                                                   cond = conds.not_vscode_or_yozvim   },
   { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                    },
-  { name = "mini.ai",                     main = "mini.ai",                       cond = conds.not_vscode_or_yozvim   },
   { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                    },
   { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.not_vscode_or_yozvim   },
   { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context     },
-  { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.not_vscode_or_yozvim   },
   { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode_or_yozvim   },
   -- stylua: ignore end
 }

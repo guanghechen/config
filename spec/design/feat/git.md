@@ -246,7 +246,7 @@ Sign 类型：
 ```lua
 M.find(lnum, hunks)          -- 查找光标所在的 hunk
 M.find_nearest(lnum, hunks, direction, opts)  -- 查找最近的 hunk
-M.ai_textobject()              -- mini.ai 的 unstaged hunk regions
+M.textobjects()                -- 本地 textobject 的 unstaged hunk ranges（0-based、end-exclusive）
 M.stage(range, callback)     -- Stage hunk
 M.unstage(range, callback)   -- Unstage hunk
 M.reset(range)               -- Reset hunk（恢复到 index 内容）

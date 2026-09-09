@@ -34,17 +34,17 @@ t:test("textobject: returns linewise unstaged hunk regions", function()
 
   local regions ---@type table[]
   vim.api.nvim_buf_call(bufnr, function()
-    regions = hunk.ai_textobject()
+    regions = hunk.textobjects()
   end)
   hunk.remove(bufnr)
   vim.api.nvim_buf_delete(bufnr, { force = true })
 
   t.assert_eq(2, #regions, "regions")
-  t.assert_eq(2, regions[1].from.line, "first start")
-  t.assert_eq(3, regions[1].to.line, "first end")
-  t.assert_eq(5, regions[1].to.col, "last byte column")
+  t.assert_eq(1, regions[1][1], "first start")
+  t.assert_eq(3, regions[1][3], "exclusive end row")
+  t.assert_eq(0, regions[1][4], "exclusive byte column")
   t.assert_eq("V", regions[1].vis_mode, "linewise")
-  t.assert_eq(4, regions[2].from.line, "second start")
+  t.assert_eq(3, regions[2][1], "second start")
 end)
 
 t:test("textobject: anchors a pure deletion to a selectable line", function()
@@ -54,13 +54,13 @@ t:test("textobject: anchors a pure deletion to a selectable line", function()
 
   local regions ---@type table[]
   vim.api.nvim_buf_call(bufnr, function()
-    regions = hunk.ai_textobject()
+    regions = hunk.textobjects()
   end)
   hunk.remove(bufnr)
   vim.api.nvim_buf_delete(bufnr, { force = true })
 
-  t.assert_eq(1, regions[1].from.line, "top deletion anchor")
-  t.assert_eq(1, regions[1].to.line, "single anchor line")
+  t.assert_eq(0, regions[1][1], "top deletion anchor")
+  t.assert_eq(1, regions[1][3], "exclusive anchor end")
   t.assert_eq("V", regions[1].vis_mode, "linewise")
 end)
 

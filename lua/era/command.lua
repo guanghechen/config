@@ -1888,13 +1888,13 @@ command
     uuid = K.code.swap_next_parameter.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      require("era.plugin.nvim-treesitter").swap_next_parameter()
+      era.m.textobject.swap_parameter(1)
     end,
   })
   .implement({
     uuid = K.code.swap_prev_parameter.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      require("era.plugin.nvim-treesitter").swap_prev_parameter()
+      era.m.textobject.swap_parameter(-1)
     end,
   })

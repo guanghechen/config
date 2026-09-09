@@ -179,16 +179,6 @@ local function find_conditional_node(node)
 end
 
 ---@return nil
-local function action_swap_next_parameter()
-  require("nvim-treesitter-textobjects.swap").swap_next("@parameter.inner")
-end
-
----@return nil
-local function action_swap_prev_parameter()
-  require("nvim-treesitter-textobjects.swap").swap_previous("@parameter.inner")
-end
-
----@return nil
 local function action_swap_conditional_branches()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
@@ -250,12 +240,8 @@ end
 
 ---@class era.plugin.nvim_treesitter
 ---@field public swap_conditional_branches fun(): nil
----@field public swap_next_parameter      fun(): nil
----@field public swap_prev_parameter      fun(): nil
 local M = {
   swap_conditional_branches = action_swap_conditional_branches,
-  swap_next_parameter = action_swap_next_parameter,
-  swap_prev_parameter = action_swap_prev_parameter,
 }
 
 ----------------------------------------------------------------------------------------------------

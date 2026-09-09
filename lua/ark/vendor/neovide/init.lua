@@ -44,6 +44,7 @@ vim.schedule(function()
   era.m.paste.dressing()
   era.m.splitjoin.dressing()
   era.m.surrounds.setup()
+  era.m.textobject.setup()
 
   pcall(require, "ark.vendor.neovide.dressing")
   pcall(require, "ark.vendor.local.dressing")

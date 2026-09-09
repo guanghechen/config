@@ -79,7 +79,10 @@ function M.bindkeys(keymaps, keymap_override)
     if not keymap.disabled then
       local bufnr = keymap_override.bufnr or keymap.bufnr ---@type integer|nil
       local nowait = keymap_override.nowait or keymap.nowait ---@type boolean|nil
-      local noremap = keymap_override.noremap or keymap.noremap ---@type boolean|nil
+      local noremap = keymap_override.noremap ---@type boolean|nil
+      if noremap == nil then
+        noremap = keymap.noremap
+      end
       local silent = keymap_override.silent or keymap.silent ---@type boolean|nil
       local expr = keymap_override.expr or keymap.expr ---@type boolean|nil
       local replace_keycodes = keymap_override.replace_keycodes or keymap.replace_keycodes ---@type boolean|nil
@@ -88,7 +91,7 @@ function M.bindkeys(keymaps, keymap_override)
       local opts = {
         buffer = bufnr,
         nowait = nowait,
-        noremap = noremap,
+        remap = noremap == false,
         silent = silent,
         expr = expr,
         replace_keycodes = replace_keycodes,
