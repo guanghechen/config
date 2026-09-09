@@ -1,4 +1,7 @@
-local S = era.m.wk
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.whichkey.view" ---@type string
+
+local S = era.dressing.whichkey
 
 ----------------------------------------------------------------------------------------------------
 -- Constants
@@ -20,7 +23,7 @@ local RIGHT_OFFSET = 1
 -- View
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.wk.view
+---@class era.dressing.whichkey.view
 local M = {}
 
 ---Format pressed keys for footer display
@@ -80,6 +83,7 @@ local function build_footer()
 end
 
 ---Render which-key window
+---@return nil
 function M.render()
   M.close()
 
@@ -112,6 +116,7 @@ function M.render()
 end
 
 ---Close which-key window
+---@return nil
 function M.close()
   local winnr = S.state.winnr
   local bufnr = S.state.popup_bufnr
@@ -133,7 +138,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Create floating window
----@param layout                         era.m.wk.ILayout
+---@param layout                         era.dressing.whichkey.ILayout
 ---@return integer, integer
 function M.__create_win__(layout)
   local width = math.min(layout.content_width + PADDING_X * 2, vim.o.columns - RIGHT_OFFSET)
@@ -169,7 +174,8 @@ end
 
 ---Draw content and highlights
 ---@param bufnr                          integer
----@param layout                         era.m.wk.ILayout
+---@param layout                         era.dressing.whichkey.ILayout
+---@return nil
 function M.__draw__(bufnr, layout)
   local lines = {}
   local highlights = {}
@@ -258,8 +264,8 @@ function M.__draw__(bufnr, layout)
 end
 
 ---Calculate multi-column layout
----@param items                          era.m.wk.IViewItem[]
----@return era.m.wk.ILayout
+---@param items                          era.dressing.whichkey.IViewItem[]
+---@return era.dressing.whichkey.ILayout
 function M.__layout__(items)
   -- Calculate max widths
   local max_key_w = 0
@@ -308,8 +314,8 @@ function M.__layout__(items)
 end
 
 ---Convert nodes to view items
----@param nodes                          table<string, era.m.wk.INode>
----@return era.m.wk.IViewItem[]
+---@param nodes                          table<string, era.dressing.whichkey.INode>
+---@return era.dressing.whichkey.IViewItem[]
 function M.__to_items__(nodes)
   local items = {}
   for key, node in pairs(nodes) do

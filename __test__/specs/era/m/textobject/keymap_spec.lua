@@ -51,7 +51,7 @@ t:test("slowly typed custom objects are remapped after the prefix timeout", func
     [[
     vim.opt.runtimepath:prepend(...)
     _G.stl = { nvim = { fn = require("stl.nvim.fn") } }
-    _G.era = { m = { wk = { add = function() end } } }
+    _G.era = { m = {}, dressing = { whichkey = { add = function() end } } }
     era.m.textobject = require("era.m.textobject")
     era.m.textobject.setup()
     vim.api.nvim_buf_set_lines(0, 0, -1, true, { "word other" })

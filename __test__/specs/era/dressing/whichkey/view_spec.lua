@@ -1,11 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/wk/view_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/whichkey/view_spec.lua
 ---@diagnostic disable: undefined-global
 
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local View = require("era.m.wk.view")
-local t = harness.new("era.m.wk.view")
+local View = require("era.dressing.whichkey.view")
+local t = harness.new("era.dressing.whichkey.view")
 
 ---@param winnr                         integer
 ---@param bufnr                         integer
@@ -39,7 +39,7 @@ t:test("popup is compact and anchored to the bottom right", function()
 end)
 
 t:test("layout caps wide menus while preserving multiple columns", function()
-  local items = {} ---@type era.m.wk.IViewItem[]
+  local items = {} ---@type era.dressing.whichkey.IViewItem[]
   for index = 1, 12 do
     items[index] = {
       key = tostring(index),

@@ -1,9 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.wk.input" ---@type string
+local __module_name__ = "era.dressing.whichkey.input" ---@type string
 
-local S = era.m.wk
+local S = era.dressing.whichkey
 
----@class era.m.wk.input
+---@class era.dressing.whichkey.input
 local M = {}
 
 ---@type table<string, {bufnr: integer, mode: string, trigger_key: string, tree_key: string}>
@@ -20,6 +20,7 @@ M.recursion_timer = nil
 
 ---Attach triggers to buffer
 ---@param bufnr                          integer
+---@return nil
 function M.attach(bufnr)
   if not S.state.ready then
     return
@@ -51,6 +52,7 @@ end
 ---Detach triggers from buffer/mode
 ---@param bufnr                          integer
 ---@param mode                           string
+---@return nil
 function M.detach(bufnr, mode)
   local to_remove = {}
   for id, trigger in pairs(M.triggers) do
@@ -69,6 +71,7 @@ function M.detach(bufnr, mode)
 end
 
 ---Stop input and hide view
+---@return nil
 function M.stop()
   M.__cancel_delay__()
   S.view.close()
@@ -124,6 +127,7 @@ end
 ---@param mode                           string
 ---@param trigger_key                    string
 ---@param tree_key                       string
+---@return nil
 function M.__bind__(bufnr, mode, trigger_key, tree_key)
   local id = bufnr .. ":" .. mode .. ":" .. trigger_key
   if M.triggers[id] then
@@ -164,6 +168,7 @@ function M.__bind__(bufnr, mode, trigger_key, tree_key)
 end
 
 ---Cancel delay timer
+---@return nil
 function M.__cancel_delay__()
   if M.delay_timer then
     M.delay_timer:stop()
@@ -173,8 +178,9 @@ function M.__cancel_delay__()
 end
 
 ---Execute keymap or feed keys
----@param node                           ?era.m.wk.INode
+---@param node                           ?era.dressing.whichkey.INode
 ---@param keys                           string
+---@return nil
 function M.__execute__(node, keys)
   local bufnr = S.state.bufnr
   local mode = S.state.mode
@@ -198,6 +204,7 @@ end
 
 ---Feed keys to Neovim
 ---@param keys                           string
+---@return nil
 function M.__feed__(keys)
   local feed = vim.api.nvim_replace_termcodes(keys, true, true, true)
   vim.api.nvim_feedkeys(feed, "mt", false)
@@ -206,6 +213,7 @@ end
 ---Feed keys with count and register context
 ---@param keys                           string
 ---@param mode                           string
+---@return nil
 function M.__feed_with_context__(keys, mode)
   local keystr = keys
 
@@ -234,6 +242,7 @@ end
 
 ---Input loop
 ---@param prefix                         string
+---@return nil
 function M.__loop__(prefix)
   vim.cmd.redraw()
 
@@ -307,6 +316,7 @@ function M.__loop__(prefix)
 end
 
 ---Reschedule popup display (called when user presses a key before popup shows)
+---@return nil
 function M.__reschedule_popup__()
   local delay = S.state.get_delay()
   if delay > 0 then
@@ -326,6 +336,7 @@ end
 
 ---Schedule popup display with delay
 ---@param delay                          integer
+---@return nil
 function M.__schedule_popup__(delay)
   M.__cancel_delay__()
 
@@ -347,6 +358,7 @@ end
 ---@param bufnr                          integer
 ---@param mode                           string
 ---@param key                            string
+---@return nil
 function M.__start__(bufnr, mode, key)
   -- Don't intercept during macro recording/execution
   if S.util.in_macro() then
@@ -371,7 +383,7 @@ function M.__start__(bufnr, mode, key)
   if M.recursion > 50 then
     M.recursion = 0
     stl.reporter.error({
-      from = "era.m.wk.input",
+      from = "era.dressing.whichkey.input",
       subject = "Recursion detected",
       message = "Possible infinite loop in keymap configuration",
     })

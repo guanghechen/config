@@ -1,10 +1,13 @@
-local S = era.m.wk
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.whichkey.state" ---@type string
+
+local S = era.dressing.whichkey
 
 ----------------------------------------------------------------------------------------------------
 -- State
 ----------------------------------------------------------------------------------------------------
 
----@type era.m.wk.ISetupOpts
+---@type era.dressing.whichkey.ISetupOpts
 local DEFAULT_OPTS = {
   preset = "classic",
   delay = 200,
@@ -43,21 +46,21 @@ local DEFAULT_OPTS = {
   },
 }
 
----@class era.m.wk.state
+---@class era.dressing.whichkey.state
 local M = {
   ---@type boolean Whether which-key is enabled and ready to handle input
   ready = false,
-  ---@type era.m.wk.ISetupOpts
+  ---@type era.dressing.whichkey.ISetupOpts
   opts = DEFAULT_OPTS,
-  ---@type table<integer, table<era.m.wk.Mode, table<string, era.m.wk.INode>>>
+  ---@type table<integer, table<era.dressing.whichkey.Mode, table<string, era.dressing.whichkey.INode>>>
   buf_trees = {},
   ---@type table<string, boolean>
   suspended = {},
-  ---@type table<{list: era.m.wk.IMapping[], opts: era.m.wk.IAddOpts?}>
+  ---@type table<{list: era.dressing.whichkey.IMapping[], opts: era.dressing.whichkey.IAddOpts?}>
   dynamic_specs = {},
   ---@type string
   keys = "",
-  ---@type era.m.wk.Mode
+  ---@type era.dressing.whichkey.Mode
   mode = "n",
   ---@type integer
   bufnr = 0,
@@ -76,11 +79,13 @@ local M = {
 ----------------------------------------------------------------------------------------------------
 
 ---Setup autocmds (called once during initialization)
+---@return nil
 function M.setup()
   M.__setup_autocmds__()
 end
 
 ---Enable which-key (can be called multiple times)
+---@return nil
 function M.enable()
   if M.ready then
     return
@@ -90,6 +95,7 @@ function M.enable()
 end
 
 ---Disable which-key (can be called multiple times)
+---@return nil
 function M.disable()
   if not M.ready then
     return
@@ -104,6 +110,7 @@ function M.disable()
 end
 
 ---Reset session state (called when stopping input)
+---@return nil
 function M.reset()
   M.keys = ""
   M.winnr = nil
@@ -115,6 +122,7 @@ end
 ---Suspend triggers for buffer/mode
 ---@param bufnr                          integer
 ---@param mode                           string
+---@return nil
 function M.suspend(bufnr, mode)
   M.suspended[bufnr .. ":" .. mode] = true
   S.input.detach(bufnr, mode)
@@ -123,6 +131,7 @@ end
 ---Resume triggers
 ---@param bufnr                          integer
 ---@param mode                           string
+---@return nil
 function M.resume(bufnr, mode)
   M.suspended[bufnr .. ":" .. mode] = nil
   S.input.attach(bufnr)
@@ -131,6 +140,7 @@ end
 ---Schedule resume on next tick (macro-safe)
 ---@param bufnr                          integer
 ---@param mode                           string
+---@return nil
 function M.schedule_resume(bufnr, mode)
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -174,8 +184,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Add mappings (public API)
----@param mappings                       era.m.wk.IMapping | era.m.wk.IMapping[]
----@param opts                           ?era.m.wk.IAddOpts
+---@param mappings                       era.dressing.whichkey.IMapping | era.dressing.whichkey.IMapping[]
+---@param opts                           ?era.dressing.whichkey.IAddOpts
+---@return nil
 function M.add(mappings, opts)
   if not M.ready then
     vim.schedule(function()
@@ -200,8 +211,9 @@ function M.add(mappings, opts)
 end
 
 ---Add a single spec (handles mode inheritance)
----@param spec                           era.m.wk.IMapping
----@param opts                           ?era.m.wk.IAddOpts
+---@param spec                           era.dressing.whichkey.IMapping
+---@param opts                           ?era.dressing.whichkey.IAddOpts
+---@return nil
 function M.__add_spec__(spec, opts)
   if spec.mode then
     ---@diagnostic disable-next-line: param-type-mismatch
@@ -218,7 +230,7 @@ function M.__add_spec__(spec, opts)
 end
 
 ---Get tree for current buffer and mode
----@return table<string, era.m.wk.INode>
+---@return table<string, era.dressing.whichkey.INode>
 function M.get_tree()
   local buf_tree = M.buf_trees[M.bufnr]
   if not buf_tree then
@@ -228,14 +240,14 @@ function M.get_tree()
 end
 
 ---Get available keys for current state
----@return table<string, era.m.wk.INode>
+---@return table<string, era.dressing.whichkey.INode>
 function M.get_available()
   return S.tree.get_children(M.get_tree(), M.keys, M.mode)
 end
 
 ---Get node at path
 ---@param keys                           string
----@return era.m.wk.INode|nil
+---@return era.dressing.whichkey.INode|nil
 function M.get_node(keys)
   local tree_tbl = M.get_tree()
   if not tree_tbl then
@@ -245,8 +257,8 @@ function M.get_node(keys)
 end
 
 ---Process expand functions
----@param nodes                          table<string, era.m.wk.INode>
----@return table<string, era.m.wk.INode>
+---@param nodes                          table<string, era.dressing.whichkey.INode>
+---@return table<string, era.dressing.whichkey.INode>
 function M.expand(nodes)
   local result = {}
   for key, node in pairs(nodes) do
@@ -315,8 +327,9 @@ end
 
 ---Add mapping to specific buffer
 ---@param bufnr                          integer
----@param mapping                        era.m.wk.IMapping
----@param opts                           ?era.m.wk.IAddOpts
+---@param mapping                        era.dressing.whichkey.IMapping
+---@param opts                           ?era.dressing.whichkey.IAddOpts
+---@return nil
 function M.__add_mapping__(bufnr, mapping, opts)
   opts = opts or {}
   local modes = mapping.mode or opts.mode or { "n" }
@@ -337,8 +350,9 @@ function M.__add_mapping__(bufnr, mapping, opts)
 end
 
 ---Add mapping to all existing buffers
----@param mapping                        era.m.wk.IMapping
----@param opts                           ?era.m.wk.IAddOpts
+---@param mapping                        era.dressing.whichkey.IMapping
+---@param opts                           ?era.dressing.whichkey.IAddOpts
+---@return nil
 function M.__add_to_all_bufs__(mapping, opts)
   for bufnr, _ in pairs(M.buf_trees) do
     M.__add_mapping__(bufnr, mapping, opts)
@@ -347,6 +361,7 @@ end
 
 ---Attach to buffer
 ---@param bufnr                          integer
+---@return nil
 function M.__attach__(bufnr)
   if not M.ready then
     return
@@ -407,6 +422,8 @@ end
 ---@param lhs                            string
 ---@return table|nil
 function M.__get_keymap__(bufnr, mode, lhs)
+  ---@param keymaps                     table[]
+  ---@return table|nil
   local function find(keymaps)
     for _, keymap in ipairs(keymaps) do
       if S.util.normalize_lhs(keymap.lhs) == lhs then
@@ -426,6 +443,7 @@ end
 ---Load keymaps from Neovim into tree
 ---@param bufnr                          integer
 ---@param mode                           string
+---@return nil
 function M.__load_keymaps__(bufnr, mode)
   if not M.buf_trees[bufnr] then
     M.buf_trees[bufnr] = {}
@@ -435,6 +453,7 @@ function M.__load_keymaps__(bufnr, mode)
   local tree_tbl = M.buf_trees[bufnr][mode]
 
   ---@param keymaps table[]
+  ---@return nil
   local function load_keymaps(keymaps)
     for _, km in ipairs(keymaps) do
       if M.__is_valid_keymap__(km) then
@@ -456,8 +475,9 @@ end
 
 ---Load spec recursively into buffer tree
 ---@param bufnr                          integer
----@param spec                           era.m.wk.IMapping
----@param parent_modes                   era.m.wk.Mode[]?
+---@param spec                           era.dressing.whichkey.IMapping
+---@param parent_modes                   era.dressing.whichkey.Mode[]?
+---@return nil
 function M.__load_spec__(bufnr, spec, parent_modes)
   local modes = spec.mode or parent_modes or { "n" }
   if type(modes) == "string" then
@@ -476,6 +496,7 @@ function M.__load_spec__(bufnr, spec, parent_modes)
 end
 
 ---Setup autocmds
+---@return nil
 function M.__setup_autocmds__()
   local group = vim.api.nvim_create_augroup("WhichKey", { clear = true })
 

@@ -17,6 +17,7 @@ local mods = {
   trailspace = "era.dressing.trailspace",
   ui_attach = "era.dressing.ui_attach",
   virtcolumn = "era.dressing.virtcolumn",
+  whichkey = "era.dressing.whichkey",
   winline = "era.dressing.winline",
   winsep = "era.dressing.winsep",
 }
@@ -39,6 +40,7 @@ local load_times = {} ---@type table<string, number>
 ---@field public trailspace             era.dressing.trailspace
 ---@field public ui_attach              era.dressing.ui_attach
 ---@field public virtcolumn             era.dressing.virtcolumn
+---@field public whichkey               era.dressing.whichkey
 ---@field public winline                era.dressing.winline
 ---@field public winsep                 era.dressing.winsep
 local M = setmetatable({

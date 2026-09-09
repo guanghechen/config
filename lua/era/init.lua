@@ -107,7 +107,6 @@ local __m__mods = {
   textobject = "era.m.textobject",
   toggle = "era.m.toggle",
   winpicker = "era.m.winpicker",
-  wk = "era.m.wk",
 }
 
 ---@class era.m
@@ -142,7 +141,6 @@ local __m__mods = {
 ---@field public textobject             era.m.textobject
 ---@field public toggle                 era.m.toggle
 ---@field public winpicker              era.m.winpicker
----@field public wk                     era.m.wk
 local m = setmetatable({
   __mods = __m__mods,
 }, {

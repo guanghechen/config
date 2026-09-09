@@ -1,17 +1,21 @@
-local S = era.m.wk
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.whichkey.tree" ---@type string
 
----@class era.m.wk.tree
+local S = era.dressing.whichkey
+
+---@class era.dressing.whichkey.tree
 local M = {}
 
 ---Create a new tree
----@return table<string, era.m.wk.INode>
+---@return table<string, era.dressing.whichkey.INode>
 function M.new()
   return {}
 end
 
 ---Add mapping to tree
----@param tree_tbl                      table<string, era.m.wk.INode>
----@param mapping                       era.m.wk.IMapping
+---@param tree_tbl                      table<string, era.dressing.whichkey.INode>
+---@param mapping                       era.dressing.whichkey.IMapping
+---@return nil
 function M.add(tree_tbl, mapping)
   local lhs = mapping[1]
   if not lhs or lhs == "" then
@@ -73,9 +77,9 @@ function M.add(tree_tbl, mapping)
 end
 
 ---Find node by key sequence
----@param tree_tbl                      table<string, era.m.wk.INode>
+---@param tree_tbl                      table<string, era.dressing.whichkey.INode>
 ---@param keys                          string
----@return era.m.wk.INode|nil
+---@return era.dressing.whichkey.INode|nil
 function M.find(tree_tbl, keys)
   if not keys or keys == "" then
     return nil
@@ -98,10 +102,10 @@ function M.find(tree_tbl, keys)
 end
 
 ---Get children of a node, including proxy mappings
----@param tree_tbl                      table<string, era.m.wk.INode>
+---@param tree_tbl                      table<string, era.dressing.whichkey.INode>
 ---@param keys                          string
----@param mode                          era.m.wk.Mode
----@return table<string, era.m.wk.INode>
+---@param mode                          era.dressing.whichkey.Mode
+---@return table<string, era.dressing.whichkey.INode>
 function M.get_children(tree_tbl, keys, mode)
   local result = M.__children__(tree_tbl, keys)
 
@@ -141,9 +145,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Get direct children of a node
----@param tree_tbl                      table<string, era.m.wk.INode>
+---@param tree_tbl                      table<string, era.dressing.whichkey.INode>
 ---@param keys                          string
----@return table<string, era.m.wk.INode>
+---@return table<string, era.dressing.whichkey.INode>
 function M.__children__(tree_tbl, keys)
   if not keys or keys == "" then
     return tree_tbl

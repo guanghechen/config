@@ -7,7 +7,11 @@ require("ark.vendor.neovim.keymap")
 pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
-era.dressing.setup({ "notifier", "ui_attach", "im" })
+era.dressing.setup({
+  "notifier",
+  "ui_attach",
+  "im",
+})
 require("era.command")
 
 if dot.path.is_git_repo() then
@@ -19,19 +23,27 @@ pcall(require, "ark.vendor.local.plugin")
 
 vim.schedule(function()
   era.dressing.setup({
+    -- Status and navigation lines.
     "statusline",
     "tabline",
     "winline",
-    "commentstring",
-    "foldtext",
-    "indentline",
-    "indentscope",
-    "hipattern",
-    "scroll",
+
+    -- Gutter, whitespace, and window guides.
     "statuscolumn",
     "trailspace",
     "virtcolumn",
     "winsep",
+
+    -- Buffer syntax and structure.
+    "commentstring",
+    "foldtext",
+    "hipattern",
+    "indentline",
+    "indentscope",
+    "whichkey",
+
+    -- Scrolling behavior.
+    "scroll",
   })
 
   era.m.dim.dressing()
@@ -39,7 +51,6 @@ vim.schedule(function()
   era.m.lsp.dressing()
   era.m.select.dressing()
   era.m.image.dressing()
-  era.m.wk.dressing()
   era.m.paste.dressing()
   era.m.splitjoin.setup()
   era.m.surrounds.setup()

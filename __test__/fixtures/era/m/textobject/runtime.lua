@@ -19,7 +19,7 @@ function M.setup(t)
         end,
       },
     },
-    era = { m = { wk = { add = function() end } } },
+    era = { m = {}, dressing = { whichkey = { add = function() end } } },
   })
   era.m.splitline = require("era.m.splitline")
   era.m.git = { hunk = require("era.m.git.hunk") }

@@ -1,16 +1,16 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/wk/input_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/whichkey/input_spec.lua
 ---@diagnostic disable: undefined-global
 
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.m.wk.input")
-local Tree = assert(loadfile("lua/era/m/wk/tree.lua"))()
-t:patch_table(era.m.wk, "tree", Tree)
-local State = assert(loadfile("lua/era/m/wk/state.lua"))()
-t:patch_table(era.m.wk, "state", State)
-local Input = assert(loadfile("lua/era/m/wk/input.lua"))()
-t:patch_table(era.m.wk, "input", Input)
+local t = harness.new("era.dressing.whichkey.input")
+local Tree = assert(loadfile("lua/era/dressing/whichkey/tree.lua"))()
+t:patch_table(era.dressing.whichkey, "tree", Tree)
+local State = assert(loadfile("lua/era/dressing/whichkey/state.lua"))()
+t:patch_table(era.dressing.whichkey, "state", State)
+local Input = assert(loadfile("lua/era/dressing/whichkey/input.lua"))()
+t:patch_table(era.dressing.whichkey, "input", Input)
 
 t:test("exact native mapping is resolved after the which-key tree was built", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -39,7 +39,7 @@ end)
 
 t:test("exact nowait mapping executes without reading a third key", function()
   local reads = 0
-  local executed = nil ---@type {node: era.m.wk.INode|nil, keys: string}|nil
+  local executed = nil ---@type {node: era.dressing.whichkey.INode|nil, keys: string}|nil
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   ---@diagnostic disable-next-line: invisible
   t:defer(function()
@@ -58,7 +58,7 @@ t:test("exact nowait mapping executes without reading a third key", function()
     desc = "diffview: stage",
     is_group = true,
     children = {},
-  } ---@type era.m.wk.INode
+  } ---@type era.dressing.whichkey.INode
 
   t:patch_table(vim.fn, "getcharstr", function()
     reads = reads + 1
@@ -100,7 +100,7 @@ t:test("group-only prefix still waits for a child key", function()
     desc = "surround",
     is_group = true,
     children = {},
-  } ---@type era.m.wk.INode
+  } ---@type era.dressing.whichkey.INode
 
   t:patch_table(vim.fn, "getcharstr", function()
     reads = reads + 1

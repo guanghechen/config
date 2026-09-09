@@ -196,7 +196,7 @@ function M.bindkeys()
       descriptions[#descriptions + 1] = { prefix .. object[1], desc = object[2] }
     end
   end
-  era.m.wk.add(descriptions, { notify = false })
+  era.dressing.whichkey.add(descriptions, { notify = false })
 end
 
 return M

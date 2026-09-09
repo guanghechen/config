@@ -1,18 +1,23 @@
----@class era.m.wk
----@field public input                     era.m.wk.input
----@field public state                     era.m.wk.state
----@field public tree                      era.m.wk.tree
----@field public util                      era.m.wk.util
----@field public view                      era.m.wk.view
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.whichkey" ---@type string
+
+---@class era.dressing.whichkey
+---@field public input                     era.dressing.whichkey.input
+---@field public state                     era.dressing.whichkey.state
+---@field public tree                      era.dressing.whichkey.tree
+---@field public util                      era.dressing.whichkey.util
+---@field public view                      era.dressing.whichkey.view
 local M = {}
+
+local initialized = false ---@type boolean
 
 ---@type table<string, string>
 local __mods__ = {
-  input = "era.m.wk.input",
-  state = "era.m.wk.state",
-  tree = "era.m.wk.tree",
-  util = "era.m.wk.util",
-  view = "era.m.wk.view",
+  input = "era.dressing.whichkey.input",
+  state = "era.dressing.whichkey.state",
+  tree = "era.dressing.whichkey.tree",
+  util = "era.dressing.whichkey.util",
+  view = "era.dressing.whichkey.view",
 }
 
 setmetatable(M, {
@@ -28,7 +33,13 @@ setmetatable(M, {
 })
 
 ---Setup which-key with default configuration
+---@return nil
 function M.dressing()
+  if initialized then
+    return
+  end
+  initialized = true
+
   M.state.setup()
 
   stl.fn.observe({ dot.context.plugin.which_key }, function()
@@ -42,14 +53,16 @@ function M.dressing()
 end
 
 ---Add mappings
----@param mappings                       era.m.wk.IMapping | era.m.wk.IMapping[]
----@param opts                           ?era.m.wk.IAddOpts
+---@param mappings                       era.dressing.whichkey.IMapping | era.dressing.whichkey.IMapping[]
+---@param opts                           ?era.dressing.whichkey.IAddOpts
+---@return nil
 function M.add(mappings, opts)
   M.state.add(mappings, opts)
 end
 
 ---Show which-key manually
----@param opts                           ?era.m.wk.IShowOpts
+---@param opts                           ?era.dressing.whichkey.IShowOpts
+---@return nil
 function M.show(opts)
   if not M.state.ready then
     return
@@ -62,6 +75,7 @@ function M.show(opts)
 end
 
 ---Hide which-key
+---@return nil
 function M.hide()
   M.input.stop()
 end

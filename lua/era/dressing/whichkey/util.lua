@@ -1,4 +1,7 @@
----@class era.m.wk.util
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.dressing.whichkey.util" ---@type string
+
+---@class era.dressing.whichkey.util
 local M = {}
 
 local KEY_ICONS = stl.icon.keycode ---@type table<string, string>
@@ -11,7 +14,7 @@ end
 
 ---Parse mode string into array
 ---@param str                            string
----@return era.m.wk.Mode[]
+---@return era.dressing.whichkey.Mode[]
 function M.parse_modes(str)
   local modes = {}
   for i = 1, #str do
