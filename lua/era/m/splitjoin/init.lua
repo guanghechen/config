@@ -51,7 +51,7 @@ local function make_operator(task)
 end
 
 ---@return nil
-function M.dressing()
+function M.setup()
   if initialized then
     return
   end

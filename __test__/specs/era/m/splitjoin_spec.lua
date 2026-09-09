@@ -19,7 +19,7 @@ bootstrap.with_runtime(t, {
 
 local Splitjoin = require("era.m.splitjoin")
 era.m.splitjoin = Splitjoin
-Splitjoin.dressing()
+Splitjoin.setup()
 
 ---@param lines                         string[]
 ---@param callback                      fun(bufnr: integer): nil
@@ -62,8 +62,8 @@ local function assert_lines(expected, bufnr, message)
   t.assert_eq(vim.inspect(expected), vim.inspect(actual), message)
 end
 
-t:test("dressing keeps action implementation lazy", function()
-  t.assert_nil(package.loaded["era.m.splitjoin.action"], "action loaded during dressing")
+t:test("setup keeps action implementation lazy", function()
+  t.assert_nil(package.loaded["era.m.splitjoin.action"], "action loaded during setup")
 end)
 
 t:test("split resolves the smallest bracket region", function()
