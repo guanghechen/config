@@ -48,7 +48,7 @@ export class ImageRendererInner extends React.Component<IProps, IState> {
             loading={loading}
             width={width}
             height={height}
-            className="box-border flex-1 cursor-pointer border border-purple-600 object-contain shadow-[0_0_20px_1px_rgba(126,125,150,0.6)]"
+            className="box-border max-w-full flex-1 cursor-zoom-in object-contain"
             onClick={this.onOpenFullscreen}
           />
           {title && (
