@@ -5,6 +5,7 @@ import { useMarkdownDarken } from '../../hook/useMarkdownDarken'
 
 interface IMermaidRendererProps {
   readonly code: string
+  readonly fitToViewer?: boolean
 }
 
 interface IMermaidRenderRequest {
@@ -18,7 +19,7 @@ interface IMermaidRenderError {
 }
 
 const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
-  const { code } = props
+  const { code, fitToViewer = false } = props
   const darken: boolean = useMarkdownDarken()
   const request = React.useMemo<IMermaidRenderRequest>(() => ({ code, darken }), [code, darken])
   const [renderError, setRenderError] = React.useState<IMermaidRenderError | null>(null)
@@ -52,10 +53,22 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
 
           const svgElement: SVGSVGElement | null = ref.current.querySelector('svg')
           if (svgElement) {
-            svgElement.style.width = '100%'
-            svgElement.style.height = '100%'
-            svgElement.style.maxWidth = 'unset'
-            svgElement.style.maxHeight = 'unset'
+            if (fitToViewer) {
+              svgElement.style.width = '100%'
+              svgElement.style.height = '100%'
+              svgElement.style.maxWidth = 'unset'
+              svgElement.style.maxHeight = 'unset'
+            } else {
+              // Keep inline diagrams at their natural scale; only shrink to fit the column.
+              const width: number = svgElement.viewBox.baseVal.width
+              if (Number.isFinite(width) && width > 0) {
+                svgElement.style.width = `${width}px`
+              }
+              svgElement.style.height = 'auto'
+              svgElement.style.maxWidth = '100%'
+              svgElement.style.display = 'block'
+              svgElement.style.marginInline = 'auto'
+            }
           }
         }
       })
@@ -74,10 +87,10 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
     return () => {
       cancelled = true
     }
-  }, [id, request])
+  }, [fitToViewer, id, request])
 
   return (
-    <div className="size-full p-2">
+    <div className={fitToViewer ? 'size-full p-2' : 'w-full p-2'}>
       {errorMessage ? (
         <div className="size-full overflow-auto text-sm text-red-600 dark:text-red-400">
           <pre role="alert" className="whitespace-pre-wrap">
@@ -89,7 +102,7 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
           </pre>
         </div>
       ) : null}
-      <div ref={ref} className={errorMessage ? 'hidden' : 'size-full'} />
+      <div ref={ref} className={errorMessage ? 'hidden' : fitToViewer ? 'size-full' : 'w-full'} />
     </div>
   )
 }
@@ -109,15 +122,12 @@ const Mermaid: React.FC<{ readonly code: string }> = props => {
 
   return (
     <React.Fragment>
-      <div
-        className="cursor-pointer w-full h-full flex items-center justify-center"
-        onClick={onClick}
-      >
+      <div className="cursor-pointer w-full flex items-center justify-center" onClick={onClick}>
         <MermaidRenderer code={code} />
       </div>
       <ElementViewer open={open} resetOnOpen={false} onClose={onClose}>
         <div className="w-[80vw] h-[80vh]">
-          <MermaidRenderer code={code} />
+          <MermaidRenderer code={code} fitToViewer />
         </div>
       </ElementViewer>
     </React.Fragment>
