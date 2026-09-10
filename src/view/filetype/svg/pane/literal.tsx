@@ -1,20 +1,15 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { IPrismThemeScheme } from '@/common/component/code-highlighter'
-import {
-  CodeHighlighter,
-  vscDarkModernTheme,
-  vscLightModernTheme,
-} from '@/common/component/code-highlighter'
+import { CodeHighlighter, getPrismTheme } from '@/common/component/code-highlighter'
 import { LiteralBox } from '@/common/component/LiteralBox'
-import { SiteTheme, useSiteViewmodel } from '@/context/site'
+import { useSiteViewmodel } from '@/context/site'
 import { useSvgViewViewModel } from '../context'
 
 export const LiteralPane: React.FC = () => {
   const site = useSiteViewmodel()
-  const theme: SiteTheme = useStateValue(site.theme$)
-  const themeScheme: IPrismThemeScheme =
-    theme === SiteTheme.DARKEN ? vscDarkModernTheme : vscLightModernTheme
+  const palette = useStateValue(site.palette$)
+  const themeScheme: IPrismThemeScheme = getPrismTheme(palette)
 
   const viewmodel = useSvgViewViewModel()
   const content: string | null = useStateValue(viewmodel.content$)

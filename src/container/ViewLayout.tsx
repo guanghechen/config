@@ -1,5 +1,6 @@
 import React from 'react'
 import { LoginModal } from '@/container/LoginModal'
+import { Settings } from '@/container/Settings'
 import { ThemeToggle } from '@/container/ThemeToggle'
 import { Link } from 'react-router-dom'
 import { FolderIcon } from '@/common/component/icon/material'
@@ -36,7 +37,8 @@ export class ViewLayout extends React.PureComponent<IProps> {
           {menu && <div className="vlt-left">{menu}</div>}
           <div className="vlt-middle">{toolbar}</div>
           <div className="vlt-right">{viewActions}</div>
-          <div className="vlt-rightest">
+          <div className="vlt-rightest flex items-center gap-1">
+            <Settings />
             <ThemeToggle />
           </div>
         </div>

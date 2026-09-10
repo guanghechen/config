@@ -49,6 +49,7 @@ export class KeyBindingManagerImpl implements IKeyBindingManager {
   }
 
   public handleKeyDown(event: KeyboardEvent): void {
+    if (event.target instanceof Element && event.target.closest('dialog[open]')) return
     for (const binding of this.bindings) {
       if (this.matchesBinding(event, binding)) {
         event.preventDefault()

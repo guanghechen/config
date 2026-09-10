@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './basic.css';
+@import './palette.css';
 @import './deps/react-toastify.css';
 @import './component/markdown.css';
 @import './view/file.css';

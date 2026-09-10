@@ -3,13 +3,12 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Editor, type EditorProps } from '@monaco-editor/react'
 import React from 'react'
 import { usePrettier } from '@/common/hook/usePrettier'
-import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
-import { FILETYPE_TO_LANGUAGE_MAP, SITE_THEME_TO_MONACO_THEME_MAP } from './constant'
+import { FILETYPE_TO_LANGUAGE_MAP } from './constant'
 import { DefaultCodeDropdown } from './DefaultCodeDropdown'
 import { LanguageDropdown } from './LanguageDropdown'
 import { PrettierFormatButton } from './PrettierFormatButton'
-import { registerModernThemes } from './theme'
+import { registerEditorThemes } from './theme'
 
 const MONACO_EDITOR_OPTIONS: EditorProps['options'] = {
   minimap: {
@@ -48,12 +47,10 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
   const language: string = FILETYPE_TO_LANGUAGE_MAP[editorLanguage] || editorLanguage
 
   const siteViewmodel = useSiteViewmodel()
-  const siteTheme: SiteTheme = useStateValue(siteViewmodel.theme$)
+  const theme = useStateValue(siteViewmodel.palette$)
   const { formatWithNotifications } = usePrettier()
 
   const [_monaco, setMonaco] = React.useState<any>(null)
-
-  const theme = SITE_THEME_TO_MONACO_THEME_MAP[siteTheme]
 
   const handleEditorDidMount = useEventCallback((editor: any, monacoInstance: any) => {
     setMonaco(monacoInstance)
@@ -153,7 +150,7 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
           language={language}
           value={content || ''}
           onChange={value => onContentChange(value || null)}
-          beforeMount={registerModernThemes}
+          beforeMount={registerEditorThemes}
           theme={theme}
           options={MONACO_EDITOR_OPTIONS}
           onMount={handleEditorDidMount}

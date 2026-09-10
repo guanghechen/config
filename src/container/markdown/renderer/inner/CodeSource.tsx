@@ -1,15 +1,12 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from '@/common/util/clsx'
+import { useSiteViewmodel } from '@/context/site'
 import React from 'react'
 import { CopyButton } from '@/common/component/button/copy'
 import type { IPrismThemeScheme } from '@/common/component/code-highlighter'
-import {
-  CodeHighlighter,
-  vscDarkModernTheme,
-  vscLightModernTheme,
-} from '@/common/component/code-highlighter'
+import { CodeHighlighter, getPrismTheme } from '@/common/component/code-highlighter'
 import { CodeIcon } from '@/common/component/icon/material'
 import type { ICodeMetaData } from '@/common/util/parseCodeMeta'
-import { useMarkdownDarken } from '../../hook/useMarkdownDarken'
 
 interface IProps {
   readonly code: string
@@ -21,9 +18,9 @@ interface IProps {
 
 export const CodeSource: React.FC<IProps> = props => {
   const { code, lang, meta, showLineno, initialExpanded } = props
-  const darken: boolean = useMarkdownDarken()
+  const palette = useStateValue(useSiteViewmodel().palette$)
 
-  const themeScheme: IPrismThemeScheme = darken ? vscDarkModernTheme : vscLightModernTheme
+  const themeScheme: IPrismThemeScheme = getPrismTheme(palette)
   const title: string = (meta.filename || meta.title || '') as string
   const lineCount = React.useMemo(() => code.split('\n').length, [code])
   const maxLines = meta.maxlines > 0 ? meta.maxlines : undefined

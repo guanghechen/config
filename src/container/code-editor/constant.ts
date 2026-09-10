@@ -1,5 +1,3 @@
-import { SiteTheme } from '@/context/site'
-
 export const FILETYPE_TO_LANGUAGE_MAP: Record<string, string> = {
   javascript: 'javascript',
   js: 'javascript',
@@ -24,11 +22,6 @@ export const FILETYPE_TO_LANGUAGE_MAP: Record<string, string> = {
   yml: 'yaml',
   text: 'plaintext',
   txt: 'plaintext',
-}
-
-export const SITE_THEME_TO_MONACO_THEME_MAP: Record<SiteTheme, string> = {
-  [SiteTheme.DARKEN]: 'vsc-dark-modern',
-  [SiteTheme.LIGHTEN]: 'vsc-light-modern',
 }
 
 export const LANGUAGE_OPTIONS = [

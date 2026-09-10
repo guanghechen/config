@@ -1,0 +1,25 @@
+/* Color values are supplied by the active palette in SiteContextProvider. */
+:root[data-palette^='rose-pine'] {
+  --vscode-editor-background: var(--palette-base);
+  --vscode-sidebar-background: var(--palette-surface);
+  --vscode-topbar-background: var(--palette-surface);
+  --vscode-surface-background: var(--palette-base);
+  --vscode-popover-background: var(--palette-overlay);
+  --vscode-input-background: var(--palette-base);
+  --vscode-code-background: var(--palette-surface);
+  --vscode-foreground: var(--palette-text);
+  --vscode-muted-foreground: var(--palette-subtle);
+  --vscode-inactive-foreground: var(--palette-muted);
+  --vscode-border: var(--palette-highlight-med);
+  --vscode-control-border: var(--palette-highlight-high);
+  --vscode-list-hover-background: var(--palette-highlight-low);
+  --vscode-list-active-background: var(--palette-highlight-med);
+  --vscode-accent: var(--palette-pine);
+  --vscode-accent-hover: var(--palette-foam);
+  --vscode-focus-border: var(--palette-iris);
+  --vscode-link: var(--palette-rose);
+  --vscode-selection: var(--palette-highlight-med);
+  --vscode-error: var(--palette-love);
+  --vscode-scrollbar: var(--palette-highlight-med);
+  --vscode-scrollbar-hover: var(--palette-highlight-high);
+}
