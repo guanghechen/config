@@ -2,7 +2,11 @@ import cn from '@/common/util/clsx'
 import React from 'react'
 import { CopyButton } from '@/common/component/button/copy'
 import type { IPrismThemeScheme } from '@/common/component/code-highlighter'
-import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/common/component/code-highlighter'
+import {
+  CodeHighlighter,
+  vscDarkModernTheme,
+  vscLightModernTheme,
+} from '@/common/component/code-highlighter'
 import { CodeIcon } from '@/common/component/icon/material'
 import type { ICodeMetaData } from '@/common/util/parseCodeMeta'
 import { useMarkdownDarken } from '../../hook/useMarkdownDarken'
@@ -19,7 +23,7 @@ export const CodeSource: React.FC<IProps> = props => {
   const { code, lang, meta, showLineno, initialExpanded } = props
   const darken: boolean = useMarkdownDarken()
 
-  const themeScheme: IPrismThemeScheme = darken ? vscDarkTheme : vscLightTheme
+  const themeScheme: IPrismThemeScheme = darken ? vscDarkModernTheme : vscLightModernTheme
   const title: string = (meta.filename || meta.title || '') as string
   const lineCount = React.useMemo(() => code.split('\n').length, [code])
   const maxLines = meta.maxlines > 0 ? meta.maxlines : undefined
@@ -31,15 +35,17 @@ export const CodeSource: React.FC<IProps> = props => {
     <div className="flex flex-col">
       <div
         className={cn(
-          'flex items-center gap-2 p-2 px-4 cursor-pointer select-none bg-gray-100 dark:bg-[#2d2d2d]',
+          'flex items-center gap-2 p-2 px-4 cursor-pointer select-none bg-[var(--vscode-sidebar-background)] text-[var(--vscode-foreground)]',
           {
-            'border-b border-gray-300 dark:border-gray-600': !expanded,
+            'border-b border-[var(--vscode-border)]': !expanded,
           },
         )}
         onClick={() => setExpanded(v => !v)}
       >
         <CodeIcon className="h-[18px] w-[18px] opacity-80" />
-        <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs dark:bg-[#444]">{lang}</span>
+        <span className="rounded bg-[var(--vscode-list-active-background)] px-1.5 py-0.5 text-xs">
+          {lang}
+        </span>
         {title && <span className="text-sm text-gray-600 dark:text-gray-400">{title}</span>}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-gray-500 dark:text-gray-400">

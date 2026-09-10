@@ -17,10 +17,10 @@ export const FullscreenToggle: React.FC = () => {
       onClick={() => viewmodel.contentFullWidth$.setState(v => !v)}
       className={cn(
         'pointer-events-auto flex h-7 w-7 items-center justify-center rounded-md',
-        'border border-transparent bg-white/70 text-xs font-medium shadow-sm backdrop-blur-sm',
-        'transition-all duration-200 dark:bg-gray-800/70',
-        'text-gray-500 dark:text-gray-400 cursor-pointer',
-        'hover:bg-gray-100 dark:hover:bg-white/10',
+        'border border-transparent bg-[var(--vscode-surface-background)] text-xs font-medium shadow-sm backdrop-blur-sm',
+        'transition-all duration-200',
+        'text-[var(--vscode-muted-foreground)] cursor-pointer',
+        'hover:bg-[var(--vscode-list-hover-background)]',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
       )}
     >

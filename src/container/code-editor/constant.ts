@@ -27,13 +27,8 @@ export const FILETYPE_TO_LANGUAGE_MAP: Record<string, string> = {
 }
 
 export const SITE_THEME_TO_MONACO_THEME_MAP: Record<SiteTheme, string> = {
-  [SiteTheme.DARKEN]: 'vs-dark',
-  [SiteTheme.LIGHTEN]: 'vs-light',
-}
-
-export const SITE_THEME_TO_CUSTOMIZED_THEME_MAP: Record<SiteTheme, string> = {
-  [SiteTheme.DARKEN]: 'transparent-dark',
-  [SiteTheme.LIGHTEN]: 'transparent-light',
+  [SiteTheme.DARKEN]: 'vsc-dark-modern',
+  [SiteTheme.LIGHTEN]: 'vsc-light-modern',
 }
 
 export const LANGUAGE_OPTIONS = [

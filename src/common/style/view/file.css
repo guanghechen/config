@@ -14,7 +14,7 @@
     min-height: 100vh;
     font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
 
-    @apply transition-colors duration-300 ease-in-out bg-gray-50 text-gray-800 dark:bg-gray-800 dark:text-gray-200;
+    @apply transition-colors duration-300 ease-in-out;
 
     .vl-topbar {
       box-sizing: border-box;
@@ -31,8 +31,6 @@
       column-gap: 1rem;
       padding-left: 1rem;
       padding-right: 1rem;
-
-      @apply bg-gray-50 dark:bg-gray-800;
 
       .vlt-leftest,
       .vlt-rightest {
@@ -86,11 +84,10 @@
         box-sizing: border-box;
         min-height: calc(100vh - 1rem - var(--v-vlt-height));
         border-width: 1rem 0.5rem;
+        border-color: transparent;
         scroll-behavior: smooth;
 
-        @apply shadow-lg rounded-lg border-transparent
-          backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80
-          text-slate-800  dark:text-gray-200;
+        @apply rounded-lg shadow-lg;
       }
 
       &[data-filetype='markdown'] .vlm-pane {
@@ -112,5 +109,32 @@
         }
       }
     }
+  }
+}
+
+.vl-root:where([data-scenario='file']) {
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-foreground);
+
+  .vl-topbar {
+    border-bottom: 1px solid var(--vscode-border);
+    background-color: var(--vscode-topbar-background);
+    color: var(--vscode-foreground);
+  }
+
+  .vlm-pane {
+    border-color: transparent;
+    background-color: var(--vscode-surface-background);
+    color: var(--vscode-foreground);
+    box-shadow:
+      0 0 0 1px var(--vscode-border),
+      0 4px 16px var(--vscode-shadow);
+  }
+
+  [role='dialog'] {
+    border-color: var(--vscode-control-border);
+    background-color: var(--vscode-popover-background);
+    color: var(--vscode-foreground);
+    box-shadow: 0 8px 24px var(--vscode-shadow);
   }
 }

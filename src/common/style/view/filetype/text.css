@@ -51,7 +51,9 @@
           width: 100%;
           padding: 0;
 
-          @apply border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm;
+          @apply border rounded-lg shadow-sm;
+          border-color: var(--vscode-border);
+          background-color: var(--vscode-surface-background);
         }
       }
     }

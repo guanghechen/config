@@ -77,7 +77,7 @@ export const ThemeToggle: React.FC = () => {
         aria-expanded={isOpen}
         aria-controls={isOpen ? groupName : undefined}
         onClick={() => setIsOpen(open => !open)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-200/60 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--vscode-muted-foreground)] transition-colors hover:bg-[var(--vscode-list-hover-background)] hover:text-[var(--vscode-foreground)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vscode-focus-border)]"
       >
         <Icon className="h-4 w-4" />
       </button>
@@ -87,9 +87,9 @@ export const ThemeToggle: React.FC = () => {
           id={groupName}
           role="dialog"
           aria-label="Appearance"
-          className="absolute right-0 top-full z-50 mt-2 w-48 max-w-[calc(100vw-2rem)] min-w-0 rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-900"
+          className="absolute right-0 top-full z-50 mt-2 w-48 max-w-[calc(100vw-2rem)] min-w-0 rounded-xl border border-[var(--vscode-control-border)] bg-[var(--vscode-popover-background)] p-2 text-[var(--vscode-foreground)] shadow-lg shadow-[var(--vscode-shadow)]"
         >
-          <div className="px-3 pb-2 pt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+          <div className="px-3 pb-2 pt-1 text-xs font-medium text-[var(--vscode-muted-foreground)]">
             Appearance
           </div>
           <div role="radiogroup" aria-label="Theme" className="space-y-1">
@@ -101,10 +101,10 @@ export const ThemeToggle: React.FC = () => {
                   key={option.value}
                   className={cn(
                     'relative flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                    'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-blue-500',
+                    'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--vscode-accent)]',
                     selected
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
-                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/60',
+                      ? 'bg-[var(--vscode-list-active-background)] text-[var(--vscode-foreground)]'
+                      : 'text-[var(--vscode-muted-foreground)] hover:bg-[var(--vscode-list-hover-background)] hover:text-[var(--vscode-foreground)]',
                   )}
                 >
                   <input

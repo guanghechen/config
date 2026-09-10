@@ -1,13 +1,49 @@
 @layer components {
   .yozora-html {
     header > h1 {
-      @apply py-2 mt-6 mb-4 border-b border-b-gray-200 dark:border-b-gray-600 text-2xl font-semibold text-gray-800 dark:text-gray-200;
+      @apply py-2 mt-6 mb-4 border-b text-2xl font-semibold;
+
       a {
-        @apply py-0.5 px-0 text-blue-700 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 active:text-blue-900 dark:active:text-blue-200 visited:text-violet-700 dark:visited:text-violet-400;
+        @apply py-0.5 px-0 font-medium;
       }
     }
     div[align='center'] a > img {
       display: inline-block;
     }
   }
+}
+
+.yozora-html header > h1 {
+  border-color: var(--vscode-border);
+  color: var(--vscode-foreground);
+}
+
+.yozora-html header > h1 a {
+  color: var(--vscode-link);
+}
+
+.yozora-root {
+  color: var(--vscode-foreground);
+}
+
+.yozora-root .yozora-heading,
+.vlm-p-content > div h1 {
+  color: var(--vscode-foreground);
+}
+
+.yozora-root .yozora-link,
+.yozora-root .yozora-link-reference {
+  border-color: color-mix(in srgb, var(--vscode-link) 45%, transparent);
+  color: var(--vscode-link);
+}
+
+.yozora-root .yozora-inline-code {
+  background-color: var(--vscode-code-background);
+  color: var(--vscode-foreground);
+}
+
+.yozora-root .yozora-code,
+.yozora-root .yozora-table {
+  border-color: var(--vscode-border);
+  background-color: var(--vscode-surface-background);
 }

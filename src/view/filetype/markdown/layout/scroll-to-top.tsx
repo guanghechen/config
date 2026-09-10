@@ -26,7 +26,7 @@ export const ScrollToTop: React.FC = () => {
       title="Scroll to top"
       aria-label="Scroll to top"
       onClick={handleClick}
-      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white/85 text-gray-500 shadow-md backdrop-blur-sm transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-600 dark:bg-gray-800/85 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-[var(--vscode-border)] bg-[var(--vscode-surface-background)] text-[var(--vscode-muted-foreground)] shadow-md backdrop-blur-sm transition-colors hover:bg-[var(--vscode-list-hover-background)] hover:text-[var(--vscode-foreground)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500     "
     >
       <svg
         aria-hidden="true"

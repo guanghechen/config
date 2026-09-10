@@ -28,9 +28,9 @@ export class FileTreeNode extends React.Component<IProps> {
           </span>
           <span className="mr-1 flex-shrink-0">
             {collapsed ? (
-              <FolderIcon className="text-blue-500" />
+              <FolderIcon className="text-[var(--vscode-accent)]" />
             ) : (
-              <FolderOpenIcon className="text-blue-500" />
+              <FolderOpenIcon className="text-[var(--vscode-accent)]" />
             )}
           </span>
           <span className="truncate">{node.basename}</span>

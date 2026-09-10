@@ -1,8 +1,68 @@
+:root {
+  color-scheme: light;
+  --vscode-editor-background: #ffffff;
+  --vscode-sidebar-background: #f8f8f8;
+  --vscode-topbar-background: #f8f8f8;
+  --vscode-surface-background: #ffffff;
+  --vscode-popover-background: #ffffff;
+  --vscode-input-background: #ffffff;
+  --vscode-code-background: #f8f8f8;
+  --vscode-foreground: #3b3b3b;
+  --vscode-muted-foreground: #616161;
+  --vscode-inactive-foreground: #868686;
+  --vscode-border: #e5e5e5;
+  --vscode-control-border: #cecece;
+  --vscode-list-hover-background: #f2f2f2;
+  --vscode-list-active-background: #e8e8e8;
+  --vscode-accent: #005fb8;
+  --vscode-accent-hover: #0258a8;
+  --vscode-focus-border: #005fb8;
+  --vscode-link: #005fb8;
+  --vscode-selection: #add6ff80;
+  --vscode-error: #f85149;
+  --vscode-shadow: rgb(0 0 0 / 14%);
+  --vscode-scrollbar: #c8c8c8;
+  --vscode-scrollbar-hover: #a8a8a8;
+}
+
+:root.dark {
+  color-scheme: dark;
+  --vscode-editor-background: #1f1f1f;
+  --vscode-sidebar-background: #181818;
+  --vscode-topbar-background: #181818;
+  --vscode-surface-background: #1f1f1f;
+  --vscode-popover-background: #1f1f1f;
+  --vscode-input-background: #313131;
+  --vscode-code-background: #2b2b2b;
+  --vscode-foreground: #cccccc;
+  --vscode-muted-foreground: #9d9d9d;
+  --vscode-inactive-foreground: #868686;
+  --vscode-border: #2b2b2b;
+  --vscode-control-border: #3c3c3c;
+  --vscode-list-hover-background: #2b2b2b;
+  --vscode-list-active-background: #313131;
+  --vscode-accent: #0078d4;
+  --vscode-accent-hover: #026ec1;
+  --vscode-focus-border: #0078d4;
+  --vscode-link: #4daafc;
+  --vscode-selection: #2489db82;
+  --vscode-error: #f85149;
+  --vscode-shadow: rgb(0 0 0 / 36%);
+  --vscode-scrollbar: #424242;
+  --vscode-scrollbar-hover: #555555;
+}
+
 @layer components {
   :root,
   html,
   body {
-    @apply bg-gray-50 text-gray-800;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-foreground);
+
+    ::selection,
+    &::selection {
+      background-color: var(--vscode-selection);
+    }
 
     ::-webkit-scrollbar,
     &::-webkit-scrollbar {
@@ -12,47 +72,23 @@
 
     ::-webkit-scrollbar-thumb,
     &::-webkit-scrollbar-thumb {
-      @apply rounded bg-gray-400 border border-gray-300;
+      border: 1px solid var(--vscode-border);
+      border-radius: 0.25rem;
+      background-color: var(--vscode-scrollbar);
     }
 
     ::-webkit-scrollbar-thumb:hover,
     &::-webkit-scrollbar-thumb:hover {
-      @apply bg-gray-500 border-gray-400;
+      background-color: var(--vscode-scrollbar-hover);
     }
 
     ::-webkit-scrollbar-track,
-    &::-webkit-scrollbar-track {
-      @apply rounded bg-gray-50 border border-gray-200;
-    }
-
+    &::-webkit-scrollbar-track,
     ::-webkit-scrollbar-corner,
     &::-webkit-scrollbar-corner {
-      @apply bg-gray-50 border border-gray-200;
-    }
-  }
-
-  /* Dark mode scrollbar styles */
-  .dark {
-    @apply bg-gray-800 text-gray-200;
-
-    ::-webkit-scrollbar-thumb,
-    &::-webkit-scrollbar-thumb {
-      @apply bg-gray-400 border-gray-500;
-    }
-
-    ::-webkit-scrollbar-thumb:hover,
-    &::-webkit-scrollbar-thumb:hover {
-      @apply bg-gray-300 border-gray-400;
-    }
-
-    ::-webkit-scrollbar-track,
-    &::-webkit-scrollbar-track {
-      @apply bg-gray-700 border-gray-600;
-    }
-
-    ::-webkit-scrollbar-corner,
-    &::-webkit-scrollbar-corner {
-      @apply bg-gray-700 border-gray-600;
+      border: 1px solid var(--vscode-border);
+      border-radius: 0.25rem;
+      background-color: var(--vscode-sidebar-background);
     }
   }
 }
@@ -85,4 +121,14 @@ button {
 button {
   font-weight: bold;
   font-style: normal;
+}
+
+input,
+textarea,
+select {
+  accent-color: var(--vscode-accent);
+}
+
+:focus-visible {
+  outline-color: var(--vscode-focus-border);
 }

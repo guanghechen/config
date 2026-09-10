@@ -17,8 +17,8 @@ const FileTreeItemComponent: React.FC<IProps> = props => {
 
   return (
     <div
-      className={cn('select-none px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-600', {
-        'bg-gray-300 text-gray-800 dark:bg-gray-500 dark:text-gray-100': activate,
+      className={cn('select-none px-1 py-1 hover:bg-[var(--vscode-list-hover-background)]', {
+        'bg-[var(--vscode-list-active-background)] text-[var(--vscode-foreground)]': activate,
       })}
       style={{ paddingLeft: `${node.depth * 12}px` }}
       onClick={() => onNodeClick(node)}

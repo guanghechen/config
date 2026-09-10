@@ -1,6 +1,6 @@
 @layer components {
   .custom-toast.custom-toast.custom-toast {
-    @apply bg-white text-gray-700 border border-gray-200 shadow-lg;
+    @apply border shadow-lg;
     font-family:
       Maple Mono NF CN,
       Roboto Mono,
@@ -24,17 +24,19 @@
     }
   }
 
-  .dark {
-    .custom-toast.custom-toast.custom-toast {
-      @apply bg-gray-800 text-gray-50 border-gray-600;
+  .dark .custom-toast.custom-toast.custom-toast {
+    &.Toastify__toast--success {
+      @apply bg-green-900 text-green-200 border-green-500;
+    }
 
-      &.Toastify__toast--success {
-        @apply bg-green-900 text-green-200 border-green-500;
-      }
-
-      &.Toastify__toast--error {
-        @apply bg-red-900 text-red-200 border-red-500;
-      }
+    &.Toastify__toast--error {
+      @apply bg-red-900 text-red-200 border-red-500;
     }
   }
+}
+
+.custom-toast.custom-toast.custom-toast {
+  border-color: var(--vscode-border);
+  background-color: var(--vscode-popover-background);
+  color: var(--vscode-foreground);
 }

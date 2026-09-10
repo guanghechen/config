@@ -5,14 +5,11 @@ import React from 'react'
 import { usePrettier } from '@/common/hook/usePrettier'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
-import {
-  FILETYPE_TO_LANGUAGE_MAP,
-  SITE_THEME_TO_CUSTOMIZED_THEME_MAP,
-  SITE_THEME_TO_MONACO_THEME_MAP,
-} from './constant'
+import { FILETYPE_TO_LANGUAGE_MAP, SITE_THEME_TO_MONACO_THEME_MAP } from './constant'
 import { DefaultCodeDropdown } from './DefaultCodeDropdown'
 import { LanguageDropdown } from './LanguageDropdown'
 import { PrettierFormatButton } from './PrettierFormatButton'
+import { registerModernThemes } from './theme'
 
 const MONACO_EDITOR_OPTIONS: EditorProps['options'] = {
   minimap: {
@@ -38,55 +35,6 @@ const MONACO_EDITOR_OPTIONS: EditorProps['options'] = {
   hideCursorInOverviewRuler: true,
 } as const
 
-// Custom transparent themes
-const TRANSPARENT_LIGHT_THEME = {
-  base: 'vs' as const,
-  inherit: true,
-  rules: [],
-  colors: {
-    'editor.background': '#f8fafc90', // Semi-transparent light background
-    'editor.foreground': '#1f2937',
-    'editorLineNumber.foreground': '#6b7280',
-    'editorLineNumber.activeForeground': '#374151',
-    'editor.selectionBackground': '#3b82f640',
-    'editor.inactiveSelectionBackground': '#3b82f620',
-    // Remove blue outlines/borders
-    focusBorder: '#00000000', // Transparent focus border
-    'editor.focusedStackFrameHighlightBackground': '#00000000',
-    'editor.stackFrameHighlightBackground': '#00000000',
-    // Minimap colors
-    'minimap.background': '#f8fafc80', // Semi-transparent light background
-    'minimap.foregroundOpacity': '#000000dd',
-    'minimapSlider.background': '#94a3b840',
-    'minimapSlider.hoverBackground': '#64748b60',
-    'minimapSlider.activeBackground': '#475569',
-  },
-}
-
-const TRANSPARENT_DARK_THEME = {
-  base: 'vs-dark' as const,
-  inherit: true,
-  rules: [],
-  colors: {
-    'editor.background': '#1e293b90', // Semi-transparent dark background
-    'editor.foreground': '#e5e7eb',
-    'editorLineNumber.foreground': '#6b7280',
-    'editorLineNumber.activeForeground': '#9ca3af',
-    'editor.selectionBackground': '#3b82f640',
-    'editor.inactiveSelectionBackground': '#3b82f620',
-    // Remove blue outlines/borders
-    focusBorder: '#00000000', // Transparent focus border
-    'editor.focusedStackFrameHighlightBackground': '#00000000',
-    'editor.stackFrameHighlightBackground': '#00000000',
-    // Minimap colors
-    'minimap.background': '#1e293b80', // Semi-transparent dark background
-    'minimap.foregroundOpacity': '#e2e8f0dd',
-    'minimapSlider.background': '#64748b40',
-    'minimapSlider.hoverBackground': '#94a3b860',
-    'minimapSlider.activeBackground': '#cbd5e1',
-  },
-}
-
 interface IProps {
   readonly content: string | null
   readonly editorLanguage: string
@@ -104,18 +52,11 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
   const { formatWithNotifications } = usePrettier()
 
   const [_monaco, setMonaco] = React.useState<any>(null)
-  const [mounted, setMounted] = React.useState<boolean>(false)
 
-  const theme: string = mounted
-    ? SITE_THEME_TO_CUSTOMIZED_THEME_MAP[siteTheme]
-    : SITE_THEME_TO_MONACO_THEME_MAP[siteTheme]
+  const theme = SITE_THEME_TO_MONACO_THEME_MAP[siteTheme]
 
   const handleEditorDidMount = useEventCallback((editor: any, monacoInstance: any) => {
     setMonaco(monacoInstance)
-
-    // Define custom transparent themes
-    monacoInstance.editor.defineTheme('transparent-light', TRANSPARENT_LIGHT_THEME)
-    monacoInstance.editor.defineTheme('transparent-dark', TRANSPARENT_DARK_THEME)
 
     // Add Prettier format command
     editor.addCommand(
@@ -166,8 +107,6 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
         }
       },
     })
-
-    setMounted(true)
   })
 
   const handleLoadTemplate = useEventCallback((templateContent: string) => {
@@ -214,6 +153,7 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
           language={language}
           value={content || ''}
           onChange={value => onContentChange(value || null)}
+          beforeMount={registerModernThemes}
           theme={theme}
           options={MONACO_EDITOR_OPTIONS}
           onMount={handleEditorDidMount}

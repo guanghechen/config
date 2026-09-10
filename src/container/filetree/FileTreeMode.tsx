@@ -19,15 +19,15 @@ export const FileTreeMode: React.FC<IProps> = props => {
 
   return (
     <div
-      className="flex h-5 select-none rounded-lg bg-gray-200 bg-opacity-80 text-xs shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-600 dark:bg-opacity-90 dark:hover:bg-opacity-95"
+      className="flex h-5 select-none rounded-lg border border-[var(--vscode-border)] bg-[var(--vscode-sidebar-background)] text-xs shadow-sm transition-colors"
       title={`Current view: ${mode === FileTreeModeEnum.LIST ? 'list' : 'tree'}`}
     >
       <button
         className={cn(
           'box-border relative px-3 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
           listMode
-            ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
-            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+            ? 'bg-[var(--vscode-accent)] font-medium text-white shadow-inner'
+            : 'text-[var(--vscode-muted-foreground)] hover:bg-[var(--vscode-list-hover-background)] hover:text-[var(--vscode-foreground)]',
         )}
         onClick={() => onModeChange(FileTreeModeEnum.LIST)}
       >
@@ -37,8 +37,8 @@ export const FileTreeMode: React.FC<IProps> = props => {
         className={cn(
           'box-border relative px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
           treeMode
-            ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
-            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+            ? 'bg-[var(--vscode-accent)] font-medium text-white shadow-inner'
+            : 'text-[var(--vscode-muted-foreground)] hover:bg-[var(--vscode-list-hover-background)] hover:text-[var(--vscode-foreground)]',
         )}
         onClick={() => onModeChange(FileTreeModeEnum.TREE)}
       >
