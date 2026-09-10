@@ -16,7 +16,10 @@ interface ISideEffectProps {
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
   const viewmodel: SiteViewModel | null = useViewModel<SiteViewModel>(async () => {
     const initialData = await universalStorage.getContext<Partial<ISiteData>>(storageKey)
-    return SiteViewModel.fromData(initialData || {})
+    const deviceTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? SiteTheme.DARKEN
+      : SiteTheme.LIGHTEN
+    return SiteViewModel.fromData(initialData || {}, deviceTheme)
   })
 
   const context: ISiteContext | null = React.useMemo<ISiteContext | null>(
@@ -41,9 +44,19 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
   const theme: SiteTheme = useStateValue(viewmodel.theme$)
 
-  usePersistAsync(viewmodel, storageKey, [viewmodel.theme$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.themePreference$])
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const updateDeviceTheme = (): void => {
+      viewmodel.setDeviceTheme(media.matches ? SiteTheme.DARKEN : SiteTheme.LIGHTEN)
+    }
+    media.addEventListener('change', updateDeviceTheme)
+    updateDeviceTheme()
+    return () => media.removeEventListener('change', updateDeviceTheme)
+  }, [viewmodel])
+
+  React.useLayoutEffect(() => {
     const darken = theme === SiteTheme.DARKEN
     if (darken) {
       document.documentElement.classList.add('dark')
