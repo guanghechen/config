@@ -1,28 +1,27 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from '@/common/util/clsx'
 import React from 'react'
-import { createPortal } from 'react-dom'
 import { useMarkdownViewViewModel } from '../context'
 
 export const FullscreenToggle: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
   const contentFullWidth: boolean = useStateValue(viewmodel.contentFullWidth$)
+  const label = contentFullWidth ? 'Restore content width' : 'Use full content width'
 
-  const portalTarget = React.useMemo(() => {
-    return document.querySelector('.vl-fp-actions')
-  }, [])
-
-  const button = (
+  return (
     <button
       type="button"
-      title={contentFullWidth ? 'Restore width' : 'Full width'}
+      title={label}
+      aria-label={label}
+      aria-pressed={contentFullWidth}
       onClick={() => viewmodel.contentFullWidth$.setState(v => !v)}
       className={cn(
-        'flex items-center justify-center rounded-md text-xs font-medium',
-        'p-1 bg-transparent border border-transparent transition-all duration-200',
+        'pointer-events-auto flex h-7 w-7 items-center justify-center rounded-md',
+        'border border-transparent bg-white/70 text-xs font-medium shadow-sm backdrop-blur-sm',
+        'transition-all duration-200 dark:bg-gray-800/70',
         'text-gray-500 dark:text-gray-400 cursor-pointer',
         'hover:bg-gray-100 dark:hover:bg-white/10',
-        'focus:outline-hidden focus:ring-2 focus:ring-blue-300/50',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
       )}
     >
       {contentFullWidth ? (
@@ -60,12 +59,6 @@ export const FullscreenToggle: React.FC = () => {
       )}
     </button>
   )
-
-  if (!portalTarget) {
-    return null
-  }
-
-  return createPortal(button, portalTarget)
 }
 
 FullscreenToggle.displayName = 'MarkdownViewFullscreenToggle'

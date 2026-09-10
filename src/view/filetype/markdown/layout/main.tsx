@@ -6,6 +6,8 @@ import { AstPane } from '../pane/ast'
 import { ContentPane } from '../pane/content'
 import { FrontmatterPane } from '../pane/frontmatter'
 import { TocPane } from '../pane/toc'
+import { FullscreenToggle } from './fullscreen'
+import { ScrollToTop } from './scroll-to-top'
 
 export const Main: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
@@ -16,7 +18,15 @@ export const Main: React.FC = () => {
     <div className={cn('vlm-canvas', `vlm-canvas-${mode}`)} data-filetype="markdown">
       {(mode & ModeEnum.CONTENT) !== 0 && (
         <div className="vlm-pane vlm-p-content">
-          <ContentPane />
+          <div className="vlm-content-actions">
+            <FullscreenToggle />
+          </div>
+          <div className="flex w-full justify-center pt-8">
+            <ContentPane />
+          </div>
+          <div className="vlm-content-scroll-actions">
+            <ScrollToTop />
+          </div>
         </div>
       )}
       {(mode & ModeEnum.AST) !== 0 && (

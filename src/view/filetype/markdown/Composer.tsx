@@ -4,7 +4,6 @@ import React from 'react'
 import { MarkdownContentProvider } from '@/container/markdown'
 import { useMarkdownViewViewModel } from './context'
 import { Main } from './layout/main'
-import { FullscreenToggle } from './layout/fullscreen'
 import { ModeToggle } from './layout/mode'
 
 export const Composer: React.FC = () => {
@@ -20,7 +19,6 @@ export const Composer: React.FC = () => {
         </MarkdownContentProvider>
       )}
       <ModeToggle />
-      <FullscreenToggle />
     </React.Fragment>
   )
 }
