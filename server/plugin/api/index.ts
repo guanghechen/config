@@ -3,6 +3,7 @@ import type { Connect, Plugin } from 'vite'
 import { ApiRoutePathEnum } from '../../../shared/constant/api'
 import { normalizeUrlPath } from '../../../shared/util'
 import state from '../../state'
+import { FileAccessError } from '../../util/file-access'
 import { fetchCodeDefaults } from './h/api/code/defaults'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
@@ -136,7 +137,19 @@ const middleware = async (
     }
 
     const params: IApiHandleParams = { req, res, next, pathname, search, searchParams, body }
-    const result: IApiHandleResult | true = await handle(params)
+    let result: IApiHandleResult | true
+    try {
+      result = await handle(params)
+    } catch (error) {
+      if (!(error instanceof FileAccessError)) state.reporter.error('API request failed', error)
+      result = {
+        code: error instanceof FileAccessError ? error.status : 500,
+        data: {
+          data: null,
+          error: error instanceof FileAccessError ? error.message : 'Request failed',
+        },
+      }
+    }
     if (result === true) return
 
     // eslint-disable-next-line no-param-reassign

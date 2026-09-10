@@ -11,15 +11,12 @@ import { requester } from './requester'
 
 export class FileController {
   public async resolve<T extends IFetchFileData = IFetchFileData>(
-    workspace: string | null,
     filepath: string,
   ): Promise<IFetchFileResult<T>> {
     if (!filepath) return {}
 
     try {
-      const query: Record<string, string> = { filepath }
-      const params = new URLSearchParams(query)
-      if (workspace) params.set('workspace', workspace)
+      const params = new URLSearchParams({ filepath })
 
       const url = `${ApiRoutePathEnum.FILE}?${params}`
       const response = await requester.get(url)
@@ -67,22 +64,21 @@ export class FileController {
       }
       return { error: `Unknown content type: ${contentType}` }
     } catch (error) {
-      console.error('Failed to fetching file:', { workspace, filepath, error })
+      console.error('Failed to fetch file:', { filepath, error })
 
-      // Handle authentication errors gracefully
+      // Preserve the authentication signal for the view.
       if (error instanceof Error && error.message === 'Authentication required') {
         return { error: 'Authentication required' }
       }
 
-      return { error: 'Failed to fetching file: ' + JSON.stringify({ workspace, filepath, error }) }
+      return { error: 'Failed to fetch file: ' + JSON.stringify({ filepath, error }) }
     }
   }
 
   public async save(params: IFileSaveRequestPayload): Promise<void> {
-    const { workspace, filepath, content } = params
+    const { filepath, content } = params
 
     const response = await requester.post(ApiRoutePathEnum.FILE_SAVE, {
-      workspace,
       filepath,
       content,
     })

@@ -68,7 +68,6 @@ export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
 export type IFileSaveRequestParams = Record<string, never>
 
 export interface IFileSaveRequestPayload {
-  readonly workspace: string | null
   readonly filepath: string
   readonly content: string
 }

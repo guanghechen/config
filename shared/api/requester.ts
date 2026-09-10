@@ -65,8 +65,8 @@ export class Requester {
 
     const response = await fetch(finalUrl, defaultOptions)
 
-    // Handle 403 responses by triggering authentication for protected endpoints
-    if (response.status === 403 && isProtected) {
+    // Handle unauthenticated responses by triggering authentication for protected endpoints
+    if (response.status === 401 && isProtected) {
       // Trigger authentication modal
       if (onAuthenticationRequired) {
         onAuthenticationRequired()

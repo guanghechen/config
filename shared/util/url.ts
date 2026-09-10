@@ -8,7 +8,7 @@ export function toSearch(params: Record<string, string | null | undefined>): str
   for (const key in params) {
     const val = params[key]
     if (typeof val === 'string') {
-      usp.set(key, encodeURIComponent(val))
+      usp.set(key, val)
     }
   }
 

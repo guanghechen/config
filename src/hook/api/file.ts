@@ -3,13 +3,12 @@ import { fileController } from '@/shared/api'
 import type { IFetchFileData, IFetchFileResult } from '@/shared/types/api'
 
 export async function getFile<T extends IFetchFileData = IFetchFileData>(
-  workspace: string | null,
   filepath: string,
 ): Promise<IFetchFileResult<T>> {
   try {
-    return await fileController.resolve<T>(workspace, filepath)
+    return await fileController.resolve<T>(filepath)
   } catch (error) {
-    // Handle authentication errors gracefully
+    // Preserve the authentication signal for the view.
     if (error instanceof Error && error.message === 'Authentication required') {
       return { error: 'Authentication required' }
     } else {
@@ -19,7 +18,6 @@ export async function getFile<T extends IFetchFileData = IFetchFileData>(
 }
 
 export const useGetFile = <T extends IFetchFileData = IFetchFileData>(
-  workspace: string | null,
   filepath: string,
   tick: number,
 ): IFetchFileResult<T> => {
@@ -37,13 +35,15 @@ export const useGetFile = <T extends IFetchFileData = IFetchFileData>(
       setResult({ loading: true })
 
       try {
-        const fetchResult = await fileController.resolve<T>(workspace, filepath)
+        const fetchResult = await fileController.resolve<T>(filepath)
         if (!cancelled) {
           setResult(fetchResult)
+        } else if (fetchResult.url) {
+          URL.revokeObjectURL(fetchResult.url)
         }
       } catch (error) {
         if (!cancelled) {
-          // Handle authentication errors gracefully
+          // Preserve the authentication signal for the view.
           if (error instanceof Error && error.message === 'Authentication required') {
             setResult({ error: 'Authentication required' })
           } else {
@@ -58,7 +58,7 @@ export const useGetFile = <T extends IFetchFileData = IFetchFileData>(
     return (): void => {
       cancelled = true
     }
-  }, [workspace, filepath, tick])
+  }, [filepath, tick])
 
   return result
 }

@@ -36,12 +36,12 @@
 - Token verification: compare provided token with `YOZ_AUTH_TOKEN`
 - JWT expires in 30 days, contains authentication flag
 - All `/api/*` endpoints except `/api/user/auth` require Bearer token or authentication cookie
-- Return 403 for missing/invalid tokens
+- Protected endpoints return 401 for missing/invalid JWTs; filesystem permission failures return 403
 - Auth endpoint sets HTTP-only cookie and returns JWT token in response body
 
 ### Client
 - Store JWT token in `localStorage` as `auth_token`
 - Use `authenticatedFetch` for protected API calls
-- 403 responses trigger login popup with 300ms debounce
+- 401 responses trigger the login popup; 403 permission failures remain visible to the caller
 - Single popup policy using `signed` state
 - Page refresh after successful login to retrigger API calls

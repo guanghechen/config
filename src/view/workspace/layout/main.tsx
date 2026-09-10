@@ -18,14 +18,12 @@ interface IProps {
 export const Main: React.FC<IProps> = props => {
   const { storageKeyScope } = props
   const viewmodel = useWorkspaceViewmodel()
-  const workspace = useStateValue(viewmodel.workspace$)
   const filepath = useStateValue(viewmodel.filepath$)
   const filepathDirtyTick: number = useStateValue(viewmodel.filepathDirtyTick$)
 
   if (!filepath) {
     return (
       <UnknownAdaptor
-        workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
         storageKeyScope={storageKeyScope}
@@ -39,7 +37,6 @@ export const Main: React.FC<IProps> = props => {
     case '.htm':
       return (
         <HtmlAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
@@ -48,7 +45,6 @@ export const Main: React.FC<IProps> = props => {
     case '.json':
       return (
         <JsonAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
@@ -60,7 +56,6 @@ export const Main: React.FC<IProps> = props => {
     case '.txt':
       return (
         <TextAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
@@ -69,7 +64,6 @@ export const Main: React.FC<IProps> = props => {
     case '.md':
       return (
         <MarkdownAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
@@ -78,7 +72,6 @@ export const Main: React.FC<IProps> = props => {
     case '.pdf':
       return (
         <PdfAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
@@ -87,7 +80,6 @@ export const Main: React.FC<IProps> = props => {
     case '.svg':
       return (
         <SvgAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
@@ -98,7 +90,6 @@ export const Main: React.FC<IProps> = props => {
     case '.jpeg':
       return (
         <ImageAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
@@ -107,7 +98,6 @@ export const Main: React.FC<IProps> = props => {
     default:
       return (
         <UnknownAdaptor
-          workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}

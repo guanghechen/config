@@ -16,7 +16,7 @@ export const Settings: React.FC<IProps> = ({ additionalItems }) => {
   const panelId = React.useId()
   const location = useLocation()
   const navigate = useNavigate()
-  const isWorkspace = location.pathname.startsWith('/ws/')
+  const isWorkspace = location.pathname === '/ws' || location.pathname.startsWith('/ws/')
 
   React.useLayoutEffect(() => {
     if (isOpen) panelRef.current?.querySelector<HTMLInputElement>('input:checked')?.focus()
@@ -96,7 +96,7 @@ export const Settings: React.FC<IProps> = ({ additionalItems }) => {
               onClick={() => {
                 setIsOpen(false)
                 triggerRef.current?.focus()
-                void navigate(isWorkspace ? location.pathname : '/ws/default')
+                void navigate(isWorkspace ? `${location.pathname}${location.search}` : '/ws')
               }}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-gray-300 dark:hover:bg-gray-800"
             >

@@ -6,8 +6,8 @@ import { HistoryButton } from './button/history'
 import { HistoryDropdown } from './HistoryDropdown'
 
 interface IProps {
-  readonly workspace: string | null
   readonly filepath: string
+  readonly displayFilepath?: string
   readonly history?: string[]
   readonly onHistorySelect?: (filepath: string) => void
 }
@@ -25,12 +25,13 @@ export class FilePath extends React.PureComponent<IProps, IState> {
   }
 
   public override render(): React.ReactElement {
-    const { filepath, history, onHistorySelect } = this.props
+    const { filepath, displayFilepath = filepath, history, onHistorySelect } = this.props
     const { showHistory } = this.state
     const { calcContentForCopy } = this
 
-    const displayPath = filepath.length > 48 ? `...${filepath.slice(-48)}` : filepath
-    const shouldShowTooltip = filepath.length > 48
+    const displayPath =
+      displayFilepath.length > 48 ? `...${displayFilepath.slice(-48)}` : displayFilepath
+    const shouldShowTooltip = displayFilepath.length > 48
     const hasHistory = history && history.length > 0
 
     return (
@@ -52,7 +53,7 @@ export class FilePath extends React.PureComponent<IProps, IState> {
           )}
           calcContentForCopy={calcContentForCopy}
         />
-        <AnchorButton workspace={null} filepath={filepath} />
+        <AnchorButton filepath={filepath} />
         {onHistorySelect && (
           <div className="relative">
             <HistoryButton onClick={this.handleHistoryClick} disabled={!hasHistory} />

@@ -1,8 +1,7 @@
 import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import type { NavigateFunction } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
 import { usePersistAsync } from '@/common/hook/usePersistAsync'
+import { normalizeAbsoluteFilepath, readAbsoluteSearchParam } from '@/common/util/path'
 import { universalStorage } from '@/common/util/storage'
 import { useMermaidSyncThemeEffect } from '@/hook/useMermaidSyncThemeEffect'
 import { ServerCustomEventType } from '@/shared/types'
@@ -23,9 +22,9 @@ export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props =
     const rawViewData = await universalStorage.getContext<Partial<IFileViewData>>(storageKey)
     const viewData: IFileViewData = FileViewViewModel.normalize(rawViewData)
     const usp = new URLSearchParams(window.location.search)
-    const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
+    const filepath: string | null = readAbsoluteSearchParam(usp.get('filepath'))
     return new FileViewViewModel({
-      filepath: filepath ?? viewData.filepath,
+      filepath: usp.has('filepath') ? filepath : viewData.filepath,
       filepathHistory: viewData.filepathHistory,
     })
   })
@@ -63,13 +62,8 @@ SideEffect.displayName = 'FileViewSideEffect'
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
 const useHMR = (viewmodel: FileViewViewModel): void => {
-  const navigate = useNavigate()
-  const navigateRef = React.useRef<NavigateFunction>(navigate)
-  navigateRef.current = navigate
-
   React.useEffect(() => {
     const meta = import.meta as any
-    if (!meta.hot) return
 
     let unsubscribed: boolean = false
 
@@ -77,7 +71,7 @@ const useHMR = (viewmodel: FileViewViewModel): void => {
       if (unsubscribed) return
 
       const filepath: string | null = viewmodel.filepath$.getSnapshot()
-      if (filepath === data.filepath) {
+      if (filepath === normalizeAbsoluteFilepath(data.filepath)) {
         viewmodel.markFilepathDirty()
       }
     }
@@ -91,7 +85,6 @@ const useHMR = (viewmodel: FileViewViewModel): void => {
         tsuki: {
           event: 'file_switch',
           payload: {
-            workspace: data.workspace,
             filepath: data.filepath,
           },
         },
@@ -100,18 +93,11 @@ const useHMR = (viewmodel: FileViewViewModel): void => {
 
     const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
       if (unsubscribed) return
-
-      if (data.workspace && data.filepath) {
-        meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-        meta.hot.off(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
-        void navigateRef.current(
-          `/ws/${data.workspace}?filepath=${encodeURIComponent(data.filepath)}`,
-        )
-        return
-      }
+      const targetFilepath = normalizeAbsoluteFilepath(data.filepath)
+      if (!targetFilepath) return
 
       const filepath: string | null = viewmodel.filepath$.getSnapshot()
-      if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
+      if (targetFilepath !== filepath) viewmodel.filepath$.next(targetFilepath)
       else viewmodel.markFilepathDirty()
 
       window.postMessage({
@@ -132,14 +118,14 @@ const useHMR = (viewmodel: FileViewViewModel): void => {
       }
     }
 
-    meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-    meta.hot.on(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
+    meta.hot?.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+    meta.hot?.on(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
     window.addEventListener('message', handleWindowMessage)
 
     return () => {
       unsubscribed = true
-      meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-      meta.hot.off(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
+      meta.hot?.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+      meta.hot?.off(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
       window.removeEventListener('message', handleWindowMessage)
     }
   }, [viewmodel])
@@ -153,8 +139,9 @@ const useUrlParams = (viewmodel: FileViewViewModel): void => {
     usp.delete('workspace')
     usp.delete('filepath')
 
-    if (filepath) usp.set('filepath', encodeURIComponent(filepath))
-    const newUrl = `${window.location.pathname}?${usp.toString()}`
+    if (filepath) usp.set('filepath', filepath)
+    const search = usp.toString()
+    const newUrl = search ? `${window.location.pathname}?${search}` : window.location.pathname
     window.history.replaceState(null, '', newUrl)
   }, [filepath])
 }

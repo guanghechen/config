@@ -18,12 +18,7 @@ export const Menu: React.FC = () => {
   return (
     <React.Fragment>
       {filepath && (
-        <FilePath
-          filepath={filepath}
-          workspace={null}
-          history={history}
-          onHistorySelect={handleHistorySelect}
-        />
+        <FilePath filepath={filepath} history={history} onHistorySelect={handleHistorySelect} />
       )}
     </React.Fragment>
   )

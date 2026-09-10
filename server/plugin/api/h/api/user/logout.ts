@@ -1,4 +1,6 @@
 import * as cookie from 'cookie'
+import state from '../../../../../state'
+import { getAuthToken } from '../../../jwt'
 import type { IApiHandle, IApiHandleData } from '../../../types'
 
 const COOKIE_NAME = 'yoz-auth'
@@ -7,7 +9,9 @@ interface ILogoutResponse {
   readonly success: boolean
 }
 
-export const postUserLogout: IApiHandle = async () => {
+export const postUserLogout: IApiHandle = async ({ req }) => {
+  const token = getAuthToken(req.headers)
+  if (token) state.authLogout$.next(token)
   const responseData: ILogoutResponse = {
     success: true,
   }

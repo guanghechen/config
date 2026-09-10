@@ -4,19 +4,17 @@ import type { IMarkdownFileData } from '@/shared/types/api'
 import { MarkdownView } from '@/view/filetype/markdown/View'
 
 interface IProps {
-  readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
   readonly storageKeyScope: string
 }
 
 export const MarkdownAdaptor: React.FC<IProps> = ({
-  workspace,
   filepath,
   filepathDirtyTick,
   storageKeyScope,
 }) => {
-  const fileResult = useFileResult<IMarkdownFileData>(workspace, filepath, filepathDirtyTick)
+  const fileResult = useFileResult<IMarkdownFileData>(filepath, filepathDirtyTick)
 
   // Pass the structured markdown data directly to the view
   const data = fileResult.data || null

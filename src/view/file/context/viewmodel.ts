@@ -1,5 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
+import { normalizeAbsoluteFilepath } from '@/common/util/path'
 import type { IFileContentData, IFileViewData } from './types'
 
 interface IProps {
@@ -52,9 +53,13 @@ export class FileViewViewModel extends ViewModel {
     base: IFileViewData = DEFAULT_DATA,
   ): IFileViewData {
     const { filepath, filepathHistory } = data || {}
-    const normalizedFilepath = typeof filepath === 'string' ? filepath : base.filepath
+    const normalizedFilepath =
+      typeof filepath === 'string' ? normalizeAbsoluteFilepath(filepath) : base.filepath
     const normalizedFilepathHistory = Array.isArray(filepathHistory)
       ? filepathHistory
+          .filter((item): item is string => typeof item === 'string')
+          .map(normalizeAbsoluteFilepath)
+          .filter((item): item is string => !!item)
       : base.filepathHistory
     const normalizedData: IFileViewData = {
       filepath: normalizedFilepath,

@@ -6,6 +6,9 @@ export async function findMarkdownFiles(cwd: string): Promise<string[]> {
     const fd = spawn(
       'fd',
       [
+        '--type',
+        'f',
+        '--print0',
         ...['html', 'jpg', 'jpeg', 'json', 'md', 'pdf', 'png', 'svg']
           .map(ext => ['-e', ext])
           .flat(),
@@ -13,7 +16,7 @@ export async function findMarkdownFiles(cwd: string): Promise<string[]> {
       ],
       {
         cwd,
-        shell: true,
+        shell: false,
       },
     )
 
@@ -26,9 +29,11 @@ export async function findMarkdownFiles(cwd: string): Promise<string[]> {
       state.reporter.error('Error:', data.toString())
     })
 
+    fd.on('error', reject)
+
     fd.on('close', code => {
       if (code === 0) {
-        resolve(result.trim().split('\n').filter(Boolean).sort()) // Split into an array, filtering out empty lines
+        resolve(result.split('\0').filter(Boolean).sort()) // Split into an array, filtering out empty lines
       } else {
         reject(new Error(`fd exited with code ${code}`))
       }

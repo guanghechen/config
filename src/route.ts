@@ -20,9 +20,16 @@ export const views = {
 export const routes: IRouteItem[] = [
   {
     key: 'workspace',
-    path: '/ws/:workspace_name',
+    path: '/ws',
     label: 'Workspace',
     listed: true,
+    Component: views.workspace,
+  },
+  {
+    key: 'workspace-legacy',
+    path: '/ws/:workspace_name',
+    label: 'Workspace',
+    listed: false,
     Component: views.workspace,
   },
   {

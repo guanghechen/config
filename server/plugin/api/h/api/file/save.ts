@@ -1,6 +1,4 @@
-import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
-import path from 'node:path'
 import state from '../../../../../state'
 import type { IApiHandle, IApiHandleData } from '../../../types'
 
@@ -16,50 +14,23 @@ export const saveFile: IApiHandle = async params => {
     return { code: 400, data }
   }
 
-  let bodyData: { workspace?: string | null; filepath?: string; content?: string }
+  let bodyData: unknown
   try {
     bodyData = JSON.parse(body)
-  } catch (error) {
-    const data: IApiHandleData = {
-      error: 'Invalid JSON in request body',
-      details: { body, error: String(error) },
-      data: null,
-    }
-    return { code: 400, data }
+  } catch {
+    return { code: 400, data: { error: 'Invalid JSON in request body', data: null } }
   }
-
-  const workspace: string | null = bodyData.workspace ?? null
-  let filepath: string = bodyData.filepath ?? ''
-  const content: string = bodyData.content ?? ''
-
-  filepath = state.resolveFilepath(workspace, filepath)
-
-  if (!filepath) {
-    const data: IApiHandleData = {
-      error: 'Bad parameters',
-      details: { workspace, filepath },
-      data: null,
-    }
-    return { code: 400, data }
+  if (
+    !bodyData ||
+    typeof bodyData !== 'object' ||
+    !('filepath' in bodyData) ||
+    !('content' in bodyData) ||
+    typeof bodyData.content !== 'string'
+  ) {
+    return { code: 400, data: { error: 'filepath and string content are required', data: null } }
   }
-
-  if (!path.isAbsolute(filepath)) {
-    const data: IApiHandleData = {
-      error: 'Cannot resolve the given filepath.',
-      details: { workspace, filepath },
-      data: null,
-    }
-    return { code: 400, data }
-  }
-
-  if (!existsSync(filepath)) {
-    const data: IApiHandleData = {
-      error: 'File not found',
-      details: { workspace, filepath },
-      data: null,
-    }
-    return { code: 404, data }
-  }
+  const filepath = state.access.resolve(bodyData.filepath, 'file')
+  const content = bodyData.content
 
   try {
     await fs.writeFile(filepath, content, 'utf8')
@@ -72,7 +43,7 @@ export const saveFile: IApiHandle = async params => {
     state.reporter.error('Failed to save file:', { filepath, error })
     const data: IApiHandleData = {
       error: 'Failed to save file: Invalid content or write error',
-      details: { workspace, filepath, error: String(error) },
+      details: { filepath, error: String(error) },
       data: null,
     }
     return { code: 500, data }

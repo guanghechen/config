@@ -1,37 +1,30 @@
 import { ApiRoutePathEnum } from '../constant/api'
+import type { IWorkspaceConfig, IWorkspaceFiles } from '../types/workspace'
 import { requester } from './requester'
 
-export interface IWorkspaceItem {
-  readonly tag: string
-}
-
 export class WorkspaceController {
-  public async list(): Promise<IWorkspaceItem[]> {
+  public async list(): Promise<IWorkspaceConfig> {
     const url = ApiRoutePathEnum.WORKSPACES
     const response = await requester.get(url)
     const { error, details, data } = await response.json()
     if (error || details || !data) {
-      console.error('Failed to fetch workspaces:', { error, details, data })
-      return []
+      throw new Error(error || details || 'Failed to fetch workspace configuration')
     }
-    return data.workspaces
+    return data
   }
 
-  public async files(workspace: string | null): Promise<string[]> {
-    if (!workspace) return []
-
+  public async files(root: string): Promise<IWorkspaceFiles> {
     const ups = new URLSearchParams()
-    ups.set('workspace', workspace)
+    ups.set('root', root)
     const search = '?' + ups.toString()
 
     const url = `${ApiRoutePathEnum.WORKSPACE_FILES}${search}`
     const response = await requester.get(url)
     const { error, details, data } = await response.json()
     if (error || details || !data) {
-      console.error('Failed to fetch workspace files:', { error, details, data })
-      return []
+      throw new Error(error || details || 'Failed to fetch workspace files')
     }
-    return data.files
+    return data
   }
 }
 

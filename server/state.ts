@@ -6,7 +6,7 @@ import type { FSWatcher } from 'chokidar'
 import chokidar from 'chokidar'
 import path from 'node:path'
 import { ROOT_DIR } from '../env'
-import { normalizeFilepath, resolveRealFilepath } from './util/path'
+import { configureRoots } from './util/file-access'
 
 const reporter = new Reporter({
   prefix: 'guanghechen',
@@ -17,48 +17,25 @@ const reporter = new Reporter({
   },
 })
 
-export interface IWorkspaceItem {
-  readonly tag: string
-  readonly path: string
-  readonly files: {
-    mds: string[] | null
-  }
-}
-
-export type IWorkspaceMap = ReadonlyMap<string, IWorkspaceItem>
-
-const YOZ_WORKSPACE_PREFIX = 'YOZ_WORKSPACE_'
-const YOZ_WORKSPACE_ITEMS: IWorkspaceItem[] = [
-  { tag: 'default', path: path.resolve(ROOT_DIR, 'demo'), files: { mds: null } },
-].concat(
-  Object.entries(process.env)
-    .filter(([key, val]) => !!val && key.startsWith(YOZ_WORKSPACE_PREFIX))
-    .map(([key, val]) => ({
-      tag: key.slice(YOZ_WORKSPACE_PREFIX.length).toLowerCase(),
-      path: resolveRealFilepath(val!),
-      files: { mds: null },
-    }))
-    .filter(item => item.tag !== 'default'),
-)
+const roots = configureRoots(process.env, path.resolve(ROOT_DIR, 'demo'))
 
 class ServerViewModel {
+  public readonly authLogout$ = new State<string | null>(null, { equals: () => false })
   public readonly reporter: IReporter
   public readonly fileChanged$: IState<string | null>
   public readonly fileSwitch$: IState<string | null>
   public readonly fileSwitchArgForce$: IState<boolean>
-  public readonly workspaceMap$: IState<IWorkspaceMap>
+  public readonly access = roots.access
+  public readonly defaultWorkspaceRoots = roots.defaultWorkspaceRoots
+  public readonly legacyWorkspaces = roots.legacyWorkspaces
   protected readonly _watchingFilepaths: Set<string>
   protected _watcher: FSWatcher | null
 
   constructor() {
-    const workspaceMap = new Map<string, IWorkspaceItem>()
-    for (const item of YOZ_WORKSPACE_ITEMS) workspaceMap.set(item.tag, item)
-
     this.reporter = reporter
     this.fileChanged$ = new State<string | null>(null, { equals: () => false, delay: 20 })
     this.fileSwitch$ = new State<string | null>(null, { equals: () => false, delay: 20 })
     this.fileSwitchArgForce$ = new State<boolean>(false)
-    this.workspaceMap$ = new State<IWorkspaceMap>(workspaceMap)
     this._watchingFilepaths = new Set<string>()
     this._watcher = null
   }
@@ -66,7 +43,7 @@ class ServerViewModel {
   public watch = (...filepaths: string[]): void => {
     const { fileChanged$, _watchingFilepaths } = this
     const fps: string[] = filepaths
-      .map(p => path.normalize(p))
+      .map(p => this.access.resolve(p, 'file'))
       .filter(p => !this._watchingFilepaths.has(p))
     if (fps.length <= 0) return
 
@@ -85,28 +62,15 @@ class ServerViewModel {
       this._watcher = watcher
 
       watcher.on('change', filepath => {
-        reporter.debug(`--> file changed ${filepath}.`)
-        fileChanged$.next(filepath)
+        try {
+          fileChanged$.next(this.access.resolve(filepath, 'file'))
+        } catch {
+          // A deleted or replaced watched path must not publish an unauthorized file.
+          this._watcher?.unwatch(filepath)
+          _watchingFilepaths.delete(filepath)
+        }
       })
     }
-  }
-
-  public resolveFilepath = (workspace: string | null, relativePath: string): string => {
-    const workspaceMap: IWorkspaceMap = this.workspaceMap$.getSnapshot()
-    const item: IWorkspaceItem | undefined = workspaceMap.get(workspace?.toLowerCase() || '')
-    const p = item ? path.join(item.path, relativePath) : relativePath
-    return resolveRealFilepath(p)
-  }
-
-  public sharpFilepath = (filepath: string): { workspace: string | null; relativePath: string } => {
-    const p: string = normalizeFilepath(filepath)
-    const workspaceMap: IWorkspaceMap = this.workspaceMap$.getSnapshot()
-    for (const item of workspaceMap.values()) {
-      if (p.startsWith(item.path)) {
-        return { workspace: item.tag, relativePath: p.slice(item.path.length) }
-      }
-    }
-    return { workspace: null, relativePath: p }
   }
 }
 

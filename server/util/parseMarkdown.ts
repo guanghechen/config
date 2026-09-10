@@ -8,7 +8,6 @@ import {
 } from '@yozora/ast-util'
 import { stripChineseCharacters } from '@yozora/character'
 import Parser from '@yozora/parser'
-import { existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parse as parseYaml } from 'yaml'
@@ -72,29 +71,13 @@ const parser = new Parser({
 
 async function resolveRefPath(curDir: string, refPath: string): Promise<string | null> {
   const absoluteSrcPath: string = path.isAbsolute(refPath) ? refPath : path.join(curDir, refPath)
-  if (existsSync(absoluteSrcPath)) return absoluteSrcPath
-
-  state.reporter.warn(
-    '[AssetResolverApi.resolveRefPath] cannot find the file. refPath: {}, curDir: {}',
-    refPath,
-    curDir,
-  )
-  return null
+  return state.access.resolve(absoluteSrcPath, 'file')
 }
 
 async function parseMarkdown(filepath: string): Promise<IMarkdownFileData> {
-  if (!existsSync(filepath)) throw new Error(`File not found: ${filepath}.`)
-
-  const stat = statSync(filepath)
-  if (stat.isDirectory()) {
-    // eslint-disable-next-line no-param-reassign
-    filepath = path.join(filepath, 'index.md')
-    if (!existsSync(filepath))
-      throw new Error(`Cannot resolve index.md for the given path ${filepath}.`)
-  }
-
-  const dirpath: string = path.dirname(filepath)
-  const rawContent: string = await fs.readFile(filepath, 'utf8')
+  const authorizedFilepath = state.access.resolve(filepath, 'file')
+  const dirpath: string = path.dirname(authorizedFilepath)
+  const rawContent: string = await fs.readFile(authorizedFilepath, 'utf8')
 
   const match: string[] | null = regexes.frontmatter.exec(rawContent) ?? ['', '']
   const frontmatter: Record<string, unknown> = match[1] ? parseYaml(match[1]) : {}
@@ -102,12 +85,21 @@ async function parseMarkdown(filepath: string): Promise<IMarkdownFileData> {
 
   let ast: Root = parser.parse(content, {
     formatUrl: (url: string) => {
-      if (url[0] === '.' || url[0] === '/') {
-        const targetFilepath: string = path.normalize(path.resolve(dirpath, url))
-        const { workspace, relativePath } = state.sharpFilepath(targetFilepath)
-        const search: string = toSearch({ workspace, filepath: relativePath })
-        if (targetFilepath.endsWith('.md')) {
-          return workspace ? `/ws/${workspace}${search}` : `/file${search}`
+      if (
+        url &&
+        !url.startsWith('#') &&
+        !url.startsWith('//') &&
+        !/^[a-z][a-z\d+.-]*:/i.test(url)
+      ) {
+        const suffixAt = url.search(/[?#]/)
+        const pathname = suffixAt < 0 ? url : url.slice(0, suffixAt)
+        const suffix = suffixAt < 0 ? '' : url.slice(suffixAt)
+        const targetFilepath = path.resolve(dirpath, decodeURIComponent(pathname))
+        // The target endpoint authorizes each request; rewriting does not grant access.
+        const search = toSearch({ filepath: targetFilepath })
+        if (targetFilepath.toLowerCase().endsWith('.md')) {
+          const hash = suffix.includes('#') ? suffix.slice(suffix.indexOf('#')) : ''
+          return `/file${search}${hash}`
         }
         return `/api/file/raw${search}`
       }
@@ -125,6 +117,7 @@ async function parseMarkdown(filepath: string): Promise<IMarkdownFileData> {
     const refPath: string | null = await resolveRefPath(dirpath, relativeSrcPath)
     if (refPath === null) return o
 
+    state.watch(refPath)
     const content = await fs.readFile(refPath, 'utf8')
     let value: string = content
 

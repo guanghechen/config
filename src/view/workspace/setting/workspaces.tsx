@@ -1,96 +1,199 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import cn from '@/common/util/clsx'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRightIcon, ViewStreamIcon } from '@/common/component/icon/material'
-import { useWorkspaceViewmodel } from '../context'
+import cn from '@/common/util/clsx'
+import { normalizeAbsoluteFilepath } from '@/common/util/path'
+import { workspaceController } from '@/shared/api'
+import { createWorkspaceUrl, useWorkspaceViewmodel } from '../context'
+
+const rootName = (root: string): string => root.split('/').filter(Boolean).at(-1) || root
 
 export const WorkspaceSelector: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
-  const currentWorkspace = useStateValue(viewmodel.workspace$)
-  const workspaces = useStateValue(viewmodel.workspaces$)
+  const currentWorkspaceRoot = useStateValue(viewmodel.workspaceRoot$)
+  const workspaceRoots = useStateValue(viewmodel.workspaceRoots$)
   const navigate = useNavigate()
 
   const [isOpen, setIsOpen] = React.useState(false)
+  const [rootInput, setRootInput] = React.useState('')
+  const [rootError, setRootError] = React.useState<string | null>(null)
+  const [validating, setValidating] = React.useState(false)
+  const validationGenerationRef = React.useRef(0)
 
-  const handleWorkspaceSelect = React.useCallback(
-    (workspaceTag: string): void => {
-      setIsOpen(false)
-      viewmodel.filepath$.next(null)
-      viewmodel.workspace$.next(workspaceTag)
-      void navigate(`/ws/${workspaceTag}`)
-    },
-    [viewmodel, navigate],
-  )
-
-  const handleToggle = React.useCallback((e: React.MouseEvent): void => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsOpen(prev => !prev)
+  React.useEffect(() => {
+    return () => {
+      validationGenerationRef.current += 1
+    }
   }, [])
 
-  // Get current workspace display name - use "default" as fallback
-  const effectiveCurrentWorkspace = currentWorkspace || 'default'
+  const handleWorkspaceSelect = React.useCallback(
+    (root: string): void => {
+      validationGenerationRef.current += 1
+      setIsOpen(false)
+      setRootError(null)
+      void navigate(createWorkspaceUrl(root))
+    },
+    [navigate],
+  )
+
+  const handleWorkspaceRemove = React.useCallback(
+    (event: React.MouseEvent, root: string): void => {
+      event.preventDefault()
+      event.stopPropagation()
+      validationGenerationRef.current += 1
+      const nextRoots = workspaceRoots.filter(item => item !== root)
+      viewmodel.removeWorkspaceRoot(root)
+      if (currentWorkspaceRoot === root) {
+        const nextRoot = nextRoots[0] ?? null
+        viewmodel.workspaceRoot$.next(nextRoot)
+        viewmodel.filepath$.next(null)
+        void navigate(createWorkspaceUrl(nextRoot))
+      }
+    },
+    [currentWorkspaceRoot, navigate, viewmodel, workspaceRoots],
+  )
+
+  const handleWorkspaceAdd = React.useCallback(async (): Promise<void> => {
+    const root = normalizeAbsoluteFilepath(rootInput.trim())
+    if (!root) {
+      setRootError('Enter an absolute path.')
+      return
+    }
+
+    const generation = validationGenerationRef.current + 1
+    validationGenerationRef.current = generation
+    setValidating(true)
+    setRootError(null)
+    try {
+      const result = await workspaceController.files(root)
+      if (validationGenerationRef.current !== generation) return
+      viewmodel.addWorkspaceRoot(result.root)
+      setRootInput('')
+      setIsOpen(false)
+      void navigate(createWorkspaceUrl(result.root))
+    } catch (error) {
+      if (validationGenerationRef.current !== generation) return
+      setRootError(error instanceof Error ? error.message : String(error))
+    } finally {
+      if (validationGenerationRef.current === generation) setValidating(false)
+    }
+  }, [navigate, rootInput, viewmodel])
+
+  const handleToggle = React.useCallback((event: React.MouseEvent): void => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsOpen(open => {
+      if (open) validationGenerationRef.current += 1
+      return !open
+    })
+    setRootError(null)
+  }, [])
+
+  const handleClose = React.useCallback((): void => {
+    validationGenerationRef.current += 1
+    setValidating(false)
+    setIsOpen(false)
+  }, [])
 
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={handleToggle}
         className={cn(
-          'flex items-center px-4 py-3 rounded-md w-full leading-relaxed',
-          'transition-colors duration-150 ease-in-out',
-          'focus:outline-none',
-          'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100',
-          'hover:bg-gray-100 dark:hover:bg-gray-700',
+          'flex w-full items-center rounded-md px-4 py-3 leading-relaxed',
+          'transition-colors duration-150 ease-in-out focus:outline-none',
+          'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+          'dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100',
         )}
-        title="Select workspace"
+        title={currentWorkspaceRoot || 'Select workspace'}
       >
-        <div className="flex items-center gap-3 flex-1">
-          <ViewStreamIcon className="h-4 w-4 flex-shrink-0" />
-          <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
-            {effectiveCurrentWorkspace}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <ViewStreamIcon className="h-4 w-4 shrink-0" />
+          <span className="truncate text-sm text-gray-700 dark:text-gray-200">
+            {currentWorkspaceRoot ? rootName(currentWorkspaceRoot) : 'No workspace'}
           </span>
         </div>
-        <ChevronRightIcon
-          className={cn('h-4 w-4 flex-shrink-0 transition-transform duration-150')}
-        />
+        <ChevronRightIcon className="h-4 w-4 shrink-0" />
       </button>
 
       {isOpen && (
         <React.Fragment>
-          <div className="absolute top-0 left-full ml-1 w-48 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 shadow-lg z-50 max-h-48 overflow-y-auto">
-            {/* Default workspace as regular option */}
-            <button
-              onClick={() => handleWorkspaceSelect('default')}
-              className={cn(
-                'w-full text-left px-4 py-3 text-sm leading-relaxed hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors duration-150',
-                effectiveCurrentWorkspace === 'default'
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-300',
+          <div className="absolute left-full top-0 z-50 ml-1 w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+            <div className="max-h-[min(24rem,60vh)] overflow-y-auto py-1">
+              {workspaceRoots.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                  No saved workspace roots
+                </div>
+              ) : (
+                workspaceRoots.map(root => (
+                  <div
+                    key={root}
+                    className={cn(
+                      'group flex items-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-700',
+                      root === currentWorkspaceRoot &&
+                        'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleWorkspaceSelect(root)}
+                      className="flex min-w-0 flex-1 items-start gap-3 px-4 py-3 text-left text-sm"
+                      title={root}
+                    >
+                      <ViewStreamIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{rootName(root)}</span>
+                        <span className="mt-1 block break-all text-left font-mono text-xs font-normal leading-relaxed text-gray-500 dark:text-gray-400">
+                          {root}
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={event => handleWorkspaceRemove(event, root)}
+                      className="mr-2 rounded px-2 py-1 text-gray-400 opacity-0 transition hover:bg-gray-200 hover:text-red-600 focus:opacity-100 group-hover:opacity-100 dark:hover:bg-gray-600 dark:hover:text-red-300"
+                      aria-label={`Remove ${root}`}
+                      title="Remove saved root"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
               )}
-            >
-              <ViewStreamIcon className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">default</span>
-            </button>
-            {workspaces
-              .filter(workspace => workspace.tag !== 'default')
-              .map(workspace => (
-                <button
-                  key={workspace.tag}
-                  onClick={() => handleWorkspaceSelect(workspace.tag)}
-                  className={cn(
-                    'w-full text-left px-4 py-3 text-sm leading-relaxed hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors duration-150',
-                    workspace.tag === effectiveCurrentWorkspace
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-gray-300',
-                  )}
-                >
-                  <ViewStreamIcon className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{workspace.tag}</span>
-                </button>
-              ))}
+            </div>
+            <div className="border-t border-gray-200 p-3 dark:border-gray-700">
+              <form
+                onSubmit={event => {
+                  event.preventDefault()
+                  void handleWorkspaceAdd()
+                }}
+              >
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={rootInput}
+                    onChange={event => setRootInput(event.target.value)}
+                    placeholder="/absolute/path/to/workspace"
+                    aria-label="Workspace root"
+                    className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-2.5 py-2 font-mono text-xs text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                  />
+                  <button
+                    type="submit"
+                    disabled={validating}
+                    className="rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {validating ? 'Checking…' : 'Add'}
+                  </button>
+                </div>
+                {rootError && (
+                  <div className="mt-2 text-xs text-red-600 dark:text-red-300">{rootError}</div>
+                )}
+              </form>
+            </div>
           </div>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="fixed inset-0 z-40" onClick={handleClose} />
         </React.Fragment>
       )}
     </div>

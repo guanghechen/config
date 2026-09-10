@@ -4,19 +4,22 @@ import cn from '@/common/util/clsx'
 import React from 'react'
 import { FileTypeIcon } from '@/common/component/icon/filetype'
 import { useKeyBinding } from '@/common/shortcut'
+import { relativeWorkspaceFilepath } from '@/common/util/path'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { useWorkspaceViewmodel } from '../context'
 
 interface FileItem {
   filepath: string
-  filepath_lower: string
+  displayFilepath: string
+  displayFilepathLower: string
   extname: string
 }
 
 export const FileSearch: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
-  const workspace = useStateValue(viewmodel.workspace$)
-  const { files } = useGetWorkspaceFiles(workspace, 0)
+  const workspaceRoot = useStateValue(viewmodel.workspaceRoot$)
+  const { root: canonicalRoot, files } = useGetWorkspaceFiles(workspaceRoot, 0)
+  const displayRoot = canonicalRoot ?? workspaceRoot
 
   const [isVisible, setIsVisible] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -32,20 +35,24 @@ export const FileSearch: React.FC = () => {
       const newFileList = files.map(filepath => {
         const lastDotIndex = filepath.lastIndexOf('.')
         const extname = lastDotIndex >= 0 ? filepath.slice(lastDotIndex) : ''
+        const displayFilepath = displayRoot
+          ? relativeWorkspaceFilepath(filepath, displayRoot)
+          : filepath
         return {
           filepath,
-          filepath_lower: filepath.toLowerCase(),
+          displayFilepath,
+          displayFilepathLower: displayFilepath.toLowerCase(),
           extname,
         }
       })
       setFileList(newFileList)
     }
-  }, [files, isVisible])
+  }, [displayRoot, files, isVisible])
 
   React.useEffect(() => {
     if (searchQuery.length > 0) {
       const keyword = searchQuery.toLowerCase()
-      const filtered = fileList.filter(file => file.filepath_lower.includes(keyword))
+      const filtered = fileList.filter(file => file.displayFilepathLower.includes(keyword))
       setFilteredFileList(filtered)
 
       // Reset current selection to first item if available
@@ -188,8 +195,12 @@ export const FileSearch: React.FC = () => {
               </span>
               <span className="truncate">
                 {searchQuery.length > 0
-                  ? highlightMatches(file.filepath, file.filepath_lower, searchQuery.toLowerCase())
-                  : file.filepath}
+                  ? highlightMatches(
+                      file.displayFilepath,
+                      file.displayFilepathLower,
+                      searchQuery.toLowerCase(),
+                    )
+                  : file.displayFilepath}
               </span>
             </div>
           </div>

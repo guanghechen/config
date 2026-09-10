@@ -4,7 +4,6 @@ import { getFile } from '@/hook/api/file'
 import type { IFetchFileData, IFetchFileResult } from '@/shared/types/api'
 
 export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
-  workspace: string | null,
   filepath: string | null,
   tick: number,
 ): IFetchFileResult<T> => {
@@ -17,7 +16,12 @@ export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
   })
 
   React.useEffect(() => {
-    if (!filepath) return
+    if (!filepath) {
+      setState({ loading: false })
+      return
+    }
+
+    let cancelled = false
 
     setState(v => ({ ...v, loading: true }))
 
@@ -26,11 +30,18 @@ export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
         ...prevState,
         loading: true,
       }))
-      const { data, text, url, error } = await getFile<T>(workspace, filepath)
+      const { data, text, url, error } = await getFile<T>(filepath)
+      if (cancelled) {
+        if (url) URL.revokeObjectURL(url)
+        return
+      }
       setState({ loading: false, data, text, url, error })
     }
     void handle()
-  }, [workspace, filepath, tick])
+    return () => {
+      cancelled = true
+    }
+  }, [filepath, tick])
 
   useAutoCleanBlobUrl(state.url ?? null)
   return state

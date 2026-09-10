@@ -1,6 +1,7 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { relativeWorkspaceFilepath, resolveWorkspaceFilepath } from '@/common/util/path'
 import type { FileTreeModeEnum, IFileTreeContext, IFileTreeFileNode } from '@/container/filetree'
 import {
   FileTreeComposer,
@@ -15,14 +16,19 @@ import { useWorkspaceViewmodel } from '../context'
 export const FileTree: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
   const mode: FileTreeModeEnum = useStateValue(workspaceVM.filetreeMode$)
+  const workspaceRoot: string | null = useStateValue(workspaceVM.workspaceRoot$)
 
   const onFileNodeClick = useEventCallback((node: IFileTreeFileNode): void => {
-    workspaceVM.filepath$.next(node.filepath || node.uuid)
+    if (workspaceRoot) {
+      workspaceVM.filepath$.next(
+        resolveWorkspaceFilepath(workspaceRoot, node.filepath || node.uuid),
+      )
+    }
   })
 
   const viewmodel: FileTreeViewModel | null = useViewModel<FileTreeViewModel>(() => {
     return new FileTreeViewModel({
-      currentFilepath: workspaceVM.filepath$.getSnapshot(),
+      currentFilepath: null,
     })
   })
   const context: IFileTreeContext | null = React.useMemo<IFileTreeContext | null>(
@@ -62,23 +68,39 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
   const sidebarVisible: boolean = useStateValue<boolean>(workspaceVM.sidebarVisible$)
   const revealTick: number = useStateValue<number>(workspaceVM.revealTick$)
   const filetreeDirtyTick: number = useStateValue<number>(workspaceVM.filetreeDirtyTick$)
+  const workspaceError: string | null = useStateValue(workspaceVM.workspaceError$)
 
   const filepath: string | null = useStateValue(workspaceVM.filepath$)
-  const workspace: string | null = useStateValue(workspaceVM.workspace$)
-  const { files } = useGetWorkspaceFiles(workspace, filetreeDirtyTick)
+  const workspaceRoot: string | null = useStateValue(workspaceVM.workspaceRoot$)
+  const {
+    root: canonicalRoot,
+    files,
+    error,
+  } = useGetWorkspaceFiles(workspaceRoot, filetreeDirtyTick)
+  const displayRoot = canonicalRoot ?? workspaceRoot
+  const displayFilepath =
+    filepath && displayRoot ? relativeWorkspaceFilepath(filepath, displayRoot) : filepath
 
   React.useEffect(() => {
-    viewmodel.currentFilepath$.next(filepath)
-  }, [filepath, viewmodel.currentFilepath$])
+    viewmodel.currentFilepath$.next(displayFilepath)
+  }, [displayFilepath, viewmodel.currentFilepath$])
 
   React.useEffect(() => {
-    viewmodel.updateFromFilepaths(files)
-  }, [files, viewmodel])
+    viewmodel.updateFromFilepaths(
+      displayRoot ? files.map(filepath => relativeWorkspaceFilepath(filepath, displayRoot)) : [],
+    )
+  }, [displayRoot, files, viewmodel])
+
+  React.useEffect(() => {
+    if (workspaceRoot && canonicalRoot && workspaceRoot !== canonicalRoot) {
+      workspaceVM.replaceWorkspaceRoot(workspaceRoot, canonicalRoot)
+    }
+  }, [canonicalRoot, workspaceRoot, workspaceVM])
 
   React.useEffect(() => {
     if (!sidebarVisible) return
 
-    const { selector } = viewmodel.reveal(filepath)
+    const { selector } = viewmodel.reveal(displayFilepath)
     if (!selector) return
 
     let cancelled: boolean = false
@@ -95,8 +117,15 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
     return (): void => {
       cancelled = true
     }
-  }, [revealTick, sidebarVisible, filepath, viewmodel])
+  }, [revealTick, sidebarVisible, displayFilepath, viewmodel])
 
-  return <React.Fragment />
+  const displayedError = workspaceError ?? error
+  return displayedError ? (
+    <div className="absolute bottom-3 left-3 right-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700 shadow-sm dark:bg-red-950/80 dark:text-red-300">
+      {displayedError}
+    </div>
+  ) : (
+    <React.Fragment />
+  )
 }
 SideEffect.displayName = 'FileTreeSideEffect'

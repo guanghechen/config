@@ -3,7 +3,6 @@ import React from 'react'
 import { ApiRoutePathEnum } from '@/shared/constant/api'
 
 interface IProps {
-  readonly workspace: string | null
   readonly filepath: string | null
 }
 
@@ -11,15 +10,14 @@ export class AnchorButton extends React.PureComponent<IProps> {
   public static readonly displayName: string = 'AnchorButton'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath } = this.props
+    const { filepath } = this.props
 
     if (!filepath) {
       return <React.Fragment />
     }
 
-    const url = workspace
-      ? `${ApiRoutePathEnum.FILE_RAW}?filepath=${encodeURIComponent(filepath)}&workspace=${encodeURIComponent(workspace)}`
-      : `${ApiRoutePathEnum.FILE_RAW}?filepath=${encodeURIComponent(filepath)}`
+    const params = new URLSearchParams({ filepath })
+    const url = `${ApiRoutePathEnum.FILE_RAW}?${params}`
 
     return (
       <span
