@@ -1,7 +1,7 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import { useVirtualizer } from '@tanstack/react-virtual'
 import React from 'react'
+import { VirtualList } from '@/common/component/virtual-list'
 import type { FileTreeViewModel, IFileTreeFileNode, IFileTreeNode } from './context'
 import { FileListItem } from './FileListItem'
 
@@ -16,8 +16,6 @@ export const FileList: React.FC<IProps> = props => {
   const currentFilepath: string | null = useStateValue(viewmodel.currentFilepath$)
   const searchKeyword: string = useStateValue(viewmodel.searchKeyword$)
   const nodeDataDirtyTick: number = useStateValue<number>(viewmodel.nodeDataDirtyTick$)
-
-  const parentRef = React.useRef<HTMLDivElement>(null)
 
   const onNodeClick = useEventCallback((node: IFileTreeNode) => {
     switch (node.type) {
@@ -39,41 +37,23 @@ export const FileList: React.FC<IProps> = props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileNodes, searchKeyword, nodeDataDirtyTick])
 
-  const virtualizer = useVirtualizer({
-    count: filteredNodes.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 33,
-    overscan: 5,
-  })
-
   return (
-    <div ref={parentRef} className="p-2 text-sm overflow-auto" style={{ height: '100%' }}>
-      <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
-        {virtualizer.getVirtualItems().map(virtualItem => {
-          const node = filteredNodes[virtualItem.index]
-
-          return (
-            <div
-              key={node.uuid}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-            >
-              <FileListItem
-                node={node}
-                currentFilepath={currentFilepath}
-                searchKeyword={searchKeyword}
-                onNodeClick={onNodeClick}
-              />
-            </div>
-          )
-        })}
-      </div>
-    </div>
+    <VirtualList
+      className="p-2 text-sm"
+      style={{ height: '100%' }}
+      items={filteredNodes}
+      itemHeight={33}
+      overscan={5}
+      getItemKey={node => node.uuid}
+      renderItem={node => (
+        <FileListItem
+          node={node}
+          currentFilepath={currentFilepath}
+          searchKeyword={searchKeyword}
+          onNodeClick={onNodeClick}
+        />
+      )}
+    />
   )
 }
 FileList.displayName = 'FileList'

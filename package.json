@@ -18,7 +18,6 @@
     "@guanghechen/subscriber": "2.1.2",
     "@guanghechen/viewmodel": "2.1.4",
     "@monaco-editor/react": "4.7.0",
-    "@tanstack/react-virtual": "^3.14.11",
     "@yozora/ast": "2.4.0",
     "@yozora/ast-util": "2.4.0",
     "@yozora/character": "2.4.0",
