@@ -26,6 +26,14 @@ interface IProps {
    */
   readonly showCodeLineno?: boolean
   /**
+   * Handle clicks after a Markdown link URL has been resolved.
+   */
+  readonly onLinkClick?: React.MouseEventHandler<HTMLAnchorElement>
+  /**
+   * Resolve the final URL rendered by Markdown links.
+   */
+  readonly resolveLinkUrl?: (url: string) => string
+  /**
    * Markdown theme scheme.
    */
   readonly theme: string
@@ -35,8 +43,16 @@ interface IProps {
   readonly children?: React.ReactNode
 }
 
+const identityLinkUrl = (url: string): string => url
+
 export const MarkdownTopProvider: React.FC<IProps> = props => {
-  const { customizedRendererMap, showCodeLineno = true, theme } = props
+  const {
+    customizedRendererMap,
+    onLinkClick,
+    resolveLinkUrl = identityLinkUrl,
+    showCodeLineno = true,
+    theme,
+  } = props
 
   const presetDefinitionMap: Record<string, Readonly<Definition>> = useDeepCompareMemo(
     () => props.presetDefinitionMap ?? {},
@@ -60,8 +76,8 @@ export const MarkdownTopProvider: React.FC<IProps> = props => {
   })
 
   const context: IMarkdownTopContext | null = React.useMemo<IMarkdownTopContext | null>(
-    () => (viewmodel ? { viewmodel } : null),
-    [viewmodel],
+    () => (viewmodel ? { viewmodel, onLinkClick, resolveLinkUrl } : null),
+    [onLinkClick, resolveLinkUrl, viewmodel],
   )
 
   if (!viewmodel || !context) return <React.Fragment />

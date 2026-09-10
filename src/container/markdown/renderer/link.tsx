@@ -1,6 +1,7 @@
 import { isEqual } from '@guanghechen/equal'
 import type { Link } from '@yozora/ast'
 import React from 'react'
+import { useMarkdownLinkClick, useMarkdownResolveLinkUrl } from '../context/top'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -14,16 +15,19 @@ import { NodesRenderer } from '../NodesRenderer'
 export const LinkRenderer: React.FC<Link> = React.memo(
   props => {
     const { title, url, children: childNodes } = props
-    const target: React.HTMLAttributeAnchorTarget | undefined = url.startsWith('/')
-      ? undefined
-      : '_blank'
+    const onLinkClick = useMarkdownLinkClick()
+    const resolveLinkUrl = useMarkdownResolveLinkUrl()
+    const resolvedUrl = resolveLinkUrl(url)
+    const target: React.HTMLAttributeAnchorTarget | undefined =
+      resolvedUrl.startsWith('/') || resolvedUrl.startsWith('#') ? undefined : '_blank'
 
     return (
       <a
         className="yozora-link py-0.5 px-0 text-blue-700 dark:text-blue-400 font-medium border-b border-blue-300 dark:border-blue-500/50 hover:text-blue-800 dark:hover:text-blue-300 hover:border-b-2 hover:border-blue-500 dark:hover:border-blue-400 active:text-blue-900 dark:active:text-blue-200 visited:text-violet-700 dark:visited:text-violet-400 visited:border-violet-300 dark:visited:border-violet-500/50"
-        href={url}
+        href={resolvedUrl}
+        onClick={onLinkClick}
         title={title}
-        rel="noopener, noreferrer"
+        rel={target ? 'noopener noreferrer' : undefined}
         target={target}
       >
         <NodesRenderer nodes={childNodes} />

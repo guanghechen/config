@@ -103,3 +103,44 @@ test('permission failures do not trigger login, while missing authentication doe
     globalThis.fetch = originalFetch
   }
 })
+
+test('Markdown file links stay in the current workspace without crossing directory boundaries', () => {
+  const { resolveWorkspaceLink } = load('src/view/workspace/util/link.ts')
+  const fileUrl = filepath => `/file?${new URLSearchParams({ filepath })}#section`
+  for (const filepath of ['/repo/docs/guide.md', '/repo/100% # 中文.md', '/repo/a\\b.md']) {
+    const result = new URL(resolveWorkspaceLink(fileUrl(filepath), '/repo'), 'http://localhost')
+    assert.equal(result.pathname, '/ws')
+    assert.equal(result.searchParams.get('root'), '/repo')
+    assert.equal(result.searchParams.get('filepath'), filepath)
+    assert.equal(result.hash, '#section')
+  }
+  for (const filepath of ['/repo-private/guide.md', '/repo/../outside.md', 'relative.md']) {
+    const url = fileUrl(filepath)
+    assert.equal(resolveWorkspaceLink(url, '/repo'), url)
+  }
+  const normalized = new URL(
+    resolveWorkspaceLink(fileUrl('/repo/docs/../guide.md'), '/repo'),
+    'http://localhost',
+  )
+  assert.equal(normalized.searchParams.get('filepath'), '/repo/guide.md')
+  for (const url of [
+    '#section',
+    'https://example.com/file?filepath=/repo/a.md',
+    '//example.com/file?filepath=/repo/a.md',
+    '/api/file/raw?filepath=/repo/a.png',
+  ]) {
+    assert.equal(resolveWorkspaceLink(url, '/repo'), url)
+  }
+  assert.equal(resolveWorkspaceLink(fileUrl('/repo/a.md'), null), fileUrl('/repo/a.md'))
+  for (const [workspaceRoot, filepath] of [
+    ['C:/repo', 'C:/repo/guide.md'],
+    ['//server/share', '//server/share/guide.md'],
+  ]) {
+    const result = new URL(
+      resolveWorkspaceLink(fileUrl(filepath), workspaceRoot),
+      'http://localhost',
+    )
+    assert.equal(result.searchParams.get('root'), workspaceRoot)
+    assert.equal(result.searchParams.get('filepath'), filepath)
+  }
+})
