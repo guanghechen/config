@@ -21,7 +21,7 @@ refactor: extract main view renderer for different filetype into src/view/filety
    - src/container
    - src/context
    - src/hook
-   - src/keybindings
+   - src/common/shortcut
    - src/types
    - src/util
 
