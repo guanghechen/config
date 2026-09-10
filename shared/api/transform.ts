@@ -33,7 +33,6 @@ export class TextTransformController {
       split: transformer.split || '\n',
       uuid: transformer.uuid || '',
       parents: transformer.parents || '() => []',
-      parents_virtual: transformer.parents_virtual || '() => []',
       title: transformer.title || "(element, index) => ''",
       chainPaths: transformer.chainPaths || [],
       steps: (transformer.steps || []).map((step: any, index: number) => ({
@@ -52,7 +51,6 @@ export class TextTransformController {
       split: config.split,
       uuid: config.uuid,
       parents: config.parents,
-      parents_virtual: config.parents_virtual,
       title: config.title,
       chainPaths: config.chainPaths,
       steps: config.steps.map(step => ({

@@ -2,7 +2,6 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { ITextTransformedNode } from '@/shared/types'
 import { ContentModeEnum, useTextViewViewModel } from '../context'
-import { ContentGraph } from './content-graph'
 import { ContentList } from './content-list'
 import { ContentPlain } from './content-plain'
 
@@ -16,8 +15,6 @@ const ContentPaneMain: React.FC = () => {
       case ContentModeEnum.LIST: {
         return <ContentList />
       }
-      case ContentModeEnum.GRAPH:
-        return <ContentGraph />
       default:
         return <ContentPlain />
     }

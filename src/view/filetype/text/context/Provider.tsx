@@ -30,7 +30,6 @@ export const TextViewProvider: React.FC<IProps> = props => {
     return new TextViewViewModel({
       mode: mode ?? viewData.mode,
       contentMode: contentMode ?? viewData.contentMode,
-      nodeDetailsPaneWidth: viewData.nodeDetailsPaneWidth,
       transformConfig: viewData.transformConfig,
     })
   })
@@ -75,7 +74,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   usePersistAsync(viewmodel, storageKey, [
     viewmodel.mode$,
     viewmodel.contentMode$,
-    viewmodel.nodeDetailsPaneWidth$,
     viewmodel.transformConfig$,
   ])
   useSyncProps(viewmodel, mode, contentMode)

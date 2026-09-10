@@ -31,7 +31,6 @@ export interface ITransformerResolveResponseResult {
     }>
     readonly uuid: string
     readonly parents: string
-    readonly parents_virtual: string
     readonly title: string
     readonly chainPaths?: string[]
   }
@@ -52,7 +51,6 @@ export interface ITransformerSaveRequestPayload {
   }>
   readonly uuid: string
   readonly parents: string
-  readonly parents_virtual: string
   readonly title: string
   readonly chainPaths?: string[]
 }

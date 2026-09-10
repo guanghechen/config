@@ -132,7 +132,6 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
       split: config.split,
       uuid: config.uuid,
       parents: config.parents,
-      parents_virtual: config.parents_virtual,
       title: config.title,
       steps: config.steps.map(step => ({
         skip: step.skip ?? false,

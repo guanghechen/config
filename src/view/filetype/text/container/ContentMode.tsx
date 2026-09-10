@@ -40,20 +40,6 @@ const CONTENT_MODE_OPTIONS: ReadonlyArray<IContentModeOption> = [
       </svg>
     ),
   },
-  {
-    value: ContentModeEnum.GRAPH,
-    label: 'Graph',
-    icon: (
-      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-        />
-      </svg>
-    ),
-  },
 ] as const
 
 export const ContentMode: React.FC = () => {
@@ -64,20 +50,13 @@ export const ContentMode: React.FC = () => {
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
   const isListDisabled: boolean = !transformedNodes || transformedNodes.length === 0
-  const isGraphDisabled: boolean = !transformedNodes || transformedNodes.length === 0
   const actualContentMode: ContentModeEnum =
-    (contentMode === ContentModeEnum.LIST && isListDisabled) ||
-    (contentMode === ContentModeEnum.GRAPH && isGraphDisabled)
-      ? ContentModeEnum.PLAIN
-      : contentMode
+    contentMode === ContentModeEnum.LIST && isListDisabled ? ContentModeEnum.PLAIN : contentMode
 
   const currentOption = CONTENT_MODE_OPTIONS.find(option => option.value === contentMode)
 
   const handleSelect = useEventCallback((mode: ContentModeEnum): void => {
     if (mode === ContentModeEnum.LIST && isListDisabled) {
-      return
-    }
-    if (mode === ContentModeEnum.GRAPH && isGraphDisabled) {
       return
     }
     viewmodel.contentMode$.next(mode)
@@ -102,9 +81,6 @@ export const ContentMode: React.FC = () => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         if (mode === ContentModeEnum.LIST && isListDisabled) {
-          return
-        }
-        if (mode === ContentModeEnum.GRAPH && isGraphDisabled) {
           return
         }
         handleSelect(mode)
@@ -178,9 +154,7 @@ export const ContentMode: React.FC = () => {
         >
           <div className="py-1">
             {CONTENT_MODE_OPTIONS.map((option, index) => {
-              const isDisabled =
-                (option.value === ContentModeEnum.LIST && isListDisabled) ||
-                (option.value === ContentModeEnum.GRAPH && isGraphDisabled)
+              const isDisabled = option.value === ContentModeEnum.LIST && isListDisabled
               return (
                 <button
                   key={option.value}

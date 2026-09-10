@@ -12,7 +12,6 @@ export enum ModeEnum {
 export enum ContentModeEnum {
   PLAIN = 'plain',
   LIST = 'list',
-  GRAPH = 'graph',
 }
 
 export interface IChainPath {
@@ -26,5 +25,4 @@ export interface ITextViewData {
   readonly mode: ModeEnum
   readonly contentMode: ContentModeEnum
   readonly transformConfig: ITextTransformConfig
-  readonly nodeDetailsPaneWidth?: number
 }
