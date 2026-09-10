@@ -3,7 +3,6 @@ import { ViewLayout } from '@/container/ViewLayout'
 import { FileSearch } from './container/FileSearch'
 import { Main } from './layout/main'
 import { Menu } from './layout/menu'
-import { Setting } from './layout/setting'
 import { Sidebar } from './layout/sidebar'
 
 const storageKeyScope = '#/view/workspace'
@@ -18,7 +17,6 @@ export class Composer extends React.PureComponent {
         floating={<FileSearch />}
         menu={<Menu />}
         sidebar={<Sidebar />}
-        settings={<Setting />}
       >
         <Main storageKeyScope={storageKeyScope} />
       </ViewLayout>

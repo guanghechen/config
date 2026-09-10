@@ -35,7 +35,7 @@ export class FilePath extends React.PureComponent<IProps, IState> {
     const hasHistory = history && history.length > 0
 
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <h2
           className={cn(
             'px-2 select-none truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300',

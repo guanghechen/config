@@ -325,23 +325,6 @@ export const RotateRightIcon: React.FC<IIconProps> = props => {
   )
 }
 
-export const SettingsIcon: React.FC<IIconProps> = props => {
-  const { fill = 'currentColor', className } = props
-
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      height="24px"
-      viewBox="0 -960 960 960"
-      width="24px"
-      fill={fill}
-      className={className}
-    >
-      <path d="M840-720v80h-520v-80H840Zm-664 40L376-480l-200 200-56-56 144-144-144-144 56-56ZM840-520v80h-400v-80H840Zm0 200v80h-520v-80H840Z" />
-    </svg>
-  )
-}
-
 export const SnippetIcon: React.FC<IIconProps> = props => {
   const { fill = 'currentColor', className } = props
   return (

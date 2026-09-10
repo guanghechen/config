@@ -88,6 +88,7 @@ export const WorkspaceSelector: React.FC = () => {
       return !open
     })
     setRootError(null)
+    setValidating(false)
   }, [])
 
   const handleClose = React.useCallback((): void => {
@@ -97,30 +98,32 @@ export const WorkspaceSelector: React.FC = () => {
   }, [])
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 shrink-0 max-w-40">
       <button
         type="button"
         onClick={handleToggle}
         className={cn(
-          'flex w-full items-center rounded-md px-4 py-3 leading-relaxed',
+          'flex h-8 w-full items-center gap-2 rounded-lg px-2',
           'transition-colors duration-150 ease-in-out focus:outline-none',
           'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
           'dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100',
         )}
+        aria-label="Select workspace"
+        aria-expanded={isOpen}
         title={currentWorkspaceRoot || 'Select workspace'}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <ViewStreamIcon className="h-4 w-4 shrink-0" />
           <span className="truncate text-sm text-gray-700 dark:text-gray-200">
             {currentWorkspaceRoot ? rootName(currentWorkspaceRoot) : 'No workspace'}
           </span>
         </div>
-        <ChevronRightIcon className="h-4 w-4 shrink-0" />
+        <ChevronRightIcon className="h-3 w-3 shrink-0 rotate-90" />
       </button>
 
       {isOpen && (
         <React.Fragment>
-          <div className="absolute left-full top-0 z-50 ml-1 w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+          <div className="absolute left-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-5rem)] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
             <div className="max-h-[min(24rem,60vh)] overflow-y-auto py-1">
               {workspaceRoots.length === 0 ? (
                 <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">

@@ -2,15 +2,14 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from '@/common/util/clsx'
 import React from 'react'
 import { createPortal } from 'react-dom'
+import { usePortalTarget } from '@/common/hook/usePortalTarget'
 import { ModeEnum, useSvgViewViewModel } from '../context'
 
 export const Mode: React.FC = () => {
   const viewmodel = useSvgViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
-  const portalTarget = React.useMemo(() => {
-    return document.querySelector('.vlt-rightest')
-  }, [])
+  const portalTarget = usePortalTarget('.vlt-right')
 
   const toggleContent = (
     <div className="flex items-center justify-end">
