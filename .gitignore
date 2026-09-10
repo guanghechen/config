@@ -6,6 +6,7 @@ credential.json
 
 /pm/logs/
 /pm/lock/
+/pm/config.local.json
 /pm/state.json
 /pm/state.json*
 
