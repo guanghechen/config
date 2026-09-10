@@ -1,9 +1,7 @@
 // See https://github.com/vitejs/vite/blob/b44e3d43db65babe1c32e143964add02e080dc15/packages/vite/src/node/server/openBrowser.ts#L1
 
 /* eslint-disable no-param-reassign */
-import spawn from 'cross-spawn'
-import type { ExecOptions } from 'node:child_process'
-import { exec } from 'node:child_process'
+import { type ExecOptions, exec, spawn } from 'node:child_process'
 import path from 'node:path'
 import open from 'open'
 import type { Options as IOpenOptions } from 'open'

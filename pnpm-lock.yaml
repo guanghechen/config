@@ -116,9 +116,6 @@ importers:
       '@tailwindcss/vite':
         specifier: 4.3.3
         version: 4.3.3(vite@8.2.2(@types/node@24.13.4)(jiti@2.7.0)(yaml@2.9.0))
-      '@types/cross-spawn':
-        specifier: 6.0.6
-        version: 6.0.6
       '@types/jsonwebtoken':
         specifier: 9.0.10
         version: 9.0.10
@@ -146,9 +143,6 @@ importers:
       cross-env:
         specifier: 10.1.0
         version: 10.1.0
-      cross-spawn:
-        specifier: 7.0.6
-        version: 7.0.6
       dotenv:
         specifier: 17.4.2
         version: 17.4.2
@@ -1542,12 +1536,6 @@ packages:
     resolution:
       {
         integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==,
-      }
-
-  '@types/cross-spawn@6.0.6':
-    resolution:
-      {
-        integrity: sha512-fXRhhUkG4H3TQk5dBhQ7m/JDdSNHKwR2BBia62lhwEIq9xGiQKLxd6LymNhn47SjXhsUEPmxi+PKw2OkW4LLjA==,
       }
 
   '@types/d3-array@3.2.2':
@@ -5825,10 +5813,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
-
-  '@types/cross-spawn@6.0.6':
-    dependencies:
-      '@types/node': 24.13.4
 
   '@types/d3-array@3.2.2': {}
 
