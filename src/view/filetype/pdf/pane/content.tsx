@@ -1,5 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'

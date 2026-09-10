@@ -1,6 +1,6 @@
 import { isEqual } from '@guanghechen/equal'
 import type { Heading, Node, Root } from '@yozora/ast'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { MarkdownContentProvider } from './context/content'
 import { FootnoteDefinitions } from './FootnoteDefinitions'

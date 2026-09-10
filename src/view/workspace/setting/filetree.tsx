@@ -1,5 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { CheckIcon, MenuIcon } from '@/common/component/icon/material'
 import { useWorkspaceViewmodel } from '../context'

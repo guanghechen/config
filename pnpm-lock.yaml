@@ -49,9 +49,6 @@ importers:
       chokidar:
         specifier: 5.0.0
         version: 5.0.0
-      clsx:
-        specifier: 2.1.1
-        version: 2.1.1
       cookie:
         specifier: 2.0.1
         version: 2.0.1

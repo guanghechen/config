@@ -1,5 +1,5 @@
 import type { Admonition } from '@yozora/ast'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import {
   AdmonitionCautionIcon,

@@ -1,6 +1,6 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import MonacoEditor from '@monaco-editor/react'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import type { editor } from 'monaco-editor'
 import React from 'react'
 import { baseEditorOptions } from './options/base'

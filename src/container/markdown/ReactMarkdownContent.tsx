@@ -1,5 +1,5 @@
 import type { Root } from '@yozora/ast'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { MarkdownContentProvider } from './context/content'
 import { useMarkdownTopViewmodel } from './context/top'

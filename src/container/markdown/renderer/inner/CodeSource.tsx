@@ -1,4 +1,4 @@
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { CopyButton } from '@/common/component/button/copy'
 import type { IPrismThemeScheme } from '@/common/component/code-highlighter'

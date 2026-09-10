@@ -1,5 +1,5 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SettingsIcon } from '@/common/component/icon/material'

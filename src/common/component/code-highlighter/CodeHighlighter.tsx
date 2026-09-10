@@ -1,5 +1,5 @@
 import { isEqual } from '@guanghechen/equal'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import type { TokenStream } from 'prismjs'
 import Prism from 'prismjs'
 import React from 'react'

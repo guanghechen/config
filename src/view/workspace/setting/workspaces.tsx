@@ -1,5 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRightIcon, ViewStreamIcon } from '@/common/component/icon/material'

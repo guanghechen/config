@@ -1,4 +1,4 @@
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 
 export const ChevronDownIcon: React.FC<{ className?: string }> = () => {

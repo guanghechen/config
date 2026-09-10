@@ -1,4 +1,4 @@
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { usePrettier } from '@/common/hook/usePrettier'
 import { isLanguageSupported } from '@/common/util/prettier'

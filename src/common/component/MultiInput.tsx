@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 
 export type DisplayMode = 'inline' | 'lines'

@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Heading, Root } from '@yozora/ast'
 import type { IHeadingToc, IHeadingTocNode } from '@yozora/ast-util'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { NodesRenderer, ReactMarkdown, useMarkdownAst } from '@/container/markdown'
 import { ReactMarkdownContent } from '@/container/markdown/ReactMarkdownContent'

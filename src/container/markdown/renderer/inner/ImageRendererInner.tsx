@@ -1,4 +1,4 @@
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { ImageViewer } from './ImageViewer'
 

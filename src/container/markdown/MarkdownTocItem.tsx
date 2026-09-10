@@ -1,5 +1,5 @@
 import type { IHeadingTocNode } from '@yozora/ast-util'
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { NodesRenderer } from './NodesRenderer'
 

@@ -1,4 +1,4 @@
-import cn from 'clsx'
+import cn from '@/common/util/clsx'
 import React from 'react'
 import { CodeBox } from '@/common/component/CodeBox'
 import type { ITextTransformStep } from '@/shared/types'
