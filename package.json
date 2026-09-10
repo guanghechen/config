@@ -42,7 +42,6 @@
     "react-pdf": "10.5.0",
     "react-router-dom": "7.18.3",
     "react-toastify": "11.1.0",
-    "roughjs": "4.6.6",
     "sanitize-html": "2.17.7"
   },
   "devDependencies": {

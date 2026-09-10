@@ -6,7 +6,6 @@ import type { IApiHandle, IApiHandleData } from '../../../types'
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.avi': 'video/x-msvideo',
   '.bmp': 'image/bmp',
-  '.drawboard': 'application/json',
   '.eventstream': 'application/json',
   '.excalidraw': 'application/json',
   '.gif': 'image/gif',

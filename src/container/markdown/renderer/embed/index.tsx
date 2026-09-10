@@ -6,7 +6,17 @@ const EmbedMath = React.lazy(() => import('./math'))
 const EmbedMermaid = React.lazy(() => import('./mermaid'))
 const EmbedMarkdown = React.lazy(() => import('./markdown'))
 const EmbedExcalidraw = React.lazy(() => import('./excalidraw'))
-const EmbedDrawboard = React.lazy(() => import('./drawboard'))
+
+const SUPPORTED_LANGUAGES: ReadonlySet<string> = new Set([
+  'math',
+  'mermaid',
+  'markdown',
+  'excalidraw',
+])
+
+export const isEmbedLanguageSupported = (lang: string): boolean => {
+  return SUPPORTED_LANGUAGES.has(lang.toLowerCase())
+}
 
 interface IProps {
   readonly code: string
@@ -29,8 +39,6 @@ export class Embed extends React.Component<IProps> {
         return <EmbedMarkdown code={code} />
       case 'excalidraw':
         return <EmbedExcalidraw code={code} />
-      case 'drawboard':
-        return <EmbedDrawboard code={code} />
       default:
         return <React.Fragment />
     }

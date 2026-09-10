@@ -4,7 +4,7 @@ import React from 'react'
 import type { ICodeMetaData } from '@/common/util/parseCodeMeta'
 import { parseCodeMeta } from '@/common/util/parseCodeMeta'
 import { useMarkdownTopViewmodel } from '../context/top'
-import { Embed } from './embed'
+import { Embed, isEmbedLanguageSupported } from './embed'
 import { CodeResult } from './inner/CodeResult'
 import { CodeSource } from './inner/CodeSource'
 
@@ -27,7 +27,7 @@ export const CodeRenderer: React.FC<Code> = props => {
     [props.meta, showCodeLineno],
   )
 
-  if (!!lang && !!meta.live) {
+  if (!!lang && !!meta.live && isEmbedLanguageSupported(lang)) {
     return (
       <div className="yozora-code my-4 flex flex-col overflow-hidden rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
         <CodeSource
@@ -42,7 +42,7 @@ export const CodeRenderer: React.FC<Code> = props => {
     )
   }
 
-  if (!!lang && !!meta.embed) {
+  if (!!lang && !!meta.embed && isEmbedLanguageSupported(lang)) {
     return (
       <div className="yozora-code flex items-center justify-center p-4">
         <Embed lang={lang} code={code} meta={meta} />

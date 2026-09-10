@@ -32,7 +32,7 @@
 
 ### 2.3 非目标
 
-- 不提供 `.drawboard` / `.excalidraw` 兼容导入导出。
+- 不提供 `.excalidraw` 兼容导入导出。
 - 不复用 `@excalidraw/excalidraw` runtime。
 - 首版不做多人实时协同（预留接口，但不实现）。
 
