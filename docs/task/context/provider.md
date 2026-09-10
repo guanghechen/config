@@ -2,7 +2,7 @@ ask react-engineer to help me refactor the filetype view.
 
 ## Task Details
 
-refactor the providers under the @src/view/filetype/, please follow the pattern of the @src/view/filetype/excalidraw/context/Provider.tsx.
+refactor the providers under the @src/view/filetype/, please follow the pattern of the @src/view/filetype/json/context/Provider.tsx.
 
 1. Don't inherit the props of the viewmodel, but just list the props that as needed into the Provider's props.
 2. Please use the `React.useState` to create the viewmodel instead of the `React.useMemo`
@@ -11,7 +11,7 @@ refactor the providers under the @src/view/filetype/, please follow the pattern 
 
 ## ✅ COMPLETED
 
-All filetype providers have been successfully refactored to follow the excalidraw pattern:
+All filetype providers have been successfully refactored to follow the shared provider pattern:
 
 - ✅ JSON provider: Updated to use `React.useState`, explicit props, and SideEffect component
 - ✅ Markdown provider: Updated to use `React.useState`, explicit props, and SideEffect component  
@@ -22,4 +22,4 @@ All filetype providers have been successfully refactored to follow the excalidra
 - ✅ EventStream provider: Updated to use `React.useState`, explicit props, and SideEffect component
 - ✅ Unknown provider: Updated to use `React.useState`, explicit props, and SideEffect component
 
-All providers now follow the consistent pattern established by the excalidraw provider.
+All providers now follow the consistent pattern used by the filetype providers.

@@ -145,7 +145,7 @@ export class FileSystemAccessStorage {
       {
         description: 'Text files',
         accept: {
-          'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw'],
+          'text/*': ['.txt', '.md', '.json', '.html', '.svg'],
         },
       },
     ]
@@ -177,7 +177,7 @@ export class FileSystemAccessStorage {
         {
           description: 'Text files',
           accept: {
-            'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw'],
+            'text/*': ['.txt', '.md', '.json', '.html', '.svg'],
           },
         },
       ]

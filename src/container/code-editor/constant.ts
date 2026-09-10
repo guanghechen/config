@@ -61,7 +61,6 @@ export const DEFAULT_CODE_TEMPLATE_OPTIONS = [
   { value: 'jsonl', label: 'JSONL' },
   { value: 'html', label: 'HTML' },
   { value: 'svg', label: 'SVG' },
-  { value: 'excalidraw', label: 'Excalidraw' },
 ]
 
 export const PRETTIER_SUPPORTED_LANGUAGES = new Set([

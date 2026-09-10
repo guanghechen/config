@@ -15,7 +15,6 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.avi': 'video/x-msvideo',
   '.bmp': 'image/bmp',
   '.eventstream': 'application/json',
-  '.excalidraw': 'application/json',
   '.gif': 'image/gif',
   '.html': 'text/html',
   '.ico': 'image/x-icon',
@@ -90,7 +89,6 @@ export const fetchFile: IApiHandle = async params => {
 
   switch (extname) {
     case '.eventstream':
-    case '.excalidraw':
     case '.json':
     case '.jsonl': {
       let data: IApiHandleData

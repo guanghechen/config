@@ -10,7 +10,6 @@ const FILETYPE_TO_EXTENSION_MAP: Record<string, string> = {
   jsonl: 'jsonl',
   html: 'html',
   svg: 'svg',
-  excalidraw: 'excalidraw',
 }
 
 const EXTENSION_TO_CONTENT_TYPE_MAP: Record<string, string> = {
@@ -20,7 +19,6 @@ const EXTENSION_TO_CONTENT_TYPE_MAP: Record<string, string> = {
   jsonl: 'application/x-jsonlines',
   html: 'text/html',
   svg: 'image/svg+xml',
-  excalidraw: 'application/json',
 }
 
 export const fetchCodeDefaults: IApiHandle = async params => {

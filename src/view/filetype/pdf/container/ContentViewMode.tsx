@@ -101,4 +101,4 @@ export const ContentViewMode: React.FC = () => {
   )
 }
 
-ContentViewMode.displayName = 'ExcalidrawViewContentViewMode'
+ContentViewMode.displayName = 'PdfViewContentViewMode'

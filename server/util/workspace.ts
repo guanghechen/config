@@ -6,7 +6,7 @@ export async function findMarkdownFiles(cwd: string): Promise<string[]> {
     const fd = spawn(
       'fd',
       [
-        ...['excalidraw', 'html', 'jpg', 'jpeg', 'json', 'md', 'pdf', 'png', 'svg']
+        ...['html', 'jpg', 'jpeg', 'json', 'md', 'pdf', 'png', 'svg']
           .map(ext => ['-e', ext])
           .flat(),
         ...['.git', 'node_modules'].map(dir => ['--exclude', dir]).flat(),
