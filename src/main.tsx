@@ -15,7 +15,7 @@ import './common/style/index.css'
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/whiteboard" replace={true} />} />
+      <Route path="/" element={<Navigate to="/file" replace={true} />} />
       {routes.map(route => (
         <Route key={route.key} path={route.path} Component={route.Component} />
       ))}
