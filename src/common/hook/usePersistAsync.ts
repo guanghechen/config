@@ -1,9 +1,9 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import type { IState } from '@guanghechen/react-viewmodel'
 import { Computed } from '@guanghechen/react-viewmodel'
-import throttle from 'lodash.throttle'
 import React from 'react'
 import { universalStorage } from '@/common/util/storage'
+import throttle from '@/common/util/throttle'
 
 interface IViewModel {
   dump(): any

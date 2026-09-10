@@ -1,7 +1,7 @@
 import { Subscriber } from '@guanghechen/subscriber'
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import debounce from 'lodash.debounce'
+import debounce from '@/common/util/debounce'
 import { FileTreeModeEnum } from '@/container/filetree/context/types'
 import type { IWorkspaceItem, IWorkspaceViewData } from './types'
 
