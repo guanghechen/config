@@ -1,4 +1,4 @@
-# Tree / Treeview 设计规范
+# Tree / Treeview 设计
 
 ## 目标
 
@@ -54,7 +54,7 @@ Base mutation 返回 topology owner 本身，支持 chaining，但不暴露内�
 
 结构不变式：
 
-1. ID 是 opaque string 且全局唯一。
+1. ID 是 opaque string，在同一 Tree 内唯一。
 2. Root 不可移除或 reparent。
 3. 新 parent 必须存在。
 4. `move` 不得形成 cycle。
@@ -81,7 +81,7 @@ Base mutation 返回 topology owner 本身，支持 chaining，但不暴露内�
 - Filter、list order 和 root attachment 均由 feature 在调用 layout 前决定。
 - 同一 ID 在一次 layout 中不得重复出现；重复 ID 同时覆盖 cycle 和 multi-parent DAG 错误。
 
-复杂度 contract 假设 `id(node)`、`children(node)` 与 `can_fold(parent, child)` 为 `O(1)`，且
+复杂度契约假设 `id(node)`、`children(node)` 与 `can_fold(parent, child)` 为 `O(1)`，且
 `children(node)` 返回 source 已持有的 dense array。Feature 若需要动态 filter，应在 layout 前构建或复用
 projected children；其计算和 allocation 不计入 layout 本身的复杂度。
 
@@ -140,7 +140,7 @@ navigation 不重复存储：
 - `next_sibling_lnum = last_descendant_lnum + 1`，前提是候选行 parent 相同。
 - `is_last = next_sibling_lnum == nil`。
 
-## 复杂度 Contract
+## 复杂度契约
 
 令：
 
@@ -149,26 +149,26 @@ navigation 不重复存储：
 - `E` 为实际遍历的 parent-child edge 数；tree 中 `E < V`。
 - `H` 为可见 tree 最大深度。
 
-| 操作                         | 时间复杂度       | 额外空间复杂度 |
-|:-----------------------------|:-----------------|:---------------|
-| `Treeview.layout`            | `O(V + E)`       | `O(V + H)`     |
-| Layout row arrays            | -                | `O(R)`         |
-| ID map 与 folded chain       | -                | `O(V)`         |
-| Iterative traversal stack    | -                | `O(H)`         |
-| `id(lnum)` / `depth(lnum)`   | `O(1)`           | `O(1)`         |
-| `lnum(id)`                   | average `O(1)`   | `O(1)`         |
-| Parent/child/sibling 查询    | `O(1)`           | `O(1)`         |
+| 操作                       | 时间复杂度     | 额外空间复杂度 |
+| :------------------------- | :------------- | :------------- |
+| `Treeview.layout`          | `O(V + E)`     | `O(V + H)`     |
+| Layout row arrays          | -              | `O(R)`         |
+| ID map 与 folded chain     | -              | `O(V)`         |
+| Iterative traversal stack  | -              | `O(H)`         |
+| `id(lnum)` / `depth(lnum)` | `O(1)`         | `O(1)`         |
+| `lnum(id)`                 | average `O(1)` | `O(1)`         |
+| Parent/child/sibling 查询  | `O(1)`         | `O(1)`         |
 
 实现预算以当前开发机为基准：
 
-- 5,000 nodes layout `< 1ms`。
-- 50,000 nodes layout `< 8ms`。
-- 50,000 nodes layout heap `< 8MiB`。
-- Depth 10,000 不得 stack overflow。
+- 5,000 个节点的 layout 耗时 `< 1 ms`。
+- 50,000 个节点的 layout 耗时 `< 8 ms`。
+- 50,000 个节点的 layout heap `< 8 MiB`。
+- 深度 10,000 不得 stack overflow。
 
-Regular test 使用更宽松的 regression ceiling，避免硬件差异导致 flaky；精确预算由 benchmark 验证。
+常规测试使用较宽松的 regression ceiling，避免硬件差异造成 flaky；精确预算由 benchmark 验证。
 
-## Fold-single-child
+## 单子节点折叠
 
 Fold 不得丢失 node identity：
 
@@ -217,5 +217,5 @@ Surface 负责批量写入 lines、应用 highlights，以及添加 sign、virt 
 
 1. 不提供通用 filesystem tree 或 remote filesystem adapter。
 2. 不定义 selection、match、search、replace 或 lazy-load 语义。
-3. 第一版不提供 tick-based cache 或 incremental render。
-4. 不兼容旧 `era.view.Tree` / stateful `stl.view.Treeview` API；迁移完成后删除旧实现。
+3. 不提供 tick-based cache 或 incremental render。
+4. 不兼容旧 `era.view.Tree` / stateful `stl.view.Treeview` API，不保留旧实现。

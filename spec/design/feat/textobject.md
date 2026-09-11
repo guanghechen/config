@@ -68,7 +68,7 @@
 支持的 ID，不覆盖表中全部原生或 indentscope 对象。
 
 数字边界跳转另接受 `g[n` / `g]n`，这里的小写 `n` 表示数字，而非 AST 选区。
-Git hunk 边界的重复跳转仍有下文记录的回归。
+Git hunk 边界的连续跳转纳入回归验证，见文末验证范围。
 
 ### 语法结构跳转表
 
@@ -127,7 +127,7 @@ local __fn__mods = {
 选择 `__fn__mods = { ... }`，再次 `an` 包含 `local`；`in` 向子节点缩小。
 
 采用 `cover_or_next` 搜索时，table 内的 `vio` 可能选择后面的函数体。
-此前插件配置也使用相同的 `o` captures，没有定义 table 对象。
+`o` 的 captures 不定义 table 对象；选择 table 使用括号对象或原生 AST 选区。
 
 ## 行为约束
 

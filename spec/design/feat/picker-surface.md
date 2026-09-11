@@ -24,14 +24,14 @@ era.m.searcher ─┘
 - Feature namespace 通过 module map 与 LuaDoc alias 保留
   `era.m.picker.Result` / `era.m.searcher.Result` 等公开入口，不保留 runtime adapter。
 
-## `Result` contract
+## `Result` 契约
 
 共享层拥有：
 
 - result buffer/window 的 create、focus、hide、resize、dispose；
 - `lnum_current`、`lnum_present`、`lnum_total`；
 - current/present/selected signs 与对应 scheduler；
-- result content scheduler；
+- Result 内容刷新调度；
 - flags、position 与可选 status 的 winbar 渲染。
 
 Feature 通过 props 提供：
@@ -48,13 +48,13 @@ Feature 通过 props 提供：
 
 共享层不得读取 tree、match、search、replace、file data 或 feature composer。
 
-## `Preview` contract
+## `Preview` 契约
 
 共享层拥有：
 
 - preview buffer/window 的 create、focus、hide、resize、dispose；
-- debounced draw scheduler；
-- draw failure reporting；
+- Draw 的 debounce 调度；
+- Draw 失败报告；
 - title、cursor、number、wrap、whitespace 等 window options。
 
 Feature 通过 props 提供 `draw`、`on_drawed`、keymaps、`diagnostic_scope` 与 relative-number policy：
@@ -73,7 +73,7 @@ Feature 通过 props 提供 `draw`、`on_drawed`、keymaps、`diagnostic_scope` 
 5. draw 或 callback failure 只报告，不得留下 `modifiable/readonly` 错误状态。
 6. reporter `from` 保持迁移前的 feature identity。
 
-## Feature-owned boundary
+## Feature 自有边界
 
 ### Finder
 
@@ -82,8 +82,7 @@ Finder 保持 feature-owned，不提取共同基类或共享 superset。
 - Picker 是 single-line 输入；多行变更会归一化为空格分隔的单行内容。
 - Searcher 保留 multiline 内容，并拥有 custom prompt sign 与 rich title accent。
 - 两者的 `set_content` 状态写入时序不同；统一实现需要 content codec、prompt 与 title policy。
-- namespace 归一化后的直接 diff 仍有 62 additions / 25 deletions。抽取会把明确的 feature contract
-  转换为 optional branches/hooks，未降低认知成本。
+- 强行共享会将上述差异转换为 optional branches/hooks，增加理解成本。
 
 ### BasicComposer
 
@@ -91,8 +90,7 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 
 - Searcher 额外拥有 replacer pane、replace-mode observable/unsubscribe lifecycle 与 replace history。
 - pane validity/focus restoration、动态 layout/border 和 keymap flow 都由 replacer 状态参与决定。
-- Searcher 为 1,864 行，Picker 为 1,412 行；namespace 归一化后的直接 diff 仍有
-  577 additions / 125 deletions，不存在窄而稳定的共同 composer contract。
+- 这些差异尚未形成范围明确、稳定的共享 composer 契约。
 
 ## 复杂度与性能
 
@@ -111,5 +109,4 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 - shared contract tests 覆盖两侧 alias、Result policy、Preview number policy、draw failure、
   changed/stable cursor scheduling 与 dispose 后 queued callback。
 - 全量测试、LuaLS Error-level、formatting 与 dependency checks 通过。
-- 使用 `%34` 当前配置与 `%44` `NVIM_APPNAME=nvim-nvchad` 基线完成 5,000+ 节点 E2E，
-  并记录常用操作时间与稳态空间对比。
+- 使用当前实现与迁移前配置基线完成 5,000+ 节点 E2E，记录运行环境、常用操作时间与稳态空间对比。

@@ -1,50 +1,29 @@
-# Plugin Module
+# Plugin 管理
 
-## Overview
+`era.m.plugin` 提供本地 plugin 管理：按 event、command、filetype 或 keymap lazy load，
+按 `lazy-lock.json` 同步版本，以及 install、update、clean、build 和统一状态窗口。
 
-`era.m.plugin` is a lightweight plugin manager that provides lazy loading, update, and clean functionality. It serves as a simplified alternative to lazy.nvim with essential features.
+## 模块边界
 
-## Features
+| 模块         | 职责                                |
+| ------------ | ----------------------------------- |
+| `types.lua`  | 类型定义                            |
+| `state.lua`  | 配置、lock 与 specs                 |
+| `loader.lua` | 加载 plugin、注册 lazy triggers     |
+| `action.lua` | Install、sync、update、clean、build |
+| `widget.lua` | 状态与操作进度渲染                  |
+| `view.lua`   | 浮动窗口生命周期                    |
+| `init.lua`   | 公共 API 与模块组装                 |
 
-- **Lazy Loading**: Load plugins on demand via events, commands, filetypes, or keymaps
-- **Plugin Sync**: Reconcile configured plugins to the exact commits in `lazy-lock.json`
-- **Plugin Update**: Fetch and checkout latest commits from remote
-- **Plugin Clean**: Remove unused plugin directories
-- **Lock File**: Compatible with `lazy-lock.json` format
-- **Unified Status View**: Show plugin inventory, startup profile, and inline operation progress
+按基础能力到调用方排列：
 
-## Architecture
-
-```
-era.m.plugin/
-├── init.lua     # Module entry and public API
-├── types.lua    # Type definitions
-├── state.lua    # Global state and configuration
-├── loader.lua   # Plugin loading and lazy trigger setup
-├── action.lua   # Install, sync, update, clean, and build actions
-├── view.lua     # Floating window management
-└── widget.lua   # Unified status and operation rendering
+```text
+types -> state -> loader -> action -> widget -> view -> init
 ```
 
-### Module Dependencies
+## 配置与 Plugin spec
 
-```
-types.lua (pure types)
-    ↓
-state.lua (config, lock, specs)
-    ↓
-loader.lua (plugin loading)
-    ↓
-action.lua (install/sync/update/clean/build)
-    ↓
-widget.lua (rendering)
-    ↓
-view.lua (window management)
-    ↓
-init.lua (public API)
-```
-
-## Configuration
+以下列出主要字段，完整类型见 [types.lua](../../../lua/era/m/plugin/types.lua)。
 
 ```lua
 ---@class era.m.plugin.IConfig
@@ -55,10 +34,9 @@ init.lua (public API)
 ---@class era.m.plugin.IUIConfig
 ---@field public size                   { width: number, height: number }
 ---@field public border                 string       -- Border style
+---@field public title                  string       -- Window title
 ---@field public icons                  era.m.plugin.IIcons
 ```
-
-## Plugin Spec
 
 ```lua
 ---@class era.m.plugin.IPluginSpec
@@ -66,21 +44,20 @@ init.lua (public API)
 ---@field public url                    string|nil       -- Git repository URL
 ---@field public branch                 string|nil       -- Git branch
 ---@field public main                   string|nil       -- Main module name
+---@field public build                  string|(fun(): nil)|nil  -- Build command or callback
 ---@field public cond                   (fun(): boolean)|nil  -- Condition function
 ---@field public enabled                boolean|nil      -- Enable/disable plugin
 ---@field public lazy                   boolean|nil      -- Lazy load flag
 ---@field public event                  string|string[]|nil   -- Event triggers
 ---@field public cmd                    string|string[]|nil   -- Command triggers
 ---@field public ft                     string|string[]|nil   -- Filetype triggers
----@field public keys                   IKeySpec[]|nil   -- Keymap triggers
+---@field public keys                   era.m.plugin.IKeySpec[]|nil  -- Keymap triggers
 ---@field public dependencies           string[]|nil     -- Dependency plugin names
 ---@field public opts                   table|(fun(): table)|nil  -- Plugin options
----@field public config                 (fun(spec, opts): nil)|nil  -- Config function
+---@field public config                 (fun(spec: era.m.plugin.IPluginSpec, opts: table): nil)|nil  -- Config function
 ```
 
-## Usage
-
-### Setup
+初始化示例：
 
 ```lua
 local specs = {
@@ -88,141 +65,97 @@ local specs = {
     name = "flash.nvim",
     main = "flash",
     event = { "VeryLazy" },
-    opts = { ... },
+    opts = {},
   },
 }
 
 require("era.m.plugin").setup(specs)
 ```
 
-### Dressing Timing
+`lua/era/plugin.lua` 从 raw specs 组装最终配置：确定 URL、branch、name、main 与 cond，
+在 cond 满足时加载 `era.plugin.*` 的详细配置，再调用 `era.m.plugin.setup(specs)`。
+详细配置模块名由 plugin name 去掉 `.nvim` / `.lua` 后缀，并将 `.`、`_` 转为 `-`。
 
-Dressing owns its initialization and timing in `era.dressing`. Vendor entry points supply ordered
-module lists; the plugin window only reads the resulting snapshot:
+## 命令与操作
+
+`:Plugin` 打开状态窗口。打开窗口只读取状态；操作由以下按键显式触发：
+
+| 按键 | 行为                            |
+| ---- | ------------------------------- |
+| `I`  | 安装缺失 plugins                |
+| `S`  | 同步到 lock file 的精确 commit  |
+| `U`  | 获取并 checkout 远端最新 commit |
+| `X`  | 删除未使用的 plugin 目录        |
+| `gb` | Build 当前 plugin               |
+| `q`  | 关闭窗口                        |
+
+## 状态窗口
+
+窗口在同一界面中展示 plugin 清单、启动耗时和操作进度：
+
+- 顶部依次显示 Neovim、startup plugins、Dressing 耗时；Dressing summary 与其 section 使用同一总和。
+- Missing plugins 和 orphan directories 位于已安装 plugins 之前。
+- 活动任务按 `Installing`、`Syncing`、`Updating`、`Building` 与 `Queued` 分组。
+  共 8 个并发槽位；获得槽位后 queued job 才进入 running。
+- Startup plugins 按 inclusive load time 降序排列；runtime-loaded 与 not-loaded 分组展示。
+- Dressing 是只读 section，按耗时降序、名称升序排列，显示各模块耗时与总和。
+- 已完成的 install/sync/update/clean/build 任务显示在所属 plugin 或 orphan row 下。
+  无变化的 update 不展示；有效结果和错误保留至下一次操作替换 task snapshot。
+- Header 汇总进度；刷新按 event-loop tick 合并。Plugin 跨 section 移动时，光标继续跟随同一 plugin。
+
+### Startup 计时
+
+- `Neovim (UIEnter)`：从进程启动时间 `v:starttime` 到 `UIEnter`。
+- `Plugins (Startup)`：截至 `VeryLazy` 的顶层 plugin load spans；之后 runtime trigger 加载的 plugin 不计入。
+- Plugin 总耗时对嵌套依赖只计一次；单个 plugin 的时间为 inclusive，可能包含依赖加载。
+- Snapshot 在 `VeryLazy` 后定稿。Neovim 与 plugin 指标边界不同，不能相加。
+
+### Dressing 计时
+
+Dressing 由 `era.dressing` 初始化并计时；vendor 提供有序模块列表，plugin 窗口只读取结果：
 
 ```lua
 era.dressing.setup({ "notifier", "ui_attach" })
 local timings = era.dressing.get_load_times() -- module name -> milliseconds
 ```
 
-### Commands
+- `setup(names)` 顺序执行模块。每个 span 从解析模块前开始，到 `dressing()` 返回结束；直接访问模块只触发 lazy load，不执行 setup。
+- 记录第一次正常返回的耗时，包含 cold `require`、同步依赖与 feature-gate 检查，不包含 scheduled callback 和后续渲染。
+- 重复调用仍执行模块，但保留首次计时。错误原样传播并中止序列；已完成模块的计时和事件保留，不自动重试。
+- 计时独立于 plugin setup 和 `VeryLazy`；记录新数据时，`DressingLoad` 刷新已打开的状态窗口。
+- Dressing 总耗时为已记录 spans 的和。Span 为 inclusive，嵌套工作可能重叠；Dressing、plugin 与 Neovim 总耗时不能相加。
+- Dressing 不参与 plugin 数量统计或基于光标的 plugin 操作。
 
-| Command   | Description               |
-|:----------|:--------------------------|
-| `:Plugin` | Open the plugin status UI |
+## Lock file 契约
 
-### Keymaps (in plugin window)
-
-| Key  | Description                |
-|:-----|:---------------------------|
-| `I`  | Install missing plugins    |
-| `S`  | Sync plugins to lock file  |
-| `U`  | Update all plugins         |
-| `X`  | Remove orphan plugins      |
-| `gb` | Build the selected plugin  |
-| `q`  | Close the window           |
-
-## Status View
-
-The plugin window has one stable surface. It displays:
-
-- Neovim, startup-plugin, and Dressing timing summaries, in that order; Dressing uses the same sum as its section.
-- Missing plugins and orphan directories before installed plugins.
-- Active operations grouped into action-aware `Installing` / `Syncing` / `Updating` / `Building` and `Queued` sections.
-- Startup plugins sorted by inclusive load time (slowest first).
-- Runtime-loaded and not-loaded plugins as separate groups.
-- A read-only Dressing section, sorted by load time (slowest first, then name), with per-module timings and their sum.
-- Completed install, sync, update, clean, and build tasks render directly below their owning plugin or orphan row.
-- Operation progress is summarized in the header; queued jobs become running only when one of eight concurrency slots is available.
-- Cursor ownership follows the selected plugin across section moves, and progress refreshes are coalesced per event-loop tick.
-
-Completed no-op updates are omitted. Meaningful results and errors remain visible until the next operation replaces the task snapshot.
-
-Startup profile semantics:
-
-- `Neovim (UIEnter)` measures process start (`v:starttime`) through `UIEnter`.
-- `Plugins (Startup)` measures top-level plugin load spans through `VeryLazy`.
-- These metrics have different boundaries and are not additive.
-- The snapshot is finalized after `VeryLazy`; plugins loaded by later runtime triggers are excluded.
-- Plugin total counts nested dependencies once.
-- Individual plugin times remain inclusive and may contain dependency load time.
-
-Dressing timing semantics:
-
-- `era.dressing.setup(names)` runs modules in order. Each span starts before resolving the module
-  and ends when its `dressing()` returns; direct module access remains lazy and does not run setup.
-- The first call that returns normally is retained, including cold `require`, synchronous dependencies,
-  and feature-gate checks. Scheduled callbacks and later rendering are outside the span.
-- Repeated calls still reach the module but preserve the first timing. Errors propagate unchanged and
-  stop the sequence; completed modules retain their timings and events. There is no automatic retry.
-- Dressing timing is independent of plugin setup and `VeryLazy`. `DressingLoad` refreshes an open
-  status view when a new timing is recorded.
-- The Dressing total sums its recorded spans. Spans are inclusive, so nested work may overlap;
-  Dressing, plugin, and Neovim totals are not additive.
-- Dressing entries are excluded from plugin inventory counts and cursor-based plugin actions.
-
-Opening the window is read-only. Missing plugins are installed only after `I`; sync, update, and clean run only after `S`, `U`, and `X` respectively.
-
-## Highlight Groups
-
-All highlight groups use the `m_pl_` prefix:
-
-| Group             | Description            |
-|:------------------|:-----------------------|
-| `m_pl_h2`         | Section header         |
-| `m_pl_bold`       | Bold text              |
-| `m_pl_comment`    | Muted/comment text     |
-| `m_pl_loaded`     | Loaded plugin icon     |
-| `m_pl_not_loaded` | Not loaded plugin icon |
-| `m_pl_running`    | Running task icon      |
-| `m_pl_error`      | Error status           |
-| `m_pl_time`       | Load time              |
-| `m_pl_event`      | Event trigger          |
-| `m_pl_cmd`        | Command trigger        |
-| `m_pl_ft`         | Filetype trigger       |
-| `m_pl_key`        | Key trigger            |
-| `m_pl_dep`        | Dependency             |
-| `m_pl_commit_from` | Old commit hash        |
-| `m_pl_commit_to`  | New commit hash        |
-
-## Lock File Format
-
-Compatible with lazy.nvim's `lazy-lock.json`:
+使用与 lazy.nvim 相同的 `lazy-lock.json` 结构；示例中的 commit 为完整 SHA-1 格式：
 
 ```json
 {
-  "plugin-name": { "branch": "main", "commit": "abc1234..." }
+  "plugin-name": { "branch": "main", "commit": "0123456789abcdef0123456789abcdef01234567" }
 }
 ```
 
-Sync treats the lock file as read-only. Commit values must be canonical full Git object IDs: 40 hexadecimal characters for SHA-1 repositories or 64 for SHA-256 repositories; abbreviated IDs are rejected as `Invalid lock entry` before any Git operation. Configured plugins without lock entries are reported as `Unpinned`; installed plugins with local worktree changes are reported as `Dirty worktree` and are not checked out. Successful sync verifies the exact full commit after checkout and runs the plugin build step for a new installation or when the checkout changes.
+Sync 只读 lock file，规则如下：
 
-## Integration with fml/plugin.lua
+- Commit 必须是完整 Git object ID：SHA-1 为 40 位、SHA-256 为 64 位十六进制字符。
+  缩写 ID 在任何 Git 操作前以 `Invalid lock entry` 拒绝。
+- 已配置但无 lock entry 的 plugin 标为 `Unpinned`。
+- 已安装 plugin 存在 worktree 改动时标为 `Dirty worktree`，不执行 checkout。
+- Checkout 后验证完整 commit 精确匹配。新安装或 checkout 发生变化时执行 plugin build。
 
-```lua
----@type era.m.plugin.IRawSpec[]
-local raw_specs = {
-  { name = "flash.nvim", main = "flash", cond = conds.common },
-  -- ...
-}
+## 高亮
 
--- Build full specs from raw specs
-local specs = {}
-for _, raw_spec in ipairs(raw_specs) do
-  local spec = {
-    url = "https://github.com/...",
-    branch = "nvim@" .. raw_spec.name,
-    name = raw_spec.name,
-    main = raw_spec.main,
-    cond = raw_spec.cond,
-  }
-  -- Load additional config from fml.plugin.*
-  local ok, details = pcall(require, "fml.plugin." .. name)
-  if ok then
-    spec = vim.tbl_deep_extend("force", spec, details)
-  end
-  specs[#specs + 1] = spec
-end
+全部使用 `m_pl_` 前缀：
 
-require("era.m.plugin").setup(specs)
-```
+| Highlight group                                    | 用途                 |
+| -------------------------------------------------- | -------------------- |
+| `m_pl_h2`                                          | Section 标题         |
+| `m_pl_bold`                                        | 加粗文字             |
+| `m_pl_comment`                                     | 弱化文字             |
+| `m_pl_loaded` / `m_pl_not_loaded`                  | 已加载 / 未加载 icon |
+| `m_pl_running` / `m_pl_error`                      | 运行中 / 错误状态    |
+| `m_pl_time`                                        | 加载耗时             |
+| `m_pl_event` / `m_pl_cmd` / `m_pl_ft` / `m_pl_key` | 对应 lazy trigger    |
+| `m_pl_dep`                                         | 依赖                 |
+| `m_pl_commit_from` / `m_pl_commit_to`              | 旧 / 新 commit hash  |

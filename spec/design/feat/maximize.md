@@ -1,38 +1,33 @@
-# Maximize
+# Window 最大化
 
-## 目标
+Maximize 是当前 window 的临时全屏投影；任意时刻最多存在一个普通 window 的 maximize context。
 
-Maximize 是当前 window 的临时全屏投影。任意时刻最多存在一个 normal-window maximize context。
+## 普通 window
 
-## Normal window
+- 从 source window 执行 `tab split`，创建只含一个普通 window 的临时 tab。
+- 临时 tab 使用 `TabTypeEnum.MAXIMIZE`，专属 nvimbar 只显示 `MAXIMIZED`；应用级 tab focus/new 与 window split 在该类型下不可用。
+- Source 与 maximize window 初始显示同一 buffer，共享编辑内容。
+- `dot.win.fork()` 复制 window metadata。Feature 的 fork factory 为 maximize window 创建独立的 Winline Nvimbar；
+  source render 同时驱动 live forks，target search state 只重绘 target owner。
+- Target 负责释放自己的 Nvimbar/scheduler；source 只保留 borrowed render link，任一端关闭时解除连接。
+- 退出时将 maximize window 的最终 buffer 与 view 同步回 source。通过 toggle/close 退出时，关闭临时 tab 并返回原 source tab/window。
+- 原生命令/API 切换 tab 时，自动关闭临时 tab，并保留用户新选择的焦点。Source tab/window 已失效时只清理，不覆盖其他 window。
 
-- 从 source window 执行 `tab split`，创建仅含一个 normal window 的 transient tab。
-- transient tab 使用 `TabTypeEnum.MAXIMIZE`；专属 nvimbar 只显示 `MAXIMIZED`，不显示其他 tabs。
-- application-level tab focus/new 与 window split 在该 tabtype 下不可用。
-- source 与 maximize window 初始显示同一个 buffer；buffer 内容天然共享。
-- `dot.win.fork()` 复制 window metadata；window-owned Winline 通过 feature-owned fork factory 为 maximize
-  window 创建独立 Nvimbar。Source render 同时驱动 live forks，target search state 只重绘 target owner。
-  Target 拥有并释放自己的 Nvimbar/scheduler；source 只保留 borrowed render link，任一端关闭时解除连接。
-- 退出时将 maximize window 的最终 buffer 和 view 同步回 source window。
-- 通过 toggle/close 退出时，关闭 transient tab 并返回原 source tab/window。
-- native command/API 绕过限制切换 tab 时，自动关闭 transient tab，同时保留用户新选择的 tab focus。
-- source tab/window 已失效时只做安全清理，不覆盖其他 window。
+Neovim 无法锁定 tabpage；`:tabs` 仍可观察该 tab，原生命令/API 仍可切换。
+`TabLeave` 负责处理这些绕过应用入口的切换。
 
-Neovim 无法锁定 tabpage。`:tabs` 等原生命令仍能观察到该 tab；原生命令或 API 也能触发切换，`TabLeave` 是对应的 safety net。
+## 浮动 window
 
-## Floating window
+- 在原 window 上最大化，不创建 tab 或复制 widget buffer。
+- 保存原 window config、`winblend` 与 `winhighlight`，再次 toggle 时恢复。
+- Widget resize 通过 `dot.state.maximized.resolve_resize_config()` 更新原 config，同时维持最大化后的尺寸。
 
-- 保留原地 maximize，不创建 tab，也不复制 widget buffer。
-- 保存原始 window config、`winblend` 与 `winhighlight`；再次 toggle 时完整恢复。
-- widget resize 通过 `dot.state.maximized.resolve_resize_config()` 更新原始 config，同时保持 maximized geometry。
+## 状态归属
 
-## State ownership
+`dot.state.maximized` 持有两类状态：
 
-`dot.state.maximized` 持有当前 maximize state：
+- 浮窗：原 window handle 与可恢复的 presentation state，就地更新 resize snapshot。
+- 普通窗口：source tab/window、maximize tab/window、lifecycle augroup 与 closing guard。
 
-- floating window：原 window handle 与可恢复的 presentation state；
-- normal window：source tab/window、maximize tab/window、lifecycle augroup 与 closing guard。
-
-normal context 最多一个；`era.m.maximize` 负责 create 与 close orchestration，`dot.state.maximized` 负责
-projection sync 与 identity-checked terminal disposal，供 interactive lifecycle 使用。
-floating context 的 resize snapshot 由 `dot.state.maximized` 就地更新。
+`era.m.maximize` 负责创建和关闭流程；`dot.state.maximized` 负责 projection sync，
+并在最终清理前校验 identity。Tab 类型与命令匹配见 [Tab](../tab.md)。

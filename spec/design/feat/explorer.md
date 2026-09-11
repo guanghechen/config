@@ -2,18 +2,10 @@
 
 ## 概述
 
-`era.m.explorer` 是当前 Neovim 配置中的文件浏览器实现。内部采用 **filepath-only** 模型，
-系统边界转换统一由 `stl.os.path` / `stl.os.fs` 承担。
+`era.m.explorer` 由 `Tree + View + Widget + Action + FileManager` 组成，内部使用 filepath-only 模型。
+路径只在系统边界转换，由 `stl.os.path` / `stl.os.fs` 统一处理；`#` 等文件名字符不具有额外路径语义。
 
-模块由 `Tree + View + Widget + Action + FileManager` 组成，目标是：
-
-- 内部状态统一且可预测
-- 与系统交互时做最小必要转换
-- 在特殊文件名（如 `#`）下保持稳定
-
-## 路径策略（核心约束）
-
-以下约束是 Explorer 的基础不变式：
+## 路径不变式
 
 1. 内部只使用 `filepath`，不使用 URI。
 2. 内部路径分隔符固定为 `/`（Windows 内部同样如此）。
@@ -73,7 +65,7 @@
 
 `View` 维护 `lnum_to_filepath` 与 `filepath_to_lnum`，并根据显式 selection 与 pending transfer 计算 sign。
 
-### Pending Transfer
+### Pending transfer 的归属
 
 `Action` 是 pending transfer 的唯一 owner，状态结构为：
 
@@ -109,7 +101,7 @@ Delete 只要删除了至少一项，就清空 selection 与 pending；失败项
 2. 内部组合目标路径并更新 tree。
 3. 真正 IO 时在 `FileManager` 转 OS 路径。
 
-### Reveal
+### Reveal 与 symlink
 
 1. 目标位于当前 root 时，直接按内部 logical filepath 展开并定位。
 2. buffer filepath 已被系统 canonicalize 到 root 外时，`FileManager` 尝试通过当前 root 本身或其直接可见
@@ -120,7 +112,7 @@ Delete 只要删除了至少一项，就清空 selection 与 pending；失败项
 
 记显式 selected roots 为 `S`，当前 focused item 为 `F`，pending transfer 为 `P`。
 
-#### Multi selection 与 mark
+#### 多选与 mark
 
 `S` 非空即处于 multi selection 模式（只有一个 selected item 也算）；独立的 `P` 不表示进入
 multi selection。类型为 `cut | copy | select`：`cut/copy` 分别对应 `P.mode = move/copy`，
@@ -189,9 +181,7 @@ Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目�
 - Copy failure 不按 pathname 自动删除 target；一旦 exclusive create 成功，后续 transfer/close failure 保留
   target 并返回 `partial_failure`，避免删除 ownership 不明的 concurrent replacement。
 
-## 维护与验证
-
-后续改动必须保持上述路径与状态不变式：
+## 验证与维护约束
 
 1. 新增路径字段时，命名统一使用 `filepath`。
 2. 新增系统调用时，必须先执行 `yoz.canonical_path.to_os_path(...)`，或直接使用 `stl.os.fs`。

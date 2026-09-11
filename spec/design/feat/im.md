@@ -1,6 +1,6 @@
 # 输入法切换
 
-`era.dressing.im` 管理 editor lifecycle，`yoz.im` 提供面向 input source 的 Lua contract，独立 crate `rust/im` 负责访问各平台的 input source。
+`era.dressing.im` 管理编辑器生命周期，`yoz.im` 提供面向 input source 的 Lua contract，独立 crate `rust/im` 负责访问各平台的 input source。
 
 ## 职责边界
 
@@ -43,7 +43,7 @@ source 操作遵守下述失败冷却策略，不启动后台重试。
 - 关闭 `auto_im` 会清除 Insert snapshot，但不改变 focus 状态。重新开启时：
   - focused：立即按当前 mode 对齐；
   - unfocused：等待下一次 Insert 或 focus entry 事件。
-- UI host 可传递 focus event 以支持焦点切换时的额外协调：terminal Neovim 接收 native/tmux event，VSCode/Yuivim 的 embedded host 可转发对应 event；未转发不影响 Insert 事件。重复或重叠 event 安全，因为 focus 状态转换 是幂等的。
+- UI host 可传递 focus event 以支持焦点切换时的额外协调：terminal Neovim 接收 native/tmux event，VSCode/Yuivim 的 embedded host 可转发对应 event；未转发不影响 Insert 事件。重复或重叠 event 安全，因为 focus 状态转换是幂等的。
 
 ## Backend 契约
 
@@ -69,7 +69,7 @@ source 操作遵守下述失败冷却策略，不启动后台重试。
 - fused capture 即使读到 English source，最近提交的另一个 source 仍可能随后生效；此时继续提交 English request。selection 失败不覆盖最近成功提交的 target。
 - 外部变化可能已让当前 source 符合目标，但最近提交的 target 仍冲突；此时保守地再提交一次，不根据一次匹配查询推断队列已完成。
 
-### Native Windows
+### 原生 Windows
 
 - snapshot 是完整的十进制 HKL。
 - primary language 为 English 的标准 LANGID 均视为 English。

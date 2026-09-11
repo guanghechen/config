@@ -1,4 +1,4 @@
-# Diffview Specification
+# Diffview 设计
 
 ## 概述
 
@@ -7,13 +7,13 @@
 ## 核心功能
 
 | 功能          | TabType              | 描述                                                                                            |
-|:--------------|:---------------------|:------------------------------------------------------------------------------------------------|
+| :------------ | :------------------- | :---------------------------------------------------------------------------------------------- |
 | Git Workspace | `diffview_workspace` | 查看 staged/unstaged 文件变更与 repository History，右侧显示 side-by-side diff                  |
 | Git Log       | `diffview_commits`   | 查看 commit 历史，支持 path_filter 过滤特定文件/目录，支持展开查看每个 commit 的变更文件及 diff |
 
-> **File History**: 通过 `diffview_commits + path_filter` 实现。当设置 path_filter 时，tabline 会显示过滤的文件名，commit 列表只显示涉及该文件的 commits。
+File History 使用 `diffview_commits + path_filter`；tabline 显示过滤文件名，列表只包含涉及该路径的 commits。
 
-## 入口与 workspace composition
+## 入口与 Workspace 组装
 
 - `<leader>gg` 是唯一 repository-level Git 入口，打开 `diffview_workspace`。
 - workspace 左侧从上到下组合 Staged、Unstaged 与 History，右侧共享一组 SBS windows；默认 focus Changes。
@@ -26,7 +26,7 @@
 
 ## TabType
 
-每种视图对应独立的 tabtype，便于精细化控制命令和 UI 行为：
+Workspace 与 commits 使用不同 tabtype，分别控制命令与 UI：
 
 ```lua
 stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE     -- "diffview_workspace"
@@ -38,7 +38,7 @@ stl.e.TabTypeSet.DIFFVIEW  -- 包含所有两种 diffview 类型
 
 ## 模块结构
 
-```
+```text
 era.m.diffview/
 ├── init.lua          # 入口，导出公共 API
 ├── types.lua         # 类型定义
@@ -51,7 +51,7 @@ era.m.diffview/
 │
 ├── pane/             # 可复用渲染单元（只负责渲染+数据，不管窗口布局）
 │   ├── filetree.lua  # 通用文件树（用于 commits 展开的文件列表）
-│   ├── changes.lua   # workspace 专用的 staged/unstaged 双树
+│   ├── changes.lua   # workspace 专用的 staged/unstaged 文件树
 │   ├── commits.lua   # Commit 列表
 │   └── sbs.lua       # Side-by-side diff（含 git 内容加载、diff 模式）
 │
@@ -75,19 +75,19 @@ era.m.diffview/
 
 ### 架构分层
 
-| 层      | 模块                 | 职责                                         |
-|:--------|:---------------------|:---------------------------------------------|
-| Pane    | `pane/*.lua`         | 纯渲染 + 数据管理，不知道窗口在哪            |
-| View    | `view/*/view.lua`    | 创建/销毁窗口、布局切换、组合 pane、生命周期 |
-| State   | `view/*/state.lua`   | 该视图的响应式状态（Observable）             |
-| Tabline | `view/*/tabline.lua` | 该视图的 tabline 渲染                        |
-| Action  | `view/*/action.lua`  | 该视图的用户操作（stage/unstage/选择文件等） |
-| Keymap  | `view/*/keymap.lua`  | 该视图的快捷键绑定                           |
-| Binding | `view/binding.lua`   | 构造 context，组装 keymap 与共享 SBS resolver |
-| Layout  | `layout.lua`         | 工具方法：根据树形结构创建窗口分割           |
-| Nvimbar | `view/*/{tabline,winline}.lua` | tabline 与 window-owned winline composition |
+| 层      | 模块                           | 职责                                          |
+| :------ | :----------------------------- | :-------------------------------------------- |
+| Pane    | `pane/*.lua`                   | 渲染与数据管理，不决定窗口布局                |
+| View    | `view/*/view.lua`              | 创建/销毁窗口、布局切换、组合 pane、生命周期  |
+| State   | `view/*/state.lua`             | 该视图的响应式状态（Observable）              |
+| Tabline | `view/*/tabline.lua`           | 该视图的 tabline 渲染                         |
+| Action  | `view/*/action.lua`            | 该视图的用户操作（stage/unstage/选择文件等）  |
+| Keymap  | `view/*/keymap.lua`            | 该视图的快捷键绑定                            |
+| Binding | `view/binding.lua`             | 构造 context，组装 keymap 与共享 SBS resolver |
+| Layout  | `layout.lua`                   | 工具方法：根据树形结构创建窗口分割            |
+| Nvimbar | `view/*/{tabline,winline}.lua` | tabline 与 window-owned winline composition   |
 
-`binding.lua` 是 view interaction 的 composition root：
+`binding.lua` 负责 view 交互的组装：
 
 ```text
 cmd / fn / tabline
@@ -99,21 +99,20 @@ cmd / fn / tabline
 
 - `action` 与 `view` 通过 context callback 请求 keymap refresh，不反向依赖 `keymap`。
 - `sbs_keymap` 只安装 buffer-local mappings；当前 tab/context 的解析由 `binding` 注入。
-- shared SBS buffer 继续在执行时解析当前 view，不持有安装时的 context。
 
 ### 四种 Pane
 
-| Pane     | 文件                | 用途                   | 使用者                  |
-|:---------|:--------------------|:-----------------------|:------------------------|
-| filetree | `pane/filetree.lua` | 通用文件树/列表        | commits view            |
-| changes  | `pane/changes.lua`  | staged + unstaged 双树 | workspace view          |
-| commits  | `pane/commits.lua`  | Commit History 列表    | workspace、commits view |
-| sbs      | `pane/sbs.lua`      | side-by-side diff      | 所有 view               |
+| Pane     | 文件                | 用途                     | 使用者                  |
+| :------- | :------------------ | :----------------------- | :---------------------- |
+| filetree | `pane/filetree.lua` | 通用文件树/列表          | commits view            |
+| changes  | `pane/changes.lua`  | staged / unstaged 文件树 | workspace view          |
+| commits  | `pane/commits.lua`  | Commit History 列表      | workspace、commits view |
+| sbs      | `pane/sbs.lua`      | side-by-side diff        | 所有 view               |
 
 ## 模块依赖
 
 | 依赖模块           | 用途           |
-|:-------------------|:---------------|
+| :----------------- | :------------- |
 | `era.m.git.diff`   | Diff 算法      |
 | `era.m.git.cmd`    | Git 命令执行   |
 | `era.m.git.status` | Git 状态解析   |
@@ -122,19 +121,21 @@ cmd / fn / tabline
 
 ## Filetype
 
-| Filetype           | Pane     | 用途                                    |
-|:-------------------|:---------|:----------------------------------------|
-| `DiffviewChanges`  | changes  | workspace 左侧的 staged + unstaged 双树 |
-| `DiffviewFiletree` | filetree | commits 的文件列表                      |
-| `DiffviewCommits`  | commits  | commit 列表面板                         |
-| `diffview-sbs`     | sbs      | Side-by-side diff 视图（左右窗口共用）  |
+| Filetype           | Pane     | 用途                                      |
+| :----------------- | :------- | :---------------------------------------- |
+| `diffview-changes` | changes  | workspace 左侧的 staged / unstaged 文件树 |
+| `diffview-files`   | filetree | commits 的文件列表                        |
+| `diffview-commits` | commits  | commit 列表面板                           |
+| `diffview-sbs`     | sbs      | 内部 buffer 的初始 filetype 与空内容占位  |
 
-> 注意：这些是自定义 filetype，由 `dot/tab.lua` 用于检测 diffview tab。
+这些值由 `config.FT` 引用 `stl.filetype` 常量。SBS 加载内容后执行 `filetype detect`，
+buffer 可使用对应语言的 filetype，因此不能仅凭 `diffview-sbs` 判断 SBS 身份。
+Pane 归属由 view/layout 确定；tab 类型与命令适用范围见 [Tab](../../tab.md)。
 
 ## 命令
 
 | 命令                       | 描述                                                     |
-|:---------------------------|:---------------------------------------------------------|
+| :------------------------- | :------------------------------------------------------- |
 | `Fdiffviewclose`           | 关闭 Diffview Tab                                        |
 | `Fdiffviewopencommits`     | 打开 Git Log 视图                                        |
 | `Fdiffviewopenfilehistory` | 打开当前文件的历史视图（实际调用 commits + path_filter） |
@@ -143,15 +144,14 @@ cmd / fn / tabline
 | `Fdiffviewtogglecommits`   | 切换 workspace History / commits 面板显示                |
 | `Fdiffviewtogglefiles`     | 切换 workspace sidebar / commits filetree                |
 
-## 布局设计
+## 布局
 
-> 详见 [layout.md](./layout.md)
+Workspace 与 standalone commits 的布局及尺寸规则见[布局设计](layout.md)。
 
-## Diff 模式策略
+## Diff 模式
 
-### 使用 Neovim 内置 Diff 模式
-
-使用 Neovim 内置的 diff 模式（基于 xdiff）：
+使用 Neovim 内置 diff 模式（基于 xdiff），由 `scrollbind`、`cursorbind` 处理同步滚动与光标，
+内置 diff 负责行对齐、填充和折叠：
 
 ```lua
 -- 窗口选项
@@ -166,17 +166,9 @@ local winopts = {
 }
 ```
 
-### 设计决策：为什么使用内置 diff 模式
+复用 Neovim 的 C 实现与窗口行为，避免另行维护 diff 对齐和滚动同步。
 
-1. **算法一致性** - Neovim 内置 xdiff 与 git 默认算法一致
-2. **滚动同步** - `scrollbind` + `cursorbind` 自动处理
-3. **行对齐** - 内置 diff 模式自动处理行对齐和填充
-4. **性能** - C 实现的 diff 算法
-5. **维护成本** - 复用 Neovim 内置功能
-
-## 高亮隔离策略
-
-### 核心原则
+## 高亮隔离
 
 1. 定义专属高亮组：所有 diffview 高亮组使用 `m_dv_*` 前缀
 2. 通过 winhighlight 隔离：每个窗口设置 `winhl`，将全局高亮组映射到专属高亮组
@@ -186,7 +178,7 @@ local winopts = {
 ### 高亮组前缀
 
 | 前缀            | 用途              |
-|:----------------|:------------------|
+| :-------------- | :---------------- |
 | `m_dv_`         | 面板通用          |
 | `m_dv_add*`     | Diff 新增内容高亮 |
 | `m_dv_del*`     | Diff 删除内容高亮 |
@@ -240,7 +232,7 @@ workspace tab 同时组合一个 workspace state 与一个无 path_filter 的 co
 持有的 layout 和 preview ownership 协作，不相互写入 domain state。
 workspace view 拥有组合 layout 与 panel buffers；无论通过 close action 还是直接关闭 tab，都必须释放这些资源。
 
-### workspace state
+### Workspace 状态
 
 ```lua
 ---@class era.m.diffview.view.workspace.State
@@ -253,7 +245,7 @@ workspace view 拥有组合 layout 与 panel buffers；无论通过 close action
 ---@field public display_mode      "tree"|"list"           -- 显示模式
 ```
 
-### commits state
+### Commits 状态
 
 ```lua
 ---@class era.m.diffview.view.commits.State
@@ -270,7 +262,7 @@ workspace view 拥有组合 layout 与 panel buffers；无论通过 close action
 ---@field public total             stl.c.Observable        -- integer (commit 总数)
 ```
 
-### Diff fold state
+### Diff fold 状态
 
 `dot.context.diffview.flag_fold_unchanges` 是持久的 global default。创建 workspace 或 commits view 时，
 其值被复制到对应 `State.fold_unchanged`，之后由该 view 独立持有当前 fold policy。
@@ -280,7 +272,7 @@ workspace view 拥有组合 layout 与 panel buffers；无论通过 close action
 - `zM`：只折叠当前 view 的 left/right diff panes，不修改 global default。
 - 当前 view 内切换文件或 layout 时保留 per-view policy；关闭后重新打开则再次使用 global default。
 
-### Untracked visibility
+### Untracked 可见性
 
 `dot.context.diffview.flag_untracked` 持久化 workspace Changes pane 是否显示 untracked files，默认开启。
 该 flag 只过滤 view projection；完整 Git snapshot 仍保留在 workspace state，refresh identity、staging 和
@@ -289,11 +281,11 @@ discard contract 不受影响。隐藏当前选中的 untracked entry 时，work
 
 - `t4` / status flag：显示或隐藏 untracked files。
 - `³`：新 Diffview 的默认 fold policy。
-- `󰡯⁴`：untracked visibility。
+- `󰡯⁴`：untracked 可见性。
 
 ## History / Commits 分页
 
-workspace History 与 Git Log 视图 (`diffview_commits`) 复用同一套分页 commit state：
+Workspace History 与 Git Log (`diffview_commits`) 复用分页 commit state。
 
 Staged、Unstaged 与 History 各自使用 window-owned Nvimbar composition。Changes winline 左侧显示 Git icon、
 stage label 与 visible entry count，History 左侧显示 commit 总数和当前 `page/page_count`；三个 window 右侧均
@@ -304,12 +296,12 @@ stage label 与 visible entry count，History 左侧显示 commit 总数和当�
 - **每页数量**：`config.COMMITS_PER_PAGE = 100`
 - **Tabline 显示**：`󰊢 Commits (1523) | Page 1/16`
 - **翻页快捷键**：
-  - `]]` - 下一页
-  - `[[` - 上一页
+  - `]]`：下一页。
+  - `[[`：上一页。
 
 ### 数据流
 
-```
+```text
 打开 commits 面板
     ↓
 fetch_log_count() - 获取 commit 总数
@@ -327,7 +319,7 @@ fetch_log_page(page, 100)
 重绘 commits 面板 + 更新 tabline
 ```
 
-### 注意事项
+### 分页与请求一致性
 
 - 带 path_filter 时也支持分页（单文件历史可能很长）
 - 未过滤 log 使用 `--topo-order` 和 parent hashes 生成 compact commit graph；为保证跨页 lane 连续，先读取
@@ -344,7 +336,7 @@ fetch_log_page(page, 100)
 ### Buffer 类型
 
 | 类型          | buftype   | modifiable | 用途                            |
-|:--------------|:----------|:-----------|:--------------------------------|
+| :------------ | :-------- | :--------- | :------------------------------ |
 | filetree      | `nofile`  | `false`    | 文件树面板                      |
 | commits       | `nofile`  | `false`    | Commit 列表                     |
 | sbs_old       | `nowrite` | `false`    | Side-by-side 左侧（旧版本）     |
@@ -360,45 +352,16 @@ fetch_log_page(page, 100)
 
 快捷键由各 view 的 `keymap.lua` 显式组装；共享 SBS buffer 只持有 context-neutral dispatcher，
 执行时再解析当前 view 和 active preview。完整 key scope、bindings 与 fallback contract 详见
-[keybinding.md](./keybinding.md)。
+[快捷键契约](keybinding.md)。
 
-## 设计决策
+## 设计取舍
 
-### 为什么 Pane 和 View 分离？
-
-1. **职责单一** - Pane 只负责渲染和数据，View 负责窗口布局和用户交互
-2. **复用性** - sbs pane 被所有 view 复用
-3. **可测试** - Pane 的渲染逻辑可以独立测试，不依赖窗口环境
-
-### 为什么每个 View 独立维护状态？
-
-1. **隔离性** - 不同 view 的状态互不影响
-2. **清晰性** - 状态定义在使用它的 view 旁边，便于理解
-3. **简化** - 不需要复杂的状态分发逻辑
-
-### 为什么 changes pane 不复用 filetree pane？
-
-1. **数据结构不同** - changes 需要同时展示 staged 和 unstaged 两个分区
-2. **交互不同** - changes 支持 stage/unstage 操作，filetree 只支持选择
-3. **渲染不同** - changes 需要绘制分区标题和分隔线
-
-### 为什么文件树使用单 buffer 双树？
-
-1. **简化窗口管理** - 只需管理一个窗口
-2. **统一滚动** - 两棵树在同一个 buffer 中
-3. **视觉一致** - 采用主流 diff 视图设计
-
-### 为什么不复用 `era.m.explorer`？
-
-1. **不同的数据模型** - explorer 是完整文件系统树，diffview 只需要变更文件列表
-2. **不同的交互** - explorer 支持文件操作，diffview 只需要选择和查看
-3. **简化实现** - diffview 的文件树渲染更简单
-
-### 为什么在独立 tab 中运行？
-
-1. **布局隔离** - 不影响用户现有的窗口布局
-2. **状态独立** - 关闭 tab 即可完全清理状态
-3. **用户预期** - 独立 tab 提供干净的工作环境
+- Pane 负责内容与数据，View 负责窗口布局、pane 组装和交互；SBS 可跨 view 复用，pane 渲染可独立测试。
+- Workspace 与 commits 分别持有 domain state，减少状态分发与相互干扰；workspace 通过 layout/preview ownership 组合二者。
+- Changes 专门处理 staged/unstaged 状态与 stage/unstage 动作；commits filetree 处理 commit 文件选择，二者不共用业务 pane。
+- Staged、Unstaged、History 各有 window/buffer，统一作为 sidebar 控制，并共享 SBS preview。
+- Diffview 只展示变更文件，不复用完整 filesystem Explorer 的数据与文件操作模型。
+- 使用独立 tab 隔离布局；关闭 tab 时释放该 view 的资源。
 
 ## 已知限制
 

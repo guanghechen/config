@@ -1,4 +1,4 @@
-# Tab Specification
+# Tab 类型与 Tabline
 
 ## TabType 定义
 
@@ -9,35 +9,37 @@
 ---| "diffview_commits"
 ---| "diffview_workspace"
 ---| "normal"
+---| "maximize"
 ```
 
-| Type                 | 描述                                                      |
-|:---------------------|:----------------------------------------------------------|
-| `normal`             | 普通编辑 tab                                              |
-| `diffview_workspace` | Git Diff 视图（staged/unstaged）                          |
-| `diffview_commits`   | Git Log 视图（支持 path_filter 实现单文件/目录历史过滤）  |
+| 类型                 | 描述                                                     |
+| :------------------- | :------------------------------------------------------- |
+| `normal`             | 普通编辑 tab                                             |
+| `diffview_workspace` | Git Diff 视图（staged/unstaged）                         |
+| `diffview_commits`   | Git Log 视图（支持 path_filter 实现单文件/目录历史过滤） |
+| `maximize`           | 普通 window 最大化使用的临时 tab                         |
 
 ## TypeEnum 与 TypeSet
 
 ```lua
 -- 具体类型枚举
 stl.e.TabTypeEnum.NORMAL               -- "normal"
+stl.e.TabTypeEnum.MAXIMIZE             -- "maximize"
 stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE   -- "diffview_workspace"
 stl.e.TabTypeEnum.DIFFVIEW_COMMITS     -- "diffview_commits"
 
 -- 类型集合（便捷常量，均为数组）
 stl.e.TabTypeSet.ALL                   -- 所有类型
 stl.e.TabTypeSet.NORMAL                -- { "normal" }
+stl.e.TabTypeSet.MAXIMIZE              -- { "maximize" }
 stl.e.TabTypeSet.DIFFVIEW              -- 所有 diffview 类型
 stl.e.TabTypeSet.DIFFVIEW_WORKSPACE    -- { "diffview_workspace" }
 stl.e.TabTypeSet.DIFFVIEW_COMMITS      -- { "diffview_commits" }
 ```
 
-## Command 实现规范
+## Command 匹配
 
-### 强制指定 tabtypes
-
-实现 command 时**必须**指定 `tabtypes`，不允许省略：
+Command 实现必须显式提供数组形式的 `tabtypes`：
 
 ```lua
 command.implement({
@@ -47,9 +49,7 @@ command.implement({
 })
 ```
 
-### tabtypes 支持 list
-
-`tabtypes` 字段接受数组，允许一个实现同时适用于多个 tab 类型：
+一个实现可适用于多个 tab 类型：
 
 ```lua
 -- 单一类型（推荐使用 TypeSet）
@@ -65,9 +65,8 @@ tabtypes = stl.e.TabTypeSet.DIFFVIEW
 tabtypes = stl.e.TabTypeSet.ALL
 ```
 
-### 执行匹配规则
-
 命令执行时精确匹配当前 tab 的 `tabtype`，无 fallback。
+`maximize` 下的命令限制与生命周期见 [Maximize](feat/maximize.md)。
 
 ## Tabline 渲染
 
@@ -81,8 +80,6 @@ tabtypes = stl.e.TabTypeSet.ALL
 ---@return nil
 era.dressing.tabline.register(tabtype, factory)
 ```
-
-特点：
 
 - 每个 tabtype 只能注册一次，重复注册被忽略
 - factory 在对应 tabtype 首次渲染时调用，创建的实例随后复用
@@ -114,15 +111,10 @@ end)
 
 ### 各 tabtype 的 tabline 内容
 
-| tabtype              | 显示内容                                          |
-|:---------------------|:--------------------------------------------------|
-| `normal`             | buffer 列表 + tab 指示器                          |
-| `diffview_workspace` | Diffview 专用标题                                 |
-| `diffview_commits`   | Diffview 专用标题（带 path_filter 时显示文件名）  |
-| 其他                 | fallback 到 normal 渲染                           |
-
-## 设计原则
-
-1. **显式优于隐式** - 所有 command 必须声明适用的 tabtypes
-2. **面向扩展** - tabtypes 使用 list 形式，便于新增类型
-3. **优雅降级** - 未知 tabtype 的 tabline 渲染 fallback 到 normal
+| tabtype              | 显示内容                                         |
+| :------------------- | :----------------------------------------------- |
+| `normal`             | buffer 列表 + tab 指示器                         |
+| `diffview_workspace` | Diffview 专用标题                                |
+| `diffview_commits`   | Diffview 专用标题（带 path_filter 时显示文件名） |
+| `maximize`           | 仅显示 `MAXIMIZED`                               |
+| 其他                 | fallback 到 normal 渲染                          |

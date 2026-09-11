@@ -1,179 +1,123 @@
-# AI Widget
+# AI Widget 设计
 
-A custom implementation replacing sidekick.nvim for AI agent CLI integration.
+本地 AI agent CLI 集成，替代 sidekick.nvim。
 
-## Supported Agents
+## Agent 与 backend
 
-- claude (Claude Code)
-- codex (OpenAI Codex)
-- gemini (Google Gemini CLI)
-- opencode (SST OpenCode)
+支持以下 agent：
 
-## Supported Backends
+- `claude`：Claude Code。
+- `codex`：OpenAI Codex。
+- `gemini`：Google Gemini CLI。
+- `opencode`：SST OpenCode。
 
-- **tmux**: Primary backend for terminal multiplexing
-- **Native neovim terminal**: Fallback when tmux is unavailable
+优先使用 tmux；不可用时使用 Neovim 原生 terminal。不支持 zellij。
 
-Note: zellij is explicitly not supported.
+## Attach 与多 source
 
-## Core Features
+Attach 打开 `Select CLI tool` picker，分组顺序固定：
 
-### 1. Attach Command
+1. 已 attach 的 sources，使用 brightGreen + bold。
+2. 正在运行的 agent panes，使用 brightBlue。
+3. 可新建的 agents，使用 fg2，按 agent name 字母序排列。
 
-Opens a "Select CLI tool" picker with the following structure:
+运行中的 panes 优先显示当前 tmux session，再优先当前 window；其余按
+session name → window name → pane id 排序。当前 cwd 已有该 agent session 时，不再显示新建项。
 
-**Picker Items (in order):**
-1. Already attached sources (highlighted with brightGreen + bold)
-2. Running agent panes from tmux (brightBlue)
-3. New agent options for creation (fg2)
+选择行为：
 
-**Sorting Rules:**
-- Attached sources appear first (as a separate group)
-- Running panes appear next (as a separate group):
-  - Same session as current tmux session comes first
-  - Within same session, same window comes first
-  - Then sorted alphabetically by session name → window name → pane id
-- New agent options appear last, sorted alphabetically by agent name
-- If an agent already has a running session for current cwd, don't show it in new options
+- 外部 pane：session name 不符合 `<agent>-<hex_hash>` 及规定 hash 长度时，只记录 pane ID，
+  通过 tmux 直接发送消息，不打开 Neovim terminal。
+- 已有 agent session pane：打开 Neovim terminal 并 attach。
+- 新建 agent：先按 `(agent, cwd)` 查找 session；存在则复用，否则创建后 attach。
 
-**Selection Behavior:**
-- If selecting an existing external pane (session name doesn't match `<agent>-<hex_hash>` pattern with correct hash length):
-  - Only record the pane identifier, no neovim terminal opened
-  - Messages sent via tmux directly
-- If selecting an existing agent session pane:
-  - Open a neovim terminal and attach to the pane
-- If selecting to create new:
-  - Check if session already exists for (agent, cwd)
-  - If exists: attach to it
-  - If not: create new session, then attach
+可同时 attach 多个 sources。发送时通过 picker 选择目标，`Tab` 切换多选；
+存在多个 sources 时，顶部提供 `Send to all`。
 
-### 2. Multi-Source Support
+Detach 只有一个 agent 时直接执行，否则打开 picker。Detach tmux source 时关闭其关联的 Neovim terminal。
+Attach、detach 及每次发送的成功或失败均提供通知。
 
-- Can attach to multiple sources simultaneously
-- When sending with multiple attached sources:
-  - Shows picker to select target(s)
-  - Supports multi-select (Tab to toggle)
-  - "Send to all" option at top when multiple sources attached
+## Prompt 契约
 
-### 3. Prompts
+每个 prompt 的 `render(ctx)` 在上下文齐全时返回 `{ text, header_end }`，缺少必要上下文时返回 `nil`。
+目标优先使用 Visual selection，例如 `@filepath :L1:C1-L10:C20`；否则使用当前文件 `@filepath`。
+预览中截至 `header_end` 的 header lines 使用 `f_us_ai_prompt_header`。
 
-Built-in prompts with render function that returns the actual content:
-- `diagnostics`: Fix diagnostics in current file (requires: file + diagnostics)
-- `diagnostics_all`: Fix all diagnostics (requires: diagnostics in any buffer)
-- `ask`: General question about target (requires: selection or file)
-- `explain`: Explain target code (requires: selection or file)
-- `fix`: Fix target code (requires: selection or file)
-- `optimize`: Optimize target code (requires: selection or file)
-- `refactor`: Refactor target code (requires: selection or file)
-- `review`: Review target code (requires: selection or file)
-- `review_changes`: Review git changes (requires: git changes)
-- `test`: Write tests for target (requires: selection or file)
+| Prompt            | 用途             | 必要上下文                   |
+| ----------------- | ---------------- | ---------------------------- |
+| `diagnostics`     | 修复当前文件诊断 | 文件与 diagnostics           |
+| `diagnostics_all` | 修复全部诊断     | 任一 buffer 中的 diagnostics |
+| `ask`             | 针对目标提问     | selection 或文件             |
+| `explain`         | 解释代码         | selection 或文件             |
+| `fix`             | 修复代码         | selection 或文件             |
+| `optimize`        | 优化代码         | selection 或文件             |
+| `refactor`        | 重构代码         | selection 或文件             |
+| `review`          | 审查代码         | selection 或文件             |
+| `review_changes`  | 审查 Git 变更    | Git changes                  |
+| `test`            | 编写测试         | selection 或文件             |
 
-Each prompt has a `render(ctx)` function that returns:
-- `{ text, header_end }` when all required context is available
-- `nil` when the prompt is not available (missing required context)
+### 变量替换
 
-**Target Resolution:**
-- If visual selection exists: uses selection range (e.g., `@filepath :L1:C1-L10:C20`)
-- Otherwise: falls back to current file (e.g., `@filepath`)
+变量名匹配 `__[A-Z_]+__`，例如 `__FILE_PATH__`、`__SELECTION_TEXT__`。
+赋值必须独占一行，语法为 `<VAR_NAME>=<value>` 或 `<VAR_NAME>="<value with spaces>"`：
 
-**Preview Highlighting:**
-- Header lines (up to `header_end`) are highlighted with `f_us_ai_prompt_header`
-
-#### Variable Substitution
-
-Prompts support a simple variable substitution system for dynamic content.
-
-**Variable Naming:**
-- Pattern: `__[A-Z_]+__` (e.g., `__FILE_PATH__`, `__SELECTION_TEXT__`)
-
-**Variable Assignment:**
-- Must be on its own line
-- Syntax: `<VAR_NAME>=<value>` or `<VAR_NAME>="<value with spaces>"`
-- Examples:
-  ```
-  __FILE_PATH__=src/main.lua
-  __SELECTION_TEXT__="function hello() end"
-  ```
-
-**Variable Reference:**
-- Syntax: `${<VAR_NAME>}` (e.g., `${__FILE_PATH__}`, `${__SELECTION_TEXT__}`)
-- If the variable is not defined, the reference is kept as-is (no substitution)
-
-**Rendering Behavior:**
-1. Parse and collect all variable assignments
-2. Remove assignment lines from output
-3. Replace all `${__VAR__}` references with their values
-4. Trim leading/trailing whitespace from the final result
-
-#### Slash Command Transformation
-
-Different AI agents have different slash command formats. When sending prompts, slash commands are automatically transformed based on the target agent:
-
-| Agent    | Format                 | Example                       |
-|:---------|:-----------------------|:------------------------------|
-| claude   | `/command` (unchanged) | `/commit` → `/commit`         |
-| gemini   | `/command` (unchanged) | `/chat` → `/chat`             |
-| opencode | `/command` (unchanged) | `/init` → `/init`             |
-| codex    | `/prompts:command`     | `/commit` → `/prompts:commit` |
-
-**Builtin Commands:**
-
-Each agent has builtin slash commands that are never transformed (preserved as-is). For example, codex's `/help`, `/model`, `/clear` remain unchanged even though other commands would be transformed to `/prompts:*` format.
-
-**Slash Command Detection:**
-- Must be preceded by whitespace, newline, or at start of string
-- Must NOT be followed by `/` (to avoid matching paths like `/usr/local/bin`)
-
-### 4. Notifications
-
-- Success/failure feedback for all message sends
-- Attach/detach notifications
-
-## Implementation Structure
-
-```
-lua/era/m/ai/
-├── init.lua      # Module entry
-├── config.lua    # Agent configs
-├── prompt.lua    # Prompt definitions and context helpers
-└── types.lua     # Type definitions
+```text
+__FILE_PATH__=src/main.lua
+__SELECTION_TEXT__="function hello() end"
 ```
 
-## Commands
+通过 `${<VAR_NAME>}` 引用，例如 `${__FILE_PATH__}`。渲染依次执行：
 
-- `ai.attach_agent`: Open attach picker
-- `ai.detach_agent`: Detach agent (direct detach if only one attached, otherwise show picker)
-- `ai.submit_buffer`: Send current split block content and submit
-- `ai.submit_selection`: Send selection and submit
-- `ai.send_buffer`: Send entire buffer content (no submit)
-- `ai.send_selection`: Send selection (no submit)
-- `ai.send_this`: Send current file path
-- `ai.send_file`: Send current file content and submit
-- `ai.select_prompt`: Open prompt picker
-- `ai.edit`: Edit with AI context
+1. 收集全部赋值。
+2. 删除赋值行。
+3. 将已定义的 `${__VAR__}` 替换为值；未定义的引用原样保留。
+4. 去掉结果首尾空白。
 
-### Detach Behavior
+### Slash command 转换
 
-- When detaching a tmux source with an attached neovim terminal, the terminal is automatically closed
-- If only one agent is attached, detach happens immediately without showing picker
+发送 prompt 时，按目标 agent 转换 slash command：
 
-## Statusline Component
+| Agent      | 格式               | 示例                          |
+| ---------- | ------------------ | ----------------------------- |
+| `claude`   | `/command`         | `/commit` → `/commit`         |
+| `gemini`   | `/command`         | `/chat` → `/chat`             |
+| `opencode` | `/command`         | `/init` → `/init`             |
+| `codex`    | `/prompts:command` | `/commit` → `/prompts:commit` |
 
-`lua/era/m/nvimbar/component/` provides AI-related statusline components.
+各 agent 的 builtin commands 原样保留，例如 codex 的 `/help`、`/model`、`/clear`。
+Slash command 必须位于字符串开头或空白之后；命令名后不能紧接 `/`，避免把 `/usr/local/bin` 识别为命令。
 
-## Highlight Groups
+## 模块与命令
 
-Defined in theme highlight groups:
-- `f_us_ai_attached`: brightGreen, bold (attached items)
-- `f_us_ai_new`: fg2 (create new options)
-- `f_us_ai_prompt_header`: purple, bold (prompt preview header)
-- `f_us_ai_running`: brightBlue (running but not attached)
-- `f_us_ai_send_to_all`: pink, bold (send to all option)
+核心模块位于 `lua/era/m/ai/`：`init.lua` 提供入口，`config.lua` 定义 agent 配置，
+`prompt.lua` 定义 prompts 与上下文 helper，`types.lua` 定义类型。
+AI statusline 组件位于 `lua/era/m/nvimbar/component/`。
 
-## Tmux Structure
+| 命令                  | 行为                           |
+| --------------------- | ------------------------------ |
+| `ai.attach_agent`     | 打开 attach picker             |
+| `ai.detach_agent`     | Detach agent                   |
+| `ai.submit_buffer`    | 发送当前 split block 并 submit |
+| `ai.submit_selection` | 发送 selection 并 submit       |
+| `ai.send_buffer`      | 发送整个 buffer，不 submit     |
+| `ai.send_selection`   | 发送 selection，不 submit      |
+| `ai.send_this`        | 发送当前文件路径               |
+| `ai.send_file`        | 发送当前文件内容并 submit      |
+| `ai.select_prompt`    | 打开 prompt picker             |
+| `ai.edit`             | 使用 AI context 编辑           |
 
-Session: `<agent>-<cwd_hash>` (e.g., `claude-a1b2c3d4e5f6`, `codex-9f8e7d6c5b4a`)
-- One session per (agent, cwd) combination
-- Hash length: `16 - len(agent)` hex characters from MD5 of cwd
-- Session name validation uses strict pattern matching: `^<agent>-[0-9a-f]{hash_len}$`
+## 高亮
+
+| Highlight group         | 样式与用途                          |
+| ----------------------- | ----------------------------------- |
+| `f_us_ai_attached`      | brightGreen、bold；已 attach 项     |
+| `f_us_ai_new`           | fg2；新建项                         |
+| `f_us_ai_prompt_header` | purple、bold；prompt preview header |
+| `f_us_ai_running`       | brightBlue；运行中但未 attach       |
+| `f_us_ai_send_to_all`   | pink、bold；发送至全部 sources      |
+
+## Tmux session 命名
+
+每个 `(agent, cwd)` 对应一个 session，名称为 `<agent>-<cwd_hash>`。
+Hash 取 cwd 的 MD5 十六进制前缀，长度为 `16 - len(agent)`；
+校验 pattern 为 `^<agent>-[0-9a-f]{hash_len}$`。

@@ -1,6 +1,6 @@
-# stl.os 设计规范
+# stl.os 系统边界
 
-`stl.os` 是系统交互边界层，目标是把“业务 filepath 语义”和“OS 调用语义”显式隔离。
+`stl.os` 统一管理业务 filepath 与 OS path 的转换，以及 filesystem 调用。
 
 ## 设计目标
 
@@ -10,11 +10,11 @@
 
 ## 模块结构
 
-| 模块             | 职责                                                            |
-|:-----------------|:----------------------------------------------------------------|
-| `stl.os.path`    | 提供 canonical path 的 Lua runtime wrapper                     |
-| `stl.os.fs`      | 文件系统 facade（`stat/rename/delete/scandir` 等）+ adapter 机制 |
-| `stl.os`         | 聚合入口（`stl.os.path`、`stl.os.fs`）                          |
+| 模块          | 职责                                                             |
+| :------------ | :--------------------------------------------------------------- |
+| `stl.os.path` | 提供 canonical path 的 Lua runtime wrapper                       |
+| `stl.os.fs`   | 文件系统 facade（`stat/rename/delete/scandir` 等）+ adapter 机制 |
+| `stl.os`      | 聚合入口（`stl.os.path`、`stl.os.fs`）                           |
 
 实现约束：
 
@@ -34,7 +34,7 @@
 
 ## 适用前提与非目标
 
-以下约束是当前个人配置的明确使用前提；满足这些前提时，不为对应的极端路径增加额外兼容逻辑：
+当前个人配置采用以下路径前提，不为超出范围的路径增加兼容逻辑：
 
 1. Windows repo 不位于 drive root（例如 `C:\`）；repo 和 workspace 路径至少包含一个非 root component。
 2. 文件或目录名称不包含字面量 `\` 字符。Windows `os_path` 中作为 separator 的 `\` 不受此限制，进入业务层后仍统一转换为 `/`。
@@ -42,51 +42,36 @@
 
 ## stl.os.path API
 
-| API                                 | 说明                                           |
-|:------------------------------------|:-----------------------------------------------|
-| `normalize(filepath, keep?)`        | 归一化为 slash path                            |
-| `join(from, to)`                    | 以 slash 语义拼接路径                          |
-| `relative(from, to)`                | 以 slash 语义计算相对路径                      |
-| `resolve(cwd, to)`                  | 以 slash 语义解析绝对路径                      |
-| `dirname(filepath)`                 | 以 slash 语义获取父目录                        |
+| API                          | 说明                      |
+| :--------------------------- | :------------------------ |
+| `normalize(filepath, keep?)` | 归一化为 slash path       |
+| `join(from, to)`             | 以 slash 语义拼接路径     |
+| `relative(from, to)`         | 以 slash 语义计算相对路径 |
+| `resolve(cwd, to)`           | 以 slash 语义解析绝对路径 |
+| `dirname(filepath)`          | 以 slash 语义获取父目录   |
 
 ## stl.os.fs API
 
-| API                                 | 说明                                           |
-|:------------------------------------|:-----------------------------------------------|
-| `stat(filepath)`                    | 获取文件信息                                   |
-| `exists(filepath)`                  | 判断路径是否存在                               |
-| `is_dir(filepath)`                  | 判断是否目录                                   |
-| `mkdir_p(dirpath)`                  | 递归创建目录                                   |
-| `rename(source, target)`            | 重命名/移动                                    |
-| `delete(filepath, recursive?)`      | 删除文件/目录                                  |
-| `scandir(dirpath)`                  | 列举目录项                                     |
-| `set_adapter(adapter)`              | 设置 FS adapter（remote 扩展入口）             |
-| `get_adapter()`                     | 获取当前 adapter                               |
-| `reset_adapter()`                   | 回退到本地 adapter                             |
+| API                            | 说明                               |
+| :----------------------------- | :--------------------------------- |
+| `stat(filepath)`               | 获取文件信息                       |
+| `exists(filepath)`             | 判断路径是否存在                   |
+| `is_dir(filepath)`             | 判断是否目录                       |
+| `mkdir_p(dirpath)`             | 递归创建目录                       |
+| `rename(source, target)`       | 重命名/移动                        |
+| `delete(filepath, recursive?)` | 删除文件/目录                      |
+| `scandir(dirpath)`             | 列举目录项                         |
+| `set_adapter(adapter)`         | 设置 FS adapter（remote 扩展入口） |
+| `get_adapter()`                | 获取当前 adapter                   |
+| `reset_adapter()`              | 回退到本地 adapter                 |
 
 ## Adapter 约束
 
-`stl.os.fs` 的 adapter 必须完整实现以下方法：
-
-1. `stat`
-2. `exists`
-3. `is_dir`
-4. `mkdir_p`
-5. `rename`
-6. `delete`
-7. `scandir`
-
-若缺失方法，`set_adapter` 会直接报错。
+`stl.os.fs` adapter 必须完整实现 `stat`、`exists`、`is_dir`、`mkdir_p`、`rename`、`delete` 与 `scandir`；
+缺少任一方法时，`set_adapter` 直接报错。Remote 扩展通过同一接口接入，业务调用方式保持不变。
 
 ## 使用规范
 
 1. 业务模块（例如 explorer）内部只保留 `filepath`。
 2. 对系统的读写调用统一通过 `stl.os.fs`，或在调用前用 `yoz.canonical_path.to_os_path`。
 3. 禁止在业务层散落私有 `to_os_filepath` 实现。
-
-## 迁移建议
-
-1. 先收口路径转换：统一改为 `yoz.canonical_path.to_os_path`。
-2. 再收口系统调用：逐步从 `vim.fn`/`vim.uv` 迁到 `stl.os.fs`。
-3. 最后增加 remote adapter，并保持业务层调用不变。

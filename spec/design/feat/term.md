@@ -1,75 +1,77 @@
-# Terminal Feature
+# Terminal 设计
 
-Implement a Terminal widget experience that mirrors the ergonomics of the Notepad widget while remaining tailored to running shell jobs.
+`era.m.term` 提供运行 shell job 的浮动 widget，与 Notepad 共用相近的导航和 winbar 交互。
 
-## Terminal Behavior
+## 模块边界
 
-1. The Terminal widget lives at `lua/era/m/term/widget.lua` and exposes the shared widget interface so other modules can focus / toggle it.
-   - A floating window is centred in the editor with a rounded border (`relative = "editor"`) and the following window styling:
-     ```lua
-     vim.wo[winnr].cursorline = false
-     vim.wo[winnr].list = false
-     vim.wo[winnr].number = false
-     vim.wo[winnr].relativenumber = false
-     vim.wo[winnr].signcolumn = "no"
-     vim.wo[winnr].spell = false
-     vim.wo[winnr].winfixbuf = true
-     vim.wo[winnr].wrap = true
-     vim.wo[winnr].winblend = 0
-     vim.wo[winnr].winhighlight = "Cursor:f_us_terminal_current,..."
-     ```
-   - The window initially opens with an internal mask buffer (`filetype = stl.filetype.TERM_MASK`) to keep the layout stable while the real terminal buffer is attached.
-   - `termline` (the terminal winbar) renders inside this floating window; any time the window resizes the widget recomputes its max width and re-renders the bar.
+| 模块                                   | 职责                                                                    |
+| -------------------------------------- | ----------------------------------------------------------------------- |
+| `lua/era/m/term/state.lua`             | Terminal metadata、顺序与当前 UUID                                      |
+| `lua/era/m/term/action.lua`            | Profile 选择、create/rename/destroy、focus/swap，以及 yazi/lazygit 入口 |
+| `lua/era/m/term/widget.lua`            | 浮窗、mask/terminal buffers、job 启动与内容发送                         |
+| `lua/era/m/term/event.lua`             | 将 terminal 退出事件同步回 state                                        |
+| `lua/era/m/nvimbar/component/term.lua` | Terminal 列表与新增按钮                                                 |
 
-2. Each terminal tab runs in a dedicated buffer created by `era.m.term.state.create`:
-   - Buffer options match expectations for pseudo terminals:
-     ```lua
-     vim.bo[bufnr].buflisted = false
-     vim.bo[bufnr].filetype = stl.filetype.TERM
-     vim.bo[bufnr].modifiable = false
-     vim.bo[bufnr].readonly = false
-     vim.bo[bufnr].swapfile = false
-     ```
-   - When the widget focuses a terminal (`:focus()` / `:toggle_and_focus()`), it ensures the buffer exists, opens the float, and starts the job with `vim.fn.jobstart(..., { pty = true })`.
-   - `toggle_and_focus` accepts creation metadata and optional `selected_text`; if a job already exists the text is piped to `termmeta.jobid` after focus.
-   - `TermClose` autocmds translate vim events back through `era.m.term.event.on_closed` so the store stays consistent even when the user exits the program inside the terminal.
+State 使用 `metamap` 按 UUID 保存 name、cmd、cwd、env、jobid 等 metadata，`termlist` 保存顺序。
+CRUD、`focus`、`put`、`iterator` 与 `pick_next_term` 供 widget/action 使用；左右交换由 action 层完成。
+`o_termuuid` 通知当前 terminal 变化。
+进程生命周期由 widget 管理。
 
-3. The terminal winbar mirrors the Notepad UX and keeps long lists approachable:
-   - `lua/era/m/nvimbar/component/term.lua` exposes `items(position)` and `add_button(position)`. Legacy consumers can still call `term.terms`.
-   - Items show truncated terminal names (12-character budget), the 1-based index badge, and consistent separators. Active entries reuse the focused highlight palette.
-   - The winbar keeps the active terminal centred when space allows; overflow places clickable left/right arrow buttons with hidden counts that call the focus-left/right actions.
-   - The add button always renders when width permits and invokes `Ftermcreate`.
-   - Width calculations call `vim.api.nvim_win_get_width(_terminal_winnr)` so re-renders match the float dimensions rather than the full screen.
+## 窗口与 buffer
 
-4. Default keymaps and commands stay aligned with the action layer:
-   - `Ftermtoggle`, `Ftermcreate`, `Ftermrename`, `Ftermdestroy`, `Ftermfocus{1-9}`, `Ftermfocusleft`, `Ftermfocusright`, `Ftermswapleft`, `Ftermswapright`, and more live under `dot.command.definitions.term`.
-   - `lua/fml/action/term/*.lua` bridges these commands to widget functions, manages prompts (rename, destroy confirmation), and triggers `dot.state.status.dirtier_termline:mark_dirty()` so the winbar reflects the new state.
-   - Each terminal profile includes its launch command and type; profiles can be selected via the UI picker defined in `fml/action/term/create.lua`.
+浮窗相对 editor 居中，使用 rounded border。初始挂载 `stl.filetype.TERM_MASK` buffer，
+再切换为实际 terminal buffer，避免窗口结构在 job 启动期间变化。
 
-----------------------------------------------------------------------------------------------------
+默认窗口选项：
 
-## Module Overview
+| 选项                                                      | 值                                              |
+| --------------------------------------------------------- | ----------------------------------------------- |
+| `cursorline`、`list`、`number`、`relativenumber`、`spell` | `false`                                         |
+| `signcolumn`                                              | `"no"`                                          |
+| `winfixbuf`、`wrap`                                       | `true`                                          |
+| `winblend`                                                | `0`                                             |
+| `winhighlight`                                            | `widget.lua` 中的 `TERMINAL_WIN_HIGHLIGHT` 映射 |
 
-### Data Model (`lua/era/m/term/state.lua`)
-- Stores active terminals keyed by UUID (`metamap`) and maintains their order (`termlist`).
-- Exposes CRUD helpers (`create`, `update`, `append`, `focus`, `swap`, `iterator`, `pick_next_term`) that the widget and action layers depend on.
-- Persists per-terminal metadata (name, cmd, cwd, env, jobid) while deferring actual process lifecycle to the widget.
-- Publishes the `o_termuuid` observable so subscribers (widget winbar, status dirtier) react to focus changes.
+每个 terminal 使用独立 buffer，其 metadata 由 `era.m.term.state.create` 创建。
+Buffer 初始化时设为 unlisted、`filetype = stl.filetype.TERM`，关闭 `modifiable`、`readonly` 与 `swapfile`。
+`hidewipe` 为 true 时设置 `bufhidden = "wipe"`。
 
-### Action Layer (`lua/era/fn/term/`)
-- `create.lua` handles profile selection, shell defaults, toggle behaviour, and rename prompts.
-- `destroy.lua` confirms deletions, picks a fallback terminal, and raises the dirtier when state changes.
-- `focus.lua`, `swap.lua`, `yazi.lua`, `lazygit.lua`, and related modules glue user commands to `era.m.term` navigation helpers.
-- Every action routes notifications through `stl.reporter` and ensures `dot.state.status.dirtier_termline` is marked so the widget winbar stays current.
+Widget 提供 `focus`、`toggle`、`toggle_and_focus`、`hide`、`resize`、`isvisible`、`isfocused`。
+Resize 时重新计算 termline 最大宽度并渲染；宽度读取实际 terminal window 的 `nvim_win_get_width`。
 
-### Widget (`lua/era/m/term/widget.lua`)
-- Owns the floating window lifecycle, mask buffer, terminal buffer creation, and `jobstart` integration.
-- Implements the shared widget API (`focus`, `toggle`, `toggle_and_focus`, `hide`, `resize`, `isvisible`, `isfocused`).
-- Observes `era.m.term.state.o_termuuid` to keep the visible buffer in sync and uses `dot.state.status.dirtier_termline` to throttle winbar renders.
-- When autofocus is requested and text is provided, schedules `vim.api.nvim_chan_send` to feed the active terminal job.
+## Job 生命周期
 
-### Nvimbar Component (`lua/era/m/nvimbar/component/term.lua`)
-- Renders terminals with truncated names, index badges, separators, and a persistent "+" button.
-- Uses the same centred-scroll strategy as the Notepad bar; arrow buttons display hidden counts and call the existing focus commands.
-- Highlights reuse the theming defined in `dot.theme.hlgroup`, so focused terminals share the look-and-feel of other widgets.
-- Exposes `M.terms` for legacy code paths while new integrations should prefer `M.items` and `M.add_button`.
+`focus()` 显示当前 terminal，确保 buffer/浮窗存在，仅在 `jobid == nil` 时通过
+`vim.fn.jobstart(..., { pty = true, term = true })` 启动 job。没有当前 metadata 时关闭浮窗并返回。
+
+`toggle_and_focus(params)` 先创建或更新目标 metadata，再按可见性与 `autofocus` 分派；
+未指定 `autofocus` 时按 false 处理：
+
+1. 浮窗已可见，且满足以下任一条件：目标是调用开始时的当前 terminal，或 `autofocus = false`。
+   此时隐藏浮窗并返回，不发送文本。
+2. 其他情况进入显示流程；`autofocus = true` 时先切换当前 UUID，再调用 `focus()`。
+3. 进入显示流程后，非空 `selected_text` 通过 scheduled `vim.api.nvim_chan_send` 发送。
+   Callback 执行时仍须满足 widget 有焦点、目标 `jobid` 非空，否则跳过。
+
+`TermClose` 与 `jobstart.on_exit` 均通过 `era.m.term.event.on_closed` 更新 state；
+`on_exit` 只处理仍与退出 `jobid` 匹配的 metadata。启动失败先报告，再延迟确认 metadata 仍属于失败的
+buffer 且没有新 job，随后清理，避免影响后续启动。
+
+Widget 订阅 `o_termuuid` 切换可见 buffer，通过 `dot.state.status.dirtier_termline` 合并 winbar 更新。
+
+## Termline
+
+`items(position)` 渲染列表，`add_button(position)` 渲染新增按钮；`M.terms` 是 `M.items` 的 alias。
+
+- 名称最多显示 12 个字符，带 1-based index badge 与统一分隔符。
+- 空间允许时居中显示当前 terminal；溢出时显示可点击的左右箭头与隐藏数量，调用已有 focus actions。
+- 宽度允许时显示 `+`，触发 `Ftermcreate`。
+- 当前项使用 focused palette，高亮复用 `dot.theme.hlgroup`。
+
+## 命令与交互
+
+命令位于 `dot.command.definitions.term`，包括 `Ftermtoggle`、`Ftermcreate`、`Ftermrename`、
+`Ftermdestroy`、`Ftermfocus{1-9}`、`Ftermfocusleft/right` 与 `Ftermswapleft/right`。
+
+Action 层选择包含 launch command 与 type 的 profile，处理重命名输入和删除确认，删除后选择后备 terminal。
+状态变化时标记 `dirtier_termline`，通知统一使用 `stl.reporter`。

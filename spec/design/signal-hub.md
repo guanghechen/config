@@ -1,8 +1,8 @@
-# Signal Hub
+# Signal Hub 消息契约
 
 `stl.c.SignalHub` 是独立的进程内消息模块。核心只使用 Lua 标准功能，不依赖
 Neovim、runtime globals、reporter、timer 或第三方库。每个 Hub 独立拥有注册表和订阅；
-共享实例由使用者显式组装。首版没有 builtin signal。
+共享实例由使用者显式组装，不内置业务 signal。
 
 ## 注册与身份
 
@@ -129,4 +129,4 @@ Benchmark 使用 `os.clock()` 测量 Hub 校验、消息构造、索引匹配及
 清理 benchmark 覆盖单个／多个 role 与共享／不同 scope 的组合；spec 另设 20,000 个不同 scope 的 CPU 回归上限。
 核心在仅含 Lua 标准功能的环境中加载并执行，防止意外引入 runtime dependency。
 
-无阻塞实现的未决设计问题。nvimbar 接入属于后续独立改动。
+Nvimbar 的共享 Hub 组装与定向通知见 [Nvimbar](nvimbar.md)。

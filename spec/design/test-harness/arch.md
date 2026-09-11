@@ -1,35 +1,35 @@
-# Test Architecture
+# 测试架构
 
-## Scope and layout
+## 范围与目录
 
-All Lua, Node, and Rust test code and shared fixtures live under top-level
-`__test__/`, outside the production `lua/` runtime. Lua specs are grouped by the
-module or feature under test and use the `*_spec.lua` suffix. Related behaviors may share a feature directory,
-such as `__test__/specs/era/m/diffview/workspace/`.
+所有 Lua、Node、Rust 测试及共享 fixture 均位于顶层 `__test__/`，与生产 `lua/` 分离。
+Lua spec 按被测模块或 feature 分组，以 `*_spec.lua` 结尾；相关行为可共用目录，例如
+`__test__/specs/era/m/diffview/workspace/`。
 
-- `__test__/run.lua` is the public CLI and the entry used by suite subprocesses.
-- `__test__/support/` contains reusable execution and fixture support.
-- `__test__/specs/` is the only Lua discovery root.
-- `__test__/specs/support/` tests the infrastructure itself.
-- `__test__/node/*.test.mjs` contains Node tests, run with `node --test`.
-- `__test__/rust/<crate>/**/*_test.rs` contains Rust unit tests, run with `cargo test`.
-- `__test__/fixtures/` contains fixtures shared across specs or languages.
-- Small fixtures stay local to their spec. Shared helpers need multiple real consumers.
+| 路径                                 | 用途                                 |
+| ------------------------------------ | ------------------------------------ |
+| `__test__/run.lua`                   | 公共 CLI 与 suite 子进程入口         |
+| `__test__/support/`                  | 共享执行工具与 fixture 支持          |
+| `__test__/specs/`                    | 唯一的 Lua spec 发现目录             |
+| `__test__/specs/support/`            | 测试基础设施自身                     |
+| `__test__/node/*.test.mjs`           | Node 测试，由 `node --test` 执行     |
+| `__test__/rust/<crate>/**/*_test.rs` | Rust unit test，由 `cargo test` 执行 |
+| `__test__/fixtures/`                 | 跨 spec 或语言共享的 fixture         |
 
-The local harness remains dependency-free. Test infrastructure does not introduce
-production abstractions or a runtime plugin system.
+小型 fixture 留在所属 spec；helper 只有被多个 spec 实际使用时才提取到共享目录。
+本地 harness 不引入第三方依赖、生产抽象或 runtime plugin system。
 
-## Ownership and dependencies
+## 职责与依赖
 
-| Component                    | Responsibility                                        | Owned state                         |
-| ---------------------------- | ----------------------------------------------------- | ----------------------------------- |
-| `__test__/run.lua`           | Resolve checkout, prepare runtime, dispatch execution | Process CWD, runtime and Lua paths  |
-| `__test__.support.runner`    | Discover, select, launch, time out, report suites     | Suite list, child process results   |
-| `__test__.support.harness`   | Register cases, assert, run, clean up, report         | Case registry, case/suite cleanups  |
-| `__test__.support.bootstrap` | Prepare explicitly requested application globals      | Harness-owned global substitutions  |
-| `*_spec.lua`                 | Specify observable behavior and regressions           | Local fixtures and resource handles |
+| 组件                         | 职责                                  | 持有状态                        |
+| ---------------------------- | ------------------------------------- | ------------------------------- |
+| `__test__/run.lua`           | 定位 checkout、准备 runtime、分派执行 | 进程 CWD、runtime 与 Lua paths  |
+| `__test__.support.runner`    | 发现、筛选、启动、超时控制与汇总      | suite 列表、子进程结果          |
+| `__test__.support.harness`   | 注册 case、断言、执行、清理与报告     | case 注册表、case/suite cleanup |
+| `__test__.support.bootstrap` | 准备显式声明的应用 globals            | 交由 harness 恢复的 global 替换 |
+| `*_spec.lua`                 | 定义可观察行为与回归用例              | 本地 fixture、资源 handle       |
 
-Within a process, dependencies remain one-way:
+进程内依赖保持单向：
 
 ```text
 CLI entry -> runner
@@ -38,81 +38,56 @@ suite entry -> spec -> harness
                    -> production modules under test
 ```
 
-The runner starts a new entry process with `--suite`; that branch loads the spec
-without importing the runner. Production Lua modules never import test support,
-reference `__test__`, or expose test-only hooks. Pure logic needed by production
-and tests belongs to normal domain modules, such as `era.m.ai.capture`.
-Neither harness nor runner imports production modules. Bootstrap does not import
-runner or suites.
+Runner 通过 `--suite` 启动新进程；该分支直接加载 spec，不导入 runner。
+生产 Lua 不得导入测试支持、引用 `__test__` 或暴露 test-only hook。生产与测试共用的纯逻辑
+放在正常 domain module，例如 `era.m.ai.capture`。Harness、runner 不导入生产模块；bootstrap
+不导入 runner 或 suite。
 
-Rust source modules retain only `#[cfg(test)] mod ... { include!(...); }` wiring
-for their extracted unit tests. Include paths start from `CARGO_MANIFEST_DIR` and
-point into `__test__/rust/`; module names, private access, and platform gates stay
-unchanged. No test code is included in a normal build. Node specs import the
-production scripts directly. Shared fixture paths resolve from the checkout root.
+Rust 源码只保留 `#[cfg(test)] mod ... { include!(...); }` 接线。Include 从
+`CARGO_MANIFEST_DIR` 定位 `__test__/rust/`，保留原模块名、private access 与 platform gate；
+普通 build 不包含测试代码。Node spec 直接导入生产脚本。共享 fixture 路径相对于 checkout root 解析。
 
-## Execution contract
+## 执行契约
 
-The public command is `nvim -l __test__/run.lua [--list] [--timeout ms] [path-filter]`.
-The selector is a literal substring of the spec path. A complete file path selects
-one suite; a directory selects its specs. Discovery is recursive and sorted, and
-only includes regular files ending in `_spec.lua`. Helpers are not excluded by a
-filename blacklist.
-Directory reads and entry inspection are checked; a failure at any depth aborts
-discovery before launching suites.
+公共命令：`nvim -l __test__/run.lua [--list] [--timeout ms] [path-filter]`。
 
-The entry resolves the repository's canonical path from its own file location,
-sets CWD to that checkout, and installs its runtime and Lua paths alongside
-Neovim's built-in runtime and library directories. Bundled parsers remain available
-when Neovim installs them separately from `$VIMRUNTIME`. Each suite starts in a separate
-Neovim process with `--headless -u NONE -i NONE -n`. Application configuration and
-plugin startup are not automatic; a composed runtime spec may explicitly request
-`ark.bootstrap` when that runtime is part of the tested contract.
+- `path-filter` 是 spec 路径的字面子串：完整路径选择一个 suite，目录路径选择其下的 specs。
+- 递归发现并排序所有以 `_spec.lua` 结尾的普通文件，不使用 helper 文件名黑名单。
+- 每层目录读取和 entry 检查都必须成功；任一失败均在启动 suite 前终止 discovery。
+- 入口从自身位置解析 canonical checkout，将 CWD 设为该目录，并配置 runtimepath、packpath 与
+  Lua paths，同时保留 Neovim 内置 runtime/library 目录及独立于 `$VIMRUNTIME` 安装的 bundled parsers。
+- 每个 suite 使用独立的 `--headless -u NONE -i NONE -n` Neovim 进程。应用配置与 plugin
+  不自动启动；测试 composed runtime 时可显式加载 `ark.bootstrap`。
+- Runner 使用 argv 形式的 `vim.system` 顺序执行 suite。默认每个 suite 超时 30 秒，可由 CLI 覆盖。
+  失败或超时不阻止后续 suite；不自动重试、安装依赖或编译 native module。
 
-Suites run sequentially through argv-based `vim.system` calls, with a 30-second
-per-suite timeout that the CLI can override. A failed or timed-out suite is
-reported and later suites still run. There are no automatic retries, dependency
-installation, or implicit native builds.
+以下情况必须返回非零退出码：未选中 suite、目录缺失、CLI 参数无效、空 spec、遗漏 `t:run()`、
+加载错误、case/cleanup 失败、子进程启动失败、子进程非零退出或超时。
 
-Zero selected suites, missing directories, invalid CLI arguments, empty specs,
-forgotten `t:run()` calls, load errors, case/cleanup failures, failed launches,
-nonzero child exits, and timeouts must produce a nonzero exit status.
+## Harness 与资源生命周期
 
-## Harness and resource lifecycle
+- 每个 suite 使用一个 harness，并以 `t:run()` 结束 spec。
+- `t:defer(fn)` 注册 cleanup，返回幂等的提前释放 handle；`patch_global`、`patch_table` 使用同一套清理机制。
+- Case 内注册的资源归该 case；顶层注册的资源归 suite，可供所有 case 使用。
+- 成功和失败后都按注册逆序清理。Cleanup 错误与原始错误同时保留，且不跳过剩余 cleanup。
+- 没有 case 的 suite 仍清理 suite 资源，并报告失败。
+- Spec 负责临时文件、仓库、buffer、window 与异步任务；释放资源前，异步任务必须完成或取消。
 
-- One harness owns each suite's case registry. A spec ends with `t:run()`.
-- `t:defer(fn)` registers cleanup and returns an idempotent early-disposal handle.
-- `patch_global` and `patch_table` use the same cleanup ownership.
-- Registrations made during a case belong to that case. Top-level registrations
-  belong to the suite and remain available to every case.
-- Cleanup runs in reverse order after both success and failure. A cleanup error
-  is retained alongside the original failure and does not skip other cleanups.
-- A suite with no registered cases fails but still disposes suite resources.
-- Specs own their temporary files, repositories, buffers, windows, and async work.
-  Async work must settle or be cancelled before its resources are disposed.
+`harness:run({ exit = false, quiet = true })` 供 harness 自测使用；普通 spec 使用默认的进程退出模式。
+Bootstrap helper 显式声明所需 globals，并通过 harness 注册恢复操作。
 
-`harness:run({ exit = false, quiet = true })` remains available for harness
-self-tests. Ordinary specs use the default process-exiting mode. Bootstrap
-helpers remain explicit declarations and register restoration through the harness.
+## 测试边界与命名
 
-## Test boundaries and naming
+按契约拆分 spec。例如 indentline 的 `parser_spec.lua`、`render_spec.lua`、`frame_spec.lua`、
+`provider_spec.lua` 与 `setup_spec.lua` 分别覆盖纯计算、buffer/cache、native rendering 和生命周期，
+各自使用独立 fixture 与失败信号，并归在同一 feature 目录。
 
-Prefer focused specs for distinct contracts. The indentline feature illustrates
-this with `parser_spec.lua`, `render_spec.lua`, `frame_spec.lua`,
-`provider_spec.lua`, and `setup_spec.lua`. Pure calculations, buffer/cache state,
-native rendering, and lifecycle registration have separate fixtures and failure
-signals while remaining together under the feature directory.
+Case 名称描述可观察行为。回归用例包含触发输入，并断言受影响结果。
+所有 Lua specs 使用相同的 harness 与资源生命周期。
 
-Case names describe observable behavior. Regression tests include the triggering
-input and assert the affected result. New shared support is extracted only for
-actual repeated needs. All Lua specs use the same harness and resource lifecycle.
+## 验证
 
-## Validation
+基础设施测试覆盖 discovery 边界、稳定排序、字面筛选、空选择、子进程状态隔离、含空格与 Unicode
+的路径、从其他 CWD 执行、加载/case/cleanup 失败、空 spec、遗漏 run、进程失败、超时和 CLI 诊断。
 
-Infrastructure specs cover discovery boundaries, deterministic ordering, literal
-selection, empty selection, child state isolation, paths containing spaces and
-Unicode, execution from another CWD, load/case/cleanup failures, empty specs,
-missing run calls, process failures, timeouts, and CLI diagnostics.
-
-See [flow](flow.md) for state transitions and
-[the test guide](../../../__test__/README.md) for executable commands and examples.
+状态转换见[执行流程](flow.md)，可执行命令与示例见[测试指南](../../../__test__/README.md)。

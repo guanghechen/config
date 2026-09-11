@@ -1,10 +1,10 @@
 # Git 模块
 
-这是一个轻量级的 Git 集成模块，用于替代 gitsigns.nvim，提供 Git 状态追踪、Hunk 管理、Sign 显示和 Blame 功能。
+`era.m.git` 提供 Git status、hunk、sign 与 blame，替代 gitsigns.nvim。
 
 ## 模块架构
 
-```
+```text
 era.m.git/
 ├── init.lua      -- 入口，初始化 watcher、autocmd、暴露公共 API
 ├── state.lua     -- 全局状态管理（branch、staged/unstaged files、status cache）
@@ -61,130 +61,40 @@ watcher / index mutation
 
 ## 文件监听
 
-### watcher.lua
+`watcher.lua` 通过 `vim.uv.new_fs_event()` 监听仓库。普通仓库的 gitdir 与 commondir 相同；
+linked worktree 的 `.git` 是指向专属 gitdir 的文件，HEAD/index 位于该 gitdir，refs/objects 位于共享 commondir。
+`repo.lua` 的 `resolve_commondir()` 解析二者关系。
 
-通过 `vim.uv.new_fs_event()` 监听 Git 目录变化，支持普通仓库和 worktree：
+### Watcher 分工
 
-#### Git 目录结构
+| Watcher                | 监听目标                      | 处理内容                                         |
+| ---------------------- | ----------------------------- | ------------------------------------------------ |
+| `fs_watcher_dir`       | `gitdir/`                     | HEAD、index 等目录事件                           |
+| `fs_watcher_commondir` | 不同于 gitdir 的 `commondir/` | 共享 packed-refs/reftable 变化                   |
+| `fs_watcher_head_ref`  | 当前 HEAD 引用所在目录        | 当前 branch ref 变化；普通仓库和 worktree 均使用 |
 
-**普通仓库：**
-```
-project/
-└── .git/                    # gitdir
-    ├── HEAD                 # 当前分支引用
-    ├── index                # staging area
-    ├── refs/heads/          # 本地分支
-    └── refs/remotes/        # 远程分支
-```
+Libuv `fs_event` 不递归监听。当前 ref 的父目录不存在时，监听最近的已有祖先目录；
+HEAD 变化及 ref 目录事件后重新绑定，覆盖嵌套 branch 路径与目录创建。
 
-**Worktree：**
-```
-main-repo/
-└── .git/                              # commondir (主 git 目录)
-    ├── refs/heads/                    # 所有分支的 refs 存储在这里
-    ├── objects/                       # 所有 git objects
-    └── worktrees/my-worktree/         # gitdir (worktree 专属目录)
-        ├── HEAD                       # 内容: "ref: refs/heads/<branch>"
-        ├── index                      # worktree 的 staging area
-        └── commondir                  # 内容: "../.." (指向主 git 目录)
+Index 使用目录级监听：Git 可能通过 rename `index.lock` → `index` 替换文件，
+只监听旧 index 文件可能漏掉后续事件。`filename == "index"` 进入独立的 index 刷新流程。
 
-my-worktree/
-└── .git                               # 文件，内容指向 gitdir
-```
+### 事件与刷新
 
-#### Watcher 架构
+| 事件                       | Debounce     | 刷新                                                                            |
+| -------------------------- | ------------ | ------------------------------------------------------------------------------- |
+| Index 变化                 | 100 ms       | `invalidate_index_all()`、清理 blame 失败 cache、`refresh_index()`              |
+| HEAD/refs/packed-refs 变化 | 150 ms       | `invalidate_compare_text_all()`、blame/ignore invalidation、完整 status refresh |
+| HEAD/refs 变化             | 与上一项合并 | 更新 branch 与 user info                                                        |
+| 其他有效目录变化           | 150 ms       | `mark_dirty_all()` 与 status refresh                                            |
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              watcher.lua                                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌────────────────────────────────────┐  ┌──────────────────────────────┐   │
-│  │         fs_watcher_dir             │  │    fs_watcher_commondir      │   │
-│  │                                    │  │      (worktree only)         │   │
-│  │  监听: gitdir/                     │  │  监听: commondir/refs/heads  │   │
-│  │  处理: HEAD、refs、index 变化      │  │  处理: 分支 refs 变化        │   │
-│  └──────────────┬─────────────────────┘  └──────────────┬───────────────┘   │
-│                 │                                       │                    │
-│                 ▼                                       ▼                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                        事件过滤                                      │    │
-│  │  - 忽略 index.lock、.watchman-cookie                                │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                 │                                       │                    │
-│                 ▼                                       ▼                    │
-│  ┌────────────────────────────────────┐  ┌──────────────────────────────┐   │
-│  │  filename == "index"?              │  │      on_fs_event             │   │
-│  │  ├─ Yes → on_index_event           │  │                              │   │
-│  │  └─ No  → on_fs_event              │  │      分支文件变化            │   │
-│  │          (HEAD/refs 变化)          │  │      触发全量刷新            │   │
-│  └──────────────┬─────────────────────┘  └──────────────┬───────────────┘   │
-│                 │                                       │                    │
-└─────────────────┼───────────────────────────────────────┼────────────────────┘
-                  │                                       │
-                  ▼                                       ▼
-┌───────────────────────────────────────────────────────────────────────────────┐
-│                          buffer.lua 刷新策略                                  │
-├───────────────────────────────────────────────────────────────────────────────┤
-│                                                                               │
-│  invalidate_compare_text_all()          invalidate_index_all()                │
-│  ┌─────────────────────────────┐        ┌─────────────────────────────┐      │
-│  │ 清除:                       │        │ 清除:                       │      │
-│  │ - compare_text (HEAD)       │        │ - compare_text_index        │      │
-│  │ - compare_text_index        │        │ - object_name               │      │
-│  │ - object_name               │        │                             │      │
-│  │                             │        │ 触发场景:                   │      │
-│  │ 触发场景:                   │        │ - git add/reset (stage)     │      │
-│  │ - git commit                │        │ - 内部 stage/unstage 操作   │      │
-│  │ - git checkout              │        │                             │      │
-│  │ - git reset --hard          │        │                             │      │
-│  │ - 外部 commit (worktree)    │        │                             │      │
-│  └─────────────────────────────┘        └─────────────────────────────┘      │
-│                                                                               │
-└───────────────────────────────────────────────────────────────────────────────┘
-```
+`invalidate_compare_text_all()` 清除 HEAD、index compare text 与 object identity；
+`invalidate_index_all()` 只清理 index compare text 与 object identity。
+同一 debounce 周期内的事件通过 pending flags 合并，HEAD 刷新优先于普通 status 刷新。
 
-#### 事件触发矩阵
-
-| Git 操作                     | gitdir 变化 | index 变化 | commondir 变化 | 刷新动作                    |
-|:-----------------------------|:------------|:-----------|:---------------|:----------------------------|
-| `git add`                    | -           | ✓ index    | -              | `invalidate_index_all`      |
-| `git reset <file>`           | -           | ✓ index    | -              | `invalidate_index_all`      |
-| `git commit` (本地)          | ✓ HEAD      | ✓ index    | -              | `invalidate_compare_text_all` |
-| `git commit` (外部 worktree) | -           | ✓ index    | ✓ refs/        | `invalidate_compare_text_all` |
-| `git checkout`               | ✓ HEAD      | ✓ index    | -              | `invalidate_compare_text_all` |
-| `git pull/fetch`             | ✓ FETCH_HEAD | -          | -              | `mark_dirty_all` + status 刷新 |
-
-#### Debounce 策略
-
-- **gitdir/commondir 事件**: 150ms debounce，合并多个事件
-- **index 事件**: 100ms debounce，快速响应 stage/unstage
-
-#### fs_event 行为差异
-
-**重要发现**：libuv 的 `fs_event` 监听单个文件 vs 监听目录时行为不同：
-
-| 监听方式                          | `git add` | `git reset`/`git unstage` |
-|:----------------------------------|:----------|:--------------------------|
-| 文件级 (`fs_event` on `index`)    | ✓ 触发    | ✗ 可能丢失                |
-| 目录级 (`fs_event` on `gitdir/`)  | ✓ 触发    | ✓ 触发                    |
-
-原因：Git 不同操作使用不同的写入策略：
-- `git add`：直接写入 index 文件
-- `git reset`：可能通过 rename `index.lock` → `index` 实现原子写入
-
-**解决方案**：仅使用目录级 `fs_watcher_dir` 监听 gitdir，当检测到 `index` 文件变化时调用 `on_index_event()`。这比文件级监听更可靠，且避免了重复事件。
-
-#### Worktree 支持
-
-通过 `repo.lua` 的 `resolve_commondir()` 函数读取 `gitdir/commondir` 文件获取主 git 目录路径。
-当检测到 commondir 存在且与 gitdir 不同时，额外启动 `fs_watcher_commondir` 监听 `commondir/refs/heads/` 目录。
-
-**重要**：libuv `fs_event` 不会递归监听子目录，所以必须直接监听 `refs/heads/` 目录才能检测到分支文件的变化。
-
-这解决了 worktree 场景下 commit 无法检测的问题：
-- 普通仓库：commit 后 `gitdir/refs/heads/<branch>` 变化，`fs_watcher_dir` 能检测到
-- Worktree：commit 后 `commondir/refs/heads/<branch>` 变化，需要 `fs_watcher_commondir` 检测
+过滤 `index.lock*`、`.watchman-cookie*`，以及 `COMMIT_EDITMSG`、`MERGE_MSG`、`ORIG_HEAD`、
+`FETCH_HEAD`、`REBASE_HEAD`、`sequencer`、`logs` 等无关事件。目录事件缺少 filename 时保守刷新。
+切换仓库或停止监听时，关闭所有 watcher/timer 并清空 pending state。
 
 ## Buffer 管理
 
@@ -202,15 +112,16 @@ my-worktree/
 ```
 
 Hunk 计算策略：
+
 1. `hunks = diff(Index, Buffer)` - 当前 buffer 相对于 index 的变更（未暂存）
 2. `hunks_head = diff(HEAD, Buffer)` - 当前 buffer 相对于 HEAD 的变更（全部变更）
-3. `hunks_staged = filter_common(hunks_head, hunks)` - 仅存在于 HEAD→Index 的变更（已暂存）
+3. `hunks_staged = filter_secondary(hunks, hunks_head)` - 仅存在于 HEAD→Index 的变更（已暂存）
 
 ### 生命周期
 
 - `BufReadPost/BufNewFile`: 自动 attach
 - `BufWritePost`: 强制刷新 compare_text
-- `BufDelete`: detach
+- `BufDelete`：解除 attachment。
 - `on_lines`: debounced 增量更新
 - `on_reload`: 强制刷新
 
@@ -228,7 +139,7 @@ signs_staged:  -- 已暂存变更的 sign（优先级 9，仅在无未暂存 sig
 Sign 类型：
 
 | 类型         | 符号 | 含义                   |
-|:-------------|:-----|:-----------------------|
+| :----------- | :--- | :--------------------- |
 | add          | ┃    | 新增行                 |
 | change       | ┃    | 修改行                 |
 | delete       | ▁    | 删除行（在下一行显示） |
@@ -268,49 +179,63 @@ M.get_nav_indicator(winnr)   -- 读取指定 window 的 transient index/total
 M.clear_nav()                -- 显式清理 transient navigation state
 ```
 
-Hunk navigation module 持有单一 transient state `{ winnr, bufnr, index, total }`。普通 buffer navigation
-从 attached hunks 计算位置；two-pane diff navigation 先执行一次原生 `[c`/`]c`，再从两侧
-`era.m.git.staging.from_buffer()` document lines 构建共享的 canonical hunk map。Document contract
-保留 empty bytes、single final newline 与 missing final newline 的差异。Diff 输入按 layout semantic order
-排列：side-by-side 为 left→right，stacked layout 为 top→bottom，不依赖 buffer allocation order。Map
-复用普通 buffer 的 `era.m.git.diff.run_diff()` histogram contract；pane-local `linematch` 只影响 native
-cursor target，不拆分 canonical Git hunk。每个 hunk 在两侧具有同一 index/total，zero-count side 映射到
-BOF、ordinary filler 或 EOF anchor。同一 anchor 可对应多个 hunk；native motion no-op/error 时不合成额外
-logical selection。Source 精确位于 canonical hunk 时 no-op 可继续显示 current index；source 位于所有
-canonical ranges 外时不发布 indicator。
-非 two-pane diff layout fallback 到 pane-local native enumeration；内部 fallback motion 使用 `keepjumps`，
-并临时关闭、恢复 `cursorbind`/`scrollbind`。
+#### Canonical hunk map 的构建
 
-Canonical map 由 hunk navigation module 单独缓存。Cache identity 包含 ordered window pair、两侧 `bufnr`、
-`changedtick` 和 `endofline`；任一输入变化都会重建。一次构建生成两侧有序 line ranges。Navigation
-在 motion 前解析两侧共享 canonical source。每侧优先以 native target line 做 binary lookup；target 落在
-alignment gap 时，根据 source line 和 direction 单调推进，并在 canonical 边界 clamp 到 current hunk。
-两侧 `cursorbind` 时，target candidate 冲突由 shared resolver 统一处理：next 取较大 index，prev 取较小
-index。若一次 native motion 仍停留在精确命中的 source hunk 内，则以 `keepjumps` 继续同方向 native motion，
-直到 canonical index 改变或 active cursor no-op；从精确 source hunk 发生的 transition 最终 clamp 为相邻
-canonical index，target candidate 只证明已经离开 current hunk，不能造成跨级跳转。Continuation 次数由
-`linematch:N` 限定。Source 位于 hunk 外时首次到达 estimated index 即停止，避免跳过首个 hunk。首次
-motion 保留用户 jump，continuation 不写入额外 jumplist entry。后续按键不再同步遍历所有 hunks。
+Hunk navigation 持有一个 transient state `{ winnr, bufnr, index, total }`。
+普通 buffer 从 attached hunks 计算位置。Two-pane diff 在原生 `[c` / `]c` motion 前取得共享
+canonical hunk map，并记录 source 位置；motion 后用同一 map 解析 target。
+Map 从两侧 `era.m.git.staging.from_buffer()` document lines 构建。
 
-右侧 presentation 统一为红色 `<git-icon> index/total`，不带方括号。普通 source window 使用 winline
-component；`diffview://` static winbar 复用同一 renderer。Indicator 不使用 buffer virtual text，因此不受 line
-length、horizontal scroll 或 inline blame 影响。
+- Document 区分 empty bytes、single final newline 与 missing final newline。
+- 输入按 layout 语义排序：side-by-side 为 left→right，stacked 为 top→bottom，不依赖 buffer 分配顺序。
+- Map 使用 `era.m.git.diff.run_diff()` 的 histogram 契约。Pane-local `linematch` 只影响原生光标目标，不拆分 canonical Git hunk。
+- 同一个 hunk 在两侧共享 index/total；zero-count side 映射到 BOF、普通 filler 或 EOF anchor。同一 anchor 可以对应多个 hunk。
 
-State 只对仍显示 captured buffer 的 source window 可见。Cursor movement、window focus、Git refresh 和
-同一 buffer 的 peer window lifecycle 都不清理 indicator。新 navigation 会替换旧 state；source window
-进入不同 buffer、source window 关闭或统一 `<Esc>` handler 调用 `clear_nav()` 时才清理。Buffer lifecycle
-监听通过 `BufEnter` 验证 captured `winnr + bufnr` identity，并通过 `WinClosed` event match 识别
-captured window，避免 `BufLeave` 把单纯的 window focus change 误判为 source buffer replacement。
+Map 只由 navigation module 缓存。Cache identity 包含有序 window pair、两侧 `bufnr`、`changedtick`
+与 `endofline`；任一变化都重建。一次构建生成两侧有序 line ranges，后续按键不再同步遍历全部 hunks。
+
+#### 原生 motion 与位置解析
+
+1. Motion 前解析两侧共享的 canonical source。
+2. 每侧优先按原生 target line 做 binary lookup；落在 alignment gap 时，按 source line 与 direction
+   单调推进，并在 canonical 边界 clamp 到 current hunk。
+3. 两侧启用 `cursorbind` 且候选冲突时，由 shared resolver 决定：next 取较大 index，prev 取较小 index。
+4. 原生 motion 仍停在精确命中的 source hunk 内时，以 `keepjumps` 继续同方向 motion，直到 canonical
+   index 改变或 active cursor no-op。Continuation 次数由 `linematch:N` 限定。
+5. 从精确 source hunk 离开时，最终只前进到相邻 canonical index；target candidate 仅证明已经离开，
+   不能造成跨级跳转。Source 在 hunk 外时，首次到达 estimated index 即停止，避免跳过首个 hunk。
+
+第一次 motion 保留用户 jump，continuation 不增加 jumplist entry。Motion no-op/error 时不合成额外
+logical selection；source 精确位于 canonical hunk 时，no-op 可保留 current index，位于所有 ranges 外时不发布 indicator。
+
+非 two-pane layout 回退到 pane-local native enumeration。内部 fallback motion 使用 `keepjumps`，
+并临时关闭、随后恢复 `cursorbind` / `scrollbind`。
+
+#### 展示与清理
+
+右侧统一显示红色 `<git-icon> index/total`，不带方括号。普通 source window 使用 winline component，
+`diffview://` static winbar 复用 renderer。不使用 buffer virtual text，因此不受行长、水平滚动或 inline blame 影响。
+
+State 只对仍显示 captured buffer 的 source window 可见。Cursor movement、window focus、Git refresh
+及同 buffer 的 peer window 生命周期均不清理 indicator。新 navigation 替换旧 state；以下情况才清理：
+
+- Source window 切换到不同 buffer：通过 `BufEnter` 校验 captured `winnr + bufnr`。
+- Source window 关闭：通过 `WinClosed` 的 event match 识别。
+- 统一 `<Esc>` handler 调用 `clear_nav()`。
+
+不使用 `BufLeave` 判断 source buffer 替换，因为单纯切换 window focus 也会触发它。
 
 ### 操作模式规则
 
-**Normal Mode:**
+#### Normal mode
+
 - 只对当前光标所在行所属的 hunk 生效
 - Stage: 作用于 unstaged hunk
 - Unstage: 在 staged Diffview 的 index-side window 中操作；普通 buffer 的 unstage 会提示打开 staged diff
 - Reset: 作用于 unstaged hunk
 
-**Visual Mode:**
+#### Visual mode
+
 - 选中 [Li, Lj] 行后，找到这些行所覆盖的所有 hunks
 - Stage/Unstage: 裁剪所选 modified-side 行后一次重建；不逐 hunk 写 index
 - Reset: **只作用于 unstaged hunks**，忽略所有 staged hunks
@@ -349,7 +274,7 @@ Unicode encoding/BOM 由 Rust 标准库实现，按 Neovim 文件写入语义使
 - Lua 保留 buffer options / 读写和 legacy `vim.iconv`。Native 返回 `nil` 且无 error 才走 legacy fallback；
   Unicode 错误不 fallback。UTF-8 无 BOM 变化时 binding 直接复用输入 Lua string。
 
-Codec 是同步计算，仍有主线程扫描、native allocation 和 Lua string 构造成本；此次修复不宣称整体 staging 加速。
+Codec 是同步计算，仍有主线程扫描、native allocation 和 Lua string 构造成本；不保证整体 staging 加速。
 
 Binding 使用 packed bytes 和 offsets，live Lua references 不随行数或 hunk 数增长；modified-side 仅读取重建
 所需的行数/EOF metadata，新增行来自 hunks。仍有同步 marshalling/native allocation 成本，不保证每个操作加速。
@@ -358,7 +283,7 @@ Binding 使用 packed bytes 和 offsets，live Lua references 不随行数或 hu
 
 ### diff.lua
 
-- 使用 `vim.text.diff()` 配合 histogram 算法计算行级 diff；本轮不替换为其他 Rust diff 算法
+- 使用 `vim.text.diff()` 的 histogram 算法计算行级 diff
 - 提供 `filter_secondary()` 分离 staged/unstaged hunks
 - 支持 word-level diff 用于 hunk preview
 
@@ -426,7 +351,7 @@ staged、unstaged 和 untracked 状态。路径按 NUL protocol 保留原始 byt
 
 任何必需查询失败或 porcelain 输出不完整时，整个 Future 拒绝，不发布部分 snapshot。
 
-### Native contract
+### Native 契约
 
 - `yoz.git.start_status({ cwd, base?, include_numstat?, include_untracked? })` 启动 worker；`cwd` 是
   canonical absolute 仓库路径，默认不取 numstat、包含 untracked。环境变量在 Lua 入口捕获，worker
@@ -449,29 +374,30 @@ Snapshot API：
 
 代价是 worker/pipe-reader threads、native heap 和至多一个 poll interval 的常规发布延迟。`equals`、单路径
 lookup 与显式 Lua export 仍在调用线程执行；不应把 Lua GC 指标当作整体内存占用。
-重复 lookup 还需跨 Lua/Rust 边界并构造返回 table，比已有 Lua table cache 的直接读取慢；本批不在 Lua
-侧重建另一份 status cache，因此大树的 warm-cache 重绘是明确的性能取舍。
+重复 lookup 还需跨 Lua/Rust 边界并构造返回 table，比已有 Lua table cache 的直接读取慢；Lua
+侧不重建另一份 status cache，因此大树的 warm-cache 重绘是明确的性能取舍。
 
 状态码映射：
 
-| 码 | 含义     | 优先级 |
-|:---|:---------|:-------|
-| U  | 冲突     | 1      |
-| ?  | 未追踪   | 2      |
-| M  | 修改     | 4      |
-| D  | 删除     | 8      |
-| A  | 新增     | 16     |
-| R  | 重命名   | 32     |
-| C  | 复制     | 64     |
-| T  | 类型变更 | 128    |
-| !  | 忽略     | 256    |
+| 码  | 含义     | Bitmask |
+| :-- | :------- | :------ |
+| U   | 冲突     | 1       |
+| ?   | 未追踪   | 2       |
+| M   | 修改     | 4       |
+| D   | 删除     | 8       |
+| A   | 新增     | 16      |
+| R   | 重命名   | 32      |
+| C   | 复制     | 64      |
+| T   | 类型变更 | 128     |
+| !   | 忽略     | 256     |
 
 Stage 状态：
+
 - `staged`: 仅有已暂存变更
 - `unstaged`: 仅有未暂存变更
 - `mixed`: 同时有已暂存和未暂存变更
 
-## Ignore cache
+## Ignore cache 与失效策略
 
 `ignore.lua` 保留 `state.preload_ignored()` / `is_ignored()` / `clear_ignored_cache()` 与
 `o_ignored_refreshed` 的入口。路径采用 canonical absolute key，末尾斜杠不影响 lookup；Unix 保留原始 bytes。
@@ -526,10 +452,10 @@ git.open_in_browser()               -- 在浏览器中打开当前文件/行
 git.open_in_browser({ what = "commit" })  -- 打开当前行的 commit
 ```
 
-## 设计决策
+## 设计边界
 
-1. **单仓库支持**：简化实现，不支持 monorepo 或嵌套仓库
-2. **无配置选项**：所有配置为常量，简化维护
-3. **仅支持 staged hunks**：unstaged 文件不计算 hunk（性能考量）
-4. **使用 vim.diff**：利用 Neovim 内置 diff 算法，无需外部依赖
-5. **decoration provider**：高性能 sign 渲染，仅渲染可见区域
+- 按单仓库维护状态，不聚合多个仓库或嵌套仓库的状态。
+- 配置使用模块常量。
+- Staged 与 unstaged hunks 分别计算和缓存，具体操作范围见上文。
+- 行级 diff 使用 Neovim 内置 histogram；sign 通过 decoration provider 只渲染可见区域。
+- Diffview 的布局与交互见 [Diffview](diffview/main.md)，原生搜索反馈见 [Winline 搜索](ux/search.md)。

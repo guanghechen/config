@@ -23,9 +23,9 @@
 - `zO` / `zR`：打开当前 view 的所有 diff folds。
 - `t3`：切换默认 diff fold policy，并应用到当前 preview domain。
 
-Help 使用 `mode + key` 作为 mapping identity；normal 与 visual 的同名 mapping 必须分别保留。
+Help 使用 `mode + key` 作为 mapping identity；Normal 与 Visual 的同名 mapping 分别保留。
 
-## Git workspace
+## Git Workspace
 
 ### Changes pane
 
@@ -37,7 +37,7 @@ Help 使用 `mode + key` 作为 mapping identity；normal 与 visual 的同名 m
 - `gr`：discard 当前文件改动。
 - `oc`：复制当前文件路径。
 - `gf` / `gF`：打开当前文件。
-- `za` / `zc` / `zo`：toggle / close / open tree fold。
+- `za` / `zc` / `zo`：切换 / 关闭 / 打开 tree fold。
 - `zC`、`zM`、`zO`、`zR`：控制当前 view 的所有 diff folds。
 - `t1`：切换 tree/list viewtype。
 - `t2`：切换 compact directory paths。
@@ -45,7 +45,7 @@ Help 使用 `mode + key` 作为 mapping identity；normal 与 visual 的同名 m
 - `t4`：切换 untracked files。
 - `q`：关闭 Diffview。
 
-Changes 与 History pane 支持 mouse wheel scrolling。
+Changes 与 History pane 支持鼠标滚轮。
 
 ### History pane
 
@@ -60,9 +60,9 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 - `g/`：按 hash prefix 或 commit message 搜索并跳转。
 - `oc`：复制当前 file/directory path。
 - `yy`：复制完整 commit hash。
-- `gh` / `gl` / `oo`：collapse / expand / toggle 当前 commit 或 directory。
-- `za` / `zc` / `zo`：toggle / collapse / expand 当前 commit 或 directory。
-- `gH` / `gL`：collapse / expand 所有 commits。
+- `gh` / `gl` / `oo`：折叠 / 展开 / 切换当前 commit 或 directory。
+- `za` / `zc` / `zo`：切换 / 折叠 / 展开当前 commit 或 directory。
+- `gH` / `gL`：折叠 / 展开所有 commits。
 - `gf` / `gF`：打开当前 commit file。
 - `gR`：将文件恢复到当前 commit 版本。
 - `t1` / `t2`：切换 viewtype / compact paths。
@@ -77,19 +77,20 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 - `t4` 始终切换 workspace 的 untracked files。
 - refresh 同时更新 Changes 与 History。
 
-## Standalone commits / File History
+## 独立 Commits / File History
 
-### View-wide layout controls
+### 视图布局控制
 
-- `P`：previous layout。
-- `pp`、`t0`：cycle layout。
-- `p1`：Commits top + SBS。
-- `p2`：Commits left + SBS。
-- `p3`：SBS only。
-- `p4`：Commits only。
-- `p5`：Commits + Filetree。
+- `P`：上一个布局。
+- `pp`、`t0`：循环切换布局。
+- `p1`：Commits 在上、SBS 在下。
+- `p2`：Commits 在左、SBS 在右。
+- `p3`：仅 SBS。
+- `p4`：仅 Commits。
+- `p5`：Commits 与 Filetree 并排。
 
 这些 bindings 与通用 refresh、commit navigation、fold actions 一起应用于 standalone view 的各个 pane。
+布局示意见[布局设计](layout.md)。
 
 ### Commits pane
 
@@ -104,11 +105,11 @@ Commits pane 使用与 workspace History 相同的 commit-domain bindings，并�
 
 ### SBS pane
 
-- `za` / `zc` / `zo`：toggle / collapse / expand 当前 commit item。
+- `za` / `zc` / `zo`：切换 / 折叠 / 展开当前 commit item。
 - `zC`、`zM`、`zO`、`zR`：控制所有 diff folds。
 - `gf` / `gF`：打开当前文件。
 
-## 共享 SBS buffer contract
+## 共享 SBS buffer 契约
 
 SBS buffer 可以跨 Diffview tabs 复用，因此不能持有安装时的 view context：
 
