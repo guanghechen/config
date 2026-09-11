@@ -25,7 +25,15 @@
       "maxRestarts": 16,
       "killTimeout": 5000,
       "logsRotateStrategy": "size",
-      "logsRotateSize": "10MB"
+      "logsRotateSize": "10MB",
+      "platforms": ["osx", "wsl", "nix"]
+    },
+    {
+      "name": "caffeinate",
+      "platforms": ["osx"],
+      "cmd": "/usr/bin/caffeinate",
+      "args": ["-i"],
+      "autostart": true
     }
   ]
 }
