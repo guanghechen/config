@@ -145,6 +145,13 @@ Delete 只要删除了至少一项，就清空 selection 与 pending；失败项
 - `p`：直接粘贴到 focused directory；`F` 为文件时使用其父目录。
 - `<Esc>`：清空 `P`，保留显式 selection 并恢复为 `selected`。
 - `r`：同目录 Rename，只接受单一名称。
+- `mm/om`：移动光标项，prompt 默认显示 cwd-relative 的完整路径，相对输入以 cwd 解析。
+  文件路径不得以 `/` 结尾，目录路径必须以 `/` 结尾；移动不改变类型。目标是新的完整路径，
+  缺失的父目录自动创建，已存在的目标拒绝操作，目录不得移入自身后代。成功后清理旧路径覆盖的
+  pending sources 并刷新 tree。
+- `d/md`：有显式 selection 时删除选中项目，否则删除光标项，均需确认。
+- `mo`：有显式 selection 时打开选中的文件（跳过目录），否则打开文件或切换光标目录展开状态。
+  单独的 `m/o` 不绑定动作，保留为前缀。
 
 Visual mode 的 `y/x` 将“现有显式 selection 与 visual range 的并集”设为新的 pending sources，不修改
 显式 selection。Visual `<Tab>` 执行 range selection toggle；首次从 pending 进入 selection 时，先提升

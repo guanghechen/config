@@ -1292,6 +1292,7 @@ function M:__setup_keymaps__(bufnr)
     {
       modes = { "i", "n" },
       key = "d",
+      aliases = { "md" },
       callback = function()
         action:delete()
       end,
@@ -1345,27 +1346,24 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "i", "n" },
-      key = "md",
+      key = "mm",
+      aliases = { "om" },
       callback = function()
-        action:delete_selected()
+        action:move()
       end,
-      desc = "explorer: delete selected",
+      desc = "explorer: move to path",
     },
     {
       modes = { "i", "n" },
       key = "mo",
       callback = function()
-        action:open_selected()
+        if #self._tree:get_selected_nodes() > 0 then
+          action:open_selected()
+        else
+          action:open()
+        end
       end,
-      desc = "explorer: open selected files",
-    },
-    {
-      modes = { "i", "n" },
-      key = "o",
-      callback = function()
-        action:open()
-      end,
-      desc = "explorer: open/toggle",
+      desc = "explorer: open selected files or open/toggle focused item",
     },
     {
       modes = { "i", "n" },

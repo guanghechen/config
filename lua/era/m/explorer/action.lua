@@ -806,72 +806,6 @@ function M:delete_visual()
 end
 
 ---@return nil
-function M:delete_selected()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  if #selected_nodes == 0 then
-    stl.reporter.warn({
-      from = ctx.fullname,
-      subject = "delete selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local cwd = dot.path.cwd() ---@type string
-
-  ---@type string[]
-  local preview_lines = {}
-  for _, node in ipairs(selected_nodes) do
-    local filepath = normalize_filepath(node.filepath) ---@type string
-    local relative_path = dot.path.relative(cwd, filepath) ---@type string
-    preview_lines[#preview_lines + 1] = relative_path
-  end
-
-  local fullname = ctx.fullname ---@type string
-
-  ---@type era.view.Act
-  local act = era.view.Act.new({
-    name = "explorer_delete",
-    title = string.format("%s Delete %d item(s)", stl.icon.diagnostic.Warning, #selected_nodes),
-    initial_input = "y",
-    preview_lines = #preview_lines,
-    render_preview = function(bufnr, _)
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, preview_lines)
-    end,
-    on_confirm = function(input)
-      local answer = vim.trim(input):lower() ---@type string
-      if answer ~= "y" and answer ~= "yes" then
-        return
-      end
-
-      local deleted_nodes = {} ---@type era.m.explorer.Node[]
-      for _, node in ipairs(selected_nodes) do
-        local ok = ctx.tree:remove(node.filepath) ---@type boolean
-        if ok then
-          deleted_nodes[#deleted_nodes + 1] = node
-        end
-      end
-
-      if #deleted_nodes > 0 then
-        self:__remove_pending_sources_covered_by__(deleted_nodes)
-        self:__clear_selection__()
-        vim.schedule(function()
-          ctx.refresh()
-        end)
-
-        stl.reporter.info({
-          from = fullname,
-          subject = "delete",
-          message = string.format("Deleted %d item(s)", #deleted_nodes),
-        })
-      end
-    end,
-  })
-  act:open()
-end
-
----@return nil
 function M:go_cwd()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
   local cwd = dot.path.cwd() ---@type string
@@ -1191,6 +1125,77 @@ function M:pick_win_vsplit(winnr)
 
   vim.api.nvim_set_current_win(picked_winnr)
   vim.cmd("vsplit " .. vim.fn.fnameescape(os_filepath))
+end
+
+---@return nil
+function M:move()
+  local ctx = self._ctx ---@type era.m.explorer.action.IContext
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
+    return
+  end
+
+  local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
+  if node == nil then
+    return
+  end
+
+  local is_directory = node.nodetype == "D" ---@type boolean
+  local cwd = dot.path.cwd() ---@type string
+  local suggested_input = dot.path.relative(cwd, filepath, "/") ---@type string
+  if is_directory and suggested_input:sub(-1) ~= "/" then
+    suggested_input = suggested_input .. "/"
+  end
+
+  vim.ui.input({ prompt = "Move to: ", default = suggested_input }, function(input)
+    if input == nil then
+      return
+    end
+
+    local specified_filepath = vim.trim(input):gsub("\\", "/") ---@type string
+    if specified_filepath == "" then
+      return
+    end
+    if (specified_filepath:sub(-1) == "/") ~= is_directory then
+      stl.reporter.error({
+        from = ctx.fullname,
+        subject = "move",
+        message = is_directory and "Directory path must end with '/'" or "File path must not end with '/'",
+      })
+      return
+    end
+
+    local target_filepath = normalize_filepath(dot.path.resolve(cwd, specified_filepath), is_directory) ---@type string
+    if is_directory and target_filepath:sub(-1) ~= "/" then
+      target_filepath = target_filepath .. "/"
+    end
+    if target_filepath == filepath then
+      return
+    end
+    if is_directory and is_same_or_descendant(filepath, target_filepath) then
+      stl.reporter.error({
+        from = ctx.fullname,
+        subject = "move",
+        message = string.format("Cannot move a directory into itself: %s", target_filepath),
+      })
+      return
+    end
+
+    local ok = ctx.resource_manager:move(filepath, target_filepath) ---@type boolean
+    if ok then
+      self:__remove_pending_sources_covered_by__({ node })
+      ctx.tree:mark_all_dirty()
+      ctx.tree:refresh(true)
+      vim.schedule(function()
+        ctx.widget:reveal(target_filepath)
+      end)
+      stl.reporter.info({
+        from = ctx.fullname,
+        subject = "move",
+        message = string.format("Moved to: %s", target_filepath),
+      })
+    end
+  end)
 end
 
 ---@return nil

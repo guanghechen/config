@@ -372,4 +372,77 @@ t:test("refresh: reloads expanded directories after invalidation", function()
   tree:dispose()
 end)
 
+t:test("move: reveals a new path below cached collapsed directories", function()
+  local tree = create_tree()
+  t:defer(function()
+    tree:dispose()
+  end)
+  local moved = false
+  local resource_manager = tree:get_resource_manager()
+  t:patch_table(resource_manager, "load", function(_, filepath)
+    if filepath == "/project/" then
+      local items = { { nodename = "dir", nodetype = "D" } }
+      if not moved then
+        items[#items + 1] = { nodename = "source.lua", nodetype = "F" }
+      end
+      return items
+    elseif filepath == "/project/dir/" then
+      return { { nodename = "nested", nodetype = "D" } }
+    elseif filepath == "/project/dir/nested/" and moved then
+      return { { nodename = "new", nodetype = "D" } }
+    elseif filepath == "/project/dir/nested/new/" and moved then
+      return { { nodename = "target.lua", nodetype = "F" } }
+    end
+    return {}
+  end)
+  t:patch_table(resource_manager, "locate", function(_, filepath)
+    return { nodename = filepath:match("([^/]+)/?$"), nodetype = filepath:sub(-1) == "/" and "D" or "F" }
+  end)
+  t:patch_table(resource_manager, "move", function()
+    moved = true
+    return true
+  end)
+  tree:refresh(true)
+  tree:expand_path("/project/dir/nested/")
+  tree:toggle_expanded("/project/dir/", false, "collapse")
+
+  local target_filepath = "/project/dir/nested/new/target.lua"
+  t:patch_table(dot.path, "relative", function(_, filepath)
+    return filepath:sub(#"/project/" + 1)
+  end)
+  t:patch_table(dot.path, "resolve", function(_, filepath)
+    return filepath
+  end)
+  t:patch_table(stl, "env", { PATH_SEP = "/" })
+  t:patch_table(stl.reporter, "info", function() end)
+  t:patch_table(vim.ui, "input", function(_, callback)
+    callback(target_filepath)
+  end)
+  t:patch_table(vim, "schedule", function(callback)
+    callback()
+  end)
+  local Widget = require("era.m.explorer.widget")
+  local widget = setmetatable({
+    _tree = tree,
+    focus = function()
+      tree:refresh(false)
+    end,
+  }, Widget)
+  require("era.m.explorer.action")
+    .new({
+      fullname = "move-test",
+      tree = tree,
+      widget = widget,
+      resource_manager = resource_manager,
+      get_cursor_filepath = function()
+        return "/project/source.lua"
+      end,
+    })
+    :move()
+
+  t.assert_true(tree:locate(target_filepath) ~= nil, "new target must be loaded")
+  t.assert_true(tree:locate("/project/dir/nested/new/").expanded, "new parent must be expanded")
+  t.assert_eq(target_filepath, tree.o_cursor_filepath:snapshot(), "cursor target")
+end)
+
 t:run()

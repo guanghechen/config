@@ -880,8 +880,8 @@ t:test("transfer: copy retains only retryable failures and exposes partial targe
   t.assert_eq("/target/c.txt", calls.reports[1].details.partial_targets[1], "partial target detail")
 end)
 
----@param method                        "copy"|"copy_as"|"rename"
----@param input                         string
+---@param method                        "copy"|"copy_as"|"rename"|"move"
+---@param input                         ?string
 ---@param options                       table|nil
 ---@return table
 local function run_name_action(method, input, options)
@@ -890,6 +890,7 @@ local function run_name_action(method, input, options)
     default = nil,
     copied_to = nil,
     moved_to = nil,
+    revealed_to = nil,
     reports = {},
     refresh = 0,
     synced_to = nil,
@@ -955,6 +956,11 @@ local function run_name_action(method, input, options)
 
   local ctx = {
     fullname = "test",
+    widget = {
+      reveal = function(_, filepath)
+        calls.revealed_to = filepath
+      end,
+    },
     get_cursor_filepath = function()
       return node.filepath
     end,
@@ -971,7 +977,7 @@ local function run_name_action(method, input, options)
       end,
       move = function(_, _, target)
         calls.moved_to = target
-        return true
+        return options.move_success ~= false
       end,
     },
     sync_cursor_to_filepath = function(filepath)
@@ -984,6 +990,7 @@ local function run_name_action(method, input, options)
       locate = function()
         return node
       end,
+      mark_all_dirty = function() end,
       refresh = function()
         calls.tree_refresh = calls.tree_refresh + 1
       end,
@@ -1035,6 +1042,70 @@ t:test("rename: joins a parent without trailing slash", function()
 
   t.assert_eq("/project/src/peer.lua", calls.moved_to, "move target")
   t.assert_eq("/project/src/peer.lua", calls.synced_to, "synced rename target")
+end)
+
+t:test("move: file prompt and cwd-relative destination keep file type", function()
+  local calls = run_name_action("move", "target/peer.txt")
+
+  t.assert_eq("src/source.lua", calls.default, "suggested move path")
+  t.assert_eq("/project/target/peer.txt", calls.moved_to, "move target")
+  t.assert_eq(calls.moved_to, calls.revealed_to, "reveal move target")
+  t.assert_eq(1, calls.tree_refresh, "tree refresh count")
+end)
+
+t:test("move: directory prompt and destination preserve trailing slash", function()
+  local calls = run_name_action("move", "target/renamed/", {
+    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
+  })
+
+  t.assert_eq("src/", calls.default, "suggested directory path")
+  t.assert_eq("/project/target/renamed/", calls.moved_to, "move target")
+  t.assert_eq(calls.moved_to, calls.revealed_to, "reveal directory target")
+end)
+
+t:test("move: rejects trailing slash for files", function()
+  local calls = run_name_action("move", "target/peer/")
+
+  t.assert_nil(calls.moved_to, "move target")
+  t.assert_eq(1, #calls.reports, "validation report count")
+end)
+
+t:test("move: requires trailing slash for directories", function()
+  local calls = run_name_action("move", "target/renamed", {
+    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
+  })
+
+  t.assert_nil(calls.moved_to, "move target")
+  t.assert_eq(1, #calls.reports, "validation report count")
+end)
+
+t:test("move: rejects moving a directory into its descendant", function()
+  local calls = run_name_action("move", "src/nested/", {
+    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
+  })
+
+  t.assert_nil(calls.moved_to, "move target")
+  t.assert_eq(1, #calls.reports, "validation report count")
+end)
+
+t:test("move: unchanged path and empty input do not write", function()
+  for _, input in ipairs({ "src/source.lua", "", "   " }) do
+    local calls = run_name_action("move", input)
+    t.assert_nil(calls.moved_to, "move target")
+    t.assert_eq(0, #calls.reports, "report count")
+  end
+  t.assert_nil(run_name_action("move", nil).moved_to, "cancelled move")
+end)
+
+t:test("move: failed operation does not refresh or focus the target", function()
+  local calls = run_name_action("move", "target/peer.lua", { move_success = false })
+
+  t.assert_eq("/project/target/peer.lua", calls.moved_to, "attempted move target")
+  t.assert_eq(0, calls.tree_refresh, "tree refresh count")
+  t.assert_eq(0, calls.refresh, "view refresh count")
+  t.assert_nil(calls.synced_to, "failed target should not receive focus")
+  t.assert_nil(calls.revealed_to, "failed target should not be revealed")
+  t.assert_eq(0, #calls.reports, "no success report")
 end)
 
 t:run()
