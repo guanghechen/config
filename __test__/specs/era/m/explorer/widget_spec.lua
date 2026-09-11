@@ -539,4 +539,50 @@ t:test("ignored refresh: updates any visible tab and filters unaffected paths", 
   t.assert_eq(3, renders, "fully hidden widget should not render")
 end)
 
+t:test("keymaps: mark prefixes and context actions dispatch independently", function()
+  local calls = {}
+  local action = {}
+  for _, name in ipairs({ "mark", "cut", "copy", "select_toggle", "move", "open_selected" }) do
+    action[name] = function(_, mode)
+      calls[#calls + 1] = name .. (mode and ":" .. mode or "")
+    end
+  end
+  local widget = setmetatable({
+    _action = action,
+    _tree = {
+      get_selected_nodes = function()
+        return { {} }
+      end,
+    },
+  }, { __index = Widget })
+  t:patch_table(dot, "state", { widget = {
+    get_keymaps = function()
+      return {}
+    end,
+  } })
+  t:patch_table(stl, "nvim", { fn = { bindkeys = function() end } })
+  widget.__get_flags__ = function()
+    return {}
+  end
+  widget:__setup_keymaps__(1)
+  local normal = {}
+  for _, keymap in ipairs(widget._keymaps) do
+    if vim.tbl_contains(keymap.modes, "n") then
+      normal[keymap.key] = keymap
+    end
+  end
+  for _, key in ipairs({ "mx", "mc", "ms", "x", "c", "<Tab>", "om", "o<CR>" }) do
+    t.assert_true(normal[key] ~= nil, key .. " mapping")
+    normal[key].callback()
+  end
+  t.assert_eq(
+    "mark:cut,mark:copy,mark:select,cut,copy,select_toggle,move,open_selected",
+    table.concat(calls, ","),
+    "dispatch"
+  )
+  for _, key in ipairs({ "m", "mm", "md", "mo" }) do
+    t.assert_nil(normal[key], key .. " reserved")
+  end
+end)
+
 t:run()

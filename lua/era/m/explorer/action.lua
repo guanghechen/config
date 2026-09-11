@@ -165,27 +165,49 @@ end
 
 ---@return nil
 function M:copy()
-  if self:__cancel_focused_transfer__("copy") then
-    return
+  if #self._ctx.tree:get_selected_nodes() > 0 then
+    self:mark("copy")
+  else
+    self:copy_as()
   end
-
-  local selected_nodes = self._ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  local pending_transfer = self._pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-  if #selected_nodes > 0 or (pending_transfer ~= nil and pending_transfer.mode == "move") then
-    self:stage_transfer("copy")
-    return
-  end
-
-  self:copy_as()
 end
 
 ---@return nil
 function M:cut()
-  if self:__cancel_focused_transfer__("move") then
+  if #self._ctx.tree:get_selected_nodes() > 0 then
+    self:mark("cut")
+  else
+    self:move()
+  end
+end
+
+---@param mode                          "cut"|"copy"|"select"
+---@return nil
+function M:mark(mode)
+  local ctx = self._ctx ---@type era.m.explorer.action.IContext
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil or ctx.tree:locate(filepath) == nil then
     return
   end
 
-  self:stage_transfer("move")
+  local pending = self._pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
+  local current_mode = pending == nil and "select" or (pending.mode == "move" and "cut" or "copy")
+  if ctx.tree:is_selected(filepath) then
+    if current_mode == mode then
+      ctx.tree:toggle_selected(filepath, "unselect")
+    end
+  else
+    ctx.tree:toggle_selected(filepath, "select")
+  end
+
+  -- Mark replaces pending sources with exactly the explicit selection roots.
+  local nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
+  if mode == "select" or #nodes == 0 then
+    self._pending_transfer = nil
+    ctx.refresh()
+  else
+    self:__stage_transfer__(mode == "cut" and "move" or "copy", nodes)
+  end
 end
 
 ---@return nil
@@ -211,7 +233,7 @@ function M:copy_as()
     suggested_input = suggested_input .. "/"
   end
 
-  vim.ui.input({ prompt = "Copy as: ", default = suggested_input }, function(input)
+  vim.ui.input({ prompt = "Copy to: ", default = suggested_input }, function(input)
     if input == nil then
       return
     end
@@ -482,52 +504,6 @@ function M:__append_transfer_source__(sources, candidate)
 end
 
 ---@protected
----@param mode                          era.m.explorer.TransferModeEnum
----@return boolean
-function M:__cancel_focused_transfer__(mode)
-  local pending_transfer = self._pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-  if pending_transfer == nil or pending_transfer.mode ~= mode then
-    return false
-  end
-
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return false
-  end
-
-  local is_pending = false ---@type boolean
-  for _, source in ipairs(pending_transfer.sources) do
-    if transfer_source_covers(source, filepath) then
-      is_pending = true
-      break
-    end
-  end
-  if not is_pending then
-    return false
-  end
-
-  if ctx.tree:is_selected(filepath) then
-    local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-    ctx.tree:toggle_selected(filepath, "unselect")
-    self:__sync_pending_transfer__(selected_nodes)
-  end
-
-  pending_transfer = self._pending_transfer
-  local sources = {} ---@type era.m.explorer.IPendingTransferSource[]
-  if pending_transfer ~= nil then
-    for _, source in ipairs(pending_transfer.sources) do
-      if not transfer_source_covers(source, filepath) then
-        self:__append_transfer_source__(sources, source)
-      end
-    end
-  end
-  self:__set_pending_transfer__(mode, sources)
-  ctx.refresh()
-  return true
-end
-
----@protected
 ---@param mode                          era.m.explorer.TransferModeEnum|nil
 ---@param sources                       era.m.explorer.IPendingTransferSource[]
 ---@return nil
@@ -633,22 +609,6 @@ function M:__select_pending_sources__()
   for _, source in ipairs(pending_transfer.sources) do
     tree:toggle_selected(source.filepath, "select")
   end
-end
-
----@protected
----@param filepath                      string
----@return nil
-function M:__toggle_selection__(filepath)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  if #selected_nodes == 0 and self._pending_transfer ~= nil then
-    self:__select_pending_sources__()
-    ctx.tree:toggle_selected(filepath, "select")
-  else
-    ctx.tree:toggle_selected(filepath, nil)
-  end
-  self:__sync_pending_transfer__(selected_nodes)
-  ctx.refresh()
 end
 
 ---@protected
@@ -1258,12 +1218,7 @@ end
 
 ---@return nil
 function M:select_toggle()
-  local filepath = self._ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  self:__toggle_selection__(filepath)
+  self:mark("select")
 end
 
 ---@return nil

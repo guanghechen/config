@@ -454,192 +454,100 @@ t:test("transfer: visual stage includes the existing selection", function()
   t.assert_true(pending.source_filepaths[visual.filepath], "visual source")
 end)
 
-t:test("transfer: tab adds focused item to pending mode and selection", function()
-  local first = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local second = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
-  local action, _, set_cursor, is_selected = setup_transfer({
-    cursor = first.filepath,
-    resources = {},
-    tree_nodes = { [first.filepath] = first, [second.filepath] = second },
-  })
+for _, mode in ipairs({ "cut", "copy", "select" }) do
+  for _, previous_mode in ipairs({ "cut", "copy", "select" }) do
+    for _, count in ipairs({ 1, 2 }) do
+      t:test(string.format("mark: %s -> %s with %d selected items", previous_mode, mode, count), function()
+        local first = { filepath = "/project/a", nodename = "a", nodetype = "F" }
+        local second = { filepath = "/project/b", nodename = "b", nodetype = "F" }
+        local action, _, set_cursor, is_selected = setup_transfer({
+          cursor = first.filepath,
+          resources = {},
+          tree_nodes = { [first.filepath] = first, [second.filepath] = second },
+        })
+        action:mark(previous_mode)
+        if count == 2 then
+          set_cursor(second.filepath)
+          action:mark(previous_mode)
+          set_cursor(first.filepath)
+        end
+        action:mark(mode)
+        t.assert_eq(previous_mode ~= mode, is_selected(first.filepath), "focused selection")
+        t.assert_eq(count == 2, is_selected(second.filepath), "other selection")
+        local pending = action:get_pending_transfer()
+        local remaining = count - (previous_mode == mode and 1 or 0)
+        if mode == "select" or remaining == 0 then
+          t.assert_nil(pending, "pending transfer")
+        else
+          t.assert_eq(mode == "cut" and "move" or "copy", pending.mode, "transfer mode")
+          t.assert_eq(remaining, #pending.sources, "source count")
+        end
+      end)
+    end
+  end
+  t:test("mark: adding an unselected item switches all items to " .. mode, function()
+    local first = { filepath = "/project/a", nodename = "a", nodetype = "F" }
+    local second = { filepath = "/project/b", nodename = "b", nodetype = "F" }
+    local action, _, set_cursor, is_selected = setup_transfer({
+      cursor = first.filepath,
+      resources = {},
+      tree_nodes = { [first.filepath] = first, [second.filepath] = second },
+    })
+    action:mark("cut")
+    set_cursor(second.filepath)
+    action:mark(mode)
+    t.assert_true(is_selected(first.filepath), "first selection")
+    t.assert_true(is_selected(second.filepath), "added selection")
+    local pending = action:get_pending_transfer()
+    if mode == "select" then
+      t.assert_nil(pending, "select has no transfer")
+    else
+      t.assert_eq(mode == "cut" and "move" or "copy", pending.mode, "transfer mode")
+      t.assert_eq(2, #pending.sources, "source count")
+    end
+  end)
+end
 
-  action:stage_transfer("move")
-  set_cursor(second.filepath)
-  action:select_toggle()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("move", pending.mode, "inherited mode")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(2, #pending.sources, "pending source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[first.filepath], "first source")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[second.filepath], "new source")
-  t.assert_true(is_selected(first.filepath), "original pending selection")
-  t.assert_true(is_selected(second.filepath), "new selection")
-end)
-
-t:test("transfer: unselecting the final item clears pending mode", function()
-  local node = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local action = setup_transfer({
+t:test("selection: tab switches cut to select before toggling the final item off", function()
+  local node = { filepath = "/project/a", nodename = "a", nodetype = "F" }
+  local action, _, _, is_selected = setup_transfer({
     cursor = node.filepath,
     resources = {},
-    selected_nodes = { node },
+    tree_nodes = { [node.filepath] = node },
   })
-
+  action:select_toggle()
   action:cut()
-  action:select_toggle()
-
-  t.assert_nil(action:get_pending_transfer(), "pending transfer")
-end)
-
-t:test("transfer: unselecting a child removes its collapsed ancestor source", function()
-  local parent = { filepath = "/project/dir/", nodename = "dir", nodetype = "D" }
-  local child = { filepath = "/project/dir/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local action, _, set_cursor, is_selected = setup_transfer({
-    cursor = child.filepath,
-    resources = {},
-    tree_nodes = { [parent.filepath] = parent, [child.filepath] = child },
-    visual_nodes = { parent },
-  })
-
-  action:select_toggle()
-  set_cursor(parent.filepath)
-  action:stage_transfer_visual("move")
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer before cancellation")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(1, #pending.sources, "collapsed source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[parent.filepath], "collapsed ancestor source")
-
-  set_cursor(child.filepath)
-  action:select_toggle()
-
-  t.assert_false(is_selected(child.filepath), "child selection")
-  t.assert_nil(action:get_pending_transfer(), "pending transfer")
-end)
-
-t:test("transfer: copy replaces an unselected cut item with focused item", function()
-  local cut = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local focused = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
-  local action, _, set_cursor = setup_transfer({
-    cursor = cut.filepath,
-    resources = {},
-    tree_nodes = { [cut.filepath] = cut, [focused.filepath] = focused },
-  })
-
-  action:cut()
-  set_cursor(focused.filepath)
+  t.assert_eq("move", action:get_pending_transfer().mode, "cut mode")
   action:copy()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("copy", pending.mode, "pending mode")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(1, #pending.sources, "pending source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_false(pending.source_filepaths[cut.filepath] == true, "old cut source")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[focused.filepath], "focused copy source")
-end)
-
-t:test("transfer: copy includes promoted pending selection and focused item", function()
-  local old_cut = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local selected = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
-  local focused = { filepath = "/project/charlie.txt", nodename = "charlie.txt", nodetype = "F" }
-  local action, _, set_cursor, is_selected = setup_transfer({
-    cursor = old_cut.filepath,
-    resources = {},
-    tree_nodes = {
-      [old_cut.filepath] = old_cut,
-      [selected.filepath] = selected,
-      [focused.filepath] = focused,
-    },
-  })
-
-  action:stage_transfer("move")
-  set_cursor(selected.filepath)
+  t.assert_eq("copy", action:get_pending_transfer().mode, "copy mode")
   action:select_toggle()
-  set_cursor(focused.filepath)
-  action:copy()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("copy", pending.mode, "pending mode")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(3, #pending.sources, "pending source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[old_cut.filepath], "promoted copy source")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[selected.filepath], "selected copy source")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[focused.filepath], "focused copy source")
-  t.assert_true(is_selected(old_cut.filepath), "promoted selection")
-  t.assert_true(is_selected(focused.filepath), "focused selection")
+  t.assert_true(is_selected(node.filepath), "selection retained")
+  t.assert_nil(action:get_pending_transfer(), "select mode")
+  action:select_toggle()
+  t.assert_false(is_selected(node.filepath), "multi selection exited")
 end)
 
-t:test("transfer: copy cancels focused item already marked copy", function()
-  local source = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local action = setup_transfer({
-    cursor = source.filepath,
-    resources = {},
-    tree_nodes = { [source.filepath] = source },
-  })
-  local copy_as_called = false ---@type boolean
-  action.copy_as = function()
-    copy_as_called = true
-  end
-
-  action:stage_transfer("copy")
-  action:copy()
-
-  t.assert_false(copy_as_called, "copy as")
-  t.assert_nil(action:get_pending_transfer(), "pending transfer")
-end)
-
-t:test("transfer: copy cancellation keeps other selected copy items", function()
-  local selected = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local focused = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
+t:test("transfer: pending alone does not enter multi selection or prevent direct prompts", function()
+  local node = { filepath = "/project/a", nodename = "a", nodetype = "F" }
   local action, _, _, is_selected = setup_transfer({
-    cursor = focused.filepath,
+    cursor = node.filepath,
     resources = {},
-    selected_nodes = { selected },
-    tree_nodes = { [focused.filepath] = focused },
+    tree_nodes = { [node.filepath] = node },
   })
-
-  action:copy()
-  action:copy()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(1, #pending.sources, "pending source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[selected.filepath], "remaining copy source")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_false(pending.source_filepaths[focused.filepath] == true, "cancelled copy source")
-  t.assert_true(is_selected(selected.filepath), "remaining selection")
-  t.assert_false(is_selected(focused.filepath), "cancelled selection")
-end)
-
-t:test("transfer: cut cancels focused item already marked cut", function()
-  local source = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local action = setup_transfer({
-    cursor = source.filepath,
-    resources = {},
-    tree_nodes = { [source.filepath] = source },
-  })
-
+  local prompts = {}
+  action.move = function()
+    prompts[#prompts + 1] = "move"
+  end
+  action.copy_as = function()
+    prompts[#prompts + 1] = "copy"
+  end
+  action:stage_transfer("move")
   action:cut()
-  action:cut()
-
-  t.assert_nil(action:get_pending_transfer(), "pending transfer")
+  action:copy()
+  t.assert_eq("move,copy", table.concat(prompts, ","), "direct actions")
+  action:select_toggle()
+  t.assert_true(is_selected(node.filepath), "tab enters selection")
+  t.assert_nil(action:get_pending_transfer(), "tab resets to select")
 end)
 
 t:test("transfer: deleting a focused pending source clears it", function()
@@ -653,7 +561,7 @@ t:test("transfer: deleting a focused pending source clears it", function()
     callback("y")
   end)
 
-  action:cut()
+  action:stage_transfer("move")
   action:delete()
 
   t.assert_eq(1, #calls.removes, "remove count")
@@ -673,7 +581,7 @@ t:test("transfer: partial selected delete clears selection and pending", functio
     callback("y")
   end)
 
-  action:cut()
+  action:stage_transfer("move")
   action:delete()
 
   t.assert_eq(1, calls.clear_selection, "selection clear count")
@@ -947,6 +855,7 @@ local function run_name_action(method, input, options)
     },
   })
   t:patch_table(vim.ui, "input", function(options, callback)
+    calls.prompt = options.prompt
     calls.default = options.default
     callback(input)
   end)
@@ -1005,6 +914,7 @@ end
 t:test("copy: without selection accepts a cwd-relative copy-as path", function()
   local calls = run_name_action("copy", "target/peer.lua")
 
+  t.assert_eq("Copy to: ", calls.prompt, "copy prompt")
   t.assert_eq("src/source-copy.lua", calls.default, "suggested copy path")
   t.assert_eq("/project/target/peer.lua", calls.copied_to, "copy target")
   t.assert_eq("/project/target/peer.lua", calls.synced_to, "synced copy target")
@@ -1042,6 +952,13 @@ t:test("rename: joins a parent without trailing slash", function()
 
   t.assert_eq("/project/src/peer.lua", calls.moved_to, "move target")
   t.assert_eq("/project/src/peer.lua", calls.synced_to, "synced rename target")
+end)
+
+t:test("cut: without selection opens move prompt immediately", function()
+  local calls = run_name_action("cut", nil)
+  t.assert_eq("Move to: ", calls.prompt, "move prompt")
+  t.assert_eq("src/source.lua", calls.default, "focused source")
+  t.assert_nil(calls.moved_to, "cancelled prompt does not move")
 end)
 
 t:test("move: file prompt and cwd-relative destination keep file type", function()

@@ -1287,12 +1287,11 @@ function M:__setup_keymaps__(bufnr)
       callback = function()
         action:copy()
       end,
-      desc = "explorer: copy selection/copy as",
+      desc = "explorer: mark copy/copy to path",
     },
     {
       modes = { "i", "n" },
       key = "d",
-      aliases = { "md" },
       callback = function()
         action:delete()
       end,
@@ -1346,8 +1345,31 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "i", "n" },
-      key = "mm",
-      aliases = { "om" },
+      key = "mx",
+      callback = function()
+        action:mark("cut")
+      end,
+      desc = "explorer: mark cut",
+    },
+    {
+      modes = { "i", "n" },
+      key = "mc",
+      callback = function()
+        action:mark("copy")
+      end,
+      desc = "explorer: mark copy",
+    },
+    {
+      modes = { "i", "n" },
+      key = "ms",
+      callback = function()
+        action:mark("select")
+      end,
+      desc = "explorer: mark select",
+    },
+    {
+      modes = { "i", "n" },
+      key = "om",
       callback = function()
         action:move()
       end,
@@ -1355,7 +1377,7 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "i", "n" },
-      key = "mo",
+      key = "o<CR>",
       callback = function()
         if #self._tree:get_selected_nodes() > 0 then
           action:open_selected()
@@ -1459,7 +1481,7 @@ function M:__setup_keymaps__(bufnr)
       callback = function()
         action:cut()
       end,
-      desc = "explorer: stage move",
+      desc = "explorer: mark cut/move to path",
     },
     {
       modes = { "i", "n" },

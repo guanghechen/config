@@ -81,9 +81,9 @@
 - `sources`：当前 pending source entries
 - `source_filepaths`：用于渲染与查询的 filepath set
 
-显式 selection 与 pending sources 是不同集合，pending source 可以独立存在。存在 pending transfer 时，
-新加入的 selection item 同步加入 `sources` 并继承同一个 mode；所有显式 selection 使用相同的
-copy/move sign。`Widget` 只向 `View` 传递状态，集合更新、文件系统写入和状态清理由 `Action` 执行。
+显式 selection 与 pending sources 是不同集合，pending source 可以独立存在。普通模式 mark 根据请求
+类型重建或清空 pending；Visual range selection 在存在 pending transfer 时同步更新 `sources` 并继承
+其 mode。所有显式 selection 使用相同的 selected/copy/move sign。`Widget` 只向 `View` 传递状态，集合更新、文件系统写入和状态清理由 `Action` 执行。
 Rename 与单项/Visual Delete 成功后，只移除被旧路径覆盖的 pending sources。显式 selection 的批量
 Delete 只要删除了至少一项，就清空 selection 与 pending；失败项不保留，需重新选择。
 
@@ -120,42 +120,49 @@ Delete 只要删除了至少一项，就清空 selection 与 pending；失败项
 
 记显式 selected roots 为 `S`，当前 focused item 为 `F`，pending transfer 为 `P`。
 
-以下转换供普通模式按键复用：
+#### Multi selection 与 mark
 
-- `stage(mode)`：若 `S` 非空，先将 `F` 加入显式 selection，再以更新后的 `S` 精确替换 `P.sources`；
-  否则以 `{F}` 替换 `P.sources`。最后设置 `P.mode = mode`。
-- `cancel(mode)`：当 `F` 已被相同 mode 的 pending source 覆盖时，移除覆盖 `F` 的 top-level pending
-  source 与显式 selection root。其他 item 保持不变。
+`S` 非空即处于 multi selection 模式（只有一个 selected item 也算）；独立的 `P` 不表示进入
+multi selection。类型为 `cut | copy | select`：`cut/copy` 分别对应 `P.mode = move/copy`，
+`select` 表示有显式 selection 且无 `P`。所有 selected items 共用一个类型。
 
-普通模式交互契约：
+`m` 是 mark 前缀，单独不绑定动作：`mx/mc/ms` 分别请求 `cut/copy/select`。
+记请求类型为 `T`，统一转换规则如下：
 
-- `<Tab>`：
-  - 无 `P` 时仅 toggle `F` 的显式 selection 状态。
-  - `S` 为空且有 `P` 时，先将全部 `P.sources` 提升为显式 selection，再加入 `F`；所有 item 保持
-    `P.mode`。
-  - `S` 非空且有 `P` 时，toggle `F`；select 时同步加入 `P.sources` 并继承 `P.mode`，unselect 时同步
-    移除对应的 top-level source。
-- `x`：若可执行 `cancel("move")`，则取消 `F`；否则执行 `stage("move")`。
-- `y`：执行 `stage("copy")`，不触发取消分支。
-- `c` 按以下优先级执行：
-  1. 若可执行 `cancel("copy")`，则取消 `F`。
-  2. `S` 非空：执行 `stage("copy")`。
-  3. `S` 为空且 `P.mode = "move"`：执行 `stage("copy")`。
-  4. 其他情况：对 `F` 打开 Copy As prompt。
+- `F` 未选中：将 `F` 加入 `S`，将整个 multi selection 类型切换为 `T`。
+- `F` 已选中，当前类型不同于 `T`：保留所有 selected items，只切换类型。
+- `F` 已选中，当前类型等于 `T`：取消 `F` 的选择；若它是唯一的 selected item，则退出
+  multi selection 并清空 `P`；否则保留其他 selected items 及其类型。
+- 每次 mark 后，`cut/copy` 以更新后的 `S` 精确替换 `P.sources`；`select` 清空 `P`。
+  不自动提升之前独立存在的 pending sources。
+- 延续 Tree 的 antichain 规则：selected directory 覆盖其后代；在后代上取消 selection 时移除
+  覆盖它的 selected root；选中祖先会替换已选中的后代 roots。
+
+例如，A/B 均为 `cut`：在 A 上按 `mc` 保留 A/B，并一起切为 `copy`；再次按 `mc` 只取消 A。
+只有 A 被选中时，同类型按键退出 multi selection，异类型按键保留 A 并切换类型。
+
+普通模式快捷键：
+
+- `x`：multi selection 下等同 `mx`；否则立即对 `F` 打开 `Move to` prompt。
+- `c`：multi selection 下等同 `mc`；否则立即对 `F` 打开 `Copy to` prompt。
+- `<Tab>`：始终等同 `ms`，普通模式从 `select` 类型进入 multi selection；multi selection 中
+  从 `cut/copy` 切回 `select` 时保留选择，再按才取消当前项。
+- `y`：保留直接 stage copy 入口；若 `S` 非空，先加入 `F`，以更新后的 `S` 设置 pending sources；
+  否则只以 `{F}` 设置 pending sources，不进入 multi selection。
 - `p`：直接粘贴到 focused directory；`F` 为文件时使用其父目录。
-- `<Esc>`：清空 `P`，保留显式 selection 并恢复为 `selected`。
+- `<Esc>`：清空 `P`，保留显式 selection 并恢复为 `select`。
 - `r`：同目录 Rename，只接受单一名称。
-- `mm/om`：移动光标项，prompt 默认显示 cwd-relative 的完整路径，相对输入以 cwd 解析。
+- `om`：移动光标项，prompt 默认显示 cwd-relative 的完整路径，相对输入以 cwd 解析。
   文件路径不得以 `/` 结尾，目录路径必须以 `/` 结尾；移动不改变类型。目标是新的完整路径，
   缺失的父目录自动创建，已存在的目标拒绝操作，目录不得移入自身后代。成功后清理旧路径覆盖的
   pending sources 并刷新 tree。
-- `d/md`：有显式 selection 时删除选中项目，否则删除光标项，均需确认。
-- `mo`：有显式 selection 时打开选中的文件（跳过目录），否则打开文件或切换光标目录展开状态。
-  单独的 `m/o` 不绑定动作，保留为前缀。
+- `d`：有显式 selection 时删除选中项目，否则删除光标项，均需确认。
+- `o<CR>`：有显式 selection 时打开选中的文件（跳过目录），否则打开文件或切换光标目录展开状态。
+  `o` 单独不绑定动作。旧 `mm/md/mo` 移除，`m` 下仅保留 mark 动作。
 
 Visual mode 的 `y/x` 将“现有显式 selection 与 visual range 的并集”设为新的 pending sources，不修改
-显式 selection。Visual `<Tab>` 执行 range selection toggle；首次从 pending 进入 selection 时，先提升
-已有 pending sources，再加入 visual range。Explorer 不提供 `mc/mx/mp/ms` 等重复入口。
+显式 selection。Visual `<Tab>` 保留 range selection toggle；首次从 pending 进入 selection 时，先提升
+已有 pending sources，再加入 visual range。后续普通模式按上述 mark 契约处理。
 
 Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目录的唯一来源。
 
@@ -172,13 +179,13 @@ Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目�
 6. 任一项成功或出现 `partial_failure` 后，清空显式 selection，只保留 `retryable_failure` source 为
    pending，并刷新 tree；全部成功时同时清空 pending。
 
-### Copy As 与 Rename
+### Copy to 与 Rename
 
-- Copy As 默认显示 cwd-relative 的完整建议目标路径；相对输入以 cwd 解析，绝对路径直接使用。
+- Copy to 默认显示 cwd-relative 的完整建议目标路径；相对输入以 cwd 解析，绝对路径直接使用。
 - Rename 只接受单一名称：不得为空、等于 `.`/`..`，或包含 `/`、`\\`；目标始终位于 source 的当前
   父目录。
 - 两者的目标冲突均由 `FileManager` 使用 exclusive filesystem primitive 按 no-overwrite 策略拒绝。
-  Copy As 出现 `partial_failure` 时刷新 tree，使 unresolved target 可见。
+  Copy to 出现 `partial_failure` 时刷新 tree，使 unresolved target 可见。
 - Copy failure 不按 pathname 自动删除 target；一旦 exclusive create 成功，后续 transfer/close failure 保留
   target 并返回 `partial_failure`，避免删除 ownership 不明的 concurrent replacement。
 
@@ -195,7 +202,7 @@ Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目�
    - transfer basename 映射、目标冲突、重复目标与目录 self-descendant
    - pending sources 与显式 selection 的独立身份及同步规则
    - Delete/Rename 后 pending sources 的路径级清理
-   - `c/x/y/Tab` 的 source-set 优先级与 focused item 行为
+   - `mx/mc/ms` 的类型切换、最后一项取消及 `x/c/Tab` 的模式分派
 
 ## 调试建议
 
