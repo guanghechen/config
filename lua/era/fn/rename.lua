@@ -44,7 +44,6 @@ local function rename(params)
       return false
     end
 
-    era.m.lsp.event.rename_buf(from, to)
     return true
   end)
 

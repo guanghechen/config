@@ -627,8 +627,6 @@ function M:move(source_filepath, target_filepath)
     return false
   end
 
-  era.m.lsp.event.rename_buf(source_os_path, target_os_path)
-
   return true
 end
 

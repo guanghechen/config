@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.lsp.event" ---@type string
+
 local Methods = vim.lsp.protocol.Methods
 
 local augroup_codelens = stl.nvim.fn.augroup("era.m.lsp.event.codelens") ---@type integer
@@ -121,10 +124,31 @@ local M = {}
 
 ---@param from                          string
 ---@param to                            string
+---@return boolean
+local function check_rename_buffers(from, to)
+  local from_bufnr = stl.nvim.buf.locate_bufnr(from) ---@type integer|nil
+  local to_bufnr = stl.nvim.buf.locate_bufnr(to) ---@type integer|nil
+  if to_bufnr ~= nil and to_bufnr ~= from_bufnr then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "rename",
+      message = string.format("Target already exists in the buffer list: %s", to),
+    })
+    return false
+  end
+  return true
+end
+
+---@param from                          string
+---@param to                            string
 ---@param rename                        ?fun(): boolean|nil
 ---@return boolean
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/rename.lua#L51
 function M.on_rename(from, to, rename)
+  if not check_rename_buffers(from, to) then
+    return false
+  end
+
   local changes = { files = { {
     oldUri = vim.uri_from_fname(from),
     newUri = vim.uri_from_fname(to),
@@ -141,11 +165,17 @@ function M.on_rename(from, to, rename)
   end
 
   if rename then
+    -- willRenameFiles edits may create a target buffer after the initial check.
+    if not check_rename_buffers(from, to) then
+      return false
+    end
     local renamed = rename() ---@type boolean|nil
     if renamed == false then
       return false
     end
   end
+
+  M.rename_buf(from, to)
 
   for _, client in ipairs(clients) do
     if client:supports_method("workspace/didRenameFiles") then
@@ -162,14 +192,73 @@ end
 function M.rename_buf(from, to)
   local from_bufnr = stl.nvim.buf.locate_bufnr(from) ---@type integer|nil
   if from_bufnr ~= nil then
-    local to_bufnr = vim.fn.bufadd(to) ---@type integer
-    vim.api.nvim_set_option_value("buflisted", true, { buf = to_bufnr })
-    for _, win in ipairs(vim.fn.win_findbuf(from_bufnr)) do
-      vim.api.nvim_win_call(win, function()
-        vim.cmd("buffer " .. to_bufnr)
-      end)
+    local clients = vim.lsp.get_clients({ bufnr = from_bufnr }) ---@type vim.lsp.Client[]
+    for _, client in ipairs(clients) do
+      vim.lsp.buf_detach_client(from_bufnr, client.id)
     end
-    vim.api.nvim_buf_delete(from_bufnr, { force = true })
+    vim.api.nvim_buf_set_name(from_bufnr, to)
+    local old_filetype = vim.api.nvim_get_option_value("filetype", { buf = from_bufnr }) ---@type string
+    local filetype, on_detect = vim.filetype.match({ filename = to, buf = from_bufnr })
+    filetype = filetype or ""
+    if filetype ~= old_filetype then
+      if on_detect ~= nil then
+        on_detect(from_bufnr)
+      end
+      -- FileType lets enabled LSP configurations select clients for the new language.
+      vim.api.nvim_set_option_value("filetype", filetype, { buf = from_bufnr })
+    else
+      for _, client in ipairs(clients) do
+        if not vim.lsp.is_enabled(client.name) then
+          vim.lsp.buf_attach_client(from_bufnr, client.id)
+        end
+      end
+      -- Same-language moves can cross project roots; only rerun LSP config selection.
+      for _, autocmd in ipairs(vim.api.nvim_get_autocmds({ event = "FileType" })) do
+        if autocmd.group_name == "nvim.lsp.enable" then
+          vim.api.nvim_exec_autocmds("FileType", { group = autocmd.group, buffer = from_bufnr, modeline = false })
+          break
+        end
+      end
+    end
+
+    -- Neovim's buffer-level save callback captures the original URI and survives client detach.
+    -- Replace only that callback; resolve the URI at save time, including after later renames.
+    for _, autocmd in ipairs(vim.api.nvim_get_autocmds({ event = "BufWritePre", buffer = from_bufnr })) do
+      if
+        autocmd.group_name == string.format("nvim.lsp.b_%d_save", from_bufnr)
+        and autocmd.desc == "vim.lsp: textDocument/willSave"
+      then
+        vim.api.nvim_del_autocmd(autocmd.id)
+        vim.api.nvim_create_autocmd("BufWritePre", {
+          group = autocmd.group,
+          buffer = from_bufnr,
+          desc = "era.m.lsp: willSave with current URI",
+          callback = function(event)
+            local params = {
+              textDocument = { uri = vim.uri_from_bufnr(event.buf) },
+              reason = vim.lsp.protocol.TextDocumentSaveReason.Manual,
+            }
+            for _, client in ipairs(vim.lsp.get_clients({ bufnr = event.buf })) do
+              if client:supports_method("textDocument/willSave") then
+                client:notify("textDocument/willSave", params, event.buf)
+              end
+              if client:supports_method("textDocument/willSaveWaitUntil") then
+                local result, err = client:request_sync("textDocument/willSaveWaitUntil", params, 1000, event.buf)
+                if result and result.result then
+                  vim.lsp.util.apply_text_edits(result.result, event.buf, client.offset_encoding)
+                elseif err then
+                  stl.reporter.error({
+                    from = __module_name__,
+                    subject = "willSaveWaitUntil",
+                    message = vim.inspect(err),
+                  })
+                end
+              end
+            end
+          end,
+        })
+      end
+    end
   end
   return true
 end
