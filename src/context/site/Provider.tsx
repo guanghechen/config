@@ -48,11 +48,13 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const theme: SiteTheme = useStateValue(viewmodel.theme$)
   const palette = useStateValue(viewmodel.palette$)
 
-  usePersistAsync(viewmodel, storageKey, [
-    viewmodel.themePreference$,
-    viewmodel.lightPalette$,
-    viewmodel.darkPalette$,
-  ])
+  // Theme choices are infrequent; do not leave a pending preference behind a quick reload.
+  usePersistAsync(
+    viewmodel,
+    storageKey,
+    [viewmodel.themePreference$, viewmodel.lightPalette$, viewmodel.darkPalette$],
+    { throttleMs: 0 },
+  )
 
   React.useLayoutEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)')
