@@ -8,6 +8,7 @@ import { fetchCodeDefaults } from './h/api/code/defaults'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
 import { saveFile } from './h/api/file/save'
+import { fetchFileText } from './h/api/file/text'
 import { switchFile } from './h/api/file-switch'
 import { getTextTransformer } from './h/api/text-transform/:name'
 import { listTextTransformers } from './h/api/text-transform/list'
@@ -26,6 +27,7 @@ const handle_map: Record<string, IApiHandle> = {
   [ApiRoutePathEnum.FILE]: fetchFile,
   [ApiRoutePathEnum.FILE_RAW]: fetchFileRaw,
   [ApiRoutePathEnum.FILE_SAVE]: saveFile,
+  [ApiRoutePathEnum.FILE_TEXT]: fetchFileText,
   [ApiRoutePathEnum.FILE_SWITCH]: switchFile,
   [ApiRoutePathEnum.TEXT_TRANSFORM_LIST]: listTextTransformers,
   [ApiRoutePathEnum.WORKSPACES]: list_workspaces,

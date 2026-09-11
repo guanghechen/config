@@ -74,10 +74,10 @@ async function resolveRefPath(curDir: string, refPath: string): Promise<string |
   return state.access.resolve(absoluteSrcPath, 'file')
 }
 
-async function parseMarkdown(filepath: string): Promise<IMarkdownFileData> {
+async function parseMarkdown(filepath: string, sourceContent?: string): Promise<IMarkdownFileData> {
   const authorizedFilepath = state.access.resolve(filepath, 'file')
   const dirpath: string = path.dirname(authorizedFilepath)
-  const rawContent: string = await fs.readFile(authorizedFilepath, 'utf8')
+  const rawContent: string = sourceContent ?? (await fs.readFile(authorizedFilepath, 'utf8'))
 
   const match: string[] | null = regexes.frontmatter.exec(rawContent) ?? ['', '']
   const frontmatter: Record<string, unknown> = match[1] ? parseYaml(match[1]) : {}

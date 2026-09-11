@@ -76,11 +76,12 @@ export class FileController {
   }
 
   public async save(params: IFileSaveRequestPayload): Promise<void> {
-    const { filepath, content } = params
+    const { filepath, content, expectedRevision } = params
 
     const response = await requester.post(ApiRoutePathEnum.FILE_SAVE, {
       filepath,
       content,
+      ...(expectedRevision ? { expectedRevision } : {}),
     })
 
     if (!response.ok) {

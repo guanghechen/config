@@ -222,6 +222,37 @@ test('Markdown sourcefile includes authorize independently, and bare relative re
   assert.ok(serialized.includes('https://example.com/image.png'))
 })
 
+test('versioned Markdown reads and saves preserve canonical paths, rich AST and conflicts', async () => {
+  const { fetchFileText } = load('server/plugin/api/h/api/file/text.ts')
+  const { saveFile } = load('server/plugin/api/h/api/file/save.ts')
+  const filepath = path.join(docs, 'versioned.md')
+  writeFileSync(filepath, '# Versioned\n\n![asset](asset.png)\n')
+  const result = await fetchFileText(params(filepath, { req: { method: 'GET' } }))
+  assert.equal(result.code, 200)
+  assert.equal(result.data.data.filepath, filepath)
+  assert.match(result.data.data.revision, /^[a-f0-9]{64}$/)
+  assert.match(JSON.stringify(result.data.data.markdown.ast), /api\/file\/raw/)
+  const revision = result.data.data.revision
+  const unchanged = await fetchFileText(
+    params(filepath, {
+      req: { method: 'GET' },
+      searchParams: new URLSearchParams({ filepath, revision }),
+    }),
+  )
+  assert.equal(unchanged.data.data.unchanged, true)
+  assert.equal(unchanged.data.data.content, undefined)
+  writeFileSync(filepath, '# Changed elsewhere')
+  const conflict = await saveFile(
+    params(filepath, {
+      body: JSON.stringify({ filepath, content: '# My draft', expectedRevision: revision }),
+    }),
+  )
+  assert.equal(conflict.code, 409)
+  assert.equal(readFileSync(filepath, 'utf8'), '# Changed elsewhere')
+  await assert.rejects(fetchFileText(params(privateFile, { req: { method: 'GET' } })), status(403))
+  assert.equal((await fetchFileText(params(filepath, { req: { method: 'POST' } }))).code, 405)
+})
+
 test('HTTP middleware preserves authentication and returns authorization status for all file routes', async () => {
   const api = load('server/plugin/api/index.ts').default
   let middleware
@@ -250,7 +281,7 @@ test('HTTP middleware preserves authentication and returns authorization status 
     const raw = await fetch(`${origin}/api/file/raw?${fileQuery}`, { headers })
     assert.equal(raw.status, 200)
     assert.equal(await raw.text(), readFileSync(article, 'utf8'))
-    for (const endpoint of ['/api/file', '/api/file/raw', '/api/file/switch']) {
+    for (const endpoint of ['/api/file', '/api/file/raw', '/api/file/text', '/api/file/switch']) {
       const response = await fetch(
         `${origin}${endpoint}?${new URLSearchParams({ filepath: privateFile })}`,
         { headers },

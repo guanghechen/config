@@ -1,5 +1,5 @@
-import fs from 'node:fs/promises'
 import state from '../../../../../state'
+import { TextConflictError, saveVersionedText } from '../../../../../util/versioned-text'
 import type { IApiHandle, IApiHandleData } from '../../../types'
 
 export const saveFile: IApiHandle = async params => {
@@ -31,15 +31,25 @@ export const saveFile: IApiHandle = async params => {
   }
   const filepath = state.access.resolve(bodyData.filepath, 'file')
   const content = bodyData.content
+  const expectedRevision = 'expectedRevision' in bodyData ? bodyData.expectedRevision : undefined
+  if (
+    expectedRevision !== undefined &&
+    (typeof expectedRevision !== 'string' || !/^[a-f0-9]{64}$/.test(expectedRevision))
+  ) {
+    return { code: 400, data: { error: 'Invalid expected revision', data: null } }
+  }
 
   try {
-    await fs.writeFile(filepath, content, 'utf8')
+    const snapshot = await saveVersionedText(filepath, content, expectedRevision)
 
     const data: IApiHandleData = {
-      data: { success: true, filepath },
+      data: { success: true, filepath, revision: snapshot.revision },
     }
     return { code: 200, data }
   } catch (error) {
+    if (error instanceof TextConflictError) {
+      return { code: 409, data: { error: error.message, data: null } }
+    }
     state.reporter.error('Failed to save file:', { filepath, error })
     const data: IApiHandleData = {
       error: 'Failed to save file: Invalid content or write error',

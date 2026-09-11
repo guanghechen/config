@@ -70,6 +70,7 @@ export type IFileSaveRequestParams = Record<string, never>
 export interface IFileSaveRequestPayload {
   readonly filepath: string
   readonly content: string
+  readonly expectedRevision?: string
 }
 
 export type IFileSaveResponseResult = Record<string, never>

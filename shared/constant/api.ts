@@ -7,6 +7,7 @@ export enum ApiRoutePathEnum {
 
   FILE = '/api/file',
   FILE_RAW = '/api/file/raw',
+  FILE_TEXT = '/api/file/text',
   FILE_SAVE = '/api/file/save',
   FILE_SWITCH = '/api/file/switch',
 
