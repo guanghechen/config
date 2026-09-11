@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/proxy/schema/config.schema.json",
+  "title": "Kit Proxy Configuration",
+  "type": "object",
+  "required": [
+    "groups"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "\\u0000"
+      }
+    },
+    "groups": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+        "not": {
+          "enum": [
+            "init",
+            "off",
+            "completion",
+            "help",
+            "version"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "proxy",
+          "targets"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "envs": {
+            "type": "object",
+            "description": "Additional session environment variables; values support single-pass ${NAME} expansion when enabling.",
+            "propertyNames": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "not": {
+                "anyOf": [
+                  { "pattern": "[^A-Za-z0-9_]" },
+                  { "pattern": "^(?:[Hh][Tt][Tt][Pp]_[Pp][Rr][Oo][Xx][Yy]$|[Hh][Tt][Tt][Pp][Ss]_[Pp][Rr][Oo][Xx][Yy]$|[Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Pp][Rr][Oo][Xx][Yy]$|[Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Hh][Tt][Tt][Pp][Ss]_[Pp][Rr][Oo][Xx][Yy]$|[Gg][Ii][Tt]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Cc][Oo][Uu][Nn][Tt]$|[Gg][Ii][Tt]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Kk][Ee][Yy]_|[Gg][Ii][Tt]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Vv][Aa][Ll][Uu][Ee]_|[Kk][Ii][Tt]_[Pp][Rr][Oo][Xx][Yy]_|__[Kk][Ii][Tt]_[Pp][Rr][Oo][Xx][Yy]_|__[Kk][Ii][Tt][Pp][Rr][Oo][Xx][Yy])" }
+                ]
+              }
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "proxy": {
+            "type": "string",
+            "description": "HTTP/HTTPS proxy URL or a template using ${NAME}; resolved when enabling the group."
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "npm",
+                "git",
+                "fish",
+                "pwsh",
+                "bash"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
