@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/guanghechen/config/kit/proxy/schema/config.schema.json",
   "groups": {
-    "local": {
+    "default": {
       "proxy": "http://127.0.0.1:${ghc_vpn_host_port}",
       "targets": ["npm", "git", "fish", "pwsh", "bash"],
       "envs": {
