@@ -9,6 +9,7 @@ import { sketchArrow, sketchShape, smoothStroke } from '@/shared/whiteboard/sket
 import { LABEL_FONT, LABEL_LINE_HEIGHT } from '@/shared/whiteboard/labels'
 import { RESIZE_CORNERS, resizeBounds } from '@/shared/whiteboard/transforms'
 import { resolveStyle } from '@/shared/whiteboard/colors'
+import type { IAlignmentGuide } from '@/shared/whiteboard/drawing'
 import type { IWhiteboardTheme } from './theme'
 import type {
   IBounds,
@@ -401,8 +402,9 @@ export class CanvasRenderer {
     width: number,
     height: number,
     marquee?: IBounds,
+    guides: ReadonlyArray<IAlignmentGuide> = [],
   ): void {
-    if (!selected.size && !marquee) {
+    if (!selected.size && !marquee && !guides.length) {
       canvas.style.display = 'none'
       return
     }
@@ -495,5 +497,20 @@ export class CanvasRenderer {
       ctx.globalAlpha = 1
       ctx.strokeRect(marquee.x, marquee.y, marquee.width, marquee.height)
     }
+    ctx.lineWidth = 1 / camera.zoom
+    ctx.setLineDash([4 / camera.zoom, 4 / camera.zoom])
+    for (const guide of guides) {
+      const padding = 10 / camera.zoom
+      ctx.beginPath()
+      if (guide.axis === 'x') {
+        ctx.moveTo(guide.position, guide.from - padding)
+        ctx.lineTo(guide.position, guide.to + padding)
+      } else {
+        ctx.moveTo(guide.from - padding, guide.position)
+        ctx.lineTo(guide.to + padding, guide.position)
+      }
+      ctx.stroke()
+    }
+    ctx.setLineDash([])
   }
 }

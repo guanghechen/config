@@ -24,7 +24,8 @@ import type {
 } from '@/shared/whiteboard/model'
 import type { IEditSession } from './InlineEditor'
 import { createNode, useBoardInteraction } from './interaction'
-import type { ITool } from './interaction'
+import type { ITool } from './tools'
+import { BoardIcon } from './BoardIcon'
 import { MarkdownCard } from './MarkdownCard'
 import { LabelEditor } from './LabelEditor'
 import { MarkdownCode } from './MarkdownCode'
@@ -115,6 +116,8 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
   const fileInput = React.useRef<HTMLInputElement>(null)
   const [size, setSize] = React.useState({ width: 1, height: 1 })
   const [tool, setTool] = React.useState<ITool>('select')
+  const [locked, setLocked] = React.useState(false)
+  const toggleLock = React.useCallback(() => setLocked(value => !value), [])
   const [style, setStyle] = React.useState<IStyle>(DEFAULT_STYLE)
   const [message, setMessage] = React.useState(initial.error ?? '')
   const [status, setStatus] = React.useState(
@@ -287,7 +290,7 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
     [store, editor, labelEditor],
   )
 
-  const { marquee, ...events } = useBoardInteraction(
+  const { marquee, guides, ...events } = useBoardInteraction(
     stage,
     store,
     tool,
@@ -297,6 +300,8 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
       void edit(node)
     },
     setMessage,
+    locked,
+    toggleLock,
   )
   React.useLayoutEffect(() => {
     if (!drawing.current || !overlay.current) return
@@ -316,8 +321,9 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
       size.width,
       size.height,
       marquee,
+      guides,
     )
-  }, [renderer, snapshot, size, marquee, theme])
+  }, [renderer, snapshot, size, marquee, guides, theme])
   React.useEffect(() => {
     const timer = setTimeout(() => {
       if (!drawing.current) return
@@ -471,7 +477,7 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
       </div>
       <header className="wb-filebar" data-wb-ui>
         <a href="/ws" title="Back to workspace" aria-label="Workspace">
-          ⌂
+          <BoardIcon name="home" />
         </a>
         <input
           aria-label="Whiteboard title"
@@ -479,7 +485,9 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
           onChange={event => store.commit({ ...snapshot.document, title: event.target.value })}
         />
         <details className="wb-file-menu">
-          <summary aria-label="File menu">☰</summary>
+          <summary aria-label="File menu">
+            <BoardIcon name="menu" />
+          </summary>
           <div>
             <button
               onClick={() => {
@@ -513,7 +521,7 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
         </details>
         <BoardAppearance />
       </header>
-      <DrawingTools tool={tool} setTool={setTool} />
+      <DrawingTools tool={tool} setTool={setTool} locked={locked} toggleLock={toggleLock} />
       {(selected.length > 0 || (tool !== 'select' && tool !== 'hand')) && (
         <aside className="wb-inspector" data-wb-ui aria-label="Properties">
           <h2>{selected.length ? `${selected.length} selected` : 'Style'}</h2>

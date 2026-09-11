@@ -4,10 +4,10 @@
 
 ## 功能与契约
 
-Node 24 执行以下测试，55 项通过，无跳过：
+Node 24 执行以下测试，62 项通过，无跳过：
 
 ```sh
-node --test tests/whiteboard.test.mjs tests/whiteboard-organization.test.mjs tests/whiteboard-transforms.test.mjs tests/whiteboard-sketch.test.mjs tests/whiteboard-theme.test.mjs tests/site-theme.test.mjs tests/file-access.test.mjs tests/websocket-auth.test.mjs
+node --test tests/whiteboard.test.mjs tests/whiteboard-organization.test.mjs tests/whiteboard-transforms.test.mjs tests/whiteboard-sketch.test.mjs tests/whiteboard-theme.test.mjs tests/whiteboard-drawing.test.mjs tests/site-theme.test.mjs tests/file-access.test.mjs tests/websocket-auth.test.mjs
 ```
 
 覆盖坐标转换、缩放锚点、形状/笔迹命中、连线绑定、事务历史、删除与复制、导入校验、并发保存冲突、文件权限保留、过期 Markdown 响应丢弃，以及既有 HTTP / WebSocket 鉴权与路径授权。
@@ -41,6 +41,10 @@ node --test tests/whiteboard.test.mjs tests/whiteboard-organization.test.mjs tes
 手绘测试覆盖填充字段的严格导入校验、旧文档兼容、种子复现与平移不变性、平滑椭圆、精确箭头端点、极大尺寸的斜线数量上限，以及平滑自由笔在实际曲线上的命中。原始节点坐标与内容不因笔迹生成而改变。
 
 主题测试覆盖全部五套站点 palette、语义色导入校验与往返、HEX 自定义色保持、实色/斜线背景上的 4.5:1 笔迹对比度、淡色填充与深色模式下的自动对比度调整，以及既有站点主题偏好逻辑。
+
+绘图辅助新增 7 项 Node tests：四个方向的等比例与中心绘制、修饰键重算、45° 箭头长度与锚点、缩放后的吸附阈值、最近对齐、排除选区/笔迹/连线及远处行列，以及整组吸附的连线跟随与历史。
+
+真实浏览器操作覆盖 Shift 正方形、Shift+Alt 正圆、指针静止时切换修饰键、Q 连续绘图、Esc 返回选择、45° 箭头、单次撤销与取消；移动吸附参考线通过 Canvas 像素检查，Alt 绕过、80% 缩放坐标、分组整体位移与连线保持绑定均通过。拖动后回到起点不留下预览位移，Alt+Shift 单击的默认图形也保持中心和等比例。标题输入中的 Q 不切换工具锁定；390–1920px 宽度下顶部工具栏不越界或相互重叠。
 
 通过站点 Settings 和 ThemeToggle 验证全部五套 palette：Canvas 缓存颜色、连线标签背景、手绘卡片边框和 Markdown 表格同步更新，自定义 HEX 填充保持原值；切换不会修改白板 JSON 或创建 undo。
 
@@ -154,6 +158,21 @@ node --test tests/whiteboard.test.mjs tests/whiteboard-organization.test.mjs tes
 | Rosé Pine Moon       | Overview | Zoom         |     59.3 |           16.8 |           33.3 |
 
 12 项均达到平均 >=55 FPS、P95 <=33.4ms 的目标，仍有少量 50ms 长帧。底部导航只订阅可见缩放百分比，操作时读取最新镜头，避免平移触发无效控件渲染；平移后按钮缩放的中心锚点通过浏览器检查。warm reload 至内容和字体就绪为 1.16–1.43 秒。
+
+### 绘图辅助与控件回归
+
+同一 1000 节点 / 1000 连线、200 组混合场景，VS Code Light Modern，1080p / DPR 1 / Chromium 146 / SwiftShader / Vite development mode；继续使用 40 帧预热和 240 帧采样。移动启用新的对齐吸附，工具栏使用 SVG 图标与快捷键提示。
+
+| View | Interaction | Mean FPS | P95 frame (ms) | Max frame (ms) |
+| --- | --- | ---: | ---: | ---: |
+| Reading | Pan | 59.5 | 16.8 | 33.4 |
+| Reading | Zoom | 58.1 | 16.8 | 33.4 |
+| Reading | Group drag | 59.5 | 16.8 | 33.3 |
+| Reading | Group resize | 58.3 | 16.8 | 33.4 |
+| Overview | Pan | 60.0 | 16.7 | 16.8 |
+| Overview | Zoom | 59.3 | 16.8 | 33.4 |
+
+六项均通过既定性能目标；warm reload 至富内容及字体就绪为 1.14–1.37 秒。该结果只对应固定场景，未扩展到任意文档或机器。
 
 ## 静态验证与限制
 

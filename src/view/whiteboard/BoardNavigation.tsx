@@ -1,6 +1,7 @@
 import React from 'react'
 import { zoomAt } from '@/shared/whiteboard/geometry'
 import type { BoardStore } from './store'
+import { BoardIcon } from './BoardIcon'
 
 export const BoardNavigation = React.memo<{
   store: BoardStore
@@ -25,7 +26,7 @@ export const BoardNavigation = React.memo<{
           )
         }
       >
-        −
+        <BoardIcon name="minus" />
       </button>
       <button
         aria-label="Reset zoom"
@@ -49,24 +50,26 @@ export const BoardNavigation = React.memo<{
           )
         }
       >
-        +
+        <BoardIcon name="plus" />
       </button>
       <button onClick={() => fit()}>Fit all</button>
       {selectedCount > 0 && <button onClick={() => fit(true)}>Focus</button>}
     </div>
     <div className="wb-history">
       <button aria-label="Undo" onClick={store.undo}>
-        ↶
+        <BoardIcon name="undo" />
       </button>
       <button aria-label="Redo" onClick={store.redo}>
-        ↷
+        <BoardIcon name="redo" />
       </button>
     </div>
     <span className="wb-status" role="status">
       {status} · {nodeCount} nodes
     </span>
     <details className="wb-help">
-      <summary aria-label="Keyboard shortcuts">?</summary>
+      <summary aria-label="Keyboard shortcuts">
+        <BoardIcon name="help" />
+      </summary>
       <div>
         Space + drag: pan
         <br />
@@ -75,6 +78,14 @@ export const BoardNavigation = React.memo<{
         Shift + click: multi-select
         <br />
         Drag empty space: select area
+        <br />
+        Shift + draw: equal sides / 45° arrows
+        <br />
+        Alt + draw: from center
+        <br />
+        Alt + move: disable alignment snapping
+        <br />
+        Q: keep drawing with the same tool
         <br />
         Shift + resize: keep proportions
         <br />

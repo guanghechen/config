@@ -9,6 +9,7 @@ import {
   intersects,
   moveElements,
   reconnectEdge,
+  resolveEndpoint,
   worldPoint,
   zoomAt,
 } from '@/shared/whiteboard/geometry'
@@ -16,6 +17,13 @@ import { parseDocument } from '@/shared/whiteboard/document'
 import { createDocument } from '@/shared/whiteboard/model'
 import { expandSelection } from '@/shared/whiteboard/organization'
 import { resizeBounds, resizeCornerAt, resizeElements } from '@/shared/whiteboard/transforms'
+import {
+  constrainAngle,
+  drawingBounds,
+  prepareMoveSnap,
+  snapMove,
+} from '@/shared/whiteboard/drawing'
+import type { IAlignmentGuide, IMoveSnap } from '@/shared/whiteboard/drawing'
 import type {
   IBounds,
   ICamera,
@@ -26,30 +34,8 @@ import type {
   IStyle,
 } from '@/shared/whiteboard/model'
 import type { BoardStore } from './store'
-
-export type ITool =
-  | 'select'
-  | 'hand'
-  | 'rectangle'
-  | 'ellipse'
-  | 'diamond'
-  | 'edge'
-  | 'stroke'
-  | 'text'
-  | 'markdown'
-  | 'image'
-export const TOOLS: ReadonlyArray<{ id: ITool; icon: string; label: string; key: string }> = [
-  { id: 'select', icon: '↖', label: 'Select', key: 'V' },
-  { id: 'hand', icon: '✋', label: 'Hand', key: 'H' },
-  { id: 'rectangle', icon: '▢', label: 'Rectangle', key: 'R' },
-  { id: 'ellipse', icon: '◯', label: 'Ellipse', key: 'O' },
-  { id: 'diamond', icon: '◇', label: 'Diamond', key: 'D' },
-  { id: 'edge', icon: '↗', label: 'Arrow', key: 'A' },
-  { id: 'stroke', icon: '✎', label: 'Freehand', key: 'P' },
-  { id: 'text', icon: 'T', label: 'Text', key: 'T' },
-  { id: 'markdown', icon: 'M↓', label: 'Markdown', key: 'M' },
-  { id: 'image', icon: '▧', label: 'Image', key: 'I' },
-]
+import { TOOLS } from './tools'
+import type { ITool } from './tools'
 
 interface IDrag {
   kind: 'pan' | 'move' | 'resize' | 'reconnect' | 'marquee' | 'draw'
@@ -64,6 +50,7 @@ interface IDrag {
   corner?: IPoint
   created?: IElement
   points: IPoint[]
+  snap?: IMoveSnap | null
 }
 
 export function createNode(tool: ITool, point: IPoint, style: IStyle): INode {
@@ -125,13 +112,17 @@ export function useBoardInteraction(
   setTool: (tool: ITool) => void,
   edit: (element: IElement) => void,
   message: (text: string) => void,
+  locked: boolean,
+  toggleLock: () => void,
 ) {
   const [marquee, setMarquee] = React.useState<IBounds>()
+  const [guides, setGuides] = React.useState<ReadonlyArray<IAlignmentGuide>>([])
   const marqueeRef = React.useRef<IBounds | undefined>(undefined)
   const drag = React.useRef<IDrag | null>(null)
   const space = React.useRef(false)
   const frame = React.useRef(0)
-  const pending = React.useRef<{ point: IPoint; shift: boolean } | null>(null)
+  const pending = React.useRef<{ point: IPoint; shift: boolean; alt: boolean } | null>(null)
+  const lastPointer = React.useRef<IPoint | null>(null)
   const moveKeys = React.useRef(new Set<string>())
   const local = React.useCallback(
     (event: { clientX: number; clientY: number }): IPoint => {
@@ -148,7 +139,7 @@ export function useBoardInteraction(
     else store.commit()
   }
 
-  const update = (screen: IPoint, preserveAspect: boolean): void => {
+  const update = (screen: IPoint, preserveAspect: boolean, alt: boolean): void => {
     const active = drag.current
     if (!active) return
     const point = worldPoint(screen, active.camera)
@@ -159,13 +150,14 @@ export function useBoardInteraction(
         y: active.camera.y + screen.y - active.screen.y,
       })
     } else if (active.kind === 'move') {
-      if (Math.hypot(screen.x - active.screen.x, screen.y - active.screen.y) < 2) return
-      store.preview(
-        moveElements(active.elements, active.selected, {
-          x: point.x - active.start.x,
-          y: point.y - active.start.y,
-        }),
-      )
+      const delta = { x: point.x - active.start.x, y: point.y - active.start.y }
+      const moved = Math.hypot(screen.x - active.screen.x, screen.y - active.screen.y) >= 2
+      const snapped =
+        moved && !alt && active.snap
+          ? snapMove(active.snap, delta, 6 / active.camera.zoom)
+          : { delta: moved ? delta : { x: 0, y: 0 }, guides: [] }
+      setGuides(snapped.guides)
+      store.preview(moveElements(active.elements, active.selected, snapped.delta))
     } else if (active.kind === 'reconnect' && active.edge && active.endpoint) {
       const edge = reconnectEdge(
         active.edge,
@@ -196,7 +188,18 @@ export function useBoardInteraction(
       let created = active.created
       if (created.type === 'edge') {
         const hit = hitTest(active.elements, point, 12 / active.camera.zoom, true)
-        created = { ...created, to: attachEndpoint(hit?.type !== 'edge' ? hit : undefined, point) }
+        created = {
+          ...created,
+          to: preserveAspect
+            ? constrainAngle(
+                resolveEndpoint(
+                  created.from,
+                  new Map(active.elements.map(item => [item.id, item])),
+                ),
+                point,
+              )
+            : attachEndpoint(hit?.type !== 'edge' ? hit : undefined, point),
+        }
       } else if (created.type === 'stroke') {
         const last = active.points.at(-1)!
         if (Math.hypot(last.x - point.x, last.y - point.y) > 1 / active.camera.zoom)
@@ -218,7 +221,7 @@ export function useBoardInteraction(
           })),
         }
       } else if (created.type === 'shape') {
-        created = { ...created, ...boundsBetween(active.start, point) }
+        created = { ...created, ...drawingBounds(active.start, point, preserveAspect, alt) }
       }
       store.preview([...active.elements, created])
     }
@@ -226,8 +229,10 @@ export function useBoardInteraction(
   const finish = (cancel = false): void => {
     cancelAnimationFrame(frame.current)
     frame.current = 0
-    if (pending.current && !cancel) update(pending.current.point, pending.current.shift)
+    const released = pending.current
+    if (released && !cancel) update(released.point, released.shift, released.alt)
     pending.current = null
+    lastPointer.current = null
     const active = drag.current
     drag.current = null
     if (!active) return
@@ -249,14 +254,38 @@ export function useBoardInteraction(
           item.type === 'shape' &&
           item.width < 8 &&
           item.height < 8
-            ? { ...item, width: 180, height: 120 }
+            ? {
+                ...item,
+                ...drawingBounds(
+                  active.start,
+                  {
+                    x: active.start.x + 180 / (released?.alt ? 2 : 1),
+                    y: active.start.y + 120 / (released?.alt ? 2 : 1),
+                  },
+                  !!released?.shift,
+                  !!released?.alt,
+                ),
+              }
             : item,
         ),
       })
-      if (active.created && active.created.type !== 'stroke') setTool('select')
+      if (active.created && active.created.type !== 'stroke' && !locked) setTool('select')
     }
+    setGuides([])
     setMarquee(undefined)
     marqueeRef.current = undefined
+  }
+
+  const scheduleUpdate = (point: IPoint, shift: boolean, alt: boolean): void => {
+    lastPointer.current = point
+    pending.current = { point, shift, alt }
+    if (frame.current) return
+    frame.current = requestAnimationFrame(() => {
+      frame.current = 0
+      const next = pending.current
+      pending.current = null
+      if (next) update(next.point, next.shift, next.alt)
+    })
   }
 
   React.useEffect(() => {
@@ -294,6 +323,11 @@ export function useBoardInteraction(
         return
       const command = event.ctrlKey || event.metaKey
       const key = event.key.toLowerCase()
+      if (drag.current && lastPointer.current && (key === 'shift' || key === 'alt')) {
+        event.preventDefault()
+        scheduleUpdate(lastPointer.current, event.shiftKey, event.altKey)
+        return
+      }
       const direction = MOVE_DIRECTIONS[key]
       if (direction && !command && !event.altKey) {
         const snapshot = store.getSnapshot()
@@ -370,11 +404,18 @@ export function useBoardInteraction(
         }
       }
       if (!command && !event.altKey) {
+        if (key === 'q') {
+          event.preventDefault()
+          if (!event.repeat) toggleLock()
+          return
+        }
         const next = TOOLS.find(item => item.key.toLowerCase() === key)
         if (next) setTool(next.id)
       }
     }
     const keyup = (event: KeyboardEvent): void => {
+      if (drag.current && lastPointer.current && ['Shift', 'Alt'].includes(event.key))
+        scheduleUpdate(lastPointer.current, event.shiftKey, event.altKey)
       if (event.code === 'Space') space.current = false
       if (moveKeys.current.delete(event.key.toLowerCase()) && !moveKeys.current.size) store.commit()
     }
@@ -457,6 +498,7 @@ export function useBoardInteraction(
 
   return {
     marquee,
+    guides,
     onPointerDown(event: React.PointerEvent<HTMLDivElement>): void {
       if (document.querySelector('.wb-editor,.wb-reference,.wb-label-editor')) return
       if (
@@ -540,24 +582,19 @@ export function useBoardInteraction(
         store.select(new Set([active.created.id]))
         store.preview([...active.elements, active.created])
       }
+      if (active.kind === 'move') active.snap = prepareMoveSnap(active.elements, active.selected)
       drag.current = active
+      lastPointer.current = screen
       event.currentTarget.setPointerCapture(event.pointerId)
       event.preventDefault()
     },
     onPointerMove(event: React.PointerEvent<HTMLDivElement>): void {
       if (!drag.current) return
-      pending.current = { point: local(event), shift: event.shiftKey }
-      if (frame.current) return
-      frame.current = requestAnimationFrame(() => {
-        frame.current = 0
-        const point = pending.current
-        pending.current = null
-        if (point) update(point.point, point.shift)
-      })
+      scheduleUpdate(local(event), event.shiftKey, event.altKey)
     },
     onPointerUp(event: React.PointerEvent<HTMLDivElement>): void {
       if (!drag.current) return
-      pending.current = { point: local(event), shift: event.shiftKey }
+      pending.current = { point: local(event), shift: event.shiftKey, alt: event.altKey }
       finish()
       if (event.currentTarget.hasPointerCapture(event.pointerId))
         event.currentTarget.releasePointerCapture(event.pointerId)
@@ -566,6 +603,7 @@ export function useBoardInteraction(
       finish(true)
     },
     onDoubleClick(event: React.MouseEvent<HTMLDivElement>): void {
+      if (tool !== 'select') return
       const snapshot = store.getSnapshot()
       const node = hitTest(
         snapshot.document.elements,

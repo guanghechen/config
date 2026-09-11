@@ -51,7 +51,7 @@
 .vl-main > .wb {
   height: 100%;
 }
-.wb:has(.wb-editor, .wb-label-editor) > :is(header, nav, aside, footer) {
+.wb:has(.wb-editor, .wb-label-editor) > :is(header, nav, aside, footer, .wb-tool-area) {
   pointer-events: none;
 }
 .wb-label-editor {
@@ -101,6 +101,12 @@
   color: inherit;
   padding: 7px 10px;
   font: inherit;
+}
+.wb-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: none;
 }
 .wb button:hover {
   background: var(--wb-hover);
@@ -240,8 +246,7 @@
   z-index: 5;
 }
 .wb-filebar > a {
-  padding: 4px 9px;
-  font-size: 23px;
+  padding: 7px 9px;
   text-decoration: none;
   color: var(--wb-muted);
 }
@@ -256,8 +261,7 @@
 }
 .wb-file-menu summary {
   list-style: none;
-  padding: 4px 9px;
-  font-size: 20px;
+  padding: 7px 9px;
 }
 .wb-file-menu > div {
   position: absolute;
@@ -271,25 +275,34 @@
 .wb-file-menu button {
   text-align: left;
 }
-.wb-tools {
+.wb-tool-area {
   position: absolute;
   top: 18px;
   left: 50%;
   transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  z-index: 4;
+  pointer-events: none;
+}
+.wb-tools {
   display: flex;
+  align-items: center;
   gap: 3px;
   padding: 6px;
-  z-index: 4;
+  pointer-events: auto;
 }
 .wb-tools button {
   position: relative;
   width: 43px;
   height: 42px;
   padding: 4px;
+  display: grid;
+  place-items: center;
 }
-.wb-tools span {
-  font-size: 22px;
-  line-height: 1;
+.wb-tools .wb-icon {
+  width: 21px;
+  height: 21px;
 }
 .wb-tools small {
   position: absolute;
@@ -297,6 +310,25 @@
   right: 4px;
   font-size: 8px;
   color: var(--wb-muted);
+}
+.wb-tools .wb-tool-lock {
+  width: 34px;
+  color: var(--wb-muted);
+}
+.wb-tool-divider {
+  height: 24px;
+  border-left: 1px solid var(--wb-border);
+  margin: 0 4px;
+}
+.wb-tool-hint {
+  margin: 9px 0 0;
+  font-size: 11px;
+  color: var(--wb-muted);
+  text-align: center;
+  white-space: nowrap;
+  background: var(--wb-canvas);
+  padding: 0 6px;
+  border-radius: 4px;
 }
 .wb-tools button[aria-pressed='true'] {
   background: var(--wb-selected);
@@ -417,8 +449,7 @@
   padding: 4px;
 }
 .wb-history button {
-  font-size: 21px;
-  padding: 0 10px;
+  padding: 7px 10px;
 }
 .wb-status {
   font-size: 11px;
@@ -430,7 +461,7 @@
 }
 .wb-help summary {
   list-style: none;
-  padding: 8px 15px;
+  padding: 11px;
 }
 .wb-help > div {
   position: absolute;
@@ -596,8 +627,8 @@
   gap: 10px;
   margin-top: 18px;
 }
-@media (max-width: 1150px) {
-  .wb-tools {
+@media (max-width: 1240px) {
+  .wb-tool-area {
     top: 80px;
   }
   .wb-inspector {
@@ -608,18 +639,31 @@
   }
 }
 @media (max-width: 650px) {
-  .wb-tools {
+  .wb-tool-area {
     width: calc(100% - 24px);
+  }
+  .wb-tools {
+    width: 100%;
     gap: 0;
     justify-content: space-between;
   }
-  .wb-tools button {
-    width: 9%;
+  .wb-tools button,
+  .wb-tools .wb-tool-lock {
+    width: 8%;
+  }
+  .wb-tool-divider {
+    margin: 0 2px;
+  }
+  .wb-tool-hint {
+    font-size: 10px;
+    white-space: normal;
   }
   .wb-inspector {
+    top: 176px;
     width: 145px;
     left: 10px;
     padding: 10px;
+    max-height: calc(100% - 280px);
   }
   .wb-status {
     display: none;
