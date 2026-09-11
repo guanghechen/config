@@ -32,7 +32,11 @@ if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then
   fi
 elif [ "$prefer_tmux_version" = "nightly" ] && command -v brew &>/dev/null; then
   printf "\e[96minstalling nightly tmux...\e[0m\n"
-  brew install -y --HEAD --fetch-HEAD tmux
+  if brew list --versions tmux 2>/dev/null | rg -q '(^|[[:space:]])HEAD-'; then
+    brew upgrade -y --fetch-HEAD tmux
+  else
+    brew install -y --HEAD --fetch-HEAD tmux
+  fi
 elif [ "$prefer_tmux_version" = "latest" ] && command -v brew &>/dev/null; then
   printf "\e[96minstalling latest tmux...\e[0m\n"
   brew install -y tmux
