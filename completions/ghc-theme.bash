@@ -12,9 +12,9 @@ _ghc_theme() {
         catppuccin-mocha
         gruvbox-dark
         gruvbox-light
-        nord
-        onehalf-dark
-        onehalf-light
+        kanagawa-dragon
+        kanagawa-lotus
+        kanagawa-wave
         rosepine-dawn
         rosepine-main
         rosepine-moon
