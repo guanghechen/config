@@ -391,6 +391,23 @@ export function useBoardInteraction(
         else store.groupSelected()
         return
       }
+      if (command && !event.altKey && snapshot.selected.size) {
+        const backward = event.code === 'BracketLeft' || key === '[' || key === '{'
+        const forward = event.code === 'BracketRight' || key === ']' || key === '}'
+        if (backward || forward) {
+          event.preventDefault()
+          store.reorderSelected(
+            backward
+              ? event.shiftKey
+                ? 'back'
+                : 'backward'
+              : event.shiftKey
+                ? 'front'
+                : 'forward',
+          )
+          return
+        }
+      }
       if (key === 'delete' || key === 'backspace') {
         event.preventDefault()
         store.removeSelected()

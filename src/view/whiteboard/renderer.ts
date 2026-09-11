@@ -9,6 +9,7 @@ import { sketchArrow, sketchShape, smoothStroke } from '@/shared/whiteboard/sket
 import { LABEL_FONT, LABEL_LINE_HEIGHT } from '@/shared/whiteboard/labels'
 import { RESIZE_CORNERS, resizeBounds } from '@/shared/whiteboard/transforms'
 import { resolveStyle } from '@/shared/whiteboard/colors'
+import { elementLayer } from '@/shared/whiteboard/model'
 import type { IAlignmentGuide } from '@/shared/whiteboard/drawing'
 import type { IWhiteboardTheme } from './theme'
 import type {
@@ -300,68 +301,75 @@ export class CanvasRenderer {
       ctx.restore()
       if (element.label) this.drawLabel(ctx, element, map)
     }
-    for (const element of elements) {
-      if (element.type === 'edge' || !intersects(element, visible)) continue
-      if (isCard(element) && camera.zoom >= 0.35) continue
-      ctx.save()
-      ctx.translate(element.x, element.y)
-      ctx.strokeStyle = this.style(element).stroke
-      ctx.fillStyle = this.style(element).fill
-      ctx.lineWidth = element.style.strokeWidth
-      if (element.type === 'text') {
-        ctx.fillStyle = this.style(element).stroke
-        ctx.font = '24px "Comic Sans MS", "Segoe Print", cursive'
-        ctx.beginPath()
-        ctx.rect(0, 0, element.width, element.height)
-        ctx.clip()
-        let line = '',
-          y = 28
-        for (const paragraph of element.text.split('\n')) {
-          for (const word of paragraph.split(' ')) {
-            if (line && ctx.measureText(`${line} ${word}`).width > element.width) {
-              ctx.fillText(line, 0, y)
-              line = ''
-              y += 32
+    // Overview cards share the Canvas but retain the same order as the DOM card layer.
+    for (const layer of camera.zoom < 0.35 ? [1, 2] : [1]) {
+      for (const element of elements) {
+        if (
+          element.type === 'edge' ||
+          elementLayer(element) !== layer ||
+          !intersects(element, visible)
+        )
+          continue
+        ctx.save()
+        ctx.translate(element.x, element.y)
+        ctx.strokeStyle = this.style(element).stroke
+        ctx.fillStyle = this.style(element).fill
+        ctx.lineWidth = element.style.strokeWidth
+        if (element.type === 'text') {
+          ctx.fillStyle = this.style(element).stroke
+          ctx.font = '24px "Comic Sans MS", "Segoe Print", cursive'
+          ctx.beginPath()
+          ctx.rect(0, 0, element.width, element.height)
+          ctx.clip()
+          let line = '',
+            y = 28
+          for (const paragraph of element.text.split('\n')) {
+            for (const word of paragraph.split(' ')) {
+              if (line && ctx.measureText(`${line} ${word}`).width > element.width) {
+                ctx.fillText(line, 0, y)
+                line = ''
+                y += 32
+              }
+              line += `${line ? ' ' : ''}${word}`
             }
-            line += `${line ? ' ' : ''}${word}`
+            ctx.fillText(line, 0, y)
+            line = ''
+            y += 32
           }
-          ctx.fillText(line, 0, y)
-          line = ''
-          y += 32
+        } else {
+          const patterns = camera.zoom >= 0.35
+          const bitmap =
+            element.type === 'shape' && patterns ? this.bitmap(element, camera.zoom * ratio) : null
+          if (bitmap)
+            ctx.drawImage(
+              bitmap.canvas,
+              -bitmap.padding,
+              -bitmap.padding,
+              bitmap.canvas.width / bitmap.scale,
+              bitmap.canvas.height / bitmap.scale,
+            )
+          else this.paintShape(ctx, element, patterns)
+          if (isCard(element)) {
+            ctx.fillStyle = this.theme.ink
+            ctx.font = '24px sans-serif'
+            const title =
+              element.type === 'markdown'
+                ? element.source.kind === 'file'
+                  ? element.source.filepath.split('/').pop()!
+                  : element.source.content
+                      .split('\n')
+                      .find(Boolean)
+                      ?.replace(/^#+\s*/, '') || 'Markdown'
+                : 'Image'
+            ctx.fillText(title.slice(0, 45), 16, 36, Math.max(1, element.width - 32))
+            ctx.fillStyle = this.theme.border
+            for (let i = 0; i < 3; i++)
+              ctx.fillRect(16, 65 + i * 20, Math.max(1, element.width - 32 - i * 25), 5)
+          }
         }
-      } else {
-        const patterns = camera.zoom >= 0.35
-        const bitmap =
-          element.type === 'shape' && patterns ? this.bitmap(element, camera.zoom * ratio) : null
-        if (bitmap)
-          ctx.drawImage(
-            bitmap.canvas,
-            -bitmap.padding,
-            -bitmap.padding,
-            bitmap.canvas.width / bitmap.scale,
-            bitmap.canvas.height / bitmap.scale,
-          )
-        else this.paintShape(ctx, element, patterns)
-        if (isCard(element)) {
-          ctx.fillStyle = this.theme.ink
-          ctx.font = '24px sans-serif'
-          const title =
-            element.type === 'markdown'
-              ? element.source.kind === 'file'
-                ? element.source.filepath.split('/').pop()!
-                : element.source.content
-                    .split('\n')
-                    .find(Boolean)
-                    ?.replace(/^#+\s*/, '') || 'Markdown'
-              : 'Image'
-          ctx.fillText(title.slice(0, 45), 16, 36, Math.max(1, element.width - 32))
-          ctx.fillStyle = this.theme.border
-          for (let i = 0; i < 3; i++)
-            ctx.fillRect(16, 65 + i * 20, Math.max(1, element.width - 32 - i * 25), 5)
-        }
+        ctx.restore()
+        if (element.type === 'shape' && element.label) this.drawLabel(ctx, element, map)
       }
-      ctx.restore()
-      if (element.type === 'shape' && element.label) this.drawLabel(ctx, element, map)
     }
     // Selection is drawn on a separate overlay canvas by drawSelection.
   }

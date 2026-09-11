@@ -20,6 +20,10 @@ const paths = {
   plus: 'M5 12h14M12 5v14',
   undo: 'm9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12',
   redo: 'm15 4 5 5-5 5m5-5H10a6 6 0 0 0 0 12',
+  back: 'M5 20h14M12 16V4m-5 7 5 5 5-5',
+  backward: 'M12 20V4m-6 10 6 6 6-6',
+  forward: 'M12 4v16M6 10l6-6 6 6',
+  front: 'M5 4h14M12 8v12m-5-7 5-5 5 5',
   help: 'M9 8a3 3 0 0 1 6 0c0 3-3 3-3 6m0 3h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
 } as const
 

@@ -7,6 +7,8 @@ import {
   ungroupElements,
 } from '../../../shared/whiteboard/organization.ts'
 import type { ILayoutAxis, ILayoutMode } from '../../../shared/whiteboard/organization.ts'
+import { reorderElements } from '../../../shared/whiteboard/stacking.ts'
+import type { IStackingOrder } from '../../../shared/whiteboard/stacking.ts'
 
 export interface IBoardSnapshot {
   readonly document: IWhiteboardDocument
@@ -56,6 +58,11 @@ export class BoardStore {
   public arrangeSelected = (axis: ILayoutAxis, mode: ILayoutMode): void => {
     const { document, selected } = this.snapshot
     this.commit({ ...document, elements: arrangeElements(document.elements, selected, axis, mode) })
+  }
+  public reorderSelected = (order: IStackingOrder): void => {
+    const { document, selected } = this.snapshot
+    const elements = reorderElements(document.elements, selected, order)
+    if (elements !== document.elements) this.commit({ ...document, elements })
   }
   public camera = (camera: ICamera): void => {
     this.publish({ camera })

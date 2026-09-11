@@ -56,6 +56,12 @@ export interface IEdge extends IElementBase {
 export type IElement = INode | IEdge
 export type ILabelElement = (INode & { readonly type: 'shape' }) | IEdge
 
+// Back to front: connections, drawings, rich-content cards.
+export function elementLayer(element: IElement): 0 | 1 | 2 {
+  if (element.type === 'edge') return 0
+  return element.type === 'markdown' || element.type === 'image' ? 2 : 1
+}
+
 export interface IWhiteboardDocument {
   readonly kind: 'yoz.whiteboard'
   readonly schemaVersion: 1

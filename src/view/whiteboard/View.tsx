@@ -15,6 +15,7 @@ import {
   worldPoint,
 } from '@/shared/whiteboard/geometry'
 import { DEFAULT_STYLE, createDocument } from '@/shared/whiteboard/model'
+import { stackingDirections } from '@/shared/whiteboard/stacking'
 import type {
   IElement,
   ILabelElement,
@@ -350,6 +351,10 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
           item => isCard(item) && intersects(item, visible),
         ) as INode[])
   const selected = snapshot.document.elements.filter(item => snapshot.selected.has(item.id))
+  const stacking = React.useMemo(
+    () => stackingDirections(snapshot.document.elements, snapshot.selected),
+    [snapshot.document.elements, snapshot.selected],
+  )
   const displayStyle = selected[0]?.style ?? style
   const editingLabelArea = labelEditor
     ? labelArea(
@@ -554,7 +559,7 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
           )}
           {selected.length > 0 && (
             <>
-              <SelectionActions selected={selected} store={store} />
+              <SelectionActions selected={selected} store={store} stacking={stacking} />
               <button onClick={store.removeSelected}>Delete selection</button>
             </>
           )}

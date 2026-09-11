@@ -9,6 +9,7 @@ import type {
   IPoint,
 } from './model.ts'
 import { wrapLabel } from './labels.ts'
+import { elementLayer } from './model.ts'
 
 export function worldPoint(point: IPoint, camera: ICamera): IPoint {
   return { x: (point.x - camera.x) / camera.zoom, y: (point.y - camera.y) / camera.zoom }
@@ -189,9 +190,7 @@ export function hitTest(
   for (const layer of [2, 1, 0]) {
     for (let i = elements.length - 1; i >= 0; i--) {
       const element = elements[i]
-      const current =
-        element.type === 'edge' ? 0 : ['markdown', 'image'].includes(element.type) ? 2 : 1
-      if (current !== layer || (nodesOnly && element.type === 'edge')) continue
+      if (elementLayer(element) !== layer || (nodesOnly && element.type === 'edge')) continue
       if (element.type === 'edge') {
         if (
           element.label &&

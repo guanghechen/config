@@ -428,6 +428,16 @@
   font-size: 20px;
   padding: 3px;
 }
+.wb-stacking {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+.wb-stacking button {
+  display: flex;
+  justify-content: center;
+  padding: 6px;
+}
 .wb-bottom {
   position: absolute;
   left: 18px;

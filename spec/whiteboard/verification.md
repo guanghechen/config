@@ -174,6 +174,39 @@ node --test tests/whiteboard.test.mjs tests/whiteboard-organization.test.mjs tes
 
 六项均通过既定性能目标；warm reload 至富内容及字体就绪为 1.14–1.37 秒。该结果只对应固定场景，未扩展到任意文档或机器。
 
+### 图层顺序回归
+
+2026-09-11 在 macOS / Apple M5 Pro 上使用 Node 24.16.0，69 项通过，无跳过：
+
+```sh
+TMPDIR=/private/tmp node --test tests/whiteboard.test.mjs tests/whiteboard-organization.test.mjs tests/whiteboard-transforms.test.mjs tests/whiteboard-sketch.test.mjs tests/whiteboard-theme.test.mjs tests/whiteboard-drawing.test.mjs tests/whiteboard-stacking.test.mjs tests/site-theme.test.mjs tests/file-access.test.mjs tests/websocket-auth.test.mjs
+```
+
+macOS 默认临时目录使用 `/var` 别名，而文件授权返回 `/private/var` 的 canonical 路径，直接运行原文件测试会有 6 项路径相关失败。上述命令指定 canonical 临时目录后全部通过，没有修改文件授权实现或测试。
+
+新增 7 项 focused tests 覆盖稳定重排、连续选区单步移动、三层独立排序、混合分组、128 种选区组合的按钮可用状态、命中顺序、持久化与历史；边界 no-op 保留 redo。
+
+通过已有 Playwright CLI 和 Edge Chromium 153.0.4234.32 验证：
+
+- 四个按钮与 Cmd/Ctrl + `[` / `]`、Shift 组合快捷键，边界禁用状态；Canvas 实际像素与点击后标签编辑器确认前后顺序一致。
+- 混合形状、Markdown 和连线的分组、多选；每层成员保持相对顺序，卡片 DOM 顺序与指针目标同步更新。
+- 在文档中早于重叠形状的卡片，阅读与 33% 概览均显示在形状上方；概览用 Canvas 像素及截图核对，回到阅读后保持卡片顺序。
+- 键盘微调与重排分成两条历史；指针手势、标题输入框和标签编辑器中的快捷键不会改变图层顺序。
+- 草稿刷新恢复、导出再导入，以及真实文件 handler 保存成功后重新加载；读取保存文件与导出文件确认元素内容、几何、分组和连接数据完整，仅顺序变化。
+
+继续使用固定 1000 节点 / 1000 连线场景，40 帧预热、240 帧采样。性能环境为 1920×1080、DPR 1、Edge headless、ANGLE Metal Renderer（Apple M5 Pro）、Vite development mode；与前述 Linux / SwiftShader 记录的硬件和渲染模式不同，不作直接性能对比。
+
+| View     | Interaction  | Mean FPS | P95 frame (ms) | Max frame (ms) |
+| -------- | ------------ | -------: | -------------: | -------------: |
+| Reading  | Pan          |     60.0 |           16.8 |           16.8 |
+| Reading  | Zoom         |     60.0 |           16.7 |           16.8 |
+| Reading  | Group drag   |     60.0 |           16.7 |           16.8 |
+| Reading  | Group resize |     60.0 |           16.7 |           16.8 |
+| Overview | Pan          |     60.0 |           16.7 |           16.8 |
+| Overview | Zoom         |     60.0 |           16.8 |           16.8 |
+
+六项均达到既定性能目标，warm reload 至富内容和字体就绪为 0.19–0.67 秒。前端 TypeScript 使用 `node node_modules/typescript/bin/tsc -p tsconfig.app.json --ignoreDeprecations 6.0 --pretty false`，前后均为同样的 8 项已有诊断，没有新增；`pnpm format` 完成，保留 54 项已有 lint warnings。
+
 ## 静态验证与限制
 
 - `pnpm format` 完成；现有 lint warnings 保留。

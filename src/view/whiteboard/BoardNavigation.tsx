@@ -101,6 +101,10 @@ export const BoardNavigation = React.memo<{
         <br />
         Ctrl / ⌘ + Shift + G: ungroup
         <br />
+        Ctrl / ⌘ + [ / ]: move backward / forward
+        <br />
+        Ctrl / ⌘ + Shift + [ / ]: send to back / front
+        <br />
         Ctrl / ⌘ + Z: undo
         <br />
         Select a card to scroll its content
