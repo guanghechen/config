@@ -8,14 +8,11 @@
     "consolas",
     "defid",
     "dontshowfirstheading",
-    "drawboard",
     "eventstream",
     "excalidraw",
     "filetree",
-    "freedraw",
     "guanghechen",
     "highlightlinenos",
-    "idaggraphprops",
     "inordertraversal",
     "inputbox",
     "inputboxes",
@@ -38,7 +35,6 @@
     "totopbutton",
     "tsuki",
     "viewmodel",
-    "xyflow",
     "yozora"
   ]
 }

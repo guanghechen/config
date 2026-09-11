@@ -31,6 +31,12 @@ export const Menu: React.FC = () => {
         <SidebarIcon className="h-4 w-4" expanded={sidebarVisible} />
       </button>
       <WorkspaceSelector />
+      <a
+        href="/whiteboard"
+        className="ml-2 rounded-lg px-3 py-1 text-sm hover:bg-gray-200/60 dark:hover:bg-gray-700"
+      >
+        Whiteboard
+      </a>
       {filepath && (
         <React.Fragment>
           <span

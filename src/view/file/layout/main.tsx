@@ -9,6 +9,7 @@ import { PdfAdaptor } from '../container/PdfAdaptor'
 import { SvgAdaptor } from '../container/SvgAdaptor'
 import { TextAdaptor } from '../container/TextAdaptor'
 import { UnknownAdaptor } from '../container/UnknownAdaptor'
+import { WhiteboardAdaptor } from '../container/WhiteboardAdaptor'
 import { useFileViewmodel } from '../context'
 
 interface IProps {
@@ -33,6 +34,8 @@ export const Main: React.FC<IProps> = props => {
 
   const extname: string = calcExtname(filepath)
   switch (extname.toLowerCase()) {
+    case '.whiteboard':
+      return <WhiteboardAdaptor filepath={filepath} />
     case '.html':
     case '.htm':
       return (

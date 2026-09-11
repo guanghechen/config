@@ -10,6 +10,9 @@ export interface IRouteItem {
 }
 
 export const views = {
+  whiteboard: React.lazy(() =>
+    import('@/view/whiteboard/View').then(md => ({ default: md.WhiteboardView })),
+  ),
   file: React.lazy(() => import('@/view/file/View').then(md => ({ default: md.FileView }))),
   notfound: React.lazy(() => import('@/view/not-found').then(md => ({ default: md.NotFoundView }))),
   workspace: React.lazy(() =>
@@ -18,6 +21,13 @@ export const views = {
 }
 
 export const routes: IRouteItem[] = [
+  {
+    key: 'whiteboard',
+    path: '/whiteboard',
+    label: 'Whiteboard',
+    listed: true,
+    Component: views.whiteboard,
+  },
   {
     key: 'workspace',
     path: '/ws',
