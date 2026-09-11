@@ -20,6 +20,20 @@ if (Test-Path $gitconfig_path) {
   Copy-Item -Path $source -Destination $target -Force
 }
 
+# Setup npm
+$npmrc_config_home = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { Join-Path $env:USERPROFILE ".config" }
+$npmrc_source = Join-Path $env:USERPROFILE ".npmrc"
+$npmrc_path = Join-Path $npmrc_config_home ".npmrc"
+if ($null -ne (Get-Item -LiteralPath $npmrc_path -Force -ErrorAction SilentlyContinue)) {
+  Write-Host "$npmrc_path already exists (skipped)" -ForegroundColor Yellow
+} elseif (-not (Test-Path -LiteralPath $npmrc_source -PathType Leaf)) {
+  Write-Host "$npmrc_source is missing or not a file (skipped copy)" -ForegroundColor Yellow
+} else {
+  Write-Host "copying $npmrc_source to $npmrc_path..." -ForegroundColor Cyan
+  New-Item -ItemType Directory -Path $npmrc_config_home -Force -ErrorAction Stop | Out-Null
+  Copy-Item -LiteralPath $npmrc_source -Destination $npmrc_path -ErrorAction Stop
+}
+
 # Setup rust
 $cargo_config_path = Join-Path "$env:USERPROFILE" ".cargo\config.toml"
 if (Test-Path $cargo_config_path) {
