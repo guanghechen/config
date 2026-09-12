@@ -6,7 +6,7 @@
       "targets": ["npm", "git", "fish", "pwsh", "bash"],
       "envs": {
         "npm_config_registry": "https://registry.npmjs.org/",
-        "npm_config_userconfig": "/dev/null"
+        "npm_config_userconfig": "${XDG_CONFIG_HOME}/kit/proxy/conf/default/.npmrc"
       }
     }
   }
