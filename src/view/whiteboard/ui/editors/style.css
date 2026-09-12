@@ -1,0 +1,104 @@
+.wb-label-editor {
+  position: absolute;
+  z-index: 15;
+  width: min(300px, calc(100% - 24px));
+  padding: 10px;
+  border: 2px solid var(--wb-focus);
+  border-radius: 10px;
+  background: var(--wb-paper);
+  box-shadow: 0 6px 24px var(--wb-shadow);
+}
+.wb-label-editor textarea {
+  width: 100%;
+  resize: vertical;
+  color: var(--wb-ink);
+  font:
+    18px/1.4 ui-monospace,
+    monospace;
+  padding: 8px;
+  outline: none;
+}
+.wb-label-editor footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.wb-label-editor small {
+  margin-right: auto;
+  color: var(--wb-muted);
+  flex-basis: 100%;
+}
+.wb-editor {
+  position: absolute;
+  width: min(650px, calc(100% - 24px));
+  height: min(480px, calc(100% - 100px));
+  min-height: min(260px, calc(100% - 24px));
+  resize: both;
+  overflow: hidden;
+  z-index: 15;
+  background: var(--wb-paper);
+  border: 2px solid var(--wb-focus);
+  border-radius: 10px;
+  box-shadow: 0 12px 48px var(--wb-shadow);
+  display: flex;
+  flex-direction: column;
+}
+.wb-editor header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--wb-border);
+  padding: 6px 12px;
+  gap: 12px;
+  font-size: 12px;
+}
+.wb-editor header span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-monaco {
+  flex: 1;
+  min-height: 100px;
+}
+.wb-editor footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--wb-border);
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.wb-editor footer > span {
+  margin-right: auto;
+  color: var(--wb-muted);
+}
+.wb-disk-version {
+  font-size: 12px;
+  padding: 8px;
+  background: var(--wb-warning);
+  max-height: 130px;
+  overflow: auto;
+}
+.wb-disk-version pre {
+  white-space: pre-wrap;
+  user-select: text;
+}
+.wb-label-editor textarea {
+  background: var(--wb-input);
+}
+.wb-plain-editor {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  padding: 12px;
+  border: 0;
+  background: var(--wb-input);
+  color: var(--wb-ink);
+  font: 15px/1.5 monospace;
+}

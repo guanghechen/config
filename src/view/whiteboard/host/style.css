@@ -1,0 +1,27 @@
+.wb .wb-card-content .yozora-root {
+  --color-inline-math: var(--vscode-link);
+  --color-math: var(--vscode-link);
+}
+.wb-card-content {
+  --vscode-link: var(--wb-readable-link);
+}
+.wb .yozora-table :is(th, td) {
+  border-color: var(--wb-border);
+  background: var(--wb-paper);
+  color: var(--wb-ink);
+}
+.wb .yozora-table thead th {
+  background: var(--wb-panel);
+}
+.wb-card-content .yozora-root {
+  font-size: 16px;
+  background: transparent;
+  color: var(--wb-ink);
+}
+.wb-card-content :is(.yozora-root, .yozora-heading) {
+  font-family: Monaco, monospace;
+}
+
+.vl-main > .wb-host > .wb {
+  height: 100%;
+}

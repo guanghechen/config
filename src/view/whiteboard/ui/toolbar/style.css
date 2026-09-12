@@ -1,0 +1,291 @@
+.wb-topbar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  z-index: 5;
+  pointer-events: none;
+}
+.wb-topbar > * {
+  pointer-events: auto;
+}
+.wb-filebar,
+.wb-viewbar {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  gap: 3px;
+  padding: 5px;
+  min-width: 0;
+  max-width: 100%;
+}
+.wb-filebar {
+  justify-self: start;
+}
+.wb-viewbar {
+  justify-self: end;
+}
+.wb-file-menu,
+.wb-view-menu {
+  position: relative;
+  min-width: 0;
+}
+.wb-topbar summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 9px;
+  list-style: none;
+  border-radius: 7px;
+}
+.wb-topbar summary::-webkit-details-marker {
+  display: none;
+}
+.wb-topbar summary:hover {
+  background: var(--wb-hover);
+}
+.wb-file-menu summary {
+  gap: 9px;
+}
+.wb-board-name {
+  min-width: 0;
+  max-width: 155px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+.wb-file-menu > div,
+.wb-view-menu-panel,
+.wb-more-tools-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  padding: 8px;
+  background: var(--wb-popover);
+  border: 1px solid var(--wb-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px var(--wb-shadow);
+}
+.wb-file-menu > div {
+  left: -5px;
+  width: 288px;
+  max-height: calc(100dvh - 88px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.wb-file-menu a,
+.wb-file-menu > div > button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  text-decoration: none;
+  text-align: left;
+  line-height: 20px;
+}
+.wb-file-menu a > .wb-icon,
+.wb-file-menu button > .wb-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--wb-muted);
+}
+.wb-file-menu :is(a, button):hover > .wb-icon {
+  color: inherit;
+}
+.wb-file-menu a:hover {
+  background: var(--wb-hover);
+}
+.wb-menu-title {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--wb-muted);
+}
+.wb-menu-title input {
+  width: 100%;
+  font-size: 13px;
+}
+.wb-file-menu hr {
+  border: 0;
+  border-top: 1px solid var(--wb-border);
+  margin: 6px 0;
+}
+.wb-viewbar > button {
+  width: 34px;
+  height: 40px;
+  padding: 7px;
+}
+.wb-viewbar > button > span {
+  display: none;
+}
+.wb-viewbar > .wb-appearance {
+  border-left: 1px solid var(--wb-border);
+  padding-left: 5px;
+  margin-left: 2px;
+}
+.wb-view-menu-panel {
+  right: -5px;
+  width: 220px;
+}
+.wb-view-menu-panel > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+}
+.wb-view-menu-panel > .wb-appearance {
+  border-top: 1px solid var(--wb-border);
+  margin-top: 8px;
+  padding: 8px 4px 0;
+  justify-content: flex-end;
+}
+.wb-view-menu-panel > .wb-appearance::before {
+  content: 'Appearance';
+  margin-right: auto;
+  color: var(--wb-muted);
+  font-size: 12px;
+}
+.wb-viewbar button[aria-pressed='true'] {
+  background: var(--wb-selected);
+  color: var(--wb-selected-ink);
+}
+.wb-tool-area {
+  position: relative;
+  min-width: 0;
+}
+.wb-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  height: 52px;
+}
+.wb-tools button,
+.wb-tools summary {
+  position: relative;
+  width: 38px;
+  height: 40px;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+}
+.wb-tools .wb-icon {
+  width: 21px;
+  height: 21px;
+}
+.wb-tools small {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 8px;
+  color: var(--wb-muted);
+}
+.wb-tools .wb-tool-lock {
+  width: 30px;
+  color: var(--wb-muted);
+}
+.wb-tool-divider {
+  height: 24px;
+  border-left: 1px solid var(--wb-border);
+  margin: 0 4px;
+}
+.wb-tool-hint {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  margin: 0;
+  font-size: 11px;
+  color: var(--wb-muted);
+  text-align: center;
+  white-space: nowrap;
+  background: var(--wb-canvas);
+  padding: 0 6px;
+  border-radius: 4px;
+}
+.wb-tools button[aria-pressed='true'],
+.wb-tools summary[data-active='true'] {
+  background: var(--wb-selected);
+  color: var(--wb-selected-ink);
+}
+.wb-appearance {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+}
+.wb-appearance > button,
+.wb-appearance > div > button {
+  padding: 0;
+  width: 32px;
+  height: 32px;
+}
+.wb-reading-tools {
+  height: 52px;
+}
+/* Compact controls follow the board's measured width, including split views. */
+.wb[data-compact='true'] .wb-topbar {
+  left: 8px;
+  right: 8px;
+  gap: 8px;
+}
+.wb[data-compact='true'] .wb-board-name,
+.wb[data-compact='true'] .wb-tool-hint {
+  display: none;
+}
+.wb[data-compact='true'] .wb-topbar summary,
+.wb[data-compact='true'] .wb-tools > button {
+  width: 36px;
+  padding: 4px;
+}
+.wb[data-compact='true'] .wb-filebar,
+.wb[data-compact='true'] .wb-viewbar {
+  padding: 3px;
+}
+.wb-more-tools-panel {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.wb-tools .wb-more-tools-panel button {
+  width: 100%;
+  display: flex;
+  gap: 6px;
+  padding: 8px 6px;
+  text-align: left;
+  font-size: 12px;
+}
+.wb-more-tools-panel .wb-icon {
+  width: 18px;
+  height: 18px;
+}
+.wb-more-tools-panel small {
+  position: static;
+  margin-left: auto;
+}
+.wb-tools .wb-more-tools-panel .wb-more-lock {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--wb-border);
+  margin-top: 4px;
+  border-radius: 0 0 7px 7px;
+}
+.wb[data-compact='true'] .wb-reading-tools > span {
+  font-size: 12px;
+}

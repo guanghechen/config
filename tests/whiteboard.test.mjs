@@ -347,7 +347,7 @@ test('shared Markdown references discard an outdated response after a file-chang
   const loadReferencedText = (filepath, revision, signal) =>
     new Promise(resolve => requests.push({ filepath, revision, signal, resolve }))
   const source = readFileSync(
-    new URL('../src/view/whiteboard/resources.ts', import.meta.url),
+    new URL('../src/view/whiteboard/io/resources.ts', import.meta.url),
     'utf8',
   ).replaceAll('import.meta.hot', 'undefined')
   const output = ts.transpileModule(source, {
@@ -355,8 +355,7 @@ test('shared Markdown references discard an outdated response after a file-chang
   }).outputText
   const module = { exports: {} }
   const require = id => {
-    assert.equal(id, '@/shared/api/whiteboard')
-    return { loadReferencedText }
+    throw new Error(`Unexpected runtime dependency: ${id}`)
   }
   new Function('require', 'module', 'exports', 'window', output)(
     require,
@@ -364,7 +363,7 @@ test('shared Markdown references discard an outdated response after a file-chang
     module.exports,
     new EventTarget(),
   )
-  const resources = new module.exports.MarkdownResources()
+  const resources = new module.exports.MarkdownResources({ load: loadReferencedText })
   t.after(resources.start())
   let notifications = 0
   t.after(

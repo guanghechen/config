@@ -1,10 +1,7 @@
-import React from 'react'
-import { useStateValue } from '@guanghechen/react-viewmodel'
-import { useSiteViewmodel } from '@/context/site'
-import { contrastRatio, readableColor } from '@/shared/whiteboard/colors'
 import type { IThemeColors } from '@/shared/whiteboard/colors'
 
 export interface IWhiteboardTheme {
+  readonly tokens?: Readonly<Record<string, string>>
   readonly canvas: string
   readonly paper: string
   readonly ink: string
@@ -16,47 +13,45 @@ export interface IWhiteboardTheme {
   readonly colors: IThemeColors
 }
 
-export function readWhiteboardTheme(): IWhiteboardTheme {
-  const css = getComputedStyle(document.documentElement)
-  const value = (name: string): string => css.getPropertyValue(name).trim()
-  const paper = value('--vscode-surface-background')
-  const ink = value('--vscode-foreground')
-  const tone = (name: string): string => readableColor(value(name) || ink, paper, ink)
-  return {
-    canvas: value('--vscode-editor-background'),
-    paper,
-    ink,
-    muted: value('--vscode-muted-foreground'),
-    border: value('--vscode-control-border'),
-    selection: value('--vscode-focus-border'),
-    onAccent: contrastRatio('#ffffff', value('--vscode-accent')) >= 4.5 ? '#ffffff' : '#111111',
-    activeInk: readableColor(value('--vscode-link'), value('--vscode-list-active-background'), ink),
-    colors: {
-      'theme:ink': ink,
-      'theme:paper': paper,
-      'theme:accent': tone('--vscode-link'),
-      'theme:red': tone('--palette-love'),
-      'theme:amber': tone('--palette-gold'),
-      'theme:green': tone('--palette-pine'),
-      'theme:blue': tone('--palette-foam'),
-      'theme:purple': tone('--palette-iris'),
-    },
-  }
-}
-
-export function useWhiteboardTheme() {
-  const site = useSiteViewmodel()
-  const mode = useStateValue(site.theme$)
-  const palette = useStateValue(site.palette$)
-  const [theme, setTheme] = React.useState(readWhiteboardTheme)
-  const [ready, setReady] = React.useState(false)
-  React.useLayoutEffect(() => {
-    // SiteContextProvider applies root variables in a sibling layout effect.
-    const frame = requestAnimationFrame(() => {
-      setTheme(readWhiteboardTheme())
-      setReady(true)
-    })
-    return () => cancelAnimationFrame(frame)
-  }, [mode, palette])
-  return { theme, ready }
+export const DEFAULT_WHITEBOARD_THEME: IWhiteboardTheme = {
+  canvas: '#ffffff',
+  paper: '#ffffff',
+  ink: '#3b3b3b',
+  muted: '#666666',
+  border: '#cccccc',
+  selection: '#0066cc',
+  onAccent: '#ffffff',
+  activeInk: '#0066cc',
+  colors: {
+    'theme:ink': '#3b3b3b',
+    'theme:paper': '#ffffff',
+    'theme:accent': '#0066cc',
+    'theme:red': '#b3212d',
+    'theme:amber': '#80662c',
+    'theme:green': '#297988',
+    'theme:blue': '#1763aa',
+    'theme:purple': '#5828bd',
+  },
+  tokens: {
+    '--wb-canvas': '#ffffff',
+    '--wb-paper': '#ffffff',
+    '--wb-panel': '#f8f8f8',
+    '--wb-popover': '#ffffff',
+    '--wb-input': '#ffffff',
+    '--wb-ink': '#3b3b3b',
+    '--wb-muted': '#666666',
+    '--wb-border': '#e2e2e2',
+    '--wb-control-border': '#cccccc',
+    '--wb-accent': '#0066cc',
+    '--wb-focus': '#0066cc',
+    '--wb-hover': '#eeeeee',
+    '--wb-selected': '#e7edf6',
+    '--wb-selected-ink': '#0066cc',
+    '--wb-shadow': '#0000001a',
+    '--wb-grid': 'color-mix(in srgb, var(--wb-ink) 20%, transparent)',
+    '--wb-warning': 'color-mix(in srgb, #80662c 12%, var(--wb-paper))',
+    '--wb-warning-border': 'color-mix(in srgb, #80662c 45%, var(--wb-border))',
+    '--wb-error': 'color-mix(in srgb, #c93838 65%, var(--wb-ink))',
+    '--wb-error-bg': 'color-mix(in srgb, #c93838 12%, var(--wb-paper))',
+  },
 }
