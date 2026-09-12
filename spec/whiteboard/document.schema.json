@@ -1,0 +1,720 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:yoz:whiteboard:document:1",
+  "title": "Yoz whiteboard document",
+  "description": "Runtime validation also enforces unique element IDs, valid edge references, and a 30 MB serialized document limit. Unknown fields are preserved.",
+  "type": "object",
+  "required": ["kind", "schemaVersion", "id", "title", "elements"],
+  "properties": {
+    "kind": {
+      "const": "yoz.whiteboard"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "maxLength": 2000000,
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 2000000
+    },
+    "elements": {
+      "type": "array",
+      "maxItems": 50000,
+      "items": {
+        "$ref": "#/$defs/element"
+      }
+    },
+    "stacking": {
+      "const": "document"
+    },
+    "regions": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/region"
+      }
+    },
+    "presentation": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    }
+  },
+  "$defs": {
+    "color": {
+      "anyOf": [
+        {
+          "enum": [
+            "theme:ink",
+            "theme:paper",
+            "theme:accent",
+            "theme:red",
+            "theme:amber",
+            "theme:green",
+            "theme:blue",
+            "theme:purple"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{6}|transparent)$"
+        }
+      ]
+    },
+    "style": {
+      "type": "object",
+      "required": ["stroke", "fill", "strokeWidth", "roughness"],
+      "properties": {
+        "stroke": {
+          "$ref": "#/$defs/color"
+        },
+        "fill": {
+          "$ref": "#/$defs/color"
+        },
+        "strokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 12
+        },
+        "roughness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "fillPattern": {
+          "enum": ["solid", "hachure", "cross-hatch"]
+        },
+        "fontSize": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 200
+        },
+        "fontFamily": {
+          "enum": ["hand", "sans", "mono"]
+        },
+        "fontWeight": {
+          "enum": ["normal", "bold"]
+        },
+        "textAlign": {
+          "enum": ["left", "center", "right"]
+        }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": -10000000,
+          "maximum": 10000000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -10000000,
+          "maximum": 10000000
+        },
+        "nodeId": {
+          "type": "string",
+          "maxLength": 2000000,
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["nodeId"]
+          },
+          "then": {
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "element": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["id", "type", "style", "x", "y", "width", "height", "shape"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 2000000,
+              "minLength": 1
+            },
+            "groupId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "style": {
+              "$ref": "#/$defs/style"
+            },
+            "type": {
+              "const": "shape"
+            },
+            "x": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "y": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "width": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "height": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "shape": {
+              "enum": ["rectangle", "ellipse", "diamond"]
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "autoSize": {
+              "type": "boolean"
+            },
+            "rotation": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["id", "type", "style", "x", "y", "width", "height", "text"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 2000000,
+              "minLength": 1
+            },
+            "groupId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "style": {
+              "$ref": "#/$defs/style"
+            },
+            "type": {
+              "const": "text"
+            },
+            "x": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "y": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "width": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "height": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 2000000
+            },
+            "autoSize": {
+              "type": "boolean"
+            },
+            "rotation": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["id", "type", "style", "x", "y", "width", "height", "source"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 2000000,
+              "minLength": 1
+            },
+            "groupId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "style": {
+              "$ref": "#/$defs/style"
+            },
+            "type": {
+              "const": "markdown"
+            },
+            "x": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "y": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "width": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "height": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "source": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": ["kind", "content"],
+                  "properties": {
+                    "kind": {
+                      "const": "inline"
+                    },
+                    "content": {
+                      "type": "string",
+                      "maxLength": 2000000
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": ["kind", "filepath"],
+                  "properties": {
+                    "kind": {
+                      "const": "file"
+                    },
+                    "filepath": {
+                      "type": "string",
+                      "maxLength": 2000000,
+                      "pattern": "^/.*\\.[mM][dD]$"
+                    }
+                  }
+                }
+              ]
+            },
+            "rotation": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          },
+          "allOf": [
+            {
+              "not": {
+                "required": ["autoSize"]
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": ["id", "type", "style", "x", "y", "width", "height", "url"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 2000000,
+              "minLength": 1
+            },
+            "groupId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "style": {
+              "$ref": "#/$defs/style"
+            },
+            "type": {
+              "const": "image"
+            },
+            "x": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "y": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "width": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "height": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2000000,
+              "pattern": "^(https?://|/|data:image/(png|jpeg|webp|gif);base64,)"
+            },
+            "rotation": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          },
+          "allOf": [
+            {
+              "not": {
+                "required": ["autoSize"]
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": ["id", "type", "style", "x", "y", "width", "height", "points"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 2000000,
+              "minLength": 1
+            },
+            "groupId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "style": {
+              "$ref": "#/$defs/style"
+            },
+            "type": {
+              "const": "stroke"
+            },
+            "x": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "y": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "width": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "height": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000000
+            },
+            "points": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 100000,
+              "items": {
+                "type": "object",
+                "required": ["x", "y"],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            },
+            "rotation": {
+              "type": "number",
+              "minimum": -10000000,
+              "maximum": 10000000
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          },
+          "allOf": [
+            {
+              "not": {
+                "required": ["autoSize"]
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": ["id", "type", "style", "from", "to"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 2000000,
+              "minLength": 1
+            },
+            "groupId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "style": {
+              "$ref": "#/$defs/style"
+            },
+            "type": {
+              "const": "edge"
+            },
+            "from": {
+              "$ref": "#/$defs/endpoint"
+            },
+            "to": {
+              "$ref": "#/$defs/endpoint"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "routing": {
+              "enum": ["straight", "polyline", "curve"]
+            },
+            "arrowStart": {
+              "enum": ["none", "arrow"]
+            },
+            "arrowEnd": {
+              "enum": ["none", "arrow"]
+            },
+            "lineStyle": {
+              "enum": ["solid", "dashed", "dotted"]
+            },
+            "controls": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "type": "object",
+                "required": ["x", "y"],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  }
+                }
+              }
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": ["routing"],
+                "properties": {
+                  "routing": {
+                    "const": "curve"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "controls": {
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "anyOf": [
+                  {
+                    "not": {
+                      "required": ["routing"]
+                    }
+                  },
+                  {
+                    "required": ["routing"],
+                    "properties": {
+                      "routing": {
+                        "const": "straight"
+                      }
+                    }
+                  }
+                ]
+              },
+              "then": {
+                "properties": {
+                  "controls": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            },
+            {
+              "not": {
+                "required": ["autoSize"]
+              }
+            },
+            {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": ["rotation"]
+                  },
+                  {
+                    "required": ["flipX"]
+                  },
+                  {
+                    "required": ["flipY"]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "region": {
+      "type": "object",
+      "required": ["id", "name", "x", "y", "width", "height"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "x": {
+          "type": "number",
+          "minimum": -10000000,
+          "maximum": 10000000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -10000000,
+          "maximum": 10000000
+        },
+        "width": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10000000
+        },
+        "height": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10000000
+        }
+      }
+    }
+  }
+}
