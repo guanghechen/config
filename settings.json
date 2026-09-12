@@ -1,0 +1,314 @@
+{
+  "base_keymap": "VSCode",
+  "vim_mode": true,
+  "vim": {
+    "toggle_relative_line_numbers": false
+  },
+  "buffer_font_family": "Maple Mono NF CN",
+  "buffer_font_fallbacks": [
+    "Consolas"
+  ],
+  "buffer_font_size": 18,
+  "markdown_preview_font_family": "Maple Mono NF CN",
+  "markdown_preview_font_size": 18,
+  "relative_line_numbers": "enabled",
+  "cursor_shape": "bar",
+  "cursor_blink": true,
+  "tab_size": 2,
+  "hard_tabs": false,
+  "soft_wrap": "none",
+  "preferred_line_length": 100,
+  "show_wrap_guides": true,
+  "wrap_guides": [
+    100,
+    120
+  ],
+  "show_whitespaces": "all",
+  "linked_edits": true,
+  "mouse_wheel_zoom": true,
+  "minimap": {
+    "show": "never"
+  },
+  "scrollbar": {
+    "cursors": false
+  },
+  "autosave": "on_focus_change",
+  "format_on_save": "off",
+  "use_on_type_format": false,
+  "line_ending": "prefer_lf",
+  "remove_trailing_whitespace_on_save": false,
+  "ensure_final_newline_on_save": false,
+  "restore_on_startup": "none",
+  "preview_tabs": {
+    "enabled": false
+  },
+  "max_tabs": 20,
+  "tab_bar": {
+    "show_pinned_tabs_in_separate_row": true
+  },
+  "tabs": {
+    "file_icons": true,
+    "show_close_button": "hidden"
+  },
+  "project_panel": {
+    "dock": "left",
+    "auto_reveal_entries": false,
+    "indent_size": 12
+  },
+  "git_panel": {
+    "dock": "left"
+  },
+  "agent": {
+    "dock": "bottom",
+    "enable_feedback": false
+  },
+  "terminal": {
+    "shell": {
+      "program": "/opt/homebrew/bin/fish"
+    },
+    "dock": "bottom",
+    "working_directory": "current_file_directory",
+    "font_family": "Maple Mono NF CN",
+    "font_fallbacks": [
+      "Consolas"
+    ],
+    "font_size": 18,
+    "blinking": "on",
+    "option_as_meta": true,
+    "bell": "system",
+    "env": {
+      "TERM": "xterm-256color"
+    }
+  },
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/.sl",
+    "**/.repo",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/.idea",
+    "**/*.tsbuildinfo"
+  ],
+  "file_types": {
+    "Rust": [
+      "rs"
+    ],
+    "Plain Text": [
+      "txt"
+    ],
+    "YAML": [
+      ".prettierrc"
+    ]
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "edit_predictions": {
+    "provider": "copilot",
+    "copilot": {
+      "enable_next_edit_suggestions": true,
+      "prediction_debounce": 100
+    },
+    "allow_data_collection": "no",
+    "disabled_globs": [
+      "**/.env*",
+      "**/local/env.*",
+      "**/.ssh/**",
+      "**/.git-credentials",
+      "**/*.pem",
+      "**/*.key",
+      "**/*.http_request",
+      "**/*.http_response"
+    ]
+  },
+  "languages": {
+    "Astro": {
+      "format_on_save": "off"
+    },
+    "C++": {
+      "tab_size": 2,
+      "formatter": "language_server"
+    },
+    "CSS": {
+      "formatter": "language_server",
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "Dart": {
+      "format_on_save": "on",
+      "use_on_type_format": true,
+      "tab_size": 2,
+      "formatter": "language_server",
+      "completions": {
+        "words": "disabled"
+      }
+    },
+    "EEx": {
+      "format_on_save": "off"
+    },
+    "Elixir": {
+      "format_on_save": "off"
+    },
+    "Elm": {
+      "format_on_save": "off"
+    },
+    "Git Commit": {
+      "show_edit_predictions": false
+    },
+    "Go": {
+      "format_on_save": "off"
+    },
+    "GraphQL": {
+      "format_on_save": "off"
+    },
+    "HEEx": {
+      "format_on_save": "off"
+    },
+    "HTML": {
+      "formatter": "language_server",
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "JSON": {
+      "formatter": "language_server",
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "JSONC": {
+      "formatter": "language_server",
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "JavaScript": {
+      "formatter": "prettier",
+      "prettier": {
+        "allowed": true
+      },
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true
+      }
+    },
+    "Kotlin": {
+      "format_on_save": "off"
+    },
+    "Markdown": {
+      "soft_wrap": "none",
+      "show_completions_on_input": false,
+      "show_edit_predictions": false
+    },
+    "Plain Text": {
+      "soft_wrap": "bounded",
+      "preferred_line_length": 100,
+      "show_edit_predictions": false
+    },
+    "Python": {
+      "tab_size": 4,
+      "use_on_type_format": true,
+      "code_actions_on_format": {
+        "source.organizeImports.ruff": false
+      }
+    },
+    "Rust": {
+      "format_on_save": "off",
+      "formatter": "language_server"
+    },
+    "SCSS": {
+      "formatter": "language_server",
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "Starlark": {
+      "format_on_save": "off"
+    },
+    "TSX": {
+      "formatter": "prettier",
+      "prettier": {
+        "allowed": true
+      },
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true
+      }
+    },
+    "TypeScript": {
+      "formatter": "prettier",
+      "prettier": {
+        "allowed": true
+      },
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true
+      }
+    },
+    "Vue.js": {
+      "formatter": "prettier",
+      "prettier": {
+        "allowed": true
+      },
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true
+      }
+    },
+    "XML": {
+      "formatter": "language_server",
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "Zig": {
+      "format_on_save": "off"
+    }
+  },
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "javascript": {
+          "preferences": {
+            "quoteStyle": "single"
+          },
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          },
+          "implementationsCodeLens": {
+            "enabled": true
+          }
+        },
+        "typescript": {
+          "preferences": {
+            "quoteStyle": "single"
+          },
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          },
+          "implementationsCodeLens": {
+            "enabled": true
+          }
+        }
+      }
+    },
+    "eslint": {
+      "settings": {
+        "run": "onSave"
+      }
+    },
+    "vscode-html-language-server": {
+      "settings": {
+        "html": {
+          "format": {
+            "indentInnerHtml": true
+          }
+        }
+      }
+    }
+  }
+}

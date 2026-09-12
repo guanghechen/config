@@ -1,0 +1,18 @@
+# Track portable configuration; ignore runtime data and local state by default.
+/*
+!/.gitignore
+!/AGENTS.md
+!/settings.json
+!/keymap.json
+!/tasks.json
+!/debug.json
+!/themes/
+!/snippets/
+!/prompt_overrides/
+
+# Temporary files can also appear inside the allowed directories.
+.DS_Store
+.tmp*
+*.swp
+*.swo
+*~

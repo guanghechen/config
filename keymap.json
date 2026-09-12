@@ -1,0 +1,915 @@
+[
+  {
+    "bindings": {
+      "alt-ctrl-p": null,
+      "cmd-.": null,
+      "cmd-/": null,
+      "cmd-0": null,
+      "cmd-1": null,
+      "cmd-2": null,
+      "cmd-3": null,
+      "cmd-4": null,
+      "cmd-5": null,
+      "cmd-6": null,
+      "cmd-7": null,
+      "cmd-8": null,
+      "cmd-9": null,
+      "cmd-[": null,
+      "cmd-\\": null,
+      "cmd-]": null,
+      "cmd-alt-k": null,
+      "cmd-b": null,
+      "cmd-ctrl-down": null,
+      "cmd-ctrl-f": null,
+      "cmd-ctrl-left": null,
+      "cmd-ctrl-right": null,
+      "cmd-ctrl-up": null,
+      "cmd-d": null,
+      "cmd-e": null,
+      "cmd-enter": null,
+      "cmd-g": null,
+      "cmd-h": null,
+      "cmd-i": null,
+      "cmd-j": null,
+      "cmd-k": null,
+      "cmd-k cmd-/": null,
+      "cmd-k cmd-0": null,
+      "cmd-k cmd-1": null,
+      "cmd-k cmd-2": null,
+      "cmd-k cmd-3": null,
+      "cmd-k cmd-4": null,
+      "cmd-k cmd-5": null,
+      "cmd-k cmd-6": null,
+      "cmd-k cmd-7": null,
+      "cmd-k cmd-8": null,
+      "cmd-k cmd-9": null,
+      "cmd-k cmd-[": null,
+      "cmd-k cmd-]": null,
+      "cmd-k cmd-b": null,
+      "cmd-k cmd-c": null,
+      "cmd-k cmd-d": null,
+      "cmd-k cmd-down": null,
+      "cmd-k cmd-f": null,
+      "cmd-k cmd-h": null,
+      "cmd-k cmd-i": null,
+      "cmd-k cmd-j": null,
+      "cmd-k cmd-l": null,
+      "cmd-k cmd-left": null,
+      "cmd-k cmd-m": null,
+      "cmd-k cmd-p": null,
+      "cmd-k cmd-q": null,
+      "cmd-k cmd-right": null,
+      "cmd-k cmd-s": null,
+      "cmd-k cmd-shift-t": null,
+      "cmd-k cmd-t": null,
+      "cmd-k cmd-up": null,
+      "cmd-k cmd-w": null,
+      "cmd-k ctrl-cmd-d": null,
+      "cmd-k down": null,
+      "cmd-k e": null,
+      "cmd-k f12": null,
+      "cmd-k left": null,
+      "cmd-k m": null,
+      "cmd-k n": null,
+      "cmd-k p": null,
+      "cmd-k q": null,
+      "cmd-k r": null,
+      "cmd-k right": null,
+      "cmd-k s": null,
+      "cmd-k shift-down": null,
+      "cmd-k shift-enter": null,
+      "cmd-k shift-left": null,
+      "cmd-k shift-right": null,
+      "cmd-k shift-up": null,
+      "cmd-k t": null,
+      "cmd-k u": null,
+      "cmd-k up": null,
+      "cmd-k v": null,
+      "cmd-k w": null,
+      "cmd-k z": null,
+      "cmd-l": null,
+      "cmd-left": null,
+      "cmd-m": null,
+      "cmd-o": null,
+      "cmd-q": null,
+      "cmd-r": null,
+      "cmd-right": null,
+      "cmd-shift-k": null,
+      "cmd-shift-l": null,
+      "cmd-t": null,
+      "ctrl-p": null,
+      "f1": null,
+      "f10": null,
+      "f11": null,
+      "f3": null,
+      "f4": null,
+      "f5": null,
+      "f6": null,
+      "f7": null,
+      "shift-f7": null,
+      "cmd-:": null
+    }
+  },
+  {
+    "bindings": {
+      "cmd-,": "zed::OpenSettings",
+      "cmd-1": "project_panel::ToggleFocus",
+      "cmd-2": "project_search::ToggleFocus",
+      "cmd-3": "git_panel::ToggleFocus",
+      "cmd-4": "zed::Extensions",
+      "cmd-5": "debug_panel::ToggleFocus",
+      "cmd-6": "git::FileHistory",
+      "cmd-7": "agent::ToggleFocus",
+      "cmd-d": "workspace::ToggleAllDocks",
+      "cmd-h": "workspace::ActivatePaneLeft",
+      "cmd-j": "workspace::ActivatePaneDown",
+      "cmd-k": "workspace::ActivatePaneUp",
+      "cmd-l": "workspace::ActivatePaneRight",
+      "cmd-n": "workspace::NewFile",
+      "cmd-p": "file_finder::Toggle",
+      "cmd-q": "workspace::ToggleBottomDock",
+      "cmd-s": "workspace::Save",
+      "cmd-:": "command_palette::Toggle",
+      "cmd-t": "terminal_panel::ToggleFocus",
+      "cmd-ctrl-`": "terminal_panel::ToggleFocus",
+      "cmd-ctrl-f11": "zed::ToggleFullScreen",
+      "cmd-ctrl-z": "workspace::ToggleZoom",
+      "cmd-ctrl-shift-z": "workspace::ResetPaneSizes"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "cmd-a": "editor::SelectAll",
+      "cmd-c": "editor::Copy",
+      "cmd-v": "editor::Paste",
+      "cmd-x": "editor::Cut",
+      "cmd-z": "editor::Undo",
+      "cmd-u": "editor::UndoSelection",
+      "ctrl-p": "editor::ShowCompletions"
+    }
+  },
+  {
+    "context": "Editor && mode == full",
+    "bindings": {
+      "cmd-[": "pane::ActivatePreviousItem",
+      "cmd-]": "pane::ActivateNextItem",
+      "cmd-i": "pane::GoBack",
+      "cmd-o": "pane::GoForward",
+      "cmd-r": "pane::RevealInProjectPanel",
+      "cmd-f": "buffer_search::Deploy",
+      "cmd-enter": "editor::ToggleCodeActions",
+      "cmd-m": "editor::ToggleMinimap",
+      "cmd-ctrl-f": "editor::Format",
+      "cmd-shift-h": "pane::SplitLeft",
+      "cmd-shift-j": "pane::SplitDown",
+      "cmd-shift-l": "pane::SplitRight",
+      "cmd-shift-k": [
+        "pane::CloseAllItems",
+        {
+          "close_pinned": false
+        }
+      ],
+      "cmd-shift-o": [
+        "pane::CloseOtherItems",
+        {
+          "close_pinned": false
+        }
+      ],
+      "ctrl-shift-c": [
+        "editor::ToggleComments",
+        {
+          "advance_downwards": false
+        }
+      ],
+      "f3": "search::SelectNextMatch",
+      "shift-f3": "search::SelectPreviousMatch",
+      "f7": "editor::GoToNextDocumentHighlight",
+      "shift-f7": "editor::GoToPreviousDocumentHighlight",
+      "f8": "editor::GoToDiagnostic",
+      "shift-f8": "editor::GoToPreviousDiagnostic",
+      "f9": "editor::ToggleBreakpoint",
+      "f12": "editor::GoToDefinition",
+      "cmd-ctrl-left": [
+        "workspace::MoveItemToPaneInDirection",
+        {
+          "direction": "left",
+          "focus": true
+        }
+      ],
+      "cmd-ctrl-right": [
+        "workspace::MoveItemToPaneInDirection",
+        {
+          "direction": "right",
+          "focus": true
+        }
+      ],
+      "cmd-ctrl-up": [
+        "workspace::MoveItemToPaneInDirection",
+        {
+          "direction": "up",
+          "focus": true
+        }
+      ],
+      "cmd-ctrl-down": [
+        "workspace::MoveItemToPaneInDirection",
+        {
+          "direction": "down",
+          "focus": true
+        }
+      ],
+      "cmd-left": "vim::ResizePaneLeft",
+      "cmd-right": "vim::ResizePaneRight"
+    }
+  },
+  {
+    "context": "Editor && vim_mode == visual",
+    "bindings": {
+      "cmd-ctrl-f": "editor::FormatSelections"
+    }
+  },
+  {
+    "context": "Editor && vim_mode == normal && !menu",
+    "bindings": {
+      "u": "editor::Undo",
+      "ctrl-r": "editor::Redo"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "s": "vim::PushSneak",
+      "shift-s": "vim::PushSneakBackward"
+    }
+  },
+  {
+    "context": "Editor && showing_code_actions",
+    "bindings": {
+      "cmd-enter": "menu::Confirm",
+      "cmd-.": "menu::Confirm"
+    }
+  },
+  {
+    "context": "Editor && edit_prediction",
+    "bindings": {
+      "cmd-right": "editor::AcceptNextWordEditPrediction"
+    }
+  },
+  {
+    "context": "ProjectPanel",
+    "bindings": {
+      "cmd-1": "workspace::ToggleLeftDock",
+      "cmd-left": "project_panel::CollapseAllEntries"
+    }
+  },
+  {
+    "context": "GitPanel",
+    "bindings": {
+      "cmd-3": "workspace::ToggleLeftDock"
+    }
+  },
+  {
+    "context": "ProjectSearchView",
+    "bindings": {
+      "f4": "search::SelectNextMatch",
+      "shift-f4": "search::SelectPreviousMatch"
+    }
+  },
+  {
+    "context": "BufferSearchBar || ProjectSearchBar",
+    "bindings": {
+      "f3": "search::SelectNextMatch",
+      "shift-f3": "search::SelectPreviousMatch"
+    }
+  },
+  {
+    "context": "!Terminal && !debugger_session",
+    "bindings": {
+      "f5": "debugger::Start"
+    }
+  },
+  {
+    "context": "debugger_stopped > !Terminal",
+    "bindings": {
+      "f5": "debugger::Continue",
+      "f10": "debugger::StepOver",
+      "f11": "debugger::StepInto",
+      "shift-f11": "debugger::StepOut"
+    }
+  },
+  {
+    "context": "debugger_running > !Terminal",
+    "bindings": {
+      "f6": "debugger::Pause"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "cmd-/": "workspace::NewTerminal",
+      "cmd-ctrl-/": "terminal::RenameTerminal",
+      "cmd-ctrl-h": "workspace::ActivatePaneLeft",
+      "cmd-ctrl-l": "workspace::ActivatePaneRight",
+      "cmd-ctrl-w": [
+        "pane::CloseActiveItem",
+        {
+          "close_pinned": false
+        }
+      ],
+      "cmd-ctrl-f12": "zed::ToggleFullScreen",
+      "cmd-ctrl-escape": "buffer_search::Dismiss",
+      "cmd-v": "terminal::Paste",
+      "ctrl-insert": "terminal::Copy",
+      "shift-insert": "terminal::Paste"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "cmd-,": [
+        "terminal::SendText",
+        "\u0001,"
+      ],
+      "cmd-.": [
+        "terminal::SendText",
+        "\u0001."
+      ],
+      "cmd-0": [
+        "terminal::SendText",
+        "\u00010"
+      ],
+      "cmd-1": [
+        "terminal::SendText",
+        "\u00011"
+      ],
+      "cmd-2": [
+        "terminal::SendText",
+        "\u00012"
+      ],
+      "cmd-3": [
+        "terminal::SendText",
+        "\u00013"
+      ],
+      "cmd-4": [
+        "terminal::SendText",
+        "\u00014"
+      ],
+      "cmd-5": [
+        "terminal::SendText",
+        "\u00015"
+      ],
+      "cmd-6": [
+        "terminal::SendText",
+        "\u00016"
+      ],
+      "cmd-7": [
+        "terminal::SendText",
+        "\u00017"
+      ],
+      "cmd-8": [
+        "terminal::SendText",
+        "\u00018"
+      ],
+      "cmd-9": [
+        "terminal::SendText",
+        "\u00019"
+      ],
+      "cmd-:": [
+        "terminal::SendText",
+        "\u0001:"
+      ],
+      "cmd-<": [
+        "terminal::SendText",
+        "\u0001<"
+      ],
+      "cmd->": [
+        "terminal::SendText",
+        "\u0001>"
+      ],
+      "cmd-[": [
+        "terminal::SendText",
+        "\u0001["
+      ],
+      "cmd-]": [
+        "terminal::SendText",
+        "\u0001]"
+      ],
+      "cmd-`": [
+        "terminal::SendText",
+        "\u0001`"
+      ],
+      "cmd-a": [
+        "terminal::SendText",
+        "\u0001a"
+      ],
+      "cmd-b": [
+        "terminal::SendText",
+        "\u0001b"
+      ],
+      "cmd-c": [
+        "terminal::SendText",
+        "\u0001c"
+      ],
+      "cmd-ctrl-0": [
+        "terminal::SendText",
+        "\u0001\u001b[48;5u"
+      ],
+      "cmd-ctrl-1": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-2": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-3": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-4": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-5": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-6": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-7": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-8": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-9": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-a": [
+        "terminal::SendText",
+        "\u0001\u0001"
+      ],
+      "cmd-ctrl-b": [
+        "terminal::SendText",
+        "\u0001\u0002"
+      ],
+      "cmd-ctrl-c": [
+        "terminal::SendText",
+        "\u0001\u0003"
+      ],
+      "cmd-ctrl-d": [
+        "terminal::SendText",
+        "\u0001\u0004"
+      ],
+      "cmd-ctrl-e": [
+        "terminal::SendText",
+        "\u0001\u0005"
+      ],
+      "cmd-ctrl-f": [
+        "terminal::SendText",
+        "\u0001\u0006"
+      ],
+      "cmd-ctrl-g": [
+        "terminal::SendText",
+        "\u0001\u0007"
+      ],
+      "cmd-ctrl-i": [
+        "terminal::SendText",
+        "\u0001\t"
+      ],
+      "cmd-ctrl-j": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-k": [
+        "terminal::SendText",
+        ""
+      ],
+      "cmd-ctrl-m": [
+        "terminal::SendText",
+        "\u0001\r"
+      ],
+      "cmd-ctrl-o": [
+        "terminal::SendText",
+        "\u0001\u000f"
+      ],
+      "cmd-ctrl-p": [
+        "terminal::SendText",
+        "\u0001\u0010"
+      ],
+      "cmd-ctrl-q": [
+        "terminal::SendText",
+        "\u0001\u0011"
+      ],
+      "cmd-ctrl-r": [
+        "terminal::SendText",
+        "\u0001\u0012"
+      ],
+      "cmd-ctrl-s": [
+        "terminal::SendText",
+        "\u0001\u0013"
+      ],
+      "cmd-ctrl-t": [
+        "terminal::SendText",
+        "\u0001\u0014"
+      ],
+      "cmd-ctrl-u": [
+        "terminal::SendText",
+        "\u0001\u0015"
+      ],
+      "cmd-ctrl-v": [
+        "terminal::SendText",
+        "\u0001\u0016"
+      ],
+      "cmd-ctrl-x": [
+        "terminal::SendText",
+        "\u0001\u0018"
+      ],
+      "cmd-ctrl-y": [
+        "terminal::SendText",
+        "\u0001\u0019"
+      ],
+      "cmd-d": [
+        "terminal::SendText",
+        "\u0001d"
+      ],
+      "cmd-down": [
+        "terminal::SendText",
+        "\u0001\u001b[B"
+      ],
+      "cmd-e": [
+        "terminal::SendText",
+        "\u0001e"
+      ],
+      "cmd-enter": [
+        "terminal::SendText",
+        "\u001b\r"
+      ],
+      "cmd-f": [
+        "terminal::SendText",
+        "\u0001f"
+      ],
+      "cmd-f1": [
+        "terminal::SendText",
+        "\u0001\u001bOP"
+      ],
+      "cmd-f10": [
+        "terminal::SendText",
+        "\u0001\u001b[21~"
+      ],
+      "cmd-f11": [
+        "terminal::SendText",
+        "\u0001\u001b[23~"
+      ],
+      "cmd-f12": [
+        "terminal::SendText",
+        "\u0001\u001b[24~"
+      ],
+      "cmd-f2": [
+        "terminal::SendText",
+        "\u0001\u001bOQ"
+      ],
+      "cmd-f3": [
+        "terminal::SendText",
+        "\u0001\u001bOR"
+      ],
+      "cmd-f4": [
+        "terminal::SendText",
+        "\u0001\u001bOS"
+      ],
+      "cmd-f5": [
+        "terminal::SendText",
+        "\u0001\u001b[15~"
+      ],
+      "cmd-f6": [
+        "terminal::SendText",
+        "\u0001\u001b[17~"
+      ],
+      "cmd-f7": [
+        "terminal::SendText",
+        "\u0001\u001b[18~"
+      ],
+      "cmd-f8": [
+        "terminal::SendText",
+        "\u0001\u001b[19~"
+      ],
+      "cmd-f9": [
+        "terminal::SendText",
+        "\u0001\u001b[20~"
+      ],
+      "cmd-g": [
+        "terminal::SendText",
+        "\u0001g"
+      ],
+      "cmd-h": [
+        "terminal::SendText",
+        "\u0001h"
+      ],
+      "cmd-i": [
+        "terminal::SendText",
+        "\u0001i"
+      ],
+      "cmd-j": [
+        "terminal::SendText",
+        "\u0001j"
+      ],
+      "cmd-k": [
+        "terminal::SendText",
+        "\u0001k"
+      ],
+      "cmd-l": [
+        "terminal::SendText",
+        "\u0001l"
+      ],
+      "cmd-left": [
+        "terminal::SendText",
+        "\u0001\u001b[D"
+      ],
+      "cmd-m": [
+        "terminal::SendText",
+        "\u0001m"
+      ],
+      "cmd-n": [
+        "terminal::SendText",
+        "\u0001n"
+      ],
+      "cmd-o": [
+        "terminal::SendText",
+        "\u0001o"
+      ],
+      "cmd-p": [
+        "terminal::SendText",
+        "\u0001p"
+      ],
+      "cmd-r": [
+        "terminal::SendText",
+        "\u0001r"
+      ],
+      "cmd-right": [
+        "terminal::SendText",
+        "\u0001\u001b[C"
+      ],
+      "cmd-s": [
+        "terminal::SendText",
+        "\u0001s"
+      ],
+      "cmd-shift-a": [
+        "terminal::SendText",
+        "\u0001A"
+      ],
+      "cmd-shift-b": [
+        "terminal::SendText",
+        "\u0001B"
+      ],
+      "cmd-shift-c": [
+        "terminal::SendText",
+        "\u0001C"
+      ],
+      "cmd-shift-d": [
+        "terminal::SendText",
+        "\u0001D"
+      ],
+      "cmd-shift-down": [
+        "terminal::SendText",
+        "\u0001\u001b[1;2B"
+      ],
+      "cmd-shift-e": [
+        "terminal::SendText",
+        "\u0001E"
+      ],
+      "cmd-shift-f": [
+        "terminal::SendText",
+        "\u0001F"
+      ],
+      "cmd-shift-g": [
+        "terminal::SendText",
+        "\u0001G"
+      ],
+      "cmd-shift-h": [
+        "terminal::SendText",
+        "\u0001H"
+      ],
+      "cmd-shift-i": [
+        "terminal::SendText",
+        "\u0001I"
+      ],
+      "cmd-shift-j": [
+        "terminal::SendText",
+        "\u0001J"
+      ],
+      "cmd-shift-k": [
+        "terminal::SendText",
+        "\u0001K"
+      ],
+      "cmd-shift-l": [
+        "terminal::SendText",
+        "\u0001L"
+      ],
+      "cmd-shift-left": [
+        "terminal::SendText",
+        "\u0001\u001b[1;2D"
+      ],
+      "cmd-shift-m": [
+        "terminal::SendText",
+        "\u0001M"
+      ],
+      "cmd-shift-n": [
+        "terminal::SendText",
+        "\u0001N"
+      ],
+      "cmd-shift-o": [
+        "terminal::SendText",
+        "\u0001O"
+      ],
+      "cmd-shift-p": [
+        "terminal::SendText",
+        "\u0001P"
+      ],
+      "cmd-shift-q": [
+        "terminal::SendText",
+        "\u0001Q"
+      ],
+      "cmd-shift-r": [
+        "terminal::SendText",
+        "\u0001R"
+      ],
+      "cmd-shift-right": [
+        "terminal::SendText",
+        "\u0001\u001b[1;2C"
+      ],
+      "cmd-shift-s": [
+        "terminal::SendText",
+        "\u0001S"
+      ],
+      "cmd-shift-t": [
+        "terminal::SendText",
+        "\u0001T"
+      ],
+      "cmd-shift-u": [
+        "terminal::SendText",
+        "\u0001U"
+      ],
+      "cmd-shift-up": [
+        "terminal::SendText",
+        "\u0001\u001b[1;2A"
+      ],
+      "cmd-shift-v": [
+        "terminal::SendText",
+        "\u0001V"
+      ],
+      "cmd-shift-w": [
+        "terminal::SendText",
+        "\u0001W"
+      ],
+      "cmd-shift-x": [
+        "terminal::SendText",
+        "\u0001X"
+      ],
+      "cmd-shift-y": [
+        "terminal::SendText",
+        "\u0001Y"
+      ],
+      "cmd-shift-z": [
+        "terminal::SendText",
+        "\u0001Z"
+      ],
+      "cmd-t": [
+        "terminal::SendText",
+        "\u0001t"
+      ],
+      "cmd-u": [
+        "terminal::SendText",
+        "\u0001u"
+      ],
+      "cmd-up": [
+        "terminal::SendText",
+        "\u0001\u001b[A"
+      ],
+      "cmd-w": [
+        "terminal::SendText",
+        "\u0001w"
+      ],
+      "cmd-x": [
+        "terminal::SendText",
+        "\u0001x"
+      ],
+      "cmd-y": [
+        "terminal::SendText",
+        "\u0001y"
+      ],
+      "cmd-z": [
+        "terminal::SendText",
+        "\u0001z"
+      ],
+      "cmd-{": [
+        "terminal::SendText",
+        "\u0001{"
+      ],
+      "cmd-}": [
+        "terminal::SendText",
+        "\u0001}"
+      ],
+      "f1": [
+        "terminal::SendText",
+        "\u001bOP"
+      ],
+      "f10": [
+        "terminal::SendText",
+        "\u001b[21~"
+      ],
+      "f11": [
+        "terminal::SendText",
+        "\u001b[23~"
+      ],
+      "f12": [
+        "terminal::SendText",
+        "\u001b[24~"
+      ],
+      "f2": [
+        "terminal::SendText",
+        "\u001bOQ"
+      ],
+      "f3": [
+        "terminal::SendText",
+        "\u001bOR"
+      ],
+      "f4": [
+        "terminal::SendText",
+        "\u001bOS"
+      ],
+      "f5": [
+        "terminal::SendText",
+        "\u001b[15~"
+      ],
+      "f6": [
+        "terminal::SendText",
+        "\u001b[17~"
+      ],
+      "f7": [
+        "terminal::SendText",
+        "\u001b[18~"
+      ],
+      "f8": [
+        "terminal::SendText",
+        "\u001b[19~"
+      ],
+      "f9": [
+        "terminal::SendText",
+        "\u001b[20~"
+      ],
+      "shift-f1": [
+        "terminal::SendText",
+        "\u001b[1;2P"
+      ],
+      "shift-f10": [
+        "terminal::SendText",
+        "\u001b[21;2~"
+      ],
+      "shift-f11": [
+        "terminal::SendText",
+        "\u001b[23;2~"
+      ],
+      "shift-f12": [
+        "terminal::SendText",
+        "\u001b[24;2~"
+      ],
+      "shift-f2": [
+        "terminal::SendText",
+        "\u001b[1;2Q"
+      ],
+      "shift-f3": [
+        "terminal::SendText",
+        "\u001b[1;2R"
+      ],
+      "shift-f4": [
+        "terminal::SendText",
+        "\u001b[1;2S"
+      ],
+      "shift-f5": [
+        "terminal::SendText",
+        "\u001b[15;2~"
+      ],
+      "shift-f6": [
+        "terminal::SendText",
+        "\u001b[17;2~"
+      ],
+      "shift-f7": [
+        "terminal::SendText",
+        "\u001b[18;2~"
+      ],
+      "shift-f8": [
+        "terminal::SendText",
+        "\u001b[19;2~"
+      ],
+      "shift-f9": [
+        "terminal::SendText",
+        "\u001b[20;2~"
+      ]
+    }
+  }
+]
