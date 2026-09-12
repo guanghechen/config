@@ -97,7 +97,8 @@ set -g @GHC_SL_FG_SESSION_ITEM_BELL     "{{unified.aqua}}"
 set -g @GHC_SL_BG_STATUS02_LABEL        "{{rosepine.overlay}}"
 set -g @GHC_SL_FG_STATUS02_LABEL        "{{unified.aqua}}"
 set -g @GHC_SL_BG_PILL_USER             "{{rosepine.overlay}}"
-set -g @GHC_SL_BG_PILL_HOST             "{{rosepine.overlay}}"
+# Muted warm backgrounds distinguish the host without competing with active sessions.
+set -g @GHC_SL_BG_PILL_HOST             "{{darken ? '#40352F' : '#E5D5C1'}}"
 set -g @GHC_SL_BG_PILL_ZOOM             "{{rosepine.overlay}}"
 
 set -g @GHC_SL_BG_PRIMARY_SEP           "{{rosepine.surface}}"
