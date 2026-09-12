@@ -10,7 +10,6 @@
     FunctionsToExport = @(
         'ghc-opensource'
         'ghc-profile'
-        'ghc-proxy'
         'ghc-theme'
         'ghc-update-agents'
         'ghc-update'

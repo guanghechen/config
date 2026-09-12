@@ -5,7 +5,6 @@ $functionsRoot = Join-Path $pwshRoot "functions"
 $lazyFunctions = @(
     'ghc-opensource'
     'ghc-profile'
-    'ghc-proxy'
     'ghc-theme'
     'ghc-update-agents'
     'ghc-update'
