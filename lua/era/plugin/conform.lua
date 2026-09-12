@@ -1,22 +1,25 @@
 ---@see https://github.com/stevearc/conform.nvim
 
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.plugin.conform" ---@type string
+
 -- stylua: ignore start
 local formatters_by_ft = {
   -- web --
-  css               = { "prettier" },
-  graphql           = { "prettier" },
+  css               = { "biome", "prettier", stop_after_first = true },
+  graphql           = { "biome", "prettier", stop_after_first = true },
   handlebars        = { "prettier" },
   html              = { "prettier" },
-  json              = { "prettier" },
-  jsonc             = { "prettier" },
-  javascript        = { "prettier" },
-  javascriptreact   = { "prettier" },
+  json              = { "biome", "prettier", stop_after_first = true },
+  jsonc             = { "biome", "prettier", stop_after_first = true },
+  javascript        = { "biome", "prettier", stop_after_first = true },
+  javascriptreact   = { "biome", "prettier", stop_after_first = true },
   less              = { "prettier" },
   markdown          = { "prettier", "injected" },
   ["markdown.mdx"]  = { "prettier", "injected" },
   svelte            = { "prettier" },
-  typescript        = { "prettier" },
-  typescriptreact   = { "prettier" },
+  typescript        = { "biome", "prettier", stop_after_first = true },
+  typescriptreact   = { "biome", "prettier", stop_after_first = true },
   yaml              = { "prettier" },
 
   -- shell --
@@ -161,6 +164,40 @@ return {
     },
     formatters_by_ft = formatters_by_ft,
     formatters = {
+      biome = {
+        require_cwd = true,
+        command = function(_, ctx)
+          return era.m.lsp.fn.locate_node_bin(ctx.dirname, "biome") or "biome"
+        end,
+        cwd = function(_, ctx)
+          return vim.fs.root(ctx.dirname, { { "biome.json", "biome.jsonc" } })
+        end,
+        condition = function(self, ctx)
+          local cwd = self:cwd(ctx)
+          if cwd == nil then
+            return false
+          end
+
+          -- Let Biome resolve JSONC, extends and per-file overrides without parsing buffer contents.
+          local result = vim
+            .system({ self:command(ctx), "format", "--stdin-file-path", ctx.filename, "--colors=off" }, {
+              cwd = cwd,
+              stdin = "",
+              text = true,
+              timeout = 1000,
+            })
+            :wait()
+          -- Keep configuration and execution errors visible instead of silently switching formatters.
+          return not (
+            result.code == 1
+            and (result.stderr or ""):find(
+              "The content was not formatted because the formatter is currently disabled.",
+              1,
+              true
+            )
+          )
+        end,
+      },
       injected = {
         options = {
           ignore_errors = true,

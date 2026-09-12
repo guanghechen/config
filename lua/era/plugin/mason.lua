@@ -9,6 +9,7 @@ local function get_mason_ensure_installed()
   return {
     -- lsp --
     "bash-language-server", -- bashls
+    "biome", -- biome LSP and formatter
     -- "clangd", -- clangd
     "css-lsp", -- cssls
     "dockerfile-language-server", -- docker

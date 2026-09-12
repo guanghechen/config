@@ -99,6 +99,26 @@ function M.locate_lsp_root(filepath, config_filenames)
   end
 end
 
+---@param dirpath                       string
+---@param bin                           string
+---@return string|nil filepath
+---@return string|nil rootdir
+function M.locate_node_bin(dirpath, bin)
+  local binname = stl.env.IS_WIN and not bin:match("%.cmd$") and (bin .. ".cmd") or bin ---@type string
+  while true do
+    local filepath = dirpath .. "/node_modules/.bin/" .. binname ---@type string
+    if vim.fn.executable(filepath) == 1 then
+      return filepath, dirpath
+    end
+
+    local parent = vim.fs.dirname(dirpath) ---@type string
+    if parent == dirpath then
+      return nil, nil
+    end
+    dirpath = parent
+  end
+end
+
 ---@param filepath                      string
 ---@return string|nil rootdir
 ---@return "deno"|"node" project_type

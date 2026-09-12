@@ -98,6 +98,7 @@ function M.gen_hlgroup_map(context)
     lsp_client_text = { fg = c.fg2, bg = "bg_bar" },
     lsp_icon_basedpyright = { fg = c.brightYellow, bg = "bg_bar" },
     lsp_icon_bashls = { fg = c.brightGreen, bg = "bg_bar" },
+    lsp_icon_biome = { fg = c.brightBlue, bg = "bg_bar" },
     lsp_icon_cssls = { fg = c.brightBlue, bg = "bg_bar" },
     lsp_icon_docker_compose_language_service = { fg = c.brightAqua, bg = "bg_bar" },
     lsp_icon_dockerls = { fg = c.brightBlue, bg = "bg_bar" },

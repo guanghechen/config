@@ -148,13 +148,15 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
   t.assert_eq(1, enabled.denols, "future Deno buffer")
   ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.eslint, "future TypeScript secondary LSP")
+  t.assert_eq(1, enabled.biome, "future TypeScript Biome LSP")
   ---@diagnostic disable-next-line: undefined-field
   t.assert_eq(1, enabled.tailwindcss, "future TypeScript secondary LSP")
   t.assert_eq(4, #enable_batches, "future buffer batch")
-  t.assert_eq(3, #enable_batches[4], "TypeScript batch size")
+  t.assert_eq(4, #enable_batches[4], "TypeScript batch size")
   t.assert_eq("vtsls", enable_batches[4][1], "TypeScript primary LSP")
   t.assert_eq("denols", enable_batches[4][2], "Deno LSP")
   t.assert_eq("eslint", enable_batches[4][3], "TypeScript secondary LSP")
+  t.assert_eq("biome", enable_batches[4][4], "TypeScript Biome LSP")
 
   ---@diagnostic disable-next-line: need-check-nil
   filetype_callback({ match = "lua" })

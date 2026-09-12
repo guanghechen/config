@@ -261,6 +261,7 @@ M.git = {
 M.lsp = {
   basedpyright = "",
   bashls = "",
+  biome = "󰔷",
   cssls = "",
   docker_compose_language_service = "",
   dockerls = "",

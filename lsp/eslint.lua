@@ -4,21 +4,32 @@ local __module_name__ = "lsp.eslint" ---@type string
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
 ---@type string[]
-local CONFIG_FILENAMES = {
+local ROOT_FILENAMES = {
   "package-lock.json",
   "yarn.lock",
   "pnpm-lock.yaml",
   "bun.lockb",
   "bun.lock",
+}
+
+---@type string[]
+local CONFIG_FILENAMES = {
   "eslint.config.js",
   "eslint.config.ts",
   "eslint.config.mjs",
   "eslint.config.cjs",
+  "eslint.config.mts",
+  "eslint.config.cts",
   ".eslintrc",
   ".eslintrc.json",
   ".eslintrc.js",
   ".eslintrc.mjs",
+  ".eslintrc.cjs",
+  ".eslintrc.yaml",
+  ".eslintrc.yml",
 }
+
+vim.list_extend(ROOT_FILENAMES, CONFIG_FILENAMES)
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        any
@@ -70,6 +81,7 @@ end
 
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
+---@return nil
 local function root_dir(bufnr, on_dir)
   -- exclude deno
   if vim.fs.root(bufnr, { "deno.json", "deno.jsonc", "deno.lock" }) then
@@ -77,7 +89,31 @@ local function root_dir(bufnr, on_dir)
   end
 
   local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = era.m.lsp.fn.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
+  if vim.fs.root(bufnr, { "biome.json", "biome.jsonc" }) then
+    -- Keep explicit ESLint configurations during migration; a lockfile alone is not an opt-in.
+    local eslint_config = vim.fs.find(function(name, dir)
+      if vim.list_contains(CONFIG_FILENAMES, name) then
+        local stat = vim.uv.fs_stat(dir .. "/" .. name)
+        return stat ~= nil and stat.type == "file"
+      end
+      if name == "package.json" then
+        local package_json = stl.fs.read_json({
+          filepath = dir .. "/" .. name,
+          silent_on_bad_json = true,
+          silent_on_bad_path = true,
+        })
+        return type(package_json) == "table" and type(package_json.eslintConfig) == "table"
+      end
+      return false
+    end, { path = vim.fs.dirname(filename), upward = true })[1]
+    if eslint_config == nil then
+      return
+    end
+    on_dir(era.m.lsp.fn.locate_lsp_root(filename, ROOT_FILENAMES) or vim.fs.dirname(eslint_config))
+    return
+  end
+
+  local rootdir = era.m.lsp.fn.locate_lsp_root(filename, ROOT_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
 
