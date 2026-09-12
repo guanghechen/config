@@ -30,13 +30,6 @@ function M.dressing()
   local processing = false ---@type boolean
 
   ---@type table<string, boolean|nil>
-  local IGNOREABLE_EVENTS = {
-    grid_destroy = true,
-    win_hide = true,
-    win_show = true,
-  }
-
-  ---@type table<string, boolean|nil>
   local DEVMODE_IGNORED_EVENTS = {
     msg_showcmd = true,
     cmdline_show = false,
@@ -175,14 +168,16 @@ function M.dressing()
 
     local handler = handlers[event]
     if handler == nil then
-      local ignoreable = IGNOREABLE_EVENTS[event] == true ---@type boolean
-      local silent = ignoreable
+      -- Remote UIs own grid/window rendering. Reporting these events creates
+      -- notification floats that emit more multigrid events.
+      if vim.startswith(event, "grid_") or vim.startswith(event, "win_") then
+        return
+      end
 
       stl.reporter.warn({
         from = __module_name__,
         message = string.format("unhandled | %s", event),
         details = { event, kind, ... },
-        silent = silent,
         anonymous = false,
       })
       return

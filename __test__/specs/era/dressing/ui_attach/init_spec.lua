@@ -15,6 +15,7 @@ local t = harness.new(module_name .. ".init")
 ---@field timer_calls                    integer
 ---@field timer_available                boolean
 ---@field errors                         table[]
+---@field warnings                      table[]
 ---@field events                         string[]
 ---@field fail_id                        integer|nil
 ---@field fast                           boolean
@@ -35,6 +36,7 @@ local function setup(initially_enabled)
     timer_calls = 0,
     timer_available = true,
     errors = {},
+    warnings = {},
     events = {},
     fast = false,
     flush_calls = 0,
@@ -99,7 +101,9 @@ local function setup(initially_enabled)
       error = function(options)
         runtime.errors[#runtime.errors + 1] = options
       end,
-      warn = function() end,
+      warn = function(options)
+        runtime.warnings[#runtime.warnings + 1] = options
+      end,
     },
   })
 
@@ -194,6 +198,39 @@ t:test("dressing attaches once and preserves queued UI events and the escape bin
   t.assert_eq(1, runtime.timer_calls, "timer reused after repeated setup")
   t.assert_eq(1, runtime.attach_calls, "attachment reused after repeated setup")
   t.assert_eq(1, runtime.keymap_calls, "escape binding reused after repeated setup")
+end)
+
+t:test("multigrid events pass through without notifications or queued work", function()
+  local runtime = setup()
+  runtime.fast = true
+
+  local events = {
+    { "grid_resize", 2, 100, 30 },
+    { "grid_destroy", 3 },
+    { "win_pos", 2, 1000, 0, 0, 100, 29 },
+    { "win_float_pos", 4, 1001, "NW", 1, 1, 1, true, 50, 1, 1, 1 },
+    { "win_hide", 4 },
+    { "win_close", 4 },
+    { "win_viewport", 2, 1000, 0, 1, 0, 0, 1, 0 },
+    { "win_viewport_margins", 2, 1000, 0, 0, 0, 0 },
+  }
+  for _, event in ipairs(events) do
+    t.assert_nil(runtime.callback(unpack(event)), event[1] .. " remains available to the GUI")
+  end
+
+  t.assert_eq(0, #runtime.warnings, "grid and window events do not create notification windows or history")
+  t.assert_eq(0, #runtime.events, "no task dispatch")
+  t.assert_nil(runtime.timer.callback, "no queue scheduling")
+end)
+
+t:test("unhandled widget events still warn and pass through", function()
+  local runtime = setup()
+
+  t.assert_nil(runtime.callback("cmdline_unknown", 1), "unhandled event passes through")
+  t.assert_eq(1, #runtime.warnings, "unhandled widget diagnostic")
+  t.assert_eq(module_name, runtime.warnings[1].from, "diagnostic namespace")
+  t.assert_eq("unhandled | cmdline_unknown", runtime.warnings[1].message, "diagnostic event")
+  t.assert_false(runtime.warnings[1].silent, "diagnostic remains visible")
 end)
 
 t:test("skipped setup can retry after enabling and timer allocation recovers", function()
