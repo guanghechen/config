@@ -1,3 +1,8 @@
+tabs = false
+fork = true
+frame = "buttonless"
+title-hidden = true
+
 [font]
 size = 16
 
