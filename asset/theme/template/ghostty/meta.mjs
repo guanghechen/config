@@ -3,7 +3,7 @@ import path from 'node:path'
 import {
   applyGhosttyThemeAppearance,
   validateGhosttyThemeAppearance,
-} from '#cli/theme/ghostty/state'
+} from './shader.mjs'
 import { PLATFORM, XDG_CONFIG_HOME } from '#env'
 import { command_exists, signal_process } from '#util/command'
 

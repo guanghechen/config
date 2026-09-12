@@ -177,6 +177,22 @@ echo $env:GHC_THEME
 }
 ```
 
+### Ghostty Shader State
+
+`asset/theme/template/ghostty/shader.mjs` owns Ghostty's shader catalog and
+persistent state. The adjacent `meta.mjs` invokes it during theme prepare/apply;
+`cli/ghostty-shader.mjs` is the command-line adapter used by the Fish and Bash
+wrappers. Both paths share
+one lock and transaction journal. Applying a theme restores the corresponding
+root-level `theme-dark.conf` or `theme-light.conf` into `local/shader.conf` together with
+`local/theme.conf` and `local/appearance`; selecting a shader updates the current
+appearance's saved selection and active file together. Ghostty reloads only the
+active file. Root configs use `shaders/name.glsl`; the derived local config uses
+`../shaders/name.glsl`. Missing root configs migrate from the old local files,
+while existing root configs (including empty/off) take precedence. Shader selection
+updates the root config, so it appears in Git diffs. Version 1 journals recover
+saved files under `local/`; version 2 journals recover the root configs.
+
 ### Theme Templates
 
 Rosé Pine keeps its named swatches in `palette.rosepine`; `palette.unified`
