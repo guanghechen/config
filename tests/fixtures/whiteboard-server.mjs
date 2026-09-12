@@ -95,6 +95,24 @@ export async function createWhiteboardServer() {
     </MathJaxProvider></SiteContextProvider></React.StrictMode>)
   `,
   )
+  await writeFile(
+    path.join(directory, 'standalone.html'),
+    '<style>html,body,#root{height:100%;margin:0}</style><div id="root"></div><script type="module" src="/standalone.tsx"></script>',
+  )
+  await writeFile(
+    path.join(directory, 'standalone.tsx'),
+    `
+    import React from 'react'
+    import { createRoot } from 'react-dom/client'
+    import { Whiteboard } from '${root}/src/view/whiteboard/Whiteboard.tsx'
+    import { createDocument } from '${root}/shared/whiteboard/model.ts'
+    createRoot(document.getElementById('root')).render(<React.StrictMode><Whiteboard initialDocument={createDocument()} style={new URLSearchParams(location.search).has('embedded') ? {width:480,height:600} : undefined} /></React.StrictMode>)
+  `,
+  )
+  await writeFile(
+    path.join(directory, 'regression.html'),
+    `<style>html,body,#root{margin:0;height:100%}</style><div id="root"></div><script type="module">import {runWhiteboardRegression} from ${JSON.stringify(`/@fs${path.join(root, 'tests/fixtures/whiteboard-regression.tsx')}`)}; window.runRegression = runWhiteboardRegression</script>`,
+  )
   const server = await createServer({
     root: directory,
     configFile: false,
@@ -149,7 +167,7 @@ export async function createWhiteboardServer() {
       },
     },
     optimizeDeps: {
-      include: ['react', 'react-dom/client', 'monaco-editor', '@monaco-editor/react'],
+      include: ['react', 'react-dom', 'react-dom/client', 'monaco-editor', '@monaco-editor/react'],
     },
   })
   await server.listen()
