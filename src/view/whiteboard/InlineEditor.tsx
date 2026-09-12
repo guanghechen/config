@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
 import { Editor, loader } from '@monaco-editor/react'
 import * as monaco from 'monaco-editor'
 import { useStateValue } from '@guanghechen/react-viewmodel'
@@ -125,7 +126,7 @@ export const InlineEditor: React.FC<{
             (session.node.type === 'image' ? 'Image URL or absolute path' : 'Edit Markdown / text')}
         </span>
         <button disabled={busy} onClick={close} aria-label="Close editor">
-          ×
+          <BoardIcon name="close" />
         </button>
       </header>
       {error && (
@@ -160,7 +161,11 @@ export const InlineEditor: React.FC<{
       </div>
       {disk && (
         <details className="wb-disk-version">
-          <summary>View current disk version — your draft is above</summary>
+          <summary>
+            <BoardIconLabel name="visible">
+              View current disk version — your draft is above
+            </BoardIconLabel>
+          </summary>
           <pre>{disk.content}</pre>
         </details>
       )}
@@ -176,7 +181,7 @@ export const InlineEditor: React.FC<{
                 )
             }}
           >
-            Copy draft
+            <BoardIconLabel name="copy">Copy draft</BoardIconLabel>
           </button>
         )}
         {disk && (
@@ -192,14 +197,14 @@ export const InlineEditor: React.FC<{
               }
             }}
           >
-            Reload disk version
+            <BoardIconLabel name="reload">Reload disk version</BoardIconLabel>
           </button>
         )}
         <button onClick={close} disabled={busy}>
-          Cancel
+          <BoardIconLabel name="close">Cancel</BoardIconLabel>
         </button>
         <button className="wb-primary" onClick={() => void save()} disabled={busy || !!disk}>
-          {busy ? 'Saving…' : 'Save'}
+          <BoardIconLabel name="save">{busy ? 'Saving…' : 'Save'}</BoardIconLabel>
         </button>
       </footer>
     </section>

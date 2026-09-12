@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
 import { VirtualList } from '@/common/component/virtual-list/VirtualList'
 import type { IRegion, IWhiteboardDocument } from '@/shared/whiteboard/model'
 import { elementBounds, unionBounds } from '@/shared/whiteboard/geometry'
@@ -44,9 +45,11 @@ export const AreaPanel = React.memo<{
   return (
     <aside className="wb-area-panel" data-wb-ui aria-label="Navigate">
       <header>
-        <strong>Named areas</strong>
+        <strong>
+          <BoardIconLabel name="navigate">Named areas</BoardIconLabel>
+        </strong>
         <button aria-label="Close navigation" onClick={onClose}>
-          ×
+          <BoardIcon name="close" />
         </button>
       </header>
       {!readOnly && (
@@ -102,7 +105,9 @@ export const AreaPanel = React.memo<{
                 Selection
               </option>
             </select>
-            <button type="submit">Add area</button>
+            <button type="submit">
+              <BoardIconLabel name="plus">Add area</BoardIconLabel>
+            </button>
           </div>
         </form>
       )}
@@ -120,21 +125,21 @@ export const AreaPanel = React.memo<{
               disabled={busy}
               onClick={() => onFocus(region)}
             >
-              {region.name}
+              <BoardIconLabel name="focus">{region.name}</BoardIconLabel>
             </button>
             <button
               disabled={readOnly}
               aria-label={`Rename ${region.name}`}
               onClick={() => setRenaming({ id: region.id, name: region.name })}
             >
-              ✎
+              <BoardIcon name="edit" />
             </button>
             <button
               disabled={readOnly}
               aria-label={`Add ${region.name} to presentation`}
               onClick={() => commit({ ...document, presentation: [...steps, region.id] })}
             >
-              +
+              <BoardIcon name="plus" />
             </button>
             <button
               disabled={readOnly}
@@ -147,7 +152,7 @@ export const AreaPanel = React.memo<{
                 })
               }
             >
-              ×
+              <BoardIcon name="delete" />
             </button>
           </div>
         )}
@@ -171,16 +176,20 @@ export const AreaPanel = React.memo<{
             maxLength={256}
             onChange={event => setRenaming({ ...renaming, name: event.target.value })}
           />
-          <button type="submit">Save</button>
+          <button type="submit">
+            <BoardIconLabel name="check">Save</BoardIconLabel>
+          </button>
           <button type="button" onClick={() => setRenaming(null)}>
-            Cancel
+            <BoardIconLabel name="close">Cancel</BoardIconLabel>
           </button>
         </form>
       )}
       <header>
-        <strong>Presentation · {steps.length}</strong>
+        <strong>
+          <BoardIconLabel name="play">Presentation · {steps.length}</BoardIconLabel>
+        </strong>
         <button disabled={!steps.length || busy} onClick={onPresent}>
-          Present
+          <BoardIconLabel name="play">Present</BoardIconLabel>
         </button>
       </header>
       <VirtualList
@@ -198,14 +207,14 @@ export const AreaPanel = React.memo<{
               aria-label={`Move step ${index + 1} up`}
               onClick={() => step(index, -1)}
             >
-              ↑
+              <BoardIcon name="up" />
             </button>
             <button
               disabled={readOnly || index === steps.length - 1}
               aria-label={`Move step ${index + 1} down`}
               onClick={() => step(index, 1)}
             >
-              ↓
+              <BoardIcon name="down" />
             </button>
             <button
               disabled={readOnly}
@@ -214,7 +223,7 @@ export const AreaPanel = React.memo<{
                 commit({ ...document, presentation: steps.filter((_value, i) => i !== index) })
               }
             >
-              ×
+              <BoardIcon name="delete" />
             </button>
           </div>
         )}

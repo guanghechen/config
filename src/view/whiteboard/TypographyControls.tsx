@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import { textSize } from '@/shared/whiteboard/text'
 import type { ITextKind, ITextStyle } from '@/shared/whiteboard/text'
 
@@ -11,11 +12,14 @@ export const TypographyControls = React.memo<{
   onAutomatic: (automatic: boolean) => void
 }>(({ value, kind, disabled, automatic, onChange, onAutomatic }) => {
   const size = textSize(value, kind)
+  const alignment = value.textAlign ?? (kind === 'text' ? 'left' : 'center')
   return (
     <fieldset className="wb-typography-controls" disabled={disabled}>
-      <legend>Text</legend>
+      <legend>
+        <BoardIconLabel name="text">Text</BoardIconLabel>
+      </legend>
       <label>
-        Font
+        <BoardIconLabel name="text">Font</BoardIconLabel>
         <select
           aria-label="Text font"
           value={value.fontFamily ?? (kind === 'text' ? 'hand' : 'mono')}
@@ -29,7 +33,7 @@ export const TypographyControls = React.memo<{
         </select>
       </label>
       <label>
-        Size
+        <BoardIconLabel name="fontSize">Size</BoardIconLabel>
         <input
           key={size}
           type="number"
@@ -66,13 +70,19 @@ export const TypographyControls = React.memo<{
           checked={value.fontWeight === 'bold'}
           onChange={event => onChange({ fontWeight: event.target.checked ? 'bold' : 'normal' })}
         />
-        Bold
+        <BoardIconLabel name="bold">Bold</BoardIconLabel>
       </label>
       <label>
-        Align
+        <BoardIconLabel
+          name={
+            alignment === 'left' ? 'textLeft' : alignment === 'right' ? 'textRight' : 'textCenter'
+          }
+        >
+          Align
+        </BoardIconLabel>
         <select
           aria-label="Text alignment"
-          value={value.textAlign ?? (kind === 'text' ? 'left' : 'center')}
+          value={alignment}
           onChange={event => onChange({ textAlign: event.target.value as ITextStyle['textAlign'] })}
         >
           <option value="left">Left</option>
@@ -88,7 +98,7 @@ export const TypographyControls = React.memo<{
             checked={automatic}
             onChange={event => onAutomatic(event.target.checked)}
           />
-          Auto size
+          <BoardIconLabel name="autoSize">Auto size</BoardIconLabel>
         </label>
       )}
       {automatic && (

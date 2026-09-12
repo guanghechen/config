@@ -53,8 +53,14 @@ export const BoardNavigation = React.memo<{
       >
         <BoardIcon name="plus" />
       </button>
-      <button onClick={() => fit()}>Fit all</button>
-      {selectedCount > 0 && <button onClick={() => fit(true)}>Focus</button>}
+      <button aria-label="Fit all" title="Fit all" onClick={() => fit()}>
+        <BoardIcon name="fit" />
+      </button>
+      {selectedCount > 0 && (
+        <button aria-label="Focus" title="Focus selection" onClick={() => fit(true)}>
+          <BoardIcon name="focus" />
+        </button>
+      )}
     </div>
     <div className="wb-history">
       <button aria-label="Undo" disabled={readOnly} onClick={store.undo}>

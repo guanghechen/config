@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import type { IStyle } from '@/shared/whiteboard/model'
 import { sketchShape } from '@/shared/whiteboard/sketch'
 
@@ -20,7 +21,9 @@ export const SketchStylePicker = React.memo<{
 }>(({ style, showFillPattern, onChange }) => (
   <div className="wb-sketch-style">
     <fieldset>
-      <legend>Hand-drawn</legend>
+      <legend>
+        <BoardIconLabel name="stroke">Hand-drawn</BoardIconLabel>
+      </legend>
       <div className="wb-style-options">
         {strokes.map(({ label, roughness, path }) => (
           <button
@@ -40,7 +43,9 @@ export const SketchStylePicker = React.memo<{
     </fieldset>
     {showFillPattern && (
       <fieldset>
-        <legend>Shape fill</legend>
+        <legend>
+          <BoardIconLabel name="fill">Shape fill</BoardIconLabel>
+        </legend>
         <div className="wb-style-options wb-fill-options">
           {fills.map(({ pattern, label, paths }) => (
             <button

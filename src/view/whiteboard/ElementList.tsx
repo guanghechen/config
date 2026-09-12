@@ -4,7 +4,7 @@ import type { IElement } from '@/shared/whiteboard/model'
 import type { BoardStore, IBoardSnapshot } from './store'
 import type { IMarkdownResources } from './resources'
 import { elementName } from './elementName'
-import { BoardIcon } from './BoardIcon'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
 
 function searchable(element: IElement): string {
   const content =
@@ -105,10 +105,12 @@ export const ElementList = React.memo<IElementListProps>(
       <aside className="wb-element-list" data-wb-ui aria-label="Elements">
         <header>
           <strong>
-            Elements <small>{items.length}</small>
+            <BoardIconLabel name="layers">
+              Elements <small>{items.length}</small>
+            </BoardIconLabel>
           </strong>
           <button aria-label="Close elements" onClick={onClose}>
-            ×
+            <BoardIcon name="close" />
           </button>
         </header>
         <input
@@ -171,8 +173,11 @@ export const ElementList = React.memo<IElementListProps>(
                     if (!hidden) onFocus(element.id)
                   }}
                 >
-                  <span>{name}</span>
-                  {element.groupId && <small>Group</small>}
+                  <BoardIcon name={element.type === 'shape' ? element.shape : element.type} />
+                  <span className="wb-element-label">
+                    <span>{name}</span>
+                    {element.groupId && <small>Group</small>}
+                  </span>
                 </button>
                 <button
                   aria-label={

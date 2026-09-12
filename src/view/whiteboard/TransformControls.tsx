@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import { normalizeAngle } from '@/shared/whiteboard/pose'
 import { transformBounds } from '@/shared/whiteboard/transforms'
 import type { IElement } from '@/shared/whiteboard/model'
@@ -15,9 +16,11 @@ export const TransformControls: React.FC<{
   const available = !!transformBounds(current.document.elements, current.selected)
   return (
     <fieldset className="wb-transform-controls" disabled={disabled || !available}>
-      <legend>Transform</legend>
+      <legend>
+        <BoardIconLabel name="rotateRight">Transform</BoardIconLabel>
+      </legend>
       <label>
-        {single ? 'Angle' : 'Rotate by'}
+        <BoardIconLabel name="rotateRight">{single ? 'Angle' : 'Rotate by'}</BoardIconLabel>
         <input
           key={`${single?.id ?? 'selection'}:${value}`}
           type="number"
@@ -52,10 +55,34 @@ export const TransformControls: React.FC<{
         />
       </label>
       <div className="wb-transform-buttons">
-        <button onClick={() => store.rotateSelected(-90)}>Rotate −90°</button>
-        <button onClick={() => store.rotateSelected(90)}>Rotate +90°</button>
-        <button onClick={() => store.flipSelected('x')}>Flip horizontal</button>
-        <button onClick={() => store.flipSelected('y')}>Flip vertical</button>
+        <button
+          aria-label="Rotate −90°"
+          title="Rotate −90°"
+          onClick={() => store.rotateSelected(-90)}
+        >
+          <BoardIconLabel name="rotateLeft">−90°</BoardIconLabel>
+        </button>
+        <button
+          aria-label="Rotate +90°"
+          title="Rotate +90°"
+          onClick={() => store.rotateSelected(90)}
+        >
+          <BoardIconLabel name="rotateRight">+90°</BoardIconLabel>
+        </button>
+        <button
+          aria-label="Flip horizontal"
+          title="Flip horizontal"
+          onClick={() => store.flipSelected('x')}
+        >
+          <BoardIconLabel name="flipHorizontal">Horizontal</BoardIconLabel>
+        </button>
+        <button
+          aria-label="Flip vertical"
+          title="Flip vertical"
+          onClick={() => store.flipSelected('y')}
+        >
+          <BoardIconLabel name="flipVertical">Vertical</BoardIconLabel>
+        </button>
       </div>
       {available && (
         <p className="wb-endpoint-hint">

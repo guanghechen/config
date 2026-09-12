@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import { workspaceController } from '@/shared/api/workspace'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { relativeWorkspaceFilepath } from '@/common/util/path'
@@ -88,10 +89,14 @@ export const WorkspaceFileDialog: React.FC<{
           })
       }}
     >
-      <h2>{mode === 'save' ? 'Save whiteboard as' : 'Reference Markdown'}</h2>
+      <h2>
+        <BoardIconLabel name={mode === 'save' ? 'saveAs' : 'reference'}>
+          {mode === 'save' ? 'Save whiteboard as' : 'Reference Markdown'}
+        </BoardIconLabel>
+      </h2>
       {roots.length > 0 && (
         <label>
-          Workspace
+          <BoardIconLabel name="home">Workspace</BoardIconLabel>
           <select
             aria-label="Workspace"
             value={roots.includes(rootInput) ? rootInput : ''}
@@ -111,7 +116,7 @@ export const WorkspaceFileDialog: React.FC<{
         </label>
       )}
       <label>
-        Directory
+        <BoardIconLabel name="folder">Directory</BoardIconLabel>
         <input
           aria-label="Directory"
           value={rootInput}
@@ -127,7 +132,7 @@ export const WorkspaceFileDialog: React.FC<{
             disabled={busy || !rootInput.startsWith('/')}
             onClick={() => setRoot(rootInput)}
           >
-            Browse directory
+            <BoardIconLabel name="folder">Browse directory</BoardIconLabel>
           </button>
           <input
             aria-label="Find Markdown file"
@@ -147,7 +152,9 @@ export const WorkspaceFileDialog: React.FC<{
                   onClick={() => setFilepath(path)}
                   title={path}
                 >
-                  {relativeWorkspaceFilepath(path, listing.root ?? root)}
+                  <BoardIconLabel name="markdown">
+                    {relativeWorkspaceFilepath(path, listing.root ?? root)}
+                  </BoardIconLabel>
                 </button>
               ))
             )}
@@ -157,7 +164,7 @@ export const WorkspaceFileDialog: React.FC<{
             {files.length > 100 && <p>Showing 100 files. Refine the search for more results.</p>}
           </div>
           <label>
-            Markdown file path
+            <BoardIconLabel name="reference">Markdown file path</BoardIconLabel>
             <input
               aria-label="Markdown file path"
               value={filepath}
@@ -168,7 +175,7 @@ export const WorkspaceFileDialog: React.FC<{
         </>
       ) : (
         <label>
-          Filename
+          <BoardIconLabel name="newBoard">Filename</BoardIconLabel>
           <input
             autoFocus
             aria-label="Filename"
@@ -181,10 +188,12 @@ export const WorkspaceFileDialog: React.FC<{
       {(error || listing.error) && <p role="alert">{error || listing.error}</p>}
       <footer>
         <button type="button" disabled={busy} onClick={onClose}>
-          Cancel
+          <BoardIconLabel name="close">Cancel</BoardIconLabel>
         </button>
         <button className="wb-primary" disabled={busy} type="submit">
-          {busy ? 'Saving…' : mode === 'save' ? 'Create file' : 'Add reference'}
+          <BoardIconLabel name={mode === 'save' ? 'newBoard' : 'reference'}>
+            {busy ? 'Saving…' : mode === 'save' ? 'Create file' : 'Add reference'}
+          </BoardIconLabel>
         </button>
       </footer>
     </form>

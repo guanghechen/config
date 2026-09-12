@@ -41,7 +41,7 @@ import type {
 import type { IEditSession } from './InlineEditor'
 import { BOARD_DIALOG_SELECTOR, createNode, useBoardInteraction } from './interaction'
 import type { ITool } from './tools'
-import { BoardIcon } from './BoardIcon'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
 import { MarkdownCard } from './MarkdownCard'
 import { LabelEditor } from './LabelEditor'
 import { MarkdownCode } from './MarkdownCode'
@@ -145,6 +145,19 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
   const fileInput = React.useRef<HTMLInputElement>(null)
   const imageInput = React.useRef<HTMLInputElement>(null)
   const [size, setSize] = React.useState({ width: 1, height: 1 })
+  const compactToolbar = size.width < 1000
+  const topbar = React.useRef<HTMLElement>(null)
+  const toolbarMenuName = React.useId()
+  React.useEffect(() => {
+    const closeMenus = (event: PointerEvent): void => {
+      const header = topbar.current
+      if (!header || (event.target instanceof Node && header.contains(event.target))) return
+      for (const menu of header.querySelectorAll<HTMLDetailsElement>('details[open]'))
+        menu.open = false
+    }
+    document.addEventListener('pointerdown', closeMenus, true)
+    return () => document.removeEventListener('pointerdown', closeMenus, true)
+  }, [])
   const [reading, setReading] = React.useState(false)
   const [presenting, setPresenting] = React.useState<number | null>(null)
   const readOnly = reading || presenting !== null
@@ -795,10 +808,51 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
     }
   }
 
+  const viewControls = (
+    <>
+      <button
+        aria-label="Elements"
+        aria-pressed={showElements}
+        title="Elements and search"
+        onClick={() => {
+          setShowElements(value => !value)
+          setShowNavigation(false)
+        }}
+      >
+        <BoardIcon name="layers" />
+        <span>Elements</span>
+      </button>
+      <button
+        aria-label="Navigate"
+        title="Navigate"
+        aria-pressed={showNavigation}
+        onClick={() => {
+          setShowNavigation(value => !value)
+          setShowElements(false)
+        }}
+      >
+        <BoardIcon name="navigate" />
+        <span>Navigate</span>
+      </button>
+      <button
+        aria-label={reading ? 'Exit reading mode' : 'Enter reading mode'}
+        title={reading ? 'Exit reading mode' : 'Enter reading mode'}
+        aria-pressed={reading}
+        disabled={modeBusy}
+        onClick={toggleReading}
+      >
+        <BoardIcon name="read" />
+        <span>{reading ? 'Exit reading mode' : 'Reading mode'}</span>
+      </button>
+      <BoardAppearance />
+    </>
+  )
+
   return (
     <div
       className="wb"
       data-whiteboard
+      data-compact={compactToolbar}
       data-reading={readOnly}
       data-element-count={snapshot.document.elements.length}
       style={
@@ -860,113 +914,164 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
         <LaserPointer ref={laser} size={size} />
       </div>
       {presenting === null && (
-        <header className="wb-filebar" data-wb-ui>
-          <a href="/ws" title="Back to workspace" aria-label="Workspace">
-            <BoardIcon name="home" />
-          </a>
-          <input
-            aria-label="Whiteboard title"
-            readOnly={readOnly}
-            maxLength={2_000_000}
-            value={snapshot.document.title}
-            onChange={event => store.commit({ ...snapshot.document, title: event.target.value })}
-          />
-          <details className="wb-file-menu">
-            <summary aria-label="File menu">
-              <BoardIcon name="menu" />
-            </summary>
-            <div>
+        <header
+          ref={topbar}
+          className="wb-topbar"
+          data-wb-ui
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') event.stopPropagation()
+            const menu =
+              event.target instanceof Element
+                ? event.target.closest<HTMLDetailsElement>('details[open]')
+                : null
+            if (!menu || event.defaultPrevented) return
+            event.stopPropagation()
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              menu.open = false
+              menu.querySelector('summary')?.focus()
+            }
+          }}
+          onClick={event => {
+            if (!(event.target instanceof Element) || event.target.closest('.wb-appearance')) return
+            const button = event.target.closest('button,a')
+            const menu = button?.closest<HTMLDetailsElement>('details')
+            if (menu) {
+              menu.open = false
+              menu.querySelector('summary')?.focus({ preventScroll: true })
+            }
+          }}
+        >
+          <div className="wb-filebar">
+            <details className="wb-file-menu" name={toolbarMenuName}>
+              <summary aria-label="File menu" title="File menu">
+                <BoardIcon name="menu" />
+                <span className="wb-board-name" title={snapshot.document.title}>
+                  {snapshot.document.title || 'Untitled whiteboard'}
+                </span>
+              </summary>
+              <div>
+                <a href="/ws" title="Back to workspace" aria-label="Workspace">
+                  <BoardIcon name="home" />
+                  <span>Back to workspace</span>
+                </a>
+                <label className="wb-menu-title">
+                  Board name
+                  <input
+                    aria-label="Whiteboard title"
+                    readOnly={readOnly}
+                    maxLength={2_000_000}
+                    value={snapshot.document.title}
+                    onChange={event =>
+                      store.commit({ ...snapshot.document, title: event.target.value })
+                    }
+                  />
+                </label>
+                <hr />
+                <button
+                  disabled={readOnly}
+                  onClick={() => {
+                    if (
+                      !snapshot.document.elements.length ||
+                      window.confirm(
+                        'Start a new whiteboard? Export the current board first to keep a separate copy.',
+                      )
+                    ) {
+                      if (readOnly) return
+                      store.replace(createDocument())
+                      store.camera({ x: 0, y: 0, zoom: 1 })
+                    }
+                  }}
+                >
+                  <BoardIcon name="newBoard" />
+                  <span>New whiteboard</span>
+                </button>
+                <button onClick={() => fileInput.current?.click()}>
+                  <BoardIcon name="importBoard" />
+                  <span>Import .whiteboard</span>
+                </button>
+                <button onClick={download}>
+                  <BoardIcon name="exportBoard" />
+                  <span>Export .whiteboard</span>
+                </button>
+                <button onClick={() => setExportImage(true)}>
+                  <BoardIcon name="exportImage" />
+                  <span>Export image…</span>
+                </button>
+                <button onClick={() => setSaveAs(true)}>
+                  <BoardIcon name="saveAs" />
+                  <span>Save as in workspace…</span>
+                </button>
+                {filepath && (
+                  <button onClick={() => void saveFile()} disabled={saving || !revision.current}>
+                    <BoardIcon name="save" />
+                    <span>{saving ? 'Saving…' : 'Save to source file'}</span>
+                  </button>
+                )}
+                {filepath && (
+                  <button onClick={() => void reloadFile()} disabled={loading || saving}>
+                    <BoardIcon name="reload" />
+                    <span>Reload source file</span>
+                  </button>
+                )}
+                <hr />
+                <button disabled={readOnly} onClick={() => imageInput.current?.click()}>
+                  <BoardIcon name="addImage" />
+                  <span>Add images…</span>
+                </button>
+                <button disabled={readOnly} onClick={() => setTool('image')}>
+                  <BoardIcon name="link" />
+                  <span>Place image from URL or path</span>
+                </button>
+                <button disabled={readOnly} onClick={() => setReference('')}>
+                  <BoardIcon name="reference" />
+                  <span>Reference Markdown file…</span>
+                </button>
+              </div>
+            </details>
+          </div>
+          {!readOnly && (
+            <DrawingTools
+              tool={tool}
+              setTool={chooseTool}
+              locked={locked}
+              toggleLock={toggleLock}
+              compact={size.width < 680}
+              menuName={toolbarMenuName}
+            />
+          )}
+          {reading && (
+            <div className="wb-reading-tools" data-wb-ui>
+              <span>Reading mode</span>
               <button
-                disabled={readOnly}
-                onClick={() => {
-                  if (
-                    !snapshot.document.elements.length ||
-                    window.confirm(
-                      'Start a new whiteboard? Export the current board first to keep a separate copy.',
-                    )
-                  ) {
-                    if (readOnly) return
-                    store.replace(createDocument())
-                    store.camera({ x: 0, y: 0, zoom: 1 })
-                  }
-                }}
+                aria-label="Hand"
+                aria-pressed={tool === 'hand'}
+                onClick={() => setTool('hand')}
               >
-                New whiteboard
+                <BoardIcon name="hand" />
               </button>
-              <button onClick={() => fileInput.current?.click()}>Import .whiteboard</button>
-              <button onClick={download}>Export .whiteboard</button>
-              <button onClick={() => setExportImage(true)}>Export image…</button>
-              <button onClick={() => setSaveAs(true)}>Save as in workspace…</button>
-              <button disabled={readOnly} onClick={() => imageInput.current?.click()}>
-                Add images…
-              </button>
-              <button disabled={readOnly} onClick={() => setTool('image')}>
-                Place image from URL or path
-              </button>
-              {filepath && (
-                <button onClick={() => void saveFile()} disabled={saving || !revision.current}>
-                  {saving ? 'Saving…' : 'Save to source file'}
-                </button>
-              )}
-              {filepath && (
-                <button onClick={() => void reloadFile()} disabled={loading || saving}>
-                  Reload source file
-                </button>
-              )}
-              <button disabled={readOnly} onClick={() => setReference('')}>
-                Reference Markdown file…
+              <button
+                aria-label="Laser pointer"
+                aria-pressed={tool === 'laser'}
+                onClick={() => setTool('laser')}
+              >
+                <BoardIcon name="laser" />
               </button>
             </div>
-          </details>
-          <BoardAppearance />
-          <button
-            aria-label="Elements"
-            aria-pressed={showElements}
-            title="Elements and search"
-            onClick={() => {
-              setShowElements(value => !value)
-              setShowNavigation(false)
-            }}
-          >
-            <BoardIcon name="layers" />
-          </button>
-          <button
-            aria-label="Navigate"
-            aria-pressed={showNavigation}
-            onClick={() => {
-              setShowNavigation(value => !value)
-              setShowElements(false)
-            }}
-          >
-            <BoardIcon name="navigate" />
-          </button>
-          <button
-            aria-label={reading ? 'Exit reading mode' : 'Enter reading mode'}
-            aria-pressed={reading}
-            disabled={modeBusy}
-            onClick={toggleReading}
-          >
-            <BoardIcon name="read" />
-          </button>
+          )}
+          <div className="wb-viewbar">
+            {compactToolbar ? (
+              <details className="wb-view-menu" name={toolbarMenuName}>
+                <summary aria-label="View options" title="View options">
+                  <BoardIcon name="view" />
+                </summary>
+                <div className="wb-view-menu-panel">{viewControls}</div>
+              </details>
+            ) : (
+              viewControls
+            )}
+          </div>
         </header>
-      )}
-      {!readOnly && (
-        <DrawingTools tool={tool} setTool={chooseTool} locked={locked} toggleLock={toggleLock} />
-      )}
-      {reading && presenting === null && (
-        <div className="wb-reading-tools" data-wb-ui>
-          <span>Reading mode</span>
-          <button aria-label="Hand" aria-pressed={tool === 'hand'} onClick={() => setTool('hand')}>
-            <BoardIcon name="hand" />
-          </button>
-          <button
-            aria-label="Laser pointer"
-            aria-pressed={tool === 'laser'}
-            onClick={() => setTool('laser')}
-          >
-            <BoardIcon name="laser" />
-          </button>
-        </div>
       )}
       {presenting !== null && (
         <div className="wb-presentation" data-wb-ui>
@@ -975,7 +1080,7 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
             disabled={!currentStep}
             onClick={() => setPresenting(Math.max(0, (currentStep ?? 0) - 1))}
           >
-            ←
+            <BoardIcon name="previous" />
           </button>
           <span>
             {steps.length
@@ -987,7 +1092,7 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
             disabled={(currentStep ?? 0) >= steps.length - 1}
             onClick={() => setPresenting(Math.min(steps.length - 1, (currentStep ?? 0) + 1))}
           >
-            →
+            <BoardIcon name="next" />
           </button>
           <button aria-label="Hand" aria-pressed={tool === 'hand'} onClick={() => setTool('hand')}>
             <BoardIcon name="hand" />
@@ -999,25 +1104,37 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
           >
             <BoardIcon name="laser" />
           </button>
-          <button onClick={stopPresentation}>Exit presentation</button>
+          <button onClick={stopPresentation}>
+            <BoardIconLabel name="stop">Exit presentation</BoardIconLabel>
+          </button>
         </div>
       )}
 
       {!readOnly &&
         (selected.length > 0 || !['select', 'hand', 'eraser', 'laser'].includes(tool)) && (
           <aside className="wb-inspector" data-wb-ui aria-label="Properties">
-            <h2>{selected.length ? `${selected.length} selected` : 'Style'}</h2>
+            <h2>
+              <BoardIconLabel name={selected.length ? 'layers' : 'stroke'}>
+                {selected.length ? `${selected.length} selected` : 'Style'}
+              </BoardIconLabel>
+            </h2>
             {selected.length > 0 && (
               <div className="wb-protection-actions">
                 <button onClick={() => store.setSelectedFlags({ locked: !selectionLocked })}>
-                  {selectionLocked ? 'Unlock selection' : 'Lock selection'}
+                  <BoardIconLabel name={selectionLocked ? 'unlock' : 'lock'}>
+                    {selectionLocked ? 'Unlock selection' : 'Lock selection'}
+                  </BoardIconLabel>
                 </button>
                 <button
                   onClick={() =>
                     store.setSelectedFlags({ hidden: !selected.some(element => element.hidden) })
                   }
                 >
-                  {selected.some(element => element.hidden) ? 'Show selection' : 'Hide selection'}
+                  <BoardIconLabel
+                    name={selected.some(element => element.hidden) ? 'visible' : 'hidden'}
+                  >
+                    {selected.some(element => element.hidden) ? 'Show selection' : 'Hide selection'}
+                  </BoardIconLabel>
                 </button>
                 {selectionLocked && (
                   <p className="wb-endpoint-hint">Unlock this selection before editing it.</p>
@@ -1077,9 +1194,11 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
               )}
               {selected.length === 1 && selected[0].type !== 'stroke' && (
                 <button onClick={() => void edit(selected[0])}>
-                  {selected[0].type === 'shape' || selected[0].type === 'edge'
-                    ? 'Edit label ↵'
-                    : 'Edit content ↵'}
+                  <BoardIconLabel name="edit">
+                    {selected[0].type === 'shape' || selected[0].type === 'edge'
+                      ? 'Edit label ↵'
+                      : 'Edit content ↵'}
+                  </BoardIconLabel>
                 </button>
               )}
               {selected.length === 1 && selected[0].type === 'edge' && (
@@ -1091,8 +1210,12 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
                 <>
                   <TransformControls selected={selected} store={store} disabled={isInteracting()} />
                   <SelectionActions selected={selected} store={store} stacking={stacking} />
-                  <button disabled={!store.canRemoveSelection()} onClick={store.removeSelected}>
-                    Delete selection
+                  <button
+                    className="wb-danger-action"
+                    disabled={!store.canRemoveSelection()}
+                    onClick={store.removeSelected}
+                  >
+                    <BoardIconLabel name="delete">Delete selection</BoardIconLabel>
                   </button>
                   {!selectionLocked && !store.canRemoveSelection() && (
                     <p className="wb-endpoint-hint">
@@ -1179,7 +1302,7 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
         <div className="wb-notice" role="alert" data-wb-ui>
           <span>{message}</span>
           <button aria-label="Dismiss message" onClick={() => setMessage('')}>
-            ×
+            <BoardIcon name="close" />
           </button>
         </div>
       )}
@@ -1191,14 +1314,16 @@ const BoardContent: React.FC<IBoardProps> = ({ filepath, initialDocument }) => {
               : `Source file changed: ${sourceUpdate.title} (${sourceUpdate.count} elements). Local work is preserved.`}
           </p>
           <div>
-            <button onClick={download}>Export local board</button>
+            <button onClick={download}>
+              <BoardIconLabel name="exportBoard">Export local board</BoardIconLabel>
+            </button>
             <button
               disabled={
                 loading || saving || !!editor || !!labelEditor || reference !== null || saveAs
               }
               onClick={() => void reloadFile()}
             >
-              Reload source file
+              <BoardIconLabel name="reload">Reload source file</BoardIconLabel>
             </button>
           </div>
         </aside>

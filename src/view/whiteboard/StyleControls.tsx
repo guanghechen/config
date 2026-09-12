@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import type { IStyle } from '@/shared/whiteboard/model'
 import { SketchStylePicker } from './SketchStylePicker'
 import { isThemeColor, resolveStyle } from '@/shared/whiteboard/colors'
@@ -35,7 +36,9 @@ export const StyleControls = React.memo<{
         {(showFillPattern ? (['stroke', 'fill'] as const) : (['stroke'] as const)).map(channel => (
           <div key={channel} className="wb-color-control">
             <label>
-              {channel === 'stroke' ? 'Stroke' : 'Fill'}
+              <BoardIconLabel name={channel === 'stroke' ? 'stroke' : 'fill'}>
+                {channel === 'stroke' ? 'Stroke' : 'Fill'}
+              </BoardIconLabel>
               <span className="wb-color-mode">
                 {isThemeColor(displayStyle[channel]) ? 'Theme' : 'Custom'}
               </span>
@@ -92,12 +95,12 @@ export const StyleControls = React.memo<{
                 updateStyle({ fill: event.target.checked ? 'transparent' : 'theme:paper' })
               }
             />
-            No fill
+            <BoardIconLabel name="noFill">No fill</BoardIconLabel>
           </label>
         )}
         {showLineWidth && (
           <label>
-            Line width
+            <BoardIconLabel name="lineWidth">Line width</BoardIconLabel>
             <select
               aria-label="Line width"
               value={displayStyle.strokeWidth}

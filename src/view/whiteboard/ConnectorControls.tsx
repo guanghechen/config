@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import { addConnectorBend, connectorControls } from '@/shared/whiteboard/edges'
 import { resolveEndpoint } from '@/shared/whiteboard/geometry'
 import { DEFAULT_EDGE_APPEARANCE } from '@/shared/whiteboard/model'
@@ -33,9 +34,11 @@ export const ConnectorControls = React.memo<{
   }
   return (
     <fieldset className="wb-connector-controls" disabled={disabled}>
-      <legend>Connection</legend>
+      <legend>
+        <BoardIconLabel name="edge">Connection</BoardIconLabel>
+      </legend>
       <label>
-        Route
+        <BoardIconLabel name="curve">Route</BoardIconLabel>
         <select
           aria-label="Connection route"
           value={value.routing ?? 'straight'}
@@ -50,7 +53,9 @@ export const ConnectorControls = React.memo<{
       </label>
       {(['arrowStart', 'arrowEnd'] as const).map(key => (
         <label key={key}>
-          {key === 'arrowStart' ? 'Start' : 'End'}
+          <BoardIconLabel name={key === 'arrowStart' ? 'previous' : 'next'}>
+            {key === 'arrowStart' ? 'Start' : 'End'}
+          </BoardIconLabel>
           <select
             aria-label={key === 'arrowStart' ? 'Start arrowhead' : 'End arrowhead'}
             value={value[key] ?? DEFAULT_EDGE_APPEARANCE[key]}
@@ -62,7 +67,7 @@ export const ConnectorControls = React.memo<{
         </label>
       ))}
       <label>
-        Line
+        <BoardIconLabel name="lineWidth">Line</BoardIconLabel>
         <select
           aria-label="Connection line style"
           value={value.lineStyle ?? 'solid'}
@@ -81,7 +86,7 @@ export const ConnectorControls = React.memo<{
             disabled={(single.controls?.length ?? 2) >= 64}
             onClick={() => editControls(addConnectorBend)}
           >
-            Add bend
+            <BoardIconLabel name="addBend">Add bend</BoardIconLabel>
           </button>
           <button
             disabled={single.controls?.length === 0}
@@ -92,7 +97,7 @@ export const ConnectorControls = React.memo<{
               }))
             }
           >
-            Remove last bend
+            <BoardIconLabel name="removeBend">Remove last bend</BoardIconLabel>
           </button>
         </>
       )}
@@ -107,7 +112,7 @@ export const ConnectorControls = React.memo<{
               })
             }
           >
-            Reset route controls
+            <BoardIconLabel name="reload">Reset route controls</BoardIconLabel>
           </button>
           <p className="wb-endpoint-hint">
             Drag square handles to shape the route.

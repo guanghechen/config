@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import type { IPoint } from '@/shared/whiteboard/model'
 
 export const LabelEditor: React.FC<{
@@ -55,10 +56,10 @@ export const LabelEditor: React.FC<{
       <footer>
         <small>Shift + Enter for a new line</small>
         <button type="button" onClick={onClose}>
-          Cancel
+          <BoardIconLabel name="close">Cancel</BoardIconLabel>
         </button>
         <button className="wb-primary" type="submit">
-          Save
+          <BoardIconLabel name="check">Save</BoardIconLabel>
         </button>
       </footer>
     </form>

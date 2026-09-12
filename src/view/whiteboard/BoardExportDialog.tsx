@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIconLabel } from './BoardIcon'
 import type { IElement } from '@/shared/whiteboard/model'
 import { exportBounds, exportSelection, rasterSize } from '@/shared/whiteboard/export'
 import type { BoardStore } from './store'
@@ -216,10 +217,12 @@ export const BoardExportDialog: React.FC<{
           }
         }}
       >
-        <h2>Export image</h2>
+        <h2>
+          <BoardIconLabel name="exportImage">Export image</BoardIconLabel>
+        </h2>
         <fieldset disabled={busy}>
           <label>
-            Content
+            <BoardIconLabel name="layers">Content</BoardIconLabel>
             <select
               aria-label="Export content"
               value={selection ? 'selection' : 'all'}
@@ -232,7 +235,7 @@ export const BoardExportDialog: React.FC<{
             </select>
           </label>
           <label>
-            Format
+            <BoardIconLabel name="image">Format</BoardIconLabel>
             <select
               aria-label="Export format"
               value={format}
@@ -243,7 +246,7 @@ export const BoardExportDialog: React.FC<{
             </select>
           </label>
           <label>
-            PNG scale
+            <BoardIconLabel name="autoSize">PNG scale</BoardIconLabel>
             <select
               aria-label="PNG scale"
               value={scale}
@@ -260,7 +263,7 @@ export const BoardExportDialog: React.FC<{
               checked={background}
               onChange={event => setBackground(event.target.checked)}
             />{' '}
-            Include background
+            <BoardIconLabel name="fill">Include background</BoardIconLabel>
           </label>
         </fieldset>
         {error && <p role="alert">{error}</p>}
@@ -268,12 +271,14 @@ export const BoardExportDialog: React.FC<{
           {status || 'Hidden elements are excluded. Card contents use their saved size.'}
         </p>
         <footer>
-          <button onClick={close}>{busy ? 'Cancel' : 'Close'}</button>
+          <button onClick={close}>
+            <BoardIconLabel name="close">{busy ? 'Cancel' : 'Close'}</BoardIconLabel>
+          </button>
           <button disabled={busy} onClick={() => start(true)}>
-            Copy PNG
+            <BoardIconLabel name="copy">Copy PNG</BoardIconLabel>
           </button>
           <button ref={button} disabled={busy} onClick={() => start(false)}>
-            Download
+            <BoardIconLabel name="exportImage">Download</BoardIconLabel>
           </button>
         </footer>
       </section>

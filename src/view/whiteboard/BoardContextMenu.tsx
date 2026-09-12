@@ -1,4 +1,5 @@
 import React from 'react'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
 import { VirtualList } from '@/common/component/virtual-list/VirtualList'
 import { canGroup } from '@/shared/whiteboard/organization'
 import type { IElement, IPoint } from '@/shared/whiteboard/model'
@@ -74,7 +75,7 @@ export const BoardContextMenu: React.FC<{
           })
         }
       >
-        Copy
+        <BoardIconLabel name="copy">Copy</BoardIconLabel>
       </button>
       <button
         role="menuitem"
@@ -85,7 +86,7 @@ export const BoardContextMenu: React.FC<{
           })
         }
       >
-        Cut
+        <BoardIconLabel name="cut">Cut</BoardIconLabel>
       </button>
       <button
         role="menuitem"
@@ -95,21 +96,21 @@ export const BoardContextMenu: React.FC<{
           })
         }
       >
-        Paste here
+        <BoardIconLabel name="paste">Paste here</BoardIconLabel>
       </button>
       <button
         role="menuitem"
         disabled={!selected.length}
         onClick={() => run(store.duplicateSelected)}
       >
-        Duplicate
+        <BoardIconLabel name="duplicate">Duplicate</BoardIconLabel>
       </button>
       <button
         role="menuitem"
         disabled={!editable || selected.length !== 1 || selected[0]?.type === 'stroke'}
         onClick={() => run(() => edit(selected[0]))}
       >
-        Edit content
+        <BoardIconLabel name="edit">Edit content</BoardIconLabel>
       </button>
       <hr />
       <button
@@ -117,35 +118,37 @@ export const BoardContextMenu: React.FC<{
         disabled={!editable || !canGroup(selected)}
         onClick={() => run(store.groupSelected)}
       >
-        Group
+        <BoardIconLabel name="group">Group</BoardIconLabel>
       </button>
       <button
         role="menuitem"
         disabled={!editable || !selected.some(element => element.groupId)}
         onClick={() => run(store.ungroupSelected)}
       >
-        Ungroup
+        <BoardIconLabel name="ungroup">Ungroup</BoardIconLabel>
       </button>
       <button
         role="menuitem"
         disabled={!editable}
         onClick={() => run(() => store.reorderSelected('front'))}
       >
-        Bring to front
+        <BoardIconLabel name="front">Bring to front</BoardIconLabel>
       </button>
       <button
         role="menuitem"
         disabled={!editable}
         onClick={() => run(() => store.reorderSelected('back'))}
       >
-        Send to back
+        <BoardIconLabel name="back">Send to back</BoardIconLabel>
       </button>
       <button
         role="menuitem"
         disabled={!selected.length}
         onClick={() => run(() => store.setSelectedFlags({ locked: !locked }))}
       >
-        {locked ? 'Unlock' : 'Lock'}
+        <BoardIconLabel name={locked ? 'unlock' : 'lock'}>
+          {locked ? 'Unlock' : 'Lock'}
+        </BoardIconLabel>
       </button>
       <button
         role="menuitem"
@@ -154,10 +157,17 @@ export const BoardContextMenu: React.FC<{
           run(() => store.setSelectedFlags({ hidden: !selected.some(element => element.hidden) }))
         }
       >
-        {selected.some(element => element.hidden) ? 'Show' : 'Hide'}
+        <BoardIconLabel name={selected.some(element => element.hidden) ? 'visible' : 'hidden'}>
+          {selected.some(element => element.hidden) ? 'Show' : 'Hide'}
+        </BoardIconLabel>
       </button>
-      <button role="menuitem" disabled={!removable} onClick={() => run(store.removeSelected)}>
-        Delete
+      <button
+        className="wb-danger-action"
+        role="menuitem"
+        disabled={!removable}
+        onClick={() => run(store.removeSelected)}
+      >
+        <BoardIconLabel name="delete">Delete</BoardIconLabel>
       </button>
       {position.targets.length > 1 && (
         <>
@@ -174,8 +184,19 @@ export const BoardContextMenu: React.FC<{
                 title={element.id}
                 onClick={() => run(() => store.select(new Set([element.id])))}
               >
-                {elementName(element)}
-                {store.getSnapshot().locked.has(element.id) ? ' · Locked' : ''}
+                <BoardIcon
+                  name={
+                    element.type === 'shape'
+                      ? element.shape
+                      : element.type === 'edge'
+                        ? 'edge'
+                        : element.type
+                  }
+                />
+                <span>
+                  {elementName(element)}
+                  {store.getSnapshot().locked.has(element.id) ? ' · Locked' : ''}
+                </span>
               </button>
             )}
           />

@@ -13,19 +13,13 @@ export type ITool =
   | 'laser'
 
 export const TOOLS: ReadonlyArray<{ id: ITool; label: string; key: string; hint: string }> = [
+  { id: 'hand', label: 'Hand', key: 'H', hint: 'Drag to pan · Ctrl / ⌘ + scroll to zoom' },
   {
     id: 'select',
     label: 'Select',
     key: 'V',
     hint: 'Drag to select · Alt to move without snapping',
   },
-  {
-    id: 'laser',
-    label: 'Laser pointer',
-    key: 'L',
-    hint: 'Hold and move to point · Leaves no marks',
-  },
-  { id: 'hand', label: 'Hand', key: 'H', hint: 'Drag to pan · Ctrl / ⌘ + scroll to zoom' },
   {
     id: 'rectangle',
     label: 'Rectangle',
@@ -51,12 +45,6 @@ export const TOOLS: ReadonlyArray<{ id: ITool; label: string; key: string; hint:
     hint: 'Drag between blocks to connect · Shift for 45° angles',
   },
   { id: 'stroke', label: 'Freehand', key: 'P', hint: 'Draw freely · Esc to return to selection' },
-  {
-    id: 'eraser',
-    label: 'Eraser',
-    key: 'E',
-    hint: 'Drag to erase objects or groups · Esc to cancel',
-  },
   { id: 'text', label: 'Text', key: 'T', hint: 'Place text · Double-click to edit' },
   {
     id: 'markdown',
@@ -69,5 +57,17 @@ export const TOOLS: ReadonlyArray<{ id: ITool; label: string; key: string; hint:
     label: 'Image',
     key: 'I',
     hint: 'Choose images · Paste or drop screenshots onto the canvas',
+  },
+  {
+    id: 'eraser',
+    label: 'Eraser',
+    key: 'E',
+    hint: 'Drag to erase objects or groups · Esc to cancel',
+  },
+  {
+    id: 'laser',
+    label: 'Laser pointer',
+    key: 'L',
+    hint: 'Hold and move to point · Leaves no marks',
   },
 ]

@@ -51,7 +51,8 @@
 .vl-main > .wb {
   height: 100%;
 }
-.wb:has(.wb-editor, .wb-label-editor) > :is(header, nav, aside, footer, .wb-tool-area) {
+.wb:has(.wb-editor, .wb-label-editor) > :is(header, nav, aside, footer),
+.wb:has(.wb-editor, .wb-label-editor) .wb-topbar * {
   pointer-events: none;
 }
 .wb-label-editor {
@@ -79,10 +80,13 @@
   align-items: center;
   gap: 4px;
   font-size: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .wb-label-editor small {
   margin-right: auto;
   color: var(--wb-muted);
+  flex-basis: 100%;
 }
 .wb-endpoint-hint {
   margin-top: 10px;
@@ -107,6 +111,24 @@
   width: 20px;
   height: 20px;
   flex: none;
+}
+.wb-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.wb-icon-label > .wb-icon {
+  width: 16px;
+  height: 16px;
+}
+.wb-icon-label > span {
+  min-width: 0;
+}
+.wb .wb-danger-action {
+  color: var(--wb-error);
 }
 .wb button:hover {
   background: var(--wb-hover);
@@ -233,6 +255,7 @@
   background: transparent;
 }
 .wb-filebar,
+.wb-viewbar,
 .wb-tools,
 .wb-inspector,
 .wb-zoom,
@@ -244,69 +267,185 @@
   box-shadow: 0 3px 14px var(--wb-shadow);
   border-radius: 12px;
 }
-.wb-filebar {
+.wb-topbar {
   position: absolute;
-  top: 18px;
-  left: 18px;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  z-index: 5;
+  pointer-events: none;
+}
+.wb-topbar > * {
+  pointer-events: auto;
+}
+.wb-filebar,
+.wb-viewbar {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px;
-  z-index: 5;
-  max-width: calc(100% - 36px);
+  height: 52px;
+  gap: 3px;
+  padding: 5px;
+  min-width: 0;
+  max-width: 100%;
 }
-.wb-filebar > a {
-  padding: 7px 9px;
-  text-decoration: none;
-  color: var(--wb-muted);
+.wb-filebar {
+  justify-self: start;
 }
-.wb-filebar > input {
-  width: 155px;
-  flex: 1 1 155px;
-  border: 0;
-  background: transparent;
-  font-size: 13px;
+.wb-viewbar {
+  justify-self: end;
 }
-.wb-file-menu {
+.wb-file-menu,
+.wb-view-menu {
   position: relative;
+  min-width: 0;
+}
+.wb-topbar summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 9px;
+  list-style: none;
+  border-radius: 7px;
+}
+.wb-topbar summary::-webkit-details-marker {
+  display: none;
+}
+.wb-topbar summary:hover {
+  background: var(--wb-hover);
 }
 .wb-file-menu summary {
-  list-style: none;
-  padding: 7px 9px;
+  gap: 9px;
+}
+.wb-board-name {
+  min-width: 0;
+  max-width: 155px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+.wb-file-menu > div,
+.wb-view-menu-panel,
+.wb-more-tools-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  padding: 8px;
+  background: var(--wb-popover);
+  border: 1px solid var(--wb-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px var(--wb-shadow);
 }
 .wb-file-menu > div {
-  position: absolute;
-  top: 44px;
-  left: 0;
-  width: 230px;
+  left: -5px;
+  width: 288px;
+  max-height: calc(100dvh - 88px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding: 8px;
 }
-.wb-file-menu button {
+.wb-file-menu a,
+.wb-file-menu > div > button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  text-decoration: none;
+  text-align: left;
+  line-height: 20px;
+}
+.wb-file-menu a > .wb-icon,
+.wb-file-menu button > .wb-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--wb-muted);
+}
+.wb-file-menu :is(a, button):hover > .wb-icon {
+  color: inherit;
+}
+.wb-file-menu a:hover {
+  background: var(--wb-hover);
+}
+.wb-menu-title {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--wb-muted);
+}
+.wb-menu-title input {
+  width: 100%;
+  font-size: 13px;
+}
+.wb-file-menu hr {
+  border: 0;
+  border-top: 1px solid var(--wb-border);
+  margin: 6px 0;
+}
+.wb-viewbar > button {
+  width: 34px;
+  height: 40px;
+  padding: 7px;
+}
+.wb-viewbar > button > span {
+  display: none;
+}
+.wb-viewbar > .wb-appearance {
+  border-left: 1px solid var(--wb-border);
+  padding-left: 5px;
+  margin-left: 2px;
+}
+.wb-view-menu-panel {
+  right: -5px;
+  width: 220px;
+}
+.wb-view-menu-panel > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
   text-align: left;
 }
+.wb-view-menu-panel > .wb-appearance {
+  border-top: 1px solid var(--wb-border);
+  margin-top: 8px;
+  padding: 8px 4px 0;
+  justify-content: flex-end;
+}
+.wb-view-menu-panel > .wb-appearance::before {
+  content: 'Appearance';
+  margin-right: auto;
+  color: var(--wb-muted);
+  font-size: 12px;
+}
+.wb-viewbar button[aria-pressed='true'] {
+  background: var(--wb-selected);
+  color: var(--wb-selected-ink);
+}
 .wb-tool-area {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  justify-items: center;
-  z-index: 4;
-  pointer-events: none;
+  position: relative;
+  min-width: 0;
 }
 .wb-tools {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 6px;
-  pointer-events: auto;
+  gap: 2px;
+  padding: 5px;
+  height: 52px;
 }
-.wb-tools button {
+.wb-tools button,
+.wb-tools summary {
   position: relative;
-  width: 43px;
-  height: 42px;
+  width: 38px;
+  height: 40px;
   padding: 4px;
   display: grid;
   place-items: center;
@@ -323,7 +462,7 @@
   color: var(--wb-muted);
 }
 .wb-tools .wb-tool-lock {
-  width: 34px;
+  width: 30px;
   color: var(--wb-muted);
 }
 .wb-tool-divider {
@@ -332,7 +471,12 @@
   margin: 0 4px;
 }
 .wb-tool-hint {
-  margin: 9px 0 0;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  margin: 0;
   font-size: 11px;
   color: var(--wb-muted);
   text-align: center;
@@ -341,7 +485,8 @@
   padding: 0 6px;
   border-radius: 4px;
 }
-.wb-tools button[aria-pressed='true'] {
+.wb-tools button[aria-pressed='true'],
+.wb-tools summary[data-active='true'] {
   background: var(--wb-selected);
   color: var(--wb-selected-ink);
 }
@@ -349,7 +494,7 @@
   position: absolute;
   left: 18px;
   top: 92px;
-  width: 208px;
+  width: 232px;
   padding: 15px;
   z-index: 3;
   max-height: calc(100% - 215px);
@@ -388,6 +533,11 @@
   text-align: left;
   font-size: 12px;
   margin-top: 5px;
+}
+.wb-inspector .wb-section-heading {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--wb-muted);
 }
 .wb-sketch-style fieldset {
   border: 0;
@@ -487,6 +637,16 @@
   min-width: 0;
   text-align: left;
   display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.wb-element-select > .wb-icon {
+  width: 16px;
+  height: 16px;
+}
+.wb-element-label {
+  display: grid;
 }
 .wb-element-select span {
   overflow: hidden;
@@ -510,10 +670,21 @@
   font-size: 12px;
 }
 .wb-context-menu button {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   width: 100%;
   text-align: left;
   padding: 5px 9px;
+}
+.wb-context-menu button > .wb-icon {
+  width: 16px;
+  height: 16px;
+}
+.wb-context-menu button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .wb-context-menu hr {
   border: 0;
@@ -574,6 +745,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 4px;
 }
+.wb-transform-buttons button {
+  padding: 7px 6px;
+  font-size: 11px;
+}
 .wb-align {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -581,9 +756,9 @@
   margin-top: 8px;
 }
 .wb-align button {
-  text-align: center;
-  font-size: 20px;
-  padding: 3px;
+  display: grid;
+  place-items: center;
+  padding: 6px;
 }
 .wb-stacking {
   display: grid;
@@ -776,8 +951,9 @@
   padding: 8px;
   border-top: 1px solid var(--wb-border);
   font-size: 12px;
+  flex-wrap: wrap;
 }
-.wb-editor footer span {
+.wb-editor footer > span {
   margin-right: auto;
   color: var(--wb-muted);
 }
@@ -837,47 +1013,24 @@
 }
 .wb-reference footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
 }
-@media (max-width: 1540px) {
-  .wb-tool-area {
-    top: 80px;
-  }
-  .wb-inspector {
-    top: 145px;
-  }
-  .wb-notice {
-    top: 140px;
-  }
-}
 @media (max-width: 650px) {
-  .wb-tool-area {
-    width: calc(100% - 24px);
-  }
-  .wb-tools {
-    width: 100%;
-    gap: 0;
-    justify-content: space-between;
-  }
-  .wb-tools button,
-  .wb-tools .wb-tool-lock {
-    width: 7%;
-  }
-  .wb-tool-divider {
-    margin: 0 2px;
-  }
-  .wb-tool-hint {
-    font-size: 10px;
-    white-space: normal;
-  }
   .wb-inspector {
-    top: 176px;
-    width: 145px;
+    top: 84px;
+    width: 184px;
     left: 10px;
     padding: 10px;
-    max-height: calc(100% - 280px);
+    max-height: calc(100% - 180px);
+  }
+  .wb-inspector .wb-icon-label {
+    gap: 5px;
+  }
+  .wb-transform-buttons {
+    grid-template-columns: 1fr;
   }
   .wb-status {
     display: none;
@@ -889,9 +1042,6 @@
   }
   .wb-help {
     margin-left: auto;
-  }
-  .wb-filebar {
-    left: 12px;
   }
   .wb-reference {
     top: 26%;
@@ -1063,8 +1213,22 @@
   text-overflow: ellipsis;
   text-align: left;
 }
+.wb-area-name .wb-icon-label {
+  display: flex;
+}
+.wb-area-name .wb-icon-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .wb-area-row button {
   padding: 6px;
+}
+.wb-area-row .wb-icon,
+.wb-area-panel header button > .wb-icon,
+.wb-element-list header button > .wb-icon {
+  width: 16px;
+  height: 16px;
 }
 .wb-area-panel p {
   font-size: 12px;
@@ -1072,9 +1236,6 @@
 }
 .wb-reading-tools,
 .wb-presentation {
-  position: absolute;
-  top: 18px;
-  right: 18px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1084,7 +1245,11 @@
   background: var(--wb-paper);
   box-shadow: 0 4px 18px var(--wb-shadow);
 }
+.wb-reading-tools {
+  height: 52px;
+}
 .wb-presentation {
+  position: absolute;
   top: auto;
   bottom: 18px;
   left: 50%;
@@ -1097,48 +1262,68 @@
   background: var(--wb-hover);
 }
 
-@media (max-width: 1540px) {
-  .wb-area-panel,
-  .wb-element-list {
-    top: 150px;
-  }
+/* Compact controls follow the board's measured width, including split views. */
+.wb[data-compact='true'] .wb-topbar {
+  left: 8px;
+  right: 8px;
+  gap: 8px;
+}
+.wb[data-compact='true'] .wb-board-name,
+.wb[data-compact='true'] .wb-tool-hint {
+  display: none;
+}
+.wb[data-compact='true'] .wb-topbar summary,
+.wb[data-compact='true'] .wb-tools > button {
+  width: 36px;
+  padding: 4px;
+}
+.wb[data-compact='true'] .wb-filebar,
+.wb[data-compact='true'] .wb-viewbar {
+  padding: 3px;
+}
+.wb-more-tools-panel {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.wb-tools .wb-more-tools-panel button {
+  width: 100%;
+  display: flex;
+  gap: 6px;
+  padding: 8px 6px;
+  text-align: left;
+  font-size: 12px;
+}
+.wb-more-tools-panel .wb-icon {
+  width: 18px;
+  height: 18px;
+}
+.wb-more-tools-panel small {
+  position: static;
+  margin-left: auto;
+}
+.wb-tools .wb-more-tools-panel .wb-more-lock {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--wb-border);
+  margin-top: 4px;
+  border-radius: 0 0 7px 7px;
+}
+.wb[data-compact='true'] .wb-area-panel,
+.wb[data-compact='true'] .wb-element-list,
+.wb[data-compact='true'] .wb-inspector {
+  top: 84px;
+}
+.wb[data-compact='true'] .wb-reading-tools > span {
+  font-size: 12px;
 }
 @media (max-width: 650px) {
-  .wb-filebar {
-    gap: 2px;
-    max-width: calc(100% - 24px);
-  }
-  .wb-filebar > input {
-    width: 70px;
-  }
-  .wb-tools {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 2px;
-  }
-  .wb-tools button,
-  .wb-tools .wb-tool-lock {
-    width: 100%;
-    min-width: 0;
-  }
-  .wb-tool-divider {
-    display: none;
-  }
-  .wb-area-panel,
-  .wb-element-list,
-  .wb-inspector {
-    top: 218px;
-  }
-  .wb[data-reading='true'] .wb-area-panel,
-  .wb[data-reading='true'] .wb-element-list {
-    top: 150px;
-  }
   .wb-area-panel {
     width: min(320px, calc(100% - 24px));
     right: 12px;
-  }
-  .wb-reading-tools {
-    top: 80px;
   }
   .wb-presentation {
     flex-wrap: wrap;

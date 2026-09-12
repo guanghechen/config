@@ -4,7 +4,8 @@ import { canGroup, layoutUnits } from '@/shared/whiteboard/organization'
 import type { ILayoutAxis, ILayoutMode } from '@/shared/whiteboard/organization'
 import type { IStackingOrder } from '@/shared/whiteboard/stacking'
 import type { BoardStore } from './store'
-import { BoardIcon } from './BoardIcon'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
+import type { IBoardIconName } from './BoardIcon'
 
 const STACKING: ReadonlyArray<{ order: IStackingOrder; label: string; shortcut: string }> = [
   { order: 'back', label: 'Send to back', shortcut: 'Shift + [' },
@@ -15,16 +16,16 @@ const STACKING: ReadonlyArray<{ order: IStackingOrder; label: string; shortcut: 
 
 const ALIGNMENTS: ReadonlyArray<{
   label: string
-  icon: string
+  icon: IBoardIconName
   axis: ILayoutAxis
   mode: ILayoutMode
 }> = [
-  { label: 'Align left', icon: '⇤', axis: 'x', mode: 'start' },
-  { label: 'Align horizontal centers', icon: '↔', axis: 'x', mode: 'center' },
-  { label: 'Align right', icon: '⇥', axis: 'x', mode: 'end' },
-  { label: 'Align top', icon: '⤒', axis: 'y', mode: 'start' },
-  { label: 'Align vertical centers', icon: '↕', axis: 'y', mode: 'center' },
-  { label: 'Align bottom', icon: '⤓', axis: 'y', mode: 'end' },
+  { label: 'Align left', icon: 'alignLeft', axis: 'x', mode: 'start' },
+  { label: 'Align horizontal centers', icon: 'alignHorizontalCenter', axis: 'x', mode: 'center' },
+  { label: 'Align right', icon: 'alignRight', axis: 'x', mode: 'end' },
+  { label: 'Align top', icon: 'alignTop', axis: 'y', mode: 'start' },
+  { label: 'Align vertical centers', icon: 'alignVerticalCenter', axis: 'y', mode: 'center' },
+  { label: 'Align bottom', icon: 'alignBottom', axis: 'y', mode: 'end' },
 ]
 
 export const SelectionActions: React.FC<{
@@ -36,6 +37,9 @@ export const SelectionActions: React.FC<{
   const grouped = selected.some(element => element.groupId)
   return (
     <div className="wb-selection-actions">
+      <p className="wb-section-heading">
+        <BoardIconLabel name="layers">Layer order</BoardIconLabel>
+      </p>
       <div className="wb-stacking" role="group" aria-label="Layer order">
         {STACKING.map(({ order, label, shortcut }) => (
           <button
@@ -54,12 +58,12 @@ export const SelectionActions: React.FC<{
       <p className="wb-endpoint-hint">All element types share one order, from back to front.</p>
       {canGroup(selected) && (
         <button onClick={store.groupSelected} title="Ctrl / ⌘ + G">
-          Group selection
+          <BoardIconLabel name="group">Group selection</BoardIconLabel>
         </button>
       )}
       {grouped && (
         <button onClick={store.ungroupSelected} title="Ctrl / ⌘ + Shift + G">
-          Ungroup selection
+          <BoardIconLabel name="ungroup">Ungroup selection</BoardIconLabel>
         </button>
       )}
       {grouped && (
@@ -82,15 +86,15 @@ export const SelectionActions: React.FC<{
                 title={label}
                 onClick={() => store.arrangeSelected(axis, mode)}
               >
-                {icon}
+                <BoardIcon name={icon} />
               </button>
             ))}
           </div>
           <button disabled={units < 3} onClick={() => store.arrangeSelected('x', 'distribute')}>
-            Distribute horizontally
+            <BoardIconLabel name="distributeHorizontal">Distribute horizontally</BoardIconLabel>
           </button>
           <button disabled={units < 3} onClick={() => store.arrangeSelected('y', 'distribute')}>
-            Distribute vertically
+            <BoardIconLabel name="distributeVertical">Distribute vertically</BoardIconLabel>
           </button>
         </>
       )}
