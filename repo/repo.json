@@ -258,6 +258,10 @@
         {
           "branch": "yui",
           "editions": ["nix", "osx"]
+        },
+        {
+          "branch": "zed",
+          "editions": ["osx"]
         }
       ]
     }
