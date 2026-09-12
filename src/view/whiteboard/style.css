@@ -214,6 +214,9 @@
   background: transparent;
   color: var(--wb-ink);
 }
+.wb-card-content :is(.yozora-root, .yozora-heading) {
+  font-family: Monaco, monospace;
+}
 .wb-card-content img {
   max-width: 100%;
   height: auto;
