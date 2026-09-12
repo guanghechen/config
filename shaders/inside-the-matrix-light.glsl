@@ -6,20 +6,23 @@
 
   @pkazmier modified this shader to work in Ghostty.
 
-  Light-theme variant: the rain is rendered as translucent dark-green ink
+  Light-theme variant: the rain is rendered as fine, muted jade ink
   only on pixels matching Ghostty's configured background color. Terminal
   glyphs, ANSI colors, selections, and cursor pixels remain unchanged.
 */
 
 const int ITERATIONS = 40;   //use less value if you need more performance
-const float SPEED = .5;
+const float SPEED = 0.32;
 
-// Light-theme compositing. These values intentionally keep the rain subtle
-// enough for long coding sessions while retaining darker leading glyphs.
-const vec3 MATRIX_INK = vec3(0.24, 0.32, 0.29);
-const vec3 MATRIX_HEAD_INK = vec3(0.07, 0.18, 0.14);
-const float MATRIX_MAX_OPACITY = 0.18;
-const float MATRIX_INTENSITY_GAMMA = 2.0;
+const vec3 MATRIX_INK = vec3(0.12, 0.42, 0.35);
+const vec3 MATRIX_HEAD_INK = vec3(0.07, 0.32, 0.27);
+const float MATRIX_MAX_OPACITY = 0.16;
+const float MATRIX_INTENSITY_GAMMA = 1.3;
+const float MATRIX_COLUMN_DENSITY = 0.50;
+const float MATRIX_FOCAL_LENGTH = 1.5;
+// Fade out approaching columns before their glyphs dominate the text.
+// Expressing the limit as a fraction of the viewport also scales with Retina.
+const float MATRIX_MAX_GLYPH_HEIGHT = 0.042;
 const float BACKGROUND_EDGE_START = 0.01;
 const float BACKGROUND_EDGE_END = 0.12;
 
@@ -102,7 +105,9 @@ float rune(vec2 U, vec2 seed, float highlight)
             if (pos.xy != pos.zw)  //filter out single points (when start and end are the same)
                 d = min(d, rune_line(U, pos.xy, pos.zw + .001) ); // closest line
 	}
-	return smoothstep(0.1, 0., d) + highlight*smoothstep(0.4, 0., d);
+    // A narrow ink stroke replaces the dark version's broad luminous halo.
+    float strokeWidth = mix(0.035, 0.05, clamp(highlight, 0.0, 1.0));
+    return 1.0 - smoothstep(strokeWidth, strokeWidth + 0.025, d);
 }
 
 float random_char(vec2 outer, vec2 inner, float highlight) {
@@ -171,6 +176,12 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
             vec4 cell_hash = hash4(vec3(ivec3(cell, zcell)));
             vec4 cell_hash2 = fract(cell_hash * vec4(127.1, 311.7, 271.9, 124.6));
 
+            // Stable per-drop sparsity avoids flickering as the camera moves.
+            if (cell_hash2.y > MATRIX_COLUMN_DENSITY) {
+                zcell += cell_shift.z;
+                continue;
+            }
+
             float chars_count = cell_hash.w * (STRIP_CHARS_MAX - STRIP_CHARS_MIN) + STRIP_CHARS_MIN;
             float target_length = chars_count * STRIP_CHAR_HEIGHT;
             float target_rad = STRIP_CHAR_WIDTH / 2.;
@@ -196,6 +207,18 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
                                                             cell_hash2.w*cell_hash2.w*4.*pow(char_hash.y, 4.)));  //some symbols in some strips are changed relatively often
                             float a = random_char(vec2(char_hash.x, time_factor), vec2(u,q), max(1., 3. - c/2.)*0.2);  //alpha
                             a *= clamp((chars_count - 0.5 - c) / 2., 0., 1.);  //tail fade
+                            a *= mix(0.3, 1.0, pow(1.0 - v, 0.7));
+                            float rayDistance = tmin / t3_to_t2;
+                            float glyphHeight = STRIP_CHAR_HEIGHT * MATRIX_FOCAL_LENGTH
+                                / max(rayDistance, 0.001);
+                            float depthFade = 1.0 - smoothstep(
+                                MATRIX_MAX_GLYPH_HEIGHT * 0.55,
+                                MATRIX_MAX_GLYPH_HEIGHT,
+                                glyphHeight
+                            );
+                            // Subpixel runes read as noise rather than symbols.
+                            depthFade *= smoothstep(1.0, 3.0, glyphHeight * iResolution.y);
+                            a *= depthFade;
                             if (a > 0.) {
                                 float attenuation = 1. + pow(0.06*tmin/t3_to_t2, 2.);
                                 vec3 col = (c == 0. ? vec3(0.67, 1.0, 0.82) : vec3(0.25, 0.80, 0.40)) / attenuation;
@@ -270,7 +293,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     float gap_size = float(BLOCK_GAP) * XYCELL_SIZE;
 
     vec3 ro = vec3(gap_size/2., gap_size/2., 0.);
-    vec3 rd = vec3(uv.x, 2.0, uv.y);
+    vec2 screen = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+    vec3 rd = vec3(screen.x, MATRIX_FOCAL_LENGTH, screen.y);
 
     float tq = fract(time / (level2_size*4.) * WALK_SPEED);  //the whole cycle time counter
     float t8 = fract(tq*4.);  //time counter while walking on one of the four big sides
@@ -422,7 +446,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         0.0,
         1.0
     );
-    float headMix = smoothstep(0.75, 0.95, rainIntensity);
+    // The head has a distinct red/green ratio even after distance attenuation.
+    float headMix = smoothstep(0.38, 0.65, rainColor.r / max(rainColor.g, 0.001));
     vec3 inkColor = mix(MATRIX_INK, MATRIX_HEAD_INK, headMix);
     float rainOpacity = pow(rainIntensity, MATRIX_INTENSITY_GAMMA)
         * MATRIX_MAX_OPACITY;
