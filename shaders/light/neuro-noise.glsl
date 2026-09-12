@@ -1,7 +1,7 @@
 // Source: https://github.com/lexrus/lex-ghostty-shaders/blob/132eb505390cbb9dab7b8f5f84de5045ccc1056c/neuro_noise.glsl
 // Upstream Paper Design code: https://www.apache.org/licenses/LICENSE-2.0
 // Powered by Paper Shaders: https://shaders.paper.design
-// Modified 2026-09-12: background-only rendering, automatic light/dark palette,
+// Modified 2026-09-12: background-only rendering, light palette,
 // preserved alpha, and macOS Metal/native/sRGB color matching.
 // Palette constants below are gamma-encoded Display P3, as in Ghostty's texture.
 
@@ -109,8 +109,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 background = srgbToDisplayP3(iBackgroundColor);
     float mask = backgroundMask(fragColor, background);
     if (mask <= 0.0) return;
-    float lightTheme = smoothstep(0.35, 0.75,
-        dot(background, vec3(0.2126, 0.7152, 0.0722)));
+    const float lightTheme = 1.0;
 
     vec2 shapeUV = (uv - 0.5) * vec2(iResolution.x / iResolution.y, 1.0)
         * PATTERN_SCALE * 10.0;
