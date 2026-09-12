@@ -1,5 +1,7 @@
 {
+  "icon_theme": "Zed (Default)",
   "base_keymap": "VSCode",
+  "theme": "rosepine-main",
   "vim_mode": true,
   "vim": {
     "toggle_relative_line_numbers": false
