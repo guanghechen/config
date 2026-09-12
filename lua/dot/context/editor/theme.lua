@@ -49,6 +49,39 @@ local integrations = {
   "plugin",
 }
 
+---@param integration                   dot.e.ThemeIntegration
+---@param theme                         dot.e.ThemeFamily
+---@return dot.theme.hlgroup.IIntegration
+---@overload fun(integration: "basic", theme: dot.e.ThemeFamily): dot.theme.hlgroup.basic.IIntegration
+local function load_integration(integration, theme)
+  local prefix = "dot.theme.hlgroup." .. integration ---@type string
+  local module = prefix .. "." .. theme ---@type string
+  -- Select a complete implementation; sharing unified highlights is explicit in theme files.
+  -- Probe Lua modules before require: only absence falls back, never a load error.
+  if
+    package.loaded[module]
+    or package.preload[module]
+    or package.searchpath(module, package.path)
+    or vim.loader.find(module)[1] ~= nil
+  then
+    return require(module)
+  end
+  return require(prefix .. ".unified")
+end
+
+---@param integration                   dot.e.ThemeIntegration
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
+---@overload fun(integration: "nvimbar", context: stl.t.theme.IContext): dot.theme.hlgroup.nvimbar.IHlgroupMap
+local function gen_hlgroup_map(integration, context)
+  if integration == "common" then
+    local basic = load_integration("basic", context.scheme.theme)
+    local modes_color_map = basic.gen_modes_color_map(context)
+    return dot.theme.hlgroup.common.gen_hlgroup_map(context, modes_color_map)
+  end
+  return load_integration(integration, context.scheme.theme).gen_hlgroup_map(context)
+end
+
 ---@return dot.context.theme.data
 function M.defaults()
   ---@type dot.context.theme.data
@@ -126,8 +159,7 @@ function M.apply_integration(params)
       scheme = scheme,
       transparency = transparency,
     }
-    local h = dot.theme.hlgroup[integration]
-    local hlgroup_map = h.gen_hlgroup_map(themeContext)
+    local hlgroup_map = gen_hlgroup_map(integration, themeContext)
     local uxTheme = stl.c.Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
@@ -146,18 +178,18 @@ function M.apply_theme(params)
     vim.g.colors_name = theme
     vim.o.background = scheme.darken and "dark" or "light"
 
-    ---@type dot.theme.hlgroup.nvimbar
-    local nvimbar_hlgroup_map = dot.theme.hlgroup.nvimbar.gen_hlgroup_map({
-      theme = theme,
+    ---@type stl.t.theme.IContext
+    local context = {
+      theme = scheme.theme,
+      variant = scheme.variant,
       scheme = scheme,
       transparency = transparency,
-    })
+    }
+    local nvimbar_hlgroup_map = gen_hlgroup_map("nvimbar", context)
 
     local uxTheme = stl.c.Theme.new()
     for _, integration in ipairs(integrations) do
-      local h = dot.theme.hlgroup[integration]
-      ---@return table<string, stl.t.theme.IHlgroup>
-      local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
+      local hlgroup_map = gen_hlgroup_map(integration, context)
 
       if integration == "plugin" then
         local additional = {} ---@type table<string, stl.t.theme.IHlgroup>

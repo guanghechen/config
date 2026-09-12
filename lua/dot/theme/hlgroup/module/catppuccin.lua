@@ -1,0 +1,23 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "dot.theme.hlgroup.module.catppuccin" ---@type string
+
+local unified = require("dot.theme.hlgroup.module.unified")
+
+---@class dot.theme.hlgroup.module.catppuccin
+local M = {}
+
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
+function M.gen_hlgroup_map(context)
+  local hlgroup_map = unified.gen_hlgroup_map(context)
+  local cs = stl.color
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
+  local bg = context.transparency and u.none or u.bg0 ---@type string
+
+  -- Keep tinted surfaces readable with this theme's foreground.
+  hlgroup_map.m_dv_add_inline = { fg = u.fg1, bg = u.diffAddInline or cs.mix(bg, u.brightGreen, 60) }
+  hlgroup_map.m_dv_del_inline = { fg = u.fg1, bg = u.diffDelInline or cs.mix(bg, u.brightRed, 60) }
+  return hlgroup_map
+end
+
+return M

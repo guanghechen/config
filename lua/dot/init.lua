@@ -80,26 +80,12 @@ local theme_scheme = setmetatable({ __mods = theme_scheme__mods }, {
 
 ---@class dot.theme.hlgroup.__mods
 local theme_hlgroup__mods = {
-  basic = "dot.theme.hlgroup.basic",
   common = "dot.theme.hlgroup.common",
-  lsp = "dot.theme.hlgroup.lsp",
-  module = "dot.theme.hlgroup.module",
-  nvimbar = "dot.theme.hlgroup.nvimbar",
-  plugin = "dot.theme.hlgroup.plugin",
-  treesitter = "dot.theme.hlgroup.treesitter",
-  widget = "dot.theme.hlgroup.widget",
 }
 
 ---@class dot.theme.hlgroup
 ---@field public __mods                 dot.theme.hlgroup.__mods
----@field public basic                  dot.theme.hlgroup.basic
 ---@field public common                 dot.theme.hlgroup.common
----@field public lsp                    dot.theme.hlgroup.lsp
----@field public module                 dot.theme.hlgroup.module
----@field public nvimbar                dot.theme.hlgroup.nvimbar
----@field public plugin                 dot.theme.hlgroup.plugin
----@field public treesitter             dot.theme.hlgroup.treesitter
----@field public widget                 dot.theme.hlgroup.widget
 local theme_hlgroup = setmetatable({ __mods = theme_hlgroup__mods }, {
   __index = function(t, k)
     local m = theme_hlgroup__mods[k] ---@type string|nil

@@ -1,11 +1,5 @@
----@class dot.theme.hlgroup.common.modes_color_map
----@field public command                stl.t.theme.IHlgroup
----@field public confirm                stl.t.theme.IHlgroup
----@field public insert                 stl.t.theme.IHlgroup
----@field public normal                 stl.t.theme.IHlgroup
----@field public select                 stl.t.theme.IHlgroup
----@field public terminal               stl.t.theme.IHlgroup
----@field public visual                 stl.t.theme.IHlgroup
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "dot.theme.hlgroup.common" ---@type string
 
 ---@class dot.theme.hlgroup.common.modes_map
 local modes_map = {
@@ -83,15 +77,14 @@ function M.resolve_mode()
 end
 
 ---@param context                       stl.t.theme.IContext
+---@param modes_color_map               dot.theme.hlgroup.basic.IModesColorMap
 ---@return table<string, stl.t.theme.IHlgroup>
-function M.gen_hlgroup_map(context)
+function M.gen_hlgroup_map(context, modes_color_map)
   local c = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
-  local basic = require("dot.theme.hlgroup.basic") ---@type dot.theme.hlgroup.basic
-  local mc = basic.gen_modes_color_map(context) ---@type dot.theme.hlgroup.common.modes_color_map
 
   local hlgroup_map = {} ---@type table<string, stl.t.theme.IHlgroup>
   for _, color in ipairs(colors) do
-    for mode, mode_color in pairs(mc) do
+    for mode, mode_color in pairs(modes_color_map) do
       local suffix = string.format("_%s_%s", color, mode) ---@type string
 
       -- stylua: ignore start
