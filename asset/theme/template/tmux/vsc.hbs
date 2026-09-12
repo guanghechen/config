@@ -12,6 +12,11 @@ set -g prompt-cursor-colour             "{{vsc.accentOrange}}"
 set -g @GHC_SL_BG_MESSAGE               "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
 set -g @GHC_SL_FG_MESSAGE               "{{vsc.foreground}}"
 
+## Popup
+set -g @GHC_POPUP_BG                    "{{vsc.editor_background}}"
+set -g @GHC_POPUP_FG                    "{{vsc.foreground}}"
+set -g @GHC_POPUP_FG_BORDER             "{{darken ? vsc.textMuted : vsc.activityBar_inactiveForeground}}"
+
 ## Menu
 set -g @GHC_MENU_BG                     "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
 set -g @GHC_MENU_FG                     "{{vsc.foreground}}"
