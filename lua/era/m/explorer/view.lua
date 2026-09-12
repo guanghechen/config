@@ -187,7 +187,7 @@ function M:render(bufnr, tree, root, options)
     end
 
     local line, line_highlights, git_info, diag_info =
-      self:__render_node__(ctx, node, indent, lnum, display_name, node.expanded, is_selected)
+      self:__render_node__(ctx, node, indent, lnum, display_name, node.expanded)
 
     lines[lnum] = line
 
@@ -542,25 +542,20 @@ end
 ---@return string
 function M:__get_node_icon__(node, is_ignored, is_expanded, defer_file_icon)
   if node.nodetype == "D" then
-    local icon, icon_hl ---@type string, string
+    local icon, icon_hl, is_fallback = stl.fileicon.get_directory_icon(node.nodename) ---@type string, string, boolean
+    if is_fallback then
+      icon = stl.icon.filetype.Folder
+      icon_hl = "m_ft_dirname"
+    end
+
+    -- Expansion changes the glyph, while directory type continues to own its color.
     if is_expanded then
       local is_loaded = node.loaded ---@type boolean
       local is_empty = is_loaded and #node.children == 0 ---@type boolean
       if is_empty then
         icon = stl.icon.filetype.FolderEmptyOpen
-        icon_hl = "m_ft_dirname"
       else
         icon = stl.icon.filetype.FolderOpen
-        icon_hl = "m_ft_dirname"
-      end
-    else
-      local dir_icon, dir_hl, is_fallback = stl.fileicon.get_directory_icon(node.nodename) ---@type string, string, boolean
-      if not is_fallback then
-        icon = dir_icon
-        icon_hl = dir_hl
-      else
-        icon = stl.icon.filetype.Folder
-        icon_hl = "m_ft_dirname"
       end
     end
     if is_ignored then
@@ -581,14 +576,9 @@ end
 ---@param ctx                           era.m.explorer.view.IRenderContext
 ---@param node                          era.m.explorer.Node
 ---@param is_ignored                    boolean
----@param is_selected                   boolean
 ---@param git_hl                        string|nil
 ---@return string
-function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected, git_hl)
-  if is_selected then
-    return "m_ex_selected"
-  end
-
+function M:__get_node_name_highlight__(ctx, node, is_ignored, git_hl)
   if is_ignored then
     return "m_ex_ignored"
   end
@@ -607,10 +597,7 @@ function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected, git_h
     return git_hl
   end
 
-  if node.nodetype == "D" then
-    return "m_ft_dirname"
-  end
-
+  -- Names encode status only; node type and selection are rendered by icons and signs.
   return "m_ft_filename"
 end
 
@@ -745,12 +732,11 @@ end
 ---@param lnum                          integer
 ---@param display_name                  ?string
 ---@param is_expanded                   boolean
----@param is_selected                   boolean
 ---@return string
 ---@return stl.t.IHighlight[]
 ---@return era.m.explorer.view.IGitStatusInfo|nil
 ---@return era.m.explorer.view.IDiagnosticInfo|nil
-function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, is_selected)
+function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded)
   local parts = {} ---@type string[]
   local highlights = {} ---@type stl.t.IHighlight[]
   local col = 0 ---@type integer
@@ -786,7 +772,7 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
   end
 
   local name = display_name or node.nodename ---@type string
-  local name_hl = self:__get_node_name_highlight__(ctx, node, is_ignored, is_selected, git_hl) ---@type string
+  local name_hl = self:__get_node_name_highlight__(ctx, node, is_ignored, git_hl) ---@type string
   parts[#parts + 1] = name
 
   local name_highlight = {

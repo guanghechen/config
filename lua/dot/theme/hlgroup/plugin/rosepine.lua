@@ -9,11 +9,12 @@ local M = {}
 function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.rosepine ---@type stl.t.theme.IRosepinePalette
-  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local panel_bg = t and c.none or c.surface
   local treesitter_context_bg = t and c.none or c.highlightLow
-  local badge_fg = u.bg1 ---@type string
-  local badge_bg = u.pink ---@type string
+  local badge_fg = c.surface ---@type string
+  local badge_bg = c.rose ---@type string
+  -- Pine-family icons need foam's contrast on dark backgrounds.
+  local pine_icon_fg = context.scheme.darken and c.foam or c.pine ---@type string
 
   ---@type table<string, stl.t.theme.IHlgroup>
   return {
@@ -78,20 +79,20 @@ function M.gen_hlgroup_map(context)
     FlashCursor = { fg = c.base, bg = c.text },
 
     ---! mason.nvim
-    MasonHeader = { fg = u.pink, bg = c.none },
+    MasonHeader = { fg = c.rose, bg = c.none },
     MasonHighlight = { fg = c.rose },
     MasonHighlightBlock = { fg = badge_fg, bg = badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
-    MasonMuted = { fg = u.fg1 },
-    MasonMutedBlock = { fg = u.fg1 },
+    MasonMuted = { fg = c.text },
+    MasonMutedBlock = { fg = c.text },
     MasonNormal = { fg = c.text, bg = panel_bg },
 
     ---! mini.icons
     MiniIconsAzure = { fg = c.foam },
-    MiniIconsBlue = { fg = c.pine },
+    MiniIconsBlue = { fg = pine_icon_fg },
     MiniIconsCyan = { fg = c.foam },
-    MiniIconsGreen = { fg = c.pine },
+    MiniIconsGreen = { fg = pine_icon_fg },
     MiniIconsGrey = { fg = c.subtle },
     MiniIconsOrange = { fg = c.gold },
     MiniIconsPurple = { fg = c.iris },

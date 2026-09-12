@@ -65,6 +65,29 @@
 
 `View` 维护 `lnum_to_filepath` 与 `filepath_to_lnum`，并根据显式 selection 与 pending transfer 计算 sign。
 
+### 图标与名称的颜色分工（已决）
+
+**丰富的类型配色只用于 fileicon；filename / foldername 的前景色由 Git status / LSP diagnostics 决定。**
+这是 `era.m.explorer` 的渲染契约，所有主题都必须遵守，不得通过主题精调改变其语义。
+
+- 图标独立表达文件类型或目录用途，可以使用丰富配色。图标与名称必须使用独立的 highlight range，
+  图标颜色不得扩散到名称。
+- 目录展开、折叠只改变 glyph，不改变类型色；空目录与尚未加载的目录也遵守此规则。
+  特殊目录保留其 `MiniIcons*` 类型色，普通目录使用主题的默认 folder icon 色。
+  Rosé Pine 的默认 folder icon 使用 `subtle`，不使用承担焦点强调的暖粉色 `rose`；ignored 图标仍使用 `muted`。
+- 没有 Git/LSP 状态的 file/folder name 共用中性正文色；不按文件类型、扩展名、目录名称或展开状态着色。
+  两者统一使用 `m_ft_filename`。目录图标仍可使用 `m_ft_dirname` 或对应的 `MiniIcons*`。
+- 名称颜色的优先级为：Git ignored 的弱化色 → LSP error → LSP warning → Git status → 中性正文色。
+  目录名称使用该目录聚合后的 Git/LSP 状态；LSP info/hint 保留独立状态标记，不覆盖名称颜色。
+- selection、copy、move 使用独立的 sign 表达，不改写名称的前景色，也不遮盖 Git/LSP 状态色。
+  当前行和焦点通过背景强调，保持名称的状态色。
+- 主题只负责为上述角色选择 palette 颜色。不得因为某种主题的目录色、选中色更好看，就给普通名称
+  增加装饰色。
+
+例如，干净的 `lsp/`、`queries/`、`main.lua` 名称应使用相同中性色，图标仍可各自着色；
+有 Git 修改的目录显示 Git 状态色，选中后仍保留该颜色并附加 selection sign；
+同时有 LSP error 的非 ignored 节点显示 error 色。
+
 ### Pending transfer 的归属
 
 `Action` 是 pending transfer 的唯一 owner，状态结构为：
@@ -193,6 +216,8 @@ Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目�
    - pending sources 与显式 selection 的独立身份及同步规则
    - Delete/Rename 后 pending sources 的路径级清理
    - `mx/mc/ms` 的类型切换、最后一项取消及 `x/c/Tab` 的模式分派
+   - 普通 file/folder name 共用中性色，类型图标拥有独立高亮范围
+   - selection/copy/move 不覆盖 Git/LSP 名称色，ignored 与 diagnostics/Git 的优先级稳定
 
 ## 调试建议
 

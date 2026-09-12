@@ -248,4 +248,103 @@ t:test("common highlights use the selected mode palette and relink on mode chang
   t.assert_eq("mf_b_bg0_insert", vim.api.nvim_get_hl(0, { name = "mf_b_bg0", link = true }).link)
 end)
 
+t:test("every Rose Pine integration generates from its native palette alone", function()
+  for _, variant in ipairs({ "main", "moon", "dawn" }) do
+    for _, transparency in ipairs({ false, true }) do
+      local context = context_for("rosepine-" .. variant, transparency)
+      context.scheme = vim.deepcopy(context.scheme)
+      local native = setmetatable(context.scheme.palette.rosepine, {
+        __index = function(_, key)
+          error("unknown Rose Pine color: " .. key)
+        end,
+      })
+      context.scheme.palette = setmetatable({ rosepine = native }, {
+        __index = function(_, key)
+          error("unexpected palette dependency: " .. key)
+        end,
+      })
+      for _, category in ipairs(categories) do
+        local implementation = require("dot.theme.hlgroup." .. category .. ".rosepine")
+        local map = implementation.gen_hlgroup_map(context)
+        t.assert_true(next(map) ~= nil, variant .. ": " .. category)
+        render_hlgroup_map(map)
+      end
+      local modes_color_map = require("dot.theme.hlgroup.basic.rosepine").gen_modes_color_map(context)
+      t.assert_eq(native.rose, modes_color_map.normal)
+      t.assert_eq(native.foam, modes_color_map.insert)
+    end
+  end
+end)
+
+t:test("Rose Pine module, widget and nvimbar implementations preserve highlight coverage", function()
+  local context = context_for("rosepine-main")
+  for _, category in ipairs({ "module", "widget", "nvimbar" }) do
+    local expected = require("dot.theme.hlgroup." .. category .. ".unified").gen_hlgroup_map(context)
+    local actual = require("dot.theme.hlgroup." .. category .. ".rosepine").gen_hlgroup_map(context)
+    local expected_names = vim.tbl_keys(expected)
+    local actual_names = vim.tbl_keys(actual)
+    table.sort(expected_names)
+    table.sort(actual_names)
+    t.assert_true(vim.deep_equal(expected_names, actual_names), category .. " highlight coverage")
+  end
+end)
+
+t:test("Rose Pine diff fills agree across integrations and remain stable with transparency", function()
+  for _, variant in ipairs({ "main", "moon", "dawn" }) do
+    local opaque = context_for("rosepine-" .. variant)
+    local transparent = context_for("rosepine-" .. variant, true)
+    local c = opaque.scheme.palette.rosepine
+    local expected = require("dot.theme.hlgroup.basic.rosepine").gen_hlgroup_map(opaque)
+    for _, context in ipairs({ opaque, transparent }) do
+      local basic = require("dot.theme.hlgroup.basic.rosepine").gen_hlgroup_map(context)
+      local module = require("dot.theme.hlgroup.module.rosepine").gen_hlgroup_map(context)
+      local widget = require("dot.theme.hlgroup.widget.rosepine").gen_hlgroup_map(context)
+      for _, pair in ipairs({
+        { basic.DiffAdd, module.m_dv_add, widget.f_diff_add_right, expected.DiffAdd },
+        { basic.DiffDelete, module.m_dv_del, widget.f_diff_del_left, expected.DiffDelete },
+        { basic.DiffWordRight, module.m_dv_add_inline, widget.f_diff_word_right, expected.DiffWordRight },
+        { basic.DiffWordLeft, module.m_dv_del_inline, widget.f_diff_word_left, expected.DiffWordLeft },
+      }) do
+        for _, hlgroup in ipairs(pair) do
+          t.assert_eq(pair[1].bg, hlgroup.bg, variant)
+        end
+      end
+      t.assert_eq(c.text, basic.DiffWordLeft.fg)
+      t.assert_eq(c.text, module.m_dv_add_inline.fg)
+      t.assert_eq(c.text, widget.f_diff_word_right.fg)
+      t.assert_true(basic.DiffAdd.bg ~= basic.DiffDelete.bg, variant .. " add/delete separation")
+      t.assert_true(basic.DiffAdd.bg ~= basic.DiffWordRight.bg, variant .. " inline separation")
+    end
+  end
+end)
+
+t:test("all Rose Pine variants apply native UI colors without unified implementations", function()
+  for _, category in ipairs(categories) do
+    t:patch_table(package.loaded, "dot.theme.hlgroup." .. category .. ".unified", {
+      gen_hlgroup_map = function()
+        error("unexpected unified implementation: " .. category)
+      end,
+    })
+  end
+  for _, variant in ipairs({ "main", "moon", "dawn" }) do
+    local name = "rosepine-" .. variant
+    local c = context_for(name).scheme.palette.rosepine
+    for _, transparency in ipairs({ false, true }) do
+      local nsnr = vim.api.nvim_create_namespace("")
+      theme.apply_theme({ theme = name, transparency = transparency, nsnr = nsnr })
+      local map = vim.api.nvim_get_hl(nsnr, { link = true })
+      t.assert_eq(tonumber(c.text:sub(2), 16), map.Normal.fg, name)
+      t.assert_eq(tonumber(c.subtle:sub(2), 16), map.m_ft_dirname.fg, name)
+      t.assert_eq(tonumber(c.rose:sub(2), 16), map.f_lsp_symbol_icon_Method.fg, name)
+      t.assert_eq(tonumber(c.rose:sub(2), 16), map.f_md_heading_h1.fg, name)
+      t.assert_eq(tonumber(c.rose:sub(2), 16), map.MasonHeader.fg, name)
+      for _, position in ipairs({ "f_sl", "f_tl", "f_wl" }) do
+        t.assert_eq(tonumber(c.text:sub(2), 16), map[position .. "_term_index"].fg, name)
+        t.assert_eq(tonumber(c.highlightHigh:sub(2), 16), map[position .. "_term_index"].bg, name)
+        t.assert_eq(tonumber(c.gold:sub(2), 16), map[position .. "_lsp_symbol_icon_String"].fg, name)
+      end
+    end
+  end
+end)
+
 t:run()
