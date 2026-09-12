@@ -1,5 +1,6 @@
 import { unionBounds } from './geometry.ts'
 import type { IBounds, IElement, IPoint } from './model.ts'
+import { nodeBounds } from './pose.ts'
 
 export type ILayoutAxis = 'x' | 'y'
 export type ILayoutMode = 'start' | 'center' | 'end' | 'distribute'
@@ -68,7 +69,7 @@ export function layoutUnits(elements: ReadonlyArray<IElement>): ILayoutUnit[] {
   }
   const units: ILayoutUnit[] = []
   for (const batch of batches) {
-    const bounds = unionBounds(batch.filter(element => element.type !== 'edge'))
+    const bounds = unionBounds(batch.filter(element => element.type !== 'edge').map(nodeBounds))
     if (bounds) units.push({ ids: batch.map(element => element.id), bounds })
   }
   return units
@@ -116,6 +117,15 @@ export function arrangeElements(
       return { ...element, x: element.x + delta.x, y: element.y + delta.y }
     return {
       ...element,
+      ...(element.controls
+        ? {
+            controls: element.controls.map(point => ({
+              ...point,
+              x: point.x + delta.x,
+              y: point.y + delta.y,
+            })),
+          }
+        : {}),
       from: element.from.nodeId
         ? element.from
         : { x: element.from.x + delta.x, y: element.from.y + delta.y },

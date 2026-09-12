@@ -18,6 +18,7 @@ export const StyleControls = React.memo<{
   colors: IThemeColors
   showSketch: boolean
   showFillPattern: boolean
+  showLineWidth?: boolean
   onChange: (patch: Partial<IStyle>) => void
 }>(
   ({
@@ -25,6 +26,7 @@ export const StyleControls = React.memo<{
     colors: themeColors,
     showSketch,
     showFillPattern,
+    showLineWidth = true,
     onChange: updateStyle,
   }) => {
     const resolved = resolveStyle(displayStyle, themeColors, showFillPattern)
@@ -93,18 +95,20 @@ export const StyleControls = React.memo<{
             No fill
           </label>
         )}
-        <label>
-          Line width
-          <select
-            aria-label="Line width"
-            value={displayStyle.strokeWidth}
-            onChange={event => updateStyle({ strokeWidth: Number(event.target.value) })}
-          >
-            {[1, 2, 4, 8].map(value => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
+        {showLineWidth && (
+          <label>
+            Line width
+            <select
+              aria-label="Line width"
+              value={displayStyle.strokeWidth}
+              onChange={event => updateStyle({ strokeWidth: Number(event.target.value) })}
+            >
+              {[1, 2, 4, 8].map(value => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+        )}
         {showSketch && (
           <SketchStylePicker
             style={displayStyle}

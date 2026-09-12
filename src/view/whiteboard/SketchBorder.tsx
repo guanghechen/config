@@ -7,7 +7,8 @@ export const SketchBorder = React.memo<{
   width: number
   height: number
   style: IStyle
-}>(({ id, width, height, style }) => {
+  borderWidth?: number
+}>(({ id, width, height, style, borderWidth = style.strokeWidth }) => {
   const outline = React.useMemo(
     () => sketchShape(id, width, height, 'rectangle', style.roughness).outline,
     [id, width, height, style.roughness],
@@ -17,7 +18,7 @@ export const SketchBorder = React.memo<{
       className="wb-sketch-border"
       width={width}
       height={height}
-      style={{ left: -style.strokeWidth, top: -style.strokeWidth }}
+      style={{ left: -borderWidth, top: -borderWidth }}
       aria-hidden="true"
     >
       <path

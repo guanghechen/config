@@ -1,5 +1,5 @@
 import type { InlineMath } from '@yozora/ast'
-import { MathJaxNode } from '@yozora/react-mathjax'
+import { MathNode } from './inner/MathNode'
 import React from 'react'
 
 /**
@@ -13,7 +13,7 @@ export class InlineMathRenderer extends React.Component<InlineMath> {
 
   public override render(): React.ReactElement {
     return (
-      <MathJaxNode
+      <MathNode
         className="yozora-inline-math"
         style={{ color: 'var(--color-inline-math)' }}
         inline={true}

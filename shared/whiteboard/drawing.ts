@@ -1,5 +1,6 @@
 import { boundsBetween, unionBounds } from './geometry.ts'
 import type { IBounds, IElement, IPoint } from './model.ts'
+import { nodeBounds } from './pose.ts'
 
 export function drawingBounds(
   start: IPoint,
@@ -46,8 +47,15 @@ export function prepareMoveSnap(
   selected: ReadonlySet<string>,
 ): IMoveSnap | null {
   const nodes = elements.filter(element => element.type !== 'edge' && element.type !== 'stroke')
-  const bounds = unionBounds(nodes.filter(element => selected.has(element.id)))
-  return bounds ? { bounds, targets: nodes.filter(element => !selected.has(element.id)) } : null
+  const bounds = unionBounds(nodes.filter(element => selected.has(element.id)).map(nodeBounds))
+  return bounds
+    ? {
+        bounds,
+        targets: nodes
+          .filter(element => !selected.has(element.id) && !element.hidden)
+          .map(nodeBounds),
+      }
+    : null
 }
 
 export function snapMove(

@@ -1,4 +1,4 @@
-import { MathJaxNode } from '@yozora/react-mathjax'
+import { MathNode } from '../inner/MathNode'
 import React from 'react'
 
 interface IProps {
@@ -11,7 +11,7 @@ class Math extends React.Component<IProps> {
   public override render(): React.ReactElement {
     const { code } = this.props
     return (
-      <MathJaxNode
+      <MathNode
         className="yozora-math"
         style={{ color: 'var(--color-math)' }}
         inline={false}

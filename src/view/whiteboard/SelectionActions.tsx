@@ -51,7 +51,7 @@ export const SelectionActions: React.FC<{
           </button>
         ))}
       </div>
-      <p className="wb-endpoint-hint">Cards stay above drawings; arrows stay behind.</p>
+      <p className="wb-endpoint-hint">All element types share one order, from back to front.</p>
       {canGroup(selected) && (
         <button onClick={store.groupSelected} title="Ctrl / ⌘ + G">
           Group selection

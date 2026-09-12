@@ -39,6 +39,40 @@ const shape = (id, x = 0) => ({
 })
 const document = elements => ({ ...createDocument(), elements })
 
+test('document shape names must be enum strings, without coercing arrays', () => {
+  for (const name of ['rectangle', 'ellipse', 'diamond']) {
+    const valid = document([{ ...shape('a'), shape: name }])
+    assert.deepEqual(parseDocument(JSON.stringify(valid)), valid)
+    for (const invalid of [[name], [[name]]])
+      assert.throws(
+        () => parseDocument(JSON.stringify(document([{ ...shape('a'), shape: invalid }]))),
+        /Unknown shape/,
+      )
+  }
+})
+
+test('edge bindings require a nonempty node ID; free endpoints omit it', () => {
+  const edge = {
+    id: 'edge',
+    type: 'edge',
+    from: { x: 0, y: 0 },
+    to: { nodeId: 'a', x: 1, y: 0.5 },
+    style: DEFAULT_STYLE,
+  }
+  const valid = document([shape('a'), edge])
+  assert.deepEqual(parseDocument(JSON.stringify(valid)), valid)
+  for (const endpoint of ['from', 'to'])
+    assert.throws(
+      () =>
+        parseDocument(
+          JSON.stringify(
+            document([shape('a'), { ...edge, [endpoint]: { ...edge[endpoint], nodeId: '' } }]),
+          ),
+        ),
+      /Invalid edge endpoint/,
+    )
+})
+
 test('zoom preserves the world point beneath the cursor at all supported scales', () => {
   const camera = { x: -312, y: 510, zoom: 0.6 },
     cursor = { x: 911, y: 433 }
@@ -358,4 +392,34 @@ test('shared Markdown references discard an outdated response after a file-chang
   await new Promise(setImmediate)
   assert.equal(resources.get('/notes.md').data.content, 'new')
   assert.equal(notifications, 2, 'Each subscriber receives the current version once')
+  const start = requests.length
+  const stops = Array.from({ length: 6 }, (_value, index) =>
+    resources.subscribe(`/search-${index}.md`, () => {
+      notifications += 1
+    }),
+  )
+  assert.equal(requests.length, start + 4, 'Reference search uses at most four concurrent reads')
+  for (const stop of stops) stop()
+  for (const request of requests.slice(start)) {
+    assert.equal(request.signal.aborted, true)
+    request.resolve({ filepath: request.filepath, content: 'cancelled', revision: 'cancelled' })
+  }
+  await new Promise(setImmediate)
+  assert.equal(
+    requests.length,
+    start + 4,
+    'Clearing search drops queued reads as well as active reads',
+  )
+  assert.equal(notifications, 2)
+  const stop = resources.subscribe('/retry.md', () => {})
+  const cancelled = requests.at(-1)
+  stop()
+  const stopRetry = resources.subscribe('/retry.md', () => {})
+  cancelled.resolve({ filepath: '/retry.md', content: 'old', revision: 'old' })
+  await new Promise(setImmediate)
+  assert.notEqual(requests.at(-1), cancelled, 'Resubscription must not wait for the polling timer')
+  requests.at(-1).resolve({ filepath: '/retry.md', content: 'retry', revision: 'retry' })
+  await new Promise(setImmediate)
+  assert.equal(resources.get('/retry.md').data.content, 'retry')
+  stopRetry()
 })

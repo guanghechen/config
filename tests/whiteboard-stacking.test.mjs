@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { DEFAULT_STYLE, createDocument, elementLayer } from '../shared/whiteboard/model.ts'
+import { DEFAULT_STYLE, createDocument } from '../shared/whiteboard/model.ts'
 import { parseDocument } from '../shared/whiteboard/document.ts'
 import { hitTest, resolveEndpoint } from '../shared/whiteboard/geometry.ts'
 import { expandSelection } from '../shared/whiteboard/organization.ts'
-import { reorderElements, stackingDirections } from '../shared/whiteboard/stacking.ts'
+import {
+  orderedDocument,
+  reorderElements,
+  stackingDirections,
+} from '../shared/whiteboard/stacking.ts'
 import { BoardStore } from '../src/view/whiteboard/store.ts'
 
 const node = id => ({
@@ -62,32 +66,42 @@ test('one-step commands move contiguous runs once, preserve selection order and 
   assert.equal(reorderElements(elements, new Set(['a', 'b']), 'backward'), elements)
 })
 
-test('each layer reorders independently; unrelated layer slots and element objects are preserved', () => {
+test('drawings, cards and connections reorder together without changing element objects', () => {
   const elements = [node('a'), card('m'), edge('e'), node('b'), card('n'), edge('f'), node('c')]
   const selected = new Set(['a', 'm', 'e'])
-  for (const order of ['forward', 'front']) {
-    const result = reorderElements(elements, selected, order)
-    assert.deepEqual(
-      ids(result),
-      order === 'front' ? ['b', 'n', 'f', 'c', 'm', 'e', 'a'] : ['b', 'n', 'f', 'a', 'm', 'e', 'c'],
-    )
-    result.forEach((element, index) => {
-      assert.equal(elementLayer(element), elementLayer(elements[index]))
+  assert.deepEqual(ids(reorderElements(elements, selected, 'front')), [
+    'b',
+    'n',
+    'f',
+    'c',
+    'a',
+    'm',
+    'e',
+  ])
+  assert.deepEqual(ids(reorderElements(elements, selected, 'forward')), [
+    'b',
+    'a',
+    'm',
+    'e',
+    'n',
+    'f',
+    'c',
+  ])
+  assert.deepEqual(ids(reorderElements(elements, new Set(['a']), 'front')), [
+    'm',
+    'e',
+    'b',
+    'n',
+    'f',
+    'c',
+    'a',
+  ])
+  for (const order of orders)
+    for (const element of reorderElements(elements, selected, order))
       assert.equal(
         element,
         elements.find(item => item.id === element.id),
       )
-    })
-  }
-  assert.deepEqual(ids(reorderElements(elements, new Set(['a']), 'front')), [
-    'b',
-    'm',
-    'e',
-    'c',
-    'n',
-    'f',
-    'a',
-  ])
 })
 
 test('group expansion includes disconnected members and connections without changing any geometry or bindings', () => {
@@ -101,7 +115,7 @@ test('group expansion includes disconnected members and connections without chan
   }
   const elements = [a, node('outside'), b, connection, edge('other'), node('top')]
   const result = reorderElements(elements, new Set(['a']), 'front')
-  assert.deepEqual(ids(result), ['outside', 'top', 'a', 'other', 'e', 'b'])
+  assert.deepEqual(ids(result), ['outside', 'other', 'top', 'a', 'b', 'e'])
   const map = new Map(result.map(element => [element.id, element]))
   assert.deepEqual(resolveEndpoint(connection.from, map), { x: 100, y: 50 })
   assert.deepEqual(resolveEndpoint(connection.to, map), { x: 200, y: 50 })
@@ -109,7 +123,7 @@ test('group expansion includes disconnected members and connections without chan
   for (const element of elements) assert.equal(map.get(element.id), element)
 })
 
-test('availability matches actual movement for every subset of an interleaved three-layer scene', () => {
+test('availability matches actual movement for every subset of an mixed scene', () => {
   const elements = [edge('e'), node('a'), card('m'), node('b'), edge('f'), card('n'), node('c')]
   for (let mask = 0; mask < 2 ** elements.length; mask++) {
     const selected = new Set(
@@ -120,12 +134,9 @@ test('availability matches actual movement for every subset of an interleaved th
       const result = reorderElements(elements, selected, order)
       const direction = order === 'back' || order === 'backward' ? 'backward' : 'forward'
       assert.equal(result !== elements, available[direction])
-      for (const layer of [0, 1, 2]) {
-        for (const included of [false, true]) {
-          const partition = items =>
-            items.filter(item => elementLayer(item) === layer && selected.has(item.id) === included)
-          assert.deepEqual(partition(result), partition(elements))
-        }
+      for (const included of [false, true]) {
+        const partition = items => items.filter(item => selected.has(item.id) === included)
+        assert.deepEqual(partition(result), partition(elements))
       }
     }
   }
@@ -136,7 +147,7 @@ test('availability matches actual movement for every subset of an interleaved th
   }
 })
 
-test('hit testing follows reordered drawings, cards and edges while retaining layer precedence', () => {
+test('hit testing follows reordered drawings, cards and edges across all element types', () => {
   for (const create of [node, card, edge]) {
     const elements = [create('a'), create('b')]
     assert.equal(hitTest(elements, { x: 50, y: 50 }, 1)?.id, 'b')
@@ -149,7 +160,7 @@ test('hit testing follows reordered drawings, cards and edges while retaining la
   for (const order of orders) {
     assert.equal(
       hitTest(reorderElements(elements, new Set(['node']), order), { x: 50, y: 50 }, 1)?.id,
-      'card',
+      order === 'back' || order === 'backward' ? 'edge' : 'node',
     )
   }
 })
@@ -173,4 +184,20 @@ test('reordering persists without a schema change and undo/redo are atomic; boun
   store.undo()
   store.undo()
   assert.equal(store.getDocument(), initial)
+})
+
+test('legacy files retain the visual order once, while explicit document stacking preserves every slot', () => {
+  const elements = [card('m'), node('a'), edge('e'), card('n'), node('b')]
+  const legacy = { ...createDocument(), stacking: undefined, elements }
+  const migrated = orderedDocument(parseDocument(JSON.stringify(legacy)))
+  assert.deepEqual(ids(migrated.elements), ['e', 'a', 'b', 'm', 'n'])
+  assert.equal(migrated.stacking, 'document')
+  assert.equal(orderedDocument(migrated), migrated)
+  const explicit = { ...legacy, stacking: 'document' }
+  assert.equal(orderedDocument(explicit), explicit)
+  assert.deepEqual(ids(new BoardStore(legacy).getDocument().elements), ['e', 'a', 'b', 'm', 'n'])
+  assert.throws(
+    () => parseDocument(JSON.stringify({ ...legacy, stacking: 'unknown' })),
+    /Invalid whiteboard/,
+  )
 })

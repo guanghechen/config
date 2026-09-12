@@ -1,5 +1,5 @@
 import type { Math } from '@yozora/ast'
-import { MathJaxNode } from '@yozora/react-mathjax'
+import { MathNode } from './inner/MathNode'
 import React from 'react'
 
 /**
@@ -13,7 +13,7 @@ export class MathRenderer extends React.Component<Math> {
 
   public override render(): React.ReactElement {
     return (
-      <MathJaxNode
+      <MathNode
         className="yozora-math"
         style={{ color: 'var(--color-math)' }}
         inline={false}

@@ -1,4 +1,6 @@
-import type { IPoint, IStyle } from './model.ts'
+import type { IEdge, IPoint, IStyle } from './model.ts'
+import { connectorArrowheads } from './edges.ts'
+import type { IConnectorPath } from './edges.ts'
 
 export interface ISketchPaths {
   readonly outline: string
@@ -145,6 +147,45 @@ export function sketchArrow(
     }
   }
   return paths.join('')
+}
+
+export function sketchConnector(
+  edge: IEdge,
+  path: IConnectorPath,
+): { body: string; heads: string } {
+  const points = path.points
+  const { roughness, strokeWidth } = edge.style
+  if (
+    points.length === 2 &&
+    points[0].x === 0 &&
+    points[0].y === 0 &&
+    !path.curved &&
+    edge.arrowStart !== 'arrow' &&
+    edge.arrowEnd !== 'none' &&
+    (!edge.lineStyle || edge.lineStyle === 'solid')
+  )
+    return { body: sketchArrow(edge.id, points[1], roughness, strokeWidth), heads: '' }
+  const random = randomFromId(`${edge.id}:connector`)
+  const body: string[] = [],
+    heads: string[] = []
+  for (const strength of roughness ? [roughness, roughness * 0.65] : [0]) {
+    if (path.curved) {
+      const jitter = (): number => (random() - 0.5) * strength * 3.2
+      body.push(
+        `M${point(points[0].x, points[0].y)}C${point(points[1].x + jitter(), points[1].y + jitter())} ${point(points[2].x + jitter(), points[2].y + jitter())} ${point(points[3].x, points[3].y)}`,
+      )
+    } else {
+      for (let index = 1; index < points.length; index++)
+        body.push(line(points[index - 1], points[index], strength, random, true))
+    }
+    for (const head of connectorArrowheads(path, strokeWidth, edge.arrowStart, edge.arrowEnd)) {
+      heads.push(
+        line(head[0], head[1], strength, random, true),
+        line(head[2], head[1], strength, random, true),
+      )
+    }
+  }
+  return { body: body.join(''), heads: heads.join('') }
 }
 
 export function smoothStroke(points: ReadonlyArray<IPoint>, width: number, height: number): string {

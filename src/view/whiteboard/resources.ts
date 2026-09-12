@@ -6,13 +6,18 @@ export interface IResourceSnapshot {
   readonly error?: string
 }
 
+export interface IMarkdownResources {
+  get: (filepath: string) => IResourceSnapshot
+  subscribe: (filepath: string, listener: () => void) => () => void
+}
+
 interface IResource {
   snapshot: IResourceSnapshot
   listeners: Set<() => void>
   controller?: AbortController
 }
 
-export class MarkdownResources {
+export class MarkdownResources implements IMarkdownResources {
   private entries = new Map<string, IResource>()
   private queue = new Set<string>()
   private active = 0
@@ -31,9 +36,14 @@ export class MarkdownResources {
   public subscribe = (filepath: string, listener: () => void): (() => void) => {
     const entry = this.entry(filepath)
     entry.listeners.add(listener)
-    if (!entry.controller && !this.queue.has(filepath)) this.refresh(filepath)
+    if ((!entry.controller || entry.controller.signal.aborted) && !this.queue.has(filepath))
+      this.refresh(filepath)
     return () => {
       entry.listeners.delete(listener)
+      if (!entry.listeners.size) {
+        this.queue.delete(filepath)
+        entry.controller?.abort()
+      }
     }
   }
   public refresh = (filepath?: string): void => {

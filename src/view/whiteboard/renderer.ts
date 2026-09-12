@@ -1,15 +1,18 @@
+import { hiddenElements, lockedElements } from '@/shared/whiteboard/visibility'
 import {
   elementBounds,
   intersects,
-  labelLayout,
   resolveEndpoint,
   unionBounds,
 } from '@/shared/whiteboard/geometry'
-import { sketchArrow, sketchShape, smoothStroke } from '@/shared/whiteboard/sketch'
-import { LABEL_FONT, LABEL_LINE_HEIGHT } from '@/shared/whiteboard/labels'
-import { RESIZE_CORNERS, resizeBounds } from '@/shared/whiteboard/transforms'
+import { sketchConnector, sketchShape, smoothStroke } from '@/shared/whiteboard/sketch'
+import { connectorControls, connectorPath } from '@/shared/whiteboard/edges'
+import { textFont, textLineHeight } from '@/shared/whiteboard/text'
+import type { BoardTypography } from './typography'
+import { framePoint, nodeBounds, normalizeAngle, rotationHandle } from '@/shared/whiteboard/pose'
+import type { ITransformFrame } from '@/shared/whiteboard/pose'
+import { RESIZE_CORNERS, resizeBounds, transformBounds } from '@/shared/whiteboard/transforms'
 import { resolveStyle } from '@/shared/whiteboard/colors'
-import { elementLayer } from '@/shared/whiteboard/model'
 import type { IAlignmentGuide } from '@/shared/whiteboard/drawing'
 import type { IWhiteboardTheme } from './theme'
 import type {
@@ -44,10 +47,12 @@ export function visibleBounds(
 
 export class CanvasRenderer {
   private theme: IWhiteboardTheme
+  private typography: BoardTypography
   private styles = new WeakMap<IStyle, { filled: IStyle; plain: IStyle; card: IStyle }>()
 
-  constructor(theme: IWhiteboardTheme) {
+  constructor(theme: IWhiteboardTheme, typography: BoardTypography) {
     this.theme = theme
+    this.typography = typography
   }
 
   public setTheme(theme: IWhiteboardTheme): void {
@@ -84,7 +89,7 @@ export class CanvasRenderer {
       points?: ReadonlyArray<IPoint>
     }
   >()
-  private arrows = new Map<string, { key: string; path: Path2D }>()
+  private arrows = new Map<string, { key: string; path: Path2D; heads: Path2D }>()
   private bitmaps = new Map<
     string,
     { key: string; canvas: HTMLCanvasElement; scale: number; padding: number }
@@ -276,66 +281,82 @@ export class CanvasRenderer {
     for (const id of this.arrows.keys()) if (!map.has(id)) this.arrows.delete(id)
     for (const id of this.bitmaps.keys()) if (map.get(id)?.type !== 'shape') this.dropBitmap(id)
     const visible = visibleBounds(camera, width, height)
+    const hidden = hiddenElements(elements)
     for (const element of elements) {
-      if (element.type !== 'edge' || !intersects(elementBounds(element, map), visible)) continue
-      const a = resolveEndpoint(element.from, map),
-        b = resolveEndpoint(element.to, map)
-      ctx.strokeStyle = this.style(element).stroke
-      ctx.fillStyle = this.style(element).stroke
-      ctx.lineWidth = element.style.strokeWidth
-      const delta = { x: b.x - a.x, y: b.y - a.y }
-      const key = `${delta.x},${delta.y},${element.style.roughness},${element.style.strokeWidth}`
-      let arrow = this.arrows.get(element.id)
-      if (arrow?.key !== key) {
-        arrow = {
-          key,
-          path: new Path2D(
-            sketchArrow(element.id, delta, element.style.roughness, element.style.strokeWidth),
-          ),
+      if (hidden.has(element.id) || !intersects(elementBounds(element, map), visible)) continue
+      if (element.type === 'edge') {
+        const a = resolveEndpoint(element.from, map),
+          b = resolveEndpoint(element.to, map)
+        ctx.strokeStyle = this.style(element).stroke
+        ctx.fillStyle = this.style(element).stroke
+        ctx.lineWidth = element.style.strokeWidth
+        const delta = { x: b.x - a.x, y: b.y - a.y }
+        const controls = element.controls?.map(point => ({ x: point.x - a.x, y: point.y - a.y }))
+        const key = `${delta.x},${delta.y},${element.style.roughness},${element.style.strokeWidth},${element.routing},${element.arrowStart},${element.arrowEnd},${element.lineStyle},${JSON.stringify(controls)}`
+        let arrow = this.arrows.get(element.id)
+        if (arrow?.key !== key) {
+          const localEdge = controls ? { ...element, controls } : element
+          const paths = sketchConnector(localEdge, connectorPath(localEdge, { x: 0, y: 0 }, delta))
+          arrow = {
+            key,
+            path: new Path2D(paths.body),
+            heads: new Path2D(paths.heads),
+          }
+          this.arrows.set(element.id, arrow)
         }
-        this.arrows.set(element.id, arrow)
-      }
-      ctx.save()
-      ctx.translate(a.x, a.y)
-      ctx.stroke(arrow.path)
-      ctx.restore()
-      if (element.label) this.drawLabel(ctx, element, map)
-    }
-    // Overview cards share the Canvas but retain the same order as the DOM card layer.
-    for (const layer of camera.zoom < 0.35 ? [1, 2] : [1]) {
-      for (const element of elements) {
-        if (
-          element.type === 'edge' ||
-          elementLayer(element) !== layer ||
-          !intersects(element, visible)
-        )
-          continue
         ctx.save()
-        ctx.translate(element.x, element.y)
+        ctx.translate(a.x, a.y)
+        ctx.setLineDash(
+          element.lineStyle === 'dashed'
+            ? [ctx.lineWidth * 4, ctx.lineWidth * 3]
+            : element.lineStyle === 'dotted'
+              ? [0, ctx.lineWidth * 3]
+              : [],
+        )
+        ctx.stroke(arrow.path)
+        ctx.setLineDash([])
+        ctx.stroke(arrow.heads)
+        ctx.restore()
+        if (element.label) this.drawLabel(ctx, element, map)
+      } else {
+        ctx.save()
+        if (normalizeAngle(element.rotation ?? 0) || element.flipX || element.flipY) {
+          ctx.translate(element.x + element.width / 2, element.y + element.height / 2)
+          ctx.rotate((normalizeAngle(element.rotation ?? 0) * Math.PI) / 180)
+          ctx.scale(element.flipX ? -1 : 1, element.flipY ? -1 : 1)
+          ctx.translate(-element.width / 2, -element.height / 2)
+        } else ctx.translate(element.x, element.y)
         ctx.strokeStyle = this.style(element).stroke
         ctx.fillStyle = this.style(element).fill
         ctx.lineWidth = element.style.strokeWidth
         if (element.type === 'text') {
           ctx.fillStyle = this.style(element).stroke
-          ctx.font = '24px "Comic Sans MS", "Segoe Print", cursive'
+          ctx.font = textFont(element.style, 'text')
+          ctx.textAlign = element.style.textAlign ?? 'left'
+          ctx.textBaseline = 'middle'
           ctx.beginPath()
           ctx.rect(0, 0, element.width, element.height)
           ctx.clip()
-          let line = '',
-            y = 28
-          for (const paragraph of element.text.split('\n')) {
-            for (const word of paragraph.split(' ')) {
-              if (line && ctx.measureText(`${line} ${word}`).width > element.width) {
-                ctx.fillText(line, 0, y)
-                line = ''
-                y += 32
-              }
-              line += `${line ? ' ' : ''}${word}`
-            }
-            ctx.fillText(line, 0, y)
-            line = ''
-            y += 32
-          }
+          const layout = this.typography.layout(element, element.width - 8, element.height)
+          const lineHeight = textLineHeight(element.style, 'text')
+          const top = Math.min(4, Math.max(0, (element.height - layout.height) / 2))
+          const x =
+            ctx.textAlign === 'left'
+              ? 4
+              : ctx.textAlign === 'right'
+                ? element.width - 4
+                : element.width / 2
+          layout.lines.forEach((line, index) => {
+            const y = top + (index + 0.5) * lineHeight
+            if (
+              !normalizeAngle(element.rotation ?? 0) &&
+              !element.flipY &&
+              (element.y + y + lineHeight < visible.y ||
+                element.y + y - lineHeight > visible.y + visible.height)
+            )
+              return
+            ctx.fillText(line, x, y, Math.max(1, element.width - 8))
+          })
         } else {
           const patterns = camera.zoom >= 0.35
           const bitmap =
@@ -379,23 +400,40 @@ export class CanvasRenderer {
     element: ILabelElement,
     nodes: ReadonlyMap<string, IElement>,
   ): void {
-    const { lines, bounds } = labelLayout(element, nodes)
+    const { lines, bounds } = this.typography.label(element, nodes)
     if (!lines.length) return
     ctx.save()
+    if (
+      element.type === 'shape' &&
+      (normalizeAngle(element.rotation ?? 0) || element.flipX || element.flipY)
+    ) {
+      const cx = element.x + element.width / 2,
+        cy = element.y + element.height / 2
+      ctx.translate(cx, cy)
+      ctx.rotate((normalizeAngle(element.rotation ?? 0) * Math.PI) / 180)
+      ctx.scale(element.flipX ? -1 : 1, element.flipY ? -1 : 1)
+      ctx.translate(-cx, -cy)
+    }
     if (element.type === 'edge') {
       ctx.fillStyle = this.theme.canvas
       ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
     }
     ctx.fillStyle = this.style(element).stroke
-    ctx.font = LABEL_FONT
-    ctx.textAlign = 'center'
+    ctx.font = textFont(element.style, 'label')
+    ctx.textAlign = element.style.textAlign ?? 'center'
     ctx.textBaseline = 'middle'
     const padding = element.type === 'edge' ? 8 : 0
+    const x =
+      ctx.textAlign === 'left'
+        ? bounds.x + padding
+        : ctx.textAlign === 'right'
+          ? bounds.x + bounds.width - padding
+          : bounds.x + bounds.width / 2
     lines.forEach((line, index) =>
       ctx.fillText(
         line,
-        bounds.x + bounds.width / 2,
-        bounds.y + padding + (index + 0.5) * LABEL_LINE_HEIGHT,
+        x,
+        bounds.y + padding + (index + 0.5) * textLineHeight(element.style, 'label'),
         Math.max(1, bounds.width - padding * 2),
       ),
     )
@@ -411,8 +449,13 @@ export class CanvasRenderer {
     height: number,
     marquee?: IBounds,
     guides: ReadonlyArray<IAlignmentGuide> = [],
+    rotationPreview?: ITransformFrame,
   ): void {
-    if (!selected.size && !marquee && !guides.length) {
+    const hidden = hiddenElements(elements),
+      locked = lockedElements(elements)
+    const visibleSelection = [...selected].some(id => !hidden.has(id))
+    const editable = visibleSelection && ![...selected].some(id => locked.has(id))
+    if (!visibleSelection && !marquee && !guides.length) {
       canvas.style.display = 'none'
       return
     }
@@ -440,22 +483,47 @@ export class CanvasRenderer {
     ctx.lineWidth = 1.5 / camera.zoom
     const map = new Map(elements.map(element => [element.id, element]))
     const groups = new Map<string, IBounds[]>()
+    const outline = (frame: ITransformFrame, padding: number): void => {
+      ctx.save()
+      ctx.translate(frame.x + frame.width / 2, frame.y + frame.height / 2)
+      ctx.rotate((normalizeAngle(frame.rotation ?? 0) * Math.PI) / 180)
+      ctx.strokeRect(
+        -frame.width / 2 - padding,
+        -frame.height / 2 - padding,
+        frame.width + padding * 2,
+        frame.height + padding * 2,
+      )
+      ctx.restore()
+    }
     for (const element of elements) {
-      if (!selected.has(element.id)) continue
+      if (!selected.has(element.id) || hidden.has(element.id)) continue
       const bounds = elementBounds(element, map)
       if (element.groupId) {
         const group = groups.get(element.groupId)
         if (group) group.push(bounds)
         else groups.set(element.groupId, [bounds])
       }
-      ctx.strokeRect(
-        bounds.x - 4 / camera.zoom,
-        bounds.y - 4 / camera.zoom,
-        bounds.width + 8 / camera.zoom,
-        bounds.height + 8 / camera.zoom,
-      )
-      if (selected.size === 1 && element.type === 'edge') {
+      outline(element.type === 'edge' ? bounds : element, 4 / camera.zoom)
+      if (editable && selected.size === 1 && element.type === 'edge') {
         ctx.fillStyle = this.theme.paper
+        const from = resolveEndpoint(element.from, map),
+          to = resolveEndpoint(element.to, map)
+        const controls = connectorControls(element, from, to)
+        if (element.routing === 'curve') {
+          ctx.setLineDash([4 / camera.zoom, 4 / camera.zoom])
+          ctx.beginPath()
+          ctx.moveTo(from.x, from.y)
+          ctx.lineTo(controls[0].x, controls[0].y)
+          ctx.moveTo(to.x, to.y)
+          ctx.lineTo(controls[1].x, controls[1].y)
+          ctx.stroke()
+          ctx.setLineDash([])
+        }
+        for (const control of controls) {
+          const radius = 5 / camera.zoom
+          ctx.fillRect(control.x - radius, control.y - radius, radius * 2, radius * 2)
+          ctx.strokeRect(control.x - radius, control.y - radius, radius * 2, radius * 2)
+        }
         for (const end of [element.from, element.to]) {
           const point = resolveEndpoint(end, map)
           ctx.beginPath()
@@ -467,6 +535,7 @@ export class CanvasRenderer {
     }
     ctx.setLineDash([6 / camera.zoom, 4 / camera.zoom])
     for (const group of groups.values()) {
+      if (rotationPreview) continue
       if (group.length < 2) continue
       const bounds = unionBounds(group)!
       const padding = 10 / camera.zoom
@@ -478,25 +547,36 @@ export class CanvasRenderer {
       )
     }
     ctx.setLineDash([])
-    const selection = resizeBounds(elements, selected)
+    const resizable = editable ? resizeBounds(elements, selected) : null
+    const selection = resizable ? (rotationPreview ?? resizable) : null
     if (selection) {
       if (selected.size > 1) {
         const padding = 4 / camera.zoom
-        ctx.strokeRect(
-          selection.x - padding,
-          selection.y - padding,
-          selection.width + padding * 2,
-          selection.height + padding * 2,
-        )
+        outline(selection, padding)
       }
       const size = 8 / camera.zoom
       ctx.fillStyle = this.theme.paper
       for (const corner of RESIZE_CORNERS) {
-        const x = selection.x + corner.x * selection.width - size / 2
-        const y = selection.y + corner.y * selection.height - size / 2
+        const point = framePoint(selection, corner)
+        const x = point.x - size / 2
+        const y = point.y - size / 2
         ctx.fillRect(x, y, size, size)
         ctx.strokeRect(x, y, size, size)
       }
+    }
+    const rotationFrame = editable ? (rotationPreview ?? transformBounds(elements, selected)) : null
+    if (rotationFrame) {
+      const top = framePoint(rotationFrame, { x: 0.5, y: 0 }),
+        handle = rotationHandle(rotationFrame, camera.zoom)
+      ctx.beginPath()
+      ctx.moveTo(top.x, top.y)
+      ctx.lineTo(handle.x, handle.y)
+      ctx.stroke()
+      ctx.fillStyle = this.theme.paper
+      ctx.beginPath()
+      ctx.arc(handle.x, handle.y, 6 / camera.zoom, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
     }
     if (marquee) {
       ctx.fillStyle = this.theme.selection

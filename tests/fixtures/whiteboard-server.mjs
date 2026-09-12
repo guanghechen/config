@@ -57,6 +57,8 @@ export async function createWhiteboardServer() {
   const { FileAccess } = load('server/util/file-access.ts')
   state = {
     access: new FileAccess([directory]),
+    defaultWorkspaceRoots: [directory],
+    legacyWorkspaces: [],
     watch() {},
     reporter: { error() {}, warn() {}, debug() {} },
   }
@@ -64,6 +66,9 @@ export async function createWhiteboardServer() {
     '/api/file/text': load('server/plugin/api/h/api/file/text.ts').fetchFileText,
     '/api/file/save': load('server/plugin/api/h/api/file/save.ts').saveFile,
     '/api/file/raw': load('server/plugin/api/h/api/file/raw.ts').fetchFileRaw,
+    '/api/whiteboard/create': load('server/plugin/api/h/api/whiteboard/create.ts').createWhiteboard,
+    '/api/workspaces': load('server/plugin/api/h/api/workspaces.ts').list_workspaces,
+    '/api/workspace/files': load('server/plugin/api/h/api/workspace/files.ts').list_workspace_files,
   }
   await writeFile(
     path.join(directory, 'index.html'),
@@ -84,7 +89,7 @@ export async function createWhiteboardServer() {
     import { createBenchmarkScene } from '${root}/tests/fixtures/whiteboard-scene.ts'
     import './fixture.css'
     const query = new URLSearchParams(location.search)
-    const initialDocument = query.has('benchmark') ? createBenchmarkScene() : undefined
+    const initialDocument = query.has('benchmark') ? createBenchmarkScene(query.has('connectors'), query.has('typography'), query.has('transforms')) : undefined
     createRoot(document.getElementById('root')).render(<React.StrictMode><SiteContextProvider><MathJaxProvider>
       <WhiteboardBoard initialDocument={initialDocument} filepath={query.get('filepath') ?? undefined} />
     </MathJaxProvider></SiteContextProvider></React.StrictMode>)

@@ -36,6 +36,7 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
     renderSequenceRef.current += 1
 
     const renderId: string = `${id}_${renderSequenceRef.current}`
+    ref.current.dataset.renderState = 'pending'
     const renderContainer: HTMLDivElement = document.createElement('div')
     renderContainer.ariaHidden = 'true'
     renderContainer.style.position = 'fixed'
@@ -70,10 +71,12 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
               svgElement.style.marginInline = 'auto'
             }
           }
+          ref.current.dataset.renderState = 'ready'
         }
       })
       .catch((error: unknown) => {
         if (!cancelled) {
+          if (ref.current) ref.current.dataset.renderState = 'error'
           const message: string =
             (error instanceof Error ? error.message || error.name : String(error)) ||
             'Unknown error'
@@ -102,7 +105,11 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
           </pre>
         </div>
       ) : null}
-      <div ref={ref} className={errorMessage ? 'hidden' : fitToViewer ? 'size-full' : 'w-full'} />
+      <div
+        ref={ref}
+        data-render-state="pending"
+        className={errorMessage ? 'hidden' : fitToViewer ? 'size-full' : 'w-full'}
+      />
     </div>
   )
 }

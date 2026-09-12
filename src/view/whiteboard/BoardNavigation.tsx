@@ -9,9 +9,10 @@ export const BoardNavigation = React.memo<{
   size: { width: number; height: number }
   selectedCount: number
   nodeCount: number
+  readOnly?: boolean
   status: string
   fit: (selectionOnly?: boolean) => void
-}>(({ store, zoomPercent, size, selectedCount, nodeCount, status, fit }) => (
+}>(({ store, zoomPercent, size, selectedCount, nodeCount, status, fit, readOnly }) => (
   <footer className="wb-bottom" data-wb-ui>
     <div className="wb-zoom">
       <button
@@ -56,10 +57,10 @@ export const BoardNavigation = React.memo<{
       {selectedCount > 0 && <button onClick={() => fit(true)}>Focus</button>}
     </div>
     <div className="wb-history">
-      <button aria-label="Undo" onClick={store.undo}>
+      <button aria-label="Undo" disabled={readOnly} onClick={store.undo}>
         <BoardIcon name="undo" />
       </button>
-      <button aria-label="Redo" onClick={store.redo}>
+      <button aria-label="Redo" disabled={readOnly} onClick={store.redo}>
         <BoardIcon name="redo" />
       </button>
     </div>
@@ -75,7 +76,19 @@ export const BoardNavigation = React.memo<{
         <br />
         Ctrl / ⌘ + scroll: zoom
         <br />
+        Two fingers: pan and pinch to zoom
+        <br />
+        L: laser pointer (hold and move)
+        <br />
+        Presentation: arrows / Space for steps · Esc to exit
+        <br />
         Shift + click: multi-select
+        <br />
+        Ctrl / ⌘ + click: select underneath
+        <br />
+        Ctrl / ⌘ + Shift + L: lock / unlock
+        <br />
+        E: erase objects · Esc: cancel
         <br />
         Drag empty space: select area
         <br />
@@ -96,6 +109,10 @@ export const BoardNavigation = React.memo<{
         Drag arrow endpoints: reconnect
         <br />
         Ctrl / ⌘ + D: duplicate
+        <br />
+        Ctrl / ⌘ + X: cut selection
+        <br />
+        I: choose images · Paste or drop images
         <br />
         Ctrl / ⌘ + G: group
         <br />

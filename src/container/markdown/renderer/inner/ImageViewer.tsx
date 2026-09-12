@@ -70,57 +70,64 @@ export const ImageViewer: React.FC<IProps> = props => {
 
   return (
     <React.Fragment>
-      <ElementViewer open={open} resetOnOpen={true} onClose={handleClose}>
+      <ElementViewer
+        open={open}
+        resetOnOpen={true}
+        onClose={handleClose}
+        controls={
+          open &&
+          imageList.length > 1 && (
+            <React.Fragment>
+              <button
+                className="fixed left-4 cursor-pointer top-1/2 z-50 -translate-y-1/2 rounded-full bg-gray-800/70 p-3 text-white backdrop-blur-sm transition-opacity hover:bg-gray-700/90"
+                onClick={e => {
+                  e.stopPropagation()
+                  navigateToImage(currentIndex - 1)
+                }}
+                title="Previous image"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button
+                className="fixed right-4 cursor-pointer z-50 top-1/2 -translate-y-1/2 rounded-full bg-gray-800/70 p-3 text-white backdrop-blur-sm transition-opacity hover:bg-gray-700/90"
+                onClick={e => {
+                  e.stopPropagation()
+                  navigateToImage(currentIndex + 1)
+                }}
+                title="Next image"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </React.Fragment>
+          )
+        }
+      >
         <img src={imageSrc} alt={imageAlt} className="max-w-[80vw] max-h-[80vh] object-contain" />
       </ElementViewer>
-      {open && imageList.length > 1 && (
-        <React.Fragment>
-          <button
-            className="fixed left-4 cursor-pointer top-1/2 z-50 -translate-y-1/2 rounded-full bg-gray-800/70 p-3 text-white backdrop-blur-sm transition-opacity hover:bg-gray-700/90"
-            onClick={e => {
-              e.stopPropagation()
-              navigateToImage(currentIndex - 1)
-            }}
-            title="Previous image"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-          <button
-            className="fixed right-4 cursor-pointer z-50 top-1/2 -translate-y-1/2 rounded-full bg-gray-800/70 p-3 text-white backdrop-blur-sm transition-opacity hover:bg-gray-700/90"
-            onClick={e => {
-              e.stopPropagation()
-              navigateToImage(currentIndex + 1)
-            }}
-            title="Next image"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        </React.Fragment>
-      )}
     </React.Fragment>
   )
 }

@@ -1,6 +1,10 @@
 // Run against whiteboard-server.mjs?benchmark using an existing Playwright page.
 // The function is self-contained so playwright-cli run-code can execute its source.
-export async function benchmarkWhiteboard(page) {
+export async function benchmarkWhiteboard(
+  page,
+  includeRotation = false,
+  includeNavigation = false,
+) {
   await page.locator('[data-whiteboard][data-element-count="2000"]').waitFor()
   const results = []
   async function readyScene() {
@@ -17,20 +21,33 @@ export async function benchmarkWhiteboard(page) {
       await document.fonts.ready
     })
   }
-  async function measure(mode, frames = 240) {
+  async function measure(operation, frames = 240) {
+    const mode = operation.startsWith('read-') ? operation.slice(5) : operation
+    if (operation.startsWith('read-')) {
+      await page.getByRole('button', { name: 'Enter reading mode', exact: true }).click()
+    }
+    if (mode === 'laser')
+      await page.getByRole('button', { name: 'Laser pointer', exact: true }).click()
     if (mode === 'pan') await page.getByRole('button', { name: 'Hand', exact: true }).click()
-    if (mode === 'drag' || mode === 'resize')
+    if (mode === 'drag' || mode === 'resize' || mode === 'rotate')
       await page.getByRole('button', { name: 'Select', exact: true }).click()
-    if (mode === 'resize') {
+    if (mode === 'resize' || mode === 'rotate') {
       await page.mouse.click(320, 220)
       await page.getByRole('heading', { name: '9 selected', exact: true }).waitFor()
     }
+    const initialCamera = await page
+      .locator('.wb-world')
+      .evaluate(element => element.style.transform)
     const origin =
-      mode === 'resize'
-        ? { x: 1500, y: 760 }
-        : mode === 'drag'
-          ? { x: 320, y: 220 }
-          : { x: 1000, y: 700 }
+      operation === 'read-pan'
+        ? { x: 1600, y: 700 }
+        : mode === 'rotate'
+          ? { x: 870, y: 132 }
+          : mode === 'resize'
+            ? { x: 1500, y: 760 }
+            : mode === 'drag'
+              ? { x: 320, y: 220 }
+              : { x: 1000, y: 700 }
     if (mode !== 'zoom') {
       await page.mouse.move(origin.x, origin.y)
       await page.mouse.down()
@@ -62,8 +79,14 @@ export async function benchmarkWhiteboard(page) {
                 pointerId: 1,
                 pointerType: 'mouse',
                 buttons: 1,
-                clientX: origin.x + Math.sin(i / 25) * 160,
-                clientY: origin.y + Math.sin(i / 35) * 90,
+                clientX:
+                  mode === 'rotate'
+                    ? 870 + Math.sin(Math.sin(i / 35) * 0.6) * 328
+                    : origin.x + Math.sin(i / 25) * 160,
+                clientY:
+                  mode === 'rotate'
+                    ? 460 - Math.cos(Math.sin(i / 35) * 0.6) * 328
+                    : origin.y + Math.sin(i / 35) * 90,
               }),
             )
         }
@@ -74,14 +97,40 @@ export async function benchmarkWhiteboard(page) {
           max: deltas.at(-1),
           frames: deltas.length,
           mountedCards: document.querySelectorAll('.wb-card').length,
+          mountedVectors: document.querySelectorAll('.wb-world .wb-vector').length,
+          minimap: !!document.querySelector('.wb-minimap'),
+          camera: document.querySelector('.wb-world').style.transform,
+          ...(mode === 'laser'
+            ? { laserActive: document.querySelector('.wb-laser').width > 300 }
+            : {}),
+          ...(mode === 'rotate'
+            ? {
+                rotationActive: document
+                  .querySelector('[data-node-id="node-0"]')
+                  ?.style.transform.includes('rotate('),
+              }
+            : {}),
         }
       },
       { mode, frames, origin },
     )
+    if (mode === 'rotate' && !result.rotationActive)
+      throw new Error('Rotation gesture did not transform the selected cards')
+    if ((mode === 'pan' || mode === 'zoom') && result.camera === initialCamera)
+      throw new Error(`${operation} did not move the camera`)
+    if (mode === 'laser' && !result.laserActive)
+      throw new Error('Laser gesture did not draw its trail')
     if (mode !== 'zoom') await page.mouse.up()
-    return { mode, ...result }
+    return { mode: operation, ...result }
   }
-  for (const mode of ['pan', 'zoom', 'drag', 'resize']) {
+  for (const mode of [
+    'pan',
+    'zoom',
+    'drag',
+    'resize',
+    ...(includeRotation ? ['rotate'] : []),
+    ...(includeNavigation ? ['laser', 'read-pan', 'read-zoom'] : []),
+  ]) {
     const started = Date.now()
     await page.reload()
     await readyScene()

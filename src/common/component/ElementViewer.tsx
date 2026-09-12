@@ -7,10 +7,13 @@ interface IProps {
   readonly children: React.ReactElement
   readonly resetOnOpen: boolean
   readonly onClose: () => void
+  readonly controls?: React.ReactNode
 }
 
+const stopPropagation = (event: React.SyntheticEvent): void => event.stopPropagation()
+
 export const ElementViewer: React.FC<IProps> = props => {
-  const { open, resetOnOpen, children, onClose } = props
+  const { open, resetOnOpen, children, onClose, controls } = props
   const [scale, setScale] = React.useState<number>(1)
   const [rotation, setRotation] = React.useState<number>(0)
   const [translateX, setTranslateX] = React.useState<number>(0)
@@ -19,6 +22,8 @@ export const ElementViewer: React.FC<IProps> = props => {
   const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 })
 
   const containerRef = React.useRef<HTMLDivElement | null>(null)
+  const dialogRef = React.useRef<HTMLDivElement | null>(null)
+  const closeRef = React.useRef<HTMLButtonElement | null>(null)
 
   const onZoomIn = React.useCallback(() => {
     setScale(prev => prev * 1.2)
@@ -44,8 +49,26 @@ export const ElementViewer: React.FC<IProps> = props => {
   }, [])
 
   const onKeyDown = useEventCallback((event: KeyboardEvent) => {
+    const dialog = dialogRef.current
+    if (!dialog || [...document.querySelectorAll('[aria-modal="true"]')].at(-1) !== dialog) return
     if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
       onClose()
+    } else if (event.key === 'Tab') {
+      const items = [
+        ...dialog.querySelectorAll<HTMLElement>('button,a[href],input,textarea,select,[tabindex]'),
+      ].filter(
+        element =>
+          element.tabIndex >= 0 &&
+          !element.matches(':disabled') &&
+          element.getClientRects().length > 0,
+      )
+      const index = items.indexOf(document.activeElement as HTMLElement)
+      if (index < 0 || (event.shiftKey ? index === 0 : index === items.length - 1)) {
+        event.preventDefault()
+        ;(event.shiftKey ? items.at(-1) : items[0])?.focus({ preventScroll: true })
+      }
     }
   })
 
@@ -78,19 +101,28 @@ export const ElementViewer: React.FC<IProps> = props => {
     if (newScale >= 0.1 && newScale <= 10) setScale(newScale)
   })
 
-  const container = containerRef.current
   React.useEffect(() => {
-    if (!container) return
+    const container = containerRef.current
+    if (!open || !container) return
 
     container.addEventListener('wheel', onWheel, { passive: false })
     return () => container.removeEventListener('wheel', onWheel)
-  }, [onWheel, container])
+  }, [onWheel, open])
 
   React.useEffect(() => {
     if (open) {
+      const previous = document.activeElement
+      const dialog = dialogRef.current
+      closeRef.current?.focus({ preventScroll: true })
       document.addEventListener('keydown', onKeyDown)
       return () => {
         document.removeEventListener('keydown', onKeyDown)
+        if (
+          previous instanceof HTMLElement &&
+          previous.isConnected &&
+          (document.activeElement === document.body || dialog?.contains(document.activeElement))
+        )
+          previous.focus({ preventScroll: true })
       }
     }
   }, [open, onKeyDown])
@@ -108,7 +140,28 @@ export const ElementViewer: React.FC<IProps> = props => {
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex flex-col items-center bg-black/60 backdrop-blur-sm">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Content preview"
+      className="fixed inset-0 z-50 flex flex-col items-center bg-black/60 backdrop-blur-sm"
+      onPointerDown={stopPropagation}
+      onPointerMove={stopPropagation}
+      onPointerUp={stopPropagation}
+      onPointerCancel={stopPropagation}
+      onClick={stopPropagation}
+      onDoubleClick={stopPropagation}
+      onContextMenu={stopPropagation}
+      onDragOver={event => {
+        event.preventDefault()
+        event.stopPropagation()
+      }}
+      onDrop={event => {
+        event.preventDefault()
+        event.stopPropagation()
+      }}
+    >
       <div className="absolute z-50 right-4 top-4 flex gap-4">
         <button
           onClick={onRotateCounterClockwise}
@@ -214,6 +267,7 @@ export const ElementViewer: React.FC<IProps> = props => {
           </svg>
         </button>
         <button
+          ref={closeRef}
           onClick={onClose}
           title="Close (Esc)"
           className="rounded-full bg-gray-800/80 p-2 text-white hover:bg-gray-700"
@@ -234,6 +288,7 @@ export const ElementViewer: React.FC<IProps> = props => {
           </svg>
         </button>
       </div>
+      {controls}
       <div
         ref={containerRef}
         className="flex h-screen w-screen z-40 items-center justify-center overflow-hidden"
