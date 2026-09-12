@@ -3,6 +3,7 @@
 !/.gitignore
 !/AGENTS.md
 !/settings.json
+!/global_settings.json
 !/keymap.json
 !/tasks.json
 !/debug.json
