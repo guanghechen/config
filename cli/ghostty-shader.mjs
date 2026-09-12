@@ -77,7 +77,7 @@ if (process.argv[1] === import.meta.filename) {
   const home = path.join(XDG_CONFIG_HOME, 'ghostty')
   const cmd = new Command({
     name: 'ghostty-shader',
-    description: 'Manage the Ghostty shader selected for each appearance.',
+    description: 'Manage one Ghostty shader selection shared by light and dark themes.',
   })
     .argument({ name: 'shader', kind: 'optional', description: 'Shader name' })
     .option({ long: 'silent', short: 's', type: 'boolean', description: 'Suppress output' })

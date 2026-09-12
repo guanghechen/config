@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 
-// Owns Ghostty's per-appearance shader selections and derived active config.
+// Owns one Ghostty shader selection and derives its path from the appearance.
 // Theme apply and the shader CLI share this writer and migrate persisted state
 // across upgrades. Importing this module does not mutate state.
 
@@ -40,8 +40,9 @@ const LOCK_TIMEOUT_MS = 5_000
  * @property {string} lock
  * @property {string} recoveryLock
  * @property {string} transaction
- * @property {Record<IAppearance, string>} saved
- * @property {Record<IAppearance, string>} legacySaved
+ * @property {string} selection
+ * @property {Record<IAppearance, string>} legacyLocal
+ * @property {Record<IAppearance, string>} legacyRoot
  */
 
 /** @param {string} home @return {IShaderStatePaths} */
@@ -55,11 +56,12 @@ function resolvePaths(home) {
     lock: path.join(localDir, '.shader-state.lock'),
     recoveryLock: path.join(localDir, '.shader-state.recovery.lock'),
     transaction: path.join(localDir, '.shader-state.transaction.json'),
-    saved: {
+    selection: path.join(localDir, 'shader'),
+    legacyLocal: {
       dark: path.join(localDir, 'shader-dark.conf'),
       light: path.join(localDir, 'shader-light.conf'),
     },
-    legacySaved: {
+    legacyRoot: {
       dark: path.join(home, 'theme-dark.conf'),
       light: path.join(home, 'theme-light.conf'),
     },
@@ -221,116 +223,62 @@ async function validateShaderFile(home, appearance, shader) {
 }
 
 /**
- * Consume old root selections before any stale local state from older releases.
- * Once retired, local per-appearance files are authoritative, including off.
- * Fall back to the older active-only config when no saved selection exists.
- * Resolving candidates does not mutate state, so prepare can validate first.
+ * The shared name is authoritative. During first migration, use the active
+ * effect (including off), then the old selection for the current appearance.
+ * Only parse legacy files here; deletion happens with the new state in a
+ * single transaction after the shader file has been validated.
  *
  * @param {IShaderStatePaths} paths
  * @param {IAppearance} targetAppearance
  */
-async function resolveLegacyState(paths, targetAppearance) {
-  const saved = {
-    dark: await readOptionalFile(paths.saved.dark),
-    light: await readOptionalFile(paths.saved.light),
-  }
-  /** @type {IAppearance[]} */
-  const migrated = []
-  /** @type {IAppearance[]} */
+async function resolveShaderState(paths, targetAppearance) {
+  /** @type {Partial<Record<IAppearance, string>>} */
+  const previous = {}
+  /** @type {ITransactionTarget[]} */
   const retired = []
   for (const appearance of /** @type {const} */ (['dark', 'light'])) {
-    const legacy = await readOptionalFile(paths.legacySaved[appearance])
-    const content = legacy ?? saved[appearance]
-    if (content === undefined) continue
-    const { shader } = parseShaderConfig(content, appearance)
-    const normalized = renderShaderConfig(shader, appearance)
-    if (saved[appearance] !== normalized) migrated.push(appearance)
-    if (legacy !== undefined) retired.push(appearance)
-    saved[appearance] = normalized
+    const local = await readOptionalFile(paths.legacyLocal[appearance])
+    const root = await readOptionalFile(paths.legacyRoot[appearance])
+    if (local !== undefined) {
+      previous[appearance] = parseShaderConfig(local, appearance).shader
+      retired.push(`saved-${appearance}`)
+    }
+    if (root !== undefined) {
+      previous[appearance] = parseShaderConfig(root, appearance).shader
+      retired.push(`legacy-${appearance}`)
+    }
   }
-  if (saved.dark !== undefined && saved.light !== undefined) return { saved, migrated, retired }
 
-  const activeContent = await readOptionalFile(paths.active)
-  if (activeContent === undefined) return { saved, migrated, retired }
-
-  const activeConfig = parseShaderConfig(activeContent)
-  const markedAppearance = await readAppearance(paths)
-  // Flat names used to be dark-only, except off and the shared Neuro Noise.
-  // Qualified paths and the two legacy -light names carry their own appearance.
-  const inferredAppearance = activeConfig.appearance ??
-    (['off', 'neuro-noise'].includes(activeConfig.shader) ? undefined : 'dark')
-  const activeAppearance =
-    inferredAppearance ?? markedAppearance ?? targetAppearance
-  if (saved[activeAppearance] === undefined) {
-    saved[activeAppearance] = renderShaderConfig(activeConfig.shader, activeAppearance)
-    migrated.push(activeAppearance)
+  const content = await readOptionalFile(paths.selection)
+  if (content !== undefined) {
+    const shader = content.trim()
+    if (!SHADER_NAMES.includes(shader)) {
+      throw new Error(`Unknown Ghostty shader selection: ${shader || '<empty>'}`)
+    }
+    return { shader, retired }
   }
-  return { saved, migrated, retired }
+
+  const active = await readOptionalFile(paths.active)
+  if (active !== undefined) {
+    return { shader: parseShaderConfig(active).shader, retired }
+  }
+  const currentAppearance = await readAppearance(paths) ?? targetAppearance
+  return { shader: previous[currentAppearance] ?? 'off', retired }
 }
 
-/**
- * Prepare and apply validate the same target and migration candidates before
- * any config writes, including legacy selections for the other appearance.
- *
- * @param {IShaderStatePaths} paths
- * @param {string} home
- * @param {IAppearance} appearance
- */
-async function resolveValidatedState(paths, home, appearance) {
-  const { saved, migrated, retired } = await resolveLegacyState(paths, appearance)
-  const shader = await validateAppearanceContent(home, appearance, saved[appearance] ?? '')
-  for (const candidate of migrated) {
-    if (candidate === appearance) continue
-    await validateAppearanceContent(home, candidate, /** @type {string} */ (saved[candidate]))
-  }
-  return { saved, migrated, retired, shader }
-}
-
-/**
- * Save both selections locally and retire their old root files atomically.
- * Recovery restores both sides if migration is interrupted.
- *
- * @param {IShaderStatePaths} paths
- * @param {string} home
- * @param {IAppearance} targetAppearance
- */
-async function migrateLegacyState(paths, home, targetAppearance) {
-  const { saved, migrated, retired, shader } = await resolveValidatedState(paths, home, targetAppearance)
-  /** @type {Array<[ITransactionTarget, string|null]>} */
-  const updates = []
-  for (const appearance of migrated) {
-    updates.push([`saved-${appearance}`, /** @type {string} */ (saved[appearance])])
-  }
-  for (const appearance of retired) updates.push([`legacy-${appearance}`, null])
-  if (updates.length > 0) await commitState(paths, updates)
-  return { saved, shader }
-}
-
-/**
- * @param {IShaderStatePaths} paths
- * @param {Record<IAppearance, string|undefined>} saved
- * @param {IAppearance} appearance
- */
-async function ensureSavedState(paths, saved, appearance) {
-  if (saved[appearance] === undefined) {
-    await replaceFileAtomic(paths.saved[appearance], '')
-    saved[appearance] = ''
-  }
-  return /** @type {string} */ (saved[appearance])
-}
-
-/** @typedef {'theme'|'active'|'appearance'|'saved-dark'|'saved-light'|'legacy-dark'|'legacy-light'} ITransactionTarget */
+/** @typedef {'theme'|'active'|'appearance'|'selection'|'saved-dark'|'saved-light'|'legacy-dark'|'legacy-light'} ITransactionTarget */
 
 /** @param {IShaderStatePaths} paths @param {ITransactionTarget} target @param {number} [version] */
-function resolveTransactionTarget(paths, target, version = 3) {
+function resolveTransactionTarget(paths, target, version = 4) {
   if (target === 'theme') return paths.theme
   if (target === 'active') return paths.active
   if (target === 'appearance') return paths.appearance
-  const saved = version === 2 ? paths.legacySaved : paths.saved
+  if (version === 4 && target === 'selection') return paths.selection
+  const saved = version === 2 ? paths.legacyRoot : paths.legacyLocal
   if (target === 'saved-dark') return saved.dark
   if (target === 'saved-light') return saved.light
-  if (version === 3 && target === 'legacy-dark') return paths.legacySaved.dark
-  if (version === 3 && target === 'legacy-light') return paths.legacySaved.light
+  if (version >= 3 && target === 'legacy-dark') return paths.legacyRoot.dark
+  if (version >= 3 && target === 'legacy-light') return paths.legacyRoot.light
   throw new Error(`Invalid Ghostty shader transaction target: ${target}`)
 }
 
@@ -344,7 +292,7 @@ async function beginTransaction(paths, targets) {
     const content = await readOptionalFile(resolveTransactionTarget(paths, target))
     files.push({ target, existed: content !== undefined, content: content ?? '' })
   }
-  await replaceFileAtomic(paths.transaction, `${JSON.stringify({ version: 3, files })}\n`)
+  await replaceFileAtomic(paths.transaction, `${JSON.stringify({ version: 4, files })}\n`)
 }
 
 /** @param {IShaderStatePaths} paths */
@@ -359,7 +307,7 @@ async function recoverPendingTransaction(paths) {
     throw new Error(`Invalid Ghostty shader transaction journal: ${paths.transaction}`)
   }
 
-  if (![1, 2, 3].includes(transaction?.version) || !Array.isArray(transaction.files)) {
+  if (![1, 2, 3, 4].includes(transaction?.version) || !Array.isArray(transaction.files)) {
     throw new Error(`Invalid Ghostty shader transaction journal: ${paths.transaction}`)
   }
 
@@ -634,59 +582,40 @@ export async function listGhosttyShaders({ home }) {
 }
 
 /**
- * @param {string} home
- * @param {IAppearance} appearance
- * @param {string} content
- */
-async function validateAppearanceContent(home, appearance, content) {
-  const { shader } = parseShaderConfig(content, appearance)
-  if (!GHOSTTY_SHADERS[appearance].includes(shader)) {
-    throw new Error(`Shader '${shader}' is not available for the ${appearance} appearance`)
-  }
-  await validateShaderFile(home, appearance, shader)
-  return shader
-}
-
-/**
- * @param {IShaderStatePaths} paths
- * @param {string} home
- * @param {IAppearance} appearance
- */
-async function prepareAppearanceActivation(paths, home, appearance) {
-  const { saved, shader } = await migrateLegacyState(paths, home, appearance)
-  const content = await ensureSavedState(paths, saved, appearance)
-  return { content, shader }
-}
-
-/**
- * Validate the currently selected shader for a theme appearance without
- * applying the requested theme.
+ * Validate the shared selection in the requested appearance without applying
+ * the theme or migrating state. Recovery of an interrupted write runs first.
  *
  * @param {{home: string, appearance: IAppearance}} params
  */
 export async function validateGhosttyThemeAppearance({ home, appearance }) {
   assertAppearance(appearance)
   return withGhosttyShaderStateLock(home, async paths => {
-    const { shader } = await resolveValidatedState(paths, home, appearance)
+    const { shader } = await resolveShaderState(paths, appearance)
+    await validateShaderFile(home, appearance, shader)
     return { appearance, shader }
   })
 }
 
 /**
- * Apply the rendered Ghostty theme and its shader appearance as one state
- * transition owned by this module.
+ * Changing appearance keeps the shader name and changes only its directory.
+ * The theme, selection, derived config, and legacy cleanup commit together.
  *
  * @param {{home: string, appearance: IAppearance, themeContent: string}} params
  */
 export async function applyGhosttyThemeAppearance({ home, appearance, themeContent }) {
   assertAppearance(appearance)
   return withGhosttyShaderStateLock(home, async paths => {
-    const { shader } = await prepareAppearanceActivation(paths, home, appearance)
-    await commitState(paths, [
+    const { shader, retired } = await resolveShaderState(paths, appearance)
+    await validateShaderFile(home, appearance, shader)
+    /** @type {Array<[ITransactionTarget, string|null]>} */
+    const updates = [
+      ['selection', `${shader}\n`],
       ['theme', themeContent],
       ['active', renderShaderConfig(shader, appearance)],
       ['appearance', `${appearance}\n`],
-    ])
+    ]
+    for (const target of retired) updates.push([target, null])
+    await commitState(paths, updates)
     return { appearance, shader }
   })
 }
@@ -699,45 +628,27 @@ export async function selectGhosttyShader({ home, shader, previous = false, next
   if (shader && (previous || next)) {
     throw new Error('A shader name cannot be combined with --prev or --next')
   }
+  if (shader && !SHADER_NAMES.includes(shader)) {
+    throw new Error(`Unknown Ghostty shader: ${shader}`)
+  }
 
   return withGhosttyShaderStateLock(home, async paths => {
     const appearance = await requireAppearance(paths)
-    const shaders = GHOSTTY_SHADERS[appearance]
-    if (shader && !shaders.includes(shader)) {
-      throw new Error(`Shader '${shader}' is not available for the ${appearance} appearance`)
-    }
-    if (shader) await validateShaderFile(home, appearance, shader)
-
-    // Selection replaces the current shader, so only the new shader file must
-    // exist. Resolve legacy state without requiring the old file to survive.
-    const { saved, migrated, retired } = await resolveLegacyState(paths, appearance)
-    const { shader: currentShader } = parseShaderConfig(saved[appearance] ?? '', appearance)
-
-    if (!shaders.includes(currentShader)) {
-      throw new Error(`Shader '${currentShader}' is not available for the ${appearance} appearance`)
-    }
-
+    const { shader: currentShader, retired } = await resolveShaderState(paths, appearance)
     let selectedShader = shader
     if (!selectedShader) {
-      const index = shaders.indexOf(currentShader)
+      const index = SHADER_NAMES.indexOf(currentShader)
       const offset = previous ? -1 : 1
-      selectedShader = shaders[(index + offset + shaders.length) % shaders.length]
+      selectedShader = SHADER_NAMES[(index + offset + SHADER_NAMES.length) % SHADER_NAMES.length]
     }
-
-    if (!shader) await validateShaderFile(home, appearance, selectedShader)
+    // Explicit replacement must not depend on the previous shader file existing.
+    await validateShaderFile(home, appearance, selectedShader)
     /** @type {Array<[ITransactionTarget, string|null]>} */
-    const updates = []
-    for (const candidate of migrated) {
-      if (candidate === appearance) continue
-      const content = /** @type {string} */ (saved[candidate])
-      await validateAppearanceContent(home, candidate, content)
-      updates.push([`saved-${candidate}`, content])
-    }
-    updates.push(
-      [`saved-${appearance}`, renderShaderConfig(selectedShader, appearance)],
+    const updates = [
+      ['selection', `${selectedShader}\n`],
       ['active', renderShaderConfig(selectedShader, appearance)],
-    )
-    for (const candidate of retired) updates.push([`legacy-${candidate}`, null])
+    ]
+    for (const target of retired) updates.push([target, null])
     await commitState(paths, updates)
     return { appearance, shader: selectedShader }
   })
