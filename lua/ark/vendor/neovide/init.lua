@@ -43,9 +43,6 @@ vim.schedule(function()
     "dim",
     "hipattern",
     "whichkey",
-
-    -- Scrolling behavior.
-    "scroll",
   })
 
   era.m.input.dressing()

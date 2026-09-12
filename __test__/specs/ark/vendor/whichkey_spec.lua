@@ -28,8 +28,12 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       return subscription
     end)
     local setup = era.dressing.setup
+    local lua_scroll_requested = false
     t:patch_table(era.dressing, "setup", function(names)
       for _, name in ipairs(names) do
+        if name == "scroll" then
+          lua_scroll_requested = true
+        end
         if name == "whichkey" then
           setup({ name })
         end
@@ -62,6 +66,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       return era.dressing.whichkey.state.ready and vim.fn.maparg("gsh", "n", false, true).desc ~= nil
     end, 1000, "deferred setup did not complete")
 
+    t.assert_eq(vendor == "neovim", lua_scroll_requested, "only terminal Neovim requests Lua scrolling")
     local state = era.dressing.whichkey.state
     state.bufnr, state.mode = bufnr, "n"
     local node = state.get_node("gsh")

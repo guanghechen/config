@@ -49,7 +49,8 @@ function M.default_gen_hlgroup_map(context)
     f_lnum_info = { fg = u.green },
     f_lnum_hint = { fg = u.purple },
     f_transparent = { bg = u.none },
-    f_fold_virt_text = { fg = u.bg2, bg = u.yellow, italic = true },
+    -- Keep the badge background opaque when combined with NormalNC.
+    f_fold_virt_text = { fg = u.bg2, bg = u.yellow, italic = true, blend = 0 },
     f_fold_virt_text_inv = { fg = u.yellow, bg = bg, italic = true },
 
     ---diff

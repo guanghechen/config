@@ -1,35 +1,23 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "ark.vendor.neovide.option" ---@type string
+
 require("ark.vendor.neovim.option")
 
--- Appearance
-vim.g.neovide_padding_top = 0
-vim.g.neovide_padding_bottom = 0
-vim.g.neovide_padding_right = 0
-vim.g.neovide_padding_left = 0
-
 -- Cursor
-vim.g.neovide_cursor_trail_size = 0
-vim.g.neovide_cursor_trail_length = 0
-vim.g.neovide_cursor_vfx_mode = "railgun"
+vim.g.neovide_cursor_animation_length = 0
+vim.g.neovide_cursor_vfx_mode = ""
 
--- Font
-vim.o.guifont = "Maple Mono NF CN:h15"
+-- Font inherits guifont from the common options.
 vim.o.linespace = 0
 vim.g.neovide_scale_factor = 1.0
 
--- Transparency
-vim.g.transparency = 0.85
+-- Appearance
 vim.g.neovide_floating_blur = false
-vim.g.neovide_floating_blur_amount_x = 2.0
-vim.g.neovide_floating_blur_amount_y = 2.0
-vim.g.neovide_floating_opacity = 1.0
 -- Thin winsep floats also receive shadows, producing overlapping wedges.
 vim.g.neovide_floating_shadow = false
-vim.g.neovide_floating_z_height = 10
-vim.g.neovide_light_angle_degrees = 45
-vim.g.neovide_light_radius = 5
 vim.g.neovide_show_border = true
 vim.g.neovide_opacity = 1
-vim.g.neovide_window_blurred = true
+vim.g.neovide_theme = "bg_color"
 
 -- Window
 vim.g.neovide_fullscreen = true
@@ -39,27 +27,23 @@ vim.g.neovide_padding_right = 0
 vim.g.neovide_padding_left = 0
 vim.g.neovide_remember_window_size = true
 
-do
-  local scheme = dot.context.theme.get_scheme(dot.context.theme.theme:snapshot()) ---@type stl.t.theme.IScheme | nil
-  if scheme ~= nil then
-    local c = scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
-    vim.g.terminal_color_0 = c.bg0
-    vim.g.terminal_color_1 = c.red
-    vim.g.terminal_color_2 = c.green
-    vim.g.terminal_color_3 = c.yellow
-    vim.g.terminal_color_4 = c.blue
-    vim.g.terminal_color_5 = c.purple
-    vim.g.terminal_color_6 = c.aqua
-    vim.g.terminal_color_7 = c.fg1
-    vim.g.terminal_color_8 = c.bg0
-    vim.g.terminal_color_9 = c.brightRed
-    vim.g.terminal_color_10 = c.brightGreen
-    vim.g.terminal_color_11 = c.brightYellow
-    vim.g.terminal_color_12 = c.brightBlue
-    vim.g.terminal_color_13 = c.brightPurple
-    vim.g.terminal_color_14 = c.brightAqua
-    vim.g.terminal_color_15 = c.fg1
+-- Neovide owns smooth scrolling; keep the existing workspace toggle effective.
+---@return nil
+local function sync_scroll_animation()
+  vim.g.neovide_scroll_animation_length = dot.context.flight.dressing_scroll:snapshot() and 0.3 or 0
+end
 
-    vim.g.neovide_theme = scheme.darken and "dark" or "light"
+sync_scroll_animation()
+stl.fn.observe({ dot.context.flight.dressing_scroll }, sync_scroll_animation, true)
+
+-- Initialize before TermOpen and refresh the palette used by new terminals.
+---@return nil
+local function sync_term_colors()
+  local scheme = dot.context.theme.get_scheme(dot.context.theme.theme:snapshot()) ---@type stl.t.theme.IScheme|nil
+  if scheme ~= nil then
+    dot.context.theme.set_term_colors(scheme)
   end
 end
+
+sync_term_colors()
+stl.fn.observe({ dot.context.theme.theme }, sync_term_colors, true)
