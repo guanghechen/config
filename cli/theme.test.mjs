@@ -473,7 +473,8 @@ describe('theme app template resolution', () => {
         app.name,
       )
 
-      if (['bat', 'codex'].includes(app.name)) {
+      // These apps have deliberate family-specific mappings, checked separately.
+      if (['bat', 'codex', 'zed'].includes(app.name)) {
         assert.notEqual(vscTemplate, defaultTemplate, app.name)
       } else {
         for (const scheme of schemes) {

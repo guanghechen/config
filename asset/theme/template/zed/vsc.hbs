@@ -1,0 +1,113 @@
+{
+  "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
+  "name": "{{name}}",
+  "author": "guanghechen",
+  "themes": [
+    {
+      "name": "{{name}}",
+      "appearance": "{{darken ? 'dark' : 'light'}}",
+      "style": {
+        "border": "{{vsc.border}}",
+        "created": "{{darken ? '#88C796' : '#007100'}}",
+        "deleted": "{{darken ? '#B95641' : '#AD0707'}}",
+        "ignored": "{{darken ? '#8C8C8C' : '#8E8E90'}}",
+        "editor.background": "{{vsc.editor_background}}",
+        "editor.foreground": "{{vsc.editor_foreground}}",
+        "editor.invisible": "{{darken ? '#DEDEDE' : '#424242'}}",
+        "editor.gutter.background": "{{vsc.editor_background}}",
+        "error": "{{darken ? '#F04C4C' : '#E93625'}}",
+        "hidden": "{{vsc.tab_inactiveForeground}}",
+        "hint": "#969696",
+        "info.background": "{{vsc.focusBorder + '20'}}",
+        "modified": "{{darken ? '#DDC194' : '#895503'}}",
+        "scrollbar.thumb.background": "{{darken ? '#FFFFFF10' : '#00000010'}}",
+        "scrollbar.thumb.hover_background": "{{darken ? '#FFFFFF20' : '#00000020'}}",
+        "tab.active_background": "{{vsc.tab_activeBackground}}",
+        "terminal.background": "{{vsc.editor_background}}",
+        "text": "{{vsc.foreground}}",
+        "text.muted": "{{vsc.foreground}}",
+        "toolbar.background": "{{vsc.editor_background}}",
+        "warning": "{{darken ? '#C7A201' : '#BF8803'}}",{{darken ? '\n        "warning.background": "#C7A201aa",' : ''}}
+        "players": [
+          {
+            "cursor": "{{darken ? '#FFFFFF' : '#000000'}}"
+          }
+        ],
+        "syntax": {
+          "attribute": {
+            "color": "{{darken ? '#91CBEA' : '#001080'}}"
+          },
+          "boolean": {
+            "color": "{{vsc.tokenConstantLanguage}}"
+          },
+          "comment": {
+            "color": "{{vsc.tokenComment}}"
+          },
+          "constant": {
+            "color": "{{vsc.tokenConstantLanguage}}"
+          },
+          "emphasis": {
+            "color": "{{vsc.tokenVariableAndParameterName}}",
+            "font_style": "italic"
+          },
+          "emphasis.strong": {
+            "color": "{{vsc.tokenVariableAndParameterName}}",
+            "font_weight": 700
+          },
+          "function": {
+            "color": "{{vsc.tokenFunctionDeclarations}}"
+          },
+          "link_text": {
+            "color": "{{vsc.tokenFunctionDeclarations}}"
+          },
+          "link_uri": {
+            "color": "{{vsc.tokenFunctionDeclarations}}"
+          },
+          "keyword": {
+            "color": "{{vsc.tokenControlFlowSpecialKeywords}}"
+          },
+          "namespace": {
+            "color": "{{vsc.tokenTypesDeclarationAndReferences}}"
+          },
+          "number": {
+            "color": "{{vsc.tokenConstantLanguage}}"
+          },
+          "property": {
+            "color": "{{darken ? '#91CBEA' : '#0451A5'}}"
+          },
+          "punctuation.list_marker": {
+            "color": "{{darken ? '#91CBEA' : '#0451A5'}}"
+          },
+          "selector": {
+            "color": "{{vsc.tokenVariableAndParameterName}}"
+          },
+          "selector.pseudo": {
+            "color": "{{vsc.tokenFunctionDeclarations}}"
+          },
+          "string": {
+            "color": "{{darken ? '#BA846E' : '#AD2F2F'}}"
+          },
+          "string.escape": {
+            "color": "{{darken ? '#C9AE76' : '#EE0101'}}"
+          },
+          "string.special": {
+            "color": "{{vsc.foreground}}"
+          },
+          "tag": {
+            "color": "{{darken ? '#569CD6' : '#0451A5'}}"
+          },
+          "title": {
+            "color": "{{vsc.tokenKeyword}}",
+            "font_weight": 700
+          },
+          "type": {
+            "color": "{{vsc.tokenTypesDeclarationAndReferences}}"
+          },
+          "variable": {
+            "color": "{{vsc.tokenVariableAndParameterName}}"
+          }
+        }
+      }
+    }
+  ]
+}

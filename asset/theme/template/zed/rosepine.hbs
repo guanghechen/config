@@ -1,0 +1,294 @@
+{
+  "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
+  "name": "{{name}}",
+  "author": "guanghechen",
+  "themes": [
+    {
+      "name": "{{name}}",
+      "appearance": "{{darken ? 'dark' : 'light'}}",
+      "style": {
+        "background": "{{rosepine.base}}",
+        "surface.background": "{{rosepine.surface}}",
+        "elevated_surface.background": "{{rosepine.overlay}}",
+        "border": "{{rosepine.highlightMed}}",
+        "border.variant": "{{unified.bg2}}",
+        "border.focused": "{{unified.aqua}}",
+        "border.selected": "{{unified.aqua}}",
+        "border.disabled": "{{unified.bg2}}",
+        "text": "{{unified.fg1}}",
+        "text.muted": "{{unified.fg3}}",
+        "text.placeholder": "{{unified.fg4}}",
+        "text.disabled": "{{unified.fg4}}",
+        "text.accent": "{{unified.aqua}}",
+        "icon": "{{unified.fg1}}",
+        "icon.muted": "{{unified.fg3}}",
+        "icon.placeholder": "{{unified.fg4}}",
+        "icon.disabled": "{{unified.fg4}}",
+        "icon.accent": "{{unified.aqua}}",
+        "element.background": "{{rosepine.overlay}}",
+        "element.hover": "{{rosepine.highlightLow}}",
+        "element.active": "{{rosepine.highlightMed}}",
+        "element.selected": "{{rosepine.highlightMed}}",
+        "element.disabled": "{{unified.bg1}}",
+        "ghost_element.hover": "{{rosepine.highlightLow}}",
+        "ghost_element.active": "{{rosepine.highlightMed}}",
+        "ghost_element.selected": "{{rosepine.highlightMed}}",
+        "ghost_element.disabled": "{{unified.bg1}}",
+        "panel.background": "{{rosepine.surface}}",
+        "panel.focused_border": "{{unified.aqua}}",
+        "panel.indent_guide": "{{unified.bg3}}",
+        "panel.indent_guide_active": "{{unified.fg4}}",
+        "panel.indent_guide_hover": "{{unified.fg4}}",
+        "pane.focused_border": "{{unified.aqua}}",
+        "pane_group.border": "{{rosepine.highlightMed}}",
+        "title_bar.background": "{{rosepine.surface}}",
+        "title_bar.inactive_background": "{{rosepine.surface}}",
+        "status_bar.background": "{{rosepine.surface}}",
+        "toolbar.background": "{{rosepine.base}}",
+        "tab_bar.background": "{{rosepine.surface}}",
+        "tab.active_background": "{{rosepine.base}}",
+        "tab.inactive_background": "{{rosepine.surface}}",
+        "editor.background": "{{rosepine.base}}",
+        "editor.foreground": "{{unified.fg1}}",
+        "editor.gutter.background": "{{rosepine.base}}",
+        "editor.subheader.background": "{{rosepine.surface}}",
+        "editor.active_line.background": "{{rosepine.highlightLow}}",
+        "editor.highlighted_line.background": "{{unified.bg2}}",
+        "editor.line_number": "{{unified.fg4}}",
+        "editor.active_line_number": "{{unified.aqua}}",
+        "editor.invisible": "{{unified.fg4 + '80'}}",
+        "editor.wrap_guide": "{{unified.bg2}}",
+        "editor.active_wrap_guide": "{{unified.bg3}}",
+        "editor.indent_guide": "{{unified.bg2}}",
+        "editor.indent_guide_active": "{{(unified.aqua) + '80'}}",
+        "editor.document_highlight.read_background": "{{rosepine.highlightLow}}",
+        "editor.document_highlight.write_background": "{{rosepine.highlightMed}}",
+        "editor.document_highlight.bracket_background": "{{rosepine.highlightMed}}",
+        "search.match_background": "{{unified.yellow + '40'}}",
+        "drop_target.background": "{{unified.blue + '30'}}",
+        "link_text.hover": "{{unified.blue}}",
+        "scrollbar.thumb.background": "{{unified.fg4 + '40'}}",
+        "scrollbar.thumb.hover_background": "{{unified.fg4 + '80'}}",
+        "scrollbar.thumb.border": "{{rosepine.highlightMed}}",
+        "scrollbar.track.background": "{{rosepine.base}}",
+        "scrollbar.track.border": "{{unified.bg2}}",
+        "terminal.background": "{{rosepine.base}}",
+        "terminal.foreground": "{{unified.fg1}}",
+        "terminal.bright_foreground": "{{unified.fg1}}",
+        "terminal.dim_foreground": "{{unified.fg3}}",
+        "terminal.ansi.background": "{{rosepine.base}}",
+        "border.transparent": "#00000000",
+        "ghost_element.background": "#00000000",
+        "created": "{{unified.green}}",
+        "created.border": "{{unified.green}}",
+        "created.background": "{{unified.diffAdd}}",
+        "deleted": "{{unified.red}}",
+        "deleted.border": "{{unified.red}}",
+        "deleted.background": "{{unified.diffDel}}",
+        "modified": "{{unified.yellow}}",
+        "modified.border": "{{unified.yellow}}",
+        "modified.background": "{{unified.yellow + '20'}}",
+        "renamed": "{{unified.aqua}}",
+        "renamed.border": "{{unified.aqua}}",
+        "renamed.background": "{{unified.aqua + '20'}}",
+        "conflict": "{{unified.orange}}",
+        "conflict.border": "{{unified.orange}}",
+        "conflict.background": "{{unified.orange + '20'}}",
+        "error": "{{unified.red}}",
+        "error.border": "{{unified.red}}",
+        "error.background": "{{unified.red + '20'}}",
+        "warning": "{{unified.yellow}}",
+        "warning.border": "{{unified.yellow}}",
+        "warning.background": "{{unified.yellow + '20'}}",
+        "info": "{{unified.blue}}",
+        "info.border": "{{unified.blue}}",
+        "info.background": "{{unified.blue + '20'}}",
+        "hint": "{{unified.aqua}}",
+        "hint.border": "{{unified.aqua}}",
+        "hint.background": "{{unified.aqua + '20'}}",
+        "success": "{{unified.green}}",
+        "success.border": "{{unified.green}}",
+        "success.background": "{{unified.green + '20'}}",
+        "ignored": "{{unified.fg4}}",
+        "ignored.border": "{{unified.fg4}}",
+        "ignored.background": "{{unified.fg4 + '20'}}",
+        "hidden": "{{unified.fg4}}",
+        "hidden.border": "{{unified.fg4}}",
+        "hidden.background": "{{unified.fg4 + '20'}}",
+        "unreachable": "{{unified.fg4}}",
+        "unreachable.border": "{{unified.fg4}}",
+        "unreachable.background": "{{unified.fg4 + '20'}}",
+        "predictive": "{{unified.fg4}}",
+        "predictive.border": "{{unified.fg4}}",
+        "predictive.background": "{{unified.fg4 + '20'}}",
+        "terminal.ansi.black": "{{rosepine.overlay}}",
+        "terminal.ansi.red": "{{rosepine.love}}",
+        "terminal.ansi.green": "{{rosepine.pine}}",
+        "terminal.ansi.yellow": "{{rosepine.gold}}",
+        "terminal.ansi.blue": "{{rosepine.foam}}",
+        "terminal.ansi.magenta": "{{rosepine.iris}}",
+        "terminal.ansi.cyan": "{{rosepine.rose}}",
+        "terminal.ansi.white": "{{rosepine.text}}",
+        "terminal.ansi.bright_black": "{{rosepine.muted}}",
+        "terminal.ansi.bright_red": "{{rosepine.love}}",
+        "terminal.ansi.bright_green": "{{rosepine.pine}}",
+        "terminal.ansi.bright_yellow": "{{rosepine.gold}}",
+        "terminal.ansi.bright_blue": "{{rosepine.foam}}",
+        "terminal.ansi.bright_magenta": "{{rosepine.iris}}",
+        "terminal.ansi.bright_cyan": "{{rosepine.rose}}",
+        "terminal.ansi.bright_white": "{{rosepine.text}}",
+        "accents": [
+          "{{unified.aqua}}",
+          "{{unified.green}}",
+          "{{unified.yellow}}",
+          "{{unified.aqua}}",
+          "{{unified.pink}}",
+          "{{unified.orange}}"
+        ],
+        "players": [
+          {
+            "cursor": "{{unified.aqua}}",
+            "background": "{{rosepine.base}}",
+            "selection": "{{rosepine.highlightMed}}"
+          }
+        ],
+        "syntax": {
+          "attribute": {
+            "color": "{{unified.tokenAttribute}}"
+          },
+          "boolean": {
+            "color": "{{unified.tokenConstant}}"
+          },
+          "comment": {
+            "color": "{{unified.tokenComment}}",
+            "font_style": "italic"
+          },
+          "comment.doc": {
+            "color": "{{unified.tokenComment}}",
+            "font_style": "italic"
+          },
+          "constant": {
+            "color": "{{unified.tokenConstant}}"
+          },
+          "constructor": {
+            "color": "{{unified.tokenType}}"
+          },
+          "embedded": {
+            "color": "{{unified.tokenVariable}}"
+          },
+          "emphasis": {
+            "color": "{{unified.tokenVariable}}",
+            "font_style": "italic"
+          },
+          "emphasis.strong": {
+            "color": "{{unified.tokenVariable}}",
+            "font_weight": 700
+          },
+          "enum": {
+            "color": "{{unified.tokenType}}"
+          },
+          "function": {
+            "color": "{{unified.tokenFunction}}"
+          },
+          "function.method": {
+            "color": "{{unified.tokenFunction}}"
+          },
+          "function.special": {
+            "color": "{{unified.tokenFunction}}"
+          },
+          "keyword": {
+            "color": "{{unified.tokenKeyword}}"
+          },
+          "label": {
+            "color": "{{unified.tokenProperty}}"
+          },
+          "link_text": {
+            "color": "{{unified.blue}}"
+          },
+          "link_uri": {
+            "color": "{{unified.tokenString}}"
+          },
+          "namespace": {
+            "color": "{{unified.tokenType}}"
+          },
+          "number": {
+            "color": "{{unified.tokenNumber}}"
+          },
+          "operator": {
+            "color": "{{unified.tokenOperator}}"
+          },
+          "predictive": {
+            "color": "{{unified.fg4}}"
+          },
+          "preproc": {
+            "color": "{{unified.tokenDecorator}}"
+          },
+          "primary": {
+            "color": "{{unified.fg1}}"
+          },
+          "property": {
+            "color": "{{unified.tokenProperty}}"
+          },
+          "punctuation": {
+            "color": "{{unified.tokenPunctuation}}"
+          },
+          "punctuation.bracket": {
+            "color": "{{unified.tokenPunctuation}}"
+          },
+          "punctuation.delimiter": {
+            "color": "{{unified.tokenPunctuation}}"
+          },
+          "punctuation.list_marker": {
+            "color": "{{unified.tokenOperator}}"
+          },
+          "punctuation.special": {
+            "color": "{{unified.tokenOperator}}"
+          },
+          "selector": {
+            "color": "{{unified.tokenTag}}"
+          },
+          "selector.pseudo": {
+            "color": "{{unified.tokenDecorator}}"
+          },
+          "string": {
+            "color": "{{unified.tokenString}}"
+          },
+          "string.escape": {
+            "color": "{{unified.blue}}"
+          },
+          "string.regex": {
+            "color": "{{unified.aqua}}"
+          },
+          "string.special": {
+            "color": "{{unified.tokenDecorator}}"
+          },
+          "string.special.symbol": {
+            "color": "{{unified.tokenConstant}}"
+          },
+          "tag": {
+            "color": "{{unified.tokenTag}}"
+          },
+          "text.literal": {
+            "color": "{{unified.tokenString}}"
+          },
+          "title": {
+            "color": "{{unified.tokenType}}",
+            "font_weight": 700
+          },
+          "type": {
+            "color": "{{unified.tokenType}}"
+          },
+          "variable": {
+            "color": "{{unified.tokenVariable}}"
+          },
+          "variable.special": {
+            "color": "{{unified.tokenParameter}}"
+          },
+          "variant": {
+            "color": "{{unified.tokenConstant}}"
+          }
+        }
+      }
+    }
+  ]
+}

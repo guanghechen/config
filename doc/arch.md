@@ -244,6 +244,51 @@ Neutral selections and inline diffs carry readable foregrounds; tmux sessions
 use blue and windows use violet. Day uses Medium weight in Windows Terminal.
 Yazi progress labels inherit Gauge's foreground inversion on filled cells.
 
+### Zed Themes
+
+`asset/theme/template/zed` generates one JSON theme per scheme in Zed's
+`themes/` directory. `default.hbs` provides a `unified` fallback. Catppuccin,
+Gruvbox, Kanagawa, Rosé Pine, Tokyo Night and VSC each have complete family
+templates; they do not merge with the default. Family templates own neutral
+surfaces, focus accents, active lines, selections and terminal ANSI mappings.
+UI foregrounds, syntax tokens and diff backgrounds retain the scheme's `unified`
+readability adjustments. Catppuccin, Kanagawa, Rosé Pine and Tokyo Night terminal
+colors match the existing Ghostty templates, including variant-specific bright
+colors. Gruvbox follows its native neutral/bright ANSI mapping with the scheme's
+soft background. `vsc.hbs` follows the VSCode Modern reference from
+`fabrialberio/zed-vscode-modern-theme` at commit
+`66495b44ace48282b1fb85ece9c53538bb5359eb`.
+Shared colors reference the existing VSC palette. Zed-specific adjustments use
+hex values directly in `vsc.hbs`; app-only colors do not belong in the shared
+schemes. The reference's dark `ignored` color is normalized with a leading `#`.
+
+The adapter follows Zed's actual configuration paths: fixed `~/.config/zed` on
+macOS, XDG on Linux/FreeBSD, and `%APPDATA%/Zed` on Windows. It activates only when
+`settings.json` exists. Apply publishes the selected theme, then writes
+`{"theme":"<scheme>"}` to the CLI-owned `global_settings.json`. Zed 1.19.2 loads
+and watches this native settings layer below `settings.json`; see
+[`paths::global_settings_file`](https://github.com/zed-industries/zed/blob/v1.19.2/crates/paths/src/paths.rs)
+and [`SettingsStore`](https://github.com/zed-industries/zed/blob/v1.19.2/crates/settings/src/settings_store.rs).
+The CLI never writes user settings, so concurrent saves, comments, permissions
+and settings symlinks are unaffected. An existing `global_settings.json` without
+the generated header is rejected before applying; move its personal settings
+into `settings.json` before enabling this integration. The generated layer is
+owned exclusively by the CLI and must not contain personal settings.
+
+Remove the old root `theme` entry from `settings.json` once to follow the CLI.
+An explicit user theme, including one chosen through Zed's theme picker or a
+settings profile, takes precedence until that override is removed. With no user
+override, the CLI selects the full scheme name and owns its light/dark appearance.
+Both generated files are replaced atomically; existing permission bits are
+preserved and new files respect umask. If publishing a theme fails, the old
+selection remains; a later selection-write failure can leave an unused theme.
+
+The Zed worktree tracks generated theme JSON and `global_settings.json` so it
+can be used directly after checkout. Theme switches change the generated layer
+without dirtying `settings.json`. Edit the source schemes/templates and regenerate
+instead of editing outputs by hand. Zed 1.19.2 also watches its theme directory and
+reloads changed files, including when the selected theme name stays the same.
+
 Each app directory contains validated metadata and Handlebars templates:
 
 ```js
