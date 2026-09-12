@@ -184,14 +184,19 @@ persistent state. The adjacent `meta.mjs` invokes it during theme prepare/apply;
 `cli/ghostty-shader.mjs` is the command-line adapter used by the Fish and Bash
 wrappers. Both paths share
 one lock and transaction journal. Applying a theme restores the corresponding
-root-level `theme-dark.conf` or `theme-light.conf` into `local/shader.conf` together with
+`local/shader-dark.conf` or `local/shader-light.conf` into `local/shader.conf` together with
 `local/theme.conf` and `local/appearance`; selecting a shader updates the current
 appearance's saved selection and active file together. Ghostty reloads only the
-active file. Root configs use `shaders/name.glsl`; the derived local config uses
-`../shaders/name.glsl`. Missing root configs migrate from the old local files,
-while existing root configs (including empty/off) take precedence. Shader selection
-updates the root config, so it appears in Git diffs. Version 1 journals recover
-saved files under `local/`; version 2 journals recover the root configs.
+active file. Both appearances expose the same shader names. Saved and active
+configs use `../shaders/<dark|light>/name.glsl`. Legacy flat paths and the old `cubes-light`
+and `inside-the-matrix-light` names normalize to this layout on the next write.
+Old root-level `theme-dark.conf` and `theme-light.conf` take precedence over stale
+local state during migration; the writer saves their selections locally and
+deletes those root files in one transaction. Subsequent selections stay under
+`local/`, including empty/off. A qualified path must match its saved appearance;
+ambiguous legacy Neuro Noise selections use the appearance marker. Version 1
+journals recover local saved files, version 2 journals recover old root configs,
+and version 3 journals cover local state and retirement of the old root files.
 
 ### Theme Templates
 
