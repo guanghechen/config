@@ -3,6 +3,7 @@ import type {
   IFileSaveRequestParams,
   IFileSaveRequestPayload,
   IFileSaveResponseResult,
+  IWhiteboardCreateRequestPayload,
 } from './file'
 import type {
   ITransformerListRequestParams,
@@ -43,6 +44,7 @@ export type IRequestParams =
 
 export type IRequestPayload =
   | IFileSaveRequestPayload
+  | IWhiteboardCreateRequestPayload
   | IUserAuthRequestPayload
   | IUserLogoutRequestPayload
   | IUserProfileRequestPayload

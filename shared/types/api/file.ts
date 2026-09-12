@@ -74,3 +74,9 @@ export interface IFileSaveRequestPayload {
 }
 
 export type IFileSaveResponseResult = Record<string, never>
+
+export interface IWhiteboardCreateRequestPayload {
+  readonly directory: string
+  readonly filename: string
+  readonly content: string
+}

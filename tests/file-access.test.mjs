@@ -278,6 +278,53 @@ test('HTTP middleware preserves authentication and returns authorization status 
     const headers = {
       authorization: `Bearer ${jwt.sign({ authenticated: true }, testJwtSecret, { expiresIn: '1h' })}`,
     }
+    const boardContent = JSON.stringify({
+      kind: 'yoz.whiteboard',
+      schemaVersion: 1,
+      id: 'api-created',
+      title: 'Created board',
+      elements: [],
+    })
+    const createBody = { directory: docs, filename: 'created.whiteboard', content: boardContent }
+    const create = (payload, authorized = true) =>
+      fetch(`${origin}/api/whiteboard/create`, {
+        method: 'POST',
+        headers: { ...(authorized ? headers : {}), 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+    assert.equal((await create(createBody, false)).status, 401)
+    assert.equal((await create({ ...createBody, directory: outside })).status, 403)
+    assert.equal(
+      (await create({ ...createBody, directory: path.join(allowed, 'escape') })).status,
+      403,
+    )
+    for (const filename of [
+      '../escape.whiteboard',
+      'nested/file.whiteboard',
+      'back\\slash.whiteboard',
+      'bad\nline.whiteboard',
+    ])
+      assert.equal((await create({ ...createBody, filename })).status, 400)
+    assert.equal((await create({ ...createBody, filename: 'notes.md' })).status, 400)
+    assert.equal((await create({ ...createBody, content: '{"elements":[]}' })).status, 400)
+    assert.equal((await fetch(`${origin}/api/whiteboard/create`, { headers })).status, 405)
+    const created = await create(createBody)
+    assert.equal(created.status, 201)
+    const createdData = (await created.json()).data
+    assert.equal(createdData.filepath, path.join(docs, 'created.whiteboard'))
+    assert.match(createdData.revision, /^[a-f0-9]{64}$/)
+    assert.equal(readFileSync(createdData.filepath, 'utf8'), boardContent)
+    const createdListing = await fetch(
+      `${origin}/api/workspace/files?${new URLSearchParams({ root: docs })}`,
+      { headers },
+    )
+    assert.ok((await createdListing.json()).data.files.includes(createdData.filepath))
+    assert.equal(
+      (await create({ ...createBody, content: boardContent.replace('Created board', 'Changed') }))
+        .status,
+      409,
+    )
+    assert.equal(readFileSync(createdData.filepath, 'utf8'), boardContent)
     const raw = await fetch(`${origin}/api/file/raw?${fileQuery}`, { headers })
     assert.equal(raw.status, 200)
     assert.equal(await raw.text(), readFileSync(article, 'utf8'))

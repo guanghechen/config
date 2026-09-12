@@ -17,6 +17,7 @@ import { postUserLogout } from './h/api/user/logout'
 import { getUserProfile } from './h/api/user/profile'
 import { list_workspace_files } from './h/api/workspace/files'
 import { list_workspaces } from './h/api/workspaces'
+import { createWhiteboard } from './h/api/whiteboard/create'
 import { verifyJwtMiddleware } from './jwt'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
@@ -29,6 +30,7 @@ const handle_map: Record<string, IApiHandle> = {
   [ApiRoutePathEnum.FILE_SAVE]: saveFile,
   [ApiRoutePathEnum.FILE_TEXT]: fetchFileText,
   [ApiRoutePathEnum.FILE_SWITCH]: switchFile,
+  [ApiRoutePathEnum.WHITEBOARD_CREATE]: createWhiteboard,
   [ApiRoutePathEnum.TEXT_TRANSFORM_LIST]: listTextTransformers,
   [ApiRoutePathEnum.WORKSPACES]: list_workspaces,
   [ApiRoutePathEnum.WORKSPACE_FILES]: list_workspace_files,

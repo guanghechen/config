@@ -9,7 +9,7 @@ export async function findMarkdownFiles(cwd: string): Promise<string[]> {
         '--type',
         'f',
         '--print0',
-        ...['html', 'jpg', 'jpeg', 'json', 'md', 'pdf', 'png', 'svg']
+        ...['html', 'jpg', 'jpeg', 'json', 'md', 'pdf', 'png', 'svg', 'whiteboard']
           .map(ext => ['-e', ext])
           .flat(),
         ...['.git', 'node_modules'].map(dir => ['--exclude', dir]).flat(),

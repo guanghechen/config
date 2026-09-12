@@ -10,6 +10,20 @@ export interface IReferencedText {
 
 export class FileConflictError extends Error {}
 
+export async function createWhiteboardFile(
+  directory: string,
+  filename: string,
+  content: string,
+): Promise<{ filepath: string; revision: string }> {
+  const response = await requester.post('/api/whiteboard/create', { directory, filename, content })
+  const body = (await response.json()) as {
+    error?: string
+    data: { filepath: string; revision: string }
+  }
+  if (!response.ok) throw new Error(body.error || 'Unable to create whiteboard file')
+  return body.data
+}
+
 export async function loadReferencedText(
   filepath: string,
   revision?: string,

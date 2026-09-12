@@ -10,6 +10,7 @@ export enum ApiRoutePathEnum {
   FILE_TEXT = '/api/file/text',
   FILE_SAVE = '/api/file/save',
   FILE_SWITCH = '/api/file/switch',
+  WHITEBOARD_CREATE = '/api/whiteboard/create',
 
   TEXT_TRANSFORM_LIST = '/api/text-transform/list',
   TEXT_TRANSFORM = '/api/text-transform',

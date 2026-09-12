@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { chmod, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { chmod, link, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 export interface ITextSnapshot {
@@ -20,6 +20,39 @@ export class TextConflictError extends Error {
   constructor() {
     super('File changed on disk. Your draft has been preserved.')
   }
+}
+
+export class FileExistsError extends Error {
+  constructor() {
+    super('File already exists. Choose another name.')
+  }
+}
+
+// Publish a complete file without replacing an existing destination, including symlinks.
+export async function createVersionedText(
+  filepath: string,
+  content: string,
+): Promise<ITextSnapshot> {
+  const temporary = path.join(path.dirname(filepath), `.yoz-create-${randomUUID()}.tmp`)
+  const file = await open(temporary, 'wx', 0o600)
+  try {
+    try {
+      await file.writeFile(content, 'utf8')
+    } finally {
+      await file.close()
+    }
+    try {
+      await link(temporary, filepath)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') throw new FileExistsError()
+      throw error
+    }
+  } finally {
+    await unlink(temporary).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== 'ENOENT') throw error
+    })
+  }
+  return { content, revision: textRevision(content) }
 }
 
 // Serialize this application's writers per canonical path. Other editors do not share this lock.
