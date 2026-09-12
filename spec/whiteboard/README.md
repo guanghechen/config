@@ -149,10 +149,29 @@
 
 ## 模块与状态边界
 
-- `src/view/whiteboard/`：页面、私有场景模型、交互、Canvas renderer、节点、工具栏与文档生命周期。
-- `shared/whiteboard/`：环境无关的文档类型、解析校验与几何函数；供 Node 测试与浏览器复用。
-- `src/container/markdown/`：复用现有 Markdown renderer；原地编辑器使用已安装的 Monaco 与 `@monaco-editor/react`，留在 whiteboard 模块内。
+- `src/view/whiteboard/Whiteboard.tsx`：可独立挂载的编辑器与生命周期组装；`View.tsx` 保留 `WhiteboardView` / `WhiteboardBoard` 两个 YOZ 入口。
+- `contracts.ts` / `HostContext.tsx`：静态宿主能力接口与实例内注入。文件服务、草稿存储、Markdown renderer、文本编辑器、文件选择器、导航和外观入口均由宿主提供；这些能力不持有白板文档或历史。
+- `host/`：YOZ 的 API、Vite 文件通知、站点主题、Markdown、Monaco、workspace 与路由适配。除通用 `VirtualList` 外，编辑器内部不直接导入项目的 container/context/hook/API。
+- `interaction/`：输入协调、手势预览、键盘分发、剪贴板和节点创建；`rendering/`：Canvas/SVG/卡片、文字测量及渲染生命周期。
+- `io/`：草稿恢复、源文件同步、引用资源、图片与导出；`ui/toolbar`、`ui/inspector`、`ui/panels`、`ui/editors` 按职责组织 UI 与局部样式。
+- `store.ts`：文档、选区、视口、事务与历史的唯一写入入口。`shared/whiteboard/` 继续保留环境无关的模型、校验和算法，供浏览器、服务端与 agent CLI 共用。
+- `style.css` 汇总基础样式和模块样式；默认主题与 `--wb-*` tokens 可独立使用。YOZ CSS 变量、Markdown 样式和宿主布局选择器只出现在 `host/`。
 - `server/`：沿用现有鉴权及 allowed roots，提供带版本的文本读取与条件保存。
+
+独立挂载不需要 SiteContext、路由、登录或服务端 API：
+
+```tsx
+import { Whiteboard } from '@/view/whiteboard/Whiteboard'
+
+<Whiteboard initialDocument={document} style={{ height: 600 }} />
+```
+
+`initialDocument` 用于初始化；文档变更仍由内部 store 管理，替换初始文档时使用 React `key` 建立新会话。`theme` 可动态更新；`host` 中的服务实现应在一个会话内保持稳定。独立入口默认不持久化草稿，存在未保存修改时仍会在离开页面前提示；Markdown 以纯文本展示、内容编辑使用 textarea；YOZ 包装入口注入原有富文本 renderer、Monaco 和草稿存储，保留现有体验。缺少文件能力时禁用对应菜单入口。
+
+`IWhiteboardFiles.load` 支持 revision 和 AbortSignal，返回 null 表示版本未变；`save` 必须检查 expectedRevision，冲突抛出 `WhiteboardFileConflictError`。`subscribe` 返回清理函数；通知订阅不可用时继续使用轮询。宿主同步抛错或首次读取返回空响应会显示错误并解除加载状态。文件创建后若仍有未保存的新修改，须先保存新草稿才能导航；宿主调用失败或结果过期时保留本地状态。数据格式、旧草稿 key、服务端权限和 CLI 命令均保持兼容。
+
+- 键盘与系统剪贴板事件仅作用于获得焦点的白板；同页多个白板的选区、对话框和快捷键互不干扰。内容编辑器与右键菜单按各自白板容器定位，支持独立嵌入。
+- 文件保存请求与文档导入使用独立生命周期；保存期间导入文档不会卡住保存状态，旧保存完成后仍保留新文档并更新源文件 revision。取消重载也会恢复交互。
 - 场景文档只有一个 owner；选择、镜头、拖拽预览、编辑草稿、资源缓存不混入持久化文档。
 - 文档编辑统一通过事务提交。一轮拖拽、一次粘贴或一次内容保存各形成一条历史。取消交互恢复原值。
 - 外部文件内容属于源文件，不随白板的布局 undo 回滚；引用文件的编辑草稿与 Monaco 文本撤销独立。
