@@ -1,5 +1,37 @@
 # Whiteboard v1 验证记录
 
+## 2026-09-12：agent 输入校验修复
+
+- 复现并修复枚举强制转换：`arrange.mode: ["start"]` 曾被接受并执行右对齐，`reorder.order: ["front"]` 曾被当作后移，`shape: ["rectangle"]` 曾通过文档校验。现在按 schema 严格要求字符串，布局 axis 同样拒绝数组。
+- 修复空 `nodeId` 被接受为自由端点，以及 `move.delta` 超过 ±10000000、但最终坐标仍合法时被接受的问题；自由端点继续通过省略 `nodeId` 表达。
+- 新增 4 项回归，覆盖三种形状、布局/顺序枚举、两端绑定和两轴正负移动边界；扩展真实 CLI 测试，确认无效批次在 dry-run / apply 均失败且文件字节不变，已有文档和 redo 保留。新增用例在修复前复现失败，修复后通过。
+- 完整 Node 回归 119 项通过，0 失败/跳过；`pnpm format` 为 0 errors / 54 既有 warnings。直接 TypeScript 检查仍为前端 8 项、Node 配置 26 项既有诊断，没有新增；本轮验证集中于共享校验、store 原子性与真实 CLI 文件操作。
+
+## 2026-09-12：全屏预览交互修复
+
+- 修复演示中打开 Mermaid 后按 Esc 会退出演示、却留下预览的问题。预览增加模态语义、初始焦点、Tab / Shift+Tab 循环和关闭后焦点恢复；白板与演示快捷键识别打开的模态窗口。
+- 修复首次打开时滚轮监听未绑定，以及 Markdown 图片点击被白板指针捕获截走的问题。图库按钮移入预览的事件和焦点边界，左右位置保持不变。
+- Edge 153 / Playwright CLI、1440×1000 实测：首次滚轮缩放从 1 变为 1.1，拖动平移 60×30px；白板镜头不变。预览中的删除、复制、方向键、双击和右键不修改文档或打开白板编辑器/菜单；Esc 只关闭预览，再次 Esc 才退出演示。
+- 两张内嵌图片的方向键、左右按钮和焦点循环通过；打开实际 `.whiteboard` 文件后，在预览期间用 revision 保存新版，旧图保持可见并提示源文件变更，关闭预览后自动加载新标题和内容。
+- 115 项 Node 回归通过，无失败或跳过；`pnpm format` 为 0 errors / 54 既有 warnings。前端 TypeScript 仍为同样的 8 项既有诊断，没有新增；本次未重跑性能基准。
+
+## 2026-09-12：最终补齐结果（阶段 4–6）
+
+- 最终回归：Node 24.16.0，`TMPDIR=/private/tmp node --test tests/whiteboard*.test.mjs tests/site-theme.test.mjs tests/file-access.test.mjs tests/websocket-auth.test.mjs`，115 项通过，0 失败/跳过。包含区域/步骤引用与原子批次、镜头/双指几何、导出范围与 PNG 上限，以及取消引用搜索后的请求清理与立即重订阅。
+- 静态检查：`pnpm format` 为 0 errors / 54 既有 warnings。直接 TypeScript 检查前端 8 项、node 配置 26 项既有诊断，无新增；格式化造成的 lockfile 改动经 YAML 语义比较后恢复。
+- 任意顺序：图形覆盖 Markdown、连线覆盖图形、跨类型置底/撤销、命中与列表顺序、被覆盖链接的隔离及恢复均通过；概览像素采样与阅读顺序一致。旧文件按原三层稳定转换，文件刷新基线不产生假冲突。
+- 导出：实际下载 SVG/PNG 与复制 PNG，覆盖旋转、斜线、连线路线、空格/中文、公式、Mermaid、代码、表格、引用 Markdown 与透明图片。发现并修复首次栅格化时内嵌字体尚未解码的问题；全新浏览器首次 PNG 与剪贴板公式像素验证通过。选区 2× 输出为 468×411，包含透明与有色像素；隐藏元素不扩张画布。
+- 导出异常：缺失图片、无效公式、无效 Mermaid、PNG 尺寸超限均明确失败；取消导出清理临时 DOM 和请求。2000 元素的混合场景成功导出 14,561,922 字节 SVG，约 22.7 秒，包含全部 2000 个元素，额外挂载上限 16。
+- 导航/演示：从选区和视口建区、重命名、重复步骤与排序、minimap 聚焦、键盘换页、退出恢复镜头/工具、激光消退、阅读保护、画面外引用正文搜索均通过。使用 Chromium CDP 的真实 touch 事件验证双指同时 pan/zoom、单指继续 pan、取消绘图及历史隔离；编辑草稿期间阅读/演示入口禁用。
+- 移动端：390×844 下 13 个工具按钮完整显示为两行，导航面板不覆盖工具栏；命名区域、演示和阅读入口可用，演示控件不超出视口。
+- agent：实际 CLI create/inspect/validate、dry-run 不写入、revision apply、锁定修改失败后文件不变均通过；外部批次更新内容和区域后，打开的演示自动刷新并重新聚焦。退出恢复原镜头，外部版本作为新文件基线，不进入本地 undo。
+
+最终性能环境：Apple M5 Pro、Edge headless 153、Metal、1920×1080、DPR 1、Vite development；1000 节点 + 1000 连线，混合富内容、路线、字体和旋转。每项预热 40 帧，采样 240 帧，minimap 开启。编辑视图 pan/zoom/drag/resize/rotate、激光、阅读模式 pan/zoom、全图概览 pan/zoom 共 10 项，平均约 59–60 FPS，全部 P95 16.7–16.8ms；最长单帧 66.7ms。阅读 pan 在空白处启动并核对镜头实际变化，激光确认绘制；不能以富内容点击或空操作代替手势。此前 Elements 打开的 8 项亦达标，仅挂载 23 行。
+
+资源压力样本另验证 1000 个 Markdown 卡片与 1000 个 SVG 图形同时交错挂载，Canvas 数量不随图层数增长。该简单卡片样本用于验证资源分配，不替代上述富内容 FPS 基准。
+
+SVG 富内容使用 foreignObject；已验证浏览器显示，其他不支持该 SVG 特性的图片工具应使用 PNG。系统字体由查看设备提供，Web 字体和图片嵌入文件。
+
 验证日期：2026-09-11。
 
 ## 功能与契约
@@ -207,10 +239,66 @@ macOS 默认临时目录使用 `/var` 别名，而文件授权返回 `/private/v
 
 六项均达到既定性能目标，warm reload 至富内容和字体就绪为 0.19–0.67 秒。前端 TypeScript 使用 `node node_modules/typescript/bin/tsc -p tsconfig.app.json --ignoreDeprecations 6.0 --pretty false`，前后均为同样的 8 项已有诊断，没有新增；`pnpm format` 完成，保留 54 项已有 lint warnings。
 
+### 能力补齐：图片、文件与 agent 接口
+
+2026-09-11，Node 24.16.0 / macOS，以下 78 项测试通过，无跳过：
+
+```sh
+TMPDIR=/private/tmp node --test tests/whiteboard*.test.mjs tests/site-theme.test.mjs tests/file-access.test.mjs tests/websocket-auth.test.mjs
+```
+
+新增图片签名/布局、create-only 并发创建、agent 命令与 CLI 测试；既有文件 HTTP 测试扩展创建接口的鉴权、allowed roots、symlink、非法名称、无效内容、重名保护及 workspace 列表可见性。
+
+Edge 153 / Playwright CLI 实际验证：
+
+- 图片选择器、PNG 输入与静态图 WebP 优化、批量输入与单次 undo/redo、图片剪贴板和定位拖入、剪切与恢复。损坏文件或不支持的格式不会留下半批元素；解码期间修改白板会取消旧结果。
+- PNG 透明背景和极端宽高比的静态图优化；图片显示区域与节点尺寸一致，不受标题栏/边框挤压。刷新后 data URL 图片正常恢复。
+- workspace 列表与 Markdown 文件选择，引用后实际渲染；另存返回 201 并打开 canonical filepath，重名或已存在草稿不会被覆盖。localStorage quota 失败时仍可将当前版本另存为文件并安全离开。
+- 外部 CLI 修改已打开文件后自动更新标题、标签与位置；编辑器打开时保留草稿，取消后载入最新文件。有本地修改时保留文档并提示外部版本，旧 revision 保存返回 409。
+- 外部文件暂时写成无效 JSON 时保留最后有效场景，修复后自动恢复；显式重新加载可清除冲突并建立新的文件基线。
+
+固定 1000 节点 / 1000 连线场景，Apple M5 Pro / ANGLE Metal / Edge headless / 1920×1080 / DPR 1 / Vite development，仍使用 40 帧预热、240 帧采样：六项 reading/overview 的 pan、zoom、group drag、group resize 均为 60.0 FPS，P95 16.7–16.8ms，最大 16.8ms；富内容与字体就绪为 0.19–0.65 秒。
+
+完整 `pnpm format` 完成，保留 54 项既有 warnings；使用内存中的 HEAD 源码与当前源码对比 TypeScript 诊断，前端仍为 8 项、服务端配置仍为 26 项，无新增诊断。没有新增 package；formatter 对 lockfile 的无关格式化在工作区还原。
+
+### 连线路线、控制点与样式
+
+2026-09-11：新增 7 项 connector tests，全部 85 项回归通过，无跳过。覆盖严格字段校验、曲线/折线命中、路线标签位置、独立箭头、控制点移动/复制/布局/拉伸、事务撤销，以及 agent 切换路线时的控制点重建。
+
+Edge 153 / Playwright CLI 验证曲线控制点拖动与 Esc/undo/redo、折点增删及重置、端点解绑/重连、绑定节点移动、分组微调、复制 remap、草稿恢复和导出/重新导入。Canvas 像素检查中，500 像素长的采样行上实线覆盖 100%、虚线 71.2%、点线 33.2%；虚线/点线箭头沿笔迹采样均为完整不透明像素。
+
+固定 1000 节点 / 1000 连线场景增加 `?benchmark&connectors` 变体，混合 straight/polyline/curve、solid/dashed/dotted 与不同端点箭头。基线与变体各测 reading pan/zoom/group drag/group resize、overview pan/zoom，共 12 项均为 60.0 FPS、P95 16.7–16.8ms、最大 16.8ms。环境仍为 Apple M5 Pro、ANGLE Metal、Edge headless、1920×1080、DPR 1、Vite development；40 帧预热、240 帧采样。富内容与字体就绪为 0.18–0.87 秒。
+
+### 文字样式与自动尺寸
+
+2026-09-11：新增 6 项 typography tests，全部 91 项回归通过，无跳过。覆盖可选字段兼容与校验、词与 grapheme 换行、长单词测量上界、省略号、shape/text 自动尺寸、标签对齐与测量边界、归一化历史、手动拉伸退出 autoSize，以及 agent 尺寸覆盖规则。
+
+通过 Edge 153 / Playwright CLI 验证普通文字和图形/连线标签的字体、字号、粗体与对齐；Monaco 内容修改后尺寸和内容一起 undo/redo；手动拉伸退出自动尺寸并可撤销；中文、emoji、长文本、标签精确命中和刷新恢复。修复了空白单击被当作 1×1 框选误选连线的问题，只有实际拖动才执行框选。
+
+外部文件使用 1×1 宽高提示和 autoSize:true 时，页面按实际字体计算尺寸。CLI 更新文字和字号后自动更新展示；字号输入框存在未提交值时，外部更新延后并保留输入，取消输入后应用新版本。刷新不会把归一化尺寸误判成本地冲突。
+
+基线与 `?benchmark&connectors&typography` 两组 1000 节点 / 1000 连线场景，共 12 项 reading/overview pan/zoom/group drag/group resize 均约 60.0 FPS、P95 16.7–16.8ms、最大 16.8ms。环境为 Apple M5 Pro / ANGLE Metal / Edge headless / 1920×1080 / DPR 1 / Vite development，40 帧预热、240 帧采样。富内容与字体就绪为 0.19–1.71 秒。
+
+### 旋转与翻转
+
+2026-09-11：新增 9 项 pose tests，全部 100 项回归通过，无跳过。覆盖节点姿态校验、局部/世界坐标逆变换、旋转后的命中与边界绑定、整组变换、镜像组合、局部尺寸手柄、直角/任意角度多选拉伸、自动尺寸原点、部分绑定线的旋转轴，以及 store/agent 历史。
+
+Edge 153 / Playwright CLI 验证角度输入、旋转手柄、Shift 15° 吸附、Esc/undo/redo、旋转节点的固定对角拉伸和精确命中；图片/Markdown 的 DOM 镜像与旋转、正向编辑器、混合组旋转、完整撤销及刷新恢复。四象限图片截图核对了旋转后世界水平镜像的像素方向；自动文字在旋转/镜像后修改字号保持局部原点，撤销和刷新不漂移；旋转自由笔只在线路上响应命中。
+
+固定 1000 节点 / 1000 连线场景增加 `?benchmark&connectors&typography&transforms`，在 Node 5 以后混合角度与镜像，并新增 reading group rotation。基线 7 项均为约 60 FPS；变体 reading pan 59.0、zoom 58.3、drag/resize/rotation 60.0，overview pan 60.0、zoom 59.3。14 项 P95 均为 16.7–16.8ms，达到既定目标；变体有少量 50–83.4ms 长帧。旋转项额外确认了选中 Markdown 卡片的实际 CSS 旋转，避免误测空手势。环境仍为 Apple M5 Pro / ANGLE Metal / Edge headless / 1920×1080 / DPR 1 / Vite development，40 帧预热、240 帧采样。
+
 ## 静态验证与限制
 
 - `pnpm format` 完成；现有 lint warnings 保留。
 - 前端和服务端配置均执行 TypeScript 检查，并使用内存中的修改前源码对比诊断。原有前端 8 项、服务端配置 26 项诊断不变，没有新增诊断；这不等于全项目类型检查通过。
 - 原有诊断示例：`src/container/code-editor/CodeEditor.tsx` 的 Monaco option 类型不匹配；服务端 tsconfig 包含客户端 API，产生 DOM 类型诊断。本次未扩展修复范围。
 - 外部编辑器不共享本应用的写入队列；revision 检查与原子文件替换不是跨进程的绝对 compare-and-swap。
-- 没有新增 package 或修改依赖版本；AI 后续接入。
+- 没有新增 package 或修改依赖版本；AI 在外部运行，通过文件与命令接口交互，不内置 provider 或多人协作。
+
+
+## 2026-09-12：对象保护与组织
+
+- 7 项 protection tests：flags 校验与复制、组保护、连带删除、绑定跟随、agent 显式解锁、擦除路径、隐藏吸附；完整 Node 回归累计 107 项。前端 TypeScript 仍为既有 8 项，formatter 0 errors / 54 既有 warnings；lockfile 仅格式差异按语义比较后恢复。
+- Edge 153 实际操作通过：组锁定后的键盘/鼠标/删除保护、快捷键解锁、锁定连线阻止删节点、隐藏节点/卡片与列表恢复、全文搜索、Ctrl-click 重叠轮换、右键选择、复制/定位粘贴、复制锁定状态、单击擦一层、锁定前景不穿透、拖动整组擦除、Esc 与一次 undo。
+- 延迟 clipboard 实测：读取期间启动键盘移动会拒绝粘贴；复制期间改变选区会保留原对象并提示重新剪切。源文件在菜单打开时更新只提示，关闭菜单后自动载入。
+- M5 Pro / Edge headless 153 / 1920×1080 / DPR1 / Vite dev，1000 节点 + 1000 连线，包含多路线、文字、旋转/镜像；每项预热 40 帧后测 240 帧。Elements 全程打开，仅挂载 23 行。reading pan/zoom/drag/resize/erase/rotate 均约 60 FPS，P95 16.7–16.8ms；overview pan 60 FPS、zoom 59.0 FPS，P95 16.8ms、最长 50.1ms。擦除实测元素从 2000 降至 1989，旋转确认真实作用于卡片。
