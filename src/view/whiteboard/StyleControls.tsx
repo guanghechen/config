@@ -1,5 +1,5 @@
 import React from 'react'
-import { BoardIconLabel } from './BoardIcon'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
 import type { IStyle } from '@/shared/whiteboard/model'
 import { SketchStylePicker } from './SketchStylePicker'
 import { isThemeColor, resolveStyle } from '@/shared/whiteboard/colors'
@@ -30,19 +30,39 @@ export const StyleControls = React.memo<{
     showLineWidth = true,
     onChange: updateStyle,
   }) => {
+    const colorId = React.useId()
     const resolved = resolveStyle(displayStyle, themeColors, showFillPattern)
     return (
-      <>
+      <div className="wb-style-controls">
         {(showFillPattern ? (['stroke', 'fill'] as const) : (['stroke'] as const)).map(channel => (
           <div key={channel} className="wb-color-control">
-            <label>
-              <BoardIconLabel name={channel === 'stroke' ? 'stroke' : 'fill'}>
-                {channel === 'stroke' ? 'Stroke' : 'Fill'}
-              </BoardIconLabel>
+            <div className="wb-color-heading">
+              <label htmlFor={`${colorId}-${channel}`}>
+                <BoardIconLabel name={channel === 'stroke' ? 'stroke' : 'fill'}>
+                  {channel === 'stroke' ? 'Stroke' : 'Fill'}
+                </BoardIconLabel>
+              </label>
+              {channel === 'fill' && (
+                <button
+                  type="button"
+                  className="wb-no-fill"
+                  aria-label="No fill"
+                  title="No fill"
+                  aria-pressed={displayStyle.fill === 'transparent'}
+                  onClick={() =>
+                    updateStyle({
+                      fill: displayStyle.fill === 'transparent' ? 'theme:paper' : 'transparent',
+                    })
+                  }
+                >
+                  <BoardIcon name="noFill" />
+                </button>
+              )}
               <span className="wb-color-mode">
                 {isThemeColor(displayStyle[channel]) ? 'Theme' : 'Custom'}
               </span>
               <input
+                id={`${colorId}-${channel}`}
                 aria-label={channel === 'stroke' ? 'Stroke color' : 'Fill color'}
                 type="color"
                 value={
@@ -52,7 +72,7 @@ export const StyleControls = React.memo<{
                 }
                 onChange={event => updateStyle({ [channel]: event.target.value })}
               />
-            </label>
+            </div>
             <div
               className="wb-color-swatches"
               role="group"
@@ -86,31 +106,30 @@ export const StyleControls = React.memo<{
             </div>
           </div>
         ))}
-        {showFillPattern && (
-          <label className="wb-check">
-            <input
-              type="checkbox"
-              checked={displayStyle.fill === 'transparent'}
-              onChange={event =>
-                updateStyle({ fill: event.target.checked ? 'transparent' : 'theme:paper' })
-              }
-            />
-            <BoardIconLabel name="noFill">No fill</BoardIconLabel>
-          </label>
-        )}
         {showLineWidth && (
-          <label>
+          <div className="wb-field-row">
             <BoardIconLabel name="lineWidth">Line width</BoardIconLabel>
-            <select
-              aria-label="Line width"
-              value={displayStyle.strokeWidth}
-              onChange={event => updateStyle({ strokeWidth: Number(event.target.value) })}
-            >
+            <div className="wb-segmented" role="group" aria-label="Line width">
               {[1, 2, 4, 8].map(value => (
-                <option key={value}>{value}</option>
+                <button
+                  key={value}
+                  aria-label={`Line width: ${value}`}
+                  title={`Line width: ${value}`}
+                  aria-pressed={displayStyle.strokeWidth === value}
+                  onClick={() => updateStyle({ strokeWidth: value })}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M4 12h16"
+                      stroke="currentColor"
+                      strokeWidth={value}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+          </div>
         )}
         {showSketch && (
           <SketchStylePicker
@@ -119,7 +138,7 @@ export const StyleControls = React.memo<{
             showFillPattern={showFillPattern}
           />
         )}
-      </>
+      </div>
     )
   },
 )

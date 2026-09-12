@@ -35,10 +35,11 @@ export const SelectionActions: React.FC<{
 }> = ({ selected, store, stacking }) => {
   const units = layoutUnits(selected).length
   const grouped = selected.some(element => element.groupId)
+  const groupable = canGroup(selected)
   return (
     <div className="wb-selection-actions">
       <p className="wb-section-heading">
-        <BoardIconLabel name="layers">Layer order</BoardIconLabel>
+        <BoardIconLabel name="layers">Arrange</BoardIconLabel>
       </p>
       <div className="wb-stacking" role="group" aria-label="Layer order">
         {STACKING.map(({ order, label, shortcut }) => (
@@ -55,48 +56,61 @@ export const SelectionActions: React.FC<{
           </button>
         ))}
       </div>
-      <p className="wb-endpoint-hint">All element types share one order, from back to front.</p>
-      {canGroup(selected) && (
-        <button onClick={store.groupSelected} title="Ctrl / ⌘ + G">
-          <BoardIconLabel name="group">Group selection</BoardIconLabel>
-        </button>
-      )}
-      {grouped && (
-        <button onClick={store.ungroupSelected} title="Ctrl / ⌘ + Shift + G">
-          <BoardIconLabel name="ungroup">Ungroup selection</BoardIconLabel>
-        </button>
-      )}
-      {grouped && (
-        <p className="wb-endpoint-hint">
-          Double-click to edit a member. Ungroup to resize or move it separately.
-        </p>
-      )}
-      {units > 0 && (
-        <p className="wb-endpoint-hint">
-          Drag corner handles to resize. Hold Shift to keep proportions.
-        </p>
-      )}
       {units >= 2 && (
-        <>
-          <div className="wb-align" role="group" aria-label="Align selection">
-            {ALIGNMENTS.map(({ label, icon, axis, mode }) => (
+        <div className="wb-align" role="group" aria-label="Align selection">
+          {ALIGNMENTS.map(({ label, icon, axis, mode }) => (
+            <button
+              key={label}
+              aria-label={label}
+              title={label}
+              onClick={() => store.arrangeSelected(axis, mode)}
+            >
+              <BoardIcon name={icon} />
+            </button>
+          ))}
+        </div>
+      )}
+      {(units >= 2 || groupable || grouped) && (
+        <div className="wb-icon-actions" role="group" aria-label="Distribute and group">
+          {units >= 2 && (
+            <>
               <button
-                key={label}
-                aria-label={label}
-                title={label}
-                onClick={() => store.arrangeSelected(axis, mode)}
+                aria-label="Distribute horizontally"
+                title="Distribute horizontally"
+                disabled={units < 3}
+                onClick={() => store.arrangeSelected('x', 'distribute')}
               >
-                <BoardIcon name={icon} />
+                <BoardIcon name="distributeHorizontal" />
               </button>
-            ))}
-          </div>
-          <button disabled={units < 3} onClick={() => store.arrangeSelected('x', 'distribute')}>
-            <BoardIconLabel name="distributeHorizontal">Distribute horizontally</BoardIconLabel>
-          </button>
-          <button disabled={units < 3} onClick={() => store.arrangeSelected('y', 'distribute')}>
-            <BoardIconLabel name="distributeVertical">Distribute vertically</BoardIconLabel>
-          </button>
-        </>
+              <button
+                aria-label="Distribute vertically"
+                title="Distribute vertically"
+                disabled={units < 3}
+                onClick={() => store.arrangeSelected('y', 'distribute')}
+              >
+                <BoardIcon name="distributeVertical" />
+              </button>
+            </>
+          )}
+          {groupable && (
+            <button
+              onClick={store.groupSelected}
+              aria-label="Group selection"
+              title="Group selection (Ctrl / ⌘ + G)"
+            >
+              <BoardIcon name="group" />
+            </button>
+          )}
+          {grouped && (
+            <button
+              onClick={store.ungroupSelected}
+              aria-label="Ungroup selection"
+              title="Ungroup selection (Ctrl / ⌘ + Shift + G)"
+            >
+              <BoardIcon name="ungroup" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

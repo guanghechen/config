@@ -80,6 +80,7 @@ const paths = {
   next: 'M4 12h16m-6-6 6 6-6 6',
   up: 'M12 20V4m-6 6 6-6 6 6',
   down: 'M12 4v16m-6-6 6 6 6-6',
+  chevronDown: 'm6 9 6 6 6-6',
   fit: 'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5M8 8h8v8H8Z',
   focus: 'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
   play: 'm8 4 12 8-12 8Z',

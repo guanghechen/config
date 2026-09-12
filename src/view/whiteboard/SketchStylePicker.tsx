@@ -20,11 +20,9 @@ export const SketchStylePicker = React.memo<{
   onChange: (patch: Partial<IStyle>) => void
 }>(({ style, showFillPattern, onChange }) => (
   <div className="wb-sketch-style">
-    <fieldset>
-      <legend>
-        <BoardIconLabel name="stroke">Hand-drawn</BoardIconLabel>
-      </legend>
-      <div className="wb-style-options">
+    <div className="wb-field-row">
+      <BoardIconLabel name="stroke">Roughness</BoardIconLabel>
+      <div className="wb-segmented wb-style-options" role="group" aria-label="Hand-drawn">
         {strokes.map(({ label, roughness, path }) => (
           <button
             key={label}
@@ -36,17 +34,14 @@ export const SketchStylePicker = React.memo<{
             <svg viewBox="-6 -6 52 34" aria-hidden="true">
               <path d={path} fill="none" stroke="currentColor" strokeWidth="1.5" />
             </svg>
-            {label}
           </button>
         ))}
       </div>
-    </fieldset>
+    </div>
     {showFillPattern && (
-      <fieldset>
-        <legend>
-          <BoardIconLabel name="fill">Shape fill</BoardIconLabel>
-        </legend>
-        <div className="wb-style-options wb-fill-options">
+      <div className="wb-field-row">
+        <BoardIconLabel name="fill">Shape fill</BoardIconLabel>
+        <div className="wb-segmented wb-style-options" role="group" aria-label="Shape fill">
           {fills.map(({ pattern, label, paths }) => (
             <button
               key={pattern}
@@ -68,11 +63,10 @@ export const SketchStylePicker = React.memo<{
                   strokeWidth="1.4"
                 />
               </svg>
-              {label}
             </button>
           ))}
         </div>
-      </fieldset>
+      </div>
     )}
   </div>
 ))

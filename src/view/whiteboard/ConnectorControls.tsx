@@ -1,5 +1,6 @@
 import React from 'react'
-import { BoardIconLabel } from './BoardIcon'
+import { BoardIcon, BoardIconLabel } from './BoardIcon'
+import { InspectorSection } from './InspectorSection'
 import { addConnectorBend, connectorControls } from '@/shared/whiteboard/edges'
 import { resolveEndpoint } from '@/shared/whiteboard/geometry'
 import { DEFAULT_EDGE_APPEARANCE } from '@/shared/whiteboard/model'
@@ -33,10 +34,7 @@ export const ConnectorControls = React.memo<{
     })
   }
   return (
-    <fieldset className="wb-connector-controls" disabled={disabled}>
-      <legend>
-        <BoardIconLabel name="edge">Connection</BoardIconLabel>
-      </legend>
+    <InspectorSection title="Connection" icon="edge" initiallyOpen disabled={disabled}>
       <label>
         <BoardIconLabel name="curve">Route</BoardIconLabel>
         <select
@@ -80,30 +78,36 @@ export const ConnectorControls = React.memo<{
           <option value="dotted">Dotted</option>
         </select>
       </label>
-      {single?.routing === 'polyline' && (
-        <>
+      <div className="wb-icon-actions" role="group" aria-label="Route controls">
+        {single?.routing === 'polyline' && (
+          <>
+            <button
+              aria-label="Add bend"
+              title="Add bend"
+              disabled={(single.controls?.length ?? 2) >= 64}
+              onClick={() => editControls(addConnectorBend)}
+            >
+              <BoardIcon name="addBend" />
+            </button>
+            <button
+              aria-label="Remove last bend"
+              title="Remove last bend"
+              disabled={single.controls?.length === 0}
+              onClick={() =>
+                editControls((edge, from, to) => ({
+                  ...edge,
+                  controls: connectorControls(edge, from, to).slice(0, -1),
+                }))
+              }
+            >
+              <BoardIcon name="removeBend" />
+            </button>
+          </>
+        )}
+        {single && single.routing && single.routing !== 'straight' && (
           <button
-            disabled={(single.controls?.length ?? 2) >= 64}
-            onClick={() => editControls(addConnectorBend)}
-          >
-            <BoardIconLabel name="addBend">Add bend</BoardIconLabel>
-          </button>
-          <button
-            disabled={single.controls?.length === 0}
-            onClick={() =>
-              editControls((edge, from, to) => ({
-                ...edge,
-                controls: connectorControls(edge, from, to).slice(0, -1),
-              }))
-            }
-          >
-            <BoardIconLabel name="removeBend">Remove last bend</BoardIconLabel>
-          </button>
-        </>
-      )}
-      {single && single.routing && single.routing !== 'straight' && (
-        <>
-          <button
+            aria-label="Reset route controls"
+            title="Reset route controls"
             disabled={single.controls === undefined}
             onClick={() =>
               editControls(edge => {
@@ -112,15 +116,11 @@ export const ConnectorControls = React.memo<{
               })
             }
           >
-            <BoardIconLabel name="reload">Reset route controls</BoardIconLabel>
+            <BoardIcon name="reload" />
           </button>
-          <p className="wb-endpoint-hint">
-            Drag square handles to shape the route.
-            {single.routing === 'polyline' ? ' Alt-click a bend to remove it.' : ''}
-          </p>
-        </>
-      )}
-    </fieldset>
+        )}
+      </div>
+    </InspectorSection>
   )
 })
 ConnectorControls.displayName = 'WhiteboardConnectorControls'
