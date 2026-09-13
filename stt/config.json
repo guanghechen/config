@@ -1,0 +1,15 @@
+{
+  "defaultModel": "qwen3-asr-0.6b",
+  "language": "zh",
+  "device": "default",
+  "maxDuration": 300,
+  "timeout": 600,
+  "copy": false,
+  "models": [
+    {
+      "name": "qwen3-asr-0.6b",
+      "path": "../.asset/model/stt/qwen3-asr-0.6b",
+      "computeDevice": "metal"
+    }
+  ]
+}
