@@ -4,12 +4,16 @@ local __module_name__ = "era.m.lsp.fn" ---@type string
 ---@class era.m.lsp.fn
 local M = {}
 
-local JS_PACKAGE_FILENAMES = {
+-- At the same directory, Deno config wins over Node locks; Node locks win over deno.lock.
+local JS_PROJECT_FILENAMES = {
+  "deno.json",
+  "deno.jsonc",
   "package-lock.json",
   "yarn.lock",
   "pnpm-lock.yaml",
   "bun.lockb",
   "bun.lock",
+  "deno.lock",
 }
 
 ----------------------------------------------------------------------------------------------------
@@ -123,30 +127,8 @@ end
 ---@return string|nil rootdir
 ---@return "deno"|"node" project_type
 function M.locate_js_project_root(filepath)
-  if filepath == "" then
-    return nil, "node"
-  end
-
-  local node_root = M.locate_lsp_root(filepath, JS_PACKAGE_FILENAMES) ---@type string|nil
-  local deno_root = M.locate_lsp_root(filepath, { "deno.json", "deno.jsonc" }) ---@type string|nil
-  local deno_lock_root = vim.fs.root(filepath, { "deno.lock" }) ---@type string|nil
-  local rootdir = nil ---@type string|nil
-
-  if deno_lock_root ~= nil and (node_root == nil or #deno_lock_root > #node_root) then
-    rootdir = deno_lock_root
-  end
-  if
-    deno_root ~= nil
-    and (node_root == nil or #deno_root >= #node_root)
-    and (rootdir == nil or #deno_root >= #rootdir)
-  then
-    rootdir = deno_root
-  end
-
-  if rootdir ~= nil then
-    return rootdir, "deno"
-  end
-  return node_root, "node"
+  local rootdir, marker = M.locate_lsp_root(filepath, JS_PROJECT_FILENAMES)
+  return rootdir, marker ~= nil and vim.fs.basename(marker):match("^deno%.") ~= nil and "deno" or "node"
 end
 
 ---@param bin                           string

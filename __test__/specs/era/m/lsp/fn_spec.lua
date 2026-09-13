@@ -145,4 +145,47 @@ t:test("locate_mason_pkg_path: resolves the conventional path without loading Ma
   t.assert_eq(0, mason_loads, "Mason load count")
 end)
 
+t:test("locate_js_project_root: preserves nearest-marker and same-directory precedence", function()
+  local root = vim.fn.tempname()
+  local dirs = { root .. "/one", root .. "/one/two", root .. "/one/two/three" }
+  vim.fn.mkdir(dirs[3], "p")
+  t:defer(function()
+    vim.fn.delete(root, "rf")
+  end)
+  for node_depth = 0, 3 do
+    for config_depth = 0, 3 do
+      for lock_depth = 0, 3 do
+        local markers = {}
+        if node_depth > 0 then
+          markers[#markers + 1] = dirs[node_depth] .. "/pnpm-lock.yaml"
+        end
+        if config_depth > 0 then
+          markers[#markers + 1] = dirs[config_depth] .. "/deno.jsonc"
+        end
+        if lock_depth > 0 then
+          markers[#markers + 1] = dirs[lock_depth] .. "/deno.lock"
+        end
+        for _, filepath in ipairs(markers) do
+          vim.fn.writefile({}, filepath)
+        end
+
+        local expected_depth, expected_type = 0, "node"
+        if config_depth > 0 and config_depth >= node_depth and config_depth >= lock_depth then
+          expected_depth, expected_type = config_depth, "deno"
+        elseif node_depth > 0 and node_depth >= lock_depth then
+          expected_depth = node_depth
+        elseif lock_depth > 0 then
+          expected_depth, expected_type = lock_depth, "deno"
+        end
+        local rootdir, project_type = Fn.locate_js_project_root(dirs[3] .. "/main.ts")
+        t.assert_eq(dirs[expected_depth], rootdir, "nearest project marker")
+        t.assert_eq(expected_type, project_type, "project kind")
+        for _, filepath in ipairs(markers) do
+          assert(vim.uv.fs_unlink(filepath))
+        end
+      end
+    end
+  end
+end)
+
 t:run()

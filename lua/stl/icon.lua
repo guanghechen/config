@@ -276,6 +276,7 @@ M.lsp = {
   stylua = "󰢱",
   tailwindcss = "󱏿",
   taplo = "",
+  tsc = "󰛦",
   vtsls = "󰛦",
   yamlls = "",
 }

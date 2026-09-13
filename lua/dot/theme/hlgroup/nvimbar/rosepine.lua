@@ -112,6 +112,7 @@ function M.gen_hlgroup_map(context)
     lsp_icon_stylua = { fg = c.rose, bg = "bg_bar" },
     lsp_icon_tailwindcss = { fg = c.rose, bg = "bg_bar" },
     lsp_icon_taplo = { fg = c.gold, bg = "bg_bar" },
+    lsp_icon_tsc = { fg = c.foam, bg = "bg_bar" },
     lsp_icon_vtsls = { fg = c.foam, bg = "bg_bar" },
     lsp_icon_yamlls = { fg = c.gold, bg = "bg_bar" },
     lsp_diagnostics_error = { fg = c.love, bg = "bg_bar" },

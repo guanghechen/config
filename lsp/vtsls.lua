@@ -3,22 +3,29 @@
 
 local __module_name__ = "lsp.vtsls" ---@type string
 
+local TypeScript = require("era.m.lsp.typescript")
 local Methods = vim.lsp.protocol.Methods
 
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
+---@return nil
 local function root_dir(bufnr, on_dir)
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir, project_type = era.m.lsp.fn.locate_js_project_root(filepath) ---@type string|nil, "deno"|"node"
-  if project_type == "node" then
-    on_dir(rootdir)
+  local project = TypeScript.select_for_buffer(bufnr, "vtsls")
+  if project.server == "vtsls" then
+    on_dir(project.root_dir)
   end
 end
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
+---@return nil
 local function before_init(params, config)
   era.m.lsp.event.before_init(params, config)
+
+  local project = config.root_dir and TypeScript.get_installation(config.root_dir)
+  local tsdk = project and project.tsdk
+  config.settings.typescript.tsdk = tsdk
+  config.settings.vtsls.autoUseWorkspaceTsdk = tsdk ~= nil
 end
 
 ---@param client                        vim.lsp.Client
@@ -174,6 +181,7 @@ local function on_attach(client, bufnr)
     },
   }
   era.m.lsp.event.bindkeys(client, bufnr, keymaps)
+  TypeScript.on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
@@ -214,8 +222,6 @@ return {
       },
     },
     typescript = {
-      tsdk = yoz.path.locate_nearest(dot.path.cwd(), { dot.path.normalize("node_modules/typescript/lib") }),
-      globalTsdk = yoz.path.locate_nearest(dot.path.cwd(), { dot.path.normalize("node_modules/typescript/lib") }),
       updateImportsOnFileMove = { enabled = "always" },
       suggest = {
         completeFunctionCalls = true,
