@@ -4,7 +4,7 @@ pub mod dict;
 pub mod find;
 pub mod r#fn;
 pub mod fs;
-mod git;
+pub mod git;
 pub mod path;
 pub mod replace;
 pub mod search;

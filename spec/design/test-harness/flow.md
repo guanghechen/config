@@ -1,12 +1,12 @@
 # 测试执行流程
 
-本文补充[测试架构](arch.md)中的执行与失败契约。所有测试源码位于 `__test__/`。
+本文补充[测试架构](arch.md)中的执行与失败契约。Lua/Node 测试位于 `__test__/`，Rust unit tests 位于对应 crate 的源码模块。
 
 Repository health check 依次执行各语言检查，并保留各 runner 的退出码；某项失败不跳过后续检查：
 
 - Node：通过 `node --test` 执行 `__test__/node/` 下的 specs。
 - Lua：通过 `__test__/run.lua` 执行 specs。
-- Rust：执行 `cargo test --workspace --all-targets`；Cargo 通过原源码模块的 `cfg(test)` include 编译 `__test__/rust/`。
+- Rust：执行 `cargo test --workspace --all-targets`；Cargo 编译对应 crate 内的 `#[cfg(test)]` 测试模块。
 
 ## Lua CLI 与 suite 子进程
 

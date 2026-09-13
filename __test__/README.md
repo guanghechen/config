@@ -1,6 +1,7 @@
 # Tests
 
-All test code and shared fixtures live under this directory. Lua tests run in
+Lua/Node test code and shared fixtures live under this directory. Rust unit tests
+live alongside their source modules in `../rust/<crate>/src/`. Lua tests run in
 Neovim using the repository's local harness; Node and Rust use their native runners.
 The execution and ownership contracts are defined in [architecture](../spec/design/test-harness/arch.md)
 and [flow](../spec/design/test-harness/flow.md).
@@ -40,10 +41,6 @@ __test__/
         component/        # individual data providers and formatters
   node/
     build.test.mjs         # Node tests for script/build.mjs
-  rust/
-    yoz/                   # unit tests mirroring rust/yoz/src/
-    im/                    # unit tests mirroring rust/im/src/
-    git/                   # Git parsers, snapshots, processes and jobs
   fixtures/
     yoz/                   # shared Lua/Rust search fixtures
     era/dressing/statusline/
@@ -58,10 +55,10 @@ group related behavior specs, such as `era/m/diffview/workspace/`. Test files us
 small fixtures local to their spec and move shared helpers into `support/` only
 when they have multiple consumers.
 
-Node tests use `node/*.test.mjs`. Rust tests use `rust/<crate>/**/*_test.rs`;
-the original source modules contain only `#[cfg(test)]` include wiring, preserving
-private access, module names, and platform gates. The archived
-`myers_linear_space_test.rs` remains disabled with its experimental implementation.
+Node tests use `node/*.test.mjs`. Rust unit tests live in the corresponding crate's
+source modules under `#[cfg(test)]`, preserving private access, module names, and
+platform gates. Shared Rust test support also stays inside its crate under `#[cfg(test)]`.
+The archived `myers_linear_space` tests remain disabled alongside their experimental implementation.
 Production Lua modules have no test-directory references or test-only exports.
 Shared search fixtures preserve their original line endings through local Git
 attributes; LF and CRLF are part of the tested input.
@@ -72,7 +69,7 @@ to measure capture and restoration to the same current source, excluding cold in
 The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
 The benchmark aborts if the source changes externally and does not measure switching between input methods.
 
-Git regression coverage lives in `specs/era/m/git/` and `rust/git/`:
+Git regression coverage lives in `specs/era/m/git/` and `../rust/yoz/src/git/`:
 
 - Status, ignore and blame compare real Git query results with independent Lua references, including
   raw object identity, UI projections, symlinks, invalidation, cancellation and process cleanup.
@@ -123,7 +120,7 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --quiet
 
 # Formatting and the existing repository-wide health check
 ~/.local/share/nvim/mason/bin/stylua --check __test__
-fd -e rs . __test__/rust -X rustfmt --edition 2024 --check
+cargo fmt --manifest-path rust/Cargo.toml --all -- --check
 node script/healcheck.mjs
 ```
 

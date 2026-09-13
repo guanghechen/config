@@ -21,8 +21,32 @@ pub fn is_absolute(filepath: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../__test__/rust/yoz/canonical_path/is_absolute_test.rs"
-    ));
+    use super::is_absolute;
+
+    #[test]
+    fn t_is_absolute_cases() {
+        let cases = [
+            ("", false),
+            (".", false),
+            ("foo/bar", false),
+            ("C", false),
+            ("../foo", false),
+            ("C:foo", false),
+            ("/", true),
+            ("/usr/bin", true),
+            ("/home/user/../", true),
+            ("//server/share", true),
+            ("\\", true),
+            ("\\server\\share", true),
+            ("C:", true),
+            ("C:/", true),
+            ("C:\\", true),
+            ("C:/foo", true),
+            ("C:\\foo", true),
+        ];
+
+        for (input, expected) in cases {
+            assert_eq!(is_absolute(input), expected, "input: {}", input);
+        }
+    }
 }

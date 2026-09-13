@@ -20,6 +20,7 @@ end
 t:test("attach keeps authoritative index documents across edits, failures, and missing entries", function()
   local repo_path = vim.fn.tempname() ---@type string
   vim.fn.mkdir(repo_path, "p")
+  repo_path = assert(vim.uv.fs_realpath(repo_path))
   local function git(...)
     return vim.system({ "git", "-C", repo_path, ... }, { text = false }):wait()
   end

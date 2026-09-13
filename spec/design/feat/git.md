@@ -26,8 +26,9 @@ era.m.git/
 └── types.lua     -- 类型定义
 ```
 
-Status / ignore / blame、staging 与 word-diff 纯计算位于独立的 `rust/git`（`yoz-git`），不依赖 Lua 或 Neovim；
-`rust/yoz/src/git.rs` 及其子模块负责 `yoz.git` binding。Histogram diff、legacy iconv 与 index 写入仍由 Lua 调用。
+Status / ignore / blame、staging 与 word-diff 纯计算位于 `yoz` crate 内的 `rust/yoz/src/git/`，不单独创建 Git crate。
+核心模块不依赖 Lua 或 Neovim；`rust/yoz/src/git/lua/` 负责 `yoz.git` binding，worker 不持有 Lua values。
+Histogram diff、legacy iconv 与 index 写入仍由 Lua 调用。
 
 ## 状态管理
 

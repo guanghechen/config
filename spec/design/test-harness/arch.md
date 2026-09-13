@@ -2,7 +2,8 @@
 
 ## 范围与目录
 
-所有 Lua、Node、Rust 测试及共享 fixture 均位于顶层 `__test__/`，与生产 `lua/` 分离。
+Lua、Node 测试及跨语言共享 fixture 位于顶层 `__test__/`，与生产 `lua/` 分离。
+Rust unit tests 位于 `rust/<crate>/src/` 对应源码模块的 `#[cfg(test)]` 中，共享 Rust 测试支持也留在所属 crate。
 Lua spec 按被测模块或 feature 分组，以 `*_spec.lua` 结尾；相关行为可共用目录，例如
 `__test__/specs/era/m/diffview/workspace/`。
 
@@ -13,7 +14,7 @@ Lua spec 按被测模块或 feature 分组，以 `*_spec.lua` 结尾；相关行
 | `__test__/specs/`                    | 唯一的 Lua spec 发现目录             |
 | `__test__/specs/support/`            | 测试基础设施自身                     |
 | `__test__/node/*.test.mjs`           | Node 测试，由 `node --test` 执行     |
-| `__test__/rust/<crate>/**/*_test.rs` | Rust unit test，由 `cargo test` 执行 |
+| `rust/<crate>/src/`                  | Rust unit test，由 `cargo test` 执行 |
 | `__test__/fixtures/`                 | 跨 spec 或语言共享的 fixture         |
 
 小型 fixture 留在所属 spec；helper 只有被多个 spec 实际使用时才提取到共享目录。
@@ -43,9 +44,9 @@ Runner 通过 `--suite` 启动新进程；该分支直接加载 spec，不导入
 放在正常 domain module，例如 `era.m.ai.capture`。Harness、runner 不导入生产模块；bootstrap
 不导入 runner 或 suite。
 
-Rust 源码只保留 `#[cfg(test)] mod ... { include!(...); }` 接线。Include 从
-`CARGO_MANIFEST_DIR` 定位 `__test__/rust/`，保留原模块名、private access 与 platform gate；
-普通 build 不包含测试代码。Node spec 直接导入生产脚本。共享 fixture 路径相对于 checkout root 解析。
+Rust unit tests 直接定义在对应源码模块的 `#[cfg(test)] mod tests` 中，保留 private access 与 platform gate；
+共享 Rust 测试支持由 crate 内的 `#[cfg(test)]` 模块提供，普通 build 不包含测试代码。
+Node spec 直接导入生产脚本。跨语言共享 fixture 路径相对于 checkout root 解析。
 
 ## 执行契约
 

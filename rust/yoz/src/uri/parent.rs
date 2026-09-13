@@ -14,11 +14,12 @@ fn parent_path(path: &str) -> String {
     }
 
     let pieces = split(path);
-    let pieces_without_trailing = if !pieces.is_empty() && pieces.last().is_some_and(|s| s.is_empty()) {
-        &pieces[..pieces.len() - 1]
-    } else {
-        &pieces[..]
-    };
+    let pieces_without_trailing =
+        if !pieces.is_empty() && pieces.last().is_some_and(|s| s.is_empty()) {
+            &pieces[..pieces.len() - 1]
+        } else {
+            &pieces[..]
+        };
 
     if pieces_without_trailing.len() <= 1 {
         if pieces_without_trailing.is_empty() || pieces_without_trailing[0].is_empty() {
@@ -37,8 +38,22 @@ fn parent_path(path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../__test__/rust/yoz/uri/parent_test.rs"
-    ));
+    use super::*;
+
+    #[test]
+    fn t_parent_cases() {
+        let cases = [
+            ("file:///usr/bin/nvim", Some("file:///usr/bin/")),
+            ("file:///foo/bar#section", Some("file:///foo/")),
+            ("file:///foo", Some("file:///")),
+            ("file:///", Some("file:///")),
+            ("/usr/bin", None),
+            ("", None),
+        ];
+
+        for (input, expected) in cases {
+            let result = parent(input);
+            assert_eq!(result.as_deref(), expected, "input: {}", input);
+        }
+    }
 }

@@ -34,14 +34,14 @@ Four global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
 Standalone `yoz-im` crate owning macOS, Windows, and WSL input-method backends. It also owns the
 repository-built Windows bridge used by WSL; the crate has no dependency on Lua or `rust/yoz`.
 
-### `rust/git` (Git Domain)
+### `rust/yoz/src/git` (Git Domain)
 
-Standalone `yoz-git` crate owning cancellable Git status/ignore/blame queries, byte-oriented protocol parsing,
+The `yoz::git` module owns cancellable Git status/ignore/blame queries, byte-oriented protocol parsing,
 immutable status/blame snapshots, the ignore cache, and pure staging calculations (EOL normalization,
 Unicode codecs/BOM, selection projection and byte reconstruction), plus word-diff byte preparation and
-highlight-range projection. It has no Lua or Neovim dependency.
-`rust/yoz/src/git.rs` provides the Lua binding; `era.m.git` owns editor lifecycle, refresh scheduling,
-and presentation. Staging/word-diff calculations are synchronous; buffer capture, legacy iconv codecs, histogram
+highlight-range projection. Core modules have no Lua or Neovim dependency.
+`rust/yoz/src/git/lua/` provides the Lua binding within the same `yoz` crate; `era.m.git` owns editor lifecycle,
+refresh scheduling, and presentation. Staging/word-diff calculations are synchronous; buffer capture, legacy iconv codecs, histogram
 diff and serialized index writes remain in Lua. The binding bounds live Lua references and avoids
 intermediate selected-hunk tables.
 

@@ -175,8 +175,8 @@ end)
 
 t:test("snapshot and Lua exports preserve native pathname bytes", function()
   local root = new_repo()
-  -- Windows requires Unicode filenames; Unix also permits invalid UTF-8 bytes.
-  local suffix = package.config:sub(1, 1) == "/" and "\255" or "字"
+  -- macOS and Windows require Unicode filenames; other Unix systems also exercise invalid UTF-8.
+  local suffix = (package.config:sub(1, 1) == "/" and vim.uv.os_uname().sysname ~= "Darwin") and "\255" or "字"
   local directory = root .. "/raw-" .. suffix
   assert(vim.uv.fs_mkdir(directory, 493))
   local path = directory .. "/file-" .. suffix

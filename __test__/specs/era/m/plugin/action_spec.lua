@@ -423,7 +423,18 @@ t:test("sync checks out the exact locked commit in a clean repository", function
   local second = git({ "rev-parse", "HEAD" }, source)
   git({ "remote", "add", "origin", remote }, source)
   git({ "push", "-u", "origin", "main" }, source)
-  git({ "clone", "--branch", "main", remote, plugin })
+  -- Clones need their own identity for checkout reflogs, avoiding hostname/email discovery.
+  git({
+    "clone",
+    "--config",
+    "user.name=Plugin Test",
+    "--config",
+    "user.email=plugin-test@example.test",
+    "--branch",
+    "main",
+    remote,
+    plugin,
+  })
 
   t:patch_table(State.options, "root", plugins)
   t:patch_table(yoz.path, "is_exist", function(path)
@@ -482,7 +493,19 @@ t:test("sync fetches a lock branch outside the installed single-branch refspec",
   local stable = git({ "rev-parse", "HEAD" }, source)
   git({ "remote", "add", "origin", remote }, source)
   git({ "push", "origin", "main", "stable" }, source)
-  git({ "clone", "--single-branch", "--branch", "main", "file://" .. remote, plugin })
+  -- Clones need their own identity for checkout reflogs, avoiding hostname/email discovery.
+  git({
+    "clone",
+    "--config",
+    "user.name=Plugin Test",
+    "--config",
+    "user.email=plugin-test@example.test",
+    "--single-branch",
+    "--branch",
+    "main",
+    "file://" .. remote,
+    plugin,
+  })
 
   local missing = vim.system({ "git", "cat-file", "-e", stable .. "^{commit}" }, { cwd = plugin }):wait()
   t.assert_true(missing.code ~= 0, "locked branch commit should not exist before sync")

@@ -17,13 +17,15 @@ fn relative_path(from: &str, to: &str) -> String {
     let from_pieces = split(from);
     let to_pieces = split(to);
 
-    let to_has_trailing_slash = !to_pieces.is_empty() && to_pieces.last().is_some_and(|s| s.is_empty());
+    let to_has_trailing_slash =
+        !to_pieces.is_empty() && to_pieces.last().is_some_and(|s| s.is_empty());
 
-    let from_effective: &[String] = if !from_pieces.is_empty() && from_pieces.last().is_some_and(|s| s.is_empty()) {
-        &from_pieces[..from_pieces.len() - 1]
-    } else {
-        &from_pieces
-    };
+    let from_effective: &[String] =
+        if !from_pieces.is_empty() && from_pieces.last().is_some_and(|s| s.is_empty()) {
+            &from_pieces[..from_pieces.len() - 1]
+        } else {
+            &from_pieces
+        };
     let to_effective: &[String] = if to_has_trailing_slash {
         &to_pieces[..to_pieces.len() - 1]
     } else {
@@ -162,8 +164,21 @@ fn relative_path(from: &str, to: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../__test__/rust/yoz/uri/relative_test.rs"
-    ));
+    use super::*;
+
+    #[test]
+    fn t_relative_cases() {
+        let cases = [
+            ("file:///foo/bar", "file:///foo/baz", Some("../baz")),
+            ("file:///foo/bar", "file:///foo/bar", Some(".")),
+            ("file:///foo/bar", "file:///bar/baz", Some("../../bar/baz")),
+            ("file:///foo", "https:///foo", None),
+            ("/foo/bar", "file:///foo/baz", None),
+        ];
+
+        for (from, to, expected) in cases {
+            let result = relative(from, to);
+            assert_eq!(result.as_deref(), expected, "from: {}, to: {}", from, to);
+        }
+    }
 }

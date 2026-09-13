@@ -4,8 +4,11 @@ pub fn count_lines(text: &str) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../__test__/rust/yoz/string/count_lines_test.rs"
-    ));
+    use super::count_lines;
+
+    #[test]
+    fn t_counts_lines() {
+        let text = "one\ntwo\nthree";
+        assert_eq!(count_lines(text), 3);
+    }
 }

@@ -138,7 +138,8 @@ end)
 
 t:test("rename metadata and literal pathname bytes match the old porcelain contract", function()
   local root = new_repo()
-  local suffix = package.config:sub(1, 1) == "/" and "\255" or "字"
+  -- macOS and Windows require Unicode filenames; other Unix systems also exercise invalid UTF-8.
+  local suffix = (package.config:sub(1, 1) == "/" and vim.uv.os_uname().sysname ~= "Darwin") and "\255" or "字"
   local old, new = "old-" .. suffix, "new-" .. suffix
   write(root .. "/" .. old, "one\ntwo\nthree\n")
   git({ "add", "--", old })

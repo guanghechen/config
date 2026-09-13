@@ -76,7 +76,7 @@ Use `stl.reporter.{debug|info|warn|error}` for structured diagnostics.
 
 ## Lua Tests
 
-- All tests and shared fixtures live under `__test__/`. Production `lua/` has no test-directory references or test-only hooks.
+- Lua/Node tests and shared fixtures live under `__test__/`. Production `lua/` has no test-directory references or test-only hooks.
 - Lua specs live under `__test__/specs/`, grouped by module and named `*_spec.lua`.
 - Run all specs with `nvim -l __test__/run.lua`; append a literal path filter to run a directory or one spec.
 - Use `__test__.support.harness` for cases, assertions, and cleanup. Each spec ends with `t:run()`.
@@ -114,5 +114,5 @@ stl.nvim.fn.bindkeys(keymaps, {
 - Follow existing `mlua` serialization/deserialization patterns.
 - Keep Lua-facing APIs synchronized with Lua call sites.
 - Prefix Rust unit tests with `t_` (for example `fn t_parses_config()`).
-- Put Rust test bodies in `__test__/rust/<crate>/**/*_test.rs`; source modules retain only `cfg(test)` include wiring, preserving module scope and platform gates. Format extracted files with `rustfmt --edition 2024`.
+- Keep Rust unit tests in the corresponding `rust/<crate>/src/` modules under `#[cfg(test)]`, preserving private access and platform gates. Shared Rust test support stays inside its crate and is also gated by `#[cfg(test)]`.
 - Put Node specs in `__test__/node/*.test.mjs` and run them with `node --test`.
