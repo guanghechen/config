@@ -10,7 +10,6 @@ $lazyFunctions = @(
     'ghc-update'
     'ghc-upgrade'
     'ghc-winshark-vsc'
-    'pnpm-publish-otp'
     'yoz'
 )
 
