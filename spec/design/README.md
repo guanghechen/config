@@ -1,6 +1,7 @@
 # 设计文档索引
 
-`spec/design/` 是已定稿设计的唯一来源，本文按职责提供导航。
+`spec/design/` 默认保存已定稿设计，本文按职责提供导航。
+Treeview 按用户指定集中在 [doc/spec/treeview](../../doc/spec/treeview/README.md)，本索引只引用其权威文档。
 整体分层见[架构](../ARCHITECTURE.md)，代码约定见[代码风格](../CODESTYLE.md)。
 
 ## 基础能力与状态
@@ -10,7 +11,7 @@
 - [Nvimbar](nvimbar.md)：组件取数、状态提交、通知与布局。
 - [Signal Hub](signal-hub.md)：进程内消息、身份、路由与清理。
 - [stl.os](stl/os.md)：canonical filepath 与系统调用边界。
-- [Tree / Treeview](stl/view/treeview.md)：树结构、可见布局与复杂度契约。
+- [Treeview](../../doc/spec/treeview/README.md)：Rust 交互树、共用标记算法、selection/expansion、布局与 Visual；另列现有 Lua layout 契约。
 
 ## 文件、搜索与 Git
 
@@ -49,4 +50,5 @@
 
 - 以中文描述职责、行为、约束与取舍；代码、API、标识符、路径和技术术语保留英文。
 - 同一契约只在所属文档定义，其他文档使用链接引用。历史验证注明环境与适用范围。
-- 未定稿提案放在 `spec/draft/`；阶段目标与执行步骤放在 `spec/roadmap/`、`spec/plan/`，由它们引用设计。
+- 未定稿提案默认放在 `spec/draft/`；Treeview 在其独立目录内显式区分 Design 与 Draft。
+  阶段目标与执行步骤放在 `spec/roadmap/`、`spec/plan/`，由它们引用设计。
