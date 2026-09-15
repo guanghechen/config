@@ -3,7 +3,7 @@
   "groups": {
     "default": {
       "proxy": "http://127.0.0.1:${ghc_vpn_host_port}",
-      "targets": ["npm", "git", "fish", "pwsh", "bash"],
+      "targets": ["npm", "pip", "git", "fish", "pwsh", "bash"],
       "envs": {
         "npm_config_registry": "https://registry.npmjs.org/",
         "npm_config_userconfig": "${XDG_CONFIG_HOME}/kit/proxy/conf/default/.npmrc"

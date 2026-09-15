@@ -18,13 +18,13 @@
     },
     "groups": {
       "type": "object",
+      "description": "Named proxy groups; default is selected when the CLI group is omitted.",
       "propertyNames": {
         "type": "string",
         "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
         "not": {
           "enum": [
             "init",
-            "off",
             "completion",
             "help",
             "version"
@@ -49,6 +49,7 @@
               "not": {
                 "anyOf": [
                   { "pattern": "[^A-Za-z0-9_]" },
+                  { "pattern": "^[Pp][Ii][Pp]_[Pp][Rr][Oo][Xx][Yy]$" },
                   { "pattern": "^(?:[Hh][Tt][Tt][Pp]_[Pp][Rr][Oo][Xx][Yy]$|[Hh][Tt][Tt][Pp][Ss]_[Pp][Rr][Oo][Xx][Yy]$|[Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Pp][Rr][Oo][Xx][Yy]$|[Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Hh][Tt][Tt][Pp][Ss]_[Pp][Rr][Oo][Xx][Yy]$|[Gg][Ii][Tt]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Cc][Oo][Uu][Nn][Tt]$|[Gg][Ii][Tt]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Kk][Ee][Yy]_|[Gg][Ii][Tt]_[Cc][Oo][Nn][Ff][Ii][Gg]_[Vv][Aa][Ll][Uu][Ee]_|[Kk][Ii][Tt]_[Pp][Rr][Oo][Xx][Yy]_|__[Kk][Ii][Tt]_[Pp][Rr][Oo][Xx][Yy]_|__[Kk][Ii][Tt][Pp][Rr][Oo][Xx][Yy])" }
                 ]
               }
@@ -68,6 +69,7 @@
             "items": {
               "enum": [
                 "npm",
+                "pip",
                 "git",
                 "fish",
                 "pwsh",
