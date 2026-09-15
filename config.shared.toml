@@ -73,22 +73,6 @@ max_concurrent_threads_per_session = 6
 max_depth = 1
 interrupt_message = true
 
-[agents.coder]
-description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
-config_file = "agents/coder.toml"
-
-[agents.react-engineer]
-description = "Frontend specialist for React + TypeScript + Tailwind tasks."
-config_file = "agents/react-engineer.toml"
-
-[agents.repair]
-description = "Iterative repair agent for bug fixing, optimization, and refactoring."
-config_file = "agents/repair.toml"
-
-[agents.code-simplifier]
-description = "Refines recently changed code for clarity and maintainability without changing behavior."
-config_file = "agents/code-simplifier.toml"
-
 [[hooks.PreToolUse]]
 matcher = "apply_patch"
 
