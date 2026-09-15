@@ -63,15 +63,16 @@ vec4 hash4(vec3 v)
 //  Slightly modified version of "runes" by FabriceNeyret2 -  https://www.shadertoy.com/view/4ltyDM
 //  Which is based on "runes" by otaviogood -  https://shadertoy.com/view/MsXSRn
 
-float rune_line(vec2 p, vec2 a, vec2 b) {   // from https://www.shadertoy.com/view/4dcfW8
+float rune_line_squared(vec2 p, vec2 a, vec2 b) {   // from https://www.shadertoy.com/view/4dcfW8
     p -= a, b -= a;
     float h = clamp(dot(p, b) / dot(b, b), 0., 1.);   // proj coord on line
-    return length(p - b * h);                         // dist to segment
+    vec2 offset = p - b * h;
+    return dot(offset, offset);
 }
 
 float rune(vec2 U, vec2 seed, float highlight)
 {
-	float d = 1e5;
+	float distanceSquared = 1e10;
 	for (int i = 0; i < 4; i++)	// number of strokes
 	{
             vec4 pos = hash4(seed);
@@ -87,8 +88,10 @@ float rune(vec2 U, vec2 seed, float highlight)
             pos = ( floor(pos * snaps) + .5) / snaps;
 
             if (pos.xy != pos.zw)  //filter out single points (when start and end are the same)
-                d = min(d, rune_line(U, pos.xy, pos.zw + .001) ); // closest line
+                distanceSquared = min(distanceSquared, rune_line_squared(U, pos.xy, pos.zw + .001));
 	}
+    // Compare squared distances so only the closest stroke needs a square root.
+    float d = sqrt(distanceSquared);
 	return smoothstep(0.1, 0., d) + highlight*smoothstep(0.4, 0., d);
 }
 
@@ -101,6 +104,7 @@ float random_char(vec2 outer, vec2 inner, float highlight) {
 
 // xy - horizontal, z - vertical
 vec3 rain(vec3 ro3, vec3 rd3, float time) {
+    // Keep RGB premultiplied during traversal to avoid normalizing every hit.
     vec4 result = vec4(0.);
 
     // normalized 2d projection
@@ -120,19 +124,22 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
     //  move through xy-cells in the ray direction
     float t2 = 0.;  // the ray formula is: ro2 + rd2 * t2, where t2 is positive as the ray has a direction.
     ivec2 next_cell = ivec2(floor(ro2/XYCELL_SIZE));  //first cell index where ray origin is located
+    vec2 side = vec2(next_cell + cell_side.xy) * XYCELL_SIZE;
+    vec2 t2_side = (side - ro2) / rd2;
+    vec2 t2_delta = XYCELL_SIZE / abs(rd2);
     for (int i=0; i<ITERATIONS; i++) {
         ivec2 cell = next_cell;  //save cell value before changing
         float t2s = t2;          //and t
 
-        //  find the intersection with the nearest side of the current xy-cell (since we know the direction, we only need to check one vertical side and one horizontal side)
-        vec2 side = vec2(next_cell + cell_side.xy) * XYCELL_SIZE;  //side.x is x coord of the y-axis side, side.y - y of the x-axis side
-        vec2 t2_side = (side - ro2) / rd2;  // t2_side.x and t2_side.y are two candidates for the next value of t2, we need the nearest
+        // Advance only the crossed boundary; the other intersection is unchanged.
         if (t2_side.x < t2_side.y) {
             t2 = t2_side.x;
             next_cell.x += cell_shift.x;  //cross through the y-axis side
+            t2_side.x += t2_delta.x;
         } else {
             t2 = t2_side.y;
             next_cell.y += cell_shift.y;  //cross through the x-axis side
+            t2_side.y += t2_delta.y;
         }
         //now t2 is the value of the end point in the current cell (and the same point is the start value in the next cell)
 
@@ -186,11 +193,11 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
                             if (a > 0.) {
                                 float attenuation = 1. + pow(0.06*tmin/t3_to_t2, 2.);
                                 vec3 col = (c == 0. ? vec3(0.67, 1.0, 0.82) : vec3(0.25, 0.80, 0.40)) / attenuation;
-                                float a1 = result.a;
-                                result.a = a1 + (1. - a1) * a;
-                                result.xyz = (result.xyz * a1 + col * (1. - a1) * a) / result.a;
+                                float contribution = (1. - result.a) * a;
+                                result.xyz += col * contribution;
+                                result.a += contribution;
                                 if (result.a > 0.98)
-                                    return result.xyz;
+                                    return result.xyz / result.a;
                             }
                         }
                     }
@@ -202,7 +209,7 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
         // go to next horizontal cell
     }
 
-    return result.xyz * result.a;
+    return result.xyz;
 }
 
 //        ----  main, camera  ----

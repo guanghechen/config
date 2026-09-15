@@ -79,15 +79,16 @@ vec4 hash4(vec3 v)
 //  Slightly modified version of "runes" by FabriceNeyret2 -  https://www.shadertoy.com/view/4ltyDM
 //  Which is based on "runes" by otaviogood -  https://shadertoy.com/view/MsXSRn
 
-float rune_line(vec2 p, vec2 a, vec2 b) {   // from https://www.shadertoy.com/view/4dcfW8
+float rune_line_squared(vec2 p, vec2 a, vec2 b) {   // from https://www.shadertoy.com/view/4dcfW8
     p -= a, b -= a;
     float h = clamp(dot(p, b) / dot(b, b), 0., 1.);   // proj coord on line
-    return length(p - b * h);                         // dist to segment
+    vec2 offset = p - b * h;
+    return dot(offset, offset);
 }
 
 float rune(vec2 U, vec2 seed, float highlight)
 {
-	float d = 1e5;
+	float distanceSquared = 1e10;
 	for (int i = 0; i < 4; i++)	// number of strokes
 	{
             vec4 pos = hash4(seed);
@@ -103,8 +104,10 @@ float rune(vec2 U, vec2 seed, float highlight)
             pos = ( floor(pos * snaps) + .5) / snaps;
 
             if (pos.xy != pos.zw)  //filter out single points (when start and end are the same)
-                d = min(d, rune_line(U, pos.xy, pos.zw + .001) ); // closest line
+                distanceSquared = min(distanceSquared, rune_line_squared(U, pos.xy, pos.zw + .001));
 	}
+    // Compare squared distances so only the closest stroke needs a square root.
+    float d = sqrt(distanceSquared);
     // A narrow ink stroke replaces the dark version's broad luminous halo.
     float strokeWidth = mix(0.035, 0.05, clamp(highlight, 0.0, 1.0));
     return 1.0 - smoothstep(strokeWidth, strokeWidth + 0.025, d);
@@ -119,6 +122,7 @@ float random_char(vec2 outer, vec2 inner, float highlight) {
 
 // xy - horizontal, z - vertical
 vec3 rain(vec3 ro3, vec3 rd3, float time) {
+    // Keep RGB premultiplied during traversal to avoid normalizing every hit.
     vec4 result = vec4(0.);
 
     // normalized 2d projection
@@ -138,19 +142,22 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
     //  move through xy-cells in the ray direction
     float t2 = 0.;  // the ray formula is: ro2 + rd2 * t2, where t2 is positive as the ray has a direction.
     ivec2 next_cell = ivec2(floor(ro2/XYCELL_SIZE));  //first cell index where ray origin is located
+    vec2 side = vec2(next_cell + cell_side.xy) * XYCELL_SIZE;
+    vec2 t2_side = (side - ro2) / rd2;
+    vec2 t2_delta = XYCELL_SIZE / abs(rd2);
     for (int i=0; i<ITERATIONS; i++) {
         ivec2 cell = next_cell;  //save cell value before changing
         float t2s = t2;          //and t
 
-        //  find the intersection with the nearest side of the current xy-cell (since we know the direction, we only need to check one vertical side and one horizontal side)
-        vec2 side = vec2(next_cell + cell_side.xy) * XYCELL_SIZE;  //side.x is x coord of the y-axis side, side.y - y of the x-axis side
-        vec2 t2_side = (side - ro2) / rd2;  // t2_side.x and t2_side.y are two candidates for the next value of t2, we need the nearest
+        // Advance only the crossed boundary; the other intersection is unchanged.
         if (t2_side.x < t2_side.y) {
             t2 = t2_side.x;
             next_cell.x += cell_shift.x;  //cross through the y-axis side
+            t2_side.x += t2_delta.x;
         } else {
             t2 = t2_side.y;
             next_cell.y += cell_shift.y;  //cross through the x-axis side
+            t2_side.y += t2_delta.y;
         }
         //now t2 is the value of the end point in the current cell (and the same point is the start value in the next cell)
 
@@ -198,6 +205,20 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
                     float z = ro3.z + rd3.z * tmin/t3_to_t2;
                     float v = (z - target_z) / target_length;  //vertical coord in the matrix strip
                     if (v >= 0.0 && v < 1.0) {
+                        float rayDistance = tmin / t3_to_t2;
+                        float glyphHeight = STRIP_CHAR_HEIGHT * MATRIX_FOCAL_LENGTH
+                            / max(rayDistance, 0.001);
+                        float depthFade = 1.0 - smoothstep(
+                            MATRIX_MAX_GLYPH_HEIGHT * 0.55,
+                            MATRIX_MAX_GLYPH_HEIGHT,
+                            glyphHeight
+                        );
+                        // Skip invisible drops before generating their rune strokes.
+                        depthFade *= smoothstep(1.0, 3.0, glyphHeight * iResolution.y);
+                        if (depthFade <= 0.0) {
+                            zcell += cell_shift.z;
+                            continue;
+                        }
                         float c = floor(v * chars_count);  //symbol index relative to the start of the strip, with addition of char_z_shift it becomes an index relative to the whole cell
                         float q = fract(v * chars_count);
                         vec2 char_hash = hash2(vec2(c+char_z_shift, cell_hash2.x));
@@ -208,25 +229,15 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
                             float a = random_char(vec2(char_hash.x, time_factor), vec2(u,q), max(1., 3. - c/2.)*0.2);  //alpha
                             a *= clamp((chars_count - 0.5 - c) / 2., 0., 1.);  //tail fade
                             a *= mix(0.3, 1.0, pow(1.0 - v, 0.7));
-                            float rayDistance = tmin / t3_to_t2;
-                            float glyphHeight = STRIP_CHAR_HEIGHT * MATRIX_FOCAL_LENGTH
-                                / max(rayDistance, 0.001);
-                            float depthFade = 1.0 - smoothstep(
-                                MATRIX_MAX_GLYPH_HEIGHT * 0.55,
-                                MATRIX_MAX_GLYPH_HEIGHT,
-                                glyphHeight
-                            );
-                            // Subpixel runes read as noise rather than symbols.
-                            depthFade *= smoothstep(1.0, 3.0, glyphHeight * iResolution.y);
                             a *= depthFade;
                             if (a > 0.) {
                                 float attenuation = 1. + pow(0.06*tmin/t3_to_t2, 2.);
                                 vec3 col = (c == 0. ? vec3(0.67, 1.0, 0.82) : vec3(0.25, 0.80, 0.40)) / attenuation;
-                                float a1 = result.a;
-                                result.a = a1 + (1. - a1) * a;
-                                result.xyz = (result.xyz * a1 + col * (1. - a1) * a) / result.a;
+                                float contribution = (1. - result.a) * a;
+                                result.xyz += col * contribution;
+                                result.a += contribution;
                                 if (result.a > 0.98)
-                                    return result.xyz;
+                                    return result.xyz / result.a;
                             }
                         }
                     }
@@ -238,7 +249,7 @@ vec3 rain(vec3 ro3, vec3 rd3, float time) {
         // go to next horizontal cell
     }
 
-    return result.xyz * result.a;
+    return result.xyz;
 }
 
 //        ----  main, camera  ----
@@ -281,6 +292,20 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     }
 
     vec2 uv = fragCoord.xy / iResolution.xy;
+
+    vec4 terminalColor = texture(iChannel0, uv);
+    // Detect the configured background instead of assuming that black pixels
+    // are background. The smooth edge protects antialiased glyph boundaries.
+    float backgroundDistance = distance(terminalColor.rgb, iBackgroundColor);
+    float backgroundMask = 1.0 - smoothstep(
+        BACKGROUND_EDGE_START,
+        BACKGROUND_EDGE_END,
+        backgroundDistance
+    );
+    if (backgroundMask <= 0.0) {
+        fragColor = terminalColor;
+        return;
+    }
 
     float time = mod(iTime, 300) * SPEED; //reset time every 5 minutes, as large values lead to the same (and eventually no) rune(s)
 
@@ -430,16 +455,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     ro += rd * 0.2;
 
     vec3 rainColor = rain(ro, rd, time);
-    vec4 terminalColor = texture(iChannel0, uv);
-
-    // Detect the configured background instead of assuming that black pixels
-    // are background. The smooth edge protects antialiased glyph boundaries.
-    float backgroundDistance = distance(terminalColor.rgb, iBackgroundColor);
-    float backgroundMask = 1.0 - smoothstep(
-        BACKGROUND_EDGE_START,
-        BACKGROUND_EDGE_END,
-        backgroundDistance
-    );
 
     float rainIntensity = clamp(
         max(rainColor.r, max(rainColor.g, rainColor.b)),
