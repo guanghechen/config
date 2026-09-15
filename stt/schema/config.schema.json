@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/stt/schema/config.schema.json",
+  "title": "Kit STT Configuration",
+  "description": "Named Qwen3-ASR models and shared STT settings. Runtime aggregates models by unique name and rejects repeated shared settings across files.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "$ref": "#/$defs/nonEmptyString" },
+    "defaultModel": { "$ref": "#/$defs/nonEmptyString" },
+    "models": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/model" },
+      "description": "Names must be unique across the complete config set."
+    },
+    "language": {
+      "enum": ["zh", "en", "yue", "ar", "de", "fr", "es", "pt", "id", "it", "ko", "ru", "th", "vi", "ja", "tr", "hi", "ms", "nl", "sv", "da", "fi", "pl", "cs", "fil", "fa", "el", "hu", "mk", "ro"]
+    },
+    "device": { "$ref": "#/$defs/nonEmptyString" },
+    "maxDuration": { "type": "integer", "minimum": 1, "maximum": 300 },
+    "timeout": { "type": "integer", "minimum": 1, "maximum": 3600 },
+    "copy": { "type": "boolean" }
+  },
+  "$defs": {
+    "model": {
+      "type": "object",
+      "required": ["name", "path", "computeDevice"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "path": {
+          "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+          "not": { "pattern": "://" },
+          "description": "Local model directory, relative to the declaring config file."
+        },
+        "computeDevice": {
+          "type": "string",
+          "anyOf": [
+            { "enum": ["cpu", "metal"] },
+            { "pattern": "^cuda:(0|[1-9][0-9]*)$" }
+          ],
+          "description": "Runtime validates platform support for the selected model and the CUDA device index."
+        }
+      }
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "not": { "pattern": "\\u0000" }
+    }
+  }
+}
