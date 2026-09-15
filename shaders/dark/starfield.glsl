@@ -11,7 +11,7 @@ const float repeats = 30.;
 const float layers = 21.;
 
 // Animation speed relative to the original and maximum combined star brightness.
-const float motionSpeed = 0.8;
+const float motionSpeed = 1.0;
 const float starBrightness = 0.55;
 
 // star colors
@@ -74,7 +74,7 @@ float perlin2(vec2 uv, int octaves, float pscale) {
     return col;
 }
 
-vec3 stars(vec2 uv, float offset) {
+vec3 stars(vec2 uv, float offset, vec2 radial) {
     float timeScale = -(iTime * motionSpeed + offset) / layers;
     float trans = fract(timeScale);
     float newRnd = floor(timeScale);
@@ -99,17 +99,23 @@ vec3 stars(vec2 uv, float offset) {
 
     // Calculate random xy and size
     vec2 rndXY = N22(newRnd + ipos * (offset + 1.)) * 0.9 + 0.05;
-    float rndSize = N21(ipos) * 100. + 200.;
+    // Reuse the position hash for size and intensity instead of a third hash.
+    float rndSize = 160. + 200. * rndXY.x;
+    float intensity = 0.65 + 0.7 * rndXY.y;
+    float nearness = 1. - trans;
 
     vec2 j = (rndXY - uv) * rndSize;
-    // Keep the sharp inverse-square core; compress highlights after combining layers.
-    float sparkle = 1. / max(dot(j, j), 0.0001);
+    // Keep the leading edge round and stretch a short trail toward the vanishing point.
+    float along = max(dot(j, radial), 0.);
+    float distanceSquared = dot(j, j) - 0.72 * nearness * nearness * along * along;
+    // Suppress the wide halo while keeping the sharp inverse-square core.
+    float sparkle = intensity / max(distanceSquared * (1. + 0.2 * distanceSquared), 0.0001);
 
     // Set stars to be pure white
     col += white * sparkle;
 
     // Fade both ends of a layer's lifetime before its positions are reseeded.
-    col *= smoothstep(0., 0.03, trans) * (1. - smoothstep(0.8, 1., trans));
+    col *= (0.65 + 0.7 * nearness) * smoothstep(0., 0.03, trans) * (1. - smoothstep(0.8, 1., trans));
     return col; // Return pure white stars only
 }
 
@@ -117,31 +123,33 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
     // Normalized pixel coordinates (from 0 to 1)
     vec2 uv = fragCoord / iResolution.xy;
+    vec2 radial = fragCoord - 0.5 * iResolution.xy;
+    radial *= inversesqrt(max(dot(radial, radial), 1.));
 
     vec3 col = vec3(0.);
 
     // Constant offsets let Metal specialize each layer; keep all 21 in depth order.
-    col += stars(uv, 0.);
-    col += stars(uv, 1.);
-    col += stars(uv, 2.);
-    col += stars(uv, 3.);
-    col += stars(uv, 4.);
-    col += stars(uv, 5.);
-    col += stars(uv, 6.);
-    col += stars(uv, 7.);
-    col += stars(uv, 8.);
-    col += stars(uv, 9.);
-    col += stars(uv, 10.);
-    col += stars(uv, 11.);
-    col += stars(uv, 12.);
-    col += stars(uv, 13.);
-    col += stars(uv, 14.);
-    col += stars(uv, 15.);
-    col += stars(uv, 16.);
-    col += stars(uv, 17.);
-    col += stars(uv, 18.);
-    col += stars(uv, 19.);
-    col += stars(uv, 20.);
+    col += stars(uv, 0., radial);
+    col += stars(uv, 1., radial);
+    col += stars(uv, 2., radial);
+    col += stars(uv, 3., radial);
+    col += stars(uv, 4., radial);
+    col += stars(uv, 5., radial);
+    col += stars(uv, 6., radial);
+    col += stars(uv, 7., radial);
+    col += stars(uv, 8., radial);
+    col += stars(uv, 9., radial);
+    col += stars(uv, 10., radial);
+    col += stars(uv, 11., radial);
+    col += stars(uv, 12., radial);
+    col += stars(uv, 13., radial);
+    col += stars(uv, 14., radial);
+    col += stars(uv, 15., radial);
+    col += stars(uv, 16., radial);
+    col += stars(uv, 17., radial);
+    col += stars(uv, 18., radial);
+    col += stars(uv, 19., radial);
+    col += stars(uv, 20., radial);
 
     // Preserve faint stars while smoothly limiting the brightest cores and overlaps.
     col = starBrightness * col / (vec3(starBrightness) + col);
