@@ -7,8 +7,12 @@ const float threshold = 0.15;
 // divisions of grid
 const float repeats = 30.;
 
-// number of layers
+// Fixed layer count, matching the unrolled calls in mainImage.
 const float layers = 21.;
+
+// Animation speed relative to the original and maximum combined star brightness.
+const float motionSpeed = 0.8;
+const float starBrightness = 0.55;
 
 // star colors
 const vec3 white = vec3(1.0); // Set star color to pure white
@@ -71,7 +75,7 @@ float perlin2(vec2 uv, int octaves, float pscale) {
 }
 
 vec3 stars(vec2 uv, float offset) {
-    float timeScale = -(iTime + offset) / layers;
+    float timeScale = -(iTime * motionSpeed + offset) / layers;
     float trans = fract(timeScale);
     float newRnd = floor(timeScale);
     vec3 col = vec3(0.);
@@ -98,12 +102,14 @@ vec3 stars(vec2 uv, float offset) {
     float rndSize = N21(ipos) * 100. + 200.;
 
     vec2 j = (rndXY - uv) * rndSize;
-    float sparkle = 1. / dot(j, j);
+    // Keep the sharp inverse-square core; compress highlights after combining layers.
+    float sparkle = 1. / max(dot(j, j), 0.0001);
 
     // Set stars to be pure white
     col += white * sparkle;
 
-    col *= smoothstep(1., 0.8, trans);
+    // Fade both ends of a layer's lifetime before its positions are reseeded.
+    col *= smoothstep(0., 0.03, trans) * (1. - smoothstep(0.8, 1., trans));
     return col; // Return pure white stars only
 }
 
@@ -114,9 +120,31 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
     vec3 col = vec3(0.);
 
-    for (float i = 0.; i < layers; i++) {
-        col += stars(uv, i);
-    }
+    // Constant offsets let Metal specialize each layer; keep all 21 in depth order.
+    col += stars(uv, 0.);
+    col += stars(uv, 1.);
+    col += stars(uv, 2.);
+    col += stars(uv, 3.);
+    col += stars(uv, 4.);
+    col += stars(uv, 5.);
+    col += stars(uv, 6.);
+    col += stars(uv, 7.);
+    col += stars(uv, 8.);
+    col += stars(uv, 9.);
+    col += stars(uv, 10.);
+    col += stars(uv, 11.);
+    col += stars(uv, 12.);
+    col += stars(uv, 13.);
+    col += stars(uv, 14.);
+    col += stars(uv, 15.);
+    col += stars(uv, 16.);
+    col += stars(uv, 17.);
+    col += stars(uv, 18.);
+    col += stars(uv, 19.);
+    col += stars(uv, 20.);
+
+    // Preserve faint stars while smoothly limiting the brightest cores and overlaps.
+    col = starBrightness * col / (vec3(starBrightness) + col);
 
     // Sample the terminal screen texture including alpha channel
     vec4 terminalColor = texture(iChannel0, uv);

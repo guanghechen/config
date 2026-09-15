@@ -67,7 +67,28 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if (mask <= 0.0) return;
 
     float stars = 0.0;
-    for (int i = 0; i < 21; i++) stars += starLayer(termUV, float(i));
+    // Constant offsets let Metal specialize each layer; keep all 21 in depth order.
+    stars += starLayer(termUV, 0.0);
+    stars += starLayer(termUV, 1.0);
+    stars += starLayer(termUV, 2.0);
+    stars += starLayer(termUV, 3.0);
+    stars += starLayer(termUV, 4.0);
+    stars += starLayer(termUV, 5.0);
+    stars += starLayer(termUV, 6.0);
+    stars += starLayer(termUV, 7.0);
+    stars += starLayer(termUV, 8.0);
+    stars += starLayer(termUV, 9.0);
+    stars += starLayer(termUV, 10.0);
+    stars += starLayer(termUV, 11.0);
+    stars += starLayer(termUV, 12.0);
+    stars += starLayer(termUV, 13.0);
+    stars += starLayer(termUV, 14.0);
+    stars += starLayer(termUV, 15.0);
+    stars += starLayer(termUV, 16.0);
+    stars += starLayer(termUV, 17.0);
+    stars += starLayer(termUV, 18.0);
+    stars += starLayer(termUV, 19.0);
+    stars += starLayer(termUV, 20.0);
     float opacity = 0.42 * stars / (1.0 + stars) * mask;
     fragColor.rgb = mix(fragColor.rgb, vec3(0.28, 0.35, 0.45) * fragColor.a, opacity);
 }
