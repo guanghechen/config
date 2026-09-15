@@ -16,7 +16,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import test from "node:test"
 
-import { findWindowsSdkLibraries, isWslRuntime, replaceFileIfChanged } from "../../script/build.mjs"
+import { findWindowsSdkLibraries, isWslRuntime, replaceFileIfChanged, verifyNativeModule } from "../../script/build.mjs"
 
 function withTempDir(fn) {
   const dir = mkdtempSync(join(tmpdir(), "nvim-build-test-"))
@@ -26,6 +26,19 @@ function withTempDir(fn) {
     rmSync(dir, { recursive: true, force: true })
   }
 }
+
+test("verifyNativeModule rejects an unloadable artifact with a nonzero exit", () => {
+  withTempDir((dir) => {
+    const artifact = join(dir, "invalid yoz.so")
+    writeFileSync(artifact, "not a shared library")
+
+    assert.throws(() => verifyNativeModule(artifact), (error) => {
+      assert.equal(error.exitCode, 1)
+      assert.match(error.message, /invalid yoz\.so/)
+      return true
+    })
+  })
+})
 
 test("replaceFileIfChanged preserves the inode held by a running process", { skip: process.platform === "win32" }, () => {
   withTempDir((dir) => {

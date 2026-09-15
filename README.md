@@ -44,6 +44,23 @@
     curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
     ```
 
+### Native module build
+
+On macOS, `node script/build.mjs` loads `.cargo/config.macos.toml`, which defaults
+`SDKROOT` to the installed Command Line Tools macOS 26.5 SDK. Builds of `yoz` with
+SDK 27 currently fail dyld's LINKEDIT alignment check. An explicit `SDKROOT`
+environment variable overrides this default. Linux (including WSL) and Windows
+builds do not load this configuration.
+
+For direct Cargo builds on macOS, run from the repository root:
+
+```sh
+cargo --config .cargo/config.macos.toml build --manifest-path rust/Cargo.toml --release -p yoz
+```
+
+After changing the SDK, run `node script/build.mjs --force` to avoid reusing cached
+artifacts. The build checks native module loading before deploying either library.
+
 ### FAQ
 
 * multiple configs

@@ -27,6 +27,7 @@ export function getPlatformBuild(platform) {
         lua: "yoz.so",
         bin: "osx.yoz.so",
         codesign: true,
+        cargoConfig: "config.macos.toml",
       }
     case "linux":
       return {
@@ -78,6 +79,22 @@ function parseForce(args) {
     throw new Error(`unknown option: ${invalid}\nusage: node script/build.mjs [--force|-f]`)
   }
   return args.length > 0
+}
+
+export function verifyNativeModule(filepath) {
+  const lua = `local ok, err = pcall(function()
+    local load = assert(package.loadlib(${JSON.stringify(filepath)}, "luaopen_yoz"))
+    assert(type(load()) == "table", "yoz module must return a table")
+  end)
+  if not ok then
+    io.stderr:write(tostring(err), "\\n")
+    vim.cmd("cquit 1")
+  end`
+  capture(
+    "nvim",
+    ["--headless", "-u", "NONE", "-i", "NONE", "-n", "-c", `lua ${lua}`, "-c", "qa!"],
+    dirname(filepath),
+  )
 }
 
 export function replaceFileIfChanged(source, destination) {
@@ -226,7 +243,11 @@ function main() {
   if (force) rmSync(targetDir, { recursive: true, force: true })
 
   console.log(`${CYAN}[neovim yoz] compiling...${RESET}`)
-  run("cargo", ["build", "--release", "--quiet"], packageDir)
+  const cargoArgs = ["build", "--release", "--quiet"]
+  if (build.cargoConfig) {
+    cargoArgs.push("--config", join(rustDir, "..", ".cargo", build.cargoConfig))
+  }
+  run("cargo", cargoArgs, packageDir)
   mkdirSync(dirname(stagedLua), { recursive: true })
   mkdirSync(dirname(stagedBin), { recursive: true })
   copyFileSync(source, stagedLua)
@@ -240,6 +261,9 @@ function main() {
   if (isWslBuild) {
     buildWslImHelper(rustDir, targetDir, wslImStagedBin)
   }
+
+  verifyNativeModule(stagedLua)
+  verifyNativeModule(stagedBin)
 
   if (isWslBuild) {
     replaceFileIfChanged(wslImStagedBin, wslImBinOutput)
