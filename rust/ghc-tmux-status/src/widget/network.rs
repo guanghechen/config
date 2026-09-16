@@ -13,7 +13,7 @@ impl TemplateWidget for NetworkWidget {
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         let body_literal = " ↓99.9G ↑99.9G ";
         let literal_text = pill_literal(body_literal);
-        let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SYM_NET} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_NET_NOW} ".to_string();
+        let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_BG_PILL_DURATION}#,bg=#{@GHC_SL_FG_PILL_ICON}#,reverse]#{@GHC_SYM_NET} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_NET_NOW} ".to_string();
         Ok(RenderedSegment {
             literal_text,
             rich_text,

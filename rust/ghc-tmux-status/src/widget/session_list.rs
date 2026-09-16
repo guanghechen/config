@@ -173,7 +173,7 @@ fn push_overflow_item(
     }
     literal_text.push_str(OVERFLOW_LITERAL);
     rich_text.push_str(&format!(
-        "#[fg={INACTIVE_NAME_FG}#,bg={INACTIVE_NAME_BG}] … #[fg={INACTIVE_NUM_FG}#,bg={INACTIVE_NUM_BG}]"
+        "#[fg={INACTIVE_NAME_BG}#,bg={INACTIVE_NAME_FG}#,reverse] …#[fg={INACTIVE_NUM_BG}#,bg={INACTIVE_NUM_FG}] #[noreverse]"
     ));
     if is_last {
         literal_text.push(ARROW_LITERAL);
@@ -251,7 +251,11 @@ fn display_literal(session_name: &str) -> String {
     format!("#{{l:{escaped}}}")
 }
 
-fn render_arrow(fg: &str, bg: &str) -> String {
+fn render_arrow(fg: &str, bg: &str, opaque_background: bool) -> String {
+    // Reverse keeps item fills as opaque as separator glyphs in Ghostty.
+    if opaque_background {
+        return format!("#[fg={bg}#,bg={fg}#,reverse]#{{@GHC_SEP_ARROW_RIGHT}}#[noreverse]");
+    }
     format!("#[fg={fg}#,bg={bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
 }
 
@@ -265,6 +269,7 @@ fn render_left_edge(first_active: bool) -> String {
         } else {
             INACTIVE_NAME_BG
         },
+        true,
     )
 }
 
@@ -281,7 +286,7 @@ fn render_join_separator(left_active: bool, right_active: bool) -> String {
     } else {
         INACTIVE_NAME_BG
     };
-    render_arrow(fg, bg)
+    render_arrow(fg, bg, true)
 }
 
 fn render_right_edge(last_active: bool) -> String {
@@ -290,7 +295,7 @@ fn render_right_edge(last_active: bool) -> String {
     } else {
         INACTIVE_NUM_BG
     };
-    render_arrow(fg, LIST_SURFACE_BG)
+    render_arrow(fg, LIST_SURFACE_BG, false)
 }
 
 fn render_item_body_literal(session_name: &str, index: usize) -> String {
@@ -317,7 +322,10 @@ fn active_item_body(session_name: &str, session_id: &str, index: usize) -> Strin
     let name = display_literal(session_name);
     let state_prefix = session_state_prefix(session_id, " #{@GHC_SYM_WIN_BELL}");
 
-    format!("#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]{state_prefix} {name} | {index} ")
+    // Reverse cells stay opaque in Ghostty; swapping colors preserves the theme.
+    format!(
+        "#[fg={ACTIVE_BG}#,bg={ACTIVE_FG}#,reverse#,bold]{state_prefix} {name} | {index} #[noreverse]"
+    )
 }
 
 fn inactive_item_body_with_last_focus(
@@ -336,12 +344,12 @@ fn inactive_item_body_with_last_focus(
     );
     let name = display_literal(session_name);
     let bell_prefix = format!(
-        " #[fg={INACTIVE_BELL_FG}#,bg={INACTIVE_NAME_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={name_fg}#,bg={INACTIVE_NAME_BG}#,nobold]"
+        " #[fg={INACTIVE_NAME_BG}#,bg={INACTIVE_BELL_FG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,nobold]"
     );
     let state_prefix = session_state_prefix(session_id, &bell_prefix);
 
     format!(
-        "#[fg={name_fg}#,bg={INACTIVE_NAME_BG}]{state_prefix} {name} #[fg={num_fg}#,bg={INACTIVE_NUM_BG}] {index} "
+        "#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,reverse]{state_prefix} {name} #[fg={INACTIVE_NUM_BG}#,bg={num_fg}] {index} #[noreverse]"
     )
 }
 
@@ -388,7 +396,7 @@ mod tests {
         assert_eq!(
             active,
             format!(
-                "#[fg=#{{@GHC_SL_FG_SESSION_LIST_ACTIVE}}#,bg=#{{@GHC_SL_BG_SESSION_LIST_ACTIVE}}#,bold]{state_prefix} #{{l:tmux}} | 2 "
+                "#[fg=#{{@GHC_SL_BG_SESSION_LIST_ACTIVE}}#,bg=#{{@GHC_SL_FG_SESSION_LIST_ACTIVE}}#,reverse#,bold]{state_prefix} #{{l:tmux}} | 2 #[noreverse]"
             )
         );
         assert!(!active.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
@@ -399,13 +407,13 @@ mod tests {
         let inactive = inactive_item_body_with_last_focus("dev", "$2", 2, Some("dev"));
         let name_fg = "#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}";
         let bell_prefix = format!(
-            " #[fg=#{{@GHC_SL_FG_SESSION_ITEM_BELL}}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={name_fg}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,nobold]"
+            " #[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg=#{{@GHC_SL_FG_SESSION_ITEM_BELL}}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg={name_fg}#,nobold]"
         );
         let state_prefix = session_state_prefix("$2", &bell_prefix);
         assert_eq!(
             inactive,
             format!(
-                "#[fg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NAME}}}}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}]{state_prefix} #{{l:dev}} #[fg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NUM}}}}#,bg=#{{@GHC_SL_BG_SESSION_ITEM_NUM}}] 2 "
+                "#[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NAME}}}}#,reverse]{state_prefix} #{{l:dev}} #[fg=#{{@GHC_SL_BG_SESSION_ITEM_NUM}}#,bg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NUM}}}}] 2 #[noreverse]"
             )
         );
     }
@@ -454,7 +462,15 @@ mod tests {
     fn join_separator_uses_baked_neighbor_states() {
         assert_eq!(
             render_join_separator(true, false),
-            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_ARROW_RIGHT}"
+            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NAME}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,reverse]#{@GHC_SEP_ARROW_RIGHT}#[noreverse]"
+        );
+        assert_eq!(
+            render_join_separator(false, true),
+            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,reverse]#{@GHC_SEP_ARROW_RIGHT}#[noreverse]"
+        );
+        assert_eq!(
+            render_join_separator(false, false),
+            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NAME}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,reverse]#{@GHC_SEP_ARROW_RIGHT}#[noreverse]"
         );
     }
 
@@ -462,7 +478,11 @@ mod tests {
     fn left_edge_uses_baked_first_item_state() {
         assert_eq!(
             render_left_edge(true),
-            "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}]#{@GHC_SEP_ARROW_RIGHT}"
+            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_PILL_HOST}#,reverse]#{@GHC_SEP_ARROW_RIGHT}#[noreverse]"
+        );
+        assert_eq!(
+            render_left_edge(false),
+            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NAME}#,bg=#{@GHC_SL_BG_PILL_HOST}#,reverse]#{@GHC_SEP_ARROW_RIGHT}#[noreverse]"
         );
     }
 

@@ -9,7 +9,7 @@ impl TemplateWidget for TimeWidget {
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: pill_literal(" 00:00:00 "),
-            rich_text: "#[fg=#{@GHC_SL_BG_PILL_TIME}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_TIME}]#{@GHC_SYM_TIME} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] %H:%M:%S ".to_string(),
+            rich_text: "#[fg=#{@GHC_SL_BG_PILL_TIME}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_BG_PILL_TIME}#,bg=#{@GHC_SL_FG_PILL_ICON}#,reverse]#{@GHC_SYM_TIME} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] %H:%M:%S ".to_string(),
         })
     }
 }

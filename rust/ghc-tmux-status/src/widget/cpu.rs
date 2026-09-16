@@ -15,7 +15,7 @@ impl TemplateWidget for CpuWidget {
     // `status_right_length` stays stable regardless of the live digits.
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         let literal_text = pill_literal(" 100% ");
-        let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SYM_CPU} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_CPU_NOW}%% ".to_string();
+        let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_BG_PILL_DURATION}#,bg=#{@GHC_SL_FG_PILL_ICON}#,reverse]#{@GHC_SYM_CPU} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_CPU_NOW}%% ".to_string();
         Ok(RenderedSegment {
             literal_text,
             rich_text,

@@ -9,7 +9,7 @@ impl TemplateWidget for DateWidget {
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: pill_literal(" Mon, 01 Jan "),
-            rich_text: "#[fg=#{@GHC_SL_BG_PILL_DATE}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DATE}]#{@GHC_SYM_DATE} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] %a, %d %b ".to_string(),
+            rich_text: "#[fg=#{@GHC_SL_BG_PILL_DATE}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_BG_PILL_DATE}#,bg=#{@GHC_SL_FG_PILL_ICON}#,reverse]#{@GHC_SYM_DATE} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] %a, %d %b ".to_string(),
         })
     }
 }

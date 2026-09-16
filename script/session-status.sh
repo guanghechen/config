@@ -46,6 +46,16 @@ function _ghc_tmux_session_status_ {
   local prefix_symbol=${9:-}
   local prefix_sep_left=${10:-}
 
+  # Reverse cells stay opaque; explicit colors can be swapped without changing appearance.
+  local active_fg=$current_fg
+  local active_bg=$current_bg
+  local active_style=bold
+  if [ "$current_fg" != default ] && [ "$current_bg" != default ]; then
+    active_fg=$current_bg
+    active_bg=$current_fg
+    active_style=reverse,bold
+  fi
+
   local -a session_ids=()
   local -a session_names=()
   local session_separator=$'\t'
@@ -68,9 +78,9 @@ function _ghc_tmux_session_status_ {
   fi
 
   if [ "${display_mode}" == "kitty" ] && [ -n "${prefix_symbol}" ]; then
-    printf '#[fg=%s]%s#[fg=%s,bg=%s,bold]%s #[default] ' \
+    printf '#[fg=%s]%s#[fg=%s,bg=%s,%s]%s #[default] ' \
       "${current_bg}" "${prefix_sep_left}" \
-      "${current_fg}" "${current_bg}" "${prefix_symbol}"
+      "${active_fg}" "${active_bg}" "${active_style}" "${prefix_symbol}"
   fi
 
   local index=1
@@ -89,17 +99,17 @@ function _ghc_tmux_session_status_ {
           left_sep=
         fi
 
-        printf '#[fg=%s,bg=%s]#[range=session|%s]%s#[fg=%s,bg=%s,bold] %s | %s #[fg=%s,bg=%s]%s#[norange]#[default]' \
+        printf '#[fg=%s,bg=%s]#[range=session|%s]%s#[fg=%s,bg=%s,%s] %s | %s #[fg=%s,bg=%s,noreverse]%s#[norange]#[default]' \
           "${current_bg}" "${status_bg}" "${session_id}" "${left_sep}" \
-          "${current_fg}" "${current_bg}" "${session_name}" "${index}" \
+          "${active_fg}" "${active_bg}" "${active_style}" "${session_name}" "${index}" \
           "${current_bg}" "${status_bg}" "${sep_right}"
       else
         printf '#[%s]#[range=session|%s]%s | %s#[norange]#[default]' \
           "${normal_style}" "${session_id}" "${session_name}" "${index}"
       fi
     elif [ "${session_name}" == "${current_session_name}" ]; then
-      printf '#[fg=%s,bg=%s,bold]#[range=session|%s]%s%s%s#[norange]#[default]' \
-        "${current_fg}" "${current_bg}" "${session_id}" "${sep_left}" "${index}" "${sep_right}"
+      printf '#[fg=%s,bg=%s,%s]#[range=session|%s]%s%s%s#[norange]#[default]' \
+        "${active_fg}" "${active_bg}" "${active_style}" "${session_id}" "${sep_left}" "${index}" "${sep_right}"
     else
       printf '#[%s]#[range=session|%s]%s%s%s#[norange]#[default]' \
         "${normal_style}" "${session_id}" "${sep_left}" "${index}" "${sep_right}"

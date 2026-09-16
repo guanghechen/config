@@ -12,7 +12,7 @@ impl TemplateWidget for FullscreenWidget {
             // width shadow reserves its worst case so status-*-length stays stable whether
             // or not the current window is zoomed.
             literal_text: pill_literal(" 00/00 ,"),
-            rich_text: "#{?window_zoomed_flag,#[fg=#{@GHC_SL_BG_PILL_ZOOM}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_ZOOM}]#{@GHC_SYM_WIN_ZOOM} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{pane_index}/#{window_panes} ,}".to_string(),
+            rich_text: "#{?window_zoomed_flag,#[fg=#{@GHC_SL_BG_PILL_ZOOM}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_BG_PILL_ZOOM}#,bg=#{@GHC_SL_FG_PILL_ICON}#,reverse]#{@GHC_SYM_WIN_ZOOM} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{pane_index}/#{window_panes} ,}".to_string(),
         })
     }
 }

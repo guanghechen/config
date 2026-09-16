@@ -15,7 +15,7 @@ impl ComputedWidget for DurationWidget {
         let body_literal = format!(" {duration} ");
         let literal_text = pill_literal(&body_literal);
         let rich_text = format!(
-            "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_DURATION}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] {duration} "
+            "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_BG_PILL_DURATION}}#,bg=#{{@GHC_SL_FG_PILL_ICON}}#,reverse]#{{@GHC_SYM_DURATION}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] {duration} "
         );
         Ok(RenderedSegment {
             literal_text,

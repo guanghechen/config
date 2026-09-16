@@ -111,8 +111,10 @@ publish_session_states() {
 }
 
 tmux_server -f /dev/null new-session -d -s alpha -n main
-tmux_server new-session -d -s beta -n main
+beta_pane=$(tmux_server new-session -dP -F '#{pane_id}' -s beta -n main)
 tmux_server source-file "$repo_dir/conf/variable.tmux.conf"
+tmux_server source-file "$repo_dir/theme/catppuccin-mocha.tmux.conf"
+tmux_server source-file "$repo_dir/conf/theme.tmux.conf"
 terminal_title_format=$(
   sed -n \
     "s/^[[:space:]]*set[[:space:]][[:space:]]*-g[[:space:]][[:space:]]*set-titles-string[[:space:]][[:space:]]*'\(.*\)'$/\1/p" \
@@ -144,15 +146,15 @@ assert_format "0" alpha "$alpha_running_format" "idle session"
 assert_format "" alpha "$alpha_running_prefix" "idle session prefix"
 
 # A running pane in another session must not leak into alpha's aggregate.
-tmux_server select-pane -t beta:main.0 -T '⠙ beta'
+tmux_server select-pane -t "$beta_pane" -T '⠙ beta'
 publish_session_states
 assert_format "⠙ " beta:main '#{E:@GHC_WINDOW_PREFIX_FMT}' \
   "running window prefix in another session"
 assert_format "0" alpha "$alpha_running_format" "target-session isolation"
 
 # The same cached format changes with pane_title and sees non-active windows.
-tmux_server new-window -d -t alpha -n worker
-tmux_server select-pane -t alpha:worker.0 -T '⠸ alpha'
+worker_pane=$(tmux_server new-window -dP -F '#{pane_id}' -t alpha -n worker)
+tmux_server select-pane -t "$worker_pane" -T '⠸ alpha'
 publish_session_states
 assert_format "⠸ " alpha:worker '#{E:@GHC_WINDOW_PREFIX_FMT}' \
   "running worker window prefix"
@@ -189,25 +191,29 @@ assert_format "" alpha "$alpha_running_prefix" \
 tmux_server set-option -g @GHC_SESSION_RUNNING_PREFIX_FMT \
   "$session_prefix_format"
 
-tmux_server select-pane -t alpha:worker.0 -T 'idle'
+tmux_server select-pane -t "$worker_pane" -T 'idle'
 publish_session_states
 assert_format "" alpha:worker '#{E:@GHC_WINDOW_PREFIX_FMT}' "settled worker window"
 assert_format "0" alpha "$alpha_running_format" "settled session"
 assert_format "" alpha "$alpha_running_prefix" "settled session prefix"
 
 # remain-on-exit panes retain their last title; pane_dead must suppress stale spinners.
-tmux_server new-window -d -t alpha -n dead 'sleep 1'
+dead_pane=$(tmux_server new-window -dP -F '#{pane_id}' -t alpha -n dead 'sleep 1')
 tmux_server set-option -w -t alpha:dead remain-on-exit on
-tmux_server select-pane -t alpha:dead.0 -T '⠋ stale'
-wait_for_dead_pane alpha:dead.0
+tmux_server select-pane -t "$dead_pane" -T '⠋ stale'
+wait_for_dead_pane "$dead_pane"
 publish_session_states
-assert_format "" alpha:dead.0 '#{E:@GHC_PANE_RUNNING_FMT}' "dead pane frame"
+assert_format "" "$dead_pane" '#{E:@GHC_PANE_RUNNING_FMT}' "dead pane frame"
 assert_format "" alpha:dead '#{E:@GHC_WINDOW_PREFIX_FMT}' "dead pane window"
 
 # The configured current-window item preserves the original idle layout and
-# prepends the live frame only while running.
-tmux_server source-file "$repo_dir/theme/catppuccin-mocha.tmux.conf"
+# prepends the live frame only while running. A theme-only reload also replaces
+# any stale decorator format from before the reverse-color styling change.
+tmux_server set-option -g @GHC_WINDOW_PREFIX_FMT 'stale-prefix'
 tmux_server source-file "$repo_dir/conf/theme.tmux.conf"
+assert_not_contains \
+  "$(tmux_server show-option -gqv @GHC_WINDOW_PREFIX_FMT)" \
+  'stale-prefix' "theme reload replaces cached window decorators"
 tmux_server select-pane -t beta:main -T 'idle'
 idle_window_item=$(
   tmux_server display-message -p -t beta:main \
@@ -283,6 +289,14 @@ assert_contains "$decorated_window_item" \
   "bell-only window state before zoom and title"
 assert_contains "$decorated_window_item_raw" "nobold]alert" \
   "inactive window state restores non-bold title style"
+for decorator in BELL ZOOM; do
+  decorator_style=$(
+    tmux_server display-message -p -t beta:alert \
+      "#[fg=#{@GHC_SL_BG_WIN_ICON_${decorator}},bg=#{@GHC_SL_FG_WIN_ICON_${decorator}},reverse,bold]#{@GHC_SYM_WIN_${decorator}}"
+  )
+  assert_contains "$decorated_window_item_raw" "$decorator_style" \
+    "inactive $decorator swaps colors with reverse"
+done
 terminal_title_before=$(
   tmux_server display-message -p -t beta:alert '#{pane_title}'
 )
@@ -331,6 +345,31 @@ assert_contains \
   "$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)" \
   "|B${beta_id}|" \
   "bell evidence remains in sampled session state"
+
+# Zoom keeps the active palette while reverse makes its background opaque.
+tmux_server select-window -t beta:alert
+active_window_item_raw=$(
+  tmux_server display-message -p -t beta:alert \
+    '#{T:window-status-current-format}'
+)
+active_zoom_style=$(
+  tmux_server display-message -p -t beta:alert \
+    '#[fg=#{@GHC_SL_BG_WIN_ACTIVE_ICON_ZOOM},bg=#{@GHC_SL_FG_WIN_ACTIVE_ICON_ZOOM},reverse,bold]#{@GHC_SYM_WIN_ZOOM}'
+)
+assert_contains "$active_window_item_raw" "$active_zoom_style" \
+  "active zoom swaps colors with reverse"
+
+tmux_server select-window -t beta:main
+assert_format "1" beta:alert '#{window_last_flag}' "zoomed window is last"
+last_window_item_raw=$(
+  tmux_server display-message -p -t beta:alert '#{T:window-status-format}'
+)
+last_zoom_style=$(
+  tmux_server display-message -p -t beta:alert \
+    '#[fg=#{@GHC_SL_BG_WIN_LAST_ICON_ZOOM},bg=#{@GHC_SL_FG_WIN_LAST_ICON_ZOOM},reverse,bold]#{@GHC_SYM_WIN_ZOOM}'
+)
+assert_contains "$last_window_item_raw" "$last_zoom_style" \
+  "last-window zoom swaps colors with reverse"
 
 # A delayed expiry may clear only its own sample, never a newer refresh.
 tmux_server select-pane -t alpha:main -T '⠴ expiring'
