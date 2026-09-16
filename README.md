@@ -6,10 +6,6 @@
 
 ## Topics
 
-- [ai/loss.md](topics/ai/loss.md) — 常见损失函数中英对照
-- [ai/llm/transformer.md](topics/ai/llm/transformer.md) — Transformer workflow
-- [ai/imggen/style.md](topics/ai/imggen/style.md) — 图像生成 style guide
-- [neovim/diff-mode.txt](topics/neovim/diff-mode.txt) — neovim diff 模式
 - [os/nix/bash.md](topics/os/nix/bash.md) — Bash 配置文件加载机制
 - [rubiks-cube/5x5/last-edge-parity.md](topics/rubiks-cube/5x5/last-edge-parity.md) — 五阶魔方最后一条棱配对（Last-edge parity）与转动记号图解
 - [rust/syntax/borrowing.md](topics/rust/syntax/borrowing.md) — 借用与生命周期
