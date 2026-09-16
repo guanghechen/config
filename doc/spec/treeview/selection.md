@@ -2,7 +2,7 @@
 
 Status: Design。适用于 `yoz.ux.treeview`；文档入口见 [Treeview](README.md)。
 
-本文定义 `rust/ux` Treeview 已确认的 selection 语义、派生结果与消费边界。
+本文定义 `rust/yoz/src/ux/treeview/` 已确认的 selection 语义、派生结果与消费边界。
 
 ## 状态与派生集合
 

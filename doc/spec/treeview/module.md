@@ -4,8 +4,8 @@ Status: Design。本文定义 `yoz.ux.treeview` 的核心运行契约；专题�
 
 ## 模块边界
 
-- `rust/ux` 使用 `yoz-ux` crate，treeview、filetree、explorer 共用该 crate。
-- 依赖方向为 `rust/yoz -> rust/ux`；Lua binding 放在 `rust/yoz/src/ux/`，入口为 `yoz.ux.treeview`。
+- Treeview 位于现有 `yoz` crate 的 `rust/yoz/src/ux/treeview/`，不新增独立 crate。
+- Lua binding 放在该目录的 `lua/` 子模块，入口为 `yoz.ux.treeview`；Lua surface 位于 `lua/ux/treeview/`。
 - Treeview core 不依赖 Lua、Neovim 或 filepath；Filetree 提供资源数据，Explorer 提供业务 callback。
 - Rust 持有数据、状态、计算和文件操作；Lua 处理输入、glyph/theme、窗口和 buffer。
 - Rename/move、资源 identity 和 filesystem 事件由上层解释；Treeview 只接收节点更新。
@@ -303,7 +303,7 @@ Tree 的 Normal/Visual 支持 `[i`、`]i`，List 均不执行；Visual 只改变
 
 ## 实现验收
 
-- Rust tests 位于 `rust/ux` 对应模块内，验证更新原子性、identity 失效、动态选择聚合和过期结果处理。
+- Rust tests 位于 `rust/yoz/src/ux/treeview/` 对应模块内，验证更新原子性、identity 失效、动态选择聚合和过期结果处理。
 - 全已加载的 50,000 节点结构布局以单次 `< 8 ms` 为目标；深度 10,000 无递归栈溢出。
   局部发布、连续输入、压力档与合计内存遵循 [性能契约](performance.md)，不能以结构布局代替端到端指标。
 - 性能分别记录核心索引、聚合、文本字节数、FFI 和 provider IO；不把完整渲染成本写成严格 `O(N)`。

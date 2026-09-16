@@ -14,3 +14,4 @@
 ---@field public find                   yoz.find
 ---@field public search                 yoz.search
 ---@field public uri                    yoz.uri
+---@field public ux                     yoz.ux

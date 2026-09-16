@@ -11,6 +11,7 @@ pub mod search;
 pub mod string;
 pub mod types;
 pub mod uri;
+pub mod ux;
 
 use mlua::FromLua;
 use mlua::FromLuaMulti;
@@ -1111,6 +1112,7 @@ fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("path", path_module(lua)?)?;
     exports.set("fs", fs_module(lua)?)?;
     exports.set("git", git::module(lua)?)?;
+    exports.set("ux", ux::module(lua)?)?;
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     exports.set("im", im_module(lua)?)?;
     #[cfg(target_os = "linux")]
