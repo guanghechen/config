@@ -21,8 +21,3 @@
 ## Troubleshoot
 
 _(暂无)_
-
-## 模板
-
-- [templates/troubleshoot.md](templates/troubleshoot.md) — 问题排查记录
-- [templates/topic.md](templates/topic.md) — wiki 条目
