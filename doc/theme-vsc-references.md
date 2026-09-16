@@ -4,10 +4,10 @@ The `vsc.hbs` family targets VS Code Dark Modern and Light Modern. References ar
 order: maintained app-specific port, official app theme contract combined with the upstream VS Code
 theme, then an adjacent repository template when the app is private or has no public theme contract.
 
-Implementation policy: every `vsc.hbs` owns its colors through `vsc.*` expressions. Except for Bat
-and Codex, those expressions currently render identically to the adjacent `default.hbs`; this keeps
-the present decisions stable while allowing later per-app refinement. The app-specific links below
-are retained for audit.
+Implementation policy: every `vsc.hbs` owns its colors through `vsc.*` expressions, with app-only
+constants where needed. Except for Bat, Codex, and Zed, those expressions currently render
+identically to the adjacent `default.hbs`; this keeps the present decisions stable while allowing
+later per-app refinement. The app-specific links below are retained for audit.
 
 The canonical VS Code sources shared by the mappings are:
 
@@ -43,6 +43,7 @@ Local source baseline: `/home/alice/sourcecodes/github/microsoft/vscode` at
 | Windows Terminal | [Dark+ Windows Terminal port](https://github.com/mbadolato/iTerm2-Color-Schemes/blob/master/windowsterminal/Dark%2B.json) | Audit only; template mirrors default. |
 | Yazi | [vscode.yazi Dark/Light Modern](https://github.com/956MB/vscode.yazi) and [current schema](https://yazi-rs.github.io/schemas/theme.json) | Audit only; template mirrors default. |
 | Yui | [Local Yui theme contract](../asset/theme/template/yui/default.hbs) | Audit only; template mirrors default. |
+| Zed | [VS Code Modern port](https://github.com/fabrialberio/zed-vscode-modern-theme/tree/66495b44ace48282b1fb85ece9c53538bb5359eb) | Independent mapping and settings ownership; see [Zed adapter](arch/zed.md). |
 
 The reference ports are not copied into non-specialized templates. Their current output follows the
 default mapping, while future VSC tuning stays local to each app template.

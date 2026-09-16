@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
+import { execFile } from 'node:child_process'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, it } from 'node:test'
+import { promisify } from 'node:util'
+
+import { XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR } from '#env'
 
 import {
   GHOSTTY_SHADERS,
@@ -17,11 +21,15 @@ const shaderNames = [
   'matrix-hallway', 'mnoise', 'neuro-noise', 'sparks-from-fire', 'starfield',
 ]
 const legacyFiles = [
+  'local/shader',
   'local/shader-dark.conf', 'local/shader-light.conf', 'theme-dark.conf', 'theme-light.conf',
 ]
 const stateFiles = [
-  'local/shader', 'local/theme.conf', 'local/shader.conf', 'local/appearance', ...legacyFiles,
+  'local/theme.conf', 'local/shader.conf', 'local/appearance', ...legacyFiles,
 ]
+const wallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png')}\n`
+const noWallpaperConfig = 'background-image =\n'
+const execFileAsync = promisify(execFile)
 
 /** @param {import('node:test').TestContext} t @param {'dark'|'light'} [appearance] */
 async function fixture(t, appearance = 'dark') {
@@ -34,21 +42,9 @@ async function fixture(t, appearance = 'dark') {
       await fs.writeFile(path.join(home, 'shaders', mode, `${name}.glsl`), '// fixture\n')
     }
   }
-  await fs.writeFile(path.join(home, 'local/shader'), 'off\n')
   await fs.writeFile(path.join(home, 'local/appearance'), `${appearance}\n`)
   await fs.writeFile(path.join(home, 'local/theme.conf'), 'original theme\n')
-  await fs.writeFile(path.join(home, 'local/shader.conf'), '')
-  return home
-}
-
-/** @param {import('node:test').TestContext} t @param {'dark'|'light'} [appearance] */
-async function legacyFixture(t, appearance = 'light') {
-  const home = await fixture(t, appearance)
-  await fs.unlink(path.join(home, 'local/shader'))
-  await fs.writeFile(path.join(home, 'local/shader-dark.conf'), 'custom-shader = ../shaders/dark/inside-the-matrix.glsl\n')
-  await fs.writeFile(path.join(home, 'local/shader-light.conf'), 'custom-shader = ../shaders/light/neuro-noise.glsl\n')
-  const shader = appearance === 'light' ? 'neuro-noise' : 'inside-the-matrix'
-  await fs.writeFile(path.join(home, 'local/shader.conf'), `custom-shader = ../shaders/${appearance}/${shader}.glsl\n`)
+  await fs.writeFile(path.join(home, 'local/shader.conf'), noWallpaperConfig)
   return home
 }
 
@@ -78,14 +74,15 @@ async function assertNoLegacy(home) {
 
 describe('Ghostty shared shader selection', () => {
   for (const appearance of /** @type {const} */ (['dark', 'light'])) {
-    it(`stores one name and derives the ${appearance} path for every selection`, async t => {
+    it(`stores every ${appearance} selection only in shader.conf`, async t => {
       const home = await fixture(t, appearance)
       assert.deepEqual(GHOSTTY_SHADERS[appearance], shaderNames)
       assert.deepEqual(await listGhosttyShaders({ home }), shaderNames)
       for (const shader of shaderNames) {
         assert.deepEqual(await selectGhosttyShader({ home, shader }), { appearance, shader })
-        assert.equal(await read(home, 'local/shader'), `${shader}\n`)
-        const active = shader === 'off' ? '' : `custom-shader = ../shaders/${appearance}/${shader}.glsl\n`
+        const active = shader === 'off'
+          ? appearance === 'dark' ? wallpaperConfig : noWallpaperConfig
+          : `${noWallpaperConfig}custom-shader = ../shaders/${appearance}/${shader}.glsl\n`
         assert.equal(await read(home, 'local/shader.conf'), active)
         await assertNoLegacy(home)
       }
@@ -104,83 +101,132 @@ describe('Ghostty shared shader selection', () => {
     const home = await fixture(t)
     await selectGhosttyShader({ home, shader: 'cubes' })
     await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/light/cubes.glsl\n')
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/cubes.glsl\n`)
     assert.equal((await selectGhosttyShader({ home, next: true })).shader, 'fireworks-rockets')
     await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/dark/fireworks-rockets.glsl\n')
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/dark/fireworks-rockets.glsl\n`)
     assert.equal((await selectGhosttyShader({ home, previous: true })).shader, 'cubes')
     await selectGhosttyShader({ home, shader: 'neuro-noise' })
     await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
-    assert.equal(await read(home, 'local/shader'), 'neuro-noise\n')
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/light/neuro-noise.glsl\n')
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/neuro-noise.glsl\n`)
     await assertNoLegacy(home)
   })
 
-  it('keeps off disabled when the appearance changes', async t => {
+  it('shows the wallpaper only in dark appearance while keeping the shader off', async t => {
+    const home = await fixture(t)
+    await fs.writeFile(path.join(home, 'shader.conf'), 'custom-shader = shaders/cursor.glsl\n')
+    await selectGhosttyShader({ home, shader: 'off' })
+    assert.equal(await read(home, 'local/shader.conf'), wallpaperConfig)
+    await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
+    await assertNoLegacy(home)
+    assert.equal(await read(home, 'local/shader.conf'), noWallpaperConfig)
+    await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
+    await assertNoLegacy(home)
+    assert.equal(await read(home, 'local/shader.conf'), wallpaperConfig)
+    assert.equal(await read(home, 'shader.conf'), 'custom-shader = shaders/cursor.glsl\n')
+  })
+
+  it('clears the wallpaper for a background shader and restores it when cycling to off', async t => {
     const home = await fixture(t)
     await selectGhosttyShader({ home, shader: 'off' })
-    await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
-    assert.equal(await read(home, 'local/shader'), 'off\n')
-    assert.equal(await read(home, 'local/shader.conf'), '')
+    await selectGhosttyShader({ home, next: true })
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/dark/cubes.glsl\n`)
+    await selectGhosttyShader({ home, previous: true })
+    assert.equal(await read(home, 'local/shader.conf'), wallpaperConfig)
+    assert.equal(await read(home, 'local/theme.conf'), 'original theme\n')
   })
 
-  it('migrates the active effect instead of restoring the destination appearance preference', async t => {
-    const home = await legacyFixture(t)
-    await fs.writeFile(path.join(home, 'theme-dark.conf'), 'custom-shader = shaders/dark/cubes.glsl\n')
-    const before = await snapshot(home)
-    assert.deepEqual(await validateGhosttyThemeAppearance({ home, appearance: 'dark' }), {
-      appearance: 'dark', shader: 'neuro-noise',
-    })
-    assert.deepEqual(await snapshot(home), before)
-    await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
-    assert.equal(await read(home, 'local/shader'), 'neuro-noise\n')
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/dark/neuro-noise.glsl\n')
-    await assertNoLegacy(home)
+  it('leaves permanent background settings in the main config across all states', async t => {
+    const home = await fixture(t)
+    const mainConfig = [
+      'background-opacity = 0.7',
+      'background-opacity-cells = true',
+      'background-image-opacity = 0.3',
+      'background-image-fit = contain',
+      'background-image-position = center',
+      'background-image-repeat = true',
+      'background-blur = false',
+      'config-file = local/shader.conf',
+      '',
+    ].join('\n')
+    await fs.writeFile(path.join(home, 'config'), mainConfig)
+    for (const appearance of /** @type {const} */ (['dark', 'light'])) {
+      await applyGhosttyThemeAppearance({ home, appearance, themeContent: 'theme\n' })
+      for (const shader of ['off', 'cubes']) {
+        await selectGhosttyShader({ home, shader })
+        assert.equal(await read(home, 'config'), mainConfig)
+        const keys = (await read(home, 'local/shader.conf')).trim().split('\n')
+          .map(line => line.split(' =')[0])
+        assert.deepEqual(keys, shader === 'off'
+          ? ['background-image']
+          : ['background-image', 'custom-shader'])
+      }
+    }
   })
 
-  for (const shader of ['cubes', 'inside-the-matrix']) {
-    it(`migrates the active ${shader}-light alias to a shared name`, async t => {
-      const home = await legacyFixture(t)
-      await fs.writeFile(path.join(home, 'local/shader.conf'), `custom-shader = ../shaders/${shader}-light.glsl\n`)
-      await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
-      assert.equal(await read(home, 'local/shader'), `${shader}\n`)
-      assert.equal(await read(home, 'local/shader.conf'), `custom-shader = ../shaders/dark/${shader}.glsl\n`)
-      await assertNoLegacy(home)
+  for (const appearance of /** @type {const} */ (['dark', 'light'])) {
+    for (const shader of ['off', 'cubes']) {
+      it(`reads ${appearance}/${shader} directly from shader.conf without a sidecar`, async t => {
+        const home = await fixture(t, appearance)
+        await selectGhosttyShader({ home, shader })
+        const before = await snapshot(home)
+        assert.deepEqual(await validateGhosttyThemeAppearance({ home, appearance }), { appearance, shader })
+        assert.deepEqual(await snapshot(home), before)
+        await applyGhosttyThemeAppearance({ home, appearance, themeContent: 'new theme\n' })
+        await assertNoLegacy(home)
+        assert.equal(await read(home, 'local/shader.conf'), before[1])
+      })
+    }
+  }
+
+  for (const content of [
+    '',
+    'background-image = /tmp/custom.png\n',
+    `${wallpaperConfig}custom-shader = /tmp/custom.glsl\n`,
+    'background-image =\ncustom-shader = /tmp/custom.glsl\n',
+    'custom-shader = shaders/cubes-light.glsl\n',
+    'background-image =\nbackground-opacity = 1\n',
+    'background-image =\ncustom-shader = ../shaders/light/../../cursor.glsl\n',
+  ]) {
+    it(`refuses to replace an unrecognized active background: ${content.trim()}`, async t => {
+      const home = await fixture(t)
+      await fs.writeFile(path.join(home, 'local/shader.conf'), content)
+      const before = await snapshot(home)
+      await assert.rejects(applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'new theme\n' }), /Unrecognized Ghostty shader config/)
+      assert.deepEqual(await snapshot(home), before)
     })
   }
 
-  it('migrates an explicitly disabled active effect as off', async t => {
-    const home = await legacyFixture(t)
-    await fs.writeFile(path.join(home, 'local/shader.conf'), '')
-    await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
-    assert.equal(await read(home, 'local/shader'), 'off\n')
-    assert.equal(await read(home, 'local/shader.conf'), '')
-    await assertNoLegacy(home)
+  it('ignores retired state files without deleting them or blocking the current selection', async t => {
+    const home = await fixture(t)
+    await selectGhosttyShader({ home, shader: 'cubes' })
+    for (const filename of legacyFiles) {
+      await fs.writeFile(path.join(home, filename), 'unrecognized legacy content\n')
+    }
+    const before = await snapshot(home)
+    assert.deepEqual(await validateGhosttyThemeAppearance({ home, appearance: 'light' }), {
+      appearance: 'light', shader: 'cubes',
+    })
+    assert.deepEqual(await snapshot(home), before)
+    await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/cubes.glsl\n`)
+    for (const filename of legacyFiles) {
+      assert.equal(await read(home, filename), 'unrecognized legacy content\n')
+    }
   })
 
-  it('uses the current appearance preference when no active config exists', async t => {
-    const home = await legacyFixture(t, 'dark')
+  it('defaults to off when the active config is missing', async t => {
+    const home = await fixture(t)
     await fs.unlink(path.join(home, 'local/shader.conf'))
-    await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
-    assert.equal(await read(home, 'local/shader'), 'inside-the-matrix\n')
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/light/inside-the-matrix.glsl\n')
-  })
-
-  it('prefers the shared name over stale derived and per-appearance state', async t => {
-    const home = await legacyFixture(t)
-    await fs.writeFile(path.join(home, 'local/shader'), 'cubes\n')
-    await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
-    assert.equal(await read(home, 'local/shader'), 'cubes\n')
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/light/cubes.glsl\n')
-    await assertNoLegacy(home)
-  })
-
-  it('does not require obsolete shader files before retiring their selections', async t => {
-    const home = await legacyFixture(t)
-    await fs.unlink(path.join(home, 'shaders/dark/inside-the-matrix.glsl'))
-    await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
+    await fs.writeFile(path.join(home, 'local/shader'), 'neuro-noise\n')
+    const before = await snapshot(home)
+    assert.deepEqual(await validateGhosttyThemeAppearance({ home, appearance: 'dark' }), {
+      appearance: 'dark', shader: 'off',
+    })
+    assert.deepEqual(await snapshot(home), before)
+    await selectGhosttyShader({ home, shader: 'off' })
+    assert.equal(await read(home, 'local/shader.conf'), wallpaperConfig)
     assert.equal(await read(home, 'local/shader'), 'neuro-noise\n')
-    await assertNoLegacy(home)
   })
 
   it('rejects a missing destination shader without changing any state', async t => {
@@ -192,91 +238,12 @@ describe('Ghostty shared shader selection', () => {
     assert.deepEqual(await snapshot(home), before)
   })
 
-  for (const name of ['', 'cubes-light', '../cubes', 'unknown']) {
-    it(`refuses an invalid shared selection without overwriting state: ${name || '<empty>'}`, async t => {
-      const home = await fixture(t)
-      await fs.writeFile(path.join(home, 'local/shader'), name)
-      const before = await snapshot(home)
-      await assert.rejects(applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'new theme\n' }), /Unknown Ghostty shader selection/)
-      assert.deepEqual(await snapshot(home), before)
-    })
-  }
-
-  for (const content of [
-    'custom-shader = shaders/dark/cubes.glsl\n',
-    'custom-shader = shaders/light/../../cursor.glsl\n',
-    'custom-shader = /tmp/custom.glsl\n',
-  ]) {
-    it(`refuses to delete an unrecognized legacy selection: ${content.trim()}`, async t => {
-      const home = await legacyFixture(t)
-      await fs.writeFile(path.join(home, 'local/shader-light.conf'), content)
-      const before = await snapshot(home)
-      await assert.rejects(applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'new theme\n' }))
-      assert.deepEqual(await snapshot(home), before)
-    })
-  }
-
   it('allows replacing a known selection whose old shader file is missing', async t => {
     const home = await fixture(t)
     await selectGhosttyShader({ home, shader: 'cubes' })
     await fs.unlink(path.join(home, 'shaders/dark/cubes.glsl'))
     await selectGhosttyShader({ home, shader: 'neuro-noise' })
-    assert.equal(await read(home, 'local/shader'), 'neuro-noise\n')
-  })
-
-  for (const version of [1, 2, 3]) {
-    it(`recovers a version ${version} journal before migrating to shared state`, async t => {
-      const home = await fixture(t, 'light')
-      await fs.unlink(path.join(home, 'local/shader'))
-      await fs.unlink(path.join(home, 'local/shader.conf'))
-      const interrupted = version === 2 ? 'theme-light.conf' : 'local/shader-light.conf'
-      await fs.writeFile(path.join(home, interrupted), 'partial update\n')
-      const journal = {
-        version,
-        files: [{ target: 'saved-light', existed: true, content: 'custom-shader = shaders/cubes-light.glsl\n' }],
-      }
-      await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), JSON.stringify(journal))
-      assert.equal((await selectGhosttyShader({ home, next: true })).shader, 'fireworks-rockets')
-      assert.equal(await read(home, 'local/shader'), 'fireworks-rockets\n')
-      await assertNoLegacy(home)
-      await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.transaction.json')), { code: 'ENOENT' })
-    })
-  }
-
-  it('recovers the shared name and active path from a version 4 journal', async t => {
-    const home = await fixture(t, 'light')
-    await fs.writeFile(path.join(home, 'local/shader'), 'starfield\n')
-    await fs.writeFile(path.join(home, 'local/shader.conf'), 'custom-shader = ../shaders/light/starfield.glsl\n')
-    const journal = {
-      version: 4,
-      files: [
-        { target: 'selection', existed: true, content: 'neuro-noise\n' },
-        { target: 'active', existed: true, content: 'custom-shader = ../shaders/light/neuro-noise.glsl\n' },
-      ],
-    }
-    await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), JSON.stringify(journal))
-    assert.equal((await selectGhosttyShader({ home, next: true })).shader, 'sparks-from-fire')
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/light/sparks-from-fire.glsl\n')
-  })
-
-  it('restores retired files after an interrupted first migration', async t => {
-    const home = await fixture(t, 'light')
-    const journal = {
-      version: 4,
-      files: [
-        { target: 'selection', existed: false, content: '' },
-        { target: 'active', existed: true, content: 'custom-shader = ../shaders/light/neuro-noise.glsl\n' },
-        { target: 'saved-dark', existed: true, content: 'custom-shader = ../shaders/dark/inside-the-matrix.glsl\n' },
-        { target: 'saved-light', existed: true, content: 'custom-shader = ../shaders/light/neuro-noise.glsl\n' },
-      ],
-    }
-    await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), JSON.stringify(journal))
-    await validateGhosttyThemeAppearance({ home, appearance: 'dark' })
-    await assert.rejects(fs.stat(path.join(home, 'local/shader')), { code: 'ENOENT' })
-    assert.equal(await read(home, 'local/shader-dark.conf'), journal.files[2].content)
-    await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
-    assert.equal(await read(home, 'local/shader'), 'neuro-noise\n')
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/dark/neuro-noise.glsl\n')
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/dark/neuro-noise.glsl\n`)
     await assertNoLegacy(home)
   })
 
@@ -288,7 +255,119 @@ describe('Ghostty shared shader selection', () => {
       applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' }),
     ])
     assert.equal(await read(home, 'local/appearance'), 'light\n')
-    assert.equal(await read(home, 'local/shader'), 'neuro-noise\n')
-    assert.equal(await read(home, 'local/shader.conf'), 'custom-shader = ../shaders/light/neuro-noise.glsl\n')
+    await assertNoLegacy(home)
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/neuro-noise.glsl\n`)
+  })
+
+  it('restores all current files from a pending journal before selecting a shader', async t => {
+    const home = await fixture(t)
+    await fs.writeFile(path.join(home, 'local/theme.conf'), 'partial theme\n')
+    await fs.writeFile(path.join(home, 'local/shader.conf'), 'partial shader\n')
+    const journal = {
+      version: 4,
+      files: [
+        { target: 'theme', existed: true, content: 'light theme\n' },
+        { target: 'active', existed: true, content: `${noWallpaperConfig}custom-shader = ../shaders/light/neuro-noise.glsl\n` },
+        { target: 'appearance', existed: true, content: 'light\n' },
+      ],
+    }
+    await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), JSON.stringify(journal))
+    assert.deepEqual(await selectGhosttyShader({ home, next: true }), {
+      appearance: 'light', shader: 'sparks-from-fire',
+    })
+    assert.equal(await read(home, 'local/theme.conf'), 'light theme\n')
+    assert.equal(await read(home, 'local/appearance'), 'light\n')
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/sparks-from-fire.glsl\n`)
+    await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.transaction.json')), { code: 'ENOENT' })
+  })
+
+  it('removes newly created files when recovering their absent snapshots', async t => {
+    const home = await fixture(t)
+    const journal = {
+      version: 4,
+      files: [
+        { target: 'theme', existed: false, content: '' },
+        { target: 'active', existed: false, content: '' },
+      ],
+    }
+    await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), JSON.stringify(journal))
+    assert.deepEqual(await validateGhosttyThemeAppearance({ home, appearance: 'dark' }), {
+      appearance: 'dark', shader: 'off',
+    })
+    await assert.rejects(fs.stat(path.join(home, 'local/theme.conf')), { code: 'ENOENT' })
+    await assert.rejects(fs.stat(path.join(home, 'local/shader.conf')), { code: 'ENOENT' })
+  })
+
+  for (const journal of [
+    { version: 3, files: [{ target: 'theme', existed: true, content: 'old theme\n' }] },
+    { version: 4, files: [
+      { target: 'theme', existed: true, content: 'old theme\n' },
+      { target: 'selection', existed: true, content: 'off\n' },
+    ] },
+    { version: 4, files: [
+      { target: 'theme', existed: true, content: 'old theme\n' },
+      { target: 'theme', existed: false, content: '' },
+    ] },
+    { version: 4, files: [
+      { target: 'theme', existed: true, content: 'old theme\n' },
+      { target: 'active', existed: true, content: null },
+    ] },
+  ]) {
+    it(`rejects the complete invalid journal before restoring any file: ${JSON.stringify(journal)}`, async t => {
+      const home = await fixture(t)
+      const before = await snapshot(home)
+      const content = JSON.stringify(journal)
+      await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), content)
+      await assert.rejects(validateGhosttyThemeAppearance({ home, appearance: 'dark' }), /Invalid Ghostty shader transaction/)
+      assert.deepEqual(await snapshot(home), before)
+      assert.equal(await read(home, 'local/.shader-state.transaction.json'), content)
+      await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.lock')), { code: 'ENOENT' })
+    })
+  }
+
+  it('rolls back the complete state when a later file replacement fails', async t => {
+    const home = await fixture(t)
+    const before = await snapshot(home)
+    const rename = fs.rename
+    let failed = false
+    t.mock.method(fs, 'rename', async (source, destination) => {
+      if (!failed && destination === path.join(home, 'local/appearance')) {
+        failed = true
+        throw Object.assign(new Error('Injected appearance replacement failure'), { code: 'EIO' })
+      }
+      return rename(source, destination)
+    })
+    await assert.rejects(
+      applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' }),
+      /Injected appearance replacement failure/,
+    )
+    assert.ok(failed)
+    assert.deepEqual(await snapshot(home), before)
+    await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.transaction.json')), { code: 'ENOENT' })
+    await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.lock')), { code: 'ENOENT' })
+  })
+
+  it('serializes theme and shader changes from separate Node processes', async t => {
+    const home = await fixture(t)
+    await selectGhosttyShader({ home, shader: 'cubes' })
+    const module = new URL('../asset/theme/template/ghostty/shader.mjs', import.meta.url).href
+    const script = `
+      const { applyGhosttyThemeAppearance, selectGhosttyShader } = await import(process.argv[1]);
+      const home = process.argv[2];
+      if (process.argv[3] === 'theme') {
+        await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\\n' });
+      } else {
+        await selectGhosttyShader({ home, shader: 'neuro-noise' });
+      }
+    `
+    const results = await Promise.allSettled(['theme', 'shader'].map(action =>
+      execFileAsync(process.execPath, ['--input-type=module', '-e', script, module, home, action], { timeout: 10_000 }),
+    ))
+    for (const result of results) {
+      assert.equal(result.status, 'fulfilled', result.status === 'rejected' ? String(result.reason) : '')
+    }
+    assert.equal(await read(home, 'local/appearance'), 'light\n')
+    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/neuro-noise.glsl\n`)
+    await assertNoLegacy(home)
   })
 })
