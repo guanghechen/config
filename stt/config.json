@@ -6,6 +6,16 @@
   "maxDuration": 300,
   "timeout": 600,
   "copy": false,
+  "stream": true,
+  "desktop": {
+    "autoPaste": false
+  },
+  "refine": {
+    "enabled": true,
+    "copilotUrlEnv": "KIT_COPILOT_URL",
+    "model": "gpt-5-mini",
+    "timeout": 60
+  },
   "models": [
     {
       "name": "qwen3-asr-0.6b",

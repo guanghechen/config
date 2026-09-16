@@ -21,9 +21,51 @@
     "device": { "$ref": "#/$defs/nonEmptyString" },
     "maxDuration": { "type": "integer", "minimum": 1, "maximum": 300 },
     "timeout": { "type": "integer", "minimum": 1, "maximum": 3600 },
-    "copy": { "type": "boolean" }
+    "copy": { "type": "boolean" },
+    "stream": { "type": "boolean" },
+    "desktop": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "autoPaste": { "type": "boolean", "default": false }
+      }
+    },
+    "refine": { "$ref": "#/$defs/refine" }
   },
   "$defs": {
+    "refine": {
+      "type": "object",
+      "additionalProperties": false,
+      "not": { "required": ["copilotUrl", "copilotUrlEnv"] },
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "copilotUrl": {
+          "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+          "pattern": "^http://",
+          "description": "HTTP loopback IP origin with an explicit port; runtime rejects userinfo, paths, queries and fragments."
+        },
+        "copilotUrlEnv": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "description": "Name of the environment variable holding the complete Copilot loopback HTTP origin, mutually exclusive with copilotUrl."
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^\\S+$",
+          "description": "Exact Copilot model supporting Native Chat Completions; runtime also limits UTF-8 bytes and control characters."
+        },
+        "tokenEnv": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "description": "Name of the environment variable containing the optional downstream bearer, never the token itself."
+        },
+        "timeout": { "type": "integer", "minimum": 1, "maximum": 600 }
+      }
+    },
     "model": {
       "type": "object",
       "required": ["name", "path", "computeDevice"],
