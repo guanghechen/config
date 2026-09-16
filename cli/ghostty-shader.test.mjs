@@ -30,6 +30,7 @@ const stateFiles = [
   'local/theme.conf', 'local/shader.conf', 'local/appearance', ...legacyFiles,
 ]
 const wallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png')}\n`
+const lightWallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.jpg')}\n`
 const noWallpaperConfig = 'background-image =\n'
 const execFileAsync = promisify(execFile)
 
@@ -127,7 +128,7 @@ describe('Ghostty shared shader selection', () => {
       for (const shader of shaderNames) {
         assert.deepEqual(await selectGhosttyShader({ home, shader }), { appearance, shader })
         const active = shader === 'off'
-          ? appearance === 'dark' ? wallpaperConfig : noWallpaperConfig
+          ? appearance === 'dark' ? wallpaperConfig : lightWallpaperConfig
           : `${noWallpaperConfig}custom-shader = ../shaders/${appearance}/${shader}.glsl\n`
         assert.equal(await read(home, 'local/shader.conf'), active)
         await assertNoLegacy(home)
@@ -158,14 +159,14 @@ describe('Ghostty shared shader selection', () => {
     await assertNoLegacy(home)
   })
 
-  it('shows the wallpaper only in dark appearance while keeping the shader off', async t => {
+  it('switches wallpapers with appearance while keeping the shader off', async t => {
     const home = await fixture(t)
     await fs.writeFile(path.join(home, 'shader.conf'), 'custom-shader = shaders/cursor.glsl\n')
     await selectGhosttyShader({ home, shader: 'off' })
     assert.equal(await read(home, 'local/shader.conf'), wallpaperConfig)
     await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'light theme\n' })
     await assertNoLegacy(home)
-    assert.equal(await read(home, 'local/shader.conf'), noWallpaperConfig)
+    assert.equal(await read(home, 'local/shader.conf'), lightWallpaperConfig)
     await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'dark theme\n' })
     await assertNoLegacy(home)
     assert.equal(await read(home, 'local/shader.conf'), wallpaperConfig)

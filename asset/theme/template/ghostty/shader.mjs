@@ -11,7 +11,10 @@ import { XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR } from '#env'
  * the shader CLI share this writer. Importing this module does not mutate state.
  */
 
-const DARK_WALLPAPER_PATH = path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png')
+const WALLPAPER_PATHS = {
+  dark: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png'),
+  light: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.jpg'),
+}
 
 export const GHOSTTY_SHADERS = Object.freeze([
   'off',
@@ -102,7 +105,8 @@ async function replaceFileAtomic(filepath, content) {
 /** @param {string} content @return {string} */
 function parseShaderConfig(content) {
   const config = content.trim()
-  if (config === 'background-image =' || config === `background-image = ${DARK_WALLPAPER_PATH}`) {
+  if (config === 'background-image =' ||
+    Object.values(WALLPAPER_PATHS).some(filepath => config === `background-image = ${filepath}`)) {
     return 'off'
   }
 
@@ -117,11 +121,10 @@ function parseShaderConfig(content) {
 
 /** @param {string} shader @param {IAppearance} appearance */
 function renderActiveConfig(shader, appearance) {
-  if (shader === 'off' && appearance === 'dark') {
-    return `background-image = ${DARK_WALLPAPER_PATH}\n`
+  if (shader === 'off') {
+    return `background-image = ${WALLPAPER_PATHS[appearance]}\n`
   }
-  const shaderConfig = shader === 'off' ? '' : `custom-shader = ../shaders/${appearance}/${shader}.glsl\n`
-  return `background-image =\n${shaderConfig}`
+  return `background-image =\ncustom-shader = ../shaders/${appearance}/${shader}.glsl\n`
 }
 
 /** @param {IShaderStatePaths} paths @return {Promise<IAppearance>} */
@@ -137,10 +140,8 @@ async function requireAppearance(paths) {
 
 /** @param {string} home @param {IAppearance} appearance @param {string} shader */
 async function validateBackgroundFile(home, appearance, shader) {
-  if (shader === 'off' && appearance === 'light') return
-
   const filepath = shader === 'off'
-    ? DARK_WALLPAPER_PATH
+    ? WALLPAPER_PATHS[appearance]
     : path.join(home, 'shaders', appearance, `${shader}.glsl`)
   try {
     const stat = await fs.stat(filepath)

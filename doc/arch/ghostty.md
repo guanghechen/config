@@ -29,13 +29,13 @@ appearances and modes.
 | Appearance | Selection    | `local/shader.conf` output                                           |
 | ---------- | ------------ | -------------------------------------------------------------------- |
 | Dark       | `off`        | `background-image` points to `asset/wallpaper/Flowerlit-Prayers.png` |
-| Light      | `off`        | Empty `background-image` clears the image                            |
+| Light      | `off`        | `background-image` points to `asset/wallpaper/Barrett-Girl.jpg`      |
 | Either     | Named shader | Clear the image and select `../shaders/<appearance>/<name>.glsl`     |
 
 The image path is resolved from this repository's asset directory. Theme
 switches retain the shader name and change its appearance directory. Both
 appearances share the same cycling order. Here, `off` disables the background
-shader; it does not disable the dark wallpaper or the cursor shader. `--list`
+shader; it does not disable the wallpaper or the cursor shader. `--list`
 returns the shared shader names without reading or creating local state.
 
 Wallpaper rendering uses Ghostty's native image support. Cell opacity lets
