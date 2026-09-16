@@ -30,7 +30,7 @@ const stateFiles = [
   'local/theme.conf', 'local/shader.conf', 'local/appearance', ...legacyFiles,
 ]
 const wallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png')}\n`
-const lightWallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.jpg')}\n`
+const lightWallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.png')}\n`
 const noWallpaperConfig = 'background-image =\n'
 const execFileAsync = promisify(execFile)
 
@@ -228,21 +228,71 @@ describe('Ghostty shared shader selection', () => {
 
   for (const content of [
     '',
+    'custom-shader = ../shaders/dark/starfield.glsl\n',
     'background-image = /tmp/custom.png\n',
     `${wallpaperConfig}custom-shader = /tmp/custom.glsl\n`,
     'background-image =\ncustom-shader = /tmp/custom.glsl\n',
     'custom-shader = shaders/cubes-light.glsl\n',
     'background-image =\nbackground-opacity = 1\n',
     'background-image =\ncustom-shader = ../shaders/light/../../cursor.glsl\n',
+    'background-image =\ncustom-shader = ../shaders/dark/unknown.glsl\n',
+    'background-image =\ncustom-shader = ../shaders/dark/off.glsl\n',
   ]) {
-    it(`refuses to replace an unrecognized active background: ${content.trim()}`, async t => {
+    it(`deletes an unrecognized active background and defaults to off: ${content.trim()}`, async t => {
       const home = await fixture(t)
       await fs.writeFile(path.join(home, 'local/shader.conf'), content)
       const before = await snapshot(home)
-      await assert.rejects(applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'new theme\n' }), /Unrecognized Ghostty shader config/)
-      assert.deepEqual(await snapshot(home), before)
+      assert.deepEqual(await validateGhosttyThemeAppearance({ home, appearance: 'light' }), {
+        appearance: 'light', shader: 'off',
+      })
+      assert.deepEqual(await snapshot(home), before.map((value, index) => index === 1 ? undefined : value))
+      await applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'new theme\n' })
+      assert.equal(await read(home, 'local/shader.conf'), lightWallpaperConfig)
+
+      await fs.writeFile(path.join(home, 'local/shader.conf'), content)
+      await applyGhosttyThemeAppearance({ home, appearance: 'dark', themeContent: 'new theme\n' })
+      assert.equal(await read(home, 'local/shader.conf'), wallpaperConfig)
     })
   }
+
+  it('allows selecting and cycling shaders after deleting unrecognized state', async t => {
+    const home = await fixture(t)
+    for (const [options, shader] of /** @type {const} */ ([
+      [{ shader: 'starfield' }, 'starfield'],
+      [{ next: true }, 'cubes'],
+      [{ previous: true }, 'starfield'],
+    ])) {
+      await fs.writeFile(path.join(home, 'local/shader.conf'), 'custom-shader = ../shaders/dark/starfield.glsl\n')
+      assert.deepEqual(await selectGhosttyShader({ home, ...options }), { appearance: 'dark', shader })
+      assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/dark/${shader}.glsl\n`)
+    }
+  })
+
+  it('propagates errors reading the active config without deleting it', async t => {
+    const home = await fixture(t)
+    await fs.unlink(path.join(home, 'local/shader.conf'))
+    await fs.mkdir(path.join(home, 'local/shader.conf'))
+    await assert.rejects(validateGhosttyThemeAppearance({ home, appearance: 'dark' }), { code: 'EISDIR' })
+    assert.ok((await fs.stat(path.join(home, 'local/shader.conf'))).isDirectory())
+  })
+
+  it('propagates errors deleting unrecognized state without applying the theme', async t => {
+    const home = await fixture(t)
+    await fs.writeFile(path.join(home, 'local/shader.conf'), 'custom-shader = ../shaders/dark/starfield.glsl\n')
+    const before = await snapshot(home)
+    const unlink = fs.unlink
+    t.mock.method(fs, 'unlink', async filepath => {
+      if (filepath === path.join(home, 'local/shader.conf')) {
+        throw Object.assign(new Error('Injected shader deletion failure'), { code: 'EACCES' })
+      }
+      return unlink(filepath)
+    })
+    await assert.rejects(
+      applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'new theme\n' }),
+      { code: 'EACCES' },
+    )
+    assert.deepEqual(await snapshot(home), before)
+  })
 
   it('ignores retired state files without deleting them or blocking the current selection', async t => {
     const home = await fixture(t)

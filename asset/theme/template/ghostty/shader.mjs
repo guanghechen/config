@@ -13,7 +13,7 @@ import { XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR } from '#env'
 
 const WALLPAPER_PATHS = {
   dark: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png'),
-  light: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.jpg'),
+  light: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.png'),
 }
 
 export const GHOSTTY_SHADERS = Object.freeze([
@@ -102,7 +102,7 @@ async function replaceFileAtomic(filepath, content) {
   }
 }
 
-/** @param {string} content @return {string} */
+/** @param {string} content @return {string|undefined} */
 function parseShaderConfig(content) {
   const config = content.trim()
   if (config === 'background-image =' ||
@@ -111,12 +111,9 @@ function parseShaderConfig(content) {
   }
 
   const match = /^background-image =\ncustom-shader = \.\.\/shaders\/(?:dark|light)\/([a-z0-9-]+)\.glsl$/.exec(config)
-  if (!match) throw new Error('Unrecognized Ghostty shader config; refusing to overwrite it')
+  if (!match) return undefined
   const shader = match[1]
-  if (shader === 'off' || !GHOSTTY_SHADERS.includes(shader)) {
-    throw new Error(`Unknown Ghostty shader in config: ${shader}`)
-  }
-  return shader
+  return shader !== 'off' && GHOSTTY_SHADERS.includes(shader) ? shader : undefined
 }
 
 /** @param {string} shader @param {IAppearance} appearance */
@@ -155,7 +152,13 @@ async function validateBackgroundFile(home, appearance, shader) {
 /** @param {IShaderStatePaths} paths @return {Promise<string>} */
 async function readShaderSelection(paths) {
   const content = await readOptionalFile(paths.active)
-  return content === undefined ? 'off' : parseShaderConfig(content)
+  if (content === undefined) return 'off'
+  const shader = parseShaderConfig(content)
+  if (shader !== undefined) return shader
+
+  // Unrecognized generated state is disposable, including during prepare.
+  await unlinkIfExists(paths.active)
+  return 'off'
 }
 
 /**

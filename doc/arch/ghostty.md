@@ -29,7 +29,7 @@ appearances and modes.
 | Appearance | Selection    | `local/shader.conf` output                                           |
 | ---------- | ------------ | -------------------------------------------------------------------- |
 | Dark       | `off`        | `background-image` points to `asset/wallpaper/Flowerlit-Prayers.png` |
-| Light      | `off`        | `background-image` points to `asset/wallpaper/Barrett-Girl.jpg`      |
+| Light      | `off`        | `background-image` points to `asset/wallpaper/Barrett-Girl.png`      |
 | Either     | Named shader | Clear the image and select `../shaders/<appearance>/<name>.glsl`     |
 
 The image path is resolved from this repository's asset directory. Theme
@@ -60,7 +60,11 @@ lock and reapply the theme. A failed rollback reports the write and rollback
 errors; reapply repairs the derived configuration.
 
 The selection is read from `local/shader.conf`, defaulting to `off` when it is
-missing. The file must contain one of the current selection forms above.
+missing. Unrecognized content, including obsolete formats and unknown shader
+names, is deleted under the state lock and treated as `off`. This cleanup also
+runs during prepare and is not rolled back if a later step fails. Apply or shader
+selection recreates the file in the current format; read and deletion errors
+still propagate. The local file is generated state, not a place for custom config.
 Retired name files, per-appearance preferences, journals, and recovery locks are
 neither read nor deleted. Flat shader paths, light-name aliases, and presentation
 settings in the local file are no longer migrated.

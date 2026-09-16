@@ -540,7 +540,7 @@ describe('theme app application', () => {
     assert.equal(errors.length, 1)
   })
 
-  it('does not apply any app when Ghostty shader validation fails', async () => {
+  it('resets obsolete Ghostty shader state and applies all apps', async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostty-theme-apply-'))
     const { reporter } = createReporter()
     const configuredAlacritty = apps.find(app => app.name === 'alacritty')
@@ -567,7 +567,7 @@ describe('theme app application', () => {
       fs.writeFileSync(path.join(ghostty.home, 'local/theme.conf'), 'old theme\n')
       fs.writeFileSync(
         path.join(ghostty.home, 'local/shader.conf'),
-        'custom-shader = /tmp/custom.glsl\n',
+        'custom-shader = ../shaders/dark/starfield.glsl\n',
       )
 
       const result = await applyThemeToApps(
@@ -576,15 +576,17 @@ describe('theme app application', () => {
         /** @type {never} */ ([alacritty, ghostty]),
       )
 
-      assert.equal(result, false)
+      assert.equal(result, true)
       assert.equal(
-        fs.existsSync(path.join(alacritty.home, 'local/theme.toml')),
-        false,
+        fs.readFileSync(path.join(alacritty.home, 'local/theme.toml'), 'utf8'),
+        'new alacritty theme\n',
       )
       assert.equal(
         fs.readFileSync(path.join(ghostty.home, 'local/theme.conf'), 'utf8'),
-        'old theme\n',
+        'new ghostty theme\n',
       )
+      assert.equal(fs.readFileSync(path.join(ghostty.home, 'local/appearance'), 'utf8'), 'light\n')
+      assert.match(fs.readFileSync(path.join(ghostty.home, 'local/shader.conf'), 'utf8'), /^background-image = .*Barrett-Girl\.png\n$/)
     } finally {
       fs.rmSync(root, { recursive: true, force: true })
     }
