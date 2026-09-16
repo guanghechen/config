@@ -80,7 +80,23 @@ impl TmuxCommand {
     }
 
     pub(crate) fn to_command_string(&self) -> String {
-        tmux_command_string(&self.args())
+        let command = tmux_command_string(&self.args());
+        if let Self::SetSessionTarget { target, name, .. } = self
+            && name == "status"
+        {
+            /*
+             * Off may be inherited or set after the snapshot. Skip the write
+             * to preserve both policy and inheritance. A vanished target gives
+             * an empty condition, preserving quiet handling of closed sessions.
+             */
+            return tmux_command_string(&[
+                "if-shell".to_string(),
+                "-F".to_string(),
+                format!("#{{S:#{{?#{{==:#{{session_id}},{target}}},#{{!=:#{{status}},off}},}}}}"),
+                command,
+            ]);
+        }
+        command
     }
 }
 

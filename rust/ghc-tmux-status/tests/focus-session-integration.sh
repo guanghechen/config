@@ -4,8 +4,15 @@ set -euo pipefail
 crate_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 repo_dir=$(cd "$crate_dir/../.." && pwd)
 tmp=$(mktemp -d /tmp/ghc-tmux-focus-session-test.XXXXXX)
+socket="$tmp/tmux.sock"
+real_tmux=$(command -v tmux)
+client_pid=
 
 cleanup() {
+  [ -z "$client_pid" ] || kill "$client_pid" 2>/dev/null || true
+  [ -z "$client_pid" ] || wait "$client_pid" 2>/dev/null || true
+  exec 9>&- 2>/dev/null || true
+  env -u TMUX "$real_tmux" -S "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -72,5 +79,36 @@ output=$(env \
 [ ! -s "$tmux_calls" ] || fail "successful focus emitted a failure message"
 [ "$(tail -1 "$renderer_calls")" = "session focus next" ] \
   || fail "successful focus did not preserve the requested target"
+
+# The last navigation record can end in a valid session-name space. The runtime
+# must preserve it so prev/next can locate the current session before switching.
+cargo build --quiet --locked --offline --manifest-path "$crate_dir/Cargo.toml"
+binary="$crate_dir/target/debug/ghc-tmux-status"
+env -u TMUX "$real_tmux" -S "$socket" -f /dev/null \
+  new-session -d -s alpha '/bin/sleep 60'
+spaced_pane=$(env -u TMUX "$real_tmux" -S "$socket" \
+  new-session -dP -F '#{pane_id}' -s 'zeta  ' '/bin/sleep 60')
+server_env=$(env -u TMUX "$real_tmux" -S "$socket" \
+  display-message -p -t "$spaced_pane" '#{socket_path},#{pid},0')
+mkfifo "$tmp/client.in"
+exec 9<>"$tmp/client.in"
+env -u TMUX "$real_tmux" -S "$socket" -C attach-session -t "$spaced_pane" \
+  <&9 >"$tmp/client.log" 2>&1 &
+client_pid=$!
+client_ready=0
+for _ in $(seq 1 100); do
+  if [ "$(env -u TMUX "$real_tmux" -S "$socket" list-clients -F '#{session_name}')" = 'zeta  ' ]; then
+    client_ready=1
+    break
+  fi
+  sleep 0.02
+done
+[ "$client_ready" = "1" ] || fail "control client did not attach to the spaced session"
+
+output=$(env TMUX="$server_env" TMUX_PANE="$spaced_pane" \
+  "$binary" session focus prev 2>&1)
+[ -z "$output" ] || fail "focus from a spaced session leaked output: $output"
+[ "$(env -u TMUX "$real_tmux" -S "$socket" list-clients -F '#{session_name}')" = alpha ] \
+  || fail "trailing session-name spaces prevented previous-session focus"
 
 printf '%s\n' "focus session integration: ok"

@@ -315,6 +315,24 @@ mkdir -p "$tmp/folded-refresh/bin"
 cat >"$tmp/folded-refresh/bin/tmux" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$*" >>"$GHC_TMUX_CALL_LOG"
+snapshot_output=${GHC_TMUX_SNAPSHOT_OUTPUT:-${GHC_TMUX_STATUS_OFF_AFTER_SNAPSHOT:-}}
+if [ -n "$snapshot_output" ]; then
+  case "$*" in
+    *__GHC_STATUS_CONTEXT__*)
+      "$GHC_TMUX_REAL_TMUX" "$@" >"$snapshot_output"
+      result=$?
+      if [ -n "${GHC_TMUX_STATUS_OFF_AFTER_SNAPSHOT:-}" ]; then
+        if [ "${GHC_TMUX_STATUS_OFF_SCOPE:-local}" = global ]; then
+          "$GHC_TMUX_REAL_TMUX" set -g status off
+        else
+          "$GHC_TMUX_REAL_TMUX" set -t "$GHC_TMUX_STATUS_OFF_TARGET" status off
+        fi
+      fi
+      cat "$snapshot_output"
+      exit "$result"
+      ;;
+  esac
+fi
 if [ -n "${GHC_TMUX_FAIL_FOLDED_ONCE:-}" ] && \
   [ ! -e "$GHC_TMUX_FAIL_FOLDED_ONCE" ]; then
   case "$*" in
@@ -422,5 +440,97 @@ if ! awk '
   echo "folded commit fallback omitted the separate refresh" >&2
   exit 1
 fi
+
+# The proxy changes status only after returning the old ON snapshot. Preserve
+# local off policy and global off inheritance across either row layout commit.
+for off_scope in local global; do
+  for rows in 1 2; do
+    tmux -L "$socket" set -g @GHC_SL_ROWS "$rows" ';' \
+      set -g status on ';' \
+      set -u -t "$refresh_pane" status ';' \
+      set -t "$refresh_pane" @GHC_SL_LAYOUT stale
+    env \
+      TMUX="$server_env" \
+      TMUX_PANE="$refresh_pane" \
+      PATH="$tmp/folded-refresh/bin:$PATH" \
+      GHC_TMUX_CALL_LOG="$tmp/folded-refresh/calls" \
+      GHC_TMUX_REAL_TMUX="$real_tmux" \
+      GHC_TMUX_STATUS_OFF_SCOPE="$off_scope" \
+      GHC_TMUX_STATUS_OFF_TARGET="$refresh_pane" \
+      GHC_TMUX_STATUS_OFF_AFTER_SNAPSHOT="$tmp/folded-refresh/off-snapshot" \
+      "$binary" apply client-resized
+    if [ "$(tmux -L "$socket" display-message -p -t "$refresh_pane" '#{status}')" != off ]; then
+      echo "row layout $rows overwrote a concurrent $off_scope status off" >&2
+      exit 1
+    fi
+    if [ "$off_scope" = global ]; then
+      if [ -n "$(tmux -L "$socket" show -qv -t "$refresh_pane" status)" ]; then
+        echo "row layout $rows turned inherited off into a local override" >&2
+        exit 1
+      fi
+      tmux -L "$socket" set -g status on
+      env TMUX="$server_env" TMUX_PANE="$refresh_pane" "$binary" apply client-resized
+      expected_status=on
+      [ "$rows" = 1 ] || expected_status=2
+      if [ "$(tmux -L "$socket" display-message -p -t "$refresh_pane" '#{status}')" != "$expected_status" ]; then
+        echo "row layout $rows did not recover after global status on" >&2
+        exit 1
+      fi
+    fi
+  done
+done
+
+# Inspect the real snapshot emitted for Rust, before it repairs the cache. A
+# column limit alone retains these zero-width payloads and fails this assertion.
+assert_snapshot_witnesses() {
+  local expectation=$1
+  if ! awk -F '\t' -v target="$witness_session_id" -v kind="$expectation" '
+    $0 == "__GHC_STATUS_SESSIONS__" { sessions = 1; next }
+    $0 == "__GHC_STATUS_CLIENTS__" { exit }
+    sessions && $1 == target {
+      found = 1
+      expected = ""
+      if (kind == "valid") {
+        key = $10
+        sub(/^[^:]*:[^:]*:/, "", key)
+        expected = "#{?0," key ",}"
+      }
+      for (i = 11; i <= 14; i++) {
+        if ($i != expected) invalid = 1
+      }
+    }
+    END { if (!found || invalid) exit 1 }
+  ' "$tmp/witness-snapshot"; then
+    echo "$witness_case cache did not produce $expectation snapshot witnesses" >&2
+    exit 1
+  fi
+}
+
+witness_session_id=$(tmux -L "$socket" display-message -p -t "$refresh_pane" '#{session_id}')
+style_cache_value=$(awk 'BEGIN { for (i = 0; i < 1000; i++) printf "#[default]" }')
+combining_cache_value=$(awk 'BEGIN { for (i = 0; i < 4096; i++) printf "\314\201" }')
+for witness_case in style combining forged; do
+  case "$witness_case" in
+    style) cache_value=$style_cache_value ;;
+    combining) cache_value=$combining_cache_value ;;
+    forged) cache_value="#{?0,$combining_cache_value,}" ;;
+  esac
+  for cache_option in \
+    @GHC_SL_STATUS02_LEFT @GHC_SL_STATUS02_RIGHT \
+    @GHC_SL_STATUS02_SESSION_FORMAT @GHC_SL_STATUS02_CURRENT_FORMAT; do
+    tmux -L "$socket" set -t "$refresh_pane" "$cache_option" "$cache_value"
+  done
+  for expectation in missing valid; do
+    env \
+      TMUX="$server_env" \
+      TMUX_PANE="$refresh_pane" \
+      PATH="$tmp/folded-refresh/bin:$PATH" \
+      GHC_TMUX_CALL_LOG="$tmp/folded-refresh/calls" \
+      GHC_TMUX_REAL_TMUX="$real_tmux" \
+      GHC_TMUX_SNAPSHOT_OUTPUT="$tmp/witness-snapshot" \
+      "$binary" apply client-resized
+    assert_snapshot_witnesses "$expectation"
+  done
+done
 
 printf '%s\n' "renderer lifecycle integration: ok"

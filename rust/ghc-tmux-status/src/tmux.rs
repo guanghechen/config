@@ -455,7 +455,7 @@ impl TmuxAdapter {
             });
         }
         Ok(String::from_utf8_lossy(&output.stdout)
-            .trim_end()
+            .trim_end_matches('\n')
             .to_string())
     }
 
@@ -644,8 +644,17 @@ fn option_value_mark(index: usize) -> String {
 }
 
 fn cache_witness_format(option: &str) -> String {
-    let capture = ".".repeat(CACHE_WITNESS_BYTES);
-    format!("#{{s/^({capture}).*$/\\1/:{option}}}")
+    /*
+     * Column trimming is bounded only after the marker is known to be ASCII.
+     * Invalid cache data becomes a missing witness so reconcile can repair it
+     * without transporting zero-width styles or combining-character payloads.
+     * An explicit alphabet keeps the guard independent of locale collation.
+     */
+    let payload_bytes = CACHE_WITNESS_BYTES - "#{?0,,}".len();
+    let pattern = format_literal(&format!(
+        r"^#\{{\?0,[0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz:]{{{payload_bytes}}},\}}"
+    ));
+    format!("#{{?#{{m/r:{pattern},#{{{option}}}}},#{{={CACHE_WITNESS_BYTES}:{option}}},}}")
 }
 
 struct SerializedPlanChunk {
@@ -1351,10 +1360,10 @@ $2	90"
     }
 
     #[test]
-    fn cache_witness_format_extracts_a_fixed_prefix() {
+    fn cache_witness_format_requires_a_fixed_ascii_prefix() {
         assert_eq!(
             cache_witness_format("@CACHE"),
-            "#{s/^(..........................).*$/\\1/:@CACHE}"
+            "#{?#{m/r:#{l:^##\\{\\?0,[0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz:]{19#},\\#}},#{@CACHE}},#{=26:@CACHE},}"
         );
     }
 

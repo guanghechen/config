@@ -90,6 +90,12 @@ mod tests {
     }
 
     #[test]
+    fn left_length_covers_supplementary_cjk_cells() {
+        let status = rendered_status(&"𠮷".repeat(40), "short");
+        assert_eq!(status_left_length(&status, &context_with_width(200)), "82");
+    }
+
+    #[test]
     fn left_length_reserves_a_second_state_prefix_per_session() {
         let status = rendered_status(&"x".repeat(68), "short");
         let context = context_with_width_and_session_count(200, 3);

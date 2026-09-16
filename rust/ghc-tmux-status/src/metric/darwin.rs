@@ -101,11 +101,16 @@ fn calculate_cpu_percent(previous: Option<&CpuSample>, current: &CpuSample) -> f
         return cpu_percent_from_ticks(current.user, current.nice, current.system, current.idle);
     };
 
-    let user = current.user.saturating_sub(previous.user);
-    let nice = current.nice.saturating_sub(previous.nice);
-    let system = current.system.saturating_sub(previous.system);
-    let idle = current.idle.saturating_sub(previous.idle);
+    let user = cpu_tick_delta(current.user, previous.user);
+    let nice = cpu_tick_delta(current.nice, previous.nice);
+    let system = cpu_tick_delta(current.system, previous.system);
+    let idle = cpu_tick_delta(current.idle, previous.idle);
     cpu_percent_from_ticks(user, nice, system, idle)
+}
+
+fn cpu_tick_delta(current: u64, previous: u64) -> u64 {
+    // Mach exports wrapping 32-bit counters, widened only for sample storage.
+    u64::from((current as u32).wrapping_sub(previous as u32))
 }
 
 fn cpu_percent_from_ticks(user: u64, nice: u64, system: u64, idle: u64) -> f64 {
@@ -368,6 +373,24 @@ mod tests {
             system: 20,
             idle: 100,
         };
+        assert_eq!(calculate_cpu_percent(Some(&previous), &current), 40.0);
+    }
+
+    #[test]
+    fn calculates_cpu_percent_across_native_counter_wraps() {
+        let previous = CpuSample {
+            user: u64::from(u32::MAX) - 5,
+            nice: u64::from(u32::MAX) - 1,
+            system: 20,
+            idle: u64::from(u32::MAX) - 15,
+        };
+        let current = CpuSample {
+            user: 4,
+            nice: 0,
+            system: 28,
+            idle: 14,
+        };
+
         assert_eq!(calculate_cpu_percent(Some(&previous), &current), 40.0);
     }
 
