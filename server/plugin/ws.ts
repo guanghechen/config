@@ -1,14 +1,14 @@
 import { Subscriber } from '@guanghechen/subscriber'
 import type { IncomingMessage } from 'node:http'
 import type { Plugin, WebSocketClient } from 'vite'
-import { SERVER_HOST, SERVER_PORT } from '../../env'
-import type { IResponsePayloadFileSwitch } from '../../shared/types'
-import { ServerCustomEventType } from '../../shared/types'
-import { toSearch } from '../../shared/util'
-import state from '../state'
-import { sleep } from '../util/misc'
-import { openBrowser } from '../util/open'
-import { getAuthToken, verifyAuthToken } from './api/jwt'
+import { SERVER_HOST, SERVER_PORT } from '../../env.ts'
+import type { IResponsePayloadFileSwitch } from '../../shared/types/index.ts'
+import { ServerCustomEventType } from '../../shared/types/index.ts'
+import { toSearch } from '../../shared/util/index.ts'
+import state from '../state.ts'
+import { sleep } from '../util/misc.ts'
+import { openBrowser } from '../util/open.ts'
+import { getAuthToken, verifyAuthToken } from './api/jwt.ts'
 
 const plugin = (): Plugin => {
   return {

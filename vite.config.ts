@@ -3,9 +3,9 @@ import basicSsl from '@vitejs/plugin-basic-ssl'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { defineConfig } from 'vite'
-import { ROOT_DIR, SERVER_HOST, SERVER_PORT, TARGET_DIR } from './env'
-import api from './server/plugin/api'
-import ws from './server/plugin/ws'
+import { ROOT_DIR, SERVER_HOST, SERVER_PORT, TARGET_DIR } from './env.ts'
+import api from './server/plugin/api/index.ts'
+import ws from './server/plugin/ws.ts'
 
 // https://vite.dev/config/
 export default defineConfig({

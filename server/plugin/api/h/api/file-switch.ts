@@ -1,5 +1,5 @@
-import state from '../../../../state'
-import type { IApiHandle, IApiHandleData } from '../../types'
+import state from '../../../../state.ts'
+import type { IApiHandle, IApiHandleData } from '../../types.ts'
 
 export const switchFile: IApiHandle = async params => {
   const { searchParams } = params

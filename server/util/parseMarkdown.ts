@@ -11,9 +11,9 @@ import Parser from '@yozora/parser'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parse as parseYaml } from 'yaml'
-import type { IMarkdownFileData } from '../../shared/types/api'
-import { toSearch } from '../../shared/util'
-import state from '../state'
+import type { IMarkdownFileData } from '../../shared/types/api/index.ts'
+import { toSearch } from '../../shared/util/index.ts'
+import state from '../state.ts'
 
 const regexes = {
   frontmatter: /^\s*[-]{3,}\n\s*([\s\S]*?)[-]{3,}\n/,

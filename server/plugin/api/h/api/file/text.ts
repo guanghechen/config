@@ -1,7 +1,7 @@
-import state from '../../../../../state'
-import parseMarkdown from '../../../../../util/parseMarkdown'
-import { readVersionedText } from '../../../../../util/versioned-text'
-import type { IApiHandle } from '../../../types'
+import state from '../../../../../state.ts'
+import parseMarkdown from '../../../../../util/parseMarkdown.ts'
+import { readVersionedText } from '../../../../../util/versioned-text.ts'
+import type { IApiHandle } from '../../../types.ts'
 
 export const fetchFileText: IApiHandle = async ({ req, searchParams }) => {
   if (req.method !== 'GET') return { code: 405, data: { error: 'GET required', data: null } }

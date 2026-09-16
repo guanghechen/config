@@ -1,4 +1,4 @@
-import type { TextTransformStepTypeEnum } from '../transform'
+import type { TextTransformStepTypeEnum } from '../transform.ts'
 
 export type ITransformerListRequestParams = Record<string, never>
 

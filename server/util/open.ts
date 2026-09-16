@@ -5,8 +5,8 @@ import { type ExecOptions, exec, spawn } from 'node:child_process'
 import path from 'node:path'
 import open from 'open'
 import type { Options as IOpenOptions } from 'open'
-import { ROOT_DIR } from '../../env'
-import state from '../state'
+import { ROOT_DIR } from '../../env.ts'
+import state from '../state.ts'
 
 const VITE_PACKAGE_DIR = path.resolve(ROOT_DIR, 'node_modules', 'vite')
 

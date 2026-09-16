@@ -1,7 +1,7 @@
 import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
-import state from '../../../../../state'
-import type { IApiHandle, IApiHandleData } from '../../../types'
+import state from '../../../../../state.ts'
+import type { IApiHandle, IApiHandleData } from '../../../types.ts'
 
 const JWT_EXPIRES_IN = '30d'
 const COOKIE_NAME = 'yoz-auth'

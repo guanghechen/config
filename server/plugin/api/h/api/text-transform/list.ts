@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { ROOT_DIR } from '../../../../../../env'
-import state from '../../../../../state'
-import type { IApiHandle, IApiHandleData } from '../../../types'
+import { ROOT_DIR } from '../../../../../../env.ts'
+import state from '../../../../../state.ts'
+import type { IApiHandle, IApiHandleData } from '../../../types.ts'
 
 const TRANSFORMER_DATA_DIR = path.join(ROOT_DIR, 'server/plugin/api/d/transform/text')
 

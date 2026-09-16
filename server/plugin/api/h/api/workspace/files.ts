@@ -1,8 +1,8 @@
 import path from 'node:path'
-import state from '../../../../../state'
-import { FileAccessError } from '../../../../../util/file-access'
-import { findMarkdownFiles } from '../../../../../util/workspace'
-import type { IApiHandle } from '../../../types'
+import state from '../../../../../state.ts'
+import { FileAccessError } from '../../../../../util/file-access.ts'
+import { findMarkdownFiles } from '../../../../../util/workspace.ts'
+import type { IApiHandle } from '../../../types.ts'
 
 export const list_workspace_files: IApiHandle = async ({ searchParams }) => {
   const root = state.access.resolve(searchParams.get('root'), 'directory')

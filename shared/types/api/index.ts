@@ -4,7 +4,7 @@ import type {
   IFileSaveRequestPayload,
   IFileSaveResponseResult,
   IWhiteboardCreateRequestPayload,
-} from './file'
+} from './file.ts'
 import type {
   ITransformerListRequestParams,
   ITransformerListRequestPayload,
@@ -15,7 +15,7 @@ import type {
   ITransformerSaveRequestParams,
   ITransformerSaveRequestPayload,
   ITransformerSaveResponseResult,
-} from './transform'
+} from './transform.ts'
 import type {
   IUserAuthRequestParams,
   IUserAuthRequestPayload,
@@ -26,12 +26,12 @@ import type {
   IUserProfileRequestParams,
   IUserProfileRequestPayload,
   IUserProfileResponseResult,
-} from './user'
+} from './user.ts'
 
-export * from './event'
-export * from './file'
-export * from './transform'
-export * from './user'
+export * from './event.ts'
+export * from './file.ts'
+export * from './transform.ts'
+export * from './user.ts'
 
 export type IRequestParams =
   | IFileSaveRequestParams

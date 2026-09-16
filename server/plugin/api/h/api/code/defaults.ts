@@ -1,6 +1,6 @@
 import { createReadStream, existsSync } from 'node:fs'
 import path from 'node:path'
-import type { IApiHandle, IApiHandleData } from '../../../types'
+import type { IApiHandle, IApiHandleData } from '../../../types.ts'
 
 // Map file types to their corresponding file extensions and content types
 const FILETYPE_TO_EXTENSION_MAP: Record<string, string> = {
@@ -50,7 +50,7 @@ export const fetchCodeDefaults: IApiHandle = async params => {
 
   // Build path to the default content file
   const filename = `${filetype}.${extension}`
-  const filepath = path.join(__dirname, '../../../d/code', filename)
+  const filepath = path.join(import.meta.dirname, '../../../d/code', filename)
 
   if (!existsSync(filepath)) {
     const data: IApiHandleData = {

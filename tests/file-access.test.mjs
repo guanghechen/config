@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import os from 'node:os'
 import { createServer } from 'node:http'
 import path from 'node:path'
@@ -9,7 +17,7 @@ import { runInThisContext } from 'node:vm'
 import ts from 'typescript'
 
 const root = path.resolve(import.meta.dirname, '..')
-const fixture = mkdtempSync(path.join(os.tmpdir(), 'yoz-access-'))
+const fixture = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'yoz-access-')))
 const allowed = path.join(fixture, 'repo')
 const docs = path.join(allowed, 'docs')
 const outside = path.join(fixture, 'repo-private')
@@ -33,7 +41,11 @@ function load(filename) {
   if (filepath === path.join(root, 'env.ts')) return { ROOT_DIR: fixture }
   if (filepath.includes('/server/plugin/api/h/api/user/')) return {}
 
-  const output = ts.transpileModule(readFileSync(filepath, 'utf8'), {
+  const source = readFileSync(filepath, 'utf8').replaceAll(
+    'import.meta.dirname',
+    JSON.stringify(path.dirname(filepath)),
+  )
+  const output = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2022,

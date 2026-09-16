@@ -1,7 +1,7 @@
 import { createReadStream } from 'node:fs'
 import path from 'node:path'
-import state from '../../../../../state'
-import type { IApiHandle, IApiHandleData } from '../../../types'
+import state from '../../../../../state.ts'
+import type { IApiHandle, IApiHandleData } from '../../../types.ts'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.avi': 'video/x-msvideo',

@@ -1,7 +1,7 @@
 import * as cookie from 'cookie'
-import state from '../../../../../state'
-import { getAuthToken } from '../../../jwt'
-import type { IApiHandle, IApiHandleData } from '../../../types'
+import state from '../../../../../state.ts'
+import { getAuthToken } from '../../../jwt.ts'
+import type { IApiHandle, IApiHandleData } from '../../../types.ts'
 
 const COOKIE_NAME = 'yoz-auth'
 

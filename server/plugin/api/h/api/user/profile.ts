@@ -1,4 +1,4 @@
-import type { IApiHandle, IApiHandleData } from '../../../types'
+import type { IApiHandle, IApiHandleData } from '../../../types.ts'
 
 interface IMeResponse {
   readonly isAuthenticated: boolean

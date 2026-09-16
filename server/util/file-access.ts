@@ -3,11 +3,11 @@ import os from 'node:os'
 import path from 'node:path'
 
 export class FileAccessError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-  ) {
+  public readonly status: number
+
+  constructor(message: string, status: number) {
     super(message)
+    this.status = status
     this.name = 'FileAccessError'
   }
 }

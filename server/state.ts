@@ -5,8 +5,8 @@ import { State } from '@guanghechen/viewmodel'
 import type { FSWatcher } from 'chokidar'
 import chokidar from 'chokidar'
 import path from 'node:path'
-import { ROOT_DIR } from '../env'
-import { configureRoots } from './util/file-access'
+import { ROOT_DIR } from '../env.ts'
+import { configureRoots } from './util/file-access.ts'
 
 const reporter = new Reporter({
   prefix: 'guanghechen',

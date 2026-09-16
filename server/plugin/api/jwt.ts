@@ -1,7 +1,7 @@
 import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 import type { IncomingHttpHeaders } from 'node:http'
-import type { IApiHandleParams, IApiHandleResult } from './types'
+import type { IApiHandleParams, IApiHandleResult } from './types.ts'
 const COOKIE_NAME = 'yoz-auth'
 
 interface IJwtPayload {

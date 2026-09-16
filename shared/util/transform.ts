@@ -1,4 +1,4 @@
-import type { ITextTransformConfig } from '../types/transform'
+import type { ITextTransformConfig } from '../types/transform.ts'
 
 export const validateTransformConfig = (data: any): data is ITextTransformConfig => {
   return (

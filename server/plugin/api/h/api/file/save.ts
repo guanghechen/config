@@ -1,6 +1,6 @@
-import state from '../../../../../state'
-import { TextConflictError, saveVersionedText } from '../../../../../util/versioned-text'
-import type { IApiHandle, IApiHandleData } from '../../../types'
+import state from '../../../../../state.ts'
+import { TextConflictError, saveVersionedText } from '../../../../../util/versioned-text.ts'
+import type { IApiHandle, IApiHandleData } from '../../../types.ts'
 
 export const saveFile: IApiHandle = async params => {
   const { body } = params

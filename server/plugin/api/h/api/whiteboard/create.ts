@@ -1,9 +1,9 @@
 import path from 'node:path'
-import { parseDocument } from '../../../../../../shared/whiteboard/document'
-import { isWhiteboardFilename } from '../../../../../../shared/whiteboard/files'
-import state from '../../../../../state'
-import { FileExistsError, createVersionedText } from '../../../../../util/versioned-text'
-import type { IApiHandle } from '../../../types'
+import { parseDocument } from '../../../../../../shared/whiteboard/document.ts'
+import { isWhiteboardFilename } from '../../../../../../shared/whiteboard/files.ts'
+import state from '../../../../../state.ts'
+import { FileExistsError, createVersionedText } from '../../../../../util/versioned-text.ts'
+import type { IApiHandle } from '../../../types.ts'
 
 export const createWhiteboard: IApiHandle = async ({ req, body }) => {
   if (req.method !== 'POST')

@@ -1,7 +1,10 @@
-export enum TextTransformStepTypeEnum {
-  FILTER = 'filter',
-  MAP = 'map',
-}
+export const TextTransformStepTypeEnum = {
+  FILTER: 'filter',
+  MAP: 'map',
+} as const
+
+export type TextTransformStepTypeEnum =
+  (typeof TextTransformStepTypeEnum)[keyof typeof TextTransformStepTypeEnum]
 
 export interface ITextTransformStep {
   readonly id: string

@@ -6,11 +6,11 @@ import type {
   IJsonFileData,
   IMarkdownFileData,
   ITextFileData,
-} from '../../../../../shared/types'
-import state from '../../../../state'
-import { FileAccessError } from '../../../../util/file-access'
-import parseMarkdown from '../../../../util/parseMarkdown'
-import type { IApiHandle, IApiHandleData } from '../../types'
+} from '../../../../../shared/types/index.ts'
+import state from '../../../../state.ts'
+import { FileAccessError } from '../../../../util/file-access.ts'
+import parseMarkdown from '../../../../util/parseMarkdown.ts'
+import type { IApiHandle, IApiHandleData } from '../../types.ts'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.avi': 'video/x-msvideo',

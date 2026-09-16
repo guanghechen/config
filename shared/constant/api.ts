@@ -1,20 +1,22 @@
-export enum ApiRoutePathEnum {
-  USER_AUTH = '/api/user/auth',
-  USER_LOGOUT = '/api/user/logout',
-  USER_PROFILE = '/api/user/profile',
+export const ApiRoutePathEnum = {
+  USER_AUTH: '/api/user/auth',
+  USER_LOGOUT: '/api/user/logout',
+  USER_PROFILE: '/api/user/profile',
 
-  CODE_DEFAULTS = '/api/code/defaults',
+  CODE_DEFAULTS: '/api/code/defaults',
 
-  FILE = '/api/file',
-  FILE_RAW = '/api/file/raw',
-  FILE_TEXT = '/api/file/text',
-  FILE_SAVE = '/api/file/save',
-  FILE_SWITCH = '/api/file/switch',
-  WHITEBOARD_CREATE = '/api/whiteboard/create',
+  FILE: '/api/file',
+  FILE_RAW: '/api/file/raw',
+  FILE_TEXT: '/api/file/text',
+  FILE_SAVE: '/api/file/save',
+  FILE_SWITCH: '/api/file/switch',
+  WHITEBOARD_CREATE: '/api/whiteboard/create',
 
-  TEXT_TRANSFORM_LIST = '/api/text-transform/list',
-  TEXT_TRANSFORM = '/api/text-transform',
+  TEXT_TRANSFORM_LIST: '/api/text-transform/list',
+  TEXT_TRANSFORM: '/api/text-transform',
 
-  WORKSPACES = '/api/workspaces',
-  WORKSPACE_FILES = '/api/workspace/files',
-}
+  WORKSPACES: '/api/workspaces',
+  WORKSPACE_FILES: '/api/workspace/files',
+} as const
+
+export type ApiRoutePathEnum = (typeof ApiRoutePathEnum)[keyof typeof ApiRoutePathEnum]

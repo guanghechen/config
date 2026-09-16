@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import state from '../state'
+import state from '../state.ts'
 
 export async function findMarkdownFiles(cwd: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
