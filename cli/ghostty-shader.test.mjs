@@ -8,10 +8,11 @@ import { promisify } from 'node:util'
 
 import { XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR } from '#env'
 
+import { handleGhosttyShader } from './ghostty-shader.mjs'
+
 import {
   GHOSTTY_SHADERS,
   applyGhosttyThemeAppearance,
-  listGhosttyShaders,
   selectGhosttyShader,
   validateGhosttyThemeAppearance,
 } from '../asset/theme/template/ghostty/shader.mjs'
@@ -22,6 +23,7 @@ const shaderNames = [
 ]
 const legacyFiles = [
   'local/shader',
+  'local/.shader-state.transaction.json', 'local/.shader-state.recovery.lock',
   'local/shader-dark.conf', 'local/shader-light.conf', 'theme-dark.conf', 'theme-light.conf',
 ]
 const stateFiles = [
@@ -73,11 +75,55 @@ async function assertNoLegacy(home) {
 }
 
 describe('Ghostty shared shader selection', () => {
+  it('lists shaders without reading or creating Ghostty state', async t => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ghostty-list-test-'))
+    t.after(() => fs.rm(root, { recursive: true, force: true }))
+    const home = path.join(root, 'unconfigured')
+    const output = []
+    const write = t.mock.method(process.stdout, 'write', chunk => {
+      output.push(String(chunk))
+      return true
+    })
+    try {
+      await handleGhosttyShader(/** @type {never} */ ({}), home, { list: true }, undefined)
+    } finally {
+      write.mock.restore()
+    }
+    assert.equal(output.join(''), `${shaderNames.join('\n')}\n`)
+    await assert.rejects(fs.stat(home), { code: 'ENOENT' })
+  })
+
+  it('leaves an existing lock untouched when waiting times out', async t => {
+    const home = await fixture(t)
+    const lock = 'interrupted command\n'
+    await fs.writeFile(path.join(home, 'local/.shader-state.lock'), lock)
+    const before = await snapshot(home)
+    let now = 0
+    t.mock.method(Date, 'now', () => { now += 5_001; return now })
+    await assert.rejects(selectGhosttyShader({ home, shader: 'cubes' }), /Timed out waiting for Ghostty state lock/)
+    assert.deepEqual(await snapshot(home), before)
+    assert.equal(await read(home, 'local/.shader-state.lock'), lock)
+  })
+
+  it('keeps the old shader file when atomic replacement fails', async t => {
+    const home = await fixture(t)
+    const before = await snapshot(home)
+    const rename = fs.rename
+    t.mock.method(fs, 'rename', async (source, destination) => {
+      if (destination === path.join(home, 'local/shader.conf')) {
+        throw Object.assign(new Error('Injected shader replacement failure'), { code: 'EIO' })
+      }
+      return rename(source, destination)
+    })
+    await assert.rejects(selectGhosttyShader({ home, shader: 'cubes' }), /Injected shader replacement failure/)
+    assert.deepEqual(await snapshot(home), before)
+    assert.deepEqual((await fs.readdir(path.join(home, 'local'))).sort(), ['appearance', 'shader.conf', 'theme.conf'])
+  })
+
   for (const appearance of /** @type {const} */ (['dark', 'light'])) {
     it(`stores every ${appearance} selection only in shader.conf`, async t => {
       const home = await fixture(t, appearance)
-      assert.deepEqual(GHOSTTY_SHADERS[appearance], shaderNames)
-      assert.deepEqual(await listGhosttyShaders({ home }), shaderNames)
+      assert.deepEqual(GHOSTTY_SHADERS, shaderNames)
       for (const shader of shaderNames) {
         assert.deepEqual(await selectGhosttyShader({ home, shader }), { appearance, shader })
         const active = shader === 'off'
@@ -259,72 +305,6 @@ describe('Ghostty shared shader selection', () => {
     assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/neuro-noise.glsl\n`)
   })
 
-  it('restores all current files from a pending journal before selecting a shader', async t => {
-    const home = await fixture(t)
-    await fs.writeFile(path.join(home, 'local/theme.conf'), 'partial theme\n')
-    await fs.writeFile(path.join(home, 'local/shader.conf'), 'partial shader\n')
-    const journal = {
-      version: 4,
-      files: [
-        { target: 'theme', existed: true, content: 'light theme\n' },
-        { target: 'active', existed: true, content: `${noWallpaperConfig}custom-shader = ../shaders/light/neuro-noise.glsl\n` },
-        { target: 'appearance', existed: true, content: 'light\n' },
-      ],
-    }
-    await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), JSON.stringify(journal))
-    assert.deepEqual(await selectGhosttyShader({ home, next: true }), {
-      appearance: 'light', shader: 'sparks-from-fire',
-    })
-    assert.equal(await read(home, 'local/theme.conf'), 'light theme\n')
-    assert.equal(await read(home, 'local/appearance'), 'light\n')
-    assert.equal(await read(home, 'local/shader.conf'), `${noWallpaperConfig}custom-shader = ../shaders/light/sparks-from-fire.glsl\n`)
-    await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.transaction.json')), { code: 'ENOENT' })
-  })
-
-  it('removes newly created files when recovering their absent snapshots', async t => {
-    const home = await fixture(t)
-    const journal = {
-      version: 4,
-      files: [
-        { target: 'theme', existed: false, content: '' },
-        { target: 'active', existed: false, content: '' },
-      ],
-    }
-    await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), JSON.stringify(journal))
-    assert.deepEqual(await validateGhosttyThemeAppearance({ home, appearance: 'dark' }), {
-      appearance: 'dark', shader: 'off',
-    })
-    await assert.rejects(fs.stat(path.join(home, 'local/theme.conf')), { code: 'ENOENT' })
-    await assert.rejects(fs.stat(path.join(home, 'local/shader.conf')), { code: 'ENOENT' })
-  })
-
-  for (const journal of [
-    { version: 3, files: [{ target: 'theme', existed: true, content: 'old theme\n' }] },
-    { version: 4, files: [
-      { target: 'theme', existed: true, content: 'old theme\n' },
-      { target: 'selection', existed: true, content: 'off\n' },
-    ] },
-    { version: 4, files: [
-      { target: 'theme', existed: true, content: 'old theme\n' },
-      { target: 'theme', existed: false, content: '' },
-    ] },
-    { version: 4, files: [
-      { target: 'theme', existed: true, content: 'old theme\n' },
-      { target: 'active', existed: true, content: null },
-    ] },
-  ]) {
-    it(`rejects the complete invalid journal before restoring any file: ${JSON.stringify(journal)}`, async t => {
-      const home = await fixture(t)
-      const before = await snapshot(home)
-      const content = JSON.stringify(journal)
-      await fs.writeFile(path.join(home, 'local/.shader-state.transaction.json'), content)
-      await assert.rejects(validateGhosttyThemeAppearance({ home, appearance: 'dark' }), /Invalid Ghostty shader transaction/)
-      assert.deepEqual(await snapshot(home), before)
-      assert.equal(await read(home, 'local/.shader-state.transaction.json'), content)
-      await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.lock')), { code: 'ENOENT' })
-    })
-  }
-
   it('rolls back the complete state when a later file replacement fails', async t => {
     const home = await fixture(t)
     const before = await snapshot(home)
@@ -344,6 +324,56 @@ describe('Ghostty shared shader selection', () => {
     assert.ok(failed)
     assert.deepEqual(await snapshot(home), before)
     await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.transaction.json')), { code: 'ENOENT' })
+    await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.lock')), { code: 'ENOENT' })
+  })
+
+  it('removes newly created files when a later theme replacement fails', async t => {
+    const home = await fixture(t)
+    await fs.unlink(path.join(home, 'local/theme.conf'))
+    await fs.unlink(path.join(home, 'local/shader.conf'))
+    const before = await snapshot(home)
+    const rename = fs.rename
+    t.mock.method(fs, 'rename', async (source, destination) => {
+      if (destination === path.join(home, 'local/appearance')) {
+        throw Object.assign(new Error('Injected appearance replacement failure'), { code: 'EIO' })
+      }
+      return rename(source, destination)
+    })
+    await assert.rejects(
+      applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'new theme\n' }),
+      /Injected appearance replacement failure/,
+    )
+    assert.deepEqual(await snapshot(home), before)
+    assert.deepEqual(await fs.readdir(path.join(home, 'local')), ['appearance'])
+  })
+
+  it('reports rollback failures and still restores the other changed files', async t => {
+    const home = await fixture(t)
+    const before = await snapshot(home)
+    const rename = fs.rename
+    let themeReplacements = 0
+    t.mock.method(fs, 'rename', async (source, destination) => {
+      if (destination === path.join(home, 'local/appearance')) {
+        throw new Error('Injected appearance replacement failure')
+      }
+      if (destination === path.join(home, 'local/theme.conf') && ++themeReplacements === 2) {
+        throw new Error('Injected theme rollback failure')
+      }
+      return rename(source, destination)
+    })
+    await assert.rejects(
+      applyGhosttyThemeAppearance({ home, appearance: 'light', themeContent: 'new theme\n' }),
+      error => {
+        assert.ok(error instanceof AggregateError)
+        assert.deepEqual(error.errors.map(item => item.message), [
+          'Injected appearance replacement failure', 'Injected theme rollback failure',
+        ])
+        return true
+      },
+    )
+    assert.equal(await read(home, 'local/theme.conf'), 'new theme\n')
+    assert.equal(await read(home, 'local/shader.conf'), before[1])
+    assert.equal(await read(home, 'local/appearance'), before[2])
     await assert.rejects(fs.stat(path.join(home, 'local/.shader-state.lock')), { code: 'ENOENT' })
   })
 

@@ -13,7 +13,7 @@ import { XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR } from '#env'
 
 const DARK_WALLPAPER_PATH = path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png')
 
-const SHADER_NAMES = Object.freeze([
+export const GHOSTTY_SHADERS = Object.freeze([
   'off',
   'cubes',
   'fireworks-rockets',
@@ -26,14 +26,7 @@ const SHADER_NAMES = Object.freeze([
   'starfield',
 ])
 
-export const GHOSTTY_SHADERS = Object.freeze({
-  dark: SHADER_NAMES,
-  light: SHADER_NAMES,
-})
-
-const APPEARANCES = new Set(Object.keys(GHOSTTY_SHADERS))
 const LOCK_RETRY_MS = 25
-const LOCK_STALE_MS = 30_000
 const LOCK_TIMEOUT_MS = 5_000
 
 /**
@@ -44,8 +37,6 @@ const LOCK_TIMEOUT_MS = 5_000
  * @property {string} active
  * @property {string} appearance
  * @property {string} lock
- * @property {string} recoveryLock
- * @property {string} transaction
  */
 
 /** @param {string} home @return {IShaderStatePaths} */
@@ -57,14 +48,12 @@ function resolvePaths(home) {
     active: path.join(localDir, 'shader.conf'),
     appearance: path.join(localDir, 'appearance'),
     lock: path.join(localDir, '.shader-state.lock'),
-    recoveryLock: path.join(localDir, '.shader-state.recovery.lock'),
-    transaction: path.join(localDir, '.shader-state.transaction.json'),
   }
 }
 
 /** @param {string} appearance @return {asserts appearance is IAppearance} */
 function assertAppearance(appearance) {
-  if (!APPEARANCES.has(appearance)) {
+  if (appearance !== 'dark' && appearance !== 'light') {
     throw new Error(`Invalid Ghostty appearance: ${appearance || '<empty>'}`)
   }
 }
@@ -93,63 +82,20 @@ async function unlinkIfExists(filepath) {
   }
 }
 
-/** @param {string} directory */
-async function syncDirectory(directory) {
-  if (process.platform === 'win32') return
-  const handle = await fs.open(directory, 'r')
-  try {
-    await handle.sync()
-  } finally {
-    await handle.close()
-  }
-}
-
-/** @param {string} filepath */
-async function unlinkFileDurable(filepath) {
-  try {
-    await fs.unlink(filepath)
-    await syncDirectory(path.dirname(filepath))
-  } catch (error) {
-    if (!hasErrorCode(error, 'ENOENT')) throw error
-  }
-}
-
-/** @param {string} filepath @param {string} content */
-async function stageFile(filepath, content) {
-  const tempPath = path.join(
-    path.dirname(filepath),
-    `.${path.basename(filepath)}.${process.pid}.${randomUUID()}.tmp`,
-  )
-  const handle = await fs.open(tempPath, 'wx')
-  try {
-    await handle.writeFile(content, 'utf8')
-    await handle.sync()
-  } catch (error) {
-    await handle.close()
-    await unlinkIfExists(tempPath)
-    throw error
-  }
-  await handle.close()
-  return tempPath
-}
-
 /** @param {string} filepath @param {string} content */
 async function replaceFileAtomic(filepath, content) {
-  const tempPath = await stageFile(filepath, content)
+  const temporary = `${filepath}.${randomUUID()}.tmp`
+  const handle = await fs.open(temporary, 'wx')
   try {
-    await fs.rename(tempPath, filepath)
-    await syncDirectory(path.dirname(filepath))
-  } finally {
-    await unlinkIfExists(tempPath)
-  }
-}
-
-/** @param {string} filepath @param {string|undefined} content */
-async function restoreOptionalFile(filepath, content) {
-  if (content === undefined) {
-    await unlinkFileDurable(filepath)
-  } else {
-    await replaceFileAtomic(filepath, content)
+    try {
+      await handle.writeFile(content, 'utf8')
+    } finally {
+      await handle.close()
+    }
+    await fs.rename(temporary, filepath)
+  } catch (error) {
+    await unlinkIfExists(temporary)
+    throw error
   }
 }
 
@@ -163,7 +109,7 @@ function parseShaderConfig(content) {
   const match = /^background-image =\ncustom-shader = \.\.\/shaders\/(?:dark|light)\/([a-z0-9-]+)\.glsl$/.exec(config)
   if (!match) throw new Error('Unrecognized Ghostty shader config; refusing to overwrite it')
   const shader = match[1]
-  if (shader === 'off' || !SHADER_NAMES.includes(shader)) {
+  if (shader === 'off' || !GHOSTTY_SHADERS.includes(shader)) {
     throw new Error(`Unknown Ghostty shader in config: ${shader}`)
   }
   return shader
@@ -211,248 +157,40 @@ async function readShaderSelection(paths) {
   return content === undefined ? 'off' : parseShaderConfig(content)
 }
 
-/** @typedef {'theme'|'active'|'appearance'} ITransactionTarget */
-
-/** @param {IShaderStatePaths} paths @param {ITransactionTarget} target */
-function resolveTransactionTarget(paths, target) {
-  if (target === 'theme') return paths.theme
-  if (target === 'active') return paths.active
-  if (target === 'appearance') return paths.appearance
-  throw new Error(`Invalid Ghostty shader transaction target: ${target}`)
-}
-
 /**
- * @param {IShaderStatePaths} paths
- * @param {ITransactionTarget[]} targets
+ * Roll back completed replacements on ordinary failures. Snapshots stay in
+ * memory; process termination can leave mixed state that needs a new apply.
+ * @param {Array<[string, string]>} updates
  */
-async function beginTransaction(paths, targets) {
-  const files = []
-  for (const target of targets) {
-    const content = await readOptionalFile(resolveTransactionTarget(paths, target))
-    files.push({ target, existed: content !== undefined, content: content ?? '' })
-  }
-  await replaceFileAtomic(paths.transaction, `${JSON.stringify({ version: 4, files })}\n`)
-}
-
-/** @param {IShaderStatePaths} paths */
-async function recoverPendingTransaction(paths) {
-  const content = await readOptionalFile(paths.transaction)
-  if (content === undefined) return false
-
-  let transaction
+async function commitState(updates) {
+  const snapshots = await Promise.all(updates.map(async ([filepath]) =>
+    /** @type {[string, string|undefined]} */ ([filepath, await readOptionalFile(filepath)])))
+  let completed = 0
   try {
-    transaction = JSON.parse(content)
-  } catch {
-    throw new Error(`Invalid Ghostty shader transaction journal: ${paths.transaction}`)
-  }
-
-  if (transaction?.version !== 4 || !Array.isArray(transaction.files)) {
-    throw new Error(`Invalid Ghostty shader transaction journal: ${paths.transaction}`)
-  }
-
-  const targets = new Set()
-  /** @type {Array<[string, string|undefined]>} */
-  const snapshots = []
-  for (const file of transaction.files) {
-    const { target, existed, content: previousContent } = file ?? {}
-    if (
-      typeof target !== 'string' ||
-      targets.has(target) ||
-      typeof existed !== 'boolean' ||
-      typeof previousContent !== 'string'
-    ) {
-      throw new Error(`Invalid Ghostty shader transaction journal: ${paths.transaction}`)
-    }
-
-    const filepath = resolveTransactionTarget(
-      paths,
-      /** @type {ITransactionTarget} */ (target),
-    )
-    targets.add(target)
-    snapshots.push([filepath, existed ? previousContent : undefined])
-  }
-
-  // Validate the complete journal before restoring any file.
-  for (const [filepath, previousContent] of snapshots) {
-    await restoreOptionalFile(filepath, previousContent)
-  }
-
-  await unlinkFileDurable(paths.transaction)
-  return true
-}
-
-/**
- * Journal the complete write set before replacing any file, then roll it back
- * if a write fails. The same journal also recovers interrupted processes.
- *
- * @param {IShaderStatePaths} paths
- * @param {Array<[ITransactionTarget, string]>} updates
- */
-async function commitState(paths, updates) {
-  await beginTransaction(
-    paths,
-    updates.map(([target]) => target),
-  )
-  try {
-    for (const [target, content] of updates) {
-      const filepath = resolveTransactionTarget(paths, target)
+    for (const [filepath, content] of updates) {
       await replaceFileAtomic(filepath, content)
-    }
-    await unlinkFileDurable(paths.transaction)
-  } catch (error) {
-    try {
-      await recoverPendingTransaction(paths)
-    } catch (recoveryError) {
-      throw new AggregateError(
-        [error, recoveryError],
-        'Ghostty shader transaction failed and could not be recovered',
-      )
-    }
-    throw error
-  }
-}
-
-/** @param {string} content */
-function inspectLockOwner(content) {
-  const ownerPid = Number.parseInt(content, 10)
-  if (!Number.isInteger(ownerPid) || ownerPid <= 0) {
-    return { known: false, dead: false }
-  }
-
-  try {
-    process.kill(ownerPid, 0)
-    return { known: true, dead: false }
-  } catch (error) {
-    return { known: true, dead: hasErrorCode(error, 'ESRCH') }
-  }
-}
-
-/** @param {string} lockPath */
-async function inspectLock(lockPath) {
-  try {
-    const content = await fs.readFile(lockPath, 'utf8')
-    const stat = await fs.stat(lockPath)
-    const owner = inspectLockOwner(content)
-    const ageMs = Date.now() - stat.mtimeMs
-    return {
-      exists: true,
-      content,
-      reclaimable: owner.dead,
-      malformedStale: !owner.known && ageMs > LOCK_STALE_MS,
+      completed += 1
     }
   } catch (error) {
-    if (hasErrorCode(error, 'ENOENT')) {
-      return {
-        exists: false,
-        content: undefined,
-        reclaimable: true,
-        malformedStale: false,
+    const failures = [error]
+    for (const [filepath, content] of snapshots.slice(0, completed).reverse()) {
+      try {
+        if (content === undefined) await unlinkIfExists(filepath)
+        else await replaceFileAtomic(filepath, content)
+      } catch (rollbackError) {
+        failures.push(rollbackError)
       }
     }
-    throw error
-  }
-}
-
-/** @param {string} lockPath @param {string} lockToken */
-async function createOwnedLock(lockPath, lockToken) {
-  const candidatePath = await stageFile(lockPath, `${process.pid} ${lockToken}\n`)
-
-  try {
-    await fs.link(candidatePath, lockPath)
-  } catch (error) {
-    try {
-      await unlinkIfExists(candidatePath)
-    } catch (cleanupError) {
-      throw new AggregateError(
-        [error, cleanupError],
-        'Ghostty shader lock creation and candidate cleanup failed',
-      )
+    if (failures.length > 1) {
+      throw new AggregateError(failures, 'Ghostty state update and rollback failed; reapply the theme to repair state')
     }
     throw error
-  }
-
-  try {
-    await unlinkIfExists(candidatePath)
-  } catch (error) {
-    try {
-      await releaseLock(lockPath, lockToken)
-    } catch (releaseError) {
-      throw new AggregateError(
-        [error, releaseError],
-        'Ghostty shader lock candidate cleanup and lock release failed',
-      )
-    }
-    throw error
-  }
-}
-
-/** @param {string} lockPath @param {string} lockToken */
-async function releaseLock(lockPath, lockToken) {
-  const content = await readOptionalFile(lockPath)
-  if (content?.trim() === `${process.pid} ${lockToken}`) {
-    await unlinkIfExists(lockPath)
-  }
-}
-
-/** @param {string} lockPath @param {string} lockToken */
-async function ownsLock(lockPath, lockToken) {
-  const content = await readOptionalFile(lockPath)
-  return content?.trim() === `${process.pid} ${lockToken}`
-}
-
-/**
- * Serialize stale-main-lock recovery with a separately owned recovery lock.
- * Both lock records are fully initialized before their paths become visible.
- *
- * @param {IShaderStatePaths} paths
- */
-async function reclaimAbandonedLock(paths) {
-  const recovery = await inspectLock(paths.recoveryLock)
-  if (recovery.exists) {
-    if (recovery.malformedStale) {
-      throw new Error(
-        `Malformed Ghostty shader recovery lock requires manual removal: ${paths.recoveryLock}`,
-      )
-    }
-    if (recovery.reclaimable) {
-      throw new Error(
-        `Abandoned Ghostty shader recovery lock requires manual removal after verifying no shader operation is running: ${paths.recoveryLock}`,
-      )
-    }
-    return false
-  }
-
-  const observed = await inspectLock(paths.lock)
-  if (!observed.exists) return true
-  if (observed.malformedStale) {
-    throw new Error(`Malformed Ghostty shader state lock requires manual removal: ${paths.lock}`)
-  }
-  if (!observed.reclaimable) return false
-
-  const recoveryToken = randomUUID()
-  try {
-    await createOwnedLock(paths.recoveryLock, recoveryToken)
-  } catch (error) {
-    if (hasErrorCode(error, 'EEXIST')) return false
-    throw error
-  }
-
-  try {
-    const current = await inspectLock(paths.lock)
-    if (!current.exists) return true
-    if (current.content !== observed.content) return false
-    if (!current.reclaimable) return false
-    if (!(await ownsLock(paths.recoveryLock, recoveryToken))) return false
-    await unlinkIfExists(paths.lock)
-    return true
-  } finally {
-    await releaseLock(paths.recoveryLock, recoveryToken)
   }
 }
 
 /**
- * Serialize every shader-state mutation across Node processes.
- *
+ * Serialize theme and shader updates across processes. A leftover lock is never
+ * reclaimed automatically; its PID is diagnostic, not an ownership lease.
  * @template T
  * @param {string} home
  * @param {(paths: IShaderStatePaths) => Promise<T>} task
@@ -460,70 +198,33 @@ async function reclaimAbandonedLock(paths) {
  */
 async function withGhosttyShaderStateLock(home, task) {
   const paths = resolvePaths(home)
-  const deadline = Date.now() + LOCK_TIMEOUT_MS
-  const lockToken = randomUUID()
   await fs.mkdir(paths.localDir, { recursive: true })
-
-  let lockOwned = false
-  while (!lockOwned) {
+  const deadline = Date.now() + LOCK_TIMEOUT_MS
+  let lock
+  while (!lock) {
     try {
-      await createOwnedLock(paths.lock, lockToken)
-      lockOwned = true
-      if ((await readOptionalFile(paths.recoveryLock)) !== undefined) {
-        await releaseLock(paths.lock, lockToken)
-        lockOwned = false
-        await reclaimAbandonedLock(paths)
-      }
+      lock = await fs.open(paths.lock, 'wx')
     } catch (error) {
       if (!hasErrorCode(error, 'EEXIST')) throw error
-      await reclaimAbandonedLock(paths)
-    }
-
-    if (!lockOwned) {
       if (Date.now() >= deadline) {
-        throw new Error(`Timed out waiting for Ghostty shader state lock: ${paths.lock}`)
+        throw new Error(`Timed out waiting for Ghostty state lock: ${paths.lock}`)
       }
-      await sleep(Math.min(LOCK_RETRY_MS, Math.max(1, deadline - Date.now())))
+      await sleep(LOCK_RETRY_MS)
     }
   }
 
-  let result
-  let taskError
   try {
-    await recoverPendingTransaction(paths)
-    result = await task(paths)
-  } catch (error) {
-    taskError = error
+    await lock.writeFile(`${process.pid}\n`, 'utf8')
+    return await task(paths)
+  } finally {
+    await lock.close()
+    await unlinkIfExists(paths.lock)
   }
-
-  let releaseError
-  try {
-    await releaseLock(paths.lock, lockToken)
-  } catch (error) {
-    releaseError = error
-  }
-
-  if (taskError && releaseError) {
-    throw new AggregateError(
-      [taskError, releaseError],
-      'Ghostty shader operation and lock release failed',
-    )
-  }
-  if (taskError) throw taskError
-  if (releaseError) throw releaseError
-  return /** @type {T} */ (result)
-}
-
-/** @param {{home: string}} params */
-export async function listGhosttyShaders({ home }) {
-  const paths = resolvePaths(home)
-  const appearance = await requireAppearance(paths)
-  return [...GHOSTTY_SHADERS[appearance]]
 }
 
 /**
  * Validate the shared selection in the requested appearance without applying
- * the theme. Recovery of an interrupted write runs first.
+ * the theme.
  *
  * @param {{home: string, appearance: IAppearance}} params
  */
@@ -538,7 +239,7 @@ export async function validateGhosttyThemeAppearance({ home, appearance }) {
 
 /**
  * Changing appearance keeps the shader name and derives the background config.
- * The theme, active config, and appearance commit together.
+ * Ordinary write failures roll back the theme, active config, and appearance.
  *
  * @param {{home: string, appearance: IAppearance, themeContent: string}} params
  */
@@ -547,13 +248,13 @@ export async function applyGhosttyThemeAppearance({ home, appearance, themeConte
   return withGhosttyShaderStateLock(home, async paths => {
     const shader = await readShaderSelection(paths)
     await validateBackgroundFile(home, appearance, shader)
-    /** @type {Array<[ITransactionTarget, string]>} */
+    /** @type {Array<[string, string]>} */
     const updates = [
-      ['theme', themeContent],
-      ['active', renderActiveConfig(shader, appearance)],
-      ['appearance', `${appearance}\n`],
+      [paths.theme, themeContent],
+      [paths.active, renderActiveConfig(shader, appearance)],
+      [paths.appearance, `${appearance}\n`],
     ]
-    await commitState(paths, updates)
+    await commitState(updates)
     return { appearance, shader }
   })
 }
@@ -566,7 +267,7 @@ export async function selectGhosttyShader({ home, shader, previous = false, next
   if (shader && (previous || next)) {
     throw new Error('A shader name cannot be combined with --prev or --next')
   }
-  if (shader && !SHADER_NAMES.includes(shader)) {
+  if (shader && !GHOSTTY_SHADERS.includes(shader)) {
     throw new Error(`Unknown Ghostty shader: ${shader}`)
   }
 
@@ -575,17 +276,13 @@ export async function selectGhosttyShader({ home, shader, previous = false, next
     const currentShader = await readShaderSelection(paths)
     let selectedShader = shader
     if (!selectedShader) {
-      const index = SHADER_NAMES.indexOf(currentShader)
+      const index = GHOSTTY_SHADERS.indexOf(currentShader)
       const offset = previous ? -1 : 1
-      selectedShader = SHADER_NAMES[(index + offset + SHADER_NAMES.length) % SHADER_NAMES.length]
+      selectedShader = GHOSTTY_SHADERS[(index + offset + GHOSTTY_SHADERS.length) % GHOSTTY_SHADERS.length]
     }
     // Explicit replacement must not depend on the previous shader file existing.
     await validateBackgroundFile(home, appearance, selectedShader)
-    /** @type {Array<[ITransactionTarget, string]>} */
-    const updates = [
-      ['active', renderActiveConfig(selectedShader, appearance)],
-    ]
-    await commitState(paths, updates)
+    await replaceFileAtomic(paths.active, renderActiveConfig(selectedShader, appearance))
     return { appearance, shader: selectedShader }
   })
 }

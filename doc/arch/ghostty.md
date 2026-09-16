@@ -35,7 +35,8 @@ appearances and modes.
 The image path is resolved from this repository's asset directory. Theme
 switches retain the shader name and change its appearance directory. Both
 appearances share the same cycling order. Here, `off` disables the background
-shader; it does not disable the dark wallpaper or the cursor shader.
+shader; it does not disable the dark wallpaper or the cursor shader. `--list`
+returns the shared shader names without reading or creating local state.
 
 Wallpaper rendering uses Ghostty's native image support. Cell opacity lets
 explicit TUI backgrounds reveal the image without per-application hooks or a
@@ -45,21 +46,24 @@ Ghostty's opaque treatment. The actual numeric settings live in `config`.
 
 ## State and recovery
 
-All background-state writes share a lock and rollback journal. Theme apply
-commits the theme, appearance, and active background config together. Prepare
-validates the selected image or shader without applying a new theme; recovery
-of an interrupted transaction can run before validation.
+Theme and shader commands share one exclusive `local/.shader-state.lock` file.
+Each config file is replaced by a same-directory rename. Theme apply keeps
+snapshots in memory and rolls back completed replacements when a later write
+fails; shader selection replaces only `local/shader.conf`. Prepare validates
+the current selection without applying a theme, and apply reads it again under
+the lock so a shader change between these phases is preserved.
 
-Normal operations read only `local/shader.conf`, defaulting to `off` when it is
+There is no durable journal, automatic lock reclamation, or power-loss recovery.
+Forced termination can leave a lock, temporary files, or mixed theme/background
+state. Once all theme and shader commands have stopped, remove the leftover
+lock and reapply the theme. A failed rollback reports the write and rollback
+errors; reapply repairs the derived configuration.
+
+The selection is read from `local/shader.conf`, defaulting to `off` when it is
 missing. The file must contain one of the current selection forms above.
-Retired name files and per-appearance preferences are neither read nor deleted;
-flat shader paths, light-name aliases, and presentation settings in the local
-file are no longer migrated.
-
-Recovery accepts version 4 journals targeting the current `theme`, `active`,
-and `appearance` files. The complete journal is validated before any snapshot
-is restored. Unsupported versions, retired targets, and malformed journals are
-left in place and reported without partially restoring files.
+Retired name files, per-appearance preferences, journals, and recovery locks are
+neither read nor deleted. Flat shader paths, light-name aliases, and presentation
+settings in the local file are no longer migrated.
 
 ## Reload and validation
 

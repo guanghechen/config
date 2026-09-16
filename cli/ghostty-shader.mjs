@@ -9,7 +9,7 @@ import { Reporter } from '#stl/reporter'
 import { exec } from '#util/command'
 
 import {
-  listGhosttyShaders,
+  GHOSTTY_SHADERS,
   selectGhosttyShader,
 } from '../asset/theme/template/ghostty/shader.mjs'
 
@@ -53,8 +53,7 @@ export async function handleGhosttyShader(reporter, home, options, shader) {
     if (shader || options.prev || options.next) {
       throw new Error('--list cannot be combined with a shader name, --prev, or --next')
     }
-    const shaders = await listGhosttyShaders({ home })
-    process.stdout.write(`${shaders.join('\n')}\n`)
+    process.stdout.write(`${GHOSTTY_SHADERS.join('\n')}\n`)
     return
   }
 
@@ -83,7 +82,7 @@ if (process.argv[1] === import.meta.filename) {
     .option({ long: 'silent', short: 's', type: 'boolean', description: 'Suppress output' })
     .option({ long: 'prev', type: 'boolean', description: 'Select the previous shader' })
     .option({ long: 'next', type: 'boolean', description: 'Select the next shader' })
-    .option({ long: 'list', type: 'boolean', description: 'List shaders for the current appearance' })
+    .option({ long: 'list', type: 'boolean', description: 'List available shaders' })
     .action(async ({ args, opts }) => {
       const reporter = opts.silent
         ? silentReporter
