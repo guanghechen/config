@@ -12,20 +12,30 @@ function cc0 {
 }
 
 ## codex
+function __codex_with_color__ {
+  $previousForceColor = $env:FORCE_COLOR
+  try {
+    $env:FORCE_COLOR = '1'
+    codex @args
+  } finally {
+    $env:FORCE_COLOR = $previousForceColor
+  }
+}
+
 function cx0 {
-  codex -p copilot --dangerously-bypass-approvals-and-sandbox @args
+  __codex_with_color__ -p copilot --dangerously-bypass-approvals-and-sandbox @args
 }
 
 function cxd {
-  codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox @args
+  __codex_with_color__ -p copilot-dev --dangerously-bypass-approvals-and-sandbox @args
 }
 
 function cxf {
-  codex -p copilot-fast --dangerously-bypass-approvals-and-sandbox @args
+  __codex_with_color__ -p copilot-fast --dangerously-bypass-approvals-and-sandbox @args
 }
 
 function cxm {
-  codex -p copilot-max --dangerously-bypass-approvals-and-sandbox @args
+  __codex_with_color__ -p copilot-max --dangerously-bypass-approvals-and-sandbox @args
 }
 
 
