@@ -21,12 +21,12 @@ color listfocus_unread    color142      color59
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-color title               color142       color59
-color info                color108       color59
-color hint-key            color175       color59          bold
-color hint-keys-delimiter color144        color59
-color hint-separator      default                           color59
-color hint-description    default                           color59
+color title               color142       default
+color info                color108       default
+color hint-key            color175       default          bold
+color hint-keys-delimiter color144        default
+color hint-separator      default                           default
+color hint-description    default                           default
 
 # -----------------------------------------------------------------------------
 # Misc

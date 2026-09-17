@@ -23,7 +23,6 @@ color listfocus_unread    default color188 bold
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-# Preserve Day's background instead of quantizing it to a darker surface.
 color title               color60        default bold
 color info                color24        default
 color hint-key            color60        default bold

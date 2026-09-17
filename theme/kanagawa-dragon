@@ -23,13 +23,12 @@ color listfocus_unread    color188 color237 bold
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-# Preserve Lotus's paper background instead of quantizing it to a darker surface.
-color title               color139        color16 bold
-color info                color109        color16
-color hint-key            color139        color16 bold
-color hint-keys-delimiter color145       color16
-color hint-separator      default                             color16
-color hint-description    default                             color16
+color title               color139        default bold
+color info                color109        default
+color hint-key            color139        default bold
+color hint-keys-delimiter color145       default
+color hint-separator      default                             default
+color hint-description    default                             default
 
 # -----------------------------------------------------------------------------
 # Misc
