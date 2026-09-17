@@ -6,11 +6,11 @@ config-file = shader.conf
 
 # Background
 background-blur = true
-background-opacity = 0.8
+background-opacity = 1
 background-opacity-cells = true
 background-image-fit = cover
 background-image-position = center-right
-background-image-opacity = 0.4
+background-image-opacity = 0.15
 background-image-repeat = false
 
 # Bell
