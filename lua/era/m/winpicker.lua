@@ -88,6 +88,7 @@ function M:show(winnr)
     vim.w[winnr_hint].wintype = stl.e.WinTypeEnum.WINPICKER
     vim.w[winnr_hint][dot.var.N_WINLINE_DISABLED] = true
 
+    vim.api.nvim_set_option_value("winblend", 0, { win = winnr_hint, scope = "local" })
     vim.api.nvim_set_option_value("number", false, { win = winnr_hint, scope = "local" })
     vim.api.nvim_set_option_value("relativenumber", false, { win = winnr_hint, scope = "local" })
     vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr_hint, scope = "local" })

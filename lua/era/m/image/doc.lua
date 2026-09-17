@@ -499,6 +499,8 @@ function M.hover()
       focusable = false,
     })
 
+    vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
+
     local updated = false
     local o = vim.tbl_deep_extend("force", {}, s.doc, {
       on_update_pre = function()

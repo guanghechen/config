@@ -111,6 +111,7 @@ return {
           auto_show_delay_ms = 200,
           window = {
             border = "rounded",
+            winblend = 0,
           },
         },
         ghost_text = {
@@ -127,6 +128,7 @@ return {
         },
         menu = {
           border = "rounded",
+          winblend = 0,
           draw = {
             treesitter = { "lsp" },
             columns = {
@@ -270,7 +272,7 @@ return {
         enabled = true,
         window = {
           border = "rounded",
-          winblend = 50,
+          winblend = 0,
           show_documentation = false,
         },
       },

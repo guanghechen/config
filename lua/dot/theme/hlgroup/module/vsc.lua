@@ -13,8 +13,8 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or u.bg0 ---@type string
-  local bg_pane = t and u.bg0 or c.none ---@type string
-  local panel_bg = cs.mix(t and c.none or c.base, t and c.none or c.overlay, 60) ---@type string
+  local bg_pane = t and c.none or u.bg0 ---@type string
+  local panel_bg = t and c.none or cs.mix(c.base, c.overlay, 60) ---@type string
 
   return {
     ---module/ai
@@ -141,7 +141,7 @@ function M.gen_hlgroup_map(context)
 
     ---module/git (hunk preview)
     m_ghp_cursor = { bg = u.bg3 },
-    m_ghp_normal = { bg = u.bg1 },
+    m_ghp_normal = { bg = t and u.none or u.bg1 },
 
     ---module/git (signs, blame)
     m_git_buffer_blame = { fg = cs.mix(c.editor_background, c.textDim, 30), italic = true },
@@ -190,7 +190,7 @@ function M.gen_hlgroup_map(context)
     ---module/picker
     m_pk_finder_normal = { fg = u.fg1, bg = bg_pane },
     m_pk_finder_prompt = { fg = u.red, bg = bg_pane },
-    m_pk_finder_title = { link = t and "ms_b_bg0" or "ms_b_none" },
+    m_pk_finder_title = { link = t and "ms_b_none" or "ms_b_bg0" },
     m_pk_matches = { fg = u.pink, bold = true, italic = true },
     m_pk_preview_current = { bg = u.bg2 },
     m_pk_preview_normal = { bg = bg_pane },
@@ -254,7 +254,7 @@ function M.gen_hlgroup_map(context)
     m_sr_search_cur = { fg = u.bg1, bg = u.red, bold = true, strikethrough = true },
 
     ---module/term
-    m_term_bg = { bg = u.bg0 },
+    m_term_bg = { bg = t and c.none or u.bg0 },
     m_term_current = { bg = u.bg2 },
 
     ---era/m/select/provider-codeaction
@@ -335,7 +335,7 @@ function M.gen_hlgroup_map(context)
     m_wk_icon_yellow = { fg = c.accentYellow },
     m_wk_key = { fg = c.accentBlue, bold = true },
     m_wk_pressed = { fg = c.accentRed, bold = true },
-    m_wk_normal = { fg = c.text, bg = u.bg1 },
+    m_wk_normal = { fg = c.text, bg = t and u.none or u.bg1 },
     m_wk_separator = { fg = c.textMuted },
   }
 end

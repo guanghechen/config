@@ -86,6 +86,7 @@ local function show_json_preview(content)
     noautocmd = true,
   })
 
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })

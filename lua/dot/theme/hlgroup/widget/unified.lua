@@ -12,7 +12,7 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   local bg = t and u.none or u.bg0 ---@type string
-  local bg_pane = t and u.bg0 or u.none ---@type string
+  local bg_pane = t and u.none or u.bg0 ---@type string
 
   return {
     ---buffers
@@ -154,11 +154,11 @@ function M.gen_hlgroup_map(context)
 
     ---notify
     -- stylua: ignore start
-    f_un_border_trace       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
-    f_un_border_debug       = { fg = u.green,   bg = t and u.bg0 or u.none },
-    f_un_border_info        = { fg = u.blue,    bg = t and u.bg0 or u.none },
-    f_un_border_warn        = { fg = u.yellow,  bg = t and u.bg0 or u.none },
-    f_un_border_error       = { fg = u.red,     bg = t and u.bg0 or u.none },
+    f_un_border_trace       = { fg = u.fg2,     bg = t and u.none or u.bg0 },
+    f_un_border_debug       = { fg = u.green,   bg = t and u.none or u.bg0 },
+    f_un_border_info        = { fg = u.blue,    bg = t and u.none or u.bg0 },
+    f_un_border_warn        = { fg = u.yellow,  bg = t and u.none or u.bg0 },
+    f_un_border_error       = { fg = u.red,     bg = t and u.none or u.bg0 },
     f_un_icon_trace         = { fg = u.fg2,     bg = u.none },
     f_un_icon_debug         = { fg = u.green,   bg = u.none },
     f_un_icon_info          = { fg = u.blue,    bg = u.none },
@@ -169,11 +169,11 @@ function M.gen_hlgroup_map(context)
     f_un_level_info         = { fg = u.blue,    bg = u.none },
     f_un_level_warn         = { fg = u.yellow,  bg = u.none },
     f_un_level_error        = { fg = u.red,     bg = u.none },
-    f_un_normal_trace       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
-    f_un_normal_debug       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
-    f_un_normal_info        = { fg = u.fg2,     bg = t and u.bg0 or u.none },
-    f_un_normal_warn        = { fg = u.fg2,     bg = t and u.bg0 or u.none },
-    f_un_normal_error       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
+    f_un_normal_trace       = { fg = u.fg2,     bg = t and u.none or u.bg0 },
+    f_un_normal_debug       = { fg = u.fg2,     bg = t and u.none or u.bg0 },
+    f_un_normal_info        = { fg = u.fg2,     bg = t and u.none or u.bg0 },
+    f_un_normal_warn        = { fg = u.fg2,     bg = t and u.none or u.bg0 },
+    f_un_normal_error       = { fg = u.fg2,     bg = t and u.none or u.bg0 },
     f_un_title_trace        = { fg = u.fg2,     bg = u.none },
     f_un_title_debug        = { fg = u.green,   bg = u.none },
     f_un_title_info         = { fg = u.blue,    bg = u.none },
@@ -193,7 +193,7 @@ function M.gen_hlgroup_map(context)
 
     ---popupmenu
     f_up_normal = { fg = u.fg2, bg = bg_pane },
-    f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },
+    f_up_border = { link = t and "ms_b_none" or "ms_b_bg0" },
     f_up_selected = { fg = u.bg1, bg = u.blue, bold = true, italic = true },
 
     ---render-markdown
@@ -269,8 +269,8 @@ function M.gen_hlgroup_map(context)
     f_winsep_title = {},
 
     ---maximize
-    f_maximize_float_normal = { fg = u.fg1, bg = u.bg0 },
-    f_maximize_float_border = { fg = u.bg4, bg = u.bg0 },
+    f_maximize_float_normal = { fg = u.fg1, bg = t and u.none or u.bg0 },
+    f_maximize_float_border = { fg = u.bg4, bg = t and u.none or u.bg0 },
     f_maximize_normal = { fg = u.fg1, bg = u.bg0 },
   }
 end

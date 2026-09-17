@@ -34,7 +34,7 @@ t:test("popup is compact and anchored to the bottom right", function()
   t.assert_true(config.width < vim.o.columns, "compact width")
   t.assert_eq(vim.o.columns - 1, config.col + config.width, "right edge")
   t.assert_eq(vim.o.lines - vim.o.cmdheight - 1, config.row + config.height, "bottom edge")
-  t.assert_eq(15, vim.api.nvim_get_option_value("winblend", { win = winnr }), "popup transparency")
+  t.assert_eq(0, vim.api.nvim_get_option_value("winblend", { win = winnr }), "popup transparency")
   t.assert_false(vim.api.nvim_get_option_value("wrap", { win = winnr }), "popup wrap")
 end)
 

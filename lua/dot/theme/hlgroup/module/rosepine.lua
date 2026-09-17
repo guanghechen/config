@@ -12,7 +12,7 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or c.base ---@type string
-  local bg_pane = t and c.base or c.none ---@type string
+  local bg_pane = t and c.none or c.base ---@type string
 
   -- Tint diff fills from the native palette, independent of window transparency.
   local diff_add = cs.mix(c.base, c.pine, 15)
@@ -145,7 +145,7 @@ function M.gen_hlgroup_map(context)
 
     ---module/git (hunk preview)
     m_ghp_cursor = { bg = c.highlightMed },
-    m_ghp_normal = { bg = c.surface },
+    m_ghp_normal = { bg = t and c.none or c.surface },
 
     ---module/git (signs, blame)
     m_git_buffer_blame = { fg = c.subtle, italic = true },
@@ -194,7 +194,7 @@ function M.gen_hlgroup_map(context)
     ---module/picker
     m_pk_finder_normal = { fg = c.text, bg = bg_pane },
     m_pk_finder_prompt = { fg = c.love, bg = bg_pane },
-    m_pk_finder_title = { link = t and "ms_b_bg0" or "ms_b_none" },
+    m_pk_finder_title = { link = t and "ms_b_none" or "ms_b_bg0" },
     m_pk_matches = { fg = c.rose, bold = true, italic = true },
     m_pk_preview_current = { bg = c.overlay },
     m_pk_preview_normal = { bg = bg_pane },
@@ -235,7 +235,7 @@ function M.gen_hlgroup_map(context)
     m_pl_icon_source = { fg = c.iris },
     m_pl_key = { fg = c.pine },
     m_pl_loaded = { fg = c.pine },
-    m_pl_normal = { fg = c.text, bg = c.surface, blend = t and 50 or 0 },
+    m_pl_normal = { fg = c.text, bg = t and c.none or c.surface, blend = t and 50 or 0 },
     m_pl_not_loaded = { fg = c.muted },
     m_pl_output = { fg = c.muted },
     m_pl_running = { fg = c.gold },
@@ -259,7 +259,7 @@ function M.gen_hlgroup_map(context)
     m_sr_search_cur = { fg = c.surface, bg = c.love, bold = true, strikethrough = true },
 
     ---module/term
-    m_term_bg = { bg = c.base },
+    m_term_bg = { bg = t and c.none or c.base },
     m_term_current = { bg = c.overlay },
 
     ---era/m/select/provider-codeaction

@@ -11,10 +11,10 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.vsc ---@type stl.t.theme.IVscPalette
   local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
-  local cmp_panel_bg = cs.mix(c.overlay, c.base, 70) ---@type string
+  local cmp_panel_bg = t and c.none or cs.mix(c.overlay, c.base, 70) ---@type string
   local treesitter_context_bg = t and c.none or c.overlay ---@type string
   local badge_fg = u.bg1 ---@type string
-  local panel_bg = cs.mix(t and c.none or c.base, t and c.none or c.overlay, 60) ---@type string
+  local panel_bg = t and c.none or cs.mix(c.base, c.overlay, 60) ---@type string
 
   ---@type table<string, stl.t.theme.IHlgroup>
   return {

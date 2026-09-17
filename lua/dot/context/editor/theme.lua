@@ -139,7 +139,8 @@ M.username = stl.c.Observable.from_value(_defaults.username)
 
 ---@return integer
 function M.get_float_winblend()
-  return M.transparency:snapshot() and 5 or 0 ---@type integer
+  -- Keep terminal-default backgrounds without revealing lower-window text.
+  return 0
 end
 
 ---@param params                        dot.context.theme.ILoadIntegrationParams
@@ -250,6 +251,8 @@ end
 
 ---@return nil
 function M.reload_theme()
+  vim.api.nvim_set_option_value("winblend", 0, { scope = "global" })
+  vim.api.nvim_set_option_value("pumblend", 0, { scope = "global" })
   local theme = M.theme:snapshot() ---@type dot.e.ThemeFullName
   local transparency = M.transparency:snapshot() ---@type boolean
   M.apply_theme({ theme = theme, transparency = transparency })

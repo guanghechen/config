@@ -488,6 +488,7 @@ function M:__create_win_as_needed__(bufnr)
   local winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
   self._winnr = winnr
 
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes:1", { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", WIN_HIGHLIGHT, { win = winnr, scope = "local" })
 

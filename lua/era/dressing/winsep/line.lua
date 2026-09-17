@@ -210,6 +210,7 @@ function M:show()
     vim.w[winnr].wintype = stl.e.WinTypeEnum.WINSEP
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
+    vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })

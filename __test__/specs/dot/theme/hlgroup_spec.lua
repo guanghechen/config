@@ -11,6 +11,64 @@ local theme = dot.context.theme
 
 local categories = { "basic", "lsp", "module", "nvimbar", "plugin", "treesitter", "widget" }
 
+t:test("transparent floats preserve terminal-default backgrounds across themes", function()
+  local groups = {
+    "Normal",
+    "NormalNC",
+    "NormalFloat",
+    "FloatNormal",
+    "FloatBorder",
+    "FloatTitle",
+    "FloatActiveBorder",
+    "FloatActiveTitle",
+    "m_pk_finder_normal",
+    "m_pk_finder_prompt",
+    "m_pk_result_normal",
+    "m_pk_preview_normal",
+    "m_bf_normal",
+    "m_bk_normal",
+    "m_ch_normal",
+    "m_cp_normal",
+    "m_in_normal",
+    "m_nf_normal",
+    "m_ghp_normal",
+    "m_pl_normal",
+    "m_term_bg",
+    "m_wk_normal",
+    "f_np_normal",
+    "f_ut_normal",
+    "f_up_normal",
+    "f_up_border",
+    "f_un_border_trace",
+    "f_un_border_debug",
+    "f_un_border_info",
+    "f_un_border_warn",
+    "f_un_border_error",
+    "f_un_normal_info",
+    "f_maximize_float_normal",
+    "f_maximize_float_border",
+    "MasonNormal",
+    "BlinkCmpMenu",
+    "BlinkCmpMenuBorder",
+    "BlinkCmpDoc",
+    "BlinkCmpDocBorder",
+    "BlinkCmpDocSeparator",
+    "BlinkCmpScrollBarGutter",
+    "BlinkCmpSignatureHelp",
+    "BlinkCmpSignatureHelpBorder",
+  }
+
+  for _, name in ipairs(dot.var.themes) do
+    for _, transparency in ipairs({ false, true }) do
+      theme.apply_theme({ theme = name, transparency = transparency })
+      for _, group in ipairs(groups) do
+        local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+        t.assert_eq(transparency, hl.bg == nil, name .. "/" .. group)
+      end
+    end
+  end
+end)
+
 ---@param name                          string
 ---@param transparency                  ?boolean
 ---@return stl.t.theme.IContext

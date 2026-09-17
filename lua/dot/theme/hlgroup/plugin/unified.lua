@@ -12,7 +12,7 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   local item_kind_bg = c.none ---@type string
-  local cmp_panel_bg = cs.mix(c.bg0, c.bg2, 75) ---@type string
+  local cmp_panel_bg = t and c.none or cs.mix(c.bg0, c.bg2, 75) ---@type string
   local treesitter_context_bg = t and c.none or c.bg2 ---@type string
   local badge_fg = c.bg1 ---@type string
   local badge_bg = c.pink ---@type string
@@ -87,7 +87,7 @@ function M.gen_hlgroup_map(context)
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = c.fg1 },
     MasonMutedBlock = { fg = c.fg1 },
-    MasonNormal = { fg = c.fg1, bg = cs.mix(c.bg0, c.bg1, 60), blend = 50 },
+    MasonNormal = { fg = c.fg1, bg = t and c.none or cs.mix(c.bg0, c.bg1, 60) },
 
     ---! mini.icons
     MiniIconsAzure = { fg = c.brightBlue },

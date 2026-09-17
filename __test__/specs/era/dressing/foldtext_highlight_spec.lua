@@ -4,7 +4,7 @@ local __module_name__ = "__test__.specs.era.dressing.foldtext_highlight" ---@typ
 local harness = require("__test__.support.harness")
 local t = harness.new("era.dressing.foldtext highlights")
 
-t:test("fold badge stays opaque over inactive window blending across themes", function()
+t:test("fold badge stays opaque with transparent window backgrounds across themes", function()
   t:patch_global("yoz", require("yoz"))
   t:patch_global("stl", require("stl"))
   t:patch_global("dot", require("dot"))
@@ -77,7 +77,7 @@ t:test("fold badge stays opaque over inactive window blending across themes", fu
       end
 
       local gap = cell(winnrs[2], cap_col - 1)
-      t.assert_eq(transparency and 50 or 0, gap[2].blend or 0, "inactive window blending remains unchanged")
+      t.assert_eq(0, gap[2].blend or 0, "ordinary window backgrounds do not use float blending")
     end
   end
 end)

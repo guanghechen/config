@@ -12,7 +12,7 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or c.base ---@type string
-  local bg_pane = t and c.base or c.none ---@type string
+  local bg_pane = t and c.none or c.base ---@type string
 
   -- Tint diff fills from the native palette, independent of window transparency.
   local diff_add = cs.mix(c.base, c.pine, 15)
@@ -159,11 +159,11 @@ function M.gen_hlgroup_map(context)
     f_np_title = { link = "m_pk_finder_title" },
 
     ---notify
-    f_un_border_trace = { fg = c.subtle, bg = t and c.base or c.none },
-    f_un_border_debug = { fg = c.pine, bg = t and c.base or c.none },
-    f_un_border_info = { fg = c.foam, bg = t and c.base or c.none },
-    f_un_border_warn = { fg = c.gold, bg = t and c.base or c.none },
-    f_un_border_error = { fg = c.love, bg = t and c.base or c.none },
+    f_un_border_trace = { fg = c.subtle, bg = t and c.none or c.base },
+    f_un_border_debug = { fg = c.pine, bg = t and c.none or c.base },
+    f_un_border_info = { fg = c.foam, bg = t and c.none or c.base },
+    f_un_border_warn = { fg = c.gold, bg = t and c.none or c.base },
+    f_un_border_error = { fg = c.love, bg = t and c.none or c.base },
     f_un_icon_trace = { fg = c.subtle, bg = c.none },
     f_un_icon_debug = { fg = c.pine, bg = c.none },
     f_un_icon_info = { fg = c.foam, bg = c.none },
@@ -174,11 +174,11 @@ function M.gen_hlgroup_map(context)
     f_un_level_info = { fg = c.foam, bg = c.none },
     f_un_level_warn = { fg = c.gold, bg = c.none },
     f_un_level_error = { fg = c.love, bg = c.none },
-    f_un_normal_trace = { fg = c.subtle, bg = t and c.base or c.none },
-    f_un_normal_debug = { fg = c.subtle, bg = t and c.base or c.none },
-    f_un_normal_info = { fg = c.subtle, bg = t and c.base or c.none },
-    f_un_normal_warn = { fg = c.subtle, bg = t and c.base or c.none },
-    f_un_normal_error = { fg = c.subtle, bg = t and c.base or c.none },
+    f_un_normal_trace = { fg = c.subtle, bg = t and c.none or c.base },
+    f_un_normal_debug = { fg = c.subtle, bg = t and c.none or c.base },
+    f_un_normal_info = { fg = c.subtle, bg = t and c.none or c.base },
+    f_un_normal_warn = { fg = c.subtle, bg = t and c.none or c.base },
+    f_un_normal_error = { fg = c.subtle, bg = t and c.none or c.base },
     f_un_title_trace = { fg = c.subtle, bg = c.none },
     f_un_title_debug = { fg = c.pine, bg = c.none },
     f_un_title_info = { fg = c.foam, bg = c.none },
@@ -197,7 +197,7 @@ function M.gen_hlgroup_map(context)
 
     ---popupmenu
     f_up_normal = { fg = c.subtle, bg = bg_pane },
-    f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },
+    f_up_border = { link = t and "ms_b_none" or "ms_b_bg0" },
     f_up_selected = { fg = c.text, bg = c.highlightMed, bold = true, italic = true },
 
     ---render-markdown
@@ -273,8 +273,8 @@ function M.gen_hlgroup_map(context)
     f_winsep_title = {},
 
     ---maximize
-    f_maximize_float_normal = { fg = c.text, bg = c.base },
-    f_maximize_float_border = { fg = c.highlightHigh, bg = c.base },
+    f_maximize_float_normal = { fg = c.text, bg = t and c.none or c.base },
+    f_maximize_float_border = { fg = c.highlightHigh, bg = t and c.none or c.base },
     f_maximize_normal = { fg = c.text, bg = c.base },
   }
 end

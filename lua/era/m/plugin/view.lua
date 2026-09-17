@@ -178,6 +178,7 @@ function M:__mount__()
   vim.api.nvim_set_option_value("filetype", "dot_plugin", { buf = self.bufnr })
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self.bufnr })
 
+  vim.api.nvim_set_option_value("winblend", 0, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("conceallevel", 3, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("foldenable", false, { win = self.winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = self.winnr, scope = "local" })

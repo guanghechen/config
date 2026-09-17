@@ -1478,6 +1478,7 @@ function M.__show_commit_popup__(abbrev_hash, lines, anchor)
     title_pos = "center",
   })
 
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
 

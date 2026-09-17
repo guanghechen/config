@@ -11,8 +11,8 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type stl.t.theme.ICatppuccinPalette
   local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
-  local cmp_panel_bg = cs.mix(t and c.none or c.mantle, c.surface0, 65)
-  local panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
+  local cmp_panel_bg = t and c.none or cs.mix(c.mantle, c.surface0, 65)
+  local panel_bg = t and c.none or cs.mix(c.mantle, c.surface1, 60)
   local treesitter_context_bg = t and c.none or c.surface0
   local badge_fg = u.bg1 ---@type string
   local badge_bg = u.pink ---@type string

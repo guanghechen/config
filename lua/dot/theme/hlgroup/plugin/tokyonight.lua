@@ -11,7 +11,7 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local item_kind_bg = u.none ---@type string
-  local cmp_panel_bg = cs.mix(u.bg1, u.bg0, 80) ---@type string
+  local cmp_panel_bg = t and u.none or cs.mix(u.bg1, u.bg0, 80) ---@type string
   local treesitter_context_bg = t and u.none or u.bg2 ---@type string
   local badge_fg = u.bg0 ---@type string
   local badge_bg = u.pink ---@type string

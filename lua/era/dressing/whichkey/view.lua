@@ -15,7 +15,6 @@ local PADDING_Y = 1
 local PADDING_X = 2
 local COL_SPACING = 3
 local MAX_WIDTH = 100
-local WINBLEND = 15
 local BOTTOM_OFFSET = 1
 local RIGHT_OFFSET = 1
 
@@ -165,7 +164,7 @@ function M.__create_win__(layout)
     zindex = WK_ZINDEX,
   })
 
-  vim.api.nvim_set_option_value("winblend", WINBLEND, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", "Normal:m_wk_normal", { win = winnr, scope = "local" })
 
