@@ -106,6 +106,7 @@
       "hideCWD": false,
       "hideModelInfo": false,
       "hideSandboxStatus": false
-    }
+    },
+    "useBackgroundColor": false
   }
 }
