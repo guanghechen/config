@@ -1,7 +1,7 @@
 # vsc-dark-modern
 
 # Main bg
-theme[main_bg]="#1F1F1F"
+theme[main_bg]=""
 
 # Main text color
 theme[main_fg]="#CCCCCC"

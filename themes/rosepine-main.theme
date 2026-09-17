@@ -1,7 +1,7 @@
 # rosepine-main
 
 # Main bg
-theme[main_bg]="#191724"
+theme[main_bg]=""
 
 # Main text color
 theme[main_fg]="#E0DEF4"

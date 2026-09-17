@@ -1,7 +1,7 @@
 # gruvbox-light
 
 # Main bg
-theme[main_bg]="#F2E5BC"
+theme[main_bg]=""
 
 # Main text color
 theme[main_fg]="#3C3836"

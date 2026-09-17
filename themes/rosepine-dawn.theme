@@ -1,7 +1,7 @@
 # rosepine-dawn
 
 # Main bg
-theme[main_bg]="#FAF4ED"
+theme[main_bg]=""
 
 # Main text color
 theme[main_fg]="#2C283B"
