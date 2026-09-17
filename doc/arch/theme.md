@@ -94,6 +94,19 @@ Native terminal ANSI colors and shared app accents are separate concerns. Keep
 upstream swatches in the family palette; put cross-app readability adjustments
 in `unified`. App-only values belong in the app template.
 
+Gemini's ordinary message and input fills are controlled by the user preference
+`ui.useBackgroundColor = false` in `~/.gemini/settings.json`, independently of
+the selected theme. Keep its RGB background palette because it also supplies
+contrast and state colors. Theme apply only touches the settings file to prompt
+a reload; it never rewrites user preferences or creates a missing settings file.
+
+OpenCode 1.18.4 also uses the root `background` as attachment badge foreground.
+Keep that value RGB so File/Directory labels remain visible. It also uses
+`backgroundMenu` for clickable tool-block hover, so keep its RGB value or its
+fallback to `backgroundElement`. Panel and ordinary diff-context backgrounds
+use `none`; root and menu surfaces retain fills because these tokens also serve
+as attachment foreground and hover feedback.
+
 - **Rosé Pine:** retain the native ANSI mapping and use `unified.fg1` for
   ordinary terminal text. Dawn uses deeper ink and accents; neutral selections
   and diff fills retain readable foregrounds.

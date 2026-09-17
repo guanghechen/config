@@ -15,8 +15,8 @@
 --scrollbar="┃"
 
 --color="fg+:{{vsc.foreground}},bg+:{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}},hl+:{{vsc.accentPink}}"
---color="fg:{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}},bg:{{vsc.editor_background}},hl:{{vsc.accentYellow}}"
---color="gutter:{{vsc.editor_background}},pointer:{{vsc.accentPink}},spinner:{{vsc.accentBlue}}"
+--color="fg:{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}},bg:-1,hl:{{vsc.accentYellow}}"
+--color="gutter:-1,pointer:{{vsc.accentPink}},spinner:{{vsc.accentBlue}}"
 --color="info:{{vsc.brightBlue}},prompt:{{vsc.brightGreen}},marker:{{vsc.accentPink}},query:{{vsc.foreground}}"
 --preview='bat --line-range=:500 --style=snip --theme={{name}} --number --color=always {} || cat -n {}'
 

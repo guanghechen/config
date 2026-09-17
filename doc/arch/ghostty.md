@@ -38,11 +38,15 @@ appearances share the same cycling order. Here, `off` disables the background
 shader; it does not disable the wallpaper or the cursor shader. `--list`
 returns the shared shader names without reading or creating local state.
 
-Wallpaper rendering uses Ghostty's native image support. Cell opacity lets
-explicit TUI backgrounds reveal the image without per-application hooks or a
-wallpaper shader. Image opacity controls blending with the theme background;
-window opacity is applied afterward. Selected and reverse-video cells retain
-Ghostty's opaque treatment. The actual numeric settings live in `config`.
+Wallpaper rendering uses Ghostty's native image support. The window stays
+opaque; ordinary TUI backgrounds, including Neovim float bodies, use
+terminal-default colors to reveal the wallpaper. Selection, search, and diff
+backgrounds retain their colors. Neovim uses `bg=NONE` and `winblend=0` so
+ordinary float bodies reveal the wallpaper without showing underlying editor
+text. Cell opacity follows window opacity, so
+enabling it does not make explicit cell backgrounds transparent when window
+opacity is `1`. Image opacity controls blending with the theme background.
+The actual numeric settings live in `config`.
 
 ## State and recovery
 

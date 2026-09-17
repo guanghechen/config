@@ -9,16 +9,16 @@ set -g @GHC_SL_FG_CMDLINE               "{{vsc.overlay}}"
 set -g prompt-cursor-colour             "{{vsc.accentOrange}}"
 
 ## Message
-set -g @GHC_SL_BG_MESSAGE               "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_SL_BG_MESSAGE               "default"
 set -g @GHC_SL_FG_MESSAGE               "{{vsc.foreground}}"
 
 ## Popup
-set -g @GHC_POPUP_BG                    "{{vsc.editor_background}}"
+set -g @GHC_POPUP_BG                    "default"
 set -g @GHC_POPUP_FG                    "{{vsc.foreground}}"
 set -g @GHC_POPUP_FG_BORDER             "{{darken ? vsc.textMuted : vsc.activityBar_inactiveForeground}}"
 
 ## Menu
-set -g @GHC_MENU_BG                     "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
+set -g @GHC_MENU_BG                     "default"
 set -g @GHC_MENU_FG                     "{{vsc.foreground}}"
 set -g @GHC_MENU_BG_SELECTED            "{{vsc.accentPink}}"
 set -g @GHC_MENU_FG_SELECTED            "{{vsc.editor_background}}"
@@ -38,8 +38,8 @@ set -g @GHC_SL_BG_COPY_MODE_SEL         "{{vsc.accentAqua}}"
 set -g @GHC_SL_FG_COPY_MODE_SEL         "{{vsc.editor_background}}"
 
 ## Pane
-set -g @GHC_PANE_BG                     "{{vsc.overlay}}"
-set -g @GHC_PANE_BG_ACTIVE              "{{vsc.editor_background}}"
+set -g @GHC_PANE_BG                     "default"
+set -g @GHC_PANE_BG_ACTIVE              "default"
 
 set -g @GHC_PSL_FG_BORDER               "{{(darken ? vsc.menu_border : vsc.badge_background)}}"
 set -g @GHC_PSL_FG_BORDER_CUR           "{{vsc.accentPink}}"

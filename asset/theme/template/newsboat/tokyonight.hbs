@@ -23,13 +23,12 @@ color listfocus_unread    {{darken ? 'color' + c256(unified.fg1) : 'default'}} c
 # -----------------------------------------------------------------------------
 # Title & Info Bar
 # -----------------------------------------------------------------------------
-# Preserve Day's background instead of quantizing it to a darker surface.
-color title               color{{c256(unified.purple)}}        {{darken ? 'color' + c256(unified.bg1) : 'default'}} bold
-color info                color{{c256(unified.blue)}}        {{darken ? 'color' + c256(unified.bg1) : 'default'}}
-color hint-key            color{{c256(unified.purple)}}        {{darken ? 'color' + c256(unified.bg1) : 'default'}} bold
-color hint-keys-delimiter color{{c256(unified.fg2)}}       {{darken ? 'color' + c256(unified.bg1) : 'default'}}
-color hint-separator      default                             {{darken ? 'color' + c256(unified.bg1) : 'default'}}
-color hint-description    default                             {{darken ? 'color' + c256(unified.bg1) : 'default'}}
+color title               color{{c256(unified.purple)}}        default bold
+color info                color{{c256(unified.blue)}}        default
+color hint-key            color{{c256(unified.purple)}}        default bold
+color hint-keys-delimiter color{{c256(unified.fg2)}}       default
+color hint-separator      default                             default
+color hint-description    default                             default
 
 # -----------------------------------------------------------------------------
 # Misc

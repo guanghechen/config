@@ -2,6 +2,9 @@
 
 # {{name}}
 
+[app]
+overall                 = { bg = "reset" }
+
 [cmp]
 border                  = { fg = "{{vsc.accentBlue}}" }
 active                  = { reversed = true }
@@ -78,7 +81,7 @@ border                  = { fg = "{{vsc.accentBlue}}" }
 title                   = { fg = "{{vsc.accentBlue}}" }
 
 [status]
-overall                 = { fg = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}" }
+overall                 = { fg = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}", bg = "reset" }
 perm_exec               = { fg = "{{vsc.accentRed}}",     bold = true }
 perm_read               = { fg = "{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}",     bold = true }
 perm_sep                = { fg = "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}",     bold = true }
