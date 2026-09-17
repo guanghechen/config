@@ -286,7 +286,6 @@ end
 function M:__create_wins__()
   local input_dimension, preview_dimension = self:__layout__() ---@type dot.t.IWinDimension, dot.t.IWinDimension
   local zindex = dot.win.resolve_zindex() ---@type integer
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
 
   local input_bufnr = self:__create_input_buf__() ---@type integer
   local input_winnr = vim.api.nvim_open_win(input_bufnr, false, {
@@ -311,7 +310,7 @@ function M:__create_wins__()
   vim.api.nvim_set_option_value("relativenumber", false, { win = input_winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes", { win = input_winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = input_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = input_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = input_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", __highlights__.input, { win = input_winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = input_winnr, scope = "local" })
@@ -337,7 +336,7 @@ function M:__create_wins__()
   vim.api.nvim_set_option_value("relativenumber", false, { win = preview_winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "no", { win = preview_winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = preview_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = preview_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = preview_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", __highlights__.preview, { win = preview_winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = preview_winnr, scope = "local" })

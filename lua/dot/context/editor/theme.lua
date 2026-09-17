@@ -22,8 +22,6 @@ local __module_name__ = "dot.context.editor.theme" ---@type string
 ---@field public transparency           stl.c.Observable
 ---@field public username               stl.c.Observable
 ---
----@field public get_float_winblend     fun(): integer
----
 ---@field public apply_integration      fun(params: dot.context.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: dot.context.theme.ILoadThemeParams): stl.t.theme.IScheme|nil
 ---@field public get_scheme             fun(theme: dot.e.ThemeFullName): stl.t.theme.IScheme | nil
@@ -136,12 +134,6 @@ local _defaults = M.defaults() ---@type dot.context.theme.data
 M.theme = stl.c.Observable.from_value(_defaults.theme)
 M.transparency = stl.c.Observable.from_value(_defaults.transparency)
 M.username = stl.c.Observable.from_value(_defaults.username)
-
----@return integer
-function M.get_float_winblend()
-  -- Keep terminal-default backgrounds without revealing lower-window text.
-  return 0
-end
 
 ---@param params                        dot.context.theme.ILoadIntegrationParams
 ---@return nil

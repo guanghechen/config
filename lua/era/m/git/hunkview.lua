@@ -290,7 +290,6 @@ function M:__show_popup__(hunk, is_staged)
   local height = math.min(#lines, 20) ---@type integer
   local row, col = self:__calc_position__(width, height) ---@type integer, integer
 
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local title_suffix = is_staged and " (staged) " or " "
   local winnr = vim.api.nvim_open_win(board_bufnr, true, {
     relative = "cursor",
@@ -311,7 +310,7 @@ function M:__show_popup__(hunk, is_staged)
   vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes:1", { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", table.concat({

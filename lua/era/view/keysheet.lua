@@ -101,7 +101,6 @@ function M:open()
     vim.hl.range(bufnr, self._ns, hl.hlname, { hl.lnum, hl.coll }, { hl.lnum, hl.colr })
   end
 
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
     row = 1,
@@ -121,7 +120,7 @@ function M:open()
   vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", table.concat({

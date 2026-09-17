@@ -28,11 +28,6 @@ local function setup()
   }
   t:patch_global("dot", {
     state = { status = { notification_level = level, notification_paused = paused } },
-    context = { theme = {
-      get_float_winblend = function()
-        return 0
-      end,
-    } },
     var = { zindex = { NOTIFIER = 50 }, N_WINLINE_DISABLED = "winline_disabled" },
   })
   t:patch_global("yoz", { fn = {

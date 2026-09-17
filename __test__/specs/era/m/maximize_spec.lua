@@ -14,13 +14,6 @@ local forked_winnrs = nil ---@type integer[]|nil
 
 bootstrap.with_runtime(t, {
   dot = {
-    context = {
-      theme = {
-        get_float_winblend = function()
-          return 0
-        end,
-      },
-    },
     state = {
       maximized = maximized,
       status = {

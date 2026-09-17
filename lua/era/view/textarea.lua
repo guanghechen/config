@@ -80,7 +80,6 @@ function M.new(props)
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
   local filetype = props.filetype ---@type string|nil
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
 
   ---@type table<string, any>
   local win_opts = vim.tbl_extend("force", {
@@ -89,7 +88,7 @@ function M.new(props)
     relativenumber = true,
     signcolumn = "no",
     wrap = false,
-    winblend = winblend,
+    winblend = 0,
     winhighlight = WIN_HIGHLIGHT,
   }, props.win_opts or {})
 

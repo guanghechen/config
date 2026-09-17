@@ -7,13 +7,6 @@ local harness = require("__test__.support.harness")
 local t = harness.new("era.m.modal_focus")
 
 bootstrap.with_global(t, "dot", {
-  context = {
-    theme = {
-      get_float_winblend = function()
-        return 0
-      end,
-    },
-  },
   var = {
     N_WINLINE_DISABLED = "test_winline_disabled",
     nsnr = {

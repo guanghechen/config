@@ -1120,7 +1120,7 @@ end
 function M:ensure_win()
   local bufnr = self:ensure_buf()
   local rect = self:measure_rect()
-  local winblend = dot.context.theme.get_float_winblend()
+  local winblend = 0
 
   self.win_opts.winhighlight = self:__normalize_winhighlight__(self.win_opts.winhighlight)
 

@@ -67,7 +67,7 @@ local function maximize_float(winnr)
     return
   end
 
-  vim.api.nvim_set_option_value("winblend", dot.context.theme.get_float_winblend(), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", WINHIGHLIGHT_FLOAT, { win = winnr, scope = "local" })
 end
 

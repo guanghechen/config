@@ -95,7 +95,6 @@ function M.open(opts, on_confirm)
   vim.api.nvim_set_option_value("omnifunc", "v:lua.require'era.m.input'.complete", { buf = bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local relative = opts.relative or "cursor" ---@type "editor"|"cursor"|"win"
   local relative_win = opts.win ---@type integer|nil
 
@@ -155,7 +154,7 @@ function M.open(opts, on_confirm)
   vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", WIN_HIGHLIGHT, { win = winnr, scope = "local" })
 

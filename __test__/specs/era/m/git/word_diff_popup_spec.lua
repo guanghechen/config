@@ -13,11 +13,6 @@ bootstrap.with_runtime(t, {
     icon = { git = { Diff = "G" } },
     nvim = { fn = require("stl.nvim.fn") },
   },
-  dot = { context = { theme = {
-    get_float_winblend = function()
-      return 0
-    end,
-  } } },
   era = { m = { git = { diff = diff } } },
 })
 

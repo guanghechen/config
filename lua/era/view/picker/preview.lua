@@ -227,7 +227,6 @@ function M:create_win(winopts, dimension)
 
   local result = self._last_result ---@type era.view.picker.preview.IDrawResult|nil
   local bufnr = self:create_buf() ---@type integer
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local wincfg = {
     relative = "editor",
     row = dimension.row,
@@ -260,7 +259,7 @@ function M:create_win(winopts, dimension)
   )
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", winopts.winhighlight, { win = winnr, scope = "local" })
 

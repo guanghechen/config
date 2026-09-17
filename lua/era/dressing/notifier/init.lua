@@ -562,11 +562,10 @@ function M.__create_win_as_needed__(win)
   end
 
   local winbar = M.__gen_winbar__(task, width) ---@type string
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local winhighlight = config.winhighlight[task.level] ---@type string
 
   vim.api.nvim_set_option_value("winbar", winbar, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", winhighlight, { win = winnr, scope = "local" })
   return winnr

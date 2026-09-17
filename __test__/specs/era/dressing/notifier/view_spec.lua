@@ -19,11 +19,6 @@ t:test("refresh updates history without readonly warnings and restores buffer pr
         return 50
       end,
     },
-    context = { theme = {
-      get_float_winblend = function()
-        return 0
-      end,
-    } },
   })
   t:patch_global("era", { dressing = { notifier = {
     history = function()

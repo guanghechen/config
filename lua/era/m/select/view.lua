@@ -102,7 +102,6 @@ function M.open(props)
   vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local position = props.position or "center" ---@type era.m.select.PositionEnum
 
   local relative ---@type string
@@ -169,7 +168,7 @@ function M.open(props)
   vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", WIN_HIGHLIGHT, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
