@@ -3,7 +3,7 @@
 # tokyonight-day
 
 [app]
-overall                 = { fg = "#293552", bg = "#e1e2e7" }
+overall                 = { fg = "#293552", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#254e96" }
@@ -83,7 +83,7 @@ border                  = { fg = "#9ca6be" }
 title                   = { fg = "#254e96", bold = true }
 
 [status]
-overall                 = { fg = "#445270", bg = "#e1e2e7" }
+overall                 = { fg = "#445270", bg = "reset" }
 perm_exec               = { fg = "#3e5d2c", bold = true }
 perm_read               = { fg = "#254e96", bold = true }
 perm_sep                = { fg = "#445270", bold = true }

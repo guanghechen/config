@@ -3,7 +3,7 @@
 # tokyonight-moon
 
 [app]
-overall                 = { fg = "#c8d3f5", bg = "#222436" }
+overall                 = { fg = "#c8d3f5", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#82aaff" }
@@ -83,7 +83,7 @@ border                  = { fg = "#4c5878" }
 title                   = { fg = "#82aaff", bold = true }
 
 [status]
-overall                 = { fg = "#aab6df", bg = "#222436" }
+overall                 = { fg = "#aab6df", bg = "reset" }
 perm_exec               = { fg = "#c3e88d", bold = true }
 perm_read               = { fg = "#82aaff", bold = true }
 perm_sep                = { fg = "#aab6df", bold = true }

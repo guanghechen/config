@@ -3,7 +3,7 @@
 # catppuccin-macchiato
 
 [app]
-overall                 = { fg = "#CAD3F5", bg = "#24273A" }
+overall                 = { fg = "#CAD3F5", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#C6A0F6" }
@@ -83,7 +83,7 @@ border                  = { fg = "#5B6078" }
 title                   = { fg = "#8AADF4", bold = true }
 
 [status]
-overall                 = { fg = "#B8C0E0", bg = "#24273A" }
+overall                 = { fg = "#B8C0E0", bg = "reset" }
 perm_exec               = { fg = "#A6DA95", bold = true }
 perm_read               = { fg = "#8AADF4", bold = true }
 perm_sep                = { fg = "#B8C0E0", bold = true }

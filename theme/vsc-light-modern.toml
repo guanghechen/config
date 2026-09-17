@@ -2,6 +2,9 @@
 
 # vsc-light-modern
 
+[app]
+overall                 = { bg = "reset" }
+
 [cmp]
 border                  = { fg = "#005FB8" }
 active                  = { reversed = true }
@@ -78,7 +81,7 @@ border                  = { fg = "#005FB8" }
 title                   = { fg = "#005FB8" }
 
 [status]
-overall                 = { fg = "#616161" }
+overall                 = { fg = "#616161", bg = "reset" }
 perm_exec               = { fg = "#F85149",     bold = true }
 perm_read               = { fg = "#616161",     bold = true }
 perm_sep                = { fg = "#767676",     bold = true }

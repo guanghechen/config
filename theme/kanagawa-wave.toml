@@ -3,7 +3,7 @@
 # kanagawa-wave
 
 [app]
-overall                 = { fg = "#DCD7BA", bg = "#1F1F28" }
+overall                 = { fg = "#DCD7BA", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#7E9CD8" }
@@ -83,7 +83,7 @@ border                  = { fg = "#54546D" }
 title                   = { fg = "#7E9CD8", bold = true }
 
 [status]
-overall                 = { fg = "#C8C093", bg = "#1F1F28" }
+overall                 = { fg = "#C8C093", bg = "reset" }
 perm_exec               = { fg = "#98BB6C", bold = true }
 perm_read               = { fg = "#7E9CD8", bold = true }
 perm_sep                = { fg = "#C8C093", bold = true }

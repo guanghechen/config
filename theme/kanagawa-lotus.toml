@@ -3,7 +3,7 @@
 # kanagawa-lotus
 
 [app]
-overall                 = { fg = "#38384D", bg = "#F2ECBC" }
+overall                 = { fg = "#38384D", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#3E5A87" }
@@ -83,7 +83,7 @@ border                  = { fg = "#ACA99A" }
 title                   = { fg = "#3E5A87", bold = true }
 
 [status]
-overall                 = { fg = "#545464", bg = "#F2ECBC" }
+overall                 = { fg = "#545464", bg = "reset" }
 perm_exec               = { fg = "#4A6037", bold = true }
 perm_read               = { fg = "#3E5A87", bold = true }
 perm_sep                = { fg = "#545464", bold = true }

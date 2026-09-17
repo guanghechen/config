@@ -3,7 +3,7 @@
 # catppuccin-frappe
 
 [app]
-overall                 = { fg = "#C6D0F5", bg = "#303446" }
+overall                 = { fg = "#C6D0F5", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#CA9EE6" }
@@ -83,7 +83,7 @@ border                  = { fg = "#626880" }
 title                   = { fg = "#8CAAEE", bold = true }
 
 [status]
-overall                 = { fg = "#B5BFE2", bg = "#303446" }
+overall                 = { fg = "#B5BFE2", bg = "reset" }
 perm_exec               = { fg = "#A6D189", bold = true }
 perm_read               = { fg = "#8CAAEE", bold = true }
 perm_sep                = { fg = "#B5BFE2", bold = true }

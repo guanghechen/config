@@ -3,7 +3,7 @@
 # catppuccin-mocha
 
 [app]
-overall                 = { fg = "#CDD6F4", bg = "#1E1E2E" }
+overall                 = { fg = "#CDD6F4", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#CBA6F7" }
@@ -83,7 +83,7 @@ border                  = { fg = "#585B70" }
 title                   = { fg = "#89B4FA", bold = true }
 
 [status]
-overall                 = { fg = "#BAC2DE", bg = "#1E1E2E" }
+overall                 = { fg = "#BAC2DE", bg = "reset" }
 perm_exec               = { fg = "#A6E3A1", bold = true }
 perm_read               = { fg = "#89B4FA", bold = true }
 perm_sep                = { fg = "#BAC2DE", bold = true }

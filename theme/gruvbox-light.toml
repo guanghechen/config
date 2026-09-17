@@ -2,6 +2,9 @@
 
 # gruvbox-light
 
+[app]
+overall                 = { bg = "reset" }
+
 [cmp]
 border                  = { fg = "#458588" }
 active                  = { reversed = true }
@@ -78,7 +81,7 @@ border                  = { fg = "#458588" }
 title                   = { fg = "#458588" }
 
 [status]
-overall                 = { fg = "#504945" }
+overall                 = { fg = "#504945", bg = "reset" }
 perm_exec               = { fg = "#CC241D",     bold = true }
 perm_read               = { fg = "#504945",     bold = true }
 perm_sep                = { fg = "#665C54",     bold = true }

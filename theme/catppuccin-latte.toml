@@ -3,7 +3,7 @@
 # catppuccin-latte
 
 [app]
-overall                 = { fg = "#303446", bg = "#EFF1F5" }
+overall                 = { fg = "#303446", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#722FBC" }
@@ -83,7 +83,7 @@ border                  = { fg = "#BCC0CC" }
 title                   = { fg = "#2451B5", bold = true }
 
 [status]
-overall                 = { fg = "#4C4F69", bg = "#EFF1F5" }
+overall                 = { fg = "#4C4F69", bg = "reset" }
 perm_exec               = { fg = "#25651C", bold = true }
 perm_read               = { fg = "#2451B5", bold = true }
 perm_sep                = { fg = "#4C4F69", bold = true }

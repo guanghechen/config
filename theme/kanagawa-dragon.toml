@@ -3,7 +3,7 @@
 # kanagawa-dragon
 
 [app]
-overall                 = { fg = "#C5C9C5", bg = "#181616" }
+overall                 = { fg = "#C5C9C5", bg = "reset" }
 
 [cmp]
 border                  = { fg = "#8BA4B0" }
@@ -83,7 +83,7 @@ border                  = { fg = "#50534E" }
 title                   = { fg = "#8BA4B0", bold = true }
 
 [status]
-overall                 = { fg = "#A6A69C", bg = "#181616" }
+overall                 = { fg = "#A6A69C", bg = "reset" }
 perm_exec               = { fg = "#87A987", bold = true }
 perm_read               = { fg = "#8BA4B0", bold = true }
 perm_sep                = { fg = "#A6A69C", bold = true }

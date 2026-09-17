@@ -3,7 +3,7 @@
 # rosepine-dawn
 
 [app]
-overall                 = { bg = "#FAF4ED" }
+overall                 = { bg = "reset" }
 
 [cmp]
 border                  = { fg = "#853C3A" }
@@ -83,7 +83,7 @@ border                  = { fg = "#CECACD" }
 title                   = { fg = "#235965", bold = true }
 
 [status]
-overall                 = { fg = "#545064", bg = "#FAF4ED" }
+overall                 = { fg = "#545064", bg = "reset" }
 perm_exec               = { fg = "#235965", bold = true }
 perm_read               = { fg = "#714A12", bold = true }
 perm_sep                = { fg = "#545064", bold = true }
