@@ -8,6 +8,8 @@ pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
 era.dressing.setup({
+  -- Seed window defaults before UI setup can create or focus other windows.
+  "statuscolumn",
   "notifier",
   "ui_attach",
   "im",
@@ -29,8 +31,7 @@ vim.schedule(function()
     "tabline",
     "winline",
 
-    -- Gutter, whitespace, and window guides.
-    "statuscolumn",
+    -- Whitespace and window guides.
     "trailspace",
     "virtcolumn",
     "winsep",
