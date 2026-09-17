@@ -107,7 +107,7 @@ transport = "websocket"
 type = "conversational"
 
 [tui]
-theme = "ansi"
+theme = "local"
 vim_mode_default = false
 notifications = true
 notification_method = "bel"
