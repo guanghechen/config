@@ -13,7 +13,7 @@
     "success": "#98971A",
     "info": "#689D6A",
 
-    "backgroundPanel": "#3C3836",
+    "backgroundPanel": "none",
     "backgroundElement": "#504945",
     "border": "#665C54",
     "borderActive": "#D3869B",
@@ -21,6 +21,7 @@
 
     "diffAdded": "#98971A",
     "diffRemoved": "#CC241D",
+    "diffContextBg": "none",
     "diffContext": "#A89984",
     "diffHunkHeader": "#B16286",
     "diffHighlightAdded": "#B8BB26",

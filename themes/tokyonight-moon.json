@@ -14,7 +14,7 @@
     "success": "#c3e88d",
     "info": "#82aaff",
 
-    "backgroundPanel": "#1e2030",
+    "backgroundPanel": "none",
     "backgroundElement": "#2f334d",
     "backgroundMenu": "#2f334d",
     "border": "#4c5878",
@@ -29,7 +29,7 @@
     "diffHighlightRemoved": "#ff8590",
     "diffAddedBg": "#293b47",
     "diffRemovedBg": "#432e40",
-    "diffContextBg": "#1e2030",
+    "diffContextBg": "none",
     "diffLineNumber": "#aab6df",
     "diffAddedLineNumberBg": "#293b47",
     "diffRemovedLineNumberBg": "#432e40",
