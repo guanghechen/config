@@ -26,6 +26,9 @@ args = ["OPENAI_CODEX_AUTH_TOKEN"]
 [analytics]
 enabled = false
 
+[feedback]
+enabled = false
+
 [otel]
 exporter = "none"
 metrics_exporter = "none"
