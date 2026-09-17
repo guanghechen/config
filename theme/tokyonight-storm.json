@@ -1,7 +1,7 @@
 {
   "name": "tokyonight-storm",
   "custom": {
-    "panel_bg": "#24283b",
+    "panel_bg": "reset",
     "surface_dim": "#1f2335",
     "surface0": "#292e42",
     "surface1": "#30374e",

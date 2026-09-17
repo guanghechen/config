@@ -1,7 +1,7 @@
 {
   "name": "gruvbox-dark",
   "custom": {
-    "panel_bg": "#32302F",
+    "panel_bg": "reset",
     "surface_dim": "#504945",
     "surface0": "#665C54",
     "surface1": "#7C6F64",

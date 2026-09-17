@@ -1,7 +1,7 @@
 {
   "name": "catppuccin-latte",
   "custom": {
-    "panel_bg": "#EFF1F5",
+    "panel_bg": "reset",
     "surface_dim": "#E6E9EF",
     "surface0": "#DCE0E8",
     "surface1": "#CCD0DA",

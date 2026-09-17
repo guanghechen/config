@@ -1,7 +1,7 @@
 {
   "name": "catppuccin-mocha",
   "custom": {
-    "panel_bg": "#1E1E2E",
+    "panel_bg": "reset",
     "surface_dim": "#181825",
     "surface0": "#313244",
     "surface1": "#45475A",

@@ -1,7 +1,7 @@
 {
   "name": "catppuccin-frappe",
   "custom": {
-    "panel_bg": "#303446",
+    "panel_bg": "reset",
     "surface_dim": "#292C3C",
     "surface0": "#414559",
     "surface1": "#51576D",

@@ -1,7 +1,7 @@
 {
   "name": "kanagawa-lotus",
   "custom": {
-    "panel_bg": "#F2ECBC",
+    "panel_bg": "reset",
     "surface_dim": "#E5DDB0",
     "surface0": "#DCD5AC",
     "surface1": "#D5D6CE",

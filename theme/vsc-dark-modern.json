@@ -1,7 +1,7 @@
 {
   "name": "vsc-dark-modern",
   "custom": {
-    "panel_bg": "#1F1F1F",
+    "panel_bg": "reset",
     "surface_dim": "#313131",
     "surface0": "#3C3C3C",
     "surface1": "#454545",

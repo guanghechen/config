@@ -1,7 +1,7 @@
 {
   "name": "rosepine-main",
   "custom": {
-    "panel_bg": "#191724",
+    "panel_bg": "reset",
     "surface_dim": "#1F1D2E",
     "surface0": "#26233A",
     "surface1": "#403D52",

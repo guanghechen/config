@@ -1,7 +1,7 @@
 {
   "name": "kanagawa-wave",
   "custom": {
-    "panel_bg": "#1F1F28",
+    "panel_bg": "reset",
     "surface_dim": "#16161D",
     "surface0": "#2A2A37",
     "surface1": "#223249",

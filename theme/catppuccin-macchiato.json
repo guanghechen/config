@@ -1,7 +1,7 @@
 {
   "name": "catppuccin-macchiato",
   "custom": {
-    "panel_bg": "#24273A",
+    "panel_bg": "reset",
     "surface_dim": "#1E2030",
     "surface0": "#363A4F",
     "surface1": "#494D64",

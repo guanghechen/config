@@ -1,7 +1,7 @@
 {
   "name": "rosepine-moon",
   "custom": {
-    "panel_bg": "#232136",
+    "panel_bg": "reset",
     "surface_dim": "#2A273F",
     "surface0": "#393552",
     "surface1": "#44415A",

@@ -1,7 +1,7 @@
 {
   "name": "rosepine-dawn",
   "custom": {
-    "panel_bg": "#FAF4ED",
+    "panel_bg": "reset",
     "surface_dim": "#FFFAF3",
     "surface0": "#F2E9E1",
     "surface1": "#DFDAD9",

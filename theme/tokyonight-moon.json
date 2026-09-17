@@ -1,7 +1,7 @@
 {
   "name": "tokyonight-moon",
   "custom": {
-    "panel_bg": "#222436",
+    "panel_bg": "reset",
     "surface_dim": "#1e2030",
     "surface0": "#2f334d",
     "surface1": "#343b54",

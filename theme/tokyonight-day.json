@@ -1,7 +1,7 @@
 {
   "name": "tokyonight-day",
   "custom": {
-    "panel_bg": "#e1e2e7",
+    "panel_bg": "reset",
     "surface_dim": "#d0d5e3",
     "surface0": "#d5d9e4",
     "surface1": "#ccd1df",
