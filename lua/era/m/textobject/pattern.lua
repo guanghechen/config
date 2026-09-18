@@ -196,7 +196,7 @@ function M.collect(text, id, prompt)
     local name = id == "u" and "[%w_%.]" or "[%w_]" ---@type string
     collect_pattern(text, "%f" .. name .. name .. "+%b()", "^.-%(().*()%)$", result)
   elseif id == "t" then
-    collect_pattern(text, "<([%p%w]-)%f[^<%w][^<>]->.-</%1>", "^<.->().*()</[^/]->$", result)
+    collect_pattern(text, "<([%p%w]-)%f[^<%w][^<>]->.-</%1%s->", "^<.->().*()</.->$", result)
   elseif id == "d" then
     collect_pattern(text, "%f[%d]%d+", nil, result)
   elseif id == "N" then

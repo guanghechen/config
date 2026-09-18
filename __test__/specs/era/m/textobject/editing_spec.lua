@@ -38,6 +38,18 @@ t:test("operator mappings respect native words and textobject whitespace", funct
   t.assert_eq(" (    )", vim.api.nvim_get_current_line())
 end)
 
+t:test("tag deletion with closing whitespace preserves the nested tag and its parent", function()
+  for _, whitespace in ipairs({ " ", "\t", "\n", " \t\n " }) do
+    local text = "<section><my-tag>hello</my-tag" .. whitespace .. "></section>"
+    local expected = "<section><my-tag></my-tag" .. whitespace .. "></section>"
+    Runtime.buffer(t, vim.split(text, "\n", { plain = true }), "html")
+    vim.api.nvim_win_set_cursor(0, { 1, assert(text:find("hello", 1, true)) - 1 })
+    Runtime.feed("dit")
+    t.assert_eq(expected, table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, true), "\n"), vim.inspect(whitespace))
+    t.assert_eq("hello", vim.fn.getreg('"'), "only inner text is deleted")
+  end
+end)
+
 t:test("delete supports nested counts and dot-repeat at a new position", function()
   Runtime.buffer(t, { "(first) (second)" })
   vim.api.nvim_win_set_cursor(0, { 1, 2 })

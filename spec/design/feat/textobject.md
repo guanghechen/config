@@ -53,6 +53,7 @@
 
 - 括号、引号、参数 `a`、调用 `u/U`、标签、数字、subword 和自定义分隔符由本地文本匹配提供，不依赖 parser。它们是文本启发式规则，不完整理解注释及所有字符串语法。
 - `b` 的 inner 保留首尾空白；引号和标签的 inner 去掉边界，around 包含两端边界。普通单 / 双引号在未转义换行处重置配对；保留转义换行。反引号优先选择参考行内的完整配对，也支持跨行配对。`u/U` 的 inner 都是调用圆括号内的全部文本。
+- 标签的闭标签名称与 `>` 之间允许空格、Tab 或换行，例如 `</my-tag >`；inner 不包含这些闭标签空白。
 - 参数 `a` 的 inner 去掉首尾空白与逗号；around 对首项取后面的逗号，对后续项取前面的逗号，唯一项则保留括号内部空白。引号状态只作用于已进入的括号容器，容器外文本不影响参数扫描。它独立于跳转、交换使用的 `@parameter.inner`。
 - `d/N/e` 的 inner 与 around 相同。`<Space>` 和其他非字母分隔符的 around 只多包含右侧连续分隔符；如 `vi|` 选 `value`，`va|` 选 `value|`。
 - `f/c/o/m` 来自 `textobjects` queries，分别使用 `@function`、`@class`、`@block/@conditional/@loop`、`@comment` 的 `.inner/.outer` captures。`io` 可能包含条件表达式。`S` 来自 `locals` 的 `@local.scope`，inner 与 around 相同。

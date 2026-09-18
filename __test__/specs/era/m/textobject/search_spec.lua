@@ -77,6 +77,24 @@ t:test("tags, arbitrary delimiters, and prompts return different inner and outer
   t.assert_eq(" comment ", text:sub(range.from, range.to - 1))
 end)
 
+t:test("tag ranges retain boundaries when closing tags contain trailing whitespace", function()
+  for _, name in ipairs({ "div", "my-tag", "ns:tag" }) do
+    for _, whitespace in ipairs({ "", " ", "\t", "\n", " \t\n " }) do
+      local text = "<" .. name .. ' class="x">hello</' .. name .. whitespace .. ">"
+      local column = assert(text:find("hello", 1, true))
+      t.assert_eq("hello", selected(text, "t", "i", column), name .. " inner " .. vim.inspect(whitespace))
+      t.assert_eq(text, selected(text, "t", "a", column), name .. " around " .. vim.inspect(whitespace))
+    end
+  end
+  t.assert_eq("", selected("<div></div >", "t", "i", 6), "empty inner range")
+end)
+
+t:test("tag whitespace does not permit mismatched names or closing attributes", function()
+  for _, text in ipairs({ "<div>hello</span >", "<my-tag>hello</my-tag-extra >", "<div>hello</div extra>" }) do
+    t.assert_nil(selected(text, "t", "i", assert(text:find("hello", 1, true))), text)
+  end
+end)
+
 t:test("source conversions preserve UTF-8 bytes, newlines, and empty boundaries", function()
   local source = Source.new({ "中文", "", "(好)" }, 20)
   for offset = 1, #source.text + 1 do
