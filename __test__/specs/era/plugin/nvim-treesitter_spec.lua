@@ -116,6 +116,10 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
     return true
   end)
   t:patch_table(vim.treesitter.highlighter, "active", active)
+  t:patch_table(vim.treesitter.query, "get", function(_, name)
+    t.assert_eq("folds", name, "fold availability query")
+    return {}
+  end)
   t:patch_table(vim.treesitter, "start", function(bufnr, lang)
     started[#started + 1] = bufnr
     if start then
@@ -354,7 +358,7 @@ t:test("BufUnload permits the same buffer to restart", function()
   t.assert_eq(2, #started, "reloaded buffer start")
 end)
 
-t:test("delayed start preserves LSP folding", function()
+t:test("delayed parser activation preserves native LSP folding", function()
   local buffers = {
     [11] = { valid = true, loaded = true, filetype = "typescript" },
   }
@@ -367,8 +371,38 @@ t:test("delayed start preserves LSP folding", function()
 
   callbacks.CursorHold({ buf = 11 })
 
-  t.assert_eq("v:lua.vim.lsp.foldexpr()", windows[101].foldexpr, "LSP fold")
+  t.assert_eq("v:lua.vim.lsp.foldexpr()", windows[101].foldexpr, "LSP retains ownership")
   t.assert_eq("v:lua.vim.treesitter.foldexpr()", windows[102].foldexpr, "Treesitter fold")
+end)
+
+t:test("a parser without a folds query preserves the unconfigured expression", function()
+  local buffers = { [11] = { valid = true, loaded = true, filetype = "typescript" } }
+  local windows = { [101] = { valid = true, bufnr = 11, foldexpr = "0" } }
+  ---@diagnostic disable-next-line: missing-parameter
+  local callbacks = setup(buffers, windows, { 101 })
+  t:patch_table(vim.treesitter.query, "get", function()
+    return nil
+  end)
+  callbacks.CursorHold({ buf = 11 })
+  t.assert_eq("0", windows[101].foldexpr, "no unusable Tree-sitter expression installed")
+end)
+
+t:test("repeated configuration does not rewrite the Tree-sitter expression", function()
+  local buffers = { [11] = { valid = true, loaded = true, filetype = "typescript" } }
+  local windows = { [101] = { valid = true, bufnr = 11, foldexpr = "v:lua.vim.treesitter.foldexpr()" } }
+  ---@diagnostic disable-next-line: missing-parameter
+  local callbacks = setup(buffers, windows, { 101 })
+  local writes = 0 ---@type integer
+  local set_option = vim.api.nvim_set_option_value
+  t:patch_table(vim.api, "nvim_set_option_value", function(name, ...)
+    if name == "foldexpr" then
+      writes = writes + 1
+    end
+    return set_option(name, ...)
+  end)
+  callbacks.CursorHold({ buf = 11 })
+  callbacks.BufWinEnter({ buf = 11 })
+  t.assert_eq(0, writes, "no redundant foldexpr writes")
 end)
 
 t:run()

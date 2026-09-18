@@ -307,10 +307,15 @@ M.spec = {
     ---@param bufnr                      integer
     ---@return nil
     local function configure_windows(bufnr)
+      local lang = active_lang(bufnr) ---@type string|nil
+      if lang == nil or vim.treesitter.query.get(lang, "folds") == nil then
+        return
+      end
+
       for _, winnr in ipairs(vim.api.nvim_list_wins()) do
         if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) == bufnr then
           local foldexpr = vim.api.nvim_get_option_value("foldexpr", { win = winnr }) ---@type string
-          if foldexpr ~= "v:lua.vim.lsp.foldexpr()" then
+          if foldexpr ~= "v:lua.vim.lsp.foldexpr()" and foldexpr ~= "v:lua.vim.treesitter.foldexpr()" then
             vim.api.nvim_set_option_value(
               "foldexpr",
               "v:lua.vim.treesitter.foldexpr()",

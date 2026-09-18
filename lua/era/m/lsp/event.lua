@@ -22,6 +22,7 @@ local LSP_FOLDEXPR = "v:lua.vim.lsp.foldexpr()" ---@type string
 ---@class era.m.lsp.event.IFoldexprState
 ---@field public fallback               string
 ---@field public windows                table<integer, string>
+---@field public initially_hidden       boolean
 
 ---@type table<integer, era.m.lsp.event.IFoldexprState>
 local foldexpr_states = {}
@@ -44,18 +45,27 @@ local function apply_lsp_foldexpr(bufnr)
     prune_invalid_windows(state)
   end
 
+  local visible = false ---@type boolean
   for _, winnr in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) == bufnr then
+      visible = true
       local current = vim.api.nvim_get_option_value("foldexpr", { win = winnr, scope = "local" }) ---@type string
       if current ~= LSP_FOLDEXPR then
         if state == nil then
-          state = { fallback = current, windows = {} }
+          state = { fallback = current, windows = {}, initially_hidden = false }
           foldexpr_states[bufnr] = state
         end
         state.windows[winnr] = current
         vim.api.nvim_set_option_value("foldexpr", LSP_FOLDEXPR, { win = winnr, scope = "local" })
       end
     end
+  end
+  if state == nil and not visible then
+    foldexpr_states[bufnr] = {
+      fallback = vim.api.nvim_get_option_value("foldexpr", { scope = "global" }),
+      windows = {},
+      initially_hidden = true,
+    }
   end
 end
 
@@ -73,6 +83,17 @@ local function restore_foldexpr(bufnr)
       local current = vim.api.nvim_get_option_value("foldexpr", { win = winnr, scope = "local" }) ---@type string
       if current == LSP_FOLDEXPR then
         local saved = state and state.windows[winnr] or nil ---@type string|nil
+        local highlighter = vim.treesitter.highlighter.active[bufnr]
+        -- A hidden buffer may reach LSP attachment before its first window is configured.
+        if
+          state ~= nil
+          and state.initially_hidden
+          and (saved or fallback) == "0"
+          and highlighter ~= nil
+          and vim.treesitter.query.get(highlighter.tree:lang(), "folds") ~= nil
+        then
+          saved = "v:lua.vim.treesitter.foldexpr()"
+        end
         vim.api.nvim_set_option_value("foldexpr", saved or fallback, { win = winnr, scope = "local" })
       end
       if state ~= nil then
