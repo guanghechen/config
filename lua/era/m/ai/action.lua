@@ -77,11 +77,7 @@ end
 ---@return nil
 function M.handle_selection(item)
   if item.type == "running" and item.source then
-    if S.state.is_attached(item.source) then
-      S.state.detach(item.source.id)
-    else
-      M.attach_to_source(item.source)
-    end
+    M.attach_to_source(item.source)
     return
   end
 
@@ -101,9 +97,28 @@ function M.handle_selection(item)
   end
 end
 
+---@param item                          era.m.ai.ISelectItem
+---@return nil
+function M.handle_toggle(item)
+  if item.type == "running" and item.source and S.state.is_attached(item.source) then
+    S.state.detach(item.source.id)
+  else
+    M.handle_selection(item)
+  end
+end
+
 ---@param source                        era.m.ai.ISource
 ---@return nil
 function M.attach_to_source(source)
+  if source.type == "terminal" then
+    local termmeta = S.term.get(source.id)
+    if termmeta then
+      S.term.open(termmeta)
+      S.state.attach(source)
+    end
+    return
+  end
+
   S.state.attach(source)
 
   local pane = source.tmux_pane
@@ -209,7 +224,7 @@ end
 function M.show_attach_picker()
   S.picker.show_attach({
     on_select = M.handle_selection,
-    on_toggle = M.handle_selection,
+    on_toggle = M.handle_toggle,
   })
 end
 

@@ -26,6 +26,8 @@ session name → window name → pane id 排序。当前 cwd 已有该 agent ses
 
 选择行为：
 
+- Confirm 已 attach 的内部 source 时显示其已有 terminal，保留 attachment 与 job；
+  `<Space>` / `<C-h>` / `<C-l>` 切换 attach/detach，`<Tab>` 仅切换 tmux source。
 - 外部 pane：session name 不符合 `<agent>-<hex_hash>` 及规定 hash 长度时，只记录 pane ID，
   通过 tmux 直接发送消息，不打开 Neovim terminal。
 - 已有 agent session pane：打开 Neovim terminal 并 attach。
@@ -36,6 +38,10 @@ session name → window name → pane id 排序。当前 cwd 已有该 agent ses
 
 Detach 只有一个 agent 时直接执行，否则打开 picker。Detach tmux source 时关闭其关联的 Neovim terminal。
 Attach、detach 及每次发送的成功或失败均提供通知。
+
+Terminal 的窗口显示与 job 启动分离：隐藏后重新打开、切换到已有 session 均复用原 job。
+关闭只释放该 session 的资源及其正在占用的窗口；重复或旧 session 的退出回调不影响新 session。
+进入 terminal 输入时重置水平滚动；延迟 focus 回调校验 session、窗口与当前焦点，不抢回用户已切走的窗口。
 
 ## Prompt 契约
 

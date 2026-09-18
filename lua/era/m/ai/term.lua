@@ -62,6 +62,7 @@ local function create_buf(termmeta)
     end,
   })
 
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n", "x" }, key = "q", desc = "ai term: close", callback = M.hide },
     {
@@ -144,10 +145,18 @@ local function create_win(termmeta)
   end
 
   vim.schedule(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_set_current_win(winnr)
-      vim.cmd("startinsert")
+    if
+      _metamap[termmeta.uuid] ~= termmeta
+      or _current_uuid ~= termmeta.uuid
+      or _winnr ~= winnr
+      or not vim.api.nvim_win_is_valid(winnr)
+      or vim.api.nvim_win_get_buf(winnr) ~= bufnr
+      or vim.api.nvim_get_current_win() ~= winnr
+    then
+      return
     end
+    vim.fn.winrestview({ leftcol = 0 })
+    vim.cmd("startinsert")
   end)
 
   return winnr
@@ -159,9 +168,6 @@ local function start_job(termmeta)
   if termmeta.jobid ~= nil then
     return
   end
-
-  local winnr = create_win(termmeta)
-  vim.api.nvim_tabpage_set_win(vim.api.nvim_get_current_tabpage(), winnr)
 
   local ok, channelid = pcall(vim.fn.jobstart, termmeta.cmd, {
     cwd = termmeta.cwd,
@@ -245,6 +251,7 @@ function M.open(params)
   end
 
   _current_uuid = termmeta.uuid
+  create_win(termmeta)
   start_job(termmeta)
   return termmeta
 end
@@ -259,12 +266,14 @@ end
 ---@param termmeta                      era.m.ai.term.IMeta
 ---@return nil
 function M.on_closed(termmeta)
-  if termmeta.jobid ~= nil then
-    vim.fn.jobstop(termmeta.jobid)
-    termmeta.jobid = nil
+  if _metamap[termmeta.uuid] ~= termmeta then
+    return
   end
 
   local bufnr = termmeta.bufnr
+  local jobid = termmeta.jobid
+  -- Release ownership before stop/delete can deliver another exit notification.
+  termmeta.jobid = nil
   termmeta.bufnr = 0
   _metamap[termmeta.uuid] = nil
 
@@ -272,14 +281,19 @@ function M.on_closed(termmeta)
     _current_uuid = nil
   end
 
+  local winnr = _winnr
+  if winnr and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) == bufnr then
+    M.hide()
+  end
+
+  if jobid ~= nil then
+    vim.fn.jobstop(jobid)
+  end
+
   S.state.detach_by_term_uuid(termmeta.uuid)
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
     stl.nvim.buf.close(bufnr)
-  end
-
-  if M.isvisible() then
-    M.hide()
   end
 
   vim.schedule(function()
