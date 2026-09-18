@@ -58,13 +58,15 @@ local pending_unknown_change = false
 ---@type (fun(): nil)[]
 local queued_refresh_callbacks = {}
 
+---@type (fun(): nil)[]
+local active_refresh_callbacks = {}
+
 ---@type stl.timer.IDisposableCallable
 local refresh_throttled
 
+---@param callbacks                     (fun(): nil)[]
 ---@return nil
-local function run_queued_refresh_callbacks()
-  local callbacks = queued_refresh_callbacks
-  queued_refresh_callbacks = {}
+local function run_refresh_callbacks(callbacks)
   for _, callback in ipairs(callbacks) do
     callback()
   end
@@ -75,11 +77,7 @@ local current_collect_token = nil
 
 ---@return nil
 local function do_refresh()
-  if exiting then
-    return
-  end
-  if refreshing then
-    pending_refresh = true
+  if exiting or refreshing or not pending_refresh then
     return
   end
 
@@ -89,6 +87,9 @@ local function do_refresh()
   pending_refresh = false
   pending_unknown_change = false
   refreshing = true
+  -- Requests arriving after capture need a later query, including requests from subscribers.
+  active_refresh_callbacks = queued_refresh_callbacks
+  queued_refresh_callbacks = {}
 
   if force then
     initialized = false
@@ -131,7 +132,9 @@ local function do_refresh()
     end
 
     refreshing = false
-    run_queued_refresh_callbacks()
+    local callbacks = active_refresh_callbacks
+    active_refresh_callbacks = {}
+    run_refresh_callbacks(callbacks)
 
     if pending_refresh and not exiting then
       refresh_throttled()
@@ -175,9 +178,10 @@ function M.last_refreshed_at()
   return last_refresh
 end
 
----@param force                      ?boolean
----@param callback                   ?(fun(): nil)
----@param change_scope               ?era.m.git.StatusChangeScope
+---@param force                         ?boolean
+---@param callback                      ?(fun(): nil)
+---@param change_scope                  ?era.m.git.StatusChangeScope
+---@return nil
 local function __refresh__(force, callback, change_scope)
   if callback then
     queued_refresh_callbacks[#queued_refresh_callbacks + 1] = callback
@@ -192,7 +196,10 @@ local function __refresh__(force, callback, change_scope)
     pending_unknown_change = true
   end
 
-  refresh_throttled()
+  pending_refresh = true
+  if not refreshing then
+    refresh_throttled()
+  end
 end
 
 ---@param force                         ?boolean
@@ -212,11 +219,12 @@ local function refresh(force, token, change_scope)
 end
 
 ---Refresh git status (Future variant).
+---Each caller waits for a collection started after its request; concurrent requests coalesce.
 ---Note: This operation uses internal throttling. The token only prevents waiting
 ---for resolution if cancelled before the call; it does not cancel the underlying
 ---throttled refresh operation which may be shared by multiple callers.
----@param force                      ?boolean
----@param token                      ?stl.c.CancellationToken
+---@param force                         ?boolean
+---@param token                         ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with nil when refresh completes
 function M.refresh(force, token)
   return refresh(force, token, "unknown")
@@ -278,7 +286,11 @@ function M.setup()
       if current_collect_token then
         current_collect_token:cancel()
       end
-      run_queued_refresh_callbacks()
+      local callbacks = active_refresh_callbacks
+      vim.list_extend(callbacks, queued_refresh_callbacks)
+      active_refresh_callbacks = {}
+      queued_refresh_callbacks = {}
+      run_refresh_callbacks(callbacks)
     end,
   })
 
@@ -286,6 +298,24 @@ function M.setup()
     group = augroup,
     pattern = { ".gitignore", "*/.gitignore", "*/.git/info/exclude" },
     callback = M.clear_ignored_cache,
+  })
+
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    group = augroup,
+    callback = function(args)
+      if
+        not dot.path.is_git_repo()
+        or not vim.api.nvim_buf_is_valid(args.buf)
+        or vim.api.nvim_get_option_value("buftype", { buf = args.buf }) ~= ""
+      then
+        return
+      end
+      -- The event path is the written target, which can differ from the buffer name.
+      local filepath = dot.path.normalize(args.match)
+      if yoz.path.is_descendant(dot.path.workspace(), filepath) then
+        M.refresh(false)
+      end
+    end,
   })
 
   -- External ignore edits are not observable through buffer events. Focus is a

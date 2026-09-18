@@ -47,13 +47,18 @@ M.o_unstaged_files  -- Observable<string[]>: 未暂存的文件列表
 Rust worker 完成查询、解析和 ancestor directory index 后，才发布 immutable snapshot；UI lookup 不触发
 全仓库扫描。刷新失败保留旧 snapshot；状态未变时复用旧 handle，仍发布刷新事件。
 
+每轮查询捕获启动前的 refresh 等待方；查询期间收到的请求合并到下一轮，不随当前查询提前完成。
+失败仍按原契约报告并完成该轮等待方；退出时取消查询并完成当前与排队等待方，迟到结果不重复完成。
+普通文件的 `BufWritePost` 按实际写入路径检查仓库边界并请求完整 status refresh，不依赖 buffer attach
+或 Explorer watcher；Diffview 的文件列表与统计随保存刷新。
+
 Ignore cache 也由 Rust 持有，Lua 只转发编辑器 invalidation 事件。`state.status_table()` 显式导出新的 Lua table，修改它不会
 改变 native snapshot；频繁路径查询应使用 `state.snapshot():lookup()`。
 
 ### 数据流
 
 ```text
-watcher / index mutation
+watcher / index mutation / BufWritePost
   -> state.refresh() / refresh_index()
   -> status.collect() -> yoz.git worker -> StatusSnapshot
   -> state snapshot / Observable

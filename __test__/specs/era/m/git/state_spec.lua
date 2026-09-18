@@ -337,6 +337,155 @@ t:test("status: propagates collection failures", function()
   t.assert_eq("fatal: status unavailable", future:get_error(), "collection error preserved")
 end)
 
+t:test("refresh: callers arriving during a query wait for the trailing snapshot", function()
+  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
+  local resolvers = {}
+  t:patch_table(era.m.git.status, "collect", function()
+    return Future.new(function(resolve)
+      resolvers[#resolvers + 1] = resolve
+    end)
+  end)
+
+  local first = local_state.refresh_index()
+  local second = local_state.refresh(true)
+  local third = local_state.refresh_index()
+  resolvers[1](new_snapshot({ ["/project/old"] = { display = "M" } }))
+
+  t.assert_true(first:is_done(), "first caller completes with its query")
+  t.assert_false(second:is_done(), "forced refresh waits for the newer query")
+  t.assert_false(third:is_done(), "coalesced caller also waits")
+  t.assert_eq(2, #resolvers, "requests coalesce into one trailing query")
+
+  resolvers[2](new_snapshot({ ["/project/new"] = { display = "M" } }))
+  t.assert_true(second:is_done(), "forced refresh completes")
+  t.assert_true(third:is_done(), "coalesced refresh completes")
+  t.assert_true(local_state.status_table()["/project/new"] ~= nil, "new snapshot is published first")
+  t.assert_eq("unknown", local_state.o_refreshed:snapshot().change_scope, "mixed provenance stays conservative")
+end)
+
+t:test("refresh: a failed query does not complete callers waiting for its successor", function()
+  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
+  local queries = {}
+  t:patch_table(era.m.git.status, "collect", function()
+    return Future.new(function(resolve, reject)
+      queries[#queries + 1] = { resolve = resolve, reject = reject }
+    end)
+  end)
+
+  local first = local_state.refresh()
+  local second = local_state.refresh()
+  queries[1].reject("query failed")
+  t.assert_true(first:is_done(), "failed collection retains the existing settlement contract")
+  t.assert_false(second:is_done(), "later caller remains pending")
+  t.assert_eq(2, #queries, "trailing collection starts after failure")
+  queries[2].resolve(new_snapshot({}))
+  t.assert_true(second:is_done(), "later caller settles with the successful retry")
+end)
+
+t:test("refresh: publication callbacks can request a newer snapshot", function()
+  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
+  local resolvers = {}
+  t:patch_table(era.m.git.status, "collect", function()
+    return Future.new(function(resolve)
+      resolvers[#resolvers + 1] = resolve
+    end)
+  end)
+  local next_value = local_state.o_refreshed.next
+  local trailing
+  t:patch_table(local_state.o_refreshed, "next", function(self, value)
+    next_value(self, value)
+    if not trailing then
+      trailing = local_state.refresh()
+    end
+  end)
+
+  local_state.refresh()
+  resolvers[1](new_snapshot({}))
+  t.assert_false(trailing:is_done(), "publication cannot complete its own refresh request")
+  resolvers[2](new_snapshot({}))
+  t.assert_true(trailing:is_done(), "publication request completes after its query")
+end)
+
+t:test("writes: refresh repository files without requiring a Git buffer attachment", function()
+  t:patch_table(stl.timer, "throttle", require("stl.timer").throttle)
+  t:patch_global("yoz", require("yoz"))
+  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
+  local_state.setup()
+  t:defer(function()
+    vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
+    vim.api.nvim_del_augroup_by_name("DotModuleGitState")
+  end)
+  local requests = 0
+  t:patch_table(local_state, "refresh", function()
+    requests = requests + 1
+  end)
+
+  for _, case in ipairs({
+    { path = "/project/tracked.lua", expected = 1 },
+    { path = "/project/new.lua", expected = 2 },
+    { path = "/project/nested/file.lua", expected = 3 },
+    { path = "/project-other/file.lua", expected = 3 },
+    { path = "/outside/file.lua", expected = 3 },
+    { path = "/project/scratch", buftype = "nofile", expected = 3 },
+    { path = "/outside/source.lua", target = "/project/written.lua", expected = 4 },
+    { path = "/project/source.lua", target = "/outside/written.lua", expected = 4 },
+  }) do
+    local bufnr = vim.api.nvim_create_buf(false, true)
+    t:defer(function()
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
+    vim.api.nvim_buf_set_name(bufnr, case.path)
+    vim.api.nvim_set_option_value("buftype", case.buftype or "", { buf = bufnr })
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.api.nvim_exec_autocmds("BufWritePost", {
+        group = "DotModuleGitState",
+        pattern = case.target or case.path,
+      })
+    end)
+    t.assert_eq(case.expected, requests, case.path)
+  end
+
+  t:patch_table(dot.path, "is_git_repo", function()
+    return false
+  end)
+  vim.api.nvim_exec_autocmds("BufWritePost", { group = "DotModuleGitState", pattern = "/project/file.lua" })
+  t.assert_eq(4, requests, "non-repository workspace does not refresh")
+end)
+
+t:test("refresh: real throttle coalesces callers before and during a query", function()
+  t:patch_table(stl.timer, "throttle", require("stl.timer").throttle)
+  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
+  local_state.setup()
+  t:defer(function()
+    vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
+    vim.api.nvim_del_augroup_by_name("DotModuleGitState")
+  end)
+  local resolvers = {}
+  t:patch_table(era.m.git.status, "collect", function()
+    return Future.new(function(resolve)
+      resolvers[#resolvers + 1] = resolve
+    end)
+  end)
+
+  local first = local_state.refresh_index()
+  local joined = local_state.refresh_index()
+  t.wait_until(function()
+    return #resolvers == 1
+  end, 1000, "initial requests should share a query")
+  local trailing = local_state.refresh()
+  resolvers[1](new_snapshot({}))
+  t.assert_true(first:is_done(), "first query completed")
+  t.assert_true(joined:is_done(), "pre-query caller joined the first collection")
+  t.assert_false(trailing:is_done(), "inflight caller waits")
+
+  t.wait_until(function()
+    return #resolvers == 2
+  end, 2000, "trailing query should start after the throttle interval")
+  resolvers[2](new_snapshot({}))
+  t.assert_true(trailing:is_done(), "inflight caller settles after the newer collection")
+  t.assert_eq("unknown", local_state.o_refreshed:snapshot().change_scope, "saved-file provenance retained")
+end)
+
 t:test("exit: queued refresh settles without starting another collection", function()
   t:patch_table(stl.timer, "throttle", require("stl.timer").throttle)
   local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
@@ -385,11 +534,23 @@ t:test("exit: cancels inflight collection and suppresses late publication", func
   end, 1000, "collection did not start")
   local before = local_state.snapshot()
   local refreshed_before = next_count(local_state.o_refreshed)
+  local trailing = local_state.refresh(true)
+  local completed = 0
+  future:finally(function()
+    completed = completed + 1
+  end)
+  trailing:finally(function()
+    completed = completed + 1
+  end)
 
   vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
   t.assert_true(token:is_cancelled(), "inflight native token cancelled")
+  t.assert_true(future:is_done(), "inflight caller settles before native acknowledgement")
+  t.assert_true(trailing:is_done(), "queued caller settles on exit")
+  t.assert_eq(2, completed, "both generations settled")
   resolve(new_snapshot({ ["/project/late"] = { display = "M" } }))
 
+  t.assert_eq(2, completed, "native acknowledgement cannot settle callers twice")
   t.assert_true(future:is_done(), "inflight caller settled")
   t.assert_true(local_state.snapshot() == before, "late result cannot replace snapshot")
   t.assert_eq(refreshed_before, next_count(local_state.o_refreshed), "no exit-time publication")
