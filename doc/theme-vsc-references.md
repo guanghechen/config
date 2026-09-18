@@ -38,7 +38,7 @@ Local source baseline: `/home/alice/sourcecodes/github/microsoft/vscode` at
 | Lazygit | [Lazygit theme contract](https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md#color-attributes) | Audit only; template mirrors default. |
 | Newsboat | [Newsboat colorschemes](https://github.com/newsboat/newsboat/tree/master/contrib/colorschemes) | Audit only; template mirrors default. |
 | OpenCode | [VS Code Modern port](https://github.com/regen45t/opencode-vscode-themes/blob/main/vscode-modern.json) and [current theme contract](https://github.com/sst/opencode/blob/dev/packages/tui/src/theme/index.ts) | Audit only; template mirrors default. |
-| Tmux | [tmux-dark-plus-theme](https://github.com/khanghh/tmux-dark-plus-theme) | Audit only; template mirrors default. |
+| Tmux | [tmux-dark-plus-theme](https://github.com/khanghh/tmux-dark-plus-theme) | Use explicit dark/light pastel pill fills with dark icons and host text. |
 | WezTerm | [Dark+ WezTerm port](https://github.com/mbadolato/iTerm2-Color-Schemes/blob/master/wezterm/Dark%2B.toml) | Audit only; template mirrors default. |
 | Windows Terminal | [Dark+ Windows Terminal port](https://github.com/mbadolato/iTerm2-Color-Schemes/blob/master/windowsterminal/Dark%2B.json) | Audit only; template mirrors default. |
 | Yazi | [vscode.yazi Dark/Light Modern](https://github.com/956MB/vscode.yazi) and [current schema](https://yazi-rs.github.io/schemas/theme.json) | Audit only; template mirrors default. |
