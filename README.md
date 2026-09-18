@@ -13,11 +13,16 @@ wiki/
 │  ╰─ os/                       操作系统
 │     ├─ nix/
 │     ╰─ win/
-╰─ topic/rubiks-cube/5x5/       五阶魔方
+├─ topic/rubiks-cube/5x5/       五阶魔方
+│  ╰─ assets/                   配图
+╰─ topics/app/canvas/           无限画布应用设计
+   ├─ presentation/             演示设计专题
    ╰─ assets/                   配图
 ```
 
 这里只维护关键目录概览，目录结构变化时同步更新。
+
+- [无限画布应用：白板与知识整理的概念设计](topics/app/canvas/README.md)
 
 FAQ 放在所属主题目录内，例如 `cs/os/win/faq.md`。配图放在条目所在目录的 `assets/` 中，使用相对链接引用。
 
