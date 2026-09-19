@@ -77,7 +77,9 @@ t:test("dressing initializes provider and lifecycle once", function()
   t.assert_eq(1, augroup_calls, "augroup registrations")
   t.assert_eq(2, autocmd_calls, "autocmd registrations")
   t.assert_true(provider ~= nil, "decoration provider")
-  t.assert_eq(1, redraw_calls, "initial redraw")
+  t.wait_until(function()
+    return redraw_calls == 1
+  end, 1000, "initial redraw")
   for _, option in ipairs({
     "breakindent",
     "buftype",
@@ -140,7 +142,9 @@ t:test("flight changes invalidate rendering and redraw", function()
   ---@diagnostic disable-next-line: need-check-nil
   observer()
   t.assert_false(Indentline.is_enabled(vim.api.nvim_get_current_buf()), "flight disabled")
-  t.assert_eq(2, redraw_calls, "flight redraw")
+  t.wait_until(function()
+    return redraw_calls == 2
+  end, 1000, "flight redraw")
 end)
 
 t:run()

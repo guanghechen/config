@@ -74,6 +74,7 @@ local DISABLED_FILETYPES = {
 
 local initialized = false ---@type boolean
 local enabled = false ---@type boolean
+local refresh_pending = false ---@type boolean
 
 ---@return era.dressing.indentline.render
 local function get_render()
@@ -99,7 +100,15 @@ end
 ---@return nil
 local function refresh()
   get_render().invalidate()
-  pcall(vim.api.nvim__redraw, { valid = false, flush = true })
+  if refresh_pending then
+    return
+  end
+  refresh_pending = true
+  -- Coalesce OptionSet bursts, but flush explicitly: an idle command line does not redraw windows.
+  vim.schedule(function()
+    refresh_pending = false
+    pcall(vim.api.nvim__redraw, { valid = false, flush = true })
+  end)
 end
 
 ---@return nil

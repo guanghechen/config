@@ -98,6 +98,33 @@ t:test("provider renders visible indentation with ephemeral extmarks", function(
   end)
 end)
 
+t:test("option changes update guides on the next frame without drawing intermediate states", function()
+  with_buffer({ "root", "    child", "tail" }, function(bufnr, winnr)
+    local before = render(winnr)
+    local frames = 0 ---@type integer
+    local namespace = vim.api.nvim_create_namespace("test_indentline_option_frames") ---@type integer
+    t:defer(function()
+      vim.api.nvim_set_decoration_provider(namespace, {})
+    end)
+    vim.api.nvim_set_decoration_provider(namespace, {
+      on_start = function()
+        frames = frames + 1
+      end,
+    })
+
+    vim.api.nvim_set_option_value("shiftwidth", 4, { buf = bufnr })
+    vim.api.nvim_set_option_value("tabstop", 4, { buf = bufnr })
+    -- Exercise OptionSet even when this spec runs before VimEnter.
+    vim.api.nvim_exec_autocmds("OptionSet", { pattern = "shiftwidth", modeline = false })
+    vim.api.nvim_exec_autocmds("OptionSet", { pattern = "tabstop", modeline = false })
+    t.assert_eq(0, frames, "option burst does not flush intermediate frames")
+
+    local after = render(winnr)
+    t.assert_true(frames > 0, "next frame rendered")
+    t.assert_false(vim.deep_equal(before[1].options.virt_text, after[1].options.virt_text), "updated indentation")
+  end)
+end)
+
 t:test("provider renders indented EOF on cold and cached redraws", function()
   for _, lines in ipairs({ { "    value" }, { "root", "    value" } }) do
     with_buffer(lines, function(_, winnr)

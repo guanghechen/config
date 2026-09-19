@@ -27,6 +27,7 @@ __test__/
         render_spec.lua    # virtual text and highlight output
         frame_spec.lua     # buffer context, window cache, invalidation
         provider_spec.lua  # real redraws, extmarks, screen contents
+        screen_spec.lua    # batched refreshes and idle command-line TUI updates
         setup_spec.lua     # registration, eligibility, enable/disable
       dressing/statusline/
         setup_spec.lua     # dirty events, subscriptions and exit lifecycle
