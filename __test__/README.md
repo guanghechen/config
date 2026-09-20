@@ -21,6 +21,9 @@ __test__/
     yoz/
     stl/
     dot/
+      win/
+        open_spec.lua        # opening events, saved cursor and navigation ownership
+        open_screen_spec.lua # native TUI opening with real ShaDa and UI services
     era/
       dressing/indentline/
         parser_spec.lua    # indentation parsing and option resolution
@@ -43,6 +46,9 @@ __test__/
   node/
     build.test.mjs         # Node tests for script/build.mjs
   fixtures/
+    dot/win/
+      seed_marks.lua       # isolated ShaDa file-position fixtures
+      open_screen.lua      # native opening and cursor-restoration scenarios
     yoz/                   # shared Lua/Rust search fixtures
     era/dressing/statusline/
       runtime.lua          # shared runtime assembly for native scenarios

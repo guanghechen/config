@@ -108,43 +108,54 @@ if not vim.g.vscode and not vim.g.yozvim and not vim.g.yuivim then
   })
 end
 
---- Go to last loc when opening a buffer
+--- Only files read from disk have a saved location pending restoration.
 vim.api.nvim_create_autocmd("BufReadPost", {
+  group = augroup("goto_last_location_read"),
+  callback = function(event)
+    if vim.b[event.buf].eve_last_loc == nil then
+      vim.b[event.buf].eve_last_loc = false
+    end
+  end,
+})
+
+--- Restore before +cmd and callers position the cursor; commit only after entry settles.
+vim.api.nvim_create_autocmd("BufWinEnter", {
   group = augroup("goto_last_location"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
-    if vim.b[bufnr].eve_last_loc then
+    if vim.b[bufnr].eve_last_loc ~= false then
       return
     end
-    vim.b[bufnr].eve_last_loc = true
 
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if vim.api.nvim_win_get_buf(winnr) ~= bufnr then
       return
     end
+    local pending_winnr = vim.b[bufnr].eve_last_loc_winnr ---@type integer|nil
+    if pending_winnr == winnr then
+      return
+    end
+    vim.b[bufnr].eve_last_loc_winnr = winnr
 
     local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
-    if mark == nil or type(mark[1]) ~= "number" then
-      return
-    end
-
     local count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-    if count <= 1 then
-      return
+    local restored = false ---@type boolean
+    if count > 1 and mark[1] > 0 and mark[1] <= count then
+      restored = pcall(vim.api.nvim_win_set_cursor, winnr, mark)
     end
-
-    if mark[1] > 0 and mark[1] <= count then
-      vim.schedule(function()
-        if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
-          return
-        end
-
-        local ok = pcall(vim.api.nvim_win_set_cursor, winnr, mark)
-        if ok then
-          era.dressing.scroll.accept_current_view(winnr)
-        end
-      end)
-    end
+    vim.schedule(function()
+      if not vim.api.nvim_buf_is_valid(bufnr) or vim.b[bufnr].eve_last_loc_winnr ~= winnr then
+        return
+      end
+      vim.b[bufnr].eve_last_loc_winnr = nil
+      if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+        return
+      end
+      vim.b[bufnr].eve_last_loc = true
+      if restored then
+        era.dressing.scroll.accept_current_view(winnr)
+      end
+    end)
   end,
 })
 

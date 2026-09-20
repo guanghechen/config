@@ -11,6 +11,7 @@ local t = harness.new("ark.autocmd")
 ---@field autocmd_events                table<string, string|string[]>
 ---@field scheduled                     fun()[]
 ---@field bufnr                         integer
+---@field winnr                         integer
 ---@field valid                         boolean
 ---@field cursor_updates                integer
 ---@field accepted                      integer
@@ -23,6 +24,7 @@ local function setup()
     autocmd_events = {},
     scheduled = {},
     bufnr = 1,
+    winnr = 11,
     valid = true,
     cursor_updates = 0,
     accepted = 0,
@@ -72,13 +74,13 @@ local function setup()
     return 1
   end)
   t:patch_table(vim.api, "nvim_get_current_win", function()
-    return 11
+    return runtime.winnr
   end)
   t:patch_table(vim.api, "nvim_win_get_buf", function()
     return runtime.bufnr
   end)
-  t:patch_table(vim.api, "nvim_win_is_valid", function()
-    return runtime.valid
+  t:patch_table(vim.api, "nvim_win_is_valid", function(winnr)
+    return runtime.valid and winnr == runtime.winnr
   end)
   t:patch_table(vim.api, "nvim_buf_get_mark", function()
     return { 20, 3 }
@@ -100,6 +102,7 @@ end
 ---@param runtime                      ark.autocmd.test.IRuntime
 ---@return nil
 local function schedule_last_location(runtime)
+  runtime.autocmds.ark_goto_last_location_read.callback({ buf = 1 })
   runtime.autocmds.ark_goto_last_location.callback({ buf = 1 })
   t.assert_eq(1, #runtime.scheduled, "scheduled callbacks")
 end
@@ -114,22 +117,47 @@ t:test("accepts the restored cursor position as the scroll baseline", function()
   t.assert_eq(1, runtime.accepted, "accepted views")
 end)
 
-t:test("does not restore a window that changed buffers before the scheduled callback", function()
+t:test("a window that disappears before restoration does not consume the saved cursor", function()
+  local runtime = setup()
+  schedule_last_location(runtime)
+  runtime.valid = false
+  table.remove(runtime.scheduled, 1)()
+  t.assert_eq(0, runtime.accepted, "expired window has no scroll baseline")
+  t.assert_false(vim.b[1].eve_last_loc, "saved cursor remains pending")
+
+  runtime.valid = true
+  runtime.winnr = 12
+  t.assert_eq("BufWinEnter", runtime.autocmd_events.ark_goto_last_location, "restore on display")
+  schedule_last_location(runtime)
+  table.remove(runtime.scheduled, 1)()
+  t.assert_eq(2, runtime.cursor_updates, "first real display restores the cursor again")
+end)
+
+t:test("repeated entry events restore the saved cursor only once", function()
+  local runtime = setup()
+  schedule_last_location(runtime)
+  runtime.autocmds.ark_goto_last_location.callback({ buf = 1 })
+  t.assert_eq(1, #runtime.scheduled, "one pending restoration")
+  table.remove(runtime.scheduled, 1)()
+  t.assert_eq(1, runtime.cursor_updates, "one cursor restoration")
+end)
+
+t:test("does not commit restoration when the window changes buffers before the scheduled callback", function()
   local runtime = setup()
   schedule_last_location(runtime)
 
   runtime.bufnr = 2
   table.remove(runtime.scheduled, 1)()
 
-  t.assert_eq(0, runtime.cursor_updates, "cursor updates")
+  t.assert_false(vim.b[1].eve_last_loc, "restoration remains pending after the buffer changed")
+  t.assert_nil(vim.b[1].eve_last_loc_winnr, "stale window claim released")
   t.assert_eq(0, runtime.accepted, "accepted views")
 end)
 
 t:test("does not accept a baseline when restoring the cursor fails", function()
   local runtime = setup()
-  schedule_last_location(runtime)
-
   runtime.cursor_error = true
+  schedule_last_location(runtime)
   table.remove(runtime.scheduled, 1)()
 
   t.assert_eq(0, runtime.cursor_updates, "cursor updates")

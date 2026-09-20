@@ -558,11 +558,13 @@ function M.open_filepath(winnr_source, filepath, lnum, col)
   end
 
   vim.api.nvim_win_set_buf(winnr, bufnr)
-  vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr, modeline = false })
   vim.schedule(function()
+    if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+      return
+    end
     vim.cmd("stopinsert")
 
-    if lnum ~= nil and col ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    if lnum ~= nil and col ~= nil then
       pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, col })
     end
   end)
@@ -604,15 +606,18 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     end
   end
 
-  if last_bufnr then
-    vim.api.nvim_win_set_buf(winnr, last_bufnr)
-    vim.api.nvim_exec_autocmds("BufRead", { buffer = last_bufnr, modeline = false })
+  if last_bufnr == nil then
+    return
   end
+  vim.api.nvim_win_set_buf(winnr, last_bufnr)
 
   vim.schedule(function()
+    if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= last_bufnr then
+      return
+    end
     vim.cmd("stopinsert")
 
-    if lnum ~= nil and col ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    if lnum ~= nil and col ~= nil then
       pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, col })
     end
   end)
