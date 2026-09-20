@@ -1,6 +1,6 @@
-model = "gpt-5.6-sol-fast"
+model = "gpt-6-astra"
 model_provider = "copilot-dev"
-model_reasoning_effort = "max"
+model_reasoning_effort = "high"
 
 [model_providers.copilot-dev]
 name = "copilot-dev"
