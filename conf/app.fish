@@ -67,6 +67,7 @@ if test -x "$conda_exe"
 end
 
 ### neovim
+set -gx NVIM_NOTTYFAST 1
 if test "$PREFER_NEOVIM_VERSION" != stable
     if test -x "$HOME/.app/neovim/bin/nvim"
         set -gx NEOVIM_HOME "$HOME/.app/neovim"
