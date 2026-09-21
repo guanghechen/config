@@ -455,4 +455,195 @@ t:test("disposing a bar cancels its delayed publication", function()
   t.assert_eq(before, #seen)
 end)
 
+for _, throttled in ipairs({ false, true }) do
+  t:test("latest scope publishes after its work when " .. (throttled and "throttled" or "queued"), function()
+    local clock = clock_fixture.new(t)
+    local first, second, third = window(), window(), window()
+    local current = first
+    local target, seen = bar(clock, first)
+    t:patch_table(target, "_get_preset_context", function()
+      return { winnr = current }
+    end)
+    target:place({
+      position = "left",
+      component = {
+        name = "scope",
+        refresh = function(ctx)
+          -- Leave publication queued so a newer scope can request work in the next turn.
+          if not throttled and ctx.winnr == second then
+            clock.now = clock.now + 2
+          end
+          local text = ctx.winnr == first and "FIRST" or ctx.winnr == second and "SECOND" or "THIRD"
+          return { text = text, hltext = text }
+        end,
+      },
+    })
+    target:refresh()
+    clock:advance(1)
+    clock:advance(1)
+    t.assert_eq("FIRST%=", target:snapshot())
+    local before = #seen
+    clock:advance(throttled and 15 or 20)
+    current = second
+    target:refresh()
+    clock:advance(throttled and 16 or 21)
+    current = third
+    target:refresh()
+    clock:advance(throttled and 17 or 24)
+    clock:advance(clock.now)
+    t.assert_eq("THIRD%=", target:snapshot())
+    for i = before + 1, #seen do
+      t.assert_true(seen[i].text ~= "%=", "scope change emitted an empty frame")
+    end
+  end)
+end
+
+for _, interval in ipairs({ 16, 200 }) do
+  t:test("retry after initial cancellation publishes ready content before the " .. interval .. "ms deadline", function()
+    local clock = clock_fixture.new(t)
+    local target, seen = bar(clock, window(), interval)
+    local refreshes = 0
+    target:place({
+      position = "left",
+      component = {
+        name = "retry",
+        refresh = function()
+          refreshes = refreshes + 1
+          return { text = "READY", hltext = "READY" }
+        end,
+      },
+    })
+    target:refresh()
+    target:cancel_refresh()
+    clock:advance(0)
+    t.assert_eq(0, refreshes, "the cancelled request never runs")
+    clock:advance(1)
+    target:refresh()
+    clock:advance(2)
+    clock:advance(2)
+    t.assert_eq(1, refreshes)
+    t.assert_eq("READY%=", target:snapshot())
+    t.assert_eq(2, seen[#seen].at, "cancellation must not consume the first-result publication")
+  end)
+end
+
+t:test("queued publication does not wait for an unresolved provider", function()
+  local clock = clock_fixture.new(t)
+  local target, seen = bar(clock, window())
+  local resolve
+  target:place({
+    position = "left",
+    component = {
+      name = "async",
+      refresh = function()
+        local future
+        future, resolve = Future.new_with_resolver()
+        return future
+      end,
+    },
+  })
+  target:refresh()
+  clock:advance(0)
+  t.assert_eq(0, #seen, "publication follows the queued provider call")
+  clock:advance(1)
+  clock:advance(2)
+  t.assert_eq("%=", seen[1].text, "pending I/O does not keep another owner's frame")
+  resolve({ text = "READY", hltext = "READY" })
+  clock:advance(2)
+  t.assert_eq("READY%=", target:snapshot())
+end)
+
+t:test("a refresh burst publishes the latest data once", function()
+  local clock = clock_fixture.new(t)
+  local target, seen = bar(clock, window(), 0)
+  local value, refreshes = "INITIAL", 0
+  target:place({
+    position = "left",
+    component = {
+      name = "burst",
+      refresh = function()
+        refreshes = refreshes + 1
+        return { text = value, hltext = value }
+      end,
+    },
+  })
+  target:refresh()
+  clock:advance(1)
+  clock:advance(1)
+  local before = #seen
+  for index = 1, 20 do
+    value = tostring(index)
+    target:refresh()
+  end
+  clock:advance(2)
+  clock:advance(2)
+  t.assert_eq("20%=", target:snapshot())
+  t.assert_eq(2, refreshes, "only the latest queued request reaches the provider")
+  t.assert_eq(before + 1, #seen, "discarded publication jobs do not consume additional turns")
+end)
+
+t:test("a window change after data completion refreshes the owner before publication", function()
+  local clock = clock_fixture.new(t)
+  local first, second = window(), window()
+  local current = first
+  local target, seen = bar(clock, first)
+  t:patch_table(target, "_get_preset_context", function()
+    return { winnr = current }
+  end)
+  target:place({
+    position = "left",
+    component = {
+      name = "owner",
+      refresh = function(ctx)
+        local text = ctx.winnr == first and "FIRST" or "SECOND"
+        return { text = text, hltext = text }
+      end,
+    },
+  })
+  target:refresh()
+  clock:advance(1)
+  current = second
+  clock:advance(1)
+  clock:advance(2)
+  clock:advance(2)
+  t.assert_eq("SECOND%=", target:snapshot(), "publication must refresh a changed owner without another dirty event")
+  for _, publication in ipairs(seen) do
+    t.assert_eq("SECOND%=", publication.text, "obsolete publication must not clear or overwrite the target")
+  end
+end)
+
+t:test("continuous same-scope refreshes cannot starve a queued publication", function()
+  local clock = clock_fixture.new(t)
+  local target, seen = bar(clock, window())
+  local value = 0
+  target:place({
+    position = "left",
+    component = {
+      name = "busy",
+      refresh = function()
+        if value > 0 then
+          clock.now = clock.now + 2
+        end
+        local text = tostring(value)
+        return { text = text, hltext = text }
+      end,
+    },
+  })
+  target:refresh()
+  clock:advance(1)
+  clock:advance(1)
+  local before = #seen
+  clock:advance(20)
+  for index = 1, 12 do
+    value = index
+    target:refresh()
+    clock:advance(clock.now + 1)
+    clock:advance(clock.now)
+  end
+  t.assert_true(#seen > before, "same-scope input must not keep moving publication behind newer work")
+  clock:advance(100)
+  clock:advance(100)
+  t.assert_eq("12%=", target:snapshot())
+end)
+
 t:run()

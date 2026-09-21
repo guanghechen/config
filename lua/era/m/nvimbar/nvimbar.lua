@@ -75,6 +75,10 @@ end
 ---@field public notify                 ?era.m.nvimbar.INotifyPolicy
 ---@field public role                   stl.c.signal_hub.IRole
 
+---@class era.m.nvimbar.IScheduledPublication
+---@field public context                era.m.nvimbar.INvimbarContext
+---@field public task                   ?era.m.nvimbar.queue.ITask
+
 ---@class era.m.nvimbar.Nvimbar
 ---@field public fullname               string
 ---@field protected _value              string
@@ -90,7 +94,7 @@ end
 ---@field protected _isactive           fun(context: era.m.nvimbar.INvimbarContext): boolean
 ---@field protected _on_fulfilled       fun(result: string, last_result: string|nil): nil
 ---@field protected _validate           fun(): string|nil
----@field protected _publish_scheduled  ?table
+---@field protected _publish_scheduled  ?era.m.nvimbar.IScheduledPublication
 ---@field protected _publish_requested  boolean
 ---@field protected _draw_interval      integer
 ---@field protected _last_draw          ?number
@@ -199,7 +203,7 @@ function M.new(props)
   self._role = hub:register_role(fullname)
   hub:subscribe(self._role, { signal = changed_signal, scope = "nvimbar" }, function(message)
     if M.__is_current__(self, message.payload) then
-      M.__publish__(self)
+      M.__publish__(self, false, message.payload)
     else
       self:refresh()
     end
@@ -223,6 +227,9 @@ function M:dispose()
   self._disposed = true
   if self._publish_scheduled then
     queue.unwatch(self._publish_scheduled)
+    if self._publish_scheduled.task then
+      queue.cancel(self._publish_scheduled.task)
+    end
   end
   hub:unregister_role(self._role)
 
@@ -380,7 +387,7 @@ function M:refresh(force)
   for _, order in ipairs(self._orders) do
     self._components[order].runtime:request(context, force)
   end
-  self:__publish__(true)
+  self:__publish__(true, context)
   return self
 end
 
@@ -614,9 +621,10 @@ function M:__is_current__(context)
 end
 
 ---@protected
----@param requested                     ?boolean
+---@param requested                     boolean
+---@param context                       era.m.nvimbar.INvimbarContext
 ---@return nil
-function M:__publish__(requested)
+function M:__publish__(requested, context)
   if self._disposed then
     return
   end
@@ -627,13 +635,22 @@ function M:__publish__(requested)
     self._last_draw = nil
     if self._publish_scheduled then
       queue.unwatch(self._publish_scheduled)
+      if self._publish_scheduled.task then
+        queue.cancel(self._publish_scheduled.task)
+      end
       self._publish_scheduled = nil
     end
   end
   if self._publish_scheduled then
-    return
+    if not requested or self:__is_current__(self._publish_scheduled.context) then
+      return
+    end
+    queue.unwatch(self._publish_scheduled)
+    if self._publish_scheduled.task then
+      queue.cancel(self._publish_scheduled.task)
+    end
   end
-  local scheduled = {}
+  local scheduled = { context = context } ---@type era.m.nvimbar.IScheduledPublication
   self._publish_scheduled = scheduled
 
   ---@return nil
@@ -642,6 +659,10 @@ function M:__publish__(requested)
       return
     end
     self._publish_scheduled = nil
+    if not self:__is_current__(context) then
+      self:refresh()
+      return
+    end
     local should_publish = self._publish_requested ---@type boolean
     self._publish_requested = false
     self._last_draw = vim.uv.hrtime() / 1e6
@@ -663,7 +684,15 @@ function M:__publish__(requested)
       and self._last_draw + self._draw_interval - vim.uv.hrtime() / 1e6
     or 0
   if remaining > 0 then
-    queue.watch(scheduled, remaining, publish)
+    queue.watch(scheduled, remaining, function()
+      if self._publish_requested then
+        scheduled.task = queue.add(publish, true)
+      else
+        publish()
+      end
+    end)
+  elseif requested then
+    scheduled.task = queue.add(publish, true)
   else
     vim.schedule(publish)
   end

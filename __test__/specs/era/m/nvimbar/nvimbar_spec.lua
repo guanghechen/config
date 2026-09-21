@@ -724,8 +724,8 @@ t:test("warm refreshes batch publication without rebuilding full owner contexts"
   t.wait_until(function()
     return bar:snapshot():find("bbbbb", 1, true) ~= nil
   end, 1000)
-  t.assert_eq(2, layouts, "explicit publication and one completed batch")
-  t.assert_eq(2, publications)
+  t.assert_eq(1, layouts, "explicit publication includes the completed batch")
+  t.assert_eq(1, publications)
   t.assert_eq(layouts + 1, mode_reads, "only the request and layouts need a full context")
 end)
 
