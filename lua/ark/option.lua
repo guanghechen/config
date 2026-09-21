@@ -1,7 +1,6 @@
 -- Global Variables --------------------------------------------------------------------------------
 
-vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
-vim.g.bigfile_line_length = 2500
+vim.g.bigfile_size = 3 * 1024 * 1024 --- 3 MiB
 vim.g.markdown_recommended_style = 0 -- fix markdown indentation settings
 vim.g.qf_disable_statusline = true
 

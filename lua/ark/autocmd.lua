@@ -56,16 +56,6 @@ vim.filetype.add({
         if size_limit > 0 and size > size_limit then
           return "bigfile"
         end
-
-        local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-        if line_count <= 0 then
-          return
-        end
-
-        local threshold = vim.g.bigfile_line_length or 0 ---@type integer
-        if threshold > 0 and (size - line_count) / line_count > threshold then
-          return "bigfile"
-        end
       end,
     },
 
