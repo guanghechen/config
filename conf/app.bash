@@ -87,3 +87,6 @@ if [[ -x "$_ghc_conda_exe" ]]; then
     unset __conda_setup
 fi
 unset _ghc_conda_root _ghc_conda_exe _ghc_conda_hook
+
+## neovim
+export NVIM_NOTTYFAST=1
