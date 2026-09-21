@@ -1,4 +1,3 @@
-use crate::cache::WIDGET_CACHE_OPTION_PREFIX;
 use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
     METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
@@ -132,15 +131,6 @@ pub fn metric_sample_states(snapshot: &TmuxSnapshot) -> Vec<MetricSampleState> {
         .into_iter()
         .map(|spec| metric_sample_state(snapshot, spec, now))
         .collect()
-}
-
-pub fn cache_bytes(snapshot: &TmuxSnapshot) -> usize {
-    snapshot
-        .options
-        .iter()
-        .filter(|(name, _)| name.starts_with(WIDGET_CACHE_OPTION_PREFIX))
-        .map(|(_, value)| value.len())
-        .sum()
 }
 
 pub fn scheduler_state_lines(snapshot: &TmuxSnapshot) -> Vec<String> {

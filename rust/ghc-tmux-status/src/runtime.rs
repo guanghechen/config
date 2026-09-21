@@ -13,7 +13,7 @@ use crate::config::{
 use crate::error::{AppError, AppResult};
 use crate::introspect::{
     CACHED_METRIC_WIDGET_PLACEMENTS, COMPUTED_WIDGET_PLACEMENTS, TEMPLATE_WIDGET_PLACEMENTS,
-    cache_bytes, metric_health_state, metric_sample_states, scheduler_state_lines,
+    metric_health_state, metric_sample_states, scheduler_state_lines,
 };
 use crate::layout::LayoutEngine;
 use crate::metric::{NET_INTERFACE_OPTION, provider_for_current_platform};
@@ -592,7 +592,6 @@ impl StatusRuntime {
         println!("layout={}", context.layout.key);
         println!("rows={}", context.layout.rows);
         println!("target_status={}", context.layout.target_status);
-        println!("cache_bytes={}", cache_bytes(&context.snapshot));
         println!("scheduler:");
         for line in scheduler_state_lines(&context.snapshot) {
             println!("  {line}");

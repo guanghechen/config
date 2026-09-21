@@ -1,5 +1,4 @@
 mod app;
-mod cache;
 mod cli;
 mod commit;
 mod composer;
