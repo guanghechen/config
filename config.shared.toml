@@ -5,9 +5,9 @@ sandbox_mode = "workspace-write"
 suppress_unstable_features_warning = true
 web_search = "live"
 
-model = "gpt-5.6-sol"
+model = "gpt-6-astra"
 model_provider = "copilot"
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 
 [model_providers.copilot]
 name = "copilot"
@@ -70,8 +70,8 @@ use_memories = false
 
 [agents]
 enabled = true
-default_subagent_model = "gpt-5.6-sol"
-default_subagent_reasoning_effort = "high"
+default_subagent_model = "gpt-6-astra"
+default_subagent_reasoning_effort = "xhigh"
 max_concurrent_threads_per_session = 6
 max_depth = 1
 interrupt_message = true
