@@ -29,6 +29,8 @@ const MAX_SESSION_LIST_RICH_BYTES: usize = 10 * 1024;
 // so one pathological name cannot consume the entire list budget.
 const MAX_SESSION_NAME_FORMAT_BYTES: usize = 96;
 const DISPLAY_LITERAL_WRAPPER_BYTES: usize = "#{l:}".len();
+// Emit the percent after time expansion, at the literal's eventual evaluation depth.
+const PERCENT_LITERAL_ESCAPE: &str = "}#{a:37}#{l:";
 const OVERFLOW_LITERAL: &str = " … ";
 
 // This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
@@ -217,6 +219,7 @@ fn display_literal_character_bytes(character: char) -> usize {
     match character {
         '#' => 4,
         '}' => 2,
+        '%' => PERCENT_LITERAL_ESCAPE.len(),
         _ => character.len_utf8(),
     }
 }
@@ -229,25 +232,31 @@ fn last_focus_fg(session_name: &str, base_fg: &str) -> String {
     format!("#{{?#{{==:#{{client_last_session}},{name}}},{LAST_FG},{base_fg}}}")
 }
 
-/// Wraps a session name as a tmux literal for use as an `#{==}` right-value. It is compared
-/// against the raw `#{client_last_session}` and never drawn, so it only has to survive the
-/// format-expand pass: `#{l:}` brace-protects `,`, and `#`->`##` / `}`->`#}` (in that order,
-/// so the `#` injected by `#}` is not re-doubled) stop `#`/`}` from terminating the format.
-/// `format_unescape` then folds these back to the raw name for the comparison.
+/**
+ * Protects a comparison value from format parsing and repeated time expansion.
+ * The literal wrapper protects commas; hashes and closing braces survive one
+ * format-unescape pass. Native percent fragments are inserted last so their
+ * delimiters remain executable, including inside nested conditional branches.
+ */
 fn compare_literal(session_name: &str) -> String {
-    let escaped = session_name.replace('#', "##").replace('}', "#}");
+    let escaped = session_name
+        .replace('#', "##")
+        .replace('}', "#}")
+        .replace('%', PERCENT_LITERAL_ESCAPE);
     format!("#{{l:{escaped}}}")
 }
 
-/// Wraps a session name as a tmux literal for *visible* branch text. Display text crosses two
-/// folding stages: format-expand (where `#{l:}`/`format_unescape` folds `##`->`#`) and then
-/// `format_draw` (which folds `##`->`#` again and reads `#[` as a style introducer). A raw `#`
-/// would survive to the draw stage and either inject `#[...]` style markup or mis-measure the
-/// on-screen width against the raw-name `literal_text` shadow. Doubling for *both* folds means
-/// `#`->`####`; `}`->`#}` (order: `#` first) since `}` is not draw-special; `,` stays
-/// brace-protected by `#{l:}`.
+/**
+ * Display text crosses format expansion and drawing, each of which folds hashes.
+ * Escape hashes twice to preserve literal style-like names; closing braces only
+ * need format escaping. Percent fragments are inserted last to produce literal
+ * characters after time expansion, without escaping their native format syntax.
+ */
 fn display_literal(session_name: &str) -> String {
-    let escaped = session_name.replace('#', "####").replace('}', "#}");
+    let escaped = session_name
+        .replace('#', "####")
+        .replace('}', "#}")
+        .replace('%', PERCENT_LITERAL_ESCAPE);
     format!("#{{l:{escaped}}}")
 }
 
@@ -367,8 +376,9 @@ mod tests {
     use std::rc::Rc;
 
     use super::{
-        MAX_SESSION_LIST_RICH_BYTES, RenderedSegment, active_item_body, compare_literal,
-        display_literal, inactive_item_body_with_last_focus, render_item_body_with_last_focus,
+        MAX_SESSION_LIST_RICH_BYTES, MAX_SESSION_NAME_FORMAT_BYTES, RenderedSegment,
+        active_item_body, bounded_session_name, compare_literal, display_literal,
+        inactive_item_body_with_last_focus, render_item_body_with_last_focus,
         render_join_separator, render_left_edge, render_right_edge, render_session_list,
         session_state_prefix,
     };
@@ -642,6 +652,27 @@ mod tests {
         assert!(segment.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
         assert!(segment.literal_text.contains('…'));
         assert!(!segment.rich_text.contains(&long_name));
+    }
+
+    #[test]
+    fn percent_names_fit_both_display_and_comparison_format_budgets() {
+        for name in ["literal-%H", "rate-100%", "mix-%H#[],}中"] {
+            let (display_name, truncated) = bounded_session_name(name);
+            assert!(!truncated);
+            assert_eq!(display_name, name);
+            assert!(display_literal(&display_name).len() <= MAX_SESSION_NAME_FORMAT_BYTES);
+            assert!(compare_literal(&display_name).len() <= MAX_SESSION_NAME_FORMAT_BYTES);
+        }
+
+        for pattern in ["%", "%H", "%#}中"] {
+            let name = pattern.repeat(MAX_SESSION_NAME_FORMAT_BYTES);
+            let (display_name, truncated) = bounded_session_name(&name);
+            assert!(truncated);
+            assert!(display_name.ends_with('…'));
+            assert!(name.starts_with(display_name.trim_end_matches('…')));
+            assert!(display_literal(&display_name).len() <= MAX_SESSION_NAME_FORMAT_BYTES);
+            assert!(compare_literal(&display_name).len() <= MAX_SESSION_NAME_FORMAT_BYTES);
+        }
     }
 
     #[test]
