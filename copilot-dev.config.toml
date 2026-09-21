@@ -2,6 +2,9 @@ model = "gpt-6-astra"
 model_provider = "copilot-dev"
 model_reasoning_effort = "high"
 
+[agents]
+default_subagent_model = "gpt-6-astra"
+
 [model_providers.copilot-dev]
 name = "copilot-dev"
 base_url = "http://127.0.0.1:4848/api/codex"
@@ -15,4 +18,3 @@ stream_idle_timeout_ms = 3000000
 [model_providers.copilot-dev.auth]
 command = "/usr/bin/printenv"
 args = ["OPENAI_CODEX_AUTH_TOKEN"]
-
