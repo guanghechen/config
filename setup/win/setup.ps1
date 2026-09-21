@@ -88,6 +88,7 @@ $env:LG_CONFIG_FILE        = "$env:XDG_CONFIG_HOME\lazygit\config.yml,$env:XDG_C
 $env:LS_COLORS             = "di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93"
 $env:NODE_OPTIONS          = "--max-old-space-size=8192"
 $env:no_proxy              = "localhost,127.0.0.1,::1"
+$env:NVIM_NOTTYFAST        = "1"
 $env:PYTHONIOENCODING      = "utf8"
 $env:PYTHONPYCACHEPREFIX   = "$env:USERPROFILE\.cache\pycache"
 $env:PYTHONUTF8            = 1
@@ -115,6 +116,7 @@ Set-GhcUserEnvironmentVariable LG_CONFIG_FILE        "$env:LG_CONFIG_FILE"
 Set-GhcUserEnvironmentVariable LS_COLORS             "$env:LS_COLORS"
 Set-GhcUserEnvironmentVariable NODE_OPTIONS          "$env:NODE_OPTIONS"
 Set-GhcUserEnvironmentVariable no_proxy              "$env:no_proxy"
+Set-GhcUserEnvironmentVariable NVIM_NOTTYFAST        "$env:NVIM_NOTTYFAST"
 Set-GhcUserEnvironmentVariable PYTHONIOENCODING      "$env:PYTHONIOENCODING"
 Set-GhcUserEnvironmentVariable PYTHONPYCACHEPREFIX   "$env:PYTHONPYCACHEPREFIX"
 Set-GhcUserEnvironmentVariable PYTHONUTF8            $env:PYTHONUTF8
