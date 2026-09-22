@@ -1,25 +1,25 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.surrounds.action" ---@type string
+local __module_name__ = "era.keystroke.surrounds.action" ---@type string
 
-local Buffer = require("era.m.surrounds.buffer")
-local Definition = require("era.m.surrounds.definition")
-local Search = require("era.m.surrounds.search")
+local Buffer = require("era.keystroke.surrounds.buffer")
+local Definition = require("era.keystroke.surrounds.definition")
+local Search = require("era.keystroke.surrounds.search")
 
 local HIGHLIGHT_DURATION = 500 ---@type integer
 local N_LINES = 50 ---@type integer
 
----@class era.m.surrounds.action.ICache
+---@class era.keystroke.surrounds.action.ICache
 ---@field public count                  ?integer
 ---@field public direction              ?"left"|"right"
----@field public input                  ?era.m.surrounds.IInputDefinition
----@field public output                 ?era.m.surrounds.IOutputDefinition
+---@field public input                  ?era.keystroke.surrounds.IInputDefinition
+---@field public output                 ?era.keystroke.surrounds.IOutputDefinition
 
----@class era.m.surrounds.action
+---@class era.keystroke.surrounds.action
 local M = {}
 
-local cache = {} ---@type era.m.surrounds.action.ICache
+local cache = {} ---@type era.keystroke.surrounds.action.ICache
 
----@return era.m.surrounds.IInputDefinition|nil
+---@return era.keystroke.surrounds.IInputDefinition|nil
 local function get_input()
   if cache.input ~= nil then
     return cache.input
@@ -33,7 +33,7 @@ local function get_input()
 end
 
 ---@param use_cache                     boolean
----@return era.m.surrounds.IOutputDefinition|nil
+---@return era.keystroke.surrounds.IOutputDefinition|nil
 local function get_output(use_cache)
   if not use_cache then
     cache = {}
@@ -45,15 +45,15 @@ local function get_output(use_cache)
   if id == nil then
     return nil
   end
-  local output = Definition.resolve_output(id) ---@type era.m.surrounds.IOutputDefinition|nil
+  local output = Definition.resolve_output(id) ---@type era.keystroke.surrounds.IOutputDefinition|nil
   if use_cache then
     cache.output = output
   end
   return output
 end
 
----@param input                         era.m.surrounds.IInputDefinition
----@return era.m.surrounds.IRegionPair|nil
+---@param input                         era.keystroke.surrounds.IInputDefinition
+---@return era.keystroke.surrounds.IRegionPair|nil
 local function find_surrounding(input)
   local cursor = vim.api.nvim_win_get_cursor(0) ---@type integer[]
   return Search.find(input.patterns, {
@@ -63,7 +63,7 @@ local function find_surrounding(input)
   })
 end
 
----@param input                         era.m.surrounds.IInputDefinition
+---@param input                         era.keystroke.surrounds.IInputDefinition
 ---@return nil
 local function notify_missing(input)
   vim.api.nvim_echo({
@@ -74,13 +74,13 @@ local function notify_missing(input)
   }, false, {})
 end
 
----@return era.m.surrounds.IRegionPair|nil
+---@return era.keystroke.surrounds.IRegionPair|nil
 local function resolve_surrounding()
-  local input = get_input() ---@type era.m.surrounds.IInputDefinition|nil
+  local input = get_input() ---@type era.keystroke.surrounds.IInputDefinition|nil
   if input == nil then
     return nil
   end
-  local pair = find_surrounding(input) ---@type era.m.surrounds.IRegionPair|nil
+  local pair = find_surrounding(input) ---@type era.keystroke.surrounds.IRegionPair|nil
   if pair == nil then
     notify_missing(input)
   end
@@ -99,8 +99,8 @@ function M.add(mode)
     return "<Esc>"
   end
 
-  local marks = Buffer.get_marks(mode) ---@type era.m.surrounds.IMarks
-  local output = get_output(mode ~= "visual") ---@type era.m.surrounds.IOutputDefinition|nil
+  local marks = Buffer.get_marks(mode) ---@type era.keystroke.surrounds.IMarks
+  local output = get_output(mode ~= "visual") ---@type era.keystroke.surrounds.IOutputDefinition|nil
   if output == nil then
     return "<Esc>"
   end
@@ -144,7 +144,7 @@ function M.delete()
   if not is_current_buffer_available() then
     return "<Esc>"
   end
-  local pair = resolve_surrounding() ---@type era.m.surrounds.IRegionPair|nil
+  local pair = resolve_surrounding() ---@type era.keystroke.surrounds.IRegionPair|nil
   if pair == nil then
     return "<Esc>"
   end
@@ -169,11 +169,11 @@ function M.replace()
   if not is_current_buffer_available() then
     return "<Esc>"
   end
-  local pair = resolve_surrounding() ---@type era.m.surrounds.IRegionPair|nil
+  local pair = resolve_surrounding() ---@type era.keystroke.surrounds.IRegionPair|nil
   if pair == nil then
     return "<Esc>"
   end
-  local output = get_output(true) ---@type era.m.surrounds.IOutputDefinition|nil
+  local output = get_output(true) ---@type era.keystroke.surrounds.IOutputDefinition|nil
   if output == nil then
     return "<Esc>"
   end
@@ -188,11 +188,11 @@ function M.find()
   if not is_current_buffer_available() then
     return
   end
-  local pair = resolve_surrounding() ---@type era.m.surrounds.IRegionPair|nil
+  local pair = resolve_surrounding() ---@type era.keystroke.surrounds.IRegionPair|nil
   if pair == nil then
     return
   end
-  local positions = Buffer.surrounding_positions(pair) ---@type era.m.surrounds.IPosition[]
+  local positions = Buffer.surrounding_positions(pair) ---@type era.keystroke.surrounds.IPosition[]
   if #positions == 0 then
     return
   end
@@ -206,7 +206,7 @@ function M.highlight()
   if not is_current_buffer_available() then
     return
   end
-  local pair = resolve_surrounding() ---@type era.m.surrounds.IRegionPair|nil
+  local pair = resolve_surrounding() ---@type era.keystroke.surrounds.IRegionPair|nil
   if pair == nil then
     return
   end
@@ -229,7 +229,7 @@ function M.make_operator(task, ask_for_motion)
       return "<Esc>"
     end
     cache = { count = vim.v.count1 }
-    vim.api.nvim_set_option_value("operatorfunc", "v:lua.era.m.surrounds." .. task, { scope = "global" })
+    vim.api.nvim_set_option_value("operatorfunc", "v:lua.era.keystroke.surrounds." .. task, { scope = "global" })
     return "<Cmd>redraw<CR>g@" .. (ask_for_motion and "" or " ")
   end
 end
@@ -243,7 +243,7 @@ function M.make_action(task, direction)
       return "<Esc>"
     end
     cache = { count = vim.v.count1, direction = direction }
-    return string.format("<Cmd>lua era.m.surrounds.%s()<CR>", task)
+    return string.format("<Cmd>lua era.keystroke.surrounds.%s()<CR>", task)
   end
 end
 

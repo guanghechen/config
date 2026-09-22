@@ -1,6 +1,6 @@
 # Surrounds 设计
 
-`era.m.surrounds` 是参考 `mini.surround` 行为独立实现的本地 surround 模块，
+`era.keystroke.surrounds` 是参考 `mini.surround` 行为独立实现的本地 surround 模块，
 替代外部插件，保留本配置使用的行为，采用固定配置。
 
 ## 模块边界

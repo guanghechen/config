@@ -1,18 +1,18 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.surrounds.keymap" ---@type string
+local __module_name__ = "era.keystroke.surrounds.keymap" ---@type string
 
-local Action = require("era.m.surrounds.action")
-local Buffer = require("era.m.surrounds.buffer")
+local Action = require("era.keystroke.surrounds.action")
+local Buffer = require("era.keystroke.surrounds.buffer")
 
----@class era.m.surrounds.keymap.IAttached
+---@class era.keystroke.surrounds.keymap.IAttached
 ---@field public mode                   stl.t.VimModeEnum
 ---@field public key                    string
 ---@field public identity               string|function
 
----@class era.m.surrounds.keymap
+---@class era.keystroke.surrounds.keymap
 local M = {}
 
-local attachments = {} ---@type table<integer, era.m.surrounds.keymap.IAttached[]>
+local attachments = {} ---@type table<integer, era.keystroke.surrounds.keymap.IAttached[]>
 local initialized = false ---@type boolean
 
 ---@type stl.t.IKeymap[]
@@ -22,7 +22,7 @@ local KEYMAPS = {
     modes = { "x" },
     key = "gsa",
     desc = "surrounds: add selection",
-    callback = ':<C-u>lua era.m.surrounds.add("visual")<CR>',
+    callback = ':<C-u>lua era.keystroke.surrounds.add("visual")<CR>',
   },
   {
     modes = { "n" },
@@ -84,7 +84,7 @@ end
 local function attach(bufnr)
   stl.nvim.fn.bindkeys(KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
 
-  local keymaps = {} ---@type era.m.surrounds.keymap.IAttached[]
+  local keymaps = {} ---@type era.keystroke.surrounds.keymap.IAttached[]
   for _, keymap in ipairs(KEYMAPS) do
     for _, mode in ipairs(keymap.modes) do
       local current = get_keymap(bufnr, mode, keymap.key) ---@type table|nil
@@ -131,7 +131,7 @@ function M.setup()
   end
   initialized = true
 
-  local group = stl.nvim.fn.augroup("era_m_surrounds") ---@type integer
+  local group = stl.nvim.fn.augroup("era_keystroke_surrounds") ---@type integer
   vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
     group = group,
     callback = function(event)

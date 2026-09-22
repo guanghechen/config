@@ -1,11 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/surrounds_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/keystroke/surrounds_spec.lua
 ---@diagnostic disable: undefined-global
---- Test for era.m.surrounds
+--- Test for era.keystroke.surrounds
 
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.surrounds")
+local t = harness.new("era.keystroke.surrounds")
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -15,14 +15,13 @@ bootstrap.with_runtime(t, {
     },
   },
   era = {
-    m = {},
+    keystroke = require("era.keystroke"),
   },
 })
 
-local Surrounds = require("era.m.surrounds")
-local Buffer = require("era.m.surrounds.buffer")
-local Keymap = require("era.m.surrounds.keymap")
-era.m.surrounds = Surrounds
+local Surrounds = era.keystroke.surrounds
+local Buffer = require("era.keystroke.surrounds.buffer")
+local Keymap = require("era.keystroke.surrounds.keymap")
 Surrounds.setup()
 
 ---@param lines                         string[]
@@ -172,7 +171,7 @@ end)
 
 t:test("neighborhood conversions preserve empty and multiline regions", function()
   with_buffer({ "alpha", "beta", "gamma" }, function()
-    local reference = { from = { line = 2, col = 2 } } ---@type era.m.surrounds.IRegion
+    local reference = { from = { line = 2, col = 2 } } ---@type era.keystroke.surrounds.IRegion
     local neighborhood = Buffer.get_neighborhood(reference, 1)
 
     local empty_span = neighborhood.region_to_span(reference)
@@ -182,7 +181,7 @@ t:test("neighborhood conversions preserve empty and multiline regions", function
     local multiline = {
       from = { line = 1, col = 2 },
       to = { line = 3, col = 3 },
-    } ---@type era.m.surrounds.IRegion
+    } ---@type era.keystroke.surrounds.IRegion
     ---@diagnostic disable-next-line: assign-type-mismatch
     local multiline_span = neighborhood.region_to_span(multiline)
     t.assert_eq(

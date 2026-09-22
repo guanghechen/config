@@ -54,7 +54,7 @@ vim.schedule(function()
   era.m.image.dressing()
   era.m.paste.dressing()
   era.keystroke.splitjoin.setup()
-  era.m.surrounds.setup()
+  era.keystroke.surrounds.setup()
   era.m.textobject.setup()
 
   pcall(require, "ark.vendor.local.dressing")

@@ -100,7 +100,6 @@ local __m__mods = {
   searcher = "era.m.searcher",
   select = "era.m.select",
   splitline = "era.m.splitline",
-  surrounds = "era.m.surrounds",
   term = "era.m.term",
   textobject = "era.m.textobject",
   toggle = "era.m.toggle",
@@ -132,7 +131,6 @@ local __m__mods = {
 ---@field public searcher               era.m.searcher
 ---@field public select                 era.m.select
 ---@field public splitline              era.m.splitline
----@field public surrounds              era.m.surrounds
 ---@field public term                   era.m.term
 ---@field public textobject             era.m.textobject
 ---@field public toggle                 era.m.toggle

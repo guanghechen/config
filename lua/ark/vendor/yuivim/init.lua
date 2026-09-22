@@ -14,5 +14,5 @@ era.dressing.setup({ "im" })
 
 vim.schedule(function()
   era.keystroke.splitjoin.setup()
-  era.m.surrounds.setup()
+  era.keystroke.surrounds.setup()
 end)

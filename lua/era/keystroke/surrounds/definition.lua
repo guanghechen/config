@@ -1,9 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.surrounds.definition" ---@type string
+local __module_name__ = "era.keystroke.surrounds.definition" ---@type string
 
 local CANCEL_INPUT = "__era_surrounds_cancel__" ---@type string
 
----@class era.m.surrounds.definition
+---@class era.keystroke.surrounds.definition
 local M = {}
 
 ---@param prompt                        string
@@ -22,7 +22,7 @@ local function user_input(prompt, default)
   return result
 end
 
----@type table<string, { input: table|fun(): (table|nil), output: era.m.surrounds.IOutputDefinition|fun(): (era.m.surrounds.IOutputDefinition|nil) }>
+---@type table<string, { input: table|fun(): (table|nil), output: era.keystroke.surrounds.IOutputDefinition|fun(): (era.keystroke.surrounds.IOutputDefinition|nil) }>
 local BUILTIN = {
   -- Opening brackets include inner edge whitespace; closing brackets do not.
   ["("] = { input = { "%b()", "^.%s*().-()%s*.$" }, output = { left = "( ", right = " )" } },
@@ -98,7 +98,7 @@ function M.read_id()
 end
 
 ---@param id                            string
----@return era.m.surrounds.IInputDefinition|nil
+---@return era.keystroke.surrounds.IInputDefinition|nil
 function M.resolve_input(id)
   local source = BUILTIN[id] and BUILTIN[id].input or nil ---@type table|fun(): (table|nil)
   local value ---@type table|nil
@@ -116,10 +116,10 @@ function M.resolve_input(id)
 end
 
 ---@param id                            string
----@return era.m.surrounds.IOutputDefinition|nil
+---@return era.keystroke.surrounds.IOutputDefinition|nil
 function M.resolve_output(id)
-  local source = BUILTIN[id] and BUILTIN[id].output or nil ---@type era.m.surrounds.IOutputDefinition|fun(): (era.m.surrounds.IOutputDefinition|nil)
-  local value ---@type era.m.surrounds.IOutputDefinition|nil
+  local source = BUILTIN[id] and BUILTIN[id].output or nil ---@type era.keystroke.surrounds.IOutputDefinition|fun(): (era.keystroke.surrounds.IOutputDefinition|nil)
+  local value ---@type era.keystroke.surrounds.IOutputDefinition|nil
   if source == nil then
     value = { left = id, right = id }
   elseif type(source) == "function" then

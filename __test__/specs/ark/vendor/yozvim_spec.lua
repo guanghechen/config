@@ -16,7 +16,7 @@ t:test("Yozvim starts its minimal profile without loading IM dressing", function
 
   assert(loadfile("init.lua"))()
   t.wait_until(function()
-    return package.loaded["era.m.surrounds"] ~= nil and era.dressing.get_load_times().commentstring ~= nil
+    return package.loaded["era.keystroke.surrounds"] ~= nil and era.dressing.get_load_times().commentstring ~= nil
   end, 3000, "deferred minimal setup did not complete")
 
   t.assert_true(package.loaded["ark.vendor.yozvim"], "Yozvim entry loaded")

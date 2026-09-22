@@ -71,7 +71,7 @@ t:test("Yuivim starts the real minimal profile without taking over host features
   assert(loadfile("init.lua"))()
   t.assert_true(era.dressing.get_load_times().im ~= nil, "IM is registered synchronously")
   t.wait_until(function()
-    return package.loaded["era.m.surrounds"] ~= nil
+    return package.loaded["era.keystroke.surrounds"] ~= nil
   end, 3000, "deferred minimal setup did not complete")
 
   t.assert_true(package.loaded["ark.vendor.yuivim"], "Yuivim entry loaded")

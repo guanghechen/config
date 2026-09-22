@@ -8,11 +8,11 @@ local t = harness.new("ark.vendor.whichkey")
 for _, vendor in ipairs({ "neovim", "neovide" }) do
   t:test(vendor .. " includes deferred surround mappings in the initial whichkey tree", function()
     for name in pairs(package.loaded) do
-      if name:match("^era%.dressing%.whichkey") or name:match("^era%.m%.surrounds") then
+      if name:match("^era%.dressing%.whichkey") or name:match("^era%.keystroke%.surrounds") then
         t:patch_table(package.loaded, name, nil)
       end
     end
-    t:patch_table(era.m, "surrounds", nil)
+    t:patch_table(era.keystroke, "surrounds", nil)
     t:patch_table(dot, "setup_context", function() end)
     t:patch_table(dot, "setup_diagnostics", function() end)
     t:patch_table(dot.path, "is_git_repo", function()
@@ -59,7 +59,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       vim.api.nvim_set_current_buf(previous_bufnr)
       vim.api.nvim_buf_delete(bufnr, { force = true })
       vim.api.nvim_del_augroup_by_name("WhichKey")
-      vim.api.nvim_del_augroup_by_name("guanghechen_era_m_surrounds")
+      vim.api.nvim_del_augroup_by_name("guanghechen_era_keystroke_surrounds")
     end)
 
     assert(loadfile("lua/ark/vendor/" .. vendor .. "/init.lua"))()

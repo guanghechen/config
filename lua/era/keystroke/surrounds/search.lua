@@ -1,20 +1,20 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.surrounds.search" ---@type string
+local __module_name__ = "era.keystroke.surrounds.search" ---@type string
 
-local Buffer = require("era.m.surrounds.buffer")
+local Buffer = require("era.keystroke.surrounds.buffer")
 
----@class era.m.surrounds.search
+---@class era.keystroke.surrounds.search
 local M = {}
 
 ---@param from                          integer
 ---@param to                            ?integer Inclusive
----@return era.m.surrounds.ISpan
+---@return era.keystroke.surrounds.ISpan
 local function new_span(from, to)
   return { from = from, to = to == nil and from or to + 1 }
 end
 
----@param span                          era.m.surrounds.ISpan|nil
----@param target                        era.m.surrounds.ISpan|nil
+---@param span                          era.keystroke.surrounds.ISpan|nil
+---@param target                        era.keystroke.surrounds.ISpan|nil
 ---@return boolean
 local function is_covering(span, target)
   if span == nil or target == nil then
@@ -29,23 +29,23 @@ local function is_covering(span, target)
   return span.from <= target.from and target.to <= span.to
 end
 
----@param left                          era.m.surrounds.ISpan|nil
----@param right                         era.m.surrounds.ISpan|nil
+---@param left                          era.keystroke.surrounds.ISpan|nil
+---@param right                         era.keystroke.surrounds.ISpan|nil
 ---@return boolean
 local function is_equal(left, right)
   return left ~= nil and right ~= nil and left.from == right.from and left.to == right.to
 end
 
----@param left                          era.m.surrounds.ISpan|nil
----@param right                         era.m.surrounds.ISpan|nil
+---@param left                          era.keystroke.surrounds.ISpan|nil
+---@param right                         era.keystroke.surrounds.ISpan|nil
 ---@return boolean
 local function is_on_left(left, right)
   return left ~= nil and right ~= nil and left.from <= right.from and left.to <= right.to
 end
 
----@param candidate                     era.m.surrounds.ISpan
----@param current                       era.m.surrounds.ISpan|nil
----@param reference                     era.m.surrounds.ISpan
+---@param candidate                     era.keystroke.surrounds.ISpan
+---@param current                       era.keystroke.surrounds.ISpan|nil
+---@param reference                     era.keystroke.surrounds.ISpan
 ---@return boolean|nil
 local function compare_covering(candidate, current, reference)
   local candidate_covering = is_covering(candidate, reference) ---@type boolean
@@ -61,9 +61,9 @@ local function compare_covering(candidate, current, reference)
   end
 end
 
----@param candidate                     era.m.surrounds.ISpan
----@param current                       era.m.surrounds.ISpan|nil
----@param reference                     era.m.surrounds.ISpan
+---@param candidate                     era.keystroke.surrounds.ISpan
+---@param current                       era.keystroke.surrounds.ISpan|nil
+---@param reference                     era.keystroke.surrounds.ISpan
 ---@return boolean
 local function is_better(candidate, current, reference)
   if is_covering(reference, candidate) or is_equal(candidate, reference) then
@@ -147,7 +147,7 @@ end
 
 ---@param text                          string
 ---@param patterns                      string[]
----@param callback                      fun(span: era.m.surrounds.ISpan): nil
+---@param callback                      fun(span: era.keystroke.surrounds.ISpan): nil
 ---@return nil
 local function iterate_matches(text, patterns, callback)
   local max_level = #patterns ---@type integer
@@ -168,7 +168,7 @@ local function iterate_matches(text, patterns, callback)
       end
 
       if level == max_level then
-        local span = new_span(from + offset, to + offset) ---@type era.m.surrounds.ISpan
+        local span = new_span(from + offset, to + offset) ---@type era.keystroke.surrounds.ISpan
         local id = string.format("%d_%d", span.from, span.to) ---@type string
         if not visited[id] then
           visited[id] = true
@@ -186,7 +186,7 @@ end
 
 ---@param text                          string
 ---@param pattern                       string
----@return era.m.surrounds.ISpanPair
+---@return era.keystroke.surrounds.ISpanPair
 local function extract_spans(text, pattern)
   local positions = { text:match(pattern) } ---@type any[]
   local valid = #positions == 2 or #positions == 4 ---@type boolean
@@ -209,12 +209,12 @@ local function extract_spans(text, pattern)
   }
 end
 
----@param neighborhood                  era.m.surrounds.INeighborhood
+---@param neighborhood                  era.keystroke.surrounds.INeighborhood
 ---@param patterns                      table
----@param reference                     era.m.surrounds.ISpan
----@return { span: era.m.surrounds.ISpan|nil, extract_pattern: string|nil }
+---@param reference                     era.keystroke.surrounds.ISpan
+---@return { span: era.keystroke.surrounds.ISpan|nil, extract_pattern: string|nil }
 local function find_best(neighborhood, patterns, reference)
-  local best = nil ---@type era.m.surrounds.ISpan|nil
+  local best = nil ---@type era.keystroke.surrounds.ISpan|nil
   local best_patterns = nil ---@type string[]|nil
   for _, nested_patterns in ipairs(cartesian_product(patterns)) do
     iterate_matches(neighborhood.text, nested_patterns, function(span)
@@ -231,18 +231,18 @@ local function find_best(neighborhood, patterns, reference)
 end
 
 ---@param patterns                      table
----@param opts                          era.m.surrounds.ISearchOptions
----@return era.m.surrounds.IRegionPair|nil
+---@param opts                          era.keystroke.surrounds.ISearchOptions
+---@return era.keystroke.surrounds.IRegionPair|nil
 function M.find(patterns, opts)
   if opts.n_times == 0 then
     return nil
   end
 
-  local neighborhood = Buffer.get_neighborhood(opts.reference_region, 0) ---@type era.m.surrounds.INeighborhood
-  local reference = neighborhood.region_to_span(opts.reference_region) ---@type era.m.surrounds.ISpan
+  local neighborhood = Buffer.get_neighborhood(opts.reference_region, 0) ---@type era.keystroke.surrounds.INeighborhood
+  local reference = neighborhood.region_to_span(opts.reference_region) ---@type era.keystroke.surrounds.ISpan
 
-  ---@param current                     era.m.surrounds.ISpan
-  ---@return { span: era.m.surrounds.ISpan|nil, extract_pattern: string|nil }
+  ---@param current                     era.keystroke.surrounds.ISpan
+  ---@return { span: era.keystroke.surrounds.ISpan|nil, extract_pattern: string|nil }
   local function find_next(current)
     local result = find_best(neighborhood, patterns, current)
     if result.span == nil then
@@ -250,16 +250,16 @@ function M.find(patterns, opts)
         return result
       end
 
-      local current_region = neighborhood.span_to_region(current) ---@type era.m.surrounds.IRegion
+      local current_region = neighborhood.span_to_region(current) ---@type era.keystroke.surrounds.IRegion
       neighborhood = Buffer.get_neighborhood(opts.reference_region, opts.n_lines)
-      reference = neighborhood.region_to_span(opts.reference_region) ---@type era.m.surrounds.ISpan
-      current = neighborhood.region_to_span(current_region) ---@type era.m.surrounds.ISpan
+      reference = neighborhood.region_to_span(opts.reference_region) ---@type era.keystroke.surrounds.ISpan
+      current = neighborhood.region_to_span(current_region) ---@type era.keystroke.surrounds.ISpan
       result = find_best(neighborhood, patterns, current)
     end
     return result
   end
 
-  local result = { span = reference, extract_pattern = nil } ---@type { span: era.m.surrounds.ISpan|nil, extract_pattern: string|nil }
+  local result = { span = reference, extract_pattern = nil } ---@type { span: era.keystroke.surrounds.ISpan|nil, extract_pattern: string|nil }
   for _ = 1, opts.n_times do
     result = find_next(result.span)
     if result.span == nil then
@@ -267,12 +267,12 @@ function M.find(patterns, opts)
     end
   end
 
-  ---@param span                        era.m.surrounds.ISpan
+  ---@param span                        era.keystroke.surrounds.ISpan
   ---@param pattern                     string
-  ---@return era.m.surrounds.ISpanPair
+  ---@return era.keystroke.surrounds.ISpanPair
   local function extract(span, pattern)
     local local_text = neighborhood.text:sub(span.from, span.to - 1) ---@type string
-    local pair = extract_spans(local_text, pattern) ---@type era.m.surrounds.ISpanPair
+    local pair = extract_spans(local_text, pattern) ---@type era.keystroke.surrounds.ISpanPair
     local offset = span.from - 1 ---@type integer
     return {
       left = { from = pair.left.from + offset, to = pair.left.to + offset },
@@ -280,8 +280,8 @@ function M.find(patterns, opts)
     }
   end
 
-  local spans = extract(result.span, result.extract_pattern) ---@type era.m.surrounds.ISpanPair
-  local outer = { from = spans.left.from, to = spans.right.to } ---@type era.m.surrounds.ISpan
+  local spans = extract(result.span, result.extract_pattern) ---@type era.keystroke.surrounds.ISpanPair
+  local outer = { from = spans.left.from, to = spans.right.to } ---@type era.keystroke.surrounds.ISpan
   if is_covering(reference, outer) then
     result = find_next(result.span)
     if result.span == nil then

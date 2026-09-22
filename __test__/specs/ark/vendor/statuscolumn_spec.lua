@@ -41,14 +41,17 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       end
     end
     local modules = {}
-    for _, name in ipairs({ "input", "lsp", "select", "image", "paste", "surrounds", "textobject" }) do
+    for _, name in ipairs({ "input", "lsp", "select", "image", "paste", "textobject" }) do
       modules[name] = { dressing = function() end, setup = function() end }
     end
     local completed = false
     bootstrap.with_runtime(t, {
       era = {
         dressing = dressing,
-        keystroke = { splitjoin = { setup = function() end } },
+        keystroke = {
+          splitjoin = { setup = function() end },
+          surrounds = { setup = function() end },
+        },
         m = modules,
       },
       dot = {

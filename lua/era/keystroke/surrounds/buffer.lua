@@ -1,9 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.surrounds.buffer" ---@type string
+local __module_name__ = "era.keystroke.surrounds.buffer" ---@type string
 
 local NSNR_HIGHLIGHT = vim.api.nvim_create_namespace(__module_name__ .. ":highlight") ---@type integer
 
----@class era.m.surrounds.buffer
+---@class era.keystroke.surrounds.buffer
 local M = {}
 
 ---@param bufnr                         integer
@@ -36,7 +36,7 @@ local function get_selection_type(mode)
 end
 
 ---@param mode                          string
----@return era.m.surrounds.IMarks
+---@return era.keystroke.surrounds.IMarks
 function M.get_marks(mode)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local mark_first = mode == "visual" and "<" or "[" ---@type string
@@ -86,8 +86,8 @@ function M.set_cursor_nonblank(line)
   vim.cmd("normal! ^")
 end
 
----@param pos1                          era.m.surrounds.IPosition
----@param pos2                          era.m.surrounds.IPosition
+---@param pos1                          era.keystroke.surrounds.IPosition
+---@param pos2                          era.keystroke.surrounds.IPosition
 ---@return "<"|">"|"="
 function M.compare_positions(pos1, pos2)
   if pos1.line < pos2.line then
@@ -105,13 +105,13 @@ function M.compare_positions(pos1, pos2)
   return "="
 end
 
----@param positions                    era.m.surrounds.IPosition[]
+---@param positions                     era.keystroke.surrounds.IPosition[]
 ---@param direction                    "left"|"right"
 ---@return nil
 function M.cycle_cursor(positions, direction)
   local cursor = vim.api.nvim_win_get_cursor(0) ---@type integer[]
-  local current = { line = cursor[1], col = cursor[2] + 1 } ---@type era.m.surrounds.IPosition
-  local result = nil ---@type era.m.surrounds.IPosition|nil
+  local current = { line = cursor[1], col = cursor[2] + 1 } ---@type era.keystroke.surrounds.IPosition
+  local result = nil ---@type era.keystroke.surrounds.IPosition|nil
 
   for _, position in ipairs(positions) do
     local comparison = M.compare_positions(current, position) ---@type "<"|">"|"="
@@ -133,8 +133,8 @@ function M.get_line_cols(line)
   return #text
 end
 
----@param pos                           era.m.surrounds.IPosition
----@return era.m.surrounds.IPosition
+---@param pos                           era.keystroke.surrounds.IPosition
+---@return era.keystroke.surrounds.IPosition
 function M.position_left(pos)
   if pos.line == 1 and pos.col == 1 then
     return { line = pos.line, col = pos.col }
@@ -145,8 +145,8 @@ function M.position_left(pos)
   return { line = pos.line, col = pos.col - 1 }
 end
 
----@param pos                           era.m.surrounds.IPosition
----@return era.m.surrounds.IPosition
+---@param pos                           era.keystroke.surrounds.IPosition
+---@return era.keystroke.surrounds.IPosition
 function M.position_right(pos)
   local cols = M.get_line_cols(pos.line) ---@type integer
   local line_count = vim.api.nvim_buf_line_count(0) ---@type integer
@@ -159,13 +159,13 @@ function M.position_right(pos)
   return { line = pos.line, col = pos.col + 1 }
 end
 
----@param region                        era.m.surrounds.IRegion
+---@param region                        era.keystroke.surrounds.IRegion
 ---@return boolean
 function M.region_is_empty(region)
   return region.to == nil
 end
 
----@param region                        era.m.surrounds.IRegion
+---@param region                        era.keystroke.surrounds.IRegion
 ---@param text                          string|string[]
 ---@return nil
 function M.region_replace(region, text)
@@ -244,12 +244,12 @@ function M.insert_lines(line, lines)
   vim.api.nvim_buf_set_lines(0, line, line, false, lines)
 end
 
----@param pair                          era.m.surrounds.IRegionPair
----@return era.m.surrounds.IPosition[]
+---@param pair                          era.keystroke.surrounds.IRegionPair
+---@return era.keystroke.surrounds.IPosition[]
 function M.surrounding_positions(pair)
-  local positions = {} ---@type era.m.surrounds.IPosition[]
+  local positions = {} ---@type era.keystroke.surrounds.IPosition[]
 
-  ---@param pos                         era.m.surrounds.IPosition|nil
+  ---@param pos                         era.keystroke.surrounds.IPosition|nil
   ---@param correction                  "left"|"right"
   local function append(pos, correction)
     if pos == nil then
@@ -258,7 +258,7 @@ function M.surrounding_positions(pair)
     if M.get_line_cols(pos.line) < pos.col and pos.col > 1 then
       pos = correction == "left" and M.position_left(pos) or M.position_right(pos)
     end
-    local last = positions[#positions] ---@type era.m.surrounds.IPosition|nil
+    local last = positions[#positions] ---@type era.keystroke.surrounds.IPosition|nil
     if last == nil or last.line ~= pos.line or last.col ~= pos.col then
       positions[#positions + 1] = { line = pos.line, col = pos.col }
     end
@@ -276,7 +276,7 @@ function M.surrounding_positions(pair)
 end
 
 ---@param bufnr                         integer
----@param region                        era.m.surrounds.IRegion
+---@param region                        era.keystroke.surrounds.IRegion
 ---@return nil
 function M.highlight_region(bufnr, region)
   if M.region_is_empty(region) then
@@ -292,7 +292,7 @@ function M.highlight_region(bufnr, region)
 end
 
 ---@param bufnr                         integer
----@param region                        era.m.surrounds.IRegion
+---@param region                        era.keystroke.surrounds.IRegion
 ---@return nil
 function M.clear_region_highlight(bufnr, region)
   if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -302,9 +302,9 @@ function M.clear_region_highlight(bufnr, region)
   vim.api.nvim_buf_clear_namespace(bufnr, NSNR_HIGHLIGHT, region.from.line - 1, to_line)
 end
 
----@param reference                     era.m.surrounds.IRegion
+---@param reference                     era.keystroke.surrounds.IRegion
 ---@param neighbors                     integer
----@return era.m.surrounds.INeighborhood
+---@return era.keystroke.surrounds.INeighborhood
 function M.get_neighborhood(reference, neighbors)
   local from_line = reference.from.line ---@type integer
   local to_line = (reference.to or reference.from).line ---@type integer
@@ -316,7 +316,7 @@ function M.get_neighborhood(reference, neighbors)
   end
   local text = table.concat(lines) ---@type string
 
-  ---@param pos                         era.m.surrounds.IPosition
+  ---@param pos                         era.keystroke.surrounds.IPosition
   ---@return integer
   local function position_to_offset(pos)
     local line = line_start ---@type integer
@@ -329,7 +329,7 @@ function M.get_neighborhood(reference, neighbors)
   end
 
   ---@param offset                      integer
-  ---@return era.m.surrounds.IPosition
+  ---@return era.keystroke.surrounds.IPosition
   local function offset_to_position(offset)
     local line = 1 ---@type integer
     local line_offset = 0 ---@type integer
@@ -340,21 +340,21 @@ function M.get_neighborhood(reference, neighbors)
     return { line = line_start + line - 1, col = offset - line_offset }
   end
 
-  ---@param region                      era.m.surrounds.IRegion
-  ---@return era.m.surrounds.ISpan
+  ---@param region                      era.keystroke.surrounds.IRegion
+  ---@return era.keystroke.surrounds.ISpan
   local function region_to_span(region)
     local is_empty = region.to == nil ---@type boolean
-    local target = region.to or region.from ---@type era.m.surrounds.IPosition
+    local target = region.to or region.from ---@type era.keystroke.surrounds.IPosition
     return {
       from = position_to_offset(region.from),
       to = position_to_offset(target) + (is_empty and 0 or 1),
     }
   end
 
-  ---@param span                        era.m.surrounds.ISpan
-  ---@return era.m.surrounds.IRegion
+  ---@param span                        era.keystroke.surrounds.ISpan
+  ---@return era.keystroke.surrounds.IRegion
   local function span_to_region(span)
-    local region = { from = offset_to_position(span.from) } ---@type era.m.surrounds.IRegion
+    local region = { from = offset_to_position(span.from) } ---@type era.keystroke.surrounds.IRegion
     if span.from < span.to then
       region.to = offset_to_position(span.to - 1)
     end
