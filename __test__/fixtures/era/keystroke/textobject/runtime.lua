@@ -25,7 +25,6 @@ function M.setup(t)
       dressing = { whichkey = { add = function() end } },
     },
   })
-  era.m.splitline = require("era.m.splitline")
   era.m.git = { hunk = require("era.m.git.hunk") }
   local textobject = era.keystroke.textobject
   textobject.setup()

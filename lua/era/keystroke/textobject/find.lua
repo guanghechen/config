@@ -150,7 +150,7 @@ function M.find(kind, id, opts)
     return buffer_range(bufnr, kind), nil
   end
   if id == "s" then
-    return era.m.splitline.textobject(kind), nil
+    return era.keystroke.splitline.textobject(kind), nil
   end
 
   local captures = CAPTURES[id]

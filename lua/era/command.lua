@@ -283,7 +283,7 @@ command
     uuid = K.code.insert_splitline.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.m.splitline.insert()
+      era.keystroke.splitline.insert()
     end,
   })
   .implement({

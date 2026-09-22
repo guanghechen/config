@@ -5,6 +5,7 @@ local __module_name__ = "era.keystroke" ---@type string
 local __mods = {
   illuminate = "era.keystroke.illuminate",
   splitjoin = "era.keystroke.splitjoin",
+  splitline = "era.keystroke.splitline",
   surrounds = "era.keystroke.surrounds",
   textobject = "era.keystroke.textobject",
 }
@@ -13,6 +14,7 @@ local __mods = {
 ---@field public __mods                 era.keystroke.__mods
 ---@field public illuminate             era.keystroke.illuminate
 ---@field public splitjoin              era.keystroke.splitjoin
+---@field public splitline              era.keystroke.splitline
 ---@field public surrounds              era.keystroke.surrounds
 ---@field public textobject             era.keystroke.textobject
 local M = setmetatable({

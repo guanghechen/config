@@ -1,13 +1,17 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.keystroke.splitline" ---@type string
+
 local SPLITLINE_PATTERN = "^%-%-%-+.-%-%-%-+$" ---@type string
 local SPLITLINE_TOTAL_LEN = 100 ---@type integer
 
 local SPLITLINE_FILETYPES = {
   lua = true,
   markdown = true,
+  text = true,
   [stl.filetype.NOTEPAD] = true,
 }
 
----@class era.m.splitline
+---@class era.keystroke.splitline
 local M = {}
 
 ---@return string
@@ -19,7 +23,7 @@ function M.make()
   return string.rep("-", left_len) .. timestamp .. string.rep("-", right_len)
 end
 
----@param line                         string
+---@param line                          string
 ---@return boolean
 function M.is_splitline(line)
   return line:match(SPLITLINE_PATTERN) ~= nil
