@@ -188,20 +188,13 @@ end
 ---@param opts                           ?era.dressing.whichkey.IAddOpts
 ---@return nil
 function M.add(mappings, opts)
-  if not M.ready then
-    vim.schedule(function()
-      M.add(mappings, opts)
-    end)
-    return
-  end
-
   opts = opts or {}
 
   -- Normalize to list: single mapping -> { mapping }
   local is_single = type(mappings[1]) == "string"
   local list = is_single and { mappings } or mappings
 
-  -- Save for future buffers
+  -- Keep definitions while disabled; enable uses them without polling readiness.
   M.dynamic_specs[#M.dynamic_specs + 1] = { list = list, opts = opts }
 
   for _, spec in ipairs(list) do

@@ -4,7 +4,9 @@ vim.api.nvim_create_autocmd("BufDelete", {
     local bufnr = event.buf ---@type integer
     dot.tab.on_buf_delete(bufnr)
     dot.buf.on_close(bufnr)
-    era.m.term.event.on_buf_deleted(bufnr)
+    if package.loaded["era.m.term.state"] ~= nil then
+      era.m.term.event.on_buf_deleted(bufnr)
+    end
   end,
 })
 

@@ -273,13 +273,35 @@ end)
 t:test("escape clears search state together with hlsearch", function()
   local runtime = setup()
   runtime.searching = true
+  t.assert_nil(package.loaded["vim.snippet"], "unused snippets stay unloaded")
 
   local key = runtime.escape()
 
+  t.assert_nil(package.loaded["vim.snippet"], "escape does not load snippets to clean them")
   t.assert_eq("<esc>", key, "mapped key")
   t.assert_false(runtime.searching, "searching state")
   t.assert_eq(1, runtime.hunk_nav_clears, "hunk navigation clear")
   t.assert_eq(1, runtime.search_clears, "search clear")
+end)
+
+t:test("escape stops an existing native snippet session", function()
+  local snippet = require("vim.snippet")
+  local previous = vim.api.nvim_get_current_buf() ---@type integer
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    snippet.stop()
+    vim.api.nvim_set_current_buf(previous)
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end)
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "" })
+  snippet.expand("${1:word}$0")
+  t.assert_true(snippet.active(), "native snippet session")
+
+  local runtime = setup()
+  t.assert_eq("<esc>", runtime.escape(), "mapped key")
+  t.assert_false(snippet.active(), "session stopped")
+  t.assert_eq("word", vim.api.nvim_get_current_line(), "snippet text preserved")
 end)
 
 t:test("escape clears hunk navigation without active search", function()

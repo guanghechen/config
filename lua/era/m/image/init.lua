@@ -123,7 +123,8 @@ function M.dressing()
       end
 
       local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-      local lang = vim.treesitter.language.get_lang(filetype) ---@type string|nil
+      -- Resolve aliases without loading the parser stack.
+      local lang = require("vim.treesitter.language").get_lang(filetype) ---@type string|nil
       return lang ~= nil and supported_lang_set[lang] == true
     end
 

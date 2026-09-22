@@ -199,12 +199,25 @@ end)
 
 t:test("BufDelete forwards the deleted buffer to every owner", function()
   local runtime = setup()
+  t:patch_table(package.loaded, "era.m.term.state", {})
 
   runtime.autocmds.bootstrap_on_BufDelete.callback({ buf = 42 })
 
   t.assert_eq(42, runtime.tab_delete_bufnr, "tab metadata")
   t.assert_eq(42, runtime.buf_close_bufnr, "buffer metadata")
   t.assert_eq(42, runtime.term_delete_bufnr, "terminal metadata")
+end)
+
+t:test("BufDelete skips an unused terminal subsystem", function()
+  local runtime = setup()
+  t:patch_table(package.loaded, "era.m.term.state", nil)
+  t:patch_global("era", {})
+
+  runtime.autocmds.bootstrap_on_BufDelete.callback({ buf = 42 })
+
+  t.assert_eq(42, runtime.tab_delete_bufnr, "tab metadata")
+  t.assert_eq(42, runtime.buf_close_bufnr, "buffer metadata")
+  t.assert_nil(runtime.term_delete_bufnr, "terminal metadata")
 end)
 
 t:test("concurrent refreshes keep one query in flight and apply the final result", function()

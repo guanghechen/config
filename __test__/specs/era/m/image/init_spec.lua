@@ -7,12 +7,13 @@ local harness = require("__test__.support.harness")
 local t = harness.new("era.m.image.init")
 
 t:test("dressing attaches existing and future supported buffers", function()
+  t.assert_nil(package.loaded["vim.treesitter"], "cold treesitter")
   local buffers = {
-    [11] = { valid = true, loaded = true, filetype = "markdown" },
+    [11] = { valid = true, loaded = true, filetype = "image-markdown" },
     [12] = { valid = true, loaded = true, filetype = "lua" },
     [13] = { valid = false, loaded = true, filetype = "markdown" },
     [14] = { valid = true, loaded = false, filetype = "markdown" },
-    [15] = { valid = true, loaded = true, filetype = "markdown" },
+    [15] = { valid = true, loaded = true, filetype = "markdown.notes" },
     [16] = { valid = true, loaded = true, filetype = "markdown" },
   }
   local attached = {} ---@type table<integer, integer>
@@ -77,9 +78,7 @@ t:test("dressing attaches existing and future supported buffers", function()
     t.assert_eq("filetype", name, "buffer option")
     return buffers[opts.buf].filetype
   end)
-  t:patch_table(vim.treesitter.language, "get_lang", function(filetype)
-    return filetype
-  end)
+  require("vim.treesitter.language").register("markdown", "image-markdown")
   t:patch_table(vim, "schedule", function(callback)
     scheduled[#scheduled + 1] = callback
   end)
@@ -89,6 +88,7 @@ t:test("dressing attaches existing and future supported buffers", function()
 
   t.assert_true(state.did_setup, "image setup")
   t.assert_eq(3, #scheduled, "existing supported schedules")
+  t.assert_nil(package.loaded["vim.treesitter"], "language lookup does not load the parser stack")
 
   buffers[15].filetype = "lua"
   buffers[16].loaded = false

@@ -219,8 +219,9 @@ function M.dressing()
         vim.cmd("noh")
       end)
     end
-    if vim.snippet then
-      vim.snippet.stop()
+    local snippet = package.loaded["vim.snippet"]
+    if snippet ~= nil then
+      snippet.stop()
     end
     return "<esc>"
   end, "system: clear search highlights", true)
