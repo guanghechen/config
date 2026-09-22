@@ -110,6 +110,9 @@ Delete 只要删除了至少一项，就清空 selection 与 pending；失败项
 2. 调用 `yoz.canonical_path.to_os_path(...)` 转为 OS 路径。
 3. 执行 `open/split/tabnew/vsplit/system-open`。
 
+`l` 打开文件时优先使用当前 tab 记住的源码窗口，`w` 通过 window picker 选窗；选定窗口后共用
+打开流程，先替换目标窗口的 buffer，成功后再切换焦点，避免提前激活即将被替换的旧 buffer。
+
 ### 读写文件系统
 
 1. `Action/Tree` 层传入内部 filepath（slash-only）。

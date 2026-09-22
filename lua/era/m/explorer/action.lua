@@ -875,13 +875,9 @@ function M:open()
     ctx.tree:toggle_expanded(filepath, false, nil)
     ctx.refresh()
   else
-    local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-    if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-      vim.api.nvim_set_current_win(winnr_sourcefile)
-    end
-    dot.win.open_filepath(winnr_sourcefile, os_filepath)
+    self:pick_win_open(winnr_sourcefile)
   end
 end
 
@@ -1045,8 +1041,9 @@ function M:pick_win_open(winnr)
     return
   end
 
-  dot.win.open_filepath(picked_winnr, os_filepath)
-  vim.api.nvim_set_current_win(picked_winnr)
+  if dot.win.open_filepath(picked_winnr, os_filepath) then
+    vim.api.nvim_set_current_win(picked_winnr)
+  end
 end
 
 ---@param winnr                         integer|nil
