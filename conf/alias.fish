@@ -31,7 +31,6 @@ alias mkdir='mkdir -pv'
 alias mv='mv -i'
 alias ports='netstat -tulanp'
 alias rm='rm -i -I'
-alias sss='source ~/.config/fish/config.fish'
 alias tls='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
