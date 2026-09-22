@@ -278,6 +278,17 @@ duration -> date -> memory -> CPU -> network
 
 time 始终保留；当 time 也放不下时，最终交给 tmux character truncation。
 
+Responsive guard 的 baseline 仍按每个可见 session 一个 state prefix 计算。额外宽度为
+active lifecycle 下同时命中 sampled `R` 与 `B` membership 的可见 session 数乘以 2；
+session-list renderer 返回同一次选择的可见 slice，overflow 隐藏的 sessions 不参与预算。
+
+- client width 小于 baseline threshold：直接隐藏。
+- client width 大于等于 baseline threshold + `2 * visible_session_count`：直接显示。
+- 两者之间：展开 sampled membership 计算实际额外预算，再判断是否显示。
+
+条件只返回 boolean，metric body 保持原有 conditional depth，避免改变时间与百分号展开。
+这套预算不增加 sampler、timer、tmux options 或 Rust state-triggered reconcile。
+
 ## 8. Session list
 
 Session list 的 group、order、focus 与 last-session 语义由 `session-navigation.md` 定义。
@@ -334,14 +345,16 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   malformed 时不显示 marker。
 - Session spinner 与 bell 各使用 2 列 title prefix（左侧 gap + marker）；同时存在时共占 4 列，
   idle 不绘制 padding、保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count
-  不变。Session-list `literal_text` 保留单 prefix baseline，避免 idle/单状态下提前提升
-  responsive metric threshold；`status-left-length` 另按每个 group session 增加 2 列上界，
-  容纳可能出现的第二个 prefix。接受状态 transition 引起的 session-list reflow。
+  不变。Session-list `literal_text` 保留单 prefix baseline，避免 idle/单状态下提前隐藏
+  metrics；双状态时 responsive guard 动态增加第二个 prefix 的预算。
+  `status-left-length` 另按每个 group session 增加 2 列静态上界，容纳可能出现的第二个
+  prefix。接受状态 transition 引起的 session-list reflow；可隐藏的 metrics 优先让出空间。
 - Window live frame 仅在 running 时增加 2 列，idle 不预留 frame、保持 baseline layout；
   接受由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，
   各自的 glyph count 和 palette 不变。
-- Typed `R/B` membership 与 frame 不进入 Rust snapshot、render key 或 session cache；indicator
-  不消费既有 `SessionInfo.has_bell` transport，状态变化不触发 renderer apply/commit。
+- Sampled `R/B` values 与 frame 不进入 Rust snapshot、render key 或 session cache；cache 中
+  仅保存按可见 session IDs 生成的动态表达式。Indicator 与预算均不消费既有
+  `SessionInfo.has_bell` transport，状态变化不触发 renderer apply/commit。
 - Session item 与 active-scheduler terminal title 是上述 session 定义的 freshness-bounded
   projection：sample 更新前可能暂时保留上一状态，且 consumer 不额外执行 `S/W/P` traversal。
   Scheduler inactive 时 terminal title 改用 live aggregation。Lifecycle fence 清空 sampled

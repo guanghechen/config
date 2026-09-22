@@ -190,6 +190,52 @@ windows       panes/window   median delta   p95 delta
 成本随 window/pane 数和实际 redraw 次数增长；多 client 各自展开，但 running-session publish
 仍由 single-flight lock 去重。
 
+### 4.8 Combined-state responsive budget
+
+双状态 prefix 的额外宽度按可见 session 的 sampled `R/B` membership 计算；每个 metric
+先检查静态上下界，只在临界宽度区间展开该计算。Metric body 保持原 conditional depth，
+idle/单状态 baseline、隐藏优先级与 time fallback 均保留。
+
+2026-09-21，macOS、tmux next-3.9、release renderer、1 个持久 control client。48 个场景，
+每场景 20 组 warmup 与 200 组随机顺序配对样本。比较完整第一行 format expansion；下表
+为全部 sessions 同时 running＋bell 时，相对同输出静态阈值的增量：
+
+| Total / visible sessions | Width | Direct median | Bounded median | Bounded p95 |
+|---|---|---:|---:|---:|
+| 4 / 4 | wide | +0.243 ms | +0.045 ms | +0.309 ms |
+| 4 / 4 | boundary | +0.239 ms | +0.114 ms | +0.375 ms |
+| 40 / 10 | wide | +1.070 ms | +0.076 ms | +0.522 ms |
+| 40 / 10 | boundary | +1.050 ms | +0.584 ms | +0.989 ms |
+
+比较对象先按 fixture state 算好正确 threshold，因此不会把 metrics 显示数量变化混入
+动态计算成本。20/40 个同组 sessions 在该 workload 下受既有 cache budget 限制，实际
+只显示 10 个。结果包含 control socket 往返，不包含逐次 CLI startup、terminal drawing、
+第二行、sampling 或 Rust apply/commit；不用于推断整机 CPU 或通用 tail latency。
+
+代价：原型 row0-right 从约 1.35 KiB 增至 4 visible 时约 3.84 KiB、10 visible 时约
+6.84 KiB。保持四个既有 cache options 与 guards；真实大 session 组的 guarded apply
+与状态变化下 cache/revision 不变均已验证。
+
+正式 release 在 4/4、40/10 fixture 下生成的 format 与上述 bounded 原型逐字节一致。
+另以修改前后 release 做 5 组 warmup、40 组随机顺序配对补测。每组只有 1 个 attached
+session、800 列、双行；同版本 apply 先在计时外稳定状态，再清该 session 的 render key，
+测量 11-command cache bundle 的 guarded 重发。已稳定的 apply 单独计时：
+
+| Total / visible | Republish before | Republish after | Paired median Δ | Settled apply Δ |
+|---|---:|---:|---:|---:|
+| 4 / 4 | 44.54 ms | 46.00 ms | +1.81 ms | +0.36 ms |
+| 40 / 10 | 52.15 ms | 80.27 ms | +27.70 ms | +0.35 ms |
+
+该表包含 CLI startup、snapshot 与 commit IPC，不含 terminal drawing、sampler、driver
+工作或多个 attached sessions。Rust render phase 的配对增量约 0.01–0.03 ms；40/10 的
+增量主要在 commit。独立 command probe 确认 payload 使发布分块从 2 增至 4，总 tmux
+调用从 3 增至 5；4/4 均为 2 个分块、3 次调用。Probe 的 Python shim 不参与计时。
+该成本发生在实际 cache 重发时，marker 状态变化仍只使用原生 format，不触发 Rust apply。
+
+40/10 发布后的 right/session cache 为 7482/7033 bytes（含 26-byte witness），最大
+tmux argv 为 10160 bytes。额外 40 个长名称、12 visible 的 fixture 也成功提交，最大
+argv 为 10514 bytes；均未触发逐命令重试。保留既有 8 KiB 分块预算与完整 guards。
+
 ## 5. 明确拒绝或延后的方向
 
 | Direction | Final decision | Revisit condition |

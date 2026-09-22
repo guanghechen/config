@@ -1,5 +1,5 @@
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderedSegment};
+use crate::model::{RenderContext, RenderedSegment, SessionInfo};
 use crate::status_widget::ComputedWidget;
 
 const LIST_SURFACE_BG: &str = "default";
@@ -40,19 +40,33 @@ const STATE_LITERAL: char = '\u{00a4}';
 
 pub struct SessionListWidget;
 
-impl ComputedWidget for SessionListWidget {
-    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
-        Ok(render_session_list(context))
+impl SessionListWidget {
+    /**
+     * Returns the rendered selection and the same visible sessions for layout
+     * accounting. Overflow items do not contribute sampled state width.
+     */
+    pub fn render_with_visible_sessions<'a>(
+        &self,
+        context: &'a RenderContext,
+    ) -> (RenderedSegment, &'a [SessionInfo]) {
+        render_session_list(context)
     }
 }
 
-/// Rebuilds one session-owned cache from the snapshot. Active styling is baked for
-/// that cache's owning session, which keeps large groups below tmux's command parser
-/// limit. The last-focus marker remains per-client because clients attached to the
-/// same session can still have different navigation history.
-fn render_session_list(context: &RenderContext) -> RenderedSegment {
+impl ComputedWidget for SessionListWidget {
+    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+        Ok(render_session_list(context).0)
+    }
+}
+
+/**
+ * Rebuilds one session-owned cache and returns its visible slice. Active styling
+ * is baked for the owner to bound large groups. Last-focus remains per-client
+ * because clients sharing a session may have different navigation history.
+ */
+fn render_session_list(context: &RenderContext) -> (RenderedSegment, &[SessionInfo]) {
     if context.group.sessions.is_empty() {
-        return RenderedSegment::empty();
+        return (RenderedSegment::empty(), &context.group.sessions);
     }
 
     let current_offset = context
@@ -98,7 +112,7 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
     }
 
     debug_assert!(rendered.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
-    rendered
+    (rendered, &context.group.sessions[start..end])
 }
 
 fn render_session_window(context: &RenderContext, start: usize, end: usize) -> RenderedSegment {
@@ -379,8 +393,8 @@ mod tests {
         MAX_SESSION_LIST_RICH_BYTES, MAX_SESSION_NAME_FORMAT_BYTES, RenderedSegment,
         active_item_body, bounded_session_name, compare_literal, display_literal,
         inactive_item_body_with_last_focus, render_item_body_with_last_focus,
-        render_join_separator, render_left_edge, render_right_edge, render_session_list,
-        session_state_prefix,
+        render_join_separator, render_left_edge, render_right_edge,
+        render_session_list as render_session_list_with_visible_sessions, session_state_prefix,
     };
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
@@ -642,6 +656,26 @@ mod tests {
     }
 
     #[test]
+    fn visible_sessions_match_the_rendered_ranges_after_bounding() {
+        let sessions = (1..=40)
+            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}"), false))
+            .collect();
+        let context = context_with_session_infos("s20", "", sessions);
+        let (segment, visible) = render_session_list_with_visible_sessions(&context);
+
+        assert!(visible.len() < context.group.sessions.len());
+        assert!(visible.iter().any(|session| session.name == "s20"));
+        for session in &context.group.sessions {
+            assert_eq!(
+                segment
+                    .rich_text
+                    .contains(&format!("#[range=session|{}]", session.id)),
+                visible.iter().any(|item| item.id == session.id)
+            );
+        }
+    }
+
+    #[test]
     fn oversized_current_session_name_is_truncated_to_budget() {
         let long_name = "#".repeat(MAX_SESSION_LIST_RICH_BYTES * 2);
         let context =
@@ -692,6 +726,10 @@ mod tests {
         assert!(segment.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
         assert!(segment.literal_text.contains('…'));
         assert!(!segment.rich_text.contains("client_last_session"));
+    }
+
+    fn render_session_list(context: &RenderContext) -> RenderedSegment {
+        render_session_list_with_visible_sessions(context).0
     }
 
     fn context_with_sessions<const N: usize>(

@@ -1,5 +1,5 @@
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderedSegment, RenderedStatus};
+use crate::model::{RenderContext, RenderedSegment, RenderedStatus, SessionInfo};
 use crate::status_widget::{StatusWidget, computed, template};
 use crate::util::width::display_width;
 use crate::widget::{
@@ -29,10 +29,10 @@ pub fn render_status02(
     context: &RenderContext,
     metrics_supported: bool,
 ) -> AppResult<RenderedStatus> {
-    let mut host = computed(HostWidget);
-    let mut session_list = computed(SessionListWidget);
-    let mut left_widgets: [&mut dyn StatusWidget; 2] = [&mut host, &mut session_list];
-    let status_left = render_widgets(&mut left_widgets, context)?;
+    let host_segment = computed(HostWidget).render(context)?;
+    let (session_segment, visible_sessions) =
+        SessionListWidget.render_with_visible_sessions(context);
+    let status_left = concat_segments(&[&host_segment, &session_segment]);
 
     let mut prefix = template(PrefixIndicatorWidget);
     let mut prefix_widgets: [&mut dyn StatusWidget; 1] = [&mut prefix];
@@ -64,17 +64,15 @@ pub fn render_status02(
     metrics.push((duration, RANK_DURATION));
     metrics.push((date, RANK_DATE));
     metrics.push((time, RANK_TIME));
-    // Base is the width the metric block competes against on the shared narrow row:
-    // host + session list (status_left) + prefix reserve. display_width matches tmux's
-    // cell accounting (powerline/nerd glyphs are single-width PUA, CJK double), so the
-    // narrow thresholds are exact — no slack. The prefix is reserved at its worst case
-    // (the same literal shadow status-*-length uses) so an active prefix indicator never
-    // overflows a metric. The wide row additionally carries the window indicators and a
-    // centered window list that are intentionally not counted — wide clients are roomy,
-    // and any residual overflow falls back to tmux truncation.
+    /*
+     * The baseline reserves host, visible sessions with one state prefix each,
+     * and the client-prefix indicator. Guards add the live second-prefix width
+     * without making idle or single-state sessions drop metrics earlier.
+     * The wide row still leaves native window-list overflow to tmux truncation.
+     */
     let metric_base = display_width(&status_left.literal_text)
         .saturating_add(display_width(&prefix_segment.literal_text));
-    let metric_segment = responsive_metric_segment(&metrics, metric_base);
+    let metric_segment = responsive_metric_segment(&metrics, metric_base, visible_sessions);
 
     let status_right_body =
         concat_segments(&[&prefix_segment, &window_indicator_segment, &metric_segment]);
@@ -142,18 +140,32 @@ fn concat_segments(segments: &[&RenderedSegment]) -> RenderedSegment {
     }
 }
 
-/// Wraps each droppable metric in a `#{?#{e|>=:#{client_width},N},…,}` guard so tmux
-/// keeps it, per attached client, only when the bar is wide enough. A metric's threshold
-/// is `base` plus the pessimistic widths of every metric whose keep_rank is at least as
-/// high — so a metric appears only once everything higher-priority already fits, which
-/// makes the visible set a clean prefix of the priority order. The single highest rank
-/// (time) is emitted unconditionally; when even it overflows, tmux char-truncation is the
-/// final fallback.
-///
-/// `literal_text` stays the full metric block: it is the width shadow for status-*-length,
-/// whose worst case is a wide client showing every metric. The numeric `#{e|>=:}` form is
-/// required — the lexicographic `#{>=:}` would mis-order widths like 92 vs 120.
-fn responsive_metric_segment(metrics: &[(RenderedSegment, u8)], base: usize) -> RenderedSegment {
+/**
+ * A metric's baseline threshold reserves all higher-priority metrics. Each
+ * visible session with both sampled states adds one two-column prefix, without
+ * reading those states into Rust or changing the cache when they change.
+ *
+ * Widths below the baseline or above the maximum reserve need no membership
+ * checks. Only the interval between those bounds evaluates the live extra width.
+ * The condition returns a boolean at the original guard depth, preserving metric
+ * time and percent expansion. Numeric comparison avoids lexicographic ordering.
+ *
+ * Time remains unconditional with tmux truncation as the final fallback. The
+ * literal shadow stays the full metric block for status-length accounting.
+ */
+fn responsive_metric_segment(
+    metrics: &[(RenderedSegment, u8)],
+    base: usize,
+    visible_sessions: &[SessionInfo],
+) -> RenderedSegment {
+    let maximum_extra_width = 2 * visible_sessions.len();
+    let mut extra_width = "0".to_string();
+    for session in visible_sessions {
+        let running = format!("#{{m:*|R{}|*,#{{@GHC_SL_SESSION_STATES}}}}", session.id);
+        let bell = format!("#{{m:*|B{}|*,#{{@GHC_SL_SESSION_STATES}}}}", session.id);
+        extra_width = format!("#{{e|+:{extra_width},#{{?#{{&&:{running},{bell}}},2,0}}}}");
+    }
+    let extra_width = format!("#{{?#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},{extra_width},0}}");
     let max_rank = metrics.iter().map(|(_, rank)| *rank).max().unwrap_or(0);
     let mut literal_text = String::new();
     let mut rich_text = String::new();
@@ -178,9 +190,19 @@ fn responsive_metric_segment(metrics: &[(RenderedSegment, u8)], base: usize) -> 
         //    second pass; doubling leaves exactly one `%`. strftime fields (`%a`, `%H`)
         //    are a single `%` that resolves to text on the first pass, so they survive.
         let guarded_rich = escape_conditional_branch(&segment.rich_text).replace("%%", "%%%%");
-        rich_text.push_str("#{?#{e|>=:#{client_width},");
-        rich_text.push_str(&threshold.to_string());
-        rich_text.push_str("},");
+        let condition = if maximum_extra_width == 0 {
+            format!("#{{e|>=:#{{client_width}},{threshold}}}")
+        } else {
+            let maximum_threshold = threshold + maximum_extra_width;
+            format!(
+                "#{{?#{{e|>=:#{{client_width}},{maximum_threshold}}},1,\
+#{{?#{{e|>=:#{{client_width}},{threshold}}},\
+#{{e|>=:#{{e|-:#{{client_width}},{extra_width}}},{threshold}}},0}}}}"
+            )
+        };
+        rich_text.push_str("#{?");
+        rich_text.push_str(&condition);
+        rich_text.push(',');
         rich_text.push_str(&guarded_rich);
         rich_text.push_str(",}");
     }
@@ -309,13 +331,13 @@ mod tests {
 
     #[test]
     fn responsive_metric_literal_keeps_full_block_as_width_shadow() {
-        let segment = responsive_metric_segment(&priority_metrics(), 10);
+        let segment = responsive_metric_segment(&priority_metrics(), 10, &[]);
         assert_eq!(segment.literal_text, "NETCPUMEMDURDATETIME");
     }
 
     #[test]
     fn responsive_metric_guards_every_droppable_and_frees_time() {
-        let segment = responsive_metric_segment(&priority_metrics(), 10);
+        let segment = responsive_metric_segment(&priority_metrics(), 10, &[]);
         // Five droppable metrics get a client_width guard; time (max rank) does not.
         assert_eq!(
             segment
@@ -337,7 +359,7 @@ mod tests {
         //   memory(3):  10 + MEM+CPU+NET+TIME     = 23
         //   date(2):    10 + DATE+MEM+CPU+NET+TIME= 27
         //   duration(1):10 + all six             = 30
-        let segment = responsive_metric_segment(&priority_metrics(), 10);
+        let segment = responsive_metric_segment(&priority_metrics(), 10, &[]);
         assert!(segment.rich_text.contains("#{client_width},17},NET,}"));
         assert!(segment.rich_text.contains("#{client_width},20},CPU,}"));
         assert!(segment.rich_text.contains("#{client_width},23},MEM,}"));
@@ -369,7 +391,7 @@ mod tests {
             (metric_seg("%a, %d %b"), RANK_DATE),
             (metric_seg("T, Z"), RANK_TIME),
         ];
-        let rendered = responsive_metric_segment(&metrics, 10);
+        let rendered = responsive_metric_segment(&metrics, 10, &[]);
         assert!(rendered.rich_text.contains("%a#, %d %b,}"));
         assert!(rendered.rich_text.ends_with("T, Z"));
     }
@@ -383,7 +405,7 @@ mod tests {
             (metric_seg("#{@CPU}%% "), RANK_CPU),
             (metric_seg("TIME%% "), RANK_TIME),
         ];
-        let rendered = responsive_metric_segment(&metrics, 10);
+        let rendered = responsive_metric_segment(&metrics, 10, &[]);
         assert!(rendered.rich_text.contains("#{@CPU}%%%% ,}"));
         assert!(rendered.rich_text.ends_with("TIME%% "));
         assert!(!rendered.rich_text.contains("TIME%%%%"));
@@ -393,8 +415,8 @@ mod tests {
     fn responsive_metric_base_lifts_every_threshold() {
         // A wider base (more sessions on the shared row) pushes every guard up by the
         // same delta, so metrics drop earlier as the left side grows.
-        let lo = responsive_metric_segment(&priority_metrics(), 10);
-        let hi = responsive_metric_segment(&priority_metrics(), 20);
+        let lo = responsive_metric_segment(&priority_metrics(), 10, &[]);
+        let hi = responsive_metric_segment(&priority_metrics(), 20, &[]);
         assert!(lo.rich_text.contains("#{client_width},17},NET,}"));
         assert!(hi.rich_text.contains("#{client_width},27},NET,}"));
     }
@@ -528,6 +550,20 @@ mod tests {
         assert!(!rich.contains("@GHC_SYM_MEMORY"));
         assert!(rich.contains("@GHC_SYM_DURATION"));
         assert!(rich.contains("%H:%M:%S"));
+    }
+
+    #[test]
+    fn sampled_session_states_do_not_change_rendered_cache() {
+        let mut context = contract_context();
+        let before = render_status02(&context, true).unwrap();
+        Rc::make_mut(&mut context.snapshot).options.insert(
+            "@GHC_SL_SESSION_STATES".to_string(),
+            "sample:|R$1||B$1|".to_string(),
+        );
+        let after = render_status02(&context, true).unwrap();
+
+        assert_eq!(before, after);
+        assert_eq!(render_cache_key(&before), render_cache_key(&after));
     }
 
     fn contract_context() -> RenderContext {

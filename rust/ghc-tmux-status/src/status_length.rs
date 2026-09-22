@@ -4,9 +4,10 @@ use crate::util::width::display_width;
 const DEFAULT_STATUS_LEFT_LENGTH: usize = 64;
 const DEFAULT_STATUS_RIGHT_LENGTH: usize = 84;
 const STATUS_LENGTH_PADDING: usize = 2;
-// The session-list layout shadow already budgets one two-column state prefix.
-// Running and bell may coexist, so status-left-length needs one additional
-// two-column prefix per group session without lifting responsive metric guards.
+/*
+ * The session-list shadow budgets one prefix; status-left-length reserves the
+ * second independently of the live responsive guards used by the metric block.
+ */
 const COMBINED_SESSION_STATE_EXTRA_WIDTH: usize = 2;
 
 pub fn status_left_length(status: &RenderedStatus, context: &RenderContext) -> String {
