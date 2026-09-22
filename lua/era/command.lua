@@ -1642,7 +1642,7 @@ command
     uuid = K.ux.color_picker.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      era.m.colorpicker.ColorPicker.instance():pick()
+      era.keystroke.colorpicker.ColorPicker.instance():pick()
     end,
   })
   .implement({

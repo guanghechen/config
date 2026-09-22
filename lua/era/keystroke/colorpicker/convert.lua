@@ -1,4 +1,7 @@
----@class era.m.colorpicker.convert
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.keystroke.colorpicker.convert" ---@type string
+
+---@class era.keystroke.colorpicker.convert
 local M = {}
 
 ---@param n                             number

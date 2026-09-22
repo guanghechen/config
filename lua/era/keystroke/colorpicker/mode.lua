@@ -1,4 +1,7 @@
-local S = era.m.colorpicker
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.keystroke.colorpicker.mode" ---@type string
+
+local S = era.keystroke.colorpicker
 
 ---@param r                             integer
 ---@param g                             integer
@@ -14,14 +17,14 @@ local function rgb_identity_reverse(value)
   return value[1], value[2], value[3]
 end
 
----@class era.m.colorpicker.mode
----@field public input                  era.m.colorpicker.mode.input
----@field public output                 era.m.colorpicker.mode.output
+---@class era.keystroke.colorpicker.mode
+---@field public input                  era.keystroke.colorpicker.mode.input
+---@field public output                 era.keystroke.colorpicker.mode.output
 local M = {}
 
----@class era.m.colorpicker.mode.input
+---@class era.keystroke.colorpicker.mode.input
 M.input = {
-  ---@type era.m.colorpicker.IInputMode
+  ---@type era.keystroke.colorpicker.IInputMode
   hex = {
     name = "HEX",
     bar_name = { "R", "G", "B" },
@@ -29,7 +32,7 @@ M.input = {
     from_rgb = rgb_identity,
     to_rgb = rgb_identity_reverse,
   },
-  ---@type era.m.colorpicker.IInputMode
+  ---@type era.keystroke.colorpicker.IInputMode
   rgb = {
     name = "RGB",
     bar_name = { "R", "G", "B" },
@@ -37,7 +40,7 @@ M.input = {
     from_rgb = rgb_identity,
     to_rgb = rgb_identity_reverse,
   },
-  ---@type era.m.colorpicker.IInputMode
+  ---@type era.keystroke.colorpicker.IInputMode
   hsl = {
     name = "HSL",
     bar_name = { "H", "S", "L" },
@@ -50,7 +53,7 @@ M.input = {
       return S.convert.hsl2rgb(value[1], value[2], value[3])
     end,
   },
-  ---@type era.m.colorpicker.IInputMode
+  ---@type era.keystroke.colorpicker.IInputMode
   hsv = {
     name = "HSV",
     bar_name = { "H", "S", "V" },
@@ -65,9 +68,9 @@ M.input = {
   },
 }
 
----@class era.m.colorpicker.mode.output
+---@class era.keystroke.colorpicker.mode.output
 M.output = {
-  ---@type era.m.colorpicker.IOutputMode
+  ---@type era.keystroke.colorpicker.IOutputMode
   hex = {
     name = "HEX",
     str = function(r, g, b, alpha)
@@ -77,7 +80,7 @@ M.output = {
       return string.format("#%02x%02x%02x", r, g, b)
     end,
   },
-  ---@type era.m.colorpicker.IOutputMode
+  ---@type era.keystroke.colorpicker.IOutputMode
   rgb = {
     name = "RGB",
     str = function(r, g, b, alpha)
@@ -87,7 +90,7 @@ M.output = {
       return string.format("rgb(%d,%d,%d)", r, g, b)
     end,
   },
-  ---@type era.m.colorpicker.IOutputMode
+  ---@type era.keystroke.colorpicker.IOutputMode
   hsl = {
     name = "HSL",
     str = function(r, g, b, alpha)
@@ -98,7 +101,7 @@ M.output = {
       return string.format("hsl(%d,%d%%,%d%%)", h, s, l)
     end,
   },
-  ---@type era.m.colorpicker.IOutputMode
+  ---@type era.keystroke.colorpicker.IOutputMode
   hsv = {
     name = "HSV",
     str = function(r, g, b, alpha)

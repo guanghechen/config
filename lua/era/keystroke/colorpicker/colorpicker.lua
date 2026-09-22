@@ -1,33 +1,33 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.colorpicker" ---@type string
+local __module_name__ = "era.keystroke.colorpicker" ---@type string
 
-local S = era.m.colorpicker
+local S = era.keystroke.colorpicker
 
 local WIN_HIGHLIGHT = "FloatBorder:m_cp_border,Normal:m_cp_normal,EndOfBuffer:m_cp_normal"
 
----@class era.m.colorpicker.IProps : era.m.colorpicker.ui.IProps
+---@class era.keystroke.colorpicker.IProps : era.keystroke.colorpicker.ui.IProps
 
----@class era.m.colorpicker.ColorPicker : dot.t.IWidget
+---@class era.keystroke.colorpicker.ColorPicker : dot.t.IWidget
 ---@field public name                   string
----@field protected _ui                 era.m.colorpicker.UI
----@field protected _color              era.m.colorpicker.Color
+---@field protected _ui                 era.keystroke.colorpicker.UI
+---@field protected _color              era.keystroke.colorpicker.Color
 ---@field protected _range              integer[]|nil
 ---@field protected _source_bufnr       integer|nil
 ---@field protected _history_index      integer
----@field protected _saved_color        era.m.colorpicker.Color|nil
+---@field protected _saved_color        era.keystroke.colorpicker.Color|nil
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _keymaps            stl.t.IKeymap[]
 local M = {}
 M.__index = M
 
----@param props                         era.m.colorpicker.IProps|nil
----@return era.m.colorpicker.ColorPicker
+---@param props                         era.keystroke.colorpicker.IProps|nil
+---@return era.keystroke.colorpicker.ColorPicker
 function M.new(props)
   local self = setmetatable({}, M)
   self.name = "colorpicker"
-  self._ui = era.m.colorpicker.UI.new(props)
-  self._color = era.m.colorpicker.Color.new()
+  self._ui = era.keystroke.colorpicker.UI.new(props)
+  self._color = era.keystroke.colorpicker.Color.new()
   self._range = nil
   self._source_bufnr = nil
   self._history_index = 0
@@ -38,10 +38,10 @@ function M.new(props)
   return self
 end
 
----@type era.m.colorpicker.ColorPicker|nil
+---@type era.keystroke.colorpicker.ColorPicker|nil
 local _instance = nil
 
----@return era.m.colorpicker.ColorPicker
+---@return era.keystroke.colorpicker.ColorPicker
 function M.instance()
   if _instance == nil then
     _instance = M.new()
@@ -165,7 +165,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param source                        era.m.colorpicker.Color
+---@param source                        era.keystroke.colorpicker.Color
 ---@return nil
 function M:__restore_from__(source)
   local r, g, b = source:get_rgb()
@@ -661,7 +661,7 @@ end
 
 ---@protected
 ---@param value                         integer
----@param point                         era.m.colorpicker.IPoint
+---@param point                         era.keystroke.colorpicker.IPoint
 ---@return nil
 function M:__set_value__(value, point)
   if point.type == "color" and point.index then

@@ -1,11 +1,14 @@
-local S = era.m.colorpicker
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.keystroke.colorpicker.picker" ---@type string
 
----@class era.m.colorpicker.picker
+local S = era.keystroke.colorpicker
+
+---@class era.keystroke.colorpicker.picker
 local M = {}
 
 ---@param line                          string
 ---@param cursor_col                    integer
----@return era.m.colorpicker.IPickResult|nil
+---@return era.keystroke.colorpicker.IPickResult|nil
 function M.pick_hex(line, cursor_col)
   local init = 1
   while init <= #line do
@@ -57,7 +60,7 @@ end
 
 ---@param line                          string
 ---@param cursor_col                    integer
----@return era.m.colorpicker.IPickResult|nil
+---@return era.keystroke.colorpicker.IPickResult|nil
 function M.pick_css_rgb(line, cursor_col)
   local init = 1
   while init <= #line do
@@ -110,7 +113,7 @@ end
 
 ---@param line                          string
 ---@param cursor_col                    integer
----@return era.m.colorpicker.IPickResult|nil
+---@return era.keystroke.colorpicker.IPickResult|nil
 function M.pick_css_hsl(line, cursor_col)
   local init = 1
   while init <= #line do
@@ -163,7 +166,7 @@ function M.pick_css_hsl(line, cursor_col)
   return nil
 end
 
----@return era.m.colorpicker.IPickResult|nil
+---@return era.keystroke.colorpicker.IPickResult|nil
 function M.pick()
   local winnr = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_win_get_buf(winnr)

@@ -3,6 +3,7 @@ local __module_name__ = "era.keystroke" ---@type string
 
 ---@class era.keystroke.__mods
 local __mods = {
+  colorpicker = "era.keystroke.colorpicker",
   illuminate = "era.keystroke.illuminate",
   splitjoin = "era.keystroke.splitjoin",
   splitline = "era.keystroke.splitline",
@@ -12,6 +13,7 @@ local __mods = {
 
 ---@class era.keystroke
 ---@field public __mods                 era.keystroke.__mods
+---@field public colorpicker            era.keystroke.colorpicker
 ---@field public illuminate             era.keystroke.illuminate
 ---@field public splitjoin              era.keystroke.splitjoin
 ---@field public splitline              era.keystroke.splitline

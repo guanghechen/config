@@ -79,7 +79,6 @@ local fn = setmetatable({
 local __m__mods = {
   ai = "era.m.ai",
   clipboard = "era.m.clipboard",
-  colorpicker = "era.m.colorpicker",
   copy = "era.m.copy",
   diffview = "era.m.diffview",
   explorer = "era.m.explorer",
@@ -107,7 +106,6 @@ local __m__mods = {
 ---@field public __mods                 era.m.__mods
 ---@field public ai                     era.m.ai
 ---@field public clipboard              era.m.clipboard
----@field public colorpicker            era.m.colorpicker
 ---@field public copy                   era.m.copy
 ---@field public diffview               era.m.diffview
 ---@field public explorer               era.m.explorer

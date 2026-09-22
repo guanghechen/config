@@ -1,4 +1,7 @@
-local S = era.m.colorpicker
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.keystroke.colorpicker.ui" ---@type string
+
+local S = era.keystroke.colorpicker
 
 local POINT_CHAR = "󰫢"
 local HISTORY_CHAR = "󱓻"
@@ -16,19 +19,19 @@ local function contrast_color(hex)
   return luminance > 127 and "#000000" or "#ffffff"
 end
 
----@class era.m.colorpicker.ui.IProps
+---@class era.keystroke.colorpicker.ui.IProps
 ---@field public bar_char               string|nil
 ---@field public bar_len                integer|nil
 ---@field public point_char             string|nil
 ---@field public history_char           string|nil
 ---@field public win_opts               vim.api.keyset.win_config|nil
 
----@class era.m.colorpicker.UI
+---@class era.keystroke.colorpicker.UI
 ---@field protected _ns_id              integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected _color              era.m.colorpicker.Color|nil
----@field protected _before_color       era.m.colorpicker.Color|nil
+---@field protected _color              era.keystroke.colorpicker.Color|nil
+---@field protected _before_color       era.keystroke.colorpicker.Color|nil
 ---@field protected _bar_char           string
 ---@field protected _bar_len            integer
 ---@field protected _point_char         string
@@ -38,8 +41,8 @@ end
 local M = {}
 M.__index = M
 
----@param props                         era.m.colorpicker.ui.IProps|nil
----@return era.m.colorpicker.UI
+---@param props                         era.keystroke.colorpicker.ui.IProps|nil
+---@return era.keystroke.colorpicker.UI
 function M.new(props)
   props = props or {}
   local self = setmetatable({}, M)
@@ -74,7 +77,7 @@ function M:set_winnr(winnr)
   self._winnr = winnr
 end
 
----@param color                         era.m.colorpicker.Color
+---@param color                         era.keystroke.colorpicker.Color
 ---@param bufnr                         integer
 ---@param winnr                         integer
 ---@return nil
@@ -103,7 +106,7 @@ function M:set_history_index(index)
   self._history_index = index
 end
 
----@return era.m.colorpicker.Color|nil
+---@return era.keystroke.colorpicker.Color|nil
 function M:get_before_color()
   return self._before_color
 end
@@ -115,7 +118,7 @@ function M:on_close()
   self._before_color = nil
 end
 
----@return era.m.colorpicker.IPoint
+---@return era.keystroke.colorpicker.IPoint
 function M:point_at()
   if not self._winnr or not vim.api.nvim_win_is_valid(self._winnr) then
     return { type = "none", index = nil }

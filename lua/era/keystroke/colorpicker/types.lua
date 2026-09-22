@@ -1,38 +1,38 @@
 ---@meta
 
----@alias era.m.colorpicker.InputModeName
+---@alias era.keystroke.colorpicker.InputModeName
 ---| "HEX"
 ---| "RGB"
 ---| "HSL"
 ---| "HSV"
 
----@alias era.m.colorpicker.OutputModeName
+---@alias era.keystroke.colorpicker.OutputModeName
 ---| "HEX"
 ---| "RGB"
 ---| "HSL"
 ---| "HSV"
 
----@alias era.m.colorpicker.PointType
+---@alias era.keystroke.colorpicker.PointType
 ---| "color"
 ---| "alpha"
 ---| "none"
 
----@class era.m.colorpicker.IPoint
----@field public type                   era.m.colorpicker.PointType
+---@class era.keystroke.colorpicker.IPoint
+---@field public type                   era.keystroke.colorpicker.PointType
 ---@field public index                  integer|nil
 
----@class era.m.colorpicker.IInputMode
----@field public name                   era.m.colorpicker.InputModeName
+---@class era.keystroke.colorpicker.IInputMode
+---@field public name                   era.keystroke.colorpicker.InputModeName
 ---@field public bar_name               string[]
 ---@field public max                    integer[]
 ---@field public from_rgb               fun(r: integer, g: integer, b: integer): integer[]
 ---@field public to_rgb                 fun(value: integer[]): integer, integer, integer
 
----@class era.m.colorpicker.IOutputMode
----@field public name                   era.m.colorpicker.OutputModeName
+---@class era.keystroke.colorpicker.IOutputMode
+---@field public name                   era.keystroke.colorpicker.OutputModeName
 ---@field public str                    fun(r: integer, g: integer, b: integer, alpha: integer|nil): string
 
----@class era.m.colorpicker.IPickResult
+---@class era.keystroke.colorpicker.IPickResult
 ---@field public start_col              integer
 ---@field public end_col                integer
 ---@field public r                      integer

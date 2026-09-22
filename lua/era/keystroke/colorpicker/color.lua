@@ -1,9 +1,12 @@
-local S = era.m.colorpicker
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.keystroke.colorpicker.color" ---@type string
+
+local S = era.keystroke.colorpicker
 
 local INPUTS = { S.mode.input.hex, S.mode.input.rgb, S.mode.input.hsl, S.mode.input.hsv }
 local OUTPUTS = { S.mode.output.hex, S.mode.output.rgb, S.mode.output.hsl, S.mode.output.hsv }
 
----@param name                          era.m.colorpicker.InputModeName|nil
+---@param name                          era.keystroke.colorpicker.InputModeName|nil
 ---@return integer
 local function get_input_idx(name)
   if name then
@@ -16,7 +19,7 @@ local function get_input_idx(name)
   return 1
 end
 
----@param name                          era.m.colorpicker.OutputModeName|nil
+---@param name                          era.keystroke.colorpicker.OutputModeName|nil
 ---@return integer
 local function get_output_idx(name)
   if name then
@@ -29,14 +32,14 @@ local function get_output_idx(name)
   return 1
 end
 
----@class era.m.colorpicker.Color
+---@class era.keystroke.colorpicker.Color
 ---@field protected _value              integer[]
 ---@field protected _alpha              integer|nil
 ---@field protected _show_alpha         boolean
 local M = {}
 M.__index = M
 
----@return era.m.colorpicker.Color
+---@return era.keystroke.colorpicker.Color
 function M.new()
   local self = setmetatable({}, M)
   self._value = { 0, 0, 0 }
@@ -45,16 +48,16 @@ function M.new()
   return self
 end
 
----@return era.m.colorpicker.IInputMode
+---@return era.keystroke.colorpicker.IInputMode
 function M:input()
-  local name = dot.context.colorpicker.get_input_mode() ---@type era.m.colorpicker.InputModeName|nil
+  local name = dot.context.colorpicker.get_input_mode() ---@type era.keystroke.colorpicker.InputModeName|nil
   local idx = get_input_idx(name) ---@type integer
   return INPUTS[idx]
 end
 
----@return era.m.colorpicker.IOutputMode
+---@return era.keystroke.colorpicker.IOutputMode
 function M:output()
-  local name = dot.context.colorpicker.get_output_mode() ---@type era.m.colorpicker.OutputModeName|nil
+  local name = dot.context.colorpicker.get_output_mode() ---@type era.keystroke.colorpicker.OutputModeName|nil
   local idx = get_output_idx(name) ---@type integer
   return OUTPUTS[idx]
 end
@@ -62,7 +65,7 @@ end
 ---@return nil
 function M:cycle_input()
   local r, g, b = self:get_rgb() ---@type integer, integer, integer
-  local name = dot.context.colorpicker.get_input_mode() ---@type era.m.colorpicker.InputModeName|nil
+  local name = dot.context.colorpicker.get_input_mode() ---@type era.keystroke.colorpicker.InputModeName|nil
   local idx = get_input_idx(name) % #INPUTS + 1 ---@type integer
   dot.context.colorpicker.set_input_mode(INPUTS[idx].name)
   self:set_rgb(r, g, b)
@@ -71,7 +74,7 @@ end
 ---@return nil
 function M:cycle_input_reverse()
   local r, g, b = self:get_rgb() ---@type integer, integer, integer
-  local name = dot.context.colorpicker.get_input_mode() ---@type era.m.colorpicker.InputModeName|nil
+  local name = dot.context.colorpicker.get_input_mode() ---@type era.keystroke.colorpicker.InputModeName|nil
   local idx = (get_input_idx(name) - 2) % #INPUTS + 1 ---@type integer
   dot.context.colorpicker.set_input_mode(INPUTS[idx].name)
   self:set_rgb(r, g, b)
@@ -79,14 +82,14 @@ end
 
 ---@return nil
 function M:cycle_output()
-  local name = dot.context.colorpicker.get_output_mode() ---@type era.m.colorpicker.OutputModeName|nil
+  local name = dot.context.colorpicker.get_output_mode() ---@type era.keystroke.colorpicker.OutputModeName|nil
   local idx = get_output_idx(name) % #OUTPUTS + 1 ---@type integer
   dot.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
 end
 
 ---@return nil
 function M:cycle_output_reverse()
-  local name = dot.context.colorpicker.get_output_mode() ---@type era.m.colorpicker.OutputModeName|nil
+  local name = dot.context.colorpicker.get_output_mode() ---@type era.keystroke.colorpicker.OutputModeName|nil
   local idx = (get_output_idx(name) - 2) % #OUTPUTS + 1 ---@type integer
   dot.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
 end
@@ -190,7 +193,7 @@ function M:str()
   return self:output().str(r, g, b, self:get_alpha())
 end
 
----@return era.m.colorpicker.Color
+---@return era.keystroke.colorpicker.Color
 function M:copy()
   local new = M.new()
   new._value = { self._value[1], self._value[2], self._value[3] }
