@@ -53,8 +53,10 @@ function M.dressing()
     group = group,
     callback = function(e)
       vim.schedule(function()
-        local Placement = require("era.m.image.placement")
-        Placement.clean(e.buf)
+        local Placement = package.loaded["era.m.image.placement"]
+        if Placement ~= nil then
+          Placement.clean(e.buf)
+        end
       end)
     end,
   })
@@ -62,8 +64,10 @@ function M.dressing()
     group = group,
     once = true,
     callback = function()
-      local Placement = require("era.m.image.placement")
-      Placement.clean()
+      local Placement = package.loaded["era.m.image.placement"]
+      if Placement ~= nil then
+        Placement.clean()
+      end
     end,
   })
   vim.api.nvim_create_autocmd("BufReadCmd", {

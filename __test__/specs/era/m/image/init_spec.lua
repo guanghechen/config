@@ -17,6 +17,8 @@ t:test("dressing attaches existing and future supported buffers", function()
   }
   local attached = {} ---@type table<integer, integer>
   local filetype_callback = nil ---@type fun(event: { buf: integer })|nil
+  local cleanup_buffer = nil ---@type fun(event: { buf: integer })|nil
+  local cleanup_exit = nil ---@type fun()|nil
   local scheduled = {} ---@type fun()[]
   local state = {
     data = {
@@ -52,6 +54,10 @@ t:test("dressing attaches existing and future supported buffers", function()
   t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
     if events == "FileType" then
       filetype_callback = opts.callback
+    elseif events[1] == "BufWipeout" then
+      cleanup_buffer = opts.callback
+    elseif events[1] == "ExitPre" then
+      cleanup_exit = opts.callback
     end
     return 1
   end)
@@ -104,6 +110,23 @@ t:test("dressing attaches existing and future supported buffers", function()
   t.assert_eq(1, #scheduled, "future supported schedule")
   table.remove(scheduled, 1)()
   t.assert_eq(1, attached[12], "future supported buffer")
+
+  assert(cleanup_buffer)({ buf = 11 })
+  table.remove(scheduled, 1)()
+  assert(cleanup_exit)()
+  t.assert_nil(package.loaded["era.m.image.placement"], "cleanup does not activate the image backend")
+
+  local cleaned = {} ---@type integer[]
+  t:patch_table(package.loaded, "era.m.image.placement", {
+    clean = function(bufnr)
+      cleaned[#cleaned + 1] = bufnr or -1
+    end,
+  })
+  cleanup_buffer({ buf = 11 })
+  table.remove(scheduled, 1)()
+  cleanup_exit()
+  t.assert_eq(11, cleaned[1], "loaded backend cleans deleted buffer")
+  t.assert_eq(-1, cleaned[2], "loaded backend cleans all placements on exit")
 end)
 
 t:run()
