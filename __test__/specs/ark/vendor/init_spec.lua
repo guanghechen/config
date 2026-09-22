@@ -111,7 +111,7 @@ t:test("Yuivim starts the real minimal profile without taking over host features
     "era.m.git",
     "era.m.lsp",
     "era.m.python_venv",
-    "era.m.textobject",
+    "era.keystroke.textobject",
   }) do
     t.assert_nil(package.loaded[name], "host-owned feature was loaded: " .. name)
   end

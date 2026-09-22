@@ -1,10 +1,10 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.search" ---@type string
+local __module_name__ = "era.keystroke.textobject.search" ---@type string
 
 local M = {}
 
----@param span                          era.m.textobject.ISpan
----@param other                         era.m.textobject.ISpan
+---@param span                          era.keystroke.textobject.ISpan
+---@param other                         era.keystroke.textobject.ISpan
 ---@return boolean
 function M.covers(span, other)
   if span.from == span.to then
@@ -16,9 +16,9 @@ function M.covers(span, other)
   return span.from <= other.from and other.to <= span.to
 end
 
----@param candidate                     era.m.textobject.ISpan
----@param current                       era.m.textobject.ISpan|nil
----@param reference                     era.m.textobject.ISpan
+---@param candidate                     era.keystroke.textobject.ISpan
+---@param current                       era.keystroke.textobject.ISpan|nil
+---@param reference                     era.keystroke.textobject.ISpan
 ---@return boolean
 local function is_better(candidate, current, reference)
   if M.covers(reference, candidate) then
@@ -40,13 +40,13 @@ local function is_better(candidate, current, reference)
     or (candidate.from == current.from and candidate.to < current.to)
 end
 
----@param candidates                    era.m.textobject.ICandidate[]
----@param reference                     era.m.textobject.ISpan
----@param bounds                        era.m.textobject.ISpan|nil
----@param kind                          era.m.textobject.Kind
----@return era.m.textobject.ICandidate|nil
+---@param candidates                    era.keystroke.textobject.ICandidate[]
+---@param reference                     era.keystroke.textobject.ISpan
+---@param bounds                        era.keystroke.textobject.ISpan|nil
+---@param kind                          era.keystroke.textobject.Kind
+---@return era.keystroke.textobject.ICandidate|nil
 local function best(candidates, reference, bounds, kind)
-  local result = nil ---@type era.m.textobject.ICandidate|nil
+  local result = nil ---@type era.keystroke.textobject.ICandidate|nil
   for _, candidate in ipairs(candidates) do
     local tied = result ~= nil and candidate.span.from == result.span.from and candidate.span.to == result.span.to
     if
@@ -70,17 +70,17 @@ local function best(candidates, reference, bounds, kind)
 end
 
 ---Fixed cover-or-next search. The reference lines take priority over the wider neighborhood.
----@param candidates                    era.m.textobject.ICandidate[]
----@param reference                     era.m.textobject.ISpan
----@param kind                          era.m.textobject.Kind
+---@param candidates                    era.keystroke.textobject.ICandidate[]
+---@param reference                     era.keystroke.textobject.ISpan
+---@param kind                          era.keystroke.textobject.Kind
 ---@param count                         integer
----@param local_bounds                  era.m.textobject.ISpan|nil
----@return era.m.textobject.ISpan|nil
+---@param local_bounds                  era.keystroke.textobject.ISpan|nil
+---@return era.keystroke.textobject.ISpan|nil
 ---@return string|nil
 function M.find(candidates, reference, kind, count, local_bounds)
-  local current = reference ---@type era.m.textobject.ISpan
-  local bounds = local_bounds ---@type era.m.textobject.ISpan|nil
-  local result = nil ---@type era.m.textobject.ICandidate|nil
+  local current = reference ---@type era.keystroke.textobject.ISpan
+  local bounds = local_bounds ---@type era.keystroke.textobject.ISpan|nil
+  local result = nil ---@type era.keystroke.textobject.ICandidate|nil
   for _ = 1, count do
     result = best(candidates, current, bounds, kind)
     if result == nil and bounds ~= nil then
@@ -96,7 +96,7 @@ function M.find(candidates, reference, kind, count, local_bounds)
     return nil, nil
   end
 
-  local selected = kind == "a" and result.outer or result.inner ---@type era.m.textobject.ISpan
+  local selected = kind == "a" and result.outer or result.inner ---@type era.keystroke.textobject.ISpan
   -- Repeated Visual selection grows out of an already selected inner range.
   if reference.from ~= reference.to and M.covers(reference, selected) then
     result = best(candidates, current, bounds, kind) or (bounds ~= nil and best(candidates, current, nil, kind) or nil)

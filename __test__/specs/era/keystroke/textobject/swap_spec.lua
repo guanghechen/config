@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.m.textobject.runtime")
-local Swap = require("era.m.textobject.swap")
-local t = harness.new("era.m.textobject.swap")
+local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
+local Swap = require("era.keystroke.textobject.swap")
+local t = harness.new("era.keystroke.textobject.swap")
 local Textobject = Runtime.setup(t)
 
 vim.keymap.set("n", "<F5>", function()

@@ -41,7 +41,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       end
     end
     local modules = {}
-    for _, name in ipairs({ "input", "lsp", "select", "image", "paste", "textobject" }) do
+    for _, name in ipairs({ "input", "lsp", "select", "image", "paste" }) do
       modules[name] = { dressing = function() end, setup = function() end }
     end
     local completed = false
@@ -51,6 +51,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
         keystroke = {
           splitjoin = { setup = function() end },
           surrounds = { setup = function() end },
+          textobject = { setup = function() end },
         },
         m = modules,
       },

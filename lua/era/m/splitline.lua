@@ -89,7 +89,7 @@ function M.retrieve_block(winnr)
 end
 
 ---@param ai_type                       "a"|"i"
----@return era.m.textobject.Range|nil
+---@return era.keystroke.textobject.Range|nil
 function M.textobject(ai_type)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer

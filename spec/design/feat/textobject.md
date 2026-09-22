@@ -1,6 +1,6 @@
 # Textobject：文本对象、跳转与参数交换
 
-`era.m.textobject` 负责文本对象选择、对象边界跳转、语法结构跳转和参数交换，替代
+`era.keystroke.textobject` 负责文本对象选择、对象边界跳转、语法结构跳转和参数交换，替代
 `mini.ai` 与 `nvim-treesitter-textobjects` 的运行时实现。现有 `nvim-treesitter`
 继续管理 parser、高亮、缩进以及 `locals` / `folds` query group。
 
@@ -139,13 +139,13 @@ local __fn__mods = {
 - 编辑支持 dot-repeat，并在新光标位置重新计算范围；空对象编辑保留 registers。原生操作异常导致清理中断时，旧 register 快照不得用于后续选择。参数交换限定同一语法容器，目标不足则整体取消；一次交换对应一个 undo step。
 - 缺失 parser、query 或对象时取消编辑并报告诊断；结构跳转无匹配时保持光标不动。每次操作刷新 parser，不跨编辑缓存节点或范围。选择先查询参考行，未命中再扩大范围；结构跳转先查前后 500 行，目标不足或落在窗口外时搜索整个 buffer。
 
-本地模块位于 `lua/era/m/textobject/`，按输入映射、动作、范围查找、Treesitter、pattern、纯搜索与交换规划分工。
+本地模块位于 `lua/era/keystroke/textobject/`，按输入映射、动作、范围查找、Treesitter、pattern、纯搜索与交换规划分工。
 Neovim / Neovide 在 which-key、indentscope 之后幂等初始化；VSCode / Yozvim / Yuivim 不安装映射。
 本地 28 个 query 文件来自 [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects/tree/898ee307df58f854d11cd7edd06472574d48014e/queries)，revision 为 `898ee307df58f854d11cd7edd06472574d48014e`，使用 Apache 2.0 license；具体语言见 `queries/*/textobjects.scm`。
 
 ## 验证
 
-运行 `nvim -l __test__/run.lua era/m/textobject/`，验证范围、搜索、编辑、映射、buffer 准入、
+运行 `nvim -l __test__/run.lua era/keystroke/textobject/`，验证范围、搜索、编辑、映射、buffer 准入、
 parser 集成及交换的 undo / repeat。回归覆盖跨行引号状态、显式函数 / class 模式、
 hunk 连续跳转与选择、函数结束行的行选区、同一函数的多个 inner captures、空对象的 register 保留、
 UTF-8 / EOF 边界，以及深嵌套括号、超出查询窗口的目标和全量查询次数。

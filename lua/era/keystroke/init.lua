@@ -5,12 +5,14 @@ local __module_name__ = "era.keystroke" ---@type string
 local __mods = {
   splitjoin = "era.keystroke.splitjoin",
   surrounds = "era.keystroke.surrounds",
+  textobject = "era.keystroke.textobject",
 }
 
 ---@class era.keystroke
 ---@field public __mods                 era.keystroke.__mods
 ---@field public splitjoin              era.keystroke.splitjoin
 ---@field public surrounds              era.keystroke.surrounds
+---@field public textobject             era.keystroke.textobject
 local M = setmetatable({
   __mods = __mods,
 }, {

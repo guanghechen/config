@@ -166,7 +166,7 @@ function M.compare_heads(a, b)
   return false
 end
 
----@return era.m.textobject.Range[]     Linewise ranges for unstaged hunks
+---@return era.keystroke.textobject.Range[]     Linewise ranges for unstaged hunks
 function M.textobjects()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local hunks = buffer_hunks[bufnr]
@@ -175,7 +175,7 @@ function M.textobjects()
   end
 
   local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-  local regions = {} ---@type era.m.textobject.Range[]
+  local regions = {} ---@type era.keystroke.textobject.Range[]
   for _, hunk in ipairs(hunks) do
     local start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     local vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer

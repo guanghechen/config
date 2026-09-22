@@ -1,8 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.keymap" ---@type string
+local __module_name__ = "era.keystroke.textobject.keymap" ---@type string
 
-local Action = require("era.m.textobject.action")
-local Find = require("era.m.textobject.find")
+local Action = require("era.keystroke.textobject.action")
+local Find = require("era.keystroke.textobject.find")
 
 local M = {}
 
@@ -34,7 +34,7 @@ local function read_prompt()
   return edges
 end
 
----@param kind                          era.m.textobject.Kind
+---@param kind                          era.keystroke.textobject.Kind
 ---@param mode                          string
 ---@return string
 local function selection(kind, mode)
@@ -46,7 +46,7 @@ local function selection(kind, mode)
     local key = kind .. id ---@type string
     return vim.fn.maparg(key, mode) ~= "" and ("<Ignore>" .. key) or key
   end
-  local opts = { count = vim.v.count1 } ---@type era.m.textobject.IOptions
+  local opts = { count = vim.v.count1 } ---@type era.keystroke.textobject.IOptions
   if id == "?" then
     opts.prompt = read_prompt()
     if opts.prompt == nil then
@@ -62,7 +62,12 @@ local function selection(kind, mode)
     opts.vis_mode = forced ~= "" and forced or nil
   end
   -- The returned command is recorded by Neovim for dot-repeat; operator ranges are recomputed.
-  return string.format("<Cmd>lua era.m.textobject.select(%s,%s,%s)<CR>", literal(kind), literal(id), literal(opts))
+  return string.format(
+    "<Cmd>lua era.keystroke.textobject.select(%s,%s,%s)<CR>",
+    literal(kind),
+    literal(id),
+    literal(opts)
+  )
 end
 
 ---@param side                          "left"|"right"
@@ -80,7 +85,7 @@ local function edge(side)
     return "<Esc>"
   end
   return string.format(
-    "<Cmd>lua era.m.textobject.move_edge(%s,%s,%d,%s)<CR>",
+    "<Cmd>lua era.keystroke.textobject.move_edge(%s,%s,%d,%s)<CR>",
     literal(side),
     literal(id),
     vim.v.count1,
@@ -144,7 +149,7 @@ function M.bindkeys()
             end
             -- Read the count when the command runs so dot-repeat can replace it.
             return string.format(
-              "<Cmd>lua era.m.textobject.move(%s,%s,%d,%s,vim.v.count1)<CR>",
+              "<Cmd>lua era.keystroke.textobject.move(%s,%s,%d,%s,vim.v.count1)<CR>",
               literal({ target.capture }),
               literal(target.group or "textobjects"),
               direction,

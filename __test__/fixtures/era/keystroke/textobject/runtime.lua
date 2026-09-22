@@ -1,11 +1,11 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.m.textobject.runtime" ---@type string
+local __module_name__ = "__test__.fixtures.era.keystroke.textobject.runtime" ---@type string
 
 local bootstrap = require("__test__.support.bootstrap")
 local M = {}
 
 ---@param t                             __test__.support.Harness
----@return era.m.textobject
+---@return era.keystroke.textobject
 ---@return string[]
 function M.setup(t)
   local messages = {} ---@type string[]
@@ -19,12 +19,15 @@ function M.setup(t)
         end,
       },
     },
-    era = { m = {}, dressing = { whichkey = { add = function() end } } },
+    era = {
+      m = {},
+      keystroke = require("era.keystroke"),
+      dressing = { whichkey = { add = function() end } },
+    },
   })
   era.m.splitline = require("era.m.splitline")
   era.m.git = { hunk = require("era.m.git.hunk") }
-  local textobject = require("era.m.textobject")
-  era.m.textobject = textobject
+  local textobject = era.keystroke.textobject
   textobject.setup()
   return textobject, messages
 end
@@ -62,7 +65,7 @@ function M.buffer(t, lines, filetype)
   return bufnr
 end
 
----@param range                         era.m.textobject.Range
+---@param range                         era.keystroke.textobject.Range
 ---@return string
 function M.text(range)
   local line_count = vim.api.nvim_buf_line_count(0) ---@type integer

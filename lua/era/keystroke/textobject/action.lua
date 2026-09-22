@@ -1,9 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.action" ---@type string
+local __module_name__ = "era.keystroke.textobject.action" ---@type string
 
-local Find = require("era.m.textobject.find")
-local Swap = require("era.m.textobject.swap")
-local Treesitter = require("era.m.textobject.treesitter")
+local Find = require("era.keystroke.textobject.find")
+local Swap = require("era.keystroke.textobject.swap")
+local Treesitter = require("era.keystroke.textobject.treesitter")
 
 local M = {}
 local swap_direction = 1 ---@type integer
@@ -23,7 +23,7 @@ local function normal_mode()
 end
 
 ---@param bufnr                         integer
----@param range                         era.m.textobject.Range
+---@param range                         era.keystroke.textobject.Range
 ---@param motion                        ?boolean
 ---@return integer[] One-based row, zero-based byte column
 function M.end_position(bufnr, range, motion)
@@ -51,7 +51,7 @@ function M.end_position(bufnr, range, motion)
   return { row + 1, col }
 end
 
----@return era.m.textobject.Range
+---@return era.keystroke.textobject.Range
 function M.visual_range()
   local anchor = vim.fn.getpos("v") ---@type integer[]
   local cursor = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win()) ---@type integer[]
@@ -95,9 +95,9 @@ function M.finish_select(id)
   vim.fn.setreg('"', unnamed.regcontents and unnamed or { regcontents = {}, regtype = "v" })
 end
 
----@param kind                          era.m.textobject.Kind
+---@param kind                          era.keystroke.textobject.Kind
 ---@param id                            string
----@param opts                          ?era.m.textobject.IOptions
+---@param opts                          ?era.keystroke.textobject.IOptions
 ---@return nil
 function M.select(kind, id, opts)
   -- A native operator error can discard its queued cleanup; never reuse that snapshot.
@@ -169,7 +169,7 @@ function M.select(kind, id, opts)
   if pending_registers ~= nil then
     -- Queue after the native operator, including when select() is invoked by dot-repeat.
     local keys = vim.api.nvim_replace_termcodes(
-      string.format('<Cmd>lua require("era.m.textobject.action").finish_select(%d)<CR>', operation_id),
+      string.format('<Cmd>lua require("era.keystroke.textobject.action").finish_select(%d)<CR>', operation_id),
       true,
       false,
       true
@@ -271,7 +271,7 @@ end
 ---@return nil
 function M.swap_parameter(direction)
   swap_direction = direction
-  vim.go.operatorfunc = "v:lua.era.m.textobject.swap_operator"
+  vim.go.operatorfunc = "v:lua.era.keystroke.textobject.swap_operator"
   vim.api.nvim_feedkeys(tostring(vim.v.count1) .. "g@l", "n", false)
 end
 

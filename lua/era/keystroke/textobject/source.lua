@@ -1,11 +1,11 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.source" ---@type string
+local __module_name__ = "era.keystroke.textobject.source" ---@type string
 
 local M = {}
 
 ---@param lines                         string[]
 ---@param first_row                     ?integer
----@return era.m.textobject.ISource
+---@return era.keystroke.textobject.ISource
 function M.new(lines, first_row)
   local starts = {} ---@type integer[]
   local offset = 1 ---@type integer
@@ -16,7 +16,7 @@ function M.new(lines, first_row)
   return { lines = lines, text = table.concat(lines, "\n") .. "\n", starts = starts, first_row = first_row or 0 }
 end
 
----@param source                        era.m.textobject.ISource
+---@param source                        era.keystroke.textobject.ISource
 ---@param row                           integer
 ---@param col                           integer
 ---@return integer
@@ -28,7 +28,7 @@ function M.offset(source, row, col)
   return source.starts[index] + col
 end
 
----@param source                        era.m.textobject.ISource
+---@param source                        era.keystroke.textobject.ISource
 ---@param offset                        integer
 ---@return integer
 ---@return integer
@@ -48,17 +48,17 @@ function M.position(source, offset)
   return source.first_row + left - 1, offset - source.starts[left]
 end
 
----@param source                        era.m.textobject.ISource
----@param range                         era.m.textobject.Range
----@return era.m.textobject.ISpan
+---@param source                        era.keystroke.textobject.ISource
+---@param range                         era.keystroke.textobject.Range
+---@return era.keystroke.textobject.ISpan
 function M.span(source, range)
   return { from = M.offset(source, range[1], range[2]), to = M.offset(source, range[3], range[4]) }
 end
 
----@param source                        era.m.textobject.ISource
----@param span                          era.m.textobject.ISpan
+---@param source                        era.keystroke.textobject.ISource
+---@param span                          era.keystroke.textobject.ISpan
 ---@param vis_mode                      ?string
----@return era.m.textobject.Range
+---@return era.keystroke.textobject.Range
 function M.range(source, span, vis_mode)
   local start_row, start_col = M.position(source, span.from)
   local end_row, end_col = M.position(source, span.to)

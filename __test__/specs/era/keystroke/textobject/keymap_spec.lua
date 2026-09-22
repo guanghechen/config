@@ -1,6 +1,6 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.m.textobject.runtime")
-local t = harness.new("era.m.textobject.keymap")
+local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
+local t = harness.new("era.keystroke.textobject.keymap")
 
 local owned = {} ---@type table<string, function>
 for _, key in ipairs({ "an", "in", "ai", "ii" }) do
@@ -51,9 +51,8 @@ t:test("slowly typed custom objects are remapped after the prefix timeout", func
     [[
     vim.opt.runtimepath:prepend(...)
     _G.stl = { nvim = { fn = require("stl.nvim.fn") } }
-    _G.era = { m = {}, dressing = { whichkey = { add = function() end } } }
-    era.m.textobject = require("era.m.textobject")
-    era.m.textobject.setup()
+    _G.era = { keystroke = require("era.keystroke"), dressing = { whichkey = { add = function() end } } }
+    era.keystroke.textobject.setup()
     vim.api.nvim_buf_set_lines(0, 0, -1, true, { "word other" })
     vim.o.timeoutlen = 1
     vim.keymap.set("o", "iz", function() vim.cmd("normal! viw") end)

@@ -1,8 +1,8 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.m.textobject.runtime")
-local t = harness.new("era.m.textobject.treesitter")
+local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
+local t = harness.new("era.keystroke.textobject.treesitter")
 local Textobject = Runtime.setup(t)
-local Treesitter = require("era.m.textobject.treesitter")
+local Treesitter = require("era.keystroke.textobject.treesitter")
 
 t:test("local queries provide inner and outer functions without external plugins", function()
   Runtime.buffer(t, { "local function add(a, b)", "  return a + b", "end" })

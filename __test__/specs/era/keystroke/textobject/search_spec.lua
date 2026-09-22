@@ -1,12 +1,12 @@
 local harness = require("__test__.support.harness")
-local Pattern = require("era.m.textobject.pattern")
-local Search = require("era.m.textobject.search")
-local Source = require("era.m.textobject.source")
-local t = harness.new("era.m.textobject.search")
+local Pattern = require("era.keystroke.textobject.pattern")
+local Search = require("era.keystroke.textobject.search")
+local Source = require("era.keystroke.textobject.source")
+local t = harness.new("era.keystroke.textobject.search")
 
 ---@param text                          string
 ---@param id                            string
----@param kind                          era.m.textobject.Kind
+---@param kind                          era.keystroke.textobject.Kind
 ---@param column                        integer
 ---@param count                         ?integer
 ---@return string|nil

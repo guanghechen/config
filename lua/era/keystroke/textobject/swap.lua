@@ -1,29 +1,29 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.swap" ---@type string
+local __module_name__ = "era.keystroke.textobject.swap" ---@type string
 
-local Source = require("era.m.textobject.source")
+local Source = require("era.keystroke.textobject.source")
 
 local M = {}
 
----@class era.m.textobject.ISwapEdit
----@field public range                  era.m.textobject.Range
+---@class era.keystroke.textobject.ISwapEdit
+---@field public range                  era.keystroke.textobject.Range
 ---@field public lines                  string[]
 ---@field public cursor                 integer[] One-based row, zero-based byte column
 
 ---Plan a rotation inside one parameter container before performing a single buffer edit.
 ---@param lines                         string[]
----@param ranges                        era.m.textobject.Range[]
+---@param ranges                        era.keystroke.textobject.Range[]
 ---@param position                      integer[] Zero-based row and byte column
 ---@param direction                     integer -1 or 1
 ---@param count                         integer
----@return era.m.textobject.ISwapEdit|nil
+---@return era.keystroke.textobject.ISwapEdit|nil
 function M.plan(lines, ranges, position, direction, count)
   if count < 1 then
     return nil
   end
   local source = Source.new(lines)
   local offset = Source.offset(source, position[1], position[2]) ---@type integer
-  local current = nil ---@type era.m.textobject.Range|nil
+  local current = nil ---@type era.keystroke.textobject.Range|nil
   local width = math.huge ---@type number
   for _, range in ipairs(ranges) do
     local span = Source.span(source, range)
@@ -35,7 +35,7 @@ function M.plan(lines, ranges, position, direction, count)
     return nil
   end
 
-  local siblings = {} ---@type era.m.textobject.Range[]
+  local siblings = {} ---@type era.keystroke.textobject.Range[]
   for _, range in ipairs(ranges) do
     if range.container == current.container then
       siblings[#siblings + 1] = range
@@ -57,7 +57,7 @@ function M.plan(lines, ranges, position, direction, count)
   end
 
   local first, last = math.min(current_index, target), math.max(current_index, target)
-  local texts, spans = {}, {} ---@type string[], era.m.textobject.ISpan[]
+  local texts, spans = {}, {} ---@type string[], era.keystroke.textobject.ISpan[]
   for index = first, last do
     local span = Source.span(source, siblings[index])
     if span.from == span.to or (#spans > 0 and span.from < spans[#spans].to) then

@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.m.textobject.runtime")
-local Find = require("era.m.textobject.find")
-local t = harness.new("era.m.textobject.eligibility")
+local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
+local Find = require("era.keystroke.textobject.find")
+local t = harness.new("era.keystroke.textobject.eligibility")
 local Textobject = Runtime.setup(t)
 local Filetype = require("stl.filetype")
 

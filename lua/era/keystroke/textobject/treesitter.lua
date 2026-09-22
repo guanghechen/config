@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.treesitter" ---@type string
+local __module_name__ = "era.keystroke.textobject.treesitter" ---@type string
 
 local M = {}
 
@@ -7,7 +7,7 @@ local M = {}
 ---@param bufnr                         integer
 ---@param metadata                      table|nil
 ---@param lang                          string
----@return era.m.textobject.Range
+---@return era.keystroke.textobject.Range
 local function node_range(nodes, bufnr, metadata, lang)
   local first, last = nil, nil ---@type integer[]|nil, integer[]|nil
   for _, node in ipairs(nodes) do
@@ -37,7 +37,7 @@ end
 ---@param captures                      table<string, true>
 ---@param group                         string
 ---@param rows                          ?integer[] Start row and exclusive end row
----@return era.m.textobject.Range[]
+---@return era.keystroke.textobject.Range[]
 ---@return string|nil
 local function collect(lang_tree, bufnr, captures, group, rows)
   local lang = lang_tree:lang() ---@type string
@@ -49,7 +49,7 @@ local function collect(lang_tree, bufnr, captures, group, rows)
     return {}, string.format("No %s query for %s", group, lang)
   end
 
-  local result = {} ---@type era.m.textobject.Range[]
+  local result = {} ---@type era.keystroke.textobject.Range[]
   local seen = {} ---@type table<string, true>
   for _, tree in ipairs(lang_tree:trees()) do
     for _, match, metadata in query:iter_matches(tree:root(), bufnr, rows and rows[1] or 0, rows and rows[2] or -1) do
@@ -75,7 +75,7 @@ end
 ---@param group                         string
 ---@param position                      integer[] Zero-based row and byte column
 ---@param rows                          ?integer[] Start row and exclusive end row
----@return era.m.textobject.Range[]
+---@return era.keystroke.textobject.Range[]
 ---@return string|nil
 ---@return boolean Whether the selected language was searched in full
 function M.ranges(bufnr, names, group, position, rows)
@@ -110,7 +110,7 @@ function M.ranges(bufnr, names, group, position, rows)
     current = current:parent()
   end
 
-  local ranges = {} ---@type era.m.textobject.Range[]
+  local ranges = {} ---@type era.keystroke.textobject.Range[]
   ---@param parent                      vim.treesitter.LanguageTree
   ---@return nil
   local function collect_children(parent)

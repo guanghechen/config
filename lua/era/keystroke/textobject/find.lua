@@ -1,11 +1,11 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.find" ---@type string
+local __module_name__ = "era.keystroke.textobject.find" ---@type string
 
 local Filetype = require("stl.filetype")
-local Pattern = require("era.m.textobject.pattern")
-local Search = require("era.m.textobject.search")
-local Source = require("era.m.textobject.source")
-local Treesitter = require("era.m.textobject.treesitter")
+local Pattern = require("era.keystroke.textobject.pattern")
+local Search = require("era.keystroke.textobject.search")
+local Source = require("era.keystroke.textobject.source")
+local Treesitter = require("era.keystroke.textobject.treesitter")
 
 local M = {}
 
@@ -53,8 +53,8 @@ function M.supports(id)
 end
 
 ---@param bufnr                         integer
----@param kind                          era.m.textobject.Kind
----@return era.m.textobject.Range
+---@param kind                          era.keystroke.textobject.Kind
+---@return era.keystroke.textobject.Range
 local function buffer_range(bufnr, kind)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true) ---@type string[]
   local first, last = 1, #lines
@@ -72,13 +72,13 @@ local function buffer_range(bufnr, kind)
   return { first - 1, 0, last - 1, #lines[last] }
 end
 
----@param ranges                        era.m.textobject.Range[]
----@param source                        era.m.textobject.ISource
----@param envelopes                     era.m.textobject.Range[]|nil
----@return era.m.textobject.ICandidate[]
+---@param ranges                        era.keystroke.textobject.Range[]
+---@param source                        era.keystroke.textobject.ISource
+---@param envelopes                     era.keystroke.textobject.Range[]|nil
+---@return era.keystroke.textobject.ICandidate[]
 local function range_candidates(ranges, source, envelopes)
-  local result = {} ---@type era.m.textobject.ICandidate[]
-  local outer_spans = {} ---@type era.m.textobject.ISpan[]
+  local result = {} ---@type era.keystroke.textobject.ICandidate[]
+  local outer_spans = {} ---@type era.keystroke.textobject.ISpan[]
   for _, outer in ipairs(envelopes or {}) do
     outer_spans[#outer_spans + 1] = Source.span(source, outer)
   end
@@ -102,7 +102,7 @@ local function range_candidates(ranges, source, envelopes)
       return left.inner.from < right.inner.from
     end)
     local next_outer = 1 ---@type integer
-    local active = {} ---@type era.m.textobject.ISpan[]
+    local active = {} ---@type era.keystroke.textobject.ISpan[]
     -- Only overlapping envelopes remain active; sibling functions do not require all-pairs scans.
     for _, candidate in ipairs(result) do
       while next_outer <= #outer_spans and outer_spans[next_outer].from <= candidate.inner.from do
@@ -127,10 +127,10 @@ local function range_candidates(ranges, source, envelopes)
   return result
 end
 
----@param kind                          era.m.textobject.Kind
+---@param kind                          era.keystroke.textobject.Kind
 ---@param id                            string
----@param opts                          ?era.m.textobject.IOptions
----@return era.m.textobject.Range|nil
+---@param opts                          ?era.keystroke.textobject.IOptions
+---@return era.keystroke.textobject.Range|nil
 ---@return string|nil
 function M.find(kind, id, opts)
   opts = opts or {}
@@ -164,11 +164,11 @@ function M.find(kind, id, opts)
     reference = { reference[1], 0, reference_last, #lines[reference_last - first_row + 1] }
   end
   local source = Source.new(lines, first_row)
-  local candidates = {} ---@type era.m.textobject.ICandidate[]
+  local candidates = {} ---@type era.keystroke.textobject.ICandidate[]
   local reason = nil ---@type string|nil
   local complete = false ---@type boolean
   ---@param rows                        ?integer[]
-  ---@return era.m.textobject.ICandidate[]
+  ---@return era.keystroke.textobject.ICandidate[]
   ---@return string|nil
   ---@return boolean
   local function query_candidates(rows)
@@ -180,9 +180,9 @@ function M.find(kind, id, opts)
     end
     local ranges, err, searched_all =
       Treesitter.ranges(bufnr, requested, id == "S" and "locals" or "textobjects", { cursor[1] - 1, cursor[2] }, rows)
-    local envelopes = nil ---@type era.m.textobject.Range[]|nil
+    local envelopes = nil ---@type era.keystroke.textobject.Range[]|nil
     if paired then
-      local inner = {} ---@type era.m.textobject.Range[]
+      local inner = {} ---@type era.keystroke.textobject.Range[]
       envelopes = {}
       for _, range in ipairs(ranges) do
         if vim.list_contains(captures.a, range.capture) then
@@ -203,7 +203,7 @@ function M.find(kind, id, opts)
     candidates = Pattern.collect(source.text, id, opts.prompt)
   end
 
-  local local_bounds = nil ---@type era.m.textobject.ISpan|nil
+  local local_bounds = nil ---@type era.keystroke.textobject.ISpan|nil
   if not whole_buffer then
     local last = reference_last - first_row + 1 ---@type integer
     local_bounds = { from = Source.offset(source, reference[1], 0), to = source.starts[last] + #lines[last] }

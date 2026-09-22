@@ -53,7 +53,7 @@ vim.schedule(function()
   era.m.paste.dressing()
   era.keystroke.splitjoin.setup()
   era.keystroke.surrounds.setup()
-  era.m.textobject.setup()
+  era.keystroke.textobject.setup()
 
   pcall(require, "ark.vendor.neovide.dressing")
   pcall(require, "ark.vendor.local.dressing")

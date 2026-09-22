@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.textobject.pattern" ---@type string
+local __module_name__ = "era.keystroke.textobject.pattern" ---@type string
 
 local M = {}
 
@@ -10,7 +10,7 @@ local QUOTES = { ["'"] = true, ['"'] = true, ["`"] = true }
 ---@param text                          string
 ---@param from                          integer
 ---@param to                            integer
----@return era.m.textobject.ISpan
+---@return era.keystroke.textobject.ISpan
 local function trim(text, from, to)
   while from < to and text:sub(from, from):match("%s") do
     from = from + 1
@@ -24,7 +24,7 @@ end
 ---@param text                          string
 ---@param pattern                       string
 ---@param extraction                    string|nil
----@param result                        era.m.textobject.ICandidate[]
+---@param result                        era.keystroke.textobject.ICandidate[]
 ---@param disjoint                      ?boolean
 ---@return nil
 local function collect_pattern(text, pattern, extraction, result, disjoint)
@@ -37,8 +37,8 @@ local function collect_pattern(text, pattern, extraction, result, disjoint)
     if from == nil or to == nil then
       break
     end
-    local outer = { from = from, to = to + 1 } ---@type era.m.textobject.ISpan
-    local inner = outer ---@type era.m.textobject.ISpan
+    local outer = { from = from, to = to + 1 } ---@type era.keystroke.textobject.ISpan
+    local inner = outer ---@type era.keystroke.textobject.ISpan
     if extraction ~= nil then
       local positions = { text:sub(from, to):match(extraction) } ---@type integer[]
       if #positions == 2 then
@@ -56,7 +56,7 @@ end
 ---@param text                          string
 ---@param left                          string
 ---@param trimmed                       boolean
----@param result                        era.m.textobject.ICandidate[]
+---@param result                        era.keystroke.textobject.ICandidate[]
 ---@return nil
 local function collect_brackets(text, left, trimmed, result)
   local stack = {} ---@type integer[]
@@ -68,7 +68,7 @@ local function collect_brackets(text, left, trimmed, result)
     elseif char == closing and #stack > 0 then
       local from = stack[#stack] ---@type integer
       stack[#stack] = nil
-      local span = { from = from, to = index + 1 } ---@type era.m.textobject.ISpan
+      local span = { from = from, to = index + 1 } ---@type era.keystroke.textobject.ISpan
       local inner = trimmed and trim(text, from + 1, index) or { from = from + 1, to = index }
       result[#result + 1] = { span = span, outer = span, inner = inner }
     end
@@ -77,7 +77,7 @@ end
 
 ---@param text                          string
 ---@param quote                         string
----@param result                        era.m.textobject.ICandidate[]
+---@param result                        era.keystroke.textobject.ICandidate[]
 ---@param multiline                     ?boolean
 ---@return nil
 local function collect_quote(text, quote, result, multiline)
@@ -94,7 +94,7 @@ local function collect_quote(text, quote, result, multiline)
         if start == nil then
           start = index
         else
-          local span = { from = start, to = index + 1 } ---@type era.m.textobject.ISpan
+          local span = { from = start, to = index + 1 } ---@type era.keystroke.textobject.ISpan
           result[#result + 1] = { span = span, outer = span, inner = { from = start + 1, to = index } }
           start = nil
         end
@@ -105,7 +105,7 @@ local function collect_quote(text, quote, result, multiline)
 end
 
 ---@param text                          string
----@param result                        era.m.textobject.ICandidate[]
+---@param result                        era.keystroke.textobject.ICandidate[]
 ---@return nil
 local function collect_arguments(text, result)
   local stack = {} ---@type { char: string, from: integer, commas: integer[] }[]
@@ -140,7 +140,7 @@ local function collect_arguments(text, result)
         for arg_index = 1, #separators - 1 do
           local left, right = separators[arg_index], separators[arg_index + 1]
           if right > left + 1 then
-            local inner = trim(text, left + 1, right) ---@type era.m.textobject.ISpan
+            local inner = trim(text, left + 1, right) ---@type era.keystroke.textobject.ISpan
             local first, last = arg_index == 1, arg_index == #separators - 1
             local outer = { from = first and inner.from or left, to = last and inner.to or right + 1 }
             if first and last then
@@ -174,9 +174,9 @@ end
 ---@param text                          string
 ---@param id                            string
 ---@param prompt                        string[]|nil
----@return era.m.textobject.ICandidate[]
+---@return era.keystroke.textobject.ICandidate[]
 function M.collect(text, id, prompt)
-  local result = {} ---@type era.m.textobject.ICandidate[]
+  local result = {} ---@type era.keystroke.textobject.ICandidate[]
   local opener = BRACKETS[id] and id or OPENERS[id] ---@type string|nil
   if opener ~= nil or id == "b" then
     local openers = id == "b" and { "(", "[", "{" } or { opener }

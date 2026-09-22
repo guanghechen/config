@@ -1,6 +1,6 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.m.textobject.runtime")
-local t = harness.new("era.m.textobject.editing")
+local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
+local t = harness.new("era.keystroke.textobject.editing")
 local clipboard = { ["+"] = { "PLUS" }, ["*"] = { "STAR" } }
 local previous_clipboard = vim.g.clipboard
 t:defer(function()
@@ -27,7 +27,7 @@ vim.g.clipboard = {
   cache_enabled = 0,
 }
 local Textobject, messages = Runtime.setup(t)
-local Action = require("era.m.textobject.action")
+local Action = require("era.keystroke.textobject.action")
 
 t:test("operator mappings respect native words and textobject whitespace", function()
   Runtime.buffer(t, { "word (  body  )" })
