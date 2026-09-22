@@ -84,7 +84,6 @@ local __m__mods = {
   diffview = "era.m.diffview",
   explorer = "era.m.explorer",
   git = "era.m.git",
-  illuminate = "era.m.illuminate",
   image = "era.m.image",
   input = "era.m.input",
   inspect = "era.m.inspect",
@@ -114,7 +113,6 @@ local __m__mods = {
 ---@field public diffview               era.m.diffview
 ---@field public explorer               era.m.explorer
 ---@field public git                    era.m.git
----@field public illuminate             era.m.illuminate
 ---@field public image                  era.m.image
 ---@field public input                  era.m.input
 ---@field public inspect                era.m.inspect

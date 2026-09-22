@@ -582,7 +582,7 @@ function M.on_attach(client, bufnr)
 
   -- illuminate
   if support_documentHighlight == 1 then
-    era.m.illuminate.dressing(bufnr)
+    era.keystroke.illuminate.dressing(bufnr)
   end
 
   ---@type era.m.lsp.event.IKeymap[]
@@ -750,7 +750,7 @@ function M.on_detach(client, bufnr)
     support_documentHighlight = support_documentHighlight - 1
 
     if support_documentHighlight == 0 then
-      era.m.illuminate.undressing(bufnr)
+      era.keystroke.illuminate.undressing(bufnr)
     end
   end
   if support_documentSymbol > 0 and client:supports_method("textDocument/documentSymbol") then

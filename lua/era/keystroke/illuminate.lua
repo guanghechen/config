@@ -1,12 +1,12 @@
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/words.lua#L1
 
-local __module_name__ = "era.m.illuminate" ---@type string
+local __module_name__ = "era.keystroke.illuminate" ---@type string
 
----@class era.m.illuminate.ILspWord
+---@class era.keystroke.illuminate.ILspWord
 ---@field public from                   { [1]: integer, [2]: integer }
 ---@field public to                     { [1]: integer, [2]: integer }
 
----@alias era.m.illuminate.IMode
+---@alias era.keystroke.illuminate.IMode
 ---| "n"
 ---| "i"
 ---| "c"
@@ -15,13 +15,13 @@ local __module_name__ = "era.m.illuminate" ---@type string
 ---| "v"
 ---| "o"
 
----@class era.m.illuminate.IConfig
+---@class era.keystroke.illuminate.IConfig
 ---@field public debounce               integer
 ---@field public notify_jump            boolean
 ---@field public notify_end             boolean
 ---@field public foldopen               boolean
 ---@field public jumplist               boolean
----@field public modes                  era.m.illuminate.IMode[]
+---@field public modes                  era.keystroke.illuminate.IMode[]
 
 local ns_lsp_ref = vim.api.nvim_create_namespace("vim_lsp_references") ---@type integer
 local ns_nvim_ref = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
@@ -29,7 +29,7 @@ local augroup = stl.nvim.fn.augroup(__module_name__) ---@type integer
 local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
 local attached_buffers = {} ---@type table<integer, boolean>
 
----@type era.m.illuminate.IConfig
+---@type era.keystroke.illuminate.IConfig
 local config = {
   debounce = 200,
   notify_jump = false,
@@ -46,7 +46,7 @@ local function has_highlight_capability(bufnr)
   return #clients > 0
 end
 
----@return era.m.illuminate.IMode
+---@return era.keystroke.illuminate.IMode
 local function get_current_mode()
   local mode = vim.api.nvim_get_mode().mode:lower()
   mode = mode:gsub("\22", "v"):gsub("\19", "s")
@@ -62,11 +62,11 @@ local function is_mode_enabled()
 end
 
 ---@param bufnr                         integer
----@return era.m.illuminate.ILspWord[]
+---@return era.keystroke.illuminate.ILspWord[]
 ---@return integer|nil
 local function get_reference_words(bufnr)
   local extmarks = {} ---@type vim.api.keyset.get_extmark_item[]
-  local words = {} ---@type era.m.illuminate.ILspWord[]
+  local words = {} ---@type era.keystroke.illuminate.ILspWord[]
 
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local cursor = vim.api.nvim_win_get_cursor(winnr)
@@ -127,7 +127,7 @@ local function clear_highlight()
   end
 end
 
----@class era.m.illuminate
+---@class era.keystroke.illuminate
 local M = {}
 
 ---@param step                          integer

@@ -969,7 +969,7 @@ command
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
       local step = vim.v.count1 ---@type integer
-      era.m.illuminate.jump(-step, true)
+      era.keystroke.illuminate.jump(-step, true)
     end,
   })
   .implement({
@@ -977,7 +977,7 @@ command
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
       local step = vim.v.count1 ---@type integer
-      era.m.illuminate.jump(step, true)
+      era.keystroke.illuminate.jump(step, true)
     end,
   })
   .implement({
