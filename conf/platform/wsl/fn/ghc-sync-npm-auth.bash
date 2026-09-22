@@ -24,10 +24,10 @@ ghc-sync-npm-auth() {
     fi
 
     if [[ -f "$wsl_npmrc" ]]; then
-        cp -- "$wsl_npmrc" "$wsl_npmrc.bak"
+        command cp -i -- "$wsl_npmrc" "$wsl_npmrc.bak"
         echo "Backed up existing .npmrc to .npmrc.bak"
     fi
 
-    cp -- "$win_npmrc" "$wsl_npmrc"
+    command cp -i -- "$win_npmrc" "$wsl_npmrc"
     echo "Synced .npmrc from Windows ($win_npmrc) to WSL ($wsl_npmrc)"
 }

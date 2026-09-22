@@ -35,7 +35,6 @@ alias mkdir='mkdir -pv'
 alias mv='mv -i'
 alias ports='netstat -tulanp'
 alias rm='rm -i -I'
-alias sss='source "$HOME/.config/bash/bashrc.bash"'
 alias tls='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
@@ -106,3 +105,10 @@ alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 alias ghc-clock='tty-clock -DSbcnrs -C5'
 alias ghc-ports='netstat -tulanp'
 alias ghc-today='cal -C3'
+
+## Python server with Poetry (examples)
+# Replace <server_entry> and <client_entry> before enabling these aliases.
+# alias pydemo-server='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run uvicorn <server_entry> --host localhost --port 9528'
+# alias pydemo-debug='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run python -m debugpy --listen 9527 -m uvicorn <server_entry> --host localhost --port 9528'
+# alias pydemo-debug-wait='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run python -m debugpy --listen 9527 --wait-for-client -m uvicorn <server_entry> --host localhost --port 9528'
+# alias pydemo-client='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run python -m <client_entry> --server-endpoint=http://localhost:9528'
