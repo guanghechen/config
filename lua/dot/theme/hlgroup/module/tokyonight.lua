@@ -15,13 +15,6 @@ function M.gen_hlgroup_map(context)
   local bg = context.transparency and u.none or u.bg0 ---@type string
 
   -- Keep tinted surfaces readable with this theme's foreground.
-  hlgroup_map.m_ft_git_ignored_cl = { fg = u.fg1, bg = u.bg3, bold = true }
-  hlgroup_map.m_ft_git_ignored_clb = { fg = u.fg1, bg = u.bg2, bold = true }
-  hlgroup_map.m_ft_git_other_cl = { fg = u.fg1, bg = u.bg3, bold = true }
-  hlgroup_map.m_ft_git_other_clb = { fg = u.fg1, bg = u.bg2, bold = true }
-  hlgroup_map.m_ft_git_untracked_cl = { fg = u.fg1, bg = u.bg3, bold = true }
-  hlgroup_map.m_ft_git_untracked_clb = { fg = u.fg1, bg = u.bg2, bold = true }
-  hlgroup_map.m_ft_position = { fg = u.fg3 }
   hlgroup_map.m_git_buffer_blame = { fg = u.fg3, italic = true }
   hlgroup_map.m_git_sign_add_staged = { fg = cs.mix(u.bg0, u.green, 80) }
   hlgroup_map.m_git_sign_change_staged = { fg = cs.mix(u.bg0, u.blue, 80) }

@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.explorer.node" ---@type string
+
 ---@class era.m.explorer.Node : era.m.explorer.resource.INode
 ---@field public filepath               string
 ---@field public nodename               string
@@ -38,6 +41,7 @@ function M.clone(node, new_parent)
   ---@type era.m.explorer.Node
   local cloned = {
     filepath = M.calc_filepath(new_parent.filepath, node.nodename, node.nodetype),
+    is_link = node.is_link,
     nodename = node.nodename,
     nodetype = node.nodetype,
     parent = new_parent,
@@ -92,11 +96,13 @@ end
 ---@param parent                        era.m.explorer.Node
 ---@param nodetype                      era.m.explorer.NodeTypeEnum
 ---@param nodename                      string
+---@param is_link                       ?boolean
 ---@return era.m.explorer.Node
-function M.new(parent, nodetype, nodename)
+function M.new(parent, nodetype, nodename, is_link)
   ---@type era.m.explorer.Node
   local node = {
     filepath = M.calc_filepath(parent.filepath, nodename, nodetype),
+    is_link = is_link == true,
     nodename = nodename,
     nodetype = nodetype,
     parent = parent,
@@ -128,6 +134,7 @@ function M.superroot()
   ---@type era.m.explorer.Node
   local node = {
     filepath = "",
+    is_link = false,
     nodename = "",
     nodetype = "D",
     parent = nil,

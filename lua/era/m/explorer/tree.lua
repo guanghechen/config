@@ -87,7 +87,7 @@ function M.new(props)
   return self
 end
 
----@param filepath                           string
+---@param filepath                      string
 ---@return boolean
 function M:attach(filepath)
   self:__health__()
@@ -95,7 +95,7 @@ function M:attach(filepath)
 
   local rm = self._resource_manager ---@type era.m.explorer.resource.IManager
   local resource = rm:locate(filepath) ---@type era.m.explorer.resource.INode|nil
-  if resource == nil then
+  if resource == nil or resource.nodetype ~= "D" then
     stl.reporter.error({
       from = __module_name__,
       subject = self.name,
@@ -225,7 +225,7 @@ function M:get_selected_filepaths()
   return filepaths
 end
 
----@param parent_filepath                     string
+---@param parent_filepath               string
 ---@param resource                      era.m.explorer.resource.INode
 ---@return boolean
 function M:insert(parent_filepath, resource)
@@ -274,7 +274,7 @@ function M:insert(parent_filepath, resource)
   end
 
   local children = parent.children ---@type era.m.explorer.Node[]
-  local node = era.m.explorer.Node.new(parent, resource.nodetype, resource.nodename) ---@type era.m.explorer.Node
+  local node = era.m.explorer.Node.new(parent, resource.nodetype, resource.nodename, resource.is_link) ---@type era.m.explorer.Node
   local insert_idx = self:__find_insertion_index__(rm, children, node) ---@type integer
 
   table.insert(children, insert_idx, node)
@@ -641,9 +641,9 @@ function M:__health__()
 end
 
 ---@protected
----@param filepath                           string
----@param resource                      era.m.explorer.resource.INode|nil
----@param ensure_resource               boolean|nil
+---@param filepath                      string
+---@param resource                      ?era.m.explorer.resource.INode
+---@param ensure_resource               ?boolean
 ---@return era.m.explorer.Node
 ---@return boolean
 function M:__insert__(filepath, resource, ensure_resource)
@@ -713,13 +713,14 @@ function M:__insert__(filepath, resource, ensure_resource)
     end
   end
   o.filepath = era.m.explorer.Node.calc_filepath(o.parent.filepath, o.nodename, o.nodetype)
+  o.is_link = resource.is_link == true
   return o, new_created
 end
 
 ---@protected
 ---@param node                          era.m.explorer.Node
 ---@param nodeindex                     integer
----@param filepath                           string
+---@param filepath                      string
 ---@param force                         boolean
 ---@return era.m.explorer.Node
 function M:__load__(node, nodeindex, filepath, force)
@@ -748,6 +749,7 @@ function M:__load__(node, nodeindex, filepath, force)
     ---@type era.m.explorer.Node
     local new_node = setmetatable({
       filepath = filepath,
+      is_link = resource_node.is_link == true,
       nodename = resource_node.nodename,
       nodetype = resource_node.nodetype,
       parent = parent,
@@ -770,6 +772,7 @@ function M:__load__(node, nodeindex, filepath, force)
   end
 
   node.filepath = filepath
+  node.is_link = resource_node.is_link == true
 
   if node.nodetype == "F" then
     node.loaded = true
@@ -786,7 +789,7 @@ end
 
 ---@protected
 ---@param node                          era.m.explorer.Node
----@param filepath                           string
+---@param filepath                      string
 ---@return nil
 function M:__load_children__(node, filepath)
   local rm = self._resource_manager ---@type era.m.explorer.resource.IManager
@@ -809,7 +812,12 @@ function M:__load_children__(node, filepath)
     for index = 1, child_count, 1 do
       local child = children[index] ---@type era.m.explorer.Node|nil
       local item = items[index] ---@type era.m.explorer.resource.INode
-      if child == nil or child.nodename ~= item.nodename or child.nodetype ~= item.nodetype then
+      if
+        child == nil
+        or child.nodename ~= item.nodename
+        or child.nodetype ~= item.nodetype
+        or child.is_link ~= (item.is_link == true)
+      then
         unchanged = false
         break
       end
@@ -832,13 +840,14 @@ function M:__load_children__(node, filepath)
     local old_index = chidxmap[item.nodename] ---@type integer|nil
     local old_child = old_index ~= nil and children[old_index] or nil ---@type era.m.explorer.Node|nil
     if old_child == nil or old_child.nodetype ~= item.nodetype then
-      local child = era.m.explorer.Node.new(node, item.nodetype, item.nodename) ---@type era.m.explorer.Node
+      local child = era.m.explorer.Node.new(node, item.nodetype, item.nodename, item.is_link) ---@type era.m.explorer.Node
       child.filepath = era.m.explorer.Node.calc_filepath(node.filepath, child.nodename, child.nodetype)
       new_children[i] = child
       new_chidxmap[item.nodename] = i
     else
       old_child.parent = node
       old_child.filepath = era.m.explorer.Node.calc_filepath(node.filepath, old_child.nodename, old_child.nodetype)
+      old_child.is_link = item.is_link == true
       if old_child.nodetype == "F" then
         old_child.loaded = true
       end

@@ -68,6 +68,7 @@
 ---@alias dot.e.ThemeIntegration
 ---| "basic"
 ---| "common"
+---| "explorer"
 ---| "lsp"
 ---| "module"
 ---| "nvimbar"

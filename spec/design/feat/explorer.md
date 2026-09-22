@@ -41,6 +41,7 @@
 - `filepath: string`
 - `nodename: string`
 - `nodetype: "D" | "F"`
+- `is_link: boolean`：当前 entry 本身是否为 symlink，与跟随 target 得到的 `nodetype` 分开保存。
 - `parent: Node|nil`
 - `children: Node[]`
 - `selected/expanded/loaded/has_selected`
@@ -67,6 +68,10 @@
 
 ### 图标与名称的颜色分工（已决）
 
+`dot.theme.hlgroup.explorer` 是独立的 theme integration，其 `explorer/` 目录集中定义 `m_ex_*`、
+`m_fe_*` 和共享 filetree/Git 的 `m_ft_*` 高亮。主题实现遵循 theme loader 的统一 fallback 规则，
+symlink 状态混色由各主题实现直接生成。
+
 **丰富的类型配色只用于 fileicon；filename / foldername 的前景色由 Git status / LSP diagnostics 决定。**
 这是 `era.m.explorer` 的渲染契约，所有主题都必须遵守，不得通过主题精调改变其语义。
 
@@ -87,6 +92,17 @@
 例如，干净的 `lsp/`、`queries/`、`main.lua` 名称应使用相同中性色，图标仍可各自着色；
 有 Git 修改的目录显示 Git 状态色，选中后仍保留该颜色并附加 selection sign；
 同时有 LSP error 的非 ignored 节点显示 error 色。
+
+### Symlink 标识
+
+- 文件链接、目录链接和 dangling link 均在名称后显示独立的链环图标 ` `；关闭图标时仍显示。
+- clean 标识使用 `m_ex_symlink` 的紫色强调色并加粗；存在 Git status 时使用 40% 紫色 + 60% 对应状态色。
+  untracked、modified、added、ignored、deleted 等状态复用已有 Git 配色，ignored 优先；staged/unstaged
+  与冲突、删除的优先级沿用 Git status 的解析结果。名称继续遵守 Git/LSP 状态色优先级，LSP 不覆盖链环的 Git 混色。
+- `m_ex_symlink_*` 混色在主题加载时生成；View 复用名称渲染的 Git 查询结果选择高亮。
+- 目录链接仍可展开，dangling link 作为文件叶子显示。普通后代不继承祖先的 symlink 标识。
+- 空目录路径折叠不跨越 symlink 节点，使具体的链接 entry 始终占据独立一行。
+- 链接属性在资源加载与刷新时更新，View 只消费节点数据，不在渲染时探测文件系统。
 
 ### Pending transfer 的归属
 

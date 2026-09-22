@@ -379,7 +379,7 @@ function M:insert_if_missing(filepath)
   end
 end
 
----@param filepath                           string
+---@param filepath                      string
 ---@return era.m.explorer.resource.INode[]
 function M:load(filepath)
   if filepath == "" then
@@ -407,6 +407,7 @@ function M:load(filepath)
     end
 
     if show_hidden or name:sub(1, 1) ~= "." then
+      local is_link = ftype == "link" ---@type boolean
       local is_directory ---@type boolean
       if ftype == "directory" then
         is_directory = true
@@ -414,10 +415,14 @@ function M:load(filepath)
         is_directory = false
       else
         -- Symlinks report as "link" (and some filesystems report "unknown") from scandir,
-        -- which cannot reveal the target type. Follow the link for explorer interaction only;
-        -- side-effecting operations use lstat so they still act on the link itself. Dangling
-        -- links fall back to a file leaf.
-        local target_stat = vim.uv.fs_stat(yoz.canonical_path.to_os_path(filepath .. name)) ---@type uv.fs_stat.result|nil
+        -- which cannot reveal the target type. Keep link identity separate from the target's
+        -- interaction type; dangling links remain file leaves.
+        local entry_path = yoz.canonical_path.to_os_path(filepath .. name) ---@type string
+        if ftype == nil or ftype == "unknown" then
+          local link_stat = vim.uv.fs_lstat(entry_path) ---@type uv.fs_stat.result|nil
+          is_link = link_stat ~= nil and link_stat.type == "link"
+        end
+        local target_stat = vim.uv.fs_stat(entry_path) ---@type uv.fs_stat.result|nil
         is_directory = target_stat ~= nil and target_stat.type == "directory"
       end
       local nodetype = is_directory and "D" or "F" ---@type era.m.explorer.NodeTypeEnum
@@ -425,6 +430,7 @@ function M:load(filepath)
       ---@type era.m.explorer.resource.INode
       local item = {
         filepath = filepath .. name .. (is_directory and "/" or ""),
+        is_link = is_link,
         nodetype = nodetype,
         nodename = name,
       }
@@ -439,31 +445,39 @@ function M:load(filepath)
   return items
 end
 
----@param filepath                           string
+---@param filepath                      string
 ---@return era.m.explorer.resource.INode|nil
 function M:locate(filepath)
   if filepath == "" then
     return nil
   end
 
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  local stat = vim.uv.fs_stat(os_filepath)
+  -- A trailing slash would make lstat follow a directory link instead of identifying it.
+  local without_slash = strip_trailing_slash(filepath) ---@type string
+  local os_filepath = yoz.canonical_path.to_os_path(without_slash) ---@type string
+  local stat = vim.uv.fs_lstat(os_filepath)
   if stat == nil then
     return nil
   end
 
-  local is_directory = stat.type == "directory" ---@type boolean
+  local is_link = stat.type == "link" ---@type boolean
+  if is_link then
+    stat = vim.uv.fs_stat(os_filepath)
+  end
+  local is_directory = stat ~= nil and stat.type == "directory" ---@type boolean
   local nodetype = is_directory and "D" or "F" ---@type era.m.explorer.NodeTypeEnum
-  local without_slash = filepath:sub(-1) == "/" and filepath:sub(1, -2) or filepath ---@type string
   local nodename = without_slash:match("([^/]+)$") or "" ---@type string
 
   if is_directory and filepath:sub(-1) ~= "/" then
     filepath = filepath .. "/"
+  elseif not is_directory then
+    filepath = without_slash
   end
 
   ---@type era.m.explorer.resource.INode
   return {
     filepath = filepath,
+    is_link = is_link,
     nodetype = nodetype,
     nodename = nodename,
   }

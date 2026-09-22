@@ -255,6 +255,68 @@ t:test("render node: ignored, LSP and Git determine the name color in order", fu
   end
 end)
 
+t:test("render node: link tint follows Git status independently of diagnostic name colors", function()
+  local info = nil ---@type yoz.git.StatusInfo|nil
+  local ignored = false ---@type boolean
+  local lookups = {} ---@type table[]
+  t:patch_table(era.m.git.state, "is_ignored", function()
+    return ignored
+  end)
+  t:patch_table(era.m.git.state, "snapshot", function()
+    return {
+      lookup = function(_, filepath, directory)
+        lookups[#lookups + 1] = { filepath = filepath, directory = directory }
+        return info
+      end,
+    }
+  end)
+  local view = View.new("symlink-git-tint")
+  for _, kind in ipairs({ "F", "D" }) do
+    local node = {
+      filepath = "/project/node" .. (kind == "D" and "/" or ""),
+      nodename = "node",
+      nodetype = kind,
+      is_link = true,
+    }
+    for _, case in ipairs({
+      { name = "clean", expected = "m_ex_symlink" },
+      { name = "untracked", code = "?", expected = "m_ex_symlink_untracked" },
+      { name = "modified", code = "M", stage = "unstaged", expected = "m_ex_symlink_unstaged" },
+      { name = "added", code = "A", stage = "staged", expected = "m_ex_symlink_staged" },
+      { name = "ignored", code = "M", stage = "unstaged", ignored = true, expected = "m_ex_symlink_ignored" },
+      { name = "deleted", code = "D", stage = "staged", expected = "m_ex_symlink_delete" },
+      { name = "mixed", code = "M", stage = "mixed", expected = "m_ex_symlink_unstaged" },
+      { name = "conflicted", code = "U", stage = "mixed", expected = "m_ex_symlink_unmerged" },
+    }) do
+      info = case.code
+          and {
+            codes = yoz.git.codes[case.code],
+            display = case.code == "?" and "U" or case.code,
+            staged_display = case.stage == "staged" and case.code or "",
+            stage = case.stage,
+            summary = case.code,
+          }
+        or nil
+      ignored = case.ignored == true
+      lookups = {}
+      local ctx = {
+        diag_counts = { [node.filepath] = { error = 1, warn = 0, hint = 0, info = 0 } },
+        show_diagnostics = false,
+        show_git_status = true,
+        show_icons = false,
+      }
+      ---@diagnostic disable-next-line: invisible, param-type-mismatch
+      local line, highlights = view:__render_node__(ctx, node, "", 1, nil, false)
+      t.assert_eq("node ", line, case.name .. " suffix")
+      t.assert_eq(ignored and "m_ex_ignored" or "f_lsp_diagnostic_error", highlights[1].hlname, "name priority")
+      t.assert_eq(case.expected, highlights[2].hlname, kind .. "/" .. case.name .. " link tint")
+      t.assert_eq(1, #lookups, "name and link share one Git lookup")
+      t.assert_eq(node.filepath, lookups[1].filepath, "logical link path")
+      t.assert_eq(kind == "D", lookups[1].directory, "directory status aggregation")
+    end
+  end
+end)
+
 t:test("render: writes range highlights directly as extmarks", function()
   t:patch_table(vim.hl, "range", function()
     error("vim.hl.range() must not be used")

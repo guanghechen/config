@@ -9,7 +9,7 @@ t:patch_global("stl", require("stl"))
 t:patch_global("dot", require("dot"))
 local theme = dot.context.theme
 
-local categories = { "basic", "lsp", "module", "nvimbar", "plugin", "treesitter", "widget" }
+local categories = { "basic", "explorer", "lsp", "module", "nvimbar", "plugin", "treesitter", "widget" }
 
 t:test("transparent floats preserve terminal-default backgrounds across themes", function()
   local groups = {
@@ -21,6 +21,8 @@ t:test("transparent floats preserve terminal-default backgrounds across themes",
     "FloatTitle",
     "FloatActiveBorder",
     "FloatActiveTitle",
+    "m_ex_bg",
+    "m_ex_border",
     "m_pk_finder_normal",
     "m_pk_finder_prompt",
     "m_pk_result_normal",
@@ -104,6 +106,46 @@ local function apply_integration(integration, context)
   restore()
   return vim.api.nvim_get_hl(nsnr, { link = true })
 end
+
+t:test("symlink tints blend the active theme's link and Git colors with Git dominant", function()
+  for _, name in ipairs(dot.var.themes) do
+    local groups = apply_integration("explorer", context_for(name))
+    local link_color = groups.m_ex_symlink.fg
+    for _, status in ipairs({
+      "add",
+      "change",
+      "delete",
+      "ignored",
+      "other",
+      "rename",
+      "staged",
+      "unmerged",
+      "unstaged",
+      "untracked",
+    }) do
+      local label = name .. "/" .. status
+      local git_color = groups["m_ft_git_" .. status].fg
+      local tint = assert(groups["m_ex_symlink_" .. status], label .. " missing link tint")
+      t.assert_nil(tint.bg, label .. " preserves the row background")
+      if link_color ~= git_color then
+        t.assert_true(tint.fg ~= link_color and tint.fg ~= git_color, label .. " combines both colors")
+      end
+      for _, shift in ipairs({ 0, 8, 16 }) do
+        local link_channel = bit.band(bit.rshift(link_color, shift), 255)
+        local git_channel = bit.band(bit.rshift(git_color, shift), 255)
+        local mixed_channel = bit.band(bit.rshift(tint.fg, shift), 255)
+        t.assert_true(
+          mixed_channel >= math.min(link_channel, git_channel) and mixed_channel <= math.max(link_channel, git_channel),
+          label .. " channel remains between the source colors"
+        )
+        t.assert_true(
+          math.abs(mixed_channel - git_channel) <= math.abs(mixed_channel - link_channel) + 1,
+          label .. " favors the Git color"
+        )
+      end
+    end
+  end
+end)
 
 t:test("every category falls back to unified when its theme implementation is absent", function()
   local context = context_for("vsc-dark-modern")
@@ -232,7 +274,8 @@ t:test("theme surface overrides preserve their colors across variants and transp
         t.assert_eq(u.fg1, widget.f_diff_word_left.fg, filepath)
         t.assert_eq(u.diffAddInline, widget.f_diff_word_right.bg, filepath)
         if family ~= "catppuccin" then
-          t.assert_eq(u.fg1, module.m_ft_git_ignored_cl.fg, filepath)
+          local explorer = require("dot.theme.hlgroup.explorer." .. family).gen_hlgroup_map(context)
+          t.assert_eq(u.fg1, explorer.m_ft_git_ignored_cl.fg, filepath)
           t.assert_eq(u.fg2, module.m_dv_winbar_dim.fg, filepath)
           t.assert_eq(u.bg3, widget.f_matched_pairs_0.bg, filepath)
           t.assert_eq(u.fg1, widget.f_md_code_fallback.fg, filepath)
@@ -260,7 +303,7 @@ end)
 
 t:test("theme overrides do not mutate later unified or theme results", function()
   local context = context_for("tokyonight-night")
-  for _, category in ipairs({ "basic", "module", "widget", "nvimbar" }) do
+  for _, category in ipairs({ "basic", "explorer", "module", "widget", "nvimbar" }) do
     local entry = require("dot.theme.hlgroup." .. category .. "." .. context.scheme.theme)
     local unified = require("dot.theme.hlgroup." .. category .. ".unified")
     local before = unified.gen_hlgroup_map(context)
@@ -334,9 +377,9 @@ t:test("every Rose Pine integration generates from its native palette alone", fu
   end
 end)
 
-t:test("Rose Pine module, widget and nvimbar implementations preserve highlight coverage", function()
+t:test("Rose Pine explorer, module, widget and nvimbar implementations preserve highlight coverage", function()
   local context = context_for("rosepine-main")
-  for _, category in ipairs({ "module", "widget", "nvimbar" }) do
+  for _, category in ipairs({ "explorer", "module", "widget", "nvimbar" }) do
     local expected = require("dot.theme.hlgroup." .. category .. ".unified").gen_hlgroup_map(context)
     local actual = require("dot.theme.hlgroup." .. category .. ".rosepine").gen_hlgroup_map(context)
     local expected_names = vim.tbl_keys(expected)

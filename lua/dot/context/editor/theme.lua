@@ -41,6 +41,7 @@ local integrations = {
   "basic",
   "lsp",
   "module",
+  "explorer",
   "nvimbar",
   "widget",
   "treesitter",

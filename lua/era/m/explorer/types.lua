@@ -68,7 +68,8 @@
 ---@field public resolve_root_alias     fun(self: era.m.explorer.resource.IManager, root_filepath: string, target_filepath: string): string|nil
 
 ---@class era.m.explorer.resource.INode
----@field public filepath                    string
+---@field public filepath               string
+---@field public is_link                boolean Whether this entry itself is a symbolic link
 ---@field public nodename               string
 ---@field public nodetype               era.m.explorer.NodeTypeEnum
 
@@ -92,6 +93,7 @@
 ---@field public highlight              stl.t.IHighlight
 ---@field public icon                   string
 ---@field public is_ignored             boolean
+---@field public link_highlight         ?stl.t.IHighlight
 ---@field public lnum                   integer
 ---@field public name_highlight         stl.t.IHighlight
 ---@field public nodename               string

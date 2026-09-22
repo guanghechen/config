@@ -7,6 +7,7 @@ local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
 local INDENT_PIPE = "│ " ---@type string
 local INDENT_SPACE = "  " ---@type string
+local LINK_MARKER = " " ---@type string
 local EMPTY_CHILDREN = {} ---@type era.m.explorer.Node[]
 
 -- Virtual text IDs start at 1M to avoid collision with extmark IDs (typically small integers).
@@ -133,6 +134,8 @@ function M:render(bufnr, tree, root, options)
     children = children,
     can_fold = ctx.foldempty and function(parent, child)
       return child.nodetype == "D"
+        and not parent.is_link
+        and not child.is_link
         and #parent.children == 1
         and not parent.selected
         and (pending_transfer == nil or not pending_transfer.source_filepaths[parent.filepath])
@@ -368,6 +371,10 @@ function M:update_file_icons(bufnr, render_result, index_start, index_end)
       info.highlight.hlname = hlname
       info.name_highlight.coll = info.name_highlight.coll + delta
       info.name_highlight.colr = info.name_highlight.colr + delta
+      if info.link_highlight ~= nil then
+        info.link_highlight.coll = info.link_highlight.coll + delta
+        info.link_highlight.colr = info.link_highlight.colr + delta
+      end
 
       vim.api.nvim_buf_clear_namespace(bufnr, self._file_icon_nsnr, row, row + 1)
       vim.api.nvim_buf_set_extmark(bufnr, self._file_icon_nsnr, row, coll, {
@@ -783,11 +790,30 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded)
   } ---@type stl.t.IHighlight
   highlights[#highlights + 1] = name_highlight
 
+  local link_highlight = nil ---@type stl.t.IHighlight|nil
+  if node.is_link then
+    local link_hl = "m_ex_symlink" ---@type string
+    if is_ignored then
+      link_hl = "m_ex_symlink_ignored"
+    elseif git_hl ~= nil then
+      link_hl = git_hl:gsub("^m_ft_git_", "m_ex_symlink_")
+    end
+    parts[#parts + 1] = LINK_MARKER
+    link_highlight = {
+      lnum = lnum,
+      coll = name_highlight.colr,
+      colr = name_highlight.colr + #LINK_MARKER,
+      hlname = link_hl,
+    }
+    highlights[#highlights + 1] = link_highlight
+  end
+
   if defer_file_icon and icon ~= nil and icon_highlight ~= nil then
     ctx.deferred_file_icons[#ctx.deferred_file_icons + 1] = {
       highlight = icon_highlight,
       icon = icon,
       is_ignored = is_ignored,
+      link_highlight = link_highlight,
       lnum = lnum,
       name_highlight = name_highlight,
       nodename = node.nodename,
