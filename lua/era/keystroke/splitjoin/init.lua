@@ -1,38 +1,38 @@
 ---@see https://github.com/nvim-mini/mini.splitjoin
 
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.splitjoin" ---@type string
+local __module_name__ = "era.keystroke.splitjoin" ---@type string
 
----@class era.m.splitjoin.IPosition
+---@class era.keystroke.splitjoin.IPosition
 ---@field public row                    integer
 ---@field public col                    integer
 
----@class era.m.splitjoin.IRegion
----@field public from                   era.m.splitjoin.IPosition
----@field public to                     era.m.splitjoin.IPosition
+---@class era.keystroke.splitjoin.IRegion
+---@field public from                   era.keystroke.splitjoin.IPosition
+---@field public to                     era.keystroke.splitjoin.IPosition
 
----@class era.m.splitjoin
+---@class era.keystroke.splitjoin
 local M = {}
 
 local initialized = false ---@type boolean
 
----@return era.m.splitjoin.action
+---@return era.keystroke.splitjoin.action
 local function get_action()
-  return require("era.m.splitjoin.action")
+  return require("era.keystroke.splitjoin.action")
 end
 
----@return era.m.splitjoin.IRegion
+---@return era.keystroke.splitjoin.IRegion
 function M.get_visual_region()
   return get_action().get_visual_region()
 end
 
----@param specified                    era.m.splitjoin.IRegion|string|nil
+---@param specified                     era.keystroke.splitjoin.IRegion|string|nil
 ---@return nil
 function M.split(specified)
   get_action().split(specified)
 end
 
----@param specified                    era.m.splitjoin.IRegion|string|nil
+---@param specified                     era.keystroke.splitjoin.IRegion|string|nil
 ---@return nil
 function M.join(specified)
   get_action().join(specified)
@@ -45,7 +45,7 @@ local function make_operator(task)
     if not get_action().is_available(vim.api.nvim_get_current_buf()) then
       return "<Esc>"
     end
-    vim.api.nvim_set_option_value("operatorfunc", "v:lua.era.m.splitjoin." .. task, { scope = "global" })
+    vim.api.nvim_set_option_value("operatorfunc", "v:lua.era.keystroke.splitjoin." .. task, { scope = "global" })
     return "g@ "
   end
 end
@@ -70,7 +70,7 @@ function M.setup()
       modes = { "x" },
       key = "gS",
       desc = "splitjoin: split",
-      callback = ":<C-u>lua era.m.splitjoin.split(era.m.splitjoin.get_visual_region())<CR>",
+      callback = ":<C-u>lua era.keystroke.splitjoin.split(era.keystroke.splitjoin.get_visual_region())<CR>",
     },
     {
       modes = { "n" },
@@ -83,7 +83,7 @@ function M.setup()
       modes = { "x" },
       key = "gJ",
       desc = "splitjoin: join",
-      callback = ":<C-u>lua era.m.splitjoin.join(era.m.splitjoin.get_visual_region())<CR>",
+      callback = ":<C-u>lua era.keystroke.splitjoin.join(era.keystroke.splitjoin.get_visual_region())<CR>",
     },
   }
   stl.nvim.fn.bindkeys(keymaps, { noremap = true, silent = true })

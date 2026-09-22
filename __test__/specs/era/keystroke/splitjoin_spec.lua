@@ -1,10 +1,10 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/splitjoin_spec.lua
+--- Run with: nvim -l __test__/run.lua __test__/specs/era/keystroke/splitjoin_spec.lua
 ---@diagnostic disable: undefined-global
 
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.splitjoin")
+local t = harness.new("era.keystroke.splitjoin")
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -13,12 +13,11 @@ bootstrap.with_runtime(t, {
     },
   },
   era = {
-    m = {},
+    keystroke = require("era.keystroke"),
   },
 })
 
-local Splitjoin = require("era.m.splitjoin")
-era.m.splitjoin = Splitjoin
+local Splitjoin = era.keystroke.splitjoin
 Splitjoin.setup()
 
 ---@param lines                         string[]
@@ -63,7 +62,7 @@ local function assert_lines(expected, bufnr, message)
 end
 
 t:test("setup keeps action implementation lazy", function()
-  t.assert_nil(package.loaded["era.m.splitjoin.action"], "action loaded during setup")
+  t.assert_nil(package.loaded["era.keystroke.splitjoin.action"], "action loaded during setup")
 end)
 
 t:test("split resolves the smallest bracket region", function()

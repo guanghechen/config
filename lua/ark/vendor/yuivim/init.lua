@@ -13,6 +13,6 @@ pcall(require, "ark.vendor.local.keymap")
 era.dressing.setup({ "im" })
 
 vim.schedule(function()
-  era.m.splitjoin.setup()
+  era.keystroke.splitjoin.setup()
   era.m.surrounds.setup()
 end)

@@ -53,7 +53,7 @@ vim.schedule(function()
   era.m.select.dressing()
   era.m.image.dressing()
   era.m.paste.dressing()
-  era.m.splitjoin.setup()
+  era.keystroke.splitjoin.setup()
   era.m.surrounds.setup()
   era.m.textobject.setup()
 

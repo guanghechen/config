@@ -15,7 +15,7 @@ pcall(require, "ark.vendor.local.plugin")
 vim.schedule(function()
   era.dressing.setup({ "commentstring" })
 
-  era.m.splitjoin.setup()
+  era.keystroke.splitjoin.setup()
   era.m.surrounds.setup()
 
   pcall(require, "ark.vendor.local.dressing")

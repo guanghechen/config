@@ -39,9 +39,10 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
         end
       end
     end)
-    for _, name in ipairs({ "input", "lsp", "select", "image", "paste", "splitjoin", "textobject" }) do
+    for _, name in ipairs({ "input", "lsp", "select", "image", "paste", "textobject" }) do
       t:patch_table(era.m, name, { dressing = function() end, setup = function() end })
     end
+    t:patch_table(era.keystroke, "splitjoin", { setup = function() end })
     local original_require = require
     t:patch_global("require", function(name)
       if name:match("^ark%.vendor%.") or name == "dot.autocmd" or name == "era.command" or name == "era.plugin" then

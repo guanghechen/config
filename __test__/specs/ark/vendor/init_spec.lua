@@ -80,7 +80,7 @@ t:test("Yuivim starts the real minimal profile without taking over host features
   t.assert_true(package.loaded["ark.vendor.yuivim.keymap"], "Yuivim keymaps loaded")
   t.assert_nil(package.loaded["ark.vendor.yozvim.option"], "Yozvim options remain independent")
   t.assert_nil(package.loaded["ark.vendor.yozvim.keymap"], "Yozvim keymaps remain independent")
-  t.assert_true(package.loaded["era.m.splitjoin"], "splitjoin retained")
+  t.assert_true(package.loaded["era.keystroke.splitjoin"], "splitjoin retained")
   t.assert_nil(vim.g.yozvim, "Yuivim does not impersonate Yozvim")
   local dressing_names = vim.tbl_keys(era.dressing.get_load_times())
   table.sort(dressing_names)

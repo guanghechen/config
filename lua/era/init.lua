@@ -100,7 +100,6 @@ local __m__mods = {
   searcher = "era.m.searcher",
   select = "era.m.select",
   splitline = "era.m.splitline",
-  splitjoin = "era.m.splitjoin",
   surrounds = "era.m.surrounds",
   term = "era.m.term",
   textobject = "era.m.textobject",
@@ -133,7 +132,6 @@ local __m__mods = {
 ---@field public searcher               era.m.searcher
 ---@field public select                 era.m.select
 ---@field public splitline              era.m.splitline
----@field public splitjoin              era.m.splitjoin
 ---@field public surrounds              era.m.surrounds
 ---@field public term                   era.m.term
 ---@field public textobject             era.m.textobject
@@ -248,6 +246,7 @@ local widget = setmetatable({
 ---@class era
 ---@field public dressing               era.dressing
 ---@field public fn                     era.fn
+---@field public keystroke              era.keystroke
 ---@field public m                      era.m
 ---@field public nvim                   era.nvim
 ---@field public view                   era.view
@@ -255,6 +254,7 @@ local widget = setmetatable({
 local M = {
   dressing = require("era.dressing"),
   fn = fn,
+  keystroke = require("era.keystroke"),
   m = m,
   nvim = nvim,
   view = view,

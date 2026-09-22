@@ -23,21 +23,21 @@
 --- SOFTWARE.
 
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.splitjoin.action" ---@type string
+local __module_name__ = "era.keystroke.splitjoin.action" ---@type string
 
----@class era.m.splitjoin.INeighborhood
+---@class era.keystroke.splitjoin.INeighborhood
 ---@field public text                   string
 ---@field public lines                  string[]
 ---@field public line_offsets           integer[]
 
----@class era.m.splitjoin.ISpan
+---@class era.keystroke.splitjoin.ISpan
 ---@field public from                   integer
 ---@field public to                     integer
 
----@class era.m.splitjoin.action
+---@class era.keystroke.splitjoin.action
 local M = {}
 
-local namespace = vim.api.nvim_create_namespace("era.m.splitjoin") ---@type integer
+local namespace = vim.api.nvim_create_namespace("era.keystroke.splitjoin") ---@type integer
 
 local BRACKET_PAIRS = {
   ["("] = ")",
@@ -77,7 +77,7 @@ end
 
 ---@param text                          string
 ---@param reference_offset              integer
----@return era.m.splitjoin.ISpan|nil
+---@return era.keystroke.splitjoin.ISpan|nil
 local function find_region(text, reference_offset)
   if reference_offset < 1 or reference_offset > #text then
     return nil
@@ -116,7 +116,7 @@ local function find_region(text, reference_offset)
 end
 
 ---@param text                          string
----@param region                        era.m.splitjoin.ISpan
+---@param region                        era.keystroke.splitjoin.ISpan
 ---@return integer[]
 local function find_separators(text, region)
   local left = text:sub(region.from, region.from) ---@type string
@@ -169,7 +169,7 @@ function M.is_available(bufnr)
 end
 
 ---@param bufnr                         integer
----@return era.m.splitjoin.INeighborhood
+---@return era.keystroke.splitjoin.INeighborhood
 local function get_neighborhood(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
   local line_offsets = {} ---@type integer[]
@@ -185,16 +185,16 @@ local function get_neighborhood(bufnr)
   }
 end
 
----@param neighborhood                  era.m.splitjoin.INeighborhood
----@param position                      era.m.splitjoin.IPosition
+---@param neighborhood                  era.keystroke.splitjoin.INeighborhood
+---@param position                      era.keystroke.splitjoin.IPosition
 ---@return integer
 local function position_to_offset(neighborhood, position)
   return neighborhood.line_offsets[position.row + 1] + position.col + 1
 end
 
----@param neighborhood                  era.m.splitjoin.INeighborhood
+---@param neighborhood                  era.keystroke.splitjoin.INeighborhood
 ---@param offset                        integer
----@return era.m.splitjoin.IPosition
+---@return era.keystroke.splitjoin.IPosition
 local function offset_to_position(neighborhood, offset)
   local left = 1 ---@type integer
   local right = #neighborhood.line_offsets ---@type integer
@@ -213,7 +213,7 @@ local function offset_to_position(neighborhood, offset)
 end
 
 ---@param bufnr                         integer
----@param position                      era.m.splitjoin.IPosition
+---@param position                      era.keystroke.splitjoin.IPosition
 ---@return string
 local function get_char(bufnr, position)
   local line = vim.api.nvim_buf_get_lines(bufnr, position.row, position.row + 1, true)[1] or "" ---@type string
@@ -221,7 +221,7 @@ local function get_char(bufnr, position)
 end
 
 ---@param bufnr                         integer
----@param region                        era.m.splitjoin.IRegion
+---@param region                        era.keystroke.splitjoin.IRegion
 ---@return boolean
 local function is_valid_region(bufnr, region)
   if region.from.row > region.to.row or (region.from.row == region.to.row and region.from.col >= region.to.col) then
@@ -231,10 +231,10 @@ local function is_valid_region(bufnr, region)
 end
 
 ---@param bufnr                         integer
----@param specified                     era.m.splitjoin.IRegion|nil
----@param reference                     era.m.splitjoin.IPosition|nil
----@param neighborhood                  era.m.splitjoin.INeighborhood|nil
----@return era.m.splitjoin.IRegion|nil, era.m.splitjoin.INeighborhood|nil
+---@param specified                     era.keystroke.splitjoin.IRegion|nil
+---@param reference                     era.keystroke.splitjoin.IPosition|nil
+---@param neighborhood                  era.keystroke.splitjoin.INeighborhood|nil
+---@return era.keystroke.splitjoin.IRegion|nil, era.keystroke.splitjoin.INeighborhood|nil
 local function resolve_region(bufnr, specified, reference, neighborhood)
   if specified ~= nil then
     if not is_valid_region(bufnr, specified) then
@@ -253,12 +253,12 @@ local function resolve_region(bufnr, specified, reference, neighborhood)
     reference = { row = cursor[1] - 1, col = cursor[2] }
   end
   local reference_offset = position_to_offset(neighborhood, reference) ---@type integer
-  local span = find_region(neighborhood.text, reference_offset) ---@type era.m.splitjoin.ISpan|nil
+  local span = find_region(neighborhood.text, reference_offset) ---@type era.keystroke.splitjoin.ISpan|nil
   if span == nil then
     return nil, neighborhood
   end
 
-  ---@type era.m.splitjoin.IRegion
+  ---@type era.keystroke.splitjoin.IRegion
   local region = {
     from = offset_to_position(neighborhood, span.from),
     to = offset_to_position(neighborhood, span.to),
@@ -371,7 +371,7 @@ local function increase_indent(bufnr, from_row, to_row, leaders)
 end
 
 ---@param bufnr                         integer
----@param position                      era.m.splitjoin.IPosition
+---@param position                      era.keystroke.splitjoin.IPosition
 ---@return integer
 local function put_extmark(bufnr, position)
   return vim.api.nvim_buf_set_extmark(bufnr, namespace, position.row, position.col, {})
@@ -379,14 +379,14 @@ end
 
 ---@param bufnr                         integer
 ---@param extmark                       integer
----@return era.m.splitjoin.IPosition
+---@return era.keystroke.splitjoin.IPosition
 local function get_extmark(bufnr, extmark)
   local position = vim.api.nvim_buf_get_extmark_by_id(bufnr, namespace, extmark, {}) ---@type integer[]
   return { row = position[1], col = position[2] }
 end
 
 ---@param bufnr                         integer
----@param positions                     era.m.splitjoin.IPosition[]
+---@param positions                     era.keystroke.splitjoin.IPosition[]
 ---@param mutate                        fun(extmarks: integer[]): nil
 ---@return nil
 local function mutate_tracked(bufnr, positions, mutate)
@@ -399,7 +399,7 @@ local function mutate_tracked(bufnr, positions, mutate)
   end
 
   local ok, err = pcall(mutate, extmarks)
-  local cursor_position = get_extmark(bufnr, cursor_extmark) ---@type era.m.splitjoin.IPosition
+  local cursor_position = get_extmark(bufnr, cursor_extmark) ---@type era.keystroke.splitjoin.IPosition
   vim.api.nvim_buf_clear_namespace(bufnr, namespace, 0, -1)
   vim.api.nvim_win_set_cursor(winnr, { cursor_position.row + 1, cursor_position.col })
   if not ok then
@@ -412,7 +412,7 @@ end
 ---@param leaders                       string[]
 ---@return nil
 local function split_at_extmark(bufnr, extmark, leaders)
-  local position = get_extmark(bufnr, extmark) ---@type era.m.splitjoin.IPosition
+  local position = get_extmark(bufnr, extmark) ---@type era.keystroke.splitjoin.IPosition
   vim.api.nvim_buf_set_text(bufnr, position.row, position.col + 1, position.row, position.col + 1, { "", "" })
 
   local split_line = vim.api.nvim_buf_get_lines(bufnr, position.row, position.row + 1, true)[1] ---@type string
@@ -426,17 +426,17 @@ local function split_at_extmark(bufnr, extmark, leaders)
 end
 
 ---@param bufnr                         integer
----@param region                        era.m.splitjoin.IRegion
----@param neighborhood                  era.m.splitjoin.INeighborhood|nil
+---@param region                        era.keystroke.splitjoin.IRegion
+---@param neighborhood                  era.keystroke.splitjoin.INeighborhood|nil
 ---@return nil
 local function split_region(bufnr, region, neighborhood)
   neighborhood = neighborhood or get_neighborhood(bufnr)
-  ---@type era.m.splitjoin.ISpan
+  ---@type era.keystroke.splitjoin.ISpan
   local span = {
     from = position_to_offset(neighborhood, region.from),
     to = position_to_offset(neighborhood, region.to),
   }
-  local positions = {} ---@type era.m.splitjoin.IPosition[]
+  local positions = {} ---@type era.keystroke.splitjoin.IPosition[]
   if span.to - span.from > 1 then
     positions[#positions + 1] = region.from
   end
@@ -450,8 +450,8 @@ local function split_region(bufnr, region, neighborhood)
     for _, extmark in ipairs(extmarks) do
       split_at_extmark(bufnr, extmark, leaders)
     end
-    local first = get_extmark(bufnr, extmarks[1]) ---@type era.m.splitjoin.IPosition
-    local last = get_extmark(bufnr, extmarks[#extmarks]) ---@type era.m.splitjoin.IPosition
+    local first = get_extmark(bufnr, extmarks[1]) ---@type era.keystroke.splitjoin.IPosition
+    local last = get_extmark(bufnr, extmarks[#extmarks]) ---@type era.keystroke.splitjoin.IPosition
     increase_indent(bufnr, first.row + 1, last.row, leaders)
   end)
 end
@@ -462,7 +462,7 @@ end
 ---@param leaders                       string[]
 ---@return nil
 local function join_at_extmark(bufnr, extmark, pad, leaders)
-  local position = get_extmark(bufnr, extmark) ---@type era.m.splitjoin.IPosition
+  local position = get_extmark(bufnr, extmark) ---@type era.keystroke.splitjoin.IPosition
   if position.row + 1 >= vim.api.nvim_buf_line_count(bufnr) then
     return
   end
@@ -475,14 +475,14 @@ local function join_at_extmark(bufnr, extmark, pad, leaders)
 end
 
 ---@param bufnr                         integer
----@param region                        era.m.splitjoin.IRegion
+---@param region                        era.keystroke.splitjoin.IRegion
 ---@return boolean
 local function join_region(bufnr, region)
   if region.from.row == region.to.row then
     return false
   end
 
-  local positions = {} ---@type era.m.splitjoin.IPosition[]
+  local positions = {} ---@type era.keystroke.splitjoin.IPosition[]
   local lines = vim.api.nvim_buf_get_lines(bufnr, region.from.row, region.to.row, true) ---@type string[]
   for index, line in ipairs(lines) do
     positions[#positions + 1] = { row = region.from.row + index - 1, col = #line }
@@ -498,13 +498,13 @@ local function join_region(bufnr, region)
   return true
 end
 
----@return era.m.splitjoin.IRegion
+---@return era.keystroke.splitjoin.IRegion
 function M.get_visual_region()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local from = vim.api.nvim_buf_get_mark(bufnr, "<") ---@type [integer, integer]
   local to = vim.api.nvim_buf_get_mark(bufnr, ">") ---@type [integer, integer]
-  local from_position = { row = from[1] - 1, col = from[2] } ---@type era.m.splitjoin.IPosition
-  local to_position = { row = to[1] - 1, col = to[2] } ---@type era.m.splitjoin.IPosition
+  local from_position = { row = from[1] - 1, col = from[2] } ---@type era.keystroke.splitjoin.IPosition
+  local to_position = { row = to[1] - 1, col = to[2] } ---@type era.keystroke.splitjoin.IPosition
   if vim.fn.visualmode() == "V" then
     from_position.col = 0
     local line = vim.api.nvim_buf_get_lines(bufnr, to_position.row, to_position.row + 1, true)[1] or "" ---@type string
@@ -513,7 +513,7 @@ function M.get_visual_region()
   return { from = from_position, to = to_position }
 end
 
----@param specified                    era.m.splitjoin.IRegion|string|nil
+---@param specified                     era.keystroke.splitjoin.IRegion|string|nil
 ---@return nil
 function M.split(specified)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
@@ -534,7 +534,7 @@ function M.split(specified)
   split_region(bufnr, region, neighborhood)
 end
 
----@param specified                    era.m.splitjoin.IRegion|string|nil
+---@param specified                     era.keystroke.splitjoin.IRegion|string|nil
 ---@return nil
 function M.join(specified)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
