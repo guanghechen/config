@@ -48,15 +48,14 @@ if (Test-NpmPackageInstalled tree-sitter-cli) {
   }
 }
 
-## Setup agents
-foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli")) {
-  if (Test-NpmPackageInstalled "$pkg") {
-    Write-Host "$pkg is already installed (skipped)" -ForegroundColor Yellow
-  } else {
-    Write-Host "installing $pkg..." -ForegroundColor Cyan
-    npm install -g $pkg
-    if ($LASTEXITCODE -ne 0) {
-      throw "[setup node] failed to install $pkg (exit code: $LASTEXITCODE)."
-    }
-  }
-}
+## Optional coding agents (disabled by default)
+# Uncomment individual commands to install or update to the latest version globally.
+
+## Claude Code
+# npm install -g "@anthropic-ai/claude-code@latest"
+
+## Gemini CLI
+# npm install -g "@google/gemini-cli@latest"
+
+## OpenCode
+# npm install -g "opencode-ai@latest"

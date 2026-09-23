@@ -12,12 +12,14 @@ fi
 fnm use "$GHC_APP_EDITION_NODE"
 fnm default "$GHC_APP_EDITION_NODE"
 
-## Setup agents
-for pkg in @anthropic-ai/claude-code @google/gemini-cli; do
-  if npm list -g "$pkg" &>/dev/null; then
-    printf "\e[93m%s is already installed (skipped)\e[0m\n" "$pkg"
-  else
-    printf "\e[96minstalling %s...\e[0m\n" "$pkg"
-    npm install -g "$pkg"
-  fi
-done
+## Optional coding agents (disabled by default)
+# Uncomment individual commands to install or update to the latest version globally.
+
+## Claude Code
+# npm install -g @anthropic-ai/claude-code@latest
+
+## Gemini CLI
+# npm install -g @google/gemini-cli@latest
+
+## OpenCode
+# npm install -g opencode-ai@latest
