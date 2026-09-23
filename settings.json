@@ -1,10 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "cleanupPeriodDays": 20,
+  "autoCompactWindow": 936000,
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "85",
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "936000",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
   },
@@ -13,6 +13,11 @@
     "pr": ""
   },
   "permissions": {
+    "ask": [
+      "Bash(git rebase *)",
+      "Bash(git reset *)",
+      "Bash(git revert *)"
+    ],
     "deny": [
       "Read(//**/*.http_request)",
       "Read(//**/*.http_response)",
@@ -20,6 +25,8 @@
       "Read(//**/.git-credentials)",
       "Read(//**/.ssh/**)",
       "Read(//**/local/env.*)",
+      "Read(//**/local/config.fish)",
+      "Read(//**/local/config.ps1)",
       "Read(//**/.credentials/**)",
       "Edit(//**/*.http_request)",
       "Edit(//**/*.http_response)",
@@ -27,17 +34,20 @@
       "Edit(//**/.git-credentials)",
       "Edit(//**/.ssh/**)",
       "Edit(//**/local/env.*)",
+      "Edit(//**/local/config.fish)",
+      "Edit(//**/local/config.ps1)",
       "Edit(//**/.credentials/**)"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Read|Write|Edit|MultiEdit|NotebookEdit",
+        "matcher": "Read|Write|Edit|NotebookEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-tool-use.mjs').href)\""
+            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-tool-use.mjs').href)\"",
+            "timeout": 10
           }
         ]
       },
@@ -46,11 +56,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-sensitive.mjs').href)\""
+            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-sensitive.mjs').href)\"",
+            "timeout": 10
           },
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-git.mjs').href)\""
+            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-git.mjs').href)\"",
+            "timeout": 10
           }
         ]
       },
@@ -70,7 +82,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\""
+            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
+            "timeout": 10
           }
         ]
       }
@@ -91,7 +104,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\""
+            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
+            "timeout": 10
           }
         ]
       }
@@ -109,8 +123,12 @@
     "ralph-loop@claude-plugins-official": false,
     "context7@claude-plugins-official": false
   },
-  "alwaysThinkingEnabled": true,
   "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
   "includeGitInstructions": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
