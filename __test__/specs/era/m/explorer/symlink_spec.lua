@@ -87,7 +87,31 @@ local function render(f, show_icons)
   })
 end
 
-t:test("file, directory and dangling links render suffix markers without file icons", function()
+---@param f                             __test__.explorer.ISymlinkFixture
+---@param lnum                          integer
+---@return table
+local function decoration(f, lnum)
+  for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(f.bufnr, f.view:get_namespace(), 0, -1, { details = true })) do
+    if mark[2] == lnum - 1 and mark[4].virt_text ~= nil then
+      return mark[4]
+    end
+  end
+  error("missing right-side decoration")
+end
+
+---@param f                             __test__.explorer.ISymlinkFixture
+---@param lnum                          integer
+---@return boolean
+local function has_link_marker(f, lnum)
+  for _, chunk in ipairs(decoration(f, lnum).virt_text) do
+    if chunk[1] == "  " then
+      return true
+    end
+  end
+  return false
+end
+
+t:test("file, directory and dangling links render right-aligned markers without file icons", function()
   local f = fixture()
   local result = render(f)
   for _, case in ipairs({
@@ -102,7 +126,9 @@ t:test("file, directory and dangling links render suffix markers without file ic
     t.assert_eq(case.kind, node.nodetype, case.path .. " interaction type")
     t.assert_eq(case.link, node.is_link, case.path .. " resource identity")
     local lnum = assert(result.layout:lnum(filepath))
-    t.assert_eq(case.link, result.lines[lnum]:sub(-#" ") == " ", case.path .. " visible suffix")
+    t.assert_false(result.lines[lnum]:find("", 1, true) ~= nil, case.path .. " name has no suffix")
+    t.assert_eq(case.link, has_link_marker(f, lnum), case.path .. " visible marker")
+    t.assert_eq("right_align", decoration(f, lnum).virt_text_pos, case.path .. " marker alignment")
   end
   t.assert_false(assert(f.manager:locate(f.root .. "/dir-link/nested/file.lua")).is_link, "plain linked descendant")
   t.assert_nil(f.manager:locate(f.root .. "/missing"), "missing target remains absent")
@@ -137,10 +163,10 @@ t:test("empty-directory folding keeps the link entry separate from its parent an
     local lnum = assert(result.layout:lnum(filepath))
     t.assert_eq(filepath, result.layout:id(lnum), "link remains the displayed node")
     t.assert_nil(result.layout:folded_ids(lnum), "link has its own row")
-    t.assert_true(result.lines[lnum]:sub(-#" ") == " ", "expanded link suffix")
+    t.assert_true(has_link_marker(f, lnum), "expanded link marker")
     local child_lnum = assert(result.layout:lnum(filepath .. "nested/"))
     t.assert_true(child_lnum ~= lnum, "child stays on a separate row")
-    t.assert_false(result.lines[child_lnum]:sub(-#" ") == " ", "child does not inherit link identity")
+    t.assert_false(has_link_marker(f, child_lnum), "child does not inherit link identity")
   end
   local parent_lnum = assert(result.layout:lnum(f.root .. "/container/"))
   t.assert_eq(f.root .. "/container/", result.layout:id(parent_lnum), "ordinary parent remains separate")
@@ -179,7 +205,7 @@ t:test("refresh detects same-name and same-type replacements in both directions"
     t.assert_true(node == f.tree:locate(filepath), "same-type replacement preserves node identity")
     local result = render(f)
     local lnum = assert(result.layout:lnum(filepath))
-    t.assert_false(result.lines[lnum]:sub(-#" ") == " ", "regular replacement loses marker")
+    t.assert_false(has_link_marker(f, lnum), "regular replacement loses marker")
 
     if case.directory then
       assert(vim.uv.fs_rmdir(to_os(path)))
@@ -191,7 +217,7 @@ t:test("refresh detects same-name and same-type replacements in both directions"
     f.tree:refresh(false)
     result = render(f)
     lnum = assert(result.layout:lnum(filepath))
-    t.assert_true(result.lines[lnum]:sub(-#" ") == " ", "recreated link regains marker")
+    t.assert_true(has_link_marker(f, lnum), "recreated link regains marker")
   end
 end)
 
@@ -207,10 +233,10 @@ t:test("dangling directory links survive refresh as their targets appear and dis
   local filepath = f.root .. "/broken-link"
   t.assert_eq("F", assert(f.tree:locate(filepath)).nodetype, "dangling link returns to a file leaf")
   local lnum = assert(result.layout:lnum(filepath))
-  t.assert_true(result.lines[lnum]:sub(-#" ") == " ", "dangling link keeps its marker")
+  t.assert_true(has_link_marker(f, lnum), "dangling link keeps its marker")
 end)
 
-t:test("deferred icons keep link markers and their highlight ranges intact", function()
+t:test("deferred icons preserve right-side link markers and name highlight ranges", function()
   local f = fixture()
   t:patch_table(stl, "fileicon", {
     get_directory_icon = function()
@@ -230,34 +256,38 @@ t:test("deferred icons keep link markers and their highlight ranges intact", fun
     local lnum = assert(result.layout:lnum(f.root .. "/file-link.lua"))
     local line = vim.api.nvim_buf_get_lines(f.bufnr, lnum - 1, lnum, false)[1]
     t.assert_eq(result.lines[lnum], line, "buffer and result stay aligned")
-    t.assert_true(line:find(" file-link.lua ", 1, true) ~= nil, "suffix and exact icon remain visible")
+    t.assert_true(line:find(" file-link.lua", 1, true) ~= nil, "exact icon remains visible")
+    t.assert_false(line:find("", 1, true) ~= nil, "link marker stays out of the name")
+    local chunks = decoration(f, lnum).virt_text
+    t.assert_eq("  ", chunks[1][1], "marker retains its padding")
+    t.assert_eq(link_hl, chunks[1][2], "marker retains its status tint")
 
-    local marker_highlight = nil ---@type stl.t.IHighlight|nil
-    for _, highlight in ipairs(result.highlights) do
-      if highlight.lnum == lnum and highlight.hlname == link_hl then
-        marker_highlight = highlight
-        break
-      end
-    end
-    assert(marker_highlight, "link marker has an independent highlight")
-    t.assert_eq(" ", line:sub(marker_highlight.coll + 1, marker_highlight.colr), "suffix range follows the icon")
-
-    local marker_found = false
     local name_found = false
     for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(f.bufnr, f.view:get_namespace(), 0, -1, { details = true })) do
       if mark[2] == lnum - 1 and mark[4].end_col ~= nil then
         local text = line:sub(mark[3] + 1, mark[4].end_col)
-        if text == " " then
-          marker_found = true
-          t.assert_eq(link_hl, mark[4].hl_group, "marker retains its status tint")
-        elseif text == "file-link.lua" then
+        if text == "file-link.lua" then
           name_found = true
           t.assert_eq(ignored and "m_ex_ignored" or "m_ft_filename", mark[4].hl_group, "name highlight")
         end
       end
     end
-    t.assert_true(marker_found, "separate marker range")
     t.assert_true(name_found, "name range follows the changed icon width")
+  end
+end)
+
+t:test("link padding shares focused and inactive cursor backgrounds without losing its tint", function()
+  local f = fixture()
+  local result = render(f)
+  local lnum = assert(result.layout:lnum(f.root .. "/file-link.lua"))
+  for _, cursorline_hl in ipairs({ "m_ex_cursorline", "m_ex_cursorline_blur", false }) do
+    f.view:update_virt_text(f.bufnr, result, lnum, cursorline_hl or nil)
+    local chunks = decoration(f, lnum).virt_text
+    t.assert_eq("  ", chunks[1][1], "trailing cell stays in the same highlight chunk")
+    t.assert_true(
+      vim.deep_equal(cursorline_hl and { cursorline_hl, "m_ex_symlink" } or "m_ex_symlink", chunks[1][2]),
+      "cursor background is combined with the link tint"
+    )
   end
 end)
 

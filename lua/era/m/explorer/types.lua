@@ -93,7 +93,6 @@
 ---@field public highlight              stl.t.IHighlight
 ---@field public icon                   string
 ---@field public is_ignored             boolean
----@field public link_highlight         ?stl.t.IHighlight
 ---@field public lnum                   integer
 ---@field public name_highlight         stl.t.IHighlight
 ---@field public nodename               string
@@ -132,6 +131,7 @@
 ---@field public highlights             stl.t.IHighlight[]
 ---@field public layout                 stl.view.TreeLayout
 ---@field public lines                  string[]
+---@field public link_by_lnum           table<integer, string>
 ---@field public sign_by_lnum           table<integer, era.m.explorer.view.ISignInfo>
 ---@field public sign_info_list         era.m.explorer.view.ISignInfo[]
 

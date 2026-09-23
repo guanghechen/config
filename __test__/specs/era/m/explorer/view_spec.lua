@@ -154,7 +154,7 @@ t:test("render: selection and pending transfers use signs without overriding nam
   end)
   local children = {
     { filepath = "/project/src/", nodename = "src", nodetype = "D", selected = true, children = {} },
-    { filepath = "/project/main.lua", nodename = "main.lua", nodetype = "F", selected = true },
+    { filepath = "/project/main.lua", nodename = "main.lua", nodetype = "F", selected = true, is_link = true },
   }
   local root = {
     filepath = "/project/",
@@ -204,6 +204,22 @@ t:test("render: selection and pending transfers use signs without overriding nam
       t.assert_eq(2, #result.sign_info_list, "selection/transfer signs remain visible")
       for _, sign in ipairs(result.sign_info_list) do
         t.assert_eq(({ select = "S", copy = "C", move = "X" })[mode], sign.sign_text, mode .. " sign")
+      end
+      local lnum = assert(result.layout:lnum(children[2].filepath))
+      for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(bufnr, view:get_namespace(), 0, -1, { details = true })) do
+        if mark[2] == lnum - 1 and mark[4].virt_text ~= nil then
+          local chunks = mark[4].virt_text
+          t.assert_eq("right_align", mark[4].virt_text_pos, "shared status alignment")
+          t.assert_eq("  ", chunks[#chunks - 1][1], "link remains before selection/transfer")
+          t.assert_eq(
+            " " .. result.sign_by_lnum[lnum].sign_text,
+            chunks[#chunks][1],
+            "selection/transfer stays visible"
+          )
+          if status then
+            t.assert_eq(" M", chunks[1][1], "Git status remains before link")
+          end
+        end
       end
     end
     restore()
@@ -306,10 +322,10 @@ t:test("render node: link tint follows Git status independently of diagnostic na
         show_icons = false,
       }
       ---@diagnostic disable-next-line: invisible, param-type-mismatch
-      local line, highlights = view:__render_node__(ctx, node, "", 1, nil, false)
-      t.assert_eq("node ", line, case.name .. " suffix")
+      local line, highlights, _, _, link_hl = view:__render_node__(ctx, node, "", 1, nil, false)
+      t.assert_eq("node", line, case.name .. " name has no suffix")
       t.assert_eq(ignored and "m_ex_ignored" or "f_lsp_diagnostic_error", highlights[1].hlname, "name priority")
-      t.assert_eq(case.expected, highlights[2].hlname, kind .. "/" .. case.name .. " link tint")
+      t.assert_eq(case.expected, link_hl, kind .. "/" .. case.name .. " link tint")
       t.assert_eq(1, #lookups, "name and link share one Git lookup")
       t.assert_eq(node.filepath, lookups[1].filepath, "logical link path")
       t.assert_eq(kind == "D", lookups[1].directory, "directory status aggregation")

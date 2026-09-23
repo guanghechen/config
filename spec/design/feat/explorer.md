@@ -95,10 +95,12 @@ symlink 状态混色由各主题实现直接生成。
 
 ### Symlink 标识
 
-- 文件链接、目录链接和 dangling link 均在名称后显示独立的链环图标 ` `；关闭图标时仍显示。
+- 文件链接、目录链接和 dangling link 均在右侧状态区显示独立的软链接图标 `  `（`nf-oct-file_symlink_file`，`U+F481`）；关闭图标时仍显示。
+  右侧顺序为 LSP diagnostics、Git status、link、selection / transfer sign。软链接图标尾部保留一格留白，
+  图标与留白共同使用当前行背景，避免 Nerd Font 字形跨格时出现高亮断裂。
 - clean 标识使用 `m_ex_symlink` 的紫色强调色并加粗；存在 Git status 时使用 40% 紫色 + 60% 对应状态色。
   untracked、modified、added、ignored、deleted 等状态复用已有 Git 配色，ignored 优先；staged/unstaged
-  与冲突、删除的优先级沿用 Git status 的解析结果。名称继续遵守 Git/LSP 状态色优先级，LSP 不覆盖链环的 Git 混色。
+  与冲突、删除的优先级沿用 Git status 的解析结果。名称继续遵守 Git/LSP 状态色优先级，LSP 不覆盖软链接图标的 Git 混色。
 - `m_ex_symlink_*` 混色在主题加载时生成；View 复用名称渲染的 Git 查询结果选择高亮。
 - 目录链接仍可展开，dangling link 作为文件叶子显示。普通后代不继承祖先的 symlink 标识。
 - 空目录路径折叠不跨越 symlink 节点，使具体的链接 entry 始终占据独立一行。

@@ -7,7 +7,8 @@ local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
 local INDENT_PIPE = "│ " ---@type string
 local INDENT_SPACE = "  " ---@type string
-local LINK_MARKER = " " ---@type string
+-- Reserve the cell after the Nerd Font glyph for its visual overhang.
+local LINK_MARKER = "  " ---@type string
 local EMPTY_CHILDREN = {} ---@type era.m.explorer.Node[]
 
 -- Virtual text IDs start at 1M to avoid collision with extmark IDs (typically small integers).
@@ -79,6 +80,7 @@ function M:render(bufnr, tree, root, options)
   local diagnostic_info_list = {} ---@type era.m.explorer.view.IDiagnosticInfo[]
   local git_status_list = {} ---@type era.m.explorer.view.IGitStatusInfo[]
   local sign_info_list = {} ---@type era.m.explorer.view.ISignInfo[]
+  local link_by_lnum = {} ---@type table<integer, string>
   local indent_hln = self._indent_hln ---@type string
   local only_selected = ctx.only_selected ---@type boolean
 
@@ -189,10 +191,11 @@ function M:render(bufnr, tree, root, options)
       display_name = table.concat(names, "/")
     end
 
-    local line, line_highlights, git_info, diag_info =
+    local line, line_highlights, git_info, diag_info, link_hl =
       self:__render_node__(ctx, node, indent, lnum, display_name, node.expanded)
 
     lines[lnum] = line
+    link_by_lnum[lnum] = link_hl
 
     highlights[#highlights + 1] = {
       lnum = lnum,
@@ -269,43 +272,8 @@ function M:render(bufnr, tree, root, options)
     sign_by_lnum[sign_info.lnum] = sign_info
   end
 
-  local total_lines = #lines ---@type integer
-  for lnum_key = 1, total_lines do
-    local virt_text = {} ---@type string[][]
-
-    local diag_info = diag_by_lnum[lnum_key] ---@type era.m.explorer.view.IDiagnosticInfo|nil
-    if diag_info ~= nil then
-      for _, hl in ipairs(diag_info.highlights) do
-        local text = diag_info.text:sub(hl.coll + 1, hl.colr) ---@type string
-        virt_text[#virt_text + 1] = { text, hl.hlname }
-      end
-    end
-
-    local git_info = git_by_lnum[lnum_key] ---@type era.m.explorer.view.IGitStatusInfo|nil
-    if git_info ~= nil then
-      for _, hl in ipairs(git_info.highlights) do
-        local text = git_info.text:sub(hl.coll + 1, hl.colr) ---@type string
-        virt_text[#virt_text + 1] = { text, hl.hlname }
-      end
-    end
-
-    local sign_info = sign_by_lnum[lnum_key] ---@type era.m.explorer.view.ISignInfo|nil
-    if sign_info ~= nil then
-      virt_text[#virt_text + 1] = { " " .. sign_info.sign_text, sign_info.sign_hl_group }
-    else
-      virt_text[#virt_text + 1] = { "  " }
-    end
-
-    vim.api.nvim_buf_set_extmark(bufnr, self._nsnr, lnum_key - 1, 0, {
-      id = VIRT_TEXT_ID_OFFSET + lnum_key,
-      virt_text = virt_text,
-      virt_text_pos = "right_align",
-      priority = 10,
-    })
-  end
-
   ---@type era.m.explorer.view.IRenderResult
-  return {
+  local result = {
     deferred_file_icons = deferred_file_icons,
     lines = lines,
     highlights = highlights,
@@ -316,7 +284,12 @@ function M:render(bufnr, tree, root, options)
     diag_by_lnum = diag_by_lnum,
     git_by_lnum = git_by_lnum,
     sign_by_lnum = sign_by_lnum,
+    link_by_lnum = link_by_lnum,
   }
+  for lnum = 1, #lines do
+    self:update_virt_text(bufnr, result, lnum)
+  end
+  return result
 end
 
 ---@param bufnr                         integer
@@ -371,10 +344,6 @@ function M:update_file_icons(bufnr, render_result, index_start, index_end)
       info.highlight.hlname = hlname
       info.name_highlight.coll = info.name_highlight.coll + delta
       info.name_highlight.colr = info.name_highlight.colr + delta
-      if info.link_highlight ~= nil then
-        info.link_highlight.coll = info.link_highlight.coll + delta
-        info.link_highlight.colr = info.link_highlight.colr + delta
-      end
 
       vim.api.nvim_buf_clear_namespace(bufnr, self._file_icon_nsnr, row, row + 1)
       vim.api.nvim_buf_set_extmark(bufnr, self._file_icon_nsnr, row, coll, {
@@ -408,11 +377,12 @@ function M:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
   local diag_info = render_result.diag_by_lnum[lnum] ---@type era.m.explorer.view.IDiagnosticInfo|nil
   local git_info = render_result.git_by_lnum[lnum] ---@type era.m.explorer.view.IGitStatusInfo|nil
   local sign_info = render_result.sign_by_lnum[lnum] ---@type era.m.explorer.view.ISignInfo|nil
+  local link_hl = render_result.link_by_lnum[lnum] ---@type string|nil
 
   local is_focused = cursorline_hlgroup == "m_ex_cursorline" ---@type boolean
   local hl_suffix = is_focused and "_cl" or "_clb" ---@type string
 
-  local virt_text = {} ---@type string[][]
+  local virt_text = {} ---@type table[]
 
   if diag_info ~= nil then
     for _, hl in ipairs(diag_info.highlights) do
@@ -428,6 +398,10 @@ function M:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
       local hlname = cursorline_hlgroup and (hl.hlname .. hl_suffix) or hl.hlname ---@type string
       virt_text[#virt_text + 1] = { text, hlname }
     end
+  end
+
+  if link_hl ~= nil then
+    virt_text[#virt_text + 1] = { LINK_MARKER, cursorline_hlgroup and { cursorline_hlgroup, link_hl } or link_hl }
   end
 
   if sign_info ~= nil then
@@ -743,6 +717,7 @@ end
 ---@return stl.t.IHighlight[]
 ---@return era.m.explorer.view.IGitStatusInfo|nil
 ---@return era.m.explorer.view.IDiagnosticInfo|nil
+---@return string|nil
 function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded)
   local parts = {} ---@type string[]
   local highlights = {} ---@type stl.t.IHighlight[]
@@ -790,22 +765,14 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded)
   } ---@type stl.t.IHighlight
   highlights[#highlights + 1] = name_highlight
 
-  local link_highlight = nil ---@type stl.t.IHighlight|nil
+  local link_hl = nil ---@type string|nil
   if node.is_link then
-    local link_hl = "m_ex_symlink" ---@type string
+    link_hl = "m_ex_symlink"
     if is_ignored then
       link_hl = "m_ex_symlink_ignored"
     elseif git_hl ~= nil then
       link_hl = git_hl:gsub("^m_ft_git_", "m_ex_symlink_")
     end
-    parts[#parts + 1] = LINK_MARKER
-    link_highlight = {
-      lnum = lnum,
-      coll = name_highlight.colr,
-      colr = name_highlight.colr + #LINK_MARKER,
-      hlname = link_hl,
-    }
-    highlights[#highlights + 1] = link_highlight
   end
 
   if defer_file_icon and icon ~= nil and icon_highlight ~= nil then
@@ -813,7 +780,6 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded)
       highlight = icon_highlight,
       icon = icon,
       is_ignored = is_ignored,
-      link_highlight = link_highlight,
       lnum = lnum,
       name_highlight = name_highlight,
       nodename = node.nodename,
@@ -826,7 +792,7 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded)
   end
 
   local line = table.concat(parts) ---@type string
-  return line, highlights, git_info, diag_info
+  return line, highlights, git_info, diag_info, link_hl
 end
 
 return M
