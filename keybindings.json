@@ -1,10 +1,21 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-keybindings.json",
+  "$docs": "https://code.claude.com/docs/en/keybindings",
   "bindings": [
+    {
+      "context": "Global",
+      "bindings": {
+        "ctrl+t": "app:toggleTranscript",
+        "ctrl+x t": "app:toggleTodos"
+      }
+    },
     {
       "context": "Chat",
       "bindings": {
-        "ctrl+v": "chat:imagePaste"
+        "ctrl+v": "chat:imagePaste",
+        "tab": "chat:queueSubmit",
+        "shift+enter": "chat:newline",
+        "alt+enter": "chat:newline"
       }
     }
   ]
