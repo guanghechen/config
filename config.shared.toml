@@ -107,11 +107,10 @@ transport = "websocket"
 type = "conversational"
 
 [tui]
-theme = "local"
-vim_mode_default = false
 notifications = true
 notification_method = "bel"
 notification_condition = "always"
+screen_reader_detection_done = true
 status_line = [
   "current-dir",
   "git-branch",
@@ -122,6 +121,8 @@ status_line = [
   "thread-id"
 ]
 terminal_title = ["activity", "project-name", "git-branch", "model-with-reasoning"]
+theme = "local"
+vim_mode_default = false
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
