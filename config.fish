@@ -67,9 +67,9 @@ set -gx PI_CODING_AGENT_SESSION_DIR "$HOME/.local/state/pi/sessions"
 set -gx PI_TELEMETRY 0
 set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
-set -gx ANTHROPIC_MODEL "claude-opus-5[1m]"
-set -gx ANTHROPIC_DEFAULT_HAIKU_MODEL claude-sonnet-5
-set -gx CLAUDE_CODE_SUBAGENT_MODEL "claude-opus-5[1m]"
+set -gx ANTHROPIC_MODEL "claude-opus-5.5[1m]"
+set -gx ANTHROPIC_DEFAULT_HAIKU_MODEL claude-opus-5.5
+set -gx CLAUDE_CODE_SUBAGENT_MODEL "claude-opus-5.5[1m]"
 
 set -gx GEMINI_MODEL gemini-3-pro-preview
 
