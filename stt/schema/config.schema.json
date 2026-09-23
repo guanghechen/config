@@ -27,12 +27,231 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "autoPaste": { "type": "boolean", "default": false }
+        "autoPaste": { "type": "boolean", "default": true },
+        "shortcuts": { "$ref": "#/$defs/shortcuts" }
       }
     },
     "refine": { "$ref": "#/$defs/refine" }
   },
   "$defs": {
+    "shortcuts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pushToTalk": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/holdShortcut"
+            }
+          ]
+        },
+        "toggle": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/doubleTapShortcut"
+            },
+            {
+              "$ref": "#/$defs/chordShortcut"
+            }
+          ]
+        },
+        "finish": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/doubleTapShortcut"
+            },
+            {
+              "$ref": "#/$defs/chordShortcut"
+            }
+          ]
+        },
+        "holdThresholdMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 500,
+          "default": 200
+        },
+        "doubleTapIntervalMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000,
+          "default": 350
+        }
+      },
+      "not": {
+        "required": [
+          "pushToTalk",
+          "toggle"
+        ],
+        "properties": {
+          "pushToTalk": {
+            "type": "null"
+          },
+          "toggle": {
+            "type": "null"
+          }
+        }
+      },
+      "description": "Omitted bindings use platform defaults; null disables an action. Runtime validates holdThresholdMs <= doubleTapIntervalMs, normalized binding conflicts, and platform support."
+    },
+    "shortcutKey": {
+      "enum": [
+        "Space",
+        "Escape",
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyX",
+        "KeyY",
+        "KeyZ",
+        "Digit0",
+        "Digit1",
+        "Digit2",
+        "Digit3",
+        "Digit4",
+        "Digit5",
+        "Digit6",
+        "Digit7",
+        "Digit8",
+        "Digit9",
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F10",
+        "F11",
+        "F12"
+      ]
+    },
+    "shortcutModifiers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "Control",
+          "Alt",
+          "Shift",
+          "Meta"
+        ]
+      }
+    },
+    "holdShortcut": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "key"
+          ],
+          "properties": {
+            "type": {
+              "const": "hold"
+            },
+            "key": {
+              "enum": [
+                "Fn"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "key",
+            "modifiers"
+          ],
+          "properties": {
+            "type": {
+              "const": "hold"
+            },
+            "key": {
+              "$ref": "#/$defs/shortcutKey"
+            },
+            "modifiers": {
+              "$ref": "#/$defs/shortcutModifiers"
+            }
+          }
+        }
+      ]
+    },
+    "doubleTapShortcut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "key"
+      ],
+      "properties": {
+        "type": {
+          "const": "doubleTap"
+        },
+        "key": {
+          "enum": [
+            "Fn",
+            "Escape"
+          ]
+        }
+      }
+    },
+    "chordShortcut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "key",
+        "modifiers"
+      ],
+      "properties": {
+        "type": {
+          "const": "chord"
+        },
+        "key": {
+          "$ref": "#/$defs/shortcutKey"
+        },
+        "modifiers": {
+          "$ref": "#/$defs/shortcutModifiers"
+        }
+      }
+    },
     "refine": {
       "type": "object",
       "additionalProperties": false,

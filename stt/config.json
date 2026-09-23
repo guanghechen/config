@@ -8,7 +8,20 @@
   "copy": false,
   "stream": true,
   "desktop": {
-    "autoPaste": false
+    "autoPaste": true,
+    "shortcuts": {
+      "pushToTalk": {
+        "type": "hold",
+        "key": "Fn"
+      },
+      "toggle": {
+        "type": "doubleTap",
+        "key": "Fn"
+      },
+      "finish": null,
+      "holdThresholdMs": 200,
+      "doubleTapIntervalMs": 350
+    }
   },
   "refine": {
     "enabled": true,
