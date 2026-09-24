@@ -119,7 +119,7 @@
     "type": "command",
     "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/statusline.mjs').href)\"",
     "padding": 0,
-    "refreshInterval": 2000
+    "refreshInterval": 10
   },
   "skillOverrides": {
     "claude-api": "user-invocable-only",

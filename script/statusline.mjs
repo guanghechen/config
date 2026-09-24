@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execSync } from "node:child_process"
+import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import os from "node:os"
@@ -24,8 +24,15 @@ const ANSI = {
 // (which would take .git/index.lock and race the user's own git commands).
 const GIT_ENV = { ...process.env, GIT_OPTIONAL_LOCKS: "0" }
 
-function execGit(cwd, cmd) {
-  return execSync(cmd, { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], env: GIT_ENV }).trim()
+function execGit(cwd, args) {
+  return execFileSync("git", args, {
+    cwd,
+    encoding: "utf-8",
+    stdio: ["pipe", "pipe", "pipe"],
+    env: GIT_ENV,
+    // Porcelain v2 lines carry ~110 bytes of metadata each; the 1 MiB default overflows on large changesets.
+    maxBuffer: 64 * 1024 * 1024,
+  }).trim()
 }
 
 function abbreviatePath(cwd) {
@@ -44,6 +51,8 @@ function abbreviatePath(cwd) {
   return [...abbreviated, parts.at(-1)].join(path.sep)
 }
 
+// Porcelain v2 entries: `1 XY ...` ordinary, `2 XY ...` renamed or copied,
+// `u XY ...` unmerged, `? path` untracked; `# ...` header lines are skipped.
 function parseGitFiles(lines) {
   const stats = {
     conflicts: 0,
@@ -58,13 +67,13 @@ function parseGitFiles(lines) {
     unstagedR: 0,
   }
   for (const line of lines) {
-    if (!line) continue
-    const [x, y] = line
-    if (x === "U" || y === "U" || (x === "A" && y === "A") || (x === "D" && y === "D")) {
+    const kind = line[0]
+    if (kind === "u") {
       stats.conflicts++
-    } else if (x === "?" && y === "?") {
+    } else if (kind === "?") {
       stats.untracked++
-    } else {
+    } else if (kind === "1" || kind === "2") {
+      const [x, y] = line.slice(2, 4)
       if (x === "M") stats.stagedM++
       else if (x === "A") stats.stagedA++
       else if (x === "D") stats.stagedD++
@@ -102,7 +111,7 @@ function buildIndicators(conflict, ahead, behind, stash, stats) {
 
 function getConflictState(cwd) {
   try {
-    const gitDir = execGit(cwd, "git rev-parse --git-dir")
+    const gitDir = execGit(cwd, ["rev-parse", "--git-dir"])
     const dir = path.isAbsolute(gitDir) ? gitDir : path.join(cwd, gitDir)
 
     if (existsSync(path.join(dir, "MERGE_HEAD"))) return "⚡merge"
@@ -115,14 +124,6 @@ function getConflictState(cwd) {
     // ignore
   }
   return ""
-}
-
-function getStashCount(cwd) {
-  try {
-    return execGit(cwd, "git stash list").split("\n").filter(Boolean).length
-  } catch {
-    return 0
-  }
 }
 
 function renderPath(cwd) {
@@ -157,35 +158,32 @@ function writeGitCache(file, output) {
 
 function renderGitUncached(cwd) {
   try {
-    const status = execGit(cwd, "git status -sb")
-    const lines = status.split("\n")
-    const header = lines[0] || ""
+    const lines = execGit(cwd, ["status", "--porcelain=v2", "--branch", "--show-stash"]).split("\n")
 
     let branch = ""
     let ahead = 0
     let behind = 0
-    const m = header.match(/^## (.+?)(?:\.\.\.(\S+))?(?:\s+\[(.+)\])?$/)
-    if (m) {
-      branch = m[1]
-      if (m[3]) {
-        ahead = parseInt(m[3].match(/ahead (\d+)/)?.[1] || "0", 10)
-        behind = parseInt(m[3].match(/behind (\d+)/)?.[1] || "0", 10)
+    let stash = 0
+    for (const line of lines) {
+      if (line.startsWith("# branch.head ")) {
+        branch = line.slice("# branch.head ".length)
+      } else if (line.startsWith("# branch.ab ")) {
+        const m = line.match(/^# branch\.ab \+(\d+) -(\d+)$/)
+        if (m) {
+          ahead = parseInt(m[1], 10)
+          behind = parseInt(m[2], 10)
+        }
+      } else if (line.startsWith("# stash ")) {
+        stash = parseInt(line.slice("# stash ".length), 10)
       }
     }
 
-    if (branch === "HEAD (no branch)" || branch === "HEAD") {
-      try {
-        branch = `@${execGit(cwd, "git rev-parse --short HEAD")}`
-      } catch {
-        branch = "@detached"
-      }
-    }
+    if (branch === "(detached)") branch = `@${execGit(cwd, ["rev-parse", "--short", "HEAD"])}`
 
     if (!branch) return ""
 
     const conflict = getConflictState(cwd)
-    const stash = getStashCount(cwd)
-    const stats = parseGitFiles(lines.slice(1))
+    const stats = parseGitFiles(lines)
     const ind = buildIndicators(conflict, ahead, behind, stash, stats)
 
     return `${ANSI.magenta}\uea68 ${branch}${ind}${ANSI.reset}`
@@ -202,6 +200,12 @@ function renderGit(data, cwd) {
   const output = renderGitUncached(cwd)
   writeGitCache(cacheFile, output)
   return output
+}
+
+function renderPr(data) {
+  const number = data.pr?.number
+  if (!number) return ""
+  return `${ANSI.magenta} #${number}${ANSI.reset}`
 }
 
 function renderModel(data) {
@@ -267,17 +271,24 @@ function renderDuration(data) {
   return `${ANSI.gray}󱎫 ${formatDuration(ms)}${ANSI.reset}`
 }
 
+function renderVersion(data) {
+  if (!data.version) return ""
+  return `${ANSI.gray} ${data.version}${ANSI.reset}`
+}
+
 function render(data) {
   const cwd = path.normalize(data.cwd || process.cwd())
   const parts = [
     renderPath(cwd),
     renderGit(data, cwd),
+    renderPr(data),
     renderModel(data),
     renderContext(data),
     renderCost(data),
     renderEffort(data),
     renderStyle(data),
     renderDuration(data),
+    renderVersion(data),
   ].filter(Boolean)
 
   const sep = `${ANSI.gray}│${ANSI.reset}`
