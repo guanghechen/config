@@ -47,7 +47,8 @@
           {
             "type": "command",
             "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-tool-use.mjs').href)\"",
-            "timeout": 10
+            "timeout": 5,
+            "statusMessage": "Checking sensitive file access"
           }
         ]
       },
@@ -57,12 +58,14 @@
           {
             "type": "command",
             "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-sensitive.mjs').href)\"",
-            "timeout": 10
+            "timeout": 5,
+            "statusMessage": "Checking sensitive path usage"
           },
           {
             "type": "command",
             "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-git.mjs').href)\"",
-            "timeout": 10
+            "timeout": 5,
+            "statusMessage": "Checking git command policy"
           }
         ]
       },
@@ -83,7 +86,7 @@
           {
             "type": "command",
             "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
-            "timeout": 10
+            "timeout": 5
           }
         ]
       }
@@ -105,7 +108,7 @@
           {
             "type": "command",
             "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
-            "timeout": 10
+            "timeout": 5
           }
         ]
       }
@@ -122,6 +125,10 @@
     "rust-analyzer-lsp@claude-plugins-official": false,
     "ralph-loop@claude-plugins-official": false,
     "context7@claude-plugins-official": false
+  },
+  "skillOverrides": {
+    "claude-api": "user-invocable-only",
+    "dataviz": "user-invocable-only"
   },
   "effortLevel": "xhigh",
   "modelSettings": {
