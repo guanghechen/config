@@ -121,12 +121,6 @@
     "padding": 0,
     "refreshInterval": 2000
   },
-  "enabledPlugins": {
-    "lua-lsp@claude-plugins-official": false,
-    "rust-analyzer-lsp@claude-plugins-official": false,
-    "ralph-loop@claude-plugins-official": false,
-    "context7@claude-plugins-official": false
-  },
   "skillOverrides": {
     "claude-api": "user-invocable-only",
     "dataviz": "user-invocable-only"
