@@ -1,0 +1,9 @@
+{
+  "background": "{{vsc.editor_background}}",
+  "foreground": "{{darken ? vsc.settings_headerForeground : vsc.inputOption_activeForeground}}",
+  "muted": "{{compositeHex(vsc.foreground + 'E0', vsc.editor_background)}}",
+  "accent": "{{compositeHex(vsc.accentBlue + 'CC', darken ? vsc.settings_headerForeground : vsc.inputOption_activeForeground)}}",
+  "recording": "{{compositeHex(vsc.accentGreen + 'CC', darken ? vsc.settings_headerForeground : vsc.inputOption_activeForeground)}}",
+  "error": "{{compositeHex(vsc.accentRed + '66', darken ? vsc.settings_headerForeground : vsc.inputOption_activeForeground)}}",
+  "border": "{{darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1}}"
+}

@@ -121,6 +121,19 @@ as attachment foreground and hover feedback.
   [VSC Theme References](../theme-vsc-references.md); Zed's separate mapping is
   described in [its adapter document](zed.md).
 
+## Kit STT
+
+`asset/theme/template/kit/` 为 Kit STT 生成深浅色配对 JSON。`default.hbs` 使用 unified
+颜色角色，`vsc.hbs` 保留 VSC app 独立映射约定。`meta.mjs` 将当前 scheme 与明确声明的 family 深浅色配对渲染为同一文件的
+`light` / `dark`；保留所选 variant，另一种外观使用配对表。`opposite` 可以是同为深色的
+循环切换，因此不用于推断 brightness。未知 family 或配对外观不正确时明确报错。`gen` 写入
+`~/.config/kit/.theme/<scheme>.json`，`apply` 原子替换 `.theme/local.json`。
+文件包含 `version: 1` 及两个 palette；每个 palette 都包含 `background`、`foreground`、
+`muted`、`accent`、`recording`、`error`、`border` 的 `#RRGGBB` 值。应用专用的颜色映射
+放在 template 中，保证文字在浮层背景上的对比度。STT 的 `desktop.theme.file` 指向
+`../.theme/local.json`，`mode` 为 `dark`、`light` 或跟随系统的 `device`。
+应用主题只发布 palette，不重启 STT 或修改其 config；浮层下一次显示时读取新 palette。
+
 ## Validation
 
 `npm test` covers scheme loading, template resolution, application ordering,
