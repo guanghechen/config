@@ -33,7 +33,7 @@ end
 #
 # set -x GOOGLE_CLOUD_PROJECT "project"
 
-set -gx KIT_COPILOT_URL "http://127.0.0.1:4141"
+set -gx KIT_COPILOT_URL "http://127.0.0.1:4747"
 
 set -gx PREFER_NEOVIM_VERSION stable
 set -gx PREFER_TMUX_VERSION stable
