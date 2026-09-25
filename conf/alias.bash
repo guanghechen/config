@@ -19,6 +19,8 @@ gr() {
   git remote -v | awk '{print $2}' | head -1
 }
 alias tf='touch "$(date +%Y%m%d_%H%M%S).log"'
+alias clock='tty-clock -DSbcnrs -C5'
+alias today='cal -C3'
 
 alias chown='chown --preserve-root'
 alias chgrp='chgrp --preserve-root'
@@ -56,9 +58,6 @@ alias cxa2-5-4='FORCE_COLOR=1 codex -p azure2-5-4 --dangerously-bypass-approvals
 alias ggg='gemini --model="gemini-3-pro-preview" --yolo'
 
 ## fzf
-if [[ -n "${HOMEBREW_PREFIX:-}" && -x "$HOMEBREW_PREFIX/bin/fzf" ]]; then
-  alias fzf='"$HOMEBREW_PREFIX/bin/fzf"'
-fi
 fvim() {
   local -a files=()
   mapfile -d '' -t files < <(fzf --print0)
@@ -98,17 +97,6 @@ alias tdetach='tmux detach'           # Detach from the session
 alias tattach='tmux attach -t'        # Attach to a session
 alias tdetach-others='tmux detach -a' # Detach other clients from the session
 ## misc
-alias ghc-ora='node $HOME/.config/ora/cli/http.mjs'
 alias ghc-update='kit-repo sync'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
-alias ghc-clock='tty-clock -DSbcnrs -C5'
-alias ghc-ports='netstat -tulanp'
-alias ghc-today='cal -C3'
-
-## Python server with Poetry (examples)
-# Replace <server_entry> and <client_entry> before enabling these aliases.
-# alias pydemo-server='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run uvicorn <server_entry> --host localhost --port 9528'
-# alias pydemo-debug='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run python -m debugpy --listen 9527 -m uvicorn <server_entry> --host localhost --port 9528'
-# alias pydemo-debug-wait='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run python -m debugpy --listen 9527 --wait-for-client -m uvicorn <server_entry> --host localhost --port 9528'
-# alias pydemo-client='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run python -m <client_entry> --server-endpoint=http://localhost:9528'
