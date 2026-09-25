@@ -47,9 +47,6 @@ abbr -a cxm 'FORCE_COLOR=1 codex -p copilot-max --dangerously-bypass-approvals-a
 abbr -a ggg 'gemini --model="gemini-3-pro-preview" --yolo'
 
 ### fzf
-if set -q HOMEBREW_PREFIX; and test -x "$HOMEBREW_PREFIX/bin/fzf"
-    alias fzf="$HOMEBREW_PREFIX/bin/fzf"
-end
 abbr -a fvim 'fzf --print0 | xargs -0 -o nvim'
 
 ### lazygit
