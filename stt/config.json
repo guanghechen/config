@@ -10,15 +10,13 @@
   "desktop": {
     "autoPaste": true,
     "shortcuts": {
-      "pushToTalk": null,
+      "pushToTalk": {
+        "type": "hold",
+        "key": "AltRight"
+      },
       "toggle": {
-        "type": "chord",
-        "key": "Space",
-        "modifiers": [
-          "Control",
-          "Alt",
-          "Shift"
-        ]
+        "type": "doubleTap",
+        "key": "AltRight"
       },
       "finish": null,
       "holdThresholdMs": 200,

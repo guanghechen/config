@@ -71,6 +71,7 @@
       "additionalProperties": false,
       "properties": {
         "pushToTalk": {
+          "default": { "type": "hold", "key": "AltRight" },
           "oneOf": [
             {
               "type": "null"
@@ -81,6 +82,7 @@
           ]
         },
         "toggle": {
+          "default": { "type": "doubleTap", "key": "AltRight" },
           "oneOf": [
             {
               "type": "null"
@@ -133,7 +135,7 @@
           }
         }
       },
-      "description": "Omitted bindings use platform defaults; null disables an action. Runtime validates holdThresholdMs <= doubleTapIntervalMs, normalized binding conflicts, and platform support."
+      "description": "Defaults use Right Alt hold and double-tap on macOS and Windows; null disables an action. Runtime validates holdThresholdMs <= doubleTapIntervalMs, normalized binding conflicts, and platform support."
     },
     "shortcutKey": {
       "enum": [
@@ -218,6 +220,7 @@
             },
             "key": {
               "enum": [
+                "AltRight",
                 "Fn"
               ]
             }
@@ -258,6 +261,7 @@
         },
         "key": {
           "enum": [
+            "AltRight",
             "Fn",
             "Escape"
           ]
