@@ -12,6 +12,11 @@ if type -q starship
     starship init fish | source
 end
 
+### dot
+if test -d "$HOME/.dotnet/"
+    fish_add_path --append "$HOME/.dotnet/"
+end
+
 ### fnm
 if type -q fnm
     fnm env --use-on-cd --shell fish | source
