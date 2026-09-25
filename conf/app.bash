@@ -15,6 +15,11 @@ if [[ $- == *i* && -z "${__BASH_CONF_APP_LOADED:-}" ]] && command -v starship >/
     eval "$(starship init bash)"
 fi
 
+## dot
+if [[ -d "$HOME/.dotnet" ]]; then
+    [[ ":$PATH:" == *":$HOME/.dotnet:"* ]] || export PATH="$PATH:$HOME/.dotnet"
+fi
+
 ## fnm
 if [[ $- == *i* && -z "${__BASH_CONF_APP_LOADED:-}" ]] && command -v fnm >/dev/null 2>&1; then
     eval "$(fnm env --use-on-cd --shell bash)"
