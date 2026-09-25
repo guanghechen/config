@@ -158,7 +158,9 @@ local function target_directory(session, preparation, path, source)
       for index = #missing, 1, -1 do
         names[#names + 1] = missing[index]
       end
-      local job = session.native:start_create({ target = value, path = table.concat(names, "/"), directory = true })
+      local job = session.data:_track_job(
+        session.native:start_create({ target = value, path = table.concat(names, "/"), directory = true })
+      )
       preparation.job = job
       while not job:status().terminal do
         async.await(function(done)
@@ -214,6 +216,7 @@ function M.poll()
             local current = job:status().confirmation
             if current and current.token == confirmation.token then
               local ok, error = pcall(job.confirm, job, confirmation.token, proceed)
+              native_async.watch(M)
               if not ok then
                 session.report(error)
               end
@@ -313,12 +316,12 @@ function M._poll()
   for session in pairs(active) do
     local job = session.job
     if job then
-      pending = true
       local status = job:status()
       if status.terminal or status.confirmation and session._confirmation ~= status.confirmation.token then
         M.poll()
         return true
       end
+      pending = pending or status.cancelling or status.confirmation == nil
     end
   end
   if not pending then
@@ -459,12 +462,12 @@ function M.start(session, view, kind, options)
         target = (kind == "copy" or kind == "move") and destination or nil,
         name = name,
         task = context,
-        prepare_move = kind == "move" and buffers.needs_preparation(),
+        prepare_move = kind == "move",
       })
     end
     preparation.launched = true
     session._preparation = nil
-    session.job, session.operation, session.preparing = job, kind, false
+    session.job, session.operation, session.preparing = session.data:_track_job(job), kind, false
     session._result_offset, session._confirmation = 0, nil
     session._counts = { success = 0, failed = 0, skipped = 0 }
     session.results, session._on_complete = {}, options.on_complete
@@ -481,6 +484,7 @@ end
 function M.cancel(session)
   if session.job then
     session.job:cancel()
+    native_async.watch(M)
   elseif session._preparation then
     local preparation = session._preparation
     preparation.cancelled = true

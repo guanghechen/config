@@ -63,6 +63,7 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
 - 准备、执行、确认和取消期间锁定选区与新修改操作，允许浏览。取消准备会结束等待中的输入 Future，等原 token 解锁再恢复；
   迟到 callback 没有执行资格。Job 取消要等 native 终态；标题显示进度，Space menu 提供取消和最近结果。
   Job 终态与新确认由 Treeview 的共享 poller 检测并及时交付，不等待低频进度刷新；无执行任务时撤销该订阅。
+  已交付的确认等待不维持 1 ms 轮询；确认回复与主动取消重新启用快速观察，进度仍按 40 ms 更新。
   无可见 pane 时 Job 继续使用全局 UI 确认，不强制重开 Explorer。
 
 ## 文件窗口与 LSP
@@ -75,20 +76,24 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   显式 `o<CR>` 有逻辑选区时打开所选文件，无选区时回退到光标项；其他显式窗口策略继续使用选区优先规则。
 - 批量打开只确定一次目标 window，跳过目录，加载各文件并展示最后成功项；保留 selection/mode。
   支持水平 split、垂直 split、新 tab；移动光标不隐式预览或打开。
-- Move/rename 使用 Filetree 移动准备握手：覆盖确认通过后请求 `workspace/willRenameFiles`，应用返回的 workspace edits；
+- 每次 Move/rename 使用 Filetree 移动准备握手：覆盖确认通过后先检查目标 buffer，再请求 `workspace/willRenameFiles`，应用返回的 workspace edits；
   Rust 复验 identity/physical paths 后执行 IO；成功结果才重命名 buffers、重选 LSP clients 并发送 `workspace/didRenameFiles`。
   取消后的迟到 response 不应用 edits。单 client 沿用 1 秒超时，无 edit 时继续；已应用 edits 不因后续 IO 失败自动回滚。
 - Buffer 同步保留 bufnr、内容和 modified 状态，目录移动覆盖已打开后代；只解析父目录 alias，移动末尾 symlink 不重命名
   referent buffer。删除/回收文件保留对应 buffer。
   Windows physical path 在编辑器边界转换 verbatim drive/UNC 前缀并保留 UNC share root，preparation、buffer 匹配
   和完成通知使用同一套 Neovim 路径；native identity 校验仍使用原始 physical path。
-- 目标名已有另一 buffer 时保留双方内容，记录 `b:filetree_move_target` 并报告待处理路径，不强删 buffer。
+- 改名留下的 unloaded、unlisted、未修改的占位 buffer 可释放；实际目标 buffer 冲突在 IO 前拒绝，目录移动同时检查已打开后代。
+  LSP 准备结束后再次检查冲突。IO 后才出现的冲突保留双方内容，记录 `b:filetree_move_target` 并报告待处理路径；
+  在 buffer 名称恢复一致之前阻止向旧路径写入，不自动保存、覆盖用户 buffer 或改写 undo history。
+  用户显式将该 buffer 改为其他路径后解除保存保护，允许另存其未保存内容。
   无法表示为 Neovim filepath 的结果仍可显示/清理，跳过依赖该 filepath 的编辑器动作。
 
 ## 装饰与订阅
 
 - `dot.theme.hlgroup.explorer` 集中定义 `m_ex_*`、`m_fe_*` 与共享的 `m_ft_*`，遵循 theme loader 的 fallback。
-- 树形连接线使用 muted 前景色，在光标行与 Visual 选区中持续可见并保留行背景；横向滚动时裁掉屏幕外的线条。
+- 普通行树形连接线保持与旧版一致的低亮度前景色；光标行与 Visual 范围使用独立 muted 前景色，保留行背景与普通行配色。
+  横向滚动时裁掉屏幕外的线条。
 - 图标和名称有独立 highlight range。特殊目录使用 `MiniIcons*`，普通目录图标用 `m_ft_dirname`，展开只改 glyph。
   Rosé Pine 普通目录沿用 subtle，ignored 图标使用 muted 对应的 `m_ex_ignored`。
 - 文件/目录名称共用 `m_ft_filename`；优先级为 ignored → error → warning → Git status → 中性色。

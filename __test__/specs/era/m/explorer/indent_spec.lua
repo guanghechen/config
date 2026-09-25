@@ -67,7 +67,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
     t.assert_eq("│├─", table.concat(guides), label .. ": structural guides disappeared")
   end
 
-  for _, theme in ipairs({ "rosepine-dawn", "rosepine-main" }) do
+  for _, theme in ipairs({ "rosepine-dawn", "rosepine-main", "vsc-light-modern", "vsc-dark-modern" }) do
     ui:rpc("nvim_exec_lua", "dot.context.theme.apply_theme({ theme = ..., transparency = false })", { theme })
     for _, input in ipairs({ { "Vj", "V" }, { "vj", "v" }, { "v<C-v>j3l", vim.keycode("<C-v>") } }) do
       ui:rpc("nvim_exec_lua", "vim.api.nvim_win_set_cursor(view.winnr, {2, 0})", {})
@@ -79,11 +79,37 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
       visible_guides(theme .. " " .. input[2])
       ui:rpc("nvim_input", "<Esc>")
       t.wait_until(function()
-        return ui:rpc("nvim_exec_lua", "return not view:_visual_mode()", {})
+        return ui:rpc("nvim_exec_lua", "return vim.api.nvim_get_mode().mode:sub(1, 1) == 'n'", {})
       end, 10000)
       visible_guides(theme .. " after Visual")
     end
+    local foreground =
+      ui:rpc("nvim_exec_lua", "return vim.api.nvim_get_hl(0, { name = 'm_ex_indent', link = false }).fg", {})
+    ui:rpc("nvim_exec_lua", "vim.api.nvim_win_set_cursor(view.winnr, {4, 0})", {})
+    ui:rpc("nvim_command", "redraw!")
+    local location = assert(grid:find("a.lua"))
+    local cells = grid.grids[location.grid].rows[location.row + 1]
+    for col = 1, location.col do
+      if cells[col][1] == "│" or cells[col][1] == "├" or cells[col][1] == "─" then
+        t.assert_eq(
+          foreground,
+          grid.highlights[cells[col][2]].foreground,
+          theme .. ": ordinary guides keep their muted color"
+        )
+      end
+    end
   end
+  ui:rpc(
+    "nvim_exec_lua",
+    [=[
+    local future = session.state:dispatch({ kind = "set_cursor", node = view:frame():node_at(3) })
+    assert(vim.wait(10000, function() return future:is_done() end))
+    assert(vim.wait(10000, function()
+      return view:frame():header().cursor_row == 3 and not view._busy and not view._latest
+    end))
+  ]=],
+    {}
+  )
   ui:rpc(
     "nvim_exec_lua",
     [=[

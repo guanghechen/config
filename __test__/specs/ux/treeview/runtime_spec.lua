@@ -49,6 +49,37 @@ local function fixture()
   return data, state, source:id("a"), source:id("b")
 end
 
+t:test("reentrant watch survives an idle result and explicit unwatch stays removed", function()
+  local async = require("ux.treeview.async")
+  local calls = 0
+  local owner = {
+    _poll = function(self)
+      calls = calls + 1
+      if calls == 1 then
+        async.watch(self)
+      else
+        async.unwatch(self)
+      end
+    end,
+  }
+  t:defer(function()
+    async.unwatch(owner)
+  end)
+  async.watch(owner)
+  t.wait_until(function()
+    return calls >= 2
+  end, 1000)
+  async.run({
+    poll = function()
+      return true, nil
+    end,
+  })
+  vim.wait(50, function()
+    return false
+  end, 50)
+  t.assert_eq(2, calls, "an unrelated request must not revive an explicitly removed watcher")
+end)
+
 t:test("owned input, identity, atomic failure, and exact recursive option", function()
   local data, state, a = fixture()
   local old = state:snapshot()

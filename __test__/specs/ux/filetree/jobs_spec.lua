@@ -74,4 +74,58 @@ t:test("Job finishes multiple pages after the Lua data facade is collected", fun
   t.assert_true(vim.uv.fs_stat(path .. "/dst/src/file-600") ~= nil)
 end)
 
+t:test("terminal Job after the event drain still delivers the final RootUnavailable effect", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/branch", 448))
+  local received = false
+  local data = await(filetree.open(path, {
+    on_effect = function(effect)
+      received = received or effect.kind == "RootUnavailable"
+    end,
+  }))
+  local branch = await(data:resolve(path .. "/branch"))
+  local state = await(data:create_state({ kind = "children_of", node = branch:node() }))
+  local owner, job = data._tree, nil
+  vim.wait(50, function()
+    return false
+  end, 50)
+  local native = owner._native
+  t:patch_table(
+    owner,
+    "_native",
+    setmetatable({
+      events = function()
+        local drained = native:events()
+        if not job then
+          job = data:start_operation({ kind = "delete", source = branch:source(), nodes = { branch:node() } })
+          local deadline = vim.uv.hrtime() + 5000000000
+          while not job:status().terminal and vim.uv.hrtime() < deadline do
+            vim.uv.sleep(1)
+          end
+          t.assert_true(job:status().terminal, "background Job must complete without running Lua callbacks")
+          t.assert_false(received, "the final event is deliberately after this drain")
+        end
+        return drained
+      end,
+    }, {
+      __index = function(_, key)
+        return function(_, ...)
+          return native[key](native, ...)
+        end
+      end,
+    })
+  )
+  t:defer(function()
+    if job then
+      job:cancel()
+    end
+  end)
+  require("ux.treeview.async").watch(owner)
+  t.wait_until(function()
+    return received
+  end, 500, "final native effects must not wait for a future user action")
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/branch"))
+  t.assert_true(state:snapshot():header().row_count == 0)
+end)
+
 t:run()

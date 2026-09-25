@@ -118,6 +118,7 @@ function Data:create_provider(scope) end
 ---@return yoz.ux.treeview.Ticket
 function Data:request_children(nodes, retry) end
 ---@return ux.treeview.IEffect[]
+---@return boolean pending_deadlines
 function Data:events() end
 ---@param token                         yoz.ux.treeview.ReadToken
 ---@param sequence                      ux.treeview.Revision

@@ -233,13 +233,19 @@ struct Publication {
     active_work: HashSet<u64>,
 }
 
+#[derive(Default)]
+struct EventQueue {
+    items: BTreeMap<(u8, u64), Effect>,
+    pending_deadlines: bool,
+}
+
 struct Shared {
     memory: Arc<super::memory::Budget>,
     acknowledged: AtomicU64,
     queue: Mutex<Queue>,
     wake: Condvar,
     publication: RwLock<Publication>,
-    events: Mutex<BTreeMap<(u8, u64), Effect>>,
+    events: Mutex<EventQueue>,
     limits: Limits,
     views: AtomicUsize,
     input_bytes: AtomicUsize,
@@ -365,7 +371,7 @@ impl DataHandle {
             acknowledged: AtomicU64::new(u64::MAX),
             queue: Mutex::new(Queue::default()),
             wake: Condvar::new(),
-            events: Mutex::new(BTreeMap::new()),
+            events: Mutex::new(EventQueue::default()),
             publication: RwLock::new(Publication {
                 source: engine.source.clone(),
                 frames: BTreeMap::new(),
@@ -507,13 +513,21 @@ impl DataHandle {
     }
 
     pub fn events(&self) -> Vec<Effect> {
+        self.poll_events().0
+    }
+
+    /** Drain effects and observe autonomous task deadlines in the same publication. */
+    pub fn poll_events(&self) -> (Vec<Effect>, bool) {
         let mut events = self
             .0
             .shared
             .events
             .lock()
             .unwrap_or_else(|poison| poison.into_inner());
-        std::mem::take(&mut *events).into_values().collect()
+        (
+            std::mem::take(&mut events.items).into_values().collect(),
+            events.pending_deadlines,
+        )
     }
 
     pub fn is_disposed(&self) -> bool {
@@ -803,6 +817,7 @@ fn events(
     shared: &Shared,
     reader: &mut Option<Box<dyn NativeReader>>,
     effects: impl IntoIterator<Item = Effect>,
+    engine: &Engine,
 ) {
     let mut events = shared
         .events
@@ -821,8 +836,15 @@ fn events(
             Effect::RootUnavailable { state, .. } => (3, *state),
             _ => continue,
         };
-        events.insert(key, effect);
+        events.items.insert(key, effect);
     }
+    /* Expiry effects must be queued before their observation demand can disappear. */
+    events.pending_deadlines = engine.states.values().any(|entry| {
+        entry
+            .task
+            .as_ref()
+            .is_some_and(|task| task.cleanup.is_none() && task.deadline.is_some())
+    });
 }
 
 fn publish(engine: &Engine, shared: &Shared, failures: &BTreeMap<u64, Error>) {
@@ -891,6 +913,11 @@ fn stop(shared: &Shared, error: Error) {
     for item in work {
         item.ticket.finish(Outcome::Reply(error.clone().into()));
     }
+    shared
+        .events
+        .lock()
+        .unwrap_or_else(|poison| poison.into_inner())
+        .pending_deadlines = false;
     shared.wake.notify_all();
 }
 
@@ -958,14 +985,17 @@ fn run_inner(
                             .completions
                             .remove(&completion);
                     }
+                    let applied: &[Effect] = match &outcome {
+                        Outcome::Reply(Reply::Applied { effects, .. }) => effects.as_ref(),
+                        _ => &[],
+                    };
+                    let deferred = std::mem::take(&mut engine.deferred_effects);
                     events(
                         &shared,
                         &mut reader,
-                        std::mem::take(&mut engine.deferred_effects),
+                        deferred.into_iter().chain(applied.iter().cloned()),
+                        &engine,
                     );
-                    if let Outcome::Reply(Reply::Applied { effects, .. }) = &outcome {
-                        events(&shared, &mut reader, effects.iter().cloned());
-                    }
                     work.ticket.finish(outcome);
                 }
                 Err(_) => {
@@ -1003,7 +1033,7 @@ fn run_inner(
             effects.extend(reads);
         }
         publish(&engine, &shared, &failures);
-        events(&shared, &mut reader, effects);
+        events(&shared, &mut reader, effects, &engine);
         if let Some(reader) = &mut reader {
             reader.publish(&engine, &WeakDataHandle(runtime.clone()));
         }

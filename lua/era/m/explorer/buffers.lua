@@ -19,14 +19,61 @@ local function filepath(path)
   return ok and value or nil
 end
 
----@return boolean
-function M.needs_preparation()
-  for _, client in ipairs(vim.lsp.get_clients()) do
-    if client:supports_method("workspace/willRenameFiles") then
-      return true
+---@return table<string, integer>
+local function buffer_names()
+  local names = {}
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
+      local raw = vim.api.nvim_buf_get_name(bufnr)
+      local name = raw ~= "" and filepath(raw) or nil
+      if name then
+        names[name] = bufnr
+      end
     end
   end
-  return false
+  return names
+end
+
+---@param bufnr                         integer
+---@return boolean
+local function discard_placeholder(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return true
+  end
+  if
+    vim.api.nvim_buf_is_loaded(bufnr)
+    or vim.api.nvim_get_option_value("buflisted", { buf = bufnr })
+    or vim.api.nvim_get_option_value("modified", { buf = bufnr })
+  then
+    return false
+  end
+  -- :file/nvim_buf_set_name retains the previous filename in an empty, unlisted buffer.
+  vim.api.nvim_buf_delete(bufnr, { force = false })
+  return true
+end
+
+---@param source                        string
+---@param target                        string
+---@return nil
+local function check_targets(source, target)
+  local names = buffer_names()
+  -- Move replaces the target namespace; its buffers matter even when the source was never opened.
+  for name, bufnr in pairs(names) do
+    if name == target or name:sub(1, #target + 1) == target .. "/" then
+      local original = source .. name:sub(#target + 1)
+      if names[original] ~= bufnr and not discard_placeholder(bufnr) then
+        error("Move refused; target belongs to another buffer: " .. name, 0)
+      end
+    end
+  end
+end
+
+---@param job                           yoz.ux.filetree.Job
+---@param confirmation                  table
+---@return boolean
+local function preparing(job, confirmation)
+  local status = job:status()
+  return not status.cancelling and status.confirmation ~= nil and status.confirmation.token == confirmation.token
 end
 
 ---@param job                           yoz.ux.filetree.Job
@@ -34,6 +81,9 @@ end
 ---@return stl.c.Future
 function M.prepare(job, confirmation)
   return async.run_future(function()
+    if not preparing(job, confirmation) then
+      return false
+    end
     if not confirmation.source or not confirmation.target then
       return true
     end
@@ -41,6 +91,7 @@ function M.prepare(job, confirmation)
     if not source or not target then
       return true
     end
+    check_targets(source, target)
     local changes = {
       files = {
         {
@@ -50,8 +101,7 @@ function M.prepare(job, confirmation)
       },
     }
     for _, client in ipairs(vim.lsp.get_clients()) do
-      local status = job:status()
-      if status.cancelling or not status.confirmation or status.confirmation.token ~= confirmation.token then
+      if not preparing(job, confirmation) then
         return false
       end
       if client:supports_method("workspace/willRenameFiles") then
@@ -79,8 +129,7 @@ function M.prepare(job, confirmation)
             end, 1000)
           end
         end):await()
-        status = job:status()
-        if status.cancelling or not status.confirmation or status.confirmation.token ~= confirmation.token then
+        if not preparing(job, confirmation) then
           return false
         end
         if response and response.error then
@@ -91,7 +140,12 @@ function M.prepare(job, confirmation)
         end
       end
     end
-    return true
+    -- Workspace edits and asynchronous replies may introduce a destination buffer.
+    if not preparing(job, confirmation) then
+      return false
+    end
+    check_targets(source, target)
+    return preparing(job, confirmation)
   end)
 end
 
@@ -109,18 +163,7 @@ function M.sync(session, item)
     session.report("File moved; its path cannot be represented by Neovim")
     return
   end
-  local names = {}
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
-      local raw = vim.api.nvim_buf_get_name(bufnr)
-      if raw ~= "" then
-        local name = filepath(raw)
-        if name then
-          names[name] = bufnr
-        end
-      end
-    end
-  end
+  local names = buffer_names()
   for name, bufnr in pairs(names) do
     local from, to = source, target
     if name == physical or name:sub(1, #physical + 1) == physical .. "/" then
@@ -128,15 +171,19 @@ function M.sync(session, item)
     end
     if name == from or name:sub(1, #from + 1) == from .. "/" then
       local renamed = to .. name:sub(#from + 1)
-      local ok, error = false, "target name belongs to another buffer"
-      if not names[renamed] or names[renamed] == bufnr then
-        ok, error = pcall(era.m.lsp.event.rename_buf, vim.api.nvim_buf_get_name(bufnr), renamed)
-      end
+      local ok, error = pcall(function()
+        if names[renamed] and names[renamed] ~= bufnr and not discard_placeholder(names[renamed]) then
+          error("target name belongs to another buffer", 0)
+        end
+        era.m.lsp.event.rename_buf(vim.api.nvim_buf_get_name(bufnr), renamed)
+      end)
       if not ok then
         vim.b[bufnr].filetree_move_target = renamed
+        vim.b[bufnr].filetree_move_source = name
         session.report("File moved; buffer path needs resolution: " .. renamed .. " (" .. tostring(error) .. ")")
       else
         vim.b[bufnr].filetree_move_target = nil
+        vim.b[bufnr].filetree_move_source = nil
       end
     end
   end
@@ -147,5 +194,23 @@ function M.sync(session, item)
     end
   end
 end
+
+vim.api.nvim_create_autocmd({ "BufWritePre", "FileWritePre" }, {
+  group = vim.api.nvim_create_augroup("ExplorerMoveBuffers", { clear = true }),
+  callback = function(event)
+    local target = vim.b[event.buf].filetree_move_target
+    if not target then
+      return
+    end
+    local name = filepath(vim.api.nvim_buf_get_name(event.buf))
+    local source = vim.b[event.buf].filetree_move_source
+    if name == target or source and name and name ~= source then
+      vim.b[event.buf].filetree_move_target = nil
+      vim.b[event.buf].filetree_move_source = nil
+    elseif filepath(event.match) == (source or name) then
+      error("File moved to " .. target .. "; resolve this buffer's filename before saving", 0)
+    end
+  end,
+})
 
 return M

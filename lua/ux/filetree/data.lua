@@ -12,6 +12,7 @@ local State = require("ux.treeview.state")
 ---@field _tree                         ux.treeview.Data
 ---@field root                          string
 ---@field _diagnostic_revision          ?integer
+---@field _jobs                         table<yoz.ux.filetree.Job, boolean>
 local M = {}
 M.__index = M
 
@@ -20,7 +21,15 @@ M.__index = M
 ---@return ux.filetree.Data
 function M.new(native, tree)
   tree._filetree_native = native
-  return setmetatable({ _native = native, _tree = tree, root = native:root() }, M)
+  return setmetatable({ _native = native, _tree = tree, root = native:root(), _jobs = {} }, M)
+end
+
+---@param job                           yoz.ux.filetree.Job
+---@return yoz.ux.filetree.Job
+function M:_track_job(job)
+  self._jobs[job] = true
+  async.watch(self._tree)
+  return job
 end
 
 ---@return yoz.ux.treeview.Source
@@ -82,13 +91,13 @@ function M:start_operation(plan)
       task = { state = plan.task.state._native, lock = plan.task.lock, cleanup = plan.task.cleanup },
     })
   end
-  return self._native:start_operation(plan)
+  return self:_track_job(self._native:start_operation(plan))
 end
 
 ---@param plan                          ux.filetree.ICreatePlan
 ---@return yoz.ux.filetree.Job
 function M:start_create(plan)
-  return self._native:start_create(plan)
+  return self:_track_job(self._native:start_create(plan))
 end
 
 ---@param root                          string

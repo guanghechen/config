@@ -211,6 +211,10 @@ t:test("completion and confirmation release selection while the progress timer i
   local widget = fixture.widget(path)
   local session, view = widget:context()
   local callbacks, completed = {}, 0
+  -- Drain a previous case's shared progress callback before intercepting this case's timer.
+  vim.wait(45, function()
+    return false
+  end, 45)
   local defer = vim.defer_fn
   t:patch_table(vim, "defer_fn", function(callback, delay)
     if callbacks and delay == 40 and debug.getinfo(callback, "S").source:find("era/m/explorer/jobs.lua", 1, true) then

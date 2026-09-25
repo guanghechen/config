@@ -268,12 +268,12 @@ impl LuaUserData for LuaData {
             },
         );
         methods.add_method("events", |lua, this, ()| {
-            let values = this.0.events();
+            let (values, pending_deadlines) = this.0.poll_events();
             let output = lua.create_table_with_capacity(values.len(), 0)?;
             for (index, value) in values.iter().enumerate() {
                 output.raw_set(index + 1, output::effect(lua, value)?)?;
             }
-            Ok(output)
+            Ok((output, pending_deadlines))
         });
         methods.add_method(
             "children_page",

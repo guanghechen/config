@@ -48,17 +48,22 @@ local function decorate(view, first, last)
     local depth = rows.depths[index]
     local tree = view._header.mode == "tree"
     local start = (depth + (tree and 1 or 0)) * view._context.indent
+    local guide_highlight = cache.guide_first
+        and row >= cache.guide_first
+        and row <= cache.guide_last
+        and "TreeviewGuideActive"
+      or "TreeviewGuide"
     if tree then
       overlay(
         view,
         row,
         start - view._context.indent,
         rows.connector_last[index] and glyphs.last or glyphs.branch,
-        "TreeviewGuide"
+        guide_highlight
       )
     end
     for _, guide in ipairs(rows.guides[index]) do
-      overlay(view, row, guide * view._context.indent, glyphs.guide, "TreeviewGuide")
+      overlay(view, row, guide * view._context.indent, glyphs.guide, guide_highlight)
     end
     local icon = rows.icons[index]
     local highlight = rows.highlights[index] or "TreeviewLabel"
@@ -122,6 +127,7 @@ local function highlights()
   for name, link in pairs({
     TreeviewLabel = "Normal",
     TreeviewGuide = "NonText",
+    TreeviewGuideActive = "TreeviewGuide",
     TreeviewSelection = "DiagnosticOk",
     TreeviewError = "DiagnosticError",
     TreeviewMatch = "Search",
@@ -166,6 +172,17 @@ vim.api.nvim_set_decoration_provider(namespace, {
       view._decorations = prepared
     end
     view._decorations.leftcol = vim.fn.getwininfo(winnr)[1].leftcol
+    local row = vim.api.nvim_win_get_cursor(winnr)[1] - 1
+    local active = vim.api.nvim_get_option_value("cursorline", { win = winnr })
+    local guide_first, guide_last = active and row or nil, active and row or nil
+    if vim.api.nvim_get_current_win() == winnr then
+      local mode = vim.api.nvim_get_mode().mode:sub(1, 1)
+      if mode == "v" or mode == "V" or mode == "\022" then
+        local anchor = vim.fn.getpos("v")[2] - 1
+        guide_first, guide_last = math.min(anchor, row), math.max(anchor, row)
+      end
+    end
+    view._decorations.guide_first, view._decorations.guide_last = guide_first, guide_last
     return true
   end,
   on_range = function(_, winnr, bufnr, first, _, last, end_col)

@@ -626,7 +626,7 @@ function M:render_winbar()
         self._titles[winnr] = text
         vim.api.nvim_set_option_value("winbar", text, { win = winnr })
       end
-      local highlight = "Normal:m_ex_bg,EndOfBuffer:m_ex_eob,WinBar:m_ex_winbar,WinBarNC:m_ex_winbar,WinSeparator:m_ex_border,TreeviewGuide:m_ex_indent,CursorLine:"
+      local highlight = "Normal:m_ex_bg,EndOfBuffer:m_ex_eob,WinBar:m_ex_winbar,WinBarNC:m_ex_winbar,WinSeparator:m_ex_border,TreeviewGuide:m_ex_indent,TreeviewGuideActive:m_ex_indent_active,CursorLine:"
         .. (vim.api.nvim_get_current_win() == winnr and "m_ex_cursorline" or "m_ex_cursorline_blur")
       if self._focus_highlights[winnr] ~= highlight then
         self._focus_highlights[winnr] = highlight

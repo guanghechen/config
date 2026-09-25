@@ -21,11 +21,15 @@ function M.open(path, options)
     local data = Data.new(value, tree)
     local poll = tree._poll
     local previous, previous_count = setmetatable({}, { __mode = "k" }), 0
-    local watch_revision, watch_error
+    local watch_revision, watch_error, acknowledged
     tree._poll = function(owner)
       local preparing = poll(owner)
       if not preparing then
-        owner._native:acknowledge_publication(owner:source():revision())
+        local revision = owner:source():revision()
+        if acknowledged ~= revision then
+          owner._native:acknowledge_publication(revision)
+          acknowledged = revision
+        end
       end
       local hints, current, changed = {}, setmetatable({}, { __mode = "k" }), false
       for view in pairs(owner._views) do
@@ -64,7 +68,31 @@ function M.open(path, options)
         end
       end
       local decorating = annotations.poll(owner, value)
-      return preparing or decorating or value:is_busy()
+      local pending_jobs, running_jobs, finished_jobs = false, false, false
+      for job in pairs(data._jobs) do
+        local status = job:status()
+        if status.terminal then
+          data._jobs[job] = nil
+          -- The final publication may have arrived after this turn's event drain.
+          finished_jobs = true
+        else
+          pending_jobs = true
+          running_jobs = running_jobs or status.cancelling or status.confirmation == nil
+        end
+      end
+      local busy = preparing or decorating or running_jobs or finished_jobs or value:is_busy()
+      if
+        not busy
+        and not pending_jobs
+        and not owner._pending_deadlines
+        and next(owner._views) == nil
+        and next(owner._works) == nil
+        and next(owner._pending_reads) == nil
+        and next(owner._queries) == nil
+      then
+        return nil
+      end
+      return busy
     end
     return data
   end)

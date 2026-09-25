@@ -64,6 +64,13 @@ Action 入队时固定该值，不接受缺失选项、Lua truthy 值或提交�
   Lua 通过异步回调或协程让出等待，不阻塞 Neovim；具体 Future 适配沿用仓库的异步工具，Rust core
   不依赖 Lua 的 Future 实现。
 
+Lua 的共享 poller 允许无需求的 owner 暂停订阅并以 weak reference 保留恢复资格。新的 native 请求及其完成会恢复
+这些 owner，显式 attach/start 也可恢复对应 owner；请求完成后的 effects 不能因先前暂停而滞留。
+暂停 Lua 轮询不取消 native action，不改变任务、读取或 frame 的所有权。
+本轮 `_poll` 回调中的新请求或显式 watch 必须保留下一轮观察，不能被本轮旧的 idle 结果撤销；显式 unwatch 仍直接移除订阅。
+Native `events()` 同时返回仍可能触发 deadline 的未准备 task 标志；该标志与本批 effects 在同一锁下交付。
+到期失败事件入队后才撤销其观察需求，Lua 不能先看到“无任务需求”再错过 `TaskFailed`。
+
 成功 payload 按命令固定：
 
 | 命令             | Future 的成功完成值                                                        |

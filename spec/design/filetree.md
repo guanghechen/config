@@ -164,6 +164,8 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   其余按最近需求顺序分配；超出预算的目录标记为需要手动/后续重读，不能声称保持实时完整。
 - 无 view 且无任务的目录释放 watch/读取需求，保留的 source 标记需要重读；再次使用时刷新。
   任务不依赖 pane 存活，最后一个 data/state/task/frame 引用消失后回收对应资源。
+- 无 view、Job、读取、query 或未准备 task deadline 需求的 Lua data 暂停共享轮询；新 native 请求及其完成、重新 attach view 或开始 Job 时恢复。
+  任务仍可在没有 view 时发布结果；同一 source revision 不重复发送 publication acknowledgement。
 - Symlink 浏览按每条逻辑祖先链的目标目录 identity 检测循环，允许非祖先方向的别名访问。
   遇到循环保留链接项并报告循环原因，停止该分支递归；不全局去重物理目录从而吞掉其他合法 alias。
 

@@ -470,6 +470,7 @@ function M.new(state, options)
   end
   decorations.attach(self)
   state._data._views[self] = true
+  async.watch(state._data)
   self._latest = native:snapshot()
   self:_poll()
   return self

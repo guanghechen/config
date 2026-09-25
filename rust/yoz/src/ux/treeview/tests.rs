@@ -2399,6 +2399,103 @@ fn wait(ticket: Ticket) -> Outcome {
 }
 
 #[test]
+fn t_runtime_deadline_observation_lasts_until_failure_is_drained() {
+    for delay in [Duration::ZERO, Duration::from_millis(30)] {
+        let data = DataHandle::new(Limits::default()).unwrap();
+        let Outcome::State(state) = wait(data.submit(Action::CreateState(
+            Root::Forest(Arc::from([])),
+            DisplayOptions::default(),
+        ))) else {
+            panic!("state");
+        };
+        let revision = state.status().unwrap().revisions.selection.unwrap();
+        let Outcome::Reply(Reply::Locked { token, .. }) = wait(state.submit(Action::Lock(
+            state.id(),
+            revision,
+            Some(Instant::now() + delay),
+        ))) else {
+            panic!("lock");
+        };
+        let started = Instant::now();
+        let mut failures = 0;
+        loop {
+            let (effects, pending) = data.poll_events();
+            for effect in effects {
+                let Effect::TaskFailed { lock, error } = effect else {
+                    panic!("unexpected task effect");
+                };
+                assert_eq!(lock, token);
+                assert_eq!(error.code, ErrorCode::Stale);
+                failures += 1;
+            }
+            if !pending {
+                assert_eq!(failures, 1, "failure must precede suspension");
+                break;
+            }
+            assert!(started.elapsed() < Duration::from_secs(10));
+            std::thread::yield_now();
+        }
+        assert!(!state.status().unwrap().locked);
+        let (effects, pending) = data.poll_events();
+        assert!(effects.is_empty());
+        assert!(!pending);
+    }
+}
+
+#[test]
+fn t_runtime_deadline_observation_tracks_only_unprepared_timed_tasks() {
+    let data = DataHandle::new(Limits::default()).unwrap();
+    let mut tasks = Vec::new();
+    for _ in 0..2 {
+        let Outcome::State(state) = wait(data.submit(Action::CreateState(
+            Root::Forest(Arc::from([])),
+            DisplayOptions::default(),
+        ))) else {
+            panic!("state");
+        };
+        let revision = state.status().unwrap().revisions.selection.unwrap();
+        let Outcome::Reply(Reply::Locked { token, .. }) = wait(state.submit(Action::Lock(
+            state.id(),
+            revision,
+            Some(Instant::now() + Duration::from_secs(10)),
+        ))) else {
+            panic!("lock");
+        };
+        tasks.push((state, token));
+    }
+    assert!(data.poll_events().1);
+    let (prepared, prepared_token) = &tasks[0];
+    assert!(matches!(
+        wait(prepared.dispatch(
+            Command::PrepareSources {
+                lock: *prepared_token,
+                retry: false,
+            },
+            Context::default(),
+        )),
+        Outcome::Reply(Reply::Ready { .. })
+    ));
+    assert!(data.poll_events().1, "the other task still has a deadline");
+    let (unlocked, unlocked_token) = &tasks[1];
+    assert!(matches!(
+        wait(unlocked.submit(Action::Unlock(unlocked.id(), *unlocked_token))),
+        Outcome::Reply(Reply::Applied { .. })
+    ));
+    assert!(!data.poll_events().1);
+    assert!(prepared.status().unwrap().locked);
+    assert!(!unlocked.status().unwrap().locked);
+    let revision = unlocked.status().unwrap().revisions.selection.unwrap();
+    assert!(matches!(
+        wait(unlocked.submit(Action::Lock(unlocked.id(), revision, None))),
+        Outcome::Reply(Reply::Locked { .. })
+    ));
+    assert!(
+        !data.poll_events().1,
+        "untimed tasks do not need deadline polling"
+    );
+}
+
+#[test]
 fn t_runtime_futures_complete_and_shared_views_hold_a_live_state() {
     let data = DataHandle::new(Limits::default()).unwrap();
     let outcome = wait(data.submit(Action::Import(Import {

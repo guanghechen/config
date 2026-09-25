@@ -27,6 +27,7 @@ function M.gen_hlgroup_map(context)
     m_ex_eob = { fg = bg, bg = bg },
     m_ex_ignored = { fg = u.fg4, italic = true },
     m_ex_indent = { fg = u.bg3 },
+    m_ex_indent_active = { fg = u.fg4 },
     m_ex_selected = { fg = c.accentYellow, bold = true },
     m_ex_selected_cl = { fg = c.accentYellow, bg = u.bg3, bold = true },
     m_ex_selected_clb = { fg = c.accentYellow, bg = u.bg2, bold = true },

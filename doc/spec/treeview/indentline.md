@@ -18,6 +18,8 @@ Treeview 不解析 filepath，也不从文本缩进反推结构。
 - 行文本为 `indent + icon + 空格 + label`；无图标时为 `indent + label`。正文不自动换行。
 - Indent 独立高亮，范围为 `[0, indent 的 UTF-8 字节长度)`；显示列不能直接作为 extmark byte offset。
 - Cursorline、selection、图标和名称样式分别处理，不叠加普通文本 indentline/indentscope guide。
+- Guide 的普通行使用 `TreeviewGuide`，CursorLine 与 Visual 范围使用 `TreeviewGuideActive`；后者默认 link 到前者，
+  consumer 可独立映射其前景色。Overlay 保留行背景，Normal/Visual 变化不改正文或 layout。
 - 图标占两列（glyph 与一个空格）；selection 标记固定在最右侧，未选择时保留两列空白，不占缩进与图标之间的位置。
 
 普通显示按可见兄弟位置绘制。Selected-only 保留选区过滤前的 source sibling 位置；压缩行使用

@@ -8,6 +8,7 @@ local Upload = require("ux.treeview.upload")
 
 ---@class ux.treeview.Data
 ---@field _pending_reads                table<string, table>
+---@field _pending_deadlines            boolean
 ---@field _native                       yoz.ux.treeview.Data
 ---@field _read_children                ?fun(request: ux.treeview.IRequest): ux.treeview.IPage|stl.c.Future
 ---@field _on_effect                    ?fun(effect: ux.treeview.IEffect): nil
@@ -171,7 +172,9 @@ end
 
 ---@return boolean
 function Data:_poll()
-  for _, event in ipairs(self._native:events()) do
+  local effects, pending_deadlines = self._native:events()
+  self._pending_deadlines = pending_deadlines
+  for _, event in ipairs(effects) do
     if event.kind == "NeedChildren" or event.kind == "Query" then
       self._pending_reads[event.work] = event
     elseif event.kind == "CancelChildren" or event.kind == "CancelQuery" then
@@ -202,20 +205,12 @@ function Data:_poll()
   end
   local preparing = false
   for view in pairs(self._views) do
-    local revisions = view._state:status().revisions
     if
       not view._closed
       and not view._gesture
       and not view._render_error
       and not view._projection_error
-      and (
-        view._busy
-        or view._latest
-        or (
-          view._header
-          and (view._header.data_revision ~= revisions.data or view._header.state_revision ~= revisions.state)
-        )
-      )
+      and (view._busy or view._latest or (view._frame and not view._state._native:applicable(view._frame)))
     then
       preparing = true
       break
@@ -253,6 +248,7 @@ function M.from_native(native, options)
     _queries = setmetatable({}, { __mode = "v" }),
     _works = {},
     _pending_reads = {},
+    _pending_deadlines = false,
   }, Data)
   async.watch(data)
   return data
