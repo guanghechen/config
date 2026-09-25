@@ -14,7 +14,9 @@ abbr -a cd.... 'cd ../../../'
 abbr -a cd..... 'cd ../../../../'
 abbr -a gr 'git remote -v | awk \'{print $2}\' | head -1'
 abbr -a ll 'lsd -l'
+abbr -a ports 'netstat -tulanp'
 abbr -a tf 'touch (date +%Y%m%d_%H%M%S).log'
+abbr -a tls 'tree --dirsfirst -aCF'
 
 alias chown='chown --preserve-root'
 alias chgrp='chgrp --preserve-root'
@@ -29,9 +31,7 @@ alias ln='ln -i'
 alias ls='ls --color=auto'
 alias mkdir='mkdir -pv'
 alias mv='mv -i'
-alias ports='netstat -tulanp'
 alias rm='rm -i -I'
-alias tls='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
 ### claude code
@@ -50,13 +50,13 @@ abbr -a ggg 'gemini --model="gemini-3-pro-preview" --yolo'
 if set -q HOMEBREW_PREFIX; and test -x "$HOMEBREW_PREFIX/bin/fzf"
     alias fzf="$HOMEBREW_PREFIX/bin/fzf"
 end
-alias fvim='fzf --print0 | xargs -0 -o nvim'
+abbr -a fvim 'fzf --print0 | xargs -0 -o nvim'
 
 ### lazygit
 if test -f "$HOME/.config/lazygit/local/theme.yml"
-    alias lg="lazygit -ucf '$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml'"
+    abbr -a lg "lazygit -ucf '$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml'"
 else
-    alias lg="lazygit -ucf '$HOME/.config/lazygit/config.yml'"
+    abbr -a lg "lazygit -ucf '$HOME/.config/lazygit/config.yml'"
 end
 
 ### lst
