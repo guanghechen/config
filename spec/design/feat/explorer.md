@@ -1,247 +1,145 @@
 # Explorer 设计
 
-## 概述
+Status: Design。本文记录默认入口的技术契约与当前默认行为。
+[交互讨论](../../../doc/spec/explorer/module.md) 保留未定稿提案；本文不将其他草案自动升格。
 
-`era.m.explorer` 由 `Tree + View + Widget + Action + FileManager` 组成，内部使用 filepath-only 模型。
-路径只在系统边界转换，由 `stl.os.path` / `stl.os.fs` 统一处理；`#` 等文件名字符不具有额外路径语义。
+## 所有权与模块边界
 
-## 路径不变式
+- 默认入口保持 `era.widget.explorer`，通过 `era.m.explorer.Widget` 组合
+  [Filetree](../filetree.md) 与 [Treeview](../../../doc/spec/treeview/README.md)。
+- Rust `ux/explorer` 组织 workspace、上一个 display root、文件 Job 和浏览动作。
+  Filetree 持有 filesystem 事实，Treeview 持有唯一的 topology、root、展开、cursor、selection 和锁。
+  Explorer 通过同一个 owner 提交 selection 与用途，不再维护 Lua tree 或独立 pending sources。
+- Lua `session.lua` 管理 native handles 与导航 generation；`widget.lua` 管理 pane、标题和持久化偏好；
+  `action.lua` / `keymaps.lua` 解释输入；`jobs.lua` 管理准备、确认、进度与取消；`buffers.lua` 接入 LSP/buffer；
+  `subscriptions.lua` 接入 Git/diagnostics；`view.lua` 装饰 viewport；`exit.lua` 管理退出协议。
+- 实例可传 `data` 共用资源并创建独立 state，也可传 `session` 共享完整浏览/选区/任务状态。
+  每个 view 使用专用 buffer。显示开关以 native state 为准，标题直接读取它；Widget observables 只保存偏好和外部输入，
+  native 变化不回写成新输入。单个开关提交带同版 revision 的 partial intent，共享 session 与 reveal 的变化同步到各标题。
+- 关闭 pane 释放 view、保留 session，不清空选区、不取消 Job。最后 Widget dispose 后撤销输入订阅并取消准备；
+  已执行 Job 由 registry 保留至终态，再释放 handles。同一 data 共用一个订阅 controller，来源 ledger 与 revision 随 data 存活。
 
-1. 内部只使用 `filepath`，不使用 URI。
-2. 内部路径分隔符固定为 `/`（Windows 内部同样如此）。
-3. 目录路径在内部以 `/` 结尾，文件路径不以 `/` 结尾。
-4. 仅在系统边界做一次路径转换（`/` -> OS separator），统一使用 `yoz.canonical_path.to_os_path(...)`。
-5. `#` 是普通文件名字符，不参与路径解析语义。
-6. `/` 与 `C:/` 视为 root，不再向上回退。
+## 浏览与输入
 
-系统边界包括：
+- 默认 Tree、显示隐藏项、压缩单子目录链，selected-only 关闭，pane 宽 30 列；可恢复显示偏好与宽度。
+  正文从 display root 的直接 children 开始，root 放在 tabline；无 tabline 时使用 winbar。
+  隐藏后重开恢复 state；首次打开失败保留可关闭的错误 pane，`R` 重试。
+- Tree/List 均使用 Filetree 的目录优先 sibling source order。List 始终递归，正文使用相对 display root 的 ancestry text；
+  Tree 的展开、折叠和结构导航在 List 中不执行。
+- Root/reveal 的异步 resolve 使用 generation，迟到结果不覆盖新导航。Reveal 优先保持逻辑路径；目标位于外部时
+  尝试 display root 本身及其直接 symlink children，多个 alias 取物理目标最具体者，无法映射才切到目标父目录。
+- Workspace 保存 occurrence 与路径 fallback。Root 删除后明确提示，可返回父目录；workspace 同名重建后可重新定位，
+  新资源不继承旧 occurrence。
+- 打开、复制路径等动作在输入时捕获 Resource/frame，后来的光标移动不改变本次目标。Visual 通过 Treeview
+  `range_action` 保持布局与端点，不在 Lua 重建范围算法。不新增 `<Esc>` 绑定，`i` / `I` 不进入正文编辑。
 
-- `stl.os.fs.*` 文件系统 facade（推荐）
-- `vim.fn.*` / `vim.uv.fs_*` / `vim.system(...)`（若直接调用，调用前必须先 `yoz.canonical_path.to_os_path(...)`）
-- `vim.ui.open(...)`
-- `vim.cmd("split/tabnew/vsplit ...")`
-- `dot.win.open_filepath(...)`
+## Selection 与文件操作
 
-## 模块职责
+- Normal `<Tab>` 与 `ms` 使用 select 用途；`mc` / `mx` 显式使用 copy/cut 用途。未选项加入当前选区并切换用途；
+  已选项上切换用途保留选择及 selection stamp，再次请求同一用途才取消该项。select 用途清除 copy/cut。
+- Normal `c` / `x` 有逻辑选区时标记 copy/cut，无选区时询问光标项的复制/移动目标路径；复制默认使用 `-copy` 名称。
+  路径操作锁定按键时捕获的 selection revision，排队期间改选则拒绝，不改用新选区。
+  Visual `<Tab>` 切换范围选择并保留用途；Visual `c` / `x` 将范围并入已有选区并刷新 stamp。
+- `p` 只对 copy/cut 生效；取得 selection lock 后从已提交状态固定用途，与 Ready 源项配对。Treeview 的 subtree roots、
+  self-only 和任务清理遵循其契约，不能按可见行猜测完整目录范围。
+- 消费逻辑选区的只读动作要求源项完整；selection pending 时取得选区锁，自动补载必要的 children，Ready 后继续原动作。
+  标题显示 loading selection，Space menu 可取消；等待期间允许浏览，取消、读取失败或关闭原 pane 后不消费部分集合，
+  保留选区与用途。取得锁前 selection revision 已变化时明确失败，不能改用新的选区。已 full 的目录直接作为完整源项，
+  不为导出目录路径补载后代；失败后用户重新执行动作创建新的准备任务。每个新准备任务首次查询显式重试
+  选区所需的失败 children，后续轮询不重复重试；读取再次失败时终止本次动作，等待用户下一次尝试。
+- 当前目录行是 paste/new 的目标，文件行用父目录，空树用 display root。`a` 接受相对路径，末尾 `/` 表示目录；
+  `A` 明确新建目录。自动补父目录，禁止覆盖最终目标；新文件成功后 reveal 并打开，新目录只 reveal。
+  创建完成使用 Job 已发布的 NodeId 定位，保留创建时的逻辑 occurrence，不按同一路径重新绑定资源。
+- `r` 接受一个源项及单一 basename，保持父目录；无选区时用光标项。Space menu 的 Copy/Move to path 只接受一个源项，
+  输入为完整目标路径，相对输入以 cwd 解析，允许补父目录；多项使用 Copy/Move to directory，逐项映射为原 basename。
+  Rename 默认值按平台从 native raw path 提取，Unix 文件名中的反斜杠和原始 bytes 不被重解释为分隔符或 display label。
+- Normal `d` 使用选区，无选区时用光标项，先确认。`dot.context.explorer.trash=true` 时明确送回收站，否则明确永久删除；
+  回收站工具不可用或失败不降级永久删除。
+- Visual `d` / `oa` 直接消费输入时捕获的临时范围；范围内父节点覆盖后代，按最外层子树去重。
+  Rust 只读范围查询复用 Treeview 的 identity / ancestry 校验，不改写逻辑选区。删除确认和 Job 使用固定的源项，
+  不随光标移动或同名资源替换重定向；取消不删除文件，原有无关标记及 copy/cut 用途保留。
+- 目录合并、逐项冲突、type/symlink 校验、跨卷 move 和部分成功遵循 Filetree 契约。覆盖提示同时显示源和目标，默认 Skip。
+  成功项清理，失败/跳过保留；context Stale 单独报告，不能重绑同名新项。
+- 准备、执行、确认和取消期间锁定选区与新修改操作，允许浏览。取消准备会结束等待中的输入 Future，等原 token 解锁再恢复；
+  迟到 callback 没有执行资格。Job 取消要等 native 终态；标题显示进度，Space menu 提供取消和最近结果。
+  Job 终态与新确认由 Treeview 的共享 poller 检测并及时交付，不等待低频进度刷新；无执行任务时撤销该订阅。
+  无可见 pane 时 Job 继续使用全局 UI 确认，不强制重开 Explorer。
 
-- `resource/file.lua`：文件系统读写与监听，维护内部路径与 OS 路径的边界转换。
-- `tree.lua`：维护树结构、selection、展开状态，并按 `filepath` 定位节点。
-- `node.lua`：定义节点结构与路径拼装。
-- `view.lua`：计算 line、highlight、diagnostic、Git status 等渲染数据。
-- `widget.lua`：管理窗口生命周期与 keymap。
-- `action.lua`：执行 open、create、delete、copy、move、rename、paste 等用户动作。
-- `nvimbar/component/explorer.lua`：只读消费 canonical root；启动时缓存稳定的 CWD/workspace display context，不写 Explorer state。
+## 文件窗口与 LSP
 
-## 数据模型
+- 打开复用 `dot.win.pick_sourcefile`，排除 Explorer、浮窗、固定 buffer 和其他非 sourcefile pane；单候选直接使用，
+  多候选选择，无候选可新建垂直窗口。放弃选择保留原焦点。
+  默认打开优先使用当前 tab 记住的源码窗口，`w` 明确通过 window picker 选窗；先替换目标 buffer，成功后再切换焦点，
+  避免激活即将被替换的旧 buffer。加载失败保留原焦点及目标 buffer。
+- Normal `l` / `<CR>` / 双击只打开捕获的光标文件，保留已有逻辑选区；Tree 目录仍切换展开，List 目录不执行。
+  显式 `o<CR>` 有逻辑选区时打开所选文件，无选区时回退到光标项；其他显式窗口策略继续使用选区优先规则。
+- 批量打开只确定一次目标 window，跳过目录，加载各文件并展示最后成功项；保留 selection/mode。
+  支持水平 split、垂直 split、新 tab；移动光标不隐式预览或打开。
+- Move/rename 使用 Filetree 移动准备握手：覆盖确认通过后请求 `workspace/willRenameFiles`，应用返回的 workspace edits；
+  Rust 复验 identity/physical paths 后执行 IO；成功结果才重命名 buffers、重选 LSP clients 并发送 `workspace/didRenameFiles`。
+  取消后的迟到 response 不应用 edits。单 client 沿用 1 秒超时，无 edit 时继续；已应用 edits 不因后续 IO 失败自动回滚。
+- Buffer 同步保留 bufnr、内容和 modified 状态，目录移动覆盖已打开后代；只解析父目录 alias，移动末尾 symlink 不重命名
+  referent buffer。删除/回收文件保留对应 buffer。
+  Windows physical path 在编辑器边界转换 verbatim drive/UNC 前缀并保留 UNC share root，preparation、buffer 匹配
+  和完成通知使用同一套 Neovim 路径；native identity 校验仍使用原始 physical path。
+- 目标名已有另一 buffer 时保留双方内容，记录 `b:filetree_move_target` 并报告待处理路径，不强删 buffer。
+  无法表示为 Neovim filepath 的结果仍可显示/清理，跳过依赖该 filepath 的编辑器动作。
 
-### Node
+## 装饰与订阅
 
-关键字段：
+- `dot.theme.hlgroup.explorer` 集中定义 `m_ex_*`、`m_fe_*` 与共享的 `m_ft_*`，遵循 theme loader 的 fallback。
+- 树形连接线使用 muted 前景色，在光标行与 Visual 选区中持续可见并保留行背景；横向滚动时裁掉屏幕外的线条。
+- 图标和名称有独立 highlight range。特殊目录使用 `MiniIcons*`，普通目录图标用 `m_ft_dirname`，展开只改 glyph。
+  Rosé Pine 普通目录沿用 subtle，ignored 图标使用 muted 对应的 `m_ex_ignored`。
+- 文件/目录名称共用 `m_ft_filename`；优先级为 ignored → error → warning → Git status → 中性色。
+  Info/hint 不覆盖名称色，selection/copy/cut 用独立 sign，焦点用背景。
+- Diagnostics 按 E/W/H/I 显示非零分类，最多两类；Git 用具体变更字符与颜色表达状态，不额外显示 `S/U`。
+  纯 staged 的 `A/M/R/C/T` 使用 staged 前景色；含 unstaged 的行按具体变更类型着色，删除与冲突始终保留各自颜色。
+  装饰不写正文，不为聚合打开文件。
+  Diagnostics 与 Git status 统一靠右显示，Git 名称色与 status 复用 `m_ft_git_*` 前景色，状态区保留当前行背景。
+  Git 标记连续排列（如 `MDA`），与 diagnostics 之间保留一个空格；untracked 使用 ``，ignored 使用 ``。
+- 文件链接、目录链接与 dangling link 在右侧独立显示 `  `，名称和 fileicon 保留各自语义。
+  clean 使用 `m_ex_symlink`，Git 状态色按 ignored、冲突、删除、untracked、unstaged、staged 的优先级选择
+  `m_ex_symlink_*`；主题生成 40% 紫色 + 60% 状态色，diagnostics 不覆盖链接标识的 Git 混色。
+  图标和尾部留白共同叠加当前行背景；链接身份来自 Filetree Resource，不在绘制时探测文件系统。
+  压缩目录链不跨越 symlink，普通后代不继承链接标识；链接目标出现、消失及同名替换通过资源刷新更新。
+- 订阅复用既有 Git status/ignore snapshots；diagnostics 按 namespace/buffer 替换。重连补齐停订阅期间的撤销；
+  Busy 保留 pending 输入并延迟重试，手动 refresh 也重新同步 diagnostics。
+  Ignore cache 失效独立触发可见路径预加载，完成后再提交 annotation 输入；后台 pane 再显示时按失效版本重新查询，
+  不依赖 source/layout/viewport 变化。预加载期间释放最后一个 owner 后，迟到结果不得再次提交输入。
+- Diagnostics/error/warning 前后跳转只查可见文件，Git 也可跳聚合目录，首尾循环。Find Files、Search Files、Find Explorer、
+  Copy Path、Quickfix、File Info、System Open、Add to AI 调用现有能力；AI 动作只添加位置，不发送消息。
 
-- `filepath: string`
-- `nodename: string`
-- `nodetype: "D" | "F"`
-- `is_link: boolean`：当前 entry 本身是否为 symlink，与跟随 target 得到的 `nodetype` 分开保存。
-- `parent: Node|nil`
-- `children: Node[]`
-- `selected/expanded/loaded/has_selected`
+## 默认键位
 
-说明：
+| 按键 | 动作 |
+| --- | --- |
+| `h` / `l` / `<CR>` | 折叠/父目录；展开或打开 |
+| `z` / `W` / `[i` / `]i` | 递归切换；全部折叠；父行；最后直接子项/兄弟 |
+| `<BS>` / `.` / `gb` / `gc` / `gw` | 父 root；当前目录；上一 root；cwd；workspace |
+| `t1` / `t2` / `t3` / `t4`、`H` | selected-only；Tree/List；压缩；隐藏项 |
+| `<Tab>` / `ms` / `mc` / `mx` | select；select；copy；cut，同用途切换选中 |
+| `c` / `x` / `p` | 无选区时复制/移动到路径，有选区时标记 copy/cut；paste |
+| `a` / `A` / `r` / `d` | 新建；新建目录；rename；delete/trash |
+| `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>` | 打开选区；选窗口；split；vsplit；tab |
+| `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h` | diagnostic；error；warning；Git 导航 |
+| `of` / `os` / `oe` / `oc` / `oi` / `oo`、`O` / `<C-q>` / `oa` | 查找；搜索；目录；路径；详情；系统打开；quickfix；AI 位置 |
+| `<Space>` / `R` / `?` / `q` | 动作和任务；刷新；帮助；关闭 pane |
 
-- `superroot.filepath = ""`，用于全局树骨架。
-- 真实文件系统 root 由普通节点表示，例如 `/` 或 `C:/`。
+Normal `<Space>` 使用 `nowait=false`，保留 `<leader>1` 等全局 leader 组合；单独按 Space 在 `timeoutlen`
+后打开动作菜单（原生 Neovim 默认 300 ms）。其余 Explorer 绑定继续使用 `nowait=true`。
 
-### Tree
+## 退出协议
 
-关键状态：
+- 用户输入的退出命令及可判定的命令链在 `CmdlineLeave` 执行前拦截；仅关闭整个进程时询问，关闭一个 pane 不触发。
+  默认 ZZ/ZQ 只在没有已有 mapping 时接入。
+- 默认 Wait 取消本次退出，任务继续，结束后不自动退出。Cancel operations and exit 等 native 终态后重放原命令，
+  仍经过 Neovim 未保存 buffer 检查；10 秒未停止则放弃本次退出，继续保留任务。
+- `ExitPre`/`QuitPre` 抛错不能否决 Neovim 退出。直接脚本退出、自定义 mapping 或动态 Ex 执行可能绕过前置交互；
+  `ExitPre` 必须取消并同步等到 native 终态，不能宣称此时仍能选择 Wait。强制终止进程不在可拦截范围。
 
-- `_superroot` 与 `_root`
-- `o_root_filepath`
-- `o_cursor_filepath`
+## 验证
 
-节点的 `selected/has_selected` 只表示显式 selection，不承载文件动作 mode。显式 selection roots
-保持 antichain：任意两个 root 之间不存在祖先关系。
-
-### View
-
-`View` 维护 `lnum_to_filepath` 与 `filepath_to_lnum`，并根据显式 selection 与 pending transfer 计算 sign。
-
-### 图标与名称的颜色分工（已决）
-
-`dot.theme.hlgroup.explorer` 是独立的 theme integration，其 `explorer/` 目录集中定义 `m_ex_*`、
-`m_fe_*` 和共享 filetree/Git 的 `m_ft_*` 高亮。主题实现遵循 theme loader 的统一 fallback 规则，
-symlink 状态混色由各主题实现直接生成。
-
-**丰富的类型配色只用于 fileicon；filename / foldername 的前景色由 Git status / LSP diagnostics 决定。**
-这是 `era.m.explorer` 的渲染契约，所有主题都必须遵守，不得通过主题精调改变其语义。
-
-- 图标独立表达文件类型或目录用途，可以使用丰富配色。图标与名称必须使用独立的 highlight range，
-  图标颜色不得扩散到名称。
-- 目录展开、折叠只改变 glyph，不改变类型色；空目录与尚未加载的目录也遵守此规则。
-  特殊目录保留其 `MiniIcons*` 类型色，普通目录使用主题的默认 folder icon 色。
-  Rosé Pine 的默认 folder icon 使用 `subtle`，不使用承担焦点强调的暖粉色 `rose`；ignored 图标仍使用 `muted`。
-- 没有 Git/LSP 状态的 file/folder name 共用中性正文色；不按文件类型、扩展名、目录名称或展开状态着色。
-  两者统一使用 `m_ft_filename`。目录图标仍可使用 `m_ft_dirname` 或对应的 `MiniIcons*`。
-- 名称颜色的优先级为：Git ignored 的弱化色 → LSP error → LSP warning → Git status → 中性正文色。
-  目录名称使用该目录聚合后的 Git/LSP 状态；LSP info/hint 保留独立状态标记，不覆盖名称颜色。
-- selection、copy、move 使用独立的 sign 表达，不改写名称的前景色，也不遮盖 Git/LSP 状态色。
-  当前行和焦点通过背景强调，保持名称的状态色。
-- 主题只负责为上述角色选择 palette 颜色。不得因为某种主题的目录色、选中色更好看，就给普通名称
-  增加装饰色。
-
-例如，干净的 `lsp/`、`queries/`、`main.lua` 名称应使用相同中性色，图标仍可各自着色；
-有 Git 修改的目录显示 Git 状态色，选中后仍保留该颜色并附加 selection sign；
-同时有 LSP error 的非 ignored 节点显示 error 色。
-
-### Symlink 标识
-
-- 文件链接、目录链接和 dangling link 均在右侧状态区显示独立的软链接图标 `  `（`nf-oct-file_symlink_file`，`U+F481`）；关闭图标时仍显示。
-  右侧顺序为 LSP diagnostics、Git status、link、selection / transfer sign。软链接图标尾部保留一格留白，
-  图标与留白共同使用当前行背景，避免 Nerd Font 字形跨格时出现高亮断裂。
-- clean 标识使用 `m_ex_symlink` 的紫色强调色并加粗；存在 Git status 时使用 40% 紫色 + 60% 对应状态色。
-  untracked、modified、added、ignored、deleted 等状态复用已有 Git 配色，ignored 优先；staged/unstaged
-  与冲突、删除的优先级沿用 Git status 的解析结果。名称继续遵守 Git/LSP 状态色优先级，LSP 不覆盖软链接图标的 Git 混色。
-- `m_ex_symlink_*` 混色在主题加载时生成；View 复用名称渲染的 Git 查询结果选择高亮。
-- 目录链接仍可展开，dangling link 作为文件叶子显示。普通后代不继承祖先的 symlink 标识。
-- 空目录路径折叠不跨越 symlink 节点，使具体的链接 entry 始终占据独立一行。
-- 链接属性在资源加载与刷新时更新，View 只消费节点数据，不在渲染时探测文件系统。
-
-### Pending transfer 的归属
-
-`Action` 是 pending transfer 的唯一 owner，状态结构为：
-
-- `mode = "copy" | "move"`
-- `sources`：当前 pending source entries
-- `source_filepaths`：用于渲染与查询的 filepath set
-
-显式 selection 与 pending sources 是不同集合，pending source 可以独立存在。普通模式 mark 根据请求
-类型重建或清空 pending；Visual range selection 在存在 pending transfer 时同步更新 `sources` 并继承
-其 mode。所有显式 selection 使用相同的 selected/copy/move sign。`Widget` 只向 `View` 传递状态，集合更新、文件系统写入和状态清理由 `Action` 执行。
-Rename 与单项/Visual Delete 成功后，只移除被旧路径覆盖的 pending sources。显式 selection 的批量
-Delete 只要删除了至少一项，就清空 selection 与 pending；失败项不保留，需重新选择。
-
-## 关键流程
-
-### 打开文件
-
-1. 从 render 状态获取内部 filepath。
-2. 调用 `yoz.canonical_path.to_os_path(...)` 转为 OS 路径。
-3. 执行 `open/split/tabnew/vsplit/system-open`。
-
-`l` 打开文件时优先使用当前 tab 记住的源码窗口，`w` 通过 window picker 选窗；选定窗口后共用
-打开流程，先替换目标窗口的 buffer，成功后再切换焦点，避免提前激活即将被替换的旧 buffer。
-
-### 读写文件系统
-
-1. `Action/Tree` 层传入内部 filepath（slash-only）。
-2. `FileManager` 在边界通过 `yoz.canonical_path.to_os_path(...)` 做路径转换。
-3. 文件系统调用优先走 `stl.os.fs`。
-4. 文件系统返回的 OS path 通过 `yoz.canonical_path.from_os_path(..., keep_trailing_slash)` normalize 为内部 filepath。
-5. 返回值与节点状态仍保持内部 slash-only。
-
-### 创建路径
-
-1. 用户输入先归一化为内部 slash-only 路径。
-2. 内部组合目标路径并更新 tree。
-3. 真正 IO 时在 `FileManager` 转 OS 路径。
-
-### Reveal 与 symlink
-
-1. 目标位于当前 root 时，直接按内部 logical filepath 展开并定位。
-2. buffer filepath 已被系统 canonicalize 到 root 外时，`FileManager` 尝试通过当前 root 本身或其直接可见
-   symlink child 重建 logical filepath；多个 alias 匹配时优先选择 canonical target 最具体的一个。
-3. alias 映射成功时保持当前 root；无法映射时才切换到 canonical target 的父目录。
-
-### 移动/复制
-
-记显式 selected roots 为 `S`，当前 focused item 为 `F`，pending transfer 为 `P`。
-
-#### 多选与 mark
-
-`S` 非空即处于 multi selection 模式（只有一个 selected item 也算）；独立的 `P` 不表示进入
-multi selection。类型为 `cut | copy | select`：`cut/copy` 分别对应 `P.mode = move/copy`，
-`select` 表示有显式 selection 且无 `P`。所有 selected items 共用一个类型。
-
-`m` 是 mark 前缀，单独不绑定动作：`mx/mc/ms` 分别请求 `cut/copy/select`。
-记请求类型为 `T`，统一转换规则如下：
-
-- `F` 未选中：将 `F` 加入 `S`，将整个 multi selection 类型切换为 `T`。
-- `F` 已选中，当前类型不同于 `T`：保留所有 selected items，只切换类型。
-- `F` 已选中，当前类型等于 `T`：取消 `F` 的选择；若它是唯一的 selected item，则退出
-  multi selection 并清空 `P`；否则保留其他 selected items 及其类型。
-- 每次 mark 后，`cut/copy` 以更新后的 `S` 精确替换 `P.sources`；`select` 清空 `P`。
-  不自动提升之前独立存在的 pending sources。
-- 延续 Tree 的 antichain 规则：selected directory 覆盖其后代；在后代上取消 selection 时移除
-  覆盖它的 selected root；选中祖先会替换已选中的后代 roots。
-
-例如，A/B 均为 `cut`：在 A 上按 `mc` 保留 A/B，并一起切为 `copy`；再次按 `mc` 只取消 A。
-只有 A 被选中时，同类型按键退出 multi selection，异类型按键保留 A 并切换类型。
-
-普通模式快捷键：
-
-- `x`：multi selection 下等同 `mx`；否则立即对 `F` 打开 `Move to` prompt。
-- `c`：multi selection 下等同 `mc`；否则立即对 `F` 打开 `Copy to` prompt。
-- `<Tab>`：始终等同 `ms`，普通模式从 `select` 类型进入 multi selection；multi selection 中
-  从 `cut/copy` 切回 `select` 时保留选择，再按才取消当前项。
-- `y`：保留直接 stage copy 入口；若 `S` 非空，先加入 `F`，以更新后的 `S` 设置 pending sources；
-  否则只以 `{F}` 设置 pending sources，不进入 multi selection。
-- `p`：直接粘贴到 focused directory；`F` 为文件时使用其父目录。
-- `<Esc>`：清空 `P`，保留显式 selection 并恢复为 `select`。
-- `r`：同目录 Rename，只接受单一名称。
-- `om`：移动光标项，prompt 默认显示 cwd-relative 的完整路径，相对输入以 cwd 解析。
-  文件路径不得以 `/` 结尾，目录路径必须以 `/` 结尾；移动不改变类型。目标是新的完整路径，
-  缺失的父目录自动创建，已存在的目标拒绝操作，目录不得移入自身后代。成功后清理旧路径覆盖的
-  pending sources 并刷新 tree。
-- `d`：有显式 selection 时删除选中项目，否则删除光标项，均需确认。
-- `o<CR>`：有显式 selection 时打开选中的文件（跳过目录），否则打开文件或切换光标目录展开状态。
-  `o` 单独不绑定动作。旧 `mm/md/mo` 移除，`m` 下仅保留 mark 动作。
-
-Visual mode 的 `y/x` 将“现有显式 selection 与 visual range 的并集”设为新的 pending sources，不修改
-显式 selection。Visual `<Tab>` 保留 range selection toggle；首次从 pending 进入 selection 时，先提升
-已有 pending sources，再加入 visual range。后续普通模式按上述 mark 契约处理。
-
-Paste 不弹出目标路径或逐项 mapping 预览，focused item 是目标目录的唯一来源。
-
-目标生成规则：
-
-1. 每个 source 独立映射为 `target_dir + basename(source)`，不保留多个 source 的 common ancestor 层级。
-2. 不 overwrite；任一目标已存在时，preflight 整批拒绝。
-3. source 缺失、多个 source 映射到同一目标或目标目录不存在时，preflight 整批拒绝。
-4. 目录不得 copy/move 到自身或后代目录。
-5. preflight 通过后逐项执行；Copy 明确返回 `success`、`retryable_failure` 或
-   `partial_failure`。`retryable_failure` 表示 final target 不存在，可以保留 source 继续重试；
-   `partial_failure` 表示 final target 已存在或状态无法确认，需要用户先处理 target，不作为普通 pending
-   重试项。成功项不回滚。
-6. 任一项成功或出现 `partial_failure` 后，清空显式 selection，只保留 `retryable_failure` source 为
-   pending，并刷新 tree；全部成功时同时清空 pending。
-
-### Copy to 与 Rename
-
-- Copy to 默认显示 cwd-relative 的完整建议目标路径；相对输入以 cwd 解析，绝对路径直接使用。
-- Rename 只接受单一名称：不得为空、等于 `.`/`..`，或包含 `/`、`\\`；目标始终位于 source 的当前
-  父目录。
-- 两者的目标冲突均由 `FileManager` 使用 exclusive filesystem primitive 按 no-overwrite 策略拒绝。
-  Copy to 出现 `partial_failure` 时刷新 tree，使 unresolved target 可见。
-- Copy failure 不按 pathname 自动删除 target；一旦 exclusive create 成功，后续 transfer/close failure 保留
-  target 并返回 `partial_failure`，避免删除 ownership 不明的 concurrent replacement。
-
-## 验证与维护约束
-
-1. 新增路径字段时，命名统一使用 `filepath`。
-2. 新增系统调用时，必须先执行 `yoz.canonical_path.to_os_path(...)`，或直接使用 `stl.os.fs`。
-3. 测试优先覆盖：
-   - `#head`、`a#1.txt`、`a#2.txt`
-   - 含空格与中文路径
-   - root 边界（`/`、`C:/`）
-   - transfer basename 映射、目标冲突、重复目标与目录 self-descendant
-   - pending sources 与显式 selection 的独立身份及同步规则
-   - Delete/Rename 后 pending sources 的路径级清理
-   - `mx/mc/ms` 的类型切换、最后一项取消及 `x/c/Tab` 的模式分派
-   - 普通 file/folder name 共用中性色，类型图标拥有独立高亮范围
-   - selection/copy/move 不覆盖 Git/LSP 名称色，ignored 与 diagnostics/Git 的优先级稳定
-
-## 调试建议
-
-1. 路径异常优先检查边界转换是否遗漏。
-2. 定位异常优先检查 `filepath_to_lnum/lnum_to_filepath` 一致性。
-3. 删除/移动异常优先检查 `FileManager` OS path 输入与返回路径是否混用。
+集成 specs 位于 `__test__/specs/era/m/explorer/`，native 状态测试在 `rust/yoz/src/ux/explorer/`。
+Job、identity、watch、跨卷和性能由 Filetree/Treeview 对应测试覆盖；实际命令、结果及平台缺口统一记录在
+[测试指南](../../../__test__/README.md)，不将编译通过当作平台 runtime 验收。

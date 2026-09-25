@@ -51,9 +51,13 @@ Examples:
 
 ## Spec Structure
 
-- CRITICAL: `spec/design/` is the single source of truth for final design decisions. Stable design must live in `design/`.
+- CRITICAL: `spec/design/` is the default single source of truth for final design decisions.
+  Treeview is an explicit exception: its Rust and Lua contracts live in `doc/spec/treeview/`, indexed by
+  that directory's `README.md`; do not keep duplicate contracts in `spec/design/`.
 - CRITICAL: `spec/roadmap/` and `spec/plan/` do not carry final design. They describe phase goals and execution steps only.
-- ALWAYS: Unfinalized, review-pending, or experimental proposals go to `spec/draft/`. Move to `spec/design/` only after finalization.
+- ALWAYS: Unfinalized, review-pending, or experimental proposals go to `spec/draft/`.
+  Move to `spec/design/` only after finalization. For Treeview, keep them in `doc/spec/treeview/` with
+  explicit Draft status and distinguish them from confirmed Design documents in its index.
 - ALWAYS: Prefer reference direction `roadmap/plan -> design` (and `-> draft` only when needed). Avoid reverse dependency `design -> roadmap/plan`.
 
 ## Detailed Docs
