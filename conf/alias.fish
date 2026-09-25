@@ -72,15 +72,15 @@ if set -q NEOVIM_HOME; and test -n "$NEOVIM_HOME"
 end
 
 ### tmux
-alias tnew='tmux new -s' # Create a new tmux session
-alias tkill='tmux kill-session -t' # Kill a tmux session
-alias tkill-all='tmux list-sessions | awk -F: \'{print $1}\' | xargs -I {} tmux kill-session -t "{}"'
+abbr -a tnew 'tmux new -s' # Create a new tmux session
+abbr -a tkill 'tmux kill-session -t' # Kill a tmux session
+abbr -a tkill-all 'tmux list-sessions | awk -F: \'{print $1}\' | xargs -I {} tmux kill-session -t "{}"'
 abbr -a tbtop "bash $HOME/.config/tmux/templates/btop.sh"
 abbr -a twiki "bash $HOME/.config/tmux/templates/wiki.sh"
 abbr -a tcap "tmux capture-pane -ep -t %"
-alias tdetach='tmux detach' # Detach from the session
-alias tattach='tmux attach -t' # Attach to a session
-alias tdetach-others='tmux detach -a' # Detach other clients from the session
+abbr -a tdetach 'tmux detach' # Detach from the session
+abbr -a tattach 'tmux attach -t' # Attach to a session
+abbr -a tdetach-others 'tmux detach -a' # Detach other clients from the session
 
 ### misc
 alias ghc-ora="node $HOME/.config/ora/cli/http.mjs"
