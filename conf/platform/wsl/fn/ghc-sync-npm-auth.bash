@@ -1,16 +1,16 @@
 # shellcheck shell=bash
 
 ghc-sync-npm-auth() {
-    if [[ -z "${GHC_WINDOWS_USERNAME:-}" ]]; then
-        echo "Error: GHC_WINDOWS_USERNAME is not set"
-        echo "Please set it in your shell config: export GHC_WINDOWS_USERNAME='your_windows_username'"
+    if [[ -z "${ghc_windows_username:-}" ]]; then
+        echo "Error: ghc_windows_username is not set"
+        echo "Please set it in your shell config: export ghc_windows_username='your_windows_username'"
         return 1
     fi
 
-    local win_home="/mnt/c/Users/$GHC_WINDOWS_USERNAME"
+    local win_home="/mnt/c/Users/$ghc_windows_username"
     if [[ ! -d "$win_home" ]]; then
         echo "Error: Windows home directory not found at $win_home"
-        echo "Please check if GHC_WINDOWS_USERNAME ('$GHC_WINDOWS_USERNAME') is correct"
+        echo "Please check if ghc_windows_username ('$ghc_windows_username') is correct"
         return 1
     fi
 

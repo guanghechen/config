@@ -14,10 +14,10 @@ unset _ghc_path
 ## Variables
 export BROWSER="/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 
-if [[ -n "${GHC_WINDOWS_USERNAME:-}" ]]; then
-    export f_windows_terminal_settings="/mnt/c/Users/$GHC_WINDOWS_USERNAME/AppData/Local/Packages/Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe/LocalState/settings.json"
-    export f_windows_download="/mnt/c/Users/$GHC_WINDOWS_USERNAME/Downloads"
-    export f_vscode_keybindings="/mnt/c/Users/$GHC_WINDOWS_USERNAME/AppData/Roaming/Code/User/keybindings.json"
+if [[ -n "${ghc_windows_username:-}" ]]; then
+    export f_windows_terminal_settings="/mnt/c/Users/$ghc_windows_username/AppData/Local/Packages/Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe/LocalState/settings.json"
+    export f_windows_download="/mnt/c/Users/$ghc_windows_username/Downloads"
+    export f_vscode_keybindings="/mnt/c/Users/$ghc_windows_username/AppData/Roaming/Code/User/keybindings.json"
 fi
 
 ## VPN host
@@ -49,8 +49,8 @@ elif [[ -x /mnt/d/app/vscode/bin/code ]]; then
     code_cmd="/mnt/d/app/vscode/bin/code"
 elif [[ -x "/mnt/c/Program Files/Microsoft VS Code/bin/code" ]]; then
     code_cmd="/mnt/c/Program Files/Microsoft VS Code/bin/code"
-elif [[ -n "${GHC_WINDOWS_USERNAME:-}" && -x "/mnt/c/Users/${GHC_WINDOWS_USERNAME}/AppData/Local/Programs/Microsoft VS Code/bin/code" ]]; then
-    code_cmd="/mnt/c/Users/${GHC_WINDOWS_USERNAME}/AppData/Local/Programs/Microsoft VS Code/bin/code"
+elif [[ -n "${ghc_windows_username:-}" && -x "/mnt/c/Users/${ghc_windows_username}/AppData/Local/Programs/Microsoft VS Code/bin/code" ]]; then
+    code_cmd="/mnt/c/Users/${ghc_windows_username}/AppData/Local/Programs/Microsoft VS Code/bin/code"
 fi
 
 if [[ -n "$code_cmd" ]]; then

@@ -80,8 +80,8 @@ if [[ -f "$LOCAL_ENV" ]]; then
     echo "[skip] $LOCAL_ENV already exists"
 else
     mkdir -p "$BASH_CONFIG_DIR/local"
-    cp "$BASH_CONFIG_DIR/samples/env.bash" "$LOCAL_ENV"
-    echo "[done] $LOCAL_ENV created from sample"
+    printf '%s\n' '# Local overrides; see the ## local section in config.bash.' > "$LOCAL_ENV"
+    echo "[done] $LOCAL_ENV created"
 fi
 
 echo ""

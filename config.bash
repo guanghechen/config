@@ -25,12 +25,29 @@ case "$(uname -s)" in
 esac
 export GHC_ENV_PLATFORM
 
-## Preferences (resolved before platform and application configuration)
+## local
+
+# export d_wireshark_vsc_log=""
+# export ghc_vpn_host_port=1080
+# export ghc_windows_username="guanghechen"
+#
+# export ANTHROPIC_AUTH_TOKEN="token"
+# export GEMINI_API_KEY="token"
+# export OPENAI_CODEX_AUTH_TOKEN="token"
+#
+# export GOOGLE_CLOUD_PROJECT="project"
+
+export KIT_COPILOT_URL="http://127.0.0.1:4141"
+
 export PREFER_NEOVIM_VERSION="${PREFER_NEOVIM_VERSION:-nightly}"
 export PREFER_TMUX_VERSION="${PREFER_TMUX_VERSION:-stable}"
 export ROOT_SOURCECODES="$HOME/sourcecodes"
 export ROOT_WORKSPACE="$HOME/ws"
 export YOZ_SERVER_PORT="7777"
+
+if [[ -f "$BASH_CONFIG_DIR/local/env.bash" ]]; then
+    source "$BASH_CONFIG_DIR/local/env.bash"
+fi
 
 ## Bootstrap paths
 export CONDARC="$XDG_CONFIG_HOME/conda/condarc"
@@ -66,7 +83,6 @@ export PYTHONPYCACHEPREFIX="$HOME/.cache/pycache"
 export PYTHONUTF8="1"
 
 ## Agents
-export KIT_COPILOT_URL="http://127.0.0.1:4747"
 export ANTHROPIC_BASE_URL="$KIT_COPILOT_URL/api/claude"
 export GOOGLE_GEMINI_BASE_URL="$KIT_COPILOT_URL/api/gemini"
 export OPENAI_BASE_URL="$KIT_COPILOT_URL/api/codex"
@@ -82,12 +98,6 @@ export ANTHROPIC_MODEL="claude-opus-4.6-1m"
 export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-sonnet-5"
 export CLAUDE_CODE_MAX_OUTPUT_TOKENS="64000"
 export GEMINI_MODEL="gemini-3-pro-preview"
-
-## Local overrides
-# Resolve local preferences before platform and application initialization.
-if [[ -f "$BASH_CONFIG_DIR/local/env.bash" ]]; then
-    source "$BASH_CONFIG_DIR/local/env.bash"
-fi
 
 ## Platform-specific configuration
 source "$BASH_CONFIG_DIR/conf/platform/$GHC_ENV_PLATFORM/config.bash"
