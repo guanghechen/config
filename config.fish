@@ -21,12 +21,29 @@ else
     set -gx GHC_ENV_PLATFORM nix
 end
 
-### preference
+## local
+
+# set -x d_wireshark_vsc_log ""
+# set -x ghc_vpn_host_port 1080
+# set -x ghc_windows_username "guanghechen"
+#
+# set -x ANTHROPIC_AUTH_TOKEN "token"
+# set -x GEMINI_API_KEY "token"
+# set -x OPENAI_CODEX_AUTH_TOKEN "token"
+#
+# set -x GOOGLE_CLOUD_PROJECT "project"
+
+set -gx KIT_COPILOT_URL "http://127.0.0.1:4141"
+
 set -gx PREFER_NEOVIM_VERSION stable
 set -gx PREFER_TMUX_VERSION stable
 set -gx ROOT_SOURCECODES "$HOME/sourcecodes"
 set -gx ROOT_WORKSPACE "$HOME/ws"
 set -gx YOZ_SERVER_PORT 7777
+
+if test -f "$HOME/.config/fish/local/env.fish"
+    source "$HOME/.config/fish/local/env.fish"
+end
 
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
@@ -56,7 +73,6 @@ set -gx PYTHONPYCACHEPREFIX "$HOME/.cache/pycache"
 set -gx PYTHONUTF8 1
 
 ### agents
-set -gx KIT_COPILOT_URL "http://127.0.0.1:4747"
 set -gx ANTHROPIC_BASE_URL "$KIT_COPILOT_URL/api/claude"
 set -gx GOOGLE_GEMINI_BASE_URL "$KIT_COPILOT_URL/api/gemini"
 set -gx OPENAI_BASE_URL "$KIT_COPILOT_URL/api/codex"
@@ -73,11 +89,6 @@ set -gx ANTHROPIC_DEFAULT_HAIKU_MODEL claude-opus-5.5
 set -gx CLAUDE_CODE_SUBAGENT_MODEL "claude-opus-5.5[1m]"
 
 set -gx GEMINI_MODEL gemini-3-pro-preview
-
-### local
-if test -f "$HOME/.config/fish/local/env.fish"
-    source "$HOME/.config/fish/local/env.fish"
-end
 
 ## platform specific
 if test "$GHC_ENV_PLATFORM" = osx
