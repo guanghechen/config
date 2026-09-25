@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/stt/schema/theme.schema.json",
+  "title": "Kit STT Paired Theme",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "light", "dark"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "light": { "$ref": "#/$defs/palette" },
+    "dark": { "$ref": "#/$defs/palette" }
+  },
+  "$defs": {
+    "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["background", "foreground", "muted", "accent", "recording", "error", "border"],
+      "properties": {
+        "background": { "$ref": "#/$defs/color" },
+        "foreground": { "$ref": "#/$defs/color" },
+        "muted": { "$ref": "#/$defs/color" },
+        "accent": { "$ref": "#/$defs/color" },
+        "recording": { "$ref": "#/$defs/color" },
+        "error": { "$ref": "#/$defs/color" },
+        "border": { "$ref": "#/$defs/color" }
+      }
+    }
+  }
+}

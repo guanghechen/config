@@ -28,6 +28,14 @@
       "additionalProperties": false,
       "properties": {
         "autoPaste": { "type": "boolean", "default": true },
+        "theme": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "enum": ["dark", "light", "device"], "default": "device", "description": "Device follows system brightness; fixed modes ignore it." },
+            "file": { "$ref": "#/$defs/localPath", "description": "Optional paired light/dark palette JSON. Supports ~ or ~/; ordinary relative paths use this config directory. Omit to use built-in palettes." }
+          }
+        },
         "app": {
           "type": "object",
           "additionalProperties": false,

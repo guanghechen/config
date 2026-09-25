@@ -10,13 +10,15 @@
   "desktop": {
     "autoPaste": true,
     "shortcuts": {
-      "pushToTalk": {
-        "type": "hold",
-        "key": "Fn"
-      },
+      "pushToTalk": null,
       "toggle": {
-        "type": "doubleTap",
-        "key": "Fn"
+        "type": "chord",
+        "key": "Space",
+        "modifiers": [
+          "Control",
+          "Alt",
+          "Shift"
+        ]
       },
       "finish": null,
       "holdThresholdMs": 200,
@@ -24,6 +26,10 @@
     },
     "app": {
       "directory": "~/.local/share/kit/stt/app"
+    },
+    "theme": {
+      "mode": "device",
+      "file": "../.theme/local.json"
     }
   },
   "refine": {

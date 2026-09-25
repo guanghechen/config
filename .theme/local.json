@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "light": {
+    "background": "#FFFFFF",
+    "foreground": "#000000",
+    "muted": "#535353",
+    "accent": "#004C93",
+    "recording": "#258036",
+    "error": "#63201D",
+    "border": "#D3D3D3"
+  },
+  "dark": {
+    "background": "#1F1F1F",
+    "foreground": "#FFFFFF",
+    "muted": "#B7B7B7",
+    "accent": "#3393DD",
+    "recording": "#58B369",
+    "error": "#FCB9B6",
+    "border": "#3C3C3C"
+  }
+}
