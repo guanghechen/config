@@ -22,7 +22,7 @@ Set-PSReadLineOption -Colors @{
 #
 # $env:GOOGLE_CLOUD_PROJECT = "project"
 
-if ([string]::IsNullOrWhiteSpace($env:KIT_COPILOT_URL)) { $env:KIT_COPILOT_URL = "http://127.0.0.1:4141" }
+if ([string]::IsNullOrWhiteSpace($env:KIT_COPILOT_URL)) { $env:KIT_COPILOT_URL = "http://127.0.0.1:4747" }
 if ([string]::IsNullOrWhiteSpace($env:ROOT_SOURCECODES)) { $env:ROOT_SOURCECODES = "C:\sourcecodes" }
 if ([string]::IsNullOrWhiteSpace($env:ROOT_WORKSPACE)) { $env:ROOT_WORKSPACE = "C:\ws" }
 if ([string]::IsNullOrWhiteSpace($env:YOZ_SERVER_PORT)) { $env:YOZ_SERVER_PORT = "7777" }
