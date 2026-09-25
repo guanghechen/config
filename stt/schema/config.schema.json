@@ -28,12 +28,36 @@
       "additionalProperties": false,
       "properties": {
         "autoPaste": { "type": "boolean", "default": true },
+        "app": {
+          "type": "object",
+          "additionalProperties": false,
+          "not": { "required": ["directory", "executable"] },
+          "properties": {
+            "directory": { "$ref": "#/$defs/localPath", "description": "Desktop installation directory containing the platform bundle. Supports ~ or ~/; ordinary relative paths use this config directory. Mutually exclusive with executable." },
+            "executable": { "$ref": "#/$defs/localPath", "description": "Explicit desktop executable path for development. Supports ~ or ~/; ordinary relative paths use this config directory. Mutually exclusive with directory." },
+            "env": {
+              "type": "object",
+              "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+              "additionalProperties": { "type": "string", "not": { "pattern": "\\u0000" } },
+              "description": "Literal environment overrides applied by the desktop app launcher."
+            }
+          }
+        },
         "shortcuts": { "$ref": "#/$defs/shortcuts" }
       }
     },
     "refine": { "$ref": "#/$defs/refine" }
   },
   "$defs": {
+    "localPath": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "not": {
+        "anyOf": [
+          { "pattern": "://" },
+          { "pattern": "^~[^/]" }
+        ]
+      }
+    },
     "shortcuts": {
       "type": "object",
       "additionalProperties": false,
@@ -255,7 +279,12 @@
     "refine": {
       "type": "object",
       "additionalProperties": false,
-      "not": { "required": ["copilotUrl", "copilotUrlEnv"] },
+      "not": {
+        "anyOf": [
+          { "required": ["copilotUrl", "copilotUrlEnv"] },
+          { "required": ["prompt", "promptFile"] }
+        ]
+      },
       "properties": {
         "enabled": { "type": "boolean" },
         "copilotUrl": {
@@ -276,6 +305,23 @@
           "pattern": "^\\S+$",
           "description": "Exact Copilot model supporting Native Chat Completions; runtime also limits UTF-8 bytes and control characters."
         },
+        "effort": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Optional reasoning_effort sent unchanged to Copilot; the selected model must support this value."
+        },
+        "prompt": {
+          "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+          "maxLength": 65536,
+          "not": { "pattern": "[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f-\\u009f]" },
+          "description": "System prompt replacing the built-in instruction, mutually exclusive with promptFile. Runtime limits UTF-8 content to 64 KiB."
+        },
+        "promptFile": {
+          "$ref": "#/$defs/localPath",
+          "description": "Local UTF-8 system prompt file, supporting ~ or ~/ and otherwise relative to the declaring config file. Mutually exclusive with prompt; read only when refine is enabled; limited to 64 KiB."
+        },
         "tokenEnv": {
           "type": "string",
           "maxLength": 128,
@@ -292,9 +338,8 @@
       "properties": {
         "name": { "$ref": "#/$defs/nonEmptyString" },
         "path": {
-          "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
-          "not": { "pattern": "://" },
-          "description": "Local model directory, relative to the declaring config file."
+          "$ref": "#/$defs/localPath",
+          "description": "Local model directory, supporting ~ or ~/ and otherwise relative to the declaring config file."
         },
         "computeDevice": {
           "type": "string",

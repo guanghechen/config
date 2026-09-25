@@ -21,6 +21,9 @@
       "finish": null,
       "holdThresholdMs": 200,
       "doubleTapIntervalMs": 350
+    },
+    "app": {
+      "directory": "~/.local/share/kit/stt/app"
     }
   },
   "refine": {
