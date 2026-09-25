@@ -11,6 +11,7 @@ pub mod search;
 pub mod string;
 pub mod types;
 pub mod uri;
+pub mod ux;
 
 use mlua::FromLua;
 use mlua::FromLuaMulti;
@@ -58,9 +59,7 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
         let executable = params.get::<String>("executable")?;
         let result = setup_state
             .try_borrow_mut()
-            .map_err(|_| {
-                LuaError::RuntimeError("IM state is already borrowed".to_owned())
-            })?
+            .map_err(|_| LuaError::RuntimeError("IM state is already borrowed".to_owned()))?
             .setup(&executable);
         match result {
             Ok(()) => Ok(LuaMultiValue::from_vec(vec![
@@ -78,9 +77,7 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
     let capture = lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
         let result = capture_state
             .try_borrow_mut()
-            .map_err(|_| {
-                LuaError::RuntimeError("IM state is already borrowed".to_owned())
-            })?
+            .map_err(|_| LuaError::RuntimeError("IM state is already borrowed".to_owned()))?
             .capture();
         match result {
             Ok(source_id) => Ok(LuaMultiValue::from_vec(vec![
@@ -99,9 +96,7 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
         lua.create_function(move |lua, ()| -> LuaResult<LuaMultiValue> {
             let result = capture_and_select_state
                 .try_borrow_mut()
-                .map_err(|_| {
-                    LuaError::RuntimeError("IM state is already borrowed".to_owned())
-                })?
+                .map_err(|_| LuaError::RuntimeError("IM state is already borrowed".to_owned()))?
                 .capture_and_select_english();
             match result {
                 Ok(snapshot) => Ok(LuaMultiValue::from_vec(vec![
@@ -127,13 +122,11 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
         })?;
 
     let restore_state = Rc::clone(&state);
-    let restore = lua.create_function(
-        move |lua, source_id: String| -> LuaResult<LuaMultiValue> {
+    let restore =
+        lua.create_function(move |lua, source_id: String| -> LuaResult<LuaMultiValue> {
             let result = restore_state
                 .try_borrow_mut()
-                .map_err(|_| {
-                    LuaError::RuntimeError("IM state is already borrowed".to_owned())
-                })?
+                .map_err(|_| LuaError::RuntimeError("IM state is already borrowed".to_owned()))?
                 .restore(&source_id);
             match result {
                 Ok(()) => Ok(LuaMultiValue::from_vec(vec![
@@ -145,16 +138,13 @@ fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
                     error.into_lua(lua)?,
                 ])),
             }
-        },
-    )?;
+        })?;
 
     let is_english_state = Rc::clone(&state);
     let is_english = lua.create_function(move |_, source_id: String| -> LuaResult<bool> {
         let is_english = is_english_state
             .try_borrow_mut()
-            .map_err(|_| {
-                LuaError::RuntimeError("IM state is already borrowed".to_owned())
-            })?
+            .map_err(|_| LuaError::RuntimeError("IM state is already borrowed".to_owned()))?
             .is_english(&source_id);
         Ok(is_english)
     })?;
@@ -1010,23 +1000,12 @@ fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
                 },
             )?,
         ),
-        (
-            "decode",
-            f(lua, |_, src: String| Ok(uri::decode(&src)))?,
-        ),
-        (
-            "encode",
-            f(lua, |_, src: String| Ok(uri::encode(&src)))?,
-        ),
-        (
-            "extname",
-            f(lua, |_, uri: String| Ok(uri::extname(&uri)))?,
-        ),
+        ("decode", f(lua, |_, src: String| Ok(uri::decode(&src)))?),
+        ("encode", f(lua, |_, src: String| Ok(uri::encode(&src)))?),
+        ("extname", f(lua, |_, uri: String| Ok(uri::extname(&uri)))?),
         (
             "from_filepath",
-            f(lua, |_, filepath: String| {
-                Ok(uri::from_filepath(&filepath))
-            })?,
+            f(lua, |_, filepath: String| Ok(uri::from_filepath(&filepath)))?,
         ),
         ("hash", f(lua, |_, uri: String| Ok(uri::hash(&uri)))?),
         (
@@ -1043,25 +1022,20 @@ fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
             "normalize",
             f(lua, |_, uri: String| Ok(uri::normalize(&uri)))?,
         ),
-        (
-            "parent",
-            f(lua, |_, uri: String| Ok(uri::parent(&uri)))?,
-        ),
+        ("parent", f(lua, |_, uri: String| Ok(uri::parent(&uri)))?),
         (
             "parse",
-            f(lua, |lua, uri: String| {
-                match uri::parse(&uri) {
-                    Some(parts) => {
-                        let table = lua.create_table()?;
-                        table.set("protocol", parts.protocol)?;
-                        table.set("path", parts.path)?;
-                        if let Some(hash) = parts.hash {
-                            table.set("hash", hash)?;
-                        }
-                        Ok(LuaValue::Table(table))
+            f(lua, |lua, uri: String| match uri::parse(&uri) {
+                Some(parts) => {
+                    let table = lua.create_table()?;
+                    table.set("protocol", parts.protocol)?;
+                    table.set("path", parts.path)?;
+                    if let Some(hash) = parts.hash {
+                        table.set("hash", hash)?;
                     }
-                    None => Ok(LuaValue::Nil),
+                    Ok(LuaValue::Table(table))
                 }
+                None => Ok(LuaValue::Nil),
             })?,
         ),
         (
@@ -1111,6 +1085,7 @@ fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("path", path_module(lua)?)?;
     exports.set("fs", fs_module(lua)?)?;
     exports.set("git", git::module(lua)?)?;
+    exports.set("ux", ux::module(lua)?)?;
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     exports.set("im", im_module(lua)?)?;
     #[cfg(target_os = "linux")]
