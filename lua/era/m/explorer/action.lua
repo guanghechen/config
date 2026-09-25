@@ -1,1504 +1,466 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.explorer.action" ---@type string
 
+local async = require("stl.async")
+local Session = require("era.m.explorer.session")
+
 ---@class era.m.explorer.Action
----@field protected _ctx                era.m.explorer.action.IContext
----@field protected _pending_transfer   era.m.explorer.IPendingTransfer|nil
+---@field _widget                       era.m.explorer.Widget
 local M = {}
 M.__index = M
 
----@param filepath                      string
----@param keep_trailing_slash           boolean|nil
----@return string
-local function normalize_filepath(filepath, keep_trailing_slash)
-  return stl.os.path.normalize(filepath, keep_trailing_slash)
-end
-
----@param parent_filepath               string
----@param name                          string
----@param is_directory                  boolean
----@return string
-local function join_child_filepath(parent_filepath, name, is_directory)
-  return normalize_filepath(parent_filepath .. "/" .. name, is_directory)
-end
-
----@param filepath                      string
----@return string
-local function transfer_filepath_key(filepath)
-  if filepath == "/" or filepath:match("^[A-Za-z]:/$") then
-    return filepath
-  end
-  return filepath:sub(-1) == "/" and filepath:sub(1, -2) or filepath
-end
-
----@param source                        era.m.explorer.IPendingTransferSource
----@param filepath                      string
----@return boolean
-local function transfer_source_covers(source, filepath)
-  return source.filepath == filepath
-    or (source.nodetype == "D" and yoz.canonical_path.is_descendant(source.filepath, filepath))
-end
-
----@param root_filepath                 string
----@param filepath                      string
----@return boolean
-local function is_same_or_descendant(root_filepath, filepath)
-  return yoz.canonical_path.is_descendant(root_filepath, filepath)
-end
-
----@param input                         string
----@return string|nil                   name
----@return string|nil                   error
-local function validate_entry_name(input)
-  local name = vim.trim(input) ---@type string
-  if name == "" then
-    return nil, nil
-  end
-  if name == "." or name == ".." then
-    return nil, "Invalid name: '.' and '..' are not allowed"
-  end
-  if name:find("[/\\]") ~= nil then
-    return nil, "Invalid name: path separator is not allowed"
-  end
-  return name, nil
-end
-
----@param filename                      string
----@param is_directory                  boolean
----@return string
-local function suggest_copy_name(filename, is_directory)
-  if is_directory then
-    return filename .. "-copy"
-  end
-
-  local ext = yoz.path.extname(filename) ---@type string
-  if ext ~= "" and #filename > #ext then
-    return filename:sub(1, #filename - #ext) .. "-copy" .. ext
-  end
-  return filename .. "-copy"
-end
-
----@param ctx                           era.m.explorer.action.IContext
+---@param widget                        era.m.explorer.Widget
 ---@return era.m.explorer.Action
-function M.new(ctx)
-  local self = setmetatable({}, M)
-  self._ctx = ctx
-  self._pending_transfer = nil
-  return self
+function M.new(widget)
+  return setmetatable({ _widget = widget }, M)
 end
 
----@return nil
-function M:add_locations_to_ai()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-
-  local locations = {} ---@type dot.t.ILocation[]
-  if #selected_nodes > 0 then
-    for _, node in ipairs(selected_nodes) do
-      local filepath = yoz.canonical_path.to_os_path(node.filepath) ---@type string
-      locations[#locations + 1] = { filepath = filepath }
-    end
+---@async
+---@param session                       era.m.explorer.Session
+---@param view                          ux.filetree.View
+---@param range                         ?era.m.explorer.IInputRange
+---@return yoz.ux.filetree.Resource[]|nil
+local function sources(session, view, range)
+  local data = session.data
+  local value, source
+  if range then
+    value = Session.await(session:inspect_range(range))
+    source = range.frame:source()
   else
-    local filepath = ctx.get_cursor_filepath() ---@type string|nil
-    if filepath == nil then
-      return
+    if session.preparing then
+      error("Explorer already has an active operation", 0)
     end
-    local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-    locations[#locations + 1] = { filepath = os_filepath }
+    local cursor = session:cursor(view)
+    value = Session.await(session.state:inspect_selection())
+    local summary = value.summary
+    if summary.pending then
+      value = Session.await(require("era.m.explorer.jobs").resolve_selection(session, value.revisions.selection))
+      if not value then
+        return nil
+      end
+      source = value.source
+    elseif summary.known_roots == 0 and summary.known_self_only == 0 then
+      return cursor and { cursor } or {}
+    else
+      source = data:source()
+      if source:revision() ~= value.revisions.data then
+        error("Explorer selection changed; retry the action", 0)
+      end
+    end
   end
-
-  era.fn.add_locations_to_ai(locations)
+  local result = {}
+  for first = 1, value.subtree_roots:len(), 128 do
+    if session._disposed or view._closed then
+      return nil
+    end
+    for _, node in ipairs(value.subtree_roots:slice(first, math.min(first + 127, value.subtree_roots:len()))) do
+      result[#result + 1] = data:inspect(source, node)
+    end
+    async.scheduler()
+  end
+  return result
 end
 
+---@async
+---@param strategy                      ?string
+---@param paths                         string[]
+---@param candidate                     ?integer
 ---@return nil
-function M:add_locations_to_ai_visual()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local nodes = ctx.get_visual_nodes() ---@type era.m.explorer.Node[]
-  if #nodes == 0 then
+local function open_paths(strategy, paths, candidate)
+  if #paths == 0 then
     return
   end
-
-  local locations = {} ---@type dot.t.ILocation[]
-  for _, node in ipairs(nodes) do
-    local filepath = yoz.canonical_path.to_os_path(node.filepath) ---@type string
-    locations[#locations + 1] = { filepath = filepath }
+  local original = vim.api.nvim_get_current_win()
+  local winnr
+  if strategy == "tab" then
+    vim.cmd.tabnew()
+    winnr = vim.api.nvim_get_current_win()
+    vim.t[vim.api.nvim_get_current_tabpage()].tabtype = stl.e.TabTypeEnum.NORMAL
+  else
+    if not strategy and not candidate then
+      candidate = dot.tab.retrieve_winnr_sourcefile(vim.api.nvim_get_current_tabpage())
+    end
+    winnr = dot.win.pick_sourcefile(candidate)
+    if not winnr then
+      return
+    end
+    if strategy == "split" or strategy == "vsplit" then
+      vim.api.nvim_set_current_win(winnr)
+      vim.cmd(strategy)
+      winnr = vim.api.nvim_get_current_win()
+    end
   end
+  local last
+  local started = vim.uv.hrtime()
+  for _, path in ipairs(paths) do
+    if not vim.api.nvim_win_is_valid(winnr) then
+      return
+    end
+    local bufnr = dot.buf.loadfile(path)
+    if bufnr then
+      last = bufnr
+      dot.win.on_buf_enter(winnr, bufnr)
+      dot.tab.on_buf_enter(vim.api.nvim_win_get_tabpage(winnr), bufnr)
+    end
+    if vim.uv.hrtime() - started > 2000000 then
+      async.scheduler()
+      started = vim.uv.hrtime()
+    end
+  end
+  if last and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_win_set_buf(winnr, last)
+    vim.api.nvim_set_current_win(winnr)
+  elseif vim.api.nvim_win_is_valid(original) then
+    vim.api.nvim_set_current_win(original)
+  end
+end
 
-  era.fn.add_locations_to_ai(locations)
+---@param strategy                      ?string
+---@param resource                      ?yoz.ux.filetree.Resource
+---@return stl.c.Future
+function M:open(strategy, resource)
+  local session, view = self._widget:context()
+  local frame = view:frame()
+  return async.run_future(function()
+    local resources = resource and { resource } or sources(session, view)
+    if not resources or view._closed then
+      return
+    end
+    if not strategy and not session:mode() and #resources == 1 and resources[1]:info().directory then
+      if frame and frame:header().mode == "tree" then
+        Session.await(
+          session.state:dispatch(
+            { kind = "toggle_expanded", node = resources[1]:node(), recursive = false },
+            { frame = frame }
+          )
+        )
+      end
+      return
+    end
+    local paths = {}
+    for _, resource in ipairs(resources) do
+      local info = resource:info()
+      if info.kind == "file" or info.target_kind == "file" then
+        paths[#paths + 1] = resource:path()
+      end
+    end
+    open_paths(strategy, paths)
+  end)
 end
 
 ---@return nil
+function M:activate()
+  local _, view = self._widget:context()
+  view:activate()
+end
+
+---@param mark                          "toggle"|"select"|"copy"|"cut"
+---@return stl.c.Future
+function M:mark(mark)
+  local session, view = self._widget:context()
+  return session:mark(view, mark)
+end
+
+---@param mark                          "copy"|"cut"
+---@return stl.c.Future|nil
+function M:transfer(mark)
+  local session, view = self._widget:context()
+  local frame = view:frame()
+  if not frame then
+    return nil
+  end
+  if session:mode(frame) then
+    return self:mark(mark)
+  end
+  local resource = session:cursor(view)
+  if not resource then
+    return nil
+  end
+  local path = resource:path()
+  local directory = resource:info().directory
+  if mark == "copy" then
+    local pattern = stl.env.IS_WIN and "[^/\\]+$" or "[^/]+$"
+    local name = assert(path:match(pattern))
+    local extension = directory and "" or yoz.path.extname(name)
+    if #extension == #name then
+      extension = ""
+    end
+    path = path:sub(1, #path - #extension) .. "-copy" .. extension
+  end
+  if directory then
+    path = path .. "/"
+  end
+  return session:operate(view, mark == "copy" and "copy" or "move", {
+    to_path = true,
+    default_path = dot.path.relative(dot.path.cwd(), path, "/"),
+    selection_revision = frame:header().selection_revision,
+  })
+end
+
+---@param direction                     string
+---@return nil
+function M:navigate(direction)
+  local _, view = self._widget:context()
+  view:navigate(direction)
+end
+
+---@return stl.c.Future|nil
+function M:collapse()
+  local session, view = self._widget:context()
+  local frame = view:frame()
+  if not frame or frame:header().mode ~= "tree" then
+    return
+  end
+  local row = vim.api.nvim_win_get_cursor(view.winnr)[1]
+  local node = frame:node_at(row)
+  if not node then
+    return
+  end
+  local values = frame:rows(row, row)
+  if values.can_expand[1] and values.expanded[1] then
+    return session.state:set_expanded({ node }, false, false)
+  end
+  local parent = frame:source():node(node).parent
+  if parent and parent ~= frame:header().root.node then
+    return session.state:set_expanded({ parent }, false, false)
+  end
+end
+
+---@return stl.c.Future|nil
+function M:recursive()
+  local session, view = self._widget:context()
+  local frame = view:frame()
+  if not frame or frame:header().mode ~= "tree" then
+    return
+  end
+  local row = vim.api.nvim_win_get_cursor(view.winnr)[1]
+  local node = frame:node_at(row)
+  if node then
+    return session.state:dispatch({ kind = "toggle_expanded", node = node, recursive = true }, { frame = frame })
+  end
+end
+
+---@return stl.c.Future|nil
 function M:collapse_all()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
-  ctx.tree:toggle_expanded(root_filepath, true, "collapse")
-  ctx.tree:toggle_expanded(root_filepath, false, "expand")
-  ctx.refresh()
+  local session, view = self._widget:context()
+  local frame = view:frame()
+  if frame and frame:header().mode == "tree" then
+    return session.state:set_expanded({ frame:header().root.node }, false, true)
+  end
 end
 
----@return nil
-function M:collapse_or_parent()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
+---@param target                        "parent"|"cursor"|"previous"|"cwd"|"workspace"
+---@return stl.c.Future|nil
+function M:root(target)
+  local session, view = self._widget:context()
+  if target == "cwd" then
+    return session:navigate_path(dot.path.cwd(), false)
   end
+  local node
+  if target == "workspace" then
+    return session:navigate_path(session.native:workspace_path(), false)
+  elseif target == "previous" then
+    node = session.native:previous()
+  elseif target == "cursor" then
+    node = session:target(view):node()
+  else
+    local frame = view:frame()
+    local root = frame and frame:header().root.node
+    local entry = root and frame:source():node(root)
+    if not entry then
+      return session:navigate_path(dot.path.dirname(self._widget:get_root_filepath()), false)
+    end
+    node = entry.parent
+  end
+  if node then
+    return session:navigate(node, false)
+  end
+end
 
-  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
-  if filepath:sub(-1) == "/" then
-    local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
-    if node ~= nil and node.expanded then
-      ctx.tree:toggle_expanded(filepath, false, "collapse")
-      ctx.refresh()
+---@param kind                          "git"|"diagnostic"|"error"|"warning"
+---@param forward                       boolean
+---@return stl.c.Future
+function M:annotation(kind, forward)
+  local session, view = self._widget:context()
+  local frame = view:frame()
+  return async.run_future(function()
+    if not frame then
       return
     end
-  end
-
-  local parent_filepath = ctx.get_parent_filepath(filepath) ---@type string
-  if parent_filepath ~= root_filepath then
-    ctx.tree:toggle_expanded(parent_filepath, false, "collapse")
-    ctx.tree.o_cursor_filepath:next(parent_filepath)
-    ctx.sync_cursor_to_filepath(parent_filepath)
-    ctx.refresh()
-  end
-end
-
----@return nil
-function M:copy()
-  if #self._ctx.tree:get_selected_nodes() > 0 then
-    self:mark("copy")
-  else
-    self:copy_as()
-  end
-end
-
----@return nil
-function M:cut()
-  if #self._ctx.tree:get_selected_nodes() > 0 then
-    self:mark("cut")
-  else
-    self:move()
-  end
-end
-
----@param mode                          "cut"|"copy"|"select"
----@return nil
-function M:mark(mode)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil or ctx.tree:locate(filepath) == nil then
-    return
-  end
-
-  local pending = self._pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-  local current_mode = pending == nil and "select" or (pending.mode == "move" and "cut" or "copy")
-  if ctx.tree:is_selected(filepath) then
-    if current_mode == mode then
-      ctx.tree:toggle_selected(filepath, "unselect")
-    end
-  else
-    ctx.tree:toggle_selected(filepath, "select")
-  end
-
-  -- Mark replaces pending sources with exactly the explicit selection roots.
-  local nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  if mode == "select" or #nodes == 0 then
-    self._pending_transfer = nil
-    ctx.refresh()
-  else
-    self:__stage_transfer__(mode == "cut" and "move" or "copy", nodes)
-  end
-end
-
----@return nil
-function M:copy_as()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
-  if node == nil then
-    return
-  end
-
-  local is_directory = node.nodetype == "D" ---@type boolean
-  local parent_filepath = ctx.get_parent_filepath(filepath) ---@type string
-  local suggested_name = suggest_copy_name(node.nodename, is_directory) ---@type string
-  local cwd = dot.path.cwd() ---@type string
-  local suggested_target = join_child_filepath(parent_filepath, suggested_name, is_directory) ---@type string
-  local suggested_input = dot.path.relative(cwd, suggested_target, "/") ---@type string
-  if is_directory and suggested_input:sub(-1) ~= "/" then
-    suggested_input = suggested_input .. "/"
-  end
-
-  vim.ui.input({ prompt = "Copy to: ", default = suggested_input }, function(input)
-    if input == nil then
+    local row = vim.api.nvim_win_get_cursor(view.winnr)[1]
+    local target = Session.await(session.data:next_annotation(frame, row, kind, forward))
+    if view._closed or view:frame() ~= frame then
       return
     end
-
-    local specified_filepath = vim.trim(input) ---@type string
-    if specified_filepath == "" then
+    if target == 0 then
+      Session.report("No matching " .. kind .. " in the current view")
       return
     end
-
-    local target_filepath = normalize_filepath(dot.path.resolve(cwd, specified_filepath), is_directory) ---@type string
-    if is_directory and target_filepath:sub(-1) ~= "/" then
-      target_filepath = target_filepath .. "/"
-    end
-
-    if is_directory and is_same_or_descendant(filepath, target_filepath) then
-      stl.reporter.error({
-        from = ctx.fullname,
-        subject = "copy as",
-        message = string.format("Cannot copy a directory into itself: %s", target_filepath),
-      })
-      return
-    end
-
-    local status = ctx.resource_manager:copy(filepath, target_filepath) ---@type era.m.explorer.resource.CopyStatus
-    if status == "success" then
-      ctx.tree:refresh(true)
-      vim.schedule(function()
-        ctx.refresh(true)
-        ctx.sync_cursor_to_filepath(target_filepath)
-      end)
-      stl.reporter.info({
-        from = ctx.fullname,
-        subject = "copy as",
-        message = string.format("Copied to: %s", target_filepath),
-      })
-    elseif status == "partial_failure" then
-      ctx.tree:refresh(true)
-      vim.schedule(function()
-        ctx.refresh(true)
-      end)
-      stl.reporter.error({
-        from = ctx.fullname,
-        subject = "copy as",
-        message = string.format("Copy left an unresolved target: %s", target_filepath),
-      })
-    end
+    vim.api.nvim_win_set_cursor(view.winnr, { target, 0 })
+    Session.await(session.state:dispatch({ kind = "set_cursor", node = frame:node_at(target) }, { frame = frame }))
   end)
 end
 
----@return nil
-function M:copy_path()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-
-  local filepaths = {} ---@type string[]
-  if #selected_nodes > 0 then
-    for _, node in ipairs(selected_nodes) do
-      local filepath = normalize_filepath(node.filepath) ---@type string
-      filepaths[#filepaths + 1] = filepath
-    end
-  else
-    local filepath = ctx.get_cursor_filepath() ---@type string|nil
-    if filepath == nil then
-      return
-    end
-    local normalized_filepath = normalize_filepath(filepath) ---@type string
-    filepaths[#filepaths + 1] = normalized_filepath
-  end
-
-  era.fn.select_copy_filepaths({
-    filepaths = filepaths,
-    winopts = {
-      relative = "cursor",
-      row = 1,
-      col = 4,
-    },
-  })
+---@param kind                          string
+---@param options                       ?table
+---@return stl.c.Future
+function M:operate(kind, options)
+  local session, view = self._widget:context()
+  return session:operate(view, kind, options)
 end
 
----@return nil
-function M:create_directory()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local cursor_filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if cursor_filepath == nil then
-    return
-  end
-
-  local parent_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath or ctx.get_parent_filepath(cursor_filepath) ---@type string
-  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
-  local relative_path = parent_filepath:sub(#root_filepath + 1) ---@type string
-
-  vim.ui.input({ prompt = "Create directory: ", default = relative_path }, function(input)
-    if input == nil or #vim.trim(input) == 0 then
-      return
-    end
-
-    local dirname = normalize_filepath(vim.trim(input), false) ---@type string
-    if dirname:sub(-1) ~= "/" then
-      dirname = dirname .. "/"
-    end
-
-    local new_filepath = normalize_filepath(root_filepath .. dirname, true) ---@type string
-    local resource = ctx.resource_manager:create(new_filepath) ---@type era.m.explorer.resource.INode|nil
-    if resource ~= nil then
-      local new_parent_filepath = ctx.get_parent_filepath(new_filepath) ---@type string
-      ctx.tree:toggle_expanded(new_parent_filepath, false, "expand")
-      local parts = vim.split(dirname:sub(1, -2), "/", { plain = true }) ---@type string[]
-      local intermediate_filepath = root_filepath ---@type string
-      for _, part in ipairs(parts) do
-        intermediate_filepath = intermediate_filepath .. part .. "/"
-        ctx.tree:toggle_expanded(intermediate_filepath, false, "expand")
+---@param directory                     boolean
+---@return stl.c.Future
+function M:create(directory)
+  local session, view = self._widget:context()
+  return session:operate(view, "create", {
+    directory = directory,
+    on_complete = function(status, results)
+      if status.error or status.cancelled or view._closed then
+        return
       end
-      ctx.tree:refresh(true)
-      vim.schedule(function()
-        ctx.render()
-        ctx.sync_cursor_to_filepath(new_filepath)
-      end)
-    end
-  end)
-end
-
----@return nil
-function M:create_file()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local cursor_filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if cursor_filepath == nil then
-    return
-  end
-
-  local parent_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath or ctx.get_parent_filepath(cursor_filepath) ---@type string
-  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
-  local relative_path = parent_filepath:sub(#root_filepath + 1) ---@type string
-  if relative_path ~= "" and relative_path:sub(-1) ~= "/" then
-    relative_path = relative_path .. "/"
-  end
-
-  vim.ui.input({ prompt = "Create file: ", default = relative_path }, function(input)
-    if input == nil or #vim.trim(input) == 0 then
-      return
-    end
-
-    local filename = normalize_filepath(vim.trim(input)) ---@type string
-    local is_directory = filename:sub(-1) == "/" ---@type boolean
-    local new_filepath = normalize_filepath(root_filepath .. filename, is_directory) ---@type string
-    local resource = ctx.resource_manager:create(new_filepath) ---@type era.m.explorer.resource.INode|nil
-    if resource ~= nil then
-      local new_parent_filepath = ctx.get_parent_filepath(new_filepath) ---@type string
-      ctx.tree:toggle_expanded(new_parent_filepath, false, "expand")
-      local parts = vim.split(filename, "/", { plain = true }) ---@type string[]
-      if #parts > 1 then
-        local intermediate_filepath = root_filepath ---@type string
-        for i = 1, #parts - 1 do
-          intermediate_filepath = intermediate_filepath .. parts[i] .. "/"
-          ctx.tree:toggle_expanded(intermediate_filepath, false, "expand")
-        end
+      local item = results[#results]
+      if not item then
+        return
       end
-      ctx.tree:refresh(true)
-      vim.schedule(function()
-        ctx.render()
-        ctx.sync_cursor_to_filepath(new_filepath)
-
-        if resource.nodetype == "F" then
-          local filepath = yoz.canonical_path.to_os_path(resource.filepath) ---@type string
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-            vim.api.nvim_set_current_win(winnr_sourcefile)
+      if not item.target then
+        session:navigate(item.node, true):catch(Session.report)
+        Session.report("Created " .. item.target_label .. "; its path cannot be represented by Neovim")
+        return
+      end
+      async
+        .run_future(function()
+          -- Creation already published this occurrence; retain its logical path without resolving it again.
+          Session.await(session:navigate(item.node, true))
+          if view._closed then
+            return
           end
-          dot.win.open_filepath(winnr_sourcefile, filepath)
-        end
-      end)
-    end
-  end)
-end
-
----@return era.m.explorer.IPendingTransfer|nil
-function M:get_pending_transfer()
-  return self._pending_transfer
-end
-
----@return nil
-function M:cancel_transfer()
-  if self._pending_transfer == nil then
-    return
-  end
-
-  self._pending_transfer = nil
-  self._ctx.refresh()
-end
-
----@param mode                          era.m.explorer.TransferModeEnum
----@return nil
-function M:stage_transfer(mode)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  local focused_node = filepath ~= nil and ctx.tree:locate(filepath) or nil ---@type era.m.explorer.Node|nil
-  if #nodes > 0 and focused_node ~= nil and not ctx.tree:is_selected(focused_node.filepath) then
-    ctx.tree:toggle_selected(focused_node.filepath, "select")
-    nodes = ctx.tree:get_selected_nodes()
-  elseif #nodes == 0 and focused_node ~= nil then
-    nodes = { focused_node }
-  end
-  if #nodes == 0 then
-    return
-  end
-
-  self:__stage_transfer__(mode, nodes)
-end
-
----@param mode                          era.m.explorer.TransferModeEnum
----@return nil
-function M:stage_transfer_visual(mode)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local visual_nodes = ctx.get_visual_nodes() ---@type era.m.explorer.Node[]
-  if #visual_nodes == 0 then
-    return
-  end
-
-  local nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  for _, node in ipairs(visual_nodes) do
-    nodes[#nodes + 1] = node
-  end
-  self:__stage_transfer__(mode, nodes)
-  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "nx", false)
-end
-
----@protected
----@param mode                          era.m.explorer.TransferModeEnum
----@param nodes                         era.m.explorer.Node[]
----@return nil
-function M:__stage_transfer__(mode, nodes)
-  local sources = {} ---@type era.m.explorer.IPendingTransferSource[]
-  for _, node in ipairs(nodes) do
-    self:__append_transfer_source__(sources, self:__create_transfer_source__(node))
-  end
-
-  self:__set_pending_transfer__(mode, sources)
-  self._ctx.refresh()
-end
-
----@protected
----@param node                          era.m.explorer.Node
----@return era.m.explorer.IPendingTransferSource
-function M:__create_transfer_source__(node)
-  return {
-    filepath = node.filepath,
-    nodename = node.nodename,
-    nodetype = node.nodetype,
-  }
-end
-
----@protected
----@param sources                       era.m.explorer.IPendingTransferSource[]
----@param candidate                     era.m.explorer.IPendingTransferSource
----@return nil
-function M:__append_transfer_source__(sources, candidate)
-  for i = #sources, 1, -1 do
-    local source = sources[i] ---@type era.m.explorer.IPendingTransferSource
-    if transfer_source_covers(source, candidate.filepath) then
-      return
-    end
-    if transfer_source_covers(candidate, source.filepath) then
-      table.remove(sources, i)
-    end
-  end
-  sources[#sources + 1] = candidate
-end
-
----@protected
----@param mode                          era.m.explorer.TransferModeEnum|nil
----@param sources                       era.m.explorer.IPendingTransferSource[]
----@return nil
-function M:__set_pending_transfer__(mode, sources)
-  if mode == nil or #sources == 0 then
-    self._pending_transfer = nil
-    return
-  end
-
-  local source_filepaths = {} ---@type table<string, boolean>
-  for _, source in ipairs(sources) do
-    source_filepaths[source.filepath] = true
-  end
-
-  self._pending_transfer = {
-    mode = mode,
-    sources = sources,
-    source_filepaths = source_filepaths,
-  }
-end
-
----@protected
----@param previous_selected_nodes       era.m.explorer.Node[]
----@return nil
-function M:__sync_pending_transfer__(previous_selected_nodes)
-  local pending_transfer = self._pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-  if pending_transfer == nil then
-    return
-  end
-
-  local selected_nodes = self._ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  local selected_filepaths = {} ---@type table<string, boolean>
-  for _, node in ipairs(selected_nodes) do
-    selected_filepaths[self:__create_transfer_source__(node).filepath] = true
-  end
-
-  local removed_filepaths = {} ---@type string[]
-  for _, node in ipairs(previous_selected_nodes) do
-    local filepath = self:__create_transfer_source__(node).filepath ---@type string
-    if not selected_filepaths[filepath] then
-      removed_filepaths[#removed_filepaths + 1] = filepath
-    end
-  end
-
-  local sources = {} ---@type era.m.explorer.IPendingTransferSource[]
-  for _, source in ipairs(pending_transfer.sources) do
-    local covers_removed_selection = false ---@type boolean
-    for _, filepath in ipairs(removed_filepaths) do
-      if transfer_source_covers(source, filepath) then
-        covers_removed_selection = true
-        break
-      end
-    end
-    if not covers_removed_selection then
-      self:__append_transfer_source__(sources, source)
-    end
-  end
-  for _, node in ipairs(selected_nodes) do
-    self:__append_transfer_source__(sources, self:__create_transfer_source__(node))
-  end
-  self:__set_pending_transfer__(pending_transfer.mode, sources)
-end
-
----@protected
----@param nodes                         era.m.explorer.Node[]
----@return nil
-function M:__remove_pending_sources_covered_by__(nodes)
-  local pending_transfer = self._pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-  if pending_transfer == nil or #nodes == 0 then
-    return
-  end
-
-  local removed_roots = {} ---@type era.m.explorer.IPendingTransferSource[]
-  for _, node in ipairs(nodes) do
-    removed_roots[#removed_roots + 1] = self:__create_transfer_source__(node)
-  end
-
-  local sources = {} ---@type era.m.explorer.IPendingTransferSource[]
-  for _, source in ipairs(pending_transfer.sources) do
-    local removed = false ---@type boolean
-    for _, root in ipairs(removed_roots) do
-      if transfer_source_covers(root, source.filepath) then
-        removed = true
-        break
-      end
-    end
-    if not removed then
-      self:__append_transfer_source__(sources, source)
-    end
-  end
-  self:__set_pending_transfer__(pending_transfer.mode, sources)
-end
-
----@protected
----@return nil
-function M:__select_pending_sources__()
-  local pending_transfer = self._pending_transfer ---@type era.m.explorer.IPendingTransfer|nil
-  if pending_transfer == nil then
-    return
-  end
-
-  local tree = self._ctx.tree ---@type era.m.explorer.Tree
-  for _, source in ipairs(pending_transfer.sources) do
-    tree:toggle_selected(source.filepath, "select")
-  end
-end
-
----@protected
----@return nil
-function M:__clear_selection__()
-  local selected_nodes = self._ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  self._ctx.tree:clear_selection()
-  self:__sync_pending_transfer__(selected_nodes)
-end
-
----@return nil
-function M:delete()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-
-  if #selected_nodes > 0 then
-    local names = {} ---@type string[]
-    for _, node in ipairs(selected_nodes) do
-      names[#names + 1] = node.nodename
-    end
-
-    local prompt ---@type string
-    if #selected_nodes == 1 then
-      prompt = string.format("Delete '%s'?", names[1])
-    else
-      prompt = string.format("Delete %d items? (%s)", #selected_nodes, table.concat(names, ", "))
-    end
-
-    vim.ui.input({ prompt = prompt, inputtype = "confirmation" }, function(input)
-      if input == nil then
-        return
-      end
-
-      local answer = vim.trim(input):lower() ---@type string
-      if answer ~= "y" and answer ~= "yes" then
-        return
-      end
-
-      local deleted_nodes = {} ---@type era.m.explorer.Node[]
-      for _, node in ipairs(selected_nodes) do
-        local ok = ctx.tree:remove(node.filepath) ---@type boolean
-        if ok then
-          deleted_nodes[#deleted_nodes + 1] = node
-        end
-      end
-
-      if #deleted_nodes > 0 then
-        self:__remove_pending_sources_covered_by__(deleted_nodes)
-        self:__clear_selection__()
-        vim.schedule(function()
-          ctx.refresh()
+          local resource = session.data:inspect(session.data:source(), item.node)
+          if resource:info().kind == "file" then
+            open_paths(nil, { resource:path() })
+          end
         end)
-
-        stl.reporter.info({
-          from = ctx.fullname,
-          subject = "delete",
-          message = string.format("Deleted %d item(s)", #deleted_nodes),
-        })
-      end
-    end)
-    return
-  end
-
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
-  if node == nil then
-    return
-  end
-
-  local is_directory = filepath:sub(-1) == "/" ---@type boolean
-  local name ---@type string
-  if is_directory then
-    local parts = vim.split(filepath:sub(1, -2), "/") ---@type string[]
-    name = parts[#parts] or filepath
-  else
-    name = vim.fn.fnamemodify(filepath, ":t")
-  end
-
-  local prompt = string.format("Delete '%s'?", name) ---@type string
-  vim.ui.input({ prompt = prompt, inputtype = "confirmation" }, function(input)
-    if input == nil then
-      return
-    end
-
-    local answer = vim.trim(input):lower() ---@type string
-    if answer ~= "y" and answer ~= "yes" then
-      return
-    end
-
-    local ok = ctx.tree:remove(filepath) ---@type boolean
-    if ok then
-      self:__remove_pending_sources_covered_by__({ node })
-      vim.schedule(function()
-        ctx.refresh()
-      end)
-    end
-  end)
-end
-
----@return nil
-function M:delete_visual()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local nodes = ctx.get_visual_nodes() ---@type era.m.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local names = {} ---@type string[]
-  for _, node in ipairs(nodes) do
-    names[#names + 1] = node.nodename
-  end
-
-  local prompt ---@type string
-  if #nodes == 1 then
-    prompt = string.format("Delete '%s'?", names[1])
-  else
-    prompt = string.format("Delete %d items? (%s)", #nodes, table.concat(names, ", "))
-  end
-
-  vim.ui.input({ prompt = prompt, inputtype = "confirmation" }, function(input)
-    if input == nil then
-      return
-    end
-
-    local answer = vim.trim(input):lower() ---@type string
-    if answer ~= "y" and answer ~= "yes" then
-      return
-    end
-
-    local deleted_nodes = {} ---@type era.m.explorer.Node[]
-    for _, node in ipairs(nodes) do
-      local ok = ctx.tree:remove(node.filepath) ---@type boolean
-      if ok then
-        deleted_nodes[#deleted_nodes + 1] = node
-      end
-    end
-
-    if #deleted_nodes > 0 then
-      self:__remove_pending_sources_covered_by__(deleted_nodes)
-      vim.schedule(function()
-        ctx.refresh()
-      end)
-
-      stl.reporter.info({
-        from = ctx.fullname,
-        subject = "delete",
-        message = string.format("Deleted %d item(s)", #deleted_nodes),
-      })
-    end
-  end)
-end
-
----@return nil
-function M:go_cwd()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local cwd = dot.path.cwd() ---@type string
-  local root_filepath = normalize_filepath(cwd .. "/") ---@type string
-  ctx.widget:set_root(root_filepath)
-end
-
----@return nil
-function M:go_home()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local workspace = dot.path.workspace() ---@type string
-  local root_filepath = normalize_filepath(workspace .. "/") ---@type string
-  ctx.widget:set_root(root_filepath)
-end
-
----@return nil
-function M:go_parent()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
-  local parent_filepath = ctx.get_parent_filepath(root_filepath) ---@type string
-
-  if parent_filepath ~= root_filepath then
-    ctx.widget:set_root(parent_filepath)
-  end
-end
-
----@return nil
-function M:go_prev()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local prev_root_filepath = ctx.tree.prev_root_filepath ---@type string|nil
-  if prev_root_filepath == nil then
-    return
-  end
-  ctx.widget:set_root(prev_root_filepath)
-end
-
----@return nil
-function M:jump_last_child()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local target_filepath = ctx.get_navigation_last_child_filepath(filepath) ---@type string|nil
-  if target_filepath == nil then
-    return
-  end
-
-  ctx.tree.o_cursor_filepath:next(target_filepath)
-  ctx.sync_cursor_to_filepath(target_filepath)
-end
-
----@return nil
-function M:jump_parent()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local target_filepath = ctx.get_navigation_parent_filepath(filepath) ---@type string|nil
-  if target_filepath ~= nil then
-    ctx.tree.o_cursor_filepath:next(target_filepath)
-    ctx.sync_cursor_to_filepath(target_filepath)
-  end
-end
-
----@return nil
-function M:mark_visual()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local nodes = ctx.get_visual_nodes() ---@type era.m.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  local force_selected = "unselect" ---@type era.m.explorer.ForceSelectedEnum
-  if #selected_nodes == 0 and self._pending_transfer ~= nil then
-    self:__select_pending_sources__()
-    force_selected = "select"
-  else
-    for _, node in ipairs(nodes) do
-      if not ctx.tree:is_selected(node.filepath) then
-        force_selected = "select"
-        break
-      end
-    end
-  end
-
-  for _, node in ipairs(nodes) do
-    ctx.tree:toggle_selected(node.filepath, force_selected)
-  end
-  self:__sync_pending_transfer__(selected_nodes)
-  ctx.refresh()
-end
-
----@return nil
-function M:open()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  if filepath:sub(-1) == "/" then
-    ctx.tree:toggle_expanded(filepath, false, nil)
-    ctx.refresh()
-  else
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-    self:pick_win_open(winnr_sourcefile)
-  end
-end
-
----@return nil
-function M:open_file_explorer()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  era.fn.find_explorer(os_filepath)
-end
-
----@return nil
-function M:open_file_finder()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local dirpath ---@type string
-  if filepath:sub(-1) == "/" then
-    dirpath = yoz.canonical_path.to_os_path(filepath)
-  else
-    dirpath = dot.path.dirname(yoz.canonical_path.to_os_path(filepath))
-  end
-
-  era.fn.find_files(dirpath, true)
-end
-
----@return nil
-function M:open_searcher()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  era.fn.search_in_files(os_filepath)
-end
-
----@return nil
-function M:open_selected()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-  if #selected_nodes == 0 then
-    stl.reporter.warn({
-      from = ctx.fullname,
-      subject = "open selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local file_nodes = {} ---@type era.m.explorer.Node[]
-  for _, node in ipairs(selected_nodes) do
-    if node.nodetype == "F" then
-      file_nodes[#file_nodes + 1] = node
-    end
-  end
-
-  if #file_nodes == 0 then
-    stl.reporter.warn({
-      from = ctx.fullname,
-      subject = "open selected",
-      message = "No files in selection (only directories)",
-    })
-    return
-  end
-
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-    vim.api.nvim_set_current_win(winnr_sourcefile)
-  end
-
-  for _, node in ipairs(file_nodes) do
-    local filepath = yoz.canonical_path.to_os_path(node.filepath) ---@type string
-    dot.win.open_filepath(winnr_sourcefile, filepath)
-  end
-
-  self:__clear_selection__()
-  vim.schedule(function()
-    ctx.render()
-  end)
-
-  stl.reporter.info({
-    from = ctx.fullname,
-    subject = "open selected",
-    message = string.format("Opened %d file(s)", #file_nodes),
+        :catch(Session.report)
+    end,
   })
 end
 
----@return nil
-function M:open_split()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil or filepath:sub(-1) == "/" then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.cmd("split " .. vim.fn.fnameescape(os_filepath))
-end
-
----@return nil
-function M:open_system_explorer()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.ui.open(os_filepath)
-end
-
----@return nil
-function M:open_tab()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil or filepath:sub(-1) == "/" then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.cmd("tabnew " .. vim.fn.fnameescape(os_filepath))
-
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
-end
-
----@return nil
-function M:open_vsplit()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil or filepath:sub(-1) == "/" then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  vim.cmd("vsplit " .. vim.fn.fnameescape(os_filepath))
-end
-
----@param winnr                         integer|nil
----@return nil
-function M:pick_win_open(winnr)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil or filepath:sub(-1) == "/" then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
-  if picked_winnr == nil then
-    return
-  end
-
-  if dot.win.open_filepath(picked_winnr, os_filepath) then
-    vim.api.nvim_set_current_win(picked_winnr)
-  end
-end
-
----@param winnr                         integer|nil
----@return nil
-function M:pick_win_split(winnr)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil or filepath:sub(-1) == "/" then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
-  if picked_winnr == nil then
-    return
-  end
-
-  vim.api.nvim_set_current_win(picked_winnr)
-  vim.cmd("split " .. vim.fn.fnameescape(os_filepath))
-end
-
----@param winnr                         integer|nil
----@return nil
-function M:pick_win_vsplit(winnr)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil or filepath:sub(-1) == "/" then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-  local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
-  if picked_winnr == nil then
-    return
-  end
-
-  vim.api.nvim_set_current_win(picked_winnr)
-  vim.cmd("vsplit " .. vim.fn.fnameescape(os_filepath))
-end
-
----@return nil
-function M:move()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
-  if node == nil then
-    return
-  end
-
-  local is_directory = node.nodetype == "D" ---@type boolean
-  local cwd = dot.path.cwd() ---@type string
-  local suggested_input = dot.path.relative(cwd, filepath, "/") ---@type string
-  if is_directory and suggested_input:sub(-1) ~= "/" then
-    suggested_input = suggested_input .. "/"
-  end
-
-  vim.ui.input({ prompt = "Move to: ", default = suggested_input }, function(input)
-    if input == nil then
-      return
-    end
-
-    local specified_filepath = vim.trim(input):gsub("\\", "/") ---@type string
-    if specified_filepath == "" then
-      return
-    end
-    if (specified_filepath:sub(-1) == "/") ~= is_directory then
-      stl.reporter.error({
-        from = ctx.fullname,
-        subject = "move",
-        message = is_directory and "Directory path must end with '/'" or "File path must not end with '/'",
-      })
-      return
-    end
-
-    local target_filepath = normalize_filepath(dot.path.resolve(cwd, specified_filepath), is_directory) ---@type string
-    if is_directory and target_filepath:sub(-1) ~= "/" then
-      target_filepath = target_filepath .. "/"
-    end
-    if target_filepath == filepath then
-      return
-    end
-    if is_directory and is_same_or_descendant(filepath, target_filepath) then
-      stl.reporter.error({
-        from = ctx.fullname,
-        subject = "move",
-        message = string.format("Cannot move a directory into itself: %s", target_filepath),
-      })
-      return
-    end
-
-    local ok = ctx.resource_manager:move(filepath, target_filepath) ---@type boolean
-    if ok then
-      self:__remove_pending_sources_covered_by__({ node })
-      ctx.tree:mark_all_dirty()
-      ctx.tree:refresh(true)
-      vim.schedule(function()
-        ctx.widget:reveal(target_filepath)
+---@return stl.c.Future
+function M:delete()
+  local session, view = self._widget:context()
+  if view:_visual_mode() then
+    return view:range_action(function(frame, first, last)
+      return session:operate(view, "delete", { range = { frame = frame, first = first, last = last } }):map(function()
+        return { kind = "NoChange" }
       end)
-      stl.reporter.info({
-        from = ctx.fullname,
-        subject = "move",
-        message = string.format("Moved to: %s", target_filepath),
-      })
-    end
-  end)
-end
-
----@return nil
-function M:rename()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
-  if node == nil then
-    return
-  end
-
-  local is_directory = node.nodetype == "D" ---@type boolean
-  local parent_filepath = ctx.get_parent_filepath(filepath) ---@type string
-
-  vim.ui.input({ prompt = "Rename to: ", default = node.nodename }, function(input)
-    if input == nil then
-      return
-    end
-
-    local name, err = validate_entry_name(input)
-    if name == nil then
-      if err ~= nil then
-        stl.reporter.error({
-          from = ctx.fullname,
-          subject = "rename",
-          message = err,
-        })
-      end
-      return
-    end
-    if name == node.nodename then
-      return
-    end
-
-    local new_filepath = join_child_filepath(parent_filepath, name, is_directory) ---@type string
-    if is_directory and new_filepath:sub(-1) ~= "/" then
-      new_filepath = new_filepath .. "/"
-    end
-
-    local ok = ctx.resource_manager:move(filepath, new_filepath) ---@type boolean
-    if ok then
-      self:__remove_pending_sources_covered_by__({ node })
-      ctx.tree:refresh(true)
-      vim.schedule(function()
-        ctx.refresh(true)
-        ctx.sync_cursor_to_filepath(new_filepath)
-      end)
-      stl.reporter.info({
-        from = ctx.fullname,
-        subject = "rename",
-        message = string.format("Renamed to: %s", new_filepath),
-      })
-    end
-  end)
-end
-
----@return nil
-function M:select_toggle()
-  self:mark("select")
-end
-
----@return nil
-function M:send_to_quickfix()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
-
-  if #selected_nodes == 0 then
-    local filepath = ctx.get_cursor_filepath() ---@type string|nil
-    if filepath == nil then
-      return
-    end
-    local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-    vim.fn.setqflist({}, "r", {
-      title = "Explorer",
-      items = { { filename = os_filepath, lnum = 1, col = 1 } },
-    })
-  else
-    local items = {} ---@type table[]
-    for _, node in ipairs(selected_nodes) do
-      local filepath = yoz.canonical_path.to_os_path(node.filepath) ---@type string
-      items[#items + 1] = { filename = filepath, lnum = 1, col = 1 }
-    end
-    vim.fn.setqflist({}, "r", {
-      title = "Explorer Selection",
-      items = items,
-    })
-  end
-
-  vim.cmd("copen")
-
-  stl.reporter.info({
-    from = ctx.fullname,
-    subject = "quickfix",
-    message = "Sent to quickfix list",
-  })
-end
-
----@return nil
-function M:set_root()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  if filepath:sub(-1) ~= "/" then
-    filepath = ctx.get_parent_filepath(filepath)
-  end
-
-  ctx.widget:set_root(filepath)
-end
-
----@param keymaps                       stl.t.IKeymap[]
----@return nil
-function M:show_keysheet(keymaps)
-  local keysheet = era.view.Keysheet.new({
-    title = "Explorer Help",
-    keymaps = keymaps,
-  })
-  keysheet:open()
-end
-
----@return nil
-function M:show_file_info()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-
-  local fileinfo = era.view.Fileinfo.new({ filepath = os_filepath })
-  fileinfo:open()
-end
-
----@return nil
-function M:toggle_recursive()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if filepath == nil then
-    return
-  end
-
-  if filepath:sub(-1) ~= "/" then
-    return
-  end
-
-  ctx.tree:toggle_expanded(filepath, true, nil)
-  ctx.refresh()
-end
-
----@class era.m.explorer.action.ITransferPlan
----@field public source                 era.m.explorer.IPendingTransferSource
----@field public target_filepath        string
-
----@return nil
-function M:paste()
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local pending_transfer = self:get_pending_transfer() ---@type era.m.explorer.IPendingTransfer|nil
-  if pending_transfer == nil then
-    stl.reporter.warn({
-      from = ctx.fullname,
-      subject = "paste",
-      message = "No cut/copy operation pending",
-    })
-    return
-  end
-
-  local cursor_filepath = ctx.get_cursor_filepath() ---@type string|nil
-  if cursor_filepath == nil then
-    return
-  end
-
-  local target_dir_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath
-    or ctx.get_parent_filepath(cursor_filepath) ---@type string
-  local target_dir = target_dir_filepath ---@type string
-
-  local plans, errors = self:__build_transfer_plans__(pending_transfer, target_dir)
-  if plans == nil then
-    stl.reporter.error({
-      from = ctx.fullname,
-      subject = "paste",
-      message = string.format("Cannot paste %d item(s)", #pending_transfer.sources),
-      details = { errors = errors },
-    })
-    return
-  end
-
-  self:__execute_transfer__(pending_transfer, plans, target_dir)
-end
-
----@protected
----@param pending_transfer              era.m.explorer.IPendingTransfer
----@param target_dir                    string
----@return era.m.explorer.action.ITransferPlan[]|nil
----@return string[]
-function M:__build_transfer_plans__(pending_transfer, target_dir)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local target_resource = ctx.resource_manager:locate(target_dir) ---@type era.m.explorer.resource.INode|nil
-  if target_resource == nil or target_resource.nodetype ~= "D" then
-    return nil, { string.format("Target is not an existing directory: %s", target_dir) }
-  end
-
-  local errors = {} ---@type string[]
-  local plans = {} ---@type era.m.explorer.action.ITransferPlan[]
-  local target_filepaths = {} ---@type table<string, boolean>
-
-  ---@param source                      era.m.explorer.IPendingTransferSource
-  ---@return era.m.explorer.action.ITransferPlan|nil, string|nil
-  local function build_plan(source)
-    local current_source = ctx.resource_manager:locate(source.filepath) ---@type era.m.explorer.resource.INode|nil
-    if current_source == nil then
-      return nil, string.format("Source no longer exists: %s", source.filepath)
-    end
-
-    local is_directory = current_source.nodetype == "D" ---@type boolean
-    local target_filepath = target_dir .. current_source.nodename .. (is_directory and "/" or "") ---@type string
-
-    local source_key = transfer_filepath_key(current_source.filepath) ---@type string
-    local target_key = transfer_filepath_key(target_filepath) ---@type string
-    if source_key == target_key then
-      return nil, string.format("Source is already in target directory: %s", current_source.filepath)
-    end
-
-    if is_directory and is_same_or_descendant(current_source.filepath, target_dir) then
-      return nil, string.format("Cannot paste a directory into itself: %s", current_source.filepath)
-    end
-
-    if target_filepaths[target_key] then
-      return nil, string.format("Multiple sources resolve to: %s", target_filepath)
-    end
-    target_filepaths[target_key] = true
-
-    if ctx.resource_manager:locate(target_filepath) ~= nil then
-      return nil, string.format("Target already exists: %s", target_filepath)
-    end
-
-    local plan = {
-      source = {
-        filepath = current_source.filepath,
-        nodename = current_source.nodename,
-        nodetype = current_source.nodetype,
-      },
-      target_filepath = target_filepath,
-    } ---@type era.m.explorer.action.ITransferPlan
-    ---@diagnostic disable-next-line: return-type-mismatch -- LuaLS assigns the table to the second slot of this nested tuple.
-    return plan, nil
-  end
-
-  for _, source in ipairs(pending_transfer.sources) do
-    local plan, err = build_plan(source)
-    if plan ~= nil then
-      plans[#plans + 1] = plan
-    elseif err ~= nil then
-      errors[#errors + 1] = err
-    end
-  end
-
-  if #errors > 0 then
-    return nil, errors
-  end
-  return plans, errors
-end
-
----@protected
----@param pending_transfer              era.m.explorer.IPendingTransfer
----@param plans                         era.m.explorer.action.ITransferPlan[]
----@param target_dir                    string
----@return nil
-function M:__execute_transfer__(pending_transfer, plans, target_dir)
-  local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local is_move = pending_transfer.mode == "move" ---@type boolean
-  local verb = is_move and "move" or "copy" ---@type string
-  local verb_past = is_move and "Moved" or "Copied" ---@type string
-  local retryable_sources = {} ---@type era.m.explorer.IPendingTransferSource[]
-  local retryable_failures = {} ---@type string[]
-  local partial_targets = {} ---@type string[]
-  local success_count = 0 ---@type integer
-
-  for _, plan in ipairs(plans) do
-    local status ---@type era.m.explorer.resource.CopyStatus
-    if is_move then
-      status = ctx.resource_manager:move(plan.source.filepath, plan.target_filepath) and "success"
-        or "retryable_failure"
-    else
-      status = ctx.resource_manager:copy(plan.source.filepath, plan.target_filepath)
-    end
-    if status == "success" then
-      success_count = success_count + 1
-    elseif status == "partial_failure" then
-      partial_targets[#partial_targets + 1] = plan.target_filepath
-    else
-      retryable_sources[#retryable_sources + 1] = plan.source
-      retryable_failures[#retryable_failures + 1] =
-        string.format("%s -> %s", plan.source.filepath, plan.target_filepath)
-    end
-  end
-
-  if success_count > 0 or #partial_targets > 0 then
-    ctx.tree:clear_selection()
-    self:__set_pending_transfer__(#retryable_sources > 0 and pending_transfer.mode or nil, retryable_sources)
-    ctx.tree:refresh(true)
-    vim.schedule(function()
-      ctx.refresh(true)
     end)
   end
+  return session:operate(view, "delete")
+end
 
-  if #partial_targets > 0 then
-    stl.reporter.error({
-      from = ctx.fullname,
-      subject = verb,
-      message = string.format(
-        "%s %d item(s), %d retryable failure(s), %d unresolved target(s)",
-        verb_past,
-        success_count,
-        #retryable_sources,
-        #partial_targets
-      ),
-      details = { failures = retryable_failures, partial_targets = partial_targets },
-    })
-  elseif #retryable_sources == 0 then
-    stl.reporter.info({
-      from = ctx.fullname,
-      subject = verb,
-      message = string.format("%s %d item(s) to: %s", verb_past, success_count, target_dir),
-    })
-  elseif success_count > 0 then
-    stl.reporter.warn({
-      from = ctx.fullname,
-      subject = verb,
-      message = string.format("%s %d item(s), %d failed", verb_past, success_count, #retryable_sources),
-      details = { failures = retryable_failures },
-    })
-  else
-    stl.reporter.error({
-      from = ctx.fullname,
-      subject = verb,
-      message = string.format("Failed to %s %d item(s)", verb, #retryable_sources),
-      details = { failures = retryable_failures },
-    })
+---@param kind                          string
+---@return stl.c.Future
+function M:auxiliary(kind)
+  local session, view = self._widget:context()
+  ---@async
+  ---@param range                       ?era.m.explorer.IInputRange
+  ---@return ux.treeview.IReply|nil
+  local function run(range)
+    local cursor = session:cursor(view)
+    if kind == "find" or kind == "directory" then
+      local path = session:target(view):path()
+      if kind == "find" then
+        era.fn.find_files(path, true)
+      else
+        era.fn.find_explorer(path)
+      end
+      return
+    elseif kind == "search" then
+      era.fn.search_in_files((cursor or session:root(view:frame())):path())
+      return
+    end
+    local resources = sources(session, view, range)
+    if not resources or view._closed then
+      return
+    end
+    local paths = {}
+    for _, resource in ipairs(resources) do
+      paths[#paths + 1] = resource:path()
+    end
+    if kind == "copy_path" then
+      era.fn.select_copy_filepaths({ filepaths = paths, winopts = { relative = "cursor", row = 1, col = 4 } })
+    elseif kind == "quickfix" then
+      local items = {}
+      for _, path in ipairs(paths) do
+        items[#items + 1] = { filename = path, lnum = 1, col = 1 }
+      end
+      vim.fn.setqflist({}, "r", { title = "Explorer", items = items })
+      vim.cmd.copen()
+    elseif kind == "ai" then
+      local locations = {}
+      for _, path in ipairs(paths) do
+        locations[#locations + 1] = { filepath = path }
+      end
+      era.fn.add_locations_to_ai(locations)
+    elseif kind == "system" then
+      for _, path in ipairs(paths) do
+        vim.ui.open(path)
+      end
+    elseif kind == "info" then
+      if #resources ~= 1 then
+        error("File info requires one item", 0)
+      end
+      local info = resources[1]:info()
+      local details = Session.await(session.data:details(resources[1]))
+      local lines = {
+        resources[1]:path(),
+        "Type: " .. info.kind,
+        "Size: " .. details.size .. " bytes",
+        "Permissions: " .. details.permissions .. " (" .. details.mode .. ")",
+        "Modified: " .. (details.modified or "unavailable"),
+        "Accessed: " .. (details.accessed or "unavailable"),
+        "Created: " .. (details.created or "unavailable"),
+      }
+      stl.reporter.info({ from = __module_name__, message = table.concat(lines, "\n") })
+    end
+    return { kind = "NoChange" }
   end
+  if kind == "ai" and view:_visual_mode() then
+    return view:range_action(function(frame, first, last)
+      return async.run_future(function()
+        return run({ frame = frame, first = first, last = last })
+      end)
+    end)
+  end
+  return async.run_future(run)
+end
+
+---@return nil
+function M:menu()
+  local session, view = self._widget:context()
+  local entries = session:busy() and { "Progress", "Cancel operation" }
+    or { "Clear selection", "Copy to path", "Move to path", "Copy to directory", "Move to directory", "Last results" }
+  vim.ui.select(entries, { prompt = "Explorer actions" }, function(choice)
+    if session._disposed or view._closed then
+      return
+    end
+    if choice == "Clear selection" then
+      session.state:clear_selection():catch(Session.report)
+    elseif choice == "Cancel operation" then
+      require("era.m.explorer.jobs").cancel(session)
+    elseif choice == "Progress" or choice == "Last results" then
+      stl.reporter.info({
+        from = __module_name__,
+        message = vim.inspect({ progress = session.progress, results = session.results }),
+      })
+    elseif choice == "Copy to path" or choice == "Move to path" then
+      session:operate(view, choice == "Copy to path" and "copy" or "move", { to_path = true }):catch(Session.report)
+    elseif choice == "Copy to directory" or choice == "Move to directory" then
+      session
+        :operate(view, choice == "Copy to directory" and "copy" or "move", { to_directory = true })
+        :catch(Session.report)
+    end
+  end)
 end
 
 return M

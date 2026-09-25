@@ -6,7 +6,7 @@ local S = era.dressing.whichkey
 ---@class era.dressing.whichkey.input
 local M = {}
 
----@type table<string, {bufnr: integer, mode: string, trigger_key: string, tree_key: string}>
+---@type table<string, {bufnr: integer, mode: string, trigger_key: string, tree_key: string, callback: fun(): nil}>
 M.triggers = {}
 
 ---@type uv.uv_timer_t|nil
@@ -17,6 +17,35 @@ M.recursion = 0
 
 ---@type uv.uv_timer_t? Timer to reset recursion counter
 M.recursion_timer = nil
+
+---@param keymaps                       table[]
+---@param lhs                           string
+---@return table|nil
+local function find_keymap(keymaps, lhs)
+  local key = vim.api.nvim_replace_termcodes(lhs, true, true, true)
+  for _, keymap in ipairs(keymaps) do
+    if vim.api.nvim_replace_termcodes(keymap.lhs, true, true, true) == key then
+      return keymap
+    end
+  end
+end
+
+---@param id                            string
+---@return nil
+local function unbind(id)
+  local trigger = M.triggers[id]
+  if not trigger then
+    return
+  end
+  if vim.api.nvim_buf_is_valid(trigger.bufnr) then
+    local keymap = find_keymap(vim.api.nvim_buf_get_keymap(trigger.bufnr, trigger.mode), trigger.trigger_key)
+    -- Buffer owners can replace a trigger after attachment; only remove our own callback.
+    if keymap and keymap.callback == trigger.callback then
+      vim.keymap.del(trigger.mode, trigger.trigger_key, { buffer = trigger.bufnr })
+    end
+  end
+  M.triggers[id] = nil
+end
 
 ---Attach triggers to buffer
 ---@param bufnr                          integer
@@ -62,11 +91,7 @@ function M.detach(bufnr, mode)
   end
 
   for _, id in ipairs(to_remove) do
-    local trigger = M.triggers[id]
-    if trigger and vim.api.nvim_buf_is_valid(trigger.bufnr) then
-      pcall(vim.keymap.del, trigger.mode, trigger.trigger_key, { buffer = trigger.bufnr })
-    end
-    M.triggers[id] = nil
+    unbind(id)
   end
 end
 
@@ -141,19 +166,17 @@ function M.__bind__(bufnr, mode, trigger_key, tree_key)
     return
   end
 
-  local existing = vim.fn.maparg(trigger_key, mode, false, true)
-  if type(existing) == "table" and existing.lhs then
-    if existing.desc and not existing.desc:find("wk-trigger", 1, true) then
-      return
-    end
-    if existing.rhs or existing.callback then
-      return
-    end
+  local existing = find_keymap(vim.api.nvim_buf_get_keymap(bufnr, mode), trigger_key)
+    or find_keymap(vim.api.nvim_get_keymap(mode), trigger_key)
+  if existing then
+    return
   end
 
-  vim.keymap.set(mode, trigger_key, function()
+  ---@return nil
+  local callback = function()
     M.__start__(bufnr, mode, tree_key)
-  end, {
+  end
+  vim.keymap.set(mode, trigger_key, callback, {
     buffer = bufnr,
     nowait = true,
     desc = "wk-trigger",
@@ -164,6 +187,7 @@ function M.__bind__(bufnr, mode, trigger_key, tree_key)
     mode = mode,
     trigger_key = trigger_key,
     tree_key = tree_key,
+    callback = callback,
   }
 end
 
@@ -364,10 +388,7 @@ function M.__start__(bufnr, mode, key)
   if S.util.in_macro() then
     local trigger_key = M.__resolve_key__(key)
     local id = bufnr .. ":" .. mode .. ":" .. trigger_key
-    if M.triggers[id] then
-      pcall(vim.keymap.del, mode, trigger_key, { buffer = bufnr })
-      M.triggers[id] = nil
-    end
+    unbind(id)
     M.__feed_with_context__(key, mode)
     return
   end

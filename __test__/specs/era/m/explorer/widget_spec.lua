@@ -1,588 +1,339 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/explorer/widget_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.explorer.widget module
-
-local bootstrap = require("__test__.support.bootstrap")
-local harness = require("__test__.support.harness")
-local treeview = require("stl.view.treeview")
-
-local t = harness.new("era.m.explorer.widget")
-local normalize_calls = 0 ---@type integer
-
----@param initial_value                any
----@return table
-local function new_observable(initial_value)
-  local subscribers = {} ---@type table[]
-  local ignore_initial = nil ---@type boolean|nil
-  local value = initial_value
-  return {
-    get_ignore_initial = function()
-      return ignore_initial
-    end,
-    subscribe = function(_, subscriber, next_ignore_initial)
-      ignore_initial = next_ignore_initial
-      subscribers[#subscribers + 1] = subscriber
-      return { unsubscribe = function() end }
-    end,
-    snapshot = function()
-      return value
-    end,
-    next = function(_, next_value)
-      value = next_value
-      for _, subscriber in ipairs(subscribers) do
-        subscriber:next(next_value)
-      end
-    end,
-  }
-end
-
-local Subscriber = {}
-
-function Subscriber.new(props)
-  return {
-    next = function(_, value)
-      props.on_next(value)
-    end,
-  }
-end
-
-local o_flag_selected = new_observable()
-local o_flag_viewtype = new_observable()
-local o_git_refreshed = new_observable()
-local o_ignored_refreshed = new_observable()
-
-bootstrap.with_runtime(t, {
-  dot = {
-    context = {
-      explorer = {
-        flag_selected = o_flag_selected,
-        flag_viewtype = o_flag_viewtype,
-      },
-    },
-    path = {
-      normalize = function(filepath, keep_trailing_slash)
-        normalize_calls = normalize_calls + 1
-        local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
-        if keep_trailing_slash == false and normalized ~= "/" then
-          normalized = normalized:gsub("/+$", "")
-        end
-        return normalized
-      end,
-    },
-  },
-  era = {
-    m = {
-      git = {
-        state = {
-          o_ignored_refreshed = o_ignored_refreshed,
-          o_refreshed = o_git_refreshed,
-        },
-      },
-      lsp = {
-        diagnostic = {
-          subscribe_all = function()
-            return { unsubscribe = function() end }
-          end,
-        },
-      },
-    },
-  },
-  stl = {
-    c = {
-      Subscriber = Subscriber,
-    },
-    env = {
-      PATH_SEP = "/",
-    },
-  },
-})
-
-local Widget = require("era.m.explorer.widget")
-
----@param tab_wins                     table<integer, integer>
----@return era.m.explorer.Widget, table
-local function new_hide_widget(tab_wins)
-  local calls = { mark_all_dirty = 0, pause_watch = 0 }
-  local widget = setmetatable({
-    _o_width = new_observable(),
-    _render_generation = 0,
-    _render_result = { deferred_file_icons = { {} } },
-    _resource_manager = {
-      pause_watch = function()
-        calls.pause_watch = calls.pause_watch + 1
-      end,
-    },
-    _tab_wins = tab_wins,
-    _tree = {
-      mark_all_dirty = function()
-        calls.mark_all_dirty = calls.mark_all_dirty + 1
-      end,
-    },
-  }, Widget)
-  return widget, calls
-end
-
----@param callback                     fun(): nil
-local function with_invalid_windows(callback)
-  t:patch_table(vim.api, "nvim_win_is_valid", function()
-    return false
-  end)
-  callback()
-end
-
-t:test("hide: invalidates the tree when the last watched window closes", function()
-  with_invalid_windows(function()
-    local widget, calls = new_hide_widget({ [1] = 101 })
-
-    widget:hide(1)
-    t.assert_eq(1, calls.pause_watch, "last window should pause watchers")
-    t.assert_eq(1, calls.mark_all_dirty, "last window should invalidate the tree snapshot")
-    ---@diagnostic disable-next-line: invisible
-    t.assert_eq(1, widget._render_generation, "last window should invalidate deferred decoration")
-    ---@diagnostic disable-next-line: invisible
-    t.assert_eq(0, #widget._render_result.deferred_file_icons, "last window should release deferred decoration")
-
-    widget:hide(1)
-    t.assert_eq(1, calls.pause_watch, "repeated hide should not pause watchers again")
-    t.assert_eq(1, calls.mark_all_dirty, "repeated hide should not invalidate the tree again")
-  end)
-end)
-
-t:test("hide: preserves watcher coverage while another window remains", function()
-  with_invalid_windows(function()
-    local widget, calls = new_hide_widget({ [1] = 101, [2] = 102 })
-
-    widget:hide(1)
-    t.assert_eq(0, calls.pause_watch, "remaining window should keep watchers active")
-    t.assert_eq(0, calls.mark_all_dirty, "remaining window should keep the tree snapshot valid")
-    ---@diagnostic disable-next-line: invisible
-    t.assert_eq(0, widget._render_generation, "remaining window should preserve deferred decoration")
-
-    widget:hide(2)
-    t.assert_eq(1, calls.pause_watch, "closing the remaining window should pause watchers")
-    t.assert_eq(1, calls.mark_all_dirty, "closing the remaining window should invalidate the tree")
-  end)
-end)
-
----@return era.m.explorer.Widget, fun(): fun()[]
-local function new_scheduled_icon_widget()
-  local scheduled = {} ---@type fun()[]
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
-  t:patch_table(vim.api, "nvim_buf_is_valid", function()
-    return true
-  end)
-
-  local widget = setmetatable({
-    _disposed = false,
-    _render_generation = 0,
-    _render_result = nil,
-    _tab_wins = { [1] = 101 },
-    _view = {},
-    fullname = "test-explorer",
-  }, Widget)
-  return widget, function()
-    return scheduled
-  end
-end
-
-t:test("file icons: stale generation cannot update the current render", function()
-  local widget, get_scheduled = new_scheduled_icon_widget()
-  local updated = {} ---@type string[]
-  ---@diagnostic disable-next-line: invisible
-  widget._view.update_file_icons = function(_, _, result)
-    ---@diagnostic disable-next-line: undefined-field
-    updated[#updated + 1] = result.id
-  end
-
-  local stale = { id = "stale", deferred_file_icons = { {} } }
-  ---@diagnostic disable-next-line: invisible
-  local stale_generation = widget:__invalidate_render__()
-  ---@diagnostic disable-next-line: invisible
-  widget._render_result = stale
-  ---@diagnostic disable-next-line: invisible
-  widget:__schedule_file_icons__(1, stale, stale_generation)
-
-  local current = { id = "current", deferred_file_icons = { {} } }
-  ---@diagnostic disable-next-line: invisible
-  local current_generation = widget:__invalidate_render__()
-  ---@diagnostic disable-next-line: invisible
-  widget._render_result = current
-  ---@diagnostic disable-next-line: invisible
-  widget:__schedule_file_icons__(1, current, current_generation)
-
-  local scheduled = get_scheduled()
-  t.assert_eq(2, #scheduled, "scheduled callback count")
-  scheduled[1]()
-  scheduled[2]()
-
-  t.assert_eq(1, #updated, "current update count")
-  t.assert_eq("current", updated[1], "only the current generation should update icons")
-  t.assert_eq(0, #current.deferred_file_icons, "completed render should release deferred icons")
-end)
-
-t:test("file icons: decoration yields between bounded batches", function()
-  local widget, get_scheduled = new_scheduled_icon_widget()
-  local batches = {} ---@type integer[][]
-  ---@diagnostic disable-next-line: invisible
-  widget._view.update_file_icons = function(_, _, _, index_start, index_end)
-    batches[#batches + 1] = { index_start, index_end }
-  end
-
-  local icons = {} ---@type table[]
-  for _ = 1, 65 do
-    icons[#icons + 1] = {}
-  end
-  local result = { deferred_file_icons = icons }
-  ---@diagnostic disable-next-line: invisible
-  local generation = widget:__invalidate_render__()
-  ---@diagnostic disable-next-line: invisible
-  widget._render_result = result
-  ---@diagnostic disable-next-line: invisible
-  widget:__schedule_file_icons__(1, result, generation)
-
-  local scheduled = get_scheduled()
-  t.assert_eq(1, #scheduled, "first batch should be scheduled")
-  scheduled[1]()
-  t.assert_eq(1, #batches, "first batch count")
-  t.assert_eq(1, batches[1][1], "first batch start")
-  t.assert_eq(64, batches[1][2], "first batch end")
-  t.assert_eq(2, #scheduled, "remaining icons should schedule another event-loop turn")
-  scheduled[2]()
-  t.assert_eq(2, #batches, "all batch count")
-  t.assert_eq(65, batches[2][1], "second batch start")
-  t.assert_eq(65, batches[2][2], "second batch end")
-  t.assert_eq(0, #result.deferred_file_icons, "completed batches should release deferred icons")
-end)
-
-t:test("file icons: hidden widgets release decoration without scheduling", function()
-  local widget, get_scheduled = new_scheduled_icon_widget()
-  ---@diagnostic disable-next-line: invisible
-  widget._tab_wins = {}
-
-  local result = { deferred_file_icons = { {} } }
-  ---@diagnostic disable-next-line: invisible
-  local generation = widget:__invalidate_render__()
-  ---@diagnostic disable-next-line: invisible
-  widget._render_result = result
-  ---@diagnostic disable-next-line: invisible
-  widget:__schedule_file_icons__(1, result, generation)
-
-  t.assert_eq(0, #get_scheduled(), "hidden widget should not schedule decoration")
-  t.assert_eq(0, #result.deferred_file_icons, "hidden widget should release deferred icons")
-end)
-
----@param initial_root                 string
----@param attach_ok                    boolean|nil
----@param alias_filepath               string|nil
----@return era.m.explorer.Widget, table
-local function new_reveal_widget(initial_root, attach_ok, alias_filepath)
-  local calls = {
-    attach = 0,
-    expand_path = 0,
-    focus = 0,
-    refresh = 0,
-    resolve_root_alias = 0,
-    render = 0,
-  }
-  local tree = {
-    o_cursor_filepath = new_observable(initial_root),
-    o_root_filepath = new_observable(initial_root),
-    prev_root_filepath = nil,
-  }
-
-  function tree:attach(filepath)
-    calls.attach = calls.attach + 1
-    calls.attached_filepath = filepath
-    return attach_ok ~= false
-  end
-
-  function tree:expand_path(filepath)
-    calls.expand_path = calls.expand_path + 1
-    calls.expanded_filepath = filepath
-  end
-
-  function tree:refresh()
-    calls.refresh = calls.refresh + 1
-  end
-
-  local widget = setmetatable({
-    _resource_manager = {
-      resolve_root_alias = function(_, root_filepath, target_filepath)
-        calls.resolve_root_alias = calls.resolve_root_alias + 1
-        calls.alias_root_filepath = root_filepath
-        calls.alias_target_filepath = target_filepath
-        return alias_filepath
-      end,
-    },
-    _tree = tree,
-    __get_parent_filepath__ = function(_, filepath)
-      return filepath:match("^(.*/)[^/]+/?$")
-    end,
-    __render__ = function()
-      calls.render = calls.render + 1
-    end,
-  }, Widget)
-
-  widget.focus = function(self)
-    calls.focus = calls.focus + 1
-    ---@diagnostic disable-next-line: invisible
-    self._tree:refresh(false)
-    ---@diagnostic disable-next-line: invisible
-    self:__render__()
-  end
-
-  return widget, calls
-end
-
-t:test("reveal: refreshes and renders once after preparing the target", function()
-  local widget, calls = new_reveal_widget("/project/")
-
-  widget:reveal("/project/src/main.lua")
-
-  t.assert_eq(0, calls.attach, "same-root reveal should not attach a new root")
-  t.assert_eq(0, calls.resolve_root_alias, "same-root reveal should skip alias resolution")
-  t.assert_eq(1, calls.expand_path, "target path should expand once")
-  t.assert_eq("/project/src/", calls.expanded_filepath)
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/src/main.lua", widget._tree.o_cursor_filepath:snapshot())
-  t.assert_eq(1, calls.focus, "reveal should focus once")
-  t.assert_eq(1, calls.refresh, "reveal should refresh once")
-  t.assert_eq(1, calls.render, "reveal should render once")
-end)
-
-t:test("reveal: changes root without an intermediate refresh", function()
-  local widget, calls = new_reveal_widget("/project/")
-
-  widget:reveal("/outside/main.lua")
-
-  t.assert_eq(1, calls.attach, "cross-root reveal should attach once")
-  t.assert_eq(1, calls.resolve_root_alias, "cross-root reveal should try the current root aliases")
-  t.assert_eq("/outside/", calls.attached_filepath)
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/", widget._tree.prev_root_filepath)
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/outside/", widget._tree.o_root_filepath:snapshot())
-  t.assert_eq("/outside/", calls.expanded_filepath)
-  t.assert_eq(1, calls.focus, "cross-root reveal should focus once")
-  t.assert_eq(1, calls.refresh, "cross-root reveal should refresh once")
-  t.assert_eq(1, calls.render, "cross-root reveal should render once")
-end)
-
-t:test("reveal: preserves the root when the canonical target has a logical alias", function()
-  local widget, calls = new_reveal_widget("/project/", nil, "/project/local/main.lua")
-
-  widget:reveal("/physical/local/main.lua")
-
-  t.assert_eq(1, calls.resolve_root_alias, "canonical target should resolve once")
-  t.assert_eq("/project/", calls.alias_root_filepath)
-  t.assert_eq("/physical/local/main.lua", calls.alias_target_filepath)
-  t.assert_eq(0, calls.attach, "logical alias should preserve the current root")
-  t.assert_eq("/project/local/", calls.expanded_filepath)
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/local/main.lua", widget._tree.o_cursor_filepath:snapshot())
-  t.assert_eq(1, calls.focus, "logical reveal should focus once")
-  t.assert_eq(1, calls.refresh, "logical reveal should refresh once")
-  t.assert_eq(1, calls.render, "logical reveal should render once")
-end)
-
-t:test("reveal: preserves the current root when attach fails", function()
-  local widget, calls = new_reveal_widget("/project/", false)
-
-  widget:reveal("/missing/main.lua")
-
-  t.assert_eq(1, calls.attach, "failed root should be attempted once")
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/", widget._tree.o_root_filepath:snapshot())
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq(nil, widget._tree.prev_root_filepath)
-  t.assert_eq(0, calls.expand_path, "failed root should abort target expansion")
-  t.assert_eq(1, calls.focus, "failed reveal should preserve focus behavior")
-  t.assert_eq(1, calls.refresh, "failed reveal should refresh the current root once")
-  t.assert_eq(1, calls.render, "failed reveal should render the current root once")
-end)
-
-t:test("parent filepath: directory parents keep a trailing slash", function()
-  t:patch_table(dot.path, "dirname", function()
-    return "/project/src"
-  end)
-
-  local widget = setmetatable({}, Widget)
-
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/src/", widget:__get_parent_filepath__("/project/src/main.lua"))
-end)
-
-t:test("navigation: resolves the visible parent, last child, and last sibling", function()
-  local layout = treeview.layout({
-    roots = { "/project/src/", "/project/README.md" },
-    children = function(filepath)
-      return filepath == "/project/src/" and { "/project/src/a.lua", "/project/src/z.lua" } or {}
-    end,
-  })
-  local widget = setmetatable({
-    _render_result = {
-      layout = layout,
-    },
-  }, Widget)
-
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/src/", widget:__get_navigation_parent_filepath__("/project/src/a.lua"))
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/src/z.lua", widget:__get_navigation_last_child_filepath__("/project/src/a.lua"))
-  ---@diagnostic disable-next-line: invisible
-  t.assert_nil(widget:__get_navigation_parent_filepath__("/project/src/"))
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/src/z.lua", widget:__get_navigation_last_child_filepath__("/project/src/"))
-  ---@diagnostic disable-next-line: invisible
-  t.assert_eq("/project/README.md", widget:__get_navigation_last_child_filepath__("/project/README.md"))
-end)
-
-t:test("navigation: consumes canonical render filepaths without normalization", function()
-  local cursor = { 1, 0 } ---@type integer[]
-  t:patch_table(vim.api, "nvim_win_is_valid", function()
-    return true
-  end)
-  t:patch_table(vim.api, "nvim_win_get_cursor", function()
-    return cursor
-  end)
-  t:patch_table(vim.api, "nvim_win_set_cursor", function(_, next_cursor)
-    cursor = next_cursor
-  end)
-
-  local o_cursor_filepath = new_observable()
-  local layout = treeview.layout({
-    roots = { "/project/src/", "/project/src/main.lua" },
-    children = function()
-      return {}
-    end,
-  })
-  local widget = setmetatable({
-    _render_result = {
-      lines = { "dir", "file" },
-      layout = layout,
-    },
-    _tree = { o_cursor_filepath = o_cursor_filepath },
-    _tab_wins = { [1] = 101 },
-  }, Widget)
-
-  local filepaths = {} ---@type string[]
-  normalize_calls = 0
-  ---@diagnostic disable-next-line: invisible
-  local found = widget:__goto_matching_file_or_dir__("next", function(filepath)
-    filepaths[#filepaths + 1] = filepath
-    return true
-  end)
-
-  t.assert_true(found, "matching item")
-  t.assert_eq(0, normalize_calls, "canonical navigation filepath normalization count")
-  t.assert_eq("/project/src", filepaths[1], "directory matcher filepath")
-  t.assert_eq("/project/src/main.lua", filepaths[2], "file matcher filepath")
-  t.assert_eq("/project/src/main.lua", o_cursor_filepath:snapshot(), "selected filepath")
-  t.assert_eq(2, cursor[1], "selected line")
-end)
-
-t:test("ignored refresh: updates any visible tab and filters unaffected paths", function()
-  local valid_wins = { [101] = true } ---@type table<integer, boolean>
-  t:patch_table(vim.api, "nvim_get_current_tabpage", function()
-    return 2
-  end)
-  t:patch_table(vim.api, "nvim_win_is_valid", function(winnr)
-    return valid_wins[winnr] == true
-  end)
-
-  local tree = {
-    o_flag_foldempty = new_observable(),
-    o_flag_hidden = new_observable(),
-    o_root_filepath = new_observable(),
-  }
-  local renders = 0 ---@type integer
-  local layout = treeview.layout({
-    roots = { "/project/file", "/project/dir/" },
-    children = function()
-      return {}
-    end,
-  })
-  local widget = setmetatable({
-    _o_width = new_observable(),
-    _render_result = {
-      layout = layout,
-    },
-    _resource_manager = {},
-    _subscriptions = {},
-    _tab_wins = { [1] = 101 },
-    _tree = tree,
-    __render__ = function()
-      renders = renders + 1
-    end,
-  }, Widget)
-
-  ---@diagnostic disable-next-line: invisible
-  widget:__setup_subscriptions__()
-  t.assert_eq(true, tree.o_flag_hidden:get_ignore_initial(), "initial hidden state should not refresh the tree")
-
-  o_ignored_refreshed:next({ "/project/file" })
-  t.assert_eq(1, renders, "off-current-tab visible window should render")
-
-  o_ignored_refreshed:next({ "/other/stale" })
-  t.assert_eq(1, renders, "unaffected path should not render")
-
-  o_ignored_refreshed:next({ "/project/dir" })
-  t.assert_eq(2, renders, "directory path should match its trailing-slash render key")
-
-  o_ignored_refreshed:next({ "/project/file", "/project/dir" })
-  t.assert_eq(3, renders, "one event should render at most once")
-
-  valid_wins[101] = false
-  o_ignored_refreshed:next({ "/project/file" })
-  t.assert_eq(3, renders, "fully hidden widget should not render")
-end)
-
-t:test("keymaps: mark prefixes and context actions dispatch independently", function()
-  local calls = {}
-  local action = {}
-  for _, name in ipairs({ "mark", "cut", "copy", "select_toggle", "move", "open_selected" }) do
-    action[name] = function(_, mode)
-      calls[#calls + 1] = name .. (mode and ":" .. mode or "")
-    end
-  end
-  local widget = setmetatable({
-    _action = action,
-    _tree = {
-      get_selected_nodes = function()
-        return { {} }
-      end,
-    },
-  }, { __index = Widget })
-  t:patch_table(dot, "state", { widget = {
-    get_keymaps = function()
-      return {}
-    end,
-  } })
-  t:patch_table(stl, "nvim", { fn = { bindkeys = function() end } })
-  widget.__get_flags__ = function()
-    return {}
-  end
-  widget:__setup_keymaps__(1)
-  local normal = {}
-  for _, keymap in ipairs(widget._keymaps) do
-    if vim.tbl_contains(keymap.modes, "n") then
-      normal[keymap.key] = keymap
-    end
-  end
-  for _, key in ipairs({ "mx", "mc", "ms", "x", "c", "<Tab>", "om", "o<CR>" }) do
-    t.assert_true(normal[key] ~= nil, key .. " mapping")
-    normal[key].callback()
-  end
-  t.assert_eq(
-    "mark:cut,mark:copy,mark:select,cut,copy,select_toggle,move,open_selected",
-    table.concat(calls, ","),
-    "dispatch"
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.m.explorer.widget" ---@type string
+
+local fixture = require("__test__.support.explorer").new("era.m.explorer.widget")
+local t, await, write, directory = fixture.t, fixture.await, fixture.write, fixture.directory
+
+t:test("real panes use native Filetree, switch Tree/List, and preserve state across close", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/sub", 448))
+  write(path .. "/sub/file")
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  t.assert_eq("tree", view:frame():header().mode)
+  t.assert_eq(2, view:frame():header().row_count)
+  t.assert_eq("explorer", vim.api.nvim_get_option_value("filetype", { buf = view.bufnr }))
+  t.assert_eq("", vim.api.nvim_get_option_value("statuscolumn", { win = view.winnr }))
+  fixture.cursor(widget, path .. "/a")
+  await(widget._action:mark("copy"))
+  t.wait_until(function()
+    return session:mode(view:frame()) == "copy"
+  end, 10000)
+  widget:toggle_flag(2)
+  t.wait_until(function()
+    return view:frame():header().mode == "list" and view:frame():header().row_count == 3
+  end, 10000)
+  t.assert_true(
+    table.concat(vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, false), "\n"):find("sub/file", 1, true) ~= nil
   )
-  for _, key in ipairs({ "m", "mm", "md", "mo" }) do
-    t.assert_nil(normal[key], key .. " reserved")
+  local state_id = view:frame():header().state_id
+  widget:hide()
+  t.assert_false(widget:isvisible())
+  widget:focus()
+  t.wait_until(function()
+    local current = widget._views[vim.api.nvim_get_current_tabpage()]
+    return current and current:frame() and current:frame():header().row_count == 3
+  end, 10000)
+  local _, reopened = widget:context()
+  t.assert_eq(state_id, reopened:frame():header().state_id)
+  t.assert_eq("copy", session:mode(reopened:frame()))
+  for _, mode in ipairs({ "n", "x" }) do
+    for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(reopened.bufnr, mode)) do
+      t.assert_true(mapping.lhs ~= "<Esc>", "Explorer must not bind Escape")
+    end
   end
+end)
+
+t:test("reveal expands a nested file and root navigation retains selection", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/sub", 448))
+  write(path .. "/sub/file")
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  await(widget._action:mark("cut"))
+  await(widget:reveal(path .. "/sub/file"))
+  local session, view = widget:context()
+  local resource = await(session.data:resolve(path .. "/sub/file"))
+  t.wait_until(function()
+    return view:frame():header().cursor == resource:node()
+  end, 10000)
+  t.assert_eq("cut", session:mode(view:frame()))
+  await(widget:set_root(path .. "/sub"))
+  t.wait_until(function()
+    return session:root(view:frame()):path() == path .. "/sub"
+  end, 10000)
+  await(widget._action:root("previous"))
+  t.wait_until(function()
+    return session:root(view:frame()):path() == path
+  end, 10000)
+  t.assert_eq("cut", session:mode(view:frame()))
+end)
+
+t:test("shared data keeps independent states and subscriptions survive the first owner closing", function()
+  local path = directory()
+  write(path .. "/a")
+  local first = fixture.widget(path)
+  local shared = first._session.data
+  fixture.cursor(first, path .. "/a")
+  await(first._action:mark("copy"))
+  local second = fixture.widget(path, { data = shared })
+  local session, view = second:context()
+  t.assert_true(session.state:snapshot():header().state_id ~= first._session.state:snapshot():header().state_id)
+  t.assert_eq(nil, session:mode(view:frame()))
+  t.assert_eq(first._session._subscriptions, session._subscriptions)
+  first:dispose()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(bufnr, path .. "/a")
+  local namespace = vim.api.nvim_create_namespace("shared-explorer-input")
+  t:defer(function()
+    vim.diagnostic.reset(namespace)
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
+  t.wait_until(function()
+    return view._filetree_annotations and view._filetree_annotations.rows[1].diagnostics[1] == 1
+  end, 10000)
+  local third = fixture.widget(path, { session = session })
+  local same, other_view = third:context()
+  t.assert_eq(session, same)
+  t.assert_eq(view:frame():header().state_id, other_view:frame():header().state_id)
+  second:toggle_flag(2)
+  t.wait_until(function()
+    return other_view:frame():header().mode == "list" and third:get_display().mode == "list"
+  end, 10000)
+  third:toggle_flag(2)
+  t.wait_until(function()
+    return view:frame():header().mode == "tree" and second:get_display().mode == "tree"
+  end, 10000)
+end)
+
+t:test("reveal synchronizes display flags and later toggles preserve the revealed visibility", function()
+  local path = directory()
+  write(path .. "/.hidden")
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  widget:toggle_flag(4)
+  t.wait_until(function()
+    return widget._session.state:display().show_hidden == false
+  end, 10000)
+  await(widget:reveal(path .. "/.hidden"))
+  t.wait_until(function()
+    return widget:show_hidden()
+  end, 10000)
+  widget:toggle_flag(2)
+  t.wait_until(function()
+    return widget._session.state:display().mode == "list"
+  end, 10000)
+  t.assert_true(widget._session.state:display().show_hidden)
+  t.assert_eq("ancestry", widget._session.state:display().list_text)
+  widget:toggle_flag(4)
+  t.wait_until(function()
+    return not widget:show_hidden() and not widget._display_scheduled
+  end, 10000)
+  widget:toggle_flag(4)
+  widget:toggle_flag(4)
+  t.wait_until(function()
+    return not widget._display_scheduled
+  end, 10000)
+  t.assert_false(widget:show_hidden())
+end)
+
+t:test("concurrent shared-session flag changes retain both partial updates", function()
+  local path = directory()
+  write(path .. "/a")
+  write(path .. "/.hidden")
+  local first = fixture.widget(path)
+  local second = fixture.widget(path, { session = first._session })
+  first:toggle_flag(2)
+  second:toggle_flag(4)
+  t.wait_until(function()
+    local display = first._session.state:display()
+    return display.mode == "list"
+      and not display.show_hidden
+      and first:get_display().mode == "list"
+      and second:get_display().mode == "list"
+      and not first:show_hidden()
+      and not second:show_hidden()
+  end, 10000)
+end)
+
+t:test("sharing flag observables cannot turn native display acknowledgements into new input", function()
+  for _, order in ipairs({ { 4, 2 }, { 2, 4 } }) do
+    local path = directory()
+    write(path .. "/a")
+    local first = fixture.widget(path)
+    local second = fixture.widget(path, {
+      session = first._session,
+      o_flag_selected = first._options[1],
+      o_flag_viewtype = first._options[2],
+      o_flag_foldempty = first._options[3],
+      o_flag_hidden = first._options[4],
+    })
+    first:toggle_flag(order[1])
+    second:toggle_flag(order[2])
+    t.wait_until(function()
+      return first:get_display().mode == "list"
+        and not first:show_hidden()
+        and not first._display_scheduled
+        and not second._display_scheduled
+    end, 10000)
+    t.assert_eq("list", second:get_display().mode)
+    t.assert_false(second:show_hidden())
+    first:dispose()
+    second:dispose()
+  end
+end)
+
+t:test("a removed root can navigate to its parent and a recreated workspace", function()
+  local base = directory()
+  local path = base .. "/workspace"
+  assert(vim.uv.fs_mkdir(path, 448))
+  local widget = fixture.widget(path)
+  assert(vim.uv.fs_rmdir(path))
+  t.wait_until(function()
+    return widget._session._root_error == true
+  end, 10000)
+  await(widget._action:root("parent"))
+  local session, view = widget:context()
+  t.wait_until(function()
+    local frame = view:frame()
+    return frame:source():node(frame:header().root.node) ~= nil and session:root(frame):path() == base
+  end, 10000)
+  assert(vim.uv.fs_mkdir(path, 448))
+  await(widget._action:root("workspace"))
+  t.wait_until(function()
+    return session:root(view:frame()):path() == path
+  end, 10000)
+end)
+
+t:test("manual refresh recovers a desynced surface after automatic recovery also fails", function()
+  local path = directory()
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  local set_lines = vim.api.nvim_buf_set_lines
+  local failures = 0
+  t:patch_table(vim.api, "nvim_buf_set_lines", function(bufnr, ...)
+    if bufnr == view.bufnr and failures < 2 then
+      failures = failures + 1
+      error("transient Explorer publication failure")
+    end
+    return set_lines(bufnr, ...)
+  end)
+  write(path .. "/b")
+  await(session:refresh())
+  t.wait_until(function()
+    return failures == 2 and view:status().desynced and not view:status().preparing
+  end, 10000)
+  await(widget:refresh())
+  t.wait_until(function()
+    return view:frame() and view:frame():header().row_count == 2 and not view:status().desynced
+  end, 10000, "Widget refresh must recover the owned surface")
+  t.assert_eq(2, vim.api.nvim_buf_line_count(view.bufnr))
+end)
+
+t:test("hide and reopen release every Explorer buffer identity", function()
+  local path = directory()
+  write(path .. "/a")
+  local before = {}
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    before[bufnr] = true
+  end
+  local widget = fixture.widget(path)
+  for _ = 1, 10 do
+    widget:hide()
+    t.wait_until(function()
+      return widget._session.data:watch_status().directories == 0
+    end, 10000)
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      t.assert_true(before[bufnr], "orphan buffer after hide: " .. vim.api.nvim_buf_get_name(bufnr))
+    end
+    widget:focus()
+    t.wait_until(function()
+      local view = widget._views[vim.api.nvim_get_current_tabpage()]
+      return view and view:frame() and view:frame():header().row_count == 1
+    end, 10000)
+  end
+end)
+
+t:test("refreshing a healthy unchanged pane preserves its body publication", function()
+  local path = directory()
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  t.wait_until(function()
+    return not view:status().preparing and session.state._native:applicable(view:frame())
+  end, 10000)
+  local tick = vim.api.nvim_buf_get_changedtick(view.bufnr)
+  await(widget:refresh())
+  fixture.idle(widget)
+  t.wait_until(function()
+    return not view:status().preparing and session.state._native:applicable(view:frame())
+  end, 10000)
+  t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr), "healthy refresh must not force a full body reset")
+end)
+
+t:test("reveal leaves a removed display root for an existing external file", function()
+  local path = directory()
+  local workspace = path .. "/workspace"
+  assert(vim.uv.fs_mkdir(workspace, 448))
+  write(path .. "/external")
+  local widget = fixture.widget(workspace)
+  assert(vim.uv.fs_rmdir(workspace))
+  await(widget:refresh())
+  await(widget:reveal(path .. "/external"))
+  t.wait_until(function()
+    return widget:get_cursor_filepath() == path .. "/external"
+  end, 10000)
+  t.assert_eq(path, widget:get_root_filepath())
+end)
+
+t:test("empty background panes release obsolete resource snapshots", function()
+  local path = directory()
+  for index = 1, 1000 do
+    write(path .. "/file-" .. index)
+  end
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  await(session.data:set_diagnostics(1, 1, 1, path .. "/file-1", { 1, 0, 0, 0 }))
+  t.wait_until(function()
+    return view:frame():header().row_count == 1000
+      and view._filetree_annotations ~= nil
+      and view._filetree_pending == nil
+      and not session.data._native:is_busy()
+      and view:frame():header().data_revision == session.data:source():revision()
+  end, 10000)
+  collectgarbage("collect")
+  local before = session.data._native:stats().retained_bytes
+
+  local tabnr = vim.api.nvim_get_current_tabpage()
+  vim.cmd.tabnew()
+  local other_tabnr = vim.api.nvim_get_current_tabpage()
+  t:defer(function()
+    if vim.api.nvim_tabpage_is_valid(other_tabnr) then
+      vim.api.nvim_set_current_tabpage(other_tabnr)
+      vim.cmd.tabclose()
+    end
+    if vim.api.nvim_tabpage_is_valid(tabnr) then
+      vim.api.nvim_set_current_tabpage(tabnr)
+    end
+  end)
+  for index = 1, 1000 do
+    assert(vim.uv.fs_unlink(path .. "/file-" .. index))
+  end
+  await(session:refresh())
+  t.wait_until(function()
+    return view:frame():header().row_count == 0 and not session.data._native:is_busy()
+  end, 10000)
+  t.assert_eq(other_tabnr, vim.api.nvim_get_current_tabpage())
+  t.wait_until(function()
+    collectgarbage("collect")
+    return session.data._native:stats().retained_bytes < before / 2
+  end, 10000, "an empty background pane retained its previous directory snapshot")
 end)
 
 t:run()

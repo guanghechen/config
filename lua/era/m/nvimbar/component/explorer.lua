@@ -120,7 +120,7 @@ function M.flags(position, flags)
   return component
 end
 
----@param o_root_filepath                    stl.c.Observable
+---@param o_root_filepath               stl.c.Observable
 ---@param position                      stl.t.NvimbarPositionEnum
 ---@param flags                         era.m.nvimbar.component.explorer.IFlagItem[]
 ---@return era.m.nvimbar.IRawComponent
@@ -184,7 +184,7 @@ function M.winbar(o_root_filepath, position, flags)
   return component
 end
 
----@param o_root_filepath                    stl.c.Observable
+---@param o_root_filepath               stl.c.Observable
 ---@return era.m.nvimbar.IRawComponent
 function M.path(o_root_filepath)
   local hln_path = "f_tl_explorer_path" ---@type string
@@ -219,32 +219,34 @@ function M.tabline(position)
   local hln_path_detached = position .. "_explorer_path_detached" ---@type string
   local hln_detached = position .. "_explorer_detached" ---@type string
 
+  ---@param index                       integer
+  ---@param observable                  stl.c.Observable
+  ---@return nil
+  local function toggle_flag(index, observable)
+    local widget = era.widget.explorer.widget
+    if widget then
+      widget:toggle_flag(index)
+    else
+      local value = observable:snapshot()
+      observable:next(index == 2 and (value == "tree" and "list" or "tree") or not value)
+    end
+  end
+
   -- Register callbacks once at component creation, not on every render
   local cb_flag_selected = dot.G.register_anonymous_fn(function()
-    local current = dot.context.explorer.flag_selected:snapshot()
-    dot.context.explorer.flag_selected:next(not current)
+    toggle_flag(1, dot.context.explorer.flag_selected)
   end) or "dot.G.noop"
 
   local cb_flag_viewtype = dot.G.register_anonymous_fn(function()
-    local current = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
-    local next_viewtype = current == "tree" and "list" or "tree" ---@type dot.context.explorer.ViewtypeEnum
-    dot.context.explorer.flag_viewtype:next(next_viewtype)
+    toggle_flag(2, dot.context.explorer.flag_viewtype)
   end) or "dot.G.noop"
 
   local cb_flag_foldempty = dot.G.register_anonymous_fn(function()
-    local current = dot.context.explorer.flag_foldempty:snapshot()
-    dot.context.explorer.flag_foldempty:next(not current)
+    toggle_flag(3, dot.context.explorer.flag_foldempty)
   end) or "dot.G.noop"
 
   local cb_flag_hidden = dot.G.register_anonymous_fn(function()
-    if era.widget.explorer.widget ~= nil then
-      local tree = era.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
-      local o_flag_hidden = tree.o_flag_hidden ---@type stl.c.Observable
-      o_flag_hidden:next(not o_flag_hidden:snapshot())
-    else
-      local current = dot.context.explorer.flag_show_hidden:snapshot()
-      dot.context.explorer.flag_show_hidden:next(not current)
-    end
+    toggle_flag(4, dot.context.explorer.flag_show_hidden)
   end) or "dot.G.noop"
 
   ---@return string, string, boolean
@@ -253,8 +255,7 @@ function M.tabline(position)
     local root_path ---@type string
 
     if era.widget.explorer.widget ~= nil then
-      local tree = era.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
-      root_filepath = tree.o_root_filepath:snapshot() ---@type string
+      root_filepath = era.widget.explorer.widget:get_root_filepath()
       root_path = root_filepath ---@type string
     else
       root_filepath = WORKSPACE_DIRPATH
@@ -262,27 +263,33 @@ function M.tabline(position)
     end
 
     local display, is_cwd = resolve_path_display(root_filepath, root_path) ---@type string, boolean
+    if era.widget.explorer.widget ~= nil then
+      local status = era.widget.explorer.widget:status_text()
+      if status ~= "" then
+        display = display .. " [" .. status .. "]"
+      end
+    end
     local path_hln = is_cwd and hln_path or hln_path_detached ---@type string
     return display, txt(display, path_hln), is_cwd
   end
 
   ---@return string, string
   local function get_flags_text()
-    local show_hidden ---@type boolean
-
-    if era.widget.explorer.widget ~= nil then
-      local tree = era.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
-      local o_flag_hidden = tree.o_flag_hidden ---@type stl.c.Observable
-      show_hidden = o_flag_hidden:snapshot()
-    else
-      show_hidden = dot.context.explorer.flag_show_hidden:snapshot()
-    end
+    local widget = era.widget.explorer.widget
+    local display = widget and widget:get_display()
+      or {
+        selected_only = dot.context.explorer.flag_selected:snapshot(),
+        mode = dot.context.explorer.flag_viewtype:snapshot(),
+        compress = dot.context.explorer.flag_foldempty:snapshot(),
+        show_hidden = dot.context.explorer.flag_show_hidden:snapshot(),
+      }
+    local show_hidden = display.show_hidden
 
     local text = "" ---@type string
     local hl_text = "" ---@type string
     local index = 1 ---@type integer
 
-    local flag_selected = dot.context.explorer.flag_selected:snapshot() ---@type boolean
+    local flag_selected = display.selected_only ---@type boolean
     local flag_selected_icon = stl.icon.symbols.flag_selected ---@type string
     local flag_selected_hln = flag_selected and "explorer_flag_orange" or "explorer_flag_grey" ---@type string
     local flag_selected_piece_hln = string.format("%s_%s", position, flag_selected_hln) ---@type string
@@ -292,7 +299,7 @@ function M.tabline(position)
     hl_text = hl_text .. btn(txt(flag_selected_piece_text, flag_selected_piece_hln), cb_flag_selected)
     index = index + 1
 
-    local flag_viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
+    local flag_viewtype = display.mode ---@type dot.context.explorer.ViewtypeEnum
     local flag_viewtype_icon = flag_viewtype == "tree" and stl.icon.symbols.flag_tree or stl.icon.symbols.flag_list ---@type string
     local flag_viewtype_hln = "explorer_flag_blue" ---@type string
     local flag_viewtype_piece_hln = string.format("%s_%s", position, flag_viewtype_hln) ---@type string
@@ -303,7 +310,7 @@ function M.tabline(position)
     index = index + 1
 
     if flag_viewtype == "tree" then
-      local flag_foldempty = dot.context.explorer.flag_foldempty:snapshot() ---@type boolean
+      local flag_foldempty = display.compress ---@type boolean
       local flag_foldempty_icon = stl.icon.symbols.flag_fold_empty_path ---@type string
       local flag_foldempty_hln = flag_foldempty and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
       local flag_foldempty_piece_hln = string.format("%s_%s", position, flag_foldempty_hln) ---@type string

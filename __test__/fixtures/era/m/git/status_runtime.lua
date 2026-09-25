@@ -59,9 +59,28 @@ local function run()
   for _, path in ipairs({ ignored, visible }) do
     assert(git.state.is_ignored(path) == ignore_reference.is_ignored(path), "ignore cache differs from Lua oracle")
   end
-  local view = require("era.m.explorer.view").new("git-native-ignore-e2e")
-  ---@diagnostic disable-next-line: invisible
-  assert(view:__is_ignored__({ filepath = ignored }), "Explorer did not consume native ignore state")
+  local source_winnr = vim.api.nvim_get_current_win()
+  local widget = era.widget.explorer.get_widget()
+  widget:focus()
+  await(widget._ready)
+  await(widget:reveal(ignored))
+  local session = widget._session
+  local resource = await(session.data:resolve(ignored))
+  assert(
+    vim.wait(10000, function()
+      local view = widget._views[vim.api.nvim_get_current_tabpage()]
+      if not view or not view:frame() then
+        return false
+      end
+      local at = view:frame():position(resource:node())
+      local annotations = view._filetree_annotations
+      local value = at and annotations and annotations.rows[at - annotations.first + 1]
+      return value and bit.band(value.git, 256) ~= 0
+    end, 1),
+    "Explorer did not consume native ignore state"
+  )
+  widget:hide()
+  vim.api.nvim_set_current_win(source_winnr)
 
   local blame_reference = assert(loadfile("__test__/fixtures/era/m/git/blame_lua_reference.lua"))()
   local owner = assert(git.buffer.get_cache(bufnr))

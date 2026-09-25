@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.widget.explorer" ---@type string
+
 ---@class era.widget.explorer
 local M = {}
 
@@ -40,11 +43,9 @@ function M.get_widget()
   if M.widget == nil then
     M.widget = era.m.explorer.Widget.new({
       name = "explorer.default",
-      width = dot.context.explorer.width:snapshot(),
       o_flag_foldempty = dot.context.explorer.flag_foldempty,
       o_flag_hidden = dot.context.explorer.flag_show_hidden,
       o_width = dot.context.explorer.width,
-      flags = M.__get_flags__(),
     })
   end
   return M.widget
@@ -100,58 +101,5 @@ function M.toggle()
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@return era.m.explorer.widget.IFlagItem[]
-function M.__get_flags__()
-  ---@type era.m.explorer.widget.IFlagItem[]
-  return {
-    {
-      desc = "explorer: toggle selected only",
-      callback = function()
-        local enabled = dot.context.explorer.flag_selected:snapshot() ---@type boolean
-        dot.context.explorer.flag_selected:next(not enabled)
-      end,
-      snapshot = function()
-        local enabled = dot.context.explorer.flag_selected:snapshot() ---@type boolean
-        return stl.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
-      end,
-    },
-    {
-      desc = "explorer: toggle tree/list view",
-      callback = function()
-        local viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
-        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type dot.context.explorer.ViewtypeEnum
-        dot.context.explorer.flag_viewtype:next(next_viewtype)
-      end,
-      snapshot = function()
-        local viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
-        if viewtype == "tree" then
-          return stl.icon.symbols.flag_tree, "picker_flag_blue"
-        else
-          return stl.icon.symbols.flag_list, "picker_flag_blue"
-        end
-      end,
-    },
-    {
-      desc = "explorer: toggle compact directory paths",
-      callback = function()
-        local viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
-        if viewtype ~= "tree" then
-          return
-        end
-        local enabled = dot.context.explorer.flag_foldempty:snapshot() ---@type boolean
-        dot.context.explorer.flag_foldempty:next(not enabled)
-      end,
-      snapshot = function()
-        local viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
-        if viewtype ~= "tree" then
-          return "", ""
-        end
-        local enabled = dot.context.explorer.flag_foldempty:snapshot() ---@type boolean
-        return stl.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    },
-  }
-end
 
 return M

@@ -1,1028 +1,543 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/explorer/action_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.explorer.action module
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.m.explorer.action" ---@type string
 
-local harness = require("__test__.support.harness")
-local Action = require("era.m.explorer.action")
+local fixture = require("__test__.support.explorer").new("era.m.explorer.action")
+local t, await, write, directory = fixture.t, fixture.await, fixture.write, fixture.directory
 
-local t = harness.new("era.m.explorer.action")
-
----@param input                         string|nil
----@param cursor_filepath               string|nil
----@param parent_filepath               string|nil
----@return table
-local function run_create_file(input, cursor_filepath, parent_filepath)
-  local calls = {
-    create_filepath = nil,
-    default_input = nil,
-    opened_filepath = nil,
-    rendered = false,
-    refreshed = false,
-    synced_filepath = nil,
-  }
-
-  t:patch_global("stl", {
-    os = {
-      path = {
-        normalize = function(filepath, keep_trailing_slash)
-          local normalized = filepath:gsub("\\", "/"):gsub("/+", "/")
-          if keep_trailing_slash == false and normalized ~= "/" then
-            normalized = normalized:gsub("/+$", "")
-          end
-          return normalized
-        end,
-      },
-    },
-  })
-
-  t:patch_global("yoz", {
-    canonical_path = {
-      to_os_path = function(filepath)
-        return filepath
-      end,
-    },
-  })
-
-  t:patch_global("dot", {
-    tab = {
-      retrieve_winnr_sourcefile = function()
-        return nil
-      end,
-    },
-    win = {
-      open_filepath = function(_, filepath)
-        calls.opened_filepath = filepath
-      end,
-    },
-  })
-
-  t:patch_table(vim.ui, "input", function(options, callback)
-    calls.default_input = options.default
-    callback(input)
-  end)
-
-  t:patch_table(vim, "schedule", function(callback)
-    callback()
-  end)
-
-  local ctx = {
-    get_cursor_filepath = function()
-      return cursor_filepath or "/project/"
-    end,
-    get_parent_filepath = function(filepath)
-      if parent_filepath ~= nil then
-        return parent_filepath
-      end
-      local target = filepath:sub(-1) == "/" and filepath:sub(1, -2) or filepath
-      local parent = target:match("^(.*/)[^/]+$")
-      return parent or "/"
-    end,
-    render = function()
-      calls.rendered = true
-    end,
-    resource_manager = {
-      create = function(_, filepath)
-        calls.create_filepath = filepath
-        return {
-          filepath = filepath,
-          nodetype = filepath:sub(-1) == "/" and "D" or "F",
-          nodename = filepath:match("([^/]+)/?$") or "",
-        }
-      end,
-    },
-    sync_cursor_to_filepath = function(filepath)
-      calls.synced_filepath = filepath
-    end,
-    tree = {
-      o_root_filepath = {
-        snapshot = function()
-          return "/project/"
-        end,
-      },
-      refresh = function(_, force)
-        calls.refreshed = force == true
-      end,
-      toggle_expanded = function() end,
-    },
-  }
-
-  Action.new(ctx):create_file()
-  return calls
+---@param widget                        era.m.explorer.Widget
+---@param mark                          string
+---@return nil
+local function mark(widget, mark)
+  local result = await(widget._action:mark(mark))
+  local session, view = widget:context()
+  if result.revisions then
+    t.wait_until(function()
+      return session.state._native:applicable(view:frame(), result.revisions.commit)
+    end, 10000)
+  end
 end
 
-----------------------------------------------------------------------------------------------------
--- create_file tests
-----------------------------------------------------------------------------------------------------
-
-t:test("create_file: file focus keeps a trailing slash in the parent prompt", function()
-  local calls = run_create_file(nil, "/project/src/main.lua", "/project/src")
-  t.assert_eq("src/", calls.default_input, "default input")
+t:test("Normal mode switching and Visual union use one native selection", function()
+  local path = directory()
+  write(path .. "/a")
+  write(path .. "/b")
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  mark(widget, "copy")
+  local session, view = widget:context()
+  local revision = view:frame():header().selection_revision
+  mark(widget, "cut")
+  t.assert_eq(revision, view:frame():header().selection_revision)
+  t.assert_eq("cut", session:mode(view:frame()))
+  vim.cmd.normal({ args = { "Vj" }, bang = true })
+  mark(widget, "copy")
+  t.assert_eq("copy", session:mode(view:frame()))
+  t.assert_eq(2, view:frame():header().summary.known_roots)
+  t.assert_true(vim.api.nvim_get_mode().mode ~= "V")
 end)
 
-t:test("create_file: trailing slash creates directory path", function()
-  local calls = run_create_file("foo/")
-  t.assert_eq("/project/foo/", calls.create_filepath, "created filepath")
-  t.assert_eq("/project/foo/", calls.synced_filepath, "synced filepath")
-  t.assert_true(calls.refreshed, "tree should refresh")
-  t.assert_true(calls.rendered, "view should render")
-  t.assert_nil(calls.opened_filepath, "directory should not open as file")
+t:test("paste consumes selected sources and successful cleanup exits copy mode", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/dest", 448))
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  mark(widget, "copy")
+  fixture.cursor(widget, path .. "/dest")
+  await(widget._action:operate("paste"))
+  fixture.idle(widget)
+  t.assert_true(vim.uv.fs_stat(path .. "/dest/a") ~= nil)
+  t.assert_true(vim.uv.fs_stat(path .. "/a") ~= nil)
+  local session, view = widget:context()
+  t.wait_until(function()
+    return session:mode(view:frame()) == nil
+  end, 10000)
+  t.assert_eq(1, session._counts.success)
 end)
 
-t:test("create_file: nested trailing slash creates directory path", function()
-  local calls = run_create_file("foo/bar/")
-  t.assert_eq("/project/foo/bar/", calls.create_filepath, "created filepath")
-  t.assert_eq("/project/foo/bar/", calls.synced_filepath, "synced filepath")
-  t.assert_nil(calls.opened_filepath, "directory should not open as file")
+t:test("paste uses the committed purpose when cut is submitted before the frame redraw", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/dest", 448))
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  local destination = await(session.data:resolve(path .. "/dest"))
+  fixture.cursor(widget, path .. "/a")
+  mark(widget, "copy")
+  local frame = view:frame()
+  local changed = widget._action:mark("cut")
+  vim.api.nvim_win_set_cursor(view.winnr, { frame:position(destination:node()), 0 })
+  local pasted = widget._action:operate("paste")
+  await(changed)
+  await(pasted)
+  fixture.idle(widget)
+  t.assert_eq("move", session.operation)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/a"), vim.inspect(session.results))
+  t.assert_true(vim.uv.fs_stat(path .. "/dest/a") ~= nil)
 end)
 
-t:test("create_file: no trailing slash creates file path", function()
-  local calls = run_create_file("foo")
-  t.assert_eq("/project/foo", calls.create_filepath, "created filepath")
-  t.assert_eq("/project/foo", calls.synced_filepath, "synced filepath")
-  t.assert_eq("/project/foo", calls.opened_filepath, "file should open")
-end)
-
----@param method                        "jump_parent"|"jump_last_child"
----@param parent_filepath               string|nil
----@param parent_last_child_filepath    string|nil
----@return table
-local function run_navigation(method, parent_filepath, parent_last_child_filepath)
-  local calls = { cursor = "/project/src/current.lua", synced = nil }
-  local ctx = {
-    get_cursor_filepath = function()
-      return calls.cursor
-    end,
-    get_navigation_parent_filepath = function()
-      return parent_filepath
-    end,
-    get_navigation_last_child_filepath = function()
-      return parent_last_child_filepath
-    end,
-    sync_cursor_to_filepath = function(filepath)
-      calls.synced = filepath
-    end,
-    tree = {
-      o_cursor_filepath = {
-        next = function(_, filepath)
-          calls.cursor = filepath
-        end,
-      },
-    },
-  }
-
-  local action = Action.new(ctx)
-  action[method](action)
-  return calls
-end
-
-t:test("jump parent: focuses the visible parent", function()
-  local calls = run_navigation("jump_parent", "/project/src/", nil)
-
-  t.assert_eq("/project/src/", calls.cursor)
-  t.assert_eq("/project/src/", calls.synced)
-end)
-
-t:test("jump parent: keeps the cursor when the visible parent is the hidden root", function()
-  local calls = run_navigation("jump_parent", nil, nil)
-
-  t.assert_eq("/project/src/current.lua", calls.cursor)
-  t.assert_nil(calls.synced)
-end)
-
-t:test("jump last child: focuses the resolved child or sibling", function()
-  local calls = run_navigation("jump_last_child", nil, "/project/src/z.lua")
-
-  t.assert_eq("/project/src/z.lua", calls.cursor)
-  t.assert_eq("/project/src/z.lua", calls.synced)
-end)
-
-local function normalize(filepath, keep_trailing_slash)
-  local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
-  if keep_trailing_slash == false and normalized ~= "/" then
-    normalized = normalized:gsub("/+$", "")
-  elseif keep_trailing_slash == true and normalized:sub(-1) ~= "/" then
-    normalized = normalized .. "/"
-  end
-  return normalized
-end
-
----@param props                         table
----@return era.m.explorer.Action
----@return table
----@return fun(filepath: string): nil
----@return fun(filepath: string): boolean
-local function setup_transfer(props)
-  local calls = {
-    copies = {},
-    moves = {},
-    removes = {},
-    reports = {},
-    canonical_descendant = 0,
-    clear_selection = 0,
-    normalize = 0,
-    refresh = 0,
-    tree_refresh = 0,
-  }
-  local cursor = props.cursor ---@type string
-  local resources = props.resources ---@type table<string, era.m.explorer.resource.INode>
-  local tree_nodes = props.tree_nodes or {} ---@type table<string, era.m.explorer.Node>
-  local selected_nodes = {} ---@type era.m.explorer.Node[]
-  local selected_filepaths = {} ---@type table<string, boolean>
-  for _, node in ipairs(props.selected_nodes or {}) do
-    selected_nodes[#selected_nodes + 1] = node
-    selected_filepaths[node.filepath] = true
-    tree_nodes[node.filepath] = tree_nodes[node.filepath] or node
-  end
-  local failed_targets = props.failed_targets or {} ---@type table<string, boolean>
-  local partial_targets = props.partial_targets or {} ---@type table<string, boolean>
-  local failed_removals = props.failed_removals or {} ---@type table<string, boolean>
-
-  local function report(options)
-    calls.reports[#calls.reports + 1] = options
-  end
-
-  t:patch_global("stl", {
-    os = {
-      path = {
-        normalize = function(filepath, keep_trailing_slash)
-          calls.normalize = calls.normalize + 1
-          return normalize(filepath, keep_trailing_slash)
-        end,
-      },
-    },
-    reporter = {
-      error = report,
-      info = report,
-      warn = report,
-    },
-  })
-  t:patch_global("yoz", {
-    canonical_path = {
-      is_descendant = function(from, to)
-        calls.canonical_descendant = calls.canonical_descendant + 1
-        from = normalize(from, false)
-        to = normalize(to, false)
-        return to == from or to:sub(1, #from + 1) == from .. "/"
-      end,
-      to_os_path = function(filepath)
-        return filepath
-      end,
-    },
-  })
-  t:patch_table(vim, "schedule", function(callback)
-    callback()
-  end)
-  t:patch_table(vim.api, "nvim_feedkeys", function() end)
-
-  local resource_manager = {
-    locate = function(_, filepath)
-      return resources[filepath] or resources[normalize(filepath, false)] or resources[normalize(filepath, true)]
-    end,
-    copy = function(_, source, target)
-      calls.copies[#calls.copies + 1] = { source = source, target = target }
-      if partial_targets[target] then
-        return "partial_failure"
-      end
-      if failed_targets[target] then
-        return "retryable_failure"
-      end
-      resources[target] = {
-        filepath = target,
-        nodename = target:match("([^/]+)/?$") or "",
-        nodetype = target:sub(-1) == "/" and "D" or "F",
-      }
-      return "success"
-    end,
-    move = function(_, source, target)
-      calls.moves[#calls.moves + 1] = { source = source, target = target }
-      if failed_targets[target] then
-        return false
-      end
-      resources[source] = nil
-      resources[target] = {
-        filepath = target,
-        nodename = target:match("([^/]+)/?$") or "",
-        nodetype = target:sub(-1) == "/" and "D" or "F",
-      }
-      return true
-    end,
-  }
-
-  local ctx = {
-    fullname = "test",
-    get_cursor_filepath = function()
-      return cursor
-    end,
-    get_parent_filepath = function(filepath)
-      local target = normalize(filepath, false)
-      return target:match("^(.*/)[^/]+$") or "/"
-    end,
-    get_visual_nodes = function()
-      return props.visual_nodes or {}
-    end,
-    refresh = function()
-      calls.refresh = calls.refresh + 1
-    end,
-    resource_manager = resource_manager,
-    sync_cursor_to_filepath = function() end,
-    tree = {
-      clear_selection = function()
-        calls.clear_selection = calls.clear_selection + 1
-        selected_nodes = {}
-        selected_filepaths = {}
-      end,
-      get_selected_nodes = function()
-        local result = {} ---@type era.m.explorer.Node[]
-        for _, node in ipairs(selected_nodes) do
-          result[#result + 1] = node
-        end
-        return result
-      end,
-      is_selected = function(_, filepath)
-        return selected_filepaths[filepath] == true
-      end,
-      locate = function(_, filepath)
-        return tree_nodes[filepath]
-      end,
-      remove = function(_, filepath)
-        calls.removes[#calls.removes + 1] = filepath
-        if failed_removals[filepath] then
-          return false
-        end
-
-        tree_nodes[filepath] = nil
-        resources[filepath] = nil
-        for i, node in ipairs(selected_nodes) do
-          if node.filepath == filepath then
-            table.remove(selected_nodes, i)
-            selected_filepaths[filepath] = nil
-            break
-          end
-        end
-        return true
-      end,
-      refresh = function()
-        calls.tree_refresh = calls.tree_refresh + 1
-      end,
-      toggle_selected = function(_, filepath, force_selected)
-        local is_selected = selected_filepaths[filepath] == true
-        local should_select = force_selected == "select" or (force_selected == nil and not is_selected)
-        if should_select == is_selected then
-          return
-        end
-
-        if should_select then
-          local node = tree_nodes[filepath]
-          if node ~= nil then
-            selected_nodes[#selected_nodes + 1] = node
-            selected_filepaths[filepath] = true
-          end
-          return
-        end
-
-        for i, node in ipairs(selected_nodes) do
-          if node.filepath == filepath then
-            table.remove(selected_nodes, i)
-            selected_filepaths[filepath] = nil
-            return
-          end
-        end
-      end,
-    },
-  }
-
-  return Action.new(ctx),
-    calls,
-    function(filepath)
-      cursor = filepath
-    end,
-    function(filepath)
-      return selected_filepaths[filepath] == true
+t:test("rename preserves a modified buffer and delete leaves that buffer alive", function()
+  local path = directory()
+  write(path .. "/a")
+  local bufnr = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_buf_set_name(bufnr, path .. "/a")
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved content" })
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
     end
-end
-
-t:test("transfer: stage includes the selection and focused item", function()
-  local selected_nodes = {
-    { filepath = "/project/src/a.txt", nodename = "a.txt", nodetype = "F" },
-    { filepath = "/project/test/b.txt", nodename = "b.txt", nodetype = "F" },
-  }
-  local focused = { filepath = "/project/focused.txt", nodename = "focused.txt", nodetype = "F" }
-  local action, _, _, is_selected = setup_transfer({
-    cursor = focused.filepath,
-    resources = {},
-    selected_nodes = selected_nodes,
-    tree_nodes = { [focused.filepath] = focused },
-  })
-
-  action:cut()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("move", pending.mode, "pending mode")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(3, #pending.sources, "pending source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths["/project/src/a.txt"], "pending source map")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[focused.filepath], "focused source")
-  t.assert_true(is_selected(focused.filepath), "focused selection")
+  end)
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  await(widget._action:operate("move", { rename = true, name = "renamed" }))
+  fixture.idle(widget)
+  t.assert_eq(vim.uv.fs_realpath(path .. "/renamed"), vim.api.nvim_buf_get_name(bufnr))
+  t.assert_eq("unsaved content", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1])
+  t.assert_true(vim.api.nvim_get_option_value("modified", { buf = bufnr }))
+  fixture.cursor(widget, path .. "/renamed")
+  t:patch_table(vim.ui, "select", function(items, _, done)
+    done(items[2], 2)
+  end)
+  await(widget._action:delete())
+  fixture.idle(widget)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/renamed"))
+  t.assert_true(vim.api.nvim_buf_is_valid(bufnr))
+  t.assert_true(vim.api.nvim_get_option_value("modified", { buf = bufnr }))
 end)
 
-t:test("transfer: visual stage includes the existing selection", function()
-  local selected = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local visual = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
-  local action = setup_transfer({
-    cursor = visual.filepath,
-    resources = {},
-    selected_nodes = { selected },
-    tree_nodes = { [visual.filepath] = visual },
-    visual_nodes = { visual },
-  })
-
-  action:stage_transfer_visual("copy")
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("copy", pending.mode, "pending mode")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(2, #pending.sources, "pending source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[selected.filepath], "selected source")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[visual.filepath], "visual source")
+t:test("accepting Rename's default preserves a native Unix name containing a backslash", function()
+  if stl.env.IS_WIN then
+    return
+  end
+  local path, name = directory(), "a\\b"
+  local widget = fixture.widget(path)
+  await(widget._action:operate("create", { path = name }))
+  fixture.idle(widget)
+  write(path .. "/" .. name)
+  fixture.cursor(widget, path .. "/" .. name)
+  local default
+  t:patch_table(vim.ui, "input", function(options, done)
+    default = options.default
+    done(default)
+  end)
+  await(widget._action:operate("move", { rename = true }))
+  fixture.idle(widget)
+  t.assert_eq(name, default)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/b"))
+  local fd = assert(vim.uv.fs_open(path .. "/" .. name, "r", 384))
+  local content = assert(vim.uv.fs_read(fd, 4, 0))
+  assert(vim.uv.fs_close(fd))
+  t.assert_eq("test", content)
 end)
 
-for _, mode in ipairs({ "cut", "copy", "select" }) do
-  for _, previous_mode in ipairs({ "cut", "copy", "select" }) do
-    for _, count in ipairs({ 1, 2 }) do
-      t:test(string.format("mark: %s -> %s with %d selected items", previous_mode, mode, count), function()
-        local first = { filepath = "/project/a", nodename = "a", nodetype = "F" }
-        local second = { filepath = "/project/b", nodename = "b", nodetype = "F" }
-        local action, _, set_cursor, is_selected = setup_transfer({
-          cursor = first.filepath,
-          resources = {},
-          tree_nodes = { [first.filepath] = first, [second.filepath] = second },
+t:test("a pending conflict survives closing the pane and cancellation preserves selection", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/dest", 448))
+  write(path .. "/a")
+  write(path .. "/dest/a")
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  mark(widget, "copy")
+  fixture.cursor(widget, path .. "/dest")
+  local confirmation
+  t:patch_table(vim.ui, "select", function(_, _, done)
+    confirmation = done
+  end)
+  local job = await(widget._action:operate("paste"))
+  t.wait_until(function()
+    return confirmation ~= nil and job:status().confirmation ~= nil
+  end, 10000)
+  local session = widget._session
+  widget:hide()
+  t.assert_false(job:status().terminal)
+  widget:focus()
+  t.wait_until(function()
+    local view = widget._views[vim.api.nvim_get_current_tabpage()]
+    return view and view:frame()
+  end, 10000)
+  t.assert_true(session.state:status().locked)
+  require("era.m.explorer.jobs").cancel(session)
+  fixture.idle(widget)
+  t.assert_true(job:status().cancelled)
+  t.assert_eq("copy", session:mode())
+  t.assert_true(vim.uv.fs_stat(path .. "/dest/a") ~= nil)
+end)
+
+t:test("new relative file creates parents, reveals it, and opens in a source window", function()
+  local path = directory()
+  local target = vim.api.nvim_get_current_win()
+  t:patch_table(dot.win, "pick_sourcefile", function()
+    return target
+  end)
+  t:patch_table(vim.ui, "input", function(_, done)
+    done("notes/todo")
+  end)
+  local widget = fixture.widget(path)
+  await(widget._action:create(false))
+  fixture.idle(widget)
+  t.wait_until(function()
+    return vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(target)) == vim.uv.fs_realpath(path .. "/notes/todo")
+  end, 10000)
+  t.assert_eq(target, vim.api.nvim_get_current_win())
+  t.assert_true(vim.uv.fs_stat(path .. "/notes/todo") ~= nil)
+end)
+
+t:test("creation through a directory link reveals the created logical occurrence", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/target", 448))
+  assert(vim.uv.fs_symlink("target", path .. "/alias", { dir = true }))
+  local target = vim.api.nvim_get_current_win()
+  t:patch_table(dot.win, "pick_sourcefile", function()
+    return target
+  end)
+  t:patch_table(vim.ui, "input", function(_, done)
+    done("notes/todo")
+  end)
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/alias")
+  await(widget._action:create(false))
+  fixture.idle(widget)
+  t.wait_until(function()
+    return vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(target))
+        == vim.uv.fs_realpath(path .. "/target/notes/todo")
+      and widget:get_cursor_filepath() == path .. "/alias/notes/todo"
+  end, 10000)
+  t.assert_eq(path, widget:get_root_filepath())
+  t.assert_eq(target, vim.api.nvim_get_current_win())
+end)
+
+t:test("completion and confirmation release selection while the progress timer is still queued", function()
+  local path = directory()
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  local callbacks, completed = {}, 0
+  local defer = vim.defer_fn
+  t:patch_table(vim, "defer_fn", function(callback, delay)
+    if callbacks and delay == 40 and debug.getinfo(callback, "S").source:find("era/m/explorer/jobs.lua", 1, true) then
+      callbacks[#callbacks + 1] = callback
+      return
+    end
+    return defer(callback, delay)
+  end)
+  t:defer(function()
+    local held = callbacks
+    callbacks = nil
+    for _, callback in ipairs(held) do
+      callback()
+    end
+  end)
+
+  for _, name in ipairs({ "first", "second" }) do
+    local job = await(session:operate(view, "create", {
+      path = name,
+      on_complete = function(status)
+        t.assert_eq(nil, status.error)
+        t.assert_false(session.state:status().locked)
+        completed = completed + 1
+      end,
+    }))
+    t.wait_until(function()
+      return job:status().terminal
+    end, 10000)
+    t.wait_until(function()
+      return session.job == nil
+    end, 1000, "completed IO must not wait for the progress timer")
+    t.assert_true(vim.uv.fs_stat(path .. "/" .. name) ~= nil)
+  end
+  fixture.cursor(widget, path .. "/first")
+  local confirmations = 0
+  t:patch_table(vim.ui, "select", function(items, _, done)
+    t.assert_eq("Skip", items[1])
+    confirmations = confirmations + 1
+    done(items[1], 1)
+  end)
+  local copy = await(session:operate(view, "copy", { to_path = path .. "/second" }))
+  t.wait_until(function()
+    return session.job == nil
+  end, 1000, "a new conflict and its terminal result must not wait for progress refresh")
+  t.assert_eq(1, confirmations)
+  t.assert_eq("skipped", copy:results(1, 1)[1].status)
+  t.assert_true(#callbacks > 0, "the low-frequency progress timer was held")
+  t.assert_eq(2, completed)
+  t.assert_false(require("era.m.explorer.jobs").pending())
+end)
+
+t:test("cancelling preparation settles before a late prompt and permits a new operation", function()
+  local path = directory()
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  local answered
+  t:patch_table(vim.ui, "input", function(_, done)
+    answered = done
+  end)
+  local preparing = session:operate(view, "create", {})
+  t.wait_until(function()
+    return answered ~= nil
+  end, 10000)
+  require("era.m.explorer.jobs").cancel(session)
+  await(preparing)
+  fixture.idle(widget)
+  t.assert_false(require("era.m.explorer.jobs").pending())
+  await(session:operate(view, "create", { path = "accepted" }))
+  answered("late")
+  fixture.idle(widget)
+  t.assert_true(vim.uv.fs_stat(path .. "/accepted") ~= nil)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/late"))
+  local again = session:operate(view, "create", {})
+  t.wait_until(function()
+    return session.preparing and session._preparation.resume ~= nil
+  end, 10000)
+  widget:dispose()
+  await(again)
+  t.assert_eq(nil, session.native)
+  t.assert_eq(nil, session.data)
+end)
+
+t:test("open captures its input before asynchronous selection inspection and preserves selection", function()
+  local path = directory()
+  write(path .. "/a")
+  write(path .. "/b")
+  local target = vim.api.nvim_get_current_win()
+  t:patch_table(dot.win, "pick_sourcefile", function()
+    return target
+  end)
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  local other = await(session.data:resolve(path .. "/b"))
+  fixture.cursor(widget, path .. "/a")
+  local opening = widget._action:open()
+  vim.api.nvim_win_set_cursor(view.winnr, { view:frame():position(other:node()), 0 })
+  await(opening)
+  t.assert_eq(vim.uv.fs_realpath(path .. "/a"), vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(target)))
+  widget:focus()
+  fixture.cursor(widget, path .. "/a")
+  mark(widget, "copy")
+  t:patch_table(dot.win, "pick_sourcefile", function()
+    return nil
+  end)
+  await(widget._action:open())
+  t.assert_eq(view.winnr, vim.api.nvim_get_current_win())
+  t.assert_eq("copy", session:mode())
+end)
+
+t:test("rename applies LSP edits before IO and notifies only after a successful move", function()
+  local path = directory()
+  write(path .. "/a.lua")
+  write(path .. "/use.lua")
+  local bufnr = vim.fn.bufadd(path .. "/use.lua")
+  vim.fn.bufload(bufnr)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  local before, after = 0, 0
+  local client = {
+    offset_encoding = "utf-16",
+    supports_method = function(_, method)
+      return method == "workspace/willRenameFiles" or method == "workspace/didRenameFiles"
+    end,
+    request = function(_, method, changes, done)
+      t.assert_eq("workspace/willRenameFiles", method)
+      t.assert_true(vim.uv.fs_stat(path .. "/a.lua") ~= nil)
+      t.assert_eq(vim.uri_from_fname(vim.uv.fs_realpath(path) .. "/renamed.lua"), changes.files[1].newUri)
+      before = before + 1
+      vim.schedule(function()
+        done(nil, {
+          changes = {
+            [vim.uri_from_bufnr(bufnr)] = {
+              {
+                range = { start = { line = 0, character = 0 }, ["end"] = { line = 0, character = 4 } },
+                newText = "renamed",
+              },
+            },
+          },
         })
-        action:mark(previous_mode)
-        if count == 2 then
-          set_cursor(second.filepath)
-          action:mark(previous_mode)
-          set_cursor(first.filepath)
-        end
-        action:mark(mode)
-        t.assert_eq(previous_mode ~= mode, is_selected(first.filepath), "focused selection")
-        t.assert_eq(count == 2, is_selected(second.filepath), "other selection")
-        local pending = action:get_pending_transfer()
-        local remaining = count - (previous_mode == mode and 1 or 0)
-        if mode == "select" or remaining == 0 then
-          t.assert_nil(pending, "pending transfer")
-        else
-          t.assert_eq(mode == "cut" and "move" or "copy", pending.mode, "transfer mode")
-          t.assert_eq(remaining, #pending.sources, "source count")
-        end
       end)
+      return true, 1
+    end,
+    cancel_request = function() end,
+    notify = function(_, method)
+      t.assert_eq("workspace/didRenameFiles", method)
+      t.assert_eq(nil, vim.uv.fs_stat(path .. "/a.lua"))
+      t.assert_true(vim.uv.fs_stat(path .. "/renamed.lua") ~= nil)
+      after = after + 1
+    end,
+  }
+  t:patch_table(vim.lsp, "get_clients", function(options)
+    return options and options.bufnr and {} or { client }
+  end)
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a.lua")
+  await(widget._action:operate("move", { rename = true, name = "renamed.lua" }))
+  fixture.idle(widget)
+  t.assert_eq(1, before)
+  t.assert_eq(1, after)
+  t.assert_eq("renamed", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1])
+  t.assert_true(vim.api.nvim_get_option_value("modified", { buf = bufnr }))
+  write(path .. "/exists.lua")
+  fixture.cursor(widget, path .. "/renamed.lua")
+  t:patch_table(vim.ui, "select", function(items, options, done)
+    t.assert_true(options.prompt:find("renamed.lua", 1, true) ~= nil)
+    t.assert_true(options.prompt:find("exists.lua", 1, true) ~= nil)
+    done(items[1], 1)
+  end)
+  await(widget._action:operate("move", { rename = true, name = "exists.lua" }))
+  fixture.idle(widget)
+  t.assert_eq(1, before)
+  t.assert_eq(1, after)
+end)
+
+t:test("trash configuration uses the platform tool and tool failure preserves the source", function()
+  if not stl.env.IS_OSX and not (stl.env.IS_NIX and not stl.env.IS_WSL) then
+    return
+  end
+  local path = directory()
+  local bin, recycled = path .. "/bin", path .. "/recycled"
+  assert(vim.uv.fs_mkdir(bin, 448))
+  assert(vim.uv.fs_mkdir(recycled, 448))
+  local tool = bin .. (stl.env.IS_OSX and "/trash" or "/gio")
+  vim.fn.writefile(
+    { "#!/bin/sh", 'for target in "$@"; do :; done', '/bin/mv "$target" "$FILETREE_TRASH_TEST_DEST/"' },
+    tool
+  )
+  assert(vim.uv.fs_chmod(tool, 448))
+  local original_path, original_destination = vim.env.PATH, vim.env.FILETREE_TRASH_TEST_DEST
+  vim.env.PATH, vim.env.FILETREE_TRASH_TEST_DEST = bin .. ":" .. original_path, recycled
+  t:defer(function()
+    vim.env.PATH, vim.env.FILETREE_TRASH_TEST_DEST = original_path, original_destination
+  end)
+  t:patch_table(dot.context.explorer, "trash", stl.c.Observable.from_value(true))
+  t:patch_table(vim.ui, "select", function(items, _, done)
+    t.assert_eq("Move to trash", items[2])
+    done(items[2], 2)
+  end)
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  await(widget._action:delete())
+  fixture.idle(widget)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/a"), vim.inspect(widget._session.results))
+  t.assert_true(vim.uv.fs_stat(recycled .. "/a") ~= nil)
+  vim.fn.writefile(
+    { "#!/usr/bin/env python3", "import sys", 'sys.stderr.buffer.write(b"\\xff" * 4096)', "sys.exit(7)" },
+    tool
+  )
+  write(path .. "/keep")
+  await(widget:refresh())
+  fixture.cursor(widget, path .. "/keep")
+  await(widget._action:delete())
+  fixture.idle(widget)
+  t.assert_true(vim.uv.fs_stat(path .. "/keep") ~= nil)
+  t.assert_eq(1, widget._session._counts.failed)
+  t.assert_true(#widget._session.results[1].error.message < 4096)
+end)
+
+t:test("copy and move to a complete path create parents and keep rename within the current parent", function()
+  local path = directory()
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  await(widget._action:operate("copy", { to_path = path .. "/new/nested/duplicate" }))
+  fixture.idle(widget)
+  t.assert_true(vim.uv.fs_stat(path .. "/a") ~= nil)
+  t.assert_true(vim.uv.fs_stat(path .. "/new/nested/duplicate") ~= nil)
+  fixture.cursor(widget, path .. "/a")
+  await(widget._action:operate("move", { to_path = path .. "/moved/renamed" }))
+  fixture.idle(widget)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/a"))
+  t.assert_true(vim.uv.fs_stat(path .. "/moved/renamed") ~= nil)
+  await(widget:reveal(path .. "/moved/renamed"))
+  fixture.cursor(widget, path .. "/moved/renamed")
+  t:patch_table(vim.ui, "input", function(options, done)
+    t.assert_eq("renamed", options.default)
+    done("final")
+  end)
+  await(widget._action:operate("move", { rename = true }))
+  fixture.idle(widget)
+  t.assert_true(vim.uv.fs_stat(path .. "/moved/final") ~= nil)
+end)
+
+t:test("copy to an alias inside the source is rejected before creating missing parents", function()
+  if stl.env.IS_WIN then
+    return
+  end
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/source", 448))
+  write(path .. "/source/a")
+  assert(vim.uv.fs_symlink("source", path .. "/alias"))
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/source")
+  local operation = widget._action:operate("copy", { to_path = path .. "/alias/created/copy" })
+  t.wait_until(function()
+    return operation:is_done()
+  end, 10000)
+  t.assert_true(operation:is_failed())
+  t.assert_true(operation:get_error():find("inside its source", 1, true) ~= nil)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/source/created"))
+  fixture.idle(widget)
+end)
+
+t:test("an unrelated non-UTF8 buffer does not interrupt successful move synchronization", function()
+  if stl.env.IS_WIN then
+    return
+  end
+  local path = directory()
+  write(path .. "/a")
+  local raw, normal = vim.api.nvim_create_buf(true, false), vim.fn.bufadd(path .. "/a")
+  vim.fn.bufload(normal)
+  vim.api.nvim_buf_set_name(raw, path .. "/" .. string.char(255))
+  vim.api.nvim_buf_set_lines(normal, 0, -1, false, { "unsaved" })
+  t:defer(function()
+    for _, bufnr in ipairs({ raw, normal }) do
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
     end
-  end
-  t:test("mark: adding an unselected item switches all items to " .. mode, function()
-    local first = { filepath = "/project/a", nodename = "a", nodetype = "F" }
-    local second = { filepath = "/project/b", nodename = "b", nodetype = "F" }
-    local action, _, set_cursor, is_selected = setup_transfer({
-      cursor = first.filepath,
-      resources = {},
-      tree_nodes = { [first.filepath] = first, [second.filepath] = second },
-    })
-    action:mark("cut")
-    set_cursor(second.filepath)
-    action:mark(mode)
-    t.assert_true(is_selected(first.filepath), "first selection")
-    t.assert_true(is_selected(second.filepath), "added selection")
-    local pending = action:get_pending_transfer()
-    if mode == "select" then
-      t.assert_nil(pending, "select has no transfer")
-    else
-      t.assert_eq(mode == "cut" and "move" or "copy", pending.mode, "transfer mode")
-      t.assert_eq(2, #pending.sources, "source count")
+  end)
+  local widget = fixture.widget(path)
+  fixture.cursor(widget, path .. "/a")
+  await(widget._action:operate("move", { rename = true, name = "b" }))
+  fixture.idle(widget)
+  t.assert_eq(vim.uv.fs_realpath(path .. "/b"), vim.api.nvim_buf_get_name(normal))
+  t.assert_eq("unsaved", vim.api.nvim_buf_get_lines(normal, 0, 1, false)[1])
+  t.assert_true(vim.api.nvim_get_option_value("modified", { buf = normal }))
+  t.assert_true(vim.api.nvim_buf_get_name(raw):find(string.char(255), 1, true) ~= nil)
+end)
+
+t:test("directory prompts lock and capture the source before cursor or filesystem changes", function()
+  for _, remove in ipairs({ false, true }) do
+    local path = directory()
+    assert(vim.uv.fs_mkdir(path .. "/dest", 448))
+    write(path .. "/a")
+    write(path .. "/b")
+    local widget = fixture.widget(path)
+    local session, view = widget:context()
+    fixture.cursor(widget, path .. "/a")
+    local answer
+    t:patch_table(vim.ui, "select", function(_, _, done)
+      done("Move to directory")
+    end)
+    t:patch_table(vim.ui, "input", function(_, done)
+      answer = done
+    end)
+    widget._action:menu()
+    t.wait_until(function()
+      return answer ~= nil
+    end, 10000)
+    t.assert_true(session.preparing and session.state:status().locked, "prompt must already own its source lock")
+    if remove then
+      assert(vim.uv.fs_unlink(path .. "/a"))
     end
-  end)
-end
-
-t:test("selection: tab switches cut to select before toggling the final item off", function()
-  local node = { filepath = "/project/a", nodename = "a", nodetype = "F" }
-  local action, _, _, is_selected = setup_transfer({
-    cursor = node.filepath,
-    resources = {},
-    tree_nodes = { [node.filepath] = node },
-  })
-  action:select_toggle()
-  action:cut()
-  t.assert_eq("move", action:get_pending_transfer().mode, "cut mode")
-  action:copy()
-  t.assert_eq("copy", action:get_pending_transfer().mode, "copy mode")
-  action:select_toggle()
-  t.assert_true(is_selected(node.filepath), "selection retained")
-  t.assert_nil(action:get_pending_transfer(), "select mode")
-  action:select_toggle()
-  t.assert_false(is_selected(node.filepath), "multi selection exited")
-end)
-
-t:test("transfer: pending alone does not enter multi selection or prevent direct prompts", function()
-  local node = { filepath = "/project/a", nodename = "a", nodetype = "F" }
-  local action, _, _, is_selected = setup_transfer({
-    cursor = node.filepath,
-    resources = {},
-    tree_nodes = { [node.filepath] = node },
-  })
-  local prompts = {}
-  action.move = function()
-    prompts[#prompts + 1] = "move"
+    local other = await(session.data:resolve(path .. "/b"))
+    vim.api.nvim_win_set_cursor(view.winnr, { assert(view:frame():position(other:node())), 0 })
+    answer(path .. "/dest")
+    fixture.idle(widget)
+    t.assert_true(vim.uv.fs_stat(path .. "/b") ~= nil)
+    t.assert_nil(vim.uv.fs_stat(path .. "/dest/b"), "a delayed prompt must never move the new cursor item")
+    t.assert_eq(not remove, vim.uv.fs_stat(path .. "/dest/a") ~= nil)
+    widget:dispose()
   end
-  action.copy_as = function()
-    prompts[#prompts + 1] = "copy"
-  end
-  action:stage_transfer("move")
-  action:cut()
-  action:copy()
-  t.assert_eq("move,copy", table.concat(prompts, ","), "direct actions")
-  action:select_toggle()
-  t.assert_true(is_selected(node.filepath), "tab enters selection")
-  t.assert_nil(action:get_pending_transfer(), "tab resets to select")
-end)
-
-t:test("transfer: deleting a focused pending source clears it", function()
-  local source = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local action, calls = setup_transfer({
-    cursor = source.filepath,
-    resources = { [source.filepath] = source },
-    tree_nodes = { [source.filepath] = source },
-  })
-  t:patch_table(vim.ui, "input", function(_, callback)
-    callback("y")
-  end)
-
-  action:stage_transfer("move")
-  action:delete()
-
-  t.assert_eq(1, #calls.removes, "remove count")
-  t.assert_nil(action:get_pending_transfer(), "pending transfer")
-end)
-
-t:test("transfer: partial selected delete clears selection and pending", function()
-  local deleted = { filepath = "/project/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local retained = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
-  local action, calls = setup_transfer({
-    cursor = deleted.filepath,
-    failed_removals = { [retained.filepath] = true },
-    resources = { [deleted.filepath] = deleted, [retained.filepath] = retained },
-    selected_nodes = { deleted, retained },
-  })
-  t:patch_table(vim.ui, "input", function(_, callback)
-    callback("y")
-  end)
-
-  action:stage_transfer("move")
-  action:delete()
-
-  t.assert_eq(1, calls.clear_selection, "selection clear count")
-  t.assert_nil(action:get_pending_transfer(), "pending transfer")
-end)
-
-t:test("transfer: renaming an ancestor removes only covered pending sources", function()
-  local parent = { filepath = "/project/dir/", nodename = "dir", nodetype = "D" }
-  local child = { filepath = "/project/dir/alpha.txt", nodename = "alpha.txt", nodetype = "F" }
-  local unrelated = { filepath = "/project/bravo.txt", nodename = "bravo.txt", nodetype = "F" }
-  local action, _, set_cursor = setup_transfer({
-    cursor = child.filepath,
-    resources = {
-      [parent.filepath] = parent,
-      [child.filepath] = child,
-      [unrelated.filepath] = unrelated,
-    },
-    selected_nodes = { child, unrelated },
-    tree_nodes = { [parent.filepath] = parent },
-  })
-  t:patch_table(vim.ui, "input", function(_, callback)
-    callback("renamed")
-  end)
-
-  action:cut()
-  set_cursor(parent.filepath)
-  action:rename()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(1, #pending.sources, "pending source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_true(pending.source_filepaths[unrelated.filepath], "unrelated source")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_false(pending.source_filepaths[child.filepath] == true, "renamed descendant source")
-end)
-
-t:test("transfer: paste uses target directory and source basenames without a prompt", function()
-  local nodes = {
-    { filepath = "/project/src/a.txt", nodename = "a.txt", nodetype = "F" },
-    { filepath = "/project/test/b.txt", nodename = "b.txt", nodetype = "F" },
-  }
-  local resources = {
-    ["/project/src/a.txt"] = nodes[1],
-    ["/project/test/b.txt"] = nodes[2],
-    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
-  }
-  local action, calls, set_cursor = setup_transfer({
-    cursor = nodes[1].filepath,
-    resources = resources,
-    selected_nodes = nodes,
-  })
-  t:patch_table(vim.ui, "input", function()
-    error("paste must not open an input prompt")
-  end)
-
-  action:stage_transfer("copy")
-  set_cursor("/target/")
-  action:paste()
-
-  t.assert_eq(2, #calls.copies, "copy count")
-  t.assert_eq("/target/a.txt", calls.copies[1].target, "first basename target")
-  t.assert_eq("/target/b.txt", calls.copies[2].target, "second basename target")
-  t.assert_eq(0, calls.normalize, "canonical transfer normalization count")
-  t.assert_eq(1, calls.clear_selection, "selection clear count")
-  t.assert_nil(action:get_pending_transfer(), "pending transfer after success")
-end)
-
-t:test("transfer: preflight conflict aborts the whole batch", function()
-  local source = { filepath = "/project/a.txt", nodename = "a.txt", nodetype = "F" }
-  local resources = {
-    [source.filepath] = source,
-    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
-    ["/target/a.txt"] = { filepath = "/target/a.txt", nodename = "a.txt", nodetype = "F" },
-  }
-  local action, calls, set_cursor = setup_transfer({
-    cursor = source.filepath,
-    resources = resources,
-    tree_nodes = { [source.filepath] = source },
-  })
-
-  action:stage_transfer("move")
-  set_cursor("/target/")
-  action:paste()
-
-  t.assert_eq(0, #calls.moves, "move count")
-  t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
-  t.assert_eq(1, #calls.reports, "conflict report count")
-end)
-
-t:test("transfer: duplicate basenames abort before any write", function()
-  local nodes = {
-    { filepath = "/project/src/config.lua", nodename = "config.lua", nodetype = "F" },
-    { filepath = "/project/test/config.lua/", nodename = "config.lua", nodetype = "D" },
-  }
-  local resources = {
-    [nodes[1].filepath] = nodes[1],
-    [nodes[2].filepath] = nodes[2],
-    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
-  }
-  local action, calls, set_cursor = setup_transfer({
-    cursor = nodes[1].filepath,
-    resources = resources,
-    selected_nodes = nodes,
-  })
-
-  action:stage_transfer("copy")
-  set_cursor("/target/")
-  action:paste()
-
-  t.assert_eq(0, #calls.copies, "copy count")
-  t.assert_eq(0, calls.normalize, "canonical transfer normalization count")
-  t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
-end)
-
-t:test("transfer: rejects copying a directory into its descendant", function()
-  local source = { filepath = "/project/dir/", nodename = "dir", nodetype = "D" }
-  local resources = {
-    [source.filepath] = source,
-    ["/project/dir/child/"] = { filepath = "/project/dir/child/", nodename = "child", nodetype = "D" },
-  }
-  local action, calls, set_cursor = setup_transfer({
-    cursor = source.filepath,
-    resources = resources,
-    tree_nodes = { [source.filepath] = source },
-  })
-
-  action:stage_transfer("copy")
-  set_cursor("/project/dir/child/")
-  action:paste()
-
-  t.assert_eq(0, #calls.copies, "copy count")
-  t.assert_eq(0, calls.normalize, "canonical transfer normalization count")
-  t.assert_true(calls.canonical_descendant > 0, "canonical descendant check")
-  t.assert_true(action:get_pending_transfer() ~= nil, "pending transfer retained")
-end)
-
-t:test("transfer: partial failure retains only failed sources", function()
-  local nodes = {
-    { filepath = "/project/a.txt", nodename = "a.txt", nodetype = "F" },
-    { filepath = "/project/b.txt", nodename = "b.txt", nodetype = "F" },
-  }
-  local resources = {
-    [nodes[1].filepath] = nodes[1],
-    [nodes[2].filepath] = nodes[2],
-    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
-  }
-  local action, calls, set_cursor = setup_transfer({
-    cursor = nodes[1].filepath,
-    failed_targets = { ["/target/b.txt"] = true },
-    resources = resources,
-    selected_nodes = nodes,
-  })
-
-  action:stage_transfer("move")
-  set_cursor("/target/")
-  action:paste()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "failed pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(1, #pending.sources, "failed source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq("/project/b.txt", pending.sources[1].filepath, "failed source")
-  t.assert_eq(1, calls.clear_selection, "selection clear count")
-end)
-
-t:test("transfer: copy retains only retryable failures and exposes partial targets", function()
-  local nodes = {
-    { filepath = "/project/a.txt", nodename = "a.txt", nodetype = "F" },
-    { filepath = "/project/b.txt", nodename = "b.txt", nodetype = "F" },
-    { filepath = "/project/c.txt", nodename = "c.txt", nodetype = "F" },
-  }
-  local resources = {
-    [nodes[1].filepath] = nodes[1],
-    [nodes[2].filepath] = nodes[2],
-    [nodes[3].filepath] = nodes[3],
-    ["/target/"] = { filepath = "/target/", nodename = "target", nodetype = "D" },
-  }
-  local action, calls, set_cursor = setup_transfer({
-    cursor = nodes[1].filepath,
-    failed_targets = { ["/target/b.txt"] = true },
-    partial_targets = { ["/target/c.txt"] = true },
-    resources = resources,
-    selected_nodes = nodes,
-  })
-
-  action:stage_transfer("copy")
-  local refresh_before_paste = calls.refresh ---@type integer
-  set_cursor("/target/")
-  action:paste()
-
-  local pending = action:get_pending_transfer()
-  t.assert_true(pending ~= nil, "retryable pending transfer")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(1, #pending.sources, "retryable source count")
-  ---@diagnostic disable-next-line: need-check-nil
-  t.assert_eq(nodes[2].filepath, pending.sources[1].filepath, "retryable source")
-  t.assert_eq(1, calls.clear_selection, "selection clear count")
-  t.assert_eq(1, calls.tree_refresh, "tree refresh count")
-  t.assert_eq(refresh_before_paste + 1, calls.refresh, "view refresh count")
-  t.assert_eq(1, #calls.reports, "summary report count")
-  t.assert_eq("/target/c.txt", calls.reports[1].details.partial_targets[1], "partial target detail")
-end)
-
----@param method                        "copy"|"copy_as"|"rename"|"move"
----@param input                         ?string
----@param options                       table|nil
----@return table
-local function run_name_action(method, input, options)
-  options = options or {}
-  local calls = {
-    default = nil,
-    copied_to = nil,
-    moved_to = nil,
-    revealed_to = nil,
-    reports = {},
-    refresh = 0,
-    synced_to = nil,
-    tree_refresh = 0,
-  }
-  local node = options.node or { filepath = "/project/src/source.lua", nodename = "source.lua", nodetype = "F" } ---@type era.m.explorer.Node
-
-  t:patch_global("stl", {
-    os = {
-      path = {
-        normalize = normalize,
-      },
-    },
-    reporter = {
-      error = function(options)
-        calls.reports[#calls.reports + 1] = options
-      end,
-      info = function(options)
-        calls.reports[#calls.reports + 1] = options
-      end,
-    },
-  })
-  t:patch_global("yoz", {
-    canonical_path = {
-      is_descendant = function(from, to)
-        from = normalize(from, false)
-        to = normalize(to, false)
-        return to == from or to:sub(1, #from + 1) == from .. "/"
-      end,
-      to_os_path = function(filepath)
-        return filepath
-      end,
-    },
-    path = {
-      extname = function(filepath)
-        return filepath:match("(%.[^./]+)$") or ""
-      end,
-    },
-  })
-  t:patch_global("dot", {
-    path = {
-      cwd = function()
-        return "/project"
-      end,
-      relative = function(_, filepath)
-        return filepath:sub(#"/project/" + 1)
-      end,
-      resolve = function(cwd, filepath)
-        if filepath:sub(1, 1) == "/" then
-          return filepath
-        end
-        return cwd .. "/" .. filepath
-      end,
-    },
-  })
-  t:patch_table(vim.ui, "input", function(options, callback)
-    calls.prompt = options.prompt
-    calls.default = options.default
-    callback(input)
-  end)
-  t:patch_table(vim, "schedule", function(callback)
-    callback()
-  end)
-
-  local ctx = {
-    fullname = "test",
-    widget = {
-      reveal = function(_, filepath)
-        calls.revealed_to = filepath
-      end,
-    },
-    get_cursor_filepath = function()
-      return node.filepath
-    end,
-    get_parent_filepath = function()
-      return options.parent_filepath or "/project/src"
-    end,
-    refresh = function()
-      calls.refresh = calls.refresh + 1
-    end,
-    resource_manager = {
-      copy = function(_, _, target)
-        calls.copied_to = target
-        return options.copy_status or "success"
-      end,
-      move = function(_, _, target)
-        calls.moved_to = target
-        return options.move_success ~= false
-      end,
-    },
-    sync_cursor_to_filepath = function(filepath)
-      calls.synced_to = filepath
-    end,
-    tree = {
-      get_selected_nodes = function()
-        return {}
-      end,
-      locate = function()
-        return node
-      end,
-      mark_all_dirty = function() end,
-      refresh = function()
-        calls.tree_refresh = calls.tree_refresh + 1
-      end,
-    },
-  }
-
-  local action = Action.new(ctx)
-  action[method](action)
-  return calls
-end
-
-t:test("copy: without selection accepts a cwd-relative copy-as path", function()
-  local calls = run_name_action("copy", "target/peer.lua")
-
-  t.assert_eq("Copy to: ", calls.prompt, "copy prompt")
-  t.assert_eq("src/source-copy.lua", calls.default, "suggested copy path")
-  t.assert_eq("/project/target/peer.lua", calls.copied_to, "copy target")
-  t.assert_eq("/project/target/peer.lua", calls.synced_to, "synced copy target")
-end)
-
-t:test("copy: copy-as rejects a directory target inside the source", function()
-  local calls = run_name_action("copy_as", "src/nested-copy/", {
-    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
-    parent_filepath = "/project",
-  })
-
-  t.assert_nil(calls.copied_to, "copy target")
-  t.assert_eq(1, #calls.reports, "validation report count")
-end)
-
-t:test("copy: copy-as refreshes an unresolved partial target without focusing it", function()
-  local calls = run_name_action("copy_as", "target/peer.lua", { copy_status = "partial_failure" })
-
-  t.assert_eq("/project/target/peer.lua", calls.copied_to, "copy target")
-  t.assert_eq(1, calls.tree_refresh, "tree refresh count")
-  t.assert_eq(1, calls.refresh, "view refresh count")
-  t.assert_nil(calls.synced_to, "partial target should not receive focus")
-  t.assert_eq(1, #calls.reports, "partial failure report count")
-end)
-
-t:test("rename: rejects path separators instead of moving across directories", function()
-  local calls = run_name_action("rename", "nested/peer.lua")
-
-  t.assert_nil(calls.moved_to, "move target")
-  t.assert_eq(1, #calls.reports, "validation report count")
-end)
-
-t:test("rename: joins a parent without trailing slash", function()
-  local calls = run_name_action("rename", "peer.lua")
-
-  t.assert_eq("/project/src/peer.lua", calls.moved_to, "move target")
-  t.assert_eq("/project/src/peer.lua", calls.synced_to, "synced rename target")
-end)
-
-t:test("cut: without selection opens move prompt immediately", function()
-  local calls = run_name_action("cut", nil)
-  t.assert_eq("Move to: ", calls.prompt, "move prompt")
-  t.assert_eq("src/source.lua", calls.default, "focused source")
-  t.assert_nil(calls.moved_to, "cancelled prompt does not move")
-end)
-
-t:test("move: file prompt and cwd-relative destination keep file type", function()
-  local calls = run_name_action("move", "target/peer.txt")
-
-  t.assert_eq("src/source.lua", calls.default, "suggested move path")
-  t.assert_eq("/project/target/peer.txt", calls.moved_to, "move target")
-  t.assert_eq(calls.moved_to, calls.revealed_to, "reveal move target")
-  t.assert_eq(1, calls.tree_refresh, "tree refresh count")
-end)
-
-t:test("move: directory prompt and destination preserve trailing slash", function()
-  local calls = run_name_action("move", "target/renamed/", {
-    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
-  })
-
-  t.assert_eq("src/", calls.default, "suggested directory path")
-  t.assert_eq("/project/target/renamed/", calls.moved_to, "move target")
-  t.assert_eq(calls.moved_to, calls.revealed_to, "reveal directory target")
-end)
-
-t:test("move: rejects trailing slash for files", function()
-  local calls = run_name_action("move", "target/peer/")
-
-  t.assert_nil(calls.moved_to, "move target")
-  t.assert_eq(1, #calls.reports, "validation report count")
-end)
-
-t:test("move: requires trailing slash for directories", function()
-  local calls = run_name_action("move", "target/renamed", {
-    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
-  })
-
-  t.assert_nil(calls.moved_to, "move target")
-  t.assert_eq(1, #calls.reports, "validation report count")
-end)
-
-t:test("move: rejects moving a directory into its descendant", function()
-  local calls = run_name_action("move", "src/nested/", {
-    node = { filepath = "/project/src/", nodename = "src", nodetype = "D" },
-  })
-
-  t.assert_nil(calls.moved_to, "move target")
-  t.assert_eq(1, #calls.reports, "validation report count")
-end)
-
-t:test("move: unchanged path and empty input do not write", function()
-  for _, input in ipairs({ "src/source.lua", "", "   " }) do
-    local calls = run_name_action("move", input)
-    t.assert_nil(calls.moved_to, "move target")
-    t.assert_eq(0, #calls.reports, "report count")
-  end
-  t.assert_nil(run_name_action("move", nil).moved_to, "cancelled move")
-end)
-
-t:test("move: failed operation does not refresh or focus the target", function()
-  local calls = run_name_action("move", "target/peer.lua", { move_success = false })
-
-  t.assert_eq("/project/target/peer.lua", calls.moved_to, "attempted move target")
-  t.assert_eq(0, calls.tree_refresh, "tree refresh count")
-  t.assert_eq(0, calls.refresh, "view refresh count")
-  t.assert_nil(calls.synced_to, "failed target should not receive focus")
-  t.assert_nil(calls.revealed_to, "failed target should not be revealed")
-  t.assert_eq(0, #calls.reports, "no success report")
 end)
 
 t:run()
