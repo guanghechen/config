@@ -14,9 +14,24 @@ const CAPACITY: usize = 2000;
 type Fingerprint = [Option<(SystemTime, u64)>; 2];
 
 #[derive(Default)]
-struct CacheSnapshot {
+pub(crate) struct CacheSnapshot {
     values: HashMap<Vec<u8>, bool>,
     fingerprint: Option<Fingerprint>,
+    retained_bytes: usize,
+}
+
+impl CacheSnapshot {
+    pub(crate) fn has_ignored(&self) -> bool {
+        self.values.values().any(|value| *value)
+    }
+
+    pub(crate) fn lookup(&self, path: &[u8]) -> bool {
+        self.values.get(path).copied().unwrap_or(false)
+    }
+
+    pub(crate) fn retained_bytes(&self) -> usize {
+        self.retained_bytes.max(std::mem::size_of::<Self>())
+    }
 }
 
 struct Context {
@@ -93,12 +108,11 @@ impl IgnoreCache {
     }
 
     pub fn lookup(&self, path: &[u8]) -> bool {
-        self.current
-            .borrow()
-            .values
-            .get(path)
-            .copied()
-            .unwrap_or(false)
+        self.current.borrow().lookup(path)
+    }
+
+    pub(crate) fn snapshot(&self) -> Arc<CacheSnapshot> {
+        self.current.borrow().clone()
     }
 
     pub fn clear(&self) {
@@ -358,6 +372,11 @@ fn prepare(
         Arc::clone(&base)
     } else {
         Arc::new(CacheSnapshot {
+            retained_bytes: values
+                .keys()
+                .map(|path| path.capacity() + 64)
+                .sum::<usize>()
+                + std::mem::size_of::<CacheSnapshot>(),
             values,
             fingerprint: Some(fingerprint),
         })

@@ -1,0 +1,80 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.ux.filetree.runtime" ---@type string
+
+local fixture = require("__test__.support.filetree").new("ux.filetree.runtime")
+local t, filetree = fixture.t, fixture.filetree
+local await, write, directory = fixture.await, fixture.write, fixture.directory
+
+t:test("native List loads a real directory and preserves old resource paths on refresh", function()
+  local path = directory()
+  assert(vim.uv.fs_mkdir(path .. "/before", 448))
+  write(path .. "/before/file")
+  local data = await(filetree.open(path))
+  local state = await(data:create_state(nil, { mode = "list" }))
+  local view = filetree.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return vim.deep_equal(vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true), { "  before", "  before/file" })
+  end, 10000)
+  local old = view:frame()
+  local file = old:node_at(2)
+  local resource = data:inspect(old:source(), file)
+  t.assert_eq(path .. "/before/file", resource:path())
+  assert(vim.uv.fs_rename(path .. "/before", path .. "/after"))
+  await(data:refresh(state))
+  t.wait_until(function()
+    return vim.deep_equal(vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true), { "  after", "  after/file" })
+  end, 10000)
+  t.assert_eq(file, view:frame():node_at(2))
+  t.assert_eq(path .. "/after/file", data:inspect(view:frame():source(), file):path())
+  t.assert_eq(path .. "/before/file", resource:path())
+  t.assert_eq("before/file", old:rows(2, 2).labels[1])
+end)
+
+t:test("paged native reads keep progressing while only the state and view remain", function()
+  local path = directory()
+  for i = 1, 1100 do
+    write(path .. ("/file-%04d"):format(i))
+  end
+  local data = await(filetree.open(path))
+  local state = await(data:create_state(nil, { mode = "list" }))
+  local view = filetree.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  data = nil
+  collectgarbage("collect")
+  t.wait_until(function()
+    return view:frame() and view:frame():header().row_count == 1100 and vim.api.nvim_buf_line_count(view.bufnr) == 1100
+  end, 10000)
+  t.assert_eq("  file-1100", vim.api.nvim_buf_get_lines(view.bufnr, -2, -1, true)[1])
+end)
+
+t:test("native watch updates the actual buffer without manual refresh", function()
+  local path = directory()
+  local data = await(filetree.open(path))
+  local state = await(data:create_state(nil, { mode = "list" }))
+  local view = filetree.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    local status = data:watch_status()
+    t.assert_eq(nil, status.error)
+    return status.directories == 1 and not data._native:is_busy()
+  end, 10000)
+  write(path .. "/observed")
+  t.wait_until(function()
+    return vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)[1] == "  observed"
+  end, 10000)
+  local id = view:frame():node_at(1)
+  assert(vim.uv.fs_rename(path .. "/observed", path .. "/renamed"))
+  t.wait_until(function()
+    return vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)[1] == "  renamed"
+  end, 10000)
+  t.assert_eq(id, view:frame():node_at(1))
+end)
+
+t:run()

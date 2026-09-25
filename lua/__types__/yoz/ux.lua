@@ -2,6 +2,7 @@
 
 ---@class yoz.ux
 ---@field public treeview               yoz.ux.treeview
+---@field public filetree               yoz.ux.filetree
 
 ---@class yoz.ux.treeview
 local M = {}
