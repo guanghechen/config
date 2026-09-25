@@ -19,6 +19,7 @@ abbr -a tf 'touch (date +%Y%m%d_%H%M%S).log'
 abbr -a tls 'tree --dirsfirst -aCF'
 abbr -a clock 'tty-clock -DSbcnrs -C5'
 abbr -a today 'cal -C3'
+abbr -a ghc-update 'git -C ~/.config/kit pull origin kit && kit-repo sync'
 
 alias chown='chown --preserve-root'
 alias chgrp='chgrp --preserve-root'
@@ -82,7 +83,5 @@ abbr -a tattach 'tmux attach -t' # Attach to a session
 abbr -a tdetach-others 'tmux detach -a' # Detach other clients from the session
 
 ### misc
-alias ghc-ora="node $HOME/.config/ora/cli/http.mjs"
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
-abbr -a ghc-update 'git -C ~/.config/kit pull origin kit && kit-repo sync'
