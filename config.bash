@@ -66,9 +66,10 @@ export PYTHONPYCACHEPREFIX="$HOME/.cache/pycache"
 export PYTHONUTF8="1"
 
 ## Agents
-export ANTHROPIC_BASE_URL="http://127.0.0.1:4747/api/claude"
-export GOOGLE_GEMINI_BASE_URL="http://127.0.0.1:4747/api/gemini"
-export OPENAI_BASE_URL="http://127.0.0.1:4747/api/codex"
+export KIT_COPILOT_URL="http://127.0.0.1:4747"
+export ANTHROPIC_BASE_URL="$KIT_COPILOT_URL/api/claude"
+export GOOGLE_GEMINI_BASE_URL="$KIT_COPILOT_URL/api/gemini"
+export OPENAI_BASE_URL="$KIT_COPILOT_URL/api/codex"
 
 export CLAUDE_CONFIG_DIR="$XDG_CONFIG_HOME/claude"
 export CODEX_HOME="$XDG_CONFIG_HOME/codex"
