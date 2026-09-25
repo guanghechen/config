@@ -12,6 +12,21 @@ Set-PSReadLineOption -Colors @{
   Default                 = "White"
 }
 
+## local
+
+# $env:d_wireshark_vsc_log = ""
+#
+# $env:ANTHROPIC_AUTH_TOKEN = "token"
+# $env:GEMINI_API_KEY = "token"
+# $env:OPENAI_CODEX_AUTH_TOKEN = "token"
+#
+# $env:GOOGLE_CLOUD_PROJECT = "project"
+
+if ([string]::IsNullOrWhiteSpace($env:KIT_COPILOT_URL)) { $env:KIT_COPILOT_URL = "http://127.0.0.1:4141" }
+if ([string]::IsNullOrWhiteSpace($env:ROOT_SOURCECODES)) { $env:ROOT_SOURCECODES = "C:\sourcecodes" }
+if ([string]::IsNullOrWhiteSpace($env:ROOT_WORKSPACE)) { $env:ROOT_WORKSPACE = "C:\ws" }
+if ([string]::IsNullOrWhiteSpace($env:YOZ_SERVER_PORT)) { $env:YOZ_SERVER_PORT = "7777" }
+
 $localEnvPath = "$env:XDG_CONFIG_HOME\pwsh\local\env.ps1"
 if (Test-Path $localEnvPath) {
   . $localEnvPath

@@ -57,7 +57,6 @@ function conda {
 ## gemini
 function gg0 {
   $env:GOOGLE_CLOUD_PROJECT = ""
-  $env:GOOGLE_GEMINI_BASE_URL = "http://127.0.0.1:4747/api/gemini"
   gemini --model="gemini-3-pro-preview" --yolo @args
 }
 
