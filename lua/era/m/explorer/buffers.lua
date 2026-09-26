@@ -19,6 +19,31 @@ local function filepath(path)
   return ok and value or nil
 end
 
+---@return fun(base: string, path: string): string|nil
+local function path_matcher()
+  -- Each synchronous matching pass gets its own cache; never retain resolutions across LSP replies or IO.
+  local entries = {}
+  ---@param path                        string
+  ---@return string
+  local function entry_path(path)
+    if not entries[path] then
+      local resolved, reason = yoz.fs.entry_path(path)
+      if not resolved then
+        error("Cannot resolve buffer path " .. path .. ": " .. tostring(reason), 0)
+      end
+      entries[path] = resolved
+    end
+    return entries[path]
+  end
+  return function(base, path)
+    local suffix, reason = yoz.fs.path_suffix(entry_path(base), entry_path(path))
+    if reason then
+      error("Cannot compare buffer path " .. path .. " with " .. base .. ": " .. reason, 0)
+    end
+    return suffix
+  end
+end
+
 ---@return table<string, integer>
 local function buffer_names()
   local names = {}
@@ -56,14 +81,35 @@ end
 ---@param target                        string
 ---@return nil
 local function check_targets(source, target)
+  local path_suffix = path_matcher()
   local names = buffer_names()
+  local conflicts = {}
   -- Move replaces the target namespace; its buffers matter even when the source was never opened.
   for name, bufnr in pairs(names) do
-    if name == target or name:sub(1, #target + 1) == target .. "/" then
-      local original = source .. name:sub(#target + 1)
-      if names[original] ~= bufnr and not discard_placeholder(bufnr) then
-        error("Move refused; target belongs to another buffer: " .. name, 0)
+    -- Parent resolution may cross the very symlink being replaced. Check every original ancestor entry too.
+    local ancestor = name
+    local visited = {}
+    while ancestor and conflicts[ancestor] == nil do
+      visited[#visited + 1] = ancestor
+      local suffix = path_suffix(target, ancestor)
+      if suffix ~= nil then
+        conflicts[ancestor] = path_suffix(source, ancestor) ~= suffix
+        break
       end
+      -- Neovim's dirname can strip the share from a UNC root, which is not a valid absolute parent.
+      if stl.env.IS_WIN and ancestor:match("^//[^/]+/[^/]+/?$") then
+        break
+      end
+      local parent = vim.fs.dirname(ancestor)
+      ancestor = parent ~= ancestor and parent or nil
+    end
+    local conflict = ancestor and conflicts[ancestor] or false
+    -- Shared ancestors need only one comparison within this synchronous pass.
+    for _, path in ipairs(visited) do
+      conflicts[path] = conflict
+    end
+    if conflict and not discard_placeholder(bufnr) then
+      error("Move refused; target belongs to another buffer: " .. name, 0)
     end
   end
 end
@@ -163,28 +209,55 @@ function M.sync(session, item)
     session.report("File moved; its path cannot be represented by Neovim")
     return
   end
+  local path_suffix = path_matcher()
   local names = buffer_names()
+  local targets = {}
+  -- Most directory moves have no target buffers. Avoid comparing every source with every buffer.
   for name, bufnr in pairs(names) do
-    local from, to = source, target
-    if name == physical or name:sub(1, #physical + 1) == physical .. "/" then
-      from, to = physical, destination
+    local ok, suffix = pcall(path_suffix, destination, name)
+    if ok and suffix == nil and destination ~= target then
+      ok, suffix = pcall(path_suffix, target, name)
     end
-    if name == from or name:sub(1, #from + 1) == from .. "/" then
-      local renamed = to .. name:sub(#from + 1)
-      local ok, error = pcall(function()
-        if names[renamed] and names[renamed] ~= bufnr and not discard_placeholder(names[renamed]) then
-          error("target name belongs to another buffer", 0)
-        end
-        era.m.lsp.event.rename_buf(vim.api.nvim_buf_get_name(bufnr), renamed)
-      end)
-      if not ok then
-        vim.b[bufnr].filetree_move_target = renamed
-        vim.b[bufnr].filetree_move_source = name
-        session.report("File moved; buffer path needs resolution: " .. renamed .. " (" .. tostring(error) .. ")")
-      else
-        vim.b[bufnr].filetree_move_target = nil
-        vim.b[bufnr].filetree_move_source = nil
+    if not ok or suffix ~= nil then
+      targets[name] = bufnr
+    end
+  end
+  for name, bufnr in pairs(names) do
+    local renamed
+    local ok, reason = pcall(function()
+      if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
       end
+      local suffix, to = path_suffix(physical, name), destination
+      if suffix == nil and physical ~= source then
+        suffix, to = path_suffix(source, name), target
+      end
+      if suffix == nil then
+        return
+      end
+      renamed = suffix == "" and to or to .. "/" .. suffix
+      for other, current in pairs(targets) do
+        if
+          current ~= bufnr
+          and vim.api.nvim_buf_is_valid(current)
+          and path_suffix(renamed, other) == ""
+          and not discard_placeholder(current)
+        then
+          error("target name belongs to another buffer: " .. other, 0)
+        end
+      end
+      era.m.lsp.event.rename_buf(vim.api.nvim_buf_get_name(bufnr), renamed)
+    end)
+    if not ok then
+      -- If source matching failed, retain the destination namespace for manual resolution.
+      vim.b[bufnr].filetree_move_target = renamed or destination
+      vim.b[bufnr].filetree_move_source = name
+      session.report(
+        "File moved; buffer path needs resolution: " .. (renamed or destination) .. " (" .. tostring(reason) .. ")"
+      )
+    elseif renamed then
+      vim.b[bufnr].filetree_move_target = nil
+      vim.b[bufnr].filetree_move_source = nil
     end
   end
   local changes = { files = { { oldUri = vim.uri_from_fname(physical), newUri = vim.uri_from_fname(destination) } } }
@@ -202,12 +275,32 @@ vim.api.nvim_create_autocmd({ "BufWritePre", "FileWritePre" }, {
     if not target then
       return
     end
+    local path_suffix = path_matcher()
     local name = filepath(vim.api.nvim_buf_get_name(event.buf))
-    local source = vim.b[event.buf].filetree_move_source
-    if name == target or source and name and name ~= source then
+    local written = filepath(event.match)
+    local source = vim.b[event.buf].filetree_move_source or name
+    if not source or not written then
+      error("File moved to " .. target .. "; resolve this buffer's filename before saving", 0)
+    end
+    ---@param path                      string
+    ---@return boolean
+    local function at_source(path)
+      local ok, suffix = pcall(path_suffix, source, path)
+      if not ok then
+        local _, _, code = vim.uv.fs_lstat(source)
+        -- A resolvable destination cannot share the old parent now occupied by a file.
+        if code ~= "ENOTDIR" or not yoz.fs.entry_path(path) then
+          error(suffix, 0)
+        end
+        return false
+      end
+      return suffix == ""
+    end
+    -- Another spelling of the old filename is not an explicit recovery path.
+    if name and name ~= source and not at_source(name) then
       vim.b[event.buf].filetree_move_target = nil
       vim.b[event.buf].filetree_move_source = nil
-    elseif filepath(event.match) == (source or name) then
+    elseif at_source(written) then
       error("File moved to " .. target .. "; resolve this buffer's filename before saving", 0)
     end
   end,

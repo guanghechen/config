@@ -84,9 +84,21 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   Windows physical path 在编辑器边界转换 verbatim drive/UNC 前缀并保留 UNC share root，preparation、buffer 匹配
   和完成通知使用同一套 Neovim 路径；native identity 校验仍使用原始 physical path。
 - 改名留下的 unloaded、unlisted、未修改的占位 buffer 可释放；实际目标 buffer 冲突在 IO 前拒绝，目录移动同时检查已打开后代。
+  目标预检查、buffer 同步与保存保护统一使用 `yoz.fs.path_suffix`，按 containing directory 的文件名规则逐级比较；
+  APFS 覆盖大小写与 Unicode canonical equivalence，case-sensitive volume 保留大小写区别，Windows 尊重 directory case flag。
+  APFS 的 Unicode 比较使用 macOS 内置 ICU 的 canonical normalization 与完整 case folding，包含 supplementary-plane 字母。
+  通过 `yoz.fs.entry_path` 解析最深已存在的 parent 并保留 missing suffix，不假设 Neovim 已解析 missing parent 下的 alias；
+  parent alias 变 dangling 后仍沿 link target 识别原 namespace，保留 buffer 同步及显式另存恢复；
+  目标预检查同时逐级检查 buffer 原始路径的 ancestor entry，拒绝覆盖其依赖的 symlink 入口，遍历不得越过完整 UNC share root；
+  无法解析的 parent 或 symlink loop 拒绝不确定的操作。每次同步匹配独立缓存路径解析，不跨 LSP 回复或 IO 复用。
+  比较 entry namespace 而非 inode identity；后缀保留候选路径的原始组件，避免 NFC/NFD 字节长度差异截断路径。
+  无法确定名称规则时在 IO 前拒绝；IO 后匹配失败则保留 buffer、报告目标 namespace 并保护原名。
+  macOS 非 APFS 的潜在 Unicode 等价名报错，其他 Unix 使用 byte equality；不推断不支持的文件系统扩展规则。
   LSP 准备结束后再次检查冲突。IO 后才出现的冲突保留双方内容，记录 `b:filetree_move_target` 并报告待处理路径；
   在 buffer 名称恢复一致之前阻止向旧路径写入，不自动保存、覆盖用户 buffer 或改写 undo history。
   用户显式将该 buffer 改为其他路径后解除保存保护，允许另存其未保存内容。
+  只改变旧路径的大小写或 Unicode spelling 不解除保护；向独立路径写出副本时保留旧路径保护。
+  旧 parent 被文件占据而返回 `ENOTDIR` 时，允许向 parent 可解析的独立路径另存或改名恢复；其余解析失败仍保留保护。
   无法表示为 Neovim filepath 的结果仍可显示/清理，跳过依赖该 filepath 的编辑器动作。
 
 ## 装饰与订阅

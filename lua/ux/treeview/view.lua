@@ -33,7 +33,7 @@ local decorations = require("ux.treeview.decorations")
 ---@field _decorations                  ?table
 ---@field _gesture                      ?table
 ---@field _submission                   ?table
----@field _program_cursor               ?integer[]
+---@field _observed_cursor              ?integer[]
 ---@field _render_error                 any
 ---@field _projection_error             ?string
 ---@field _failed_target                ?string
@@ -176,19 +176,31 @@ function M:refresh()
   end
 end
 
+---@param row                           integer
+---@return stl.c.Future
+function M:set_cursor(row)
+  if not self:_valid() or self._desynced or self._publishing or not self._frame then
+    return Future.resolve(async.rejected("Stale", "Treeview surface has no valid input frame"))
+  end
+  local node = self._frame:node_at(row)
+  if not node then
+    return Future.resolve({ kind = "NoChange" })
+  end
+  vim.api.nvim_win_set_cursor(self.winnr, { row, 0 })
+  self._observed_cursor = vim.api.nvim_win_get_cursor(self.winnr)
+  return self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })
+end
+
 ---@param direction                     string
 ---@return nil
 function M:navigate(direction)
   if not self:_valid() or self._desynced or self._publishing or not self._frame then
     return
   end
-  local cursor = vim.api.nvim_win_get_cursor(self.winnr)
-  local row = self._frame:navigate(cursor[1], direction)
-  if not row then
-    return
+  local row = self._frame:navigate(vim.api.nvim_win_get_cursor(self.winnr)[1], direction)
+  if row then
+    self:set_cursor(row)
   end
-  vim.api.nvim_win_set_cursor(self.winnr, { row, 0 })
-  self._state:dispatch({ kind = "set_cursor", node = self._frame:node_at(row) }, { frame = self._frame })
 end
 
 ---@return nil
@@ -410,11 +422,12 @@ function M.new(state, options)
         return
       end
       local cursor = vim.api.nvim_win_get_cursor(self.winnr)
-      if self._program_cursor and cursor[1] == self._program_cursor[1] and cursor[2] == self._program_cursor[2] then
-        self._program_cursor = nil
+      local observed = self._observed_cursor
+      if observed and cursor[1] == observed[1] and cursor[2] == observed[2] then
         return
       end
-      self._program_cursor = nil
+      -- Repeated or delayed events at an unchanged position carry no new navigation intent.
+      self._observed_cursor = cursor
       local node = self._frame:node_at(cursor[1])
       if node then
         self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })

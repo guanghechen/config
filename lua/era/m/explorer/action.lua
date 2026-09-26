@@ -296,8 +296,7 @@ function M:annotation(kind, forward)
       Session.report("No matching " .. kind .. " in the current view")
       return
     end
-    vim.api.nvim_win_set_cursor(view.winnr, { target, 0 })
-    Session.await(session.state:dispatch({ kind = "set_cursor", node = frame:node_at(target) }, { frame = frame }))
+    Session.await(view:set_cursor(target))
   end)
 end
 

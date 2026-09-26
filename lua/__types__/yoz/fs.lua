@@ -4,6 +4,22 @@
 ---@class yoz.fs
 local M = {}
 
+---Resolves parent aliases, including dangling targets, while preserving missing components and the final entry.
+---The native absolute result is for path comparison; unresolvable parents or symlink loops return an error.
+---@param path                          string
+---@return string|nil
+---@return string|nil error
+function M.entry_path(path) end
+
+---Returns the suffix within an editor entry namespace, or nil when outside it.
+---Uses directory filename rules, including APFS canonical Unicode equivalence.
+---Paths must be absolute with parent aliases resolved by entry_path; Unix bytes are preserved.
+---@param base                          string
+---@param path                          string
+---@return string|nil
+---@return string|nil error
+function M.path_suffix(base, path) end
+
 ---@class yoz.fs.IFileItemWithStatus
 ---@field public type                   string
 ---@field public name                   string

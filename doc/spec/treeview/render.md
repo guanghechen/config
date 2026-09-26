@@ -179,6 +179,9 @@ Preflight 失败时不改 live buffer。若实际 API 在已有写入后失败�
 
 - 普通刷新以目标 snapshot 的逻辑 cursor 为准；无新的 cursor 意图时保持原 NodeId，并尽量保持顶端锚点的屏幕位置。
   删除/过滤后的回退遵循既有 cursor 契约，不依赖 extmark 偶然漂移；byte column 按目标文本合法边界钳位。
+- View 记录实际恢复或观察到的 cursor 坐标；坐标未变的重复、迟到 `CursorMoved` 不提交新导航，不能用旧 frame
+  覆盖已完成但尚未显示的 native cursor。真实位置变化仍按实际显示的 frame 提交，不等待待发布 snapshot。
+  程序导航经 `view:set_cursor(row)` 同时记录位置与提交意图，避免其迟到事件重复提交。
 - Visual 期间只允许 layout revision 不变的 target 发布；无正文 splice 但身份/祖先归并变化的 target 也必须暂缓。
   同布局正文/装饰更新保留模式、方向及两个端点，退出后从实际显示的 frame 直接追赶最新适用 target。
 - 每个 view 独立确认 base 和 changedtick。一个 view 持帧不阻塞另一个 view 更新；关闭 view 释放自身 staging 与计划。

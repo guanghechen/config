@@ -67,7 +67,7 @@ local function restore(view, saved)
     vim.api.nvim_win_set_cursor(view.winnr, cursor)
     vim.fn.winrestview(saved.window)
   end)
-  view._program_cursor = { cursor[1], cursor[2] }
+  view._observed_cursor = vim.api.nvim_win_get_cursor(view.winnr)
 end
 
 ---@param view                          ux.treeview.View

@@ -27,6 +27,28 @@ for _, case in ipairs({
     to = "//server/share/new",
   },
   {
+    name = "Windows UNC file",
+    windows = true,
+    single_file = true,
+    source = [[\\server\share\a.txt]],
+    target = [[\\server\share\b.txt]],
+    physical = [[\\?\UNC\server\share\a.txt]],
+    destination = [[\\?\UNC\server\share\b.txt]],
+    from = "//server/share/a.txt",
+    to = "//server/share/b.txt",
+  },
+  {
+    name = "Windows drive move with an unrelated UNC buffer",
+    windows = true,
+    unrelated = "//server/share/unrelated.txt",
+    source = [[C:\work\a.txt]],
+    target = [[C:\work\b.txt]],
+    physical = [[\\?\C:\work\a.txt]],
+    destination = [[\\?\C:\work\b.txt]],
+    from = "C:/work/a.txt",
+    to = "C:/work/b.txt",
+  },
+  {
     name = "Unix literal backslash and filename bytes",
     windows = false,
     source = "/alias/old\\" .. string.char(255),
@@ -39,16 +61,39 @@ for _, case in ipairs({
 }) do
   t:test(case.name .. " paths agree across LSP preparation and alias buffer synchronization", function()
     t:patch_table(stl.env, "IS_WIN", case.windows)
+    if case.windows then
+      local restore = t:patch_table(vim.uv, "os_uname", function()
+        return { sysname = "Windows_NT" }
+      end)
+      local windows_fs = dofile(vim.env.VIMRUNTIME .. "/lua/vim/fs.lua")
+      restore()
+      t:patch_table(vim.fs, "dirname", windows_fs.dirname)
+    end
     local bufnr = vim.api.nvim_create_buf(true, false)
     t:defer(function()
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved content" })
-    local name = case.from .. "/$literal space #文.lua"
+    local suffix = case.single_file and "" or "/$literal space #文.lua"
+    local name = case.unrelated or case.from .. suffix
     local get_name = vim.api.nvim_buf_get_name
     -- Emulate only the platform filename; the buffer and URI encoder are real.
     t:patch_table(vim.api, "nvim_buf_get_name", function(current)
       return current == bufnr and name or get_name(current)
+    end)
+    -- These synthetic platform paths test the editor boundary, not the host filesystem's rules.
+    t:patch_table(yoz.fs, "entry_path", function(path)
+      if case.windows and not (path:match("^%a:/") or path:match("^//[^/]+/[^/]+")) then
+        return nil, "path must be absolute without parent components"
+      end
+      return path
+    end)
+    t:patch_table(yoz.fs, "path_suffix", function(base, path)
+      if base == path then
+        return ""
+      elseif path:sub(1, #base + 1) == base .. "/" then
+        return path:sub(#base + 2)
+      end
     end)
     local renamed = {}
     t:patch_table(era.m.lsp.event, "rename_buf", function(from, to)
@@ -97,7 +142,8 @@ for _, case in ipairs({
     for _, method in ipairs({ "workspace/willRenameFiles", "workspace/didRenameFiles" }) do
       t.assert_true(vim.deep_equal(expected, sent[method]), method .. ": " .. vim.inspect(sent[method]))
     end
-    t.assert_true(vim.deep_equal({ { name, case.to .. "/$literal space #文.lua" } }, renamed))
+    local expected_renames = case.unrelated and {} or { { name, case.to .. suffix } }
+    t.assert_true(vim.deep_equal(expected_renames, renamed))
     t.assert_eq(case.physical, confirmation.source)
     t.assert_eq(case.destination, confirmation.target)
     t.assert_true(vim.deep_equal({ "unsaved content" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)))
