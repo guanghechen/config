@@ -12,6 +12,19 @@
       "logsRotateSize": "10MB"
     },
     {
+      "name": "kit-shot",
+      "platforms": ["osx"],
+      "cmd": "${HOME}/.local/share/kit/shot/app/kit-shot",
+      "args": ["run"],
+      "autostart": false,
+      "autorestart": true,
+      "maxRestarts": 16,
+      "stopExitCodes": [0],
+      "killTimeout": 10000,
+      "logsRotateStrategy": "size",
+      "logsRotateSize": "10MB"
+    },
+    {
       "name": "yoz",
       "cmd": "npm",
       "args": ["run", "start"],
