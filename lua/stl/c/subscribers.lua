@@ -8,7 +8,7 @@ local __module_name__ = "stl.c.subscribers" ---@type string
 ---@field public ARRANGE_THRESHOLD      ?number
 
 ---@class stl.c.subscribers.ISubscriberItem
----@field public subscriber             stl.c.ISubscriber
+---@field public subscriber             ?stl.c.ISubscriber
 ---@field public unsubscribed           boolean
 
 ---@type stl.c.IUnsubscribable
@@ -65,20 +65,14 @@ function M:dispose()
   local i = 1
   while i <= #items do
     local item = items[i]
-    if item.unsubscribed then
-      goto continue
-    end
-
+    local subscriber = item.subscriber
     item.unsubscribed = true
-    if item.subscriber:isdisposed() then
-      goto continue
+    item.subscriber = nil
+    if subscriber and not subscriber:isdisposed() then
+      handler:run(function()
+        subscriber:dispose()
+      end)
     end
-
-    handler:run(function()
-      item.subscriber:dispose()
-    end)
-
-    ::continue::
     i = i + 1
   end
 
@@ -103,9 +97,10 @@ function M:notify(value, value_prev)
   local L = #items
   while i <= L do
     local item = items[i]
-    if not item.unsubscribed and not item.subscriber:isdisposed() then
+    local subscriber = item.subscriber
+    if subscriber and not subscriber:isdisposed() then
       handler:run(function()
-        item.subscriber:next(value, value_prev)
+        subscriber:next(value, value_prev)
       end)
     end
     i = i + 1
@@ -141,6 +136,8 @@ function M:subscribe(subscriber)
       end
 
       item.unsubscribed = true
+      -- Compaction is lazy; callback owners must be released immediately.
+      item.subscriber = nil
       self._subscribing_count = self._subscribing_count - 1
       self:__arrange__()
     end,
@@ -161,7 +158,7 @@ function M:__arrange__()
     local i = 1
     while i <= #items do
       local item = items[i]
-      if not item.unsubscribed and not item.subscriber:isdisposed() then
+      if item.subscriber and not item.subscriber:isdisposed() then
         table.insert(next_items, item)
       end
       i = i + 1
