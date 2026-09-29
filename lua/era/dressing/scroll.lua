@@ -65,6 +65,12 @@ local function is_enabled(bufnr)
     return false
   end
 
+  -- These surfaces own cursor publication; animation positions would become navigation input.
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+  if filetype == "explorer" or filetype == "treeview" then
+    return false
+  end
+
   return true
 end
 
@@ -144,6 +150,9 @@ end
 local function get_state(winnr)
   local bufnr = vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr)
   if not bufnr or not is_enabled(bufnr) then
+    if states[winnr] then
+      stop_animation(states[winnr])
+    end
     states[winnr] = nil
     return nil
   end

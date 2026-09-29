@@ -26,7 +26,7 @@ pub use is_data_uri::is_data_uri;
 pub use join::join;
 pub use normalize::normalize;
 pub use parent::parent;
-pub use parse::{build, parse, UriParts};
+pub use parse::{UriParts, build, parse};
 pub use pathname::pathname;
 pub use protocol::protocol;
 pub use relative::relative;

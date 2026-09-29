@@ -214,6 +214,40 @@ t:test("animates an unaccepted programmatic view change", function()
   t.assert_true(runtime.states[1].timer == runtime.timers[1], "active animation timer")
 end)
 
+t:test("renderer-owned cursors do not start scroll animations", function()
+  local runtime = setup()
+  for _, filetype in ipairs({ "explorer", "treeview" }) do
+    runtime.options.filetype = filetype
+    runtime.view.lnum = 100
+    runtime.view.topline = 100
+    runtime.check_scroll(1)
+    t.assert_eq(0, #runtime.timers, "animation timers for " .. filetype)
+    t.assert_nil(runtime.get_states()[1], "animation state for " .. filetype)
+  end
+end)
+
+t:test("switching to an Explorer buffer releases animation options and queued work", function()
+  local runtime = setup()
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+  local timer = runtime.timers[1]
+  assert(timer.callback)()
+
+  runtime.bufnr = 2
+  runtime.options.filetype = "explorer"
+  runtime.view.lnum = 2
+  runtime.view.topline = 1
+  runtime.check_scroll(1)
+
+  t.assert_true(timer.cleared, "timer cleared")
+  t.assert_nil(runtime.get_states()[1], "animation state")
+  t.assert_eq("", runtime.options.virtualedit, "restored virtualedit")
+  t.assert_eq(4, runtime.options.scrolloff, "restored scrolloff")
+  table.remove(runtime.scheduled, 1)()
+  t.assert_eq(2, runtime.view.lnum, "cursor after stale animation callback")
+end)
+
 t:test("accepts a programmatic view change as the new baseline", function()
   local runtime = setup()
 
