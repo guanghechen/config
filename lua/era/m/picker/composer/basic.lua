@@ -135,6 +135,7 @@ local __highlights__ = {
 ---@field protected _pane_last_focused  era.m.picker.composer.basic.PaneEnum
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
+---@field protected _preview_observer   ?stl.c.IUnsubscribable
 ---
 ---@field protected _search_pattern_history ?stl.c.History
 ---
@@ -223,6 +224,9 @@ function M.new(props)
     diagnostic_scope = "era.m.picker.result",
     winline_hl = "f_wl_picker",
     draw = function(bufnr)
+      if self._disposed then
+        return {}
+      end
       if search_pattern_history ~= nil then
         local keyword = search_pattern:snapshot() ---@type string
         if keyword ~= nil and vim.trim(keyword) ~= "" then
@@ -241,6 +245,9 @@ function M.new(props)
     flags_start_index = flags_start_index,
     ---@type era.m.picker.result.IOnDrawed
     on_drawed = function(bufnr)
+      if self._disposed then
+        return
+      end
       self:mark_preview_dirty()
       on_result_rendered(self, bufnr)
     end,
@@ -254,7 +261,12 @@ function M.new(props)
       name = name,
       diagnostic_scope = "era.m.picker.preview",
       relative_number = true,
-      draw = render_preview,
+      draw = function(bufnr, force)
+        if self._disposed then
+          return { cursorline = false, number = false, title = "", wrap = false }
+        end
+        return render_preview(bufnr, force)
+      end,
       keymaps = self:__resolve_keymaps_preview__(
         flags,
         flags_start_index,
@@ -262,7 +274,9 @@ function M.new(props)
       ),
       ---@type era.m.picker.preview.IOnDrawed
       on_drawed = function(bufnr)
-        on_preview_rendered(self, bufnr)
+        if not self._disposed then
+          on_preview_rendered(self, bufnr)
+        end
       end,
     })
   end
@@ -274,8 +288,10 @@ function M.new(props)
   self._result_number = result_number ---@type boolean
 
   if preview ~= nil then
-    stl.fn.observe({ result.lnum_current, result.lnum_total }, function()
-      self:mark_preview_dirty()
+    self._preview_observer = stl.fn.observe({ result.lnum_current, result.lnum_total }, function()
+      if not self._disposed then
+        self:mark_preview_dirty()
+      end
     end, true)
   end
   return self
@@ -287,6 +303,10 @@ function M:dispose()
     return
   end
   self._disposed = true
+  if self._preview_observer then
+    self._preview_observer:unsubscribe()
+    self._preview_observer = nil
+  end
 
   local fullname = self.fullname ---@type string
   local finder = self.finder ---@type era.m.picker.Finder
@@ -350,6 +370,9 @@ function M:close()
 
   self:__hide__()
   vim.schedule(function()
+    if self._disposed then
+      return
+    end
     local ok, error = pcall(self._on_closed, self)
     if not ok then
       stl.reporter.error({
@@ -376,6 +399,9 @@ function M:focus(pane)
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
+    if self._disposed then
+      return
+    end
     local ok, error = pcall(self._on_focused, self)
     if not ok then
       stl.reporter.error({
@@ -396,6 +422,9 @@ function M:hide()
 
   self:__hide__()
   vim.schedule(function()
+    if self._disposed then
+      return
+    end
     local ok, error = pcall(self._on_hidden, self)
     if not ok then
       stl.reporter.error({

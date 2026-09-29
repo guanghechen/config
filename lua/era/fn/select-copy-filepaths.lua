@@ -9,6 +9,7 @@ local __module_name__ = "era.fn.select_copy_filepaths" ---@type string
 ---@param params                        era.fn.select_copy_filepaths.IParams
 ---@return integer
 local function select_copy_filepaths(params)
+  local paths = require("ux.filetree.path")
   local filepaths = params.filepaths ---@type string[]
   local on_completed = params.on_completed or stl.fn.noop ---@type fun(): nil
 
@@ -28,15 +29,15 @@ local function select_copy_filepaths(params)
     on_choice = function(item)
       if item ~= nil then
         local contents = {} ---@type string[]
-        local cwd = dot.path.cwd() ---@type string
+        local cwd = paths.from_os(dot.path.cwd()) ---@type string
 
         for _, filepath in ipairs(filepaths) do
           if item.key == "1" then
-            contents[#contents + 1] = filepath
+            contents[#contents + 1] = paths.from_os(filepath)
           elseif item.key == "2" then
-            contents[#contents + 1] = dot.path.relative(cwd, filepath, "/")
+            contents[#contents + 1] = paths.relative(cwd, paths.from_os(filepath))
           elseif item.key == "3" then
-            contents[#contents + 1] = yoz.path.basename(filepath)
+            contents[#contents + 1] = paths.basename(paths.from_os(filepath))
           end
         end
 

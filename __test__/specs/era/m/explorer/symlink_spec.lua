@@ -1,294 +1,253 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.specs.era.m.explorer.symlink" ---@type string
 
-local bootstrap = require("__test__.support.bootstrap")
-local harness = require("__test__.support.harness")
-local t = harness.new("era.m.explorer.symlink")
+local support = require("__test__.support.explorer").new("era.m.explorer.symlink")
+local t, await = support.t, support.await
 
-t:patch_global("yoz", require("yoz"))
-t:patch_global("stl", require("stl"))
-bootstrap.with_runtime(t, {
-  era = {
-    m = {
-      explorer = { Node = require("era.m.explorer.node") },
-      git = {
-        state = {
-          is_ignored = function()
-            return false
-          end,
-          preload_ignored = function() end,
-        },
-      },
-    },
-  },
-})
-
-local FileManager = require("era.m.explorer.resource.file")
-local Tree = require("era.m.explorer.tree")
-local View = require("era.m.explorer.view")
-local to_os = yoz.canonical_path.to_os_path
-
----@class __test__.explorer.ISymlinkFixture
----@field public root                   string
----@field public manager                era.m.explorer.resource.FileManager
----@field public tree                   era.m.explorer.Tree
----@field public bufnr                  integer
----@field public view                   era.m.explorer.View
-
----@return __test__.explorer.ISymlinkFixture
-local function fixture()
-  local root = yoz.canonical_path.from_os_path(vim.fn.tempname(), false) ---@type string
-  vim.fn.mkdir(to_os(root), "p")
-  t:defer(function()
-    vim.fn.delete(to_os(root), "rf")
-  end)
-  vim.fn.mkdir(to_os(root .. "/target/nested"), "p")
-  vim.fn.mkdir(to_os(root .. "/container"), "p")
-  vim.fn.writefile({ "target" }, to_os(root .. "/target/nested/file.lua"))
-  vim.fn.writefile({ "plain" }, to_os(root .. "/plain.lua"))
-  assert(vim.uv.fs_symlink("target", to_os(root .. "/dir-link"), { dir = true }))
-  assert(vim.uv.fs_symlink("plain.lua", to_os(root .. "/file-link.lua")))
-  assert(vim.uv.fs_symlink("missing", to_os(root .. "/broken-link"), { dir = true }))
-  assert(vim.uv.fs_symlink(to_os("../target"), to_os(root .. "/container/alias"), { dir = true }))
-
-  local manager = FileManager.new({ name = "symlink-test" })
-  t:defer(function()
-    manager:dispose()
-  end)
-  local tree = Tree.new({
-    name = "symlink-test",
-    initial_root = root .. "/",
-    resource_manager = manager,
-    o_flag_foldempty = stl.c.Observable.from_value(true),
-    o_flag_hidden = stl.c.Observable.from_value(true),
-  })
-  t:defer(function()
-    tree:dispose()
-  end)
-  tree:refresh(false)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-
-  return { root = root, manager = manager, tree = tree, bufnr = bufnr, view = View.new("symlink-test") }
+---@return string
+local function directory()
+  local root = support.directory()
+  vim.fn.mkdir(root .. "/target/nested", "p")
+  vim.fn.mkdir(root .. "/container", "p")
+  support.write(root .. "/target/nested/file.lua")
+  support.write(root .. "/plain.lua")
+  assert(vim.uv.fs_symlink("target", root .. "/dir-link", { dir = true }))
+  assert(vim.uv.fs_symlink("plain.lua", root .. "/file-link.lua"))
+  assert(vim.uv.fs_symlink("missing", root .. "/broken-link", { dir = true }))
+  assert(vim.uv.fs_symlink("../target", root .. "/container/alias", { dir = true }))
+  return root
 end
 
----@param f                             __test__.explorer.ISymlinkFixture
----@param show_icons                    ?boolean
----@return era.m.explorer.view.IRenderResult
-local function render(f, show_icons)
-  return f.view:render(f.bufnr, f.tree, f.tree:get_root_node(), {
-    foldempty = true,
-    defer_file_icons = true,
-    show_diagnostics = false,
-    show_git_status = false,
-    show_icons = show_icons == true,
-  })
-end
-
----@param f                             __test__.explorer.ISymlinkFixture
----@param lnum                          integer
----@return table
-local function decoration(f, lnum)
-  for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(f.bufnr, f.view:get_namespace(), 0, -1, { details = true })) do
-    if mark[2] == lnum - 1 and mark[4].virt_text ~= nil then
-      return mark[4]
-    end
-  end
-  error("missing right-side decoration")
-end
-
----@param f                             __test__.explorer.ISymlinkFixture
----@param lnum                          integer
----@return boolean
-local function has_link_marker(f, lnum)
-  for _, chunk in ipairs(decoration(f, lnum).virt_text) do
-    if chunk[1] == "  " then
-      return true
-    end
-  end
-  return false
-end
-
-t:test("file, directory and dangling links render right-aligned markers without file icons", function()
-  local f = fixture()
-  local result = render(f)
+t:test("native resources keep link identity separate from directory interaction", function()
+  local root = directory()
+  local widget = support.widget(root)
+  local session = widget:context()
   for _, case in ipairs({
-    { path = "dir-link/", kind = "D", link = true },
-    { path = "file-link.lua", kind = "F", link = true },
-    { path = "broken-link", kind = "F", link = true },
-    { path = "target/", kind = "D", link = false },
-    { path = "plain.lua", kind = "F", link = false },
+    { "dir-link", "link", true },
+    { "file-link.lua", "link", false },
+    { "broken-link", "link", false },
+    { "target", "directory", true },
+    { "plain.lua", "file", false },
+    { "dir-link/nested/file.lua", "file", false },
   }) do
-    local filepath = f.root .. "/" .. case.path
-    local node = assert(f.manager:locate(filepath))
-    t.assert_eq(case.kind, node.nodetype, case.path .. " interaction type")
-    t.assert_eq(case.link, node.is_link, case.path .. " resource identity")
-    local lnum = assert(result.layout:lnum(filepath))
-    t.assert_false(result.lines[lnum]:find("", 1, true) ~= nil, case.path .. " name has no suffix")
-    t.assert_eq(case.link, has_link_marker(f, lnum), case.path .. " visible marker")
-    t.assert_eq("right_align", decoration(f, lnum).virt_text_pos, case.path .. " marker alignment")
-  end
-  t.assert_false(assert(f.manager:locate(f.root .. "/dir-link/nested/file.lua")).is_link, "plain linked descendant")
-  t.assert_nil(f.manager:locate(f.root .. "/missing"), "missing target remains absent")
-end)
-
-t:test("scandir unknown types retain link identity", function()
-  local f = fixture()
-  local scandir_next = vim.uv.fs_scandir_next
-  t:patch_table(vim.uv, "fs_scandir_next", function(handle)
-    local name, kind = scandir_next(handle)
-    return name, name ~= nil and "unknown" or kind
-  end)
-  local links = {} ---@type table<string, boolean>
-  for _, node in ipairs(f.manager:load(f.root .. "/")) do
-    links[node.nodename] = node.is_link
-  end
-  t.assert_true(links["dir-link"], "directory link")
-  t.assert_true(links["file-link.lua"], "file link")
-  t.assert_true(links["broken-link"], "dangling link")
-  t.assert_false(links.target, "regular directory")
-  t.assert_false(links["plain.lua"], "regular file")
-end)
-
-t:test("empty-directory folding keeps the link entry separate from its parent and descendants", function()
-  local f = fixture()
-  for _, path in ipairs({ "dir-link/nested/", "container/alias/nested/", "target/nested/" }) do
-    f.tree:expand_path(f.root .. "/" .. path)
-  end
-  local result = render(f)
-  for _, path in ipairs({ "dir-link/", "container/alias/" }) do
-    local filepath = f.root .. "/" .. path
-    local lnum = assert(result.layout:lnum(filepath))
-    t.assert_eq(filepath, result.layout:id(lnum), "link remains the displayed node")
-    t.assert_nil(result.layout:folded_ids(lnum), "link has its own row")
-    t.assert_true(has_link_marker(f, lnum), "expanded link marker")
-    local child_lnum = assert(result.layout:lnum(filepath .. "nested/"))
-    t.assert_true(child_lnum ~= lnum, "child stays on a separate row")
-    t.assert_false(has_link_marker(f, child_lnum), "child does not inherit link identity")
-  end
-  local parent_lnum = assert(result.layout:lnum(f.root .. "/container/"))
-  t.assert_eq(f.root .. "/container/", result.layout:id(parent_lnum), "ordinary parent remains separate")
-  local ordinary_lnum = assert(result.layout:lnum(f.root .. "/target/nested/"))
-  t.assert_true(result.lines[ordinary_lnum]:find("target/nested", 1, true) ~= nil, "ordinary paths still fold")
-
-  t.assert_true(f.tree:attach(f.root .. "/dir-link/"), "attach directory link as root")
-  t.assert_true(f.tree:get_root_node().is_link, "attached root retains link identity")
-end)
-
-t:test("attach rejects file and dangling-link roots while preserving the current directory", function()
-  local f = fixture()
-  t:patch_table(stl.reporter, "error", function() end)
-  local root = f.tree:get_root_node()
-  for _, path in ipairs({ "plain.lua/", "file-link.lua/", "broken-link/" }) do
-    t.assert_false(f.tree:attach(f.root .. "/" .. path), path .. " is not a directory root")
-    t.assert_true(root == f.tree:get_root_node(), "rejected root preserves the current directory")
-    t.assert_eq(f.root .. "/", f.tree:get_root_filepath(), "current root keeps its directory path")
+    local info = await(session.data:resolve(root .. "/" .. case[1])):info()
+    t.assert_eq(case[2], info.kind, case[1] .. " entry identity")
+    t.assert_eq(case[3], info.directory, case[1] .. " interaction type")
   end
 end)
 
-t:test("refresh detects same-name and same-type replacements in both directions", function()
-  local f = fixture()
-  for _, case in ipairs({ { name = "file-link.lua", directory = false }, { name = "dir-link", directory = true } }) do
-    local path = f.root .. "/" .. case.name
-    local filepath = path .. (case.directory and "/" or "")
-    local node = assert(f.tree:locate(filepath))
-    assert(vim.uv.fs_unlink(to_os(path)))
-    if case.directory then
-      assert(vim.uv.fs_mkdir(to_os(path), 493))
-    else
-      vim.fn.writefile({ "replacement" }, to_os(path))
-    end
-    f.tree:mark_all_dirty()
-    f.tree:refresh(false)
-    t.assert_true(node == f.tree:locate(filepath), "same-type replacement preserves node identity")
-    local result = render(f)
-    local lnum = assert(result.layout:lnum(filepath))
-    t.assert_false(has_link_marker(f, lnum), "regular replacement loses marker")
-
-    if case.directory then
-      assert(vim.uv.fs_rmdir(to_os(path)))
-    else
-      assert(vim.uv.fs_unlink(to_os(path)))
-    end
-    assert(vim.uv.fs_symlink(case.directory and "target" or "plain.lua", to_os(path), { dir = case.directory }))
-    f.tree:mark_all_dirty()
-    f.tree:refresh(false)
-    result = render(f)
-    lnum = assert(result.layout:lnum(filepath))
-    t.assert_true(has_link_marker(f, lnum), "recreated link regains marker")
+t:test("directory compression does not cross a link or hide its entry", function()
+  local root = directory()
+  local widget = support.widget(root)
+  local session, view = widget:context()
+  local resources = {}
+  for _, path in ipairs({
+    "dir-link",
+    "dir-link/nested",
+    "container",
+    "container/alias",
+    "container/alias/nested",
+    "target/nested",
+  }) do
+    resources[path] = await(session.data:resolve(root .. "/" .. path))
   end
-end)
-
-t:test("dangling directory links survive refresh as their targets appear and disappear", function()
-  local f = fixture()
-  assert(vim.uv.fs_mkdir(to_os(f.root .. "/missing"), 493))
-  f.tree:refresh(true)
-  t.assert_eq("D", assert(f.tree:locate(f.root .. "/broken-link/")).nodetype, "restored target is expandable")
-  f.tree:expand_path(f.root .. "/broken-link/")
-  assert(vim.uv.fs_rmdir(to_os(f.root .. "/missing")))
-  f.tree:refresh(true)
-  local result = render(f)
-  local filepath = f.root .. "/broken-link"
-  t.assert_eq("F", assert(f.tree:locate(filepath)).nodetype, "dangling link returns to a file leaf")
-  local lnum = assert(result.layout:lnum(filepath))
-  t.assert_true(has_link_marker(f, lnum), "dangling link keeps its marker")
-end)
-
-t:test("deferred icons preserve right-side link markers and name highlight ranges", function()
-  local f = fixture()
-  t:patch_table(stl, "fileicon", {
-    get_directory_icon = function()
-      return "D", "DirectoryIcon", false
-    end,
-    get_file_icon = function(_, filetype)
-      return filetype == "" and "󰈚" or "", "FileIcon"
-    end,
-  })
-  for _, ignored in ipairs({ false, true }) do
-    local link_hl = ignored and "m_ex_symlink_ignored" or "m_ex_symlink"
-    t:patch_table(era.m.git.state, "is_ignored", function()
-      return ignored
-    end)
-    local result = render(f, true)
-    f.view:update_file_icons(f.bufnr, result, 1, #result.deferred_file_icons)
-    local lnum = assert(result.layout:lnum(f.root .. "/file-link.lua"))
-    local line = vim.api.nvim_buf_get_lines(f.bufnr, lnum - 1, lnum, false)[1]
-    t.assert_eq(result.lines[lnum], line, "buffer and result stay aligned")
-    t.assert_true(line:find(" file-link.lua", 1, true) ~= nil, "exact icon remains visible")
-    t.assert_false(line:find("", 1, true) ~= nil, "link marker stays out of the name")
-    local chunks = decoration(f, lnum).virt_text
-    t.assert_eq("  ", chunks[1][1], "marker retains its padding")
-    t.assert_eq(link_hl, chunks[1][2], "marker retains its status tint")
-
-    local name_found = false
-    for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(f.bufnr, f.view:get_namespace(), 0, -1, { details = true })) do
-      if mark[2] == lnum - 1 and mark[4].end_col ~= nil then
-        local text = line:sub(mark[3] + 1, mark[4].end_col)
-        if text == "file-link.lua" then
-          name_found = true
-          t.assert_eq(ignored and "m_ex_ignored" or "m_ft_filename", mark[4].hl_group, "name highlight")
-        end
+  await(session.state:set_expanded({ session.data.root }, true, true))
+  t.wait_until(function()
+    local frame = view:frame()
+    for _, resource in pairs(resources) do
+      if not frame:position(resource:node()) then
+        return false
       end
     end
-    t.assert_true(name_found, "name range follows the changed icon width")
+    return true
+  end, 10000)
+  local frame = view:frame()
+  for _, path in ipairs({ "dir-link", "container/alias" }) do
+    local row = assert(frame:position(resources[path]:node()))
+    t.assert_eq(resources[path]:node(), frame:node_at(row), "link owns its displayed row")
+    t.assert_true(row ~= frame:position(resources[path .. "/nested"]:node()), "child stays separate")
+  end
+  t.assert_true(frame:position(resources.container:node()) ~= frame:position(resources["container/alias"]:node()))
+  local ordinary = assert(frame:position(resources["target/nested"]:node()))
+  t.assert_eq("target/nested", frame:rows(ordinary, ordinary).labels[1], "ordinary directories still compress")
+  await(session:navigate(resources["dir-link"]:node(), false))
+  t.wait_until(function()
+    return view:frame():header().root.node == resources["dir-link"]:node()
+  end, 10000)
+end)
+
+t:test("file and dangling-link roots are rejected without changing the display root", function()
+  local root = directory()
+  local widget = support.widget(root)
+  local session, view = widget:context()
+  local original = view:frame():header().root.node
+  for _, path in ipairs({ "plain.lua", "file-link.lua", "broken-link" }) do
+    local resource = await(session.data:resolve(root .. "/" .. path))
+    local future = session:navigate(resource:node(), false)
+    t.wait_until(function()
+      return future:is_done()
+    end, 10000)
+    t.assert_false(future:is_failed(), future:get_error())
+    t.assert_eq("Rejected", future:get_result().kind)
+    t.assert_eq(original, view:frame():header().root.node)
   end
 end)
 
-t:test("link padding shares focused and inactive cursor backgrounds without losing its tint", function()
-  local f = fixture()
-  local result = render(f)
-  local lnum = assert(result.layout:lnum(f.root .. "/file-link.lua"))
-  for _, cursorline_hl in ipairs({ "m_ex_cursorline", "m_ex_cursorline_blur", false }) do
-    f.view:update_virt_text(f.bufnr, result, lnum, cursorline_hl or nil)
-    local chunks = decoration(f, lnum).virt_text
-    t.assert_eq("  ", chunks[1][1], "trailing cell stays in the same highlight chunk")
-    t.assert_true(
-      vim.deep_equal(cursorline_hl and { cursorline_hl, "m_ex_symlink" } or "m_ex_symlink", chunks[1][2]),
-      "cursor background is combined with the link tint"
-    )
+t:test("refresh updates link identity after same-name replacements in both directions", function()
+  local root = directory()
+  local widget = support.widget(root)
+  local session = widget:context()
+  for _, case in ipairs({ { "file-link.lua", false }, { "dir-link", true } }) do
+    local path = root .. "/" .. case[1]
+    local old = await(session.data:resolve(path))
+    assert(vim.uv.fs_unlink(path))
+    if case[2] then
+      assert(vim.uv.fs_mkdir(path, 448))
+    else
+      support.write(path)
+    end
+    await(session:refresh())
+    local regular = await(session.data:resolve(path))
+    t.assert_eq(case[2] and "directory" or "file", regular:info().kind)
+    t.assert_true(old:node() ~= regular:node(), "replacement has a new resource occurrence")
+    if case[2] then
+      assert(vim.uv.fs_rmdir(path))
+    else
+      assert(vim.uv.fs_unlink(path))
+    end
+    assert(vim.uv.fs_symlink(case[2] and "target" or "plain.lua", path, { dir = case[2] }))
+    await(session:refresh())
+    t.assert_eq("link", await(session.data:resolve(path)):info().kind)
   end
+end)
+
+t:test("dangling links remain links when their directory targets appear and disappear", function()
+  local root = directory()
+  local widget = support.widget(root)
+  local session = widget:context()
+  local before = await(session.data:resolve(root .. "/broken-link"))
+  assert(vim.uv.fs_mkdir(root .. "/missing", 448))
+  await(session:refresh())
+  local present = await(session.data:resolve(root .. "/broken-link"))
+  t.assert_eq("link", present:info().kind)
+  t.assert_true(present:info().directory)
+  t.assert_eq(before:node(), present:node())
+  assert(vim.uv.fs_rmdir(root .. "/missing"))
+  await(session:refresh())
+  local missing = await(session.data:resolve(root .. "/broken-link"))
+  t.assert_eq("link", missing:info().kind)
+  t.assert_false(missing:info().directory)
+end)
+
+t:test("real UI separates file icons from right-aligned links and preserves Git tint over diagnostics", function()
+  local root = directory()
+  local ui = require("__test__.support.ui").new()
+  t:defer(function()
+    ui:close()
+  end)
+  ui:rpc("nvim_ui_attach", 100, 30, { rgb = true, ext_linegrid = true })
+  ui:rpc(
+    "nvim_exec_lua",
+    [=[
+    local root, path = ...
+    vim.opt.runtimepath:prepend(root)
+    local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
+    yoz = assert(package.loadlib(root .. "/rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))()
+    stl, dot, era = require("stl"), require("dot"), require("era")
+    dot.path.workspace = function() return path end
+    dot.path.is_git_repo = function() return false end
+    errors, links, icons, names = {}, {}, {}, {}
+    stl.reporter.warn = function(value) errors[#errors + 1] = value.message end
+    stl.reporter.error = function(value) errors[#errors + 1] = value.message end
+    stl.reporter.info = function() end
+    local namespace = vim.api.nvim_create_namespace("era.explorer")
+    local mark = vim.api.nvim_buf_set_extmark
+    vim.api.nvim_buf_set_extmark = function(bufnr, ns, row, col, options)
+      if ns == namespace and view and bufnr == view.bufnr then
+        local frame = view:frame()
+        local info = session.data:inspect(frame:source(), frame:node_at(row + 1)):info()
+        if options.virt_text_pos == "right_align" then
+          links[info.label] = options
+        elseif options.virt_text_pos == "overlay" then
+          icons[info.label] = options.virt_text[1]
+        elseif options.hl_group then
+          names[info.label] = options.hl_group
+        end
+      end
+      return mark(bufnr, ns, row, col, options)
+    end
+    widget = require("era.m.explorer.widget").new({ name = "symlink-ui", root = path })
+    widget:focus()
+    assert(vim.wait(10000, function()
+      local current = widget._views[vim.api.nvim_get_current_tabpage()]
+      return current and current:frame() and current:frame():header().row_count == 6
+    end))
+    session, view = widget:context()
+  ]=],
+    { assert(vim.uv.cwd()), root }
+  )
+  t.wait_until(function()
+    ui:rpc("nvim_command", "redraw")
+    return ui:rpc(
+      "nvim_exec_lua",
+      "return links['dir-link'] ~= nil and links['file-link.lua'] ~= nil and links['broken-link'] ~= nil",
+      {}
+    )
+  end, 10000)
+  t.assert_true(ui:rpc("nvim_exec_lua", "return links['plain.lua'] == nil and links.target == nil", {}))
+  t.assert_true(
+    ui:rpc("nvim_exec_lua", "return icons['file-link.lua'][1] == stl.fileicon.get_file_icon('file-link.lua')", {})
+  )
+  t.assert_false(
+    ui:rpc(
+      "nvim_exec_lua",
+      "return table.concat(vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)):find('', 1, true) ~= nil",
+      {}
+    )
+  )
+  for _, case in ipairs({
+    { git = 0, expected = "m_ex_symlink" },
+    { git = 2, expected = "m_ex_symlink_untracked" },
+    { git = 4, unstaged = true, expected = "m_ex_symlink_unstaged" },
+    { git = 16, staged = true, expected = "m_ex_symlink_staged" },
+    { git = 260, unstaged = true, expected = "m_ex_symlink_ignored" },
+    { git = 8, staged = true, expected = "m_ex_symlink_delete" },
+    { git = 4, staged = true, unstaged = true, expected = "m_ex_symlink_unstaged" },
+    { git = 1, staged = true, unstaged = true, expected = "m_ex_symlink_unmerged" },
+  }) do
+    local rendered = ui:rpc(
+      "nvim_exec_lua",
+      [=[
+      local case = ...
+      local frame = view:frame()
+      local rows = {}
+      for row = 1, frame:header().row_count do
+        rows[row] = { git = case.git, staged = case.staged, unstaged = case.unstaged, diagnostics = { 1, 0, 0, 0 } }
+      end
+      view._filetree_annotations = { frame = frame:id(), first = 1, rows = rows }
+      view._filetree_annotation_data = frame:header().data_revision
+      view._filetree_annotation_layout = frame:header().layout_revision
+      links, icons, names = {}, {}, {}
+      vim.cmd("redraw!")
+      return { links = links, names = names }
+    ]=],
+      { case }
+    )
+    for _, name in ipairs({ "dir-link", "file-link.lua", "broken-link" }) do
+      local options = rendered.links[name]
+      t.assert_eq("  ", options.virt_text[1][1], "padding stays in one highlight chunk")
+      t.assert_eq(case.expected, options.virt_text[1][2], name .. " Git tint")
+      t.assert_eq("right_align", options.virt_text_pos)
+      t.assert_eq("combine", options.hl_mode, "cursor background remains visible")
+      t.assert_eq(
+        case.git == 260 and "m_ex_ignored" or "DiagnosticError",
+        rendered.names[name],
+        name .. "/" .. case.expected .. " name color"
+      )
+    end
+  end
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+  ui:rpc("nvim_exec_lua", "widget:dispose()", {})
 end)
 
 t:run()

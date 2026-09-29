@@ -274,8 +274,6 @@ t:test("theme surface overrides preserve their colors across variants and transp
         t.assert_eq(u.fg1, widget.f_diff_word_left.fg, filepath)
         t.assert_eq(u.diffAddInline, widget.f_diff_word_right.bg, filepath)
         if family ~= "catppuccin" then
-          local explorer = require("dot.theme.hlgroup.explorer." .. family).gen_hlgroup_map(context)
-          t.assert_eq(u.fg1, explorer.m_ft_git_ignored_cl.fg, filepath)
           t.assert_eq(u.fg2, module.m_dv_winbar_dim.fg, filepath)
           t.assert_eq(u.bg3, widget.f_matched_pairs_0.bg, filepath)
           t.assert_eq(u.fg1, widget.f_md_code_fallback.fg, filepath)

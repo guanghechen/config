@@ -1,141 +1,70 @@
----@alias era.m.explorer.ForceExpandedEnum
----| "expand"
----| "collapse"
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.explorer.types" ---@type string
 
----@alias era.m.explorer.ForceSelectedEnum
----| "select"
----| "unselect"
+---@class era.m.explorer.IInputRange
+---@field frame                         yoz.ux.treeview.Frame
+---@field first                         integer
+---@field last                          integer
 
----@alias era.m.explorer.ITreeTraverseCallback
----| fun(params: era.m.explorer.ITreeTraverseCallbackParams): nil
+---@alias era.m.explorer.JobKind "create"|"copy"|"move"|"paste"|"delete"|"rename"|"copy_to_path"|"move_to_path"|"copy_to_directory"|"move_to_directory"
+---@alias era.m.explorer.OperationKind "create"|"copy"|"move"|"delete"|"trash"
+---@alias era.m.explorer.OnJobComplete fun(status: ux.filetree.IJobStatus, results: ux.filetree.IItemResult[]): nil
 
----@alias era.m.explorer.NodeTypeEnum
----| "F"
----| "D"
+---@class era.m.explorer.IJobRequestBase
+---@field selection_revision            ?ux.treeview.Revision
+---@field on_complete                   ?era.m.explorer.OnJobComplete
 
----@alias era.m.explorer.TransferModeEnum
----| "move"
----| "copy"
+---@class (exact) era.m.explorer.ITransferRequest: era.m.explorer.IJobRequestBase
+---@field kind                          "copy"|"move"|"paste"
+---@field target                        ?yoz.ux.filetree.Resource
+---@field range                         ?era.m.explorer.IInputRange
+---@field name                          ?string
 
----@class era.m.explorer.IPendingTransferSource
----@field public filepath               string
----@field public nodename               string
----@field public nodetype               era.m.explorer.NodeTypeEnum
+---@class (exact) era.m.explorer.ICreateRequest: era.m.explorer.IJobRequestBase
+---@field kind                          "create"
+---@field target                        ?yoz.ux.filetree.Resource
+---@field path                          ?ux.filetree.Path
+---@field directory                     ?boolean
 
----@class era.m.explorer.IPendingTransfer
----@field public mode                   era.m.explorer.TransferModeEnum
----@field public sources                era.m.explorer.IPendingTransferSource[]
----@field public source_filepaths       table<string, boolean>
+---@class (exact) era.m.explorer.IRenameRequest: era.m.explorer.IJobRequestBase
+---@field kind                          "rename"
+---@field name                          ?string
 
----@class era.m.explorer.ITreeTicks
----@field public structure              integer
+---@class (exact) era.m.explorer.IPathRequest: era.m.explorer.IJobRequestBase
+---@field kind                          "copy_to_path"|"move_to_path"
+---@field path                          ?ux.filetree.Path Prompt when omitted.
+---@field default_path                  ?ux.filetree.Path
 
----@class era.m.explorer.ITreeTraverseCallbackParams
----@field public node                   era.m.explorer.Node
----@field public childindex             integer
----@field public depth                  integer
----@field public indent                 string
+---@class (exact) era.m.explorer.IDirectoryRequest: era.m.explorer.IJobRequestBase
+---@field kind                          "copy_to_directory"|"move_to_directory"
+---@field path                          ?ux.filetree.Path Prompt when omitted.
 
----@class era.m.explorer.action.IContext
----@field public widget                 era.m.explorer.Widget
----@field public tree                   era.m.explorer.Tree
----@field public resource_manager       era.m.explorer.resource.FileManager
----@field public fullname               string
----@field public get_cursor_filepath         fun(): string|nil
----@field public get_navigation_parent_filepath fun(filepath: string): string|nil
----@field public get_navigation_last_child_filepath fun(filepath: string): string|nil
----@field public get_parent_filepath         fun(filepath: string): string
----@field public get_visual_nodes       fun(): era.m.explorer.Node[]
----@field public refresh                fun(skip_refresh: boolean|nil): nil
----@field public render                 fun(): nil
----@field public sync_cursor_to_filepath     fun(filepath: string): nil
+---@class (exact) era.m.explorer.IDeleteRequest: era.m.explorer.IJobRequestBase
+---@field kind                          "delete"
+---@field range                         ?era.m.explorer.IInputRange
 
----@alias era.m.explorer.resource.CopyStatus
----| "success"
----| "retryable_failure"
----| "partial_failure"
+---@alias era.m.explorer.IJobRequest era.m.explorer.ITransferRequest|era.m.explorer.ICreateRequest|era.m.explorer.IRenameRequest|era.m.explorer.IPathRequest|era.m.explorer.IDirectoryRequest|era.m.explorer.IDeleteRequest
 
----@class era.m.explorer.resource.IManager
----All filepath values crossing this interface are canonical slash-only paths; callers own input normalization.
----@field public compare                fun(left: era.m.explorer.resource.INode, right: era.m.explorer.resource.INode): integer
----@field public copy                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): era.m.explorer.resource.CopyStatus
----@field public create                 fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode|nil
----@field public insert_if_missing      fun(self: era.m.explorer.resource.IManager, filepath: string): boolean
----@field public load                   fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode[]
----@field public locate                 fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode|nil
----@field public move                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): boolean
----@field public remove                 fun(self: era.m.explorer.resource.IManager, filepath: string, on_removed: fun(): nil): boolean
----@field public resolve_root_alias     fun(self: era.m.explorer.resource.IManager, root_filepath: string, target_filepath: string): string|nil
+---@class (exact) era.m.explorer.IPreparation
+---@field cancelled                     boolean
+---@field label                         string
+---@field launched                      ?boolean
+---@field resume                        ?fun(value: string|nil): nil
+---@field job                           ?yoz.ux.filetree.Job
 
----@class era.m.explorer.resource.INode
----@field public filepath               string
----@field public is_link                boolean Whether this entry itself is a symbolic link
----@field public nodename               string
----@field public nodetype               era.m.explorer.NodeTypeEnum
+---@class era.m.explorer.IJobCounts
+---@field success                       integer
+---@field failed                        integer
+---@field skipped                       integer
 
----@class era.m.explorer.view.IDiagCounts
----@field public error                  integer
----@field public hint                   integer
----@field public info                   integer
----@field public warn                   integer
-
----@class era.m.explorer.view.IDiagnosticInfo
----@field public highlights             stl.t.IHighlightInline[]
----@field public lnum                   integer
----@field public text                   string
-
----@class era.m.explorer.view.IGitStatusInfo
----@field public highlights             stl.t.IHighlightInline[]
----@field public lnum                   integer
----@field public text                   string
-
----@class era.m.explorer.view.IFileIconInfo
----@field public highlight              stl.t.IHighlight
----@field public icon                   string
----@field public is_ignored             boolean
----@field public lnum                   integer
----@field public name_highlight         stl.t.IHighlight
----@field public nodename               string
-
----@class era.m.explorer.view.IRenderContext
----@field public tree                   era.m.explorer.Tree
----@field public root                   era.m.explorer.Node
----@field public root_filepath               string
----@field public resource_manager       ?era.m.explorer.resource.IManager
----@field public diag_counts            table<string, era.m.explorer.view.IDiagCounts>
----@field public defer_file_icons       boolean
----@field public deferred_file_icons    era.m.explorer.view.IFileIconInfo[]
----@field public foldempty              boolean
----@field public only_selected          boolean
----@field public pending_transfer       era.m.explorer.IPendingTransfer|nil
----@field public show_diagnostics       boolean
----@field public show_git_status        boolean
----@field public show_icons             boolean
-
----@class era.m.explorer.view.IRenderOptions
----@field public defer_file_icons       ?boolean
----@field public foldempty              ?boolean
----@field public only_selected          ?boolean
----@field public pending_transfer       era.m.explorer.IPendingTransfer|nil
----@field public resource_manager       ?era.m.explorer.resource.IManager
----@field public show_diagnostics       ?boolean
----@field public show_git_status        ?boolean
----@field public show_icons             ?boolean
-
----@class era.m.explorer.view.IRenderResult
----@field public diag_by_lnum           table<integer, era.m.explorer.view.IDiagnosticInfo>
----@field public deferred_file_icons    era.m.explorer.view.IFileIconInfo[]
----@field public diagnostic_info_list   era.m.explorer.view.IDiagnosticInfo[]
----@field public git_by_lnum            table<integer, era.m.explorer.view.IGitStatusInfo>
----@field public git_status_list        era.m.explorer.view.IGitStatusInfo[]
----@field public highlights             stl.t.IHighlight[]
----@field public layout                 stl.view.TreeLayout
----@field public lines                  string[]
----@field public link_by_lnum           table<integer, string>
----@field public sign_by_lnum           table<integer, era.m.explorer.view.ISignInfo>
----@field public sign_info_list         era.m.explorer.view.ISignInfo[]
-
----@class era.m.explorer.view.ISignInfo
----@field public lnum                   integer
----@field public sign_hl_group          string
----@field public sign_text              string
+---@class era.m.explorer.widget.IProps
+---@field name                          string
+---@field root                          ?ux.filetree.Path
+---@field data                          ?ux.filetree.Data Share resources with an independent state.
+---@field session                       ?era.m.explorer.Session Share complete interaction state and jobs.
+---@field o_width                       ?stl.c.Observable
+---@field o_flag_selected               ?stl.c.Observable
+---@field o_flag_viewtype               ?stl.c.Observable
+---@field o_flag_foldempty              ?stl.c.Observable
+---@field o_flag_hidden                 ?stl.c.Observable
+---@field on_disposed                   ?fun(): nil

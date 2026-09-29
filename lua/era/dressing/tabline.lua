@@ -206,9 +206,12 @@ function M.dressing()
   local last_showtabline = 0 ---@type integer
   dirtier:subscribe(stl.c.Subscriber.new({
     on_next = function()
-      if should_show_tabline() then
-        vim.o.showtabline = 2
-
+      local showtabline = should_show_tabline() and 2 or 0
+      -- Same-value writes also emit OptionSet; Explorer feeds that event back into this dirtier.
+      if vim.o.showtabline ~= showtabline then
+        vim.o.showtabline = showtabline
+      end
+      if showtabline == 2 then
         if last_showtabline == 0 then
           if is_explorer_visible_in_current_tab() then
             era.widget.explorer.widget:render_winbar()
@@ -222,8 +225,6 @@ function M.dressing()
         local nvimbar = resolve_nvimbar(tabtype)
         nvimbar:refresh()
       else
-        vim.o.showtabline = 0
-
         if last_showtabline ~= 0 then
           if is_explorer_visible_in_current_tab() then
             era.widget.explorer.widget:render_winbar()
