@@ -34,11 +34,12 @@ abbr -a ghc-gen-secret "node -e \"console.log(crypto.randomBytes(32).toString('b
 abbr -a ghc-invisible-space "node -e \"process.stdout.write('\u00A0')\" | clip.exe"
 
 ## Setup vpn
-if command -v ipconfig.exe >/dev/null
-    set -gx ghc_vpn_host_ip (ipconfig.exe | grep 'IPv4 Address' | awk '{print $NF}' | grep 192 | head -1 | sed 's/[^0-9.]//g')
-else
-    set -gx ghc_vpn_host_ip (cat /etc/resolv.conf | grep nameserver | awk '{print $2}' | grep -v '::' | head -1)
-end
+set -gx ghc_vpn_host_ip '127.0.0.1'
+# if command -v ipconfig.exe >/dev/null
+#     set -gx ghc_vpn_host_ip (ipconfig.exe | grep 'IPv4 Address' | awk '{print $NF}' | grep 192 | head -1 | sed 's/[^0-9.]//g')
+# else
+#     set -gx ghc_vpn_host_ip (cat /etc/resolv.conf | grep nameserver | awk '{print $2}' | grep -v '::' | head -1)
+# end
 
 ## Load WSL-specific functions (lazy load like fish functions/)
 set -l wsl_fn_dir (dirname (status filename))/fn
