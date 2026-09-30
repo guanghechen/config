@@ -25,6 +25,16 @@
       "logsRotateSize": "10MB"
     },
     {
+      "name": "kit-stt",
+      "platforms": ["osx"],
+      "cmd": "${HOME}/.local/share/kit/stt/app/kit-stt",
+      "args": ["app", "run"],
+      "autostart": false,
+      "autorestart": true,
+      "stopExitCodes": [0],
+      "killTimeout": 15000
+    },
+    {
       "name": "yoz",
       "cmd": "npm",
       "args": ["run", "start"],
