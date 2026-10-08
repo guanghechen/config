@@ -423,17 +423,24 @@ function M.new(props)
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe(
     { search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive },
     function()
-      composer:mark_result_flags_dirty()
+      if not self._disposed and not composer:isdisposed() then
+        composer:mark_result_flags_dirty()
+      end
     end,
     true
   )
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe(
     { search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive },
     function()
-      scheduler_match:schedule()
+      if not self._disposed and not composer:isdisposed() then
+        scheduler_match:schedule()
+      end
     end
   )
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ composer.result.lnum_current }, function()
+    if self._disposed or composer:isdisposed() then
+      return
+    end
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = self._lnum2uuid[lnum] ---@type string|nil
     if uuid ~= nil then
@@ -471,9 +478,9 @@ function M:dispose()
     end
   end
 
+  local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
+  local ok2, error2 = pcall(composer.dispose, composer)
   vim.schedule(function()
-    local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
-    local ok2, error2 = pcall(composer.dispose, composer)
     local ok3, error3 = pcall(on_disposed)
 
     if not (ok1 and ok2 and ok3) then
@@ -611,6 +618,9 @@ function M:reset_data(data)
   self._scheduler_match:schedule()
 
   vim.schedule(function()
+    if self._disposed or self._composer:isdisposed() then
+      return
+    end
     self:reset_uuid_current(data.uuid_current)
     self:reset_uuid_present(data.uuid_present)
   end)

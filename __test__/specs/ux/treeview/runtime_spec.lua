@@ -1459,7 +1459,10 @@ for _, failure in ipairs({ "throw", "invalid future" }) do
     t.wait_until(function()
       return pending ~= nil
     end, 5000)
-    applied(await(state:select_node({ a }, false)))
+    local selected = applied(await(state:select_node({ a }, false)))
+    t.wait_until(function()
+      return state._native:applicable(state:snapshot(), selected.revisions.commit)
+    end, 5000)
     local target = state:snapshot():id()
     t.assert_true(target ~= original)
     mode = "failed"

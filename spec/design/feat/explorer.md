@@ -46,6 +46,26 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   其他错误直接报告，过期导航停止重试。文件修改操作继续使用固定 Resource，不采用该路径重试。
   Reveal 将展开的祖先记录到 Treeview expansion invalidation；与 loading/selection 更新合并发布时仍须投影目标行，
   不能因沿用折叠布局而把刚设置的 cursor 回退到父目录。
+- 连续 root 与 annotation 导航按输入顺序执行，不把多次相对移动折叠成同一旧 frame 的目标。
+  `navigate_parent` 在 native owner 执行时读取当前 root；上一请求完成而投影尚未发布时仍能继续上移。
+  Annotation 查询按前一步完成后的光标继续；纯 cursor frame 发布不丢弃结果，布局改变、新 root/reveal、
+  用户另行移动光标或原 view 关闭则丢弃迟到结果与尚未执行的旧步骤。
+- Normal 展开、递归切换、折叠和标记直接进入 native owner 的有界队列，不额外等待 Lua frame 发布。
+  每次按键捕获 frame 与 occurrence；owner 按提交顺序读取当前展开/选择/用途，`hh` 可继续折叠上级，
+  `ll`、`zz`、`<Tab><Tab>` 保留两次切换，`<Tab>j<Tab>` 保留两个按键各自的目标。
+  折叠遮住旧目标时从当前可见祖先继续；普通光标移动不会把已提交标记重定向到新行。
+  执行前校验所属 state/data、root/display、节点及祖先 identity/关系；新视图上下文和资源替换不能借旧输入修改。
+  Visual 仍校验捕获范围与 toggle 的 marked 值，文件操作保持原有准备及身份校验。
+  view 关闭后不再有延迟队列提交或 surface 回调；已交给 owner 的输入按既有提交顺序完成。
+  Explorer keymap 统一报告 range_action 的失败，避免 surface 与业务入口重复提示。
+- Workspace 来自 Widget 构造时的 root（默认是 editor workspace），与之后请求的 display root 分开。
+  替代尚未完成的 opening 时保留该 workspace；shared session 沿用原有 workspace，shared data 的独立 state 各自固定 workspace。
+  已观察到的 workspace 传入 Resource，保留 occurrence 与解析后的路径；共享 owner 在 opening 期间 rename 不丢失该身份。
+  冷启动直接下降到子目录时，可从这次观察的 Source ancestry 取得 workspace Resource；包含 `..` 的 workspace 前缀仍由 filesystem 解析。
+  workspace 之后的路径若包含 `..`，则不能用下降层数推断 ancestor，尤其不能把 symlink 的物理父目录误当成 workspace。
+  Native 只接受同一 Filetree 的 workspace Resource；未知 workspace 使用显式路径，绑定已知 ancestor 或保留 fallback，不额外执行 IO。
+  未观察到或暂时缺失的 workspace 不阻塞有效 display root 的打开。
+  连续切根使旧 opening 上排队的导航失效；迟到成功只释放旧 session，迟到失败不覆盖当前状态。
 - Workspace 保存 occurrence 与路径 fallback。Root 删除后明确提示，可返回父目录；workspace 同名重建后可重新定位，
   新资源不继承旧 occurrence。
 - 打开、复制路径等动作在输入时捕获 Resource/frame，后来的光标移动不改变本次目标。Visual 通过 Treeview
@@ -77,6 +97,13 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   用户改选后再清空仍拒绝，节点替换、路径或祖先关系变化也拒绝；无关目录补载、metadata 更新不因全局 revision 变化误拒绝。
   操作始终绑定原 Resource，不重新捕获当前光标或自动重放；Filetree 在 IO 边界继续校验 filesystem identity。
   Visual `<Tab>` 切换范围选择并保留用途；Visual `c`（别名 `y`）/ `x` 将范围并入已有选区并刷新 stamp。
+- 单项 Copy/Move to path 完全成功后 reveal 结果的 target 路径，包含 Space 菜单入口；目录使用整棵子树的
+  最终 root result，不将结果中的 source NodeId 当作复制后的目标。目标在当前 root 外时切到目标父目录。
+  preparation、IO 与目标解析期间，后来的 cursor、root、display、expansion 输入或离开原窗口均撤销自动跟随；
+  即使用户移走后又返回也不恢复。文件移动后的 native 自动 cursor fallback 不视作新的输入。
+  原 view 关闭、session dispose、新任务开始、取消、失败、skip、部分完成或同步失败时不跟随。
+  已有 completion callback 在任务解锁后照常执行，其新导航优先；bulk、directory 与 paste 请求不自动跟随。
+  配置的 input/confirmation surface 打开时使用 `noautocmd`，正常输入框的临时焦点切换不撤销跟随。
 - `p` 只对 copy/cut 生效；取得 selection lock 后从已提交状态固定用途，与 Ready 源项配对。Treeview 的 subtree roots、
   self-only 和任务清理遵循其契约，不能按可见行猜测完整目录范围。
 - 消费逻辑选区的只读动作要求源项完整；native `prepare_selection` 在一次 owner action 中检查选区：完整时返回

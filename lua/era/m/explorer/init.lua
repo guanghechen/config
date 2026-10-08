@@ -1,8 +1,10 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.explorer" ---@type string
+
 ---@class era.m.explorer.__mods
 local __mods = {
   Action = "era.m.explorer.action",
-  Node = "era.m.explorer.node",
-  Tree = "era.m.explorer.tree",
+  Session = "era.m.explorer.session",
   View = "era.m.explorer.view",
   Widget = "era.m.explorer.widget",
 }
@@ -10,9 +12,8 @@ local __mods = {
 ---@class era.m.explorer
 ---@field public __mods                 era.m.explorer.__mods
 ---@field public Action                 era.m.explorer.Action
----@field public Node                   era.m.explorer.Node
----@field public Tree                   era.m.explorer.Tree
----@field public View                   era.m.explorer.View
+---@field public Session                era.m.explorer.Session
+---@field public View                   table
 ---@field public Widget                 era.m.explorer.Widget
 local M = setmetatable({
   __mods = __mods,

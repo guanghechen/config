@@ -12,6 +12,62 @@ t:patch_table(era.dressing.whichkey, "state", State)
 local Input = assert(loadfile("lua/era/dressing/whichkey/input.lua"))()
 t:patch_table(era.dressing.whichkey, "input", Input)
 
+---@return integer
+local function new_buffer()
+  local previous_bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    State.disable()
+    Input.detach(bufnr, "n")
+    State.buf_trees[bufnr] = nil
+    State.suspended[bufnr .. ":n"] = nil
+    if vim.api.nvim_buf_is_valid(previous_bufnr) then
+      vim.api.nvim_set_current_buf(previous_bufnr)
+    end
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  vim.api.nvim_set_current_buf(bufnr)
+  return bufnr
+end
+
+t:test("suspend, resume and disable preserve a mapping that replaced a trigger", function()
+  local bufnr = new_buffer()
+  State.enable()
+  t.assert_eq("wk-trigger", vim.fn.maparg("z", "n", false, true).desc)
+  State.suspend(bufnr, "n")
+  t.assert_nil(vim.fn.maparg("z", "n", false, true).desc, "owned trigger is removed")
+  State.resume(bufnr, "n")
+  t.assert_eq("wk-trigger", vim.fn.maparg("z", "n", false, true).desc, "owned trigger can resume")
+
+  local calls = 0
+  ---@return nil
+  local callback = function()
+    calls = calls + 1
+  end
+  vim.keymap.set("n", "z", callback, { buffer = bufnr, nowait = true, desc = "Explorer: recursive expansion" })
+  State.suspend(bufnr, "n")
+  t.assert_eq(callback, vim.fn.maparg("z", "n", false, true).callback, "suspend keeps the replacement")
+  State.resume(bufnr, "n")
+  t.assert_eq(callback, vim.fn.maparg("z", "n", false, true).callback, "resume keeps the replacement")
+  State.disable()
+  t.assert_eq(callback, vim.fn.maparg("z", "n", false, true).callback, "disable keeps the replacement")
+  vim.api.nvim_feedkeys("z", "xt", false)
+  t.assert_eq(1, calls, "the native mapping still executes")
+end)
+
+t:test("trigger attachment checks the target buffer instead of the current buffer", function()
+  local bufnr = new_buffer()
+  ---@return nil
+  local callback = function() end
+  vim.keymap.set("n", "z", callback, { buffer = bufnr, nowait = true, desc = "Explorer: recursive expansion" })
+  new_buffer()
+  Input.__bind__(bufnr, "n", "z", "z")
+  local mapping = State.__get_keymap__(bufnr, "n", "z")
+  t.assert_true(mapping ~= nil and mapping.callback == callback, "the background mapping is preserved")
+end)
+
 t:test("exact native mapping is resolved after the which-key tree was built", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   ---@diagnostic disable-next-line: invisible

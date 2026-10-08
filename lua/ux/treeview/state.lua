@@ -7,6 +7,7 @@ local Task = require("ux.treeview.task")
 ---@class ux.treeview.State
 ---@field _native                       yoz.ux.treeview.State
 ---@field _data                         ux.treeview.Data
+---@field _navigation_sequence          integer
 local M = {}
 M.__index = M
 
@@ -14,7 +15,7 @@ M.__index = M
 ---@param native                        yoz.ux.treeview.State
 ---@return ux.treeview.State
 function M.new(data, native)
-  return setmetatable({ _data = data, _native = native }, M)
+  return setmetatable({ _data = data, _native = native, _navigation_sequence = 0 }, M)
 end
 
 ---@return yoz.ux.treeview.Frame
@@ -37,7 +38,29 @@ end
 ---@param context                       ?ux.treeview.IContext
 ---@return stl.c.Future
 function M:dispatch(command, context)
+  local kind = command.kind
+  if
+    kind == "set_cursor"
+    or kind == "navigate"
+    or kind == "set_root"
+    or kind == "set_display"
+    or kind == "set_expanded"
+    or kind == "toggle_expanded"
+  then
+    self:note_navigation()
+  end
   return async.run(self._native:dispatch(command, context))
+end
+
+---@return nil
+function M:note_navigation()
+  -- Input intent must survive ABA and remain distinct from automatic cursor fallback.
+  self._navigation_sequence = self._navigation_sequence + 1
+end
+
+---@return integer
+function M:navigation_sequence()
+  return self._navigation_sequence
 end
 
 ---@param root                          ux.treeview.IRoot
