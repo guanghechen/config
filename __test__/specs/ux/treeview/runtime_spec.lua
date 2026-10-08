@@ -1,0 +1,1509 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.ux.treeview.runtime" ---@type string
+
+local harness = require("__test__.support.harness")
+local bootstrap = require("__test__.support.bootstrap")
+local t = harness.new("ux.treeview.runtime")
+local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
+local native = assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))()
+bootstrap.with_yoz(t, native)
+bootstrap.with_stl(t, {
+  c = { Future = require("stl.c.future") },
+  nvim = { fn = require("stl.nvim.fn") },
+  reporter = {
+    error = function(options)
+      error(options.message)
+    end,
+  },
+})
+local treeview = require("ux.treeview")
+
+---@param future                        stl.c.Future
+---@return any
+local function await(future)
+  t.wait_until(function()
+    return future:is_done()
+  end, 5000, "Treeview Future did not finish")
+  t.assert_false(future:is_failed(), future:get_error())
+  return future:get_result()
+end
+
+---@param value                         any
+---@return any
+local function applied(value)
+  t.assert_eq("Applied", value.kind, vim.inspect(value))
+  return value
+end
+
+---@return ux.treeview.Data, ux.treeview.State, string, string
+local function fixture()
+  local data = treeview.new_data()
+  applied(await(data:import({
+    { key = "root", label = "root", can_expand = true },
+    { key = "a", parent = "root", label = "alpha" },
+    { key = "b", parent = "root", label = "beta" },
+  })))
+  local source = data:source()
+  local state = await(data:create_state({ kind = "children_of", node = source:id("root") }))
+  t.assert_eq("table", type(state), vim.inspect(state))
+  return data, state, source:id("a"), source:id("b")
+end
+
+t:test("an empty scratch buffer transfers to the view without entering another buffer", function()
+  local _, state = fixture()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_set_option_value("filetype", "custom_tree", { buf = bufnr })
+  vim.api.nvim_win_set_buf(0, bufnr)
+  local enters = 0
+  local group = vim.api.nvim_create_augroup("TreeviewBufferTransferTest", { clear = true })
+  t:defer(function()
+    vim.api.nvim_del_augroup_by_id(group)
+  end)
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = group,
+    callback = function()
+      enters = enters + 1
+    end,
+  })
+  local view = treeview.attach(state, { bufnr = bufnr, keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  t.assert_eq(bufnr, view.bufnr)
+  t.assert_eq("custom_tree", vim.api.nvim_get_option_value("filetype", { buf = bufnr }))
+  t.assert_eq(0, enters)
+  view:detach()
+  t.assert_false(vim.api.nvim_buf_is_valid(bufnr))
+end)
+
+t:test("buffer transfer rejects existing contents before claiming the surface", function()
+  local _, state = fixture()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "keep this content" })
+  vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+  local ok = pcall(treeview.attach, state, { bufnr = bufnr, keymaps = false })
+  t.assert_false(ok)
+  t.assert_eq("keep this content", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1])
+end)
+
+t:test("an empty buffer already owned by another view cannot be transferred", function()
+  local data = treeview.new_data()
+  local state = await(data:create_state({ kind = "forest", nodes = {} }))
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() and not view._busy
+  end, 5000)
+  t.assert_eq(0, view:frame():header().row_count)
+  t.assert_false(pcall(treeview.attach, state, { bufnr = view.bufnr, keymaps = false }))
+  t.assert_true(view:_valid())
+  t.assert_false(pcall(treeview.attach, state, { bufnr = 0, keymaps = false }))
+end)
+
+t:test("source frames coalesce while accepted selection publishes the latest source immediately", function()
+  local data, state, a = fixture()
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() and not view._busy
+  end, 5000)
+  await(view:set_cursor(1))
+  t.wait_until(function()
+    return view._header.cursor == a and not view._busy
+  end, 5000)
+  -- Hold this publication boundary deterministically instead of asserting wall-clock timing.
+  view._source_after = vim.uv.hrtime() + 1000000000
+  local original = view:frame():id()
+  applied(await(data:batch({ { kind = "update", id = a, label = "first" } })))
+  t.wait_until(function()
+    return view._source_timer ~= nil
+  end, 5000)
+  local timer = view._source_timer
+  applied(await(data:batch({ { kind = "update", id = a, label = "latest" } })))
+  view:_poll()
+  t.assert_eq(original, view:frame():id())
+  applied(await(view:select("select_node", true)))
+  t.wait_until(function()
+    return view:frame():node(a).label == "latest" and view:frame():header().summary.known_roots == 1
+  end, 5000)
+  t.assert_nil(view._source_timer)
+  t.assert_true(timer:is_closing())
+
+  view._source_after = vim.uv.hrtime() + 1000000000
+  applied(await(data:batch({ { kind = "update", id = a, label = "closed" } })))
+  t.wait_until(function()
+    return view._source_timer ~= nil
+  end, 5000)
+  timer = view._source_timer
+  view:detach()
+  t.assert_nil(view._source_timer)
+  t.assert_true(timer:is_closing())
+end)
+
+t:test("the first nonempty source frame bypasses a pending display deadline", function()
+  local data = treeview.new_data()
+  applied(await(data:import({ { key = "root", label = "root", can_expand = true } })))
+  local root = data:source():id("root")
+  local state = await(data:create_state({ kind = "children_of", node = root }))
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() and view:frame():header().row_count == 0 and not view._busy
+  end, 5000)
+  view._source_after = vim.uv.hrtime() + 30000000000
+  applied(await(data:batch({ { kind = "insert", key = "first", label = "first", parent = "root" } })))
+  t.wait_until(function()
+    return view:frame():header().row_count == 1 and not view._busy
+  end, 5000, "the first visible content waited for source pacing")
+  t.assert_nil(view._source_timer)
+end)
+
+t:test("active frame preparation still applies backpressure to subsequent provider pages", function()
+  local Future = require("stl.c.future")
+  local pages, commit = 0, nil
+  local pending = Future.new(function(resolve)
+    commit = resolve
+  end)
+  local preparing = false
+  local data = treeview.new_data({
+    read_children = function()
+      pages = pages + 1
+      return { records = { { key = "page-" .. pages, label = "page-" .. pages } }, done = pages == 2 }
+    end,
+  })
+  applied(await(data:batch({ { kind = "insert", key = "root", label = "root", can_expand = true } })))
+  local state = await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
+  local view
+  view = treeview.attach(state, {
+    keymaps = false,
+    prepare_frame = function()
+      if not preparing then
+        preparing = true
+        return pending
+      end
+      return Future.resolve(function() end)
+    end,
+    on_frame = function()
+      if view then
+        view._source_after = 0
+      end
+    end,
+  })
+  view._source_after = 0
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return preparing
+  end, 5000)
+  t.assert_eq("Inspected", await(state:inspect_selection()).kind)
+  t.assert_eq(1, pages, "the provider must wait while the first nonempty frame is being prepared")
+  commit(function() end)
+  t.wait_until(function()
+    return pages == 2 and view:frame() and view:frame():header().row_count == 2 and not view._busy
+  end, 5000)
+end)
+
+t:test("buffer unload revokes pending frame work before deferred surface cleanup", function()
+  local data, state, _, b = fixture()
+  local reject, preparing, closed_on_unload
+  local errors, frames = {}, 0
+  local pending = require("stl.c.future").new(function(_, failed)
+    reject = failed
+  end)
+  local view = treeview.attach(state, {
+    keymaps = false,
+    prepare_frame = function()
+      preparing = true
+      return pending
+    end,
+    on_error = function(error)
+      errors[#errors + 1] = error
+    end,
+    on_frame = function()
+      frames = frames + 1
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return preparing == true
+  end, 5000)
+  vim.api.nvim_create_autocmd("BufUnload", {
+    buf = view.bufnr,
+    once = true,
+    callback = function()
+      closed_on_unload = view:status().closed
+      -- Consumer preparation can finish before the scheduled detach gets a turn.
+      reject("consumer stopped preparing an unloaded surface")
+    end,
+  })
+  vim.api.nvim_buf_delete(view.bufnr, { force = true, unload = true })
+  t.assert_true(closed_on_unload, "an unloading buffer must already be closed to frame callbacks")
+  t.assert_eq(0, #errors, "late preparation reported an error after unload: " .. vim.inspect(errors))
+  t.assert_eq(0, frames)
+  t.wait_until(function()
+    return data._views[view] == nil
+  end, 5000)
+  view:detach()
+  view:detach()
+  applied(await(state:dispatch({ kind = "set_cursor", node = b }, { frame = state:snapshot() })))
+  local replacement = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    replacement:detach()
+  end)
+  t.wait_until(function()
+    return replacement:frame() ~= nil and not replacement:status().preparing
+  end, 5000)
+  t.assert_eq(b, replacement:frame():header().cursor)
+end)
+
+t:test("reentrant watch survives an idle result and explicit unwatch stays removed", function()
+  local async = require("ux.treeview.async")
+  local calls = 0
+  local owner = {
+    _poll = function(self)
+      calls = calls + 1
+      if calls == 1 then
+        async.watch(self)
+      else
+        async.unwatch(self)
+      end
+    end,
+  }
+  t:defer(function()
+    async.unwatch(owner)
+  end)
+  async.watch(owner)
+  t.wait_until(function()
+    return calls >= 2
+  end, 1000)
+  async.run({
+    poll = function()
+      return true, nil
+    end,
+  })
+  vim.wait(50, function()
+    return false
+  end, 50)
+  t.assert_eq(2, calls, "an unrelated request must not revive an explicitly removed watcher")
+end)
+
+t:test("a visible idle view sleeps and native publication wakes it without another Lua request", function()
+  local data, state, a = fixture()
+  local calls, poll = 0, data._poll
+  t:patch_table(data, "_poll", function(self)
+    calls = calls + 1
+    return poll(self)
+  end)
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() and not view._busy
+  end, 5000)
+  vim.wait(100, function()
+    return false
+  end, 10)
+  local idle_calls = calls
+  vim.wait(150, function()
+    return false
+  end, 10)
+  t.assert_eq(idle_calls, calls, "an unchanged visible view must not poll on a timer")
+  local ticket = data._native:batch({
+    base_revision = data:source():revision(),
+    operations = { { kind = "update", id = a, label = "awakened" } },
+  })
+  t.wait_until(function()
+    return view:frame():node(a).label == "awakened"
+  end, 5000, "native publication must wake the sleeping Lua view")
+  local done, result = ticket:poll()
+  t.assert_true(done)
+  applied(result)
+  t.assert_true(calls > idle_calls)
+end)
+
+t:test("closing a notification lease releases capacity before Lua garbage collection", function()
+  local data = treeview.new_data()
+  local descriptors = assert(vim.uv.pipe({ nonblock = true }, { nonblock = false }))
+  t:defer(function()
+    vim.uv.fs_close(descriptors.write)
+    vim.uv.fs_close(descriptors.read)
+  end)
+  local closed = {}
+  for index = 1, 128 do
+    local subscription = data._native:subscribe(descriptors.write)
+    subscription:close()
+    closed[index] = subscription
+  end
+  t.assert_eq(128, #closed)
+end)
+
+t:test("notification readers do not retain a collected Lua owner while native data remains alive", function()
+  local data = treeview.new_data()
+  applied(await(data:import({ { key = "root", label = "root" } })))
+  local retained = data._native
+  local weak = setmetatable({ data, data._notification.subscription, data._notification.reader }, { __mode = "v" })
+  data = nil
+  t.wait_until(function()
+    collectgarbage("collect")
+    return weak[1] == nil and weak[2] == nil and weak[3] == nil
+  end, 5000, "owner collection must close its pipe without waiting for another publication")
+  local source = retained:source()
+  t.assert_eq("root", source:node(source:id("root")).label)
+end)
+
+t:test("a failed notification stream reports once and preserves publication through polling", function()
+  local data, state, a = fixture()
+  local errors = {}
+  t:patch_table(stl.reporter, "error", function(value)
+    errors[#errors + 1] = value.message
+  end)
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() and not view._busy
+  end, 5000)
+  data._notification.subscription:close()
+  t.wait_until(function()
+    return data._notification_failed
+  end, 5000)
+  t.assert_eq(1, #errors)
+  t.assert_true(errors[1]:find("notification stream closed", 1, true) ~= nil)
+  local ticket = data._native:batch({
+    base_revision = data:source():revision(),
+    operations = { { kind = "update", id = a, label = "recovered" } },
+  })
+  t.wait_until(function()
+    return view:frame():node(a).label == "recovered"
+  end, 5000)
+  t.assert_true(ticket:poll())
+  t.assert_eq(1, #errors)
+end)
+
+t:test("owned input, identity, atomic failure, and exact recursive option", function()
+  local data, state, a = fixture()
+  local old = state:snapshot()
+  local input = { { kind = "update", id = a, label = "changed", fields = { path = "old" } } }
+  local future = data:batch(input)
+  input[1].label = "mutated after import"
+  input[1].fields.path = "mutated"
+  applied(await(future))
+  t.assert_eq("changed", data:source():node(a).label)
+  t.assert_eq("old", data:source():node(a).fields.path)
+  t.assert_eq("alpha", old:node(a).label)
+  local invalid = await(state:select_node({ a }, "true"))
+  t.assert_eq("Rejected", invalid.kind)
+  t.assert_eq("InvalidUpdate", invalid.error.code)
+  applied(await(state:select_node({ a }, false)))
+  local inspect = await(state:inspect_selection())
+  t.assert_eq(1, inspect.summary.known_roots)
+  local base = data:source():revision()
+  invalid = await(data:batch({
+    { kind = "update", id = a, label = "not committed" },
+    { kind = "insert", key = "a", label = "duplicate" },
+  }))
+  t.assert_eq("Rejected", invalid.kind)
+  t.assert_eq(base, data:source():revision())
+  t.assert_eq("changed", data:source():node(a).label)
+end)
+
+t:test("viewport guide output is bounded without invalidating the immutable frame", function()
+  local data = treeview.new_data()
+  local records = { { key = "root", label = "root", can_expand = true } }
+  local parent = "root"
+  for index = 1, 256 do
+    local key = "branch" .. index
+    records[#records + 1] = { key = key, parent = parent, label = key, can_expand = true }
+    records[#records + 1] = { key = "sibling" .. index, parent = parent, label = "sibling" }
+    parent = key
+  end
+  for index = 1, 40 do
+    records[#records + 1] = { key = "leaf" .. index, parent = parent, label = "leaf" }
+  end
+  applied(await(data:import(records)))
+  local source = data:source()
+  local state = await(data:create_state({ kind = "children_of", node = source:id("root") }))
+  applied(await(state:set_expanded({ source:id("root") }, true, true)))
+  local frame
+  t.wait_until(function()
+    frame = state:snapshot()
+    return frame:position(source:id("leaf40")) ~= nil
+  end, 5000)
+  local first, last = frame:position(source:id("leaf1")), frame:position(source:id("leaf40"))
+  local ok, error = pcall(frame.rows, frame, first, last)
+  t.assert_false(ok)
+  t.assert_true(tostring(error):find("ResourceLimit", 1, true) ~= nil, tostring(error))
+  t.assert_eq("leaf", frame:rows(first, first).labels[1])
+  t.assert_eq(source:id("leaf40"), frame:node_at(last))
+end)
+
+t:test("nil, empty, and partial render contexts share default geometry", function()
+  local _, state = fixture()
+  local view = state._native:attach()
+  t:defer(function()
+    view:detach()
+  end)
+  local async = require("ux.treeview.async")
+  local frame = state:snapshot()
+  local default = await(async.run(view:plan(nil, frame, nil, nil, true)))
+  local expected = default:lines(0, 2, 1024)
+  t.assert_true(vim.deep_equal({ "    alpha", "    beta" }, expected))
+  for _, context in ipairs({ {}, { separator = "/" }, { indent = 2 }, { slots = 2 } }) do
+    local plan = await(async.run(view:plan(nil, frame, context, nil, true)))
+    local lines = plan:lines(0, 2, 1024)
+    t.assert_true(vim.deep_equal(expected, lines), vim.inspect(context))
+  end
+end)
+
+t:test("dedicated buffers publish body, delta, decorations, and empty sentinel", function()
+  local data, state, a = fixture()
+  local errors = {}
+  local view = treeview.attach(state, {
+    keymaps = false,
+    on_error = function(error)
+      errors[#errors + 1] = error
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000, "initial frame was not published: " .. vim.inspect(errors))
+  t.assert_true(vim.deep_equal({ "    alpha", "    beta" }, vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)))
+  local tick = vim.api.nvim_buf_get_changedtick(view.bufnr)
+  applied(await(state:select_node({ a }, false)))
+  t.wait_until(function()
+    return view:frame():rows(1, 1).marked[1]
+  end, 5000)
+  t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr), "selection must not write body text")
+  applied(await(data:batch({ { kind = "update", id = a, label = "renamed" } })))
+  t.wait_until(function()
+    return vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, true)[1] == "    renamed"
+  end, 5000)
+  t.assert_eq("Delta", view:status().last_plan.mode)
+  t.assert_eq(1, view:status().last_plan.written_rows)
+  applied(await(state:set_root({ kind = "forest", nodes = {} })))
+  t.wait_until(function()
+    return view:status().frame.row_count == 0
+  end, 5000)
+  t.assert_eq(1, vim.api.nvim_buf_line_count(view.bufnr))
+  t.assert_nil(view:frame():node_at(1))
+  t.assert_eq(0, #errors, vim.inspect(errors))
+end)
+
+t:test("native view polling reuses unchanged frames and returns a complete changed frame", function()
+  local data, state, a = fixture()
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  local first = view:frame()
+  local unchanged, error = view._native:poll_frame(first)
+  t.assert_nil(unchanged)
+  t.assert_nil(error)
+  applied(await(data:batch({ { kind = "update", id = a, label = "updated" } })))
+  t.wait_until(function()
+    return view:frame():rows(1, 1).labels[1] == "updated"
+  end, 5000)
+  local changed
+  changed, error = view._native:poll_frame(first)
+  t.assert_eq(view:frame():id(), changed:id())
+  t.assert_eq("updated", changed:rows(1, 1).labels[1])
+  t.assert_nil(error)
+  unchanged, error = view._native:poll_frame(changed)
+  t.assert_nil(unchanged)
+  t.assert_nil(error)
+end)
+
+t:test("frame preparation preserves the old publication through retries and stale results", function()
+  local data, state, a = fixture()
+  local delayed, pending, commits, errors = false, {}, {}, {}
+  local committed_frame
+  ---@param label                       string
+  ---@return fun(frame: yoz.ux.treeview.Frame): nil
+  local function commit(label)
+    return function(frame)
+      committed_frame = frame:id()
+      commits[#commits + 1] = label
+    end
+  end
+  local view = treeview.attach(state, {
+    keymaps = false,
+    prepare_frame = function()
+      if not delayed then
+        return stl.c.Future.resolve(commit("initial"))
+      end
+      return stl.c.Future.new(function(resolve, reject)
+        pending[#pending + 1] = { resolve = resolve, reject = reject }
+      end)
+    end,
+    on_frame = function(frame)
+      t.assert_eq(frame:id(), committed_frame, "decorations must be committed before observers run")
+    end,
+    on_error = function(error)
+      errors[#errors + 1] = error
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  local original, tick = view:frame():id(), vim.api.nvim_buf_get_changedtick(view.bufnr)
+  delayed = true
+  applied(await(data:batch({ { kind = "update", id = a, label = "intermediate" } })))
+  t.wait_until(function()
+    return #pending == 1
+  end, 5000)
+  t.assert_eq(original, view:frame():id())
+  t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr))
+  pending[1].resolve(false)
+  t.wait_until(function()
+    return #pending == 2
+  end, 5000)
+  applied(await(data:batch({ { kind = "update", id = a, label = "latest" } })))
+  pending[2].resolve(commit("stale"))
+  t.wait_until(function()
+    return #pending == 3
+  end, 5000)
+  t.assert_eq(1, #commits, "a superseded preparation must not run its commit")
+  t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr))
+  pending[3].resolve(commit("latest"))
+  t.wait_until(function()
+    return view:frame():node(a).label == "latest"
+  end, 5000)
+  t.assert_eq("latest", commits[2])
+  t.assert_eq("    latest", vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, true)[1])
+
+  local published = view:frame():id()
+  applied(await(data:batch({ { kind = "update", id = a, label = "failed" } })))
+  t.wait_until(function()
+    return #pending == 4
+  end, 5000)
+  pending[4].reject("decoration preparation failed")
+  t.wait_until(function()
+    return #errors == 1
+  end, 5000)
+  t.assert_eq(published, view:frame():id())
+  t.assert_eq("    latest", vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, true)[1])
+  applied(await(data:batch({ { kind = "update", id = a, label = "recovered" } })))
+  t.wait_until(function()
+    return #pending == 5
+  end, 5000)
+  pending[5].resolve(commit("recovered"))
+  t.wait_until(function()
+    return view:frame():node(a).label == "recovered"
+  end, 5000)
+  t.assert_eq(1, #errors)
+end)
+
+t:test("frame preparation rechecks viewport size and ignores detached completions", function()
+  local data = treeview.new_data()
+  local records = { { key = "root", label = "root", can_expand = true } }
+  for index = 1, 40 do
+    records[#records + 1] = { key = "item-" .. index, parent = "root", label = "item-" .. index }
+  end
+  applied(await(data:import(records)))
+  local state = await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  local winnr = vim.api.nvim_open_win(bufnr, true, {
+    relative = "editor",
+    row = 0,
+    col = 0,
+    width = 40,
+    height = 6,
+    style = "minimal",
+  })
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
+  end)
+  local pending, commits = {}, 0
+  local view = treeview.attach(state, {
+    winnr = winnr,
+    keymaps = false,
+    prepare_frame = function(_, _, first, last)
+      return stl.c.Future.new(function(resolve)
+        pending[#pending + 1] = { first = first, last = last, resolve = resolve }
+      end)
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return #pending == 1
+  end, 5000)
+  vim.api.nvim_win_set_config(winnr, { height = 10 })
+  pending[1].resolve(function()
+    commits = commits + 1
+  end)
+  t.wait_until(function()
+    return #pending == 2
+  end, 5000)
+  t.assert_eq(0, commits, "a preparation for the previous viewport must be discarded")
+  t.assert_true(pending[2].last > pending[1].last)
+  pending[2].resolve(function()
+    commits = commits + 1
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  t.assert_eq(1, commits)
+  applied(await(data:batch({ { kind = "update", id = data:source():id("item-1"), label = "changed" } })))
+  t.wait_until(function()
+    return #pending == 3
+  end, 5000)
+  view:detach()
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { "replacement window content" })
+  pending[3].resolve(function()
+    commits = commits + 1
+  end)
+  t.assert_eq(1, commits, "a closed view must not apply late decorations")
+  t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr))
+  t.assert_eq("replacement window content", vim.api.nvim_buf_get_lines(bufnr, 0, 1, true)[1])
+end)
+
+t:test("column length failure preserves the previous source", function()
+  local data = treeview.new_data()
+  applied(await(data:import({ keys = { "x", "y" }, labels = { "X", "Y" }, parents = { 0, 0 } })))
+  local revision = data:source():revision()
+  local result = await(data:import({ keys = { "z", "w" }, labels = { "Z" } }))
+  t.assert_eq("Rejected", result.kind)
+  t.assert_eq(revision, data:source():revision())
+end)
+
+t:test("sparse arrays are rejected before changing source or selection", function()
+  local data, state, a = fixture()
+  applied(await(state:select_node({ a }, false)))
+  local revision = data:source():revision()
+  for _, records in ipairs({
+    { [0] = { key = "bad", label = "bad" } },
+    { [100] = { key = "bad", label = "bad" } },
+    { keys = { [100] = "bad" }, labels = { [100] = "bad" } },
+    { keys = { "bad" }, labels = { "bad" }, parents = { [100] = 0 } },
+  }) do
+    t.assert_eq("Rejected", await(data:import(records)).kind)
+    t.assert_eq(revision, data:source():revision())
+    t.assert_eq(a, data:source():id("a"))
+  end
+  t.assert_eq("Rejected", await(data:batch({ [100] = { kind = "remove", id = a } })).kind)
+  t.assert_eq("Rejected", await(state:select_node({ [100] = a }, false)).kind)
+  t.assert_eq(1, await(state:inspect_selection()).summary.known_roots)
+  local upload = data:begin_import()
+  t.assert_eq("Rejected", upload:append({ [100] = { key = "bad", label = "bad" } }).kind)
+  t.assert_eq("Rejected", await(upload:commit()).kind)
+  local oversized = data:begin_import()
+  t.assert_eq("Rejected", oversized:append({ { key = "large", label = string.rep("x", 2 * 1024 * 1024) } }).kind)
+  t.assert_eq(revision, data:source():revision())
+end)
+
+t:test("List loads a hidden unknown root and activation preserves Tree expansion", function()
+  local calls, activated = 0, nil
+  local data = treeview.new_data({
+    read_children = function()
+      calls = calls + 1
+      return {
+        records = { { key = "branch", label = "branch", can_expand = true, completeness = "complete" } },
+        done = true,
+      }
+    end,
+  })
+  applied(await(data:batch({ { kind = "insert", key = "root", label = "root", can_expand = true } })))
+  t.assert_eq("unknown", data:source():node(data:source():id("root")).completeness)
+  local state = await(data:create_state({ kind = "children_of", node = data:source():id("root") }, { mode = "list" }))
+  local view = treeview.attach(state, {
+    keymaps = false,
+    on_activate = function(_, node)
+      activated = node
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() and view:status().frame.row_count == 1
+  end, 5000)
+  t.assert_eq(1, calls)
+  view:activate()
+  t.assert_eq(data:source():id("branch"), activated)
+  t.assert_false(state:snapshot():rows(1, 1).expanded[1])
+end)
+
+t:test("decoration capacity failure preserves the previous publication", function()
+  local data, state, a = fixture()
+  applied(await(state:set_display({ pattern = "a" })))
+  local errors = {}
+  local view = treeview.attach(state, {
+    keymaps = false,
+    on_error = function(err)
+      errors[#errors + 1] = err
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  local frame, tick = view:frame():id(), vim.api.nvim_buf_get_changedtick(view.bufnr)
+  applied(await(data:batch({ { kind = "update", id = a, label = string.rep("a", 10000) } })))
+  t.wait_until(function()
+    return #errors > 0
+  end, 5000)
+  vim.wait(50, function()
+    return false
+  end)
+  t.assert_eq(1, #errors)
+  t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr))
+  t.assert_eq(frame, view:frame():id())
+  applied(await(data:batch({ { kind = "update", id = a, label = "alpha" } })))
+  t.wait_until(function()
+    return not view:status().error and state._native:applicable(view:frame(), nil)
+  end, 5000)
+end)
+
+t:test("view detach does not cancel an accepted selection command", function()
+  local _, state, a = fixture()
+  local view = treeview.attach(state, {
+    keymaps = false,
+    on_error = function(error)
+      error(error)
+    end,
+  })
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  local future = state:select_node({ a }, true)
+  view:detach()
+  applied(await(future))
+  t.assert_eq(1, await(state:inspect_selection()).summary.known_roots)
+end)
+
+for _, mode in ipairs({ "v", "V", "<C-v>" }) do
+  t:test(mode .. " keeps both UTF-8 endpoints and submits the captured identities", function()
+    local data, state, a, b = fixture()
+    local root = data:source():id("root")
+    local errors = {}
+    local view = treeview.attach(state, {
+      keymaps = false,
+      on_error = function(value)
+        errors[#errors + 1] = value
+      end,
+    })
+    t:defer(function()
+      vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
+      view:detach()
+    end)
+    t.wait_until(function()
+      return view:frame() ~= nil
+    end, 5000)
+    vim.api.nvim_win_set_cursor(view.winnr, { 2, 6 })
+    vim.cmd.normal({ args = { vim.keycode(mode) }, bang = true })
+    vim.api.nvim_win_set_cursor(view.winnr, { 1, 6 })
+    applied(await(data:batch({ { kind = "update", id = a, label = "中" } })))
+    t.wait_until(function()
+      return vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, true)[1] == "    中"
+    end, 5000)
+    t.assert_eq(vim.keycode(mode), vim.api.nvim_get_mode().mode)
+    t.assert_eq(2, vim.fn.getpos("v")[2])
+    t.assert_eq(7, vim.fn.getpos("v")[3])
+    t.assert_eq(4, vim.api.nvim_win_get_cursor(view.winnr)[2])
+    local displayed = view:frame():id()
+    applied(await(data:batch({
+      {
+        kind = "insert",
+        key = "middle",
+        parent = { id = root },
+        position = { before = { id = b } },
+        label = "middle",
+      },
+    })))
+    t.wait_until(function()
+      return state:snapshot():header().row_count == 3
+    end, 5000)
+    t.assert_eq(displayed, view:frame():id())
+    t.assert_eq(2, vim.api.nvim_buf_line_count(view.bufnr))
+    applied(await(view:select("select_node", false)))
+    t.wait_until(function()
+      return view:status().frame.row_count == 3
+    end, 5000)
+    local rows = view:frame():rows(1, 3)
+    t.assert_true(rows.marked[1])
+    t.assert_false(rows.marked[2])
+    t.assert_true(rows.marked[3])
+    t.assert_eq("n", vim.api.nvim_get_mode().mode)
+    t.assert_eq(0, #errors, vim.inspect(errors))
+  end)
+end
+
+t:test("Visual-block preserves virtual columns when metadata outside its range changes", function()
+  local data, state = fixture()
+  applied(await(data:batch({
+    { kind = "insert", key = "c", parent = { id = data:source():id("root") }, label = "gamma" },
+  })))
+  local c = data:source():id("c")
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
+    view:detach()
+  end)
+  local virtualedit = vim.api.nvim_get_option_value("virtualedit", { win = view.winnr, scope = "local" })
+  t:defer(function()
+    vim.api.nvim_set_option_value("virtualedit", virtualedit, { win = view.winnr, scope = "local" })
+  end)
+  vim.api.nvim_set_option_value("virtualedit", "block", { win = view.winnr, scope = "local" })
+  t.wait_until(function()
+    return view:frame() and view:frame():header().row_count == 3
+  end, 5000)
+  vim.api.nvim_win_set_cursor(view.winnr, { 1, 0 })
+  vim.cmd.normal({ args = { vim.keycode("<C-v>20ljo10l") }, bang = true })
+  t.assert_eq(21, vim.fn.virtcol("v"))
+  t.assert_eq(11, vim.fn.virtcol("."))
+  for index = 1, 2 do
+    local anchor, cursor = vim.fn.getpos("v"), vim.fn.getpos(".")
+    local anchor_column, cursor_column = vim.fn.virtcol("v"), vim.fn.virtcol(".")
+    local label = "gamma " .. index
+    applied(await(data:batch({ { kind = "update", id = c, label = label } })))
+    t.wait_until(function()
+      return vim.api.nvim_buf_get_lines(view.bufnr, 2, 3, true)[1] == "    " .. label
+    end, 5000)
+    t.assert_eq(vim.keycode("<C-v>"), vim.api.nvim_get_mode().mode)
+    t.assert_eq(anchor_column, vim.fn.virtcol("v"), "metadata must preserve the block anchor's virtual column")
+    t.assert_eq(cursor_column, vim.fn.virtcol("."), "metadata must preserve the block cursor's virtual column")
+    t.assert_true(vim.deep_equal(anchor, vim.fn.getpos("v")))
+    t.assert_true(vim.deep_equal(cursor, vim.fn.getpos(".")))
+    vim.cmd.normal({ args = { "o" }, bang = true })
+  end
+end)
+
+t:test("partial buffer failure disables input and resynchronizes the complete frame once", function()
+  local data = treeview.new_data()
+  local records = { { key = "root", label = "root", can_expand = true } }
+  for index = 1, 12 do
+    records[#records + 1] = { key = "n" .. index, parent = "root", label = "node" .. index }
+  end
+  applied(await(data:import(records)))
+  local state = await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
+  local errors = {}
+  local view = treeview.attach(state, {
+    keymaps = false,
+    on_error = function(value)
+      errors[#errors + 1] = value
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  local set_lines = vim.api.nvim_buf_set_lines
+  local writes, blocked = 0, nil
+  t:patch_table(vim.api, "nvim_buf_set_lines", function(bufnr, first, last, strict, text)
+    if bufnr == view.bufnr then
+      writes = writes + 1
+      blocked = view:select("select_node", true):get_result()
+      if writes == 2 then
+        error("injected second-splice failure")
+      end
+    end
+    return set_lines(bufnr, first, last, strict, text)
+  end)
+  applied(await(data:batch({
+    { kind = "update", node = "n1", label = "first changed" },
+    { kind = "update", node = "n12", label = "last changed" },
+  })))
+  t.wait_until(function()
+    return writes >= 3 and not view:status().desynced
+  end, 5000)
+  t.assert_eq("Rejected", blocked.kind)
+  t.assert_eq("Reset", view:status().last_plan.mode)
+  t.assert_eq("    first changed", vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, true)[1])
+  t.assert_eq("    last changed", vim.api.nvim_buf_get_lines(view.bufnr, 11, 12, true)[1])
+  t.assert_true(#errors >= 1)
+  t.assert_true(await(state:inspect_selection()).summary.is_empty)
+end)
+
+t:test("an external buffer write invalidates mapping until reset", function()
+  local _, state = fixture()
+  local view = treeview.attach(state, { keymaps = false, on_error = function() end })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  vim.api.nvim_set_option_value("modifiable", true, { buf = view.bufnr })
+  vim.api.nvim_buf_set_lines(view.bufnr, 0, -1, true, { "foreign" })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = view.bufnr })
+  t.assert_nil(view:frame())
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  t.assert_eq("    alpha", vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, true)[1])
+end)
+
+t:test("PrepareSources Pending finishes once and a task alone can request children", function()
+  local Future = require("stl.c.future")
+  local read, resolve = Future.new_with_resolver()
+  local calls = 0
+  local data = treeview.new_data({
+    read_children = function()
+      calls = calls + 1
+      return read
+    end,
+  })
+  applied(await(data:batch({ { kind = "insert", key = "root", label = "root", can_expand = true } })))
+  local root = data:source():id("root")
+  local state = await(data:create_state({ kind = "children_of", node = root }))
+  applied(await(state:select_node({ root }, false)))
+  local task = await(state:lock_selection(5000))
+  local pending = task:prepare_sources()
+  t.assert_eq("Pending", await(pending).kind)
+  t.wait_until(function()
+    return calls == 1
+  end, 5000)
+  resolve({ records = { { key = "child", label = "child" } }, done = true })
+  t.wait_until(function()
+    return data:source():node(root).completeness == "complete"
+  end, 5000)
+  local ready = await(task:prepare_sources())
+  t.assert_eq("Ready", ready.kind, vim.inspect(ready))
+  t.assert_eq(0, ready.subtree_roots:len())
+  t.assert_eq(1, ready.self_only_nodes:len())
+  t.assert_eq("Pending", pending:get_result().kind)
+  applied(await(data:batch({ { kind = "update", id = root, label = "new label" } })))
+  t.assert_eq("root", ready.source:node(root).label)
+  t.assert_eq("root", await(task:prepare_sources()).source:node(root).label)
+  applied(await(task:unlock()))
+end)
+
+t:test("query generations coalesce pending work and retain only the new result set", function()
+  local Future = require("stl.c.future")
+  local data = treeview.new_data({ limits = { concurrent_reads = 1 } })
+  applied(await(data:import({ { key = "old", label = "old" } })))
+  local provider = await(data:create_provider({ kind = "forest" }))
+  local requests, resolvers = {}, {}
+  local query = await(provider:create_query(function(request)
+    requests[#requests + 1] = request
+    local future, resolve = Future.new_with_resolver()
+    resolvers[#resolvers + 1] = resolve
+    return future
+  end))
+  applied(await(query:start({ pattern = "a" })))
+  t.wait_until(function()
+    return #requests == 1
+  end, 5000)
+  applied(await(query:start({ pattern = "ab" })))
+  applied(await(query:start({ pattern = "abc" })))
+  t.wait_until(function()
+    return requests[1].is_cancelled()
+  end, 5000)
+  resolvers[1]({ records = { { key = "stale", label = "stale" } }, done = true })
+  t.wait_until(function()
+    return #requests == 2
+  end, 5000)
+  t.assert_eq("abc", requests[2].pattern)
+  t.assert_nil(data:source():id("stale"))
+  resolvers[2]({ records = { { key = "new", label = "new" } }, done = true })
+  t.wait_until(function()
+    return data:source():id("new") ~= nil
+  end, 5000)
+  t.assert_nil(data:source():id("old"))
+  t.assert_eq("complete", query:info().completeness)
+  local result = data:source():query_result({ kind = "forest" })
+  t.assert_eq("abc", result.pattern)
+  t.assert_eq(query:info().result_generation, result.generation)
+end)
+
+t:test("private chunks retain ownership and publish only on commit", function()
+  local data = treeview.new_data()
+  local upload = data:begin_import()
+  local chunk = { keys = { "root" }, labels = { "root" }, can_expand = { true } }
+  t.assert_eq("NoChange", upload:append(chunk).kind)
+  chunk.labels[1] = "changed by caller"
+  t.assert_eq(0, data:source():len())
+  t.assert_eq("NoChange", upload:append({ keys = { "child" }, labels = { "child" }, parent_keys = { "root" } }).kind)
+  applied(await(upload:commit()))
+  t.assert_eq("root", data:source():node(data:source():id("root")).label)
+  t.assert_eq(2, data:source():len())
+  local revision = data:source():revision()
+  local bad = data:begin_import()
+  t.assert_eq("NoChange", bad:append({ { key = "new", label = "new" } }).kind)
+  t.assert_eq("Rejected", bad:append({ keys = { "x" }, labels = {} }).kind)
+  t.assert_eq("Rejected", await(bad:commit()).kind)
+  t.assert_eq(revision, data:source():revision())
+end)
+
+t:test("provider failures preserve classification for children and queries", function()
+  local cases = {
+    {
+      value = { error = { code = "NotFound", message = "resource absent" } },
+      code = "NotFound",
+      message = "resource absent",
+    },
+    {
+      value = { error = { code = "ProviderError", message = "permission denied" } },
+      code = "ProviderError",
+      message = "permission denied",
+    },
+    { value = { error = "cannot read" }, code = "ProviderError", message = "cannot read" },
+    { thrown = true, code = "ProviderError", message = "provider threw" },
+    {
+      rejected = true,
+      value = "async denied",
+      code = "ProviderError",
+      message = "async denied",
+    },
+    { value = 42, code = "InvalidUpdate" },
+    { value = {}, code = "InvalidUpdate" },
+    { value = { error = { code = "ENOENT", message = "bad code" } }, code = "InvalidUpdate" },
+  }
+  for _, case in ipairs(cases) do
+    local handler = function()
+      if case.thrown then
+        error("provider threw", 0)
+      end
+      if case.rejected then
+        return require("stl.c.future").reject(case.value)
+      end
+      return case.value
+    end
+    local data = treeview.new_data({ read_children = handler })
+    applied(await(data:batch({ { kind = "insert", key = "root", label = "root", can_expand = true } })))
+    local root = data:source():id("root")
+    applied(await(data:request_children({ root })))
+    t.wait_until(function()
+      return data:source():node(root).load_state == "error"
+    end, 5000)
+    local failure = data:source():node(root).error
+    t.assert_eq(case.code, failure.code)
+    if case.message then
+      t.assert_eq(case.message, failure.message)
+    end
+    local query_data = treeview.new_data()
+    local provider = await(query_data:create_provider({ kind = "forest" }))
+    local query = await(provider:create_query(handler))
+    applied(await(query:start({ pattern = "test" })))
+    t.wait_until(function()
+      return query:info().error ~= nil
+    end, 5000)
+    failure = query:info().error
+    t.assert_eq(case.code, failure.code)
+    if case.message then
+      t.assert_eq(case.message, failure.message)
+    end
+  end
+end)
+
+t:test("malformed provider errors still end their reserved read and release a preparing task", function()
+  local Future = require("stl.c.future")
+  local read, fail = Future.new_with_resolver()
+  local data = treeview.new_data({
+    read_children = function()
+      return read
+    end,
+  })
+  applied(await(data:batch({ { kind = "insert", key = "root", label = "root", can_expand = true } })))
+  local root = data:source():id("root")
+  local state = await(data:create_state({ kind = "children_of", node = root }))
+  applied(await(state:select_node({ root }, false)))
+  local task = await(state:lock_selection(5000))
+  t.assert_eq("Pending", await(task:prepare_sources()).kind)
+  fail({ error = { code = "ENOENT", message = "provider error" } })
+  t.wait_until(function()
+    return not state:status().locked
+  end, 5000)
+  t.assert_eq("error", data:source():node(root).load_state)
+  t.assert_eq("InvalidUpdate", data:source():node(root).error.code)
+end)
+
+t:test("List ancestry text remains specific to each root", function()
+  local data = treeview.new_data()
+  applied(await(data:import({
+    { key = "root", label = "root", can_expand = true },
+    { key = "src", parent = "root", label = "src", can_expand = true },
+    { key = "leaf", parent = "src", label = "文.lua" },
+  })))
+  local source = data:source()
+  local outer = await(
+    data:create_state({ kind = "children_of", node = source:id("root") }, { mode = "list", list_text = "ancestry" })
+  )
+  local inner = await(
+    data:create_state({ kind = "children_of", node = source:id("src") }, { mode = "list", list_text = "ancestry" })
+  )
+  local old = outer:snapshot()
+  t.assert_true(vim.deep_equal({ "src", "src/文.lua" }, old:rows(1, 2).labels))
+  t.assert_eq("文.lua", inner:snapshot():rows(1, 1).labels[1])
+  applied(await(data:batch({ { kind = "update", id = source:id("src"), label = "renamed" } })))
+  t.wait_until(function()
+    return outer:snapshot():rows(2, 2).labels[1] == "renamed/文.lua"
+  end, 5000)
+  t.assert_eq("文.lua", inner:snapshot():rows(1, 1).labels[1])
+  t.assert_true(vim.deep_equal({ "src", "src/文.lua" }, old:rows(1, 2).labels))
+  local invalid = await(
+    data:create_state({ kind = "children_of", node = source:id("root") }, { mode = "list", list_text = "unknown" })
+  )
+  t.assert_eq("Rejected", invalid.kind)
+  t.assert_eq("InvalidUpdate", invalid.error.code)
+end)
+
+t:test("directory import refreshes ancestry text in the published buffer", function()
+  local data = treeview.new_data()
+  local records = {
+    { key = "root", label = "root", can_expand = true },
+    { key = "dir", parent = "root", label = "before", can_expand = true },
+    { key = "file", parent = "dir", label = "文.lua" },
+  }
+  applied(await(data:import(records)))
+  local state = await(
+    data:create_state(
+      { kind = "children_of", node = data:source():id("root") },
+      { mode = "list", list_text = "ancestry", show_hidden = false }
+    )
+  )
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  local old = view:frame()
+  records[2].label = "after"
+  local reply = applied(await(data:import(records)))
+  t.wait_until(function()
+    return state._native:applicable(view:frame(), reply.revisions.commit)
+  end, 5000)
+  t.assert_true(vim.deep_equal({ "  after", "  after/文.lua" }, vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)))
+  t.assert_true(vim.deep_equal({ "before", "before/文.lua" }, old:rows(1, 2).labels))
+end)
+
+t:test("attachment installs preparation before the first frame and decoration refresh rejects stale work", function()
+  local _, state = fixture()
+  local pending, commits = {}, 0
+  local view = treeview.attach(state, {
+    keymaps = false,
+    on_attach = function(current)
+      t.assert_nil(current:frame())
+      current._options.prepare_frame = function(_, frame, first, last, rows)
+        t.assert_eq(last - first, #rows.ids)
+        t.assert_eq(frame:node_at(first + 1), rows.ids[1])
+        return require("stl.c.future").new(function(resolve)
+          pending[#pending + 1] = resolve
+        end)
+      end
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return #pending == 1
+  end, 5000)
+  view:refresh_decorations()
+  t.assert_true(view:status().preparing)
+  pending[1](function()
+    commits = commits + 100
+  end)
+  t.wait_until(function()
+    return #pending == 2
+  end, 5000)
+  t.assert_eq(0, commits)
+  pending[2](function()
+    commits = commits + 1
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil and not view:status().preparing
+  end, 5000)
+  local frame = view:frame():id()
+  local changedtick = vim.api.nvim_buf_get_changedtick(view.bufnr)
+  view:refresh_decorations()
+  t.wait_until(function()
+    return #pending == 3
+  end, 5000)
+  pending[3](function()
+    commits = commits + 1
+  end)
+  t.wait_until(function()
+    return not view:status().preparing
+  end, 5000)
+  t.assert_eq(2, commits)
+  t.assert_eq(frame, view:frame():id())
+  t.assert_eq(changedtick, vim.api.nvim_buf_get_changedtick(view.bufnr))
+  t.assert_eq("Swap", view:status().last_plan.mode)
+  view:refresh_decorations()
+  t.wait_until(function()
+    return #pending == 4
+  end, 5000)
+  view:detach()
+  pending[4](function()
+    commits = commits + 100
+  end)
+  t.assert_eq(2, commits, "a detached view cannot publish late viewport work")
+end)
+
+for _, failure in ipairs({ "throw", "reject", "invalid result" }) do
+  t:test(
+    "decoration preparation settles after " .. failure .. " and an explicit refresh retries the same frame",
+    function()
+      local _, state = fixture()
+      local calls, errors, failing = 0, {}, false
+      local view = treeview.attach(state, {
+        keymaps = false,
+        prepare_frame = function()
+          calls = calls + 1
+          if failing then
+            if failure == "throw" then
+              error("injected preparation failure", 0)
+            elseif failure == "reject" then
+              return stl.c.Future.reject("injected preparation failure")
+            end
+            return stl.c.Future.resolve(nil)
+          end
+          return stl.c.Future.resolve(function() end)
+        end,
+        on_error = function(error)
+          errors[#errors + 1] = error
+        end,
+      })
+      t:defer(function()
+        view:detach()
+      end)
+      t.wait_until(function()
+        return view:frame() and not view:status().preparing
+      end, 5000)
+      local frame, tick = view:frame():id(), vim.api.nvim_buf_get_changedtick(view.bufnr)
+      failing = true
+      for attempt = 1, 2 do
+        view:refresh_decorations()
+        t.wait_until(function()
+          return #errors == attempt
+        end, 5000)
+        t.assert_false(view:status().preparing, "a failed request must release its pending state")
+        t.assert_true(view:status().error ~= nil)
+        t.assert_eq(frame, view:frame():id())
+        t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr))
+        local completed = calls
+        view:_poll()
+        vim.cmd.redraw()
+        await(state:inspect_selection())
+        view:_poll()
+        t.assert_eq(completed, calls, "ordinary polling and redraw must not retry a failed preparation")
+      end
+      failing = false
+      view:refresh_decorations()
+      t.wait_until(function()
+        return not view:status().preparing and view:status().error == nil
+      end, 5000)
+      t.assert_eq(frame, view:frame():id())
+      t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr))
+      t.assert_eq("Swap", view:status().last_plan.mode)
+    end
+  )
+end
+
+t:test("a superseded preparation rejection preserves the newer decoration request", function()
+  local _, state = fixture()
+  local pending, errors, delayed, commits = {}, {}, false, 0
+  local view = treeview.attach(state, {
+    keymaps = false,
+    prepare_frame = function()
+      if not delayed then
+        return stl.c.Future.resolve(function() end)
+      end
+      return stl.c.Future.new(function(resolve, reject)
+        pending[#pending + 1] = { resolve = resolve, reject = reject }
+      end)
+    end,
+    on_error = function(error)
+      errors[#errors + 1] = error
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() and not view:status().preparing
+  end, 5000)
+  delayed = true
+  view:refresh_decorations()
+  t.wait_until(function()
+    return #pending == 1
+  end, 5000)
+  view:refresh_decorations()
+  pending[1].reject("superseded preparation failed")
+  t.wait_until(function()
+    return #pending == 2
+  end, 5000)
+  t.assert_true(view:status().preparing)
+  t.assert_nil(view:status().error)
+  t.assert_eq(0, #errors)
+  pending[2].resolve(function()
+    commits = commits + 1
+  end)
+  t.wait_until(function()
+    return not view:status().preparing
+  end, 5000)
+  t.assert_eq(1, commits)
+end)
+
+t:test("retargeting a plan re-prepares row-dependent features after selection changes", function()
+  local _, state, a = fixture()
+  local pending, committed, delayed = {}, {}, false
+  local view = treeview.attach(state, {
+    keymaps = false,
+    prepare_frame = function(_, _, _, _, rows)
+      local selected = rows.marked[1]
+      if not delayed then
+        return stl.c.Future.resolve(function() end)
+      end
+      return stl.c.Future.new(function(resolve)
+        pending[#pending + 1] = function()
+          resolve(function(frame)
+            committed[#committed + 1] = { selected, frame:rows(1, 1).marked[1] }
+          end)
+        end
+      end)
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+  delayed = true
+  view:refresh_decorations()
+  t.wait_until(function()
+    return #pending == 1
+  end, 5000)
+  local layout = view:frame():header().layout_revision
+  applied(await(state:select_node({ a }, false)))
+  t.assert_eq(layout, state:snapshot():header().layout_revision)
+  pending[1]()
+  t.wait_until(function()
+    return #pending == 2 or #committed ~= 0
+  end, 5000)
+  t.assert_eq(0, #committed, "old row columns cannot be relabeled as a newer frame")
+  pending[2]()
+  t.wait_until(function()
+    return not view:status().preparing
+  end, 5000)
+  t.assert_true(committed[1][1])
+  t.assert_true(committed[1][2])
+end)
+
+for _, failure in ipairs({ "throw", "invalid future" }) do
+  t:test("retargeted preparation records the current frame after " .. failure, function()
+    local _, state, a = fixture()
+    local pending, calls, errors, mode = nil, 0, {}, "ready"
+    local view = treeview.attach(state, {
+      keymaps = false,
+      prepare_frame = function()
+        calls = calls + 1
+        if mode == "pending" then
+          return stl.c.Future.new(function(resolve)
+            pending = resolve
+          end)
+        elseif mode == "failed" then
+          if failure == "throw" then
+            error("retargeted preparation failed", 0)
+          end
+          return nil
+        end
+        return stl.c.Future.resolve(function() end)
+      end,
+      on_error = function(error)
+        errors[#errors + 1] = error
+      end,
+    })
+    t:defer(function()
+      view:detach()
+    end)
+    t.wait_until(function()
+      return view:frame() and not view:status().preparing
+    end, 5000)
+    local original = view:frame():id()
+    mode = "pending"
+    view:refresh_decorations()
+    t.wait_until(function()
+      return pending ~= nil
+    end, 5000)
+    applied(await(state:select_node({ a }, false)))
+    local target = state:snapshot():id()
+    t.assert_true(target ~= original)
+    mode = "failed"
+    pending(function()
+      error("the old frame cannot commit")
+    end)
+    t.wait_until(function()
+      return #errors > 0
+    end, 5000)
+    t.assert_false(view:status().preparing)
+    local failed_calls = calls
+    view:_poll()
+    vim.cmd.redraw()
+    await(state:inspect_selection())
+    view:_poll()
+    t.assert_eq(failed_calls, calls, "retargeting must not make the failed frame eligible for ordinary retry")
+    t.assert_eq(1, #errors)
+    t.assert_eq(original, view:frame():id())
+    mode = "ready"
+    view:refresh_decorations()
+    t.wait_until(function()
+      return not view:status().preparing and view:status().error == nil
+    end, 5000)
+    t.assert_eq(target, view:frame():id())
+    t.assert_true(view:frame():rows(1, 1).marked[1])
+  end)
+end
+
+t:test("failed attachment releases the view and restores its original buffer", function()
+  local data, state = fixture()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local attached
+  local ok, failure = pcall(treeview.attach, state, {
+    keymaps = false,
+    on_attach = function(view)
+      attached = view
+      error("attachment rejected", 0)
+    end,
+  })
+  t.assert_false(ok)
+  t.assert_true(tostring(failure):find("attachment rejected", 1, true) ~= nil)
+  t.assert_true(attached:status().closed)
+  t.assert_eq(nil, next(data._views))
+  t.assert_eq(bufnr, vim.api.nvim_get_current_buf())
+end)
+
+t:run()

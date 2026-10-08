@@ -288,6 +288,7 @@ Ready 同时固定 `cleanup_context`；准备阶段的外部结构变化使原�
   切换或交换待显示 frame 前捕获范围，持有对应 frame 至事务处理结束。旧 frame 无持有者后释放。
 - Lua `view:range_action(submit)` 复用此生命周期，将捕获的 frame、1-based first/last 与 visual 标志
   传给上层 callback；上层返回 Future，不自行交换 frame 或重建 Visual marks。
+  可传第二参数 `false` 将错误报告交给调用方；surface 仍完成相同的提交、Visual 退出与 publication 生命周期。
   `IViewOptions.on_frame(frame)` 在完整 publication 成功后通知上层，用于标题或业务装饰，不接管正文。
 - Visual 期间，改变 layout revision 的 snapshot 只作为本 view 最新待显示项；相同布局的完整 envelope
   可以发布，但必须原子保存/恢复 Visual mode 和两个端点，并屏蔽程序重绘造成的退出/导航事件。

@@ -226,6 +226,11 @@ Selection 查询的信息完整性与业务任务终态分别表达：查询仍�
   以及影响范围判断的 children 完整性变化，使 context 失效。
 - 纯重排、名称和图标、Git/diagnostic metadata、loading/error 状态，以及 root/cursor/viewport
   等浏览变化不使 context 失效；范围之外且不改变上述关系的 topology 更新也不使其失效。
+  仅作为固定源项祖先的目录改变 children 完整性，不改变已捕获源项及其关系，不使 context 失效；
+  被选中或准备所需子树内部的完整性变化仍按原规则校验，祖先 reparent/Remove 仍拒绝。
+  Ready 已捕获为 Complete 的槽位，可在 Job claim 前绑定真实 ReadToken 的封闭刷新资格；
+  只允许该读取的分页完整性变化，不允许新增成员。原本 Unknown/Partial 的槽位不因此获得发现资格，
+  无读取归属的完整性修改仍使 context 失效。
 - Owner 按每次已提交更新的旧/新关系判断影响，将 context 失效与 data/state 一起发布。
   外部相关变化即使随后移回原位置，已失效的 context 也不恢复。
 - 本任务已确认的 move/delete 等会产生预期节点更新。仅在 context 仍有效、owner 已验证任务归属、
