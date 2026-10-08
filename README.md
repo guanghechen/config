@@ -61,6 +61,12 @@ cargo --config .cargo/config.macos.toml build --manifest-path rust/Cargo.toml --
 After changing the SDK, run `node script/build.mjs --force` to avoid reusing cached
 artifacts. The build checks native module loading before deploying either library.
 
+For an isolated source-bound build without deploying to the checkout, use a new
+output directory: `node script/build.mjs --output /tmp/yoz-build --offline`.
+`--root PATH` selects another checkout. Offline builds require cached dependencies.
+The published libraries receive `.build.json` receipts containing native source and
+artifact hashes, the build command and toolchain; Explorer benchmarks verify them.
+
 ### FAQ
 
 * multiple configs
@@ -68,4 +74,3 @@ artifacts. The build checks native module loading before deploying either librar
   ```fish
   alias nvchad='NVIM_APPNAME=nvim-nvchad nvim'
   ```
-
