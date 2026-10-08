@@ -33,16 +33,7 @@ git:
   truncateCopiedCommitHashesTo: 40 # Copy full commit hash (40 chars)
 gui:
   animateExplosion: true # Show explosion animation when nuking working tree
-  authorColors: # Custom colors for commit authors
-    "*": white
-    guanghechen: blue
   border: "rounded" # Rounded window borders
-  branchColorPatterns: # Custom colors for branch name patterns
-    "^(main|master)$": purple
-    "^(user/[^/]+/)?feat": green
-    "^(user/[^/]+/)?feature": green
-    "^(user/[^/]+/)?fix": red
-    "^(user/[^/]+/)?release": blue
   commitAuthorShortLength: 4 # Show 4 chars for author name in compact view
   commitHashLength: 9 # Show 9 chars for commit hash
   commitLength: # Show commit message length indicator
@@ -112,9 +103,18 @@ gui:
       - white
     unstagedChangesColor:
       - red
+    authorColors: # Custom colors for commit authors
+      "*": white
+      guanghechen: blue
+    branchColorPatterns: # Custom colors for branch name patterns
+      "^(main|master)$": purple
+      "^(user/[^/]+/)?feat": green
+      "^(user/[^/]+/)?feature": green
+      "^(user/[^/]+/)?fix": red
+      "^(user/[^/]+/)?release": blue
   timeFormat: "2006-01-02 15:04:05" # Time format for older commits (YYYY-MM-DD HH:mm:SS)
-  useHunkModeInStagingView: true # Start in hunk mode when entering staging view
-  wrapLinesInStagingView: true # Wrap long lines in staging view
+  useHunkModeInDiffView: true # Start in hunk mode when entering staging view
+  wrapLinesInDiffView: true # Wrap long lines in staging view
 keybinding:
   main:
     toggleSelectHunk: '`' # Use backtick to toggle hunk selection
