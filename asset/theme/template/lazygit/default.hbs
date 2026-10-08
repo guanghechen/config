@@ -1,25 +1,26 @@
 # {{name}}
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/v0.66.0/schema/config.json
 
 gui:
-  authorColors:
-    '*': '{{unified.fg2}}'
-    guanghechen: '{{vsc?.textLink_foreground || unified.blue}}'
-  branchColorPatterns:
-    "^(main|master)$": '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
-    "^(user/[^/]+/)?chore": '{{unified.fg4}}'
-    "^(user/[^/]+/)?feat": '{{vsc?.editorGutter_addedBackground || unified.green}}'
-    "^(user/[^/]+/)?feature": '{{vsc?.editorGutter_addedBackground || unified.green}}'
-    "^(user/[^/]+/)?fix": '{{vsc?.editorGutter_deletedBackground || unified.red}}'
-    "^(user/[^/]+/)?refactor": '{{unified.orange}}'
-    "^(user/[^/]+/)?release": '{{vsc?.editorGutter_modifiedBackground || unified.blue}}'
+  colorScheme: {{darken ? 'dark' : 'light'}}
   theme:
     activeBorderColor:
-      - '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
+      - '{{vsc?.tokenControlFlowSpecialKeywords || unified.brightPurple}}'
       - bold
+    authorColors:
+      '*': '{{unified.fg2}}'
+      guanghechen: '{{vsc?.textLink_foreground || unified.brightBlue}}'
+    branchColorPatterns:
+      "^(main|master)$": '{{vsc?.tokenControlFlowSpecialKeywords || unified.brightPurple}}'
+      "^(user/[^/]+/)?chore": '{{vsc ? (darken ? vsc.textMuted : vsc.activityBar_inactiveForeground) : unified.fg2}}'
+      "^(user/[^/]+/)?feat": '{{vsc ? (darken ? vsc.editorGutter_addedBackground : vsc.terminal_ansiGreen) : unified.brightGreen}}'
+      "^(user/[^/]+/)?fix": '{{vsc ? (darken ? vsc.editorGutter_deletedBackground : vsc.terminal_ansiRed) : unified.brightRed}}'
+      "^(user/[^/]+/)?refactor": '{{vsc?.accentOrange || unified.brightOrange}}'
+      "^(user/[^/]+/)?release": '{{vsc?.textLink_foreground || unified.brightBlue}}'
     cherryPickedCommitBgColor:
-      - '{{unified.aqua}}'
+      - '{{vsc?.accentAqua || unified.bg2}}'
     cherryPickedCommitFgColor:
-      - '{{unified.bg0}}'
+      - '{{vsc?.editor_background || unified.fg1}}'
     defaultFgColor:
       - '{{unified.fg2}}'
     inactiveBorderColor:
@@ -27,20 +28,25 @@ gui:
     inactiveViewSelectedLineBgColor:
       - '{{unified.bg2}}'
     markedBaseCommitBgColor:
-      - '{{unified.yellow}}'
+      - '{{vsc?.accentYellow || unified.bg3}}'
     markedBaseCommitFgColor:
-      - '{{unified.bg0}}'
+      - '{{vsc?.editor_background || unified.fg1}}'
     optionsTextColor:
-      - '{{vsc?.tokenFunctionDeclarations || unified.orange}}'
+      - '{{vsc?.tokenFunctionDeclarations || unified.brightOrange}}'
     searchingActiveBorderColor:
-      - '{{vsc?.focusBorder || unified.aqua}}'
+      - '{{vsc?.focusBorder || unified.brightAqua}}'
       - bold
     selectedLineBgColor:
       - '{{unified.bg3}}'
+    selectedLineFgColor:
+      - '{{vsc?.foreground || unified.fg1}}'
+      - bold
     unstagedChangesColor:
-      - '{{vsc?.editorGutter_deletedBackground || unified.red}}'
+      - '{{vsc ? (darken ? vsc.editorGutter_deletedBackground : vsc.terminal_ansiRed) : unified.brightRed}}'
 
 git:
   diffRenderers:
-    - colorArg: always
-      command: delta --paging=never --{{darken ? 'dark' : 'light'}}
+    - command: >-
+        delta --paging=never --{{darken ? 'dark' : 'light'}}
+        --line-numbers --hyperlinks
+        --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"

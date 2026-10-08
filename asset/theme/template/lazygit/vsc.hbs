@@ -1,21 +1,22 @@
 # {{name}}
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/v0.66.0/schema/config.json
 
 gui:
-  authorColors:
-    '*': '{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}'
-    guanghechen: '{{vsc.textLink_foreground}}'
-  branchColorPatterns:
-    "^(main|master)$": '{{vsc.tokenControlFlowSpecialKeywords}}'
-    "^(user/[^/]+/)?chore": '{{(darken ? vsc.editorLineNumber_foreground : vsc.pickerGroup_foreground)}}'
-    "^(user/[^/]+/)?feat": '{{vsc.editorGutter_addedBackground}}'
-    "^(user/[^/]+/)?feature": '{{vsc.editorGutter_addedBackground}}'
-    "^(user/[^/]+/)?fix": '{{vsc.editorGutter_deletedBackground}}'
-    "^(user/[^/]+/)?refactor": '{{vsc.accentOrange}}'
-    "^(user/[^/]+/)?release": '{{vsc.editorGutter_modifiedBackground}}'
+  colorScheme: {{darken ? 'dark' : 'light'}}
   theme:
     activeBorderColor:
       - '{{vsc.tokenControlFlowSpecialKeywords}}'
       - bold
+    authorColors:
+      '*': '{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}'
+      guanghechen: '{{vsc.textLink_foreground}}'
+    branchColorPatterns:
+      "^(main|master)$": '{{vsc.tokenControlFlowSpecialKeywords}}'
+      "^(user/[^/]+/)?chore": '{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}}'
+      "^(user/[^/]+/)?feat": '{{darken ? vsc.editorGutter_addedBackground : vsc.terminal_ansiGreen}}'
+      "^(user/[^/]+/)?fix": '{{darken ? vsc.editorGutter_deletedBackground : vsc.terminal_ansiRed}}'
+      "^(user/[^/]+/)?refactor": '{{vsc.accentOrange}}'
+      "^(user/[^/]+/)?release": '{{vsc.textLink_foreground}}'
     cherryPickedCommitBgColor:
       - '{{vsc.accentAqua}}'
     cherryPickedCommitFgColor:
@@ -37,10 +38,15 @@ gui:
       - bold
     selectedLineBgColor:
       - '{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}'
+    selectedLineFgColor:
+      - '{{vsc.foreground}}'
+      - bold
     unstagedChangesColor:
-      - '{{vsc.editorGutter_deletedBackground}}'
+      - '{{darken ? vsc.editorGutter_deletedBackground : vsc.terminal_ansiRed}}'
 
 git:
   diffRenderers:
-    - colorArg: always
-      command: delta --paging=never --{{darken ? 'dark' : 'light'}}
+    - command: >-
+        delta --paging=never --{{darken ? 'dark' : 'light'}}
+        --line-numbers --hyperlinks
+        --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"

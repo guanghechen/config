@@ -1,21 +1,22 @@
 # {{name}}
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/v0.66.0/schema/config.json
 
 gui:
-  authorColors:
-    '*': '{{unified.fg2}}'
-    guanghechen: '{{unified.blue}}'
-  branchColorPatterns:
-    "^(main|master)$": '{{unified.purple}}'
-    "^(user/[^/]+/)?chore": '{{unified.fg2}}'
-    "^(user/[^/]+/)?feat": '{{unified.green}}'
-    "^(user/[^/]+/)?feature": '{{unified.green}}'
-    "^(user/[^/]+/)?fix": '{{unified.red}}'
-    "^(user/[^/]+/)?refactor": '{{unified.orange}}'
-    "^(user/[^/]+/)?release": '{{unified.blue}}'
+  colorScheme: {{darken ? 'dark' : 'light'}}
   theme:
     activeBorderColor:
       - '{{unified.blue}}'
       - bold
+    authorColors:
+      '*': '{{unified.fg2}}'
+      guanghechen: '{{unified.blue}}'
+    branchColorPatterns:
+      "^(main|master)$": '{{unified.purple}}'
+      "^(user/[^/]+/)?chore": '{{unified.fg2}}'
+      "^(user/[^/]+/)?feat": '{{unified.green}}'
+      "^(user/[^/]+/)?fix": '{{unified.red}}'
+      "^(user/[^/]+/)?refactor": '{{unified.orange}}'
+      "^(user/[^/]+/)?release": '{{unified.blue}}'
     cherryPickedCommitBgColor:
       - '{{unified.bg2}}'
     cherryPickedCommitFgColor:
@@ -37,11 +38,15 @@ gui:
       - bold
     selectedLineBgColor:
       - '{{unified.bg3}}'
+    selectedLineFgColor:
+      - '{{unified.fg1}}'
       - bold
     unstagedChangesColor:
       - '{{unified.red}}'
 
 git:
   diffRenderers:
-    - colorArg: always
-      command: delta --paging=never --{{darken ? 'dark' : 'light'}}
+    - command: >-
+        delta --paging=never --{{darken ? 'dark' : 'light'}}
+        --line-numbers --hyperlinks
+        --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
