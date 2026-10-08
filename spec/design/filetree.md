@@ -180,7 +180,9 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
 - 同一轮刷新同时覆盖祖先与后代时，先对齐祖先，再按当前路径重读后代；初次 List 加载仍可并发读取已发现的目录。
 - 每次扫描固定目录 occurrence、资源 identity、request epoch 和来源。Worker 使用显式遍历栈，
   一个目录取得基路径后复用于其直接 children，不为每条目重走整条祖先链。
-- 枚举和基本 metadata 读取按有界块进行；每页最多 512 项且 owned payload 不超过 1 MiB。
+- 枚举和基本 metadata 读取按有界块进行；首个 page 最多 512 项/1 MiB，后续最多 2,048 项/4 MiB，
+  以保留首批显示速度并减少宽目录反复插入、索引修复与 publication 的成本。
+  Scan staging 或 data retained 余量不足时继续使用 512 项/1 MiB 的小批次，不提高既有硬预算。
   初始化已知成员索引时逐项检查取消，分页枚举也持续检查；取消后释放已取得的暂存和目录句柄。
   页被 owner 消费后才推进下一页，沿用 Treeview publication 背压，不能把完整目录先导出 Lua。
   Surface 仅等待 source 合并 deadline 时允许确认已消费的 source revision，继续分页；实际 frame 准备仍保持背压。
@@ -191,11 +193,13 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   同名观察去重、hardlink 歧义和 rename 对齐仍基于该次捕获与完整观测，不能混入新的 live Source 或可变路径索引。
   Deferred/carry 只持有已计费的观察，进入 page 时再准入输出空间；预算随观察、分页结果和扫描索引各自的 ownership 释放。
   Deferred 容器按 capacity 增长准入，底层存储持续由 Scan 计费，不能因元素移入 page 而提前释放仍保留的槽位费用。
-  每个 Reader 的共享 scan staging 上限保持 32 MiB，page 仍受 512 项/1 MiB 限制；更紧凑的索引不改变全局 data 预算。
+  每个 Reader 的共享 scan staging 上限保持 32 MiB；扩大后续 page 不改变该上限与全局 data 预算。
   Seen 集合与在途结果计入预算；无需为未变化成员复制新的 NodeData 或重新发布 metadata。
 - 初次加载可逐页插入，source 顺序通过 sibling 索引维护。刷新中的新数据可以发布，旧数据保留到完整终态。
   枚举失败、取消或硬预算失败不得把 partial 集合当成完整集合。
-- 条目 metadata 失败不能当作该条目不存在。保留已知有效记录并标记本轮不完整；首次未知条目报告读取错误。
+- `read_dir` 已缓存的条目在 metadata 读取前被删除或 rename，明确的 NotFound 可跳过；
+  只有扫描成功终态才按本轮成员集合删除对应旧项，目录本身的 identity 与读取错误仍须检查。
+  其他条目 metadata 失败不能当作该条目不存在。保留已知有效记录并标记本轮不完整；首次未知条目报告读取错误。
   无法确认缺失的其他旧项也不能在该轮被清除。权限失败可显式重试。
   同一路径、同一 symlink occurrence 的 target 暂时不可确认时，保留最后确认的 target 和 children，
   标记读取错误/不完整；恢复后确认 target 未变时保留 children 的 NodeId 与 selection。
@@ -219,6 +223,10 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
 
 - Rust platform backend 使用原生目录通知；首期用现有依赖或平台 API，不额外引入 watcher package。
   注册失败报告错误并保留手动刷新，不静默切换为全树周期扫描。
+  Linux 经已验证目录的 `/proc/self/fd` 注册 inotify 后立即释放临时目录 fd，监听仍绑定同一 inode；
+  不因继续持有目录 fd 而延迟空根目录的删除通知。
+  Display root 同时监听父目录中的入口名称，处理 cwd/外部句柄仍持有根目录而推迟 self-delete 通知的情况；
+  该辅助监听只匹配根名称与父目录自身事件，其他 sibling 活动不刷新根目录，占用同一 50 个 OS 监听预算。
   Windows 使用 `ReadDirectoryChangesW` 的 overlapped 读取，每个 watch 的 16 KiB buffer 计入预算；
   注册时核对打开目录的 identity，取消后等 pending IO 完成再释放 event、buffer 与 handle。
 - Tree 的刷新兴趣来自可见 views 的展开目录及其入口；List 请求当前浏览范围内的目录。
@@ -236,6 +244,7 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   事件合并窗口仍为 150 ms，每批最多向 owner 交付 512 个 dirty NodeId，目录读取沿用现有并发与排队预算。
 - `watch_status().roots` 表示实际 OS 监听根数，`directories` 表示已覆盖的物理目录兴趣数，
   `covered` 是这些兴趣关联的逻辑 occurrence NodeId 集合。仅用于订阅的根不计入 `directories`。
+  Linux 仅匹配入口名称的父目录辅助监听也不计入 `directories`，仍计入实际 `roots`。
   macOS 的 `limited` 反映实际根预算，不因普通展开目录超过 50 而置位。
 - 目录收起或失去 view 需求时撤销刷新兴趣；再次加入兴趣时强制重读，关闭读取与注册监听之间的竞态窗口。
   无剩余兴趣时释放 OS 订阅，保留的 source 不能被视为持续更新的缓存。
@@ -253,8 +262,10 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   不通过恢复下层回调链完成清理。观察者注册本身不创建 filesystem 兴趣，也不阻止无需求 data 休眠。
   回调重入 Neovim 事件循环并观察到更新版本时，旧 source/watch 发布停止后续交付，不能倒退其他观察者的状态；
   普通任务 effects 保留各自交付，不按 source/watch 的最新版本策略丢弃。
-- macOS FSEvents callback 唤醒 watch controller，控制线程仅在 150 ms 合并 deadline 或待完成工作需要检查时定时等待；
-  没有事件时休眠。Linux/Windows backend 仍使用原有有界轮询读取平台事件。
+- Linux watch controller 同时等待 inotify 与 eventfd；订阅变更、关闭及停止写入 eventfd，
+  事件在进入等待前发生也不会丢失。沿用一个控制线程，空闲时不做 10 ms 周期轮询。
+  macOS FSEvents callback 唤醒 watch controller，两者仅在 150 ms 合并 deadline 或待完成工作需要检查时定时等待；
+  没有事件时休眠。Windows backend 仍使用原有有界轮询读取平台事件。
   任务仍可在没有 view 时发布结果；同一 source revision 不重复发送 publication acknowledgement。
 - Symlink 浏览按每条逻辑祖先链的目标目录 identity 检测循环，允许非祖先方向的别名访问。
   遇到循环保留链接项并报告循环原因，停止该分支递归；不全局去重物理目录从而吞掉其他合法 alias。
@@ -326,7 +337,7 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   同次发现顺序和已公开结果索引固定；不承诺不同执行之间的枚举顺序相同。
 - Item 固定 prepared root、执行时路径、Entry/Signature 与必要父链，可带已捕获的 Resource。
   Cursor 每层持有一个 ReadDir、最多四个预读条目和已加载成员的 bitset；预算失败保留原观测，
-  回收投机预取后只重试尚未执行的条目，不能跳过失败准入的目录项。
+  不执行未成功准入的目录项，也不能跳过该项后继续。
   已加载成员必须保持原名称、身份和 occurrence；Complete 目录出现新成员、已知成员消失或重复、
   目录身份变化等使任务 Stale。Symlink 仍操作链接本身，不作为递归源跟随。
 - staging、已有目录合并、递归 delete 和跨 filesystem move 共用该 Cursor。
@@ -415,22 +426,13 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   同一 Job 按已打开源文件的大小分配并复用 8 KiB–1 MiB copy buffer，遇到更大文件才扩容，读取仍持续到 EOF；
   同时缓存最近一个目标父目录 fd。缓存以路径及目标 identity 匹配，每次 IO 与发布仍复验
   pathname，不能借缓存重绑已替换的目录。buffer 与缓存路径计入 retained 预算，在 Job runner 结束时释放。
-  macOS/Linux 的目录 staging 对连续不超过 64 KiB 的普通文件最多预取 4 个只读源 fd；复用现有 4 个 IO workers，
-  文件内容读取和目标修改仍在全进程执行槽内串行完成。预取固定原路径与 Signature，打开时验证 fd 的类型与身份，
-  消费前仍复验路径，父目录与发布检查继续适用；不能把已打开的旧 inode 复制到后来替换的源路径名下。
-  预取不为源文件分配数据 buffer。描述符、metadata、路径与队列 reservation 同时计入单任务剩余预算与 data retained；
-  计费跟随正在使用的 fd，不能在出队时提前释放。队列或预算不足时按原顺序同步打开；预取错误在实际执行时复查。
-  预取挤占后续必需的 buffer/journal/结果空间时，退场本 Job 预取，对尚未完成 IO 的本项按原 signature
-  同步重试一次；该 Job 后续使用同步打开。必需的源、目标、目录枚举、名称观察、watch 与进程管道 fd 分配
-  遇到 EMFILE/ENFILE 时，关闭进程级预取准入，撤销全部 Job 尚未消费的预取，只重试原失败的 fd 分配一次；
-  后续 Job 也使用同步打开，直到进程重启。不重放已完成的创建、复制、发布、trash 或 progress。
-  Writer 已取走的 Input 保留自己的 fd 和计费，不被其他 Job 回收。注册、关闭准入与 Input 单次转移均有同步边界。
-  排队回调仅持 Weak；退场直接取消尚未开始的读取，仅等待正在执行的 raw open，不能占满 IO pool 后等待同一队列。
-  排队输入与 reservation 由可取消的状态槽持有；worker 升级 Weak 或回收器保留协调引用后尚未取得输入时，
-  取消仍直接释放该 payload。协调引用不能延长退场资源的计费；running 输入在发布退场状态前释放。
-  全局回收等待期间不持 registry 锁。不得因投机准备而拒绝原本能按同步路径完成的 Filetree fd 分配。
-  预取不跨目录 frame；进入或结束目录、遍历早停及取消时先撤销未开始的预取，等待正在执行的读取完成并释放 fd，
-  然后读取下一目录、发布或清理输出；所有预取均在任务清理与 terminal 前退场。
+  Linux 普通文件优先通过 `sendfile` 在内核中传输，每块最多 1 MiB，块间检查取消并交付实际进度。
+  不支持该调用时从当前输入/输出 offset 退回 buffered stream；其他 IO 错误仍报告失败。
+  EOF、权限复制、源/目标身份复验、私有文件发布及失败清理沿用相同规则。
+  源文件只在 Job 的串行执行槽内按需打开，不向共享 IO pool 投递逐文件的投机 fd 预取。
+  每项固定原路径与 Signature，打开前校验路径，打开后校验 fd 的类型与身份；复制完成再次复验路径。
+  只持有正在复制的源/目标 fd，退出该项时释放；不保留额外预取 fd、协调队列或全局预取 registry。
+  必需的 fd 或预算不足时报告本次失败，不重放已完成的创建、复制、发布、trash 或 progress。
   macOS 普通文件 copy 完成后复用输出 fd 读取 metadata 与实际名称，再验证目标 pathname 仍指向该 identity；
   读取失败继续按已完成 IO 的同步错误报告，不把文件复制成功改写为 IO 失败。Symlink 保持目录项观测。
   同一目标目录内、无覆盖且不超过 64 KiB 的普通文件可合并 source publication；每批最多 16 项，
@@ -458,7 +460,7 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   在下一项 IO 前准入，容量不足以 `ResourceLimit` 停止新项；已完成前缀仍尝试按上述规则发布。
   Journal 按 256 项固定块保留 basename、parent index、identity、kind 与 ownership，
   permissions/child count 仅为目录保留，避免扩容时同时持有两份完整 ownership vector。
-  私有遍历、captured lineage、bindings、结果、journal、预取与 admission scratch 使用同一 task ledger；
+  私有遍历、captured lineage、bindings、结果、journal 与 admission scratch 使用同一 task ledger；
   copy buffer 和一个目标父目录缓存沿用独立的 data retained 工作集计费。
   目标侧发布目录根，后代保持 Unknown，
   由实际展开、List、reveal 或共享 view 的浏览需求加载，不因 copy 自动构造整棵目标 Source。
@@ -550,7 +552,7 @@ Treeview 的任务准入支持“已准备源项下的子项”：
 | 单 data 排队的目录读取 | 256；其余需求保留在有界 dirty/interest 集合 |
 | 单页 records | 512 项 / 1 MiB，先到者为准 |
 | 单 data 扫描与结果暂存 | 32 MiB，计入 retained 总预算 |
-| 单任务遍历、结果、身份、journal、预取与 admission 暂存 | 共享 32 MiB，计入所属 data 总预算 |
+| 单任务遍历、结果、身份、journal 与 admission 暂存 | 共享 32 MiB，计入所属 data 总预算 |
 | 全进程文件任务数 | 16，包括排队与等待确认任务 |
 | 文件 copy 流式 buffer | 每个 Job 最多 1 MiB，按需分配并复用 |
 | 单 data OS 监听根数 | 50；macOS 根递归覆盖，Linux/Windows 每目录一个 |

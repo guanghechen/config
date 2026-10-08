@@ -47,6 +47,9 @@ impl Budget {
     pub fn used(&self) -> usize {
         self.used.load(Ordering::Relaxed)
     }
+    pub fn remaining(&self) -> usize {
+        self.limit.saturating_sub(self.used())
+    }
     pub fn check(&self) -> Result<()> {
         if self.used() > self.limit {
             Err(Error::limit(

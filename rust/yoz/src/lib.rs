@@ -494,6 +494,37 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
 fn fs_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         (
+            "entry_path",
+            f(
+                lua,
+                |lua, path: LuaString| -> LuaResult<(Option<LuaString>, Option<String>)> {
+                    match fs::entry_path(path.as_bytes().as_ref()) {
+                        Ok(path) => Ok((Some(lua.create_string(path)?), None)),
+                        Err(error) => Ok((None, Some(error))),
+                    }
+                },
+            )?,
+        ),
+        (
+            "path_suffix",
+            f(
+                lua,
+                |lua, (base, path): (LuaString, LuaString)| -> LuaResult<LuaMultiValue> {
+                    match fs::path_suffix(base.as_bytes().as_ref(), path.as_bytes().as_ref()) {
+                        Ok(Some(suffix)) => Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::String(lua.create_string(suffix)?),
+                            LuaValue::Nil,
+                        ])),
+                        Ok(None) => Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, LuaValue::Nil])),
+                        Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::Nil,
+                            LuaValue::String(lua.create_string(error)?),
+                        ])),
+                    }
+                },
+            )?,
+        ),
+        (
             "is_same_file",
             f(
                 lua,

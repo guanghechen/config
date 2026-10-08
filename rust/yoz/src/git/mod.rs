@@ -15,9 +15,10 @@ pub mod word_diff;
 pub use blame::{
     BlameCommit, BlameJob, BlameLine, BlameOptions, BlameSnapshot, BlameSource, start_blame,
 };
+pub(crate) use ignore::CacheSnapshot as IgnoreSnapshot;
 pub use ignore::{IgnoreCache, IgnoreJob, IgnoreReport, IgnoreWarning};
 pub use job::{Outcome, StatusJob, start_status};
-pub(crate) use lua::module;
+pub(crate) use lua::{ignore_snapshot, module, status_snapshot};
 pub use model::{CODES, Entry, Info, Numstat, Numstats, Snapshot, Stage, code_bit};
 pub use status::{Options, collect};
 

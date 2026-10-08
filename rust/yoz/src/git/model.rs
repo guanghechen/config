@@ -154,6 +154,7 @@ pub struct Snapshot {
     pub(crate) commands: usize,
     pub(crate) elapsed_ms: f64,
     directories: HashMap<Vec<u8>, Info>,
+    retained_bytes: usize,
 }
 
 pub fn parent(path: &[u8]) -> Option<&[u8]> {
@@ -184,13 +185,16 @@ impl Snapshot {
             }
             info.finish();
         }
-        Self {
+        let mut result = Self {
             entries,
             numstats,
             directories,
             commands: 0,
             elapsed_ms: 0.0,
-        }
+            retained_bytes: 0,
+        };
+        result.retained_bytes = result.measure_bytes();
+        result
     }
 
     pub fn same_status(&self, other: &Self) -> bool {
@@ -207,6 +211,49 @@ impl Snapshot {
 
     pub fn stats(&self) -> (usize, f64) {
         (self.commands, self.elapsed_ms)
+    }
+
+    pub(crate) fn retained_bytes(&self) -> usize {
+        self.retained_bytes.max(std::mem::size_of::<Self>())
+    }
+
+    fn measure_bytes(&self) -> usize {
+        let entries: usize = self
+            .entries
+            .iter()
+            .map(|(path, entry)| {
+                path.capacity()
+                    + entry.relative.capacity()
+                    + 192
+                    + [
+                        &entry.staged_previous,
+                        &entry.unstaged_previous,
+                        &entry.staged_old,
+                        &entry.staged_new,
+                        &entry.unstaged_old,
+                        &entry.unstaged_new,
+                    ]
+                    .iter()
+                    .map(|value| value.as_ref().map_or(0, Vec::capacity))
+                    .sum::<usize>()
+            })
+            .sum();
+        let directories: usize = self
+            .directories
+            .iter()
+            .map(|(path, info)| {
+                path.capacity() + info.display.capacity() + info.staged_display.capacity() + 128
+            })
+            .sum();
+        let numstats = self.numstats.as_ref().map_or(0, |stats| {
+            stats
+                .staged
+                .keys()
+                .chain(stats.unstaged.keys())
+                .map(|path| path.capacity() + 96)
+                .sum()
+        });
+        entries + directories + numstats + std::mem::size_of::<Self>()
     }
 
     fn untracked_ancestor(&self, path: &[u8]) -> Option<&Entry> {
