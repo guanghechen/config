@@ -1,4 +1,8 @@
-# Tree / Treeview 设计
+# Lua Tree 与 TreeLayout
+
+Status: Design。本文定义现有 `stl.c.Tree` 与 `stl.view.treeview.layout` 的 Lua API。
+文中的 Treeview 均指该纯 layout 工具，其状态边界只约束使用它的 Lua consumers。
+Rust 交互树 `yoz.ux.treeview` 使用独立的 [核心契约](module.md)；新旧 API 关系见 [文档入口](README.md#api-关系)。
 
 ## 目标
 
@@ -7,7 +11,7 @@
 1. `Tree` 维护有序、可变、无环的层级结构。
 2. `Treeview` 将当前可见 tree topology 计算为紧凑、可导航的 `TreeLayout`。
 
-Explorer、Picker、Searcher、Diffview 保留各自的业务状态、node data、render 和 UI 生命周期。
+Picker、Searcher、Diffview 等 Lua consumers 保留各自的业务状态、node data、render 和 UI 生命周期。
 
 ## 数据流
 
@@ -186,7 +190,6 @@ layout:folded_ids(lnum)
 
 公共层不拥有业务状态：
 
-- Explorer：`loaded/expanded/selection/pending transfer/watch`。
 - Picker：`matched/order/selection`。
 - Searcher：request generation、location、replace、visibility。
 - Diffview：collapsed directory set 和 stage-specific state。
