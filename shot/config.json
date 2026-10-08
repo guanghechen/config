@@ -1,5 +1,5 @@
 {
   "version": 1,
   "gui": "~/.local/share/kit/shot/app/Kit Shot.app/Contents/MacOS/kit-shot-gui",
-  "captureShortcut": "Ctrl+Shift+A"
+  "captureShortcut": "Ctrl+Super+A"
 }
