@@ -1,21 +1,22 @@
 # rosepine-dawn
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/v0.66.0/schema/config.json
 
 gui:
-  authorColors:
-    '*': '#545064'
-    guanghechen: '#235965'
-  branchColorPatterns:
-    "^(main|master)$": '#634873'
-    "^(user/[^/]+/)?chore": '#545064'
-    "^(user/[^/]+/)?feat": '#205569'
-    "^(user/[^/]+/)?feature": '#205569'
-    "^(user/[^/]+/)?fix": '#8A344D'
-    "^(user/[^/]+/)?refactor": '#853C3A'
-    "^(user/[^/]+/)?release": '#235965'
+  colorScheme: light
   theme:
     activeBorderColor:
       - '#853C3A'
       - bold
+    authorColors:
+      '*': '#545064'
+      guanghechen: '#235965'
+    branchColorPatterns:
+      "^(main|master)$": '#634873'
+      "^(user/[^/]+/)?chore": '#545064'
+      "^(user/[^/]+/)?feat": '#205569'
+      "^(user/[^/]+/)?fix": '#8A344D'
+      "^(user/[^/]+/)?refactor": '#853C3A'
+      "^(user/[^/]+/)?release": '#235965'
     cherryPickedCommitBgColor:
       - '#F2E9E1'
     cherryPickedCommitFgColor:
@@ -37,11 +38,15 @@ gui:
       - bold
     selectedLineBgColor:
       - '#DFDAD9'
+    selectedLineFgColor:
+      - '#2C283B'
       - bold
     unstagedChangesColor:
       - '#8A344D'
 
 git:
   diffRenderers:
-    - colorArg: always
-      command: delta --paging=never --light
+    - command: >-
+        delta --paging=never --light
+        --line-numbers --hyperlinks
+        --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"

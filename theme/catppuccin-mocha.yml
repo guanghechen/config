@@ -1,23 +1,24 @@
 # catppuccin-mocha
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/v0.66.0/schema/config.json
 
 gui:
-  authorColors:
-    '*': '#BAC2DE'
-    guanghechen: '#89B4FA'
-  branchColorPatterns:
-    "^(main|master)$": '#CBA6F7'
-    "^(user/[^/]+/)?chore": '#BAC2DE'
-    "^(user/[^/]+/)?feat": '#A6E3A1'
-    "^(user/[^/]+/)?feature": '#A6E3A1'
-    "^(user/[^/]+/)?fix": '#F38BA8'
-    "^(user/[^/]+/)?refactor": '#FAB387'
-    "^(user/[^/]+/)?release": '#89B4FA'
+  colorScheme: dark
   theme:
     activeBorderColor:
       - '#CBA6F7'
       - bold
+    authorColors:
+      '*': '#BAC2DE'
+      guanghechen: '#89B4FA'
+    branchColorPatterns:
+      "^(main|master)$": '#CBA6F7'
+      "^(user/[^/]+/)?chore": '#BAC2DE'
+      "^(user/[^/]+/)?feat": '#A6E3A1'
+      "^(user/[^/]+/)?fix": '#F38BA8'
+      "^(user/[^/]+/)?refactor": '#FAB387'
+      "^(user/[^/]+/)?release": '#89B4FA'
     cherryPickedCommitBgColor:
-      - '#313244'
+      - '#181825'
     cherryPickedCommitFgColor:
       - '#CBA6F7'
     defaultFgColor:
@@ -37,11 +38,15 @@ gui:
       - bold
     selectedLineBgColor:
       - '#45475A'
+    selectedLineFgColor:
+      - '#CDD6F4'
       - bold
     unstagedChangesColor:
       - '#F38BA8'
 
 git:
   diffRenderers:
-    - colorArg: always
-      command: delta --paging=never --dark
+    - command: >-
+        delta --paging=never --dark
+        --line-numbers --hyperlinks
+        --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"

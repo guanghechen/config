@@ -1,25 +1,26 @@
 # gruvbox-dark
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/v0.66.0/schema/config.json
 
 gui:
-  authorColors:
-    '*': '#D5C4A1'
-    guanghechen: '#458588'
-  branchColorPatterns:
-    "^(main|master)$": '#B16286'
-    "^(user/[^/]+/)?chore": '#A89984'
-    "^(user/[^/]+/)?feat": '#98971A'
-    "^(user/[^/]+/)?feature": '#98971A'
-    "^(user/[^/]+/)?fix": '#CC241D'
-    "^(user/[^/]+/)?refactor": '#D65D0E'
-    "^(user/[^/]+/)?release": '#458588'
+  colorScheme: dark
   theme:
     activeBorderColor:
-      - '#B16286'
+      - '#D3869B'
       - bold
+    authorColors:
+      '*': '#D5C4A1'
+      guanghechen: '#83A598'
+    branchColorPatterns:
+      "^(main|master)$": '#D3869B'
+      "^(user/[^/]+/)?chore": '#D5C4A1'
+      "^(user/[^/]+/)?feat": '#B8BB26'
+      "^(user/[^/]+/)?fix": '#FB4934'
+      "^(user/[^/]+/)?refactor": '#FE8019'
+      "^(user/[^/]+/)?release": '#83A598'
     cherryPickedCommitBgColor:
-      - '#689D6A'
+      - '#504945'
     cherryPickedCommitFgColor:
-      - '#32302F'
+      - '#EBDBB2'
     defaultFgColor:
       - '#D5C4A1'
     inactiveBorderColor:
@@ -27,20 +28,25 @@ gui:
     inactiveViewSelectedLineBgColor:
       - '#504945'
     markedBaseCommitBgColor:
-      - '#D79921'
+      - '#665C54'
     markedBaseCommitFgColor:
-      - '#32302F'
+      - '#EBDBB2'
     optionsTextColor:
-      - '#D65D0E'
+      - '#FE8019'
     searchingActiveBorderColor:
-      - '#689D6A'
+      - '#8EC07C'
       - bold
     selectedLineBgColor:
       - '#665C54'
+    selectedLineFgColor:
+      - '#EBDBB2'
+      - bold
     unstagedChangesColor:
-      - '#CC241D'
+      - '#FB4934'
 
 git:
   diffRenderers:
-    - colorArg: always
-      command: delta --paging=never --dark
+    - command: >-
+        delta --paging=never --dark
+        --line-numbers --hyperlinks
+        --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
