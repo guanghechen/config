@@ -137,7 +137,7 @@ Outputs:
   entries shown and compression disabled. Modules/theme load before timing; Git/LSP
   collection and plugin startup are excluded. Source hashing and fixture creation warm
   filesystem/page caches. A/B and B/A alternate, without concurrent measurements.
-- `visible_ms` ends when the parent observes the requested content/cursor in a UI
+- `visible_ms` ends when the parent observes the requested content/cursor/selection in a UI
   flush; terminal/GPU rendering is excluded. `ready_ms` waits for expected rows and
   renderer completion, including legacy offscreen icons and native viewport decoration.
   First screen, operation completion and all-row readiness are distinct boundaries.
@@ -161,8 +161,16 @@ Outputs:
   its required redraw. Cancelled queued/running workers remain pending until
   retirement; replacement scans wait for the old slot's cached Scan to be reclaimed.
 - Cursor uses typed j/k; scrolling uses typed Ngg across the viewport. Tab toggles a
-  single entry; Visual selection spans 100 file rows. Selection timing requires the
-  published count and revision to change, and makes no UI-flush claim.
+  single entry; Visual selection spans 100 file rows. A child operation-start notification
+  arms first-flush observation before input is processed. Selection `visible_ms` requires
+  the target filename row and its actual selected/unselected glyph state inside the
+  Explorer window; Visual selection observes its final file row. `ready_ms` separately
+  requires the published count/revision and decoration completion. Legacy ready includes
+  all-row precise icons; native ready includes viewport preparation. These ready boundaries
+  do not describe equivalent first feedback or continuous main-thread blocking.
+  Older records without selection `visible_ms` keep that metric unavailable; the report
+  never substitutes their ready values. Start/finish notifications add no parent readiness
+  RPCs during measurement, and the existing tick-gap/CPU measurements remain separate.
 - `active_loading` uses a fresh native process per sample and mode. It injects typed `j`
   only while the branch reports Loading and the visible frame is applicable, and requires
   the cursor publication to complete during Loading. The parent separately observes the
@@ -188,10 +196,13 @@ Outputs:
   and destination normally share the displayed directory; the destination sorts after
   the source. The expanded-source case loads its children before timing; the outside
   case copies into a sibling of the display root. These two cases make no destination
-  UI-flush claim, because the output is offscreen or outside the displayed tree.
+  UI-flush claim, because the output is initially offscreen or outside the displayed tree.
   `job_ms` ends at native terminal
   notification or the legacy copy return; throughput divides verified bytes/files by
-  this interval. `ready_ms` includes publication and native result draining/unlock.
+  this interval. `ready_ms` includes publication and native result draining/unlock,
+  plus the native completion cursor on the target. An outside native copy follows the
+  destination parent; legacy copy keeps its initial root. Their ready endpoints therefore
+  include different navigation work; compare `job_ms` for IO throughput.
   Native copies also report `selection_unlocked_ms`, `session_idle_ms` and
   `frame_ready_ms`: the first checks after terminal delivery that observe an unlocked
   selection, an idle Session, and the expected rows with current data/selection revisions.
@@ -2087,3 +2098,47 @@ separate `before-profile.log` / `after-profile.log`, `zero-recheck.json`,
 `descendant-placeholder-red.log` and `descendant-placeholder-final.log`.
 Early draft-driver and intermediate-source samples are not pooled with these
 final-source results.
+
+
+**Linux optimization validation, 2026-10-08**
+
+The follow-up comparison uses native baseline `13e2442bb`, five fresh processes per
+case/mode, three repeats, warm local ext4 on WSL2, and source-bound release modules.
+The before and after matrices ran sequentially, not as alternating paired samples.
+The final native input is `53bd3f1930d20aa229c53e58c03129f070e68cbd3b0932b61ec510375a8dfbbc`.
+
+| Tree metric, ms | Before | Final |
+| --- | ---: | ---: |
+| 10k complete open | 206.761 | 141.397 |
+| 50k first content flush | 12.218 | 12.909 |
+| 50k complete open | 3430.214 | 1581.009 |
+| 50k refresh | 388.777 | 283.966 |
+| 64 MiB copy Job | 16.917 | 14.459 |
+| 10k four-byte files, copy Job | 336.425 | 335.973 |
+
+Bounded larger follow-up scan pages reduce repeated insertion/index work while
+the first page stays small. Linux copy uses cancellable sendfile chunks with
+offset-preserving buffered fallback. Small-file copy throughput remains similar;
+the measurements do not establish universal startup, idle or platform superiority.
+
+The final eleven-case matrix passes Tree/List browsing, loading input/cancellation,
+idle, watch churn, five 100-cycle soaks, full-config operations, and Job/exit UI.
+Earlier expanded coverage also passes real vtsls integration. Dedicated probes
+verify repeated annotation/parent input, 520 prepared leaf copies across an unchanged
+refresh, and automatic empty-root removal with cwd pinned to the removed directory.
+Linux parent entry watches share the 50-root budget and ignore unrelated siblings.
+The formerly conservative ancestor-only completeness invalidation described above
+is now narrowed; selected-subtree and ancestor topology guards remain enforced.
+
+Validation: 583 Rust tests passed with 28 explicit ignores,
+286 Lua cases across 39 Explorer/UX suites passed, and three cross-volume
+Rust cases passed. The symlink capture test forces a full redraw after attaching
+its recorder; an ordinary redraw can omit unchanged rows already painted before
+recording. Git setup explicitly exposes its ignored fixture, and Job cancellation
+uses a 50k-file fixture with a pre-cancel liveness assertion. Windows GNU checking
+passes with existing platform unused/dead-code warnings; native Windows/macOS
+runtime acceptance was not run here.
+
+Detailed raw results and reproduction commands are preserved locally in
+`/tmp/explorer-optimization-20261008/before-matrix/` and
+`/tmp/explorer-optimization-20261008/final-matrix/`.

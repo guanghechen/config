@@ -14,6 +14,17 @@ Status: Design。本文定义 Treeview 命令、异步结果与 children 读取�
 - Explorer 的文件任务及其选区锁继续遵循业务契约，Treeview queue 不定义 copy/move/delete 的执行策略。
 - Provider 查询输入的替换与结果提交遵循 [query 契约](query.md)；查询工作可合并，用户标记命令仍按序提交。
 
+Lua `State:navigation_sequence()` 观察同一 wrapper 上显式提交的导航意图。`set_cursor`、`navigate`、
+`set_root`、`set_display`、`set_expanded` 与 `toggle_expanded` 在 dispatch 时推进 sequence，
+包括同值请求和之后被拒绝的请求；多个 view 共用该序列。Native 自动 cursor fallback、frame publication、
+selection inspection 与任务清理不推进它。上层可用它撤销迟到的 UI 跟随，不能把它当作 native revision
+或提交成功证明。绕过 Lua dispatch 的 native 输入可先调用 `State:note_navigation()` 记录意图；
+该序列只供上层检查迟到回调，不取消已排队的命令。Explorer fold 使用此入口，root/reveal 队列的
+替代关系继续由业务层独立的 navigation generation 管理。业务导航在入队时记录意图，不等到
+异步 annotation 查询或前一请求完成后才记录，避免旧的完成跟随覆盖正在等待的新输入。
+Widget 也在接收有效 display 切换或 preference 通知时记录，不等待延迟 dispatch；重复通知和
+List 模式下无效的 compression 切换沿用现有去重，不产生新导航意图。
+
 ## 单个队列项
 
 1. 入队时固定命令输入、action scope 与 context；行输入持有实际显示的 frame，直到命令处理结束。

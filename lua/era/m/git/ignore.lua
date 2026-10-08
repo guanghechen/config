@@ -8,6 +8,7 @@ local workspace = nil ---@type string|nil
 ---@class era.m.git.ignore
 local M = {}
 M.o_refreshed = stl.c.Observable.from_value({}) ---@type stl.c.Observable<string[]>
+M.o_invalidated = stl.c.Observable.from_value(0) ---@type stl.c.Observable<integer>
 
 ---@return yoz.git.IgnoreCache
 local function current_cache()
@@ -24,6 +25,12 @@ function M.clear()
   if cache then
     cache:clear()
   end
+  M.o_invalidated:next(M.o_invalidated:snapshot() + 1)
+end
+
+---@return yoz.git.IgnoreCache
+function M.snapshot()
+  return current_cache()
 end
 
 ---@param filepath                      string

@@ -14,9 +14,7 @@ bootstrap.with_runtime(t, {
   },
   yoz = {
     path = {
-      basename = function(filepath)
-        return filepath
-      end,
+      basename = vim.fs.basename,
     },
   },
 })
@@ -79,6 +77,34 @@ t:test("get_file_icon: empty filetype skips automatic detection", function()
 
   Fileicon.get_file_icon(filename)
   t.assert_eq(1, detect_calls, "missing filetype should use automatic detection")
+end)
+
+t:test("absolute icon paths remain usable when cwd is unavailable", function()
+  local directory = assert(vim.uv.cwd()) .. "/FileiconProbe"
+  local unknown = directory .. "/__unknown_fileicon_extension__.unrecognized"
+  local extension_icon, extension_group = Fileicon.get_extension_icon(unknown)
+  t:patch_table(vim.uv, "cwd", function()
+    return nil
+  end)
+
+  local expected_icon, expected_group = Fileicon.get_filetype_icon("lua")
+  local icon, group = Fileicon.get_file_icon(directory .. "/example.lua")
+  t.assert_eq(expected_icon, icon)
+  t.assert_eq(expected_group, group)
+
+  expected_icon, expected_group = Fileicon.get_filetype_icon("cpp")
+  icon, group = Fileicon.get_file_icon(directory .. "/example.C")
+  t.assert_eq(expected_icon, icon, "filetype matching retains the filename's case")
+  t.assert_eq(expected_group, group)
+
+  expected_icon, expected_group = Fileicon.get_file_icon(unknown, "")
+  icon, group = Fileicon.get_file_icon(unknown)
+  t.assert_eq(expected_icon, icon)
+  t.assert_eq(expected_group, group)
+
+  icon, group = Fileicon.get_extension_icon(unknown)
+  t.assert_eq(extension_icon, icon)
+  t.assert_eq(extension_group, group)
 end)
 
 t:run()

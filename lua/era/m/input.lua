@@ -1,5 +1,8 @@
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/input.lua
 
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.input" ---@type string
+
 ---@alias era.m.input.InputTypeEnum
 ---| "text"
 ---| "confirmation"
@@ -74,17 +77,35 @@ end
 ---@return integer winnr
 function M.open(opts, on_confirm)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local parent_cursor = vim.api.nvim_win_get_cursor(parent_winnr) ---@type integer[]
-  local parent_row = parent_cursor[1] ---@type integer
+  local parent_row = vim.api.nvim_win_call(parent_winnr, vim.fn.winline) ---@type integer
 
   opts = opts or {} ---@type era.m.input.IOptions
   local inputtype = opts.inputtype or "text" ---@type era.m.input.InputTypeEnum
-  local prompt = inputtype == "confirmation" and "? (y/n)  " or "" ---@type string
-  local title = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
+  local prompt = inputtype == "confirmation" and "? (y/N)  " or "" ---@type string
+  local title = opts.prompt or "Input" ---@type string
+  local description = {} ---@type string[]
+  if inputtype == "confirmation" then
+    local parts = vim.split(title, "\n", { plain = true })
+    title = table.remove(parts, 1)
+    description = parts
+  end
+  title = vim.trim(title):gsub(":$", "")
   local default = opts.default or "" ---@type string
-  local min_width = opts.width or 60 ---@type integer
+  local max_width = math.min(MAX_WIDTH, math.max(1, vim.o.columns - 4)) ---@type integer
+  local min_width = math.min(opts.width or 60, max_width) ---@type integer
+  if inputtype == "confirmation" and vim.api.nvim_strwidth(title) + 6 > max_width then
+    table.insert(description, 1, title)
+    title = "Confirm"
+  end
   local initial_text = inputtype == "confirmation" and prompt or default ---@type string
-  local initial_width = math.min(math.max(min_width, vim.api.nvim_strwidth(initial_text) + 5), MAX_WIDTH) ---@type integer
+  assert(not initial_text:find("\n", 1, true), "Input default cannot contain newlines")
+  local content_width = math.max(min_width, vim.api.nvim_strwidth(title) + 6, vim.api.nvim_strwidth(initial_text) + 5)
+  for _, line in ipairs(description) do
+    content_width = math.max(content_width, vim.api.nvim_strwidth(line) + 2)
+  end
+  local initial_width = math.min(content_width, max_width) ---@type integer
+  local input_lnum = #description + 1 ---@type integer
+  local height = math.min(input_lnum, 8, math.max(1, vim.o.lines - 4)) ---@type integer
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
@@ -120,7 +141,7 @@ function M.open(opts, on_confirm)
   else
     local win_height = vim.api.nvim_win_get_height(parent_winnr) ---@type integer
     local rows_below = win_height - parent_row ---@type integer
-    row = opts.row or (rows_below >= 3 and 1 or -2)
+    row = opts.row or (rows_below >= height + 2 and 1 or -height - 1)
     col = opts.col or 0
   end
 
@@ -136,7 +157,7 @@ function M.open(opts, on_confirm)
     border = "rounded",
     col = col,
     focusable = true,
-    height = 1,
+    height = height,
     noautocmd = true,
     relative = relative,
     row = row,
@@ -157,6 +178,7 @@ function M.open(opts, on_confirm)
   vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", WIN_HIGHLIGHT, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", #description > 0, { win = winnr, scope = "local" })
 
   contexts[bufnr] = { completion = opts.completion }
 
@@ -208,7 +230,7 @@ function M.open(opts, on_confirm)
       if disposed or confirming then
         return
       end
-      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+      local lines = vim.api.nvim_buf_get_lines(bufnr, input_lnum - 1, input_lnum, false) ---@type string[]
       local text = string.sub(lines[1] or "", #prompt + 1) ---@type string
       if before_confirm then
         confirming = true
@@ -275,14 +297,21 @@ function M.open(opts, on_confirm)
   stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.api.nvim_set_current_win(winnr)
+  local lines = vim.list_extend(description, { initial_text })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_win_set_cursor(winnr, { input_lnum, #initial_text })
   if prompt == "" then
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
-    vim.api.nvim_win_set_cursor(winnr, { 1, #default })
+    vim.api.nvim_win_set_height(winnr, 1)
   else
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { prompt })
-    vim.api.nvim_win_set_cursor(winnr, { 1, #prompt })
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.hl.range(bufnr, NSNR_CONFIRMATION, "SpecialKey", { 0, 0 }, { 0, #prompt }, {})
+    vim.hl.range(bufnr, NSNR_CONFIRMATION, "SpecialKey", { input_lnum - 1, 0 }, { input_lnum - 1, #prompt }, {})
+    height = math.min(vim.api.nvim_win_text_height(winnr, {}).all, 8, math.max(1, vim.o.lines - 4))
+    vim.api.nvim_win_set_height(winnr, height)
+    if relative == "cursor" and opts.row == nil then
+      local rows_below = vim.api.nvim_win_get_height(parent_winnr) - parent_row
+      local config = vim.api.nvim_win_get_config(winnr)
+      local offset = rows_below >= height + 2 and 1 or -height - 1
+      config.row = config.row + offset - row
+      vim.api.nvim_win_set_config(winnr, config)
     end
   end
 
@@ -291,15 +320,15 @@ function M.open(opts, on_confirm)
   end
 
   vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       if disposed or not vim.api.nvim_win_is_valid(winnr) then
         return
       end
-      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false) ---@type string[]
+      local lines = vim.api.nvim_buf_get_lines(bufnr, input_lnum - 1, input_lnum, false) ---@type string[]
       local text = lines[1] or "" ---@type string
       local text_width = vim.api.nvim_strwidth(text) + 5 ---@type integer
-      local new_width = math.min(math.max(min_width, text_width), MAX_WIDTH) ---@type integer
+      local new_width = math.min(math.max(initial_width, text_width), max_width) ---@type integer
       local current_cfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
       if current_cfg.width ~= new_width then
         vim.api.nvim_win_set_config(winnr, { width = new_width })
@@ -308,7 +337,7 @@ function M.open(opts, on_confirm)
   })
 
   vim.api.nvim_create_autocmd("BufLeave", {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       focus_revoked = true
       clear_focus_watch()

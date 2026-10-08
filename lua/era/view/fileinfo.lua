@@ -3,6 +3,8 @@ local __module_name__ = "era.view.fileinfo" ---@type string
 
 ---@class era.view.fileinfo.IProps
 ---@field public filepath               string
+---@field public kind                   string
+---@field public details                ux.filetree.IResourceDetails
 
 ---@class era.view.fileinfo.IState
 ---@field protected _disposed           boolean
@@ -10,6 +12,8 @@ local __module_name__ = "era.view.fileinfo" ---@type string
 ---@field protected _winnr              integer|nil
 ---@field protected _ns                 integer
 ---@field protected _filepath           string
+---@field protected _kind               string
+---@field protected _details            ux.filetree.IResourceDetails
 
 ---@class era.view.Fileinfo : era.view.fileinfo.IState
 local M = {}
@@ -27,6 +31,8 @@ function M.new(props)
   self._winnr = nil
   self._ns = vim.api.nvim_create_namespace("board_fileinfo")
   self._filepath = props.filepath
+  self._kind = props.kind
+  self._details = props.details
   return self
 end
 
@@ -78,17 +84,6 @@ function M:open()
 
   self:close()
 
-  local filepath = self._filepath ---@type string
-  local stat = vim.uv.fs_stat(filepath) ---@type uv.fs_stat.result|nil
-  if stat == nil then
-    stl.reporter.warn({
-      from = __module_name__,
-      subject = "File Info",
-      message = "Cannot get file information",
-    })
-    return
-  end
-
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   self._bufnr = bufnr
 
@@ -99,7 +94,7 @@ function M:open()
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
 
-  local lines, highlights, width = self:__render__(stat) ---@type string[], stl.t.IHighlight[], integer
+  local lines, highlights, width = self:__render__() ---@type string[], stl.t.IHighlight[], integer
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
@@ -109,7 +104,7 @@ function M:open()
     vim.hl.range(bufnr, self._ns, hl.hlname, { hl.lnum, hl.coll }, { hl.lnum, hl.colr })
   end
 
-  local height = #lines ---@type integer
+  local height = math.min(#lines, math.max(1, vim.o.lines - 4)) ---@type integer
   local row, col = self:__calc_position__(width, height) ---@type integer, integer
 
   local winnr = vim.api.nvim_open_win(bufnr, true, {
@@ -133,12 +128,20 @@ function M:open()
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winhighlight", table.concat({
-    "FloatBorder:ms_b_bg0",
-    "FloatTitle:ms_b_bg0",
-    "Normal:m_bf_normal",
-  }, ","), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
+  vim.api.nvim_win_set_height(
+    winnr,
+    math.min(vim.api.nvim_win_text_height(winnr, {}).all, math.max(1, vim.o.lines - 4))
+  )
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    table.concat({
+      "FloatBorder:ms_b_bg0",
+      "FloatTitle:ms_b_bg0",
+      "Normal:m_bf_normal",
+    }, ","),
+    { win = winnr, scope = "local" }
+  )
 
   self:__setup_keymaps__(bufnr)
 end
@@ -182,37 +185,13 @@ function M:__calc_position__(width, height)
 end
 
 ---@protected
----@param mode                          integer
----@return string
-function M:__format_permissions__(mode)
-  local perms = ""
-  local flags = mode % 512
-  for i = 8, 0, -1 do
-    local has = math.floor(flags / (2 ^ i)) % 2 == 1
-    if has then
-      local idx = 8 - i
-      if idx % 3 == 0 then
-        perms = perms .. "r"
-      elseif idx % 3 == 1 then
-        perms = perms .. "w"
-      else
-        perms = perms .. "x"
-      end
-    else
-      perms = perms .. "-"
-    end
-  end
-  return perms
-end
-
----@protected
----@param stat                          uv.fs_stat.result
 ---@return string[]
 ---@return stl.t.IHighlight[]
 ---@return integer
-function M:__render__(stat)
+function M:__render__()
   local strwidth = vim.api.nvim_strwidth ---@type fun(str: string): integer
   local filepath = self._filepath ---@type string
+  local details = self._details
 
   ---@class era.view.fileinfo.IInfoLine
   ---@field public label                  string
@@ -221,29 +200,36 @@ function M:__render__(stat)
   local infos = {} ---@type era.view.fileinfo.IInfoLine[]
   local workspace = dot.path.workspace() ---@type string
   local relative_path = filepath ---@type string
-  if filepath:sub(1, #workspace) == workspace then
-    relative_path = filepath:sub(#workspace + 2)
+  local prefix = workspace:sub(-1) == "/" and workspace or workspace .. "/"
+  if filepath:sub(1, #prefix) == prefix then
+    relative_path = filepath:sub(#prefix + 1)
   end
 
-  infos[#infos + 1] = { label = "Path", value = relative_path }
-  infos[#infos + 1] = { label = "Type", value = stat.type }
-  infos[#infos + 1] = { label = "Size", value = yoz.fs.get_filesize(filepath) or "unknown" }
+  local units = { "B", "KiB", "MiB", "GiB", "TiB", "PiB" }
+  local size, unit = details.size, 1
+  while size >= 1024 and unit < #units do
+    size, unit = size / 1024, unit + 1
+  end
+  local size_label = unit == 1 and string.format("%d B", size)
+    or string.format("%.1f %s (%d bytes)", size, units[unit], details.size)
+  infos[#infos + 1] = { label = "Path", value = vim.fn.strtrans(relative_path) }
+  infos[#infos + 1] = { label = "Type", value = self._kind }
+  infos[#infos + 1] = { label = "Size", value = size_label }
   infos[#infos + 1] = {
     label = "Modified",
-    value = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec) --[[@as string]],
+    value = details.modified or "unavailable",
   }
   infos[#infos + 1] = {
     label = "Accessed",
-    value = os.date("%Y-%m-%d %H:%M:%S", stat.atime.sec) --[[@as string]],
+    value = details.accessed or "unavailable",
   }
-  if stat.birthtime and stat.birthtime.sec > 0 then
+  if details.created then
     infos[#infos + 1] = {
       label = "Created",
-      value = os.date("%Y-%m-%d %H:%M:%S", stat.birthtime.sec) --[[@as string]],
+      value = details.created,
     }
   end
-  infos[#infos + 1] =
-    { label = "Mode", value = string.format("%s (%o)", self:__format_permissions__(stat.mode), stat.mode % 512) }
+  infos[#infos + 1] = { label = "Mode", value = details.permissions .. " (" .. details.mode .. ")" }
 
   local label_width = 0 ---@type integer
   for _, info in ipairs(infos) do
@@ -286,7 +272,7 @@ function M:__render__(stat)
   for _, line in ipairs(lines) do
     width = math.max(width, strwidth(line))
   end
-  width = width + PADDING_RIGHT
+  width = math.min(width + PADDING_RIGHT, math.max(1, vim.o.columns - 4))
 
   return lines, highlights, width
 end

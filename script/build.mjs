@@ -12,6 +12,9 @@ import {
 } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { parseArgs } from "node:util"
+
+import { nativeInputs, writeBuildReceipt } from "./benchmark/provenance.mjs"
 
 const RED = "\x1b[0;31m"
 const GREEN = "\x1b[0;32m"
@@ -71,14 +74,6 @@ function capture(command, args, cwd) {
   )
   error.exitCode = result.status ?? 1
   throw error
-}
-
-function parseForce(args) {
-  const invalid = args.find((arg) => arg !== "--force" && arg !== "-f")
-  if (invalid) {
-    throw new Error(`unknown option: ${invalid}\nusage: node script/build.mjs [--force|-f]`)
-  }
-  return args.length > 0
 }
 
 export function verifyNativeModule(filepath) {
@@ -219,13 +214,22 @@ function buildWslImHelper(rustDir, targetDir, stagedBin) {
 }
 
 function main() {
-  const force = parseForce(process.argv.slice(2))
+  const { values } = parseArgs({ options: {
+    force: { type: "boolean", short: "f" },
+    root: { type: "string", default: resolve(dirname(fileURLToPath(import.meta.url)), "..") },
+    output: { type: "string" },
+    offline: { type: "boolean" },
+  } })
+  const force = values.force
+  const checkout = resolve(values.root)
   const build = getPlatformBuild(process.platform)
-  const rustDir = resolve(dirname(fileURLToPath(import.meta.url)), "..", "rust")
+  const rustDir = join(checkout, "rust")
   const packageDir = join(rustDir, "yoz")
-  const targetDir = join(rustDir, "target")
-  const luaDir = join(rustDir, "..", "lua")
-  const binDir = join(rustDir, "..", "bin")
+  const output = values.output && resolve(values.output)
+  if (output && existsSync(output)) throw new Error(`output directory already exists: ${output}`)
+  const targetDir = output ? join(output, "target") : join(rustDir, "target")
+  const luaDir = output ? join(output, "lua") : join(checkout, "lua")
+  const binDir = output ? join(output, "bin") : join(checkout, "bin")
   const source = join(targetDir, "release", build.source)
   const stagedLua = join(targetDir, "deploy", "lua", build.lua)
   const stagedBin = join(targetDir, "deploy", "bin", build.bin)
@@ -236,6 +240,14 @@ function main() {
   const isWslBuild = process.platform === "linux" && isWslRuntime(process.env, readKernelRelease())
 
   if (!existsSync(packageDir)) throw new Error(`package not found: ${packageDir}`)
+  const inputs = nativeInputs(checkout)
+  const toolchain = {
+    rustc: capture("rustc", ["-vV"], packageDir),
+    cargo: capture("cargo", ["--version"], packageDir),
+    platform: process.platform,
+    arch: process.arch,
+    profile: "release",
+  }
 
   mkdirSync(luaDir, { recursive: true })
   mkdirSync(binDir, { recursive: true })
@@ -243,7 +255,8 @@ function main() {
   if (force) rmSync(targetDir, { recursive: true, force: true })
 
   console.log(`${CYAN}[neovim yoz] compiling...${RESET}`)
-  const cargoArgs = ["build", "--release", "--quiet"]
+  const cargoArgs = ["build", "--release", "--locked", "--quiet", "--target-dir", targetDir]
+  if (values.offline) cargoArgs.push("--offline")
   if (build.cargoConfig) {
     cargoArgs.push("--config", join(rustDir, "..", ".cargo", build.cargoConfig))
   }
@@ -264,12 +277,16 @@ function main() {
 
   verifyNativeModule(stagedLua)
   verifyNativeModule(stagedBin)
+  if (nativeInputs(checkout).sha256 !== inputs.sha256) throw new Error("native inputs changed during the build")
 
   if (isWslBuild) {
     replaceFileIfChanged(wslImStagedBin, wslImBinOutput)
   }
   replaceFileIfChanged(stagedLua, luaOutput)
   replaceFileIfChanged(stagedBin, binOutput)
+  const provenance = { ...toolchain, command: ["cargo", ...cargoArgs], source_root: checkout }
+  writeBuildReceipt(luaOutput, inputs, provenance)
+  writeBuildReceipt(binOutput, inputs, provenance)
 
   console.log(`${GREEN}[neovim yoz] ✓ built${RESET}`)
   console.log(`${BLUE}[neovim build] done${RESET}`)
