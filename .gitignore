@@ -10,6 +10,7 @@
 .codex-global-state.json.*
 .personality_migration
 .sandbox_migration
+.sqlite-maintenance.lock
 auth.json
 cap_sid
 config.toml
