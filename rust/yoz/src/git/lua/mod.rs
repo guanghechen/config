@@ -131,6 +131,12 @@ fn entry_table(lua: &Lua, path: &[u8], entry: &Entry) -> LuaResult<LuaTable> {
 
 struct StatusSnapshot(Arc<Snapshot>);
 
+pub(crate) fn status_snapshot(value: &LuaAnyUserData) -> LuaResult<Arc<Snapshot>> {
+    Ok(value.borrow::<StatusSnapshot>()?.0.clone())
+}
+
+pub(crate) use ignore::ignore_snapshot;
+
 impl StatusSnapshot {
     fn entries(&self, lua: &Lua) -> LuaResult<LuaTable> {
         let result = lua.create_table_with_capacity(0, self.0.entries().len())?;

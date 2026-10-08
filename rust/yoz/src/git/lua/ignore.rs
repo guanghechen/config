@@ -6,6 +6,12 @@ use std::path::PathBuf;
 struct Cache(crate::git::IgnoreCache);
 struct Job(crate::git::IgnoreJob);
 
+pub(crate) fn ignore_snapshot(
+    value: &LuaAnyUserData,
+) -> LuaResult<std::sync::Arc<crate::git::IgnoreSnapshot>> {
+    Ok(value.borrow::<Cache>()?.0.snapshot())
+}
+
 fn report_table(lua: &Lua, report: &IgnoreReport) -> LuaResult<LuaTable> {
     let result = lua.create_table_with_capacity(0, 4)?;
     let changed = lua.create_table_with_capacity(report.changed.len(), 0)?;
