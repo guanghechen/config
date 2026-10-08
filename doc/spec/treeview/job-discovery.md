@@ -24,7 +24,9 @@ Discovery 按普通 Source mutation 推进父 epoch，使旧 read page 失效；
 ## 并发浏览的资格
 
 ReadWork 创建时固定起始 completeness，真实 ReadToken 是授权边界。
-有效 native prepared Task 可为其原根或已准入后代绑定这个 read grant；Job 中途 claim
+Ready 已捕获为 Complete 的槽位可在 native Job claim 前绑定封闭 read grant；普通任务同样只接受
+该读取的完整性变化，不能借此准入新成员。未知/部分槽位的发现资格仍要求 native Job 归属。
+有效 native prepared Task 可为其原根或已准入后代绑定 read grant；Job 中途 claim
 已经开始的 read 也使用原起始值。绑定不创造读取需求，已失效任务不阻止正常 browse 数据发布。
 Claim 绑定当时仍有效的 reads；新 read 在首个 page 前绑定资格。从 Complete 开始的 read，
 以及 native Task 期间完成的完整 read，都将对应 slot 记为 closed，直到该 task 结束。
