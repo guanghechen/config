@@ -3,6 +3,15 @@
 Tsuki is a Chrome/Edge Extension for improving website themes and readability. It also provides an
 optional, capability-scoped Agent Bridge for explicitly granted pages.
 
+## Chunkbase Seed Map
+
+Tsuki 为 [Chunkbase Seed Map](https://www.chunkbase.com/apps/seed-map)
+提供宽屏布局：隐藏底部 AdThrive 悬浮广告，压缩顶部装饰与设置区域，使地图随窗口尺寸扩展。原生地图计算、图层和 Expand
+Map 功能继续由 Chunkbase 提供；窄窗口保持纵向滚动。
+
+扩展面板中的站点开关可恢复原始布局。修改源码并重新构建后，在浏览器扩展管理页重新加载 Tsuki，再刷新 Seed
+Map 页面。
+
 ## Agent Bridge from a source checkout
 
 Requirements: Node.js 18+, Chrome/Edge 116+, and the workspace dependencies installed with pnpm.
