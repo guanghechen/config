@@ -1,10 +1,10 @@
 # Starship - Yazi
-# user@host ~/path ( main|+1•?) 12:34:56
+# user@host ~/path ( main|+1•?)
 
 "$schema" = "https://starship.rs/config-schema.json"
 add_newline = false
 
-format = "${env_var.STARSHIP_OS_ICON}$username[@](white)$hostname$directory$git_branch$git_status $time"
+format = "${env_var.STARSHIP_OS_ICON}$username[@](white)$hostname$directory$git_branch$git_status"
 
 [env_var.STARSHIP_OS_ICON]
 format = "([$env_value](cyan) )"
@@ -48,9 +48,3 @@ behind = "[⇣${count}](red)"
 diverged = "[⇡${ahead_count}](green)[⇣${behind_count}](red)"
 renamed = "[➜${count}](blue)"
 deleted = "[✘${count}](red)"
-
-[time]
-format = "[$time]($style)"
-style = "bright-black"
-time_format = "%H:%M:%S"
-disabled = false
