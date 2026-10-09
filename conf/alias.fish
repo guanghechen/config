@@ -54,9 +54,9 @@ abbr -a fvim 'fzf --print0 | xargs -0 -o nvim'
 
 ### lazygit
 if test -f "$HOME/.config/lazygit/local/theme.yml"
-    abbr -a lg "lazygit -ucf '$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml'"
+    alias lg="lazygit -ucf '$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml'"
 else
-    abbr -a lg "lazygit -ucf '$HOME/.config/lazygit/config.yml'"
+    alias lg="lazygit -ucf '$HOME/.config/lazygit/config.yml'"
 end
 
 ### lst
