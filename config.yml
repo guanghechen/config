@@ -119,9 +119,9 @@ keybinding:
   main:
     toggleSelectHunk: '`' # Use backtick to toggle hunk selection
   universal:
-    nextBlock-alt2: <disabled> # Disable tab for panel switching
-    nextScreenMode: <tab> # Use tab for screen mode switching
-    prevBlock-alt2: <disabled> # Disable backtab for panel switching
-    prevScreenMode: <backtab> # Use backtab for screen mode switching
+    nextScreenMode: z # Cycle to the next screen mode
+    prevScreenMode: Z # Cycle to the previous screen mode
+    redo: <alt+shift+z> # Redo the last undone Git operation
+    undo: <alt+z> # Undo the last Git operation
 os:
   editPreset: "nvim-remote" # Use nvim-remote preset
