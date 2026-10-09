@@ -12,6 +12,8 @@ import type { ITsukiPageStatusResponse } from '@/shared/types/event'
 
 interface IPageStyleOptions {
   readonly layoutCss?: string
+  /** Receives resolved state changes and false when the page style is disposed. */
+  readonly onEnabledChange?: (enabled: boolean) => void
   readonly themes: ReadonlyArray<IWebsiteTheme>
 }
 
@@ -55,6 +57,7 @@ export function startPageStyle(options: IPageStyleOptions): () => void {
     if (disposed || nextValue === enabled) return
     enabled = nextValue
     syncStyle()
+    options.onEnabledChange?.(nextValue)
   }
 
   const updateAppearanceSettings = (nextValue: IAppearanceSettings) => {
@@ -122,6 +125,7 @@ export function startPageStyle(options: IPageStyleOptions): () => void {
     systemTheme.removeEventListener('change', handleSystemThemeChange)
     removeStyleElement(LAYOUT_STYLE_ELEMENT_ID)
     removeStyleElement(THEME_STYLE_ELEMENT_ID)
+    options.onEnabledChange?.(false)
   }
 }
 
