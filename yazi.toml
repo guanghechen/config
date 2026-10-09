@@ -11,7 +11,7 @@ cursor_blink = true
 
 [open]
 prepend_rules = [
-  { url = "*.{pptx,ppt,docx,doc,xlsx,xls,pdf}", use = "open" },
+  { url = "local://*.{pptx,ppt,docx,doc,xlsx,xls,pdf}", use = "open" },
   { mime = "video/*", use = "open" },
   { mime = "application/vnd.openxmlformats-officedocument.*", use = "open" },
   { mime = "application/vnd.ms-*", use = "open" },

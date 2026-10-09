@@ -17,7 +17,7 @@ prepend_keymap = [
 
   { on = "!", run = 'shell "$SHELL" --block', desc = "Open shell here" },
 
-  { on = ["t", "d"], run = "tab_close", desc = "Close current tab" },
+  { on = ["t", "d"], run = "close", desc = "Close current tab" },
   { on = ["t", "1"], run = "tab_switch 0", desc = "Switch to tab 1" },
   { on = ["t", "2"], run = "tab_switch 1", desc = "Switch to tab 2" },
   { on = ["t", "3"], run = "tab_switch 2", desc = "Switch to tab 3" },
