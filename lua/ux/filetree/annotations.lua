@@ -32,9 +32,10 @@ end
 ---@param first                         integer
 ---@param last                          integer
 ---@param revision                      string
----@return fun(frame: yoz.ux.treeview.Frame): nil
+---@return fun(frame: yoz.ux.treeview.Frame): boolean
 local function publication(view, value, first, last, revision)
   return function(frame)
+    local unchanged = view._filetree_annotations == value
     local header = frame:header()
     view._filetree_annotation_key =
       table.concat({ header.data_revision, header.layout_revision, first, last, revision }, ":")
@@ -47,6 +48,7 @@ local function publication(view, value, first, last, revision)
     else
       view._filetree_annotation_source = nil
     end
+    return unchanged
   end
 end
 

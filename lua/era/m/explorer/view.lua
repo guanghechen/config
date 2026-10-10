@@ -83,18 +83,21 @@ function M.attach(session, view)
   view._options.prepare_frame = function(current, frame, first, last, rows)
     local generation = entry.generation
     local prepared_frame = prepare_frame(current, frame, first, last, rows)
-    local prepared_icons = icons
-      .prepare(session, frame, rows, entry.cache, function()
-        return not view._closed and entry.generation == generation
-      end)
-      :map(function(value)
-        if value and not view._closed and entry.generation == generation then
-          -- Pure icon values remain reusable if a newer frame supersedes this preparation.
-          -- Displayed rows and glyphs still change only in the publication callback.
-          entry.cache = value.cache
-        end
-        return value
-      end)
+    local reuse_icons = entry.rows == rows and entry.cache and entry.first == first and entry.last == last
+    local prepared_icons = reuse_icons
+        and Future.resolve({ cache = entry.cache, icons = entry.icons, links = entry.links })
+      or icons
+        .prepare(session, frame, rows, entry.cache, function()
+          return not view._closed and entry.generation == generation
+        end)
+        :map(function(value)
+          if value and not view._closed and entry.generation == generation then
+            -- Pure icon values remain reusable if a newer frame supersedes this preparation.
+            -- Displayed rows and glyphs still change only in the publication callback.
+            entry.cache = value.cache
+          end
+          return value
+        end)
     return Future.all({
       prepared_frame,
       prepared_icons,
@@ -103,10 +106,11 @@ function M.attach(session, view)
         return false
       end
       return function(published)
-        prepared[1](published)
+        local unchanged = prepared[1](published)
         local value = prepared[2]
         entry.key, entry.first, entry.last, entry.rows = published:id(), first, last, rows
         entry.icons, entry.links = value.icons, value.links
+        return unchanged and reuse_icons == true
       end
     end)
   end

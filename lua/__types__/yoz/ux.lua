@@ -61,6 +61,10 @@ local Frame = {}
 function Frame:id() end
 ---@return ux.treeview.IFrameHeader
 function Frame:header() end
+---Proves identical row data and topology, excluding cursor and external consumer decorations.
+---@param other                         yoz.ux.treeview.Frame
+---@return boolean
+function Frame:same_rows(other) end
 ---@param row                           integer
 ---@return ux.treeview.NodeId|nil
 function Frame:node_at(row) end
@@ -76,6 +80,12 @@ function Frame:navigate(row, direction) end
 ---@param last                          integer
 ---@return ux.treeview.IRows
 function Frame:rows(first, last) end
+---Visible cursor path, top to bottom; 1-based inclusive rows, at most 512 viewport rows.
+---@param row                           integer
+---@param first                         integer
+---@param last                          integer
+---@return ux.treeview.IGuideSegment[]
+function Frame:guide_path(row, first, last) end
 ---@param node                          ux.treeview.NodeId
 ---@return ux.treeview.INode|nil
 function Frame:node(node) end

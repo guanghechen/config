@@ -29,7 +29,7 @@ pub use command::{Command, Context, Effect, Reply, Revisions, Targets};
 pub use data::{Batch, Node, NodePatch, NodeRef, Operation, Position, Source};
 pub use engine::Engine;
 pub use model::*;
-pub use projection::{Direction, Row, RowInfo, Snapshot};
+pub use projection::{Direction, GuideSegment, Row, RowInfo, Snapshot};
 pub use provider::{DataScope, Import, ProviderId, Record};
 pub use query::{QueryId, QueryInfo, QueryInput, QueryResult, QueryToken};
 pub use reads::ReadToken;

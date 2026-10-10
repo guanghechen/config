@@ -49,28 +49,73 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
     { assert(vim.uv.cwd()), path }
   )
 
+  ---@param row                         integer
+  ---@return nil
+  local function move(row)
+    ui:rpc(
+      "nvim_exec_lua",
+      [=[
+      local row = ...
+      local future = view:set_cursor(row)
+      assert(vim.wait(10000, function() return future:is_done() end))
+      assert(not future:is_failed(), future:get_error())
+      assert(vim.wait(10000, function()
+        return view:frame():header().cursor_row == row and not view._busy and not view._latest
+      end))
+    ]=],
+      { row }
+    )
+  end
+
   ---@param label                       string
   ---@return nil
   local function visible_guides(label)
     ui:rpc("nvim_command", "redraw!")
-    local location = assert(grid:find("a.lua"), label .. ": missing filename")
+    local location = assert(
+      grid:find("a.lua"),
+      label .. ": missing filename: " .. vim.inspect(ui:rpc("nvim_exec_lua", "return errors", {}))
+    )
     local cells = grid.grids[location.grid].rows[location.row + 1]
+    local colors = ui:rpc(
+      "nvim_exec_lua",
+      [=[
+      local cursor = vim.api.nvim_win_get_cursor(view.winnr)[1]
+      local mode = vim.api.nvim_get_mode().mode:sub(1, 1)
+      local active = cursor == 2 or mode == "v" or mode == "V" or mode == "\22"
+      return {
+        path = vim.api.nvim_get_hl(0, {name="m_ex_indent_path",link=false}).fg,
+        base = vim.api.nvim_get_hl(0, {name=active and "m_ex_indent_active" or "m_ex_indent",link=false}).fg,
+        cursor = cursor,
+      }
+    ]=],
+      {}
+    )
     local guides = {}
     for col = 1, location.col do
       local cell = cells[col]
-      if cell[1] == "│" or cell[1] == "├" or cell[1] == "─" then
+      if cell[1] == "│" or cell[1] == "├" or cell[1] == "╰" or cell[1] == "─" then
         guides[#guides + 1] = cell[1]
         local highlight = grid.highlights[cell[2]]
         t.assert_true(highlight.foreground ~= highlight.background, label .. ": guide blends into its background")
+        local path = #guides == 2 or #guides == 3 and colors.cursor == 2
+        t.assert_eq(
+          path and colors.path or colors.base,
+          highlight.foreground,
+          label .. ": exact path column " .. #guides .. ", cursor " .. colors.cursor
+        )
       end
     end
-    t.assert_eq("│├─", table.concat(guides), label .. ": structural guides disappeared")
+    t.assert_eq(
+      colors.cursor == 2 and "│╰─" or "││─",
+      table.concat(guides),
+      label .. ": path stem stays straight"
+    )
   end
 
   for _, theme in ipairs({ "rosepine-dawn", "rosepine-main", "vsc-light-modern", "vsc-dark-modern" }) do
     ui:rpc("nvim_exec_lua", "dot.context.theme.apply_theme({ theme = ..., transparency = false })", { theme })
     for _, input in ipairs({ { "Vj", "V" }, { "vj", "v" }, { "v<C-v>j3l", vim.keycode("<C-v>") } }) do
-      ui:rpc("nvim_exec_lua", "vim.api.nvim_win_set_cursor(view.winnr, {2, 0})", {})
+      move(2)
       visible_guides(theme .. " Normal")
       ui:rpc("nvim_input", input[1])
       t.wait_until(function()
@@ -85,16 +130,18 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
     end
     local foreground =
       ui:rpc("nvim_exec_lua", "return vim.api.nvim_get_hl(0, { name = 'm_ex_indent', link = false }).fg", {})
-    ui:rpc("nvim_exec_lua", "vim.api.nvim_win_set_cursor(view.winnr, {4, 0})", {})
+    local path_foreground =
+      ui:rpc("nvim_exec_lua", "return vim.api.nvim_get_hl(0, { name = 'm_ex_indent_path', link = false }).fg", {})
+    move(4)
     ui:rpc("nvim_command", "redraw!")
     local location = assert(grid:find("a.lua"))
     local cells = grid.grids[location.grid].rows[location.row + 1]
     for col = 1, location.col do
       if cells[col][1] == "│" or cells[col][1] == "├" or cells[col][1] == "─" then
         t.assert_eq(
-          foreground,
+          cells[col][1] == "│" and path_foreground or foreground,
           grid.highlights[cells[col][2]].foreground,
-          theme .. ": ordinary guides keep their muted color"
+          theme .. ": only the path to the top-level sibling changes color"
         )
       end
     end

@@ -4575,6 +4575,267 @@ fn t_viewport_reads_bound_bytes_and_match_expansion() {
 }
 
 #[test]
+fn t_guide_path_clips_segments_and_stops_at_each_forest_root() {
+    let mut engine = Engine::new(Limits::default()).unwrap();
+    engine
+        .import(Import {
+            base_revision: engine.source.revision(),
+            scope: DataScope::Forest,
+            records: [
+                ("root", None, true),
+                ("prior", Some("root"), true),
+                ("prior-child", Some("prior"), false),
+                ("src", Some("root"), true),
+                ("lib", Some("src"), true),
+                ("helper", Some("lib"), true),
+                ("nested", Some("helper"), false),
+                ("target", Some("lib"), false),
+                ("other", Some("src"), false),
+                ("docs", Some("root"), false),
+            ]
+            .into_iter()
+            .map(|(key, parent, branch)| Record {
+                key: key.into(),
+                parent: parent.map(Into::into),
+                data: if branch {
+                    NodeData::branch(key)
+                } else {
+                    NodeData::leaf(key)
+                },
+                completeness: None,
+            })
+            .collect(),
+        })
+        .unwrap();
+    let root = engine.source.id("root").unwrap();
+    let state = engine
+        .create_state(Root::ChildrenOf(root), DisplayOptions::default())
+        .unwrap();
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![root].into()),
+                value: true,
+                scope: Scope::Subtree,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let frame = project(&mut engine, state);
+    let segments = vec![
+        GuideSegment {
+            first: 0,
+            last: 3,
+            depth: 0,
+        },
+        GuideSegment {
+            first: 3,
+            last: 4,
+            depth: 1,
+        },
+        GuideSegment {
+            first: 4,
+            last: 7,
+            depth: 2,
+        },
+    ];
+    assert_eq!(frame.guide_path(6, 0, 9).unwrap(), segments);
+    assert_eq!(
+        frame.guide_path(6, 5, 9).unwrap(),
+        vec![GuideSegment {
+            first: 5,
+            last: 7,
+            depth: 2
+        }]
+    );
+    assert!(frame.guide_path(6, 0, 5).unwrap().is_empty());
+    assert!(frame.guide_path(9, 0, 9).unwrap().is_empty());
+    assert!(frame.guide_path(0, 0, 0).unwrap().is_empty());
+    assert!(frame.guide_path(6, 0, 10).is_err());
+
+    let roots = ["prior", "src", "docs"].map(|key| engine.source.id(key).unwrap());
+    let expected = engine.states[&state].state.revision;
+    engine
+        .dispatch(
+            state,
+            Command::SetRoot(Root::Forest(roots.into())),
+            Context {
+                expected_state: Some(expected),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let forest = project(&mut engine, state);
+    let mut forest_segments = segments.clone();
+    forest_segments[0].first = 2;
+    assert_eq!(forest.guide_path(6, 0, 9).unwrap(), forest_segments);
+    assert_eq!(
+        frame.guide_path(6, 0, 9).unwrap(),
+        segments,
+        "retained frame owns its path"
+    );
+
+    let lib = engine.source.id("lib").unwrap();
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![lib].into()),
+                value: false,
+                scope: Scope::SelfOnly,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let folded = project(&mut engine, state);
+    assert_eq!(
+        folded.guide_path(3, 0, folded.len()).unwrap(),
+        forest_segments[..2]
+    );
+    let expected = engine.states[&state].state.revision;
+    engine
+        .dispatch(
+            state,
+            Command::SetDisplay(DisplayOptions {
+                mode: Mode::List,
+                ..DisplayOptions::default()
+            }),
+            Context {
+                expected_state: Some(expected),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let list = project(&mut engine, state);
+    assert!(list.guide_path(0, 0, list.len()).unwrap().is_empty());
+}
+
+#[test]
+fn t_guide_path_follows_compressed_display_parents() {
+    let (mut engine, state, _) = ancestry_fixture();
+    for key in ["src", "lib"] {
+        apply(
+            &mut engine,
+            vec![Operation::Update {
+                node: key.into(),
+                patch: NodePatch {
+                    foldable: Some(true),
+                    ..NodePatch::default()
+                },
+            }],
+        );
+    }
+    let expected = engine.states[&state].state.revision;
+    engine
+        .dispatch(
+            state,
+            Command::SetDisplay(DisplayOptions {
+                compress: true,
+                ..DisplayOptions::default()
+            }),
+            Context {
+                expected_state: Some(expected),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let root = engine.source.id("root").unwrap();
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![root].into()),
+                value: true,
+                scope: Scope::Subtree,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let frame = project(&mut engine, state);
+    assert_eq!(frame.len(), 3);
+    assert_eq!(
+        frame.guide_path(1, 0, 3).unwrap(),
+        vec![
+            GuideSegment {
+                first: 0,
+                last: 1,
+                depth: 0
+            },
+            GuideSegment {
+                first: 1,
+                last: 2,
+                depth: 1
+            },
+        ]
+    );
+}
+
+#[test]
+fn t_guide_path_bounds_wide_and_deep_viewports() {
+    let (engine, state, _) = fixture(50_000);
+    let frame = engine.snapshot(state).unwrap();
+    assert_eq!(
+        frame.guide_path(49_990, 49_950, 50_000).unwrap(),
+        vec![GuideSegment {
+            first: 49_950,
+            last: 49_991,
+            depth: 0
+        },]
+    );
+    assert_eq!(
+        frame.guide_path(0, 0, 513).unwrap_err().code,
+        ErrorCode::ResourceLimit
+    );
+
+    let mut engine = Engine::new(Limits::default()).unwrap();
+    engine
+        .import(Import {
+            base_revision: engine.source.revision(),
+            scope: DataScope::Forest,
+            records: (0usize..10_000)
+                .map(|index| Record {
+                    key: format!("n{index}").into(),
+                    parent: index
+                        .checked_sub(1)
+                        .map(|parent| NodeRef::Key(format!("n{parent}").into())),
+                    data: NodeData::branch("branch"),
+                    completeness: None,
+                })
+                .collect(),
+        })
+        .unwrap();
+    let root = engine.source.id("n0").unwrap();
+    let state = engine
+        .create_state(Root::Forest(vec![root].into()), DisplayOptions::default())
+        .unwrap();
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![root].into()),
+                value: true,
+                scope: Scope::Subtree,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let frame = project(&mut engine, state);
+    let segments = frame.guide_path(9_999, 9_950, 10_000).unwrap();
+    assert_eq!(segments.len(), 50);
+    for (index, segment) in segments.iter().enumerate() {
+        assert_eq!(
+            *segment,
+            GuideSegment {
+                first: 9_950 + index,
+                last: 9_951 + index,
+                depth: 9_950 + index
+            }
+        );
+    }
+}
+
+#[test]
 fn t_staged_plan_retargets_metadata_but_rejects_changed_text_or_layout() {
     let (mut engine, state, _) = fixture(2);
     let original = project(&mut engine, state);
@@ -4626,6 +4887,105 @@ fn t_staged_plan_retargets_metadata_but_rejects_changed_text_or_layout() {
         .unwrap();
     assert!(plan.retarget(project(&mut engine, state)).is_none());
     assert_eq!(plan.lines(0, 2, 1024).unwrap().0, lines(original));
+}
+
+#[test]
+fn t_same_rows_proves_cursor_reuse_but_rejects_other_decoration_changes() {
+    let (mut engine, state, root) = fixture(2);
+    apply(
+        &mut engine,
+        vec![Operation::Update {
+            node: "n0".into(),
+            patch: NodePatch {
+                can_expand: Some(true),
+                ..NodePatch::default()
+            },
+        }],
+    );
+    let base = project(&mut engine, state);
+    let node = engine.source.id("n1").unwrap();
+    engine
+        .dispatch(state, Command::SetCursor(Some(node)), Context::default())
+        .unwrap();
+    let cursor = project(&mut engine, state);
+    assert_ne!(base.id, cursor.id);
+    assert!(base.same_rows(&cursor));
+    assert!(cursor.same_rows(&base));
+    assert!(cursor.same_rows(&cursor));
+    let other = engine
+        .create_state(Root::ChildrenOf(root), DisplayOptions::default())
+        .unwrap();
+    assert!(!cursor.same_rows(&engine.snapshot(other).unwrap()));
+
+    let empty = engine.source.id("n0").unwrap();
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![empty].into()),
+                value: true,
+                scope: Scope::SelfOnly,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let expanded = project(&mut engine, state);
+    assert_eq!(cursor.layout_revision, expanded.layout_revision);
+    assert!(!cursor.rows(0, 1).unwrap()[0].expanded);
+    assert!(expanded.rows(0, 1).unwrap()[0].expanded);
+    assert!(!cursor.same_rows(&expanded));
+
+    engine
+        .dispatch(
+            state,
+            Command::Select {
+                targets: Targets::Nodes(vec![node].into()),
+                action: SelectAction::Select,
+                scope: Scope::SelfOnly,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let selected = project(&mut engine, state);
+    assert_eq!(selected.layout_revision, expanded.layout_revision);
+    assert!(!selected.same_rows(&expanded));
+
+    let expected = engine.states[&state].state.revision;
+    engine
+        .dispatch(
+            state,
+            Command::SetDisplay(DisplayOptions {
+                pattern: "node".into(),
+                ..DisplayOptions::default()
+            }),
+            Context {
+                expected_state: Some(expected),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let matched = project(&mut engine, state);
+    assert_eq!(matched.len(), selected.len());
+    assert!(matched.rows(0, 1).unwrap()[0].matches.len() > 0);
+    assert!(!matched.same_rows(&selected));
+
+    apply(
+        &mut engine,
+        vec![Operation::Update {
+            node: node.into(),
+            patch: NodePatch {
+                highlight: Some(Some("DiagnosticError".into())),
+                ..NodePatch::default()
+            },
+        }],
+    );
+    let metadata = project(&mut engine, state);
+    assert_eq!(metadata.layout_revision, matched.layout_revision);
+    assert!(!metadata.same_rows(&matched));
+    assert!(
+        base.same_rows(&cursor),
+        "retained frames retain their proof after later mutations"
+    );
 }
 
 #[test]

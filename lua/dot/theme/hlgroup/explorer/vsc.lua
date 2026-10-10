@@ -22,6 +22,7 @@ function M.gen_hlgroup_map(context)
     m_ex_ignored = { fg = u.fg4, italic = true },
     m_ex_indent = { fg = u.bg3 },
     m_ex_indent_active = { fg = u.fg4 },
+    m_ex_indent_path = { fg = c.accentPink },
     m_ex_symlink = { fg = c.accentPurple, bold = true },
     m_ex_winbar = { fg = c.text, bg = c.tab_inactiveBackground, bold = true },
 

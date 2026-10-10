@@ -117,6 +117,88 @@ t:test("duplicate restored-position events cannot overwrite native navigation be
   t.assert_eq(1, submitted, "publication does not echo its restored cursor back to native state")
 end)
 
+t:test("cursor publication reuses row reads and only redraws changed consumer output", function()
+  local state, view, nodes = fixture()
+  local decorations = require("ux.treeview.decorations")
+  local prepare = decorations.prepare
+  local reads, redraws, prepares, commits = 0, 0, 0, 0
+  t:patch_table(decorations, "prepare", function(...)
+    reads = reads + 1
+    return prepare(...)
+  end)
+  local redraw = view._redraw
+  t:patch_table(view, "_redraw", function(self)
+    redraws = redraws + 1
+    redraw(self)
+  end)
+  local unchanged = true
+  view._options.prepare_frame = function(_, frame, _, _, rows)
+    prepares = prepares + 1
+    t.assert_true(rows == view._decorations.rows, "cursor preparation shares the immutable row batch")
+    return stl.c.Future.resolve(function(published)
+      commits = commits + 1
+      t.assert_eq(frame:id(), published:id(), "consumer commits the actual target frame")
+      return unchanged
+    end)
+  end
+  local original = view:frame()
+  local pending = view:set_cursor(2)
+  local immediate = redraws
+  await(pending)
+  t.wait_until(function()
+    return view:frame():header().cursor == nodes[2] and not view._busy and not view._latest
+  end, 5000)
+  t.assert_eq(0, reads, "cursor-only publication does not export the viewport again")
+  t.assert_eq(immediate, redraws, "unchanged consumer output does not request another whole-window redraw")
+  t.assert_true(original:same_rows(view:frame()))
+  t.assert_eq(1, prepares)
+  t.assert_eq(1, commits)
+
+  unchanged = nil
+  pending = view:set_cursor(3)
+  immediate = redraws
+  await(pending)
+  t.wait_until(function()
+    return view:frame():header().cursor == nodes[3] and not view._busy and not view._latest
+  end, 5000)
+  t.assert_eq(immediate + 1, redraws, "an ordinary commit callback keeps the conservative redraw")
+  t.assert_eq(0, reads)
+  t.assert_eq(2, commits)
+
+  unchanged = true
+  immediate = redraws
+  view:refresh_decorations()
+  t.wait_until(function()
+    return not view:status().preparing
+  end, 5000)
+  t.assert_eq(immediate + 1, redraws, "explicit decoration invalidation still redraws")
+  t.assert_eq(3, commits)
+end)
+
+t:test("a cursor-frame observer can close its window before the redraw decision", function()
+  vim.cmd.vsplit()
+  local _, view = fixture()
+  local winnr = view.winnr
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
+  end)
+  local errors = {}
+  view._options.on_error = function(error)
+    errors[#errors + 1] = error
+  end
+  view._options.on_frame = function()
+    view:detach()
+    vim.api.nvim_win_close(winnr, true)
+  end
+  await(view:set_cursor(2))
+  t.wait_until(function()
+    return not vim.api.nvim_win_is_valid(winnr)
+  end, 5000)
+  t.assert_eq(0, #errors, "a completed observer can release the surface without a later redraw failure")
+end)
+
 for _, programmatic in ipairs({ false, true }) do
   t:test(
     (programmatic and "programmatic" or "observed user") .. " cursor events are deduplicated after later navigation",
