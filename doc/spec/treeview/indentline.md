@@ -13,13 +13,21 @@ Treeview 不解析 filepath，也不从文本缩进反推结构。
 ## 缩进线
 
 - Explorer 的 display root 放在标题区，正文直接子项的 depth 为 0，顶层行也绘制 connector。
-- 每层片段占 2 列：自身有后续兄弟用 `├─`，末项用 `╰─`；祖先有后续兄弟用 `│ `，否则用两个空格。
+- 每层片段占 2 列：普通 connector 有后续兄弟用 `├─`，末项用 `╰─`；祖先有后续兄弟用 `│ `，否则用两个空格。
 - Depth 为 `d` 的行包含 `d` 个祖先片段和一个自身 connector，indent 宽度为 `2 * (d + 1)`。
 - 行文本为 `indent + icon + 空格 + label`；无图标时为 `indent + label`。正文不自动换行。
 - Indent 独立高亮，范围为 `[0, indent 的 UTF-8 字节长度)`；显示列不能直接作为 extmark byte offset。
 - Cursorline、selection、图标和名称样式分别处理，不叠加普通文本 indentline/indentscope guide。
 - Guide 的普通行使用 `TreeviewGuide`，CursorLine 与 Visual 范围使用 `TreeviewGuideActive`；后者默认 link 到前者，
   consumer 可独立映射其前景色。Overlay 保留行背景，Normal/Visual 变化不改正文或 layout。
+- 当前窗口 cursor 到 display root 的连接路径使用独立的 `TreeviewGuidePath`，默认粉色；Explorer 映射到
+  随主题变化的 `m_ex_indent_path`。路径颜色优先于普通/Active guide，其他列保留各自的颜色和行背景。
+- 每行只着色路径经过的 guide 列。当前节点和可见祖先用末端 glyph（默认 `╰─`）绘制整个高亮 connector，
+  表示路径转向或结束，去掉 `├` 向下的多余笔画；不改变 native sibling 信息与导航。经过其他 sibling 时，
+  用 guide glyph 替换其 connector 的首字符并着色，横线保留原色，避免竖向高亮出现旁支凸起；默认显示为粉色
+  `│` 接原色 `─`。压缩链按 display parent 和 display depth 处理。
+- Children-of 的顶层连线接到标题中的隐式 root；Forest 在当前所属顶层入口处停止，不跨到其他入口。
+- 路径始终基于当前窗口实际 cursor 与已显示 frame；Visual 使用其冻结布局，List 不绘制路径。
 - 图标占两列（glyph 与一个空格）；selection 标记固定在最右侧，未选择时保留两列空白，不占缩进与图标之间的位置。
 
 普通显示按可见兄弟位置绘制。Selected-only 保留选区过滤前的 source sibling 位置；压缩行使用
@@ -89,3 +97,17 @@ Tree 模式的目标根据当前可见 layout 计算：
   局部更新复用未变区间，filter/sort 和依赖重算成本另计。
 - Indent 文本生成成本按输出字节数计；Lua 不重新遍历 topology，也不扫描文本来补算导航。
 - Connector 变化须覆盖旧/新 sibling 边界及受影响后代；优先按可见范围生成装饰，不要求全表重写连接线。
+- `frame:guide_path(row, first, last)` 是只读批量查询，参数与返回区间均为 1-based inclusive，viewport 最多 512 行。
+  返回按行排序的 `{first, last, depth}` 区间，`last` 是路径节点的 connector 行，之前的行只携带竖向连接；
+  `first` 裁剪到 viewport。List、空范围或 cursor 不在该范围时返回空数组。
+- 路径查询沿 display parent 回溯，遇到 viewport 上方 parent 即停止，不扫描跨过的 sibling 子树或更高祖先。
+  每次查询至多处理 viewport 行数那么多的路径节点，另计现有 rank/select 索引定位成本。
+- Lua 按 view 的 layout revision、cursor 行和覆盖 viewport 缓存路径；metadata frame、横向移动与重复 redraw
+  可复用缓存。每行用一个 overlay extmark 承载 guide、间隔和 connector 的分色 chunks；只生成水平可见范围中的
+  glyph 与必要间隔，不创建离屏持久标记。被左边界截断起点的 glyph 整段省略，保持既有裁剪语义。
+  Cursor 换行比较新旧路径，只额外重画可见颜色变化区间；viewport cache 不可用时请求整个窗口 redraw。
+  路径计算缓存与待重绘区间分开：`on_win` 提前计算新路径不清除失效，`on_range` 只消除已绘制区间；
+  redraw 结束后合并调度剩余范围。即使 cursor 在一次 callback 内往返而没有新的 `CursorMoved`，也不遗留中间颜色。
+  Cursor 换行立即更新路径缓存，同一事件循环内的 range redraw 合并调度；Neovim 的自然 redraw 已覆盖的行
+  不再重复请求。调度不使用固定时长 timer，不等待 native state 确认，关闭 view 后忽略待执行 callback。
+  纯路径变化不写正文、不重新投影、不等待异步 state 发布。

@@ -87,6 +87,76 @@ to measure capture and restoration to the same current source, excluding cold in
 The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
 The benchmark aborts if the source changes externally and does not measure switching between input methods.
 
+Cursor-path guide measurements use `nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [rows] [samples] [ui-height]`.
+Defaults are `lua/yoz.so`, no baseline override, 50,000 rows and 300 samples per operation after 30 warmups.
+Pass `''` for the baseline directory when specifying a larger row count. The fixture imports 512-record chunks,
+expands an eight-way tree, and attaches an 80×50 UI by default. It measures API/Normal adjacent movement, visible
+branch changes, eight API cursor requests in one callback, redraw before CursorMoved, cold jumps, scrolling and
+Visual movement through native publication and UI flush, with natural GC and an assertion of zero body writes.
+The burst alternates between two visible rows: its first request repeats the existing position and seven move it.
+The optional baseline directory contains the previous `decorations.lua`, `surface.lua` and `view.lua`; both variants
+use the same release native module. Output includes p50/p95/max, sample counts, surface work, path updates,
+prepare/redraw/guide-extmark counts and retained Lua heap. `flush` measures visible output; `publication` measures
+native frame acknowledgement; `settled` waits for both and for deferred path invalidation to clear.
+Viewport preparation calls are separate from native row-query counts and exported-row totals, including bounded
+overscan. Process CPU per operation uses getrusage after warmup and includes native threads and measurement RPCs.
+Cursor-only publications can acknowledge pixels that
+already flushed and need no further redraw. Path-update time includes any immediate redraw it requests;
+it is not an isolated ancestry-query measurement. External terminal/compositor presentation is excluded.
+
+2026-10-10 guide-path acceptance: Apple M1 Pro, Darwin 27.0.0, Neovim 0.12.5, release module. Three independent
+baseline/current pairs use 50k preloaded rows, 300 samples per operation after 30 warmups, natural GC, and reversed
+order in the second pair. The baseline already draws the same straight/rounded path glyphs. Settled p95 in ms:
+
+| Operation | Before | After |
+| --- | ---: | ---: |
+| Adjacent movement | 1.702–1.879 | 0.483–0.607 |
+| Cross-branch jump | 2.570–2.729 | 1.453–1.835 |
+| Scrolling | 1.985–2.003 | 0.861–0.996 |
+| Visual movement | 1.931–1.980 | 0.525–0.591 |
+
+Adjacent/Visual movement submits 2 guide extmarks instead of 276 in this fixture, with no repeated viewport export
+or whole-window redraw at native acknowledgement. A cold jump submits 48 instead of about 450 guide extmarks;
+viewport reads and whole-window redraws drop from two each to one. Actual adjacent UI-flush p95 is 0.227–0.299 ms.
+At 200k rows, settled p95 is 0.385/1.755/0.920/0.516 ms for the same four operations. All runs record zero body writes.
+These synthetic results exclude filesystem discovery and loading. A separate before/after grid comparison matches
+all 192 cases across three widths, Normal/Visual modes, sparse guides and eight horizontal offsets, including colors
+and backgrounds. The native regression also covers a 10,000-level source with only 50 visible path segments;
+it does not claim that rendering all 10,000 indentation columns meets the same UI latency target.
+
+The subsequent invalidation fixes retain those draw counts. Three 50k-row A/B pairs on the same setup measured
+settled p95 0.590–0.679 ms for adjacent movement, 1.800–2.017 ms for jumps, 0.966–1.148 ms for scrolling and
+0.579–0.661 ms for Visual movement. Every sample still performed zero body writes. Focused UI regressions now cover
+purpose-only marker changes, redraw before CursorMoved, cursor round trips without a new event, and closing a view
+with a deferred path redraw pending.
+
+The next optimization adds bounded overscan behind exact viewport slices and coalesces path redraws within one
+event-loop turn. Three before/after pairs on the same machine/library, with 300 samples and 30 warmups per operation,
+give these medians of per-process settled p95 (ms):
+
+| Operation | Before | After |
+| --- | ---: | ---: |
+| Normal adjacent movement | 0.555 | 0.613 |
+| Visible cross-branch movement | 1.281 | 1.307 |
+| Eight API requests / seven moves | 4.857 | 1.689 |
+| Cold jump | 1.901 | 1.962 |
+| Scrolling | 1.118 | 0.986 |
+| Visual movement | 0.651 | 0.620 |
+
+The gains concentrate on batched movement and scrolling. Scrolling exports 6.91 native rows per
+operation instead of 46.22; mean process CPU drops from 0.787 to 0.600 ms. The burst requests one range redraw instead
+of seven, with mean process CPU 4.470 to 1.260 ms. With an 80×150 UI, burst p95 is 14.562 to 3.387 ms and scroll p95
+1.735 to 1.368 ms; a single visible cross-branch move is 2.781 to 3.055 ms. At 200k rows the burst remains 1.612–1.772 ms,
+although ordinary-movement p95 varies up to 1.365 ms; those samples are retained without attributing a cause.
+
+A real Explorer fixture with 256 preloaded Lua files, icons, the annotation pipeline and no Git/LSP collection gives
+burst p95 6.089 to 2.853 ms, scroll 5.114 to 4.780 ms, and Normal movement 1.375 to 1.449 ms across three pairs.
+Its scroll exports fall from 37.92 to 5.88 rows per operation, but mean process CPU only falls from 2.916 to 2.839 ms:
+consumer preparation and repainting still dominate. All samples retain zero body writes. Treeview/Filetree/Explorer
+regressions, exact viewport and budget checks, and 32 natural-vs-forced UI comparisons pass. These measurements
+exclude discovery/loading and the external compositor; Lua heap readings include JIT/cache variation and are not
+interpreted as an exact memory delta for this change.
+
 The Explorer runner and report generator live in [`script/benchmark/`](../script/benchmark/).
 Lua probes and usage are documented in [`bench/explorer/`](bench/explorer/README.md).
 The runner supports isolated native/legacy

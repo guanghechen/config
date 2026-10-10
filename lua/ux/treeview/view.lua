@@ -32,6 +32,9 @@ local decorations = require("ux.treeview.decorations")
 ---@field _header                       ?ux.treeview.IFrameHeader
 ---@field _publication                  ?table
 ---@field _decorations                  ?table
+---@field _guide_path                   ?table
+---@field _guide_dirty                  ?{first: integer, last: integer}
+---@field _guide_redraw_pending         ?boolean
 ---@field _gesture                      ?table
 ---@field _submission                   ?table
 ---@field _observed_cursor              ?integer[]
@@ -255,8 +258,12 @@ function M:set_cursor(row)
   if not node then
     return Future.resolve({ kind = "NoChange" })
   end
+  local previous_row = vim.api.nvim_win_get_cursor(self.winnr)[1]
   vim.api.nvim_win_set_cursor(self.winnr, { row, 0 })
   self._observed_cursor = vim.api.nvim_win_get_cursor(self.winnr)
+  if row ~= previous_row then
+    decorations.cursor_moved(self, self._observed_cursor[1] - 1)
+  end
   return self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })
 end
 
@@ -381,6 +388,8 @@ function M:detach()
   decorations.detach(self)
   self._native:detach()
   self._frame, self._latest, self._gesture, self._decorations = nil, nil, nil, nil
+  self._guide_path = nil
+  self._guide_dirty, self._guide_redraw_pending = nil, nil
   self._render_guard = nil
   if self._group then
     vim.api.nvim_del_augroup_by_id(self._group)
@@ -537,6 +546,9 @@ function M.new(state, options)
       end
       -- Repeated or delayed events at an unchanged position carry no new navigation intent.
       self._observed_cursor = cursor
+      if not observed or cursor[1] ~= observed[1] then
+        decorations.cursor_moved(self, cursor[1] - 1)
+      end
       local node = self._frame:node_at(cursor[1])
       if node then
         self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })

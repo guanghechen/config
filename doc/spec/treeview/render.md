@@ -129,6 +129,10 @@ connector、图标与右对齐信息默认通过 Neovim decoration provider 的 
   不在每次更新重新注册 provider；跳转和滚动到未缓存范围时仍按当前实际 frame 正确绘制。
 - 可缓存 viewport/小范围 overscan 的装饰批次，键包含 frame 依赖、render context 与区间。缓存命中省计算，
   不能省略本次 redraw 的 ephemeral marks；这些 marks 不会自动留到下一次 redraw。
+- 连续滚动的小范围缺口可预读前后各至多 8 行，整个批次仍受 512 行及 native payload/guide 预算限制；
+  overscan 超限时退回精确 viewport 查询，后续相邻滚动不反复尝试失败的预读；冷跳转或行数据变化后恢复。
+  冷跳转不预读。缓存切片只复制列数组，复用不可变行值；
+  consumer 准备和 Filetree watch hints 仍使用实际 viewport，不把预读范围当作可见范围。
 - 在 `on_win` 固定本轮 frame/context 并按整个 viewport 批量准备冷缓存，`on_range` 消费该批数据；
   Neovim 分段调用 on_range 时不因此逐行跨 FFI，也不反复准备同一祖先路径。实际多次 redraw/range 的调用成本仍计入。
 - 冷范围读取只允许对不可变 frame 做有界 Rust 批量查询，返回所需行的装饰；不做 IO、全树布局、全量 FFI 导出，
@@ -162,6 +166,17 @@ connector、图标与右对齐信息默认通过 Neovim decoration provider 的 
 准备完成后重新校验目标 frame、viewport 与装饰失效版本，过期结果不提交；仅 data/layout 相同不足以复用
 包含 selection/expansion 等 state 列的行批次。Callback 在正文、frame 与装饰一起交换时执行，
 不能进行 IO 或让出。`on_frame` observer 只在这些输入全部就绪后运行；关闭或重新绑定后忽略迟到结果。
+
+`frame:same_rows(other)` 以相同 state、共享 source/行序列、root/display 和 selection/expansion stamps 证明
+行数据可复用；cursor、frame/commit revision 和外部 consumer 装饰不参与。该判定不扫描行，返回 false 时按普通准备处理。
+Swap 发布可复用已覆盖目标 viewport 的行批次；同一 target 的 consumer 异步准备恢复也复用其已导出的行。
+内部 overscan 批次只在同 frame 或这项 `same_rows` 证明成立时复用；selection/source 变化不能仅凭 layout 复用。
+Consumer 的准备和 commit 仍执行，commit 仅在确认自身装饰未变时返回 true；nil/false 保守请求完整重绘。
+全部行数据和 consumer 装饰未变、且没有显式装饰失效时，发布只交换 frame，保留已在正确位置的 cursor/Visual
+端点和窗口位置。共享 state 导致本窗口 cursor 真正移动时，再更新其局部路径。已经画过的 cursor 路径不因 native
+确认再整窗重绘；外部 annotations、主题或 metadata 变化仍按其失效语义发布。
+Selection marker glyph 在 commit/`on_frame` 前后单独比较；例如 copy/cut purpose 改变但行数据未变时，
+仍复用行批次，并重画 viewport 中的 marker，不能据 `same_rows` 跳过这次显示变化。
 
 `view:refresh_decorations()` 合并请求并复用同一准备/发布流程；其待调度和准备状态均计入 `status().preparing`。
 滚动到冷范围且 consumer 提供了准备 callback 时，redraw 只调度这次刷新，不在 callback 内运行昂贵准备。

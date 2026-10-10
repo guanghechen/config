@@ -67,6 +67,14 @@ pub enum Direction {
     LastChildOrSibling,
 }
 
+/** A half-open row interval ending at a path node's connector, at its display depth. */
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GuideSegment {
+    pub first: usize,
+    pub last: usize,
+    pub depth: usize,
+}
+
 #[derive(Clone, Debug)]
 pub struct RowInfo {
     pub row: Row,
@@ -790,6 +798,64 @@ impl Snapshot {
     }
     pub fn position(&self, id: NodeId) -> Option<usize> {
         self.rows.position(&id)
+    }
+
+    /** Prove that row reads are reusable across cursor-only publications, without visiting rows. */
+    pub fn same_rows(&self, other: &Self) -> bool {
+        self.state.id == other.state.id
+            && Arc::ptr_eq(&self.source, &other.source)
+            && self.rows.same_version(&other.rows)
+            && self.state.root == other.state.root
+            && self.state.display == other.state.display
+            && self.state.selection.clear == other.state.selection.clear
+            && self
+                .state
+                .selection
+                .nodes
+                .same_version(&other.state.selection.nodes)
+            && self.state.expansion.clear == other.state.expansion.clear
+            && self
+                .state
+                .expansion
+                .nodes
+                .same_version(&other.state.expansion.nodes)
+    }
+
+    /** Only visible ancestors are visited; an offscreen parent terminates the clipped path. */
+    pub fn guide_path(&self, index: usize, start: usize, end: usize) -> Result<Vec<GuideSegment>> {
+        if start > end || end > self.len() {
+            return Err(Error::invalid("guide viewport is outside this frame"));
+        }
+        if end - start > 512 {
+            return Err(Error::limit("guide viewport requires at most 512 rows"));
+        }
+        let mut segments = Vec::new();
+        if self.mode() != Mode::Tree || !(start..end).contains(&index) {
+            return Ok(segments);
+        }
+        let mut at = index;
+        loop {
+            let row = self.row(at).expect("visible guide path node");
+            let parent = row.parent.and_then(|id| self.position(id));
+            let first = parent.map_or_else(
+                || match self.root() {
+                    Root::ChildrenOf(_) => 0,
+                    Root::Forest(_) => at,
+                },
+                |parent| parent + 1,
+            );
+            segments.push(GuideSegment {
+                first: first.max(start),
+                last: at + 1,
+                depth: row.depth,
+            });
+            match parent {
+                Some(parent) if parent >= start => at = parent,
+                _ => break,
+            }
+        }
+        segments.reverse();
+        Ok(segments)
     }
 
     pub fn navigate(&self, index: usize, direction: Direction) -> Option<usize> {

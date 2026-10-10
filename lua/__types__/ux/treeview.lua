@@ -182,7 +182,7 @@
 ---@field public keymaps                ?boolean
 ---@field public selection_recursive    ?boolean
 ---@field public on_attach              ?fun(view: ux.treeview.View): nil Called after setup and before the first frame request; failure detaches the view.
----@field public prepare_frame          ?fun(view: ux.treeview.View, frame: yoz.ux.treeview.Frame, first: integer, last: integer, rows: ux.treeview.IRows): stl.c.Future Resolves to a commit callback or false to retry; viewport is 0-based, half-open; rows are shared readonly preparation input.
+---@field public prepare_frame          ?fun(view: ux.treeview.View, frame: yoz.ux.treeview.Frame, first: integer, last: integer, rows: ux.treeview.IRows): stl.c.Future Resolves to a commit callback or false to retry; callback may return true if decorations are unchanged. Viewport is 0-based, half-open; rows are shared readonly input.
 ---@field public on_frame               ?fun(frame: yoz.ux.treeview.Frame): nil
 ---@field public glyphs                 ?table<string, string>
 ---@field public on_activate            ?fun(frame: yoz.ux.treeview.Frame, node: ux.treeview.NodeId): nil
@@ -268,6 +268,12 @@
 ---@field public indent                 ?integer
 ---@field public slots                  ?integer
 ---@field public separator              ?string
+
+---The last row is a path node; preceding rows carry only its vertical connection.
+---@class ux.treeview.IGuideSegment
+---@field public first                  integer 1-based inclusive, clipped to the viewport.
+---@field public last                   integer 1-based inclusive connector row.
+---@field public depth                  integer 0-based guide depth.
 
 ---@class ux.treeview.INode : ux.treeview.INodeData
 ---@field public id                     ux.treeview.NodeId

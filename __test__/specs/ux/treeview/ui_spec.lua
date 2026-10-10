@@ -165,7 +165,15 @@ t:test("connectors and navigation are exact, and persistent decoration errors st
     await(state:set_expanded({data:source():id("a")},true,false))
     set_extmark = vim.api.nvim_buf_set_extmark
     vim.api.nvim_buf_set_extmark = function(bufnr,ns,row,col,options)
-      if options.ephemeral and options.virt_text_pos == "overlay" then marks[row..":"..col] = options.virt_text[1][1] end
+      if options.ephemeral and options.virt_text_pos == "overlay" then
+        local column = col
+        for _, chunk in ipairs(options.virt_text) do
+          for _, glyph in ipairs(vim.fn.split(chunk[1], "\\zs")) do
+            marks[row..":"..column] = glyph
+            column = column + vim.fn.strdisplaywidth(glyph)
+          end
+        end
+      end
       if fail_marks and options.ephemeral then error("injected decoration failure") end
       return set_extmark(bufnr,ns,row,col,options)
     end
@@ -177,9 +185,9 @@ t:test("connectors and navigation are exact, and persistent decoration errors st
     { assert(vim.uv.cwd()) }
   )
   rpc(channel, "nvim_command", "redraw")
-  t.assert_eq("├─", eval(channel, 'return marks["0:0"]'))
+  t.assert_eq("╰─", eval(channel, 'return marks["0:0"] .. marks["0:1"]'))
   t.assert_eq("│", eval(channel, 'return marks["1:0"]'))
-  t.assert_eq("╰─", eval(channel, 'return marks["1:2"]'))
+  t.assert_eq("╰─", eval(channel, 'return marks["1:2"] .. marks["1:3"]'))
   t.assert_eq(
     0,
     eval(
@@ -215,7 +223,7 @@ t:test("connectors and navigation are exact, and persistent decoration errors st
   ]]
   )
   rpc(channel, "nvim_command", "redraw")
-  t.assert_eq("╰─", eval(channel, 'return marks["0:0"]'))
+  t.assert_eq("╰─", eval(channel, 'return marks["0:0"] .. marks["0:1"]'))
   eval(
     channel,
     [[
@@ -233,7 +241,8 @@ t:test("connectors and navigation are exact, and persistent decoration errors st
   rpc(channel, "nvim_command", "redraw")
   t.assert_eq("V", eval(channel, "return vim.api.nvim_get_mode().mode"))
   t.assert_true(eval(channel, "return view:frame():header().layout_revision==visual_layout and writes==visual_writes"))
-  t.assert_eq("├─", eval(channel, 'return marks["0:0"]'))
+  t.assert_false(eval(channel, "return view:frame():rows(1,1).connector_last[1]"))
+  t.assert_eq("╰─", eval(channel, 'return marks["0:0"] .. marks["0:1"]'))
 end)
 
 t:run()

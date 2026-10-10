@@ -181,6 +181,7 @@ local function publish(view, plan, header, staging, guard)
     end
   end
   local previous_frame, previous_header = view._frame, view._header
+  local same_rows = header.mode == "Swap" and previous_frame and target:same_rows(previous_frame)
   local saved = capture(view)
   local prepared
   if target_header.row_count > 0 then
@@ -189,12 +190,33 @@ local function publish(view, plan, header, staging, guard)
     local cursor = saved.visual and saved.cursor[1] or target_header.cursor_row or 1
     local first = math.max(0, math.min(top - 1, cursor - 1, target_header.row_count - 1))
     first = math.max(first, math.min(cursor, target_header.row_count) - height)
-    local ok, result = pcall(decorations.prepare, target, first, math.min(first + height + 1, target_header.row_count))
-    if not ok then
-      M.fail(view, result, false)
-      return
+    local last = math.min(first + height + 1, target_header.row_count)
+    local staged, cached = guard.decorations, view._decorations
+    if staged and staged.frame == target_header.frame_id and staged.first <= first and staged.last >= last then
+      prepared = staged
+    elseif
+      same_rows
+      and cached
+      and cached.frame == previous_frame:id()
+      and cached.first <= first
+      and cached.last >= last
+    then
+      prepared = {
+        frame = target_header.frame_id,
+        first = cached.first,
+        last = cached.last,
+        rows = cached.rows,
+        batch = cached.batch,
+      }
+    else
+      local ok, result = pcall(decorations.prepare, target, first, last)
+      if not ok then
+        M.fail(view, result, false)
+        return
+      end
+      prepared = result
     end
-    prepared = result
+    guard.decorations = prepared
   end
   if guard.decoration_revision ~= view._decoration_revision then
     guard.feature = nil
@@ -242,6 +264,8 @@ local function publish(view, plan, header, staging, guard)
       return
     end
   end
+  local unchanged = same_rows and not view._decoration_pending
+  local selected_glyph, self_selected_glyph = view._glyphs.selected, view._glyphs.self_selected
   view._publishing = true
   local ok, error = pcall(function()
     if header.mode ~= "Swap" then
@@ -259,9 +283,15 @@ local function publish(view, plan, header, staging, guard)
     view._frame, view._header = target, target_header
     view._decorations = prepared
     if feature and prepared then
-      feature.commit(target)
+      local feature_unchanged = feature.commit(target)
+      unchanged = unchanged and feature_unchanged == true
     end
-    restore(view, saved)
+    if same_rows and (saved.visual or saved.cursor[1] == (target_header.cursor_row or 1)) then
+      -- Cursor-only frames keep the already drawn window, including Visual endpoints and virtual columns.
+      view._observed_cursor = saved.cursor
+    else
+      restore(view, saved)
+    end
   end)
   if not ok then
     view._frame, view._header = previous_frame, previous_header
@@ -297,7 +327,20 @@ local function publish(view, plan, header, staging, guard)
       view:_notify_error(error)
     end
   end
-  view:_redraw()
+  if not view:_valid() then
+    return
+  end
+  unchanged = unchanged
+    and view._glyphs.selected == selected_glyph
+    and view._glyphs.self_selected == self_selected_glyph
+  if unchanged then
+    local cursor = vim.api.nvim_win_get_cursor(view.winnr)
+    if cursor[1] ~= saved.cursor[1] then
+      decorations.cursor_moved(view, cursor[1] - 1)
+    end
+  else
+    view:_redraw()
+  end
 end
 
 ---@param view                          ux.treeview.View

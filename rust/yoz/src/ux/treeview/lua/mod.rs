@@ -141,6 +141,10 @@ impl LuaUserData for LuaFrame {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
         methods.add_method("header", |lua, this, ()| output::header(lua, &this.0));
         methods.add_method("id", |_, this, ()| Ok(output::token('f', this.0.id)));
+        methods.add_method("same_rows", |_, this, other: LuaAnyUserData| {
+            let other = other.borrow::<LuaFrame>()?;
+            Ok(this.0.same_rows(&other.0))
+        });
         methods.add_method("node_at", |_, this, row: LuaValue| {
             let row = input::integer(row).map_err(LuaError::external)?;
             Ok(row
@@ -169,6 +173,28 @@ impl LuaUserData for LuaFrame {
             let (first, last) = range(first, last, this.0.len(), 1024)?;
             output::rows(lua, &this.0, first, last)
         });
+        methods.add_method(
+            "guide_path",
+            |lua, this, (row, first, last): (LuaValue, LuaValue, LuaValue)| {
+                let row = input::integer(row).map_err(LuaError::external)?;
+                let (first, last) = range(first, last, this.0.len(), 512)?;
+                let result = lua.create_table()?;
+                if let Some(row) = row.checked_sub(1) {
+                    let path = this
+                        .0
+                        .guide_path(row, first, last)
+                        .map_err(LuaError::external)?;
+                    for (index, segment) in path.iter().enumerate() {
+                        let value = lua.create_table_with_capacity(0, 3)?;
+                        value.set("first", segment.first + 1)?;
+                        value.set("last", segment.last)?;
+                        value.set("depth", segment.depth)?;
+                        result.raw_set(index + 1, value)?;
+                    }
+                }
+                Ok(result)
+            },
+        );
         methods.add_method("node", |lua, this, id: LuaValue| {
             output::detail(
                 lua,
