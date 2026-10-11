@@ -467,3 +467,19 @@ the longest gap from 377 ms to 19.5 ms. Two complete-flow checks measured identi
 595–600 ms with 6.7–7.1 ms gaps, and reopen at 4.0–7.2 ms with zero body writes or repeated icon lookups.
 The synthetic input excludes filesystem discovery. Preparation copies and validates generations
 before one source adoption; the existing displayed result is not partially rewritten.
+
+Final whole-migration acceptance compared original `c55d9c6ad` with runtime `543fcb2ca` in three
+independent processes per variant, reversing order in the second round. At 50k files, File Picker
+first UI measured 4.99→1.45 s, identical refresh 5.28→0.63 s, initial max timer gap 4.99 s→22.6 ms,
+directory collapse 388→11 ms and expansion 391→3.7 ms. Reopen measured 5.0→7.8 ms, with zero body
+writes in both; cursor p95 was 0.84→1.10 ms, also with zero body writes. These are whole-migration
+figures, distinct from the intermediate migration regressions corrected above.
+
+Remaining costs are explicit: generic 5k Tree first UI is 23.3→71.0 ms, despite collapse/expansion
+falling from roughly 142 ms to 2.5 ms and its initial main-thread gap falling from 21.9 to 6.2 ms.
+Dense Searcher first UI is 148→108 ms, but process CPU is 72→123 ms, retained Lua 7.1→13.3 MiB and
+RSS increment 25.8→36.4 MiB. Picker initial RSS is 278→303 MiB while its completed interaction
+sequence ends at 351→313 MiB. The 50k Tree→List transition still has an O(N) preparation path
+(158 ms total and an 86 ms max timer gap in this sample). No uniform speedup or strict frame-time
+guarantee is claimed. The final runtime passes all 252 Lua suites; Rust validation is 619 passed,
+28 ignored.

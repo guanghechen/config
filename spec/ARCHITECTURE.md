@@ -75,7 +75,7 @@ Key capabilities:
 - Common utilities (`stl.string`, `stl.table`, `stl.fs`, `stl.json`)
 - OS boundary layer (`stl.os.path`, `stl.os.fs`) for filepath/os_path conversion and filesystem facade
 - UI/runtime primitives (`stl.icon`, `stl.fileicon`, `stl.filetype`, `stl.reporter`)
-- Async and state primitives in `stl.c.*` (`Observable`, `Future`, `Scheduler`, `History`, `Filetree`, etc.)
+- Async and state primitives in `stl.c.*` (`Observable`, `Future`, `Scheduler`, `History`, `CancellationToken`, etc.)
 
 ### `lua/dot/` (Core Framework Layer)
 
@@ -97,7 +97,7 @@ Highlights:
 
 - Feature modules in `era/m/*` (`explorer`, `picker`, `searcher`, `ai`, `git`, `term`, etc.)
 - Callable functions in `era/fn/*` (`find-*`, `search-*`, `select-*`, `rename`, `run-code`, etc.)
-- View components in `era/view/*` (`act`, `filetree`, `keysheet`, `notifications`, etc.)
+- View components in `era/view/*` (`act`, `result_tree`, `result_files`, `keysheet`, `notifications`, etc.)
 
 ## Entry Layer
 
