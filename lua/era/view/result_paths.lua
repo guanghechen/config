@@ -127,8 +127,8 @@ end
 ---@param cwd                           string
 ---@param paths                         string[]
 ---@param with_locations                boolean
----@return nil
-function M:reset(cwd, paths, with_locations)
+---@return boolean
+function M:matches(cwd, paths, with_locations)
   local previous = self._reset
   if
     previous
@@ -145,8 +145,19 @@ function M:reset(cwd, paths, with_locations)
       end
     end
     if same then
-      return
+      return true
     end
+  end
+  return false
+end
+
+---@param cwd                           string
+---@param paths                         string[]
+---@param with_locations                boolean
+---@return nil
+function M:reset(cwd, paths, with_locations)
+  if self:matches(cwd, paths, with_locations) then
+    return
   end
   self:clear()
   self:insert_directory_absolute(cwd)
@@ -160,6 +171,61 @@ function M:reset(cwd, paths, with_locations)
     self:insert_file_absolute(path)
   end
   self._reset = { cwd = cwd, paths = vim.list_slice(paths), with_locations = with_locations, revision = self.revision }
+end
+
+---Prepare a private producer. The caller owns yielding, cancellation and atomic adoption.
+---@param cwd                           string
+---@param paths                         string[] Owned input array; not mutated during preparation.
+---@param checkpoint                    fun(): nil
+---@return era.view.ResultPaths
+function M:prepare(cwd, paths, checkpoint)
+  if self:matches(cwd, paths, false) then
+    return self
+  end
+  local prepared = M.new()
+  prepared:insert_directory_absolute(cwd)
+  for _, path in ipairs(paths) do
+    if not yoz.canonical_path.is_absolute(path) then
+      path = yoz.canonical_path.join(cwd, path, false)
+    end
+    prepared:insert_file_absolute(path)
+    checkpoint()
+  end
+  local records = prepared.records
+  local order = require("era.view.result_order")
+  for key, record in pairs(records) do
+    if #record.children > 1 then
+      record.children = order.sort(record.children, function(left, right)
+        local a, b = records[left].data, records[right].data
+        if a.filetype ~= b.filetype then
+          return a.filetype == "directory"
+        end
+        return a.basename < b.basename
+      end, checkpoint)
+      prepared._sorted[key] = prepared.revision
+    end
+    checkpoint()
+  end
+  prepared._reset = { cwd = cwd, paths = paths, with_locations = false, revision = prepared.revision }
+  return prepared
+end
+
+---@param prepared                      era.view.ResultPaths
+---@return nil
+function M:adopt(prepared)
+  assert(self.root == prepared.root, "result paths must share the canonical root")
+  self.records, self._paths = prepared.records, prepared._paths
+  self.revision = self.revision + 1
+  self._sorted = {}
+  for key in pairs(prepared._sorted) do
+    self._sorted[key] = self.revision
+  end
+  self._reset = {
+    cwd = prepared._reset.cwd,
+    paths = prepared._reset.paths,
+    with_locations = false,
+    revision = self.revision,
+  }
 end
 
 return M

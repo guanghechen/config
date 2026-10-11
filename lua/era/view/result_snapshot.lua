@@ -158,6 +158,7 @@ end
 ---@return boolean
 function M:step()
   if self._produce then
+    local deadline = vim.uv.hrtime() + 2000000
     for _ = 1, 256 do
       local ok, record = coroutine.resume(self._produce)
       if not ok then
@@ -222,6 +223,9 @@ function M:step()
             return false
           end
         end
+      end
+      if vim.uv.hrtime() >= deadline then
+        return false
       end
     end
     return false

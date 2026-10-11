@@ -52,6 +52,23 @@ t:test("one file with thousands of locations yields during presentation and meta
   t.assert_true(builder.snapshot.entries.file.locations[4000] == builder.snapshot.entries["location:4000"])
 end)
 
+t:test("presentation yields on its time budget before the record-count limit", function()
+  local source = Source.new("root", { label = "root" })
+  for index = 1, 100 do
+    source:insert("root", tostring(index), { label = tostring(index) })
+  end
+  local clock = 0
+  t:patch_table(vim.uv, "hrtime", function()
+    clock = clock + 1000000
+    return clock
+  end)
+  local builder = Snapshot.new(source, {}, {}, function(_, data)
+    return { label = data.label }
+  end)
+  t.assert_false(builder:step())
+  t.assert_eq(2, #builder.snapshot.records.keys)
+end)
+
 t:test("sparse snapshots and late topology changes preserve the complete input", function()
   local source = Source.new("root", { label = "root" })
   for index = 1, 600 do

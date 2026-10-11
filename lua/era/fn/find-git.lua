@@ -14,19 +14,22 @@ local o_flag_selected = dot.context.select.find_git.flag_selected
 local o_flag_viewtype = dot.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
+local refresh_generation = 0
 local picker ---@type era.m.picker.FiletreeComposer
 
 ---@async
 ---@param force                         boolean
----@return nil
+---@return boolean
 local function refresh(force)
   if not force and not git_filepaths_dirty then
-    return
+    return true
   end
+  refresh_generation = refresh_generation + 1
+  local generation = refresh_generation
 
   local status = era.m.git.state.status("HEAD"):await()
-  if status == nil then
-    return
+  if status == nil or generation ~= refresh_generation then
+    return generation == refresh_generation
   end
 
   local workspace = dot.path.workspace()
@@ -35,8 +38,12 @@ local function refresh(force)
     filepaths[#filepaths + 1] = filepath
   end
 
-  picker:reset_filepaths(workspace, filepaths, false)
-  git_filepaths_dirty = false
+  local reply = picker:prepare_filepaths(workspace, filepaths):await()
+  if reply.kind == "Applied" and generation == refresh_generation then
+    git_filepaths_dirty = false
+    return true
+  end
+  return false
 end
 
 picker = era.m.picker.FiletreeComposer.new({
@@ -60,6 +67,11 @@ picker = era.m.picker.FiletreeComposer.new({
   flags_start_index = 1,
 
   on_closed = function()
+    refresh_generation = refresh_generation + 1
+    git_filepaths_dirty = true
+  end,
+  on_hidden = function()
+    refresh_generation = refresh_generation + 1
     git_filepaths_dirty = true
   end,
   on_focused = function()
@@ -68,9 +80,13 @@ picker = era.m.picker.FiletreeComposer.new({
     end)
   end,
   on_refresh = function()
+    refresh_generation = refresh_generation + 1
+    local generation = refresh_generation
     stl.async.run(function()
       era.m.git.state.refresh(true):await()
-      refresh(true)
+      if generation == refresh_generation then
+        refresh(true)
+      end
     end)
   end,
 })
@@ -92,8 +108,9 @@ local function find_git()
   end
 
   stl.async.run(function()
-    refresh(false)
-    picker:focus()
+    if refresh(false) then
+      picker:focus()
+    end
   end)
 end
 

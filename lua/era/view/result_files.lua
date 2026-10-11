@@ -36,7 +36,7 @@ function M.new(props)
       label = text,
       icon = entry.locations and #entry.locations > 0 and "" or nil,
       highlight = highlight or "m_ft_filename",
-      fields = { highlights = highlights, file_icon = name },
+      fields = { highlights = #highlights > 0 and highlights or nil, file_icon = name },
     }
   end
   return setmetatable(ResultTree.new(props), M)
@@ -168,6 +168,22 @@ function M:reset_filepaths(cwd, paths, with_locations)
       end
     end
   end
+end
+
+---@param source                        era.view.ResultPaths
+---@param entries                       table<string, era.view.result_tree.IEntry>
+---@return nil
+function M:adopt_filepaths(source, entries)
+  local reused = source == self.source
+  local icons, directories = self._icons, self._directory_icons
+  self:clear()
+  if not reused then
+    self.source:adopt(source)
+  else
+    self._icons, self._directory_icons = icons, directories
+  end
+  self.entries = entries
+  self:clear_match()
 end
 
 ---@param root                          ?string

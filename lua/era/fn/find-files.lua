@@ -25,6 +25,8 @@ local o_includes = dot.context.select.find_file.includes
 ---@field public includes               string[]
 ---@field public excludes               string[]
 
+local pending_refresh
+
 ---@param picker                        era.m.picker.FiletreeComposer
 ---@return nil
 local function edit_setting(picker)
@@ -92,7 +94,6 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function refresh(picker, rootpath)
-  local rootuuid = require("era.view.result_paths").key(rootpath) ---@type string
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and dot.context.select.find_file.excludes:snapshot() or {} ---@type string[]
@@ -107,6 +108,10 @@ local function refresh(picker, rootpath)
     search_paths = "",
     exclude_patterns = table.concat(excludes, ","),
   }
+  if pending_refresh and vim.deep_equal(pending_refresh.options, find_files_options) then
+    return
+  end
+  local request = { rootpath = rootpath, options = find_files_options }
 
   local filepaths = {}
   local result, err = yoz.find.find_files(find_files_options)
@@ -120,9 +125,15 @@ local function refresh(picker, rootpath)
     filepaths = result.filepaths or {}
   end
 
-  picker:reset_filepaths(rootpath, filepaths, false)
-  picker:attach(rootuuid)
-  picker:mark_result_dirty()
+  pending_refresh = request
+  picker:prepare_filepaths(rootpath, filepaths):finally(function(ok, error)
+    if pending_refresh == request then
+      pending_refresh = nil
+    end
+    if not ok then
+      stl.reporter.error({ from = name, subject = "prepare files", message = tostring(error) })
+    end
+  end)
 end
 
 ---@param picker                        era.m.picker.FiletreeComposer
@@ -130,7 +141,11 @@ end
 ---@return nil
 local function attach(picker, rootpath)
   local rootuuid = require("era.view.result_paths").key(rootpath) ---@type string
+  if pending_refresh and require("era.view.result_paths").key(pending_refresh.rootpath) == rootuuid then
+    return
+  end
   if picker:isexistent(rootuuid) then
+    pending_refresh = nil
     picker:attach(rootuuid)
   else
     refresh(picker, rootpath)
@@ -227,9 +242,16 @@ picker = era.m.picker.FiletreeComposer.new({
   on_attached = function(_, rootpath)
     o_rootpath:next(rootpath)
   end,
+  on_closed = function()
+    pending_refresh = nil
+  end,
+  on_hidden = function()
+    pending_refresh = nil
+  end,
 
   on_refresh = function(self)
-    local rootpath = o_rootpath:snapshot() ---@type string
+    local rootpath = pending_refresh and pending_refresh.rootpath or o_rootpath:snapshot()
+    pending_refresh = nil
     refresh(self, rootpath)
   end,
 })
@@ -251,7 +273,7 @@ stl.fn.observe({ o_rootpath }, function()
 end)
 
 stl.fn.observe({ o_flag_exclude, o_flag_gitignore, o_includes, o_excludes }, function()
-  local rootpath = o_rootpath:snapshot() ---@type string
+  local rootpath = pending_refresh and pending_refresh.rootpath or o_rootpath:snapshot()
   picker:mark_result_flags_dirty()
   refresh(picker, rootpath)
 end, true)

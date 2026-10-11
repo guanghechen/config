@@ -120,6 +120,7 @@ local __module_name__ = "era.m.picker.composer.filetree" ---@type string
 ---@field protected _composer           era.m.picker.BasicComposer
 ---@field protected _plainfile          era.view.Plainfile
 ---@field protected _scheduler_match    stl.c.Scheduler
+---@field protected _search_pattern     stl.c.Observable
 ---@field protected _treeview           era.m.picker.FiletreeView
 ---
 ---@field protected _last_preview_filepath string|nil
@@ -1329,6 +1330,25 @@ function M.new(props)
     end
   end
 
+  ---@return stl.c.Future
+  local function render_result()
+    if self._disposed then
+      return stl.c.Future.resolve({ kind = "Rejected", error = "picker disposed" })
+    end
+    if self._path_request and self._path_future and not self._path_future:is_done() then
+      return self._path_future:then_(render_result)
+    end
+    return treeview:publish({
+      mode = o_flag_viewtype:snapshot(),
+      rootuuid = self._uuid_root,
+      orders = self._uuids_order,
+      foldempty = o_flag_foldempty:snapshot(),
+      only_matched = o_search_pattern:snapshot() ~= "",
+      only_selected = o_flag_selected:snapshot(),
+      list_text = "ancestry",
+    })
+  end
+
   local composer = era.m.picker.BasicComposer.new({
     uuid = picker_uuid,
     name = fullname,
@@ -1358,17 +1378,7 @@ function M.new(props)
 
     ---@type era.m.picker.result.IDraw
     result_tree = treeview,
-    render_result = function()
-      return treeview:publish({
-        mode = o_flag_viewtype:snapshot(),
-        rootuuid = self._uuid_root,
-        orders = self._uuids_order,
-        foldempty = o_flag_foldempty:snapshot(),
-        only_matched = o_search_pattern:snapshot() ~= "",
-        only_selected = o_flag_selected:snapshot(),
-        list_text = "ancestry",
-      })
-    end,
+    render_result = render_result,
 
     ---@type era.m.picker.preview.IDraw|nil
     preview_tree = function()
@@ -1387,6 +1397,7 @@ function M.new(props)
       end
     end,
     on_closed = function()
+      self._path_request = nil
       on_closed(self)
     end,
     on_disposed = function()
@@ -1396,6 +1407,7 @@ function M.new(props)
       on_focused(self)
     end,
     on_hidden = function()
+      self._path_request = nil
       on_hidden(self)
     end,
     on_refresh = function(picker, force)
@@ -1434,6 +1446,7 @@ function M.new(props)
   self._composer = composer
   self._plainfile = plainfile
   self._scheduler_match = scheduler_match
+  self._search_pattern = o_search_pattern
   self._treeview = treeview
 
   self._last_preview_filepath = nil
@@ -1486,6 +1499,7 @@ function M:dispose()
     return
   end
   self._disposed = true
+  self._path_request, self._path_future = nil, nil
 
   local fullname = self.fullname
   local on_dispose = self._on_disposed ---@type era.m.picker.composer.filetree.IOnDisposed
@@ -1546,6 +1560,7 @@ function M:dispose()
   self._composer = nil
   self._plainfile = nil
   self._scheduler_match = nil
+  self._search_pattern = nil
   self._treeview = nil
 
   self._last_preview_filepath = nil
@@ -1591,6 +1606,7 @@ end
 
 ---@return nil
 function M:hide()
+  self._path_request = nil
   self._composer:hide()
 end
 
@@ -1605,6 +1621,7 @@ end
 ---@return era.m.picker.FiletreeComposer
 function M:attach(rootuuid)
   self:__health__()
+  self._path_request = nil
   if self._uuid_root == rootuuid then
     return self
   end
@@ -1663,6 +1680,96 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
 
   self._on_attached(self, cwd)
   return self
+end
+
+---Prepare a plain file collection cooperatively, then replace the live producer once.
+---@param cwd                           string
+---@param filepaths                     string[]
+---@return stl.c.Future
+function M:prepare_filepaths(cwd, filepaths)
+  self:__health__()
+  cwd = yoz.canonical_path.from_os_path(cwd, false)
+  local paths = vim.list_slice(filepaths)
+  local source, treeview = self._filetree, self._treeview
+  local source_revision, revision = source.revision, treeview._revision
+  local request, cancelled = {}, {}
+  self._path_request = request
+  local future = stl.async.run_future(function()
+    local deadline = vim.uv.hrtime() + 2000000
+    ---@return nil
+    local function checkpoint()
+      if
+        self._disposed
+        or self._path_request ~= request
+        or source.revision ~= source_revision
+        or treeview._revision ~= revision
+      then
+        error(cancelled, 0)
+      end
+      if vim.uv.hrtime() >= deadline then
+        stl.async.scheduler()
+        if
+          self._disposed
+          or self._path_request ~= request
+          or source.revision ~= source_revision
+          or treeview._revision ~= revision
+        then
+          error(cancelled, 0)
+        end
+        deadline = vim.uv.hrtime() + 2000000
+      end
+    end
+    local ok, failure = pcall(function()
+      local prepared = source:prepare(cwd, paths, checkpoint)
+      local entries, files = {}, {}
+      for key, record in pairs(prepared.records) do
+        entries[key] = { key = key, nodetype = record.data.filetype == "directory" and "container" or "leaf" }
+        checkpoint()
+      end
+      local root = require("era.view.result_paths").key(cwd)
+      prepared:walk(root, function(key, data)
+        if data.filetype == "file" then
+          files[#files + 1] = key
+        end
+        checkpoint()
+      end)
+      local ordered = vim.list_slice(files)
+      if self._frecency then
+        local scores = {}
+        for _, key in ipairs(files) do
+          scores[key] = self._frecency:score(key) or 0
+          checkpoint()
+        end
+        ordered = require("era.view.result_order").sort(ordered, function(left, right)
+          return scores[left] > scores[right]
+        end, checkpoint)
+      end
+      checkpoint()
+      treeview:adopt_filepaths(prepared, entries)
+      self._last_preview_filepath, self._uuid_root = nil, root
+      self._uuids_file, self._uuids_order = files, ordered
+      if self._search_pattern:snapshot() ~= "" then
+        self:__match__(self._search_pattern:snapshot())
+      end
+      self._path_request = nil
+      self:mark_result_dirty()
+      self._on_attached(self, cwd)
+    end)
+    if self._path_request == request then
+      self._path_request = nil
+    end
+    if not ok then
+      if failure == cancelled then
+        return { kind = "Superseded" }
+      end
+      error(failure, 0)
+    end
+    return { kind = "Applied" }
+  end)
+  if self._path_request == request then
+    self._path_future = future
+  end
+  return future
 end
 
 ----------------------------------------------------------------------------------------------------

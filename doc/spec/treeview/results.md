@@ -14,7 +14,7 @@ Picker、Searcher 和 Diffview 使用通用 Treeview records。Explorer 的真�
 - `era.view.ResultFiles` 提供 Picker/Searcher 共用的文件结果与 location presentation；两者没有静态互相依赖。
 - Lua 业务 metadata 在提交时复制为 snapshot，并以 native data revision 保存。Action 通过已发布 Frame
   获取节点与 metadata；prepare 阶段不可把新 metadata 绑定到旧 buffer 行。
-- Presentation 每批最多 256 条 records；metadata 图复制每 1024 个字段检查一次 2 ms 时间片，
+- Presentation 每批最多 256 条 records，每条结束后检查 2 ms 时间片；metadata 图复制每 1024 个字段检查一次 2 ms 时间片，
   超出时间片时让出主线程。
   共享引用与循环只复制一次；准备期间 producer revision 改变则丢弃部分 snapshot，继续最新请求。
   至多 16 个字段的简单 metadata 只有逐字段相同才复用上一帧的 immutable copy；复用不能合并
@@ -28,6 +28,13 @@ Picker、Searcher 和 Diffview 使用通用 Treeview records。Explorer 的真�
 - 完全相同的路径输入复用 producer topology；任何 producer mutation 都使这项复用失效。Locations
   与业务 metadata 仍按每次刷新重建，不能因路径集合相同而复用旧搜索结果。
   同一次 topology 复用也保留 viewport icon cache；路径输入改变时丢弃旧 cache。
+- 大批普通文件列表使用 `FiletreeComposer:prepare_filepaths`：复制输入数组，在独立 producer 中分片构建路径、
+  entries 和排序，完成后一次性接管 records，保持原 Source 对象的引用有效。宽目录和 frecency 使用稳定的
+  cooperative merge sort；每个文件的 frecency score 只读取一次，相同分数保留 source 顺序。
+  Find Files / Find Git 使用此流程；需要立即附加 locations/diagnostics 的 producer 继续使用同步 reset。
+  准备期间旧 Frame 保持可读；新的请求、同步 mutation、切根、hide 或 dispose 使旧准备失效。
+  首次 render 等待准备完成，避免先发布空根再重建投影；当前 query 在新 source 发布前应用。
+  时间片限制长循环，不承诺中断单次 Lua/VM/native 调用，也不修改全局 GC 参数。
 - 完整 Forest import 若保留所有既有节点的 data、parent、completeness 和 sibling prefix，只需生成追加操作，
   省去临时 Source 的重复构造；操作仍经过相同的原子提交、状态更新及资源检查。其他 import 使用完整 reconciliation。
 

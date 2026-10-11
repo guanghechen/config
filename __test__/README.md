@@ -455,3 +455,15 @@ settlement fell from 1.43 s to 0.83 s; reclamation adds three imports across the
 Single-commit hot expansion remained about 14 ms median, with zero hot plan rebuilds/imports; collapse
 was about 6.5–6.7 ms in that UI sample. Expanded/current commits remain live content outside the
 20,000-node collapsed-cache budget, and cold reopens restore saved directory folds after importing.
+
+Cooperative bulk-path preparation was compared against `daae1772f` at 50,000 files. Three natural-GC
+processes measured nested first UI at 1.39 s median (before 1.43 s) and longest event-loop gap at
+22.2 ms (before 209 ms). A phase profile isolated the producer gap to 9.5 ms; the remaining roughly
+20 ms spikes occurred inside individual presentation/MessagePack/VM calls. Disabling automatic GC
+in an isolated diagnostic did not eliminate them, so they are not all attributed to GC and the
+production GC policy is unchanged. The whole pipeline is not claimed to meet a strict 20 ms ceiling.
+For one wide directory with deterministic frecency scores, first UI fell from 2.04 s to 1.76 s and
+the longest gap from 377 ms to 19.5 ms. Two complete-flow checks measured identical refresh at
+595–600 ms with 6.7–7.1 ms gaps, and reopen at 4.0–7.2 ms with zero body writes or repeated icon lookups.
+The synthetic input excludes filesystem discovery. Preparation copies and validates generations
+before one source adoption; the existing displayed result is not partially rewritten.
