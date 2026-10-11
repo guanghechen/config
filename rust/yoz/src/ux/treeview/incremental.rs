@@ -1,7 +1,9 @@
 use super::data::{ChangeKind, Source};
 use super::engine::Invalidation;
 use super::model::*;
-use super::projection::{MatchedChildren, Row, Snapshot, selection_kind, sorted};
+use super::projection::{
+    Inherited, MatchedChildren, Row, Snapshot, compression_child, selection_kind, sorted,
+};
 use super::state::State;
 use super::storage::IndexedSequence;
 use std::collections::{HashMap, HashSet};
@@ -600,14 +602,12 @@ fn subtree(
         if tree && state.display.compress {
             loop {
                 let node = source.node(id).ok_or_else(|| Error::missing(id))?;
-                if !node.data.can_expand
-                    || !node.data.foldable
-                    || node.child_count() != 1
-                    || inherited.max(state.expansion.marks(id).own) & 1 == 0
-                {
+                let Some(child) = compression_child(node, &state.display, matched) else {
+                    break;
+                };
+                if inherited.max(state.expansion.marks(id).own) & 1 == 0 {
                     break;
                 }
-                let child = node.child_at(0).expect("single child");
                 let child_node = source.node(child).expect("source child");
                 let child_selected = selected.max(state.selection.marks(child).subtree);
                 if !child_node.data.can_expand
@@ -782,27 +782,68 @@ fn compression_targets(
     source: &Source,
     state: &State,
     previous: &Snapshot,
+    matched: &MatchedChildren,
     targets: &mut HashSet<NodeId>,
     boundary: &HashSet<NodeId>,
-) {
+) -> Result<()> {
     if state.display.mode != Mode::Tree || !state.display.compress {
-        return;
+        return Ok(());
     }
     let roots: HashSet<_> = match state.root {
         Root::Forest(_) => state.display_roots(source).into_iter().collect(),
         _ => HashSet::new(),
     };
-    let can_join = |tree: &Source, id| {
-        tree.node(id).is_some_and(|node| {
-            node.data.can_expand && node.data.foldable && node.child_count() == 1
-        })
+    /* Cache each source/state pair independently; checking a deep chain must not
+    walk back to the root for every compression edge. */
+    let mut inherited = [
+        (
+            Inherited::new(source, &state.expansion),
+            Inherited::new(source, &state.selection),
+        ),
+        (
+            Inherited::new(&previous.source, &previous.state.expansion),
+            Inherited::new(&previous.source, &previous.state.selection),
+        ),
+    ];
+    let joined_child = |tree: &Source,
+                        view: &State,
+                        children: &MatchedChildren,
+                        id,
+                        (expansion, selection): &mut (Inherited<'_>, Inherited<'_>)|
+     -> Result<Option<NodeId>> {
+        let Some(child) = tree
+            .node(id)
+            .and_then(|node| compression_child(node, &view.display, children))
+        else {
+            return Ok(None);
+        };
+        let node = tree.node(child).expect("source child");
+        if !node.data.can_expand
+            || !node.data.foldable
+            || expansion.get(id)?.max(view.expansion.marks(id).own) & 1 == 0
+            || !visible(tree, view, previous, children, child)?
+        {
+            return Ok(None);
+        }
+        let selected = selection.get(id)?;
+        let child_selected = selected.max(view.selection.marks(child).subtree);
+        Ok((selection_kind(tree, view, id, selected)?
+            == selection_kind(tree, view, child, child_selected)?)
+        .then_some(child))
     };
-    /* A child insertion/removal can split or join its parent's old row, including
-    when that parent is only an alias inside a longer compressed chain. */
+    /* Rebuild an ancestor only when its compression edge changes. A filtered-out
+    sibling edit must not reproject the unchanged visible subtree below that edge. */
     for &id in boundary {
         if state.root != Root::ChildrenOf(id)
             && previous.position(id).is_some()
-            && (can_join(source, id) || can_join(&previous.source, id))
+            && joined_child(source, state, matched, id, &mut inherited[0])?
+                != joined_child(
+                    &previous.source,
+                    &previous.state,
+                    &previous.matched_children,
+                    id,
+                    &mut inherited[1],
+                )?
         {
             targets.insert(id);
         }
@@ -821,17 +862,28 @@ fn compression_targets(
         if roots.contains(&id) {
             continue;
         }
-        for tree in [source, &*previous.source] {
+        for ((tree, view, children), inherited) in [
+            (source, state, matched),
+            (
+                &*previous.source,
+                &previous.state,
+                &previous.matched_children,
+            ),
+        ]
+        .into_iter()
+        .zip(&mut inherited)
+        {
             if let Some(parent) = tree.node(id).and_then(|node| node.parent)
                 && state.root != Root::ChildrenOf(parent)
                 && previous.position(parent).is_some()
-                && can_join(tree, parent)
+                && joined_child(tree, view, children, parent, inherited)? == Some(id)
                 && targets.insert(parent)
             {
                 pending.push(parent);
             }
         }
     }
+    Ok(())
 }
 
 pub(crate) fn project(
@@ -955,7 +1007,7 @@ pub(crate) fn project(
             }
         }
     }
-    compression_targets(source, state, previous, &mut targets, &boundary);
+    compression_targets(source, state, previous, matched, &mut targets, &boundary)?;
     let mut removals = Vec::new();
     let mut old_ranks = Ranks::default();
     let mut ranks = Ranks::default();

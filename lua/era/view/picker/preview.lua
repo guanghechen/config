@@ -10,6 +10,7 @@ local __module_name__ = "era.view.picker.preview" ---@type string
 
 ---@class era.view.picker.preview.IDrawResult
 ---@field public cursorline             boolean
+---@field public has_range              ?boolean
 ---@field public number                 boolean
 ---@field public title                  string
 ---@field public wrap                   boolean
@@ -50,6 +51,19 @@ local __module_name__ = "era.view.picker.preview" ---@type string
 ---@field protected _scheduler_content  stl.c.Scheduler
 local M = {}
 M.__index = M
+
+---@param winnr                         integer
+---@param has_range                     ?boolean
+---@return nil
+local function update_cursorline_highlight(winnr, has_range)
+  local from = has_range and "m_pk_preview_current" or "m_pk_preview_range_current"
+  local to = has_range and "m_pk_preview_range_current" or "m_pk_preview_current"
+  local current = vim.api.nvim_get_option_value("winhighlight", { win = winnr })
+  local updated = current:gsub(from, to)
+  if updated ~= current then
+    vim.api.nvim_set_option_value("winhighlight", updated, { win = winnr, scope = "local" })
+  end
+end
 
 ---@param props                         era.view.picker.preview.IProps
 ---@return era.view.PickerPreview
@@ -283,6 +297,7 @@ function M:create_win(winopts, dimension)
   vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", winopts.winhighlight, { win = winnr, scope = "local" })
+  update_cursorline_highlight(winnr, result and result.has_range)
 
   if result == nil then
     vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
@@ -337,8 +352,11 @@ function M:__replace_buffer__()
   self._bufnr = nil
   local bufnr = self:create_buf()
   if self._winnr and vim.api.nvim_win_is_valid(self._winnr) then
+    -- Window-local highlight overrides are reset when entering a new buffer.
+    local winhighlight = vim.api.nvim_get_option_value("winhighlight", { win = self._winnr })
     vim.api.nvim_set_option_value("winfixbuf", false, { win = self._winnr })
     vim.api.nvim_win_set_buf(self._winnr, bufnr)
+    vim.api.nvim_set_option_value("winhighlight", winhighlight, { win = self._winnr, scope = "local" })
     vim.api.nvim_set_option_value("winfixbuf", true, { win = self._winnr })
   end
   if previous and vim.api.nvim_buf_is_valid(previous) then
@@ -487,6 +505,7 @@ function M:__update_winopts__()
   wincfg.title = result.title
   wincfg.title_pos = #result.title > 0 and "center" or nil
 
+  update_cursorline_highlight(winnr, result.has_range)
   if result.cursorline ~= nil then
     vim.api.nvim_set_option_value("cursorline", result.cursorline, { win = winnr, scope = "local" })
   end

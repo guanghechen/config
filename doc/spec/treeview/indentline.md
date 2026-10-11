@@ -38,6 +38,9 @@ chain 最外层节点的位置。因此分别提供“绘制时是否末项”�
 - 单子链压缩为一行，以最深 NodeId 为代表；保留完整 chain，链中各 ID 都映射到该行。
 - 整条 chain 只占一层显示深度，source parent 关系保持完整。
 - Explorer 仅压缩目录链；parent 在 selected-only 过滤前的 source children 也必须只有一项。
+- 普通 pattern 或显式 filter 按过滤后保留的 children 判定单子链；未命中的 sibling 不阻止压缩，
+  source 拓扑仍完整保留。完整构建、局部重建和压缩边界失效共用此判定，复用既有过滤索引。
+  局部更新按实际压缩连接的变化扩大重建范围，不因祖先仍可压缩而重建其未变化的大子树。
 - 文件独立成行，选择边界不能被压缩隐藏；自身未选、仅自身选中与子树全选按
   [selection 契约](selection.md) 区分。
 - `[i` 跳到 chain 外的可见父行；`h` 使用 source parent，必要时逐段缩短压缩链。

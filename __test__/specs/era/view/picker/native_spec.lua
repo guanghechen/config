@@ -159,19 +159,24 @@ t:test("Preview switches between a native subtree and a file without closing its
       t.assert_true(force, "a new file buffer must force its first draw")
       draws = draws + 1
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "source content" })
-      return { title = "file", cursorline = true, number = true, wrap = false }
+      return { title = "file", cursorline = true, has_range = true, number = true, wrap = false }
     end,
   })
   t:defer(function()
     preview:dispose()
   end)
-  local winnr = preview:create_win({ border = "none", winhighlight = "" }, { row = 0, col = 0, width = 40, height = 6 })
+  local winhighlight = "Normal:NormalFloat,CursorLine:m_pk_preview_current,TreeviewMatch:IncSearch"
+  local winnr = preview:create_win(
+    { border = "none", winhighlight = winhighlight },
+    { row = 0, col = 0, width = 40, height = 6 }
+  )
   preview:mark_content_dirty()
   t.wait_until(function()
     return preview._tree_view and preview._tree_view:frame() ~= nil
   end, 5000)
   t.assert_eq(0, draws)
   t.assert_true(vim.api.nvim_buf_get_lines(preview:get_bufnr(), 0, 1, true)[1]:find("file.lua", 1, true) ~= nil)
+  t.assert_eq(winhighlight, vim.api.nvim_get_option_value("winhighlight", { win = winnr }), "directory preview styles")
   target = nil
   preview:mark_content_dirty()
   t.wait_until(function()
@@ -179,6 +184,11 @@ t:test("Preview switches between a native subtree and a file without closing its
   end, 5000)
   t.assert_true(vim.api.nvim_win_is_valid(winnr))
   t.assert_eq("source content", vim.api.nvim_buf_get_lines(preview:get_bufnr(), 0, 1, true)[1])
+  t.assert_eq(
+    "Normal:NormalFloat,CursorLine:m_pk_preview_range_current,TreeviewMatch:IncSearch",
+    vim.api.nvim_get_option_value("winhighlight", { win = winnr }),
+    "range preview uses its own cursorline style"
+  )
   target = { owner = tree, key = "dir", foldempty = true, title = "directory" }
   preview:mark_content_dirty()
   t.wait_until(function()
@@ -186,6 +196,7 @@ t:test("Preview switches between a native subtree and a file without closing its
   end, 5000)
   t.assert_eq(winnr, preview:get_winnr())
   t.assert_eq(1, draws)
+  t.assert_eq(winhighlight, vim.api.nvim_get_option_value("winhighlight", { win = winnr }), "restored directory styles")
 end)
 
 t:test("a late cursor acknowledgement preserves the current Visual endpoint", function()

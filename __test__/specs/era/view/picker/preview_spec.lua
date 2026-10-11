@@ -133,4 +133,41 @@ t:test("shared preview ignores a queued draw after dispose", function()
   t.assert_eq(0, draw_count, "queued draw count after dispose")
 end)
 
+t:test("preview cursorline follows range presence through redraws and reopening", function()
+  local has_range
+  local preview = era.view.PickerPreview.new({
+    name = "preview range style",
+    diagnostic_scope = "contract.preview",
+    relative_number = false,
+    keymaps = {},
+    draw = function()
+      return { title = "preview", cursorline = true, has_range = has_range, number = false, wrap = false }
+    end,
+  })
+  t:defer(function()
+    preview:dispose()
+  end)
+  local normal = "CursorLine:m_pk_preview_current,TreeviewMatch:m_pk_matches"
+  local range = "CursorLine:m_pk_preview_range_current,TreeviewMatch:m_pk_matches"
+  local winopts = { border = "", winhighlight = normal }
+  local dimension = { row = 0, col = 0, width = 20, height = 2 }
+  local winnr = preview:create_win(winopts, dimension)
+  t.assert_eq(normal, vim.api.nvim_get_option_value("winhighlight", { win = winnr }))
+
+  has_range = true
+  preview._scheduler_content._task()
+  t.assert_eq(range, vim.api.nvim_get_option_value("winhighlight", { win = winnr }))
+  preview:hide()
+  winnr = preview:create_win(winopts, dimension)
+  t.assert_eq(range, vim.api.nvim_get_option_value("winhighlight", { win = winnr }), "reopening retains range style")
+
+  has_range = nil
+  preview._scheduler_content._task()
+  t.assert_eq(
+    normal,
+    vim.api.nvim_get_option_value("winhighlight", { win = winnr }),
+    "ordinary previews restore the theme style"
+  )
+end)
+
 t:run()

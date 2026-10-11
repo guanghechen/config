@@ -63,6 +63,9 @@ Feature 通过 props 提供 `draw`、`on_drawed`、keymaps、`diagnostic_scope` 
 - Picker：relative number 跟随 `result.number`。
 - Searcher：relative number 始终关闭。
 
+Draw 只有在绘制了目标范围时才返回 `has_range = true`，启用范围专用的 cursorline 背景；普通文件、目录
+和无范围结果使用主题的常规 `CursorLine`。结果切换及窗口重开都按最近一次 Draw 的范围状态选择样式。
+
 普通文件 preview 使用 draw。目录 preview 使用 ResultTree 的独立 native State；切回文件时先替换 buffer，再 detach 旧 View，保持浮窗存活。
 异步 subtree 准备以 preview epoch 校验，关闭或换目标后不得安装旧 View。
 

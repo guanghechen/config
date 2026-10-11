@@ -81,6 +81,62 @@ t:test("ordered List filtering retains Tree ancestors and native selection acros
   t.assert_eq(0, #errors, vim.inspect(errors))
 end)
 
+t:test("foldempty compacts filtered directory chains and restores their full topology", function()
+  local records = {
+    { "rust", "root", "container", "rust" },
+    { "yoz", "rust", "container", "yoz" },
+    { "readme", "rust", "leaf", "README.md" },
+    { "src", "yoz", "container", "src" },
+    { "manifest", "yoz", "leaf", "Cargo.toml" },
+    { "macos", "src", "leaf", "macos.rs" },
+    { "linux", "src", "leaf", "linux.rs" },
+    { "cargo", "root", "container", ".cargo" },
+    { "config", "cargo", "leaf", "config.macos.toml" },
+  }
+  local source = Source.new("root", { label = "root" })
+  for _, record in ipairs(records) do
+    source:insert(record[2], record[1], { label = record[4] })
+  end
+  local tree = Tree.new({
+    name = "filtered directory compression",
+    tree = source,
+    present = function(_, data)
+      return { label = data.label }
+    end,
+  })
+  t:defer(function()
+    tree:dispose()
+  end)
+  tree:insert("root", { nodetype = "container" })
+  for _, record in ipairs(records) do
+    tree:insert(record[1], { nodetype = record[3] })
+  end
+  local request = {
+    mode = "tree",
+    rootuuid = "root",
+    foldempty = true,
+    only_matched = true,
+    orders = { "config", "macos" },
+  }
+  await(tree:publish(request))
+  local compact = tree:frame()
+  t.assert_eq(4, tree:linecount(), "unmatched siblings must not split the directory chain")
+  t.assert_eq("rust/yoz/src", compact:rows(1, 1).labels[1])
+  t.assert_eq("src", tree:retrieve_uuid(1), "the deepest directory represents the compact row")
+  t.assert_eq("macos", tree:retrieve_uuid(2), "files keep their own row")
+
+  request.foldempty = false
+  await(tree:publish(request))
+  t.assert_eq(6, tree:linecount(), "disabling foldempty restores every matching ancestor")
+  request.foldempty = true
+  await(tree:publish(request))
+  t.assert_eq(4, tree:linecount())
+  request.only_matched = false
+  await(tree:publish(request))
+  t.assert_eq(9, tree:linecount(), "clearing the filter restores the original branching topology")
+  t.assert_eq(4, compact:header().row_count, "old frames retain their compressed mapping")
+end)
+
 t:test("a native surface keeps old metadata until publication and survives reopening", function()
   local tree = fixture()
   local bufnr = vim.api.nvim_create_buf(false, true)

@@ -113,14 +113,14 @@ pub struct Snapshot {
     matcher: Option<Regex>,
 }
 
-struct Inherited<'a> {
+pub(crate) struct Inherited<'a> {
     source: &'a Source,
     stamps: &'a Stamps,
     values: HashMap<NodeId, u32>,
 }
 
 impl<'a> Inherited<'a> {
-    fn new(source: &'a Source, stamps: &'a Stamps) -> Self {
+    pub(crate) fn new(source: &'a Source, stamps: &'a Stamps) -> Self {
         Self {
             source,
             stamps,
@@ -128,7 +128,7 @@ impl<'a> Inherited<'a> {
         }
     }
 
-    fn get(&mut self, id: NodeId) -> Result<u32> {
+    pub(crate) fn get(&mut self, id: NodeId) -> Result<u32> {
         if let Some(value) = self.values.get(&id) {
             return Ok(*value);
         }
@@ -166,6 +166,22 @@ pub(crate) fn selection_kind(
         .lookup(source, &state.selection, id, inherited)?
         .ok_or_else(|| Error::invalid("frame selection summary was not prepared"))?;
     Ok(if summary.summary.full { 2 } else { 1 })
+}
+
+pub(crate) fn compression_child(
+    node: &Node,
+    display: &DisplayOptions,
+    matched: &MatchedChildren,
+) -> Option<NodeId> {
+    if !node.data.can_expand || !node.data.foldable {
+        return None;
+    }
+    // Ordinary filters compact their retained topology; selected-only preserves source branches.
+    if !display.selected_only && (!display.pattern.is_empty() || display.filter.is_some()) {
+        let children = matched.get(&node.id)?;
+        return (children.len() == 1).then(|| *children.get(0).expect("single matched child"));
+    }
+    (node.child_count() == 1).then(|| node.child_at(0).expect("single source child"))
 }
 
 pub(crate) fn sorted(
@@ -558,16 +574,14 @@ impl Snapshot {
                         if state.display.compress {
                             loop {
                                 let node = source.node(id).ok_or_else(|| Error::missing(id))?;
-                                if !node.data.can_expand
-                                    || !node.data.foldable
-                                    || node.child_count() != 1
-                                {
+                                let Some(child) =
+                                    compression_child(node, &state.display, &matched_children)
+                                else {
                                     break;
-                                }
+                                };
                                 if expansion.get(id)?.max(state.expansion.marks(id).own) & 1 == 0 {
                                     break;
                                 }
-                                let child = node.child_at(0).expect("single child");
                                 let child_node =
                                     source.node(child).ok_or_else(|| Error::missing(child))?;
                                 if !allowed(&child)
