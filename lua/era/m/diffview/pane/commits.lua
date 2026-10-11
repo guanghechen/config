@@ -417,7 +417,7 @@ function M.render(commits, opts)
     plan.entries[key] = { nodetype = "container", foldable = false }
     plan.default_closed[#plan.default_closed + 1] = key
     if include_files then
-      tree.files(plan, commit.files, key, commit)
+      plan.source:get(key).file_nodes = tree.files(plan, commit.files, key, commit)
     end
   end
   return plan

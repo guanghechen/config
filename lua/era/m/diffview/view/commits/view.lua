@@ -685,23 +685,31 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Render commits pane
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
 ---@param include_files                 ?table<string, true>
+---@param omitted                       ?table<string, true>
 ---@return stl.c.Future|nil
-function M.render_commits(ctx, include_files)
+function M.render_commits(ctx, include_files, omitted)
   local lyt = ctx.layout
   local state = ctx.state
 
-  if not lyt.commits_bufnr or not vim.api.nvim_buf_is_valid(lyt.commits_bufnr) then
+  local mounted = lyt.commits_bufnr and vim.api.nvim_buf_is_valid(lyt.commits_bufnr)
+  if not mounted and not include_files and not omitted then
     return
   end
 
   local commits = state:get_commits()
   local owner = state:get_tree("commits")
+  state._materialization:bind(owner, function(removed)
+    return M.render_commits(ctx, nil, removed)
+  end)
   local materialized = {}
   for _, commit in ipairs(commits) do
     local previous = owner.source:get("commit:" .. commit.hash)
-    if include_files and include_files[commit.hash] or previous and previous.files_loaded then
+    if
+      not (omitted and omitted[commit.hash])
+      and (include_files and include_files[commit.hash] or previous and previous.files_loaded)
+    then
       materialized[commit.hash] = true
     end
   end
@@ -712,9 +720,15 @@ function M.render_commits(ctx, include_files)
     tabtype = tabtype,
     include_files = materialized,
   })
-  local future = pane_commits.apply_to_buffer(lyt.commits_bufnr, result, owner, function()
-    if not state:is_disposed() and ctx.render_winline then
-      ctx.render_winline()
+  if not mounted then
+    return pane_commits.apply_to_buffer(nil, result, owner)
+  end
+  local future = pane_commits.apply_to_buffer(lyt.commits_bufnr, result, owner, function(frame)
+    if not state:is_disposed() then
+      state._materialization:observe(frame)
+      if ctx.render_winline then
+        ctx.render_winline()
+      end
     end
   end)
   return future

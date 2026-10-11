@@ -80,10 +80,11 @@ end
 ---@param files                         era.m.diffview.IFileEntry[]
 ---@param scope                         ?string
 ---@param commit                        ?era.m.diffview.ICommit
----@return nil
+---@return integer
 function M.files(plan, files, scope, commit)
   local util = require("era.m.diffview.util")
   local parent = scope or M.root
+  local count = 0
   for _, entry in ipairs(M.sorted_entries(files)) do
     local filepath = entry.filepath
     local parts = vim.split(filepath, "/", { plain = true })
@@ -99,6 +100,7 @@ function M.files(plan, files, scope, commit)
             item = { type = "directory", uuid = path, filepath = path, stage_type = entry.stage_type, commit = commit },
           })
           plan.entries[key] = { nodetype = "container" }
+          count = count + 1
         end
         owner = key
       end
@@ -124,17 +126,19 @@ function M.files(plan, files, scope, commit)
     })
     plan.entries[key] = { nodetype = "leaf" }
     plan.orders[#plan.orders + 1] = key
+    count = count + 1
   end
+  return count
 end
 
----@param bufnr                         integer
+---@param bufnr                         ?integer Nil publishes logical state without a surface.
 ---@param plan                          table
 ---@param owner                         ?era.view.ResultTree
 ---@param on_frame                      ?fun(frame: yoz.ux.treeview.Frame): nil
 ---@return stl.c.Future
 function M.apply(bufnr, plan, owner, on_frame)
-  owner = owner or owners[bufnr] or M.new()
-  if not owners[bufnr] then
+  owner = owner or bufnr and owners[bufnr] or M.new()
+  if bufnr and not owners[bufnr] then
     vim.api.nvim_create_autocmd("BufWipeout", {
       buffer = bufnr,
       once = true,
@@ -147,10 +151,12 @@ function M.apply(bufnr, plan, owner, on_frame)
   -- Producers describe records; native Data keeps identity across successive imports.
   owner.source, owner.entries = plan.source, plan.entries
   owner:invalidate()
-  for _, winnr in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_get_buf(winnr) == bufnr then
-      owner:mount(winnr, bufnr, on_frame or function() end)
-      break
+  if bufnr then
+    for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_get_buf(winnr) == bufnr then
+        owner:mount(winnr, bufnr, on_frame or function() end)
+        break
+      end
     end
   end
   return owner

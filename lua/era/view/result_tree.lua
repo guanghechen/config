@@ -1277,6 +1277,9 @@ end
 ---@return nil
 function M:_published(frame)
   self:_prune_versions(frame)
+  if frame and self._line_map and self._line_map.data ~= frame:header().data_revision then
+    self._line_map = nil
+  end
   local waiting = self._waiting
   local presented = not self.view or self.view:is_suspended() or not self.view:status().preparing
   if waiting and frame and presented and not self:selection_pending() and self.state._native:applicable(frame) then

@@ -16,6 +16,14 @@ local fetched_per_page = nil ---@type integer|nil
 local page_commits = {} ---@type era.m.diffview.ICommit[]
 
 local requested_tree_focus
+local materialization = {
+  bind = function() end,
+  observe = function() end,
+  restore = function() end,
+  run = function(_, callback)
+    callback()
+  end,
+}
 ---@param state                         table
 ---@return table
 local function mock_tree(state)
@@ -28,6 +36,13 @@ local function mock_tree(state)
     },
     focus_key = function(_, key)
       requested_tree_focus = key
+    end,
+    frame = function() end,
+    is_current = function()
+      return true
+    end,
+    ready = function()
+      return require("stl.c.future").resolve({ kind = "Applied" })
     end,
   }
 end
@@ -153,6 +168,7 @@ end
 ---@return table
 local function new_search_state()
   local state = {
+    _materialization = materialization,
     get_tree = function(self)
       return mock_tree(self)
     end,
@@ -278,6 +294,17 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
   local commit = { hash = "abc123", files = { entry } }
   local expanded = false
   local state = {
+    _materialization = materialization,
+    _content_generation = 0,
+    owns_content_request = function()
+      return true
+    end,
+    is_disposed = function()
+      return false
+    end,
+    expand_commit = function()
+      expanded = true
+    end,
     get_tree = function(self)
       return mock_tree(self)
     end,

@@ -71,8 +71,9 @@ cursor、selection 和 expansion 不重新生成 records 或全量行映射。
   晚到的异步 callback 不重新连接 surface，也不能写入重新绑定的窗口。
 - Diffview refresh 等待 publication Future，稳定 key 定位等待 native 行可用；buffer 行与 action 对象来自同一帧。
 - Diffview 初始仅准备 commit headers；未展开的缓存 files 不进入 inline records 或 header metadata。
-  首次 inline 展开才准备该 commit 的 files，后续展开／折叠只提交 native State 命令，不重新构造 producer、
-  解析 icons 或发起 import。Standalone filetree 独立准备自己的 records，reveal 显式准备目标 commit files。
+  首次 inline 展开才准备该 commit 的 files；缓存仍保留时，后续展开／折叠只提交 native State 命令，不重新构造 producer、
+  解析 icons 或发起 import。缓存回收遵循 [Diffview policy](../../../spec/design/feat/diffview/main.md#materialized-records-cache)，
+  冷重开重新导入 records。Standalone filetree 独立准备自己的 records，reveal 显式准备目标 commit files。
 - 文件结果的 producer 按 directory 优先、basename 排序；List 的显式 filter 排名独立于此顺序。
 - 业务 action 从已发布 snapshot 读取目标；replace 后的剩余 offsets 写回 producer，再发布新 snapshot。
 

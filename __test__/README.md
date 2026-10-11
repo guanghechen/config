@@ -446,3 +446,12 @@ These samples do not measure peak RSS. Retained Lua heap at 50k stayed around 65
 Lua heap stayed around 13.4 MiB. Identical path refreshes now preserve viewport icon caches, eliminating
 the 34 repeated icon lookups observed on reopen. Snapshot preparation still traverses the complete
 producer; sparse native writes do not imply an end-to-end delta preparation path.
+
+Diffview's materialization-cache comparison against `07b029f0f` visits and collapses five commits with
+10,000 files each, then waits for cache work to settle. Across three processes, retained materialized
+nodes fell from 50,506 to 20,206, additional Lua heap from 100.5 to 42.7 MiB, and RSS increment from
+436 to 211 MiB. Raw Git file lists are setup input in both variants. The fifth expansion plus cache
+settlement fell from 1.43 s to 0.83 s; reclamation adds three imports across the sequence.
+Single-commit hot expansion remained about 14 ms median, with zero hot plan rebuilds/imports; collapse
+was about 6.5–6.7 ms in that UI sample. Expanded/current commits remain live content outside the
+20,000-node collapsed-cache budget, and cold reopens restore saved directory folds after importing.

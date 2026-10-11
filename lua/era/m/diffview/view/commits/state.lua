@@ -28,6 +28,7 @@ local M = {}
 ---@field protected _content_generation integer
 ---@field protected _disposed           boolean
 ---@field protected _commits_page_applied integer
+---@field protected _materialization    era.m.diffview.view.commits.Cache
 local State = {}
 State.__index = State
 
@@ -53,6 +54,7 @@ function State.new(tabnr, fold_unchanged)
   self.lnum_present = stl.c.Observable.from_value(-1)
 
   self._trees = {}
+  self._materialization = require("era.m.diffview.view.commits.cache").new(self)
   self.path_filter = nil
 
   self._git_subscription = nil
@@ -77,8 +79,10 @@ function State:get_commits()
 end
 
 ---Set commits
----@param commits                        era.m.diffview.ICommit[]
+---@param commits                       era.m.diffview.ICommit[]
+---@return nil
 function State:set_commits(commits)
+  self._materialization:reset(commits)
   self.commits:next(commits)
 end
 
@@ -89,9 +93,11 @@ function State:get_current_commit()
 end
 
 ---Set current commit
----@param commit                         era.m.diffview.ICommit|nil
+---@param commit                        era.m.diffview.ICommit|nil
+---@return nil
 function State:set_current_commit(commit)
   self.current_commit:next(commit)
+  self._materialization:touch(commit and commit.hash)
 end
 
 ---Get current entry snapshot
@@ -137,6 +143,7 @@ end
 ---@return nil
 function State:toggle_commit_expanded(hash)
   self:get_tree("commits"):set_expansion("commit:" .. hash, nil, false)
+  self._materialization:touch(hash)
 end
 
 ---@param hash                          string
@@ -150,12 +157,14 @@ end
 ---@return nil
 function State:expand_commit(hash)
   self:get_tree("commits"):set_expansion("commit:" .. hash, true, false)
+  self._materialization:touch(hash)
 end
 
 ---@param hash                          string
 ---@return nil
 function State:collapse_commit(hash)
   self:get_tree("commits"):set_expansion("commit:" .. hash, false, false)
+  self._materialization:touch(hash)
 end
 
 ---@return nil
@@ -433,6 +442,7 @@ function State:dispose()
   self.commits:dispose()
   self.current_commit:dispose()
   self.current_entry:dispose()
+  self._materialization:dispose()
   for _, tree in pairs(self._trees) do
     tree:dispose()
   end

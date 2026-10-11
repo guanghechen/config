@@ -282,33 +282,45 @@ end
 ---@param ctx                           era.m.diffview.view.commits.IContext
 ---@return nil
 function M.expand_all(ctx)
+  local generation = ctx.state._content_generation
   stl.async.run(function()
-    local commits = ctx.state:get_commits()
-    local loaded = false
-    local include_files = {}
-    local owner = ctx.state:get_tree("commits")
-
-    -- Load files for commits that don't have them yet
-    for _, commit in stl.async.ipairs(commits) do
-      if not commit.files then
-        commit.files = data.fetch_commit_files(commit.hash)
+    ctx.state._materialization:run(function()
+      if not ctx.state:owns_content_request(generation) then
+        return
       end
-      include_files[commit.hash] = true
-      local record = owner:frame() and owner:data("commit:" .. commit.hash)
-      loaded = loaded or not record or not record.files_loaded
-    end
-
-    -- Expand all commits
-    stl.async.scheduler()
-    if loaded then
-      local future = commits_view.render_commits(ctx, include_files)
-      if future then
-        future:await()
+      local commits = ctx.state:get_commits()
+      local loaded = false
+      local include_files = {}
+      local owner = ctx.state:get_tree("commits")
+      for _, commit in stl.async.ipairs(commits) do
+        if not ctx.state:owns_content_request(generation) then
+          return
+        end
+        if not commit.files then
+          commit.files = data.fetch_commit_files(commit.hash)
+        end
+        include_files[commit.hash] = true
+        local record = owner:frame() and owner:data("commit:" .. commit.hash)
+        loaded = loaded or not record or not record.files_loaded or not owner:is_current()
       end
-    end
-    if not ctx.state:is_disposed() then
-      ctx.state:expand_all()
-    end
+      stl.async.scheduler()
+      if not ctx.state:owns_content_request(generation) then
+        return
+      end
+      if loaded then
+        local future = commits_view.render_commits(ctx, include_files)
+        if future then
+          future:await()
+        end
+      end
+      if ctx.state:owns_content_request(generation) then
+        for _, commit in ipairs(ctx.state:get_commits()) do
+          ctx.state._materialization:restore(owner, commit.hash)
+        end
+        ctx.state:expand_all()
+        owner:ready():await()
+      end
+    end)
   end)
 end
 
@@ -703,7 +715,8 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Reveal the active commit or file in Commits, or hide Commits when it is already focused.
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.reveal(ctx)
   if ctx.layout.commits_winnr == vim.api.nvim_get_current_win() then
     commits_view.hide_commits(ctx.layout)
@@ -714,13 +727,19 @@ function M.reveal(ctx)
 
   local current = ctx.state:get_current_commit()
   local filepath = current and get_current_entry_filepath(ctx, current) or nil
-  if current and filepath and not ctx.state:is_commit_expanded(current.hash) then
-    ctx.state:toggle_commit_expanded(current.hash)
-  end
-
-  commits_view.render_commits(ctx, current and filepath and { [current.hash] = true } or nil)
-  if current then
-    M.__update_commits_cursor__(ctx, current.hash, filepath)
+  if current and filepath then
+    local generation = ctx.state._content_generation
+    stl.async.run(function()
+      M.__expand_commit__(ctx, current)
+      if ctx.state:owns_content_request(generation) then
+        M.__update_commits_cursor__(ctx, current.hash, filepath)
+      end
+    end)
+  else
+    commits_view.render_commits(ctx)
+    if current then
+      M.__update_commits_cursor__(ctx, current.hash)
+    end
   end
   commits_view.focus_commits(ctx.layout)
 end
@@ -1289,29 +1308,37 @@ end
 ---@param token                         ?stl.c.CancellationToken
 ---@return nil
 function M.__expand_commit__(ctx, commit, token)
-  local actual_commit = find_commit_in_state(ctx, commit.hash)
-  if not actual_commit then
-    return
-  end
-
-  if not actual_commit.files then
-    actual_commit.files = data.fetch_commit_files(actual_commit.hash, token)
-  end
-  stl.async.scheduler()
-  if ctx.state:is_disposed() or token and token:is_cancelled() then
-    return
-  end
-  local owner = ctx.state:get_tree("commits")
-  local record = owner:frame() and owner:data("commit:" .. actual_commit.hash)
-  if not record or not record.files_loaded then
-    local future = commits_view.render_commits(ctx, { [actual_commit.hash] = true })
-    if future then
-      future:await()
+  local generation = ctx.state._content_generation
+  ctx.state._materialization:run(function()
+    if not ctx.state:owns_content_request(generation) then
+      return
     end
-  end
-  if not ctx.state:is_disposed() and find_commit_in_state(ctx, actual_commit.hash) then
-    ctx.state:expand_commit(actual_commit.hash)
-  end
+    local actual_commit = find_commit_in_state(ctx, commit.hash)
+    if not actual_commit then
+      return
+    end
+    if not actual_commit.files then
+      actual_commit.files = data.fetch_commit_files(actual_commit.hash, token)
+    end
+    stl.async.scheduler()
+    if not ctx.state:owns_content_request(generation) or token and token:is_cancelled() then
+      return
+    end
+    local owner = ctx.state:get_tree("commits")
+    local record = owner:frame() and owner:data("commit:" .. actual_commit.hash)
+    local producer = owner.source:get("commit:" .. actual_commit.hash)
+    if not record or not record.files_loaded or not producer or not producer.files_loaded or not owner:is_current() then
+      local future = commits_view.render_commits(ctx, { [actual_commit.hash] = true })
+      if future then
+        future:await()
+      end
+    end
+    if ctx.state:owns_content_request(generation) and find_commit_in_state(ctx, actual_commit.hash) then
+      ctx.state._materialization:restore(owner, actual_commit.hash)
+      ctx.state:expand_commit(actual_commit.hash)
+      owner:ready():await()
+    end
+  end, commit.hash)
 end
 
 ---Load commit files and render filetree (for layout 5)

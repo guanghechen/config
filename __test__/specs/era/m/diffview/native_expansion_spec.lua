@@ -163,6 +163,54 @@ t:test("a failed first inline import stays collapsed and can be retried", functi
   t.assert_eq("src/one.lua", commits.get_item_at_line(ctx.layout.commits_bufnr, 3).entry.filepath)
 end)
 
+t:test("a hidden Commits pane can materialize and restore its logical expansion", function()
+  local ctx, owner = history({ { filepath = "src/hidden.lua", status = "M" } })
+  vim.api.nvim_win_close(ctx.layout.commits_winnr, true)
+  ctx.layout.commits_winnr, ctx.layout.commits_bufnr = nil, nil
+  local done = false
+  stl.async.run(function()
+    commits_action.__expand_commit__(ctx, ctx.state:get_current_commit())
+    done = true
+  end)
+  t.wait_until(function()
+    return done
+  end, 5000)
+  t.assert_true(ctx.state:is_commit_expanded("review"))
+  t.assert_true(owner:data("commit:review").files_loaded)
+  local bufnr = commits.create_buffer()
+  ctx.layout.commits_bufnr, ctx.layout.commits_winnr = bufnr, window(bufnr)
+  native.await(commits_view.render_commits(ctx))
+  rows(owner, 3)
+  t.assert_eq("src/hidden.lua", commits.get_item_at_line(bufnr, 3).entry.filepath)
+end)
+
+for _, all in ipairs({ false, true }) do
+  t:test((all and "expand all" or "single expansion") .. " abandons an older content generation", function()
+    local ctx, owner = history()
+    local replacement = { hash = "review", abbrev_hash = "review", author = "A", date = 0, message = "new request" }
+    local publication
+    t:patch_table(require("era.m.diffview.data"), "fetch_commit_files", function()
+      ctx.state:begin_content_request()
+      ctx.state:set_commits({ replacement })
+      ctx.state:set_current_commit(replacement)
+      publication = commits_view.render_commits(ctx)
+      return { { filepath = "obsolete.lua", status = "M" } }
+    end)
+    if all then
+      commits_action.expand_all(ctx)
+    else
+      commits_action.sbs_expand(ctx)
+    end
+    t.wait_until(function()
+      return publication and publication:is_done() and ctx.state._materialization._pending == 0
+    end, 5000)
+    native.await(owner:ready())
+    t.assert_eq(1, owner:linecount())
+    t.assert_false(ctx.state:is_commit_expanded("review"))
+    t.assert_false(owner:data("commit:review").files_loaded)
+  end)
+end
+
 t:test("Changes actions update expansion without rebuilding either pane's records", function()
   t:patch_table(dot.context.diffview.flag_panel_viewtype, "snapshot", function()
     return "tree"

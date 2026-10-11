@@ -379,3 +379,19 @@ Native State 在 pane 隐藏、buffer 重建和 layout 切换之间保留；默�
 标记 snapshot 已应用；定位使用稳定 key，等待对应行可用。Metadata overlay 只在 viewport 绘制。
 
 通用契约见 [Treeview 结果集](../../../../doc/spec/treeview/results.md)。
+
+### Materialized records cache
+
+Commits 的 collapsed、非 current 文件树使用 20,000 个 file/directory nodes 的 LRU 预算。
+Expanded/current commit 是仍在使用的内容，不作为可回收缓存；正在 materialize 的操作保护其完整发布与展开过程，
+等待已启动的 eviction 结束，并在加载新 commit 前回收已超预算的旧缓存。
+
+Eviction 保留 commit header 和既有的 raw `commit.files` 查询缓存，移除额外的 producer/native records。
+目录折叠设置按 provider key 与旧 native ID 保存为紧凑 checkpoint；冷重建产生新 ID 后先恢复折叠，再展开 commit。
+节点仍存在时 native State 是唯一 expansion authority。翻页和 dispose 清理过期 checkpoint。
+
+失败的 eviction 保留原 surface；producer 只在仍属于该请求时恢复。即使 native 删除已提交、surface 发布失败，
+也保留已移除目录的 checkpoint。Materialization/reveal 的异步结果必须属于当前 content generation。
+隐藏面板中的显式 materialization/eviction 可以只发布逻辑 State；普通隐藏刷新仍跳过准备。
+
+Budget 限制新增的 materialized cache，不宣称限制用户展开的内容或原有 Git file cache 的全部内存。
