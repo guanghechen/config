@@ -47,3 +47,15 @@
   border-color: var(--vscode-border);
   background-color: var(--vscode-surface-background);
 }
+
+.yozora-root .yozora-table :is(tr, th, td) {
+  border-color: var(--vscode-border);
+}
+
+.yozora-root .yozora-table thead {
+  background-color: var(--vscode-code-background);
+}
+
+.yozora-root .yozora-table tbody tr:hover {
+  background-color: var(--vscode-list-hover-background);
+}
