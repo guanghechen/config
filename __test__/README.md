@@ -419,3 +419,10 @@ so earlier correctness cases do not contribute their dead owners/frames to the m
 The threshold is unchanged and GC remains enabled during the sample. Five independent runs measured
 19–26 ms for normal results and 27–38 ms for replace preview. Without that fixture cleanup, accumulated
 garbage produced 52–60 ms outliers; this microbenchmark is not a natural-GC tail-latency guarantee.
+
+On 2026-10-11, explicit View suspension restored result buffer/Frame reuse. In three independent
+FiletreeComposer processes per variant (100×40 UI, natural GC, alternating order), reopening 50,000
+files fell from 78.5 ms to 17.7 ms median; 5,000 files fell from 20.2 ms to 13.9 ms. All six optimized
+reopens performed zero body writes. The comparison baseline is migration commit `7afabbf14`, not the
+pre-migration Lua renderer. First display at 50,000 files remained 1.95 s; identical refresh measured
+622 ms before and 612 ms after. Hidden results retain one owned scratch buffer until disposal.

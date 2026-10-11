@@ -69,7 +69,8 @@ Feature 通过 props 提供 `draw`、`on_drawed`、keymaps、`diagnostic_scope` 
 ## 生命周期不变式
 
 1. `create_buf/create_win` 幂等，返回既有 resource 时不重复绑定。
-2. `hide` 保留 scheduler 和逻辑 State。普通列表复用 buffer；native View 释放其 buffer，重开时使用新的空 buffer。
+2. `hide` 保留 scheduler、逻辑 State 和 reusable buffer；native View suspend 后保留已发布 Frame，重开重新绑定窗口，
+   并提交最新 producer/display 请求。Buffer 失效时正常重建；dispose 释放隐藏的资源。
 3. `dispose` 只执行一次，并释放 window、buffer、observable、autocmd、nvimbar、scheduler 与 registered flag callbacks。
 4. queued observable/scheduler callback 在 dispose 后不得读取已释放字段或写入 buffer/window。
 5. draw 或 callback failure 只报告，不得留下 `modifiable/readonly` 错误状态。

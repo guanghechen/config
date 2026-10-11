@@ -587,7 +587,7 @@ function M:create_win(winopts, dimension)
     return winnr, false
   end
 
-  local bufnr = self:create_buf() ---@type integer
+  local bufnr, created = self:create_buf()
   local wincfg = {
     relative = "editor",
     row = dimension.row,
@@ -619,12 +619,13 @@ function M:create_win(winopts, dimension)
 
   if self._tree then
     self._tree:mount(winnr, bufnr, function(frame)
-      if self._disposed or self._winnr ~= winnr then
+      if self._disposed or self._winnr ~= winnr or not vim.api.nvim_win_is_valid(winnr) then
         return
       end
       local header = frame:header()
       self.lnum_total:next(header.row_count)
-      self.lnum_current:next(header.cursor_row or 0)
+      -- A Visual gesture can be ahead of the native cursor acknowledgement; preserve its surface endpoint.
+      self.lnum_current:next(header.row_count > 0 and vim.api.nvim_win_get_cursor(winnr)[1] or 0)
       self._scheduler_lnum_current:schedule()
       self._on_drawed(bufnr)
     end, function()
@@ -632,6 +633,9 @@ function M:create_win(winopts, dimension)
       vim.api.nvim_set_option_value("relativenumber", winopts.number, { win = winnr })
       vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr })
     end)
+    if not created then
+      self._scheduler_content:schedule({ immediate = true })
+    end
   else
     vim.schedule(function()
       self:__restore_cursor__(winnr)
@@ -676,8 +680,7 @@ function M:hide()
 
   self._winnr = nil
   if self._tree then
-    self._tree:unmount()
-    self._bufnr = nil
+    self._tree:unmount(true)
   end
 
   local ok1, error1 = pcall(stl.nvim.win.close, winnr)

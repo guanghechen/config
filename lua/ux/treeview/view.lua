@@ -21,11 +21,13 @@ local decorations = require("ux.treeview.decorations")
 ---@field _glyphs                       table<string, string>
 ---@field _closed                       boolean
 ---@field _detached                     boolean
+---@field _suspended                    boolean
 ---@field _desynced                     boolean
 ---@field _busy                         boolean
 ---@field _publishing                   boolean
 ---@field _window_options               table<string, any>
 ---@field _previous_bufnr               ?integer
+---@field _saved_window                 ?table
 ---@field _group                        ?integer
 ---@field _frame                        ?yoz.ux.treeview.Frame
 ---@field _latest                       ?yoz.ux.treeview.Frame
@@ -54,6 +56,7 @@ M.__index = M
 ---@return boolean
 function M:_valid()
   return not self._closed
+    and not self._suspended
     and vim.api.nvim_buf_is_valid(self.bufnr)
     and vim.api.nvim_win_is_valid(self.winnr)
     and vim.api.nvim_win_get_buf(self.winnr) == self.bufnr
@@ -115,7 +118,7 @@ end
 
 ---@return nil
 function M:_poll()
-  if self._closed then
+  if self._closed or self._suspended then
     return
   end
   if not self:_valid() then
@@ -197,6 +200,7 @@ end
 function M:status()
   return {
     closed = self._closed,
+    suspended = self._suspended,
     desynced = self._desynced,
     preparing = self._busy or self._decoration_pending == true,
     frame = self._header,
@@ -204,6 +208,11 @@ function M:status()
     error = self._render_error,
     last_plan = self._last_plan,
   }
+end
+
+---@return boolean
+function M:is_suspended()
+  return self._suspended
 end
 
 ---@return nil
@@ -374,6 +383,123 @@ function M:range_action(submit, notify)
 end
 
 ---@return nil
+function M:_release_window()
+  if self._group then
+    vim.api.nvim_clear_autocmds({ group = self._group, event = "WinClosed" })
+  end
+  if vim.api.nvim_win_is_valid(self.winnr) and vim.api.nvim_win_get_buf(self.winnr) == self.bufnr then
+    if self._previous_bufnr and vim.api.nvim_buf_is_valid(self._previous_bufnr) then
+      vim.api.nvim_win_set_buf(self.winnr, self._previous_bufnr)
+    end
+    for name, value in pairs(self._window_options) do
+      vim.api.nvim_set_option_value(name, value, { win = self.winnr })
+    end
+  end
+  self._previous_bufnr, self._window_options = nil, {}
+end
+
+---@param winnr                         integer
+---@return nil
+function M:_bind_window(winnr)
+  self.winnr = winnr
+  local previous = vim.api.nvim_win_get_buf(winnr)
+  self._previous_bufnr = previous ~= self.bufnr and previous or nil
+  local options = {
+    wrap = false,
+    foldenable = false,
+    number = false,
+    relativenumber = false,
+    signcolumn = "no",
+    list = false,
+  }
+  -- Entering a reused buffer restores its remembered local options; capture the destination first.
+  for name in pairs(options) do
+    self._window_options[name] = vim.api.nvim_get_option_value(name, { win = winnr })
+  end
+  if previous ~= self.bufnr then
+    vim.api.nvim_win_set_buf(winnr, self.bufnr)
+  end
+  for name, value in pairs(options) do
+    vim.api.nvim_set_option_value(name, value, { win = winnr })
+  end
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = self._group,
+    pattern = tostring(winnr),
+    callback = function()
+      self:detach()
+    end,
+  })
+end
+
+---Keep the owned buffer and published frame while releasing its window binding.
+---@return nil
+function M:suspend()
+  if self._closed or self._suspended then
+    return
+  end
+  if not self:_valid() then
+    self:detach()
+    return
+  end
+  self._saved_window = vim.api.nvim_win_call(self.winnr, vim.fn.winsaveview)
+  self._publishing = true
+  if self:_visual_mode() then
+    vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
+  end
+  self._suspended = true
+  self._epoch = self._epoch + 1
+  self:_cancel_source_timer()
+  self._state._data._views[self] = nil
+  self._busy, self._publishing, self._render_guard = false, false, nil
+  self._latest = nil
+  self._gesture, self._submission, self._minimum_commit = nil, nil, nil
+  self._guide_path, self._guide_dirty, self._guide_redraw_pending = nil, nil, nil
+  vim.api.nvim_set_option_value("bufhidden", "hide", { buf = self.bufnr })
+  self:_release_window()
+end
+
+---@param winnr                         integer
+---@return nil
+function M:resume(winnr)
+  assert(not self._closed and self._suspended and vim.api.nvim_buf_is_valid(self.bufnr), "Treeview is not suspended")
+  assert(vim.api.nvim_win_is_valid(winnr), "Treeview requires a live window")
+  self._epoch = self._epoch + 1
+  self._suspended = false
+  self._resync_attempted, self._failed_target, self._render_error, self._source_after = false, nil, nil, nil
+  if self._publication and vim.api.nvim_buf_get_changedtick(self.bufnr) ~= self._publication.changedtick then
+    self._desynced = true
+  end
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self.bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = self.bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
+  self._publishing = true
+  self:_bind_window(winnr)
+  if self._saved_window then
+    vim.api.nvim_win_call(winnr, function()
+      vim.fn.winrestview(self._saved_window)
+    end)
+    self._saved_window = nil
+  end
+  self._observed_cursor = vim.api.nvim_win_get_cursor(winnr)
+  self._publishing = false
+  self._state._data._views[self] = true
+  if self._options.on_attach then
+    local ok, failure = pcall(self._options.on_attach, self)
+    if not ok then
+      self:detach()
+      error(failure, 0)
+    end
+  end
+  if self._closed or self._suspended then
+    return
+  end
+  self._latest = self._native:snapshot()
+  async.watch(self._state._data)
+  self:_poll()
+  self:_redraw()
+end
+
+---@return nil
 function M:detach()
   self:_cancel_source_timer()
   if self._detached then
@@ -388,19 +514,13 @@ function M:detach()
   decorations.detach(self)
   self._native:detach()
   self._frame, self._latest, self._gesture, self._decorations = nil, nil, nil, nil
+  self._saved_window, self._submission = nil, nil
   self._guide_path = nil
   self._guide_dirty, self._guide_redraw_pending = nil, nil
   self._render_guard = nil
+  self:_release_window()
   if self._group then
     vim.api.nvim_del_augroup_by_id(self._group)
-  end
-  if vim.api.nvim_win_is_valid(self.winnr) and vim.api.nvim_win_get_buf(self.winnr) == self.bufnr then
-    if self._previous_bufnr and vim.api.nvim_buf_is_valid(self._previous_bufnr) then
-      vim.api.nvim_win_set_buf(self.winnr, self._previous_bufnr)
-    end
-    for name, value in pairs(self._window_options) do
-      vim.api.nvim_set_option_value(name, value, { win = self.winnr })
-    end
   end
   if vim.api.nvim_buf_is_valid(self.bufnr) then
     vim.api.nvim_buf_delete(self.bufnr, { force = true })
@@ -429,7 +549,6 @@ function M.new(state, options)
       "Treeview requires an unowned, empty, unmodified scratch buffer"
     )
   end
-  local previous = vim.api.nvim_win_get_buf(winnr)
   local native = state._native:attach()
   local self = setmetatable({
     _state = state,
@@ -454,11 +573,11 @@ function M.new(state, options)
     }, options.glyphs or {}),
     _closed = false,
     _detached = false,
+    _suspended = false,
     _desynced = false,
     _busy = false,
     _publishing = false,
     _window_options = {},
-    _previous_bufnr = previous ~= options.bufnr and previous or nil,
     winnr = winnr,
     bufnr = options.bufnr or vim.api.nvim_create_buf(false, true),
   }, M)
@@ -482,21 +601,8 @@ function M.new(state, options)
   if filetype == "" then
     vim.api.nvim_set_option_value("filetype", "treeview", { buf = self.bufnr })
   end
-  if previous ~= self.bufnr then
-    vim.api.nvim_win_set_buf(winnr, self.bufnr)
-  end
-  for name, value in pairs({
-    wrap = false,
-    foldenable = false,
-    number = false,
-    relativenumber = false,
-    signcolumn = "no",
-    list = false,
-  }) do
-    self._window_options[name] = vim.api.nvim_get_option_value(name, { win = winnr })
-    vim.api.nvim_set_option_value(name, value, { win = winnr })
-  end
   self._group = vim.api.nvim_create_augroup("UxTreeview" .. native:id(), { clear = true })
+  self:_bind_window(winnr)
   ---@return nil
   local function unload()
     if self._closed then
@@ -518,8 +624,11 @@ function M.new(state, options)
     on_lines = function()
       if not self._publishing and not self._closed then
         self._desynced = true
+        local epoch = self._epoch
         vim.schedule(function()
-          surface.fail(self, "Treeview buffer was modified outside publication", true)
+          if not self._closed and self._epoch == epoch then
+            surface.fail(self, "Treeview buffer was modified outside publication", true)
+          end
         end)
       end
     end,
@@ -555,13 +664,6 @@ function M.new(state, options)
       if node then
         self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })
       end
-    end,
-  })
-  vim.api.nvim_create_autocmd("WinClosed", {
-    group = self._group,
-    pattern = tostring(winnr),
-    callback = function()
-      self:detach()
     end,
   })
   if options.keymaps ~= false then
@@ -627,6 +729,9 @@ function M.new(state, options)
       self:detach()
       error(failure, 0)
     end
+  end
+  if self._closed or self._suspended then
+    return self
   end
   async.watch(state._data)
   self._latest = native:snapshot()

@@ -375,7 +375,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 vim.api.nvim_set_decoration_provider(namespace, {
   on_win = function(_, winnr, bufnr, first, last)
     local view = views[bufnr]
-    if not view or view.winnr ~= winnr or view._desynced or view._publishing or not view._frame then
+    if not view or view._suspended or view.winnr ~= winnr or view._desynced or view._publishing or not view._frame then
       return false
     end
     first, last = math.max(0, first), math.min(last + 1, view._header.row_count)
@@ -432,7 +432,7 @@ vim.api.nvim_set_decoration_provider(namespace, {
   end,
   on_range = function(_, winnr, bufnr, first, _, last, end_col)
     local view = views[bufnr]
-    if not view or view.winnr ~= winnr or view._desynced or view._publishing then
+    if not view or view._suspended or view.winnr ~= winnr or view._desynced or view._publishing then
       return false
     end
     local ok, painted_first, painted_last = pcall(decorate, view, first, last + (end_col > 0 and 1 or 0))
@@ -458,7 +458,7 @@ vim.api.nvim_set_decoration_provider(namespace, {
   end,
   on_end = function()
     for _, view in pairs(views) do
-      if not view._closed and not view._desynced and view._decorations then
+      if not view._closed and not view._suspended and not view._desynced and view._decorations then
         view._resync_attempted = false
         schedule_path(view)
       end

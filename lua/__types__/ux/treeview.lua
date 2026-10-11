@@ -182,7 +182,7 @@
 ---@field public bufname                ?string
 ---@field public keymaps                ?boolean
 ---@field public selection_recursive    ?boolean
----@field public on_attach              ?fun(view: ux.treeview.View): nil Called after setup and before the first frame request; failure detaches the view.
+---@field public on_attach              ?fun(view: ux.treeview.View): nil Called after each window binding, before its first frame request; failure detaches the view.
 ---@field public prepare_frame          ?fun(view: ux.treeview.View, frame: yoz.ux.treeview.Frame, first: integer, last: integer, rows: ux.treeview.IRows): stl.c.Future Resolves to a commit callback or false to retry; callback may return true if decorations are unchanged. Viewport is 0-based, half-open; rows are shared readonly input.
 ---@field public decorate_row           ?fun(view: ux.treeview.View, frame: yoz.ux.treeview.Frame, row: integer, node: ux.treeview.NodeId, col: integer, label: string, expanded: boolean): nil Bounded redraw callback; ephemeral decorations only. Expansion comes from the published viewport rows.
 ---@field public on_frame               ?fun(frame: yoz.ux.treeview.Frame): nil

@@ -95,6 +95,7 @@ function M.new(props)
     if self.view and self.view:status().closed then
       self.view, self._mount = nil, nil
     end
+    local mounted = self.view ~= nil and not self.view:is_suspended()
     if self.state and (self._waiting or #self._ready > 0) then
       local failure = self.state:status().projection_error
       if failure then
@@ -105,12 +106,13 @@ function M.new(props)
         return nil
       end
     end
-    if self._waiting and not self.view and self.state then
-      self:_published(self.state:snapshot())
+    if self._waiting and not mounted and self.state then
+      self._frame = self.state:snapshot()
+      self:_published(self._frame)
     end
     self:_focus_pending()
     self:_settle_ready()
-    if preparing or not self.view and (self._waiting ~= nil or self._focus ~= nil or #self._ready > 0) then
+    if preparing or not mounted and (self._waiting ~= nil or self._focus ~= nil or #self._ready > 0) then
       return true
     end
     if next(self._data._views) ~= nil then
@@ -236,7 +238,7 @@ end
 
 ---@return yoz.ux.treeview.Frame|nil
 function M:frame()
-  if self.view then
+  if self.view and not self.view:is_suspended() then
     return self.view:frame()
   end
   return self.state and self.state:snapshot() or self._frame
@@ -1189,13 +1191,24 @@ function M:_attach()
     return
   end
   if self.view and not self.view:status().closed then
-    return
+    if not self.view:is_suspended() then
+      return
+    end
+    if self.view.bufnr == mount.bufnr then
+      self.view:resume(mount.winnr)
+      return
+    end
+    self.view:detach()
   end
   self.view = treeview.attach(self.state, {
     winnr = mount.winnr,
     bufnr = mount.bufnr,
     keymaps = false,
-    on_attach = mount.on_attach,
+    on_attach = function(view)
+      if self._mount and self._mount.on_attach then
+        self._mount.on_attach(view)
+      end
+    end,
     prepare_frame = function(_, frame)
       if not self._versions[frame:header().data_revision] then
         return Future.resolve(false)
@@ -1209,13 +1222,6 @@ function M:_attach()
     end,
     on_frame = function(frame)
       self._frame = frame
-      local revision = frame:header().data_revision
-      local current = self._data:source():revision()
-      for version in pairs(self._versions) do
-        if version ~= revision and version ~= current then
-          self._versions[version] = nil
-        end
-      end
       self:_published(frame)
       if self._mount then
         self._mount.on_frame(frame)
@@ -1230,6 +1236,17 @@ end
 ---@param frame                         ?yoz.ux.treeview.Frame
 ---@return nil
 function M:_published(frame)
+  if frame then
+    local revision = frame:header().data_revision
+    local current = self._data:source():revision()
+    local retained = self.view and self.view:frame()
+    local retained_revision = retained and retained:header().data_revision
+    for version in pairs(self._versions) do
+      if version ~= revision and version ~= current and version ~= retained_revision then
+        self._versions[version] = nil
+      end
+    end
+  end
   local waiting = self._waiting
   if waiting and frame and not self:selection_pending() and self.state._native:applicable(frame) then
     self._waiting = nil
@@ -1361,13 +1378,18 @@ function M:_focus_pending()
   end)
 end
 
+---@param retain                        ?boolean Keep the owned buffer and published Frame for a reusable result.
 ---@return nil
-function M:unmount()
+function M:unmount(retain)
   self._mount, self._read_cache = nil, nil
   if self.view then
     self._frame = self.view:frame()
-    self.view:detach()
-    self.view = nil
+    if retain then
+      self.view:suspend()
+    else
+      self.view:detach()
+      self.view = nil
+    end
   end
 end
 

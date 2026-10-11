@@ -48,6 +48,7 @@ cursor、selection 和 expansion 不重新生成 records 或全量行映射。
 ## 发布、输入与生命周期
 
 - Result 的 native 模式不写 buffer；行数、当前行和 preview 通知跟随 `on_frame`。普通 ListComposer 继续使用原 draw surface。
+  Current-line observable 读取发布后的 surface cursor，不能将迟到的 Frame cursor acknowledgement 回写成新输入、移动 Visual 端点。
 - Publication 等待已排队的 selection；native draw 被后续请求取代时等待最新 Frame 就绪，不能将
   `Superseded` 通知作为已完成的结果更新交给调用方。
 - Visual 选择由 native View 的 range action 捕获 frame。跟随选择的业务 action 等到 selection 被接受并发布，
@@ -57,8 +58,12 @@ cursor、selection 和 expansion 不重新生成 records 或全量行映射。
   通过该帧中的所属文件身份定位，不依赖 List 的视觉 parent。
 - Matcher 保留输入 debounce；native Result 发布仅合并同轮请求，不再追加 128 ms render debounce。
 - Directory preview 使用共享 Data 上的独立 State。切回文件先更换 buffer 再 detach，防止销毁浮窗。
-- Hide/detach 释放 View 和 scratch buffer，保留 Data/State；重开转交新的空 buffer。Dispose 取消待发布工作，
-  释放 notification、业务 metadata 和 producer records，晚到的异步 callback 不重新连接 surface。
+- 可复用的 Picker/Searcher result 在 hide 时 suspend View：保留独占 scratch buffer、已发布 Frame 和正文，
+  释放 window binding 与活动 polling。重开复用该 View，以原 Frame 为增量发布基线；buffer 被删除时重新接管空 buffer，
+  changedtick 失配或外部修改时执行正常 resync。重开仍提交最新 producer/display 请求，不能遗漏隐藏期间的变更。
+  隐藏期间业务读取与 publication 跟随 State 的最新 Frame；metadata 仅保留当前 revision 和隐藏正文仍引用的 revision。
+  普通 unmount/detach 释放 View 和 scratch buffer，保留 Data/State；Dispose 取消待发布工作并释放所有保留资源。
+  晚到的异步 callback 不重新连接 surface，也不能写入重新绑定的窗口。
 - Diffview refresh 等待 publication Future，稳定 key 定位等待 native 行可用；buffer 行与 action 对象来自同一帧。
 - Diffview 初始仅准备 commit headers；未展开的缓存 files 不进入 inline records 或 header metadata。
   首次 inline 展开才准备该 commit 的 files，后续展开／折叠只提交 native State 命令，不重新构造 producer、

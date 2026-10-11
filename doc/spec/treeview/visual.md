@@ -84,6 +84,10 @@ Visual 是尚未提交的行范围。正在进行的圈选保持稳定，后台�
   标记提交之前的待显示 snapshot，再用旧 selection/mode 覆盖刚完成的动作。
 - View/gesture 的迟到回调不得结束新一轮 Visual 或移动其端点。Detach 释放 view 的 frame 引用；
   已提交命令按既有 state 生命周期完成，其回调不得写入已关闭或重新绑定的 buffer/window。
+- 可复用 surface 可以 `suspend()` / `resume(winnr)`：suspend 保留专用 buffer 和已发布 Frame，释放原窗口的
+  buffer/options binding、停止活动 View polling，并递增 epoch 使在途 prepare/gesture callback 失效。
+  Buffer 在隐藏时仍由该 View 独占；resume 校验 buffer 有效性与 changedtick，恢复窗口配置并从保留 Frame 发布最新状态。
+  `detach()` 始终彻底释放资源；直接关闭活动窗口仍触发 detach。
 - Surface API 部分写入失败时不能继续用旧 frame 解释已变化的正文；隔离行输入并按 [发布恢复](render.md#surface-提交与失败恢复)
   完整 resync。恢复不自动提交 Visual 选择或重放业务动作，必要时终止本次 gesture 并报告显示错误。
 
