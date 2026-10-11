@@ -223,6 +223,71 @@ pub(crate) fn check_scope(
     Ok(())
 }
 
+/// Plan pure additions without constructing a disposable source version.
+fn append_import(
+    source: &Source,
+    records: &[Record],
+    parents: &[Option<NodeRef>],
+    children: &[Vec<usize>],
+    order: &[usize],
+) -> Option<Vec<Operation>> {
+    if source.len() > records.len() {
+        return None;
+    }
+    let mut known = 0;
+    for (index, record) in records.iter().enumerate() {
+        let Some(id) = source.id(&record.key) else {
+            continue;
+        };
+        known += 1;
+        let node = source.node(id)?;
+        let parent = match &parents[index] {
+            Some(NodeRef::Key(key)) => Some(source.id(key)?),
+            Some(NodeRef::Id(id)) => Some(*id),
+            None => None,
+        };
+        if node.parent != parent
+            || *node.data != record.data
+            || node.completeness != record.completeness.unwrap_or(Completeness::Complete)
+        {
+            return None;
+        }
+    }
+    if known != source.len() {
+        return None;
+    }
+    for (index, desired) in children.iter().enumerate() {
+        let parent = if index == records.len() {
+            None
+        } else if let Some(id) = source.id(&records[index].key) {
+            Some(id)
+        } else {
+            continue;
+        };
+        let existing = source.child_sequence(parent).ok()?;
+        if existing.len() > desired.len()
+            || existing.iter().zip(desired).any(|(id, &index)| {
+                source.node(*id).expect("existing child").key != records[index].key
+            })
+        {
+            return None;
+        }
+    }
+    Some(
+        order
+            .iter()
+            .filter(|&&index| source.id(&records[index].key).is_none())
+            .map(|&index| Operation::Insert {
+                key: records[index].key.clone(),
+                parent: parents[index].clone(),
+                position: Position::Last,
+                data: records[index].data.clone(),
+                completeness: Completeness::Complete,
+            })
+            .collect(),
+    )
+}
+
 /** Align a complete membership declaration. Input order supplies sibling order, not mutation order. */
 pub(crate) fn plan_import(
     source: &Source,
@@ -332,6 +397,14 @@ pub(crate) fn plan_import(
     }
     if order.len() != records.len() {
         return Err(Error::invalid("snapshot contains a parent cycle"));
+    }
+    if replace
+        && complete
+        && scope == DataScope::Forest
+        && protected.is_empty()
+        && let Some(operations) = append_import(source, records, &parents, &children, &order)
+    {
+        return Ok(operations);
     }
     let revision = source.revision().next()?;
     let mut candidate = source.clone();
@@ -609,7 +682,149 @@ impl Engine {
 
 #[cfg(test)]
 mod tests {
+    use super::super::{Command, Context, SelectAction, Targets};
     use super::*;
+
+    #[test]
+    fn t_full_import_appends_then_reconciles_order_values_and_removal() {
+        fn import(engine: &mut Engine, records: &[Record]) -> Reply {
+            engine
+                .import(Import {
+                    base_revision: engine.source.revision(),
+                    scope: DataScope::Forest,
+                    records: records.to_vec(),
+                })
+                .unwrap()
+        }
+        fn child(key: &str, parent: &str, branch: bool) -> Record {
+            Record {
+                key: key.into(),
+                parent: Some(parent.into()),
+                data: if branch {
+                    NodeData::branch(key)
+                } else {
+                    NodeData::leaf(key)
+                },
+                completeness: None,
+            }
+        }
+        fn children(engine: &Engine, parent: NodeId) -> Vec<String> {
+            engine
+                .source
+                .child_sequence(Some(parent))
+                .unwrap()
+                .iter()
+                .map(|id| engine.source.node(*id).unwrap().key.to_string())
+                .collect()
+        }
+
+        let mut engine = Engine::new(Limits::default()).unwrap();
+        let root = Record::new("root", NodeData::branch("root"));
+        import(&mut engine, std::slice::from_ref(&root));
+        let root_id = engine.source.id("root").unwrap();
+        let original = engine.source.clone();
+        let state = engine
+            .create_state(Root::ChildrenOf(root_id), DisplayOptions::default())
+            .unwrap();
+        engine
+            .dispatch(
+                state,
+                Command::Select {
+                    targets: Targets::Nodes(vec![root_id].into()),
+                    action: SelectAction::Select,
+                    scope: Scope::Subtree,
+                },
+                Context::default(),
+            )
+            .unwrap();
+        let nested = child("nested", "branch", false);
+        let branch = child("branch", "root", true);
+        let tail = child("tail", "root", false);
+        import(
+            &mut engine,
+            &[nested.clone(), root.clone(), branch.clone(), tail.clone()],
+        );
+        let nested_id = engine.source.id("nested").unwrap();
+        let tail_id = engine.source.id("tail").unwrap();
+        assert_eq!(engine.source.id("root"), Some(root_id));
+        assert_eq!(children(&engine, root_id), ["branch", "tail"]);
+        assert!(
+            engine.states[&state]
+                .state
+                .selection
+                .value(&engine.source, nested_id)
+                .unwrap()
+        );
+        assert_eq!(original.child_sequence(Some(root_id)).unwrap().len(), 0);
+
+        let mut reordered = vec![
+            root.clone(),
+            child("first", "root", false),
+            tail,
+            branch,
+            nested,
+        ];
+        import(&mut engine, &reordered);
+        assert_eq!(children(&engine, root_id), ["first", "tail", "branch"]);
+        assert_eq!(engine.source.id("tail"), Some(tail_id));
+        assert!(matches!(import(&mut engine, &reordered), Reply::NoChange));
+        reordered[2].data.label = "updated".into();
+        import(&mut engine, &reordered);
+        assert_eq!(
+            engine.source.node(tail_id).unwrap().data.label.as_ref(),
+            "updated"
+        );
+
+        import(&mut engine, &[root, child("first", "root", false)]);
+        assert_eq!(children(&engine, root_id), ["first"]);
+        assert!(engine.source.id("tail").is_none());
+        assert!(engine.source.id("nested").is_none());
+        assert_eq!(engine.source.id("root"), Some(root_id));
+    }
+
+    #[test]
+    fn t_appended_import_rejections_preserve_the_published_source() {
+        for limit in [false, true] {
+            let mut engine = Engine::new(Limits {
+                nodes: if limit { 2 } else { 100 },
+                ..Limits::default()
+            })
+            .unwrap();
+            let original = engine.source.clone();
+            let mut records = vec![Record::new(
+                "parent",
+                if limit {
+                    NodeData::branch("parent")
+                } else {
+                    NodeData::leaf("parent")
+                },
+            )];
+            for key in ["one", "two"] {
+                records.push(Record {
+                    key: key.into(),
+                    parent: Some("parent".into()),
+                    data: NodeData::leaf(key),
+                    completeness: None,
+                });
+            }
+            let error = engine
+                .import(Import {
+                    base_revision: engine.source.revision(),
+                    scope: DataScope::Forest,
+                    records,
+                })
+                .unwrap_err();
+            assert_eq!(
+                error.code,
+                if limit {
+                    ErrorCode::ResourceLimit
+                } else {
+                    ErrorCode::InvalidUpdate
+                }
+            );
+            assert!(Arc::ptr_eq(&original, &engine.source));
+        }
+    }
 
     #[test]
     fn t_native_payload_import_preserves_identity_and_retained_versions() {

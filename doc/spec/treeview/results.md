@@ -27,6 +27,9 @@ Picker、Searcher 和 Diffview 使用通用 Treeview records。Explorer 的真�
   只有 commit 后才发布 source；新的刷新合并为最后一次请求，失败保留先前 surface 并拒绝 publication Future。
 - 完全相同的路径输入复用 producer topology；任何 producer mutation 都使这项复用失效。Locations
   与业务 metadata 仍按每次刷新重建，不能因路径集合相同而复用旧搜索结果。
+  同一次 topology 复用也保留 viewport icon cache；路径输入改变时丢弃旧 cache。
+- 完整 Forest import 若保留所有既有节点的 data、parent、completeness 和 sibling prefix，只需生成追加操作，
+  省去临时 Source 的重复构造；操作仍经过相同的原子提交、状态更新及资源检查。其他 import 使用完整 reconciliation。
 
 ## 匹配与读取
 
@@ -51,6 +54,7 @@ cursor、selection 和 expansion 不重新生成 records 或全量行映射。
   Current-line observable 读取发布后的 surface cursor，不能将迟到的 Frame cursor acknowledgement 回写成新输入、移动 Visual 端点。
 - Publication 等待已排队的 selection；native draw 被后续请求取代时等待最新 Frame 就绪，不能将
   `Superseded` 通知作为已完成的结果更新交给调用方。
+  Metadata-only 变更也刷新共享 Data 的所有 viewport decorations；可见主结果的 publication/ready 等待其准备完成。
 - Visual 选择由 native View 的 range action 捕获 frame。跟随选择的业务 action 等到 selection 被接受并发布，
   批量 self selection 按值合并为 native 命令，避免逐行占用 command queue。
 - 多行 Visual Tab 保留结果集的范围语义：忽略 location；有任一未选节点则全部选中，否则全部取消，
@@ -61,7 +65,8 @@ cursor、selection 和 expansion 不重新生成 records 或全量行映射。
 - 可复用的 Picker/Searcher result 在 hide 时 suspend View：保留独占 scratch buffer、已发布 Frame 和正文，
   释放 window binding 与活动 polling。重开复用该 View，以原 Frame 为增量发布基线；buffer 被删除时重新接管空 buffer，
   changedtick 失配或外部修改时执行正常 resync。重开仍提交最新 producer/display 请求，不能遗漏隐藏期间的变更。
-  隐藏期间业务读取与 publication 跟随 State 的最新 Frame；metadata 仅保留当前 revision 和隐藏正文仍引用的 revision。
+  隐藏期间业务读取与 publication 跟随 State 的最新 Frame；metadata 保留当前 revision 以及各 surface 仍显示或暂停的 revision。
+  慢于主结果的 preview 保留自己的 metadata，替换 Frame 发布后回收旧 revision。
   普通 unmount/detach 释放 View 和 scratch buffer，保留 Data/State；Dispose 取消待发布工作并释放所有保留资源。
   晚到的异步 callback 不重新连接 surface，也不能写入重新绑定的窗口。
 - Diffview refresh 等待 publication Future，稳定 key 定位等待 native 行可用；buffer 行与 action 对象来自同一帧。
@@ -81,3 +86,5 @@ open/closed glyph，共享 Data 的主结果和 preview 各自跟随自己的 Fr
 目录与带 locations 的文件 records 使用空 `icon` 禁止默认 chevron，避免与 consumer overlay 重复绘制。
 Git status、diagnostics、搜索匹配与 commit graph 的 rich highlights
 遵循同一发布边界，不为每个结果节点创建常驻 extmark。
+Location 的位置前缀和 snippet 仍是 native label；highlight spans 从该 Frame 对应的 Lua metadata 中按 viewport 计算，
+不为每条 location 再构造和导入一份 native highlight 图。主结果和目录 preview 使用同一 metadata 准备边界。

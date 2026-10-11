@@ -1066,6 +1066,9 @@ function M:_drain()
           nil, nil, nil, nil, nil
         self._versions[data_revision] = snapshot
         self._accepted_revision, self._accepted_input = revision, input_revision
+        for view in pairs(self._data._views) do
+          view:refresh_decorations()
+        end
       end
       return self:_display(request)
     end)
@@ -1111,7 +1114,7 @@ end
 ---@param col                           integer
 ---@param label                         string
 ---@param expanded                      boolean
----@return nil
+---@return ux.treeview.INode|nil
 function M:decorate_row(view, frame, row, id, col, label, expanded)
   local node = frame:node(id)
   local directory = node and node.fields.directory_icon
@@ -1182,6 +1185,19 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
       end
     end
   end
+  return node
+end
+
+---@param frame                         yoz.ux.treeview.Frame
+---@return stl.c.Future
+function M:prepare_frame(frame)
+  if not self._versions[frame:header().data_revision] then
+    return Future.resolve(false)
+  end
+  return Future.resolve(function(published)
+    self:_prune_versions(published)
+    return true
+  end)
 end
 
 ---@return nil
@@ -1210,12 +1226,7 @@ function M:_attach()
       end
     end,
     prepare_frame = function(_, frame)
-      if not self._versions[frame:header().data_revision] then
-        return Future.resolve(false)
-      end
-      return Future.resolve(function()
-        return true
-      end)
+      return self:prepare_frame(frame)
     end,
     decorate_row = function(view, frame, row, id, col, label, expanded)
       self:decorate_row(view, frame, row, id, col, label, expanded)
@@ -1235,20 +1246,40 @@ end
 
 ---@param frame                         ?yoz.ux.treeview.Frame
 ---@return nil
-function M:_published(frame)
+function M:_prune_versions(frame)
+  if self._disposed then
+    return
+  end
+  local keep = { [self._data:source():revision()] = true }
   if frame then
-    local revision = frame:header().data_revision
-    local current = self._data:source():revision()
-    local retained = self.view and self.view:frame()
-    local retained_revision = retained and retained:header().data_revision
-    for version in pairs(self._versions) do
-      if version ~= revision and version ~= current and version ~= retained_revision then
-        self._versions[version] = nil
+    keep[frame:header().data_revision] = true
+  end
+  local retained = self.view and self.view:frame()
+  if retained then
+    keep[retained:header().data_revision] = true
+  end
+  for view in pairs(self._data._views) do
+    if view ~= self.view then
+      local displayed = view:frame()
+      if displayed then
+        keep[displayed:header().data_revision] = true
       end
     end
   end
+  for revision in pairs(self._versions) do
+    if not keep[revision] then
+      self._versions[revision] = nil
+    end
+  end
+end
+
+---@param frame                         ?yoz.ux.treeview.Frame
+---@return nil
+function M:_published(frame)
+  self:_prune_versions(frame)
   local waiting = self._waiting
-  if waiting and frame and not self:selection_pending() and self.state._native:applicable(frame) then
+  local presented = not self.view or self.view:is_suspended() or not self.view:status().preparing
+  if waiting and frame and presented and not self:selection_pending() and self.state._native:applicable(frame) then
     self._waiting = nil
     waiting.resolve({ kind = "Applied", frame = frame })
   end
@@ -1275,6 +1306,7 @@ function M:_settle_ready()
     or self._request
     or self._command_busy
     or self._focus
+    or self.view and not self.view:is_suspended() and self.view:status().preparing
     or self:selection_pending()
     or not self:is_current()
   then

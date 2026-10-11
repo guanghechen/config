@@ -3,6 +3,13 @@ local __module_name__ = "era.view.result_files" ---@type string
 
 local ResultTree = require("era.view.result_tree")
 local Paths = require("era.view.result_paths")
+local namespace = vim.api.nvim_create_namespace("era.result_files")
+
+---@param location                      era.view.result_tree.IEntry
+---@return string
+local function location_prefix(location)
+  return location.col and string.format("%4d:%-4d", location.lnum, location.col) or string.format("%4d:", location.lnum)
+end
 
 ---@class era.view.ResultFiles : era.view.ResultTree
 local M = setmetatable({}, { __index = ResultTree })
@@ -11,15 +18,9 @@ M.__index = M
 ---@param props                         table
 ---@return era.view.ResultFiles
 function M.new(props)
-  props.present = function(key, data, entry)
+  props.present = function(_, data, entry)
     if entry.nodetype == "location" then
-      local text, highlights
-      if props.render_treeview_location then
-        text, highlights = props.render_treeview_location({}, key, data, nil, entry, 0)
-      else
-        text, highlights = M.present_location(entry)
-      end
-      return { label = text, highlight = "m_ft_text", fields = { highlights = highlights or {} } }
+      return { label = location_prefix(entry) .. " " .. (entry.text or ""), highlight = "m_ft_text" }
     end
     if entry.nodetype == "container" then
       local name = vim.fn.strtrans(data.basename or "")
@@ -45,8 +46,7 @@ end
 ---@return string
 ---@return stl.t.IHighlightInline[]
 function M.present_location(location)
-  local position = location.col and string.format("%4d:%-4d", location.lnum, location.col)
-    or string.format("%4d:", location.lnum)
+  local position = location_prefix(location)
   local text = position .. " " .. (location.text or "")
   local highlights = { { coll = 0, colr = #position, hlname = "m_ft_position" } }
   for _, highlight in ipairs(location.highlights or {}) do
@@ -57,6 +57,37 @@ function M.present_location(location)
     }
   end
   return text, highlights
+end
+
+---@param view                          ux.treeview.View
+---@param frame                         yoz.ux.treeview.Frame
+---@param row                           integer
+---@param id                            string
+---@param col                           integer
+---@param label                         string
+---@param expanded                      boolean
+---@return nil
+function M:decorate_row(view, frame, row, id, col, label, expanded)
+  local node = ResultTree.decorate_row(self, view, frame, row, id, col, label, expanded)
+  local version = self._versions[self:_read(frame).header.data_revision]
+  local entry = node and version and version.entries[node.key]
+  if not entry or entry.nodetype ~= "location" then
+    return
+  end
+  local text, highlights = M.present_location(entry)
+  local offset = #label - #text
+  for _, highlight in ipairs(highlights) do
+    local first = offset + highlight.coll
+    local last = highlight.colr < 0 and #label or math.min(#label, offset + highlight.colr)
+    if first < last then
+      vim.api.nvim_buf_set_extmark(view.bufnr, namespace, row, col + first, {
+        ephemeral = true,
+        end_col = col + last,
+        hl_group = highlight.hlname,
+        priority = 160,
+      })
+    end
+  end
 end
 
 ---@return nil
@@ -118,8 +149,13 @@ end
 ---@param with_locations                ?boolean
 ---@return nil
 function M:reset_filepaths(cwd, paths, with_locations)
+  local revision = self.source.revision
+  local icons, directories = self._icons, self._directory_icons
   self:clear()
   self.source:reset(cwd, paths, with_locations == true)
+  if self.source.revision == revision then
+    self._icons, self._directory_icons = icons, directories
+  end
   self:_sync_entries()
   if with_locations then
     for _, value in ipairs(paths) do

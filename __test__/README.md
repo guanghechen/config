@@ -426,3 +426,23 @@ files fell from 78.5 ms to 17.7 ms median; 5,000 files fell from 20.2 ms to 13.9
 reopens performed zero body writes. The comparison baseline is migration commit `7afabbf14`, not the
 pre-migration Lua renderer. First display at 50,000 files remained 1.95 s; identical refresh measured
 622 ms before and 612 ms after. Hidden results retain one owned scratch buffer until disposal.
+
+The next comparison against `0fca27937` uses preserved Lua/native binaries and three processes per
+variant. A native append-only import path and viewport-only location span preparation reduced:
+
+| Scenario | Before | After |
+| --- | ---: | ---: |
+| Generic Tree, 5,000 symbols, first UI | 98.3 ms | 70.9 ms |
+| Searcher, 5,000 matches / one file, first UI | 210.4 ms | 104.6 ms |
+| Searcher, same workload, process CPU | 249.9 ms | 119.4 ms |
+| Searcher, same workload, RSS increment | 57.5 MiB | 36.0 MiB |
+| File Picker, 50,000 files, first UI | 1.93 s | 1.43 s |
+
+The 50k Picker still has a roughly 200 ms synchronous producer gap. Its initial RSS increment rose
+from 276 to 317 MiB, while the complete interaction sequence ended at 352 versus 340 MiB. A separate
+macOS malloc-zone check of the native change measured essentially identical live allocations
+(135.57/135.60 MiB) and reserved allocator memory (172.59 MiB); RSS is residency, not a live-object count.
+These samples do not measure peak RSS. Retained Lua heap at 50k stayed around 65.6 MiB; dense Searcher
+Lua heap stayed around 13.4 MiB. Identical path refreshes now preserve viewport icon caches, eliminating
+the 34 repeated icon lookups observed on reopen. Snapshot preparation still traverses the complete
+producer; sparse native writes do not imply an end-to-end delta preparation path.

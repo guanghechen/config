@@ -140,6 +140,21 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
       t.assert_true(main_chevrons > 0, "commit headers retain their generic expand indicator")
     else
       t.assert_eq(0, main_chevrons, "file results do not draw fallback chevrons")
+      eval([[
+        refreshed_paths = vim.list_slice(owner.source._reset.paths)
+        owner:reset_filepaths("/icons", refreshed_paths, false)
+        owner:add_location(require("era.view.result_paths").key("/icons/a/src/one.lua"), {lnum=2,col=0})
+        native.publish(owner, {rootuuid=preview_root, foldempty=true})
+      ]])
+      check(expected.open)
+      eval([[
+        refreshed_paths[#refreshed_paths+1] = "fresh.lua"
+        owner:reset_filepaths("/icons", refreshed_paths, false)
+        native.publish(owner, {rootuuid=preview_root, foldempty=true})
+      ]])
+      t.wait_until(function()
+        return eval("return lookups.directory.src == 2 and lookups.file.src == 2")
+      end, 5000, "a changed path set must invalidate its viewport icon cache")
     end
   end)
 end

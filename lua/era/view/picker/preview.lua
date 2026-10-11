@@ -384,6 +384,9 @@ function M:__show_tree__(target)
           winnr = winnr,
           bufnr = bufnr,
           keymaps = false,
+          prepare_frame = function(_, frame)
+            return target.owner:prepare_frame(frame)
+          end,
           decorate_row = function(view, frame, row, id, col, label, expanded)
             target.owner:decorate_row(view, frame, row, id, col, label, expanded)
           end,
