@@ -71,6 +71,7 @@ local __highlights__ = {
     "CursorLineNr:m_pk_result_current",
     "FloatBorder:FloatBorder",
     "Normal:m_pk_result_normal",
+    "TreeviewMatch:m_pk_matches",
   }, ","),
   preview = table.concat({
     "Cursor:m_pk_preview_current",
@@ -80,6 +81,7 @@ local __highlights__ = {
     "FloatBorder:FloatBorder",
     "FloatTitle:m_pk_preview_title",
     "Normal:m_pk_preview_normal",
+    "TreeviewMatch:m_pk_matches",
   }, ","),
 }
 

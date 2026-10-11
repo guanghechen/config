@@ -128,8 +128,10 @@ function M.gen_hlgroup_map(context)
     m_pk_finder_prompt = { fg = c.love, bg = bg_pane },
     m_pk_finder_title = { link = t and "ms_b_none" or "ms_b_bg0" },
     m_pk_matches = { fg = c.rose, bold = true, italic = true },
-    m_pk_preview_current = { bg = c.overlay },
+    -- ctermfg lifts CursorLine above range fills without replacing truecolor syntax foregrounds.
+    m_pk_preview_current = { bg = cs.mix(c.base, c.rose, 24), ctermfg = 0 },
     m_pk_preview_normal = { bg = bg_pane },
+    m_pk_preview_range = { bg = cs.mix(c.base, c.rose, 12) },
     m_pk_preview_title = { fg = c.pine, bg = bg_pane, bold = true },
     m_pk_replacer_prompt = { fg = c.foam, bg = bg_pane },
     m_pk_result_current = { bg = c.highlightMed },

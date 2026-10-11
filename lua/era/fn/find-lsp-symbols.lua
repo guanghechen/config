@@ -578,6 +578,9 @@ local function refresh()
   end)
 end
 
+---@param bufnr                         integer
+---@param force                         boolean
+---@return era.view.picker.preview.IDrawResult
 local function render_preview(bufnr, force)
   if not filepath_sourcefile then
     if force then
@@ -632,7 +635,7 @@ local function render_preview(bufnr, force)
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
 
   if data.end_lnum and data.end_col and data.lnum and data.col then
-    vim.hl.range(bufnr, nsnr, "Visual", { data.lnum - 1, data.col }, { data.end_lnum - 1, data.end_col })
+    vim.hl.range(bufnr, nsnr, "m_pk_preview_range", { data.lnum - 1, data.col }, { data.end_lnum - 1, data.end_col })
   end
 
   return {
