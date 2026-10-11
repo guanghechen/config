@@ -59,9 +59,11 @@ fn member(
     } else {
         true
     };
-    Ok((selected && previous.matches_label(&node.data.label))
-        || (!state.display.pattern.is_empty()
-            && (subtree || state.display.mode == Mode::Tree || state.display.selected_only)
+    Ok((selected && previous.matches_node(id, &node.data.label))
+        || ((!state.display.pattern.is_empty() || state.display.filter.is_some())
+            && (subtree
+                || state.display.mode == Mode::Tree
+                || (state.display.selected_only && state.display.filter.is_none()))
             && matched
                 .get(&id)
                 .is_some_and(|children| !children.is_empty())))
@@ -146,6 +148,15 @@ fn compare_paths(
     use std::cmp::Ordering;
     let compare_key = |a: NodeId, b: NodeId| {
         if state.display.sort == Sort::Source && !state.display.branches_first {
+            if state.display.mode == Mode::List
+                && let Some(filter) = &state.display.filter
+            {
+                return filter
+                    .get(&a)
+                    .copied()
+                    .unwrap_or(usize::MAX)
+                    .cmp(&filter.get(&b).copied().unwrap_or(usize::MAX));
+            }
             return Ordering::Equal;
         }
         let left = &source.node(a).expect("ordered node").data;
@@ -153,6 +164,17 @@ fn compare_paths(
         (state.display.branches_first && !left.can_expand)
             .cmp(&(state.display.branches_first && !right.can_expand))
             .then_with(|| match state.display.sort {
+                Sort::Source if state.display.mode == Mode::List => state
+                    .display
+                    .filter
+                    .as_ref()
+                    .map_or(Ordering::Equal, |filter| {
+                        filter
+                            .get(&a)
+                            .copied()
+                            .unwrap_or(usize::MAX)
+                            .cmp(&filter.get(&b).copied().unwrap_or(usize::MAX))
+                    }),
                 Sort::Source => Ordering::Equal,
                 Sort::Name => left
                     .label
@@ -193,7 +215,9 @@ fn compare_paths(
 
 fn sorted_list(state: &State) -> bool {
     state.display.mode == Mode::List
-        && (state.display.sort != Sort::Source || state.display.branches_first)
+        && (state.display.sort != Sort::Source
+            || state.display.branches_first
+            || state.display.filter.is_some())
 }
 
 /* Surviving rows keep their projection order. Rank search skips filtered
@@ -209,6 +233,7 @@ fn boundary_at(
 ) -> Result<usize> {
     let direct_rank = if path.len() == 1
         && state.display.sort == Sort::Source
+        && state.display.filter.is_none()
         && !state.display.branches_first
         && matches!(state.root, Root::ChildrenOf(root) if source.node(path[0]).is_some_and(|node| node.parent == Some(root)))
     {
@@ -315,7 +340,10 @@ fn update_membership(
     roots: &HashMap<NodeId, usize>,
 ) -> Result<MembershipUpdate> {
     let mut matched = previous.matched_children.clone();
-    if state.display.pattern.is_empty() && !state.display.selected_only {
+    if state.display.pattern.is_empty()
+        && state.display.filter.is_none()
+        && !state.display.selected_only
+    {
         return Ok(MembershipUpdate {
             children: matched,
             changed: HashSet::new(),
@@ -636,7 +664,9 @@ fn subtree(
         if !descend {
             continue;
         }
-        let children = if state.display.selected_only || !state.display.pattern.is_empty() {
+        let children = if state.display.selected_only
+            || (!state.display.pattern.is_empty() || state.display.filter.is_some())
+        {
             matched
                 .get(&id)
                 .map_or_else(Vec::new, |children| children.iter().copied().collect())
@@ -948,7 +978,9 @@ pub(crate) fn project(
                     if let Some(at) = previous.position(id) {
                         removals.push((at, at + 1));
                     }
-                    if state.display.selected_only || !state.display.pattern.is_empty() {
+                    if state.display.selected_only
+                        || (!state.display.pattern.is_empty() || state.display.filter.is_some())
+                    {
                         if let Some(children) = previous.matched_children.get(&id) {
                             pending.extend(children.iter().copied());
                         }

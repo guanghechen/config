@@ -608,6 +608,16 @@ pub(crate) fn display(value: LuaValue) -> Result<DisplayOptions> {
         pattern: get::<Option<String>>(&value, "pattern")?
             .unwrap_or_default()
             .into(),
+        filter: match get(&value, "filter")? {
+            LuaValue::Nil => None,
+            value => Some(Arc::new(
+                ids(value)?
+                    .iter()
+                    .enumerate()
+                    .map(|(rank, id)| (*id, rank))
+                    .collect(),
+            )),
+        },
         case_sensitive: option_bool(&value, "case_sensitive")?.unwrap_or(false),
         show_hidden: option_bool(&value, "show_hidden")?.unwrap_or(true),
         selected_only: option_bool(&value, "selected_only")?.unwrap_or(false),

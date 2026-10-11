@@ -1,66 +1,14 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/commits/navigation_spec.lua
----@diagnostic disable: undefined-global
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.m.diffview.commits.navigation" ---@type string
 
-local bootstrap = require("__test__.support.bootstrap")
-local harness = require("__test__.support.harness")
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new("era.m.diffview.commits.navigation")
+local native = require("__test__.support.result_tree")
+local commits = require("era.m.diffview.pane.commits")
+local panels = require("era.m.diffview.pane.tree")
 
-local t = harness.new("era.m.diffview.commits.navigation")
-local ns = vim.api.nvim_create_namespace("era.m.diffview.commits_navigation.test")
-
-bootstrap.with_global(t, "stl", {
-  e = {
-    TabTypeEnum = { DIFFVIEW_WORKSPACE = "diffview_workspace" },
-  },
-  fileicon = {
-    get_file_icon = function()
-      return "F", "file_icon"
-    end,
-  },
-  icon = {
-    filetype = { Folder = "d", FolderOpen = "D" },
-    ui = { ArrowClosed = ">", ArrowOpen = "v" },
-  },
-})
-bootstrap.with_global(t, "dot", {
-  context = {
-    diffview = {
-      flag_foldempty = {
-        snapshot = function()
-          return false
-        end,
-      },
-      flag_panel_viewtype = {
-        snapshot = function()
-          return "tree"
-        end,
-      },
-    },
-  },
-})
-t:patch_table(package.loaded, "era.m.diffview.config", {
-  NS = ns,
-  BUFOPTS_PANEL = {},
-  WINOPTS_PANEL = {},
-  FT = { COMMITS = "diffview-commits-test" },
-})
-t:patch_table(package.loaded, "era.m.diffview.util", {
-  format_relative_time = function()
-    return "now"
-  end,
-  get_status_hlgroup = function(status)
-    return "status_" .. status
-  end,
-})
-t:patch_table(
-  package.loaded,
-  "era.m.diffview.commit_format",
-  assert(loadfile("lua/era/m/diffview/commit_format.lua"))()
-)
-
-local commits = assert(loadfile("lua/era/m/diffview/pane/commits.lua"))()
-
-local commit_a = {
-  hash = "aaaaaaaa",
+local first = {
+  hash = "aaaa",
   abbrev_hash = "aaaa",
   author = "A",
   date = 0,
@@ -71,202 +19,143 @@ local commit_a = {
     { filepath = "z.lua", status = "D" },
   },
 }
-local commit_b = {
-  hash = "bbbbbbbb",
-  abbrev_hash = "bbbb",
-  author = "B",
-  date = 0,
-  message = "second",
-  files = nil,
-}
+local second = { hash = "bbbb", abbrev_hash = "bbbb", author = "B", date = 0, message = "second" }
 
----@param viewtype stl.m.diffview.PanelViewTypeEnum
----@param tabtype stl.e.TabTypeEnum|nil
----@param collapsed_dirs table<string, table<string, boolean>>|nil
----@return era.m.diffview.IRenderResult
-local function render(viewtype, tabtype, collapsed_dirs)
-  return commits.render({ commit_a, commit_b }, { [commit_a.hash] = true }, {
-    collapsed_dirs = collapsed_dirs,
-    viewtype = viewtype,
-    foldempty = false,
-    layout = 2,
-    tabtype = tabtype,
-  })
+---@param mode                          ?string
+---@param input                         ?table[]
+---@param compressed                    ?boolean
+---@return era.view.ResultTree, integer
+local function render(mode, input, compressed)
+  input = input or { first, second }
+  local include_files = {}
+  for _, commit in ipairs(input) do
+    include_files[commit.hash] = true
+  end
+  local bufnr = commits.create_buffer()
+  local owner = panels.new()
+  t:defer(function()
+    owner:dispose()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  native.await(commits.apply_to_buffer(
+    bufnr,
+    commits.render(input, {
+      viewtype = mode or "tree",
+      foldempty = compressed == true,
+      layout = 2,
+      include_files = include_files,
+    }),
+    owner
+  ))
+  return owner, bufnr
 end
 
-t:test("render: expanded commit directories preserve identity and collapse independently", function()
-  local result = render("tree", nil, { [commit_a.hash] = { src = true } })
+---@param owner                         era.view.ResultTree
+---@param key                           string
+---@param value                         boolean
+---@return nil
+local function expand(owner, key, value)
+  owner:set_expansion(key, value, false)
+  native.await(owner:ready())
+end
 
-  t.assert_eq(4, #result.lines, "collapsed subtree hidden")
-  t.assert_true(result.lines[2]:find("d src", 1, true) ~= nil, "collapsed directory icon")
-  t.assert_eq("directory", result.line_map[2].type, "directory line identity")
-  t.assert_eq("src", result.line_map[2].uuid, "collapse identity")
-  t.assert_eq("src", result.line_map[2].filepath, "copy path")
-  t.assert_eq(1, commits.resolve_parent_lnum(result.navigation, 2), "directory remains under commit")
-
-  local compact_commit = vim.tbl_extend("force", {}, commit_a, {
-    files = { { filepath = "src/sub/b.lua", status = "A" } },
-  })
-  local compact = commits.render({ compact_commit }, { [compact_commit.hash] = true }, {
-    collapsed_dirs = {},
-    viewtype = "tree",
-    foldempty = true,
-    layout = 2,
-  })
-  t.assert_eq("src/sub", compact.line_map[2].filepath, "compacted directory exposes its displayed path")
-  t.assert_eq("src/sub", compact.line_map[2].uuid, "compacted directory keeps stable identity")
-
-  local collapsed_compact = commits.render({ compact_commit }, { [compact_commit.hash] = true }, {
-    collapsed_dirs = { [compact_commit.hash] = { ["src/sub"] = true } },
-    viewtype = "tree",
-    foldempty = true,
-    layout = 2,
-  })
-  t.assert_eq(2, #collapsed_compact.lines, "compacted directory collapse hides its file")
-  t.assert_true(collapsed_compact.lines[2]:find("d src/sub", 1, true) ~= nil, "compacted collapse icon")
+t:test("commits begin collapsed and their file trees share native row navigation", function()
+  local owner, bufnr = render()
+  t.assert_eq(2, owner:linecount())
+  expand(owner, "commit:aaaa", true)
+  t.assert_eq(7, owner:linecount())
+  local frame = commits.get_navigation(bufnr)
+  t.assert_eq(1, commits.resolve_parent_lnum(frame, 2))
+  t.assert_eq(2, commits.resolve_parent_lnum(frame, 3))
+  t.assert_eq(3, commits.resolve_parent_lnum(frame, 4))
+  t.assert_eq(6, commits.resolve_last_child_or_sibling_lnum(frame, 1))
+  t.assert_eq("src/sub/b.lua", commits.get_item_at_line(bufnr, 4).entry.filepath)
 end)
 
-t:test("render: workspace History starts commit rows with the hash", function()
-  local history = commits.render({ commit_b }, {}, {
-    viewtype = "tree",
-    foldempty = false,
-    layout = 2,
-    tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE,
-  })
-  t.assert_eq("bbbb B  second now", history.lines[1], "History row")
-
-  local hash_highlight = history.highlights[1]
-  t.assert_eq("m_dv_cm_hash", hash_highlight.hlname, "first highlight")
-  t.assert_eq(0, hash_highlight.coll, "hash starts at first column")
-
-  local standalone = commits.render({ commit_b }, {}, { viewtype = "tree", foldempty = false, layout = 2 })
-  t.assert_eq("> | bbbb B  second now", standalone.lines[1], "filtered Commits keeps chevron")
-
-  local graph_commit = vim.tbl_extend("force", {}, commit_b, {
-    author = "Jesse Duffield",
-    graph = "◎─╮",
-    message = ":sparkles: merge graph",
-  })
-  local graph_result = commits.render({ graph_commit }, {}, {
-    viewtype = "tree",
-    foldempty = false,
-    layout = 2,
-    tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE,
-  })
-  t.assert_eq("bbbb JD ◎─╮ ✨ merge graph now", graph_result.lines[1], "graph row metadata")
-
-  local expanded_history = render("tree", stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE)
-  t.assert_false(expanded_history.lines[2]:sub(1, 1) == " ", "History tree starts at the hash column")
-
-  local expanded_standalone = render("tree")
-  t.assert_eq("   ", expanded_standalone.lines[2]:sub(1, 3), "standalone child indent")
-  t.assert_false(expanded_standalone.lines[2]:sub(4, 4) == " ", "standalone indent remains unchanged")
+t:test("the same directory under different commits keeps independent expansion", function()
+  local peer = vim.tbl_extend("force", second, { files = first.files })
+  local owner, bufnr = render("tree", { first, peer })
+  expand(owner, "commit:aaaa", true)
+  expand(owner, "commit:bbbb", true)
+  local a = panels.key("commit:aaaa", "src", true)
+  local b = panels.key("commit:bbbb", "src", true)
+  expand(owner, a, false)
+  t.assert_false(owner:expanded(a))
+  t.assert_true(owner:expanded(b))
+  t.assert_nil(owner:retrieve_lnum(panels.key("commit:aaaa", "src/a.lua", false)))
+  local row = owner:retrieve_lnum(panels.key("commit:bbbb", "src/a.lua", false))
+  t.assert_eq("bbbb", commits.get_item_at_line(bufnr, row).commit.hash)
 end)
 
-t:test("render: projects nested TreeLayout navigation into buffer lines", function()
-  local result = render("tree")
-  local navigation = result.navigation ---@type era.m.diffview.ITreeNavigation
-
-  t.assert_eq(7, #result.lines, "rendered line count")
-  t.assert_eq(7, navigation.root_last_lnum, "last commit root")
-
-  t.assert_eq(1, commits.resolve_parent_lnum(navigation, 2), "filetree root parent")
-  t.assert_eq(2, commits.resolve_parent_lnum(navigation, 3), "nested directory parent")
-  t.assert_eq(3, commits.resolve_parent_lnum(navigation, 4), "nested file parent")
-
-  t.assert_eq(6, commits.resolve_last_child_or_sibling_lnum(navigation, 1), "commit last direct child")
-  t.assert_eq(5, commits.resolve_last_child_or_sibling_lnum(navigation, 2), "directory last direct child")
-  t.assert_eq(4, commits.resolve_last_child_or_sibling_lnum(navigation, 3), "single direct child")
-  t.assert_nil(commits.resolve_last_child_or_sibling_lnum(navigation, 4), "last sibling is a no-op")
-  t.assert_nil(commits.resolve_last_child_or_sibling_lnum(navigation, 7), "last root is a no-op")
+t:test("compressed directory rows retain the deepest semantic path", function()
+  local commit = vim.tbl_extend("force", first, { files = { first.files[2] } })
+  local owner, bufnr = render("tree", { commit }, true)
+  expand(owner, "commit:aaaa", true)
+  t.assert_eq(3, owner:linecount())
+  t.assert_eq("src/sub", commits.get_item_at_line(bufnr, 2).filepath)
+  expand(owner, panels.key("commit:aaaa", "src/sub", true), false)
+  t.assert_eq(2, owner:linecount())
 end)
 
-t:test("render: list rows retain the previous root-level navigation semantics", function()
-  local result = render("list")
-  local navigation = result.navigation ---@type era.m.diffview.ITreeNavigation
-
-  t.assert_nil(commits.resolve_parent_lnum(navigation, 2), "list row has no tree parent")
-  t.assert_eq(#result.lines, commits.resolve_last_child_or_sibling_lnum(navigation, 1), "list row scans to last root")
+t:test("List files remain attached to their commit and use full Git paths", function()
+  local owner, bufnr = render("list")
+  expand(owner, "commit:aaaa", true)
+  t.assert_eq(5, owner:linecount())
+  for row = 2, 4 do
+    local item = commits.get_item_at_line(bufnr, row)
+    t.assert_eq("file", item.type)
+    t.assert_eq("aaaa", item.commit.hash)
+    t.assert_eq(1, commits.resolve_parent_lnum(owner:frame(), row))
+    t.assert_eq(item.entry.filepath, owner:frame():rows(row, row).labels[1])
+  end
 end)
 
-t:test("apply: owns navigation with the commits buffer and cursor actions use it", function()
-  local result = render("tree")
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local original_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_win_set_buf(winnr, bufnr)
+t:test("Git graph and rich commit highlights survive native publication", function()
+  local commit = vim.tbl_extend(
+    "force",
+    second,
+    { author = "Jesse Duffield", graph = "◎─╮", message = ":sparkles: merge graph" }
+  )
+  local owner = render("tree", { commit })
+  local frame = owner:frame()
+  t.assert_true(frame:rows(1, 1).labels[1]:find("bbbb JD ◎─╮ ✨ merge graph", 1, true) ~= nil)
+  local highlights = frame:node(frame:node_at(1)).fields.highlights
+  t.assert_eq("m_dv_cm_hash", highlights[1].hlname)
+  t.assert_eq(0, highlights[1].coll)
+end)
 
-  commits.apply_to_buffer(bufnr, result)
-  t.assert_eq(7, commits.get_navigation(bufnr).root_last_lnum, "stored navigation")
-  t.assert_true(rawequal(result.line_map, commits.get_line_map(bufnr)), "line map stays in Lua without copying")
-  t.assert_true(rawequal(result.navigation, commits.get_navigation(bufnr)), "navigation stays in Lua without copying")
-
-  vim.api.nvim_win_set_cursor(winnr, { 4, 0 })
-  commits.goto_parent_node()
-  t.assert_eq(3, vim.api.nvim_win_get_cursor(winnr)[1], "parent cursor target")
-
-  vim.api.nvim_win_set_cursor(winnr, { 2, 0 })
-  commits.goto_last_child_or_sibling()
-  t.assert_eq(5, vim.api.nvim_win_get_cursor(winnr)[1], "last child cursor target")
-
-  commits.apply_to_buffer(bufnr, { lines = {}, highlights = {}, line_map = {} })
-  t.assert_eq(0, commits.get_navigation(bufnr).root_last_lnum, "cleared navigation")
-
-  vim.api.nvim_win_set_buf(winnr, original_bufnr)
+t:test("panel recreation reuses native state and a requested cursor waits for its row", function()
+  local owner, bufnr = render()
+  expand(owner, "commit:aaaa", true)
+  local key = panels.key("commit:aaaa", "src/sub/b.lua", false)
+  owner:focus_key(key)
+  t.wait_until(function()
+    return owner:frame():header().cursor == owner:frame():source():id(key)
+  end, 5000)
+  local identity = owner.state
   vim.api.nvim_buf_delete(bufnr, { force = true })
-  t.assert_nil(commits.get_navigation(bufnr), "wiped buffer releases navigation")
-end)
-
-t:test("apply: publishes render state before fallible decorations", function()
-  local old_result = render("tree")
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local original_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  commits.apply_to_buffer(bufnr, old_result)
-
-  local new_line_map = { { type = "commit", commit = commit_b, entry = nil } }
-  local new_navigation = {
-    parent_lnums = { 0 },
-    last_child_lnums = { 0 },
-    root_last_lnum = 1,
-  } ---@type era.m.diffview.ITreeNavigation
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local restore_range = t:patch_table(vim.hl, "range", function()
-    error("injected decoration failure")
+  local next_bufnr = commits.create_buffer()
+  local winnr =
+    vim.api.nvim_open_win(next_bufnr, false, { relative = "editor", row = 0, col = 0, width = 60, height = 10 })
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
   end)
-  local ok = pcall(commits.apply_to_buffer, bufnr, {
-    lines = { "new line" },
-    highlights = { { lnum = 0, coll = 0, colr = 1, hlname = "test" } },
-    line_map = new_line_map,
-    navigation = new_navigation,
-  })
-  restore_range()
-
-  t.assert_false(ok, "decoration failure propagates")
-  t.assert_eq("new line", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1], "new lines remain applied")
-  t.assert_true(rawequal(new_line_map, commits.get_line_map(bufnr)), "line map matches new lines")
-  t.assert_true(rawequal(new_navigation, commits.get_navigation(bufnr)), "navigation matches new lines")
-
-  vim.api.nvim_win_set_buf(winnr, original_bufnr)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-end)
-
-t:test("apply: cleanup registration fails before buffer mutation", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "original" })
-  t:patch_table(vim.api, "nvim_create_autocmd", function()
-    error("injected cleanup registration failure")
-  end)
-
-  local ok = pcall(commits.apply_to_buffer, bufnr, render("tree"))
-
-  t.assert_false(ok, "cleanup registration failure propagates")
-  t.assert_eq("original", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1], "buffer remains unchanged")
-  t.assert_nil(commits.get_line_map(bufnr), "line map remains unpublished")
-  t.assert_nil(commits.get_navigation(bufnr), "navigation remains unpublished")
-
-  vim.api.nvim_buf_delete(bufnr, { force = true })
+  native.await(commits.apply_to_buffer(
+    next_bufnr,
+    commits.render({ first, second }, {
+      layout = 2,
+      viewtype = "tree",
+      foldempty = false,
+      include_files = { aaaa = true, bbbb = true },
+    }),
+    owner
+  ))
+  t.assert_true(identity == owner.state)
+  t.assert_eq(owner:retrieve_lnum(key), vim.api.nvim_win_get_cursor(winnr)[1])
 end)
 
 t:run()

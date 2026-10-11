@@ -308,6 +308,8 @@ pub struct DisplayOptions {
     pub mode: Mode,
     pub list_text: ListText,
     pub pattern: Arc<str>,
+    /** Ordered result membership; Tree keeps connecting ancestors, List follows this order. */
+    pub filter: Option<Arc<BTreeMap<NodeId, usize>>>,
     pub case_sensitive: bool,
     pub show_hidden: bool,
     pub selected_only: bool,
@@ -322,6 +324,7 @@ impl Default for DisplayOptions {
             mode: Mode::Tree,
             list_text: ListText::Label,
             pattern: "".into(),
+            filter: None,
             case_sensitive: false,
             show_hidden: true,
             selected_only: false,

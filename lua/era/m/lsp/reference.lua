@@ -304,7 +304,7 @@ local function focus(title, method, additional_params)
       local treeview = picker._treeview ---@type era.m.picker.FiletreeView
       treeview:traverse_filenode(nil, function(_, data, nodestate)
         if nodestate ~= nil and nodestate.locations ~= nil then
-          local locations = nodestate.locations ---@type era.m.picker.view.filetree.ILocationNodeState[]
+          local locations = nodestate.locations ---@type era.view.result_tree.IEntry[]
           local lnum_maximum = 1 ---@type integer
           for _, location in ipairs(locations) do
             lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum
@@ -319,7 +319,7 @@ local function focus(title, method, additional_params)
         end
       end)
 
-      treeview:mark_cache_treeview_dirty()
+      treeview:invalidate()
       picker:mark_result_dirty()
     end)
   end)

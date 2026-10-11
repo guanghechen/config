@@ -92,7 +92,7 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function refresh(picker, rootpath)
-  local rootuuid = stl.c.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = require("era.view.result_paths").key(rootpath) ---@type string
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and dot.context.select.find_file.excludes:snapshot() or {} ---@type string[]
@@ -129,7 +129,7 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function attach(picker, rootpath)
-  local rootuuid = stl.c.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = require("era.view.result_paths").key(rootpath) ---@type string
   if picker:isexistent(rootuuid) then
     picker:attach(rootuuid)
   else

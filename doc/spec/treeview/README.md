@@ -1,18 +1,14 @@
 # Treeview 设计
 
-本目录是 Treeview 规范的权威位置，统一收录 Rust 交互树与现有 Lua layout 工具的契约。
-`Design` 表示已确认的设计，`Draft` 表示仍需审阅的设计提案或接入说明；设计状态不代表 runtime 已实现或切换。
+本目录是 Treeview 规范的权威位置。`Design` 表示已确认的契约，`Draft` 表示待审阅提案。
 
-## API 关系
+## Runtime 接入
 
-- `stl.c.Tree` 与 `stl.view.treeview.layout` 使用 [Lua Tree / TreeLayout 契约](lua-layout.md)：
-  Tree 管理结构，layout 纯计算可见行和导航；使用该 API 的 feature 持有自己的交互状态与 surface。
-- `yoz.ux.treeview` 使用 [Rust Treeview 核心契约](module.md)：data owner 提供真实 topology，
-  Treeview state 持有 selection、expansion、display root 和逻辑 cursor，Lua 负责输入与 surface。
-- 新 Explorer 使用 Rust Treeview；其 Lua surface 不再保存另一份权威 selection/expansion。
-  Picker、Searcher、Diffview 等调用方在使用 Lua API 时继续遵循 Lua 契约。
-- 两个 API 的输入、状态所有权与生命周期不同，按各自契约并存。Consumer 接入 Rust Treeview 时，
-  一起明确 data/state 与 surface 的职责，不将旧 layout 调用直接当作新 API 的别名。
+- 所有树状结果统一使用 `yoz.ux.treeview` 和 `lua/ux/treeview/`，不存在并行的 Lua layout/state 实现。
+- Explorer 使用新 Filetree 的 filesystem owner；Picker、Searcher、diagnostics、LSP symbols/references
+  和 Diffview 将业务结果作为 records 导入通用 Treeview。结果集不会触发额外的磁盘扫描。
+- Native State 独占 selection、expansion、display root、cursor 和行映射。输入、业务 metadata、
+  窗口组合及 viewport decorations 由 Lua consumer 负责，接入约定见 [结果集](results.md)。
 
 ## 文档导航
 
@@ -32,7 +28,7 @@
 | [roots.md](roots.md)                 | 显式展示入口、topology 归并与入口生命周期                     | Design |
 | [visual.md](visual.md)               | 稳定圈选布局、输入提交、重绘与 view 生命周期                  | Design |
 | [indentline.md](indentline.md)       | 缩进、压缩链、结构导航与 cursor 恢复                          | Design |
-| [lua-layout.md](lua-layout.md)       | 现有 Lua Tree、纯 layout、TreeLayout 与 renderer 边界         | Design |
+| [results.md](results.md)             | Picker、Searcher、Diffview 的 records、发布与 surface 接入    | Design |
 
 ## 规范边界
 

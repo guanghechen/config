@@ -334,7 +334,9 @@ pub(crate) fn apply(
         let mut covered = HashSet::new();
         let mut visited = HashSet::new();
         let mut scope = HashMap::new();
-        let ordered = state.display.sort == Sort::Source && !state.display.branches_first;
+        let ordered = state.display.sort == Sort::Source
+            && state.display.filter.is_none()
+            && !state.display.branches_first;
         /* New leaves are initialized by projection or the missing-text pass above;
          * they have no descendants whose existing text needs invalidation. */
         let mut dirty: Vec<_> = nodes
@@ -386,7 +388,7 @@ pub(crate) fn apply(
              * Only the former needs descendant traversal. Share ancestor lookups across
              * the batch, including when all changed ancestors are filtered out. */
             if at.is_none()
-                && (state.display.pattern.is_empty()
+                && ((state.display.pattern.is_empty() && state.display.filter.is_none())
                     || !in_scope(source, &state.root, stops, &mut scope, id))
             {
                 continue;

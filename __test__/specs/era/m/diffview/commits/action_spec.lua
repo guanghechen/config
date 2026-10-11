@@ -15,10 +15,39 @@ local fetched_page = nil ---@type integer|nil
 local fetched_per_page = nil ---@type integer|nil
 local page_commits = {} ---@type era.m.diffview.ICommit[]
 
+local requested_tree_focus
+---@param state                         table
+---@return table
+local function mock_tree(state)
+  return {
+    state = state,
+    source = {
+      get = function()
+        return nil
+      end,
+    },
+    focus_key = function(_, key)
+      requested_tree_focus = key
+    end,
+  }
+end
+
 local pane_commits = {
-  apply_to_buffer = function(bufnr, result)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, result.lines)
-    line_maps[bufnr] = result.line_map
+  apply_to_buffer = function(bufnr, result, owner)
+    local lines, items = {}, {}
+    for _, commit in ipairs(result.commits) do
+      lines[#lines + 1] = commit.hash
+      items[#items + 1] = { type = "commit", commit = commit }
+      if owner.state:is_commit_expanded(commit.hash) then
+        for _, entry in ipairs(commit.files or {}) do
+          lines[#lines + 1] = entry.filepath
+          items[#items + 1] = { type = "file", commit = commit, entry = entry }
+        end
+      end
+    end
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    line_maps[bufnr] = items
+    return require("stl.c.future").resolve({ kind = "Applied" })
   end,
   apply_winopts = function() end,
   create_buffer = function()
@@ -45,20 +74,8 @@ local pane_commits = {
     local line_map = line_maps[bufnr]
     return line_map and line_map[lnum] or nil
   end,
-  render = function(commits, expanded)
-    local lines = {} ---@type string[]
-    local line_map = {} ---@type era.m.diffview.ICommitsLineMap[]
-    for _, commit in ipairs(commits) do
-      lines[#lines + 1] = commit.hash
-      line_map[#line_map + 1] = { type = "commit", commit = commit }
-      if expanded[commit.hash] then
-        for _, entry in ipairs(commit.files or {}) do
-          lines[#lines + 1] = entry.filepath
-          line_map[#line_map + 1] = { type = "file", commit = commit, entry = entry }
-        end
-      end
-    end
-    return { lines = lines, highlights = {}, line_map = line_map }
+  render = function(commits)
+    return { commits = commits }
   end,
 }
 
@@ -136,6 +153,9 @@ end
 ---@return table
 local function new_search_state()
   local state = {
+    get_tree = function(self)
+      return mock_tree(self)
+    end,
     commits = {},
     current_commit = nil,
     current_entry = { filepath = "stale.lua" },
@@ -146,16 +166,18 @@ local function new_search_state()
     content_generation = 0,
     page_applied = 1,
   }
-  state.expanded_commits = {
-    next = function(_, value)
-      state.expanded = value
-    end,
-  }
+  ---@return nil
+  function state:collapse_all()
+    self.expanded = {}
+  end
+  ---@param hash                        string
+  ---@return boolean
+  function state:is_commit_expanded(hash)
+    return self.expanded[hash] == true
+  end
+
   function state:get_commits()
     return self.commits
-  end
-  function state:get_expanded_commits()
-    return self.expanded
   end
   function state:get_commit_collapsed_dirs()
     return {}
@@ -256,6 +278,9 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
   local commit = { hash = "abc123", files = { entry } }
   local expanded = false
   local state = {
+    get_tree = function(self)
+      return mock_tree(self)
+    end,
     get_commits = function()
       return { commit }
     end,
@@ -264,9 +289,6 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
     end,
     get_current_entry = function()
       return entry
-    end,
-    get_expanded_commits = function()
-      return expanded and { [commit.hash] = true } or {}
     end,
     get_commit_collapsed_dirs = function()
       return {}
@@ -292,7 +314,11 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
   local commits_bufnr = assert(lyt.commits_bufnr)
   t.assert_true(expanded, "active commit expanded")
   t.assert_eq(commits_winnr, vim.api.nvim_get_current_win(), "Commits focused")
-  t.assert_eq(2, vim.api.nvim_win_get_cursor(commits_winnr)[1], "active file cursor")
+  t.assert_eq(
+    require("era.m.diffview.pane.tree").key("commit:" .. commit.hash, entry.filepath, false),
+    requested_tree_focus,
+    "active file cursor identity"
+  )
 
   action.reveal(ctx)
   t.assert_true(vim.api.nvim_tabpage_is_valid(tabnr), "tab remains valid")
@@ -342,7 +368,7 @@ t:test("search jumps across pages and selects the matching commit", function()
   t.assert_nil(state.current_entry, "stale entry")
   t.assert_nil(next(state.expanded), "expanded commits")
   t.assert_eq(2, state.lnum_present, "present line")
-  t.assert_eq(2, vim.api.nvim_win_get_cursor(commits_winnr)[1], "cursor line")
+  t.assert_eq("commit:" .. target.hash, requested_tree_focus, "cursor identity")
   t.assert_eq(1, dirty_count, "tabline refresh")
 
   vim.cmd.tabclose()
@@ -460,7 +486,7 @@ t:test("commit pane directories toggle independently and copy their displayed pa
   t.assert_eq("toggle:commit-a:lua", operations[1], "select toggles directory")
   t.assert_eq("collapse:commit-a:lua", operations[2], "collapse action")
   t.assert_eq("expand:commit-a:lua", operations[3], "expand action")
-  t.assert_eq(3, renders, "directory actions rerender")
+  t.assert_eq(0, renders, "native directory expansion preserves the producer")
   local copy_opts = assert(copied)
   t.assert_eq("/repo/lua/era", copy_opts.filepath, "displayed directory path")
   t.assert_eq("cursor", copy_opts.relative, "copy picker anchor")

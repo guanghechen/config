@@ -65,6 +65,14 @@ function Frame:header() end
 ---@param other                         yoz.ux.treeview.Frame
 ---@return boolean
 function Frame:same_rows(other) end
+---Immutable selected identities. Visible reads follow row order; false includes hidden/collapsed nodes.
+---@param visible_only                  boolean
+---@return yoz.ux.treeview.NodeIds
+function Frame:marked_nodes(visible_only) end
+---Identity-only export, bounded to 1024 nodes and 1 MiB of keys.
+---@param nodes                         ux.treeview.NodeId[]
+---@return string[]
+function Frame:node_keys(nodes) end
 ---@param row                           integer
 ---@return ux.treeview.NodeId|nil
 function Frame:node_at(row) end
@@ -89,6 +97,9 @@ function Frame:guide_path(row, first, last) end
 ---@param node                          ux.treeview.NodeId
 ---@return ux.treeview.INode|nil
 function Frame:node(node) end
+---@param node                          ux.treeview.NodeId
+---@return {marked: boolean, expanded: boolean}|nil
+function Frame:flags(node) end
 ---@return yoz.ux.treeview.Source
 function Frame:source() end
 

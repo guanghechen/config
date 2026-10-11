@@ -1,316 +1,135 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/picker/view/filetree_spec.lua
----@diagnostic disable: undefined-global
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.m.picker.view.filetree" ---@type string
 
-local harness = require("__test__.support.harness")
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new("era.m.picker.view.filetree")
+local native = require("__test__.support.result_tree")
+local Paths = require("era.view.result_paths")
+local Files = require("era.view.result_files")
 
-local t = harness.new("era.m.picker.view.filetree")
-
-local Tree = {}
-Tree.__index = Tree
-
-function Tree.new(props)
-  return {
-    _disposed = false,
-    _dirty_selected = false,
-    _tree = props.tree,
-    _tick_selected = 1,
-    _tick_render_treeview = 0,
-    statemap = {},
-  }
-end
-
-function Tree:__health__() end
-
-function Tree:mark_cache_treeview_dirty()
-  self._tick_render_treeview = self._tick_render_treeview + 1
-  return self
-end
-
----@param inserted                      table
----@return table
----@return table
-local function setup(inserted)
-  local root = { uuid = "/", parent = "/" }
-  local ancestor = { uuid = "/a", parent = "/" }
-  local nodes = { [root.uuid] = root, [ancestor.uuid] = ancestor }
-  local filetree = {
-    root = root.uuid,
-    insert_directory_absolute = function()
-      return inserted
-    end,
-    insert_file_absolute = function()
-      return inserted
-    end,
-    parent = function(_, uuid)
-      local node = nodes[uuid] or inserted
-      return node.uuid == root.uuid and nil or node.parent
-    end,
-  }
-
-  t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
-  t:patch_global("era", { view = { Tree = Tree } })
-
-  local FiletreeView = assert(loadfile("lua/era/m/picker/view/filetree.lua"))()
-  local view = FiletreeView.new({ name = "test", tree = filetree })
-  local ancestor_state = {
-    nodetype = "container",
-    collapsed = true,
-    tick_invisible = 0,
-    tick_matched = 0,
-    tick_selected = 0,
-    tick_selected_maximum = 0,
-  }
-  view.statemap[ancestor.uuid] = ancestor_state
-  return view, ancestor_state
-end
-
-t:test("inserting a file preserves existing ancestor state", function()
-  local view, ancestor_state = setup({ uuid = "/a/file", parent = "/a" })
-
-  view:insert_filepath("/a/file", false)
-
-  t.assert_true(view.statemap["/a"] == ancestor_state, "ancestor state identity")
-  t.assert_true(view.statemap["/a"].collapsed, "ancestor collapsed state")
-  t.assert_true(view._dirty_selected, "file insert invalidates selected aggregate")
-end)
-
-t:test("inserting a directory preserves existing ancestor state", function()
-  local view, ancestor_state = setup({ uuid = "/a/nested", parent = "/a" })
-
-  view:insert_dirpath("/a/nested")
-
-  t.assert_true(view.statemap["/a"] == ancestor_state, "ancestor state identity")
-  t.assert_true(view.statemap["/a"].collapsed, "ancestor collapsed state")
-  t.assert_true(view._dirty_selected, "directory insert invalidates selected aggregate")
-end)
-
-t:test("restore_subtree owns rebuilt state and selection aggregate", function()
-  local root = { uuid = "/a", children = { "/a/file" }, data = { filetype = "directory" } }
-  local leaf = { uuid = "/a/file", children = {}, data = { filetype = "file" } }
-  local nodes = { [root.uuid] = root, [leaf.uuid] = leaf }
-  local filetree = {
-    root = "/",
-    contains = function(_, uuid)
-      return nodes[uuid] ~= nil
-    end,
-    children = function(_, uuid)
-      if uuid == "/" then
-        return { root.uuid }
-      end
-      return nodes[uuid] and nodes[uuid].children or nil
-    end,
-    get = function(_, uuid)
-      return nodes[uuid] and nodes[uuid].data or nil
-    end,
-  }
-  t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
-  t:patch_global("era", { view = { Tree = Tree } })
-  local FiletreeView = assert(loadfile("lua/era/m/picker/view/filetree.lua"))()
-  local view = FiletreeView.new({ name = "test", tree = filetree })
-
-  view:restore_subtree(root.uuid, { [leaf.uuid] = true })
-
-  t.assert_eq("container", view.statemap[root.uuid].nodetype, "directory state")
-  t.assert_eq(0, view.statemap[root.uuid].tick_selected, "unselected directory")
-  t.assert_eq("leaf", view.statemap[leaf.uuid].nodetype, "file state")
-  t.assert_eq(1, view.statemap[leaf.uuid].tick_selected, "selected file")
-  t.assert_true(view._dirty_selected, "restored subtree invalidates selected aggregate")
-  view:__refresh_selected_maximum__()
-  t.assert_eq(1, view.statemap[root.uuid].tick_selected_maximum, "restored directory selected maximum")
-  t.assert_eq(1, view.statemap[leaf.uuid].tick_selected_maximum, "restored file selected maximum")
-  t.assert_eq(1, view._tick_render_treeview, "tree cache invalidated")
-
-  local visited = 0
-  view:traverse_filenode(root.uuid, function(uuid, data, nodestate)
-    visited = visited + 1
-    t.assert_eq(leaf.uuid, uuid, "visited file uuid")
-    t.assert_true(data == leaf.data, "visited file data")
-    t.assert_true(nodestate == view.statemap[leaf.uuid], "visited file state")
+---@return era.m.picker.FiletreeView
+local function fixture()
+  local view = Files.new({ name = "file result test", tree = Paths.new() })
+  t:defer(function()
+    view:dispose()
   end)
-  t.assert_eq(1, visited, "visited file count")
-end)
+  view:reset_filepaths("/workspace", { "dir/one.lua", "two.lua" }, false)
+  native.publish(view, { rootuuid = Paths.key("/workspace") })
+  return view
+end
 
-t:test("reset_filepaths restores locations and selection aggregate", function()
-  local filepath = "/workspace/a.lua"
-  local fileuuid = "file:" .. filepath
-  local nodes = {
-    { uuid = "/workspace", data = { filetype = "directory" } },
-    { uuid = fileuuid, data = { filetype = "file" } },
-    { uuid = "/archive", data = { filetype = "directory" } },
-  }
-  local filetree = {
-    root = "/",
-    contains = function(_, uuid)
-      for _, node in ipairs(nodes) do
-        if node.uuid == uuid then
-          return true
-        end
-      end
-      return false
-    end,
-    children = function(_, uuid)
-      if uuid == "/" then
-        return { nodes[1].uuid, nodes[3].uuid }
-      end
-      if uuid == nodes[1].uuid then
-        return { fileuuid }
-      end
-      return {}
-    end,
-    get = function(_, uuid)
-      for _, node in ipairs(nodes) do
-        if node.uuid == uuid then
-          return node.data
-        end
-      end
-      return nil
-    end,
-    reset = function() end,
-    retrieve = function(_, uuid)
-      return uuid == fileuuid and nodes[2] or nil
-    end,
-  }
-  t:patch_table(table, "clear", function(target)
-    for key in pairs(target) do
-      target[key] = nil
+for _, directory in ipairs({ false, true }) do
+  t:test("inserting a " .. (directory and "directory" or "file") .. " preserves native ancestor state", function()
+    local view = fixture()
+    local key = Paths.key("/workspace/dir")
+    view:collapse(key, "collapse", false)
+    view:toggle_select(key, true, true)
+    native.publish(view)
+    if directory then
+      view:insert_dirpath("/workspace/dir/new")
+    else
+      view:insert_filepath("/workspace/dir/new.lua", false)
     end
+    native.publish(view)
+    t.assert_true(view:retrieve(key).collapsed)
+    t.assert_true(view:isselected(key))
+    local child = Paths.key(directory and "/workspace/dir/new" or "/workspace/dir/new.lua")
+    t.assert_true(view:isselected(child), "new descendants inherit the native subtree selection")
   end)
-  t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
-  t:patch_global("era", { view = { Tree = Tree } })
-  t:patch_global("stl", {
-    c = { Filetree = {
-      uuid = function(path)
-        return "file:" .. path
-      end,
-    } },
-    env = { PATH_SEP = "/" },
-    string = {
-      parse_filepath_with_location = function()
-        return filepath, 12, 3, nil
-      end,
-    },
-  })
-  t:patch_global("yoz", { path = {
-    is_absolute = function()
-      return true
-    end,
-  } })
-  local FiletreeView = assert(loadfile("lua/era/m/picker/view/filetree.lua"))()
-  local view = FiletreeView.new({ name = "test", tree = filetree })
-  view.statemap[nodes[1].uuid] = {
-    nodetype = "container",
-    collapsed = false,
-    tick_invisible = 0,
-    tick_matched = 0,
-    tick_selected = 0,
-    tick_selected_maximum = 1,
-  }
-  view.statemap[fileuuid] = {
-    nodetype = "leaf",
-    collapsed = false,
-    tick_invisible = 0,
-    tick_matched = 0,
-    tick_selected = view._tick_selected,
-    tick_selected_maximum = view._tick_selected,
-  }
-  view.statemap[nodes[3].uuid] = {
-    nodetype = "container",
-    collapsed = false,
-    tick_invisible = 0,
-    tick_matched = 0,
-    tick_selected = 0,
-    tick_selected_maximum = 0,
-  }
+end
 
-  view:reset_filepaths("/workspace", { filepath .. ":12:3" }, true)
-
-  local locations = view.statemap[fileuuid].locations
-  t.assert_eq(1, #locations, "location count")
-  t.assert_eq(12, locations[1].lnum, "location line")
-  t.assert_eq(3, locations[1].col, "location column")
-  t.assert_eq(view._tick_selected, view.statemap[fileuuid].tick_selected, "selected file restored")
-  t.assert_true(view._dirty_selected, "reset invalidates selected aggregate")
-  view:__refresh_selected_maximum__()
-  t.assert_eq(view._tick_selected, view.statemap[fileuuid].tick_selected_maximum, "reset file selected maximum")
-  t.assert_eq(view._tick_selected, view.statemap[nodes[1].uuid].tick_selected_maximum, "reset parent selected maximum")
+t:test("restored results preserve selection after a file identity changes", function()
+  local view = fixture()
+  local key = Paths.key("/workspace/dir/renamed.lua")
+  view.source:remove(Paths.key("/workspace/dir/one.lua"))
+  view.source:insert_file_absolute("/workspace/dir/renamed.lua")
+  view:restore_subtree(Paths.key("/workspace/dir"), { [key] = true })
+  native.publish(view, { only_selected = true })
+  t.assert_true(view:isselected(key))
+  t.assert_true(view:retrieve_lnum(key) ~= nil)
 end)
 
-t:test("match reads leaf data and marks ancestors without matching the root", function()
-  local rootuuid = "/"
-  local parentuuid = "/workspace"
-  local leafuuid = "/workspace/a.lua"
-  local nodes = {
-    { uuid = parentuuid, data = { filetype = "directory" } },
-    { uuid = leafuuid, data = { filetype = "file", filepath = leafuuid, filepath_lower = leafuuid } },
-  }
-  local parents = { [parentuuid] = rootuuid, [leafuuid] = parentuuid }
-  local filetree = {
-    root = rootuuid,
-    children = function(_, uuid)
-      if uuid == rootuuid then
-        return { parentuuid }
-      end
-      if uuid == parentuuid then
-        return { leafuuid }
-      end
-      return {}
-    end,
-    get = function(_, uuid)
-      return uuid == leafuuid and nodes[2].data or nil
-    end,
-    parent = function(_, uuid)
-      return parents[uuid]
-    end,
-  }
-  t:patch_global("dot", { var = { nsnr = { view_filetree_matches = 1 } } })
-  t:patch_global("era", { view = { Tree = Tree } })
-  t:patch_global("stl", {
-    reporter = {
-      error = function(report)
-        error(report.message or report.subject)
-      end,
-    },
-    table = { truncate_inline = function() end },
-  })
-  t:patch_global("yoz", {
-    search = {
-      search_in_lines = function(params)
-        t.assert_eq(leafuuid, params.lines[1], "searched filepath")
-        return { lines = { { lnum = 1, score = 1, matches = {} } } }, nil
-      end,
-    },
-  })
-  local FiletreeView = assert(loadfile("lua/era/m/picker/view/filetree.lua"))()
-  local view = FiletreeView.new({ name = "test", tree = filetree })
-  view.statemap[parentuuid] = {
-    nodetype = "container",
-    collapsed = false,
-    tick_invisible = 0,
-    tick_matched = 0,
-    tick_selected = 0,
-    tick_selected_maximum = 0,
-  }
-  view.statemap[leafuuid] = {
-    nodetype = "leaf",
-    collapsed = false,
-    tick_invisible = 0,
-    tick_matched = 0,
-    tick_selected = 0,
-    tick_selected_maximum = 0,
-  }
+t:test("reset restores native location identities and selection", function()
+  local view = fixture()
+  view:reset_filepaths("/workspace", { "dir/one.lua:4:2", "dir/one.lua:9:3" }, true)
+  native.publish(view)
+  local key = Paths.key("/workspace/dir/one.lua")
+  local before = view:retrieve(key).locations
+  t.assert_eq(2, #before)
+  view:toggle_select(key, true, true)
+  native.publish(view)
+  view:reset_filepaths("/workspace", { "dir/one.lua:4:2", "dir/one.lua:9:3" }, true)
+  native.publish(view, { mode = "list", only_selected = true })
+  t.assert_true(view:isselected(key))
+  t.assert_true(view:isselected(before[1].locationuuid))
+  t.assert_eq(3, view:linecount(), "List membership excludes directory ancestors")
+end)
 
-  local matched = view:match({
-    rootuuid = rootuuid,
-    pattern = "a",
-    case_sensitive = true,
+t:test("search membership is projected through native ancestors", function()
+  local view = fixture()
+  local keys = view:match({
+    rootuuid = Paths.key("/workspace"),
+    pattern = "one.lua",
     fuzzy = false,
     regex = false,
+    case_sensitive = false,
   })
+  t.assert_eq(1, #keys)
+  t.assert_eq(Paths.key("/workspace/dir/one.lua"), keys[1])
+  native.publish(view, { rootuuid = Paths.key("/workspace"), only_matched = true, orders = keys })
+  t.assert_eq(2, view:linecount())
+  t.assert_eq(Paths.key("/workspace/dir"), view:retrieve_uuid(1))
+  t.assert_eq(keys[1], view:retrieve_uuid(2))
+end)
 
-  t.assert_eq(leafuuid, matched[1], "matched leaf")
-  t.assert_eq(view._tick_matched, view.statemap[leafuuid].tick_matched, "leaf matched tick")
-  t.assert_eq(view._tick_matched, view.statemap[parentuuid].tick_matched, "ancestor matched tick")
-  t.assert_nil(view.statemap[rootuuid], "synthetic root state")
+t:test("a plain file is never treated as a collapsed branch", function()
+  local view = fixture()
+  t.assert_false(view:retrieve(Paths.key("/workspace/two.lua")).collapsed)
+  view:add_location(Paths.key("/workspace/two.lua"), { lnum = 3, col = 1 })
+  native.publish(view)
+  local location = view:retrieve(Paths.key("/workspace/two.lua")).locations[1]
+  t.assert_eq("/workspace/two.lua", view:data(location.locationuuid).filepath)
+end)
+
+t:test("file imports defer icon detection until a viewport needs the file", function()
+  local calls = 0
+  t:patch_table(stl.fileicon, "get_file_icon", function()
+    calls = calls + 1
+    return "F", "Normal"
+  end)
+  local view = fixture()
+  t.assert_eq(0, calls)
+  local key = Paths.key("/workspace/two.lua")
+  local frame = view:frame()
+  t.assert_eq("two.lua", frame:node(frame:source():id(key)).fields.file_icon)
+end)
+
+t:test("Tree uses directories-first name order while List keeps explicit ranking", function()
+  local view = fixture()
+  view:reset_filepaths("/workspace", { "z.lua", "src/b.lua", "src/a.lua", "a.lua", "aaa/x.lua" }, false)
+  local root = Paths.key("/workspace")
+  native.publish(view, { rootuuid = root })
+  local paths = {}
+  for row = 1, view:linecount() do
+    paths[#paths + 1] = view:data(view:retrieve_uuid(row)).filepath
+  end
+  local expected = {
+    "/workspace/aaa",
+    "/workspace/aaa/x.lua",
+    "/workspace/src",
+    "/workspace/src/a.lua",
+    "/workspace/src/b.lua",
+    "/workspace/a.lua",
+    "/workspace/z.lua",
+  }
+  t.assert_true(vim.deep_equal(expected, paths), vim.inspect(paths))
+  view:insert_filepath("/workspace/src/0.lua", false)
+  native.publish(view, { rootuuid = root })
+  t.assert_eq(Paths.key("/workspace/src/0.lua"), view:retrieve_uuid(4))
+  local orders = { Paths.key("/workspace/z.lua"), Paths.key("/workspace/src/a.lua") }
+  native.publish(view, { mode = "list", rootuuid = root, orders = orders })
+  t.assert_eq(orders[1], view:retrieve_uuid(1))
+  t.assert_eq(orders[2], view:retrieve_uuid(2))
 end)
 
 t:run()

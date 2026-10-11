@@ -1,73 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/changes_render_spec.lua
----@diagnostic disable: undefined-global
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.m.diffview.changes_render" ---@type string
 
-local bootstrap = require("__test__.support.bootstrap")
-local harness = require("__test__.support.harness")
-
-local t = harness.new("era.m.diffview.changes_render")
-local ns = vim.api.nvim_create_namespace("era.m.diffview.changes_render.test")
-
-bootstrap.with_global(t, "stl", {
-  e = {
-    TabTypeEnum = {
-      DIFFVIEW_COMMITS = "diffview_commits",
-      DIFFVIEW_WORKSPACE = "diffview_workspace",
-    },
-  },
-  fileicon = {
-    get_file_icon = function()
-      return "F", "file_icon"
-    end,
-  },
-  icon = {
-    filetype = {
-      Folder = "D",
-      FolderOpen = "O",
-    },
-  },
-})
-t:patch_table(package.loaded, "era.m.diffview.config", {
-  NS = ns,
-  BUFOPTS_PANEL = {},
-  FT = { CHANGES = "diffview-changes-test" },
-  ICONS = { SEPARATOR = "-" },
-  FILETREE_WIDTH = 40,
-  WINOPTS_PANEL = {},
-})
-t:patch_table(package.loaded, "era.m.diffview.util", {
-  get_status_hlgroup = function(status)
-    return status == "?" and "status_untracked" or "status_" .. status
-  end,
-})
-
-local changes = assert(loadfile("lua/era/m/diffview/pane/changes.lua"))()
-
----@param overlay                      era.m.diffview.IOverlay
----@return string
-local function overlay_text(overlay)
-  local parts = {} ---@type string[]
-  for _, segment in ipairs(overlay.virt_text) do
-    parts[#parts + 1] = segment[1]
-  end
-  return table.concat(parts)
-end
-
----@param result                       era.m.diffview.IRenderResult
----@return table<string, era.m.diffview.IOverlay>
-local function overlays_by_filepath(result)
-  local overlays = {} ---@type table<string, era.m.diffview.IOverlay>
-  for index, item in ipairs(result.line_map) do
-    if item.entry ~= nil then
-      for _, overlay in ipairs(result.overlays or {}) do
-        if overlay.lnum == index - 1 then
-          overlays[item.entry.filepath] = overlay
-          break
-        end
-      end
-    end
-  end
-  return overlays
-end
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new("era.m.diffview.changes_render")
+local native = require("__test__.support.result_tree")
+local changes = require("era.m.diffview.pane.changes")
+local panels = require("era.m.diffview.pane.tree")
 
 local entries = {
   { filepath = "src/foo.lua", stage_type = "staged", status = "M", insertions = 12, deletions = 3 },
@@ -76,283 +14,137 @@ local entries = {
   { filepath = "src/untracked.lua", stage_type = "unstaged", status = "?" },
 }
 
----@param viewtype                     stl.m.diffview.PanelViewTypeEnum
----@param stage_type                  stl.m.diffview.StageTypeEnum
----@return era.m.diffview.IRenderResult
-local function render(viewtype, stage_type)
-  return changes.render(entries, {
-    stage_type = stage_type,
-    viewtype = viewtype,
+---@param mode                          string
+---@param stage                         string
+---@param input                         ?table[]
+---@param width                         ?integer
+---@return era.view.ResultTree, integer
+local function render(mode, stage, input, width)
+  local bufnr = changes.create_buffer(stage)
+  local owner = panels.new()
+  t:defer(function()
+    owner:dispose()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  local plan = changes.render(input or entries, {
+    stage_type = stage,
+    viewtype = mode,
     foldempty = true,
-    collapsed_dirs = {},
-    metadata_widths = changes.measure_metadata(entries),
-    panel_width = 40,
+    metadata_widths = changes.measure_metadata(input or entries),
+    panel_width = width or 40,
   })
+  native.await(changes.apply_to_buffer(bufnr, plan, owner))
+  return owner, bufnr
 end
 
----@param line_map                      era.m.diffview.IFiletreeLineMap[]
----@param uuid                          string
----@return integer
-local function find_uuid_line(line_map, uuid)
-  for lnum, item in ipairs(line_map) do
-    if item.uuid == uuid then
-      return lnum
-    end
+---@param owner                         era.view.ResultTree
+---@param path                          string
+---@return string
+local function metadata(owner, path)
+  local frame = owner:frame()
+  local id = frame:source():id(panels.key(nil, path, false))
+  local chunks = frame:node(id).fields.overlay
+  local text = {}
+  for _, chunk in ipairs(chunks) do
+    text[#text + 1] = chunk[1]
   end
-  error("missing line for " .. uuid)
+  return table.concat(text)
 end
 
----@param viewtype                     stl.m.diffview.PanelViewTypeEnum
-local function assert_aligned_columns(viewtype)
-  local overlays = {} ---@type table<string, era.m.diffview.IOverlay>
-  for _, stage_type in ipairs({ "staged", "unstaged" }) do
-    for filepath, overlay in pairs(overlays_by_filepath(render(viewtype, stage_type))) do
-      overlays[filepath] = overlay
-    end
-  end
-  t.assert_eq(" +12 -3 M", overlay_text(overlays["src/foo.lua"]), "full metadata row")
-  t.assert_eq("  +8    A", overlay_text(overlays["src/new.lua"]), "missing deletion keeps its column")
-  t.assert_eq("     -6 D", overlay_text(overlays["src/deleted.lua"]), "missing insertion keeps its column")
-  t.assert_eq("        ?", overlay_text(overlays["src/untracked.lua"]), "missing stats keep both columns")
+for _, mode in ipairs({ "tree", "list" }) do
+  t:test(mode .. " uses the same INS / DEL / S columns across sibling panes", function()
+    local staged = render(mode, "staged")
+    local unstaged = render(mode, "unstaged")
+    t.assert_eq(" +12 -3 M", metadata(staged, "src/foo.lua"))
+    t.assert_eq("  +8    A", metadata(staged, "src/new.lua"))
+    t.assert_eq("     -6 D", metadata(unstaged, "src/deleted.lua"))
+    t.assert_eq("        ?", metadata(unstaged, "src/untracked.lua"))
+  end)
 end
 
-t:test("render: list keeps pane-wide INS / DEL / S columns", function()
-  assert_aligned_columns("list")
-end)
-
-t:test("render: tree uses the same metadata columns", function()
-  assert_aligned_columns("tree")
-end)
-
-t:test("create buffer records stage ownership", function()
-  local bufnr = changes.create_buffer("unstaged")
-
-  t.assert_eq("unstaged", changes.get_stage_type(bufnr), "stage ownership")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-end)
-
-t:test("tree navigation matches explorer parent and last-child semantics", function()
-  local tree_entries = {
-    { filepath = "src/a.lua", stage_type = "unstaged", status = "M" },
-    { filepath = "src/sub/b.lua", stage_type = "unstaged", status = "M" },
-    { filepath = "src/z.lua", stage_type = "unstaged", status = "M" },
-    { filepath = "tail.lua", stage_type = "unstaged", status = "M" },
-  }
-  local result = changes.render(tree_entries, {
-    stage_type = "unstaged",
-    viewtype = "tree",
-    foldempty = false,
-    collapsed_dirs = {},
-    panel_width = 40,
-  })
-  local src_lnum = find_uuid_line(result.line_map, "src")
-  local sub_lnum = find_uuid_line(result.line_map, "src/sub")
-  local a_lnum = find_uuid_line(result.line_map, "src/a.lua")
-  local b_lnum = find_uuid_line(result.line_map, "src/sub/b.lua")
-  local z_lnum = find_uuid_line(result.line_map, "src/z.lua")
-  local tail_lnum = find_uuid_line(result.line_map, "tail.lua")
-  local navigation = result.navigation
-
-  t.assert_nil(changes.resolve_parent_lnum(navigation, src_lnum), "top-level parent is hidden")
-  t.assert_eq(sub_lnum, changes.resolve_parent_lnum(navigation, b_lnum), "visible parent")
-  t.assert_eq(z_lnum, changes.resolve_last_child_or_sibling_lnum(navigation, src_lnum), "last direct child")
-  t.assert_eq(z_lnum, changes.resolve_last_child_or_sibling_lnum(navigation, a_lnum), "last sibling")
-  t.assert_nil(changes.resolve_last_child_or_sibling_lnum(navigation, tail_lnum), "last root is a no-op")
-
-  local winnr = vim.api.nvim_get_current_win()
-  local original_bufnr = vim.api.nvim_win_get_buf(winnr)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  changes.apply_to_buffer(bufnr, result)
-
-  vim.api.nvim_win_set_cursor(winnr, { b_lnum, 0 })
-  changes.goto_parent_node()
-  t.assert_eq(sub_lnum, vim.api.nvim_win_get_cursor(winnr)[1], "parent cursor")
-
-  vim.api.nvim_win_set_cursor(winnr, { a_lnum, 0 })
-  changes.goto_last_child_or_sibling()
-  t.assert_eq(z_lnum, vim.api.nvim_win_get_cursor(winnr)[1], "last sibling cursor")
-
-  vim.api.nvim_win_set_buf(winnr, original_bufnr)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-end)
-
-t:test("render: narrow pane keeps status when full metadata cannot fit", function()
-  local overlays = {} ---@type table<string, era.m.diffview.IOverlay>
-  for _, stage_type in ipairs({ "staged", "unstaged" }) do
-    local result = changes.render(entries, {
-      stage_type = stage_type,
-      viewtype = "list",
-      foldempty = true,
-      collapsed_dirs = {},
-      metadata_widths = changes.measure_metadata(entries),
-      panel_width = 5,
-    })
-    for filepath, overlay in pairs(overlays_by_filepath(result)) do
-      overlays[filepath] = overlay
-    end
-  end
-
-  t.assert_eq(" M", overlay_text(overlays["src/foo.lua"]), "status fallback")
-  t.assert_eq(" ?", overlay_text(overlays["src/untracked.lua"]), "untracked fallback")
-end)
-
-t:test("render: escapes control characters without changing semantic paths", function()
-  for _, viewtype in ipairs({ "list", "tree" }) do
-    local entry = { filepath = "src/multi\nline\tname.lua", stage_type = "staged", status = "A" }
-    local result = changes.render({ entry }, {
-      stage_type = "staged",
-      viewtype = viewtype,
-      foldempty = true,
-      collapsed_dirs = {},
-      panel_width = 40,
-    })
-
-    for _, line in ipairs(result.lines) do
-      t.assert_false(line:find("\n", 1, true) ~= nil, viewtype .. " line remains single-line")
-    end
-    local file_lnum = nil ---@type integer|nil
-    for index, item in ipairs(result.line_map) do
-      if item.entry == entry then
-        file_lnum = index
-        break
+t:test("native rows map each Changes pane to its own stage", function()
+  for _, stage in ipairs({ "staged", "unstaged" }) do
+    local _, bufnr = render("tree", stage)
+    t.assert_eq(stage, changes.get_stage_type(bufnr))
+    local files = 0
+    for _, item in ipairs(changes.get_line_map(bufnr)) do
+      t.assert_eq(stage, item.stage_type)
+      if item.type == "file" then
+        files = files + 1
       end
     end
-    t.assert_true(file_lnum ~= nil, viewtype .. " file line")
-    t.assert_true(result.lines[file_lnum]:find("multi^@line^Iname.lua", 1, true) ~= nil, viewtype .. " display path")
-    t.assert_eq(entry.filepath, result.line_map[file_lnum].entry.filepath, viewtype .. " semantic path")
-
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    changes.apply_to_buffer(bufnr, result)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+    t.assert_eq(2, files)
   end
 end)
 
-t:test("render: filename and status use per-status highlights", function()
-  local result = render("list", "staged")
-  local overlays = overlays_by_filepath(result)
-
-  t.assert_eq("status_M", overlays["src/foo.lua"].virt_text[#overlays["src/foo.lua"].virt_text][2], "status")
-
-  local item_lnum = nil ---@type integer|nil
-  for index, item in ipairs(result.line_map) do
-    if item.entry and item.entry.filepath == "src/foo.lua" then
-      item_lnum = index - 1
-      break
-    end
-  end
-  local filename_hl = nil ---@type string|nil
-  for _, highlight in ipairs(result.highlights) do
-    if highlight.lnum == item_lnum and highlight.hlname == "status_M" then
-      filename_hl = highlight.hlname
-      break
-    end
-  end
-  t.assert_eq("status_M", filename_hl, "filename")
+t:test("native navigation and collapse preserve file identity", function()
+  local owner, bufnr = render("tree", "staged")
+  local row = owner:retrieve_lnum(panels.key(nil, "src/foo.lua", false))
+  local parent = changes.resolve_parent_lnum(changes.get_navigation(bufnr), row)
+  t.assert_eq("src", changes.get_item_at_line(bufnr, parent).uuid)
+  owner:collapse(owner:retrieve_uuid(parent), "collapse", false)
+  native.publish(owner, { rootuuid = panels.root })
+  t.assert_eq(1, owner:linecount())
+  t.assert_nil(owner:retrieve_lnum(panels.key(nil, "src/foo.lua", false)))
+  owner:collapse(owner:retrieve_uuid(1), "expand", false)
+  native.publish(owner, { rootuuid = panels.root })
+  t.assert_eq(
+    "src/foo.lua",
+    changes.get_entry_at_line(bufnr, owner:retrieve_lnum(panels.key(nil, "src/foo.lua", false))).filepath
+  )
 end)
 
-t:test("apply: installs right-aligned virtual text", function()
-  local result = render("list", "staged")
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  changes.apply_to_buffer(bufnr, result)
-
-  local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns, 0, -1, { details = true })
-  local right_aligned = 0 ---@type integer
-  for _, extmark in ipairs(extmarks) do
-    local details = extmark[4]
-    if details and details.virt_text_pos == "right_align" then
-      right_aligned = right_aligned + 1
-    end
-  end
-
-  t.assert_eq(2, right_aligned, "one right-aligned overlay per staged file")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
+t:test("narrow panes retain status when metadata columns do not fit", function()
+  local owner = render("tree", "staged", nil, 2)
+  t.assert_eq(" M", metadata(owner, "src/foo.lua"))
 end)
 
-t:test("apply: publishes semantic state before fallible decorations", function()
-  local old_result = render("tree", "staged")
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  changes.apply_to_buffer(bufnr, old_result)
+t:test("display escapes control and byte names while actions keep exact Git paths", function()
+  local paths = { "dir/tab\tname.lua", "line\nbreak.lua", "raw" .. string.char(255) .. ".lua", "back\\slash.lua" }
+  local input = {}
+  for _, path in ipairs(paths) do
+    input[#input + 1] = { filepath = path, stage_type = "staged", status = "M" }
+  end
+  local owner, bufnr = render("list", "staged", input)
+  local frame = owner:frame()
+  t.assert_eq(#paths, frame:header().row_count)
+  for row = 1, #paths do
+    local item = changes.get_item_at_line(bufnr, row)
+    t.assert_true(vim.list_contains(paths, item.entry.filepath))
+    local label = frame:rows(row, row).labels[1]
+    t.assert_false(label:find("[\r\n\t]") ~= nil)
+  end
+end)
 
-  local new_line_map = {
-    {
-      type = "file",
-      entry = { filepath = "new.lua", stage_type = "staged", status = "M" },
-      stage_type = "staged",
-      uuid = "new.lua",
-    },
-  }
-  local new_navigation = {
-    parent_lnums = { 0 },
-    last_child_lnums = { 0 },
-    root_last_lnum = 1,
-  } ---@type era.m.diffview.ITreeNavigation
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local restore_range = t:patch_table(vim.hl, "range", function()
-    error("injected decoration failure")
+t:test("empty panes expose zero native rows", function()
+  local owner, bufnr = render("tree", "staged", {})
+  t.assert_eq(0, owner:linecount())
+  t.assert_eq(0, #changes.get_line_map(bufnr))
+end)
+
+t:test("an attached Changes pane publishes through the owned native surface", function()
+  local bufnr = changes.create_buffer("staged")
+  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 50, height = 10 })
+  local owner = panels.new()
+  t:defer(function()
+    owner:dispose()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
   end)
-  local ok = pcall(changes.apply_to_buffer, bufnr, {
-    lines = { "new line" },
-    highlights = { { lnum = 0, coll = 0, colr = 1, hlname = "test" } },
-    line_map = new_line_map,
-    navigation = new_navigation,
-  })
-  restore_range()
-
-  t.assert_false(ok, "decoration failure propagates")
-  t.assert_eq("new line", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1], "new lines remain applied")
-  t.assert_true(rawequal(new_line_map, changes.get_line_map(bufnr)), "line map matches new lines")
-  t.assert_true(rawequal(new_navigation, changes.get_navigation(bufnr)), "navigation matches new lines")
-
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-  t.assert_nil(changes.get_line_map(bufnr), "wiped buffer releases line map")
-  t.assert_nil(changes.get_navigation(bufnr), "wiped buffer releases navigation")
-end)
-
-t:test("window options keep the Changes column width fixed", function()
-  local winnr = vim.api.nvim_get_current_win()
-  local winfixwidth = vim.api.nvim_get_option_value("winfixwidth", { win = winnr })
-  changes.apply_winopts(winnr)
-
-  t.assert_true(vim.api.nvim_get_option_value("winfixwidth", { win = winnr }), "fixed width")
-  vim.api.nvim_set_option_value("winfixwidth", winfixwidth, { win = winnr, scope = "local" })
-end)
-
-t:test("render: each pane contains only its own entries", function()
-  local staged = render("list", "staged")
-  local unstaged = render("list", "unstaged")
-
-  t.assert_eq(2, #staged.lines, "staged lines")
-  t.assert_eq(2, #unstaged.lines, "unstaged lines")
-  for _, item in ipairs(staged.line_map) do
-    t.assert_false(item.type == "header", "staged has no section header")
-    t.assert_eq("staged", item.stage_type, "staged line ownership")
-  end
-  for _, item in ipairs(unstaged.line_map) do
-    t.assert_false(item.type == "header", "unstaged has no section header")
-    t.assert_eq("unstaged", item.stage_type, "unstaged line ownership")
-  end
-end)
-
-t:test("render: an empty pane has no synthetic buffer row", function()
-  local result = changes.render({}, {
-    stage_type = "staged",
-    viewtype = "list",
-    foldempty = true,
-    collapsed_dirs = {},
-    panel_width = 40,
-  })
-
-  t.assert_eq(0, #result.lines, "no section header")
-  t.assert_eq(0, #result.line_map, "no synthetic line identity")
-end)
-
-t:test("status highlight mapping distinguishes conflicts and untracked files", function()
-  bootstrap.with_global(t, "era", { m = { diffview = { config = { STATUS_ICONS = {} } } } })
-  local util = assert(loadfile("lua/era/m/diffview/util.lua"))()
-
-  t.assert_eq("m_dv_ft_status_unmerged", util.get_status_hlgroup("U"), "conflict")
-  t.assert_eq("m_dv_ft_status_untracked", util.get_status_hlgroup("?"), "untracked")
+  native.await(
+    changes.apply_to_buffer(
+      bufnr,
+      changes.render(entries, { stage_type = "staged", viewtype = "tree", foldempty = true }),
+      owner
+    )
+  )
+  t.assert_eq(owner:linecount(), vim.api.nvim_buf_line_count(bufnr))
+  t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }))
+  t.assert_true(changes.get_entry_at_line(bufnr, owner:retrieve_lnum(panels.key(nil, "src/foo.lua", false))) ~= nil)
+  t.assert_eq(0, #vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, {}), "decorations remain ephemeral")
 end)
 
 t:run()

@@ -371,3 +371,51 @@ t:run()
 - Declare application globals through `__test__.support.bootstrap`. Load `ark.bootstrap` explicitly only when the composed runtime is part of the test.
 - Wait for observable async completion with `t.wait_until(predicate, timeout_ms, message)`; settle or cancel owned work before cleanup.
 - Keep temporary repositories, files, buffers, and windows owned by the creating test. Test failures must retain their original diagnostics.
+
+## Native result consumers
+
+`nvim -l __test__/bench/treeview_results.lua 50000` drives the production ResultPaths/ResultFiles adapter
+in an attached 100×40 UI with virtual file records (no filesystem scan). It reports producer time,
+first complete UI flush, cursor feedback and native confirmation separately, buffer writes during
+cursor movement, retained Lua heap, and collection of the first directory's selected identities.
+Run it without concurrent builds or test suites.
+
+On the 2026-10-10 macOS run after result-consumer optimization, 50,000 files produced 50,500 rows:
+producer 190 ms, initial flush 1.86 s, 30 cursor moves p50 0.22 ms / p95 0.35 ms,
+native confirmation p95 0.61 ms, zero cursor body writes, and 67.6 MiB additional Lua heap.
+Collecting 101 selected identities took 7.2 ms. The adapter retains one compact record signature
+generation to avoid full uploads when topology is unchanged.
+These are one-process observations, not a latency guarantee.
+Icon detection is viewport-only; an earlier all-file detection run spent 4.16 s in the producer.
+
+`nvim -l __test__/bench/treeview_diffview.lua 10000 10` drives actual Diffview expansion actions in an
+attached 100×40 UI. It separates the header-only first screen and first file materialization from
+subsequent expansion/collapse, and counts record-plan rebuilds, imports and icon lookups in the hot loop.
+Across three independent runs, the medians were 3.2 ms for the collapsed first screen, 337 ms for the
+first expansion, expansion p50 9.1 ms / p95 12.0 ms, and collapse p50 3.1 ms / p95 3.3 ms.
+The hot loop performed zero plan rebuilds, imports or icon lookups. The expanded commit contains
+10,101 rows; files remain absent from inline records until their first expansion.
+
+A separate before/after run through the real FiletreeComposer used virtual paths, the same UI and
+three independent processes. At 50,000 files, collecting 100 files for the actual open action fell
+from 1.82 s to 13 ms (10–16 ms across the final runs; file opening and disk IO stubbed out).
+Filtering to ten files fell from 205 ms to 107 ms; refreshing an identical collection fell from
+1.10 s to 0.63 s, with its longest 2 ms event-loop timer gap falling from 356 ms to 40 ms.
+Switching to List fell from 302 ms to 145 ms; switching back to Tree fell from 259 ms to 61 ms.
+First display changed from 1.86 s to 1.92 s, while its longest timer gap fell from 327 ms to 217 ms.
+There are costs: retained Lua heap rose from 55.8 MiB to 65.7 MiB, and reopening after a refresh
+rose from 45 ms to 72 ms (51–73 ms across the final runs). Ordinary selection remained about 5.5 ms;
+single-directory expansion changed from 4.5 ms to 5.5 ms. These measurements use natural GC during
+each operation; no GC tuning or forced collection is used to make reopening faster. Heap is measured
+after collection outside the operation timings. A final baseline spot check measured 1.86 s for the
+bulk action, 206 ms filtering, 1.09 s refresh and 50 ms reopen.
+At 5,000 files, filtering fell from 195 ms to 70 ms and an identical refresh from 259 ms to 79 ms;
+final reopening measured 15 ms. These synthetic results exclude filesystem discovery and the external
+terminal/compositor. They are observations on this machine, not a latency guarantee.
+These comparisons use the migration immediately before optimization as their baseline, not HEAD.
+
+The Searcher 500-result 50 ms regression check collects its fixture before starting the native job,
+so earlier correctness cases do not contribute their dead owners/frames to the measured publication.
+The threshold is unchanged and GC remains enabled during the sample. Five independent runs measured
+19–26 ms for normal results and 27–38 ms for replace preview. Without that fixture cleanup, accumulated
+garbage produced 52–60 ms outliers; this microbenchmark is not a natural-GC tail-latency guarantee.

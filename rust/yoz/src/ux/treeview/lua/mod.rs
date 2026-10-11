@@ -145,6 +145,35 @@ impl LuaUserData for LuaFrame {
             let other = other.borrow::<LuaFrame>()?;
             Ok(this.0.same_rows(&other.0))
         });
+        methods.add_method("marked_nodes", |_, this, visible_only: bool| {
+            this.0
+                .marked_nodes(visible_only)
+                .map(LuaIds)
+                .map_err(LuaError::external)
+        });
+        methods.add_method("node_keys", |lua, this, nodes: LuaValue| {
+            let ids = input::ids(nodes).map_err(LuaError::external)?;
+            if ids.len() > 1024 {
+                return Err(LuaError::external(
+                    "node key reads require at most 1024 nodes",
+                ));
+            }
+            let keys = lua.create_table_with_capacity(ids.len(), 0)?;
+            let mut bytes = 0usize;
+            for (index, id) in ids.iter().enumerate() {
+                let node = this
+                    .0
+                    .source()
+                    .node(*id)
+                    .ok_or_else(|| LuaError::external(Error::missing(*id)))?;
+                bytes = bytes.saturating_add(node.key.len());
+                if bytes > 1024 * 1024 {
+                    return Err(LuaError::external("node key reads exceed 1 MiB"));
+                }
+                keys.raw_set(index + 1, node.key.as_ref())?;
+            }
+            Ok(keys)
+        });
         methods.add_method("node_at", |_, this, row: LuaValue| {
             let row = input::integer(row).map_err(LuaError::external)?;
             Ok(row
@@ -201,6 +230,30 @@ impl LuaUserData for LuaFrame {
                 this.0.source(),
                 input::node(id).map_err(LuaError::external)?,
             )
+        });
+        methods.add_method("flags", |lua, this, id: LuaValue| {
+            let id = input::node(id).map_err(LuaError::external)?;
+            let source = this.0.source();
+            if !source.contains(id) {
+                return Ok(None);
+            }
+            let result = lua.create_table()?;
+            result.set(
+                "marked",
+                this.0
+                    .state
+                    .selection
+                    .value(source, id)
+                    .map_err(LuaError::external)?,
+            )?;
+            result.set(
+                "expanded",
+                this.0
+                    .state
+                    .expanded(source, id)
+                    .map_err(LuaError::external)?,
+            )?;
+            Ok(Some(result))
         });
         methods.add_method("source", |_, this, ()| Ok(LuaSource(this.0.source.clone())));
     }

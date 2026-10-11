@@ -2,8 +2,6 @@
 local name = "era.fn.find_lsp_symbols" ---@type string
 local title = "LSP Symbols" ---@type string
 
-local tree_traversal = require("era.view.tree.traversal")
-
 ---@class era.fn.find_lsp_symbols.ISymbolData
 ---@field public name                   string
 ---@field public kind                   string
@@ -322,7 +320,7 @@ local function get_icon(kindname)
   return icon, icon_hln
 end
 
----@param tree                          stl.c.Tree
+---@param tree                          era.view.ResultSource
 ---@param callback                      fun(): nil
 local function fetch_symbols(tree, callback)
   local bufnr = filepath_sourcefile and dot.buf.loadfile(filepath_sourcefile) or nil
@@ -551,8 +549,8 @@ end
 
 ---@return nil
 local function refresh()
-  local tree = picker._tree ---@type stl.c.Tree
-  local treeview = picker._treeview ---@type era.m.picker.TreeView
+  local tree = picker._tree ---@type era.view.ResultSource
+  local treeview = picker._treeview ---@type era.view.ResultTree
 
   _tick_refresh = _tick_refresh + 1
   local tick_refresh = _tick_refresh
@@ -564,108 +562,20 @@ local function refresh()
     if _tick_refresh ~= tick_refresh then
       return
     end
-    tree_traversal.preorder(tree, tree.root, function(uuid, children)
+    tree:walk(tree.root, function(uuid)
+      local children = tree:children(uuid)
       local data = tree:get(uuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
       local text = data and data.name or ""
       local has_children = #children > 0
       treeview:insert(uuid, {
         nodetype = has_children and "container" or "leaf",
-        collapsed = false,
-        tick_invisible = 0,
-        tick_matched = 0,
-        tick_selected = 0,
-        tick_selected_maximum = 0,
-        cache_treeview = nil,
         text = text,
-        text_lower = text:lower(),
       })
     end)
     picker:attach(tree.root)
+    picker._scheduler_match:schedule({ immediate = true })
     picker:mark_result_dirty()
   end)
-end
-
----@param _ctx                          any
----@param _uuid                         string
----@param data                          era.fn.find_lsp_symbols.ISymbolData
----@diagnostic disable-next-line: unused-local -- Renderer signature is shared with tree callbacks.
-local function render_symbol(_ctx, _uuid, data)
-  local icon = data.icon or "●"
-  local text = icon .. " " .. (data.name or "Unknown")
-  return text,
-    {
-      { coll = 0, colr = #icon + 1, hlname = data.icon_hln or "DiagnosticInfo" },
-      { coll = #icon + 1, colr = #text, hlname = "f_lsp_symbol_text" },
-    }
-end
-
----@type era.m.picker.view.tree.ITreeviewContainerNodeRenderer
----@diagnostic disable-next-line: unused-local -- Renderer signature is defined by the shared tree view contract.
-local function render_treeview_container(ctx, uuid, data, _nodestate, _lnum, folded_depth)
-  if folded_depth == 0 then
-    return render_symbol(ctx, uuid, data)
-  end
-
-  local limit = folded_depth + 1
-  local items = {} ---@type era.fn.find_lsp_symbols.ISymbolData[]
-  local tree = picker._tree ---@type stl.c.IReadonlyTree
-  local current_uuid = uuid ---@type string|nil
-  while current_uuid ~= nil and #items < limit do
-    local current_data = tree:get(current_uuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
-    if current_data == nil then
-      break
-    end
-    table.insert(items, 1, current_data)
-    current_uuid = tree:parent(current_uuid)
-  end
-  local item_count = #items
-
-  local text = "" ---@type string
-  local highlights = {} ---@type table[]
-  local offset = 0 ---@type integer
-
-  local sep = "  " ---@type string
-  for i = 1, item_count, 1 do
-    local item = items[i] ---@type era.fn.find_lsp_symbols.ISymbolData
-
-    if i > 1 then
-      text = text .. sep
-      highlights[#highlights + 1] = {
-        coll = offset,
-        colr = offset + #sep,
-        hlname = "f_lsp_symbol_sep",
-      }
-      offset = offset + #sep
-    end
-
-    local icon = item.icon or "●"
-    local symbol_name = item.name or "Unknown"
-    local part_text = string.format("%s %s", icon, symbol_name)
-
-    text = text .. part_text
-    highlights[#highlights + 1] = {
-      coll = offset,
-      colr = offset + #icon,
-      hlname = item.icon_hln or "DiagnosticInfo",
-    }
-    highlights[#highlights + 1] = {
-      coll = offset + #icon + 1,
-      colr = offset + #part_text,
-      hlname = "f_lsp_symbol_text",
-    }
-
-    offset = offset + #part_text
-  end
-
-  return text, highlights
-end
-
-local function render_location(_, _, symbol_data)
-  ---@cast symbol_data                 era.fn.find_lsp_symbols.ISymbolData
-  if symbol_data and symbol_data.lnum then
-    return string.format(":%d", symbol_data.lnum), { { coll = 0, colr = 10, hlname = "LineNr" } }
-  end
-  return "", {}
 end
 
 local function render_preview(bufnr, force)
@@ -700,7 +610,7 @@ local function render_preview(bufnr, force)
     }
   end
 
-  local data = picker._tree:get(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+  local data = picker._treeview:data(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
   if data == nil then
     if force then
       local lines = { "Invalid symbol data" }
@@ -739,7 +649,7 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 local function goto_symbol(nodeuuid)
-  local symbol_data = picker._tree:get(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+  local symbol_data = picker._treeview:data(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
   if symbol_data == nil or filepath_sourcefile == nil then
     return
   end
@@ -769,6 +679,9 @@ local function goto_symbol(nodeuuid)
 end
 
 picker = era.m.picker.TreeComposer.new({
+  present = function(_, data)
+    return { label = vim.fn.strtrans(data.name or ""), icon = data.icon, highlight = "f_lsp_symbol_text" }
+  end,
   name = name,
   permanent = true,
   title = title,
@@ -803,12 +716,6 @@ picker = era.m.picker.TreeComposer.new({
   flag_viewtype = o_flag_viewtype,
   flag_foldempty = o_flag_foldempty,
   flag_selected = stl.c.Observable.from_value(false),
-
-  render_listview_leaf = render_symbol,
-  render_listview_location = render_location,
-  render_treeview_container = render_treeview_container,
-  render_treeview_leaf = render_symbol,
-  render_treeview_location = render_location,
 
   render_preview = render_preview,
 

@@ -296,6 +296,17 @@ local function decorate(view, first, last)
         priority = 150,
       })
     end
+    if view._options.decorate_row then
+      view._options.decorate_row(
+        view,
+        view._frame,
+        row,
+        rows.ids[index],
+        start + view._context.slots,
+        rows.labels[index],
+        rows.expanded[index]
+      )
+    end
     local right = {}
     if rows.right_texts[index] then
       right[#right + 1] = { rows.right_texts[index], "TreeviewRightText" }

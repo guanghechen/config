@@ -57,6 +57,7 @@ local function navigate(method, results)
   local picker = nil ---@type era.m.picker.FiletreeComposer|nil
   local jumps = {}
   local focused = false
+  local refreshes = 0
   local original_new = era.m.picker.FiletreeComposer.new
   t:patch_table(era.m.picker.FiletreeComposer, "new", function(props)
     props.permanent = false
@@ -70,6 +71,7 @@ local function navigate(method, results)
       focused = true
     end
     picker.mark_result_dirty = function(self)
+      refreshes = refreshes + 1
       return self
     end
     return picker
@@ -109,9 +111,6 @@ local function navigate(method, results)
     end
     return lines
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    callback()
-  end)
   t:patch_table(package.loaded, "era.m.lsp.reference", nil)
 
   local Reference = require("era.m.lsp.reference")
@@ -120,16 +119,21 @@ local function navigate(method, results)
   else
     Reference.goto_definitions()
   end
+  if focused then
+    t.wait_until(function()
+      return refreshes == 2
+    end, 1000, "scheduled reference snippets did not invalidate and refresh their producer")
+  end
   return assert(picker), jumps, focused
 end
 
 ---@param picker                        era.m.picker.FiletreeComposer
 ---@param filepath                      string
----@return era.m.picker.view.filetree.ILocationNodeState[]
+---@return era.view.result_tree.IEntry[]
 local function picker_locations(picker, filepath)
-  local fileuuid = stl.c.Filetree.uuid(filepath)
+  local fileuuid = require("era.view.result_paths").key(filepath)
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local filestate = picker._treeview.statemap[fileuuid] ---@type era.m.picker.view.filetree.IFileNodeState
+  local filestate = picker._treeview.entries[fileuuid] ---@type era.view.result_tree.IEntry
   return assert(filestate.locations)
 end
 
@@ -156,24 +160,19 @@ t:test("references: deduplicates overlapping clients and renders unique location
   t.assert_true(cols[8], "distinct same-line column")
 
   local bufnr_result = create_buffer("", { "" })
-  local render_result = resolved_picker._treeview:render_treeview({
-    bufnr = bufnr_result,
-    rootuuid = resolved_picker._uuid_root,
-    foldempty = false,
-    only_expanded = true,
-    only_matched = false,
-    only_selected = false,
-    only_visible = true,
-  })
-  local layout = assert(render_result.layout) ---@type stl.view.TreeLayout
+  local view = resolved_picker._treeview
+  require("__test__.support.result_tree").publish(view, { rootuuid = resolved_picker._uuid_root })
   local rendered_ids = {} ---@type table<string, true>
-  for lnum = 1, layout:len(), 1 do
-    local id = assert(layout:id(lnum)) ---@type string
+  for lnum = 1, view:linecount(), 1 do
+    local id = assert(view:retrieve_uuid(lnum)) ---@type string
     t.assert_nil(rendered_ids[id], "duplicate rendered ID")
     rendered_ids[id] = true
   end
   for locationuuid in pairs(ids) do
     t.assert_true(rendered_ids[locationuuid], "rendered location ID")
+    local location = view:retrieve(locationuuid)
+    local row = assert(view:retrieve_lnum(locationuuid))
+    t.assert_true(view:frame():rows(row, row).labels[1]:find("line " .. location.lnum, 1, true) ~= nil)
   end
 end)
 

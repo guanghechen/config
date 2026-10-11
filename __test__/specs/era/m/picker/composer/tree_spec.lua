@@ -1,178 +1,92 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/picker/composer/tree_spec.lua
----@diagnostic disable: undefined-global
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.m.picker.composer.tree" ---@type string
 
-local harness = require("__test__.support.harness")
-local bootstrap = require("__test__.support.bootstrap")
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new("era.m.picker.composer.tree")
+local native = require("__test__.support.result_tree")
+local Source = require("era.view.result_source")
+local View = require("era.view.result_tree")
+local Composer = require("era.m.picker.composer.tree")
 
-local t = harness.new("era.m.picker.composer.tree")
-bootstrap.with_runtime(t, {
-  stl = {
-    reporter = {
-      error = function(report)
-        error(report.message)
-      end,
-    },
-    table = require("stl.table"),
-  },
-})
-
-local Tree = require("stl.c.tree")
-local tree_selection = require("era.view.tree.selection")
-local TreeComposer = assert(loadfile("lua/era/m/picker/composer/tree.lua"))()
-
-t:test("insert: owns explicit sorted child order on strict Tree", function()
-  local tree = Tree.new("root")
-  local composer = setmetatable({
-    _disposed = false,
-    _tree = tree,
-    _treeview = {
-      mark_cache_match_dirty = function() end,
-      mark_cache_selected_dirty = function() end,
-    },
-    _node_sorter = function(left, right)
-      return left.order < right.order
+---@return era.m.picker.TreeComposer
+local function fixture()
+  local source = Source.new("root", { name = "root" })
+  local view = View.new({
+    name = "symbols",
+    tree = source,
+    present = function(_, data)
+      return { label = data.name }
     end,
-    fullname = "test",
-  }, TreeComposer)
+  })
+  local composer = setmetatable({
+    fullname = "symbols",
+    _disposed = false,
+    _tree = source,
+    _treeview = view,
+    _node_sorter = function(a, b)
+      return a.name < b.name
+    end,
+    _scheduler_match = { schedule = function() end },
+    _on_attached = function() end,
+  }, Composer)
+  t:defer(function()
+    view:dispose()
+  end)
+  return composer
+end
 
-  t.assert_true(composer:insert("root", "b", { order = 2 }) == composer, "insert returns composer")
-  composer:insert("root", "a", { order = 1 })
-  t.assert_eq("a", tree:children("root")[1], "sorted first child")
-  t.assert_eq("b", tree:children("root")[2], "sorted second child")
+---@param composer                      era.m.picker.TreeComposer
+---@return nil
+local function publish(composer)
+  composer._tree:walk(nil, function(key, data)
+    composer._treeview:insert(key, {
+      nodetype = #composer._tree:children(key) > 0 and "container" or "leaf",
+      text = data.name,
+    })
+  end)
+  native.publish(composer._treeview)
+end
 
-  composer:insert("root", "a", { order = 3 })
-  t.assert_eq("a", tree:children("root")[1], "same-parent upsert keeps position")
-  t.assert_eq(3, tree:get("a").order, "same-parent upsert updates data")
-
-  composer:insert("root", "group", { order = 0 })
-  composer:insert("group", "existing", { order = 4 })
-  composer:insert("group", "a", { order = 3 })
-  t.assert_eq("group", tree:parent("a"), "cross-parent upsert moves node")
-  t.assert_eq("a", tree:children("group")[1], "moved node uses explicit order")
-  t.assert_eq("existing", tree:children("group")[2], "existing child follows moved node")
-
-  composer:insert("a", "nested", { order = 5 })
-  local ok = pcall(composer.insert, composer, "nested", "group", { order = 99 })
-  t.assert_false(ok, "cycle upsert must fail")
-  t.assert_eq(0, tree:get("group").order, "failed upsert keeps old data")
-  t.assert_eq("root", tree:parent("group"), "failed upsert keeps old parent")
+t:test("symbol insertion preserves source order in native rows", function()
+  local composer = fixture()
+  composer:insert("root", "second", { name = "z" })
+  composer:insert("root", "first", { name = "a" })
+  publish(composer)
+  t.assert_eq("first", composer._treeview:retrieve_uuid(1))
+  t.assert_eq("second", composer._treeview:retrieve_uuid(2))
 end)
 
-t:test("insert: reparent invalidates the selection aggregate", function()
-  local tree = Tree.new("root")
-  tree:insert("root", "left", { order = 1 })
-  tree:insert("root", "right", { order = 2 })
-  tree:insert("left", "chosen", { order = 1 })
-
-  local tick_selected = 1
-  local treeview = {
-    _dirty_selected = true,
-    _tick_selected = tick_selected,
-    _tree = tree,
-    statemap = {
-      left = { tick_selected = 0, tick_selected_maximum = 0 },
-      right = { tick_selected = 0, tick_selected_maximum = 0 },
-      chosen = { tick_selected = tick_selected, tick_selected_maximum = 0 },
-    },
-    __health__ = function() end,
-    mark_cache_match_dirty = function() end,
-    mark_cache_selected_dirty = tree_selection.mark_dirty,
-    __refresh_selected_maximum__ = tree_selection.refresh_selected_maximum,
-  }
-  treeview:__refresh_selected_maximum__()
-  t.assert_false(treeview._dirty_selected, "initial aggregate clean")
-  t.assert_eq(tick_selected, treeview.statemap.left.tick_selected_maximum, "initial selected ancestor")
-  t.assert_eq(0, treeview.statemap.right.tick_selected_maximum, "initial unselected ancestor")
-
-  local composer = setmetatable({
-    _disposed = false,
-    _tree = tree,
-    _treeview = treeview,
-    _node_sorter = function(left, right)
-      return left.order < right.order
-    end,
-    fullname = "test",
-  }, TreeComposer)
-
-  composer:insert("right", "chosen", { order = 1 })
-
-  t.assert_true(treeview._dirty_selected, "reparent invalidates aggregate")
-  treeview:__refresh_selected_maximum__()
-  t.assert_eq(0, treeview.statemap.left.tick_selected_maximum, "old ancestor aggregate")
-  t.assert_eq(tick_selected, treeview.statemap.right.tick_selected_maximum, "new ancestor aggregate")
+t:test("reparenting a symbol preserves its native selection", function()
+  local composer = fixture()
+  composer:insert("root", "left", { name = "left" })
+  composer:insert("root", "right", { name = "right" })
+  composer:insert("left", "leaf", { name = "leaf" })
+  publish(composer)
+  composer._treeview:toggle_select("leaf", true, false)
+  native.publish(composer._treeview)
+  composer:insert("right", "leaf", { name = "leaf" })
+  publish(composer)
+  t.assert_true(composer._treeview:isselected("leaf"))
+  local frame = composer._treeview:frame()
+  local leaf = frame:source():id("leaf")
+  t.assert_eq(frame:source():id("right"), frame:node(leaf).parent)
 end)
 
-t:test("attach: validates roots through strict topology accessors", function()
-  local tree = Tree.new("root")
-  tree:insert("root", "child", {})
-  local dirty_count = 0
-  local schedule_count = 0
-  local attached_uuid ---@type string|nil
-  local composer = setmetatable({
-    _disposed = false,
-    _tree = tree,
-    _treeview = {
-      mark_cache_listview_dirty = function()
-        dirty_count = dirty_count + 1
-      end,
-    },
-    _scheduler_match = {
-      schedule = function()
-        schedule_count = schedule_count + 1
-      end,
-    },
-    _on_attached = function(_, uuid)
-      attached_uuid = uuid
-    end,
-    _uuid_root = "root",
-  }, TreeComposer)
-
-  composer:attach("child")
-
-  t.assert_eq("child", composer._uuid_root, "attached root")
-  t.assert_eq("child", attached_uuid, "attached callback")
-  t.assert_eq(1, dirty_count, "view dirty count")
-  t.assert_eq(1, schedule_count, "match schedule count")
-end)
-
-t:test("toggle: resolves state and children through strict accessors", function()
-  local tree = Tree.new("root")
-  tree:insert("root", "leaf", {})
-  tree:insert("leaf", "child", {})
-  local collapse_uuid ---@type string|nil
-  local dirty_count = 0
-  local composer = setmetatable({
-    _tree = tree,
-    _treeview = {
-      retrieve = function(_, uuid)
-        if uuid == "leaf" then
-          return { nodetype = "leaf" }
-        end
-        return { nodetype = "container" }
-      end,
-      collapse = function(_, uuid)
-        collapse_uuid = uuid
-      end,
-    },
-    _composer = {
-      mark_result_dirty = function()
-        dirty_count = dirty_count + 1
-      end,
-    },
-    _retriever = {
-      retrieve_lnum = function()
-        return nil
-      end,
-    },
-  }, TreeComposer)
-
-  composer:__toggle_node__("leaf", false, false)
-  local root_lnum, root_parent = composer:__retrieve_lnum_parent__("root")
-
-  t.assert_eq("leaf", collapse_uuid, "collapsed topology node")
-  t.assert_eq(1, dirty_count, "result dirty count")
-  t.assert_nil(root_lnum, "root parent line")
-  t.assert_nil(root_parent, "root parent uuid")
+t:test("attach rejects unknown roots and publishes known symbol roots", function()
+  local composer = fixture()
+  local errors = {}
+  t:patch_table(stl.reporter, "error", function(value)
+    errors[#errors + 1] = value
+  end)
+  composer:attach("absent")
+  t.assert_eq(1, #errors)
+  t.assert_nil(composer._uuid_root)
+  composer:insert("root", "scope", { name = "scope" })
+  composer:insert("scope", "symbol", { name = "symbol" })
+  publish(composer)
+  composer:attach("scope")
+  native.publish(composer._treeview, { rootuuid = composer._uuid_root })
+  t.assert_eq("symbol", composer._treeview:retrieve_uuid(1))
 end)
 
 t:run()

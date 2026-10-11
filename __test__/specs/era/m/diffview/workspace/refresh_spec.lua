@@ -6,6 +6,7 @@ local CancellationToken = require("stl.c.cancellation_token")
 local harness = require("__test__.support.harness")
 
 local t = harness.new("era.m.diffview.workspace.refresh")
+local requested_tree_focus
 
 bootstrap.with_global(t, "stl", {
   async = {
@@ -14,6 +15,9 @@ bootstrap.with_global(t, "stl", {
 })
 bootstrap.with_global(t, "dot", {
   state = {
+    is_disposed = function()
+      return false
+    end,
     status = {
       dirtier_tabline = {
         mark_dirty = function() end,
@@ -128,6 +132,7 @@ local function load_refresh_case(opts)
       for _, entry in ipairs(opts.visible_entries) do
         line_map[#line_map + 1] = { type = "file", entry = entry }
       end
+      return require("stl.c.future").resolve({})
     end,
     sync_changes_heights = function()
       height_sync_count = height_sync_count + 1
@@ -138,6 +143,16 @@ local function load_refresh_case(opts)
   local ctx = {
     layout = { changes_bufnr = changes_bufnr },
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
+      is_disposed = function()
+        return false
+      end,
       get_current_entry = function()
         return current
       end,

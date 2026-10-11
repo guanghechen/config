@@ -281,6 +281,14 @@ pub(super) fn display(lua: &Lua, value: &DisplayOptions) -> LuaResult<LuaTable> 
         },
     )?;
     result.set("pattern", value.pattern.as_ref())?;
+    if let Some(filter) = &value.filter {
+        let mut ordered: Vec<_> = filter.iter().collect();
+        ordered.sort_unstable_by_key(|(_, rank)| **rank);
+        result.set(
+            "filter",
+            lua.create_sequence_from(ordered.into_iter().map(|(id, _)| node(*id)))?,
+        )?;
+    }
     result.set("case_sensitive", value.case_sensitive)?;
     result.set("show_hidden", value.show_hidden)?;
     result.set("selected_only", value.selected_only)?;

@@ -108,7 +108,19 @@ impl Action {
                 })
                 .fold(0usize, usize::saturating_add)
         }
+        let display_bytes = |display: &DisplayOptions| {
+            display
+                .pattern
+                .len()
+                .saturating_add(display.filter.as_ref().map_or(0, |filter| {
+                    64usize.saturating_add(filter.len().saturating_mul(64))
+                }))
+        };
         match self {
+            Self::CreateState(root, display) => display_bytes(display).saturating_add(match root {
+                Root::Forest(ids) => ids.len().saturating_mul(8),
+                Root::ChildrenOf(_) => 8,
+            }),
             Self::Native(action) => action.bytes(),
             Self::Import(import) => records(&import.records),
             Self::ProviderImport(_, _, items)
@@ -130,6 +142,7 @@ impl Action {
                 .unwrap_or(usize::MAX / 4),
             ),
             Self::Dispatch(_, command, _) => match command {
+                Command::SetDisplay(display) => display_bytes(display),
                 Command::SetRoot(Root::Forest(ids)) => ids.len().saturating_mul(8),
                 Command::SetExpanded {
                     targets: Targets::Nodes(ids),

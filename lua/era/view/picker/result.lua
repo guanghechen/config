@@ -7,7 +7,7 @@ local c = nvimbar.component
 local Nvimbar = nvimbar.Nvimbar
 
 ---@alias era.view.picker.result.IDraw
----| fun(bufnr: integer): era.view.picker.result.IDrawResult
+---| fun(bufnr: integer): era.view.picker.result.IDrawResult|stl.c.Future
 
 ---@alias era.view.picker.result.IIsSelected
 ---| fun(bufnr: integer, lnum: integer): boolean
@@ -43,6 +43,7 @@ local Nvimbar = nvimbar.Nvimbar
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.view.picker.result.IProps
+---@field public tree                   ?era.view.ResultTree
 ---@field public uuid                   string
 ---@field public name                   string
 ---@field public draw                   era.view.picker.result.IDraw
@@ -85,6 +86,7 @@ function M.new(props)
   local name = props.name ---@type string
   local diagnostic_scope = props.diagnostic_scope ---@type string
   local fullname = string.format("%s -> %s", name, diagnostic_scope) ---@type string
+  local native_tree = props.tree
   local draw = props.draw ---@type era.view.picker.result.IDraw
   local isselected = props.isselected or stl.fn.falsy ---@type era.view.picker.result.IIsSelected
   local keymaps = props.keymaps ---@type stl.t.IKeymap[]
@@ -256,6 +258,9 @@ function M.new(props)
     value = stl.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
+      if native_tree then
+        return
+      end
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         local group = dot.var.sign.GROUP_PICKER_RESULT_SELECTED ---@type string
         local sign = dot.var.sign.PICKER_RESULT_SELECTED ---@type string
@@ -275,13 +280,21 @@ function M.new(props)
   local scheduler_content = stl.c.Scheduler.new({
     name = string.format("%s#content", fullname),
     mode = "debounce",
-    delay = 128,
+    delay = native_tree and 0 or 128,
     timeout = 0,
     silent = stl.fn.falsy,
     value = stl.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
+
+      if native_tree then
+        local ok, error = pcall(draw, bufnr)
+        if not ok then
+          stl.reporter.error({ from = fullname, subject = "Treeview", message = tostring(error) })
+        end
         return
       end
 
@@ -346,7 +359,18 @@ function M.new(props)
   })
 
   self.fullname = name
-  self.draw = draw
+  self.draw = native_tree
+      and function(bufnr)
+        return draw(bufnr):then_(function(reply)
+          if reply.kind == "Superseded" then
+            return native_tree:ready()
+          end
+          return reply
+        end)
+      end
+    or draw
+  self._tree = native_tree
+  self._on_drawed = on_drawed
   self.keymaps = keymaps
   self.lnum_current = _o_lnum_current
   self.lnum_present = _o_lnum_present
@@ -382,7 +406,11 @@ function M.new(props)
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
       local lnum_current = _o_lnum_current:snapshot() ---@type integer
       if cursor[1] ~= lnum_current then
-        pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_current, 0 })
+        if native_tree and native_tree.view then
+          native_tree.view:set_cursor(lnum_current)
+        else
+          pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_current, 0 })
+        end
       end
       result_nvimbar:refresh()
     end
@@ -432,6 +460,7 @@ function M:dispose()
   local unregister_fns = self._unregister_fns ---@type (fun(): nil)[]
 
   self.draw = nil
+  self._tree, self._on_drawed = nil, nil
   self.keymaps = nil
   self.lnum_current = nil
   self.lnum_present = nil
@@ -588,9 +617,26 @@ function M:create_win(winopts, dimension)
   vim.api.nvim_set_option_value("winhighlight", winopts.winhighlight, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
 
-  vim.schedule(function()
-    self:__restore_cursor__(winnr)
-  end)
+  if self._tree then
+    self._tree:mount(winnr, bufnr, function(frame)
+      if self._disposed or self._winnr ~= winnr then
+        return
+      end
+      local header = frame:header()
+      self.lnum_total:next(header.row_count)
+      self.lnum_current:next(header.cursor_row or 0)
+      self._scheduler_lnum_current:schedule()
+      self._on_drawed(bufnr)
+    end, function()
+      vim.api.nvim_set_option_value("number", winopts.number, { win = winnr })
+      vim.api.nvim_set_option_value("relativenumber", winopts.number, { win = winnr })
+      vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr })
+    end)
+  else
+    vim.schedule(function()
+      self:__restore_cursor__(winnr)
+    end)
+  end
   return winnr, true
 end
 
@@ -629,6 +675,10 @@ function M:hide()
   local winnr = self._winnr ---@type integer|nil
 
   self._winnr = nil
+  if self._tree then
+    self._tree:unmount()
+    self._bufnr = nil
+  end
 
   local ok1, error1 = pcall(stl.nvim.win.close, winnr)
   if not ok1 then

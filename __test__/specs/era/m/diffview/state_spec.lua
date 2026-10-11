@@ -107,21 +107,55 @@ t:test("commits pagination separates requested and applied pages", function()
   state:dispose()
 end)
 
-t:test("expanded commits keep directory collapse state independent", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
+---@param owner                         era.view.ResultTree
+---@param keys                          string[]
+---@return nil
+local function populate_tree(owner, keys)
+  local root = owner.source.root
+  owner.entries[root] = { nodetype = "container", foldable = false }
+  for _, key in ipairs(keys) do
+    owner.source:insert(root, key, { presentation = { label = key } })
+    owner.entries[key] = { nodetype = "container" }
+  end
+  require("__test__.support.result_tree").publish(owner)
+end
+
+---@return nil
+local function native_runtime()
   t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
+  local bootstrap = require("__test__.support.bootstrap")
+  local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
+  bootstrap.with_yoz(t, assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))())
+  bootstrap.with_stl(t, {
+    c = { Observable = Observable, Future = require("stl.c.future") },
+    nvim = { fn = require("stl.nvim.fn") },
+    reporter = {
+      error = function(value)
+        error(value.message)
+      end,
+    },
+  })
+end
+
+t:test("expanded commits keep directory collapse state independent", function()
+  native_runtime()
   local State = assert(loadfile("lua/era/m/diffview/view/commits/state.lua"))()
   local state = State.State.new(101, true)
-
+  t:defer(function()
+    state:dispose()
+  end)
+  local panels = require("era.m.diffview.pane.tree")
+  local owner = state:get_tree("commits")
+  populate_tree(owner, { panels.key("commit:commit-a", "src", true), panels.key("commit:commit-b", "src", true) })
   state:collapse_commit_dir("commit-a", "src")
-  t.assert_true(state:is_commit_dir_collapsed("commit-a", "src"), "first commit collapsed")
-  t.assert_false(state:is_commit_dir_collapsed("commit-b", "src"), "peer commit remains expanded")
-
+  require("__test__.support.result_tree").await(owner:ready())
+  t.assert_true(state:is_commit_dir_collapsed("commit-a", "src"))
+  t.assert_false(state:is_commit_dir_collapsed("commit-b", "src"))
   state:toggle_commit_dir("commit-b", "src")
   state:expand_commit_dir("commit-a", "src")
-  t.assert_false(state:is_commit_dir_collapsed("commit-a", "src"), "first commit expanded")
-  t.assert_true(state:get_commit_collapsed_dirs("commit-b").src, "peer commit collapsed")
-  state:dispose()
+  require("__test__.support.result_tree").await(owner:ready())
+  t.assert_false(state:is_commit_dir_collapsed("commit-a", "src"))
+  t.assert_true(state:is_commit_dir_collapsed("commit-b", "src"))
 end)
 
 t:test("diffview context persists the untracked visibility default", function()
@@ -198,27 +232,30 @@ t:test("workspace state disposes its refresh owner after unsubscribing", functio
 end)
 
 t:test("workspace keeps staged and unstaged tree state independent", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
+  native_runtime()
   local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
   local state = State.State.new(101, true)
-
+  t:defer(function()
+    state:dispose()
+  end)
+  local panels = require("era.m.diffview.pane.tree")
+  for _, stage in ipairs({ "staged", "unstaged" }) do
+    populate_tree(state:get_tree(stage), { panels.key(nil, "src", true), panels.key(nil, stage .. "/dir", true) })
+  end
   state:collapse_dir("staged", "src")
-  t.assert_true(state:is_collapsed("staged", "src"), "staged collapsed")
-  t.assert_false(state:is_collapsed("unstaged", "src"), "unstaged remains expanded")
-
+  require("__test__.support.result_tree").await(state:get_tree("staged"):ready())
+  t.assert_true(state:is_collapsed("staged", "src"))
+  t.assert_false(state:is_collapsed("unstaged", "src"))
   state:toggle_collapse("unstaged", "src")
   state:expand_dir("staged", "src")
-  t.assert_false(state:is_collapsed("staged", "src"), "staged expanded")
-  t.assert_true(state:is_collapsed("unstaged", "src"), "unstaged remains collapsed")
-
-  state:set_entries({
-    { filepath = "staged/dir/a.lua", stage_type = "staged", status = "M" },
-    { filepath = "unstaged/dir/b.lua", stage_type = "unstaged", status = "M" },
-  })
+  require("__test__.support.result_tree").await(state:get_tree("staged"):ready())
+  require("__test__.support.result_tree").await(state:get_tree("unstaged"):ready())
+  t.assert_false(state:is_collapsed("staged", "src"))
+  t.assert_true(state:is_collapsed("unstaged", "src"))
   state:collapse_all("staged")
-  t.assert_true(state:is_collapsed("staged", "staged/dir"), "staged directories collapsed")
-  t.assert_false(state:is_collapsed("unstaged", "unstaged/dir"), "unstaged directories untouched")
-  state:dispose()
+  require("__test__.support.result_tree").await(state:get_tree("staged"):ready())
+  t.assert_true(state:is_collapsed("staged", "staged/dir"))
+  t.assert_false(state:is_collapsed("unstaged", "unstaged/dir"))
 end)
 
 t:test("workspace entries snapshot becomes applied only after commit", function()

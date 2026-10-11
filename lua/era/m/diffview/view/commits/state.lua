@@ -17,12 +17,9 @@ local M = {}
 ---@field public commits                 stl.c.Observable                Observable<era.m.diffview.ICommit[]>
 ---@field public current_commit          stl.c.Observable                Observable<era.m.diffview.ICommit|nil>
 ---@field public current_entry           stl.c.Observable                Observable<era.m.diffview.IFileEntry|nil>
----@field public expanded_commits        stl.c.Observable                Observable<table<string, boolean>>
 ---@field public commits_page            stl.c.Observable                Observable<integer> (1-indexed)
 ---@field public commits_total           stl.c.Observable                Observable<integer>
 ---@field public lnum_present            stl.c.Observable                Observable<integer> line of currently displayed commit
----@field public collapsed_dirs          table<string, boolean>          Collapsed directory paths in the standalone filetree pane
----@field public collapsed_commit_dirs   table<string, table<string, boolean>> Per-commit inline tree collapse state
 ---@field public path_filter             string|nil                      Path filter (file or directory path)
 ---@field protected _git_subscription    stl.c.IUnsubscribable|nil
 ---@field protected _git_debounce        stl.timer.IDisposableCallable|nil
@@ -47,7 +44,6 @@ function State.new(tabnr, fold_unchanged)
   self.commits = stl.c.Observable.from_value({})
   self.current_commit = stl.c.Observable.from_value(nil)
   self.current_entry = stl.c.Observable.from_value(nil)
-  self.expanded_commits = stl.c.Observable.from_value({})
 
   -- Pagination state
   self.commits_page = stl.c.Observable.from_value(1)
@@ -56,8 +52,7 @@ function State.new(tabnr, fold_unchanged)
   -- Sign state
   self.lnum_present = stl.c.Observable.from_value(-1)
 
-  self.collapsed_dirs = {}
-  self.collapsed_commit_dirs = {}
+  self._trees = {}
   self.path_filter = nil
 
   self._git_subscription = nil
@@ -127,56 +122,54 @@ end
 -- Commit expansion management
 ----------------------------------------------------------------------------------------------------
 
----Toggle commit expansion
----@param hash                           string
-function State:toggle_commit_expanded(hash)
-  local expanded = vim.tbl_extend("force", {}, self.expanded_commits:snapshot())
-  expanded[hash] = not expanded[hash]
-  self.expanded_commits:next(expanded)
+---@param kind                          "commits"|"files"
+---@return era.view.ResultTree
+function State:get_tree(kind)
+  local tree = self._trees[kind]
+  if not tree then
+    tree = require("era.m.diffview.pane.tree").new()
+    self._trees[kind] = tree
+  end
+  return tree
 end
 
----Check if commit is expanded
----@param hash                           string
+---@param hash                          string
+---@return nil
+function State:toggle_commit_expanded(hash)
+  self:get_tree("commits"):set_expansion("commit:" .. hash, nil, false)
+end
+
+---@param hash                          string
 ---@return boolean
 function State:is_commit_expanded(hash)
-  return self.expanded_commits:snapshot()[hash] == true
+  local tree = self._trees.commits
+  return tree ~= nil and tree:expanded("commit:" .. hash)
 end
 
----Expand commit
----@param hash                           string
+---@param hash                          string
+---@return nil
 function State:expand_commit(hash)
-  if not self:is_commit_expanded(hash) then
-    self:toggle_commit_expanded(hash)
-  end
+  self:get_tree("commits"):set_expansion("commit:" .. hash, true, false)
 end
 
----Collapse commit
----@param hash                           string
+---@param hash                          string
+---@return nil
 function State:collapse_commit(hash)
-  if self:is_commit_expanded(hash) then
-    self:toggle_commit_expanded(hash)
-  end
+  self:get_tree("commits"):set_expansion("commit:" .. hash, false, false)
 end
 
----Expand all commits
+---@return nil
 function State:expand_all()
-  local commits = self:get_commits()
-  local expanded = {} ---@type table<string, boolean>
-  for _, commit in ipairs(commits) do
-    expanded[commit.hash] = true
+  for _, commit in ipairs(self:get_commits()) do
+    self:expand_commit(commit.hash)
   end
-  self.expanded_commits:next(expanded)
 end
 
----Collapse all commits
+---@return nil
 function State:collapse_all()
-  self.expanded_commits:next({})
-end
-
----Get expanded commits snapshot
----@return table<string, boolean>
-function State:get_expanded_commits()
-  return vim.tbl_extend("force", {}, self.expanded_commits:snapshot())
+  for _, commit in ipairs(self:get_commits()) do
+    self:collapse_commit(commit.hash)
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -241,88 +234,68 @@ end
 -- Directory collapse management (for filetree in expanded commits)
 ----------------------------------------------------------------------------------------------------
 
----Check if directory is collapsed
----@param dir_path                       string
+---@param path                          string
+---@return nil
+function State:toggle_collapse(path)
+  self:get_tree("files"):set_expansion(require("era.m.diffview.pane.tree").key(nil, path, true), nil, false)
+end
+
+---@param path                          string
+---@return nil
+function State:expand_dir(path)
+  self:get_tree("files"):set_expansion(require("era.m.diffview.pane.tree").key(nil, path, true), true, false)
+end
+
+---@param path                          string
+---@return nil
+function State:collapse_dir(path)
+  self:get_tree("files"):set_expansion(require("era.m.diffview.pane.tree").key(nil, path, true), false, false)
+end
+
+---@param path                          string
 ---@return boolean
-function State:is_collapsed(dir_path)
-  return self.collapsed_dirs[dir_path] == true
+function State:is_collapsed(path)
+  local tree = self._trees.files
+  return tree ~= nil
+    and tree.state ~= nil
+    and tree:expanded(require("era.m.diffview.pane.tree").key(nil, path, true)) == false
 end
 
----Toggle directory collapse state
----@param dir_path                       string
-function State:toggle_collapse(dir_path)
-  self.collapsed_dirs[dir_path] = not self.collapsed_dirs[dir_path]
+---@param hash                          string
+---@param path                          string
+---@return nil
+function State:toggle_commit_dir(hash, path)
+  self
+    :get_tree("commits")
+    :set_expansion(require("era.m.diffview.pane.tree").key("commit:" .. hash, path, true), nil, false)
 end
 
----Expand directory
----@param dir_path                       string
-function State:expand_dir(dir_path)
-  self.collapsed_dirs[dir_path] = nil
+---@param hash                          string
+---@param path                          string
+---@return nil
+function State:expand_commit_dir(hash, path)
+  self
+    :get_tree("commits")
+    :set_expansion(require("era.m.diffview.pane.tree").key("commit:" .. hash, path, true), true, false)
 end
 
----Collapse directory
----@param dir_path                       string
-function State:collapse_dir(dir_path)
-  self.collapsed_dirs[dir_path] = true
+---@param hash                          string
+---@param path                          string
+---@return nil
+function State:collapse_commit_dir(hash, path)
+  self
+    :get_tree("commits")
+    :set_expansion(require("era.m.diffview.pane.tree").key("commit:" .. hash, path, true), false, false)
 end
 
----Get collapsed dirs snapshot
----@return table<string, boolean>
-function State:get_collapsed_dirs()
-  return vim.tbl_extend("force", {}, self.collapsed_dirs)
-end
-
----Set collapsed dirs
----@param collapsed_dirs                 table<string, boolean>
-function State:set_collapsed_dirs(collapsed_dirs)
-  self.collapsed_dirs = collapsed_dirs
-end
-
----Check whether a directory in one expanded commit is collapsed.
----@param hash                           string
----@param dir_path                       string
+---@param hash                          string
+---@param path                          string
 ---@return boolean
-function State:is_commit_dir_collapsed(hash, dir_path)
-  local collapsed_dirs = self.collapsed_commit_dirs[hash]
-  return collapsed_dirs ~= nil and collapsed_dirs[dir_path] == true
-end
-
----Toggle one directory without affecting the same path under another commit.
----@param hash                           string
----@param dir_path                       string
-function State:toggle_commit_dir(hash, dir_path)
-  local collapsed_dirs = self.collapsed_commit_dirs[hash]
-  if collapsed_dirs == nil then
-    collapsed_dirs = {}
-    self.collapsed_commit_dirs[hash] = collapsed_dirs
-  end
-  collapsed_dirs[dir_path] = not collapsed_dirs[dir_path]
-end
-
----@param hash                           string
----@param dir_path                       string
-function State:expand_commit_dir(hash, dir_path)
-  local collapsed_dirs = self.collapsed_commit_dirs[hash]
-  if collapsed_dirs ~= nil then
-    collapsed_dirs[dir_path] = nil
-  end
-end
-
----@param hash                           string
----@param dir_path                       string
-function State:collapse_commit_dir(hash, dir_path)
-  local collapsed_dirs = self.collapsed_commit_dirs[hash]
-  if collapsed_dirs == nil then
-    collapsed_dirs = {}
-    self.collapsed_commit_dirs[hash] = collapsed_dirs
-  end
-  collapsed_dirs[dir_path] = true
-end
-
----@param hash                           string
----@return table<string, boolean>
-function State:get_commit_collapsed_dirs(hash)
-  return vim.tbl_extend("force", {}, self.collapsed_commit_dirs[hash] or {})
+function State:is_commit_dir_collapsed(hash, path)
+  local tree = self._trees.commits
+  return tree ~= nil
+    and tree.state ~= nil
+    and tree:expanded(require("era.m.diffview.pane.tree").key("commit:" .. hash, path, true)) == false
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -399,7 +372,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Subscribe to observable field changes
----@param field                          "commits"|"current_commit"|"current_entry"|"expanded_commits"|"commits_page"|"commits_total"
+---@param field                         "commits"|"current_commit"|"current_entry"|"commits_page"|"commits_total"
 ---@param callback                       fun(value: any): nil
 ---@return stl.c.IUnsubscribable
 function State:subscribe(field, callback)
@@ -460,7 +433,10 @@ function State:dispose()
   self.commits:dispose()
   self.current_commit:dispose()
   self.current_entry:dispose()
-  self.expanded_commits:dispose()
+  for _, tree in pairs(self._trees) do
+    tree:dispose()
+  end
+  self._trees = {}
   self.commits_page:dispose()
   self.commits_total:dispose()
   self.lnum_present:dispose()

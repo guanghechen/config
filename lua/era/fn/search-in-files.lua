@@ -130,7 +130,7 @@ end
 local function attach(searcher, rootpath)
   rootpath = yoz.canonical_path.from_os_path(rootpath, false)
   o_rootpath:next(rootpath)
-  local rootuuid = stl.c.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = require("era.view.result_paths").key(rootpath) ---@type string
   if searcher:isexistent(rootuuid) then
     searcher:attach(rootuuid)
   else

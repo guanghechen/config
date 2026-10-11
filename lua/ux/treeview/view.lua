@@ -468,11 +468,13 @@ function M.new(state, options)
     vim.api.nvim_buf_set_name(self.bufnr, bufname)
   end
   local filetype = options.bufnr and vim.api.nvim_get_option_value("filetype", { buf = self.bufnr }) or ""
+  -- A transferred Picker buffer may be readonly; nomodifiable protects the owned surface between writes.
   for name, value in pairs({
     buftype = "nofile",
     bufhidden = "wipe",
     swapfile = false,
     modifiable = false,
+    readonly = false,
     undolevels = -1,
   }) do
     vim.api.nvim_set_option_value(name, value, { buf = self.bufnr })

@@ -5,6 +5,7 @@ local harness = require("__test__.support.harness")
 
 local t = harness.new("era.m.diffview.workspace.layout")
 local null_bufnr = vim.api.nvim_create_buf(false, true)
+local requested_trees = {}
 local render_calls = {} ---@type table[]
 local metadata_widths = { insertion = 3, deletion = 2 }
 local panel_width = 40
@@ -311,8 +312,9 @@ t:test("render shares metadata widths without changing balanced pane heights", f
       { filepath = "b.lua", stage_type = "unstaged", status = "M" },
     }
     local state = {
-      get_collapsed_dirs = function(_, stage_type)
-        return { [stage_type] = true }
+      get_tree = function(_, stage_type)
+        requested_trees[#requested_trees + 1] = stage_type
+        return {}
       end,
       get_entries = function()
         return entries
@@ -327,8 +329,8 @@ t:test("render shares metadata widths without changing balanced pane heights", f
     t.assert_eq("unstaged", render_calls[2].stage_type, "unstaged render")
     t.assert_true(render_calls[1].metadata_widths == metadata_widths, "staged shared widths")
     t.assert_true(render_calls[2].metadata_widths == metadata_widths, "unstaged shared widths")
-    t.assert_true(render_calls[1].collapsed_dirs.staged, "staged tree state")
-    t.assert_true(render_calls[2].collapsed_dirs.unstaged, "unstaged tree state")
+    t.assert_eq("staged", requested_trees[1], "staged tree owner")
+    t.assert_eq("unstaged", requested_trees[2], "unstaged tree owner")
 
     local staged_winnr = lyt.changes.staged.winnr
     local history_winnr = lyt.history.commits_winnr

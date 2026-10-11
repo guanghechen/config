@@ -261,9 +261,9 @@ function M.select(ctx)
 end
 
 ---Toggle directory collapse at cursor
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.toggle_collapse(ctx)
-  local winnr = vim.api.nvim_get_current_win()
   local bufnr, lnum = get_cursor_info()
 
   -- Get item at line
@@ -272,14 +272,7 @@ function M.toggle_collapse(ctx)
     return
   end
 
-  -- Toggle in state
   ctx.state:toggle_collapse(assert(item.stage_type), item.uuid)
-
-  -- Re-render
-  workspace_view.render_changes(ctx)
-
-  -- Restore cursor position
-  vim.api.nvim_win_set_cursor(winnr, { lnum, 0 })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1005,7 +998,8 @@ local function get_current_entry_dir(ctx)
 end
 
 ---Toggle directory collapse from sbs window
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.sbs_toggle_collapse(ctx)
   local current = ctx.state:get_current_entry()
   local dir = get_current_entry_dir(ctx)
@@ -1014,11 +1008,11 @@ function M.sbs_toggle_collapse(ctx)
   end
 
   ctx.state:toggle_collapse(current.stage_type, dir)
-  workspace_view.render_changes(ctx)
 end
 
 ---Expand directory from sbs window
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.sbs_expand(ctx)
   local current = ctx.state:get_current_entry()
   local dir = get_current_entry_dir(ctx)
@@ -1028,12 +1022,12 @@ function M.sbs_expand(ctx)
 
   if ctx.state:is_collapsed(current.stage_type, dir) then
     ctx.state:expand_dir(current.stage_type, dir)
-    workspace_view.render_changes(ctx)
   end
 end
 
 ---Collapse directory from sbs window
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.sbs_collapse(ctx)
   local current = ctx.state:get_current_entry()
   local dir = get_current_entry_dir(ctx)
@@ -1043,30 +1037,29 @@ function M.sbs_collapse(ctx)
 
   if not ctx.state:is_collapsed(current.stage_type, dir) then
     ctx.state:collapse_dir(current.stage_type, dir)
-    workspace_view.render_changes(ctx)
   end
 end
 
 ---Expand all directories from sbs window
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.sbs_expand_all(ctx)
   local current = ctx.state:get_current_entry()
   if not current or not current.stage_type then
     return
   end
   ctx.state:expand_all(current.stage_type)
-  workspace_view.render_changes(ctx)
 end
 
 ---Collapse all directories from sbs window
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.sbs_collapse_all(ctx)
   local current = ctx.state:get_current_entry()
   if not current or not current.stage_type then
     return
   end
   ctx.state:collapse_all(current.stage_type)
-  workspace_view.render_changes(ctx)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1172,7 +1165,10 @@ function M.refresh(ctx, token)
   end
 
   ctx.state:set_entries(entries)
-  workspace_view.render_changes(ctx)
+  workspace_view.render_changes(ctx):await()
+  if (token and token:is_cancelled()) or ctx.state:is_disposed() then
+    return
+  end
 
   if current then
     local refreshed_entries, visible_entry_ids = get_navigation_entries(ctx)
@@ -1235,15 +1231,8 @@ function M.__update_changes_cursor__(ctx, entry)
   if not pane.bufnr or not vim.api.nvim_buf_is_valid(pane.bufnr) then
     return
   end
-  local line_map = pane_changes.get_line_map(pane.bufnr)
-  if not line_map then
-    return
-  end
-
-  local target_lnum = pane_changes.find_entry_line(line_map, entry)
-  if target_lnum and pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
-    vim.api.nvim_win_set_cursor(pane.winnr, { target_lnum, 0 })
-  end
+  local tree = ctx.state:get_tree(entry.stage_type)
+  tree:focus_key(require("era.m.diffview.pane.tree").key(nil, entry.filepath, false))
 end
 
 return M

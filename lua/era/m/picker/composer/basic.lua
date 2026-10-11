@@ -107,6 +107,8 @@ local __highlights__ = {
 ---@field public result_number          boolean
 ---@field public result_isselected      ?era.m.picker.result.IIsSelected
 ---
+---@field public result_tree            ?era.view.ResultTree
+---@field public preview_tree           ?fun(): era.view.picker.preview.ITreeTarget|nil
 ---@field public render_preview         ?era.m.picker.preview.IDraw
 ---@field public render_result          era.m.picker.result.IDraw
 ---
@@ -223,6 +225,7 @@ function M.new(props)
     augroup_prefix = "picker.result",
     diagnostic_scope = "era.m.picker.result",
     winline_hl = "f_wl_picker",
+    tree = props.result_tree,
     draw = function(bufnr)
       if self._disposed then
         return {}
@@ -260,6 +263,7 @@ function M.new(props)
       uuid = uuid,
       name = name,
       diagnostic_scope = "era.m.picker.preview",
+      tree = props.preview_tree,
       relative_number = true,
       draw = function(bufnr, force)
         if self._disposed then

@@ -564,7 +564,7 @@ impl Engine {
                 if entry.state.display == display {
                     return Ok(Reply::NoChange);
                 }
-                entry.state.display = display;
+                entry.state.set_display(display);
                 entry.state.revision = entry.state.revision.next()?;
                 entry.dirty.layout = true;
                 true

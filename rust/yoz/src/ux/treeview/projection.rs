@@ -174,6 +174,11 @@ pub(crate) fn sorted(
     options: &DisplayOptions,
 ) -> Vec<NodeId> {
     if options.sort == Sort::Source && !options.branches_first {
+        if options.mode == Mode::List
+            && let Some(filter) = &options.filter
+        {
+            ids.sort_by_key(|id| filter.get(id).copied().unwrap_or(usize::MAX));
+        }
         return ids;
     }
     let mut keys: Vec<_> = ids
@@ -190,6 +195,18 @@ pub(crate) fn sorted(
         .collect();
     keys.sort_by(|a, b| {
         a.1.cmp(&b.1).then_with(|| match options.sort {
+            Sort::Source if options.mode == Mode::List => {
+                options
+                    .filter
+                    .as_ref()
+                    .map_or(std::cmp::Ordering::Equal, |filter| {
+                        filter
+                            .get(&a.0)
+                            .copied()
+                            .unwrap_or(usize::MAX)
+                            .cmp(&filter.get(&b.0).copied().unwrap_or(usize::MAX))
+                    })
+            }
             Sort::Source => std::cmp::Ordering::Equal,
             Sort::Name => a.2.cmp(&b.2).then_with(|| a.0.cmp(&b.0)),
             Sort::Score => b.3.total_cmp(&a.3).then_with(|| a.0.cmp(&b.0)),
@@ -214,7 +231,7 @@ fn retained(
     matched_children: &mut MatchedChildren,
 ) -> Result<Option<HashSet<NodeId>>> {
     *matched_children = Map::default();
-    if matcher.is_none() && !state.display.selected_only {
+    if matcher.is_none() && state.display.filter.is_none() && !state.display.selected_only {
         return Ok(None);
     }
     struct Scan<'a> {
@@ -247,8 +264,13 @@ fn retained(
                 } else {
                     true
                 };
-                let direct =
-                    selected && matcher.is_none_or(|matcher| matcher.is_match(&node.data.label));
+                let direct = selected
+                    && state
+                        .display
+                        .filter
+                        .as_ref()
+                        .is_none_or(|filter| filter.contains_key(&id))
+                    && matcher.is_none_or(|matcher| matcher.is_match(&node.data.label));
                 stack.push(Scan {
                     node,
                     child: 0,
@@ -270,7 +292,9 @@ fn retained(
                 counts.push((frame.node.id, IndexedSequence::from_vec(frame.descendant)?));
             }
             if frame.direct
-                || (connected && (state.display.mode == Mode::Tree || state.display.selected_only))
+                || (connected
+                    && (state.display.mode == Mode::Tree
+                        || (state.display.selected_only && state.display.filter.is_none())))
             {
                 keep.push(frame.node.id);
             }
@@ -746,10 +770,16 @@ impl Snapshot {
         &self.source
     }
 
-    pub(crate) fn matches_label(&self, label: &str) -> bool {
-        self.matcher
+    pub(crate) fn matches_node(&self, id: NodeId, label: &str) -> bool {
+        self.state
+            .display
+            .filter
             .as_ref()
-            .is_none_or(|matcher| matcher.is_match(label))
+            .is_none_or(|filter| filter.contains_key(&id))
+            && self
+                .matcher
+                .as_ref()
+                .is_none_or(|matcher| matcher.is_match(label))
     }
 
     pub(crate) fn unchanged_match(
@@ -890,6 +920,31 @@ impl Snapshot {
         self.row(next)
             .filter(|next| next.parent == row.parent)
             .map(|_| next)
+    }
+
+    /// Selected identities from this frame; visible reads preserve display order.
+    pub fn marked_nodes(&self, visible_only: bool) -> Result<Arc<[NodeId]>> {
+        if self.summary.is_empty() {
+            return Ok(Arc::from([]));
+        }
+        let mut inherited = Inherited::new(&self.source, &self.state.selection);
+        let mut selected = Vec::new();
+        let mut visit = |id| -> Result<()> {
+            if inherited.get(id)?.max(self.state.selection.marks(id).own) & 1 != 0 {
+                selected.push(id);
+            }
+            Ok(())
+        };
+        if visible_only {
+            for row in self.rows.iter() {
+                visit(row.id)?;
+            }
+        } else {
+            for (id, _) in self.source.nodes.iter() {
+                visit(*id)?;
+            }
+        }
+        Ok(selected.into())
     }
 
     pub fn rows(&self, start: usize, end: usize) -> Result<Vec<RowInfo>> {

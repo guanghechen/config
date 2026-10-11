@@ -6599,3 +6599,110 @@ fn t_task_read_retry_preserves_discovery_grants_without_expanding_them() {
         }
     }
 }
+
+#[test]
+fn t_ordered_result_filter_keeps_tree_connections_and_list_membership_after_mutations() {
+    let (mut engine, state, _) = ancestry_fixture();
+    let root = engine.source.id("root").unwrap();
+    let src = engine.source.id("src").unwrap();
+    let lib = engine.source.id("lib").unwrap();
+    let a = engine.source.id("a").unwrap();
+    let readme = engine.source.id("readme").unwrap();
+    let filter = Arc::new([(readme, 0), (a, 1)].into_iter().collect());
+    let mut display = DisplayOptions {
+        mode: Mode::Tree,
+        filter: Some(filter),
+        ..DisplayOptions::default()
+    };
+    let set_display = |engine: &mut Engine, display: DisplayOptions| {
+        let expected_state = Some(engine.states[&state].state.revision);
+        engine
+            .dispatch(
+                state,
+                Command::SetDisplay(display),
+                Context {
+                    expected_state,
+                    ..Context::default()
+                },
+            )
+            .unwrap();
+        project(engine, state);
+        assert_projection(engine, state);
+    };
+    set_display(&mut engine, display.clone());
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![root].into()),
+                value: true,
+                scope: Scope::Subtree,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let tree = project(&mut engine, state);
+    assert_eq!(
+        tree.rows.iter().map(|row| row.id).collect::<Vec<_>>(),
+        [src, lib, a, readme]
+    );
+    engine
+        .dispatch(
+            state,
+            Command::Select {
+                targets: Targets::Nodes(vec![root].into()),
+                action: SelectAction::Select,
+                scope: Scope::Subtree,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    display.mode = Mode::List;
+    display.selected_only = true;
+    display.branches_first = true;
+    display.list_text = ListText::Ancestry;
+    set_display(&mut engine, display.clone());
+    let list = engine.snapshot(state).unwrap();
+    assert_eq!(
+        list.rows.iter().map(|row| row.id).collect::<Vec<_>>(),
+        [readme, a]
+    );
+    assert_eq!(list.rows(0, 2).unwrap()[1].label, "src/lib/文.lua");
+    assert_eq!(&*list.marked_nodes(true).unwrap(), &[readme, a]);
+    let mut selected = list.marked_nodes(false).unwrap().to_vec();
+    selected.sort();
+    let mut expected = vec![root, src, lib, a, readme];
+    expected.sort();
+    assert_eq!(selected, expected);
+    apply(
+        &mut engine,
+        vec![Operation::Update {
+            node: lib.into(),
+            patch: NodePatch {
+                label: Some("nested".into()),
+                ..NodePatch::default()
+            },
+        }],
+    );
+    let renamed = project(&mut engine, state);
+    assert_eq!(renamed.rows(0, 2).unwrap()[1].label, "src/nested/文.lua");
+    assert_projection(&engine, state);
+    apply(
+        &mut engine,
+        vec![Operation::Remove {
+            node: readme.into(),
+        }],
+    );
+    let removed = project(&mut engine, state);
+    assert_eq!(
+        removed.rows.iter().map(|row| row.id).collect::<Vec<_>>(),
+        [a]
+    );
+    assert_projection(&engine, state);
+    assert_eq!(&*removed.marked_nodes(true).unwrap(), &[a]);
+    assert_eq!(&*list.marked_nodes(true).unwrap(), &[readme, a]);
+    assert_eq!(
+        list.rows.iter().map(|row| row.id).collect::<Vec<_>>(),
+        [readme, a]
+    );
+}

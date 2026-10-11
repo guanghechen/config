@@ -141,7 +141,6 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@field public current_entry          era.m.diffview.IFileEntry|nil
 ---@field public commits                era.m.diffview.ICommit[]
 ---@field public current_commit         era.m.diffview.ICommit|nil
----@field public expanded_commits       table<string, boolean>
 
 ----------------------------------------------------------------------------------------------------
 -- Render result types

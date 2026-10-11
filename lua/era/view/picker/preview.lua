@@ -24,7 +24,14 @@ local __module_name__ = "era.view.picker.preview" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
+---@class era.view.picker.preview.ITreeTarget
+---@field public owner                  era.view.ResultTree
+---@field public key                    string
+---@field public title                  string
+---@field public foldempty              boolean
+
 ---@class era.view.picker.preview.IProps
+---@field public tree                   ?fun(): era.view.picker.preview.ITreeTarget|nil
 ---@field public name                   string
 ---@field public draw                   era.view.picker.preview.IDraw
 ---@field public keymaps                stl.t.IKeymap[]
@@ -50,6 +57,7 @@ function M.new(props)
   local name = props.name ---@type string
   local diagnostic_scope = props.diagnostic_scope ---@type string
   local fullname = string.format("%s -> %s", name, diagnostic_scope) ---@type string
+  local tree_target = props.tree
   local draw = props.draw ---@type era.view.picker.preview.IDraw
   local keymaps = props.keymaps ---@type stl.t.IKeymap[]
   local relative_number = props.relative_number ---@type boolean
@@ -70,9 +78,20 @@ function M.new(props)
         return
       end
 
+      local target = tree_target and tree_target()
+      if target then
+        self:__show_tree__(target)
+        return
+      end
+      local force = self._tree_view ~= nil or self._tree_target ~= nil
+      if force then
+        self:__clear_tree__(true)
+        bufnr = self._bufnr or self:__replace_buffer__()
+      end
+
       vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
       vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
-      local ok, result = pcall(draw, bufnr, false) ---@type boolean, era.view.picker.preview.IDrawResult
+      local ok, result = pcall(draw, bufnr, force) ---@type boolean, era.view.picker.preview.IDrawResult
       vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
       vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
@@ -124,7 +143,9 @@ function M:dispose()
   if self._disposed then
     return nil
   end
+  self:__clear_tree__()
   self._disposed = true
+  self._tree_state, self._tree_owner = nil, nil
 
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
@@ -293,6 +314,86 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param preserve_window               ?boolean
+---@return nil
+function M:__clear_tree__(preserve_window)
+  self._tree_epoch = (self._tree_epoch or 0) + 1
+  self._tree_target = nil
+  if self._tree_view then
+    if preserve_window then
+      self:__replace_buffer__()
+    end
+    self._tree_view:detach()
+    self._tree_view = nil
+    if not preserve_window then
+      self._bufnr = nil
+    end
+  end
+end
+
+---@return integer
+function M:__replace_buffer__()
+  local previous = self._bufnr
+  self._bufnr = nil
+  local bufnr = self:create_buf()
+  if self._winnr and vim.api.nvim_win_is_valid(self._winnr) then
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = self._winnr })
+    vim.api.nvim_win_set_buf(self._winnr, bufnr)
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = self._winnr })
+  end
+  if previous and vim.api.nvim_buf_is_valid(previous) then
+    vim.api.nvim_buf_delete(previous, { force = true })
+  end
+  return bufnr
+end
+
+---@param target                        table
+---@return nil
+function M:__show_tree__(target)
+  local winnr = self._winnr
+  if not winnr or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+  local previous = self._tree_target
+  if
+    previous
+    and previous.owner == target.owner
+    and previous.key == target.key
+    and previous.foldempty == target.foldempty
+  then
+    return
+  end
+  self._tree_epoch = (self._tree_epoch or 0) + 1
+  local epoch = self._tree_epoch
+  self._tree_target = target
+  target.owner
+    :preview_state(target.key, target.foldempty, self._tree_owner == target.owner and self._tree_state or nil)
+    :finally(function(ok, state)
+      if self._disposed or self._tree_epoch ~= epoch or not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+      if not ok then
+        self._tree_target = nil
+        stl.reporter.error({ from = self.fullname, subject = "Treeview preview", message = tostring(state) })
+        return
+      end
+      self._tree_owner, self._tree_state = target.owner, state
+      if not self._tree_view or self._tree_view:status().closed then
+        local bufnr = self:__replace_buffer__()
+        self._tree_view = require("ux.treeview").attach(state, {
+          winnr = winnr,
+          bufnr = bufnr,
+          keymaps = false,
+          decorate_row = function(view, frame, row, id, col, label, expanded)
+            target.owner:decorate_row(view, frame, row, id, col, label, expanded)
+          end,
+        })
+      end
+      self._last_result = { title = target.title, cursorline = true, number = false, wrap = false, whitespaces = false }
+      self:__update_winopts__()
+    end)
+end
+
 ---@return era.view.PickerPreview
 function M:focus()
   self:__health__()
@@ -308,6 +409,7 @@ function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
 
+  self:__clear_tree__()
   self._winnr = nil
 
   local ok1, error1 = pcall(stl.nvim.win.close, winnr)

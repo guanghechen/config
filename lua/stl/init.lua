@@ -7,7 +7,6 @@ local c__mods = {
   CircularStack = "stl.c.circular_stack",
   Dirtier = "stl.c.dirtier",
   Disposable = "stl.c.disposable",
-  Filetree = "stl.c.filetree",
   Frecency = "stl.c.frecency",
   Future = "stl.c.future",
   History = "stl.c.history",
@@ -20,8 +19,6 @@ local c__mods = {
   Subscribers = "stl.c.subscribers",
   Theme = "stl.c.theme",
   Ticker = "stl.c.ticker",
-  Tree = "stl.c.tree",
-  TreeRetriever = "stl.c.tree_retriever",
 }
 
 ---@class stl.c
@@ -33,7 +30,6 @@ local c__mods = {
 ---@field public CircularStack          stl.c.CircularStack
 ---@field public Dirtier                stl.c.Dirtier
 ---@field public Disposable             stl.c.Disposable
----@field public Filetree               stl.c.Filetree
 ---@field public Frecency               stl.c.Frecency
 ---@field public Future                 stl.c.Future
 ---@field public History                stl.c.History
@@ -46,8 +42,6 @@ local c__mods = {
 ---@field public Subscribers            stl.c.Subscribers
 ---@field public Theme                  stl.c.Theme
 ---@field public Ticker                 stl.c.Ticker
----@field public Tree                   stl.c.Tree
----@field public TreeRetriever          stl.c.TreeRetriever
 local c = setmetatable({ __mods = c__mods }, {
   __index = function(t, k)
     local m = c__mods[k] ---@type string|nil

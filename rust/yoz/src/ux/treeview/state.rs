@@ -28,6 +28,7 @@ pub(crate) struct State {
     pub data_identity: u64,
     pub root: Root,
     pub display: DisplayOptions,
+    display_payload: Option<Arc<super::memory::Payload>>,
     pub cursor: Option<NodeId>,
     pub revision: Revision,
     pub selection_revision: Revision,
@@ -46,6 +47,7 @@ impl State {
             id: identity()?,
             data_identity: source.identity(),
             root,
+            display_payload: Self::display_payload(&display),
             display,
             cursor: None,
             revision: Revision::default(),
@@ -56,6 +58,18 @@ impl State {
             summaries: SummaryCache::default(),
             locked: None,
         })
+    }
+
+    fn display_payload(display: &DisplayOptions) -> Option<Arc<super::memory::Payload>> {
+        display.filter.as_ref().map(|filter| {
+            /* Charge a conservative BTree node footprint once per shared allocation. */
+            super::memory::Payload::external(filter.clone(), 64 + filter.len() * 64)
+        })
+    }
+
+    pub fn set_display(&mut self, display: DisplayOptions) {
+        self.display_payload = Self::display_payload(&display);
+        self.display = display;
     }
 
     pub fn validate_root(source: &Source, root: &Root) -> Result<()> {

@@ -1,3 +1,4 @@
+---@alias era.m.picker.FiletreeView era.view.ResultFiles
 ---@alias era.m.picker.result.IDraw era.view.picker.result.IDraw
 ---@alias era.m.picker.result.IIsSelected era.view.picker.result.IIsSelected
 ---@alias era.m.picker.result.IOnDrawed era.view.picker.result.IOnDrawed
@@ -25,8 +26,7 @@ local __mods = {
   ListComposer = "era.m.picker.composer.list",
   TreeComposer = "era.m.picker.composer.tree",
 
-  TreeView = "era.m.picker.view.tree",
-  FiletreeView = "era.m.picker.view.filetree",
+  FiletreeView = "era.view.result_files",
 }
 
 ---@class era.m.picker
@@ -41,7 +41,6 @@ local __mods = {
 ---@field public ListComposer           era.m.picker.ListComposer
 ---@field public TreeComposer           era.m.picker.TreeComposer
 ---
----@field public TreeView               era.m.picker.TreeView
 ---@field public FiletreeView           era.m.picker.FiletreeView
 local M = setmetatable({
   __mods = __mods,

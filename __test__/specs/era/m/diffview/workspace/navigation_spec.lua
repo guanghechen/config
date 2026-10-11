@@ -5,6 +5,7 @@ local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new("era.m.diffview.workspace.navigation")
+local requested_tree_focus
 
 local workspace = "/repo"
 t:patch_table(package.loaded, "era.m.diffview.util", {
@@ -174,6 +175,13 @@ t:test("hiding untracked files selects the first remaining rendered entry", func
       },
     },
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
       get_current_entry = function()
         return current
       end,
@@ -231,6 +239,13 @@ t:test("cross-pane navigation follows visible changes order and wraps", function
       },
     },
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
       get_entries = function()
         return entries
       end,
@@ -246,12 +261,20 @@ t:test("cross-pane navigation follows visible changes order and wraps", function
   action.goto_next_entry(ctx)
   t.assert_eq(beta, current, "next visible entry")
   t.assert_eq(unstaged_winnr, vim.api.nvim_get_current_win(), "next pane")
-  t.assert_eq(3, vim.api.nvim_win_get_cursor(unstaged_winnr)[1], "next cursor")
+  t.assert_eq(
+    require("era.m.diffview.pane.tree").key(nil, beta.filepath, false),
+    requested_tree_focus,
+    "next cursor identity"
+  )
 
   action.goto_next_entry(ctx)
   t.assert_eq(alpha, current, "next wraps")
   t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "wrapped pane")
-  t.assert_eq(2, vim.api.nvim_win_get_cursor(staged_winnr)[1], "wrapped cursor")
+  t.assert_eq(
+    require("era.m.diffview.pane.tree").key(nil, alpha.filepath, false),
+    requested_tree_focus,
+    "wrapped cursor identity"
+  )
 
   action.goto_prev_entry(ctx)
   t.assert_eq(beta, current, "previous wraps")
@@ -287,6 +310,13 @@ t:test("navigation skips hidden current entry without losing direction", functio
       },
     },
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
       get_entries = function()
         return entries
       end,
@@ -324,6 +354,13 @@ t:test("navigation does not enter entries hidden by the rendered panel", functio
       },
     },
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
       get_entries = function()
         return { hidden }
       end,
@@ -370,6 +407,13 @@ t:test("reveal expands hidden entry ancestors, focuses the entry, then hides Cha
   local ctx = {
     layout = lyt,
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
       expand_dir = function(_, stage_type, dir)
         t.assert_eq("unstaged", stage_type, "expanded stage")
         t.assert_eq("middle", dir, "expanded ancestor")
@@ -384,7 +428,11 @@ t:test("reveal expands hidden entry ancestors, focuses the entry, then hides Cha
   action.reveal(ctx)
   t.assert_false(collapsed, "ancestor expanded")
   t.assert_eq(changes_winnr, vim.api.nvim_get_current_win(), "Changes focused")
-  t.assert_eq(2, vim.api.nvim_win_get_cursor(changes_winnr)[1], "entry cursor")
+  t.assert_eq(
+    require("era.m.diffview.pane.tree").key(nil, current.filepath, false),
+    requested_tree_focus,
+    "entry cursor identity"
+  )
 
   action.reveal(ctx)
   t.assert_true(lyt.changes_hidden, "Changes hidden")
@@ -409,6 +457,13 @@ t:test("navigation falls back to state order without a changes panel", function(
       },
     },
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
       get_entries = function()
         return entries
       end,
@@ -444,6 +499,13 @@ t:test("goto file preserves a literal POSIX backslash", function()
   local ctx = {
     layout = { changes_bufnr = changes_bufnr },
     state = {
+      get_tree = function()
+        return {
+          focus_key = function(_, key)
+            requested_tree_focus = key
+          end,
+        }
+      end,
       get_current_entry = function()
         return { filepath = relative, stage_type = "unstaged", status = "M" }
       end,

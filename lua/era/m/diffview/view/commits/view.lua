@@ -324,7 +324,11 @@ function M.switch_layout(lyt, new_layout_type)
   if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) and lyt.sbs_left_winnr ~= current_winnr then
     table.insert(winnrs_to_close, lyt.sbs_left_winnr)
   end
-  if lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) and lyt.sbs_right_winnr ~= current_winnr then
+  if
+    lyt.sbs_right_winnr
+    and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
+    and lyt.sbs_right_winnr ~= current_winnr
+  then
     table.insert(winnrs_to_close, lyt.sbs_right_winnr)
   end
 
@@ -669,7 +673,9 @@ function M.destroy(lyt)
     local tabs = vim.api.nvim_list_tabpages()
     if #tabs > 1 then
       local tabnr_num = vim.api.nvim_tabpage_get_number(lyt.tabnr)
-      pcall(function() vim.cmd("tabclose " .. tabnr_num) end)
+      pcall(function()
+        vim.cmd("tabclose " .. tabnr_num)
+      end)
     end
   end
 end
@@ -680,7 +686,9 @@ end
 
 ---Render commits pane
 ---@param ctx                            era.m.diffview.view.commits.IContext
-function M.render_commits(ctx)
+---@param include_files                 ?table<string, true>
+---@return stl.c.Future|nil
+function M.render_commits(ctx, include_files)
   local lyt = ctx.layout
   local state = ctx.state
 
@@ -689,25 +697,27 @@ function M.render_commits(ctx)
   end
 
   local commits = state:get_commits()
-  local expanded = state:get_expanded_commits()
-  local layout_type = lyt.layout_type or 1
-  local tabtype = vim.t[lyt.tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
-  local collapsed_dirs = {} ---@type table<string, table<string, boolean>>
+  local owner = state:get_tree("commits")
+  local materialized = {}
   for _, commit in ipairs(commits) do
-    if expanded[commit.hash] then
-      collapsed_dirs[commit.hash] = state:get_commit_collapsed_dirs(commit.hash)
+    local previous = owner.source:get("commit:" .. commit.hash)
+    if include_files and include_files[commit.hash] or previous and previous.files_loaded then
+      materialized[commit.hash] = true
     end
   end
-
-  local result = pane_commits.render(commits, expanded, {
-    collapsed_dirs = collapsed_dirs,
+  local layout_type = lyt.layout_type or 1
+  local tabtype = vim.t[lyt.tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
+  local result = pane_commits.render(commits, {
     layout = layout_type,
     tabtype = tabtype,
+    include_files = materialized,
   })
-  pane_commits.apply_to_buffer(lyt.commits_bufnr, result)
-  if ctx.render_winline then
-    ctx.render_winline()
-  end
+  local future = pane_commits.apply_to_buffer(lyt.commits_bufnr, result, owner, function()
+    if not state:is_disposed() and ctx.render_winline then
+      ctx.render_winline()
+    end
+  end)
+  return future
 end
 
 ---Render filetree pane (for expanded commit files)
@@ -723,15 +733,9 @@ function M.render_filetree(ctx)
   local current_commit = state:get_current_commit()
   if not current_commit or not current_commit.files then
     -- Clear filetree if no commit selected
-    pane_filetree.apply_to_buffer(lyt.filetree_bufnr, {
-      lines = {},
-      highlights = {},
-      line_map = {},
-    })
-    return
+    return pane_filetree.apply_to_buffer(lyt.filetree_bufnr, pane_filetree.render({}), state:get_tree("files"))
   end
 
-  local collapsed_dirs = state:get_collapsed_dirs()
   local panel_width = config.FILETREE_WIDTH
 
   if lyt.filetree_winnr and vim.api.nvim_win_is_valid(lyt.filetree_winnr) then
@@ -739,11 +743,10 @@ function M.render_filetree(ctx)
   end
 
   local result = pane_filetree.render(current_commit.files, {
-    collapsed_dirs = collapsed_dirs,
     panel_width = panel_width,
   })
 
-  pane_filetree.apply_to_buffer(lyt.filetree_bufnr, result)
+  return pane_filetree.apply_to_buffer(lyt.filetree_bufnr, result, state:get_tree("files"))
 end
 
 ---Open file entry in sbs view

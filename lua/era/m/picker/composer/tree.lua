@@ -51,6 +51,7 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
+---@field public present                fun(key: string, data: table, entry: era.view.result_tree.IEntry): ux.treeview.INodeData
 ---@field public node_sorter            era.m.picker.composer.tree.INodeSorter
 ---
 ---@field public keymaps_common         ?stl.t.IKeymap[]
@@ -72,11 +73,6 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field public search_pattern_history ?stl.c.History
 ---
 ---@field public render_preview         ?era.m.picker.preview.IDraw
----@field public render_listview_leaf   era.m.picker.view.tree.IListviewLeafNodeRenderer
----@field public render_listview_location   era.m.picker.view.tree.IListviewLeafLocationRenderer
----@field public render_treeview_container  era.m.picker.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf   era.m.picker.view.tree.ITreeviewLeafNodeRenderer
----@field public render_treeview_location   era.m.picker.view.tree.ITreeviewLeafLocationRenderer
 ---
 ---@field public on_attached            ?era.m.picker.composer.tree.IOnAttached
 ---@field public on_closed              ?era.m.picker.composer.tree.IOnClosed
@@ -105,16 +101,14 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _node_sorter        era.m.picker.composer.tree.INodeSorter
----@field protected _tree               stl.c.Tree
+---@field protected _tree               era.view.ResultSource
 ---@field protected _composer           era.m.picker.BasicComposer
 ---@field protected _plainfile          era.view.Plainfile
----@field protected _retriever          stl.c.TreeRetriever
 ---@field protected _scheduler_match    stl.c.Scheduler|nil
----@field protected _treeview           era.m.picker.TreeView
+---@field protected _treeview           era.view.ResultTree
 ---
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
----@field protected _uuids_file         string[]
 ---@field protected _uuids_order        string[]
 ---
 ---@field protected _on_attached        era.m.picker.composer.tree.IOnAttached
@@ -157,11 +151,6 @@ function M.new(props)
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local render_preview = props.render_preview ---@type era.m.picker.preview.IDraw|nil
-  local render_listview_leaf = props.render_listview_leaf ---@type era.m.picker.view.tree.IListviewLeafNodeRenderer
-  local render_listview_location = props.render_listview_location ---@type era.m.picker.view.tree.IListviewLeafLocationRenderer
-  local render_treeview_container = props.render_treeview_container ---@type era.m.picker.view.tree.ITreeviewContainerNodeRenderer
-  local render_treeview_leaf = props.render_treeview_leaf ---@type era.m.picker.view.tree.ITreeviewLeafNodeRenderer
-  local render_treeview_location = props.render_treeview_location ---@type era.m.picker.view.tree.ITreeviewLeafLocationRenderer
 
   local on_attached = props.on_attached or stl.fn.noop ---@type era.m.picker.composer.tree.IOnAttached
   local on_closed = props.on_closed or stl.fn.noop ---@type era.m.picker.composer.tree.IOnClosed
@@ -172,33 +161,26 @@ function M.new(props)
   local on_hidden = props.on_hidden or stl.fn.noop ---@type era.m.picker.composer.tree.IOnHidden
   local on_refresh = props.on_refresh or stl.fn.noop ---@type era.m.picker.composer.tree.IOnRefresh
 
-  local tree = stl.c.Tree.new("__virtual_root__")
+  local tree = require("era.view.result_source").new("__virtual_root__")
 
   local self = setmetatable({}, M)
-
-  ---@type stl.c.TreeRetriever
-  local retriever = stl.c.TreeRetriever.new({
-    name = fullname,
-  })
 
   ---@type era.view.Plainfile
   local plainfile = era.view.Plainfile.new({
     name = fullname,
   })
 
-  ---@type era.m.picker.TreeView
-  local treeview = era.m.picker.TreeView.new({
+  ---@type era.view.ResultTree
+  local treeview = require("era.view.result_tree").new({
     name = fullname,
     tree = tree,
+    present = props.present,
     flag_foldempty = o_flag_foldempty,
     indent = "",
     indent_hln = "f_utw_indent_float",
-    render_listview_leaf = render_listview_leaf,
-    render_listview_location = render_listview_location,
-    render_treeview_container = render_treeview_container,
-    render_treeview_leaf = render_treeview_leaf,
-    render_treeview_location = render_treeview_location,
   })
+
+  local retriever = treeview
 
   local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
@@ -210,7 +192,6 @@ function M.new(props)
     task = function()
       local input = o_search_pattern:snapshot() ---@type string
       self:__match__(input)
-      treeview:mark_cache_treeview_dirty()
       self:mark_result_dirty()
     end,
   })
@@ -240,12 +221,12 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
-        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type era.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.result_tree.Viewtype
+        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type era.view.result_tree.Viewtype
         o_flag_viewtype:next(next_viewtype)
       end,
       snapshot = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.result_tree.Viewtype
         if viewtype == "tree" then
           return stl.icon.symbols.flag_tree, "picker_flag_aqua"
         end
@@ -260,7 +241,7 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: compact directory paths", name),
       disabled = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.result_tree.Viewtype
         return viewtype ~= "tree"
       end,
       callback = function()
@@ -322,13 +303,12 @@ function M.new(props)
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
         if nodestate == nil then
           return
         end
 
         if nodestate.nodetype == "container" then
-          treeview:mark_cache_listview_dirty()
           self._uuid_root = nodeuuid ---@type string
           self:mark_result_dirty()
           on_attached(self, nodeuuid)
@@ -340,7 +320,6 @@ function M.new(props)
           return
         end
 
-        treeview:mark_cache_listview_dirty()
         self._uuid_root = leafuuid ---@type string
         self:mark_result_dirty()
         on_attached(self, leafuuid)
@@ -350,7 +329,6 @@ function M.new(props)
       local rootuuid = self._uuid_root ---@type string
       local parentuuid = tree:parent(rootuuid) ---@type string|nil
       if parentuuid ~= nil then
-        treeview:mark_cache_listview_dirty()
         self._uuid_root = parentuuid ---@type string
         self:mark_result_dirty()
 
@@ -386,7 +364,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
+          local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
           if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
@@ -414,11 +392,10 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
         if nodestate.collapsed then
           treeview:collapse(nodeuuid, "expand", true)
-          treeview:mark_cache_listview_dirty()
           self._composer:mark_result_dirty()
           return
         end
@@ -436,10 +413,9 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
       if nodestate ~= nil and nodestate.nodetype == "container" and not nodestate.collapsed then
         treeview:collapse(nodeuuid, "collapse", true)
-        treeview:mark_cache_listview_dirty()
         self._composer:mark_result_dirty()
         self._composer.result:set_lnum_current(lnum)
         return
@@ -451,7 +427,6 @@ function M.new(props)
       end
 
       treeview:collapse(parentuuid, "collapse", true)
-      treeview:mark_cache_listview_dirty()
       self._composer:mark_result_dirty()
       if lnum_parent ~= nil then
         self._composer.result:set_lnum_current(lnum_parent)
@@ -470,64 +445,29 @@ function M.new(props)
       end
     end,
     toggle_selection = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      if lnum_from == lnum_to then
-        local nodeuuid = retriever:retrieve_uuid(lnum_from) ---@type string|nil
-        if nodeuuid == nil then
-          return
-        end
-
-        local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
-        if nodestate == nil then
-          return
-        end
-
-        if nodestate.nodetype == "container" then
-          local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
-          treeview:toggle_select(nodeuuid, next_selected, true)
-        elseif nodestate.nodetype == "leaf" then
-          local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
-          treeview:toggle_select(nodeuuid, next_selected, true)
-        elseif nodestate.nodetype == "location" then
-          nodeuuid = nodestate.leafuuid ---@type string
-          local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
-          treeview:toggle_select(nodeuuid, next_selected, true)
-        end
-        self._composer.result:refresh_signs()
-        return
-      end
-
-      local next_selected = false ---@type boolean
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
-          if childstate ~= nil and childstate.nodetype ~= "location" then
-            local isselected = treeview:isselected(nodeuuid) ---@type boolean
-            if not isselected then
-              next_selected = true
-              break
-            end
-          end
-        end
-      end
-
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
-          if childstate ~= nil and childstate.nodetype ~= "location" then
-            treeview:set_selected(nodeuuid, next_selected)
-          end
-        end
-      end
-      self._composer.result:refresh_signs()
+      treeview:toggle_selection()
     end,
   }
+
+  for key, action in pairs(actions) do
+    if key ~= "toggle_selection" then
+      actions[key] = function()
+        if self._disposed then
+          return
+        end
+        if
+          treeview:after_selection(function()
+            if not self._disposed then
+              action()
+            end
+          end)
+        then
+          return
+        end
+        action()
+      end
+    end
+  end
 
   ---@type stl.t.IKeymap[]
   local preset_keymaps_common = {}
@@ -728,44 +668,17 @@ function M.new(props)
     end,
 
     ---@type era.m.picker.result.IDraw
-    render_result = function(bufnr)
-      local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
-      local result ---@type era.view.tree.IRenderResult
-      local only_matched = o_search_pattern:snapshot() ~= "" ---@type boolean
-      local only_selected = o_flag_selected:snapshot() ---@type boolean
-
-      if viewtype == "list" then
-        result = treeview:render_listview({
-          bufnr = bufnr,
-          rootuuid = self._uuid_root,
-          orders = self._uuids_order,
-          only_matched = only_matched,
-          only_selected = only_selected,
-          only_visible = true,
-        })
-      elseif viewtype == "tree" then
-        local foldempty = o_flag_foldempty:snapshot() ---@type boolean
-        result = treeview:render_treeview({
-          bufnr = bufnr,
-          rootuuid = self._uuid_root,
-          foldempty = foldempty,
-          only_expanded = true,
-          only_matched = only_matched,
-          only_selected = only_selected,
-          only_visible = true,
-        })
-      end
-
-      if result.layout ~= nil then
-        retriever:attach_layout(result.layout, result.childline)
-      else
-        retriever:attach(result.lnum2uuid, result.uuid2lnum, result.childline)
-      end
-
-      local uuid_current = self._uuid_current ---@type string|nil
-      local lnum_current = uuid_current ~= nil and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil
-      local ret = { lnum_current = lnum_current } ---@type era.m.picker.result.IDrawResult
-      return ret
+    result_tree = treeview,
+    render_result = function()
+      return treeview:publish({
+        mode = o_flag_viewtype:snapshot(),
+        rootuuid = self._uuid_root,
+        orders = self._uuids_order,
+        foldempty = o_flag_foldempty:snapshot(),
+        only_matched = o_search_pattern:snapshot() ~= "",
+        only_selected = o_flag_selected:snapshot(),
+        list_text = "label",
+      })
     end,
 
     ---@type era.m.picker.preview.IDraw|nil
@@ -816,12 +729,10 @@ function M.new(props)
   self._tree = tree
   self._composer = composer
   self._plainfile = plainfile
-  self._retriever = retriever
   self._scheduler_match = scheduler_match
   self._treeview = treeview
 
   self._uuid_root = nil
-  self._uuids_file = {}
   self._uuids_order = {}
 
   self._on_attached = on_attached
@@ -876,9 +787,8 @@ function M:dispose()
   local on_dispose = self._on_disposed ---@type era.m.picker.composer.tree.IOnDisposed
   local composer = self._composer ---@type era.m.picker.BasicComposer
   local plainfile = self._plainfile ---@type era.view.Plainfile
-  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type stl.c.Scheduler
-  local treeview = self._treeview ---@type era.m.picker.TreeView
+  local treeview = self._treeview ---@type era.view.ResultTree
   local observer_unsubs = self._observer_unsubs ---@type stl.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
@@ -899,10 +809,9 @@ function M:dispose()
     local ok2, error2 = pcall(treeview.dispose, treeview)
     local ok3, error3 = pcall(composer.dispose, composer)
     local ok4, error4 = pcall(plainfile.dispose, plainfile)
-    local ok5, error5 = pcall(retriever.dispose, retriever)
     local ok6, error6 = pcall(on_dispose)
 
-    if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
+    if not (ok1 and ok2 and ok3 and ok4 and ok6) then
       stl.reporter.error({
         from = fullname,
         subject = "dispose",
@@ -912,7 +821,6 @@ function M:dispose()
           error2 = not ok2 and error2 or nil,
           error3 = not ok3 and error3 or nil,
           error4 = not ok4 and error4 or nil,
-          error5 = not ok5 and error5 or nil,
           error6 = not ok6 and error6 or nil,
           error_observers = not ok_unsubs and error_unsubs or nil,
         },
@@ -932,12 +840,10 @@ function M:dispose()
 
   self._composer = nil
   self._plainfile = nil
-  self._retriever = nil
   self._scheduler_match = nil
   self._treeview = nil
 
   self._uuid_root = nil
-  self._uuids_file = nil
   self._uuids_order = nil
 
   self._on_attached = nil
@@ -963,9 +869,9 @@ end
 ---@return era.m.picker.TreeComposer
 function M:insert(parentuuid, uuid, data)
   self:__health__()
-  self._treeview:mark_cache_match_dirty()
+  self._treeview:invalidate()
 
-  local tree = self._tree ---@type stl.c.Tree
+  local tree = self._tree ---@type era.view.ResultSource
   if tree:contains(uuid) then
     if tree:parent(uuid) == parentuuid then
       tree:update(uuid, data)
@@ -975,7 +881,6 @@ function M:insert(parentuuid, uuid, data)
       error(string.format("[%s] parent '%s' does not exist", self.fullname, parentuuid), 2)
     end
     local insertion_index = self:__resolve_insert_index__(parentuuid, data) ---@type integer
-    self._treeview:mark_cache_selected_dirty()
     tree:move(uuid, parentuuid, insertion_index)
     tree:update(uuid, data)
     return self
@@ -1037,9 +942,8 @@ function M:attach(rootuuid)
     return self
   end
 
-  local treeview = self._treeview ---@type era.m.picker.TreeView
+  local treeview = self._treeview ---@type era.view.ResultTree
 
-  treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
   self._scheduler_match:schedule()
 
@@ -1067,25 +971,7 @@ end
 ---@return boolean
 function M:__has_selected_node__()
   self:__health__()
-
-  local retriever = self._retriever ---@type stl.c.TreeRetriever
-  local linecount = retriever:linecount() ---@type integer
-  if linecount < 1 then
-    return false
-  end
-
-  local treeview = self._treeview ---@type era.m.picker.TreeView
-
-  for lnum = 1, linecount, 1 do
-    local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-    if uuid ~= nil then
-      local isselected = treeview:isselected(uuid) ---@type boolean
-      if isselected then
-        return true
-      end
-    end
-  end
-  return false
+  return self._treeview:has_selected()
 end
 
 ---@protected
@@ -1093,7 +979,7 @@ end
 ---@param candidate                     table
 ---@return integer
 function M:__resolve_insert_index__(parentuuid, candidate)
-  local tree = self._tree ---@type stl.c.Tree
+  local tree = self._tree ---@type era.view.ResultSource
   local children = tree:children(parentuuid) --[[@as string[] ]]
   local sorter = self._node_sorter ---@type era.m.picker.composer.tree.INodeSorter
   for index, childuuid in ipairs(children) do
@@ -1118,13 +1004,7 @@ end
 ---@param input                         string
 ---@return nil
 function M:__match__(input)
-  local treeview = self._treeview ---@type era.m.picker.TreeView
-
-  if #input < 1 then
-    local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
-    self._uuids_order = uuids_order
-    return
-  end
+  local treeview = self._treeview ---@type era.view.ResultTree
 
   ---@type string[]
   local uuids_order = treeview:match({
@@ -1141,22 +1021,12 @@ end
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
   local composer = self._composer ---@type era.m.picker.BasicComposer
-  local retriever = self._retriever ---@type stl.c.TreeRetriever
-  local treeview = self._treeview ---@type era.m.picker.TreeView
+  local treeview = self._treeview ---@type era.view.ResultTree
 
   if self:__has_selected_node__() then
-    local linecount = retriever:linecount() ---@type integer
-    local uuids = {} ---@type string[]
-
-    for lnum = 1, linecount, 1 do
-      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-      if uuid ~= nil then
-        local isselected = treeview:isselected(uuid) ---@type boolean
-        if isselected then
-          treeview:set_selected(uuid, false)
-          uuids[#uuids + 1] = uuid
-        end
-      end
+    local uuids = treeview:selected_keys(true)
+    for _, uuid in ipairs(uuids) do
+      treeview:set_selected(uuid, false)
     end
 
     if #uuids > 0 then
@@ -1180,7 +1050,7 @@ function M:__retrieve_nodeuuid__()
     return nil, lnum
   end
 
-  local nodeuuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
+  local nodeuuid = self._treeview:retrieve_uuid(lnum) ---@type string|nil
   return nodeuuid, lnum
 end
 
@@ -1188,7 +1058,7 @@ end
 ---@return integer
 function M:__retrieve_lnum_range__()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._retriever ---@type stl.c.TreeRetriever
+  local retriever = self._treeview ---@type era.view.ResultTree
 
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
@@ -1210,32 +1080,7 @@ end
 ---@return integer|nil
 ---@return string|nil
 function M:__retrieve_lnum_parent__(nodeuuid)
-  if nodeuuid == nil then
-    return nil
-  end
-
-  local nodestate = self._treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
-  if nodestate == nil then
-    return nil
-  end
-
-  if nodestate.nodetype == "location" then
-    local parentuuid = nodestate.leafuuid ---@type string
-    local lnum_parent = self._retriever:retrieve_lnum(parentuuid) ---@type integer|nil
-    return lnum_parent, parentuuid
-  end
-
-  local tree = self._tree ---@type stl.c.IReadonlyTree
-  if not tree:contains(nodeuuid) then
-    return nil, nil
-  end
-
-  local parentuuid = tree:parent(nodeuuid) ---@type string|nil
-  if parentuuid == nil then
-    return nil, nil
-  end
-  local lnum_parent = self._retriever:retrieve_lnum(parentuuid) ---@type integer|nil
-  return lnum_parent, parentuuid
+  return self._treeview:retrieve_parent(nodeuuid)
 end
 
 ---@param nodeuuid                      string
@@ -1243,19 +1088,19 @@ end
 ---@param recursively                   boolean
 ---@return nil
 function M:__toggle_node__(nodeuuid, open, recursively)
-  local nodestate = self._treeview:retrieve(nodeuuid) ---@type era.view.tree.INodeState|nil
+  local nodestate = self._treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
   local treeuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local tree = self._tree ---@type stl.c.IReadonlyTree
+  local tree = self._tree ---@type era.view.ResultSource
   if not tree:contains(treeuuid) then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
   end
 
   local composer = self._composer ---@type era.m.picker.BasicComposer
-  local treeview = self._treeview ---@type era.m.picker.TreeView
+  local treeview = self._treeview ---@type era.view.ResultTree
   if nodestate.nodetype == "container" then
     treeview:collapse(treeuuid, "toggle", recursively)
     composer:mark_result_dirty()

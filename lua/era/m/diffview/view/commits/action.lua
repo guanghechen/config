@@ -204,7 +204,8 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Toggle commit expansion at cursor
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.toggle_expand(ctx)
   local item = get_item_at_cursor()
   if not item or not item.commit then
@@ -213,7 +214,6 @@ function M.toggle_expand(ctx)
 
   if item.type == "directory" and item.uuid then
     ctx.state:toggle_commit_dir(item.commit.hash, item.uuid)
-    commits_view.render_commits(ctx)
     return
   end
   if item.type ~= "commit" then
@@ -224,7 +224,6 @@ function M.toggle_expand(ctx)
   if is_expanded then
     -- Collapse
     ctx.state:toggle_commit_expanded(item.commit.hash)
-    commits_view.render_commits(ctx)
   else
     -- Expand and load files
     stl.async.run(function()
@@ -234,7 +233,8 @@ function M.toggle_expand(ctx)
 end
 
 ---Expand commit at cursor
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.expand(ctx)
   local item = get_item_at_cursor()
   if not item or not item.commit then
@@ -243,7 +243,6 @@ function M.expand(ctx)
 
   if item.type == "directory" and item.uuid then
     ctx.state:expand_commit_dir(item.commit.hash, item.uuid)
-    commits_view.render_commits(ctx)
     return
   end
   if item.type ~= "commit" then
@@ -258,7 +257,8 @@ function M.expand(ctx)
 end
 
 ---Collapse commit at cursor
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.collapse(ctx)
   local item = get_item_at_cursor()
   if not item or not item.commit then
@@ -267,7 +267,6 @@ function M.collapse(ctx)
 
   if item.type == "directory" and item.uuid then
     ctx.state:collapse_commit_dir(item.commit.hash, item.uuid)
-    commits_view.render_commits(ctx)
     return
   end
   if item.type ~= "commit" then
@@ -276,35 +275,48 @@ function M.collapse(ctx)
 
   if ctx.state:is_commit_expanded(item.commit.hash) then
     ctx.state:toggle_commit_expanded(item.commit.hash)
-    commits_view.render_commits(ctx)
   end
 end
 
 ---Expand all commits
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.expand_all(ctx)
   stl.async.run(function()
     local commits = ctx.state:get_commits()
+    local loaded = false
+    local include_files = {}
+    local owner = ctx.state:get_tree("commits")
 
     -- Load files for commits that don't have them yet
     for _, commit in stl.async.ipairs(commits) do
       if not commit.files then
         commit.files = data.fetch_commit_files(commit.hash)
       end
+      include_files[commit.hash] = true
+      local record = owner:frame() and owner:data("commit:" .. commit.hash)
+      loaded = loaded or not record or not record.files_loaded
     end
 
     -- Expand all commits
     stl.async.scheduler()
-    ctx.state:expand_all()
-    commits_view.render_commits(ctx)
+    if loaded then
+      local future = commits_view.render_commits(ctx, include_files)
+      if future then
+        future:await()
+      end
+    end
+    if not ctx.state:is_disposed() then
+      ctx.state:expand_all()
+    end
   end)
 end
 
 ---Collapse all commits
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.collapse_all(ctx)
   ctx.state:collapse_all()
-  commits_view.render_commits(ctx)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -371,7 +383,7 @@ function M.search_commit(ctx)
 
       ctx.state:set_commits_total(match.total)
       ctx.state:set_commits_page(page)
-      ctx.state.expanded_commits:next({})
+      ctx.state:collapse_all()
       ctx.state:set_commits(commits)
       ctx.state:set_current_commit(commit)
       ctx.state:set_current_entry(nil)
@@ -425,7 +437,7 @@ function M.next_page(ctx)
     return
   end
   ctx.state:request_commits_page(next_page)
-  ctx.state.expanded_commits:next({})
+  ctx.state:collapse_all()
   stl.async.run(function()
     M.__refresh_page__(ctx, next_page, generation)
   end)
@@ -446,7 +458,7 @@ function M.prev_page(ctx)
     return
   end
   ctx.state:request_commits_page(prev_page)
-  ctx.state.expanded_commits:next({})
+  ctx.state:collapse_all()
   stl.async.run(function()
     M.__refresh_page__(ctx, prev_page, generation)
   end)
@@ -706,7 +718,7 @@ function M.reveal(ctx)
     ctx.state:toggle_commit_expanded(current.hash)
   end
 
-  commits_view.render_commits(ctx)
+  commits_view.render_commits(ctx, current and filepath and { [current.hash] = true } or nil)
   if current then
     M.__update_commits_cursor__(ctx, current.hash, filepath)
   end
@@ -830,7 +842,8 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Toggle commit expand from sbs window
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.sbs_toggle_expand(ctx)
   local current = ctx.state:get_current_commit()
   if not current then
@@ -840,7 +853,6 @@ function M.sbs_toggle_expand(ctx)
   local is_expanded = ctx.state:is_commit_expanded(current.hash)
   if is_expanded then
     ctx.state:toggle_commit_expanded(current.hash)
-    commits_view.render_commits(ctx)
   else
     stl.async.run(function()
       M.__expand_commit__(ctx, current)
@@ -864,7 +876,8 @@ function M.sbs_expand(ctx)
 end
 
 ---Collapse commit from sbs window
----@param ctx                            era.m.diffview.view.commits.IContext
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
 function M.sbs_collapse(ctx)
   local current = ctx.state:get_current_commit()
   if not current then
@@ -873,7 +886,6 @@ function M.sbs_collapse(ctx)
 
   if ctx.state:is_commit_expanded(current.hash) then
     ctx.state:toggle_commit_expanded(current.hash)
-    commits_view.render_commits(ctx)
   end
 end
 
@@ -1233,7 +1245,7 @@ function M.refresh(ctx, token)
   end
   ctx.state:set_commits_total(total)
   ctx.state:set_commits_page(1)
-  ctx.state.expanded_commits:next({})
+  ctx.state:collapse_all()
   ctx.state:set_commits(commits)
   commits_view.render_commits(ctx)
 
@@ -1272,34 +1284,42 @@ end
 
 ---Expand commit and load its files
 ---@async
----@param ctx                            era.m.diffview.view.commits.IContext
----@param commit                         era.m.diffview.ICommit
----@param token                          ?stl.c.CancellationToken
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@param commit                        era.m.diffview.ICommit
+---@param token                         ?stl.c.CancellationToken
+---@return nil
 function M.__expand_commit__(ctx, commit, token)
   local actual_commit = find_commit_in_state(ctx, commit.hash)
   if not actual_commit then
     return
   end
 
-  if actual_commit.files then
-    stl.async.scheduler()
-    ctx.state:toggle_commit_expanded(actual_commit.hash)
-    commits_view.render_commits(ctx)
+  if not actual_commit.files then
+    actual_commit.files = data.fetch_commit_files(actual_commit.hash, token)
+  end
+  stl.async.scheduler()
+  if ctx.state:is_disposed() or token and token:is_cancelled() then
     return
   end
-
-  local files = data.fetch_commit_files(actual_commit.hash, token)
-  stl.async.scheduler()
-  actual_commit.files = files
-  ctx.state:toggle_commit_expanded(actual_commit.hash)
-  commits_view.render_commits(ctx)
+  local owner = ctx.state:get_tree("commits")
+  local record = owner:frame() and owner:data("commit:" .. actual_commit.hash)
+  if not record or not record.files_loaded then
+    local future = commits_view.render_commits(ctx, { [actual_commit.hash] = true })
+    if future then
+      future:await()
+    end
+  end
+  if not ctx.state:is_disposed() and find_commit_in_state(ctx, actual_commit.hash) then
+    ctx.state:expand_commit(actual_commit.hash)
+  end
 end
 
 ---Load commit files and render filetree (for layout 5)
 ---@async
----@param ctx                            era.m.diffview.view.commits.IContext
----@param commit                         era.m.diffview.ICommit
----@param token                          ?stl.c.CancellationToken
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@param commit                        era.m.diffview.ICommit
+---@param token                         ?stl.c.CancellationToken
+---@return nil
 function M.__load_commit_files_and_render_filetree__(ctx, commit, token)
   local actual_commit = find_commit_in_state(ctx, commit.hash)
   if not actual_commit then
@@ -1323,9 +1343,10 @@ function M.__load_commit_files_and_render_filetree__(ctx, commit, token)
 end
 
 ---Open target file diff directly (for file history mode)
----@param ctx                            era.m.diffview.view.commits.IContext
----@param commit                         era.m.diffview.ICommit
----@param path_filter                    string
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@param commit                        era.m.diffview.ICommit
+---@param path_filter                   string
+---@return nil
 function M.__open_target_file_diff__(ctx, commit, path_filter)
   local actual_commit = find_commit_in_state(ctx, commit.hash)
   if not actual_commit then
@@ -1337,10 +1358,15 @@ function M.__open_target_file_diff__(ctx, commit, path_filter)
   dot.state.status.dirtier_tabline:mark_dirty()
 
   stl.async.run(function()
+    local loaded = false
     if not actual_commit.files then
       actual_commit.files = data.fetch_commit_files(actual_commit.hash)
+      loaded = true
     end
     stl.async.scheduler()
+    if loaded then
+      commits_view.render_commits(ctx)
+    end
 
     -- Find target file entry
     local target_entry = nil ---@type era.m.diffview.IFileEntry|nil
@@ -1425,16 +1451,10 @@ function M.__update_commits_cursor__(ctx, hash, filepath)
     return
   end
 
-  local line_map = pane_commits.get_line_map(lyt.commits_bufnr)
-  if not line_map then
-    return
-  end
-
-  local target_lnum = filepath and pane_commits.find_file_line(line_map, hash, filepath) or nil
-  target_lnum = target_lnum or pane_commits.find_commit_line(line_map, hash)
-  if target_lnum and lyt.commits_winnr and vim.api.nvim_win_is_valid(lyt.commits_winnr) then
-    vim.api.nvim_win_set_cursor(lyt.commits_winnr, { target_lnum, 0 })
-  end
+  local tree = ctx.state:get_tree("commits")
+  local commit_key = "commit:" .. hash
+  local key = filepath and require("era.m.diffview.pane.tree").key(commit_key, filepath, false) or commit_key
+  tree:focus_key(key, commit_key)
 end
 
 ---@class era.m.diffview.view.commits.ICommitPopupAnchor

@@ -26,7 +26,8 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if yoz.path.is_absolute(filepath) and yoz.path.is_exist_file(filepath) then
-      local uuid = stl.c.Filetree.uuid(filepath) ---@type string
+      local key_path = filepath:find("\\", 1, true) and yoz.canonical_path.from_os_path(filepath, false) or filepath
+      local uuid = yoz.fn.md5(key_path) ---@type string
       dot.context.frecency.files:access(uuid)
     end
   end,

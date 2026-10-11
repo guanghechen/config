@@ -7,8 +7,8 @@ Picker 与 Searcher 只共享已经形成稳定同构实现的 UI surface：
 1. `Result`：result buffer/window lifecycle、line observables、sign scheduler 与 winbar。
 2. `Preview`：preview buffer/window lifecycle、debounced draw 与 window options。
 
-Feature 保留 Finder 输入语义、pane composition、tree/search/replace 状态和所有业务 action。
-Tree/Treeview 不属于本设计范围。
+Feature 保留 Finder 输入语义、pane composition、search/replace 输入和所有业务 action。
+树状结果使用 [native Treeview 接入契约](../../../doc/spec/treeview/results.md)，selection/expansion 归 native State。
 
 ## 依赖方向
 
@@ -31,12 +31,12 @@ era.m.searcher ─┘
 - result buffer/window 的 create、focus、hide、resize、dispose；
 - `lnum_current`、`lnum_present`、`lnum_total`；
 - current/present/selected signs 与对应 scheduler；
-- Result 内容刷新调度；
+- Result 内容刷新调度；树状结果的 buffer 正文与 viewport decorations 由 native View 独占；
 - flags、position 与可选 status 的 winbar 渲染。
 
 Feature 通过 props 提供：
 
-- `draw`、`isselected`、`on_drawed`；
+- `draw`、`isselected`、`on_drawed`；树状结果额外提供 `era.view.ResultTree`；
 - keymaps 与 flags；
 - `augroup_prefix`、`diagnostic_scope` 与 `winline_hl`；
 - 可选 status snapshot。
@@ -46,7 +46,8 @@ Feature 通过 props 提供：
 - Picker：`winline_hl = "f_wl_picker"`，无 status。
 - Searcher：`winline_hl = "f_wl_searcher"`，可提供 status。
 
-共享层不得读取 tree、match、search、replace、file data 或 feature composer。
+共享层通过 ResultTree 的 mount/publish 接入 native surface，不解释节点、query 或业务 metadata。
+Native 模式跳过全 buffer 的 selected-sign 扫描，行数和 cursor observables 只在 frame 发布后更新。
 
 ## `Preview` 契约
 
@@ -62,12 +63,13 @@ Feature 通过 props 提供 `draw`、`on_drawed`、keymaps、`diagnostic_scope` 
 - Picker：relative number 跟随 `result.number`。
 - Searcher：relative number 始终关闭。
 
-共享层不得解释 preview 内容或 node identity。
+普通文件 preview 使用 draw。目录 preview 使用 ResultTree 的独立 native State；切回文件时先替换 buffer，再 detach 旧 View，保持浮窗存活。
+异步 subtree 准备以 preview epoch 校验，关闭或换目标后不得安装旧 View。
 
 ## 生命周期不变式
 
 1. `create_buf/create_win` 幂等，返回既有 resource 时不重复绑定。
-2. `hide` 只关闭 window，保留 reusable buffer 与 scheduler。
+2. `hide` 保留 scheduler 和逻辑 State。普通列表复用 buffer；native View 释放其 buffer，重开时使用新的空 buffer。
 3. `dispose` 只执行一次，并释放 window、buffer、observable、autocmd、nvimbar、scheduler 与 registered flag callbacks。
 4. queued observable/scheduler callback 在 dispose 后不得读取已释放字段或写入 buffer/window。
 5. draw 或 callback failure 只报告，不得留下 `modifiable/readonly` 错误状态。
@@ -96,9 +98,9 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 
 - 共享层不持有 tree node、search match 或 file data，不新增与结果规模相关的状态。
 - `Result`/`Preview` 的 create、focus、hide、resize、dispose 和 schedule 操作保持原有渐进复杂度；
-  content render 的时间与空间成本仍由 feature-owned `draw` 决定。
+  普通列表由 `draw` 写入内容；树状结果通过 native Frame 发布。
 - policy 只增加固定大小的 instance state；不得引入按 node/result 复制的数据或额外 observer。
-- 常用操作时间不得出现明显回退；稳态 Lua heap 相对迁移前基线不得增加超过 1%。
+- Cursor、selection 与 expansion 更新不得重新导入业务 records；相同 display 请求复用已解析的 filter。
 
 ## 验收标准
 

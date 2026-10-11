@@ -831,6 +831,7 @@ function M.render_changes(ctx)
   local state = ctx.state
   local entries = M.get_visible_entries(state:get_entries())
   local metadata_widths = pane_changes.measure_metadata(entries)
+  local futures = {}
 
   for _, pane in ipairs(M.get_changes_panes(lyt)) do
     if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
@@ -840,16 +841,26 @@ function M.render_changes(ctx)
       end
       local result = pane_changes.render(entries, {
         stage_type = pane.stage_type,
-        collapsed_dirs = state:get_collapsed_dirs(pane.stage_type),
         metadata_widths = metadata_widths,
         panel_width = panel_width,
       })
-      pane_changes.apply_to_buffer(pane.bufnr, result)
+      futures[#futures + 1] = pane_changes.apply_to_buffer(
+        pane.bufnr,
+        result,
+        state:get_tree(pane.stage_type),
+        function()
+          if not state:is_disposed() then
+            M.sync_changes_heights(lyt)
+            require("era.m.diffview.view.workspace.winline").render_changes(ctx)
+          end
+        end
+      )
     end
   end
 
   M.sync_changes_heights(lyt)
   require("era.m.diffview.view.workspace.winline").render_changes(ctx)
+  return require("stl.c.future").all(futures)
 end
 
 ---Open file entry in sbs view
@@ -937,9 +948,7 @@ function M.history_context(lyt, workspace_state, history_state)
     begin_preview = function()
       local generation = M.begin_preview(lyt, "history") ---@type integer
       return function()
-        return M.owns_preview(lyt, generation)
-          and not workspace_state:is_disposed()
-          and not history_state:is_disposed()
+        return M.owns_preview(lyt, generation) and not workspace_state:is_disposed() and not history_state:is_disposed()
       end
     end,
     render_winline = function()

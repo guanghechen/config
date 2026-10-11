@@ -26,9 +26,9 @@ local o_flag_selected = dot.context.select.find_diagnostics.flag_selected ---@ty
 local o_flag_viewtype = dot.context.select.find_diagnostics.flag_viewtype ---@type stl.c.Observable
 
 local search_pattern_history = stl.c.InputHistory.new({ name = name, capacity = 5 })
-local o_bufnr_sourcefile = stl.c.Observable.from_value(nil)---@type stl.c.Observable
-local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())---@type stl.c.Observable
-local o_flag_buffer = stl.c.Observable.from_value(false)---@type stl.c.Observable
+local o_bufnr_sourcefile = stl.c.Observable.from_value(nil) ---@type stl.c.Observable
+local o_rootpath = stl.c.Observable.from_value(dot.path.cwd()) ---@type stl.c.Observable
+local o_flag_buffer = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 local o_flag_severity = stl.c.Observable.from_value(nil)
 
 local picker ---@type era.m.picker.FiletreeComposer
@@ -56,7 +56,7 @@ local function refresh(force)
     return
   end
 
-  local filetree = picker._filetree ---@type stl.c.Filetree
+  local filetree = picker._filetree ---@type era.view.ResultPaths
   local treeview = picker._treeview ---@type era.m.picker.FiletreeView
   local rootpath = o_rootpath:snapshot() ---@type string
 
@@ -91,7 +91,11 @@ local function refresh(force)
   else
     for _, diagnostic in ipairs(original_diagnostics) do
       local bufnr = diagnostic.bufnr
-      if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
+      if
+        bufnr
+        and vim.api.nvim_buf_is_valid(bufnr)
+        and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
+      then
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
         if filepath ~= "" and yoz.path.is_descendant(rootpath, filepath) then
           diagnostics[#diagnostics + 1] = diagnostic
@@ -114,13 +118,7 @@ local function refresh(force)
     end)
   end
 
-  filetree:clear()
-  treeview:clear()
-
   picker:reset_filepaths(rootpath, filepaths, false)
-
-  local statemap = treeview.statemap ---@type table<string, era.view.tree.INodeState>
-  ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
   for _, diagnostic in ipairs(diagnostics) do
     local bufnr = diagnostic.bufnr
@@ -131,8 +129,8 @@ local function refresh(force)
     local severity = type(severity_raw) == "number" and vim.diagnostic.severity[severity_raw] or tostring(severity_raw) ---@type string
     ---@cast severity                 era.fn.find_diagnostics.SeverityEnum
 
-    local leafuuid = stl.c.Filetree.uuid(filepath) ---@type string
-    local leafnodestate = statemap[leafuuid] ---@type era.m.picker.view.filetree.INodeState|nil
+    local leafuuid = require("era.view.result_paths").key(filepath) ---@type string
+    local leafnodestate = treeview.entries[leafuuid] ---@type era.view.result_tree.IEntry|nil
     if leafnodestate == nil then
       goto continue
     end
@@ -150,7 +148,7 @@ local function refresh(force)
       goto continue
     end
 
-    local locations = leafnodestate.locations or {} ---@type era.m.picker.view.filetree.ILocationNodeState[]
+    local locations = leafnodestate.locations or {} ---@type era.view.result_tree.IEntry[]
     leafnodestate.locations = locations
 
     ---@type era.fn.find_diagnostics.ILocationData
@@ -160,7 +158,8 @@ local function refresh(force)
       severity = severity,
     }
 
-    local locationuuid = string.format("%s:%d:%d:%d#%d", filepath, diagnostic.lnum, diagnostic.col, diagnostic.end_col, #locations) ---@type string
+    local locationuuid =
+      string.format("%s:%d:%d:%d#%d", filepath, diagnostic.lnum, diagnostic.col, diagnostic.end_col, #locations) ---@type string
 
     local text ---@type string
     local highlights = {} ---@type stl.t.IHighlightInline[]
@@ -183,12 +182,11 @@ local function refresh(force)
       }
     end
 
-    ---@class era.m.picker.view.filetree.ILocationNodeState
+    ---@class era.view.result_tree.IEntry
     local location = {
       nodetype = "location",
       leafuuid = leafuuid,
       locationuuid = locationuuid,
-      tick_invisible = 0,
       data = data,
       lnum = diagnostic.lnum + 1,
       col = diagnostic.col,
@@ -196,8 +194,7 @@ local function refresh(force)
       text = text,
       highlights = highlights,
     }
-    locations[#locations + 1] = location
-    statemap[locationuuid] = location
+    treeview:add_location(leafuuid, location)
 
     ::continue::
   end
@@ -331,8 +328,6 @@ stl.fn.observe({ o_flag_buffer }, function()
   picker:mark_result_flags_dirty()
   refresh(false)
 end, true)
-
-
 
 ---@return nil
 local function find_diagnostics()

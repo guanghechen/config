@@ -132,6 +132,8 @@ local __highlights__ = {
 ---@field public result_isselected      ?era.m.searcher.result.IIsSelected
 ---@field public result_status          ?era.m.searcher.result.IStatusSnapshot
 ---
+---@field public result_tree            ?era.view.ResultTree
+---@field public preview_tree           ?fun(): era.view.picker.preview.ITreeTarget|nil
 ---@field public render_preview         ?era.m.searcher.preview.IDraw
 ---@field public render_result          era.m.searcher.result.IDraw
 ---
@@ -278,6 +280,7 @@ function M.new(props)
     augroup_prefix = "searcher.result",
     diagnostic_scope = "era.m.searcher.result",
     winline_hl = "f_wl_searcher",
+    tree = props.result_tree,
     draw = function(bufnr)
       if search_pattern_history ~= nil then
         local keyword = search_pattern:snapshot() ---@type string
@@ -316,6 +319,7 @@ function M.new(props)
       uuid = uuid,
       name = name,
       diagnostic_scope = "era.m.searcher.preview",
+      tree = props.preview_tree,
       relative_number = false,
       draw = render_preview,
       keymaps = self:__resolve_keymaps_preview__(

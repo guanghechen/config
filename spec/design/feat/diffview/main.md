@@ -116,7 +116,7 @@ cmd / fn / tabline
 | `era.m.git.diff`   | Diff 算法      |
 | `era.m.git.cmd`    | Git 命令执行   |
 | `era.m.git.status` | Git 状态解析   |
-| `stl.c.Filetree`   | 文件树数据结构 |
+| `ux.treeview`      | native topology、交互状态与 viewport surface |
 | `stl.c.Observable` | 响应式状态管理 |
 
 ## Filetype
@@ -256,8 +256,7 @@ workspace view 拥有组合 layout 与 panel buffers；无论通过 close action
 ---@field public commits           stl.c.Observable        -- ICommit[]
 ---@field public current_commit    stl.c.Observable        -- ICommit|nil
 ---@field public current_file      stl.c.Observable        -- IFileEntry|nil (布局5用)
----@field public expanded_commits  stl.c.Observable        -- table<string, boolean>
----@field public collapsed_commit_dirs table<string, table<string, boolean>> -- inline commit tree state
+---@field protected _trees         table<string, era.view.ResultTree> -- commits/files 各自持有 native State
 ---@field public page              stl.c.Observable        -- integer (1-indexed)
 ---@field public total             stl.c.Observable        -- integer (commit 总数)
 ```
@@ -324,7 +323,7 @@ fetch_log_page(page, 100)
 - 带 path_filter 时也支持分页（单文件历史可能很长）
 - 未过滤 log 使用 `--topo-order` 和 parent hashes 生成 compact commit graph；为保证跨页 lane 连续，先读取
   `HEAD..page_end` 的轻量 metadata，再只为当前页获取 shortstat。带 path_filter 的 File History 不生成 graph。
-- 翻页时清除所有 expanded_commits 状态
+- 翻页时向 native State 提交 commit 折叠命令
 - 每次翻页都重新获取 shortstat 数据
 - `g/` 在当前 log（包括 path_filter）中跨页搜索：至少 4 位 hash prefix 优先匹配且必须唯一，否则按 commit message 进行 case-insensitive substring 匹配并选择最新结果
 - search、翻页和 refresh 共享 per-view content generation；只有最新 request 可以提交 state，关闭 view 会使所有在途 request 失效并拒绝后续 request
@@ -368,3 +367,15 @@ fetch_log_page(page, 100)
 1. 暂不支持 merge conflict 解决
 2. 暂不支持非 git 仓库的 diff
 3. 暂不支持 inline diff 视图（只支持 side-by-side）
+
+## Treeview 发布
+
+Changes、Commits 和独立 files pane 均通过 `pane/tree.lua` 导入 records。Commit header 是不可压缩的 branch，
+文件和目录是其后代；同名目录在不同 commit 下使用不同 provider key。Git 原始路径保留在业务 metadata 中，
+provider key 使用可逆 byte 编码，显示 label 单独转义。
+
+Native State 在 pane 隐藏、buffer 重建和 layout 切换之间保留；默认新 commit 折叠，普通目录展开。
+行号、父子导航与 action metadata 从已发布 Frame 派生。`apply_to_buffer` 返回发布 Future，refresh 完成后才
+标记 snapshot 已应用；定位使用稳定 key，等待对应行可用。Metadata overlay 只在 viewport 绘制。
+
+通用契约见 [Treeview 结果集](../../../../doc/spec/treeview/results.md)。

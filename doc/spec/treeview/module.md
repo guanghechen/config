@@ -1,6 +1,6 @@
 # Rust Treeview
 
-Status: Design。本文定义 `yoz.ux.treeview` 的核心运行契约；专题与新旧 API 关系见 [文档入口](README.md)。
+Status: Design。本文定义 `yoz.ux.treeview` 的核心运行契约；专题与 consumer 接入见 [文档入口](README.md)。
 
 ## 模块边界
 
@@ -10,8 +10,7 @@ Status: Design。本文定义 `yoz.ux.treeview` 的核心运行契约；专题�
 - Rust 持有数据、状态、计算和文件操作；Lua 处理输入、glyph/theme、窗口和 buffer。
 - Rename/move、资源 identity 和 filesystem 事件由上层解释；Treeview 只接收节点更新。
 
-本文定义 Rust 交互树的数据、更新和运行协议；现有 `stl.view.treeview.layout` 的纯计算接口遵循
-[Lua layout 契约](lua-layout.md)，其 feature-owned 状态规则不约束这里的 Rust Treeview state。
+所有 consumer 遵循同一份 native State 与 Frame 契约，结果集接入见 [results.md](results.md)。
 Explorer 的用途与任务接入见 [Explorer Design](../../../spec/design/feat/explorer.md#selection-与文件操作)，
 缩进与导航见 [indentline.md](indentline.md)。
 版本标记、继承查询与 reparent 以 [共用标记算法](stamps.md) 为准。
