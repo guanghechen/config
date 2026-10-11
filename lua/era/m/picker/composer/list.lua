@@ -2,6 +2,11 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.composer.list" ---@type string
 
+local Source = require("era.view.result_source")
+local ResultTree = require("era.view.result_tree")
+local LEAF = { nodetype = "leaf" }
+local PRESENTATION = {}
+
 ---@alias era.m.picker.composer.list.IOnCancel
 ---| fun(self: era.m.picker.ListComposer): nil
 
@@ -26,22 +31,25 @@ local __module_name__ = "era.m.picker.composer.list" ---@type string
 ---@alias era.m.picker.composer.list.IRenderPreview
 ---| fun(self: era.m.picker.ListComposer, bufnr: integer, force: boolean): era.m.picker.preview.IDrawResult
 
----@alias era.m.picker.composer.list.IRenderResult
----| fun(self: era.m.picker.ListComposer, bufnr: integer, itemmap: table<string, era.m.picker.composer.list.IItem>, matches: dot.t.IScoredMatch[]): era.m.picker.composer.list.IRenderResultData
+---@class era.m.picker.composer.list.IPresentation
+---@field public label                  ?string
+---@field public highlights             ?stl.t.IHighlightInline[]
+---@field public overlay                ?table[]
+---@field public match_regions          ?integer[][] Source byte start/end and displayed byte start.
+
+---@alias era.m.picker.composer.list.IPresent
+---| fun(self: era.m.picker.ListComposer, item: era.m.picker.composer.list.IItem): era.m.picker.composer.list.IPresentation
 
 ---@class era.m.picker.composer.list.IItem
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public text_lower             string
----@field public highlights             stl.t.IHighlightInline[]
+---@field public highlights             ?stl.t.IHighlightInline[]
 
 ---@class era.m.picker.composer.list.IResetData
 ---@field public items                  era.m.picker.composer.list.IItem[]
 ---@field public uuid_present           string|nil
 ---@field public uuid_current           string|nil
-
----@class era.m.picker.composer.list.IRenderResultData
----@field public uuids                  string[]
 
 ----------------------------------------------------------------------------------------------------
 
@@ -70,7 +78,7 @@ local __module_name__ = "era.m.picker.composer.list" ---@type string
 ---@field public search_pattern_history ?stl.c.History
 ---
 ---@field public render_preview         ?era.m.picker.composer.list.IRenderPreview
----@field public render_result          ?era.m.picker.composer.list.IRenderResult
+---@field public present                ?era.m.picker.composer.list.IPresent
 ---
 ---@field public on_cancel              ?era.m.picker.composer.list.IOnCancel
 ---@field public on_closed              ?era.m.picker.composer.list.IOnClosed
@@ -97,13 +105,14 @@ local __module_name__ = "era.m.picker.composer.list" ---@type string
 ---@field protected _composer           era.m.picker.BasicComposer
 ---@field protected _scheduler_match    stl.c.Scheduler
 ---
----@field protected _lnum2uuid          string[]
----@field protected _uuid2lnum          table<string, integer>
+---@field protected _treeview           era.view.ResultTree
+---@field protected _payload_version    integer
+---@field protected _preparing          ?integer
 ---
 ---@field protected _autosort           boolean
 ---@field protected _items              era.m.picker.composer.list.IItem[]
----@field protected _itemmap            table<string, era.m.picker.composer.list.IItem>
 ---@field protected _matches            dot.t.IScoredMatch[]
+---@field protected _matched_input      string
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuid_present       string|nil
 ---
@@ -147,57 +156,31 @@ function M.new(props)
   local on_hidden = props.on_hidden or stl.fn.noop ---@type era.m.picker.composer.list.IOnHidden
   local on_refresh = props.on_refresh or stl.fn.noop ---@type era.m.picker.composer.list.IOnRefresh
 
-  ---@type era.m.picker.composer.list.IRenderResult
-  local render_result = props.render_result
-    or function(_, bufnr, itemmap, matches)
-      local lines = {} ---@type string[]
-      local uuids = {} ---@type string[]
-
-      for _, match in ipairs(matches) do
-        local item = itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
-        lines[#lines + 1] = item.text
-        uuids[#uuids + 1] = item.uuid
-      end
-
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-      local nsnr_content = dot.var.nsnr.picker_result ---@type integer
-      local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
-
-      for lnum, match in ipairs(matches) do
-        local row = lnum - 1 ---@type integer
-        local item = itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
-
-        if item and item.highlights then
-          for _, hl in ipairs(item.highlights) do
-            vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
-          end
-        end
-
-        if match.matches then
-          for _, m in ipairs(match.matches) do
-            vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
-          end
-        end
-      end
-
-      ---@type era.m.picker.composer.list.IRenderResultData
-      local data = { uuids = uuids }
-      return data
-    end
-
-  ---@type era.m.picker.composer.list.IRenderPreview|nil
+  local present = props.present
   local render_preview = props.render_preview
-
-  local self = setmetatable({}, M)
-
-  ---@return string|nil
-  ---@return integer
-  local function retrieve()
-    local lnum = self._composer:get_result_lnum() ---@type integer
-    local uuid = self._lnum2uuid[lnum] ---@type string|nil
-    return uuid, lnum
-  end
+  local self = setmetatable({ _disposed = false, _payload_version = 0, _matches = {} }, M)
+  local treeview
+  treeview = ResultTree.new({
+    name = fullname,
+    tree = Source.new("list"),
+    present = function(key, data)
+      if key == "list" then
+        return { label = "", fields = { payload_version = data.payload_version } }
+      end
+      local item = treeview.source.payloads[key]
+      local display = item and present and present(self, item) or PRESENTATION
+      local highlights = display.highlights or item and item.highlights
+      local fields
+      if highlights and #highlights > 0 or display.overlay or display.match_regions then
+        fields = { highlights = highlights, overlay = display.overlay, match_regions = display.match_regions }
+      end
+      return {
+        label = display.label or item and item.text or data,
+        fields = fields,
+      }
+    end,
+  })
+  self._treeview = treeview
 
   local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
@@ -207,18 +190,19 @@ function M.new(props)
     silent = stl.fn.falsy,
     value = stl.c.Observable.from_value(true),
     task = function()
+      if self._preparing then
+        return
+      end
       local input = search_pattern:snapshot() ---@type string
       self:__match__(input)
-      self:mark_result_dirty()
+      self._composer:mark_result_dirty()
     end,
   })
 
   local actions = {
     on_confirm = function()
       if on_confirm ~= nil then
-        local uuid = retrieve() ---@type string|nil
-        local item = uuid and self._itemmap[uuid] or nil ---@type era.m.picker.composer.list.IItem|nil
-        on_confirm(self, item)
+        on_confirm(self, self:retrieve(self._composer:get_result_lnum()))
       end
     end,
   }
@@ -329,35 +313,23 @@ function M.new(props)
 
     result_number = false,
 
-    render_result = function(bufnr)
-      local data = render_result(self, bufnr, self._itemmap, self._matches)
-      local uuids = data.uuids ---@type string[]
-
-      local lnum2uuid = self._lnum2uuid ---@type string[]
-      local uuid2lnum = self._uuid2lnum ---@type table<string, integer>
-
-      local N1 = #lnum2uuid ---@type integer
-      for lnum = 1, N1, 1 do
-        local uuid = lnum2uuid[lnum] ---@type string
-        uuid2lnum[uuid] = nil
+    result_tree = treeview,
+    render_result = function()
+      if self._preparing then
+        return
       end
-
-      local N2 = #uuids ---@type integer
-      for lnum = 1, N2, 1 do
-        local uuid = uuids[lnum] ---@type string
-        lnum2uuid[lnum] = uuid
-        uuid2lnum[uuid] = lnum
+      local all_rows = self._matched_input == ""
+      local orders
+      if not all_rows then
+        orders = {}
+        for _, match in ipairs(self._matches) do
+          orders[#orders + 1] = "item:" .. match.uuid
+        end
       end
-
-      if N1 > N2 then
-        stl.table.truncate_inline(lnum2uuid, N2)
-      end
-
-      local uuid_current = self._uuid_current ---@type string|nil
-      local uuid_present = self._uuid_present ---@type string|nil
-      local lnum_current = uuid_current and uuid2lnum[uuid_current] or nil ---@type integer|nil
-      local lnum_present = uuid_present and uuid2lnum[uuid_present] or nil ---@type integer|nil
-      return { lnum_current = lnum_current, lnum_present = lnum_present }
+      return treeview:publish({ mode = "list", rootuuid = "list", orders = orders, all_rows = all_rows })
+    end,
+    on_result_rendered = function()
+      self:__refresh_uuid_present__()
     end,
 
     ---@type era.m.picker.preview.IDraw|nil
@@ -403,13 +375,10 @@ function M.new(props)
   self._disposed = false
   self._composer = composer
   self._scheduler_match = scheduler_match
-
-  self._lnum2uuid = {}
-  self._uuid2lnum = {}
+  self._search_pattern = search_pattern
 
   self._autosort = autosort
   self._items = {}
-  self._itemmap = {}
   self._matches = {}
   self._uuid_current = nil
   self._uuid_present = nil
@@ -442,9 +411,9 @@ function M.new(props)
       return
     end
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
-    local uuid = self._lnum2uuid[lnum] ---@type string|nil
-    if uuid ~= nil then
-      self._uuid_current = uuid
+    local item = self:retrieve(lnum)
+    if item then
+      self._uuid_current = item.uuid
     end
   end)
   self._observer_unsubs = observer_unsubs
@@ -480,6 +449,7 @@ function M:dispose()
 
   local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
   local ok2, error2 = pcall(composer.dispose, composer)
+  self._treeview:dispose()
   vim.schedule(function()
     local ok3, error3 = pcall(on_disposed)
 
@@ -508,14 +478,14 @@ function M:dispose()
 
   self._composer = nil
   self._scheduler_match = nil
+  self._search_pattern = nil
 
-  self._lnum2uuid = nil
-  self._uuid2lnum = nil
+  self._treeview = nil
 
   self._autosort = nil
   self._items = nil
-  self._itemmap = nil
   self._matches = nil
+  self._matched_input = nil
   self._uuid_current = nil
   self._uuid_present = nil
 
@@ -562,14 +532,14 @@ end
 ---@return era.m.picker.composer.list.IItem|nil
 function M:retrieve(lnum)
   self:__health__()
-  local uuid = self._lnum2uuid[lnum] ---@type string|nil
-  local item = uuid and self._itemmap[uuid] or nil ---@type era.m.picker.composer.list.IItem|nil
-  return item
+  local key = self._treeview:retrieve_uuid(lnum)
+  return key and self._treeview:payload(key)
 end
 
 ---@return era.m.picker.ListComposer
 function M:mark_result_dirty()
   self:__health__()
+  self._treeview:invalidate()
   self._composer:mark_result_dirty()
   return self
 end
@@ -604,26 +574,54 @@ end
 function M:reset_data(data)
   self:__health__()
 
-  local items = data.items ---@type era.m.picker.composer.list.IItem[]
-  local lnum_total = #items ---@type integer
-  local itemmap = {} ---@type table<string, era.m.picker.composer.list.IItem>
-  for _, item in ipairs(items) do
-    itemmap[item.uuid] = item
-  end
-
-  self._items = items
-  self._itemmap = itemmap
-  self._composer.result.lnum_total:next(lnum_total)
-  self._composer:mark_result_dirty()
-  self._scheduler_match:schedule()
-
-  vim.schedule(function()
-    if self._disposed or self._composer:isdisposed() then
+  local items = vim.list_slice(data.items)
+  self._payload_version = self._payload_version + 1
+  local version = self._payload_version
+  self._preparing = version
+  self._uuid_present = data.uuid_present
+  self._uuid_current = data.uuid_current or self._uuid_current
+  local source = Source.new("list", { payload_version = version })
+  local entries = { list = { nodetype = "container" } }
+  local index = 1
+  ---@return nil
+  local function prepare()
+    if self._disposed or self._preparing ~= version then
       return
     end
-    self:reset_uuid_current(data.uuid_current)
-    self:reset_uuid_present(data.uuid_present)
-  end)
+    local ok, done = pcall(function()
+      local deadline = vim.uv.hrtime() + 2000000
+      while index <= #items do
+        local item = items[index]
+        assert(type(item.uuid) == "string", "list item identities must be strings")
+        local key = "item:" .. item.uuid
+        source:insert("list", key, item.text)
+        source.payloads[key], entries[key] = item, LEAF
+        index = index + 1
+        if vim.uv.hrtime() >= deadline then
+          return false
+        end
+      end
+      return true
+    end)
+    if not ok then
+      self._preparing = nil
+      stl.reporter.error({ from = __module_name__, subject = "list preparation", message = tostring(done) })
+    elseif not done then
+      vim.schedule(prepare)
+    else
+      self._preparing = nil
+      self._items = items
+      self._treeview.source, self._treeview.entries = source, entries
+      self._treeview:invalidate()
+      self:__match__(self._search_pattern:snapshot())
+      if self._uuid_current then
+        self._treeview:focus_key("item:" .. self._uuid_current)
+      end
+      self._composer:mark_result_dirty()
+    end
+  end
+  prepare()
+
   return self
 end
 
@@ -643,11 +641,7 @@ function M:__match__(input)
   local items = self._items
   local matches = {}
 
-  if #input == 0 then
-    for order, item in ipairs(items) do
-      matches[#matches + 1] = { order = order, uuid = item.uuid, score = 0, matches = {} }
-    end
-  else
+  if #input > 0 then
     local case_sensitive = self.flag_case_sensitive:snapshot()
     local use_fuzzy = self.flag_fuzzy:snapshot()
     local use_regex = self.flag_regex:snapshot()
@@ -680,25 +674,40 @@ function M:__match__(input)
       search_result = nil
     end
     if search_result and search_result.lines then
+      local by_line = {}
       for _, entry in ipairs(search_result.lines) do
         local lnum = entry.lnum ---@type integer
-        matches[#matches + 1] = {
-          order = lnum,
-          uuid = items[lnum].uuid,
-          score = entry.score,
-          matches = entry.matches,
-        }
+        local match = by_line[lnum]
+        if match then
+          match.score = math.max(match.score, entry.score)
+          vim.list_extend(match.matches, entry.matches)
+        else
+          match = { order = lnum, uuid = items[lnum].uuid, score = entry.score, matches = entry.matches }
+          by_line[lnum] = match
+          matches[#matches + 1] = match
+        end
       end
     end
   end
 
-  if self._autosort then
+  if self._autosort and #input > 0 then
     table.sort(matches, function(a, b)
       return a.score == b.score and a.order < b.order or a.score > b.score
     end)
   end
 
   self._matches = matches
+  self._matched_input = input
+  local native_matches = {}
+  for _, match in ipairs(matches) do
+    if #match.matches > 0 then
+      native_matches["item:" .. match.uuid] = match
+    end
+  end
+  self._treeview._matches = native_matches
+  if self._treeview.view then
+    self._treeview.view:refresh_decorations()
+  end
 end
 
 ---@protected
@@ -709,10 +718,7 @@ function M:__refresh_uuid_current__()
     return
   end
 
-  local lnum = self._uuid2lnum[uuid] ---@type integer|nil
-  if lnum then
-    self._composer.result:set_lnum_current(lnum)
-  end
+  self._treeview:focus_key("item:" .. uuid)
 end
 
 ---@protected
@@ -720,13 +726,12 @@ end
 function M:__refresh_uuid_present__()
   local uuid = self._uuid_present ---@type string|nil
   if uuid == nil then
+    self._composer.result:set_lnum_present(-1)
     return
   end
 
-  local lnum = self._uuid2lnum[uuid] ---@type integer|nil
-  if lnum then
-    self._composer.result:set_lnum_present(lnum)
-  end
+  local lnum = self._treeview:retrieve_lnum("item:" .. uuid)
+  self._composer.result:set_lnum_present(lnum or -1)
 end
 
 return M

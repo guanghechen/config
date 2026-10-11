@@ -89,6 +89,36 @@ Status: Design。本文定义局部更新的成本边界、测量口径与实现
 临时背压和硬容量失败沿用 [action 契约](action.md#预算背压与恢复)。渲染阶段准备失败保留最近有效显示，不回滚
 已提交 source/state；API 部分写入后的失步恢复另遵循 render 契约。
 
+## 2026-10-11 全面迁移采样
+
+以 `87db4409` 的 List/Find Explorer/共享 surface Lua 入口作为 baseline overlay，共用同一 native library；
+legacy `readdir`/search 实现未变。使用 [`treeview_migration.lua`](../../../__test__/bench/treeview_migration.lua)，
+100×30 attached UI、相同只读 fixture，每组 5 个独立 Neovim 进程交替运行，以下为中位数。
+环境为 macOS 27.0.1 arm64、Neovim 0.12.5 Release、LuaJIT 2.1、libuv 1.53.0。
+数据准备不计时；首开包含模块加载与 producer/native 导入。2 ms 观察器确认目标 Frame 后显式 redraw/flush，
+不测外部 compositor；样本数量不支持生产 p95 结论。原始结果保留于本次交付的 benchmark artifacts。
+过滤和清空通过 Finder 的 `set_content()` 更新真实输入 buffer 与 Observable，避免初始 TextChanged 覆盖测试输入。
+
+| 场景 | 首开 ms，旧→新 | 过滤 ms，旧→新 | 清空过滤 ms，旧→新 | 进程 footprint MiB，旧→新 |
+| --- | --- | --- | --- | --- |
+| 普通 List，1,000 项 | 216.3 → 34.6 | 198.2 → 66.8 | 195.3 → 67.0 | 7.6 → 11.4 |
+| 普通 List，10,000 项 | 224.7 → 72.9 | 203.0 → 71.7 | 207.5 → 75.8 | 15.7 → 47.5 |
+| 普通 List，50,000 项 | 238.7 → 248.2 | 209.5 → 91.2 | 214.7 → 107.0 | 47.3 → 196.8 |
+| Find Explorer，1,000 文件 | 361.3 → 47.6 | 196.8 → 67.9 | 274.4 → 71.7 | 18.4 → 13.9 |
+| Find Explorer，10,000 文件 | 1414.0 → 202.2 | 214.5 → 70.1 | 689.8 → 78.6 | 93.1 → 49.3 |
+
+- 延迟改善包含移除第二层 128 ms render debounce；输入 debounce 仍为 64 ms，不能将全部降幅解释为计算加速。
+- 10,000 文件首开的 main-thread CPU 从 1207.5 ms 降为 54.1 ms；最大 tick gap 的中位数从 734.5 ms 降为 26.4 ms。
+  新旧 cursor/reopen 均为零正文写入；新版重开可显示时间约 2–3 ms。恢复 watch 后尚未接受的 reconciliation 不属于这一显示时点。
+- Footprint 是上述操作后 GC 的 Darwin/libuv `physical_footprint`，包含 allocator 保留空间；不等同于 Lua heap 或 Rust 独占内存。
+  普通 List 使用完整 native data/state，10,000 项的首开 main-thread CPU 为 46.8 ms（旧版 22.5 ms），空间成本仍高于旧平面列表。
+- 50,000 项 List 的首开 main-thread CPU 为 175.6 ms（旧版 57.6 ms），最大 tick gap 中位数为 30.0 ms（旧版 27.9 ms）。
+  Native source 与一个 List State 的独立记账约为 62 MiB，不含 Lua、Neovim buffer 和 allocator 留存。
+  大型 List 的内存回退仍未消除；冷启动接近旧版不能代表迁移的全部性能成本已解决。
+- 首次空 Data 导入直接构建 source/key/sibling 索引，保留完整校验与失败原子性；有状态的数据继续按原契约对齐。
+  同父节点的连续尾部插入批量维护 sibling 索引，外部写入仍使旧 children read epoch 失效。
+  Plain List producer 分片准备；纯文本签名和稀疏可选列减少 Lua 序列化与默认值副本。
+
 ## 实验与实现验收的关系
 
 已有传输与发布实验支持原生交接、候选常驻、分块共享、局部正文和可见区域装饰；它们用于选择实现方向。

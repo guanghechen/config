@@ -137,54 +137,10 @@ local picker = era.m.picker.ListComposer.new({
   flag_regex = flag_regex,
   flag_case_sensitive = flag_case_sensitive,
 
-  render_result = function(composer, bufnr, _, matches)
-    local lines = {} ---@type string[]
-    local uuids = {} ---@type string[]
-    local cwd = dot.path.cwd() ---@type string
-
-    local itemmap = composer._itemmap ---@type table<string, era.m.picker.composer.list.IItem>
-    ---@cast itemmap                    table<string, era.widget.win_history.IItem>
-
-    for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type era.widget.win_history.IItem
-      local relative_filepath = dot.path.relative(cwd, item.data.filepath, "/") ---@type string
-      local text_displayed = string.format("%s %s %s", item.uuid, item.data.icon, relative_filepath) ---@type string
-      lines[#lines + 1] = text_displayed
-      uuids[#uuids + 1] = item.uuid
-    end
-
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-    local nsnr_content = dot.var.nsnr.picker_result
-    local nsnr_matches = dot.var.nsnr.picker_matches
-
-    for lnum, match in ipairs(matches) do
-      local row = lnum - 1 ---@type integer
-      local item = composer._itemmap[match.uuid]
-
-      if item and item.highlights then
-        for _, hl in ipairs(item.highlights) do
-          vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
-        end
-      end
-
-      if match.matches then
-        local offset = ORDINAL_WIDTH + 1 + 1 + 1 -- ordinal + space + icon + space
-        for _, m in ipairs(match.matches) do
-          vim.hl.range(
-            bufnr,
-            nsnr_matches,
-            "m_pk_matches",
-            { row, m.l + offset },
-            { row, m.r + offset },
-            { priority = 30 }
-          )
-        end
-      end
-    end
-
-    local data = { uuids = uuids } ---@type era.m.picker.composer.list.IRenderResultData
-    return data
+  present = function(_, item)
+    local prefix = item.uuid .. " " .. item.data.icon .. " "
+    local path = dot.path.relative(dot.path.cwd(), item.data.filepath, "/")
+    return { label = prefix .. path, match_regions = { { 0, #item.text, #prefix } } }
   end,
 
   on_confirm = function(composer, item)

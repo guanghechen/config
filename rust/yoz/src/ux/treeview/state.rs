@@ -28,7 +28,7 @@ pub(crate) struct State {
     pub data_identity: u64,
     pub root: Root,
     pub display: DisplayOptions,
-    display_payload: Option<Arc<super::memory::Payload>>,
+    display_payload: Arc<[Arc<super::memory::Payload>]>,
     pub cursor: Option<NodeId>,
     pub revision: Revision,
     pub selection_revision: Revision,
@@ -60,11 +60,22 @@ impl State {
         })
     }
 
-    fn display_payload(display: &DisplayOptions) -> Option<Arc<super::memory::Payload>> {
-        display.filter.as_ref().map(|filter| {
+    fn display_payload(display: &DisplayOptions) -> Arc<[Arc<super::memory::Payload>]> {
+        let mut payloads = Vec::new();
+        if let Some(filter) = &display.filter {
             /* Charge a conservative BTree node footprint once per shared allocation. */
-            super::memory::Payload::external(filter.clone(), 64 + filter.len() * 64)
-        })
+            payloads.push(super::memory::Payload::external(
+                filter.clone(),
+                64 + filter.len() * 64,
+            ));
+        }
+        if let Some(label) = &display.context_label {
+            payloads.push(super::memory::Payload::text(label.clone()));
+        }
+        if !display.branch_suffix.is_empty() {
+            payloads.push(super::memory::Payload::text(display.branch_suffix.clone()));
+        }
+        payloads.into()
     }
 
     pub fn set_display(&mut self, display: DisplayOptions) {
@@ -253,6 +264,7 @@ impl State {
         let mut current = Some(node);
         let mut visible = true;
         let mut included = false;
+        let mut depth = 0;
         while let Some(id) = current {
             let Some(data) = source.node(id) else {
                 return false;
@@ -262,15 +274,20 @@ impl State {
                 visible &= self.expanded(source, id).unwrap_or(false);
             }
             if roots.contains(&id) {
-                included = visible;
+                included = visible
+                    && (self.display.mode != Mode::List
+                        || self.display.list_depth.is_none_or(|limit| depth < limit));
             }
             if data
                 .parent
                 .is_some_and(|parent| self.root == Root::ChildrenOf(parent))
             {
-                return visible;
+                return visible
+                    && (self.display.mode != Mode::List
+                        || self.display.list_depth.is_none_or(|limit| depth < limit));
             }
             current = data.parent;
+            depth += 1;
         }
         included
     }

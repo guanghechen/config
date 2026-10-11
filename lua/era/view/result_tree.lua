@@ -300,7 +300,7 @@ function M:retrieve(key)
 end
 
 ---@param key                           ?string
----@return table|nil
+---@return table|string|nil
 function M:data(key)
   local read = self:_read()
   local version = read and self._versions[read.header.data_revision]
@@ -310,6 +310,18 @@ function M:data(key)
     return version and version.data[key]
   end
   return self.source:get(key)
+end
+
+---Opaque action payloads retain caller identity while presentation metadata is copied.
+---@param key                           ?string
+---@return any
+function M:payload(key)
+  local read = self:_read()
+  if read then
+    local version = self._versions[read.header.data_revision]
+    return version and version.payloads[key]
+  end
+  return self.source.payloads[key]
 end
 
 ---@return integer
@@ -844,14 +856,22 @@ function M:_import(snapshot)
           local needed = default == nil
           if not needed then
             for index = first, last do
-              if values[index] ~= default then
+              if values[index] ~= nil and values[index] ~= default then
                 needed = true
                 break
               end
             end
           end
           if needed then
-            columns[name] = vim.list_slice(values, first, last)
+            local column = {}
+            for index = first, last do
+              local value = values[index]
+              if value == nil then
+                value = default
+              end
+              column[#column + 1] = value
+            end
+            columns[name] = column
           end
         end
         local reply = upload:append(columns)
@@ -882,7 +902,7 @@ end
 function M:_display(request)
   local source = self._data:source()
   local root = source:id(request.rootuuid or self.source.root)
-  local filtered = request.mode == "list" or request.only_matched
+  local filtered = not request.all_rows and (request.mode == "list" or request.only_matched)
   local signature = {
     revision = filtered and source:revision() or nil,
     root = request.rootuuid,
@@ -892,6 +912,7 @@ function M:_display(request)
     selected = request.only_selected,
     matched = request.only_matched,
     orders = filtered and request.orders or nil,
+    all_rows = request.all_rows,
     list_text = request.list_text,
   }
   local same = self._configured ~= nil
@@ -1174,14 +1195,22 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
     local base = data and data.filepath and #data.filepath - #data.basename - offset or -offset
     local length = data and data.basename and offset + #data.basename or #label
     for _, point in ipairs(match.matches) do
-      local first, last = math.max(0, point.l - base), math.min(length, point.r - base)
-      if first < last then
-        vim.api.nvim_buf_set_extmark(view.bufnr, namespace, row, col + first, {
-          ephemeral = true,
-          end_col = col + last,
-          hl_group = "TreeviewMatch",
-          priority = 180,
-        })
+      local regions = node.fields.match_regions or { { base, base + length, 0 } }
+      for _, region in ipairs(regions) do
+        local first = math.max(point.l, region[1]) - region[1] + region[3]
+        local last = math.min(point.r, region[2]) - region[1] + region[3]
+        if node.fields.match_regions then
+          first, last = first + offset, last + offset
+        end
+        first, last = math.max(0, first), math.min(#label, last)
+        if first < last then
+          vim.api.nvim_buf_set_extmark(view.bufnr, namespace, row, col + first, {
+            ephemeral = true,
+            end_col = col + last,
+            hl_group = "TreeviewMatch",
+            priority = 180,
+          })
+        end
       end
     end
   end

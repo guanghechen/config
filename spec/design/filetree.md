@@ -7,7 +7,8 @@ Explorer 的输入与 UI 行为见 [Explorer Design](feat/explorer.md)。
 ## 模块与所有权
 
 - 当前只支持真实 filesystem 与最新 Neovim；不为其他宿主或未接入的 VFS 预留适配层。
-  默认 Explorer 使用本模块；Picker、Searcher、Diffview 继续使用各自现有的 Lua API。
+  Explorer 与 Find Explorer 使用本模块；文件 Picker 的真实 IO 也使用 native Jobs。
+  Picker、Searcher、Diffview 的逻辑结果仍通过 [通用 Treeview records](../../doc/spec/treeview/results.md) 表达。
 - 使用现有 `yoz` crate：Rust 位于 `rust/yoz/src/ux/filetree/`，binding 位于其 `lua/` 子模块，
   Lua facade 位于 `lua/ux/filetree/`，入口为 `yoz.ux.filetree` / `require("ux.filetree")`。
 - 依赖为 Filetree → Treeview 与现有 Rust fs/git 工具。Treeview 不导入 Filetree、Lua 或 Neovim。
@@ -36,6 +37,7 @@ Explorer 的输入与 UI 行为见 [Explorer Design](feat/explorer.md)。
 | native `data:is_settled()` | 在请求接受后观察 owner 队列及执行中的整轮工作、active reads/query、待调度扫描/探测与 dirty demand 是否已收尾；不表示 IO 成功或 UI 已发布 |
 | `data:inspect(source, node)` | 按需返回该版本的资源信息；需要新 IO 的详情查询另返回带身份校验的 Future |
 | `data:details(resource)` | Worker 校验资源及祖先 identity，返回当前 size、权限、八进制 mode 与 RFC3339 日期 |
+| `data:listing(frame, first, last, parent_context?)` | Worker 格式化最多 512 行的已捕获 metadata；权限、size、日期、owner/group 不重新 stat 或扫描目录。`parent_context=true` 时上下文行使用该 Frame 中的父目录 metadata，保留行 NodeId |
 | `data:subscribe({on_effect?, on_source_changed?})` | 观察 effects 与 source revision；返回可幂等取消的订阅 |
 | `data:start_operation(plan)` | 接收明确源项、目标及可选的原任务清理资格，返回文件 Job，不自行选择操作源 |
 | `data:check_transfer_target(source, target)` | Worker 核对源和已存在目标祖先、拒绝 physical self-descendant，供补父目录前检查 |

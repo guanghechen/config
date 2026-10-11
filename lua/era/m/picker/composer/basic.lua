@@ -107,9 +107,8 @@ local __highlights__ = {
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
----@field public result_isselected      ?era.m.picker.result.IIsSelected
 ---
----@field public result_tree            ?era.view.ResultTree
+---@field public result_tree            era.view.ResultTree|era.view.Directory
 ---@field public preview_tree           ?fun(): era.view.picker.preview.ITreeTarget|nil
 ---@field public render_preview         ?era.m.picker.preview.IDraw
 ---@field public render_result          era.m.picker.result.IDraw
@@ -177,7 +176,6 @@ function M.new(props)
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean
-  local result_isselected = props.result_isselected ---@type era.m.picker.result.IIsSelected|nil
 
   local render_preview = props.render_preview ---@type era.m.picker.preview.IDraw|nil
   local render_result = props.render_result ---@type era.m.picker.result.IDraw
@@ -240,7 +238,6 @@ function M.new(props)
       end
       return render_result(bufnr)
     end,
-    isselected = result_isselected,
     keymaps = self:__resolve_keymaps_result__(
       flags,
       flags_start_index,

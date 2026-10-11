@@ -173,7 +173,11 @@ impl Filetree {
         self.data.submit(Action::CreateState(
             root.unwrap_or(Root::ChildrenOf(self.root)),
             DisplayOptions {
-                list_text: ListText::Ancestry,
+                list_text: if display.list_depth.is_some() {
+                    display.list_text
+                } else {
+                    ListText::Ancestry
+                },
                 sort: Sort::Source,
                 branches_first: false,
                 ..display

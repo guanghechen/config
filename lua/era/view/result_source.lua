@@ -1,35 +1,40 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.result_source" ---@type string
+local EMPTY_CHILDREN = {}
 
 ---Producer records for a result set. UI state and row topology belong to ux.treeview.
 ---@class era.view.ResultSource
 ---@field public root                   string
 ---@field public revision               integer
----@field public records                table<string, {key: string, parent: string|nil, data: table, children: string[]}>
+---@field public records                table<string, {parent: string|nil, data: table|string, children: string[]|nil}>
+---@field public payloads               table<string, any> Opaque callback values, separate from display metadata.
 local M = {}
 M.__index = M
 
 ---@param root                          string
----@param data                          ?table
+---@param data                          ?table|string
 ---@return era.view.ResultSource
 function M.new(root, data)
   return setmetatable({
     root = root,
     revision = 0,
-    records = { [root] = { key = root, data = data or {}, children = {} } },
+    payloads = {},
+    records = { [root] = { data = data or {} } },
   }, M)
 end
 
 ---@return nil
 function M:clear()
   local root = self.records[self.root]
-  self.records = { [self.root] = { key = self.root, data = root and root.data or {}, children = {} } }
+  self.records = { [self.root] = { data = root and root.data or {} } }
+  self.payloads = {}
   self.revision = self.revision + 1
 end
 
 ---@return nil
 function M:dispose()
   self.records = {}
+  self.payloads = {}
 end
 
 ---@param key                           ?string
@@ -39,7 +44,7 @@ function M:contains(key)
 end
 
 ---@param key                           ?string
----@return table|nil
+---@return table|string|nil
 function M:get(key)
   local record = key and self.records[key]
   return record and record.data
@@ -56,25 +61,26 @@ end
 ---@return string[]|nil
 function M:children(key)
   local record = self.records[key]
-  return record and record.children
+  return record and (record.children or EMPTY_CHILDREN)
 end
 
 ---@param parent                        string
 ---@param key                           string
----@param data                          table
+---@param data                          table|string
 ---@param index                         ?integer
 ---@return era.view.ResultSource
 function M:insert(parent, key, data, index)
   assert(not self.records[key], "duplicate result key: " .. key)
   local owner = assert(self.records[parent], "missing result parent: " .. parent)
-  self.records[key] = { key = key, parent = parent, data = data, children = {} }
+  self.records[key] = { parent = parent, data = data }
+  owner.children = owner.children or {}
   table.insert(owner.children, index or (#owner.children + 1), key)
   self.revision = self.revision + 1
   return self
 end
 
 ---@param key                           string
----@param data                          table
+---@param data                          table|string
 ---@return nil
 function M:update(key, data)
   assert(self.records[key], "missing result key: " .. key).data = data
@@ -101,12 +107,13 @@ function M:move(key, parent, index)
     end
   end
   record.parent = parent
+  target.children = target.children or {}
   table.insert(target.children, index or (#target.children + 1), key)
   self.revision = self.revision + 1
 end
 
 ---@param root                          ?string
----@param visit                         fun(key: string, data: table): nil
+---@param visit                         fun(key: string, data: table|string): nil
 ---@return nil
 function M:walk(root, visit)
   local pending = { root or self.root }
@@ -147,6 +154,7 @@ function M:remove(key)
   end
   for _, child in ipairs(keys) do
     self.records[child] = nil
+    self.payloads[child] = nil
   end
   self.revision = self.revision + 1
 end

@@ -307,10 +307,18 @@ pub enum ListText {
 pub struct DisplayOptions {
     pub mode: Mode,
     pub list_text: ListText,
+    /** Maximum source depth below display roots in List mode; zero lists direct entries only. */
+    pub list_depth: Option<usize>,
+    /** Optional leading row for a ChildrenOf root in List mode; its resource identity is unchanged. */
+    pub context_label: Option<Arc<str>>,
+    /** Display and match a suffix on expandable List labels. */
+    pub branch_suffix: Arc<str>,
     pub pattern: Arc<str>,
     /** Ordered result membership; Tree keeps connecting ancestors, List follows this order. */
     pub filter: Option<Arc<BTreeMap<NodeId, usize>>>,
     pub case_sensitive: bool,
+    pub fuzzy: bool,
+    pub regex: bool,
     pub show_hidden: bool,
     pub selected_only: bool,
     pub compress: bool,
@@ -323,9 +331,14 @@ impl Default for DisplayOptions {
         Self {
             mode: Mode::Tree,
             list_text: ListText::Label,
+            list_depth: None,
+            context_label: None,
+            branch_suffix: "".into(),
             pattern: "".into(),
             filter: None,
             case_sensitive: false,
+            fuzzy: false,
+            regex: false,
             show_hidden: true,
             selected_only: false,
             compress: false,

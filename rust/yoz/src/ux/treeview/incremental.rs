@@ -641,6 +641,7 @@ fn subtree(
             rows.push(Row {
                 id,
                 label: node.data.label.clone(),
+                label_payload: None,
                 text: None,
                 chain: (!chain.is_empty()).then(|| chain.into()),
                 depth: if tree { walk.depth } else { 0 },
@@ -894,6 +895,10 @@ pub(crate) fn project(
 ) -> Result<Option<LayoutUpdate>> {
     if state.display != previous.state.display
         || state.root != previous.state.root
+        /* Bounded Lists rebuild only their bounded scope, then reconcile unchanged rows. */
+        || state.display.list_depth.is_some()
+        || state.display.context_label.is_some()
+        || !state.display.branch_suffix.is_empty()
         || dirty.full
         || matches!(&state.root, Root::ChildrenOf(id) if dirty.expanded.iter().chain(&dirty.selected).any(|node| source.within(*node, *id)))
         || (dirty.changes.is_empty() && dirty.expanded.is_empty() && dirty.selected.is_empty())

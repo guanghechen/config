@@ -81,6 +81,48 @@ t:test("ordered List filtering retains Tree ancestors and native selection acros
   t.assert_eq(0, #errors, vim.inspect(errors))
 end)
 
+t:test("sparse presentation columns preserve defaults across import chunks and later updates", function()
+  local source = Source.new("root", { label = "root" })
+  local special = { ["1"] = true, ["513"] = true }
+  local tree = Tree.new({
+    name = "sparse presentation",
+    tree = source,
+    present = function(key, data)
+      return {
+        label = data.label,
+        icon = special[key] and "*" or nil,
+        score = special[key] and 5 or nil,
+        fields = special[key] and { value = key } or nil,
+      }
+    end,
+  })
+  t:defer(function()
+    tree:dispose()
+  end)
+  for index = 1, 600 do
+    local key = tostring(index)
+    source:insert("root", key, { label = key })
+    tree:insert(key, { nodetype = "leaf" })
+  end
+  await(tree:publish({ mode = "list", rootuuid = "root", all_rows = true }))
+  local before = tree:frame()
+  for _, key in ipairs({ "1", "2", "256", "257", "512", "513", "514", "600" }) do
+    local node = before:node(before:source():id(key))
+    t.assert_eq(special[key] and "*" or nil, node.icon)
+    t.assert_eq(special[key] and key or nil, node.fields.value)
+  end
+  special = { ["2"] = true }
+  tree:invalidate()
+  await(tree:publish({ mode = "list", rootuuid = "root", all_rows = true }))
+  for _, key in ipairs({ "1", "2", "513" }) do
+    local frame = tree:frame()
+    local node = frame:node(frame:source():id(key))
+    t.assert_eq(special[key] and "*" or nil, node.icon)
+    t.assert_eq(special[key] and key or nil, node.fields.value)
+  end
+  t.assert_eq("*", before:node(before:source():id("513")).icon)
+end)
+
 t:test("foldempty compacts filtered directory chains and restores their full topology", function()
   local records = {
     { "rust", "root", "container", "rust" },

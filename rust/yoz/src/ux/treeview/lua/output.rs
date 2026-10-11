@@ -281,6 +281,9 @@ pub(super) fn display(lua: &Lua, value: &DisplayOptions) -> LuaResult<LuaTable> 
         },
     )?;
     result.set("pattern", value.pattern.as_ref())?;
+    result.set("list_depth", value.list_depth)?;
+    result.set("context_label", value.context_label.as_deref())?;
+    result.set("branch_suffix", value.branch_suffix.as_ref())?;
     if let Some(filter) = &value.filter {
         let mut ordered: Vec<_> = filter.iter().collect();
         ordered.sort_unstable_by_key(|(_, rank)| **rank);
@@ -290,6 +293,8 @@ pub(super) fn display(lua: &Lua, value: &DisplayOptions) -> LuaResult<LuaTable> 
         )?;
     }
     result.set("case_sensitive", value.case_sensitive)?;
+    result.set("fuzzy", value.fuzzy)?;
+    result.set("regex", value.regex)?;
     result.set("show_hidden", value.show_hidden)?;
     result.set("selected_only", value.selected_only)?;
     result.set("compress", value.compress)?;

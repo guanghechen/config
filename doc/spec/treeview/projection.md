@@ -44,7 +44,7 @@ Tree 保留 source 层级，在 display roots 内应用 filter、兄弟排序、
 不越过 display roots 或自动展开已折叠的分支。Hidden 与 selected-only 的优先级仍遵循
 [selection 契约](selection.md#selected-only-与-hidden)，连接线与压缩遵循 [indentline](indentline.md)。
 
-List 的候选范围递归覆盖 display roots，不受 Tree 折叠影响；filter 决定结果成员，sort 决定平铺顺序。
+List 的候选范围默认递归覆盖 display roots，不受 Tree 折叠影响；filter 决定结果成员，sort 决定平铺顺序。
 递归候选范围不要求输出按 DFS 排列。普通文本匹配不强制加入只用于连接的祖先行；selected-only
 要求保留的必要祖先与 pending 范围仍遵循 selection 契约。
 
@@ -55,6 +55,13 @@ List 的候选范围递归覆盖 display roots，不受 Tree 折叠影响；filt
 - List 无视觉缩进、连接线或压缩，不支持 Tree 专用结构导航与折叠动作；切回 Tree 使用保存的展开状态。
 - 未加载范围仍报告真实的 partial/loading/error，按现有 children 调度补载。不能仅因当前缓存已算完，
   就把尚未加载的候选范围声明为完整；有效补载提交更新 tree 后使缓存失效。
+
+`list_depth` 可限制候选范围：display roots 深度为 0，`ChildrenOf(root)` 配合 0 只列直接 children。
+超出边界的已加载后代不参与匹配；边界节点不产生 children 读取或 watch 需求。ChildrenOf 入口自身仍需加载直接 children。
+有界 List 的结构更新只重算这段范围，再复用未变行块；不宣称该路径已达到局部 `O(D)`。
+
+`pattern` 默认 literal；`regex=true` 优先于 `fuzzy=true`。Fuzzy 先尝试 literal，再按 Unicode 字符顺序匹配，
+viewport spans 使用原始 UTF-8 byte offsets。Matcher 在 worker 构造并随完整输入缓存，非法 regex 保留最近有效 Frame 并报告错误。
 
 Filter、sort 和模式切换不改变 selection 标记。递归 action 的输入祖先归并仍使用 source 关系，
 不会因平铺、排序或隐藏了部分后代而缩小为屏幕上的几行；自身 action 只去重实际输入 ID，不归并父子目标。
@@ -73,6 +80,15 @@ Tree 模式与既有压缩链规则不变。正文变化推进 text revision，�
 祖先文本使用共享片段与累计长度，实际导出才展开完整字符串；构建、读取和最后引用释放必须深度安全。
 叶子 rename 只处理本行；目录 rename/reparent 处理实际依赖它的后代正文，排除在 display root 外的祖先变化不改正文。
 RenderPlan、viewport spans 与字节预算使用同一文本来源，计入真实输出字节，不为每节点缓存完整路径字符串。
+
+`context_label` 为 `ChildrenOf + List + list_text=label` 提供一个位于首行的入口上下文。
+它保留入口 NodeId，以给定 label 参与普通 pattern/filter，不改写 source label，不建立虚拟资源。
+该行独立于 children 的排序与 selected-only 成员，用途及动作由 consumer 决定；Find Explorer 用它显示 `../` 并执行 parent 导航。
+标签限 4096 bytes，不含 control characters；标签变化推进 text revision，并在相邻或跨帧 RenderPlan 中更新正文。
+
+List label 可通过 `branch_suffix` 为可展开节点追加至多 32 bytes 的展示标记；它同时参与匹配与正文，不修改 source label。
+该选项要求 `list_text=label`，上下文行使用自己的完整标签。Find Explorer 使用 `/`，因此 `folder/` 查询和 UTF-8 spans
+与实际显示一致。派生 label 的共享存储计入 Rust 预算；标签或 suffix 变化按正文更新发布。
 
 ## 异步计算与显示
 

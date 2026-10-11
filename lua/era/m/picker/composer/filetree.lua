@@ -359,82 +359,7 @@ function M.new(props)
       on_attached(self, data.filepath)
     end,
     create_node = function()
-      local _, filedata = self:__retrieve_file__()
-      if filedata == nil then
-        return
-      end
-
-      local rootdata = self:__retrieve_rootdata__() ---@type era.view.result_paths.IFile|nil
-      if rootdata == nil then
-        return
-      end
-
-      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
-      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
-        return
-      end
-
-      local rootpath = rootdata.filepath ---@type string
-      local nodepath = filedata.filepath ---@type string
-      local relpath = yoz.canonical_path.relative(rootpath, nodepath, false) ---@type string
-      if filedata.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. "/" ---@type string
-      end
-
-      ---@param filepath                string|nil
-      ---@return nil
-      local function on_confirmed(filepath)
-        if filepath == nil or filepath == "" then
-          return
-        end
-
-        local isdir = yoz.canonical_path.is_dirpath(filepath) ---@type boolean
-        filepath = yoz.canonical_path.resolve(rootpath, filepath, true) ---@type string
-        local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-
-        if yoz.path.is_exist(os_filepath) then
-          stl.reporter.error({
-            from = fullname,
-            subject = "create_node",
-            message = "The filepath is already exist.",
-            details = { filepath = filepath, isdir = isdir },
-          })
-          return
-        end
-
-        if isdir then
-          stl.env.mkdirs(os_filepath, true)
-          treeview:insert_dirpath(filepath)
-        else
-          stl.env.mkdirs(os_filepath, false)
-          vim.fn.writefile({}, os_filepath)
-          treeview:insert_filepath(filepath, false)
-
-          local uuid = require("era.view.result_paths").key(filepath)
-          table.insert(self._uuids_file, uuid)
-          table.insert(self._uuids_order, uuid)
-        end
-
-        scheduler_match:schedule()
-      end
-
-      ---@return nil
-      local function handle()
-        vim.ui.input({
-          prompt = " New file / directory ",
-          default = relpath,
-          relative = "cursor",
-        }, function(filepath)
-          on_confirmed(filepath)
-        end)
-      end
-
-      if winnr_current == winnr_result then
-        handle()
-      else
-        vim.api.nvim_win_call(winnr_result, handle)
-      end
+      self:__file_operation__("create")
     end,
     open_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -472,320 +397,13 @@ function M.new(props)
       end
     end,
     remove_node = function()
-      local fileuuid, filedata = self:__retrieve_file__()
-      if fileuuid == nil or filedata == nil then
-        return
-      end
-
-      local rootdata = self:__retrieve_rootdata__() ---@type era.view.result_paths.IFile|nil
-      if rootdata == nil then
-        return
-      end
-
-      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
-      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
-        return
-      end
-
-      local nodepath = filedata.filepath ---@type string
-      local rootpath = rootdata.filepath ---@type string
-      local relpath = yoz.canonical_path.relative(rootpath, nodepath, false) ---@type string
-      if filedata.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. "/" ---@type string
-      end
-
-      ---@param answer                  string|nil
-      ---@return nil
-      local function on_confirmed(answer)
-        if answer == nil then
-          return
-        end
-
-        answer = vim.trim(answer:lower()) ---@type string
-        if answer:sub(1, 1) ~= "y" then
-          return
-        end
-
-        local isdir = filedata.filetype == "directory" ---@type boolean
-        local os_nodepath = yoz.canonical_path.to_os_path(nodepath) ---@type string
-
-        local success = false ---@type boolean
-        if isdir then
-          success = vim.fn.delete(os_nodepath, "rf") == 0
-        else
-          success = vim.fn.delete(os_nodepath) == 0
-        end
-
-        if not success then
-          stl.reporter.error({
-            from = fullname,
-            subject = "remove_node",
-            message = string.format("Failed to delete %s.", isdir and "directory" or "file"),
-            details = { filepath = nodepath, isdir = isdir },
-          })
-          return
-        end
-
-        treeview:remove(fileuuid)
-        filetree:remove(fileuuid)
-        self:__refresh_file_indexes__()
-        scheduler_match:schedule()
-      end
-
-      ---@return nil
-      local function handle()
-        vim.ui.input({
-          inputtype = "confirmation",
-          prompt = string.format(" Delete '%s' ", relpath),
-          relative = "cursor",
-        }, function(answer)
-          on_confirmed(answer)
-        end)
-      end
-
-      if winnr_current == winnr_result then
-        handle()
-      else
-        vim.api.nvim_win_call(winnr_result, handle)
-      end
+      self:__file_operation__("delete")
     end,
     rename_node = function()
-      local _, filedata = self:__retrieve_file__()
-      if filedata == nil then
-        return
-      end
-
-      local rootdata = self:__retrieve_rootdata__() ---@type era.view.result_paths.IFile|nil
-      if rootdata == nil then
-        return
-      end
-
-      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
-      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
-        return
-      end
-
-      local filepath = filedata.filepath ---@type string
-      local rootpath = rootdata.filepath ---@type string
-      local dirname = yoz.canonical_path.dirname(filepath, false) ---@type string
-      local filename = yoz.canonical_path.basename(filepath) ---@type string
-
-      ---@param next_filename           string|nil
-      ---@return nil
-      local function on_confirmed(next_filename)
-        if next_filename == nil or next_filename == "" then
-          return
-        end
-
-        local next_filepath = next_filename:match("[/\\]") and yoz.canonical_path.resolve(rootpath, next_filename, true)
-          or yoz.canonical_path.join(dirname, next_filename, true)
-
-        -- Validate that source and destination types match
-        local source_is_dir = filedata.filetype == "directory"
-        local dest_is_dir = yoz.canonical_path.is_dirpath(next_filepath)
-
-        if source_is_dir ~= dest_is_dir then
-          local source_type = source_is_dir and "directory" or "file"
-          local dest_type = dest_is_dir and "directory" or "file"
-          stl.reporter.error({
-            from = fullname,
-            subject = "rename_node",
-            message = string.format(
-              "Cannot rename %s to %s path. %s nodes can only be renamed to %s paths.",
-              source_type,
-              dest_type,
-              source_type:gsub("^%l", string.upper),
-              source_type
-            ),
-            details = { from = filepath, to = next_filepath, source_type = source_type, dest_type = dest_type },
-          })
-          return
-        end
-
-        -- Ensure destination directory exists
-        local dest_dir = yoz.canonical_path.dirname(next_filepath, false) ---@type string
-        local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-        local os_next_filepath = yoz.canonical_path.to_os_path(next_filepath) ---@type string
-        local os_dest_dir = yoz.canonical_path.to_os_path(dest_dir) ---@type string
-        if not yoz.path.is_exist(os_dest_dir) then
-          stl.env.mkdirs(os_dest_dir, true)
-        end
-
-        if yoz.path.is_exist(os_next_filepath) then
-          -- Ask user if they want to overwrite
-          vim.ui.select({ "No", "Yes" }, {
-            prompt = string.format('File "%s" already exists. Overwrite?', next_filename),
-            format_item = function(item)
-              return item
-            end,
-          }, function(choice)
-            if choice == "Yes" then
-              local isdir = filedata.filetype == "directory"
-              local success = era.fn.rename({
-                from = os_filepath,
-                to = os_next_filepath,
-                isdir = isdir,
-                force = true,
-              })
-
-              if success then
-                self:__update_tree_after_rename__(filepath, next_filepath, isdir)
-              end
-            end
-          end)
-          return
-        end
-
-        local isdir = filedata.filetype == "directory"
-        local success = era.fn.rename({
-          from = os_filepath,
-          to = os_next_filepath,
-          isdir = isdir,
-        })
-
-        if not success then
-          -- Error already reported by era.fn.rename, just return
-          return
-        end
-
-        self:__update_tree_after_rename__(filepath, next_filepath, isdir)
-      end
-
-      ---@return nil
-      local function handle()
-        vim.ui.input({
-          prompt = string.format(' Rename "%s" to: ', filename),
-          default = filename,
-          relative = "cursor",
-        }, function(next_filename)
-          on_confirmed(next_filename)
-        end)
-      end
-
-      if winnr_current == winnr_result then
-        handle()
-      else
-        vim.api.nvim_win_call(winnr_result, handle)
-      end
+      self:__file_operation__("rename")
     end,
     move_node = function()
-      local _, filedata = self:__retrieve_file__()
-      if filedata == nil then
-        return
-      end
-
-      local rootdata = self:__retrieve_rootdata__() ---@type era.view.result_paths.IFile|nil
-      if rootdata == nil then
-        return
-      end
-
-      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
-      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
-        return
-      end
-
-      local filepath = filedata.filepath ---@type string
-
-      ---@param next_filepath           string|nil
-      ---@return nil
-      local function on_confirmed(next_filepath)
-        if next_filepath == nil or next_filepath == "" then
-          return
-        end
-
-        -- Canonicalize the destination at UI ingress.
-        next_filepath = yoz.canonical_path.from_os_path(next_filepath, true)
-
-        -- Validate that source and destination types match
-        local source_is_dir = filedata.filetype == "directory"
-        local dest_is_dir = yoz.canonical_path.is_dirpath(next_filepath)
-
-        if source_is_dir ~= dest_is_dir then
-          local source_type = source_is_dir and "directory" or "file"
-          local dest_type = dest_is_dir and "directory" or "file"
-          stl.reporter.error({
-            from = fullname,
-            subject = "move_node",
-            message = string.format(
-              "Cannot move %s to %s path. %s nodes can only be moved to %s paths.",
-              source_type,
-              dest_type,
-              source_type:gsub("^%l", string.upper),
-              source_type
-            ),
-            details = { from = filepath, to = next_filepath, source_type = source_type, dest_type = dest_type },
-          })
-          return
-        end
-
-        -- Ensure destination directory exists
-        local dest_dir = yoz.canonical_path.dirname(next_filepath, false) ---@type string
-        local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
-        local os_next_filepath = yoz.canonical_path.to_os_path(next_filepath) ---@type string
-        local os_dest_dir = yoz.canonical_path.to_os_path(dest_dir) ---@type string
-        if not yoz.path.is_exist(os_dest_dir) then
-          stl.env.mkdirs(os_dest_dir, true)
-        end
-
-        if yoz.path.is_exist(os_next_filepath) then
-          -- Ask user if they want to overwrite
-          vim.ui.select({ "No", "Yes" }, {
-            prompt = string.format('File "%s" already exists. Overwrite?', yoz.canonical_path.basename(next_filepath)),
-            format_item = function(item)
-              return item
-            end,
-          }, function(choice)
-            if choice == "Yes" then
-              local isdir = filedata.filetype == "directory"
-              local success = era.fn.rename({
-                from = os_filepath,
-                to = os_next_filepath,
-                isdir = isdir,
-                force = true,
-              })
-
-              if success then
-                self:__update_tree_after_rename__(filepath, next_filepath, isdir)
-              end
-            end
-          end)
-          return
-        end
-
-        local isdir = filedata.filetype == "directory"
-        local success = era.fn.rename({
-          from = os_filepath,
-          to = os_next_filepath,
-          isdir = isdir,
-        })
-
-        if not success then
-          -- Error already reported by era.fn.rename, just return
-          return
-        end
-
-        self:__update_tree_after_rename__(filepath, next_filepath, isdir)
-      end
-
-      ---@return nil
-      local function handle()
-        vim.ui.input({
-          prompt = string.format(' Move "%s" to: ', yoz.canonical_path.basename(filepath)),
-          default = filepath,
-          relative = "cursor",
-        }, function(next_filepath)
-          on_confirmed(next_filepath)
-        end)
-      end
-
-      if winnr_current == winnr_result then
-        handle()
-      else
-        vim.api.nvim_win_call(winnr_result, handle)
-      end
+      self:__file_operation__("move")
     end,
     toggle_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -1369,12 +987,6 @@ function M.new(props)
     finder_title = title,
 
     result_number = true,
-
-    ---@type era.m.picker.result.IIsSelected
-    result_isselected = function(_, lnum)
-      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-      return uuid ~= nil and treeview:isselected(uuid)
-    end,
 
     ---@type era.m.picker.result.IDraw
     result_tree = treeview,
@@ -2105,11 +1717,150 @@ function M:__retrieve_file__()
   return fileuuid, data
 end
 
+---@param kind                          "create"|"delete"|"rename"|"move"
+---@return nil
+function M:__file_operation__(kind)
+  local fileuuid, filedata = self:__retrieve_file__()
+  local rootdata = self:__retrieve_rootdata__()
+  local winnr = self.result:get_winnr()
+  if not fileuuid or not filedata or not rootdata or not winnr or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+  if self._file_operation_busy then
+    stl.reporter.warn({ from = self.fullname, message = "A file operation is already running" })
+    return
+  end
+  local record = self._filetree.records[fileuuid]
+  local sourcepath = filedata.filepath
+  local isdir = filedata.filetype == "directory"
+  local Jobs = require("era.m.filetree.jobs")
+  local Future = require("stl.c.future")
+  self._file_operation_busy = true
+  local future = stl.async.run_future(function()
+    local captured = Jobs.capture(kind == "create" and rootdata.filepath or sourcepath):await()
+    if self._disposed then
+      return
+    end
+    local resource = captured.resource
+    if kind ~= "create" and resource:info().directory ~= isdir then
+      error("File type changed before the operation: " .. sourcepath, 0)
+    end
+    local filename = yoz.canonical_path.basename(sourcepath)
+    local options
+    if kind == "create" then
+      local relative = yoz.canonical_path.relative(rootdata.filepath, sourcepath, false)
+      options = { prompt = " New file / directory ", default = relative .. (isdir and "/" or "") }
+    elseif kind == "delete" then
+      local label = yoz.canonical_path.relative(rootdata.filepath, sourcepath, false)
+      options = { inputtype = "confirmation", prompt = "Delete '" .. label .. (isdir and "/" or "") .. "'?" }
+    else
+      options = {
+        prompt = string.format(' %s "%s" to: ', kind == "rename" and "Rename" or "Move", filename),
+        default = (kind == "rename" and filename or sourcepath) .. (isdir and "/" or ""),
+      }
+    end
+    local input = Future.new(function(resolve)
+      vim.api.nvim_win_call(winnr, function()
+        vim.ui.input(vim.tbl_extend("force", options, { relative = "cursor" }), resolve)
+      end)
+    end):await()
+    if not input or input == "" or self._disposed then
+      return
+    end
+    local result, destination
+    if kind == "create" then
+      local canonical = yoz.canonical_path.resolve(rootdata.filepath, input, true)
+      isdir = yoz.canonical_path.is_dirpath(canonical)
+      destination = yoz.canonical_path.from_os_path(canonical, false)
+      local relative = yoz.canonical_path.relative(rootdata.filepath, destination, false)
+      result = Jobs.create(captured.data, resource, relative, isdir):await()
+    elseif kind == "delete" then
+      local answer = vim.trim(input):lower()
+      if answer ~= "y" and answer ~= "yes" then
+        return
+      end
+      result = Jobs.run(captured.data, { kind = "delete", source = resource:source(), nodes = { resource:node() } })
+        :await()
+    else
+      if kind == "rename" then
+        local name = yoz.canonical_path.from_os_path(input, false)
+        destination = name:find("/", 1, true) and yoz.canonical_path.resolve(rootdata.filepath, input, true)
+          or yoz.canonical_path.join(yoz.canonical_path.dirname(sourcepath, false), input, true)
+      else
+        destination = yoz.canonical_path.from_os_path(input, true)
+      end
+      if isdir ~= yoz.canonical_path.is_dirpath(destination) then
+        error("Source and destination must have the same file type; directory paths end with /", 0)
+      end
+      destination = yoz.canonical_path.from_os_path(destination, false)
+      if destination == sourcepath then
+        return
+      end
+      result = Jobs.move(captured.data, resource, destination, function(confirmation)
+        return Future.new(function(resolve)
+          vim.ui.select({ "No", "Yes" }, {
+            prompt = string.format('File "%s" already exists. Overwrite?', confirmation.target_label),
+          }, function(choice)
+            resolve(choice == "Yes")
+          end)
+        end)
+      end):await()
+    end
+    local item = result.items[1]
+    if result.error then
+      error(result.error, 0)
+    end
+    if not result.success then
+      if kind == "create" and not result.status.cancelled then
+        error("The filepath already exists or creation was incomplete", 0)
+      end
+      return
+    end
+    if item.sync_error then
+      stl.reporter.warn({ from = self.fullname, message = item.sync_error.message })
+    end
+    -- An old Frame may own the IO target without owning a record in the current producer.
+    if self._disposed or not record or self._filetree.records[fileuuid] ~= record then
+      return
+    end
+    if self._treeview:selection_pending() then
+      local ready = self._treeview:ready():await()
+      if ready.kind == "Rejected" then
+        error(ready.error, 0)
+      end
+      if self._disposed or self._filetree.records[fileuuid] ~= record then
+        return
+      end
+    end
+    if kind == "create" then
+      if isdir then
+        self._treeview:insert_dirpath(destination)
+      else
+        self._treeview:insert_filepath(destination, false)
+      end
+      self:__refresh_file_indexes__()
+      self._scheduler_match:schedule()
+    elseif kind == "delete" then
+      self._treeview:remove(fileuuid)
+      self._filetree:remove(fileuuid)
+      self:__refresh_file_indexes__()
+      self._scheduler_match:schedule()
+    else
+      self:__update_tree_after_rename__(sourcepath, item.target or destination)
+    end
+  end)
+  future:finally(function(ok, error)
+    self._file_operation_busy = false
+    if not ok then
+      stl.reporter.error({ from = __module_name__, subject = kind, message = tostring(error) })
+    end
+  end)
+end
+
 ---@param from                          string Canonical filepath.
 ---@param to                            string Canonical filepath.
----@param isdir                         boolean
 ---@return nil
-function M:__update_tree_after_rename__(from, to, isdir)
+function M:__update_tree_after_rename__(from, to)
   from = yoz.canonical_path.from_os_path(from, false)
   to = yoz.canonical_path.from_os_path(to, false)
   local from_nodeuuid = require("era.view.result_paths").key(from) ---@type string
@@ -2139,32 +1890,15 @@ function M:__update_tree_after_rename__(from, to, isdir)
   local cursoruuid = self:__retrieve_nodeuuid__() or self._uuid_current
   local uuid_current = remap_uuid(cursoruuid) ---@type string|nil
 
-  local filepaths = {} ---@type string[]
-
-  if isdir then
-    local result, err = yoz.fs.collect_files(yoz.canonical_path.to_os_path(to), true)
-    if err ~= nil then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "collect_files_failed",
-        details = {
-          error = err.error,
-          directory = to,
-        },
-      })
-      for _, uuid in ipairs(treeview:collect_leafs(from_nodeuuid)) do
-        local data = filetree:get(uuid) ---@type era.view.result_paths.IFile|nil
-        if data ~= nil then
-          filepaths[#filepaths + 1] = rebase_filepath(data.filepath)
-        end
-      end
-    elseif result ~= nil and result.files ~= nil then
-      for _, relative_filepath in ipairs(result.files) do
-        local to_filepath = yoz.canonical_path.join(to, relative_filepath, false) ---@type string
-        filepaths[#filepaths + 1] = to_filepath
-      end
-    end
-  end
+  local moved = {}
+  filetree:walk(from_nodeuuid, function(key, data)
+    local entry = treeview.entries[key]
+    moved[#moved + 1] = {
+      path = rebase_filepath(data.filepath),
+      data = data,
+      entry = entry and vim.tbl_extend("force", entry, { locations = vim.list_slice(entry.locations or {}) }),
+    }
+  end)
 
   local selected_set_current = treeview:collect_selected() ---@type table<string, true>
   local selected_set = {} ---@type table<string, true>
@@ -2185,15 +1919,20 @@ function M:__update_tree_after_rename__(from, to, isdir)
   treeview:remove(from_nodeuuid)
   filetree:remove(from_nodeuuid)
 
-  if isdir then
-    treeview:insert_dirpath(to)
-    for _, filepath in ipairs(filepaths) do
-      filetree:insert_file_absolute(filepath)
+  -- Preserve result membership and location payloads; the filesystem job already owns traversal.
+  for _, item in ipairs(moved) do
+    local key = filetree:_insert_path(item.path, item.data.filetype)
+    filetree:update(key, vim.tbl_extend("force", item.data, filetree:get(key)))
+    if item.entry then
+      local entry = vim.tbl_extend("force", item.entry, { key = key, locations = {} })
+      for _, location in ipairs(item.entry.locations or {}) do
+        local moved_location = vim.tbl_extend("force", location, { leafuuid = key })
+        entry.locations[#entry.locations + 1] = moved_location
+        treeview.entries[moved_location.locationuuid] = moved_location
+      end
+      treeview.entries[key] = entry
     end
-  else
-    treeview:insert_filepath(to, false)
   end
-
   treeview:restore_subtree(to_nodeuuid, selected_set)
 
   self._uuid_root = uuid_root ~= nil and filetree:contains(uuid_root) and uuid_root or nil

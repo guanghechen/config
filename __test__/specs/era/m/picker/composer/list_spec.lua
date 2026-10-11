@@ -1,0 +1,279 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.m.picker.composer.list" ---@type string
+
+local t = require("__test__.support.harness").new("era.m.picker.composer.list")
+
+---@param predicate                     fun(): boolean
+---@param timeout_ms                    integer
+---@return nil
+local function wait_until(predicate, timeout_ms)
+  local deadline = vim.uv.hrtime() + timeout_ms * 1000000
+  t.wait_until(function()
+    t.assert_true(vim.uv.hrtime() < deadline, "native List UI did not reach the expected state")
+    return predicate()
+  end, timeout_ms)
+end
+
+---@return __test__.support.UI
+local function session()
+  local ui = require("__test__.support.ui").new()
+  t:defer(function()
+    ui:close()
+  end)
+  ui:rpc("nvim_ui_attach", 100, 32, { rgb = true, ext_linegrid = true })
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    local root = ...
+    vim.opt.runtimepath:prepend(root)
+    package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
+    require("ark.bootstrap").setup()
+    errors = {}
+    stl.reporter.error = function(value) errors[#errors + 1] = value end
+    controls = {
+      search_pattern = stl.c.Observable.from_value(""),
+      flag_fuzzy = stl.c.Observable.from_value(false),
+      flag_regex = stl.c.Observable.from_value(false),
+      flag_case_sensitive = stl.c.Observable.from_value(false),
+    }
+    original = {opaque = newproxy(false)}
+    items = {
+      {uuid="one", text="needle first", text_lower="needle first", data=original},
+      {uuid="two", text="needle second", text_lower="needle second", data={}},
+      {uuid="three", text="other", text_lower="other", data={}},
+    }
+    picker = era.m.picker.ListComposer.new(vim.tbl_extend("force", controls, {
+      name="native list", title="native list", permanent=true,
+      present=function(_, item)
+        local prefix="中:"
+        return {label=prefix..item.text, match_regions={{0, #item.text, #prefix}}}
+      end,
+    }))
+    writes, matches = 0, {}
+    local set_lines = vim.api.nvim_buf_set_lines
+    vim.api.nvim_buf_set_lines = function(bufnr, ...)
+      if bufnr == picker.result:get_bufnr() then writes = writes + 1 end
+      return set_lines(bufnr, ...)
+    end
+    local set_extmark = vim.api.nvim_buf_set_extmark
+    vim.api.nvim_buf_set_extmark = function(bufnr, nsnr, row, col, options)
+      if bufnr == picker.result:get_bufnr() and options.ephemeral and options.hl_group == "TreeviewMatch" then
+        matches[row] = {col, options.end_col}
+      end
+      return set_extmark(bufnr, nsnr, row, col, options)
+    end
+    picker:reset_data({items=items, uuid_current="one", uuid_present="two"})
+    picker:focus()
+  ]],
+    { assert(vim.uv.cwd()) }
+  )
+  wait_until(function()
+    return ui:rpc(
+      "nvim_exec_lua",
+      "return picker._treeview.view and picker._treeview.view:frame() and picker._treeview:linecount() == 3",
+      {}
+    )
+  end, 5000)
+  return ui
+end
+
+t:test("native List preserves callback payload identity, match byte offsets and warm buffers", function()
+  local ui = session()
+  t.assert_eq("userdata", ui:rpc("nvim_exec_lua", "return type(picker._treeview.state._native)", {}))
+  t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(1) == items[1]", {}), "original item identity")
+  t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(1).data == original", {}), "original payload identity")
+  t.assert_eq(2, ui:rpc("nvim_exec_lua", "return picker.result.lnum_present:snapshot()", {}))
+  ui:rpc("nvim_exec_lua", [[picker.finder:set_content("needle")]], {})
+  wait_until(function()
+    ui:rpc("nvim_command", "redraw")
+    return ui:rpc(
+      "nvim_exec_lua",
+      [[
+      return picker._treeview:linecount() == 2 and matches[0] and matches[0][1] == 6 and matches[0][2] == 12
+    ]],
+      {}
+    )
+  end, 5000)
+  ui:rpc("nvim_exec_lua", [[saved_bufnr=picker.result:get_bufnr(); writes=0; picker:hide(); picker:focus()]], {})
+  wait_until(function()
+    return ui:rpc("nvim_exec_lua", "return picker._treeview.view and not picker._treeview.view:is_suspended()", {})
+  end, 5000)
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return writes", {}))
+  t.assert_true(ui:rpc("nvim_exec_lua", "return saved_bufnr == picker.result:get_bufnr()", {}))
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+end)
+
+t:test("a Visual frame keeps its published payloads while a replacement reorders the List", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    vim.cmd.stopinsert()
+    vim.api.nvim_set_current_win(picker.result:get_winnr())
+    vim.cmd.normal({args={"V"}, bang=true})
+    old_frame = picker._treeview:frame()
+    next_items = {
+      {uuid="two", text="next second", text_lower="next second", data={}},
+      {uuid="one", text="next first", text_lower="next first", data={}},
+    }
+    picker:reset_data({items=next_items, uuid_current="two"})
+  ]],
+    {}
+  )
+  wait_until(function()
+    return ui:rpc(
+      "nvim_exec_lua",
+      [[
+      return picker._treeview.state:snapshot():header().data_revision ~= old_frame:header().data_revision
+    ]],
+      {}
+    )
+  end, 5000)
+  t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(1) == items[1]", {}))
+  ui:rpc("nvim_exec_lua", [[vim.cmd.normal({args={vim.keycode("<Esc>")}, bang=true})]], {})
+  wait_until(function()
+    return ui:rpc(
+      "nvim_exec_lua",
+      "return picker:retrieve(1) == next_items[1] and picker._treeview:linecount() == 2",
+      {}
+    )
+  end, 5000)
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+end)
+
+t:test("equal presentation replaces action payloads through a new revision without rewriting text", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    previous_revision=picker._treeview:frame():header().data_revision
+    replacement={}
+    for _,item in ipairs(items) do
+      replacement[#replacement+1]={uuid=item.uuid,text=item.text,text_lower=item.text_lower,data={opaque=newproxy(false)}}
+    end
+    writes=0
+    picker:reset_data({items=replacement,uuid_current="one"})
+    assert(picker:retrieve(1)==items[1],"old frame must keep the original item until publication")
+  ]],
+    {}
+  )
+  wait_until(function()
+    return ui:rpc(
+      "nvim_exec_lua",
+      [[
+      return picker:retrieve(1)==replacement[1]
+        and picker._treeview:frame():header().data_revision~=previous_revision
+    ]],
+      {}
+    )
+  end, 5000)
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return writes", {}))
+end)
+
+t:test("multiple occurrences remain on one native row and all receive match highlights", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    spans={}
+    local set_extmark=vim.api.nvim_buf_set_extmark
+    vim.api.nvim_buf_set_extmark=function(bufnr,nsnr,row,col,options)
+      if bufnr==picker.result:get_bufnr() and options.ephemeral and options.hl_group=="TreeviewMatch" then
+        spans[col..":"..options.end_col]=true
+      end
+      return set_extmark(bufnr,nsnr,row,col,options)
+    end
+    picker:reset_data({items={{uuid="repeat",text="needle needle",text_lower="needle needle"}}})
+    picker.finder:set_content("needle")
+  ]],
+    {}
+  )
+  wait_until(function()
+    ui:rpc("nvim_command", "redraw")
+    return ui:rpc(
+      "nvim_exec_lua",
+      [[
+      return picker._treeview:linecount()==1 and spans["6:12"] and spans["13:19"]
+    ]],
+      {}
+    )
+  end, 5000)
+end)
+
+t:test("a newer reset supersedes partially prepared producer records", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    local now=vim.uv.hrtime
+    local clock=now()
+    vim.uv.hrtime=function() clock=clock+2000000; return clock end
+    picker:reset_data({items={
+      {uuid="stale-one",text="stale one",text_lower="stale one"},
+      {uuid="stale-two",text="stale two",text_lower="stale two"},
+    }})
+    vim.uv.hrtime=now
+    assert(picker._preparing,"producer preparation must yield")
+    assert(picker:retrieve(1)==items[1],"the visible frame must keep its payload")
+    latest={uuid="latest",text="latest",text_lower="latest",data=newproxy(false)}
+    picker:reset_data({items={latest}})
+  ]],
+    {}
+  )
+  wait_until(function()
+    return ui:rpc("nvim_exec_lua", "return picker._treeview:linecount()==1 and picker:retrieve(1)==latest", {})
+  end, 5000)
+  t.assert_true(ui:rpc("nvim_exec_lua", "return not picker._treeview:frame():source():id('item:stale-one')", {}))
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+end)
+
+t:test("Snacks items with equal names retain distinct native rows and action payloads", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    choices={{name="same",text="same",value=1},{name="same",text="same",value=2}}
+    local data=require("era.m.select.provider-snacks")(choices,{format_item=function(item) return item.text end})
+    picker:reset_data(data)
+  ]],
+    {}
+  )
+  wait_until(function()
+    return ui:rpc("nvim_exec_lua", "return picker._treeview:linecount()==2 or #errors>0", {})
+  end, 5000)
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+  t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(1).data.original_item==choices[1]", {}))
+  t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(2).data.original_item==choices[2]", {}))
+end)
+
+for _, provider in ipairs({ "fallback", "snacks" }) do
+  t:test(provider .. " escapes control characters while preserving original choices", function()
+    local ui = session()
+    ui:rpc(
+      "nvim_exec_lua",
+      [[
+      local provider=...
+      choices={"carriage\rreturn", "zero\0byte"}
+      local data=require("era.m.select.provider-"..provider)(choices,{format_item=function(item) return item end})
+      picker:reset_data(data)
+    ]],
+      { provider }
+    )
+    wait_until(function()
+      return ui:rpc("nvim_exec_lua", "return picker._treeview:linecount()==2 or #errors>0", {})
+    end, 5000)
+    t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+    t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(1).data.original_item==choices[1]", {}))
+    t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(2).data.original_item==choices[2]", {}))
+    t.assert_true(ui:rpc(
+      "nvim_exec_lua",
+      [[
+      local text=table.concat(vim.api.nvim_buf_get_lines(picker.result:get_bufnr(),0,-1,false))
+      return text:find("carriage\\rreturn",1,true)~=nil and text:find("zero\\0byte",1,true)~=nil
+    ]],
+      {}
+    ))
+  end)
+end
+
+t:run()

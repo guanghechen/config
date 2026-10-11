@@ -26,10 +26,11 @@ local __module_name__ = "era.view.picker.preview" ---@type string
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.view.picker.preview.ITreeTarget
----@field public owner                  era.view.ResultTree
+---@field public owner                  era.view.ResultTree|era.view.Directory
 ---@field public key                    string
 ---@field public title                  string
 ---@field public foldempty              boolean
+---@field public glyphs                 ?table<string, string>
 
 ---@class era.view.picker.preview.IProps
 ---@field public tree                   ?fun(): era.view.picker.preview.ITreeTarget|nil
@@ -402,8 +403,9 @@ function M:__show_tree__(target)
           winnr = winnr,
           bufnr = bufnr,
           keymaps = false,
-          prepare_frame = function(_, frame)
-            return target.owner:prepare_frame(frame)
+          glyphs = target.glyphs,
+          prepare_frame = function(view, frame, first, last)
+            return target.owner:prepare_frame(frame, view, first, last)
           end,
           decorate_row = function(view, frame, row, id, col, label, expanded)
             target.owner:decorate_row(view, frame, row, id, col, label, expanded)

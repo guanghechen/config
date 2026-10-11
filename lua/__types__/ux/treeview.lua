@@ -43,7 +43,12 @@
 ---@field public filter                 ?ux.treeview.NodeId[] Ordered result membership. Tree retains connecting ancestors.
 ---@field public sort                   ?"source"|"name"|"score"
 ---@field public list_text              ?"label"|"ancestry"
+---@field public list_depth             ?integer Maximum depth below display roots; zero lists direct children only.
+---@field public context_label          ?string Leading ChildrenOf root row in List mode; keeps the root identity.
+---@field public branch_suffix          ?string Display/match suffix for expandable List labels; at most 32 bytes.
 ---@field public case_sensitive         ?boolean
+---@field public fuzzy                  ?boolean
+---@field public regex                  ?boolean Takes precedence over fuzzy.
 ---@field public show_hidden            ?boolean
 ---@field public selected_only          ?boolean
 ---@field public compress               ?boolean

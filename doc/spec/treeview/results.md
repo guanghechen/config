@@ -14,9 +14,17 @@ Picker、Searcher 和 Diffview 使用通用 Treeview records。Explorer 的真�
 - `era.view.ResultFiles` 提供 Picker/Searcher 共用的文件结果与 location presentation；两者没有静态互相依赖。
 - Lua 业务 metadata 在提交时复制为 snapshot，并以 native data revision 保存。Action 通过已发布 Frame
   获取节点与 metadata；prepare 阶段不可把新 metadata 绑定到旧 buffer 行。
+- 普通 ListComposer 同样使用 ResultTree；纯文本 producer 保存不可变字符串，并共享 leaf 描述，避免逐行建立和复制 metadata 表。
+  `payloads` 单独保存原始 IItem 引用，可包含 callback、userdata 或 LSP action；不 deepcopy、不序列化到 Rust。
+  每次 reset 在根记录推进 payload version，即使 label 不变也生成新的 data revision；旧 Frame 仍解析到旧 IItem 引用。
+  Payload 内部的可变内容由调用方拥有。空 query 直接使用 source 顺序，不构造全量 matches 或重传 filter。
+  Select provider 在展示入口转义 NUL、CR 和 LF，callback 保留原值；Snacks 的相同名称或文本通过输入序号保持独立 identity。
+- List reset 的 producer 准备也遵循 2 ms 时间片，较新的 reset 或 dispose 终止旧准备，不能发布半份列表。
+  只有准备成功才替换 producer；已显示 Frame 在此期间继续使用原 payload。空叶子不单独分配 children 数组。
 - Presentation 每批最多 256 条 records，每条结束后检查 2 ms 时间片；metadata 图复制每 1024 个字段检查一次 2 ms 时间片，
   超出时间片时让出主线程。
   共享引用与循环只复制一次；准备期间 producer revision 改变则丢弃部分 snapshot，继续最新请求。
+  纯文本 leaf 使用带类型标记的直接字符串签名，其余 presentation 使用完整编码；可选导入列只在有界 chunk 中补全默认值。
   至多 16 个字段的简单 metadata 只有逐字段相同才复用上一帧的 immutable copy；复用不能合并
   原本不同的对象，也不能改变共享引用关系。嵌套 metadata 仍按图复制。
 - 保留一代 records 的精确序列化签名和 topology 顺序。Topology 不变且最多 256 个 records 改变时，
@@ -57,8 +65,9 @@ cursor、selection 和 expansion 不重新生成 records 或全量行映射。
 
 ## 发布、输入与生命周期
 
-- Result 的 native 模式不写 buffer；行数、当前行和 preview 通知跟随 `on_frame`。普通 ListComposer 继续使用原 draw surface。
+- 所有 Result 都由 native Treeview owner 提供正文；行数、当前行和 preview 通知跟随 `on_frame`，没有旧 draw 分支。
   Current-line observable 读取发布后的 surface cursor，不能将迟到的 Frame cursor acknowledgement 回写成新输入、移动 Visual 端点。
+  明确的行导航立即提交给 native View，observable 仅通知其余 UI，避免异步通知晚于初始定位。
 - Publication 等待已排队的 selection；native draw 被后续请求取代时等待最新 Frame 就绪，不能将
   `Superseded` 通知作为已完成的结果更新交给调用方。
   Metadata-only 变更也刷新共享 Data 的所有 viewport decorations；可见主结果的 publication/ready 等待其准备完成。
@@ -83,6 +92,10 @@ cursor、selection 和 expansion 不重新生成 records 或全量行映射。
   冷重开重新导入 records。Standalone filetree 独立准备自己的 records，reveal 显式准备目标 commit files。
 - 文件结果的 producer 按 directory 优先、basename 排序；List 的显式 filter 排名独立于此顺序。
 - 业务 action 从已发布 snapshot 读取目标；replace 后的剩余 offsets 写回 producer，再发布新 snapshot。
+- 文件 Picker 的 create/delete/rename/move 使用 Filetree Jobs。Prompt 前捕获真实资源，IO 与 identity 校验由 Rust 执行；
+  rename/move 复用 Explorer 的 buffer/LSP 同步。成功后只重映射已有结果，保留 location identity 与 metadata，不扫描目录补入其他文件。
+  等待已排队的 selection 后再迁移标记；同步结果须仍持有原 producer record，旧 Frame 的操作不向替换后的集合补项。
+  Create 在捕获的目标目录内补齐相对路径；`../` 使用同一 snapshot 的祖先 Resource。跨卷绝对路径由用户输入明确新目标后解析。
 
 ## 装饰
 
@@ -96,3 +109,7 @@ Git status、diagnostics、搜索匹配与 commit graph 的 rich highlights
 遵循同一发布边界，不为每个结果节点创建常驻 extmark。
 Location 的位置前缀和 snippet 仍是 native label；highlight spans 从该 Frame 对应的 Lua metadata 中按 viewport 计算，
 不为每条 location 再构造和导入一份 native highlight 图。主结果和目录 preview 使用同一 metadata 准备边界。
+
+List 的自定义 renderer 使用 `present(self, item)` 返回 `label / highlights / overlay / match_regions`，不写 buffer。
+`match_regions` 为 source byte start、exclusive end、display byte start 三元组，用于前缀和插入列的匹配坐标转换。
+Current/present sign 保持常数数量；多项选择由 viewport decoration 展示，不按全部结果放置常驻 signs。

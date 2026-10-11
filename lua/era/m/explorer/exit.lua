@@ -2,6 +2,8 @@
 local __module_name__ = "era.m.explorer.exit" ---@type string
 
 local M = {}
+local providers = {}
+local initialized = false
 local all = { qall = true, wqall = true, xall = true, cquit = true, restart = true }
 local single = { quit = true, wq = true, xit = true, exit = true }
 
@@ -100,6 +102,31 @@ end
 ---@param jobs                          {pending: fun(): boolean, cancel_all: fun(): nil, poll: fun(): nil}
 ---@return nil
 function M.setup(jobs)
+  providers[jobs] = true
+  if initialized then
+    return
+  end
+  initialized = true
+  jobs = {
+    pending = function()
+      for provider in pairs(providers) do
+        if provider.pending() then
+          return true
+        end
+      end
+      return false
+    end,
+    cancel_all = function()
+      for provider in pairs(providers) do
+        provider.cancel_all()
+      end
+    end,
+    poll = function()
+      for provider in pairs(providers) do
+        provider.poll()
+      end
+    end,
+  }
   local pending_exit = false
   ---@param command                     string
   ---@return nil
@@ -112,7 +139,7 @@ function M.setup(jobs)
     local bufnr = vim.api.nvim_win_get_buf(winnr)
     pending_exit = true
     vim.ui.input(
-      { prompt = "Cancel unfinished Explorer operations and exit?", inputtype = "confirmation" },
+      { prompt = "Cancel unfinished Filetree operations and exit?", inputtype = "confirmation" },
       function(answer)
         answer = answer and vim.trim(answer):lower()
         if answer ~= "y" and answer ~= "yes" then

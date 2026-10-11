@@ -1,8 +1,6 @@
 ---@alias era.m.searcher.result.IDraw era.view.picker.result.IDraw
----@alias era.m.searcher.result.IIsSelected era.view.picker.result.IIsSelected
 ---@alias era.m.searcher.result.IOnDrawed era.view.picker.result.IOnDrawed
 ---@alias era.m.searcher.result.IStatusSnapshot era.view.picker.result.IStatusSnapshot
----@alias era.m.searcher.result.IDrawResult era.view.picker.result.IDrawResult
 ---@alias era.m.searcher.result.IFlagItemRaw era.view.picker.result.IFlagItemRaw
 ---@alias era.m.searcher.result.IFlagItem era.view.picker.result.IFlagItem
 ---@alias era.m.searcher.result.IWinOpts era.view.picker.result.IWinOpts

@@ -661,12 +661,6 @@ function M.new(props)
 
     result_number = true,
 
-    ---@type era.m.picker.result.IIsSelected
-    result_isselected = function(_, lnum)
-      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-      return uuid ~= nil and treeview:isselected(uuid)
-    end,
-
     ---@type era.m.picker.result.IDraw
     result_tree = treeview,
     render_result = function()

@@ -14,6 +14,31 @@ pub(crate) struct LuaResource(pub(crate) Resource);
 struct LuaOpen(Request<Filetree>);
 struct LuaResolve(Request<Resource>);
 struct LuaDetails(Request<super::Details>);
+struct LuaListing(Request<super::Listing>);
+
+impl LuaUserData for LuaListing {
+    fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("poll", |lua, this, ()| match this.0.poll() {
+            None => Ok((false, LuaValue::Nil)),
+            Some(Err(error)) => Ok((true, output::outcome(lua, Outcome::Reply(error.into()))?)),
+            Some(Ok(listing)) => {
+                let rows = lua.create_table_with_capacity(listing.rows.len(), 0)?;
+                for (index, row) in listing.rows.iter().enumerate() {
+                    let value = lua.create_table()?;
+                    value.set("node", output::node(row.node))?;
+                    value.set("directory", row.directory)?;
+                    value.set("permissions", row.permissions.as_str())?;
+                    value.set("size", row.size.as_str())?;
+                    value.set("date", row.date.as_str())?;
+                    value.set("owner", row.owner.as_str())?;
+                    value.set("group", row.group.as_str())?;
+                    rows.raw_set(index + 1, value)?;
+                }
+                Ok((true, rows.into_lua(lua)?))
+            }
+        });
+    }
+}
 
 impl LuaUserData for LuaDetails {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
@@ -132,6 +157,16 @@ impl LuaUserData for LuaFiletree {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
         jobs::methods(methods);
         annotations::methods(methods);
+        methods.add_method(
+            "listing",
+            |_, this, (frame, first, last, parent_context): (LuaAnyUserData, usize, usize, Option<bool>)| {
+                let frame = frame.borrow::<LuaFrame>()?.0.clone();
+                if first == 0 {
+                    return Err(LuaError::external("listing rows are 1-based"));
+                }
+                Ok(LuaListing(this.0.listing(frame, first - 1, last, parent_context.unwrap_or(false))))
+            },
+        );
         methods.add_method("details", |_, this, resource: LuaAnyUserData| {
             Ok(LuaDetails(
                 this.0.details(resource.borrow::<LuaResource>()?.0.clone()),

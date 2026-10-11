@@ -131,10 +131,9 @@ local __highlights__ = {
 ---@field public flag_replace           ?stl.c.Observable
 ---
 ---@field public result_number          boolean
----@field public result_isselected      ?era.m.searcher.result.IIsSelected
 ---@field public result_status          ?era.m.searcher.result.IStatusSnapshot
 ---
----@field public result_tree            ?era.view.ResultTree
+---@field public result_tree            era.view.ResultTree|era.view.Directory
 ---@field public preview_tree           ?fun(): era.view.picker.preview.ITreeTarget|nil
 ---@field public render_preview         ?era.m.searcher.preview.IDraw
 ---@field public render_result          era.m.searcher.result.IDraw
@@ -212,7 +211,6 @@ function M.new(props)
   local flag_replace = props.flag_replace ---@type stl.c.Observable|nil
 
   local result_number = not not props.result_number ---@type boolean
-  local result_isselected = props.result_isselected ---@type era.m.searcher.result.IIsSelected|nil
   local result_status = props.result_status ---@type era.m.searcher.result.IStatusSnapshot|nil
 
   local render_preview = props.render_preview ---@type era.m.searcher.preview.IDraw|nil
@@ -298,7 +296,6 @@ function M.new(props)
       end
       return render_result(bufnr)
     end,
-    isselected = result_isselected,
     keymaps = self:__resolve_keymaps_result__(
       flags,
       flags_start_index,

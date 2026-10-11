@@ -13,7 +13,7 @@ local __module_name__ = "era.m.select" ---@type string
 ---@field public format_item            ?fun(item): string
 ---@field public kind                   ?string
 ---@field public dimension              ?era.m.select.IDimension
----@field public render_result          ?era.m.picker.composer.list.IRenderResult
+---@field public present                ?era.m.picker.composer.list.IPresent
 ---@field public render_preview         ?era.m.picker.composer.list.IRenderPreview
 ---@field public uuid_current           ?string
 ---@field public uuid_present           ?string
@@ -27,7 +27,7 @@ local __module_name__ = "era.m.select" ---@type string
 ---@field public data                   era.m.select.IItemData
 
 ---@alias era.m.select.IDataProvider
----| fun(items: any[], opts: era.m.select.IOptions): era.m.picker.composer.list.IResetData, integer, era.m.picker.composer.list.IRenderResult|nil, era.m.picker.composer.list.IRenderPreview|nil
+---| fun(items: any[], opts: era.m.select.IOptions): era.m.picker.composer.list.IResetData, integer, era.m.picker.composer.list.IPresent|nil, era.m.picker.composer.list.IRenderPreview|nil
 
 local providers = {
   ---@type era.m.select.IDataProvider
@@ -78,9 +78,9 @@ function M.select(items, opts, on_choice)
 
   local name = opts.name or __module_name__ ---@type string
   local title = (opts.prompt or opts.kind or "--"):gsub(":$", "") ---@type string
-  local data, width, render_result, render_preview = provider(items, opts)
-  if opts.render_result ~= nil then
-    render_result = opts.render_result
+  local data, width, present, render_preview = provider(items, opts)
+  if opts.present ~= nil then
+    present = opts.present
   end
   if opts.render_preview ~= nil then
     render_preview = opts.render_preview
@@ -179,7 +179,7 @@ function M.select(items, opts, on_choice)
     flag_regex = flag_regex,
     flag_case_sensitive = flag_case_sensitive,
 
-    render_result = render_result,
+    present = present,
     render_preview = render_preview,
 
     keymaps_common = on_toggle and {

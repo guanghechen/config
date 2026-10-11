@@ -166,43 +166,6 @@ picker = era.m.picker.ListComposer.new({
   },
   flags_start_index = 0,
 
-  render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, era.fn.find_buffers.IItem>
-    ---
-    local lines = {} ---@type string[]
-    local uuids = {} ---@type string[]
-    for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type era.fn.find_buffers.IItem
-      lines[#lines + 1] = item.text
-      uuids[#uuids + 1] = item.uuid
-    end
-
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-    local nsnr_content = dot.var.nsnr.picker_result
-    local nsnr_matches = dot.var.nsnr.picker_matches
-
-    for lnum, match in ipairs(matches) do
-      local row = lnum - 1 ---@type integer
-      local item = itemmap[match.uuid]
-
-      if item and item.highlights then
-        for _, hl in ipairs(item.highlights) do
-          vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
-        end
-      end
-
-      if match.matches then
-        for _, m in ipairs(match.matches) do
-          vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
-        end
-      end
-    end
-
-    local data = { uuids = uuids } ---@type era.m.picker.composer.list.IRenderResultData
-    return data
-  end,
-
   keymaps_result = {
     {
       modes = { "i", "n", "x" },

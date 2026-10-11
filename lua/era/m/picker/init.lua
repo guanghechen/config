@@ -1,8 +1,6 @@
 ---@alias era.m.picker.FiletreeView era.view.ResultFiles
 ---@alias era.m.picker.result.IDraw era.view.picker.result.IDraw
----@alias era.m.picker.result.IIsSelected era.view.picker.result.IIsSelected
 ---@alias era.m.picker.result.IOnDrawed era.view.picker.result.IOnDrawed
----@alias era.m.picker.result.IDrawResult era.view.picker.result.IDrawResult
 ---@alias era.m.picker.result.IFlagItemRaw era.view.picker.result.IFlagItemRaw
 ---@alias era.m.picker.result.IFlagItem era.view.picker.result.IFlagItem
 ---@alias era.m.picker.result.IWinOpts era.view.picker.result.IWinOpts

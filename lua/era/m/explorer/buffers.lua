@@ -285,7 +285,7 @@ local function sync_editor(item, report)
   end
 end
 
----@param session                       era.m.explorer.Session
+---@param session                       {operation: string, report: fun(error: any): nil}
 ---@param item                          ux.filetree.IItemResult
 ---@return era.m.explorer.IEditorSyncError|nil
 function M.sync(session, item)

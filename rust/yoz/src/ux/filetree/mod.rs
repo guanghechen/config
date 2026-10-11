@@ -6,6 +6,7 @@ mod index;
 mod io;
 mod job_owner;
 mod jobs;
+mod listing;
 pub(crate) mod lua;
 mod memory;
 mod model;
@@ -25,6 +26,7 @@ pub use jobs::{
     CreatePlan, ItemId, ItemResult, ItemStatus, Job, JobPhase, JobStatus, OperationKind,
     OperationPlan, TaskContext,
 };
+pub use listing::{Listing, ListingRow};
 pub use model::{Entry, FileIdentity, Kind, display_name};
 pub use resource::Resource;
 pub use runtime::Filetree;

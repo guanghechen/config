@@ -572,46 +572,6 @@ local function execute_action(picker)
   end
 end
 
----@type era.m.picker.composer.list.IRenderResult
-local function render_result(_, bufnr, itemmap, matches)
-  local lines = {} ---@type string[]
-  local uuids = {} ---@type string[]
-
-  for _, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
-    ---@cast item                       era.m.toggle.IListItem
-
-    lines[#lines + 1] = item.text
-    uuids[#uuids + 1] = item.uuid
-  end
-
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-  local nsnr_content = dot.var.nsnr.picker_result ---@type integer
-  local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
-
-  for lnum, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
-    ---@cast item                       era.m.toggle.IListItem
-
-    local row = lnum - 1 ---@type integer
-    if item and item.highlights then
-      for _, hl in ipairs(item.highlights) do
-        vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
-      end
-    end
-
-    if match.matches then
-      for _, m in ipairs(match.matches) do
-        vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
-      end
-    end
-  end
-
-  ---@type era.m.picker.composer.list.IRenderResultData
-  return { uuids = uuids }
-end
-
 dot.command.define({
   uuid = dot.command.definitions.toggle.list.uuid,
   desc = dot.command.definitions.toggle.list.desc,
@@ -634,8 +594,6 @@ picker = era.m.picker.ListComposer.new({
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
   flag_case_sensitive = flag_case_sensitive,
-
-  render_result = render_result,
 
   keymaps_common = {
     {

@@ -312,6 +312,101 @@ fn loaded(data: &Filetree, node: NodeId) {
         node.completeness == Completeness::Complete && node.load_state == LoadState::Idle
     });
 }
+
+#[test]
+fn bounded_directory_states_do_not_read_descendants_or_parent_siblings() {
+    let directory = Directory::new();
+    fs::create_dir_all(directory.0.join("sub/nested")).unwrap();
+    fs::write(directory.0.join("sub/nested/deep.txt"), b"deep").unwrap();
+    fs::write(directory.0.join("visible.txt"), b"visible").unwrap();
+    let data = request(Filetree::open(directory.0.clone()));
+    let Outcome::State(state) = ticket(data.create_state(
+        None,
+        DisplayOptions {
+            mode: Mode::List,
+            list_depth: Some(0),
+            context_label: Some("../".into()),
+            ..DisplayOptions::default()
+        },
+    )) else {
+        panic!("expected bounded state")
+    };
+    let _view = state.attach().unwrap();
+    loaded(&data, data.root());
+    until(|| !data.data().has_work());
+    let sub = child(&data, data.root(), "sub");
+    let source = data.source();
+    assert_eq!(
+        source.node(sub).unwrap().completeness,
+        Completeness::Unknown
+    );
+    assert_eq!(source.node(sub).unwrap().child_count(), 0);
+    let parent = source.node(data.root()).unwrap().parent.unwrap();
+    assert_ne!(
+        source.node(parent).unwrap().completeness,
+        Completeness::Complete
+    );
+    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 3));
+    let frame = state.snapshot().unwrap();
+    let listing = request(data.listing(frame.clone(), 0, frame.len(), false));
+    assert_eq!(listing.rows.len(), 3);
+    assert_eq!(listing.rows[0].node, data.root());
+    assert_eq!(listing.rows[2].size, "7B");
+    let Outcome::State(preview) = ticket(data.create_state(
+        Some(Root::ChildrenOf(sub)),
+        DisplayOptions {
+            mode: Mode::List,
+            list_depth: Some(0),
+            ..DisplayOptions::default()
+        },
+    )) else {
+        panic!("expected bounded preview")
+    };
+    let _preview = preview.attach().unwrap();
+    loaded(&data, sub);
+    until(|| !data.data().has_work());
+    let nested = child(&data, sub, "nested");
+    assert_eq!(
+        data.source().node(nested).unwrap().completeness,
+        Completeness::Unknown
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn t_listing_parent_context_uses_captured_metadata_without_changing_row_identity() {
+    use std::os::unix::fs::PermissionsExt;
+    let directory = Directory::new();
+    let parent = directory.0.join("parent");
+    let current = parent.join("current");
+    fs::create_dir_all(&current).unwrap();
+    fs::set_permissions(&parent, fs::Permissions::from_mode(0o755)).unwrap();
+    fs::set_permissions(&current, fs::Permissions::from_mode(0o700)).unwrap();
+    let data = request(Filetree::open(current));
+    let Outcome::State(state) = ticket(data.create_state(
+        None,
+        DisplayOptions {
+            mode: Mode::List,
+            list_depth: Some(0),
+            context_label: Some("../".into()),
+            ..DisplayOptions::default()
+        },
+    )) else {
+        panic!("expected state")
+    };
+    let _view = state.attach().unwrap();
+    loaded(&data, data.root());
+    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 1));
+    let frame = state.snapshot().unwrap();
+    fs::set_permissions(&parent, fs::Permissions::from_mode(0o700)).unwrap();
+    let own = request(data.listing(frame.clone(), 0, 1, false));
+    let context = request(data.listing(frame, 0, 1, true));
+    assert_eq!(own.rows[0].permissions, "drwx------");
+    assert_eq!(context.rows[0].permissions, "drwxr-xr-x");
+    assert_eq!(own.rows[0].node, context.rows[0].node);
+    assert_eq!(context.rows[0].node, data.root());
+}
+
 fn child(data: &Filetree, parent: NodeId, name: &str) -> NodeId {
     let source = data.source();
     source

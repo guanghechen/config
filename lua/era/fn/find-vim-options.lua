@@ -92,45 +92,14 @@ local picker = era.m.picker.ListComposer.new({
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,
 
-  render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, era.fn.find_vim_options.IItem>
-    local lines = {} ---@type string[]
-    local uuids = {} ---@type string[]
-    for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type era.fn.find_vim_options.IItem
-      lines[#lines + 1] = item.data.text
-      uuids[#uuids + 1] = item.uuid
-    end
-
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-    local nsnr_content = dot.var.nsnr.picker_result
-    local nsnr_matches = dot.var.nsnr.picker_matches
-
-    for lnum, match in ipairs(matches) do
-      local row = lnum - 1 ---@type integer
-      local item = itemmap[match.uuid]
-
-      if item and item.highlights then
-        for _, hl in ipairs(item.highlights) do
-          vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
-        end
-      end
-
-      if match.matches then
-        for _, m in ipairs(match.matches) do
-          local offset_l, offset_r = m.l, m.r
-          if m.l >= WIDTH_NAME then
-            offset_l = m.l + (WIDTH_TYPE + WIDTH_SCOPE)
-            offset_r = m.r + (WIDTH_TYPE + WIDTH_SCOPE)
-          end
-          vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, offset_l }, { row, offset_r }, { priority = 30 })
-        end
-      end
-    end
-
-    local data = { uuids = uuids } ---@type era.m.picker.composer.list.IRenderResultData
-    return data
+  present = function(_, item)
+    return {
+      label = item.data.text,
+      match_regions = {
+        { 0, WIDTH_NAME, 0 },
+        { WIDTH_NAME, #item.text, WIDTH_NAME + WIDTH_TYPE + WIDTH_SCOPE },
+      },
+    }
   end,
 
   on_confirm = function(composer, item)

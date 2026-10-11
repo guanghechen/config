@@ -1,258 +1,145 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/view/picker/result_spec.lua
----@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "__test__.specs.era.view.picker.result" ---@type string
 
-local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new("era.view.picker.result")
+local native = require("__test__.support.result_tree")
 
-local t = harness.new("era.view.picker.result")
-
-local CASES = {
-  {
-    name = "picker",
-    new = era.m.picker.Result.new,
-    policy = {
-      augroup_prefix = "picker.result",
-      diagnostic_scope = "era.m.picker.result",
-      winline_hl = "f_wl_picker",
-    },
-  },
-  {
-    name = "searcher",
-    new = era.m.searcher.Result.new,
-    policy = {
-      augroup_prefix = "searcher.result",
-      diagnostic_scope = "era.m.searcher.result",
-      winline_hl = "f_wl_searcher",
-    },
-  },
-}
-
-t:test("picker Result aliases the shared surface", function()
-  t.assert_true(era.m.picker.Result == era.view.PickerResult, "picker Result alias identity")
-end)
-
-t:test("searcher Result aliases the shared surface", function()
-  t.assert_true(era.m.searcher.Result == era.view.PickerResult, "searcher Result alias identity")
-end)
-
-t:test("shared result applies status and diagnostic policies", function()
-  local fail_draw = false ---@type boolean
-  local reported_from = nil ---@type string|nil
-  t:patch_table(stl.reporter, "error", function(report)
-    reported_from = report.from
+---@param count                         ?integer
+---@return era.view.ResultTree
+local function tree(count)
+  local source = require("era.view.result_source").new("root", { label = "root" })
+  for row = 1, count or 2 do
+    source:insert("root", tostring(row), { label = "item " .. row })
+  end
+  local value = require("era.view.result_tree").new({
+    name = "result contract",
+    tree = source,
+    present = function(_, data)
+      return { label = data.label }
+    end,
+  })
+  value:insert("root", { nodetype = "container" })
+  for row = 1, count or 2 do
+    value:insert(tostring(row), { nodetype = "leaf" })
+  end
+  t:defer(function()
+    value:dispose()
   end)
+  return value
+end
 
-  local result = era.view.PickerResult.new({
-    uuid = "shared-result-contract",
-    name = "shared result contract",
-    diagnostic_scope = "contract.result",
-    augroup_prefix = "contract.result",
-    winline_hl = "f_wl_searcher",
+---@param owner                         era.view.ResultTree
+---@param policy                        string
+---@param options                       ?table
+---@return era.view.PickerResult
+local function result(owner, policy, options)
+  local value = era.view.PickerResult.new(vim.tbl_extend("force", {
+    uuid = "result contract " .. policy,
+    name = "result contract",
+    diagnostic_scope = policy .. ".result",
+    augroup_prefix = policy .. ".result",
+    winline_hl = "f_wl_" .. policy,
+    tree = owner,
+    keymaps = {},
+    flags = {},
+    draw = function()
+      return owner:publish({ mode = "list", rootuuid = "root" })
+    end,
+  }, options or {}))
+  t:defer(function()
+    value:dispose()
+  end)
+  return value
+end
+
+for _, kind in ipairs({ "picker", "searcher" }) do
+  t:test(kind .. " aliases the shared native surface", function()
+    t.assert_true(era.m[kind].Result == era.view.PickerResult)
+  end)
+  t:test(kind .. " uses bounded signs when every row is selected", function()
+    local owner = tree(512)
+    local value = result(owner, kind)
+    value:create_win({ border = "", number = false, winhighlight = "" }, { row = 0, col = 0, width = 40, height = 4 })
+    native.await(owner:ready())
+    vim.wait(100)
+    local calls = 0
+    local sign_place = vim.fn.sign_place
+    t:patch_table(vim.fn, "sign_place", function(...)
+      calls = calls + 1
+      return sign_place(...)
+    end)
+    owner:toggle_select("root", true, true)
+    native.await(owner:ready())
+    vim.wait(100)
+    t.assert_true(owner:isselected("512"))
+    t.assert_true(calls <= 2, "selection must not place a persistent sign per result")
+  end)
+end
+
+t:test("status and diagnostic policies survive a failed publication", function()
+  local owner = tree()
+  local fail = false
+  local reported
+  t:patch_table(stl.reporter, "error", function(value)
+    reported = value.from
+  end)
+  local value = result(owner, "picker", {
     status = function()
       return "READY", "picker_result_limit"
     end,
-    draw = function(bufnr)
-      if fail_draw then
+    draw = function()
+      if fail then
         error("draw failure")
       end
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "item" })
-      return { lnum_current = 1 }
+      return owner:publish({ mode = "list", rootuuid = "root" })
     end,
-    keymaps = {},
-    flags = {},
   })
-
-  local ok, err = pcall(function()
-    local winnr = result:create_win(
-      { border = "", number = false, winhighlight = "" },
-      { row = 0, col = 0, width = 40, height = 4 }
-    )
-    t.wait_until(function()
-      return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("READY", 1, true) ~= nil
-    end, 1000, "shared result status")
-
-    fail_draw = true
-    ---@diagnostic disable-next-line: missing-parameter
-    result._scheduler_content._task()
-    t.assert_eq("shared result contract -> contract.result", reported_from, "diagnostic scope")
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    local bufnr = result:get_bufnr() ---@type integer
-    t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }), "draw failure restores modifiable")
-    t.assert_true(vim.api.nvim_get_option_value("readonly", { buf = bufnr }), "draw failure restores readonly")
-
-    result:dispose()
-    local restore_ok, restore_err = pcall(result.__restore_cursor__, result, winnr)
-    t.assert_true(restore_ok, "disposed cursor restore: " .. tostring(restore_err))
-  end)
-
-  if not result:isdisposed() then
-    result:dispose()
-  end
-  vim.wait(20)
-  if not ok then
-    error(err, 0)
-  end
+  local winnr = value:create_win(
+    { border = "", number = false, winhighlight = "" },
+    { row = 0, col = 0, width = 40, height = 4 }
+  )
+  native.await(owner:ready())
+  t.wait_until(function()
+    return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("READY", 1, true) ~= nil
+  end, 1000)
+  local bufnr = value:get_bufnr()
+  local before = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true), "\n")
+  fail = true
+  value._scheduler_content._task()
+  t.assert_eq("result contract -> picker.result", reported)
+  t.assert_eq(before, table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true), "\n"))
+  t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }))
+  t.assert_false(vim.api.nvim_get_option_value("readonly", { buf = bufnr }))
 end)
 
-t:test("shared result unregisters flag callbacks on dispose", function()
-  local registered_names = {} ---@type string[]
-  local register_anonymous_fn = dot.G.register_anonymous_fn
+t:test("flag callbacks are unregistered when a result is disposed", function()
+  local names = {}
+  local original = dot.G.register_anonymous_fn
   t:patch_table(dot.G, "register_anonymous_fn", function(...)
-    local path, unregister = register_anonymous_fn(...)
-    registered_names[#registered_names + 1] = assert(path:match("^dot%.G%.(.+)$"))
+    local path, unregister = original(...)
+    names[#names + 1] = assert(path:match("^dot%.G%.(.+)$"))
     return path, unregister
   end)
-
-  local callback_count = 0 ---@type integer
-  local result = era.view.PickerResult.new({
-    uuid = "shared-result-flags-contract",
-    name = "shared result flags contract",
-    diagnostic_scope = "contract.result",
-    augroup_prefix = "contract.result",
-    winline_hl = "f_wl_picker",
-    draw = function()
-      return { lnum_current = 0 }
-    end,
-    keymaps = {},
+  local calls = 0
+  local value = result(tree(), "picker", {
     flags = {
       {
-        desc = "first",
+        desc = "flag",
         callback = function()
-          callback_count = callback_count + 1
+          calls = calls + 1
         end,
         snapshot = function()
           return "1", "Normal"
         end,
       },
-      {
-        desc = "second",
-        callback = function()
-          callback_count = callback_count + 1
-        end,
-        snapshot = function()
-          return "2", "Normal"
-        end,
-      },
     },
   })
-
-  t.assert_eq(2, #registered_names, "registered flag callback count")
-  for _, name in ipairs(registered_names) do
-    t.assert_true(type(dot.G[name]) == "function", "registered flag callback")
-    dot.G[name]()
-  end
-  t.assert_eq(2, callback_count, "flag callback invocation count")
-
-  result:dispose()
-  for _, name in ipairs(registered_names) do
-    t.assert_true(dot.G[name] == nil, "unregistered flag callback")
-  end
+  t.assert_eq(1, #names)
+  dot.G[names[1]]()
+  t.assert_eq(1, calls)
+  value:dispose()
+  t.assert_nil(dot.G[names[1]])
 end)
-
----@param case                         { name: string, new: fun(props: table): table, policy: table|nil }
-local function verify_schedule_counts(case)
-  local desired_lnum_current = 1 ---@type integer
-  local desired_lnum_present = 1 ---@type integer
-  local props = vim.tbl_extend("force", {
-    uuid = "result-scheduler-" .. case.name,
-    name = "result scheduler " .. case.name,
-    draw = function(bufnr)
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "first", "second" })
-      return { lnum_current = desired_lnum_current, lnum_present = desired_lnum_present }
-    end,
-    keymaps = {},
-    flags = {},
-    ---@diagnostic disable-next-line: undefined-field
-  }, case.policy or {})
-  local result = case.new(props)
-
-  local ok, err = pcall(function()
-    local initial_task_counts = { current = 0, present = 0, selected = 0 } ---@type table<string, integer>
-    for name, scheduler in pairs({
-      current = result._scheduler_lnum_current,
-      present = result._scheduler_lnum_present,
-      selected = result._scheduler_lnums_selected,
-    }) do
-      local task = scheduler._task
-      scheduler._task = function(...)
-        initial_task_counts[name] = initial_task_counts[name] + 1
-        return task(...)
-      end
-    end
-
-    vim.wait(150)
-    t.assert_eq(0, initial_task_counts.current, case.name .. " pre-buffer current task count")
-    t.assert_eq(0, initial_task_counts.present, case.name .. " pre-buffer present task count")
-    t.assert_eq(0, initial_task_counts.selected, case.name .. " pre-buffer selected task count")
-
-    result:create_buf()
-    t.wait_until(function()
-      return initial_task_counts.current > 0
-        and initial_task_counts.present > 0
-        and initial_task_counts.selected > 0
-        and result._scheduler_lnum_current._tick_settled == result._scheduler_lnum_current._tick_pending
-        and result._scheduler_lnum_present._tick_settled == result._scheduler_lnum_present._tick_pending
-        and result._scheduler_lnums_selected._tick_settled == result._scheduler_lnums_selected._tick_pending
-    end, 1000, case.name .. " initial line tasks did not settle")
-    vim.wait(10)
-    t.assert_eq(1, initial_task_counts.current, case.name .. " initial current task count")
-    t.assert_eq(1, initial_task_counts.present, case.name .. " initial present task count")
-    t.assert_eq(1, initial_task_counts.selected, case.name .. " initial selected task count")
-
-    result._scheduler_lnum_current:cancel()
-    result._scheduler_lnum_present:cancel()
-
-    local current_schedule_count = 0 ---@type integer
-    local present_schedule_count = 0 ---@type integer
-    result._scheduler_lnum_current.schedule = function(self)
-      current_schedule_count = current_schedule_count + 1
-      return self
-    end
-    result._scheduler_lnum_present.schedule = function(self)
-      present_schedule_count = present_schedule_count + 1
-      return self
-    end
-
-    result.lnum_current:next(2)
-    result.lnum_present:next(2)
-    t.wait_until(function()
-      return current_schedule_count > 0 and present_schedule_count > 0
-    end, 1000, case.name .. " line observers did not run")
-    vim.wait(10)
-    t.assert_eq(1, current_schedule_count, case.name .. " direct current-line schedule count")
-    t.assert_eq(1, present_schedule_count, case.name .. " direct present-line schedule count")
-
-    current_schedule_count = 0
-    present_schedule_count = 0
-    desired_lnum_current = 1
-    desired_lnum_present = 1
-    result._scheduler_content._task()
-    t.wait_until(function()
-      return current_schedule_count > 0 and present_schedule_count > 0
-    end, 1000, case.name .. " changed redraw observers did not run")
-    vim.wait(10)
-    t.assert_eq(1, current_schedule_count, case.name .. " changed redraw current schedule count")
-    t.assert_eq(1, present_schedule_count, case.name .. " changed redraw present schedule count")
-
-    current_schedule_count = 0
-    present_schedule_count = 0
-    result._scheduler_content._task()
-    vim.wait(10)
-    t.assert_eq(1, current_schedule_count, case.name .. " stable redraw current schedule count")
-    t.assert_eq(1, present_schedule_count, case.name .. " stable redraw present schedule count")
-  end)
-
-  result:dispose()
-  vim.wait(20)
-  if not ok then
-    error(err, 0)
-  end
-end
-
-for _, case in ipairs(CASES) do
-  t:test(case.name .. " result schedules line signs once per update", function()
-    verify_schedule_counts(case)
-  end)
-end
 
 t:run()

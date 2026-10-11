@@ -5301,6 +5301,71 @@ fn t_staged_plan_retargets_metadata_but_rejects_changed_text_or_layout() {
 }
 
 #[test]
+fn t_staged_list_plan_rejects_branch_suffix_changes_when_expandability_changes() {
+    for suffix in ["", "/"] {
+        let (mut engine, state, _) = fixture(2);
+        let expected = engine.states[&state].state.revision;
+        engine
+            .dispatch(
+                state,
+                Command::SetDisplay(DisplayOptions {
+                    mode: Mode::List,
+                    list_depth: Some(0),
+                    branch_suffix: suffix.into(),
+                    ..DisplayOptions::default()
+                }),
+                Context {
+                    expected_state: Some(expected),
+                    ..Context::default()
+                },
+            )
+            .unwrap();
+        let context = RenderContext::default();
+        let mut before = project(&mut engine, state);
+        for can_expand in [true, false] {
+            let plan = RenderPlan::new(
+                Some(before.clone()),
+                before.clone(),
+                Some(&context),
+                context.clone(),
+                false,
+            )
+            .unwrap();
+            assert_eq!(plan.work.written_rows, 0);
+            apply(
+                &mut engine,
+                vec![Operation::Update {
+                    node: "n0".into(),
+                    patch: NodePatch {
+                        can_expand: Some(can_expand),
+                        ..NodePatch::default()
+                    },
+                }],
+            );
+            let after = project(&mut engine, state);
+            assert_eq!(after.layout_revision, before.layout_revision);
+            if suffix.is_empty() {
+                assert!(plan.retarget(after.clone()).is_some());
+            } else {
+                assert!(plan.retarget(after.clone()).is_none());
+                assert_ne!(after.text_revision, before.text_revision);
+                let updated = RenderPlan::new(
+                    Some(before.clone()),
+                    after.clone(),
+                    Some(&context),
+                    context.clone(),
+                    false,
+                )
+                .unwrap();
+                assert_eq!(updated.work.written_rows, 1);
+                assert_eq!(apply_plan(lines(before), &updated), lines(after.clone()));
+            }
+            before = after;
+        }
+    }
+}
+
+#[test]
 fn t_same_rows_proves_cursor_reuse_but_rejects_other_decoration_changes() {
     let (mut engine, state, root) = fixture(2);
     apply(

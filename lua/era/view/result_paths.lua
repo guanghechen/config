@@ -62,6 +62,15 @@ function M:dispose()
 end
 
 ---@param key                           string
+---@return nil
+function M:remove(key)
+  self:walk(key, function(child, data)
+    self._paths[data.filepath], self._sorted[child] = nil, nil
+  end)
+  Source.remove(self, key)
+end
+
+---@param key                           string
 ---@return string[]|nil
 function M:children(key)
   local children = Source.children(self, key)
@@ -194,7 +203,7 @@ function M:prepare(cwd, paths, checkpoint)
   local records = prepared.records
   local order = require("era.view.result_order")
   for key, record in pairs(records) do
-    if #record.children > 1 then
+    if record.children and #record.children > 1 then
       record.children = order.sort(record.children, function(left, right)
         local a, b = records[left].data, records[right].data
         if a.filetype ~= b.filetype then

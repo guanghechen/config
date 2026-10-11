@@ -350,13 +350,14 @@ impl Source {
         self.apply_inner(operation, revision, limits, request, None)
     }
 
-    /** A children page inserts into fixed gaps and repairs its sibling index once. */
+    /** Sibling inserts use fixed gaps and repair their index once per batch. */
     pub(crate) fn insert_children(
         &mut self,
         parent: NodeId,
         operations: &[Operation],
         revision: Revision,
         limits: &Limits,
+        request: Option<NodeId>,
     ) -> Result<Vec<Change>> {
         let mut ids = Vec::with_capacity(operations.len());
         let mut changes = Vec::with_capacity(operations.len());
@@ -366,13 +367,7 @@ impl Source {
                 unreachable!("validated children inserts")
             };
             let at = self.position(Some(parent), position)?;
-            changes.push(self.apply_inner(
-                operation,
-                revision,
-                limits,
-                Some(parent),
-                Some(&mut ids),
-            )?);
+            changes.push(self.apply_inner(operation, revision, limits, request, Some(&mut ids))?);
             gaps.entry(at)
                 .or_default()
                 .push(*ids.last().expect("inserted child"));
@@ -383,7 +378,7 @@ impl Source {
                 .map(|(at, values)| (at, at, values))
                 .collect(),
         )?;
-        self.set_children(Some(parent), children, revision, Some(parent))?;
+        self.set_children(Some(parent), children, revision, request)?;
         Ok(changes)
     }
 

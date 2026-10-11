@@ -1,9 +1,10 @@
 use super::data::{Node, Source};
+use super::matching::Matcher;
 use super::model::*;
 use super::stamps::{Stamps, Summary};
 use super::state::State;
 use super::storage::{IndexedSequence, IndexedValue, Map};
-use regex::{Regex, RegexBuilder};
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -13,6 +14,7 @@ pub(crate) type MatchedChildren = Map<NodeId, IndexedSequence<NodeId>>;
 pub struct Row {
     pub id: NodeId,
     pub(crate) label: Arc<str>,
+    pub(crate) label_payload: Option<Arc<super::memory::Payload>>,
     pub(crate) text: Option<super::text::Text>,
     pub chain: Option<Arc<[NodeId]>>,
     pub depth: usize,
@@ -110,7 +112,7 @@ pub struct Snapshot {
     pub(crate) text_nodes: Arc<[NodeId]>,
     pub(crate) matched_children: MatchedChildren,
     pub(crate) text_roots: Map<NodeId, ()>,
-    matcher: Option<Regex>,
+    matcher: Option<Matcher>,
 }
 
 pub(crate) struct Inherited<'a> {
@@ -239,11 +241,43 @@ fn hidden(source: &Source, state: &State, id: NodeId) -> bool {
         && source.node(id).is_some_and(|node| node.data.hidden)
 }
 
+fn matching_label<'a>(node: &'a Node, state: &State) -> Cow<'a, str> {
+    if node.data.can_expand
+        && state.display.mode == Mode::List
+        && !state.display.branch_suffix.is_empty()
+    {
+        Cow::Owned(format!(
+            "{}{}",
+            node.data.label, state.display.branch_suffix
+        ))
+    } else {
+        Cow::Borrowed(&node.data.label)
+    }
+}
+
+fn list_label(
+    node: &Node,
+    state: &State,
+    previous: Option<&Snapshot>,
+) -> (Arc<str>, Option<Arc<super::memory::Payload>>) {
+    match matching_label(node, state) {
+        Cow::Borrowed(_) => (node.data.label.clone(), None),
+        Cow::Owned(text) => {
+            let label = previous
+                .and_then(|frame| frame.rows.lookup(node.id))
+                .filter(|row| row.label.as_ref() == text)
+                .map_or_else(|| Arc::<str>::from(text), |row| row.label.clone());
+            let payload = super::memory::Payload::text(label.clone());
+            (label, Some(payload))
+        }
+    }
+}
+
 fn retained(
     source: &Source,
     state: &State,
     roots: &[NodeId],
-    matcher: Option<&Regex>,
+    matcher: Option<&Matcher>,
     matched_children: &mut MatchedChildren,
 ) -> Result<Option<HashSet<NodeId>>> {
     *matched_children = Map::default();
@@ -286,7 +320,7 @@ fn retained(
                         .filter
                         .as_ref()
                         .is_none_or(|filter| filter.contains_key(&id))
-                    && matcher.is_none_or(|matcher| matcher.is_match(&node.data.label));
+                    && matcher.is_none_or(|matcher| matcher.is_match(&matching_label(node, state)));
                 stack.push(Scan {
                     node,
                     child: 0,
@@ -294,8 +328,13 @@ fn retained(
                     descendant: Vec::new(),
                 });
             }
+            let descend = state.display.mode != Mode::List
+                || state
+                    .display
+                    .list_depth
+                    .is_none_or(|limit| stack.len() <= limit);
             let Some(frame) = stack.last_mut() else { break };
-            if let Some(child) = frame.node.child_at(frame.child) {
+            if let Some(child) = descend.then(|| frame.node.child_at(frame.child)).flatten() {
                 frame.child += 1;
                 if !hidden(source, state, child) {
                     enter = Some(child);
@@ -391,21 +430,40 @@ impl Snapshot {
         if state.display.pattern.len() > 4096 {
             return Err(Error::limit("filter pattern exceeds 4096 bytes"));
         }
+        if !state.display.branch_suffix.is_empty()
+            && (state.display.mode != Mode::List
+                || state.display.list_text != ListText::Label
+                || state.display.branch_suffix.len() > 32
+                || state.display.branch_suffix.chars().any(char::is_control))
+        {
+            return Err(Error::invalid(
+                "branch suffixes require List label text and at most 32 display bytes",
+            ));
+        }
+        if let Some(label) = &state.display.context_label {
+            if state.display.mode != Mode::List
+                || state.display.list_text != ListText::Label
+                || !matches!(state.root, Root::ChildrenOf(_))
+                || label.len() > 4096
+                || label.chars().any(char::is_control)
+            {
+                return Err(Error::invalid(
+                    "context labels require a ChildrenOf List with label text",
+                ));
+            }
+        }
         let summary = state.summary(&source)?;
         let matcher = if state.display.pattern.is_empty() {
             None
         } else if let Some(previous) = previous.filter(|previous| {
             previous.state.display.pattern == state.display.pattern
                 && previous.state.display.case_sensitive == state.display.case_sensitive
+                && previous.state.display.fuzzy == state.display.fuzzy
+                && previous.state.display.regex == state.display.regex
         }) {
             previous.matcher.clone()
         } else {
-            Some(
-                RegexBuilder::new(&regex::escape(&state.display.pattern))
-                    .case_insensitive(!state.display.case_sensitive)
-                    .build()
-                    .map_err(|error| Error::invalid(error.to_string()))?,
-            )
+            Some(Matcher::new(&state.display)?)
         };
         let reuse = previous.filter(|frame| {
             reuse_layout && frame.state.display == state.display && frame.state.root == state.root
@@ -472,6 +530,32 @@ impl Snapshot {
                 let mut selection = Inherited::new(&source, &state.selection);
                 let mut expansion = Inherited::new(&source, &state.expansion);
                 if state.display.mode == Mode::List {
+                    if let (Root::ChildrenOf(id), Some(label)) =
+                        (&state.root, &state.display.context_label)
+                        && source.contains(*id)
+                        && state
+                            .display
+                            .filter
+                            .as_ref()
+                            .is_none_or(|filter| filter.contains_key(id))
+                        && matcher
+                            .as_ref()
+                            .is_none_or(|matcher| matcher.is_match(label))
+                    {
+                        rows.push(Row {
+                            id: *id,
+                            label: label.clone(),
+                            label_payload: Some(super::memory::Payload::text(label.clone())),
+                            text: None,
+                            chain: None,
+                            depth: 0,
+                            parent: None,
+                            source_ancestor: None,
+                            last_child: None,
+                            last_descendant: *id,
+                            connector_last: true,
+                        });
+                    }
                     let mut groups = vec![Group {
                         ids: roots.clone(),
                         next: 0,
@@ -489,19 +573,24 @@ impl Snapshot {
                             continue;
                         }
                         let node = source.node(id).ok_or_else(|| Error::missing(id))?;
+                        let depth = group.depth;
+                        let descend = state.display.list_depth.is_none_or(|limit| depth < limit);
                         visited += 1;
                         if allowed(&id) {
                             candidates.push(id);
                         }
-                        if node.data.can_expand && node.completeness != Completeness::Complete {
+                        if descend
+                            && node.data.can_expand
+                            && node.completeness != Completeness::Complete
+                        {
                             needed.push(id);
                         }
-                        if node.child_count() != 0 {
+                        if descend && node.child_count() != 0 {
                             groups.push(Group {
                                 ids: node.children().collect(),
                                 next: 0,
                                 parent: None,
-                                depth: 0,
+                                depth: depth + 1,
                             });
                         }
                     }
@@ -529,9 +618,11 @@ impl Snapshot {
                         for current in path {
                             ancestors.insert(current, parent);
                         }
+                        let (label, label_payload) = list_label(node, state, previous);
                         rows.push(Row {
                             id,
-                            label: node.data.label.clone(),
+                            label,
+                            label_payload,
                             text: text.as_mut().map(|text| text.text(node)).transpose()?,
                             chain: None,
                             depth: 0,
@@ -628,6 +719,7 @@ impl Snapshot {
                         rows.push(Row {
                             id,
                             label: node.data.label.clone(),
+                            label_payload: None,
                             text: None,
                             chain: (!chain.is_empty()).then(|| chain.into()),
                             depth,
@@ -700,10 +792,18 @@ impl Snapshot {
                 continue;
             }
             let row = rows.get(at).expect("changed text row");
-            let label = &source.node(row.id).expect("projected node").data.label;
-            if !Arc::ptr_eq(&row.label, label) {
+            if state.display.context_label.is_some() && state.root == Root::ChildrenOf(row.id) {
+                continue;
+            }
+            let (label, payload) = list_label(
+                source.node(row.id).expect("projected node"),
+                state,
+                previous,
+            );
+            if !Arc::ptr_eq(&row.label, &label) {
                 let mut row = row.clone();
-                row.label = label.clone();
+                row.label = label;
+                row.label_payload = payload;
                 rows.splice(at, at + 1, vec![row])?;
             }
         }
@@ -745,10 +845,19 @@ impl Snapshot {
             Some(previous) => {
                 let changed = !same_layout
                     || ancestry_changed
+                    || previous.state.display.context_label != state.display.context_label
+                    || previous.state.display.branch_suffix != state.display.branch_suffix
                     || text_nodes.iter().any(|id| {
+                        /* Expandability changes derived List text even when the source label is unchanged. */
+                        let suffix = !state.display.branch_suffix.is_empty();
                         (rows.position(id).is_some() || previous.position(*id).is_some())
-                            && previous.source.node(*id).map(|node| &node.data.label)
-                                != source.node(*id).map(|node| &node.data.label)
+                            && previous
+                                .source
+                                .node(*id)
+                                .map(|node| (&node.data.label, suffix && node.data.can_expand))
+                                != source
+                                    .node(*id)
+                                    .map(|node| (&node.data.label, suffix && node.data.can_expand))
                     });
                 if changed {
                     previous.text_revision.next()?
@@ -803,7 +912,10 @@ impl Snapshot {
         after: &str,
     ) -> bool {
         self.state.display.pattern == display.pattern
+            && display.branch_suffix.is_empty()
             && self.state.display.case_sensitive == display.case_sensitive
+            && self.state.display.fuzzy == display.fuzzy
+            && self.state.display.regex == display.regex
             && self
                 .matcher
                 .as_ref()
@@ -993,7 +1105,13 @@ impl Snapshot {
                     );
                 }
                 label_bytes = row.text.as_ref().map_or_else(
-                    || label_bytes.saturating_add(row.folded_ids().len() - 1),
+                    || {
+                        if row.chain.is_none() {
+                            row.label.len()
+                        } else {
+                            label_bytes.saturating_add(row.folded_ids().len() - 1)
+                        }
+                    },
                     |text| text.bytes(&row.label),
                 );
                 let mut row_bytes = label_bytes.saturating_add(std::mem::size_of::<RowInfo>());
@@ -1035,7 +1153,7 @@ impl Snapshot {
                         .collect::<Result<Vec<_>>>()?
                         .join("/")
                 } else {
-                    node.data.label.to_string()
+                    row.label.to_string()
                 };
                 let (matched_text, match_offset) = if row.text.is_some() {
                     (
@@ -1050,9 +1168,9 @@ impl Snapshot {
                     .as_ref()
                     .map(|matcher| {
                         matcher
-                            .find_iter(matched_text)
-                            .take(remaining_matches + 1)
-                            .map(|range| (range.start() + match_offset, range.end() + match_offset))
+                            .ranges(matched_text, remaining_matches + 1)
+                            .into_iter()
+                            .map(|(first, last)| (first + match_offset, last + match_offset))
                             .collect::<Vec<_>>()
                     })
                     .unwrap_or_default();
@@ -1157,6 +1275,130 @@ mod tests {
             .set_expanded(&source, &[root], true, Scope::Subtree)
             .unwrap();
         (Arc::new(source), state)
+    }
+
+    #[test]
+    fn list_branch_suffix_is_matched_rendered_and_accounted_without_changing_source_labels() {
+        let (source, mut state) = fixture();
+        state.display = DisplayOptions {
+            mode: Mode::List,
+            list_depth: Some(0),
+            branch_suffix: "/".into(),
+            pattern: "^a/$".into(),
+            regex: true,
+            ..DisplayOptions::default()
+        };
+        let first = Snapshot::build(
+            source.clone(),
+            &mut state,
+            None,
+            false,
+            Arc::new([]),
+            Revision(1),
+        )
+        .unwrap();
+        assert_eq!(first.len(), 1);
+        let row = &first.rows(0, 1).unwrap()[0];
+        assert_eq!(row.label, "a/");
+        assert_eq!(row.matches, [(0, 2)]);
+        assert!(row.row.label_payload.is_some());
+        assert_eq!(
+            source
+                .node(source.id("a").unwrap())
+                .unwrap()
+                .data
+                .label
+                .as_ref(),
+            "a"
+        );
+        state.display.pattern = "".into();
+        state.display.branch_suffix = "中/".into();
+        let before = Snapshot::build(
+            source.clone(),
+            &mut state,
+            Some(&first),
+            false,
+            Arc::new([]),
+            Revision(2),
+        )
+        .unwrap();
+        state.display.branch_suffix = "".into();
+        let after = Snapshot::build(
+            source,
+            &mut state,
+            Some(&before),
+            false,
+            Arc::new([]),
+            Revision(3),
+        )
+        .unwrap();
+        let context = super::super::render::RenderContext::default();
+        let plan = super::super::render::RenderPlan::new(
+            Some(Arc::new(before)),
+            Arc::new(after),
+            Some(&context),
+            context.clone(),
+            false,
+        )
+        .unwrap();
+        assert_eq!(plan.lines(0, 2, 1024).unwrap().0, ["  a", "  z"]);
+        assert_eq!(plan.work.written_rows, 1);
+    }
+
+    #[test]
+    fn bounded_list_filters_only_its_scope_and_keeps_context_identity() {
+        let (source, mut state) = fixture();
+        state.display = DisplayOptions {
+            mode: Mode::List,
+            list_depth: Some(0),
+            context_label: Some("../".into()),
+            ..DisplayOptions::default()
+        };
+        let build = |state: &mut State, before: Option<&Snapshot>| {
+            Snapshot::build(
+                source.clone(),
+                state,
+                before,
+                false,
+                Arc::new([]),
+                Revision(1),
+            )
+            .unwrap()
+        };
+        let frame = build(&mut state, None);
+        assert_eq!(
+            frame
+                .rows(0, frame.len())
+                .unwrap()
+                .iter()
+                .map(|row| row.label.as_str())
+                .collect::<Vec<_>>(),
+            ["../", "a", "z"]
+        );
+        assert_eq!(frame.row(0).unwrap().id, source.id("r").unwrap());
+        assert!(state.demands_children(&source, source.id("r").unwrap()));
+        assert!(!state.demands_children(&source, source.id("a").unwrap()));
+        assert_eq!(frame.visited_nodes, 2);
+        state.display.pattern = "c".into();
+        assert_eq!(build(&mut state, Some(&frame)).len(), 0);
+        state.display.pattern = "../".into();
+        let filtered = build(&mut state, Some(&frame));
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered.rows(0, 1).unwrap()[0].matches, [(0, 3)]);
+        state.display.pattern = "".into();
+        state.display.context_label = Some("up".into());
+        let changed = build(&mut state, Some(&frame));
+        let context = super::super::render::RenderContext::default();
+        let plan = super::super::render::RenderPlan::new(
+            Some(Arc::new(frame)),
+            Arc::new(changed),
+            Some(&context),
+            context.clone(),
+            false,
+        )
+        .unwrap();
+        assert_eq!(plan.lines(0, 1, 1024).unwrap().0, ["  up"]);
+        assert!(plan.work.written_rows > 0);
     }
 
     #[test]

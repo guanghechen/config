@@ -171,113 +171,259 @@ t:test("canonicalizes reset ingress and matches either separator", function()
   end)
 end)
 
-t:test("mutation actions cross only the OS boundary", function()
+t:test("mutation actions pass captured resources and canonical paths to native Jobs", function()
   with_composer("canonical-mutations", function(composer)
+    local Jobs = require("era.m.filetree.jobs")
+    local Future = require("stl.c.future")
     local rootpath = "C:/workspace/project"
     local current_uuid, current_data = create_file(rootpath, "directory")
     local rootdata = current_data
+    composer._filetree:insert_directory_absolute(rootpath)
     composer.__retrieve_file__ = function()
       return current_uuid, current_data
     end
     composer.__retrieve_rootdata__ = function()
       return rootdata
     end
-
     t:patch_table(composer.result, "get_winnr", function()
       return vim.api.nvim_get_current_win()
     end)
     t:patch_table(composer._scheduler_match, "schedule", function() end)
-    t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
-      return "OS<" .. filepath .. ">"
+    t:patch_table(composer, "__refresh_file_indexes__", function() end)
+    local captured_path, created_path, moved_path, removed_uuid, inserted_path
+    local captured_source, captured_resource = {}, {}
+    captured_resource.info = function()
+      return { directory = current_data.filetype == "directory" }
+    end
+    captured_resource.source = function()
+      return captured_source
+    end
+    captured_resource.node = function()
+      return "captured-node"
+    end
+    t:patch_table(Jobs, "capture", function(path)
+      captured_path = path
+      return Future.resolve({ data = {}, resource = captured_resource })
     end)
-    local existing_filepath = nil ---@type string|nil
-    t:patch_table(yoz.path, "is_exist", function(filepath)
-      return filepath == existing_filepath
+    ---@param target                    ?string
+    ---@return stl.c.Future
+    local function result(target)
+      return Future.resolve({ status = {}, success = true, items = { { status = "success", target = target } } })
+    end
+    t:patch_table(Jobs, "create", function(_, resource, path)
+      t.assert_true(resource == captured_resource, "creation retains the captured target")
+      created_path = path
+      return result(path)
+    end)
+    t:patch_table(Jobs, "run", function(_, plan)
+      t.assert_eq("delete", plan.kind)
+      t.assert_true(plan.source == captured_source)
+      t.assert_eq("captured-node", plan.nodes[1])
+      return result()
+    end)
+    t:patch_table(Jobs, "move", function(_, resource, path, overwrite)
+      t.assert_true(resource == captured_resource)
+      moved_path = path
+      local decision = overwrite({ target_label = path })
+      t.assert_true(decision:get_result())
+      return result(path)
     end)
     t:patch_table(vim.ui, "select", function(_, _, callback)
       callback("Yes")
     end)
-
-    local mkdir_calls = {} ---@type table[]
-    local write_filepath = nil ---@type string|nil
-    local delete_filepath = nil ---@type string|nil
-    local inserted_filepath = nil ---@type string|nil
-    local removed_uuid = nil ---@type string|nil
-    local removed_tree_uuid = nil ---@type string|nil
-    local rename_params = nil ---@type dot.t.IRenameParams|nil
-    local update_params = nil ---@type table|nil
-    t:patch_table(stl.env, "mkdirs", function(filepath, isdir)
-      mkdir_calls[#mkdir_calls + 1] = { filepath = filepath, isdir = isdir }
-    end)
-    t:patch_table(vim.fn, "writefile", function(_, filepath)
-      write_filepath = filepath
-    end)
-    t:patch_table(vim.fn, "delete", function(filepath)
-      delete_filepath = filepath
-      return 0
-    end)
-    t:patch_table(composer._treeview, "insert_filepath", function(_, filepath)
-      inserted_filepath = filepath
+    t:patch_table(composer._treeview, "insert_filepath", function(_, path)
+      inserted_path = path
     end)
     t:patch_table(composer._treeview, "remove", function(_, uuid)
       removed_uuid = uuid
     end)
-    t:patch_table(composer._filetree, "remove", function(_, uuid)
-      removed_tree_uuid = uuid
-    end)
-    t:patch_table(composer, "__refresh_file_indexes__", function() end)
-    t:patch_table(era.fn, "rename", function(params)
-      rename_params = params
-      return true
-    end)
-    composer.__update_tree_after_rename__ = function(_, from, to, isdir)
-      update_params = { from = from, to = to, isdir = isdir }
+    t:patch_table(composer._filetree, "remove", function() end)
+    local update
+    composer.__update_tree_after_rename__ = function(_, from, to)
+      update = { from, to }
     end
-
-    local function submit(action_desc, value)
-      local restore_input = t:patch_table(vim.ui, "input", function(_, callback)
-        callback(value)
+    ---@param desc                      string
+    ---@param input                     string
+    ---@return nil
+    local function submit(desc, input)
+      local restore = t:patch_table(vim.ui, "input", function(_, callback)
+        callback(input)
       end)
-      retrieve_action(composer, action_desc)()
-      restore_input()
+      retrieve_action(composer, desc)()
+      t.wait_until(function()
+        return not composer._file_operation_busy
+      end, 1000)
+      restore()
     end
-
     submit("filetree: create node", [[nested\new.lua]])
-    local created_filepath = rootpath .. "/nested/new.lua"
-    t.assert_eq(created_filepath, inserted_filepath, "created canonical filepath")
-    t.assert_eq("OS<" .. created_filepath .. ">", write_filepath, "write boundary")
-    t.assert_eq("OS<" .. created_filepath .. ">", mkdir_calls[1].filepath, "create mkdir boundary")
-    t.assert_false(mkdir_calls[1].isdir, "create file mkdir mode")
-
-    local source_filepath = rootpath .. "/src/main.lua"
-    current_uuid, current_data = create_file(source_filepath, "file")
+    t.assert_eq(rootpath, captured_path)
+    t.assert_eq("nested/new.lua", created_path)
+    t.assert_eq(rootpath .. "/" .. created_path, inserted_path)
+    submit("filetree: create node", "../sibling/new.lua")
+    t.assert_eq("../sibling/new.lua", created_path)
+    t.assert_eq("C:/workspace/sibling/new.lua", inserted_path)
+    submit("filetree: create node", [[D:\archive\new.lua]])
+    t.assert_eq("D:/archive/new.lua", created_path, "another volume stays an explicit absolute target")
+    t.assert_eq(created_path, inserted_path)
+    local source = rootpath .. "/src/main.lua"
+    current_uuid, current_data = create_file(source, "file")
+    composer._filetree:insert_file_absolute(source)
     submit("filetree: remove node", "yes")
-    t.assert_eq("OS<" .. source_filepath .. ">", delete_filepath, "delete boundary")
-    t.assert_eq(current_uuid, removed_uuid, "removed canonical UUID")
-    t.assert_eq(current_uuid, removed_tree_uuid, "removed topology UUID")
-
-    rename_params = nil
-    update_params = nil
-    existing_filepath = "OS<" .. rootpath .. "/src/renamed.lua>"
+    t.assert_eq(source, captured_path)
+    t.assert_eq(current_uuid, removed_uuid)
     submit("filetree: rename node", "renamed.lua")
-    local renamed_filepath = rootpath .. "/src/renamed.lua"
-    t.assert_eq("OS<" .. source_filepath .. ">", rename_params and rename_params.from, "rename source boundary")
-    t.assert_eq("OS<" .. renamed_filepath .. ">", rename_params and rename_params.to, "rename target boundary")
-    t.assert_true(rename_params and rename_params.force, "overwrite rename force")
-    t.assert_eq(source_filepath, update_params and update_params.from, "rename canonical source")
-    t.assert_eq(renamed_filepath, update_params and update_params.to, "rename canonical target")
-
-    rename_params = nil
-    update_params = nil
-    existing_filepath = nil
+    t.assert_eq(rootpath .. "/src/renamed.lua", moved_path)
+    t.assert_eq(source, update[1])
+    t.assert_eq(moved_path, update[2])
     submit("filetree: move node", [[D:\archive\moved.lua]])
-    local moved_filepath = "D:/archive/moved.lua"
-    t.assert_eq("OS<" .. source_filepath .. ">", rename_params and rename_params.from, "move source boundary")
-    t.assert_eq("OS<" .. moved_filepath .. ">", rename_params and rename_params.to, "move target boundary")
-    t.assert_eq(source_filepath, update_params and update_params.from, "move canonical source")
-    t.assert_eq(moved_filepath, update_params and update_params.to, "move canonical target")
+    t.assert_eq("D:/archive/moved.lua", moved_path)
+    t.assert_eq(moved_path, update[2])
+    current_uuid, current_data = create_file(rootpath .. "/nested/old", "directory")
+    composer._filetree:insert_directory_absolute(current_data.filepath)
+    moved_path = nil
+    submit("filetree: rename node", "old/")
+    t.assert_nil(moved_path, "accepting a nested directory's default name must not move it to the result root")
+    submit("filetree: rename node", "new/")
+    t.assert_eq(rootpath .. "/nested/new", moved_path, "a trailing slash is a directory marker, not a parent path")
   end)
 end)
+
+---@param ui                            __test__.support.UI
+---@param expression                    string
+---@return nil
+local function wait_ui(ui, expression)
+  local deadline = vim.uv.hrtime() + 5000000000
+  t.wait_until(function()
+    t.assert_true(vim.uv.hrtime() < deadline, expression)
+    return ui:rpc("nvim_exec_lua", "return " .. expression, {})
+  end, 5000)
+end
+
+---@return __test__.support.UI
+---@return string
+local function new_picker_ui()
+  local directory = require("ux.filetree.path").from_os(vim.fn.tempname())
+  vim.fn.mkdir(directory .. "/root", "p")
+  t:defer(function()
+    vim.fn.delete(directory, "rf")
+  end)
+  vim.fn.writefile({ "a" }, directory .. "/root/a.lua")
+  vim.fn.writefile({ "b" }, directory .. "/root/b.lua")
+  local ui = require("__test__.support.ui").new()
+  t:defer(function()
+    ui:close()
+  end)
+  ui:rpc("nvim_ui_attach", 100, 32, { rgb = true, ext_linegrid = true })
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    local root, path = ...
+    vim.opt.runtimepath:prepend(root)
+    package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
+    vim.api.nvim_set_current_dir(path)
+    require("ark.bootstrap").setup()
+    errors = {}
+    stl.reporter.error = function(value) errors[#errors + 1] = value.message end
+    local o = stl.c.Observable.from_value
+    picker = era.m.picker.FiletreeComposer.new({
+      name = "file operation", permanent = false, preview = false, title = "file operation",
+      search_pattern = o(""), flag_foldempty = o(false), flag_fuzzy = o(false), flag_regex = o(false),
+      flag_case_sensitive = o(true), flag_selected = o(false), flag_viewtype = o("tree"),
+    })
+    test_directory = path
+    picker:reset_filepaths(path, { path .. "/a.lua", path .. "/b.lua" }, false)
+    picker:focus()
+  ]],
+    { assert(vim.uv.cwd()), directory .. "/root" }
+  )
+  wait_ui(ui, "picker._treeview.view and picker._treeview.view:frame() and picker.result.lnum_total:snapshot() == 2")
+  return ui, directory
+end
+
+t:test("create rejects a directory replaced while its prompt is open", function()
+  local ui, directory = new_picker_ui()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    vim.ui.input = function(_, callback) pending = callback end
+    picker:__file_operation__("create")
+  ]],
+    {}
+  )
+  wait_ui(ui, "pending ~= nil")
+  assert(vim.uv.fs_rename(directory .. "/root", directory .. "/original"))
+  assert(vim.uv.fs_mkdir(directory .. "/root", 493))
+  ui:rpc("nvim_exec_lua", [[pending("created.txt")]], {})
+  wait_ui(ui, "not picker._file_operation_busy")
+  t.assert_nil(vim.uv.fs_stat(directory .. "/root/created.txt"), "replacement directory must remain untouched")
+  t.assert_nil(vim.uv.fs_stat(directory .. "/original/created.txt"), "moved directory must remain untouched")
+  t.assert_true(ui:rpc("nvim_exec_lua", "return #errors > 0", {}), "stale target must be reported")
+end)
+
+for _, phase in ipairs({ "before action", "during prompt" }) do
+  t:test("an old Frame rename preserves a producer replaced " .. phase, function()
+    local ui = new_picker_ui()
+    ui:rpc(
+      "nvim_exec_lua",
+      [[
+      vim.cmd.stopinsert()
+      vim.api.nvim_set_current_win(picker.result:get_winnr())
+      picker.result:set_lnum_current(1)
+      vim.cmd.normal({args={"V"}, bang=true})
+      vim.ui.input = function(_, callback) pending = callback end
+    ]],
+      {}
+    )
+    if phase == "during prompt" then
+      ui:rpc("nvim_exec_lua", [[picker:__file_operation__("rename")]], {})
+      wait_ui(ui, "pending ~= nil")
+    end
+    ui:rpc("nvim_exec_lua", [[picker:reset_filepaths(test_directory, {test_directory .. "/b.lua"}, false)]], {})
+    wait_ui(
+      ui,
+      [[
+      picker._treeview.state:snapshot():source():id(require("era.view.result_paths").key(test_directory .. "/a.lua")) == nil
+    ]]
+    )
+    t.assert_eq(
+      "a.lua",
+      ui:rpc(
+        "nvim_exec_lua",
+        [[
+      local _, item = picker:__retrieve_file__()
+      return item and item.basename
+    ]],
+        {}
+      ),
+      "the visible Frame still owns the original action target"
+    )
+    if phase == "before action" then
+      ui:rpc("nvim_exec_lua", [[picker:__file_operation__("rename")]], {})
+      wait_ui(ui, "pending ~= nil")
+    end
+    ui:rpc("nvim_exec_lua", [[pending("renamed.lua")]], {})
+    wait_ui(
+      ui,
+      [[vim.uv.fs_stat(test_directory .. "/renamed.lua") ~= nil and not require("era.m.filetree.jobs").pending()]]
+    )
+    ui:rpc("nvim_exec_lua", [[vim.cmd.normal({args={vim.keycode("<Esc>")}, bang=true})]], {})
+    wait_ui(ui, "not picker._file_operation_busy")
+    local files = ui:rpc(
+      "nvim_exec_lua",
+      [[
+      local files = {}
+      for _, uuid in ipairs(picker._uuids_file) do
+        files[#files + 1] = picker._filetree:get(uuid).basename
+      end
+      return files
+    ]],
+      {}
+    )
+    t.assert_eq(1, #files, "the replacement producer must keep its own membership")
+    t.assert_eq("b.lua", files[1])
+    t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+  end)
+end
 
 t:test("directory removal synchronizes topology state and indexes", function()
   with_composer("directory-remove-refresh", function(composer)
@@ -290,8 +436,25 @@ t:test("directory removal synchronizes topology state and indexes", function()
       return vim.api.nvim_get_current_win()
     end)
     t:patch_table(composer._scheduler_match, "schedule", function() end)
-    t:patch_table(vim.fn, "delete", function()
-      return 0
+    local Jobs = require("era.m.filetree.jobs")
+    t:patch_table(Jobs, "capture", function()
+      return stl.c.Future.resolve({
+        data = {},
+        resource = {
+          info = function()
+            return { directory = true }
+          end,
+          source = function()
+            return {}
+          end,
+          node = function()
+            return "captured"
+          end,
+        },
+      })
+    end)
+    t:patch_table(Jobs, "run", function()
+      return stl.c.Future.resolve({ status = {}, success = true, items = { { status = "success" } } })
     end)
     t:patch_table(vim.ui, "input", function(_, callback)
       callback("yes")
@@ -305,6 +468,9 @@ t:test("directory removal synchronizes topology state and indexes", function()
     end
 
     retrieve_action(composer, "filetree: remove node")()
+    t.wait_until(function()
+      return not composer._file_operation_busy
+    end, 1000)
 
     t.assert_false(composer._filetree:contains(directory_uuid), "removed directory topology")
     t.assert_false(composer._filetree:contains(fileuuid), "removed child topology")
@@ -317,66 +483,27 @@ t:test("directory removal synchronizes topology state and indexes", function()
   end)
 end)
 
-t:test("directory refresh canonicalizes native scan results", function()
+t:test("directory moves preserve only producer membership without rescanning disk", function()
   with_composer("canonical-directory-refresh", function(composer)
-    local rootpath = "C:/workspace/project"
-    local source = rootpath .. "/src/old"
-    local target = stl.env.IS_WIN and "D:/archive/new" or "/archive/new"
+    local source, target = "/workspace/src/old", "/archive/new"
     t:patch_table(composer._scheduler_match, "schedule", function() end)
-    composer:reset_filepaths(rootpath, {
-      source .. "/old.lua",
-    }, false)
+    composer:reset_filepaths("/workspace", { source .. "/old.lua", source .. "/nested/child.lua" }, false)
     native.publish(composer._treeview)
     composer._treeview:set_selected(require("era.view.result_paths").key(source .. "/old.lua"), true)
     native.publish(composer._treeview)
-
-    local scanned = nil ---@type string|nil
-    t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
-      return "OS<" .. filepath .. ">"
+    t:patch_table(yoz.fs, "collect_files", function()
+      error("result moves must not scan disk")
     end)
-    t:patch_table(yoz.fs, "collect_files", function(filepath)
-      scanned = filepath
-      return {
-        files = {
-          [[nested\child.lua]],
-          "old.lua",
-          "root.lua",
-        },
-      },
-        nil
-    end)
-
-    composer:__update_tree_after_rename__(source, target .. "/", true)
-
+    composer:__update_tree_after_rename__(source, target .. "/")
     native.publish(composer._treeview)
-
-    t.assert_eq("OS<" .. target .. ">", scanned, "directory scan boundary")
-    for _, filepath in ipairs({
-      target .. "/nested/child.lua",
-      target .. "/old.lua",
-      target .. "/root.lua",
-    }) do
-      local data = composer._filetree:get(require("era.view.result_paths").key(filepath))
-      t.assert_true(data ~= nil, "canonical scanned data: " .. filepath)
-      t.assert_eq(filepath, data and data.filepath, "scanned filepath")
+    for _, path in ipairs({ target .. "/old.lua", target .. "/nested/child.lua" }) do
+      local data = composer._filetree:get(require("era.view.result_paths").key(path))
+      t.assert_eq(path, data and data.filepath)
     end
-
     local fileuuid = require("era.view.result_paths").key(target .. "/old.lua")
-    local ancestor_uuid = require("era.view.result_paths").key(yoz.canonical_path.dirname(target, false))
-    t.assert_true(composer._treeview:retrieve(ancestor_uuid) ~= nil, "destination ancestor state")
-    t.assert_true(composer._treeview:isselected(fileuuid), "moved file selection")
-
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    local ok, err = pcall(function()
-      native.publish(composer._treeview, { only_selected = true })
-      t.assert_true(composer._treeview:retrieve_lnum(fileuuid) ~= nil, "selected moved file projection")
-    end)
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-    if not ok then
-      error(err, 0)
-    end
+    t.assert_true(composer._treeview:isselected(fileuuid))
+    native.publish(composer._treeview, { only_selected = true })
+    t.assert_true(composer._treeview:retrieve_lnum(fileuuid) ~= nil)
   end)
 end)
 
@@ -392,7 +519,7 @@ t:test("file refresh preserves selection at the new identity", function()
     composer._uuid_current = require("era.view.result_paths").key(source)
     composer:__match__("foo")
 
-    composer:__update_tree_after_rename__(source, target, false)
+    composer:__update_tree_after_rename__(source, target)
 
     native.publish(composer._treeview)
     composer:__match__("foo")
@@ -419,7 +546,7 @@ t:test("root directory refresh remaps composer indexes", function()
     composer:reset_filepaths(source, { source .. "/file.lua" }, false)
     composer._uuid_current = require("era.view.result_paths").key(source .. "/file.lua")
 
-    composer:__update_tree_after_rename__(source, target .. "/", true)
+    composer:__update_tree_after_rename__(source, target .. "/")
 
     native.publish(composer._treeview)
 
@@ -444,7 +571,7 @@ t:test("directory refresh preserves an empty destination", function()
     end)
     composer._treeview:insert_dirpath(source)
 
-    composer:__update_tree_after_rename__(source, target .. "/", true)
+    composer:__update_tree_after_rename__(source, target .. "/")
 
     native.publish(composer._treeview)
 
@@ -478,7 +605,7 @@ t:test("directory overwrite removes the replaced target subtree", function()
     composer._treeview:set_selected(require("era.view.result_paths").key(stale_file), true)
     native.publish(composer._treeview)
 
-    composer:__update_tree_after_rename__(source, target .. "/", true)
+    composer:__update_tree_after_rename__(source, target .. "/")
 
     native.publish(composer._treeview)
 
@@ -492,42 +619,30 @@ t:test("directory overwrite removes the replaced target subtree", function()
   end)
 end)
 
-t:test("directory scan failure rebuilds from known source leafs", function()
-  with_composer("directory-scan-failure", function(composer)
-    local source = "/workspace/source"
-    local target = "/archive/target"
-    local source_file = source .. "/known.lua"
-    local target_file = target .. "/known.lua"
-    local report = nil ---@type table|nil
-    local schedule_count = 0
-    t:patch_table(composer._scheduler_match, "schedule", function()
-      schedule_count = schedule_count + 1
-    end)
-    t:patch_table(stl.reporter, "error", function(value)
-      report = value
-    end)
+t:test("directory moves retain location metadata and native selection without disk scans", function()
+  with_composer("location-move", function(composer)
+    local source, target = "/workspace/source", "/archive/target"
+    local key = require("era.view.result_paths").key(source .. "/known.lua")
+    local next_key = require("era.view.result_paths").key(target .. "/known.lua")
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
     t:patch_table(yoz.fs, "collect_files", function()
-      return nil, { error = "permission denied" }
+      error("unexpected directory scan")
     end)
-    composer:reset_filepaths("/workspace", { source_file }, false)
+    composer:reset_filepaths("/workspace", { source .. "/known.lua" }, false)
+    composer._treeview:add_location(key, { locationuuid = "location", lnum = 7, col = 3, col_end = 5, text = "match" })
     native.publish(composer._treeview)
-    composer._treeview:set_selected(require("era.view.result_paths").key(source_file), true)
+    composer._treeview:set_selected("location", true)
     native.publish(composer._treeview)
-    schedule_count = 0
-
-    composer:__update_tree_after_rename__(source, target .. "/", true)
-
+    local old = composer._treeview:frame():source():id("location")
+    composer:__update_tree_after_rename__(source, target .. "/")
     native.publish(composer._treeview)
-
-    local source_uuid = require("era.view.result_paths").key(source)
-    local target_uuid = require("era.view.result_paths").key(target)
-    local target_file_uuid = require("era.view.result_paths").key(target_file)
-    t.assert_false(composer._filetree:contains(source_uuid), "failed scan removes stale source")
-    t.assert_true(composer._filetree:contains(target_uuid), "failed scan keeps target root")
-    t.assert_true(composer._filetree:contains(target_file_uuid), "failed scan restores known file")
-    t.assert_true(composer._treeview:isselected(target_file_uuid), "failed scan remaps selection")
-    t.assert_eq("collect_files_failed", report and report.subject, "failed scan report")
-    t.assert_eq(1, schedule_count, "failed scan schedules match refresh")
+    local location = composer._treeview:retrieve("location")
+    t.assert_eq(next_key, location.leafuuid)
+    t.assert_eq(7, location.lnum)
+    t.assert_eq("match", location.text)
+    t.assert_eq(old, composer._treeview:frame():source():id("location"))
+    t.assert_true(composer._treeview:isselected("location"))
+    t.assert_eq(target .. "/known.lua", composer._treeview:data("location").filepath)
   end)
 end)
 
@@ -698,7 +813,7 @@ t:test("rename restores the native cursor to the new file identity", function()
     native.await(tree:ready())
     composer.result:set_lnum_current(2)
     native.await(tree:ready())
-    composer:__update_tree_after_rename__("/workspace/bbb.lua", "/workspace/renamed.lua", false)
+    composer:__update_tree_after_rename__("/workspace/bbb.lua", "/workspace/renamed.lua")
     native.await(composer.result.draw())
     native.await(tree:ready())
     local cursor = vim.api.nvim_win_get_cursor(composer.result:get_winnr())[1]

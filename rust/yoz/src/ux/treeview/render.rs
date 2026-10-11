@@ -375,11 +375,30 @@ impl RenderPlan {
                     old = a + len;
                     new = b + len;
                 }
-                let changed = if target.previous == Some(base.id) {
+                let mut changed = if target.previous == Some(base.id) {
                     target.text_nodes.to_vec()
                 } else {
                     base.source.nodes.changed_keys(&target.source.nodes)
                 };
+                if base.state.display.context_label != target.state.display.context_label
+                    && let Root::ChildrenOf(root) = target.root()
+                {
+                    changed.push(*root);
+                }
+                if base.state.display.branch_suffix != target.state.display.branch_suffix {
+                    changed.extend(
+                        target
+                            .rows
+                            .iter()
+                            .filter(|row| {
+                                target
+                                    .source
+                                    .node(row.id)
+                                    .is_some_and(|node| node.data.can_expand)
+                            })
+                            .map(|row| row.id),
+                    );
+                }
                 let mut text_rows = ancestry_rows;
                 for id in changed {
                     if let Some(at) = target.position(id) {

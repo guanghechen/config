@@ -46,6 +46,21 @@ function Data:inspect(source, node) end
 ---@return yoz.ux.treeview.Ticket
 function Data:details(resource) end
 
+---@class ux.filetree.IListingRow
+---@field node                          ux.treeview.NodeId
+---@field directory                     boolean
+---@field permissions                   string
+---@field size                          string
+---@field date                          string
+---@field owner                         string
+---@field group                         string
+---@param frame                         yoz.ux.treeview.Frame
+---@param first                         integer
+---@param last                          integer
+---@param parent_context                ?boolean Use captured parent metadata for the context row.
+---@return yoz.ux.treeview.Ticket
+function Data:listing(frame, first, last, parent_context) end
+
 ---@class ux.filetree.IResourceDetails
 ---@field size                          integer
 ---@field permissions                   string

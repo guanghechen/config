@@ -1,3 +1,7 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.select.provider_snacks" ---@type string
+local ESCAPES = { ["\0"] = "\\0", ["\r"] = "\\r", ["\n"] = "\\n" }
+
 ---@param text                          string
 ---@return string
 ---@return stl.t.IHighlightInline[]
@@ -72,7 +76,7 @@ end
 ---@param opts                          era.m.select.IOptions
 ---@return era.m.picker.composer.list.IResetData
 ---@return integer
----@return era.m.picker.composer.list.IRenderResult|nil
+---@return era.m.picker.composer.list.IPresent|nil
 ---@return era.m.picker.composer.list.IRenderPreview|nil
 local function snacks_provider(items, opts)
   local format_item = opts.format_item or (opts.snacks and opts.snacks.format) or stl.fn.identity ---@type fun(item): string|nil
@@ -82,7 +86,7 @@ local function snacks_provider(items, opts)
   for i = 1, #items do
     local item = items[i]
     local raw_text = format_item(item) or (type(item) == "table" and item.text) or tostring(item) ---@type string
-    raw_text = raw_text:gsub("\n", "\\n")
+    raw_text = raw_text:gsub("[%z\r\n]", ESCAPES)
 
     local text, highlights = generate_highlights(raw_text) ---@type string, stl.t.IHighlightInline[]
     local text_len = #text ---@type integer
@@ -91,7 +95,7 @@ local function snacks_provider(items, opts)
     end
 
     select_items[#select_items + 1] = {
-      uuid = item.name or yoz.fn.md5(text),
+      uuid = tostring(i),
       text = text,
       text_lower = text:lower(),
       data = { original_item = item },

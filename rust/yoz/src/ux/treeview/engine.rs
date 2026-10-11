@@ -265,11 +265,19 @@ impl Engine {
                 (append_base.as_ref().expect("append base").clone(), change)
             } else {
                 let old = source.clone();
-                let count = request.map_or(0, |parent| batch.operations[at..].iter().take_while(|operation| {
+                let parent = request.or_else(|| match operation {
+                    Operation::Insert {
+                        parent: Some(parent),
+                        position: super::data::Position::Last,
+                        ..
+                    } if matches!(origin, Origin::External) => source.resolve(parent).ok(),
+                    _ => None,
+                });
+                let count = parent.map_or(0, |parent| batch.operations[at..].iter().take_while(|operation| {
                     matches!(operation, Operation::Insert { parent: Some(reference), position, .. }
                         if source.resolve(reference) == Ok(parent) && match position {
                             super::data::Position::Last => true,
-                            super::data::Position::Before(anchor) => source.resolve(anchor).ok().is_some_and(|id|
+                            super::data::Position::Before(anchor) if request.is_some() => source.resolve(anchor).ok().is_some_and(|id|
                                 source.node(id).is_some_and(|node| node.parent == Some(parent))),
                             _ => false,
                         })
@@ -278,10 +286,11 @@ impl Engine {
                     append_base = Some(old.clone());
                     appended = source
                         .insert_children(
-                            request.expect("read slot"),
+                            parent.expect("sibling parent"),
                             &batch.operations[at..at + count],
                             revision,
                             &self.limits,
+                            request,
                         )?
                         .into();
                     appended.pop_front().expect("append changes")
@@ -1049,6 +1058,122 @@ mod tests {
                 ..Context::default()
             },
         )
+    }
+
+    #[test]
+    fn t_sibling_import_preserves_frames_selection_and_later_operation_order() {
+        let (mut engine, state, a, _, c) = fixture();
+        select(
+            &mut engine,
+            state,
+            &[a],
+            SelectAction::Select,
+            Scope::Subtree,
+        )
+        .unwrap();
+        let before = engine.snapshot(state).unwrap();
+        let epoch = engine.source.node(a).unwrap().request_epoch;
+        let mut operations: Vec<_> = (0..2048)
+            .map(|index| insert(&format!("item-{index}"), Some(a), false))
+            .collect();
+        operations.push(Operation::Insert {
+            key: "first".into(),
+            parent: Some(a.into()),
+            position: Position::First,
+            data: NodeData::leaf("first"),
+            completeness: Completeness::Complete,
+        });
+        operations.push(Operation::Reorder {
+            parent: Some(a.into()),
+            children: std::iter::once("first".into())
+                .chain(
+                    (0..2048)
+                        .rev()
+                        .map(|index| format!("item-{index}").as_str().into()),
+                )
+                .chain(std::iter::once(c.into()))
+                .collect(),
+        });
+        batch(&mut engine, operations).unwrap();
+        for (_, frame) in engine.project() {
+            frame.unwrap();
+        }
+        let after = engine.snapshot(state).unwrap();
+        assert_eq!(before.source().node(a).unwrap().child_count(), 1);
+        let children: Vec<_> = engine.source.node(a).unwrap().children().collect();
+        assert_eq!(children.len(), 2050);
+        assert_eq!(
+            engine.source.node(children[0]).unwrap().key.as_ref(),
+            "first"
+        );
+        assert_eq!(
+            engine.source.node(children[1]).unwrap().key.as_ref(),
+            "item-2047"
+        );
+        assert_eq!(children.last(), Some(&c));
+        assert!(engine.source.node(a).unwrap().request_epoch > epoch);
+        assert!(
+            children
+                .iter()
+                .all(|id| after.state.selection.value(&after.source, *id).unwrap())
+        );
+    }
+
+    #[test]
+    fn t_failed_sibling_import_keeps_the_committed_source_and_memory() {
+        let (mut engine, _, a, _, _) = fixture();
+        let source = engine.source.clone();
+        let memory = engine.memory.used();
+        let mut operations: Vec<_> = (0..512)
+            .map(|index| insert(&format!("item-{index}"), Some(a), false))
+            .collect();
+        operations.push(insert("item-0", Some(a), false));
+        assert!(batch(&mut engine, operations).is_err());
+        assert!(Arc::ptr_eq(&source, &engine.source));
+        assert_eq!(engine.memory.used(), memory);
+    }
+
+    #[test]
+    #[ignore = "explicit release-mode List migration sampling"]
+    fn t_release_flat_import_sample() {
+        use super::super::provider::{DataScope, Import, Record};
+        for count in [1_000, 10_000, 50_000] {
+            let mut engine = Engine::new(Limits::default()).unwrap();
+            let mut records = vec![Record::new("list", NodeData::branch(""))];
+            records.extend((0..count).map(|index| Record {
+                key: format!("item:{index}").into(),
+                parent: Some("list".into()),
+                data: NodeData::leaf(format!("item-{index:06}.lua")),
+                completeness: None,
+            }));
+            let started = Instant::now();
+            engine
+                .import(Import {
+                    base_revision: engine.source.revision(),
+                    scope: DataScope::Forest,
+                    records,
+                })
+                .unwrap();
+            let import = started.elapsed();
+            let source_bytes = engine.memory.used();
+            let started = Instant::now();
+            let root = engine.source.id("list").unwrap();
+            engine
+                .create_state(
+                    Root::ChildrenOf(root),
+                    DisplayOptions {
+                        mode: Mode::List,
+                        ..DisplayOptions::default()
+                    },
+                )
+                .unwrap();
+            println!(
+                "flat_import: nodes={count}, import_ms={:.3}, state_ms={:.3}, source_bytes={source_bytes}, total_bytes={}",
+                import.as_secs_f64() * 1000.0,
+                started.elapsed().as_secs_f64() * 1000.0,
+                engine.memory.used()
+            );
+        }
     }
 
     #[test]

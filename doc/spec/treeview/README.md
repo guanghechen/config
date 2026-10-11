@@ -5,10 +5,11 @@
 ## Runtime 接入
 
 - 所有树状结果统一使用 `yoz.ux.treeview` 和 `lua/ux/treeview/`，不存在并行的 Lua layout/state 实现。
-- Explorer 使用新 Filetree 的 filesystem owner；Picker、Searcher、diagnostics、LSP symbols/references
+- Explorer 与 Find Explorer 使用 Filetree 的 filesystem owner；普通 List、文件 Picker、Searcher、diagnostics、LSP symbols/references
   和 Diffview 将业务结果作为 records 导入通用 Treeview。结果集不会触发额外的磁盘扫描。
 - Native State 独占 selection、expansion、display root、cursor 和行映射。输入、业务 metadata、
   窗口组合及 viewport decorations 由 Lua consumer 负责，接入约定见 [结果集](results.md)。
+- Find Explorer 主列表与目录 preview 使用有界 List 和共享 Filetree Data；文件操作统一提交 native Jobs。
 
 ## 文档导航
 

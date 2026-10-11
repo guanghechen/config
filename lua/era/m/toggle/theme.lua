@@ -38,55 +38,25 @@ local MAX_WIDTH_THEMENAME = 24 ---@type integer
 local themes = dot.command.definitions.toggle.theme.candidates ---@type string[]
 local o_theme = dot.context.theme.theme ---@type stl.c.Observable
 
----@type era.m.picker.composer.list.IRenderResult
-local function render_result(_, bufnr, itemmap, matches)
-  local lines = {} ---@type string[]
-  local uuids = {} ---@type string[]
-
-  for _, match_data in ipairs(matches) do
-    local item = itemmap[match_data.uuid] ---@type era.m.picker.composer.list.IItem
-    uuids[#uuids + 1] = match_data.uuid ---@type string
-
-    local themename = item.text ---@type string
-    local colorsquares = string.rep(" ", #COLORS_TO_DISPLAY) ---@type string
-    local line = string.format("%s %s", stl.string.pad_end(themename, MAX_WIDTH_THEMENAME, " "), colorsquares) ---@type string
-    lines[#lines + 1] = line
+---@param _                             era.m.picker.ListComposer
+---@param item                          era.m.picker.composer.list.IItem
+---@return era.m.picker.composer.list.IPresentation
+local function present(_, item)
+  local name = item.text
+  local prefix = stl.string.pad_end(name, MAX_WIDTH_THEMENAME, " ") .. " "
+  local scheme = dot.theme.scheme[name]
+  local group_prefix = "f_cs_" .. name:gsub("-", "_") .. "__"
+  local highlights = {}
+  for index, color in ipairs(COLORS_TO_DISPLAY) do
+    local group = group_prefix .. color
+    vim.api.nvim_set_hl(0, group, { bg = scheme.palette[color], default = true })
+    highlights[#highlights + 1] = { coll = #prefix + index - 1, colr = #prefix + index, hlname = group }
   end
-
-  -- Set buffer lines
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-  local nsnr_content = dot.var.nsnr.picker_result ---@type integer
-  local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
-
-  -- Apply highlights
-  for lnum, match_data in ipairs(matches) do
-    local row = lnum - 1 ---@type integer
-    local offset = MAX_WIDTH_THEMENAME + 2 ---@type integer
-    local item = itemmap[match_data.uuid] ---@type era.m.picker.composer.list.IItem
-    local themename = item.text ---@type string
-    local hlgroup_prefix = "f_cs_" .. themename:gsub("-", "_") .. "__" ---@type string
-
-    local scheme = dot.theme.scheme[themename] ---@type stl.t.theme.IScheme
-    for _, color in ipairs(COLORS_TO_DISPLAY) do
-      local hlgroup = hlgroup_prefix .. color ---@type string
-      local hex = scheme.palette[color] ---@type string
-      vim.api.nvim_set_hl(0, hlgroup, { bg = hex, default = true })
-
-      vim.hl.range(bufnr, nsnr_content, hlgroup, { row, offset }, { row, offset + 1 })
-      offset = offset + 1
-    end
-
-    if match_data.matches then
-      for _, m in ipairs(match_data.matches) do
-        vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
-      end
-    end
-  end
-
-  ---@type era.m.picker.composer.list.IRenderResultData
-  local result = { uuids = uuids }
-  return result
+  return {
+    label = prefix .. string.rep(" ", #COLORS_TO_DISPLAY),
+    highlights = highlights,
+    match_regions = { { 0, #name, 0 } },
+  }
 end
 
 ---@param theme                         string
@@ -151,7 +121,7 @@ function M.theme(arg)
         row = 5,
         width = 80, -- Increased width for color squares
       },
-      render_result = render_result, -- Add the custom renderer
+      present = present,
       on_toggle = function(choice)
         if choice then
           apply_theme(choice)

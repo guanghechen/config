@@ -1373,12 +1373,6 @@ function M.new(props)
 
     result_number = true,
 
-    ---@type era.m.searcher.result.IIsSelected
-    result_isselected = function(_, lnum)
-      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-      return uuid ~= nil and treeview:isselected(uuid)
-    end,
-
     result_status = function()
       local inputs = self._published_search_inputs ---@type era.m.searcher.composer.filetree.ISearchInputs|nil
       if not self._published_search_limit_reached or inputs == nil then

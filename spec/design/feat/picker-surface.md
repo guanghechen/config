@@ -8,7 +8,7 @@ Picker 与 Searcher 只共享已经形成稳定同构实现的 UI surface：
 2. `Preview`：preview buffer/window lifecycle、debounced draw 与 window options。
 
 Feature 保留 Finder 输入语义、pane composition、search/replace 输入和所有业务 action。
-树状结果使用 [native Treeview 接入契约](../../../doc/spec/treeview/results.md)，selection/expansion 归 native State。
+所有结果使用 [native Treeview 接入契约](../../../doc/spec/treeview/results.md)，selection/expansion/行映射归 native State。
 
 ## 依赖方向
 
@@ -30,13 +30,13 @@ era.m.searcher ─┘
 
 - result buffer/window 的 create、focus、hide、resize、dispose；
 - `lnum_current`、`lnum_present`、`lnum_total`；
-- current/present/selected signs 与对应 scheduler；
-- Result 内容刷新调度；树状结果的 buffer 正文与 viewport decorations 由 native View 独占；
+- current/present signs 与对应 scheduler；多项 selection 使用 viewport decoration；
+- Result 内容刷新调度；buffer 正文与 viewport decorations 由 native View 独占；
 - flags、position 与可选 status 的 winbar 渲染。
 
 Feature 通过 props 提供：
 
-- `draw`、`isselected`、`on_drawed`；树状结果额外提供 `era.view.ResultTree`；
+- `draw`、`on_drawed`，以及 `era.view.ResultTree` 或真实 Filetree 的 `era.view.Directory` owner；
 - keymaps 与 flags；
 - `augroup_prefix`、`diagnostic_scope` 与 `winline_hl`；
 - 可选 status snapshot。
@@ -47,7 +47,7 @@ Feature 通过 props 提供：
 - Searcher：`winline_hl = "f_wl_searcher"`，可提供 status。
 
 共享层通过 ResultTree 的 mount/publish 接入 native surface，不解释节点、query 或业务 metadata。
-Native 模式跳过全 buffer 的 selected-sign 扫描，行数和 cursor observables 只在 frame 发布后更新。
+行数和 cursor observables 在 frame 发布后更新，没有全 buffer 的 selected-sign 扫描或旧 Lua draw 路径。
 
 ## `Preview` 契约
 
@@ -66,7 +66,7 @@ Feature 通过 props 提供 `draw`、`on_drawed`、keymaps、`diagnostic_scope` 
 Draw 只有在绘制了目标范围时才返回 `has_range = true`，启用范围专用的 cursorline 背景；普通文件、目录
 和无范围结果使用主题的常规 `CursorLine`。结果切换及窗口重开都按最近一次 Draw 的范围状态选择样式。
 
-普通文件 preview 使用 draw。目录 preview 使用 ResultTree 的独立 native State；切回文件时先替换 buffer，再 detach 旧 View，保持浮窗存活。
+普通文件 preview 使用 draw。目录 preview 使用 owner 的独立 native State；切回文件时先替换 buffer，再 detach 旧 View，保持浮窗存活。
 异步 subtree 准备以 preview epoch 校验，关闭或换目标后不得安装旧 View。
 
 ## 生命周期不变式
@@ -102,7 +102,7 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 
 - 共享层不持有 tree node、search match 或 file data，不新增与结果规模相关的状态。
 - `Result`/`Preview` 的 create、focus、hide、resize、dispose 和 schedule 操作保持原有渐进复杂度；
-  普通列表由 `draw` 写入内容；树状结果通过 native Frame 发布。
+  所有结果通过 native Frame 发布，普通 List 的 custom presentation 也不直接写 buffer。
 - policy 只增加固定大小的 instance state；不得引入按 node/result 复制的数据或额外 observer。
 - Cursor、selection 与 expansion 更新不得重新导入业务 records；相同 display 请求复用已解析的 filter。
 
@@ -110,7 +110,7 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 
 - Picker/Searcher 的 keymap、window type、filetype、sign、cursor、empty-result 与 error behavior 不变。
 - Result/Preview 的 feature-owned callback 输入输出 contract 不变。
-- 不新增 Picker ↔ Searcher 依赖，不改变 Tree/Treeview。
+- 不新增 Picker ↔ Searcher 依赖，native 接入遵循 Treeview 的权威契约。
 - 只保留一套 Result 与一套 Preview 行为实现；feature alias 仅保留类型与公开入口。
 - shared contract tests 覆盖两侧 alias、Result policy、Preview number policy、draw failure、
   changed/stable cursor scheduling 与 dispose 后 queued callback。

@@ -260,6 +260,15 @@ function M:details(resource)
   return async.run(self._native:details(resource))
 end
 
+---@param frame                         yoz.ux.treeview.Frame
+---@param first                         integer
+---@param last                          integer
+---@param parent_context                ?boolean Use captured parent metadata for the context row.
+---@return stl.c.Future
+function M:listing(frame, first, last, parent_context)
+  return async.run(self._native:listing(frame, first, last, parent_context))
+end
+
 ---@param source                        yoz.ux.filetree.Resource
 ---@param target                        yoz.ux.filetree.Resource
 ---@return stl.c.Future

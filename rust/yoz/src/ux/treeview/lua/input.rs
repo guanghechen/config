@@ -597,6 +597,11 @@ pub(crate) fn display(value: LuaValue) -> Result<DisplayOptions> {
     Ok(DisplayOptions {
         mode,
         sort,
+        list_depth: get::<Option<usize>>(&value, "list_depth")?,
+        context_label: get::<Option<String>>(&value, "context_label")?.map(Into::into),
+        branch_suffix: get::<Option<String>>(&value, "branch_suffix")?
+            .unwrap_or_default()
+            .into(),
         list_text: match get::<Option<String>>(&value, "list_text")?
             .as_deref()
             .unwrap_or("label")
@@ -619,6 +624,8 @@ pub(crate) fn display(value: LuaValue) -> Result<DisplayOptions> {
             )),
         },
         case_sensitive: option_bool(&value, "case_sensitive")?.unwrap_or(false),
+        fuzzy: option_bool(&value, "fuzzy")?.unwrap_or(false),
+        regex: option_bool(&value, "regex")?.unwrap_or(false),
         show_hidden: option_bool(&value, "show_hidden")?.unwrap_or(true),
         selected_only: option_bool(&value, "selected_only")?.unwrap_or(false),
         compress: option_bool(&value, "compress")?.unwrap_or(false),

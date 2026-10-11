@@ -1,5 +1,5 @@
 use super::Reply;
-use super::data::{Batch, NodePatch, NodeRef, Operation, Position, Source};
+use super::data::{Batch, Node, NodePatch, NodeRef, Operation, Position, Source};
 use super::engine::Engine;
 use super::model::*;
 use std::collections::{HashMap, VecDeque};
@@ -574,6 +574,115 @@ pub(crate) fn plan_import(
     Ok(operations)
 }
 
+/** Build the first complete forest directly; no existing state or identity needs reconciliation. */
+fn initial_source(source: &Source, records: Vec<Record>, limits: &Limits) -> Result<Source> {
+    use super::storage::{IndexedSequence, Map};
+    if records.len() > limits.batch_nodes || records.len() > limits.nodes {
+        return Err(Error::limit("initial forest node capacity exceeded"));
+    }
+    let revision = source.revision().next()?;
+    let mut keys = HashMap::with_capacity(records.len());
+    let mut sizes = Vec::with_capacity(records.len());
+    let mut bytes = 0usize;
+    let mut batch_bytes = 0usize;
+    for (index, record) in records.iter().enumerate() {
+        if keys.insert(record.key.clone(), index).is_some() {
+            return Err(Error::invalid("duplicate key in snapshot"));
+        }
+        let size = record.data.validate()?.saturating_add(record.key.len());
+        bytes = bytes.saturating_add(size);
+        let parent_bytes = match &record.parent {
+            Some(NodeRef::Key(key)) => key.len().saturating_add(16),
+            _ => 0,
+        };
+        batch_bytes = batch_bytes
+            .saturating_add(size)
+            .saturating_add(16 + std::mem::size_of::<Operation>())
+            .saturating_add(parent_bytes);
+        if batch_bytes > limits.batch_bytes || bytes > limits.payload_bytes {
+            return Err(Error::limit("initial forest payload capacity exceeded"));
+        }
+        if record
+            .completeness
+            .is_some_and(|value| value != Completeness::Complete)
+        {
+            return Err(Error::invalid(
+                "complete snapshot cannot omit unknown or partial descendants",
+            ));
+        }
+        sizes.push(size);
+    }
+    let mut parents = Vec::with_capacity(records.len());
+    let mut children = vec![Vec::new(); records.len() + 1];
+    let top = records.len();
+    for (index, record) in records.iter().enumerate() {
+        let parent = match &record.parent {
+            Some(NodeRef::Key(key)) => Some(
+                *keys
+                    .get(key)
+                    .ok_or_else(|| Error::invalid("snapshot parent is not declared"))?,
+            ),
+            Some(NodeRef::Id(id)) => return Err(Error::missing(*id)),
+            None => None,
+        };
+        if parent.is_some_and(|parent| !records[parent].data.can_expand) {
+            return Err(Error::invalid("a leaf cannot own children"));
+        }
+        parents.push(parent);
+        children[parent.unwrap_or(top)].push(index);
+    }
+    let mut pending = children[top].clone();
+    let mut visited = 0;
+    while let Some(index) = pending.pop() {
+        visited += 1;
+        pending.extend(children[index].iter().copied());
+    }
+    if visited != records.len() {
+        return Err(Error::invalid("snapshot contains a parent cycle"));
+    }
+    let ids = (0..records.len())
+        .map(|_| identity().map(NodeId))
+        .collect::<Result<Vec<_>>>()?;
+    let mut nodes = Vec::with_capacity(records.len());
+    let mut names = Vec::with_capacity(records.len());
+    for (index, record) in records.into_iter().enumerate() {
+        let id = ids[index];
+        let data = Arc::new(record.data);
+        let descendants =
+            IndexedSequence::from_vec(children[index].iter().map(|&child| ids[child]).collect())?;
+        let node = Node {
+            _payloads: super::memory::Payload::node(record.key.clone(), data.clone()),
+            id,
+            key: record.key.clone(),
+            parent: parents[index].map(|parent| ids[parent]),
+            data,
+            completeness: Completeness::Complete,
+            load_state: LoadState::Idle,
+            error: None,
+            request_epoch: u64::from(!descendants.is_empty()),
+            next_sequence: 1,
+            modified: revision,
+            subtree_revision: revision,
+            children: descendants,
+            bytes: sizes[index],
+        };
+        nodes.push((id, node));
+        names.push((record.key, id));
+        super::memory::check()?;
+    }
+    names.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+    let mut candidate = source.clone();
+    candidate.nodes = Map::from_sorted(nodes);
+    candidate.keys = Map::from_sorted(names);
+    candidate.roots =
+        IndexedSequence::from_vec(children[top].iter().map(|&child| ids[child]).collect())?;
+    candidate.revision = revision;
+    candidate.ancestry_revision = revision;
+    candidate.bytes = bytes;
+    super::memory::check()?;
+    Ok(candidate)
+}
+
 impl Engine {
     pub fn create_provider(&mut self, scope: DataScope) -> Result<ProviderId> {
         scope.validate(&self.source)?;
@@ -611,6 +720,23 @@ impl Engine {
             return Err(Error::stale("base data revision changed"));
         }
         let _memory = self.memory.enter();
+        if import.scope == DataScope::Forest
+            && self.source.revision() == Revision::default()
+            && self.source.is_empty()
+            && self.states.is_empty()
+            && self.providers.is_empty()
+            && self.reads.is_empty()
+            && self.queries.is_empty()
+        {
+            if import.records.is_empty() {
+                return Ok(Reply::NoChange);
+            }
+            let source = initial_source(&self.source, import.records, &self.limits)?;
+            let commit = self.commit.next()?;
+            self.source = Arc::new(source);
+            self.commit = commit;
+            return Ok(self.applied(None, Vec::new()));
+        }
         let operations = plan_import(
             &self.source,
             import.scope,
@@ -684,6 +810,111 @@ impl Engine {
 mod tests {
     use super::super::{Command, Context, SelectAction, Targets};
     use super::*;
+
+    #[test]
+    fn t_initial_import_matches_reconciliation_for_unordered_declarations() {
+        let records = vec![
+            Record {
+                parent: Some("branch".into()),
+                ..Record::new("leaf", NodeData::leaf("leaf"))
+            },
+            Record::new("root", NodeData::branch("root")),
+            Record {
+                parent: Some("root".into()),
+                ..Record::new("branch", NodeData::branch("branch"))
+            },
+            Record {
+                parent: Some("root".into()),
+                ..Record::new("last", NodeData::leaf("last"))
+            },
+        ];
+        let mut sources = Vec::new();
+        for existing_state in [false, true] {
+            let mut engine = Engine::new(Limits::default()).unwrap();
+            if existing_state {
+                engine
+                    .create_state(Root::Forest(Arc::new([])), DisplayOptions::default())
+                    .unwrap();
+            }
+            let empty = engine.source.clone();
+            engine
+                .import(Import {
+                    base_revision: empty.revision(),
+                    scope: DataScope::Forest,
+                    records: records.clone(),
+                })
+                .unwrap();
+            assert!(empty.is_empty());
+            assert_eq!(empty.identity(), engine.source.identity());
+            sources.push(engine.source);
+        }
+        for record in records {
+            let shape = |source: &Source| {
+                let node = source.node(source.id(&record.key).unwrap()).unwrap();
+                (
+                    node.data.clone(),
+                    node.parent.map(|id| source.node(id).unwrap().key.clone()),
+                    node.children()
+                        .map(|id| source.node(id).unwrap().key.clone())
+                        .collect::<Vec<_>>(),
+                    node.completeness,
+                )
+            };
+            assert_eq!(shape(&sources[0]), shape(&sources[1]));
+        }
+    }
+
+    #[test]
+    fn t_initial_import_rejects_invalid_forests_and_restores_the_budget() {
+        for case in [
+            "cycle",
+            "parent",
+            "leaf",
+            "duplicate",
+            "partial",
+            "bytes",
+            "memory",
+        ] {
+            let limits = Limits {
+                batch_bytes: if case == "bytes" { 128 } else { 1024 * 1024 },
+                memory_bytes: if case == "memory" { 64 } else { 1024 * 1024 },
+                ..Limits::default()
+            };
+            let mut engine = Engine::new(limits).unwrap();
+            let original = engine.source.clone();
+            let memory = engine.memory.used();
+            let mut records = vec![
+                Record::new("root", NodeData::branch("root")),
+                Record {
+                    parent: Some("root".into()),
+                    ..Record::new("child", NodeData::leaf("child"))
+                },
+            ];
+            match case {
+                "cycle" => {
+                    records[0].parent = Some("child".into());
+                    records[1].data.can_expand = true;
+                }
+                "parent" => records[1].parent = Some("absent".into()),
+                "leaf" => records[0].data.can_expand = false,
+                "duplicate" => records.push(records[1].clone()),
+                "partial" => records[0].completeness = Some(Completeness::Partial),
+                _ => {}
+            }
+            assert!(
+                engine
+                    .import(Import {
+                        base_revision: original.revision(),
+                        scope: DataScope::Forest,
+                        records
+                    })
+                    .is_err(),
+                "{case}"
+            );
+            assert!(Arc::ptr_eq(&original, &engine.source), "{case}");
+            assert_eq!(engine.memory.used(), memory, "{case}");
+        }
+    }
 
     #[test]
     fn t_full_import_appends_then_reconciles_order_values_and_removal() {

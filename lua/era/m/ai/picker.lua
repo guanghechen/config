@@ -835,8 +835,6 @@ function M.show_prompt(on_select)
     show_arg_picker()
   end
 
-  local nsnr_args_tag = vim.api.nvim_create_namespace("era.m.ai.picker.args_tag")
-
   picker = era.m.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
@@ -850,45 +848,15 @@ function M.show_prompt(on_select)
     keymaps_result = {
       { modes = { "n" }, key = "oe", callback = edit_current_args, desc = "Edit args" },
     },
-    render_result = function(_, bufnr, local_itemmap, matches)
-      local lines = {} ---@type string[]
-      local uuids = {} ---@type string[]
-
-      for _, match in ipairs(matches) do
-        local item = local_itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
-        lines[#lines + 1] = item.text
-        uuids[#uuids + 1] = item.uuid
-      end
-
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-      local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
-      vim.api.nvim_buf_clear_namespace(bufnr, nsnr_args_tag, 0, -1)
-
-      for lnum, match in ipairs(matches) do
-        local row = lnum - 1
-
-        if match.matches then
-          for _, m in ipairs(match.matches) do
-            vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
-          end
-        end
-
-        local tag = args_tag_map[match.uuid]
-        if tag and #tag > 0 then
-          vim.api.nvim_buf_set_extmark(bufnr, nsnr_args_tag, row, 0, {
-            virt_text = {
-              { stl.icon.symbols.sep_left, "m_ai_args_tag_sep" },
-              { tag, "m_ai_args_tag" },
-              { stl.icon.symbols.sep_right, "m_ai_args_tag_sep" },
-            },
-            virt_text_pos = "right_align",
-            priority = 50,
-          })
-        end
-      end
-
-      return { uuids = uuids }
+    present = function(_, item)
+      local tag = args_tag_map[item.uuid]
+      return {
+        overlay = tag and #tag > 0 and {
+          { stl.icon.symbols.sep_left, "m_ai_args_tag_sep" },
+          { tag, "m_ai_args_tag" },
+          { stl.icon.symbols.sep_right, "m_ai_args_tag_sep" },
+        } or nil,
+      }
     end,
     render_preview = function(composer, bufnr, _)
       local lnum = composer.result.lnum_current:snapshot()

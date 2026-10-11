@@ -1377,6 +1377,58 @@ t:test("a superseded preparation rejection preserves the newer decoration reques
   t.assert_eq(1, commits)
 end)
 
+t:test("a pending cursor publication cannot reuse text after a branch suffix changes", function()
+  local data, state = fixture()
+  applied(await(state:set_display({ mode = "list", list_depth = 0, branch_suffix = "/" })))
+  local Future = require("stl.c.future")
+  local hold, complete = false, nil
+  local errors = {}
+  local view = treeview.attach(state, {
+    keymaps = false,
+    prepare_frame = function()
+      if hold then
+        return Future.new(function(resolve)
+          complete = resolve
+        end)
+      end
+      return Future.resolve(function()
+        return false
+      end)
+    end,
+    on_error = function(error)
+      errors[#errors + 1] = error
+    end,
+  })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil and not view:status().preparing
+  end, 5000)
+  for _, can_expand in ipairs({ true, false }) do
+    hold, complete = true, nil
+    applied(await(view:set_cursor(can_expand and 2 or 1)))
+    t.wait_until(function()
+      return complete ~= nil
+    end, 5000)
+    applied(await(data:batch({ { kind = "update", node = "a", can_expand = can_expand } })))
+    t.wait_until(function()
+      return state:snapshot():header().data_revision == data:source():revision()
+    end, 5000)
+    hold = false
+    complete(function()
+      return false
+    end)
+    t.wait_until(function()
+      return view:frame():header().data_revision == data:source():revision() and not view:status().preparing
+    end, 5000)
+    local label = can_expand and "alpha/" or "alpha"
+    t.assert_eq(label, view:frame():rows(1, 1).labels[1])
+    t.assert_eq("  " .. label, vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, false)[1])
+  end
+  t.assert_eq(0, #errors)
+end)
+
 t:test("retargeting a plan re-prepares row-dependent features after selection changes", function()
   local _, state, a = fixture()
   local pending, committed, delayed = {}, {}, false
