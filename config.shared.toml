@@ -52,7 +52,7 @@ memories = true
 multi_agent = true
 plugin_sharing = false
 prevent_idle_sleep = true
-realtime_conversation = true
+realtime_conversation = false
 remote_plugin = false
 
 [[skills.config]]
