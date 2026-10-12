@@ -22,10 +22,10 @@ name = "copilot"
 base_url = "http://127.0.0.1:4747/api/codex"
 wire_api = "responses"
 supports_websockets = true
-websocket_connect_timeout_ms = 30000
-request_max_retries = 3
-stream_max_retries = 0
-stream_idle_timeout_ms = 3000000
+request_max_retries = 8
+stream_max_retries = 8
+stream_idle_timeout_ms = 6000000
+websocket_connect_timeout_ms = 60000
 
 [model_providers.copilot.auth]
 command = "/usr/bin/printenv"
