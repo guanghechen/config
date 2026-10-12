@@ -35,6 +35,19 @@
       "killTimeout": 15000
     },
     {
+      "name": "kit-touchpad",
+      "platforms": ["osx"],
+      "cmd": "kit",
+      "args": ["touchpad", "run"],
+      "autostart": false,
+      "autorestart": true,
+      "maxRestarts": 16,
+      "stopExitCodes": [0],
+      "killTimeout": 10000,
+      "logsRotateStrategy": "size",
+      "logsRotateSize": "10MB"
+    },
+    {
       "name": "yoz",
       "cmd": "npm",
       "args": ["run", "start"],
