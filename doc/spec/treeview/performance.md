@@ -16,6 +16,8 @@ Status: Design。本文定义局部更新的成本边界、测量口径与实现
   已知 delta 不应无条件走一般 diff；一次完整快照对齐也不能伪报为 O(D)。
 - 基线使用平衡分块序列，局部变更只复制边界块与索引路径。稳定 NodeId 定位与源祖先索引的维护成本必须纳入，
   不能仅证明正文容器局部更新就声称全部索引已达到相同复杂度。
+- 当前 inverse location index 按 64 个连续 ID 的范围分组，位图将实际成员映射到紧凑的 location 数组。
+  空 ID 不占数组槽；修改只复制受影响的页和索引路径，旧 Source/Frame 继续共享未变页。页数组计入 native memory budget。
 
 复杂度以实际工作区间、输出字节和索引维护描述；全局排序、很深的真实缩进与大段移动不承诺常数时间。
 块整理、cache eviction、Lua GC、Arc 释放及失败恢复的成本同样记录，不移到未计时的“收尾”来制造低延迟。
@@ -118,6 +120,46 @@ legacy `readdir`/search 实现未变。使用 [`treeview_migration.lua`](../../.
 - 首次空 Data 导入直接构建 source/key/sibling 索引，保留完整校验与失败原子性；有状态的数据继续按原契约对齐。
   同父节点的连续尾部插入批量维护 sibling 索引，外部写入仍使旧 children read epoch 失效。
   Plain List producer 分片准备；纯文本签名和稀疏可选列减少 Lua 序列化与默认值副本。
+
+## 2026-10-12 迁移收尾与索引压缩采样
+
+本节对比 `48f30fa57` 和本轮改动；baseline 已使用 native Treeview，不是上一节的旧 Lua renderer。
+保留 baseline Lua overlay 与 native library，使用同一 fixture，5 个独立进程交替运行，每轮反转执行顺序。
+环境为 macOS arm64、Neovim 0.12.5 Release、LuaJIT 2.1、libuv 1.53.0。下表均为进程间中位数。
+
+Diffview 使用 [`diffview_navigation.lua`](../../../__test__/bench/diffview_navigation.lua) 测量真实 action 的路径解析，
+排除 preview I/O、逻辑 cursor acknowledgement 和 UI flush。相邻文件查询留在 native Frame，Lua 只读取最终目标；
+commit 和刷新定位按 identity 查询，目录 transfer 直接跳过原生子树区间。
+
+| 场景 | 冷 J 导航 ms，前→后 | Lua item 读取，前→后 |
+| --- | --- | --- |
+| List，5,000 文件 | 54.84 → 0.069 | 5,000 → 1 |
+| List，50,000 文件 | 730.64 → 0.019 | 50,000 → 1 |
+| 跳过 5,000 个折叠目录后定位文件 | 35.43 → 0.186 | 5,001 → 1 |
+
+- 5,000 文件仅更新 metadata 后，J 为 53.37 → 0.029 ms，Ctrl-j 为 68.51 → 0.740 ms；没有重建 Lua 行表或重排全部文件。
+- Native leaf 查询仍扫描实际跳过的行，不承诺任意目录分布下为常数时间。同一折叠目录场景的热 J 为
+  0.052 → 0.188 ms：移除完整 Lua 缓存后重新在 native 扫描，换取冷导航和 publication 后的稳定成本。
+- 采样包含 VM/JIT 和首次模块调用成本，小数值不能用于推导不同规模间的精确比例，也不代表完整按键响应延迟。
+
+普通 List 继续使用 [`treeview_migration.lua`](../../../__test__/bench/treeview_migration.lua) 的 attached UI 链路，
+口径与上一节相同；第三个参数的 baseline 目录可同时提供 Lua overlay 和 `lua/yoz.so`。
+
+| List 项数 | 首开 UI ms，前→后 | 首开主线程 CPU ms，前→后 | 进程 footprint MiB，前→后 |
+| --- | --- | --- | --- |
+| 1,000 | 34.6 → 34.4 | 19.0 → 18.8 | 11.5 → 11.2 |
+| 10,000 | 67.9 → 68.6 | 43.2 → 43.8 | 47.5 → 44.9 |
+| 50,000 | 236.9 → 239.5 | 166.7 → 170.3 | 200.3 → 186.1 |
+
+- 50,000 项 native Source 加一个 List State 的独立记账从 62.1 降至 53.1 MiB，约减少 14%；
+  完整交互后的进程 footprint 减少约 7%。Footprint 包括 allocator 保留空间，不是 Rust 独占内存。
+- 本轮没有改善 List 首开 CPU；50,000 项的最大 tick gap 为 28.65 → 28.61 ms，过滤为 91.7 → 91.7 ms，
+  清空过滤为 107.0 → 104.9 ms，重开为 5.14 → 5.18 ms。Cursor/reopen 均为零正文写入。
+- Find Explorer 的 1,000 文件采样首开为 46.1 → 45.6 ms，footprint 为 13.3 → 13.1 MiB。
+  共享 guide 链路另跑 3 个进程对、每动作 100 次：50k 行相邻移动 settled p95 为 0.557 → 0.523 ms，
+  跨分支跳转为 1.587 → 1.529 ms，滚动为 0.662 → 0.708 ms，Visual 为 0.551 → 0.494 ms，均无正文写入。
+- 大型 List 相对旧 Lua renderer 的内存和首开 CPU 回退仍未消除。业务输入准备、同步 matcher 调用和 Lua ranking
+  仍需独立优化，不能将移除旧 Diffview 访问层等同于整体性能已收敛。
 
 ## 实验与实现验收的关系
 

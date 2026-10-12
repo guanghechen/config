@@ -45,14 +45,12 @@ t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
   render = function(entries, opts)
     render_calls[#render_calls + 1] = opts
     local lines = {} ---@type string[]
-    local line_map = {} ---@type era.m.diffview.IFiletreeLineMap[]
     for _, entry in ipairs(entries) do
       if entry.stage_type == opts.stage_type then
         lines[#lines + 1] = entry.filepath
-        line_map[#line_map + 1] = { type = "file", entry = entry, stage_type = opts.stage_type }
       end
     end
-    return { lines = lines, highlights = {}, line_map = line_map }
+    return { lines = lines }
   end,
 })
 t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {

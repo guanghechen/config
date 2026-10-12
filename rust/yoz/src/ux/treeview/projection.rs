@@ -956,6 +956,32 @@ impl Snapshot {
         self.rows.position(&id)
     }
 
+    /** Find a visible terminal node without exporting skipped branch rows or their metadata. */
+    pub fn adjacent_leaf(&self, index: Option<usize>, forward: bool) -> Option<usize> {
+        if index.is_some_and(|index| index >= self.len()) {
+            return None;
+        }
+        let leaf = |row: &Row| {
+            !self
+                .source
+                .node(row.id)
+                .expect("projected node")
+                .data
+                .can_expand
+        };
+        if forward {
+            let first = index.map_or(0, |index| index + 1);
+            self.rows
+                .iter_from(first)
+                .position(leaf)
+                .map(|offset| first + offset)
+        } else {
+            (0..index.unwrap_or(self.len()))
+                .rev()
+                .find(|&at| leaf(self.row(at).expect("projected row")))
+        }
+    }
+
     /** Prove that row reads are reusable across cursor-only publications, without visiting rows. */
     pub fn same_rows(&self, other: &Self) -> bool {
         self.state.id == other.state.id
@@ -1275,6 +1301,69 @@ mod tests {
             .set_expanded(&source, &[root], true, Scope::Subtree)
             .unwrap();
         (Arc::new(source), state)
+    }
+
+    #[test]
+    fn t_adjacent_leaves_follow_the_frame_order_and_skip_collapsed_branches() {
+        let (source, mut state) = fixture();
+        let open = Snapshot::build(
+            source.clone(),
+            &mut state,
+            None,
+            false,
+            Arc::new([]),
+            Revision(1),
+        )
+        .unwrap();
+        assert_eq!(open.adjacent_leaf(None, true), Some(1));
+        assert_eq!(open.adjacent_leaf(None, false), Some(2));
+        assert_eq!(open.adjacent_leaf(Some(0), true), Some(1));
+        assert_eq!(open.adjacent_leaf(Some(1), false), None);
+        assert_eq!(open.adjacent_leaf(Some(2), false), Some(1));
+        assert_eq!(open.adjacent_leaf(Some(2), true), None);
+        assert_eq!(open.adjacent_leaf(Some(usize::MAX), false), None);
+        state
+            .set_expanded(&source, &[source.id("a").unwrap()], false, Scope::SelfOnly)
+            .unwrap();
+        let closed = Snapshot::build(
+            source.clone(),
+            &mut state,
+            Some(&open),
+            false,
+            Arc::new([]),
+            Revision(2),
+        )
+        .unwrap();
+        assert_eq!(closed.adjacent_leaf(None, true), Some(1));
+        assert_eq!(closed.row(1).unwrap().id, source.id("z").unwrap());
+        assert_eq!(closed.adjacent_leaf(Some(1), false), None);
+        assert_eq!(
+            open.row(open.adjacent_leaf(None, true).unwrap())
+                .unwrap()
+                .id,
+            source.id("c").unwrap()
+        );
+        state.display.mode = Mode::List;
+        let list = Snapshot::build(
+            source.clone(),
+            &mut state,
+            None,
+            false,
+            Arc::new([]),
+            Revision(3),
+        )
+        .unwrap();
+        assert_eq!(
+            list.row(list.adjacent_leaf(None, true).unwrap())
+                .unwrap()
+                .id,
+            source.id("c").unwrap()
+        );
+        state.root = Root::Forest(Arc::new([]));
+        let empty =
+            Snapshot::build(source, &mut state, None, false, Arc::new([]), Revision(4)).unwrap();
+        assert_eq!(empty.adjacent_leaf(None, true), None);
+        assert_eq!(empty.adjacent_leaf(None, false), None);
     }
 
     #[test]

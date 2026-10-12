@@ -156,7 +156,7 @@ function M:dispose()
   self._waiting, self._active_request, self._restore_selection = nil, nil, nil
   require("ux.treeview.async").unwatch(self._data)
   self._data._after_poll = nil
-  self._focus, self._commands, self._selection_batch, self._line_map = nil, {}, nil, nil
+  self._focus, self._commands, self._selection_batch = nil, {}, nil
   self.view, self.state, self._data, self._request, self._mount = nil, nil, nil, nil, nil
   self.source:dispose()
   self.source, self._present, self._frame, self._configured = nil, nil, nil, nil
@@ -1306,9 +1306,6 @@ end
 ---@return nil
 function M:_published(frame)
   self:_prune_versions(frame)
-  if frame and self._line_map and self._line_map.data ~= frame:header().data_revision then
-    self._line_map = nil
-  end
   local waiting = self._waiting
   local presented = not self.view or self.view:is_suspended() or not self.view:status().preparing
   if waiting and frame and presented and not self:selection_pending() and self.state._native:applicable(frame) then

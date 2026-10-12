@@ -39,6 +39,7 @@ local ok, result = xpcall(function()
     if baseline then
       vim.opt.runtimepath:prepend(baseline)
       package.path=baseline.."/lua/?.lua;"..baseline.."/lua/?/init.lua;"..package.path
+      package.cpath=baseline.."/lua/?.so;"..baseline.."/lua/?.dll;"..package.cpath
     end
     vim.api.nvim_set_current_dir(path)
     require("ark.bootstrap").setup()

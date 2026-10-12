@@ -66,10 +66,11 @@ end
 
 t:test("native rows map each Changes pane to its own stage", function()
   for _, stage in ipairs({ "staged", "unstaged" }) do
-    local _, bufnr = render("tree", stage)
+    local owner, bufnr = render("tree", stage)
     t.assert_eq(stage, changes.get_stage_type(bufnr))
     local files = 0
-    for _, item in ipairs(changes.get_line_map(bufnr)) do
+    for row = 1, owner:linecount() do
+      local item = changes.get_item_at_line(bufnr, row)
       t.assert_eq(stage, item.stage_type)
       if item.type == "file" then
         files = files + 1
@@ -121,7 +122,7 @@ end)
 t:test("empty panes expose zero native rows", function()
   local owner, bufnr = render("tree", "staged", {})
   t.assert_eq(0, owner:linecount())
-  t.assert_eq(0, #changes.get_line_map(bufnr))
+  t.assert_nil(changes.find_adjacent_entry(bufnr, nil, 1))
 end)
 
 t:test("an attached Changes pane publishes through the owned native surface", function()

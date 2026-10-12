@@ -175,9 +175,6 @@ function M.new(props)
     name = fullname,
     tree = tree,
     present = props.present,
-    flag_foldempty = o_flag_foldempty,
-    indent = "",
-    indent_hln = "f_utw_indent_float",
   })
 
   local retriever = treeview

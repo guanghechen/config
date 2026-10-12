@@ -192,27 +192,6 @@ function M.item(bufnr, row)
 end
 
 ---@param bufnr                         integer
----@return table[]|nil
-function M.line_map(bufnr)
-  local owner = owners[bufnr]
-  local frame = owner and owner:frame()
-  if not frame then
-    return nil
-  end
-  local header = frame:header()
-  local cached = owner._line_map
-  if cached and cached.data == header.data_revision and cached.layout == header.layout_revision then
-    return cached.items
-  end
-  local items = {}
-  for row = 1, header.row_count do
-    items[row] = M.item(bufnr, row) or { type = "empty" }
-  end
-  owner._line_map = { data = header.data_revision, layout = header.layout_revision, items = items }
-  return items
-end
-
----@param bufnr                         integer
 ---@return yoz.ux.treeview.Frame|nil
 function M.navigation(bufnr)
   local owner = owners[bufnr]

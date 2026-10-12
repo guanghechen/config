@@ -4,7 +4,7 @@
 local harness = require("__test__.support.harness")
 
 local t = harness.new("era.m.diffview.commits.action")
-local line_maps = {} ---@type table<integer, era.m.diffview.ICommitsLineMap[]>
+local line_maps = {} ---@type table<integer, era.m.diffview.ICommitsItem[]>
 local reports = {} ---@type table[]
 local dirty_count = 0 ---@type integer
 local search_match = nil ---@type era.m.diffview.ICommitSearchMatch|nil
@@ -68,22 +68,12 @@ local pane_commits = {
   create_buffer = function()
     return vim.api.nvim_create_buf(false, true)
   end,
-  find_commit_line = function(line_map, hash)
-    for lnum, item in ipairs(line_map) do
+  find_commit_line = function(bufnr, hash)
+    for lnum, item in ipairs(line_maps[bufnr] or {}) do
       if item.type == "commit" and item.commit.hash == hash then
         return lnum
       end
     end
-  end,
-  find_file_line = function(line_map, hash, filepath)
-    for lnum, item in ipairs(line_map) do
-      if item.type == "file" and item.commit.hash == hash and item.entry and item.entry.filepath == filepath then
-        return lnum
-      end
-    end
-  end,
-  get_line_map = function(bufnr)
-    return line_maps[bufnr]
   end,
   get_item_at_line = function(bufnr, lnum)
     local line_map = line_maps[bufnr]

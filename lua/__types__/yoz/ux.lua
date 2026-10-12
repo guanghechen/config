@@ -79,6 +79,11 @@ function Frame:node_at(row) end
 ---@param node                          ux.treeview.NodeId
 ---@return integer|nil
 function Frame:position(node) end
+---Scan visible terminal nodes in this Frame. Nil starts at the first/last row; no wrap.
+---@param row                           ?integer 1-based origin, excluded from the search.
+---@param forward                       boolean
+---@return integer|nil
+function Frame:adjacent_leaf(row, forward) end
 ---@param row                           integer
 ---@param direction                     ux.treeview.Direction
 ---@return integer|nil

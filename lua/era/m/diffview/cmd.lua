@@ -39,7 +39,8 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Open the Git workspace with Changes, History, and side-by-side preview.
----@param opts                        { layout: integer|nil }|nil
+---@param opts                          ?{ layout: integer|nil }
+---@return nil
 function M.open(opts)
   local binding = require("era.m.diffview.view.binding")
   local commits_action = require("era.m.diffview.view.commits.action")
@@ -109,20 +110,14 @@ function M.open(opts)
       local selected_visible = false
       for _, pane in ipairs(workspace_view.get_changes_panes(lyt)) do
         if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
-          local line_map = pane_changes.get_line_map(pane.bufnr)
-          if line_map then
-            for i, item in ipairs(line_map) do
-              if item.type == "file" and item.entry ~= nil then
-                local visible_entry = assert(item.entry) ---@type era.m.diffview.IFileEntry
-                first_entry = st:find_entry(visible_entry.filepath, visible_entry.stage_type) or visible_entry
-                if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
-                  vim.api.nvim_win_set_cursor(pane.winnr, { i, 0 })
-                  vim.api.nvim_set_current_win(pane.winnr)
-                end
-                selected_visible = true
-                break
-              end
+          local row, visible_entry = pane_changes.find_adjacent_entry(pane.bufnr, nil, 1)
+          if row and visible_entry then
+            first_entry = st:find_entry(visible_entry.filepath, visible_entry.stage_type) or visible_entry
+            if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+              vim.api.nvim_win_set_cursor(pane.winnr, { row, 0 })
+              vim.api.nvim_set_current_win(pane.winnr)
             end
+            selected_visible = true
           end
         end
         if selected_visible then
@@ -143,9 +138,8 @@ function M.open(opts)
     local first_commit = commits[1] ---@type era.m.diffview.ICommit|nil
     if first_commit then
       history_state:set_current_commit(first_commit)
-      local line_map = require("era.m.diffview.pane.commits").get_line_map(lyt.history.commits_bufnr)
       history_state:set_lnum_present(
-        line_map and require("era.m.diffview.pane.commits").find_commit_line(line_map, first_commit.hash) or 1
+        require("era.m.diffview.pane.commits").find_commit_line(lyt.history.commits_bufnr, first_commit.hash) or 1
       )
       history_state:schedule_sign_present()
     end
@@ -243,10 +237,7 @@ function M.log(opts)
 
   -- Check if commits diffview already open with same path_filter
   for tabnr, st in pairs(commits_state.active_states) do
-    if
-      vim.api.nvim_tabpage_is_valid(tabnr)
-      and vim.t[tabnr].tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS
-    then
+    if vim.api.nvim_tabpage_is_valid(tabnr) and vim.t[tabnr].tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
       if st:get_path_filter() == path_filter then
         -- Switch to existing tab with same filter
         vim.api.nvim_set_current_tabpage(tabnr)

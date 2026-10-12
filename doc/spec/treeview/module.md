@@ -293,6 +293,9 @@ Ready 同时固定 `cleanup_context`；准备阶段的外部结构变化使原�
   可以发布，但必须原子保存/恢复 Visual mode 和两个端点，并屏蔽程序重绘造成的退出/导航事件。
 - Frame 在 Rust 中保留范围归并所需的只读 source 祖先索引。Visual 结构导航只查询实际 frame，
   先移动 surface 端点，再按现有前提同步有效逻辑 cursor；其他 view 的 cursor 更新不能拉动这两个端点。
+- `Frame:adjacent_leaf(row, forward)` 按当前 Frame 的可见行序查找 `can_expand=false` 的相邻节点，
+  不改变 cursor、selection 或 expansion，也不导出跳过的行。`row` 为 1-based 且不包含自身；
+  nil 从首行/末行开始；起点为 0、超过行数或无目标时返回 nil，不循环。Tree 与 List 共用此只读查询。
 - 提交或正常退出 Visual 后展示最新可用 snapshot。标记提交后，owner 先确认 snapshot 覆盖该提交，
   避免把提交之前的待显示帧发布回去；尚未就绪时暂留当前画面。
 

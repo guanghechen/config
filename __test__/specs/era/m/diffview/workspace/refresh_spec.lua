@@ -84,17 +84,13 @@ local function load_refresh_case(opts)
       return opts.refreshed_entries
     end,
   })
-  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
-    find_entry_line = function()
-      return nil
-    end,
-    get_entries_in_render_order = function(items)
-      return items
-    end,
-    get_line_map = function()
-      return line_map
-    end,
-  })
+  local pane = require("__test__.support.diffview_pane").new(function()
+    return line_map
+  end)
+  pane.get_entries_in_render_order = function(items)
+    return items
+  end
+  t:patch_table(package.loaded, "era.m.diffview.pane.changes", pane)
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {

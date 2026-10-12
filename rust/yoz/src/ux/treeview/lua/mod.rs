@@ -188,6 +188,22 @@ impl LuaUserData for LuaFrame {
                 .map(|row| row + 1))
         });
         methods.add_method(
+            "adjacent_leaf",
+            |_, this, (row, forward): (LuaValue, bool)| {
+                let index = match row {
+                    LuaValue::Nil => None,
+                    value => {
+                        let row = input::integer(value).map_err(LuaError::external)?;
+                        let Some(index) = row.checked_sub(1) else {
+                            return Ok(None);
+                        };
+                        Some(index)
+                    }
+                };
+                Ok(this.0.adjacent_leaf(index, forward).map(|row| row + 1))
+            },
+        );
+        methods.add_method(
             "navigate",
             |_, this, (row, direction): (LuaValue, LuaValue)| {
                 let row = input::integer(row).map_err(LuaError::external)?;

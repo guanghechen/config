@@ -34,30 +34,16 @@ bootstrap.with_global(t, "era", {})
 ---@return era.m.diffview.view.workspace.action
 local function load_action(line_map, opened, ordered_entries)
   t:patch_table(package.loaded, "era.m.diffview.data", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
-    find_entry_line = function(items, target)
-      for i, item in ipairs(items) do
-        local entry = item.entry
-        if
-          item.type == "file"
-          and entry
-          and entry.filepath == target.filepath
-          and entry.stage_type == target.stage_type
-        then
-          return i
-        end
-      end
-    end,
-    get_line_map = function(bufnr)
-      if type(line_map) == "function" then
-        return line_map(bufnr)
-      end
-      return line_map
-    end,
-    get_entries_in_render_order = function(entries)
-      return ordered_entries or entries
-    end,
-  })
+  local pane = require("__test__.support.diffview_pane").new(function(bufnr)
+    if type(line_map) == "function" then
+      return line_map(bufnr)
+    end
+    return line_map
+  end)
+  pane.get_entries_in_render_order = function(entries)
+    return ordered_entries or entries
+  end
+  t:patch_table(package.loaded, "era.m.diffview.pane.changes", pane)
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
     setup_changes = function() end,

@@ -1,3 +1,4 @@
+use super::super::memory::Charge;
 use super::super::model::{Error, NodeId, Result};
 use super::map::Map;
 use super::sequence::{Contents, Iter, Sequence};
@@ -19,6 +20,93 @@ struct Location {
     offset: usize,
 }
 
+/** A bitset ranks occupied IDs into a packed array; each affected page holds at most 64 locations. */
+struct LocationPage {
+    mask: u64,
+    values: Box<[Location]>,
+    _memory: Charge,
+}
+
+impl LocationPage {
+    fn new(mask: u64, values: Vec<Location>) -> Self {
+        debug_assert_eq!(mask.count_ones() as usize, values.len());
+        Self {
+            mask,
+            _memory: Charge::new(values.len() * std::mem::size_of::<Location>()),
+            values: values.into_boxed_slice(),
+        }
+    }
+}
+
+/** Persistent inverse index with packed 64-ID pages. */
+#[derive(Clone, Default)]
+struct Locations(Map<u64, LocationPage>);
+
+impl Locations {
+    fn from_sorted(values: Vec<(NodeId, Location)>) -> Self {
+        let pages = values
+            .chunk_by(|left, right| left.0.0 >> 6 == right.0.0 >> 6)
+            .map(|chunk| {
+                let mask = chunk
+                    .iter()
+                    .fold(0, |mask, (id, _)| mask | (1 << (id.0 & 63)));
+                let values = chunk.iter().map(|(_, location)| *location).collect();
+                (chunk[0].0.0 >> 6, LocationPage::new(mask, values))
+            })
+            .collect();
+        Self(Map::from_sorted(pages))
+    }
+
+    fn get(&self, id: &NodeId) -> Option<&Location> {
+        let page = self.0.get(&(id.0 >> 6))?;
+        let bit = 1 << (id.0 & 63);
+        (page.mask & bit != 0).then(|| &page.values[(page.mask & (bit - 1)).count_ones() as usize])
+    }
+
+    fn remove(&mut self, id: &NodeId) {
+        let key = id.0 >> 6;
+        let Some(page) = self.0.get(&key) else {
+            return;
+        };
+        let bit = 1 << (id.0 & 63);
+        if page.mask & bit == 0 {
+            return;
+        }
+        if page.mask == bit {
+            self.0.remove(&key);
+        } else {
+            let mask = page.mask ^ bit;
+            let mut values = page.values.to_vec();
+            values.remove((page.mask & (bit - 1)).count_ones() as usize);
+            self.0.insert(key, LocationPage::new(mask, values));
+        }
+    }
+
+    fn extend_sorted(&mut self, values: Vec<(NodeId, Location)>) -> Result<()> {
+        let _input = Charge::new(values.capacity() * std::mem::size_of::<(NodeId, Location)>());
+        super::super::memory::check()?;
+        let mut pages = Vec::new();
+        for chunk in values.chunk_by(|left, right| left.0.0 >> 6 == right.0.0 >> 6) {
+            let key = chunk[0].0.0 >> 6;
+            let previous = self.0.get(&key);
+            let mut mask = previous.map_or(0, |page| page.mask);
+            let mut values = previous.map_or_else(Vec::new, |page| page.values.to_vec());
+            for &(id, location) in chunk {
+                let bit = 1 << (id.0 & 63);
+                let at = (mask & (bit - 1)).count_ones() as usize;
+                if mask & bit == 0 {
+                    values.insert(at, location);
+                    mask |= bit;
+                } else {
+                    values[at] = location;
+                }
+            }
+            pages.push((key, LocationPage::new(mask, values)));
+        }
+        self.0.extend_sorted(pages)
+    }
+}
+
 #[derive(Clone, Copy, Eq, PartialEq)]
 struct Parent {
     parent: Option<u64>,
@@ -34,7 +122,7 @@ pub(crate) struct IndexWork {
 #[derive(Clone)]
 pub(crate) struct IndexedSequence<T: IndexedValue> {
     sequence: Sequence<T>,
-    locations: Map<NodeId, Location>,
+    locations: Locations,
     parents: Map<u64, Parent>,
 }
 
@@ -42,7 +130,7 @@ impl<T: IndexedValue> Default for IndexedSequence<T> {
     fn default() -> Self {
         Self {
             sequence: Sequence::default(),
-            locations: Map::default(),
+            locations: Locations::default(),
             parents: Map::default(),
         }
     }
@@ -108,7 +196,7 @@ impl<T: IndexedValue> IndexedSequence<T> {
         parents.sort_unstable_by_key(|(id, _)| *id);
         Ok(Self {
             sequence,
-            locations: Map::from_sorted(locations),
+            locations: Locations::from_sorted(locations),
             parents: Map::from_sorted(parents),
         })
     }
@@ -459,6 +547,62 @@ impl<T: IndexedValue> IndexedSequence<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn t_dense_locations_share_pages_and_release_their_budget() {
+        let budget = super::super::super::memory::Budget::new(usize::MAX);
+        let _guard = budget.enter();
+        let original = IndexedSequence::from_vec((1..=50_000).map(NodeId).collect()).unwrap();
+        let before = budget.used();
+        assert!(
+            before < 3 * 1024 * 1024,
+            "dense inverse index uses {before} bytes"
+        );
+        let mut updated = original.clone();
+        assert_eq!(before, budget.used());
+        updated.splice(63, 66, vec![NodeId(60_000)]).unwrap();
+        assert_eq!(original.position(&NodeId(64)), Some(63));
+        assert_eq!(updated.position(&NodeId(64)), None);
+        assert_eq!(updated.position(&NodeId(60_000)), Some(63));
+        drop(updated);
+        assert_eq!(before, budget.used());
+        drop(original);
+        assert_eq!(0, budget.used());
+    }
+
+    #[test]
+    fn t_sparse_locations_cover_page_edges_and_preserve_old_frames() {
+        let ids = [1, 63, 64, 127, 1 << 40, u64::MAX - 1, u64::MAX];
+        let original = IndexedSequence::from_vec(ids.into_iter().map(NodeId).collect()).unwrap();
+        let mut updated = original.clone();
+        updated.splice(1, 3, vec![NodeId(62), NodeId(65)]).unwrap();
+        let expected = [1, 62, 65, 127, 1 << 40, u64::MAX - 1, u64::MAX];
+        for (at, id) in ids.into_iter().enumerate() {
+            assert_eq!(original.position(&NodeId(id)), Some(at));
+        }
+        for (at, id) in expected.into_iter().enumerate() {
+            assert_eq!(updated.position(&NodeId(id)), Some(at));
+        }
+        assert_eq!(updated.position(&NodeId(63)), None);
+        assert_eq!(updated.position(&NodeId(64)), None);
+    }
+
+    #[test]
+    fn t_location_page_budget_failure_keeps_the_previous_index() {
+        let budget = super::super::super::memory::Budget::new(4000);
+        let _guard = budget.enter();
+        let location = Location {
+            block: 1,
+            offset: 0,
+        };
+        let mut locations = Locations::from_sorted(vec![(NodeId(1), location)]);
+        let previous = locations.clone();
+        let before = budget.used();
+        let additions = (1..=32).map(|id| (NodeId(id * 64), location)).collect();
+        assert!(locations.extend_sorted(additions).is_err());
+        assert!(locations.0.same_version(&previous.0));
+        assert_eq!(before, budget.used());
+    }
 
     #[test]
     fn t_disjoint_edits_and_moves_preserve_base_coordinates_and_old_versions() {

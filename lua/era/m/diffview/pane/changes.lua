@@ -7,12 +7,12 @@ local config = require("era.m.diffview.config")
 local util = require("era.m.diffview.util")
 local M = {}
 M.apply_to_buffer = tree.apply
-M.get_line_map = tree.line_map
 M.get_item_at_line = tree.item
 M.get_navigation = tree.navigation
 M.resolve_parent_lnum = tree.parent
 M.resolve_last_child_or_sibling_lnum = tree.last_child
 M.get_entry_at_line = files.get_entry_at_line
+M.find_adjacent_entry = files.find_adjacent_entry
 M.toggle_collapse = files.toggle_collapse
 M.is_directory = files.is_directory
 M.goto_parent_node = files.goto_parent_node
@@ -39,7 +39,7 @@ local function pad_left(text, width)
   return string.rep(" ", math.max(0, width - #text)) .. text
 end
 
----Keep Git paths semantic in line_map/actions while making buffer text single-line and printable.
+---Keep Git paths semantic in action payloads while making buffer text single-line and printable.
 ---@param path                          string
 ---@return string
 local function format_display_path(path)
@@ -212,14 +212,21 @@ function M.render(entries, opts)
   return plan
 end
 
----@param items                         table[]
+---@param bufnr                         integer
 ---@param entry                         era.m.diffview.IFileEntry
 ---@return integer|nil
-function M.find_entry_line(items, entry)
-  for row, item in ipairs(items) do
-    if item.type == "file" and item.entry.filepath == entry.filepath and item.entry.stage_type == entry.stage_type then
-      return row
-    end
+function M.find_entry_line(bufnr, entry)
+  if M.get_stage_type(bufnr) == entry.stage_type then
+    return files.find_entry_line(bufnr, entry.filepath)
+  end
+end
+
+---@param bufnr                         integer
+---@param entry                         era.m.diffview.IFileEntry
+---@return integer|nil
+function M.find_entry_anchor(bufnr, entry)
+  if M.get_stage_type(bufnr) == entry.stage_type then
+    return files.find_entry_anchor(bufnr, entry.filepath)
   end
 end
 

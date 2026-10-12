@@ -66,7 +66,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 M.apply_to_buffer = tree.apply
-M.get_line_map = tree.line_map
 M.get_item_at_line = tree.item
 M.get_navigation = tree.navigation
 M.resolve_parent_lnum = tree.parent
@@ -89,15 +88,40 @@ function M.get_entry_at_line(bufnr, lnum)
   return item and item.entry
 end
 
----@param items                         table[]
+---@param bufnr                         integer
 ---@param filepath                      string
 ---@return integer|nil
-function M.find_entry_line(items, filepath)
-  for row, item in ipairs(items) do
-    if item.type == "file" and item.entry.filepath == filepath then
+function M.find_entry_line(bufnr, filepath)
+  local owner = tree.owner(bufnr)
+  return owner and owner:retrieve_lnum(tree.key(nil, filepath, false))
+end
+
+---A collapsed file is anchored to its nearest visible ancestor in this Frame.
+---@param bufnr                         integer
+---@param filepath                      string
+---@return integer|nil
+function M.find_entry_anchor(bufnr, filepath)
+  local frame = tree.navigation(bufnr)
+  local id = frame and frame:source():id(tree.key(nil, filepath, false))
+  while id do
+    local row = frame:position(id)
+    if row then
       return row
     end
+    id = frame:node(id).parent
   end
+end
+
+---@param bufnr                         integer
+---@param lnum                          ?integer Nil starts at the first/last row.
+---@param direction                     1|-1
+---@return integer|nil
+---@return era.m.diffview.IFileEntry|nil
+function M.find_adjacent_entry(bufnr, lnum, direction)
+  local frame = tree.navigation(bufnr)
+  local row = frame and frame:adjacent_leaf(lnum, direction == 1)
+  local item = row and tree.item(bufnr, row)
+  return row, item and item.entry
 end
 
 ---@param bufnr                         integer

@@ -8,7 +8,6 @@ local config = require("era.m.diffview.config")
 local util = require("era.m.diffview.util")
 local M = {}
 M.apply_to_buffer = tree.apply
-M.get_line_map = tree.line_map
 M.get_item_at_line = tree.item
 M.get_navigation = tree.navigation
 M.resolve_parent_lnum = tree.parent
@@ -95,36 +94,12 @@ function M.clear_signs(bufnr)
 end
 
 ---Find line number for commit
----@param line_map                      era.m.diffview.ICommitsLineMap[]
+---@param bufnr                         integer
 ---@param hash                          string
 ---@return integer|nil                  1-indexed line number
-function M.find_commit_line(line_map, hash)
-  for i, item in ipairs(line_map) do
-    if item.type == "commit" and item.commit and item.commit.hash == hash then
-      return i
-    end
-  end
-  return nil
-end
-
----Find line number for file entry
----@param line_map                      era.m.diffview.ICommitsLineMap[]
----@param commit_hash                   string
----@param filepath                      string
----@return integer|nil                  1-indexed line number
-function M.find_file_line(line_map, commit_hash, filepath)
-  for i, item in ipairs(line_map) do
-    if
-      item.type == "file"
-      and item.commit
-      and item.commit.hash == commit_hash
-      and item.entry
-      and item.entry.filepath == filepath
-    then
-      return i
-    end
-  end
-  return nil
+function M.find_commit_line(bufnr, hash)
+  local owner = tree.owner(bufnr)
+  return owner and owner:retrieve_lnum("commit:" .. hash)
 end
 
 ---@param parts                          string[]

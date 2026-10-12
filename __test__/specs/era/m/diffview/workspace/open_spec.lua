@@ -116,9 +116,9 @@ t:test("open selects and previews the first visible file", function()
   }
 
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
-    get_line_map = function(bufnr)
+    find_adjacent_entry = function(bufnr)
       local entry = bufnr == staged_bufnr and entries[2] or entries[1]
-      return { { type = "file", entry = vim.deepcopy(entry) } }
+      return 1, vim.deepcopy(entry)
     end,
   })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {

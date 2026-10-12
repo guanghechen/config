@@ -396,6 +396,12 @@ first expansion, expansion p50 9.1 ms / p95 12.0 ms, and collapse p50 3.1 ms / p
 The hot loop performed zero plan rebuilds, imports or icon lookups. The expanded commit contains
 10,101 rows; files remain absent from inline records until their first expansion.
 
+`nvim -l __test__/bench/diffview_navigation.lua 5000` measures cold/hot adjacency and navigation after
+metadata publication. Add a preserved baseline directory as the second argument; pass `"" directories`
+to sample skipping collapsed directories. Preview I/O and UI flush are excluded. Results and native
+index memory comparisons are recorded in
+[Treeview performance](../doc/spec/treeview/performance.md#2026-10-12-迁移收尾与索引压缩采样).
+
 A separate before/after run through the real FiletreeComposer used virtual paths, the same UI and
 three independent processes. At 50,000 files, collecting 100 files for the actual open action fell
 from 1.82 s to 13 ms (10–16 ms across the final runs; file opening and disk IO stubbed out).

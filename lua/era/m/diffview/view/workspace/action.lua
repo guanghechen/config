@@ -95,42 +95,46 @@ local function get_entry_id(entry)
   return (entry.stage_type or "") .. "\0" .. entry.filepath
 end
 
----Get entries in panel order and the subset currently visible in the changes pane.
----Falls back to state order with every entry visible when the workspace has no changes pane.
----@param ctx                            era.m.diffview.view.workspace.IContext
----@return era.m.diffview.IFileEntry[] entries
----@return table<string, boolean>|nil visible_entry_ids
-local function get_navigation_entries(ctx)
-  local entries = workspace_view.get_visible_entries(ctx.state:get_entries())
-  local visible_entry_ids = {} ---@type table<string, boolean>
-  local has_line_map = false
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return era.m.diffview.view.workspace.IChangesPane[]
+local function get_navigation_panes(ctx)
+  local panes = {}
   for _, pane in ipairs(workspace_view.get_changes_panes(ctx.layout)) do
-    if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
-      local line_map = pane_changes.get_line_map(pane.bufnr)
-      if line_map then
-        has_line_map = true
-        for _, item in ipairs(line_map) do
-          local entry = item.entry ---@type era.m.diffview.IFileEntry|nil
-          if item.type == "file" and entry then
-            visible_entry_ids[get_entry_id(entry)] = true
-          end
-        end
-      end
+    if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) and pane_changes.get_navigation(pane.bufnr) then
+      panes[#panes + 1] = pane
     end
   end
-  if not has_line_map then
+  return panes
+end
+
+---Refresh uses producer order, but queries native visibility only for candidate identities.
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return era.m.diffview.IFileEntry[]
+---@return (fun(entry: era.m.diffview.IFileEntry): boolean)|nil
+local function get_navigation_entries(ctx)
+  local entries = workspace_view.get_visible_entries(ctx.state:get_entries())
+  local panes = get_navigation_panes(ctx)
+  if #panes == 0 then
     return entries, nil
   end
-  return pane_changes.get_entries_in_render_order(entries), visible_entry_ids
+  return pane_changes.get_entries_in_render_order(entries),
+    function(entry)
+      for _, pane in ipairs(panes) do
+        if pane_changes.find_entry_line(pane.bufnr, entry) then
+          return true
+        end
+      end
+      return false
+    end
 end
 
 ---Resolve current selection against freshly rendered entries.
----@param current                        era.m.diffview.IFileEntry
----@param previous_entries               era.m.diffview.IFileEntry[]
----@param entries                        era.m.diffview.IFileEntry[]
----@param visible_entry_ids              table<string, boolean>|nil
+---@param current                       era.m.diffview.IFileEntry
+---@param previous_entries              era.m.diffview.IFileEntry[]
+---@param entries                       era.m.diffview.IFileEntry[]
+---@param is_visible                    ?fun(entry: era.m.diffview.IFileEntry): boolean
 ---@return era.m.diffview.IFileEntry|nil
-local function resolve_refreshed_entry(current, previous_entries, entries, visible_entry_ids)
+local function resolve_refreshed_entry(current, previous_entries, entries, is_visible)
   local current_id = get_entry_id(current)
   local entries_by_id = {} ---@type table<string, era.m.diffview.IFileEntry>
 
@@ -148,9 +152,11 @@ local function resolve_refreshed_entry(current, previous_entries, entries, visib
     end
   end
 
+  ---@param entry                       era.m.diffview.IFileEntry
+  ---@return era.m.diffview.IFileEntry|nil
   local function get_visible_entry(entry)
     local refreshed = entries_by_id[get_entry_id(entry)]
-    if refreshed and (not visible_entry_ids or visible_entry_ids[get_entry_id(refreshed)]) then
+    if refreshed and (not is_visible or is_visible(refreshed)) then
       return refreshed
     end
   end
@@ -179,42 +185,56 @@ local function resolve_refreshed_entry(current, previous_entries, entries, visib
   end
 
   for _, entry in ipairs(entries) do
-    if not visible_entry_ids or visible_entry_ids[get_entry_id(entry)] then
+    if not is_visible or is_visible(entry) then
       return entry
     end
   end
 end
 
 ---Navigate to an adjacent entry and keep state, panel cursor, and preview in sync.
----@param ctx                            era.m.diffview.view.workspace.IContext
----@param direction                      1|-1
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@param direction                     1|-1
+---@return nil
 local function goto_adjacent_entry(ctx, direction)
   local move_changes_focus = workspace_view.is_changes_buffer(ctx.layout, vim.api.nvim_get_current_buf())
-  local entries, visible_entry_ids = get_navigation_entries(ctx)
-  if #entries == 0 then
-    return
-  end
-
+  local panes = get_navigation_panes(ctx)
   local current = ctx.state:get_current_entry()
-  local current_idx = nil ---@type integer|nil
-  if current then
-    for i, entry in ipairs(entries) do
-      if entry.filepath == current.filepath and entry.stage_type == current.stage_type then
-        current_idx = i
+  local target_entry = nil ---@type era.m.diffview.IFileEntry|nil
+  if #panes > 0 then
+    local start = direction == 1 and 1 or #panes
+    local anchor = nil ---@type integer|nil
+    if current then
+      for index, pane in ipairs(panes) do
+        if pane.stage_type == current.stage_type then
+          anchor = pane_changes.find_entry_anchor(pane.bufnr, current)
+          if anchor then
+            start = index
+          end
+          break
+        end
+      end
+    end
+    for offset = 0, #panes - (anchor and 0 or 1) do
+      local pane = panes[((start - 1 + direction * offset) % #panes) + 1]
+      local _, entry = pane_changes.find_adjacent_entry(pane.bufnr, offset == 0 and anchor or nil, direction)
+      if entry then
+        target_entry = entry
         break
       end
     end
-  end
-
-  local start_idx = current_idx or (direction == 1 and 0 or 1)
-  local target_entry = nil ---@type era.m.diffview.IFileEntry|nil
-  for offset = 1, #entries do
-    local target_idx = ((start_idx - 1 + direction * offset) % #entries) + 1
-    local entry = entries[target_idx]
-    if not visible_entry_ids or visible_entry_ids[get_entry_id(entry)] then
-      target_entry = entry
-      break
+  else
+    local entries = workspace_view.get_visible_entries(ctx.state:get_entries())
+    if #entries == 0 then
+      return
     end
+    local index = direction == 1 and 0 or 1
+    for i, entry in ipairs(entries) do
+      if current and get_entry_id(entry) == get_entry_id(current) then
+        index = i
+        break
+      end
+    end
+    target_entry = entries[((index - 1 + direction) % #entries) + 1]
   end
 
   if not target_entry then
@@ -280,46 +300,28 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---Move to next file entry in changes pane (skips directories)
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.next_entry(ctx)
   local bufnr, lnum = get_cursor_info()
   local winnr = vim.api.nvim_get_current_win()
-  local line_map = pane_changes.get_line_map(bufnr)
-
-  if not line_map then
-    return
-  end
-
-  -- Find next file entry (with actual entry, not directory)
-  for i = lnum + 1, #line_map do
-    local item = line_map[i]
-    if item.type == "file" and item.entry ~= nil then
-      vim.api.nvim_win_set_cursor(winnr, { i, 0 })
-      M.select(ctx)
-      return
-    end
+  local row = pane_changes.find_adjacent_entry(bufnr, lnum, 1)
+  if row then
+    vim.api.nvim_win_set_cursor(winnr, { row, 0 })
+    M.select(ctx)
   end
 end
 
 ---Move to previous file entry in changes pane (skips directories)
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.prev_entry(ctx)
   local bufnr, lnum = get_cursor_info()
   local winnr = vim.api.nvim_get_current_win()
-  local line_map = pane_changes.get_line_map(bufnr)
-
-  if not line_map then
-    return
-  end
-
-  -- Find previous file entry (with actual entry, not directory)
-  for i = lnum - 1, 1, -1 do
-    local item = line_map[i]
-    if item.type == "file" and item.entry ~= nil then
-      vim.api.nvim_win_set_cursor(winnr, { i, 0 })
-      M.select(ctx)
-      return
-    end
+  local row = pane_changes.find_adjacent_entry(bufnr, lnum, -1)
+  if row then
+    vim.api.nvim_win_set_cursor(winnr, { row, 0 })
+    M.select(ctx)
   end
 end
 
@@ -438,9 +440,9 @@ local function build_transfer_pathspec_input(target)
 end
 
 ---Capture the next visible item in the source work queue before Git moves the target.
----@param ctx                            era.m.diffview.view.workspace.IContext
----@param target                         era.m.diffview.view.workspace.ITransferTarget
----@param destination_stage_type         stl.m.diffview.StageTypeEnum
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@param target                        era.m.diffview.view.workspace.ITransferTarget
+---@param destination_stage_type        stl.m.diffview.StageTypeEnum
 ---@return era.m.diffview.view.workspace.ITransferContext
 local function capture_transfer(ctx, target, destination_stage_type)
   local source_stage_type = assert(target.entries[1].stage_type) ---@type stl.m.diffview.StageTypeEnum
@@ -452,28 +454,15 @@ local function capture_transfer(ctx, target, destination_stage_type)
   local pane = workspace_view.get_changes_pane(ctx.layout, source_stage_type)
   local fallback = nil ---@type era.m.diffview.IFileEntry|nil
   if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then
-    local line_map = pane_changes.get_line_map(pane.bufnr)
-    if line_map then
-      local anchor_lnum = target.anchor_lnum
-      if anchor_lnum == nil and #target.entries == 1 then
-        anchor_lnum = pane_changes.find_entry_line(line_map, target.entries[1])
-      end
+    local frame = pane_changes.get_navigation(pane.bufnr)
+    if frame then
+      local anchor_lnum = target.anchor_lnum or pane_changes.find_entry_line(pane.bufnr, target.entries[1])
       if anchor_lnum then
-        for i = anchor_lnum + 1, #line_map do
-          local candidate = line_map[i].entry ---@type era.m.diffview.IFileEntry|nil
-          if line_map[i].type == "file" and candidate and not entry_ids[get_entry_id(candidate)] then
-            fallback = candidate
-            break
-          end
-        end
+        local after = target.anchor_lnum and frame:rows(anchor_lnum, anchor_lnum).last_descendants[1] or anchor_lnum
+        local _, candidate = pane_changes.find_adjacent_entry(pane.bufnr, after, 1)
+        fallback = candidate
         if not fallback then
-          for i = anchor_lnum - 1, 1, -1 do
-            local candidate = line_map[i].entry ---@type era.m.diffview.IFileEntry|nil
-            if line_map[i].type == "file" and candidate and not entry_ids[get_entry_id(candidate)] then
-              fallback = candidate
-              break
-            end
-          end
+          _, fallback = pane_changes.find_adjacent_entry(pane.bufnr, anchor_lnum, -1)
         end
       end
     end
@@ -488,8 +477,9 @@ local function capture_transfer(ctx, target, destination_stage_type)
 end
 
 ---Refresh after a stage transfer without stealing a newer selection or focus.
----@param ctx                            era.m.diffview.view.workspace.IContext
----@param transfer                       era.m.diffview.view.workspace.ITransferContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@param transfer                      era.m.diffview.view.workspace.ITransferContext
+---@return nil
 local function refresh_after_transfer(ctx, transfer)
   if ctx.state.is_disposed and ctx.state:is_disposed() then
     return
@@ -506,15 +496,7 @@ local function refresh_after_transfer(ctx, transfer)
     local source = workspace_view.get_changes_pane(ctx.layout, transfer.source_stage_type)
     local source_has_visible_entries = false
     if source.bufnr and vim.api.nvim_buf_is_valid(source.bufnr) then
-      local line_map = pane_changes.get_line_map(source.bufnr)
-      if line_map then
-        for _, item in ipairs(line_map) do
-          if item.type == "file" and item.entry then
-            source_has_visible_entries = true
-            break
-          end
-        end
-      end
+      source_has_visible_entries = pane_changes.find_adjacent_entry(source.bufnr, nil, 1) ~= nil
     end
     if
       not source_has_visible_entries
@@ -1084,7 +1066,8 @@ function M.toggle_foldempty(ctx)
 end
 
 ---Toggle whether untracked files are visible in the Changes panes.
----@param ctx                            era.m.diffview.view.workspace.IContext
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
 function M.toggle_untracked(ctx)
   local current = dot.context.diffview.flag_untracked:snapshot() ---@type boolean
   local show_untracked = not current
@@ -1097,10 +1080,10 @@ function M.toggle_untracked(ctx)
     return
   end
 
-  local entries, visible_entry_ids = get_navigation_entries(ctx)
+  local entries, is_visible = get_navigation_entries(ctx)
   local target = nil ---@type era.m.diffview.IFileEntry|nil
   for _, entry in ipairs(entries) do
-    if not visible_entry_ids or visible_entry_ids[get_entry_id(entry)] then
+    if not is_visible or is_visible(entry) then
       target = entry
       break
     end
@@ -1133,8 +1116,9 @@ end
 
 ---Refresh the view
 ---@async
----@param ctx                            era.m.diffview.view.workspace.IContext
----@param token                          ?stl.c.CancellationToken
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@param token                         ?stl.c.CancellationToken
+---@return nil
 function M.refresh(ctx, token)
   -- Let in-flight Git reads settle; the token guards view ownership and prevents writes after disposal.
   local entries = data.fetch_diff_entries()
@@ -1171,8 +1155,8 @@ function M.refresh(ctx, token)
   end
 
   if current then
-    local refreshed_entries, visible_entry_ids = get_navigation_entries(ctx)
-    local refreshed_entry = resolve_refreshed_entry(current, previous_entries, refreshed_entries, visible_entry_ids)
+    local refreshed_entries, is_visible = get_navigation_entries(ctx)
+    local refreshed_entry = resolve_refreshed_entry(current, previous_entries, refreshed_entries, is_visible)
 
     if refreshed_entry then
       M.__update_changes_cursor__(ctx, refreshed_entry)

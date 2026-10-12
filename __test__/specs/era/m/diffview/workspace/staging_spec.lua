@@ -85,26 +85,18 @@ bootstrap.with_global(t, "era", {
 })
 
 local entries_at_line = {} ---@type table<integer, table<integer, era.m.diffview.IFileEntry>>
-local line_maps = {} ---@type table<integer, era.m.diffview.IFiletreeLineMap[]>
+local line_maps = {} ---@type table<integer, era.m.diffview.IFiletreeItem[]>
 t:patch_table(package.loaded, "era.m.diffview.data", {})
-t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
-  find_entry_line = function(items, target)
-    for i, item in ipairs(items) do
-      if item.entry == target then
-        return i
-      end
-    end
-  end,
-  get_entry_at_line = function(bufnr, lnum)
-    return entries_at_line[bufnr] and entries_at_line[bufnr][lnum]
-  end,
-  get_item_at_line = function(bufnr, lnum)
-    return line_maps[bufnr] and line_maps[bufnr][lnum]
-  end,
-  get_line_map = function(bufnr)
-    return line_maps[bufnr]
-  end,
-})
+local pane = require("__test__.support.diffview_pane").new(function(bufnr)
+  return line_maps[bufnr]
+end)
+pane.get_entry_at_line = function(bufnr, lnum)
+  return entries_at_line[bufnr] and entries_at_line[bufnr][lnum]
+end
+pane.get_item_at_line = function(bufnr, lnum)
+  return line_maps[bufnr] and line_maps[bufnr][lnum]
+end
+t:patch_table(package.loaded, "era.m.diffview.pane.changes", pane)
 t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
 t:patch_table(package.loaded, "era.m.diffview.util", {
   workspace_path = function(filepath)

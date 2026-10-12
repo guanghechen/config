@@ -190,9 +190,6 @@ function M.new(props)
   local treeview = era.m.picker.FiletreeView.new({
     name = fullname,
     tree = filetree,
-    flag_foldempty = o_flag_foldempty,
-    indent = "",
-    indent_hln = "f_utw_indent_float",
   })
 
   local retriever = treeview

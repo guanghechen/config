@@ -36,15 +36,16 @@ local function get_cursor_info()
 end
 
 ---Get item at cursor in commits pane
----@return era.m.diffview.ICommitsLineMap|nil
+---@return era.m.diffview.ICommitsItem|nil
 local function get_item_at_cursor()
   local bufnr, lnum = get_cursor_info()
   return pane_commits.get_item_at_line(bufnr, lnum)
 end
 
 ---Update lnum_present based on commit hash
----@param ctx                            era.m.diffview.view.commits.IContext
----@param hash                           string
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@param hash                          string
+---@return nil
 local function update_lnum_present(ctx, hash)
   local lyt = ctx.layout
 
@@ -52,12 +53,7 @@ local function update_lnum_present(ctx, hash)
     return
   end
 
-  local line_map = pane_commits.get_line_map(lyt.commits_bufnr)
-  if not line_map then
-    return
-  end
-
-  local lnum = pane_commits.find_commit_line(line_map, hash)
+  local lnum = pane_commits.find_commit_line(lyt.commits_bufnr, hash)
   if lnum then
     ctx.state:set_lnum_present(lnum)
   end
@@ -981,7 +977,7 @@ function M.switch_to_layout(ctx, layout_type)
   if new_lyt.filetree_bufnr then
     local current_commit = ctx.state:get_current_commit()
 
-    -- If no current_commit, try to get commit from commits buffer line_map
+    -- If no current_commit, use the item in the displayed Frame.
     if not current_commit and new_lyt.commits_bufnr and vim.api.nvim_buf_is_valid(new_lyt.commits_bufnr) then
       -- Get cursor position in commits window, or default to line 1
       local lnum = 1 ---@type integer
@@ -1046,7 +1042,7 @@ function M.cycle_layout(ctx)
   if new_lyt.filetree_bufnr then
     local current_commit = ctx.state:get_current_commit()
 
-    -- If no current_commit, try to get commit from commits buffer line_map
+    -- If no current_commit, use the item in the displayed Frame.
     if not current_commit and new_lyt.commits_bufnr and vim.api.nvim_buf_is_valid(new_lyt.commits_bufnr) then
       -- Get cursor position in commits window, or default to line 1
       local lnum = 1 ---@type integer
@@ -1112,7 +1108,7 @@ function M.prev_layout(ctx)
   if new_lyt.filetree_bufnr then
     local current_commit = ctx.state:get_current_commit()
 
-    -- If no current_commit, try to get commit from commits buffer line_map
+    -- If no current_commit, use the item in the displayed Frame.
     if not current_commit and new_lyt.commits_bufnr and vim.api.nvim_buf_is_valid(new_lyt.commits_bufnr) then
       -- Get cursor position in commits window, or default to line 1
       local lnum = 1 ---@type integer

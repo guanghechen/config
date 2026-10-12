@@ -84,33 +84,20 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@field public total                  integer                         total commits in the same log snapshot
 
 ----------------------------------------------------------------------------------------------------
--- Filetree line mapping types
+-- Filetree action payloads
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.diffview.IFiletreeLineMap
+---@class era.m.diffview.IFiletreeItem
 ---@field public type                   stl.m.diffview.FiletreeLineTypeEnum
 ---@field public entry                  era.m.diffview.IFileEntry|nil
 ---@field public stage_type             stl.m.diffview.StageTypeEnum|nil
 ---@field public uuid                   string|nil
 
 ----------------------------------------------------------------------------------------------------
--- Filetree node data types
+-- Commits action payloads
 ----------------------------------------------------------------------------------------------------
 
----@class era.m.diffview.IFiletreeNodeData
----@field public basename               string
----@field public filepath               string
----@field public filetype               "directory" | "file"
----@field public fileicon               string
----@field public fileicon_hln           string
----@field public entry                  era.m.diffview.IFileEntry|nil
----@field public stage_type             stl.m.diffview.StageTypeEnum
-
-----------------------------------------------------------------------------------------------------
--- Commits line mapping types
-----------------------------------------------------------------------------------------------------
-
----@class era.m.diffview.ICommitsLineMap
+---@class era.m.diffview.ICommitsItem
 ---@field public type                   stl.m.diffview.CommitsLineTypeEnum
 ---@field public commit                 era.m.diffview.ICommit|nil
 ---@field public entry                  era.m.diffview.IFileEntry|nil
@@ -149,18 +136,6 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@class era.m.diffview.IOverlay
 ---@field public lnum                   integer                         0-indexed line number
 ---@field public virt_text              [string, string][]              virtual text segments {text, hlname}[]
-
----@class era.m.diffview.ITreeNavigation
----@field public parent_lnums           integer[]                       0 means no parent
----@field public last_child_lnums       integer[]                       0 means no child
----@field public root_last_lnum         integer                         0 means no root
-
----@class era.m.diffview.IRenderResult
----@field public lines                  string[]
----@field public highlights             stl.t.IHighlight[]
----@field public line_map               era.m.diffview.IFiletreeLineMap[]|era.m.diffview.ICommitsLineMap[]
----@field public overlays               era.m.diffview.IOverlay[]|nil   right-aligned virtual text
----@field public navigation             era.m.diffview.ITreeNavigation|nil
 
 ----------------------------------------------------------------------------------------------------
 
