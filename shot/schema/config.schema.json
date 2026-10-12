@@ -1,0 +1,364 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/shot/schema/config.schema.json",
+  "title": "Kit Shot Configuration",
+  "type": "object",
+  "required": [
+    "version",
+    "gui"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "\\u0000"
+      }
+    },
+    "version": {
+      "const": 1
+    },
+    "gui": {
+      "$ref": "#/$defs/localPath",
+      "description": "Explicit native GUI executable; relative paths resolve against the config directory."
+    },
+    "captureShortcut": {
+      "default": "Ctrl+Super+A",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^(?:(?:Ctrl|Shift|Alt|Super)\\+)+(?:[A-Z0-9]|F(?:[1-9]|1[0-2]))$"
+        }
+      ]
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "includeCursor": {
+          "type": "boolean",
+          "default": false
+        },
+        "detectWindows": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "font": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "family": {
+              "$ref": "#/$defs/fontFamily"
+            },
+            "size": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 24,
+              "default": 12
+            }
+          }
+        },
+        "text": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "font": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "family": {
+                  "$ref": "#/$defs/fontFamily"
+                },
+                "size": {
+                  "type": "number",
+                  "minimum": 8,
+                  "maximum": 144,
+                  "default": 24
+                }
+              }
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "arrow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "style": {
+              "type": "string",
+              "enum": [
+                "standard",
+                "tapered"
+              ],
+              "default": "standard"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "width": {
+              "$ref": "#/$defs/width"
+            }
+          }
+        },
+        "line": {
+          "$ref": "#/$defs/stroke"
+        },
+        "stroke": {
+          "$ref": "#/$defs/stroke"
+        },
+        "shape": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "style": {
+              "type": "string",
+              "enum": [
+                "rectangle",
+                "ellipse",
+                "circle"
+              ],
+              "default": "rectangle"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "width": {
+              "$ref": "#/$defs/width"
+            }
+          }
+        },
+        "mosaic": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cellSize": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 64,
+              "default": 12
+            }
+          }
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maskOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.42
+            }
+          }
+        },
+        "magnifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "pixelSize": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 32,
+              "default": 14
+            }
+          }
+        },
+        "pin": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "opacity": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 1,
+              "default": 1
+            },
+            "shadow": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      }
+    },
+    "colorPicker": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": [
+                "hex",
+                "rgb"
+              ],
+              "default": "hex"
+            },
+            "hex": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "withHashPrefix": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "copy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "closeAfterCopy": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "save": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "directory": {
+          "$ref": "#/$defs/localPath",
+          "default": "~/Pictures/Screenshots",
+          "description": "PNG export directory; relative paths resolve against the config directory."
+        },
+        "pathPattern": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 1024,
+          "pattern": "^(?![/~])(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?:[^{}\\\\\\u0000-\\u001F\\u007F-\\u009F]|\\{\\{|\\}\\}|\\{(?:yyyy|MM|dd|HH|mm|ss|SSS)\\})*\\.[pP][nN][gG]$",
+          "default": "{yyyy}-{MM}-{dd}_{HH}-{mm}-{ss}-{SSS}.png"
+        },
+        "copyToClipboard": {
+          "type": "boolean",
+          "default": true
+        },
+        "closeAfterSave": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "alwaysOnTop": {
+          "type": "boolean",
+          "default": true
+        },
+        "allSpaces": {
+          "type": "boolean",
+          "default": true
+        },
+        "copyToClipboard": {
+          "type": "boolean",
+          "default": true
+        },
+        "doubleClickAction": {
+          "type": "string",
+          "enum": [
+            "hide",
+            "edit",
+            "none"
+          ],
+          "default": "hide"
+        },
+        "scrollZoom": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "step": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 1,
+              "default": 0.05
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "localPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "\\u0000"
+          },
+          {
+            "pattern": "://"
+          },
+          {
+            "pattern": "^~[^/]"
+          }
+        ]
+      }
+    },
+    "fontFamily": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^\\S(?:.*\\S)?$",
+      "not": {
+        "pattern": "[\\u0000-\\u001F\\u007F-\\u009F]"
+      },
+      "default": "system"
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?$",
+      "default": "#FF3B30"
+    },
+    "width": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 64,
+      "default": 3
+    },
+    "stroke": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "width": {
+          "$ref": "#/$defs/width"
+        }
+      }
+    }
+  }
+}
