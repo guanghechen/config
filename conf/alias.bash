@@ -81,7 +81,7 @@ if [[ -n "${NEOVIM_HOME:-}" && -x "$NEOVIM_HOME/bin/nvim" ]]; then
   alias vi='"$NEOVIM_HOME/bin/nvim"'
   alias nvchad='NVIM_APPNAME=nvim-nvchad  "$NEOVIM_HOME/bin/nvim"'
   alias nvlazy='NVIM_APPNAME=nvim-lazy    "$NEOVIM_HOME/bin/nvim"'
-  alias lazyvim='NVIM_APPNAME=nvim-lazy   "$NEOVIM_HOME/bin/nvim"'
+  alias nvstd='NVIM_APPNAME=nvim-stable   "$NEOVIM_HOME/bin/nvim"'
 fi
 
 ## tmux
