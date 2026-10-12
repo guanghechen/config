@@ -43,6 +43,7 @@ local repo_map = {
       "nvim",
       "nvim-lazy",
       "nvim-nvchad",
+      "nvim-stable",
       "pm2",
       "pwsh",
       "ripgrep",

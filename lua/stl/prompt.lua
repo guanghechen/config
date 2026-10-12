@@ -300,7 +300,8 @@ M.templates = {
       local config_home = vim.env.XDG_CONFIG_HOME or (vim.env.HOME .. "/.config")
       local nvim_config = yoz.path.normalize(config_home .. "/nvim", false, "/")
       local nvchad_config = yoz.path.normalize(config_home .. "/nvim-nvchad", false, "/")
-      return cwd == nvim_config or cwd == nvchad_config
+      local stable_config = yoz.path.normalize(config_home .. "/nvim-stable", false, "/")
+      return cwd == nvim_config or cwd == nvchad_config or cwd == stable_config
     end,
   },
   {
