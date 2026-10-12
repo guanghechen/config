@@ -158,6 +158,18 @@
           }
         },
         {
+          "branch": "nvim-stable",
+          "editions": ["nix", "osx", "win"],
+          "on": {
+            "changed": {
+              "steps": "node script/build.mjs --force"
+            },
+            "synced": {
+              "steps": "node script/build.mjs"
+            }
+          }
+        },
+        {
           "branch": "opencode",
           "editions": ["nix", "osx", "win"]
         },
