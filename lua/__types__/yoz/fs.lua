@@ -42,14 +42,6 @@ function M.path_suffix(base, path) end
 ---@class yoz.fs.ICollectFilesError
 ---@field public error                  string
 
----@class yoz.fs.IMoveParams
----@field public old_path               string
----@field public new_path               string
----@field public force                  boolean
-
----@class yoz.fs.IMoveError
----@field public error                  string
-
 ---Checks whether two native absolute paths identify the same filesystem object.
 ---@param left                         string
 ---@param right                        string
@@ -81,10 +73,5 @@ function M.get_filesize(filepath) end
 ---@return yoz.fs.IReaddirResult|nil
 ---@return yoz.fs.IReaddirError|nil
 function M.readdir(dirpath) end
-
----@param params                        yoz.fs.IMoveParams
----@return boolean|nil
----@return yoz.fs.IMoveError|nil
-function M.move(params) end
 
 return M

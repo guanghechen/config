@@ -608,22 +608,6 @@ fn fs_module(lua: &Lua) -> LuaResult<LuaTable> {
                 }
             })?,
         ),
-        (
-            "move",
-            f(lua, |lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
-                let params = crate::types::IFsMoveParams::from_lua(params, lua)?;
-                match fs::r#move(&params) {
-                    Ok(result) => {
-                        let data = result.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
-                    }
-                    Err(error) => {
-                        let err = error.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
-                    }
-                }
-            })?,
-        ),
     ])
 }
 

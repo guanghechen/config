@@ -7,7 +7,6 @@ local commit_format = require("era.m.diffview.commit_format")
 local config = require("era.m.diffview.config")
 local util = require("era.m.diffview.util")
 local M = {}
-M.apply_to_buffer = tree.apply
 M.get_item_at_line = tree.item
 M.get_navigation = tree.navigation
 M.resolve_parent_lnum = tree.parent
@@ -58,6 +57,20 @@ function M.apply_winopts(winnr)
   end
   vim.api.nvim_set_option_value("winhighlight", gen_winhl(), { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes:1", { win = winnr, scope = "local" })
+end
+
+---@param bufnr                         ?integer
+---@param plan                          table
+---@param owner                         ?era.view.ResultTree
+---@param on_frame                      ?fun(frame: yoz.ux.treeview.Frame): nil
+---@return stl.c.Future
+function M.apply_to_buffer(bufnr, plan, owner, on_frame)
+  return tree.apply(bufnr, plan, owner, on_frame, function(view)
+    local tabnr = vim.api.nvim_win_get_tabpage(view.winnr)
+    if vim.t[tabnr].tabtype ~= stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
+      M.apply_winopts(view.winnr)
+    end
+  end)
 end
 
 ----------------------------------------------------------------------------------------------------

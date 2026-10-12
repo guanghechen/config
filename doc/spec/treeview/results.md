@@ -20,7 +20,9 @@ Lua metadata 在提交时复制为 snapshot，按 native data revision 保存；
 
 ### 普通 List 与 payload
 
-- 普通 ListComposer 同样使用 ResultTree；纯文本 producer 保存不可变字符串，并共享 leaf 描述，避免逐行建立和复制 metadata 表。
+- 普通 ListComposer 同样使用 ResultTree；其 `ResultList` producer 使用有序 keys/labels/items 数组和一个 key→index 表，
+  不为每项建立 parent/children record。完成准备后整份版本不可变；metadata 通过同版索引读取，不重复构造、深拷贝全量映射。
+  平面 snapshot 在 256 项 / 2 ms 时间片中直接准备 presentation，树形 producer 继续使用通用遍历与 metadata 图复制。
   `payloads` 单独保存原始 IItem 引用，可包含 callback、userdata 或 LSP action；不 deepcopy、不序列化到 Rust。
   每次 reset 在根记录推进 payload version，即使 label 不变也生成新的 data revision；旧 Frame 仍解析到旧 IItem 引用。
   Payload 内部的可变内容由调用方拥有。空 query 直接使用 source 顺序，不构造全量 matches 或重传 filter。

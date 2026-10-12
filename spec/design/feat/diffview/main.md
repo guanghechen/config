@@ -387,6 +387,8 @@ Changes、Commits 和独立 files pane 均通过 `pane/tree.lua` 导入 records�
 provider key 使用可逆 byte 编码，显示 label 单独转义。
 
 Native State 在 pane 隐藏、buffer 重建和 layout 切换之间保留；默认新 commit 折叠，普通目录展开。
+独立 Git Log 的 Commits consumer 在每次 attach/resume 后恢复 `signcolumn=yes:1` 及当前 preview commit 的指示 sign；
+workspace History 继续使用 `signcolumn=no` 与单列 statuscolumn spacer。
 行号、父子导航与 action metadata 从已发布 Frame 派生。相邻文件通过 `Frame:adjacent_leaf` 定位，Lua 只读取目标，
 不缓存全量行表；跳过的原生行仍计入查询成本。`apply_to_buffer` 返回发布 Future，refresh 完成后才
 标记 snapshot 已应用；定位使用稳定 key，等待对应行可用。Metadata overlay 只在 viewport 绘制。

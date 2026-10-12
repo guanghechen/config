@@ -135,8 +135,9 @@ end
 ---@param plan                          table
 ---@param owner                         ?era.view.ResultTree
 ---@param on_frame                      ?fun(frame: yoz.ux.treeview.Frame): nil
+---@param on_attach                     ?fun(view: ux.treeview.View): nil
 ---@return stl.c.Future
-function M.apply(bufnr, plan, owner, on_frame)
+function M.apply(bufnr, plan, owner, on_frame, on_attach)
   owner = owner or bufnr and owners[bufnr] or M.new()
   if bufnr and not owners[bufnr] then
     vim.api.nvim_create_autocmd("BufWipeout", {
@@ -154,7 +155,7 @@ function M.apply(bufnr, plan, owner, on_frame)
   if bufnr then
     for _, winnr in ipairs(vim.api.nvim_list_wins()) do
       if vim.api.nvim_win_get_buf(winnr) == bufnr then
-        owner:mount(winnr, bufnr, on_frame or function() end)
+        owner:mount(winnr, bufnr, on_frame or function() end, on_attach)
         break
       end
     end

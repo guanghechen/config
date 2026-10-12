@@ -405,6 +405,7 @@ end)
 ---@param specified_filepath            ?string
 ---@return nil
 local function find_explorer(specified_filepath)
+  cwd = paths.from_os(vim.fn.getcwd())
   local candidates = { specified_filepath or "" }
   local winnr = dot.tab.retrieve_winnr_sourcefile(vim.api.nvim_get_current_tabpage())
   if winnr and vim.api.nvim_win_is_valid(winnr) then

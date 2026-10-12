@@ -2,9 +2,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.composer.list" ---@type string
 
-local Source = require("era.view.result_source")
+local Source = require("era.view.result_list")
 local ResultTree = require("era.view.result_tree")
-local LEAF = { nodetype = "leaf" }
 local PRESENTATION = {}
 
 ---@alias era.m.picker.composer.list.IOnCancel
@@ -162,7 +161,7 @@ function M.new(props)
   local treeview
   treeview = ResultTree.new({
     name = fullname,
-    tree = Source.new("list"),
+    tree = Source.new(0):seal(),
     present = function(key, data)
       if key == "list" then
         return { label = "", fields = { payload_version = data.payload_version } }
@@ -609,8 +608,7 @@ function M:reset_data(data)
   self._preparing = version
   self._uuid_present = data.uuid_present
   self._uuid_current = data.uuid_current or self._uuid_current
-  local source = Source.new("list", { payload_version = version })
-  local entries = { list = { nodetype = "container" } }
+  local source = Source.new(version)
   local index = 1
   ---@return nil
   local function prepare()
@@ -620,11 +618,7 @@ function M:reset_data(data)
     local ok, done = pcall(function()
       local deadline = vim.uv.hrtime() + 2000000
       while index <= #items do
-        local item = items[index]
-        assert(type(item.uuid) == "string", "list item identities must be strings")
-        local key = "item:" .. item.uuid
-        source:insert("list", key, item.text)
-        source.payloads[key], entries[key] = item, LEAF
+        source:append(items[index])
         index = index + 1
         if vim.uv.hrtime() >= deadline then
           return false
@@ -639,8 +633,9 @@ function M:reset_data(data)
       vim.schedule(prepare)
     else
       self._preparing = nil
-      self._items = items
-      self._treeview.source, self._treeview.entries = source, entries
+      source:seal()
+      self._items = source.items
+      self._treeview.source, self._treeview.entries = source, source.entries
       self._treeview:invalidate()
       self:__match__(self._search_pattern:snapshot())
       if self._uuid_current then

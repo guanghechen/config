@@ -98,7 +98,7 @@ local function copy(value, work)
   return setmetatable(target, getmetatable(value))
 end
 
----@param source                        era.view.ResultSource
+---@param source                        era.view.ResultSource|era.view.ResultList
 ---@param entries                       table<string, era.view.result_tree.IEntry>
 ---@param hidden                        table<string, boolean>
 ---@param present                       fun(key: string, data: table|string, entry: era.view.result_tree.IEntry): table
@@ -121,14 +121,25 @@ function M.new(source, entries, hidden, present, previous, metadata)
     _previous = previous,
     _signature = {},
     _copies = {},
+    _immutable = source.metadata,
+    _list = source.metadata and source or nil,
+    _index = 0,
+    _present = present,
+    _hidden = hidden,
   }, M)
+  if source.metadata then
+    self.snapshot.entries, self.snapshot.data, self.snapshot.payloads =
+      source.metadata.entries, source.metadata.data, source.metadata.payloads
+  end
   local retained = {}
   self._produce_records = function()
     source:walk(nil, function(key, data)
-      self.snapshot.data[key] = data
-      self.snapshot.payloads[key] = source.payloads and source.payloads[key]
+      if not self._immutable then
+        self.snapshot.data[key] = data
+        self.snapshot.payloads[key] = source.payloads and source.payloads[key]
+      end
       local entry = entries[key] or { nodetype = "container" }
-      if metadata then
+      if metadata and not self._immutable then
         retain(data, metadata.data[key], self._copies, retained)
         retain(entry, metadata.entries[key], self._copies, retained)
       end
@@ -149,7 +160,9 @@ function M.new(source, entries, hidden, present, previous, metadata)
       end
     end)
   end
-  self._produce = coroutine.create(self._produce_records)
+  if not self._list then
+    self._produce = coroutine.create(self._produce_records)
+  end
   return self
 end
 
@@ -159,25 +172,48 @@ function M:_restart_import()
   self._previous = nil
   self.snapshot.records, self.snapshot.updates = columns(), nil
   self.snapshot.signatures, self.snapshot.topology = {}, {}
-  self._produce = coroutine.create(self._produce_records)
+  if self._list then
+    self._index = 0
+  else
+    self._produce = coroutine.create(self._produce_records)
+  end
 end
 
 ---Bound presentation and graph copying independently; shared metadata and cycles retain their identity.
 ---@return boolean
 function M:step()
-  if self._produce then
+  if self._produce or self._list then
     local deadline = vim.uv.hrtime() + 2000000
     for _ = 1, 256 do
-      local ok, record = coroutine.resume(self._produce)
-      if not ok then
-        error(record)
+      local record, finished
+      if self._list then
+        local source = self._list
+        local key = self._index == 0 and source.root or source.keys[self._index]
+        finished = key == nil
+        if key then
+          record = self._present(key, source:get(key), source.entries[key])
+          record.key, record.parent = key, source:parent(key)
+          record.can_expand, record.foldable = key == source.root, key == source.root
+          record.hidden = self._hidden[key] == true
+          self._index = self._index + 1
+        end
+      else
+        local ok
+        ok, record = coroutine.resume(self._produce)
+        if not ok then
+          error(record)
+        end
+        finished = coroutine.status(self._produce) == "dead"
       end
-      if coroutine.status(self._produce) == "dead" then
+      if finished then
         if self._previous and #self._previous.topology ~= #self.snapshot.topology then
           self:_restart_import()
           return false
         end
         self._produce, self._produce_records, self._signature = nil, nil, nil
+        if self._immutable then
+          return true
+        end
         self._copy = coroutine.create(function()
           return copy({ entries = self.snapshot.entries, data = self.snapshot.data }, {
             copies = self._copies,

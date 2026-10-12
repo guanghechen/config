@@ -1,38 +1,35 @@
 ---@diagnostic disable: undefined-global
 local __module_name__ = "__test__.specs.era.m.lsp.rename" ---@type string
 local harness = require("__test__.support.harness")
-local bootstrap = require("__test__.support.bootstrap")
 local t = harness.new(__module_name__)
 local reports = {}
 
-bootstrap.with_stl(t, {
-  nvim = {
-    fn = {
-      augroup = function(name)
-        return vim.api.nvim_create_augroup(name, {})
-      end,
-    },
-    buf = {
-      locate_bufnr = function(filepath)
-        for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-          if vim.api.nvim_buf_get_name(bufnr) == filepath then
-            return bufnr
-          end
-        end
-      end,
-    },
-  },
-  reporter = {
-    error = function(report)
-      reports[#reports + 1] = report
-    end,
-  },
-})
-local Event = require("era.m.lsp.event")
+require("ark.bootstrap").setup()
+local Jobs = require("era.m.filetree.jobs")
+local await = require("__test__.support.result_tree").await
+t:patch_table(stl.reporter, "error", function(report)
+  reports[#reports + 1] = report
+end)
+t:patch_table(era.m.git.state, "refresh", function() end)
+
+---@param from                          string
+---@param to                            string
+---@return boolean
+local function move(from, to)
+  local captured = await(Jobs.capture(from))
+  local result = await(Jobs.move(captured.data, captured.resource, to))
+  return result.success
+end
 
 ---@return integer, string, string
 local function new_buffer()
-  local from = vim.fn.tempname() .. ".lua"
+  local directory = vim.fn.tempname()
+  vim.fn.mkdir(directory, "p")
+  t:defer(function()
+    vim.fn.delete(directory, "rf")
+  end)
+  local from = directory .. "/source.lua"
+  vim.fn.writefile({ "disk content" }, from)
   local bufnr = vim.api.nvim_create_buf(true, false)
   t:defer(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
@@ -50,7 +47,6 @@ end
 t:test("rename: preserves hidden modified buffer and undo", function()
   local bufnr, from, to = new_buffer()
   local undo = vim.api.nvim_buf_call(bufnr, vim.fn.undotree)
-  local moved = false
   local file_events = 0
   local autocmd = vim.api.nvim_create_autocmd("BufFilePost", {
     buffer = bufnr,
@@ -62,11 +58,9 @@ t:test("rename: preserves hidden modified buffer and undo", function()
     vim.api.nvim_del_autocmd(autocmd)
   end)
 
-  t.assert_true(Event.on_rename(from, to, function()
-    moved = true
-    return true
-  end))
-  t.assert_true(moved)
+  t.assert_true(move(from, to))
+  t.assert_nil(vim.uv.fs_stat(from))
+  t.assert_eq("disk content", vim.fn.readfile(to)[1])
   t.assert_true(vim.api.nvim_buf_is_valid(bufnr))
   t.assert_eq(to, vim.api.nvim_buf_get_name(bufnr))
   t.assert_true(vim.deep_equal({ "unsaved content" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)))
@@ -83,9 +77,7 @@ t:test("rename: preserves displayed buffer identity", function()
     vim.api.nvim_win_set_buf(winnr, previous_bufnr)
   end)
   vim.api.nvim_win_set_buf(winnr, bufnr)
-  t.assert_true(Event.on_rename(from, to, function()
-    return true
-  end))
+  t.assert_true(move(from, to))
   t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr))
   t.assert_eq(to, vim.api.nvim_buf_get_name(bufnr))
 end)
@@ -94,24 +86,23 @@ t:test("rename: rejects target buffer before filesystem and LSP changes", functi
   local bufnr, from, to = new_buffer()
   local target_bufnr = new_buffer()
   vim.api.nvim_buf_set_name(target_bufnr, to)
-  local moved = false
   t:patch_table(vim.lsp, "get_clients", function()
     error("LSP must not be queried after a preflight conflict")
   end)
-  t.assert_false(Event.on_rename(from, to, function()
-    moved = true
-    return true
-  end))
-  t.assert_false(moved)
+  t.assert_false(move(from, to))
+  t.assert_true(vim.uv.fs_stat(from) ~= nil)
+  t.assert_nil(vim.uv.fs_stat(to))
   t.assert_eq(from, vim.api.nvim_buf_get_name(bufnr))
   t.assert_true(vim.deep_equal({ "unsaved content" }, vim.api.nvim_buf_get_lines(target_bufnr, 0, -1, false)))
 end)
 
 t:test("rename: filesystem failure keeps original buffer", function()
   local bufnr, from, to = new_buffer()
-  t.assert_false(Event.on_rename(from, to, function()
-    return false
-  end))
+  local captured = await(Jobs.capture(from))
+  assert(vim.uv.fs_rename(from, from .. ".saved"))
+  vim.fn.writefile({ "replacement" }, from)
+  t.assert_false(await(Jobs.move(captured.data, captured.resource, to)).success)
+  t.assert_eq("replacement", vim.fn.readfile(from)[1])
   t.assert_eq(from, vim.api.nvim_buf_get_name(bufnr))
   t.assert_true(vim.api.nvim_get_option_value("modified", { buf = bufnr }))
 end)
@@ -123,20 +114,17 @@ t:test("rename: checks buffers created by willRenameFiles before moving", functi
     supports_method = function(_, method)
       return method == "workspace/willRenameFiles"
     end,
-    request_sync = function()
+    request = function(_, _, _, callback)
       vim.api.nvim_buf_set_name(target_bufnr, to)
-      return {}
+      callback(nil, nil)
+      return true, 1
     end,
   }
   t:patch_table(vim.lsp, "get_clients", function()
     return { client }
   end)
-  local moved = false
-  t.assert_false(Event.on_rename(from, to, function()
-    moved = true
-    return true
-  end))
-  t.assert_false(moved)
+  t.assert_false(move(from, to))
+  t.assert_true(vim.uv.fs_stat(from) ~= nil)
   t.assert_eq(from, vim.api.nvim_buf_get_name(bufnr))
 end)
 
@@ -193,9 +181,7 @@ t:test("rename: LSP closes old URI and tracks edits at the new URI", function()
   )
   notifications = {}
 
-  t.assert_true(Event.on_rename(from, to, function()
-    return true
-  end))
+  t.assert_true(move(from, to))
   local close_index, open_index, rename_index
   for i, notification in ipairs(notifications) do
     if notification.method == "textDocument/didClose" then
@@ -226,9 +212,7 @@ t:test("rename: LSP closes old URI and tracks edits at the new URI", function()
 
   for _, target in ipairs({ to, to .. ".lua" }) do
     if target ~= to then
-      t.assert_true(Event.on_rename(to, target, function()
-        return true
-      end))
+      t.assert_true(move(to, target))
     end
     notifications = {}
     vim.api.nvim_exec_autocmds("BufWritePre", { buffer = bufnr, modeline = false })
@@ -257,9 +241,7 @@ t:test("rename: LSP closes old URI and tracks edits at the new URI", function()
   t:defer(function()
     vim.api.nvim_del_autocmd(autocmd)
   end)
-  t.assert_true(Event.on_rename(to .. ".lua", to .. ".py", function()
-    return true
-  end))
+  t.assert_true(move(to .. ".lua", to .. ".py"))
   t.assert_eq("python", vim.api.nvim_get_option_value("filetype", { buf = bufnr }))
   t.assert_eq(1, filetype_events, "new language triggers configured LSP selection")
   t.assert_false(vim.lsp.buf_is_attached(bufnr, client_id), "old-language client must remain detached")
@@ -313,9 +295,7 @@ t:test("rename: enabled LSP config resolves the new project root", function()
   )
   local old_client = vim.lsp.get_clients({ name = config_name, bufnr = bufnr })[1]
   t.assert_eq(root, old_client.root_dir)
-  t.assert_true(Event.on_rename(from, target, function()
-    return true
-  end))
+  t.assert_true(move(from, target))
   t.assert_true(
     vim.wait(1000, function()
       local attached = vim.lsp.get_clients({ name = config_name, bufnr = bufnr })
@@ -325,9 +305,7 @@ t:test("rename: enabled LSP config resolves the new project root", function()
   )
   t.assert_false(vim.lsp.buf_is_attached(bufnr, old_client.id), "old project client stays detached")
   local new_client = vim.lsp.get_clients({ name = config_name, bufnr = bufnr })[1]
-  t.assert_true(Event.on_rename(target, target .. ".lua", function()
-    return true
-  end))
+  t.assert_true(move(target, target .. ".lua"))
   t.assert_true(
     vim.wait(1000, function()
       return vim.lsp.buf_is_attached(bufnr, new_client.id)

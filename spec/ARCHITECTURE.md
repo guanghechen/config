@@ -54,7 +54,7 @@ Submodules:
 - `yoz.dict`: dictionary search for English word completion
 - `yoz.find`: file finding (fd-like)
 - `yoz.fn`: utility functions (uuid, md5)
-- `yoz.fs`: filesystem operations (collect_files, readdir, move, get_filesize)
+- `yoz.fs`: filesystem queries (collect_files, readdir, get_filesize, resource path helpers)
 - `yoz.git`: asynchronous status/ignore/blame jobs, immutable snapshots, ignore cache and pure staging helpers
 - `yoz.im`: Lua adapter for the `rust/im` source-oriented capture/restore contract
 - `yoz.path`: path handling (normalize, join, relative, resolve, split, basename)
@@ -110,7 +110,7 @@ Key areas:
 Highlights:
 
 - Feature modules in `era/m/*` (`explorer`, `picker`, `searcher`, `ai`, `git`, `term`, etc.)
-- Callable functions in `era/fn/*` (`find-*`, `search-*`, `select-*`, `rename`, `run-code`, etc.)
+- Callable functions in `era/fn/*` (`find-*`, `search-*`, `select-*`, `run-code`, etc.)
 - View components in `era/view/*` (`act`, `result_tree`, `result_files`, `keysheet`, `notifications`, etc.)
 
 ## Entry Layer

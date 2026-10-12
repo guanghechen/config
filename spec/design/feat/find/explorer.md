@@ -8,6 +8,7 @@ Status: Design。定义 picker 内的单目录浏览与单项文件操作。
 ## 入口与状态
 
 命令 `Ffindexplorer` 接受可选 `filepath`；函数入口为 `era.fn.find_explorer(specified_filepath)`。
+显式相对参数按每次调用窗口的当前 CWD 解析，遵循 `:cd`、`:lcd` 与 `:tcd`；最近浏览目录独立保留。
 初始目录按以下顺序选择，再异步打开目录并 focus：
 
 1. 参数是已有目录：使用该目录。

@@ -40,7 +40,7 @@ local RECORD_DEFAULTS = {
 
 ---@class era.view.ResultTree
 ---@field public entries                table<string, era.view.result_tree.IEntry> Producer metadata; never stores selection or expansion.
----@field public source                 era.view.ResultSource
+---@field public source                 era.view.ResultSource|era.view.ResultList
 ---@field public view                   ?ux.treeview.View
 ---@field public state                  ?ux.treeview.State
 local M = {}
@@ -839,6 +839,12 @@ function M:_import(snapshot)
   end
   local upload = self._data:begin_import()
   self._upload = upload
+  local records = {}
+  for name, values in pairs(snapshot.records) do
+    if name == "keys" or name == "labels" or next(values) ~= nil then
+      records[name] = values
+    end
+  end
   return Future.new(function(resolve, reject)
     local first = 1
     ---@return nil
@@ -848,10 +854,10 @@ function M:_import(snapshot)
         reject("result tree disposed")
         return
       end
-      local last = math.min(first + 255, #snapshot.records.keys)
+      local last = math.min(first + 255, #records.keys)
       if first <= last then
         local columns = {}
-        for name, values in pairs(snapshot.records) do
+        for name, values in pairs(records) do
           local default = RECORD_DEFAULTS[name]
           local needed = default == nil
           if not needed then

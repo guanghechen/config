@@ -136,3 +136,29 @@ commit 和刷新定位按 identity 查询，目录 transfer 直接跳过原生�
   跨分支跳转为 1.587 → 1.529 ms，滚动为 0.662 → 0.708 ms，Visual 为 0.551 → 0.494 ms，均无正文写入。
 - 大型 List 相对旧 Lua renderer 的内存和首开 CPU 回退仍未消除。业务输入准备、同步 matcher 调用和 Lua ranking
   仍需独立优化，不能将移除旧 Diffview 访问层等同于整体性能已收敛。
+
+## 2026-10-12 Flat List producer 收敛
+
+Baseline 为 `2e7980c4b` 的完整 Lua overlay 与对应 release native library；current 为基于该 HEAD 的
+本轮工作区。Apple M5 Pro / macOS arm64、Neovim 0.12.6 Release、LuaJIT 2.1、libuv 1.53.0，
+继续使用 `treeview_migration.lua list`、100×30 attached UI 和相同只读 fixture。
+每档 5 对独立进程交替运行，下表为进程间中位数；没有并发运行 build 或其他 benchmark。
+
+| List 项数 | 首开 UI ms，前→后 | 首开主线程 CPU ms，前→后 | Lua heap MiB，前→后 | 进程 footprint MiB，前→后 |
+| --------- | ----------------- | ------------------------ | -------------------- | ------------------------- |
+| 1,000     | 31.80 → 25.04     | 15.75 → 12.71            | 2.65 → 2.41          | 11.59 → 11.42             |
+| 10,000    | 53.25 → 44.45     | 31.79 → 26.42            | 10.27 → 7.82         | 45.05 → 40.63             |
+| 50,000    | 203.31 → 156.59   | 132.78 → 108.71          | 40.14 → 29.30        | 183.94 → 171.30           |
+
+- Flat producer 使用数组与单个 key→index 表；已完成版本的 metadata 按同版索引读取。
+  Snapshot 直接分片处理 flat records，省去逐项 coroutine resume 与通用 metadata graph copy；
+  完整 import 不再扫描全空的 optional columns。Native Data/State/Frame、选区、payload identity 与原子发布边界保持不变。
+- 50k 的首开主线程 CPU 下降约 18%，Lua heap 下降约 27%，进程 footprint 下降约 7%。
+  过滤中位数为 84.44 → 83.94 ms，清空过滤为 94.22 → 95.39 ms；未将这一小幅波动解释为加速。
+  Cursor/reopen 的全部样本均零正文写入；30 个进程的 errors 均为空。
+- 此轮未改变通用 Rust storage；Source 与 State 的独立 retained 成本继续使用既有
+  `ux::treeview::engine::tests::t_release_flat_import_sample` 拆分测量。它与 Lua heap、进程 footprint
+  是不同口径，不能相加。大型 List 相对旧 Lua 平面列表的总体内存回退仍然存在。
+- 原始输出、环境信息、baseline overlay 与逐阶段临时探针保存在本机
+  `/var/folders/by/7s_s327x3r9clwb_nbcs1l600000gn/T/treeview-fixes-7wn0d3c3/`。
+  该路径仅为本次实验 artifact，不保证跨机器或临时目录清理后仍可用；这里不据 5 对进程样本声称生产 p95。

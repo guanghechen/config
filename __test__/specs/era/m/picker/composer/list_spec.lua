@@ -276,4 +276,69 @@ for _, provider in ipairs({ "fallback", "snacks" }) do
   end)
 end
 
+t:test("flat replacements keep stable native identities and selection through a full import", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    before=picker._treeview:frame():source():id("item:one")
+    picker._treeview:set_selected("item:one",true)
+    replacement={}
+    for index=1,300 do
+      replacement[index]={uuid=tostring(index),text="row "..index,text_lower="row "..index}
+    end
+    replacement[151]={uuid="one",text="changed",text_lower="changed"}
+    picker:reset_data({items=replacement})
+  ]],
+    {}
+  )
+  wait_until(function()
+    return ui:rpc(
+      "nvim_exec_lua",
+      [[return picker._treeview:linecount()==300 and picker:retrieve(151)==replacement[151] ]],
+      {}
+    )
+  end, 5000)
+  t.assert_true(ui:rpc(
+    "nvim_exec_lua",
+    [[return picker._treeview:frame():source():id("item:one")==before
+    and picker._treeview:isselected("item:one")]],
+    {}
+  ))
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    latest={}
+    for index,item in ipairs(replacement) do
+      latest[index]={uuid=item.uuid,text="new "..index,text_lower="new "..index}
+    end
+    picker:reset_data({items=latest})
+  ]],
+    {}
+  )
+  wait_until(function()
+    return ui:rpc("nvim_exec_lua", [[return picker:retrieve(151)==latest[151] ]], {})
+  end, 5000)
+  t.assert_true(ui:rpc("nvim_exec_lua", [[return picker._treeview:isselected("item:one")]], {}))
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+end)
+
+t:test("a rejected flat reset leaves the published payloads and selection intact", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    picker._treeview:set_selected("item:one",true)
+    picker:reset_data({items={items[1],items[1]}})
+  ]],
+    {}
+  )
+  wait_until(function()
+    return ui:rpc("nvim_exec_lua", [[return #errors==1 and picker._treeview:isselected("item:one")]], {})
+  end, 5000)
+  t.assert_true(
+    ui:rpc("nvim_exec_lua", [[return picker:retrieve(1)==items[1] and picker._treeview:linecount()==3]], {})
+  )
+end)
+
 t:run()

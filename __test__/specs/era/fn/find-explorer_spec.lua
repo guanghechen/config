@@ -136,4 +136,37 @@ t:test("parent guards, no overwrite, and captured resource identity survive prom
   t.assert_eq("hello", vim.fn.readfile(path .. "/saved.lua")[1])
 end)
 
+for _, command in ipairs({ "cd", "lcd", "tcd" }) do
+  t:test(command .. " changes the base of explicit relative paths and preserves the remembered directory", function()
+    local ui, path = fixture.new(t)
+    vim.fn.mkdir(path .. "/other/sub", "p")
+    vim.fn.writefile({ "other" }, path .. "/other/sub/only-other.txt")
+    actions(ui)
+    ui:rpc(
+      "nvim_exec_lua",
+      [[
+      local path, command = ...
+      picker:hide()
+      vim.cmd[command]({args={path.."/other"}})
+      require("era.fn.find-explorer")("sub")
+    ]],
+      { path, command }
+    )
+    wait(ui, [[present("only-other.txt")]])
+    t.assert_eq(
+      vim.uv.fs_realpath(path .. "/other/sub"),
+      ui:rpc(
+        "nvim_exec_lua",
+        [[return surface.data:inspect(surface:frame():source(),surface:frame():header().root.node):path()]],
+        {}
+      )
+    )
+    ui:rpc("nvim_exec_lua", [[picker:hide(); require("era.fn.find-explorer")()]], {})
+    wait(ui, [[present("only-other.txt")]])
+    ui:rpc("nvim_exec_lua", [[picker:hide(); require("era.fn.find-explorer")(...)]], { path .. "/folder/sub" })
+    wait(ui, [[present("deep.txt") and not present("only-other.txt")]])
+    t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+  end)
+end
+
 t:run()
