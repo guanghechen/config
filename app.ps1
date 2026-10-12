@@ -72,6 +72,17 @@ function ll {
   lsd -l @args
 }
 
+## nvim
+function nvstd {
+  $previousNvimAppName = $env:NVIM_APPNAME
+  try {
+    $env:NVIM_APPNAME = 'nvim-stable'
+    nvim @args
+  } finally {
+    $env:NVIM_APPNAME = $previousNvimAppName
+  }
+}
+
 ## yazi
 function y {
   $tmp = [System.IO.Path]::GetTempFileName()
