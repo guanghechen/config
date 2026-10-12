@@ -1,13 +1,13 @@
 # Explorer 设计
 
-Status: Design。本文记录默认入口的技术契约与当前默认行为。
-本文是 Explorer 交互的单一契约；文件操作规则由 [Filetree Design](../filetree.md) 定义。
+Status: Design。本文定义当前 native Explorer 的输入、用途、窗口、编辑器同步与退出行为。
+文件操作由 [Filetree](../filetree.md) 定义，交互状态与发布由 [Treeview](../../../doc/spec/treeview/README.md) 定义。
 
 ## 所有权与模块边界
 
-- 默认入口保持 `era.widget.explorer`，通过 `era.m.explorer.Widget` 组合
+- 入口为 `era.widget.explorer`，通过 `era.m.explorer.Widget` 组合
   [Filetree](../filetree.md) 与 [Treeview](../../../doc/spec/treeview/README.md)。
-- Rust `ux/explorer` 组织 workspace、上一个 display root、文件 Job 和浏览动作。
+- Rust `rust/yoz/src/ux/explorer/` 组织 workspace、上一个 display root、文件 Job 和浏览动作。
   Filetree 持有 filesystem 事实，Treeview 持有唯一的 topology、root、展开、cursor、selection 和锁。
   Explorer 通过同一个 owner 提交 selection 与用途，不再维护 Lua tree 或独立 pending sources。
 - Lua `session.lua` 管理 native handles 与导航 generation；`widget.lua` 管理 pane、标题和持久化偏好；
@@ -23,6 +23,8 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   Controller 使用 Filetree 的可取消订阅接收 source/effect，不改写 Treeview/Filetree 的私有 poll 或 effect 函数。
 
 ## 浏览与输入
+
+### 打开与显示
 
 - 默认 Tree、显示隐藏项、压缩单子目录链，selected-only 关闭，pane 宽 30 列；可恢复显示偏好与宽度。
   正文从 display root 的直接 children 开始，root 放在 tabline；无 tabline 时使用 winbar。
@@ -40,6 +42,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   Job 进度仍优先显示，具体扫描错误由报告保留；这个观察复用 frame publication，不增加轮询。
 - Tree/List 均使用 Filetree 的目录优先 sibling source order。List 始终递归，正文使用相对 display root 的 ancestry text；
   Tree 的展开、折叠和结构导航在 List 中不执行。
+
+### 导航与输入时序
+
 - Root/reveal 的异步 resolve 使用 generation，迟到结果不覆盖新导航。Reveal 优先保持逻辑路径；目标位于外部时
   尝试 display root 本身及其直接 symlink children，多个 alias 取物理目标最具体者，无法映射才切到目标父目录。
   路径 resolve 因并发发布返回 Stale 时，只读导航最多重新观察两次；每次观察前后检查 generation 与 session 存活。
@@ -58,6 +63,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   Visual 仍校验捕获范围与 toggle 的 marked 值，文件操作保持原有准备及身份校验。
   view 关闭后不再有延迟队列提交或 surface 回调；已交给 owner 的输入按既有提交顺序完成。
   Explorer keymap 统一报告 range_action 的失败，避免 surface 与业务入口重复提示。
+
+### Workspace 与 display root
+
 - Workspace 来自 Widget 构造时的 root（默认是 editor workspace），与之后请求的 display root 分开。
   替代尚未完成的 opening 时保留该 workspace；shared session 沿用原有 workspace，shared data 的独立 state 各自固定 workspace。
   已观察到的 workspace 传入 Resource，保留 occurrence 与解析后的路径；共享 owner 在 opening 期间 rename 不丢失该身份。
@@ -68,6 +76,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   连续切根使旧 opening 上排队的导航失效；迟到成功只释放旧 session，迟到失败不覆盖当前状态。
 - Workspace 保存 occurrence 与路径 fallback。Root 删除后明确提示，可返回父目录；workspace 同名重建后可重新定位，
   新资源不继承旧 occurrence。
+
+### 行输入与 Visual
+
 - 打开、复制路径等动作在输入时捕获 Resource/frame，后来的光标移动不改变本次目标。Visual 通过 Treeview
   `range_action` 保持布局与端点，不在 Lua 重建范围算法。Explorer 的双 Esc 先退出 Visual；copy/cut 用途中
   只取消 pending transfer、保留选区并恢复 select，普通 select 时清空选区。判断与提交由 native owner 原子执行，
@@ -78,6 +89,8 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   动画中间位置不能反向成为新的导航输入。窗口从普通 buffer 切入时释放已有动画及其临时 window options。
 
 ## Selection 与文件操作
+
+### 请求与源项
 
 - Lua 操作入口接收一个 `IJobRequest`，由 `kind` 唯一确定 create、rename、paste、delete、普通 copy/move，
   或 copy/move to path/directory；路径请求省略 `path` 时才打开输入框。参数记录分别声明所需字段，
@@ -90,6 +103,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
 - Selection 判空同时考虑 `subtree_roots`、`self_only_nodes` 和 pending；递归文件动作只消费完整的 `subtree_roots`。
   只有 self-only 选择时保持用途，不执行递归 IO，也不回退到光标项。确定为空时退出用途；
   后续结构更新自然产生选择时进入 select，不恢复先前的 copy/cut。任务期间保留已固定的用途。
+
+### 标记与用途
+
 - Normal `<Tab>` 与 `ms` 使用 select 用途；`mc`（别名 `y`）/ `mx` 显式使用 copy/cut 用途。未选项加入当前选区并切换用途；
   已选项上切换用途保留选择及 selection stamp，再次请求同一用途才取消该项。select 用途清除 copy/cut。
 - Normal `c` / `x` 有逻辑选区时标记 copy/cut，无选区时询问光标项的复制/移动目标路径；复制默认使用 `-copy` 名称。
@@ -106,6 +122,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   配置的 input/confirmation surface 打开时使用 `noautocmd`，正常输入框的临时焦点切换不撤销跟随。
 - `p` 只对 copy/cut 生效；取得 selection lock 后从已提交状态固定用途，与 Ready 源项配对。Treeview 的 subtree roots、
   self-only 和任务清理遵循其契约，不能按可见行猜测完整目录范围。
+
+### 只读动作与源项准备
+
 - 消费逻辑选区的只读动作要求源项完整；native `prepare_selection` 在一次 owner action 中检查选区：完整时返回
   `Inspected` 及对应不可变 Source，不取得任务锁；pending 时直接返回 `Locked`，自动补载必要的 children，Ready 后继续原动作。
   选区以该 owner action 的处理顺序为准，此前排队的改选先生效，之后的改选不能越过已取得的锁。
@@ -115,6 +134,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   在清理完成前不释放 session 或接受下一次准备。已 full 的目录直接作为完整源项，
   不为导出目录路径补载后代；失败后用户重新执行动作创建新的准备任务。每个新准备任务首次查询显式重试
   选区所需的失败 children，后续轮询不重复重试；读取再次失败时终止本次动作，等待用户下一次尝试。
+
+### 新建、移动与删除
+
 - 当前目录行是 paste/new 的目标，文件行用父目录，空树用 display root。`a` 接受相对路径，末尾 `/` 表示目录；
   `A` 明确新建目录。自动补父目录，禁止覆盖最终目标；新文件成功后 reveal 并打开，新目录只 reveal。
   交互输入使用 `Create file` / `Create directory`，预填相对 display root 的目标目录前缀；保持前缀时仍绑定
@@ -137,6 +159,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
 - 目录合并、逐项冲突、type/symlink 校验、跨卷 move 和部分成功遵循 Filetree 契约。覆盖提示同时显示源和目标，默认 Skip。
   覆盖与退出时取消未完成操作也使用相同的轻量 confirmation 输入；空输入按否处理。
   成功项清理，失败/跳过保留；context Stale 单独报告，不能重绑同名新项。
+
+### 任务、进度与结果
+
 - 修改操作准备、执行、确认和取消期间锁定选区与新修改操作，允许浏览。取消准备会结束等待中的输入 Future，等原 token 解锁再恢复；
   迟到 callback 没有执行资格。Job 取消要等 native 终态；标题显示进度，Space menu 提供取消和最近结果。
   Filetree 通过 native 通知统一读取 Job 状态并交付终态、新确认和可读取结果；Explorer 不再单独轮询 Job。
@@ -163,16 +188,7 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
 
 ## 文件窗口与 LSP
 
-从旧 Explorer 迁移时，以下行为需要调整使用习惯：
-
-- Normal `y` 现在是 `mc` 的别名：同一已标记项再次使用相同 copy 用途会取消该项，不再是幂等 staging。
-  例如无选区时在同一文件连续按两次 `y`，第二次取消标记；Visual `y` 仍将范围加入 copy 选区。
-- 清理动作改用 `<Esc><Esc>`：copy/cut 时先取消用途并保留选区，普通 select 时清空选区。
-  单次 `<Esc>` 可退出 Visual，不承担清空整个逻辑选区的动作。
-- 原 `om` 的路径移动入口使用 Space menu；需要区分单项 Move to path 与多项 Move to directory。
-- 批量打开保留 selection/mode；普通 `l` / `<CR>` 使用光标项，显式 `o<CR>`、split/tab 策略优先使用逻辑选区。
-  `J` / `L` 先通过 window picker 选窗再 split 的能力继续保留。
-- List 现在递归展示后代；目录选择表示逻辑子树，并可排除子项，不应再按当前可见行数推断操作源项。
+### 打开
 
 - 打开复用 `dot.win.pick_sourcefile`，排除 Explorer、浮窗、固定 buffer 和其他非 sourcefile pane；单候选直接使用，
   多候选选择，无候选可新建垂直窗口。放弃选择保留原焦点。
@@ -182,6 +198,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   显式 `o<CR>` 有逻辑选区时打开所选文件，无选区时回退到光标项；其他显式窗口策略继续使用选区优先规则。
 - 批量打开只确定一次目标 window，跳过目录，加载各文件并展示最后成功项；保留 selection/mode。
   支持水平 split、垂直 split、新 tab；移动光标不隐式预览或打开。
+
+### Rename 与 buffer/LSP 同步
+
 - 每次 Move/rename 使用 Filetree 移动准备握手：覆盖确认通过后，在首次 `workspace/willRenameFiles` 请求前检查目标 buffer，应用返回的 workspace edits；
   进入 IO 前始终检查当前目标 buffer；没有支持该请求的 client 时，只需这次最终检查，不重复完整 buffer 匹配。
   准备阶段的 buffer 检查只读，不删除占位 buffer 或触发其删除 callbacks；占位 buffer 的释放留到成功 IO 后的同步阶段。
@@ -215,8 +234,10 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
 
 ## 装饰与订阅
 
+### 主题与图标
+
 - `dot.theme.hlgroup.explorer` 集中定义 `m_ex_*`、`m_fe_*` 与共享的 `m_ft_*`，遵循 theme loader 的 fallback。
-- 普通行树形连接线保持与旧版一致的低亮度前景色；光标行与 Visual 范围使用独立 muted 前景色，保留行背景与普通行配色。
+- 普通行树形连接线使用低亮度前景色；光标行与 Visual 范围使用独立 muted 前景色，保留行背景与普通行配色。
   横向滚动时裁掉屏幕外的线条。
 - 图标和名称有独立 highlight range。特殊目录使用 `MiniIcons*`，普通目录图标用 `m_ft_dirname`，展开只改 glyph。
   Rosé Pine 普通目录沿用 subtle，ignored 图标使用 muted 对应的 `m_ex_ignored`。
@@ -230,6 +251,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   revision 变化时检查节点的完整逻辑路径、类型与名称，未变的图标继续复用，离屏插入不能清空整屏缓存。
   祖先 rename 会改变后代路径；链接目标类型、目录加载完成和展开状态分别更新对应图标。
   滚动到冷范围时通过 Treeview 的装饰刷新补齐；ColorScheme 撤销旧准备资格并重算可见图标，不重写正文。
+
+### 状态装饰
+
 - 文件/目录名称共用 `m_ft_filename`；优先级为 ignored → error → warning → Git status → 中性色。
   Info/hint 不覆盖名称色，selection/copy/cut 用独立 sign，焦点用背景。
   Selection 使用 Nerd Font 勾选框，copy/cut 使用复制页与剪刀图标；self-only 使用半选框区分，
@@ -246,6 +270,9 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
   压缩目录链不跨越 symlink，普通后代不继承链接标识；链接目标出现、消失及同名替换通过资源刷新更新。
 - 可见区域装饰使用 Neovim `on_range`，在 range 外校验 frame 与 viewport，再逐行写 ephemeral extmarks。
   不读取超出当前发布范围的 rows，关闭、发布中或已失步的 view 不绘制旧装饰。
+
+### 订阅与业务入口
+
 - 订阅复用既有 Git status/ignore snapshots；diagnostics 按 namespace/buffer 替换。重连补齐停订阅期间的撤销；
   Busy 保留 pending 输入并延迟重试，手动 refresh 也重新同步 diagnostics。
   Ignore cache 失效独立触发可见路径预加载，完成后再提交 annotation 输入；后台 pane 再显示时按失效版本重新查询，
@@ -262,20 +289,20 @@ Status: Design。本文记录默认入口的技术契约与当前默认行为。
 
 ## 默认键位
 
-| 按键 | 动作 |
-| --- | --- |
-| `h` / `l` / `<CR>` | 折叠/父目录；展开或打开 |
-| `z` / `W` / `[i` / `]i` | 递归切换；全部折叠；父行；最后直接子项/兄弟 |
-| `<BS>` / `.` / `gb` / `gc` / `gw` | 父 root；当前目录；上一 root；cwd；workspace |
-| `t1` / `t2` / `t3` / `t4`、`H` | selected-only；Tree/List；压缩；隐藏项 |
-| `<Tab>` / `ms` / `mc`（`y`）/ `mx` | select；select；copy；cut，同用途切换选中 |
-| `<Esc><Esc>` | 先取消 copy/cut 并保留选区；普通 select 时清空选区 |
-| `c` / `x` / `p` | 无选区时复制/移动到路径，有选区时标记 copy/cut；paste |
-| `a` / `A` / `r` / `d` | 新建；新建目录；rename；delete/trash |
-| `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>` | 打开选区；选窗口；split；vsplit；tab |
-| `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h` | diagnostic；error；warning；Git 导航 |
+| 按键                                                          | 动作                                                      |
+| ------------------------------------------------------------- | --------------------------------------------------------- |
+| `h` / `l` / `<CR>`                                            | 折叠/父目录；展开或打开                                   |
+| `z` / `W` / `[i` / `]i`                                       | 递归切换；全部折叠；父行；最后直接子项/兄弟               |
+| `<BS>` / `.` / `gb` / `gc` / `gw`                             | 父 root；当前目录；上一 root；cwd；workspace              |
+| `t1` / `t2` / `t3` / `t4`、`H`                                | selected-only；Tree/List；压缩；隐藏项                    |
+| `<Tab>` / `ms` / `mc`（`y`）/ `mx`                            | select；select；copy；cut，同用途切换选中                 |
+| `<Esc><Esc>`                                                  | 先取消 copy/cut 并保留选区；普通 select 时清空选区        |
+| `c` / `x` / `p`                                               | 无选区时复制/移动到路径，有选区时标记 copy/cut；paste     |
+| `a` / `A` / `r` / `d`                                         | 新建；新建目录；rename；delete/trash                      |
+| `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>`         | 打开选区；选窗口；split；vsplit；tab                      |
+| `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h`             | diagnostic；error；warning；Git 导航                      |
 | `of` / `os` / `oe` / `oc` / `oi` / `oo`、`O` / `<C-q>` / `oa` | 查找；搜索；目录；路径；详情；系统打开；quickfix；AI 位置 |
-| `<Space>` / `R` / `?` / `q` | 动作和任务；刷新；帮助；关闭 pane |
+| `<Space>` / `R` / `?` / `q`                                   | 动作和任务；刷新；帮助；关闭 pane                         |
 
 Normal `<Space>` 使用 `nowait=false`，保留 `<leader>1` 等全局 leader 组合；单独按 Space 在 `timeoutlen`
 后打开动作菜单（原生 Neovim 默认 300 ms）。其余 Explorer 自有绑定继续使用 `nowait=true`。

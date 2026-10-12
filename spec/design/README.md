@@ -11,7 +11,7 @@ Treeview 按用户指定集中在 [doc/spec/treeview](../../doc/spec/treeview/RE
 - [Nvimbar](nvimbar.md)：组件取数、状态提交、通知与布局。
 - [Signal Hub](signal-hub.md)：进程内消息、身份、路由与清理。
 - [stl.os](stl/os.md)：canonical filepath 与系统调用边界。
-- [Treeview](../../doc/spec/treeview/README.md)：Rust 交互树、共用标记算法、selection/expansion、布局与 Visual；另列现有 Lua layout 契约。
+- [Treeview](../../doc/spec/treeview/README.md)：native Data/State/Frame、标记算法、投影、Visual 与 Lua consumer 接入。
 
 ## 文件、搜索与 Git
 

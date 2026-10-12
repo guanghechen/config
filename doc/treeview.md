@@ -2,7 +2,13 @@
 
 Rust core 位于 `rust/yoz/src/ux/treeview/`，Lua surface 使用 `require("ux.treeview")`。
 权威语义见 [Treeview 设计](spec/treeview/README.md)，Lua 字段与原生方法见
-`lua/__types__/ux/treeview.lua` 和 `lua/__types__/yoz/ux.lua`。
+[treeview.lua](../lua/__types__/ux/treeview.lua) 和 [yoz/ux.lua](../lua/__types__/yoz/ux.lua)。
+
+## 选择入口
+
+- 真实目录浏览使用 `require("ux.filetree")`；资源、watch 与文件 Job 见 [Filetree](../spec/design/filetree.md)。
+- 普通 List、文件结果、LSP symbols/references 和 Diffview 通过 ResultTree 导入业务 records，见[结果集接入](spec/treeview/results.md)。
+- 直接提供通用层级数据时使用下述 `ux.treeview` API。显示模式与数据来源分开，Treeview 不推断 filesystem。
 
 ## 最小示例
 
@@ -92,7 +98,7 @@ local result = upload:commit():await()
 请求提供 `work`、`sequence`、`node`、只读 `source` 与 `is_cancelled()`；provider 按 work 保存分页 cursor。
 每页被 owner 消费后才请求下一页。普通错误不会自动重试，使用 `data:request_children({ node_id }, true)` 显式重试。
 普通 view 正在准备发布时，下一页等待该次交接完成；Visual 持帧或失败的 view 不阻塞其他消费者。
-Native completion 使用共享 timer 轮询：有在途工作时 1 ms，空闲 watcher 为 5 ms。
+Native completion 通过可合并通知唤醒 Lua；空闲 view 不持续轮询。只有待处理工作需要检查或通知通道失败时才使用 timer。
 
 查询使用 `provider:create_query(handler)` 和 `query:start({ pattern, options? })`。
 Handler 同样返回一页或 Future；首批替换旧结果，后续页追加。`query:cancel()` 关闭当前轮结果资格；
@@ -103,19 +109,21 @@ Handler 同样返回一页或 Future；首批替换旧结果，后续页追加�
 ## 验证与容量
 
 ```sh
-cargo test --offline --manifest-path rust/Cargo.toml --workspace --all-targets
-cargo build --offline --manifest-path rust/Cargo.toml -p yoz --lib
+cargo build --offline --locked --manifest-path rust/Cargo.toml -p yoz --lib
+cargo test --offline --locked --manifest-path rust/Cargo.toml --workspace --all-targets
 nvim -l __test__/run.lua ux/treeview/
-cargo test --offline --release --manifest-path rust/Cargo.toml -p yoz --lib t_release_performance_sample -- --ignored --nocapture
-CARGO_NET_OFFLINE=true node script/build.mjs
+nvim -l __test__/run.lua ux/filetree/
+nvim -l __test__/run.lua era/m/explorer/
+node script/build.mjs --offline
 nvim -l __test__/bench/treeview.lua > treeview-ui-benchmark.json
 ```
 
 macOS 的 Cargo 命令需追加 `--config .cargo/config.macos.toml`，使用仓库固定的 SDK；build script 已自动使用该配置。
 如果系统升级后 Xcode 尚未配置，可在以上命令前设置 `DEVELOPER_DIR=/Library/Developer/CommandLineTools`，使用已有的 Command Line Tools。
-Lua tests 加载 debug library，UI benchmark 加载 build script 部署的 release library，运行前分别重建。
+Native specs 直接加载 debug library；完整 bootstrap 的 UI specs 和 benchmarks 使用部署的 release library。
+修改 Rust 后分别构建，避免验证旧动态库。更多筛选命令见[测试指南](../__test__/README.md#run)。
 
-默认 Rust 保留预算为 512 MiB，另有节点、payload、批次、action queue、读取并发和私有输入暂存限制。
+默认 Rust 保留预算为 512 MiB；节点、payload、批次、action queue 与读取限制见[默认容量](spec/treeview/action.md#预算背压与恢复)。
 共享索引与 payload 随最后一个持有者释放；保留旧 frame/source 会占用预算。Lua staging 限制为 64 MiB，装饰按 viewport 查询。
 Rust 内部计量使用结构尺寸及 payload allocation 估算，allocator 和 Neovim/Lua 内存需结合进程测量。
 正文按最多 512 行、64 KiB 分块准备；超过单片预算的单行拒绝发布。Viewport 每次最多读取 512 行、1 MiB 行数据，
@@ -126,72 +134,7 @@ Rust 内部计量使用结构尺寸及 payload allocation 估算，allocator 和
 `view:detach()` 解除 surface，已经接受的命令继续完成。
 准备期间发生 cursor/装饰更新，只有 Rust 确认正文及布局版本均相同时才复用 staging，并发布最新完整 frame。
 
-Tree/List 的局部 projection 覆盖 source/name/score 排序、branches-first、compression、selected-only 和固定 filter。
-压缩链变化合并旧/新父链；filter 在不可变 frame 中保留匹配子项的共享顺序索引，按变更更新连接祖先。
-行位置使用 projection 顺序的 rank 查询，不扫描被过滤的 siblings；排序 List 的单项 label/score 更新只移动该行。
-正文 label 直接引用当前 source 的 allocation，文本更新只替换相关行块；connector 单独变化保留 layout revision。
+局部更新、共享索引与全量重算边界见 [render 契约](spec/treeview/render.md)，
+测量口径与验收目标见 [performance](spec/treeview/performance.md)。
 
-更换 pattern、排序方式、display root，影响整个展示范围的继承变化，或超过 4096 条失效提示预算时，仍会全量重算。
-局部成本包含受影响子树、祖先/排序依赖、索引路径和实际输出字节；不把所有操作描述成统一的 O(D)。
-
-性能样本必须区分 Rust 计算、Lua staging、buffer 发布与 UI redraw；单独的结构或容器测试不代表全部性能目标已达标。
-
-2026-09-16 补齐局部投影后的合成 UI 样本：Apple M2 Max / 32 GiB、Darwin 27 arm64、Neovim 0.12.5，release build；
-50,001 个 source 节点、50,000 行投影、96-byte label、80×48 UI，每行两处高亮和右对齐文本。
-单行更新、Selection、filter 各 100 次；sort 300 次，额外持有初始 frame。各轮均单独运行，包含自然 GC。
-以下为输入到适用 frame 的 UI flush 延迟：
-
-| 路径        | p50 ms | p95 ms | max ms |
-| ----------- | -----: | -----: | -----: |
-| 单行更新    |  0.903 |  3.369 |  7.131 |
-| Selection   |  3.409 |  4.266 |  6.328 |
-| 全局 filter | 16.776 | 41.464 | 43.421 |
-| 全局 sort   | 45.241 | 48.788 | 50.735 |
-
-压缩链拆合、排序视图单项插入各 100 次，p95 分别为 2.15 / 1.90 ms；修复前对应值为 8.88 / 9.69 ms。
-另一个宽目录含 50,000 个直接 children；selected-only 单项变化 p95 为 5.41 ms。
-结构测试同时断言重算节点小于 20、至少 49,800 行及匹配子项保持块共享，并与独立全量投影对照。
-15 组模式组合覆盖 4,500 次 mixed updates、旧 frame、hidden/foldable、选中/展开、label/score 和 reparent。
-Rust workspace/all-target 338 项通过（另 1 项性能测试默认忽略），Lua/UI 17 项通过；UI 包含 Visual 内 connector 更新。
-
-2026-09-16 补充真实数据链路验收。运行 `nvim -l __test__/bench/treeview_consumers.lua <consumer> [samples]`，
-consumer 为 `filetree`、`searcher`、`git` 或 `lsp`，默认 100 个正式样本，另有 5 次预热。
-脚本使用 release library、附着 UI 和自然 GC；`lsp` 使用已安装的 Mason Lua language server。
-Adapter 位于测试 fixture，验收到 Treeview surface，不切换现有业务入口。
-
-| 链路与数据形状 | 输入到首批 flush p95 | 输入到末批 flush p95 | 数据就绪到末批 flush p95 |
-| --- | ---: | ---: | ---: |
-| Filetree：真实 fs event + native readdir，128/129 个文件 | 52.69 ms | 52.69 ms | 2.40 ms |
-| Searcher：native search 当前 Treeview Rust 源码，507 行，4 页 | 7.51 ms | 28.98 ms | 24.92 ms |
-| Git：当前 checkout 的 status + numstat，52 行 | 36.39 ms | 36.39 ms | 2.86 ms |
-| LSP：真实 documentSymbol response，315 行 | 220.58 ms | 220.58 ms | 5.11 ms |
-
-Filetree 完整时间包含 OS watch 通知等待；LSP 完整时间包含 language server 等待，不能当作已加载数据的局部交互延迟。
-Searcher 原生 job 完成后提供完整结果，测试 adapter 每页提取最多 128 行；原生结果导出的主线程成本也计入测量，
-本组 native poll 累计 p95 为 1.87 ms，末批时间包含后续分页与发布背压。
-JSON 另保存 plan 请求/完成的 Lua 观察时点、staging、buffer 写入、Lua heap、实际 buffer bytes 与关闭成本；
-这些观察时点不冒充 Rust worker 内部提交时点。所有样本最终 queue 为 0，没有持久逐行 extmarks，关闭后弱引用中的
-data/state/query/provider/view 和专用 buffers 均已回收。GC 检查在关闭函数返回后的独立 RPC 中执行，
-避免关闭栈临时引用影响弱引用检查；关闭与 GC 成本分别记录。
-另对当前 `view.lua` 做了 100 次真实 Tree-sitter 解析、Lua 提取与 UI 发布，28 个函数节点，完整 flush p95 为 4.17 ms。
-
-补充压力结果与适用范围：
-
-- 50k 行局部路径的访问节点数、行块/子项索引共享与实际正文差量已分别验证，不能只用延迟推断复杂度。
-- 12 轮三 view 流式测试：旧 query 第 10 页取消，新 query 40 × 500 项；同时输入、滚动与 Visual 持帧。
-  1,071 次 Applied 输入到首个包含该 commit 的 frame flush，p95 为 36.74 ms，最大 44.39 ms。
-  其中 744 次 cursor 状态在发布前被后续输入覆盖，未被覆盖的 327 次 p95 为 10.52 ms。另有 369 次 MissingNode 拒绝，来自旧 frame 引用已被查询替换的节点。
-  输入完成与 publication/flush 独立记录后关联，避免完成通知晚于发布时漏算，也不要求已经显示的 frame 仍是此刻最新。
-  每轮最终显示 20k 项、queue 为 0、旧 generation 无残留。压力档结果不套用静态基线的 16 ms 目标。
-- Rust 独立 allocator：96-byte label、path payload、highlight/right text、旧 frame；50k 行 3 个 states 和
-  200k 行 1 个 state 各重排 20 轮，live requested allocations 分别稳定在 183.02 / 601.67 MiB，
-  单阶段峰值为 221.07 / 691.02 MiB。测试显式使用 1 GiB retained、256 MiB batch 预算，不能据此声称默认容量通过。
-  20k 项、3 个 states 的查询替换经过容量增长后稳定在 140.00 MiB，峰值 204.44 MiB；旧 frame 释放后降至 83.00 MiB。
-  释放 engine 后分别剩余 40 / 0 / 0 bytes；40 bytes 为首次初始化的共享静态空 fields。
-- 50k 行 UI 连续 100 次 detach/attach 与各 500 项插删，旧 view 弱引用全部释放，关闭后只剩原始 buffer。
-  GC 后 Lua heap 保持约 0.78–1.06 MiB，关闭后约 0.87 MiB。5 ms 采样得到的 Lua heap / 进程 RSS 峰值分别为
-  36.16 / 175.13 MiB；采样可能遗漏短暂峰值。Rust requested allocations、Lua heap 和进程 RSS 按各自口径报告，
-  不相加或用 allocator 保留的 RSS 推断泄漏。
-
-本轮原始结果、压力脚本与 snapshot 位于 `local/20260916/treeview-local-completion/`；前轮记录保留在
-`local/20260916/treeview-verification/`。它们是验收记录，不是设计契约。
+测量结果见 [Treeview 测量记录](../__test__/bench/treeview.md)；具体版本、环境、样本数和预算以各次记录为准。

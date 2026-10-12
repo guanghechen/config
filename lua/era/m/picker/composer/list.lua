@@ -536,6 +536,35 @@ function M:retrieve(lnum)
   return key and self._treeview:payload(key)
 end
 
+---@return nil
+function M:toggle_selection()
+  self:__health__()
+  self._treeview:toggle_selection()
+end
+
+---Resolve selected payloads after queued selection and publication, including filtered items.
+---@return stl.c.Future
+function M:selected_items()
+  self:__health__()
+  local tree = self._treeview
+  return tree:ready():map(function(reply)
+    if self._disposed then
+      return {}
+    end
+    if reply.kind == "Rejected" then
+      error(reply.error)
+    end
+    local items = {} ---@type era.m.picker.composer.list.IItem[]
+    for _, key in ipairs(tree:selected_keys(false)) do
+      local item = tree:payload(key)
+      if item then
+        items[#items + 1] = item
+      end
+    end
+    return items
+  end)
+end
+
 ---@return era.m.picker.ListComposer
 function M:mark_result_dirty()
   self:__health__()

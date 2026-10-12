@@ -1,13 +1,15 @@
 # Picker / Searcher 共享 Surface
 
-## 目标
+Status: Design。定义 Result/Preview 的窗口、发布与生命周期；节点语义以 [Treeview](../../../doc/spec/treeview/README.md) 为准。
 
-Picker 与 Searcher 只共享已经形成稳定同构实现的 UI surface：
+## 共享范围
 
-1. `Result`：result buffer/window lifecycle、line observables、sign scheduler 与 winbar。
+Picker 与 Searcher 共享两类 UI surface：
+
+1. `Result`：结果窗口、native View 接入、派生行号、current/present signs 与 winbar。
 2. `Preview`：preview buffer/window lifecycle、debounced draw 与 window options。
 
-Feature 保留 Finder 输入语义、pane composition、search/replace 输入和所有业务 action。
+Feature 保留 Finder 输入、pane composition、search/replace 与业务 action。
 所有结果使用 [native Treeview 接入契约](../../../doc/spec/treeview/results.md)，selection/expansion/行映射归 native State。
 
 ## 依赖方向
@@ -26,10 +28,11 @@ era.m.searcher ─┘
 
 ## `Result` 契约
 
-共享层拥有：
+共享层负责：
 
-- result buffer/window 的 create、focus、hide、resize、dispose；
-- `lnum_current`、`lnum_present`、`lnum_total`；
+- result window 与初始空 scratch buffer 的创建；attach 后 buffer 所有权交给 native View；
+- focus、hide/suspend、resize、dispose 的协调；
+- 派生的 `lnum_current`、`lnum_present`、`lnum_total`，不作为节点定位的权威数据；
 - current/present signs 与对应 scheduler；多项 selection 使用 viewport decoration；
 - Result 内容刷新调度；buffer 正文与 viewport decorations 由 native View 独占；
 - flags、position 与可选 status 的 winbar 渲染。
@@ -77,7 +80,7 @@ Draw 只有在绘制了目标范围时才返回 `has_range = true`，启用范�
 3. `dispose` 只执行一次，并释放 window、buffer、observable、autocmd、nvimbar、scheduler 与 registered flag callbacks。
 4. queued observable/scheduler callback 在 dispose 后不得读取已释放字段或写入 buffer/window。
 5. draw 或 callback failure 只报告，不得留下 `modifiable/readonly` 错误状态。
-6. reporter `from` 保持迁移前的 feature identity。
+6. reporter `from` 使用调用方的 feature identity。
 
 ## Feature 自有边界
 
@@ -88,7 +91,6 @@ Finder 保持 feature-owned，不提取共同基类或共享 superset。
 - Picker 是 single-line 输入；多行变更会归一化为空格分隔的单行内容。
 - Searcher 保留 multiline 内容，并拥有 custom prompt sign 与 rich title accent。
 - 两者的 `set_content` 状态写入时序不同；统一实现需要 content codec、prompt 与 title policy。
-- 强行共享会将上述差异转换为 optional branches/hooks，增加理解成本。
 
 ### BasicComposer
 
@@ -96,14 +98,13 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 
 - Searcher 额外拥有 replacer pane、replace-mode observable/unsubscribe lifecycle 与 replace history。
 - pane validity/focus restoration、动态 layout/border 和 keymap flow 都由 replacer 状态参与决定。
-- 这些差异尚未形成范围明确、稳定的共享 composer 契约。
+- Result/Preview 接入相同的 owner contract，composer 的业务生命周期各自管理。
 
 ## 复杂度与性能
 
 - 共享层不持有 tree node、search match 或 file data，不新增与结果规模相关的状态。
-- `Result`/`Preview` 的 create、focus、hide、resize、dispose 和 schedule 操作保持原有渐进复杂度；
-  所有结果通过 native Frame 发布，普通 List 的 custom presentation 也不直接写 buffer。
-- policy 只增加固定大小的 instance state；不得引入按 node/result 复制的数据或额外 observer。
+- Result 通过 native Frame 发布，普通 List 的 custom presentation 不直接写 buffer。
+- Surface 保留实例状态和有界 viewport 缓存；按结果规模增长的 records/metadata 由 ResultTree producer 管理。
 - Cursor、selection 与 expansion 更新不得重新导入业务 records；相同 display 请求复用已解析的 filter。
 
 ## 验收标准
@@ -114,5 +115,5 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 - 只保留一套 Result 与一套 Preview 行为实现；feature alias 仅保留类型与公开入口。
 - shared contract tests 覆盖两侧 alias、Result policy、Preview number policy、draw failure、
   changed/stable cursor scheduling 与 dispose 后 queued callback。
-- 全量测试、LuaLS Error-level、formatting 与 dependency checks 通过。
-- 使用当前实现与迁移前配置基线完成 5,000+ 节点 E2E，记录运行环境、常用操作时间与稳态空间对比。
+- 多选 List 覆盖 native 标记、过滤后的选区、快速确认、取消和关闭时的迟到回调。
+- 测试、LuaLS、formatting 与 dependency checks 覆盖修改范围；规模与测量口径遵循 Treeview 性能契约。

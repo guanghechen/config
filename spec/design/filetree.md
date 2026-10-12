@@ -1,18 +1,18 @@
 # Filetree 技术契约
 
-Status: Design。本文确定 Filetree 的 Rust/Lua 边界、资源身份、读取、任务接入及性能验收。
-Design 不表示 runtime 已实现或性能已达标。本文同时维护已确认的文件操作行为；
-Explorer 的输入与 UI 行为见 [Explorer Design](feat/explorer.md)。
+Status: Design。本文定义当前 native Filetree 的资源、读取、watch、文件 Job 与容量契约。
+Explorer 的输入与 UI 见 [Explorer Design](feat/explorer.md)，通用交互状态见 [Treeview](../../doc/spec/treeview/README.md)。
+性能章节保留验收目标，具体测量结果见[测试指南](../../__test__/README.md)。
 
 ## 模块与所有权
 
 - 当前只支持真实 filesystem 与最新 Neovim；不为其他宿主或未接入的 VFS 预留适配层。
   Explorer 与 Find Explorer 使用本模块；文件 Picker 的真实 IO 也使用 native Jobs。
-  Picker、Searcher、Diffview 的逻辑结果仍通过 [通用 Treeview records](../../doc/spec/treeview/results.md) 表达。
+  Picker、Searcher、Diffview 的逻辑结果通过 [通用 Treeview records](../../doc/spec/treeview/results.md) 表达。
 - 使用现有 `yoz` crate：Rust 位于 `rust/yoz/src/ux/filetree/`，binding 位于其 `lua/` 子模块，
   Lua facade 位于 `lua/ux/filetree/`，入口为 `yoz.ux.filetree` / `require("ux.filetree")`。
 - 依赖为 Filetree → Treeview 与现有 Rust fs/git 工具。Treeview 不导入 Filetree、Lua 或 Neovim。
-  不新增 crate，不将已实现的 Treeview 移回 `rust/ux`，不为未来 VFS 引入未使用的插件框架。
+  VFS 扩展保留在 [Draft](../draft/filetree.md)，不属于当前 filesystem 契约。
 - 每份 Filetree data 组合一个通用 Treeview DataHandle。它的 owner 持有唯一权威 source topology、
   key/NodeId 映射和不可变节点 payload；Filetree 不保存另一份可独立修改的 parent/children tree。
 - Filetree 拥有资源解释、目录观测、路径查找索引、IO 缓存与调度。索引只保存节点身份或不可变数据引用，
@@ -27,23 +27,27 @@ Explorer 的输入与 UI 行为见 [Explorer Design](feat/explorer.md)。
 
 ### 句柄与调用边界
 
-| 入口 | 结果与职责 |
-| --- | --- |
-| `open(path)` | Future 完成为 Filetree data 与初始 display-root NodeId；路径 IO 在 worker 执行 |
-| `data:create_state(root?)` | 创建同 data 的独立 Treeview state，省略 root 使用初始入口 |
-| `data:source()` | 返回不可变 source，资源查询必须携带这个 source 或相应 frame |
-| `data:resolve(path)` | Future 返回资源句柄；只补齐定位所需的祖先，不递归读取整个 workspace |
-| `data:refresh(state)` | 按该 state 的 Tree 展开范围或 List 递归范围建立刷新需求，返回请求接受结果 |
-| native `data:is_settled()` | 在请求接受后观察 owner 队列及执行中的整轮工作、active reads/query、待调度扫描/探测与 dirty demand 是否已收尾；不表示 IO 成功或 UI 已发布 |
-| `data:inspect(source, node)` | 按需返回该版本的资源信息；需要新 IO 的详情查询另返回带身份校验的 Future |
-| `data:details(resource)` | Worker 校验资源及祖先 identity，返回当前 size、权限、八进制 mode 与 RFC3339 日期 |
+| 入口                                                | 结果与职责                                                                                                                                                                       |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open(path, options?)`                              | Future 返回 Filetree Data 或 Rejected；`data.root` 为初始入口 NodeId，路径 IO 在 worker 执行                                                                                     |
+| `data:create_state(root?, display?)`                | 创建同 data 的独立 Treeview State，省略 root 使用初始入口                                                                                                                        |
+| `data:source()`                                     | 返回不可变 source，资源查询必须携带这个 source 或相应 frame                                                                                                                      |
+| `data:resolve(path)`                                | Future 返回资源句柄；只补齐定位所需的祖先，不递归读取整个 workspace                                                                                                              |
+| `data:refresh(state)`                               | 按该 state 的 Tree 展开范围或 List 递归范围建立刷新需求，返回请求接受结果                                                                                                        |
+| native `data:is_settled()`                          | 在请求接受后观察 owner 队列及执行中的整轮工作、active reads/query、待调度扫描/探测与 dirty demand 是否已收尾；不表示 IO 成功或 UI 已发布                                         |
+| `data:inspect(source, node)`                        | 按需返回该版本的资源信息；需要新 IO 的详情查询另返回带身份校验的 Future                                                                                                          |
+| `data:details(resource)`                            | Worker 校验资源及祖先 identity，返回当前 size、权限、八进制 mode 与 RFC3339 日期                                                                                                 |
 | `data:listing(frame, first, last, parent_context?)` | Worker 格式化最多 512 行的已捕获 metadata；权限、size、日期、owner/group 不重新 stat 或扫描目录。`parent_context=true` 时上下文行使用该 Frame 中的父目录 metadata，保留行 NodeId |
-| `data:subscribe({on_effect?, on_source_changed?})` | 观察 effects 与 source revision；返回可幂等取消的订阅 |
-| `data:start_operation(plan)` | 接收明确源项、目标及可选的原任务清理资格，返回文件 Job，不自行选择操作源 |
-| `data:check_transfer_target(source, target)` | Worker 核对源和已存在目标祖先、拒绝 physical self-descendant，供补父目录前检查 |
-| `data:start_create({target, path, directory})` | 在明确目录内新建相对路径，自动补齐父目录，返回同一类文件 Job |
-| `job:status()` / `job:results(first, last)` | 读取进度/终态和有界逐项结果，不一次导出全部任务记录 |
-| `job:confirm(token, override)` / `job:cancel()` | 提交一次性确认或取消请求，不能被解释为 IO 已结束 |
+| `data:subscribe({on_effect?, on_source_changed?})`  | 观察 effects 与 source revision；返回可幂等取消的订阅                                                                                                                            |
+| `data:start_operation(plan)`                        | 接收明确源项、目标及可选的原任务清理资格，返回文件 Job，不自行选择操作源                                                                                                         |
+| `data:check_transfer_target(source, target)`        | Worker 核对源和已存在目标祖先、拒绝 physical self-descendant，供补父目录前检查                                                                                                   |
+| `data:start_create({target, path, directory})`      | 在明确目录内新建相对路径，自动补齐父目录，返回同一类文件 Job                                                                                                                     |
+| `job:status()` / `job:results(first, last)`         | 读取进度/终态和有界逐项结果，不一次导出全部任务记录                                                                                                                              |
+| `job:confirm(token, accept)` / `job:cancel()`       | 提交一次性确认或取消请求，不能被解释为 IO 已结束                                                                                                                                 |
+
+具体字段见 [Lua 类型](../../lua/__types__/ux/filetree.lua)，入口适配见 [Lua facade](../../lua/ux/filetree/init.lua)。
+
+### Job 生命周期
 
 Operation plan 包含操作种类、原 source/资源身份、源项句柄，以及适用的目标目录、名称和 Treeview 任务资格。
 直接单项动作和已有 selection 的批量动作均使用明确源项；是否在无选区时使用光标项由 Explorer 决定。
@@ -53,6 +57,9 @@ Job 的确认、已发布结果、取消状态和终态在提交状态、释放�
 这些变化不要求 source/frame 更新。字节与处理项进度通知共用 40 ms 限频；两者各自的首次非零变化、
 阶段转换与终态不等待下一次进度周期。阶段通知不消耗字节/处理项进度的限频窗口。
 通知仅弱引用 native data，不保活 Lua facade；Lua 按通知读取最新状态，Filetree 统一观察并向调用方交付。
+
+### Data 请求的完成边界
+
 `is_busy()` 继续供 Lua 调度观察已发布的 active work；完整目录刷新观察使用 `is_settled()`，
 避免尚未取得 read slot 的 dirty demand 被判为空闲，也覆盖已接受的展开或 display 变更
 在 owner 内派生 projection、read scheduling 和 Reader publication 的执行窗口。这个只读观察不增加 Lua 定时轮询；
@@ -63,21 +70,29 @@ Job 的确认、已发布结果、取消状态和终态在提交状态、释放�
 不增加 Lua 定时轮询。
 独立文件 Job 和尚未由 watch 合并投递的通知（包括新订阅的 reconciliation）不属于这个完成条件，
 不据此承诺后续不会出现新工作。
+
+### Job 进度与结果
+
 `job:status(previous_revision?)` 返回观察 revision；与上次通知 revision 相同则返回 nil，不重复导出状态。
 不传 revision 时始终读取当前状态。Revision 描述已通知的变化，字节与处理项进度可以在下一次限频通知前继续增长。
 运行中的 Job 保留通知连接，不因等待 IO 持续启动快速轮询；通知失败时沿用轮询回退。订阅初次读取也观察已完成的 Job。
+
 `results` 使用 1-based inclusive 范围，每次最多 512 条。目录内部结果先保留于 Job，完整成功时归并为目录根；
 一个外层源项结束后才将该组结果加入可查询前缀，取消/终止时发布尚未归并的明细，已经公开的索引不移动。
+
 `processed` 单调累计已形成处理结果的文件、链接和目录，包含 failed/skipped；create 仅计新建 components。
 它不随子树归并、staging 发布失败或取消而回退，也不代表 success 或可查询结果数量。
 整体 rename/trash 等未枚举后代的操作计为一个条目，不为百分比预扫描。
 `bytes` 是已传输字节；空文件依靠 `processed` 提供进度。
+
 `phase` 为 preparing、reading、working、publishing、cleanup 或 complete：reading 覆盖目录枚举等待，
 working 包含逐项 IO/模型同步，publishing 标识私有目录的整棵发布，cleanup 覆盖任务选择清理与解锁。
 终态总为 complete，成功、失败和取消由其余终态字段区分；确认与 cancelling 独立于阶段。
+
 每个操作条目有 Job 内唯一且不复用的 ItemId，与 inode 和浏览 NodeId 分离。
 确认与结果的 Lua 字段为不透明的 `item`；`node` 为 optional，只表示执行时已捕获或准入的浏览 occurrence。
 私有后代无需 NodeId 即可执行 copy、确认冲突与保留结果，cleanup 后的准入不回填历史 `node`。
+
 普通成功项以 ItemId、optional NodeId、原始 basename 和共享的源/目标父路径保留；每页引用已有不可变结果，
 Lua 逐项序列化时才临时组成完整路径，不在 native Job 中保存一整页展开副本。
 共享路径固定为执行时捕获的值，不从最新 Source 重建，后续 rename/delete 不改变历史结果。
@@ -85,6 +100,9 @@ Lua 逐项序列化时才临时组成完整路径，不在 native Job 中保存�
 任务内存预留随记录和共享路径的所有权释放，取消与部分归并也使用相同计费；向量保留容量仍计入预留。
 合法范围的结果读取不要求再取得 native retained 预算，避免 IO 终态后因内存压力中断结果交付。
 调用方持有的结果继续共享原有计费；结果自身不持有 Source，最后一个引用释放时回收记录与共享路径。
+
+### 错误与编辑器交接
+
 IO error 保留操作、对应资源、平台错误类别与原始 error code；普通业务失败为完成值，不抛成丢失上下文的 Lua error。
 `std::io::ErrorKind::NotFound` 对应结构化 `error.code = "NotFound"`；其他 IO 失败仍为 `ProviderError`。
 调用方只根据 code 决定是否补建缺失父目录，不解析 message 中的诊断文字；`NotADirectory` 与权限失败不等价于缺失。
@@ -223,7 +241,7 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
 
 ### Watch 与生命周期
 
-- Rust platform backend 使用原生目录通知；首期用现有依赖或平台 API，不额外引入 watcher package。
+- Rust platform backend 使用现有依赖与平台原生目录通知。
   注册失败报告错误并保留手动刷新，不静默切换为全树周期扫描。
   Linux 经已验证目录的 `/proc/self/fd` 注册 inotify 后立即释放临时目录 fd，监听仍绑定同一 inode；
   不因继续持有目录 fd 而延迟空根目录的删除通知。
@@ -274,22 +292,12 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
 
 ## 多 state 的 List 文本
 
-采用 Treeview 的通用“祖先 label 组成正文”能力，不让 Treeview 解析 filesystem 路径：
+Filetree 使用 [Treeview List 正文](../../doc/spec/treeview/projection.md#list-正文)，不把 filesystem 路径解析交给 Treeview。
 
-- Filetree 在 List 中使用 `list_text = "ancestry"`，具体默认值、root 边界、分隔符与匹配 spans 遵循
-  [Treeview List 正文](../../doc/spec/treeview/projection.md#list-正文)。Tree 仍显示 basename，压缩链沿用既定规则。
-- Text 的 source、root、格式和依赖全部固定在 frame 中。两个 state 共享 data、root 不同时可产生不同正文，
-  不改写 source label，不在 Lua 拼路径，也不复制整份 source。
-- Rust 使用共享的祖先文本片段及长度索引；相同前缀只保留一份，旧 frame 与新 frame 复用未变片段。
-  不为每个节点缓存一份完整路径字符串，避免深树 O(N × depth) 的驻留字符量。
-- 字节预算查询利用片段累计长度；实际导出在限定行/字节范围内展开文本，成本包含真实输出字节。
-  片段构建、读取和最后引用释放均使用深度安全的迭代流程。
-- 叶子 rename 只影响本行及真实排序依赖；目录 rename/reparent 影响其在本 state root 内的后代路径正文。
-  改变被排除的 root label 不应使全部后代正文失效。完整改变 root 则允许处理整个受影响展示范围。
-- Path 文本依赖变化推进 text revision；正文未变的 metadata/selection 更新保留正文。
-  RenderPlan、viewport spans、文本预算和 staging 复用都使用同一份派生文本，不能只修改显示出口。
-- 名称过滤仍按 Treeview 已定义的 source label 执行；本能力只改变 List 正文。
-  Filetree 不因此新增实时路径过滤产品功能。
+- 无深度限制的 State 使用 `list_text="ancestry"`；Tree 显示 basename。
+- 指定 `list_depth` 时保留调用方的 `list_text`；Find Explorer 使用 `list_depth=0` 与 `list_text="label"`。
+- 不同 roots 的 State 可共享 Data，各自从 Frame 的 source labels 派生正文，不在 Lua 拼接整份路径表。
+- Root 边界、匹配 spans、共享文本、rename/reparent 失效与字节预算统一遵循上述 Treeview 契约。
 
 ## Git 与 diagnostics
 
@@ -413,7 +421,9 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
 
 ### 执行器
 
-- 首期全进程使用一个文件修改执行器，多个独立 data/state 也共享执行槽；读取使用独立的有界 worker pool。
+#### 串行执行
+
+- 全进程使用一个文件修改执行槽，多个独立 data/state 共用；读取使用独立的有界 worker pool。
   这保证本进程不并发修改同一资源，避免把选区锁当成 filesystem 锁。
 - 每个文件/整体 rename 是一个执行单元。目录遍历在项之间让出执行槽；等待用户确认的任务挂起，
   其他任务可以继续。恢复时重新校验源、目标和必要父目录的身份，沿用已确认的覆盖规则。
@@ -423,6 +433,9 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   任务最多有一个待确认项，确认 token 一次消费。旧确认不能用于后来换入的资源。
 - 源目录不能复制/移动进它自身或其后代，检查考虑实际解析的目录 identity 与 symlink 别名。
   源和目标为同一目录项时不执行破坏性覆盖，报告对应项未执行。
+
+#### 单项发布与目录合并
+
 - 单文件 copy 与已有目标目录内的逐项 copy 使用私有临时文件，完成并校验后发布；失败时清理本任务临时输出。
   Unix 临时输出通过目标目录 fd 创建、发布及清理，目标目录改名不导致临时文件遗留。
   同一 Job 按已打开源文件的大小分配并复用 8 KiB–1 MiB copy buffer，遇到更大文件才扩容，读取仍持续到 EOF；
@@ -446,6 +459,9 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   新建目录先以私有权限填充，收尾时采用源目录权限；合并已有目录保持目标目录权限。
   目录合并没有全目录事务，已发布的成功项不回滚。跨 filesystem move 完成复制后才移除对应源项，
   只有复制和源项移除均成功才将该移动项报告为 success；不能把半个 move 清理为成功。
+
+#### 目录 staging
+
 - macOS/Linux 上，普通目录 copy 的最终目标尚不存在时，先在目标父目录创建私有 staging root，
   后代直接写入其中，不为每个文件另建临时名或执行 rename。已有目录合并继续逐项执行；
   合并期间遇到全新子目录时，该子树同样使用 staging。其他平台继续使用逐项发布。
@@ -469,6 +485,9 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   资源发现、refresh、watch 引发的扫描与路径 resolve 均屏蔽本进程仍持有的私有 staging 目录，
   不能经 symlink alias 进入其子树；屏蔽按 identity 判定，不屏蔽用户创建的同类名称。
   已开始的目录枚举可以跳过发布后遗留在 iterator 内的私有旧名称。
+
+#### 取消与停止
+
 - Cancellation 在项边界及大文件块间检查；停止发起新项，处理自身临时输出后报告终态。
   不能把发出取消请求当作已经停止，也不承诺立即中断所有平台的阻塞 syscall。
   Unix 普通源文件使用 nonblocking、nofollow open 并核对打开后的类型与 identity；
@@ -544,21 +563,22 @@ Treeview 的任务准入支持“已准备源项下的子项”：
 
 ## 容量与成本边界
 
-以下为首期默认预算。实现可按测量修正内部块大小，但不能悄悄扩大公开容量或省略计费。
+以下为当前默认上限，各项与 data 总预算同时生效；性能测试规模不代表硬容量。
 
-| 项目 | 默认上界 |
-| --- | ---: |
-| 每份 data 的 Rust retained 总预算 | 512 MiB，包含 Treeview、Filetree payload/索引、旧版本与在途数据 |
-| Source 节点数 | 沿用 Treeview 容量，基线 50k；200k 使用显式压力预算 |
-| 全进程并发目录读取 | 4，单 data 最多 4 |
-| 单 data 排队的目录读取 | 256；其余需求保留在有界 dirty/interest 集合 |
-| 单页 records | 512 项 / 1 MiB，先到者为准 |
-| 单 data 扫描与结果暂存 | 32 MiB，计入 retained 总预算 |
-| 单任务遍历、结果、身份、journal 与 admission 暂存 | 共享 32 MiB，计入所属 data 总预算 |
-| 全进程文件任务数 | 16，包括排队与等待确认任务 |
-| 文件 copy 流式 buffer | 每个 Job 最多 1 MiB，按需分配并复用 |
-| 单 data OS 监听根数 | 50；macOS 根递归覆盖，Linux/Windows 每目录一个 |
-| Watch 合并窗口 / 单批 dirty NodeId | 150 ms / 512 |
+| 项目                                              | 默认上界                                                        |
+| ------------------------------------------------- | --------------------------------------------------------------: |
+| 每份 data 的 Rust retained 总预算                 | 512 MiB，包含 Treeview、Filetree payload/索引、旧版本与在途数据 |
+| Source 节点数 / payload                           | 1,000,000 / 256 MiB，沿用 Treeview Limits                       |
+| 全进程并发目录读取                                | 4，单 data 最多 4                                               |
+| 单 data 排队的目录读取                            | 256；其余需求保留在有界 dirty/interest 集合                     |
+| 首个扫描页                                        | 512 项 / 1 MiB，先到者为准                                      |
+| 后续扫描页                                        | 最多 2,048 项 / 4 MiB；预算不足时使用首批大小                   |
+| 单 data 扫描与结果暂存                            | 32 MiB，计入 retained 总预算                                    |
+| 单任务遍历、结果、身份、journal 与 admission 暂存 | 共享 32 MiB，计入所属 data 总预算                               |
+| 全进程文件任务数                                  | 16，包括排队与等待确认任务                                      |
+| 文件 copy 流式 buffer                             | 每个 Job 最多 1 MiB，按需分配并复用                             |
+| 单 data OS 监听根数                               | 50；macOS 根递归覆盖，Linux/Windows 每目录一个                  |
+| Watch 合并窗口 / 单批 dirty NodeId                | 150 ms / 512                                                    |
 
 - Dirty/interest 集合按 source NodeId 去重，受 source 容量约束，不无限保留已删除路径。
   错误信息与任务结果包含 bytes 上限，超限报告 ResourceLimit；不以无限字符串或日志旁路预算。

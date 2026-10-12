@@ -5,6 +5,8 @@ Status: Design。适用于 Rust Treeview 的 Lua surface；文档入口见 [Tree
 Visual 是尚未提交的行范围。正在进行的圈选保持稳定，后台变化在用户完成圈选后再重排列表。
 标记提交仍遵循 [selection 契约](selection.md)，Visual 本身不持有另一份权威 selection。
 字符、整行和块模式（`v`、`V`、`CTRL-V`）均按两个端点之间的完整行确定节点目标；列只用于恢复端点位置。
+Lua [View](../../../lua/ux/treeview/view.lua) 捕获输入与 gesture，
+[surface](../../../lua/ux/treeview/surface.lua) 负责正文、frame 与端点的一致发布。
 
 ## Frame 与 view
 

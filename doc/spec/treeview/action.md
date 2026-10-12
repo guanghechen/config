@@ -48,18 +48,13 @@ ChildrenResult(A) -> validate token, commit data
 
 ## Action 的 recursive 选项
 
-Selection 提供 `select_node`、`deselect_node`、`toggle_node`，均显式传入必填的 `{ recursive: boolean }`；
-false 对应 SelfOnly，true 对应 Subtree，具体写入与范围归并见 [selection](selection.md#标记与交互)。
-Action 入队时固定该值，不接受缺失选项、Lua truthy 值或提交时临时推断的默认范围。
-上层决定 mouse、Ctrl+mouse、键盘或标题行如何映射；core 不按 consumer 或节点业务类型替上层选择。
-
-自身 action 批量输入只去重 ID，递归 action 才归并最外层根。不同 scope 的 actions 按先后顺序独立提交，
-不能为了合并重绘改变 recursive。两种 scope 都遵循同一选区锁、错误和 Future 完成规则，
-公开 deselect 不具备任务 owner 的 Unselect 清理身份。
+Selection action 入队时固定必填的 boolean `recursive`，不接受缺失、truthy 值或提交时推断的默认范围。
+不同 scope 的 actions 按输入顺序独立提交，不能为了合并重绘而更换 scope。
+SelfOnly/Subtree 的写入、目标归并及任务清理边界统一见 [selection](selection.md#标记与交互)。
 
 ## Dispatch 与 Future
 
-`dispatch(state, command, context)` 统一返回 Future。Future 表达本次 action 是否处理完成，
+Lua `state:dispatch(command, context?)` 将 native Ticket 适配为 `stl.c.Future`。Future 表达本次 action 是否处理完成，
 完成值为该命令的成功 payload 或 `Rejected {error}`；普通输入错误使用结构化完成值，不另建异常通道。
 
 - 排队或处理中，Future 尚未完成；校验与状态提交结束后完成一次。不能仅因入队成功就返回 Applied，
@@ -75,29 +70,13 @@ Action 入队时固定该值，不接受缺失选项、Lua truthy 值或提交�
   Lua 通过异步回调或协程让出等待，不阻塞 Neovim；具体 Future 适配沿用仓库的异步工具，Rust core
   不依赖 Lua 的 Future 实现。
 
-Lua 的共享 poller 允许无需求的 owner 暂停订阅并以 weak reference 保留恢复资格。新的 native 请求及其完成会恢复
-这些 owner，显式 attach/start 也可恢复对应 owner；请求完成后的 effects 不能因先前暂停而滞留。
-暂停 Lua 轮询不取消 native action，不改变任务、读取或 frame 的所有权。
-组合层可在 `new_data` / `from_native` 的 options 中提供 `after_poll(preparing)`；它在 effects、views 和读取调度后执行。
-回调返回 `true` 请求下一次快速检查，`false` 等待原生通知，`nil` 释放当前通知连接并保留恢复资格。
-未提供回调时保持 Treeview 默认调度；Filetree 在创建时接入自身生命周期，不覆盖实例的 `_poll` 方法。
-本轮 `_poll` 回调中的新请求或显式 watch 必须保留下一轮观察，不能被本轮旧的 idle 结果撤销；显式 unwatch 仍直接移除订阅。
-Native `events()` 同时返回仍可能触发 deadline 的未准备 task 标志；该标志与本批 effects 在同一锁下交付。
-到期失败事件入队后才撤销其观察需求，Lua 不能先看到“无任务需求”再错过 `TaskFailed`。
-
-Native owner 在没有队列输入、待 projection、待观察的 provider 工作或 task deadline 时休眠，不固定周期重建 publication。
-Task 到期和读取调度产生的内部变更必须继续完成 projection，不能等待新的用户输入或 provider response。
-普通 action、publication acknowledgment 和 Filetree viewport 变化显式唤醒 owner；通知状态与等待队列共用
-同步谓词，防止检查与休眠之间丢失唤醒。尚无完成通知的 provider 工作仍可要求有界轮询，task deadline
-独立于 Lua 活动触发；休眠不改变读取、锁或 owner 的生命周期。
-
 成功 payload 按命令固定：
 
-| 命令             | Future 的成功完成值                                                        |
-| ---------------- | -------------------------------------------------------------------------- |
-| 修改状态         | `Applied {revisions, effects}` 或 `NoChange`                              |
+| 命令             | Future 的成功完成值                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| 修改状态         | `Applied {revisions, effects}` 或 `NoChange`                                              |
 | InspectSelection | `Inspected {revisions, source, summary, subtree_roots, self_only_nodes, needed_children}` |
-| PrepareSources   | `Ready` 或 `Pending`，包含查询版本及对应源项 payload                     |
+| PrepareSources   | `Ready` 或 `Pending`，包含查询版本及对应源项 payload                                      |
 
 所有命令均可用 `Rejected {error}` 表示本次处理失败；错误分类沿用 [核心契约](module.md#revision-与过期输入)。
 查询结果的 revisions/revision 记录本次读取的数据与选择版本，summary 与 needed children 必须来自
@@ -117,6 +96,35 @@ Future 再完成为 Ready。PrepareSources 所属业务任务继续持锁，失�
 
 本节的 Future 协议适用于 dispatch。Snapshot 读取仍取得当前可用的不可变快照，不隐式等待排队
 命令或后续 IO；等待 Applied 也不代表新 frame 已显示，surface 仍遵循既有 revision 与发布约束。
+
+## Native notifications
+
+Native 发布 frame、effects、Ticket completion 或 deadline 结果后发送可合并的唤醒信号。
+Lua 先确认信号、再读取最新状态；期间发生的新发布会再次唤醒。空闲 view 不持续轮询，
+ModeChanged 和 viewport 变化显式安排检查。
+
+- Lua native `data:subscribe(write_fd)` 复制调用方提供的 pipe write descriptor，返回 notification lease；
+  调用方可立即关闭原 write descriptor。每份 data 最多使用 `limits.views` 个 lease。
+  每个 lease 最多保留一个未确认字节，reader 取走字节后调用 `acknowledge()`，随后读取 native 状态。
+  `close()` 幂等，先同步停止 writer 再关闭 read endpoint；descriptor 不继承给子进程。
+  Lease、read callback 不保活 Lua data owner，owner 回收或显式 unwatch 会释放连接；native owner 终止会关闭所有 writer。
+  通知通道创建或读取失败时报告错误，并保留原有轮询以继续处理已接受的工作。
+
+Lua 的共享 poller 允许无需求的 owner 暂停订阅并以 weak reference 保留恢复资格。新的 native 请求及其完成会恢复
+这些 owner，显式 attach/start 也可恢复对应 owner；请求完成后的 effects 不能因先前暂停而滞留。
+暂停 Lua 轮询不取消 native action，不改变任务、读取或 frame 的所有权。
+组合层可在 `new_data` / `from_native` 的 options 中提供 `after_poll(preparing)`；它在 effects、views 和读取调度后执行。
+回调返回 `true` 请求下一次快速检查，`false` 等待原生通知，`nil` 释放当前通知连接并保留恢复资格。
+未提供回调时保持 Treeview 默认调度；Filetree 在创建时接入自身生命周期，不覆盖实例的 `_poll` 方法。
+本轮 `_poll` 回调中的新请求或显式 watch 必须保留下一轮观察，不能被本轮旧的 idle 结果撤销；显式 unwatch 仍直接移除订阅。
+Native `events()` 同时返回仍可能触发 deadline 的未准备 task 标志；该标志与本批 effects 在同一锁下交付。
+到期失败事件入队后才撤销其观察需求，Lua 不能先看到“无任务需求”再错过 `TaskFailed`。
+
+Native owner 在没有队列输入、待 projection、待观察的 provider 工作或 task deadline 时休眠，不固定周期重建 publication。
+Task 到期和读取调度产生的内部变更必须继续完成 projection，不能等待新的用户输入或 provider response。
+普通 action、publication acknowledgment 和 Filetree viewport 变化显式唤醒 owner；通知状态与等待队列共用
+同步谓词，防止检查与休眠之间丢失唤醒。尚无完成通知的 provider 工作仍可要求有界轮询，task deadline
+独立于 Lua 活动触发；休眠不改变读取、锁或 owner 的生命周期。
 
 ## Children 读取调度
 
@@ -139,8 +147,21 @@ Future 再完成为 Ready。PrepareSources 所属业务任务继续持锁，失�
 
 ## 预算、背压与恢复
 
-预算由 data owner 管理，分别约束在途 IO、排队工作、结果批次及保留的数据。以下行为固定，具体
-并发数、队列长度、批次大小与节点/内存阈值在实现阶段通过规模测试确定。
+预算由 data owner 管理，分别约束在途 IO、排队工作、批次与保留数据。
+`new_data({limits=...})` 使用以下默认值，来源为 Rust `model.rs::Limits`：
+
+| 限制                                | 默认值            |
+| ----------------------------------- | ----------------: |
+| `memory_bytes` / `payload_bytes`    | 512 MiB / 256 MiB |
+| `nodes`                             | 1,000,000         |
+| `states` / `views`                  | 16 / 64           |
+| `queued_actions`                    | 256               |
+| `concurrent_reads` / `queued_reads` | 8 / 128           |
+| `batch_nodes` / `batch_bytes`       | 200,000 / 64 MiB  |
+
+各项同时约束一次工作，不保证达到节点上限前不会触及字节预算。Filetree 将读取并发/队列调整为 4 / 256，
+并增加扫描、Job 和 watch 预算，见 [Filetree 容量](../../../spec/design/filetree.md#容量与成本边界)。
+50k/200k 是性能测试规模，与硬容量分开；FFI 单次调用和 viewport 还有更小的传输上限。
 
 ### 临时拥塞
 
@@ -185,8 +206,7 @@ Future 再完成为 Ready。PrepareSources 所属业务任务继续持锁，失�
 
 ## 投影与发布
 
-状态提交之后的投影继续使用 [既有调度规则](module.md#缓存与调度)：每个 state 最多一个运行中的
-投影及一个最新待处理需求。连续更新合并待投影状态，不逐个重绘已经过时的中间状态。
+每个 state 最多一个运行中的投影及一个最新待处理需求。共享 state 的 views 复用结构 snapshot。连续更新合并待投影状态，不逐个重绘已经过时的中间状态。
 缓存复用与发布校验遵循 [projection 契约](projection.md#异步计算与显示)，核对 source、filter/sort 与展示上下文的输入身份。
 各 view 的 RenderPlan 基于自己的已显示 frame；有界准备、短发布、ephemeral 装饰与失步恢复遵循 [render 契约](render.md)。
 工作片与端到端延迟按 [performance](performance.md) 验收，不能在 live buffer 边分批写入边让出而保留旧映射。

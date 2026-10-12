@@ -2,7 +2,8 @@
 
 Status: Design。适用于 `yoz.ux.treeview`；文档入口见 [Treeview](README.md)。
 
-本文定义 `rust/yoz/src/ux/treeview/` 已确认的 selection 语义、派生结果与消费边界。
+标记与聚合由 Rust `state.rs` / `stamps.rs` 实现，任务资格与清理由 `tasks.rs` 管理。
+本文定义这些状态的语义；List、Picker、Searcher 等业务接入见 [results.md](results.md)。
 
 ## 状态与派生集合
 
@@ -95,7 +96,8 @@ ClearSelection 使用本 selection 状态的 `clear_all(g)`，覆盖全部 self/
 ### Selected-only 与 hidden
 
 Selected-only 开启时采用 `selected > hidden`：hidden 过滤不参与本次投影，保留选中节点、必要的
-连接祖先及 pending 范围。Hidden 的判定由上层提供，Treeview 不根据文件名或 filepath 推断。
+连接祖先及 pending 范围。显式 filter 下的 List 不额外加入连接祖先，具体成员规则见
+[Tree/List 投影](projection.md#tree-与-list)。Hidden 是 provider 的节点属性，Treeview 不根据文件名推断。
 
 - 已选隐藏项与到达它所需的隐藏祖先可以显示；祖先只作为连接路径时不因此变为 marked。
   完整选中目录内的隐藏后代同样继承选择，被反选的项仍按实际 selection 过滤。
@@ -162,6 +164,17 @@ Selection 数量是上述紧凑表示的条目数，不是全部递归节点数�
 - 取消最后一个已选子项或清理全部递归源项后，祖先自身可能仍在 `self_only_nodes` 中，此时保留 mode。
   已清理源项之外的自身选择不会被额外取消。
 
+## 任务锁
+
+源项准备、执行、确认和取消期间禁止改选及重复修改操作，浏览仍可继续。
+普通加载与 inspection 不取得或解除任务锁；只有持锁 owner 可以清理结果并释放锁。
+锁不冻结 source，数据变化是否使任务失效由 cleanup context 判断。
+
+Lua `state:lock_selection(deadline_ms?, selection_revision?)` 可传入先前查询捕获的 selection revision，
+由 native owner 在取得锁时原子校验；省略时在同一次 owner 提交中读取并锁住当前选区，
+不在 Lua 先读取版本再排队拿锁。此前排队的更新先提交，锁后的改选仍被拒绝；需要固定此前输入或查询结果的调用方
+必须显式传入捕获的 revision，过期时不能退回当前版本。补载引起的后续 revision 推进不等于用户改选。
+
 ## 源项准备
 
 按 data owner 的完整 forest/children 顺序枚举，范围不受 display root、折叠或显示过滤限制：
@@ -169,9 +182,8 @@ Selection 数量是上述紧凑表示的条目数，不是全部递归节点数�
 - Full 节点输出到 `subtree_roots`，跳过后代；非 full 节点自身 marked 时输出到 `self_only_nodes`，继续查询 children。
   只有两类数量均为 0 且无 pending 时才跳过该分支；不能把 self-only 节点的已选后代一起跳过。
 - Pending 分支请求必要的完整直接 children；已 full 的目录不为枚举其自身而加载后代。
-- 通过 dispatch 查询时，Future 完成值为 `Ready {revision, cleanup_context, subtree_roots, self_only_nodes}` 或
-  `Pending {revision, known_subtree_roots, known_self_only_nodes, needed_children}`；两者都记录本次查询的
-  data/selection revision，部分集合不能当作完整操作输入。
+- Lua Future 的 Ready/Pending 均包含 `revisions`、`summary`、`subtree_roots`、`self_only_nodes` 和 `needed_children`。
+  Ready 另有不可变 `source` 与 `cleanup` token；Pending 中两组只表示已知结果，不能作为完整操作输入。
   上层按动作契约消费两组结果，递归 copy/move/delete 只使用 `subtree_roots`。
 - Pending 表示源项信息尚未完整，但本次查询的 Future 已完成；上层补载后提交新的查询，不把旧
   Future 更新为 Ready。查询完成不结束业务任务或释放其锁；返回协议遵循 [Dispatch 与 Future](action.md#dispatch-与-future)。
@@ -309,7 +321,7 @@ deselect_node(P, { recursive = true })   -> P 及全部后代未选
 recursive=true 则归并为 P；这一区别不由当前 Tree/List 模式或鼠标修饰键决定。
 Reparent 只保存 subtree 的 inherited 并保留 self；节点自身 true/false 不会因移动被扩散给后代。
 
-下列既有 Explorer 例子继续使用 递归 actions，表中的 stamp 指 subtree stamp，self stamp 均为 0。
+以下 Explorer 例子使用递归 actions；表中的 stamp 指 subtree stamp，self stamp 均为 0。
 
 ### 取消子项与恢复覆盖
 

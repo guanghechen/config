@@ -50,6 +50,7 @@ era.m.diffview/
 ├── cmd.lua           # 命令定义
 │
 ├── pane/             # 可复用渲染单元（只负责渲染+数据，不管窗口布局）
+│   ├── tree.lua      # ResultTree records、native Frame 发布与导航
 │   ├── filetree.lua  # 通用文件树（用于 commits 展开的文件列表）
 │   ├── changes.lua   # workspace 专用的 staged/unstaged 文件树
 │   ├── commits.lua   # Commit 列表
@@ -111,13 +112,13 @@ cmd / fn / tabline
 
 ## 模块依赖
 
-| 依赖模块           | 用途           |
-| :----------------- | :------------- |
-| `era.m.git.diff`   | Diff 算法      |
-| `era.m.git.cmd`    | Git 命令执行   |
-| `era.m.git.status` | Git 状态解析   |
+| 依赖模块           | 用途                                         |
+| :----------------- | :------------------------------------------- |
+| `era.m.git.diff`   | Diff 算法                                    |
+| `era.m.git.cmd`    | Git 命令执行                                 |
+| `era.m.git.status` | Git 状态解析                                 |
 | `ux.treeview`      | native topology、交互状态与 viewport surface |
-| `stl.c.Observable` | 响应式状态管理 |
+| `stl.c.Observable` | 响应式状态管理                               |
 
 ## Filetype
 
@@ -375,7 +376,8 @@ Changes、Commits 和独立 files pane 均通过 `pane/tree.lua` 导入 records�
 provider key 使用可逆 byte 编码，显示 label 单独转义。
 
 Native State 在 pane 隐藏、buffer 重建和 layout 切换之间保留；默认新 commit 折叠，普通目录展开。
-行号、父子导航与 action metadata 从已发布 Frame 派生。`apply_to_buffer` 返回发布 Future，refresh 完成后才
+行号、父子导航与 action metadata 从已发布 Frame 派生。相邻文件通过 `Frame:adjacent_leaf` 定位，Lua 只读取目标，
+不缓存全量行表；跳过的原生行仍计入查询成本。`apply_to_buffer` 返回发布 Future，refresh 完成后才
 标记 snapshot 已应用；定位使用稳定 key，等待对应行可用。Metadata overlay 只在 viewport 绘制。
 
 通用契约见 [Treeview 结果集](../../../../doc/spec/treeview/results.md)。

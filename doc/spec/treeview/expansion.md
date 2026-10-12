@@ -47,7 +47,11 @@ expanded(n) = can_expand(n) && expansion.value(n)
 - 来自实际 frame 的 Toggle 捕获 NodeId、scope 和当时的 expanded 判据，提交时校验对应前提；
   不按另一个展开状态重放旧 Toggle。绝对赋值遵循既有 expected state context，metadata 更新本身不使输入过期。
 
-## Explorer 动作映射
+## Consumer 动作映射
+
+以下是 Explorer 的默认策略，由 native `ux/explorer` 通过同一 Treeview owner 提交。
+Normal 相对动作使用 owner 执行时的状态与按键时目标；Visual 继续验证捕获 frame 的范围和标记。
+其他 consumer 的键位见各自业务文档，不由 core 按节点类型推断。
 
 - `l`、`<CR>`、双击：可展开节点执行普通 Toggle；leaf 仍调用上层打开动作。
 - `h`：当前节点已展开则普通折叠自身，否则定位并普通折叠 source parent；在 display root 边界停止。
@@ -140,4 +144,4 @@ A 起初是折叠的空目录，可展开且 children 完整：
 - Reparent 保存 inherited 而非 effective；分别验证较新自身展开、较新自身折叠及新祖先版本竞争。
 - 验证展开后立刻折叠、晚到结果、分页、失败重试、预算、共享请求、关闭/重连及切换 Tree/List。
 - 验证递归 Toggle 的自身判据、普通多目标 scope、当前范围全部折叠、Reveal 与 selection 锁独立。
-- 模型验证标记语义；实现时另验有界异步调度、UI 输入与 Visual frame 发布时序。
+- Rust 模型验证标记语义；Lua/UI specs 验证有界异步调度、输入与 Visual frame 发布时序。

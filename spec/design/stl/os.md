@@ -72,6 +72,10 @@
 
 ## 使用规范
 
-1. 业务模块（例如 explorer）内部只保留 `filepath`。
-2. 对系统的读写调用统一通过 `stl.os.fs`，或在调用前用 `yoz.canonical_path.to_os_path`。
+1. 通用 Lua 业务模块内部使用 `filepath`。
+2. 通用 Lua 文件读写通过 `stl.os.fs`，或在调用前用 `yoz.canonical_path.to_os_path`。
 3. 禁止在业务层散落私有 `to_os_filepath` 实现。
+
+Filetree/Explorer 使用 [Filetree 的路径与资源契约](../filetree.md#资源记录与路径)：Lua 通过
+`ux.filetree.path` 处理路径，文件操作提交 native Jobs，OS 路径转换与 identity 校验在 Rust 边界完成。
+这条资源句柄路径不要求再经 `stl.os.fs` 转发。

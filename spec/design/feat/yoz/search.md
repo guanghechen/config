@@ -221,7 +221,8 @@ Node-scoped 与单项替换只处理可见 matches，不受此限制，但仍须
 
 ## 发布与性能边界
 
-每次搜索发布一个最终结果，保留确定性排序与现有 filetree reset/apply 行为。
+每次搜索发布一个最终结果，保留确定性排序。Lua FileSearch 校验 generation 后，ResultFiles 准备文件与 locations，
+ResultTree 导入 native Data 并发布 Frame，遵循 [结果集接入](../../../../doc/spec/treeview/results.md)。
 不启用 Rust file-level parallel traversal 或 streaming UI。
 
 主线程发布的验收边界为默认 `max_filesize = "1M"`、`max_matches = 500`。测量必须包含：
@@ -229,8 +230,8 @@ Node-scoped 与单项替换只处理可见 matches，不受此限制，但仍须
 - `job:poll()` 的 Rust-to-Lua terminal conversion。
 - Result normalization 与 replacement preview。
 - 排序。
-- Filetree reset、location 构建与 ancestor 更新。
-- 同步触发的 render work。
+- ResultPaths/ResultFiles 准备、location 构建与 records 导入。
+- Native projection、Lua staging 与适用 Frame 的实际发布。
 
 普通搜索与 replacement-preview 的最坏 fixture 在 500 matches 下都必须低于 50 ms。
 5000-match 场景只记录 stress result，不承诺响应性，也不引入静默结果上限。

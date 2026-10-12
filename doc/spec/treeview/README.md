@@ -1,42 +1,48 @@
 # Treeview 设计
 
-本目录是 Treeview 规范的权威位置。`Design` 表示已确认的契约，`Draft` 表示待审阅提案。
+本目录是 Treeview 契约的唯一权威位置。下列专题均为 `Design`；未确认的提案须单独标为 `Draft`。
 
-## Runtime 接入
+## 当前实现
 
-- 所有树状结果统一使用 `yoz.ux.treeview` 和 `lua/ux/treeview/`，不存在并行的 Lua layout/state 实现。
-- Explorer 与 Find Explorer 使用 Filetree 的 filesystem owner；普通 List、文件 Picker、Searcher、diagnostics、LSP symbols/references
-  和 Diffview 将业务结果作为 records 导入通用 Treeview。结果集不会触发额外的磁盘扫描。
-- Native State 独占 selection、expansion、display root、cursor 和行映射。输入、业务 metadata、
-  窗口组合及 viewport decorations 由 Lua consumer 负责，接入约定见 [结果集](results.md)。
-- Find Explorer 主列表与目录 preview 使用有界 List 和共享 Filetree Data；文件操作统一提交 native Jobs。
+Rust core 位于 `rust/yoz/src/ux/treeview/`，Lua 入口为 `yoz.ux.treeview` 和 `require("ux.treeview")`。
+Data 持有 source topology；State 持有 selection、expansion、display root 与逻辑 cursor；Frame 提供不可变行映射。
+Lua 负责输入、窗口、buffer、业务 metadata 和 viewport decorations，不维护第二套交互树。
+
+| Consumer                                                   | 数据路径                                                          |
+| ---------------------------------------------------------- | ----------------------------------------------------------------- |
+| Explorer                                                   | native Filetree Data；native Explorer policy 解释浏览、用途与 Job |
+| Find Explorer、目录 preview                                | 共享 Filetree Data，各自使用单层 List State                       |
+| 文件 Picker、Searcher、diagnostics、LSP symbols/references | Lua producer 准备业务 records，经 ResultTree 导入 native Data     |
+| 普通 List、AI 多选 picker                                  | ResultTree；多选标记与确认结果使用同一 native selection           |
+| Diffview                                                   | Git 结果经 `pane/tree.lua` 准备 records，交由 ResultTree 发布     |
+
+结果集不因展示层级而扫描真实目录。Explorer、Find Explorer 和文件 Picker 的文件修改统一使用 Filetree Jobs。
+接入步骤见 [Treeview 接入](../../treeview.md)，业务 records、匹配与发布边界见 [结果集](results.md)。
 
 ## 文档导航
 
-| 文档                                 | 范围                                                          | 状态   |
-| ------------------------------------ | ------------------------------------------------------------- | ------ |
-| [module.md](module.md)               | Rust Treeview 的句柄、更新、命令、请求、snapshot 与生命周期   | Design |
-| [data.md](data.md)                   | 通用 data owner、provider key、更新范围与 Rust/Lua 数据交接   | Design |
-| [action.md](action.md)               | 命令与异步结果的串行提交、Future、读取队列及预算恢复          | Design |
-| [projection.md](projection.md)       | Source ground truth、Tree/List 投影、filter/sort 与缓存有效性 | Design |
-| [render.md](render.md)               | 增量投影、正文 splice、可见区域装饰与发布恢复                 | Design |
-| [performance.md](performance.md)     | 成本边界、延迟目标、压力档与合计内存验收                      | Design |
-| [query.md](query.md)                 | Provider 查询会话、generation、取消、结果替换与分页           | Design |
-| [stamps.md](stamps.md)               | Selection/expansion 共用的版本标记、继承、查询与 reparent     | Design |
-| [selection.md](selection.md)         | Recursive 选择范围、标记聚合、源项准备与任务结果清理          | Design |
-| [job-discovery.md](job-discovery.md) | Native Job 的私有遍历准入、read 资格与 partial cleanup        | Design |
-| [expansion.md](expansion.md)         | 普通/递归展开折叠、后代记忆与异步加载                         | Design |
-| [roots.md](roots.md)                 | 显式展示入口、topology 归并与入口生命周期                     | Design |
-| [visual.md](visual.md)               | 稳定圈选布局、输入提交、重绘与 view 生命周期                  | Design |
-| [indentline.md](indentline.md)       | 缩进、压缩链、结构导航与 cursor 恢复                          | Design |
-| [results.md](results.md)             | Picker、Searcher、Diffview 的 records、发布与 surface 接入    | Design |
+| 文档                                 | 职责                                             |
+| ------------------------------------ | ------------------------------------------------ |
+| [module.md](module.md)               | 句柄、命令、revision、snapshot 与生命周期        |
+| [data.md](data.md)                   | Provider key、更新范围、导入与所有权             |
+| [action.md](action.md)               | 串行提交、Future、读取队列与容量恢复             |
+| [projection.md](projection.md)       | Tree/List、filter/sort、文本与缓存               |
+| [render.md](render.md)               | 增量投影、正文 splice、装饰与发布恢复            |
+| [performance.md](performance.md)     | 成本边界、测量口径与验收目标                     |
+| [query.md](query.md)                 | Native Query 会话、generation、取消与分页        |
+| [stamps.md](stamps.md)               | Selection/expansion 共用标记算法                 |
+| [selection.md](selection.md)         | 选择范围、聚合、源项准备与清理                   |
+| [job-discovery.md](job-discovery.md) | Native Job 私有遍历的节点准入                    |
+| [expansion.md](expansion.md)         | 展开、折叠、后代记忆与加载                       |
+| [roots.md](roots.md)                 | 展示入口、topology 归并与失效                    |
+| [visual.md](visual.md)               | 圈选持帧、输入提交与 view 生命周期               |
+| [indentline.md](indentline.md)       | 缩进、压缩链、结构导航与 cursor                  |
+| [results.md](results.md)             | 业务 records、List/Picker/Searcher/Diffview 接入 |
 
 ## 规范边界
 
-- 核心运行协议由 `module.md` 定义，各状态与交互规则由对应专题定义；同一算法只在所属专题中维护。
-- 本目录外的设计索引只提供导航，不保存 Treeview 的规范副本。目录内的 draft 与未决部分显式标记，
-  不因相邻文档已经定稿而自动成为已确认决策。
+- 总体协议由 `module.md` 定义，算法和细节以对应专题为准；其他设计文档通过链接引用，不复制契约。
 - [Explorer Design](../../../spec/design/feat/explorer.md) 与 [Filetree Design](../../../spec/design/filetree.md) 保留各自的业务说明；
   它们通过链接引用这里的 Treeview 契约，文件操作名称、资源 identity 与用途不进入通用标记算法。
-- 本目录按用户指定作为 Treeview 的独立归档位置；仓库默认的 `spec/design/` / `spec/draft/`
-  目录规则对 Treeview 使用这一明确例外。
+- 性能目标保留在 Design，具体版本的实验数据保留在[测量记录](../../../__test__/bench/treeview.md)。
+  VFS、跨重启恢复等未确认范围分别保留在 Filetree/Explorer Draft。

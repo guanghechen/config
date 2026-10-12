@@ -3,6 +3,10 @@
 Status: Design。本文定义向 Rust Treeview 提供结果的 provider 查询会话、generation、取消和结果替换。
 节点提交与 identity 遵循 [核心契约](module.md)及 [data 接入契约](data.md)，串行提交与资源预算遵循 [action queue](action.md)。
 
+本协议对应 `data:create_provider(scope)`、`provider:create_query(handler)` 与 `query:start(input)`。
+当前 Searcher 使用独立的 `yoz.search` Job 和 Lua FileSearch 调度，完成后通过 ResultTree 导入 records；
+其查询归属见[检索设计](../../../spec/design/feat/yoz/search.md)。已有候选的 Finder 过滤使用 display 输入，不创建 Query。
+
 ## 会话与归属
 
 每个 provider 查询会话由上层 Rust 持有，绑定目标 DataHandle 及明确归属的结果范围。
@@ -16,7 +20,7 @@ Status: Design。本文定义向 Rust Treeview 提供结果的 provider 查询�
 - 数据批次、进度、成功、失败和取消通知均携带会话与 generation 归属；分页额外携带顺序信息。
   同一轮内部的 worker 由 provider 汇合，不通过多个无协调的写入者修改 tree。
 - Provider 负责执行查询与取消，data owner 的串行入口负责验证归属和提交；Rust Treeview core
-  不解释搜索算法、LSP 方法或业务 payload，Lua 不维护另一份查询调度与结果权威数据。
+  不解释搜索算法、LSP 方法或业务 payload。Native Query 的 generation、范围与分页资格只有这一个 owner。
   涉及 Neovim/Lua API 的 provider 调用由主线程 adapter 执行并回传带归属的通知，worker 不直接调用 Lua/Neovim。
 
 查询 generation 与 data revision、filter/sort 输入版本、children request epoch、selection/expansion
@@ -52,7 +56,7 @@ Status: Design。本文定义向 Rust Treeview 提供结果的 provider 查询�
 4. Owner 按当前数据准备更新，原子提交节点变化与本轮进度/终态，再释放借用并通知 views。
 
 收到结果或入队前可以提前拒绝已知过期内容，但不能省略最终校验。私有候选在后台准备时，也必须在发布前重验归属。
-Generation 校验不能绕过 `TreeChangeBatch` 的 base revision 或其他 context 检查；异步 provider 可以由 owner
+Generation 校验不能绕过 `Batch` 的 base revision 或其他 context 检查；异步 provider 可以由 owner
 在当前版本上解释仍有效的结果，不能将旧 revision 的 operations 不经验证地套用到新 topology。
 
 - 过期成功与数据批次不写 tree；过期失败、进度和取消通知不改当前查询的 loading、error、计数或结果。

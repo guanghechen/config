@@ -5,6 +5,8 @@ Status: Design。定义 native Job 的资源准入与并发浏览资格；入口
 Native provider 可以自行遍历资源，不要求先将整棵操作子树装入 Source。
 原任务根仍由 PrepareSources 固定；需要更新或清理未知成功项时，provider 按执行时身份
 做最小节点准入，普通 Lua 不获得这个入口。资源签名和 filesystem 路径仍由 provider 校验。
+任务资格由 [tasks.rs](../../../rust/yoz/src/ux/treeview/tasks.rs) 管理；Filetree 的私有遍历与结果发布见
+[文件任务](../../../spec/design/filetree.md#文件任务与成功子项)。
 
 ## 独立提交来源
 

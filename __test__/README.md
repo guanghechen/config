@@ -400,7 +400,7 @@ The hot loop performed zero plan rebuilds, imports or icon lookups. The expanded
 metadata publication. Add a preserved baseline directory as the second argument; pass `"" directories`
 to sample skipping collapsed directories. Preview I/O and UI flush are excluded. Results and native
 index memory comparisons are recorded in
-[Treeview performance](../doc/spec/treeview/performance.md#2026-10-12-迁移收尾与索引压缩采样).
+[Treeview performance](bench/treeview.md#2026-10-12-迁移收尾与索引压缩采样).
 
 A separate before/after run through the real FiletreeComposer used virtual paths, the same UI and
 three independent processes. At 50,000 files, collecting 100 files for the actual open action fell

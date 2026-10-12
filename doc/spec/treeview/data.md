@@ -7,7 +7,7 @@ Status: Design。本文定义通用 Rust data owner、provider key、更新范�
 
 Rust 提供通用 data owner，创建 DataHandle 并接收 provider 的完整快照与增量批次。
 Filetree、Searcher、Symbols 和 Diffview 使用同一接入契约，按需要共享或独立持有 DataHandle。
-Provider 解释业务资源、采集结果并决定节点 identity；owner 负责 key 对齐、NodeId 分配、source topology、
+Provider 解释业务资源、采集结果并决定稳定 key；owner 负责 key 对齐、NodeId 分配、source topology、
 必要数据的所有权以及原子发布。Treeview state 通过该 owner 的 readonly source 读取唯一权威 tree。
 
 - 原生 provider 可将 owned 数据交给 owner，或共享不可变的原始结果；不能通过外部可变引用绕过 owner 修改已发布数据。
@@ -49,7 +49,7 @@ Lua 来源使用字符串表达 key，按其值精确比较，不隐式正规化
 - 来源 context：直接更新的 base data revision、provider source 版本，或相应查询会话/generation、children request token。
   使用实际适用的 context，不把这些版本当作可互换的 token。
 
-Key 输入由 owner 解析为当前 NodeId；已有可靠 NodeId 的 Rust 接入可直接使用低层 TreeChangeBatch。
+Key 输入由 owner 解析为当前 NodeId；已有可靠 NodeId 的 Rust 接入可直接使用 `Batch`。
 批内 parent 索引等紧凑编码只是一种传输形式，不是持久 identity；必须验证索引边界和目标归属。
 输入若同时携带 parent 与 children 描述，两者必须一致，不能维护两套相互矛盾的结构事实。
 
@@ -95,9 +95,9 @@ Data/source/state 的原子性不回滚 provider 已发生的业务 IO。
 
 ## Rust 原生路径
 
-Rust 搜索、Git 与文件 provider 的结果通过 Rust 接口直接交接，不先展开 Lua table 再导回 owner。
-Owned 数据可以移动所有权；不可变结果可以共享持有。Owner 建立必要的结构和 identity 索引，数据所有权
-与引用生命周期可追踪，不能从仍被 provider 修改的容器借用数据构建 snapshot。
+Filetree 的目录 worker 直接向 owner 提交 owned 数据；Git annotations 共享 native snapshots。
+这条路径不经过 Lua readdir table。Owner 建立结构和 identity 索引，不从可变外部容器借用 snapshot 数据。
+Searcher、LSP symbols 与 Diffview 的业务 records 则由 Lua producer 准备后批量导入，见[结果集接入](results.md)。
 
 - `NodeData.fields` 保存结构化字段，供 filter/sort 及 Lua 按需读取；native provider 的私有二进制数据
   由独立的 `NodeData.payload: Option<Arc<[u8]>>` 持有，不要求为单个 blob 建立字段 map。
@@ -117,8 +117,9 @@ Owned 数据可以移动所有权；不可变结果可以共享持有。Owner �
 
 ## Lua 来源与 FFI
 
-LSP/Tree-sitter 等来源由主线程 adapter 提取必要字段并批量交给 Rust。热路径与大批量输入优先扁平列式，
-adapter 在提取时直接填充批次，不先构造第二套完整节点对象。小量行式输入可以使用同一逻辑契约；binding
+LSP/Tree-sitter 等来源由主线程 adapter 提取必要字段并批量交给 Rust。ResultSource/ResultPaths 保存业务 records，
+ResultTree 准备版本化 metadata 与有界列式输入；这些 producer 不保存交互状态或可见行映射。
+小量行式输入使用同一逻辑契约；binding
 缓存重复字段名，所有入口执行相同的长度、类型、引用和语义校验。列长度、缺失字段与清除标记须无歧义。
 
 - 异步工作或后续队列处理需要的数据，必须在离开本次 Lua 调用前取得 Rust 所有权或有效的不可变 Rust 引用。
@@ -133,7 +134,7 @@ adapter 在提取时直接填充批次，不先构造第二套完整节点对象
   单项定位需要映射时按需查询。经过 dispatch 的命令继续使用既有 Future 完成协议。
 
 Rust 原生路径与 Lua 路径共享逻辑语义，不要求两者都经过 Lua 列式编码。
-具体 binding 方法名、列排布及内部容器在实现中确定；这些实现选择不能改变本契约的所有权、identity 或提交语义。
+Binding 方法和列字段见 [Lua 类型](../../../lua/__types__/ux/treeview.lua)，使用方式见[接入指南](../../treeview.md)。
 
 ## Snapshot 与出站读取
 
@@ -152,16 +153,8 @@ Data、snapshot、frame 和原生结果通过 userdata 句柄在 Lua 侧引用�
 
 ## Consumer 接入与验收
 
-- Filetree：Rust 目录读取/watch 提供快照或 delta，普通分页遵循 children 完整性规则。资源 identity 与重命名
-  由 Filetree 决定；Treeview 接收既有节点更新，不从 filepath 猜测移动。
-- Searcher：原生结果直接交接，文件与每条 match 都是 provider tree 中有 key/NodeId 的节点，文件可拥有命中 children。
-  命中包含业务定位与展示所需字段；Lua 不在 layout 完成后插入没有 Rust 行映射的命中行。替换与分页按 query context 提交。
-- LSP/Tree-sitter Finder：Lua adapter 提取层级、必要字段和 provider key，Rust 对齐 scoped snapshot 并保留候选；
-  对已有候选的输入过滤只更新 filter/sort；需要服务端按 pattern 检索时遵循 query 协议接收新结果。
-  Provider 的 symbol identity 稳定程度由其 key 策略决定。
-- Diffview filetree：Rust Git 结果直接进入 owner，staged/unstaged 等 occurrence 使用独立 key/NodeId，共享业务文件资料。
-  更新一个所属范围不清除另一个范围；具体 stage 与资源操作由上层解释。
-
+当前 consumer 的 records、metadata、查询与 Frame 接入见 [results.md](results.md)；
+Filetree 的资源 identity 与目录读取见 [Filetree Design](../../../spec/design/filetree.md)。
 使用同一组语义 fixture 验证原生 owned、共享不可变数据与 Lua 批量输入：
 
 - 同 key 的 metadata、位置、重排与 reparent 保留 NodeId，显式删除后同 key 重现取得新 ID；旧任务不能重绑定。

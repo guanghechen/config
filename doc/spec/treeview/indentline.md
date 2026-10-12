@@ -64,6 +64,12 @@ Tree 模式的目标根据当前可见 layout 计算：
 - 无有效目标时不写 cursor；`[i` 无父行时原行和原列均保留。
 - 每次按键执行一次结构跳转，不增加数字前缀重复能力。
 
+### 相邻叶节点查询
+
+- `Frame:adjacent_leaf(row, forward)` 按当前 Frame 的可见行序查找 `can_expand=false` 的相邻节点，
+  不改变 cursor、selection 或 expansion，也不导出跳过的行。`row` 为 1-based 且不包含自身；
+  nil 从首行/末行开始；起点为 0、超过行数或无目标时返回 nil，不循环。Tree 与 List 共用此只读查询。
+
 ## 普通移动与状态恢复
 
 - `j` / `k` 按可见行移动；`gg` / `G` 到正文首尾；半页/整页移动交给 Neovim。
@@ -76,8 +82,8 @@ Tree 模式的目标根据当前可见 layout 计算：
 
 ## List 与 Visual
 
-- List 候选范围总是递归，不受 Tree 展开状态限制；输出顺序遵循 [filter/sort 投影](projection.md#tree-与-list)，
-  不固定为 DFS。视觉 indent 为 0，不画连接线、不压缩链。
+- List 默认递归，不受 Tree 展开状态限制；`list_depth` 可限制遍历深度，Find Explorer 使用 0 只列直接 children。
+  输出顺序遵循 [filter/sort 投影](projection.md#tree-与-list)，不固定为 DFS。视觉 indent 为 0，不画连接线、不压缩链。
 - List 不执行 Tree 专用折叠动作；切回 Tree 恢复展开状态，selection 不变。
 - List 在 Normal/Visual 均不支持 `[i`、`]i`；按键分派不执行动作，也不回退到全局文本 indentscope 映射。
 - Tree 在 Normal/Visual 均支持 `[i`、`]i`；Visual 保持 mode 和 anchor，只移动 cursor 端点及范围。

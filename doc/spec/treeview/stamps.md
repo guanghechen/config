@@ -2,7 +2,8 @@
 
 Status: Design。适用于 Rust Treeview 的独立标记状态；文档入口见 [Treeview](README.md)。
 
-本文定义 selection 与 expansion 共用的版本标记算法：子树继承、自身覆盖、单点查询及 topology 更新。
+实现位于 [stamps.rs](../../../rust/yoz/src/ux/treeview/stamps.rs)。本文定义 selection 与 expansion 共用的
+版本标记算法：子树继承、自身覆盖、单点查询及 topology 更新。
 各状态的命令决定写入哪些节点与哪些 scope；算法只解释这些写入，不自动执行祖先修补或业务动作。
 具体写入策略分别见 [selection](selection.md) 与 [expansion](expansion.md)。
 
@@ -76,7 +77,7 @@ clear_all(g):
 - 节点失效、context 过期、锁冲突或容量不足按对应错误拒绝，不能当成 NoChange，也不能静默移除无效
   ID 后提交其余目标。整批校验和容量检查在任何写入前完成。
 - 查询、聚合、重绘、children 结果接收和纯 mode 切换不生成新的标记意图。它们各自需要的数据、派生
-  或 feature revision 按原契约发布，不为刷新 stamp 合成赋值命令。
+  或业务版本按所属契约发布，不为刷新 stamp 合成赋值命令。
 
 ## Reparent
 

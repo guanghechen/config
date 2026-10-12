@@ -37,8 +37,9 @@ Frame 依赖的 source、selection 等输入版本必须固定，延迟计算只
 
 ## 依赖失效与重算范围
 
-Owner 在数据/state 提交时给出可验证的变更类别与目标。Provider 谓词或 formatter 必须声明实际依赖；
-无法证明依赖范围时扩大重算，不能冒险复用。Filter/sort 输入改变仍使旧结果失效，允许复用其中经验证未变的子计算。
+Owner 在数据/state 提交时记录变更类别与目标。节点字段、display 和 render context 表达计算依赖；
+Lua producer 的 presentation 变化须通过 records/metadata revision 提交。
+无法证明依赖范围时扩大重算。Filter/sort 输入改变使旧结果失效，允许复用经验证未变的子计算。
 
 | 变化                            | 需要处理的范围                                                       |
 | ------------------------------- | -------------------------------------------------------------------- |
@@ -121,7 +122,7 @@ Planner 同时估计比较工作、FFI 文本字节、Neovim 调用数及更新�
 
 ## 可见区域装饰
 
-正文 buffer 保存全部已投影的真实行，首期不使用虚拟空白行伪装整份列表。行高亮、匹配片段、selection 标记、
+正文 buffer 保存全部已投影的真实行，不使用虚拟空白行伪装列表。行高亮、匹配片段、selection 标记、
 connector、图标与右对齐信息默认通过 Neovim decoration provider 的 ephemeral extmarks 发布。
 不为每个离屏行维护一组持久 extmarks，也不在全选时向 Lua 导出全部节点的装饰。
 

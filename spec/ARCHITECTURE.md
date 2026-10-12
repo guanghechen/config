@@ -11,7 +11,7 @@ yoz -> stl -> dot -> era -> ark/vendor
 ```
 
 | Layer | Module   | Description                                                                 |
-|:------|:---------|:----------------------------------------------------------------------------|
+| :---- | :------- | :-------------------------------------------------------------------------- |
 | L0    | `yoz`    | Rust-native library, independent Lua extension, no Neovim dependency        |
 | L1    | `stl`    | Standard library, may use `yoz` and `vim` globals                           |
 | L2    | `dot`    | Core framework: configuration, context, theme, commands; depends on yoz/stl |
@@ -62,8 +62,22 @@ Submodules:
 - `yoz.search`: content search (ripgrep-like, search_in_files, search_in_lines)
 - `yoz.string`: string utilities
 - `yoz.uri`: URI handling (encode/decode, filepath conversion)
+- `yoz.ux`: native Treeview, Filetree, and Explorer interaction policy
 
 Type definitions: `lua/__types__/yoz/`
+
+### Treeview / Filetree / Explorer
+
+Native implementations live in `rust/yoz/src/ux/`. Their Lua facades and Neovim surface live in `lua/ux/`,
+using `yoz`, `stl`, and `vim`; this runtime layer does not depend on `dot` or `era`.
+Business consumers in `era` compose those handles, prepare result records, and manage editor interactions.
+
+- [Treeview](../doc/spec/treeview/README.md): Data/State/Frame, projection, selection, and surface publication.
+- [Filetree](design/filetree.md): filesystem resources, directory reads, watch, annotations, and file Jobs.
+- [Explorer](design/feat/explorer.md): native interaction policy, Lua windows, prompts, and editor synchronization.
+- [Result consumers](../doc/spec/treeview/results.md): List, Picker, Searcher, and Diffview records and metadata.
+
+Treeview contracts remain in `doc/spec/treeview/`; this architecture document only indexes them.
 
 ### `lua/stl/` (Standard Library Layer)
 

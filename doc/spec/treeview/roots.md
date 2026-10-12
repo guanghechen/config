@@ -7,6 +7,7 @@ Status: Design。适用于 `yoz.ux.treeview`；文档入口见 [Treeview](README
 ## 显式范围与派生入口
 
 - `ChildrenOf(root)` 从当前 root 的直接 children 开始展示，root 自身隐藏；不保存一份独立的 children 名单。
+  List 可用 `context_label` 显示该入口的上下文行，见 [List 正文](projection.md#list-正文)；它仍引用原 NodeId。
 - `Forest(ids)` 保存调用方显式指定的有序 NodeId 列表。它表示持续浏览这些节点及其子树的意图，
   不要求它们一直位于 data forest 的最顶层。
 - State 只保存一份权威范围。实际用于遍历的 `display_roots` 根据该范围与当前 topology 派生，

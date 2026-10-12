@@ -18,7 +18,8 @@ list = project(tree, filter, sort; display_context)
 - Filter 或 sort 改变不通过 Remove、Reparent 或 Reorder 修改 source，也不分配新 NodeId。
   Source 的真实变化仍由 data owner 提交节点更新批次。
 - Tree 展示同样由 source 与当前展示条件派生。两种模式不需要互相同步另一份节点集合或 parent 关系。
-- Rust 负责匹配、排序、缓存和行映射；Lua 不维护另一份 tree/list，不逐节点提供跨 FFI 谓词。
+- Rust 负责投影内部的匹配、排序、缓存和行映射。Consumer 可以在 Lua 准备路径分组、frecency 排名或 matcher 结果，
+  通过 records 和有序 `filter` 输入交接；不逐节点提供跨 FFI 谓词，也不在 Lua 计算最终可见行。
 
 ## 输入与缓存有效性
 
@@ -46,7 +47,8 @@ Tree 保留 source 层级，在 display roots 内应用 filter、兄弟排序、
 
 List 的候选范围默认递归覆盖 display roots，不受 Tree 折叠影响；filter 决定结果成员，sort 决定平铺顺序。
 递归候选范围不要求输出按 DFS 排列。普通文本匹配不强制加入只用于连接的祖先行；selected-only
-要求保留的必要祖先与 pending 范围仍遵循 selection 契约。
+在没有显式 `filter` 时保留必要祖先与 pending 范围。有显式 `filter` 的 List 只保留直接命中成员，
+不会额外加入 filter 外的连接祖先；Tree 仍保留连接路径。
 
 - Finder 可以按相关性或 frecency 跨父节点排序；行序不反写 source 的 sibling 顺序。
 - Explorer 继续使用其已确认的各层目录优先、名称升序 DFS 规则，保留通过过滤的目录与文件行。
@@ -104,7 +106,8 @@ List label 可通过 `branch_suffix` 为可展开节点追加至多 32 bytes 的
 
 已有候选上的 Finder 查询只需更新 filter/sort 输入，候选未变化时不重复导入 tree。
 跨文件内容搜索则须由 provider 对新 pattern 执行搜索，接收的新源数据通过 owner 更新 tree；
-不能靠过滤上次命中来发现此前未返回的匹配。Provider 的查询取消与结果替换遵循 [query 契约](query.md)，
+不能靠过滤上次命中来发现此前未返回的匹配。使用 native Query 的 provider 遵循 [query 契约](query.md)；
+当前 Searcher 使用独立的 [FileSearch/原生检索契约](../../../spec/design/feat/yoz/search.md)。
 数据接入遵循 [data 契约](data.md)。查询结果的归属与当前目标查询也是发布时需要核对的输入，
 不与派生缓存有效性混为一套生命周期。
 

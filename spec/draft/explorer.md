@@ -1,7 +1,7 @@
 # Explorer 后续交互讨论
 
-Status: Draft。仅保留尚未确认的后续范围，不覆盖 [Explorer Design](../design/feat/explorer.md)。
-默认键位、无选区动作、确认/退出、空树目标和 buffer 冲突均已由 Design 定义，不再维护第二份键位表。
+Status: Draft。仅记录跨重启恢复与虚拟资源这两类未确认范围。
+当前 native 实现、默认键位、文件操作、buffer/LSP 与退出行为统一见 [Explorer Design](../design/feat/explorer.md)。
 
 ## 跨重启恢复
 
