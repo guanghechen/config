@@ -131,6 +131,9 @@
 [includeIf "gitdir:~/.local/share/nvim-nvchad/lazy/"]
   path = ~/.config/git/guanghechen/.gitconfig
 
+[includeIf "gitdir:~/.local/share/nvim-stable/lazy/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
 [includeIf "gitdir:~/playground/"]
   path = ~/.config/git/guanghechen/.gitconfig
 
