@@ -390,7 +390,7 @@ describe('theme app template resolution', () => {
     ])
     assert.equal(errors.length, 0)
 
-    for (const app of apps.filter(app => !['nvim', 'nvim-nvchad'].includes(app.name))) {
+    for (const app of apps.filter(app => !['nvim', 'nvim-nvchad', 'nvim-stable'].includes(app.name))) {
       const templatePath = resolve_app_template_filepath(
         app,
         /** @type {never} */ ({ theme: 'vsc' }),
@@ -458,7 +458,7 @@ describe('theme app template resolution', () => {
       load_theme_scheme(reporter, 'vsc-light-modern'),
     ])
 
-    for (const app of apps.filter(app => !['nvim', 'nvim-nvchad'].includes(app.name))) {
+    for (const app of apps.filter(app => !['nvim', 'nvim-nvchad', 'nvim-stable'].includes(app.name))) {
       const defaultTemplate = fs.readFileSync(
         path.join(templateRoot, app.name, 'default.hbs'),
         'utf8',
