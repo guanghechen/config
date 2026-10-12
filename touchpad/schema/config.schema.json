@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/guanghechen/config/kit/touchpad/schema/config.schema.json",
+  "title": "Kit Touchpad Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1, "pattern": "\\S", "not": {"pattern": "\\u0000"}},
+    "version": {"type": "integer", "const": 1},
+    "device": {"type": "string", "enum": ["mouse", "trackpad", "both"], "default": "mouse"},
+    "axes": {"type": "string", "enum": ["vertical", "horizontal", "both"], "default": "vertical"},
+    "rawInputOnly": {"type": "boolean", "default": false}
+  }
+}

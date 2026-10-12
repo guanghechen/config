@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "device": "mouse",
+  "axes": "vertical",
+  "rawInputOnly": false
+}
