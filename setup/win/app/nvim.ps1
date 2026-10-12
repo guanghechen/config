@@ -14,13 +14,27 @@ if ($LASTEXITCODE -ne 0) {
 fnm use $env:GHC_APP_EDITION_NODE
 
 $reporoot = "$env:XDG_CONFIG_HOME"
-$nvim_repopath = Join-Path $reporoot "nvim"
-node "$nvim_repopath/script/build.mjs"
-if ($LASTEXITCODE -ne 0) {
-  throw "[setup nvim] failed to build native module (exit code: $LASTEXITCODE)."
-}
+$previousNvimAppName = $env:NVIM_APPNAME
+try {
+  foreach ($nvim_appname in @("nvim", "nvim-stable")) {
+    $nvim_repopath = Join-Path $reporoot $nvim_appname
+    if ($nvim_appname -ne "nvim" -and -not (Test-Path -LiteralPath $nvim_repopath -PathType Container)) {
+      Write-Host "Skipping ${nvim_appname}: configuration directory not found" -ForegroundColor Yellow
+      continue
+    }
 
-nvim --headless -u "$nvim_repopath/init-update.lua"
-if ($LASTEXITCODE -ne 0) {
-  throw "[setup nvim] failed to update Neovim (exit code: $LASTEXITCODE)."
+    Write-Host "Setting up $nvim_appname" -ForegroundColor Cyan
+    $env:NVIM_APPNAME = $nvim_appname
+    node "$nvim_repopath/script/build.mjs"
+    if ($LASTEXITCODE -ne 0) {
+      throw "[setup $nvim_appname] failed to build native module (exit code: $LASTEXITCODE)."
+    }
+
+    nvim --headless -u "$nvim_repopath/init-update.lua"
+    if ($LASTEXITCODE -ne 0) {
+      throw "[setup $nvim_appname] failed to update Neovim (exit code: $LASTEXITCODE)."
+    }
+  }
+} finally {
+  $env:NVIM_APPNAME = $previousNvimAppName
 }

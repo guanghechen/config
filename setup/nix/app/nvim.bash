@@ -15,20 +15,19 @@ ghc_activate_python() {
   return 1
 }
 
-(
-  cd "$HOME/.config/nvim" &&
-    ghc_activate_python &&
-    fnm use "$GHC_APP_EDITION_NODE" &&
-    node script/build.mjs &&
-    nvim --headless -u ./init-update.lua
-)
+for nvim_appname in nvim nvim-nvchad nvim-stable; do
+  if [ "$nvim_appname" != nvim ] && [ ! -d "$HOME/.config/$nvim_appname" ]; then
+    printf '\e[93mSkipping %s: configuration directory not found\e[0m\n' "$nvim_appname"
+    continue
+  fi
 
-if [ -d "$HOME/.config/nvim-nvchad/" ]; then
+  printf '\e[96mSetting up %s\e[0m\n' "$nvim_appname"
   (
-    cd "$HOME/.config/nvim-nvchad" &&
+    export NVIM_APPNAME="$nvim_appname"
+    cd "$HOME/.config/$nvim_appname" &&
       ghc_activate_python &&
       fnm use "$GHC_APP_EDITION_NODE" &&
       node script/build.mjs &&
-      NVIM_APPNAME=nvim-nvchad nvim --headless -u ./init-update.lua
-  )
-fi
+      nvim --headless -u ./init-update.lua
+  ) || exit "$?"
+done
