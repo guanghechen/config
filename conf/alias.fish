@@ -68,7 +68,7 @@ if set -q NEOVIM_HOME; and test -n "$NEOVIM_HOME"
     alias vi="$NEOVIM_HOME/bin/nvim"
     abbr -a nvchad "NVIM_APPNAME=nvim-nvchad nvim"
     abbr -a nvlazy "NVIM_APPNAME=nvim-lazy nvim"
-    abbr -a lazyvim "NVIM_APPNAME=nvim-lazy nvim"
+    abbr -a nvstd "NVIM_APPNAME=nvim-stable nvim"
 end
 
 ### tmux
