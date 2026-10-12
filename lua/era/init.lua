@@ -21,7 +21,6 @@ local __fn__mods = {
   paste_image_as_base64 = "era.fn.paste-image-as-base64",
   pick_win = "era.fn.pick-win",
   refresh_all = "era.fn.refresh-all",
-  rename = "era.fn.rename",
   resume_last_widget = "era.fn.resume-last-widget",
   run_code = "era.fn.run-code",
   run_code_as_neovim_command = "era.fn.run-code-as-neovim-command",
@@ -52,7 +51,6 @@ local __fn__mods = {
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               era.fn.pick_win
 ---@field public refresh_all            fun(): nil
----@field public rename                 era.fn.rename
 ---@field public resume_last_widget     fun(): nil
 ---@field public run_code               fun(force: boolean): nil
 ---@field public run_code_as_neovim_command fun(): nil

@@ -16,7 +16,8 @@ Lua 负责输入、窗口、buffer、业务 metadata 和 viewport decorations，
 | 普通 List、AI 多选 picker                                  | ResultTree；多选标记与确认结果使用同一 native selection           |
 | Diffview                                                   | Git 结果经 `pane/tree.lua` 准备 records，交由 ResultTree 发布     |
 
-结果集不因展示层级而扫描真实目录。Explorer、Find Explorer 和文件 Picker 的文件修改统一使用 Filetree Jobs。
+结果集不因展示层级而扫描真实目录。Explorer、Find Explorer、文件 Picker 的文件修改及 Diffview 的 untracked discard
+统一使用 Filetree Jobs；Git tracked 文件的 discard 由 Git 领域处理。
 接入步骤见 [Treeview 接入](../../treeview.md)，业务 records、匹配与发布边界见 [结果集](results.md)。
 
 ## 文档导航

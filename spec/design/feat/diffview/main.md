@@ -283,6 +283,17 @@ discard contract 不受影响。隐藏当前选中的 untracked entry 时，work
 - `³`：新 Diffview 的默认 fold policy。
 - `󰡯⁴`：untracked 可见性。
 
+## 文件操作
+
+- Changes pane 的 `gr` 从已发布行取得目标，并在异步准备前固定 workspace 与相对路径。
+  Untracked 项通过 `era.m.filetree.jobs` 捕获 Resource 并提交 native Filetree delete Job，资源身份、IO、取消及退出收尾
+  遵循 [Filetree 契约](../../filetree.md)。同一 workspace state、同一路径的未完成请求合并，后续光标或 workspace 变化不重定向动作。
+- Discard 拒绝普通目录，目录 symlink 按链接项删除；不枚举或删除其 referent。
+  捕获后的资源被替换时报告失败，保留替换项；再次操作必须来自新的显式输入。
+- Workspace 在资源捕获完成前关闭时不启动 Job；已接受的 Job 继续完成，关闭后的 state 不再刷新 UI。
+  有实际成功的 IO 就请求刷新，取消不回滚已完成删除；同步/收尾错误单独报告，不把已完成删除描述为未执行。
+- Tracked 文件的 discard、stage 与 unstage 继续由 Git 领域和 repository index FIFO 执行。
+
 ## History / Commits 分页
 
 Workspace History 与 Git Log (`diffview_commits`) 复用分页 commit state。

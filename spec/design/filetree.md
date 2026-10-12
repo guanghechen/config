@@ -7,7 +7,7 @@ Explorer 的输入与 UI 见 [Explorer Design](feat/explorer.md)，通用交互�
 ## 模块与所有权
 
 - 当前只支持真实 filesystem 与最新 Neovim；不为其他宿主或未接入的 VFS 预留适配层。
-  Explorer 与 Find Explorer 使用本模块；文件 Picker 的真实 IO 也使用 native Jobs。
+  Explorer 与 Find Explorer 使用本模块；文件 Picker 的真实 IO 与 Diffview 的 untracked discard 也使用 native Jobs。
   Picker、Searcher、Diffview 的逻辑结果通过 [通用 Treeview records](../../doc/spec/treeview/results.md) 表达。
 - 使用现有 `yoz` crate：Rust 位于 `rust/yoz/src/ux/filetree/`，binding 位于其 `lua/` 子模块，
   Lua facade 位于 `lua/ux/filetree/`，入口为 `yoz.ux.filetree` / `require("ux.filetree")`。

@@ -8,6 +8,7 @@ local pane_sbs = require("era.m.diffview.pane.sbs")
 local util = require("era.m.diffview.util")
 local workspace_state = require("era.m.diffview.view.workspace.state")
 local workspace_view = require("era.m.diffview.view.workspace.view")
+local pending_discards = {} ---@type table<era.m.diffview.view.workspace.State, table<string, stl.c.Future>>
 
 ---Workspace view actions.
 ---@class era.m.diffview.view.workspace.action
@@ -709,30 +710,67 @@ function M.toggle_stage(ctx)
 end
 
 ---Reset (discard) file at cursor
----@param ctx                            era.m.diffview.view.workspace.IContext
----@return nil
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return stl.c.Future|nil
 function M.reset(ctx)
   local entry = get_entry_at_cursor()
   if not entry or entry.stage_type ~= "unstaged" then
     return
   end
 
-  -- Untracked files: remove them
   if entry.status == "?" then
-    local absolute = util.workspace_path(entry.filepath)
-    local ok, err = stl.os.fs.delete(absolute)
-    if not ok then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "discard",
-        message = string.format("Failed to discard `%s`: unable to delete the untracked file.", entry.filepath),
-        details = { error = err or "delete_failed" },
-      })
-      return
+    local Jobs = require("era.m.filetree.jobs")
+    local paths = require("ux.filetree.path")
+    local state, relative = ctx.state, entry.filepath
+    local path = paths.from_os(util.workspace_path(relative))
+    local pending = pending_discards[state] or {}
+    if pending[path] then
+      return pending[path]
     end
-
-    ctx.state:request_refresh()
-    return
+    pending_discards[state] = pending
+    local future = Jobs.capture(path):then_(function(captured)
+      if state:is_disposed() then
+        return nil
+      end
+      local resource = captured.resource
+      -- Discard remains non-recursive; directory links are still removed as link entries.
+      if resource:info().kind == "directory" then
+        error("Discard does not delete directories", 0)
+      end
+      return Jobs.run(captured.data, { kind = "delete", source = resource:source(), nodes = { resource:node() } })
+    end)
+    pending[path] = future
+    future:finally(function(ok, result)
+      pending[path] = nil
+      if next(pending) == nil then
+        pending_discards[state] = nil
+      end
+      if ok and result == nil then
+        return
+      end
+      local item = ok and result.items[1]
+      if item and item.status == "success" then
+        local issue = item.sync_error or item.editor_error
+        local reason = result.error or issue and issue.message
+        if reason then
+          stl.reporter.error({
+            from = __module_name__,
+            subject = "discard",
+            message = string.format("Discarded `%s`, but synchronization failed.", relative),
+            details = { error = reason },
+          })
+        end
+        state:request_refresh()
+      elseif not ok or result.error or not result.status.cancelled then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "discard",
+          message = string.format("Failed to discard `%s`: unable to delete the untracked file.", relative),
+          details = { error = not ok and tostring(result) or result.error or "delete_failed" },
+        })
+      end
+    end)
+    return future
   end
 
   -- Tracked files: git checkout

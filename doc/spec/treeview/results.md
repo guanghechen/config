@@ -129,6 +129,8 @@ Diffview 的 Git 结果同样经 Lua producer 交接。它们没有隐式使用 
 
 - 文件结果的 producer 按 directory 优先、basename 排序；List 的显式 filter 排名独立于此顺序。
 - 业务 action 从已发布 snapshot 读取目标；replace 后的剩余 offsets 写回 producer，再发布新 snapshot。
+- Diffview 的 untracked discard 同样捕获 Filetree Resource 并提交 native Job；其单项删除与 pane 生命周期
+  遵循 [Diffview 文件操作](../../../spec/design/feat/diffview/main.md#文件操作)。
 - 文件 Picker 的 create/delete/rename/move 使用 Filetree Jobs。Prompt 前捕获真实资源，IO 与 identity 校验由 Rust 执行；
   rename/move 复用 Explorer 的 buffer/LSP 同步。成功后只重映射已有结果，保留 location identity 与 metadata，不扫描目录补入其他文件。
   等待已排队的 selection 后再迁移标记；同步结果须仍持有原 producer record，旧 Frame 的操作不向替换后的集合补项。
