@@ -17,6 +17,7 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.log': 'text/plain',
   '.md': 'application/json',
   '.mkv': 'video/x-matroska',
+  '.mmd': 'text/plain; charset=utf-8',
   '.mov': 'video/quicktime',
   '.mp3': 'audio/mpeg',
   '.mp4': 'video/mp4',

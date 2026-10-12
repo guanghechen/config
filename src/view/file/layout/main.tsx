@@ -5,6 +5,7 @@ import { HtmlAdaptor } from '../container/HtmlAdaptor'
 import { ImageAdaptor } from '../container/ImageAdaptor'
 import { JsonAdaptor } from '../container/JsonAdaptor'
 import { MarkdownAdaptor } from '../container/MarkdownAdaptor'
+import { MermaidAdaptor } from '../container/MermaidAdaptor'
 import { PdfAdaptor } from '../container/PdfAdaptor'
 import { SvgAdaptor } from '../container/SvgAdaptor'
 import { TextAdaptor } from '../container/TextAdaptor'
@@ -71,6 +72,10 @@ export const Main: React.FC<IProps> = props => {
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
         />
+      )
+    case '.mmd':
+      return (
+        <MermaidAdaptor key={filepath} filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
       )
     case '.pdf':
       return (

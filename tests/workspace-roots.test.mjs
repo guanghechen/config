@@ -107,7 +107,13 @@ test('permission failures do not trigger login, while missing authentication doe
 test('Markdown file links stay in the current workspace without crossing directory boundaries', () => {
   const { resolveWorkspaceLink } = load('src/view/workspace/util/link.ts')
   const fileUrl = filepath => `/file?${new URLSearchParams({ filepath })}#section`
-  for (const filepath of ['/repo/docs/guide.md', '/repo/100% # 中文.md', '/repo/a\\b.md']) {
+  for (const filepath of [
+    '/repo/docs/guide.md',
+    '/repo/100% # 中文.md',
+    '/repo/a\\b.md',
+    '/repo/docs/agent-loop-flow.mmd',
+    '/repo/100% # 中文.MMD',
+  ]) {
     const result = new URL(resolveWorkspaceLink(fileUrl(filepath), '/repo'), 'http://localhost')
     assert.equal(result.pathname, '/ws')
     assert.equal(result.searchParams.get('root'), '/repo')

@@ -26,6 +26,7 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.log': 'text/plain',
   '.md': 'application/json',
   '.mkv': 'video/x-matroska',
+  '.mmd': 'text/plain',
   '.mov': 'video/quicktime',
   '.mp3': 'audio/mpeg',
   '.mp4': 'video/mp4',
@@ -81,6 +82,7 @@ export const fetchFile: IApiHandle = async params => {
       return { code: 200, data }
     }
     case '.log':
+    case '.mmd':
     case '.txt': {
       let data: IApiHandleData
       try {

@@ -212,6 +212,22 @@ test('authorized absolute paths round trip once and listing supports arbitrary c
   }
 })
 
+test('workspace listing discovers lowercase and uppercase Mermaid files', async () => {
+  const { list_workspace_files } = load('server/plugin/api/h/api/workspace/files.ts')
+  const directory = path.join(docs, 'mermaid-listing')
+  mkdirSync(directory)
+  const files = ['guide.md', 'diagram.mmd', 'UPPERCASE.MMD'].map(filename =>
+    path.join(directory, filename),
+  )
+  for (const filepath of files) writeFileSync(filepath, 'flowchart TD\n  Start --> Finish\n')
+
+  const result = await list_workspace_files(
+    params('', { searchParams: new URLSearchParams({ root: directory }) }),
+  )
+  assert.equal(result.code, 200)
+  assert.deepEqual(result.data.data, { root: directory, files: files.sort() })
+})
+
 test('Markdown sourcefile includes authorize independently, and bare relative resources become absolute API URLs', async () => {
   const parseMarkdown = load('server/util/parseMarkdown.ts').default
   const markdown = path.join(docs, 'references.md')
@@ -232,6 +248,40 @@ test('Markdown sourcefile includes authorize independently, and bare relative re
   assert.ok(serialized.includes('/file?filepath='))
   assert.ok(serialized.includes('#title'))
   assert.ok(serialized.includes('https://example.com/image.png'))
+})
+
+test('Mermaid files preserve source and Markdown links open the file viewer', async () => {
+  const parseMarkdown = load('server/util/parseMarkdown.ts').default
+  const { fetchFile } = load('server/plugin/api/h/api/file.ts')
+  const { fetchFileRaw } = load('server/plugin/api/h/api/file/raw.ts')
+  const content = 'flowchart TD\n  Start[Prompt] --> Wait[等待用户答复]\n'
+  for (const extension of ['mmd', 'MMD']) {
+    const filename = `100% # 中文.${extension}`
+    const filepath = path.join(docs, filename)
+    writeFileSync(filepath, content)
+
+    const file = await fetchFile(params(filepath))
+    assert.equal(file.code, 200)
+    assert.deepEqual(file.data, { data: { content } })
+
+    const markdown = await parseMarkdown(
+      article,
+      `[Diagram](${encodeURIComponent(filename)}#diagram)`,
+    )
+    const link = markdown.ast.children[0].children[0]
+    assert.equal(link.type, 'link')
+    const url = new URL(link.url, 'http://localhost')
+    assert.equal(url.pathname, '/file')
+    assert.equal(url.searchParams.get('filepath'), filepath)
+    assert.equal(url.hash, '#diagram')
+  }
+
+  const privateDiagram = path.join(outside, 'private.mmd')
+  writeFileSync(privateDiagram, content)
+  for (const handle of [fetchFile, fetchFileRaw]) {
+    await assert.rejects(handle(params(privateDiagram)), status(403))
+    await assert.rejects(handle(params(path.join(allowed, 'escape/private.mmd'))), status(403))
+  }
 })
 
 test('versioned Markdown reads and saves preserve canonical paths, rich AST and conflicts', async () => {
@@ -289,6 +339,26 @@ test('HTTP middleware preserves authentication and returns authorization status 
     const jwt = createRequire(import.meta.url)('jsonwebtoken')
     const headers = {
       authorization: `Bearer ${jwt.sign({ authenticated: true }, testJwtSecret, { expiresIn: '1h' })}`,
+    }
+    const diagram = path.join(docs, 'http-diagram.mmd')
+    const diagramContent = 'flowchart TD\n  Start --> Finish[完成]\n'
+    writeFileSync(diagram, diagramContent)
+    const diagramQuery = new URLSearchParams({ filepath: diagram })
+    const cookieHeaders = { cookie: `yoz-auth=${headers.authorization.slice(7)}` }
+    for (const endpoint of ['/api/file', '/api/file/raw']) {
+      const url = `${origin}${endpoint}?${diagramQuery}`
+      assert.equal((await fetch(url)).status, 401)
+      for (const authentication of [headers, cookieHeaders]) {
+        const response = await fetch(url, { headers: authentication })
+        assert.equal(response.status, 200)
+        if (endpoint === '/api/file') {
+          assert.match(response.headers.get('content-type'), /application\/json/)
+          assert.deepEqual(await response.json(), { data: { content: diagramContent } })
+        } else {
+          assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8')
+          assert.equal(await response.text(), diagramContent)
+        }
+      }
     }
     const boardContent = JSON.stringify({
       kind: 'yoz.whiteboard',

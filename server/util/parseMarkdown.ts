@@ -97,7 +97,8 @@ async function parseMarkdown(filepath: string, sourceContent?: string): Promise<
         const targetFilepath = path.resolve(dirpath, decodeURIComponent(pathname))
         // The target endpoint authorizes each request; rewriting does not grant access.
         const search = toSearch({ filepath: targetFilepath })
-        if (targetFilepath.toLowerCase().endsWith('.md')) {
+        const extname = path.extname(targetFilepath).toLowerCase()
+        if (extname === '.md' || extname === '.mmd') {
           const hash = suffix.includes('#') ? suffix.slice(suffix.indexOf('#')) : ''
           return `/file${search}${hash}`
         }
