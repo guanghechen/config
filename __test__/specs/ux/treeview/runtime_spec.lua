@@ -1628,4 +1628,126 @@ t:test("failed attachment releases the view and restores its original buffer", f
   t.assert_eq(bufnr, vim.api.nvim_get_current_buf())
 end)
 
+t:test("row key pages and subtree boundaries omit row payloads and keep retained frame order", function()
+  local data = treeview.new_data()
+  local records = { { key = "root", label = "root", can_expand = true } }
+  for index = 1, 1025 do
+    records[#records + 1] = { key = "key-" .. index, parent = "root", label = string.rep("x", 4096) }
+  end
+  applied(await(data:import(records)))
+  local source = data:source()
+  local state = await(data:create_state({ kind = "forest", nodes = { source:id("root") } }))
+  applied(await(state:set_expanded({ source:id("root") }, true, false)))
+  t.wait_until(function()
+    return state:snapshot():header().row_count == 1026
+  end, 5000)
+  local frame = state:snapshot()
+  t.assert_eq(1026, frame:header().row_count)
+  t.assert_eq(1026, frame:subtree_end(1))
+  t.assert_eq(2, frame:subtree_end(2))
+  t.assert_nil(frame:subtree_end(0))
+  t.assert_nil(frame:subtree_end(1027))
+  t.assert_false(pcall(frame.rows, frame, 2, 513), "decorated rows exceed their byte budget")
+  local keys = frame:row_keys(2, 1025)
+  t.assert_eq(1024, #keys)
+  t.assert_eq("key-1", keys[1])
+  t.assert_eq("key-1024", keys[1024])
+  t.assert_eq("key-1025", frame:row_keys(1026, 1026)[1])
+  t.assert_eq(0, #frame:row_keys(1, 0))
+  for _, bounds in ipairs({ { 0, 1 }, { 2, 1026 }, { 1, 1027 }, { 3, 1 } }) do
+    t.assert_false(pcall(frame.row_keys, frame, bounds[1], bounds[2]))
+  end
+  applied(await(state:set_expanded({ source:id("root") }, false, false)))
+  t.wait_until(function()
+    return state:snapshot():header().row_count == 1
+  end, 5000)
+  t.assert_eq(1, state:snapshot():subtree_end(1))
+  t.assert_eq(1026, frame:subtree_end(1))
+  applied(await(data:batch({ { kind = "remove", id = source:id("key-1") } })))
+  t.assert_eq("key-1", frame:row_keys(2, 2)[1])
+  applied(await(state:set_display({ mode = "list", filter = { source:id("key-3"), source:id("key-2") } })))
+  t.wait_until(function()
+    return state:snapshot():header().row_count == 2
+  end, 5000)
+  local list = state:snapshot()
+  t.assert_true(vim.deep_equal({ "key-3", "key-2" }, list:row_keys(1, 2)))
+  t.assert_eq(1, list:subtree_end(1))
+  t.assert_eq(2, list:subtree_end(2))
+  t.assert_eq(0, #list:row_keys(3, 2))
+end)
+
+t:test("row key pages resume at the byte boundary while explicit node key reads stay strict", function()
+  local data = treeview.new_data()
+  local records = {}
+  for index = 1, 600 do
+    records[index] = { key = string.rep("界", 600) .. index, label = "small" }
+  end
+  applied(await(data:import(records)))
+  local nodes = {}
+  for index, record in ipairs(records) do
+    nodes[index] = data:source():id(record.key)
+  end
+  local state = await(data:create_state({ kind = "forest", nodes = nodes }))
+  local frame = state:snapshot()
+  t.assert_eq(512, #frame:row_keys(1, 512))
+  local keys = frame:row_keys(1, 600)
+  t.assert_true(#keys > 0 and #keys < 600)
+  local bytes = 0
+  for index, key in ipairs(keys) do
+    t.assert_eq(records[index].key, key)
+    bytes = bytes + #key
+  end
+  t.assert_true(bytes <= 1024 * 1024)
+  t.assert_true(bytes + #records[#keys + 1].key > 1024 * 1024, "each page fills its byte budget")
+  applied(await(data:batch({ { kind = "remove", id = nodes[#keys + 1] } })))
+  local rest = frame:row_keys(#keys + 1, 600)
+  t.assert_eq(600, #keys + #rest)
+  for index, key in ipairs(rest) do
+    t.assert_eq(records[#keys + index].key, key)
+  end
+  local ok, error = pcall(frame.node_keys, frame, nodes)
+  t.assert_false(ok)
+  t.assert_true(tostring(error):find("1 MiB", 1, true) ~= nil, tostring(error))
+end)
+
+t:test("Source key and parent reads retain identity after removal without node payloads", function()
+  local data, _, a, b = fixture()
+  local source = data:source()
+  local root = source:id("root")
+  t.assert_eq("a", source:key(a))
+  t.assert_eq(root, source:parent(a))
+  t.assert_nil(source:parent(root))
+  applied(await(data:batch({ { kind = "remove", id = a } })))
+  local current = data:source()
+  t.assert_nil(current:key(a))
+  t.assert_nil(current:parent(a))
+  t.assert_eq("b", current:key(b))
+  t.assert_eq("a", source:key(a))
+  t.assert_eq(root, source:parent(a))
+end)
+
+t:test("key pages accept the exact byte limit and reject a single oversized identity without empty progress", function()
+  local data = treeview.new_data()
+  local exact = string.rep("k", 1024 * 1024)
+  local oversized = exact .. "x"
+  applied(await(data:import({
+    { key = "short", label = "short" },
+    { key = exact, label = "exact" },
+    { key = oversized, label = "oversized" },
+  })))
+  local source = data:source()
+  local state = await(data:create_state({
+    kind = "forest",
+    nodes = { source:id("short"), source:id(exact), source:id(oversized) },
+  }))
+  local frame = state:snapshot()
+  t.assert_true(vim.deep_equal({ "short" }, frame:row_keys(1, 3)))
+  local page = frame:row_keys(2, 3)
+  t.assert_eq(1, #page)
+  t.assert_eq(exact, page[1])
+  local ok, error = pcall(frame.row_keys, frame, 3, 3)
+  t.assert_false(ok)
+  t.assert_true(tostring(error):find("1 MiB", 1, true) ~= nil, tostring(error))
+end)
+
 t:run()

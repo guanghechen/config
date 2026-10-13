@@ -298,9 +298,10 @@ function M.new(props)
   ---@type era.m.picker.composer.tree.actions
   local actions = {
     attach_node = function()
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      local frame = treeview:frame()
+      local nodeuuid = self:__retrieve_nodeuuid__(frame) ---@type string|nil
       if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
+        local nodestate = treeview:retrieve(nodeuuid, frame) ---@type era.view.result_tree.IEntry|nil
         if nodestate == nil then
           return
         end
@@ -313,7 +314,7 @@ function M.new(props)
         end
 
         local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-        if not tree:contains(leafuuid) then
+        if not frame:source():id(leafuuid) then
           return
         end
 
@@ -323,8 +324,8 @@ function M.new(props)
       end
     end,
     attach_parent = function()
-      local rootuuid = self._uuid_root ---@type string
-      local parentuuid = tree:parent(rootuuid) ---@type string|nil
+      local frame = treeview:frame()
+      local parentuuid = treeview:parent_key(treeview:root_key(frame), frame)
       if parentuuid ~= nil then
         self._uuid_root = parentuuid ---@type string
         self:mark_result_dirty()
@@ -352,36 +353,17 @@ function M.new(props)
       end
     end,
     mark_node_invisible = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      local search_pattern = o_search_pattern:snapshot() ---@type string
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
-          if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
-            treeview:mark_node_invisible(nodeuuid)
-          end
-        end
-      end
-      self._composer:mark_result_dirty()
+      treeview:range_action(function(frame, first, last)
+        local search_pattern = o_search_pattern:snapshot() ---@type string
+        treeview:mark_rows_invisible(frame, first, last, search_pattern ~= "")
+        self._composer:mark_result_dirty()
+      end)
     end,
     mark_subroot_invisible = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          treeview:mark_node_invisible(nodeuuid)
-        end
-      end
-      self._composer:mark_result_dirty()
+      treeview:range_action(function(frame, first, last)
+        treeview:mark_rows_invisible(frame, first, last)
+        self._composer:mark_result_dirty()
+      end)
     end,
     open_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -1033,38 +1015,17 @@ function M:__resolve_confirmation__(nodeuuid)
   self._on_confirm(self, { nodeuuid })
 end
 
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return string|nil
 ---@return integer
-function M:__retrieve_nodeuuid__()
+function M:__retrieve_nodeuuid__(frame)
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
     return nil, lnum
   end
 
-  local nodeuuid = self._treeview:retrieve_uuid(lnum) ---@type string|nil
+  local nodeuuid = self._treeview:retrieve_uuid(lnum, frame) ---@type string|nil
   return nodeuuid, lnum
-end
-
----@return integer
----@return integer
-function M:__retrieve_lnum_range__()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._treeview ---@type era.view.ResultTree
-
-  if winnr == self.result:get_winnr() then
-    local mode = vim.fn.mode()
-    if mode == "v" or mode == "V" or mode == "\22" then
-      local lnum_from, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range() ---@type integer, integer
-      return lnum_from, lnum_end
-    end
-  end
-
-  local lnum = self.result.lnum_current:snapshot() ---@type integer
-  local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) or lnum ---@type integer
-  if lnum < lnum_childline then
-    return lnum, lnum_childline
-  end
-  return lnum, lnum
 end
 
 ---@param nodeuuid                      string|nil
@@ -1079,28 +1040,30 @@ end
 ---@param recursively                   boolean
 ---@return nil
 function M:__toggle_node__(nodeuuid, open, recursively)
-  local nodestate = self._treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
+  local treeview = self._treeview
+  local frame = treeview:frame()
+  if not frame then
+    return
+  end
+  local nodestate = treeview:retrieve(nodeuuid, frame) ---@type era.view.result_tree.IEntry|nil
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
   local treeuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local tree = self._tree ---@type era.view.ResultSource
-  if not tree:contains(treeuuid) then
+  if not frame:source():id(treeuuid) then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
   end
 
   local composer = self._composer ---@type era.m.picker.BasicComposer
-  local treeview = self._treeview ---@type era.view.ResultTree
   if nodestate.nodetype == "container" then
-    treeview:collapse(treeuuid, "toggle", recursively)
+    treeview:collapse(treeuuid, "toggle", recursively, frame)
     composer:mark_result_dirty()
     return
   end
 
-  local children = tree:children(treeuuid) --[[@as string[] ]]
-  if nodestate.nodetype == "leaf" and #children > 0 then
-    treeview:collapse(treeuuid, "toggle", false)
+  if nodestate.nodetype == "leaf" and nodestate.locations and #nodestate.locations > 0 then
+    treeview:collapse(treeuuid, "toggle", false, frame)
     composer:mark_result_dirty()
     return
   end

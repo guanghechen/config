@@ -575,7 +575,8 @@ t:test("match limit status follows the published projection and blocks replace a
   native.await(composer.result.draw(result_bufnr))
   local location = assert(leafstate.locations and leafstate.locations[#leafstate.locations])
   local location_lnum = assert(composer._treeview:retrieve_lnum(location.locationuuid))
-  composer.result.lnum_current:next(location_lnum, { force = true })
+  composer.result:set_lnum_current(location_lnum)
+  native.await(composer._treeview:ready())
   local replace_in_node ---@type fun(): nil
   for _, keymap in ipairs(composer.finder.keymaps) do
     if keymap.desc == "search: replace file" then

@@ -80,6 +80,19 @@ Diffview 的 Git 结果同样经 Lua producer 交接。它们没有隐式使用 
 `Frame:marked_nodes(visible_only)` 在 native 中查询当前帧的选中身份，返回分页读取的 NodeIds；visible
 查询遵循行顺序，完整查询包含折叠与过滤之外的标记。`Frame:node_keys(ids)` 仅导出 identity，单次最多
 1024 个节点、1 MiB keys。批量动作只解析选中节点，不能逐行导出 header、完整节点或装饰数据。
+`Frame:row_keys(first,last)` 对最多 1024 行的 1-based inclusive 范围，返回符合 1 MiB keys 预算的最长连续前缀。
+调用方按 `first + #keys` 续读；非空范围至少返回一个 key，单个 key 超过预算则报错。显式 `node_keys(ids)`
+保持完整读取语义，超过字节预算仍报错，不返回部分身份。
+`ResultTree:iter_rows(frame,first?,last?)` 固定该 Frame 对应的 metadata 版本，分页返回 row、key、业务 data 和
+只读 entry；location 的 data 指向所属文件，entry 仍描述 location。批量导出须按 nodetype 区分文件与 location，
+避免重复输出所属文件；producer 在遍历期间变化不影响已捕获的 metadata。
+`Frame:subtree_end(row)` 只返回当前显示子树的最后一行；折叠节点和普通 List 行返回自身，范围外返回 nil。
+范围动作和跳过子树的遍历通过该标量接口取边界，不导出 decorated rows。
+`Source:key(id)` 和 `Source:parent(id)` 从 immutable Source 读取标量身份，缺失节点返回 nil；key 仍受
+1 MiB 上限约束。`ResultTree:root_key(frame)` 解析该 Frame 的 display root，`parent_key(key,frame)` 读取
+source parent，包含画面之外的祖先。confirmation、文件操作与 preview 的相对路径基准、attach-parent
+都使用同一 Frame 的 root 与 data；不能把 producer 待发布的 root key 当作显示 root。
+节点存在性和文件 location 的展开判断同样来自该 Frame，不能再读取 live producer 的 children／membership。
 `Frame:all_marked(ids)` 对显式 ID 数组做 native 聚合，只返回这些身份是否全部已选；空数组返回 true。
 它读取该 immutable frame 的状态，不受折叠或过滤影响；重复 ID 不改变结果。所有 ID 都须存在于该帧 Source，
 即使已遇到未选节点，后续缺失 ID 仍报 MissingNode。输入沿用 200,000 项数组上限，不导出逐节点 flags。
@@ -97,6 +110,14 @@ Diffview 的 Git 结果同样经 Lua producer 交接。它们没有隐式使用 
   Metadata-only 变更也刷新共享 Data 的所有 viewport decorations；可见主结果的 publication/ready 等待其准备完成。
 - Visual 选择由 native View 的 range action 捕获 frame。跟随选择的业务 action 等到 selection 被接受并发布，
   批量 self selection 按值合并为 native 命令，避免逐行占用 command queue。
+- Picker／Searcher 的 hide、AI 导出、quickfix 和替换经 `ResultTree:range_action` 捕获同一已发布 Frame，
+  继承 View 的 stale／desynced／publishing 输入保护。Normal 范围扩展到显示子树，Visual 保留实际圈选端点；
+  quickfix／replace-all 在捕获后遍历该 Frame 的全部行。Searcher 的单节点替换仍由活动端点决定
+  location／file／container 分支，只有 container 分支使用圈选范围，并保留当前查询与完整性检查。
+  同步业务 callback 返回 nil 时按 NoChange 完成；返回 native command Future 时保留其 receipt，抛错则拒绝 Future
+  并释放 submission。业务写入只更新 producer，不修改捕获的 metadata。
+  Hide 通过 `mark_rows_invisible` 先读取全部目标页，只暂存本次范围尚未隐藏的 keys；读取成功后统一应用并
+  invalidate，随后由 consumer 通知发布。任一页读取失败均不修改 `_hidden` 或 producer revision。
 - 多行 Visual Tab 保留结果集的范围语义：忽略 location；有任一未选节点则全部选中，否则全部取消，
   只修改范围内节点自身。Normal／单行选择仍递归切换所属文件或目录。List location 的 parent 动作
   通过该帧中的所属文件身份定位，不依赖 List 的视觉 parent。

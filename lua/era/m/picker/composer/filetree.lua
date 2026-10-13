@@ -324,34 +324,24 @@ function M.new(props)
   ---@type era.m.picker.composer.filetree.actions
   local actions = {
     attach_node = function()
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      local frame = treeview:frame()
+      local nodeuuid = self:__retrieve_nodeuuid__(frame) ---@type string|nil
       if nodeuuid == nil then
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
+      local nodestate = treeview:retrieve(nodeuuid, frame) ---@type era.view.result_tree.IEntry|nil
       if nodestate == nil then
         return
       end
 
-      if nodestate.nodetype == "container" then
-        self._uuid_root = nodeuuid ---@type string
-        self:mark_result_dirty()
-
-        local data = filetree:get(nodeuuid) ---@type era.view.result_paths.IFile|nil
-        if data ~= nil then
-          on_attached(self, data.filepath)
-        end
-        return
-      end
-
-      local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-      local data = filetree:get(leafuuid) ---@type era.view.result_paths.IFile|nil
+      local rootuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid
+      local data = treeview:data(rootuuid, frame) ---@type era.view.result_paths.IFile|nil
       if data == nil then
         return
       end
 
-      self._uuid_root = leafuuid ---@type string
+      self._uuid_root = rootuuid
       self:mark_result_dirty()
       on_attached(self, data.filepath)
     end,
@@ -418,57 +408,42 @@ function M.new(props)
     ------------------------------------------------------------------------------------------------
 
     add_node_to_ai = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      local locations = {} ---@type dot.t.ILocation[]
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        local data = nodeuuid ~= nil and filetree:get(nodeuuid) or nil ---@type era.view.result_paths.IFile|nil
-        if data ~= nil and data.filetype == "file" then
-          locations[#locations + 1] = { filepath = data.filepath }
-        end
-      end
-      era.fn.add_locations_to_ai(locations)
-    end,
-    add_subtree_to_ai = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      local locations = {} ---@type dot.t.ILocation[]
-      local lnum = lnum_from ---@type integer
-      while lnum <= lnum_to do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          local data = filetree:get(nodeuuid) ---@type era.view.result_paths.IFile|nil
-          if data ~= nil then
+      treeview:range_action(function(frame, first, last)
+        local locations = {} ---@type dot.t.ILocation[]
+        for _, _, data, entry in treeview:iter_rows(frame, first, last) do
+          if data and data.filetype == "file" and entry and entry.nodetype == "leaf" then
             locations[#locations + 1] = { filepath = data.filepath }
-
-            if data.filetype == "directory" then
-              local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-              if lnum_childline ~= nil and lnum_childline > 0 then
-                lnum = lnum_childline
-              end
-            end
           end
         end
-        lnum = lnum + 1
-      end
-      era.fn.add_locations_to_ai(locations)
+        era.fn.add_locations_to_ai(locations)
+      end)
+    end,
+    add_subtree_to_ai = function()
+      treeview:range_action(function(frame, first, last)
+        local locations = {} ---@type dot.t.ILocation[]
+        local lnum = first
+        while lnum <= last do
+          local _, _, data, entry = treeview:iter_rows(frame, lnum, lnum)()
+          if data and entry and entry.nodetype ~= "location" then
+            locations[#locations + 1] = { filepath = data.filepath }
+            if data.filetype == "directory" then
+              lnum = frame:subtree_end(lnum)
+            end
+          end
+          lnum = lnum + 1
+        end
+        era.fn.add_locations_to_ai(locations)
+      end)
     end,
 
     attach_parent = function()
-      local rootuuid = self._uuid_root ---@type string
-      local parentuuid = filetree:parent(rootuuid) ---@type string|nil
+      local frame = treeview:frame()
+      local parentuuid = treeview:parent_key(treeview:root_key(frame), frame)
       if parentuuid ~= nil then
         self._uuid_root = parentuuid ---@type string
         self:mark_result_dirty()
 
-        local parentdata = filetree:get(parentuuid) ---@type era.view.result_paths.IFile|nil
+        local parentdata = treeview:data(parentuuid, frame) ---@type era.view.result_paths.IFile|nil
         if parentdata ~= nil then
           on_attached(self, parentdata.filepath)
         end
@@ -552,52 +527,27 @@ function M.new(props)
       end
     end,
     mark_node_invisible = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      local search_pattern = o_search_pattern:snapshot() ---@type string
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
-          if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
-            treeview:mark_node_invisible(nodeuuid)
-          end
-        end
-      end
-      self._composer:mark_result_dirty()
+      treeview:range_action(function(frame, first, last)
+        local search_pattern = o_search_pattern:snapshot() ---@type string
+        treeview:mark_rows_invisible(frame, first, last, search_pattern ~= "")
+        self._composer:mark_result_dirty()
+      end)
     end,
     mark_subroot_invisible = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          treeview:mark_node_invisible(nodeuuid)
-        end
-      end
-      self._composer:mark_result_dirty()
+      treeview:range_action(function(frame, first, last)
+        treeview:mark_rows_invisible(frame, first, last)
+        self._composer:mark_result_dirty()
+      end)
     end,
     send_to_qflist = function()
-      local cwd = yoz.canonical_path.get_cwd() ---@type string
-      local quickfix_items = {} ---@type dot.state.qflist.IItem[]
-
-      local linecount = retriever:linecount() ---@type integer
-      for lnum = 1, linecount, 1 do
-        local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if uuid ~= nil then
-          local data = filetree:get(uuid) ---@type era.view.result_paths.IFile|nil
-          if data ~= nil and data.filetype == "file" then
+      treeview:range_action(function(frame)
+        local cwd = yoz.canonical_path.get_cwd() ---@type string
+        local quickfix_items = {} ---@type dot.state.qflist.IItem[]
+        for _, _, data, entry in treeview:iter_rows(frame) do
+          if data and data.filetype == "file" and entry and entry.nodetype == "leaf" then
             local filepath = data.filepath ---@type string
             local relative_filepath = yoz.canonical_path.relative(cwd, filepath, false) ---@type string
-
-            local nodestate = treeview:retrieve(uuid) ---@type era.view.result_tree.IEntry|nil
-            local locations = nodestate and nodestate.locations or nil ---@type era.view.result_tree.IEntry[]|nil
+            local locations = entry.locations
             if locations == nil or #locations < 1 then
               table.insert(quickfix_items, {
                 filename = relative_filepath,
@@ -616,13 +566,12 @@ function M.new(props)
             end
           end
         end
-      end
-
-      if #quickfix_items > 0 then
-        self._composer:close()
-        dot.state.qflist.push(quickfix_items)
-        dot.state.qflist.open_qflist()
-      end
+        if #quickfix_items > 0 then
+          self._composer:close()
+          dot.state.qflist.push(quickfix_items)
+          dot.state.qflist.open_qflist()
+        end
+      end)
     end,
     toggle_selection = function()
       treeview:toggle_selection()
@@ -1387,7 +1336,8 @@ end
 ---@param force                         boolean
 ---@return era.m.picker.preview.IDrawResult
 function M:render_preview(bufnr, force)
-  local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
+  local frame = self._treeview:frame()
+  local nodeuuid, lnum = self:__retrieve_nodeuuid__(frame) ---@type string|nil, integer
   if nodeuuid == nil then
     self._last_preview_filepath = nil
     if lnum == 0 then
@@ -1417,17 +1367,16 @@ function M:render_preview(bufnr, force)
     return result
   end
 
-  local filetree = self._filetree ---@type era.view.ResultPaths
   local treeview = self._treeview ---@type era.m.picker.FiletreeView
   local plainfile = self._plainfile ---@type era.view.Plainfile
   local o_flag_foldempty = self.flag_foldempty ---@type stl.c.Observable
 
-  local _, data, nodestate = self:__retrieve__(nodeuuid)
+  local _, data, nodestate = self:__retrieve__(nodeuuid, frame)
 
   force = force or data.filepath ~= self._last_preview_filepath ---@type boolean
   self._last_preview_filepath = data.filepath ---@type string|nil
 
-  local rootdata = filetree:get(self._uuid_root) ---@type era.view.result_paths.IFile|nil
+  local rootdata = self:__retrieve_rootdata__(frame)
   local filepath = data.filepath ---@type string
   local relative_filepath = rootdata ~= nil and yoz.canonical_path.relative(rootdata.filepath, filepath, false)
     or filepath ---@type string
@@ -1637,19 +1586,17 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
-  local _, data = self:__retrieve__(nodeuuid)
-
   local composer = self._composer ---@type era.m.picker.BasicComposer
-  local filetree = self._filetree ---@type era.view.ResultPaths
   local treeview = self._treeview ---@type era.m.picker.FiletreeView
+  local frame = treeview:frame()
+  local _, data = self:__retrieve__(nodeuuid, frame)
+  local rootdata = self:__retrieve_rootdata__(frame)
 
-  local rootdata = filetree:get(self._uuid_root) ---@type era.view.result_paths.IFile|nil
-
-  if self:__has_selected_node__() then
+  if treeview:has_selected(frame) then
     local filepaths = {} ---@type string[]
     local seen = {} ---@type table<string, true>
-    for _, uuid in ipairs(treeview:selected_keys(true)) do
-      local selected_data = treeview:data(uuid)
+    for _, uuid in ipairs(treeview:selected_keys(true, frame)) do
+      local selected_data = treeview:data(uuid, frame)
       treeview:set_selected(uuid, false)
       if selected_data and selected_data.filetype == "file" and not seen[selected_data.filepath] then
         seen[selected_data.filepath] = true
@@ -1672,18 +1619,19 @@ function M:__resolve_confirmation__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return string
 ---@return era.view.result_paths.IFile
 ---@return era.view.result_tree.IEntry
-function M:__retrieve__(nodeuuid)
+function M:__retrieve__(nodeuuid, frame)
   ---@type era.view.result_tree.IEntry|nil
-  local nodestate = self._treeview:retrieve(nodeuuid)
+  local nodestate = self._treeview:retrieve(nodeuuid, frame)
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
   local treeuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local data = self._treeview:data(treeuuid) ---@type era.view.result_paths.IFile|nil
+  local data = self._treeview:data(treeuuid, frame) ---@type era.view.result_paths.IFile|nil
   if data == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
   end
@@ -1691,34 +1639,36 @@ function M:__retrieve__(nodeuuid)
   return treeuuid, data, nodestate
 end
 
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return string|nil
 ---@return era.view.result_paths.IFile|nil
-function M:__retrieve_file__()
+function M:__retrieve_file__(frame)
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
     return
   end
 
-  local nodeuuid = self._treeview:retrieve_uuid(lnum) ---@type string|nil
+  local nodeuuid = self._treeview:retrieve_uuid(lnum, frame) ---@type string|nil
   if nodeuuid == nil then
     return
   end
 
-  local nodestate = self._treeview:retrieve(nodeuuid) ---@type era.view.result_tree.IEntry|nil
+  local nodestate = self._treeview:retrieve(nodeuuid, frame) ---@type era.view.result_tree.IEntry|nil
   if nodestate == nil then
     return
   end
 
   local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local data = self._treeview:data(fileuuid) ---@type era.view.result_paths.IFile|nil
+  local data = self._treeview:data(fileuuid, frame) ---@type era.view.result_paths.IFile|nil
   return fileuuid, data
 end
 
 ---@param kind                          "create"|"delete"|"rename"|"move"
 ---@return nil
 function M:__file_operation__(kind)
-  local fileuuid, filedata = self:__retrieve_file__()
-  local rootdata = self:__retrieve_rootdata__()
+  local frame = self._treeview:frame()
+  local fileuuid, filedata = self:__retrieve_file__(frame)
+  local rootdata = self:__retrieve_rootdata__(frame)
   local winnr = self.result:get_winnr()
   if not fileuuid or not filedata or not rootdata or not winnr or not vim.api.nvim_win_is_valid(winnr) then
     return
@@ -1951,43 +1901,24 @@ function M:__update_tree_after_rename__(from, to)
   scheduler_match:schedule()
 end
 
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return era.view.result_paths.IFile|nil
-function M:__retrieve_rootdata__()
-  return self._filetree:get(self._uuid_root) ---@type era.view.result_paths.IFile|nil
+function M:__retrieve_rootdata__(frame)
+  frame = frame or self._treeview:frame()
+  return self._treeview:data(self._treeview:root_key(frame), frame) ---@type era.view.result_paths.IFile|nil
 end
 
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return string|nil
 ---@return integer
-function M:__retrieve_nodeuuid__()
+function M:__retrieve_nodeuuid__(frame)
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
     return nil, lnum
   end
 
-  local nodeuuid = self._treeview:retrieve_uuid(lnum) ---@type string|nil
+  local nodeuuid = self._treeview:retrieve_uuid(lnum, frame) ---@type string|nil
   return nodeuuid, lnum
-end
-
----@return integer
----@return integer
-function M:__retrieve_lnum_range__()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._treeview ---@type era.view.ResultTree
-
-  if winnr == self.result:get_winnr() then
-    local mode = vim.fn.mode()
-    if mode == "v" or mode == "V" or mode == "\22" then
-      local lnum_from, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range() ---@type integer, integer
-      return lnum_from, lnum_end
-    end
-  end
-
-  local lnum = self.result.lnum_current:snapshot() ---@type integer
-  local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) or lnum ---@type integer
-  if lnum < lnum_childline then
-    return lnum, lnum_childline
-  end
-  return lnum, lnum
 end
 
 ---@param nodeuuid                      string|nil
@@ -2002,19 +1933,19 @@ end
 ---@param recursively                   boolean
 ---@return nil
 function M:__toggle_node__(nodeuuid, open, recursively)
-  local treeuuid, data, nodestate = self:__retrieve__(nodeuuid)
+  local frame = self._treeview:frame()
+  local treeuuid, data, nodestate = self:__retrieve__(nodeuuid, frame)
 
   local composer = self._composer ---@type era.m.picker.BasicComposer
   local treeview = self._treeview ---@type era.m.picker.FiletreeView
   if nodestate.nodetype == "container" then
-    treeview:collapse(treeuuid, "toggle", recursively)
+    treeview:collapse(treeuuid, "toggle", recursively, frame)
     composer:mark_result_dirty()
     return
   end
 
-  local children = self._filetree:children(treeuuid) --[[@as string[] ]]
-  if nodestate.nodetype == "leaf" and #children > 0 then
-    treeview:collapse(treeuuid, "toggle", false)
+  if nodestate.nodetype == "leaf" and nodestate.locations and #nodestate.locations > 0 then
+    treeview:collapse(treeuuid, "toggle", false, frame)
     composer:mark_result_dirty()
     return
   end

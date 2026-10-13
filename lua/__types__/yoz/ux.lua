@@ -46,6 +46,14 @@ function Source:len() end
 ---@param key                           string
 ---@return ux.treeview.NodeId|nil
 function Source:id(key) end
+---Identity-only lookup; nil for a missing node, at most 1 MiB of key data.
+---@param node                          ux.treeview.NodeId
+---@return string|nil
+function Source:key(node) end
+---Source parent identity, including parents outside the visible projection.
+---@param node                          ux.treeview.NodeId
+---@return ux.treeview.NodeId|nil
+function Source:parent(node) end
 ---@param node                          ux.treeview.NodeId
 ---@return ux.treeview.INode|nil
 function Source:node(node) end
@@ -78,12 +86,22 @@ function Frame:all_marked(nodes) end
 ---@param nodes                         ux.treeview.NodeId[]
 ---@return string[]
 function Frame:node_keys(nodes) end
+---Read a prefix of a 1-based inclusive range of at most 1024 rows, within 1 MiB of keys.
+---Resume at first + #keys. Nonempty ranges make progress or reject an oversized single key.
+---@param first                         integer
+---@param last                          integer
+---@return string[]
+function Frame:row_keys(first, last) end
 ---@param row                           integer
 ---@return ux.treeview.NodeId|nil
 function Frame:node_at(row) end
 ---@param node                          ux.treeview.NodeId
 ---@return integer|nil
 function Frame:position(node) end
+---Last displayed descendant, including this row; nil for a row outside this Frame.
+---@param row                           integer
+---@return integer|nil
+function Frame:subtree_end(row) end
 ---Scan visible terminal nodes in this Frame. Nil starts at the first/last row; no wrap.
 ---@param row                           ?integer 1-based origin, excluded from the search.
 ---@param forward                       boolean

@@ -263,23 +263,43 @@ end
 ---@param id                            string
 ---@return string|nil
 function M:_key(frame, id)
-  local version = self._versions[self:_read(frame).header.data_revision]
+  local read = self:_read(frame)
+  local version = self._versions[read.header.data_revision]
   if version then
     local key = version.keys[id]
     if key then
       return key
     end
-    local node = frame:node(id)
-    key = node and node.key
+    key = read.source:key(id)
     version.keys[id] = key
     return key
   end
 end
 
+---The displayed root may differ from a producer's pending root even at the same data revision.
+---@param frame                         ?yoz.ux.treeview.Frame
+---@return string|nil
+function M:root_key(frame)
+  local read = self:_read(frame)
+  local root = read and read.header.root
+  return root and root.kind == "children_of" and self:_key(read.frame, root.node) or nil
+end
+
+---@param key                           ?string
+---@param frame                         ?yoz.ux.treeview.Frame
+---@return string|nil
+function M:parent_key(key, frame)
+  local read = self:_read(frame)
+  local id = read and key and read.source:id(key)
+  local parent = id and read.source:parent(id)
+  return parent and self:_key(read.frame, parent)
+end
+
 ---@param key                           string
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return era.view.result_tree.IEntry|nil
-function M:retrieve(key)
-  local read = self:_read()
+function M:retrieve(key, frame)
+  local read = self:_read(frame)
   if read then
     local version = self._versions[read.header.data_revision]
     local entry = version and version.entries[key]
@@ -300,9 +320,10 @@ function M:retrieve(key)
 end
 
 ---@param key                           ?string
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return table|string|nil
-function M:data(key)
-  local read = self:_read()
+function M:data(key, frame)
+  local read = self:_read(frame)
   local version = read and self._versions[read.header.data_revision]
   if read then
     local entry = version and version.entries[key]
@@ -330,10 +351,39 @@ function M:linecount()
   return read and read.header.row_count or 0
 end
 
+---Capture metadata once and export only a bounded page of identities at a time.
+---@param frame                         yoz.ux.treeview.Frame
+---@param first                         ?integer
+---@param last                          ?integer
+---@return fun(): integer|nil, string|nil, table|string|nil, era.view.result_tree.IEntry|nil
+function M:iter_rows(frame, first, last)
+  local read = self:_read(frame)
+  local version = self._versions[read.header.data_revision]
+  local row = (first or 1) - 1
+  last = last or read.header.row_count
+  local keys, page_start, page_end = {}, 0, row
+  return function()
+    row = row + 1
+    if row > last then
+      return nil
+    end
+    if row > page_end then
+      page_start = row
+      keys = frame:row_keys(row, math.min(row + 1023, last))
+      page_end = row + #keys - 1
+    end
+    local key = keys[row - page_start + 1]
+    local entry = version and version.entries[key]
+    local data = version and version.data[entry and entry.leafuuid or key]
+    return row, key, data, entry
+  end
+end
+
 ---@param row                           integer
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return string|nil
-function M:retrieve_uuid(row)
-  local frame = self:frame()
+function M:retrieve_uuid(row, frame)
+  frame = frame or self:frame()
   local id = frame and frame:node_at(row)
   return id and self:_key(frame, id)
 end
@@ -370,11 +420,12 @@ function M:retrieve_parent(key)
 end
 
 ---@param row                           integer
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return integer|nil
-function M:retrieve_lastchild_lnum(row)
-  local frame = self:frame()
-  if frame and row > 0 and row <= frame:header().row_count then
-    return frame:rows(row, row).last_descendants[1]
+function M:retrieve_lastchild_lnum(row, frame)
+  frame = frame or self:frame()
+  if frame and row > 0 then
+    return frame:subtree_end(row)
   end
 end
 
@@ -397,10 +448,11 @@ function M:collect_selected()
 end
 
 ---@param visible_only                  boolean
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return era.view.result_tree.IRead|nil
 ---@return yoz.ux.treeview.NodeIds|nil
-function M:_selected(visible_only)
-  local read = self:_read()
+function M:_selected(visible_only, frame)
+  local read = self:_read(frame)
   if not read then
     return nil
   end
@@ -412,16 +464,18 @@ function M:_selected(visible_only)
   return read, ids
 end
 
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return boolean
-function M:has_selected()
-  local _, ids = self:_selected(true)
+function M:has_selected(frame)
+  local _, ids = self:_selected(true, frame)
   return ids ~= nil and ids:len() > 0
 end
 
 ---@param visible_only                  boolean
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return string[]
-function M:selected_keys(visible_only)
-  local read, ids = self:_selected(visible_only)
+function M:selected_keys(visible_only, frame)
+  local read, ids = self:_selected(visible_only, frame)
   local version = read and self._versions[read.header.data_revision]
   if not version or not ids then
     return {}
@@ -590,8 +644,8 @@ function M:toggle_selection()
           recursive = false,
         }, { frame = frame })
       end
-      local key = self:retrieve_uuid(first)
-      local entry = key and self:retrieve(key)
+      local key = self:retrieve_uuid(first, frame)
+      local entry = key and self:retrieve(key, frame)
       if entry and entry.nodetype == "location" then
         return self.state:dispatch({
           kind = "toggle_node",
@@ -608,12 +662,34 @@ function M:toggle_selection()
   end
 end
 
+---Normal input covers the displayed subtree; Visual input keeps its exact row range.
+---@param submit                        fun(frame: yoz.ux.treeview.Frame, first: integer, last: integer, visual: boolean): stl.c.Future|nil
+---@return stl.c.Future
+function M:range_action(submit)
+  if not self.view then
+    return Future.resolve({
+      kind = "Rejected",
+      error = { code = "Stale", message = "ResultTree has no mounted input frame" },
+    })
+  end
+  return self.view:range_action(function(frame, first, last, visual)
+    local ok, future = pcall(function()
+      return submit(frame, first, visual and last or frame:subtree_end(first), visual)
+    end)
+    if not ok then
+      return Future.reject(future)
+    end
+    return future or Future.resolve({ kind = "NoChange" })
+  end)
+end
+
 ---@param key                           string
 ---@param action                        "toggle"|"collapse"|"expand"
 ---@param recursive                     ?boolean
+---@param frame                         ?yoz.ux.treeview.Frame
 ---@return nil
-function M:collapse(key, action, recursive)
-  local frame = self:frame()
+function M:collapse(key, action, recursive, frame)
+  frame = frame or self:frame()
   local id = frame and frame:source():id(key)
   if id and self.state then
     self.state
@@ -642,6 +718,27 @@ end
 function M:mark_node_invisible(key)
   self._hidden[key] = true
   self:invalidate()
+end
+
+---Prepare only this range's new hidden keys before changing producer visibility.
+---@param frame                         yoz.ux.treeview.Frame
+---@param first                         integer
+---@param last                          integer
+---@param skip_containers               ?boolean
+---@return nil
+function M:mark_rows_invisible(frame, first, last, skip_containers)
+  local keys = {}
+  for _, key, _, entry in self:iter_rows(frame, first, last) do
+    if not self._hidden[key] and (not skip_containers or entry and entry.nodetype ~= "container") then
+      keys[#keys + 1] = key
+    end
+  end
+  if #keys > 0 then
+    for _, key in ipairs(keys) do
+      self._hidden[key] = true
+    end
+    self:invalidate()
+  end
 end
 
 ---@return nil

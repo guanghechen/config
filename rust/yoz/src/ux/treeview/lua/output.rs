@@ -9,6 +9,38 @@ pub(crate) fn node(id: NodeId) -> String {
     token('n', id.value())
 }
 
+/// Return the longest prefix fitting the key budget, or reject a single oversized key.
+pub(super) fn key_page(
+    lua: &Lua,
+    source: &Source,
+    ids: impl Iterator<Item = NodeId>,
+    count: usize,
+) -> LuaResult<(LuaTable, usize)> {
+    if count > 1024 {
+        return Err(LuaError::external(
+            "node key reads require at most 1024 nodes",
+        ));
+    }
+    let keys = lua.create_table_with_capacity(count, 0)?;
+    let mut bytes = 0usize;
+    let mut length = 0usize;
+    for id in ids {
+        let node = source
+            .node(id)
+            .ok_or_else(|| LuaError::external(Error::missing(id)))?;
+        bytes = bytes.saturating_add(node.key.len());
+        if bytes > 1024 * 1024 {
+            if length == 0 {
+                return Err(LuaError::external("node key reads exceed 1 MiB"));
+            }
+            break;
+        }
+        length += 1;
+        keys.raw_set(length, node.key.as_ref())?;
+    }
+    Ok((keys, length))
+}
+
 pub(crate) fn error(lua: &Lua, error: &Error) -> LuaResult<LuaTable> {
     let table = lua.create_table()?;
     table.set("code", error.code.as_str())?;

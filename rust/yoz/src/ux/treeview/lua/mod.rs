@@ -113,6 +113,24 @@ impl LuaUserData for LuaSource {
                 .id(&input::string(key).map_err(LuaError::external)?)
                 .map(output::node))
         });
+        methods.add_method("key", |lua, this, id: LuaValue| {
+            let id = input::node(id).map_err(LuaError::external)?;
+            let Some(node) = this.0.node(id) else {
+                return Ok(None);
+            };
+            if node.key.len() > 1024 * 1024 {
+                return Err(LuaError::external("node key reads exceed 1 MiB"));
+            }
+            lua.create_string(node.key.as_ref()).map(Some)
+        });
+        methods.add_method("parent", |_, this, id: LuaValue| {
+            let id = input::node(id).map_err(LuaError::external)?;
+            Ok(this
+                .0
+                .node(id)
+                .and_then(|node| node.parent)
+                .map(output::node))
+        });
         methods.add_method("node", |lua, this, id: LuaValue| {
             output::detail(lua, &this.0, input::node(id).map_err(LuaError::external)?)
         });
@@ -157,27 +175,30 @@ impl LuaUserData for LuaFrame {
         });
         methods.add_method("node_keys", |lua, this, nodes: LuaValue| {
             let ids = input::ids(nodes).map_err(LuaError::external)?;
-            if ids.len() > 1024 {
-                return Err(LuaError::external(
-                    "node key reads require at most 1024 nodes",
-                ));
-            }
-            let keys = lua.create_table_with_capacity(ids.len(), 0)?;
-            let mut bytes = 0usize;
-            for (index, id) in ids.iter().enumerate() {
-                let node = this
-                    .0
-                    .source()
-                    .node(*id)
-                    .ok_or_else(|| LuaError::external(Error::missing(*id)))?;
-                bytes = bytes.saturating_add(node.key.len());
-                if bytes > 1024 * 1024 {
-                    return Err(LuaError::external("node key reads exceed 1 MiB"));
-                }
-                keys.raw_set(index + 1, node.key.as_ref())?;
+            let (keys, length) =
+                output::key_page(lua, this.0.source(), ids.iter().copied(), ids.len())?;
+            if length != ids.len() {
+                return Err(LuaError::external("node key reads exceed 1 MiB"));
             }
             Ok(keys)
         });
+        methods.add_method(
+            "row_keys",
+            |lua, this, (first, last): (LuaValue, LuaValue)| {
+                let (first, last) = range(first, last, this.0.len(), 1024)?;
+                let (keys, _) = output::key_page(
+                    lua,
+                    this.0.source(),
+                    this.0
+                        .rows
+                        .iter_from(first)
+                        .take(last - first)
+                        .map(|row| row.id),
+                    last - first,
+                )?;
+                Ok(keys)
+            },
+        );
         methods.add_method("node_at", |_, this, row: LuaValue| {
             let row = input::integer(row).map_err(LuaError::external)?;
             Ok(row
@@ -189,6 +210,14 @@ impl LuaUserData for LuaFrame {
             Ok(this
                 .0
                 .position(input::node(id).map_err(LuaError::external)?)
+                .map(|row| row + 1))
+        });
+        methods.add_method("subtree_end", |_, this, row: LuaValue| {
+            let row = input::integer(row).map_err(LuaError::external)?;
+            Ok(row
+                .checked_sub(1)
+                .and_then(|row| this.0.row(row))
+                .and_then(|row| this.0.position(row.last_descendant))
                 .map(|row| row + 1))
         });
         methods.add_method(
