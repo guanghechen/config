@@ -44,8 +44,8 @@ set -g  fish_pager_color_description             yellow
 set -g  fish_pager_color_prefix                  cyan --bold
 set -g  fish_pager_color_progress                brwhite --background=blue
 set -g  fish_pager_color_secondary_background    normal
-set -g  fish_pager_color_secondary_completion    brblack
-set -g  fish_pager_color_secondary_description   brblack
+set -g  fish_pager_color_secondary_completion    normal
+set -g  fish_pager_color_secondary_description   yellow
 set -g  fish_pager_color_secondary_prefix        brblack
 set -g  fish_pager_color_selected_background     --background=blue
 set -g  fish_pager_color_selected_completion     brwhite
