@@ -6,7 +6,6 @@ $lazyFunctions = @(
     'ghc-opensource'
     'ghc-profile'
     'ghc-theme'
-    'ghc-update-agents'
     'ghc-update'
     'ghc-upgrade'
     'ghc-winshark-vsc'
