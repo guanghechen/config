@@ -1,1 +1,3 @@
-local/
+completions/copilot.bash
+completions/kit.bash
+completions/kit-*.bash
