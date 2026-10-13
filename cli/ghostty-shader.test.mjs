@@ -29,8 +29,16 @@ const legacyFiles = [
 const stateFiles = [
   'local/theme.conf', 'local/shader.conf', 'local/appearance', ...legacyFiles,
 ]
-const wallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png')}\n`
-const lightWallpaperConfig = `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.png')}\n`
+const wallpaperConfig = [
+  `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png')}`,
+  'background-image-opacity = 0.1',
+  '',
+].join('\n')
+const lightWallpaperConfig = [
+  `background-image = ${path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'A-Summer-That-Never-Ends.png')}`,
+  'background-image-opacity = 0.12',
+  '',
+].join('\n')
 const noWallpaperConfig = 'background-image =\n'
 const execFileAsync = promisify(execFile)
 
@@ -183,7 +191,7 @@ describe('Ghostty shared shader selection', () => {
     assert.equal(await read(home, 'local/theme.conf'), 'original theme\n')
   })
 
-  it('leaves permanent background settings in the main config across all states', async t => {
+  it('preserves theme colors while changing the background selection', async t => {
     const home = await fixture(t)
     const mainConfig = [
       'background-opacity = 0.7',
@@ -198,15 +206,20 @@ describe('Ghostty shared shader selection', () => {
     ].join('\n')
     await fs.writeFile(path.join(home, 'config'), mainConfig)
     for (const appearance of /** @type {const} */ (['dark', 'light'])) {
-      await applyGhosttyThemeAppearance({ home, appearance, themeContent: 'theme\n' })
-      for (const shader of ['off', 'cubes']) {
+      const themeContent = appearance === 'light'
+        ? 'background = #FAF4ED\nforeground = #2C283B\n'
+        : 'background = #191724\nforeground = #E0DEF4\n'
+      await applyGhosttyThemeAppearance({ home, appearance, themeContent })
+      for (const shader of ['off', 'cubes', 'off']) {
         await selectGhosttyShader({ home, shader })
         assert.equal(await read(home, 'config'), mainConfig)
+        assert.equal(await read(home, 'local/theme.conf'), themeContent)
         const keys = (await read(home, 'local/shader.conf')).trim().split('\n')
           .map(line => line.split(' =')[0])
-        assert.deepEqual(keys, shader === 'off'
-          ? ['background-image']
-          : ['background-image', 'custom-shader'])
+        const expectedKeys = shader === 'off'
+          ? ['background-image', 'background-image-opacity']
+          : ['background-image', 'custom-shader']
+        assert.deepEqual(keys, expectedKeys)
       }
     }
   })
@@ -230,6 +243,7 @@ describe('Ghostty shared shader selection', () => {
     '',
     'custom-shader = ../shaders/dark/starfield.glsl\n',
     'background-image = /tmp/custom.png\n',
+    `${wallpaperConfig}background = #000000\n`,
     `${wallpaperConfig}custom-shader = /tmp/custom.glsl\n`,
     'background-image =\ncustom-shader = /tmp/custom.glsl\n',
     'custom-shader = shaders/cubes-light.glsl\n',

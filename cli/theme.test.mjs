@@ -586,7 +586,12 @@ describe('theme app application', () => {
         'new ghostty theme\n',
       )
       assert.equal(fs.readFileSync(path.join(ghostty.home, 'local/appearance'), 'utf8'), 'light\n')
-      assert.match(fs.readFileSync(path.join(ghostty.home, 'local/shader.conf'), 'utf8'), /^background-image = .*Barrett-Girl\.png\n$/)
+      const backgroundConfig = fs.readFileSync(path.join(ghostty.home, 'local/shader.conf'), 'utf8').split('\n')
+      assert.match(backgroundConfig[0], /^background-image = .*A-Summer-That-Never-Ends\.png$/)
+      assert.deepEqual(backgroundConfig.slice(1), [
+        'background-image-opacity = 0.12',
+        '',
+      ])
     } finally {
       fs.rmSync(root, { recursive: true, force: true })
     }

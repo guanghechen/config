@@ -11,9 +11,15 @@ import { XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR } from '#env'
  * the shader CLI share this writer. Importing this module does not mutate state.
  */
 
-const WALLPAPER_PATHS = {
-  dark: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png'),
-  light: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.png'),
+const WALLPAPERS = {
+  dark: {
+    filepath: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.png'),
+    opacity: 0.1,
+  },
+  light: {
+    filepath: path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'A-Summer-That-Never-Ends.png'),
+    opacity: 0.12,
+  },
 }
 
 export const GHOSTTY_SHADERS = Object.freeze([
@@ -34,6 +40,9 @@ const LOCK_TIMEOUT_MS = 5_000
 
 /**
  * @typedef {'dark'|'light'} IAppearance
+ * @typedef {Object} IWallpaper
+ * @property {string} filepath
+ * @property {number} opacity
  * @typedef {Object} IShaderStatePaths
  * @property {string} localDir
  * @property {string} theme
@@ -106,7 +115,7 @@ async function replaceFileAtomic(filepath, content) {
 function parseShaderConfig(content) {
   const config = content.trim()
   if (config === 'background-image =' ||
-    Object.values(WALLPAPER_PATHS).some(filepath => config === `background-image = ${filepath}`)) {
+    Object.values(WALLPAPERS).some(wallpaper => config === renderWallpaperConfig(wallpaper).trim())) {
     return 'off'
   }
 
@@ -116,10 +125,23 @@ function parseShaderConfig(content) {
   return shader !== 'off' && GHOSTTY_SHADERS.includes(shader) ? shader : undefined
 }
 
+/**
+ * Wallpaper selection never overrides theme colors or text readability.
+ * @param {IWallpaper} wallpaper
+ * @return {string}
+ */
+function renderWallpaperConfig(wallpaper) {
+  return [
+    `background-image = ${wallpaper.filepath}`,
+    `background-image-opacity = ${wallpaper.opacity}`,
+    '',
+  ].join('\n')
+}
+
 /** @param {string} shader @param {IAppearance} appearance */
 function renderActiveConfig(shader, appearance) {
   if (shader === 'off') {
-    return `background-image = ${WALLPAPER_PATHS[appearance]}\n`
+    return renderWallpaperConfig(WALLPAPERS[appearance])
   }
   return `background-image =\ncustom-shader = ../shaders/${appearance}/${shader}.glsl\n`
 }
@@ -138,7 +160,7 @@ async function requireAppearance(paths) {
 /** @param {string} home @param {IAppearance} appearance @param {string} shader */
 async function validateBackgroundFile(home, appearance, shader) {
   const filepath = shader === 'off'
-    ? WALLPAPER_PATHS[appearance]
+    ? WALLPAPERS[appearance].filepath
     : path.join(home, 'shaders', appearance, `${shader}.glsl`)
   try {
     const stat = await fs.stat(filepath)

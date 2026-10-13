@@ -12,31 +12,43 @@ selection, cycling, and listing for shell wrappers.
 
 Paths below are relative to `~/.config/ghostty`.
 
-| File                | Responsibility                                                                    |
-| ------------------- | --------------------------------------------------------------------------------- |
-| `config`            | Permanent image fit, position, opacity, repetition, window/cell opacity, and blur |
-| `local/theme.conf`  | Generated colors for the selected scheme                                          |
-| `local/appearance`  | Current `dark` or `light` appearance                                              |
-| `local/shader.conf` | Active image path and optional background shader; sole source of selection        |
-| `shader.conf`       | Separately configured cursor shader                                               |
+| File                | Responsibility                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| `config`            | Image placement, repetition, fallback image opacity, window/cell opacity, and blur |
+| `local/theme.conf`  | Generated theme colors                                                            |
+| `local/appearance`  | Current `dark` or `light` appearance                                               |
+| `local/shader.conf` | Wallpaper path and image opacity, or a background shader; source of selection      |
+| `shader.conf`       | Separately configured cursor shader                                                |
 
-The writer never edits the main `config`. Changing a theme or shader only
-changes selection-related files; permanent presentation settings apply in all
-appearances and modes.
+The writer never edits the main `config`. `WALLPAPERS` in `shader.mjs` stores
+only each image's path and opacity. Theme templates own the background,
+foreground, ANSI palette and selection colors in both wallpaper and shader
+modes. Text rendering inherits the main config or Ghostty defaults. Other
+presentation settings remain in the main config.
 
 ## Background selection
 
-| Appearance | Selection    | `local/shader.conf` output                                           |
-| ---------- | ------------ | -------------------------------------------------------------------- |
-| Dark       | `off`        | `background-image` points to `asset/wallpaper/Flowerlit-Prayers.png` |
-| Light      | `off`        | `background-image` points to `asset/wallpaper/Barrett-Girl.png`      |
-| Either     | Named shader | Clear the image and select `../shaders/<appearance>/<name>.glsl`     |
+| Appearance | Selection    | `local/shader.conf` output                                                  |
+| ---------- | ------------ | --------------------------------------------------------------------------- |
+| Dark       | `off`        | `background-image` points to `asset/wallpaper/Flowerlit-Prayers.png`        |
+| Light      | `off`        | `background-image` points to `asset/wallpaper/A-Summer-That-Never-Ends.png` |
+| Either     | Named shader | Clear the image and select `../shaders/<appearance>/<name>.glsl`            |
 
 The image path is resolved from this repository's asset directory. Theme
 switches retain the shader name and change its appearance directory. Both
 appearances share the same cycling order. Here, `off` disables the background
 shader; it does not disable the wallpaper or the cursor shader. `--list`
 returns the shared shader names without reading or creating local state.
+
+| Wallpaper                       | Image opacity |
+| ------------------------------- | ------------- |
+| Light: A Summer That Never Ends | `0.12`        |
+| Dark: Flowerlit Prayers         | `0.1`         |
+
+The light wallpaper is the dense summer-town illustration, A Summer That Never Ends.
+Blending changes the terminal presentation without repainting the source.
+When replacing an image, tune its opacity in `WALLPAPERS`. Changes to the
+base color belong in the Ghostty theme mapping so the palette stays coherent.
 
 Wallpaper rendering uses Ghostty's native image support. The window stays
 opaque; ordinary TUI backgrounds, including Neovim float bodies, use
@@ -46,7 +58,12 @@ ordinary float bodies reveal the wallpaper without showing underlying editor
 text. Cell opacity follows window opacity, so
 enabling it does not make explicit cell backgrounds transparent when window
 opacity is `1`. Image opacity controls blending with the theme background.
-The actual numeric settings live in `config`.
+Ghostty loads included files after their parent config, in declaration order.
+The main config includes `local/theme.conf` before `local/shader.conf`.
+The latter only overrides the image path and opacity, never theme colors or
+readability. Selecting a named shader clears the image and removes its opacity
+override; the theme's background and text settings stay active on reload.
+Other numeric settings live in `config`.
 
 ## State and recovery
 
