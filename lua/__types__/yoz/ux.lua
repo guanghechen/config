@@ -69,6 +69,11 @@ function Frame:same_rows(other) end
 ---@param visible_only                  boolean
 ---@return yoz.ux.treeview.NodeIds
 function Frame:marked_nodes(visible_only) end
+---Checks explicit identities, including hidden/filtered nodes. Empty input is true.
+---Missing IDs raise an error, even after an unmarked node.
+---@param nodes                         ux.treeview.NodeId[]
+---@return boolean
+function Frame:all_marked(nodes) end
 ---Identity-only export, bounded to 1024 nodes and 1 MiB of keys.
 ---@param nodes                         ux.treeview.NodeId[]
 ---@return string[]

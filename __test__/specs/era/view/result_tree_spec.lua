@@ -418,6 +418,127 @@ t:test("bulk selection reads preserve visible order without per-row Lua queries"
   t.assert_true(vim.deep_equal({ one = true, two = true }, tree:collect_selected()), "filtered marks survive")
 end)
 
+t:test("Visual selection skips marked queries for an empty captured frame", function()
+  local tree = fixture()
+  tree:insert("one", {
+    nodetype = "leaf",
+    locations = { { nodetype = "location", leafuuid = "one", locationuuid = "one:1", lnum = 1 } },
+  })
+  await(tree:publish({ mode = "list", rootuuid = "root", orders = { "one", "two", "three" } }))
+  local captured = tree:frame()
+  t.assert_true(captured:header().summary.is_empty)
+  tree:set_selected("one", true)
+  tree:set_selected("two", true)
+  await(tree:ready())
+  t.assert_false(tree:frame():header().summary.is_empty)
+  local proxy = setmetatable({}, {
+    __index = function(_, name)
+      if name == "all_marked" or name == "flags" or name == "marked_nodes" then
+        error("an empty captured selection must not query marked identities")
+      end
+      return function(_, ...)
+        return captured[name](captured, ...)
+      end
+    end,
+  })
+  local submitted, dispatch = nil, tree.state.dispatch
+  tree.state.dispatch = function(_, command, context)
+    t.assert_eq(proxy, context.frame)
+    submitted = command
+    return stl.c.Future.resolve({ kind = "Applied" })
+  end
+  tree.view = {
+    detach = function() end,
+    frame = function()
+      return tree.state:snapshot()
+    end,
+    is_suspended = function()
+      return false
+    end,
+    range_action = function(_, callback)
+      return callback(proxy, 1, 3, true)
+    end,
+  }
+  tree:toggle_selection()
+  tree.view = nil
+  tree.state.dispatch = dispatch
+  t.assert_eq("select_node", submitted.kind)
+  t.assert_false(submitted.recursive)
+  t.assert_true(vim.deep_equal({ "one", "two" }, captured:node_keys(submitted.nodes)))
+end)
+
+t:test("Visual selection reads only its range and preserves location and outside marks", function()
+  local tree = fixture()
+  tree:insert("one", {
+    nodetype = "leaf",
+    locations = { { nodetype = "location", leafuuid = "one", locationuuid = "one:1", lnum = 1 } },
+  })
+  local orders = { "one", "two", "three" }
+  for index = 1, 1100 do
+    local key = "outside" .. index
+    tree.source:insert("root", key, { label = key })
+    tree:insert(key, { nodetype = "leaf" })
+    orders[#orders + 1] = key
+  end
+  await(tree:publish({ mode = "list", rootuuid = "root", orders = orders }))
+  tree:set_selected("one", true)
+  tree:set_selected("one:1", true)
+  for index = 1, 1100 do
+    tree:set_selected("outside" .. index, true)
+  end
+  await(tree:ready())
+  local marked_reads = 0
+  local view = {
+    detach = function() end,
+    range_action = function(_, callback)
+      local frame = tree:frame()
+      local proxy = setmetatable({}, {
+        __index = function(_, name)
+          if name == "marked_nodes" or name == "flags" then
+            error("a range action must batch its marked query")
+          end
+          return function(_, ...)
+            if name == "node_at" then
+              local row = ...
+              t.assert_true(row >= 1 and row <= 3, "only read the captured range")
+            elseif name == "all_marked" then
+              local ids = ...
+              marked_reads = marked_reads + 1
+              t.assert_true(vim.deep_equal({ "one", "two" }, frame:node_keys(ids)), "only query eligible range nodes")
+            end
+            return frame[name](frame, ...)
+          end
+        end,
+      })
+      local dispatch = tree.state.dispatch
+      tree.state.dispatch = function(self, command, context)
+        context.frame = frame
+        return dispatch(self, command, context)
+      end
+      local future = callback(proxy, 1, 3, true)
+      tree.state.dispatch = dispatch
+      return future
+    end,
+  }
+  for _, selected in ipairs({ true, false }) do
+    tree.view = view
+    view.frame = function()
+      return tree.state:snapshot()
+    end
+    view.is_suspended = function()
+      return false
+    end
+    tree:toggle_selection()
+    tree.view = nil
+    await(tree:ready())
+    t.assert_eq(selected, tree:isselected("one"))
+    t.assert_eq(selected, tree:isselected("two"))
+    t.assert_true(tree:isselected("one:1"), "location marks are independent")
+    t.assert_true(tree:isselected("outside1100"), "outside marks survive")
+  end
+  t.assert_eq(2, marked_reads, "one marked query per range action")
+end)
+
 for _, module in ipairs({
   "era.m.picker.composer.tree",
   "era.m.picker.composer.filetree",

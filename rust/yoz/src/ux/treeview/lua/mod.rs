@@ -151,6 +151,10 @@ impl LuaUserData for LuaFrame {
                 .map(LuaIds)
                 .map_err(LuaError::external)
         });
+        methods.add_method("all_marked", |_, this, nodes: LuaValue| {
+            let ids = input::ids(nodes).map_err(LuaError::external)?;
+            this.0.all_marked(&ids).map_err(LuaError::external)
+        });
         methods.add_method("node_keys", |lua, this, nodes: LuaValue| {
             let ids = input::ids(nodes).map_err(LuaError::external)?;
             if ids.len() > 1024 {

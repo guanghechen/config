@@ -80,6 +80,10 @@ Diffview 的 Git 结果同样经 Lua producer 交接。它们没有隐式使用 
 `Frame:marked_nodes(visible_only)` 在 native 中查询当前帧的选中身份，返回分页读取的 NodeIds；visible
 查询遵循行顺序，完整查询包含折叠与过滤之外的标记。`Frame:node_keys(ids)` 仅导出 identity，单次最多
 1024 个节点、1 MiB keys。批量动作只解析选中节点，不能逐行导出 header、完整节点或装饰数据。
+`Frame:all_marked(ids)` 对显式 ID 数组做 native 聚合，只返回这些身份是否全部已选；空数组返回 true。
+它读取该 immutable frame 的状态，不受折叠或过滤影响；重复 ID 不改变结果。所有 ID 都须存在于该帧 Source，
+即使已遇到未选节点，后续缺失 ID 仍报 MissingNode。输入沿用 200,000 项数组上限，不导出逐节点 flags。
+批量查询共享祖先的 inherited stamp 缓存，工作量限于输入节点及所需祖先，不扫描范围外的行或选中项。
 
 ## 发布、输入与生命周期
 
@@ -96,6 +100,8 @@ Diffview 的 Git 结果同样经 Lua producer 交接。它们没有隐式使用 
 - 多行 Visual Tab 保留结果集的范围语义：忽略 location；有任一未选节点则全部选中，否则全部取消，
   只修改范围内节点自身。Normal／单行选择仍递归切换所属文件或目录。List location 的 parent 动作
   通过该帧中的所属文件身份定位，不依赖 List 的视觉 parent。
+  范围聚合先按捕获 Frame 收集并过滤节点；该 Frame 的 selection summary 为空时直接全选，否则调用一次
+  `all_marked`。不逐项查询 flags，也不导出范围外的选中项；空 summary 路径不重复解析和校验已捕获的节点数组。
 - Matcher 保留输入 debounce；native Result 发布仅合并同轮请求，不再追加 128 ms render debounce。
 
 ### 多选 List
@@ -126,6 +132,9 @@ Diffview 的 Git 结果同样经 Lua producer 交接。它们没有隐式使用 
   首次 inline 展开才准备该 commit 的 files；缓存仍保留时，后续展开／折叠只提交 native State 命令，不重新构造 producer、
   解析 icons 或发起 import。缓存回收遵循 [Diffview policy](../../../spec/design/feat/diffview/main.md#materialized-records-cache)，
   冷重开重新导入 records。Standalone filetree 独立准备自己的 records，reveal 显式准备目标 commit files。
+- Diffview Tree/List 共用相同的目录和文件 records。Changes/Files 使用 native List ancestry；inline commits
+  使用 `list_from_depth=1` 保留 commit header 分组，在组内平铺文件。模式切换不删除目录、不改写 label/parent，
+  业务 records 未变时不产生 data revision，也不丢失目录的 NodeId 或折叠标记。
 
 ### 文件操作
 

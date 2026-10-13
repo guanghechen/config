@@ -254,8 +254,12 @@ impl State {
         if self.root == Root::ChildrenOf(node) {
             return true;
         }
+        let mut collapsed = None;
         if self.display.mode == Mode::Tree && !self.expansion.value(source, node).unwrap_or(false) {
-            return false;
+            if self.display.list_from_depth.is_none() {
+                return false;
+            }
+            collapsed = Some(0);
         }
         let roots: HashSet<_> = match &self.root {
             Root::Forest(ids) => ids.iter().copied().collect(),
@@ -270,11 +274,20 @@ impl State {
                 return false;
             };
             visible &= self.display.show_hidden || self.display.selected_only || !data.data.hidden;
-            if id != node && self.display.mode == Mode::Tree {
-                visible &= self.expanded(source, id).unwrap_or(false);
+            if id != node
+                && self.display.mode == Mode::Tree
+                && !self.expanded(source, id).unwrap_or(false)
+            {
+                collapsed = Some(depth);
             }
+            let expanded = collapsed.is_none_or(|closed| {
+                self.display
+                    .list_from_depth
+                    .is_some_and(|limit| depth - closed >= limit)
+            });
             if roots.contains(&id) {
                 included = visible
+                    && expanded
                     && (self.display.mode != Mode::List
                         || self.display.list_depth.is_none_or(|limit| depth < limit));
             }
@@ -283,6 +296,7 @@ impl State {
                 .is_some_and(|parent| self.root == Root::ChildrenOf(parent))
             {
                 return visible
+                    && expanded
                     && (self.display.mode != Mode::List
                         || self.display.list_depth.is_none_or(|limit| depth < limit));
             }
@@ -472,6 +486,57 @@ mod tests {
         assert!(sources.subtree_roots.is_empty());
         assert_eq!(sources.self_only_nodes.as_ref(), [a]);
         assert!(!sources.summary.is_empty());
+    }
+
+    #[test]
+    #[ignore = "explicit release-mode collapsed Tree demand measurement"]
+    fn t_collapsed_tree_children_demand_performance() {
+        for depth in [80, 160, 320, 420] {
+            let mut source = Source::empty().unwrap();
+            let mut nodes: Vec<NodeId> = Vec::with_capacity(depth + 1);
+            for index in 0..=depth {
+                let key = format!("d{index}");
+                source
+                    .apply(
+                        &Operation::Insert {
+                            key: key.as_str().into(),
+                            parent: nodes.last().copied().map(Into::into),
+                            position: Position::Last,
+                            data: NodeData::branch("d"),
+                            completeness: Completeness::Complete,
+                        },
+                        Revision(1),
+                        &Limits::default(),
+                        None,
+                    )
+                    .unwrap();
+                nodes.push(source.id(&key).unwrap());
+            }
+            let mut state = State::new(
+                &source,
+                Root::ChildrenOf(nodes[0]),
+                DisplayOptions::default(),
+            )
+            .unwrap();
+            state
+                .set_expanded(&source, &nodes[..1], false, Scope::Subtree)
+                .unwrap();
+            let mut samples = Vec::new();
+            for index in 0..26 {
+                let started = std::time::Instant::now();
+                for node in &nodes[1..] {
+                    assert!(!state.demands_children(&source, std::hint::black_box(*node)));
+                }
+                if index >= 2 {
+                    samples.push(started.elapsed().as_secs_f64() * 1000.0);
+                }
+            }
+            samples.sort_by(f64::total_cmp);
+            println!(
+                "collapsed Tree demand: depth={depth} samples=24 p50_ms={:.3} max_ms={:.3}",
+                samples[11], samples[23],
+            );
+        }
     }
 
     #[test]

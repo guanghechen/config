@@ -1253,6 +1253,36 @@ fn t_native_watch_parent_detects_pinned_root_removal_without_sibling_refresh() {
 
 #[cfg(any(target_os = "macos", target_os = "linux", windows))]
 #[test]
+fn t_zero_depth_grouped_list_watches_descendants_without_expansion() {
+    let dir = Directory::new();
+    fs::create_dir(dir.0.join("dir")).unwrap();
+    fs::write(dir.0.join("dir/old"), b"old").unwrap();
+    let data = request(Filetree::open(dir.0.clone()));
+    let Outcome::State(state) = ticket(data.create_state(
+        None,
+        DisplayOptions {
+            mode: Mode::Tree,
+            compress: false,
+            list_from_depth: Some(0),
+            ..DisplayOptions::default()
+        },
+    )) else {
+        panic!("expected state")
+    };
+    let _view = state.attach().unwrap();
+    loaded(&data, data.root());
+    let folder = child(&data, data.root(), "dir");
+    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 2));
+    watching(&data, folder);
+
+    fs::write(dir.0.join("dir/new"), b"new").unwrap();
+    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 3));
+    assert_eq!(data.source().node(folder).unwrap().child_count(), 2);
+    child(&data, folder, "new");
+}
+
+#[cfg(any(target_os = "macos", target_os = "linux", windows))]
+#[test]
 fn t_native_watch_coalesces_changes_and_releases_when_view_detaches() {
     let dir = Directory::new();
     let data = request(Filetree::open(dir.0.clone()));

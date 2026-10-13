@@ -348,7 +348,11 @@ fn retained(
             }
             if frame.direct
                 || (connected
-                    && (state.display.mode == Mode::Tree
+                    && ((state.display.mode == Mode::Tree
+                        && state
+                            .display
+                            .list_from_depth
+                            .is_none_or(|depth| stack.len() < depth))
                         || (state.display.selected_only && state.display.filter.is_none())))
             {
                 keep.push(frame.node.id);
@@ -370,6 +374,96 @@ struct Group {
     next: usize,
     parent: Option<usize>,
     depth: usize,
+}
+
+fn flat_rows(
+    source: &Source,
+    state: &State,
+    roots: Vec<NodeId>,
+    allowed: impl Fn(&NodeId) -> bool,
+    text_roots: &Map<NodeId, ()>,
+    previous: Option<&Snapshot>,
+    rows: &mut Vec<Row>,
+) -> Result<(Vec<NodeId>, usize)> {
+    let mut groups = vec![Group {
+        ids: roots,
+        next: 0,
+        parent: None,
+        depth: 0,
+    }];
+    let mut candidates = Vec::new();
+    let mut needed = Vec::new();
+    let mut visited = 0;
+    while let Some(group) = groups.last_mut() {
+        let Some(&id) = group.ids.get(group.next) else {
+            groups.pop();
+            continue;
+        };
+        group.next += 1;
+        if hidden(source, state, id) {
+            continue;
+        }
+        let node = source.node(id).ok_or_else(|| Error::missing(id))?;
+        let depth = group.depth;
+        let descend = state.display.list_depth.is_none_or(|limit| depth < limit);
+        visited += 1;
+        if allowed(&id) {
+            candidates.push(id);
+        }
+        if descend && node.data.can_expand && node.completeness != Completeness::Complete {
+            needed.push(id);
+        }
+        if descend && node.child_count() != 0 {
+            groups.push(Group {
+                ids: node.children().collect(),
+                next: 0,
+                parent: None,
+                depth: depth + 1,
+            });
+        }
+    }
+    let mut display = state.display.clone();
+    display.mode = Mode::List;
+    let candidates = sorted(source, candidates, &display);
+    let visible: HashSet<_> = candidates.iter().copied().collect();
+    let mut ancestors = HashMap::<NodeId, Option<NodeId>>::new();
+    let mut text = (state.display.list_text == ListText::Ancestry)
+        .then(|| super::text::Builder::new(source, &state.root, text_roots, previous));
+    rows.reserve(candidates.len());
+    for id in candidates {
+        let mut path = Vec::new();
+        let node = source.node(id).expect("projected node");
+        let mut parent = node.parent;
+        while let Some(current) = parent {
+            if visible.contains(&current) {
+                break;
+            }
+            if let Some(cached) = ancestors.get(&current) {
+                parent = *cached;
+                break;
+            }
+            path.push(current);
+            parent = source.node(current).and_then(|node| node.parent);
+        }
+        for current in path {
+            ancestors.insert(current, parent);
+        }
+        let (label, label_payload) = list_label(node, state, previous);
+        rows.push(Row {
+            id,
+            label,
+            label_payload,
+            text: text.as_mut().map(|text| text.text(node)).transpose()?,
+            chain: None,
+            depth: 0,
+            parent: None,
+            source_ancestor: parent,
+            last_child: None,
+            last_descendant: id,
+            connector_last: true,
+        });
+    }
+    Ok((needed, visited))
 }
 
 impl Snapshot {
@@ -430,6 +524,15 @@ impl Snapshot {
         if state.display.pattern.len() > 4096 {
             return Err(Error::limit("filter pattern exceeds 4096 bytes"));
         }
+        if state.display.list_from_depth.is_some()
+            && (state.display.mode != Mode::Tree
+                || state.display.compress
+                || state.display.list_depth.is_some())
+        {
+            return Err(Error::invalid(
+                "grouped Lists require uncompressed Tree mode without list_depth",
+            ));
+        }
         if !state.display.branch_suffix.is_empty()
             && (state.display.mode != Mode::List
                 || state.display.list_text != ListText::Label
@@ -468,13 +571,36 @@ impl Snapshot {
         let reuse = previous.filter(|frame| {
             reuse_layout && frame.state.display == state.display && frame.state.root == state.root
         });
-        let text_roots = if state.display.mode == Mode::List
+        let text_roots = if let Some(depth) = state.display.list_from_depth {
+            match previous.filter(|frame| {
+                frame.state.display.list_from_depth == Some(depth)
+                    && frame.state.root == state.root
+                    && frame.source.ancestry_revision == source.ancestry_revision
+            }) {
+                Some(frame) => frame.text_roots.clone(),
+                None => {
+                    let mut roots = state.display_roots(&source);
+                    for _ in 0..depth {
+                        if roots.is_empty() {
+                            break;
+                        }
+                        roots = roots
+                            .into_iter()
+                            .flat_map(|id| source.node(id).expect("text root").children())
+                            .collect();
+                    }
+                    roots.sort_unstable();
+                    Map::from_sorted(roots.into_iter().map(|id| (id, ())).collect())
+                }
+            }
+        } else if state.display.mode == Mode::List
             && state.display.list_text == ListText::Ancestry
             && matches!(state.root, Root::Forest(_))
         {
             /* Display and metadata updates may rebuild rows without changing parentage. */
             match previous.filter(|frame| {
                 frame.ancestry_text()
+                    && frame.state.display.list_from_depth.is_none()
                     && frame.state.root == state.root
                     && frame.source.ancestry_revision == source.ancestry_revision
             }) {
@@ -556,90 +682,27 @@ impl Snapshot {
                             connector_last: true,
                         });
                     }
-                    let mut groups = vec![Group {
-                        ids: roots.clone(),
-                        next: 0,
-                        parent: None,
-                        depth: 0,
-                    }];
-                    let mut candidates = Vec::new();
-                    while let Some(group) = groups.last_mut() {
-                        let Some(&id) = group.ids.get(group.next) else {
-                            groups.pop();
-                            continue;
-                        };
-                        group.next += 1;
-                        if hidden(&source, state, id) {
-                            continue;
-                        }
-                        let node = source.node(id).ok_or_else(|| Error::missing(id))?;
-                        let depth = group.depth;
-                        let descend = state.display.list_depth.is_none_or(|limit| depth < limit);
-                        visited += 1;
-                        if allowed(&id) {
-                            candidates.push(id);
-                        }
-                        if descend
-                            && node.data.can_expand
-                            && node.completeness != Completeness::Complete
-                        {
-                            needed.push(id);
-                        }
-                        if descend && node.child_count() != 0 {
-                            groups.push(Group {
-                                ids: node.children().collect(),
-                                next: 0,
-                                parent: None,
-                                depth: depth + 1,
-                            });
-                        }
-                    }
-                    let candidates = sorted(&source, candidates, &state.display);
-                    let visible: HashSet<_> = candidates.iter().copied().collect();
-                    let mut ancestors = HashMap::<NodeId, Option<NodeId>>::new();
-                    let mut text = (state.display.list_text == ListText::Ancestry).then(|| {
-                        super::text::Builder::new(&source, &state.root, &text_roots, previous)
-                    });
-                    for id in candidates {
-                        let mut path = Vec::new();
-                        let node = source.node(id).expect("projected node");
-                        let mut parent = node.parent;
-                        while let Some(current) = parent {
-                            if visible.contains(&current) {
-                                break;
-                            }
-                            if let Some(cached) = ancestors.get(&current) {
-                                parent = *cached;
-                                break;
-                            }
-                            path.push(current);
-                            parent = source.node(current).and_then(|node| node.parent);
-                        }
-                        for current in path {
-                            ancestors.insert(current, parent);
-                        }
-                        let (label, label_payload) = list_label(node, state, previous);
-                        rows.push(Row {
-                            id,
-                            label,
-                            label_payload,
-                            text: text.as_mut().map(|text| text.text(node)).transpose()?,
-                            chain: None,
-                            depth: 0,
-                            parent: None,
-                            source_ancestor: parent,
-                            last_child: None,
-                            last_descendant: id,
-                            connector_last: true,
-                        });
-                    }
+                    let (reads, scanned) = flat_rows(
+                        &source,
+                        state,
+                        roots.clone(),
+                        allowed,
+                        &text_roots,
+                        previous,
+                        &mut rows,
+                    )?;
+                    needed.extend(reads);
+                    visited += scanned;
                     last_root = rows.last().map(|row| row.id);
                 } else {
                     let top = match state.root {
                         Root::Forest(_) => roots.clone(),
                         Root::ChildrenOf(_) => sorted(&source, roots.clone(), &state.display),
                     };
-                    let top: Vec<_> = top.into_iter().filter(&allowed).collect();
+                    let top: Vec<_> = top
+                        .into_iter()
+                        .filter(|id| state.display.list_from_depth == Some(0) || allowed(id))
+                        .collect();
                     let mut groups = vec![Group {
                         ids: top,
                         next: 0,
@@ -647,6 +710,40 @@ impl Snapshot {
                         depth: 0,
                     }];
                     while let Some(group) = groups.last_mut() {
+                        if state.display.list_from_depth == Some(group.depth) {
+                            let group = groups.pop().expect("flat group");
+                            let first = rows.len();
+                            let (reads, scanned) = flat_rows(
+                                &source,
+                                state,
+                                group.ids,
+                                allowed,
+                                &text_roots,
+                                previous,
+                                &mut rows,
+                            )?;
+                            let count = rows.len() - first;
+                            let parent = group.parent.map(|at| rows[at].id);
+                            if count > 0 {
+                                let last = rows.last().expect("flat row").id;
+                                if let Some(at) = group.parent {
+                                    rows[at].last_child = Some(last);
+                                    rows[at].last_descendant = last;
+                                } else {
+                                    last_root = Some(last);
+                                }
+                            }
+                            for (index, row) in rows[first..].iter_mut().enumerate() {
+                                row.depth = group.depth;
+                                row.parent = parent;
+                                row.source_ancestor = row.source_ancestor.or(parent);
+                                row.connector_last = index + 1 == count;
+                            }
+                            needed.extend(reads);
+                            visited += scanned;
+                            continue;
+                        }
+
                         let Some(&outer) = group.ids.get(group.next) else {
                             let finished = groups.pop().expect("finished group");
                             if let Some(parent) = finished.parent {
@@ -737,7 +834,12 @@ impl Snapshot {
                             }
                             let children = sorted(
                                 &source,
-                                node.children().filter(&allowed).collect(),
+                                node.children()
+                                    .filter(|id| {
+                                        state.display.list_from_depth == Some(depth + 1)
+                                            || allowed(id)
+                                    })
+                                    .collect(),
                                 &state.display,
                             );
                             if !children.is_empty() {
@@ -935,7 +1037,8 @@ impl Snapshot {
     }
 
     pub(crate) fn ancestry_text(&self) -> bool {
-        self.mode() == Mode::List && self.state.display.list_text == ListText::Ancestry
+        (self.mode() == Mode::List || self.state.display.list_from_depth.is_some())
+            && self.state.display.list_text == ListText::Ancestry
     }
     pub fn root(&self) -> &Root {
         &self.state.root
@@ -1097,6 +1200,27 @@ impl Snapshot {
             }
         }
         Ok(selected.into())
+    }
+
+    /// Whether every explicit identity is marked in this immutable frame.
+    pub fn all_marked(&self, nodes: &[NodeId]) -> Result<bool> {
+        let selection = &self.state.selection;
+        let uniform = selection.is_clear().then_some(selection.clear & 1 != 0);
+        let mut inherited = Inherited::new(&self.source, selection);
+        let mut marked = true;
+        for &id in nodes {
+            if !self.source.contains(id) {
+                return Err(Error::missing(id));
+            }
+            if marked {
+                marked = match uniform {
+                    Some(value) => value,
+                    None if nodes.len() == 1 => selection.value(&self.source, id)?,
+                    None => inherited.get(id)?.max(selection.marks(id).own) & 1 != 0,
+                };
+            }
+        }
+        Ok(marked)
     }
 
     pub fn rows(&self, start: usize, end: usize) -> Result<Vec<RowInfo>> {

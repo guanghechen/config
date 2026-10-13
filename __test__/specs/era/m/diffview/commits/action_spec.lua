@@ -185,9 +185,6 @@ local function new_search_state()
   function state:get_commits()
     return self.commits
   end
-  function state:get_commit_collapsed_dirs()
-    return {}
-  end
   function state:get_path_filter()
     return self.path_filter
   end
@@ -306,9 +303,6 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
     end,
     get_current_entry = function()
       return entry
-    end,
-    get_commit_collapsed_dirs = function()
-      return {}
     end,
     is_commit_expanded = function()
       return expanded

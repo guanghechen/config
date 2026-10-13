@@ -633,6 +633,7 @@ impl Watcher {
                 _ => roots.extend(state.state.display_roots(source)),
             }
             if state.state.display.mode == Mode::Tree
+                && state.state.display.list_from_depth != Some(0)
                 && state.state.expansion.is_clear()
                 && state.state.expansion.clear & 1 == 0
             {

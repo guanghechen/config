@@ -89,21 +89,19 @@ function M.files(plan, files, scope, commit)
     local filepath = entry.filepath
     local parts = vim.split(filepath, "/", { plain = true })
     local owner, path = parent, ""
-    if plan.mode == "tree" then
-      for index = 1, #parts - 1 do
-        path = path == "" and parts[index] or path .. "/" .. parts[index]
-        local key = M.key(scope, path, true)
-        if not plan.source:contains(key) then
-          local name = vim.fn.strtrans(parts[index])
-          plan.source:insert(owner, key, {
-            presentation = { label = name, icon = "", highlight = "m_ft_dirname", fields = { directory_icon = name } },
-            item = { type = "directory", uuid = path, filepath = path, stage_type = entry.stage_type, commit = commit },
-          })
-          plan.entries[key] = { nodetype = "container" }
-          count = count + 1
-        end
-        owner = key
+    for index = 1, #parts - 1 do
+      path = path == "" and parts[index] or path .. "/" .. parts[index]
+      local key = M.key(scope, path, true)
+      if not plan.source:contains(key) then
+        local name = vim.fn.strtrans(parts[index])
+        plan.source:insert(owner, key, {
+          presentation = { label = name, icon = "", highlight = "m_ft_dirname", fields = { directory_icon = name } },
+          item = { type = "directory", uuid = path, filepath = path, stage_type = entry.stage_type, commit = commit },
+        })
+        plan.entries[key] = { nodetype = "container" }
+        count = count + 1
       end
+      owner = key
     end
     local key = M.key(scope, filepath, false)
     local right = {}
@@ -117,7 +115,7 @@ function M.files(plan, files, scope, commit)
     local name = vim.fn.strtrans(parts[#parts])
     plan.source:insert(owner, key, {
       presentation = {
-        label = plan.mode == "tree" and name or vim.fn.strtrans(filepath),
+        label = name,
         fields = { file_icon = name },
         highlight = util.get_status_hlgroup(entry.status or ""),
         right_text = table.concat(right, " "),
@@ -163,6 +161,8 @@ function M.apply(bufnr, plan, owner, on_frame, on_attach)
   return owner
     :publish({
       mode = plan.inline and "tree" or plan.mode,
+      list_text = "ancestry",
+      list_from_depth = plan.inline and plan.mode == "list" and 1 or nil,
       rootuuid = M.root,
       foldempty = plan.foldempty,
       default_closed = plan.default_closed,

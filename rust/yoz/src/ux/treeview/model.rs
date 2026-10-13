@@ -309,6 +309,8 @@ pub struct DisplayOptions {
     pub list_text: ListText,
     /** Maximum source depth below display roots in List mode; zero lists direct entries only. */
     pub list_depth: Option<usize>,
+    /** Tree groups above this source depth retain expansion; each lower scope is a flat List. */
+    pub list_from_depth: Option<usize>,
     /** Optional leading row for a ChildrenOf root in List mode; its resource identity is unchanged. */
     pub context_label: Option<Arc<str>>,
     /** Display and match a suffix on expandable List labels. */
@@ -332,6 +334,7 @@ impl Default for DisplayOptions {
             mode: Mode::Tree,
             list_text: ListText::Label,
             list_depth: None,
+            list_from_depth: None,
             context_label: None,
             branch_suffix: "".into(),
             pattern: "".into(),

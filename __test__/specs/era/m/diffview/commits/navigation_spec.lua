@@ -126,6 +126,51 @@ t:test("Git graph and rich commit highlights survive native publication", functi
   t.assert_eq(0, highlights[1].coll)
 end)
 
+t:test("inline List retains commit groups and the hidden directory expansion across mode switches", function()
+  local peer = vim.tbl_extend("force", second, { files = first.files })
+  local owner, bufnr = render("tree", { first, peer })
+  expand(owner, "commit:aaaa", true)
+  local directory = panels.key("commit:aaaa", "src", true)
+  local nested = panels.key("commit:aaaa", "src/sub", true)
+  expand(owner, directory, false)
+  expand(owner, nested, false)
+  local source = owner:frame():source()
+  local directory_id, nested_id = source:id(directory), source:id(nested)
+  local revision = source:revision()
+  for _, mode in ipairs({ "list", "tree" }) do
+    native.await(commits.apply_to_buffer(
+      bufnr,
+      commits.render({ first, peer }, {
+        viewtype = mode,
+        foldempty = true,
+        layout = 2,
+        include_files = { aaaa = true, bbbb = true },
+      }),
+      owner
+    ))
+    local frame = owner:frame()
+    t.assert_eq(revision, frame:source():revision())
+    t.assert_eq(directory_id, frame:source():id(directory))
+    t.assert_eq(nested_id, frame:source():id(nested))
+    t.assert_false(frame:flags(directory_id).expanded)
+    t.assert_false(frame:flags(nested_id).expanded)
+    t.assert_true(owner:expanded("commit:aaaa"))
+    t.assert_false(owner:expanded("commit:bbbb"))
+    t.assert_eq(mode == "list" and 5 or 4, owner:linecount())
+    if mode == "list" then
+      for row = 2, 4 do
+        local item = commits.get_item_at_line(bufnr, row)
+        t.assert_eq(item.entry.filepath, frame:rows(row, row).labels[1])
+        t.assert_eq(1, commits.resolve_parent_lnum(frame, row))
+      end
+      expand(owner, "commit:aaaa", false)
+      t.assert_eq(2, owner:linecount())
+      expand(owner, "commit:aaaa", true)
+      t.assert_eq(5, owner:linecount())
+    end
+  end
+end)
+
 t:test("panel recreation reuses native state and a requested cursor waits for its row", function()
   local owner, bufnr = render()
   expand(owner, "commit:aaaa", true)

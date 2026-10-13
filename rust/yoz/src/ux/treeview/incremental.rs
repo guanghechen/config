@@ -887,6 +887,130 @@ fn compression_targets(
     Ok(())
 }
 
+fn grouped_expansion(
+    source: &Source,
+    state: &State,
+    previous: &Snapshot,
+    dirty: &Invalidation,
+) -> Result<Option<LayoutUpdate>> {
+    if !std::ptr::eq(source, &*previous.source)
+        || !dirty.changes.is_empty()
+        || !dirty.selected.is_empty()
+        || dirty.expanded.is_empty()
+    {
+        return Ok(None);
+    }
+    let depth = state.display.list_from_depth.expect("grouped display");
+    let mut targets = HashSet::new();
+    for &id in &dirty.expanded {
+        if let Some(row) = previous.rows.lookup(id) {
+            if row.depth < depth {
+                targets.insert(id);
+            }
+        } else {
+            /* A hidden outer ancestor can change inherited expansion at display roots. */
+            for root in state.display_roots(source) {
+                if source.is_ancestor(id, root)
+                    && previous
+                        .rows
+                        .lookup(root)
+                        .is_some_and(|row| row.depth < depth)
+                {
+                    targets.insert(root);
+                }
+            }
+        }
+    }
+    let mut segments = Vec::new();
+    let mut boundary = HashSet::new();
+    let mut needed: HashSet<_> = previous
+        .needed_children
+        .iter()
+        .copied()
+        .filter(|id| state.observes_children(source, *id))
+        .collect();
+    let mut visited = 0;
+    for id in State::normalize(
+        source,
+        &targets.into_iter().collect::<Vec<_>>(),
+        Scope::Subtree,
+    )? {
+        let Some(first) = previous.position(id) else {
+            continue;
+        };
+        let root = previous.row(first).expect("group row");
+        let end = previous
+            .position(root.last_descendant)
+            .expect("group boundary")
+            + 1;
+        let mut local = state.clone();
+        local.root = Root::Forest(vec![id].into());
+        local.display.list_from_depth = Some(depth - root.depth);
+        let frame = Snapshot::build(
+            previous.source.clone(),
+            &mut local,
+            None,
+            false,
+            Arc::new([]),
+            previous.commit_revision,
+        )?;
+        visited += frame.visited_nodes;
+        needed.extend(frame.needed_children.iter().copied());
+        let mut replacement: Vec<_> = frame.rows.iter().cloned().collect();
+        for row in &mut replacement {
+            row.depth += root.depth;
+            if row.parent.is_none() {
+                row.parent = root.parent;
+                row.source_ancestor = root.source_ancestor;
+                row.connector_last = root.connector_last;
+            }
+        }
+        segments.push((first, end, replacement));
+        let mut parent = root.parent;
+        while let Some(id) = parent {
+            if !boundary.insert(id) {
+                break;
+            }
+            parent = previous.rows.lookup(id).and_then(|row| row.parent);
+        }
+    }
+    segments.sort_unstable_by_key(|(first, _, _)| *first);
+    let mut rows = previous.rows.clone();
+    rows.splice_many(segments)?;
+    if !boundary.is_empty() {
+        let roots = match &state.root {
+            Root::Forest(_) => state.display_roots(source),
+            _ => Vec::new(),
+        };
+        let order = roots
+            .into_iter()
+            .enumerate()
+            .map(|(index, id)| (id, index))
+            .collect();
+        boundaries(
+            source,
+            state,
+            &order,
+            &mut rows,
+            &boundary,
+            &mut Ranks::default(),
+        )?;
+    }
+    let same_content = previous.rows.same_content(&rows);
+    let same = same_content || previous.rows.same_content_by(&rows, Row::same_layout);
+    if same_content {
+        rows = previous.rows.clone();
+    }
+    Ok(Some(LayoutUpdate {
+        rows,
+        last_root: previous.last_root,
+        needed: needed.into_iter().collect(),
+        visited: visited + boundary.len(),
+        same,
+        matched_children: previous.matched_children.clone(),
+    }))
+}
+
 pub(crate) fn project(
     source: &Source,
     state: &State,
@@ -904,6 +1028,9 @@ pub(crate) fn project(
         || (dirty.changes.is_empty() && dirty.expanded.is_empty() && dirty.selected.is_empty())
     {
         return Ok(None);
+    }
+    if state.display.list_from_depth.is_some() {
+        return grouped_expansion(source, state, previous, dirty);
     }
     if matches!(state.root, Root::Forest(_))
         && state.display_roots(source) != previous.state.display_roots(&previous.source)

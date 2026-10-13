@@ -62,6 +62,15 @@ List 的候选范围默认递归覆盖 display roots，不受 Tree 折叠影响�
 超出边界的已加载后代不参与匹配；边界节点不产生 children 读取或 watch 需求。ChildrenOf 入口自身仍需加载直接 children。
 有界 List 的结构更新只重算这段范围，再复用未变行块；不宣称该路径已达到局部 `O(D)`。
 
+`list_from_depth` 为 Tree 提供分组平铺：display roots 深度为 0，指定深度以上保留 Tree 行与展开状态，
+每个到达该深度的子范围独立应用 List 成员筛选和排序。范围内不受其目录折叠影响，行的视觉 parent 指向所属
+Tree 分组；source parent、NodeId、selection 与 expansion 均不变。分组折叠隐藏其整个平铺范围。
+该选项要求 `mode=tree`、`compress=false`，不能同时使用 `list_depth`。分组层级不参与路径压缩。
+`list_text=ancestry` 在每个平铺范围内组合 labels，不包含分组 header；范围以外的 Tree 行继续显示自身 label。
+Source、root 和 display 不变时，展开／折叠只重新投影受影响的 Tree 分组并修复祖先边界，复用其他分组的行块。
+平铺范围内部的目录展开标记不改变布局；cursor-only 更新也复用布局。Source、成员筛选或展示范围改变时仍可
+重算当前展示范围，不将这类更新与局部分组展开的成本混为一谈。
+
 `pattern` 默认 literal；`regex=true` 优先于 `fuzzy=true`。Fuzzy 先尝试 literal，再按 Unicode 字符顺序匹配，
 viewport spans 使用原始 UTF-8 byte offsets。Matcher 在 worker 构造并随完整输入缓存，非法 regex 保留最近有效 Frame 并报告错误。
 

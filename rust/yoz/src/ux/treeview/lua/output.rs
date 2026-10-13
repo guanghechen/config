@@ -282,6 +282,7 @@ pub(super) fn display(lua: &Lua, value: &DisplayOptions) -> LuaResult<LuaTable> 
     )?;
     result.set("pattern", value.pattern.as_ref())?;
     result.set("list_depth", value.list_depth)?;
+    result.set("list_from_depth", value.list_from_depth)?;
     result.set("context_label", value.context_label.as_deref())?;
     result.set("branch_suffix", value.branch_suffix.as_ref())?;
     if let Some(filter) = &value.filter {

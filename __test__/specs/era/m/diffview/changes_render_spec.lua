@@ -102,6 +102,40 @@ t:test("narrow panes retain status when metadata columns do not fit", function()
   t.assert_eq(" M", metadata(owner, "src/foo.lua"))
 end)
 
+t:test("Tree List Tree preserves directory identity, marks and collapsed state", function()
+  local owner, bufnr = render("tree", "staged")
+  local directory = panels.key(nil, "src", true)
+  local file = panels.key(nil, "src/foo.lua", false)
+  local source = owner:frame():source()
+  local directory_id, file_id = source:id(directory), source:id(file)
+  local revision = source:revision()
+  owner:set_expansion(directory, false, false)
+  owner:set_selected(directory, true)
+  native.await(owner:ready())
+  for _, mode in ipairs({ "list", "tree", "list", "tree" }) do
+    native.await(changes.apply_to_buffer(
+      bufnr,
+      changes.render(entries, {
+        stage_type = "staged",
+        viewtype = mode,
+        foldempty = true,
+      }),
+      owner
+    ))
+    local frame = owner:frame()
+    t.assert_eq(revision, frame:source():revision(), "display changes must not import different records")
+    t.assert_eq(directory_id, frame:source():id(directory))
+    t.assert_eq(file_id, frame:source():id(file))
+    t.assert_eq(directory_id, frame:source():node(file_id).parent)
+    t.assert_false(frame:flags(directory_id).expanded)
+    t.assert_true(frame:flags(directory_id).marked)
+    t.assert_eq(mode == "list" and 2 or 1, frame:header().row_count)
+    if mode == "list" then
+      t.assert_eq("src/foo.lua", frame:rows(1, 1).labels[1])
+    end
+  end
+end)
+
 t:test("display escapes control and byte names while actions keep exact Git paths", function()
   local paths = { "dir/tab\tname.lua", "line\nbreak.lua", "raw" .. string.char(255) .. ".lua", "back\\slash.lua" }
   local input = {}

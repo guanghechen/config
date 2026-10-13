@@ -58,6 +58,509 @@ fn ancestry_fixture() -> (Engine, u64, u64) {
     (engine, outer, inner)
 }
 
+fn grouped_ancestry_fixture() -> (Engine, u64) {
+    let (mut engine, state, _) = ancestry_fixture();
+    let filter = ["src", "a", "readme"]
+        .into_iter()
+        .enumerate()
+        .map(|(rank, key)| (engine.source.id(key).unwrap(), rank))
+        .collect();
+    engine
+        .dispatch(
+            state,
+            Command::SetDisplay(DisplayOptions {
+                list_from_depth: Some(1),
+                list_text: ListText::Ancestry,
+                filter: Some(Arc::new(filter)),
+                ..DisplayOptions::default()
+            }),
+            Context {
+                expected_state: Some(engine.states[&state].state.revision),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    for (key, value, scope) in [
+        ("root", true, Scope::Subtree),
+        ("lib", false, Scope::SelfOnly),
+    ] {
+        let node = engine.source.id(key).unwrap();
+        engine
+            .dispatch(
+                state,
+                Command::SetExpanded {
+                    targets: Targets::Nodes(vec![node].into()),
+                    value,
+                    scope,
+                },
+                Context {
+                    expected_state: Some(engine.states[&state].state.revision),
+                    ..Context::default()
+                },
+            )
+            .unwrap();
+    }
+    (engine, state)
+}
+
+#[test]
+fn t_grouped_lists_preserve_source_and_expansion_while_flattening_only_group_contents() {
+    let (mut engine, state) = grouped_ancestry_fixture();
+    let directory = engine.source.id("lib").unwrap();
+    let group = engine.source.id("src").unwrap();
+    let leaf = engine.source.id("a").unwrap();
+    let revision = engine.source.revision();
+    let grouped = project(&mut engine, state);
+    let rows = grouped.rows(0, grouped.len()).unwrap();
+    assert_eq!(
+        rows.iter()
+            .map(|row| row.label.as_str())
+            .collect::<Vec<_>>(),
+        ["src", "lib/文.lua", "README"]
+    );
+    assert_eq!(rows[1].row.parent, Some(group));
+    assert_eq!(rows[1].row.depth, 1);
+    assert_eq!(grouped.navigate(1, Direction::Parent), Some(0));
+    assert_eq!(grouped.source.node(leaf).unwrap().parent, Some(directory));
+    assert!(
+        !engine.states[&state]
+            .state
+            .expanded(&engine.source, directory)
+            .unwrap()
+    );
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![group].into()),
+                value: false,
+                scope: Scope::SelfOnly,
+            },
+            Context {
+                expected_state: Some(engine.states[&state].state.revision),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(project(&mut engine, state).len(), 2);
+    assert!(
+        !engine.states[&state]
+            .state
+            .observes_children(&engine.source, directory)
+    );
+    engine
+        .dispatch(
+            state,
+            Command::SetExpanded {
+                targets: Targets::Nodes(vec![group].into()),
+                value: true,
+                scope: Scope::SelfOnly,
+            },
+            Context {
+                expected_state: Some(engine.states[&state].state.revision),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(project(&mut engine, state).len(), 3);
+    assert!(
+        engine.states[&state]
+            .state
+            .observes_children(&engine.source, directory)
+    );
+    engine
+        .dispatch(
+            state,
+            Command::SetDisplay(DisplayOptions::default()),
+            Context {
+                expected_state: Some(engine.states[&state].state.revision),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let tree = project(&mut engine, state);
+    assert_eq!(tree.len(), 3);
+    assert!(tree.position(leaf).is_none());
+    assert_eq!(tree.source.id("lib"), Some(directory));
+    assert_eq!(tree.source.revision(), revision);
+    assert!(
+        !engine.states[&state]
+            .state
+            .observes_children(&engine.source, directory)
+    );
+}
+
+#[test]
+fn t_grouped_ancestry_renames_publish_updated_text_and_keep_retained_frames() {
+    let (mut engine, state) = grouped_ancestry_fixture();
+    let old = project(&mut engine, state);
+    for (key, label, expected) in [
+        ("lib", "core", "core/文.lua"),
+        ("src", "renamed group", "core/文.lua"),
+    ] {
+        let base = project(&mut engine, state);
+        let node = engine.source.id(key).unwrap();
+        apply(
+            &mut engine,
+            vec![Operation::Update {
+                node: node.into(),
+                patch: NodePatch {
+                    label: Some(label.into()),
+                    ..NodePatch::default()
+                },
+            }],
+        );
+        let current = project(&mut engine, state);
+        assert_eq!(current.rows(1, 2).unwrap()[0].label, expected);
+        let context = RenderContext::default();
+        let plan = RenderPlan::new(
+            Some(base.clone()),
+            current.clone(),
+            Some(&context),
+            context.clone(),
+            false,
+        )
+        .unwrap();
+        assert_eq!(apply_plan(lines(base), &plan), lines(current));
+        assert_eq!(plan.work.written_rows, 1);
+    }
+    assert_eq!(old.rows(1, 2).unwrap()[0].label, "lib/文.lua");
+}
+
+#[test]
+fn t_grouped_cursor_reuses_boundaries_but_flat_forest_restores_its_ancestry_scope() {
+    let (mut engine, state) = grouped_ancestry_fixture();
+    let group = engine.source.id("src").unwrap();
+    let leaf = engine.source.id("a").unwrap();
+    engine
+        .dispatch(
+            state,
+            Command::SetRoot(Root::Forest(vec![group].into())),
+            Context {
+                expected_state: Some(engine.states[&state].state.revision),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let before = project(&mut engine, state);
+    engine
+        .dispatch(
+            state,
+            Command::SetCursor(Some(leaf)),
+            Context {
+                frame: Some(before.clone()),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let moved = project(&mut engine, state);
+    assert_eq!(moved.visited_nodes, 0);
+    assert!(moved.text_roots.same_version(&before.text_roots));
+    engine
+        .dispatch(
+            state,
+            Command::SetDisplay(DisplayOptions {
+                mode: Mode::List,
+                list_text: ListText::Ancestry,
+                filter: Some(Arc::new([(leaf, 0)].into_iter().collect())),
+                ..DisplayOptions::default()
+            }),
+            Context {
+                expected_state: Some(engine.states[&state].state.revision),
+                ..Context::default()
+            },
+        )
+        .unwrap();
+    let flat = project(&mut engine, state);
+    assert_eq!(flat.rows(0, 1).unwrap()[0].label, "src/lib/文.lua");
+    assert_eq!(before.rows(1, 2).unwrap()[0].label, "lib/文.lua");
+}
+
+#[test]
+fn t_zero_depth_forest_publishes_external_ancestor_expansion_without_replacing_rows() {
+    let mut engine = Engine::new(Limits::default()).unwrap();
+    engine
+        .import(Import {
+            base_revision: engine.source.revision(),
+            scope: DataScope::Forest,
+            records: vec![
+                Record::new("outer", NodeData::branch("outer")),
+                Record {
+                    key: "group".into(),
+                    parent: Some("outer".into()),
+                    data: NodeData::branch("group"),
+                    completeness: None,
+                },
+                Record {
+                    key: "file".into(),
+                    parent: Some("group".into()),
+                    data: NodeData::leaf("file"),
+                    completeness: None,
+                },
+            ],
+        })
+        .unwrap();
+    let outer = engine.source.id("outer").unwrap();
+    let group = engine.source.id("group").unwrap();
+    let state = engine
+        .create_state(
+            Root::Forest(vec![group].into()),
+            DisplayOptions {
+                list_from_depth: Some(0),
+                list_text: ListText::Ancestry,
+                ..DisplayOptions::default()
+            },
+        )
+        .unwrap();
+    let original = project(&mut engine, state);
+    let mut before = original.clone();
+    for value in [true, false, true] {
+        engine
+            .dispatch(
+                state,
+                Command::SetExpanded {
+                    targets: Targets::Nodes(vec![outer].into()),
+                    value,
+                    scope: Scope::Subtree,
+                },
+                Context::default(),
+            )
+            .unwrap();
+        let current = project(&mut engine, state);
+        assert_eq!(
+            current.state_revision(),
+            engine.states[&state].state.revision
+        );
+        assert_eq!(current.visited_nodes, 0);
+        assert!(current.rows.same_version(&before.rows));
+        assert_eq!(
+            current
+                .rows(0, 2)
+                .unwrap()
+                .iter()
+                .map(|row| row.label.as_str())
+                .collect::<Vec<_>>(),
+            ["group", "group/file"]
+        );
+        let reference = Snapshot::build(
+            engine.source.clone(),
+            &mut engine.states[&state].state.clone(),
+            None,
+            false,
+            Arc::new([]),
+            engine.commit,
+        )
+        .unwrap();
+        assert_eq!(lines(current.clone()), lines(Arc::new(reference)));
+        let context = RenderContext::default();
+        let plan = RenderPlan::new(
+            Some(before.clone()),
+            current.clone(),
+            Some(&context),
+            context.clone(),
+            false,
+        )
+        .unwrap();
+        assert_eq!(apply_plan(lines(before), &plan), lines(current.clone()));
+        before = current;
+    }
+    assert_eq!(original.rows(0, 2).unwrap()[1].label, "group/file");
+}
+
+#[test]
+fn t_grouped_expansion_work_is_independent_of_unrelated_expanded_files() {
+    for count in [1_000, 10_000, 50_000] {
+        let mut engine = Engine::new(Limits::default()).unwrap();
+        let mut records = vec![Record::new("root", NodeData::branch("root"))];
+        for (key, parent, branch) in [
+            ("tiny", "root", true),
+            ("tiny-dir", "tiny", true),
+            ("tiny-file", "tiny-dir", false),
+            ("bulk", "root", true),
+            ("bulk-dir", "bulk", true),
+        ] {
+            records.push(Record {
+                key: key.into(),
+                parent: Some(parent.into()),
+                data: if branch {
+                    NodeData::branch(key)
+                } else {
+                    NodeData::leaf(key)
+                },
+                completeness: None,
+            });
+        }
+        records.extend((0..count).map(|index| Record {
+            key: format!("f{index}").into(),
+            parent: Some("bulk-dir".into()),
+            data: NodeData::leaf(format!("file-{index}")),
+            completeness: None,
+        }));
+        engine
+            .import(Import {
+                base_revision: engine.source.revision(),
+                scope: DataScope::Forest,
+                records,
+            })
+            .unwrap();
+        let root = engine.source.id("root").unwrap();
+        let tiny = engine.source.id("tiny").unwrap();
+        let keys = ["tiny", "tiny-file", "bulk"]
+            .into_iter()
+            .map(str::to_owned)
+            .chain((0..count).map(|index| format!("f{index}")));
+        let filter = keys
+            .enumerate()
+            .map(|(rank, key)| (engine.source.id(&key).unwrap(), rank))
+            .collect();
+        let state = engine
+            .create_state(
+                Root::ChildrenOf(root),
+                DisplayOptions {
+                    list_from_depth: Some(1),
+                    list_text: ListText::Ancestry,
+                    filter: Some(Arc::new(filter)),
+                    ..DisplayOptions::default()
+                },
+            )
+            .unwrap();
+        engine
+            .dispatch(
+                state,
+                Command::SetExpanded {
+                    targets: Targets::Nodes(vec![root].into()),
+                    value: true,
+                    scope: Scope::Subtree,
+                },
+                Context::default(),
+            )
+            .unwrap();
+        let mut before = project(&mut engine, state);
+        for expanded in [false, true, false, true] {
+            engine
+                .dispatch(
+                    state,
+                    Command::SetExpanded {
+                        targets: Targets::Nodes(vec![tiny].into()),
+                        value: expanded,
+                        scope: Scope::SelfOnly,
+                    },
+                    Context::default(),
+                )
+                .unwrap();
+            let current = project(&mut engine, state);
+            assert!(
+                current.visited_nodes <= 4,
+                "{count} unrelated files: visited {}",
+                current.visited_nodes
+            );
+            assert_eq!(current.len(), count + 2 + usize::from(expanded));
+            let shared: usize = before
+                .rows
+                .shared_spans(&current.rows)
+                .iter()
+                .map(|(_, _, len)| len)
+                .sum();
+            assert!(shared >= count - 256, "unrelated row blocks must survive");
+            let context = RenderContext::default();
+            let plan = RenderPlan::new(
+                Some(before.clone()),
+                current.clone(),
+                Some(&context),
+                context.clone(),
+                false,
+            )
+            .unwrap();
+            assert!(plan.work.written_rows <= 2);
+            if count == 1_000 {
+                assert_eq!(apply_plan(lines(before), &plan), lines(current.clone()));
+            }
+            before = current;
+        }
+    }
+}
+
+#[test]
+fn t_grouped_local_expansion_matches_full_projection_for_nested_groups_and_inherited_marks() {
+    for root_kind in ["children", "forest"] {
+        let (mut engine, state) = grouped_ancestry_fixture();
+        let src = engine.source.id("src").unwrap();
+        let lib = engine.source.id("lib").unwrap();
+        let leaf = engine.source.id("a").unwrap();
+        if root_kind == "forest" {
+            engine
+                .dispatch(
+                    state,
+                    Command::SetRoot(Root::Forest(vec![src].into())),
+                    Context {
+                        expected_state: Some(engine.states[&state].state.revision),
+                        ..Context::default()
+                    },
+                )
+                .unwrap();
+        }
+        engine
+            .dispatch(
+                state,
+                Command::SetDisplay(DisplayOptions {
+                    list_from_depth: Some(2),
+                    list_text: ListText::Ancestry,
+                    filter: Some(Arc::new(
+                        [(src, 0), (lib, 1), (leaf, 2)].into_iter().collect(),
+                    )),
+                    ..DisplayOptions::default()
+                }),
+                Context {
+                    expected_state: Some(engine.states[&state].state.revision),
+                    ..Context::default()
+                },
+            )
+            .unwrap();
+        project(&mut engine, state);
+        for (nodes, value, scope) in [
+            (vec![lib], true, Scope::SelfOnly),
+            (vec![lib], false, Scope::SelfOnly),
+            (vec![src], false, Scope::Subtree),
+            (vec![src], true, Scope::Subtree),
+            (vec![src, lib], false, Scope::SelfOnly),
+            (vec![src, lib], true, Scope::SelfOnly),
+        ] {
+            engine
+                .dispatch(
+                    state,
+                    Command::SetExpanded {
+                        targets: Targets::Nodes(nodes.into()),
+                        value,
+                        scope,
+                    },
+                    Context::default(),
+                )
+                .unwrap();
+            let current = project(&mut engine, state);
+            let reference = Snapshot::build(
+                engine.source.clone(),
+                &mut engine.states[&state].state.clone(),
+                None,
+                false,
+                Arc::new([]),
+                engine.commit,
+            )
+            .unwrap();
+            assert_eq!(current.len(), reference.len());
+            for (actual, expected) in current
+                .rows(0, current.len())
+                .unwrap()
+                .iter()
+                .zip(reference.rows(0, reference.len()).unwrap())
+            {
+                assert!(actual.row.same_layout(&expected.row));
+                assert_eq!(actual.row.connector_last, expected.row.connector_last);
+                assert_eq!(actual.label, expected.label);
+            }
+        }
+    }
+}
+
 #[test]
 fn t_selection_inspection_retains_the_source_that_resolved_its_nodes() {
     let (mut engine, state, _) = ancestry_fixture();
@@ -7072,6 +7575,98 @@ fn t_task_read_retry_preserves_discovery_grants_without_expanding_them() {
                     );
                 }
             }
+        }
+    }
+}
+
+#[test]
+fn t_all_marked_preserves_inheritance_and_immutable_frame_membership() {
+    let (mut engine, state, _) = ancestry_fixture();
+    let [root, src, lib, a, readme] =
+        ["root", "src", "lib", "a", "readme"].map(|key| engine.source.id(key).unwrap());
+    let empty = project(&mut engine, state);
+    assert!(empty.all_marked(&[]).unwrap());
+    assert!(!empty.all_marked(&[a]).unwrap());
+    assert!(!empty.all_marked(&[a, a]).unwrap());
+
+    engine
+        .dispatch(
+            state,
+            Command::Select {
+                targets: Targets::Nodes(vec![root].into()),
+                action: SelectAction::Select,
+                scope: Scope::Subtree,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let selected = project(&mut engine, state);
+    assert!(selected.all_marked(&[root, src, lib, a, readme]).unwrap());
+    assert!(selected.all_marked(&[a, a]).unwrap());
+    assert!(!empty.all_marked(&[a]).unwrap());
+
+    engine
+        .dispatch(
+            state,
+            Command::Select {
+                targets: Targets::Nodes(vec![lib].into()),
+                action: SelectAction::Deselect,
+                scope: Scope::SelfOnly,
+            },
+            Context::default(),
+        )
+        .unwrap();
+    let mixed = project(&mut engine, state);
+    assert!(!mixed.all_marked(&[lib]).unwrap());
+    assert!(!mixed.all_marked(&[a, lib]).unwrap());
+    assert!(!mixed.all_marked(&[lib, a]).unwrap());
+    assert!(mixed.all_marked(&[src, a, readme]).unwrap());
+
+    for display in [
+        DisplayOptions::default(),
+        DisplayOptions {
+            mode: Mode::List,
+            filter: Some(Arc::new([(readme, 0)].into_iter().collect())),
+            ..DisplayOptions::default()
+        },
+    ] {
+        engine
+            .dispatch(
+                state,
+                Command::SetDisplay(display),
+                Context {
+                    expected_state: Some(engine.states[&state].state.revision),
+                    ..Context::default()
+                },
+            )
+            .unwrap();
+        let hidden = project(&mut engine, state);
+        assert_eq!(hidden.position(a), None);
+        assert!(hidden.all_marked(&[root, src, a, readme]).unwrap());
+        assert!(!hidden.all_marked(&[lib, a]).unwrap());
+    }
+
+    engine
+        .dispatch(state, Command::ClearSelection, Context::default())
+        .unwrap();
+    let cleared = project(&mut engine, state);
+    assert!(!cleared.all_marked(&[a, readme]).unwrap());
+    assert!(selected.all_marked(&[lib, a]).unwrap());
+    assert!(mixed.all_marked(&[a]).unwrap());
+    apply(&mut engine, vec![Operation::Remove { node: a.into() }]);
+    let removed = project(&mut engine, state);
+    let error = removed.all_marked(&[readme, a]).unwrap_err();
+    assert_eq!(error.code, ErrorCode::MissingNode);
+    assert_eq!(error.node, Some(a));
+    assert!(selected.all_marked(&[a]).unwrap());
+    assert!(mixed.all_marked(&[a, readme]).unwrap());
+
+    let missing = NodeId(u64::MAX);
+    for frame in [empty, selected, mixed, cleared, removed] {
+        for nodes in [vec![missing], vec![readme, missing], vec![missing, readme]] {
+            let error = frame.all_marked(&nodes).unwrap_err();
+            assert_eq!(error.code, ErrorCode::MissingNode);
+            assert_eq!(error.node, Some(missing));
         }
     }
 }

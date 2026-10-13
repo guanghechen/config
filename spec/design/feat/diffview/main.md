@@ -242,8 +242,7 @@ workspace view 拥有组合 layout 与 panel buffers；无论通过 close action
 ---@field public fold_unchanged    boolean                 -- 当前 view 是否折叠 unchanged hunks
 ---@field public entries           stl.c.Observable        -- IFileEntry[] (staged + unstaged)
 ---@field public current_entry     stl.c.Observable        -- IFileEntry|nil
----@field public collapsed_dirs    table<string, boolean>  -- 折叠的目录
----@field public display_mode      "tree"|"list"           -- 显示模式
+---@field protected _trees         table<string, era.view.ResultTree> -- staged/unstaged 各自持有 native State
 ```
 
 ### Commits 状态
@@ -387,6 +386,8 @@ Changes、Commits 和独立 files pane 均通过 `pane/tree.lua` 导入 records�
 provider key 使用可逆 byte 编码，显示 label 单独转义。
 
 Native State 在 pane 隐藏、buffer 重建和 layout 切换之间保留；默认新 commit 折叠，普通目录展开。
+Tree/List 切换只改变 native display，不重建目录 topology。Inline List 使用 native 分组平铺保留 commit 折叠，
+文件路径由同一 source 的祖先 labels 生成，切回 Tree 恢复原目录折叠状态。
 独立 Git Log 的 Commits consumer 在每次 attach/resume 后恢复 `signcolumn=yes:1` 及当前 preview commit 的指示 sign；
 workspace History 继续使用 `signcolumn=no` 与单列 statuscolumn spacer。
 行号、父子导航与 action metadata 从已发布 Frame 派生。相邻文件通过 `Frame:adjacent_leaf` 定位，Lua 只读取目标，

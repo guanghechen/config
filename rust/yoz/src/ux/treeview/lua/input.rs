@@ -598,6 +598,7 @@ pub(crate) fn display(value: LuaValue) -> Result<DisplayOptions> {
         mode,
         sort,
         list_depth: get::<Option<usize>>(&value, "list_depth")?,
+        list_from_depth: get::<Option<usize>>(&value, "list_from_depth")?,
         context_label: get::<Option<String>>(&value, "context_label")?.map(Into::into),
         branch_suffix: get::<Option<String>>(&value, "branch_suffix")?
             .unwrap_or_default()

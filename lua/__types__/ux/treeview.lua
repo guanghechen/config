@@ -44,6 +44,7 @@
 ---@field public sort                   ?"source"|"name"|"score"
 ---@field public list_text              ?"label"|"ancestry"
 ---@field public list_depth             ?integer Maximum depth below display roots; zero lists direct children only.
+---@field public list_from_depth        ?integer Tree groups above this depth retain expansion; lower scopes are flat Lists. Requires compress=false.
 ---@field public context_label          ?string Leading ChildrenOf root row in List mode; keeps the root identity.
 ---@field public branch_suffix          ?string Display/match suffix for expandable List labels; at most 32 bytes.
 ---@field public case_sensitive         ?boolean

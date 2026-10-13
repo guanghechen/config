@@ -308,8 +308,8 @@ pub(crate) fn apply(
     nodes: Arc<[NodeId]>,
     stops: &Map<NodeId, ()>,
 ) -> Result<(Arc<[NodeId]>, bool)> {
-    let ancestry =
-        state.display.mode == Mode::List && state.display.list_text == ListText::Ancestry;
+    let ancestry = (state.display.mode == Mode::List || state.display.list_from_depth.is_some())
+        && state.display.list_text == ListText::Ancestry;
     let was_ancestry = previous.is_some_and(Snapshot::ancestry_text);
     if !ancestry {
         return if was_ancestry {
@@ -323,7 +323,12 @@ pub(crate) fn apply(
     let mut next = 0;
     for (_, start, len) in spans.into_iter().chain(std::iter::once((0, rows.len(), 0))) {
         for (offset, row) in rows.iter_from(next).take(start - next).enumerate() {
-            if row.text.is_none() {
+            if row.text.is_none()
+                && state
+                    .display
+                    .list_from_depth
+                    .is_none_or(|depth| row.depth >= depth)
+            {
                 positions.insert(next + offset);
             }
         }
@@ -422,6 +427,13 @@ pub(crate) fn apply(
     let mut start = None;
     for at in positions {
         let row = rows.get(at).expect("ancestry row");
+        if state
+            .display
+            .list_from_depth
+            .is_some_and(|depth| row.depth < depth)
+        {
+            continue;
+        }
         let text = builder.text(source.node(row.id).ok_or_else(|| Error::missing(row.id))?)?;
         if row.text.as_ref().is_some_and(|old| old.same_version(&text)) {
             continue;

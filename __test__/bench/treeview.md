@@ -162,3 +162,110 @@ Baseline 为 `2e7980c4b` 的完整 Lua overlay 与对应 release native library�
 - 原始输出、环境信息、baseline overlay 与逐阶段临时探针保存在本机
   `/var/folders/by/7s_s327x3r9clwb_nbcs1l600000gn/T/treeview-fixes-7wn0d3c3/`。
   该路径仅为本次实验 artifact，不保证跨机器或临时目录清理后仍可用；这里不据 5 对进程样本声称生产 p95。
+
+## 2026-10-12 Grouped List 局部展开
+
+比较同一 canonical topology 在局部展开修复前后的 release library：101 个已展开分组，首组只有一个文件，
+其余 100 组共持有下表所列文件。每组保留一层目录，但 display 使用 `list_from_depth=1` 平铺文件；
+只交替展开／折叠首组，不改变 source、filter 或其他分组。每次操作后确认最新 Frame 并 acknowledge publication。
+环境为 Apple M5 Pro、macOS 27.0.1 arm64、Neovim 0.12.6 Release 与 LuaJIT 2.1。
+
+| 无关文件数 | native action→Frame 中位数 ms，前→后 | visited nodes，前→后  | 附着 UI flush 中位数区间 ms，前→后 |
+| ---------- | ------------------------------------ | --------------------- | ---------------------------------- |
+| 50,000     | 13.75 → 0.056                        | 50,201–50,203 → 1–3   | 13.68–13.78 → 0.43–0.51            |
+| 190,000    | 50.27 → 0.062                        | 190,201–190,203 → 1–3 | 52.64–53.05 → 0.94–1.09            |
+
+- Native 数据为每档 3 对独立进程、每进程 24 次操作的进程中位数再取中位数；交替执行 before/after。
+  Cursor-only 的 visited nodes 均为 0。另有 1k/10k/50k 的 Rust scale regression，断言访问量、未变行块共享和 RenderPlan 写入量。
+- UI 为每档 2 对独立进程、100×30 attached UI，每进程 24 次操作；上表列各进程中位数的范围。
+  使用 Treeview facade 与 surface，测到 UI flush；每次最多写一行正文，errors 为空。未包含 Git IO 或 Lua producer 准备，
+  也不把少量进程样本解释为生产 p95。测量期间没有并发 build 或其他 benchmark。
+- 修复仅对 source/root/display 不变的展开更新局部分组；source topology、成员筛选或展示范围变化仍有全量路径。
+  此记录不替代普通 List 的整体性能结论。
+- 环境信息、前后 library hash、两套 probe 与原始输出保存在本机
+  `/var/folders/by/7s_s327x3r9clwb_nbcs1l600000gn/T/treeview-converge-r2-666d3scv/`；该临时 artifact 不保证跨机器或清理后可用。
+
+## 2026-10-12 普通 Tree 折叠后的 watch 扫描
+
+先以 List 加载 80 / 160 / 320 / 420 层真实目录，再切回普通 Tree，递归折叠隐藏 root；每次操作后仅有一行可见。
+比较恢复关闭目标早退前后的 release library，前后 native inputs 仅 `treeview/state.rs` 不同，包含修复及其 opt-in 测量。
+环境为 Apple M5 Pro、macOS 27.0.1 arm64、Neovim 0.12.6 Release 与 LuaJIT 2.1。
+每档 3 对独立进程，交替 before/after 并在中间一对反转顺序；每进程 2 次预热后记录 24 次递归折叠。
+计时从提交命令到 Filetree `is_settled()`，以 1 ms polling 观察；fixture 准备和 List 初次加载不计入。
+下表为各进程中位数再取中位数，测量期间没有并发 build 或其他 benchmark。
+
+| 目录深度 | command→settled 中位数 ms，前→后 |
+| -------: | -------------------------------: |
+|       80 |                      1.22 → 0.07 |
+|      160 |                      3.45 → 1.18 |
+|      320 |                     29.35 → 1.18 |
+|      420 |                     66.49 → 1.18 |
+
+- 新增 `t_collapsed_tree_children_demand_performance`，在 Rust 内直接扫描各层已折叠目录的 children demand：
+  同样 2 次预热、24 次采样，320 层 p50 为 26.429 → 0.235 ms，420 层为 63.172 → 0.449 ms。
+  该测量默认 ignored，通过 `cargo test --release --lib t_collapsed_tree_children_demand_performance -- --ignored --nocapture --test-threads=1`
+  在 `rust/yoz/` 下显式运行；macOS 需要沿用 `.cargo/config.macos.toml` 与可用 SDK 的构建配置。
+  它断言关闭目录不产生读取需求，时间数据用于比较成本，不在常规测试中引入机器相关阈值。
+- 原因是关闭目标进入祖先循环后重复解析 inherited expansion；恢复普通 Tree 的提前返回，并保持目标使用 raw stamp、祖先使用 `expanded()`。
+  Grouped List 仍按深度判断。扫描已知目录及单次 inherited 查询仍有成本，本记录不声称这些路径达到常数时间。
+- command→settled 包括发布与 watch reconciliation；Rust 测量只覆盖 demand 扫描。1 ms polling 影响前者的观察精度，
+  两者不是相同口径，少量进程样本也不支持生产 p95 结论。
+- 前后 library、build receipts、完整样本、环境与测量脚本保存在本机
+  `/var/folders/by/7s_s327x3r9clwb_nbcs1l600000gn/T/treeview-r5-fix-g09j0e1d/`；临时 artifact 的可用性与前述记录相同。
+
+## 2026-10-12 Visual 范围选中聚合
+
+本节记录 R6 批量查询完成时的 snapshot；空 selection 的后续优化见下一节。
+比较三套生产 `ResultTree:toggle_selection()`：`de9b1b19` 的全量 `marked_nodes(true)` 导出、R6 修复前的
+逐项 `flags()`、修复后的单次 `all_marked(ids)`。三者使用同一份修复后 release library 和相同 fixture；
+仅替换生产 Lua 模块。保留真实 native Frame、范围节点与 metadata 解析，隔离 command dispatch 和 UI，
+因此以下是同步 callback 成本，不是按键到 UI flush 的完整延迟。
+环境为 Apple M5 Pro、macOS 27.0.1 arm64、Neovim 0.12.6 Release 与 LuaJIT 2.1。
+每版 3 个独立进程交错运行，每场景 2 次预热、24 次正式采样，采样中保留自然 GC；表中为进程中位数再取中位数。
+测量期间没有并发 build、tests 或其他 benchmark，全部调用均校验最终 action 和范围身份。
+
+| Source 深度 | 可见行数 | 范围项数 | HEAD 全量导出 ms | 修复前逐项 flags ms | 修复后批量查询 ms |
+| ----------: | -------: | -------: | ---------------: | ------------------: | ----------------: |
+|           0 |    1,000 |        2 |           0.2806 |              0.0026 |            0.0021 |
+|           0 |   10,000 |        2 |           2.9990 |              0.0025 |            0.0019 |
+|           0 |   50,000 |        2 |          18.4636 |              0.0023 |            0.0019 |
+|         320 |    5,000 |    5,000 |           4.6866 |             15.1008 |            3.6499 |
+|      10,000 |      500 |      500 |           0.8393 |            108.3616 |            0.8224 |
+
+- 表中节点均继承 root 的选中标记。批量查询按输入共享祖先解析，不再为每个节点重复遍历 parent chain；
+  小范围也不重新扫描范围外的可见行或选中项。深链改善与范围外行数无关的成本须分别验证。
+- 同时覆盖首项未选、末项未选和全未选。320 层 / 5,000 项的 callback 分别为
+  2.560 → 3.203、15.752 → 3.670、2.548 → 3.188 ms；10,000 层 / 500 项分别为
+  0.454 → 0.773、101.752 → 0.843、0.408 → 0.266 ms。这里的前值均为逐项 flags。
+  新接口完整解析并校验所有输入身份，短路路径仍有批量输入成本，不能将全选场景的降幅推广到每种标记分布。
+- 常规测试验证继承与 self-only 标记、折叠/过滤节点、旧 Frame、移除后的 MissingNode、重复 ID、空数组、
+  dense-array 校验和 200,000 项输入上限；Visual consumer 测试禁止逐项 flags 和范围外选中项导出。
+  测试不使用机器相关时间阈值，以上少量进程样本也不代表生产 p95。
+- 三套生产模块、release library 与 build receipt、测量脚本、环境和完整样本保存在本机
+  `/var/folders/by/7s_s327x3r9clwb_nbcs1l600000gn/T/treeview-r6-fix-p99g4gae/`；运行其中的
+  `run-range-selection.py` 可复核汇总。临时 artifact 的可用性与前述记录相同。
+
+## 2026-10-12 空 selection 的范围聚合
+
+R7 复审确认：空 selection 下，即使 native stamp 查询可以短路，调用 `all_marked(ids)` 仍会完整解析和
+校验 Lua ID 数组，大范围首次选择因此新增同步开销。Consumer 现在读取捕获 Frame 的 `summary.is_empty`，
+确定为空时直接选择范围内符合条件的节点；这些身份来自同一 immutable Frame。非空 selection 继续批量查询，
+native API 的完整输入校验与 MissingNode 契约保持不变。
+
+复用上一节的环境、release library 和生产 callback 测量口径；native inputs 没有变化。
+每版 3 个独立进程交错运行，每场景 2 次预热、24 次正式采样，保留自然 GC，以下为进程中位数再取中位数。
+计时排除 dispatch、UI 与 fixture 准备，测量期间没有并发 build、tests 或其他 benchmark。
+
+| 未选范围项数 | HEAD ms | R7 修复前 ms | R7 修复后 ms |
+| -----------: | -------: | ------------: | ------------: |
+|       50,000 |   29.163 |        36.753 |        28.470 |
+|      190,000 |  145.477 |       172.898 |       140.911 |
+
+- 同轮验证原有场景：10,000 层 / 500 项全选从 0.815 → 0.806 ms，50,000 行中的两项全选为
+  0.0018 → 0.0018 ms；320 层 / 5,000 项全未选从 3.133 → 2.572 ms。这里的前值均为 R7 修复前。
+- 新增 consumer 回归用例禁止空 captured Frame 的任何标记查询；随后改变实时 selection，仍须依据捕获的
+  空 summary 选择并排除 location。原有 mixed/all-selected 测试继续要求单次 native 批量查询。
+- 该修复消除新增解析开销；超大范围仍需按节点组装 command，上表约 141 ms 的既有同步成本没有消失。
+  数据不代表完整交互延迟或生产 p95，也不声称任意范围选择达到常数时间。
+- 三套生产模块、native library/receipt、原始样本与脚本保存在本机
+  `/var/folders/by/7s_s327x3r9clwb_nbcs1l600000gn/T/treeview-r7-fix-rt0jf9k0/`；临时 artifact 的可用性与前述记录相同。

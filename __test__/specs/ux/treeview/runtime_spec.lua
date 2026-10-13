@@ -424,6 +424,73 @@ t:test("owned input, identity, atomic failure, and exact recursive option", func
   t.assert_eq("changed", data:source():node(a).label)
 end)
 
+t:test("marked aggregation validates dense identities and keeps the captured frame", function()
+  local data, state, a, b = fixture()
+  local old = state:snapshot()
+  t.assert_true(old:all_marked({}))
+  t.assert_false(old:all_marked({ a }))
+  t.assert_false(old:all_marked({ a, a }))
+  applied(await(state:select_node({ data:source():id("root") }, true)))
+  t.wait_until(function()
+    return state:snapshot():header().state_revision == state:status().revisions.state
+  end, 5000)
+  local selected = state:snapshot()
+  t.assert_true(selected:all_marked({ a, b, a }))
+  t.assert_false(old:all_marked({ a, b }))
+  applied(await(state:deselect_node({ b }, false)))
+  t.wait_until(function()
+    return state:snapshot():header().state_revision == state:status().revisions.state
+  end, 5000)
+  local mixed = state:snapshot()
+  t.assert_false(mixed:all_marked({ a, b }))
+  t.assert_false(mixed:all_marked({ b, a }))
+  t.assert_true(mixed:all_marked({ a, a }))
+  applied(await(data:batch({ { kind = "remove", id = a } })))
+  t.wait_until(function()
+    return state:snapshot():header().data_revision == data:source():revision()
+  end, 5000)
+  local removed = state:snapshot()
+  local ok, failure = pcall(removed.all_marked, removed, { b, a })
+  t.assert_false(ok)
+  t.assert_true(tostring(failure):find("MissingNode", 1, true) ~= nil, tostring(failure))
+  t.assert_true(selected:all_marked({ a, b }))
+  t.assert_true(mixed:all_marked({ a }))
+  for _, nodes in ipairs({ false, { [0] = b }, { [100] = b }, { b, "invalid" } }) do
+    ok, failure = pcall(removed.all_marked, removed, nodes)
+    t.assert_false(ok)
+    t.assert_true(tostring(failure):find("InvalidUpdate", 1, true) ~= nil, tostring(failure))
+  end
+end)
+
+t:test("marked aggregation accepts ranges larger than an export page within the input limit", function()
+  local data = treeview.new_data()
+  local records = { { key = "root", label = "root", can_expand = true } }
+  for index = 1, 1100 do
+    local key = "item-" .. index
+    records[#records + 1] = { key = key, parent = "root", label = key }
+  end
+  applied(await(data:import(records)))
+  local source = data:source()
+  local state = await(data:create_state({ kind = "children_of", node = source:id("root") }))
+  applied(await(state:select_node({ source:id("root") }, true)))
+  t.wait_until(function()
+    return state:snapshot():header().state_revision == state:status().revisions.state
+  end, 5000)
+  local frame, ids = state:snapshot(), {}
+  for index = 1, 1100 do
+    ids[index] = source:id("item-" .. index)
+  end
+  t.assert_true(frame:all_marked(ids))
+  for index = 1101, 200000 do
+    ids[index] = ids[1]
+  end
+  t.assert_true(frame:all_marked(ids))
+  ids[200001] = ids[1]
+  local ok, failure = pcall(frame.all_marked, frame, ids)
+  t.assert_false(ok)
+  t.assert_true(tostring(failure):find("ResourceLimit", 1, true) ~= nil, tostring(failure))
+end)
+
 t:test("viewport guide output is bounded without invalidating the immutable frame", function()
   local data = treeview.new_data()
   local records = { { key = "root", label = "root", can_expand = true } }

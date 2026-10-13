@@ -567,13 +567,7 @@ function M:toggle_selection()
       if visual and first ~= last then
         local read = self:_read(frame)
         local version = self._versions[read.header.data_revision]
-        local marked, nodes, select = {}, {}, false
-        local selected = frame:marked_nodes(true)
-        for at = 1, selected:len(), 1024 do
-          for _, id in ipairs(selected:slice(at, math.min(at + 1023, selected:len()))) do
-            marked[id] = true
-          end
-        end
+        local nodes = {}
         for at = first, last, 1024 do
           local ids = {}
           for row = at, math.min(at + 1023, last) do
@@ -583,13 +577,13 @@ function M:toggle_selection()
             local entry = version and version.entries[key]
             if entry and entry.nodetype ~= "location" then
               nodes[#nodes + 1] = ids[index]
-              select = select or not marked[ids[index]]
             end
           end
         end
         if #nodes == 0 then
           return Future.resolve({ kind = "NoChange" })
         end
+        local select = read.header.summary.is_empty or not frame:all_marked(nodes)
         return self.state:dispatch({
           kind = select and "select_node" or "deselect_node",
           nodes = nodes,
@@ -908,7 +902,8 @@ end
 function M:_display(request)
   local source = self._data:source()
   local root = source:id(request.rootuuid or self.source.root)
-  local filtered = not request.all_rows and (request.mode == "list" or request.only_matched)
+  local filtered = not request.all_rows
+    and (request.mode == "list" or request.list_from_depth ~= nil or request.only_matched)
   local signature = {
     revision = filtered and source:revision() or nil,
     root = request.rootuuid,
@@ -920,6 +915,7 @@ function M:_display(request)
     orders = filtered and request.orders or nil,
     all_rows = request.all_rows,
     list_text = request.list_text,
+    list_from_depth = request.list_from_depth,
   }
   local same = self._configured ~= nil
   for key, value in pairs(signature) do
@@ -932,11 +928,12 @@ function M:_display(request)
   end
   local display = {
     mode = request.mode,
-    compress = request.foldempty,
+    compress = request.foldempty and request.list_from_depth == nil,
     show_hidden = false,
     selected_only = request.only_selected,
     sort = "source",
     list_text = request.list_text or "label",
+    list_from_depth = request.list_from_depth,
   }
   if not same and filtered then
     local filter = {}
