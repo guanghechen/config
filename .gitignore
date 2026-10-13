@@ -1,1 +1,3 @@
-local/
+completions/copilot.ps1
+completions/kit.ps1
+completions/kit-*.ps1
