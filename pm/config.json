@@ -1,6 +1,13 @@
 {
   "apps": [
     {
+      "name": "caffeinate",
+      "platforms": ["osx"],
+      "cmd": "/usr/bin/caffeinate",
+      "args": ["-i"],
+      "autostart": true
+    },
+    {
       "name": "kit-copilot",
       "cmd": "kit",
       "args": ["copilot", "start"],
@@ -63,13 +70,6 @@
       "logsRotateStrategy": "size",
       "logsRotateSize": "10MB",
       "platforms": ["osx", "wsl", "nix"]
-    },
-    {
-      "name": "caffeinate",
-      "platforms": ["osx"],
-      "cmd": "/usr/bin/caffeinate",
-      "args": ["-i"],
-      "autostart": true
     }
   ]
 }
