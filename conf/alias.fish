@@ -39,6 +39,7 @@ alias vdir='vdir --color=auto'
 
 ### claude code
 abbr -a ccc 'claude --dangerously-skip-permissions'
+abbr -a ccl "ANTHROPIC_BASE_URL='$MS_LLMAPI_URL/api/claude' claude --dangerously-skip-permissions"
 
 ### codex
 abbr -a cx0 'FORCE_COLOR=1 codex -p copilot --dangerously-bypass-approvals-and-sandbox'
