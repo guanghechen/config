@@ -379,13 +379,6 @@ local function root_dir(bufnr, on_dir)
   end
 end
 
----@param params                        lsp.InitializeParams
----@param config                        table
----@return nil
-local function before_init(params, config)
-  era.m.lsp.event.before_init(params, config)
-end
-
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 ---@return nil
@@ -424,11 +417,8 @@ local function on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
----@param config                        any
 ---@return nil
-local function on_init(client, config)
-  era.m.lsp.event.on_init(client, config)
-
+local function on_init(client)
   local rootdir = client.config.root_dir
   if type(rootdir) ~= "string" or rootdir == "" then
     return
@@ -484,7 +474,6 @@ return {
     },
   },
   root_dir = root_dir,
-  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

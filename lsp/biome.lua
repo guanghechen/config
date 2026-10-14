@@ -37,8 +37,6 @@ return {
     on_dir(rootdir)
   end,
   workspace_required = true,
-  before_init = era.m.lsp.event.before_init,
   on_attach = era.m.lsp.event.on_attach,
   on_detach = era.m.lsp.event.on_detach,
-  on_init = era.m.lsp.event.on_init,
 }

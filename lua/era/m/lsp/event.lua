@@ -223,10 +223,10 @@ end
 ---@return lsp.ClientCapabilities
 function M.get_capabilities()
   local capabilities = vim.lsp.protocol.make_client_capabilities() ---@type lsp.ClientCapabilities
-  capabilities.workspace = capabilities.workspace or {}
-  capabilities.workspace.fileOperations = capabilities.workspace.fileOperations or {}
-  capabilities.workspace.fileOperations.didRename = true
-  capabilities.workspace.fileOperations.willRename = true
+  local workspace = capabilities.workspace --[[@as lsp.WorkspaceClientCapabilities]]
+  local file_operations = workspace.fileOperations --[[@as lsp.FileOperationClientCapabilities]]
+  file_operations.didRename = true
+  file_operations.willRename = true
 
   -- Capability negotiation belongs to the LSP boundary. Loading the completion UI here would
   -- bypass its InsertEnter/CmdlineEnter lazy lifecycle.
@@ -250,17 +250,6 @@ function M.get_capabilities()
   completion.insertTextMode = 1
 
   return capabilities
-end
-
----@param params                        lsp.InitializeParams
----@param config                        table
----@diagnostic disable-next-line: unused-local
-function M.before_init(params, config)
-  local capabilities = params.capabilities ---@type lsp.ClientCapabilities
-  capabilities.textDocument = capabilities.textDocument or {}
-  capabilities.textDocument.completion = capabilities.textDocument.completion or {}
-  capabilities.textDocument.completion.completionItem = capabilities.textDocument.completion.completionItem or {}
-  capabilities.textDocument.completion.completionItem.snippetSupport = true
 end
 
 ---@param bufnr                         integer
@@ -711,10 +700,5 @@ function M.on_detach(client, bufnr)
     reconcile_keymaps(bufnr, client.id)
   end
 end
-
----@param client                        vim.lsp.Client
----@param config                        any
----@diagnostic disable-next-line: unused-local
-function M.on_init(client, config) end
 
 return M

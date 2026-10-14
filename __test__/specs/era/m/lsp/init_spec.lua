@@ -30,11 +30,9 @@ t:patch_table(package.loaded, "era.m.lsp.diagnostic", {
   setup = function() end,
 })
 local lsp_event = {
-  before_init = function() end,
   dressing = function() end,
   get_capabilities = vim.lsp.protocol.make_client_capabilities,
   on_attach = function() end,
-  on_init = function() end,
 }
 t:patch_table(package.loaded, "era.m.lsp.event", lsp_event)
 bootstrap.with_era(t, {

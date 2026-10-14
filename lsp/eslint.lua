@@ -31,11 +31,10 @@ local CONFIG_FILENAMES = {
 
 vim.list_extend(ROOT_FILENAMES, CONFIG_FILENAMES)
 
----@param params                        lsp.InitializeParams
+---@param _                             lsp.InitializeParams
 ---@param config                        any
-local function before_init(params, config)
-  era.m.lsp.event.before_init(params, config)
-
+---@return nil
+local function before_init(_, config)
   -- The "workspaceFolder" is a VSCode concept. It limits how far the server will traverse the
   -- file system when locating the ESLint config file (e.g., .eslintrc).
   local root_dir = config.root_dir
@@ -65,18 +64,6 @@ local function on_attach(client, bufnr)
       },
     }, nil, bufnr)
   end, {})
-end
-
----@param client                        vim.lsp.Client
----@param bufnr                         integer
-local function on_detach(client, bufnr)
-  era.m.lsp.event.on_detach(client, bufnr)
-end
-
----@param client                        vim.lsp.Client
----@param config                        any
-local function on_init(client, config)
-  era.m.lsp.event.on_init(client, config)
 end
 
 ---@param bufnr                         integer
@@ -195,6 +182,5 @@ return {
   before_init = before_init,
   root_dir = root_dir,
   on_attach = on_attach,
-  on_detach = on_detach,
-  on_init = on_init,
+  on_detach = era.m.lsp.event.on_detach,
 }

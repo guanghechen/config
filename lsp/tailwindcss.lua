@@ -62,40 +62,21 @@ local function detectLspServer()
   return nil
 end
 
----@param params                        lsp.InitializeParams
+---@param _                             lsp.InitializeParams
 ---@param config                        table
-local function before_init(params, config)
-  era.m.lsp.event.before_init(params, config)
-
+---@return nil
+local function before_init(_, config)
   config.settings = config.settings or {}
   config.settings.editor = config.settings.editor or {}
   config.settings.editor.tabSize = config.settings.editor.tabSize or vim.lsp.util.get_effective_tabstop()
 end
 
----@param client                        vim.lsp.Client
----@param bufnr                         integer
-local function on_attach(client, bufnr)
-  era.m.lsp.event.on_attach(client, bufnr)
-end
-
----@param client                        vim.lsp.Client
----@param bufnr                         integer
-local function on_detach(client, bufnr)
-  era.m.lsp.event.on_detach(client, bufnr)
-end
-
----@param client                        vim.lsp.Client
----@param config                        any
-local function on_init(client, config)
-  era.m.lsp.event.on_init(client, config)
-end
-
 local lspBinPath = detectLspServer()
 
 local capabilities = era.m.lsp.event.get_capabilities()
-capabilities.workspace = capabilities.workspace or {}
-capabilities.workspace.didChangeWatchedFiles = capabilities.workspace.didChangeWatchedFiles or {}
-capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
+local workspace = capabilities.workspace --[[@as lsp.WorkspaceClientCapabilities]]
+local watched_files = workspace.didChangeWatchedFiles --[[@as lsp.DidChangeWatchedFilesClientCapabilities]]
+watched_files.dynamicRegistration = true
 
 ---@type vim.lsp.Config
 return {
@@ -134,7 +115,6 @@ return {
   },
   root_dir = root_dir,
   before_init = before_init,
-  on_attach = on_attach,
-  on_detach = on_detach,
-  on_init = on_init,
+  on_attach = era.m.lsp.event.on_attach,
+  on_detach = era.m.lsp.event.on_detach,
 }

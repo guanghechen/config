@@ -12,8 +12,6 @@ bootstrap.with_era(t, {
     lsp = {
       event = {
         get_capabilities = vim.lsp.protocol.make_client_capabilities,
-        before_init = function() end,
-        on_init = function() end,
         on_attach = function() end,
         bindkeys = function() end,
       },

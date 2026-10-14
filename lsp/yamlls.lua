@@ -1,29 +1,9 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/592de750bf5b8c45fc48cebfde585721626ffd6d/lsp/yamlls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#yamlls
 
----@param params                        lsp.InitializeParams
----@param config                        table
-local function before_init(params, config)
-  era.m.lsp.event.before_init(params, config)
-end
-
 ---@param client                        vim.lsp.Client
----@param bufnr                         integer
-local function on_attach(client, bufnr)
-  era.m.lsp.event.on_attach(client, bufnr)
-end
-
----@param client                        vim.lsp.Client
----@param bufnr                         integer
-local function on_detach(client, bufnr)
-  era.m.lsp.event.on_detach(client, bufnr)
-end
-
----@param client                        vim.lsp.Client
----@param config                        any
-local function on_init(client, config)
-  era.m.lsp.event.on_init(client, config)
-
+---@return nil
+local function on_init(client)
   --- https://github.com/neovim/nvim-lspconfig/pull/4016
   --- Since formatting is disabled by default if you check `client:supports_method('textDocument/formatting')`
   --- during `LspAttach` it will return `false`. This hack sets the capability to `true` to facilitate
@@ -178,8 +158,7 @@ return {
       },
     },
   },
-  before_init = before_init,
-  on_attach = on_attach,
-  on_detach = on_detach,
+  on_attach = era.m.lsp.event.on_attach,
+  on_detach = era.m.lsp.event.on_detach,
   on_init = on_init,
 }

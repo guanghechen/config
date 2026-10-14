@@ -139,9 +139,6 @@ end
 
 t:test("capabilities: include completion deltas without loading blink", function()
   local capabilities = Event.get_capabilities()
-  ---@diagnostic disable-next-line: missing-fields
-  Event.before_init({ capabilities = capabilities }, {})
-
   local completion = capabilities.textDocument.completion
   ---@diagnostic disable-next-line: need-check-nil
   local completion_item = completion.completionItem

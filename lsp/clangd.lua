@@ -73,20 +73,6 @@ local function symbol_info(bufnr, client)
   end, bufnr)
 end
 
----@param params                        lsp.InitializeParams
----@param config                        table
-local function before_init(params, config)
-  era.m.lsp.event.before_init(params, config)
-
-  local capabilities = params.capabilities
-  capabilities.textDocument = capabilities.textDocument or {}
-  capabilities.textDocument.completion = capabilities.textDocument.completion or {}
-  ---@diagnostic disable-next-line: inject-field
-  capabilities.textDocument.completion.editsNearCursor = true
-  ---@diagnostic disable-next-line: inject-field
-  capabilities.offsetEncoding = { "utf-8", "utf-16" }
-end
-
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
@@ -102,12 +88,6 @@ local function on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
----@param bufnr                         integer
-local function on_detach(client, bufnr)
-  era.m.lsp.event.on_detach(client, bufnr)
-end
-
----@param client                        vim.lsp.Client
 ---@param init_result                   era.lsp.ClangdInitializeResult
 local function on_init(client, init_result)
   if init_result.offsetEncoding then
@@ -116,10 +96,10 @@ local function on_init(client, init_result)
 end
 
 local capabilities = era.m.lsp.event.get_capabilities()
-capabilities.textDocument = capabilities.textDocument or {}
-capabilities.textDocument.completion = capabilities.textDocument.completion or {}
+local text_document = capabilities.textDocument --[[@as lsp.TextDocumentClientCapabilities]]
+local completion = text_document.completion --[[@as lsp.CompletionClientCapabilities]]
 ---@diagnostic disable-next-line: inject-field
-capabilities.textDocument.completion.editsNearCursor = true
+completion.editsNearCursor = true
 ---@diagnostic disable-next-line: inject-field
 capabilities.offsetEncoding = { "utf-8", "utf-16" }
 
@@ -154,8 +134,7 @@ return {
     local language_ids = { objc = "objective-c", objcpp = "objective-cpp", cuda = "cuda-cpp" }
     return language_ids[ftype] or ftype
   end,
-  before_init = before_init,
   on_attach = on_attach,
-  on_detach = on_detach,
+  on_detach = era.m.lsp.event.on_detach,
   on_init = on_init,
 }
