@@ -32,7 +32,7 @@ brew install -y nvim fd git-delta lazygit ripgrep
 
 ### Install yazi
 printf "\e[96minstalling Yazi tools...\e[0m\n"
-brew install -y yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jstkdng/programs/ueberzugpp
+brew install -y yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship
 
 ### Install hardware utilities (cpu/memo/disk/network)
 printf "\e[96minstalling hardware utilities...\e[0m\n"
