@@ -58,6 +58,10 @@ brew install -y gemini-cli
 printf "\e[96minstalling GitHub Copilot CLI...\e[0m\n"
 brew install -y --cask copilot-cli
 
+### Install OpenCode
+printf "\e[96minstalling OpenCode...\e[0m\n"
+brew install -y anomalyco/tap/opencode
+
 ### Install usual tools
 printf "\e[96minstalling general CLI tools...\e[0m\n"
 brew install -y automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd tree unzip yt-dlp zoxide
