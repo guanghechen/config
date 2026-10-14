@@ -57,6 +57,11 @@ local __module_name__ = "era.m.picker.composer.filetree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
+---@class era.m.picker.composer.filetree.IPrepareOptions
+---@field public prepare_entry          ?fun(data: era.view.result_paths.IFile): table Builds private metadata before adoption.
+---@field public token                  ?stl.c.CancellationToken Cancels preparation before adoption.
+---@field public keep_root              ?boolean Retain the requested root if it survives in the prepared collection.
+
 ---@class era.m.picker.IFiletreeComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
@@ -65,6 +70,7 @@ local __module_name__ = "era.m.picker.composer.filetree" ---@type string
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
+---@field public treeview               ?era.view.ResultFiles Owned by this composer.
 ---
 ---@field public keymaps_common         ?stl.t.IKeymap[]
 ---@field public keymaps_finder         ?stl.t.IKeymap[]
@@ -183,14 +189,13 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type era.view.ResultPaths
-  local filetree = require("era.view.result_paths").new()
-
   ---@type era.m.picker.FiletreeView
-  local treeview = era.m.picker.FiletreeView.new({
-    name = fullname,
-    tree = filetree,
-  })
+  local treeview = props.treeview
+    or era.m.picker.FiletreeView.new({
+      name = fullname,
+      tree = require("era.view.result_paths").new(),
+    })
+  local filetree = treeview.source ---@type era.view.ResultPaths
 
   local retriever = treeview
 
@@ -1243,11 +1248,14 @@ end
 ---Prepare a plain file collection cooperatively, then replace the live producer once.
 ---@param cwd                           string
 ---@param filepaths                     string[]
+---@param opts                          ?era.m.picker.composer.filetree.IPrepareOptions
 ---@return stl.c.Future
-function M:prepare_filepaths(cwd, filepaths)
+function M:prepare_filepaths(cwd, filepaths, opts)
   self:__health__()
   cwd = yoz.canonical_path.from_os_path(cwd, false)
   local paths = vim.list_slice(filepaths)
+  local prepare_entry, token = opts and opts.prepare_entry, opts and opts.token
+  local retained_root = opts and opts.keep_root and self._uuid_root or nil
   local source, treeview = self._filetree, self._treeview
   local source_revision, revision = source.revision, treeview._revision
   local request, cancelled = {}, {}
@@ -1258,6 +1266,7 @@ function M:prepare_filepaths(cwd, filepaths)
     local function checkpoint()
       if
         self._disposed
+        or token and token:is_cancelled()
         or self._path_request ~= request
         or source.revision ~= source_revision
         or treeview._revision ~= revision
@@ -1268,6 +1277,7 @@ function M:prepare_filepaths(cwd, filepaths)
         stl.async.scheduler()
         if
           self._disposed
+          or token and token:is_cancelled()
           or self._path_request ~= request
           or source.revision ~= source_revision
           or treeview._revision ~= revision
@@ -1281,7 +1291,9 @@ function M:prepare_filepaths(cwd, filepaths)
       local prepared = source:prepare(cwd, paths, checkpoint)
       local entries, files = {}, {}
       for key, record in pairs(prepared.records) do
-        entries[key] = { key = key, nodetype = record.data.filetype == "directory" and "container" or "leaf" }
+        local entry = prepare_entry and prepare_entry(record.data) or {}
+        entry.key, entry.nodetype = key, record.data.filetype == "directory" and "container" or "leaf"
+        entries[key] = entry
         checkpoint()
       end
       local root = require("era.view.result_paths").key(cwd)
@@ -1303,6 +1315,9 @@ function M:prepare_filepaths(cwd, filepaths)
         end, checkpoint)
       end
       checkpoint()
+      if retained_root and prepared:contains(retained_root) then
+        root = retained_root
+      end
       treeview:adopt_filepaths(prepared, entries)
       self._last_preview_filepath, self._uuid_root = nil, root
       self._uuids_file, self._uuids_order = files, ordered
@@ -1311,7 +1326,7 @@ function M:prepare_filepaths(cwd, filepaths)
       end
       self._path_request = nil
       self:mark_result_dirty()
-      self._on_attached(self, cwd)
+      self._on_attached(self, prepared:get(root).filepath)
     end)
     if self._path_request == request then
       self._path_request = nil

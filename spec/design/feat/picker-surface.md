@@ -1,10 +1,10 @@
-# Picker / Searcher 共享 Surface
+# 文件结果共享 Surface
 
 Status: Design。定义 Result/Preview 的窗口、发布与生命周期；节点语义以 [Treeview](../../../doc/spec/treeview/README.md) 为准。
 
 ## 共享范围
 
-Picker 与 Searcher 共享两类 UI surface：
+Picker、Searcher 与 Git Files 共享两类 UI surface：
 
 1. `Result`：结果窗口、native View 接入、派生行号、current/present signs 与 winbar。
 2. `Preview`：preview buffer/window lifecycle、debounced draw 与 window options。
@@ -15,12 +15,12 @@ Feature 保留 Finder 输入、pane composition、search/replace 与业务 actio
 ## 依赖方向
 
 ```text
-era.m.picker  ─┐
-               ├─> era.view.picker.{result,preview} ─> era.m.nvimbar / dot / stl
-era.m.searcher ─┘
+era.m.picker    ─┐
+era.m.searcher  ─┼─> era.view.picker.{result,preview} ─> era.m.nvimbar / dot / stl
+era.m.git_files ─┘
 ```
 
-- 共享 surface 不依赖 `era.m.picker` 或 `era.m.searcher`。
+- 共享 surface 不依赖 `era.m.picker`、`era.m.searcher` 或 `era.m.git_files`。
 - Picker 与 Searcher 不互相依赖。
 - `era.m.nvimbar` 不依赖共享 surface，依赖图保持无环。
 - Feature namespace 通过 module map 与 LuaDoc alias 保留
@@ -42,12 +42,14 @@ Feature 通过 props 提供：
 - `draw`、`on_drawed`，以及 `era.view.ResultTree` 或真实 Filetree 的 `era.view.Directory` owner；
 - keymaps 与 flags；
 - `augroup_prefix`、`diagnostic_scope` 与 `winline_hl`；
-- 可选 status snapshot。
+- 可选 status snapshot；`winbar = false` 不创建 winbar renderer，保留行号 observables，`mark_nvimbar_dirty()` 此时无操作。
 
 差异映射：
 
 - Picker：`winline_hl = "f_wl_picker"`，无 status。
 - Searcher：`winline_hl = "f_wl_searcher"`，可提供 status。
+- Git Files：两个 Result 各自绑定一棵固定 stage scope 的树，禁用 winbar；feature 订阅行号 observables，
+  在 border 右侧显示 position，左侧显示标题、统计及刷新 / index 操作状态，query 保留在 inputbox。
 
 共享层通过 ResultTree 的 mount/publish 接入 native surface，不解释节点、query 或业务 metadata。
 行数和 cursor observables 在 frame 发布后更新，没有全 buffer 的 selected-sign 扫描或旧 Lua draw 路径。
@@ -83,6 +85,11 @@ Draw 只有在绘制了目标范围时才返回 `has_range = true`，启用范�
 6. reporter `from` 使用调用方的 feature identity。
 
 ## Feature 自有边界
+
+### Git Files
+
+Git Files 自有单行 inputbox、左栏双树 / 右栏整高 preview 布局、Git snapshot 刷新、文件级 stage / unstage 和异步 diff 内容读取。
+Result / Preview 仅负责窗口与展示生命周期；完整业务契约见 [Git Files](../../../doc/spec/treeview/results.md#git-files)。
 
 ### Finder
 

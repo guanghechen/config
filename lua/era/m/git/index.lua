@@ -4,7 +4,7 @@ local __module_name__ = "era.m.git.index" ---@type string
 ---@class era.m.git.index.ITask
 ---@field public reject                  fun(err: string): nil
 ---@field public resolve                 fun(result: any): nil
----@field public run                     fun(resolve: fun(result: any): nil, reject: fun(err: string): nil): nil
+---@field public run                    stl.c.future.Executor
 
 ---@class era.m.git.index.IQueue
 ---@field public pending                 era.m.git.index.ITask[]
@@ -19,7 +19,7 @@ local M = {}
 local queues = {}
 
 ---@param toplevel                      string
----@param task                          fun(resolve: fun(result: any): nil, reject: fun(err: string): nil): nil
+---@param task                          stl.c.future.Executor
 ---@return stl.c.Future
 function M.run(toplevel, task)
   return stl.c.Future.new(function(resolve, reject)

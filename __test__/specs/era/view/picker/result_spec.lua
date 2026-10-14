@@ -77,6 +77,32 @@ for _, kind in ipairs({ "picker", "searcher" }) do
   end)
 end
 
+t:test("an omitted winbar preserves positions across refresh, resize and reopening", function()
+  local owner = tree(3)
+  local value = result(owner, "picker", { winbar = false })
+  local options = { border = "single", number = false, winhighlight = "" }
+  local dimension = { row = 0, col = 0, width = 40, height = 4 }
+  local winnr = value:create_win(options, dimension)
+  native.await(owner:ready())
+  value:set_lnum_current(2)
+  value:mark_nvimbar_dirty()
+  value:resize({ row = 0, col = 0, width = 50, height = 5 })
+  native.await(owner:ready())
+  vim.wait(100)
+  t.assert_eq(2, value.lnum_current:snapshot())
+  t.assert_eq(3, value.lnum_total:snapshot())
+  t.assert_eq("", vim.api.nvim_get_option_value("winbar", { win = winnr }))
+  value:hide()
+  winnr = value:create_win(options, dimension)
+  native.await(owner:ready())
+  vim.wait(100)
+  t.assert_eq(2, value.lnum_current:snapshot())
+  t.assert_eq("", vim.api.nvim_get_option_value("winbar", { win = winnr }))
+  value:set_lnum_current(3)
+  value:dispose()
+  vim.wait(100)
+end)
+
 t:test("status and diagnostic policies survive a failed publication", function()
   local owner = tree()
   local fail = false

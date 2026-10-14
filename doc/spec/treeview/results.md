@@ -2,7 +2,7 @@
 
 Status: Design。
 
-普通 List、Picker、Searcher 和 Diffview 使用通用 Treeview records。Explorer 的 filesystem ownership 由
+普通 List、Picker、Searcher、Git Files 和 Diffview 使用通用 Treeview records。Explorer 的 filesystem ownership 由
 [Filetree](../../../spec/design/filetree.md) 提供；搜索结果、历史删除文件和 LSP symbols 不被解释为磁盘全量目录。
 
 ## 数据与状态
@@ -53,12 +53,62 @@ Lua metadata 在提交时复制为 snapshot，按 native data revision 保存；
 - 大批普通文件列表使用 `FiletreeComposer:prepare_filepaths`：复制输入数组，在独立 producer 中分片构建路径、
   entries 和排序，完成后一次性接管 records，保持原 Source 对象的引用有效。宽目录和 frecency 使用稳定的
   cooperative merge sort；每个文件的 frecency score 只读取一次，相同分数保留 source 顺序。
-  Find Files / Find Git 使用此流程；需要立即附加 locations/diagnostics 的 producer 继续使用同步 reset。
+  Find Files 使用此流程；需要立即附加 locations/diagnostics 的 producer 继续使用同步 reset。
   准备期间旧 Frame 保持可读；新的请求、同步 mutation、切根、hide 或 dispose 使旧准备失效。
+  可选 `prepare_entry` 在同一准备阶段生成私有业务 metadata；可选 cancellation token 在提交前终止旧 generation。
+  `keep_root` 保留仍存在的 requested root，包含尚未发布的 attach 意图；根被移除时回到输入 cwd。
   首次 render 等待准备完成，避免先发布空根再重建投影；当前 query 在新 source 发布前应用。
   时间片限制长循环，不承诺中断单次 Lua/VM/native 调用，也不修改全局 GC 参数。
 - 完整 Forest import 若保留所有既有节点的 data、parent、completeness 和 sibling prefix，只需生成追加操作，
   省去临时 Source 的重复构造；操作仍经过相同的原子提交、状态更新及资源检查。其他 import 使用完整 reconciliation。
+
+### Git Files
+
+- `<leader>3` 使用独立的 `era.m.git_files.Widget`，复用 Result / Preview surface 和 `era.view.GitFiles`，
+  不依赖 Picker composer。左栏从上到下为单行 inputbox、Staged、Unstaged；右栏为跨越整个左栏高度的单个 preview，
+  不按左栏分段。输入框高度固定为一行，两棵树分配剩余高度，各自拥有 native Data/State/View，
+  独立保存展开、选择、当前子目录、光标与滚动位置。空组仍保留窗口和零文件数标题。
+- 四个 pane 组成一个连续圆角外框，共用单线分隔，不显示 footer。下方 pane 的顶边承担左栏的横向分隔，
+  左栏的右边承担 preview 的竖向分隔；只有整个浮窗的四个外角使用圆角。Preview 收起或恢复时同步更新边框连接。
+- 两棵树不显示 winbar。各自顶边左侧放标题、变更汇总及刷新 / index 操作状态，右侧放当前可见行 / 可见总行数，
+  空树显示 `0 / 0`；光标、过滤、折叠与缩放后同步更新。窄窗口优先保留位置计数，左侧文字按剩余宽度截断。
+- 一次 `status.collect({ include_numstat = true })` 提供两侧路径、status 与 numstat。Mixed 文件在两边各出现一次；
+  Staged 统计 HEAD → index，Unstaged 统计 index → worktree。文件、目录与 pane 总计只使用对应侧的变更，
+  目录 status 是本侧子树的 code union。标题统计整组文件，路径过滤不改变原始总计。
+- Untracked 属于 Unstaged，标记为 `?`。`era.m.git.numstat.collect_untracked` 通过临时 intent-to-add index
+  批量补齐其 Git 行数统计，与 Diffview 共用，不修改真实 index。Binary / 无法取得的统计显示 `—`，
+  目录用 `?` 标明总计不完整，标题显示 unknown 文件数；不将未知统计解释成零。
+- 两侧 producer 与 metadata 均在私有准备阶段完成，按 2 ms 时间片让出主线程；只有整份准备成功才接管两侧 records。
+  相同路径复用 producer topology，存活节点保留 native identity。Metadata 随 data revision / Frame 发布，
+  后台刷新不把新 status 绑定到旧 buffer 行。Git status / counts 仅通过 viewport decorations 绘制，不进入正文或路径匹配。
+- 两棵树共用固定的新增、删除和 status 列宽：新增 / 删除数值右对齐，status 左对齐；有未知统计时统一预留标记列。
+  列宽从整份 snapshot 的两侧总计计算，随 metadata 一起发布；过滤、折叠和滚动不改变列位置。
+- inputbox 实时用一个 fuzzy path query 过滤两边；`/` 聚焦输入并进入 Insert，`Enter` 返回最近使用的树。
+  输入中的 CR / LF 归一化为空格，隐藏后重开保留 query，切 workspace 时清空。`tf` 控制目录压缩。
+  每边的 `.` / `<BS>` / `gw` 独立切换子目录，不能越过 workspace root。树中 `Tab` / `Shift-Tab` 切换树，
+  inputbox 中分别进入 Staged / Unstaged；`m` 标记当前节点或 Visual range，`Esc Esc` 清除选择。
+- 四个 pane 都沿用 Picker 的 `<C-a>h/j/k/l`，以及 `Cmd` / `Alt` 同方向别名，覆盖 Insert / Normal / Visual mode。
+  左栏上下依次导航 inputbox → Staged → Unstaged；向右进入已显示的 preview，向左返回之前的左栏 pane（包含 inputbox）。
+  浮窗边界在非 zen 的 tmux 环境转交 `stl.tmux.change_pane`；无 tmux 或 zen mode 时，左栏上下边界循环，
+  preview 向右返回之前的左栏 pane，其余无相邻 pane 的方向不移动。
+- `gs` 只在 Unstaged stage，`gu` 只在 Staged unstage。操作目标来自输入 Frame：优先使用 Visual range，
+  否则使用可见标记或当前行；目录展开成该 pane 中符合已发布路径过滤的 changed files，包含折叠后代，去重后执行。
+  排队中的过滤结果不能扩大旧 Frame 的操作范围。所有写入经过 `era.m.git.index` 队列，捕获原 workspace，
+  使用 literal NUL pathspec；rename 同时处理新旧路径，copy 不操作 source。Unborn repository 的 unstage 仅移除 index 条目。
+- 操作完成后刷新两边，保留存活节点的导航状态；来源 pane 清空且仍聚焦时转到另一边。
+  `Enter` / `l` 展开目录或打开 worktree 文件，缺失文件提示后保留窗口；`oc` 复制所选路径。
+  同时提供 Explorer 风格的折叠、结构导航、目录入口、文件查找、内容搜索、system open 和 quickfix。
+- `tp` 切换右侧只读单栏 inline diff preview，默认显示；窄于 88 列时暂时隐藏。Gutter 左列为旧行号、右列为新行号，
+  新增 / 删除缺失的一侧留空，行号固定在窗口左侧，不随正文水平滚动。删除红底、新增绿底，替换行复用 Git word diff 高亮，
+  行号区与正文之间不加竖线，红绿背景贯穿两者；正文保留文件语法高亮。Git 文件头不进入正文，
+  每个 hunk 用独立底色的 `@@ … @@` 标题带展示范围和函数上下文。Binary、仅重命名 / mode 变更显示简短描述，
+  缺失末尾换行通过行尾注记展示。只有 preview 可见且光标目标稳定后才查询 Git，
+  对应 Staged / Unstaged 的比较侧，untracked 接受 `--no-index` 的 exit code 1。禁用 external diff / textconv，
+  单次查询限时 10s，保留最多 256 KiB / 4000 行，并标记截断。切文件、换侧、刷新、hide 或 dispose 取消旧 preview；
+  迟到结果必须通过 token、workspace 和可见性检查，不能覆盖新目标。
+- 可见期间跟随 Git refresh 事件；隐藏期间不查询。刷新请求持有 workspace 和 cancellation token；hide / dispose
+  取消读取，旧请求不能重新打开窗口。必需的 status 查询失败保留旧树并禁止写操作，重试成功后恢复。
+  已经提交到 index 队列的用户操作继续作用于捕获的仓库，关闭窗口不取消写入。`q`、关闭 inputbox / 任一树或离开 tab 关闭整个浮窗。
 
 ## 匹配与读取
 

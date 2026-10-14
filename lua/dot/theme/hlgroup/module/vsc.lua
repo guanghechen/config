@@ -75,6 +75,11 @@ function M.gen_hlgroup_map(context)
     m_ghp_cursor = { bg = u.bg3 },
     m_ghp_normal = { bg = t and u.none or u.bg1 },
 
+    ---module/git-files
+    m_gf_diff_add_nr = { fg = c.textMuted, bg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 30) },
+    m_gf_diff_del_nr = { fg = c.textMuted, bg = cs.mix(c.editor_background, c.editorGutter_deletedBackground, 30) },
+    m_gf_diff_hunk = { fg = c.textMuted, bg = cs.mix(c.editor_background, c.accentBlue, 12) },
+
     ---module/git (signs, blame)
     m_git_buffer_blame = { fg = cs.mix(c.editor_background, c.textDim, 30), italic = true },
     m_git_hunk_indicator = { fg = c.editorGutter_deletedBackground },

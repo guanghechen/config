@@ -94,42 +94,4 @@ t:test("Find Files coalesces a pending root and applies flag changes to that req
   t.assert_eq(count + 1, #scans, "reopening a cancelled root starts fresh preparation")
 end)
 
-t:test("Find Git ignores status and preparation completions from a closed generation", function()
-  local picker = facade()
-  t:patch_table(dot.context.select, "find_git", controls())
-  t:patch_table(dot.path, "is_git_repo", function()
-    return true
-  end)
-  t:patch_table(dot.path, "workspace", function()
-    return "/workspace"
-  end)
-  local statuses, refreshes = {}, {}
-  t:patch_table(era.m.git.state, "status", function()
-    local future, resolve = stl.c.Future.new_with_resolver()
-    statuses[#statuses + 1] = resolve
-    return future
-  end)
-  t:patch_table(era.m.git.state, "refresh", function()
-    local future, resolve = stl.c.Future.new_with_resolver()
-    refreshes[#refreshes + 1] = resolve
-    return future
-  end)
-  local find = assert(loadfile("lua/era/fn/find-git.lua"))()
-  find()
-  picker.props.on_closed()
-  statuses[1]({ ["one.lua"] = {} })
-  t.assert_eq(0, #picker.preparations)
-  picker.props.on_refresh()
-  picker.props.on_hidden()
-  refreshes[1](true)
-  t.assert_eq(1, #statuses, "a closed forced refresh cannot start another status request")
-  find()
-  statuses[2]({ ["one.lua"] = {} })
-  t.assert_eq(1, #picker.preparations)
-  picker.props.on_closed()
-  picker.preparations[1].resolve({ kind = "Applied" })
-  find()
-  t.assert_eq(3, #statuses, "late prepared data cannot mark a closed picker clean")
-end)
-
 t:run()

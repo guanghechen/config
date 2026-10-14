@@ -46,6 +46,7 @@ local Nvimbar = nvimbar.Nvimbar
 ---@field public flags_start_index      ?0|1
 ---@field public on_drawed              ?era.view.picker.result.IOnDrawed
 ---@field public status                 ?era.view.picker.result.IStatusSnapshot
+---@field public winbar                 ?boolean False omits the bar; position observables remain available.
 ---@field public winline_hl             string
 ---@field public diagnostic_scope       string
 ---@field public augroup_prefix         string
@@ -63,7 +64,7 @@ local Nvimbar = nvimbar.Nvimbar
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _augroup_CursorMoved integer
----@field protected _nvimbar            era.m.nvimbar.Nvimbar
+---@field protected _nvimbar            ?era.m.nvimbar.Nvimbar
 ---@field protected _scheduler_content  stl.c.Scheduler
 ---@field protected _scheduler_lnum_current stl.c.Scheduler
 ---@field protected _scheduler_lnum_present stl.c.Scheduler
@@ -132,57 +133,59 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type era.m.nvimbar.Nvimbar
-  local result_nvimbar = Nvimbar.new({
-    name = string.format("%s#winline", fullname),
-    comp_sep = "",
-    comp_sep_hlname = winline_hl,
-    comp_sep_hlname_active = winline_hl,
-    get_max_width = function()
-      local winnr = self._winnr ---@type integer|nil
-      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        return vim.api.nvim_win_get_width(winnr)
-      end
-      return 0
-    end,
-    get_preset_context = function()
-      local winnr = self._winnr ---@type integer|nil
-      return { winnr = winnr }
-    end,
-    is_active = function()
-      local winnr = self._winnr ---@type integer|nil
-      return winnr == vim.api.nvim_get_current_win()
-    end,
-    on_fulfilled = function(result)
-      local winnr = self._winnr ---@type integer|nil
-      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
-      end
-    end,
-  })
-    :place({
-      position = "left",
-      priority = 100,
-      component = c.lazy(function()
-        return c.picker.result_flags(position, flags, flags_start_index)
-      end),
+  local result_nvimbar ---@type era.m.nvimbar.Nvimbar|nil
+  if props.winbar ~= false then
+    result_nvimbar = Nvimbar.new({
+      name = string.format("%s#winline", fullname),
+      comp_sep = "",
+      comp_sep_hlname = winline_hl,
+      comp_sep_hlname_active = winline_hl,
+      get_max_width = function()
+        local winnr = self._winnr ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          return vim.api.nvim_win_get_width(winnr)
+        end
+        return 0
+      end,
+      get_preset_context = function()
+        local winnr = self._winnr ---@type integer|nil
+        return { winnr = winnr }
+      end,
+      is_active = function()
+        local winnr = self._winnr ---@type integer|nil
+        return winnr == vim.api.nvim_get_current_win()
+      end,
+      on_fulfilled = function(result)
+        local winnr = self._winnr ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
+        end
+      end,
     })
-    :place({
-      position = "right",
-      priority = 100,
-      component = c.lazy(function()
-        return c.picker.result_pos(position, _o_lnum_current, _o_lnum_total)
-      end),
-    })
+      :place({
+        position = "left",
+        priority = 100,
+        component = c.lazy(function()
+          return c.picker.result_flags(position, flags, flags_start_index)
+        end),
+      })
+      :place({
+        position = "right",
+        priority = 100,
+        component = c.lazy(function()
+          return c.picker.result_pos(position, _o_lnum_current, _o_lnum_total)
+        end),
+      })
 
-  if status ~= nil then
-    result_nvimbar:place({
-      position = "center",
-      priority = 200,
-      component = c.lazy(function()
-        return c.picker.result_status(position, status)
-      end),
-    })
+    if status ~= nil then
+      result_nvimbar:place({
+        position = "center",
+        priority = 200,
+        component = c.lazy(function()
+          return c.picker.result_status(position, status)
+        end),
+      })
+    end
   end
 
   ---@type stl.c.Scheduler
@@ -206,7 +209,7 @@ function M.new(props)
           local sign = dot.var.sign.PICKER_RESULT_CURRENT ---@type string
           local frame = native_tree:frame()
           local id = frame and frame:node_at(lnum)
-          local flags = id and frame:flags(id)
+          local flags = frame and id and frame:flags(id)
           if flags and flags.marked then
             sign = dot.var.sign.PICKER_RESULT_SELECTED_CURRENT
           elseif lnum == lnum_present then
@@ -298,7 +301,7 @@ function M.new(props)
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local lnum_total = _o_lnum_total:snapshot() ---@type integer
       vim.api.nvim_set_option_value("cursorline", lnum_total > 0, { win = winnr, scope = "local" })
-      result_nvimbar:refresh()
+      self:mark_nvimbar_dirty()
     end
   end, true)
 
@@ -314,7 +317,7 @@ function M.new(props)
       if cursor[1] ~= lnum_current and native_tree.view then
         native_tree.view:set_cursor(lnum_current)
       end
-      result_nvimbar:refresh()
+      self:mark_nvimbar_dirty()
     end
     self._scheduler_lnum_current:schedule()
   end, true)
@@ -354,7 +357,7 @@ function M:dispose()
   local lnum_present = self.lnum_present ---@type stl.c.Observable
   local lnum_total = self.lnum_total ---@type stl.c.Observable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
-  local owned_nvimbar = self._nvimbar ---@type era.m.nvimbar.Nvimbar
+  local owned_nvimbar = self._nvimbar ---@type era.m.nvimbar.Nvimbar|nil
   local scheduler_content = self._scheduler_content ---@type stl.c.Scheduler
   local scheduler_lnum_current = self._scheduler_lnum_current ---@type stl.c.Scheduler
   local scheduler_lnum_present = self._scheduler_lnum_present ---@type stl.c.Scheduler
@@ -381,7 +384,11 @@ function M:dispose()
   local ok4, error4 = pcall(stl.nvim.win.close, winnr)
   local ok5, error5 = pcall(stl.nvim.buf.close, bufnr)
   local ok6, error6 = pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
-  local ok7, error7 = pcall(owned_nvimbar.dispose, owned_nvimbar)
+  local ok7, error7 = pcall(function()
+    if owned_nvimbar then
+      owned_nvimbar:dispose()
+    end
+  end)
   local ok8, error8 = pcall(scheduler_content.dispose, scheduler_content)
   local ok9, error9 = pcall(scheduler_lnum_current.dispose, scheduler_lnum_current)
   local ok10, error10 = pcall(scheduler_lnum_present.dispose, scheduler_lnum_present)
@@ -508,7 +515,8 @@ function M:create_win(winopts, dimension)
   vim.api.nvim_set_option_value("relativenumber", winopts.number, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
-  self._nvimbar:refresh()
+  vim.api.nvim_set_option_value("winbar", "", { win = winnr, scope = "local" })
+  self:mark_nvimbar_dirty()
   vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", winopts.winhighlight, { win = winnr, scope = "local" })
@@ -576,7 +584,7 @@ end
 function M:resize(dimension)
   self:__health__()
 
-  self._nvimbar:refresh()
+  self:mark_nvimbar_dirty()
 
   local winnr = self._winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -606,7 +614,9 @@ end
 ---@return era.view.PickerResult
 function M:mark_nvimbar_dirty()
   self:__health__()
-  self._nvimbar:refresh()
+  if self._nvimbar then
+    self._nvimbar:refresh()
+  end
   return self
 end
 
