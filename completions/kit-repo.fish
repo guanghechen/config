@@ -7,15 +7,21 @@ function __kit_repo_complete
         set -e words[1]
     end
     set -l current (commandline -ct)
-    command kit-repo completion --fish -- $words "$current" | while read -l record
-        set -l fields (string split -m 1 \t -- $record)
-        set -l candidate (string escape -- $fields[1])
-        if test (count $fields) -gt 1
-            printf '%s\t%s\n' $candidate "$fields[2]"
+    # Keep blank lines and trailing newlines when capturing query records.
+    set -l records (command 'kit-repo' completion --fish -- $words "$current" | string split0)
+    # Simple candidate tokens need no per-record escaping.
+    if string match -qr '\A(?:[-./0-9A-Za-z_]+(?:\t[^\n]*)?\n)*\z' -- "$records"
+        printf '%s' "$records"
+        return
+    end
+    printf '%s' "$records" | while read -l -d \t candidate description
+        set candidate (string escape -- "$candidate")
+        if set -q description[1]
+            printf '%s\t%s\n' $candidate "$description"
         else
             printf '%s\n' $candidate
         end
     end
 end
 
-complete -c kit-repo -f -a '(__kit_repo_complete)'
+complete -c 'kit-repo' -f -a '(__kit_repo_complete)'
