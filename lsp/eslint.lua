@@ -1,6 +1,7 @@
 local __module_name__ = "lsp.eslint" ---@type string
 
--- https://github.com/neovim/nvim-lspconfig/blob/78596b61676d361a74ea3f3abbbf83d5fe6f5519/lsp/eslint.lua
+-- Upstream reference: https://github.com/neovim/nvim-lspconfig/blob/ac062d0d01c019c0dbdb798968f3e5d8b35c3853/lsp/eslint.lua
+-- Derived from nvim-lspconfig (Apache-2.0); license in lua/era/m/lsp/init.lua.
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
 ---@type string[]
@@ -107,7 +108,11 @@ end
 ---@type vim.lsp.Config
 return {
   capabilities = era.m.lsp.event.get_capabilities(),
-  cmd = { "vscode-eslint-language-server", "--stdio" },
+  cmd = function(dispatchers, config)
+    local command = config.root_dir and era.m.lsp.fn.locate_node_bin(config.root_dir, "vscode-eslint-language-server")
+      or "vscode-eslint-language-server"
+    return vim.lsp.rpc.start({ command, "--stdio" }, dispatchers, { cwd = config.root_dir })
+  end,
   filetypes = {
     "javascript",
     "javascriptreact",

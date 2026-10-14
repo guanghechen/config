@@ -30,3 +30,10 @@ nvim -l __test__/run.lua __test__/specs/era/plugin/nvim-lint_spec.lua
 
 覆盖同一 debounce window 的多个 buffer、隐藏被动加载、隐藏显式请求、unloaded/deleted buffer、重新 setup 和批内失败隔离。
 需要真实 linter 验证时使用任务 fixture 与已安装工具，并区分 adapter 测试和外部工具行为。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`f6230a5c06ba59e6059c14637f1dbe29a7978b9b`（`nvim@nvim-lint`）。
+- 基线与范围：已核实历史接口审计锚点到目标的祖先关系；9 个 commits 未修改 `lua/lint.lua`，变化位于 linter definitions、SARIF parser 与文档。
+- 结果：无需 adapter 代码移植。开始任务时的安装 HEAD 与 staged lockfile 已是此目标；保留本地 buffer ownership、调度和现有 linters。
+- 验证：`__test__/specs/era/plugin/nvim-lint_spec.lua`：6 cases 通过。

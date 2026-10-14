@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/82af15ba583c8e1ba1e5f718ec3e287b89265a0c/lsp/tailwindcss.lua
+-- Upstream reference: https://github.com/neovim/nvim-lspconfig/blob/ac062d0d01c019c0dbdb798968f3e5d8b35c3853/lsp/tailwindcss.lua
+-- Derived from nvim-lspconfig (Apache-2.0); license in lua/era/m/lsp/init.lua.
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#tailwindcss
 
 ---@type string[]
@@ -50,18 +51,6 @@ local function root_dir(bufnr, on_dir)
   on_dir(rootdir)
 end
 
----@return string|nil
-local function detectLspServer()
-  local _, binPath = era.m.lsp.fn.locate_lsp_root(
-    dot.path.cwd() .. stl.env.PATH_SEP .. "a.css",
-    { "./node_modules/.bin/tailwindcss-language-server" }
-  )
-  if binPath ~= nil and vim.fn.executable(binPath) == 1 then
-    return binPath
-  end
-  return nil
-end
-
 ---@param _                             lsp.InitializeParams
 ---@param config                        table
 ---@return nil
@@ -71,8 +60,6 @@ local function before_init(_, config)
   config.settings.editor.tabSize = config.settings.editor.tabSize or vim.lsp.util.get_effective_tabstop()
 end
 
-local lspBinPath = detectLspServer()
-
 local capabilities = era.m.lsp.event.get_capabilities()
 local workspace = capabilities.workspace --[[@as lsp.WorkspaceClientCapabilities]]
 local watched_files = workspace.didChangeWatchedFiles --[[@as lsp.DidChangeWatchedFilesClientCapabilities]]
@@ -81,7 +68,11 @@ watched_files.dynamicRegistration = true
 ---@type vim.lsp.Config
 return {
   capabilities = capabilities,
-  cmd = { lspBinPath or "tailwindcss-language-server", "--stdio" },
+  cmd = function(dispatchers, config)
+    local command = config.root_dir and era.m.lsp.fn.locate_node_bin(config.root_dir, "tailwindcss-language-server")
+      or "tailwindcss-language-server"
+    return vim.lsp.rpc.start({ command, "--stdio" }, dispatchers, { cwd = config.root_dir })
+  end,
   filetypes = filetypes,
   workspace_required = true,
   settings = {

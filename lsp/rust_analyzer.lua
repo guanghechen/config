@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/784531c83cdab93ed7a2ec10f0111ca564b1c18a/lsp/rust_analyzer.lua
+-- Upstream reference: https://github.com/neovim/nvim-lspconfig/blob/ac062d0d01c019c0dbdb798968f3e5d8b35c3853/lsp/rust_analyzer.lua
+-- Derived from nvim-lspconfig (Apache-2.0); license in lua/era/m/lsp/init.lua.
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#rust_analyzer
 
 local __module_name__ = "lsp.rust_analyzer" ---@type string
@@ -36,8 +37,18 @@ local function is_library(fname)
   local rustup_home = os.getenv("RUSTUP_HOME") or dot.path.join(user_home, ".rustup")
   local toolchains = dot.path.join(rustup_home, "toolchains")
 
+  local cargo = vim.tbl_get(vim.lsp.config.rust_analyzer, "settings", "rust-analyzer", "cargo") or {}
+  local sysroot_src = cargo.sysrootSrc
+  if type(sysroot_src) ~= "string" and type(cargo.sysroot) == "string" then
+    sysroot_src = dot.path.join(cargo.sysroot, "lib/rustlib/src/rust/library")
+  end
+  local library_paths = { toolchains, registry, git_registry } ---@type string[]
+  if type(sysroot_src) == "string" then
+    library_paths[#library_paths + 1] = dot.path.normalize(sysroot_src, false)
+  end
+
   local normalized_fname = dot.path.normalize(fname, false)
-  for _, item in ipairs({ toolchains, registry, git_registry }) do
+  for _, item in ipairs(library_paths) do
     if yoz.path.is_descendant(item, normalized_fname) then
       local clients = vim.lsp.get_clients({ name = "rust_analyzer" })
       return #clients > 0 and clients[#clients].config.root_dir or nil
@@ -47,6 +58,7 @@ end
 
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
+---@return nil
 local function root_dir(bufnr, on_dir)
   local fname = vim.api.nvim_buf_get_name(bufnr)
   local reused_dir = is_library(fname)
@@ -63,6 +75,15 @@ local function root_dir(bufnr, on_dir)
       vim.fs.root(fname, { "rust-project.json" })
         or vim.fs.dirname(vim.fs.find(".git", { path = fname, upward = true })[1])
     )
+    return
+  end
+
+  if vim.fn.executable("cargo") ~= 1 then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "root_dir",
+      message = "cargo executable not found.",
+    })
     return
   end
 

@@ -29,3 +29,10 @@ nvim -l __test__/run.lua era/m/git/
 
 按改动选择 hunk/sign/blame/status/index/staging 等 suite。使用测试拥有的隔离数据验证 Git 写入，不把用户当前工作区当操作 fixture。
 涉及 Rust 时执行仓库 Rust checks；单项环境失败须注明触发步骤和未覆盖行为。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`fd780920613e541cbdfac41bf711583ed49f9249`（`nvim@gitsigns.nvim`）。
+- 基线与范围：已核实来源锚点到目标的祖先关系并核对相关差异；范围按本地 Git 模块与现有 native backend 划分。
+- 结果：已移植 watcher 失败 fallback：事件 watcher 创建/启动/回调失败后关闭旧 handles，异步轮询 HEAD/index/packed-refs/reftable/当前 ref，最多一轮 stat 在途；完整契约见现有 Git 设计。保留本地 native status/ignore/blame/staging、零计数 hunk 语义与 Diffview，不引入上游 CLI、diff panel 或 config runtime。完整许可见 [Git 入口顶部注释](../../../../lua/era/m/git/init.lua)。
+- 验证：`era/m/git/`：25 suites、204 cases 通过；包含 fs_event 启动及回调失败、ref 创建/切换、index 替换与 dispose 清理。

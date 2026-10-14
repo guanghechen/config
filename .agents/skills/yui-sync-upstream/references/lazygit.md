@@ -27,3 +27,8 @@ nvim -l __test__/run.lua __test__/specs/era/m/diffview/commit_graph_spec.lua
 ```
 
 重点覆盖线性历史、分叉、merge、多父节点、断开的历史与长 lane。变更复杂度时再使用大 DAG 验证，而非同步整个 lazygit runtime。
+
+## 最近检查（2026-10-14）
+
+- 本次远端 refs 查询仍未找到 `refs/heads/nvim@lazygit`；没有可固定的同步目标。
+- 已保留本地来源盘点；未进行代码移植或推进已同步 revision。镜像分支可用后再执行上述核对与验证。

@@ -27,3 +27,10 @@ nvim -l __test__/run.lua __test__/specs/era/keystroke/splitjoin_spec.lua
 ```
 
 覆盖嵌套调用、字符串逗号、转义、Visual/Normal、undo/repeat；保留现有 malformed-bracket 扫描预算用例。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`be4536a1b8608a482dfac7aec5ce91b1c2f9bdab`（`nvim@mini.splitjoin`）。
+- 基线与范围：首次建立固定参考；历史导入 revision 仍未知。已对照括号/分隔符扫描、extmark 编辑和 comments 的 `b/f` flags。
+- 结果：无需代码移植。上游 pre-hook 返回空 positions 的修复不对应本地公开接口；保留本地扫描预算、Visual/operator、undo/repeat 与注释缩进处理。
+- 验证：`__test__/specs/era/keystroke/splitjoin_spec.lua`：13 cases 通过。

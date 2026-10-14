@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/592de750bf5b8c45fc48cebfde585721626ffd6d/lsp/yamlls.lua
+-- Upstream reference: https://github.com/neovim/nvim-lspconfig/blob/ac062d0d01c019c0dbdb798968f3e5d8b35c3853/lsp/yamlls.lua
+-- Derived from nvim-lspconfig (Apache-2.0); license in lua/era/m/lsp/init.lua.
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#yamlls
 
 ---@param client                        vim.lsp.Client
@@ -14,7 +15,11 @@ end
 ---@type vim.lsp.Config
 return {
   capabilities = era.m.lsp.event.get_capabilities(),
-  cmd = { "yaml-language-server", "--stdio" },
+  cmd = function(dispatchers, config)
+    local command = config.root_dir and era.m.lsp.fn.locate_node_bin(config.root_dir, "yaml-language-server")
+      or "yaml-language-server"
+    return vim.lsp.rpc.start({ command, "--stdio" }, dispatchers, { cwd = config.root_dir })
+  end,
   filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab", "yaml.helm-values" },
   root_markers = { ".git" },
   settings = {

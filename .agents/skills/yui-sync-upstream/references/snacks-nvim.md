@@ -46,3 +46,8 @@ nvim -l __test__/run.lua __test__/specs/era/m/explorer/prompt_spec.lua
 
 Explorer prompt 测试只覆盖 input 的一个消费者。当前没有找到 Proc 和 illuminate 的专用 suite；改动它们时补针对性 headless 验证，
 分别检查进程回调/handle 生命周期或 documentHighlight/跳转，而不是用 scroll suite 代替。
+
+## 最近检查（2026-10-14）
+
+- 本次远端 refs 查询仍未找到 `refs/heads/nvim@snacks.nvim`；没有可固定的同步目标。
+- 已保留本地来源盘点；未进行代码移植或推进已同步 revision。镜像分支可用后再执行上述核对与验证。

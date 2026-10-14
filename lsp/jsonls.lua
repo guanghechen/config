@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/5a49a97f9d3de5c39a2b18d583035285b3640cb0/lsp/jsonls.lua
+-- Upstream reference: https://github.com/neovim/nvim-lspconfig/blob/ac062d0d01c019c0dbdb798968f3e5d8b35c3853/lsp/jsonls.lua
+-- Derived from nvim-lspconfig (Apache-2.0); license in lua/era/m/lsp/init.lua.
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#jsonls
 
 local schemas = {
@@ -106,7 +107,11 @@ local schemas = {
 ---@type vim.lsp.Config
 return {
   capabilities = era.m.lsp.event.get_capabilities(),
-  cmd = { "vscode-json-language-server", "--stdio" },
+  cmd = function(dispatchers, config)
+    local command = config.root_dir and era.m.lsp.fn.locate_node_bin(config.root_dir, "vscode-json-language-server")
+      or "vscode-json-language-server"
+    return vim.lsp.rpc.start({ command, "--stdio" }, dispatchers, { cwd = config.root_dir })
+  end,
   filetypes = { "json", "jsonc", "excalidraw" },
   init_options = {
     provideFormatter = true,

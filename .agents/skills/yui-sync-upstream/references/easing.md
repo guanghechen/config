@@ -29,3 +29,8 @@ nvim -l __test__/run.lua __test__/specs/era/dressing/dim_spec.lua
 ```
 
 首条仅是加载与 linear 端点 smoke check；实际修改其他曲线时必须补相应数值采样，不能据此宣称全部公式已验证。
+
+## 最近检查（2026-10-14）
+
+- 本次远端 refs 查询仍未找到 `refs/heads/nvim@easing`；没有可固定的同步目标。
+- 已保留本地来源盘点；未进行代码移植或推进已同步 revision。镜像分支可用后再执行上述核对与验证。

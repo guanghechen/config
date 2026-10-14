@@ -30,3 +30,11 @@ nvim -l __test__/run.lua era/keystroke/cmp/
 
 按改动覆盖接受/取消、输入排队、resolve、snippet、undo/dot-repeat、Unicode 和真实 UI。
 算法或性能比较按已有 comparison/benchmark 文档执行；修改 Rust 时运行仓库规定的 Rust checks。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`78336bc89ee5365633bcf754d93df01678b5c08f`（`nvim@blink.cmp`）。
+- 基线与范围：首次建立参考，重点对照 `lua/blink/cmp/lib/text_edits.lua` 的 scratch-completion、buflisted、offset encoding 与 null 字段处理。
+- 结果：无需代码移植；保留本地 native preview 的增量录制、真实 UTF-8 删除文本、无 synthetic end key 与 source ownership。此记录不声明整个 Blink runtime 已同步。
+- 验证环境：macOS、Neovim 0.12.6。
+- 验证：`era/keystroke/cmp/`：13 suites 中 261 cases 通过、3 cases 在创建含 `0xff` 的文件名时以 EILSEQ 失败（input_spec 两例、source_spec 一例）；尚未进入相应补全逻辑。直接文件系统探测同样返回 errno 92。验收未全通过，保留这三个真实文件名用例的验证缺口；Neovide 实机 UI 未验证。

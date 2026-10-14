@@ -27,3 +27,10 @@ nvim -l __test__/run.lua __test__/specs/stl/tmux_spec.lua
 ```
 
 优先使用现有 mock 验证单 pane、zoom、多 pane 和异常响应。需要真实导航时，按仓库规则使用用户指定的精确 `%N`，不自动选择目标 pane。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`4898c98702954439233fdaf764c39636681e2861`（`nvim@nvim-tmux-navigation`）。
+- 基线与范围：镜像 tip 与来源锚点相同，没有上游增量。
+- 结果：无需代码移植；保留本地 socket、timeout、同步/异步 helper 和参数数组传递。
+- 验证：`__test__/specs/stl/tmux_spec.lua`：8 cases 通过，使用现有 mock。

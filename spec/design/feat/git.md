@@ -85,6 +85,11 @@ HEAD 变化及 ref 目录事件后重新绑定，覆盖嵌套 branch 路径与�
 Index 使用目录级监听：Git 可能通过 rename `index.lock` → `index` 替换文件，
 只监听旧 index 文件可能漏掉后续事件。`filename == "index"` 进入独立的 index 刷新流程。
 
+任一 `fs_event` 创建、启动或运行时失败后，关闭该仓库的事件 watcher，改用 200ms 间隔的异步 metadata polling。
+轮询 gitdir 的 HEAD/index、commondir 的 packed-refs、reftable/tables.list 和当前 branch ref，
+以 inode、size、mtime/ctime 等 fingerprint 识别修改、替换、创建与删除。最多保留一轮 stat 请求，
+沿用现有 HEAD/index debounce；HEAD 变化后更新 ref 目标。切换仓库或 dispose 后，旧轮询结果不再发布。
+
 ### 事件与刷新
 
 | 事件                       | Debounce     | 刷新                                                                            |

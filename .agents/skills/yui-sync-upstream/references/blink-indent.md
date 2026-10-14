@@ -28,3 +28,10 @@ nvim -l __test__/run.lua era/dressing/indentline/
 ```
 
 该目录覆盖 parser、render、provider、frame、setup 和实际 screen；修改绘制时保留滚动、分屏、resize、fold 和空行场景。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`2e9c9768affeaf3a48b2dc329eb59763012f79f6`（`nvim@blink.indent`）。
+- 基线与范围：来源锚点到目标的 10 个 commits 已核对；范围为静态缩进解析、绘制、准入和 frame 生命周期。
+- 结果：无需代码移植。本地已有 unloaded-buffer guard、tab/listchars 保留、viewport 缓存与 extmark options 复用；上游 scope/motion 的修复继续由独立 mini.indentscope 模块的本地契约处理。
+- 验证：`era/dressing/indentline/`：6 suites、36 cases 通过。

@@ -27,3 +27,10 @@ nvim -l __test__/run.lua era/dressing/hipattern/
 ```
 
 检查局部插入/删除后的旧 extmark 清理、跨行匹配、buffer detach 和重配置。规则改变时补对应实际文本用例。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`8e18b4970f21be0db157104786d2be43058cdd44`（`nvim@mini.hipatterns`）。
+- 基线与范围：来源锚点到目标只有 README logo 更新，`lua/mini/hipatterns.lua` 未变化。
+- 结果：无需代码移植；本地增量刷新、规则集合和私有内容限制保持现有契约。
+- 验证：`era/dressing/hipattern/`：4 suites、23 cases 通过。

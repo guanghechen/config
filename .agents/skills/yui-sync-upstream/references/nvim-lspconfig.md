@@ -16,9 +16,10 @@
   [typescript.lua](../../../../lua/era/m/lsp/typescript.lua) 的 TypeScript server 选择。
 - 关系：配置与必要回调的派生实现；本地直接维护这些定义，不依赖 nvim-lspconfig runtime，不能用统一插件版本作为基线。
 
-各文件的来源记录如下；这些锚点不表示后续差异均已移植，使用前仍须在镜像核实对象及其分支关系：
+下表保留 2026-10-14 本次同步前的来源锚点，作为历史基线。已改文件的源码链接记录本次上游参考 revision，
+见文末「最近核对」；参考 revision 不表示本地与上游逐项完全一致。
 
-| 本地 server（`lsp/<name>.lua`）                          | 源码中的来源锚点                           |
+| 本地 server（`lsp/<name>.lua`）                          | 本次同步前的来源锚点                       |
 | -------------------------------------------------------- | ------------------------------------------ |
 | `basedpyright`                                           | `a1d25809c5f732756cbc06a995e1426b956cdad9` |
 | `bashls`、`cssls`、`dockerls`、`jsonls`、`ruff`、`taplo` | `5a49a97f9d3de5c39a2b18d583035285b3640cb0` |
@@ -59,8 +60,19 @@
 nvim -l __test__/run.lua era/m/lsp/
 ```
 
-现有 `init`、`fn`、`event`、`biome`、`typescript`、`typescript_activation` suites
-覆盖启用入口、root 查找、公共事件、Biome/ESLint 与 TypeScript 选择等行为，不代表每个 server 的配置均已验证。
+现有 `init`、`fn`、`event`、`biome`、`typescript`、`typescript_activation`、`server_commands`、`rust_analyzer` suites
+覆盖启用入口、root/executable 查找、公共事件、Biome/ESLint 与 TypeScript 选择等行为，不代表每个 server 的配置均已验证。
 修改其他 server 时补对应配置/回调的定向用例；需要真实 server 时使用任务 fixture 与已安装工具，
 按 [LSP headless debug guide](../../../../spec/debug/lsp.md) 检查实际 attach、root、settings 和目标行为，
 并记录 server 版本与未覆盖项。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`ac062d0d01c019c0dbdb798968f3e5d8b35c3853`（`nvim@nvim-lspconfig`）。
+- 源码参考：本次已改动的 `cssls`、`eslint`、`html`、`jsonls`、`rust_analyzer`、`tailwindcss`、`yamlls`
+  的 `Upstream reference` 链接均指向上述固定目标；旧来源锚点保留在前表。
+- 基线与范围：表列全部 23 个 server 已逐文件对照。20 个固定锚点均已核实为目标祖先；dartls、biome、tsc 首次建立固定参考，原有来源缺口保持注明。
+- 结果：已移植 cssls/eslint/html/jsonls/tailwindcss/yamlls 的按 workspace 选择 executable；修正 Tailwind 在加载时绑定 editor cwd 的问题。rust_analyzer 支持显式 `cargo.sysrootSrc/sysroot` 复用，并在 Cargo 项目缺少 cargo 时停止 metadata 启动。clangd 复合 filetypes、Pyright tagged hints、ESLint workspace URI/flat-config 默认值及 Rust runnable environment 已由本地实现覆盖。
+- 验证：`era/m/lsp/`：11 suites、84 cases 通过；6 个已改 command 的真实已安装 server 均通过 initialization smoke。其他 server 未逐一进行实机回归。
+- 实机环境：macOS、Neovim 0.12.6；cssls/eslint/html/jsonls 使用 `vscode-langservers-extracted 4.10.0`，Tailwind 使用 `@tailwindcss/language-server 0.16.0`，YAML 使用 `yaml-language-server 1.24.0`。
+- 保留差异：TypeScript 的项目版本选择、tsc/vtsls/Deno 准入、Biome/ESLint 共存、schema 与 UI settings；不引入全局 TypeScript fallback、同步 `--version` 探测或每次 root 解析的同步 `cargo -Z` sysroot 查询。继续使用本地异步 metadata 路径。完整许可见 [LSP 入口顶部注释](../../../../lua/era/m/lsp/init.lua)。

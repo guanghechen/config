@@ -27,3 +27,8 @@ nvim -l __test__/run.lua __test__/specs/era/dressing/commentstring_spec.lua
 ```
 
 检查无 parser/无 node 的 fallback、多候选分隔符、文件类型别名，以及重新 setup 后是否重复包装原生函数。
+
+## 最近检查（2026-10-14）
+
+- 本次远端 refs 查询仍未找到 `refs/heads/nvim@ts-comments.nvim`；没有可固定的同步目标。
+- 已保留本地来源盘点；未进行代码移植或推进已同步 revision。镜像分支可用后再执行上述核对与验证。

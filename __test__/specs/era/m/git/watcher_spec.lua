@@ -165,4 +165,91 @@ t:test("watcher observes commits from a linked worktree", function()
   end, 3000, "worktree ref update should refresh HEAD")
 end)
 
+for _, failure in ipairs({ "start", "callback" }) do
+  t:test("watcher polls refs and index after fs_event " .. failure .. " failure", function()
+    local repo = vim.fn.tempname() ---@type string
+    vim.fn.mkdir(repo, "p")
+    t:defer(function()
+      watcher.dispose()
+      vim.fn.delete(repo, "rf")
+    end)
+    git(repo, "init", "-q")
+    git(repo, "config", "user.email", "test@test")
+    git(repo, "config", "user.name", "test")
+    vim.fn.writefile({ "base" }, repo .. "/f.txt")
+    git(repo, "add", "f.txt")
+    git(repo, "commit", "-qm", "base")
+    git(repo, "checkout", "-qb", "feature/polled")
+    git(repo, "pack-refs", "--all", "--prune")
+
+    local callbacks = {}
+    local closed = 0
+    t:patch_table(vim.uv, "new_fs_event", function()
+      local closing = false
+      return {
+        start = function(_, _, _, callback)
+          callbacks[#callbacks + 1] = callback
+          if failure == "start" then
+            return nil, "ENOSYS"
+          end
+          return 0
+        end,
+        stop = function() end,
+        close = function()
+          closing = true
+          closed = closed + 1
+        end,
+        is_closing = function()
+          return closing
+        end,
+      }
+    end)
+    local timers = {}
+    local new_timer = vim.uv.new_timer
+    t:patch_table(vim.uv, "new_timer", function()
+      local timer = assert(new_timer())
+      timers[#timers + 1] = timer
+      return timer
+    end)
+    local index_refreshes = 0
+    t:patch_table(era.m.git.buffer, "invalidate_index_all", function()
+      index_refreshes = index_refreshes + 1
+    end)
+
+    head_refreshes = 0
+    watcher.update(repo .. "/.git")
+    if failure == "callback" then
+      callbacks[1]("ENOSYS")
+    end
+    t.wait_until(function()
+      return head_refreshes > 0 and index_refreshes > 0
+    end, 3000, "polling initial metadata snapshot")
+    t.assert_true(closed > 0, "failed fs_event handles are closed")
+
+    head_refreshes, index_refreshes = 0, 0
+    vim.fn.writefile({ "changed" }, repo .. "/f.txt")
+    git(repo, "add", "f.txt")
+    t.assert_eq(0, git(repo, "commit", "-qm", "change").code)
+    t.wait_until(function()
+      return head_refreshes > 0 and index_refreshes > 0
+    end, 3000, "polling detects ref creation and index replacement")
+
+    head_refreshes = 0
+    git(repo, "checkout", "-qb", "feature/next")
+    t.wait_until(function()
+      return head_refreshes > 0
+    end, 3000, "polling follows the new HEAD ref")
+    head_refreshes = 0
+    t.assert_eq(0, git(repo, "commit", "--allow-empty", "-qm", "next").code)
+    t.wait_until(function()
+      return head_refreshes > 0
+    end, 3000, "polling observes subsequent commits")
+
+    watcher.dispose()
+    for _, timer in ipairs(timers) do
+      t.assert_true(timer:is_closing(), "dispose closes polling and debounce timers")
+    end
+  end)
+end
+
 t:run()

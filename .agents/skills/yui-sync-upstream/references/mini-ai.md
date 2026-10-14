@@ -30,3 +30,10 @@ nvim -l __test__/run.lua era/keystroke/textobject/
 
 重点验证 `di(`/`vi)`、嵌套参数、转义引号、空对象、UTF-8/EOF、count、连续 Visual 扩选和 dot-repeat。
 只有新增或移植了受许可约束的源码时，按所取上游文件保留其许可与署名。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`d0c4987a1ead2bcf4eb22cc9815c662d76677c08`（`nvim@mini.ai`）。
+- 基线与范围：首次建立固定参考；历史导入 revision 仍未知。范围为本地 pattern/search/find/action/keymap 与其 textobject 消费行为。
+- 结果：无需代码移植。对照了 Visual reference、forced motion、空对象、tag 闭标签空白及 Treesitter 调用变化；保留本地 `cover_or_next`、原生 fallback、对象 ID 与搜索范围。
+- 验证：`era/keystroke/textobject/`：6 suites、75 cases 通过。

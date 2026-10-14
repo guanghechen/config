@@ -29,3 +29,10 @@ nvim -l __test__/run.lua era/keystroke/textobject/
 ```
 
 检查空行、混合缩进、EOF、scope 切换、动画取消，以及 Visual/operator 的 inner 与 border 范围。
+
+## 最近核对（2026-10-14）
+
+- 审查目标：`14eecb1cf33d1db35b8ac665b1aab4d3c9b47fe3`（`nvim@mini.indentscope`）。
+- 基线与范围：来源锚点到目标只有 README logo 更新，`lua/mini/indentscope.lua` 未变化。
+- 结果：无需代码移植；保留本地 scope/draw/action 与 dim/textobject 的消费约定。
+- 验证：indentscope 27 cases、dim 1 case、textobject 75 cases 通过。
