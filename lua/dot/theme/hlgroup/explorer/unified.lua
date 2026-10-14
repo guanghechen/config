@@ -48,7 +48,7 @@ function M.gen_hlgroup_map(context)
     m_ft_git_staged = { fg = u.brightGreen, bold = true },
     m_ft_git_unmerged = { fg = u.brightOrange, bold = true },
     m_ft_git_unstaged = { fg = u.brightYellow, bold = true },
-    m_ft_git_untracked = { fg = u.fg4, bold = true },
+    m_ft_git_untracked = { fg = u.purple, bold = true },
     m_ft_pathsep = { fg = u.fg4 },
     m_ft_position = { fg = u.bg4 },
     m_ft_reference = { fg = u.purple, bold = true, italic = true },
