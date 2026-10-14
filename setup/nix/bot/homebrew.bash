@@ -42,13 +42,21 @@ brew install -y btop fastfetch httpie
 printf "\e[96minstalling GitHub CLI...\e[0m\n"
 brew install -y gh
 
-### Install GitHub Copilot CLI
-printf "\e[96minstalling GitHub Copilot CLI...\e[0m\n"
-brew install -y --cask copilot-cli
+### Install Claude Code
+printf "\e[96minstalling Claude Code...\e[0m\n"
+brew install -y --cask claude-code
 
 ### Install Codex
 printf "\e[96minstalling Codex...\e[0m\n"
 brew install -y --cask codex
+
+### Install Gemini CLI
+printf "\e[96minstalling Gemini CLI...\e[0m\n"
+brew install -y gemini-cli
+
+### Install GitHub Copilot CLI
+printf "\e[96minstalling GitHub Copilot CLI...\e[0m\n"
+brew install -y --cask copilot-cli
 
 ### Install usual tools
 printf "\e[96minstalling general CLI tools...\e[0m\n"
