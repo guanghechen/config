@@ -22,6 +22,4 @@ const fp = extractFilePath(input)
 
 if (fp && isSensitiveFile(fp)) {
   outputHook("PreToolUse", "deny", `"${path.basename(fp)}" is a sensitive file and is blocked by hook policy.`)
-} else {
-  outputHook("PreToolUse", "allow")
 }

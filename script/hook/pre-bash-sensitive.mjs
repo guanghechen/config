@@ -10,7 +10,7 @@
  */
 
 import { readFileSync } from "node:fs"
-import { SENSITIVE_PATHS, SENSITIVE_PATTERNS } from "./sensitive.mjs"
+import { isSensitiveFile } from "./sensitive.mjs"
 import { outputHook } from "./util.mjs"
 
 const DANGEROUS_COMMANDS = new Set([
@@ -32,16 +32,76 @@ const PROCESS_WRAPPERS = new Set(["timeout", "time", "nice", "nohup", "stdbuf", 
 
 const SHELL_DASH_C = new Set(["bash", "sh", "zsh", "fish", "dash", "ash", "ksh"])
 
+const SEARCH_COMMANDS = new Set(["rg", "grep", "egrep", "fgrep"])
+const SEARCH_VALUE_OPTIONS = new Set([
+  "-A", "--after-context", "-B", "--before-context", "-C", "--context",
+  "-m", "--max-count", "--max-depth", "--max-filesize", "-M", "--max-columns",
+  "-g", "--glob", "--iglob", "-t", "--type", "-T", "--type-not", "--type-add", "--type-clear",
+  "-E", "--encoding", "--engine", "--dfa-size-limit", "--regex-size-limit", "-j", "--threads",
+  "--replace", "--sort", "--sortr", "--color", "--colors", "--path-separator",
+  "--field-context-separator", "--field-match-separator", "--context-separator",
+  "--hostname-bin", "--hyperlink-format", "--pre", "--pre-glob",
+  "--include", "--exclude", "--exclude-dir", "--label", "--binary-files",
+  "-d", "--directories", "-D", "--devices",
+])
+
 const SUBCOMMAND_SEPARATORS = /(?:&&|\|\||;|\||\|&|&|\n)/
 
 function looksSensitive(token) {
   let cleaned = token.replace(/^['"]|['"]$/g, "")
   cleaned = cleaned.replace(/^@/, "") // curl --data @file
   if (!cleaned || cleaned.startsWith("-")) return false
-  if (SENSITIVE_PATHS.some((p) => p.test(cleaned))) return true
-  const base = cleaned.includes("/") ? cleaned.slice(cleaned.lastIndexOf("/") + 1) : cleaned
-  if (SENSITIVE_PATTERNS.some((p) => p.test(base))) return true
-  return false
+  return isSensitiveFile(cleaned)
+}
+
+function searchFileArguments(command, args) {
+  const files = []
+  const positional = []
+  let explicitPattern = false
+  let options = true
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (options && arg === "--") {
+      options = false
+      continue
+    }
+    if (options && arg.startsWith("--")) {
+      const equals = arg.indexOf("=")
+      const option = equals === -1 ? arg : arg.slice(0, equals)
+      if (option === "--files") explicitPattern = true
+      if (option === "--regexp" || option === "--file" || option === "--exclude-from") {
+        const value = equals === -1 ? args[++i] : arg.slice(equals + 1)
+        if (option !== "--exclude-from") explicitPattern = true
+        if (option !== "--regexp" && value) files.push(value)
+      } else if (SEARCH_VALUE_OPTIONS.has(option) && equals === -1) {
+        i++
+      }
+      continue
+    }
+    if (options && arg.startsWith("-") && arg !== "-") {
+      for (let j = 1; j < arg.length; j++) {
+        const option = "-" + arg[j]
+        if (option === "-e" || option === "-f") {
+          const value = arg.slice(j + 1) || args[++i]
+          explicitPattern = true
+          if (option === "-f" && value) files.push(value)
+          break
+        }
+        // grep -E/-r are flags; rg -E/-r consume an encoding/replacement.
+        const takesValue = SEARCH_VALUE_OPTIONS.has(option) && (option !== "-E" || command === "rg")
+        if (takesValue || (option === "-r" && command === "rg")) {
+          if (j === arg.length - 1) i++
+          break
+        }
+      }
+      continue
+    }
+    positional.push(arg)
+  }
+
+  // An explicit pattern can follow file operands, so decide after parsing all options.
+  return files.concat(explicitPattern ? positional : positional.slice(1))
 }
 
 function tokenize(subcommand) {
@@ -101,7 +161,9 @@ function findOffendingCommand(subcommand) {
 
   if (!DANGEROUS_COMMANDS.has(base)) return null
 
-  for (const tok of tokens.slice(i + 1)) {
+  const args = tokens.slice(i + 1)
+  const files = SEARCH_COMMANDS.has(base) ? searchFileArguments(base, args) : args
+  for (const tok of files) {
     if (looksSensitive(tok)) return { cmd: base, target: tok }
   }
   return null
@@ -116,10 +178,8 @@ for (const sub of command.split(SUBCOMMAND_SEPARATORS)) {
     outputHook(
       "PreToolUse",
       "deny",
-      `Blocked: "${hit.cmd}" targeting sensitive path "${hit.target}". Edit the file directly or ask the user to handle it.`,
+      `Blocked: "${hit.cmd}" targeting sensitive path "${hit.target}". Ask the user to handle this file.`,
     )
     process.exit(0)
   }
 }
-
-outputHook("PreToolUse", "allow")

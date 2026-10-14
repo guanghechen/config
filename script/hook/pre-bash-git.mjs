@@ -49,5 +49,3 @@ if (COMMIT.test(command) && COMMIT_AMEND.test(command)) {
   outputHook("PreToolUse", "ask", `Intercepted "git commit --amend". Allow?`)
   process.exit(0)
 }
-
-outputHook("PreToolUse", "allow")

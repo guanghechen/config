@@ -1,10 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "cleanupPeriodDays": 20,
-  "autoCompactWindow": 936000,
   "autoMemoryEnabled": false,
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "85",
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
@@ -47,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-tool-use.mjs').href)\"",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/pre-tool-use.mjs\" || exit 2",
             "timeout": 5,
             "statusMessage": "Checking sensitive file access"
           }
@@ -58,13 +56,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-sensitive.mjs').href)\"",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/pre-bash-sensitive.mjs\" || exit 2",
             "timeout": 5,
             "statusMessage": "Checking sensitive path usage"
           },
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-git.mjs').href)\"",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/pre-bash-git.mjs\" || exit 2",
             "timeout": 5,
             "statusMessage": "Checking git command policy"
           }
@@ -75,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/notify.mjs\"",
             "async": true
           }
         ]
@@ -86,21 +84,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/notify.mjs\"",
             "timeout": 5
           }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
-            "async": true
-          }
-        ]
+        ],
+        "matcher": "^(?!idle_prompt$).*"
       }
     ],
     "Stop": [
@@ -108,7 +96,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/notify.mjs\"",
             "timeout": 5
           }
         ]
@@ -117,7 +105,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/statusline.mjs').href)\"",
+    "command": "node \"$CLAUDE_CONFIG_DIR/script/statusline.mjs\"",
     "padding": 0,
     "refreshInterval": 10
   },
