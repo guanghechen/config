@@ -25,13 +25,6 @@ function runGuard(script, toolName, toolInput) {
   return result.stdout.trim() ? JSON.parse(result.stdout).hookSpecificOutput : undefined
 }
 
-test("ordinary file operations leave the permission decision to Claude Code", () => {
-  for (const tool of ["Read", "Write", "Edit", "NotebookEdit"]) {
-    const key = tool === "NotebookEdit" ? "notebook_path" : "file_path"
-    assert.equal(runGuard("pre-tool-use.mjs", tool, { [key]: "/synthetic/project/README.md" }), undefined)
-  }
-})
-
 test("ordinary Bash and unguarded git commands do not receive blanket approval", () => {
   for (const command of ["printf hello", "git status", "git clean -fd", "git commit -m example"]) {
     for (const script of ["pre-bash-sensitive.mjs", "pre-bash-git.mjs"]) {
@@ -55,7 +48,6 @@ test("environment files including templates are blocked", () => {
   for (const name of envFiles) {
     const file = `/synthetic/project/${name}`
     assert.equal(isSensitiveFile(file), true, file)
-    assert.equal(runGuard("pre-tool-use.mjs", "Read", { file_path: file }).permissionDecision, "deny")
     assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command: `cat ${file}` }).permissionDecision, "deny")
   }
 })
@@ -131,7 +123,7 @@ test("configured policy launchers use CLAUDE_CONFIG_DIR and block load or input 
     symlinkSync(path.join(configDir, "script"), path.join(temporaryDir, "script"), "dir")
     const env = { ...process.env, CLAUDE_CONFIG_DIR: temporaryDir }
     delete env.XDG_CONFIG_HOME
-    for (const entry of settings.hooks.PreToolUse.filter((item) => item.matcher !== "AskUserQuestion")) {
+    for (const entry of settings.hooks.PreToolUse.filter((item) => item.matcher === "Bash")) {
       for (const hook of entry.hooks) {
         const run = (input, configPath = temporaryDir) => spawnSync("sh", ["-c", hook.command], {
           input,
@@ -139,7 +131,7 @@ test("configured policy launchers use CLAUDE_CONFIG_DIR and block load or input 
           env: { ...env, CLAUDE_CONFIG_DIR: configPath },
           timeout: 5000,
         })
-        const valid = JSON.stringify({ tool_name: "Read", tool_input: { file_path: "/synthetic/README.md" } })
+        const valid = JSON.stringify({ tool_name: "Bash", tool_input: { command: "printf hello" } })
         const neutral = run(valid)
         assert.equal(neutral.status, 0, neutral.stderr)
         assert.equal(neutral.stdout, "")

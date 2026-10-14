@@ -41,17 +41,6 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Read|Write|Edit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/pre-tool-use.mjs\" || exit 2",
-            "timeout": 5,
-            "statusMessage": "Checking sensitive file access"
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -113,7 +102,6 @@
     "claude-api": "user-invocable-only",
     "dataviz": "user-invocable-only"
   },
-  "effortLevel": "xhigh",
   "modelSettings": {
     "claude-opus-5-5": {
       "effortLevel": "xhigh"
