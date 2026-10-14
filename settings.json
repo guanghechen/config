@@ -80,6 +80,16 @@
           }
         ],
         "matcher": "^(?!idle_prompt$).*"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "^idle_prompt$"
       }
     ],
     "Stop": [
@@ -88,6 +98,78 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/notify.mjs\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "^(startup|resume)$"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
             "timeout": 5
           }
         ]
