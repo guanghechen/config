@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/guanghechen/config/kit/pm/schema/config.schema.json",
   "apps": [
     {
       "name": "caffeinate",
