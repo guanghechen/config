@@ -306,12 +306,14 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 
 - Source of truth：live pane 的 `pane_title` 以 Braille spinner
   `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 之一开头；`pane_dead=1` 始终视为 idle。
+  Claude Code hooks 上报的 `pane_pb_state=indeterminate` 在 window 无 bell 时显示固定帧 `⠋`。
 - Running 与 bell evidence 按以下定义聚合；window item 与 terminal title 仍按
   `spinning > bell > idle` 选择单一状态，session item 独立展示两类 evidence：
 
   ```text
   pane_spinning(p)
     = !pane_dead(p) && pane_title(p) 以 Braille spinner 开头
+      || !pane_dead(p) && pane_pb_state(p) = indeterminate && !window_bell_flag(window(p))
 
   window_spinning(w)
     = 存在 p ∈ panes(w): pane_spinning(p)
