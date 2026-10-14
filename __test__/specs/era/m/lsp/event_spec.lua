@@ -18,16 +18,16 @@ bootstrap.with_stl(t, {
   },
 })
 
-local blink_loads = 0 ---@type integer
-t:patch_table(package.preload, "blink.cmp", function()
-  blink_loads = blink_loads + 1
+local completion_loads = 0 ---@type integer
+t:patch_table(package.preload, "era.keystroke.cmp", function()
+  completion_loads = completion_loads + 1
   return {
     get_lsp_capabilities = function()
       return {}
     end,
   }
 end)
-t:patch_table(package.loaded, "blink.cmp", nil)
+t:patch_table(package.loaded, "era.keystroke.cmp", nil)
 
 local Event = require("era.m.lsp.event")
 local Methods = vim.lsp.protocol.Methods
@@ -137,7 +137,7 @@ local function count_desc(bufnr, desc)
   return count
 end
 
-t:test("capabilities: include completion deltas without loading blink", function()
+t:test("capabilities: include completion deltas without loading completion", function()
   local capabilities = Event.get_capabilities()
   local completion = capabilities.textDocument.completion
   ---@diagnostic disable-next-line: need-check-nil
@@ -154,7 +154,7 @@ t:test("capabilities: include completion deltas without loading blink", function
   t.assert_eq(1, completion.insertTextMode, "insert text mode")
   ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(completion_item.snippetSupport, "snippet support")
-  t.assert_eq(0, blink_loads, "blink load count")
+  t.assert_eq(0, completion_loads, "completion load count")
 end)
 
 t:test("keymaps: reconcile dynamic capability changes with bounded writes", function()

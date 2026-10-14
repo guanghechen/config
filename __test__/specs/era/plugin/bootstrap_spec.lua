@@ -5,7 +5,6 @@ local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local t = harness.new("era.plugin host policy")
 local plugin_names = {
-  "blink.cmp",
   "blink.pairs",
   "conform.nvim",
   "flash.nvim",

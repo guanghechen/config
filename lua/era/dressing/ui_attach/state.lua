@@ -62,15 +62,6 @@ local __module_name__ = "era.dressing.ui_attach.state" ---@type string
 ---@field public group                  string
 ---@field public index                  integer
 
----@class era.dressing.ui_attach.popupmenu.IState
----@field public items                  string[][]
----@field public selected               integer
----@field public row                    integer
----@field public col                    integer
----@field public grid                   integer
----@field public bufnr                  integer|nil
----@field public winnr                  integer|nil
-
 ---@class era.dressing.ui_attach.cmdline_block.IState
 ---@field public lines                  string[]
 ---@field public highlights             stl.t.IHighlight[]
@@ -82,7 +73,6 @@ local __module_name__ = "era.dressing.ui_attach.state" ---@type string
 ---@class era.dressing.ui_attach.state
 ---@field public cmdline                era.dressing.ui_attach.cmdline.IState[]
 ---@field public message                era.dressing.ui_attach.message.IState
----@field public popupmenu              era.dressing.ui_attach.popupmenu.IState|nil
 ---@field public cmdline_block          era.dressing.ui_attach.cmdline_block.IState
 local M = {}
 
@@ -94,7 +84,6 @@ M.message = {
   showcmd = "",
   ruler = "",
 } ---@type era.dressing.ui_attach.message.IState
-M.popupmenu = nil ---@type era.dressing.ui_attach.popupmenu.IState|nil
 M.cmdline_block = { lines = {}, highlights = {} } ---@type era.dressing.ui_attach.cmdline_block.IState
 
 ---@return era.dressing.ui_attach.cmdline.IState|nil

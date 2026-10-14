@@ -3,6 +3,7 @@
 ---@module 'yoz'
 ---@class yoz
 ---@field public canonical_path         yoz.canonical_path
+---@field public completion             yoz.completion
 ---@field public string                 yoz.string
 ---@field public fn                     yoz.fn
 ---@field public dict                   yoz.dict

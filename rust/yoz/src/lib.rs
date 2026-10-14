@@ -1,5 +1,6 @@
 pub mod algorithm;
 pub mod canonical_path;
+pub mod completion;
 pub mod dict;
 pub mod find;
 pub mod r#fn;
@@ -183,6 +184,10 @@ fn dict_module(lua: &Lua) -> LuaResult<LuaTable> {
 
 fn string_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
+        (
+            "is_utf8",
+            f(lua, |_, text: LuaString| Ok(text.to_str().is_ok()))?,
+        ),
         (
             "calc_linewidths",
             f(lua, |_, text: String| Ok(string::calc_linewidths(&text)))?,
@@ -1094,6 +1099,7 @@ fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
 fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("canonical_path", canonical_path_module(lua)?)?;
+    exports.set("completion", completion::module(lua)?)?;
     exports.set("dict", dict_module(lua)?)?;
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;

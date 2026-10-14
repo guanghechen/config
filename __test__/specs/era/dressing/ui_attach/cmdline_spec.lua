@@ -6,6 +6,7 @@ local harness = require("__test__.support.harness")
 local t = harness.new("era.dressing.ui_attach.cmdline")
 
 ---@return era.dressing.ui_attach.cmdline, era.dressing.ui_attach.state
+---@return table<integer, table>
 local function setup()
   t:patch_global("dot", {
     var = {
@@ -24,7 +25,13 @@ local function setup()
     },
     string = require("stl.string"),
   })
-  t:patch_table(vim, "g", { ui_cmdline_pos = { 5, 7 } })
+  local configs = {}
+  t:patch_table(vim.api, "nvim_win_get_position", function()
+    return { 0, 4 }
+  end)
+  t:patch_table(vim.api, "nvim_win_set_config", function(winnr, config)
+    configs[winnr] = config
+  end)
 
   local states = require("era.dressing.ui_attach.state")
   t:patch_table(states, "cmdline", {})
@@ -34,14 +41,14 @@ local function setup()
   })
 
   local cmdline = assert(loadfile("lua/era/dressing/ui_attach/cmdline.lua"))()
-  return cmdline, states
+  return cmdline, states, configs
 end
 
 ---@param concealable                   boolean
 ---@param pos                           integer
 ---@return integer
-local function resolve_popup_col(concealable, pos)
-  local cmdline, states = setup()
+local function resolve_native_offset(concealable, pos)
+  local cmdline, states, configs = setup()
   local strdisplaywidth = vim.fn.strdisplaywidth
   t:patch_table(vim.api, "nvim_win_is_valid", function()
     return true
@@ -71,27 +78,18 @@ local function resolve_popup_col(concealable, pos)
   states.cmdline[1] = state
   cmdline._update_cmdline_position(state, state.winnr)
 
-  local popupmenu = assert(loadfile("lua/era/dressing/ui_attach/popupmenu.lua"))()
-  local _, col = popupmenu._resolve_position({
-    items = {},
-    selected = -1,
-    row = 0,
-    col = 5,
-    grid = -1,
-  })
-  return col
+  return configs[state.winnr]._cmdline_offset
 end
 
-t:test("top-level hide clears cmdline position and pending confirmation", function()
+t:test("top-level hide clears pending confirmation", function()
   local cmdline, states = setup()
 
   cmdline.hide({ event = "cmdline_hide", args = { 1, false } })
 
-  t.assert_nil(vim.g.ui_cmdline_pos, "cmdline position")
   t.assert_nil(states.message.confirming_task, "confirmation")
 end)
 
-t:test("nested hide restores the highest active cmdline position", function()
+t:test("nested hide restores the highest active native command-line anchor", function()
   local cmdline, states = setup()
   local confirming_task = states.message.confirming_task
   states.message.confirming_task = nil
@@ -99,20 +97,21 @@ t:test("nested hide restores the highest active cmdline position", function()
   states.cmdline[1] = { level = 1, winnr = 11, type = "confirm", confirming_task = confirming_task }
   ---@diagnostic disable-next-line: missing-fields
   states.cmdline[2] = { level = 2, winnr = 22 }
+  local active
   cmdline._update_cmdline_position = function(state, winnr)
-    vim.g.ui_cmdline_pos = { state.level, winnr }
+    active = { state.level, winnr }
   end
 
   cmdline.hide({ event = "cmdline_hide", args = { 3, false } })
 
-  t.assert_eq(2, vim.g.ui_cmdline_pos[1], "active level")
-  t.assert_eq(22, vim.g.ui_cmdline_pos[2], "active window")
+  t.assert_eq(2, active[1], "active level")
+  t.assert_eq(22, active[2], "active window")
   t.assert_true(states.cmdline[1].confirming_task == confirming_task, "confirmation")
   t.assert_nil(states.message.confirming_task, "pending confirmation")
 end)
 
-t:test("cmdline position uses original content origin", function()
-  local cmdline = setup()
+t:test("native anchor compensates for the concealed command prefix", function()
+  local cmdline, _, configs = setup()
   t:patch_table(vim.api, "nvim_win_is_valid", function()
     return true
   end)
@@ -134,12 +133,11 @@ t:test("cmdline position uses original content origin", function()
     concealable = true,
   }, 1)
 
-  t.assert_eq(4, vim.g.ui_cmdline_pos[1], "cmdline row")
-  t.assert_eq(2, vim.g.ui_cmdline_pos[2], "cmdline column")
+  t.assert_eq(-3, configs[1]._cmdline_offset, "content origin relative to the native anchor window")
 end)
 
-t:test("cmdline position follows a horizontally scrolled cursor", function()
-  local cmdline = setup()
+t:test("native anchor follows a horizontally scrolled cursor", function()
+  local cmdline, _, configs = setup()
   t:patch_table(vim.api, "nvim_win_is_valid", function()
     return true
   end)
@@ -161,8 +159,7 @@ t:test("cmdline position follows a horizontally scrolled cursor", function()
     concealable = false,
   }, 1)
 
-  t.assert_eq(5, vim.g.ui_cmdline_pos[1], "cmdline row")
-  t.assert_eq(-64, vim.g.ui_cmdline_pos[2], "scrolled cmdline origin")
+  t.assert_eq(-69, configs[1]._cmdline_offset, "scrolled content origin relative to the native anchor window")
 end)
 
 t:test("cmdline position updates only the cursor when layout is unchanged", function()
@@ -571,18 +568,16 @@ t:test("latest Neovim emits block events with one-line append payloads", functio
   t.assert_eq("  echo 'x'", events.append[1][1][1][2], "block append content")
 end)
 
-t:test("popup byte offset resolves against visible normal cmdline content", function()
-  local col = resolve_popup_col(false, 4)
+t:test("native anchor includes the visible command-line icon", function()
+  local col = resolve_native_offset(false, 4)
 
-  -- screen col 5 + icon width 2 + "edit " width 5
-  t.assert_eq(12, col, "popup column")
+  t.assert_eq(2, col, "icon width added to native command completion")
 end)
 
-t:test("popup byte offset compensates for a concealed command prefix", function()
-  local col = resolve_popup_col(true, 5)
+t:test("native anchor omits the concealed command prefix", function()
+  local col = resolve_native_offset(true, 5)
 
-  -- screen col 5 + icon width 2; the concealed "edit " prefix contributes no width
-  t.assert_eq(7, col, "popup column")
+  t.assert_eq(-3, col, "icon width minus hidden command prefix")
 end)
 
 t:test("confirm prompts keep their renderer while the user types", function()

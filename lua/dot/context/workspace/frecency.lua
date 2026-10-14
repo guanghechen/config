@@ -1,8 +1,10 @@
 ---@class dot.context.frecency.data
 ---@field public files                  stl.c.frecency.ISerializedData
+---@field public completions            yoz.completion.IHistoryData
 
 ---@class dot.context.frecency.state
 ---@field public files                  stl.c.Frecency
+---@field public completions            yoz.completion.History
 
 ---@class dot.context.frecency : dot.context.frecency.state
 ---@field public defaults               fun(): dot.context.frecency.data
@@ -16,6 +18,7 @@ function M.defaults()
   ---@type dot.context.frecency.data
   return {
     files = { items = {} },
+    completions = { items = {} },
   }
 end
 
@@ -46,6 +49,7 @@ function M.dump()
   ---@type dot.context.frecency.data
   return {
     files = M.files:dump(),
+    completions = M.completions:dump(),
   }
 end
 
@@ -55,6 +59,7 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.frecency.data
 
   M.files:load(data.files)
+  M.completions:load(data.completions)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -68,5 +73,8 @@ M.files = stl.c.Frecency.deserialize({
     return yoz.fn.md5(key)
   end,
 })
+
+---@type yoz.completion.History
+M.completions = yoz.completion.new_history(_defaults.completions)
 
 return M

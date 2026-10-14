@@ -76,15 +76,6 @@ function M.dressing()
     msg_ruler = function(task)
       require("era.dressing.ui_attach.messages").ruler(task)
     end,
-    popupmenu_hide = function(task)
-      require("era.dressing.ui_attach.popupmenu").hide(task)
-    end,
-    popupmenu_select = function(task)
-      require("era.dressing.ui_attach.popupmenu").select(task)
-    end,
-    popupmenu_show = function(task)
-      require("era.dressing.ui_attach.popupmenu").show(task)
-    end,
   }
 
   ---@param task                        era.dressing.ui_attach.ITask
@@ -229,7 +220,6 @@ function M.dressing()
   vim.ui_attach(dot.var.nsnr.attach, {
     ext_cmdline = true,
     ext_messages = true,
-    ext_popupmenu = true,
   }, ui_attach_callback)
   initialized = true
 end

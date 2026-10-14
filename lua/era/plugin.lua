@@ -10,10 +10,6 @@ local conds = {
     return false
   end,
   ---@return boolean
-  cmp = function()
-    return not vim.g.vscode and not vim.g.yozvim and not vim.g.yuivim
-  end,
-  ---@return boolean
   lsp = function()
     return not vim.g.vscode and not vim.g.yozvim and not vim.g.yuivim
   end,
@@ -37,7 +33,6 @@ local conds = {
 ---@type era.m.plugin.IRawSpec[]
 local raw_specs = {
   -- stylua: ignore start
-  { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                    },
   { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.standalone             },
   { name = "conform.nvim",                main = "conform",                       cond = conds.standalone             },
   { name = "flash.nvim",                  main = "flash",                         cond = conds.flash                  },
@@ -48,11 +43,6 @@ local raw_specs = {
   { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context     },
   { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.standalone             },
   -- stylua: ignore end
-}
-
----@type string[]
-local no_details_module_names = {
-  "friendly-snippets",
 }
 
 ---@type era.m.plugin.IPluginSpec[]
@@ -85,7 +75,7 @@ for _, raw_spec in ipairs(raw_specs) do
       spec.url = url
       spec.branch = branch
       spec.main = main or spec.main
-    elseif not vim.list_contains(no_details_module_names, name) then
+    else
       stl.reporter.error({
         from = __module_name__,
         subject = "resolve plugin details",

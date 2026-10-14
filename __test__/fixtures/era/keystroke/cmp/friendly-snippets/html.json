@@ -1,0 +1,10 @@
+{
+  "list item": {
+    "prefix": "li",
+    "body": "<li>$0</li>"
+  },
+  "stylesheet link": {
+    "prefix": "link",
+    "body": "<link rel=\"stylesheet\" href=\"$0\">"
+  }
+}

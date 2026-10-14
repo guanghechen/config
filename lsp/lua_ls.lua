@@ -25,6 +25,7 @@ return {
       },
       completion = {
         callSnippet = "Replace",
+        showWord = "Disable",
       },
       doc = {
         privateName = { "^_" },

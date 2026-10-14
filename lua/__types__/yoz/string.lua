@@ -5,6 +5,10 @@
 local M = {}
 
 ---@param text                          string
+---@return boolean
+function M.is_utf8(text) end
+
+---@param text                          string
 ---@return integer[]
 function M.calc_linewidths(text) end
 

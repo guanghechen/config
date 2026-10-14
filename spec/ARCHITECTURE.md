@@ -52,6 +52,7 @@ Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
 Submodules:
 
 - `yoz.dict`: dictionary search for English word completion
+- `yoz.completion`: immutable candidate snapshots, Unicode fuzzy/typo matching, global ranking and acceptance history
 - `yoz.find`: file finding (fd-like)
 - `yoz.fn`: utility functions (uuid, md5)
 - `yoz.fs`: filesystem queries (collect_files, readdir, get_filesize, resource path helpers)
@@ -110,6 +111,8 @@ Key areas:
 Highlights:
 
 - Feature modules in `era/m/*` (`explorer`, `picker`, `searcher`, `ai`, `git`, `term`, etc.)
+- Completion in `era/keystroke/cmp/`: input sessions, sources, edit transactions and completion UI;
+  see [the completion contract](design/feat/cmp.md).
 - Callable functions in `era/fn/*` (`find-*`, `search-*`, `select-*`, `run-code`, etc.)
 - View components in `era/view/*` (`act`, `result_tree`, `result_files`, `keysheet`, `notifications`, etc.)
 

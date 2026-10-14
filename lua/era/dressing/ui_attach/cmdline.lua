@@ -127,7 +127,6 @@ function M.hide(task)
     states.message.confirming_task = nil
   end
 
-  vim.g.ui_cmdline_pos = nil
   local active = states.get_active_cmdline()
   if active == nil then
     states.message.confirming_task = nil
@@ -347,7 +346,8 @@ function M._show(state)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = dot.var.zindex.CMDLINE + state.level * 100,
+    zindex = dot.var.zindex.CMDLINE + state.level,
+    _cmdline_offset = 0,
     relative = "editor",
     width = width,
     height = 1,
@@ -417,7 +417,7 @@ function M._show(state)
   vim.api.nvim_win_set_cursor(winnr, { 1, render.cursor_col })
   vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
 
-  -- Refresh the cmdline position for blink.cmp compatibility
+  -- Refresh the cmdline position for completion positioning
   M._update_cmdline_position(state, winnr)
 end
 
@@ -432,7 +432,6 @@ function M._update_cmdline_position(state, winnr)
   local _, buffer_cursor_col = resolve_cursor_position(state, state.pos)
   local screenpos = vim.fn.screenpos(winnr, 1, buffer_cursor_col + 1)
   if screenpos.row < 1 or screenpos.col < 1 then
-    vim.g.ui_cmdline_pos = nil
     return
   end
 
@@ -440,12 +439,9 @@ function M._update_cmdline_position(state, winnr)
   local prefix_width = vim.fn.strdisplaywidth(content:sub(1, state.pos)) ---@type integer
   local content_col = screenpos.col - 1 - prefix_width ---@type integer
 
-  -- blink.cmp expects a 1-indexed row and 0-indexed column for the original
-  -- cmdline content; completion offsets are applied by the consumer.
-  vim.g.ui_cmdline_pos = {
-    screenpos.row,
-    content_col,
-  }
+  -- Native command completion applies its pattern offset from this logical content origin.
+  local position = vim.api.nvim_win_get_position(winnr)
+  vim.api.nvim_win_set_config(winnr, { _cmdline_offset = content_col - position[2] - 1 })
 end
 
 ---@param width                         integer
@@ -708,7 +704,7 @@ function M._show_confirm(state, msg_show_task)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = dot.var.zindex.CMDLINE + state.level * 100,
+    zindex = dot.var.zindex.CMDLINE + state.level,
     relative = "editor",
     width = width,
     height = height,
@@ -762,7 +758,7 @@ function M._show_confirm(state, msg_show_task)
   update_syntax(bufnr, syntax)
   vim.api.nvim__redraw({ cursor = false, win = winnr, flush = true })
 
-  -- Set the cmdline position for blink.cmp compatibility (confirm dialog)
+  -- Set the cmdline position for completion positioning (confirm dialog)
   M._update_cmdline_position(state, winnr)
 end
 

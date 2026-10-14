@@ -257,6 +257,23 @@ subscription release. Windows has a native
 Linux/Windows/WSL runtime and their trash backends were not executed on this macOS host; cross-compilation
 does not establish runtime/watch acceptance on those platforms.
 
+Completion regression specs and their shared protocol/editor fixtures live under
+`specs/era/keystroke/cmp/` and `fixtures/era/keystroke/cmp/`. Ordinary suites do not
+require Blink, benchmark runners or generated results:
+
+```sh
+nvim -l __test__/run.lua era/keystroke/cmp/
+cargo test --offline --manifest-path rust/Cargo.toml -p yoz completion:: --lib
+
+# Real servers, using an existing Mason executable or an explicit executable argument
+nvim -l __test__/fixtures/era/keystroke/cmp/lua_ls.lua
+nvim -l __test__/fixtures/era/keystroke/cmp/emmet.lua
+```
+
+The [completion behavior guide](../spec/debug/cmp-behavior.md) maps failures to focused
+suites. Shared RPC is in `support/rpc.lua`; full-sort, tokenization and scalar/SIMD
+oracles remain separate from production algorithms.
+
 Git regression coverage lives in `specs/era/m/git/` and `../rust/yoz/src/git/`:
 
 - Status, ignore and blame compare real Git query results with independent Lua references, including

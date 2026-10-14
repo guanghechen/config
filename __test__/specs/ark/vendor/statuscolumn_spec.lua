@@ -49,6 +49,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       era = {
         dressing = dressing,
         keystroke = {
+          cmp = { setup = function() end },
           splitjoin = { setup = function() end },
           surrounds = { setup = function() end },
           textobject = { setup = function() end },

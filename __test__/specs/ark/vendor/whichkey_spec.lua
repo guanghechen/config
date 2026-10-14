@@ -43,6 +43,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       t:patch_table(era.m, name, { dressing = function() end, setup = function() end })
     end
     t:patch_table(era.keystroke, "splitjoin", { setup = function() end })
+    t:patch_table(era.keystroke, "cmp", { setup = function() end })
     t:patch_table(era.keystroke, "textobject", { setup = function() end })
     local original_require = require
     t:patch_global("require", function(name)

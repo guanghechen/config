@@ -134,11 +134,6 @@ local function setup(initially_enabled)
     showcmd = record,
     showmode = record,
   })
-  t:patch_table(package.loaded, "era.dressing.ui_attach.popupmenu", {
-    hide = record,
-    select = record,
-    show = record,
-  })
   t:patch_table(package.loaded, "era.m.git.hunk_nav", {
     clear_nav = function()
       runtime.hunk_nav_clears = runtime.hunk_nav_clears + 1
@@ -158,7 +153,8 @@ local function setup(initially_enabled)
   t:patch_table(vim, "schedule", function(callback)
     callback()
   end)
-  t:patch_table(vim, "ui_attach", function(_, _, callback)
+  t:patch_table(vim, "ui_attach", function(_, options, callback)
+    t.assert_true(options.ext_popupmenu ~= true, "native popupmenu rendering remains enabled")
     runtime.attach_calls = runtime.attach_calls + 1
     runtime.callback = callback
   end)

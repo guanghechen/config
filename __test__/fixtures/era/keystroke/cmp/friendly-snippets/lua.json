@@ -1,0 +1,7 @@
+{
+  "completion fixture": {
+    "prefix": ["zzcmpfixture", "zzcmpalias"],
+    "body": "local ${1:${TM_FILENAME_BASE}} = '${TM_FILENAME_BASE}'$0",
+    "description": "Snippet registry fixture"
+  }
+}

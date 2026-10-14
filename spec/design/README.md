@@ -26,6 +26,7 @@ Treeview 按用户指定集中在 [doc/spec/treeview](../../doc/spec/treeview/RE
 
 ## 编辑与窗口交互
 
+- [Completion](feat/cmp.md)：sources、session、preview、LSP 编辑与原生 matcher。
 - [Textobject](feat/textobject.md)：对象选择、边界跳转与参数交换。
 - [Surrounds](feat/surrounds.md)：surround 动作、buffer 准入与映射归属。
 - [输入法切换](feat/im.md)：input source 捕获、恢复与平台行为。
