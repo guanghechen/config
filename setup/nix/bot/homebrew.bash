@@ -50,10 +50,6 @@ brew install -y --cask claude-code
 printf "\e[96minstalling Codex...\e[0m\n"
 brew install -y --cask codex
 
-### Install Gemini CLI
-printf "\e[96minstalling Gemini CLI...\e[0m\n"
-brew install -y gemini-cli
-
 ### Install GitHub Copilot CLI
 printf "\e[96minstalling GitHub Copilot CLI...\e[0m\n"
 brew install -y --cask copilot-cli
