@@ -21,10 +21,10 @@
     {
       "name": "kit-shot",
       "platforms": ["osx"],
-      "cmd": "${HOME}/.local/share/kit/shot/app/kit-shot",
-      "args": ["start"],
+      "cmd": "kit",
+      "args": ["shot", "start"],
       "autostart": true,
-      "autorestart": true,
+      "autorestart": false,
       "maxRestarts": 16,
       "stopExitCodes": [0],
       "killTimeout": 10000,
@@ -34,10 +34,10 @@
     {
       "name": "kit-stt",
       "platforms": ["osx"],
-      "cmd": "${HOME}/.local/share/kit/stt/app/kit-stt",
-      "args": ["start"],
+      "cmd": "kit",
+      "args": ["stt", "start"],
       "autostart": false,
-      "autorestart": true,
+      "autorestart": false,
       "stopExitCodes": [0],
       "killTimeout": 15000
     },
