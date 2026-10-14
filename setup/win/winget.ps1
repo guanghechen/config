@@ -18,6 +18,7 @@ $packages = @(
   "Microsoft.WindowsTerminal.Preview"
   "Microsoft.PowerToys"
   "Neovim.Neovim"
+  "Anthropic.ClaudeCode"
   "GitHub.Copilot"
 
   "Schniz.fnm"
