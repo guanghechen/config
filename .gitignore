@@ -3,6 +3,10 @@
 !rust/im/src/bin/yoz-im.rs
 /rust/target/
 
+# Local benchmark and comparison output
+/__test__/bench/results/
+/__test__/compare/results/
+
 local.*/
 __tmp__.lua
 

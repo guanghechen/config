@@ -274,6 +274,14 @@ The [completion behavior guide](../spec/debug/cmp-behavior.md) maps failures to 
 suites. Shared RPC is in `support/rpc.lua`; full-sort, tokenization and scalar/SIMD
 oracles remain separate from production algorithms.
 
+Completion benchmarks and the frozen Blink behavior comparison are optional tooling.
+The [performance guide](../spec/debug/cmp-comparison.md) documents the CLIs, baseline
+contract, sampling/GC boundaries and JSON/gzip reporter. Run reporter and CLI tests with
+`node --test __test__/node/cmp-*.test.mjs`.
+Runners and fixtures are versioned; samples, traces, failure logs and local analysis
+under `bench/results/` and `compare/results/` are ignored by Git. Tools use existing
+binaries and never install or download dependencies.
+
 Git regression coverage lives in `specs/era/m/git/` and `../rust/yoz/src/git/`:
 
 - Status, ignore and blame compare real Git query results with independent Lua references, including
