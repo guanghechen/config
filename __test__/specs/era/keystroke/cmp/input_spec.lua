@@ -94,6 +94,65 @@ local function wait(lua, code, message)
   )
 end
 
+t:test("native fuzzy completion preserves ranked aliases and duplicate alternatives", function()
+  local lua, input = editor({ "" })
+  lua([[
+    local Menu = require('era.keystroke.cmp.menu')
+    local show = Menu.show
+    Menu.show = function(self,context,items,selected)
+      _G.cmp_ranked_labels = vim.tbl_map(function(item) return item.raw.label end,items)
+      return show(self,context,items,selected)
+    end
+  ]])
+  lsp_client(
+    lua,
+    [[return function(_, callback)
+    callback(nil, {
+      {label='dateDMY',filterText='dd',sortText='1',insertText='replacement'},
+      {label='dateMDY',filterText='dd',sortText='2'},
+      {label='dd',filterText='dd',sortText='3'},
+      {label='filter alias',filterText='dd',sortText='4'},
+      {label='dateDMY',filterText='dd',sortText='5',insertText='replacement',detail='alternative'},
+    })
+  end]]
+  )
+  input("idd")
+  wait(lua, [[return #vim.fn.complete_info({'items'}).items == 5]], "all ranked candidates remain visible")
+  t.assert_eq(
+    lua([[return table.concat(cmp_ranked_labels,',')]]),
+    lua([[
+      return table.concat(vim.tbl_map(function(item) return item.abbr end,vim.fn.complete_info({'items'}).items),',')
+    ]]),
+    "native items retain the published Rust order, including filterText aliases"
+  )
+  for index = 0, 4 do
+    lua([[vim.api.nvim_select_popupmenu_item(...,false,false,{})]], index)
+    wait(lua, "return vim.fn.complete_info({'selected'}).selected == " .. index, "native selection")
+    t.assert_eq(
+      index + 1,
+      lua([[return vim.fn.complete_info({'completed'}).completed.user_data.index]]),
+      "native selection follows the Rust candidate order"
+    )
+  end
+  input("<CR>")
+  wait(lua, [[return vim.api.nvim_get_current_line() == 'replacement']], "the selected alternative is accepted")
+end)
+
+t:test("native fuzzy completion retains typo-only candidates", function()
+  local lua, input = editor({ "" })
+  lsp_client(
+    lua,
+    [[return function(_, callback)
+    callback(nil, {{label='completion'}})
+  end]]
+  )
+  input("icompletiom")
+  wait(lua, [[return require('era.keystroke.cmp').is_menu_visible()]], "Rust typo match survives native filtering")
+  t.assert_eq("completion", lua([[return vim.fn.complete_info({'items'}).items[1].abbr]]))
+  input("<CR>")
+  wait(lua, [[return vim.api.nvim_get_current_line() == 'completion']], "typo candidate remains acceptable")
+end)
+
 t:test("compound LSP acceptance replaces the full input instead of a suffix snippet", function()
   local lua, input = editor({ "" })
   lua([[

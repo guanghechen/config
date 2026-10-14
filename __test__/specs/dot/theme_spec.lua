@@ -66,6 +66,9 @@ t:test("registered themes apply through the highlight pipeline", function()
         transparency = transparency,
       })
       t.assert_true(type(scheme) == "table", "failed to apply " .. theme)
+      local deprecated = vim.api.nvim_get_hl(0, { name = "CmpLabelDeprecated", link = false })
+      t.assert_true(deprecated.strikethrough, "deprecated decoration for " .. theme)
+      t.assert_true(deprecated.fg == nil and deprecated.bg == nil, "native match and selection colors for " .. theme)
     end
   end
 

@@ -34,8 +34,9 @@ end
 
 ---@return nil
 local function highlights()
+  -- Deprecated labels decorate native text without replacing its match colors.
+  vim.api.nvim_set_hl(0, "CmpLabelDeprecated", { strikethrough = true, default = true })
   local links = {
-    CmpLabelDeprecated = "Comment",
     CmpDoc = "NormalFloat",
     CmpDocBorder = "FloatBorder",
     CmpDocSeparator = "NormalFloat",
@@ -95,7 +96,8 @@ function M.setup()
     return
   end
   initialized = true
-  vim.o.completeopt = "menuone,noselect,popup"
+  -- Native fuzzy matching supplies PUM highlights; Rust owns candidate filtering and order.
+  vim.o.completeopt = "menuone,noselect,popup,fuzzy,nosort"
   vim.o.completeitemalign = "kind,abbr,menu"
   vim.o.pumborder = "rounded"
   vim.o.pumheight = 10

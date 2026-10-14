@@ -473,7 +473,7 @@ t:test("empty documentation and disappearing sections leave no stale separator",
   t.assert_false(documentation_state(rpc).visible, "empty info hides the native window")
 end)
 
-t:test("native menu renders and scrolls without menu or scrollbar windows", function()
+t:test("native menu highlights subsequences and scrolls without menu or scrollbar windows", function()
   local Rpc = require("__test__.support.rpc")
   local root = assert(vim.uv.cwd())
   local rpc = Rpc.new(root)
@@ -495,11 +495,12 @@ t:test("native menu renders and scrolls without menu or scrollbar windows", func
     for name, colors in pairs({
       Pmenu={fg=0xcccccc,bg=0x1f1f1f}, PmenuBorder={fg=0x2b2b2b,bg=0x1f1f1f},
       PmenuSel={fg=0xffffff,bg=0x0078d4}, PmenuThumb={bg=0x2b2b2b}, PmenuSbar={bg=0x101010},
+      PmenuMatch={fg=0xf5a9b8,bold=true,italic=true}, PmenuMatchSel={link='PmenuMatch'},
     }) do vim.api.nvim_set_hl(0,name,colors) end
   ]],
     root
   )
-  rpc:request("nvim_input", { "ial" })
+  rpc:request("nvim_input", { "iap" })
 
   ---@return table
   local function screen()
@@ -510,8 +511,9 @@ t:test("native menu renders and scrolls without menu or scrollbar windows", func
         for row = math.max(1, geometry.row), math.min(vim.o.lines, geometry.row + geometry.height + 3) do
           local text = {}
           for col = math.max(1, geometry.col), math.min(vim.o.columns, geometry.col + geometry.width + 4) do
-            text[#text + 1] = vim.fn.screenstring(row,col)
-            cells[#cells + 1] = {row=row,col=col,attribute=vim.fn.screenattr(row,col)}
+            local character = vim.fn.screenstring(row,col)
+            text[#text + 1] = character
+            cells[#cells + 1] = {row=row,col=col,text=character,attribute=vim.fn.screenattr(row,col)}
           end
           rows[#rows + 1] = table.concat(text)
         end
@@ -531,9 +533,15 @@ t:test("native menu renders and scrolls without menu or scrollbar windows", func
       end
     end
     state.thumb = {}
+    state.matches = {}
     for _, cell in ipairs(state.cells) do
-      if (attributes[cell.attribute] or {}).background == 0x2b2b2b then
+      local attribute = attributes[cell.attribute] or {}
+      if attribute.background == 0x2b2b2b then
         state.thumb[#state.thumb + 1] = cell
+      end
+      if attribute.foreground == 0xf5a9b8 then
+        cell.style = attribute
+        state.matches[#state.matches + 1] = cell
       end
     end
     return state
@@ -550,6 +558,15 @@ t:test("native menu renders and scrolls without menu or scrollbar windows", func
   t.assert_eq(40, first.geometry.size, "native PUM owns the candidate list")
   t.assert_eq(10, first.geometry.height, "native height limit")
   t.assert_eq(1, first.windows, "menu and scrollbar need no floating windows")
+  t.assert_eq(20, #first.matches, "two nonadjacent matched letters on each visible row")
+  for index, cell in ipairs(first.matches) do
+    t.assert_eq(index % 2 == 1 and "a" or "p", cell.text, "only query letters are highlighted")
+    t.assert_true(cell.style.bold and cell.style.italic, "matching letters retain bold and italic")
+    t.assert_eq(index <= 2 and 0x0078d4 or 0x1f1f1f, cell.style.background, "menu selection background")
+    if index % 2 == 0 then
+      t.assert_eq(2, cell.col - first.matches[index - 1].col, "the intervening letter is not highlighted")
+    end
+  end
   rpc:request("nvim_input", { ("<C-j>"):rep(39) })
   t.assert_true(
     Rpc.wait(1000, function()
@@ -569,7 +586,7 @@ t:test("native menu renders and scrolls without menu or scrollbar windows", func
   rpc:lua([[require('era.keystroke.cmp').cancel()]])
   t.assert_true(
     Rpc.wait(1000, function()
-      return rpc:lua([[return vim.fn.pumvisible()==0 and vim.api.nvim_get_current_line()=='al']])
+      return rpc:lua([[return vim.fn.pumvisible()==0 and vim.api.nvim_get_current_line()=='ap']])
     end, 5),
     "native cancellation restores the typed prefix"
   )

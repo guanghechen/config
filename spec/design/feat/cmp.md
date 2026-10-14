@@ -17,7 +17,11 @@ VSCode、Yozvim、Yuivim 继续由 host 管理补全。核心在第一次使用�
   LSP 的 `filterText`（缺省时为 label）以 edit start 到 keyword start 的已输入前缀开头时，
   才将该前缀纳入 query。完整复合缩写因此保留匹配优先级，suffix alternatives 仍按 keyword 匹配。
 - `menu` 将已排序候选交给 `complete()`；Neovim 持有 PUM、border、scrollbar、选择和 prefix preview。
-  `equal`、`dup` 保留现有排序与 LSP alternatives，`user_data` 只携带本轮菜单身份和索引。
+  `completeopt` 的 `fuzzy` 提供非连续匹配高亮，`nosort` 保留 Rust 排序。
+  `equal`、`dup` 保留 typo、filterText-only 候选与 LSP alternatives，`user_data` 只携带本轮菜单身份和索引。
+  原生 leader 使用各候选 filter query 的公共后缀；宽 LSP edit 不把无关 namespace 加入高亮 query。
+  宽 edit 的静态前缀若保留 leader 之前的原文，只预览其后缀；否则保持已输入 query，接受时执行完整替换。
+  deprecated label 只叠加删除线等文字装饰，继承原生菜单的匹配色和选中背景。
   `nvim_select_popupmenu_item()` 在后续输入循环执行；`CompleteChanged` 确认选择。
   Native prefix preview 不删除光标后的 suffix；snippet 使用 native parser 提取静态插入前缀，展示 label 独立保留。
   只为已展示候选缓存静态前缀，不在收集或绘制时求值动态变量；动态前缀使用 label 的前缀，最终接受仍应用完整 LSP edit plan。

@@ -48,7 +48,7 @@ function M.gen_hlgroup_map(context)
     CmpKindUnit = { fg = c.purple, bg = item_kind_bg },
     CmpKindValue = { fg = c.aqua, bg = item_kind_bg },
     CmpKindVariable = { fg = c.purple, bg = item_kind_bg },
-    CmpLabelDeprecated = { fg = c.bg4, italic = true, bg = item_kind_bg, strikethrough = true },
+    CmpLabelDeprecated = { italic = true, strikethrough = true },
     CmpSignatureHelp = { bg = cmp_panel_bg },
     CmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
     CmpSignatureHelpBorder = { fg = c.bg4, bg = cmp_panel_bg },

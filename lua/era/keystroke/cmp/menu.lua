@@ -51,9 +51,10 @@ function M:show(context, items, selected)
   end
   self._generation = self._generation + 1
   local generation = self._generation
-  local start_col = context.start_col
+  -- Native items share one leader: use the common suffix of their filter queries.
+  local start_col = 0
   for _, item in ipairs(items) do
-    start_col = math.min(start_col, item.start_col)
+    start_col = math.max(start_col, item.filter_start_col or item.start_col)
   end
   self.start_col = start_col
   self.end_col = context.col
@@ -69,10 +70,17 @@ function M:show(context, items, selected)
       end
       text = item.preview_word
     end
+    local word = text and (text:match("^[^\n]*") or "") or context.line:sub(item.start_col + 1, context.col)
+    if item.start_col < start_col then
+      local prefix = context.line:sub(item.start_col + 1, start_col)
+      -- A wider replacement can preview only when it preserves the text before the native leader.
+      word = vim.startswith(word, prefix) and word:sub(#prefix + 1) or context.line:sub(start_col + 1, context.col)
+    else
+      word = context.line:sub(start_col + 1, item.start_col) .. word
+    end
     local tags = Item.optional(raw.tags)
     matches[index] = {
-      word = context.line:sub(start_col + 1, item.start_col)
-        .. (text and (text:match("^[^\n]*") or "") or context.line:sub(item.start_col + 1, context.col)),
+      word = word,
       abbr = label_text(raw):gsub("[%z\1-\31\127]", " "),
       kind = stl.icon.kind[kind] or stl.icon.kind.Text,
       kind_hlgroup = "CmpKind" .. kind,

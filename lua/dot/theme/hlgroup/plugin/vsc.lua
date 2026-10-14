@@ -47,7 +47,7 @@ function M.gen_hlgroup_map(context)
     CmpKindUnit = { fg = c.tokenConstantsAndEnums, bg = c.none },
     CmpKindValue = { fg = c.tokenConstantsAndEnums, bg = c.none },
     CmpKindVariable = { fg = c.tokenVariableAndParameterName, bg = c.none },
-    CmpLabelDeprecated = { fg = c.textMuted, bg = c.none, strikethrough = true },
+    CmpLabelDeprecated = { strikethrough = true },
     CmpSignatureHelp = { fg = c.text, bg = cmp_panel_bg },
     CmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
     CmpSignatureHelpBorder = { fg = c.border, bg = cmp_panel_bg },

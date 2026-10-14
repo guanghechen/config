@@ -82,7 +82,12 @@ end
 function M.gen_hlgroup_map(context, modes_color_map)
   local c = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
 
-  local hlgroup_map = { PmenuBorder = { link = "Pmenu" } } ---@type table<string, stl.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
+  local hlgroup_map = {
+    PmenuBorder = { link = "Pmenu" },
+    PmenuMatch = { fg = c.pink, bold = true, italic = true },
+    PmenuMatchSel = { link = "PmenuMatch" },
+  }
   for _, color in ipairs(colors) do
     for mode, mode_color in pairs(modes_color_map) do
       local suffix = string.format("_%s_%s", color, mode) ---@type string
