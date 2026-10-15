@@ -11,8 +11,9 @@ const configDir = fileURLToPath(new URL("../../", import.meta.url))
 const settings = JSON.parse(readFileSync(path.join(configDir, "settings.json"), "utf8"))
 const envFiles = [
   ".env", ".env.local", ".env.production", ".envrc", ".environment",
-  ".env.example", ".env.sample", ".env.template", ".env.example.local", ".env.sample.bak",
+  ".env.sample", ".env.template", ".env.example.local", ".env.sample.bak",
 ]
+const envTemplate = ".env.example"
 
 function runGuard(script, toolName, toolInput) {
   // Commands and paths are synthetic input; the guard never executes or opens them.
@@ -44,12 +45,15 @@ test("explicit git guard decisions remain intact", () => {
   }
 })
 
-test("environment files including templates are blocked", () => {
+test("environment files are blocked except the .env.example template", () => {
   for (const name of envFiles) {
     const file = `/synthetic/project/${name}`
     assert.equal(isSensitiveFile(file), true, file)
     assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command: `cat ${file}` }).permissionDecision, "deny")
   }
+  const template = `/synthetic/project/${envTemplate}`
+  assert.equal(isSensitiveFile(template), false)
+  assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command: `cat ${template}` }), undefined)
 })
 
 test("protected directories and other sensitive paths remain blocked", () => {
@@ -61,23 +65,59 @@ test("protected directories and other sensitive paths remain blocked", () => {
     "/synthetic/.git-credentials", "/synthetic/request.http_request", "/synthetic/response.http_response",
     "C:\\synthetic\\.credentials\\.env.template", "C:\\synthetic\\.env.production",
   ]) assert.equal(isSensitiveFile(file), true, file)
-  assert.equal(isSensitiveFile("C:\\synthetic\\.env.example"), true)
+  assert.equal(isSensitiveFile("C:\\synthetic\\.env.example"), false)
 })
 
-test("global Read and Edit rules block env files without blocking ordinary filenames", () => {
+test("plaintext Claude credential store is blocked", () => {
+  for (const file of ["/synthetic/.claude/.credentials.json", "C:\\synthetic\\.claude\\.credentials.json"]) {
+    assert.equal(isSensitiveFile(file), true, file)
+  }
+  assert.equal(isSensitiveFile("/synthetic/credentials.json"), false)
+  const command = "cat /synthetic/.claude/.credentials.json"
+  assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command }).permissionDecision, "deny")
   for (const tool of ["Read", "Edit"]) {
-    const prefix = `${tool}(//**/`
-    const patterns = settings.permissions.deny
-      .filter((rule) => rule.startsWith(prefix + ".env"))
-      .map((rule) => rule.slice(prefix.length, -1))
-    assert.ok(patterns.length > 0)
-    for (const name of envFiles) {
-      assert.ok(patterns.some((pattern) => path.matchesGlob(name, pattern)), `${tool}: ${name}`)
-    }
-    for (const name of ["README.md", "config.mjs", "env.example"]) {
-      assert.equal(patterns.some((pattern) => path.matchesGlob(name, pattern)), false, `${tool}: ${name}`)
+    assert.ok(settings.permissions.deny.includes(`${tool}(//**/.credentials.json)`), tool)
+  }
+})
+
+function deniedAnywhere(tool, name) {
+  const prefix = `${tool}(//**/`
+  return settings.permissions.deny.some(
+    (rule) => rule.startsWith(prefix) && path.matchesGlob(name, rule.slice(prefix.length, -1)),
+  )
+}
+
+// Mirrors Claude Code: a `!` rule carves its matches out of the relative rules listed before it,
+// and never out of `//` rules, which are evaluated on their own.
+function deniedInProject(tool, name) {
+  let denied = false
+  for (const rule of settings.permissions.deny) {
+    if (!rule.startsWith(`${tool}(`) || rule.startsWith(`${tool}(//`)) continue
+    const pattern = rule.slice(tool.length + 1, -1)
+    if (pattern.startsWith("!")) {
+      if (path.matchesGlob(name, pattern.slice(1))) denied = false
+    } else if (path.matchesGlob(name, pattern)) {
+      denied = true
     }
   }
+  return denied || deniedAnywhere(tool, name)
+}
+
+test("Read and Edit rules block env files and leave only .env.example readable", () => {
+  for (const tool of ["Read", "Edit"]) {
+    for (const name of envFiles) assert.equal(deniedInProject(tool, name), true, `${tool}: ${name}`)
+    for (const name of ["README.md", "config.mjs", "env.example"]) {
+      assert.equal(deniedInProject(tool, name), false, `${tool}: ${name}`)
+    }
+  }
+  assert.equal(deniedInProject("Read", envTemplate), false)
+  assert.equal(deniedInProject("Edit", envTemplate), true)
+  // Outside the project only `//` rules apply, so they must still cover the common secret names.
+  for (const name of [
+    ".env", ".env.local", ".env.production.local", ".env.production",
+    ".env.development", ".env.staging", ".env.test", ".envrc",
+  ]) assert.equal(deniedAnywhere("Read", name), true, name)
+  assert.equal(deniedAnywhere("Read", envTemplate), false)
 })
 
 test("search patterns and glob option values are not mistaken for files", () => {

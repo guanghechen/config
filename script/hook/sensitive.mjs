@@ -5,7 +5,11 @@ export const SENSITIVE_PATTERNS = [
   /\.http_response$/,
   /^\.env/,
   /^\.git-credentials$/,
+  /^\.credentials\.json$/,
 ]
+
+// Env templates carry placeholders only, so they stay readable outside protected directories.
+const READABLE_TEMPLATES = new Set([".env.example"])
 
 export const SENSITIVE_PATHS = [
   /(?:^|[\\/])\.ssh(?:[\\/]|$)/,
@@ -23,5 +27,6 @@ export function isSensitiveFile(filepath) {
   const parents = normalized.split("/").slice(0, -1)
   if (parents.some((part) => SENSITIVE_PATTERNS.some((p) => p.test(part)))) return true
 
+  if (READABLE_TEMPLATES.has(base)) return false
   return SENSITIVE_PATTERNS.some((p) => p.test(base))
 }
