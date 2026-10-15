@@ -1,3 +1,5 @@
+local __module_name__ = "era.m.image" ---@type string
+
 ---@class era.m.image.__mods
 local __mods = {
   Convert = "era.m.image.convert",
@@ -46,6 +48,25 @@ function M.dressing()
   if state.did_setup then
     return
   end
+
+  if stl.env.IS_TMUX then
+    -- Popups have no owning pane to enable passthrough for.
+    local pane = vim.env.TMUX_PANE
+    if pane == nil then
+      return
+    end
+
+    -- `on` can discard uploads during tmux redraws or while the pane is hidden.
+    local result = vim
+      .system({ "tmux", "set-option", "-p", "-t", pane, "allow-passthrough", "all" }, { text = true, timeout = 1000 })
+      :wait()
+    if result.code ~= 0 then
+      local message = ("tmux exited with %d: %s"):format(result.code, result.stderr or "")
+      stl.reporter.warn({ from = __module_name__, subject = "tmux image passthrough", message = message })
+      return
+    end
+  end
+
   state.did_setup = true
 
   local group = stl.nvim.fn.augroup("era.image_dressing")

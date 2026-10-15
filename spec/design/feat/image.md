@@ -11,7 +11,8 @@ placement / image / convert / state → terminal
 state / terminal → env
 ```
 
-`init` 负责生命周期组装。
+`init` 负责生命周期组装。在 tmux 中先将所在 pane 的 `allow-passthrough` 设为 `all`（`on` 会在 redraw
+或 pane 隐藏时丢弃上传）；没有 `TMUX_PANE`（如 popup）或设置失败时不启用 image。
 
 ## 状态归属
 
