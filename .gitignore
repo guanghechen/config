@@ -13,7 +13,6 @@
 .sqlite-maintenance.lock
 auth.json
 cap_sid
-config.toml
 history.jsonl
 installation_id
 memories_*.sqlite*
@@ -21,6 +20,13 @@ models_cache.json
 sandbox.log
 session_index.jsonl
 version.json
+
+config.toml
+*.config.toml
+!copilot-dev.config.toml
+!copilot-fast.config.toml
+!copilot-max.config.toml
+!copilot.config.toml
 
 /.sandbox/
 /.sandbox-bin/
