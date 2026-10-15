@@ -32,6 +32,8 @@ local SELECTION_GLYPHS = {
 ---@field _views                        table<integer, ux.filetree.View>
 ---@field _tab_wins                     table<integer, integer>
 ---@field _tab_bufs                     table<integer, integer>
+---@field _titles                       table<integer, string> Last winbar written per window.
+---@field _focus_highlights             table<integer, string> Last winhighlight written per window.
 ---@field _options                      stl.c.Observable[]
 ---@field _o_width                      stl.c.Observable
 ---@field _o_root                       stl.c.Observable
@@ -42,6 +44,8 @@ local SELECTION_GLYPHS = {
 ---@field _group                        integer
 ---@field _navigation                   integer
 ---@field _workspace                    ux.filetree.Path
+---@field _input_data                   ?ux.filetree.Data
+---@field _on_disposed                  ?fun(): nil
 local M = {}
 M.__index = M
 
@@ -392,6 +396,8 @@ function M:_attach(tabnr, winnr)
         bufname = "explorer://" .. self.name .. "/" .. tabnr,
         glyphs = SELECTION_GLYPHS[session:mode() or "select"],
         on_attach = function(current)
+          -- Filetree.attach forwards only its own views, after installing their annotations.
+          ---@cast current ux.filetree.View
           require("era.m.explorer.view").attach(session, current)
         end,
         on_error = Session.report,

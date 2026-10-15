@@ -6,6 +6,17 @@ local Treeview = require("ux.treeview")
 local Future = require("stl.c.future")
 local namespace = vim.api.nvim_create_namespace("era.directory")
 
+---@class era.view.directory.IListing
+---@field layout                        ux.treeview.Revision
+---@field source                        yoz.ux.treeview.Source
+---@field first                         integer
+---@field last                          integer
+---@field entries                       table<ux.treeview.NodeId, ux.filetree.IListingRow>
+
+---A Directory owner caches listing rows on whichever Treeview View it decorates.
+---@class era.view.directory.View : ux.treeview.View
+---@field _directory_listing            ?era.view.directory.IListing
+
 ---@class era.view.Directory
 ---@field data                          ?ux.filetree.Data
 ---@field state                         ?ux.treeview.State
@@ -241,6 +252,7 @@ end
 ---@param last                          integer
 ---@return stl.c.Future
 function M:prepare_frame(frame, view, first, last)
+  ---@cast view era.view.directory.View
   local cache = view._directory_listing
   local header, source = frame:header(), frame:source()
   if
@@ -276,6 +288,7 @@ end
 ---@param expanded                      boolean
 ---@return nil
 function M:decorate_row(view, frame, row, id, col, label, expanded)
+  ---@cast view era.view.directory.View
   local cache = view._directory_listing
   local entry = cache and cache.entries[id]
   if not entry then

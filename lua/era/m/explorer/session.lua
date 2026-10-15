@@ -33,6 +33,8 @@ local filepath = require("ux.filetree.path")
 ---@field _operation_sequence           ?integer
 ---@field _disposed                     boolean
 ---@field _subscriptions                ?era.m.explorer.Subscriptions
+---@field _display_inputs               table<stl.c.Observable, boolean|string> Latest flag inputs; weak keys.
+---@field owners                        ?integer Widgets sharing this session; set by the first owner.
 local M = {}
 M.__index = M
 
@@ -298,6 +300,7 @@ function M:status_text()
       return "stopping", "progress"
     end
     local progress = self.progress
+    ---@cast progress -?
     local size = string.format("%d B", progress.bytes)
     for _, unit in ipairs({ { 1073741824, "GiB" }, { 1048576, "MiB" }, { 1024, "KiB" } }) do
       if progress.bytes >= unit[1] then

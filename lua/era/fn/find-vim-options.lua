@@ -93,6 +93,7 @@ local picker = era.m.picker.ListComposer.new({
   flag_case_sensitive = o_flag_case_sensitive,
 
   present = function(_, item)
+    ---@cast item era.fn.find_vim_options.IItem
     return {
       label = item.data.text,
       match_regions = {

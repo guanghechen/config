@@ -39,7 +39,9 @@ end
 ---@return stl.c.Future
 function M.run(data, plan, overwrite)
   local future, resolve = Future.new_with_resolver()
-  local job = plan.kind and data:start_operation(plan) or data:start_create(plan)
+  -- Only IOperationPlan carries kind.
+  local job = plan.kind and data:start_operation(plan --[[@as ux.filetree.IOperationPlan]])
+    or data:start_create(plan --[[@as ux.filetree.ICreatePlan]])
   local work = { job = job, data = data, results = {}, operation = plan.kind or "create", report = report }
   active[job] = work
   ---@param status                      ux.filetree.IJobStatus
@@ -70,6 +72,7 @@ function M.run(data, plan, overwrite)
     local last = math.min(status.results, #work.results + 128)
     if last > #work.results then
       for _, item in ipairs(job:results(#work.results + 1, last)) do
+        ---@cast item era.m.explorer.IItemResult
         item.editor_error = buffers.sync(work, item)
         work.results[#work.results + 1] = item
       end

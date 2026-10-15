@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.image.doc" ---@type string
 
----@class era.m.image.doc
+---@class era.m.image.doc : era.m.image.inline.IDocument
 local M = {}
 
 ---@alias TSMatch                        {node: TSNode, meta: vim.treesitter.query.TSMetadata}

@@ -564,7 +564,7 @@ local function refresh()
     end
     tree:walk(tree.root, function(uuid)
       local children = tree:children(uuid)
-      local data = tree:get(uuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+      local data = tree:get(uuid) --[[@as era.fn.find_lsp_symbols.ISymbolData|nil]]
       local text = data and data.name or ""
       local has_children = #children > 0
       treeview:insert(uuid, {
@@ -616,7 +616,7 @@ local function render_preview(bufnr, force)
     }
   end
 
-  local data = picker._treeview:data(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+  local data = picker._treeview:data(nodeuuid) --[[@as era.fn.find_lsp_symbols.ISymbolData|nil]]
   if data == nil then
     if force then
       local lines = { "Invalid symbol data" }
@@ -658,7 +658,7 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 local function goto_symbol(nodeuuid)
-  local symbol_data = picker._treeview:data(nodeuuid) ---@type era.fn.find_lsp_symbols.ISymbolData|nil
+  local symbol_data = picker._treeview:data(nodeuuid) --[[@as era.fn.find_lsp_symbols.ISymbolData|nil]]
   if symbol_data == nil or filepath_sourcefile == nil then
     return
   end

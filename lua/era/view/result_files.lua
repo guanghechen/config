@@ -12,6 +12,9 @@ local function location_prefix(location)
 end
 
 ---@class era.view.ResultFiles : era.view.ResultTree
+---@field public source                 era.view.ResultPaths
+---@field public data                   fun(self: era.view.ResultFiles, key?: string, frame?: yoz.ux.treeview.Frame): era.view.result_paths.IFile|nil
+---@field public iter_rows              fun(self: era.view.ResultFiles, frame: yoz.ux.treeview.Frame, first?: integer, last?: integer): fun(): integer|nil, string|nil, era.view.result_paths.IFile|nil, era.view.result_tree.IEntry|nil
 local M = setmetatable({}, { __index = ResultTree })
 M.__index = M
 
@@ -39,7 +42,7 @@ function M.new(props)
       fields = { highlights = #highlights > 0 and highlights or nil, file_icon = name },
     }
   end
-  return setmetatable(ResultTree.new(props), M)
+  return setmetatable(ResultTree.new(props) --[[@as era.view.ResultFiles]], M)
 end
 
 ---@param location                      era.view.result_tree.IEntry
@@ -193,7 +196,7 @@ function M:collect_file_uuids(root)
 end
 
 ---@param root                          ?string
----@param visit                         fun(key: string, data: table, entry: era.view.result_tree.IEntry): nil
+---@param visit                         fun(key: string, data: era.view.result_paths.IFile, entry: era.view.result_tree.IEntry): nil
 ---@return nil
 function M:traverse_filenode(root, visit)
   for _, key in ipairs(self:collect_leafs(root)) do

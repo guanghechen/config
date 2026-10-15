@@ -99,7 +99,7 @@ local function check_targets(source, target)
   for name, bufnr in pairs(names) do
     local ok, conflict = pcall(function()
       -- Parent resolution may cross the very symlink being replaced. Check every original ancestor entry too.
-      local ancestor = name
+      local ancestor = name ---@type string|nil
       local visited = {}
       while ancestor and conflicts[ancestor] == nil do
         visited[#visited + 1] = ancestor

@@ -3,7 +3,7 @@ local __module_name__ = "era.m.ai.term" ---@type string
 
 local S = era.m.ai
 
----@class era.m.ai.term.IMeta
+---@class era.m.ai.term.IMeta : era.m.ai.term.IOpenParams
 ---@field public uuid                   string
 ---@field public agent                  era.m.ai.AgentName
 ---@field public bufnr                  integer

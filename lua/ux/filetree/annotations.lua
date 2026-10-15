@@ -7,7 +7,11 @@ local namespace = vim.api.nvim_create_namespace("ux.filetree.annotations")
 local views = setmetatable({}, { __mode = "v" }) ---@type table<integer, ux.filetree.View>
 local M = {}
 
+---@class ux.filetree.IViewOptions : ux.treeview.IViewOptions
+---@field public prepare_frame          fun(view: ux.treeview.View, frame: yoz.ux.treeview.Frame, first: integer, last: integer, rows: ux.treeview.IRows): stl.c.Future Always installed by ux.filetree.attach.
+
 ---@class ux.filetree.View : ux.treeview.View
+---@field _options                      ux.filetree.IViewOptions
 ---@field _filetree_annotations         ?ux.filetree.IAnnotationRows
 ---@field _filetree_pending             ?stl.c.Future
 ---@field _filetree_annotation_key      ?string

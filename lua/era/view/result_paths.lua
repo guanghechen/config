@@ -10,6 +10,11 @@ local Source = require("era.view.result_source")
 ---@field public filetype               "directory"|"file"
 
 ---@class era.view.ResultPaths : era.view.ResultSource
+---@field public get                    fun(self: era.view.ResultPaths, key?: string): era.view.result_paths.IFile|nil
+---@field public walk                   fun(self: era.view.ResultPaths, root?: string, visit: fun(key: string, data: era.view.result_paths.IFile): nil): nil
+---@field _paths                        table<string, string> Canonical path to result key.
+---@field _sorted                       table<string, integer> Parent key to the revision its children were sorted at.
+---@field _reset                        ?{cwd: string, paths: string[], with_locations: boolean, revision: integer}
 local M = setmetatable({}, { __index = Source })
 M.__index = M
 
@@ -39,7 +44,7 @@ end
 
 ---@return era.view.ResultPaths
 function M.new()
-  local self = Source.new(M.key("/"), file_data("/", "directory"))
+  local self = Source.new(M.key("/"), file_data("/", "directory")) --[[@as era.view.ResultPaths]]
   self._paths = { ["/"] = self.root }
   self._sorted = {}
   return setmetatable(self, M)

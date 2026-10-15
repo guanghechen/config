@@ -21,6 +21,8 @@ local RECORD_DEFAULTS = {
 
 ---@class era.view.result_tree.IEntry
 ---@field public nodetype               "container"|"leaf"|"location"
+---@field public key                    ?string
+---@field public foldable               ?boolean False excludes a container from path compression.
 ---@field public collapsed              ?boolean Read from the published native frame.
 ---@field public leafuuid               ?string
 ---@field public locationuuid           ?string
@@ -39,6 +41,7 @@ local RECORD_DEFAULTS = {
 ---@field selected                      table<boolean, yoz.ux.treeview.NodeIds>
 
 ---@class era.view.ResultTree
+---@field public fullname               string
 ---@field public entries                table<string, era.view.result_tree.IEntry> Producer metadata; never stores selection or expansion.
 ---@field public source                 era.view.ResultSource|era.view.ResultList
 ---@field public view                   ?ux.treeview.View
@@ -1453,7 +1456,7 @@ function M:_settle_ready()
 end
 
 ---@param key                           string
----@return boolean
+---@return boolean|nil Nil when the node is absent from the native snapshot.
 function M:expanded(key)
   local frame = self.state and self.state:snapshot()
   local id = frame and frame:source():id(key)

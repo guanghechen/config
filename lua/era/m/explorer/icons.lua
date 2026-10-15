@@ -95,7 +95,7 @@ function M.prepare(session, frame, rows, previous, current)
         index = index + 1
         if index <= #rows.ids and vim.uv.hrtime() - started >= 2000000 then
           vim.schedule(function()
-            local ok, error = pcall(step)
+            local ok, error = pcall(step) ---@type boolean, any
             if not ok then
               reject(error)
             end

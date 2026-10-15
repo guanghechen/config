@@ -3,6 +3,9 @@ local __module_name__ = "era.view.result_snapshot" ---@type string
 
 ---@class era.view.ResultSnapshot
 ---@field snapshot                      table
+---@field _immutable                    ?table Shared metadata of a sealed List producer.
+---@field _present                      fun(key: string, data: table|string, entry: era.view.result_tree.IEntry): table
+---@field _hidden                       table<string, boolean>
 local M = {}
 M.__index = M
 

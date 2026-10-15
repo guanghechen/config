@@ -35,7 +35,7 @@ function M.run(start, token)
     local cancellation = nil ---@type stl.c.IUnsubscribable|nil
 
     ---@param ok                        boolean
-    ---@param result                    yoz.git.StatusSnapshot|yoz.git.IgnoreReport|yoz.git.BlameSnapshot|string
+    ---@param result                    yoz.git.StatusSnapshot|yoz.git.IgnoreReport|yoz.git.BlameSnapshot|string|nil
     ---@return nil
     local function finish(ok, result)
       if settled then
@@ -53,7 +53,7 @@ function M.run(start, token)
       if ok then
         resolve(result)
       else
-        reject(result)
+        reject(result --[[@as string]])
       end
     end
 

@@ -6,6 +6,8 @@ local files = require("era.m.diffview.pane.filetree")
 local commit_format = require("era.m.diffview.commit_format")
 local config = require("era.m.diffview.config")
 local util = require("era.m.diffview.util")
+
+---@class era.m.diffview.pane.commits
 local M = {}
 M.get_item_at_line = tree.item
 M.get_navigation = tree.navigation

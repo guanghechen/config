@@ -351,7 +351,7 @@ local function buffer_annotations(entry)
   local user_name = era.m.git.state.get_user_name()
   local user_email = era.m.git.state.get_user_email()
   local timezone = vim.env.TZ
-  local zone = os.date("%z:%Z")
+  local zone = os.date("%z:%Z") --[[@as string]]
   local locale = os.setlocale(nil, "time")
   local presentation = entry.presentation
   if

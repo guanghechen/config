@@ -138,6 +138,7 @@ local picker = era.m.picker.ListComposer.new({
   flag_case_sensitive = flag_case_sensitive,
 
   present = function(_, item)
+    ---@cast item era.widget.win_history.IItem
     local prefix = item.uuid .. " " .. item.data.icon .. " "
     local path = dot.path.relative(dot.path.cwd(), item.data.filepath, "/")
     return { label = prefix .. path, match_regions = { { 0, #item.text, #prefix } } }

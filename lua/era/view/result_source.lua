@@ -93,7 +93,7 @@ end
 ---@return nil
 function M:move(key, parent, index)
   local record = assert(self.records[key], "missing result key: " .. key)
-  local current = parent
+  local current = parent ---@type string|nil
   while current do
     assert(current ~= key, "cyclic result parent")
     current = self:parent(current)

@@ -246,6 +246,7 @@ local function update(session, job, status)
   end
   if status.confirmation and session._confirmation ~= status.confirmation.token then
     local confirmation = status.confirmation
+    ---@cast confirmation -?
     session._confirmation = confirmation.token
     ---@param proceed                   boolean
     ---@return nil
@@ -391,6 +392,7 @@ function M.start(session, view, request)
   local root = operation == "create" and not request.path and not request.target and session:root(view:frame()) or nil
   return with_preparation(session, "preparing", function(state)
     if request.cursor then
+      ---@cast cursor -?
       return native_async.run(session.native:prepare_cursor(request.cursor.frame, cursor:node()))
     end
     return native_async.run(state._native:lock_selection())
@@ -412,6 +414,7 @@ function M.start(session, view, request)
         return
       end
     elseif request.cursor then
+      ---@cast cursor -?
       nodes, source, count = { cursor:node() }, cursor:source(), 1
     elseif operation ~= "create" then
       ready = prepare_sources(session, task, preparation)
@@ -559,7 +562,7 @@ function M.start(session, view, request)
         session._direct_task = task
       end
       job = session.native:start_operation({
-        kind = operation,
+        kind = operation --[[@as "copy"|"move"|"delete"|"trash"]],
         source = source,
         nodes = nodes,
         target = (operation == "copy" or operation == "move") and destination or nil,
@@ -589,6 +592,7 @@ function M.cancel(session)
     session.job:cancel()
   elseif session._preparation then
     local preparation = session._preparation
+    ---@cast preparation -?
     preparation.cancelled = true
     if preparation.job then
       preparation.job:cancel()

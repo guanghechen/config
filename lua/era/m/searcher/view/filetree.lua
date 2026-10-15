@@ -48,6 +48,13 @@ local Paths = require("era.view.result_paths")
 ---
 ---@field public preview                era.m.searcher.view.filetree.ISearchedPreviewItem
 
+---@class era.m.searcher.view.filetree.IEntry : era.view.result_tree.IEntry
+---@field public filematch              ?era.m.searcher.view.filetree.IResolvedFileMatch
+---@field public locations              ?era.m.searcher.view.filetree.ILocationEntry[]
+
+---@class era.m.searcher.view.filetree.ILocationEntry : era.m.searcher.view.filetree.IEntry
+---@field public match                  era.m.searcher.view.filetree.ISearchedItem
+
 ---@param text                          string
 ---@return string
 local function decode_preview_text(text)
@@ -62,13 +69,16 @@ local function encode_preview_text(text)
 end
 
 ---@class era.m.searcher.FiletreeView : era.view.ResultFiles
+---@field public entries                table<string, era.m.searcher.view.filetree.IEntry>
+---@field public retrieve               fun(self: era.m.searcher.FiletreeView, key: string, frame?: yoz.ux.treeview.Frame): era.m.searcher.view.filetree.IEntry|nil
+---@field public iter_rows              fun(self: era.m.searcher.FiletreeView, frame: yoz.ux.treeview.Frame, first?: integer, last?: integer): fun(): integer|nil, string|nil, era.view.result_paths.IFile|nil, era.m.searcher.view.filetree.IEntry|nil
 local M = setmetatable({}, { __index = Files })
 M.__index = M
 
 ---@param props                         table
 ---@return era.m.searcher.FiletreeView
 function M.new(props)
-  return setmetatable(Files.new(props), M)
+  return setmetatable(Files.new(props), M) --[[@as era.m.searcher.FiletreeView]]
 end
 
 ---@param params                        era.m.searcher.view.filetree.ISearchParams
@@ -297,7 +307,7 @@ function M:publish_search_result(result, uuids)
   self:invalidate()
 end
 
----@param leaf                          era.view.result_tree.IEntry
+---@param leaf                          era.m.searcher.view.filetree.IEntry
 ---@return nil
 function M:remove_visible_locations(leaf)
   local entry = self.entries[leaf.key]

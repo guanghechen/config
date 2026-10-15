@@ -6,11 +6,24 @@ local namespace = vim.api.nvim_create_namespace("ux.treeview")
 local views = {} ---@type table<integer, ux.treeview.View>
 local M = {}
 
+---@class ux.treeview.decorations.IBatch
+---@field first                         integer
+---@field last                          integer
+---@field rows                          ux.treeview.IRows
+---@field limited                       ?boolean
+
+---@class ux.treeview.decorations.IPrepared
+---@field frame                         string
+---@field first                         integer
+---@field last                          integer
+---@field rows                          ux.treeview.IRows
+---@field batch                         ux.treeview.decorations.IBatch
+
 ---@param frame                         yoz.ux.treeview.Frame
 ---@param first                         integer
 ---@param last                          integer
----@param previous                      ?table
----@return table
+---@param previous                      ?ux.treeview.decorations.IPrepared
+---@return ux.treeview.decorations.IPrepared
 function M.prepare(frame, first, last, previous)
   local id = frame:id()
   local batch = previous and previous.frame == id and previous.batch or nil

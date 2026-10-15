@@ -44,6 +44,7 @@ local function __diffview_navigate_window__(direction)
   if direction ~= "h" then
     return false
   end
+  ---@cast direction "h"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   if vim.t[tabnr].tabtype ~= stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then

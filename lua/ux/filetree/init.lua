@@ -38,7 +38,7 @@ function M.attach(state, options)
       return annotations.prepare(view, native, frame, first, last)
     end,
   })
-  return Treeview.attach(state, options)
+  return Treeview.attach(state, options) --[[@as ux.filetree.View]]
 end
 
 return M

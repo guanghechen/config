@@ -183,7 +183,7 @@ local function refresh(force)
       }
     end
 
-    ---@class era.view.result_tree.IEntry
+    ---@type era.view.result_tree.IEntry
     local location = {
       nodetype = "location",
       leafuuid = leafuuid,

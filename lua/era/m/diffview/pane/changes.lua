@@ -5,6 +5,8 @@ local tree = require("era.m.diffview.pane.tree")
 local files = require("era.m.diffview.pane.filetree")
 local config = require("era.m.diffview.config")
 local util = require("era.m.diffview.util")
+
+---@class era.m.diffview.pane.changes
 local M = {}
 M.apply_to_buffer = tree.apply
 M.get_item_at_line = tree.item
