@@ -1,6 +1,11 @@
 {
-  "workspace.ignoreDir": [
-    "lua/stl/dict",
-    "__test__"
-  ]
+  "runtime.version": "LuaJIT",
+  "runtime.path": ["lua/?.lua", "lua/?/init.lua"],
+  "runtime.pathStrict": true,
+  "diagnostics.globals": ["vim"],
+  "diagnostics.disable": ["different-requires"],
+  "doc.privateName": ["^_"],
+  "workspace.checkThirdParty": false,
+  "workspace.library": ["$VIMRUNTIME/lua", "${3rd}/luv/library"],
+  "workspace.ignoreDir": ["lua/stl/dict", "__test__"]
 }

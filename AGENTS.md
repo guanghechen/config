@@ -36,6 +36,7 @@ yoz -> stl -> dot -> era -> ark/vendor
 - Lua/Node tests and shared fixtures live under `__test__/`; production `lua/` must not reference `__test__` or expose test-only hooks.
 - Rust unit tests live in the corresponding `rust/<crate>/src/` modules under `#[cfg(test)]`; shared Rust test support stays inside its crate.
 - Lua specs use `__test__/specs/**/*_spec.lua`; run them with `nvim -l __test__/run.lua [path-filter]`. Node tests use `__test__/node/` with `node --test`; Rust tests use `cargo test --manifest-path rust/Cargo.toml --workspace --all-targets`. See `__test__/README.md`.
+- LuaLS baseline: `node script/luals-check.mjs` must report no Warning or Error. It checks tracked and unignored Lua files with Mason's `lua-language-server` pinned by `LUALS_VERSION` and the runtime, library (`$VIMRUNTIME/lua`, luv), and diagnostics settings in `.luarc.json`, which also govern the editor for this repository; bump the pin only together with a clean re-check.
 
 ## Module Usage Guidance (`yoz` / `stl` / `dot`)
 

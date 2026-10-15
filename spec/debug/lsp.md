@@ -2,6 +2,9 @@
 
 在 headless 模式下运行 Neovim，自动收集整个项目的 LSP diagnostics，输出结构化结果供外部工具（如 Claude Code）解析和自动修复。
 
+> **基线检查**: 仓库的 LuaLS 零 Warning/Error 基线使用 `node script/luals-check.mjs`（固定 LuaLS 版本、只检查
+> tracked 与未忽略的 Lua 文件）。本 collector 复现交互式编辑器会话，适合排查编辑器内的 diagnostics。
+
 > **推荐**: 使用 tmux pane 运行 headless Neovim，可以实时观察 LSP 分析进度。详见 `spec/debug/tmux.md`。
 
 ## Usage

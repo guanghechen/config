@@ -339,9 +339,10 @@ nvim -l __test__/run.lua --timeout 60000 stl/c/
 node --test __test__/node/*.test.mjs
 cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --quiet
 
-# Formatting and the existing repository-wide health check
+# Formatting, the LuaLS baseline, and the existing repository-wide health check
 ~/.local/share/nvim/mason/bin/stylua --check __test__
 cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+node script/luals-check.mjs
 node script/healcheck.mjs
 ```
 

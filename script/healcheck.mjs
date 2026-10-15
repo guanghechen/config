@@ -139,6 +139,10 @@ function getChecks() {
       run: () => checkGitWhitespace(rootDir),
     },
     {
+      name: "LuaLS",
+      run: () => runCommand(process.execPath, [join(scriptDir, "luals-check.mjs")], rootDir),
+    },
+    {
       name: "Node tests",
       run: () => runCommand(process.execPath, ["--test", ...nodeTests], rootDir),
     },
