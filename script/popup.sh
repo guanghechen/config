@@ -20,7 +20,7 @@ function _ghc_tmux_popup_ {
     tmux detach-client ${client_name:+-t "$client_name"}
   else
     # Check if popup session already exists
-    if ! tmux has-session -t "${popup_session_name}" 2>/dev/null; then
+    if ! tmux has-session -t "=${popup_session_name}" 2>/dev/null; then
       # Create new popup session and window if it doesn't exist
       tmux new-session -d -s "${popup_session_name}" -n "${popup_window_name}" -c "${current_pane_path}"
     else

@@ -9,7 +9,7 @@ function _ghc_tmux_notify_ {
 function _ghc_tmux_renumber_session_ {
   local session_name=$1
 
-  if ! tmux has-session -t "${session_name}" 2>/dev/null; then
+  if ! tmux has-session -t "=${session_name}" 2>/dev/null; then
     return 0
   fi
 
@@ -78,7 +78,8 @@ function _ghc_tmux_move_window_ {
     return 0
   fi
 
-  if ! tmux has-session -t "${target_session_name}" 2>/dev/null; then
+  # `=` disables prefix matching: target `api` must not resolve to an existing `api-server`.
+  if ! tmux has-session -t "=${target_session_name}" 2>/dev/null; then
     if ! tmux new-session -d -s "${target_session_name}"; then
       _ghc_tmux_notify_ "failed to create session: ${target_session_name}"
       return 1
