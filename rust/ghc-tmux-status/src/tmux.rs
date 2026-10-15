@@ -515,9 +515,9 @@ fn snapshot_command_args(
         ";".to_string(),
         "list-sessions".to_string(),
         "-F".to_string(),
-        // bell: tmux's #{session_bell_flag} is buggy — it inspects only the first window of
-        // the session (returns on the first RB-tree winlink), so a bell in any later window
-        // is never reported. Derive has_bell from #{session_alerts} instead, which lists
+        // bell: #{session_bell_flag} inspects only the session's first window in tmux
+        // releases up to 3.8 (fixed upstream after 3.8 by 2e9189c0), so a bell in any later
+        // window is never reported. Derive has_bell from #{session_alerts} instead, which lists
         // every alerted window; a '!' in it marks a bell. parse_session_line reads this third
         // field as the "1"/"0" has_bell flag, so the shape is unchanged.
         format!(

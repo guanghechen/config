@@ -29,10 +29,6 @@ mkdir -p "$(dirname "$renderer")" "$tmp/bin"
 cat >"$renderer" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$*" >>"$GHC_FOCUS_RENDERER_CALLS"
-if [ "${1-}" = "help" ]; then
-  printf '%s\n' 'session focus <prev|next|index>'
-  exit 0
-fi
 printf '%s\n' 'renderer stdout must not reach run-shell'
 printf '%s\n' 'renderer stderr must not reach run-shell' >&2
 exit "${GHC_FAKE_RENDERER_EXIT:-1}"
@@ -62,8 +58,8 @@ set -e
 [ -z "$output" ] || fail "focus helper leaked renderer output: $output"
 [ "$(cat "$tmux_calls")" = "display-message Session focus failed" ] \
   || fail "focus helper did not degrade to the expected status message"
-[ "$(tail -1 "$renderer_calls")" = "session focus prev" ] \
-  || fail "focus helper did not call the renderer with the requested target"
+[ "$(cat "$renderer_calls")" = "session focus prev" ] \
+  || fail "focus helper must call the renderer exactly once with the requested target"
 
 : >"$renderer_calls"
 : >"$tmux_calls"

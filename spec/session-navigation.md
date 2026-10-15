@@ -107,8 +107,8 @@ ghc-tmux-status session focus <prev|next|index>
 - Target 是 current session：idempotent no-op。
 - Target 有效：通过 session id 执行 `tmux switch-client`。
 
-`script/focus-session.sh` 优先调用 Rust。只有 release binary 缺失或不支持 session command
-时才使用 shell fallback；fallback 不是 virtual-order owner。
+`script/focus-session.sh` 优先调用 Rust，每次按键只启动一次 binary。只有 release binary 缺失
+时才使用 shell fallback；binary 调用失败只显示 status message。fallback 不是 virtual-order owner。
 
 ## 6. Swap contract
 
