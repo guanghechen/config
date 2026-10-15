@@ -146,7 +146,7 @@ fn render_session_window(context: &RenderContext, start: usize, end: usize) -> R
             Some(left_active) => rich_text.push_str(&render_join_separator(left_active, is_active)),
             None => rich_text.push_str(&render_left_edge(is_active)),
         }
-        literal_text.push_str(&render_item_body_literal(&display_name, index));
+        literal_text.push_str(&render_item_body_literal(&display_name, index, is_active));
         rich_text.push_str(&render_item_body_with_last_focus(
             &display_name,
             &session.id,
@@ -321,11 +321,13 @@ fn render_right_edge(last_active: bool) -> String {
     render_arrow(fg, LIST_SURFACE_BG, false)
 }
 
-fn render_item_body_literal(session_name: &str, index: usize) -> String {
+fn render_item_body_literal(session_name: &str, index: usize, is_active: bool) -> String {
     // Keep one state slot in the responsive-layout shadow so idle/single-state
     // metric thresholds remain stable. status-left-length separately reserves
-    // the possible second slot when running and bell coexist.
-    format!(" {STATE_LITERAL} {session_name}  {index} ")
+    // the possible second slot when running and bell coexist. The active body
+    // separates title and index with " | ", one column wider than inactive.
+    let separator = if is_active { " | " } else { "  " };
+    format!(" {STATE_LITERAL} {session_name}{separator}{index} ")
 }
 
 fn render_item_body_with_last_focus(
@@ -400,6 +402,7 @@ mod tests {
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
         StatusPosition, TmuxSnapshot,
     };
+    use crate::util::width::display_width;
 
     #[test]
     fn item_body_bakes_the_owner_active_branch() {
@@ -525,7 +528,7 @@ mod tests {
 
         assert_eq!(
             segment.literal_text,
-            "\u{e0b0} ¤ dev  1 \u{e0b0} ¤ yui  2 \u{e0b0} "
+            "\u{e0b0} ¤ dev | 1 \u{e0b0} ¤ yui  2 \u{e0b0} "
         );
     }
 
@@ -540,7 +543,11 @@ mod tests {
             [("$1", "dev"), ("$2", "yui")],
         ));
 
-        assert_eq!(on_dev.literal_text, on_yui.literal_text);
+        // The active separator moves with the owner; the width shadow does not.
+        assert_eq!(
+            display_width(&on_dev.literal_text),
+            display_width(&on_yui.literal_text)
+        );
         assert_ne!(on_dev.rich_text, on_yui.rich_text);
         assert!(
             on_dev
@@ -561,7 +568,7 @@ mod tests {
 
         assert!(segment.rich_text.contains("#[range=session|$1]"));
         assert!(segment.rich_text.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
-        assert_eq!(segment.literal_text, "\u{e0b0} ¤ dev  1 \u{e0b0} ");
+        assert_eq!(segment.literal_text, "\u{e0b0} ¤ dev | 1 \u{e0b0} ");
     }
 
     #[test]
@@ -590,7 +597,7 @@ mod tests {
         assert!(segment.rich_text.contains("#[range=session|$2]"));
         assert_eq!(
             segment.literal_text,
-            "\u{e0b0} ¤ dev  1 \u{e0b0} ¤ yui  2 \u{e0b0} "
+            "\u{e0b0} ¤ dev | 1 \u{e0b0} ¤ yui  2 \u{e0b0} "
         );
     }
 
@@ -605,7 +612,7 @@ mod tests {
         assert!(segment.rich_text.contains("#[range=session|$2]"));
         assert_eq!(
             segment.literal_text,
-            "\u{e0b0} ¤ dev  1 \u{e0b0} ¤ yui  2 \u{e0b0} "
+            "\u{e0b0} ¤ dev | 1 \u{e0b0} ¤ yui  2 \u{e0b0} "
         );
     }
 

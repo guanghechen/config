@@ -150,6 +150,16 @@ mod tests {
     }
 
     #[test]
+    fn rejects_retired_window_changed_event() {
+        assert_eq!(
+            parse(args(&["apply", "window-changed"]))
+                .unwrap_err()
+                .to_string(),
+            "unknown render event: window-changed"
+        );
+    }
+
+    #[test]
     fn parses_scheduler_tick_without_arguments() {
         assert_eq!(
             parse(args(&["scheduler-tick"])).unwrap(),

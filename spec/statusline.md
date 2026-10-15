@@ -151,11 +151,11 @@ client-session-changed[40]
 session-created[40]
 session-closed[40]
 session-renamed[40]
-session-window-changed[40]
 ```
 
 Hook 仅发送 background reconcile notification。其 stdout、stderr 和非零退出均被隔离，
-避免 tmux 进入 view mode；下一次 event 负责重试。
+避免 tmux 进入 view mode；下一次 event 负责重试。Render 不读取 window 状态，因此不注册
+`session-window-changed`；loader 会移除旧版本留下的该 hook。
 
 ### 4.4 Fallback
 
@@ -380,6 +380,9 @@ result      = min(desired, max(client_width, floor))
 Conditional pill 使用 pessimistic literal shadow。作为最大值，适度 over-reserve 可接受；
 underestimate 会造成可见 clipping，因此不可接受。
 
+只有 one-row 的 global `status-format` 按 `status-*-length` 裁剪；two-row session format
+不经 length 裁剪，因此 narrow session 不写入 length。
+
 ### 9.2 Session-scoped rendered state
 
 ```text
@@ -398,7 +401,7 @@ status-format[]
 四个 rendered cache value 都带固定 witness。只有 cache witnesses、render key、layout、
 status 与 row formats 全部匹配时，session 才视为 settled。
 
-- 仅 length drift：允许走 length-only fast path。
+- 仅 length drift：wide session 允许走 length-only fast path；narrow session 不写 length。
 - 任意其他 drift：提交完整 session reconcile bundle。
 - `SessionRenderedStatus` 携带对应 `session_group_count`，commit planner 使用同一 length policy
   计算实际写入的 `status-left-length`。

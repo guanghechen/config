@@ -44,8 +44,7 @@ function _ghc_tmux_status_layout_hooks_ {
     'client-session-changed[40]' \
     'session-created[40]' \
     'session-closed[40]' \
-    'session-renamed[40]' \
-    'session-window-changed[40]'
+    'session-renamed[40]'
 }
 
 # Layout hooks are reconcile notifications, not part of the triggering tmux
@@ -69,8 +68,10 @@ function _ghc_tmux_unset_status_layout_hooks_ {
   for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
     tmux set-hook -gu "$layout_hook" 2>/dev/null || true
   done
-  # Remove the short-lived bell reconcile hook from the previous state transport.
+  # Remove retired hooks: the bell reconcile hook from the previous state
+  # transport, and window-changed, whose render never read window state.
   tmux set-hook -gu 'alert-bell[40]' 2>/dev/null || true
+  tmux set-hook -gu 'session-window-changed[40]' 2>/dev/null || true
 }
 
 # The renderer writes both render cache and LAYOUT (rows / status-format / lengths /
@@ -264,7 +265,6 @@ function _ghc_tmux_load_theme_ {
         _ghc_tmux_set_status_layout_hook_ 'session-created[40]' session-created "$status_renderer"
         _ghc_tmux_set_status_layout_hook_ 'session-closed[40]' session-closed "$status_renderer"
         _ghc_tmux_set_status_layout_hook_ 'session-renamed[40]' session-renamed "$status_renderer"
-        _ghc_tmux_set_status_layout_hook_ 'session-window-changed[40]' window-changed "$status_renderer"
 
         local bootstrap_generation="$_GHC_TMUX_STATUS_FENCED_GENERATION"
         if ! "$status_renderer" apply theme-loaded "$bootstrap_generation"; then

@@ -220,6 +220,9 @@ impl CommitPlanner {
             let session_layout = &rendered_session.session_layout;
             let status = &rendered_session.status;
             let session_target = &session_layout.session_id;
+            // Only the one-row global status-format trims by status-*-length; the
+            // two-row session format draws both caches untrimmed.
+            let writes_lengths = session_layout.layout.rows == 1;
             let left_length = status_left_length_for_width(
                 status,
                 session_layout.status_length_width,
@@ -228,7 +231,7 @@ impl CommitPlanner {
             let right_length =
                 status_right_length_for_width(status, session_layout.status_length_width);
             if session_render_state_settled(session_layout, &rendered_session.render_key, options) {
-                if session_layout.current_left_length != left_length {
+                if writes_lengths && session_layout.current_left_length != left_length {
                     push_set_session_target(
                         &mut plan,
                         session_target,
@@ -236,7 +239,7 @@ impl CommitPlanner {
                         &left_length,
                     );
                 }
-                if session_layout.current_right_length != right_length {
+                if writes_lengths && session_layout.current_right_length != right_length {
                     push_set_session_target(
                         &mut plan,
                         session_target,
@@ -272,18 +275,20 @@ impl CommitPlanner {
                 "@GHC_SL_LAYOUT",
                 &session_layout.layout.key,
             );
-            push_set_session_target(
-                &mut plan,
-                session_target,
-                "status-left-length",
-                &left_length,
-            );
-            push_set_session_target(
-                &mut plan,
-                session_target,
-                "status-right-length",
-                &right_length,
-            );
+            if writes_lengths {
+                push_set_session_target(
+                    &mut plan,
+                    session_target,
+                    "status-left-length",
+                    &left_length,
+                );
+                push_set_session_target(
+                    &mut plan,
+                    session_target,
+                    "status-right-length",
+                    &right_length,
+                );
+            }
             push_set_session_target(
                 &mut plan,
                 session_target,
@@ -766,6 +771,28 @@ mod tests {
                     if name == expected_name && value == expected_value
             )));
         }
+    }
+
+    #[test]
+    fn narrow_session_never_writes_status_lengths() {
+        let status = rendered_status("body");
+        let mut settled =
+            session_layout("$4", LayoutKind::Narrow, "2", "02:narrow", "2", "02:narrow");
+        settled.current_left_length = "40".to_string();
+        settled.current_right_length = "40".to_string();
+        let changed = session_layout("$7", LayoutKind::Narrow, "2", "02:narrow", "on", "02:wide");
+        let mut context = context_with_options(BTreeMap::new());
+        context.session_layouts = vec![settled, changed];
+
+        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+
+        assert!(session_commands_for_target(&plan, "$4").is_empty());
+        assert!(!session_commands_for_target(&plan, "$7").is_empty());
+        assert!(!plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetSessionTarget { name, .. }
+                if name == "status-left-length" || name == "status-right-length"
+        )));
     }
 
     #[test]

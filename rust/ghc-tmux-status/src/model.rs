@@ -10,7 +10,6 @@ pub enum RenderEventKind {
     SessionCreated,
     SessionClosed,
     SessionRenamed,
-    WindowChanged,
     ManualApply,
 }
 
@@ -24,7 +23,6 @@ impl RenderEventKind {
             Self::SessionCreated => "session-created",
             Self::SessionClosed => "session-closed",
             Self::SessionRenamed => "session-renamed",
-            Self::WindowChanged => "window-changed",
             Self::ManualApply => "manual-apply",
         }
     }
@@ -38,7 +36,6 @@ impl RenderEventKind {
             "session-created" => Some(Self::SessionCreated),
             "session-closed" => Some(Self::SessionClosed),
             "session-renamed" => Some(Self::SessionRenamed),
-            "window-changed" => Some(Self::WindowChanged),
             "manual-apply" => Some(Self::ManualApply),
             _ => None,
         }
@@ -276,7 +273,6 @@ mod tests {
         RenderEventKind::SessionCreated,
         RenderEventKind::SessionClosed,
         RenderEventKind::SessionRenamed,
-        RenderEventKind::WindowChanged,
         RenderEventKind::ManualApply,
     ];
 

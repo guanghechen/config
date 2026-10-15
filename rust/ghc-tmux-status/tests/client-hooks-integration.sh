@@ -204,7 +204,8 @@ tmux_server set -g @GHC_SL_MODE 02 ';' \
   set -g @GHC_SL_ROWS auto ';' \
   set -s @GHC_SL_RUNNING_SESSIONS legacy-state ';' \
   set -g @GHC_RUNNING_SESSIONS_FMT legacy-format ';' \
-  set-hook -g 'alert-bell[40]' 'display-message legacy-bell-hook'
+  set-hook -g 'alert-bell[40]' 'display-message legacy-bell-hook' ';' \
+  set-hook -g 'session-window-changed[40]' 'display-message legacy-window-hook'
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
 if [ -n "$(tmux_server show -sqv @GHC_SL_RUNNING_SESSIONS)" ] \
   || [ -n "$(tmux_server show -gqv @GHC_RUNNING_SESSIONS_FMT)" ]; then
@@ -212,6 +213,9 @@ if [ -n "$(tmux_server show -sqv @GHC_SL_RUNNING_SESSIONS)" ] \
 fi
 if [ -n "$(tmux_server show-hooks -gv 'alert-bell[40]' 2>/dev/null)" ]; then
   fail "loader did not remove legacy alert-bell hook"
+fi
+if [ -n "$(tmux_server show-hooks -gv 'session-window-changed[40]' 2>/dev/null)" ]; then
+  fail "loader did not remove retired window-changed hook"
 fi
 
 assert_background_hook 'client-attached[40]' client-resized "$renderer"
@@ -221,7 +225,6 @@ assert_background_hook 'client-session-changed[40]' session-changed "$renderer"
 assert_background_hook 'session-created[40]' session-created "$renderer"
 assert_background_hook 'session-closed[40]' session-closed "$renderer"
 assert_background_hook 'session-renamed[40]' session-renamed "$renderer"
-assert_background_hook 'session-window-changed[40]' window-changed "$renderer"
 if [[ $(tmux_server show-hooks -g) == *"theme-loaded"* ]]; then
   fail "theme-loaded bootstrap must remain outside the asynchronous hook set"
 fi
@@ -313,8 +316,7 @@ for hook in \
   'client-resized[40]' \
   'client-session-changed[40]' \
   'session-created[40]' \
-  'session-renamed[40]' \
-  'session-window-changed[40]'; do
+  'session-renamed[40]'; do
   tmux_server set-hook -gu "$hook" 2>/dev/null || true
 done
 state_before_close=$(session_state vscode)
