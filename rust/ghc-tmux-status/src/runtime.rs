@@ -251,8 +251,8 @@ impl StatusRuntime {
                 if is_recent_sample(
                     previous_network
                         .as_ref()
-                        .map(|snapshot| snapshot.sample.timestamp_seconds),
-                    snapshot.sample.timestamp_seconds,
+                        .map(|snapshot| snapshot.sample.timestamp_seconds()),
+                    snapshot.sample.timestamp_seconds(),
                 ) {
                     set_values.push((NETWORK_NOW_OPTION, format_network_now(&snapshot)));
                     summary.network_published = true;

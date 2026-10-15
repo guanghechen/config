@@ -5,7 +5,7 @@ use crate::metric::{
     CpuSample, CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot,
 };
 use crate::process::output_with_timeout;
-use crate::util::time::unix_timestamp_seconds;
+use crate::util::time::{unix_timestamp_millis, unix_timestamp_seconds};
 
 pub struct DarwinMetricsProvider {
     interface: Option<String>,
@@ -37,20 +37,20 @@ impl MetricsProvider for DarwinMetricsProvider {
     }
 
     fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot> {
-        let timestamp_seconds = unix_timestamp_seconds();
+        let timestamp_millis = unix_timestamp_millis();
         let interface = match self.interface.as_deref() {
             Some(interface) => interface.to_string(),
             None => default_network_interface(),
         };
         let (rx_bytes, tx_bytes) = read_network_counters(&interface)?;
         let (rx_bytes_per_second, tx_bytes_per_second) =
-            calculate_speed(previous, &interface, timestamp_seconds, rx_bytes, tx_bytes);
+            calculate_speed(previous, &interface, timestamp_millis, rx_bytes, tx_bytes);
 
         Ok(NetworkSnapshot {
             rx_bytes_per_second,
             tx_bytes_per_second,
             sample: NetworkSample {
-                timestamp_seconds,
+                timestamp_millis,
                 rx_bytes,
                 tx_bytes,
                 interface,
@@ -275,7 +275,7 @@ fn parse_netstat_counters(output: &str) -> AppResult<(u64, u64)> {
 fn calculate_speed(
     previous: Option<&NetworkSample>,
     interface: &str,
-    timestamp_seconds: u64,
+    timestamp_millis: u64,
     rx_bytes: u64,
     tx_bytes: u64,
 ) -> (u64, u64) {
@@ -285,14 +285,19 @@ fn calculate_speed(
     if previous.interface != interface {
         return (0, 0);
     }
-    let elapsed = timestamp_seconds.saturating_sub(previous.timestamp_seconds);
-    if elapsed == 0 || rx_bytes < previous.rx_bytes || tx_bytes < previous.tx_bytes {
+    let elapsed_millis = timestamp_millis.saturating_sub(previous.timestamp_millis);
+    if elapsed_millis == 0 || rx_bytes < previous.rx_bytes || tx_bytes < previous.tx_bytes {
         return (0, 0);
     }
     (
-        (rx_bytes - previous.rx_bytes) / elapsed,
-        (tx_bytes - previous.tx_bytes) / elapsed,
+        bytes_per_second(rx_bytes - previous.rx_bytes, elapsed_millis),
+        bytes_per_second(tx_bytes - previous.tx_bytes, elapsed_millis),
     )
+}
+
+fn bytes_per_second(bytes: u64, elapsed_millis: u64) -> u64 {
+    let rate = u128::from(bytes) * 1000 / u128::from(elapsed_millis);
+    u64::try_from(rate).unwrap_or(u64::MAX)
 }
 
 #[cfg(target_os = "macos")]
@@ -483,18 +488,34 @@ mod tests {
     #[test]
     fn calculates_network_speed() {
         let previous = NetworkSample {
-            timestamp_seconds: 10,
+            timestamp_millis: 10_000,
             rx_bytes: 100,
             tx_bytes: 200,
             interface: "en0".to_string(),
         };
         assert_eq!(
-            calculate_speed(Some(&previous), "en0", 20, 1100, 700),
+            calculate_speed(Some(&previous), "en0", 20_000, 1100, 700),
             (100, 50)
         );
         assert_eq!(
-            calculate_speed(Some(&previous), "utun4", 20, 50_000, 50_000),
+            calculate_speed(Some(&previous), "utun4", 20_000, 50_000, 50_000),
             (0, 0)
+        );
+    }
+
+    #[test]
+    fn network_speed_uses_sub_second_elapsed_time() {
+        // A 4.1 s window would read as 4 s (or 5 s across a second boundary)
+        // with whole-second timestamps.
+        let previous = NetworkSample {
+            timestamp_millis: 10_950,
+            rx_bytes: 0,
+            tx_bytes: 0,
+            interface: "en0".to_string(),
+        };
+        assert_eq!(
+            calculate_speed(Some(&previous), "en0", 15_050, 41_000, 4_100),
+            (10_000, 1_000)
         );
     }
 }

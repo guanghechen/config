@@ -21,10 +21,15 @@ impl TemplateWidget for NetworkWidget {
     }
 }
 
+// Leading field of the millisecond-timestamp layout. Untagged values use the
+// previous whole-second layout; older binaries reject the tag as a timestamp
+// and start a fresh baseline instead of misreading milliseconds as seconds.
+const MILLIS_SNAPSHOT_TAG: &str = "v2";
+
 pub fn encode_network_snapshot(snapshot: &NetworkSnapshot) -> String {
     format!(
-        "{}\t{}\t{}\t{}\t{}\t{}",
-        snapshot.sample.timestamp_seconds,
+        "{MILLIS_SNAPSHOT_TAG}\t{}\t{}\t{}\t{}\t{}\t{}",
+        snapshot.sample.timestamp_millis,
         snapshot.sample.rx_bytes,
         snapshot.sample.tx_bytes,
         snapshot.rx_bytes_per_second,
@@ -34,9 +39,17 @@ pub fn encode_network_snapshot(snapshot: &NetworkSnapshot) -> String {
 }
 
 pub fn decode_network_snapshot(value: &str) -> Option<NetworkSnapshot> {
-    let mut parts = value.splitn(6, '\t');
+    let (fields, millis_per_unit) = match value.split_once('\t') {
+        Some((MILLIS_SNAPSHOT_TAG, fields)) => (fields, 1),
+        _ => (value, 1000),
+    };
+    let mut parts = fields.splitn(6, '\t');
     let sample = NetworkSample {
-        timestamp_seconds: parts.next()?.parse::<u64>().ok()?,
+        timestamp_millis: parts
+            .next()?
+            .parse::<u64>()
+            .ok()?
+            .checked_mul(millis_per_unit)?,
         rx_bytes: parts.next()?.parse::<u64>().ok()?,
         tx_bytes: parts.next()?.parse::<u64>().ok()?,
         interface: String::new(),
@@ -131,7 +144,7 @@ mod tests {
             rx_bytes_per_second: 12 * 1024,
             tx_bytes_per_second: 999,
             sample: NetworkSample {
-                timestamp_seconds: 1,
+                timestamp_millis: 1_000,
                 rx_bytes: 2,
                 tx_bytes: 3,
                 interface: "en0".to_string(),
@@ -146,14 +159,29 @@ mod tests {
             rx_bytes_per_second: 1,
             tx_bytes_per_second: 2,
             sample: NetworkSample {
-                timestamp_seconds: 1,
+                timestamp_millis: 1_234,
                 rx_bytes: 2,
                 tx_bytes: 3,
                 interface: "utun4".to_string(),
             },
         };
-        let parsed = decode_network_snapshot(&super::encode_network_snapshot(&snapshot)).unwrap();
-        assert_eq!(parsed, snapshot);
+        let encoded = super::encode_network_snapshot(&snapshot);
+        assert_eq!(encoded, "v2\t1234\t2\t3\t1\t2\tutun4");
+        assert_eq!(decode_network_snapshot(&encoded).unwrap(), snapshot);
+    }
+
+    #[test]
+    fn decodes_whole_second_snapshot_as_milliseconds() {
+        let parsed = decode_network_snapshot("1700000000\t2\t3\t4\t5\ten0").unwrap();
+        assert_eq!(parsed.sample.timestamp_millis, 1_700_000_000_000);
+        assert_eq!(parsed.sample.timestamp_seconds(), 1_700_000_000);
+        assert_eq!(parsed.sample.interface, "en0");
+    }
+
+    #[test]
+    fn rejects_unknown_tags_and_overflowing_legacy_timestamps() {
+        assert!(decode_network_snapshot("v3\t1\t2\t3\t4\t5\ten0").is_none());
+        assert!(decode_network_snapshot(&format!("{}\t2\t3\t4\t5", u64::MAX)).is_none());
     }
 
     #[test]

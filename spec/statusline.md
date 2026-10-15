@@ -456,7 +456,7 @@ macOS provider：
 
 - CPU：native Mach host ticks；
 - memory：native memory size + `vm_stat`；
-- network：route-selected interface + `netstat` counters。
+- network：route-selected interface + `netstat` counters，速率按毫秒时间戳计算。
 
 其他 platform 不显示 metric pills。Sampling failure 保留上一份可用 display value，更新
 health state，并在下一次 due tick 重试。

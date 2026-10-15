@@ -30,11 +30,20 @@ pub struct MemorySnapshot {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NetworkSample {
-    pub timestamp_seconds: u64,
+    /// Rates divide by elapsed milliseconds; whole seconds would skew a ~4 s
+    /// sampling window by up to 25%.
+    pub timestamp_millis: u64,
     pub rx_bytes: u64,
     pub tx_bytes: u64,
     /// Counter owner. A baseline from another interface must never be diffed.
     pub interface: String,
+}
+
+impl NetworkSample {
+    /// Whole-second view for freshness checks shared with the other metrics.
+    pub fn timestamp_seconds(&self) -> u64 {
+        self.timestamp_millis / 1000
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

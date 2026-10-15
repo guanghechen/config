@@ -307,7 +307,7 @@ fn memory_sample_timestamp_seconds(value: &str) -> Option<u64> {
 }
 
 fn network_sample_timestamp_seconds(value: &str) -> Option<u64> {
-    decode_network_snapshot(value).map(|snapshot| snapshot.sample.timestamp_seconds)
+    decode_network_snapshot(value).map(|snapshot| snapshot.sample.timestamp_seconds())
 }
 
 fn metric_sample_state(
