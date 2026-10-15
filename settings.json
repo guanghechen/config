@@ -44,6 +44,9 @@
     "claude-api": "user-invocable-only",
     "dataviz": "user-invocable-only"
   },
+  "enabledPlugins": {
+    "diff@builtin": false
+  },
   "hooks": {
     "PreToolUse": [
       {
