@@ -474,7 +474,7 @@ describe('theme app template resolution', () => {
       )
 
       // These apps have deliberate family-specific mappings.
-      if (['bat', 'codex', 'tmux', 'zed'].includes(app.name)) {
+      if (['bat', 'codex', 'kitty', 'tmux', 'zed'].includes(app.name)) {
         assert.notEqual(vscTemplate, defaultTemplate, app.name)
       } else {
         for (const scheme of schemes) {
