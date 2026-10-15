@@ -368,13 +368,15 @@ fn inactive_item_body_with_last_focus(
         |name| last_focus_fg(name, INACTIVE_NUM_FG),
     );
     let name = display_literal(session_name);
-    let bell_prefix = format!(
-        " #[fg={INACTIVE_NAME_BG}#,bg={INACTIVE_BELL_FG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,nobold]"
-    );
+    let bell_prefix =
+        format!(" #[fg={INACTIVE_NAME_BG}#,bg={INACTIVE_BELL_FG}#,bold]#{{@GHC_SYM_WIN_BELL}}");
     let state_prefix = session_state_prefix(session_id, &bell_prefix);
 
+    // The title style resumes after the space that follows the prefix: Ghostty draws a
+    // Nerd Font icon across a following space in that cell's colour, so a bell coloured
+    // only in its own cell renders half in the title colour.
     format!(
-        "#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,reverse]{state_prefix} {name} #[fg={INACTIVE_NUM_BG}#,bg={num_fg}] {index} #[noreverse]"
+        "#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,reverse]{state_prefix} #[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,nobold]{name} #[fg={INACTIVE_NUM_BG}#,bg={num_fg}] {index} #[noreverse]"
     )
 }
 
@@ -433,14 +435,12 @@ mod tests {
     fn inactive_branch_splits_name_and_number_with_last_focus_fg() {
         let inactive = inactive_item_body_with_last_focus("dev", "$2", 2, Some("dev"));
         let name_fg = "#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}";
-        let bell_prefix = format!(
-            " #[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg=#{{@GHC_SL_FG_SESSION_ITEM_BELL}}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg={name_fg}#,nobold]"
-        );
-        let state_prefix = session_state_prefix("$2", &bell_prefix);
+        let bell_prefix = " #[fg=#{@GHC_SL_BG_SESSION_ITEM_NAME}#,bg=#{@GHC_SL_FG_SESSION_ITEM_BELL}#,bold]#{@GHC_SYM_WIN_BELL}";
+        let state_prefix = session_state_prefix("$2", bell_prefix);
         assert_eq!(
             inactive,
             format!(
-                "#[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NAME}}}}#,reverse]{state_prefix} #{{l:dev}} #[fg=#{{@GHC_SL_BG_SESSION_ITEM_NUM}}#,bg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NUM}}}}] 2 #[noreverse]"
+                "#[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg={name_fg}#,reverse]{state_prefix} #[fg=#{{@GHC_SL_BG_SESSION_ITEM_NAME}}#,bg={name_fg}#,nobold]#{{l:dev}} #[fg=#{{@GHC_SL_BG_SESSION_ITEM_NUM}}#,bg=#{{?#{{==:#{{client_last_session}},#{{l:dev}}}},#{{@GHC_SL_FG_SESSION_ITEM_LAST}},#{{@GHC_SL_FG_SESSION_ITEM_NUM}}}}] 2 #[noreverse]"
             )
         );
     }
@@ -480,7 +480,7 @@ mod tests {
         let active = active_item_body("a#b", "$1", 1);
         assert!(active.contains(" #{l:a####b} "));
         let inactive = inactive_item_body_with_last_focus("a#b", "$1", 1, Some("a#b"));
-        assert!(inactive.contains(" #{l:a####b} "));
+        assert!(inactive.contains("nobold]#{l:a####b} "));
         // ...while the last-focus compare right-value keeps the expand-only (doubled) form.
         assert!(inactive.contains("#{==:#{client_last_session},#{l:a##b}}"));
     }
