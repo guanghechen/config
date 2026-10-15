@@ -785,7 +785,8 @@ function M.new(props)
               nt = nt + 1 ---@type integer
               local pl = preview_locations[nt] ---@type dot.t.IMatchLocation
               -- Published metadata stays immutable; the next import reads the producer.
-              local preview = treeview.entries[location.locationuuid].match.preview
+              local producer = treeview.entries[location.locationuuid] --[[@as era.m.searcher.view.filetree.ILocationEntry]]
+              local preview = producer.match.preview
               preview.offset = pl.offset
               preview.lnum = pl.lnum
               preview.col = pl.col

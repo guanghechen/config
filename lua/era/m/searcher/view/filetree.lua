@@ -53,6 +53,13 @@ local Paths = require("era.view.result_paths")
 ---@field public locations              ?era.m.searcher.view.filetree.ILocationEntry[]
 
 ---@class era.m.searcher.view.filetree.ILocationEntry : era.m.searcher.view.filetree.IEntry
+---@field public nodetype               "location"
+---@field public leafuuid               string
+---@field public locationuuid           string
+---@field public lnum                   integer
+---@field public col                    integer
+---@field public text                   string
+---@field public highlights             stl.t.IHighlightInline[]
 ---@field public match                  era.m.searcher.view.filetree.ISearchedItem
 
 ---@param text                          string
