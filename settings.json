@@ -1,7 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "cleanupPeriodDays": 20,
-  "autoMemoryEnabled": false,
   "env": {
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
@@ -13,12 +12,8 @@
     "commit": "",
     "pr": ""
   },
+  "includeGitInstructions": false,
   "permissions": {
-    "ask": [
-      "Bash(git rebase *)",
-      "Bash(git reset *)",
-      "Bash(git revert *)"
-    ],
     "deny": [
       "Read(//**/*.http_request)",
       "Read(//**/*.http_response)",
@@ -38,7 +33,16 @@
       "Edit(//**/local/config.fish)",
       "Edit(//**/local/config.ps1)",
       "Edit(//**/.credentials/**)"
+    ],
+    "ask": [
+      "Bash(git rebase *)",
+      "Bash(git reset *)",
+      "Bash(git revert *)"
     ]
+  },
+  "skillOverrides": {
+    "claude-api": "user-invocable-only",
+    "dataviz": "user-invocable-only"
   },
   "hooks": {
     "PreToolUse": [
@@ -72,24 +76,24 @@
     ],
     "Notification": [
       {
+        "matcher": "^(?!idle_prompt$).*",
         "hooks": [
           {
             "type": "command",
             "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/notify.mjs\"",
             "timeout": 5
           }
-        ],
-        "matcher": "^(?!idle_prompt$).*"
+        ]
       },
       {
+        "matcher": "^idle_prompt$",
         "hooks": [
           {
             "type": "command",
             "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
             "timeout": 5
           }
-        ],
-        "matcher": "^idle_prompt$"
+        ]
       }
     ],
     "Stop": [
@@ -154,14 +158,14 @@
     ],
     "SessionStart": [
       {
+        "matcher": "^(startup|resume)$",
         "hooks": [
           {
             "type": "command",
             "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
             "timeout": 5
           }
-        ],
-        "matcher": "^(startup|resume)$"
+        ]
       }
     ],
     "SessionEnd": [
@@ -182,17 +186,17 @@
     "padding": 0,
     "refreshInterval": 10
   },
-  "skillOverrides": {
-    "claude-api": "user-invocable-only",
-    "dataviz": "user-invocable-only"
-  },
   "modelSettings": {
     "claude-opus-5-5": {
       "effortLevel": "xhigh"
+    },
+    "claude-opus-5.5": {
+      "effortLevel": "xhigh"
     }
   },
-  "includeGitInstructions": false,
+  "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
-  "editorMode": "vim"
+  "editorMode": "vim",
+  "tui": "fullscreen"
 }
