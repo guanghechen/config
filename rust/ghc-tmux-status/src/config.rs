@@ -13,16 +13,18 @@ pub const STATUS_JUSTIFY_VALUE: &str = "centre";
 pub const STATUS_SESSION_FORMAT: &str = "#($HOME/.config/tmux/script/status-scheduler.sh)#[default]#[align=left]#{E:@GHC_SL_STATUS02_LEFT}#[align=right]#{E:@GHC_SL_STATUS02_SESSION_FORMAT}#[default]";
 pub const STATUS_CURRENT_FORMAT: &str = "#{E:@GHC_SL_STATUS02_CURRENT_FORMAT}";
 pub const STATUS_REDRAW_INTERVAL_SECONDS_STR: &str = "1";
-pub const METRIC_RESAMPLE_INTERVAL_SECONDS: u64 = 5;
+// status-scheduler.sh ticks about every 4.1 s (4 s delay plus startup). Due
+// checks use whole seconds, so any longer interval skips every other tick.
+pub const METRIC_RESAMPLE_INTERVAL_SECONDS: u64 = 4;
 pub const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
 pub const METRIC_EXECUTION_BUDGET_SECONDS: u64 = 8;
 pub const METRIC_EXECUTION_LEASE_SECONDS: u64 = 15;
 pub const HEARTBEAT_EXECUTION_BUDGET_SECONDS: u64 = 10;
 pub const HEARTBEAT_EXECUTION_LEASE_SECONDS: u64 = 20;
 
-// Samples become due at METRIC_RESAMPLE_INTERVAL_SECONDS; the wider freshness
-// window tolerates the tmux #() driver cadence, process startup, and rounding.
-pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = METRIC_RESAMPLE_INTERVAL_SECONDS * 2;
+// Deltas against an older baseline are long-window averages, not current values.
+// The window tolerates one missed driver tick plus whole-second rounding.
+pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = METRIC_RESAMPLE_INTERVAL_SECONDS * 2 + 2;
 
 // load-theme owns this lifecycle pair. Standard renders require ACTIVE=1,
 // bootstrap requires ACTIVE=0, and every commit retains the observed GEN.

@@ -295,8 +295,20 @@ mod tests {
         for value in ["", "invalid"] {
             let plan = plan_claim(SchedulerTask::Metrics, 7, value, 100).unwrap();
             assert_eq!(plan.observed_state, value);
-            assert_eq!(plan.claimed_state, "7:1:105:115");
-            assert_eq!(plan.completed_state, "7:1:105:0");
+            assert_eq!(plan.claimed_state, "7:1:104:115");
+            assert_eq!(plan.completed_state, "7:1:104:0");
+        }
+    }
+
+    #[test]
+    fn every_driver_tick_samples_metrics() {
+        // The driver claims at least 4 s apart; whole-second claim times must not
+        // leave alternate ticks undue.
+        let mut state = String::new();
+        for tick_millis in [100_000_u64, 104_010, 108_020, 112_030] {
+            let plan = plan_claim(SchedulerTask::Metrics, 7, &state, tick_millis / 1000)
+                .unwrap_or_else(|| panic!("metrics tick at {tick_millis} ms was not due"));
+            state = plan.completed_state;
         }
     }
 
@@ -309,7 +321,7 @@ mod tests {
     #[test]
     fn expired_lease_advances_sequence_without_catch_up() {
         let plan = plan_claim(SchedulerTask::Metrics, 7, "7:4:90:99", 100).unwrap();
-        assert_eq!(plan.claimed_state, "7:5:105:115");
+        assert_eq!(plan.claimed_state, "7:5:104:115");
     }
 
     #[test]
@@ -321,7 +333,7 @@ mod tests {
     #[test]
     fn clock_skewed_future_state_is_repaired() {
         let plan = plan_claim(SchedulerTask::Metrics, 7, "7:4:1000:1000", 100).unwrap();
-        assert_eq!(plan.claimed_state, "7:5:105:115");
+        assert_eq!(plan.claimed_state, "7:5:104:115");
     }
 
     #[test]

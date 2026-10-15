@@ -410,8 +410,12 @@ status 与 row formats 全部匹配时，session 才视为 settled。
 
 | Task | Interval | Execution budget | Lease |
 |---|---:|---:|---:|
-| metrics | 5 s | 8 s | 15 s |
+| metrics | 4 s | 8 s | 15 s |
 | heartbeat | 30 s | 10 s | 20 s |
+
+Driver 约每 4.1 s tick 一次（4 s delay 加启动开销）。Due 按整秒判断，metrics interval
+因此与 tick 对齐；更长的 interval 会隔一拍才到期。Metric 新鲜度上限为 10 s，容忍丢失一次
+tick。
 
 Server state：
 
