@@ -200,5 +200,6 @@
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
+  "editorMode": "vim",
   "tui": "fullscreen"
 }
