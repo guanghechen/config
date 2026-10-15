@@ -1,17 +1,23 @@
 #! /usr/bin/env bash
 
 function _ghc_tmux_popup_ {
+  # Bindings pass the invoking client and pane. tmux 3.9 opens the popup in the target pane's window,
+  # and the implicit target can resolve to the popup session created below instead.
+  local client_name=$1
+  local pane_id=$2
   local current_session_name
-  current_session_name=$(tmux display-message -p -F "#{session_name}")
+  current_session_name=$(tmux display-message -p ${pane_id:+-t "$pane_id"} -F "#{session_name}")
   local current_window_name
-  current_window_name=$(tmux display-message -p -F "#{window_name}")
+  current_window_name=$(tmux display-message -p ${pane_id:+-t "$pane_id"} -F "#{window_name}")
   local current_pane_path
-  current_pane_path=$(tmux display-message -p -F "#{pane_current_path}")
+  current_pane_path=$(tmux display-message -p ${pane_id:+-t "$pane_id"} -F "#{pane_current_path}")
+  local socket_path
+  socket_path=$(tmux display-message -p -F "#{socket_path}")
   local popup_session_name="_popup@${current_session_name}"
   local popup_window_name="${current_window_name}"
 
   if [[ "${current_session_name}" == _popup@* ]]; then
-    tmux detach-client
+    tmux detach-client ${client_name:+-t "$client_name"}
   else
     # Check if popup session already exists
     if ! tmux has-session -t "${popup_session_name}" 2>/dev/null; then
@@ -47,7 +53,12 @@ function _ghc_tmux_popup_ {
     fi
     local popup_border_style="fg=${border_color},bold"
 
-    tmux popup -d '#{pane_current_path}' -xC -yC -w90% -h90% -S "${popup_border_style}" -e "GHC_POPUP_SESSION_NAME=${popup_session_name}" -E 'tmux new-session -A -s "$GHC_POPUP_SESSION_NAME"' &
+    # tmux 3.9 popups are panes that inherit $TMUX, so the nested client must drop it to pass the
+    # nesting check while -S keeps it on this server. Detached stdio lets run-shell return instead of
+    # blocking the client's command queue, which would hold mouse input until the popup closes.
+    tmux popup ${client_name:+-c "$client_name"} ${pane_id:+-t "$pane_id"} -d '#{pane_current_path}' -xC -yC -w90% -h90% -S "${popup_border_style}" \
+      -e "GHC_POPUP_SESSION_NAME=${popup_session_name}" -e "GHC_POPUP_SOCKET=${socket_path}" \
+      -E 'env -u TMUX tmux -S "$GHC_POPUP_SOCKET" new-session -A -s "$GHC_POPUP_SESSION_NAME"' >/dev/null 2>&1 &
 
     sleep 0.3 # Sleep 300ms.
 
@@ -76,4 +87,4 @@ function _ghc_tmux_popup_ {
   fi
 }
 
-_ghc_tmux_popup_
+_ghc_tmux_popup_ "$@"
