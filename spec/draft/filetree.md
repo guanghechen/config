@@ -2,7 +2,7 @@
 
 Status: Draft。仅保留未定稿的扩展方向，不作为当前实现或验收前提。
 当前资源、watch、文件操作、冲突与成功项清理见 [Filetree Design](../design/filetree.md)；
-已接入的 consumers 与 records 路径见 [Treeview 设计](../../doc/spec/treeview/README.md)。
+已接入的 consumers 与 records 路径见 [Treeview 设计](../design/treeview/README.md)。
 
 ## VFS
 

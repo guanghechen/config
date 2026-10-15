@@ -1,14 +1,14 @@
 # Filetree 技术契约
 
 Status: Design。本文定义当前 native Filetree 的资源、读取、watch、文件 Job 与容量契约。
-Explorer 的输入与 UI 见 [Explorer Design](feat/explorer.md)，通用交互状态见 [Treeview](../../doc/spec/treeview/README.md)。
+Explorer 的输入与 UI 见 [Explorer Design](feat/explorer.md)，通用交互状态见 [Treeview](treeview/README.md)。
 性能章节保留验收目标，具体测量结果见[测试指南](../../__test__/README.md)。
 
 ## 模块与所有权
 
 - 当前只支持真实 filesystem 与最新 Neovim；不为其他宿主或未接入的 VFS 预留适配层。
   Explorer 与 Find Explorer 使用本模块；文件 Picker 的真实 IO 与 Diffview 的 untracked discard 也使用 native Jobs。
-  Picker、Searcher、Diffview 的逻辑结果通过 [通用 Treeview records](../../doc/spec/treeview/results.md) 表达。
+  Picker、Searcher、Diffview 的逻辑结果通过 [通用 Treeview records](treeview/results.md) 表达。
 - 使用现有 `yoz` crate：Rust 位于 `rust/yoz/src/ux/filetree/`，binding 位于其 `lua/` 子模块，
   Lua facade 位于 `lua/ux/filetree/`，入口为 `yoz.ux.filetree` / `require("ux.filetree")`。
 - 依赖为 Filetree → Treeview 与现有 Rust fs/git 工具。Treeview 不导入 Filetree、Lua 或 Neovim。
@@ -292,7 +292,7 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
 
 ## 多 state 的 List 文本
 
-Filetree 使用 [Treeview List 正文](../../doc/spec/treeview/projection.md#list-正文)，不把 filesystem 路径解析交给 Treeview。
+Filetree 使用 [Treeview List 正文](treeview/projection.md#list-正文)，不把 filesystem 路径解析交给 Treeview。
 
 - 无深度限制的 State 使用 `list_text="ancestry"`；Tree 显示 basename。
 - 指定 `list_depth` 时保留调用方的 `list_text`；Find Explorer 使用 `list_depth=0` 与 `list_text="label"`。
@@ -357,7 +357,7 @@ Filetree 使用 [Treeview List 正文](../../doc/spec/treeview/projection.md#lis
   完整成功目录按根清理；不能只为生成结果物化后代。已加载目标按实际 delta 同步，
   未加载目标仅同步必要根、目录锚点及已有 occurrence，其余由实际浏览需求加载。
   未物化的成员变化仍使其他相关任务 context 失效，不能因 Source 未新增节点而漏掉冲突。
-- Native 准入使用 [Treeview Job discovery](../../doc/spec/treeview/job-discovery.md)。
+- Native 准入使用 [Treeview Job discovery](treeview/tasks.md#job-discovery)。
   Filetree worker 在每次 admission 边界复验捕获的 filesystem 父链，包括已经绑定 NodeId 的祖先；
   bindings 仅缓存 Source 准入，不证明路径仍指向原 inode。Owner 继续校验精确 task/context、
   prepared root、原始名称与资源 signature，并与 Filetree index 一起发布候选事务。
@@ -428,8 +428,9 @@ Filetree 使用 [Treeview List 正文](../../doc/spec/treeview/projection.md#lis
 - 每个文件/整体 rename 是一个执行单元。目录遍历在项之间让出执行槽；等待用户确认的任务挂起，
   其他任务可以继续。恢复时重新校验源、目标和必要父目录的身份，沿用已确认的覆盖规则。
 - 任务持有自己的状态与 source references，关闭 pane 不结束任务；确认/进度通过可轮询的不可变结果提供给 Lua。
-  Job 接管已准备的任务后，准备阶段的 deadline 不再解锁选区；执行完成或取消确认后才释放本任务锁。
-  接管失败也释放精确凭据对应、尚未被其他 Job 接管的锁；检查与释放在 owner 内原子执行。
+  Job 接管已准备的任务时，deadline 已到期则以 Stale 拒绝接管；接管后清除 deadline，执行完成或取消确认后
+  先提交选区清理、再释放本任务锁，两者是独立的 owner 提交。接管失败也释放精确凭据对应、尚未被其他 Job 接管的锁；
+  检查与释放在 owner 内原子执行。
   任务最多有一个待确认项，确认 token 一次消费。旧确认不能用于后来换入的资源。
 - 源目录不能复制/移动进它自身或其后代，检查考虑实际解析的目录 identity 与 symlink 别名。
   源和目标为同一目录项时不执行破坏性覆盖，报告对应项未执行。
@@ -516,69 +517,50 @@ Filetree 使用 [Treeview List 正文](../../doc/spec/treeview/projection.md#lis
 
 ### 受任务校验的子项清理
 
-- 成功的部分取消选择，失败、跳过或取消时尚未完成的部分保留选择；目录内部采用同一规则。
-  不因一个目录内有失败项而保留其中已经成功部分的选择。
-- 整个目录操作成功时可以用该目录作为成功根清理；目录部分成功时，只清理成功的文件或完整成功的子树。
-  不取消它们的严格祖先自身或旁支，也不额外修补父目录的选择标记。
+Treeview 的 cleanup context、成功项清理、授权更新与 Job discovery 见 [Treeview 任务](treeview/tasks.md)；
+本节只定义 Filetree 如何产生成功项与资源事实。
+
+- 成功的部分取消选择，失败、跳过或取消时尚未完成的部分保留选择；目录内部采用同一规则，
+  不因一个目录内有失败项而保留其中已经成功部分的选择。完整成功的目录以目录为成功根，部分成功只清理成功的文件
+  或完整成功的子树，见[成功 frontier 清理](treeview/tasks.md#成功-frontier-清理)。
 - Provider 保留目录内部的逐项 success/failed/skipped 结果及原因；目录汇总结果不能抹掉已经成功的子项。
   单个文件只写入了一部分不算成功，不据此清理该文件的选择。
-- 清理继续遵守原任务身份、选区锁及 cleanup context 校验：context 有效时统一清理成功部分；
-  Stale 时保留当前存活选区和真实 IO 结果，不自动重试 IO 或清理。已 Remove 的节点不复活。
+- 结果按成功的完整子树归并；失败路径和其必要成功兄弟保留明细。登记、结果和待发布子项均计入任务预算，
+  在无法保留必要身份/结果前停止后续 IO 并报告容量失败，不能丢弃失败记录后声称整个目录成功。
 
 例如整棵 `src/` 被选中，copy `src/a.txt` 成功、`src/b.txt` 失败或被用户跳过；
 正常清理后 `a.txt` 取消选择，`b.txt` 保留选择，`src/` 自身仍按 Treeview 既有规则保留选择。
 
-成功子项回传必须保持原任务内的资源/节点身份，不能按当前同名路径重新绑定。
-原任务根及子项准入按下列协议校验，不通过解锁后调用普通 deselect 绕过。
+成功子项回传必须保持原任务内的资源/节点身份，不按当前同名路径重新绑定，也不通过解锁后调用普通 deselect 绕过：
 
-Treeview 的任务准入支持“已准备源项下的子项”：
-
-- Ready 仍固定最外层源项，不提前递归枚举完整选中目录。任务记录 root 集合及原 source，
-  已加载的成功子项以原 NodeId 和所属 prepared root 验证；不接受 self-only root 作为递归授权。
-- Filetree 的私有发现使用独立 JobDiscovery origin，不伪装成浏览 read page。
-  其任务身份、read grant、epoch 与外部变更规则由 [Treeview Job discovery](../../doc/spec/treeview/job-discovery.md)
-  统一定义；资源路径、签名与 Filetree index 由本层校验。不把相同 task token 视为任意 Insert/Reparent 的授权。
-- 只填充原 unknown/partial 槽位的可信发现可推进该任务 context。已知项被替换/移除、跨范围移动等外部事实
-  仍使 context Stale；其他任务也按自己的相关范围判断失效。晚到观测不恢复已失效 context。
+- Ready 只固定最外层源项，不提前递归枚举完整选中目录。私有发现使用独立的 JobDiscovery，不伪装成浏览 read page，
+  也不把相同 task token 视为任意 Insert/Reparent 的授权；资源路径、签名与 Filetree index 由本层校验。
 - Filetree 持有资源结果与准入身份的对应关系。成功子项可来自 prepared source 或已登记的发现，
   不能靠最新同名路径替代；元数据补载和结果登记不自动改变 selection。
-- 对子项的预期 move/delete，owner 先校验其任务归属与影响范围，再签发一次性更新资格。
-  跨 filesystem 目录 move 可将已完成子项移到目标临时 occurrence，整个目录成功后原目录 NodeId 接管目标及这些子项；
-  已准入子项可以随原 prepared subtree 整体移动，不能并入另一个 prepared root。
-  目录链接移动前解析新位置的目标，预先授权必要的旧 children Remove 与精确的 slot 状态；执行后不匹配即同步 Stale。
-  允许更新已准入的子项，不局限于最外层 prepared root；不得破坏其他成功/失败项的清理前提。
-- Cleanup 先按原 source/登记关系校验整批成功子项，再按提交时的 source 去掉仍被成功祖先覆盖的重复子项，
-  共用一个 generation 清理；已由本任务移出成功祖先的子项仍需单独清理。
-  外部相关变化仍使整批清理 Stale，不能先清一部分再失败；本任务已 Remove 的节点直接略过。
-- 私有成功 frontier 可分批准入 Source facts；每批最多 128 项、64 KiB task scratch，先按捕获的
-  路径/签名尺寸预留，再读取或复制 Entry，计费持续到 owner 消费完成。
-  所有批次成功后才提交一次 Unselect；任一批 Stale/ResourceLimit 均不提交 cleanup stamp。
-  此前已发布的 IO/Source facts 保留，记录独立 cleanup 错误并精确解锁，不重放 IO。
-- Root 资格使用集合与共享祖先校验，不为 K 个成功子项各扫描全部 S 个 prepared roots。
-  任务失效检测也按变更节点的祖先/受保护祖先索引查询，避免每个 metadata/无关节点变化扫描全部任务源项。
-- 结果按成功的完整子树归并；失败路径和其必要成功兄弟保留明细。登记、结果和待发布子项均计入任务预算，
-  在无法保留必要身份/结果前停止后续 IO 并报告容量失败，不能丢弃失败记录后声称整个目录成功。
-- Native 任务观测/结果准入属于 owner 的受控协议。普通 Lua `deselect` 不能绕过任务锁；
-  原先按 prepared roots 清理的调用方继续适用，不被解释为允许任意新节点。
+- 预期 move/delete 使用 [授权更新](treeview/tasks.md#授权更新)，可更新已准入的子项，不局限于最外层 prepared root。
+  跨 filesystem 目录 move 可将已完成子项移到目标临时 occurrence，整个目录成功后原目录 NodeId 接管目标及这些子项。
+  目录链接移动前解析新位置的目标，预先授权必要的旧 children Remove 与精确的 `Slot` 状态；执行后不匹配即同步 Stale。
+- 私有成功 frontier 分批准入 Source facts：每批最多 128 项、64 KiB task scratch，先按捕获的路径/签名尺寸预留，
+  再读取或复制 Entry，计费持续到 owner 消费完成。批次失败时的处理见 [成功 frontier 清理](treeview/tasks.md#成功-frontier-清理)。
 
 ## 容量与成本边界
 
-以下为当前默认上限，各项与 data 总预算同时生效；性能测试规模不代表硬容量。
+每份 data 的 retained 总预算、Source 节点数与 payload 沿用 [Treeview 默认容量](treeview/action.md#默认容量)，
+包含 Filetree payload/索引、旧版本与在途数据。下表列出 Filetree 覆盖或新增的默认上限，各项与 data 总预算同时生效；
+性能测试规模不代表硬容量。
 
-| 项目                                              | 默认上界                                                        |
-| ------------------------------------------------- | --------------------------------------------------------------: |
-| 每份 data 的 Rust retained 总预算                 | 512 MiB，包含 Treeview、Filetree payload/索引、旧版本与在途数据 |
-| Source 节点数 / payload                           | 1,000,000 / 256 MiB，沿用 Treeview Limits                       |
-| 全进程并发目录读取                                | 4，单 data 最多 4                                               |
-| 单 data 排队的目录读取                            | 256；其余需求保留在有界 dirty/interest 集合                     |
-| 首个扫描页                                        | 512 项 / 1 MiB，先到者为准                                      |
-| 后续扫描页                                        | 最多 2,048 项 / 4 MiB；预算不足时使用首批大小                   |
-| 单 data 扫描与结果暂存                            | 32 MiB，计入 retained 总预算                                    |
-| 单任务遍历、结果、身份、journal 与 admission 暂存 | 共享 32 MiB，计入所属 data 总预算                               |
-| 全进程文件任务数                                  | 16，包括排队与等待确认任务                                      |
-| 文件 copy 流式 buffer                             | 每个 Job 最多 1 MiB，按需分配并复用                             |
-| 单 data OS 监听根数                               | 50；macOS 根递归覆盖，Linux/Windows 每目录一个                  |
-| Watch 合并窗口 / 单批 dirty NodeId                | 150 ms / 512                                                    |
+| 项目                                              | 默认上界                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------------ |
+| 全进程并发目录读取                                | 4，单 data 最多 4（覆盖 Treeview `concurrent_reads`）              |
+| 单 data 排队的目录读取                            | 256（覆盖 `queued_reads`）；其余需求保留在有界 dirty/interest 集合 |
+| 首个扫描页                                        | 512 项 / 1 MiB，先到者为准                                         |
+| 后续扫描页                                        | 最多 2,048 项 / 4 MiB；预算不足时使用首批大小                      |
+| 单 data 扫描与结果暂存                            | 32 MiB，计入 retained 总预算                                       |
+| 单任务遍历、结果、身份、journal 与 admission 暂存 | 共享 32 MiB，计入所属 data 总预算                                  |
+| 全进程文件任务数                                  | 16，包括排队与等待确认任务                                         |
+| 文件 copy 流式 buffer                             | 每个 Job 最多 1 MiB，按需分配并复用                                |
+| 单 data OS 监听根数                               | 50；macOS 根递归覆盖，Linux/Windows 每目录一个                     |
+| Watch 合并窗口 / 单批 dirty NodeId                | 150 ms / 512                                                       |
 
 - Dirty/interest 集合按 source NodeId 去重，受 source 容量约束，不无限保留已删除路径。
   错误信息与任务结果包含 bytes 上限，超限报告 ResourceLimit；不以无限字符串或日志旁路预算。
@@ -586,7 +568,8 @@ Treeview 的任务准入支持“已准备源项下的子项”：
 - 局部 identity/metadata 更新包含该条目的 IO、排序索引与受影响祖先；没有 O(1) 的整目录 freshness 保证。
 - W 个直接 children 的完整枚举/对齐至少 O(W)；首次排序允许 O(W log W)。已知 D 项 delta 使用局部索引更新。
 - 目录 rename 的原生路径定位不重写所有后代路径，但实际改变的 List 正文字节和已加载 metadata 更新仍按量计费。
-- 旧 frames、持锁任务与尚未完成的请求按引用保留数据；释放后可回收。缓存淘汰不能伪装成 Remove 或丢失选择 skeleton。
+- 旧 frames、持锁任务与尚未完成的请求按引用保留数据；释放后可回收。Source 节点当前不淘汰，只因 Remove 减少，
+  约束见 [Treeview 新增、补载与移除](treeview/module.md#新增补载与移除)。
 - 完整 cold copy 可以只保留浏览根；100k 的零散 partial frontier、已加载目标或跨卷 move 仍可能需要
   O(N) 个 Source 节点。预算不承诺任意文件名、目录形状、独立错误数均可完成 100k。
   直接构造已加载 Source 的压力验证不代表 browse Scan 能在同一预算内加载 100k。

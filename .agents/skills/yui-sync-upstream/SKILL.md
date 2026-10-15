@@ -79,7 +79,7 @@ git ls-remote --heads https://github.com/guanghechen/mirror.git 'refs/heads/nvim
    按本地模块边界移植，保留 attribution/license；版本升级不等于整文件覆盖或重新引入插件运行时。
    本仓库偏好将完整许可放在对应主入口顶部的注释中，参考 [fileicon.lua](../../../lua/stl/fileicon.lua)；
    多文件模块注明许可覆盖的派生内容，子文件引用该入口，避免新增独立 license 文件。
-   最终行为以 `spec/design/` 为准，Treeview 以 `doc/spec/treeview/` 为准；待讨论设计遵循仓库 draft 约定。
+   最终行为以 `spec/design/` 为准（Treeview 见 `spec/design/treeview/`）；待讨论设计遵循仓库 draft 约定。
 5. 按库文档验证真实触发场景，运行对应测试和格式检查。声明未覆盖的行为及环境失败，
    不以其他 suite 通过替代关键验证。Git 写操作、包安装及其他副作用沿用当前用户授权和仓库规则。
 6. 同步完成后更新对应库文档：镜像分支、目标 SHA/日期、已移植的相关变更、保留差异和验证结果。

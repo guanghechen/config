@@ -368,7 +368,7 @@ staged、unstaged 和 untracked 状态。路径按 NUL protocol 保留原始 byt
 查询在临时 `GIT_INDEX_FILE` 中为显式 paths 建立 intent-to-add 条目，再运行一次 `git diff --numstat -z`；
 结束或取消后清理临时目录，不写真实 index。Git 查询失败降级为未知统计，取消或内部错误仍传播给调用方。
 Binary 的未知统计和空文本文件的 `0 / 0` 保持区别。Git Files 的展示与文件级操作见
-[Treeview results](../../../doc/spec/treeview/results.md#git-files)。
+[Git Files](git-files.md)。
 
 ### Native 契约
 

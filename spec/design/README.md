@@ -1,7 +1,7 @@
 # 设计文档索引
 
-`spec/design/` 默认保存已定稿设计，本文按职责提供导航。
-Treeview 按用户指定集中在 [doc/spec/treeview](../../doc/spec/treeview/README.md)，本索引只引用其权威文档。
+`spec/design/` 保存已定稿设计，本文按职责提供导航。多文档主题使用独立子目录与 `README.md`，
+例如 [Treeview](treeview/README.md)。
 整体分层见[架构](../ARCHITECTURE.md)，代码约定见[代码风格](../CODESTYLE.md)。
 
 ## 基础能力与状态
@@ -11,7 +11,8 @@ Treeview 按用户指定集中在 [doc/spec/treeview](../../doc/spec/treeview/RE
 - [Nvimbar](nvimbar.md)：组件取数、状态提交、通知与布局。
 - [Signal Hub](signal-hub.md)：进程内消息、身份、路由与清理。
 - [stl.os](stl/os.md)：canonical filepath 与系统调用边界。
-- [Treeview](../../doc/spec/treeview/README.md)：native Data/State/Frame、标记算法、投影、Visual 与 Lua consumer 接入。
+- [Treeview](treeview/README.md)：native Data/State/Frame、标记算法、任务、投影、渲染、Visual 与 consumer 接入；
+  接入步骤见 [Treeview 接入](treeview/integration.md)。
 
 ## 文件、搜索与 Git
 
@@ -22,6 +23,7 @@ Treeview 按用户指定集中在 [doc/spec/treeview](../../doc/spec/treeview/RE
 - [Yoz Search](feat/yoz/search.md)：native job、取消、结果完整性与性能边界。
 - [原生搜索反馈](feat/ux/search.md)：`/`、`?`、`n`、`N` 的 winline 状态。
 - [Git](feat/git.md)：status、watcher、hunk、staging、blame 与 ignore cache。
+- [Git Files](feat/git-files.md)：未提交文件的 Staged / Unstaged 双树、stage 与 diff preview。
 - [Diffview](feat/diffview/main.md)：workspace 与 commits 的状态和交互；另见[布局](feat/diffview/layout.md)与[快捷键](feat/diffview/keybinding.md)。
 
 ## 编辑与窗口交互
@@ -52,5 +54,5 @@ Treeview 按用户指定集中在 [doc/spec/treeview](../../doc/spec/treeview/RE
 
 - 以中文描述职责、行为、约束与取舍；代码、API、标识符、路径和技术术语保留英文。
 - 同一契约只在所属文档定义，其他文档使用链接引用。历史验证注明环境与适用范围。
-- 未定稿提案默认放在 `spec/draft/`；Treeview 在其独立目录内显式区分 Design 与 Draft。
-  阶段目标与执行步骤放在 `spec/roadmap/`、`spec/plan/`，由它们引用设计。
+- 未定稿提案放在 `spec/draft/`，定稿后移入 `spec/design/`。
+  阶段目标与执行步骤放在 `spec/plan/`（按需创建），由它们引用设计。

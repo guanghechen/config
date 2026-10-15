@@ -386,15 +386,21 @@ Changes、Commits 和独立 files pane 均通过 `pane/tree.lua` 导入 records�
 provider key 使用可逆 byte 编码，显示 label 单独转义。
 
 Native State 在 pane 隐藏、buffer 重建和 layout 切换之间保留；默认新 commit 折叠，普通目录展开。
-Tree/List 切换只改变 native display，不重建目录 topology。Inline List 使用 native 分组平铺保留 commit 折叠，
+Tree/List 共用相同的目录和文件 records，切换只改变 native display，不删除目录、不改写 label/parent；
+业务 records 未变时不产生 data revision，也不丢失目录的 NodeId 或折叠标记。Changes 与独立 files pane 的 List 使用
+`list_text = "ancestry"`；inline commits 的 List 使用 `list_from_depth = 1` 保留 commit header 分组并在组内平铺文件，
 文件路径由同一 source 的祖先 labels 生成，切回 Tree 恢复原目录折叠状态。
+Commits 初始只准备 commit headers，未展开的缓存 files 不进入 inline records 或 header metadata；首次 inline 展开才准备
+该 commit 的 files。缓存仍保留时，后续展开／折叠只提交 native State 命令，不重新构造 producer、解析 icons 或发起 import；
+回收后的冷重开重新导入 records。Standalone filetree 独立准备自己的 records，reveal 显式准备目标 commit 的 files。
 独立 Git Log 的 Commits consumer 在每次 attach/resume 后恢复 `signcolumn=yes:1` 及当前 preview commit 的指示 sign；
 workspace History 继续使用 `signcolumn=no` 与单列 statuscolumn spacer。
 行号、父子导航与 action metadata 从已发布 Frame 派生。相邻文件通过 `Frame:adjacent_leaf` 定位，Lua 只读取目标，
 不缓存全量行表；跳过的原生行仍计入查询成本。`apply_to_buffer` 返回发布 Future，refresh 完成后才
-标记 snapshot 已应用；定位使用稳定 key，等待对应行可用。Metadata overlay 只在 viewport 绘制。
+标记 snapshot 已应用；定位使用稳定 key，等待对应行可用，buffer 行与 action 对象来自同一 Frame。
+Metadata overlay 只在 viewport 绘制。
 
-通用契约见 [Treeview 结果集](../../../../doc/spec/treeview/results.md)。
+通用契约见 [Treeview 结果集](../../treeview/results.md)。
 
 ### Materialized records cache
 

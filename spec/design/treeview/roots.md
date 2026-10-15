@@ -1,4 +1,4 @@
-# Rust Treeview display roots
+# Treeview display roots
 
 Status: Design。适用于 `yoz.ux.treeview`；文档入口见 [Treeview](README.md)。
 
@@ -27,7 +27,7 @@ display_roots = [
 ```
 
 - 保留未被覆盖入口在 `ids` 中的相对顺序。被覆盖的入口不占额外行，它作为实际后代使用 source
-  的 children 顺序、展开/折叠及过滤规则展示。
+  的 children 顺序、展开/折叠及过滤规则展示；完整展开时每个节点恰好出现一次，范围等于各显式子树的并集。
 - 归并先于折叠、过滤与压缩；祖先被折叠或过滤，不会使后代重新成为独立顶层入口。
 - 只从显式入口中取最外层节点，不补入它们的共同祖先或其他未指定资源。
 - 当前被另一入口覆盖的存活 ID 仍保留在 `ids` 中。其祖先关系解除后，自动按原入口顺序恢复。
@@ -39,13 +39,13 @@ display_roots = [
    中途出现的祖先重叠不会删除显式入口，也不会让合法的 reparent 返回 `InvalidUpdate`。
 3. 将 data、显式范围清理及派生状态与其他 state 补丁同批发布；失败时全部丢弃，不发布中间布局。
 
-共享 data 的独立 states 分别使用自己的显式范围归并；共享完整 state 的 views 共用同一结果。
+共享 data 的独立 states 分别使用自己的显式范围归并；共享完整 state 的 View 共用同一结果。
 State 的范围及派生状态变更遵循现有 revision 协议，布局 revision 同时考虑行映射、导航和 source
-祖先索引。Snapshot 保留对应提交的显式范围及派生顶层结构，Lua 不用最新 topology 修补旧 frame。
+祖先索引。Snapshot 保留对应提交的显式范围及派生顶层结构，Lua 不用最新 topology 修补旧 Frame。
 
 Reparent 对 selection 的影响仍由 [selection 契约](selection.md) 定义；展示归并本身不生成
-选择事务，也不将展示入口当作业务源项。普通光标按 NodeId 可见性恢复；Visual 中的 view 按
-[圈选契约](visual.md) 延后展示布局变化，后台 data/state 正常提交。
+选择事务，也不将展示入口当作业务源项。归并后的光标遵循 [cursor 回退](render.md#cursor-回退)，
+Visual 持帧遵循 [visual.md](visual.md)。
 
 ## 入口生命周期
 
@@ -74,11 +74,3 @@ Reparent 对 selection 的影响仍由 [selection 契约](selection.md) 定义�
 
 同一批次先把 B 移入 A、再移出 A，最终仍保存并展示 `[A, B]`。若要删除 A 并保留 B，须按节点
 更新契约先将 B 移出，再 Remove A；最终显式范围保留 B。
-
-## 验证要求
-
-- 归并后的入口无重复、无祖先重叠；完整展开时，每个覆盖节点恰好遍历一次，范围等于显式子树的并集。
-- 覆盖存活入口不修改 `ids`；反复移入/移出、多个入口形成祖先链后再拆开，均恢复原成员与顺序。
-- 验证被覆盖入口的 Remove、移出后删除旧祖先、同名新 ID、全部入口失效及显式 SetRoot 替换。
-- 验证同批临时重叠、批次失败、共享 data 下不同范围，以及折叠/过滤/压缩不改变祖先归并规则。
-- 归并后的 cursor、Visual 延后发布与 selection 提交继续满足各自契约。

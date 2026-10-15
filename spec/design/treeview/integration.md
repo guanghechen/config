@@ -1,14 +1,14 @@
 # Treeview 接入
 
 Rust core 位于 `rust/yoz/src/ux/treeview/`，Lua surface 使用 `require("ux.treeview")`。
-权威语义见 [Treeview 设计](spec/treeview/README.md)，Lua 字段与原生方法见
-[treeview.lua](../lua/__types__/ux/treeview.lua) 和 [yoz/ux.lua](../lua/__types__/yoz/ux.lua)。
+权威语义见 [Treeview 设计](README.md)，Lua 字段与原生方法见
+[treeview.lua](../../../lua/__types__/ux/treeview.lua) 和 [yoz/ux.lua](../../../lua/__types__/yoz/ux.lua)。
 
 ## 选择入口
 
-- 真实目录浏览使用 `require("ux.filetree")`；资源、watch 与文件 Job 见 [Filetree](../spec/design/filetree.md)。
-- 普通 List、文件结果、LSP symbols/references 和 Diffview 通过 ResultTree 导入业务 records，见[结果集接入](spec/treeview/results.md)。
-- 直接提供通用层级数据时使用下述 `ux.treeview` API。显示模式与数据来源分开，Treeview 不推断 filesystem。
+各 consumer 的数据路径见 [Treeview 索引](README.md)。真实目录浏览使用 `require("ux.filetree")`（见 [Filetree](../filetree.md)），
+业务结果通过 ResultTree 导入（见 [结果集接入](results.md)）；直接提供通用层级数据时使用下述 `ux.treeview` API。
+显示模式与数据来源分开，Treeview 不推断 filesystem。
 
 ## 最小示例
 
@@ -38,16 +38,25 @@ stl.async.run(function()
 end)
 ```
 
-每个 view 创建专用 buffer。`[i` / `]i` 执行结构导航，`<CR>` 展开/折叠分支；leaf 的激活由
-`on_activate(frame, node_id)` 接入。传入明确的 `selection_recursive` 后才绑定 `<Tab>`。
-`view:select("select_node", false)` 可显式提交自身选择，Normal/Visual 都使用实际显示的 frame。
+`treeview.attach` 默认创建专用 scratch buffer，也可用 `bufnr` 交接已有的空 buffer，条件见
+[State、View 与共享](module.md#stateview-与共享)。默认 buffer-local 键位：
+
+| 按键         | 模式            | 行为                                                                     |
+| ------------ | --------------- | ------------------------------------------------------------------------ |
+| `[i` / `]i`  | Normal / Visual | 结构导航，见 [indentline](indentline.md#结构导航)                        |
+| `<CR>`       | Normal          | 切换展开或调用 `on_activate`，见 [expansion](expansion.md#consumer-动作) |
+| `<Esc><Esc>` | Normal / Visual | 退出 Visual 并清空 selection，见 [visual](visual.md#移动与共享-state)    |
+| `<Tab>`      | Normal / Visual | 仅在传入 boolean `selection_recursive` 时绑定，按该 scope 切换选择       |
+
+`keymaps = false` 关闭全部默认键位，由 consumer 自行映射。Leaf 的激活由 `on_activate(frame, node_id)` 接入；
+`view:select("select_node", false)` 可显式提交自身选择，Normal/Visual 都使用实际显示的 Frame。
 
 ## 更新与查询
 
 `data:batch(operations, base_revision?)`、`data:import(records, scope?, base_revision?)` 返回 `stl.c.Future`。
 省略 base 时捕获调用时的 source revision；两个同时发出的更新若基于同一旧版本，后者可能被拒绝，调用方应按事实重新准备。
 普通拒绝是完成值 `{ kind = "Rejected", error = { code, message, node? } }`。
-`Applied` 只保证提交完成；`view:frame()` 表示已实际发布的 frame。
+`Applied` 只保证提交完成；`view:frame()` 表示已实际发布的 Frame。
 
 ```lua
 local result = data:batch({
@@ -57,13 +66,15 @@ local result = data:batch({
 ```
 
 结构引用字符串表示 provider key；已知 NodeId 使用 `{ id = node_id }`，更新目标也可直接使用 `id` 字段。
-NodeId、revision、request token 都应原样传回。行输入使用 1-based 闭区间；RenderPlan splice/text range 使用
+NodeId、revision、request token 都应原样传回。行输入使用 1-based 闭区间；RenderPlan splice 使用
 0-based、end-exclusive 坐标。可选文本字段用 `false` 显式清除；`fields` 内的 null 使用 `vim.NIL`。
+显示文本须为单行，见[写入范围](data.md#写入范围)。
 
-`state:set_display(options)` 替换展示选项；`state:set_root(root)` 替换展示范围。
-展开 Toggle 使用 `state:dispatch({ kind = "toggle_expanded", node = id, recursive = false }, { frame = frame })`，
+`state:set_display(options)` 替换全部展示选项（字段见 [Display 选项](projection.md#display-选项)）；
+`state:set_root(root)` 替换展示范围。展开 Toggle 使用
+`state:dispatch({ kind = "toggle_expanded", node = id, recursive = false }, { frame = frame })`，
 提交时校验捕获的 expanded 值；`set_expanded` 继续表达绝对赋值。
-`select_node(nodes, recursive)` / `deselect_node` 的 recursive 必须是 boolean；`toggle_node` 还需提供捕获的 frame。
+`select_node(nodes, recursive)` / `deselect_node` 的 recursive 必须是 boolean；`toggle_node` 还需提供捕获的 Frame。
 `state:inspect_selection()`、`state:lock_selection(deadline_ms?)` 和 task 的 `prepare_sources()` 都返回 Future。
 Ready 中的 `source` 是对应版本的不可变 source；两组 NodeIds 使用 `:len()`、`:get(i)`、`:slice(first, last)` 按需读取。
 任务结束使用 `task:unlock()`，成功项清理调用 `task:unselect(ready.cleanup, successful_ids)`。
@@ -77,8 +88,8 @@ Ready 中的 `source` 是对应版本的不可变 source；两组 NodeIds 使用
 `parents` 使用批内 1-based 索引，0 表示范围入口；`parent_keys` 使用 key 或 false，适合跨 chunk 的父子关系。
 两种 parent 列只能提供一种。
 
-完整大 snapshot 可使用 `data:begin_import(scope)` 或 `provider:begin_import()`，每次最多 append 512 条，
-且该 chunk 的 Lua 输入计量（含字段与容器开销）不超过 1 MiB：
+完整大 snapshot 使用 `data:begin_import(scope)` 或 `provider:begin_import()` 分块 append，再一次 commit；
+每块的条数与 Lua 输入字节上限见 [默认容量](action.md#默认容量)：
 
 ```lua
 local upload = data:begin_import({ kind = "descendants", node = root_id })
@@ -90,23 +101,32 @@ assert(second.kind ~= "Rejected", vim.inspect(second))
 local result = upload:commit():await()
 ```
 
-每次 append 返回前取得该 chunk 的 Rust 所有权，只有 commit 才发布整份 snapshot。
-取消导入调用 `upload:dispose()`；每个 data 最多保留两个私有导入。普通 import 调用直接取得全部输入所有权；
-需要分片控制主线程时间的 adapter 应使用上述显式 chunk 接口。
+每次 append 返回前取得该 chunk 的 Rust 所有权，只有 commit 才发布整份 snapshot。取消导入调用 `upload:dispose()`；
+每个 data 同时保留的私有导入数有上限。普通 import 直接取得全部输入所有权；需要分片控制主线程时间的 adapter 使用 chunk 接口。
 
 普通 children 接入 `new_data({ read_children = function(request) ... end })`，返回 `{ records, done }` 或完成为该值的 Future。
 请求提供 `work`、`sequence`、`node`、只读 `source` 与 `is_cancelled()`；provider 按 work 保存分页 cursor。
 每页被 owner 消费后才请求下一页。普通错误不会自动重试，使用 `data:request_children({ node_id }, true)` 显式重试。
-普通 view 正在准备发布时，下一页等待该次交接完成；Visual 持帧或失败的 view 不阻塞其他消费者。
-Native completion 通过可合并通知唤醒 Lua；空闲 view 不持续轮询。只有待处理工作需要检查或通知通道失败时才使用 timer。
+普通 View 正在准备发布时，下一页等待该次交接完成；Visual 持帧或失败的 View 不阻塞其他消费者。
+Native completion 通过可合并通知唤醒 Lua；空闲 View 不持续轮询。
 
 查询使用 `provider:create_query(handler)` 和 `query:start({ pattern, options? })`。
 Handler 同样返回一页或 Future；首批替换旧结果，后续页追加。`query:cancel()` 关闭当前轮结果资格；
-查询来源、分页顺序和旧 generation 的清理均由 Rust 校验。
+查询来源、分页顺序和旧 generation 的清理均由 Rust 校验，语义见 [query.md](query.md)。
 `data:source():query_result(scope)` 按需读取该 scope 最近已提交结果的 session、generation、pattern 和 completeness；
-这份归属随 source 保留，释放 query session 后仍可读取。旧 frame 使用 `frame:source():query_result(scope)`。
+这份归属随 source 保留，释放 query session 后仍可读取。旧 Frame 使用 `frame:source():query_result(scope)`。
 
-## 验证与容量
+## 状态与容量
+
+`view:status()` 提供 publication、准备/失步状态与最近 RenderPlan（mode、原因、比较/写入行数与字节数）。
+发布部分失败时暂停该 View 的行输入并尝试一次完整 resync；持续失败后由 `view:refresh()` 显式恢复。
+`view:detach()` 解除 View，已经接受的命令继续完成。发布流程见 [render 契约](render.md)，
+成本与目标见 [performance](performance.md)。
+
+Rust 保留预算、节点、payload、批次、读取、staging 与 viewport 读取等默认上限及超限行为统一见 [默认容量](action.md#默认容量)。共享索引与 payload 随最后一个持有者释放，
+保留旧 Frame/source 会占用预算。Rust 内部计量使用结构尺寸及 payload allocation 估算，allocator 与 Neovim/Lua 内存需结合进程测量。
+
+## 构建与验证
 
 ```sh
 cargo build --offline --locked --manifest-path rust/Cargo.toml -p yoz --lib
@@ -118,23 +138,7 @@ node script/build.mjs --offline
 nvim -l __test__/bench/treeview.lua > treeview-ui-benchmark.json
 ```
 
-macOS 的 Cargo 命令需追加 `--config .cargo/config.macos.toml`，使用仓库固定的 SDK；build script 已自动使用该配置。
-如果系统升级后 Xcode 尚未配置，可在以上命令前设置 `DEVELOPER_DIR=/Library/Developer/CommandLineTools`，使用已有的 Command Line Tools。
-Native specs 直接加载 debug library；完整 bootstrap 的 UI specs 和 benchmarks 使用部署的 release library。
-修改 Rust 后分别构建，避免验证旧动态库。更多筛选命令见[测试指南](../__test__/README.md#run)。
-
-默认 Rust 保留预算为 512 MiB；节点、payload、批次、action queue 与读取限制见[默认容量](spec/treeview/action.md#预算背压与恢复)。
-共享索引与 payload 随最后一个持有者释放；保留旧 frame/source 会占用预算。Lua staging 限制为 64 MiB，装饰按 viewport 查询。
-Rust 内部计量使用结构尺寸及 payload allocation 估算，allocator 和 Neovim/Lua 内存需结合进程测量。
-正文按最多 512 行、64 KiB 分块准备；超过单片预算的单行拒绝发布。Viewport 每次最多读取 512 行、1 MiB 行数据，
-另限制为最多 8192 个匹配和 8192 个 guide。超限返回 `ResourceLimit`，不截断 source 或篡改已有 frame。
-
-`view:status()` 提供 publication、准备/失步状态、最近 RenderPlan 的比较行数、传输行数和字节数。
-发布部分失败时暂停该 view 的行输入并尝试一次完整 resync；持续失败后由 `view:refresh()` 显式恢复。
-`view:detach()` 解除 surface，已经接受的命令继续完成。
-准备期间发生 cursor/装饰更新，只有 Rust 确认正文及布局版本均相同时才复用 staging，并发布最新完整 frame。
-
-局部更新、共享索引与全量重算边界见 [render 契约](spec/treeview/render.md)，
-测量口径与验收目标见 [performance](spec/treeview/performance.md)。
-
-测量结果见 [Treeview 测量记录](../__test__/bench/treeview.md)；具体版本、环境、样本数和预算以各次记录为准。
+macOS 直接运行 Cargo 时的配置与 SDK 选择见 [Native module build](../../../README.md#native-module-build)。
+Native specs 直接加载 debug library；完整 bootstrap 的 UI specs 和 benchmarks 使用部署的 release library，
+修改 Rust 后分别构建，避免验证旧动态库。更多筛选命令见[测试指南](../../../__test__/README.md#run)，
+测量结果见 [Treeview 测量记录](../../../__test__/bench/treeview.md)。

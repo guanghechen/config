@@ -544,7 +544,7 @@ The changes retain failed/skipped/synchronization results independently of the r
 success tail, reuse a Job's copy buffer and destination descriptors, coalesce source
 frames over 8 ms, and transfer the opening scratch buffer to the native view.
 The confirmed contracts remain in [Explorer](../../../spec/design/feat/explorer.md),
-[Filetree](../../../spec/design/filetree.md) and [Treeview](../../../doc/spec/treeview/performance.md).
+[Filetree](../../../spec/design/filetree.md) and [Treeview publication pacing](../../../spec/design/treeview/render.md#发布节奏).
 
 The following **native before/after** comparison uses preserved source snapshots,
 verified release receipts, identical fixtures and alternating fresh processes.
@@ -631,7 +631,7 @@ The change based on `a167896b9` keeps the 8 ms source-publication window and let
 directory pages advance while only that display deadline is pending. Active frame
 preparation and pending input still apply backpressure; the latest target remains
 bounded to one per view. The confirmed boundaries are in
-[Treeview](../../../doc/spec/treeview/performance.md) and
+[Treeview publication](../../../spec/design/treeview/render.md#发布节奏) and
 [Filetree](../../../spec/design/filetree.md). No native code or artifact changed.
 
 The final native before/after comparison uses the same Apple M1 Pro / 32 GiB host,
@@ -1026,7 +1026,7 @@ Treeview's native `NodeData.payload` slot. Structured `fields` remain available 
 queries and Lua-facing data; Filetree no longer allocates a one-entry field map
 for every resource. All resource readers, metadata updates, link annotations and
 move validation use the native slot. The resource codec and filesystem IO are
-unchanged. The contract is recorded in `doc/spec/treeview/data.md` and
+unchanged. The contract is recorded in `spec/design/treeview/data.md` and
 `spec/design/filetree.md`; there is no adapter for the former private field.
 
 The native slot participates in full imports, partial updates, content comparison,
@@ -1235,8 +1235,8 @@ fixed-gap insertion path applied only to display roots. Nested pages still
 reindexed rows and repaired ancestor boundaries for each arriving subtree.
 Projection now batches normalized independent subtrees at every visible depth,
 then repairs boundaries once. Globally sorted List and node-only List updates
-retain their required sequential ordering. The contract is in
-[Treeview rendering](../../../doc/spec/treeview/render.md).
+retain their required sequential ordering. This is an implementation record; the
+observable rendering contract is in [Treeview rendering](../../../spec/design/treeview/render.md).
 
 The diagnostic also established that the former 131 ms "first screen" metric
 actually waited for one specific filename. The preceding acceptance record now
@@ -1323,7 +1323,7 @@ Completed pure icon values survive a superseded plan, while displayed rows and
 glyphs still change together at publication. Redraw no longer performs Resource
 inspection, path construction or filetype detection. The contracts are in
 [Explorer](../../../spec/design/feat/explorer.md) and
-[Treeview rendering](../../../doc/spec/treeview/render.md).
+[Treeview rendering](../../../spec/design/treeview/render.md).
 
 Treeview installs consumer callbacks before its first frame request. Cold scrolling
 and theme invalidation reuse its preparation pipeline, including a same-frame Swap

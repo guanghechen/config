@@ -17,7 +17,8 @@ yoz -> stl -> dot -> era -> ark/vendor
 ```
 
 - Lower layers must not depend on higher layers.
-- Global modules are initialized in `ark/bootstrap.lua`: `_G.yoz`, `_G.stl`, `_G.dot`, `_G.era`.
+- `ux` (Treeview/Filetree surfaces) sits beside `dot`: it may use `yoz`/`stl` only and is used by `era`.
+- Global modules are initialized in `lua/ark/bootstrap.lua`: `_G.yoz`, `_G.stl`, `_G.dot`, `_G.era`.
 
 ## Base Coding Rules
 
@@ -52,17 +53,18 @@ Examples:
 
 ## Spec Structure
 
-- CRITICAL: `spec/design/` is the default single source of truth for final design decisions.
-  Treeview is an explicit exception: its Rust and Lua contracts live in `doc/spec/treeview/`, indexed by
-  that directory's `README.md`; do not keep duplicate contracts in `spec/design/`.
-- CRITICAL: `spec/roadmap/` and `spec/plan/` do not carry final design. They describe phase goals and execution steps only.
+- CRITICAL: `spec/design/` is the single source of truth for final design decisions, indexed by
+  `spec/design/README.md`. A topic with several documents uses its own subdirectory and `README.md`
+  (for example `spec/design/treeview/`). Each contract is defined in one document; others link to it.
+- CRITICAL: Phase plans in `spec/plan/` (created when needed) do not carry final design. They describe goals and execution steps only.
 - ALWAYS: Unfinalized, review-pending, or experimental proposals go to `spec/draft/`.
-  Move to `spec/design/` only after finalization. For Treeview, keep them in `doc/spec/treeview/` with
-  explicit Draft status and distinguish them from confirmed Design documents in its index.
-- ALWAYS: Prefer reference direction `roadmap/plan -> design` (and `-> draft` only when needed). Avoid reverse dependency `design -> roadmap/plan`.
+  Move to `spec/design/` only after finalization.
+- ALWAYS: Prefer reference direction `plan -> design` (and `-> draft` only when needed). Avoid reverse dependency `design -> plan`.
 
 ## Detailed Docs
 
 - Architecture details: `spec/ARCHITECTURE.md`
+- Design index: `spec/design/README.md`
 - Code style details: `spec/CODESTYLE.md`
+- Test guide: `__test__/README.md`
 - LSP headless debug guide: `spec/debug/lsp.md`

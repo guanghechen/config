@@ -222,7 +222,7 @@ Node-scoped 与单项替换只处理可见 matches，不受此限制，但仍须
 ## 发布与性能边界
 
 每次搜索发布一个最终结果，保留确定性排序。Lua FileSearch 校验 generation 后，ResultFiles 准备文件与 locations，
-ResultTree 导入 native Data 并发布 Frame，遵循 [结果集接入](../../../../doc/spec/treeview/results.md)。
+ResultTree 导入 native Data 并发布 Frame，遵循 [结果集接入](../../treeview/results.md)。
 不启用 Rust file-level parallel traversal 或 streaming UI。
 
 主线程发布的验收边界为默认 `max_filesize = "1M"`、`max_matches = 500`。测量必须包含：

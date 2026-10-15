@@ -1,12 +1,12 @@
 # Explorer 设计
 
 Status: Design。本文定义当前 native Explorer 的输入、用途、窗口、编辑器同步与退出行为。
-文件操作由 [Filetree](../filetree.md) 定义，交互状态与发布由 [Treeview](../../../doc/spec/treeview/README.md) 定义。
+文件操作由 [Filetree](../filetree.md) 定义，交互状态与发布由 [Treeview](../treeview/README.md) 定义。
 
 ## 所有权与模块边界
 
 - 入口为 `era.widget.explorer`，通过 `era.m.explorer.Widget` 组合
-  [Filetree](../filetree.md) 与 [Treeview](../../../doc/spec/treeview/README.md)。
+  [Filetree](../filetree.md) 与 [Treeview](../treeview/README.md)。
 - Rust `rust/yoz/src/ux/explorer/` 组织 workspace、上一个 display root、文件 Job 和浏览动作。
   Filetree 持有 filesystem 事实，Treeview 持有唯一的 topology、root、展开、cursor、selection 和锁。
   Explorer 通过同一个 owner 提交 selection 与用途，不再维护 Lua tree 或独立 pending sources。
@@ -45,12 +45,19 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
 
 ### 导航与输入时序
 
-- Root/reveal 的异步 resolve 使用 generation，迟到结果不覆盖新导航。Reveal 优先保持逻辑路径；目标位于外部时
+- Root/reveal 的异步 resolve 使用 session 自己的 navigation generation，迟到结果不覆盖新导航。Reveal 优先保持逻辑路径；目标位于外部时
   尝试 display root 本身及其直接 symlink children，多个 alias 取物理目标最具体者，无法映射才切到目标父目录。
   路径 resolve 因并发发布返回 Stale 时，只读导航最多重新观察两次；每次观察前后检查 generation 与 session 存活。
   其他错误直接报告，过期导航停止重试。文件修改操作继续使用固定 Resource，不采用该路径重试。
-  Reveal 将展开的祖先记录到 Treeview expansion invalidation；与 loading/selection 更新合并发布时仍须投影目标行，
+- Reveal 只以 SelfOnly 展开使目标可见所需的祖先，不递归展开旁支；目标位于当前 display root 下时保留 root，
+  否则 root 切到目标父目录。同一提交设置 cursor、关闭 selected-only，目标或其祖先为隐藏项时开启显示隐藏项。
+  展开的祖先记录到 Treeview expansion invalidation；与 loading/selection 更新合并发布时仍须投影目标行，
   不能因沿用折叠布局而把刚设置的 cursor 回退到父目录。
+- 导航意图按 [Treeview 导航意图](../treeview/action.md#导航意图)记录：Normal 折叠/展开在提交 native fold 前记录；
+  键盘切 root 与 annotation 导航在入队时记录，不等异步查询或前一请求完成。Widget 在接收有效的显示切换或偏好通知时记录，
+  不等待延迟 dispatch；重复通知和 List 模式下无效的压缩切换不产生新意图。
+- `Widget:reveal`、`Widget:set_root` 以及复制/移动成功后的 reveal 不记录 Treeview 导航意图；它们与键盘导航之间的替代关系
+  由 session 的 navigation generation 管理，每次导航推进 generation，过期的导航停止，不再提交。
 - 连续 root 与 annotation 导航按输入顺序执行，不把多次相对移动折叠成同一旧 frame 的目标。
   `navigate_parent` 在 native owner 执行时读取当前 root；上一请求完成而投影尚未发布时仍能继续上移。
   Annotation 查询按前一步完成后的光标继续；纯 cursor frame 发布不丢弃结果，布局改变、新 root/reveal、
@@ -80,11 +87,17 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
 ### 行输入与 Visual
 
 - 打开、复制路径等动作在输入时捕获 Resource/frame，后来的光标移动不改变本次目标。Visual 通过 Treeview
-  `range_action` 保持布局与端点，不在 Lua 重建范围算法。Explorer 的双 Esc 先退出 Visual；copy/cut 用途中
-  只取消 pending transfer、保留选区并恢复 select，普通 select 时清空选区。判断与提交由 native owner 原子执行，
-  不依赖上一次展示的 frame；取消用途不刷新 selection stamp。持有任务锁时拒绝该动作，已启动的 Job 使用
-  Space 菜单取消。其他 Treeview 沿用 [双 Esc 清空选择](../../../doc/spec/treeview/visual.md#移动与共享-state)。
+  `range_action` 保持布局与端点，不在 Lua 重建范围算法；圈选只有显式动作键才提交，Tree 与 List 都可圈选。
   `i` / `I` 不进入正文编辑。
+- Visual 动作捕获 frame 与行范围后提交，全部使用 `recursive=true`，范围内的父节点覆盖后代：
+  - `<Tab>`：Toggle 范围选择，保留当前用途；提交时校验各目标的 `marked` 与捕获 frame 一致。
+  - `c`（别名 `y`）/ `x`：把范围并入选区（显式 select，已选目标也刷新 stamp），并把用途设为 copy/cut。
+  - `d` / `oa`：直接消费范围作为删除或 Add to AI 的源项，不改写逻辑选区，见[新建、移动与删除](#新建移动与删除)。
+  - `[i` / `]i`：只在 Tree 中移动 cursor 端点，保持 Visual mode 与 anchor；List 中不执行。
+- 双 Esc 先退出 Visual；copy/cut 用途中只取消 pending transfer、保留选区并恢复 select，普通 select 时清空选区。
+  判断与提交由 native owner 原子执行，不依赖上一次展示的 frame；取消用途不刷新 selection stamp。
+  持有任务锁时拒绝该动作，已启动的 Job 使用 Space 菜单取消。其他 Treeview 沿用
+  [双 Esc 清空选择](../treeview/visual.md#移动与共享-state)。
 - `explorer` / `treeview` buffer 不参与 Lua scroll dressing 的插值动画；cursor 与 viewport 由 renderer 发布，
   动画中间位置不能反向成为新的导航输入。窗口从普通 buffer 切入时释放已有动画及其临时 window options。
 
@@ -100,19 +113,25 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
 - 所有路径遵循 [Filetree 路径契约](../filetree.md#资源记录与路径)：Explorer 内统一 `/`，
   原始 OS 输入在边界转换，只有底层 filesystem / OS API 使用系统路径。默认复制名、relative/dirname/basename、
   导航和 Copy Path 共用该语义；Unix 文件名里的 `\` 不得变成目录层级，`..` 保留给 filesystem 解析。
-- Selection 判空同时考虑 `subtree_roots`、`self_only_nodes` 和 pending；递归文件动作只消费完整的 `subtree_roots`。
-  只有 self-only 选择时保持用途，不执行递归 IO，也不回退到光标项。确定为空时退出用途；
-  后续结构更新自然产生选择时进入 select，不恢复先前的 copy/cut。任务期间保留已固定的用途。
+- Selection 判空同时考虑 `subtree_roots`、`self_only_nodes` 和 pending，见 [Treeview 判空](../treeview/selection.md#覆盖判空与计数)。
+  copy/move/delete 等递归文件动作只消费完整的 `subtree_roots`；`self_only_nodes` 中的目录只代表自身，不作为整目录源项。
+  选区确定为空时使用光标项；只有 self-only 选择时不执行 IO、保留选区与用途，也不回退到光标项。
+- 选区确定为空时退出用途；后续结构更新自然产生选择时进入 select，不恢复先前的 copy/cut。任务期间保留已固定的用途。
+  任务结束后按清理后的两组实际结果判空，不因递归源项全部成功而清空选区；例如祖先仍仅自身选中时保留用途。
 
 ### 标记与用途
 
+- Explorer 的全部标记使用 `recursive=true`（Subtree），通过 native owner 与用途在同一提交中发布。
+  用途保存在 Treeview `selection_purpose`：select 不设用途，copy/cut 分别为 `"copy"` / `"cut"`；
+  显示模式取已提交用途，未设用途而选区非空时为 select。
 - Normal `<Tab>` 与 `ms` 使用 select 用途；`mc`（别名 `y`）/ `mx` 显式使用 copy/cut 用途。未选项加入当前选区并切换用途；
-  已选项上切换用途保留选择及 selection stamp，再次请求同一用途才取消该项。select 用途清除 copy/cut。
+  已选项上切换用途保留选择及 selection stamp，再次请求同一用途才取消该项的整棵子树。select 用途清除 copy/cut。
+  “已选”按 Treeview `marked` 判断，仅自身选中的目录同样视为已选。
 - Normal `c` / `x` 有逻辑选区时标记 copy/cut，无选区时询问光标项的复制/移动目标路径；复制默认使用 `-copy` 名称。
   Cursor 路径操作携带输入 frame 和原 Resource；native owner 在同一次准备中校验空选区意图、资源及祖先身份并锁定。
   用户改选后再清空仍拒绝，节点替换、路径或祖先关系变化也拒绝；无关目录补载、metadata 更新不因全局 revision 变化误拒绝。
   操作始终绑定原 Resource，不重新捕获当前光标或自动重放；Filetree 在 IO 边界继续校验 filesystem identity。
-  Visual `<Tab>` 切换范围选择并保留用途；Visual `c`（别名 `y`）/ `x` 将范围并入已有选区并刷新 stamp。
+  Visual 标记见[行输入与 Visual](#行输入与-visual)。
 - 单项 Copy/Move to path 完全成功后 reveal 结果的 target 路径，包含 Space 菜单入口；目录使用整棵子树的
   最终 root result，不将结果中的 source NodeId 当作复制后的目标。目标在当前 root 外时切到目标父目录。
   preparation、IO 与目标解析期间，后来的 cursor、root、display、expansion 输入或离开原窗口均撤销自动跟随；
@@ -158,7 +177,7 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
   不随光标移动或同名资源替换重定向；取消不删除文件，原有无关标记及 copy/cut 用途保留。
 - 目录合并、逐项冲突、type/symlink 校验、跨卷 move 和部分成功遵循 Filetree 契约。覆盖提示同时显示源和目标，默认 Skip。
   覆盖与退出时取消未完成操作也使用相同的轻量 confirmation 输入；空输入按否处理。
-  成功项清理，失败/跳过保留；context Stale 单独报告，不能重绑同名新项。
+  成功项取消选择，失败/跳过保留；清理 Stale 的报告见[任务、进度与结果](#任务进度与结果)，不能重绑同名新项。
 
 ### 任务、进度与结果
 
@@ -177,6 +196,11 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
 - 目录内部按 filesystem 发现顺序执行，确认次序不跟随当前浏览排序。
   确认和结果使用 Job 内的 ItemId；结果可以没有浏览 NodeId，历史路径及身份不随后续 cleanup 准入改写。
   完整复制折叠目录不自动加载源或目标后代；partial 成功项清理和预算边界遵循 Filetree 契约。
+- 逐项 IO 结果（success/failed/skipped）与选区清理结果分开记录，清理失败不把已成功的 IO 改报为失败。
+  Treeview 清理返回 Stale（例如结构在执行期间被外部改变）时，Explorer 单独报告该错误，Last results 另列
+  `Selection cleanup: <message>`，选区不自动清理；不换用当前 topology 重试清理，也不重放 IO 或推断移动后的新源项，
+  用户整理选择后再次执行的动作是新任务。清理规则见 [Treeview 任务](../treeview/tasks.md#成功项清理)。
+- 结果与清理状态保存在 session；关闭 pane 后重新打开同一 session，Last results 仍可读取。
 - 最近结果保留最后 128 项；failed、skipped 与含同步错误的结果独立保留，后续成功不会淘汰它们。
   独立明细最多 512 项、1 MiB 字段与记录预算，先到者为准；超出部分记录数量并在 Last results 中明确显示。
   汇总计数仍覆盖完整 Job，下一次 Job 启动时重置最近结果与明细，不延长终态 native Job 或 Source 的生命周期。
@@ -289,20 +313,36 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
 
 ## 默认键位
 
-| 按键                                                          | 动作                                                      |
-| ------------------------------------------------------------- | --------------------------------------------------------- |
-| `h` / `l` / `<CR>`                                            | 折叠/父目录；展开或打开                                   |
-| `z` / `W` / `[i` / `]i`                                       | 递归切换；全部折叠；父行；最后直接子项/兄弟               |
-| `<BS>` / `.` / `gb` / `gc` / `gw`                             | 父 root；当前目录；上一 root；cwd；workspace              |
-| `t1` / `t2` / `t3` / `t4`、`H`                                | selected-only；Tree/List；压缩；隐藏项                    |
-| `<Tab>` / `ms` / `mc`（`y`）/ `mx`                            | select；select；copy；cut，同用途切换选中                 |
-| `<Esc><Esc>`                                                  | 先取消 copy/cut 并保留选区；普通 select 时清空选区        |
-| `c` / `x` / `p`                                               | 无选区时复制/移动到路径，有选区时标记 copy/cut；paste     |
-| `a` / `A` / `r` / `d`                                         | 新建；新建目录；rename；delete/trash                      |
-| `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>`         | 打开选区；选窗口；split；vsplit；tab                      |
-| `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h`             | diagnostic；error；warning；Git 导航                      |
-| `of` / `os` / `oe` / `oc` / `oi` / `oo`、`O` / `<C-q>` / `oa` | 查找；搜索；目录；路径；详情；系统打开；quickfix；AI 位置 |
-| `<Space>` / `R` / `?` / `q`                                   | 动作和任务；刷新；帮助；关闭 pane                         |
+| 按键                                                          | 动作                                                                            |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `l` / `<CR>` / 双击                                           | Tree 分支切换展开，文件打开                                                     |
+| `h` / `z` / `W`                                               | 折叠或折叠父目录；递归切换；全部折叠                                            |
+| `[i` / `]i`                                                   | 父行；最后直接子项或兄弟，Normal/Visual，仅 Tree                                |
+| `<BS>` / `.` / `gb` / `gc` / `gw`                             | 父 root；当前目录；上一 root；cwd；workspace                                    |
+| `t1` / `t2` / `t3` / `t4`、`H`                                | selected-only；Tree/List；压缩；隐藏项                                          |
+| `<Tab>` / `ms` / `mc`（`y`）/ `mx`                            | select；select；copy；cut，同用途切换选中                                       |
+| Visual `<Tab>` / `c`（`y`）/ `x`                              | 切换范围选择；范围并入选区并设为 copy；cut                                      |
+| `<Esc><Esc>`                                                  | 先取消 copy/cut 并保留选区；普通 select 时清空选区，Normal/Visual               |
+| `c` / `x` / `p`                                               | 无选区时复制/移动到路径，有选区时标记 copy/cut；paste                           |
+| `a` / `A` / `r` / `d`                                         | 新建；新建目录；rename；delete/trash，Visual `d` 删除范围                       |
+| `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>`         | 打开选区；选窗口；split；vsplit；tab                                            |
+| `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h`             | diagnostic；error；warning；Git 导航                                            |
+| `of` / `os` / `oe` / `oc` / `oi` / `oo`、`O` / `<C-q>` / `oa` | 查找；搜索；目录；路径；详情；系统打开；quickfix；AI 位置，Visual `oa` 使用范围 |
+| `<Space>` / `R` / `?` / `q`                                   | 动作和任务；刷新；帮助；关闭 pane                                               |
+| `i` / `I`                                                     | 无动作，不进入正文编辑                                                          |
+
+展开与折叠由 native owner 按执行时的当前状态解释按键时捕获的目标，只在 Tree 中执行；List 的递归展示独立于展开状态，
+切回 Tree 时使用保存的展开标记。Expansion 的写入语义见 [Treeview expansion](../treeview/expansion.md#consumer-动作)。
+
+- `l` / `<CR>` / 双击：可展开行以 SelfOnly 切换展开，不自动进入首个 child；不可展开行打开捕获的文件。
+  List 中目录不执行，文件照常打开。
+- `h`：当前目录已展开则折叠自身，否则折叠 source parent，到 display root 停止。前一次折叠已遮住目标时，
+  从当前可见的最外层已折叠祖先继续，因此 `hh` 可逐级折叠。
+- `z`：按当前分支展开状态的相反值写 Subtree，覆盖未加载及以后加载的后代。
+- `W`：通过 `state:set_expanded({ root }, false, true)` 对 display root 写 false subtree stamp；root 的直接 children
+  仍是顶层行，不使用全局 clear，也不影响展示范围之外的子树。
+- `[i` / `]i` 的结构导航规则见 [indentline](../treeview/indentline.md#结构导航)；Visual 键位见[行输入与 Visual](#行输入与-visual)。
+- 刷新另有别名 `<C-a>r`、`<D-r>` 与 `<M-r>`。
 
 Normal `<Space>` 使用 `nowait=false`，保留 `<leader>1` 等全局 leader 组合；单独按 Space 在 `timeoutlen`
 后打开动作菜单（原生 Neovim 默认 300 ms）。其余 Explorer 自有绑定继续使用 `nowait=true`。

@@ -3,7 +3,7 @@
 Status: Design。定义 picker 内的单目录浏览与单项文件操作。
 
 `find-explorer` 以 `BasicComposer` 组合窗口，`era.view.Directory` 直接连接 Rust Filetree Data、State 与 View。
-入口为 `lua/era/fn/find-explorer.lua`。主结果和目录 preview 均使用 [native Treeview](../../../../doc/spec/treeview/README.md)。
+入口为 `lua/era/fn/find-explorer.lua`。主结果和目录 preview 均使用 [native Treeview](../../treeview/README.md)。
 
 ## 入口与状态
 
@@ -18,7 +18,7 @@ Status: Design。定义 picker 内的单目录浏览与单项文件操作。
 
 核心状态由共享 Filetree Data 与主结果 State 持有；query 和 fuzzy/regex/case-sensitive 开关保留 Observable。
 主结果是当前目录的单层 List；有界遍历、上下文行与目录 suffix 的精确规则见
-[Treeview projection](../../../../doc/spec/treeview/projection.md)。不创建 Lua 目录缓存或行映射。
+[Treeview projection](../../treeview/projection.md)。不创建 Lua 目录缓存或行映射。
 
 所有路径遵循 [Filetree path/resource 契约](../../filetree.md)。进入目录时按资源 NodeId 切根；
 异步定位校验 navigation sequence，不能覆盖用户较新的光标输入。旧 Frame 保持自己的资源解释。
@@ -94,8 +94,8 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 
 ## 刷新与失败处理
 
-动作全部使用 `era.m.filetree.jobs` 及 Rust Filetree Jobs。Prompt 前从显示 Frame 捕获资源 identity；
-同名文件在等待输入期间被替换时，native 拒绝对替换项执行操作。Find Explorer 不接受 overwrite，
+动作全部经 `era.m.filetree.jobs` 提交 Rust Filetree Jobs，prompt 前从显示 Frame 捕获资源，
+identity 校验与收尾遵循 [Filetree 契约](../../filetree.md)。Find Explorer 不接受 overwrite，
 rename 使用与 Explorer 相同的 editor buffer / LSP 同步。
 
 成功后由 native publication 更新已加载目录；当前仍处于原目录时刷新，并尝试定位新项。
@@ -111,10 +111,3 @@ rename 使用与 Explorer 相同的 editor buffer / LSP 同步。
 - 目录 IO、过滤、投影和 metadata 格式化在 native worker；Lua 装饰成本随 viewport 行数增长。
   Filter/排序和结构变化仍可读取当前目录的全部候选，首开不是常数成本。
 - Hide 保留 native buffer/Frame，重开先复用正文；恢复 watch 时的后台 reconciliation 另计。
-
-## 验证要求
-
-- `oa/od/c/or/oc/oA` 在 finder/result 的动作语义一致。
-- `c/or` 拒绝包含路径分隔符的输入；创建、删除对 `../` 的处理符合各自动作规则。
-- Create/copy/rename 后定位目标，delete 后定位邻近项，列表立即反映变更。
-- `oc` 与 `oA` 保留原能力；失败不改变当前目录。

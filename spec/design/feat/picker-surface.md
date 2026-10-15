@@ -1,6 +1,6 @@
 # 文件结果共享 Surface
 
-Status: Design。定义 Result/Preview 的窗口、发布与生命周期；节点语义以 [Treeview](../../../doc/spec/treeview/README.md) 为准。
+Status: Design。定义 Result/Preview 的窗口、发布与生命周期；节点语义以 [Treeview](../treeview/README.md) 为准。
 
 ## 共享范围
 
@@ -10,7 +10,7 @@ Picker、Searcher 与 Git Files 共享两类 UI surface：
 2. `Preview`：preview buffer/window lifecycle、debounced draw 与 window options。
 
 Feature 保留 Finder 输入、pane composition、search/replace 与业务 action。
-所有结果使用 [native Treeview 接入契约](../../../doc/spec/treeview/results.md)，selection/expansion/行映射归 native State。
+所有结果使用 [native Treeview 接入契约](../treeview/results.md)，selection/expansion/行映射归 native State。
 
 ## 依赖方向
 
@@ -52,7 +52,7 @@ Feature 通过 props 提供：
   在 border 右侧显示 position，左侧显示标题、统计及刷新 / index 操作状态，query 保留在 inputbox。
 
 共享层通过 ResultTree 的 mount/publish 接入 native surface，不解释节点、query 或业务 metadata。
-行数和 cursor observables 在 frame 发布后更新，没有全 buffer 的 selected-sign 扫描或旧 Lua draw 路径。
+行数和 cursor observables 在 Frame 发布后更新，不扫描全 buffer 放置 selected signs。
 
 ## `Preview` 契约
 
@@ -77,8 +77,8 @@ Draw 只有在绘制了目标范围时才返回 `has_range = true`，启用范�
 ## 生命周期不变式
 
 1. `create_buf/create_win` 幂等，返回既有 resource 时不重复绑定。
-2. `hide` 保留 scheduler、逻辑 State 和 reusable buffer；native View suspend 后保留已发布 Frame，重开重新绑定窗口，
-   并提交最新 producer/display 请求。Buffer 失效时正常重建；dispose 释放隐藏的资源。
+2. `hide` 保留 scheduler、逻辑 State 和 reusable buffer；native View 的 suspend 与重开遵循
+   [结果集生命周期](../treeview/results.md#生命周期)。Buffer 失效时正常重建；dispose 释放隐藏的资源。
 3. `dispose` 只执行一次，并释放 window、buffer、observable、autocmd、nvimbar、scheduler 与 registered flag callbacks。
 4. queued observable/scheduler callback 在 dispose 后不得读取已释放字段或写入 buffer/window。
 5. draw 或 callback failure 只报告，不得留下 `modifiable/readonly` 错误状态。
@@ -89,7 +89,7 @@ Draw 只有在绘制了目标范围时才返回 `has_range = true`，启用范�
 ### Git Files
 
 Git Files 自有单行 inputbox、左栏双树 / 右栏整高 preview 布局、Git snapshot 刷新、文件级 stage / unstage 和异步 diff 内容读取。
-Result / Preview 仅负责窗口与展示生命周期；完整业务契约见 [Git Files](../../../doc/spec/treeview/results.md#git-files)。
+Result / Preview 仅负责窗口与展示生命周期；完整业务契约见 [Git Files](git-files.md)。
 
 ### Finder
 
@@ -113,14 +113,3 @@ BasicComposer 保持 feature-owned，不建立共同基类。
 - Result 通过 native Frame 发布，普通 List 的 custom presentation 不直接写 buffer。
 - Surface 保留实例状态和有界 viewport 缓存；按结果规模增长的 records/metadata 由 ResultTree producer 管理。
 - Cursor、selection 与 expansion 更新不得重新导入业务 records；相同 display 请求复用已解析的 filter。
-
-## 验收标准
-
-- Picker/Searcher 的 keymap、window type、filetype、sign、cursor、empty-result 与 error behavior 不变。
-- Result/Preview 的 feature-owned callback 输入输出 contract 不变。
-- 不新增 Picker ↔ Searcher 依赖，native 接入遵循 Treeview 的权威契约。
-- 只保留一套 Result 与一套 Preview 行为实现；feature alias 仅保留类型与公开入口。
-- shared contract tests 覆盖两侧 alias、Result policy、Preview number policy、draw failure、
-  changed/stable cursor scheduling 与 dispose 后 queued callback。
-- 多选 List 覆盖 native 标记、过滤后的选区、快速确认、取消和关闭时的迟到回调。
-- 测试、LuaLS、formatting 与 dependency checks 覆盖修改范围；规模与测量口径遵循 Treeview 性能契约。

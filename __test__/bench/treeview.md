@@ -1,8 +1,8 @@
 # Treeview 测量记录
 
 本文件归档特定版本与环境下的测量结果，不定义当前 runtime 契约或性能保证。
-目标与测量口径见 [性能契约](../../doc/spec/treeview/performance.md)，运行入口见
-[Treeview 接入](../../doc/treeview.md)及[测试指南](../README.md#native-result-consumers)。
+目标与测量口径见 [性能契约](../../spec/design/treeview/performance.md)，运行入口见
+[Treeview 接入](../../spec/design/treeview/integration.md)及[测试指南](../README.md#native-result-consumers)。
 历史本地 artifact 路径按原记录保留，不保证其他 checkout 可用。
 
 ## 2026-09-16 局部投影与数据链路
@@ -18,6 +18,11 @@
 | Selection   | 3.409  | 4.266  | 6.328  |
 | 全局 filter | 16.776 | 41.464 | 43.421 |
 | 全局 sort   | 45.241 | 48.788 | 50.735 |
+
+与[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)的对应：单行更新与 Selection 两行对应
+“常见局部发布及当前窗口 redraw”（p95 ≤ 8 ms）和“局部交互到 Frame flush”（p95 ≤ 16 ms）；全局 filter 与 sort 两行对应
+50,000 驻留候选的 filter/sort 目标（p95 ≤ 50 ms）。`__test__/bench/treeview.lua` 的 filter 路径以 `set_display` 切换 pattern，
+计时不含 consumer 输入 debounce；当前脚本只包含 text、selection 与 filter 三条路径。“全量结构布局”目标没有对应记录。
 
 压缩链拆合、排序视图单项插入各 100 次，p95 分别为 2.15 / 1.90 ms；修复前对应值为 8.88 / 9.69 ms。
 另一个宽目录含 50,000 个直接 children；selected-only 单项变化 p95 为 5.41 ms。

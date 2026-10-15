@@ -10,11 +10,14 @@ The modules follow a strict dependency hierarchy (lower layers must not depend o
 yoz -> stl -> dot -> era -> ark/vendor
 ```
 
+`ux` sits beside `dot`: it depends only on `yoz`/`stl` and is used by `era`.
+
 | Layer | Module   | Description                                                                 |
 | :---- | :------- | :-------------------------------------------------------------------------- |
 | L0    | `yoz`    | Rust-native library, independent Lua extension, no Neovim dependency        |
 | L1    | `stl`    | Standard library, may use `yoz` and `vim` globals                           |
 | L2    | `dot`    | Core framework: configuration, context, theme, commands; depends on yoz/stl |
+| L2    | `ux`     | Treeview/Filetree Lua facades and Neovim surfaces; depends on yoz/stl       |
 | L3    | `era`    | Business layer: actions, UI modules, plugin configs; depends on yoz/stl/dot |
 | L4    | `vendor` | Environment entry points: neovim/neovide/vscode/yozvim/yuivim               |
 
@@ -69,16 +72,15 @@ Type definitions: `lua/__types__/yoz/`
 
 ### Treeview / Filetree / Explorer
 
-Native implementations live in `rust/yoz/src/ux/`. Their Lua facades and Neovim surface live in `lua/ux/`,
-using `yoz`, `stl`, and `vim`; this runtime layer does not depend on `dot` or `era`.
+Native implementations live in `rust/yoz/src/ux/`. The Treeview and Filetree Lua facades and Neovim surfaces
+live in `lua/ux/`, using `yoz`, `stl`, and `vim`; this runtime layer does not depend on `dot` or `era`.
+Explorer's Lua side lives in `lua/era/m/explorer/` and drives the native Explorer policy through `yoz.ux`.
 Business consumers in `era` compose those handles, prepare result records, and manage editor interactions.
 
-- [Treeview](../doc/spec/treeview/README.md): Data/State/Frame, projection, selection, and surface publication.
+- [Treeview](design/treeview/README.md): Data/State/Frame, projection, selection, and surface publication.
 - [Filetree](design/filetree.md): filesystem resources, directory reads, watch, annotations, and file Jobs.
 - [Explorer](design/feat/explorer.md): native interaction policy, Lua windows, prompts, and editor synchronization.
-- [Result consumers](../doc/spec/treeview/results.md): List, Picker, Searcher, and Diffview records and metadata.
-
-Treeview contracts remain in `doc/spec/treeview/`; this architecture document only indexes them.
+- [Result consumers](design/treeview/results.md): List, Picker, Searcher, and Diffview records and metadata.
 
 ### `lua/stl/` (Standard Library Layer)
 

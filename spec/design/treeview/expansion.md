@@ -1,4 +1,4 @@
-# Rust Treeview expansion
+# Treeview expansion
 
 Status: Design。适用于 `yoz.ux.treeview`；文档入口见 [Treeview](README.md)。
 
@@ -44,23 +44,20 @@ expanded(n) = can_expand(n) && expansion.value(n)
 - 对可展开目标，SetExpanded 总是按 scope 写入新 stamp，即使自身或整棵子树已满足目标 true/false。
   同值赋值返回 Applied 并推进 state revision；完整规则见 [共用命令规则](stamps.md#同值赋值与-nochange)。
   无适用目标时才返回 NoChange；children 加载单独报告进度，重绘依据实际展示变化决定。
-- 来自实际 frame 的 Toggle 捕获 NodeId、scope 和当时的 expanded 判据，提交时校验对应前提；
+- 来自实际 Frame 的 Toggle 捕获 NodeId、scope 和当时的 expanded 判据，提交时校验对应前提；
   不按另一个展开状态重放旧 Toggle。绝对赋值遵循既有 expected state context，metadata 更新本身不使输入过期。
 
-## Consumer 动作映射
+## Consumer 动作
 
-以下是 Explorer 的默认策略，由 native `ux/explorer` 通过同一 Treeview owner 提交。
-Normal 相对动作使用 owner 执行时的状态与按键时目标；Visual 继续验证捕获 frame 的范围和标记。
-其他 consumer 的键位见各自业务文档，不由 core 按节点类型推断。
+Core View 只在 Tree 模式把 `<CR>` 映射为当前可展开行的普通 Toggle（捕获显示的 Frame），leaf 与 List 行交给
+`on_activate`；`keymaps = false` 时不绑定。其他展开键位由 consumer 定义，通过同一 owner 提交 SetExpanded 或
+ToggleExpanded，不由 core 按节点类型推断；Explorer 的键位见 [Explorer 默认键位](../feat/explorer.md#默认键位)。
+Normal 相对动作使用 owner 执行时的状态与按键时目标；Visual 继续验证捕获 Frame 的范围和标记。
 
-- `l`、`<CR>`、双击：可展开节点执行普通 Toggle；leaf 仍调用上层打开动作。
-- `h`：当前节点已展开则普通折叠自身，否则定位并普通折叠 source parent；在 display root 边界停止。
-- `z`：对当前分支执行递归 Toggle，作用范围包括未加载后代，不取决于之前缓存了多少内容。
-- `W`：递归折叠当前展示子树，保留顶层行。`ChildrenOf(R)` 对 R 写 false subtree stamp，
-  R 自身隐藏，当前直接 children 仍作为顶层行；`Forest` 对归并后的各入口写 false subtree stamp。
+- 折叠当前展示范围：对 `ChildrenOf(R)` 的 R 写 false Subtree stamp；R 自身隐藏，当前直接 children 仍作为顶层行。
   该动作不使用覆盖整个 DataHandle 的全局 clear，也不处理展示范围之外的其他子树。
 - Reveal：上层确定展示范围与目标后，只对使目标可见所需的祖先执行普通展开；不递归展开旁支。
-- List 的递归展示独立于 Tree 展开状态，Tree 专用展开/折叠键在 List 不执行；切回 Tree 使用当前保存的标记。
+- List 的递归展示独立于 Tree 展开状态，Tree 专用展开/折叠动作在 List 不执行；切回 Tree 使用当前保存的标记。
 
 ## 未加载后代与请求生命周期
 
@@ -73,13 +70,13 @@ Normal 相对动作使用 owner 执行时的状态与按键时目标；Visual �
   按 [预算与恢复规则](action.md#预算背压与恢复)，临时背压等待容量后继续；硬容量不足或读取失败
   保留已提交的展开意图及有效数据，明确报告未完成/错误，不能伪装成完整空目录。
 - 用户普通折叠 A 后，解除本消费者对 A 后代的 Tree 展开需求，停止继续调度该隐藏范围的新读取；
-  不清除后代展开标记。若其他 view/state、List、selection 准备或任务仍需要数据，保留其共享读取。
+  不清除后代展开标记。若其他 View/state、List、selection 准备或任务仍需要数据，保留其共享读取。
 - 递归折叠还覆盖子树原有展开意图；之后没有新的后代改写时，普通展开 A 只打开 A 自身，后代保持折叠。
 - 晚到结果按 request token 校验后只提交有效数据。结果不能写回旧展开标记，也不能在 A 已折叠时
   重新展开 A、恢复旧 root 或拉回 cursor；后续需求依据最新 state 重新计算。
 - 显式重新展开恢复当前可见展开路径的加载需求。错误槽位通过显式重试/刷新恢复，不因每次投影
   都发现 expanded 而无限重试；重新展开不把 error 当作成功。
-- 离开展示范围、切到 List 或关闭最后一个相关 view 时，解除对应 Tree 展开需求；展开标记随 state
+- 离开展示范围、切到 List 或关闭最后一个相关 View 时，解除对应 Tree 展开需求；展开标记随 state
   保留。重连 state 或切回 Tree 后，按最新范围及标记重新建立需求，不恢复旧请求队列。
 - 标记布尔值是同步确定的，递归加载是否完整另行报告。Loader 使用既有 children token、共享订阅、
   deadline、资源预算及循环处理规则；不为展开状态另建一套读取协议。
@@ -96,11 +93,12 @@ Normal 相对动作使用 owner 执行时的状态与按键时目标；Visual �
   例如 B 的 inherited 为 `3`、自身折叠为 `4`，移动时保存 `3`；B 自身仍受 `4` 影响，后代不继承这个自身折叠。
 - Expansion 与 selection 分别计算标记补丁，与同一份候选 topology 原子发布。展开操作推进相应
   state revision，实际布局变化推进 layout revision；selection 标记与 generation 不因展开操作改变。
-- 共享完整 state 的 views 同步展开状态；共享 data 的独立 states 各自保存展开意图。
+- 共享完整 state 的 View 同步展开状态；共享 data 的独立 states 各自保存展开意图。
   Selection 业务锁不锁展开，文件任务期间仍可浏览与折叠。
-- Visual 中的 view 遵循 [圈选契约](visual.md) 保持当前行映射；后台展开状态、请求和其他
-  views 正常更新。冻结的旧 frame 不作为恢复旧展开意图或继续过时读取的依据。
-- 压缩链从当前可见展开路径派生，输入仍映射回 source NodeId；压缩本身不写展开标记。
+- Visual 持帧见 [visual.md](visual.md)；后台展开状态、请求和其他 View 正常更新，
+  冻结的旧 Frame 不作为恢复旧展开意图或继续过时读取的依据。
+- 压缩链的非末端节点必须已展开，末端可以折叠（见 [indentline](indentline.md#压缩链)）；
+  输入仍映射回 source NodeId，压缩本身不写展开标记。
 
 ## 例子
 
@@ -132,16 +130,3 @@ A 起初是折叠的空目录，可展开且 children 完整：
 
 第二步当前布尔值未变，仍须写入 subtree stamp `5` 并返回 Applied；已知空目录不因此重新请求 children。
 后来 B 以默认 0 stamp 加入时，自然继承递归展开意图。普通展开只写 self，不能替代这次 Subtree 写入。
-
-## 验证要求
-
-- 普通折叠/展开保留后代记忆；折叠 child 不影响 parent 或旁支，递归操作覆盖旧例外。
-- 递归展开覆盖未加载和新增后代；普通展开不新增后代展开意图，结果不依赖 cache 暖热程度。
-- 已展开空目录再次递归展开仍写 subtree stamp，新子目录继承展开；同值递归折叠同样覆盖未来后代。
-- SelfOnly/Subtree 的同值 true/false 均写新版本，验证其在 reparent 后与新祖先的竞争及 scope 边界。
-- 验证混合 leaf/可展开目标、空目标、失效 ID 与过期 context；NoChange 和整批拒绝均不写标记。
-- 验证自身 expanded 与可见性、可展开空目录与 leaf，以及 ChildrenOf/Forest 的展示边界。
-- Reparent 保存 inherited 而非 effective；分别验证较新自身展开、较新自身折叠及新祖先版本竞争。
-- 验证展开后立刻折叠、晚到结果、分页、失败重试、预算、共享请求、关闭/重连及切换 Tree/List。
-- 验证递归 Toggle 的自身判据、普通多目标 scope、当前范围全部折叠、Reveal 与 selection 锁独立。
-- Rust 模型验证标记语义；Lua/UI specs 验证有界异步调度、输入与 Visual frame 发布时序。
