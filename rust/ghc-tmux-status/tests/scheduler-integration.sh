@@ -241,4 +241,31 @@ if [ "$retry" != "SKIPPED" ]; then
   exit 1
 fi
 
+# A committing heartbeat must not refresh clients: its `set` commands already
+# redraw them, while refresh-client restarts #() jobs and SIGTERMs the driver
+# that owns this tick.
+tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
+  set -s @GHC_SL_HEARTBEAT_SCHED '43:20:0:0' ';' \
+  set -g @GHC_SL_MODE 02 ';' \
+  set -g status-interval 20
+: >"$tmux_call_log"
+env \
+  TMUX="$server_env" \
+  PATH="$tmp/bin:$PATH" \
+  GHC_TMUX_REAL_TMUX="$real_tmux" \
+  GHC_TMUX_TMUX_CALL_LOG="$tmux_call_log" \
+  "$binary" scheduler-tick
+case "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)" in
+  43:21:*:0) ;;
+  *) echo "committing heartbeat did not complete" >&2; exit 1 ;;
+esac
+if [ "$(tmux -L "$socket" show -gqv status-interval)" != "1" ]; then
+  echo "committing heartbeat did not publish its render" >&2
+  exit 1
+fi
+if rg -Fq 'refresh-client' "$tmux_call_log"; then
+  echo "scheduler commit refreshed clients" >&2
+  exit 1
+fi
+
 printf '%s\n' "scheduler integration: ok"

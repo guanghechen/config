@@ -347,7 +347,11 @@ impl TmuxAdapter {
 
         let chunks = serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES);
         let final_chunk_index = chunks.len() - 1;
-        let mut refresh_separately = !retry_individual_commands;
+        // Scheduler commits never refresh: each committed `set` already redraws
+        // attached clients, while any `refresh-client` makes tmux SIGTERM and
+        // restart running `#()` status jobs, including the driver awaiting this
+        // commit's task completion.
+        let mut refresh_separately = false;
 
         for (chunk_index, chunk) in chunks.iter().enumerate() {
             if let Some(deadline) = deadline {

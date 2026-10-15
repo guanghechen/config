@@ -423,6 +423,10 @@ Status format 通过 `#()` 调用 `script/status-scheduler.sh`。Shell driver �
 single-flight ownership，再 materialize running-session derived state，并负责 process
 supervision；Rust 负责 task state transition 和实际 scheduler work。
 
+任何 `refresh-client` 都会让 tmux SIGTERM 正在运行的 `#()` job 并启动替代 job。Driver
+因此把 TERM 视为重启通知：完成当前周期并等待 renderer 自行结束，替代 job 因 lock 退出。
+HUP/INT 仍终止 renderer。
+
 ### 10.2 State transition
 
 ```text
@@ -461,7 +465,8 @@ health state，并在下一次 due tick 重试。
 Plan 在 32 KiB command budget 内分 chunk：
 
 - Standard / Bootstrap：chunk 失败后，可在相同 guards 下逐命令重试；
-- Scheduler：deadline-sensitive ambiguous mutation 不重试；
+- Scheduler：deadline-sensitive ambiguous mutation 不重试，也不发 refresh；committed
+  `set` 已重绘 attached clients，refresh 会重启 driver 所在的 status `#()` job；
 - final Standard / Bootstrap chunk 可折叠 `refresh-client -S`；
 - detached context 跳过 refresh，不影响 mutation success。
 

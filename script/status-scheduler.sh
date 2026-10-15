@@ -202,7 +202,13 @@ stop_driver() {
 trap cleanup_driver EXIT
 trap 'stop_driver 129' HUP
 trap 'stop_driver 130' INT
-trap 'stop_driver 143' TERM
+# Any refresh-client makes tmux SIGTERM this running #() job and start a
+# replacement that loses the lock. TERM is therefore a restart notice, not a
+# stop request: finish this cycle so a claimed task completes instead of
+# waiting out its lease. A handler, unlike an ignored disposition, is not
+# inherited by the renderer.
+term_received=0
+trap 'term_received=1' TERM
 
 recover_lock_with_lease() {
   acquire_recovery_lease || return 1
@@ -281,6 +287,7 @@ else
 fi
 
 renderer_status=0
+term_received=0
 "$renderer" scheduler-tick >/dev/null 2>&1 &
 renderer_pid=$!
 if ! publish_renderer_owner; then
@@ -290,6 +297,18 @@ if ! publish_renderer_owner; then
   exit 1
 fi
 wait "$renderer_pid" || renderer_status=$?
+# A trapped TERM interrupts wait with a status above 128 while the renderer may
+# still run. Wait again for the renderer's own status; 127 means the previous
+# wait already reaped it, so its status stands.
+while [ "$term_received" = "1" ] && [ "$renderer_status" -gt 128 ]; do
+  term_received=0
+  waited_status=0
+  wait "$renderer_pid" 2>/dev/null || waited_status=$?
+  if [ "$waited_status" = "127" ]; then
+    break
+  fi
+  renderer_status=$waited_status
+done
 renderer_pid=""
 if [ "$renderer_status" = "0" ]; then
   exit 0

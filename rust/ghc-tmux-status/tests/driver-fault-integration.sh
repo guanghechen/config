@@ -463,6 +463,49 @@ fi
 env -u TMUX tmux -L "$socket" set -su @GHC_SL_LOCK_RECOVERY_OWNER
 unlink "$stale_lock"
 
+# Any refresh-client makes tmux SIGTERM the running status job. The driver must
+# treat that as a restart notice: the renderer completes its claimed task, and
+# TERM during the delay does not drop the tick.
+cat >"$renderer" <<EOF
+#!/bin/sh
+: >'$tmp/term-renderer-started'
+sleep 0.5
+: >'$tmp/term-renderer-completed'
+EOF
+chmod +x "$renderer"
+env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 50 ';' \
+  set -s @GHC_SL_SCHED_ACTIVE 1
+env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
+  GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 "$driver" >/dev/null 2>&1 &
+term_driver_pid=$!
+wait_for "TERM test renderer start" file_exists "$tmp/term-renderer-started"
+kill -TERM "$term_driver_pid"
+if ! wait "$term_driver_pid"; then
+  echo "TERM restart notice failed the driver" >&2
+  exit 1
+fi
+if [ ! -f "$tmp/term-renderer-completed" ]; then
+  echo "TERM restart notice killed the renderer before task completion" >&2
+  exit 1
+fi
+if ! option_is_active || [ -e "$scheduler_lock" ]; then
+  echo "TERM restart notice fenced the scheduler or leaked the lock" >&2
+  exit 1
+fi
+
+rm -f "$tmp/term-renderer-started" "$tmp/term-renderer-completed"
+env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
+  GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0.5 "$driver" >/dev/null 2>&1 &
+term_driver_pid=$!
+sleep 0.2
+kill -TERM "$term_driver_pid"
+wait "$term_driver_pid" || true
+if [ ! -f "$tmp/term-renderer-completed" ]; then
+  echo "TERM during the driver delay dropped the scheduler tick" >&2
+  exit 1
+fi
+env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+
 env -u TMUX tmux -L "$socket" display-message -p '#{pid}:alive' >/dev/null
 
 printf '%s\n' "driver fault integration: ok"

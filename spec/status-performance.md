@@ -108,7 +108,9 @@ total median   25.000 -> 23.230 ms
 
 Final Standard/Bootstrap chunk 在 applied marker 前 conditionally 执行 `refresh-client -S`。
 Detached context 跳过 refresh；queue failure 仍回退到 guarded individual retry 与独立
-best-effort refresh。Scheduler commit 保持自己的 deadline-sensitive path。
+best-effort refresh。Scheduler commit 保持自己的 deadline-sensitive path，且不发 refresh：
+每个 committed `set` 已触发全部 attached client 重绘，而任何 `refresh-client` 都会让 tmux
+SIGTERM 并重启正在运行的 status `#()` job。
 
 30-run one-client non-empty A/B：
 
