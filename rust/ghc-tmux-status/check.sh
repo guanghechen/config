@@ -16,6 +16,7 @@ bash -n \
   "$crate_dir/tests/client-hooks-integration.sh" \
   "$crate_dir/tests/driver-fault-integration.sh" \
   "$crate_dir/tests/focus-session-integration.sh" \
+  "$crate_dir/tests/hook-gates-integration.sh" \
   "$crate_dir/tests/renderer-lifecycle-integration.sh" \
   "$crate_dir/tests/running-indicator-integration.sh" \
   "$crate_dir/tests/session-names-integration.sh" \
@@ -25,6 +26,7 @@ bash -n \
 "$crate_dir/tests/client-hooks-integration.sh"
 "$crate_dir/tests/driver-fault-integration.sh"
 "$crate_dir/tests/focus-session-integration.sh"
+"$crate_dir/tests/hook-gates-integration.sh"
 "$crate_dir/tests/renderer-lifecycle-integration.sh"
 "$crate_dir/tests/running-indicator-integration.sh"
 "$crate_dir/tests/session-names-integration.sh"

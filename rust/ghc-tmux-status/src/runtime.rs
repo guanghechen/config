@@ -938,10 +938,10 @@ fn rows_override(snapshot: &TmuxSnapshot) -> RowsOverride {
 
 /// Reconciles a per-session target layout for every ON (not currently `off`),
 /// attached session. A session whose effective `status` is `off` (popup/agent,
-/// owned by hook/session-created.sh) is skipped — the renderer respects the
-/// current status and has no knowledge of the naming convention. Detached
-/// sessions (no client width) are skipped until a client attaches and an event
-/// re-reconciles them.
+/// owned by the session-created policy hook in tmux.conf) is skipped — the
+/// renderer respects the current status and has no knowledge of the naming
+/// convention. Detached sessions (no client width) are skipped until a client
+/// attaches and an event re-reconciles them.
 fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
     let width_ranges = client_width_ranges(&snapshot.client_widths);
     let group_counts = SessionGrouper::counts(&snapshot.sessions);

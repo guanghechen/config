@@ -141,21 +141,26 @@ unknown -> 01
 
 ### 4.3 Hook contract
 
-Adaptive mode 注册固定 hooks：
+Adaptive mode 注册固定 hooks。Gate 在 server 内以 `if -F` 求值，不满足时不启动 renderer：
 
-```text
-client-attached[40]
-client-detached[40]
-client-resized[40]
-client-session-changed[40]
-session-created[40]
-session-closed[40]
-session-renamed[40]
-```
+- `client-attached[40]`、`client-session-changed[40]`：目标 session 非 `off`，或 rows 为
+  `auto` / `1`；
+- `client-detached[40]`、`client-resized[40]`：rows 为 `auto` / `1`；
+- `session-created[40]`、`session-closed[40]`：session 名不属于 popup / agent；
+- `session-renamed[40]`：无 gate，改名可能改变 group membership。
+
+Fixed two-row layout 不写任何依赖 client 宽度的 renderer state；popup / agent 是 `status off`
+的分组，不出现在任何 rendered list。Renderer 新增此类读取时（例如 two-row 下按宽度选择
+session 窗口），必须同步放宽对应 gate。较早的 tmux 不保证 attach 同时触发
+`client-session-changed`，因此保留 `client-attached`。
 
 Hook 仅发送 background reconcile notification。其 stdout、stderr 和非零退出均被隔离，
 避免 tmux 进入 view mode；下一次 event 负责重试。Render 不读取 window 状态，因此不注册
 `session-window-changed`；loader 会移除旧版本留下的该 hook。
+
+Session policy 是 `tmux.conf` 中的 `session-created[0]`，以纯 tmux 命令在 server 内执行，
+早于 renderer hook：popup / agent session 设为 `status off` 与 `detach-on-destroy on`，
+`G<digits>-` session 保持 `detach-on-destroy off`，其余 session 以 session 名命名首个 window。
 
 ### 4.4 Fallback
 

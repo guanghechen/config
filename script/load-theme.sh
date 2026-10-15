@@ -50,13 +50,27 @@ function _ghc_tmux_status_layout_hooks_ {
 # Layout hooks are reconcile notifications, not part of the triggering tmux
 # transaction. A failed background job must stay silent because tmux turns job
 # output or a non-zero exit into view-mode; the next lifecycle event retries.
+# An optional format gate is checked in-server, so events that cannot change
+# renderer-owned state start no process.
 function _ghc_tmux_set_status_layout_hook_ {
   local layout_hook=$1
   local event=$2
   local status_renderer=$3
-  tmux set-hook -g "$layout_hook" \
-    "run-shell -b '$status_renderer apply $event >/dev/null 2>&1 || true'"
+  local gate=${4:-}
+  local command="run-shell -b '$status_renderer apply $event >/dev/null 2>&1 || true'"
+  if [ -n "$gate" ]; then
+    command="if -F '$gate' \"$command\""
+  fi
+  tmux set-hook -g "$layout_hook" "$command"
 }
+
+# Hook gates mirror what the renderer reads. A fixed two-row layout writes no
+# width-dependent state; revisit this gate if it ever does. Popup and agent
+# sessions are status-off groups that never appear in a rendered list (patterns
+# match the session-created policy in tmux.conf and src/session/group.rs).
+readonly _GHC_TMUX_WIDTH_GATE='#{&&:#{!=:#{@GHC_SL_ROWS},},#{!=:#{@GHC_SL_ROWS},2}}'
+readonly _GHC_TMUX_CLIENT_GATE="#{||:#{!=:#{status},off},$_GHC_TMUX_WIDTH_GATE}"
+readonly _GHC_TMUX_LISTED_GATE='#{?#{m/r:^(_popup@|(claude|codex|gemini)-[0-9A-Fa-f]+$),#{hook_session_name}},0,1}'
 
 function _ghc_tmux_defer_status_bootstrap_ {
   tmux set-hook -g 'session-created[40]' \
@@ -257,13 +271,14 @@ function _ghc_tmux_load_theme_ {
       else
         tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
         # Attach/detach change the attached-width set, so they share the
-        # client-resized event kind.
-        _ghc_tmux_set_status_layout_hook_ 'client-attached[40]' client-resized "$status_renderer"
-        _ghc_tmux_set_status_layout_hook_ 'client-detached[40]' client-resized "$status_renderer"
-        _ghc_tmux_set_status_layout_hook_ 'client-resized[40]' client-resized "$status_renderer"
-        _ghc_tmux_set_status_layout_hook_ 'client-session-changed[40]' session-changed "$status_renderer"
-        _ghc_tmux_set_status_layout_hook_ 'session-created[40]' session-created "$status_renderer"
-        _ghc_tmux_set_status_layout_hook_ 'session-closed[40]' session-closed "$status_renderer"
+        # client-resized event kind. Attach is kept alongside session-changed
+        # because older tmux releases do not always fire both.
+        _ghc_tmux_set_status_layout_hook_ 'client-attached[40]' client-resized "$status_renderer" "$_GHC_TMUX_CLIENT_GATE"
+        _ghc_tmux_set_status_layout_hook_ 'client-detached[40]' client-resized "$status_renderer" "$_GHC_TMUX_WIDTH_GATE"
+        _ghc_tmux_set_status_layout_hook_ 'client-resized[40]' client-resized "$status_renderer" "$_GHC_TMUX_WIDTH_GATE"
+        _ghc_tmux_set_status_layout_hook_ 'client-session-changed[40]' session-changed "$status_renderer" "$_GHC_TMUX_CLIENT_GATE"
+        _ghc_tmux_set_status_layout_hook_ 'session-created[40]' session-created "$status_renderer" "$_GHC_TMUX_LISTED_GATE"
+        _ghc_tmux_set_status_layout_hook_ 'session-closed[40]' session-closed "$status_renderer" "$_GHC_TMUX_LISTED_GATE"
         _ghc_tmux_set_status_layout_hook_ 'session-renamed[40]' session-renamed "$status_renderer"
 
         local bootstrap_generation="$_GHC_TMUX_STATUS_FENCED_GENERATION"
