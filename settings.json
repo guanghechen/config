@@ -44,11 +44,6 @@
       "Edit(//**/local/config.ps1)",
       "Edit(//**/.credentials/**)",
       "Edit(//**/.credentials.json)"
-    ],
-    "ask": [
-      "Bash(git rebase *)",
-      "Bash(git reset *)",
-      "Bash(git revert *)"
     ]
   },
   "skillOverrides": {
@@ -68,12 +63,6 @@
             "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/pre-bash-sensitive.mjs\" || exit 2",
             "timeout": 5,
             "statusMessage": "Checking sensitive path usage"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/pre-bash-git.mjs\" || exit 2",
-            "timeout": 5,
-            "statusMessage": "Checking git command policy"
           }
         ]
       },

@@ -26,22 +26,9 @@ function runGuard(script, toolName, toolInput) {
   return result.stdout.trim() ? JSON.parse(result.stdout).hookSpecificOutput : undefined
 }
 
-test("ordinary Bash and unguarded git commands do not receive blanket approval", () => {
+test("ordinary Bash and git commands do not receive blanket approval", () => {
   for (const command of ["printf hello", "git status", "git clean -fd", "git commit -m example"]) {
-    for (const script of ["pre-bash-sensitive.mjs", "pre-bash-git.mjs"]) {
-      assert.equal(runGuard(script, "Bash", { command }), undefined, `${script}: ${command}`)
-    }
-  }
-})
-
-test("explicit git guard decisions remain intact", () => {
-  for (const command of [
-    "git push origin main",
-    "git -C /synthetic/project reset --hard HEAD",
-    "git --work-tree /synthetic/project revert HEAD",
-    "git commit --amend",
-  ]) {
-    assert.equal(runGuard("pre-bash-git.mjs", "Bash", { command }).permissionDecision, "ask", command)
+    assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command }), undefined, command)
   }
 })
 
