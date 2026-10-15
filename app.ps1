@@ -11,6 +11,21 @@ function cc0 {
   claude --dangerously-skip-permissions @args
 }
 
+function ccl {
+  $names = 'ANTHROPIC_BASE_URL', 'ANTHROPIC_MODEL', 'CLAUDE_CODE_SUBAGENT_MODEL', 'ANTHROPIC_DEFAULT_HAIKU_MODEL'
+  $previous = @{}
+  foreach ($name in $names) { $previous[$name] = [Environment]::GetEnvironmentVariable($name) }
+  try {
+    $env:ANTHROPIC_BASE_URL = "$env:MS_LLMAPI_URL/api/claude"
+    $env:ANTHROPIC_MODEL = 'opus[1m]'
+    $env:CLAUDE_CODE_SUBAGENT_MODEL = 'opus[1m]'
+    $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = $null
+    claude --dangerously-skip-permissions @args
+  } finally {
+    foreach ($name in $names) { [Environment]::SetEnvironmentVariable($name, $previous[$name]) }
+  }
+}
+
 ## codex
 function __codex_with_color__ {
   $previousForceColor = $env:FORCE_COLOR
