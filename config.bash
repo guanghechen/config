@@ -38,6 +38,7 @@ export GHC_ENV_PLATFORM
 # export GOOGLE_CLOUD_PROJECT="project"
 
 export KIT_COPILOT_URL="http://127.0.0.1:4747"
+export MS_LLMAPI_URL="http://127.0.0.1:4242"
 
 export PREFER_NEOVIM_VERSION="${PREFER_NEOVIM_VERSION:-nightly}"
 export PREFER_TMUX_VERSION="${PREFER_TMUX_VERSION:-stable}"
