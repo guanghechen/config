@@ -734,12 +734,13 @@ function M.get_repo_info(cwd, token)
           local toplevel = yoz.path.normalize(lines[1], true, stl.env.PATH_SEP)
           local gitdir = yoz.path.normalize(lines[2], true, stl.env.PATH_SEP)
           local head = lines[3] or ""
+          ---@type stl.git.IRepoInfo
           local result = {
             abbrev_head = "",
             detached = false,
             gitdir = gitdir,
             toplevel = toplevel,
-          } ---@type stl.git.IRepoInfo
+          }
 
           if obj.code ~= 0 then
             -- An unborn repository has valid paths but cannot resolve HEAD yet.

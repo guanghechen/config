@@ -265,9 +265,10 @@ stl.fn.observe({ o_rootpath }, function()
   elseif rootpath == cwd then
     picker.finder:set_title(string.format("%s (cwd)", title))
   else
+    ---@type string
     local relative_path = yoz.canonical_path.is_descendant(workspace, rootpath)
         and yoz.canonical_path.relative(cwd, rootpath, false)
-      or rootpath ---@type string
+      or rootpath
     picker.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)

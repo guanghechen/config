@@ -14,6 +14,7 @@ local cache = {} ---@type table<integer, { context: era.keystroke.cmp.IContext, 
 ---@field public id                     ?integer
 ---@field public timer                  ?uv.uv_timer_t
 ---@field public expired                boolean
+
 local requests = {} ---@type table<integer, era.keystroke.cmp.ILspRequest>
 local default_fields = { "insertTextFormat", "insertTextMode", "data", "commitCharacters" }
 local nullable_fields = {

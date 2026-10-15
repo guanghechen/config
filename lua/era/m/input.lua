@@ -234,13 +234,15 @@ function M.open(opts, on_confirm)
       local text = string.sub(lines[1] or "", #prompt + 1) ---@type string
       if before_confirm then
         confirming = true
+        ---@type era.m.input.ConfirmCallback
         local confirm_cb = function()
           confirming = false
           dispose(text)
-        end ---@type era.m.input.ConfirmCallback
+        end
+        ---@type era.m.input.CancelCallback
         local cancel_cb = function()
           confirming = false
-        end ---@type era.m.input.CancelCallback
+        end
         before_confirm(text, confirm_cb, cancel_cb)
       else
         dispose(text)

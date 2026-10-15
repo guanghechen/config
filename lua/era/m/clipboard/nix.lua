@@ -42,13 +42,14 @@ end
 ---@param filepath                      string
 ---@return  boolean
 function M.paste_image_from_clipboard(filepath)
+  ---@type string[]
   local cmd = {
     "sh",
     "-c",
     'xclip -selection clipboard -o -t image/png > "$1"',
     "sh",
     filepath,
-  } ---@type string[]
+  }
   ---@type vim.SystemCompleted|nil
   local exec_result = exec.run(__module_name__, "paste_image_from_clipboard", cmd, nil, { filepath = filepath })
   return exec_result ~= nil

@@ -640,8 +640,8 @@ function M.new(props)
 
     result_number = true,
 
-    ---@type era.m.picker.result.IDraw
     result_tree = treeview,
+    ---@type era.m.picker.result.IDraw
     render_result = function()
       return treeview:publish({
         mode = o_flag_viewtype:snapshot(),

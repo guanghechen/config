@@ -19,6 +19,7 @@ local __module_name__ = "era.dressing.indentline.parser" ---@type string
 ---@class era.dressing.indentline.parser
 local M = {}
 
+---@type table<string, true>
 local DEDENT_SCOPED_FILETYPES = {
   automake = true,
   bzl = true,
@@ -57,7 +58,7 @@ local DEDENT_SCOPED_FILETYPES = {
   starlark = true,
   stylus = true,
   yaml = true,
-} ---@type table<string, true>
+}
 
 ---@param filetype                      string
 ---@return boolean

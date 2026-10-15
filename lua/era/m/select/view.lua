@@ -143,6 +143,7 @@ function M.open(props)
   local zindex_source_winnr = relative_win or parent_winnr ---@type integer
   local zindex = dot.win.resolve_zindex(zindex_source_winnr) ---@type integer
 
+  ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     anchor = "NW",
     border = "rounded",
@@ -158,7 +159,7 @@ function M.open(props)
     width = width,
     win = relative_win,
     zindex = zindex,
-  }) ---@type integer
+  })
 
   vim.w[winnr].wintype = stl.e.WinTypeEnum.SELECT
   vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true

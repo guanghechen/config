@@ -35,6 +35,7 @@ local filetype = require("stl.filetype")
 ---@class era.dressing.indentline
 local M = {}
 
+---@type era.dressing.indentline.IConfig
 M.config = {
   char = "│",
   priority = 1,
@@ -47,7 +48,7 @@ M.config = {
     "f_indentline_6",
     "f_indentline_7",
   },
-} ---@type era.dressing.indentline.IConfig
+}
 
 ---@type table<string, boolean>
 local DISABLED_BUFTYPES = {

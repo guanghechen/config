@@ -81,9 +81,10 @@ normal_tabline = era
 local function create_maximize_tabline()
   local content = "󰓩 MAXIMIZED" ---@type string
   local text = stl.icon.symbols.sep_left .. content .. stl.icon.symbols.sep_right ---@type string
+  ---@type string
   local hl_text = stl.nvim.fn.txt(stl.icon.symbols.sep_left, position .. "_nvim_tabtype_sep")
     .. stl.nvim.fn.txt(content, position .. "_nvim_tabtype_text")
-    .. stl.nvim.fn.txt(stl.icon.symbols.sep_right, position .. "_nvim_tabtype_sep") ---@type string
+    .. stl.nvim.fn.txt(stl.icon.symbols.sep_right, position .. "_nvim_tabtype_sep")
 
   ---@type era.m.nvimbar.IRawComponent
   local indicator = {

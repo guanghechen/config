@@ -3,6 +3,7 @@ local __module_name__ = "stl.os.fs" ---@type string
 
 local path = require("stl.os.path")
 
+---@type string[]
 local REQUIRED_ADAPTER_METHODS = {
   "stat",
   "exists",
@@ -11,7 +12,7 @@ local REQUIRED_ADAPTER_METHODS = {
   "rename",
   "delete",
   "scandir",
-} ---@type string[]
+}
 
 ---@param filepath                      string
 ---@return string|nil

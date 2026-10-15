@@ -4,6 +4,7 @@ local __module_name__ = "era.dressing.hipattern.rule.tailwind" ---@type string
 local palette = require("stl.lang.tailwind").palette
 local scan = require("era.dressing.hipattern.rule.scan")
 
+---@type table<string, true>
 local filetypes = {
   astro = true,
   css = true,
@@ -17,11 +18,11 @@ local filetypes = {
   typescript = true,
   typescriptreact = true,
   vue = true,
-} ---@type table<string, true>
+}
 
 local pattern = "%f[%w:-][%w:-]+%-[a-z%-]+%-%d+%f[^%w:-]" ---@type string
 
----@class era.dressing.hipattern.rule.tailwind
+---@class era.dressing.hipattern.rule.tailwind : era.dressing.hipattern.rule.IModule
 local M = {}
 
 ---@param line                          string

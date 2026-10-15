@@ -64,10 +64,11 @@ end
 ---@param observer                      ux.filetree.IObserver
 ---@return stl.c.IUnsubscribable
 function M:subscribe(observer)
+  ---@type ux.filetree.IRegistration
   local registration = {
     observer = { on_effect = observer.on_effect, on_source_changed = observer.on_source_changed },
     source_revision = self:source():revision(),
-  } ---@type ux.filetree.IRegistration
+  }
   -- Replace the list on registration changes so callbacks can safely unsubscribe or add observers.
   local observers = { unpack(self._observers) }
   observers[#observers + 1] = registration

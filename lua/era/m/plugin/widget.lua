@@ -472,13 +472,14 @@ function M:__render_operation_sections__(tasks)
     end
   end
 
+  ---@type table<era.m.plugin.ActionEnum, string>
   local titles = {
     install = "Installing",
     sync = "Syncing",
     update = "Updating",
     clean = "Cleaning",
     build = "Building",
-  } ---@type table<era.m.plugin.ActionEnum, string>
+  }
   self:__render_task_section__(titles[action] or "Running", running)
   self:__render_task_section__("Queued", queued)
   return active
@@ -488,13 +489,14 @@ end
 function M:__collect_plugins__()
   local Loader = require("era.m.plugin.loader")
   local plugins = Loader.get_all() ---@type table<string, era.m.plugin.IPluginState>
+  ---@type era.m.plugin.IPluginGroups
   local groups = {
     startup = {},
     runtime = {},
     not_loaded = {},
     missing = {},
     by_name = plugins,
-  } ---@type era.m.plugin.IPluginGroups
+  }
 
   for _, state in pairs(plugins) do
     if state.loaded and state.startup then

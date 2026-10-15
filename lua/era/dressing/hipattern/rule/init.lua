@@ -7,11 +7,12 @@ local __module_name__ = "era.dressing.hipattern.rule" ---@type string
 ---@class era.dressing.hipattern.rule
 local M = {}
 
+---@type era.dressing.hipattern.rule.IModule[]
 M.all = {
   require("era.dressing.hipattern.rule.keyword"),
   require("era.dressing.hipattern.rule.color"),
   require("era.dressing.hipattern.rule.tailwind"),
   require("era.dressing.hipattern.rule.markdown"),
-} ---@type era.dressing.hipattern.rule.IModule[]
+}
 
 return M

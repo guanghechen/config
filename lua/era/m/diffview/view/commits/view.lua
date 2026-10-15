@@ -59,6 +59,7 @@ function M.create_layout(layout_type)
   local tabnr = vim.api.nvim_get_current_tabpage()
   vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_COMMITS
 
+  ---@type era.m.diffview.view.commits.ILayout
   local lyt = {
     tabnr = tabnr,
     layout_type = layout_type,
@@ -68,7 +69,7 @@ function M.create_layout(layout_type)
     filetree_bufnr = nil,
     sbs_left_winnr = nil,
     sbs_right_winnr = nil,
-  } ---@type era.m.diffview.view.commits.ILayout
+  }
 
   if layout_type == 1 then
     lyt = M.__create_layout_commits_top__(tabnr)

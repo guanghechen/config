@@ -541,12 +541,13 @@ function M.open_diff_entry(opts)
     return
   end
 
+  ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
   local apply_opts = {
     get_fold_unchanged = opts.get_fold_unchanged,
     is_current = is_current,
     preserve_view = opts.preserve_view,
     refresh_diff = entry.stage_type ~= "staged",
-  } ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
+  }
 
   local function capture_views()
     if apply_opts.preserve_view ~= true or apply_opts.left_view or apply_opts.right_view then
@@ -808,10 +809,11 @@ function M.open_commit_entry(opts)
   local commit = opts.commit
   local token = opts.token
   local is_current = opts.is_current
+  ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
   local apply_opts = {
     get_fold_unchanged = opts.get_fold_unchanged,
     is_current = is_current,
-  } ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
+  }
 
   local filepath = entry.filepath
   local parent_filepath = commit.parent_filepath or entry.prev_filepath or filepath

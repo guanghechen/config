@@ -1293,8 +1293,8 @@ function M.new(props)
       return string.format("LIMIT %d", inputs.max_matches), "picker_result_limit"
     end,
 
-    ---@type era.m.searcher.result.IDraw
     result_tree = treeview,
+    ---@type era.m.searcher.result.IDraw
     render_result = function()
       return treeview:publish({
         mode = o_flag_viewtype:snapshot(),
@@ -1307,7 +1307,6 @@ function M.new(props)
       })
     end,
 
-    ---@type era.m.searcher.preview.IDraw|nil
     preview_tree = function()
       local key = self:__retrieve_nodeuuid__()
       local entry = key and treeview:retrieve(key)
@@ -1316,6 +1315,7 @@ function M.new(props)
         return { owner = treeview, key = key, foldempty = o_flag_foldempty:snapshot(), title = data.filepath }
       end
     end,
+    ---@type era.m.searcher.preview.IDraw|nil
     render_preview = preview and function(bufnr)
       local frame = treeview:frame()
       local nodeuuid, lnum = self:__retrieve_nodeuuid__(frame) ---@type string|nil, integer
@@ -1526,6 +1526,7 @@ function M.new(props)
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
+  ---@type stl.c.Observable[]
   local search_observables = {
     o_excludes,
     o_flag_exclude,
@@ -1540,7 +1541,7 @@ function M.new(props)
     o_replace_pattern,
     o_rootpath,
     o_search_pattern,
-  } ---@type stl.c.Observable[]
+  }
   for _, observable in ipairs(search_observables) do
     observer_unsubs[#observer_unsubs + 1] = observable:subscribe(
       stl.c.Subscriber.new({

@@ -56,7 +56,7 @@ local __mods = {
 ---@field public get_storage            fun(): dot.context.storage
 ---@field public set_storage            fun(storage: dot.context.storage): nil
 ---
----@field public observe                fun(observables: stl.c.Observable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---@field public observe                fun(observables: stl.c.Observable[], callback: (fun(): nil), ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: dot.context.state.IWatchChangeParams): nil

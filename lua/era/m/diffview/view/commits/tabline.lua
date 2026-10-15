@@ -18,13 +18,14 @@ M.position = "f_tl" ---@type stl.t.NvimbarPositionEnum
 -- Constants (hoisted for performance)
 ----------------------------------------------------------------------------------------------------
 
+---@type string[]
 local LAYOUT_ICONS = {
   stl.icon.symbols.flag_layout_1, -- layout 1: commits_top
   stl.icon.symbols.flag_layout_2, -- layout 2: commits_left
   stl.icon.symbols.flag_layout_3, -- layout 3: sbs_only
   stl.icon.symbols.flag_layout_4, -- layout 4: commits_only
   stl.icon.symbols.flag_layout_5, -- layout 5: commits_filetree
-} ---@type string[]
+}
 
 local SUBSCRIPT_DIGITS = { "₁", "₂", "₃", "₄", "₅" } ---@type string[]
 

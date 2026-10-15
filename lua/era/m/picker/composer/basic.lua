@@ -717,10 +717,12 @@ function M:__layout__()
   local min_width = preview_on_right and math.min(math.floor(vim.o.columns * 0.6), 160)
     or math.min(math.floor(vim.o.columns * 0.4), 80)
 
+  ---@type integer
   local recommended_height = self._recommended_height <= 1 and math.floor(vim.o.lines * self._recommended_height)
-    or math.floor(self._recommended_height) ---@type integer
+    or math.floor(self._recommended_height)
+  ---@type integer
   local recommended_width = self._recommended_width <= 1 and math.floor(vim.o.columns * self._recommended_width)
-    or math.floor(self._recommended_width) ---@type integer
+    or math.floor(self._recommended_width)
 
   local height = math.min(max_height, math.max(min_height, recommended_height)) ---@type integer
   local width = math.min(max_width, math.max(min_width, recommended_width)) ---@type integer
@@ -1414,8 +1416,9 @@ function M:__preview_layout__()
   local lines = vim.o.lines ---@type integer
   local max_height = math.max(math.floor(lines * 0.9), lines - 10) ---@type integer
   local min_height = math.min(math.floor(lines * 0.6), 56) ---@type integer
+  ---@type integer
   local recommended_height = self._recommended_height <= 1 and math.floor(lines * self._recommended_height)
-    or math.floor(self._recommended_height) ---@type integer
+    or math.floor(self._recommended_height)
   local height = math.min(max_height, math.max(min_height, recommended_height)) ---@type integer
 
   if height < 32 then

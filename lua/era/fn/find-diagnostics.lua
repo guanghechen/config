@@ -158,8 +158,9 @@ local function refresh(force)
       severity = severity,
     }
 
+    ---@type string
     local locationuuid =
-      string.format("%s:%d:%d:%d#%d", filepath, diagnostic.lnum, diagnostic.col, diagnostic.end_col, #locations) ---@type string
+      string.format("%s:%d:%d:%d#%d", filepath, diagnostic.lnum, diagnostic.col, diagnostic.end_col, #locations)
 
     local text ---@type string
     local highlights = {} ---@type stl.t.IHighlightInline[]
@@ -317,9 +318,10 @@ stl.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
   elseif rootpath == cwd then
     picker.finder:set_title(string.format("%s (cwd)", title))
   else
+    ---@type string
     local relative_path = yoz.canonical_path.is_descendant(workspace, rootpath)
         and yoz.canonical_path.relative(cwd, rootpath, false)
-      or rootpath ---@type string
+      or rootpath
     picker.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)

@@ -644,6 +644,7 @@ function M:update(context, manual)
     then
       self._slots[name] = old
     else
+      ---@type era.keystroke.cmp.ISourceSlot
       local slot = {
         context = context,
         -- A superseded response callback must not discard the last prepared candidate set.
@@ -651,7 +652,7 @@ function M:update(context, manual)
         prepared = old ~= nil and Context.compatible(old.context, context) and old.prepared or nil,
         -- Filter the previous compatible snapshot while incomplete/async providers refresh it.
         groups = old ~= nil and Context.compatible(old.context, context) and old.groups or nil,
-      } ---@type era.keystroke.cmp.ISourceSlot
+      }
       self._slots[name] = slot
       ---@param submit                  fun(): nil
       ---@return nil

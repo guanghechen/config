@@ -206,11 +206,12 @@ local function update_hunks(buf_cache)
     end
 
     local buffer_document = era.m.git.staging.from_buffer(bufnr) ---@type era.m.git.Document
+    ---@type string
     local document_format = table.concat({
       buffer_document.encoding,
       buffer_document.eol,
       buffer_document.bomb and "1" or "0",
-    }, ":") ---@type string
+    }, ":")
     if buf_cache.document_format ~= document_format then
       buf_cache.document_format = document_format
       buf_cache.head_document = nil

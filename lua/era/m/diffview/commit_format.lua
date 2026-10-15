@@ -6,6 +6,7 @@ local __module_name__ = "era.m.diffview.commit_format" ---@type string
 local M = {}
 
 ---@see https://gitmoji.dev/
+---@type table<string, string>
 local GITMOJI = {
   adhesive_bandage = "🩹",
   alembic = "⚗️",
@@ -79,7 +80,7 @@ local GITMOJI = {
   white_check_mark = "✅",
   wrench = "🔧",
   zap = "⚡️",
-} ---@type table<string, string>
+}
 
 ---Match lazygit's default two-column author representation.
 ---@param author                         string

@@ -30,6 +30,7 @@ end
 
 ---@return era.m.plugin.IOperationProgress
 function M.get_progress()
+  ---@type era.m.plugin.IOperationProgress
   local progress = {
     action = M._action,
     total = 0,
@@ -37,7 +38,7 @@ function M.get_progress()
     running = 0,
     done = 0,
     error = 0,
-  } ---@type era.m.plugin.IOperationProgress
+  }
 
   for _, task in pairs(M._tasks) do
     progress.total = progress.total + 1

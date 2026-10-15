@@ -215,6 +215,7 @@ local function make_indicator(scope, options)
     return nil
   end
 
+  ---@type table
   local view = vim.api.nvim_win_call(scope.winnr, function()
     local saved = vim.fn.winsaveview() ---@type table
     local viewport_top = vim.fn.line("w0") ---@type integer
@@ -239,7 +240,7 @@ local function make_indicator(scope, options)
       leftcol = saved.leftcol,
       rows = rows,
     }
-  end) ---@type table
+  end)
   local screen_col = draw_col - view.leftcol ---@type integer
   if screen_col < 0 or #view.rows == 0 then
     return nil
@@ -262,6 +263,7 @@ local function make_indicator(scope, options)
   shiftwidth = math.max(shiftwidth, 1)
 
   local highlight_index = math.floor(draw_col / shiftwidth) % #options.highlights + 1 ---@type integer
+  ---@type vim.api.keyset.set_extmark
   local extmark_options = {
     ephemeral = true,
     hl_mode = "combine",
@@ -270,7 +272,7 @@ local function make_indicator(scope, options)
     virt_text = { { options.symbol, options.highlights[highlight_index] } },
     virt_text_pos = "overlay",
     virt_text_win_col = screen_col,
-  } ---@type vim.api.keyset.set_extmark
+  }
 
   local breakindent = vim.api.nvim_get_option_value("breakindent", { win = scope.winnr }) ---@type boolean
   local showbreak = vim.api.nvim_get_option_value("showbreak", { win = scope.winnr }) ---@type string

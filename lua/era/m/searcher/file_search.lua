@@ -5,9 +5,11 @@ local __module_name__ = "era.m.searcher.file_search" ---@type string
 ---@field public options                yoz.search.ISearchInFilesOptions
 ---@field public context                unknown
 
----@class era.m.searcher.file_search.IActive
+---@class era.m.searcher.file_search.IQueued
 ---@field public generation             integer
 ---@field public request                era.m.searcher.file_search.IRequest
+
+---@class era.m.searcher.file_search.IActive : era.m.searcher.file_search.IQueued
 ---@field public job                    yoz.search.SearchInFilesJob
 
 ---@class era.m.searcher.file_search.IProps
@@ -26,7 +28,7 @@ local __module_name__ = "era.m.searcher.file_search" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _generation         integer
 ---@field protected _active             era.m.searcher.file_search.IActive|nil
----@field protected _pending            era.m.searcher.file_search.IActive|nil
+---@field protected _pending            era.m.searcher.file_search.IQueued|nil
 ---@field protected _timer              unknown|nil
 ---@field protected _poll_interval      integer
 ---@field protected _start_job          fun(request: era.m.searcher.file_search.IRequest): yoz.search.SearchInFilesJob
@@ -98,10 +100,11 @@ end
 function M:submit(request)
   self:__health__()
 
+  ---@type era.m.searcher.file_search.IQueued
   local queued = {
     generation = self._generation,
     request = request,
-  } ---@type era.m.searcher.file_search.IActive
+  }
 
   local active = self._active ---@type era.m.searcher.file_search.IActive|nil
   if active == nil then
@@ -161,7 +164,7 @@ function M:isdisposed()
 end
 
 ---@protected
----@param queued                        era.m.searcher.file_search.IActive
+---@param queued                        era.m.searcher.file_search.IQueued
 ---@return nil
 function M:__start__(queued)
   if not self:__is_current__(queued.generation, queued.request) then
@@ -183,8 +186,7 @@ function M:__start__(queued)
     return
   end
 
-  queued.job = job
-  self._active = queued
+  self._active = { generation = queued.generation, request = queued.request, job = job }
 end
 
 ---@protected
@@ -283,7 +285,7 @@ function M:__advance__()
     return
   end
 
-  local pending = self._pending ---@type era.m.searcher.file_search.IActive|nil
+  local pending = self._pending ---@type era.m.searcher.file_search.IQueued|nil
   self._pending = nil
   if pending ~= nil and pending.generation == self._generation then
     self:__start__(pending)

@@ -161,10 +161,11 @@ local function get_parse_context(bufnr, lines, parse_start_row, parse_end_row, l
     end
   end)
 
+  ---@type era.dressing.indentline.parser.IContext
   local context = {
     previous_level = get_line_level(bufnr, previous_lnum, options),
     following_level = get_line_level(bufnr, following_lnum, options),
-  } ---@type era.dressing.indentline.parser.IContext
+  }
 
   for _, line in ipairs(lines) do
     -- Native nonblank searches only skip spaces/tabs, unlike Lua's broader %s.
@@ -278,15 +279,17 @@ function M.build_frame(winnr, bufnr, start_row, end_row)
   local parse_end_row = math.min(line_count, end_row + 1) ---@type integer
   local lines = vim.api.nvim_buf_get_lines(bufnr, parse_start_row, parse_end_row, false) ---@type string[]
   -- Keep one proven blank interval per window; edits and option invalidation discard it.
+  ---@type era.dressing.indentline.render.IBlankContext|nil
   local blank_context = cached ~= nil
       and cached.bufnr == bufnr
       and cached.changedtick == changedtick
       and cached.blank_context
-    or nil ---@type era.dressing.indentline.render.IBlankContext|nil
+    or nil
   local context ---@type era.dressing.indentline.parser.IContext|nil
   context, blank_context =
     get_parse_context(bufnr, lines, parse_start_row, parse_end_row, line_count, indent_options, blank_context)
   local result = parser.parse(lines, parse_start_row, indent_options, parser.is_dedent_scoped(filetype), context)
+  ---@type era.dressing.indentline.render.IFrame
   local frame = {
     bufnr = bufnr,
     changedtick = changedtick,
@@ -309,7 +312,7 @@ function M.build_frame(winnr, bufnr, start_row, end_row)
     virt_texts = {},
     extmark_chunk = extmark_chunk,
     extmark_options = extmark_options,
-  } ---@type era.dressing.indentline.render.IFrame
+  }
   frames[winnr] = frame
   return frame, true
 end

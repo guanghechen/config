@@ -7,8 +7,14 @@ local Subscriber = require("stl.c.subscriber")
 local Git = require("era.m.git.state")
 local Ignore = require("era.m.git.ignore")
 
+local controllers = setmetatable({}, { __mode = "kv" })
+local revisions = setmetatable({}, { __mode = "k" })
+local namespaces_by_data = setmetatable({}, { __mode = "k" })
+local filepath = require("ux.filetree.path")
+
 ---@class era.m.explorer.Subscriptions
 ---@field _data                         ux.filetree.Data
+---@field _report                       fun(error: any): nil
 ---@field _sessions                     table<era.m.explorer.Session, boolean>
 ---@field _group                        integer
 ---@field _subscriptions                stl.c.IUnsubscribable[]
@@ -18,10 +24,6 @@ local Ignore = require("era.m.git.ignore")
 ---@field _git                          boolean
 ---@field _running                      boolean
 ---@field _disposed                     boolean
-local controllers = setmetatable({}, { __mode = "kv" })
-local revisions = setmetatable({}, { __mode = "k" })
-local namespaces_by_data = setmetatable({}, { __mode = "k" })
-local filepath = require("ux.filetree.path")
 local M = {}
 M.__index = M
 

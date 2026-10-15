@@ -602,10 +602,11 @@ function M.show_details(_)
   local source_winnr = vim.api.nvim_get_current_win() ---@type integer
   local cursor = vim.api.nvim_win_get_cursor(source_winnr) ---@type integer[]
   local screenpos = vim.fn.screenpos(source_winnr, cursor[1], cursor[2] + 1)
+  ---@type era.m.diffview.view.commits.ICommitPopupAnchor
   local anchor = {
     row = math.max(0, screenpos.row - 1),
     col = math.max(0, screenpos.col - 1),
-  } ---@type era.m.diffview.view.commits.ICommitPopupAnchor
+  }
 
   stl.async.run(function()
     -- Fetch full commit details

@@ -939,11 +939,10 @@ function M.new(props)
 
     result_number = true,
 
-    ---@type era.m.picker.result.IDraw
     result_tree = treeview,
+    ---@type era.m.picker.result.IDraw
     render_result = render_result,
 
-    ---@type era.m.picker.preview.IDraw|nil
     preview_tree = function()
       local key = self:__retrieve_nodeuuid__()
       local entry = key and treeview:retrieve(key)
@@ -952,6 +951,7 @@ function M.new(props)
         return { owner = treeview, key = key, foldempty = o_flag_foldempty:snapshot(), title = data.filepath }
       end
     end,
+    ---@type era.m.picker.preview.IDraw|nil
     render_preview = render_preview,
 
     on_cancel = function()
@@ -1393,8 +1393,9 @@ function M:render_preview(bufnr, force)
 
   local rootdata = self:__retrieve_rootdata__(frame)
   local filepath = data.filepath ---@type string
+  ---@type string
   local relative_filepath = rootdata ~= nil and yoz.canonical_path.relative(rootdata.filepath, filepath, false)
-    or filepath ---@type string
+    or filepath
 
   if nodestate.nodetype == "container" then
     ---@cast nodestate          era.view.result_tree.IEntry

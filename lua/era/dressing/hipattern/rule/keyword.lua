@@ -7,6 +7,7 @@ local scan = require("era.dressing.hipattern.rule.scan")
 ---@field public hlgroup                string
 ---@field public words                  string[]
 
+---@type era.dressing.hipattern.rule.keyword.ISpec[]
 local specs = {
   {
     hlgroup = "f_hipattern_error",
@@ -21,7 +22,7 @@ local specs = {
   { hlgroup = "f_hipattern_success", words = { "TIP", "HINT", "SUCCESS", "CHECK", "DONE" } },
   { hlgroup = "f_hipattern_hint", words = { "IMPORTANT", "EXAMPLE" } },
   { hlgroup = "f_hipattern_quote", words = { "QUOTE", "CITE" } },
-} ---@type era.dressing.hipattern.rule.keyword.ISpec[]
+}
 
 local patterns = {} ---@type { pattern: string, hlgroup: string }[]
 for _, spec in ipairs(specs) do
@@ -30,7 +31,7 @@ for _, spec in ipairs(specs) do
   end
 end
 
----@class era.dressing.hipattern.rule.keyword
+---@class era.dressing.hipattern.rule.keyword : era.dressing.hipattern.rule.IModule
 local M = {}
 
 ---@param line                          string

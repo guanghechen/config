@@ -534,8 +534,9 @@ function M.bufs(position)
       if right_remain_count > 0 then
         local count = math.min(99, right_remain_count) ---@type integer
         local omitter_text = "▏" .. tostring(count) .. " " .. stl.icon.ui.Right .. "  " ---@type string
+        ---@type string
         local omitter_text_hl = txt("▏", hln_buf_omitter_sep)
-          .. txt(tostring(count) .. " " .. stl.icon.ui.Right .. "  ", hln_buf_omitter) ---@type string
+          .. txt(tostring(count) .. " " .. stl.icon.ui.Right .. "  ", hln_buf_omitter)
         text = text .. omitter_text
         hl_text = hl_text .. btn(omitter_text_hl, fn_focus_right_buf)
       end

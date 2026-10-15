@@ -99,7 +99,7 @@ local function exits(command)
   return false, false
 end
 
----@param jobs                          {pending: fun(): boolean, cancel_all: fun(): nil, poll: fun(): nil}
+---@param jobs                          {pending: (fun(): boolean), cancel_all: (fun(): nil), poll: (fun(): nil)}
 ---@return nil
 function M.setup(jobs)
   providers[jobs] = true

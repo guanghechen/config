@@ -4,6 +4,7 @@ local __module_name__ = "era.m.git.status" ---@type string
 local jobs = require("era.m.git.job")
 
 local DEFAULT_GIT_STATUS_HL = "m_ft_git_other"
+---@type table<string, string>
 local GIT_STATUS_HIGHLIGHT = {
   ["!"] = "m_ft_git_ignored",
   ["?"] = "m_ft_git_untracked",
@@ -14,7 +15,7 @@ local GIT_STATUS_HIGHLIGHT = {
   R = "m_ft_git_rename",
   T = "m_ft_git_change",
   U = "m_ft_git_unmerged",
-} ---@type table<string, string>
+}
 
 ---@class era.m.git.status
 local M = {}

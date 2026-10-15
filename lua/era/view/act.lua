@@ -431,8 +431,9 @@ function M:__layout__()
     local content_width = self._get_width() ---@type integer
     width = math.min(max_width, math.max(min_width, content_width))
   else
+    ---@type integer
     local recommended_width = self._recommended_width <= 1 and math.floor(vim.o.columns * self._recommended_width)
-      or math.floor(self._recommended_width) ---@type integer
+      or math.floor(self._recommended_width)
     width = math.min(max_width, math.max(min_width, recommended_width))
   end
 

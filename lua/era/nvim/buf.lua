@@ -413,8 +413,9 @@ function M.save(args)
 
   for _, bufnr in ipairs(bufnrs_new_file) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    ---@type string
     local initial_text = yoz.path.is_descendant(workspace, filepath) and dot.path.relative(cwd, filepath, "/")
-      or filepath ---@type string
+      or filepath
     vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
 
     vim.ui.input({

@@ -4,6 +4,7 @@ local __module_name__ = "era.dressing.hipattern.rule.color" ---@type string
 local color = require("stl.external.color")
 local scan = require("era.dressing.hipattern.rule.scan")
 
+---@type table<string, true>
 local css_filetypes = {
   astro = true,
   css = true,
@@ -15,9 +16,9 @@ local css_filetypes = {
   svelte = true,
   typescriptreact = true,
   vue = true,
-} ---@type table<string, true>
+}
 
----@class era.dressing.hipattern.rule.color
+---@class era.dressing.hipattern.rule.color : era.dressing.hipattern.rule.IModule
 local M = {}
 
 ---@param decorations                   era.dressing.hipattern.IDecoration[]

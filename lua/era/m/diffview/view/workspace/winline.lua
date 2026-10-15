@@ -11,6 +11,7 @@ local POSITION = "f_wl" ---@type stl.t.NvimbarPositionEnum
 ---@param stage_type                     stl.m.diffview.StageTypeEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.changes_status_component(ctx, stage_type)
+  ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "diffview:" .. stage_type .. "_status",
 
@@ -27,13 +28,14 @@ function M.changes_status_component(ctx, stage_type)
       local text = string.format(" %s %s (%d) ", stl.icon.git.Git, label, count) ---@type string
       return { text = text, hltext = stl.nvim.fn.txt(text, POSITION .. "_sidebar_pink") }
     end,
-  } ---@type era.m.nvimbar.IRawComponent
+  }
   return component
 end
 
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return era.m.nvimbar.IRawComponent
 function M.history_status_component(ctx)
+  ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "diffview:history_status",
 
@@ -66,7 +68,7 @@ function M.history_status_component(ctx)
       hl_text = hl_text .. stl.nvim.fn.txt(page_text, POSITION .. "_sidebar_dim")
       return text, hl_text
     end,
-  } ---@type era.m.nvimbar.IRawComponent
+  }
   return component
 end
 

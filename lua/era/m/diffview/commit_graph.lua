@@ -64,6 +64,7 @@ local function next_pipes(pipes, commit)
   end
 
   local parents = commit.parents or {} ---@type string[]
+  ---@type era.m.diffview.commit_graph.IPipe[]
   local result = {
     {
       from_pos = pos,
@@ -72,7 +73,7 @@ local function next_pipes(pipes, commit)
       to_hash = parents[1] or EMPTY_TREE_HASH,
       kind = STARTS,
     },
-  } ---@type era.m.diffview.commit_graph.IPipe[]
+  }
 
   local taken = {} ---@type table<integer, boolean>
   local traversed = {} ---@type table<integer, boolean>

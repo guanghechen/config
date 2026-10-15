@@ -6,6 +6,7 @@ local __module_name__ = "era.m.diffview.view.sbs_keymap" ---@type string
 ---@class era.m.diffview.view.sbs_keymap
 local M = {}
 
+---@type table<string, string>
 local DESCRIPTIONS = {
   ["<C-a>r"] = "diffview(sbs): Refresh current view",
   ["<C-j>"] = "diffview(sbs): Next item in active preview",
@@ -33,7 +34,7 @@ local DESCRIPTIONS = {
   ["za"] = "diffview(sbs): Toggle active preview item",
   ["zc"] = "diffview(sbs): Collapse active preview item",
   ["zo"] = "diffview(sbs): Expand active preview item",
-} ---@type table<string, string>
+}
 
 ---@alias era.m.diffview.view.sbs_keymap.IResolve
 ---| fun(mode: string, key: string): stl.t.IKeymap|nil

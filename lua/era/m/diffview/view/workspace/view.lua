@@ -213,6 +213,7 @@ function M.create_layout(layout_type)
   local tabnr = vim.api.nvim_get_current_tabpage()
   vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE
 
+  ---@type era.m.diffview.view.workspace.ILayout
   local lyt = {
     tabnr = tabnr,
     layout_type = layout_type,
@@ -222,7 +223,7 @@ function M.create_layout(layout_type)
     sbs_right_winnr = nil,
     preview_generation = 0,
     preview_source = nil,
-  } ---@type era.m.diffview.view.workspace.ILayout
+  }
 
   if layout_type == 1 then
     -- Layout 1: changes + sbs

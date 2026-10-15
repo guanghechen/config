@@ -284,6 +284,7 @@ function M.get(line, col, options)
     }
   end
 
+  ---@type era.dressing.indentscope.IScope
   local scope = {
     bufnr = bufnr,
     winnr = winnr,
@@ -294,7 +295,7 @@ function M.get(line, col, options)
       col = col,
       indent = reference_indent,
     },
-  } ---@type era.dressing.indentscope.IScope
+  }
   cache_scope(scope, changedtick, tabstop, vartabstop, options)
   return scope
 end

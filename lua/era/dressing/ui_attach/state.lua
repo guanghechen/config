@@ -77,13 +77,14 @@ local __module_name__ = "era.dressing.ui_attach.state" ---@type string
 local M = {}
 
 M.cmdline = {} ---@type era.dressing.ui_attach.cmdline.IState[]
+---@type era.dressing.ui_attach.message.IState
 M.message = {
   generation = 0,
   groups = {},
   id_refs = {},
   showcmd = "",
   ruler = "",
-} ---@type era.dressing.ui_attach.message.IState
+}
 M.cmdline_block = { lines = {}, highlights = {} } ---@type era.dressing.ui_attach.cmdline_block.IState
 
 ---@return era.dressing.ui_attach.cmdline.IState|nil

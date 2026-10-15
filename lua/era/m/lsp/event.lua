@@ -7,6 +7,7 @@ local augroup_codelens = stl.nvim.fn.augroup("era.m.lsp.event.codelens") ---@typ
 local augroup_foldexpr = stl.nvim.fn.augroup("era.m.lsp.event.foldexpr") ---@type integer
 local augroup_keymaps = stl.nvim.fn.augroup("era.m.lsp.event.keymaps") ---@type integer
 
+---@type table<string, true>
 local KEYMAP_METHODS = {
   ["textDocument/codeAction"] = true,
   ["textDocument/codeLens"] = true,
@@ -15,7 +16,7 @@ local KEYMAP_METHODS = {
   ["textDocument/references"] = true,
   ["textDocument/rename"] = true,
   ["textDocument/typeDefinition"] = true,
-} ---@type table<string, true>
+}
 
 local LSP_FOLDEXPR = "v:lua.vim.lsp.foldexpr()" ---@type string
 

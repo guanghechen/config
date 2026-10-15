@@ -120,10 +120,11 @@ end
 ---@param pivot_winnr                   integer                         starting window (will be reused)
 ---@return era.m.diffview.layout.ICreateResult
 function M.create(tree, pivot_winnr)
+  ---@type era.m.diffview.layout.ICreateResult
   local result = {
     winnrs = {},
     all_winnrs = {},
-  } ---@type era.m.diffview.layout.ICreateResult
+  }
 
   local total_width = vim.api.nvim_win_get_width(pivot_winnr)
   create_node(tree, pivot_winnr, result, true, nil, total_width)
