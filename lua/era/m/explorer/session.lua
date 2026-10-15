@@ -270,7 +270,7 @@ function M:observe_root(frame)
   if not self.state._native:applicable(frame) then
     return
   end
-  local root = frame:header().root.node
+  local root = assert(frame:header().root.node, "Explorer requires a directory display root")
   local node = frame:source():node(root)
   local error = node and node.error
   local key = error and table.concat({ root, error.code, error.message }, "\0") or nil

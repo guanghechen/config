@@ -227,7 +227,7 @@ function M.new(props)
     winline_hl = "f_wl_picker",
     tree = props.result_tree,
     draw = function(bufnr)
-      if self._disposed then
+      if self:isdisposed() then
         return {}
       end
       if search_pattern_history ~= nil then
@@ -247,7 +247,7 @@ function M.new(props)
     flags_start_index = flags_start_index,
     ---@type era.m.picker.result.IOnDrawed
     on_drawed = function(bufnr)
-      if self._disposed then
+      if self:isdisposed() then
         return
       end
       self:mark_preview_dirty()
@@ -265,7 +265,7 @@ function M.new(props)
       tree = props.preview_tree,
       relative_number = true,
       draw = function(bufnr, force)
-        if self._disposed then
+        if self:isdisposed() then
           return { cursorline = false, number = false, title = "", wrap = false }
         end
         return render_preview(bufnr, force)
@@ -277,7 +277,7 @@ function M.new(props)
       ),
       ---@type era.m.picker.preview.IOnDrawed
       on_drawed = function(bufnr)
-        if not self._disposed then
+        if not self:isdisposed() then
           on_preview_rendered(self, bufnr)
         end
       end,
@@ -292,7 +292,7 @@ function M.new(props)
 
   if preview ~= nil then
     self._preview_observer = stl.fn.observe({ result.lnum_current, result.lnum_total }, function()
-      if not self._disposed then
+      if not self:isdisposed() then
         self:mark_preview_dirty()
       end
     end, true)

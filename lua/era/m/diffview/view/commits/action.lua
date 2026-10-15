@@ -278,9 +278,9 @@ end
 ---@param ctx                           era.m.diffview.view.commits.IContext
 ---@return nil
 function M.expand_all(ctx)
-  local generation = ctx.state._content_generation
+  local generation = ctx.state:content_generation()
   stl.async.run(function()
-    ctx.state._materialization:run(function()
+    ctx.state:materialization():run(function()
       if not ctx.state:owns_content_request(generation) then
         return
       end
@@ -311,7 +311,7 @@ function M.expand_all(ctx)
       end
       if ctx.state:owns_content_request(generation) then
         for _, commit in ipairs(ctx.state:get_commits()) do
-          ctx.state._materialization:restore(owner, commit.hash)
+          ctx.state:materialization():restore(owner, commit.hash)
         end
         ctx.state:expand_all()
         owner:ready():await()
@@ -725,7 +725,7 @@ function M.reveal(ctx)
   local current = ctx.state:get_current_commit()
   local filepath = current and get_current_entry_filepath(ctx, current) or nil
   if current and filepath then
-    local generation = ctx.state._content_generation
+    local generation = ctx.state:content_generation()
     stl.async.run(function()
       M.__expand_commit__(ctx, current)
       if ctx.state:owns_content_request(generation) then
@@ -1305,8 +1305,8 @@ end
 ---@param token                         ?stl.c.CancellationToken
 ---@return nil
 function M.__expand_commit__(ctx, commit, token)
-  local generation = ctx.state._content_generation
-  ctx.state._materialization:run(function()
+  local generation = ctx.state:content_generation()
+  ctx.state:materialization():run(function()
     if not ctx.state:owns_content_request(generation) then
       return
     end
@@ -1331,7 +1331,7 @@ function M.__expand_commit__(ctx, commit, token)
       end
     end
     if ctx.state:owns_content_request(generation) and find_commit_in_state(ctx, actual_commit.hash) then
-      ctx.state._materialization:restore(owner, actual_commit.hash)
+      ctx.state:materialization():restore(owner, actual_commit.hash)
       ctx.state:expand_commit(actual_commit.hash)
       owner:ready():await()
     end

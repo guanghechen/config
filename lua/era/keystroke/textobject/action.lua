@@ -250,7 +250,7 @@ function M.move(captures, group, direction, use_end, count)
     end)
     local target = positions[direction > 0 and count or #positions - count + 1]
     -- An enclosing node can end beyond the window, with nearer siblings still outside the query.
-    if target ~= nil and (complete or (rows[1] <= target[1] - 1 and target[1] - 1 < rows[2])) then
+    if target ~= nil and (complete or (rows ~= nil and rows[1] <= target[1] - 1 and target[1] - 1 < rows[2])) then
       -- Read the forced mode before normal! resets it; unforced operators include the target.
       local mode = vim.api.nvim_get_mode().mode ---@type string
       vim.cmd("normal! m'")

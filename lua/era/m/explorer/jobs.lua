@@ -77,7 +77,7 @@ end
 ---@param session                       era.m.explorer.Session
 ---@param task                          ux.treeview.Task
 ---@param preparation                   era.m.explorer.IPreparation
----@return ux.treeview.IReply|nil
+---@return ux.treeview.IReadyReply|nil
 local function prepare_sources(session, task, preparation)
   local retry = true
   while not preparation.cancelled do
@@ -96,6 +96,13 @@ local function prepare_sources(session, task, preparation)
     end)
   end
   return nil
+end
+
+---@param nodes                         string[]|yoz.ux.treeview.NodeIds
+---@param index                         integer
+---@return string
+local function node_at(nodes, index)
+  return assert(type(nodes) == "table" and nodes[index] or nodes:get(index), "Explorer source index out of range")
 end
 
 ---@param session                       era.m.explorer.Session
@@ -397,6 +404,8 @@ function M.start(session, view, request)
     end
     return native_async.run(state._native:lock_selection())
   end, function(task, preparation)
+    -- Both acquisitions either lock the selection or reject.
+    task = assert(task, "Explorer operation acquired no selection lock")
     if kind == "paste" then
       -- The lock fixes both selection and its purpose, even before the new frame is drawn.
       local mode = session.state:status().selection_purpose
@@ -480,23 +489,29 @@ function M.start(session, view, request)
       })
       session._direct_task = task
     else
+      -- Every non-create operation resolved its sources above.
+      assert(nodes and source, "Explorer operation sources are unresolved")
       local name = request.name
       if kind == "rename" then
         if count ~= 1 then
           error("Rename requires exactly one source", 0)
         end
-        local node = type(nodes) == "table" and nodes[1] or nodes:get(1)
+        local node = node_at(nodes, 1)
         local resource = session.data:inspect(source, node)
         name = name or input(preparation, { prompt = "Rename to: ", default = filepath.basename(resource:path()) })
         if not name or name == "" then
           return
         end
-        destination = session.data:inspect(source, source:node(node).parent)
+        local parent = source:parent(node)
+        if not parent then
+          error("Rename source has no parent directory", 0)
+        end
+        destination = session.data:inspect(source, parent)
       elseif kind == "copy_to_path" or kind == "move_to_path" then
         if count ~= 1 then
           error("Copy or move to a path requires exactly one source; use a target directory for multiple sources", 0)
         end
-        local node = type(nodes) == "table" and nodes[1] or nodes:get(1)
+        local node = node_at(nodes, 1)
         local resource = session.data:inspect(source, node)
         local path = request.path
           or input(preparation, {
@@ -517,10 +532,11 @@ function M.start(session, view, request)
           name = filepath.basename(path)
         end
         -- Native target preparation checks physical ancestry, including symlinks and parent components.
-        destination = target_directory(session, preparation, filepath.dirname(path), resource)
-        if not destination then
+        local parent = target_directory(session, preparation, filepath.dirname(path), resource)
+        if not parent then
           return
         end
+        destination = parent
       elseif kind == "copy_to_directory" or kind == "move_to_directory" then
         local path = request.path
           or input(preparation, {
@@ -538,8 +554,7 @@ function M.start(session, view, request)
         local trash = dot.context.explorer.trash:snapshot()
         local labels = {}
         for index = 1, math.min(count, 5) do
-          local node = type(nodes) == "table" and nodes[index] or nodes:get(index)
-          local info = session.data:inspect(source, node):info()
+          local info = session.data:inspect(source, node_at(nodes, index)):info()
           labels[#labels + 1] = string.format("%q", info.label .. (info.kind == "directory" and "/" or ""))
         end
         if count > #labels then

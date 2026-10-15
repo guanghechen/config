@@ -107,7 +107,7 @@ function M.setup(jobs)
     return
   end
   initialized = true
-  jobs = {
+  local aggregate = {
     pending = function()
       for provider in pairs(providers) do
         if provider.pending() then
@@ -146,12 +146,12 @@ function M.setup(jobs)
           pending_exit = false
           return
         end
-        jobs.cancel_all()
+        aggregate.cancel_all()
         local started = vim.uv.hrtime()
         ---@return nil
         local function finish()
-          jobs.poll()
-          if jobs.pending() then
+          aggregate.poll()
+          if aggregate.pending() then
             if vim.uv.hrtime() - started > 10000000000 then
               pending_exit = false
               stl.reporter.warn({ from = __module_name__, message = "IO is still stopping; exit postponed" })
@@ -177,7 +177,7 @@ function M.setup(jobs)
   vim.api.nvim_create_autocmd("CmdlineLeave", {
     group = group,
     callback = function(event)
-      if not jobs.pending() or event.match ~= ":" or vim.v.event.abort then
+      if not aggregate.pending() or event.match ~= ":" or vim.v.event.abort then
         return
       end
       local command = vim.fn.getcmdline()
@@ -200,7 +200,7 @@ function M.setup(jobs)
         key = key,
         desc = "Quit after Explorer tasks stop",
         callback = function()
-          if jobs.pending() and exits(command) then
+          if aggregate.pending() and exits(command) then
             request(command)
           else
             vim.cmd(command)
@@ -213,15 +213,15 @@ function M.setup(jobs)
   vim.api.nvim_create_autocmd("ExitPre", {
     group = group,
     callback = function()
-      if not jobs.pending() then
+      if not aggregate.pending() then
         return
       end
       -- Native/scripted quits cannot be vetoed by ExitPre. Finish cancellation before returning.
-      jobs.cancel_all()
-      while jobs.pending() do
+      aggregate.cancel_all()
+      while aggregate.pending() do
         vim.wait(100, function()
-          jobs.poll()
-          return not jobs.pending()
+          aggregate.poll()
+          return not aggregate.pending()
         end, 10)
       end
     end,

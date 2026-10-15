@@ -99,8 +99,8 @@ function M:move(key, parent, index)
     current = self:parent(current)
   end
   local target = assert(self.records[parent], "missing result parent: " .. parent)
-  local siblings = self:children(record.parent)
-  for at, sibling in ipairs(siblings or {}) do
+  local siblings = self:children(record.parent) or EMPTY_CHILDREN
+  for at, sibling in ipairs(siblings) do
     if sibling == key then
       table.remove(siblings, at)
       break
@@ -122,7 +122,7 @@ function M:walk(root, visit)
     local record = self.records[key]
     if record then
       visit(key, record.data)
-      local children = self:children(key)
+      local children = self:children(key) or EMPTY_CHILDREN
       for index = #children, 1, -1 do
         pending[#pending + 1] = children[index]
       end
@@ -145,8 +145,8 @@ function M:remove(key)
   self:walk(key, function(child)
     keys[#keys + 1] = child
   end)
-  local siblings = self:children(record.parent)
-  for at, sibling in ipairs(siblings or {}) do
+  local siblings = self:children(record.parent) or EMPTY_CHILDREN
+  for at, sibling in ipairs(siblings) do
     if sibling == key then
       table.remove(siblings, at)
       break

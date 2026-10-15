@@ -465,7 +465,7 @@ function M.bind(widget, view)
                 modes = { mode },
                 key = key,
                 desc = desc,
-                callback = mapping.callback or mapping.rhs,
+                callback = mapping.callback or mapping.rhs or "",
               }
               entries[id] = entry
               help[#help + 1] = entry

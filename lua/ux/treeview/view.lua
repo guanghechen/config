@@ -582,7 +582,7 @@ function M.new(state, options)
     bufnr = options.bufnr or vim.api.nvim_create_buf(false, true),
   }, M)
   -- Renaming an already named buffer leaves an unloaded entry for its previous name.
-  local bufname = options.bufname or "treeview://" .. native:id()
+  local bufname = options.bufname or ("treeview://" .. native:id())
   if vim.api.nvim_buf_get_name(self.bufnr) ~= bufname then
     vim.api.nvim_buf_set_name(self.bufnr, bufname)
   end

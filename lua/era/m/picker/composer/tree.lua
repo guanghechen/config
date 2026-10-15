@@ -299,6 +299,9 @@ function M.new(props)
   local actions = {
     attach_node = function()
       local frame = treeview:frame()
+      if frame == nil then
+        return
+      end
       local nodeuuid = self:__retrieve_nodeuuid__(frame) ---@type string|nil
       if nodeuuid ~= nil then
         local nodestate = treeview:retrieve(nodeuuid, frame) ---@type era.view.result_tree.IEntry|nil

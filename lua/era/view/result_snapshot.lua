@@ -4,6 +4,7 @@ local __module_name__ = "era.view.result_snapshot" ---@type string
 ---@class era.view.ResultSnapshot
 ---@field snapshot                      table
 ---@field _immutable                    ?table Shared metadata of a sealed List producer.
+---@field _list                         ?era.view.ResultList
 ---@field _present                      fun(key: string, data: table|string, entry: era.view.result_tree.IEntry): table
 ---@field _hidden                       table<string, boolean>
 local M = {}
@@ -36,7 +37,7 @@ end
 local function retain(value, previous, copies, retained)
   if
     type(value) ~= "table"
-    or not previous
+    or type(previous) ~= "table"
     or copies[value]
     or retained[previous]
     or getmetatable(value) ~= getmetatable(previous)
@@ -185,18 +186,18 @@ end
 ---Bound presentation and graph copying independently; shared metadata and cycles retain their identity.
 ---@return boolean
 function M:step()
-  if self._produce or self._list then
+  local list = self._list
+  if self._produce or list then
     local deadline = vim.uv.hrtime() + 2000000
     for _ = 1, 256 do
       local record, finished
-      if self._list then
-        local source = self._list
-        local key = self._index == 0 and source.root or source.keys[self._index]
+      if list then
+        local key = self._index == 0 and list.root or list.keys[self._index]
         finished = key == nil
         if key then
-          record = self._present(key, source:get(key), source.entries[key])
-          record.key, record.parent = key, source:parent(key)
-          record.can_expand, record.foldable = key == source.root, key == source.root
+          record = self._present(key, list.metadata.data[key], list.entries[key])
+          record.key, record.parent = key, list:parent(key)
+          record.can_expand, record.foldable = key == list.root, key == list.root
           record.hidden = self._hidden[key] == true
           self._index = self._index + 1
         end

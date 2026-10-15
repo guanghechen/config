@@ -187,7 +187,9 @@ function M.prepare(job, confirmation)
           elseif not finished then
             timer = vim.defer_fn(function()
               finished = true
-              client:cancel_request(id)
+              if id then
+                client:cancel_request(id)
+              end
               resolve(nil)
             end, 1000)
           end

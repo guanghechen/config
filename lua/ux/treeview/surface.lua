@@ -196,6 +196,7 @@ local function publish(view, plan, header, staging, guard)
       prepared = staged
     elseif
       same_rows
+      and previous_frame
       and cached
       and cached.frame == previous_frame:id()
       and cached.first <= first

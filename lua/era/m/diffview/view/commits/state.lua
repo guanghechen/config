@@ -150,7 +150,7 @@ end
 ---@return boolean
 function State:is_commit_expanded(hash)
   local tree = self._trees.commits
-  return tree ~= nil and tree:expanded("commit:" .. hash)
+  return tree ~= nil and tree:expanded("commit:" .. hash) == true
 end
 
 ---@param hash                          string
@@ -340,6 +340,16 @@ end
 ---@return boolean
 function State:owns_content_request(generation)
   return not self._disposed and self._content_generation == generation
+end
+
+---@return integer
+function State:content_generation()
+  return self._content_generation
+end
+
+---@return era.m.diffview.view.commits.Cache
+function State:materialization()
+  return self._materialization
 end
 
 ---@return boolean

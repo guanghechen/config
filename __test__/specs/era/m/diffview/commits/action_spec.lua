@@ -169,7 +169,7 @@ local function new_search_state()
     page = 1,
     total = 100,
     path_filter = "lua/ark/autocmd.lua",
-    content_generation = 0,
+    _content_generation = 0,
     page_applied = 1,
   }
   ---@return nil
@@ -201,11 +201,17 @@ local function new_search_state()
     self.page = self.page_applied
   end
   function state:begin_content_request()
-    self.content_generation = self.content_generation + 1
-    return self.content_generation
+    self._content_generation = self._content_generation + 1
+    return self._content_generation
   end
   function state:owns_content_request(generation)
-    return self.content_generation == generation
+    return self._content_generation == generation
+  end
+  function state:content_generation()
+    return self._content_generation
+  end
+  function state:materialization()
+    return self._materialization
   end
   function state:set_commits(value)
     self.commits = value
@@ -283,6 +289,12 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
   local state = {
     _materialization = materialization,
     _content_generation = 0,
+    content_generation = function(self)
+      return self._content_generation
+    end,
+    materialization = function(self)
+      return self._materialization
+    end,
     owns_content_request = function()
       return true
     end,

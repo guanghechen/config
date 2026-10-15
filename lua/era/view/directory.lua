@@ -90,7 +90,7 @@ end
 function M:retrieve(row)
   local frame = self:frame()
   local id = frame and frame:node_at(row)
-  if not id or not self.data then
+  if not frame or not id or not self.data then
     return nil, false
   end
   local root = frame:header().root

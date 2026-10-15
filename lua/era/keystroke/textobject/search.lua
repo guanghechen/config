@@ -54,7 +54,8 @@ local function best(candidates, reference, bounds, kind)
       and (
         is_better(candidate.span, result and result.span, reference)
         or (
-          tied
+          result ~= nil
+          and tied
           and is_better(
             kind == "i" and candidate.inner or candidate.outer,
             kind == "i" and result.inner or result.outer,

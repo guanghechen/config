@@ -488,7 +488,7 @@ function M.new(props)
           local _, _, data, nodestate = treeview:iter_rows(frame, lnum, lnum)()
           append_location_payload(locations, data, nodestate, true)
           if data and data.filetype == "directory" then
-            lnum = frame:subtree_end(lnum)
+            lnum = frame:subtree_end(lnum) or lnum
           end
           lnum = lnum + 1
         end
@@ -1312,7 +1312,9 @@ function M.new(props)
       local entry = key and treeview:retrieve(key)
       if entry and entry.nodetype == "container" then
         local data = treeview:data(key)
-        return { owner = treeview, key = key, foldempty = o_flag_foldempty:snapshot(), title = data.filepath }
+        if data then
+          return { owner = treeview, key = key, foldempty = o_flag_foldempty:snapshot(), title = data.filepath }
+        end
       end
     end,
     ---@type era.m.searcher.preview.IDraw|nil

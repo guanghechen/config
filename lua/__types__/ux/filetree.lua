@@ -182,7 +182,7 @@ function Data:start_create(plan) end
 
 ---@class yoz.ux.filetree.Job
 local Job = {}
----@param revision                      ?string
+---@param revision                      string
 ---@return ux.filetree.IJobStatus|nil
 ---@overload fun(self: yoz.ux.filetree.Job): ux.filetree.IJobStatus
 function Job:status(revision) end

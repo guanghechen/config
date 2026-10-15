@@ -72,7 +72,7 @@ end
 ---@return nil
 function M:decorate_row(view, frame, row, id, col, label, expanded)
   local node = ResultTree.decorate_row(self, view, frame, row, id, col, label, expanded)
-  local version = self._versions[self:_read(frame).header.data_revision]
+  local version = self._versions[self:_read_frame(frame).header.data_revision]
   local entry = node and version and version.entries[node.key]
   if not entry or entry.nodetype ~= "location" then
     return
@@ -200,7 +200,11 @@ end
 ---@return nil
 function M:traverse_filenode(root, visit)
   for _, key in ipairs(self:collect_leafs(root)) do
-    visit(key, self.source:get(key), self.entries[key])
+    -- Keys were collected from the source; skip any that an earlier visit removed.
+    local data = self.source:get(key)
+    if data then
+      visit(key, data, self.entries[key])
+    end
   end
 end
 

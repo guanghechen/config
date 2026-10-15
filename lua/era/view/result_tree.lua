@@ -247,13 +247,9 @@ function M:frame()
   return self.state and self.state:snapshot() or self._frame
 end
 
----@param frame                         ?yoz.ux.treeview.Frame
----@return era.view.result_tree.IRead|nil
-function M:_read(frame)
-  frame = frame or self:frame()
-  if not frame then
-    return nil
-  end
+---@param frame                         yoz.ux.treeview.Frame
+---@return era.view.result_tree.IRead
+function M:_read_frame(frame)
   local read = self._read_cache
   if not read or read.frame ~= frame then
     read = { frame = frame, header = frame:header(), source = frame:source(), selected = {} }
@@ -262,11 +258,21 @@ function M:_read(frame)
   return read
 end
 
+---@param frame                         ?yoz.ux.treeview.Frame
+---@return era.view.result_tree.IRead|nil
+function M:_read(frame)
+  frame = frame or self:frame()
+  if not frame then
+    return nil
+  end
+  return self:_read_frame(frame)
+end
+
 ---@param frame                         yoz.ux.treeview.Frame
 ---@param id                            string
 ---@return string|nil
 function M:_key(frame, id)
-  local read = self:_read(frame)
+  local read = self:_read_frame(frame)
   local version = self._versions[read.header.data_revision]
   if version then
     local key = version.keys[id]
@@ -284,7 +290,10 @@ end
 ---@return string|nil
 function M:root_key(frame)
   local read = self:_read(frame)
-  local root = read and read.header.root
+  if not read then
+    return nil
+  end
+  local root = read.header.root
   return root and root.kind == "children_of" and self:_key(read.frame, root.node) or nil
 end
 
@@ -293,7 +302,10 @@ end
 ---@return string|nil
 function M:parent_key(key, frame)
   local read = self:_read(frame)
-  local id = read and key and read.source:id(key)
+  if not read or not key then
+    return nil
+  end
+  local id = read.source:id(key)
   local parent = id and read.source:parent(id)
   return parent and self:_key(read.frame, parent)
 end
@@ -360,7 +372,7 @@ end
 ---@param last                          ?integer
 ---@return fun(): integer|nil, string|nil, table|string|nil, era.view.result_tree.IEntry|nil
 function M:iter_rows(frame, first, last)
-  local read = self:_read(frame)
+  local read = self:_read_frame(frame)
   local version = self._versions[read.header.data_revision]
   local row = (first or 1) - 1
   last = last or read.header.row_count
@@ -387,7 +399,10 @@ end
 ---@return string|nil
 function M:retrieve_uuid(row, frame)
   frame = frame or self:frame()
-  local id = frame and frame:node_at(row)
+  if not frame then
+    return nil
+  end
+  local id = frame:node_at(row)
   return id and self:_key(frame, id)
 end
 
@@ -395,7 +410,10 @@ end
 ---@return integer|nil
 function M:retrieve_lnum(key)
   local read = self:_read()
-  local id = read and read.source:id(key)
+  if not read then
+    return nil
+  end
+  local id = read.source:id(key)
   return id and read.frame:position(id)
 end
 
@@ -436,7 +454,10 @@ end
 ---@return boolean
 function M:isselected(key)
   local read = self:_read()
-  local id = read and read.source:id(key)
+  if not read then
+    return false
+  end
+  local id = read.source:id(key)
   local flags = id and read.frame:flags(id)
   return flags ~= nil and flags.marked
 end
@@ -480,7 +501,7 @@ end
 function M:selected_keys(visible_only, frame)
   local read, ids = self:_selected(visible_only, frame)
   local version = read and self._versions[read.header.data_revision]
-  if not version or not ids then
+  if not read or not version or not ids then
     return {}
   end
   local selected = {}
@@ -622,7 +643,7 @@ function M:toggle_selection()
   if self.view then
     self:_track_selection(self.view:range_action(function(frame, first, last, visual)
       if visual and first ~= last then
-        local read = self:_read(frame)
+        local read = self:_read_frame(frame)
         local version = self._versions[read.header.data_revision]
         local nodes = {}
         for at = first, last, 1024 do
@@ -677,10 +698,12 @@ function M:range_action(submit)
   end
   return self.view:range_action(function(frame, first, last, visual)
     local ok, future = pcall(function()
-      return submit(frame, first, visual and last or frame:subtree_end(first), visual)
+      -- The view has already checked that the first row has a node in this Frame.
+      local range_last = visual and last or assert(frame:subtree_end(first), "range_action row is outside its frame")
+      return submit(frame, first, range_last, visual)
     end)
     if not ok then
-      return Future.reject(future)
+      return Future.reject(tostring(future))
     end
     return future or Future.resolve({ kind = "NoChange" })
   end)
@@ -788,7 +811,9 @@ function M:match(params)
   if narrow then
     keys = vim.list_slice(cached.keys)
     for index, key in ipairs(keys) do
-      local data, entry = self.source:get(key), self.entries[key]
+      -- Entry changes clear the cache, and every source change bumps its revision.
+      local data = assert(self.source:get(key), "narrowed match key left its source revision")
+      local entry = self.entries[key]
       lines[index] = data.filepath or entry.text or data.name or ""
     end
   else
@@ -884,7 +909,7 @@ function M:_snapshot()
       end
       local ok, done = pcall(builder.step, builder)
       if not ok then
-        reject(done)
+        reject(tostring(done))
       elseif done then
         resolve(builder.snapshot)
       else
@@ -1292,7 +1317,7 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
     })
   end
   local match = node and self._matches and self._matches[node.key]
-  if match then
+  if node and match then
     local version = self._versions[frame:header().data_revision]
     local data = version and version.data[node.key]
     local base = data and data.filepath and #data.filepath - #data.basename - offset or -offset
@@ -1444,7 +1469,7 @@ function M:_settle_ready()
   then
     return
   end
-  local frame = self:frame()
+  local frame = assert(self:frame(), "a current result tree has a frame")
   if frame:header().state_revision ~= self.state:status().revisions.state then
     return
   end
@@ -1456,10 +1481,13 @@ function M:_settle_ready()
 end
 
 ---@param key                           string
----@return boolean|nil Nil when the node is absent from the native snapshot.
+---@return boolean|nil Nil without native state or when the node is absent from its snapshot.
 function M:expanded(key)
   local frame = self.state and self.state:snapshot()
-  local id = frame and frame:source():id(key)
+  if not frame then
+    return nil
+  end
+  local id = frame:source():id(key)
   local flags = id and frame:flags(id)
   return flags and flags.expanded
 end

@@ -78,7 +78,7 @@ end
 ---@return nil
 function M:_trim(requested)
   local owner, state = self._owner, self._state
-  local frame = owner:frame()
+  local frame = assert(owner:frame(), "commit cache trims only an applied frame")
   local source = frame:source()
   local current = state:get_current_commit()
   local candidates, count = {}, 0
@@ -87,7 +87,8 @@ function M:_trim(requested)
     local record = owner:data(key)
     if record and record.files_loaded and commit.hash ~= requested and (not current or current.hash ~= commit.hash) then
       local id = source:id(key)
-      if id and not frame:flags(id).expanded then
+      local flags = id and frame:flags(id)
+      if flags and not flags.expanded then
         local nodes = record.file_nodes or 0
         count = count + nodes
         candidates[#candidates + 1] = { hash = commit.hash, key = key, nodes = nodes }
@@ -112,7 +113,8 @@ function M:_trim(requested)
     owner.source:walk(candidate.key, function(key, data)
       if data.item and data.item.type == "directory" then
         local id = source:id(key)
-        if id and not frame:flags(id).expanded then
+        local flags = id and frame:flags(id)
+        if flags and not flags.expanded then
           closed[key] = id
         end
       end

@@ -381,12 +381,13 @@ function M.render(commits, opts)
     local include_files = opts.include_files and opts.include_files[commit.hash] and commit.files ~= nil
     local metadata = commit
     if not include_files then
-      metadata = {}
+      local copy = {}
       for key, value in pairs(commit) do
         if key ~= "files" then
-          metadata[key] = value
+          copy[key] = value
         end
       end
+      metadata = copy
     end
     local label, highlights, overlay
     if horizontal then

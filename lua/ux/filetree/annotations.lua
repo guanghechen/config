@@ -150,11 +150,10 @@ function M.poll(owner, native)
   end
   local busy = false
   for view in pairs(owner._views) do
-    local cache = view._decorations
-    if views[view.bufnr] == view and not view._closed and view._frame and cache then
+    -- Surfaces publish _frame and _header together; detach clears only _frame.
+    local cache, frame, header = view._decorations, view._frame, view._header
+    if views[view.bufnr] == view and not view._closed and frame and header and cache then
       ---@cast view ux.filetree.View
-      local frame = view._frame
-      local header = view._header
       local key = table.concat({ header.data_revision, header.layout_revision, cache.first, cache.last, revision }, ":")
       if view._filetree_pending then
         busy = true

@@ -29,14 +29,16 @@ function M.prepare(frame, first, last, previous)
   local batch = previous and previous.frame == id and previous.batch or nil
   if not batch or batch.first > first or batch.last < last or first > last or last - first > 512 then
     local start, finish = first, last
-    local overlapping = batch and first < batch.last and last > batch.first
-    local limited = overlapping and batch.limited or nil
-    if overlapping and not limited and first >= 0 and first <= last and last - first < 512 then
-      local missing = math.max(0, batch.first - first) + math.max(0, last - batch.last)
-      if missing <= 16 then
-        local extra = math.min(8, math.floor((512 - (last - first)) / 2))
-        start = math.max(0, first - extra)
-        finish = math.min(frame:header().row_count, last + extra)
+    local limited
+    if batch and first < batch.last and last > batch.first then
+      limited = batch.limited
+      if not limited and first >= 0 and first <= last and last - first < 512 then
+        local missing = math.max(0, batch.first - first) + math.max(0, last - batch.last)
+        if missing <= 16 then
+          local extra = math.min(8, math.floor((512 - (last - first)) / 2))
+          start = math.max(0, first - extra)
+          finish = math.min(frame:header().row_count, last + extra)
+        end
       end
     end
     local rows
@@ -56,13 +58,14 @@ function M.prepare(frame, first, last, previous)
   end
   local rows = batch.rows
   if batch.first ~= first or batch.last ~= last then
-    rows = { first = first + 1 }
+    local sliced = { first = first + 1 }
     local offset = first - batch.first
     for name, column in pairs(batch.rows) do
       if name ~= "first" then
-        rows[name] = table.move(column, offset + 1, offset + last - first, 1, {})
+        sliced[name] = table.move(column, offset + 1, offset + last - first, 1, {})
       end
     end
+    rows = sliced
   end
   return { frame = id, first = first, last = last, rows = rows, batch = batch }
 end
@@ -257,7 +260,7 @@ local function decorate(view, first, last)
           local on_path = level == path_depth
           local highlight = on_path and "TreeviewGuidePath" or guide_highlight
           if at == 0 then
-            local path_turn = on_path and path.connectors[path_index]
+            local path_turn = on_path and path and path.connectors[path_index]
             local text = (path_turn or rows.connector_last[index]) and glyphs.last or glyphs.branch
             if on_path and not path_turn then
               -- A cell has one foreground; a straight stem leaves the side branch untinted.

@@ -215,7 +215,8 @@ end
 ---@param callback                      fun(raw: lsp.CompletionItem): nil
 ---@return (fun(): nil)|nil
 function M.resolve(item, callback)
-  local full_path = item.raw.data.full_path ---@type string
+  local data = item.raw.data --[[@as { full_path: string }]]
+  local full_path = data.full_path ---@type string
   if Context.is_private(full_path) then
     callback(item.raw)
     return nil

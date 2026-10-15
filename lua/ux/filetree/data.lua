@@ -166,7 +166,13 @@ function M:_poll(preparing)
   local decorating = annotations.poll(owner, native)
   local finished_jobs = false
   for job, observer in pairs(self._jobs) do
-    local status = job:status(observer.revision)
+    local revision = observer.revision
+    local status ---@type ux.filetree.IJobStatus|nil
+    if revision then
+      status = job:status(revision)
+    else
+      status = job:status()
+    end
     if status then
       observer.revision = status.revision
       if status.terminal then

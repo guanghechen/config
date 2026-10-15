@@ -52,7 +52,7 @@ M.__index = M
 ---@return ux.treeview.IDisplay
 function M:get_display()
   if self._session then
-    return self._session.state:display()
+    return (self._session.state:display())
   end
   return {
     selected_only = self._options[1]:snapshot(),

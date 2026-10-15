@@ -58,14 +58,14 @@ local Paths = require("era.view.result_paths")
 ---@param text                          string
 ---@return string
 local function decode_preview_text(text)
-  return text:gsub(stl.icon.listchars.eol, "\n")
+  return (text:gsub(stl.icon.listchars.eol, "\n"))
 end
 
 ---@param text                          string
 ---@return string
 local function encode_preview_text(text)
   local sanitized = text:gsub("\r\n", "\n"):gsub("\r", "\n")
-  return sanitized:gsub("\n", stl.icon.listchars.eol)
+  return (sanitized:gsub("\n", stl.icon.listchars.eol))
 end
 
 ---@class era.m.searcher.FiletreeView : era.view.ResultFiles

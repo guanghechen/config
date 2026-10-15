@@ -102,13 +102,17 @@ end
 ---@return integer|nil
 function M.find_entry_anchor(bufnr, filepath)
   local frame = tree.navigation(bufnr)
-  local id = frame and frame:source():id(tree.key(nil, filepath, false))
+  if frame == nil then
+    return nil
+  end
+  local id = frame:source():id(tree.key(nil, filepath, false))
   while id do
     local row = frame:position(id)
     if row then
       return row
     end
-    id = frame:node(id).parent
+    local node = frame:node(id)
+    id = node and node.parent
   end
 end
 
@@ -132,7 +136,11 @@ function M.toggle_collapse(bufnr, lnum)
   if not owner or not item or item.type ~= "directory" then
     return false
   end
-  owner:collapse(owner:retrieve_uuid(lnum), "toggle", false)
+  local key = owner:retrieve_uuid(lnum)
+  if key == nil then
+    return false
+  end
+  owner:collapse(key, "toggle", false)
   return true
 end
 

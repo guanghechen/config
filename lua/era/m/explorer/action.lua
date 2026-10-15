@@ -295,7 +295,7 @@ function M:root(target)
       node = session:target(view):node()
     else
       local frame = session.state:snapshot()
-      local root = frame:header().root.node
+      local root = assert(frame:header().root.node, "Explorer requires a directory display root")
       local entry = frame:source():node(root)
       if not entry then
         return session:navigate_path(filepath.dirname(self._widget:get_root_filepath()), false)
@@ -319,7 +319,8 @@ function M:annotation(kind, forward)
       if not frame then
         return
       end
-      local queue = self._navigation
+      -- _navigate starts this action synchronously while its queue is current.
+      local queue = assert(self._navigation, "Explorer navigation queue is missing")
       local row = vim.api.nvim_win_get_cursor(view.winnr)[1]
       local target = Session.await(session.data:next_annotation(frame, row, kind, forward))
       local current = view:frame()

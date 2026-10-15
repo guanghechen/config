@@ -101,12 +101,13 @@ end
 ---@return nil
 function M:walk(root, visit)
   if root and root ~= self.root then
-    if self.positions[root] then
-      visit(root, self:get(root))
+    local index = self.positions[root]
+    if index then
+      visit(root, self.labels[index])
     end
     return
   end
-  visit(self.root, self:get(self.root))
+  visit(self.root, self.metadata.data[self.root])
   for index, key in ipairs(self.keys) do
     visit(key, self.labels[index])
   end

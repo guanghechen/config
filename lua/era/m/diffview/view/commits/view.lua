@@ -701,7 +701,7 @@ function M.render_commits(ctx, include_files, omitted)
 
   local commits = state:get_commits()
   local owner = state:get_tree("commits")
-  state._materialization:bind(owner, function(removed)
+  state:materialization():bind(owner, function(removed)
     return M.render_commits(ctx, nil, removed)
   end)
   local materialized = {}
@@ -726,7 +726,7 @@ function M.render_commits(ctx, include_files, omitted)
   end
   local future = pane_commits.apply_to_buffer(lyt.commits_bufnr, result, owner, function(frame)
     if not state:is_disposed() then
-      state._materialization:observe(frame)
+      state:materialization():observe(frame)
       if ctx.render_winline then
         ctx.render_winline()
       end

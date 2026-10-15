@@ -221,6 +221,13 @@
 ---@field public cleanup                ?string
 ---@field public token                  ?string
 
+---@class ux.treeview.IReadyReply : ux.treeview.IReply
+---@field public kind                   "Ready"
+---@field public summary                ux.treeview.ISummary
+---@field public subtree_roots          yoz.ux.treeview.NodeIds
+---@field public source                 yoz.ux.treeview.Source
+---@field public cleanup                string
+
 ---@class ux.treeview.IFrameHeader
 ---@field public frame_id               string
 ---@field public state_id               string
