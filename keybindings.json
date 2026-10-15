@@ -15,7 +15,18 @@
         "ctrl+v": "chat:imagePaste",
         "tab": "chat:queueSubmit",
         "shift+enter": "chat:newline",
-        "alt+enter": "chat:newline"
+        "alt+enter": "chat:sendNow"
+      }
+    },
+    {
+      "context": "Autocomplete",
+      "bindings": {
+        "tab": "autocomplete:accept",
+        "ctrl+y": "autocomplete:accept",
+        "ctrl+l": "autocomplete:accept",
+        "ctrl+j": "autocomplete:next",
+        "ctrl+k": "autocomplete:previous",
+        "ctrl+e": "autocomplete:dismiss"
       }
     }
   ]
