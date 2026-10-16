@@ -5,15 +5,14 @@ fzf-history() {
     fi
 
     local time_fmt="%m-%d %H:%M:%S | "
-    local preview_cmd
-    preview_cmd="bash -c 'line=\"{}\"; printf \"%s\\n\" \"\${line#* | }\"'"
 
     local selected
     selected=$(HISTTIMEFORMAT="$time_fmt" history |
         sed -E 's/^ *[0-9]+ *//' |
         fzf --tac --no-sort --prompt="History> " \
+            --with-shell='bash --noprofile --norc -c' --bind=ctrl-o:ignore \
             --query="$READLINE_LINE" \
-            --preview="$preview_cmd" \
+            --preview='line={}; printf "%s\n" "${line#* | }"' \
             --preview-window="bottom:3:wrap")
 
     if [[ -n "$selected" ]]; then

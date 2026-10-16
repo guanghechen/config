@@ -42,6 +42,7 @@ unset _ghc_path
 
 ## fzf (CSI u: Ctrl+Shift+Key)
 # The corresponding Readline bindings live in conf/keymap.bash.
+# The shared options file runs fzf commands with fish; fzf-* widgets select Bash for their own commands.
 export FZF_DEFAULT_COMMAND="${FZF_DEFAULT_COMMAND:-fd --hidden --follow --no-ignore-vcs --color=never --exclude=.git --exclude=node_modules --exclude=.DS_Store --type=f}"
 export FZF_DEFAULT_OPTS_FILE="${FZF_DEFAULT_OPTS_FILE:-$XDG_CONFIG_HOME/fzf/fzf.fzfrc}"
 

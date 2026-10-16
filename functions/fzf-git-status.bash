@@ -10,12 +10,6 @@ fzf-git-status() {
     local query
     query=$(_ghc_unquote_token "$token")
 
-    local preview_cmd
-    preview_cmd='bash -c '\''line=$1; status_code=${line:0:2}; p=${line:3}; if [[ "$status_code" == "??" ]]; then bat --line-range=:500 --style=snip --number --color=always "$p" 2>/dev/null || cat -n "$p"; else git diff --color=always -- "$p" 2>/dev/null; git diff --color=always --staged -- "$p" 2>/dev/null; fi'\'' _ {}'
-
-    local open_cmd
-    open_cmd='bash -c '\''line=$1; nvim -- "${line:3}" < /dev/tty'\'' _ {}'
-
     local entry status_code path old_path
     local -a selected=()
     mapfile -d '' -t selected < <(
@@ -30,11 +24,28 @@ fzf-git-status() {
             fi
         done |
         fzf --read0 --print0 --multi --prompt="Git Status> " \
+            --with-shell='bash --noprofile --norc -c' \
             --query="$query" \
             --nth=2.. \
-            --preview="$preview_cmd" \
+            --preview='
+                line={}
+                status_code=${line:0:2}
+                p=${line:3}
+                if [[ "$status_code" == "??" ]]; then
+                    bat --line-range=:500 --style=snip --number --color=always -- "$p" 2>/dev/null || cat -n -- "$p"
+                else
+                    git diff --color=always -- "$p" 2>/dev/null
+                    git diff --color=always --staged -- "$p" 2>/dev/null
+                fi
+            ' \
             --preview-window="right:60%:wrap" \
-            --bind="ctrl-o:execute($open_cmd)"
+            --bind='ctrl-o:execute(
+                paths=()
+                for line in {+}; do
+                    paths+=("${line:3}")
+                done
+                nvim -- "${paths[@]}" < /dev/tty
+            )'
     )
 
     if [[ ${#selected[@]} -gt 0 ]]; then

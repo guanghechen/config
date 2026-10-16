@@ -6,7 +6,8 @@ fzf-variables() {
     local selected
     selected=$(compgen -v |
         fzf --multi --prompt="Variables> " \
-            --query="$query")
+            --query="$query" \
+            --with-shell='bash --noprofile --norc -c' --preview='' --bind=ctrl-o:ignore)
 
     if [[ -n "$selected" ]]; then
         mapfile -t vars <<< "$selected"

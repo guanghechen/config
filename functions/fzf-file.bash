@@ -1,43 +1,37 @@
 fzf-file() {
     _ghc_readline_context
-    local token="$GHC_READLINE_TOKEN"
-    local query
-    query=$(_ghc_unquote_token "$token")
-
-    local search_path="$query"
-    if [[ "$search_path" == '~/'* ]]; then
-        search_path="$HOME/${search_path:2}"
+    local token
+    token=$(_ghc_unquote_token "$GHC_READLINE_TOKEN")
+    if [[ "$token" == '~/'* ]]; then
+        token="$HOME/${token:2}"
     fi
 
-    local result status
-    if [[ "$search_path" == */ && -d "$search_path" ]]; then
-        result=$(fd --hidden --follow --no-ignore-vcs --color=always --exclude=.git --exclude='*.local' --exclude=local/ --exclude='*.exe' --exclude='*.zip' --type=f --base-directory="$search_path" |
-            GHC_FZF_FILE_BASE="$search_path" fzf --ansi --multi --prompt="$search_path> " \
-                --preview='bash -c '\''path=$GHC_FZF_FILE_BASE$1; bat --line-range=:500 --style=snip --theme=vsc-light-modern --number --color=always "$path" || cat -n "$path"'\'' _ {}')
-        status=$?
-        if [[ $status -eq 0 && -n "$result" ]]; then
-            mapfile -t items <<< "$result"
-            local prefixed=()
-            local item
-            for item in "${items[@]}"; do
-                [[ -z "$item" ]] && continue
-                prefixed+=("${search_path}${item}")
-            done
-            local replacement
-            replacement=$(_ghc_shell_escape_join "${prefixed[@]}")
-            READLINE_LINE="${GHC_READLINE_BEFORE:0:GHC_READLINE_TOKEN_START}${replacement}${GHC_READLINE_AFTER}"
-            READLINE_POINT=$(( GHC_READLINE_TOKEN_START + ${#replacement} ))
-        fi
-    else
-        result=$(fd --hidden --follow --no-ignore-vcs --color=always --exclude=.git --exclude='*.local' --exclude=local/ --exclude='*.exe' --exclude='*.zip' --type=f |
-            fzf --ansi --multi --prompt="File> " --query="$query" --preview="bat --line-range=:500 --style=snip --theme=vsc-light-modern --number --color=always {} || cat -n {}")
-        status=$?
-        if [[ $status -eq 0 && -n "$result" ]]; then
-            mapfile -t items <<< "$result"
-            local replacement
-            replacement=$(_ghc_shell_escape_join "${items[@]}")
-            READLINE_LINE="${GHC_READLINE_BEFORE:0:GHC_READLINE_TOKEN_START}${replacement}${GHC_READLINE_AFTER}"
-            READLINE_POINT=$(( GHC_READLINE_TOKEN_START + ${#replacement} ))
-        fi
+    local search_dir=.
+    local prompt='File> '
+    local query="$token"
+    if [[ "$token" == */ && -d "$token" ]]; then
+        search_dir="$token"
+        prompt="$token> "
+        query=''
+    fi
+
+    # fd includes the search directory in each result; fzf quotes complete paths.
+    local -a items=()
+    mapfile -d '' -t items < <(
+        command fd --hidden --follow --no-ignore-vcs --color=always --print0 \
+            --exclude=.git --exclude=node_modules --exclude=.DS_Store \
+            --exclude='*.local' --exclude=local/ --exclude='*.exe' --exclude='*.zip' \
+            --type=f --search-path="$search_dir" |
+        fzf --ansi --read0 --print0 --multi --scheme=path --prompt="$prompt" --query="$query" \
+            --with-shell='bash --noprofile --norc -c' \
+            --preview='bat --line-range=:500 --style=snip --number --color=always -- {} || cat -n -- {}' \
+            --bind='ctrl-o:execute(nvim -- {+} < /dev/tty)'
+    )
+
+    if [[ ${#items[@]} -gt 0 ]]; then
+        local replacement
+        replacement=$(_ghc_shell_escape_join "${items[@]}")
+        READLINE_LINE="${GHC_READLINE_BEFORE:0:GHC_READLINE_TOKEN_START}${replacement}${GHC_READLINE_AFTER}"
+        READLINE_POINT=$(( GHC_READLINE_TOKEN_START + ${#replacement} ))
     fi
 }

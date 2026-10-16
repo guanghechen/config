@@ -8,6 +8,7 @@ fzf-processes() {
     local selected
     selected=$(ps -A -o pid,command |
         fzf --multi --ansi --prompt="Processes> " \
+            --with-shell='bash --noprofile --norc -c' --bind=ctrl-o:ignore \
             --header-lines=1 \
             --exact \
             --query="$token" \
@@ -19,7 +20,8 @@ fzf-processes() {
         local line pid
         while IFS= read -r line; do
             [[ -z "$line" ]] && continue
-            pid=${line%% *}
+            # ps right-aligns PIDs; read trims the padding.
+            read -r pid _ <<< "$line"
             pids+=("$pid")
         done <<< "$selected"
 

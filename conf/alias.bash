@@ -61,7 +61,7 @@ alias ggg='gemini --model="gemini-3-pro-preview" --yolo'
 ## fzf
 fvim() {
   local -a files=()
-  mapfile -d '' -t files < <(fzf --print0)
+  mapfile -d '' -t files < <(fzf --scheme=path --print0)
   [[ ${#files[@]} -gt 0 ]] || return 1
   nvim -- "${files[@]}"
 }
