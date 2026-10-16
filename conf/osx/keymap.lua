@@ -302,6 +302,9 @@ function M.setup(config)
 
   -- Terminal actions (placed last to override SendString bindings)
 
+  -- Terminal state
+  table.insert(keys, { key = "Backspace", mods = "CMD|CTRL", action = act.ClearScrollback("ScrollbackAndViewport") })
+
   -- Clipboard
   table.insert(keys, { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") })
   table.insert(keys, { key = "Insert", mods = "CTRL", action = act.CopyTo("Clipboard") })
