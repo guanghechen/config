@@ -4,11 +4,11 @@ bind -M insert ctrl-w forward-bigword
 bind -M default ctrl-w forward-bigword
 
 for mode in default insert
-    bind --mode $mode \e\[70\;6u fzf-file # Ctrl+Shift+F
-    bind --mode $mode \e\[76\;6u fzf-git-log # Ctrl+Shift+L
-    bind --mode $mode \e\[71\;6u fzf-git-status # Ctrl+Shift+G
-    bind --mode $mode \e\[82\;6u fzf-history # Ctrl+Shift+R
-    bind --mode $mode \e\[80\;6u fzf-processes # Ctrl+Shift+P
-    bind --mode $mode \e\[69\;6u fzf-variables # Ctrl+Shift+E
-    bind --mode $mode \e\[90\;6u zi # Ctrl+Shift+Z
+    bind --mode $mode ctrl-shift-f fzf-file
+    bind --mode $mode ctrl-shift-l fzf-git-log
+    bind --mode $mode ctrl-shift-g fzf-git-status
+    bind --mode $mode ctrl-shift-r fzf-history
+    bind --mode $mode ctrl-shift-p fzf-processes
+    bind --mode $mode ctrl-shift-e fzf-variables
+    bind --mode $mode ctrl-shift-z zi
 end
