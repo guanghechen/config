@@ -7,7 +7,7 @@ for mode in default insert
     bind --mode $mode ctrl-shift-f fzf-file
     bind --mode $mode ctrl-shift-l fzf-git-log
     bind --mode $mode ctrl-shift-g fzf-git-status
-    bind --mode $mode ctrl-shift-r fzf-history
+    bind --mode $mode ctrl-shift-h fzf-history
     bind --mode $mode ctrl-shift-p fzf-processes
     bind --mode $mode ctrl-shift-e fzf-variables
     bind --mode $mode ctrl-shift-z zi
