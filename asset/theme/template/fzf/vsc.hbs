@@ -14,6 +14,7 @@
 --marker="▎"
 --scrollbar="┃"
 --gutter=" "
+{{!IS_WIN && "--with-shell='fish --no-config -c'" || ""}}
 
 --color="{{darken ? 'dark' : 'light'}}"
 --color="fg:{{vsc.foreground}},bg:-1,hl:{{vsc.accentOrange}}"
@@ -22,7 +23,8 @@
 --color="spinner:{{vsc.accentPurple}},info:{{(darken ? vsc.brightBlue : vsc.accentBlue)}}"
 --color="pointer:{{vsc.accentPurple}},marker:{{vsc.accentBlue}},prompt:{{vsc.accentPurple}},query:{{vsc.foreground}}"
 --color="preview-fg:{{vsc.foreground}},preview-bg:-1,preview-border:{{(darken ? vsc.menu_border : vsc.badge_background)}}"
---preview='bat --line-range=:500 --style=snip --theme={{name}} --number --color=always {} || cat -n {}'
+{{IS_WIN && "--preview='bat --line-range=:500 --style=snip --theme=" + name + " --number --color=always {} || cat -n {}'" || ""}}
+{{!IS_WIN && "--preview='test -f {} && { bat --line-range=:500 --style=snip --theme=" + name + " --number --color=always {} || cat -n {}; }'" || ""}}
 
 --bind 'ctrl-a:toggle-all'
 --bind 'ctrl-s:toggle-sort'
@@ -31,6 +33,6 @@
 --bind 'ctrl-b:preview-half-page-up'
 --bind 'ctrl-f:preview-half-page-down'
 --bind 'ctrl-o:execute(nvim {+} < /dev/tty)'
-{{IS_OSX && "--bind 'ctrl-y:execute-silent(echo {+} | pbcopy)+bell'" || ""}}
+{{IS_OSX && "--bind 'ctrl-y:execute-silent(printf \"%s\\n\" {+} | pbcopy)+bell'" || ""}}
 {{IS_WIN && "--bind 'ctrl-y:execute-silent(echo {+} | clip.exe)+bell'" || ""}}
-{{IS_WSL && "--bind 'ctrl-y:execute-silent(echo {+} | clip.exe)+bell'" || ""}}
+{{IS_WSL && "--bind 'ctrl-y:execute-silent(printf \"%s\\n\" {+} | clip.exe)+bell'" || ""}}
