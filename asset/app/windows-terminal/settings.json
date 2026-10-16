@@ -1147,14 +1147,6 @@
     },
     {
       "id": "Terminal.IncreaseFontSize",
-      "keys": "ctrl+alt+shift+plus"
-    },
-    {
-      "id": "Terminal.DecreaseFontSize",
-      "keys": "ctrl+alt+shift+minus"
-    },
-    {
-      "id": "Terminal.IncreaseFontSize",
       "keys": "ctrl+alt+plus"
     },
     {
@@ -1224,6 +1216,10 @@
     {
       "id": "Terminal.FindText",
       "keys": "ctrl+alt+f"
+    },
+    {
+      "id": "Terminal.FindText",
+      "keys": "ctrl+alt+shift+/"
     },
     {
       "id": "Terminal.OpenNewTab",
