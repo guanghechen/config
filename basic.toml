@@ -29,7 +29,7 @@ multiplier = 3  # Number of lines the viewport will move for every line scrolled
 
 [selection]
 save_to_clipboard = true                         # When set to true, selected text will be copied to the primary clipboard.
-semantic_escape_chars = ",│`|:\\\"' ()[]{}<>\\t"
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
 
 [window]
 blur = true
