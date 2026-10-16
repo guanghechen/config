@@ -68,6 +68,46 @@ t:test("trigger attachment checks the target buffer instead of the current buffe
   t.assert_true(mapping ~= nil and mapping.callback == callback, "the background mapping is preserved")
 end)
 
+t:test("attaching reads each mode's mappings once and leaves mapped keys alone", function()
+  local bufnr = new_buffer()
+  ---@return nil
+  local callback = function() end
+  vim.keymap.set("n", "z", callback, { buffer = bufnr, nowait = true, desc = "buffer z" })
+  for _, lhs in ipairs({ "gX1", "]X1" }) do
+    vim.keymap.set("n", lhs, function() end, { desc = "spec prefix" })
+    t:defer(function()
+      pcall(vim.keymap.del, "n", lhs)
+    end)
+  end
+  State.enable()
+  Input.detach(bufnr, "n")
+
+  local reads = {} ---@type table<string, integer>
+  for name, mode_arg in pairs({ nvim_get_keymap = 1, nvim_buf_get_keymap = 2 }) do
+    local original = vim.api[name]
+    t:patch_table(vim.api, name, function(...)
+      local key = name .. ":" .. select(mode_arg, ...)
+      reads[key] = (reads[key] or 0) + 1
+      return original(...)
+    end)
+  end
+  Input.attach(bufnr)
+
+  local bound = {} ---@type table<string, boolean>
+  for _, trigger in pairs(Input.triggers) do
+    if trigger.bufnr == bufnr and trigger.mode == "n" then
+      bound[trigger.trigger_key] = true
+    end
+  end
+  for key, count in pairs(reads) do
+    t.assert_eq(1, count, key .. " is read once per attach")
+  end
+  t.assert_eq(1, reads["nvim_get_keymap:n"], "normal mode mappings are read")
+  t.assert_true(bound["g"] and bound["]"], "prefix triggers are bound")
+  t.assert_nil(bound["z"], "no trigger over the buffer mapping")
+  t.assert_eq(callback, vim.fn.maparg("z", "n", false, true).callback, "the buffer mapping is preserved")
+end)
+
 t:test("exact native mapping is resolved after the which-key tree was built", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   ---@diagnostic disable-next-line: invisible

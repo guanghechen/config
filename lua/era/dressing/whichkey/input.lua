@@ -30,6 +30,23 @@ local function find_keymap(keymaps, lhs)
   end
 end
 
+---@class era.dressing.whichkey.input.IMapped
+---@field public keys                   ?table<string, true>
+
+-- Normalized lhs of the buffer-local and global mappings in a mode; a trigger never shadows one of them.
+---@param bufnr                         integer
+---@param mode                          string
+---@return table<string, true>
+local function mapped_keys(bufnr, mode)
+  local keys = {} ---@type table<string, true>
+  for _, keymaps in ipairs({ vim.api.nvim_buf_get_keymap(bufnr, mode), vim.api.nvim_get_keymap(mode) }) do
+    for _, keymap in ipairs(keymaps) do
+      keys[vim.api.nvim_replace_termcodes(keymap.lhs, true, true, true)] = true
+    end
+  end
+  return keys
+end
+
 ---@param id                            string
 ---@return nil
 local function unbind(id)
@@ -68,9 +85,11 @@ function M.attach(bufnr)
     if not S.state.is_suspended(bufnr, mode) then
       local tree = buf_trees[mode]
       if tree then
+        -- Existing mappings are read once per mode instead of once per trigger.
+        local mapped = {} ---@type era.dressing.whichkey.input.IMapped
         for key, node in pairs(tree) do
           if node.is_group or next(node.children) ~= nil then
-            M.__bind__(bufnr, mode, M.__resolve_key__(key), key)
+            M.__bind__(bufnr, mode, M.__resolve_key__(key), key, mapped)
           end
         end
       end
@@ -152,8 +171,9 @@ end
 ---@param mode                           string
 ---@param trigger_key                    string
 ---@param tree_key                       string
+---@param mapped                         ?era.dressing.whichkey.input.IMapped Mappings shared by one attach pass
 ---@return nil
-function M.__bind__(bufnr, mode, trigger_key, tree_key)
+function M.__bind__(bufnr, mode, trigger_key, tree_key, mapped)
   local id = bufnr .. ":" .. mode .. ":" .. trigger_key
   if M.triggers[id] then
     return
@@ -166,9 +186,9 @@ function M.__bind__(bufnr, mode, trigger_key, tree_key)
     return
   end
 
-  local existing = find_keymap(vim.api.nvim_buf_get_keymap(bufnr, mode), trigger_key)
-    or find_keymap(vim.api.nvim_get_keymap(mode), trigger_key)
-  if existing then
+  mapped = mapped or {}
+  mapped.keys = mapped.keys or mapped_keys(bufnr, mode)
+  if mapped.keys[vim.api.nvim_replace_termcodes(trigger_key, true, true, true)] then
     return
   end
 
