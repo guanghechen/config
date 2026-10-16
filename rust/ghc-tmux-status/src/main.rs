@@ -1,4 +1,3 @@
-mod app;
 mod cli;
 mod commit;
 mod composer;
@@ -24,11 +23,11 @@ use std::io::Write;
 use std::process::ExitCode;
 use std::time::Duration;
 
-use crate::app::StatusApp;
 use crate::cli::CliCommand;
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
 use crate::process::ProcessWatchdog;
+use crate::runtime::StatusRuntime;
 use crate::scheduler::{
     SCHEDULER_SNAPSHOT_ENV, SESSION_STATE_TTL_ENV, SESSION_STATES_ACK, SESSION_STATES_PREFIX_ENV,
     SchedulerSnapshot, SessionStatesPublish,
@@ -47,16 +46,20 @@ fn main() -> ExitCode {
 
 fn run() -> AppResult<()> {
     let command = cli::parse(std::env::args().skip(1).collect())?;
-    let app = StatusApp::live();
+    let runtime = StatusRuntime::live();
     match command {
-        CliCommand::Apply(event) => app.apply(event),
-        CliCommand::BootstrapTheme(expected_generation) => app.bootstrap_theme(expected_generation),
+        CliCommand::Apply(event) => runtime.apply(event),
+        CliCommand::BootstrapTheme(expected_generation) => {
+            runtime.bootstrap_theme(expected_generation)
+        }
         CliCommand::SchedulerTick => {
             let snapshot = std::env::var(SCHEDULER_SNAPSHOT_ENV)
                 .ok()
                 .and_then(|value| SchedulerSnapshot::from_transport(&value));
-            // Only the driver's lock owner passes a publication; direct invocations
-            // and malformed transport run the tasks without publishing.
+            /*
+             * Only the driver's lock owner passes a publication; direct invocations
+             * and malformed transport run the tasks without publishing.
+             */
             let publish = std::env::var(SESSION_STATES_PREFIX_ENV)
                 .ok()
                 .zip(std::env::var(SESSION_STATE_TTL_ENV).ok())
@@ -64,12 +67,12 @@ fn run() -> AppResult<()> {
             if publish.is_some() {
                 acknowledge_session_states_publish().map_err(AppError::Io)?;
             }
-            app.scheduler_tick(snapshot, publish)
+            runtime.scheduler_tick(snapshot, publish)
         }
-        CliCommand::DumpState => app.dump_state(),
-        CliCommand::RenderStatus02 => app.render_status02_stdout(),
-        CliCommand::FocusSession(target) => app.focus_session(target),
-        CliCommand::SwapSession(direction) => app.swap_session(direction),
+        CliCommand::DumpState => runtime.dump_state(),
+        CliCommand::RenderStatus02 => runtime.render_status02_stdout(),
+        CliCommand::FocusSession(target) => runtime.focus_session(target),
+        CliCommand::SwapSession(direction) => runtime.swap_session(direction),
         CliCommand::Layout {
             mode,
             status,
@@ -84,8 +87,10 @@ fn run() -> AppResult<()> {
     }
 }
 
-/// Taking over must be visible to the driver before any publication path can run,
-/// so a failed acknowledgement forfeits the whole tick.
+/**
+ * Taking over must be visible to the driver before any publication path can run,
+ * so a failed acknowledgement forfeits the whole tick.
+ */
 fn acknowledge_session_states_publish() -> std::io::Result<()> {
     let mut stdout = std::io::stdout().lock();
     writeln!(stdout, "{SESSION_STATES_ACK}")?;

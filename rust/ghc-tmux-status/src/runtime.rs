@@ -6,31 +6,36 @@ use crate::commit::{CommitPlanner, TmuxCommandPlan};
 use crate::composer::{render_cache_key, render_status02};
 use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
-    METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
-    METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
-    ROWS_OVERRIDE_OPTION, SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
+    METRIC_ERROR_COUNT_OPTION, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
+    SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::introspect::{
     CACHED_METRIC_WIDGET_PLACEMENTS, COMPUTED_WIDGET_PLACEMENTS, TEMPLATE_WIDGET_PLACEMENTS,
     metric_health_state, metric_sample_states, scheduler_state_lines,
 };
-use crate::layout::LayoutEngine;
-use crate::metric::{NET_INTERFACE_OPTION, provider_for_current_platform};
+use crate::layout::{LayoutEngine, resolve_session_layouts, rows_override};
+use crate::metric::publish::{
+    MetricPublishSummary, is_recent_sample, metric_health_sets, parse_metric_error_count,
+};
+use crate::metric::{
+    NET_INTERFACE_OPTION, normalize_network_interface, provider_for_current_platform,
+};
 use crate::model::{
-    RenderContext, RenderEvent, RenderEventKind, RowsOverride, SessionGroupView, SessionLayout,
-    SessionRenderedStatus, TmuxSnapshot,
+    RenderContext, RenderEvent, RenderEventKind, SessionGroupView, SessionRenderedStatus,
+    TmuxSnapshot,
 };
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::platform::current_platform;
 use crate::process::{OperationDeadline, output_with_timeout};
 use crate::scheduler::{
     ClaimPlan, SchedulerSnapshot, SchedulerTask, SessionStatesPublish, plan_claim,
+    scheduler_outcome_value,
 };
 use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPERATION_OPTION, SESSION_ORDER_OPTION,
-    SESSION_ORDER_REVISION_OPTION, SessionGrouper, SwapOutcome, focus_target, ordered_sessions,
-    swap_current,
+    SESSION_ORDER_REVISION_OPTION, SwapOutcome, focus_target, ordered_group,
+    ordered_group_for_session, ordered_group_from_snapshot, swap_current,
 };
 use crate::status_length::{status_left_length, status_right_length};
 use crate::tmux::{
@@ -274,9 +279,11 @@ impl StatusRuntime {
         }
     }
 
-    /// Runs due scheduler tasks. An owned session-state publication rides in the
-    /// first mutation queue the tick executes; an ordinary exit that reached no
-    /// such queue still attempts it on its own and keeps the task result.
+    /**
+     * Runs due scheduler tasks. An owned session-state publication rides in the
+     * first mutation queue the tick executes; an ordinary exit that reached no
+     * such queue still attempts it on its own and keeps the task result.
+     */
     pub fn scheduler_tick(
         &self,
         snapshot: Option<SchedulerSnapshot>,
@@ -384,8 +391,10 @@ impl StatusRuntime {
         let Some(claim) = plan_claim(task, generation, observed_state, now_seconds) else {
             return Ok(());
         };
-        // Taken before the queue runs: a skipped, failed, or timed-out queue has
-        // still attempted the publication, which is never repeated.
+        /*
+         * Taken before the queue runs: a skipped, failed, or timed-out queue has
+         * still attempted the publication, which is never repeated.
+         */
         let publish = publish.take();
         let generation_text = generation.to_string();
         let guards = scheduler_guards(&claim, &generation_text, &claim.observed_state);
@@ -890,23 +899,11 @@ fn scheduler_guards<'a>(
     ]
 }
 
-fn scheduler_outcome_value(
-    timestamp_seconds: u64,
-    generation: u64,
-    sequence: u64,
-    phase: &str,
-    certainty: &str,
-    message: &str,
-) -> String {
-    format!(
-        "{timestamp_seconds}\t{generation}\t{sequence}\t{phase}\t{certainty}\t{}",
-        sanitize_metric_error(message)
-    )
-}
-
-/// Diagnostic commands describe the invoking session only. Unlike apply's
-/// server-wide reconcile context, they must not borrow another attached
-/// session's active layout when the current session has `status off`.
+/**
+ * Diagnostic commands describe the invoking session only. Unlike apply's
+ * server-wide reconcile context, they must not borrow another attached
+ * session's active layout when the current session has `status off`.
+ */
 fn current_session_context_from_snapshot(snapshot: TmuxSnapshot) -> Option<RenderContext> {
     let LiveContextState::Active(mut context) = context_state_from_snapshot(snapshot) else {
         return None;
@@ -933,9 +930,11 @@ fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
         rows_override(&snapshot),
     );
     let session_layouts = resolve_session_layouts(&snapshot);
-    // `status off` is owned per session. It excludes the invoking session, not
-    // the server-wide reconcile: hooks and reloads can legitimately originate
-    // from an off popup/agent while other attached sessions still need repair.
+    /*
+     * `status off` is owned per session. It excludes the invoking session, not
+     * the server-wide reconcile: hooks and reloads can legitimately originate
+     * from an off popup/agent while other attached sessions still need repair.
+     */
     let Some(layout) = current_layout.or_else(|| {
         session_layouts
             .first()
@@ -953,95 +952,9 @@ fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
     })
 }
 
-/// The manual rows override (`@GHC_SL_ROWS`) for this snapshot, defaulting to
-/// `Two` when the option is unset. Shared by the global and per-session resolves
-/// so both agree on the pinned row count.
-fn rows_override(snapshot: &TmuxSnapshot) -> RowsOverride {
-    RowsOverride::parse(
-        snapshot
-            .options
-            .get(ROWS_OVERRIDE_OPTION)
-            .map(String::as_str)
-            .unwrap_or_default(),
-    )
-}
-
-/// Reconciles a per-session target layout for every ON (not currently `off`),
-/// attached session. A session whose effective `status` is `off` (popup/agent,
-/// owned by the session-created policy hook in tmux.conf) is skipped — the
-/// renderer respects the current status and has no knowledge of the naming
-/// convention. Detached sessions (no client width) are skipped until a client
-/// attaches and an event re-reconciles them.
-fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
-    let width_ranges = client_width_ranges(&snapshot.client_widths);
-    let group_counts = SessionGrouper::counts(&snapshot.sessions);
-    let rows = rows_override(snapshot);
-    let mut session_layouts = Vec::new();
-    for session in &snapshot.sessions {
-        if session.status == "off" {
-            continue;
-        }
-        let Some(&(layout_width, status_length_width)) = width_ranges.get(session.id.as_str())
-        else {
-            continue;
-        };
-        let count = group_counts
-            .get(&SessionGrouper::key(&session.name))
-            .copied()
-            .unwrap_or_default();
-        let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", layout_width, count, rows)
-        else {
-            continue;
-        };
-        session_layouts.push(SessionLayout {
-            session_id: session.id.clone(),
-            session_name: session.name.clone(),
-            current_status: session.status.clone(),
-            current_layout_key: session.layout_key.clone(),
-            current_left_length: session.left_length.clone(),
-            current_right_length: session.right_length.clone(),
-            current_format_0: session.format_0.clone(),
-            current_format_1: session.format_1.clone(),
-            current_render_key: session.render_key.clone(),
-            current_cache_witnesses: session.cache_witnesses.clone(),
-            session_created: session.created,
-            layout,
-            status_length_width,
-        });
-    }
-    session_layouts
-}
-
-/// Narrowest and widest attached-client widths per session id. Rows are shared
-/// session state and resolve from the minimum; status-length maxima resolve from
-/// the maximum so a narrow peer cannot clip content on a wider client.
-fn client_width_ranges(
-    client_widths: &[(String, usize)],
-) -> std::collections::BTreeMap<&str, (usize, usize)> {
-    let mut ranges = std::collections::BTreeMap::new();
-    for (session_id, width) in client_widths {
-        ranges
-            .entry(session_id.as_str())
-            .and_modify(|(min, max): &mut (usize, usize)| {
-                *min = (*min).min(*width);
-                *max = (*max).max(*width);
-            })
-            .or_insert((*width, *width));
-    }
-    ranges
-}
-
 enum LiveContextState {
     Active(RenderContext),
     Inactive(TmuxSnapshot),
-}
-
-#[derive(Default)]
-struct MetricPublishSummary {
-    cpu_published: bool,
-    memory_published: bool,
-    network_published: bool,
-    errors: Vec<String>,
 }
 
 struct CollectedMetricSample {
@@ -1056,66 +969,6 @@ impl CollectedMetricSample {
             .map(|(name, value)| (*name, value.as_str()))
             .collect()
     }
-}
-
-fn is_recent_sample(
-    previous_timestamp_seconds: Option<u64>,
-    current_timestamp_seconds: u64,
-) -> bool {
-    previous_timestamp_seconds.is_some_and(|previous_timestamp_seconds| {
-        current_timestamp_seconds.saturating_sub(previous_timestamp_seconds)
-            <= METRIC_SAMPLE_STALE_LIMIT_SECONDS
-    })
-}
-
-fn normalize_network_interface(value: Option<&str>) -> Option<&str> {
-    value.map(str::trim).filter(|value| !value.is_empty())
-}
-
-fn parse_metric_error_count(value: Option<&str>) -> u64 {
-    value
-        .and_then(|value| value.parse::<u64>().ok())
-        .unwrap_or_default()
-}
-
-fn metric_health_sets(
-    summary: &MetricPublishSummary,
-    previous_error_count: u64,
-    now_seconds: u64,
-) -> Vec<(&'static str, String)> {
-    if summary.errors.is_empty() {
-        return vec![
-            (METRIC_LAST_OK_OPTION, now_seconds.to_string()),
-            (METRIC_ERROR_COUNT_OPTION, "0".to_string()),
-        ];
-    }
-
-    vec![
-        (
-            METRIC_LAST_ERROR_OPTION,
-            format!(
-                "{}\t{}",
-                now_seconds,
-                sanitize_metric_error(&summary.errors.join("; "))
-            ),
-        ),
-        (
-            METRIC_ERROR_COUNT_OPTION,
-            previous_error_count.saturating_add(1).to_string(),
-        ),
-    ]
-}
-
-fn sanitize_metric_error(value: &str) -> String {
-    const MAX_ERROR_LEN: usize = 240;
-    let sanitized = value
-        .chars()
-        .map(|character| match character {
-            '\t' | '\n' | '\r' => ' ',
-            _ => character,
-        })
-        .collect::<String>();
-    sanitized.chars().take(MAX_ERROR_LEN).collect()
 }
 
 static RENDER_REVISION_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -1168,28 +1021,6 @@ fn run_bounded_command(program: &str, args: &[&str], timeout: Duration) -> AppRe
     }))
 }
 
-fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
-    ordered_group_for_session(snapshot, &snapshot.current_session_name)
-}
-
-fn ordered_group_for_session(snapshot: &TmuxSnapshot, session_name: &str) -> SessionGroupView {
-    ordered_group(
-        session_name,
-        &snapshot.sessions,
-        session_order_value(snapshot),
-    )
-}
-
-fn ordered_group(
-    session_name: &str,
-    sessions: &[crate::model::SessionInfo],
-    order_value: Option<&str>,
-) -> SessionGroupView {
-    let mut group = SessionGrouper::group(session_name, sessions);
-    group.sessions = ordered_sessions(&group.sessions, order_value);
-    group
-}
-
 fn fallback_render_context(context: &RenderContext) -> RenderContext {
     RenderContext {
         snapshot: Rc::clone(&context.snapshot),
@@ -1198,8 +1029,10 @@ fn fallback_render_context(context: &RenderContext) -> RenderContext {
             sessions: Vec::new(),
         },
         layout: context.layout.clone(),
-        // A future creation timestamp deterministically renders the neutral "0m"
-        // fallback until an attached session receives its local cache.
+        /*
+         * A future creation timestamp deterministically renders the neutral "0m"
+         * fallback until an attached session receives its local cache.
+         */
         render_session_created: i64::MAX,
         session_layouts: Vec::new(),
     }
@@ -1231,13 +1064,6 @@ fn render_session_statuses(
         .collect()
 }
 
-fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
-    snapshot
-        .options
-        .get(SESSION_ORDER_OPTION)
-        .map(String::as_str)
-}
-
 fn focus_missing_message(target: FocusTarget) -> String {
     match target {
         FocusTarget::Index(index) => format!("No session at index {index}"),
@@ -1252,18 +1078,13 @@ mod tests {
     use std::time::Duration;
 
     use super::{
-        LiveContextState, MetricPublishSummary, context_state_from_snapshot,
-        current_session_context_from_snapshot, metric_health_sets, next_render_revision,
-        next_session_order_revision, normalize_network_interface, ordered_group_from_snapshot,
-        parse_metric_error_count, render_session_statuses, resolve_session_layouts,
-        run_bounded_command, sanitize_metric_error, scheduler_outcome_value,
-    };
-    use crate::config::{
-        METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
+        LiveContextState, context_state_from_snapshot, current_session_context_from_snapshot,
+        next_render_revision, next_session_order_revision, ordered_group_from_snapshot,
+        render_session_statuses, resolve_session_layouts, run_bounded_command,
     };
     use crate::error::AppError;
     use crate::layout::LayoutEngine;
-    use crate::model::{LayoutKind, RenderContext, RowsOverride, SessionInfo, TmuxSnapshot};
+    use crate::model::{RenderContext, RowsOverride, SessionInfo, TmuxSnapshot};
 
     fn session(id: &str, name: &str, status: &str) -> SessionInfo {
         SessionInfo {
@@ -1280,61 +1101,6 @@ mod tests {
             cache_witnesses: std::array::from_fn(|_| String::new()),
             created: 0,
         }
-    }
-
-    #[test]
-    fn resolve_session_layouts_skips_off_status_and_detached_sessions() {
-        // on + attached -> reconciled; off + attached (popup/agent) -> skipped by
-        // status, not by name; on + detached (no client width) -> skipped.
-        let snapshot = TmuxSnapshot {
-            mode: "02".to_string(),
-            status: "on".to_string(),
-            width: 200,
-            current_session_name: "main".to_string(),
-            client_last_session: String::new(),
-            host: "h".to_string(),
-            session_created: 1,
-            sessions: vec![
-                session("$1", "main", "on"),
-                session("$2", "_popup@x", "off"),
-                session("$3", "detached", "on"),
-            ],
-            client_widths: vec![("$1".to_string(), 200), ("$2".to_string(), 200)],
-            options: BTreeMap::new(),
-        };
-
-        let layouts = resolve_session_layouts(&snapshot);
-        assert_eq!(layouts.len(), 1);
-        assert_eq!(layouts[0].session_id, "$1");
-    }
-
-    #[test]
-    fn resolve_session_layouts_uses_min_width_for_rows_and_max_width_for_lengths() {
-        let snapshot = TmuxSnapshot {
-            mode: "02".to_string(),
-            status: "on".to_string(),
-            width: 90,
-            current_session_name: "main".to_string(),
-            client_last_session: String::new(),
-            host: "h".to_string(),
-            session_created: 1,
-            sessions: vec![session("$1", "main", "on"), session("$2", "work", "on")],
-            client_widths: vec![
-                ("$1".to_string(), 90),
-                ("$1".to_string(), 300),
-                ("$2".to_string(), 300),
-            ],
-            options: BTreeMap::new(),
-        };
-
-        let layouts = resolve_session_layouts(&snapshot);
-        let main = layouts
-            .iter()
-            .find(|layout| layout.session_id == "$1")
-            .unwrap();
-
-        assert_eq!(main.layout.kind, LayoutKind::Narrow);
-        assert_eq!(main.status_length_width, 300);
     }
 
     #[test]
@@ -1472,67 +1238,5 @@ mod tests {
             .unwrap_err();
 
         assert!(matches!(error, AppError::CommandTimeout { .. }));
-    }
-
-    #[test]
-    fn normalize_network_interface_trims_and_filters_empty_values() {
-        assert_eq!(normalize_network_interface(Some(" en0 ")), Some("en0"));
-        assert_eq!(
-            normalize_network_interface(Some("\tutun4\n")),
-            Some("utun4")
-        );
-        assert_eq!(normalize_network_interface(Some("   ")), None);
-        assert_eq!(normalize_network_interface(None), None);
-    }
-
-    #[test]
-    fn parse_metric_error_count_uses_zero_for_missing_or_invalid_values() {
-        assert_eq!(parse_metric_error_count(Some("7")), 7);
-        assert_eq!(parse_metric_error_count(Some("bad")), 0);
-        assert_eq!(parse_metric_error_count(None), 0);
-    }
-
-    #[test]
-    fn metric_health_sets_reset_error_count_on_clean_sample() {
-        let summary = MetricPublishSummary::default();
-        assert_eq!(
-            metric_health_sets(&summary, 3, 100),
-            vec![
-                (METRIC_LAST_OK_OPTION, "100".to_string()),
-                (METRIC_ERROR_COUNT_OPTION, "0".to_string()),
-            ]
-        );
-    }
-
-    #[test]
-    fn metric_health_sets_increment_error_count_and_records_last_error() {
-        let summary = MetricPublishSummary {
-            errors: vec!["network:failed\tbadly".to_string()],
-            ..MetricPublishSummary::default()
-        };
-        assert_eq!(
-            metric_health_sets(&summary, 3, 100),
-            vec![
-                (
-                    METRIC_LAST_ERROR_OPTION,
-                    "100\tnetwork:failed badly".to_string()
-                ),
-                (METRIC_ERROR_COUNT_OPTION, "4".to_string()),
-            ]
-        );
-    }
-
-    #[test]
-    fn sanitize_metric_error_replaces_separators_and_bounds_length() {
-        assert_eq!(sanitize_metric_error("a\tb\nc\rd"), "a b c d");
-        assert_eq!(sanitize_metric_error(&"x".repeat(300)).len(), 240);
-    }
-
-    #[test]
-    fn scheduler_outcome_records_phase_certainty_and_sanitized_error() {
-        assert_eq!(
-            scheduler_outcome_value(100, 7, 3, "claim", "unknown", "bad\tstate\nnow"),
-            "100\t7\t3\tclaim\tunknown\tbad state now"
-        );
     }
 }

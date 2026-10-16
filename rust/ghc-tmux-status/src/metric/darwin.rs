@@ -182,8 +182,10 @@ fn detect_default_network_interface() -> String {
     default_interface_from_route_result(command_output("route", &["-n", "get", "default"]))
 }
 
-// Resiliency policy split from the IO boundary above: any route failure (Err) or
-// missing/blank `interface:` line degrades to en0 rather than aborting the render.
+/*
+ * Resiliency policy split from the IO boundary above: any route failure (Err) or
+ * missing/blank `interface:` line degrades to en0 rather than aborting the render.
+ */
 fn default_interface_from_route_result(route_output: AppResult<String>) -> String {
     route_output
         .ok()
@@ -257,9 +259,11 @@ fn parse_netstat_counters(output: &str) -> AppResult<(u64, u64)> {
         .find(|line| line.contains("<Link#"))
         .ok_or_else(|| AppError::Render("failed to find netstat link row".to_string()))?;
     let fields = line.split_whitespace().collect::<Vec<_>>();
-    // Tunnel/VPN interfaces (utun*) emit an empty Address column, so the Link row
-    // has 10 fields instead of en0's 11. Index from the tail, where the trailing
-    // columns (.. Ibytes Opkts Oerrs Obytes Coll) are positionally fixed.
+    /*
+     * Tunnel/VPN interfaces (utun*) emit an empty Address column, so the Link row
+     * has 10 fields instead of en0's 11. Index from the tail, where the trailing
+     * columns (.. Ibytes Opkts Oerrs Obytes Coll) are positionally fixed.
+     */
     if fields.len() < 10 {
         return Err(AppError::Render("invalid netstat link row".to_string()));
     }
@@ -505,8 +509,10 @@ mod tests {
 
     #[test]
     fn network_speed_uses_sub_second_elapsed_time() {
-        // A 4.1 s window would read as 4 s (or 5 s across a second boundary)
-        // with whole-second timestamps.
+        /*
+         * A 4.1 s window would read as 4 s (or 5 s across a second boundary)
+         * with whole-second timestamps.
+         */
         let previous = NetworkSample {
             timestamp_millis: 10_950,
             rx_bytes: 0,

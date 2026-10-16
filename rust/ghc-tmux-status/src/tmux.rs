@@ -23,9 +23,11 @@ use crate::process::{OperationDeadline, output_with_timeout};
 use crate::scheduler::SessionStatesPublish;
 
 const TMUX_COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
-// This budget applies before two nested `if-shell` quoting passes. tmux 3.7c
-// rejects the fully wrapped client command near 16 KiB, so retain enough room
-// for argv framing and content-dependent escaping rather than relying on ARG_MAX.
+/*
+ * This budget applies before two nested `if-shell` quoting passes. tmux 3.7c
+ * rejects the fully wrapped client command near 16 KiB, so retain enough room
+ * for argv framing and content-dependent escaping rather than relying on ARG_MAX.
+ */
 const MAX_PLAN_CHUNK_BYTES: usize = 8 * 1024;
 
 pub struct TmuxAdapter;
@@ -93,9 +95,11 @@ impl TmuxAdapter {
         parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS)
     }
 
-    /// Claims a render revision and collects its snapshot in one guarded tmux
-    /// command queue. A lifecycle fence can therefore reject a stale worker
-    /// before it replaces the render token, not only when it eventually commits.
+    /**
+     * Claims a render revision and collects its snapshot in one guarded tmux
+     * command queue. A lifecycle fence can therefore reject a stale worker
+     * before it replaces the render token, not only when it eventually commits.
+     */
     pub fn read_snapshot_for_render(
         &self,
         revision: u64,
@@ -135,9 +139,11 @@ impl TmuxAdapter {
         ])
     }
 
-    /// Updates a global user option only while its server-owned revision witness
-    /// remains current. The value, next revision, and applied marker are emitted
-    /// in one tmux command queue.
+    /**
+     * Updates a global user option only while its server-owned revision witness
+     * remains current. The value, next revision, and applied marker are emitted
+     * in one tmux command queue.
+     */
     pub fn compare_and_set_global_option(
         &self,
         mutation: GlobalOptionCas<'_>,
@@ -209,17 +215,21 @@ impl TmuxAdapter {
         Ok(CompareAndSetOutcome::Unknown(error))
     }
 
-    /// Reads explicitly scoped options in one tmux invocation. Marker-delimited
-    /// `show -gqv`/`show -sqv` sections preserve empty, spaced, and tabbed values
-    /// without falling back to the current session's effective option lookup.
+    /**
+     * Reads explicitly scoped options in one tmux invocation. Marker-delimited
+     * `show -gqv`/`show -sqv` sections preserve empty, spaced, and tabbed values
+     * without falling back to the current session's effective option lookup.
+     */
     pub fn show_options(&self, options: &[(TmuxOptionScope, &str)]) -> AppResult<Vec<String>> {
         let output = self.tmux_output(options_command_args(options))?;
         parse_options_output(&output, options.len())
     }
 
-    /// An optional session-state publication runs ahead of the claim guard in the
-    /// same queue, so a skipped claim still publishes. Callers treat it as
-    /// attempted whatever the outcome and never publish it again.
+    /**
+     * An optional session-state publication runs ahead of the claim guard in the
+     * same queue, so a skipped claim still publishes. Callers treat it as
+     * attempted whatever the outcome and never publish it again.
+     */
     pub fn claim_scheduler_task(
         &self,
         guards: &[TmuxOptionGuard<'_>],
@@ -232,10 +242,12 @@ impl TmuxAdapter {
         self.guarded_mutation_after(publish, guards, command_list)
     }
 
-    /// Claims a scheduler task and snapshots its execution inputs in the same
-    /// tmux command queue. A timeout after the state mutation remains ambiguous:
-    /// callers must not retry; the claimed lease is the recovery boundary. The
-    /// optional publication follows the `claim_scheduler_task` contract.
+    /**
+     * Claims a scheduler task and snapshots its execution inputs in the same
+     * tmux command queue. A timeout after the state mutation remains ambiguous:
+     * callers must not retry; the claimed lease is the recovery boundary. The
+     * optional publication follows the `claim_scheduler_task` contract.
+     */
     pub fn claim_scheduler_task_with_options(
         &self,
         guards: &[TmuxOptionGuard<'_>],
@@ -254,8 +266,10 @@ impl TmuxAdapter {
         parse_guarded_options_output(&output, options.len())
     }
 
-    /// Publishes session states in a queue of its own, for owned ticks whose
-    /// publication no mutation queue carried.
+    /**
+     * Publishes session states in a queue of its own, for owned ticks whose
+     * publication no mutation queue carried.
+     */
     pub fn publish_session_states(&self, publish: &SessionStatesPublish) -> AppResult<()> {
         self.tmux_status(session_states_publish_args(publish))
     }
@@ -351,10 +365,12 @@ impl TmuxAdapter {
 
         let chunks = serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES);
         let final_chunk_index = chunks.len() - 1;
-        // Scheduler commits never refresh: each committed `set` already redraws
-        // attached clients, while any `refresh-client` makes tmux SIGTERM and
-        // restart running `#()` status jobs, including the driver awaiting this
-        // commit's task completion.
+        /*
+         * Scheduler commits never refresh: each committed `set` already redraws
+         * attached clients, while any `refresh-client` makes tmux SIGTERM and
+         * restart running `#()` status jobs, including the driver awaiting this
+         * commit's task completion.
+         */
         let mut refresh_separately = false;
 
         for (chunk_index, chunk) in chunks.iter().enumerate() {
@@ -376,9 +392,11 @@ impl TmuxAdapter {
                 Err(_) => refresh_separately |= fold_refresh,
             }
 
-            // Commands are idempotent. A chunk-level parser/argv failure can be
-            // retried one command at a time without allowing a stale writer: both
-            // guards are rebuilt around every individual mutation.
+            /*
+             * Commands are idempotent. A chunk-level parser/argv failure can be
+             * retried one command at a time without allowing a stale writer: both
+             * guards are rebuilt around every individual mutation.
+             */
             for command in &plan.commands[chunk.range.clone()] {
                 let outcome = self.render_guarded_mutation(
                     expected_revision,
@@ -527,11 +545,13 @@ fn snapshot_command_args(
         ";".to_string(),
         "list-sessions".to_string(),
         "-F".to_string(),
-        // bell: #{session_bell_flag} inspects only the session's first window in tmux
-        // releases up to 3.8 (fixed upstream after 3.8 by 2e9189c0), so a bell in any later
-        // window is never reported. Derive has_bell from #{session_alerts} instead, which lists
-        // every alerted window; a '!' in it marks a bell. parse_session_line reads this third
-        // field as the "1"/"0" has_bell flag, so the shape is unchanged.
+        /*
+         * bell: #{session_bell_flag} inspects only the session's first window in tmux
+         * releases up to 3.8 (fixed upstream after 3.8 by 2e9189c0), so a bell in any later
+         * window is never reported. Derive has_bell from #{session_alerts} instead, which lists
+         * every alerted window; a '!' in it marks a bell. parse_session_line reads this third
+         * field as the "1"/"0" has_bell flag, so the shape is unchanged.
+         */
         format!(
             "#{{session_id}}\t#{{session_name}}\t#{{?#{{m:*!*,#{{session_alerts}}}},1,0}}\t#{{status}}\t#{{@GHC_SL_LAYOUT}}\t#{{status-left-length}}\t#{{status-right-length}}\t#{{{STATUS_FORMAT_0_OPTION}}}\t#{{{STATUS_FORMAT_1_OPTION}}}\t#{{{SESSION_RENDER_KEY_OPTION}}}\t{}\t{}\t{}\t{}\t#{{session_created}}",
             cache_witness_formats[0],
@@ -768,16 +788,20 @@ fn option_guarded_command_args(
     args
 }
 
-// Mirrors the lifecycle guard of every session-state consumer: an inactive
-// scheduler or a non-status02 mode samples an empty membership.
+/*
+ * Mirrors the lifecycle guard of every session-state consumer: an inactive
+ * scheduler or a non-status02 mode samples an empty membership.
+ */
 const SESSION_STATES_ENABLED_FORMAT: &str =
     "#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{||:#{==:#{@GHC_SL_MODE},02},#{==:#{@GHC_SL_MODE},12}}}";
 
-/// Arms this sample's expiry, clears the option, then samples membership. The
-/// expiry clears only a value still carrying this sample's prefix. `run-shell`
-/// expands its command once when scheduled, so doubled hashes leave the token
-/// comparison to the delayed `if-shell`. Clearing first makes a malformed
-/// expansion degrade to no marker.
+/**
+ * Arms this sample's expiry, clears the option, then samples membership. The
+ * expiry clears only a value still carrying this sample's prefix. `run-shell`
+ * expands its command once when scheduled, so doubled hashes leave the token
+ * comparison to the delayed `if-shell`. Clearing first makes a malformed
+ * expansion degrade to no marker.
+ */
 fn session_states_publish_args(publish: &SessionStatesPublish) -> Vec<String> {
     let prefix = &publish.sample_prefix;
     let stale_clear = format!(
@@ -1153,9 +1177,11 @@ const RENDER_SKIPPED_MARK: &str = "__GHC_RENDER_SKIPPED__";
 const SCHEDULER_APPLIED_MARK: &str = "__GHC_SCHEDULER_APPLIED__";
 const SCHEDULER_SKIPPED_MARK: &str = "__GHC_SCHEDULER_SKIPPED__";
 
-// Render/apply hot path: only values consumed by context resolution, composition,
-// commit planning, and lifecycle fencing. Metric payload/health state remains
-// indirect in templates and belongs to diagnostic snapshots only.
+/*
+ * Render/apply hot path: only values consumed by context resolution, composition,
+ * commit planning, and lifecycle fencing. Metric payload/health state remains
+ * indirect in templates and belongs to diagnostic snapshots only.
+ */
 const RENDER_SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, "@GHC_SL_MODE"),
     (TmuxOptionScope::GlobalSession, ROWS_OVERRIDE_OPTION),

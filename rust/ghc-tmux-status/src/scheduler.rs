@@ -9,14 +9,17 @@ use crate::config::{
     METRIC_SCHEDULER_STATE_OPTION,
 };
 use crate::process::OperationDeadline;
+use crate::util::format::sanitize_option_text;
 
 pub const SCHEDULER_SNAPSHOT_ENV: &str = "GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT";
 
-// load-theme is the single writer for renderer lifecycle (active + generation).
-// The same fence gates standard renders and scheduler work. This module owns each
-// task state and advances it one way: observed -> claimed -> completed. A
-// claim/publish timeout is intentionally not retried because tmux may already have
-// committed it; the lease is the only recovery writer after ambiguity.
+/*
+ * load-theme is the single writer for renderer lifecycle (active + generation).
+ * The same fence gates standard renders and scheduler work. This module owns each
+ * task state and advances it one way: observed -> claimed -> completed. A
+ * claim/publish timeout is intentionally not retried because tmux may already have
+ * committed it; the lease is the only recovery writer after ambiguity.
+ */
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SchedulerTask {
@@ -84,9 +87,11 @@ impl SchedulerTask {
     }
 }
 
-/// Read-only scheduler input captured by the driver before it launches Rust.
-/// tmux remains the state owner and single writer: task mutations still compare
-/// the exact transported strings before committing.
+/**
+ * Read-only scheduler input captured by the driver before it launches Rust.
+ * tmux remains the state owner and single writer: task mutations still compare
+ * the exact transported strings before committing.
+ */
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SchedulerSnapshot {
     pub generation: u64,
@@ -147,17 +152,23 @@ fn has_transport_shape(value: &str) -> bool {
     valid && fields.next().is_none()
 }
 
-// Versioned so renderers that predate the acknowledgement ignore the request and
-// leave publication with the driver.
+/*
+ * Versioned so renderers that predate the acknowledgement ignore the request and
+ * leave publication with the driver.
+ */
 pub const SESSION_STATES_PREFIX_ENV: &str = "GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2";
 pub const SESSION_STATE_TTL_ENV: &str = "GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS";
-// Printed, and flushed, before any publication path runs; the driver publishes only
-// when a normally exiting renderer never printed it. Must match the driver.
+/*
+ * Printed, and flushed, before any publication path runs; the driver publishes only
+ * when a normally exiting renderer never printed it. Must match the driver.
+ */
 pub const SESSION_STATES_ACK: &str = "__GHC_SESSION_STATES_V2_TAKEN__";
 
-/// The lock-owning driver hands its tick's session-state publication to the
-/// renderer, which carries it in the first mutation queue of the tick. Missing or
-/// malformed transport means this invocation does not own the publication.
+/**
+ * The lock-owning driver hands its tick's session-state publication to the
+ * renderer, which carries it in the first mutation queue of the tick. Missing or
+ * malformed transport means this invocation does not own the publication.
+ */
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionStatesPublish {
     pub sample_prefix: String,
@@ -296,10 +307,25 @@ fn is_due(
     now_seconds >= state.next_due_seconds && now_seconds >= state.lease_until_seconds
 }
 
+pub fn scheduler_outcome_value(
+    timestamp_seconds: u64,
+    generation: u64,
+    sequence: u64,
+    phase: &str,
+    certainty: &str,
+    message: &str,
+) -> String {
+    format!(
+        "{timestamp_seconds}\t{generation}\t{sequence}\t{phase}\t{certainty}\t{}",
+        sanitize_option_text(message)
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         ScheduleState, SchedulerSnapshot, SchedulerTask, SessionStatesPublish, plan_claim,
+        scheduler_outcome_value,
     };
 
     #[test]
@@ -373,8 +399,10 @@ mod tests {
 
     #[test]
     fn every_driver_tick_samples_metrics() {
-        // The driver claims at least 4 s apart; whole-second claim times must not
-        // leave alternate ticks undue.
+        /*
+         * The driver claims at least 4 s apart; whole-second claim times must not
+         * leave alternate ticks undue.
+         */
         let mut state = String::new();
         for tick_millis in [100_000_u64, 104_010, 108_020, 112_030] {
             let plan = plan_claim(SchedulerTask::Metrics, 7, &state, tick_millis / 1000)
@@ -421,5 +449,13 @@ mod tests {
         assert_eq!(ScheduleState::parse("7:4:105"), None);
         assert_eq!(ScheduleState::parse("7:4:105:0:extra"), None);
         assert_eq!(ScheduleState::parse("7:-1:105:0"), None);
+    }
+
+    #[test]
+    fn scheduler_outcome_records_phase_certainty_and_sanitized_error() {
+        assert_eq!(
+            scheduler_outcome_value(100, 7, 3, "claim", "unknown", "bad\tstate\nnow"),
+            "100\t7\t3\tclaim\tunknown\tbad state now"
+        );
     }
 }

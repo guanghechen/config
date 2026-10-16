@@ -65,18 +65,18 @@ tmux event / status tick
 
 | Module | 唯一职责 |
 |---|---|
-| `cli` / `app` | 解析命令并暴露 application operations |
-| `runtime` | 编排 snapshot、context、render、scheduler 与 commit |
+| `cli` | 解析命令；`main` 直接分派到 `runtime` |
+| `runtime` | 编排 snapshot、context、render、scheduler 与 commit，不持有 domain 规则 |
 | `tmux` | tmux subprocess、framing、guards 与 mutation |
-| `layout` | 计算 position、rows、target status 与 layout key |
-| `session` | 分组、排序、focus 与 swap 的纯 domain logic |
+| `layout` | 计算 position、rows、target status、layout key 与 per-session layout reconcile |
+| `session` | 分组、排序（含 snapshot 的 ordered group）、focus 与 swap 的纯 domain logic |
 | `status_widget` | 约束 template/computed widget 的统一接口 |
 | `widget` | 产出独立 status fragment 与 width shadow |
 | `composer` | 组合 fragments 与 responsive metric guards |
 | `status_length` | 计算左右 status length 上限 |
 | `commit` | 生成 idempotent tmux command plan |
-| `scheduler` | task cadence、claim、lease 与 completion |
-| `metric` / `platform` | platform detection 与 metrics sampling |
+| `scheduler` | task cadence、claim、lease、completion 与 outcome encoding |
+| `metric` / `platform` | platform detection、metrics sampling 与 publish policy（freshness、health） |
 | `process` | timeout、capture limit、watchdog、process-group reap |
 | `introspect` / `observability` | read-only diagnostics 与 opt-in trace |
 

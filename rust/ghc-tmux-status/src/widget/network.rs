@@ -8,8 +8,10 @@ use crate::widget::pill::pill_literal;
 pub struct NetworkWidget;
 
 impl TemplateWidget for NetworkWidget {
-    // The sampler is the single writer of `@GHC_NET_NOW`; render only installs an
-    // indirect reference so tmux redraws can show fresh bandwidth without a full render.
+    /*
+     * The sampler is the single writer of `@GHC_NET_NOW`; render only installs an
+     * indirect reference so tmux redraws can show fresh bandwidth without a full render.
+     */
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         let body_literal = " ↓99.9G ↑99.9G ";
         let literal_text = pill_literal(body_literal);
@@ -21,9 +23,11 @@ impl TemplateWidget for NetworkWidget {
     }
 }
 
-// Leading field of the millisecond-timestamp layout. Untagged values use the
-// previous whole-second layout; older binaries reject the tag as a timestamp
-// and start a fresh baseline instead of misreading milliseconds as seconds.
+/*
+ * Leading field of the millisecond-timestamp layout. Untagged values use the
+ * previous whole-second layout; older binaries reject the tag as a timestamp
+ * and start a fresh baseline instead of misreading milliseconds as seconds.
+ */
 const MILLIS_SNAPSHOT_TAG: &str = "v2";
 
 pub fn encode_network_snapshot(snapshot: &NetworkSnapshot) -> String {

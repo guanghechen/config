@@ -74,8 +74,10 @@ impl OperationDeadline {
     }
 }
 
-/// Runs a bounded child process without a shell. Timeout aborts and reaps the
-/// child; all other IO failures propagate to the caller's boundary policy.
+/**
+ * Runs a bounded child process without a shell. Timeout aborts and reaps the
+ * child; all other IO failures propagate to the caller's boundary policy.
+ */
 pub fn output_with_timeout<I, S>(program: &str, args: I, timeout: Duration) -> AppResult<Output>
 where
     I: IntoIterator<Item = S>,
@@ -262,8 +264,10 @@ fn terminate_process_group(child: &mut std::process::Child, process_group_id: u3
     const SIGKILL: i32 = 9;
 
     if let Ok(process_group_id) = i32::try_from(process_group_id) {
-        // The child was spawned as its own process-group leader. A negative pid
-        // targets the whole group, including descendants that still own pipes.
+        /*
+         * The child was spawned as its own process-group leader. A negative pid
+         * targets the whole group, including descendants that still own pipes.
+         */
         unsafe {
             kill(-process_group_id, SIGKILL);
         }

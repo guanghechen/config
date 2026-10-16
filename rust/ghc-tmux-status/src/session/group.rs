@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use crate::model::{SessionGroupView, SessionInfo};
+use crate::model::{SessionGroupView, SessionInfo, TmuxSnapshot};
+use crate::session::list::{SESSION_ORDER_OPTION, ordered_sessions};
 
 pub struct SessionGrouper;
 
@@ -56,6 +57,35 @@ impl SessionGrouper {
         }
         SessionGroupKey::Default
     }
+}
+
+pub fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
+    ordered_group_for_session(snapshot, &snapshot.current_session_name)
+}
+
+pub fn ordered_group_for_session(snapshot: &TmuxSnapshot, session_name: &str) -> SessionGroupView {
+    ordered_group(
+        session_name,
+        &snapshot.sessions,
+        session_order_value(snapshot),
+    )
+}
+
+pub fn ordered_group(
+    session_name: &str,
+    sessions: &[SessionInfo],
+    order_value: Option<&str>,
+) -> SessionGroupView {
+    let mut group = SessionGrouper::group(session_name, sessions);
+    group.sessions = ordered_sessions(&group.sessions, order_value);
+    group
+}
+
+fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
+    snapshot
+        .options
+        .get(SESSION_ORDER_OPTION)
+        .map(String::as_str)
 }
 
 #[cfg(test)]

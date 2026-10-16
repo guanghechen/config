@@ -72,8 +72,10 @@ pub struct SessionInfo {
     pub format_1: String,
     /// Fingerprint of this session's renderer-owned cache options.
     pub render_key: String,
-    /// Fixed-size prefixes read from the four actual renderer-owned cache values.
-    /// They detect drift without copying every full rich-text value into snapshots.
+    /**
+     * Fixed-size prefixes read from the four actual renderer-owned cache values.
+     * They detect drift without copying every full rich-text value into snapshots.
+     */
     pub cache_witnesses: [String; 4],
     pub created: i64,
 }
@@ -90,8 +92,10 @@ pub struct TmuxSnapshot {
     pub sessions: Vec<SessionInfo>,
     /// Attached clients as (session_id, client_width); detached sessions are absent.
     pub client_widths: Vec<(String, usize)>,
-    /// Owner-scope values only: global session options plus authoritative server
-    /// generations. Effective per-session layout/status values live in `sessions`.
+    /**
+     * Owner-scope values only: global session options plus authoritative server
+     * generations. Effective per-session layout/status values live in `sessions`.
+     */
     pub options: BTreeMap<String, String>,
 }
 
@@ -154,9 +158,11 @@ impl LayoutKind {
     }
 }
 
-/// Manual override for how many rows the adaptive layout uses, read from
-/// `@GHC_SL_ROWS`. `Auto` keeps the width/session-count heuristic; `One`/`Two`
-/// pin the row count regardless of screen width.
+/**
+ * Manual override for how many rows the adaptive layout uses, read from
+ * `@GHC_SL_ROWS`. `Auto` keeps the width/session-count heuristic; `One`/`Two`
+ * pin the row count regardless of screen width.
+ */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub enum RowsOverride {
     Auto,
@@ -166,8 +172,10 @@ pub enum RowsOverride {
 }
 
 impl RowsOverride {
-    /// Parses the raw option value. Empty uses the two-row default; `auto` and
-    /// unrecognized values fall back to `Auto` so a typo never wedges the layout.
+    /**
+     * Parses the raw option value. Empty uses the two-row default; `auto` and
+     * unrecognized values fall back to `Auto` so a typo never wedges the layout.
+     */
     pub fn parse(value: &str) -> Self {
         match value.trim() {
             "" => Self::default(),
@@ -207,8 +215,10 @@ impl RenderedSegment {
 pub struct RenderedStatus {
     pub status_left: RenderedSegment,
     pub status_right: RenderedSegment,
-    /// Right side of the two-row session line. The fixed status-format template
-    /// composes it with status_left through tmux indirection.
+    /**
+     * Right side of the two-row session line. The fixed status-format template
+     * composes it with status_left through tmux indirection.
+     */
     pub session_right: RenderedSegment,
     pub current_format: RenderedSegment,
 }
@@ -219,15 +229,19 @@ pub struct RenderContext {
     pub snapshot: Rc<TmuxSnapshot>,
     pub group: SessionGroupView,
     pub layout: LayoutPlan,
-    /// Session whose time-dependent widgets are being rendered. This is explicit
-    /// because the snapshot's invoking client is not the owner of every session cache.
+    /**
+     * Session whose time-dependent widgets are being rendered. This is explicit
+     * because the snapshot's invoking client is not the owner of every session cache.
+     */
     pub render_session_created: i64,
     /// Resolved target layout for every reconciled (ON, attached) session.
     pub session_layouts: Vec<SessionLayout>,
 }
 
-/// The per-session reconcile unit: a session's resolved target layout plus the
-/// current per-session values used to short-circuit a no-op write.
+/**
+ * The per-session reconcile unit: a session's resolved target layout plus the
+ * current per-session values used to short-circuit a no-op write.
+ */
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionLayout {
     pub session_id: String,
@@ -242,9 +256,11 @@ pub struct SessionLayout {
     pub current_cache_witnesses: [String; 4],
     pub session_created: i64,
     pub layout: LayoutPlan,
-    /// Widest attached client for this session. Layout rows are resolved from
-    /// the narrowest client, but the shared status-length ceiling must still
-    /// accommodate content visible on wider clients.
+    /**
+     * Widest attached client for this session. Layout rows are resolved from
+     * the narrowest client, but the shared status-length ceiling must still
+     * accommodate content visible on wider clients.
+     */
     pub status_length_width: usize,
 }
 

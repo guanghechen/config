@@ -13,8 +13,10 @@ pub const STATUS_JUSTIFY_VALUE: &str = "centre";
 pub const STATUS_SESSION_FORMAT: &str = "#($HOME/.config/tmux/script/status-scheduler.sh)#[default]#[align=left]#{E:@GHC_SL_STATUS02_LEFT}#[align=right]#{E:@GHC_SL_STATUS02_SESSION_FORMAT}#[default]";
 pub const STATUS_CURRENT_FORMAT: &str = "#{E:@GHC_SL_STATUS02_CURRENT_FORMAT}";
 pub const STATUS_REDRAW_INTERVAL_SECONDS_STR: &str = "1";
-// status-scheduler.sh ticks about every 4.1 s (4 s delay plus startup). Due
-// checks use whole seconds, so any longer interval skips every other tick.
+/*
+ * status-scheduler.sh ticks about every 4.1 s (4 s delay plus startup). Due
+ * checks use whole seconds, so any longer interval skips every other tick.
+ */
 pub const METRIC_RESAMPLE_INTERVAL_SECONDS: u64 = 4;
 pub const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
 pub const METRIC_EXECUTION_BUDGET_SECONDS: u64 = 8;
@@ -22,12 +24,16 @@ pub const METRIC_EXECUTION_LEASE_SECONDS: u64 = 15;
 pub const HEARTBEAT_EXECUTION_BUDGET_SECONDS: u64 = 10;
 pub const HEARTBEAT_EXECUTION_LEASE_SECONDS: u64 = 20;
 
-// Deltas against an older baseline are long-window averages, not current values.
-// The window tolerates one missed driver tick plus whole-second rounding.
+/*
+ * Deltas against an older baseline are long-window averages, not current values.
+ * The window tolerates one missed driver tick plus whole-second rounding.
+ */
 pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = METRIC_RESAMPLE_INTERVAL_SECONDS * 2 + 2;
 
-// load-theme owns this lifecycle pair. Standard renders require ACTIVE=1,
-// bootstrap requires ACTIVE=0, and every commit retains the observed GEN.
+/*
+ * load-theme owns this lifecycle pair. Standard renders require ACTIVE=1,
+ * bootstrap requires ACTIVE=0, and every commit retains the observed GEN.
+ */
 pub const SCHEDULER_ACTIVE_OPTION: &str = "@GHC_SL_SCHED_ACTIVE";
 pub const SCHEDULER_GENERATION_OPTION: &str = "@GHC_SL_SCHED_GEN";
 pub const METRIC_SCHEDULER_STATE_OPTION: &str = "@GHC_SL_METRIC_SCHED";
@@ -48,8 +54,10 @@ pub const MEMORY_SAMPLE_STATE_OPTION: &str = "@GHC_SL_MEM_SAMPLE";
 pub const NETWORK_NOW_OPTION: &str = "@GHC_NET_NOW";
 pub const NETWORK_SAMPLE_STATE_OPTION: &str = "@GHC_SL_NET_SAMPLE";
 
-// Manual rows override: unset defaults to two rows; `auto` uses the
-// width/session-count heuristic; `1`/`2` force the corresponding row count.
+/*
+ * Manual rows override: unset defaults to two rows; `auto` uses the
+ * width/session-count heuristic; `1`/`2` force the corresponding row count.
+ */
 pub const ROWS_OVERRIDE_OPTION: &str = "@GHC_SL_ROWS";
 pub const RENDER_REVISION_OPTION: &str = "@GHC_SL_RENDER_REV";
 pub const SESSION_RENDER_KEY_OPTION: &str = "@GHC_SL_RENDER_KEY";

@@ -1,4 +1,5 @@
 mod darwin;
+pub mod publish;
 mod unsupported;
 
 use crate::error::AppResult;
@@ -30,8 +31,10 @@ pub struct MemorySnapshot {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NetworkSample {
-    /// Rates divide by elapsed milliseconds; whole seconds would skew a ~4 s
-    /// sampling window by up to 25%.
+    /**
+     * Rates divide by elapsed milliseconds; whole seconds would skew a ~4 s
+     * sampling window by up to 25%.
+     */
     pub timestamp_millis: u64,
     pub rx_bytes: u64,
     pub tx_bytes: u64,
@@ -53,11 +56,13 @@ pub struct NetworkSnapshot {
     pub sample: NetworkSample,
 }
 
-/// Read-only sampling boundary. `StatusRuntime` creates one provider per sampler tick
-/// and remains the single writer of tmux metric state. Providers do not retry; external
-/// commands use the shared bounded process runner. Each method returns `AppError`, and the
-/// runtime degrades that metric independently before publishing available values and
-/// rescheduling in one tmux invocation.
+/**
+ * Read-only sampling boundary. `StatusRuntime` creates one provider per sampler tick
+ * and remains the single writer of tmux metric state. Providers do not retry; external
+ * commands use the shared bounded process runner. Each method returns `AppError`, and the
+ * runtime degrades that metric independently before publishing available values and
+ * rescheduling in one tmux invocation.
+ */
 pub trait MetricsProvider {
     fn sample_cpu(&self, previous: Option<&CpuSample>) -> AppResult<CpuSnapshot>;
     fn sample_memory(&self) -> AppResult<MemorySnapshot>;
@@ -77,3 +82,23 @@ pub fn provider_for(platform: Platform, interface: Option<&str>) -> Box<dyn Metr
 
 // tmux option overriding the auto-detected primary network interface.
 pub const NET_INTERFACE_OPTION: &str = "@GHC_SL_NET_IFACE";
+
+pub fn normalize_network_interface(value: Option<&str>) -> Option<&str> {
+    value.map(str::trim).filter(|value| !value.is_empty())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_network_interface;
+
+    #[test]
+    fn normalize_network_interface_trims_and_filters_empty_values() {
+        assert_eq!(normalize_network_interface(Some(" en0 ")), Some("en0"));
+        assert_eq!(
+            normalize_network_interface(Some("\tutun4\n")),
+            Some("utun4")
+        );
+        assert_eq!(normalize_network_interface(Some("   ")), None);
+        assert_eq!(normalize_network_interface(None), None);
+    }
+}

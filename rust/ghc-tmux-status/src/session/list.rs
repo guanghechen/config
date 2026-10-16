@@ -86,8 +86,10 @@ pub fn swap_current(
     let neighbor_id = &ordered_group[neighbor_index].id;
     let mut order = normalized_order(live_sessions, order_value);
 
-    // Swap the two visible group members in the global order so sessions from
-    // other groups keep their relative slots between visible sessions.
+    /*
+     * Swap the two visible group members in the global order so sessions from
+     * other groups keep their relative slots between visible sessions.
+     */
     let Some(current_position) = order.iter().position(|id| id == current_id) else {
         return SwapOutcome::CurrentMissing;
     };
@@ -122,8 +124,10 @@ fn normalized_order(sessions: &[SessionInfo], order_value: Option<&str>) -> Vec<
 }
 
 fn sessions_by_creation_id(sessions: &[SessionInfo]) -> Vec<&SessionInfo> {
-    // tmux session ids are allocated monotonically within a server, so numeric id
-    // order gives a stable creation-order fallback for sessions missing from the virtual order.
+    /*
+     * tmux session ids are allocated monotonically within a server, so numeric id
+     * order gives a stable creation-order fallback for sessions missing from the virtual order.
+     */
     let mut indexed_sessions = sessions.iter().enumerate().collect::<Vec<_>>();
     indexed_sessions.sort_by_key(|(index, session)| {
         (session_id_number(&session.id).unwrap_or(u64::MAX), *index)

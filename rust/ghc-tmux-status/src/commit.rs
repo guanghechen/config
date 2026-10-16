@@ -190,8 +190,10 @@ impl CommitPlanner {
             &fallback_status.current_format.rich_text,
         );
 
-        // STYLE stays global: templates + redraw cadence + position/justify apply to
-        // every client identically. LAYOUT (rows, lengths, @GHC_SL_LAYOUT) is per-session.
+        /*
+         * STYLE stays global: templates + redraw cadence + position/justify apply to
+         * every client identically. LAYOUT (rows, lengths, @GHC_SL_LAYOUT) is per-session.
+         */
         push_global_if_changed(&mut plan, options, STATUS_LEFT_OPTION, STATUS_LEFT_FORMAT);
         push_global_if_changed(
             &mut plan,
@@ -213,15 +215,19 @@ impl CommitPlanner {
             STATUS_JUSTIFY_VALUE,
         );
 
-        // Session-dependent output has exactly one writer: the target session's
-        // local options. Global values above are only a stable fallback for a
-        // newly attached session before its first reconcile.
+        /*
+         * Session-dependent output has exactly one writer: the target session's
+         * local options. Global values above are only a stable fallback for a
+         * newly attached session before its first reconcile.
+         */
         for rendered_session in session_statuses {
             let session_layout = &rendered_session.session_layout;
             let status = &rendered_session.status;
             let session_target = &session_layout.session_id;
-            // Only the one-row global status-format trims by status-*-length; the
-            // two-row session format draws both caches untrimmed.
+            /*
+             * Only the one-row global status-format trims by status-*-length; the
+             * two-row session format draws both caches untrimmed.
+             */
             let writes_lengths = session_layout.layout.rows == 1;
             let left_length = status_left_length_for_width(
                 status,
@@ -328,8 +334,10 @@ impl CommitPlanner {
     }
 }
 
-// Lengths are intentionally excluded: a resize can update those independently
-// only after every cache, layout, status, and format witness has converged.
+/*
+ * Lengths are intentionally excluded: a resize can update those independently
+ * only after every cache, layout, status, and format witness has converged.
+ */
 fn session_render_state_settled(
     session_layout: &SessionLayout,
     render_key: &str,
@@ -688,8 +696,10 @@ mod tests {
 
     #[test]
     fn writes_only_stale_length_when_render_state_is_settled() {
-        // A resize within the same render/layout state changes only the derived
-        // length; rewriting the cache bundle would add avoidable tmux parsing work.
+        /*
+         * A resize within the same render/layout state changes only the derived
+         * length; rewriting the cache bundle would add avoidable tmux parsing work.
+         */
         let status = rendered_status("body");
         let mut session_layout =
             session_layout("$2", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");

@@ -7,10 +7,12 @@ use crate::widget::{
     NetworkWidget, PrefixIndicatorWidget, SessionListWidget, TimeWidget, WindowIdWidget,
 };
 
-// Responsive metric priority: a higher keep_rank is dropped later. `responsive_metric_segment`
-// accumulates thresholds in this rank order, so the on-screen drop order is
-// duration → date → memory → cpu → network, with time (the max rank) always kept.
-// Display order (network … time, left→right) is independent and fixed by the metric list.
+/*
+ * Responsive metric priority: a higher keep_rank is dropped later. `responsive_metric_segment`
+ * accumulates thresholds in this rank order, so the on-screen drop order is
+ * duration → date → memory → cpu → network, with time (the max rank) always kept.
+ * Display order (network … time, left→right) is independent and fixed by the metric list.
+ */
 const RANK_DURATION: u8 = 1;
 const RANK_DATE: u8 = 2;
 const RANK_MEMORY: u8 = 3;
@@ -18,13 +20,15 @@ const RANK_CPU: u8 = 4;
 const RANK_NETWORK: u8 = 5;
 const RANK_TIME: u8 = 6;
 
-/// Purely renders the status02 layout. Dynamic metrics are sampler-owned indirect
-/// tmux references, not render-time samples or composer-owned cache writes.
-///
-/// Each widget type is instantiated exactly once. The single-row and two-row
-/// layouts share the rendered sub-segments (prefix / window indicators / metrics):
-/// segment concatenation is associative, so composing the shared pieces is
-/// byte-identical to rendering each row independently.
+/**
+ * Purely renders the status02 layout. Dynamic metrics are sampler-owned indirect
+ * tmux references, not render-time samples or composer-owned cache writes.
+ *
+ * Each widget type is instantiated exactly once. The single-row and two-row
+ * layouts share the rendered sub-segments (prefix / window indicators / metrics):
+ * segment concatenation is associative, so composing the shared pieces is
+ * byte-identical to rendering each row independently.
+ */
 pub fn render_status02(
     context: &RenderContext,
     metrics_supported: bool,
@@ -50,11 +54,13 @@ pub fn render_status02(
     let duration = computed(DurationWidget).render(context)?;
     let date = template(DateWidget).render(context)?;
     let time = template(TimeWidget).render(context)?;
-    // Display order left→right; keep_rank carries the responsive priority. time has the
-    // max rank and stays unconditional, so it is the last metric standing before tmux
-    // char-truncation takes over. Platforms without a metrics provider (everything but
-    // macOS) never publish CPU/memory/network values, so those pills are omitted entirely
-    // here; the width-priority drop then applies to whatever metrics remain.
+    /*
+     * Display order left→right; keep_rank carries the responsive priority. time has the
+     * max rank and stays unconditional, so it is the last metric standing before tmux
+     * char-truncation takes over. Platforms without a metrics provider (everything but
+     * macOS) never publish CPU/memory/network values, so those pills are omitted entirely
+     * here; the width-priority drop then applies to whatever metrics remain.
+     */
     let mut metrics: Vec<(RenderedSegment, u8)> = Vec::new();
     if metrics_supported {
         metrics.push((network, RANK_NETWORK));
@@ -95,10 +101,12 @@ pub fn render_status02(
     })
 }
 
-/// Stable, non-cryptographic witness for the four renderer-owned session cache
-/// options. Lengths are framed explicitly so different segment boundaries cannot
-/// alias. Bump the version when the ownership contract changes independently of
-/// the rendered strings.
+/**
+ * Stable, non-cryptographic witness for the four renderer-owned session cache
+ * options. Lengths are framed explicitly so different segment boundaries cannot
+ * alias. Bump the version when the ownership contract changes independently of
+ * the rendered strings.
+ */
 pub fn render_cache_key(status: &RenderedStatus) -> String {
     const VERSION: u8 = 1;
     const FNV_OFFSET_BASIS: u64 = 0xcbf2_9ce4_8422_2325;
@@ -181,14 +189,16 @@ fn responsive_metric_segment(
                 .filter(|(_, other_rank)| *other_rank >= *rank)
                 .map(|(other, _)| display_width(&other.literal_text))
                 .sum::<usize>();
-        // Make the rich text safe as a `#{?cond,<branch>,}` argument:
-        //  - `escape_conditional_branch` escapes bare literal commas (e.g. DateWidget's
-        //    `%a, %d %b`), which would otherwise split the conditional's arguments and
-        //    truncate the metric.
-        //  - `%%` → `%%%%`: tmux expands a conditional branch twice, so an escaped
-        //    percent `%%` collapses to `%` then is eaten as a stray strftime `%` on the
-        //    second pass; doubling leaves exactly one `%`. strftime fields (`%a`, `%H`)
-        //    are a single `%` that resolves to text on the first pass, so they survive.
+        /*
+         * Make the rich text safe as a `#{?cond,<branch>,}` argument:
+         *  - `escape_conditional_branch` escapes bare literal commas (e.g. DateWidget's
+         *    `%a, %d %b`), which would otherwise split the conditional's arguments and
+         *    truncate the metric.
+         *  - `%%` → `%%%%`: tmux expands a conditional branch twice, so an escaped
+         *    percent `%%` collapses to `%` then is eaten as a stray strftime `%` on the
+         *    second pass; doubling leaves exactly one `%`. strftime fields (`%a`, `%H`)
+         *    are a single `%` that resolves to text on the first pass, so they survive.
+         */
         let guarded_rich = escape_conditional_branch(&segment.rich_text).replace("%%", "%%%%");
         let condition = if maximum_extra_width == 0 {
             format!("#{{e|>=:#{{client_width}},{threshold}}}")
@@ -212,12 +222,14 @@ fn responsive_metric_segment(
     }
 }
 
-/// Escapes a metric's rich text so it is safe as a `#{?cond,<branch>,}` argument. Inside a
-/// conditional a bare literal `,` is an argument separator, so it must be `#,` — but only
-/// when it is real branch text, not part of a `#{...}` replacement (where `,` is operator
-/// syntax). Existing `#x` escape pairs (`#,`, `##`, `#{`, `#[`) pass through untouched, and
-/// `}` that closes a tracked `#{...}` is left alone; only bare commas at replacement depth 0
-/// (e.g. DateWidget's `%a, %d %b`) are escaped.
+/**
+ * Escapes a metric's rich text so it is safe as a `#{?cond,<branch>,}` argument. Inside a
+ * conditional a bare literal `,` is an argument separator, so it must be `#,` — but only
+ * when it is real branch text, not part of a `#{...}` replacement (where `,` is operator
+ * syntax). Existing `#x` escape pairs (`#,`, `##`, `#{`, `#[`) pass through untouched, and
+ * `}` that closes a tracked `#{...}` is left alone; only bare commas at replacement depth 0
+ * (e.g. DateWidget's `%a, %d %b`) are escaped.
+ */
 fn escape_conditional_branch(rich: &str) -> String {
     let mut out = String::with_capacity(rich.len() + 8);
     let mut chars = rich.chars();
@@ -316,8 +328,10 @@ mod tests {
         assert_ne!(render_cache_key(&first), render_cache_key(&changed));
     }
 
-    // network … time, mirroring render_status02's display order; widths NET/CPU/MEM/DUR=3,
-    // DATE/TIME=4.
+    /*
+     * network … time, mirroring render_status02's display order; widths NET/CPU/MEM/DUR=3,
+     * DATE/TIME=4.
+     */
     fn priority_metrics() -> [(RenderedSegment, u8); 6] {
         [
             (metric_seg("NET"), RANK_NETWORK),
@@ -352,13 +366,15 @@ mod tests {
 
     #[test]
     fn responsive_metric_threshold_grows_as_priority_drops() {
-        // threshold(metric) = base + Σ widths of metrics with keep_rank >= its rank.
-        // base 10, widths NET3 CPU3 MEM3 DUR3 DATE4 TIME4:
-        //   network(5): 10 + NET+TIME            = 17
-        //   cpu(4):     10 + CPU+NET+TIME         = 20
-        //   memory(3):  10 + MEM+CPU+NET+TIME     = 23
-        //   date(2):    10 + DATE+MEM+CPU+NET+TIME= 27
-        //   duration(1):10 + all six             = 30
+        /*
+         * threshold(metric) = base + Σ widths of metrics with keep_rank >= its rank.
+         * base 10, widths NET3 CPU3 MEM3 DUR3 DATE4 TIME4:
+         *   network(5): 10 + NET+TIME            = 17
+         *   cpu(4):     10 + CPU+NET+TIME         = 20
+         *   memory(3):  10 + MEM+CPU+NET+TIME     = 23
+         *   date(2):    10 + DATE+MEM+CPU+NET+TIME= 27
+         *   duration(1):10 + all six             = 30
+         */
         let segment = responsive_metric_segment(&priority_metrics(), 10, &[]);
         assert!(segment.rich_text.contains("#{client_width},17},NET,}"));
         assert!(segment.rich_text.contains("#{client_width},20},CPU,}"));
@@ -369,8 +385,10 @@ mod tests {
 
     #[test]
     fn escape_conditional_branch_escapes_only_bare_commas() {
-        // Bare literal comma (DateWidget's `%a, %d %b`) must be escaped so it does not
-        // split the conditional arguments and truncate the metric to the weekday.
+        /*
+         * Bare literal comma (DateWidget's `%a, %d %b`) must be escaped so it does not
+         * split the conditional arguments and truncate the metric to the weekday.
+         */
         assert_eq!(escape_conditional_branch("%a, %d %b"), "%a#, %d %b");
         // Already-escaped style commas pass through unchanged (no double escaping).
         assert_eq!(
@@ -385,8 +403,10 @@ mod tests {
 
     #[test]
     fn responsive_metric_guards_escape_branch_commas() {
-        // A guarded metric whose rich carries a bare comma must emit it escaped, so the
-        // true branch survives whole; the unconditional max-rank metric is emitted raw.
+        /*
+         * A guarded metric whose rich carries a bare comma must emit it escaped, so the
+         * true branch survives whole; the unconditional max-rank metric is emitted raw.
+         */
         let metrics = [
             (metric_seg("%a, %d %b"), RANK_DATE),
             (metric_seg("T, Z"), RANK_TIME),
@@ -398,9 +418,11 @@ mod tests {
 
     #[test]
     fn responsive_metric_doubles_literal_percent_only_when_guarded() {
-        // cpu/memory emit an escaped literal percent `%%`; inside a guard it must become
-        // `%%%%` to survive tmux's double branch expansion. The unconditional max-rank
-        // metric keeps the single `%%`.
+        /*
+         * cpu/memory emit an escaped literal percent `%%`; inside a guard it must become
+         * `%%%%` to survive tmux's double branch expansion. The unconditional max-rank
+         * metric keeps the single `%%`.
+         */
         let metrics = [
             (metric_seg("#{@CPU}%% "), RANK_CPU),
             (metric_seg("TIME%% "), RANK_TIME),
@@ -413,8 +435,10 @@ mod tests {
 
     #[test]
     fn responsive_metric_base_lifts_every_threshold() {
-        // A wider base (more sessions on the shared row) pushes every guard up by the
-        // same delta, so metrics drop earlier as the left side grows.
+        /*
+         * A wider base (more sessions on the shared row) pushes every guard up by the
+         * same delta, so metrics drop earlier as the left side grows.
+         */
         let lo = responsive_metric_segment(&priority_metrics(), 10, &[]);
         let hi = responsive_metric_segment(&priority_metrics(), 20, &[]);
         assert!(lo.rich_text.contains("#{client_width},17},NET,}"));
@@ -428,15 +452,17 @@ mod tests {
         assert!(formatted.contains("RIGHT"));
     }
 
-    // The contract tests below lock the structural invariants of render_status02 —
-    // row composition, shared sub-segment reuse, window-indicator routing, wrappers, metric
-    // order, and provider-dependent visibility. They deliberately assert structure
-    // (markers, ordering, presence/absence) rather than any color/style value, so
-    // intentional theme tweaks do not churn them; only a structural regression breaks them.
-    //
-    // Stable text markers come from Template widgets (fixed strings): window_id
-    // `@00`, fullscreen `00/00`, time `00:00:00`. Dynamic metrics render as
-    // indirect tmux options, so these contract tests never sample the host.
+    /*
+     * The contract tests below lock the structural invariants of render_status02 —
+     * row composition, shared sub-segment reuse, window-indicator routing, wrappers, metric
+     * order, and provider-dependent visibility. They deliberately assert structure
+     * (markers, ordering, presence/absence) rather than any color/style value, so
+     * intentional theme tweaks do not churn them; only a structural regression breaks them.
+     *
+     * Stable text markers come from Template widgets (fixed strings): window_id
+     * `@00`, fullscreen `00/00`, time `00:00:00`. Dynamic metrics render as
+     * indirect tmux options, so these contract tests never sample the host.
+     */
 
     #[test]
     fn render_status02_keeps_large_left_out_of_session_right_cache() {
@@ -458,15 +484,17 @@ mod tests {
         let context = contract_context();
         let rendered = render_status02(&context, true).unwrap();
 
-        // Associativity witness: the metric block is rendered once and is the tail of
-        // both the status_right body and the session row0_right. status_right appends
-        // `#[default]` directly; the fixed status-format template appends it after
-        // expanding session_right. Apart from that wrapper, the suffix from the first
-        // metric marker must be byte-identical across the two rows. This is the strong form: a
-        // regression that drops network/cpu/memory/duration from the session row (or
-        // otherwise desyncs the two metric blocks) breaks the equality, whereas a mere
-        // "both rows contain time" check would not. Ordering (asserted on status_right
-        // below) therefore transitively holds for the session row too.
+        /*
+         * Associativity witness: the metric block is rendered once and is the tail of
+         * both the status_right body and the session row0_right. status_right appends
+         * `#[default]` directly; the fixed status-format template appends it after
+         * expanding session_right. Apart from that wrapper, the suffix from the first
+         * metric marker must be byte-identical across the two rows. This is the strong form: a
+         * regression that drops network/cpu/memory/duration from the session row (or
+         * otherwise desyncs the two metric blocks) breaks the equality, whereas a mere
+         * "both rows contain time" check would not. Ordering (asserted on status_right
+         * below) therefore transitively holds for the session row too.
+         */
         let right_rich = &rendered.status_right.rich_text;
         let session_rich = &rendered.session_right.rich_text;
         let right_tail = &right_rich[right_rich.find("@GHC_SYM_NET").expect("network in right")..];
@@ -491,9 +519,11 @@ mod tests {
         let context = contract_context();
         let rendered = render_status02(&context, true).unwrap();
 
-        // The window indicators (fullscreen + window_id) belong to status_right and the
-        // per-session current_format, never to the session row (row0_right = prefix +
-        // metric only).
+        /*
+         * The window indicators (fullscreen + window_id) belong to status_right and the
+         * per-session current_format, never to the session row (row0_right = prefix +
+         * metric only).
+         */
         assert!(rendered.status_right.literal_text.contains("@00"));
         assert!(rendered.status_right.literal_text.contains("00/00"));
         assert!(!rendered.session_right.literal_text.contains("@00"));
@@ -519,9 +549,11 @@ mod tests {
         let rendered = render_status02(&context, true).unwrap();
         let rich = &rendered.status_right.rich_text;
 
-        // Intended metric order: network, cpu, memory, duration, date, time. Keyed on
-        // glyph-identity symbols (which metric), not styles. A deliberate reorder is a
-        // semantic change and updates this single assertion.
+        /*
+         * Intended metric order: network, cpu, memory, duration, date, time. Keyed on
+         * glyph-identity symbols (which metric), not styles. A deliberate reorder is a
+         * semantic change and updates this single assertion.
+         */
         let net = rich.find("@GHC_SYM_NET").expect("network symbol");
         let cpu = rich.find("@GHC_SYM_CPU").expect("cpu symbol");
         let memory = rich.find("@GHC_SYM_MEMORY").expect("memory symbol");
@@ -543,8 +575,10 @@ mod tests {
         let rendered = render_status02(&context, false).unwrap();
         let rich = &rendered.status_right.rich_text;
 
-        // No metrics provider ⇒ network/cpu/memory pills are dropped, but the
-        // always-on duration/date/time tail still renders.
+        /*
+         * No metrics provider ⇒ network/cpu/memory pills are dropped, but the
+         * always-on duration/date/time tail still renders.
+         */
         assert!(!rich.contains("@GHC_SYM_NET"));
         assert!(!rich.contains("@GHC_SYM_CPU"));
         assert!(!rich.contains("@GHC_SYM_MEMORY"));

@@ -1,7 +1,9 @@
-// These placeholders mirror the common tmux pill shape used by rich_text:
-// ROUND_LEFT + icon glyph + one spacer before the body literal.
-// status-*-length uses literal_text as a tmux-width shadow, so keep this helper
-// in sync when the rich pill shape changes.
+/*
+ * These placeholders mirror the common tmux pill shape used by rich_text:
+ * ROUND_LEFT + icon glyph + one spacer before the body literal.
+ * status-*-length uses literal_text as a tmux-width shadow, so keep this helper
+ * in sync when the rich pill shape changes.
+ */
 const ROUND_LEFT_LITERAL: &str = "";
 const ICON_LITERAL: &str = "¤";
 

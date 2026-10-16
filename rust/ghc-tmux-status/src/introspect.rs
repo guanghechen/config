@@ -9,9 +9,11 @@ use crate::platform::current_platform;
 use crate::scheduler::{ScheduleState, SchedulerTask};
 use crate::widget::{decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot};
 
-// Placement counts describe how many times each widget lifecycle appears in the
-// rendered status02 output (duplicates across rows included). Maintained by hand
-// for `dump-state`; kept in sync with the render in composer::render_status02.
+/*
+ * Placement counts describe how many times each widget lifecycle appears in the
+ * rendered status02 output (duplicates across rows included). Maintained by hand
+ * for `dump-state`; kept in sync with the render in composer::render_status02.
+ */
 pub const TEMPLATE_WIDGET_PLACEMENTS: usize = 16;
 pub const COMPUTED_WIDGET_PLACEMENTS: usize = 4;
 pub const CACHED_METRIC_WIDGET_PLACEMENTS: usize = 0;

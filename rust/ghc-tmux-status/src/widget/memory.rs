@@ -9,8 +9,10 @@ use crate::widget::pill::pill_literal;
 pub struct MemoryWidget;
 
 impl TemplateWidget for MemoryWidget {
-    // The sampler is the single writer of `@GHC_MEM_NOW`; render only installs an
-    // indirect reference so tmux redraws can show fresh memory without a full render.
+    /*
+     * The sampler is the single writer of `@GHC_MEM_NOW`; render only installs an
+     * indirect reference so tmux redraws can show fresh memory without a full render.
+     */
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         let body_literal = " 100% ";
         let literal_text = pill_literal(body_literal);

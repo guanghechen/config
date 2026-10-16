@@ -15,11 +15,13 @@ impl ComputedWidget for HostWidget {
     }
 }
 
-// These placeholders mirror glyph variables in rich_text. status-left-length uses
-// literal_text as a tmux-width shadow, so update them with the rich pill shape.
-// ARROW_RIGHT carves the surface-colored ">" notch into the host head; the whole
-// host block is the PILL_HOST color and the session list's first item connects on
-// via its own ">" notch.
+/*
+ * These placeholders mirror glyph variables in rich_text. status-left-length uses
+ * literal_text as a tmux-width shadow, so update them with the rich pill shape.
+ * ARROW_RIGHT carves the surface-colored ">" notch into the host head; the whole
+ * host block is the PILL_HOST color and the session list's first item connects on
+ * via its own ">" notch.
+ */
 const ARROW_RIGHT: &str = "";
 const OS_ICON: &str = "";
 

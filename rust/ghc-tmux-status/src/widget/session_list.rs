@@ -3,9 +3,11 @@ use crate::model::{RenderContext, RenderedSegment, SessionInfo};
 use crate::status_widget::ComputedWidget;
 
 const LIST_SURFACE_BG: &str = "default";
-// The first item's ">" is a powerline join the orange host segment points into the
-// session list: the arrow ink is the host pill color over the item-colored cell, so the
-// host flows straight on. (Not the "default" token: as fg it would be the bar text color.)
+/*
+ * The first item's ">" is a powerline join the orange host segment points into the
+ * session list: the arrow ink is the host pill color over the item-colored cell, so the
+ * host flows straight on. (Not the "default" token: as fg it would be the bar text color.)
+ */
 const FIRST_ITEM_ARROW_FG: &str = "#{@GHC_SL_BG_PILL_HOST}";
 const ACTIVE_BG: &str = "#{@GHC_SL_BG_SESSION_LIST_ACTIVE}";
 const ACTIVE_FG: &str = "#{@GHC_SL_FG_SESSION_LIST_ACTIVE}";
@@ -16,25 +18,33 @@ const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
 const LAST_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_LAST}";
 const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
-// The last item always pads one trailing cell so status-left-length stays constant
-// across the session-owned active variants.
+/*
+ * The last item always pads one trailing cell so status-left-length stays constant
+ * across the session-owned active variants.
+ */
 const LAST_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
 const LAST_ITEM_CLOSE: &str = "#[default] #[default]";
 
-// A status-left cache is embedded in a guarded tmux command. Keep the rendered
-// session-list payload comfortably below tmux's parser limit, leaving headroom
-// for the host segment, cache witness, command syntax, and quoting.
+/*
+ * A status-left cache is embedded in a guarded tmux command. Keep the rendered
+ * session-list payload comfortably below tmux's parser limit, leaving headroom
+ * for the host segment, cache witness, command syntax, and quoting.
+ */
 const MAX_SESSION_LIST_RICH_BYTES: usize = 10 * 1024;
-// Session names are user-controlled. Bound their format-expanded representation
-// so one pathological name cannot consume the entire list budget.
+/*
+ * Session names are user-controlled. Bound their format-expanded representation
+ * so one pathological name cannot consume the entire list budget.
+ */
 const MAX_SESSION_NAME_FORMAT_BYTES: usize = 96;
 const DISPLAY_LITERAL_WRAPPER_BYTES: usize = "#{l:}".len();
 // Emit the percent after time expansion, at the literal's eventual evaluation depth.
 const PERCENT_LITERAL_ESCAPE: &str = "}#{a:37}#{l:";
 const OVERFLOW_LITERAL: &str = " … ";
 
-// This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
-// uses literal_text as a tmux-width shadow, so update it with the rich item shape.
+/*
+ * This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
+ * uses literal_text as a tmux-width shadow, so update it with the rich item shape.
+ */
 const ARROW_LITERAL: char = '\u{e0b0}';
 const STATE_LITERAL: char = '\u{00a4}';
 
@@ -238,9 +248,11 @@ fn display_literal_character_bytes(character: char) -> usize {
     }
 }
 
-/// Inactive foreground: orange last-focus ink when this item is the client's
-/// `client_last_session`, otherwise the base item ink.
-/// The compared name is a literal so a `,`/`#`/`}` in it cannot split the surrounding DSL.
+/**
+ * Inactive foreground: orange last-focus ink when this item is the client's
+ * `client_last_session`, otherwise the base item ink.
+ * The compared name is a literal so a `,`/`#`/`}` in it cannot split the surrounding DSL.
+ */
 fn last_focus_fg(session_name: &str, base_fg: &str) -> String {
     let name = compare_literal(session_name);
     format!("#{{?#{{==:#{{client_last_session}},{name}}},{LAST_FG},{base_fg}}}")
@@ -283,8 +295,10 @@ fn render_arrow(fg: &str, bg: &str, opaque_background: bool) -> String {
 }
 
 fn render_left_edge(first_active: bool) -> String {
-    // The orange host segment points its ">" arrow into the first item: ink = host pill
-    // color, bg = the owning session's statically selected item color.
+    /*
+     * The orange host segment points its ">" arrow into the first item: ink = host pill
+     * color, bg = the owning session's statically selected item color.
+     */
     render_arrow(
         FIRST_ITEM_ARROW_FG,
         if first_active {
@@ -297,8 +311,10 @@ fn render_left_edge(first_active: bool) -> String {
 }
 
 fn render_join_separator(left_active: bool, right_active: bool) -> String {
-    // Powerline seam between two items: ink = left item's trailing (num) bg, bg = right
-    // item's leading (name) bg.
+    /*
+     * Powerline seam between two items: ink = left item's trailing (num) bg, bg = right
+     * item's leading (name) bg.
+     */
     let fg = if left_active {
         ACTIVE_BG
     } else {
@@ -322,10 +338,12 @@ fn render_right_edge(last_active: bool) -> String {
 }
 
 fn render_item_body_literal(session_name: &str, index: usize, is_active: bool) -> String {
-    // Keep one state slot in the responsive-layout shadow so idle/single-state
-    // metric thresholds remain stable. status-left-length separately reserves
-    // the possible second slot when running and bell coexist. The active body
-    // separates title and index with " | ", one column wider than inactive.
+    /*
+     * Keep one state slot in the responsive-layout shadow so idle/single-state
+     * metric thresholds remain stable. status-left-length separately reserves
+     * the possible second slot when running and bell coexist. The active body
+     * separates title and index with " | ", one column wider than inactive.
+     */
     let separator = if is_active { " | " } else { "  " };
     format!(" {STATE_LITERAL} {session_name}{separator}{index} ")
 }
@@ -372,16 +390,20 @@ fn inactive_item_body_with_last_focus(
         format!(" #[fg={INACTIVE_NAME_BG}#,bg={INACTIVE_BELL_FG}#,bold]#{{@GHC_SYM_WIN_BELL}}");
     let state_prefix = session_state_prefix(session_id, &bell_prefix);
 
-    // The title style resumes after the space that follows the prefix: Ghostty draws a
-    // Nerd Font icon across a following space in that cell's colour, so a bell coloured
-    // only in its own cell renders half in the title colour.
+    /*
+     * The title style resumes after the space that follows the prefix: Ghostty draws a
+     * Nerd Font icon across a following space in that cell's colour, so a bell coloured
+     * only in its own cell renders half in the title colour.
+     */
     format!(
         "#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,reverse]{state_prefix} #[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,nobold]{name} #[fg={INACTIVE_NUM_BG}#,bg={num_fg}] {index} #[noreverse]"
     )
 }
 
-/// Renders each sampled state independently before the title, so running and
-/// bell evidence remain visible when both memberships are present.
+/**
+ * Renders each sampled state independently before the title, so running and
+ * bell evidence remain visible when both memberships are present.
+ */
 fn session_state_prefix(session_id: &str, bell_prefix: &str) -> String {
     format!(
         "#{{?#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},#{{?#{{m:*|R{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},#{{=2:#{{E:@GHC_SESSION_RUNNING_PREFIX_FMT}}}},}}#{{?#{{m:*|B{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},{bell_prefix},}},}}"
@@ -455,8 +477,10 @@ mod tests {
 
     #[test]
     fn compare_literal_escapes_for_the_format_expand_pass_only() {
-        // `==` right-value never reaches format_draw, so a single `#{l:}` fold is enough:
-        // `,` is brace-protected, `#`->`##`, `}`->`#}` (and the order keeps `#}`'s `#` intact).
+        /*
+         * `==` right-value never reaches format_draw, so a single `#{l:}` fold is enough:
+         * `,` is brace-protected, `#`->`##`, `}`->`#}` (and the order keeps `#}`'s `#` intact).
+         */
         assert_eq!(compare_literal("a,b"), "#{l:a,b}");
         assert_eq!(compare_literal("a#b"), "#{l:a##b}");
         assert_eq!(compare_literal("a}b"), "#{l:a#}b}");
@@ -465,8 +489,10 @@ mod tests {
 
     #[test]
     fn display_literal_double_escapes_hash_for_the_draw_stage() {
-        // Visible text crosses format-expand AND format_draw; each folds `##`->`#`, so `#`
-        // must be quadrupled. `}` is not draw-special, so it still only needs `#}`.
+        /*
+         * Visible text crosses format-expand AND format_draw; each folds `##`->`#`, so `#`
+         * must be quadrupled. `}` is not draw-special, so it still only needs `#}`.
+         */
         assert_eq!(display_literal("a,b"), "#{l:a,b}");
         assert_eq!(display_literal("a#b"), "#{l:a####b}");
         assert_eq!(display_literal("a}b"), "#{l:a#}b}");
