@@ -4,11 +4,11 @@
 background              {{vsc.editor_background}}
 foreground              {{vsc.foreground}}
 selection_background    {{vsc.accentPink}}
-selection_foreground    {{vsc.editor_background}}
+selection_foreground    {{(darken ? vsc.editor_background : '#1F1F1F')}}
 
 # Cursor colors
 cursor                  {{vsc.accentPink}}
-cursor_text_color       {{vsc.editor_background}}
+cursor_text_color       {{(darken ? vsc.editor_background : '#1F1F1F')}}
 
 # URL underline color when hovering with mouse
 url_color               {{vsc.accentPink}}
@@ -19,7 +19,7 @@ inactive_border_color   {{(darken ? vsc.editorLineNumber_foreground : vsc.picker
 bell_border_color       {{vsc.accentYellow}}
 
 # Tab bar colors
-active_tab_foreground   {{vsc.editor_background}}
+active_tab_foreground   {{(darken ? vsc.editor_background : '#1F1F1F')}}
 active_tab_background   {{vsc.accentPink}}
 inactive_tab_foreground {{vsc.inputOption_activeForeground}}
 inactive_tab_background {{vsc.overlay}}
