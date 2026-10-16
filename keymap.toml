@@ -119,34 +119,10 @@ bindings = [
   { key = "}",          mods = "Control|Shift",             chars = "\u001b[93;6u" },
 
   # ----- tmux -----
-  { key = "F1",                                             chars = "\u001b[11~" },         # F1
-  { key = "F2",                                             chars = "\u001b[12~" },         # F2
-  { key = "F3",                                             chars = "\u001b[13~" },         # F3
-  { key = "F4",                                             chars = "\u001b[14~" },         # F4
-  { key = "F5",                                             chars = "\u001b[15~" },         # F5
-  { key = "F6",                                             chars = "\u001b[17~" },         # F6
-  { key = "F7",                                             chars = "\u001b[18~" },         # F7
-  { key = "F8",                                             chars = "\u001b[19~" },         # F8
-  { key = "F9",                                             chars = "\u001b[20~" },         # F9
-  { key = "F10",                                            chars = "\u001b[21~" },         # F10
-  { key = "F11",                                            chars = "\u001b[23~" },         # F11
-  { key = "F12",                                            chars = "\u001b[24~" },         # F12
-  { key = "F1",         mods = "Shift",                     chars = "\u001b[1;2P" },        # S-F1
-  { key = "F2",         mods = "Shift",                     chars = "\u001b[1;2Q" },        # S-F2
-  { key = "F3",         mods = "Shift",                     chars = "\u001b[1;2R" },        # S-F3
-  { key = "F4",         mods = "Shift",                     chars = "\u001b[1;2S" },        # S-F4
-  { key = "F5",         mods = "Shift",                     chars = "\u001b[15;2~" },       # S-F5
-  { key = "F6",         mods = "Shift",                     chars = "\u001b[17;2~" },       # S-F6
-  { key = "F7",         mods = "Shift",                     chars = "\u001b[18;2~" },       # S-F7
-  { key = "F8",         mods = "Shift",                     chars = "\u001b[19;2~" },       # S-F8
-  { key = "F9",         mods = "Shift",                     chars = "\u001b[20;2~" },       # S-F9
-  { key = "F10",        mods = "Shift",                     chars = "\u001b[21;2~" },       # S-F10
-  { key = "F11",        mods = "Shift",                     chars = "\u001b[23;2~" },       # S-F11
-  { key = "F12",        mods = "Shift",                     chars = "\u001b[24;2~" },       # S-F12
-  { key = "F1",         mods = "Command",                   chars = "\u0001\u001b[11~" },   # <Ctrl-a>F1
-  { key = "F2",         mods = "Command",                   chars = "\u0001\u001b[12~" },   # <Ctrl-a>F2
-  { key = "F3",         mods = "Command",                   chars = "\u0001\u001b[13~" },   # <Ctrl-a>F3
-  { key = "F4",         mods = "Command",                   chars = "\u0001\u001b[14~" },   # <Ctrl-a>F4
+  { key = "F1",         mods = "Command",                   chars = "\u0001\u001bOP" },     # <Ctrl-a>F1
+  { key = "F2",         mods = "Command",                   chars = "\u0001\u001bOQ" },     # <Ctrl-a>F2
+  { key = "F3",         mods = "Command",                   chars = "\u0001\u001bOR" },     # <Ctrl-a>F3
+  { key = "F4",         mods = "Command",                   chars = "\u0001\u001bOS" },     # <Ctrl-a>F4
   { key = "F5",         mods = "Command",                   chars = "\u0001\u001b[15~" },   # <Ctrl-a>F5
   { key = "F6",         mods = "Command",                   chars = "\u0001\u001b[17~" },   # <Ctrl-a>F6
   { key = "F7",         mods = "Command",                   chars = "\u0001\u001b[18~" },   # <Ctrl-a>F7
@@ -319,6 +295,7 @@ bindings = [
   { key = "W",          mods = "Command|Control",           action = "Quit"                     },
   { key = "N",          mods = "Command|Control|Shift",     action = "CreateNewWindow"          },
   { key = "V",          mods = "Command|Control|Shift",     action = "ToggleViMode"             },
+  { key = "?",          mods = "Command|Control|Shift",     action = "ToggleViMode"             },
   { key = "W",          mods = "Command|Control|Shift",     action = "Quit"                     },
   { key = "Key0",       mods = "Command|Control",           action = "ResetFontSize"            },
   { key = "=",          mods = "Command|Control",           action = "IncreaseFontSize"         },
