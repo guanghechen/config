@@ -1,3 +1,6 @@
+# Upstream reference: https://github.com/PatrickF1/fzf.fish/blob/main/functions/_fzf_search_variables.fish
+# Locally adapted; see README.md for sync policy.
+
 function fzf-variables --description "Search shell variables and insert name"
     set -l var_names (set --names | string match --invert history)
 

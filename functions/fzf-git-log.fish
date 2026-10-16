@@ -1,3 +1,6 @@
+# Upstream reference: https://github.com/PatrickF1/fzf.fish/blob/main/functions/_fzf_search_git_log.fish
+# Locally adapted; see README.md for sync policy.
+
 function fzf-git-log --description "Search git log and insert commit hash"
     if not git rev-parse --git-dir >/dev/null 2>&1
         echo 'fzf-git-log: Not in a git repository.' >&2

@@ -1,3 +1,6 @@
+# Upstream reference: https://github.com/PatrickF1/fzf.fish/blob/main/functions/_fzf_search_directory.fish
+# Locally adapted; see README.md for sync policy.
+
 function fzf-file --description "Search files in current directory"
     set -l unescaped (commandline --tokens-expanded --current-token)
 

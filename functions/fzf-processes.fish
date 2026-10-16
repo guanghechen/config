@@ -1,3 +1,6 @@
+# Upstream reference: https://github.com/PatrickF1/fzf.fish/blob/main/functions/_fzf_search_processes.fish
+# Locally adapted; see README.md for sync policy.
+
 function fzf-processes --description "Search running processes and insert PID"
     set -l preview_fmt (string join ',' 'pid' 'ppid=PARENT' 'user' '%cpu' 'rss=RSS_IN_KB' 'start=START_TIME' 'command')
     set -l selected (

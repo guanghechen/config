@@ -1,3 +1,5 @@
+# Upstream reference: https://yazi-rs.github.io/docs/quick-start/#shell-wrapper
+
 function y
     set tmp (mktemp -t "yazi-cwd.XXXXXX")
     yazi $argv --cwd-file="$tmp"

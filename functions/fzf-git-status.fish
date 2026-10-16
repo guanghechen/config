@@ -1,3 +1,6 @@
+# Upstream reference: https://github.com/PatrickF1/fzf.fish/blob/main/functions/_fzf_search_git_status.fish
+# Locally adapted; see README.md for sync policy.
+
 function fzf-git-status --description "Search git status and insert file paths"
     set -l repo_root (git rev-parse --show-toplevel 2>/dev/null)
     if test $status -ne 0

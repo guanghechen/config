@@ -1,3 +1,5 @@
+# Regenerate with: acm completions --fish
+
 # Print an optspec for argparse to handle cmd's options that are independent of any subcommand.
 function __fish_acm_global_optspecs
     string join \n h/help V/version

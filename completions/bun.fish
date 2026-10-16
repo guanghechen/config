@@ -1,3 +1,5 @@
+# Upstream reference: https://github.com/oven-sh/bun/blob/main/completions/bun.fish
+
 # This is terribly complicated
 # It's because:
 # 1. bun run has to have dynamic completions

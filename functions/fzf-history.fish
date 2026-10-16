@@ -1,3 +1,6 @@
+# Upstream reference: https://github.com/PatrickF1/fzf.fish/blob/main/functions/_fzf_search_history.fish
+# Locally adapted; see README.md for sync policy.
+
 function fzf-history --description "Search command history"
     test -z "$fish_private_mode" && builtin history merge
 
