@@ -195,6 +195,28 @@ function M.setup(config)
     })
   end
 
+  -- Shift+Digit keys (Alt+Shift+N -> Ctrl+A symbol)
+  local shift_digit_symbols = {
+    { key = ")", symbol = ")" },
+    { key = "!", symbol = "!" },
+    { key = "@", symbol = "@" },
+    { key = "#", symbol = "#" },
+    { key = "$", symbol = "$" },
+    { key = "%", symbol = "%" },
+    { key = "^", symbol = "^" },
+    { key = "&", symbol = "&" },
+    { key = "*", symbol = "*" },
+    { key = "(", symbol = "(" },
+  }
+
+  for _, entry in ipairs(shift_digit_symbols) do
+    table.insert(keys, {
+      key = entry.key,
+      mods = "ALT|SHIFT",
+      action = act.SendString("\x01" .. entry.symbol),
+    })
+  end
+
   -- Letter keys (Alt+Letter -> Ctrl+A letter)
   for _, key in ipairs(letters) do
     table.insert(keys, {
@@ -251,16 +273,21 @@ function M.setup(config)
   local special_chars = {
     { key = ",", mods = "ALT", seq = "\x01\x2c" },
     { key = ".", mods = "ALT", seq = "\x01\x2e" },
+    { key = "/", mods = "ALT", seq = "\x01\x2f" },
     { key = "<", mods = "ALT|SHIFT", seq = "\x01\x3c" },
     { key = ">", mods = "ALT|SHIFT", seq = "\x01\x3e" },
+    { key = "?", mods = "ALT|SHIFT", seq = "\x01\x3f" },
     { key = "[", mods = "ALT", seq = "\x01\x5b" },
     { key = "]", mods = "ALT", seq = "\x01\x5d" },
     { key = "{", mods = "ALT|SHIFT", seq = "\x01\x7b" },
     { key = "}", mods = "ALT|SHIFT", seq = "\x01\x7d" },
+    { key = "_", mods = "ALT|SHIFT", seq = "\x01\x5f" },
+    { key = "|", mods = "ALT|SHIFT", seq = "\x01\x7c" },
     { key = "Enter", mods = "ALT", seq = "\x1b\x0d" },
     { key = ";", mods = "ALT", seq = "\x01\x3b" },
     { key = ":", mods = "ALT|SHIFT", seq = "\x01\x3a" },
     { key = "'", mods = "ALT", seq = "\x01\x27" },
+    { key = "\"", mods = "ALT|SHIFT", seq = "\x01\x22" },
     { key = "`", mods = "ALT", seq = "\x01\x60" },
   }
 
@@ -337,6 +364,7 @@ function M.setup(config)
   -- Configuration
   table.insert(keys, { key = "F5", mods = "ALT|CTRL", action = act.ReloadConfiguration })
   table.insert(keys, { key = "F11", mods = "", action = act.ToggleFullScreen })
+  table.insert(keys, { key = "F11", mods = "ALT|CTRL", action = act.ToggleFullScreen })
   table.insert(keys, { key = "F12", mods = "ALT|CTRL", action = act.ToggleFullScreen })
 
   -- Launch Menu (Profiles)
@@ -355,6 +383,9 @@ function M.setup(config)
       end),
     }),
   })
+
+  -- Scroll mode
+  table.insert(keys, { key = "?", mods = "ALT|CTRL|SHIFT", action = act.ActivateCopyMode })
 
   config.keys = keys
 end

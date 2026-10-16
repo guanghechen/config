@@ -385,6 +385,9 @@ function M.setup(config)
     }),
   })
 
+  -- Scroll mode
+  table.insert(keys, { key = "?", mods = "CMD|CTRL|SHIFT", action = act.ActivateCopyMode })
+
   config.keys = keys
 end
 
