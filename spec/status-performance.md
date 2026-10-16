@@ -238,6 +238,32 @@ session、800 列、双行；同版本 apply 先在计时外稳定状态，再�
 tmux argv 为 10160 bytes。额外 40 个长名称、12 visible 的 fixture 也成功提交，最大
 argv 为 10514 bytes；均未触发逐命令重试。保留既有 8 KiB 分块预算与完整 guards。
 
+### 4.9 Fold session-state publication into the first scheduler queue
+
+每次 option 写入（包括同值写入）都会经 `options_push_changes` 请求全部 attached client
+全量重绘；无 WAIT 的同一 queue 只重绘一次。原实现每个 metrics tick 有三批写入：driver
+session-state 发布、metric claim、metric finish。现由 renderer 将发布置于该 tick 首个
+mutation queue 的 guard 之前（契约见 `statusline.md` §8.1），正常 metrics tick 降为两批；
+claims、lease、deadline 与 completion witness 不变。该收益只属于新 driver + 新 renderer 的
+正常路径；旧 renderer 的 fallback 发布仍是独立一批，并多一次 tmux CLI。
+
+2026-10-16，macOS、tmux next-3.9、完整配置、4 sessions / 7 windows / 8 panes 铺满彩色文本、
+284×70 client、isolated server。Old/new driver 与 renderer 成对切换（renderer SHA-256
+`44da93a7…` → `b6f74ef4…`），每组 60 秒：
+
+| Workload | Old | New |
+|---|---:|---:|
+| 1 client 终端输出 | 28.75 KiB/s | 22.05 KiB/s |
+| 2 clients 终端输出 | 60.92 KiB/s | 43.89 KiB/s |
+| `-vv` full redraws / metrics tick | 3.42 | 2.62 |
+| `-vv` tmux CLI / metrics tick | 4.50 | 3.62 |
+
+`-vv` 两侧分别为 12/13 个 metrics tick，另含 heartbeat（old 1 次、new 2 次，每次约 3 次
+redraw），扣除后为每 tick 约 3.2 → 2.2 次 full redraw。Server CPU 两轮 2-client 读数分别为
+`1.22 → 0.68%` 与 `0.70 → 0.62%`，每 tick process-tree CPU 的 12 组配对 median 为
+`44 → 48 ms`，均处于噪声范围，不构成 CPU 结论。单次 full redraw 字节数随屏幕内容、尺寸与
+client 数增长，结果不外推到其他 workload。
+
 ## 5. 明确拒绝或延后的方向
 
 | Direction | Final decision | Revisit condition |

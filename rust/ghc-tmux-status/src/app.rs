@@ -1,7 +1,7 @@
 use crate::error::AppResult;
 use crate::model::RenderEvent;
 use crate::runtime::StatusRuntime;
-use crate::scheduler::SchedulerSnapshot;
+use crate::scheduler::{SchedulerSnapshot, SessionStatesPublish};
 use crate::session::{FocusTarget, MoveDirection};
 
 pub struct StatusApp {
@@ -23,8 +23,12 @@ impl StatusApp {
         self.runtime.bootstrap_theme(expected_generation)
     }
 
-    pub fn scheduler_tick(&self, snapshot: Option<SchedulerSnapshot>) -> AppResult<()> {
-        self.runtime.scheduler_tick(snapshot)
+    pub fn scheduler_tick(
+        &self,
+        snapshot: Option<SchedulerSnapshot>,
+        publish: Option<SessionStatesPublish>,
+    ) -> AppResult<()> {
+        self.runtime.scheduler_tick(snapshot, publish)
     }
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {

@@ -13,13 +13,14 @@ use crate::config::{
     METRIC_LAST_ERROR_OPTION, METRIC_LAST_EXEC_OUTCOME_OPTION, METRIC_LAST_OK_OPTION,
     METRIC_SCHEDULER_STATE_OPTION, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
     RENDER_REVISION_OPTION, ROWS_OVERRIDE_OPTION, SCHEDULER_ACTIVE_OPTION,
-    SCHEDULER_GENERATION_OPTION, SESSION_RENDER_KEY_OPTION, STATUS_FORMAT_0_OPTION,
-    STATUS_FORMAT_1_OPTION, STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_LEFT_OPTION,
-    STATUS_POSITION_OPTION, STATUS_RIGHT_OPTION,
+    SCHEDULER_GENERATION_OPTION, SESSION_RENDER_KEY_OPTION, SESSION_STATES_OPTION,
+    STATUS_FORMAT_0_OPTION, STATUS_FORMAT_1_OPTION, STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION,
+    STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_RIGHT_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::model::{SessionInfo, SessionNavigationSnapshot, TmuxSnapshot};
 use crate::process::{OperationDeadline, output_with_timeout};
+use crate::scheduler::SessionStatesPublish;
 
 const TMUX_COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
 // This budget applies before two nested `if-shell` quoting passes. tmux 3.7c
@@ -33,6 +34,14 @@ pub struct TmuxAdapter;
 pub struct TmuxOptionGuard<'a> {
     pub option: &'a str,
     pub expected: &'a str,
+}
+
+/// The task-state transition a scheduler claim commits behind its guards.
+pub struct SchedulerClaimMutation<'a> {
+    pub state_option: &'a str,
+    pub claimed_state: &'a str,
+    pub last_attempt_option: &'a str,
+    pub now_seconds: u64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -208,52 +217,47 @@ impl TmuxAdapter {
         parse_options_output(&output, options.len())
     }
 
+    /// An optional session-state publication runs ahead of the claim guard in the
+    /// same queue, so a skipped claim still publishes. Callers treat it as
+    /// attempted whatever the outcome and never publish it again.
     pub fn claim_scheduler_task(
         &self,
         guards: &[TmuxOptionGuard<'_>],
-        state_option: &str,
-        claimed_state: &str,
-        last_attempt_option: &str,
-        now_seconds: u64,
+        claim: &SchedulerClaimMutation<'_>,
+        publish: Option<&SessionStatesPublish>,
     ) -> AppResult<GuardedMutationOutcome> {
-        let mut commands = scheduler_claim_commands(
-            state_option,
-            claimed_state,
-            last_attempt_option,
-            now_seconds,
-        );
+        let mut commands = scheduler_claim_commands(claim);
         commands.push(marker_command(SCHEDULER_APPLIED_MARK));
         let command_list = tmux_command_sequence(&commands);
-        self.guarded_mutation(guards, command_list)
+        self.guarded_mutation_after(publish, guards, command_list)
     }
 
     /// Claims a scheduler task and snapshots its execution inputs in the same
     /// tmux command queue. A timeout after the state mutation remains ambiguous:
-    /// callers must not retry; the claimed lease is the recovery boundary.
+    /// callers must not retry; the claimed lease is the recovery boundary. The
+    /// optional publication follows the `claim_scheduler_task` contract.
     pub fn claim_scheduler_task_with_options(
         &self,
         guards: &[TmuxOptionGuard<'_>],
-        state_option: &str,
-        claimed_state: &str,
-        last_attempt_option: &str,
-        now_seconds: u64,
+        claim: &SchedulerClaimMutation<'_>,
         options: &[(TmuxOptionScope, &str)],
+        publish: Option<&SessionStatesPublish>,
     ) -> AppResult<(GuardedMutationOutcome, Vec<String>)> {
-        let mut commands = scheduler_claim_commands(
-            state_option,
-            claimed_state,
-            last_attempt_option,
-            now_seconds,
-        );
+        let mut commands = scheduler_claim_commands(claim);
         commands.push(marker_command(SCHEDULER_APPLIED_MARK));
         commands.extend(serialized_option_commands(options));
         let skipped = marker_command(SCHEDULER_SKIPPED_MARK);
-        let output = self.tmux_output(option_guarded_command_args(
-            guards,
-            tmux_command_sequence(&commands),
-            Some(skipped),
+        let output = self.tmux_output(with_session_states_publish(
+            publish,
+            option_guarded_command_args(guards, tmux_command_sequence(&commands), Some(skipped)),
         ))?;
         parse_guarded_options_output(&output, options.len())
+    }
+
+    /// Publishes session states in a queue of its own, for owned ticks whose
+    /// publication no mutation queue carried.
+    pub fn publish_session_states(&self, publish: &SessionStatesPublish) -> AppResult<()> {
+        self.tmux_status(session_states_publish_args(publish))
     }
 
     pub fn finish_scheduler_task(
@@ -427,15 +431,23 @@ impl TmuxAdapter {
         guards: &[TmuxOptionGuard<'_>],
         command_list: String,
     ) -> AppResult<GuardedMutationOutcome> {
+        self.guarded_mutation_after(None, guards, command_list)
+    }
+
+    fn guarded_mutation_after(
+        &self,
+        publish: Option<&SessionStatesPublish>,
+        guards: &[TmuxOptionGuard<'_>],
+        command_list: String,
+    ) -> AppResult<GuardedMutationOutcome> {
         let skipped = tmux_command_string(&[
             "display-message".to_string(),
             "-p".to_string(),
             SCHEDULER_SKIPPED_MARK.to_string(),
         ]);
-        let output = self.tmux_output(option_guarded_command_args(
-            guards,
-            command_list,
-            Some(skipped),
+        let output = self.tmux_output(with_session_states_publish(
+            publish,
+            option_guarded_command_args(guards, command_list, Some(skipped)),
         ))?;
         match output.trim() {
             SCHEDULER_APPLIED_MARK => Ok(GuardedMutationOutcome::Applied),
@@ -756,24 +768,73 @@ fn option_guarded_command_args(
     args
 }
 
-fn scheduler_claim_commands(
-    state_option: &str,
-    claimed_state: &str,
-    last_attempt_option: &str,
-    now_seconds: u64,
+// Mirrors the lifecycle guard of every session-state consumer: an inactive
+// scheduler or a non-status02 mode samples an empty membership.
+const SESSION_STATES_ENABLED_FORMAT: &str =
+    "#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{||:#{==:#{@GHC_SL_MODE},02},#{==:#{@GHC_SL_MODE},12}}}";
+
+/// Arms this sample's expiry, clears the option, then samples membership. The
+/// expiry clears only a value still carrying this sample's prefix. `run-shell`
+/// expands its command once when scheduled, so doubled hashes leave the token
+/// comparison to the delayed `if-shell`. Clearing first makes a malformed
+/// expansion degrade to no marker.
+fn session_states_publish_args(publish: &SessionStatesPublish) -> Vec<String> {
+    let prefix = &publish.sample_prefix;
+    let stale_clear = format!(
+        "if-shell -F '##{{m:{prefix}*,##{{{SESSION_STATES_OPTION}}}}}' 'set-option -s {SESSION_STATES_OPTION} \"\"'"
+    );
+    let sample =
+        format!("#{{?{SESSION_STATES_ENABLED_FORMAT},{prefix}#{{E:@GHC_SESSION_STATES_FMT}},}}");
+    [
+        "run-shell",
+        "-bC",
+        "-d",
+        &publish.ttl_seconds,
+        &stale_clear,
+        ";",
+        "set-option",
+        "-s",
+        SESSION_STATES_OPTION,
+        "",
+        ";",
+        "set-option",
+        "-sF",
+        SESSION_STATES_OPTION,
+        &sample,
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect()
+}
+
+fn with_session_states_publish(
+    publish: Option<&SessionStatesPublish>,
+    args: Vec<String>,
 ) -> Vec<String> {
+    match publish {
+        Some(publish) => {
+            let mut prefixed = session_states_publish_args(publish);
+            prefixed.push(";".to_string());
+            prefixed.extend(args);
+            prefixed
+        }
+        None => args,
+    }
+}
+
+fn scheduler_claim_commands(claim: &SchedulerClaimMutation<'_>) -> Vec<String> {
     vec![
         tmux_command_string(&[
             "set".to_string(),
             "-g".to_string(),
-            last_attempt_option.to_string(),
-            now_seconds.to_string(),
+            claim.last_attempt_option.to_string(),
+            claim.now_seconds.to_string(),
         ]),
         tmux_command_string(&[
             "set".to_string(),
             "-s".to_string(),
-            state_option.to_string(),
-            claimed_state.to_string(),
+            claim.state_option.to_string(),
+            claim.claimed_state.to_string(),
         ]),
     ]
 }
@@ -1197,12 +1258,58 @@ mod tests {
         format_literal, guarded_snapshot_command_args, nested_render_guard_args, option_value_mark,
         options_command_args, parse_client_line, parse_guarded_options_output,
         parse_options_output, parse_session_line, parse_session_navigation_output,
-        parse_snapshot_output, serialized_plan_chunks, snapshot_command_args,
+        parse_snapshot_output, serialized_plan_chunks, session_states_publish_args,
+        snapshot_command_args, with_session_states_publish,
     };
     use crate::commit::{TmuxCommand, TmuxCommandPlan};
     use crate::config::RENDER_REVISION_OPTION;
+    use crate::scheduler::SessionStatesPublish;
 
     const CLIENTS_MARK: &str = super::CLIENTS_MARK;
+
+    #[test]
+    fn session_states_publish_matches_the_driver_command_queue() {
+        let publish = SessionStatesPublish::from_transport("314:5120:77:", "12").unwrap();
+        assert_eq!(
+            session_states_publish_args(&publish),
+            [
+                "run-shell",
+                "-bC",
+                "-d",
+                "12",
+                "if-shell -F '##{m:314:5120:77:*,##{@GHC_SL_SESSION_STATES}}' 'set-option -s @GHC_SL_SESSION_STATES \"\"'",
+                ";",
+                "set-option",
+                "-s",
+                "@GHC_SL_SESSION_STATES",
+                "",
+                ";",
+                "set-option",
+                "-sF",
+                "@GHC_SL_SESSION_STATES",
+                "#{?#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{||:#{==:#{@GHC_SL_MODE},02},#{==:#{@GHC_SL_MODE},12}}},314:5120:77:#{E:@GHC_SESSION_STATES_FMT},}",
+            ]
+        );
+    }
+
+    #[test]
+    fn session_states_publish_precedes_the_guarded_queue() {
+        let publish = SessionStatesPublish::from_transport("1:2:3:", "12").unwrap();
+        let guarded = vec![
+            "if-shell".to_string(),
+            "-F".to_string(),
+            "guard".to_string(),
+        ];
+        let mut expected = session_states_publish_args(&publish);
+        expected.push(";".to_string());
+        expected.extend(guarded.clone());
+
+        assert_eq!(
+            with_session_states_publish(Some(&publish), guarded.clone()),
+            expected
+        );
+        assert_eq!(with_session_states_publish(None, guarded.clone()), guarded);
+    }
 
     fn option_section(values: &[&str]) -> String {
         let mut lines = vec![OPTIONS_MARK.to_string()];

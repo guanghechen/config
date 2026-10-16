@@ -341,12 +341,26 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Terminal title 使用 session scope：scheduler active 时读取同一份 sampled running/bell
   membership，否则用 live `W/P` aggregation 保持 status01/fallback 可用；两条路径均按
   `spinning > bell > idle` 选择，最后显示 `session:window`。Terminal title 不反写 `pane_title`。
-- Scheduler lock owner 用一条 command queue 发布
+- 每个持锁 scheduler tick 尝试一次发布
   `@GHC_SL_SESSION_STATES = <sample-token><|R$session_id|...><|B$session_id|...>`；`R`/`B`
-  分别表示 running/bell evidence，contender 不采样。
+  分别表示 running/bell evidence，contender 不采样。Driver 以版本化 env 请求 renderer
+  接管发布；renderer 校验请求后先向 stdout 写出并 flush 固定 ack 行，成功后才进入任何
+  发布路径，写失败则放弃整个 tick。接管后，renderer 将发布置于该 tick 首个 mutation queue
+  的 guard 之前（metrics claim，否则 heartbeat claim），与 claim 共享一次 client redraw；
+  没有 queue 执行的普通出口（not-due、snapshot 读取失败、inactive）单独发布。携带发布的
+  queue 无论 skipped、失败或 timeout 都只算已尝试，不重发；ack 后、首个 queue 前崩溃时该
+  tick 不发布，由 TTL 兜底。Direct `scheduler-tick` 与不认识版本化请求的旧 renderer 都
+  不发布。
+- Driver 不启动 renderer 的出口（snapshot 读取失败、inactive 或非法 generation）由 driver
+  单独发布。Renderer 以 status 0/1 结束后，driver 在最终 wait 后读取 ack：只有确认 renderer
+  未接管（ack 文件为空，或读到非 ack 的完整行）时才补发一次，采样晚于正常 prelude；完整 ack、
+  ack 无法打开或未能读到完整行（unknown），以及 renderer 异常退出（保留 generation fencing）
+  时都不补发。发布在执行时采样当前 formats 与 live state，不受 task generation
+  guard 约束。
 - Session item 检查 lifecycle active 与 exact typed session-id membership；`R` 与 `B`
   分别匹配并按 spinner、bell 顺序拼接，因此两类 evidence 可同时显示。Sample 默认由 tmux
-  server 在 12 秒后以 token prefix CAS 清理；正常 freshness 约为 4–5 秒。
+  server 在 12 秒后以 token prefix CAS 清理；正常 freshness 约为 4–5 秒。发布在 driver
+  delay 之后执行，driver 首次启动或 reload 后约一个 tick 才出现首个 sample。
 - Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 2` 派生
   `⠋/⠴`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
   malformed 时不显示 marker。
@@ -431,9 +445,11 @@ Server state：
 generation:sequence:next_due_seconds:lease_until_seconds
 ```
 
-Status format 通过 `#()` 调用 `script/status-scheduler.sh`。Shell driver 先取得 scheduler
-single-flight ownership，再 materialize running-session derived state，并负责 process
-supervision；Rust 负责 task state transition 和实际 scheduler work。
+Status format 通过 `#()` 调用 `script/status-scheduler.sh`。Shell driver 取得 scheduler
+single-flight ownership 并负责 process supervision；running-session derived state 按 §8.1
+每个持锁 tick 发布一次；Rust 负责 task state transition 和实际 scheduler work。Renderer
+stdout 写入本次 invocation 独占创建的 ack 文件（与 lock candidate/update 同目录）；driver
+释放 lock 前清理，dead-owner recovery 一并清理遗留文件。
 
 任何 `refresh-client` 都会让 tmux SIGTERM 正在运行的 `#()` job 并启动替代 job。Driver
 因此把 TERM 视为重启通知：完成当前周期并等待 renderer 自行结束，替代 job 因 lock 退出。

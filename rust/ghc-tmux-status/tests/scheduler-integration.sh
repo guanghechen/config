@@ -23,6 +23,7 @@ mkdir -p "$tmp/bin"
 cat >"$tmp/bin/tmux" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$*" >>"$GHC_TMUX_TMUX_CALL_LOG"
+case "$*" in *"${GHC_TMUX_FAIL_MATCH:-__never__}"*) exit 1 ;; esac
 exec "$GHC_TMUX_REAL_TMUX" "$@"
 EOF
 chmod +x "$tmp/bin/tmux"
@@ -130,6 +131,151 @@ if [ ! -s "$tmux_call_log" ]; then
   echo "invalid transported scheduler snapshot did not fall back to tmux" >&2
   exit 1
 fi
+
+# An owned tick attempts its session-state publication exactly once: inside the
+# first mutation queue it executes, or on its own when no queue carried it.
+publish_prefix="314:5120:$snapshot_now:"
+tmux -L "$socket" set -g @GHC_SL_MODE 02
+owned_stdout="$tmp/owned.stdout"
+session_states_ack='__GHC_SESSION_STATES_V2_TAKEN__'
+run_owned_tick() {
+  local snapshot=$1
+  shift
+  : >"$tmux_call_log"
+  env \
+    TMUX="$server_env" \
+    PATH="$tmp/bin:$PATH" \
+    GHC_TMUX_REAL_TMUX="$real_tmux" \
+    GHC_TMUX_TMUX_CALL_LOG="$tmux_call_log" \
+    GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT="$snapshot" \
+    GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2="$publish_prefix" \
+    GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS=12 \
+    "$@" "$binary" scheduler-tick >"$owned_stdout"
+}
+# A publication always leads its tmux invocation with the delayed expiry; failure
+# outcomes may quote it, but never at the start of a call.
+publish_calls() {
+  rg -c '^run-shell -bC -d 12 ' "$tmux_call_log" || echo 0
+}
+session_states() {
+  tmux -L "$socket" show -sqv @GHC_SL_SESSION_STATES
+}
+expect_publication() {
+  local expected_value=$1
+  local context=$2
+  if [ "$(publish_calls)" != "1" ] || [ "$(session_states)" != "$expected_value" ]; then
+    echo "$context: expected one publication of '$expected_value'" >&2
+    cat "$tmux_call_log" >&2
+    exit 1
+  fi
+}
+
+# Nothing due: the only tmux call is the standalone publication.
+tmux -L "$socket" set -s @GHC_SL_SESSION_STATES stale
+run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_not_due"
+expect_publication "$publish_prefix" "not-due owned tick"
+if [ "$(cat "$owned_stdout")" != "$session_states_ack" ]; then
+  echo "owned tick did not acknowledge its publication: $(cat "$owned_stdout")" >&2
+  exit 1
+fi
+if [ "$(wc -l <"$tmux_call_log" | tr -d ' ')" != "1" ]; then
+  echo "not-due owned tick issued more than its publication" >&2
+  cat "$tmux_call_log" >&2
+  exit 1
+fi
+
+# Malformed or unversioned publication requests are not owned work: no
+# acknowledgement, no publication, and the tick still succeeds.
+expect_unowned_request() {
+  if [ -s "$tmux_call_log" ] || [ -s "$owned_stdout" ]; then
+    echo "unowned publication request was acknowledged or published: $1" >&2
+    cat "$tmux_call_log" "$owned_stdout" >&2
+    exit 1
+  fi
+}
+run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_not_due" \
+  GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2=bad
+expect_unowned_request "malformed request"
+run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_not_due" \
+  GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2= \
+  "GHC_TMUX_STATUS_SESSION_STATES_PREFIX=$publish_prefix"
+expect_unowned_request "unversioned request"
+
+# An acknowledgement that cannot be written forfeits the tick before any work. A
+# pipe whose reader is already closed makes the write fail with EPIPE.
+if env \
+  TMUX="$server_env" \
+  PATH="$tmp/bin:$PATH" \
+  GHC_TMUX_REAL_TMUX="$real_tmux" \
+  GHC_TMUX_TMUX_CALL_LOG="$tmux_call_log" \
+  GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2="$publish_prefix" \
+  GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS=12 \
+  python3 -c '
+import os, subprocess, sys
+read_end, write_end = os.pipe()
+os.close(read_end)
+sys.exit(subprocess.run(sys.argv[1:], stdout=write_end, stderr=subprocess.DEVNULL).returncode)
+' "$binary" scheduler-tick; then
+  echo "unwritable acknowledgement reported success" >&2
+  exit 1
+fi
+if [ -s "$tmux_call_log" ]; then
+  echo "unwritable acknowledgement still reached tmux" >&2
+  cat "$tmux_call_log" >&2
+  exit 1
+fi
+
+# A due claim carries the publication ahead of its guard, in the same queue.
+heartbeat_due="777:11:0:0"
+tmux -L "$socket" set -s @GHC_SL_HEARTBEAT_SCHED "$heartbeat_due" ';' \
+  set -s @GHC_SL_SESSION_STATES stale
+run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_due"
+expect_publication "$publish_prefix" "due heartbeat tick"
+if ! rg '^run-shell -bC -d 12 ' "$tmux_call_log" | rg -Fq '@GHC_SL_HEARTBEAT_LAST_ATTEMPT'; then
+  echo "publication did not share the heartbeat claim queue" >&2
+  cat "$tmux_call_log" >&2
+  exit 1
+fi
+heartbeat_after_publish=$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)
+case "$heartbeat_after_publish" in
+  777:12:*:0) ;;
+  *) echo "due heartbeat did not complete after publishing: $heartbeat_after_publish" >&2; exit 1 ;;
+esac
+
+# A stale witness skips the claim, but the publication outside its guard ran.
+tmux -L "$socket" set -s @GHC_SL_SESSION_STATES stale
+run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_due"
+expect_publication "$publish_prefix" "skipped heartbeat claim"
+if [ "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)" != "$heartbeat_after_publish" ]; then
+  echo "stale witness overwrote heartbeat state" >&2
+  exit 1
+fi
+
+# A failed live read still attempts the publication and keeps its error.
+tmux -L "$socket" set -s @GHC_SL_SESSION_STATES stale
+if run_owned_tick invalid GHC_TMUX_FAIL_MATCH=@GHC_SL_SCHED_GEN 2>/dev/null; then
+  echo "failed scheduler snapshot read reported success" >&2
+  exit 1
+fi
+expect_publication "$publish_prefix" "failed snapshot read"
+
+# An inactive lifecycle exits before any task yet still publishes, clearing samples.
+tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
+  set -s @GHC_SL_SESSION_STATES stale
+run_owned_tick ''
+expect_publication "" "inactive owned tick"
+tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 1
+
+# A claim queue that fails before reaching tmux consumed the attempt: it is not
+# repeated even though nothing was committed.
+tmux -L "$socket" set -s @GHC_SL_HEARTBEAT_SCHED "$heartbeat_due" ';' \
+  set -s @GHC_SL_SESSION_STATES stale
+if run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_due" \
+  GHC_TMUX_FAIL_MATCH=@GHC_SL_HEARTBEAT_LAST_ATTEMPT 2>/dev/null; then
+  echo "failed heartbeat claim reported success" >&2
+  exit 1
+fi
+expect_publication stale "failed claim queue"
 
 tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 1
 tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 42

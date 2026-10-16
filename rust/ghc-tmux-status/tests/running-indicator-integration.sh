@@ -2,10 +2,13 @@
 set -euo pipefail
 
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
+crate_dir="$repo_dir/rust/ghc-tmux-status"
 socket="ghc-tmux-running-indicator-test-$$"
+tmp=$(mktemp -d /tmp/ghc-tmux-running-indicator-test.XXXXXX)
 
 cleanup() {
   env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+  rm -rf "$tmp"
 }
 trap cleanup EXIT
 
@@ -406,5 +409,141 @@ publish_session_states
 assert_equal "" \
   "$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)" \
   "inactive lifecycle clears sampled sessions"
+
+# With a valid lifecycle the driver hands its publication to the renderer, which
+# carries it in the tick's first mutation queue; the driver itself only reads the
+# scheduler snapshot. A HOME whose release path points at the freshly built debug
+# binary keeps this check on the current sources.
+cargo build --quiet --manifest-path "$crate_dir/Cargo.toml"
+renderer_home="$tmp/home"
+mkdir -p "$renderer_home/.config/tmux/rust/ghc-tmux-status/target/release"
+ln -s "$crate_dir/target/debug/ghc-tmux-status" \
+  "$renderer_home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+real_tmux=$(command -v tmux)
+mkdir -p "$tmp/bin"
+cat >"$tmp/bin/tmux" <<'EOF'
+#!/bin/sh
+caller=$(ps -o comm= -p "$PPID" 2>/dev/null)
+printf '%s\t%s\n' "${caller##*/}" "$*" >>"$GHC_TMUX_CALL_LOG"
+case "$*" in *"${GHC_TMUX_FAIL_MATCH:-__never__}"*) exit 1 ;; esac
+exec "$GHC_TMUX_REAL_TMUX" "$@"
+EOF
+chmod +x "$tmp/bin/tmux"
+tmux_calls="$tmp/tmux-calls"
+
+publish_through_driver() {
+  : >"$tmux_calls"
+  env \
+    TMUX="$server_environment" \
+    HOME="$renderer_home" \
+    PATH="$tmp/bin:$PATH" \
+    GHC_TMUX_REAL_TMUX="$real_tmux" \
+    GHC_TMUX_CALL_LOG="$tmux_calls" \
+    GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 \
+    "$@" \
+    "$repo_dir/script/status-scheduler.sh" \
+    >/dev/null
+}
+
+count_calls() {
+  local caller=$1
+  local pattern=$2
+  rg -c "^${caller}"$'\t'"${pattern}" "$tmux_calls" || echo 0
+}
+
+tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 1 ';' \
+  set-option -s @GHC_SL_SCHED_GEN 9 ';' \
+  set-option -s @GHC_SL_METRIC_SCHED '9:1:9999999999:0' ';' \
+  set-option -s @GHC_SL_HEARTBEAT_SCHED '9:1:9999999999:0'
+tmux_server select-pane -t alpha:main -T '⠴ renderer-owned'
+publish_through_driver
+renderer_sample=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
+assert_contains "$renderer_sample" "|R${alpha_id}|" "renderer-owned publication"
+assert_equal "1" "$(count_calls bash '')" "driver tmux calls on the renderer path"
+assert_equal "0" "$(count_calls bash 'run-shell -bC -d ')" "driver publication on the renderer path"
+assert_equal "1" "$(count_calls ghc-tmux-status 'run-shell -bC -d ')" \
+  "renderer publications per owned tick"
+
+# A failed scheduler snapshot never starts the renderer, so the driver publishes.
+publish_through_driver GHC_TMUX_FAIL_MATCH=@GHC_SL_HEARTBEAT_SCHED
+driver_sample=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
+assert_contains "$driver_sample" "|R${alpha_id}|" "driver publication after snapshot failure"
+if [ "$driver_sample" = "$renderer_sample" ]; then
+  fail "snapshot failure did not refresh the sample"
+fi
+assert_equal "1" "$(count_calls bash 'run-shell -bC -d ')" \
+  "driver publications after snapshot failure"
+assert_equal "0" "$(count_calls ghc-tmux-status '')" \
+  "renderer calls after snapshot failure"
+
+# Fake renderers model each side of the handoff: a renderer that predates the
+# versioned request never acknowledges it, so a normal exit hands publication back
+# to the driver; an acknowledgement transfers it for good; an abnormal exit keeps
+# the generation fence and never falls back.
+make_renderer_home() {
+  local name=$1
+  local body=$2
+  local home="$tmp/renderer-$name"
+  mkdir -p "$home/.config/tmux/rust/ghc-tmux-status/target/release"
+  printf '#!/bin/sh\n%s\n' "$body" \
+    >"$home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+  chmod +x "$home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+  printf '%s\n' "$home"
+}
+
+for legacy_status in 0 1; do
+  legacy_home=$(make_renderer_home "legacy-$legacy_status" "exit $legacy_status")
+  before=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
+  publish_through_driver HOME="$legacy_home"
+  after=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
+  assert_contains "$after" "|R${alpha_id}|" "fallback after legacy renderer exit $legacy_status"
+  if [ "$after" = "$before" ]; then
+    fail "legacy renderer exit $legacy_status did not refresh the sample"
+  fi
+  assert_equal "1" "$(count_calls bash 'run-shell -bC -d ')" \
+    "driver fallbacks after legacy renderer exit $legacy_status"
+done
+
+ack_home=$(make_renderer_home ack-only "printf '%s\\n' __GHC_SESSION_STATES_V2_TAKEN__")
+before=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
+publish_through_driver HOME="$ack_home"
+assert_equal "$before" "$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)" \
+  "acknowledged publication is never repeated by the driver"
+assert_equal "0" "$(count_calls bash 'run-shell -bC -d ')" "driver publication after acknowledgement"
+
+# Only the exact acknowledgement line transfers publication.
+garbage_home=$(make_renderer_home garbage "printf '%s\\n' __GHC_SESSION_STATES_V1_TAKEN__")
+publish_through_driver HOME="$garbage_home"
+assert_equal "1" "$(count_calls bash 'run-shell -bC -d ')" \
+  "driver fallback after an unrecognized acknowledgement"
+
+# An ack that exists but cannot be fully read proves neither handoff outcome, so the
+# driver never repeats a publication the renderer may already have made. The first
+# renderer makes its acknowledged ack file unopenable; the second leaves a partial line.
+unreadable_home=$(make_renderer_home unreadable-ack '
+printf "%s\n" __GHC_SESSION_STATES_V2_TAKEN__
+fields=${TMUX#*,}
+chmod 000 "${TMPDIR:-/tmp}/ghc-tmux-status-scheduler-$(id -u)-${fields%%,*}.lock.ack.$PPID" \
+  && : >"$GHC_TEST_ACK_BLOCKED"')
+partial_home=$(make_renderer_home partial-ack "printf '%s' __GHC_SESSION_STATES_V2_TAKEN__")
+ack_blocked="$tmp/ack-blocked"
+for unknown_home in "$unreadable_home" "$partial_home"; do
+  before=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
+  publish_through_driver HOME="$unknown_home" GHC_TEST_ACK_BLOCKED="$ack_blocked"
+  assert_equal "$before" "$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)" \
+    "unknown acknowledgement keeps the sample: $unknown_home"
+  assert_equal "0" "$(count_calls bash 'run-shell -bC -d ')" \
+    "driver publication after an unknown acknowledgement: $unknown_home"
+done
+if [ ! -e "$ack_blocked" ]; then
+  fail "unreadable-ack renderer did not block its ack file"
+fi
+
+panic_home=$(make_renderer_home panic "exit 101")
+publish_through_driver HOME="$panic_home"
+assert_equal "0" "$(count_calls bash 'run-shell -bC -d ')" "driver publication after abnormal exit"
+assert_equal "0" "$(tmux_server show-option -sqv @GHC_SL_SCHED_ACTIVE)" \
+  "abnormal renderer exit keeps the generation fence"
+tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 1
 
 printf '%s\n' "running indicator integration: ok"

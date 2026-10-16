@@ -15,6 +15,12 @@ readonly generation_option='@GHC_SL_SCHED_GEN'
 readonly session_states_option='@GHC_SL_SESSION_STATES'
 readonly recovery_owner_option='@GHC_SL_LOCK_RECOVERY_OWNER'
 readonly renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+# A renderer prints this line, and nothing else, once it owns the tick's session-state
+# publication; it must match the renderer's SESSION_STATES_ACK.
+readonly session_states_ack='__GHC_SESSION_STATES_V2_TAKEN__'
+# Only the versioned request below hands publication over. Renderers that predate
+# it ignore that request, so an inherited unversioned request must not reach them.
+unset GHC_TMUX_STATUS_SESSION_STATES_PREFIX
 
 if [ "$recover_only" = "0" ]; then
   printf '\n'
@@ -32,6 +38,7 @@ fi
 lock_path="${TMPDIR:-/tmp}/ghc-tmux-status-scheduler-${UID}-${server_pid}.lock"
 lock_candidate="${lock_path}.candidate.$$"
 lock_update="${lock_path}.update.$$"
+lock_ack="${lock_path}.ack.$$"
 legacy_owner_file="$lock_path/owner"
 owns_lock=0
 owns_recovery_lease=0
@@ -79,6 +86,9 @@ cleanup_candidate_files() {
   fi
   if [ -e "$lock_update" ] || [ -L "$lock_update" ]; then
     unlink "$lock_update" 2>/dev/null || true
+  fi
+  if [ -e "$lock_ack" ] || [ -L "$lock_ack" ]; then
+    unlink "$lock_ack" 2>/dev/null || true
   fi
 }
 
@@ -136,6 +146,7 @@ recover_stale_lock() {
   if [[ "$owner_driver" =~ ^[0-9]+$ ]]; then
     unlink "${lock_path}.candidate.${owner_driver}" 2>/dev/null || true
     unlink "${lock_path}.update.${owner_driver}" 2>/dev/null || true
+    unlink "${lock_path}.ack.${owner_driver}" 2>/dev/null || true
   fi
 }
 
@@ -148,7 +159,7 @@ release_lock() {
     owner=""
   fi
   if [ "${owner%%:*}" = "$$" ]; then
-    rm -f -- "$lock_path" "$lock_candidate" "$lock_update" 2>/dev/null || true
+    rm -f -- "$lock_path" "$lock_candidate" "$lock_update" "$lock_ack" 2>/dev/null || true
   fi
   cleanup_candidate_files
   owns_lock=0
@@ -236,15 +247,20 @@ acquire_driver_lock() {
 
 acquire_driver_lock || exit 0
 
+# Each owned tick publishes session states once. A renderer that acknowledges the
+# versioned request carries the publication in its first mutation queue, saving a
+# full client redraw. The driver publishes itself on exits that never start the
+# renderer, and after a normal renderer exit that never acknowledged the request.
+nonce=${EPOCHREALTIME:-${RANDOM}${RANDOM}}
+sample_prefix="${server_pid}:$$:${nonce/./}:"
+ttl_seconds=${GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS:-12}
+if ! [[ "$ttl_seconds" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+  ttl_seconds=12
+fi
+
 publish_session_states() {
-  local enabled_format nonce sample_prefix stale_clear_command ttl_seconds
+  local enabled_format stale_clear_command
   enabled_format='#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{||:#{==:#{@GHC_SL_MODE},02},#{==:#{@GHC_SL_MODE},12}}}'
-  nonce=${EPOCHREALTIME:-${RANDOM}${RANDOM}}
-  sample_prefix="${server_pid}:$$:${nonce/./}:"
-  ttl_seconds=${GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS:-12}
-  if ! [[ "$ttl_seconds" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-    ttl_seconds=12
-  fi
 
   # run-shell expands once when it is scheduled. Double hashes preserve the
   # sample comparison for if-shell to expand when the delayed command executes.
@@ -259,19 +275,21 @@ publish_session_states() {
     >/dev/null 2>&1 || true
 }
 
-publish_session_states
-
 delay_seconds=${GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS:-4}
 if ! [[ "$delay_seconds" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
   delay_seconds=4
 fi
 sleep "$delay_seconds"
 
-scheduler_snapshot=$(tmux display-message -p \
+if ! scheduler_snapshot=$(tmux display-message -p \
   $'#{@GHC_SL_SCHED_ACTIVE}\t#{@GHC_SL_SCHED_GEN}\t#{@GHC_SL_METRIC_SCHED}\t#{@GHC_SL_HEARTBEAT_SCHED}' \
-  2>/dev/null) || exit 0
+  2>/dev/null); then
+  publish_session_states
+  exit 0
+fi
 IFS=$'\t' read -r active generation _ <<<"$scheduler_snapshot"
 if [ "$active" != "1" ] || ! [[ "$generation" =~ ^[0-9]+$ ]]; then
+  publish_session_states
   exit 0
 fi
 
@@ -286,9 +304,26 @@ else
   unset GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT
 fi
 
+# The ack file belongs to this invocation. Acquisition already unlinked any stale
+# path, and an exclusive create gives the renderer a fresh file that an orphan's
+# old descriptor cannot write into. Without one, the driver keeps publication.
+ack_ready=0
+set -C
+if : >"$lock_ack" 2>/dev/null; then
+  ack_ready=1
+fi
+set +C
+
 renderer_status=0
 term_received=0
-"$renderer" scheduler-tick >/dev/null 2>&1 &
+if [ "$ack_ready" = "1" ]; then
+  GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2="$sample_prefix" \
+    GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS="$ttl_seconds" \
+    "$renderer" scheduler-tick >"$lock_ack" 2>/dev/null &
+else
+  publish_session_states
+  "$renderer" scheduler-tick >/dev/null 2>&1 &
+fi
 renderer_pid=$!
 if ! publish_renderer_owner; then
   kill "$renderer_pid" 2>/dev/null || true
@@ -310,6 +345,44 @@ while [ "$term_received" = "1" ] && [ "$renderer_status" -gt 128 ]; do
   renderer_status=$waited_status
 done
 renderer_pid=""
+
+# Classifies this invocation's ack. `taken`: a complete ack line, so the renderer owned
+# the publication whatever happened afterwards. `declined`: an empty file or another
+# complete line, so the renderer predates the handoff or failed before taking it and
+# never published. `unknown`: the ack could not be opened or fully read; that proves
+# neither, so the tick is left to the TTL rather than risk a second publication.
+classify_renderer_publication() {
+  local ack_line="" opened=0 read_status=0
+  publication_state=unknown
+  if ! [ -f "$lock_ack" ]; then
+    return
+  fi
+  {
+    opened=1
+    IFS= read -r ack_line || read_status=$?
+  } 2>/dev/null <"$lock_ack"
+  if [ "$opened" != "1" ]; then
+    return
+  fi
+  if [ "$read_status" = "0" ]; then
+    if [ "$ack_line" = "$session_states_ack" ]; then
+      publication_state=taken
+    else
+      publication_state=declined
+    fi
+  elif [ -z "$ack_line" ] && ! [ -s "$lock_ack" ]; then
+    publication_state=declined
+  fi
+}
+
+# Only normal exits fall back; abnormal exits keep the generation fence below.
+if [ "$ack_ready" = "1" ] && { [ "$renderer_status" = "0" ] || [ "$renderer_status" = "1" ]; }; then
+  classify_renderer_publication
+  if [ "$publication_state" = "declined" ]; then
+    publish_session_states
+  fi
+fi
+
 if [ "$renderer_status" = "0" ]; then
   exit 0
 fi

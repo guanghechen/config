@@ -24,7 +24,9 @@ use crate::model::{
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::platform::current_platform;
 use crate::process::{OperationDeadline, output_with_timeout};
-use crate::scheduler::{ClaimPlan, SchedulerSnapshot, SchedulerTask, plan_claim};
+use crate::scheduler::{
+    ClaimPlan, SchedulerSnapshot, SchedulerTask, SessionStatesPublish, plan_claim,
+};
 use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPERATION_OPTION, SESSION_ORDER_OPTION,
     SESSION_ORDER_REVISION_OPTION, SessionGrouper, SwapOutcome, focus_target, ordered_sessions,
@@ -32,8 +34,8 @@ use crate::session::{
 };
 use crate::status_length::{status_left_length, status_right_length};
 use crate::tmux::{
-    CompareAndSetOutcome, GlobalOptionCas, GuardedMutationOutcome, TmuxAdapter, TmuxOptionGuard,
-    TmuxOptionScope,
+    CompareAndSetOutcome, GlobalOptionCas, GuardedMutationOutcome, SchedulerClaimMutation,
+    TmuxAdapter, TmuxOptionGuard, TmuxOptionScope,
 };
 use crate::util::format::format_percent_width_2;
 use crate::util::time::unix_timestamp_seconds;
@@ -272,7 +274,31 @@ impl StatusRuntime {
         }
     }
 
-    pub fn scheduler_tick(&self, snapshot: Option<SchedulerSnapshot>) -> AppResult<()> {
+    /// Runs due scheduler tasks. An owned session-state publication rides in the
+    /// first mutation queue the tick executes; an ordinary exit that reached no
+    /// such queue still attempts it on its own and keeps the task result.
+    pub fn scheduler_tick(
+        &self,
+        snapshot: Option<SchedulerSnapshot>,
+        publish: Option<SessionStatesPublish>,
+    ) -> AppResult<()> {
+        let mut publish = publish;
+        let result = self.run_scheduler_tasks(snapshot, &mut publish);
+        if let Some(publish) = publish
+            && let Err(error) = self.tmux.publish_session_states(&publish)
+        {
+            self.trace_apply(|| {
+                format!("event=scheduler-tick action=publish-session-states error={error}")
+            });
+        }
+        result
+    }
+
+    fn run_scheduler_tasks(
+        &self,
+        snapshot: Option<SchedulerSnapshot>,
+        publish: &mut Option<SessionStatesPublish>,
+    ) -> AppResult<()> {
         let snapshot = match snapshot {
             Some(snapshot) => Some(snapshot),
             None => self.read_scheduler_snapshot()?,
@@ -290,6 +316,7 @@ impl StatusRuntime {
                 generation,
                 snapshot.state_for(SchedulerTask::Metrics),
                 now_seconds,
+                publish,
             )
         {
             self.trace_apply(|| {
@@ -302,6 +329,7 @@ impl StatusRuntime {
             generation,
             snapshot.state_for(SchedulerTask::Heartbeat),
             now_seconds,
+            publish,
         ) {
             self.trace_apply(|| {
                 format!("event=scheduler-tick task=heartbeat action=error error={error}")
@@ -351,31 +379,33 @@ impl StatusRuntime {
         generation: u64,
         observed_state: &str,
         now_seconds: u64,
+        publish: &mut Option<SessionStatesPublish>,
     ) -> AppResult<()> {
         let Some(claim) = plan_claim(task, generation, observed_state, now_seconds) else {
             return Ok(());
         };
+        // Taken before the queue runs: a skipped, failed, or timed-out queue has
+        // still attempted the publication, which is never repeated.
+        let publish = publish.take();
         let generation_text = generation.to_string();
         let guards = scheduler_guards(&claim, &generation_text, &claim.observed_state);
         let metric_deadline = (task == SchedulerTask::Metrics).then(|| claim.deadline());
+        let mutation = SchedulerClaimMutation {
+            state_option: task.state_option(),
+            claimed_state: &claim.claimed_state,
+            last_attempt_option: task.last_attempt_option(),
+            now_seconds: claim.started_at_seconds,
+        };
         let claim_result = match task {
             SchedulerTask::Metrics => self.tmux.claim_scheduler_task_with_options(
                 &guards,
-                task.state_option(),
-                &claim.claimed_state,
-                task.last_attempt_option(),
-                claim.started_at_seconds,
+                &mutation,
                 METRIC_CLAIM_OPTIONS,
+                publish.as_ref(),
             ),
             SchedulerTask::Heartbeat => self
                 .tmux
-                .claim_scheduler_task(
-                    &guards,
-                    task.state_option(),
-                    &claim.claimed_state,
-                    task.last_attempt_option(),
-                    claim.started_at_seconds,
-                )
+                .claim_scheduler_task(&guards, &mutation, publish.as_ref())
                 .map(|outcome| (outcome, Vec::new())),
         };
         let (outcome, claimed_options) = match claim_result {

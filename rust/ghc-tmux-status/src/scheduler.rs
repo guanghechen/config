@@ -147,6 +147,44 @@ fn has_transport_shape(value: &str) -> bool {
     valid && fields.next().is_none()
 }
 
+// Versioned so renderers that predate the acknowledgement ignore the request and
+// leave publication with the driver.
+pub const SESSION_STATES_PREFIX_ENV: &str = "GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2";
+pub const SESSION_STATE_TTL_ENV: &str = "GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS";
+// Printed, and flushed, before any publication path runs; the driver publishes only
+// when a normally exiting renderer never printed it. Must match the driver.
+pub const SESSION_STATES_ACK: &str = "__GHC_SESSION_STATES_V2_TAKEN__";
+
+/// The lock-owning driver hands its tick's session-state publication to the
+/// renderer, which carries it in the first mutation queue of the tick. Missing or
+/// malformed transport means this invocation does not own the publication.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SessionStatesPublish {
+    pub sample_prefix: String,
+    pub ttl_seconds: String,
+}
+
+impl SessionStatesPublish {
+    pub fn from_transport(sample_prefix: &str, ttl_seconds: &str) -> Option<Self> {
+        let valid_prefix = sample_prefix.strip_suffix(':').is_some_and(|fields| {
+            let fields = fields.split(':').collect::<Vec<_>>();
+            fields.len() == 3 && fields.iter().all(|field| is_digits(field))
+        });
+        let valid_ttl = match ttl_seconds.split_once('.') {
+            Some((whole, fraction)) => is_digits(whole) && is_digits(fraction),
+            None => is_digits(ttl_seconds),
+        };
+        (valid_prefix && valid_ttl).then(|| Self {
+            sample_prefix: sample_prefix.to_string(),
+            ttl_seconds: ttl_seconds.to_string(),
+        })
+    }
+}
+
+fn is_digits(value: &str) -> bool {
+    !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit())
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ScheduleState {
     pub generation: u64,
@@ -260,7 +298,40 @@ fn is_due(
 
 #[cfg(test)]
 mod tests {
-    use super::{ScheduleState, SchedulerSnapshot, SchedulerTask, plan_claim};
+    use super::{
+        ScheduleState, SchedulerSnapshot, SchedulerTask, SessionStatesPublish, plan_claim,
+    };
+
+    #[test]
+    fn session_states_publish_accepts_driver_transport() {
+        let publish =
+            SessionStatesPublish::from_transport("314:5120:1792109353287046:", "12").unwrap();
+        assert_eq!(publish.sample_prefix, "314:5120:1792109353287046:");
+        assert_eq!(publish.ttl_seconds, "12");
+        assert!(SessionStatesPublish::from_transport("1:2:3:", "0.3").is_some());
+    }
+
+    #[test]
+    fn session_states_publish_rejects_malformed_transport() {
+        for (prefix, ttl) in [
+            ("", "12"),
+            ("1:2:3", "12"),
+            ("1:2:", "12"),
+            ("1:2:3:4:", "12"),
+            ("1:x:3:", "12"),
+            ("1::3:", "12"),
+            ("1:2:3:", ""),
+            ("1:2:3:", "1."),
+            ("1:2:3:", ".5"),
+            ("1:2:3:", "-1"),
+            ("1:2:3:", "12; kill-server"),
+        ] {
+            assert!(
+                SessionStatesPublish::from_transport(prefix, ttl).is_none(),
+                "accepted {prefix:?} / {ttl:?}"
+            );
+        }
+    }
 
     #[test]
     fn transported_snapshot_preserves_exact_cas_witnesses() {

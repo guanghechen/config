@@ -20,15 +20,19 @@ mod tmux;
 mod util;
 mod widget;
 
+use std::io::Write;
 use std::process::ExitCode;
 use std::time::Duration;
 
 use crate::app::StatusApp;
 use crate::cli::CliCommand;
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
 use crate::process::ProcessWatchdog;
-use crate::scheduler::{SCHEDULER_SNAPSHOT_ENV, SchedulerSnapshot};
+use crate::scheduler::{
+    SCHEDULER_SNAPSHOT_ENV, SESSION_STATE_TTL_ENV, SESSION_STATES_ACK, SESSION_STATES_PREFIX_ENV,
+    SchedulerSnapshot, SessionStatesPublish,
+};
 
 const PROCESS_DEADLINE: Duration = Duration::from_secs(30);
 
@@ -51,7 +55,16 @@ fn run() -> AppResult<()> {
             let snapshot = std::env::var(SCHEDULER_SNAPSHOT_ENV)
                 .ok()
                 .and_then(|value| SchedulerSnapshot::from_transport(&value));
-            app.scheduler_tick(snapshot)
+            // Only the driver's lock owner passes a publication; direct invocations
+            // and malformed transport run the tasks without publishing.
+            let publish = std::env::var(SESSION_STATES_PREFIX_ENV)
+                .ok()
+                .zip(std::env::var(SESSION_STATE_TTL_ENV).ok())
+                .and_then(|(prefix, ttl)| SessionStatesPublish::from_transport(&prefix, &ttl));
+            if publish.is_some() {
+                acknowledge_session_states_publish().map_err(AppError::Io)?;
+            }
+            app.scheduler_tick(snapshot, publish)
         }
         CliCommand::DumpState => app.dump_state(),
         CliCommand::RenderStatus02 => app.render_status02_stdout(),
@@ -69,6 +82,14 @@ fn run() -> AppResult<()> {
             Ok(())
         }
     }
+}
+
+/// Taking over must be visible to the driver before any publication path can run,
+/// so a failed acknowledgement forfeits the whole tick.
+fn acknowledge_session_states_publish() -> std::io::Result<()> {
+    let mut stdout = std::io::stdout().lock();
+    writeln!(stdout, "{SESSION_STATES_ACK}")?;
+    stdout.flush()
 }
 
 fn run_layout(
