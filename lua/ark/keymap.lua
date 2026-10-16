@@ -69,8 +69,10 @@ mk({ "v" }, "J", ":m '>+1<cr>gv=gv", "move: move lines down in visual selection"
 mk({ "v" }, "K", ":m '<-2<cr>gv=gv", "move: move lines up in visual selection")
 
 ---! better jump list
-mk({ "i", "n", "x" }, "<C-i>", "<C-o>", "jump back")
-mk({ "i", "n", "x" }, "<C-o>", "<C-i>", "jump forward")
+mk({ "n", "x" }, "<C-i>", "<C-o>", "jump back")
+mk({ "n", "x" }, "<C-o>", "<C-i>", "jump forward")
+mk({ "i" }, "<C-i>", "<C-o><C-o>", "jump back")
+mk({ "i" }, "<C-o>", "<C-o><C-i>", "jump forward")
 
 ---! commenting
 mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add below")
