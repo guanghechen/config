@@ -62,15 +62,16 @@ bindings = [
 
   # ----- csi u keybindings -----
   # Special keys to CSI u format
-  { key = "Tab",                                            chars = "\u001b[9;1u" },
+  # Plain Esc, Tab, Shift+Tab, and Ctrl+O keep legacy bytes; non-CSI-u apps such as fzf cannot parse them.
+  # { key = "Tab",                                            chars = "\u001b[9;1u" },
   # { key = "Return",                                         chars = "\u001b[13;1u" },
-  { key = "Escape",                                         chars = "\u001b[27;1u" },
-  { key = "Tab",        mods = "Shift",                     chars = "\u001b[9;2u" },
+  # { key = "Escape",                                         chars = "\u001b[27;1u" },
+  # { key = "Tab",        mods = "Shift",                     chars = "\u001b[9;2u" },
   { key = "Return",     mods = "Shift",                     chars = "\u001b[13;2u" },
   { key = "Escape",     mods = "Shift",                     chars = "\u001b[27;2u" },
   { key = "I",          mods = "Control",                   chars = "\u001b[105;5u" },
   { key = "M",          mods = "Control",                   chars = "\u001b[109;5u" },
-  { key = "O",          mods = "Control",                   chars = "\u001b[111;5u" },
+  # { key = "O",          mods = "Control",                   chars = "\u001b[111;5u" },
   { key = "Comma",      mods = "Control",                   chars = "\u001b[44;5u" },
   { key = "Period",     mods = "Control",                   chars = "\u001b[46;5u" },
   { key = "Slash",      mods = "Control",                   chars = "\u001b[47;5u" },
