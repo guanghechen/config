@@ -415,6 +415,17 @@ local function enable()
     end,
   })
 
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = augroup,
+    callback = function(ev)
+      local winnr = tonumber(ev.match) ---@type integer|nil
+      if winnr ~= nil and states[winnr] ~= nil then
+        stop_animation(states[winnr])
+        states[winnr] = nil
+      end
+    end,
+  })
+
   vim.api.nvim_create_autocmd("WinScrolled", {
     group = augroup,
     callback = function()

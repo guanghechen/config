@@ -226,7 +226,8 @@ vim.api.nvim_create_autocmd({ "BufWinEnter", "BufFilePost" }, {
   end,
 })
 
-vim.api.nvim_create_autocmd("BufDelete", {
+-- Unlisted buffers are wiped without BufDelete.
+vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
   group = augroup("cache_buf_filepath_delete"),
   callback = function(event)
     local bufnr = event.buf ---@type integer

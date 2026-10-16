@@ -517,7 +517,8 @@ function M.__setup_autocmds__()
     end,
   })
 
-  vim.api.nvim_create_autocmd("BufDelete", {
+  -- Unlisted buffers, such as widget scratch buffers, are wiped without BufDelete.
+  vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
     group = group,
     callback = function(ev)
       M.buf_trees[ev.buf] = nil

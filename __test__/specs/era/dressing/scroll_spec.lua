@@ -413,6 +413,19 @@ t:test("an oversized scroll during an animation keeps the new target curswant", 
   t.assert_eq(880, runtime.states[1].current.topline, "current topline")
 end)
 
+t:test("closing a window releases its animation state", function()
+  local runtime = setup()
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+  local timer = runtime.timers[1]
+
+  runtime.autocmds.WinClosed.callback({ match = "1" })
+
+  t.assert_true(timer.cleared, "timer cleared")
+  t.assert_nil(runtime.get_states()[1], "window state")
+end)
+
 t:test("accepts a programmatic view change as the new baseline", function()
   local runtime = setup()
 

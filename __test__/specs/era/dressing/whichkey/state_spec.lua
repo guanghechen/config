@@ -105,4 +105,26 @@ t:test("disabled updates survive re-enable and replay in a new buffer", function
   t.assert_true(trigger_count(next_bufnr) > 0, "new buffer receives triggers")
 end)
 
+t:test("wiping an unlisted buffer releases its keymap tree and triggers", function()
+  local state = new_state()
+  state.setup()
+  state.enable()
+  local bufnr = new_buffer()
+  t.assert_true(state.buf_trees[bufnr] ~= nil, "attached tree")
+  local triggers = 0 ---@type integer
+  for _, trigger in pairs(Whichkey.input.triggers) do
+    if trigger.bufnr == bufnr then
+      triggers = triggers + 1
+    end
+  end
+  t.assert_true(triggers > 0, "attached triggers")
+
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+
+  t.assert_nil(state.buf_trees[bufnr], "released tree")
+  for _, trigger in pairs(Whichkey.input.triggers) do
+    t.assert_true(trigger.bufnr ~= bufnr, "released trigger")
+  end
+end)
+
 t:run()
