@@ -353,6 +353,59 @@ t:test("common highlights use the selected mode palette and relink on mode chang
   t.assert_eq("mf_b_bg0_insert", vim.api.nvim_get_hl(0, { name = "mf_b_bg0", link = true }).link)
 end)
 
+t:test("mode changes within a category leave highlights untouched and theme reloads keep the category", function()
+  local common = require("dot.theme.hlgroup.common")
+  local context = context_for("vsc-dark-modern")
+  local modes_color_map = require("dot.theme.hlgroup.basic.vsc").gen_modes_color_map(context)
+  local set_hl = vim.api.nvim_set_hl
+  local saved = {}
+  t:defer(function()
+    for name, hlgroup in pairs(saved) do
+      set_hl(0, name, hlgroup)
+    end
+  end)
+  ---@return nil
+  local function reload_theme()
+    for name, hlgroup in pairs(common.gen_hlgroup_map(context, modes_color_map)) do
+      saved[name] = saved[name] or vim.api.nvim_get_hl(0, { name = name, link = true })
+      set_hl(0, name, hlgroup)
+    end
+  end
+
+  local mode = "n" ---@type string
+  t:patch_table(vim.api, "nvim_get_mode", function()
+    return { mode = mode, blocking = false }
+  end)
+  -- Earlier cases may leave the module linked to another category.
+  common.on_mode_changed()
+  reload_theme()
+  t.assert_eq("mf_b_bg0_normal", vim.api.nvim_get_hl(0, { name = "mf_b_bg0", link = true }).link)
+
+  local calls = 0
+  t:patch_table(vim.api, "nvim_set_hl", function(...)
+    calls = calls + 1
+    return set_hl(...)
+  end)
+  mode = "i"
+  common.on_mode_changed()
+  t.assert_true(calls > 0, "normal to insert relinks")
+
+  calls = 0
+  mode = "ic"
+  common.on_mode_changed()
+  mode = "i"
+  common.on_mode_changed()
+  t.assert_eq(0, calls, "insert completion keeps the insert links")
+
+  reload_theme()
+  t.assert_eq("mf_b_bg0_insert", vim.api.nvim_get_hl(0, { name = "mf_b_bg0", link = true }).link, "reload")
+  common.on_mode_changed()
+  t.assert_eq(0, calls, "no relink after a reload in the same category")
+
+  mode = "n"
+  common.on_mode_changed()
+end)
+
 t:test("every Rose Pine integration generates from its native palette alone", function()
   for _, variant in ipairs({ "main", "moon", "dawn" }) do
     for _, transparency in ipairs({ false, true }) do

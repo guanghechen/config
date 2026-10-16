@@ -68,6 +68,10 @@ local colors = {
   -- "pink",
 }
 
+-- Mode category the base groups link to. Theme generation follows it, so a reload keeps the current
+-- links; nil leaves it unknown and makes the next mode change relink.
+local linked_mode = nil ---@type string|nil
+
 ---@return string
 ---@return string
 function M.resolve_mode()
@@ -88,6 +92,7 @@ function M.gen_hlgroup_map(context, modes_color_map)
     PmenuMatch = { fg = c.pink, bold = true, italic = true },
     PmenuMatchSel = { link = "PmenuMatch" },
   }
+  local linked = linked_mode or "normal" ---@type string
   for _, color in ipairs(colors) do
     for mode, mode_color in pairs(modes_color_map) do
       local suffix = string.format("_%s_%s", color, mode) ---@type string
@@ -106,14 +111,14 @@ function M.gen_hlgroup_map(context, modes_color_map)
     end
 
     -- stylua: ignore start
-    hlgroup_map["mf_"     .. color] = { link = "mf_"    .. color .. "_normal" }
-    hlgroup_map["mf_b_"   .. color] = { link = "mf_b_"  .. color .. "_normal" }
-    hlgroup_map["mf_bi_"  .. color] = { link = "mf_bi_" .. color .. "_normal" }
-    hlgroup_map["mf_i_"   .. color] = { link = "mf_i_"  .. color .. "_normal" }
-    hlgroup_map["ms_"     .. color] = { link = "ms_"    .. color .. "_normal" }
-    hlgroup_map["ms_b_"   .. color] = { link = "ms_b_"  .. color .. "_normal" }
-    hlgroup_map["ms_bi_"  .. color] = { link = "ms_bi_" .. color .. "_normal" }
-    hlgroup_map["ms_i_"   .. color] = { link = "ms_i_"  .. color .. "_normal" }
+    hlgroup_map["mf_"     .. color] = { link = "mf_"    .. color .. "_" .. linked }
+    hlgroup_map["mf_b_"   .. color] = { link = "mf_b_"  .. color .. "_" .. linked }
+    hlgroup_map["mf_bi_"  .. color] = { link = "mf_bi_" .. color .. "_" .. linked }
+    hlgroup_map["mf_i_"   .. color] = { link = "mf_i_"  .. color .. "_" .. linked }
+    hlgroup_map["ms_"     .. color] = { link = "ms_"    .. color .. "_" .. linked }
+    hlgroup_map["ms_b_"   .. color] = { link = "ms_b_"  .. color .. "_" .. linked }
+    hlgroup_map["ms_bi_"  .. color] = { link = "ms_bi_" .. color .. "_" .. linked }
+    hlgroup_map["ms_i_"   .. color] = { link = "ms_i_"  .. color .. "_" .. linked }
     -- stylua: ignore end
   end
 
@@ -123,6 +128,12 @@ end
 ---@return nil
 function M.on_mode_changed()
   local mode = M.resolve_mode() ---@type string
+  -- Every nvim_set_hl forces a full redraw even for an unchanged link, and transitions within one
+  -- category (i/ic, n/no) fire on most keystrokes.
+  if mode == linked_mode then
+    return
+  end
+  linked_mode = mode
 
   for _, color in ipairs(colors) do
     -- stylua: ignore start
