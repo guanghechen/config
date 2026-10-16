@@ -13,11 +13,15 @@
 --pointer=""
 --marker="▎"
 --scrollbar="┃"
+--gutter=" "
 
---color="fg+:{{vsc.foreground}},bg+:{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}},hl+:{{vsc.accentPink}}"
---color="fg:{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}},bg:-1,hl:{{vsc.accentYellow}}"
---color="gutter:-1,pointer:{{vsc.accentPink}},spinner:{{vsc.accentBlue}}"
---color="info:{{vsc.brightBlue}},prompt:{{vsc.brightGreen}},marker:{{vsc.accentPink}},query:{{vsc.foreground}}"
+--color="{{darken ? 'dark' : 'light'}}"
+--color="fg:{{vsc.foreground}},bg:-1,hl:{{vsc.accentOrange}}"
+--color="fg+:{{vsc.foreground}},bg+:{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}},hl+:{{vsc.foreground}}:bold:underline"
+--color="border:{{(darken ? vsc.menu_border : vsc.badge_background)}},header:{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}},label:{{(darken ? vsc.textMuted : vsc.activityBar_inactiveForeground)}},gutter:-1"
+--color="spinner:{{vsc.accentPurple}},info:{{(darken ? vsc.brightBlue : vsc.accentBlue)}}"
+--color="pointer:{{vsc.accentPurple}},marker:{{vsc.accentBlue}},prompt:{{vsc.accentPurple}},query:{{vsc.foreground}}"
+--color="preview-fg:{{vsc.foreground}},preview-bg:-1,preview-border:{{(darken ? vsc.menu_border : vsc.badge_background)}}"
 --preview='bat --line-range=:500 --style=snip --theme={{name}} --number --color=always {} || cat -n {}'
 
 --bind 'ctrl-a:toggle-all'
