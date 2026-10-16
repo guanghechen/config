@@ -10,7 +10,8 @@ function M.setup(config)
 
   -- CSI u format keybindings for special keys (ghostty-style)
   -- Note: Tab and Escape without modifiers use default behavior for PowerShell compatibility
-  table.insert(keys, { key = "Tab", mods = "SHIFT", action = act.SendString("\x1b[9;2u") })
+  -- Plain Esc, Tab, Shift+Tab, and Ctrl+O keep legacy bytes; non-CSI-u apps such as fzf cannot parse them.
+  -- table.insert(keys, { key = "Tab", mods = "SHIFT", action = act.SendString("\x1b[9;2u") })
   table.insert(keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\x1b[13;2u") })
   table.insert(keys, { key = "Escape", mods = "SHIFT", action = act.SendString("\x1b[27;2u") })
 
@@ -34,7 +35,7 @@ function M.setup(config)
     { key = "`", code = 96 },
     { key = "i", code = 105 },
     { key = "m", code = 109 },
-    { key = "o", code = 111 },
+    -- { key = "o", code = 111 },
   }
 
   for _, entry in ipairs(ctrl_keys) do
