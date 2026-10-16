@@ -196,13 +196,6 @@
       }
     },
     {
-      "id": "ghc.input.ctrl_o",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b[111;5u"
-      }
-    },
-    {
       "id": "ghc.input.ctrl_shift_,",
       "command": {
         "action": "sendInput",
@@ -956,7 +949,7 @@
       "keys": "ctrl+m"
     },
     {
-      "id": "ghc.input.ctrl_o",
+      "id": null,
       "keys": "ctrl+o"
     },
     {
