@@ -22,6 +22,7 @@
 - [Picker / Searcher Surface](feat/picker-surface.md)：共享 Result、Preview 及 feature 边界。
 - [Yoz Search](feat/yoz/search.md)：native job、取消、结果完整性与性能边界。
 - [原生搜索反馈](feat/ux/search.md)：`/`、`?`、`n`、`N` 的 winline 状态。
+- [Winline LSP 面包屑](feat/lsp-symbols.md)：documentSymbol 请求合并、新鲜度契约与超大文档节奏。
 - [Git](feat/git.md)：status、watcher、hunk、staging、blame 与 ignore cache。
 - [Git Files](feat/git-files.md)：未提交文件的 Staged / Unstaged 双树、stage 与 diff preview。
 - [Diffview](feat/diffview/main.md)：workspace 与 commits 的状态和交互；另见[布局](feat/diffview/layout.md)与[快捷键](feat/diffview/keybinding.md)。

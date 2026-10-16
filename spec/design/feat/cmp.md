@@ -52,7 +52,7 @@ VSCode、Yozvim、Yuivim 继续由 host 管理补全。核心在第一次使用�
   不注册空的公共 `on_init`；纯转发的 attach/detach 直接引用统一事件函数。
   rust-analyzer 使用默认的无上限 completion response，避免 server 在客户端筛选前截掉 auto-import；菜单仍由统一 top-200 限制。
   LuaLS 关闭 `completion.showWord`，普通词统一由 buffer source 提供；避免 server 的 Text 候选阻止跨 buffer fallback。
-- `dot.win.locate_symbols()` 直接以 `pumvisible()` 和当前 source window 判断是否延后，不维护跨层 visibility flag。
+- [Winline LSP 面包屑](lsp-symbols.md)在发出请求时直接以 `pumvisible()` 和当前 source window 判断是否跳过，不维护跨层 visibility flag。
 
 ## 请求与缓存
 

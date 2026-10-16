@@ -8,24 +8,37 @@ local M = {}
 local txt = stl.nvim.fn.txt
 local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 
----@param winnr                         integer
+---@param left                          dot.t.ILspSymbol[]|nil
+---@param right                         dot.t.ILspSymbol[]|nil
 ---@return boolean
-local function silent(winnr)
-  if not stl.nvim.win.is_valid(winnr) then
-    return false
+local function is_same_symbols(left, right)
+  if left == nil or right == nil or #left ~= #right then
+    return left == right
   end
-
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local clients = vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/documentSymbol" })
-
-  -- Silence timeout if any client has not yet responded to documentSymbol
-  for _, client in ipairs(clients) do
-    if not dot.state.status.lsp_symbol_ready[client.id] then
-      return true
+  for index, symbol in ipairs(left) do
+    local other = right[index] ---@type dot.t.ILspSymbol
+    if symbol.kind ~= other.kind or symbol.name ~= other.name or symbol.row ~= other.row or symbol.col ~= other.col then
+      return false
     end
   end
+  return true
+end
 
-  return false
+---@param winnr                         integer
+---@param symbols                       dot.t.ILspSymbol[]
+---@return nil
+local function deliver_symbols(winnr, symbols)
+  local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
+  local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
+  if winline == nil or winline.nvimbar:isdisposed() or is_same_symbols(winline.lsp_symbols, symbols) then
+    return
+  end
+  winline.lsp_symbols = symbols
+  vim.schedule(function()
+    if not winline.nvimbar:isdisposed() then
+      winline.nvimbar:refresh()
+    end
+  end)
 end
 
 ---@param winnr                         integer
@@ -70,7 +83,7 @@ local function resolve_nvimbar(winnr)
     })
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    winline = winline or { bufnr = bufnr, nvimbar = nvimbar, locate_token = nil } ---@type dot.win.IWinline
+    winline = winline or { bufnr = bufnr, nvimbar = nvimbar } ---@type dot.win.IWinline
 
     winline.nvimbar = nvimbar
     meta.winline = winline
@@ -128,52 +141,12 @@ local function resolve_nvimbar(winnr)
   end
 
   if winline ~= nil then
-    if winline.locate_scheduler == nil or winline.locate_scheduler:isdisposed() then
-      local locate_scheduler = stl.c.Scheduler.new({
-        name = string.format("locate_scheduler:%d", winnr),
-        mode = "throttle",
-        delay = 128,
-        timeout = 10000,
-        value = stl.c.Observable.from_value(false),
-        silent = function()
-          return silent(winnr)
-        end,
-        task = function(_, _, callback)
-          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if winline.locate_token ~= nil then
-            winline.locate_token:cancel()
-            winline.locate_token = nil
-          end
-
-          local token = stl.c.CancellationToken.new()
-          winline.locate_token = token
-
-          dot.win.locate_symbols(winnr, token):finally(function(resolved, result)
-            winline.locate_token = nil
-
-            if not resolved or not result or not result.ok then
-              callback(false)
-              return
-            end
-
-            if not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
-              callback(false)
-              return
-            end
-
-            winline.lsp_symbols = result.symbols
-            vim.schedule(function()
-              if not winline.nvimbar:isdisposed() then
-                winline.nvimbar:refresh()
-              end
-            end)
-            callback(true, true)
-          end)
-        end,
-      })
-      winline.locate_scheduler = locate_scheduler
+    -- The confirmed tree answers at once; the request issued after this render decides the final path.
+    local symbols = era.m.lsp.symbols.path(winnr) ---@type dot.t.ILspSymbol[]|nil
+    if symbols ~= nil then
+      winline.lsp_symbols = symbols
     end
-    winline.locate_scheduler:schedule()
+    era.m.lsp.symbols.request(winnr, deliver_symbols)
     return winline.nvimbar
   end
 

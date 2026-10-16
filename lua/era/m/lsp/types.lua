@@ -1,7 +1,3 @@
----@class era.m.lsp.ISymbolPos
----@field public line                   integer
----@field public character              integer
-
 ---@class era.m.lsp.diagnostic.IBufferDiagnostics
 ---@field public bufnr                  integer
 ---@field public error                  integer

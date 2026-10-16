@@ -190,6 +190,7 @@ local __mods = {
   fn = "era.m.lsp.fn",
   illuminate = "era.m.lsp.illuminate",
   reference = "era.m.lsp.reference",
+  symbols = "era.m.lsp.symbols",
 }
 
 ---@class era.m.lsp
@@ -200,6 +201,7 @@ local __mods = {
 ---@field public fn                     era.m.lsp.fn
 ---@field public illuminate             era.m.lsp.illuminate
 ---@field public reference              era.m.lsp.reference
+---@field public symbols                era.m.lsp.symbols
 local M = setmetatable({
   __mods = __mods,
 }, {
