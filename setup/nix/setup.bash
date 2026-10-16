@@ -109,6 +109,7 @@ ghc_step "󰙅" worktree ghc_ensure_kit_worktree
 printf "\n"
 ghc_sync_kit_repo || exit $?
 ghc_step_optional "" config ghc_run_script "$setup_nix/bot/config.bash"
+ghc_step_optional "" bash ghc_run_script "$HOME/.config/bash/setup.bash"
 
 ## Applications
 ghc_section "󱧺" applications
