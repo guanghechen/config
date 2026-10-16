@@ -6,6 +6,10 @@ source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 brew install -y git
 brew install -y --cask git-credential-manager
 
+### Install bash
+### macOS only ships Bash 3.2 (the last GPLv2 release); ~/.config/bash requires Bash 4.4+.
+brew install -y bash
+
 ### Install wget
 brew install -y wget
 
