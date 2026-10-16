@@ -31,11 +31,9 @@ bindings = [
   { key = "F",          mods = "Control",                   action = "ReceiveChar" },
   { key = "G",          mods = "Control",                   action = "ReceiveChar" },
   { key = "H",          mods = "Control",                   action = "ReceiveChar" },
-  { key = "I",          mods = "Control",                   action = "ReceiveChar" },
   { key = "J",          mods = "Control",                   action = "ReceiveChar" },
   { key = "K",          mods = "Control",                   action = "ReceiveChar" },
   { key = "L",          mods = "Control",                   action = "ReceiveChar" },
-  { key = "M",          mods = "Control",                   action = "ReceiveChar" },
   { key = "N",          mods = "Control",                   action = "ReceiveChar" },
   { key = "O",          mods = "Control",                   action = "ReceiveChar" },
   { key = "P",          mods = "Control",                   action = "ReceiveChar" },
@@ -88,9 +86,9 @@ bindings = [
   { key = "LBracket",   mods = "Control",                   chars = "\u001b[91;5u" },
   { key = "RBracket",   mods = "Control",                   chars = "\u001b[93;5u" },
   { key = "`",          mods = "Control",                   chars = "\u001b[96;5u" },
-  { key = "Comma",      mods = "Control|Shift",             chars = "\u001b[44;6u" },
-  { key = "Period",     mods = "Control|Shift",             chars = "\u001b[46;6u" },
-  { key = "Slash",      mods = "Control|Shift",             chars = "\u001b[47;6u" },
+  { key = "<",          mods = "Control|Shift",             chars = "\u001b[44;6u" },
+  { key = ">",          mods = "Control|Shift",             chars = "\u001b[46;6u" },
+  { key = "?",          mods = "Control|Shift",             chars = "\u001b[47;6u" },
   { key = "A",          mods = "Control|Shift",             chars = "\u001b[97;6u" },
   { key = "B",          mods = "Control|Shift",             chars = "\u001b[98;6u" },
   { key = "C",          mods = "Control|Shift",             chars = "\u001b[99;6u" },
@@ -117,8 +115,8 @@ bindings = [
   { key = "X",          mods = "Control|Shift",             chars = "\u001b[120;6u" },
   { key = "Y",          mods = "Control|Shift",             chars = "\u001b[121;6u" },
   { key = "Z",          mods = "Control|Shift",             chars = "\u001b[122;6u" },
-  { key = "LBracket",   mods = "Control|Shift",             chars = "\u001b[91;6u" },
-  { key = "RBracket",   mods = "Control|Shift",             chars = "\u001b[93;6u" },
+  { key = "{",          mods = "Control|Shift",             chars = "\u001b[91;6u" },
+  { key = "}",          mods = "Control|Shift",             chars = "\u001b[93;6u" },
 
   # ----- tmux -----
   { key = "F1",                                             chars = "\u001b[11~" },         # F1
@@ -203,7 +201,7 @@ bindings = [
   { key = "&",          mods = "Command|Shift",             chars = "\u0001\u0026" },       # <Ctrl-a>&
   { key = "*",          mods = "Command|Shift",             chars = "\u0001\u002a" },       # <Ctrl-a>*
   { key = "(",          mods = "Command|Shift",             chars = "\u0001\u0028" },       # <Ctrl-a>(
-  { key = "Key0",       mods = "Command|Control",           chars = "\u0001\u001b[48;5u" }, # <Ctrl-a><Ctrl-0>
+  # { key = "Key0",       mods = "Command|Control",           chars = "\u0001\u001b[48;5u" }, # <Ctrl-a><Ctrl-0>
   { key = "Key1",       mods = "Command|Control",           chars = "\u0001\u001b[49;5u" }, # <Ctrl-a><Ctrl-1>
   { key = "Key2",       mods = "Command|Control",           chars = "\u0001\u001b[50;5u" }, # <Ctrl-a><Ctrl-2>
   { key = "Key3",       mods = "Command|Control",           chars = "\u0001\u001b[51;5u" }, # <Ctrl-a><Ctrl-3>
@@ -288,7 +286,7 @@ bindings = [
   { key = "T",          mods = "Command|Control",           chars = "\u0001\u0014" },       # <Ctrl-a><Ctrl-t>
   { key = "U",          mods = "Command|Control",           chars = "\u0001\u0015" },       # <Ctrl-a><Ctrl-u>
   { key = "V",          mods = "Command|Control",           chars = "\u0001\u0016" },       # <Ctrl-a><Ctrl-v>
-  { key = "W",          mods = "Command|Control",           chars = "\u0001\u0017" },       # <Ctrl-a><Ctrl-w>
+  # { key = "W",          mods = "Command|Control",           chars = "\u0001\u0017" },       # <Ctrl-a><Ctrl-w>
   { key = "X",          mods = "Command|Control",           chars = "\u0001\u0018" },       # <Ctrl-a><Ctrl-x>
   { key = "Y",          mods = "Command|Control",           chars = "\u0001\u0019" },       # <Ctrl-a><Ctrl-y>
   { key = "Z",          mods = "Command|Control",           chars = "\u0001\u001a" },       # <Ctrl-a><Ctrl-z>
