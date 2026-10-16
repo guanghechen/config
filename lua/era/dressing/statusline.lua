@@ -7,6 +7,10 @@ local M = {}
 local dirtier = dot.state.status.dirtier_statusline ---@type stl.c.Dirtier
 local c = era.m.nvimbar.component
 local position = "f_sl" ---@type stl.t.NvimbarPositionEnum
+-- Writing a literal 'statusline' recomposes the whole focused floating window, so the option
+-- evaluates the cached text and content changes only redraw the status line.
+local EXPRESSION = "%!v:lua.require'era.dressing.statusline'.render()" ---@type string
+local rendered = "" ---@type string
 
 local statusline ---@type era.m.nvimbar.Nvimbar
 
@@ -20,10 +24,16 @@ statusline = era.m.nvimbar.Nvimbar.new({
   end,
   is_active = stl.fn.falsy,
   on_fulfilled = function(result)
-    if vim.o.statusline ~= result or vim.api.nvim_get_option_value("statusline", { scope = "local" }) ~= "" then
-      vim.o.statusline = result
+    local changed = rendered ~= result
+    rendered = result
+    if vim.o.statusline ~= EXPRESSION or vim.api.nvim_get_option_value("statusline", { scope = "local" }) ~= "" then
+      vim.o.statusline = EXPRESSION
+    elseif changed then
+      vim.cmd("redrawstatus!")
+    else
+      return
     end
-    -- The built-in cmdline does not redraw after an asynchronous option update.
+    -- The built-in cmdline does not redraw after an asynchronous update.
     if vim.api.nvim_get_mode().mode:sub(1, 1) == "c" then
       vim.cmd("redraw")
     end
@@ -191,6 +201,12 @@ statusline
       return c.nvim.msg_lsp(position)
     end),
   })
+
+--- Statusline text evaluated by the 'statusline' expression.
+---@return string
+function M.render()
+  return rendered
+end
 
 --- Initialize once; dirty and mode events own subsequent refreshes.
 ---@return nil

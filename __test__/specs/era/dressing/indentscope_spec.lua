@@ -250,6 +250,8 @@ t:test("draw renders only in the active window for a shared buffer", function()
       vim.api.nvim_set_current_win(inactive_winnr)
       scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
       Indentscope.draw(scope, { interval = 0 })
+      -- Headless scripts have no idle redraw; static frames are not flushed outside the command line.
+      vim.api.nvim__redraw({ flush = true })
 
       t.assert_eq("╎", screen_char(inactive_winnr, 3, 2), "new active window guide")
       t.assert_eq(" ", screen_char(active_winnr, 6, 2), "previous active window guide")
@@ -295,6 +297,8 @@ t:test("restarting animation clears the previous scope immediately", function()
 
     vim.api.nvim_win_set_cursor(winnr, { 2, 2 })
     Indentscope.draw(Indentscope.get_scope(nil, nil, { try_as_border = false }), { interval = 0 })
+    -- Headless scripts have no idle redraw; the static frame waits for the next redraw.
+    vim.api.nvim__redraw({ flush = true })
     t.assert_eq("╎", guide_at(2), "previous scope guide")
 
     vim.api.nvim_win_set_cursor(winnr, { 8, 2 })
@@ -420,6 +424,8 @@ t:test("real timer preserves an intermediate animation frame", function()
     vim.wait(120)
     t.assert_eq(3, guide_count(), "intermediate frame")
     t.wait_until(function()
+      -- Animation frames flush themselves; the finished static frame waits for the next redraw.
+      vim.api.nvim__redraw({ flush = true })
       return guide_count() == 7
     end, 600, "animation completion")
   end)

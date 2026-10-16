@@ -52,11 +52,16 @@ vim.api.nvim_create_autocmd("VimEnter", {
     local deadline = vim.uv.hrtime() / 1e6 + 3000
     ---@return nil
     local function poll()
-      local current = { mode = vim.api.nvim_get_mode().mode, option = vim.o.statusline, screen = screenline() }
+      local current = {
+        mode = vim.api.nvim_get_mode().mode,
+        option = vim.o.statusline,
+        text = vim.api.nvim_eval_statusline(vim.o.statusline, {}).str,
+        screen = screenline(),
+      }
       local index = #samples + 1
       if
         current.mode == modes[index]
-        and current.option:find(expected[index], 1, true)
+        and current.text:find(expected[index], 1, true)
         and current.screen:find(expected[index], 1, true)
       then
         samples[index] = current

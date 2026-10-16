@@ -94,7 +94,9 @@ end
 ---@return nil
 local function redraw_scope(scope)
   if scope ~= nil and vim.api.nvim_win_is_valid(scope.winnr) then
-    pcall(vim.api.nvim__redraw, { win = scope.winnr, valid = false, flush = true })
+    -- Only an idle command line needs an explicit flush; elsewhere it would push intermediate frames.
+    local flush = vim.api.nvim_get_mode().mode:sub(1, 1) == "c"
+    pcall(vim.api.nvim__redraw, { win = scope.winnr, valid = false, flush = flush })
   end
 end
 

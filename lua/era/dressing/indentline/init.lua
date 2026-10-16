@@ -105,10 +105,11 @@ local function refresh()
     return
   end
   refresh_pending = true
-  -- Coalesce OptionSet bursts, but flush explicitly: an idle command line does not redraw windows.
+  -- Coalesce OptionSet bursts. Only an idle command line needs an explicit flush; elsewhere it would
+  -- push intermediate frames, such as floating windows whose content is not set yet.
   vim.schedule(function()
     refresh_pending = false
-    pcall(vim.api.nvim__redraw, { valid = false, flush = true })
+    pcall(vim.api.nvim__redraw, { valid = false, flush = vim.api.nvim_get_mode().mode:sub(1, 1) == "c" })
   end)
 end
 

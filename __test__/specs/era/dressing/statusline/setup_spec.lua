@@ -7,6 +7,14 @@ local nvim_fn = require("stl.nvim.fn")
 
 local t = harness.new("era.dressing.statusline.setup")
 local module_name = "era.dressing.statusline"
+local EXPRESSION = "%!v:lua.require'era.dressing.statusline'.render()"
+
+---@param message                       ?string
+---@return string
+local function displayed(message)
+  t.assert_eq(EXPRESSION, vim.o.statusline, message or "statusline evaluates the cached text")
+  return vim.api.nvim_eval_statusline(vim.o.statusline, {}).str
+end
 
 ---@class era.dressing.statusline.test.IRuntime
 ---@field clean_count                  integer
@@ -165,12 +173,12 @@ t:test("dressing requests initial data and publishes only completed results", fu
   t.assert_eq(1, runtime.refresh_count)
   t.assert_eq(1, runtime.clean_count)
   runtime.fulfill("initial")
-  t.assert_eq("initial", vim.o.statusline)
+  t.assert_eq("initial", displayed())
   runtime.mark_dirty()
   t.assert_eq(2, runtime.refresh_count)
   t.assert_eq(2, runtime.clean_count, "consume dirty state when requesting, not when publishing")
   runtime.fulfill("updated")
-  t.assert_eq("updated", vim.o.statusline)
+  t.assert_eq("updated", displayed())
   t.assert_eq(2, runtime.clean_count)
 end)
 
@@ -210,12 +218,12 @@ t:test("repeated dressing preserves the latest statusline until the next refresh
   runtime.fulfill("updated")
 
   Statusline.dressing()
-  t.assert_eq("updated", vim.api.nvim_get_option_value("statusline", {}), "latest rendered statusline")
+  t.assert_eq("updated", displayed("latest rendered statusline"))
   t.assert_eq(1, runtime.refresh_count, "no repeated initial render")
 
   runtime.mark_dirty()
   runtime.fulfill("refreshed")
-  t.assert_eq("refreshed", vim.api.nvim_get_option_value("statusline", {}), "later dirty refresh")
+  t.assert_eq("refreshed", displayed("later dirty refresh"))
 end)
 
 t:test("mode changes request asynchronous refresh after the transition", function()
@@ -231,7 +239,7 @@ t:test("mode changes request asynchronous refresh after the transition", functio
     end, 1000)
     t.assert_eq("stale", vim.api.nvim_get_option_value("statusline", {}), "wait for the new snapshot")
     runtime.fulfill("updated " .. transition)
-    t.assert_eq("updated " .. transition, vim.api.nvim_get_option_value("statusline", {}))
+    t.assert_eq("updated " .. transition, displayed())
   end
 end)
 
@@ -255,8 +263,8 @@ t:test("exit disposes once and ignores pending mode and dirty callbacks", functi
   t.assert_eq(1, runtime.dispose_count)
 end)
 
-t:test("unchanged publication skips option writes and still restores global ownership", function()
-  local runtime = setup()
+t:test("content changes skip option writes and foreign values restore global ownership", function()
+  local runtime, Statusline = setup()
   vim.o.statusline = "before"
   local writes = 0
   local set_option = vim.api.nvim_set_option_value
@@ -270,12 +278,16 @@ t:test("unchanged publication skips option writes and still restores global owne
   t.assert_eq(1, writes)
   runtime.fulfill("stable")
   t.assert_eq(1, writes, "unchanged output does not request another option update")
+  runtime.fulfill("changed")
+  t.assert_eq(1, writes, "a literal write would recompose the focused floating window")
+  t.assert_eq("changed", Statusline.render())
+  t.assert_eq("changed", displayed())
 
   set_option("statusline", "external", { scope = "global" })
-  set_option("statusline", "stable", { scope = "local" })
-  runtime.fulfill("stable")
+  set_option("statusline", EXPRESSION, { scope = "local" })
+  runtime.fulfill("changed")
   t.assert_eq(2, writes, "an equal local override must not hide the foreign global value")
-  t.assert_eq("stable", vim.api.nvim_get_option_value("statusline", { scope = "global" }))
+  t.assert_eq(EXPRESSION, vim.api.nvim_get_option_value("statusline", { scope = "global" }))
   t.assert_eq("", vim.api.nvim_get_option_value("statusline", { scope = "local" }))
 end)
 
