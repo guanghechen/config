@@ -371,23 +371,27 @@ end
 function M:__schedule_throttle__(immediate)
   local tick = self._tick_pending ---@type integer
 
+  -- Closing the window reschedules only for calls made within it; rescheduling an idle window would
+  -- restart the timer forever.
+  ---@return nil
+  local function close_window()
+    self._tick_freezed = tick
+    if self._tick_pending > tick then
+      self:schedule({ rescheduled = true })
+    end
+  end
+
   if immediate then
     self._tick_freezed = self._tick_settled
     self._timer_timeout:stop()
-    self._timer_task:start(self._delay, 0, function()
-      self._tick_freezed = tick
-      self:schedule({ rescheduled = true })
-    end)
+    self._timer_task:start(self._delay, 0, close_window)
     self:__run__()
     return self
   end
 
   if self._tick_running == self._tick_freezed and self._tick_running == self._tick_settled then
     self._timer_timeout:stop()
-    self._timer_task:start(self._delay, 0, function()
-      self._tick_freezed = tick
-      self:schedule({ rescheduled = true })
-    end)
+    self._timer_task:start(self._delay, 0, close_window)
     self:__run__()
   end
   return self
