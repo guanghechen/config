@@ -312,6 +312,58 @@ t:test("restarting animation clears the previous scope immediately", function()
   end)
 end)
 
+t:test("changing scope clears guide rows outside the new body", function()
+  with_buffer({ "if ok then", "  one()", "  two()", "  three()", "end" }, function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local position = vim.api.nvim_win_get_position(winnr) ---@type integer[]
+    local info = vim.fn.getwininfo(winnr)[1] ---@type table
+
+    local function guide_at(lnum)
+      local row = position[1] + lnum - vim.fn.line("w0") + 1 ---@type integer
+      return vim.fn.screenstring(row, position[2] + info.textoff + 1)
+    end
+
+    vim.api.nvim_win_set_cursor(winnr, { 2, 2 })
+    local scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
+    Indentscope.draw(scope, { interval = 0 })
+    vim.api.nvim__redraw({ flush = true })
+    t.assert_eq("╎", guide_at(4), "previous guide")
+
+    local narrowed = vim.deepcopy(scope)
+    narrowed.body.bottom = 3
+    Indentscope.draw(narrowed, { interval = 0 })
+    vim.api.nvim__redraw({ flush = true })
+    t.assert_eq("╎", guide_at(3), "kept guide")
+    t.assert_eq(" ", guide_at(4), "cleared guide")
+  end)
+end)
+
+t:test("scope changes redraw guide rows until the buffer changes", function()
+  with_buffer({ "if first then", "  first()", "end", "if second then", "  second()", "end" }, function(bufnr)
+    vim.api.nvim_win_set_cursor(0, { 2, 2 })
+    Indentscope.draw(Indentscope.get_scope(nil, nil, { try_as_border = false }), { interval = 0 })
+
+    local redraws = {} ---@type table[]
+    local original = vim.api.nvim__redraw
+    t:patch_table(vim.api, "nvim__redraw", function(options)
+      redraws[#redraws + 1] = options
+      return original(options)
+    end)
+
+    vim.api.nvim_win_set_cursor(0, { 5, 2 })
+    Indentscope.draw(Indentscope.get_scope(nil, nil, { try_as_border = false }), { interval = 0 })
+    t.assert_eq(2, #redraws, "redraw count")
+    t.assert_eq("1:2", table.concat(redraws[1].range or {}, ":"), "previous guide rows")
+    t.assert_eq("4:5", table.concat(redraws[2].range or {}, ":"), "current guide rows")
+
+    redraws = {}
+    vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, { "-- shifted" })
+    vim.api.nvim_win_set_cursor(0, { 3, 2 })
+    Indentscope.draw(Indentscope.get_scope(nil, nil, { try_as_border = false }), { interval = 0 })
+    t.assert_eq(false, redraws[1].valid, "moved guide rows redraw the window")
+  end)
+end)
+
 t:test("draw skips lines hidden inside a closed fold", function()
   local lines = { "root" } ---@type string[]
   for index = 2, 201 do
@@ -748,6 +800,37 @@ t:test("WinScrolled updates layout without recomputing scope", function()
     vim.api.nvim_exec_autocmds("WinScrolled", { modeline = false })
 
     t.assert_eq(0, calls, "scope calls")
+  end)
+end)
+
+t:test("WinScrolled keeps a finished scope without redrawing the window", function()
+  local lines = { "root" } ---@type string[]
+  for index = 2, 201 do
+    lines[index] = "  line"
+  end
+  lines[202] = "tail"
+
+  with_buffer(lines, function()
+    with_render_capture(function(render)
+      vim.api.nvim_win_set_cursor(0, { 101, 2 })
+      vim.cmd("normal! zz")
+      Indentscope.draw(Indentscope.get_scope(nil, nil, { try_as_border = false }), { interval = 0 })
+      Indentscope.dressing()
+
+      local redraws = 0 ---@type integer
+      local original = vim.api.nvim__redraw
+      t:patch_table(vim.api, "nvim__redraw", function(options)
+        redraws = redraws + 1
+        return original(options)
+      end)
+      vim.cmd("normal! 20" .. vim.keycode("<C-e>"))
+      vim.api.nvim_exec_autocmds("WinScrolled", { modeline = false })
+      t.assert_eq(0, redraws, "redraw requests")
+
+      local rows = render(nil)
+      t.assert_eq(vim.fn.line("w0") - 1, rows[1], "first guide row")
+      t.assert_eq(vim.fn.line("w$") - 1, rows[#rows], "last guide row")
+    end)
   end)
 end)
 

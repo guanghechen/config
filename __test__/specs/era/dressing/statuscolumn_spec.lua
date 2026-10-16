@@ -95,14 +95,6 @@ end)
 t:test("rendering and fold-click callbacks resolve through the dressing namespace", function()
   t:patch_global("era", require("era"))
   t:patch_table(package.loaded, "era.dressing.statuscolumn", nil)
-  t:patch_table(vim.uv, "new_timer", function()
-    return {
-      is_active = function()
-        return true
-      end,
-      start = function() end,
-    }
-  end)
   local winnr, bufnr = setup_window()
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "first", "second" })
   vim.api.nvim_set_option_value("number", true, { win = winnr })
@@ -131,35 +123,27 @@ t:test("rendering and fold-click callbacks resolve through the dressing namespac
   t.assert_eq("function", type(era.dressing.statuscolumn.click_fold), "fold-click callback resolves")
 end)
 
-t:test("expires caches with a demand-driven one-shot timer", function()
-  local timer = {
-    active = false,
-    callback = nil,
-    starts = {},
-  }
-  local timer_count = 0
-  local winnr = 1
-
-  function timer:is_active()
-    return self.active
-  end
-
-  function timer:start(timeout, repeat_interval, callback)
-    self.active = true
-    self.callback = callback
-    self.starts[#self.starts + 1] = { timeout, repeat_interval }
-  end
-
-  t:patch_table(vim.uv, "new_timer", function()
-    timer_count = timer_count + 1
-    return timer
+t:test("caches live for one redraw", function()
+  local on_start ---@type function|nil
+  t:patch_table(vim.api, "nvim_set_decoration_provider", function(_, opts)
+    on_start = opts.on_start
+  end)
+  local scan_count = 0
+  t:patch_table(vim.api, "nvim_buf_get_extmarks", function()
+    scan_count = scan_count + 1
+    return {}
+  end)
+  t:patch_table(vim.fn, "getmarklist", function()
+    return {}
   end)
   t:patch_table(vim.api, "nvim_win_get_buf", function()
     return 1
   end)
+  local option_reads = 0
   t:patch_table(vim.api, "nvim_get_option_value", function(name)
+    option_reads = option_reads + 1
     if name == "signcolumn" then
-      return "no"
+      return "yes"
     end
     if name == "foldcolumn" then
       return "0"
@@ -167,25 +151,19 @@ t:test("expires caches with a demand-driven one-shot timer", function()
     return false
   end)
 
-  vim.g.statusline_winid = winnr
+  vim.g.statusline_winid = 1
   local Statuscolumn = assert(loadfile("lua/era/dressing/statuscolumn.lua"))()
 
   Statuscolumn.statuscolumn()
-  t.assert_eq(1, timer_count, "timer allocation count")
-  t.assert_eq(1, #timer.starts, "initial timer start count")
-  t.assert_eq(50, timer.starts[1][1], "expiration delay")
-  t.assert_eq(0, timer.starts[1][2], "repeat interval")
-
-  winnr = 2
-  vim.g.statusline_winid = winnr
+  local reads = option_reads
   Statuscolumn.statuscolumn()
-  t.assert_eq(1, #timer.starts, "active timer remains scheduled once")
+  t.assert_eq(reads, option_reads, "cached render within a redraw")
+  t.assert_eq(1, scan_count, "sign scans within a redraw")
 
-  timer.active = false
-  assert(timer.callback)()
+  t.assert_false(assert(on_start)(), "provider skips the rest of the redraw")
   Statuscolumn.statuscolumn()
-  t.assert_eq(1, timer_count, "timer reuse count")
-  t.assert_eq(2, #timer.starts, "timer restart count")
+  t.assert_true(option_reads > reads, "render after the next redraw starts")
+  t.assert_eq(2, scan_count, "sign scans after the next redraw starts")
 end)
 
 t:test("shares complete sign data across windows with different components", function()

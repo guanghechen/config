@@ -68,6 +68,15 @@ t:test("transparent floats preserve terminal-default backgrounds across themes",
   end
 end)
 
+t:test("transparent themes leave NormalNC empty so window switches keep cell attributes", function()
+  for _, name in ipairs(dot.var.themes) do
+    theme.apply_theme({ theme = name, transparency = true })
+    t.assert_true(vim.tbl_isempty(vim.api.nvim_get_hl(0, { name = "NormalNC" })), name .. " transparent")
+    theme.apply_theme({ theme = name, transparency = false })
+    t.assert_true(vim.api.nvim_get_hl(0, { name = "NormalNC" }).bg ~= nil, name .. " opaque")
+  end
+end)
+
 ---@param name                          string
 ---@param transparency                  ?boolean
 ---@return stl.t.theme.IContext

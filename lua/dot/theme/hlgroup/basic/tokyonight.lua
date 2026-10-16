@@ -162,7 +162,8 @@ function M.gen_hlgroup_map(context)
     NonText = { fg = cs.mix(bg, u.fg4, 45), italic = true },
     Normal = { fg = u.fg1, bg = t and u.none or u.bg0 },
     NormalFloat = { fg = u.fg1, bg = t and u.none or u.bg1 },
-    NormalNC = { fg = u.fg1, bg = t and u.none or u.bg1 },
+    -- Transparent NormalNC would equal Normal yet still repaint every cell on window switches.
+    NormalNC = t and {} or { fg = u.fg1, bg = u.bg1 },
     Number = { fg = u.orange },
     NvimInternalError = { fg = u.red },
     Operator = { fg = u.aqua },

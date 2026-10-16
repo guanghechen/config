@@ -184,6 +184,34 @@ local function setup()
   return runtime
 end
 
+---@param runtime                       era.dressing.scroll.test.IRuntime
+---@param view                          vim.fn.winsaveview.ret
+---@return { restores: vim.fn.winsaveview.ret[], cursor: integer[]|nil, virtualedit: string|nil }
+local function finish_animation(runtime, view)
+  local result = { restores = {}, cursor = nil, virtualedit = nil }
+  t:patch_table(vim, "cmd", function() end)
+  t:patch_table(vim.fn, "winrestview", function(restored)
+    result.restores[#result.restores + 1] = restored
+    result.virtualedit = runtime.options.virtualedit
+    runtime.view = vim.deepcopy(restored)
+  end)
+  t:patch_table(vim.fn, "cursor", function(position)
+    result.cursor = position
+    result.virtualedit = runtime.options.virtualedit
+  end)
+
+  local timer = runtime.timers[1]
+  while runtime.states[1].timer == timer do
+    if #runtime.scheduled == 0 then
+      assert(timer.callback)()
+    end
+    -- Scroll commands are stubbed; frames observe the view they would reach.
+    runtime.view = vim.deepcopy(view)
+    table.remove(runtime.scheduled, 1)()
+  end
+  return result
+end
+
 t:test("dressing subscribes once across repeated setup and feature toggles", function()
   local runtime = setup()
 
@@ -246,6 +274,60 @@ t:test("switching to an Explorer buffer releases animation options and queued wo
   t.assert_eq(4, runtime.options.scrolloff, "restored scrolloff")
   table.remove(runtime.scheduled, 1)()
   t.assert_eq(2, runtime.view.lnum, "cursor after stale animation callback")
+end)
+
+t:test("final frame keeps the scrolled view and restores the target cursor", function()
+  local runtime = setup()
+  runtime.view = { lnum = 120, col = 3, coladd = 0, curswant = 7, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.check_scroll(1)
+
+  local scrolled =
+    { lnum = 101, col = 0, coladd = 0, curswant = 0, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
+  local result = finish_animation(runtime, scrolled)
+
+  t.assert_eq(0, #result.restores, "view restores")
+  t.assert_eq("120:4:0:8", table.concat(result.cursor or {}, ":"), "target cursor")
+  t.assert_eq("", result.virtualedit, "virtualedit before cursor restore")
+  t.assert_eq(4, runtime.options.scrolloff, "restored scrolloff")
+end)
+
+t:test("final frame restores an end-of-line curswant with the target view", function()
+  local runtime = setup()
+  runtime.view = {
+    lnum = 120,
+    col = 3,
+    coladd = 0,
+    curswant = vim.v.maxcol,
+    topline = 100,
+    topfill = 0,
+    leftcol = 0,
+    skipcol = 0,
+  }
+  runtime.check_scroll(1)
+
+  local scrolled =
+    { lnum = 101, col = 0, coladd = 0, curswant = 0, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
+  local result = finish_animation(runtime, scrolled)
+
+  t.assert_eq(1, #result.restores, "view restores")
+  t.assert_eq(vim.v.maxcol, result.restores[1].curswant, "restored curswant")
+  t.assert_eq("", result.virtualedit, "virtualedit before view restore")
+  t.assert_nil(result.cursor, "cursor-only restore")
+end)
+
+t:test("final frame restores the target view when scrolling falls short", function()
+  local runtime = setup()
+  runtime.view = { lnum = 120, col = 3, coladd = 0, curswant = 7, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.check_scroll(1)
+
+  local scrolled =
+    { lnum = 101, col = 0, coladd = 0, curswant = 0, topline = 99, topfill = 0, leftcol = 0, skipcol = 0 }
+  local result = finish_animation(runtime, scrolled)
+
+  t.assert_eq(1, #result.restores, "view restores")
+  t.assert_eq(100, result.restores[1].topline, "restored topline")
+  t.assert_eq(120, result.restores[1].lnum, "restored cursor line")
+  t.assert_nil(result.cursor, "cursor-only restore")
 end)
 
 t:test("accepts a programmatic view change as the new baseline", function()

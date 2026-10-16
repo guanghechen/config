@@ -59,6 +59,7 @@ local DISABLED_FILETYPES = {
 ---@class era.dressing.indentscope.draw.IState
 ---@field public generation             integer
 ---@field public scope                  era.dressing.indentscope.IScope|nil
+---@field public changedtick            integer
 ---@field public status                 "none"|"waiting"|"drawing"|"finished"
 ---@field public delay_timer            uv.uv_timer_t|nil
 ---@field public animation_timer        uv.uv_timer_t|nil
@@ -68,6 +69,7 @@ local DISABLED_FILETYPES = {
 local state = {
   generation = 0,
   scope = nil,
+  changedtick = 0,
   status = "none",
   delay_timer = nil,
   animation_timer = nil,
@@ -91,11 +93,20 @@ local function clear_animation_timer()
 end
 
 ---@param scope                         era.dressing.indentscope.IScope|nil
+---@param changedtick                   integer
 ---@return nil
-local function redraw_scope(scope)
-  if scope ~= nil and vim.api.nvim_win_is_valid(scope.winnr) then
-    -- Only an idle command line needs an explicit flush; elsewhere it would push intermediate frames.
-    local flush = vim.api.nvim_get_mode().mode:sub(1, 1) == "c"
+local function redraw_scope(scope, changedtick)
+  if scope == nil or not vim.api.nvim_win_is_valid(scope.winnr) then
+    return
+  end
+
+  -- Only an idle command line needs an explicit flush; elsewhere it would push intermediate frames.
+  local flush = vim.api.nvim_get_mode().mode:sub(1, 1) == "c" ---@type boolean
+  if vim.api.nvim_buf_is_valid(scope.bufnr) and vim.api.nvim_buf_get_changedtick(scope.bufnr) == changedtick then
+    -- Redrawing only the guide rows lets a concurrent scroll keep Nvim's scroll optimization.
+    pcall(vim.api.nvim__redraw, { win = scope.winnr, range = { scope.body.top - 1, scope.body.bottom }, flush = flush })
+  else
+    -- Edits may have moved the guide rows.
     pcall(vim.api.nvim__redraw, { win = scope.winnr, valid = false, flush = flush })
   end
 end
@@ -194,6 +205,7 @@ vim.api.nvim_set_decoration_provider(namespace, {
 ---@return nil
 function M.undraw()
   local previous = state.scope ---@type era.dressing.indentscope.IScope|nil
+  local previous_changedtick = state.changedtick ---@type integer
   next_generation()
   clear_delay_timer()
   clear_animation_timer()
@@ -202,7 +214,7 @@ function M.undraw()
   state.options = nil
   state.indicator = nil
   state.drawn_distance = 0
-  redraw_scope(previous)
+  redraw_scope(previous, previous_changedtick)
 end
 
 ---@param scope                         era.dressing.indentscope.IScope
@@ -313,7 +325,7 @@ local function start_drawing(scope, options, generation)
     state.status = "finished"
     state.indicator = nil
     state.drawn_distance = 0
-    redraw_scope(scope)
+    redraw_scope(scope, state.changedtick)
     return
   end
 
@@ -322,7 +334,7 @@ local function start_drawing(scope, options, generation)
   if options.interval <= 0 or options.max_duration <= 0 or maximum_distance == 0 then
     state.status = "finished"
     state.drawn_distance = maximum_distance
-    redraw_scope(scope)
+    redraw_scope(scope, state.changedtick)
     return
   end
 
@@ -330,7 +342,7 @@ local function start_drawing(scope, options, generation)
   if timer == nil then
     state.status = "finished"
     state.drawn_distance = maximum_distance
-    redraw_scope(scope)
+    redraw_scope(scope, state.changedtick)
     return
   end
 
@@ -360,7 +372,7 @@ local function start_drawing(scope, options, generation)
         state.drawn_distance = target_distance
         if state.drawn_distance >= maximum_distance then
           state.status = "finished"
-          redraw_scope(scope)
+          redraw_scope(scope, state.changedtick)
         else
           redraw_distances(scope, indicator, previous_distance + 1, state.drawn_distance)
         end
@@ -379,25 +391,23 @@ end
 ---@return nil
 local function schedule_drawing(scope, options, delay)
   local previous = state.scope ---@type era.dressing.indentscope.IScope|nil
+  local previous_changedtick = state.changedtick ---@type integer
   local generation = next_generation() ---@type integer
   clear_delay_timer()
   clear_animation_timer()
   state.scope = scope
+  state.changedtick = vim.api.nvim_buf_get_changedtick(scope.bufnr)
   state.status = delay > 0 and "waiting" or "drawing"
   state.options = options
   state.indicator = nil
   state.drawn_distance = 0
 
+  redraw_scope(previous, previous_changedtick)
   if delay <= 0 then
-    local restarts_animation = options.interval > 0 and options.max_duration > 0 ---@type boolean
-    if previous ~= nil and (previous.winnr ~= scope.winnr or restarts_animation) then
-      redraw_scope(previous)
-    end
     start_drawing(scope, options, generation)
     return
   end
 
-  redraw_scope(previous)
   state.delay_timer = vim.defer_fn(function()
     if generation ~= state.generation then
       return
@@ -459,6 +469,12 @@ function M.relayout()
   end
   if not M.is_enabled(scope.bufnr) then
     M.undraw()
+    return true
+  end
+  if state.status == "finished" then
+    -- Nvim redraws rows exposed by scrolling, and the whole window after a resize or horizontal
+    -- scroll; invalidating it here would defeat the scroll optimization and repaint every row.
+    state.indicator = make_indicator(scope, options)
     return true
   end
 

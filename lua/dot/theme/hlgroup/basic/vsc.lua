@@ -194,7 +194,8 @@ function M.gen_hlgroup_map(context)
     },
     Normal = { fg = c.editor_foreground, bg = t and u.none or u.bg0 },
     NormalFloat = { fg = c.dropdown_foreground, bg = t and c.none or c.dropdown_background },
-    NormalNC = { fg = c.editor_foreground, bg = t and u.none or u.bg1 },
+    -- Transparent NormalNC would equal Normal yet still repaint every cell on window switches.
+    NormalNC = t and {} or { fg = c.editor_foreground, bg = u.bg1 },
     NvimInternalError = { fg = c.errorForeground },
     Number = { fg = c.semanticNumberLiteral },
     Operator = { fg = c.semanticNewOperator },

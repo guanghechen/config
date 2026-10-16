@@ -200,7 +200,8 @@ function M.gen_hlgroup_map(context)
     MatchWord = { fg = c.fg1, bg = c.bg4 },
     Normal = { fg = c.fg1, bg = t and c.none or c.bg0 },
     NormalFloat = { link = "FloatNormal" },
-    NormalNC = { fg = c.fg1, bg = t and c.none or c.bg1 },
+    -- Transparent NormalNC would equal Normal yet still repaint every cell on window switches.
+    NormalNC = t and {} or { fg = c.fg1, bg = c.bg1 },
     NvimInternalError = { fg = c.red },
     Pmenu = { fg = c.fg1, bg = c.bg2 },
     PmenuSbar = { bg = c.bg2 },

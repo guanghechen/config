@@ -6,12 +6,10 @@ local initialized = false ---@type boolean
 ---@class era.dressing.statuscolumn.IConfig
 ---@field public left                   era.dressing.statuscolumn.IComponents
 ---@field public right                  era.dressing.statuscolumn.IComponents
----@field public refresh                integer
 ---@field public folds                  { open: boolean, git_hl: boolean }
 local config = {
   left = { "mark", "sign" }, -- priority of signs on the left (high to low)
   right = { "fold", "git" }, -- priority of signs on the right (high to low)
-  refresh = 50, -- refresh at most every 50ms
   folds = {
     open = true, -- show open fold icons
     git_hl = true, -- use Git Signs hl for fold icons
@@ -88,21 +86,15 @@ local sign_cache = {} ---@type table<number,table<number, era.dressing.statuscol
 local icon_cache = {} ---@type table<string, string>
 local cache = {} ---@type table<string, string>
 
-local cache_timer ---@type uv.uv_timer_t|nil
-
----@return nil
-local function schedule_cache_expiration()
-  if cache_timer == nil then
-    cache_timer = assert(vim.uv.new_timer())
-  elseif cache_timer:is_active() then
-    return
-  end
-
-  cache_timer:start(config.refresh, 0, function()
+-- Caches live for one redraw. Nvim redraws a row when its signs or folds change, so a cache that
+-- outlived the redraw would render stale data and nothing would repaint the row afterwards.
+vim.api.nvim_set_decoration_provider(vim.api.nvim_create_namespace(__module_name__), {
+  on_start = function()
     sign_cache = {}
     cache = {}
-  end)
-end
+    return false
+  end,
+})
 
 ---@param signs_by_type                 table<era.dressing.statuscolumn.SignType, era.dressing.statuscolumn.ISign>
 ---@param types                         era.dressing.statuscolumn.SignType[]
@@ -223,8 +215,6 @@ end
 
 ---@return string
 local function statuscolumn()
-  schedule_cache_expiration()
-
   local winnr = vim.g.statusline_winid ---@type integer
   local nu = vim.api.nvim_get_option_value("number", { win = winnr }) ---@type boolean
   local rnu = vim.api.nvim_get_option_value("relativenumber", { win = winnr }) ---@type boolean

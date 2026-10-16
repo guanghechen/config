@@ -274,17 +274,10 @@ local function check_scroll(winnr)
 
       elapsed = elapsed + 1
       local progress = math.min(elapsed / total_steps, 1) ---@type number
-      local eased = easing_fn(progress * duration, 0, 1, duration) ---@type number
+      local eased = progress >= 1 and 1 or easing_fn(progress * duration, 0, 1, duration) ---@type number
       local value = eased * scrolls ---@type number
 
       vim.api.nvim_win_call(state.winnr, function()
-        if progress >= 1 then
-          vim.fn.winrestview(state.target)
-          state.current = vim.api.nvim_win_call(state.winnr, vim.fn.winsaveview)
-          stop_animation(state)
-          return
-        end
-
         local count = vim.v.count ---@type integer
 
         local scroll_target = math.floor(value) ---@type integer
@@ -303,6 +296,28 @@ local function check_scroll(winnr)
           local cursor = vim.api.nvim_win_get_cursor(state.winnr) ---@type integer[]
           vim.cmd(("keepjumps normal! %dzh"):format(count))
           vim.api.nvim_win_set_cursor(state.winnr, cursor)
+        end
+
+        if progress >= 1 then
+          local target = state.target ---@type vim.fn.winsaveview.ret
+          local view = vim.fn.winsaveview() ---@type vim.fn.winsaveview.ret
+          -- Restoring 'virtualedit' resets curswant, so the target cursor is restored afterwards.
+          stop_animation(state)
+          if
+            view.topline == target.topline
+            and view.topfill == target.topfill
+            and view.leftcol == target.leftcol
+            and view.skipcol == target.skipcol
+            and target.curswant ~= vim.v.maxcol
+          then
+            -- winrestview() resets the window layout, which repaints every row of the scrolled frame.
+            -- cursor() cannot restore an end-of-line curswant, which takes the fallback.
+            vim.fn.cursor({ target.lnum, target.col + 1, target.coladd, target.curswant + 1 })
+          else
+            vim.fn.winrestview(target)
+          end
+          state.current = vim.fn.winsaveview()
+          return
         end
 
         state.current = vim.api.nvim_win_call(state.winnr, vim.fn.winsaveview)
