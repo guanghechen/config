@@ -95,7 +95,7 @@ function M.setup(config)
   }
 
   for _, key in ipairs(letters) do
-    local ascii_code = string.byte(key:upper())
+    local ascii_code = string.byte(key)
     table.insert(keys, {
       key = key:upper(),
       mods = "CTRL|SHIFT",
