@@ -19,9 +19,9 @@ function fzf-file --description "Search files in current directory"
             --exclude=.git --exclude=node_modules --exclude=.DS_Store \
             --exclude='*.local' --exclude=local/ --exclude='*.exe' --exclude='*.zip' \
             --type=f --search-path="$search_dir" |
-        fzf --ansi --read0 --print0 --multi --prompt="$prompt" --query="$query" \
+        fzf --ansi --read0 --print0 --multi --scheme=path --prompt="$prompt" --query="$query" \
             --with-shell='fish --no-config -c' \
-            --preview='bat --line-range=:500 --style=snip --theme=vsc-light-modern --number --color=always -- {} || cat -n -- {}' \
+            --preview='bat --line-range=:500 --style=snip --number --color=always -- {} || cat -n -- {}' \
             --bind='ctrl-o:execute(nvim -- {+} < /dev/tty)' |
         string split0
     )
