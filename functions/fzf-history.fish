@@ -5,17 +5,16 @@ function fzf-history --description "Search command history"
     test -z "$fish_private_mode" && builtin history merge
 
     set -l time_fmt "%m-%d %H:%M:%S"
-    set -l time_regex '^.*? │ '
     set -l selected (
         builtin history --null --show-time="$time_fmt │ " |
         fzf --read0 --print0 --multi --scheme=history --prompt="History> " \
-            --query=(commandline) \
-            --preview="string replace --regex '$time_regex' '' -- {} | fish_indent --ansi" \
+            --with-shell='fish --no-config -c' --bind=ctrl-o:ignore \
+            --query=(commandline | string collect) \
+            --preview="string split --max=1 --fields=2 -- ' │ ' {} | fish_indent --ansi" \
             --preview-window="bottom:3:wrap" |
-        string split0 |
-        string replace --regex $time_regex ''
+        string split0
     )
 
-    test $status -eq 0 && commandline --replace -- $selected
+    test $status -eq 0 && commandline --replace -- (string split --max=1 --fields=2 -- ' │ ' $selected)
     commandline --function repaint
 end

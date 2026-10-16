@@ -12,6 +12,7 @@ function fzf-git-log --description "Search git log and insert commit hash"
     set -l selected (
         git log --no-show-signature --color=always --format=format:$format --date=short |
         fzf --ansi --multi --scheme=history --prompt="Git Log> " \
+            --with-shell='fish --no-config -c' --bind=ctrl-o:ignore \
             --preview="git show --color=always --stat --patch {1}" \
             --query=(commandline --current-token)
     )
@@ -22,7 +23,7 @@ function fzf-git-log --description "Search git log and insert commit hash"
             set -l abbrev (string split --field=1 " " $line)
             set -a hashes (git rev-parse $abbrev)
         end
-        commandline --current-token --replace (string join ' ' $hashes)
+        commandline --current-token --replace -- (string join ' ' $hashes)
     end
 
     commandline --function repaint

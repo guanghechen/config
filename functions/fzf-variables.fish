@@ -9,14 +9,15 @@ function fzf-variables --description "Search shell variables and insert name"
 
     set -l selected (
         printf '%s\n' $var_names |
-        fzf --multi --prompt="Variables> " --query=$query
+        fzf --multi --prompt="Variables> " --query=$query \
+            --with-shell='fish --no-config -c' --preview='' --bind=ctrl-o:ignore
     )
 
     if test $status -eq 0
         if string match --quiet -- '$*' $token
-            commandline --current-token --replace (string join " " \${$selected})
+            commandline --current-token --replace -- (string join " " \${$selected})
         else
-            commandline --current-token --replace (string join " " $selected)
+            commandline --current-token --replace -- (string join " " $selected)
         end
     end
 

@@ -6,6 +6,7 @@ function fzf-processes --description "Search running processes and insert PID"
     set -l selected (
         ps -A -opid,command |
         fzf --multi --ansi --prompt="Processes> " \
+            --with-shell='fish --no-config -c' --bind=ctrl-o:ignore \
             --header-lines=1 \
             --exact \
             --query=(commandline --current-token) \
