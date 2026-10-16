@@ -7,10 +7,14 @@ local support = require("__test__.support.git_files")
 
 ---@return table
 local function fixture()
-  local columns = vim.o.columns
+  -- Nvim 0.12 without a UI overruns the tabline buffers once 'columns' grows, corrupting the heap and
+  -- crashing later; the preview needs the width but not the tabline.
+  local showtabline, columns = vim.o.showtabline, vim.o.columns
+  vim.o.showtabline = 0
   vim.o.columns = 150
   t:defer(function()
     vim.o.columns = columns
+    vim.o.showtabline = showtabline
   end)
   local root = support.repo(t)
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "only-staged" })

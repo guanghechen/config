@@ -42,6 +42,8 @@ end
 ---@field autocmds                      table<string, table>
 ---@field bufnr                         integer
 ---@field valid                         boolean
+---@field height                        integer
+---@field float                         boolean
 ---@field view                          vim.fn.winsaveview.ret
 ---@field options                       table<string, any>
 ---@field scheduled                     fun()[]
@@ -60,6 +62,8 @@ local function setup()
     autocmds = {},
     bufnr = 1,
     valid = true,
+    height = 200,
+    float = false,
     view = { lnum = 1, col = 0, coladd = 0, curswant = 0, topline = 1, topfill = 0, leftcol = 0, skipcol = 0 },
     options = { virtualedit = "", scrolloff = 4 },
     scheduled = {},
@@ -124,6 +128,15 @@ local function setup()
   t:patch_table(vim.api, "nvim_clear_autocmds", function() end)
   t:patch_table(vim.api, "nvim_list_wins", function()
     return { 1 }
+  end)
+  t:patch_table(vim.api, "nvim_tabpage_list_wins", function()
+    return { 1, 2 }
+  end)
+  t:patch_table(vim.api, "nvim_win_get_config", function(winnr)
+    return { relative = winnr == 2 and runtime.float and "editor" or "" }
+  end)
+  t:patch_table(vim.api, "nvim_win_get_height", function()
+    return runtime.height
   end)
   t:patch_table(vim.api, "nvim_win_is_valid", function()
     return runtime.valid
@@ -328,6 +341,76 @@ t:test("final frame restores the target view when scrolling falls short", functi
   t.assert_eq(100, result.restores[1].topline, "restored topline")
   t.assert_eq(120, result.restores[1].lnum, "restored cursor line")
   t.assert_nil(result.cursor, "cursor-only restore")
+end)
+
+t:test("jumps without animation while a float is visible", function()
+  local runtime = setup()
+  runtime.float = true
+
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+
+  t.assert_eq(0, #runtime.timers, "animation timers")
+  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
+end)
+
+t:test("jumps without animation beyond one screen", function()
+  local runtime = setup()
+  runtime.height = 50
+
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+
+  t.assert_eq(0, #runtime.timers, "animation timers")
+  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
+end)
+
+t:test("a float appearing mid-animation finishes on the next frame", function()
+  local runtime = setup()
+  runtime.view = { lnum = 120, col = 3, coladd = 0, curswant = 7, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.check_scroll(1)
+  local timer = runtime.timers[1]
+  local cursor ---@type integer[]|nil
+  t:patch_table(vim, "cmd", function() end)
+  t:patch_table(vim.fn, "cursor", function(position)
+    cursor = position
+  end)
+
+  assert(timer.callback)()
+  table.remove(runtime.scheduled, 1)()
+  t.assert_true(runtime.states[1].timer == timer, "animation continues without a float")
+
+  runtime.float = true
+  runtime.view = { lnum = 101, col = 0, coladd = 0, curswant = 0, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
+  assert(timer.callback)()
+  table.remove(runtime.scheduled, 1)()
+  t.assert_nil(runtime.states[1].timer, "active timer")
+  t.assert_eq("120:4:0:8", table.concat(cursor or {}, ":"), "target cursor")
+end)
+
+t:test("an oversized scroll during an animation keeps the new target curswant", function()
+  local runtime = setup()
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+  local restores = {} ---@type vim.fn.winsaveview.ret[]
+  local restore = vim.fn.winrestview
+  t:patch_table(vim.fn, "winrestview", function(view)
+    restores[#restores + 1] = view
+    restore(view)
+  end)
+
+  runtime.height = 50
+  runtime.view =
+    { lnum = 900, col = 5, coladd = 0, curswant = 30, topline = 880, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.check_scroll(1)
+
+  t.assert_true(runtime.timers[1].cleared, "timer cleared")
+  t.assert_eq("", runtime.options.virtualedit, "restored virtualedit")
+  t.assert_eq(30, restores[#restores].curswant, "restored curswant")
+  t.assert_eq(880, runtime.states[1].current.topline, "current topline")
 end)
 
 t:test("accepts a programmatic view change as the new baseline", function()

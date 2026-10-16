@@ -24,6 +24,7 @@ local t = harness.new("dot.autocmd")
 ---@field save_on_exit_error           boolean
 ---@field save_errors                  integer
 ---@field shutdown_steps               string[]
+---@field msg_lsp                      string|nil
 
 ---@return dot.autocmd.test.IRuntime
 local function setup()
@@ -48,6 +49,11 @@ local function setup()
   } ---@type dot.autocmd.test.IRuntime
 
   t:patch_global("stl", {
+    anim = {
+      spinner = function()
+        return "S"
+      end,
+    },
     env = { IS_TMUX = true },
     nvim = {
       fn = {
@@ -126,6 +132,12 @@ local function setup()
         isdisposed = function()
           return runtime.disposed > 0
         end,
+        msg_lsp = {
+          next = function(_, value)
+            runtime.msg_lsp = value
+          end,
+        },
+        suppress_warning = { next = function() end },
         tmux_zen_mode = {
           next = function(_, value)
             runtime.updates[#runtime.updates + 1] = value
@@ -195,6 +207,16 @@ t:test("TabClosed delegates without passing the ordinal as a handle", function()
   runtime.autocmds.bootstrap_on_TabClosed.callback({ file = "2" })
 
   t.assert_eq(0, runtime.tab_close_argc, "tab close arguments")
+end)
+
+t:test("LspProgress publishes a literal percentage for the statusline to escape", function()
+  local runtime = setup()
+
+  runtime.autocmds.bootstrap_on_LspProgress.callback({
+    data = { params = { value = { kind = "report", percentage = 45, message = "351", title = "Indexing" } } },
+  })
+
+  t.assert_eq("S 45% 351 Indexing", runtime.msg_lsp, "progress text")
 end)
 
 t:test("BufDelete forwards the deleted buffer to every owner", function()
