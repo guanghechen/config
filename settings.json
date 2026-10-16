@@ -50,9 +50,6 @@
     "claude-api": "user-invocable-only",
     "dataviz": "user-invocable-only"
   },
-  "enabledPlugins": {
-    "diff@builtin": false
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -189,6 +186,10 @@
     "padding": 0,
     "refreshInterval": 10
   },
+  "enabledPlugins": {
+    "diff@builtin": false,
+    "swift-lsp@claude-plugins-official": true
+  },
   "modelSettings": {
     "claude-opus-5-5": {
       "effortLevel": "xhigh"
@@ -197,9 +198,9 @@
       "effortLevel": "xhigh"
     }
   },
+  "tui": "fullscreen",
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
-  "editorMode": "vim",
-  "tui": "fullscreen"
+  "editorMode": "vim"
 }
