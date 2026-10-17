@@ -18,6 +18,12 @@ local M = {}
 local states = {} ---@type table<integer, era.dressing.hipattern.buffer.IState>
 local initialized = false ---@type boolean
 
+-- Rows outside every window render in chunks until a step exceeds its budget, then the step yields. Cost
+-- follows bytes, so a chunk also stops at CHUNK_BYTES and wide lines shrink it.
+local CHUNK_ROWS = 256 ---@type integer
+local CHUNK_BYTES = 16 * 1024 ---@type integer
+local STEP_BUDGET_NS = 4 * 1000000 ---@type integer
+
 ---@param bufnr                         integer|nil
 ---@return integer|nil
 local function resolve_bufnr(bufnr)
@@ -31,17 +37,71 @@ local function resolve_bufnr(bufnr)
 end
 
 ---@param bufnr                         integer
----@param range                         era.dressing.hipattern.dirty.IRange|nil
----@param dirty_all                     boolean
+---@param range                         era.dressing.hipattern.dirty.IRange
 ---@param err                           any
 ---@return nil
-local function report_failure(bufnr, range, dirty_all, err)
+local function report_failure(bufnr, range, err)
   reporter.error({
     from = __module_name__,
     subject = "render",
     message = "Failed to update hipatterns",
-    details = { bufnr = bufnr, range = range, dirty_all = dirty_all, error = err },
+    details = { bufnr = bufnr, range = range, error = err },
   })
+end
+
+-- A screen of rows from where each window on the buffer was at its last redraw. Validating the view
+-- (line("w0"), line("w$")) could first evaluate a fold expression on every row, and later steps run after
+-- a redraw anyway. Rows below a closed fold render with the rest.
+---@param bufnr                         integer
+---@return era.dressing.hipattern.dirty.IRange[]
+local function visible_ranges(bufnr)
+  local ranges = {} ---@type era.dressing.hipattern.dirty.IRange[]
+  for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_buf(winnr) == bufnr then
+      local info = vim.fn.getwininfo(winnr)[1] ---@type vim.fn.getwininfo.ret.item
+      ranges = dirty.add(ranges, info.topline - 1, info.topline - 1 + info.height)
+    end
+  end
+  return ranges
+end
+
+-- End of the chunk starting at `from_row`: at most CHUNK_ROWS rows and CHUNK_BYTES of the buffer, at least
+-- one row. Every pending range inside renders with it, so scattered edits do not cost a step each.
+---@param bufnr                         integer
+---@param from_row                      integer
+---@return integer
+local function chunk_end(bufnr, from_row)
+  local high = math.min(from_row + CHUNK_ROWS, vim.api.nvim_buf_line_count(bufnr)) ---@type integer
+  local low = from_row + 1 ---@type integer
+  if high <= low then
+    return low
+  end
+  local limit = vim.api.nvim_buf_get_offset(bufnr, from_row) + CHUNK_BYTES ---@type integer
+  while low < high do
+    local mid = math.floor((low + high + 1) / 2) ---@type integer
+    if vim.api.nvim_buf_get_offset(bufnr, mid) <= limit then
+      low = mid
+    else
+      high = mid - 1
+    end
+  end
+  return low
+end
+
+---@param bufnr                         integer
+---@param state                         era.dressing.hipattern.buffer.IState
+---@param from_row                      integer
+---@param to_row                        integer
+---@return nil
+local function render_pending(bufnr, state, from_row, to_row)
+  local taken ---@type era.dressing.hipattern.dirty.IRange[]
+  state.dirty_ranges, taken = dirty.take(state.dirty_ranges, from_row, to_row)
+  for _, range in ipairs(taken) do
+    local ok, err = pcall(render.update, bufnr, range.from, range.to)
+    if not ok then
+      report_failure(bufnr, range, err)
+    end
+  end
 end
 
 ---@param bufnr                         integer
@@ -57,33 +117,40 @@ local function flush(bufnr, state)
     return
   end
 
-  local dirty_all = state.dirty_all ---@type boolean
-  local dirty_ranges = state.dirty_ranges ---@type era.dressing.hipattern.dirty.IRange[]
-  state.dirty_all = false
-  state.dirty_ranges = {}
-  if not dirty_all and #dirty_ranges == 0 then
-    return
+  -- A full render becomes one pending range, so it renders like edits do: rows on screen first, the rest
+  -- in budgeted steps.
+  if state.dirty_all then
+    state.dirty_all = false
+    render.clear(bufnr, 0, -1)
+    state.dirty_ranges = dirty.add({}, 0, vim.api.nvim_buf_line_count(bufnr))
+  end
+  -- Rows past the end, such as an update with a stale range, have nothing to render; the row at the end
+  -- stays to clear the extmarks a tail deletion leaves there.
+  local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+  local last = state.dirty_ranges[#state.dirty_ranges] ---@type era.dressing.hipattern.dirty.IRange|nil
+  if last ~= nil and last.to > line_count + 1 then
+    state.dirty_ranges = dirty.take(state.dirty_ranges, line_count + 1, last.to)
   end
 
-  if dirty_all then
-    local ok, err = pcall(render.update_all, bufnr)
-    if not ok then
-      report_failure(bufnr, nil, true, err)
-    end
-  else
-    for _, range in ipairs(dirty_ranges) do
-      local ok, err = pcall(render.update, bufnr, range.from, range.to)
-      if not ok then
-        report_failure(bufnr, range, false, err)
-      end
+  for _, range in ipairs(visible_ranges(bufnr)) do
+    render_pending(bufnr, state, range.from, range.to)
+  end
+  local deadline = vim.uv.hrtime() + STEP_BUDGET_NS ---@type integer
+  while #state.dirty_ranges > 0 do
+    local from_row = state.dirty_ranges[1].from ---@type integer
+    render_pending(bufnr, state, from_row, chunk_end(bufnr, from_row))
+    if vim.uv.hrtime() >= deadline then
+      break
     end
   end
 
+  -- Later steps wait for a timer: chained scheduled callbacks would keep the event queue busy, so the screen
+  -- would only update when the whole render ends.
   if (state.dirty_all or #state.dirty_ranges > 0) and not state.scheduled then
     state.scheduled = true
-    vim.schedule(function()
+    vim.defer_fn(function()
       flush(bufnr, state)
-    end)
+    end, 0)
   end
 end
 
@@ -253,7 +320,7 @@ function M.update(bufnr, from_row, to_row)
     queue_update(bufnr, state, 0, 0, true)
   else
     local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-    queue_update(bufnr, state, from_row or 0, to_row or line_count)
+    queue_update(bufnr, state, math.max(0, from_row or 0), to_row or line_count)
   end
 end
 

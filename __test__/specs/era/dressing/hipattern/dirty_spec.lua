@@ -32,4 +32,20 @@ t:test("transform collapses deleted ranges and merges survivors", function()
   t.assert_eq(inspect({ { from = 5, to = 9 } }), inspect(ranges), "delete transform")
 end)
 
+t:test("take splits the requested rows off the ranges", function()
+  local remaining, taken = dirty.take({ { from = 0, to = 10 }, { from = 20, to = 30 } }, 5, 25)
+  t.assert_eq(inspect({ { from = 0, to = 5 }, { from = 25, to = 30 } }), inspect(remaining), "remaining")
+  t.assert_eq(inspect({ { from = 5, to = 10 }, { from = 20, to = 25 } }), inspect(taken), "taken")
+end)
+
+t:test("take leaves ranges outside the rows and empty requests untouched", function()
+  local ranges = { { from = 0, to = 10 }, { from = 20, to = 30 } } ---@type era.dressing.hipattern.dirty.IRange[]
+  local remaining, taken = dirty.take(ranges, 10, 20)
+  t.assert_eq(inspect(ranges), inspect(remaining), "gap between ranges")
+  t.assert_eq(inspect({}), inspect(taken), "nothing taken")
+  remaining, taken = dirty.take(ranges, 5, 5)
+  t.assert_eq(inspect(ranges), inspect(remaining), "empty request")
+  t.assert_eq(inspect({}), inspect(taken), "nothing taken from an empty request")
+end)
+
 t:run()

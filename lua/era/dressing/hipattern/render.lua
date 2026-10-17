@@ -76,16 +76,6 @@ function M.update(bufnr, from_row, to_row)
   render_rows(bufnr, from_row, to_row)
 end
 
----@param bufnr                         integer
----@return nil
-function M.update_all(bufnr)
-  if not vim.api.nvim_buf_is_loaded(bufnr) then
-    return
-  end
-  M.clear(bufnr, 0, -1)
-  render_rows(bufnr, 0, vim.api.nvim_buf_line_count(bufnr))
-end
-
 ---@return nil
 function M.refresh_highlights()
   highlight.refresh()

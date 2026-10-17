@@ -257,4 +257,163 @@ t:test("colorscheme restores generated color groups", function()
   end)
 end)
 
+---@param lines                         string[]
+---@return integer bufnr
+---@return integer winnr
+local function show_lines(lines)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(previous_bufnr) then
+      vim.api.nvim_win_set_buf(winnr, previous_bufnr)
+    end
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  return bufnr, winnr
+end
+
+-- Queues steps instead of running them and makes every clock read exceed the step budget, so a step
+-- renders the screen and exactly one chunk; setting the filetype then starts the full render.
+---@param bufnr                         integer
+---@return fun()[] steps
+---@return string[] queued_by
+local function begin_stepped_render(bufnr)
+  local steps = {} ---@type fun()[]
+  local queued_by = {} ---@type string[]
+  for _, name in ipairs({ "schedule", "defer_fn" }) do
+    t:patch_table(vim, name, function(callback)
+      steps[#steps + 1] = callback
+      queued_by[#queued_by + 1] = name
+    end)
+  end
+  local now = 0 ---@type integer
+  t:patch_table(vim.uv, "hrtime", function()
+    now = now + 5 * 1000000
+    return now
+  end)
+  vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+  t.assert_eq(1, #steps, "first step queued")
+  return steps, queued_by
+end
+
+---@param bufnr                         integer
+---@return table<integer, true>
+local function rendered_rows(bufnr)
+  local rows = {} ---@type table<integer, true>
+  for _, extmark in ipairs(get_extmarks(bufnr)) do
+    rows[extmark[2]] = true
+  end
+  return rows
+end
+
+---@param steps                         fun()[]
+---@return integer count
+local function drain(steps)
+  local count = 0 ---@type integer
+  while #steps > 0 do
+    count = count + 1
+    table.remove(steps, 1)()
+  end
+  return count
+end
+
+t:test("a full render draws the visible rows first and finishes the rest in later steps", function()
+  local lines = {} ---@type string[]
+  for index = 1, 3000 do
+    lines[index] = "TODO " .. index
+  end
+  local bufnr, winnr = show_lines(lines)
+  vim.api.nvim_win_set_cursor(winnr, { 2000, 0 })
+  vim.cmd("normal! zz")
+  local steps, queued_by = begin_stepped_render(bufnr)
+  table.remove(steps, 1)()
+
+  local rows = rendered_rows(bufnr)
+  local top = vim.fn.line("w0", winnr) - 1 ---@type integer
+  local bottom = vim.fn.line("w$", winnr) - 1 ---@type integer
+  t.assert_true(rows[top] and rows[bottom], "visible rows render in the first step")
+  t.assert_true(rows[0] and rows[255] and not rows[256], "one chunk renders besides the screen")
+  t.assert_nil(rows[1000], "other rows wait for later steps")
+  -- A scheduled continuation would keep the event queue busy and hold back the screen update.
+  t.assert_eq("defer_fn", queued_by[2], "later steps wait for a timer")
+  t.assert_true(drain(steps) > 1, "the rest spans several steps")
+  t.assert_eq(3000, #get_extmarks(bufnr), "every row renders")
+end)
+
+t:test("wide lines shrink a chunk to its byte limit", function()
+  local lines = {} ---@type string[]
+  for index = 1, 600 do
+    lines[index] = "TODO " .. string.rep("x", 1000)
+  end
+  local bufnr, winnr = show_lines(lines)
+  local steps = begin_stepped_render(bufnr)
+  table.remove(steps, 1)()
+
+  local rows = rendered_rows(bufnr)
+  -- The visible pass covers a screen of rows from the top; the first chunk starts after it.
+  local after_screen = vim.fn.getwininfo(winnr)[1].topline - 1 + vim.api.nvim_win_get_height(winnr) ---@type integer
+  t.assert_true(rows[after_screen], "a chunk follows the screen")
+  t.assert_nil(rows[after_screen + 20], "the chunk stops near 16 KiB instead of 256 rows")
+  drain(steps)
+  t.assert_eq(600, #get_extmarks(bufnr), "every row renders")
+end)
+
+t:test("closed folds keep the first step to a screen of rows", function()
+  local lines = {} ---@type string[]
+  for index = 1, 3000 do
+    lines[index] = "TODO " .. index
+  end
+  local bufnr, winnr = show_lines(lines)
+  vim.api.nvim_set_option_value("foldmethod", "manual", { win = winnr })
+  vim.cmd("2,2990fold")
+  local steps = begin_stepped_render(bufnr)
+  table.remove(steps, 1)()
+
+  local rows = rendered_rows(bufnr)
+  t.assert_true(rows[0], "the first screen renders")
+  t.assert_nil(rows[1000], "folded rows wait for later steps")
+  drain(steps)
+  t.assert_eq(3000, #get_extmarks(bufnr), "every row renders")
+end)
+
+t:test("an update past the end of the buffer drops the missing rows", function()
+  local bufnr = show_lines({ "TODO 1", "TODO 2" })
+  vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+  wait_for_extmarks(bufnr, 2)
+
+  local render = require("era.dressing.hipattern.render")
+  local update = render.update
+  local calls = 0 ---@type integer
+  t:patch_table(render, "update", function(...)
+    calls = calls + 1
+    return update(...)
+  end)
+  Hipattern.update(bufnr, 0, 200000)
+  t.wait_until(function()
+    return calls > 0
+  end, 1000, "rendered")
+  vim.wait(50)
+  t.assert_true(calls <= 2, "rendered once instead of row by row, got " .. calls)
+  t.assert_eq(2, #get_extmarks(bufnr), "existing rows still render")
+end)
+
+t:test("an update before the first row starts at the first row", function()
+  with_buffer({ "TODO", "TODO" }, "lua", function(bufnr)
+    Hipattern.enable(bufnr)
+    wait_for_extmarks(bufnr, 2)
+
+    Hipattern.update(bufnr, -5, 1)
+    vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, { "DONE" })
+    t.wait_until(function()
+      local extmarks = get_extmarks(bufnr)
+      return #extmarks == 2 and extmarks[2][4].hl_group == "f_hipattern_success"
+    end, 1000, "later edits still render")
+  end)
+end)
+
 t:run()

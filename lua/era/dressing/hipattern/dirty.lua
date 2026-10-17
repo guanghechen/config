@@ -74,4 +74,33 @@ function M.transform(ranges, first, last_orig, last_new)
   return result
 end
 
+-- Splits the rows inside [from, to) off the ranges.
+---@param ranges                        era.dressing.hipattern.dirty.IRange[]
+---@param from                          integer
+---@param to                            integer
+---@return era.dressing.hipattern.dirty.IRange[] remaining
+---@return era.dressing.hipattern.dirty.IRange[] taken
+function M.take(ranges, from, to)
+  if from >= to then
+    return ranges, {}
+  end
+
+  local remaining = {} ---@type era.dressing.hipattern.dirty.IRange[]
+  local taken = {} ---@type era.dressing.hipattern.dirty.IRange[]
+  for _, range in ipairs(ranges) do
+    if range.to <= from or to <= range.from then
+      remaining[#remaining + 1] = range
+    else
+      if range.from < from then
+        remaining[#remaining + 1] = { from = range.from, to = from }
+      end
+      taken[#taken + 1] = { from = math.max(range.from, from), to = math.min(range.to, to) }
+      if to < range.to then
+        remaining[#remaining + 1] = { from = to, to = range.to }
+      end
+    end
+  end
+  return remaining, taken
+end
+
 return M
