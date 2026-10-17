@@ -160,13 +160,38 @@ t:test("caches live for one redraw", function()
   t.assert_eq(reads, option_reads, "cached render within a redraw")
   t.assert_eq(1, scan_count, "sign scans within a redraw")
 
-  t.assert_false(assert(on_start)(), "provider skips the rest of the redraw")
+  t.assert_true(assert(on_start)() ~= false, "provider keeps receiving the windows of the redraw")
   Statuscolumn.statuscolumn()
   t.assert_true(option_reads > reads, "render after the next redraw starts")
   t.assert_eq(2, scan_count, "sign scans after the next redraw starts")
 end)
 
-t:test("shares complete sign data across windows with different components", function()
+t:test("sign scans cover only the rows a window draws", function()
+  local provider ---@type table|nil
+  t:patch_table(vim.api, "nvim_set_decoration_provider", function(_, opts)
+    provider = opts
+  end)
+  local scans = {} ---@type string[]
+  t:patch_table(vim.api, "nvim_buf_get_extmarks", function(_, _, start, finish)
+    scans[#scans + 1] = start[1] .. "-" .. finish[1]
+    return {}
+  end)
+  t:patch_table(vim.fn, "getmarklist", function()
+    return {}
+  end)
+
+  local line_signs = load_line_signs()
+  local wanted = { sign = true, git = true, mark = true, fold = false }
+  assert(provider).on_win(nil, 1, 1, 10, 40)
+  line_signs(1, 1, 11, wanted)
+  line_signs(1, 1, 41, wanted)
+  line_signs(1, 1, 61, wanted)
+  line_signs(1, 1, 61, wanted)
+
+  t.assert_eq("10-40,60-60", table.concat(scans, ","), "drawn rows, then a row beyond them once")
+end)
+
+t:test("shares complete sign data across components", function()
   local scan_count = 0
   t:patch_table(vim.api, "nvim_buf_get_extmarks", function()
     scan_count = scan_count + 1
@@ -181,9 +206,9 @@ t:test("shares complete sign data across windows with different components", fun
 
   local line_signs = load_line_signs()
   local git_signs = line_signs(1, 1, 1, { sign = false, git = true, mark = false, fold = false })
-  local all_signs = line_signs(2, 1, 1, { sign = true, git = true, mark = false, fold = false })
+  local all_signs = line_signs(1, 1, 1, { sign = true, git = true, mark = false, fold = false })
 
-  t.assert_eq(1, scan_count, "buffer sign scan count")
+  t.assert_eq(1, scan_count, "window sign scan count")
   t.assert_eq(1, #git_signs, "filtered sign count")
   t.assert_eq("git", git_signs[1].type, "filtered sign type")
   t.assert_eq(2, #all_signs, "complete sign count")

@@ -81,17 +81,30 @@ local function fold_info(winnr, lnum)
   return C.fold_info(wp, lnum) ---@type era.dressing.statuscolumn.IFoldInfo
 end
 
--- Cache for signs per buffer and line
-local sign_cache = {} ---@type table<number,table<number, era.dressing.statuscolumn.ISign[]>>
-local icon_cache = {} ---@type table<string, string>
-local cache = {} ---@type table<string, string>
+---@class era.dressing.statuscolumn.IWindowSigns
+---@field public bufnr                  integer
+---@field public top_row                integer
+---@field public bot_row                integer
+---@field public signs_by_lnum          table<integer, era.dressing.statuscolumn.ISign[]>
 
 -- Caches live for one redraw. Nvim redraws a row when its signs or folds change, so a cache that
 -- outlived the redraw would render stale data and nothing would repaint the row afterwards.
+local sign_cache = {} ---@type table<integer, era.dressing.statuscolumn.IWindowSigns>
+local mark_cache = {} ---@type table<integer, table<integer, era.dressing.statuscolumn.ISign[]>>
+local drawn_rows = {} ---@type table<integer, integer[]>
+local icon_cache = {} ---@type table<string, string>
+local cache = {} ---@type table<string, string>
+
 vim.api.nvim_set_decoration_provider(vim.api.nvim_create_namespace(__module_name__), {
   on_start = function()
     sign_cache = {}
+    mark_cache = {}
+    drawn_rows = {}
     cache = {}
+  end,
+  -- Signs are read for the rows each window draws instead of the whole buffer.
+  on_win = function(_, winnr, _, toprow, botrow)
+    drawn_rows[winnr] = { toprow, botrow }
     return false
   end,
 })
@@ -114,14 +127,47 @@ local function is_git_sign(name)
   return name:find("^m_git_sign_") ~= nil
 end
 
--- Returns buffer signs grouped by line
+-- Marks of the buffer grouped by line, read once per redraw.
 ---@param bufnr                         integer
 ---@return table<integer, era.dressing.statuscolumn.ISign[]>
-local function collect_buf_signs(bufnr)
+local function buf_marks(bufnr)
+  local marks_by_lnum = mark_cache[bufnr] ---@type table<integer, era.dressing.statuscolumn.ISign[]>|nil
+  if marks_by_lnum ~= nil then
+    return marks_by_lnum
+  end
+
+  marks_by_lnum = {}
+  local marks = vim.fn.getmarklist(bufnr)
+  vim.list_extend(marks, vim.fn.getmarklist())
+  for _, mark in ipairs(marks) do
+    if mark.pos[1] == bufnr and mark.mark:match("[a-zA-Z]") then
+      ---@type era.dressing.statuscolumn.ISign
+      local sign = { type = "mark", text = string.sub(mark.mark, 2), texthl = "StatusColumnMark" }
+      local lnum = mark.pos[2]
+      marks_by_lnum[lnum] = marks_by_lnum[lnum] or {}
+      table.insert(marks_by_lnum[lnum], sign)
+    end
+  end
+  mark_cache[bufnr] = marks_by_lnum
+  return marks_by_lnum
+end
+
+-- Returns the signs on rows [top_row, bot_row] grouped by line
+---@param bufnr                         integer
+---@param top_row                       integer
+---@param bot_row                       integer
+---@return table<integer, era.dressing.statuscolumn.ISign[]>
+local function collect_signs(bufnr, top_row, bot_row)
   local signs_by_lnum = {} ---@type table<integer, era.dressing.statuscolumn.ISign[]>
 
   -- Get extmark signs (includes both legacy and extmark signs in nvim 0.10+)
-  local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true, type = "sign" })
+  local extmarks = vim.api.nvim_buf_get_extmarks(
+    bufnr,
+    -1,
+    { top_row, 0 },
+    { bot_row, -1 },
+    { details = true, type = "sign" }
+  )
   for _, extmark in ipairs(extmarks) do
     local lnum = extmark[2] + 1
     local name = extmark[4].sign_hl_group or extmark[4].sign_name or ""
@@ -139,15 +185,10 @@ local function collect_buf_signs(bufnr)
   end
 
   -- Add marks
-  local marks = vim.fn.getmarklist(bufnr)
-  vim.list_extend(marks, vim.fn.getmarklist())
-  for _, mark in ipairs(marks) do
-    if mark.pos[1] == bufnr and mark.mark:match("[a-zA-Z]") then
-      ---@type era.dressing.statuscolumn.ISign
-      local sign = { type = "mark", text = string.sub(mark.mark, 2), texthl = "StatusColumnMark" }
-      local lnum = mark.pos[2]
+  for lnum, marks in pairs(buf_marks(bufnr)) do
+    if lnum > top_row and lnum <= bot_row + 1 then
       signs_by_lnum[lnum] = signs_by_lnum[lnum] or {}
-      table.insert(signs_by_lnum[lnum], sign)
+      vim.list_extend(signs_by_lnum[lnum], marks)
     end
   end
 
@@ -161,13 +202,21 @@ end
 ---@param wanted                        era.dressing.statuscolumn.IWanted
 ---@return era.dressing.statuscolumn.ISign[]
 local function line_signs(winnr, bufnr, lnum, wanted)
-  local signs_by_lnum = sign_cache[bufnr] ---@type table<integer, era.dressing.statuscolumn.ISign[]>|nil
-  if not signs_by_lnum then
-    signs_by_lnum = collect_buf_signs(bufnr)
-    sign_cache[bufnr] = signs_by_lnum
+  local window = sign_cache[winnr] ---@type era.dressing.statuscolumn.IWindowSigns|nil
+  if window == nil or window.bufnr ~= bufnr then
+    local rows = drawn_rows[winnr] or { lnum - 1, lnum - 1 } ---@type integer[]
+    window =
+      { bufnr = bufnr, top_row = rows[1], bot_row = rows[2], signs_by_lnum = collect_signs(bufnr, rows[1], rows[2]) }
+    sign_cache[winnr] = window
+  end
+  local line = window.signs_by_lnum[lnum] ---@type era.dressing.statuscolumn.ISign[]|nil
+  if line == nil and (lnum - 1 < window.top_row or lnum - 1 > window.bot_row) then
+    -- A row drawn beyond the range announced for the window is read on its own.
+    line = collect_signs(bufnr, lnum - 1, lnum - 1)[lnum] or {}
+    window.signs_by_lnum[lnum] = line
   end
   local signs = {} ---@type era.dressing.statuscolumn.ISign[]
-  for _, sign in ipairs(signs_by_lnum[lnum] or {}) do
+  for _, sign in ipairs(line or {}) do
     if wanted[sign.type] then
       signs[#signs + 1] = sign
     end
