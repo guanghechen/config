@@ -214,8 +214,22 @@ local filetypes = {
     [M.UX_CMDLINE] = true,
     [M.UX_POPUPMENU] = true,
   },
+  -- Interface buffers toggle 'modifiable' on every render, and surround mappings have no use there.
   no_surround = {
+    [M.BOARD] = true,
     [M.DIFFVIEW_CHANGES] = true,
+    [M.EXPLORER] = true,
+    [M.NOTIFY] = true,
+    [M.UX_CMDLINE] = true,
+    [M.UX_INPUT] = true,
+    [M.UX_MESSAGE_HISTORY] = true,
+    [M.UX_PICKER_FINDER] = true,
+    [M.UX_PICKER_PREVIEW] = true,
+    [M.UX_PICKER_RESULT] = true,
+    [M.UX_POPUPMENU] = true,
+    [M.UX_SEARCHER_FINDER] = true,
+    [M.UX_SEARCHER_PREVIEW] = true,
+    [M.UX_SEARCHER_RESULT] = true,
   },
 }
 

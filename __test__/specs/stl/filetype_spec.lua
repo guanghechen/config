@@ -31,4 +31,18 @@ t:test("C# uses Neovim's cs filetype", function()
   t.assert_false(Filetype.is_cmp_enabled("csharp"), "nonexistent alias")
 end)
 
+t:test("surrounds stay out of interface buffers but not notes or code", function()
+  for _, filetype in ipairs({
+    Filetype.UX_PICKER_RESULT,
+    Filetype.UX_PICKER_PREVIEW,
+    Filetype.EXPLORER,
+    Filetype.NOTIFY,
+  }) do
+    t.assert_false(Filetype.is_surround_enabled(filetype), filetype)
+  end
+  for _, filetype in ipairs({ Filetype.NOTEPAD, "lua", "" }) do
+    t.assert_true(Filetype.is_surround_enabled(filetype), filetype)
+  end
+end)
+
 t:run()
