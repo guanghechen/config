@@ -49,6 +49,7 @@ end
 ---@field scheduled                     fun()[]
 ---@field timers                        era.dressing.scroll.test.ITimer[]
 ---@field observer                      fun()
+---@field on_key                        fun(key: string, typed: string)|nil
 ---@field observe_calls                 integer
 ---@field enabled                       boolean
 ---@field Scroll                        era.dressing.scroll
@@ -113,7 +114,10 @@ local function setup()
   t:patch_table(vim, "schedule", function(callback)
     runtime.scheduled[#runtime.scheduled + 1] = callback
   end)
-  t:patch_table(vim, "on_key", function(_, _)
+  t:patch_table(vim, "on_key", function(callback, _)
+    if callback ~= nil then
+      runtime.on_key = callback
+    end
     return 1
   end)
   t:patch_table(vim.uv, "new_timer", function()
@@ -199,10 +203,12 @@ end
 
 ---@param runtime                       era.dressing.scroll.test.IRuntime
 ---@param view                          vim.fn.winsaveview.ret
----@return { restores: vim.fn.winsaveview.ret[], cursor: integer[]|nil, virtualedit: string|nil }
+---@return { restores: vim.fn.winsaveview.ret[], cursor: integer[]|nil, virtualedit: string|nil, commands: string[] }
 local function finish_animation(runtime, view)
-  local result = { restores = {}, cursor = nil, virtualedit = nil }
-  t:patch_table(vim, "cmd", function() end)
+  local result = { restores = {}, cursor = nil, virtualedit = nil, commands = {} }
+  t:patch_table(vim, "cmd", function(command)
+    result.commands[#result.commands + 1] = command
+  end)
   t:patch_table(vim.fn, "winrestview", function(restored)
     result.restores[#result.restores + 1] = restored
     result.virtualedit = runtime.options.virtualedit
@@ -213,7 +219,7 @@ local function finish_animation(runtime, view)
     result.virtualedit = runtime.options.virtualedit
   end)
 
-  local timer = runtime.timers[1]
+  local timer = runtime.timers[#runtime.timers]
   while runtime.states[1].timer == timer do
     if #runtime.scheduled == 0 then
       assert(timer.callback)()
@@ -343,7 +349,7 @@ t:test("final frame restores the target view when scrolling falls short", functi
   t.assert_nil(result.cursor, "cursor-only restore")
 end)
 
-t:test("jumps without animation while a float is visible", function()
+t:test("animates while a float is visible", function()
   local runtime = setup()
   runtime.float = true
 
@@ -351,32 +357,58 @@ t:test("jumps without animation while a float is visible", function()
   runtime.view.topline = 100
   runtime.check_scroll(1)
 
-  t.assert_eq(0, #runtime.timers, "animation timers")
-  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
+  t.assert_eq(1, #runtime.timers, "animation timers")
 end)
 
-t:test("jumps without animation beyond one screen", function()
+t:test("a scroll inside a key sequence animates once the whole sequence has run", function()
   local runtime = setup()
-  runtime.height = 50
+  local state = "m" ---@type string
+  t:patch_table(vim.fn, "state", function()
+    return state
+  end)
+  t:patch_table(vim, "v", { event = { ["1"] = { topline = 99 } } })
 
   runtime.view.lnum = 100
   runtime.view.topline = 100
-  runtime.check_scroll(1)
+  runtime.autocmds.WinScrolled.callback()
+  t.assert_eq(0, #runtime.timers, "no animation while keys are pending")
 
-  t.assert_eq(0, #runtime.timers, "animation timers")
-  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
+  runtime.view.lnum = 120
+  runtime.view.topline = 110
+  state = ""
+  runtime.autocmds.SafeState.callback()
+  t.assert_eq(1, #runtime.timers, "animation once the sequence has run")
+  t.assert_eq(110, runtime.states[1].target.topline, "final view of the sequence")
+  t.assert_eq(1, runtime.states[1].current.topline, "view before the sequence")
+
+  runtime.autocmds.SafeState.callback()
+  t.assert_eq(1, #runtime.timers, "one check per pending window")
 end)
 
-t:test("a float appearing mid-animation finishes on the next frame", function()
+t:test("a scroll beyond one screen animates all the way from its start", function()
+  local runtime = setup()
+  runtime.height = 50
+  local target = { lnum = 300, col = 0, coladd = 0, curswant = 0, topline = 300, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.view = vim.deepcopy(target)
+  runtime.check_scroll(1)
+
+  t.assert_eq(1, #runtime.timers, "animation timers")
+  t.assert_eq(1, runtime.states[1].current.topline, "animation start")
+  t.assert_eq(300, runtime.states[1].target.topline, "animation target")
+
+  local scrolled = 0 ---@type integer
+  for _, command in ipairs(finish_animation(runtime, target).commands) do
+    scrolled = scrolled + (tonumber(command:match("normal! (%d+)\5")) or 0)
+  end
+  t.assert_eq(299, scrolled, "lines scrolled by the frames")
+end)
+
+t:test("a float appearing mid-animation leaves it running", function()
   local runtime = setup()
   runtime.view = { lnum = 120, col = 3, coladd = 0, curswant = 7, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
   runtime.check_scroll(1)
   local timer = runtime.timers[1]
-  local cursor ---@type integer[]|nil
   t:patch_table(vim, "cmd", function() end)
-  t:patch_table(vim.fn, "cursor", function(position)
-    cursor = position
-  end)
 
   assert(timer.callback)()
   table.remove(runtime.scheduled, 1)()
@@ -386,31 +418,72 @@ t:test("a float appearing mid-animation finishes on the next frame", function()
   runtime.view = { lnum = 101, col = 0, coladd = 0, curswant = 0, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
   assert(timer.callback)()
   table.remove(runtime.scheduled, 1)()
-  t.assert_nil(runtime.states[1].timer, "active timer")
-  t.assert_eq("120:4:0:8", table.concat(cursor or {}, ":"), "target cursor")
+  t.assert_true(runtime.states[1].timer == timer, "animation continues under a float")
 end)
 
-t:test("an oversized scroll during an animation keeps the new target curswant", function()
+t:test("an oversized scroll during an animation restarts it and keeps the new target curswant", function()
   local runtime = setup()
   runtime.view.lnum = 100
   runtime.view.topline = 100
   runtime.check_scroll(1)
-  local restores = {} ---@type vim.fn.winsaveview.ret[]
-  local restore = vim.fn.winrestview
-  t:patch_table(vim.fn, "winrestview", function(view)
-    restores[#restores + 1] = view
-    restore(view)
-  end)
+  local first = runtime.timers[1]
 
   runtime.height = 50
-  runtime.view =
+  local target =
     { lnum = 900, col = 5, coladd = 0, curswant = 30, topline = 880, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.view = vim.deepcopy(target)
   runtime.check_scroll(1)
 
-  t.assert_true(runtime.timers[1].cleared, "timer cleared")
-  t.assert_eq("", runtime.options.virtualedit, "restored virtualedit")
-  t.assert_eq(30, restores[#restores].curswant, "restored curswant")
-  t.assert_eq(880, runtime.states[1].current.topline, "current topline")
+  t.assert_true(first.cleared, "previous animation stopped")
+  t.assert_eq(2, #runtime.timers, "animation timers")
+  t.assert_eq(1, runtime.states[1].current.topline, "animation start")
+  t.assert_eq(30, runtime.states[1].target.curswant, "target curswant")
+  local result = finish_animation(runtime, target)
+  t.assert_eq("900:6:0:31", table.concat(result.cursor or {}, ":"), "target cursor and curswant")
+  t.assert_eq("", result.virtualedit, "restored virtualedit")
+end)
+
+t:test("a typed key first finishes running animations on their targets", function()
+  local runtime = setup()
+  runtime.view = { lnum = 120, col = 3, coladd = 0, curswant = 7, topline = 100, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.check_scroll(1)
+  local timer = runtime.timers[1]
+  local restored = nil ---@type { view: vim.fn.winsaveview.ret, virtualedit: string }|nil
+  t:patch_table(vim.fn, "winrestview", function(view)
+    restored = { view = view, virtualedit = runtime.options.virtualedit }
+    runtime.view = vim.deepcopy(view)
+  end)
+
+  assert(runtime.on_key)("x", "x")
+
+  local restore = assert(restored, "target view restored")
+  t.assert_true(timer.cleared, "timer cleared")
+  t.assert_nil(runtime.states[1].timer, "active timer")
+  t.assert_eq(4, runtime.options.scrolloff, "restored scrolloff")
+  t.assert_eq("", restore.virtualedit, "virtualedit before the view restore")
+  t.assert_eq(
+    "120:3:7:100",
+    ("%d:%d:%d:%d"):format(restore.view.lnum, restore.view.col, restore.view.curswant, restore.view.topline),
+    "target view"
+  )
+  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
+end)
+
+t:test("keys of the frames and mouse keys leave animations running", function()
+  local runtime = setup()
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+  local timer = runtime.timers[1]
+  local on_key = assert(runtime.on_key)
+
+  on_key("\5", "")
+  for _, key in ipairs({ "<LeftMouse>", "<2-LeftMouse>", "<LeftRelease>", "<MouseMove>", "<ScrollWheelDown>" }) do
+    on_key(vim.keycode(key), vim.keycode(key))
+  end
+
+  t.assert_false(timer.cleared, "timer cleared")
+  t.assert_true(runtime.states[1].timer == timer, "active timer")
 end)
 
 t:test("closing a window releases its animation state", function()

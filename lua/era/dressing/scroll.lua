@@ -41,6 +41,7 @@ local config = {
 local augroup = stl.nvim.fn.augroup(__module_name__)
 
 local states = {} ---@type table<integer, era.dressing.scroll.IState>
+local pending_winnrs = {} ---@type table<integer, true>
 local mouse_scrolling = false ---@type boolean
 local on_key_ns = nil ---@type integer|nil
 local initialized = false ---@type boolean
@@ -116,6 +117,19 @@ local function stop_animation(state)
   state.wincfg = {}
 end
 
+---@param state                         era.dressing.scroll.IState
+---@return nil
+local function finish_animation(state)
+  -- Restoring 'virtualedit' resets curswant, so the target view is restored afterwards.
+  stop_animation(state)
+  if is_state_valid(state) then
+    vim.api.nvim_win_call(state.winnr, function()
+      vim.fn.winrestview(state.target)
+      state.current = vim.fn.winsaveview()
+    end)
+  end
+end
+
 ---@param winnr                         integer
 ---@param from                          vim.fn.winsaveview.ret
 ---@param to                            vim.fn.winsaveview.ret
@@ -143,19 +157,6 @@ local function calc_scroll_lines(winnr, from, to)
 
   local height = vim.api.nvim_win_text_height(winnr, { start_row = start_row, end_row = end_row })
   return height.all + offset - 1
-end
-
--- Nvim's TUI compositor cannot scroll a grid while any float is layered above it, so every animation
--- frame would repaint the whole screen.
----@return boolean
-local function has_float()
-  for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-    if wincfg.relative ~= "" and not wincfg.hide and not wincfg.external then
-      return true
-    end
-  end
-  return false
 end
 
 ---@param winnr                         integer
@@ -226,21 +227,9 @@ local function check_scroll(winnr)
     return
   end
 
-  -- Animate only when frames can scroll the grid and add up to at most one screen of new rows; a
-  -- direct jump repaints a single screen.
-  if has_float() or calc_scroll_lines(winnr, state.current, state.view) > vim.api.nvim_win_get_height(winnr) then
-    local animating = next(state.wincfg) ~= nil ---@type boolean
-    stop_animation(state)
-    if animating then
-      -- Restoring 'virtualedit' resets curswant.
-      vim.api.nvim_win_call(winnr, function()
-        vim.fn.winrestview(state.view)
-      end)
-    end
-    state.current = vim.deepcopy(state.view)
-    return
-  end
-
+  -- Every scroll animates all the way. A frame repaints the window instead of scrolling it when it
+  -- moves more than a screen, as in a long jump, or when floats share the window's rows, such as
+  -- winsep's separators or a context window; smooth scrolling is worth that.
   state.target = vim.deepcopy(state.view)
   stop_animation(state)
 
@@ -300,8 +289,7 @@ local function check_scroll(winnr)
         return
       end
 
-      -- A float that appears mid-animation, such as a context window, makes the rest full repaints.
-      elapsed = has_float() and total_steps or elapsed + 1
+      elapsed = elapsed + 1
       local progress = math.min(elapsed / total_steps, 1) ---@type number
       local eased = progress >= 1 and 1 or easing_fn(progress * duration, 0, 1, duration) ---@type number
       local value = eased * scrolls ---@type number
@@ -364,9 +352,25 @@ local function enable()
 
   states = {}
 
-  on_key_ns = vim.on_key(function(key)
+  -- Typed keys act on the cursor, which an animation holds short of its target, so running animations
+  -- finish on their targets first. Keys of the frames are not typed, and mouse keys act on the screen as
+  -- drawn.
+  on_key_ns = vim.on_key(function(key, typed)
     if key == MOUSE_SCROLL_DOWN or key == MOUSE_SCROLL_UP then
       mouse_scrolling = true
+      return
+    end
+    if typed == "" then
+      return
+    end
+    local name = vim.fn.keytrans(typed) ---@type string
+    if name:find("Mouse") or name:find("Drag") or name:find("Release") or name:find("ScrollWheel") then
+      return
+    end
+    for _, state in pairs(states) do
+      if state.timer then
+        finish_animation(state)
+      end
     end
   end)
 
@@ -426,12 +430,30 @@ local function enable()
     end,
   })
 
+  -- Keys still pending, such as the zz of a mapping like nzzzv, would run on the view an animation
+  -- restores; their windows wait until the whole sequence has run, which is still before the redraw.
   vim.api.nvim_create_autocmd("WinScrolled", {
     group = augroup,
     callback = function()
+      local pending = vim.fn.state("m") ~= "" ---@type boolean
       for winnr, changes in pairs(vim.v.event) do
         winnr = tonumber(winnr)
         if winnr and changes.topline ~= 0 then
+          if pending then
+            pending_winnrs[winnr] = true
+          else
+            check_scroll(winnr)
+          end
+        end
+      end
+    end,
+  })
+  vim.api.nvim_create_autocmd("SafeState", {
+    group = augroup,
+    callback = function()
+      for winnr in pairs(pending_winnrs) do
+        pending_winnrs[winnr] = nil
+        if vim.api.nvim_win_is_valid(winnr) then
           check_scroll(winnr)
         end
       end
@@ -454,6 +476,7 @@ local function disable()
     stop_animation(state)
   end
   states = {}
+  pending_winnrs = {}
 
   if on_key_ns then
     vim.on_key(nil, on_key_ns)
