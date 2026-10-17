@@ -466,4 +466,139 @@ if vim.env.NVIM_LSP_EVENT_BENCHMARK == "1" then
   end)
 end
 
+t:test("inlay hints: pause in the buffer being typed in and resume once the mode settles outside typing", function()
+  local switch = true ---@type boolean
+  bootstrap.with_dot(t, {
+    context = {
+      lsp = {
+        inlay_hints = {
+          snapshot = function()
+            return switch
+          end,
+        },
+      },
+    },
+  })
+  local names = {} ---@type table<integer, string>
+  local calls = {} ---@type string[]
+  t:patch_table(vim.lsp.inlay_hint, "enable", function(enable, filter)
+    calls[#calls + 1] = tostring(enable) .. "@" .. (names[filter.bufnr] or tostring(filter.bufnr))
+  end)
+  t:patch_table(vim.lsp._changetracking, "flush", function(_, bufnr)
+    calls[#calls + 1] = "flush@" .. (names[bufnr] or tostring(bufnr))
+  end)
+  local showmode = vim.o.showmode ---@type boolean
+  vim.o.showmode = false
+  t:defer(function()
+    vim.o.showmode = showmode
+  end)
+  local previous_bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(previous_bufnr) then
+      vim.api.nvim_set_current_buf(previous_bufnr)
+    end
+  end)
+  local bufnrs = {} ---@type integer[]
+  for index, name in ipairs({ "a", "b", "c" }) do
+    local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
+    t:defer(function()
+      delete_buffer(bufnr)
+    end)
+    bufnrs[index] = bufnr
+    names[bufnr] = name
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "alpha beta gamma" })
+  end
+  local a, b, c = bufnrs[1], bufnrs[2], bufnrs[3] ---@type integer, integer, integer
+  local methods = { [Methods.textDocument_inlayHint] = true }
+  -- Keys run without waiting for input, so the mode only settles where `settle` lets queued callbacks run,
+  -- and every key is pending unless `typed` says it was typed.
+  local settle = "<Cmd>lua vim.wait(20)<CR>" ---@type string
+  local typed = false ---@type boolean
+  local state = vim.fn.state
+  t:patch_table(vim.fn, "state", function(what)
+    return typed and "" or state(what)
+  end)
+  t:patch_global("__spec_mark", function()
+    calls[#calls + 1] = "mark"
+  end)
+  ---@param keys                        string
+  ---@return nil
+  local function type_keys(keys)
+    vim.api.nvim_feedkeys(vim.keycode(keys), "xt", false)
+    vim.wait(20)
+  end
+
+  vim.api.nvim_set_current_buf(a)
+  Event.on_attach(add_client(a, "lua_ls", methods), a)
+  Event.on_attach(add_client(b, "lua_ls", methods), b)
+  -- Pending keys such as a mapping or a repeat pass through Insert mode, or pause once it settles.
+  type_keys("A;<Esc>")
+  type_keys(".")
+  type_keys("A" .. settle .. "<Esc>")
+  -- A typed key pauses at once.
+  typed = true
+  type_keys("i<Cmd>lua __spec_mark()<CR><Esc>")
+  -- CTRL-C leaves Insert mode without InsertLeave.
+  type_keys("i<C-c>")
+  -- Mappings and scroll animations pass through Normal mode while typing.
+  type_keys("i<Cmd>normal! w<CR>" .. settle .. "<Esc>")
+  type_keys("i<C-o>zz" .. settle .. "<Esc>")
+  -- An operator waiting for its motion after CTRL-O passes back to typing, and so does the one Visual
+  -- command of CTRL-O in Select mode, here the `settle` right after it.
+  vim.keymap.set("o", "<F5>", function()
+    vim.wait(20)
+    return "w"
+  end, { expr = true })
+  t:defer(function()
+    vim.keymap.del("o", "<F5>")
+  end)
+  type_keys("i<C-o>d<F5>" .. settle .. "<Esc>")
+  type_keys("gh<C-o>" .. settle .. settle .. "<Esc>")
+  -- An insert-mode mapping switches buffers; typing continues in the other one.
+  type_keys("i<Cmd>buffer " .. b .. "<CR>" .. settle .. "<Esc>")
+  -- A client attaching mid-insert starts paused.
+  vim.api.nvim_set_current_buf(c)
+  t:patch_global("__spec_attach_c", function()
+    Event.on_attach(add_client(c, "lua_ls", methods), c)
+  end)
+  type_keys("i<Cmd>lua __spec_attach_c()<CR><Esc>")
+  -- With the workspace switch off nothing is paused or resumed.
+  switch = false
+  type_keys("i<Esc>")
+
+  local expected = {
+    "true@a,true@b", -- attach
+    "false@a,flush@a,true@a", -- pending keys staying in Insert mode
+    "false@a,mark,flush@a,true@a", -- a typed key
+    "false@a,flush@a,true@a", -- CTRL-C
+    "false@a,flush@a,true@a", -- :normal! while typing
+    "false@a,flush@a,true@a", -- CTRL-O
+    "false@a,flush@a,true@a", -- an operator after CTRL-O
+    "false@a,flush@a,true@a", -- CTRL-O in Select mode
+    "false@a,flush@a,true@a,false@b,flush@b,true@b", -- switching buffers while typing
+    "false@c,flush@c,true@c", -- attaching mid-insert
+  } ---@type string[]
+  t.assert_eq(table.concat(expected, ","), table.concat(calls, ","), "inlay hint calls")
+end)
+
+t:test("document colors: only servers reporting hex literals drop their colors", function()
+  local disabled = {} ---@type string[]
+  t:patch_table(vim.lsp.document_color, "enable", function(enable, filter)
+    if enable == false then
+      disabled[#disabled + 1] = vim.lsp.get_client_by_id(filter.client_id).name .. "@" .. tostring(filter.bufnr)
+    end
+  end)
+  local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
+  t:defer(function()
+    delete_buffer(bufnr)
+  end)
+
+  local methods = { [Methods.textDocument_documentColor] = true }
+  for _, name in ipairs({ "lua_ls", "jsonls", "cssls", "tailwindcss", "dartls" }) do
+    Event.on_attach(add_client(bufnr, name, methods), bufnr)
+  end
+  local b = tostring(bufnr) ---@type string
+  t.assert_eq("lua_ls@" .. b .. ",jsonls@" .. b, table.concat(disabled, ","), "per-client colors")
+end)
+
 t:run()

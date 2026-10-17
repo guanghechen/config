@@ -5,7 +5,83 @@ local Methods = vim.lsp.protocol.Methods
 
 local augroup_codelens = stl.nvim.fn.augroup("era.m.lsp.event.codelens") ---@type integer
 local augroup_foldexpr = stl.nvim.fn.augroup("era.m.lsp.event.foldexpr") ---@type integer
+local augroup_inlayhint = stl.nvim.fn.augroup("era.m.lsp.event.inlayhint") ---@type integer
 local augroup_keymaps = stl.nvim.fn.augroup("era.m.lsp.event.keymaps") ---@type integer
+
+-- Servers whose document colors are hex strings. hipattern draws #RGB and #RRGGBB without a request; the
+-- rest are rare or noise (LuaLS colors any 8-digit hex string, dates included), while cssls,
+-- tailwindcss, dartls, ... report colors hipattern cannot recognize.
+---@type table<string, true>
+local HEX_COLOR_CLIENTS = {
+  jsonls = true,
+  lua_ls = true,
+}
+
+-- Buffers whose inlay hints are paused for typing.
+local inlay_hints_paused = {} ---@type table<integer, true>
+local inlay_hints_reconcile_queued = false ---@type boolean
+
+-- Insert, Replace, Select (snippet placeholders) and the single Normal or Visual command of CTRL-O all
+-- belong to typing.
+---@param mode                          string
+---@return boolean
+local function is_typing(mode)
+  return mode:find("^[iRsS\19]") ~= nil or mode:find("^ni") ~= nil or mode:find("^[vV\22]s") ~= nil
+end
+
+---@param bufnr                         integer
+---@return nil
+local function pause_inlay_hints(bufnr)
+  if
+    not inlay_hints_paused[bufnr]
+    and (vim.b[bufnr].support_inlayhint or 0) > 0
+    and dot.context.lsp.inlay_hints:snapshot()
+  then
+    inlay_hints_paused[bufnr] = true
+    vim.lsp.inlay_hint.enable(false, { bufnr = bufnr })
+  end
+end
+
+-- Once the mode settles, only the buffer being typed in stays paused: mappings, repeats, scroll animations
+-- and snippets pass through Insert or Normal mode, and insert-mode mappings may switch buffers.
+---@return nil
+local function reconcile_inlay_hints()
+  inlay_hints_reconcile_queued = false
+  local mode = vim.api.nvim_get_mode().mode ---@type string
+  -- The command line and an operator waiting for its motion end with another mode change.
+  if mode:find("^c") ~= nil or mode:find("^no") ~= nil then
+    return
+  end
+  local typing_bufnr = is_typing(mode) and vim.api.nvim_get_current_buf() or nil ---@type integer|nil
+  for bufnr in pairs(inlay_hints_paused) do
+    if bufnr ~= typing_bufnr then
+      inlay_hints_paused[bufnr] = nil
+      if
+        vim.api.nvim_buf_is_valid(bufnr)
+        and (vim.b[bufnr].support_inlayhint or 0) > 0
+        and dot.context.lsp.inlay_hints:snapshot()
+      then
+        -- Enabling sends the pending changes before it requests hints, and their notification would
+        -- request hints again; sent while hints are still off, they do not.
+        for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, method = Methods.textDocument_inlayHint })) do
+          vim.lsp._changetracking.flush(client, bufnr)
+        end
+        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+      end
+    end
+  end
+  if typing_bufnr ~= nil then
+    pause_inlay_hints(typing_bufnr)
+  end
+end
+
+---@return nil
+local function queue_inlay_hints_reconcile()
+  if not inlay_hints_reconcile_queued then
+    inlay_hints_reconcile_queued = true
+    vim.schedule(reconcile_inlay_hints)
+  end
+end
 
 ---@type table<string, true>
 local KEYMAP_METHODS = {
@@ -407,6 +483,35 @@ function M.dressing()
       foldexpr_states[args.buf] = nil
     end,
   })
+  -- Inlay hints are requested and redrawn after every change, so they pause in the buffer being typed in
+  -- and resume once the mode settles outside typing. CTRL-C skips InsertLeave, hence ModeChanged.
+  vim.api.nvim_create_autocmd("ModeChanged", {
+    group = augroup_inlayhint,
+    callback = function(args)
+      if not is_typing(args.match:match(":(.*)$") or "") then
+        if next(inlay_hints_paused) ~= nil then
+          queue_inlay_hints_reconcile()
+        end
+      elseif not inlay_hints_paused[args.buf] then
+        -- A typed key pauses at once, before a change made on the way in (cc, o) is notified and requests
+        -- hints. Pending keys (a mapping, a repeat, a macro) may only pass through and wait for the mode
+        -- to settle.
+        if vim.fn.state("m") == "" then
+          pause_inlay_hints(args.buf)
+        else
+          queue_inlay_hints_reconcile()
+        end
+      end
+    end,
+  })
+  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+    group = augroup_inlayhint,
+    callback = function()
+      if next(inlay_hints_paused) ~= nil or is_typing(vim.api.nvim_get_mode().mode) then
+        queue_inlay_hints_reconcile()
+      end
+    end,
+  })
 
   vim.lsp.handlers[Methods.client_registerCapability] = function(err, params, ctx, config)
     local result = register_capability(err, params, ctx, config) ---@type any
@@ -494,7 +599,18 @@ function M.on_attach(client, bufnr)
   -- inlay hints
   if support_inlayhint == 1 then
     local enable_inlay_hints = dot.context.lsp.inlay_hints:snapshot() ---@type boolean
+    -- A client attaching while its buffer is being typed in starts paused like the rest of the session.
+    if enable_inlay_hints and bufnr == vim.api.nvim_get_current_buf() and is_typing(vim.api.nvim_get_mode().mode) then
+      inlay_hints_paused[bufnr] = true
+      enable_inlay_hints = false
+    end
     vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
+  end
+
+  -- document colors: these servers only report hex literals that hipattern already renders, and every
+  -- change would request them again.
+  if HEX_COLOR_CLIENTS[client.name] and client:supports_method("textDocument/documentColor") then
+    vim.lsp.document_color.enable(false, { bufnr = bufnr, client_id = client.id })
   end
 
   -- highlighting: stop treesitter
