@@ -207,11 +207,14 @@ local function check_scroll(winnr)
     return
   end
 
+  -- Scrollbind partners follow scroll commands but not a view an animation restores, and Select mode
+  -- would take the keys of the frames as text, so both scroll directly.
   if
     vim.api.nvim_get_option_value("scrollbind", { win = state.winnr })
-    and vim.api.nvim_get_current_win() ~= state.winnr
+    or vim.api.nvim_get_mode().mode:find("^[sS\19]")
   then
     stop_animation(state)
+    state.current = vim.deepcopy(state.view)
     return
   end
 
@@ -288,6 +291,12 @@ local function check_scroll(winnr)
         stl.timer.clear_timer(timer)
         return
       end
+      -- Select mode entered without a typed key, such as a deferred snippet jump, owns the view.
+      if vim.api.nvim_get_mode().mode:find("^[sS\19]") then
+        stop_animation(state)
+        state.current = vim.api.nvim_win_call(state.winnr, vim.fn.winsaveview)
+        return
+      end
 
       elapsed = elapsed + 1
       local progress = math.min(elapsed / total_steps, 1) ---@type number
@@ -354,17 +363,14 @@ local function enable()
 
   -- Typed keys act on the cursor, which an animation holds short of its target, so running animations
   -- finish on their targets first. Keys of the frames are not typed, and mouse keys act on the screen as
-  -- drawn.
+  -- drawn. Mapped wheels reach here as the keys of their mappings, so the typed key identifies them.
   on_key_ns = vim.on_key(function(key, typed)
-    if key == MOUSE_SCROLL_DOWN or key == MOUSE_SCROLL_UP then
+    local name = typed ~= "" and vim.fn.keytrans(typed) or "" ---@type string
+    if key == MOUSE_SCROLL_DOWN or key == MOUSE_SCROLL_UP or name:find("ScrollWheel") then
       mouse_scrolling = true
       return
     end
-    if typed == "" then
-      return
-    end
-    local name = vim.fn.keytrans(typed) ---@type string
-    if name:find("Mouse") or name:find("Drag") or name:find("Release") or name:find("ScrollWheel") then
+    if name == "" or name:find("Mouse") or name:find("Drag") or name:find("Release") then
       return
     end
     for _, state in pairs(states) do
@@ -373,6 +379,17 @@ local function enable()
       end
     end
   end)
+
+  -- A buffer leaving a window keeps that window's options for its return, so its animation ends first.
+  vim.api.nvim_create_autocmd("BufLeave", {
+    group = augroup,
+    callback = function(ev)
+      local state = states[vim.api.nvim_get_current_win()] ---@type era.dressing.scroll.IState|nil
+      if state ~= nil and state.timer ~= nil and state.bufnr == ev.buf then
+        finish_animation(state)
+      end
+    end,
+  })
 
   vim.api.nvim_create_autocmd("BufWinEnter", {
     group = augroup,
@@ -457,6 +474,8 @@ local function enable()
           check_scroll(winnr)
         end
       end
+      -- A wheel that scrolled no animated window must not turn the next scroll into a jump.
+      mouse_scrolling = false
     end,
   })
 
