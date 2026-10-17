@@ -147,7 +147,25 @@ local fns = {
     end
     return args
   end,
+
+  -- Identifies the configuration files Biome reads from `cwd`.
+  ---@param cwd                         string
+  ---@return string
+  biome_config_stamp = function(cwd)
+    local parts = {} ---@type string[]
+    for _, name in ipairs({ "biome.json", "biome.jsonc" }) do
+      local stat = vim.uv.fs_stat(cwd .. "/" .. name)
+      if stat ~= nil then
+        parts[#parts + 1] = string.format("%s:%d.%d:%d", name, stat.mtime.sec, stat.mtime.nsec, stat.size)
+      end
+    end
+    return table.concat(parts, ",")
+  end,
 }
+
+-- Biome's answer for a file holds while its configuration stays the same, and asking costs a process
+-- start that blocks every format.
+local biome_enabled = {} ---@type table<string, boolean>
 
 return {
   name = "conform.nvim",
@@ -177,10 +195,15 @@ return {
           if cwd == nil then
             return false
           end
+          local command = self:command(ctx) ---@type string
+          local key = table.concat({ command, cwd, fns.biome_config_stamp(cwd), ctx.filename }, "\n") ---@type string
+          if biome_enabled[key] ~= nil then
+            return biome_enabled[key]
+          end
 
           -- Let Biome resolve JSONC, extends and per-file overrides without parsing buffer contents.
           local result = vim
-            .system({ self:command(ctx), "format", "--stdin-file-path", ctx.filename, "--colors=off" }, {
+            .system({ command, "format", "--stdin-file-path", ctx.filename, "--colors=off" }, {
               cwd = cwd,
               stdin = "",
               text = true,
@@ -188,7 +211,7 @@ return {
             })
             :wait()
           -- Keep configuration and execution errors visible instead of silently switching formatters.
-          return not (
+          local enabled = not (
             result.code == 1
             and (result.stderr or ""):find(
               "The content was not formatted because the formatter is currently disabled.",
@@ -196,6 +219,8 @@ return {
               true
             )
           )
+          biome_enabled[key] = enabled
+          return enabled
         end,
       },
       injected = {

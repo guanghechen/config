@@ -190,11 +190,13 @@ end)
 t:test("Biome configuration and execution failures do not silently select Prettier", function()
   local root, bufnr = project({ "biome.json" })
   install_fixture_binary(root)
-  for _, result in ipairs({
+  for index, result in ipairs({
     { code = 1, stderr = "Failed to deserialize the configuration" },
     { code = 124, stderr = "" },
     { code = 1 },
   }) do
+    -- Each result comes from another configuration, so the previous answer is not reused.
+    vim.fn.writefile({ string.rep(" ", index) .. "{}" }, root .. "/biome.json")
     local restore = t:patch_table(vim, "system", function()
       return {
         wait = function()
@@ -212,7 +214,9 @@ t:test("Biome availability is re-evaluated after configuration changes", functio
   local root, bufnr = project({ "biome.json" })
   install_fixture_binary(root)
   local enabled = false
+  local calls = 0 ---@type integer
   t:patch_table(vim, "system", function()
+    calls = calls + 1
     return {
       wait = function()
         return enabled and { code = 0, stderr = "" }
@@ -221,8 +225,12 @@ t:test("Biome availability is re-evaluated after configuration changes", functio
     }
   end)
   t.assert_eq("prettier", conform.list_formatters_to_run(bufnr)[1].name, "initially disabled")
+  t.assert_eq("prettier", conform.list_formatters_to_run(bufnr)[1].name, "unchanged configuration")
+  t.assert_eq(1, calls, "the answer is reused while the configuration holds")
   enabled = true
+  vim.fn.writefile({ '{ "formatter": { "enabled": true } }' }, root .. "/biome.json")
   t.assert_eq("biome", conform.list_formatters_to_run(bufnr)[1].name, "enabled after configuration change")
+  t.assert_eq(2, calls, "a changed configuration is probed again")
 end)
 
 t:test("projects without Biome configuration do not launch an availability probe", function()
