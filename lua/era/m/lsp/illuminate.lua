@@ -194,7 +194,13 @@ function M.dressing(bufnr)
   vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "ModeChanged" }, {
     group = augroup,
     buffer = bufnr,
-    callback = clear_highlight,
+    callback = function(ev)
+      -- A completion menu switches between Insert submodes (i, ic) on every update.
+      if ev.event == "ModeChanged" and ev.match:find("^i[^:]*:i") then
+        return
+      end
+      clear_highlight()
+    end,
   })
 
   vim.api.nvim_create_autocmd("BufDelete", {
