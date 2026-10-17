@@ -29,7 +29,8 @@ statusline = era.m.nvimbar.Nvimbar.new({
     if vim.o.statusline ~= EXPRESSION or vim.api.nvim_get_option_value("statusline", { scope = "local" }) ~= "" then
       vim.o.statusline = EXPRESSION
     elseif changed then
-      vim.cmd("redrawstatus!")
+      -- :redrawstatus would also flush every pending window redraw.
+      vim.api.nvim__redraw({ statusline = true })
     else
       return
     end

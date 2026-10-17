@@ -291,4 +291,28 @@ t:test("content changes skip option writes and foreign values restore global own
   t.assert_eq("", vim.api.nvim_get_option_value("statusline", { scope = "local" }))
 end)
 
+t:test("content changes redraw only the status line", function()
+  local runtime = setup()
+  vim.o.statusline = "before"
+  local redraws = {} ---@type vim.api.keyset.redraw[]
+  local commands = {} ---@type string[]
+  local redraw = vim.api.nvim__redraw
+  t:patch_table(vim.api, "nvim__redraw", function(opts)
+    redraws[#redraws + 1] = opts
+    return redraw(opts)
+  end)
+  t:patch_table(vim, "cmd", function(command)
+    commands[#commands + 1] = command
+  end)
+
+  runtime.fulfill("stable")
+  runtime.fulfill("changed")
+  runtime.fulfill("changed")
+
+  t.assert_eq(1, #redraws, "redraws per changed text")
+  t.assert_true(vim.deep_equal({ statusline = true }, redraws[1]), "status line redraw")
+  t.assert_eq(0, #commands, "command redraws")
+  t.assert_eq("changed", displayed())
+end)
+
 t:run()
