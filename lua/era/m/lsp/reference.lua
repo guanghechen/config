@@ -55,26 +55,33 @@ local function lua_field_name(node)
   return nil
 end
 
+-- Loaded buffers hold the text servers count positions in; other files are read from disk.
+---@param filepath                      string
+---@return string[]
+local function read_lines(filepath)
+  local bufnr = stl.nvim.buf.locate_bufnr(filepath)
+  if bufnr ~= nil and vim.api.nvim_buf_is_loaded(bufnr) then
+    return vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  end
+  return stl.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {}
+end
+
 ---@param items                         era.m.lsp.reference.IItem[]
----@param encodings                     table<era.m.lsp.reference.IItem, lsp.PositionEncodingKind>
+---@param definitions                   table<era.m.lsp.reference.IItem, true>
 ---@return era.m.lsp.reference.IItem[]
-local function collapse_lua_field_values(items, encodings)
+local function collapse_lua_field_values(items, definitions)
   local grouped = {} ---@type table<string, era.m.lsp.reference.IItem[]>
   for _, item in ipairs(items) do
-    if item.filepath:match("%.lua$") and encodings[item] ~= nil then
+    if item.filepath:match("%.lua$") and definitions[item] then
       grouped[item.filepath] = grouped[item.filepath] or {}
       table.insert(grouped[item.filepath], item)
     end
   end
 
   local redundant = {} ---@type table<era.m.lsp.reference.IItem, true>
-  for filepath, definitions in pairs(grouped) do
-    if #definitions > 1 then
-      local bufnr = stl.nvim.buf.locate_bufnr(filepath)
-      local lines = bufnr ~= nil
-          and vim.api.nvim_buf_is_loaded(bufnr)
-          and vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        or stl.fs.read_file_as_lines({ filepath = filepath, silent = true })
+  for filepath, candidates in pairs(grouped) do
+    if #candidates > 1 then
+      local lines = read_lines(filepath)
       local parsed, trees = pcall(function()
         return vim.treesitter.get_string_parser(table.concat(lines, "\n"), "lua"):parse()
       end)
@@ -82,10 +89,9 @@ local function collapse_lua_field_values(items, encodings)
         local root = trees[1]:root() ---@type TSNode
         local positions = {} ---@type table<integer, table<integer, true>>
         local nodes = {} ---@type table<era.m.lsp.reference.IItem, TSNode>
-        for _, item in ipairs(definitions) do
-          local line = lines[item.lnum]
-          if line ~= nil then
-            local col = vim.str_byteindex(line, encodings[item], item.col, false)
+        for _, item in ipairs(candidates) do
+          if lines[item.lnum] ~= nil then
+            local col = item.col ---@type integer
             positions[item.lnum] = positions[item.lnum] or {}
             positions[item.lnum][col] = true
             local node = root:named_descendant_for_range(item.lnum - 1, col, item.lnum - 1, col)
@@ -146,11 +152,18 @@ local function fetch_data(method, additional_params, token)
       return
     end
 
-    local params =
-      vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile, "utf-8"), additional_params)
+    -- Positions count in each client's encoding, so every client gets its own request.
+    ---@param client                    vim.lsp.Client
+    ---@return table
+    local function params_for(client)
+      local position = vim.lsp.util.make_position_params(winnr_sourcefile, client.offset_encoding)
+      return vim.tbl_extend("force", position, additional_params)
+    end
+    local uri_cur = vim.uri_from_bufnr(bufnr_sourcefile) ---@type string
+    local line_cur = vim.api.nvim_win_get_cursor(winnr_sourcefile)[1] - 1 ---@type integer
     local is_definition = method == "textDocument/definition"
 
-    vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
+    vim.lsp.buf_request_all(bufnr_sourcefile, method, params_for, function(results_per_client)
       if token and token:is_cancelled() then
         return
       end
@@ -158,12 +171,28 @@ local function fetch_data(method, additional_params, token)
       local errors = {} ---@type string[]
       local items = {} ---@type era.m.lsp.reference.IItem[]
       local seen_locations = {} ---@type table<string, true>
-      local item_encodings = {} ---@type table<era.m.lsp.reference.IItem, lsp.PositionEncodingKind>
+      local definitions = {} ---@type table<era.m.lsp.reference.IItem, true>
+      local lines_by_filepath = {} ---@type table<string, string[]>
 
-      local uri_cur = params.textDocument.uri ---@type string
-      local line_cur = params.position.line ---@type integer
+      -- Items hold byte columns, as the jump and the highlights of the picker read them.
+      ---@param filepath                string
+      ---@param lnum                    integer
+      ---@param character               integer
+      ---@param encoding                lsp.PositionEncodingKind
+      ---@return integer
+      local function byte_col(filepath, lnum, character, encoding)
+        if encoding == "utf-8" then
+          return character
+        end
+        local lines = lines_by_filepath[filepath] or read_lines(filepath)
+        lines_by_filepath[filepath] = lines
+        local line = lines[lnum] ---@type string|nil
+        return line ~= nil and vim.str_byteindex(line, encoding, character, false) or character
+      end
+
       for client_id, result_or_error in pairs(results_per_client) do
-        local client = is_definition and vim.lsp.get_client_by_id(client_id) or nil
+        local client = vim.lsp.get_client_by_id(client_id)
+        local encoding = client ~= nil and client.offset_encoding or "utf-16" ---@type lsp.PositionEncodingKind
         local error, result = result_or_error.err, result_or_error.result
         if error then
           local details = "Failed to executing '" .. method .. "' (" .. client_id .. "): " .. error.message
@@ -196,7 +225,7 @@ local function fetch_data(method, additional_params, token)
               if uri ~= nil and range ~= nil then
                 local filepath = dot.path.normalize(vim.uri_to_fname(uri)) ---@type string
                 local lnum = range.start.line + 1 ---@type integer
-                local col = range.start.character ---@type integer
+                local col = byte_col(filepath, lnum, range.start.character, encoding) ---@type integer
                 local location_key = string.format("%s:%d:%d", filepath, lnum, col) ---@type string
                 if not seen_locations[location_key] then
                   seen_locations[location_key] = true
@@ -207,11 +236,11 @@ local function fetch_data(method, additional_params, token)
                     filepath = filepath,
                     lnum = lnum,
                     col = col,
-                    col_end = lnum == lnum_end and range["end"].character or -1,
+                    col_end = lnum == lnum_end and byte_col(filepath, lnum, range["end"].character, encoding) or -1,
                   }
                   items[#items + 1] = item
-                  if client ~= nil then
-                    item_encodings[item] = client.offset_encoding
+                  if is_definition then
+                    definitions[item] = true
                   end
                 end
               end
@@ -225,14 +254,14 @@ local function fetch_data(method, additional_params, token)
           from = __module_name__,
           subject = "fetch_data",
           message = "Encountered errors.",
-          details = { bufnr = bufnr_sourcefile, method = method, params = params, errors = errors },
+          details = { bufnr = bufnr_sourcefile, method = method, context = additional_params, errors = errors },
         })
         resolve({ ok = false, items = nil })
         return
       end
 
       if is_definition and #items > 1 then
-        items = collapse_lua_field_values(items, item_encodings)
+        items = collapse_lua_field_values(items, definitions)
       end
 
       if #items <= 0 then

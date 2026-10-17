@@ -39,10 +39,12 @@ end
 
 ---@param method                        string
 ---@param results                       table<integer, table>
+---@param clients                       ?{ id: integer, offset_encoding: string }[]
 ---@return era.m.picker.FiletreeComposer
 ---@return { filepath: string, lnum: integer, col: integer }[]
 ---@return boolean
-local function navigate(method, results)
+---@return table<integer, table>          Request params by client id
+local function navigate(method, results, clients)
   local filepath_source = "/workspace/source.lua"
   local winnr_source = vim.api.nvim_get_current_win()
   local bufnr_previous = vim.api.nvim_win_get_buf(winnr_source)
@@ -87,21 +89,26 @@ local function navigate(method, results)
     t.assert_eq(winnr_source, winnr, "jump window")
     jumps[#jumps + 1] = { filepath = filepath, lnum = lnum, col = col }
   end)
-  local clients = { { id = 1, offset_encoding = "utf-8" }, { id = 2, offset_encoding = "utf-8" } }
+  clients = clients or { { id = 1, offset_encoding = "utf-8" }, { id = 2, offset_encoding = "utf-8" } }
   t:patch_table(vim.lsp, "get_clients", function()
     return clients
   end)
   t:patch_table(vim.lsp, "get_client_by_id", function(client_id)
     return clients[client_id]
   end)
-  t:patch_table(vim.lsp.util, "make_position_params", function()
+  t:patch_table(vim.lsp.util, "make_position_params", function(_, encoding)
     return {
       textDocument = { uri = vim.uri_from_fname(filepath_source) },
       position = { line = 0, character = 0 },
+      encoding = encoding,
     }
   end)
-  t:patch_table(vim.lsp, "buf_request_all", function(_, requested_method, _, callback)
+  local requests = {} ---@type table<integer, table>
+  t:patch_table(vim.lsp, "buf_request_all", function(bufnr, requested_method, params, callback)
     t.assert_eq(method, requested_method, "LSP method")
+    for _, client in ipairs(clients) do
+      requests[client.id] = type(params) == "function" and params(client, bufnr) or params
+    end
     callback(results)
   end)
   t:patch_table(vim.fn, "readfile", function()
@@ -124,7 +131,7 @@ local function navigate(method, results)
       return refreshes == 2
     end, 1000, "scheduled reference snippets did not invalidate and refresh their producer")
   end
-  return assert(picker), jumps, focused
+  return assert(picker), jumps, focused, requests
 end
 
 ---@param picker                        era.m.picker.FiletreeComposer
@@ -293,6 +300,61 @@ t:test("definitions: preserves the existing current-line filter", function()
   t.assert_false(focused, "current-line target remains excluded")
   t.assert_eq(1, #jumps, "single external target")
   t.assert_eq(filepath, jumps[1].filepath, "external filepath")
+end)
+
+t:test("definitions: positions follow each client's encoding both ways", function()
+  local filepath = "/workspace/target.ts"
+  -- Before "target", UTF-16 counts 16 units and UTF-8 counts 20 bytes.
+  create_buffer(filepath, { 'const s = "中文"; target();' })
+  local _, jumps, focused, requests = navigate("textDocument/definition", {
+    [1] = { result = { location(filepath, 0, 16, 22) } },
+    [2] = { result = { location(filepath, 0, 20, 26) } },
+  }, { { id = 1, offset_encoding = "utf-16" }, { id = 2, offset_encoding = "utf-8" } })
+  t.assert_eq("utf-16", requests[1].encoding, "UTF-16 client request")
+  t.assert_eq("utf-8", requests[2].encoding, "UTF-8 client request")
+  t.assert_false(focused, "both clients report one location")
+  t.assert_eq(1, #jumps, "single jump")
+  t.assert_eq(20, jumps[1].col, "byte column")
+end)
+
+t:test("references: UTF-16 results highlight byte columns", function()
+  local filepath = "/workspace/target.ts"
+  create_buffer(filepath, { 'const s = "中文"; target(); target();' })
+  local picker, jumps, focused = navigate("textDocument/references", {
+    [1] = { result = { location(filepath, 0, 16, 22), location(filepath, 0, 26, 32) } },
+  }, { { id = 1, offset_encoding = "utf-16" } })
+  t.assert_eq(0, #jumps, "no automatic jump")
+  t.assert_true(focused, "picker opened")
+  local spans = {} ---@type string[]
+  for _, item in ipairs(picker_locations(picker, filepath)) do
+    spans[#spans + 1] = item.col .. "-" .. item.col_end
+  end
+  table.sort(spans)
+  t.assert_eq("20-26,30-36", table.concat(spans, ","), "byte spans")
+end)
+
+t:test("definitions: collapses a field/function pair reported in UTF-16", function()
+  local filepath = "/workspace/target.lua"
+  create_buffer(filepath, {
+    "local conds = {",
+    "  --[[中]] not_vscode_or_yozvim = function()",
+    "    return not vim.g.vscode and not vim.g.yozvim",
+    "  end,",
+    "}",
+  })
+  -- UTF-16 counts the CJK character as one unit: the field starts at 10 and the function at 33.
+  local targets = {}
+  for _, target in ipairs({ location(filepath, 1, 10, 30), location(filepath, 1, 33, 5, 3) }) do
+    targets[#targets + 1] = { targetUri = target.uri, targetRange = target.range, targetSelectionRange = target.range }
+  end
+  local _, jumps, focused = navigate(
+    "textDocument/definition",
+    { [1] = { result = targets } },
+    { { id = 1, offset_encoding = "utf-16" } }
+  )
+  t.assert_false(focused, "picker remains closed")
+  t.assert_eq(1, #jumps, "single jump")
+  t.assert_eq(12, jumps[1].col, "field name byte column")
 end)
 
 t:run()
