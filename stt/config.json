@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/guanghechen/config/kit/stt/schema/config.schema.json",
   "defaultModel": "qwen3-asr-0.6b",
-  "language": "zh",
+  "language": "zh-Hans",
   "device": "default",
   "maxDuration": 300,
   "timeout": 600,
