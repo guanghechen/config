@@ -12,10 +12,11 @@ local cmdline_bound = false
 ---@param bufnr                         ?integer
 ---@return table|nil
 local function mapping_for(mode, key, bufnr)
+  -- Raw lhs, because <Tab> and <C-I> share one simplified keycode but are separate mappings.
   local wanted = vim.keycode(key)
   local mappings = bufnr and vim.api.nvim_buf_get_keymap(bufnr, mode) or vim.api.nvim_get_keymap(mode)
   for _, mapping in ipairs(mappings) do
-    if vim.keycode(mapping.lhs) == wanted and not (mapping.desc or ""):match("^cmp:") then
+    if (mapping.lhsraw == wanted or mapping.lhsrawalt == wanted) and not (mapping.desc or ""):match("^cmp:") then
       return mapping
     end
   end

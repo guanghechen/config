@@ -2103,4 +2103,21 @@ t:test("hide falls back to backspace when an empty completion request has no UI"
   wait(lua, [[return vim.api.nvim_get_current_line() == 'qq']], "native backspace fallback")
 end)
 
+t:test("Tab without a menu or snippet inserts a tab instead of running an Insert-mode <C-i> mapping", function()
+  local lines = {} ---@type string[]
+  for index = 1, 60 do
+    lines[index] = "line " .. index
+  end
+  local lua, input = editor(lines)
+  lua([[
+    vim.keymap.set('i', '<C-i>', '<C-o><C-o>', { noremap = true })
+    vim.cmd('normal! 50G')
+    vim.cmd('normal! 10G')
+  ]])
+  input("A<Tab>X<Esc>")
+  wait(lua, [[return vim.api.nvim_get_mode().mode == 'n' and vim.fn.search('X', 'nw') > 0]], "input settled")
+  t.assert_eq("line 10\tX", lua([[return vim.fn.getline(10)]]), "tab at the cursor")
+  t.assert_eq("line 50", lua([[return vim.fn.getline(50)]]), "jump target untouched")
+end)
+
 t:run()
