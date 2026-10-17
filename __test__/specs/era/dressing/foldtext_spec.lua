@@ -47,69 +47,143 @@ t:test("dressing initializes every existing window only once", function()
   t.assert_eq(22, calls[3].opts.win, "second window")
 end)
 
-t:test("foldtext preserves byte columns and separates uncaptured text", function()
+---@param lines                         string[]
+---@param prepare                       fun(bufnr: integer): nil
+---@return [string, string][] chunks
+local function fold_chunks(lines, prepare)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local previous_foldmethod = vim.api.nvim_get_option_value("foldmethod", { win = winnr }) ---@type string
   local previous_foldtext = vim.api.nvim_get_option_value("foldtext", { win = winnr }) ---@type string
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local chunks = nil ---@type table[]|nil
-  local capture_cols = {} ---@type integer[]
+  t:defer(function()
+    vim.api.nvim_set_option_value("foldtext", previous_foldtext, { win = winnr })
+    vim.api.nvim_set_option_value("foldmethod", previous_foldmethod, { win = winnr })
+    if vim.api.nvim_buf_is_valid(previous_bufnr) then
+      vim.api.nvim_win_set_buf(winnr, previous_bufnr)
+    end
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  local chunks = nil ---@type [string, string][]|nil
 
   vim.api.nvim_win_set_buf(winnr, bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "a\téc", "two", "three" })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("foldmethod", "manual", { win = winnr })
-  vim.api.nvim_set_option_value("tabstop", 4, { buf = bufnr })
-  vim.cmd("1,3fold")
-
-  t:patch_table(vim.treesitter, "get_captures_at_pos", function(_, row, col)
-    t.assert_eq(0, row, "capture row")
-    capture_cols[#capture_cols + 1] = col
-    if col == 0 then
-      return {
-        { capture = "High", lang = "lua", metadata = { priority = 150 } },
-        { capture = "Low", lang = "lua", metadata = { priority = 50 } },
-      }
-    end
-    if col == 2 or col == 4 then
-      return { { capture = "Last", lang = "lua", id = 3, metadata = { [3] = { priority = 120 } } } }
-    end
-    return {}
-  end)
+  vim.cmd("1," .. #lines .. "fold")
+  prepare(bufnr)
   t:patch_global("__test_foldtext", function()
     chunks = Foldtext.foldtext()
     return chunks
   end)
   vim.api.nvim_set_option_value("foldtext", "v:lua.__test_foldtext()", { win = winnr })
+  vim.fn.foldtextresult(1)
+  return assert(chunks, "foldtext chunks")
+end
 
-  local ok, err = pcall(function()
-    vim.fn.foldtextresult(1)
-    t.assert_true(chunks ~= nil, "foldtext chunks")
-    ---@cast chunks table[]
-    t.assert_eq(7, #chunks, "chunk count")
-    t.assert_eq("a", chunks[1][1], "first text")
-    t.assert_eq("@High.lua", chunks[1][2], "first highlight")
-    t.assert_eq("   ", chunks[2][1], "expanded tab")
-    t.assert_nil(chunks[2][2], "uncaptured highlight")
-    t.assert_eq("éc", chunks[3][1], "last text")
-    t.assert_eq("@Last.lua", chunks[3][2], "last highlight")
-    t.assert_eq(4, #capture_cols, "capture count")
-    t.assert_eq(0, capture_cols[1], "ascii column")
-    t.assert_eq(1, capture_cols[2], "tab column")
-    t.assert_eq(2, capture_cols[3], "multibyte column")
-    t.assert_eq(4, capture_cols[4], "post-multibyte column")
+t:test("foldtext preserves byte columns and separates uncaptured text", function()
+  local queries = 0 ---@type integer
+  -- One tree whose query captures the first byte twice and the multibyte text once.
+  local captures = {
+    { id = 1, range = { 0, 0, 0, 1 }, metadata = { priority = 150 } },
+    { id = 2, range = { 0, 0, 0, 1 }, metadata = { priority = 50 } },
+    { id = 3, range = { 0, 2, 0, 5 }, metadata = { [3] = { priority = 120 } } },
+  }
+  local query = {
+    captures = { "High", "Low", "Last" },
+    iter_captures = function(_, _, _, start_row, end_row)
+      queries = queries + 1
+      t.assert_eq(0, start_row, "capture row")
+      t.assert_eq(1, end_row, "single row")
+      local index = 0 ---@type integer
+      return function()
+        index = index + 1
+        local capture = captures[index]
+        if capture ~= nil then
+          local range = capture.range
+          return capture.id,
+            {
+              range = function()
+                return range[1], range[2], range[3], range[4]
+              end,
+            },
+            capture.metadata
+        end
+      end
+    end,
+  }
+  local tstree = {
+    root = function()
+      return {
+        range = function()
+          return 0, 0, 2, 5
+        end,
+      }
+    end,
+  }
+
+  local chunks = fold_chunks({ "a\téc", "two", "three" }, function(bufnr)
+    vim.api.nvim_set_option_value("tabstop", 4, { buf = bufnr })
+    t:patch_table(vim.treesitter.highlighter.active, bufnr, {
+      tree = {
+        for_each_tree = function(_, callback)
+          callback(tstree, {
+            lang = function()
+              return "lua"
+            end,
+          })
+        end,
+      },
+    })
+    t:patch_table(vim.treesitter.query, "get", function(lang, name)
+      t.assert_eq("lua", lang, "query language")
+      t.assert_eq("highlights", name, "query name")
+      return query
+    end)
   end)
 
-  vim.api.nvim_set_option_value("foldtext", previous_foldtext, { win = winnr })
-  vim.api.nvim_set_option_value("foldmethod", previous_foldmethod, { win = winnr })
-  if vim.api.nvim_buf_is_valid(previous_bufnr) then
-    vim.api.nvim_win_set_buf(winnr, previous_bufnr)
+  t.assert_eq(7, #chunks, "chunk count")
+  t.assert_eq("a", chunks[1][1], "first text")
+  t.assert_eq("@High.lua", chunks[1][2], "first highlight")
+  t.assert_eq("   ", chunks[2][1], "expanded tab")
+  t.assert_nil(chunks[2][2], "uncaptured highlight")
+  t.assert_eq("éc", chunks[3][1], "last text")
+  t.assert_eq("@Last.lua", chunks[3][2], "last highlight")
+  t.assert_eq(1, queries, "one query pass for the row")
+end)
+
+t:test("foldtext highlights match the captures at every position", function()
+  local line = 'local function greet(name) return ("hi %s"):format(name) .. 42 -- done' ---@type string
+  local chunks = fold_chunks({ line, "  return nil", "end" }, function(bufnr)
+    vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+    vim.treesitter.start(bufnr, "lua")
+    vim.treesitter.get_parser(bufnr):parse(true)
+  end)
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+
+  -- The highest priority capture at each position, the later one on a tie.
+  local expected = {} ---@type string[]
+  for col = 0, #line - 1 do
+    local selected, selected_priority = nil, -math.huge ---@type table|nil, number
+    for _, capture in ipairs(vim.treesitter.get_captures_at_pos(bufnr, 0, col)) do
+      local metadata = capture.metadata or {} ---@type table
+      local priority = tonumber(metadata.priority or (metadata[capture.id] or {}).priority)
+        or vim.hl.priorities.treesitter
+      if priority >= selected_priority then
+        selected, selected_priority = capture, priority
+      end
+    end
+    expected[#expected + 1] = selected and ("@" .. selected.capture .. "." .. selected.lang) or "-"
   end
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+  local actual = {} ---@type string[]
+  for index = 1, #chunks - 4 do
+    for _ = 1, #chunks[index][1] do
+      actual[#actual + 1] = chunks[index][2] or "-"
+    end
   end
-  if not ok then
-    error(err, 0)
-  end
+
+  t.assert_true(vim.list_contains(expected, "@keyword.function.lua"), "captured line")
+  t.assert_eq(table.concat(expected, " "), table.concat(actual, " "), "highlight per byte")
 end)
 t:run()

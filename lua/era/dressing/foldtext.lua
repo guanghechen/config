@@ -8,30 +8,54 @@ local M = {}
 local foldtext = "v:lua.era.dressing.foldtext.foldtext()" ---@type string
 local initialized = false ---@type boolean
 
----@param captures                     table[]
----@return string|nil
-local function resolve_highlight(captures)
-  local selected = nil ---@type table|nil
-  local selected_priority = -math.huge ---@type number
+-- The highlight of every byte on `row`, chosen among the captures there as the highest priority, the
+-- later capture on a tie. One query pass per tree replaces a capture lookup per character.
+---@param bufnr                         integer
+---@param row                           integer
+---@param length                        integer
+---@return table<integer, string>
+local function row_highlights(bufnr, row, length)
+  local highlights = {} ---@type table<integer, string>
+  local highlighter = vim.treesitter.highlighter.active[bufnr]
+  if highlighter == nil then
+    return highlights
+  end
 
-  for _, capture in ipairs(captures) do
-    local metadata = capture.metadata or {} ---@type table
-    local capture_metadata = metadata[capture.id] or {} ---@type table
-    local priority = tonumber(metadata.priority or capture_metadata.priority) or vim.hl.priorities.treesitter
-    if priority >= selected_priority then
-      selected = capture
-      selected_priority = priority
+  local priorities = {} ---@type table<integer, number>
+  highlighter.tree:for_each_tree(function(tstree, tree)
+    if not tstree then
+      return
     end
-  end
+    local root = tstree:root()
+    local root_start_row, _, root_end_row = root:range()
+    -- Only worry about trees within the line range
+    if root_start_row > row or root_end_row < row then
+      return
+    end
+    local lang = tree:lang() ---@type string
+    local query = vim.treesitter.query.get(lang, "highlights")
+    -- Some injected languages may not have highlight queries.
+    if query == nil then
+      return
+    end
 
-  if selected == nil then
-    return nil
-  end
-  local hl = "@" .. selected.capture ---@type string
-  if selected.lang ~= nil and selected.lang ~= "" then
-    hl = hl .. "." .. selected.lang
-  end
-  return hl
+    for id, node, metadata in query:iter_captures(root, bufnr, row, row + 1) do
+      local capture = query.captures[id] ---@type string|nil
+      local start_row, start_col, end_row, end_col = node:range()
+      if capture ~= nil and start_row <= row and row <= end_row then
+        local capture_metadata = metadata[id] or {} ---@type table
+        local priority = tonumber(metadata.priority or capture_metadata.priority) or vim.hl.priorities.treesitter
+        local hl = lang ~= "" and ("@" .. capture .. "." .. lang) or ("@" .. capture) ---@type string
+        for col = start_row < row and 0 or start_col, (end_row > row and length or end_col) - 1 do
+          if priority >= (priorities[col] or -math.huge) then
+            priorities[col] = priority
+            highlights[col] = hl
+          end
+        end
+      end
+    end
+  end)
+  return highlights
 end
 
 ---@return [string, string][]
@@ -40,6 +64,7 @@ function M.foldtext()
   local linecount = vim.v.foldend - vim.v.foldstart ---@type integer
   local lnum = vim.v.foldstart - 1 ---@type integer
   local byte_positions = vim.str_utf_pos(start_text) ---@type integer[]
+  local highlights = row_highlights(vim.api.nvim_get_current_buf(), lnum, #start_text) ---@type table<integer, string>
   local display_col = 0 ---@type integer
 
   local result = {} ---@type [string, string][]
@@ -47,8 +72,7 @@ function M.foldtext()
   for index, byte_index in ipairs(byte_positions) do
     local next_byte_index = byte_positions[index + 1] or #start_text + 1 ---@type integer
     local char = start_text:sub(byte_index, next_byte_index - 1) ---@type string
-    local captured_highlights = vim.treesitter.get_captures_at_pos(0, lnum, byte_index - 1)
-    local next_hl = resolve_highlight(captured_highlights) ---@type string|nil
+    local next_hl = highlights[byte_index - 1] ---@type string|nil
 
     if next_hl ~= hl then
       if text ~= "" then

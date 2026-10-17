@@ -9,9 +9,6 @@ t:test("fold badge stays opaque with transparent window backgrounds across theme
   t:patch_global("stl", require("stl"))
   t:patch_global("dot", require("dot"))
   t:patch_global("__test_foldtext", require("era.dressing.foldtext").foldtext)
-  t:patch_table(vim.treesitter, "get_captures_at_pos", function()
-    return {}
-  end)
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   t:defer(function()
