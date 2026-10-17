@@ -1,69 +1,8 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/78596b61676d361a74ea3f3abbbf83d5fe6f5519/lsp/denols.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#denols
 
----@param uri                           string
----@param res                           {result: string}|nil
----@param client                        vim.lsp.Client
----@return nil
-local function virtual_text_document_handler(uri, res, client)
-  if not res then
-    return nil
-  end
-
-  local lines = vim.split(res.result, "\n")
-  local bufnr = vim.uri_to_bufnr(uri)
-
-  local current_buf = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  if #current_buf ~= 0 then
-    return nil
-  end
-
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
-  vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
-  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-  vim.lsp.buf_attach_client(bufnr, client.id)
-end
-
----@param uri                           string
----@param client                        vim.lsp.Client
----@return nil
-local function virtual_text_document(uri, client)
-  local params = {
-    textDocument = {
-      uri = uri,
-    },
-  }
-  local result = client:request_sync("deno/virtualTextDocument", params) ---@diagnostic disable-line: param-type-mismatch
-  virtual_text_document_handler(uri, result, client)
-end
-
----@param err                           lsp.ResponseError|nil
----@param result                        table|nil
----@param ctx                           lsp.HandlerContext
----@param config                        table|nil
----@return nil
-local function denols_handler(err, result, ctx, config)
-  if not result or vim.tbl_isempty(result) then
-    return nil
-  end
-
-  local client = vim.lsp.get_client_by_id(ctx.client_id)
-  if not client then
-    return nil
-  end
-
-  for _, res in pairs(result) do
-    local uri = res.uri or res.targetUri
-    if uri:match("^deno:") then
-      virtual_text_document(uri, client)
-      res["uri"] = uri
-      res["targetUri"] = uri
-    end
-  end
-
-  vim.lsp.handlers[ctx.method](err, result, ctx, config)
-end
+-- Deno 2 serves remote modules and its own declarations as file URIs under its cache, so no deno:
+-- virtual documents need fetching.
 
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
@@ -119,11 +58,6 @@ return {
         },
       },
     },
-  },
-  handlers = {
-    ["textDocument/definition"] = denols_handler,
-    ["textDocument/typeDefinition"] = denols_handler,
-    ["textDocument/references"] = denols_handler,
   },
   root_dir = root_dir,
   on_attach = on_attach,
