@@ -261,20 +261,20 @@ function M.code_action(opts)
     if has_external_diagnostics then
       params.context = context
     else
-      local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, false)
-      local ns_push = vim.lsp.diagnostic.get_namespace(client.id, true)
-      local diagnostics = {}
-      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum }))
-      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
-      local enriched_context = vim.tbl_extend("force", context, {
+      -- Each client gets its own diagnostics: its push namespace and one pull namespace per registered
+      -- provider, as vim.lsp.buf.code_action() collects them.
+      local namespace = vim.lsp.diagnostic.get_namespace(client.id) ---@type integer
+      local diagnostics = vim.diagnostic.get(bufnr, { namespace = namespace, lnum = lnum })
+      client:_provider_foreach("textDocument/diagnostic", function(cap)
+        local pull_namespace = vim.lsp.diagnostic.get_namespace(client.id, true, cap.identifier) ---@type integer
+        vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = pull_namespace, lnum = lnum }))
+      end)
+      ---@type lsp.CodeActionContext
+      params.context = vim.tbl_extend("force", context, {
         diagnostics = vim.tbl_map(function(diagnostic)
           return diagnostic.user_data and diagnostic.user_data.lsp or diagnostic
         end, diagnostics),
       })
-      ---@cast enriched_context lsp.CodeActionContext
-      params.context = enriched_context
-      context = enriched_context
-      has_external_diagnostics = true
     end
 
     return params
