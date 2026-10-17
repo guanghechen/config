@@ -216,7 +216,6 @@ function M.setup_diagnostics()
         end,
       },
       virtual_text = {
-        current_line = false,
         prefix = function(diagnostic)
           return severity2prefixicon[diagnostic.severity] or ""
         end,
@@ -228,8 +227,8 @@ function M.setup_diagnostics()
     local enable_diagnostic_virt_lines = M.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
     if not enable_diagnostic_virt_lines then
       config.virtual_lines = false
-      config.virtual_text.current_line = nil
     end
+    require("dot.diagnostic").set_virtual_text_hides_cursor_line(enable_diagnostic_virt_lines)
     vim.diagnostic.config(config)
   end)
 end
