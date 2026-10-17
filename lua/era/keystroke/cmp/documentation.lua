@@ -53,7 +53,10 @@ function M:_publish(index, view)
     zindex = dot.var.zindex.POPUPMENU + 2,
     width = math.max(1, math.min(config.width, vim.o.columns - config.col - 2)),
   })
-  vim.api.nvim_set_option_value("filetype", "cmp-documentation", { buf = bufnr })
+  -- The native info buffer is reused; setting the same filetype again would rerun FileType autocmds.
+  if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ~= "cmp-documentation" then
+    vim.api.nvim_set_option_value("filetype", "cmp-documentation", { buf = bufnr })
+  end
   for name, value in pairs({
     wrap = true,
     smoothscroll = true,
