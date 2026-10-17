@@ -210,6 +210,28 @@ t:test("Biome configuration and execution failures do not silently select Pretti
   end
 end)
 
+t:test("an inconclusive Biome probe is asked again by the next selection", function()
+  local root, bufnr = project({ "biome.json" })
+  install_fixture_binary(root)
+  local results = {
+    { code = 124, stderr = "" },
+    { code = 1, stderr = "The content was not formatted because the formatter is currently disabled.\n" },
+  }
+  local calls = 0 ---@type integer
+  t:patch_table(vim, "system", function()
+    calls = calls + 1
+    local result = results[calls]
+    return {
+      wait = function()
+        return result
+      end,
+    }
+  end)
+  t.assert_eq("biome", conform.list_formatters_to_run(bufnr)[1].name, "a timed-out probe keeps Biome once")
+  t.assert_eq("prettier", conform.list_formatters_to_run(bufnr)[1].name, "the next selection asks again")
+  t.assert_eq(2, calls, "probes")
+end)
+
 t:test("Biome availability is re-evaluated after configuration changes", function()
   local root, bufnr = project({ "biome.json" })
   install_fixture_binary(root)

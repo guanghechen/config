@@ -211,16 +211,13 @@ return {
             })
             :wait()
           -- Keep configuration and execution errors visible instead of silently switching formatters.
-          local enabled = not (
-            result.code == 1
-            and (result.stderr or ""):find(
-              "The content was not formatted because the formatter is currently disabled.",
-              1,
-              true
-            )
-          )
-          biome_enabled[key] = enabled
-          return enabled
+          local message = "The content was not formatted because the formatter is currently disabled." ---@type string
+          local disabled = result.code == 1 and (result.stderr or ""):find(message, 1, true) ~= nil
+          -- Only a clear answer outlives this selection; a timeout or crash is asked again next time.
+          if result.code == 0 or disabled then
+            biome_enabled[key] = not disabled
+          end
+          return not disabled
         end,
       },
       injected = {
