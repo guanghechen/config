@@ -12,6 +12,7 @@ wiki/
 │  ├─ lang/rust/syntax/         Rust 语法
 │  ╰─ os/                       操作系统
 │     ├─ nix/
+│     ├─ osx/
 │     ╰─ win/
 ├─ topic/rubiks-cube/5x5/       五阶魔方
 │  ╰─ assets/                   配图
