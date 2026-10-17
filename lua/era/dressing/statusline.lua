@@ -29,8 +29,9 @@ statusline = era.m.nvimbar.Nvimbar.new({
     if vim.o.statusline ~= EXPRESSION or vim.api.nvim_get_option_value("statusline", { scope = "local" }) ~= "" then
       vim.o.statusline = EXPRESSION
     elseif changed then
-      -- :redrawstatus would also flush every pending window redraw.
-      vim.api.nvim__redraw({ statusline = true })
+      -- :redrawstatus would also flush every pending window redraw, and so would a redraw scoped to all
+      -- windows while one is undrawn. The global status line belongs to the current window.
+      vim.api.nvim__redraw({ win = vim.api.nvim_get_current_win(), statusline = true })
     else
       return
     end

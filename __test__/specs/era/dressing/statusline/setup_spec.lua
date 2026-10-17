@@ -310,7 +310,10 @@ t:test("content changes redraw only the status line", function()
   runtime.fulfill("changed")
 
   t.assert_eq(1, #redraws, "redraws per changed text")
-  t.assert_true(vim.deep_equal({ statusline = true }, redraws[1]), "status line redraw")
+  t.assert_true(
+    vim.deep_equal({ win = vim.api.nvim_get_current_win(), statusline = true }, redraws[1]),
+    "status line redraw of the current window"
+  )
   t.assert_eq(0, #commands, "command redraws")
   t.assert_eq("changed", displayed())
 end)
