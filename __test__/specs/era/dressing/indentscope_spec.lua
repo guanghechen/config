@@ -834,4 +834,31 @@ t:test("WinScrolled keeps a finished scope without redrawing the window", functi
   end)
 end)
 
+t:test("an edit that keeps the scope and every row in place redraws nothing", function()
+  with_buffer({ "if ok then", "  one()", "  two()", "end", "tail" }, function(bufnr)
+    with_render_capture(function(render)
+      vim.api.nvim_win_set_cursor(0, { 2, 2 })
+      Indentscope.draw(Indentscope.get_scope(nil, nil, { try_as_border = false }), { interval = 0 })
+      Indentscope.dressing()
+
+      local redraws = {} ---@type table[]
+      local original = vim.api.nvim__redraw
+      t:patch_table(vim.api, "nvim__redraw", function(options)
+        redraws[#redraws + 1] = options
+        return original(options)
+      end)
+      vim.api.nvim_buf_set_text(bufnr, 1, 7, 1, 7, { " -- note" })
+      vim.api.nvim_exec_autocmds("TextChanged", { modeline = false })
+      t.assert_eq(0, #redraws, "redraw requests")
+      t.assert_eq("1,2", table.concat(render(nil), ","), "guide rows")
+
+      redraws = {}
+      vim.api.nvim_buf_set_lines(bufnr, 2, 2, false, { "  three()" })
+      vim.api.nvim_exec_autocmds("TextChanged", { modeline = false })
+      t.assert_true(#redraws > 0, "moved rows redraw")
+      t.assert_eq("1,2,3", table.concat(render(nil), ","), "guide rows after the insert")
+    end)
+  end)
+end)
+
 t:run()

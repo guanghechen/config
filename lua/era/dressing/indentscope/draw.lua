@@ -60,6 +60,7 @@ local DISABLED_FILETYPES = {
 ---@field public generation             integer
 ---@field public scope                  era.dressing.indentscope.IScope|nil
 ---@field public changedtick            integer
+---@field public line_count             integer
 ---@field public status                 "none"|"waiting"|"drawing"|"finished"
 ---@field public delay_timer            uv.uv_timer_t|nil
 ---@field public animation_timer        uv.uv_timer_t|nil
@@ -70,6 +71,7 @@ local state = {
   generation = 0,
   scope = nil,
   changedtick = 0,
+  line_count = 0,
   status = "none",
   delay_timer = nil,
   animation_timer = nil,
@@ -397,6 +399,7 @@ local function schedule_drawing(scope, options, delay)
   clear_animation_timer()
   state.scope = scope
   state.changedtick = vim.api.nvim_buf_get_changedtick(scope.bufnr)
+  state.line_count = vim.api.nvim_buf_line_count(scope.bufnr)
   state.status = delay > 0 and "waiting" or "drawing"
   state.options = options
   state.indicator = nil
@@ -444,6 +447,18 @@ function M.refresh(scope, options, lazy)
     and state.status ~= "waiting"
     and Scope.equals(scope, state.scope)
   then
+    return
+  end
+  -- A drawn guide depends only on whether its row lies in the scope. An edit that keeps the scope and
+  -- the line count moves no row, and Nvim repaints the edited rows itself, so every guide stays valid.
+  if
+    state.status == "finished"
+    and state.scope ~= nil
+    and Scope.equals(scope, state.scope)
+    and vim.api.nvim_buf_line_count(scope.bufnr) == state.line_count
+  then
+    state.scope = scope
+    state.changedtick = vim.api.nvim_buf_get_changedtick(scope.bufnr)
     return
   end
 
