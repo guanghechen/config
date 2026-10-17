@@ -88,10 +88,11 @@ local function setup()
   local builtin = vim.diagnostic.handlers.virtual_text
   vim.diagnostic.handlers.virtual_text = {
     show = function(namespace, bufnr, diagnostics, opts)
-      builtin.show(namespace, bufnr, diagnostics, opts)
       bufnr = bufnr == 0 and vim.api.nvim_get_current_buf() or bufnr
+      -- Showing clears the namespace, and its new extmarks reuse the ids the hidden record points to.
+      restore(bufnr)
+      builtin.show(namespace, bufnr, diagnostics, opts)
       if hides_cursor_line and bufnr == vim.api.nvim_get_current_buf() then
-        restore(bufnr)
         hide(bufnr)
       end
     end,
