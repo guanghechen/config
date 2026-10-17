@@ -328,10 +328,10 @@ local function update_hunks(buf_cache)
         local hunks_changed = era.m.git.hunk.compare_heads(buf_cache.hunks, old_hunks) ---@type boolean
         local hunks_staged_changed = era.m.git.hunk.compare_heads(buf_cache.hunks_staged, old_hunks_staged) ---@type boolean
 
+        -- A forced update also repairs the marks an edit moved, even when the hunks stayed the same.
         if should_force_update or hunks_changed or hunks_staged_changed then
           era.m.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, {
             untracked = buf_cache.untracked,
-            force = should_force_update,
           })
           M.ticker:tick()
         end
@@ -463,11 +463,15 @@ local function ensure_buffer_listener(bufnr)
 
       era.m.git.sign.on_lines(buf, last_orig, last_new)
 
+      -- Only an edit that adds or removes lines can move sign marks onto other rows; typing within signed
+      -- lines leaves them in place, so signs follow the hunks alone.
       local check_start = first + 1 ---@type integer
       local check_end = math.max(last_orig, last_new) ---@type integer
-      if buf_cache.hunks and era.m.git.sign.contains_range(buf, check_start, check_end) then
-        buf_cache.force_next_update = true
-      elseif buf_cache.hunks_staged and era.m.git.sign.contains_range(buf, check_start, check_end) then
+      if
+        last_orig ~= last_new
+        and (buf_cache.hunks or buf_cache.hunks_staged)
+        and era.m.git.sign.contains_range(buf, check_start, check_end)
+      then
         buf_cache.force_next_update = true
       end
 

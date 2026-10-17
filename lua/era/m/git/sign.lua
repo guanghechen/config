@@ -134,12 +134,16 @@ end
 ---@field public id                     integer
 ---@field public type                   era.m.git.SignType
 
+-- One mark per line; edits that join or delete lines can move a second mark onto a line, and those
+-- extras, like marks of no known sign, are returned for removal.
 ---@param bufnr                         integer
----@return table<integer, era.m.git.sign.IExtmark>
+---@return table<integer, era.m.git.sign.IExtmark> marks
+---@return integer[] extras
 function Signs:__get_extmarks__(bufnr)
   local result = {} ---@type table<integer, era.m.git.sign.IExtmark>
+  local extras = {} ---@type integer[]
   if not vim.api.nvim_buf_is_valid(bufnr) then
-    return result
+    return result, extras
   end
 
   local marks = vim.api.nvim_buf_get_extmarks(bufnr, self._ns, 0, -1, { details = true })
@@ -150,14 +154,18 @@ function Signs:__get_extmarks__(bufnr)
     local text = details.sign_text ---@type string|nil
     local hl = details.sign_hl_group ---@type string|nil
     local sign_type = text and hl and self._key_to_type[sign_key(text, hl)] or nil ---@type era.m.git.SignType|nil
-    if sign_type then
+    if sign_type and not result[lnum] then
       result[lnum] = { id = id, type = sign_type }
+    else
+      extras[#extras + 1] = id
     end
   end
 
-  return result
+  return result, extras
 end
 
+-- Writes only the lines whose sign differs, which leaves the namespace exactly as clearing it and
+-- adding every sign again would.
 ---@param bufnr                         integer
 ---@param new_signs                     era.m.git.Sign[]
 ---@param filter                        (fun(lnum: integer): boolean)|nil
@@ -166,7 +174,7 @@ function Signs:__update_incremental__(bufnr, new_signs, filter)
     return
   end
 
-  local old_signs = self:__get_extmarks__(bufnr)
+  local old_signs, extras = self:__get_extmarks__(bufnr)
   local new_signs_map = {} ---@type table<integer, era.m.git.SignType>
 
   for _, sign in ipairs(new_signs) do
@@ -176,7 +184,7 @@ function Signs:__update_incremental__(bufnr, new_signs, filter)
     end
   end
 
-  local to_remove = {} ---@type integer[]
+  local to_remove = extras ---@type integer[]
   local to_add = {} ---@type era.m.git.Sign[]
 
   for lnum, old_sign in pairs(old_signs) do
@@ -319,11 +327,10 @@ end
 ---@param bufnr                         integer
 ---@param hunks                         era.m.git.Hunk[]|nil
 ---@param hunks_staged                  era.m.git.Hunk[]|nil
----@param opts                          { untracked: boolean|nil, force: boolean|nil }|nil
+---@param opts                          { untracked: boolean|nil }|nil
 function M.update(bufnr, hunks, hunks_staged, opts)
   setup_decoration_provider()
 
-  local force = opts and opts.force ---@type boolean|nil
   local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
 
   local new_signs = {} ---@type era.m.git.Sign[]
@@ -338,12 +345,7 @@ function M.update(bufnr, hunks, hunks_staged, opts)
     end
   end
 
-  if force then
-    signs_normal:remove(bufnr)
-    signs_normal:add(bufnr, new_signs)
-  else
-    signs_normal:__update_incremental__(bufnr, new_signs)
-  end
+  signs_normal:__update_incremental__(bufnr, new_signs)
 
   local new_signs_staged = {} ---@type era.m.git.Sign[]
   if hunks_staged and #hunks_staged > 0 then
@@ -359,12 +361,7 @@ function M.update(bufnr, hunks, hunks_staged, opts)
     return not new_signs_lnum_set[lnum]
   end
 
-  if force then
-    signs_staged:remove(bufnr)
-    signs_staged:add(bufnr, new_signs_staged, filter)
-  else
-    signs_staged:__update_incremental__(bufnr, new_signs_staged, filter)
-  end
+  signs_staged:__update_incremental__(bufnr, new_signs_staged, filter)
 end
 
 function M.reset()

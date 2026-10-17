@@ -67,4 +67,40 @@ t:test("incremental removal uses the extmark id after line movement", function()
   t.assert_eq(0, #marks(bufnr), "moved extmark removed")
 end)
 
+t:test("an update keeps one mark per line after an edit joins two", function()
+  local bufnr = create_buffer()
+  sign.update(bufnr, { { lnum = 1, type = "change" }, { lnum = 2, type = "add" } }, nil)
+  vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, {})
+  t.assert_eq(2, #marks(bufnr), "both marks on the first line")
+
+  sign.update(bufnr, { { lnum = 1, type = "change" } }, nil)
+  local current = marks(bufnr)
+  t.assert_eq(1, #current, "single mark")
+  t.assert_eq(0, current[1][2], "first line")
+  t.assert_eq("m_git_sign_change", current[1][4].sign_hl_group, "change sign")
+end)
+
+t:test("an unchanged update writes nothing and unknown marks are dropped", function()
+  local bufnr = create_buffer()
+  local signs = { { lnum = 1, type = "change" }, { lnum = 3, type = "add" } } ---@type era.m.git.Sign[]
+  sign.update(bufnr, signs, nil)
+  vim.api.nvim_buf_set_extmark(bufnr, sign.get_namespace(), 1, 0, { sign_text = "?", sign_hl_group = "Error" })
+
+  local writes = 0 ---@type integer
+  for _, name in ipairs({ "nvim_buf_set_extmark", "nvim_buf_del_extmark", "nvim_buf_clear_namespace" }) do
+    local original = vim.api[name]
+    t:patch_table(vim.api, name, function(...)
+      writes = writes + 1
+      return original(...)
+    end)
+  end
+  sign.update(bufnr, signs, nil)
+  t.assert_eq(1, writes, "only the unknown mark is removed")
+  t.assert_eq(2, #marks(bufnr), "known marks kept")
+
+  writes = 0
+  sign.update(bufnr, signs, nil)
+  t.assert_eq(0, writes, "nothing to write")
+end)
+
 t:run()

@@ -23,14 +23,14 @@ end
 ---@param get_file_info (fun(bufnr: integer): stl.c.Future|nil)|nil
 ---@param get_buf_name (fun(bufnr: integer): string)|nil
 ---@param create_repo (fun(repo: table): stl.c.Future)|nil
----@return era.m.git.buffer, table<string, fun(event: { buf: integer })>, fun(): nil, fun(bufnr: integer, visible: boolean), fun(bufnr: integer, valid: boolean), table<integer, integer>, { count: integer }
+---@return era.m.git.buffer, table<string, fun(event: { buf: integer })>, fun(): nil, fun(bufnr: integer, visible: boolean), fun(bufnr: integer, valid: boolean), table<integer, integer>, { count: integer, opts: vim.api.keyset.buf_attach|nil }
 local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
   local callbacks = {} ---@type table<string, fun(event: { buf: integer })>
   local file_info_calls = {} ---@type table<integer, integer>
   local pending_debounce = nil ---@type fun()|nil
   local valid = {} ---@type table<integer, boolean>
   local visible = vim.deepcopy(initial_visible) ---@type table<integer, boolean>
-  local listener_calls = { count = 0 }
+  local listener_calls = { count = 0 } ---@type { count: integer, opts: vim.api.keyset.buf_attach|nil }
   local bufnrs = vim.tbl_keys(initial_visible) ---@type integer[]
   table.sort(bufnrs)
 
@@ -113,15 +113,22 @@ local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
             return create_repo and create_repo(repo) or Future.resolve(repo)
           end,
         },
-        sign = { clear = function() end },
+        sign = {
+          clear = function() end,
+          contains_range = function()
+            return true
+          end,
+          on_lines = function() end,
+        },
         state = { o_branch = { next = function() end } },
         watcher = { update = function() end },
       },
     },
   })
 
-  t:patch_table(vim.api, "nvim_buf_attach", function()
+  t:patch_table(vim.api, "nvim_buf_attach", function(_, _, opts)
     listener_calls.count = listener_calls.count + 1
+    listener_calls.opts = opts
     return true
   end)
   t:patch_table(vim.api, "nvim_buf_get_name", function(bufnr)
@@ -252,6 +259,19 @@ t:test("BufFilePost rebinds Git state without duplicating the buffer listener", 
   t.assert_eq("/repo/new.lua", current.file, "current filepath")
   t.assert_eq("new.lua", current.relpath, "current Git path")
   t.assert_eq(1, listener_calls.count, "one low-level listener")
+end)
+
+t:test("only an edit that adds or removes lines forces a sign repair", function()
+  local Buffer, _, _, _, _, _, listener_calls = setup({ [11] = true })
+  local current = assert(Buffer.get_cache(11))
+  local on_lines = assert(assert(listener_calls.opts).on_lines)
+  current.hunks = {}
+  current.force_next_update = false
+
+  on_lines("lines", 11, 0, 4, 5, 5)
+  t.assert_false(current.force_next_update, "typing within a signed line")
+  on_lines("lines", 11, 0, 4, 5, 6)
+  t.assert_true(current.force_next_update, "a line added among signs")
 end)
 
 t:test("an async attach cannot publish after the buffer leaves the repository", function()
