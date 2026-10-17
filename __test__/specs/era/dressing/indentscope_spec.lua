@@ -784,6 +784,27 @@ t:test("window and buffer entry refresh the active scope", function()
   end)
 end)
 
+t:test("Insert submode changes skip scope computation", function()
+  with_buffer({ "if ok then", "  one()", "end" }, function()
+    local Scope = require("era.dressing.indentscope.scope")
+    local original = Scope.get
+    local calls = 0 ---@type integer
+    t:patch_table(Scope, "get", function(...)
+      calls = calls + 1
+      return original(...)
+    end)
+
+    Indentscope.dressing()
+    for _, transition in ipairs({ "i:ic", "ic:i", "ix:ic" }) do
+      vim.api.nvim_exec_autocmds("ModeChanged", { pattern = transition, modeline = false })
+    end
+    t.assert_eq(0, calls, "scope calls within Insert mode")
+
+    vim.api.nvim_exec_autocmds("ModeChanged", { pattern = "ic:n", modeline = false })
+    t.assert_eq(1, calls, "scope calls on leaving Insert mode")
+  end)
+end)
+
 t:test("WinScrolled updates layout without recomputing scope", function()
   with_buffer({ "if ok then", "  one()", "  two()", "end" }, function()
     vim.api.nvim_win_set_cursor(0, { 2, 2 })

@@ -279,7 +279,11 @@ function M.dressing()
   local augroup = stl.nvim.fn.augroup(__module_name__) ---@type integer
   vim.api.nvim_create_autocmd({ "BufWinEnter", "CursorMoved", "CursorMovedI", "ModeChanged", "WinEnter" }, {
     group = augroup,
-    callback = function()
+    callback = function(ev)
+      -- A completion menu switches between Insert submodes (i, ic) on every update.
+      if ev.event == "ModeChanged" and ev.match:find("^i[^:]*:i") then
+        return
+      end
       refresh(true, false)
     end,
   })
