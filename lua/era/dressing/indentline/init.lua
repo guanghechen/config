@@ -76,6 +76,8 @@ local DISABLED_FILETYPES = {
 local initialized = false ---@type boolean
 local enabled = false ---@type boolean
 local refresh_pending = false ---@type boolean
+local refresh_all = false ---@type boolean
+local refresh_winnrs = {} ---@type table<integer, true>
 
 ---@return era.dressing.indentline.render
 local function get_render()
@@ -98,9 +100,19 @@ function M.is_enabled(bufnr)
   return DISABLED_FILETYPES[value] ~= true
 end
 
+-- Rebuilds the guides of the given windows, or of every window when none are given.
+---@param winnrs                        ?integer[]
 ---@return nil
-local function refresh()
-  get_render().invalidate()
+local function refresh(winnrs)
+  if winnrs == nil then
+    get_render().invalidate()
+    refresh_all = true
+  else
+    for _, winnr in ipairs(winnrs) do
+      get_render().drop_window(winnr)
+      refresh_winnrs[winnr] = true
+    end
+  end
   if refresh_pending then
     return
   end
@@ -108,8 +120,22 @@ local function refresh()
   -- Coalesce OptionSet bursts. Only an idle command line needs an explicit flush; elsewhere it would
   -- push intermediate frames, such as floating windows whose content is not set yet.
   vim.schedule(function()
-    refresh_pending = false
-    pcall(vim.api.nvim__redraw, { valid = false, flush = vim.api.nvim_get_mode().mode:sub(1, 1) == "c" })
+    local all, pending_winnrs = refresh_all, refresh_winnrs ---@type boolean, table<integer, true>
+    refresh_pending, refresh_all, refresh_winnrs = false, false, {}
+    local flush = vim.api.nvim_get_mode().mode:sub(1, 1) == "c" ---@type boolean
+    if all then
+      pcall(vim.api.nvim__redraw, { valid = false, flush = flush })
+      return
+    end
+    local targets = {} ---@type integer[]
+    for winnr in pairs(pending_winnrs) do
+      if vim.api.nvim_win_is_valid(winnr) then
+        targets[#targets + 1] = winnr
+      end
+    end
+    for index, winnr in ipairs(targets) do
+      pcall(vim.api.nvim__redraw, { win = winnr, valid = false, flush = flush and index == #targets })
+    end
   end)
 end
 
@@ -132,7 +158,19 @@ function M.dressing()
   vim.api.nvim_create_autocmd("OptionSet", {
     group = augroup,
     pattern = { "breakindent", "buftype", "filetype", "list", "listchars", "shiftwidth", "tabstop", "vartabstop" },
-    callback = refresh,
+    callback = function(ev)
+      -- A buffer option changes the windows showing the buffer and a window option the current window,
+      -- unless a global-local option changes its global value, which every window may be using.
+      -- Floating windows set theirs while opening, so the rest of the screen stays as it is.
+      local info = vim.api.nvim_get_option_info2(ev.match, {}) ---@type vim.api.keyset.get_option_info
+      if info.global_local and vim.v.option_type == "global" then
+        refresh()
+      elseif info.scope == "buf" then
+        refresh(vim.fn.win_findbuf(vim.api.nvim_get_current_buf()))
+      else
+        refresh({ vim.api.nvim_get_current_win() })
+      end
+    end,
   })
   vim.api.nvim_create_autocmd("WinClosed", {
     group = augroup,
