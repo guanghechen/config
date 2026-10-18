@@ -205,7 +205,7 @@ local function fetch_data()
     --- search lsp workspace folders
     local lsp_workspace_paths = {}
     for _, client in pairs(vim.lsp.get_clients()) do
-      if vim.tbl_contains({ "basedpyright", "pyright", "pylance" }, client.name) then
+      if vim.list_contains({ "basedpyright", "pyright", "pylance" }, client.name) then
         for _, folder in pairs(client.workspace_folders or {}) do
           local search_path = format_search_path(folder.name) ---@type string|nil
           if search_path ~= nil then

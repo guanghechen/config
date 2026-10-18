@@ -36,19 +36,15 @@ local function refresh_all()
   dot.state.status.dirtier_tabline:mark_dirty()
   vim.cmd("redraw!")
 
-  local clients = vim.lsp.get_clients({ bufnr = bufnr_sourcefile }) ---@type vim.lsp.Client[]
-  if #clients > 0 then
-    for _, client in ipairs(clients) do
-      vim.lsp.enable(client.name, false)
+  local names = {} ---@type string[]
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr_sourcefile })) do
+    if not vim.list_contains(names, client.name) then
+      names[#names + 1] = client.name
     end
-
-    for _, client in ipairs(clients) do
-      vim.lsp.enable(client.name, true)
-    end
-
-    vim.defer_fn(function()
-      vim.cmd("edit")
-    end, 100)
+  end
+  if #names > 0 then
+    -- Each client is started again once its server exits, attached to the buffers it had.
+    vim.cmd("lsp restart " .. table.concat(names, " "))
   end
 
   stl.reporter.info({

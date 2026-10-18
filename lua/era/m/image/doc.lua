@@ -139,7 +139,7 @@ function M.get_packages(bufnr)
       line = line:match("(.-)%%") or line
       if line:find("\\usepackage", 1, true) then
         for _, p in ipairs(vim.split(line:match("\\usepackage.-{(.-)}") or "", ",%s*")) do
-          if not vim.tbl_contains(ret, p) then
+          if not vim.list_contains(ret, p) then
             ret[#ret + 1] = p
           end
         end

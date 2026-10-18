@@ -105,16 +105,9 @@ function M.collect_orphan_plugins()
   end
 
   local orphans = {} ---@type string[]
-  local handle = vim.uv.fs_scandir(M.options.root)
-  if handle then
-    while true do
-      local name, type = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil
-      if not name then
-        break
-      end
-      if type == "directory" and not known_plugins[name] then
-        orphans[#orphans + 1] = name
-      end
+  for name, type in vim.fs.dir(M.options.root) do
+    if type == "directory" and not known_plugins[name] then
+      orphans[#orphans + 1] = name
     end
   end
   table.sort(orphans)

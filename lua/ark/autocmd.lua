@@ -39,7 +39,7 @@ vim.filetype.add({
           return
         end
 
-        local ext = vim.fn.fnamemodify(filepath, ":e"):lower() ---@type string
+        local ext = vim.fs.ext(filepath):lower() ---@type string
         local binary_exts = { "png", "jpg", "jpeg", "gif", "bmp", "webp", "ico", "svg", "tiff", "tif", "pdf" }
         for _, binary_ext in ipairs(binary_exts) do
           if ext == binary_ext then

@@ -58,7 +58,7 @@ end
 ---@return boolean
 local function is_mode_enabled()
   local mode = get_current_mode()
-  return vim.tbl_contains(config.modes, mode)
+  return vim.list_contains(config.modes, mode)
 end
 
 ---@param bufnr                         integer

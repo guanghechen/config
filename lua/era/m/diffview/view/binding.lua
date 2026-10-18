@@ -25,7 +25,7 @@ local M = {}
 ---@return stl.t.IKeymap|nil
 local function find_keymap(keymaps, mode, key)
   for _, keymap in ipairs(keymaps) do
-    if keymap.key == key and vim.tbl_contains(keymap.modes, mode) then
+    if keymap.key == key and vim.list_contains(keymap.modes, mode) then
       return keymap
     end
   end

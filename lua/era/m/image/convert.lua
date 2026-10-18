@@ -222,9 +222,9 @@ local commands = {
       local formats = vim.deepcopy(config.magick or {})
       local args = formats.default or { "{src}[{page}]" }
       local info = step.meta.info
-      local format = info and info.format or vim.fn.fnamemodify(step.meta.src, ":e")
+      local format = info and info.format or vim.fs.ext(step.meta.src)
 
-      local vector = vim.tbl_contains({ "pdf", "svg", "eps", "ai", "mvg" }, format)
+      local vector = vim.list_contains({ "pdf", "svg", "eps", "ai", "mvg" }, format)
       if vector then
         args = formats.vector or args
       end
@@ -383,7 +383,7 @@ end
 ---@param src                            ?string
 ---@return string
 function Convert:ft(src)
-  return vim.fn.fnamemodify(src or self.meta.src, ":e"):lower()
+  return vim.fs.ext(src or self.meta.src):lower()
 end
 
 ---@return nil
