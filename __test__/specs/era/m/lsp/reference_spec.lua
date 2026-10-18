@@ -302,6 +302,41 @@ t:test("definitions: preserves the existing current-line filter", function()
   t.assert_eq(filepath, jumps[1].filepath, "external filepath")
 end)
 
+---@param uri                           string
+---@param range                         lsp.Range Whole declaration.
+---@param selection                     lsp.Range Name of the declaration.
+---@return lsp.LocationLink
+local function link(uri, range, selection)
+  return { targetUri = uri, targetRange = range, targetSelectionRange = selection }
+end
+
+t:test("definitions: a link lands on the name its selection range marks", function()
+  local filepath = "/workspace/target.rs"
+  -- The declaration starts at its doc comments, three lines above the name.
+  local declaration = location(filepath, 0, 0, 1, 4)
+  local name = location(filepath, 3, 3, 14)
+  local _, jumps, focused = navigate("textDocument/definition", {
+    [1] = { result = { link(declaration.uri, declaration.range, name.range) } },
+  })
+  t.assert_false(focused, "picker remains closed")
+  t.assert_eq(1, #jumps, "single jump")
+  t.assert_eq(4, jumps[1].lnum, "line of the name")
+  t.assert_eq(3, jumps[1].col, "column of the name")
+end)
+
+t:test("definitions: the current-line filter reads the name of a link", function()
+  local filepath = "/workspace/target.ts"
+  -- The link names the current line while its declaration starts on another one.
+  local declaration = location("/workspace/source.lua", 1, 0, 1, 2)
+  local name = location("/workspace/source.lua", 0, 0, 8)
+  local _, jumps, focused = navigate("textDocument/definition", {
+    [1] = { result = { link(declaration.uri, declaration.range, name.range), location(filepath, 9, 2, 5) } },
+  })
+  t.assert_false(focused, "current-line link remains excluded")
+  t.assert_eq(1, #jumps, "single external target")
+  t.assert_eq(filepath, jumps[1].filepath, "external filepath")
+end)
+
 t:test("definitions: positions follow each client's encoding both ways", function()
   local filepath = "/workspace/target.ts"
   -- Before "target", UTF-16 counts 16 units and UTF-8 counts 20 bytes.

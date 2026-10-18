@@ -200,10 +200,12 @@ local function fetch_data(method, additional_params, token)
         else
           if result ~= nil then
             local locations = {} ---@type lsp.Location[]
+            -- The targetRange of a link spans the whole declaration, its doc comments and attributes
+            -- included; the targetSelectionRange marks the name to land on.
             if vim.islist(result) then
               for _, location in ipairs(result) do
                 local uri = location.targetUri or location.uri
-                local range = location.targetRange or location.range
+                local range = location.targetSelectionRange or location.range
                 if uri ~= uri_cur or range.start.line ~= line_cur then
                   locations[#locations + 1] = location
                 end
@@ -211,7 +213,7 @@ local function fetch_data(method, additional_params, token)
             else
               local location = result
               local uri = location.targetUri or location.uri
-              local range = location.targetRange or location.range
+              local range = location.targetSelectionRange or location.range
               if uri ~= uri_cur or range.start.line ~= line_cur then
                 locations[#locations + 1] = location
               end
@@ -221,7 +223,7 @@ local function fetch_data(method, additional_params, token)
               ---@diagnostic disable-next-line: undefined-field
               local uri = location.targetUri or location.uri
               ---@diagnostic disable-next-line: undefined-field
-              local range = location.targetRange or location.range
+              local range = location.targetSelectionRange or location.range
               if uri ~= nil and range ~= nil then
                 local filepath = dot.path.normalize(vim.uri_to_fname(uri)) ---@type string
                 local lnum = range.start.line + 1 ---@type integer
