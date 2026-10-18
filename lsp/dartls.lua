@@ -6,7 +6,6 @@ return {
   capabilities = era.m.lsp.event.get_capabilities(),
   cmd = { "dart", "language-server", "--protocol=lsp" },
   filetypes = { "dart" },
-  log_level = vim.lsp.protocol.MessageType.Warning,
   root_markers = {
     "pubspec.yaml",
     ".git",
@@ -31,5 +30,4 @@ return {
     },
   },
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

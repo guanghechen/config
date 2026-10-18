@@ -61,5 +61,4 @@ return {
   },
   root_dir = root_dir,
   on_attach = on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

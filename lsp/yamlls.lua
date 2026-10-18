@@ -164,6 +164,5 @@ return {
     },
   },
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
   on_init = on_init,
 }

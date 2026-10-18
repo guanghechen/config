@@ -13,16 +13,14 @@ return {
   filetypes = { "html", "templ" },
   flags = {
     debounce_text_changes = 500,
-    exit_timeout = 200,
   },
+  exit_timeout = 200,
   root_markers = { "package.json", ".git" },
   init_options = {
     embeddedLanguages = { css = true, javascript = true },
     configurationSection = { "html", "css", "javascript" },
     provideFormatter = true,
   },
-  single_file_support = true,
   settings = {},
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

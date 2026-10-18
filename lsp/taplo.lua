@@ -8,5 +8,4 @@ return {
   filetypes = { "toml" },
   root_markers = { ".taplo.toml", "taplo.toml", ".git" },
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

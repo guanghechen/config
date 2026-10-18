@@ -239,5 +239,4 @@ return {
   root_dir = root_dir,
   before_init = before_init,
   on_attach = on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

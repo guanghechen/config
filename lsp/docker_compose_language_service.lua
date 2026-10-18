@@ -8,5 +8,4 @@ return {
   filetypes = { "yaml.docker-compose" },
   root_markers = { "docker-compose.yaml", "docker-compose.yml", "compose.yaml", "compose.yml" },
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

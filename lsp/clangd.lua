@@ -135,6 +135,5 @@ return {
     return language_ids[ftype] or ftype
   end,
   on_attach = on_attach,
-  on_detach = era.m.lsp.event.on_detach,
   on_init = on_init,
 }

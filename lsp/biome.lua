@@ -38,5 +38,4 @@ return {
   end,
   workspace_required = true,
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

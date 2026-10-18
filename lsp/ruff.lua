@@ -42,5 +42,4 @@ return {
   root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },
   settings = {},
   on_attach = on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

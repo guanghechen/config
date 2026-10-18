@@ -6,7 +6,6 @@ return {
   capabilities = era.m.lsp.event.get_capabilities(),
   cmd = { "lua-language-server" },
   filetypes = { "lua" },
-  log_level = vim.lsp.protocol.MessageType.Warning,
   root_markers = {
     ".emmyrc.json",
     ".luarc.json",
@@ -64,5 +63,4 @@ return {
     },
   },
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

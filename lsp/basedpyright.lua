@@ -77,5 +77,4 @@ return {
     },
   },
   on_attach = on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }

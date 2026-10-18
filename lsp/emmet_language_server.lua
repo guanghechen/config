@@ -20,7 +20,5 @@ return {
     "typescriptreact",
   },
   root_markers = { ".git" },
-  single_file_support = true,
   on_attach = era.m.lsp.event.on_attach,
-  on_detach = era.m.lsp.event.on_detach,
 }
