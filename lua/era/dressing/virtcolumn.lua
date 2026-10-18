@@ -58,10 +58,10 @@ local DISABLED_FILETYPES = {
 
 ---@class era.dressing.virtcolumn.IWindow
 ---@field public leftcol                integer
----@field public unicode                boolean
+---@field public tabstop                integer
 
 -- The window being drawn, set by on_win for its on_line calls.
-local window = { leftcol = 0, unicode = false } ---@type era.dressing.virtcolumn.IWindow
+local window = { leftcol = 0, tabstop = 8 } ---@type era.dressing.virtcolumn.IWindow
 
 -- Floating windows only draw guides while focused, so popups and previews stay clean.
 ---@param winnr                         integer
@@ -77,27 +77,39 @@ local function on_win(winnr, bufnr)
   if DISABLED_BUFTYPES[vim.api.nvim_get_option_value("buftype", { buf = bufnr })] then
     return false
   end
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-  if DISABLED_FILETYPES[filetype] then
+  if DISABLED_FILETYPES[vim.api.nvim_get_option_value("filetype", { buf = bufnr })] then
     return false
   end
 
   window.leftcol = vim.fn.getwininfo(winnr)[1].leftcol
-  window.unicode = filetype == "markdown" or filetype == stl.filetype.NOTEPAD
+  window.tabstop = vim.api.nvim_get_option_value("tabstop", { buf = bufnr })
   return true
 end
 
--- Prose measures display cells; code measures bytes, which is cheaper and equal for ASCII.
+-- A tab advances to the next tabstop, and other characters take their display width.
+---@param line                          string
+---@param tabstop                       integer
+---@return integer
+local function display_width(line, tabstop)
+  local width, start = 0, 1 ---@type integer, integer
+  while true do
+    local tab = line:find("\t", start, true) ---@type integer|nil
+    width = width + vim.api.nvim_strwidth(line:sub(start, tab and tab - 1 or #line))
+    if not tab then
+      return width
+    end
+    width = width + tabstop - width % tabstop
+    start = tab + 1
+  end
+end
+
 ---@param bufnr                         integer
 ---@param row                           integer
 ---@return nil
 local function on_line(bufnr, row)
-  local width ---@type integer
-  if window.unicode then
-    width = vim.api.nvim_strwidth(vim.api.nvim_buf_get_lines(bufnr, row, row + 1, true)[1])
-  else
-    width = vim.api.nvim_buf_get_offset(bufnr, row + 1) - vim.api.nvim_buf_get_offset(bufnr, row) - 1
-  end
+  local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, true)[1] ---@type string
+  -- The bytes of ASCII text are its display cells, so only tabs and multibyte characters need measuring.
+  local width = line:find("[\t\128-\255]") and display_width(line, window.tabstop) or #line ---@type integer
 
   for index, col in ipairs(config.columns) do
     local win_col = col - 1 - window.leftcol ---@type integer

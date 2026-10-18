@@ -121,6 +121,29 @@ t:test("an edit redraws only the edited line, which is measured again", function
   t.assert_eq(GUIDE, cell(grid, 0, 120), "column 120 stays free")
 end)
 
+t:test("tabs and wide characters are measured in display cells", function()
+  local ui, grid = start()
+  exec(
+    ui,
+    [[
+    vim.bo.tabstop = 2
+    vim.bo.eol, vim.bo.fixeol = false, false
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+      ("\t"):rep(30) .. ("x"):rep(50),
+      "-- " .. ("中"):rep(40),
+      ("x"):rep(100),
+    })
+    vim.cmd("redraw!")
+  ]]
+  )
+
+  t.assert_eq("x", cell(grid, 0, 100), "80 bytes of tabs and text cover column 100 with 110 cells")
+  t.assert_eq(GUIDE, cell(grid, 0, 120), "110 cells leave column 120 free")
+  t.assert_eq(GUIDE, cell(grid, 1, 100), "123 bytes of wide characters leave column 100 free in 83 cells")
+  t.assert_eq(GUIDE, cell(grid, 1, 120), "and column 120")
+  t.assert_eq("x", cell(grid, 2, 100), "a last line without an end of line still covers column 100")
+end)
+
 t:test("disabled filetypes and the flight switch draw no guides", function()
   local ui, grid = start()
 
