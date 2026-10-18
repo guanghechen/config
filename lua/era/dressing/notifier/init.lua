@@ -473,12 +473,10 @@ function M.__create_buf_as_needed__(win)
     }
     stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-    if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-      local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
-      local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-      if has_ts_parser then
-        vim.treesitter.start(bufnr, lang)
-      end
+    -- A missing parser makes language.add return nil rather than raise.
+    local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
+    if vim.treesitter.language.add(lang) then
+      vim.treesitter.start(bufnr, lang)
     end
   else
     vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })

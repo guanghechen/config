@@ -286,7 +286,7 @@ function M:render(context, bufnr, filepath, force)
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-    if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+    if filetype ~= nil then
       local lang = vim.treesitter.language.get_lang(filetype) or filetype
       local loaded = vim.treesitter.language.add(lang)
       if loaded then

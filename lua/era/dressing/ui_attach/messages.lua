@@ -4,14 +4,11 @@ local states = require("era.dressing.ui_attach.state")
 
 local KIND_MAP = {
   TRANSIENT = {
-    bufwrite = true,
     progress = true,
     undo = true,
   },
   CONFIRM = {
     confirm = true,
-    confirm_sub = true,
-    number_prompt = true,
   },
 }
 

@@ -79,8 +79,8 @@ end
 ---@return string|nil
 ---@return boolean Whether the selected language was searched in full
 function M.ranges(bufnr, names, group, position, rows)
-  local ok, parser = pcall(vim.treesitter.get_parser, bufnr, nil, { error = false })
-  if not ok or parser == nil then
+  local parser = vim.treesitter.get_parser(bufnr)
+  if parser == nil then
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
     return {}, string.format("No Tree-sitter parser for %s", filetype == "" and "this buffer" or filetype), true
   end

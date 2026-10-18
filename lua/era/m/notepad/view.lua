@@ -967,10 +967,6 @@ function M:__ensure_markdown_features__(bufnr, winnr)
     vim.api.nvim_exec_autocmds("FileType", { buf = bufnr })
   end
 
-  if vim.treesitter == nil or vim.treesitter.start == nil then
-    return
-  end
-
   pcall(vim.treesitter.start, bufnr, "markdown")
 
   if not vim.api.nvim_win_is_valid(winnr) then

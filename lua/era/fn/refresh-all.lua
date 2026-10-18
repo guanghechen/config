@@ -15,7 +15,7 @@ local function refresh_all()
   era.m.git.buffer.invalidate_compare_text_all()
 
   pcall(function()
-    if vim.treesitter and bufnr_sourcefile ~= nil then
+    if bufnr_sourcefile ~= nil then
       local parser = vim.treesitter.get_parser(bufnr_sourcefile)
       if parser ~= nil then
         parser:invalidate()

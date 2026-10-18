@@ -107,11 +107,7 @@ end
 ---@return nil
 function M.write(data)
   data = env.transform and env.transform(data) or data
-  if vim.api.nvim_ui_send then
-    vim.api.nvim_ui_send(data)
-  else
-    io.stdout:write(data)
-  end
+  vim.api.nvim_ui_send(data)
 end
 
 return M

@@ -36,6 +36,7 @@ t:test("symbol preview clears its range when the filter or source removes the ta
     local client = {
       offset_encoding = "utf-8",
       server_capabilities = {documentSymbolProvider = true},
+      supports_method = function(_, method) return method == "textDocument/documentSymbol" end,
       request = function(_, _, _, callback)
         callback(nil, {{
           name = "sample", kind = vim.lsp.protocol.SymbolKind.Function,

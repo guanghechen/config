@@ -131,14 +131,7 @@ local TS_KIND_MAP = {
 ---@param bufnr                         integer
 ---@return boolean
 local function supports_document_symbols(client, bufnr)
-  if not client then
-    return false
-  end
-  if client.supports_method and client:supports_method("textDocument/documentSymbol", bufnr) then
-    return true
-  end
-  local cap = client.server_capabilities and client.server_capabilities.documentSymbolProvider
-  return cap ~= nil and cap ~= false
+  return client ~= nil and client:supports_method("textDocument/documentSymbol", bufnr)
 end
 
 ---@param bufnr                         integer

@@ -139,12 +139,10 @@ picker = era.m.picker.ListComposer.new({
       end
     end
 
-    if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-      local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
-      local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-      if has_ts_parser then
-        vim.treesitter.start(bufnr, lang)
-      end
+    -- A missing parser makes language.add return nil rather than raise.
+    local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
+    if vim.treesitter.language.add(lang) then
+      vim.treesitter.start(bufnr, lang)
     end
 
     ---@type era.m.picker.preview.IDrawResult
