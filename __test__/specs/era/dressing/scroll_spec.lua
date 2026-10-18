@@ -43,6 +43,9 @@ end
 ---@field bufnr                         integer
 ---@field valid                         boolean
 ---@field height                        integer
+---@field width                         integer Screen columns of one wrapped screen line.
+---@field heights                       table<integer, integer> Screen lines of each 0-based row, one by default.
+---@field cursors                       integer[][] Cursors placed through nvim_win_set_cursor.
 ---@field float                         boolean
 ---@field view                          vim.fn.winsaveview.ret
 ---@field options                       table<string, any>
@@ -64,6 +67,9 @@ local function setup()
     bufnr = 1,
     valid = true,
     height = 200,
+    width = 80,
+    heights = {},
+    cursors = {},
     float = false,
     view = { lnum = 1, col = 0, coladd = 0, curswant = 0, topline = 1, topfill = 0, leftcol = 0, skipcol = 0 },
     options = { virtualedit = "", scrolloff = 4, scrollbind = false },
@@ -170,7 +176,19 @@ local function setup()
     return callback()
   end)
   t:patch_table(vim.api, "nvim_win_text_height", function(_, opts)
-    return { all = opts.end_row - opts.start_row + 1 }
+    -- A start column skips the screen lines before it; an exclusive end column keeps only those before it.
+    local all = 0 ---@type integer
+    for row = opts.start_row, opts.end_row do
+      local first, last = 0, runtime.heights[row] or 1
+      if row == opts.start_row and opts.start_vcol then
+        first = math.floor(opts.start_vcol / runtime.width)
+      end
+      if row == opts.end_row and opts.end_vcol then
+        last = math.ceil(opts.end_vcol / runtime.width)
+      end
+      all = all + math.max(last - first, 0)
+    end
+    return { all = all }
   end)
   t:patch_table(vim.fn, "winsaveview", function()
     return vim.deepcopy(runtime.view)
@@ -183,6 +201,16 @@ local function setup()
   end)
   t:patch_table(vim.fn, "virtcol", function(pos)
     return pos[2] + 1
+  end)
+  t:patch_table(vim.fn, "virtcol2col", function(_, _, vcol)
+    return vcol
+  end)
+  t:patch_table(vim.fn, "line", function(expr)
+    assert(expr == "w$", "unexpected line() query: " .. tostring(expr))
+    return runtime.view.topline + runtime.height - 1
+  end)
+  t:patch_table(vim.api, "nvim_win_set_cursor", function(_, cursor)
+    runtime.cursors[#runtime.cursors + 1] = cursor
   end)
 
   runtime.Scroll = assert(loadfile("lua/era/dressing/scroll.lua"))()
@@ -398,6 +426,78 @@ t:test("a scroll beyond one screen animates all the way from its start", functio
     scrolled = scrolled + (tonumber(command:match("normal! (%d+)\5")) or 0)
   end
   t.assert_eq(299, scrolled, "lines scrolled by the frames")
+end)
+
+t:test("a frame keeps the cursor off the part of a smoothscroll topline its view skips", function()
+  local runtime = setup()
+  runtime.heights[5] = 24
+  runtime.view = { lnum = 35, col = 0, coladd = 0, curswant = 0, topline = 30, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.Scroll.accept_current_view(1)
+  -- The target puts the cursor on the topline, so the last frame moves it to the first window line.
+  local target = { lnum = 6, col = 0, coladd = 0, curswant = 0, topline = 6, topfill = 0, leftcol = 0, skipcol = 0 }
+  runtime.view = vim.deepcopy(target)
+  runtime.check_scroll(1)
+  local skipped = { lnum = 8, col = 0, coladd = 0, curswant = 0, topline = 6, topfill = 0, leftcol = 0, skipcol = 960 }
+  local commands = finish_animation(runtime, skipped).commands
+
+  t.assert_true(vim.deep_equal({ 6, 960 }, runtime.cursors[#runtime.cursors]), vim.inspect(runtime.cursors))
+  for _, command in ipairs(commands) do
+    t.assert_nil(command:match("normal! 1H"), "H onto the skipped topline: " .. command)
+  end
+end)
+
+t:test("a frame restores a zero count without the motion to the first column", function()
+  local runtime = setup()
+  local v, reads = vim.v, 0
+  -- Each frame reads the count before its commands, which leave a count of 2, and after them.
+  t:patch_table(
+    vim,
+    "v",
+    setmetatable({}, {
+      __index = function(_, key)
+        if key == "count" then
+          reads = reads + 1
+          return reads % 2 == 1 and 0 or 2
+        end
+        return v[key]
+      end,
+    })
+  )
+  t:patch_table(vim.api, "nvim_win_get_cursor", function()
+    return { runtime.view.lnum, runtime.view.col }
+  end)
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+  local commands = finish_animation(runtime, vim.deepcopy(runtime.view)).commands
+
+  t.assert_true(vim.list_contains(commands, "keepjumps normal! zh"), vim.inspect(commands))
+  for _, command in ipairs(commands) do
+    t.assert_nil(command:match("normal! 0"), "a count of 0 runs the 0 motion: " .. command)
+  end
+end)
+
+t:test("scrolling between parts of a wrapped line animates only the screen lines in between", function()
+  local runtime = setup()
+  -- Line 6 wraps into 24 screen lines; the views start or stop 12 screen lines into it.
+  runtime.heights[5] = 24
+  local into = { lnum = 6, col = 0, coladd = 0, curswant = 0, topline = 6, topfill = 0, leftcol = 0, skipcol = 960 }
+  local below = { lnum = 9, col = 0, coladd = 0, curswant = 0, topline = 9, topfill = 0, leftcol = 0, skipcol = 0 }
+  for _, case in ipairs({
+    { from = below, to = into, key = "\25", lines = 14, name = "up into the wrapped line" },
+    { from = runtime.view, to = into, key = "\5", lines = 17, name = "down into the wrapped line" },
+    { from = into, to = below, key = "\5", lines = 14, name = "down out of the wrapped line" },
+  }) do
+    runtime.view = vim.deepcopy(case.from)
+    runtime.Scroll.accept_current_view(1)
+    runtime.view = vim.deepcopy(case.to)
+    runtime.check_scroll(1)
+    local scrolled = 0 ---@type integer
+    for _, command in ipairs(finish_animation(runtime, case.to).commands) do
+      scrolled = scrolled + (tonumber(command:match("normal! (%d+)" .. case.key)) or 0)
+    end
+    t.assert_eq(case.lines, scrolled, case.name)
+  end
 end)
 
 t:test("a float appearing mid-animation leaves it running", function()

@@ -144,19 +144,16 @@ local function calc_scroll_lines(winnr, from, to)
     f, t = to, from
   end
 
-  local start_row = f.topline - 1 ---@type integer
-  local end_row = t.topline - 1 ---@type integer
-  local offset = 0 ---@type integer
-  if f.topfill > 0 then
-    start_row = start_row + 1
-    offset = f.topfill + 1
-  end
-  if t.topfill > 0 then
-    offset = offset - t.topfill
-  end
-
-  local height = vim.api.nvim_win_text_height(winnr, { start_row = start_row, end_row = end_row })
-  return height.all + offset - 1
+  -- Count from the top screen line of the upper view to that of the lower one. The start column drops the
+  -- part of a wrapped line a smoothscroll view skips, and the filler lines above it, which the upper view
+  -- shows as its topfill; the end column stops where the lower view starts.
+  local height = vim.api.nvim_win_text_height(winnr, {
+    start_row = f.topline - 1,
+    start_vcol = f.skipcol,
+    end_row = t.topline - 1,
+    end_vcol = t.skipcol,
+  })
+  return height.all + f.topfill - t.topfill
 end
 
 ---@param winnr                         integer
@@ -316,11 +313,24 @@ local function check_scroll(winnr)
 
         local virtcol = math.floor(col_from + (col_to - col_from) * value / scrolls) ---@type integer
 
-        vim.cmd(("keepjumps normal! %s%dH%d|"):format(scroll_cmd, move_target, virtcol + 1))
+        if scroll_cmd ~= "" then
+          vim.cmd(("keepjumps normal! %s"):format(scroll_cmd))
+        end
+        -- H lands on the topline at a count of 1, or at any count when the topline fills the window. A
+        -- cursor moved onto the part of a smoothscroll topline that the view skips scrolls the window back
+        -- to the start of that line, beyond the frames, so the frame keeps it on the first shown character.
+        local view = vim.fn.winsaveview() ---@type vim.fn.winsaveview.ret
+        if view.skipcol > 0 and (move_target <= 1 or vim.fn.line("w$") == view.topline) then
+          local col = vim.fn.virtcol2col(state.winnr, view.topline, view.skipcol + 1) ---@type integer
+          vim.api.nvim_win_set_cursor(state.winnr, { view.topline, math.max(col - 1, 0) })
+        else
+          vim.cmd(("keepjumps normal! %dH%d|"):format(move_target, virtcol + 1))
+        end
 
         if vim.v.count ~= count then
           local cursor = vim.api.nvim_win_get_cursor(state.winnr) ---@type integer[]
-          vim.cmd(("keepjumps normal! %dzh"):format(count))
+          -- A leading 0 would be the motion to the first column rather than a count.
+          vim.cmd(count > 0 and ("keepjumps normal! %dzh"):format(count) or "keepjumps normal! zh")
           vim.api.nvim_win_set_cursor(state.winnr, cursor)
         end
 
