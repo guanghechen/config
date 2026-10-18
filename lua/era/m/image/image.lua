@@ -93,7 +93,8 @@ end
 
 ---@return boolean
 function M:ready()
-  if self.convert and not self.convert:done() then
+  -- A failed conversion of a source that needs none leaves the readable source as its file.
+  if self.convert and (not self.convert:done() or self.convert:error()) then
     return false
   end
   return self.file and vim.fn.filereadable(self.file) == 1

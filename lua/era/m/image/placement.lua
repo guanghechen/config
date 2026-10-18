@@ -171,7 +171,7 @@ function M:error()
   vim.api.nvim_set_option_value("modifiable", true, { buf = self.bufnr })
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
-  if not vim.treesitter.start(self.bufnr, "markdown") then
+  if not pcall(vim.treesitter.start, self.bufnr, "markdown") then
     vim.api.nvim_set_option_value("syntax", "markdown", { buf = self.bufnr })
   end
 end
