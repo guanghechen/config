@@ -25,12 +25,8 @@ function M.gen_hlgroup_map(context)
     ["@constant"] = { fg = c.tokenConstantsAndEnums },
     ["@constant.builtin"] = { fg = c.tokenConstantLanguage },
     ["@constant.macro"] = { fg = c.tokenMetaPreprocessor },
-    ["@field"] = { fg = c.tokenObjectKeysTsGrammarSpecific },
     ["@module"] = { fg = c.tokenTypesDeclarationAndReferences },
-    ["@namespace"] = { fg = c.tokenTypesDeclarationAndReferences },
-    ["@parameter"] = { fg = c.tokenVariableAndParameterName },
     ["@property"] = { fg = c.tokenObjectKeysTsGrammarSpecific },
-    ["@symbol"] = { fg = c.tokenConstantsAndEnums },
     ["@variable"] = { fg = c.tokenVariableAndParameterName },
     ["@variable.builtin"] = { fg = c.tokenThisSelf },
     ["@variable.member"] = { fg = c.tokenObjectKeysTsGrammarSpecific },
@@ -56,7 +52,6 @@ function M.gen_hlgroup_map(context)
     ["@function.call"] = { fg = c.tokenFunctionDeclarations },
     ["@function.macro"] = { fg = c.tokenMetaPreprocessor },
     ["@function.method"] = { fg = c.tokenFunctionDeclarations },
-    ["@method"] = { fg = c.tokenFunctionDeclarations },
     ["@operator"] = { fg = c.tokenKeywordOperator },
 
     -- Keywords
@@ -108,22 +103,6 @@ function M.gen_hlgroup_map(context)
     ["@tag.attribute"] = { fg = c.tokenEntityOtherAttributeName },
     ["@tag.builtin"] = { fg = c.tokenEntityNameTag },
     ["@tag.delimiter"] = { fg = c.tokenBracketsOfXmlHtmlTags },
-
-    -- Legacy text groups
-    ["@text"] = { fg = c.editor_foreground },
-    ["@text.danger"] = { fg = c.tokenInvalid, bold = true },
-    ["@text.diff.add"] = { fg = c.tokenMarkupInserted },
-    ["@text.diff.delete"] = { fg = c.tokenMarkupDeleted },
-    ["@text.emphasis"] = { italic = true },
-    ["@text.literal"] = { fg = c.tokenMarkupInlineRaw },
-    ["@text.note"] = { fg = c.tokenMarkupInserted },
-    ["@text.reference"] = { fg = c.textLink_foreground, underline = true },
-    ["@text.strike"] = { strikethrough = true },
-    ["@text.strong"] = { fg = c.tokenMarkupBold, bold = true },
-    ["@text.title"] = { fg = c.tokenMarkupHeading, bold = true },
-    ["@text.todo"] = { fg = c.tokenMarkupHeading, bold = true },
-    ["@text.underline"] = { underline = true },
-    ["@text.uri"] = { fg = c.textLink_foreground, underline = true },
 
     -- Diff compatibility
     ["@diff.plus"] = { fg = c.tokenMarkupInserted },
