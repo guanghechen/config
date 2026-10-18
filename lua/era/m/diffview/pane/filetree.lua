@@ -131,22 +131,6 @@ end
 ---@param bufnr                         integer
 ---@param lnum                          integer
 ---@return boolean
-function M.toggle_collapse(bufnr, lnum)
-  local item, owner = tree.item(bufnr, lnum), tree.owner(bufnr)
-  if not owner or not item or item.type ~= "directory" then
-    return false
-  end
-  local key = owner:retrieve_uuid(lnum)
-  if key == nil then
-    return false
-  end
-  owner:collapse(key, "toggle", false)
-  return true
-end
-
----@param bufnr                         integer
----@param lnum                          integer
----@return boolean
 function M.is_directory(bufnr, lnum)
   local item = tree.item(bufnr, lnum)
   return item ~= nil and item.type == "directory"

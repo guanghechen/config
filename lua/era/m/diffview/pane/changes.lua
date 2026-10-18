@@ -15,7 +15,6 @@ M.resolve_parent_lnum = tree.parent
 M.resolve_last_child_or_sibling_lnum = tree.last_child
 M.get_entry_at_line = files.get_entry_at_line
 M.find_adjacent_entry = files.find_adjacent_entry
-M.toggle_collapse = files.toggle_collapse
 M.is_directory = files.is_directory
 M.goto_parent_node = files.goto_parent_node
 M.goto_last_child_or_sibling = files.goto_last_child_or_sibling
