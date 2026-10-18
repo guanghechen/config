@@ -167,6 +167,30 @@ local function next_generation()
   return state.generation
 end
 
+---@param winnr                         integer
+---@param bufnr                         integer
+---@param row                           integer
+---@return nil
+local function draw_row(winnr, bufnr, row)
+  local scope = state.scope
+  local indicator = state.indicator
+  if scope == nil or indicator == nil or scope.winnr ~= winnr or scope.bufnr ~= bufnr then
+    return
+  end
+  local lnum = row + 1 ---@type integer
+  if lnum < scope.body.top or lnum > scope.body.bottom then
+    return
+  end
+
+  if state.status == "drawing" then
+    local index = indicator.row_indexes[lnum] ---@type integer|nil
+    if index == nil or math.abs(index - indicator.origin_index) > state.drawn_distance then
+      return
+    end
+  end
+  pcall(vim.api.nvim_buf_set_extmark, bufnr, namespace, row, 0, indicator.extmark_options)
+end
+
 vim.api.nvim_set_decoration_provider(namespace, {
   on_win = function(_, winnr, bufnr)
     local scope = state.scope
@@ -183,24 +207,15 @@ vim.api.nvim_set_decoration_provider(namespace, {
     end
     return true
   end,
-  on_line = function(_, winnr, bufnr, row)
-    local scope = state.scope
-    local indicator = state.indicator
-    if scope == nil or indicator == nil or scope.winnr ~= winnr or scope.bufnr ~= bufnr then
-      return
+  -- A range takes its end row only when it covers some of that row's text.
+  on_range = function(_, winnr, bufnr, begin_row, _, end_row, end_col)
+    local last_row = end_col > 0 and end_row or end_row - 1 ---@type integer
+    for row = begin_row, last_row do
+      draw_row(winnr, bufnr, row)
     end
-    local lnum = row + 1 ---@type integer
-    if lnum < scope.body.top or lnum > scope.body.bottom then
-      return
-    end
-
-    if state.status == "drawing" then
-      local index = indicator.row_indexes[lnum] ---@type integer|nil
-      if index == nil or math.abs(index - indicator.origin_index) > state.drawn_distance then
-        return
-      end
-    end
-    pcall(vim.api.nvim_buf_set_extmark, bufnr, namespace, row, 0, indicator.extmark_options)
+    -- The skip_row return is documented in :h nvim_set_decoration_provider but missing from its type.
+    ---@diagnostic disable-next-line: return-type-mismatch
+    return last_row + 1
   end,
 })
 

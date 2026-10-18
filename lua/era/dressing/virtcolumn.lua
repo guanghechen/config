@@ -60,7 +60,7 @@ local DISABLED_FILETYPES = {
 ---@field public leftcol                integer
 ---@field public tabstop                integer
 
--- The window being drawn, set by on_win for its on_line calls.
+-- The window being drawn, set by on_win for its on_range calls.
 local window = { leftcol = 0, tabstop = 8 } ---@type era.dressing.virtcolumn.IWindow
 
 -- Floating windows only draw guides while focused, so popups and previews stay clean.
@@ -106,7 +106,7 @@ end
 ---@param bufnr                         integer
 ---@param row                           integer
 ---@return nil
-local function on_line(bufnr, row)
+local function draw_row(bufnr, row)
   local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, true)[1] ---@type string
   -- The bytes of ASCII text are its display cells, so only tabs and multibyte characters need measuring.
   local width = line:find("[\t\128-\255]") and display_width(line, window.tabstop) or #line ---@type integer
@@ -143,8 +143,15 @@ function M.dressing()
     on_win = function(_, winnr, bufnr)
       return on_win(winnr, bufnr)
     end,
-    on_line = function(_, _, bufnr, row)
-      on_line(bufnr, row)
+    -- A range takes its end row only when it covers some of that row's text.
+    on_range = function(_, _, bufnr, begin_row, _, end_row, end_col)
+      local last_row = end_col > 0 and end_row or end_row - 1 ---@type integer
+      for row = begin_row, last_row do
+        draw_row(bufnr, row)
+      end
+      -- The skip_row return is documented in :h nvim_set_decoration_provider but missing from its type.
+      ---@diagnostic disable-next-line: return-type-mismatch
+      return last_row + 1
     end,
   })
 end
