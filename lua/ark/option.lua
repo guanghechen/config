@@ -12,38 +12,22 @@ vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 
 -- Disabled Builtins -------------------------------------------------------------------------------
--- cspell:ignore logipat matchit optwin rrhelper synmenu
+-- cspell:ignore matchit
 
 vim.g.loaded_2html_plugin = 1
-vim.g.loaded_bugreport = 1
-vim.g.loaded_compiler = 1
-vim.g.loaded_getscript = 1
-vim.g.loaded_getscriptPlugin = 1
 vim.g.loaded_gzip = 1
-vim.g.loaded_logipat = 1
 vim.g.loaded_matchit = 1
 vim.g.loaded_matchparen = 1
 vim.g.loaded_netrw = 1
-vim.g.loaded_netrwFileHandlers = 1
 vim.g.loaded_netrwPlugin = 1
-vim.g.loaded_netrwSettings = 1
-vim.g.loaded_optwin = 1
-vim.g.loaded_rrhelper = 1
 vim.g.loaded_spellfile_plugin = 1
-vim.g.loaded_synmenu = 1
-vim.g.loaded_syntax = 1
 vim.g.loaded_tar = 1
 vim.g.loaded_tarPlugin = 1
-vim.g.loaded_tohtml = 1
-vim.g.loaded_tutor = 1
-vim.g.loaded_vimball = 1
-vim.g.loaded_vimballPlugin = 1
 vim.g.loaded_zip = 1
 vim.g.loaded_zipPlugin = 1
 
 -- Encoding & File Format --------------------------------------------------------------------------
 
-vim.o.encoding = "utf-8"
 vim.o.fileencoding = "utf-8"
 vim.o.fileencodings = "utf-8,gbk,latin1"
 vim.o.fileformat = "unix"
