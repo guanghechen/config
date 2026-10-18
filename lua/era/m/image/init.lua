@@ -126,6 +126,26 @@ function M.dressing()
     end,
   })
 
+  -- This setup is deferred past startup, which has already read the files it was given as text, so an
+  -- unchanged image buffer among them is read again through the viewer.
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    local filename = vim.api.nvim_buf_get_name(bufnr):lower() ---@type string
+    local image = false ---@type boolean
+    for _, extname in ipairs(state.data.extnames) do
+      image = image or filename:sub(-#extname) == extname:lower()
+    end
+    if
+      image
+      and vim.api.nvim_buf_is_loaded(bufnr)
+      and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
+      and not vim.api.nvim_get_option_value("modified", { buf = bufnr })
+    then
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd("edit")
+      end)
+    end
+  end
+
   if state.data.doc.enabled then
     local queries = vim.api.nvim_get_runtime_file("queries/*/images.scm", true)
     local supported_lang_set = {} ---@type table<string, true>

@@ -74,6 +74,9 @@ t:test("dressing attaches existing and future supported buffers", function()
   t:patch_table(vim.api, "nvim_buf_is_loaded", function(bufnr)
     return buffers[bufnr].loaded
   end)
+  t:patch_table(vim.api, "nvim_buf_get_name", function(bufnr)
+    return "/workspace/doc" .. bufnr .. ".md"
+  end)
   t:patch_table(vim.api, "nvim_get_option_value", function(name, opts)
     t.assert_eq("filetype", name, "buffer option")
     return buffers[opts.buf].filetype
@@ -127,6 +130,66 @@ t:test("dressing attaches existing and future supported buffers", function()
   cleanup_exit()
   t.assert_eq(11, cleaned[1], "loaded backend cleans deleted buffer")
   t.assert_eq(-1, cleaned[2], "loaded backend cleans all placements on exit")
+end)
+
+t:test("dressing reads the unchanged image buffers that startup read as text", function()
+  local buffers = {
+    [21] = { name = "/workspace/start.png", loaded = true, buftype = "", modified = false },
+    [22] = { name = "/workspace/edited.png", loaded = true, buftype = "", modified = true },
+    [23] = { name = "/workspace/later.png", loaded = false, buftype = "", modified = false },
+    [24] = { name = "/workspace/notes.md", loaded = true, buftype = "", modified = false },
+    [25] = { name = "/workspace/SHOT.PNG", loaded = true, buftype = "", modified = false },
+  }
+  local state = {
+    data = { doc = { enabled = false }, extnames = { ".png" } },
+    did_setup = false,
+    is_support_file = function()
+      return true
+    end,
+    is_support_terminal = function()
+      return true
+    end,
+  }
+  t:patch_global(
+    "stl",
+    { env = { IS_OSX = true }, nvim = { fn = {
+      augroup = function()
+        return 1
+      end,
+    } } }
+  )
+  t:patch_global("dot", {})
+  t:patch_table(package.loaded, "era.m.image.state", state)
+  t:patch_table(vim.api, "nvim_create_autocmd", function()
+    return 1
+  end)
+  t:patch_table(vim.api, "nvim_list_bufs", function()
+    return { 21, 22, 23, 24, 25 }
+  end)
+  t:patch_table(vim.api, "nvim_buf_get_name", function(bufnr)
+    return buffers[bufnr].name
+  end)
+  t:patch_table(vim.api, "nvim_buf_is_loaded", function(bufnr)
+    return buffers[bufnr].loaded
+  end)
+  t:patch_table(vim.api, "nvim_get_option_value", function(name, opts)
+    return buffers[opts.buf][name]
+  end)
+  local reread = {} ---@type integer[]
+  local current ---@type integer|nil
+  t:patch_table(vim.api, "nvim_buf_call", function(bufnr, callback)
+    current = bufnr
+    callback()
+    current = nil
+  end)
+  t:patch_table(vim, "cmd", function(command)
+    t.assert_eq("edit", command, "command run in an image buffer")
+    reread[#reread + 1] = assert(current)
+  end)
+
+  assert(loadfile("lua/era/m/image/init.lua"))().dressing()
+
+  t.assert_eq(vim.inspect({ 21, 25 }), vim.inspect(reread), "image buffers read again")
 end)
 
 t:run()
