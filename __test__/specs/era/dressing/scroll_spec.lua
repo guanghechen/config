@@ -566,7 +566,7 @@ t:test("a typed key first finishes running animations on their targets", functio
   t.assert_eq(100, runtime.states[1].current.topline, "current topline")
 end)
 
-t:test("keys of the frames and mouse keys leave animations running", function()
+t:test("keys of the frames, a moving mouse and wheels leave animations running", function()
   local runtime = setup()
   runtime.view.lnum = 100
   runtime.view.topline = 100
@@ -575,12 +575,31 @@ t:test("keys of the frames and mouse keys leave animations running", function()
   local on_key = assert(runtime.on_key)
 
   on_key("\5", "")
-  for _, key in ipairs({ "<LeftMouse>", "<2-LeftMouse>", "<LeftRelease>", "<MouseMove>", "<ScrollWheelDown>" }) do
+  for _, key in ipairs({ "<MouseMove>", "<ScrollWheelDown>" }) do
     on_key(vim.keycode(key), vim.keycode(key))
   end
 
   t.assert_false(timer.cleared, "timer cleared")
   t.assert_true(runtime.states[1].timer == timer, "active timer")
+end)
+
+t:test("a click stops animations on the view drawn under it", function()
+  for _, key in ipairs({ "<LeftMouse>", "<2-LeftMouse>", "<RightMouse>", "<LeftDrag>", "<LeftRelease>" }) do
+    local runtime = setup()
+    runtime.view.lnum = 100
+    runtime.view.topline = 100
+    runtime.check_scroll(1)
+    local timer = runtime.timers[1]
+    -- A frame has drawn the window halfway to its target.
+    runtime.view = { lnum = 50, col = 0, coladd = 0, curswant = 0, topline = 40, topfill = 0, leftcol = 0, skipcol = 0 }
+    assert(runtime.on_key)(vim.keycode(key), vim.keycode(key))
+
+    t.assert_true(timer.cleared, key .. " clears the timer")
+    t.assert_nil(runtime.states[1].timer, key .. " ends the animation")
+    t.assert_eq(40, runtime.states[1].current.topline, key .. " keeps the drawn view")
+    t.assert_eq(40, runtime.view.topline, key .. " does not restore the target view")
+    t.assert_eq(4, runtime.options.scrolloff, key .. " restores scrolloff")
+  end
 end)
 
 t:test("Select mode scrolls directly without touching the view", function()

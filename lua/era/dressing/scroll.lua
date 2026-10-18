@@ -372,19 +372,26 @@ local function enable()
   states = {}
 
   -- Typed keys act on the cursor, which an animation holds short of its target, so running animations
-  -- finish on their targets first. Keys of the frames are not typed, and mouse keys act on the screen as
-  -- drawn. Mapped wheels reach here as the keys of their mappings, so the typed key identifies them.
+  -- finish on their targets first. A click acts on the screen as drawn, so they stop where they are and
+  -- no later frame moves the cursor it placed. Keys of the frames are not typed and a moving mouse does
+  -- not act. Mapped wheels reach here as the keys of their mappings, so the typed key identifies them.
   on_key_ns = vim.on_key(function(key, typed)
     local name = typed ~= "" and vim.fn.keytrans(typed) or "" ---@type string
     if key == MOUSE_SCROLL_DOWN or key == MOUSE_SCROLL_UP or name:find("ScrollWheel") then
       mouse_scrolling = true
       return
     end
-    if name == "" or name:find("Mouse") or name:find("Drag") or name:find("Release") then
+    if name == "" or name == "<MouseMove>" then
       return
     end
+    local click = name:find("Mouse>$") or name:find("Drag>$") or name:find("Release>$")
     for _, state in pairs(states) do
-      if state.timer then
+      if state.timer and click then
+        stop_animation(state)
+        if is_state_valid(state) then
+          state.current = vim.api.nvim_win_call(state.winnr, vim.fn.winsaveview)
+        end
+      elseif state.timer then
         finish_animation(state)
       end
     end
