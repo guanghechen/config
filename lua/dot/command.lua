@@ -74,6 +74,7 @@ function M.define(raw_definition, overwrite)
     desc = raw_definition.desc,
     nargs = raw_definition.nargs,
     candidates = raw_definition.candidates,
+    range = raw_definition.range,
   }
   definition_map[definition.uuid] = definition
 
@@ -106,6 +107,7 @@ function M.define(raw_definition, overwrite)
     desc = definition.desc,
     nargs = definition.nargs,
     complete = definition.nargs ~= 0 and complete or nil,
+    range = definition.range,
   })
   return M
 end
@@ -199,13 +201,15 @@ D.__index = D
 ---@param desc                          string
 ---@param nargs                         ?0|1|"?"|"+"|"*"
 ---@param candidates                    ?string[]
+---@param range                         ?boolean
 ---@return dot.command.IDefinition
-function D.new(uuid, desc, nargs, candidates)
+function D.new(uuid, desc, nargs, candidates, range)
   local definition = setmetatable({
     uuid = uuid,
     desc = desc,
     nargs = nargs or 0,
     candidates = candidates and vim.list_slice(candidates) or nil,
+    range = range,
   }, D)
   M.define(definition)
   return definition
@@ -465,7 +469,7 @@ M.definitions.lint = {
 ---@class dot.command.definitions.log
 M.definitions.log = {
   preview_json_normal = D.new("Fjsonviewnormal", "json: preview current line"),
-  preview_json_visual = D.new("Fjsonviewvisual", "json: preview selection"),
+  preview_json_visual = D.new("Fjsonviewvisual", "json: preview selection", nil, nil, true),
 }
 
 ---@class dot.command.definitions.lsp

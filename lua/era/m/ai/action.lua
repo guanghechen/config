@@ -289,16 +289,10 @@ function M.edit()
 
   local location ---@type string|nil
   local location_err ---@type string|nil
-  local lnum_start, col_start, lnum_end, col_end = stl.nvim.buf.retrieve_visual_range()
+  local region = stl.nvim.buf.retrieve_visual_region() ---@type stl.nvim.buf.IVisualRegion|nil
   local content ---@type string
 
-  if
-    lnum_start == nil
-    or col_start == nil
-    or lnum_end == nil
-    or col_end == nil
-    or ((lnum_start == lnum_end) and (col_start == col_end))
-  then
+  if region == nil then
     location, location_err = dot.uri.file_location({
       filepath = filepath,
     })
@@ -306,13 +300,12 @@ function M.edit()
   else
     location, location_err = dot.uri.file_location({
       filepath = filepath,
-      start_lnum = lnum_start,
-      start_col = col_start,
-      end_lnum = lnum_end,
-      end_col = col_end,
+      start_lnum = region.start_lnum,
+      start_col = region.start_col,
+      end_lnum = region.end_lnum,
+      end_col = region.end_col,
     })
-    local lines = stl.nvim.buf.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end)
-    content = table.concat(lines, "\n")
+    content = table.concat(region.lines, "\n")
   end
 
   if location == nil then
@@ -324,10 +317,10 @@ function M.edit()
       details = {
         error = location_err,
         filepath = filepath,
-        start_lnum = lnum_start,
-        start_col = col_start,
-        end_lnum = lnum_end,
-        end_col = col_end,
+        start_lnum = region and region.start_lnum,
+        start_col = region and region.start_col,
+        end_lnum = region and region.end_lnum,
+        end_col = region and region.end_col,
       },
     })
     location = string.format("@%s", filepath)

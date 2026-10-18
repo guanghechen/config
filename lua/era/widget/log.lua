@@ -133,24 +133,12 @@ end
 
 ---@return nil
 function M.preview_json_visual()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local s_lnum, s_col, e_lnum, e_col = stl.nvim.buf.retrieve_visual_range()
-
-  local lines ---@type string[]
-  if s_lnum == e_lnum then
-    lines = vim.api.nvim_buf_get_text(bufnr, s_lnum - 1, s_col - 1, e_lnum - 1, e_col, {})
-  else
-    lines = vim.api.nvim_buf_get_lines(bufnr, s_lnum - 1, e_lnum, false)
-    if #lines > 0 then
-      lines[1] = lines[1]:sub(s_col)
-    end
-    if #lines > 0 then
-      lines[#lines] = lines[#lines]:sub(1, e_col)
-    end
+  -- The command runs after Visual mode ends, so the selection comes from its marks.
+  local region = stl.nvim.buf.retrieve_visual_region(true)
+  if region == nil then
+    return
   end
-
-  local content = table.concat(lines, "\n")
-  show_json_preview(content)
+  show_json_preview(table.concat(region.lines, "\n"))
 end
 
 return M

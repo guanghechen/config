@@ -59,6 +59,7 @@
 ---@field public desc                   string
 ---@field public nargs                  0|1|"?"|"+"|"*"|nil
 ---@field public candidates             string[]|nil
+---@field public range                  boolean|nil Accepts a line range, such as the '<,'> of a Visual selection.
 
 ---@class dot.command.IDefinition : dot.command.IRawDefinition
 ---@field public execute                fun(self: dot.command.IDefinition, args?: string, fargs?: string[], silent?: boolean): nil

@@ -302,54 +302,43 @@ function M.retrieve_visual_lnum_range()
   return lnum_end, lnum_start
 end
 
----@return integer
----@return integer
----@return integer
----@return integer
-function M.retrieve_visual_range()
-  local s_pos = vim.fn.getpos("v") -- visual selection start
-  local e_pos = vim.fn.getpos(".") -- visual selection end (cursor)
+---@class stl.nvim.buf.IVisualRegion
+---@field public lines                  string[] Text of each selected line, as the Visual mode selects it.
+---@field public start_lnum             integer
+---@field public start_col              integer 1-based byte column of the first selected byte.
+---@field public end_lnum               integer
+---@field public end_col                integer 1-based byte column of the last selected byte.
 
-  local s_lnum = s_pos[2] ---@type integer
-  local s_col = s_pos[3] ---@type integer
-  local e_lnum = e_pos[2] ---@type integer
-  local e_col = e_pos[3] ---@type integer
-
-  if s_lnum < e_lnum then
-    return s_lnum, s_col, e_lnum, e_col
+---Reads the selection of the active Visual mode. With `marks`, a command run after Visual mode ended reads
+---the last selection through '< and '> instead.
+---@param marks                         ?boolean
+---@return stl.nvim.buf.IVisualRegion|nil
+function M.retrieve_visual_region(marks)
+  local mode = vim.fn.mode() ---@type string
+  local from, to ---@type integer[], integer[]
+  if mode == "v" or mode == "V" or mode == "\22" then
+    from, to = vim.fn.getpos("v"), vim.fn.getpos(".")
+  elseif marks and vim.fn.visualmode() ~= "" then
+    mode = vim.fn.visualmode()
+    from, to = vim.fn.getpos("'<"), vim.fn.getpos("'>")
+  else
+    return nil
   end
 
-  if s_lnum == e_lnum and s_col < e_col then
-    return s_lnum, s_col, e_lnum, e_col
+  local opts = { type = mode }
+  local positions = vim.fn.getregionpos(from, to, opts)
+  if #positions == 0 then
+    return nil
   end
-
-  return e_lnum, e_col, s_lnum, s_col
-end
-
----@param bufnr                         integer
----@param lnum_start                    integer
----@param col_start                     integer
----@param lnum_end                      integer
----@param col_end                       integer
----@return string[]
-function M.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end)
-  local lines = vim.api.nvim_buf_get_lines(bufnr, lnum_start - 1, lnum_end, false) ---@type string[]
-  local N = #lines ---@type integer
-
-  if N == 0 then
-    return {}
-  end
-
-  if N == 1 then
-    lines[1] = string.sub(lines[1], col_start, col_end)
-  end
-
-  if N > 1 then
-    lines[1] = string.sub(lines[1], col_start, -1)
-    lines[N] = string.sub(lines[N], 1, col_end)
-  end
-
-  return lines
+  local first, last = positions[1][1], positions[#positions][2]
+  return {
+    lines = vim.fn.getregion(from, to, opts),
+    start_lnum = first[2],
+    start_col = math.max(first[3], 1),
+    end_lnum = last[2],
+    -- An empty selected line reports column 0.
+    end_col = math.max(last[3], 1),
+  }
 end
 
 return M

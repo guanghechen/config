@@ -171,4 +171,56 @@ t:test("Windows case-fold owner survives another buffer rename", function()
   t.assert_eq(reused_bufnr, buf.lookup_bufnr(loaded_bufnrs, old_filepath), "reused case-fold filepath")
 end)
 
+---@param keys                          string Keys that end in Visual mode, where the region is read.
+---@return stl.nvim.buf.IVisualRegion|nil
+local function visual_region(keys)
+  local bufnr = create_buffer()
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "abc中x", "hello world", "second line" })
+  local region ---@type stl.nvim.buf.IVisualRegion|nil
+  vim.keymap.set("x", "<F2>", function()
+    region = buf.retrieve_visual_region()
+  end, { buffer = bufnr })
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>" .. keys .. "<F2><Esc>"), "x", false)
+  return region
+end
+
+---@param expected                      table
+---@param region                        stl.nvim.buf.IVisualRegion|nil
+---@param msg                           string
+local function assert_region(expected, region, msg)
+  t.assert_true(vim.deep_equal(expected, region), msg .. ": " .. vim.inspect(region))
+end
+
+t:test("a Visual region keeps whole characters and follows the Visual mode", function()
+  assert_region(
+    { lines = { "abc中" }, start_lnum = 1, start_col = 1, end_lnum = 1, end_col = 6 },
+    visual_region("gg0v3l"),
+    "a charwise selection ending on a multibyte character"
+  )
+  assert_region(
+    { lines = { "hello world", "second line" }, start_lnum = 2, start_col = 1, end_lnum = 3, end_col = 11 },
+    visual_region("2G6|Vj"),
+    "a linewise selection takes whole lines wherever the cursor is"
+  )
+  assert_region(
+    { lines = { "he", "se" }, start_lnum = 2, start_col = 1, end_lnum = 3, end_col = 2 },
+    visual_region("2G0<C-v>jl"),
+    "a blockwise selection takes the block of each line"
+  )
+end)
+
+t:test("outside Visual mode only an explicit request reads the last selection", function()
+  local bufnr = create_buffer()
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "abc中x", "hello world" })
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>gg0vl<Esc>"), "x", false)
+  t.assert_nil(buf.retrieve_visual_region(), "a Normal mode caller has no selection")
+  assert_region(
+    { lines = { "ab" }, start_lnum = 1, start_col = 1, end_lnum = 1, end_col = 2 },
+    buf.retrieve_visual_region(true),
+    "a command run after Visual mode reads its marks"
+  )
+end)
+
 t:run()
