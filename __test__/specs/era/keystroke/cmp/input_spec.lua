@@ -1531,7 +1531,12 @@ for _, mode in ipairs({ "insert", "cmdline" }) do
       vim.fn.delete(directory, "rf")
     end)
     vim.fn.writefile({}, directory .. "/alpha.txt")
-    vim.fn.writefile({}, directory .. "/a\255.txt")
+    -- APFS refuses names that are not UTF-8; such names only exist on byte-oriented filesystems.
+    local written, err = pcall(vim.fn.writefile, {}, directory .. "/a\255.txt")
+    if not written and tostring(err):find("illegal byte sequence", 1, true) then
+      t.skip("the filesystem refuses names that are not UTF-8")
+    end
+    assert(written, err)
     local lua, input = editor({ "" })
     lua([[_G.cmp_utf8_directory = ...]], directory)
     if mode == "insert" then

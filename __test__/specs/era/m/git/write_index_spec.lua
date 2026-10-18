@@ -1,4 +1,5 @@
 --- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/write_index_spec.lua
+--- Timeout: 120000
 ---@diagnostic disable: undefined-global
 
 local bootstrap = require("__test__.support.bootstrap")

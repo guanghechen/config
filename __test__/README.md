@@ -363,7 +363,10 @@ in its temporary directory; it is removed during cleanup. Real Git query/parsing
 Zero matches, an empty spec, a missing `t:run()`, load errors, case or cleanup
 failures, process failures, and timeouts all produce a nonzero exit status. A
 failed suite does not prevent later suites from running. There are no automatic
-retries or silent skips.
+retries. A case that the environment cannot exercise calls `t.skip(reason)`; it
+prints `SKIP <case>: <reason>`, counts in the summary, and does not fail the suite.
+A suite slower than the shared limit declares `--- Timeout: <ms>` among its leading
+comment lines; the runner applies the larger of that and the shared limit.
 An unreadable spec directory, including a nested directory, fails selection
 before any suite starts.
 
@@ -396,6 +399,7 @@ t:run()
 - Register resources with `defer` immediately after acquisition. Cleanup runs in reverse order, including after failures. Top-level registrations last for the suite; registrations inside a case last for that case.
 - Declare application globals through `__test__.support.bootstrap`. Load `ark.bootstrap` explicitly only when the composed runtime is part of the test.
 - Wait for observable async completion with `t.wait_until(predicate, timeout_ms, message)`; settle or cancel owned work before cleanup.
+- Skip only after detecting at runtime that the environment cannot exercise the behavior, such as a filesystem that refuses a name; never skip to hide a failure.
 - Keep temporary repositories, files, buffers, and windows owned by the creating test. Test failures must retain their original diagnostics.
 
 ## Native result consumers

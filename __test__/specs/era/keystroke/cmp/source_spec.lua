@@ -103,7 +103,12 @@ t:test("directory scans skip invalid UTF-8 file and symlink names while preservi
     vim.fn.delete(directory, "rf")
   end)
   vim.fn.writefile({}, directory .. "/alpha.txt")
-  vim.fn.writefile({}, directory .. "/a\255.txt")
+  -- APFS refuses names that are not UTF-8; such names only exist on byte-oriented filesystems.
+  local written, err = pcall(vim.fn.writefile, {}, directory .. "/a\255.txt")
+  if not written and tostring(err):find("illegal byte sequence", 1, true) then
+    t.skip("the filesystem refuses names that are not UTF-8")
+  end
+  assert(written, err)
   assert(vim.uv.fs_symlink(directory .. "/child", directory .. "/linked"))
   assert(vim.uv.fs_symlink(directory .. "/child", directory .. "/l\255"))
   local result

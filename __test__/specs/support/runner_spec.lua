@@ -218,6 +218,40 @@ t:test("timeout terminates a suite and allows the following suite to run", funct
   end)
 end)
 
+t:test("a leading timeout declaration only raises the limit of its own suite", function()
+  with_temp_root(function(dir)
+    ---@param header                    string
+    ---@param wait_ms                   integer
+    ---@param filepath                  string
+    local function write_waiting_spec(header, wait_ms, filepath)
+      write_file({
+        header,
+        'local harness = require("__test__.support.harness")',
+        'local t = harness.new("fixture")',
+        't:test("case", function() vim.wait(' .. wait_ms .. ") end)",
+        "t:run()",
+      }, filepath)
+    end
+    write_waiting_spec("--- Timeout: 8000", 2000, dir .. "/raised_spec.lua")
+    write_waiting_spec("--- Timeout: 100", 300, dir .. "/lowered_spec.lua")
+    write_waiting_spec("--- No declaration", 2000, dir .. "/plain_spec.lua")
+    local failed, output = run_suites({ root = dir, timeout_ms = 1500 })
+    t.assert_eq(1, failed, "only the undeclared slow suite times out")
+    t.assert_true(output:find("plain_spec.lua: timeout after 1500 ms", 1, true) ~= nil, output)
+  end)
+end)
+
+t:test("skipped cases are counted in the aggregate summary without failing", function()
+  with_temp_root(function(dir)
+    write_spec('t.skip("unsupported here")', dir .. "/skip_spec.lua")
+    write_spec("", dir .. "/pass_spec.lua")
+    local failed, output = run_suites({ root = dir })
+    t.assert_eq(0, failed, "failed suites")
+    t.assert_true(output:find("SKIP case: unsupported here", 1, true) ~= nil, "skip detail")
+    t.assert_true(output:find("2 suite(s), 0 failed, 1 case(s) skipped", 1, true) ~= nil, "aggregate summary")
+  end)
+end)
+
 t:test("spawn errors fail the run", function()
   with_temp_root(function(dir)
     write_spec("", dir .. "/pass_spec.lua")

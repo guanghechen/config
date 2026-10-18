@@ -9,7 +9,11 @@ local __module_name__ = "__test__.support.harness" ---@type string
 ---@field public name                   string
 ---@field public passed                 integer
 ---@field public failed                 integer
+---@field public skipped                integer
 ---@field public failures               string[]
+
+---@class __test__.support.harness.ISkip
+---@field public reason                 string
 
 ---@class __test__.support.Harness
 ---@field public name                   string
@@ -20,6 +24,9 @@ local Harness = {}
 Harness.__index = Harness
 
 local M = {}
+
+-- Metatable of the error skip() raises, so run() tells a skip from a failure.
+local Skip = {} ---@type table
 
 ---@param value                         any
 ---@return string
@@ -111,6 +118,13 @@ function Harness.assert_nil(actual, msg)
   end
 end
 
+--- Ends the current case as skipped when the environment cannot exercise it.
+---@param reason                        string
+---@return nil
+function Harness.skip(reason)
+  error(setmetatable({ reason = reason }, Skip), 0)
+end
+
 ---@param cleanup                       fun()
 ---@return fun()
 function Harness:defer(cleanup)
@@ -196,6 +210,7 @@ function Harness:run(opts)
 
   local passed = 0 ---@type integer
   local failed = 0 ---@type integer
+  local skipped = 0 ---@type integer
   local failures = {} ---@type string[]
 
   if #self._cases == 0 then
@@ -209,14 +224,18 @@ function Harness:run(opts)
     local ok, err = pcall(case.callback)
     local cleanup_failures = run_cleanups(self._case_cleanups)
     self._case_cleanups = nil
+    local skip = not ok and getmetatable(err) == Skip and err or nil ---@type __test__.support.harness.ISkip|nil
 
-    if ok and #cleanup_failures == 0 then
+    if skip ~= nil and #cleanup_failures == 0 then
+      skipped = skipped + 1
+      emit("SKIP " .. case.name .. ": " .. skip.reason)
+    elseif ok and #cleanup_failures == 0 then
       passed = passed + 1
       emit("PASS " .. case.name)
     else
       failed = failed + 1
       emit("FAIL " .. case.name)
-      if not ok then
+      if not ok and skip == nil then
         local message = tostring(err)
         failures[#failures + 1] = case.name .. ": " .. message
         emit("  Error: " .. message)
@@ -237,12 +256,14 @@ function Harness:run(opts)
     emit("FAIL " .. message)
   end
 
-  emit(string.format("\n%d passed, %d failed", passed, failed))
+  local summary = string.format("\n%d passed, %d failed", passed, failed) ---@type string
+  emit(skipped > 0 and string.format("%s, %d skipped", summary, skipped) or summary)
 
   local result = {
     name = self.name,
     passed = passed,
     failed = failed,
+    skipped = skipped,
     failures = failures,
   } ---@type __test__.support.harness.IResult
 

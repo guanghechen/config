@@ -87,6 +87,30 @@ local function write_output(output)
   end
 end
 
+-- A suite that needs longer than the shared limit declares it in a leading comment line such as
+-- `--- Timeout: 120000`; the declaration only ever raises the limit.
+---@param suite                         string
+---@return integer|nil
+local function declared_timeout_ms(suite)
+  local file = io.open(suite, "r")
+  if file == nil then
+    return nil
+  end
+  local declared = nil ---@type integer|nil
+  for line in file:lines() do
+    if not line:match("^%-%-") then
+      break
+    end
+    local value = line:match("^%-%-%-?%s*Timeout:%s*(%d+)%s*$")
+    if value ~= nil then
+      declared = tonumber(value)
+      break
+    end
+  end
+  file:close()
+  return declared
+end
+
 ---@param opts                          ?__test__.support.runner.IOptions
 ---@return integer failed_suites
 function M.run_all(opts)
@@ -108,8 +132,10 @@ function M.run_all(opts)
   end
 
   local failed = 0 ---@type integer
+  local skipped = 0 ---@type integer
   for _, suite in ipairs(suites) do
     local name = display_path(suite) ---@type string
+    local suite_timeout_ms = math.max(timeout_ms, declared_timeout_ms(suite) or 0) ---@type integer
     io.write("== " .. name .. "\n")
     io.flush()
     local ok, result = pcall(function()
@@ -126,7 +152,7 @@ function M.run_all(opts)
           ROOT .. "/__test__/run.lua",
           "--suite",
           suite,
-        }, { cwd = ROOT, text = true, timeout = timeout_ms })
+        }, { cwd = ROOT, text = true, timeout = suite_timeout_ms })
         :wait()
     end)
     if not ok then
@@ -135,9 +161,12 @@ function M.run_all(opts)
     else
       write_output(result.stdout)
       write_output(result.stderr)
+      for _ in ("\n" .. (result.stdout or "")):gmatch("\nSKIP ") do
+        skipped = skipped + 1
+      end
       if result.code ~= 0 or result.signal ~= 0 then
         failed = failed + 1
-        local reason = result.code == 124 and ("timeout after " .. timeout_ms .. " ms")
+        local reason = result.code == 124 and ("timeout after " .. suite_timeout_ms .. " ms")
           or string.format("exit %s, signal %s", result.code, result.signal)
         io.write("FAIL " .. name .. ": " .. reason .. "\n")
       end
@@ -145,7 +174,8 @@ function M.run_all(opts)
     io.flush()
   end
 
-  io.write(string.format("\n%d suite(s), %d failed\n", #suites, failed))
+  local summary = string.format("\n%d suite(s), %d failed", #suites, failed) ---@type string
+  io.write((skipped > 0 and string.format("%s, %d case(s) skipped", summary, skipped) or summary) .. "\n")
   return failed
 end
 

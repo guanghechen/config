@@ -124,4 +124,33 @@ t:test("suite resources survive cases and are disposed after the final case", fu
   t.assert_false(live, "suite resource disposed")
 end)
 
+t:test("skip ends a case without passing or failing and still runs its cleanups", function()
+  local cleaned = false ---@type boolean
+  local after_skip = false ---@type boolean
+  local result = run_inner(function(inner)
+    inner:defer(function()
+      cleaned = true
+    end)
+    inner.skip("unsupported environment")
+    after_skip = true
+  end)
+  t.assert_eq(0, result.passed, "passed count")
+  t.assert_eq(0, result.failed, "failed count")
+  t.assert_eq(1, result.skipped, "skipped count")
+  t.assert_false(after_skip, "case stops at skip")
+  t.assert_true(cleaned, "cleanup")
+end)
+
+t:test("a cleanup failure after skip still fails the case", function()
+  local result = run_inner(function(inner)
+    inner:defer(function()
+      error("expected cleanup failure")
+    end)
+    inner.skip("unsupported environment")
+  end)
+  t.assert_eq(1, result.failed, "failed count")
+  t.assert_eq(0, result.skipped, "skipped count")
+  t.assert_eq(1, #result.failures, "cleanup diagnostic only")
+end)
+
 t:run()
