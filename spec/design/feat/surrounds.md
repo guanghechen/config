@@ -36,8 +36,10 @@ count 与 dot-repeat。Linewise、blockwise selection 保留 `respect_selection_
 ## Buffer 准入与映射归属
 
 Buffer 必须有效、可修改、非 readonly，且 filetype 通过 `stl.filetype.is_surround_enabled()`。
-排除 `stl.filetype.DIFFVIEW_CHANGES`，覆盖 staged/unstaged Changes buffers；其他 Diffview buffer
-及 diff window 中的真实文件仍可使用 surrounds。
+它排除每次渲染都会切换 `modifiable`、也用不到 surround 的界面 buffer：Board、Diffview Changes
+（staged/unstaged）、Explorer、通知，以及 UX 的 cmdline、input、消息历史、popupmenu 和 picker/searcher
+的 finder、preview、result；清单维护在 `stl.filetype` 的 `no_surround`。其他 Diffview buffer 及 diff
+window 中的真实文件仍可使用 surrounds。
 
 `setup()` 在 `BufEnter`、`FileType` 及 `modifiable`、`readonly` 变化时刷新 buffer-local mappings。
 由于 `OptionSet` 无法标识非当前目标 buffer，公开动作在编辑前再次检查准入。
