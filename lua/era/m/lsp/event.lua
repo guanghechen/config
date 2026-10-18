@@ -3,7 +3,6 @@ local __module_name__ = "era.m.lsp.event" ---@type string
 
 local Methods = vim.lsp.protocol.Methods
 
-local augroup_codelens = stl.nvim.fn.augroup("era.m.lsp.event.codelens") ---@type integer
 local augroup_foldexpr = stl.nvim.fn.augroup("era.m.lsp.event.foldexpr") ---@type integer
 local augroup_inlayhint = stl.nvim.fn.augroup("era.m.lsp.event.inlayhint") ---@type integer
 local augroup_keymaps = stl.nvim.fn.augroup("era.m.lsp.event.keymaps") ---@type integer
@@ -583,15 +582,9 @@ function M.on_attach(client, bufnr)
     -- code lens
     if support_codelens == 1 then
       local enable_code_lens = dot.context.lsp.code_lens:snapshot() ---@type boolean
+      -- Enabled lenses request themselves again after each edit and on a server refresh.
       if enable_code_lens then
         vim.lsp.codelens.enable(true, { bufnr = bufnr })
-        vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave" }, {
-          buffer = bufnr,
-          group = augroup_codelens,
-          callback = function()
-            vim.lsp.codelens.enable(true, { bufnr = bufnr })
-          end,
-        })
       end
     end
   end
@@ -727,6 +720,8 @@ function M.on_attach(client, bufnr)
       modes = { "n", "x" },
       key = "<leader>cC",
       callback = function()
+        -- Enabling lenses that are already enabled requests nothing, so they are enabled afresh.
+        vim.lsp.codelens.enable(false, { bufnr = bufnr })
         vim.lsp.codelens.enable(true, { bufnr = bufnr })
       end,
       desc = "lsp: refresh & display codelens",
@@ -777,13 +772,6 @@ function M.on_detach(client, bufnr)
 
   if support_codelens > 0 and client:supports_method("textDocument/codeLens") then
     support_codelens = support_codelens - 1
-
-    if support_codelens == 0 then
-      vim.api.nvim_clear_autocmds({
-        group = augroup_codelens,
-        buffer = bufnr,
-      })
-    end
   end
   if support_inlayhint > 0 and client:supports_method("textDocument/inlayHint") then
     support_inlayhint = support_inlayhint - 1

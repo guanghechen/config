@@ -218,6 +218,27 @@ t:test("keymaps: reconcile dynamic capability changes with bounded writes", func
   delete_buffer(bufnr)
 end)
 
+t:test("codelens: the refresh mapping requests lenses afresh even while they are enabled", function()
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local client = add_client(bufnr, "lens", { [Methods.textDocument_codeLens] = true })
+  Event.on_attach(client, bufnr)
+  local refresh ---@type function|nil
+  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
+    if keymap.desc == "lsp: refresh & display codelens" then
+      refresh = keymap.callback
+    end
+  end
+  local calls = {} ---@type string[]
+  t:patch_table(vim.lsp.codelens, "enable", function(enable, filter)
+    calls[#calls + 1] = tostring(enable) .. "@" .. tostring(filter and filter.bufnr)
+  end)
+
+  assert(refresh, "refresh mapping")()
+  t.assert_eq(vim.inspect({ "false@" .. bufnr, "true@" .. bufnr }), vim.inspect(calls), "enable calls")
+
+  delete_buffer(bufnr)
+end)
+
 t:test("keymaps: client-specific mappings win and detach restores fallback", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local vtsls = add_client(bufnr, "vtsls")
