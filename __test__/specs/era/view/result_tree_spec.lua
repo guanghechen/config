@@ -81,6 +81,131 @@ t:test("ordered List filtering retains Tree ancestors and native selection acros
   t.assert_eq(0, #errors, vim.inspect(errors))
 end)
 
+t:test("ready waits for every collapse change that is still in flight", function()
+  local tree = fixture()
+  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  local releases = {} ---@type fun(value: any)[]
+  local original = tree.state.dispatch
+  t:patch_table(tree.state, "dispatch", function(self, command, context)
+    local deferred, release = stl.c.Future.new_with_resolver()
+    releases[#releases + 1] = release
+    return deferred:then_(function()
+      return original(self, command, context)
+    end)
+  end)
+  local id = tree._data:source():id("dir")
+  tree:collapse("dir", "collapse", false)
+  tree:collapse("dir", "expand", false)
+  local ready = tree:ready()
+  t.assert_false(
+    vim.wait(50, function()
+      return ready:is_done()
+    end),
+    "ready settled before any change applied"
+  )
+  releases[1]()
+  t.wait_until(function()
+    return not tree.state:snapshot():flags(id).expanded
+  end, 5000)
+  t.assert_false(
+    vim.wait(50, function()
+      return ready:is_done()
+    end),
+    "ready settled while the second change was in flight"
+  )
+  releases[2]()
+  local frame = await(ready).frame
+  t.assert_true(frame:flags(id).expanded, "ready frame includes both changes")
+  t.assert_eq(0, #errors, vim.inspect(errors))
+end)
+
+t:test("input deferred behind a collapse decides on the Frame that shows it", function()
+  local tree = fixture()
+  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  local id = tree._data:source():id("dir")
+  local before = tree:frame()
+  local release ---@type fun(value: any)|nil
+  local original = tree.state.dispatch
+  t:patch_table(tree.state, "dispatch", function(self, command, context)
+    local deferred, resolve = stl.c.Future.new_with_resolver()
+    release = resolve
+    return deferred:then_(function()
+      return original(self, command, context)
+    end)
+  end)
+  t.assert_false(
+    tree:after_collapse(function()
+      error("an idle tree must run input at once")
+    end),
+    "idle input is not deferred"
+  )
+  tree:collapse("dir", "collapse", false)
+  t.assert_true(tree:collapse_pending(), "a submitted change is pending")
+  local expanded ---@type boolean|nil
+  t.assert_true(tree:after_collapse(function()
+    expanded = tree:frame():flags(id).expanded
+  end))
+  t.assert_false(
+    vim.wait(50, function()
+      return expanded ~= nil
+    end),
+    "deferred input ran before the change applied"
+  )
+  assert(release)()
+  t.wait_until(function()
+    return expanded ~= nil
+  end, 5000)
+  t.assert_false(expanded, "deferred input sees the collapsed directory")
+  t.assert_false(tree:collapse_pending(), "a shown change is no longer pending")
+  -- A mounted View publishes after the change applies; until then it still presents the old Frame.
+  t:patch_table(tree, "frame", function()
+    return before
+  end)
+  t.assert_true(tree:collapse_pending(), "an applied but unpublished change is pending")
+  tree:_published(tree.state:snapshot())
+  t.assert_false(tree:collapse_pending(), "after publication, later lag is unrelated to the change")
+  t.assert_eq(0, #errors, vim.inspect(errors))
+end)
+
+t:test("ready settles when a publication that leaves the mounted Frame unchanged finishes", function()
+  local tree = fixture()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
+  end)
+  tree:mount(winnr, bufnr, function() end)
+  local request = { mode = "tree", rootuuid = "root" }
+  await(tree:publish(request))
+  await(tree:ready())
+  local release ---@type fun(value: any)|nil
+  local display = tree._display
+  t:patch_table(tree, "_display", function(self, ...)
+    local deferred, resolve = stl.c.Future.new_with_resolver()
+    release = resolve
+    local args = { ... }
+    return deferred:then_(function()
+      return display(self, unpack(args))
+    end)
+  end)
+  local publication = tree:publish(request)
+  t.wait_until(function()
+    return release ~= nil
+  end, 5000)
+  local ready = tree:ready()
+  -- Let the idle poll loop stop, so only the drain itself can settle the waiter.
+  vim.wait(100)
+  t.assert_false(ready:is_done(), "ready waits for the publication")
+  assert(release)()
+  await(publication)
+  t.wait_until(function()
+    return ready:is_done()
+  end, 2000, "ready must settle once the publication finishes")
+  t.assert_eq("Applied", ready:get_result().kind)
+end)
+
 t:test("sparse presentation columns preserve defaults across import chunks and later updates", function()
   local source = Source.new("root", { label = "root" })
   local special = { ["1"] = true, ["513"] = true }

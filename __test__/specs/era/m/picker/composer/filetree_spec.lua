@@ -126,10 +126,12 @@ end)
 ---@param desc                          string
 ---@return fun()
 local function retrieve_action(composer, desc)
-  for _, keymap in ipairs(composer.result.keymaps) do
-    if keymap.desc == desc then
-      ---@diagnostic disable-next-line: return-type-mismatch
-      return keymap.callback
+  for _, keymaps in ipairs({ composer.result.keymaps, composer.finder.keymaps }) do
+    for _, keymap in ipairs(keymaps) do
+      if keymap.desc == desc then
+        ---@diagnostic disable-next-line: return-type-mismatch
+        return keymap.callback
+      end
     end
   end
   error("Cannot retrieve action: " .. desc)
@@ -808,6 +810,43 @@ t:test("Enter opens a plain file and waits for an immediately preceding Tab", fu
     end, 5000)
     t.assert_eq(1, #paths)
     t.assert_eq("/workspace/one.lua", paths[1], "Tab selection wins over the next cursor row")
+  end)
+end)
+
+t:test("expansion actions typed ahead act on the tree their earlier actions produce", function()
+  with_composer("typeahead-expansion", function(composer)
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
+    composer:reset_filepaths("/workspace", { "src/one.lua", "src/two.lua" }, false)
+    composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
+      row = 0,
+      col = 0,
+      width = 60,
+      height = 8,
+    })
+    local tree = composer._treeview
+    native.await(tree:ready())
+    local errors = {} ---@type table[]
+    t:patch_table(stl.reporter, "error", function(value)
+      errors[#errors + 1] = value
+    end)
+    local src = require("era.view.result_paths").key("/workspace/src")
+    local open, collapse = retrieve_action(composer, "filetree: open"), retrieve_action(composer, "filetree: collapse")
+    composer.result.lnum_current:next(tree:retrieve_lnum(src), { silent = true })
+    for _, case in ipairs({
+      { name = "collapse+open", actions = { collapse, open }, expanded = true },
+      { name = "collapse", actions = { collapse }, expanded = false },
+      { name = "open+collapse", actions = { open, collapse }, expanded = false },
+      { name = "open+collapse+open", actions = { open, collapse, open }, expanded = true },
+    }) do
+      for _, action in ipairs(case.actions) do
+        action()
+      end
+      t.wait_until(function()
+        return not tree:collapse_pending() and tree:expanded(src) == case.expanded
+      end, 5000, case.name .. " must leave src " .. (case.expanded and "expanded" or "collapsed"))
+      native.await(tree:ready())
+    end
+    t.assert_eq(0, #errors, vim.inspect(errors))
   end)
 end)
 

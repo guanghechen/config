@@ -74,9 +74,11 @@ end
 ---@param description                   string
 ---@return fun(): nil
 local function action(composer, description)
-  for _, keymap in ipairs(composer.result.keymaps) do
-    if keymap.desc == description then
-      return keymap.callback
+  for _, keymaps in ipairs({ composer.result.keymaps, composer.finder.keymaps }) do
+    for _, keymap in ipairs(keymaps) do
+      if keymap.desc == description then
+        return keymap.callback
+      end
     end
   end
   error("missing action: " .. description)
@@ -245,6 +247,34 @@ t:test("parent attachment uses the displayed root ancestry after a pending root 
   action(composer, "searcher: change root to parent")()
   t.assert_eq(Paths.key(root), composer._uuid_root)
   t.assert_true(vim.deep_equal({ root }, attached))
+end)
+
+t:test("expansion actions typed ahead act on the tree their earlier actions produce", function()
+  local composer = fixture()
+  local tree = composer._treeview
+  local errors = {} ---@type table[]
+  t:patch_table(stl.reporter, "error", function(value)
+    errors[#errors + 1] = value
+  end)
+  local dir = Paths.key(root .. "/dir")
+  local open, collapse = action(composer, "searcher: open"), action(composer, "searcher: collapse")
+  composer.result:set_lnum_current(tree:retrieve_lnum(dir))
+  native.await(tree:ready())
+  for _, case in ipairs({
+    { name = "collapse+open", actions = { collapse, open }, expanded = true },
+    { name = "collapse", actions = { collapse }, expanded = false },
+    { name = "open+collapse", actions = { open, collapse }, expanded = false },
+    { name = "open+collapse+open", actions = { open, collapse, open }, expanded = true },
+  }) do
+    for _, run in ipairs(case.actions) do
+      run()
+    end
+    t.wait_until(function()
+      return not tree:collapse_pending() and tree:expanded(dir) == case.expanded
+    end, 5000, case.name .. " must leave dir " .. (case.expanded and "expanded" or "collapsed"))
+    native.await(tree:ready())
+  end
+  t.assert_eq(0, #errors, vim.inspect(errors))
 end)
 
 t:run()

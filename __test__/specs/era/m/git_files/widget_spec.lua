@@ -193,4 +193,31 @@ t:test("the single-line input survives reopening and closing it closes every pan
   t.assert_false(widget.preview.surface:isvisible())
 end)
 
+t:test("expansion keys typed ahead act on the tree their earlier keys produce", function()
+  local state = fixture()
+  local widget = state.widget
+  local tree = widget.panes.unstaged.tree
+  local dir = Paths.key(state.root .. "/dir")
+  support.cursor(widget, "unstaged", "dir")
+  local winnr = assert(widget.panes.unstaged.result:get_winnr())
+  local row = vim.api.nvim_win_get_cursor(winnr)[1]
+  -- Feeding with "x" runs every key before the event loop can publish the change of an earlier key.
+  for _, case in ipairs({
+    { keys = "hl", expanded = true },
+    { keys = "h", expanded = false },
+    { keys = "lh", expanded = false },
+    { keys = "lhl", expanded = true },
+    { keys = "hlh", expanded = false },
+    { keys = "zh", expanded = false },
+  }) do
+    vim.api.nvim_feedkeys(case.keys, "x", false)
+    t.wait_until(function()
+      return not tree:collapse_pending() and tree:expanded(dir) == case.expanded
+    end, 5000, case.keys .. " must leave dir " .. (case.expanded and "expanded" or "collapsed"))
+    support.ready(widget)
+    t.assert_eq(row, vim.api.nvim_win_get_cursor(winnr)[1], case.keys .. " keeps the cursor on dir")
+  end
+  t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
+end)
+
 t:run()

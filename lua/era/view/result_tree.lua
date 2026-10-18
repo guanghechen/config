@@ -615,10 +615,12 @@ function M:selection_pending()
     and frame:header().selection_revision ~= self.state:status().revisions.selection
 end
 
+---Runs callback after ready() while pending input is not yet visible in the published Frame.
+---@param pending                       fun(tree: era.view.ResultTree): boolean
 ---@param callback                      fun(): nil
----@return boolean
-function M:after_selection(callback)
-  if not self:selection_pending() then
+---@return boolean deferred
+function M:_after(pending, callback)
+  if not pending(self) then
     return false
   end
   self
@@ -635,6 +637,12 @@ function M:after_selection(callback)
       end
     end)
   return true
+end
+
+---@param callback                      fun(): nil
+---@return boolean
+function M:after_selection(callback)
+  return self:_after(M.selection_pending, callback)
 end
 
 ---@return nil
@@ -718,6 +726,9 @@ function M:collapse(key, action, recursive, frame)
   frame = frame or self:frame()
   local id = frame and frame:source():id(key)
   if id and self.state then
+    -- Until the worker applies this change, the current Frame still matches the state revision,
+    -- so ready() must wait for the change itself.
+    self._collapse_busy = (self._collapse_busy or 0) + 1
     self.state
       :dispatch({
         kind = action == "toggle" and "toggle_expanded" or "set_expanded",
@@ -727,10 +738,35 @@ function M:collapse(key, action, recursive, frame)
         recursive = recursive == true,
       }, { frame = frame })
       :map(checked)
-      :catch(function(error)
-        self:_error(error)
+      :finally(function(ok, result)
+        self._collapse_busy = math.max(0, (self._collapse_busy or 0) - 1)
+        if not ok then
+          self:_error(result)
+        elseif result.kind == "Applied" then
+          self._collapse_unpublished = true
+        end
       end)
   end
+end
+
+---An expansion change stays pending from submission until the published Frame shows it.
+---@return boolean
+function M:collapse_pending()
+  if (self._collapse_busy or 0) > 0 then
+    return true
+  end
+  local frame = self:frame()
+  return self._collapse_unpublished == true
+    and self.state ~= nil
+    and frame ~= nil
+    and frame:header().state_revision ~= self.state:status().revisions.state
+end
+
+---Input typed ahead of an expansion change decides on the tree that change produces.
+---@param callback                      fun(): nil
+---@return boolean
+function M:after_collapse(callback)
+  return self:_after(M.collapse_pending, callback)
 end
 
 ---@param key                           string
@@ -1227,6 +1263,8 @@ function M:_drain()
         self:_fail(error)
         request.resolve({ kind = "Rejected", error = error })
       end
+      -- _published ran while this drain was still busy, and an unchanged Frame prepares nothing that would poll again.
+      self:_settle_ready()
       if self._request and not self._disposed then
         vim.schedule(function()
           if not self._disposed and not self._busy then
@@ -1434,6 +1472,14 @@ end
 ---@return nil
 function M:_published(frame)
   self:_prune_versions(frame)
+  if
+    self._collapse_unpublished
+    and frame
+    and self.state
+    and frame:header().state_revision == self.state:status().revisions.state
+  then
+    self._collapse_unpublished = nil
+  end
   local waiting = self._waiting
   local presented = not self.view or self.view:is_suspended() or not self.view:status().preparing
   if waiting and frame and presented and not self:selection_pending() and self.state._native:applicable(frame) then
@@ -1462,6 +1508,7 @@ function M:_settle_ready()
     or self._busy
     or self._request
     or self._command_busy
+    or (self._collapse_busy or 0) > 0
     or self._focus
     or self.view and not self.view:is_suspended() and self.view:status().preparing
     or self:selection_pending()

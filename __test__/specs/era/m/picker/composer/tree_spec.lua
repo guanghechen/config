@@ -180,6 +180,40 @@ t:test("TreeComposer hide captures native Visual rows and rejects a desynced sur
   t.assert_true(pcall(composer.__toggle_node__, composer, "two", false, false))
 end)
 
+t:test("expansion actions typed ahead act on the tree their earlier actions produce", function()
+  local composer = action_fixture("typeahead-symbols")
+  local tree = composer._treeview
+  composer:insert(composer._tree.root, "scope", { name = "scope" })
+  composer:insert("scope", "one", { name = "one" })
+  composer:insert("scope", "two", { name = "two" })
+  tree:insert("scope", { nodetype = "container" })
+  tree:insert("one", { nodetype = "leaf" })
+  tree:insert("two", { nodetype = "leaf" })
+  mount(composer)
+  local errors = {} ---@type table[]
+  t:patch_table(stl.reporter, "error", function(value)
+    errors[#errors + 1] = value
+  end)
+  local open, collapse = action(composer, "tree: open"), action(composer, "tree: collapse")
+  composer.result:set_lnum_current(tree:retrieve_lnum("scope"))
+  native.await(tree:ready())
+  for _, case in ipairs({
+    { name = "collapse+open", actions = { collapse, open }, expanded = true },
+    { name = "collapse", actions = { collapse }, expanded = false },
+    { name = "open+collapse", actions = { open, collapse }, expanded = false },
+    { name = "open+collapse+open", actions = { open, collapse, open }, expanded = true },
+  }) do
+    for _, run in ipairs(case.actions) do
+      run()
+    end
+    t.wait_until(function()
+      return not tree:collapse_pending() and tree:expanded("scope") == case.expanded
+    end, 5000, case.name .. " must leave scope " .. (case.expanded and "expanded" or "collapsed"))
+    native.await(tree:ready())
+  end
+  t.assert_eq(0, #errors, vim.inspect(errors))
+end)
+
 t:test("a subtree with deep LSP identities hides completely across the native byte boundary", function()
   local composer = action_fixture("deep-symbol-identities")
   local tree, source = composer._treeview, composer._tree

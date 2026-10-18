@@ -585,21 +585,17 @@ function M.new(props)
 
   for key, action in pairs(actions) do
     if key ~= "toggle_selection" then
-      actions[key] = function()
+      -- A deferred action checks again: an action deferred before it may have submitted a new change.
+      local function gated()
         if self._disposed then
           return
         end
-        if
-          treeview:after_selection(function()
-            if not self._disposed then
-              action()
-            end
-          end)
-        then
+        if treeview:after_selection(gated) or treeview:after_collapse(gated) then
           return
         end
         action()
       end
+      actions[key] = gated
     end
   end
 

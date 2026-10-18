@@ -50,6 +50,26 @@ end
 ---@param widget                        era.m.git_files.Widget
 ---@return stl.t.IKeymap[]
 function M.tree(widget)
+  -- Expansion keys typed ahead decide on the tree their earlier keys produce, in typing order.
+  ---@param callback                    fun(): nil
+  ---@return fun(): nil
+  local function after_expansion(callback)
+    local function gated()
+      local pane = widget:current()
+      if
+        pane.tree:after_collapse(function()
+          if pane.result:isfocused() then
+            gated()
+          end
+        end)
+      then
+        return
+      end
+      callback()
+    end
+    return gated
+  end
+
   ---@type stl.t.IKeymap[]
   local keys = {
     {
@@ -80,25 +100,25 @@ function M.tree(widget)
       modes = { "n" },
       key = "<CR>",
       desc = "Git Files: expand or open",
-      callback = function()
+      callback = after_expansion(function()
         widget:activate()
-      end,
+      end),
     },
     {
       modes = { "n" },
       key = "l",
       desc = "Git Files: expand or open",
-      callback = function()
+      callback = after_expansion(function()
         widget:activate()
-      end,
+      end),
     },
     {
       modes = { "n" },
       key = "h",
       desc = "Git Files: collapse or parent",
-      callback = function()
+      callback = after_expansion(function()
         widget:collapse()
-      end,
+      end),
     },
     {
       modes = { "n", "x" },
@@ -141,23 +161,23 @@ function M.tree(widget)
       modes = { "n" },
       key = "z",
       desc = "Git Files: recursive expansion",
-      callback = function()
+      callback = after_expansion(function()
         local pane, key = widget:current()
         if key then
           pane.tree:collapse(key, "toggle", true)
         end
-      end,
+      end),
     },
     {
       modes = { "n" },
       key = "W",
       desc = "Git Files: collapse all",
-      callback = function()
+      callback = after_expansion(function()
         local pane = widget:current()
         if pane.tree.root then
           pane.tree:collapse(pane.tree.root, "collapse", true)
         end
-      end,
+      end),
     },
     {
       modes = { "n" },
