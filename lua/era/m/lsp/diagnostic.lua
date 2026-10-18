@@ -182,17 +182,52 @@ end
 ---@type stl.timer.IDisposableCallable
 local refresh_debounced = stl.timer.debounce(do_refresh_pending, DEBOUNCE_MS)
 
+-- Normalized names of buffers with counts, computed again whenever a buffer's name changes.
+local bufpath_keys = {} ---@type table<integer, { name: string, key: string }>
+
+---@param bufnr                          integer
+---@return string
+local function bufpath_key(bufnr)
+  local name = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local cached = bufpath_keys[bufnr]
+  if cached == nil or cached.name ~= name then
+    cached = { name = name, key = stl.nvim.buf.normalize_bufpath(name) }
+    bufpath_keys[bufnr] = cached
+  end
+  return cached.key
+end
+
+-- Only buffers with counts render anything, so a path is compared with their current names alone rather
+-- than located among every buffer, which result lists do for each of their files.
+---@param filepath                       string
+---@return era.m.lsp.diagnostic.IBufferDiagnostics|nil
+local function find_counted(filepath)
+  -- Windows names also match case-insensitively, so several buffers can match; the full lookup decides.
+  if stl.env.IS_WIN then
+    local bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
+    return bufnr ~= nil and M._buffers[bufnr] or nil
+  end
+
+  local key = stl.nvim.buf.normalize_bufpath(filepath) ---@type string
+  if key == "" then
+    return nil
+  end
+  for bufnr, data in pairs(M._buffers) do
+    if data.error + data.warn + data.hint + data.info > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+      if bufpath_key(bufnr) == key then
+        return data
+      end
+    end
+  end
+  return nil
+end
+
 ---@param filepath                       string
 ---@param offset                         integer
 ---@param highlights                     stl.t.IHighlightInline[]
 ---@return string
 function M.render(filepath, offset, highlights)
-  local bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
-  if bufnr == nil or bufnr < 1 then
-    return ""
-  end
-
-  local data = M._buffers[bufnr] ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
+  local data = find_counted(filepath) ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
   if data == nil then
     return ""
   end
@@ -318,6 +353,7 @@ function M.setup()
     callback = function(args)
       local bufnr = args.buf ---@type integer
       pending_bufnrs[bufnr] = nil
+      bufpath_keys[bufnr] = nil
       local changed = apply_buffer(bufnr, nil) ---@type boolean
       local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
       if subscribers ~= nil then

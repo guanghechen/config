@@ -187,6 +187,12 @@ function M.lookup_bufnr(filepath_to_bufnr_map, filepath)
   end
 end
 
+---@param filepath                      string|nil
+---@return string                       The key a buffer name is located by; "" for an empty name
+function M.normalize_bufpath(filepath)
+  return normalize_bufpath(filepath)
+end
+
 ---@param filepath                      string
 ---@return integer|nil
 function M.locate_bufnr(filepath)
