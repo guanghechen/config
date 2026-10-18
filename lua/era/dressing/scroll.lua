@@ -6,6 +6,7 @@ local SCROLL_UP = vim.api.nvim_replace_termcodes("<C-y>", true, true, true)
 local SCROLL_DOWN = vim.api.nvim_replace_termcodes("<C-e>", true, true, true)
 local MOUSE_SCROLL_DOWN = vim.api.nvim_replace_termcodes("<ScrollWheelDown>", true, true, true)
 local MOUSE_SCROLL_UP = vim.api.nvim_replace_termcodes("<ScrollWheelUp>", true, true, true)
+local IGNORE = vim.api.nvim_replace_termcodes("<Ignore>", true, true, true)
 
 ---@class era.dressing.scroll.IState
 ---@field public winnr                  integer
@@ -327,11 +328,10 @@ local function check_scroll(winnr)
           vim.cmd(("keepjumps normal! %dH%d|"):format(move_target, virtcol + 1))
         end
 
+        -- <Ignore> takes a count and does nothing else, where zh would scroll a nowrap window. A leading 0
+        -- would be the motion to the first column rather than a count.
         if vim.v.count ~= count then
-          local cursor = vim.api.nvim_win_get_cursor(state.winnr) ---@type integer[]
-          -- A leading 0 would be the motion to the first column rather than a count.
-          vim.cmd(count > 0 and ("keepjumps normal! %dzh"):format(count) or "keepjumps normal! zh")
-          vim.api.nvim_win_set_cursor(state.winnr, cursor)
+          vim.cmd("keepjumps normal! " .. (count > 0 and count or "") .. IGNORE)
         end
 
         if progress >= 1 then

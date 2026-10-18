@@ -446,34 +446,36 @@ t:test("a frame keeps the cursor off the part of a smoothscroll topline its view
   end
 end)
 
-t:test("a frame restores a zero count without the motion to the first column", function()
-  local runtime = setup()
-  local v, reads = vim.v, 0
-  -- Each frame reads the count before its commands, which leave a count of 2, and after them.
-  t:patch_table(
-    vim,
-    "v",
-    setmetatable({}, {
-      __index = function(_, key)
-        if key == "count" then
-          reads = reads + 1
-          return reads % 2 == 1 and 0 or 2
-        end
-        return v[key]
-      end,
-    })
-  )
-  t:patch_table(vim.api, "nvim_win_get_cursor", function()
-    return { runtime.view.lnum, runtime.view.col }
-  end)
-  runtime.view.lnum = 100
-  runtime.view.topline = 100
-  runtime.check_scroll(1)
-  local commands = finish_animation(runtime, vim.deepcopy(runtime.view)).commands
+t:test("a frame restores the count without scrolling sideways or the motion to the first column", function()
+  local ignore = vim.keycode("<Ignore>")
+  for _, count in ipairs({ 0, 3 }) do
+    local runtime = setup()
+    local v, reads = vim.v, 0
+    -- Each frame reads the count before its commands, which leave a count of 2, and after them.
+    t:patch_table(
+      vim,
+      "v",
+      setmetatable({}, {
+        __index = function(_, key)
+          if key == "count" then
+            reads = reads + 1
+            return reads % 2 == 1 and count or 2
+          end
+          return v[key]
+        end,
+      })
+    )
+    runtime.view.lnum = 100
+    runtime.view.topline = 100
+    runtime.check_scroll(1)
+    local commands = finish_animation(runtime, vim.deepcopy(runtime.view)).commands
 
-  t.assert_true(vim.list_contains(commands, "keepjumps normal! zh"), vim.inspect(commands))
-  for _, command in ipairs(commands) do
-    t.assert_nil(command:match("normal! 0"), "a count of 0 runs the 0 motion: " .. command)
+    local restore = "keepjumps normal! " .. (count > 0 and count or "") .. ignore
+    t.assert_true(vim.list_contains(commands, restore), vim.inspect(commands))
+    for _, command in ipairs(commands) do
+      t.assert_nil(command:match("normal! 0"), "a count of 0 runs the 0 motion: " .. command)
+      t.assert_nil(command:match("z[hl]"), "a frame scrolls a nowrap window sideways: " .. command)
+    end
   end
 end)
 
