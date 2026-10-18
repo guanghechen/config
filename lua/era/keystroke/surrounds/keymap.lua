@@ -106,7 +106,7 @@ local function detach(bufnr)
   for _, attached in ipairs(attachments[bufnr] or {}) do
     local current = get_keymap(bufnr, attached.mode, attached.key) ---@type table|nil
     if current ~= nil and get_keymap_identity(current) == attached.identity then
-      pcall(vim.keymap.del, attached.mode, attached.key, { buffer = bufnr })
+      pcall(vim.keymap.del, attached.mode, attached.key, { buf = bufnr })
     end
   end
   attachments[bufnr] = nil

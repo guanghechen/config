@@ -193,7 +193,7 @@ function M.dressing(bufnr)
 
   vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "ModeChanged" }, {
     group = augroup,
-    buffer = bufnr,
+    buf = bufnr,
     callback = function(ev)
       -- A completion menu switches between Insert submodes (i, ic) on every update.
       if ev.event == "ModeChanged" and ev.match:find("^i[^:]*:i") then
@@ -205,7 +205,7 @@ function M.dressing(bufnr)
 
   vim.api.nvim_create_autocmd("BufDelete", {
     group = augroup,
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       attached_buffers[bufnr] = nil
     end,
@@ -220,7 +220,7 @@ function M.undressing(bufnr)
   vim.lsp.buf.clear_references()
   vim.api.nvim_clear_autocmds({
     group = augroup,
-    buffer = bufnr,
+    buf = bufnr,
   })
 end
 

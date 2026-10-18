@@ -38,7 +38,7 @@ function M.leave_on_success(future)
   current_owner = owner
 
   owner.autocmd_id = vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged", "BufLeave", "WinLeave" }, {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       owner.valid = false
       if current_owner == owner then

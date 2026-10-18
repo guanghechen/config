@@ -139,7 +139,7 @@ function M.apply(bufnr, plan, owner, on_frame, on_attach)
   owner = owner or bufnr and owners[bufnr] or M.new()
   if bufnr and not owners[bufnr] then
     vim.api.nvim_create_autocmd("BufWipeout", {
-      buffer = bufnr,
+      buf = bufnr,
       once = true,
       callback = function()
         owners[bufnr] = nil

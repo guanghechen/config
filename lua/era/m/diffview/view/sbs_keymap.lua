@@ -84,7 +84,7 @@ function M.setup(keymaps, bufnr, resolve)
       vim.keymap.set(mode, plug, function()
         M.dispatch(resolve, mode, canonical_key)
       end, {
-        buffer = bufnr,
+        buf = bufnr,
         silent = true,
       })
 
@@ -95,7 +95,7 @@ function M.setup(keymaps, bufnr, resolve)
           end
           return key
         end, {
-          buffer = bufnr,
+          buf = bufnr,
           desc = description,
           expr = true,
           nowait = true,

@@ -271,7 +271,7 @@ function M:__setup_keymaps__()
     end
     for _, key in ipairs(keys) do
       vim.keymap.set(keymap.modes, key, keymap.callback, {
-        buffer = bufnr,
+        buf = bufnr,
         nowait = true,
         desc = keymap.desc,
       })

@@ -752,7 +752,7 @@ function M:__create_finder_buffer_as_needed__()
   vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       local raw_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
       local content = table.concat(raw_lines, "\n") ---@type string
@@ -795,7 +795,7 @@ function M:__create_replacer_buffer_as_needed__()
   vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       local raw_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
       local content = table.concat(raw_lines, "\n") ---@type string
@@ -1583,7 +1583,7 @@ function M:__setup_source_keymaps__(bufnr)
     return
   end
 
-  local keymap_opts = { buffer = bufnr, noremap = true, silent = true }
+  local keymap_opts = { buf = bufnr, noremap = true, silent = true }
 
   vim.keymap.set("n", "n", function()
     local current_win = vim.api.nvim_get_current_win() ---@type integer
@@ -1628,8 +1628,8 @@ function M:__cleanup_source_keymaps__(bufnr)
     return
   end
 
-  pcall(vim.keymap.del, "n", "n", { buffer = bufnr })
-  pcall(vim.keymap.del, "n", "N", { buffer = bufnr })
+  pcall(vim.keymap.del, "n", "n", { buf = bufnr })
+  pcall(vim.keymap.del, "n", "N", { buf = bufnr })
 end
 
 return M

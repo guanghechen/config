@@ -964,7 +964,7 @@ function M:__ensure_markdown_features__(bufnr, winnr)
 
   if not vim.b[bufnr][BUFFER_FILETYPE_DONE_VAR] then
     vim.b[bufnr][BUFFER_FILETYPE_DONE_VAR] = true
-    vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
+    vim.api.nvim_exec_autocmds("FileType", { buf = bufnr })
   end
 
   if vim.treesitter == nil or vim.treesitter.start == nil then
@@ -991,7 +991,7 @@ function M:__attach_autocmds__(bufnr)
 
   for _, event in ipairs(TEXT_CHANGED_EVENTS) do
     local id = vim.api.nvim_create_autocmd(event, {
-      buffer = bufnr,
+      buf = bufnr,
       callback = function()
         self:__on_text_changed__()
       end,
@@ -1000,7 +1000,7 @@ function M:__attach_autocmds__(bufnr)
   end
 
   local wipe_id = vim.api.nvim_create_autocmd("BufWipeout", {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       if self._bufnr == bufnr then
         self._bufnr = nil

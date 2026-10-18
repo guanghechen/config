@@ -566,7 +566,7 @@ function M.attach(bufnr)
     local group = vim.api.nvim_create_augroup(__module_name__ .. ".doc." .. bufnr, { clear = true })
     vim.api.nvim_create_autocmd({ "CursorMoved" }, {
       group = group,
-      buffer = bufnr,
+      buf = bufnr,
       callback = vim.schedule_wrap(M.hover),
     })
     vim.schedule(M.hover)

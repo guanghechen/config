@@ -58,7 +58,7 @@ local function unbind(id)
     local keymap = find_keymap(vim.api.nvim_buf_get_keymap(trigger.bufnr, trigger.mode), trigger.trigger_key)
     -- Buffer owners can replace a trigger after attachment; only remove our own callback.
     if keymap and keymap.callback == trigger.callback then
-      vim.keymap.del(trigger.mode, trigger.trigger_key, { buffer = trigger.bufnr })
+      vim.keymap.del(trigger.mode, trigger.trigger_key, { buf = trigger.bufnr })
     end
   end
   M.triggers[id] = nil
@@ -197,7 +197,7 @@ function M.__bind__(bufnr, mode, trigger_key, tree_key, mapped)
     M.__start__(bufnr, mode, tree_key)
   end
   vim.keymap.set(mode, trigger_key, callback, {
-    buffer = bufnr,
+    buf = bufnr,
     nowait = true,
     desc = "wk-trigger",
   })

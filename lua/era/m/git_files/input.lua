@@ -89,7 +89,7 @@ function M:show(dimension, border)
     stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
     self:set_content(self._value)
     vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "TextChangedP" }, {
-      buffer = bufnr,
+      buf = bufnr,
       callback = function()
         self:sync()
       end,

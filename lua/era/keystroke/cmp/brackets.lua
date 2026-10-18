@@ -178,7 +178,7 @@ function M.watch(context, client_id, callback)
   end
 
   autocmd =
-    vim.api.nvim_create_autocmd("LspTokenUpdate", { buffer = context.bufnr, callback = vim.schedule_wrap(inspect) })
+    vim.api.nvim_create_autocmd("LspTokenUpdate", { buf = context.bufnr, callback = vim.schedule_wrap(inspect) })
   timer:start(400, 0, vim.schedule_wrap(cancel))
   inspect()
   if not done then

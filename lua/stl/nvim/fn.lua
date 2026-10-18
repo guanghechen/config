@@ -89,7 +89,7 @@ function M.bindkeys(keymaps, keymap_override)
 
       ---@type vim.keymap.set.Opts
       local opts = {
-        buffer = bufnr,
+        buf = bufnr,
         nowait = nowait,
         remap = noremap == false,
         silent = silent,

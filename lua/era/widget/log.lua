@@ -61,8 +61,8 @@ local function show_json_preview(content)
 
   -- Trigger LSP and TreeSitter attachment
   vim.schedule(function()
-    vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
-    vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr })
+    vim.api.nvim_exec_autocmds("FileType", { buf = bufnr })
+    vim.api.nvim_exec_autocmds("BufRead", { buf = bufnr })
   end)
 
   local editor_width = vim.o.columns
@@ -114,7 +114,7 @@ local function show_json_preview(content)
   }
 
   for _, keymap in ipairs(keymaps) do
-    vim.keymap.set(keymap[1], keymap[2], keymap[3], vim.tbl_extend("force", keymap[4] or {}, { buffer = bufnr }))
+    vim.keymap.set(keymap[1], keymap[2], keymap[3], vim.tbl_extend("force", keymap[4] or {}, { buf = bufnr }))
   end
 
   -- Format the JSON content using conform.nvim

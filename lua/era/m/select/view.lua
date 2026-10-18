@@ -299,7 +299,7 @@ function M.open(props)
   stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.api.nvim_create_autocmd("BufLeave", {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       focus_revoked = true
       clear_focus_watch()
@@ -308,7 +308,7 @@ function M.open(props)
   })
 
   vim.api.nvim_create_autocmd("CursorMoved", {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       if disposed then
         return

@@ -103,7 +103,7 @@ function M.new(bufnr, src, opts)
   if self.opts.auto_resize then
     vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter", "BufWinLeave", "BufEnter" }, {
       group = self.augroup,
-      buffer = self.bufnr,
+      buf = self.bufnr,
       callback = function()
         vim.schedule(function()
           self:update()

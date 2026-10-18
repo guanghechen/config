@@ -56,8 +56,8 @@ function M.loadfile(filepath)
     end
 
     vim.api.nvim_set_option_value("swapfile", vim.o.swapfile, { buf = bufnr })
-    -- vim.api.nvim_exec_autocmds("FileReadPost", { buffer = bufnr })
-    -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = bufnr })
+    -- vim.api.nvim_exec_autocmds("FileReadPost", { buf = bufnr })
+    -- vim.api.nvim_exec_autocmds("BufReadPost", { buf = bufnr })
     return bufnr
   end
 end

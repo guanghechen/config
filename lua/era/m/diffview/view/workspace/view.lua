@@ -145,7 +145,7 @@ end
 local function create_changes_buffer(changes, stage_type)
   local bufnr = pane_changes.create_buffer(stage_type) ---@type integer
   vim.api.nvim_create_autocmd("WinEnter", {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       changes.last_focused_stage_type = stage_type
     end,

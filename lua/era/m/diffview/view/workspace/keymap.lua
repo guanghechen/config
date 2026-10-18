@@ -163,7 +163,7 @@ local function apply_keymaps(bufnr, keymaps)
   for _, km in ipairs(keymaps) do
     for _, mode in ipairs(km.modes) do
       vim.keymap.set(mode, km.key, km.callback, {
-        buffer = bufnr,
+        buf = bufnr,
         desc = km.desc,
         nowait = true,
         silent = true,
@@ -171,7 +171,7 @@ local function apply_keymaps(bufnr, keymaps)
       if km.aliases then
         for _, alias in ipairs(km.aliases) do
           vim.keymap.set(mode, alias, km.callback, {
-            buffer = bufnr,
+            buf = bufnr,
             desc = km.desc,
             nowait = true,
             silent = true,

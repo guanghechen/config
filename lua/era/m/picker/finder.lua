@@ -147,7 +147,7 @@ function M:create_buf()
   self:__set_prompt__(bufnr)
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
 

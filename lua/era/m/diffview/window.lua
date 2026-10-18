@@ -72,7 +72,7 @@ function M.save_winopts(bufnr, winnr)
 
   -- Clean up store entry when buffer is wiped out to prevent memory leak
   vim.api.nvim_create_autocmd("BufWipeout", {
-    buffer = bufnr,
+    buf = bufnr,
     once = true,
     callback = function()
       M.winopts_store[bufnr] = nil

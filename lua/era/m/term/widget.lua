@@ -481,7 +481,7 @@ function M.__create_buf_as_needed__(termmeta)
   end
 
   vim.api.nvim_create_autocmd("TermClose", {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       vim.schedule(function()
         local _, _termmeta = era.m.term.state.indexof_by_bufnr(bufnr)

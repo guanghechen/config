@@ -54,7 +54,7 @@ local function create_buf(termmeta)
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   vim.api.nvim_create_autocmd("TermClose", {
-    buffer = bufnr,
+    buf = bufnr,
     callback = function()
       vim.schedule(function()
         M.on_closed(termmeta)

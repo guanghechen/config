@@ -1531,12 +1531,12 @@ function M.__show_commit_popup__(abbrev_hash, lines, anchor)
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
     end
-  end, { buffer = bufnr, nowait = true })
+  end, { buf = bufnr, nowait = true })
   vim.keymap.set("n", "<Esc>", function()
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
     end
-  end, { buffer = bufnr, nowait = true })
+  end, { buf = bufnr, nowait = true })
 end
 
 return M

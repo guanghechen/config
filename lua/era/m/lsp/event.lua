@@ -248,7 +248,7 @@ function M.rename_buf(from, to)
       -- Same-language moves can cross project roots; only rerun LSP config selection.
       for _, autocmd in ipairs(vim.api.nvim_get_autocmds({ event = "FileType" })) do
         if autocmd.group_name == "nvim.lsp.enable" then
-          vim.api.nvim_exec_autocmds("FileType", { group = autocmd.group, buffer = from_bufnr, modeline = false })
+          vim.api.nvim_exec_autocmds("FileType", { group = autocmd.group, buf = from_bufnr, modeline = false })
           break
         end
       end
@@ -256,7 +256,7 @@ function M.rename_buf(from, to)
 
     -- Neovim's buffer-level save callback captures the original URI and survives client detach.
     -- Replace only that callback; resolve the URI at save time, including after later renames.
-    for _, autocmd in ipairs(vim.api.nvim_get_autocmds({ event = "BufWritePre", buffer = from_bufnr })) do
+    for _, autocmd in ipairs(vim.api.nvim_get_autocmds({ event = "BufWritePre", buf = from_bufnr })) do
       if
         autocmd.group_name == string.format("nvim.lsp.b_%d_save", from_bufnr)
         and autocmd.desc == "vim.lsp: textDocument/willSave"
@@ -264,7 +264,7 @@ function M.rename_buf(from, to)
         vim.api.nvim_del_autocmd(autocmd.id)
         vim.api.nvim_create_autocmd("BufWritePre", {
           group = autocmd.group,
-          buffer = from_bufnr,
+          buf = from_bufnr,
           desc = "era.m.lsp: willSave with current URI",
           callback = function(event)
             local params = {
@@ -365,7 +365,7 @@ end
 ---@return nil
 local function unbind_keymaps(bound, bufnr)
   for _, keymap in pairs(bound) do
-    pcall(vim.keymap.del, keymap.mode, keymap.key, { buffer = bufnr })
+    pcall(vim.keymap.del, keymap.mode, keymap.key, { buf = bufnr })
   end
 end
 

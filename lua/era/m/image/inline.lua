@@ -41,12 +41,12 @@ function M.new(bufnr, document)
 
   vim.api.nvim_create_autocmd({ "BufWritePost", "WinScrolled", "BufWinEnter" }, {
     group = self._augroup,
-    buffer = bufnr,
+    buf = bufnr,
     callback = vim.schedule_wrap(update),
   })
   vim.api.nvim_create_autocmd({ "ModeChanged", "CursorMoved" }, {
     group = self._augroup,
-    buffer = bufnr,
+    buf = bufnr,
     callback = function(ev)
       if ev.buf == self.bufnr and ev.buf == vim.api.nvim_get_current_buf() then
         self:conceal()
