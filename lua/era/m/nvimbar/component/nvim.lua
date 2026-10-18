@@ -274,8 +274,14 @@ function M.pid(position)
 
     refresh = function(context)
       local bufnr = context.bufnr ---@type integer
-      local pid = vim.b[bufnr].terminal_job_pid ---@type integer|nil
-      if pid == nil or pid <= 0 then
+      local channel = vim.api.nvim_get_option_value("channel", { buf = bufnr }) ---@type integer
+      if channel == 0 then
+        return { text = "", hltext = "" }
+      end
+
+      -- The channel of an exited job no longer resolves to a process.
+      local ok, pid = pcall(vim.fn.jobpid, channel)
+      if not ok then
         return { text = "", hltext = "" }
       end
 

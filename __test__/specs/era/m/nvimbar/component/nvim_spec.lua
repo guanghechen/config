@@ -149,4 +149,55 @@ t:test("long search patterns truncate without dropping the count", function()
   t.assert_eq(" S abc… 2/10", text, "truncated search")
 end)
 
+---@param cmd                           string[]
+---@return integer bufnr
+---@return integer channel
+local function open_terminal(cmd)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  local channel = 0 ---@type integer
+  vim.api.nvim_buf_call(bufnr, function()
+    channel = vim.fn.jobstart(cmd, { term = true })
+  end)
+  t.assert_true(channel > 0, "terminal job started")
+  return bufnr, channel
+end
+
+t:test("pid shows the process of a running terminal job", function()
+  local component = setup("").pid("right")
+  local bufnr, channel = open_terminal({ "sleep", "30" })
+  t:defer(function()
+    pcall(vim.fn.jobstop, channel)
+  end)
+
+  ---@diagnostic disable-next-line: missing-fields
+  local text = component.refresh({ bufnr = bufnr }).text ---@type string
+  local suffix = " " .. vim.fn.jobpid(channel) ---@type string
+  t.assert_eq(suffix, text:sub(-#suffix), "running job")
+end)
+
+t:test("pid shows nothing once the terminal job exits", function()
+  local component = setup("").pid("right")
+  local bufnr, channel = open_terminal({ "sh", "-c", "exit 0" })
+  t.assert_eq(0, vim.fn.jobwait({ channel }, 2000)[1], "job exited")
+
+  ---@diagnostic disable-next-line: missing-fields
+  t.assert_eq("", component.refresh({ bufnr = bufnr }).text, "exited job")
+end)
+
+t:test("pid shows nothing for a buffer without a channel", function()
+  local component = setup("").pid("right")
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end)
+
+  ---@diagnostic disable-next-line: missing-fields
+  t.assert_eq("", component.refresh({ bufnr = bufnr }).text, "plain buffer")
+end)
+
 t:run()
