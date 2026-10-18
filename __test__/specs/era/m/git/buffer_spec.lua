@@ -261,10 +261,15 @@ t:test("BufFilePost rebinds Git state without duplicating the buffer listener", 
   t.assert_eq(1, listener_calls.count, "one low-level listener")
 end)
 
-t:test("only an edit that adds or removes lines forces a sign repair", function()
+t:test("only edits that move sign marks force a sign repair", function()
   local Buffer, _, _, _, _, _, listener_calls = setup({ [11] = true })
   local current = assert(Buffer.get_cache(11))
   local on_lines = assert(assert(listener_calls.opts).on_lines)
+  local checked ---@type integer[]|nil
+  t:patch_table(era.m.git.sign, "contains_range", function(_, start_lnum, end_lnum)
+    checked = { start_lnum, end_lnum }
+    return true
+  end)
   current.hunks = {}
   current.force_next_update = false
 
@@ -272,6 +277,11 @@ t:test("only an edit that adds or removes lines forces a sign repair", function(
   t.assert_false(current.force_next_update, "typing within a signed line")
   on_lines("lines", 11, 0, 4, 5, 6)
   t.assert_true(current.force_next_update, "a line added among signs")
+  current.force_next_update = false
+  -- Rewriting lines 15-20 at once keeps their count but moves their marks onto line 21.
+  on_lines("lines", 11, 0, 14, 20, 20)
+  t.assert_true(current.force_next_update, "a same-count rewrite of several signed lines")
+  t.assert_true(vim.deep_equal({ 15, 21 }, checked), "the line below a rewrite holds its moved marks")
 end)
 
 t:test("an async attach cannot publish after the buffer leaves the repository", function()

@@ -463,12 +463,13 @@ local function ensure_buffer_listener(bufnr)
 
       era.m.git.sign.on_lines(buf, last_orig, last_new)
 
-      -- Only an edit that adds or removes lines can move sign marks onto other rows; typing within signed
-      -- lines leaves them in place, so signs follow the hunks alone.
+      -- Adding or removing lines moves sign marks onto other rows, and so does rewriting several lines at
+      -- once, such as a comment toggle or :sort, which moves them just below the rewrite. Typing within one
+      -- line leaves them in place, so signs follow the hunks alone.
       local check_start = first + 1 ---@type integer
-      local check_end = math.max(last_orig, last_new) ---@type integer
+      local check_end = math.max(last_orig, last_new) + 1 ---@type integer
       if
-        last_orig ~= last_new
+        (last_orig ~= last_new or last_orig - first > 1)
         and (buf_cache.hunks or buf_cache.hunks_staged)
         and era.m.git.sign.contains_range(buf, check_start, check_end)
       then
