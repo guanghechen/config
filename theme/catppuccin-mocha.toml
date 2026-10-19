@@ -50,7 +50,7 @@ marker_cut              = { fg = "#F38BA8",     bg = "#F38BA8" }
 marker_marked           = { fg = "#89B4FA", bg = "#89B4FA" }
 marker_selected         = { fg = "#CBA6F7", bg = "#CBA6F7" }
 symlink_target          = { italic = true }
-syntect_theme           = ""
+syntect_theme           = "~/.config/bat/themes/catppuccin-mocha.tmTheme"
 
 [indicator]
 parent                  = { fg = "#BAC2DE", bg = "#181825" }

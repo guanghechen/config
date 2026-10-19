@@ -50,7 +50,7 @@ marker_cut              = { fg = "#a21d49",     bg = "#a21d49" }
 marker_marked           = { fg = "#254e96", bg = "#254e96" }
 marker_selected         = { fg = "#663999", bg = "#663999" }
 symlink_target          = { italic = true }
-syntect_theme           = ""
+syntect_theme           = "~/.config/bat/themes/tokyonight-day.tmTheme"
 
 [indicator]
 parent                  = { fg = "#445270", bg = "#d0d5e3" }

@@ -50,7 +50,7 @@ marker_cut              = { fg = "#8A344D",     bg = "#8A344D" }
 marker_marked           = { fg = "#853C3A",    bg = "#853C3A" }
 marker_selected         = { fg = "#714A12", bg = "#714A12" }
 symlink_target          = { italic = true }
-syntect_theme           = ""
+syntect_theme           = "~/.config/bat/themes/rosepine-dawn.tmTheme"
 
 [indicator]
 parent                  = { fg = "#545064", bg = "#F4EDE8" }
