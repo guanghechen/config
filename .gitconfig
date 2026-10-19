@@ -80,6 +80,9 @@
 [merge]
   conflictstyle= zdiff3
 
+[pager]
+  blame = delta
+
 [pull]
   rebase = false
   ff = only
