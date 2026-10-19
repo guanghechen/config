@@ -46,7 +46,8 @@ gui:
 
 git:
   diffRenderers:
+    # Narrow panels (< 100 columns) use the unified delta layout, matching fzf-git-log.
     - command: >-
-        delta --paging=never --light
+        [ "${COLUMNS:-0}" -lt 100 ] && export DELTA_FEATURES=+unified; delta --paging=never --light
         --line-numbers --hyperlinks
         --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
