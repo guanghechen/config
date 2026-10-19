@@ -98,7 +98,7 @@
         <key>name</key>
         <string>Booleans, constants, numbers</string>
         <key>scope</key>
-        <string>constant.numeric, variable.other.constant, entity.name.constant, constant.language.boolean, constant.language.false, constant.language.true, keyword.other.unit.user-defined, keyword.other.unit.suffix.floating-point</string>
+        <string>constant.numeric, variable.other.constant, entity.name.constant, constant.language.boolean</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -117,15 +117,6 @@
         </dict>
       </dict>
       <dict>
-        <key>scope</key>
-        <string>entity.name.tag.documentation</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#9D0006</string>
-        </dict>
-      </dict>
-      <dict>
         <key>name</key>
         <string>Punctuation</string>
         <key>scope</key>
@@ -138,7 +129,7 @@
       </dict>
       <dict>
         <key>scope</key>
-        <string>entity.name.function, meta.function-call.method, support.function, support.function.misc, variable.function</string>
+        <string>entity.name.function, meta.function-call.method, support.function, variable.function</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -199,7 +190,7 @@
         <key>name</key>
         <string>Types</string>
         <key>scope</key>
-        <string>meta.type, meta.type-alias, support.type, entity.name.type</string>
+        <string>meta.type, support.type, entity.name.type</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -235,15 +226,6 @@
         <string>Built-ins</string>
         <key>scope</key>
         <string>constant.language, support.function.builtin</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#CC241D</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>entity.other.attribute-name.documentation</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -342,61 +324,6 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>C++ extern keyword</string>
-        <key>scope</key>
-        <string>storage.modifier.specifier.extern.cpp</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#9D0006</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>C++ scope resolution</string>
-        <key>scope</key>
-        <string>entity.name.scope-resolution.template.call.cpp, entity.name.scope-resolution.parameter.cpp, entity.name.scope-resolution.cpp, entity.name.scope-resolution.function.definition.cpp</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B57614</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>C++ doc keywords</string>
-        <key>scope</key>
-        <string>storage.type.class.doxygen</string>
-        <key>settings</key>
-        <dict>
-          <key>fontStyle</key>
-          <string/>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>C++ operators</string>
-        <key>scope</key>
-        <string>storage.modifier.reference.cpp</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#3C3836</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>C# Interpolated Strings</string>
-        <key>scope</key>
-        <string>meta.interpolation.cs</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#076678</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>C# xml-style docs</string>
         <key>scope</key>
         <string>comment.block.documentation.cs</string>
@@ -410,7 +337,7 @@
         <key>name</key>
         <string>Classes, reflecting the className color in JSX</string>
         <key>scope</key>
-        <string>source.css entity.other.attribute-name.class.css, entity.other.attribute-name.parent-selector.css punctuation.definition.entity.css</string>
+        <string>source.css entity.other.attribute-name.class.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -419,20 +346,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Operators</string>
-        <key>scope</key>
-        <string>punctuation.separator.operator.css</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#3C3836</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>Pseudo classes</string>
         <key>scope</key>
-        <string>source.css entity.other.attribute-name.pseudo-class</string>
+        <string>source.css entity.other.attribute-name.pseudo-class, entity.other.pseudo-class.css, entity.other.pseudo-element.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -441,7 +357,7 @@
       </dict>
       <dict>
         <key>scope</key>
-        <string>source.css constant.other.unicode-range</string>
+        <string>support.unicode-range.css, support.constant.unicode-range.prefix.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -449,21 +365,10 @@
         </dict>
       </dict>
       <dict>
-        <key>scope</key>
-        <string>source.css variable.parameter.url</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#79740E</string>
-          <key>fontStyle</key>
-          <string/>
-        </dict>
-      </dict>
-      <dict>
         <key>name</key>
         <string>CSS vendored property names</string>
         <key>scope</key>
-        <string>support.type.vendored.property-name</string>
+        <string>support.type.vendor-prefix.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -474,7 +379,7 @@
         <key>name</key>
         <string>Less/SCSS right-hand variables (@/$-prefixed)</string>
         <key>scope</key>
-        <string>source.css meta.property-value variable, source.css meta.property-value variable.other.less, source.css meta.property-value variable.other.less punctuation.definition.variable.less, meta.definition.variable.scss</string>
+        <string>source.css meta.property-value variable, source.css meta.property-value variable.other.less, source.css meta.property-value variable.other.less punctuation.definition.variable.less</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -485,7 +390,7 @@
         <key>name</key>
         <string>CSS variables (--prefixed)</string>
         <key>scope</key>
-        <string>source.css meta.property-list variable, meta.property-list variable.other.less, meta.property-list variable.other.less punctuation.definition.variable.less</string>
+        <string>source.css meta.property-list variable, meta.property-list variable.other.less, meta.property-list variable.other.less punctuation.definition.variable.less, support.type.custom-property.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -494,9 +399,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>CSS Percentage values, styled the same as numbers</string>
+        <string>CSS units, styled the same as numbers</string>
         <key>scope</key>
-        <string>keyword.other.unit.percentage.css</string>
+        <string>keyword.other.unit.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -518,7 +423,7 @@
         <key>name</key>
         <string>JSON/YAML keys, other left-hand assignments</string>
         <key>scope</key>
-        <string>keyword.other.definition.ini, punctuation.support.type.property-name.json, support.type.property-name.json, punctuation.support.type.property-name.toml, support.type.property-name.toml, entity.name.tag.yaml, punctuation.support.type.property-name.yaml, support.type.property-name.yaml</string>
+        <string>entity.name.tag.yaml, entity.name.tag.toml, keyword.name.ini</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -531,7 +436,7 @@
         <key>name</key>
         <string>JSON/YAML constants</string>
         <key>scope</key>
-        <string>constant.language.json, constant.language.yaml</string>
+        <string>constant.language.json, constant.language.boolean.yaml, constant.language.null.yaml</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -542,7 +447,7 @@
         <key>name</key>
         <string>YAML anchors</string>
         <key>scope</key>
-        <string>entity.name.type.anchor.yaml, variable.other.alias.yaml</string>
+        <string>variable.other.alias.yaml, entity.name.other.anchor.yaml</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -555,7 +460,7 @@
         <key>name</key>
         <string>TOML tables / ini groups</string>
         <key>scope</key>
-        <string>support.type.property-name.table, entity.name.section.group-title.ini</string>
+        <string>entity.name.table.toml, entity.section.ini</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -566,7 +471,7 @@
         <key>name</key>
         <string>TOML dates</string>
         <key>scope</key>
-        <string>constant.other.time.datetime.offset.toml</string>
+        <string>constant.other.datetime.toml</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -663,17 +568,6 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>GDScript functions</string>
-        <key>scope</key>
-        <string>support.function.builtin.gdscript</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#79740E</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>GDScript constants</string>
         <key>scope</key>
         <string>constant.language.gdscript</string>
@@ -696,17 +590,6 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>go:embed, go:build, etc.</string>
-        <key>scope</key>
-        <string>comment meta.annotation.parameters.go</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#8F3F71</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>Go constants (nil, true, false)</string>
         <key>scope</key>
         <string>constant.language.go</string>
@@ -718,53 +601,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>GraphQL variables</string>
-        <key>scope</key>
-        <string>variable.graphql</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#076678</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>GraphQL aliases</string>
-        <key>scope</key>
-        <string>string.unquoted.alias.graphql</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B16286</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>GraphQL enum members</string>
-        <key>scope</key>
-        <string>constant.character.enum.graphql</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#8F3F71</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>GraphQL field in types</string>
-        <key>scope</key>
-        <string>meta.objectvalues.graphql constant.object.key.graphql string.unquoted.graphql</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B16286</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>HTML/XML DOCTYPE as keyword</string>
         <key>scope</key>
-        <string>keyword.other.doctype, meta.tag.sgml.doctype punctuation.definition.tag, meta.tag.metadata.doctype entity.name.tag, meta.tag.metadata.doctype punctuation.definition.tag</string>
+        <string>meta.tag.sgml.doctype punctuation.definition.tag</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -788,7 +627,7 @@
         <key>name</key>
         <string>Special characters like &amp;amp;</string>
         <key>scope</key>
-        <string>text.html constant.character.entity, text.html constant.character.entity punctuation, constant.character.entity.xml, constant.character.entity.xml punctuation, constant.character.entity.js.jsx, constant.character.entity.js.jsx punctuation, constant.character.entity.tsx, constant.character.entity.tsx punctuation</string>
+        <string>text.html constant.character.entity, text.html constant.character.entity punctuation, constant.character.entity.xml, constant.character.entity.xml punctuation, constant.character.entity.tsx, constant.character.entity.tsx punctuation</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -810,7 +649,7 @@
         <key>name</key>
         <string>Components</string>
         <key>scope</key>
-        <string>support.class.component, support.class.component.jsx, support.class.component.tsx, support.class.component.vue</string>
+        <string>support.class.component, support.class.component.tsx</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -839,28 +678,6 @@
         <dict>
           <key>foreground</key>
           <string>#8F3F71</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Java imports</string>
-        <key>scope</key>
-        <string>storage.modifier.import.java</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#3C3836</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Javadoc</string>
-        <key>scope</key>
-        <string>comment.block.javadoc.java keyword.other.documentation.javadoc.java</string>
-        <key>settings</key>
-        <dict>
-          <key>fontStyle</key>
-          <string/>
         </dict>
       </dict>
       <dict>
@@ -964,7 +781,7 @@
         <key>name</key>
         <string>Arrow functions</string>
         <key>scope</key>
-        <string>keyword.declaration.function.arrow.js, storage.type.function.arrow.ts</string>
+        <string>storage.type.function.arrow.ts, storage.type.function.arrow.js</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -988,7 +805,7 @@
         <key>name</key>
         <string>Extra JS/TS keywords</string>
         <key>scope</key>
-        <string>keyword.operator.expression.in.js, keyword.operator.expression.in.ts, keyword.operator.expression.infer.ts, keyword.operator.expression.instanceof.js, keyword.operator.expression.instanceof.ts, keyword.operator.expression.is, keyword.operator.expression.keyof.ts, keyword.operator.expression.of.js, keyword.operator.expression.of.ts, keyword.operator.expression.typeof.ts</string>
+        <string>keyword.operator.expression.in.ts, keyword.operator.expression.infer.ts, keyword.operator.expression.instanceof.ts, keyword.operator.expression.is, keyword.operator.expression.keyof.ts, keyword.operator.expression.of.ts, keyword.operator.expression.typeof.ts, keyword.operator.js</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1053,106 +870,6 @@
         </dict>
       </dict>
       <dict>
-        <key>name</key>
-        <string>LaTeX math</string>
-        <key>scope</key>
-        <string>constant.other.general.math.tex</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B16286</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Liquid Builtin Objects &amp; User Defined Variables</string>
-        <key>scope</key>
-        <string>variable.language.liquid</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B16286</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Lua docstring keywords</string>
-        <key>scope</key>
-        <string>comment.line.double-dash.documentation.lua storage.type.annotation.lua</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#9D0006</string>
-          <key>fontStyle</key>
-          <string/>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Lua docstring variables</string>
-        <key>scope</key>
-        <string>comment.line.double-dash.documentation.lua entity.name.variable.lua, comment.line.double-dash.documentation.lua variable.lua</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#076678</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>heading.1.markdown punctuation.definition.heading.markdown, heading.1.markdown, heading.1.quarto punctuation.definition.heading.quarto, heading.1.quarto, markup.heading.atx.1.mdx, markup.heading.atx.1.mdx punctuation.definition.heading.mdx, markup.heading.setext.1.markdown, markup.heading.heading-0.asciidoc</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#CC241D</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>heading.2.markdown punctuation.definition.heading.markdown, heading.2.markdown, heading.2.quarto punctuation.definition.heading.quarto, heading.2.quarto, markup.heading.atx.2.mdx, markup.heading.atx.2.mdx punctuation.definition.heading.mdx, markup.heading.setext.2.markdown, markup.heading.heading-1.asciidoc</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#427B58</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>heading.3.markdown punctuation.definition.heading.markdown, heading.3.markdown, heading.3.quarto punctuation.definition.heading.quarto, heading.3.quarto, markup.heading.atx.3.mdx, markup.heading.atx.3.mdx punctuation.definition.heading.mdx, markup.heading.heading-2.asciidoc</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#D79921</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>heading.4.markdown punctuation.definition.heading.markdown, heading.4.markdown, heading.4.quarto punctuation.definition.heading.quarto, heading.4.quarto, markup.heading.atx.4.mdx, markup.heading.atx.4.mdx punctuation.definition.heading.mdx, markup.heading.heading-3.asciidoc</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#98971A</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>heading.5.markdown punctuation.definition.heading.markdown, heading.5.markdown, heading.5.quarto punctuation.definition.heading.quarto, heading.5.quarto, markup.heading.atx.5.mdx, markup.heading.atx.5.mdx punctuation.definition.heading.mdx, markup.heading.heading-4.asciidoc</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#427B58</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>heading.6.markdown punctuation.definition.heading.markdown, heading.6.markdown, heading.6.quarto punctuation.definition.heading.quarto, heading.6.quarto, markup.heading.atx.6.mdx, markup.heading.atx.6.mdx punctuation.definition.heading.mdx, markup.heading.heading-5.asciidoc</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#076678</string>
-        </dict>
-      </dict>
-      <dict>
         <key>scope</key>
         <string>markup.bold</string>
         <key>settings</key>
@@ -1200,7 +917,7 @@
         <key>name</key>
         <string>Markdown links</string>
         <key>scope</key>
-        <string>text.html.markdown punctuation.definition.link.title, text.html.quarto punctuation.definition.link.title, string.other.link.title.markdown, string.other.link.title.quarto, markup.link, punctuation.definition.constant.markdown, punctuation.definition.constant.quarto, constant.other.reference.link.markdown, constant.other.reference.link.quarto, markup.substitution.attribute-reference</string>
+        <string>constant.other.reference.link.markdown, meta.link.inline.description.markdown, meta.link.reference.description.markdown, meta.link.reference.literal.description.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1211,7 +928,7 @@
         <key>name</key>
         <string>Markdown code spans</string>
         <key>scope</key>
-        <string>punctuation.definition.raw.markdown, punctuation.definition.raw.quarto, markup.inline.raw.string.markdown, markup.inline.raw.string.quarto, markup.raw.block.markdown, markup.raw.block.quarto</string>
+        <string>markup.raw.block.markdown, markup.raw.inline.markdown, punctuation.definition.raw.begin.markdown, punctuation.definition.raw.end.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1222,7 +939,7 @@
         <key>name</key>
         <string>Markdown triple backtick language identifier</string>
         <key>scope</key>
-        <string>fenced_code.block.language</string>
+        <string>constant.other.language-name.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1233,7 +950,7 @@
         <key>name</key>
         <string>Markdown triple backticks</string>
         <key>scope</key>
-        <string>markup.fenced_code.block punctuation.definition, markup.raw support.asciidoc</string>
+        <string>punctuation.definition.raw.code-fence.begin.markdown, punctuation.definition.raw.code-fence.end.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1255,7 +972,7 @@
         <key>name</key>
         <string>Markdown separators</string>
         <key>scope</key>
-        <string>meta.separator.markdown</string>
+        <string>meta.separator.thematic-break.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1266,22 +983,11 @@
         <key>name</key>
         <string>Markdown list bullets</string>
         <key>scope</key>
-        <string>punctuation.definition.list.begin.markdown, punctuation.definition.list.begin.quarto, markup.list.bullet</string>
+        <string>punctuation.definition.list_item.markdown, markup.list.numbered.bullet.markdown, markup.list.unnumbered.bullet.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
           <string>#689D6A</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Quarto headings</string>
-        <key>scope</key>
-        <string>markup.heading.quarto</string>
-        <key>settings</key>
-        <dict>
-          <key>fontStyle</key>
-          <string>bold</string>
         </dict>
       </dict>
       <dict>
@@ -1332,17 +1038,6 @@
           <string>#B16286</string>
           <key>fontStyle</key>
           <string/>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>PHP Attributes</string>
-        <key>scope</key>
-        <string>support.attribute.builtin, meta.attribute.php</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B57614</string>
         </dict>
       </dict>
       <dict>
@@ -1417,7 +1112,7 @@
         <key>name</key>
         <string>Python `self` keyword</string>
         <key>scope</key>
-        <string>variable.parameter.function.language.special.self.python, variable.language.special.self.python</string>
+        <string>variable.language.python</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1430,7 +1125,7 @@
         <key>name</key>
         <string>python keyword flow/logical (for ... in)</string>
         <key>scope</key>
-        <string>keyword.control.flow.python, keyword.operator.logical.python</string>
+        <string>keyword.operator.logical.python</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1450,17 +1145,6 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>python function support</string>
-        <key>scope</key>
-        <string>support.token.decorator.python, meta.function.decorator.identifier.python</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#427B58</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>python function calls</string>
         <key>scope</key>
         <string>meta.function-call.python</string>
@@ -1472,22 +1156,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>python function decorators</string>
-        <key>scope</key>
-        <string>entity.name.function.decorator.python, punctuation.definition.decorator.python</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#427B58</string>
-          <key>fontStyle</key>
-          <string>italic</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>python placeholder reset to normal string</string>
         <key>scope</key>
-        <string>constant.character.format.placeholder.other.python</string>
+        <string>constant.other.placeholder.python</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1531,7 +1202,7 @@
         <key>name</key>
         <string>Arguments accessed later in the function body</string>
         <key>scope</key>
-        <string>meta.indexed-name.python, meta.item-access.python</string>
+        <string>meta.item-access.python</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1678,7 +1349,7 @@
         <key>name</key>
         <string>Rust attribute</string>
         <key>scope</key>
-        <string>meta.annotation.rust, meta.annotation.rust punctuation, meta.attribute.rust, punctuation.definition.attribute.rust</string>
+        <string>meta.annotation.rust, meta.annotation.rust punctuation</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1689,33 +1360,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Rust attribute strings</string>
-        <key>scope</key>
-        <string>meta.attribute.rust string.quoted.double.rust, meta.attribute.rust string.quoted.single.char.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>fontStyle</key>
-          <string/>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>Rust keyword</string>
         <key>scope</key>
-        <string>entity.name.function.macro.rules.rust, storage.type.module.rust, storage.modifier.rust, storage.type.struct.rust, storage.type.enum.rust, storage.type.trait.rust, storage.type.union.rust, storage.type.impl.rust, storage.type.rust, storage.type.function.rust, storage.type.type.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#9D0006</string>
-          <key>fontStyle</key>
-          <string/>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Rust u/i32, u/i64, etc.</string>
-        <key>scope</key>
-        <string>entity.name.type.numeric.rust</string>
+        <string>storage.type.module.rust, storage.modifier.rust, storage.type.struct.rust, storage.type.enum.rust, storage.type.trait.rust, storage.type.impl.rust, storage.type.rust, storage.type.function.rust, storage.type.type.rust</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1774,42 +1421,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Rust struct</string>
-        <key>scope</key>
-        <string>storage.type.source.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B57614</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Rust union</string>
-        <key>scope</key>
-        <string>entity.name.union.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#B57614</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Rust enum member</string>
-        <key>scope</key>
-        <string>meta.enum.rust storage.type.source.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#8F3F71</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>Rust macro</string>
         <key>scope</key>
-        <string>support.macro.rust, meta.macro.rust support.function.rust, entity.name.function.macro.rust</string>
+        <string>support.macro.rust, meta.macro.rust support.function.rust, entity.name.macro.rust</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1822,7 +1436,7 @@
         <key>name</key>
         <string>Rust lifetime</string>
         <key>scope</key>
-        <string>storage.modifier.lifetime.rust, entity.name.type.lifetime</string>
+        <string>storage.modifier.lifetime.rust</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1855,31 +1469,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Rust functions</string>
-        <key>scope</key>
-        <string>meta.function.call.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#79740E</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Rust angle brackets</string>
-        <key>scope</key>
-        <string>punctuation.brackets.angle.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#427B58</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>Rust constants</string>
         <key>scope</key>
-        <string>constant.other.caps.rust</string>
+        <string>constant.other.rust</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1888,31 +1480,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Rust function parameters</string>
-        <key>scope</key>
-        <string>meta.function.definition.rust variable.other.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#076678</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Rust closure variables</string>
-        <key>scope</key>
-        <string>meta.function.call.rust variable.other.rust</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#076678</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>Rust self</string>
         <key>scope</key>
-        <string>variable.language.self.rust</string>
+        <string>variable.language.rust</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1923,7 +1493,7 @@
         <key>name</key>
         <string>Rust metavariable names</string>
         <key>scope</key>
-        <string>variable.other.metavariable.name.rust, meta.macro.metavariable.rust keyword.operator.macro.dollar.rust</string>
+        <string>variable.parameter.macro.rust</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1934,7 +1504,7 @@
         <key>name</key>
         <string>Shell shebang</string>
         <key>scope</key>
-        <string>comment.line.shebang, comment.line.shebang punctuation.definition.comment, comment.line.shebang, punctuation.definition.comment.shebang.shell, meta.shebang.shell</string>
+        <string>comment.line.shebang, comment.line.shebang punctuation.definition.comment</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1960,7 +1530,7 @@
         <key>name</key>
         <string>Shell interpolated command</string>
         <key>scope</key>
-        <string>meta.function-call.arguments.shell punctuation.definition.variable.shell, meta.function-call.arguments.shell punctuation.section.interpolation, meta.function-call.arguments.shell punctuation.definition.variable.shell, meta.function-call.arguments.shell punctuation.section.interpolation</string>
+        <string>meta.function-call.arguments.shell punctuation.definition.variable.shell, meta.function-call.arguments.shell punctuation.section.interpolation</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -1968,47 +1538,12 @@
         </dict>
       </dict>
       <dict>
-        <key>name</key>
-        <string>Shell interpolated command variable</string>
         <key>scope</key>
-        <string>meta.string meta.interpolation.parameter.shell variable.other.readwrite</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#427B58</string>
-          <key>fontStyle</key>
-          <string>italic</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>scope</key>
-        <string>source.shell punctuation.section.interpolation, punctuation.definition.evaluation.backticks.shell</string>
+        <string>source.shell punctuation.section.interpolation</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
           <string>#3C3836</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Shell EOF</string>
-        <key>scope</key>
-        <string>entity.name.tag.heredoc.shell</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#9D0006</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Shell quoted variable</string>
-        <key>scope</key>
-        <string>string.quoted.double.shell variable.other.normal.shell</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>#076678</string>
         </dict>
       </dict>
       <dict>
@@ -2079,7 +1614,7 @@
         <key>name</key>
         <string>Command help section headings</string>
         <key>scope</key>
-        <string>constant.section-heading.cmd-help, markup.heading.cmd-help, string.section-heading.cmd-help, meta.constructor.argument.css.section-heading.cmd-help</string>
+        <string>constant.section-heading.cmd-help, markup.heading.cmd-help, meta.constructor.argument.css.section-heading.cmd-help</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -2092,7 +1627,7 @@
         <key>name</key>
         <string>Command help inline usage heading</string>
         <key>scope</key>
-        <string>constant.section-heading.inline-usage.cmd-help, markup.heading.inline-usage.cmd-help, string.section-heading.inline-usage.cmd-help, meta.constructor.argument.css.section-heading.inline-usage.cmd-help</string>
+        <string>constant.section-heading.inline-usage.cmd-help, markup.heading.inline-usage.cmd-help, meta.constructor.argument.css.section-heading.inline-usage.cmd-help</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -2153,7 +1688,7 @@
         <key>name</key>
         <string>Command help paths</string>
         <key>scope</key>
-        <string>constant.character.escape.pathname.cmd-help, variable.parameter.pathname.cmd-help, meta.function.block.start.handlebars.pathname.cmd-help</string>
+        <string>constant.character.escape.pathname.cmd-help, meta.function.block.start.handlebars.pathname.cmd-help</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -2249,7 +1784,7 @@
       </dict>
       <dict>
         <key>scope</key>
-        <string>markup.heading.1.markdown</string>
+        <string>markup.heading.1.markdown, markup.heading.1.setext.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -2258,7 +1793,7 @@
       </dict>
       <dict>
         <key>scope</key>
-        <string>markup.heading.2.markdown</string>
+        <string>markup.heading.2.markdown, markup.heading.2.setext.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
