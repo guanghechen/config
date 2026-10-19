@@ -21,12 +21,11 @@ prepend_rules = [
 
 [opener]
 edit = [
-  { run = "nvim %s", desc = "nvim", for = "unix", block = true },
-  { run = "nvim %s", desc = "nvim", for = "windows", block = true },
+  { run = "nvim %s", desc = "nvim", block = true },
 ]
 
 [plugin]
 prepend_fetchers = [
-  { url = "*", run = "git", prio = "normal", group = "git" },
-  { url = "*/", run = "git", prio = "normal", group = "git" },
+  { url = "*", run = "git", group = "git" },
+  { url = "*/", run = "git", group = "git" },
 ]
