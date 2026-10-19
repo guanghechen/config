@@ -124,7 +124,10 @@ describe('theme app config', () => {
         /** @type {never} */ ({ theme: 'rosepine', variant: 'main' }),
         /** @type {never} */ (reporter),
       )
-      assert.equal(fs.readFileSync(path.join(root, 'config'), 'utf8'), '--theme=rosepine-main')
+      assert.equal(
+        fs.readFileSync(path.join(root, 'config'), 'utf8'),
+        '--theme=rosepine-main\n--italic-text=always\n',
+      )
     } finally {
       fs.rmSync(root, { recursive: true, force: true })
     }
