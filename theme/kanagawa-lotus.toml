@@ -81,6 +81,8 @@ inactive                = { fg = "#545464" }
 [spot]
 border                  = { fg = "#ACA99A" }
 title                   = { fg = "#3E5A87", bold = true }
+tbl_col                 = { fg = "#3E5A87" }
+tbl_cell                = { fg = "#38384D", bg = "#D5D6CE", bold = true }
 
 [status]
 overall                 = { fg = "#545464", bg = "reset" }
@@ -108,6 +110,7 @@ title                   = { bold = true }
 hovered                 = { fg = "#38384D", bg = "#D5D6CE", bold = true }
 
 [which]
+border                  = { fg = "#ACA99A" }
 cols                    = 3
 mask                    = { bg = "#E5DDB0" }
 cand                    = { fg = "#3E5A87" }
