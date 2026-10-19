@@ -16,7 +16,8 @@
       "description": "Names must be unique across the complete config set."
     },
     "language": {
-      "enum": ["zh", "en", "yue", "ar", "de", "fr", "es", "pt", "id", "it", "ko", "ru", "th", "vi", "ja", "tr", "hi", "ms", "nl", "sv", "da", "fi", "pl", "cs", "fil", "fa", "el", "hu", "mk", "ro"]
+      "description": "zh-Hans (macOS only) recognizes Chinese and converts every transcript to Simplified Chinese.",
+      "enum": ["zh", "zh-Hans", "en", "yue", "ar", "de", "fr", "es", "pt", "id", "it", "ko", "ru", "th", "vi", "ja", "tr", "hi", "ms", "nl", "sv", "da", "fi", "pl", "cs", "fil", "fa", "el", "hu", "mk", "ro"]
     },
     "device": { "$ref": "#/$defs/nonEmptyString" },
     "maxDuration": { "type": "integer", "minimum": 1, "maximum": 300 },
@@ -28,6 +29,7 @@
       "additionalProperties": false,
       "properties": {
         "autoPaste": { "type": "boolean", "default": true },
+        "preload": { "type": "boolean", "default": true, "description": "Load the model in the background when the desktop starts; it then stays resident (about 1.9 GB of unified memory)." },
         "theme": {
           "type": "object",
           "additionalProperties": false,
@@ -108,6 +110,21 @@
             }
           ]
         },
+        "overlay": {
+          "default": { "type": "chord", "key": "KeyV", "modifiers": ["Control", "Meta"] },
+          "description": "Shows or hides the overlay without starting, finishing, or cancelling a dictation.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/doubleTapShortcut"
+            },
+            {
+              "$ref": "#/$defs/chordShortcut"
+            }
+          ]
+        },
         "holdThresholdMs": {
           "type": "integer",
           "minimum": 100,
@@ -135,7 +152,7 @@
           }
         }
       },
-      "description": "Defaults use Right Alt hold and double-tap on macOS and Windows; null disables an action. Runtime validates holdThresholdMs <= doubleTapIntervalMs, normalized binding conflicts, and platform support."
+      "description": "Defaults use Right Alt hold and double-tap on macOS and Windows, plus Control+Meta+V for the overlay; null disables an action. Runtime validates holdThresholdMs <= doubleTapIntervalMs, normalized binding conflicts, and platform support."
     },
     "shortcutKey": {
       "enum": [
