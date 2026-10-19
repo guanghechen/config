@@ -45,44 +45,11 @@
         <key>name</key>
         <string>Embedded source</string>
         <key>scope</key>
-        <string>meta.embedded, source.groovy.embedded, string meta.image.inline.markdown, variable.legacy.builtin.python</string>
+        <string>meta.embedded, source.groovy.embedded, string meta.image.inline.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
           <string>{{vsc.tokenMetaEmbedded}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Emphasis</string>
-        <key>scope</key>
-        <string>emphasis</string>
-        <key>settings</key>
-        <dict>
-          <key>fontStyle</key>
-          <string>italic</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Strong</string>
-        <key>scope</key>
-        <string>strong</string>
-        <key>settings</key>
-        <dict>
-          <key>fontStyle</key>
-          <string>bold</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Header</string>
-        <key>scope</key>
-        <string>header</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenHeader}}</string>
         </dict>
       </dict>
       <dict>
@@ -111,22 +78,11 @@
         <key>name</key>
         <string>Number and enum member</string>
         <key>scope</key>
-        <string>constant.numeric, variable.other.enummember, keyword.operator.plus.exponent, keyword.operator.minus.exponent</string>
+        <string>constant.numeric, variable.other.enummember</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
           <string>{{vsc.tokenConstantNumeric}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Regular expression</string>
-        <key>scope</key>
-        <string>constant.regexp</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenConstantRegexp}}</string>
         </dict>
       </dict>
       <dict>
@@ -142,20 +98,9 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Selector</string>
-        <key>scope</key>
-        <string>entity.name.selector</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenEntityNameSelector}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>CSS tag</string>
         <key>scope</key>
-        <string>entity.name.tag.css, entity.name.tag.less</string>
+        <string>entity.name.tag.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -177,7 +122,7 @@
         <key>name</key>
         <string>CSS class and attribute</string>
         <key>scope</key>
-        <string>entity.other.attribute-name.class.css, source.css entity.other.attribute-name.class, entity.other.attribute-name.id.css, entity.other.attribute-name.parent-selector.css, entity.other.attribute-name.parent.less, source.css entity.other.attribute-name.pseudo-class, entity.other.attribute-name.pseudo-element.css, source.css.less entity.other.attribute-name.id, entity.other.attribute-name.scss</string>
+        <string>entity.other.attribute-name.class.css, source.css entity.other.attribute-name.class, entity.other.attribute-name.id.css, source.css entity.other.attribute-name.pseudo-class, entity.other.pseudo-class.css, entity.other.pseudo-element.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -247,17 +192,6 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Strikethrough</string>
-        <key>scope</key>
-        <string>markup.strikethrough</string>
-        <key>settings</key>
-        <dict>
-          <key>fontStyle</key>
-          <string>strikethrough</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>Markup inserted</string>
         <key>scope</key>
         <string>markup.inserted</string>
@@ -293,7 +227,7 @@
         <key>name</key>
         <string>Markdown quote punctuation</string>
         <key>scope</key>
-        <string>punctuation.definition.quote.begin.markdown</string>
+        <string>punctuation.definition.blockquote.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -304,7 +238,7 @@
         <key>name</key>
         <string>Markdown list punctuation</string>
         <key>scope</key>
-        <string>punctuation.definition.list.begin.markdown</string>
+        <string>punctuation.definition.list_item.markdown, markup.list.numbered.bullet.markdown, markup.list.unnumbered.bullet.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -315,7 +249,7 @@
         <key>name</key>
         <string>Inline raw markup</string>
         <key>scope</key>
-        <string>markup.inline.raw</string>
+        <string>markup.raw.inline.markdown, punctuation.definition.raw.begin.markdown, punctuation.definition.raw.end.markdown</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -342,39 +276,6 @@
         <dict>
           <key>foreground</key>
           <string>{{vsc.tokenMetaPreprocessor}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Preprocessor string</string>
-        <key>scope</key>
-        <string>meta.preprocessor.string</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenMetaPreprocessorString}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Preprocessor number</string>
-        <key>scope</key>
-        <string>meta.preprocessor.numeric</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenMetaPreprocessorNumeric}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Python dictionary key</string>
-        <key>scope</key>
-        <string>meta.structure.dictionary.key.python</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenMetaStructureDictionaryKeyPython}}</string>
         </dict>
       </dict>
       <dict>
@@ -414,7 +315,7 @@
         <key>name</key>
         <string>Storage modifier</string>
         <key>scope</key>
-        <string>storage.modifier, keyword.operator.noexcept</string>
+        <string>storage.modifier</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -425,22 +326,11 @@
         <key>name</key>
         <string>String</string>
         <key>scope</key>
-        <string>string, meta.embedded.assembly</string>
+        <string>string</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
           <string>{{vsc.tokenString}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>String tag</string>
-        <key>scope</key>
-        <string>string.tag</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenStringTag}}</string>
         </dict>
       </dict>
       <dict>
@@ -458,7 +348,7 @@
         <key>name</key>
         <string>Pug, YAML, XML, HTML, and Handlebars string</string>
         <key>scope</key>
-        <string>string.comment.buffered.block.pug, string.quoted.pug, string.interpolated.pug, string.unquoted.plain.in.yaml, string.unquoted.plain.out.yaml, string.unquoted.block.yaml, string.quoted.single.yaml, string.quoted.double.xml, string.quoted.single.xml, string.unquoted.cdata.xml, string.quoted.double.html, string.quoted.single.html, string.unquoted.html, string.quoted.single.handlebars, string.quoted.double.handlebars</string>
+        <string>string.unquoted.plain.in.yaml, string.unquoted.plain.out.yaml, string.unquoted.block.yaml, string.quoted.single.yaml, string.quoted.double.xml, string.quoted.single.xml, string.unquoted.cdata.xml, string.quoted.double.html, string.quoted.single.html, string.unquoted.html</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -502,7 +392,7 @@
         <key>name</key>
         <string>Support constant</string>
         <key>scope</key>
-        <string>support.constant.property-value, support.constant.font-name, support.constant.media-type, support.constant.media, constant.other.color.rgb-value, constant.other.rgb-value, support.constant.color</string>
+        <string>support.constant.property-value, support.constant.font-name, support.constant.media, constant.other.color.rgb-value, support.constant.color</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -513,22 +403,11 @@
         <key>name</key>
         <string>Vendored property</string>
         <key>scope</key>
-        <string>support.type.vendored.property-name, support.type.property-name, source.css variable, source.coffee.embedded</string>
+        <string>support.type.property-name, source.css variable, source.coffee.embedded, support.type.vendor-prefix.css</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
           <string>{{vsc.tokenSupportTypeVendoredPropertyName}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>JSON property</string>
-        <key>scope</key>
-        <string>support.type.property-name.json</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenSupportTypePropertyNameJson}}</string>
         </dict>
       </dict>
       <dict>
@@ -568,7 +447,7 @@
         <key>name</key>
         <string>New and word-like operator</string>
         <key>scope</key>
-        <string>keyword.operator.new, keyword.operator.expression, keyword.operator.cast, keyword.operator.sizeof, keyword.operator.alignof, keyword.operator.typeid, keyword.operator.alignas, keyword.operator.instanceof, keyword.operator.logical.python, keyword.operator.wordlike</string>
+        <string>keyword.operator.new, keyword.operator.expression, keyword.operator.cast, keyword.operator.instanceof, keyword.operator.logical.python</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -599,39 +478,6 @@
       </dict>
       <dict>
         <key>name</key>
-        <string>Git rebase function</string>
-        <key>scope</key>
-        <string>support.function.git-rebase</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenSupportFunctionGitRebase}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Git rebase SHA</string>
-        <key>scope</key>
-        <string>constant.sha.git-rebase</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenConstantShaGitRebase}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
-        <string>Java import and package</string>
-        <key>scope</key>
-        <string>storage.modifier.import.java, variable.language.wildcard.java, storage.modifier.package.java</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenColoringOfTheJavaImportAndPackageIdentifiers}}</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>This and self</string>
         <key>scope</key>
         <string>variable.language</string>
@@ -645,7 +491,7 @@
         <key>name</key>
         <string>Function declarations</string>
         <key>scope</key>
-        <string>entity.name.function, support.function, support.constant.handlebars, source.powershell variable.other.member, entity.name.operator.custom-literal</string>
+        <string>entity.name.function, support.function, source.powershell variable.other.member</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -656,7 +502,7 @@
         <key>name</key>
         <string>Types declaration and references</string>
         <key>scope</key>
-        <string>support.class, support.type, entity.name.type, entity.name.namespace, entity.other.attribute, entity.name.scope-resolution, entity.name.class, storage.type.numeric.go, storage.type.byte.go, storage.type.boolean.go, storage.type.string.go, storage.type.uintptr.go, storage.type.error.go, storage.type.rune.go, storage.type.cs, storage.type.generic.cs, storage.type.modifier.cs, storage.type.variable.cs, storage.type.annotation.java, storage.type.generic.java, storage.type.java, storage.type.object.array.java, storage.type.primitive.array.java, storage.type.primitive.java, storage.type.token.java, storage.type.groovy, storage.type.annotation.groovy, storage.type.parameters.groovy, storage.type.generic.groovy, storage.type.object.array.groovy, storage.type.primitive.array.groovy, storage.type.primitive.groovy</string>
+        <string>support.class, support.type, entity.name.type, entity.name.namespace, entity.name.class, storage.type.numeric.go, storage.type.cs, storage.type.variable.cs, storage.type.java, storage.type.primitive.java, storage.type.annotation.groovy, storage.type.primitive.groovy</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -667,7 +513,7 @@
         <key>name</key>
         <string>Types declaration and references, TS grammar specific</string>
         <key>scope</key>
-        <string>meta.type.cast.expr, meta.type.new.expr, support.constant.math, support.constant.dom, support.constant.json, entity.other.inherited-class, punctuation.separator.namespace.ruby</string>
+        <string>support.constant.math, support.constant.dom, support.constant.json, entity.other.inherited-class</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -678,7 +524,7 @@
         <key>name</key>
         <string>Control flow and special keywords</string>
         <key>scope</key>
-        <string>keyword.control, source.cpp keyword.operator.new, keyword.operator.delete, source.cpp keyword.operator.delete, keyword.other.using, keyword.other.directive.using, keyword.other.operator, entity.name.operator</string>
+        <string>keyword.control, keyword.other.operator</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -689,7 +535,7 @@
         <key>name</key>
         <string>Variable and parameter name</string>
         <key>scope</key>
-        <string>variable, meta.definition.variable.name, support.variable, entity.name.variable, constant.other.placeholder</string>
+        <string>variable, support.variable, entity.name.variable, constant.other.placeholder</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -722,7 +568,7 @@
         <key>name</key>
         <string>CSS property value</string>
         <key>scope</key>
-        <string>support.constant.property-value, support.constant.font-name, support.constant.media-type, support.constant.media, constant.other.color.rgb-value, constant.other.rgb-value, support.constant.color</string>
+        <string>support.constant.property-value, support.constant.font-name, support.constant.media, constant.other.color.rgb-value, support.constant.color</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -733,7 +579,7 @@
         <key>name</key>
         <string>Regular expression groups</string>
         <key>scope</key>
-        <string>punctuation.definition.group.regexp, punctuation.definition.group.assertion.regexp, punctuation.definition.character-class.regexp, punctuation.character.set.begin.regexp, punctuation.character.set.end.regexp, keyword.operator.negation.regexp, support.other.parenthesis.regexp</string>
+        <string>punctuation.definition.group.regexp, punctuation.definition.group.assertion.regexp, punctuation.definition.character-class.regexp, keyword.operator.negation.regexp</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -744,7 +590,7 @@
         <key>name</key>
         <string>Regular expression character class</string>
         <key>scope</key>
-        <string>constant.character.character-class.regexp, constant.other.character-class.set.regexp, constant.other.character-class.regexp, constant.character.set.regexp</string>
+        <string>constant.character.character-class.regexp, constant.other.character-class.set.regexp, constant.other.character-class.regexp</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -777,7 +623,7 @@
         <key>name</key>
         <string>Character constant and option</string>
         <key>scope</key>
-        <string>constant.character, constant.other.option</string>
+        <string>constant.character</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -809,22 +655,9 @@
       <!-- Compatibility aliases for common Sublime/TextMate grammar scopes. -->
       <dict>
         <key>name</key>
-        <string>TextMate compatibility: Markdown headings</string>
-        <key>scope</key>
-        <string>heading.1.markdown, heading.2.markdown, heading.3.markdown, heading.4.markdown, heading.5.markdown, heading.6.markdown, heading.1.quarto, heading.2.quarto, heading.3.quarto, heading.4.quarto, heading.5.quarto, heading.6.quarto</string>
-        <key>settings</key>
-        <dict>
-          <key>foreground</key>
-          <string>{{vsc.tokenMarkupHeading}}</string>
-          <key>fontStyle</key>
-          <string>bold</string>
-        </dict>
-      </dict>
-      <dict>
-        <key>name</key>
         <string>TextMate compatibility: object and document keys</string>
         <key>scope</key>
-        <string>source.json meta.mapping.key string, keyword.other.definition.ini, punctuation.support.type.property-name.json, punctuation.support.type.property-name.toml, support.type.property-name.toml, entity.name.tag.yaml, punctuation.support.type.property-name.yaml, support.type.property-name.yaml</string>
+        <string>source.json meta.mapping.key string, entity.name.tag.yaml, entity.name.tag.toml, keyword.name.ini</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -846,7 +679,7 @@
         <key>name</key>
         <string>TextMate compatibility: function calls</string>
         <key>scope</key>
-        <string>meta.function-call.method, variable.function, meta.function-call.python, meta.function.call.rust, text.html.php support.function</string>
+        <string>meta.function-call.method, variable.function, meta.function-call.python, text.html.php support.function</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -857,7 +690,7 @@
         <key>name</key>
         <string>TextMate compatibility: declarations and types</string>
         <key>scope</key>
-        <string>entity.name.struct, entity.name.enum, meta.type, meta.type-alias, entity.name.impl.rust, entity.name.trait.rust, entity.name.union.rust</string>
+        <string>entity.name.struct, entity.name.enum, meta.type, entity.name.impl.rust, entity.name.trait.rust</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
@@ -890,7 +723,7 @@
         <key>name</key>
         <string>TextMate compatibility: component types</string>
         <key>scope</key>
-        <string>support.class.component, support.class.component.jsx, support.class.component.tsx, support.class.component.vue</string>
+        <string>support.class.component, support.class.component.tsx</string>
         <key>settings</key>
         <dict>
           <key>foreground</key>
