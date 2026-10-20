@@ -1,19 +1,14 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-
-function median(values) {
-  const sorted = [...values].sort((a, b) => a - b),
-    middle = Math.floor(sorted.length / 2)
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
-}
+import { median, percentile } from "./stats.mjs"
 
 function statistics(values, observations = values.length) {
   const sorted = [...values].sort((a, b) => a - b)
   return {
     runs: sorted.length, observations,
     median: median(sorted), min: sorted[0], max: sorted.at(-1),
-    ...(sorted.length >= 20 ? { p95: sorted[Math.ceil(sorted.length * 0.95) - 1] } : {}),
+    ...(sorted.length >= 20 ? { p95: percentile(sorted, 0.95) } : {}),
   }
 }
 
@@ -195,7 +190,7 @@ export function analyze(directory) {
         .join(" | ")} |`,
     )
   }
-  lines.push("", "Selection flush observes the target row's actual mark, including unmarking. It is distinct from ready: legacy completes all-row icons, while native completes viewport decorations. Historical records without a selection flush remain unavailable; their ready values are not substituted.", "",
+  lines.push("", "Selection flush observes the target row's actual mark, including unmarking. It is distinct from ready: the baseline completes all-row icons, while native completes viewport decorations. Historical records without a selection flush remain unavailable; their ready values are not substituted.", "",
     "## Input latency and observation", "",
     "Process p95 is the p95 of process-level medians, reported only with at least 20 independent processes. Observed max retains the slowest individual operation; it is not a percentile. Readiness checks run inside the measured process. Observer RPCs count parent readiness requests during timing.", "",
     "| Case | Mode | Implementation | Operation | Processes | Median ms | Process p95 ms | Observed max ms | Observer RPCs max | Readiness checks median |",

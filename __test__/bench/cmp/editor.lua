@@ -31,10 +31,7 @@ function M.setup(options)
     M.notices[#M.notices + 1] = { message = message, level = level }
   end
   vim.opt.runtimepath:prepend(options.root)
-  if options.blink ~= nil then
-    vim.opt.runtimepath:append(options.blink)
-  end
-  local Runtime = require("__test__.fixtures.era.keystroke.cmp.runtime")
+  local Runtime = require("__test__.support.cmp.runtime")
   Runtime.setup(options.baseline)
   if not options.frecency then
     dot.context.frecency.completions = nil
@@ -98,151 +95,55 @@ function M.setup(options)
   end
   local sources = options.buffer and { "lsp", "buffer" } or { "lsp" }
   local start = vim.uv.hrtime()
-  if options.engine == "era" then
-    if options.frecency then
-      local Item = require("era.keystroke.cmp.item")
-      for index = 1, math.min(options.frecency_entries or 0, #M.labels) do
-        local label = M.labels[(index * 7919) % #M.labels + 1]
-        local item = assert(Item.new(Runtime.context(""), "lsp", { label = label }, clients[1]))
-        dot.context.frecency.completions:access("lua\0" .. item.frecency_key)
-      end
+  if options.frecency then
+    local Item = require("era.keystroke.cmp.item")
+    for index = 1, math.min(options.frecency_entries or 0, #M.labels) do
+      local label = M.labels[(index * 7919) % #M.labels + 1]
+      local item = assert(Item.new(Runtime.context(""), "lsp", { label = label }, clients[1]))
+      dot.context.frecency.completions:access("lua\0" .. item.frecency_key)
     end
-    require("era.keystroke.cmp.policy").sources_for = function()
-      return sources
-    end
-    M.cmp = require("era.keystroke.cmp")
-    M.cmp.setup()
-    local session = require("era.keystroke.cmp.session")
-    local select = session.on_complete_changed
-    session.on_complete_changed = function(...)
-      local result = select(...)
-      if M.active ~= nil and M.active.keys == "<Tab>" then
-        vim.rpcnotify(1, "cmp_bench_select", M.active.sequence, (vim.uv.hrtime() - M.active.start) / 1e6)
-      end
-      return result
-    end
-    profile(require("era.keystroke.cmp.rank"), "prepare", "prepare")
-    profile(require("era.keystroke.cmp.rank"), "filter", "rank")
-    profile(require("era.keystroke.cmp.source.lsp"), "response", "normalize_lsp")
-    local menu = require("era.keystroke.cmp.menu")
-    profile(menu, "show", "menu")
-    local show = menu.show
-    menu.show = function(self, context, items, selected)
-      show(self, context, items, selected)
-      M.menu_event(context.line, #items, nil, items)
-    end
-    local edit = require("era.keystroke.cmp.edit")
-    local apply = edit.apply
-    edit.apply = function(...)
-      local result = apply(...)
-      if result and M.active ~= nil and M.active.keys == "<CR>" then
-        vim.rpcnotify(1, "cmp_bench_accept", M.active.sequence, (vim.uv.hrtime() - M.active.start) / 1e6)
-      end
-      return result
-    end
-  else
-    M.cmp = require("blink.cmp")
-    M.cmp.setup({
-      fuzzy = {
-        implementation = "rust",
-        prebuilt_binaries = { download = false },
-        frecency = {
-          enabled = options.frecency == true,
-          path = options.output .. "/frecency-" .. vim.uv.os_getpid() .. ".dat",
-        },
-        sorts = { "score", "exact", "sort_text" },
-        max_typos = function(query)
-          return math.min(2, math.floor(vim.str_utfindex(query, "utf-32") / 4))
-        end,
-      },
-      sources = {
-        default = sources,
-        providers = {
-          lsp = { score_offset = 180 },
-          buffer = {
-            score_offset = 100,
-            opts = {
-              get_bufnrs = function()
-                return vim.api.nvim_list_bufs()
-              end,
-            },
-          },
-        },
-      },
-      keymap = {
-        preset = "none",
-        ["<Tab>"] = { "select_next", "fallback" },
-        ["<CR>"] = { "select_and_accept", "fallback" },
-      },
-      completion = {
-        keyword = { range = "prefix" },
-        list = { max_items = 200, selection = { preselect = true, auto_insert = true } },
-        menu = {
-          border = "rounded",
-          max_height = 10,
-          draw = {
-            treesitter = {},
-            columns = { { "kind_icon" }, { "label", "label_description", gap = 1 }, { "source_name" } },
-          },
-        },
-        documentation = { auto_show = false },
-        ghost_text = { enabled = false },
-      },
-      signature = { enabled = false },
-      cmdline = { enabled = false },
-    })
-    assert(
-      vim.wait(5000, function()
-        return package.loaded["blink.cmp.completion.windows.menu"] ~= nil
-      end, 1),
-      "Blink setup timeout"
-    )
-    if options.frecency and (options.frecency_entries or 0) > 0 then
-      local fuzzy = require("blink.cmp.fuzzy")
-      fuzzy.init_db()
-      -- Seed synchronously so background DB writes cannot leak into timed bursts.
-      for index = 1, math.min(options.frecency_entries, #M.labels) do
-        local label = M.labels[(index * 7919) % #M.labels + 1]
-        assert(fuzzy.implementation.access({ label = label, kind = 6, source_id = "lsp" }))
-      end
-    end
-    profile(require("blink.cmp.fuzzy").implementation, "set_provider_items", "prepare")
-    profile(require("blink.cmp.fuzzy"), "fuzzy", "rank_including_prepare")
-    local menu = require("blink.cmp.completion.windows.menu")
-    profile(menu, "open_with_items", "menu")
-    local show = menu.open_with_items
-    menu.open_with_items = function(context, items)
-      show(context, items)
-      M.menu_event(context.line, #items, menu.win:get_win(), items)
-    end
-    vim.api.nvim_create_autocmd("User", {
-      pattern = "BlinkCmpAccept",
-      callback = function()
-        if M.active ~= nil then
-          vim.rpcnotify(1, "cmp_bench_accept", M.active.sequence, (vim.uv.hrtime() - M.active.start) / 1e6)
-        end
-      end,
-    })
   end
-  if options.engine == "blink" then
-    vim.api.nvim_create_autocmd("User", {
-      pattern = "BlinkCmpListSelect",
-      callback = function()
-        if M.active ~= nil and M.active.keys == "<Tab>" then
-          vim.rpcnotify(1, "cmp_bench_select", M.active.sequence, (vim.uv.hrtime() - M.active.start) / 1e6)
-        end
-      end,
-    })
+  require("era.keystroke.cmp.policy").sources_for = function()
+    return sources
+  end
+  M.cmp = require("era.keystroke.cmp")
+  M.cmp.setup()
+  local session = require("era.keystroke.cmp.session")
+  local select = session.on_complete_changed
+  session.on_complete_changed = function(...)
+    local result = select(...)
+    if M.active ~= nil and M.active.keys == "<Tab>" then
+      vim.rpcnotify(1, "cmp_bench_select", M.active.sequence, (vim.uv.hrtime() - M.active.start) / 1e6)
+    end
+    return result
+  end
+  profile(require("era.keystroke.cmp.rank"), "prepare", "prepare")
+  profile(require("era.keystroke.cmp.rank"), "filter", "rank")
+  profile(require("era.keystroke.cmp.source.lsp"), "response", "normalize_lsp")
+  local menu = require("era.keystroke.cmp.menu")
+  profile(menu, "show", "menu")
+  local show = menu.show
+  menu.show = function(self, context, items, selected)
+    show(self, context, items, selected)
+    M.menu_event(context.line, #items, items)
+  end
+  local edit = require("era.keystroke.cmp.edit")
+  local apply = edit.apply
+  edit.apply = function(...)
+    local result = apply(...)
+    if result and M.active ~= nil and M.active.keys == "<CR>" then
+      vim.rpcnotify(1, "cmp_bench_accept", M.active.sequence, (vim.uv.hrtime() - M.active.start) / 1e6)
+    end
+    return result
   end
   return { setup_ms = (vim.uv.hrtime() - start) / 1e6, rss_kib = Data.rss_kib(), lua_kib = collectgarbage("count") }
 end
 
 ---@param line                          string
 ---@param count                         integer
----@param winnr                         ?integer
----@param _items                        ?table[]
+---@param _items                        table[]
 ---@return nil
-function M.menu_event(line, count, winnr, _items)
+function M.menu_event(line, count, _items)
   local active = M.active
   if active == nil or line ~= active.query or count == 0 or not M.cmp.is_menu_visible() then
     return
@@ -252,7 +153,6 @@ function M.menu_event(line, count, winnr, _items)
     sequence = active.sequence,
     elapsed_ms = (vim.uv.hrtime() - active.start) / 1e6,
     count = count,
-    winnr = winnr,
     cost = vim.deepcopy(active.cost),
     calls = vim.deepcopy(active.calls),
   })

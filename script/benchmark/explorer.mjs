@@ -35,7 +35,7 @@ export const cases = [
   { name: "copy_1000_outside", scope: "copy", entries: 1, bytes: 4000, files: 1000, outside: true },
   { name: "navigation", scope: "acceptance", driver: "navigation.lua", comparison: "native repeated navigation and root recovery" },
   { name: "active_loading", scope: "acceptance", driver: "loading.lua", comparison: "native input and cancellation during active scans" },
-  { name: "idle", scope: "acceptance", driver: "idle.lua", comparison: "legacy/native idle" },
+  { name: "idle", scope: "acceptance", driver: "idle.lua", comparison: "baseline/native idle" },
   { name: "watch", scope: "acceptance", driver: "activity.lua", comparison: "native watch activity" },
   { name: "jobs_activity", scope: "acceptance", driver: "activity.lua", comparison: "native Job activity" },
   { name: "root_watch", scope: "acceptance", driver: "root_watch.lua", comparison: "native macOS recursive watch" },
@@ -115,7 +115,7 @@ function harnessHashes() {
   const names = [
     ...readdirSync(here).filter((name) => name.endsWith(".mjs")).map((name) => join("script/benchmark", name)),
     ...readdirSync(drivers).filter((name) => name.endsWith(".lua")).map((name) => join("__test__/bench/explorer", name)),
-    "__test__/support/ui.lua", "__test__/support/ui_grid.lua", "__test__/fixtures/era/m/explorer/full_config_init.lua",
+    "__test__/support/ui.lua", "__test__/support/ui_grid.lua",
     "script/build.mjs",
   ]
   return Object.fromEntries(names.map((name) => name.split(sep).join("/")).sort().map((name) => [name, fileHash(join(checkout, name))]))
@@ -263,9 +263,9 @@ async function main() {
   if (values.help) {
     console.log(`Usage: node ${fileURLToPath(import.meta.url)} [options]
   --current PATH       Native checkout (default: this checkout)
-  --baseline PATH      Legacy checkout for common A/B cases
+  --baseline PATH      Baseline checkout for common A/B cases
   --native PATH        Preserved native release module (default: current/lua/yoz.so)
-  --baseline-native PATH  Preserved legacy release module
+  --baseline-native PATH  Preserved baseline release module
   --case NAME          Repeat to select cases (default: the comprehensive matrix)
   --samples N          Independent processes per comparison/probe (default: 3)
   --repeats N          Repeated interactions within a process (default: 3)
@@ -290,7 +290,7 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
   for (const name of selected) if (!cases.some((item) => item.name === name)) throw new Error(`unknown case: ${name}`)
   const scenarios = cases.filter((item) => selected.includes(item.name))
   const locations = { native: realpathSync(values.current) }
-  if (values.baseline) locations.legacy = realpathSync(values.baseline)
+  if (values.baseline) locations.baseline = realpathSync(values.baseline)
   const nvimVersion = capture(values.nvim, ["--version"], checkout).split("\n").slice(0, 3)
   const harness = harnessHashes()
   if (values.output) {
@@ -315,8 +315,8 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
     harness_sha256: harness,
     coverage: scenarios.map((scenario) => ({
       case: scenario.name,
-      comparison: scenario.name === "idle" && !locations.legacy ? "native idle"
-        : scenario.comparison ?? (locations.legacy && (scenario.scope !== "widget" || values.mode !== "list") ? "legacy/native" : "native only"),
+      comparison: scenario.name === "idle" && !locations.baseline ? "native idle"
+        : scenario.comparison ?? (locations.baseline && (scenario.scope !== "widget" || values.mode !== "list") ? "baseline/native" : "native only"),
       status: "not_run",
     })),
     commands: [],
@@ -326,13 +326,13 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
       startup: "fresh full-config process plus first default Explorer; embedded UI handshake included, context isolated, automatic IM disabled; locally installed plugins/caches retained",
       plugins: "one unmeasured startup discovers each full-config environment; configured plugin Lua/Vim/native/query/data/JS/Wasm contents, including ignored native libraries, are fingerprinted before samples and checked before/after cases; plugin caches are warm",
       git: "real disposable Git repository and queries; staged/untracked/ignored fixtures; changed status must reach the Explorer model; no UI-flush claim for Git ready",
-      copy: "actual Explorer copy action with automatically accepted path input; dense 64 MiB file or 100/1000/10000 files, four bytes/4 KiB/64 KiB each; collapsed source, expanded source and destination outside display root are separate cases; all names and contents verified after timing; native ready includes target-follow, outside copies change native root while legacy retains it; job_ms remains the IO throughput boundary",
+      copy: "actual Explorer copy action with automatically accepted path input; dense 64 MiB file or 100/1000/10000 files, four bytes/4 KiB/64 KiB each; collapsed source, expanded source and destination outside display root are separate cases; all names and contents verified after timing; native ready includes target-follow, outside copies change the native root while the baseline retains it; job_ms remains the IO throughput boundary",
       observer: "comparable phases send completion notifications with zero readiness RPCs during timing; widget checks run on publication/cursor events and a 2 ms timer; copy/Git readiness checks begin only after terminal/query notification; startup uses 5 ms configuration and 2 ms first-view checks. Process/main-thread CPU and Job-terminal CPU are separate; readiness_checks and observer_rpcs audit observation work",
       caches: "source fingerprinting and fixture creation warm filesystem/page caches; not a cold-device benchmark",
       selection: "typed Tab and 100-row Visual selection; visible ends at a parent-observed UI flush with the expected selection glyph state on the target filename row inside the Explorer window, armed by a child start notification; ready separately validates published selection counts and decoration completion",
       memory: "full GC before snapshots; process memory has an explicit kind and libuv version; Lua heap/native retained accounting overlap with it",
       statistics: "within-process medians, then independent-process distributions; p95 only with at least 20 processes; acceptance probe event/cycle distributions stay separate",
-      acceptance: "native-only probes are labeled as acceptance, not legacy/native performance comparisons; no packages are installed",
+      acceptance: "native-only probes are labeled as acceptance, not baseline/native performance comparisons; no packages are installed",
     },
   }
   const controller = new AbortController(), results = []
@@ -369,7 +369,7 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
       const scenario = { scope: "startup", entries: 200 }
       const folder = join(data, "plugin-inputs")
       populate(folder, scenario)
-      const implementations = locations.legacy && scenarios.some((item) => item.scope === "startup") ? ["native", "legacy"] : ["native"]
+      const implementations = locations.baseline && scenarios.some((item) => item.scope === "startup") ? ["native", "baseline"] : ["native"]
       for (const implementation of implementations) {
         resetFixture(folder, scenario)
         const args = ["-l", join(drivers, "startup.lua"), locations[implementation], folder, implementation, String(scenario.entries)]
@@ -421,7 +421,7 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
           const iterations = scenario.name === "lsp" || scenario.name === "soak" ? samples : 1
           const records = []
           for (let trial = 1; trial <= iterations; trial++) {
-            const args = ["-l", join(drivers, scenario.driver), ...probeArguments(scenario.name, { samples, repeats, cycles, baseline: locations.legacy, lsp: values.lsp })]
+            const args = ["-l", join(drivers, scenario.driver), ...probeArguments(scenario.name, { samples, repeats, cycles, baseline: locations.baseline, lsp: values.lsp })]
             metadata.commands.push({ case: scenario.name, trial, command: values.nvim, args })
             console.log(`Running ${scenario.name} ${trial}/${iterations}`)
             const record = await execute(values.nvim, args, timeout, controller.signal, env)
@@ -437,7 +437,7 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
           const modes = scenario.scope === "widget" ? values.mode === "both" ? ["tree", "list"] : [values.mode] : ["tree"]
           for (const mode of modes) {
             for (let trial = 1; trial <= samples; trial++) {
-              const order = locations.legacy && mode === "tree" ? trial % 2 ? ["legacy", "native"] : ["native", "legacy"] : ["native"]
+              const order = locations.baseline && mode === "tree" ? trial % 2 ? ["baseline", "native"] : ["native", "baseline"] : ["native"]
               for (const implementation of order) {
                 resetFixture(folder, scenario)
                 const repo = metadata.repositories[implementation]

@@ -1,8 +1,9 @@
---- Run from the repository root with the LUA_PATH documented in spec/design/signal-hub.md.
+-- Usage, from the repository root: LUA_PATH='./lua/?.lua;./lua/?/init.lua;./?.lua;;' luajit __test__/bench/signal_hub.lua [iterations=50000]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.signal_hub" ---@type string
 
 local SignalHub = require("stl.c.signal_hub")
+local Stats = require("__test__.bench.stats")
 local iterations = tonumber(arg[1]) or 50000
 local rounds = 7
 assert(iterations > 0 and iterations % 1 == 0, "Expected a positive iteration count")
@@ -11,8 +12,7 @@ assert(iterations > 0 and iterations % 1 == 0, "Expected a positive iteration co
 ---@return number
 ---@return number
 local function summarize(samples)
-  table.sort(samples)
-  return samples[math.ceil(#samples / 2)], samples[#samples]
+  return Stats.median(samples), Stats.percentile(samples, 1)
 end
 
 ---@param name                          string

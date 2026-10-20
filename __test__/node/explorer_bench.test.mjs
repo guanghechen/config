@@ -138,7 +138,7 @@ test("failed and partial runs still produce an honest report", (t) => {
   t.after(() => rmSync(directory, { recursive: true, force: true }))
   writeFileSync(join(directory, "metadata.json"), JSON.stringify({
     status: "failed", repositories: {}, samples: 3,
-    coverage: [{ case: "example", comparison: "legacy/native", status: "failed", reason: "second process failed" },
+    coverage: [{ case: "example", comparison: "baseline/native", status: "failed", reason: "second process failed" },
       { case: "lsp", comparison: "native", status: "blocked", reason: "missing server" }],
   }))
   assert.deepEqual(analyze(directory).groups, [])
@@ -197,7 +197,7 @@ test("watch events stay within their process and idle phases stay separate", () 
     idle: [{ memory_measurement: { kind: "physical_footprint" }, records: [
       { trial: 1, implementation: "native", phase: "visible", one_core_percent: 0.1 },
       { trial: 1, implementation: "native", phase: "hidden", one_core_percent: 0.05 },
-      { trial: 1, implementation: "legacy", phase: "visible", one_core_percent: 0.2 },
+      { trial: 1, implementation: "baseline", phase: "visible", one_core_percent: 0.2 },
     ] }],
   })
   assert.equal(groups.length, 4)

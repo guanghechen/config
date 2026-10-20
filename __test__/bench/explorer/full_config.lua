@@ -44,9 +44,7 @@ local ok, error = xpcall(function()
         "--cmd",
         string.format("lua vim.g.explorer_test_root=%q; vim.g.explorer_test_directory=%q", root, directory),
         "--cmd",
-        "lua dofile("
-          .. string.format("%q", harness .. "/__test__/fixtures/era/m/explorer/full_config_init.lua")
-          .. ")",
+        "lua dofile(" .. string.format("%q", harness .. "/__test__/bench/explorer/full_config_init.lua") .. ")",
       },
     })
     local grid = Grid.new(ui)

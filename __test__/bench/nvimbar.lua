@@ -1,11 +1,13 @@
+-- Usage, from the repository root: nvim -l __test__/bench/nvimbar.lua
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.nvimbar" ---@type string
 
 package.path = "./lua/?.lua;./lua/?/init.lua;./?.lua;" .. package.path
-local t = require("__test__.support.harness").new("nvimbar benchmark")
+local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
 local Nvimbar = require("era.m.nvimbar.nvimbar")
 local Future = require("stl.c.future")
+local Stats = require("__test__.bench.stats")
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -39,13 +41,6 @@ bootstrap.with_runtime(t, {
     end,
   } },
 })
-
----@param values                        number[]
----@return number
-local function median(values)
-  table.sort(values)
-  return values[math.ceil(#values / 2)]
-end
 
 ---@param count                         integer
 ---@param staggered                     boolean
@@ -207,11 +202,11 @@ local function measure(count, staggered)
       "%s,%d,%.3f,%.3f,%.0f,%.0f,%.3f\n",
       staggered and "staggered" or "batch",
       count,
-      median(samples.cpu),
-      median(samples.wall),
-      median(samples.layouts),
-      median(samples.publications),
-      median(samples.lag)
+      Stats.median(samples.cpu),
+      Stats.median(samples.wall),
+      Stats.median(samples.layouts),
+      Stats.median(samples.publications),
+      Stats.median(samples.lag)
     )
   )
 end

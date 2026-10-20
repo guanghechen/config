@@ -1,3 +1,4 @@
+-- Usage, from the repository root: nvim -l __test__/bench/filetree.lua [samples=10] [tree|list] [annotations]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.filetree" ---@type string
 

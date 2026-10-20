@@ -1,3 +1,4 @@
+-- Usage, from the repository root: nvim -l __test__/bench/filetree_watch.lua [samples=20]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.filetree_watch" ---@type string
 

@@ -18,7 +18,7 @@ end
 ---@param options                       table
 ---@return table
 function M.run(options)
-  local Runtime = require("__test__.fixtures.era.keystroke.cmp.runtime")
+  local Runtime = require("__test__.support.cmp.runtime")
   Runtime.setup(options.baseline)
   local Rank = require("era.keystroke.cmp.rank")
   local Lsp = require("era.keystroke.cmp.source.lsp")

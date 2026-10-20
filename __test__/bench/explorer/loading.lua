@@ -252,7 +252,7 @@ local ok, result = xpcall(function()
   return {
     records = records,
     memory_measurement = Metrics.memory_description(),
-    conditions = "Fresh native process per sample and mode; one shared warm filesystem fixture. Typed j is injected only while the branch reports Loading and the published frame is applicable. Cursor publication must finish during Loading; visible latency ends at the parent UI flush. Typed h (Tree) or t2 (List to Tree) must retire scan work, preserve the collapsed view, and allow a complete reopen. Cold expansion and warm refresh remain separate. Two-ms child checks, no readiness RPCs during measurement; acceptance only, not a legacy comparison or p95 claim.",
+    conditions = "Fresh native process per sample and mode; one shared warm filesystem fixture. Typed j is injected only while the branch reports Loading and the published frame is applicable. Cursor publication must finish during Loading; visible latency ends at the parent UI flush. Typed h (Tree) or t2 (List to Tree) must retire scan work, preserve the collapsed view, and allow a complete reopen. Cold expansion and warm refresh remain separate. Two-ms child checks, no readiness RPCs during measurement; acceptance only, not a baseline comparison or p95 claim.",
   }
 end, debug.traceback)
 if ui then

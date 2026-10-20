@@ -21,7 +21,7 @@ local loadlib = package.loadlib
 package.loadlib = function(path, symbol)
   return loadlib(symbol == "luaopen_yoz" and native_path or path, symbol)
 end
-local fixture = require("__test__.support.explorer").new("explorer.move.benchmark")
+local fixture = require("__test__.support.explorer").new()
 package.loadlib = loadlib
 local t, await = fixture.t, fixture.await
 local buffers = require("era.m.explorer.buffers")
@@ -29,7 +29,7 @@ local Metrics = require("__test__.bench.explorer.metrics")
 local record
 
 t:test("bulk Move preserves every file and unsaved buffer", function()
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   assert(vim.uv.fs_mkdir(path .. "/unrelated", 448))
   for index = 1, count do

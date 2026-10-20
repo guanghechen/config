@@ -259,7 +259,7 @@ local ok, failure = xpcall(function()
       vim.schedule(function() vim.cmd("qa!") end)
     ]])
     until_(function()
-      return ui._exited
+      return ui.exit_code ~= nil
     end, "Neovim did not exit")
     assert(ui.stderr == "", ui.stderr)
     record.cases[#record.cases + 1] = "hide-dispose-exit"

@@ -1,3 +1,4 @@
+-- Usage, from the repository root: nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [count=50000] [samples=300] [height=50]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.treeview_guides" ---@type string
 

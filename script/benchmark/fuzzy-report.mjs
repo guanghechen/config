@@ -2,30 +2,10 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { median, percentile, variation } from "./stats.mjs"
 
-export function median(values) {
-  if (!values.length) return undefined
-  const sorted = [...values].sort((a, b) => a - b), middle = Math.floor(sorted.length / 2)
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
-}
-
-/** Nearest-rank percentile. */
-export function percentile(values, fraction) {
-  if (!values.length) return undefined
-  const sorted = [...values].sort((a, b) => a - b)
-  return sorted[Math.min(sorted.length, Math.max(1, Math.ceil(sorted.length * fraction))) - 1]
-}
-
-/** Coefficient of variation of process-level values: run-to-run noise. */
-export function variation(values) {
-  if (values.length < 2) return undefined
-  const mean = values.reduce((sum, value) => sum + value, 0) / values.length
-  if (mean === 0) return 0
-  const deviation = Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1))
-  return deviation / mean
-}
-
-/** Distribution of `values`; `processes` are per-process medians, which alone may report a process p95. */
+/** Distribution of `values`; `processes` are per-process medians, which alone may report a process p95.
+ *  `process_cv` measures run-to-run noise. */
 export function distribution(values, processes = []) {
   return {
     n: values.length,

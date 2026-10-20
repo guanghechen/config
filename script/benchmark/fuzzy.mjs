@@ -214,7 +214,7 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
     nvim: capture(values.nvim, ["--version"]).split("\n").slice(0, 3), levels, cases: e2eCases, samples, runs, sequences,
     corpora: Object.fromEntries(names.map((name) => [name, manifest.corpora[name]])),
     implementations: Object.fromEntries(Object.entries(implementations).map(([name, item]) => [name, { path: item.path, library: item.library, source: item.source, runtime_sha256: item.runtime, native_sha256: item.provenance.source.sha256, artifact_sha256: item.provenance.artifact_sha256 }])),
-    harness_sha256: Object.fromEntries(["fuzzy.mjs", "fuzzy-corpus.mjs", "fuzzy-report.mjs"].map((name) => [`script/benchmark/${name}`, fileHash(join(here, name))]).concat(["ffi.lua", "e2e.lua", "probes.lua", "init.lua"].map((name) => [`__test__/bench/fuzzy/${name}`, fileHash(join(checkout, "__test__/bench/fuzzy", name))]))),
+    harness_sha256: Object.fromEntries(["fuzzy.mjs", "fuzzy-corpus.mjs", "fuzzy-report.mjs", "stats.mjs"].map((name) => [`script/benchmark/${name}`, fileHash(join(here, name))]).concat(["ffi.lua", "e2e.lua", "probes.lua", "init.lua"].map((name) => [`__test__/bench/fuzzy/${name}`, fileHash(join(checkout, "__test__/bench/fuzzy", name))]))),
     conditions: {
       order: "fresh processes; one benchmark at a time; L3 implementations alternate A/B and B/A by run",
       rust: "L1 compares matchers inside one release test process: one untimed warm pass, then samples with the probe order rotated per sample; per-query medians",
@@ -244,7 +244,7 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
         for (const plan of rustPlans) {
           check()
           const file = join(output, `rust-${run}-${plan.corpora[0]}.jsonl`)
-          const args = ["test", "--manifest-path", join(current.path, "rust/Cargo.toml"), "-p", "yoz", "--release", "--offline", "--locked", "--lib", "fuzzy::perf_tests", "--", "--ignored", "--nocapture", "--test-threads=1"]
+          const args = ["test", "--manifest-path", join(current.path, "rust/Cargo.toml"), "-p", "yoz", "--release", "--offline", "--locked", "--lib", "fuzzy::perf_tests::t_fuzzy_l1", "--", "--exact", "--ignored", "--nocapture", "--test-threads=1"]
           const env = { YOZ_FUZZY_BENCH_CORPUS: corpusDir, YOZ_FUZZY_BENCH_CORPORA: plan.corpora.join(","), YOZ_FUZZY_BENCH_SAMPLES: String(plan.samples ?? samples), YOZ_FUZZY_BENCH_SEQUENCES: String(plan.stride), YOZ_FUZZY_BENCH_OUT: file, ...(values.probes ? { YOZ_FUZZY_BENCH_PROBES: values.probes } : {}) }
           metadata.commands.push({ level: "rust", run, command: "cargo", args, env })
           console.log(`rust ${run}/${runs} ${plan.corpora.join(",")}`)

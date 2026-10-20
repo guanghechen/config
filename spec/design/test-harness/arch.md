@@ -7,28 +7,36 @@ Rust unit tests 位于 `rust/<crate>/src/` 对应源码模块的 `#[cfg(test)]` 
 Lua spec 按被测模块或 feature 分组，以 `*_spec.lua` 结尾；相关行为可共用目录，例如
 `__test__/specs/era/m/diffview/workspace/`。
 
-| 路径                                 | 用途                                 |
-| ------------------------------------ | ------------------------------------ |
-| `__test__/run.lua`                   | 公共 CLI 与 suite 子进程入口         |
-| `__test__/support/`                  | 共享执行工具与 fixture 支持          |
-| `__test__/specs/`                    | 唯一的 Lua spec 发现目录             |
-| `__test__/specs/support/`            | 测试基础设施自身                     |
-| `__test__/node/*.test.mjs`           | Node 测试，由 `node --test` 执行     |
-| `rust/<crate>/src/`                  | Rust unit test，由 `cargo test` 执行 |
-| `__test__/fixtures/`                 | 跨 spec 或语言共享的 fixture         |
+| 路径                       | 用途                                         |
+| -------------------------- | -------------------------------------------- |
+| `__test__/run.lua`         | 公共 CLI 与 suite 子进程入口                 |
+| `__test__/support/`        | 共享执行工具与 fixture 支持                  |
+| `__test__/specs/`          | 唯一的 Lua spec 发现目录                     |
+| `__test__/specs/support/`  | 测试基础设施自身                             |
+| `__test__/node/*.test.mjs` | Node 测试，由 `node --test` 执行             |
+| `rust/<crate>/src/`        | Rust unit test，由 `cargo test` 执行         |
+| `__test__/fixtures/`       | 跨 spec 或语言共享的 fixture 数据            |
+| `__test__/manual/`         | 手动运行的真实 server 与完整配置检查         |
+| `__test__/bench/`          | 可选的 benchmark driver，结果写入 `results/` |
 
 小型 fixture 留在所属 spec；helper 只有被多个 spec 实际使用时才提取到共享目录。
 本地 harness 不引入第三方依赖、生产抽象或 runtime plugin system。
 
 ## 职责与依赖
 
-| 组件                         | 职责                                  | 持有状态                        |
-| ---------------------------- | ------------------------------------- | ------------------------------- |
-| `__test__/run.lua`           | 定位 checkout、准备 runtime、分派执行 | 进程 CWD、runtime 与 Lua paths  |
-| `__test__.support.runner`    | 发现、筛选、启动、超时控制与汇总      | suite 列表、子进程结果          |
-| `__test__.support.harness`   | 注册 case、断言、执行、清理与报告     | case 注册表、case/suite cleanup |
-| `__test__.support.bootstrap` | 准备显式声明的应用 globals            | 交由 harness 恢复的 global 替换 |
-| `*_spec.lua`                 | 定义可观察行为与回归用例              | 本地 fixture、资源 handle       |
+| 组件                         | 职责                                   | 持有状态                        |
+| ---------------------------- | -------------------------------------- | ------------------------------- |
+| `__test__/run.lua`           | 定位 checkout、准备 runtime、分派执行  | 进程 CWD、runtime 与 Lua paths  |
+| `__test__.support.runner`    | 发现、筛选、启动、超时控制与汇总       | suite 列表、子进程结果          |
+| `__test__.support.harness`   | 注册 case、断言、执行、清理与报告      | case 注册表、case/suite cleanup |
+| `__test__.support.bootstrap` | 准备显式声明的应用 globals             | 交由 harness 恢复的 global 替换 |
+| 其余 `__test__.support.*`    | 子进程、Git、Treeview 等多处共用的步骤 | 由调用方 harness 登记的资源     |
+| `*_spec.lua`                 | 定义可观察行为与回归用例               | 本地 fixture、资源 handle       |
+
+其余 support 模块各管一类资源：`ui`（子 Neovim 的 msgpack-RPC 客户端，含 redraw）、`ui_grid`、`process`
+（headless 脚本与 PTY 进程）、`git`（隔离 identity、签名与 hook 的命令和临时仓库）、`treeview`、`filetree`、
+`explorer`，以及 feature 专用的 `cmp/`、`textobject`、`git_files` 等。它们创建的进程、目录与仓库都通过调用方
+harness 的 `defer` 清理；临时目录一律位于系统临时目录，不写入 checkout。
 
 进程内依赖保持单向：
 
@@ -44,9 +52,18 @@ Runner 通过 `--suite` 启动新进程；该分支直接加载 spec，不导入
 放在正常 domain module，例如 `era.m.ai.capture`。Harness、runner 不导入生产模块；bootstrap
 不导入 runner 或 suite。
 
-Rust unit tests 直接定义在对应源码模块的 `#[cfg(test)] mod tests` 中，保留 private access 与 platform gate；
-共享 Rust 测试支持由 crate 内的 `#[cfg(test)]` 模块提供，普通 build 不包含测试代码。
+Rust unit tests 定义在被测模块的 `#[cfg(test)] mod tests` 中，保留 private access 与 platform gate；
+较长的测试放在 `<module>/tests.rs`，测试文件之间不互相导入。共享支持只放在 `#[cfg(test)] test_support.rs`：
+crate 级的 `TempDir`、`eventually`（轮询条件，超时即失败）、`percentile` 与 `isolated`（在子进程中单独重跑
+会耗尽进程级资源的测试），以及 `ux/treeview`、`ux/filetree`、`git` 各自的 fixture 与测试替身。
+生产代码不含测试钩子，普通 build 不包含测试代码。测试函数以 `t_` 开头；release 模式的测量放在
+`perf_tests.rs` 的 `#[ignore]` 测试中，只断言正确性并打印样本。异步条件用 `eventually` 等待；
+固定 sleep 只用于断言一段时间内不发生某事，或跨越 deadline、watch 合并窗口等时间阈值。
 Node spec 直接导入生产脚本。跨语言共享 fixture 路径相对于 checkout root 解析。
+
+原生库：spec 与 bench 通过 `require("yoz")` 加载本平台安装在 runtimepath 上的库（`lua/yoz.so`，Windows 为
+`lua/yoz.dll`），由 `node script/build.mjs` 按当前平台构建；不依赖 `rust/target` 下的 debug 构建，
+runner 也不编译 native module。Baseline 比较按同样的路径加载另一个 checkout 中安装的库。
 
 ## 执行契约
 
@@ -67,7 +84,8 @@ Node spec 直接导入生产脚本。跨语言共享 fixture 路径相对于 che
 
 ## Harness 与资源生命周期
 
-- 每个 suite 使用一个 harness，并以 `t:run()` 结束 spec。
+- 每个 suite 使用一个 harness，以脚本路径命名，并以 `t:run()` 结束 spec。Spec 没有文件头，
+  不声明 `__module_name__`；只有超过共享超时的 suite 在文件开头声明 `--- Timeout: <ms>`。
 - `t:defer(fn)` 注册 cleanup，返回幂等的提前释放 handle；`patch_global`、`patch_table` 使用同一套清理机制。
 - Case 内注册的资源归该 case；顶层注册的资源归 suite，可供所有 case 使用。
 - 成功和失败后都按注册逆序清理。Cleanup 错误与原始错误同时保留，且不跳过剩余 cleanup。

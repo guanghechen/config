@@ -22,7 +22,7 @@ local ok, result = xpcall(function()
   end
   local records = {}
   for trial = 1, samples do
-    local order = baseline and (trial % 2 == 1 and { "legacy", "native" } or { "native", "legacy" }) or { "native" }
+    local order = baseline and (trial % 2 == 1 and { "baseline", "native" } or { "native", "baseline" }) or { "native" }
     for _, implementation in ipairs(order) do
       local checkout = implementation == "native" and root or baseline
       ui = UI.new({ timeout_ms = 15000 })

@@ -13,10 +13,17 @@ __test__/
   run.lua                  # CLI and isolated suite entry
   support/
     runner.lua             # discovery, process timeout, aggregate result
-    harness.lua            # cases, assertions, cleanup
-    bootstrap.lua          # explicitly declared runtime globals
+    harness.lua            # cases, assertions, await, temporary directories, cleanup
+    bootstrap.lua          # explicitly declared globals, the native library, reporter capture
+    ui.lua                 # msgpack-RPC client for child Neovim processes, with redraws
+    ui_grid.lua            # screen grid built from ext_linegrid redraws
+    process.lua            # headless scripts and PTY Neovim processes
+    git.lua                # isolated Git commands and temporary repositories
+    treeview.lua           # native Treeview requests, ResultTree publishing, typed-ahead checks
     filetree.lua           # native Filetree runtime and filesystem fixtures
-    explorer.lua           # composed Explorer panes, native state and input helpers
+    explorer.lua           # composed Explorer panes, child UI start, native state and input helpers
+    cmp/                   # completion runtime, behavior editor and behavior traces
+    textobject.lua, git_files.lua, diffview_pane.lua, directory_picker.lua  # feature helpers
   specs/
     support/               # tests of the test infrastructure
     ux/filetree/
@@ -54,6 +61,7 @@ __test__/
         component/        # individual data providers and formatters
   node/
     build.test.mjs         # Node tests for script/build.mjs
+  manual/                  # manually run checks against real servers or a full configuration
   fixtures/
     dot/win/
       seed_marks.lua       # isolated ShaDa file-position fixtures
@@ -73,157 +81,16 @@ when they have multiple consumers.
 
 Node tests use `node/*.test.mjs`. Rust unit tests live in the corresponding crate's
 source modules under `#[cfg(test)]`, preserving private access, module names, and
-platform gates. Shared Rust test support also stays inside its crate under `#[cfg(test)]`.
-Filetree reader, runtime, annotations and watch tests use child `tests` modules;
-their production files retain the same private module boundaries and platform gates.
-The archived `myers_linear_space` tests remain disabled alongside their experimental implementation.
+platform gates. Shared Rust test support stays inside its crate in `#[cfg(test)]`
+`test_support.rs` modules: `rust/yoz/src/test_support.rs` (`TempDir`, `eventually`, `percentile`,
+`isolated`), `ux/treeview/`, `ux/filetree/` and `git/`. Test functions are named `t_*`.
+Filetree and Treeview tests use a child `tests` module per production module, such as
+`ux/filetree/jobs/tests.rs` or `ux/treeview/reads/tests.rs`; their production files retain the
+same private module boundaries and platform gates. Opt-in release measurements live in
+`perf_tests.rs` modules and in `#[ignore]` cases named by the measurement records below.
 Production Lua modules have no test-directory references or test-only exports.
 Shared search fixtures preserve their original line endings through local Git
 attributes; LF and CRLF are part of the tested input.
-
-Manual macOS IM measurements live in `bench/im.lua`. Run
-`nvim --headless -u NONE -i NONE -n -l __test__/bench/im.lua [native-library]`
-to measure capture and restoration to the same current source, excluding cold initialization.
-The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
-The benchmark aborts if the source changes externally and does not measure switching between input methods.
-
-Fuzzy matcher measurements (L1 Rust core, L2 FFI, L3 real UI) run through `node script/benchmark/fuzzy.mjs`;
-for example `node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --baseline-rev 117a4fc88 --runs 3`.
-`--current DIR` times a snapshot so the working tree stays editable during long runs. Corpora, levels, statistics, the
-fzf parity check (`fuzzy::perf_tests::fzf_parity`) and the ranking-quality probe (`fuzzy::perf_tests::fuzzy_quality`)
-are described in [Yoz Fuzzy](../spec/design/feat/yoz/fuzzy.md#评测).
-
-Cursor-path guide measurements use `nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [rows] [samples] [ui-height]`.
-Defaults are `lua/yoz.so`, no baseline override, 50,000 rows and 300 samples per operation after 30 warmups.
-Pass `''` for the baseline directory when specifying a larger row count. The fixture imports 512-record chunks,
-expands an eight-way tree, and attaches an 80×50 UI by default. It measures API/Normal adjacent movement, visible
-branch changes, eight API cursor requests in one callback, redraw before CursorMoved, cold jumps, scrolling and
-Visual movement through native publication and UI flush, with natural GC and an assertion of zero body writes.
-The burst alternates between two visible rows: its first request repeats the existing position and seven move it.
-The optional baseline directory contains the previous `decorations.lua`, `surface.lua` and `view.lua`; both variants
-use the same release native module. Output includes p50/p95/max, sample counts, surface work, path updates,
-prepare/redraw/guide-extmark counts and retained Lua heap. `flush` measures visible output; `publication` measures
-native frame acknowledgement; `settled` waits for both and for deferred path invalidation to clear.
-Viewport preparation calls are separate from native row-query counts and exported-row totals, including bounded
-overscan. Process CPU per operation uses getrusage after warmup and includes native threads and measurement RPCs.
-Cursor-only publications can acknowledge pixels that
-already flushed and need no further redraw. Path-update time includes any immediate redraw it requests;
-it is not an isolated ancestry-query measurement. External terminal/compositor presentation is excluded.
-
-2026-10-10 guide-path acceptance: Apple M1 Pro, Darwin 27.0.0, Neovim 0.12.5, release module. Three independent
-baseline/current pairs use 50k preloaded rows, 300 samples per operation after 30 warmups, natural GC, and reversed
-order in the second pair. The baseline already draws the same straight/rounded path glyphs. Settled p95 in ms:
-
-| Operation | Before | After |
-| --- | ---: | ---: |
-| Adjacent movement | 1.702–1.879 | 0.483–0.607 |
-| Cross-branch jump | 2.570–2.729 | 1.453–1.835 |
-| Scrolling | 1.985–2.003 | 0.861–0.996 |
-| Visual movement | 1.931–1.980 | 0.525–0.591 |
-
-Adjacent/Visual movement submits 2 guide extmarks instead of 276 in this fixture, with no repeated viewport export
-or whole-window redraw at native acknowledgement. A cold jump submits 48 instead of about 450 guide extmarks;
-viewport reads and whole-window redraws drop from two each to one. Actual adjacent UI-flush p95 is 0.227–0.299 ms.
-At 200k rows, settled p95 is 0.385/1.755/0.920/0.516 ms for the same four operations. All runs record zero body writes.
-These synthetic results exclude filesystem discovery and loading. A separate before/after grid comparison matches
-all 192 cases across three widths, Normal/Visual modes, sparse guides and eight horizontal offsets, including colors
-and backgrounds. The native regression also covers a 10,000-level source with only 50 visible path segments;
-it does not claim that rendering all 10,000 indentation columns meets the same UI latency target.
-
-The subsequent invalidation fixes retain those draw counts. Three 50k-row A/B pairs on the same setup measured
-settled p95 0.590–0.679 ms for adjacent movement, 1.800–2.017 ms for jumps, 0.966–1.148 ms for scrolling and
-0.579–0.661 ms for Visual movement. Every sample still performed zero body writes. Focused UI regressions now cover
-purpose-only marker changes, redraw before CursorMoved, cursor round trips without a new event, and closing a view
-with a deferred path redraw pending.
-
-The next optimization adds bounded overscan behind exact viewport slices and coalesces path redraws within one
-event-loop turn. Three before/after pairs on the same machine/library, with 300 samples and 30 warmups per operation,
-give these medians of per-process settled p95 (ms):
-
-| Operation | Before | After |
-| --- | ---: | ---: |
-| Normal adjacent movement | 0.555 | 0.613 |
-| Visible cross-branch movement | 1.281 | 1.307 |
-| Eight API requests / seven moves | 4.857 | 1.689 |
-| Cold jump | 1.901 | 1.962 |
-| Scrolling | 1.118 | 0.986 |
-| Visual movement | 0.651 | 0.620 |
-
-The gains concentrate on batched movement and scrolling. Scrolling exports 6.91 native rows per
-operation instead of 46.22; mean process CPU drops from 0.787 to 0.600 ms. The burst requests one range redraw instead
-of seven, with mean process CPU 4.470 to 1.260 ms. With an 80×150 UI, burst p95 is 14.562 to 3.387 ms and scroll p95
-1.735 to 1.368 ms; a single visible cross-branch move is 2.781 to 3.055 ms. At 200k rows the burst remains 1.612–1.772 ms,
-although ordinary-movement p95 varies up to 1.365 ms; those samples are retained without attributing a cause.
-
-A real Explorer fixture with 256 preloaded Lua files, icons, the annotation pipeline and no Git/LSP collection gives
-burst p95 6.089 to 2.853 ms, scroll 5.114 to 4.780 ms, and Normal movement 1.375 to 1.449 ms across three pairs.
-Its scroll exports fall from 37.92 to 5.88 rows per operation, but mean process CPU only falls from 2.916 to 2.839 ms:
-consumer preparation and repainting still dominate. All samples retain zero body writes. Treeview/Filetree/Explorer
-regressions, exact viewport and budget checks, and 32 natural-vs-forced UI comparisons pass. These measurements
-exclude discovery/loading and the external compositor; Lua heap readings include JIT/cache variation and are not
-interpreted as an exact memory delta for this change.
-
-The Explorer runner and report generator live in [`script/benchmark/`](../script/benchmark/).
-Lua probes and usage are documented in [`bench/explorer/`](bench/explorer/README.md).
-The runner supports isolated native/legacy
-Tree comparison, separate native List runs, full startup, real Git, copy throughput,
-idle/activity CPU and lifecycle/UI/LSP acceptance in one case catalog. Source-bound
-release builds, raw samples, explicit memory definitions, input fingerprints and
-independent-process summaries make the result reviewable. Coverage records failed,
-blocked and platform-specific cases; empty Git notification timing remains separate
-from actual Git collection. The guide also documents the focused probe commands.
-
-Filetree measurements use the installed release module (`lua/yoz.so`) and an attached 80×48 UI:
-`nvim -l __test__/bench/filetree.lua 20 tree annotations` (or `list`). Each run creates 50k files,
-keeps natural GC during samples, and reports publication/flush latency and separate memory metrics.
-The optional `annotations` argument also measures a 48-row viewport, worst-case 50k-row diagnostic
-navigation, and diagnostic updates through UI flush. Native stage and loaded-alias measurements
-are opt-in Rust tests `t_native_directory_stages` and `t_annotations_wide_directory_with_loaded_aliases`;
-run them with `cargo test --release ... -- --ignored --nocapture` and without concurrent test/build load.
-
-2026-09-22 acceptance: Apple M2 Max / 32 GiB, Darwin 27.0.0, Neovim 0.12.5, release module,
-80×48 attached UI, 50k files, 20 samples per mode with natural GC. Values below are p95 milliseconds:
-
-| Measurement | Tree | List |
-| --- | ---: | ---: |
-| First 512 rows through UI flush | 17.590 | 20.747 |
-| Complete initial load through UI flush | 1986.568 | 1969.299 |
-| 48-row annotation query | 1.930 | 1.660 |
-| Diagnostic navigation across 50k visible rows | 14.196 | 14.066 |
-| Diagnostic update through UI flush | 2.888 | 2.506 |
-
-Both complete-load p95 values meet the 2 s target, and these local annotation operations meet 16 ms.
-The initial unchanged implementation measured 2021.666/2075.876 ms. The final change caches source-order
-sibling ranks during projection and reads display options only on demand, avoiding an unused Lua table
-on every polling tick. The maximum Tree complete flush was 2050.850 ms; the acceptance bound is p95.
-Rust retained memory after collection was about 109.2 MiB per final tree, with zero queued work.
-Final Lua heaps were 1055.8/1021.0 KiB; process RSS was 992768/1017920 KiB after natural-GC samples.
-These metrics describe different owners and must not be added together.
-
-The release alias benchmark passed: 50k synthetic files plus 128 real loaded aliases, 20 samples,
-annotation aggregate p95 10.086 ms and sparse Git navigation p95 6.054 ms. A separate 98-page native
-scan measured IO 237.980 ms, apply 472.549 ms, projection 682.003 ms; these are single-run stage totals.
-Seven existing release performance tests passed. Three-state 50k leaf updates measured p95 0.052 ms;
-preparing 50k explicit operation roots took p95 64.646 ms on the native owner, separately from local UI
-interaction. Deep ancestry tests covered 1k/2k/4k/8k nodes; ordinary tests cover 10k-depth construction,
-text storage and iterative release. The filtered 8k ancestor batch measured p95 16.168 ms.
-On the real macOS filesystem, 471 nested directories reached a 1022-byte absolute path; creating the
-next level returned `ENAMETOOLONG`. Native Filetree open, resource lookup and details succeeded at that
-deepest path, and the temporary tree was removed.
-
-The explicit 200k stress case uses a 2 GiB budget: 200005 source nodes, three states with different roots
-and Tree/List modes, three retained old frames, leaf/directory rename, reparent, insert/remove and metadata
-changes. It passed with about 321.1 MiB retained; dropping all handles returned accounted memory to zero.
-This synthetic pressure case is separate from the real 50k filesystem baseline.
-
-Watch latency uses `nvim -l __test__/bench/filetree_watch.lua 20` with an attached 80×24 UI.
-A real single-file rename measured p95 185.722 ms from mutation to UI flush,
-including the 150 ms coalescing window. Lua's first observation of the new source to flush measured
-p95 0.325 ms. A separate native OS notification probe measured
-p95 14.424 ms with 1 ms polling. These are separate observations, not an additive per-event trace.
-The backend coalescing window is fixed; IO and owner scheduling remain included in the total latency.
-After detach the watch count and queue depth were zero. The ordinary native suite also opens/releases
-100 data/state/view instances and checks final budget reclamation after retained frames are dropped.
 
 Explorer integration tests use the actual Filetree/Treeview runtime and default entry. They cover shared
 and independent state, symlink reveal, root loss/recreation, flags and titles, Visual selection, queued
@@ -232,61 +99,23 @@ dirty-buffer preservation, byte-name isolation, trash failure, complete target p
 subscriptions and real typed exit commands. Trash tests use a temporary PATH tool and do not alter the
 user's recycle bin. `status_runtime.lua` now checks the default Explorer's native ignore decoration.
 
-Final regression run: Rust workspace 474 passed, with the 15 opt-in cases exercised separately;
-Explorer 32 cases / 7 suites, UX 28 cases / 7 suites, source-window opening 11 cases, LSP rename 7 cases,
-and all 11 adjacent nvimbar suites passed. StyLua, Lua annotation alignment, cargo fmt and diff checks
-passed. The full-config Git smoke passed status parity, stable native handles, signs, Explorer ignore
-and blame using the installed release module. Restart an existing Neovim process to load the new native API.
-
-Cross-filesystem acceptance ran all three opt-in Job cases on a separate temporary 512 MiB APFS volume,
-including watched 128 MiB copy/move coordination. The volume was detached and its image removed.
-Reproduce on a disposable second filesystem with `FILETREE_TEST_VOLUME=/absolute/mount` and
-`cargo test --manifest-path rust/Cargo.toml -p yoz --lib cross_filesystem -- --ignored --test-threads=1`.
-
-Run stress probes sequentially without concurrent builds:
-
-```sh
-cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib performance -- --ignored --nocapture --test-threads=1
-cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib t_large_multi_root_mutations_keep_retained_frames -- --ignored --nocapture
-cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib t_annotations_wide_directory_with_loaded_aliases -- --ignored --nocapture
-cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib t_native_watch_notification_latency -- --ignored --nocapture
-cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib t_native_link_watch_budget_stress -- --ignored --nocapture
-```
-
-The watch-budget stress needs a file descriptor limit of at least 4096. It covers
-55 external symlink targets: macOS caps actual recursive roots at 50, while Linux
-retains the 50-directory cap. The macOS attached-UI probe
-`nvim -l __test__/bench/explorer/root_watch.lua 3` separately verifies 96 expanded
-directories under one root, closed-cache freshness, external target recovery and
-subscription release. Windows has a native
-`ReadDirectoryChangesW` backend and is checked with the installed `x86_64-pc-windows-msvc` target.
-Linux/Windows/WSL runtime and their trash backends were not executed on this macOS host; cross-compilation
-does not establish runtime/watch acceptance on those platforms.
-
-Completion regression specs and their shared protocol/editor fixtures live under
-`specs/era/keystroke/cmp/` and `fixtures/era/keystroke/cmp/`. Ordinary suites do not
-require Blink, benchmark runners or generated results:
+Completion regression specs live under `specs/era/keystroke/cmp/`; their runtime and behavior
+editor are in `support/cmp/`, and behavior cases with per-step expectations are in
+`fixtures/era/keystroke/cmp/behavior/`. Ordinary suites need no benchmark runners or generated results:
 
 ```sh
 nvim -l __test__/run.lua era/keystroke/cmp/
 cargo test --offline --manifest-path rust/Cargo.toml -p yoz completion:: --lib
 
 # Real servers, using an existing Mason executable or an explicit executable argument
-nvim -l __test__/fixtures/era/keystroke/cmp/lua_ls.lua
-nvim -l __test__/fixtures/era/keystroke/cmp/emmet.lua
+nvim -l __test__/manual/era/keystroke/cmp/lua_ls.lua
+nvim -l __test__/manual/era/keystroke/cmp/emmet.lua
 ```
 
 The [completion behavior guide](../spec/debug/cmp-behavior.md) maps failures to focused
-suites. Shared RPC is in `support/rpc.lua`; full-sort, tokenization and scalar/SIMD
-oracles remain separate from production algorithms.
-
-Completion benchmarks and the frozen Blink behavior comparison are optional tooling.
-The [performance guide](../spec/debug/cmp-comparison.md) documents the CLIs, baseline
-contract, sampling/GC boundaries and JSON/gzip reporter. Run reporter and CLI tests with
-`node --test __test__/node/cmp-*.test.mjs`.
-Runners and fixtures are versioned; samples, traces, failure logs and local analysis
-under `bench/results/` and `compare/results/` are ignored by Git. Tools use existing
-binaries and never install or download dependencies.
+suites. Full-sort, tokenization and scalar/SIMD oracles remain separate from production algorithms.
+The [performance guide](../spec/debug/cmp-benchmark.md) documents the benchmark CLI, baseline
+contract, sampling/GC boundaries and reporter; `node --test __test__/node/cmp-*.test.mjs` tests them.
 
 Git regression coverage lives in `specs/era/m/git/` and `../rust/yoz/src/git/`:
 
@@ -312,13 +141,13 @@ alone still resolves modules from the default config path:
 nvim --headless \
   --cmd 'lua vim.opt.runtimepath:prepend(vim.uv.cwd()); package.cpath = vim.uv.cwd() .. "/lua/?.so;" .. package.cpath' \
   -u init.lua -i NONE -n lua/era/m/git/ignore.lua \
-  -c 'luafile __test__/fixtures/era/m/git/status_runtime.lua'
+  -c 'luafile __test__/manual/era/m/git/status_runtime.lua'
 ```
 
 For full-config word-highlight E2E, open a tracked file with an unstaged change hunk:
 use the same runtime/native prelude, a changed tracked file, and
-`-c 'luafile __test__/fixtures/era/m/git/word_diff_runtime.lua'`.
-These fixtures compare actual UI data with the Lua oracle, disable context saving and exit without
+`-c 'luafile __test__/manual/era/m/git/word_diff_runtime.lua'`.
+These checks compare actual UI data with the Lua oracle, disable context saving and exit without
 writing source buffers.
 
 ## Run
@@ -360,9 +189,9 @@ parsers. The canonical checkout is also the CWD. No user configuration or plugin
 startup is loaded automatically.
 
 Requirements are the latest Neovim and the existing repository toolchain.
-Native `yoz` specs need the compiled module in `lua/`; build it through the
-existing `node script/build.mjs` workflow. Git integration specs use temporary
-local repositories. The runner does not install dependencies or build production artifacts.
+Native `yoz` specs load the library this platform installs in `lua/` (`yoz.so`, or `yoz.dll` on
+Windows) through `require("yoz")`; build it with `node script/build.mjs`, which compiles only the
+current platform's target. Git integration specs use temporary local repositories. The runner does not install dependencies or build production artifacts.
 The native blame exit spec uses the installed `rustc` to build a tiny controlled Git-process fixture
 in its temporary directory; it is removed during cleanup. Real Git query/parsing parity is tested separately.
 
@@ -381,7 +210,7 @@ before any suite starts.
 ```lua
 local harness = require("__test__.support.harness")
 local parser = require("era.dressing.indentline.parser")
-local t = harness.new("era.dressing.indentline.options")
+local t = harness.new()
 
 t:test("uses tabstop when shiftwidth is zero", function()
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -399,129 +228,75 @@ end)
 t:run()
 ```
 
+- Specs have no header: the suite takes its name from the file path, and specs declare no `__module_name__`.
 - Name cases after observable behavior and include a concrete trigger for regressions.
 - Prefer real small inputs and native buffer/window APIs when their behavior is the contract.
 - Use `patch_global` and `patch_table` for controlled substitutions; each returns an idempotent restore handle.
 - Register resources with `defer` immediately after acquisition. Cleanup runs in reverse order, including after failures. Top-level registrations last for the suite; registrations inside a case last for that case.
 - Declare application globals through `__test__.support.bootstrap`. Load `ark.bootstrap` explicitly only when the composed runtime is part of the test.
-- Wait for observable async completion with `t.wait_until(predicate, timeout_ms, message)`; settle or cancel owned work before cleanup.
+- Compare tables with `t.assert_same(expected, actual, message)`, which shows both sides on failure.
+- Wait for observable async completion with `t.wait_until(predicate, timeout_ms, message)` or a Future with
+  `t.await(future, timeout_ms)`; settle or cancel owned work before cleanup. When the predicate makes RPC requests
+  to a child, use `ui:wait_until`: a request inside a `vim.wait` callback keeps the wait from timing out.
+- Create temporary directories with `t:tempdir()` under the system temporary directory, never inside the checkout;
+  temporary Git repositories come from `support.git`, child processes from `support.process` or `support.ui`.
+- Load the native library with `bootstrap.with_native(t)` and record reports with `bootstrap.with_reporter(t)`.
 - Skip only after detecting at runtime that the environment cannot exercise the behavior, such as a filesystem that refuses a name; never skip to hide a failure.
 - Keep temporary repositories, files, buffers, and windows owned by the creating test. Test failures must retain their original diagnostics.
 
-## Native result consumers
+## Benchmarks
+
+Benchmarks are optional tooling. Run them sequentially, without concurrent builds,
+tests or other benchmarks; they use existing binaries and never install or download
+dependencies. Samples, traces and local analysis under `bench/results/` are ignored by Git. Measurement records keep each scenario's method
+and latest baseline:
+
+- [Explorer and Filetree](bench/explorer/README.md): the unified Explorer runner in
+  [`script/benchmark/`](../script/benchmark/), focused Lua probes, Filetree probes and
+  opt-in Rust scan, watch and copy-capacity tests.
+- [Treeview](bench/treeview.md): synthetic projection, `ux::treeview::perf_tests`,
+  real data consumers, guides, result consumers, Diffview and List measurements.
+- [Yoz Fuzzy](../spec/design/feat/yoz/fuzzy.md#评测): L1 Rust core, L2 FFI and L3 real UI.
+- [Completion](../spec/debug/cmp-benchmark.md): the completion benchmark and reporter.
+
+Fuzzy matcher measurements run through `node script/benchmark/fuzzy.mjs`;
+for example `node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --baseline-rev 117a4fc88 --runs 3`.
+`--current DIR` times a snapshot so the working tree stays editable during long runs. Corpora, levels, statistics, the
+fzf parity check (`fuzzy::perf_tests::t_fzf_parity`) and the ranking-quality probe (`fuzzy::perf_tests::t_fuzzy_quality`)
+are described in the fuzzy design.
+
+Manual macOS IM measurements live in `bench/im.lua`. Run
+`nvim --headless -u NONE -i NONE -n -l __test__/bench/im.lua [native-library]`
+to measure capture and restoration to the same current source, excluding cold initialization.
+The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
+The benchmark aborts if the source changes externally and does not measure switching between input methods.
+
+Cursor-path guide measurements use `nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [rows] [samples] [ui-height]`.
+Defaults are `lua/yoz.so`, no baseline override, 50,000 rows and 300 samples per operation after 30 warmups.
+Pass `''` for the baseline directory when specifying a larger row count. The fixture imports 512-record chunks,
+expands an eight-way tree, and attaches an 80×50 UI by default. It measures API/Normal adjacent movement, visible
+branch changes, eight API cursor requests in one callback, redraw before CursorMoved, cold jumps, scrolling and
+Visual movement through native publication and UI flush, with natural GC and an assertion of zero body writes.
+The burst alternates between two visible rows: its first request repeats the existing position and seven move it.
+The optional baseline directory contains the previous `decorations.lua`, `surface.lua` and `view.lua`; both variants
+use the same release native module. Output includes p50/p95/max, sample counts, surface work, path updates,
+prepare/redraw/guide-extmark counts and retained Lua heap. `flush` measures visible output; `publication` measures
+native frame acknowledgement; `settled` waits for both and for deferred path invalidation to clear.
+Viewport preparation calls are separate from native row-query counts and exported-row totals, including bounded
+overscan. Process CPU per operation uses getrusage after warmup and includes native threads and measurement RPCs.
+Cursor-only publications can acknowledge pixels that
+already flushed and need no further redraw. Path-update time includes any immediate redraw it requests;
+it is not an isolated ancestry-query measurement. External terminal/compositor presentation is excluded.
 
 `nvim -l __test__/bench/treeview_results.lua 50000` drives the production ResultPaths/ResultFiles adapter
 in an attached 100×40 UI with virtual file records (no filesystem scan). It reports producer time,
 first complete UI flush, cursor feedback and native confirmation separately, buffer writes during
 cursor movement, retained Lua heap, and collection of the first directory's selected identities.
-Run it without concurrent builds or test suites.
-
-On the 2026-10-10 macOS run after result-consumer optimization, 50,000 files produced 50,500 rows:
-producer 190 ms, initial flush 1.86 s, 30 cursor moves p50 0.22 ms / p95 0.35 ms,
-native confirmation p95 0.61 ms, zero cursor body writes, and 67.6 MiB additional Lua heap.
-Collecting 101 selected identities took 7.2 ms. The adapter retains one compact record signature
-generation to avoid full uploads when topology is unchanged.
-These are one-process observations, not a latency guarantee.
-Icon detection is viewport-only; an earlier all-file detection run spent 4.16 s in the producer.
 
 `nvim -l __test__/bench/treeview_diffview.lua 10000 10` drives actual Diffview expansion actions in an
 attached 100×40 UI. It separates the header-only first screen and first file materialization from
 subsequent expansion/collapse, and counts record-plan rebuilds, imports and icon lookups in the hot loop.
-Across three independent runs, the medians were 3.2 ms for the collapsed first screen, 337 ms for the
-first expansion, expansion p50 9.1 ms / p95 12.0 ms, and collapse p50 3.1 ms / p95 3.3 ms.
-The hot loop performed zero plan rebuilds, imports or icon lookups. The expanded commit contains
-10,101 rows; files remain absent from inline records until their first expansion.
 
 `nvim -l __test__/bench/diffview_navigation.lua 5000` measures cold/hot adjacency and navigation after
 metadata publication. Add a preserved baseline directory as the second argument; pass `"" directories`
-to sample skipping collapsed directories. Preview I/O and UI flush are excluded. Results and native
-index memory comparisons are recorded in
-[Treeview performance](bench/treeview.md#2026-10-12-迁移收尾与索引压缩采样).
-
-A separate before/after run through the real FiletreeComposer used virtual paths, the same UI and
-three independent processes. At 50,000 files, collecting 100 files for the actual open action fell
-from 1.82 s to 13 ms (10–16 ms across the final runs; file opening and disk IO stubbed out).
-Filtering to ten files fell from 205 ms to 107 ms; refreshing an identical collection fell from
-1.10 s to 0.63 s, with its longest 2 ms event-loop timer gap falling from 356 ms to 40 ms.
-Switching to List fell from 302 ms to 145 ms; switching back to Tree fell from 259 ms to 61 ms.
-First display changed from 1.86 s to 1.92 s, while its longest timer gap fell from 327 ms to 217 ms.
-There are costs: retained Lua heap rose from 55.8 MiB to 65.7 MiB, and reopening after a refresh
-rose from 45 ms to 72 ms (51–73 ms across the final runs). Ordinary selection remained about 5.5 ms;
-single-directory expansion changed from 4.5 ms to 5.5 ms. These measurements use natural GC during
-each operation; no GC tuning or forced collection is used to make reopening faster. Heap is measured
-after collection outside the operation timings. A final baseline spot check measured 1.86 s for the
-bulk action, 206 ms filtering, 1.09 s refresh and 50 ms reopen.
-At 5,000 files, filtering fell from 195 ms to 70 ms and an identical refresh from 259 ms to 79 ms;
-final reopening measured 15 ms. These synthetic results exclude filesystem discovery and the external
-terminal/compositor. They are observations on this machine, not a latency guarantee.
-These comparisons use the migration immediately before optimization as their baseline, not HEAD.
-
-The Searcher 500-result 50 ms regression check collects its fixture before starting the native job,
-so earlier correctness cases do not contribute their dead owners/frames to the measured publication.
-The threshold is unchanged and GC remains enabled during the sample. Five independent runs measured
-19–26 ms for normal results and 27–38 ms for replace preview. Without that fixture cleanup, accumulated
-garbage produced 52–60 ms outliers; this microbenchmark is not a natural-GC tail-latency guarantee.
-
-On 2026-10-11, explicit View suspension restored result buffer/Frame reuse. In three independent
-FiletreeComposer processes per variant (100×40 UI, natural GC, alternating order), reopening 50,000
-files fell from 78.5 ms to 17.7 ms median; 5,000 files fell from 20.2 ms to 13.9 ms. All six optimized
-reopens performed zero body writes. The comparison baseline is migration commit `7afabbf14`, not the
-pre-migration Lua renderer. First display at 50,000 files remained 1.95 s; identical refresh measured
-622 ms before and 612 ms after. Hidden results retain one owned scratch buffer until disposal.
-
-The next comparison against `0fca27937` uses preserved Lua/native binaries and three processes per
-variant. A native append-only import path and viewport-only location span preparation reduced:
-
-| Scenario | Before | After |
-| --- | ---: | ---: |
-| Generic Tree, 5,000 symbols, first UI | 98.3 ms | 70.9 ms |
-| Searcher, 5,000 matches / one file, first UI | 210.4 ms | 104.6 ms |
-| Searcher, same workload, process CPU | 249.9 ms | 119.4 ms |
-| Searcher, same workload, RSS increment | 57.5 MiB | 36.0 MiB |
-| File Picker, 50,000 files, first UI | 1.93 s | 1.43 s |
-
-The 50k Picker still has a roughly 200 ms synchronous producer gap. Its initial RSS increment rose
-from 276 to 317 MiB, while the complete interaction sequence ended at 352 versus 340 MiB. A separate
-macOS malloc-zone check of the native change measured essentially identical live allocations
-(135.57/135.60 MiB) and reserved allocator memory (172.59 MiB); RSS is residency, not a live-object count.
-These samples do not measure peak RSS. Retained Lua heap at 50k stayed around 65.6 MiB; dense Searcher
-Lua heap stayed around 13.4 MiB. Identical path refreshes now preserve viewport icon caches, eliminating
-the 34 repeated icon lookups observed on reopen. Snapshot preparation still traverses the complete
-producer; sparse native writes do not imply an end-to-end delta preparation path.
-
-Diffview's materialization-cache comparison against `07b029f0f` visits and collapses five commits with
-10,000 files each, then waits for cache work to settle. Across three processes, retained materialized
-nodes fell from 50,506 to 20,206, additional Lua heap from 100.5 to 42.7 MiB, and RSS increment from
-436 to 211 MiB. Raw Git file lists are setup input in both variants. The fifth expansion plus cache
-settlement fell from 1.43 s to 0.83 s; reclamation adds three imports across the sequence.
-Single-commit hot expansion remained about 14 ms median, with zero hot plan rebuilds/imports; collapse
-was about 6.5–6.7 ms in that UI sample. Expanded/current commits remain live content outside the
-20,000-node collapsed-cache budget, and cold reopens restore saved directory folds after importing.
-
-Cooperative bulk-path preparation was compared against `daae1772f` at 50,000 files. Three natural-GC
-processes measured nested first UI at 1.39 s median (before 1.43 s) and longest event-loop gap at
-22.2 ms (before 209 ms). A phase profile isolated the producer gap to 9.5 ms; the remaining roughly
-20 ms spikes occurred inside individual presentation/MessagePack/VM calls. Disabling automatic GC
-in an isolated diagnostic did not eliminate them, so they are not all attributed to GC and the
-production GC policy is unchanged. The whole pipeline is not claimed to meet a strict 20 ms ceiling.
-For one wide directory with deterministic frecency scores, first UI fell from 2.04 s to 1.76 s and
-the longest gap from 377 ms to 19.5 ms. Two complete-flow checks measured identical refresh at
-595–600 ms with 6.7–7.1 ms gaps, and reopen at 4.0–7.2 ms with zero body writes or repeated icon lookups.
-The synthetic input excludes filesystem discovery. Preparation copies and validates generations
-before one source adoption; the existing displayed result is not partially rewritten.
-
-Final whole-migration acceptance compared original `c55d9c6ad` with runtime `543fcb2ca` in three
-independent processes per variant, reversing order in the second round. At 50k files, File Picker
-first UI measured 4.99→1.45 s, identical refresh 5.28→0.63 s, initial max timer gap 4.99 s→22.6 ms,
-directory collapse 388→11 ms and expansion 391→3.7 ms. Reopen measured 5.0→7.8 ms, with zero body
-writes in both; cursor p95 was 0.84→1.10 ms, also with zero body writes. These are whole-migration
-figures, distinct from the intermediate migration regressions corrected above.
-
-Remaining costs are explicit: generic 5k Tree first UI is 23.3→71.0 ms, despite collapse/expansion
-falling from roughly 142 ms to 2.5 ms and its initial main-thread gap falling from 21.9 to 6.2 ms.
-Dense Searcher first UI is 148→108 ms, but process CPU is 72→123 ms, retained Lua 7.1→13.3 MiB and
-RSS increment 25.8→36.4 MiB. Picker initial RSS is 278→303 MiB while its completed interaction
-sequence ends at 351→313 MiB. The 50k Tree→List transition still has an O(N) preparation path
-(158 ms total and an 86 ms max timer gap in this sample). No uniform speedup or strict frame-time
-guarantee is claimed. The final runtime passes all 252 Lua suites; Rust validation is 619 passed,
-28 ignored.
+to sample skipping collapsed directories. Preview I/O and UI flush are excluded.

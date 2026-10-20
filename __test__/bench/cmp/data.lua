@@ -1,6 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.cmp.data" ---@type string
 
+local Stats = require("__test__.bench.stats")
+
 local M = {}
 
 ---@param count                         integer
@@ -71,15 +73,11 @@ end
 ---@param values                        number[]
 ---@return table
 function M.stats(values)
-  local sorted = vim.list_extend({}, values)
-  table.sort(sorted)
-  local middle = math.floor(#sorted / 2)
   return {
-    median = #sorted % 2 == 1 and sorted[middle + 1]
-      or (#sorted > 0 and (sorted[middle] + sorted[middle + 1]) / 2 or nil),
-    p95 = sorted[math.ceil(#sorted * 0.95)],
-    min = sorted[1],
-    max = sorted[#sorted],
+    median = Stats.median(values),
+    p95 = Stats.percentile(values, 0.95),
+    min = Stats.percentile(values, 0),
+    max = Stats.percentile(values, 1),
     samples = values,
   }
 end

@@ -18,7 +18,7 @@ end
 yoz = assert(
   package.loadlib(
     variant.library
-      or vim.env[implementation == "legacy" and "NVIM_EXPLORER_BENCH_BASELINE_NATIVE" or "NVIM_EXPLORER_BENCH_NATIVE"]
+      or vim.env[implementation == "baseline" and "NVIM_EXPLORER_BENCH_BASELINE_NATIVE" or "NVIM_EXPLORER_BENCH_NATIVE"]
       or root .. "/lua/yoz." .. (vim.uv.os_uname().sysname == "Windows_NT" and "dll" or "so"),
     "luaopen_yoz"
   )

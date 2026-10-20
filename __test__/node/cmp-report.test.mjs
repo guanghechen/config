@@ -1,4 +1,3 @@
-// Run with: node --test __test__/node/cmp-report.test.mjs
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
@@ -7,7 +6,7 @@ import { join } from "node:path"
 import test from "node:test"
 import { gzipSync } from "node:zlib"
 
-import { collectRuns, measureLoad, renderReport, statistics } from "../bench/cmp/report.mjs"
+import { collectRuns, measureLoad, renderReport, statistics } from "../../script/benchmark/cmp-report.mjs"
 
 function directory(t) {
   const root = mkdtempSync(join(tmpdir(), "cmp-report-test-"))
@@ -69,7 +68,7 @@ function loadCase() {
     },
   })
   return {
-    engine: "blink",
+    engine: "era",
     scenario: { name: "warm_test", count: 10, interval_ms: 10, seed: "g" },
     plan: ["ge", "get", "ge"].map((query, index) => ({ query, offset_ms: index * 10 })),
     samples: [
@@ -170,58 +169,8 @@ test("pooling rejects duplicate directories, different builds and different samp
   const changed = run(root, "changed", { ranking: ranking([2]) }, { native_sha256: "native-v2" })
   const differentHost = run(root, "host", { ranking: ranking([2]) }, { cpu: "other" })
   assert.throws(() => collectRuns([first, first]), /same run/)
-  assert.throws(() => collectRuns([first, changed]), /different era implementations/)
+  assert.throws(() => collectRuns([first, changed]), /different native implementations/)
   assert.throws(() => collectRuns([first, differentHost]), /sampling conditions/)
-})
-
-test("Blink pooling uses Lua content even when native and Git metadata are unchanged", (t) => {
-  const root = directory(t)
-  const data = { load: { cases: [loadCase()], heartbeat_period_ms: 2 } }
-  const metadata = {
-    blink_lua_sha256: "blink-lua-v1",
-    blink_revision: "revision-v1",
-    blink_dirty: " M lua/blink/cmp/init.lua",
-    libraries: { blink: { sha256: "blink-native-v1" } },
-  }
-  const first = run(root, "first", data, metadata)
-  const changed = run(root, "changed", data, { ...metadata, blink_lua_sha256: "blink-lua-v2" })
-  assert.throws(() => collectRuns([first, changed]), /different blink_lua implementations/)
-})
-
-test("identical Blink code can pool across Git metadata changes", (t) => {
-  const root = directory(t)
-  const data = { load: { cases: [loadCase()], heartbeat_period_ms: 2 } }
-  const metadata = {
-    blink_lua_sha256: "blink-lua-v1",
-    blink_revision: "revision-v1",
-    blink_dirty: "",
-    libraries: { blink: { sha256: "blink-native-v1" } },
-  }
-  const first = run(root, "first", data, metadata)
-  const second = run(root, "second", data, { ...metadata, blink_revision: "revision-v2", blink_dirty: " M README.md" })
-  const result = collectRuns([first, second])
-  const row = [...result.metrics.values()].find((metric) => metric.metric === "cpu_per_key")
-  assert.equal(row.values.length, 2)
-  assert.match(renderReport(result), /Blink Lua SHA/)
-})
-
-test("pooling Blink samples requires Lua and native identity in every run", (t) => {
-  const root = directory(t)
-  const data = { load: { cases: [loadCase()], heartbeat_period_ms: 2 } }
-  const metadata = { blink_lua_sha256: "blink-lua-v1", libraries: { blink: { sha256: "blink-native-v1" } } }
-  const complete = run(root, "complete", data, metadata)
-  for (const [name, partial] of [
-    ["missing-lua", { libraries: metadata.libraries }],
-    ["missing-native", { blink_lua_sha256: metadata.blink_lua_sha256 }],
-    ["missing-both", {}],
-  ]) {
-    const first = run(root, name, data, partial)
-    const second = run(root, `${name}-second`, data, partial)
-    assert.doesNotThrow(() => collectRuns([first]), "a single legacy run remains readable")
-    for (const folders of [[complete, first], [first, complete], [first, second]]) {
-      assert.throws(() => collectRuns(folders), /Blink Lua\/native identity is required for pooling/)
-    }
-  }
 })
 
 test("before/after comparison reports deliberate ranking changes while rejecting different corpora", (t) => {
@@ -251,21 +200,20 @@ test("before/after comparison rejects different hosts and measurement code", (t)
   }
 })
 
-test("load metrics measure offered input and preserve Blink's live-query semantics", () => {
+test("load metrics measure offered input and count a menu only when it renders the current query", () => {
   const fixture = loadCase()
   const trace = fixture.samples[0]
-  const blink = measureLoad(fixture, trace)
-  assert.deepEqual(blink.dispatch, [1, 1, 1])
-  assert.deepEqual(blink.menu, [5, 5])
-  assert.deepEqual(blink.menu_count, [2])
-  assert.deepEqual(blink.line_flush, [6])
-  assert.deepEqual(blink.cpu_per_key, [5])
-  assert.deepEqual(blink.after_gc_rss_mib, [3])
-  assert.deepEqual(blink.max_heartbeat_gap, [18])
-  assert.deepEqual(blink.stale_context, [1])
-  assert.deepEqual(blink.final_query_lag, [1])
-  assert.deepEqual(blink.bad_final, [0])
-  assert.deepEqual(measureLoad({ ...fixture, engine: "era" }, trace).menu, [5])
+  const measured = measureLoad(fixture, trace)
+  assert.deepEqual(measured.dispatch, [1, 1, 1])
+  assert.deepEqual(measured.menu, [5])
+  assert.deepEqual(measured.menu_count, [1])
+  assert.deepEqual(measured.line_flush, [6])
+  assert.deepEqual(measured.cpu_per_key, [5])
+  assert.deepEqual(measured.after_gc_rss_mib, [3])
+  assert.deepEqual(measured.max_heartbeat_gap, [18])
+  assert.deepEqual(measured.stale_context, [1])
+  assert.deepEqual(measured.final_query_lag, [0])
+  assert.deepEqual(measured.bad_final, [0])
   assert.deepEqual(measureLoad(fixture, { ...trace, final_mode: "ic" }).bad_final, [0])
   assert.deepEqual(measureLoad(fixture, { ...trace, final_mode: "n" }).bad_final, [1])
 })
@@ -277,7 +225,7 @@ test("event-query lag is reported separately from correctness and changed load p
   const before = collectRuns([run(root, "before", data)])
   assert.deepEqual(before.failures, [])
   const coverage = [...before.metrics.values()].find((row) => row.metric === "menu coverage")
-  assert.deepEqual(coverage.values, [2])
+  assert.deepEqual(coverage.values, [1])
   assert.deepEqual(coverage.denominator, [3])
   fixture.plan[0].offset_ms = 5
   const after = collectRuns([run(root, "after", data)])
@@ -311,7 +259,7 @@ test("CLI reports ownership failures with a nonzero exit and does not require al
   const fixture = loadCase()
   fixture.samples[0].requests[0].cancelled_inflight = true
   const folder = run(root, "load", { load: { cases: [fixture], heartbeat_period_ms: 2 } })
-  const result = spawnSync(process.execPath, [new URL("../bench/cmp/report.mjs", import.meta.url).pathname, folder], {
+  const result = spawnSync(process.execPath, [new URL("../../script/benchmark/cmp-report.mjs", import.meta.url).pathname, folder], {
     encoding: "utf8",
   })
   assert.equal(result.status, 1)

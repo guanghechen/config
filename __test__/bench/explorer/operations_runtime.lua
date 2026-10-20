@@ -116,7 +116,7 @@ if kind == "copy" then
     local copy = resource.copy
     resource.copy = function(self, ...)
       local status = copy(self, ...)
-      assert(status == "success", "legacy copy failed: " .. tostring(status))
+      assert(status == "success", "baseline copy failed: " .. tostring(status))
       io_complete()
       return status
     end

@@ -1,3 +1,4 @@
+-- Usage, from the repository root: nvim -l __test__/bench/treeview_results.lua [count=50000]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.treeview_results" ---@type string
 local root =

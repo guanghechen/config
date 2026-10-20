@@ -7,7 +7,7 @@ package.path = harness .. "/?.lua;" .. package.path
 local repo, directory, implementation = assert(arg[1]), assert(arg[2]), assert(arg[3])
 local entries = assert(tonumber(arg[4]))
 local suffix = vim.uv.os_uname().sysname == "Windows_NT" and "dll" or "so"
-local library = vim.env[implementation == "legacy" and "NVIM_EXPLORER_BENCH_BASELINE_NATIVE" or "NVIM_EXPLORER_BENCH_NATIVE"]
+local library = vim.env[implementation == "baseline" and "NVIM_EXPLORER_BENCH_BASELINE_NATIVE" or "NVIM_EXPLORER_BENCH_NATIVE"]
   or repo .. "/lua/yoz." .. suffix
 local started = vim.uv.hrtime()
 local ui = require("__test__.support.ui").new({
@@ -22,7 +22,7 @@ local ui = require("__test__.support.ui").new({
       library
     ),
     "--cmd",
-    "lua dofile(" .. string.format("%q", harness .. "/__test__/fixtures/era/m/explorer/full_config_init.lua") .. ")",
+    "lua dofile(" .. string.format("%q", harness .. "/__test__/bench/explorer/full_config_init.lua") .. ")",
   },
 })
 local active, visible

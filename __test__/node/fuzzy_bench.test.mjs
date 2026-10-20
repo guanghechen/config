@@ -5,7 +5,8 @@ import { join } from "node:path"
 import { test } from "node:test"
 
 import { canonical, mulberry32, sequencesFor, synthesizePaths, wordsOf } from "../../script/benchmark/fuzzy-corpus.mjs"
-import { analyze, distribution, median, percentile, slowProcess, summarizeE2e, summarizeFfi, summarizeRust, variation } from "../../script/benchmark/fuzzy-report.mjs"
+import { analyze, distribution, slowProcess, summarizeE2e, summarizeFfi, summarizeRust } from "../../script/benchmark/fuzzy-report.mjs"
+import { median, percentile, variation } from "../../script/benchmark/stats.mjs"
 
 test("the PRNG repeats its sequence for a seed", () => {
   const first = mulberry32(42), second = mulberry32(42)

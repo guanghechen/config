@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.cmp.load" ---@type string
 
-local Rpc = require("__test__.support.rpc")
+local Child = require("__test__.bench.cmp.child")
 local M = {}
 
 ---@param scenario                      table
@@ -30,31 +30,26 @@ local function input_plan(scenario)
   return plan
 end
 
----@param rpc                           table
+---@param ui                            __test__.support.UI
+---@param recorder                      __test__.bench.cmp.IRecorder
 ---@param scenario                      table
 ---@param plan                          table[]
 ---@return table
-local function burst(rpc, scenario, plan)
-  rpc:request("nvim_input", { "<Esc>" })
-  assert(
-    Rpc.wait(2000, function()
-      return rpc:request("nvim_get_mode", {}).mode == "n"
-    end, 1),
-    "normal mode timeout"
-  )
-  rpc:lua("require('__test__.bench.cmp.load_editor').prepare(...)", #plan)
+local function burst(ui, recorder, scenario, plan)
+  ui:rpc("nvim_input", "<Esc>")
+  ui:wait_until(function()
+    return ui:rpc("nvim_get_mode").mode == "n"
+  end, 2000, "normal mode")
+  ui:lua("require('__test__.bench.cmp.load_editor').prepare(...)", #plan)
   if scenario.seed then
-    rpc:request("nvim_input", { "i" .. scenario.seed })
-    assert(
-      Rpc.wait(5000, function()
-        return rpc:lua("return require('__test__.bench.cmp.load_editor').ready()")
-      end, 2),
-      "seed completion timeout"
-    )
+    ui:rpc("nvim_input", "i" .. scenario.seed)
+    ui:wait_until(function()
+      return ui:lua("return require('__test__.bench.cmp.load_editor').ready()")
+    end, 5000, "seed completion")
     vim.wait(25)
   end
-  rpc.notifications = {}
-  rpc:lua("require('__test__.bench.cmp.load_editor').begin(...)", plan)
+  recorder.events = {}
+  ui:lua("require('__test__.bench.cmp.load_editor').begin(...)", plan)
   local start = vim.uv.hrtime() + 20e6
   local sent, next_key = {}, 1
   local timer = assert(vim.uv.new_timer())
@@ -63,7 +58,7 @@ local function burst(rpc, scenario, plan)
     while next_key <= #plan and vim.uv.hrtime() >= start + plan[next_key].offset_ms * 1e6 do
       local step = plan[next_key]
       sent[next_key] = { scheduled_ns = start + step.offset_ms * 1e6, sent_ns = vim.uv.hrtime() }
-      rpc:notify("nvim_input", { step.keys })
+      ui:notify("nvim_input", step.keys)
       next_key = next_key + 1
     end
     if next_key > #plan then
@@ -73,9 +68,9 @@ local function burst(rpc, scenario, plan)
   local input_done, seen = nil, 0
   local pending_requests, last_response = {}, start
   local ok = vim.wait(15000, function()
-    while seen < #rpc.notifications do
+    while seen < #recorder.events do
       seen = seen + 1
-      local event = rpc.notifications[seen]
+      local event = recorder.events[seen]
       if event.method == "cmp_load_input_done" then
         input_done = event.args[1]
       elseif event.method == "cmp_load_request" then
@@ -94,13 +89,13 @@ local function burst(rpc, scenario, plan)
   timer:stop()
   timer:close()
   assert(ok, "open-loop input timeout: sent=" .. #sent .. ", pending=" .. vim.inspect(pending_requests))
-  local trace = rpc:lua("return require('__test__.bench.cmp.load_editor').finish()")
+  local trace = ui:lua("return require('__test__.bench.cmp.load_editor').finish()")
   trace.sent = sent
   trace.flushes = {}
   local pending_line, pending_menu
   local current_sequence = 0
   local current_query = scenario.seed or ""
-  for _, event in ipairs(rpc.notifications) do
+  for _, event in ipairs(recorder.events) do
     if event.method == "cmp_load_line" then
       pending_line = event.args[1]
       current_sequence = pending_line.sequence
@@ -163,60 +158,46 @@ function M.run(options)
       hide = true,
     },
   }
-  for scenario_index, scenario in ipairs(scenarios) do
+  for _, scenario in ipairs(scenarios) do
     if options.case_filter == nil or scenario.name:find(options.case_filter, 1, true) then
       scenario.settle_ms = scenario.incomplete and 180 or 60
       local plan = input_plan(scenario)
-      local engines = scenario.control and { "none" }
-        or options.engine and { options.engine }
-        or scenario_index % 2 == 1 and { "era", "blink" }
-        or { "blink", "era" }
-      for _, engine in ipairs(engines) do
-        io.stdout:write("  " .. scenario.name .. " / " .. engine .. "\n")
-        io.stdout:flush()
-        local rpc = Rpc.new(options.root)
-        local sample_index
-        local ok, err = xpcall(function()
-          rpc:request("nvim_ui_attach", { 120, 40, { ext_linegrid = true, ext_multigrid = true, rgb = true } })
-          rpc:lua(
-            [[
-            local options = ...
-            vim.opt.runtimepath:prepend(options.root)
-            package.path = options.root .. '/?.lua;' .. options.root .. '/?/init.lua;' .. package.path
-            require('__test__.bench.cmp.load_editor').setup(options)
-          ]],
-            vim.tbl_extend("force", options, scenario, { engine = engine })
-          )
-          local samples = {}
-          for sample = 1, options.samples + 5 do
-            sample_index = sample
-            local trace = burst(rpc, scenario, plan)
-            if sample > 5 then
-              samples[#samples + 1] = trace
-            end
+      local engine = scenario.control and "none" or "era"
+      io.stdout:write("  " .. scenario.name .. " / " .. engine .. "\n")
+      io.stdout:flush()
+      local ui, recorder = Child.start()
+      local sample_index
+      local ok, err = xpcall(function()
+        ui:lua(
+          "require('__test__.bench.cmp.load_editor').setup(...)",
+          vim.tbl_extend("force", options, scenario, { engine = engine })
+        )
+        local samples = {}
+        for sample = 1, options.samples + 5 do
+          sample_index = sample
+          local trace = burst(ui, recorder, scenario, plan)
+          if sample > 5 then
+            samples[#samples + 1] = trace
           end
-          result.cases[#result.cases + 1] = { scenario = scenario, engine = engine, plan = plan, samples = samples }
-          vim.fn.writefile({ vim.json.encode(result) }, options.output .. "/load.partial.json")
-        end, debug.traceback)
-        if not ok then
-          local mode_ok, mode = pcall(rpc.request, rpc, "nvim_get_mode", {})
-          local failure = {
-            scenario = scenario.name,
-            engine = engine,
-            sample = sample_index,
-            error = err,
-            mode = mode_ok and mode or nil,
-            stderr = rpc.stderr,
-            notifications = vim.list_slice(rpc.notifications, math.max(1, #rpc.notifications - 99)),
-          }
-          vim.fn.writefile(
-            vim.split(vim.inspect(failure), "\n", { plain = true }),
-            options.output .. "/load-failure.txt"
-          )
         end
-        rpc:close()
-        assert(ok, err)
+        result.cases[#result.cases + 1] = { scenario = scenario, engine = engine, plan = plan, samples = samples }
+        vim.fn.writefile({ vim.json.encode(result) }, options.output .. "/load.partial.json")
+      end, debug.traceback)
+      if not ok then
+        local mode_ok, mode = pcall(ui.rpc, ui, "nvim_get_mode")
+        local failure = {
+          scenario = scenario.name,
+          engine = engine,
+          sample = sample_index,
+          error = err,
+          mode = mode_ok and mode or nil,
+          stderr = ui.stderr,
+          notifications = vim.list_slice(recorder.events, math.max(1, #recorder.events - 99)),
+        }
+        vim.fn.writefile(vim.split(vim.inspect(failure), "\n", { plain = true }), options.output .. "/load-failure.txt")
       end
+      ui:close()
+      assert(ok, err)
     end
   end
   assert(#result.cases > 0, "no load scenarios matched filter: " .. tostring(options.case_filter))

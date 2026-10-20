@@ -1,3 +1,4 @@
+-- Usage, from the repository root: nvim -l __test__/bench/treeview_diffview.lua [count=10000] [iterations=10]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.treeview_diffview" ---@type string
 local root =

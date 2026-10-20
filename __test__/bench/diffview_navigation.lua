@@ -1,3 +1,4 @@
+-- Usage, from the repository root: nvim -l __test__/bench/diffview_navigation.lua [count=5000] [baseline-dir] [files|directories]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.diffview_navigation" ---@type string
 
@@ -15,7 +16,7 @@ if baseline then
   package.cpath = baseline .. "/lua/?.so;" .. baseline .. "/lua/?.dll;" .. package.cpath
 end
 require("ark.bootstrap").setup()
-local native = require("__test__.support.result_tree")
+local treeview = require("__test__.support.treeview")
 local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
 local action = require("era.m.diffview.view.workspace.action")
@@ -39,10 +40,10 @@ vim.api.nvim_win_set_buf(0, bufnr)
 local owner = tree.new()
 local plan =
   changes.render(entries, { viewtype = directories and "tree" or "list", foldempty = false, stage_type = "unstaged" })
-native.await(tree.apply(bufnr, plan, owner))
+treeview.await(tree.apply(bufnr, plan, owner))
 if directories then
   owner:set_expansion(tree.root, false, true)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
 end
 local current = entries[1]
 local ctx = {
@@ -83,7 +84,7 @@ end
 ---@return nil
 local function metadata(label)
   plan.source:get(tree.key(nil, entries[1].filepath, false)).presentation.right_text = label
-  native.await(tree.apply(bufnr, plan, owner))
+  treeview.await(tree.apply(bufnr, plan, owner))
 end
 
 local result = { rows = owner:linecount(), directories = directories }

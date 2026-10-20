@@ -8,7 +8,7 @@ local repo, directory, implementation = assert(arg[1]), assert(arg[2]), assert(a
 local entries, branch_entries = assert(tonumber(arg[4])), tonumber(arg[5]) or 0
 local repeats = assert(tonumber(arg[6]))
 local mode = assert(arg[7])
-assert(implementation == "native" or implementation == "legacy")
+assert(implementation == "native" or implementation == "baseline")
 assert(mode == "tree" or mode == "list")
 local ui = require("__test__.support.ui").new({ timeout_ms = 65000 })
 local active

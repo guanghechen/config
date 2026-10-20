@@ -11,6 +11,7 @@ local harness = vim.fs.dirname(
 )
 package.path = harness .. "/?.lua;" .. package.path
 local cpu = require("__test__.bench.fuzzy.cpu")
+local Stats = require("__test__.bench.stats")
 local qos = cpu.prefer_performance_cores()
 local calibration_ms = cpu.calibrate()
 
@@ -256,15 +257,6 @@ for sample = 1, samples do
   end
 end
 
----@param values                        number[]
----@return number
-local function median(values)
-  local sorted = vim.list_extend({}, values)
-  table.sort(sorted)
-  local middle = math.floor(#sorted / 2)
-  return #sorted % 2 == 1 and sorted[middle + 1] or (sorted[middle] + sorted[middle + 1]) / 2
-end
-
 for _, name in ipairs(names) do
   local rows = {}
   local stage_names = {}
@@ -275,16 +267,16 @@ for _, name in ipairs(names) do
     local record = records[name][index]
     local stages = {}
     for _, stage in ipairs(stage_names) do
-      stages[#stages + 1] = median(record.stages[stage])
+      stages[#stages + 1] = Stats.median(record.stages[stage])
     end
     rows[index] = {
       query.sequence,
       query.step,
       vim.fn.strchars(query.text),
       query.kind,
-      median(record.total),
+      Stats.median(record.total),
       record.matched,
-      median(record.allocated),
+      Stats.median(record.allocated),
       stages,
     }
   end

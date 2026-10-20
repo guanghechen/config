@@ -1,5 +1,5 @@
 ---@diagnostic disable: undefined-global
-local __module_name__ = "__test__.fixtures.ux.treeview.consumers"
+local __module_name__ = "__test__.bench.treeview_consumers_child"
 local M = {}
 
 ---@param future                        stl.c.Future

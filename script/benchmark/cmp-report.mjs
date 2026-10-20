@@ -1,25 +1,17 @@
-// Run with: node __test__/bench/cmp/report.mjs <run-dir> [run-dir...]
+// Reports completion benchmark runs of __test__/bench/cmp.lua: node script/benchmark/cmp-report.mjs <run-dir...>
 import assert from "node:assert/strict"
 import { existsSync, readFileSync, realpathSync } from "node:fs"
 import { join } from "node:path"
 import { gunzipSync } from "node:zlib"
+import { median, percentile } from "./stats.mjs"
 
-const phases = ["ranking", "matching", "sources", "ui", "memory", "load"]
+const phases = ["ranking", "ui", "load"]
 const sum = (values) => values.reduce((total, value) => total + value, 0)
-const version = (metadata) => metadata.native_sha256 ?? metadata.libraries?.era?.sha256
 
 export function statistics(values) {
   assert(values.every(Number.isFinite), "samples must be finite numbers")
   if (values.length === 0) return null
-  const ordered = [...values].sort((a, b) => a - b)
-  const middle = Math.floor(ordered.length / 2)
-  return {
-    count: ordered.length,
-    median: ordered.length % 2 ? ordered[middle] : (ordered[middle - 1] + ordered[middle]) / 2,
-    p95: ordered[Math.ceil(ordered.length * 0.95) - 1],
-    max: ordered.at(-1),
-    total: sum(values),
-  }
+  return { count: values.length, median: median(values), p95: percentile(values, 0.95), max: percentile(values, 1), total: sum(values) }
 }
 
 function read(folder, phase) {
@@ -27,11 +19,6 @@ function read(folder, phase) {
   if (existsSync(path)) return JSON.parse(readFileSync(path, "utf8"))
   if (existsSync(`${path}.gz`)) return JSON.parse(gunzipSync(readFileSync(`${path}.gz`)).toString("utf8"))
   return null
-}
-
-// Blink ranks the live line; its render context can describe an older input.
-function matchingQuery(engine, menu) {
-  return engine === "blink" ? menu.buffer_line : menu.query
 }
 
 export function measureLoad(testCase, trace) {
@@ -79,7 +66,7 @@ export function measureLoad(testCase, trace) {
     const request = trace.requests[menu.generation - 1]
     assert(request, "menu references an unknown request")
     cancelledPublication += Number(Boolean(request.cancelled_inflight && request.response_ns <= menu.time_ns))
-    if (matchingQuery(engine, menu) === plan[sequence - 1].query) {
+    if (menu.query === plan[sequence - 1].query) {
       if (!events.menu.has(sequence)) events.menu.set(sequence, menu.time_ns)
       if (menu.request_sequence === sequence && !events.fresh_menu.has(sequence)) {
         events.fresh_menu.set(sequence, menu.time_ns)
@@ -93,7 +80,7 @@ export function measureLoad(testCase, trace) {
       events.line_flush.set(flush.line_sequence, flush.time_ns)
     }
     const sequence = flush.menu_sequence
-    const query = sequence && engine === "blink" ? plan[sequence - 1].query : flush.menu_query
+    const query = flush.menu_query
     if (sequence && flush.menu_visible) {
       oldContextFlush += Number(query !== flush.current_query)
       if (query === plan[sequence - 1].query) {
@@ -111,13 +98,13 @@ export function measureLoad(testCase, trace) {
   const correctMode = expectedMode === "i" ? trace.final_mode[0] === "i" : trace.final_mode === "n"
   const correctFinal =
     correctMode && (engine === "none" || trace.final_visible === !scenario.hide)
-  const finalQuery = visible.length ? matchingQuery(engine, visible.at(-1)) : finalMenu.line
+  const finalQuery = visible.length ? visible.at(-1).query : finalMenu.line
   const before = trace.before.usage,
     after = trace.after.usage
   const seconds = (time) => time.sec + time.usec / 1e6
   const cpu = (seconds(after.utime) - seconds(before.utime) + seconds(after.stime) - seconds(before.stime)) * 1000
   const wall = (trace.end_ns - trace.start_ns) / 1e6
-  const current = visible.filter((menu) => matchingQuery(engine, menu) === menu.buffer_line)
+  const current = visible.filter((menu) => menu.query === menu.buffer_line)
   const calls = trace.profile.calls ?? {},
     cost = trace.profile.cost ?? {}
   const requests = trace.requests.slice(trace.initial_requests)
@@ -254,15 +241,13 @@ export function collectRuns(folders) {
     assert(metadata, `${folder}: metadata.json is missing`)
     if (folders.length > 1) {
       assert(
-        metadata.completion_lua_sha256 && version(metadata),
+        metadata.completion_lua_sha256 && metadata.native_sha256,
         `${folder}: source/binary identity is required for pooling`,
       )
     }
     for (const [name, hash] of Object.entries({
       lua: metadata.completion_lua_sha256,
-      era: version(metadata),
-      blink: metadata.libraries?.blink?.sha256,
-      blink_lua: metadata.blink_lua_sha256,
+      native: metadata.native_sha256,
     })) {
       if (hash === undefined) continue
       assert(
@@ -285,12 +270,6 @@ export function collectRuns(folders) {
       load_gc: metadata.load_gc,
     }
     function add(section, scenario, engine, metric, values, unit = "ms", workload = {}, denominator = []) {
-      if (folders.length > 1 && (engine === "paired" || engine.startsWith("blink"))) {
-        assert(
-          metadata.blink_lua_sha256 && metadata.libraries?.blink?.sha256,
-          `${folder}: Blink Lua/native identity is required for pooling`,
-        )
-      }
       assert(Array.isArray(values), `${section}/${metric}: raw samples are missing`)
       const key = JSON.stringify([section, scenario, engine, metric])
       let row = metrics.get(key)
@@ -314,67 +293,25 @@ export function collectRuns(folders) {
       const data = read(folder, phase)
       if (!data) continue
       found = true
-      if (phase === "ranking" || phase === "matching") {
+      if (phase === "ranking") {
         for (const row of data.construction) {
           const scenario = `${row.corpus}/${row.candidates}`
-          const timings = phase === "ranking" ? { normalize: row.normalize, prepare: row.prepare } : row.timings
-          for (const [metric, values] of Object.entries(timings)) {
-            add(
-              `${phase} construction`,
-              scenario,
-              phase === "ranking" ? "era" : "paired",
-              metric,
-              values.samples,
-              "ms",
-              { corpus: row.sha256 },
-            )
+          for (const [metric, values] of Object.entries({ normalize: row.normalize, prepare: row.prepare })) {
+            add("ranking construction", scenario, "era", metric, values.samples, "ms", { corpus: row.sha256 })
           }
         }
         for (const row of data.queries) {
           const scenario = `${row.corpus}/${row.candidates}/${JSON.stringify(row.query)}/${row.history ?? "off"}`
+          const corpus = data.construction.find(
+            (entry) => entry.corpus === row.corpus && entry.candidates === row.candidates,
+          )
           for (const [metric, values] of Object.entries(row.timings)) {
-            const corpus = data.construction.find(
-              (entry) => entry.corpus === row.corpus && entry.candidates === row.candidates,
-            )
-            add(phase, scenario, phase === "ranking" ? "era" : "paired", metric, values.samples, "ms", {
-              corpus: corpus?.sha256,
-            })
+            add(phase, scenario, "era", metric, values.samples, "ms", { corpus: corpus?.sha256 })
           }
-          if (phase === "ranking") {
-            outcome(scenario, "returned candidates", row.count)
-            outcome(scenario, "ordered ID/score fingerprint", row.fingerprint)
-            if (row.timings.fuzzy_packed.bytes !== undefined) {
-              outcome(scenario, "full-match packed bytes", row.timings.fuzzy_packed.bytes)
-            }
-          } else {
-            outcome(
-              scenario,
-              "matching sets (Era/Blink/intersection)",
-              `${row.agreement.era_count}/${row.agreement.blink_count}/${row.agreement.intersection}`,
-            )
-            outcome(scenario, "Era top 10", JSON.stringify(row.era_top10))
-            outcome(scenario, "Blink top 10", JSON.stringify(row.blink_top10))
-          }
-        }
-        for (const row of data.quality ?? []) {
-          for (const engine of ["era", "blink", "blink_default_typos"]) {
-            if (row[engine] !== undefined)
-              outcome(`quality/${JSON.stringify(row.query)}`, engine, JSON.stringify(row[engine]))
-          }
-        }
-      } else if (phase === "sources") {
-        const sources = []
-        for (const row of data.buffers) {
-          for (const state of ["hot", "changedtick"])
-            sources.push([`buffer/${row.words} words/${row.bytes} bytes/${state}`, row[state]])
-        }
-        for (const row of data.paths) sources.push([`path/${row.entries}`, row.timings])
-        sources.push(["snippets", data.snippets])
-        for (const [scenario, engines] of sources) {
-          for (const [engine, timings] of Object.entries(engines)) {
-            for (const metric of ["latency_ms", "synchronous_ms"])
-              add("sources", scenario, engine, metric, timings[metric].samples)
-            outcome(`sources/${scenario}`, `${engine} candidates`, timings.count)
+          outcome(scenario, "returned candidates", row.count)
+          outcome(scenario, "ordered ID/score fingerprint", row.fingerprint)
+          if (row.timings.fuzzy_packed.bytes !== undefined) {
+            outcome(scenario, "full-match packed bytes", row.timings.fuzzy_packed.bytes)
           }
         }
       } else if (phase === "ui") {
@@ -392,20 +329,6 @@ export function collectRuns(folders) {
             }
             for (const metric of ["select_ms", "accept_ms"])
               add("sequential UI", row.scenario, row.engine, metric, [sample[metric]])
-          }
-        }
-      } else if (phase === "memory") {
-        for (const row of data.cases) {
-          for (const [metric, values] of Object.entries(row.summary)) {
-            const kib = metric.endsWith("_kib")
-            add(
-              "standalone fuzzy memory",
-              String(row.candidates),
-              row.engine,
-              metric.replace("_kib", "_mib"),
-              values.samples.map((value) => (kib ? value / 1024 : value)),
-              kib ? "MiB" : "ms",
-            )
           }
         }
       } else if (phase === "load") {
@@ -520,7 +443,7 @@ export function renderReport(before, after) {
   output += "\n"
   output += table(
     "Inputs",
-    ["Side", "Directory", "Era Lua SHA", "Era native SHA", "Blink Lua SHA", "Blink native SHA"],
+    ["Side", "Directory", "Completion Lua SHA", "Native SHA"],
     [before, after]
       .filter(Boolean)
       .flatMap((side, index) =>
@@ -528,9 +451,7 @@ export function renderReport(before, after) {
           after ? (index ? "after" : "before") : "run",
           folder,
           metadata.completion_lua_sha256 ?? "unknown",
-          version(metadata) ?? "unknown",
-          metadata.blink_lua_sha256 ?? (metadata.libraries?.blink ? "unknown" : "—"),
-          metadata.libraries?.blink?.sha256 ?? "—",
+          metadata.native_sha256 ?? "unknown",
         ]),
       ),
   )
@@ -600,7 +521,7 @@ export function renderReport(before, after) {
 function main(args) {
   if (args.length === 1 && args[0] === "--help") {
     process.stdout.write(
-      "node __test__/bench/cmp/report.mjs <run-dir...>\nnode __test__/bench/cmp/report.mjs --before <run-dir...> --after <run-dir...>\n",
+      "node script/benchmark/cmp-report.mjs <run-dir...>\nnode script/benchmark/cmp-report.mjs --before <run-dir...> --after <run-dir...>\n",
     )
     return
   }

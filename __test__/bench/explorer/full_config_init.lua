@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.m.explorer.full_config_init" ---@type string
+local __module_name__ = "__test__.bench.explorer.full_config_init" ---@type string
 
 local root = assert(vim.g.explorer_test_root)
 local directory = assert(vim.g.explorer_test_directory)

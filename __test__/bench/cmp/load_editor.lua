@@ -12,14 +12,13 @@ end
 
 ---@param line                          string
 ---@param count                         integer
----@param winnr                         ?integer
 ---@param items                         table[]
 ---@return nil
-local function menu_event(line, count, winnr, items)
+local function menu_event(line, count, items)
   local first = items[1]
   local raw = first and (first.raw or first)
   local generation = raw and raw._cmp_bench_request or 1
-  M.last_menu = { line = line, count = count, winnr = winnr, generation = generation }
+  M.last_menu = { line = line, count = count, generation = generation }
   local trace = M.trace
   if trace == nil then
     return

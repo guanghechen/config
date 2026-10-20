@@ -48,7 +48,7 @@ Treeview DisplayOptions.pattern -> ux/treeview/matching.rs -> fuzzy::TextMatcher
 
 ### fzf 对齐
 
-`fuzzy::perf_tests::fzf_parity` 对每条查询比较 `fzf --filter QUERY --literal --scheme=<scheme>`（加 `--exact` 比较精确模式）
+`fuzzy::perf_tests::t_fzf_parity` 对每条查询比较 `fzf --filter QUERY --literal --scheme=<scheme>`（加 `--exact` 比较精确模式）
 与本实现在无权重时的结果顺序。比较覆盖 repo、runtime、plugins、synthetic-10k/100k、labels/labels-100k 与 unicode 语料
 的全部打字序列，以及一组手写的扩展语法查询。在 fzf 0.74.5 下，fuzzy 与 exact 两种模式全部一致。
 
@@ -193,7 +193,7 @@ node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --runs
   - **L3**：`__test__/bench/fuzzy/e2e.lua`，在挂 UI 的子进程中运行完整配置，以真实按键计时，由父进程观测刷屏。
 - **统计**：每个进程取中位数，再跨进程取中位数；L3 的按键样本合并统计。进程数达到 20 才报告进程级 p95。
   标定循环显著变慢的进程（疑似跑在能效核上）会被标记。
-- **排序质量**：`fuzzy::perf_tests::fuzzy_quality`。
+- **排序质量**：`fuzzy::perf_tests::t_fuzzy_quality`。
   - 方法：按 L3 的口径给 2% 的条目分配 frecency，统计每个打字序列的目标在每次按键后的名次；分两种场景，目标本身常用（frecency 60）与目标不常用。
   - 结论：权重 8–16 时，常用目标的 MRR 从约 0.24–0.45 提升到 0.51–0.81，不常用目标的 MRR 下降约 0.01–0.03；
     权重达到 32 以上，不常用目标明显变差。默认权重取 16。

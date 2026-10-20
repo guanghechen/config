@@ -160,9 +160,7 @@ local ok, failure = xpcall(function()
         "--cmd",
         string.format("lua vim.g.explorer_test_root=%q; vim.g.explorer_test_directory=%q", root, directory),
         "--cmd",
-        "lua dofile("
-          .. string.format("%q", harness .. "/__test__/fixtures/era/m/explorer/full_config_init.lua")
-          .. ")",
+        "lua dofile(" .. string.format("%q", harness .. "/__test__/bench/explorer/full_config_init.lua") .. ")",
       },
     })
     grid = Grid.new(ui)
@@ -421,7 +419,7 @@ local ok, failure = xpcall(function()
       ui:rpc("nvim_input", "y")
     end
     until_(function()
-      return ui._exited == true
+      return ui.exit_code ~= nil
     end, "Neovim did not exit after cancelling its Job")
     local exited = vim.json.decode(table.concat(vim.fn.readfile(marker), "\n"))
     record.exit = exited
@@ -438,7 +436,7 @@ local ok, failure = xpcall(function()
   end
 end, debug.traceback)
 local diagnostic
-if not ok and ui and not ui._exited then
+if not ok and ui and ui.exit_code == nil then
   if grid and grid.grids[1] then
     screen("failure")
   end

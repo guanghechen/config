@@ -30,6 +30,13 @@ function M.digest(directory, paths)
   return vim.fn.sha256(table.concat(sources, "\0"))
 end
 
+---The native library a checkout installs for this platform.
+---@param root                          string
+---@return string
+function M.native_library(root)
+  return root .. "/lua/yoz." .. (vim.fn.has("win32") == 1 and "dll" or "so")
+end
+
 ---@param root                          string
 ---@param baseline                      ?string
 ---@param entry                         string Repository-relative CLI path.
@@ -38,8 +45,8 @@ function M.collect(root, baseline, entry)
   local source_root = baseline or root
   local paths = vim.fn.glob(root .. "/__test__/bench/cmp/*.lua", false, true)
   paths[#paths + 1] = root .. "/" .. entry
-  paths[#paths + 1] = root .. "/__test__/fixtures/era/keystroke/cmp/runtime.lua"
-  paths[#paths + 1] = root .. "/__test__/support/rpc.lua"
+  paths[#paths + 1] = root .. "/__test__/support/cmp/runtime.lua"
+  paths[#paths + 1] = root .. "/__test__/support/ui.lua"
   return {
     timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
     repository_revision = vim.trim(vim.system({ "git", "rev-parse", "HEAD" }):wait().stdout),

@@ -1,22 +1,23 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.cmp.ui" ---@type string
 
+local Child = require("__test__.bench.cmp.child")
 local Data = require("__test__.bench.cmp.data")
-local Rpc = require("__test__.support.rpc")
 local M = {}
 
----@param rpc                           table
+---@param ui                            __test__.support.UI
+---@param recorder                      __test__.bench.cmp.IRecorder
 ---@param sequence                      integer
 ---@param start                         number
 ---@return table
-local function await_menu(rpc, sequence, start)
+local function await_menu(ui, recorder, sequence, start)
   local result = { menus = {} }
   local seen = 0
   assert(
     vim.wait(10000, function()
-      while seen < #rpc.notifications do
+      while seen < #recorder.events do
         seen = seen + 1
-        local event = rpc.notifications[seen]
+        local event = recorder.events[seen]
         if event.method == "cmp_bench_menu" and event.args[1].sequence == sequence then
           result.menus[#result.menus + 1] = event.args[1]
         elseif event.method == "redraw" and #result.menus > 0 then
@@ -29,7 +30,7 @@ local function await_menu(rpc, sequence, start)
       end
       return result.flush_ms ~= nil
     end, 1),
-    "menu/UI timeout: " .. vim.inspect(rpc:lua("return require('__test__.bench.cmp.editor').snapshot()"))
+    "menu/UI timeout: " .. vim.inspect(ui:lua("return require('__test__.bench.cmp.editor').snapshot()"))
   )
   result.first_menu_ms = result.menus[1].elapsed_ms
   result.count = result.menus[#result.menus].count
@@ -54,143 +55,129 @@ function M.run(options)
     { name = "buffer_and_lsp_20ms", count = 1000, buffer = 500, delays = { 20 } },
   }
   local sequence = 0
-  for scenario_index, scenario in ipairs(scenarios) do
-    local engines = scenario_index % 2 == 1 and { "era", "blink" } or { "blink", "era" }
-    for _, engine in ipairs(engines) do
-      io.stdout:write("  " .. scenario.name .. " / " .. engine .. "\n")
-      io.stdout:flush()
-      local rpc = Rpc.new(options.root)
-      local ok, err = xpcall(function()
-        rpc:request("nvim_ui_attach", { 120, 40, { ext_linegrid = true, ext_multigrid = true, rgb = true } })
-        local setup = rpc:lua(
-          [[
-          local options = ...
-          vim.opt.runtimepath:prepend(options.root)
-          package.path = options.root .. '/?.lua;' .. options.root .. '/?/init.lua;' .. package.path
-          return require('__test__.bench.cmp.editor').setup(options)
-        ]],
-          vim.tbl_extend("force", options, scenario, { engine = engine })
-        )
-        local samples, cold = {}, nil
-        for sample = 1, options.samples + 5 do
-          rpc:request("nvim_input", { "<Esc>" })
-          assert(Rpc.wait(1000, function()
-            return rpc:request("nvim_get_mode", {}).mode == "n"
-          end, 1))
-          rpc:lua("require('__test__.bench.cmp.editor').reset()")
-          local steps = {}
-          for step, query in ipairs({ "g", "ge", "get", "getC", "getCo" }) do
-            sequence = sequence + 1
-            rpc.notifications = {}
-            local start = vim.uv.hrtime()
-            rpc:lua(
-              "require('__test__.bench.cmp.editor').input(...)",
-              sequence,
-              step == 1 and "ig" or query:sub(-1),
-              query
-            )
-            local measured = await_menu(rpc, sequence, start)
-            local state = rpc:lua("return require('__test__.bench.cmp.editor').snapshot()")
-            assert(state.errmsg == "", state.errmsg)
-            measured.cost = state.active.cost
-            measured.calls = state.active.calls
-            measured.requests = state.active.requests
-            measured.renders = state.active.renders
-            measured.query = query
-            measured.rss_kib = state.rss_kib
-            measured.lua_kib = state.lua_kib
-            steps[#steps + 1] = measured
-            -- Allow the delayed second source to finish before measuring the next keystroke.
-            if scenario.delays ~= nil then
-              rpc:lua("vim.wait(...)", 40)
-              local settled = rpc:lua("return require('__test__.bench.cmp.editor').snapshot()")
-              measured.settled_cost = settled.active.cost
-              measured.settled_calls = settled.active.calls
-              measured.settled_renders = settled.active.renders
-              for _, event in ipairs(rpc.notifications) do
-                if event.method == "cmp_bench_menu" and event.args[1].sequence == sequence then
-                  measured.last_menu_ms = event.args[1].elapsed_ms
-                end
-              end
-            else
-              vim.wait(20)
-            end
-          end
+  for _, scenario in ipairs(scenarios) do
+    io.stdout:write("  " .. scenario.name .. "\n")
+    io.stdout:flush()
+    local ui, recorder = Child.start()
+    local ok, err = xpcall(function()
+      local setup =
+        ui:lua("return require('__test__.bench.cmp.editor').setup(...)", vim.tbl_extend("force", options, scenario))
+      local samples, cold = {}, nil
+      for sample = 1, options.samples + 5 do
+        ui:rpc("nvim_input", "<Esc>")
+        ui:wait_until(function()
+          return ui:rpc("nvim_get_mode").mode == "n"
+        end, 1000)
+        ui:lua("require('__test__.bench.cmp.editor').reset()")
+        local steps = {}
+        for step, query in ipairs({ "g", "ge", "get", "getC", "getCo" }) do
           sequence = sequence + 1
-          rpc.notifications = {}
+          recorder.events = {}
           local start = vim.uv.hrtime()
-          rpc:lua("require('__test__.bench.cmp.editor').input(...)", sequence, "<Tab>", "getCo")
-          assert(
-            Rpc.wait(2000, function()
-              return rpc:lua("return vim.api.nvim_get_current_line()") ~= "getCo"
-            end, 1),
-            "selection preview timeout"
+          ui:lua(
+            "require('__test__.bench.cmp.editor').input(...)",
+            sequence,
+            step == 1 and "ig" or query:sub(-1),
+            query
           )
-          local select_ms
-          assert(
-            vim.wait(2000, function()
-              for _, event in ipairs(rpc.notifications) do
-                if event.method == "cmp_bench_select" and event.args[1] == sequence then
-                  select_ms = event.args[2]
-                end
+          local measured = await_menu(ui, recorder, sequence, start)
+          local state = ui:lua("return require('__test__.bench.cmp.editor').snapshot()")
+          assert(state.errmsg == "", state.errmsg)
+          measured.cost = state.active.cost
+          measured.calls = state.active.calls
+          measured.requests = state.active.requests
+          measured.renders = state.active.renders
+          measured.query = query
+          measured.rss_kib = state.rss_kib
+          measured.lua_kib = state.lua_kib
+          steps[#steps + 1] = measured
+          -- Allow the delayed second source to finish before measuring the next keystroke.
+          if scenario.delays ~= nil then
+            ui:lua("vim.wait(...)", 40)
+            local settled = ui:lua("return require('__test__.bench.cmp.editor').snapshot()")
+            measured.settled_cost = settled.active.cost
+            measured.settled_calls = settled.active.calls
+            measured.settled_renders = settled.active.renders
+            for _, event in ipairs(recorder.events) do
+              if event.method == "cmp_bench_menu" and event.args[1].sequence == sequence then
+                measured.last_menu_ms = event.args[1].elapsed_ms
               end
-              return select_ms ~= nil
-            end, 1),
-            "selection notification timeout"
-          )
-          vim.wait(20)
-          sequence = sequence + 1
-          rpc.notifications = {}
-          start = vim.uv.hrtime()
-          rpc:lua("require('__test__.bench.cmp.editor').input(...)", sequence, "<CR>", "getCo")
-          local accept_ms
-          assert(
-            vim.wait(2000, function()
-              for _, event in ipairs(rpc.notifications) do
-                if event.method == "cmp_bench_accept" and event.args[1] == sequence then
-                  accept_ms = event.args[2]
-                end
+            end
+          else
+            vim.wait(20)
+          end
+        end
+        sequence = sequence + 1
+        recorder.events = {}
+        local start = vim.uv.hrtime()
+        ui:lua("require('__test__.bench.cmp.editor').input(...)", sequence, "<Tab>", "getCo")
+        ui:wait_until(function()
+          return ui:lua("return vim.api.nvim_get_current_line()") ~= "getCo"
+        end, 2000, "selection preview")
+        local select_ms
+        assert(
+          vim.wait(2000, function()
+            for _, event in ipairs(recorder.events) do
+              if event.method == "cmp_bench_select" and event.args[1] == sequence then
+                select_ms = event.args[2]
               end
-              return accept_ms ~= nil
-            end, 1),
-            "accept timeout: " .. vim.inspect(rpc:lua("return require('__test__.bench.cmp.editor').snapshot()"))
-          )
-          if sample > 5 then
-            samples[#samples + 1] = { steps = steps, select_ms = select_ms, accept_ms = accept_ms }
-          end
-          if sample == 1 then
-            cold = { steps = steps, select_ms = select_ms, accept_ms = accept_ms }
-          end
-          vim.wait(15)
+            end
+            return select_ms ~= nil
+          end, 1),
+          "selection notification timeout"
+        )
+        vim.wait(20)
+        sequence = sequence + 1
+        recorder.events = {}
+        start = vim.uv.hrtime()
+        ui:lua("require('__test__.bench.cmp.editor').input(...)", sequence, "<CR>", "getCo")
+        local accept_ms
+        assert(
+          vim.wait(2000, function()
+            for _, event in ipairs(recorder.events) do
+              if event.method == "cmp_bench_accept" and event.args[1] == sequence then
+                accept_ms = event.args[2]
+              end
+            end
+            return accept_ms ~= nil
+          end, 1),
+          "accept timeout: " .. vim.inspect(ui:lua("return require('__test__.bench.cmp.editor').snapshot()"))
+        )
+        if sample > 5 then
+          samples[#samples + 1] = { steps = steps, select_ms = select_ms, accept_ms = accept_ms }
         end
-        local summary = {}
-        for step = 1, 5 do
-          local menus, frames, settled = {}, {}, {}
-          for _, sample in ipairs(samples) do
-            menus[#menus + 1] = sample.steps[step].first_menu_ms
-            frames[#frames + 1] = sample.steps[step].flush_ms
-            settled[#settled + 1] = sample.steps[step].last_menu_ms or sample.steps[step].first_menu_ms
-          end
-          summary[#summary + 1] = {
-            query = samples[1].steps[step].query,
-            menu_ms = Data.stats(menus),
-            flush_ms = Data.stats(frames),
-            settled_menu_ms = Data.stats(settled),
-          }
+        if sample == 1 then
+          cold = { steps = steps, select_ms = select_ms, accept_ms = accept_ms }
         end
-        result.cases[#result.cases + 1] = {
-          scenario = scenario.name,
-          engine = engine,
-          setup = setup,
-          summary = summary,
-          samples = samples,
-          cold = cold,
+        vim.wait(15)
+      end
+      local summary = {}
+      for step = 1, 5 do
+        local menus, frames, settled = {}, {}, {}
+        for _, sample in ipairs(samples) do
+          menus[#menus + 1] = sample.steps[step].first_menu_ms
+          frames[#frames + 1] = sample.steps[step].flush_ms
+          settled[#settled + 1] = sample.steps[step].last_menu_ms or sample.steps[step].first_menu_ms
+        end
+        summary[#summary + 1] = {
+          query = samples[1].steps[step].query,
+          menu_ms = Data.stats(menus),
+          flush_ms = Data.stats(frames),
+          settled_menu_ms = Data.stats(settled),
         }
-        vim.fn.writefile({ vim.json.encode(result) }, options.output .. "/ui.partial.json")
-      end, debug.traceback)
-      rpc:close()
-      assert(ok, err)
-    end
+      end
+      result.cases[#result.cases + 1] = {
+        scenario = scenario.name,
+        engine = "era",
+        setup = setup,
+        summary = summary,
+        samples = samples,
+        cold = cold,
+      }
+      vim.fn.writefile({ vim.json.encode(result) }, options.output .. "/ui.partial.json")
+    end, debug.traceback)
+    ui:close()
+    assert(ok, err)
   end
   vim.fn.delete(options.output .. "/ui.partial.json")
   return result

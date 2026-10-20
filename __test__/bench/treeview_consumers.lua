@@ -1,3 +1,4 @@
+-- Usage, from the repository root: nvim -l __test__/bench/treeview_consumers.lua [filetree|searcher|git|lsp] [samples=100]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.treeview_consumers"
 local root =
@@ -13,7 +14,7 @@ local ok, result = xpcall(function()
     "nvim_exec_lua",
     [[
     local root, mode = ...
-    consumer_bench = assert(loadfile(root .. "/__test__/fixtures/ux/treeview/consumers.lua"))()
+    consumer_bench = assert(loadfile(root .. "/__test__/bench/treeview_consumers_child.lua"))()
     consumer_bench.setup(root, mode)
   ]],
     { root, mode }

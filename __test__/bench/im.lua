@@ -1,11 +1,13 @@
---- Run with: nvim --headless -u NONE -i NONE -n -l __test__/bench/im.lua [native-library]
---- Measures capture + restore to the same macOS source; aborts if the source changes externally.
+-- Usage, from the repository root: nvim --headless -u NONE -i NONE -n -l __test__/bench/im.lua [native-library]
+-- Measures capture + restore to the same macOS source; aborts if the source changes externally.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.im" ---@type string
 
 assert(vim.uv.os_uname().sysname == "Darwin", "This benchmark requires the macOS IM backend.")
 local source = assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2)))
 local root = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source)))
+package.path = root .. "/?.lua;" .. package.path
+local Stats = require("__test__.bench.stats")
 local library = arg[1] and vim.fs.abspath(arg[1]) or (root .. "/lua/yoz.so")
 local native = assert(package.loadlib(library, "luaopen_yoz"))()
 local im = assert(native.im)
@@ -31,12 +33,11 @@ assert(im.capture() == snapshot, "Input source changed during the benchmark.")
 
 ---@return { p50_us: number, p95_us: number, p99_us: number, max_us: number }
 local function summarize(samples)
-  table.sort(samples)
   return {
-    p50_us = samples[50],
-    p95_us = samples[95],
-    p99_us = samples[99],
-    max_us = samples[100],
+    p50_us = Stats.percentile(samples, 0.5),
+    p95_us = Stats.percentile(samples, 0.95),
+    p99_us = Stats.percentile(samples, 0.99),
+    max_us = Stats.percentile(samples, 1),
   }
 end
 
