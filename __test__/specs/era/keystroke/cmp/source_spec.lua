@@ -73,9 +73,6 @@ t:test("path parsing distinguishes workspace references and file-relative paths"
   for _, quote in ipairs({ '"', "'", "`" }) do
     t.assert_nil(Path.target(runtime.context("local text = " .. quote .. "word")), "plain quoted text")
   end
-  local finder = runtime.context("folder")
-  finder.filetype = stl.filetype.UX_PICKER_FINDER
-  t.assert_eq("/workspace", assert(Path.target(finder)).dirname, "finder basenames remain paths")
 end)
 
 t:test("path targets reject invalid UTF-8 origins without invoking native path conversion", function()

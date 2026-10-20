@@ -200,6 +200,4 @@ node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --runs
 
 ## 已知问题
 
-- picker 与 searcher 的 finder 只监听 `TextChanged` / `TextChangedI`（`lua/era/m/picker/finder.lua`、`lua/era/m/searcher/finder.lua`）。
-  补全菜单打开期间触发的是 `TextChangedP`，结果列表会停止更新，直到菜单关闭。L3 因此在 finder 中关闭补全。
 - 列表视图的结果收缩后，光标会跟随原条目移到末行，窗口顶部同时停在该行，上方结果不可见。基线版本同样存在这个问题。

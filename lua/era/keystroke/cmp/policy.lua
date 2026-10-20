@@ -64,11 +64,7 @@ function M.sources_for(context, manual, previous)
   end
   local filetype = context.filetype
   local names
-  if filetype == stl.filetype.UX_PICKER_FINDER then
-    names = { "path" }
-  elseif filetype == stl.filetype.UX_SEARCHER_FINDER then
-    names = { "path", "dict" }
-  elseif filetype == "markdown" or filetype == stl.filetype.NOTEPAD then
+  if filetype == "markdown" or filetype == stl.filetype.NOTEPAD then
     names = markdown_sources
   elseif code_filetypes[filetype] then
     names = code_sources

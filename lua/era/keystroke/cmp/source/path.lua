@@ -23,9 +23,7 @@ function M.target(context)
     return nil
   end
   local at_path = token:sub(1, 1) == "@"
-  local finder = context.filetype == stl.filetype.UX_PICKER_FINDER
-    or context.filetype == stl.filetype.UX_SEARCHER_FINDER
-  if not at_path and not finder and not token:find("[/\\]") then
+  if not at_path and not token:find("[/\\]") then
     return nil
   end
   if not yoz.string.is_utf8(token) then
@@ -34,7 +32,7 @@ function M.target(context)
   local prefix = token:match("^(.*[/\\])") or (at_path and "@" or "")
   local dirname = at_path and prefix:sub(2) or prefix
   local root = dot.path.cwd()
-  if not at_path and not finder then
+  if not at_path then
     local filename = vim.api.nvim_buf_get_name(context.bufnr)
     if filename ~= "" then
       if not yoz.string.is_utf8(filename) then

@@ -100,10 +100,6 @@ local filetypes = {
     yaml             = true,
   },
   -- stylua: ignore end
-  cmp_others = {
-    [M.UX_PICKER_FINDER] = true,
-    [M.UX_SEARCHER_FINDER] = true,
-  },
   has_external_winline = {
     [M.DIFFVIEW_CHANGES] = true,
     [M.DIFFVIEW_COMMITS] = true,
@@ -294,16 +290,15 @@ function M.has_external_winline(filetype)
   return filetypes.has_external_winline[filetype]
 end
 
+---Completion runs in code filetypes only; picker and searcher finders filter on every keystroke, and a
+---completion popup would hold back that filtering.
 ---@param filetype                      string|nil
 ---@return boolean
 function M.is_cmp_enabled(filetype)
   if filetype == nil or #filetype < 1 then
     return false
   end
-  if filetypes.code[filetype] or filetypes.cmp_others[filetype] then
-    return true
-  end
-  return false
+  return filetypes.code[filetype] == true
 end
 
 ---@param filetype                      string|nil

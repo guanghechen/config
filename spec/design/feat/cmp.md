@@ -203,14 +203,15 @@ cmdline mappings 使用 `silent=false` 保持 incsearch 更新；fallback 插入
 
 ## Sources 与排序
 
-保留代码、Markdown/notepad、finder/searcher 的 source 分配，以及 buffer/filetype 准入规则。
+保留代码与 Markdown/notepad 的 source 分配，以及 buffer/filetype 准入规则。picker 与 searcher 的 finder 不启用补全：
+它们逐键过滤，补全菜单打开时 Neovim 只触发 `TextChangedP`，会使结果停止更新。
 buffer 是 LSP 与普通 path 的 fallback：请求中的 primary source 都返回空结果后才请求 buffer；
 任一 primary 出现候选就撤销 buffer 的请求、展示和 preview 资格，迟到 callback 不能重新发布。
 policy 在请求前区分 `path` / `path_at` 并声明 buffer 的 primary 依赖；
 `path_at` 独立于该 fallback 关系，扫描仍 pending 时也不阻塞 buffer；Insert 场景没有 primary source 时直接请求 buffer。
 路径 source 共用异步目录扫描，`@` 使用 workspace cwd，普通路径使用当前文件目录。
 普通路径以 `/` 或 `\` 分隔符准入；引号只保留路径中的空格，不能单独将普通字符串升级为路径。
-workspace `@` 与 finder 仍允许裸 basename，普通字符串继续使用既定的 buffer fallback。
+workspace `@` 仍允许裸 basename，普通字符串继续使用既定的 buffer fallback。
 扫描按批让出主线程，取消底层排队请求，2 s 超时返回不完整结果；在排序前不截断目录候选。
 路径 token、基准目录和环境展开值须为有效 UTF-8；无法表示的目标跳过路径请求。
 目录扫描在 join/stat 前排除非法 UTF-8 名称，包括 symlink 和未知类型，其他条目继续参与补全。

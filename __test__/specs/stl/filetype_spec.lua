@@ -31,6 +31,11 @@ t:test("C# uses Neovim's cs filetype", function()
   t.assert_false(Filetype.is_cmp_enabled("csharp"), "nonexistent alias")
 end)
 
+t:test("picker and searcher finders take no completion", function()
+  t.assert_false(Filetype.is_cmp_enabled(Filetype.UX_PICKER_FINDER), "picker finder")
+  t.assert_false(Filetype.is_cmp_enabled(Filetype.UX_SEARCHER_FINDER), "searcher finder")
+end)
+
 t:test("surrounds stay out of interface buffers but not notes or code", function()
   for _, filetype in ipairs({
     Filetype.UX_PICKER_RESULT,
