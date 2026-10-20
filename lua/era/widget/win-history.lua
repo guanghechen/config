@@ -128,6 +128,7 @@ local flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Ob
 local picker = era.m.picker.ListComposer.new({
   name = "window-history",
   permanent = true,
+  scheme = "path",
   title = "Find Window History",
   height = 20,
   width = 80,

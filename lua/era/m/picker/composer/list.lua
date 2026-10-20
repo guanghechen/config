@@ -55,7 +55,8 @@ local PRESENTATION = {}
 ---@class era.m.picker.IListComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
----@field public autosort               ?boolean
+---@field public autosort               ?boolean False keeps matches in item order.
+---@field public scheme                 ?yoz.fuzzy.Scheme Scoring for item texts; "path" for file paths. Defaults to "default".
 ---@field public permanent              boolean
 ---@field public title                  string
 ---@field public height                 ?number
@@ -109,8 +110,10 @@ local PRESENTATION = {}
 ---@field protected _preparing          ?integer
 ---
 ---@field protected _autosort           boolean
+---@field protected _scheme             yoz.fuzzy.Scheme
 ---@field protected _items              era.m.picker.composer.list.IItem[]
----@field protected _matches            dot.t.IScoredMatch[]
+---@field protected _corpus             yoz.fuzzy.Corpus Item texts, keyed by item node.
+---@field protected _orders             ?era.view.result_tree.Orders
 ---@field protected _matched_input      string
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuid_present       string|nil
@@ -127,6 +130,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local picker_uuid = props.uuid or yoz.fn.uuid() ---@type string
   local autosort = props.autosort ~= false ---@type boolean
+  local scheme = props.scheme or "default" ---@type yoz.fuzzy.Scheme
   local permanent = props.permanent ---@type boolean
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
@@ -157,7 +161,7 @@ function M.new(props)
 
   local present = props.present
   local render_preview = props.render_preview
-  local self = setmetatable({ _disposed = false, _payload_version = 0, _matches = {} }, M)
+  local self = setmetatable({ _disposed = false, _payload_version = 0 }, M)
   local treeview
   treeview = ResultTree.new({
     name = fullname,
@@ -318,13 +322,7 @@ function M.new(props)
         return
       end
       local all_rows = self._matched_input == ""
-      local orders
-      if not all_rows then
-        orders = {}
-        for _, match in ipairs(self._matches) do
-          orders[#orders + 1] = "item:" .. match.uuid
-        end
-      end
+      local orders = not all_rows and self._orders or nil
       return treeview:publish({ mode = "list", rootuuid = "list", orders = orders, all_rows = all_rows })
     end,
     on_result_rendered = function()
@@ -377,8 +375,10 @@ function M.new(props)
   self._search_pattern = search_pattern
 
   self._autosort = autosort
+  self._scheme = scheme
   self._items = {}
-  self._matches = {}
+  self._corpus = yoz.fuzzy.new_corpus({ scheme = scheme })
+  self._orders = nil
   self._uuid_current = nil
   self._uuid_present = nil
 
@@ -482,8 +482,10 @@ function M:dispose()
   self._treeview = nil
 
   self._autosort = nil
+  self._scheme = nil
   self._items = nil
-  self._matches = nil
+  self._corpus = nil
+  self._orders = nil
   self._matched_input = nil
   self._uuid_current = nil
   self._uuid_present = nil
@@ -609,6 +611,7 @@ function M:reset_data(data)
   self._uuid_present = data.uuid_present
   self._uuid_current = data.uuid_current or self._uuid_current
   local source = Source.new(version)
+  local corpus = yoz.fuzzy.new_corpus({ scheme = self._scheme })
   local index = 1
   ---@return nil
   local function prepare()
@@ -617,14 +620,18 @@ function M:reset_data(data)
     end
     local ok, done = pcall(function()
       local deadline = vim.uv.hrtime() + 2000000
+      local texts, keys = {}, {}
       while index <= #items do
-        source:append(items[index])
+        local item = items[index]
+        source:append(item)
+        texts[#texts + 1], keys[#keys + 1] = item.text, "item:" .. item.uuid
         index = index + 1
         if vim.uv.hrtime() >= deadline then
-          return false
+          break
         end
       end
-      return true
+      corpus:append(texts, keys)
+      return index > #items
     end)
     if not ok then
       self._preparing = nil
@@ -634,7 +641,7 @@ function M:reset_data(data)
     else
       self._preparing = nil
       source:seal()
-      self._items = source.items
+      self._items, self._corpus, self._orders = source.items, corpus, nil
       self._treeview.source, self._treeview.entries = source, source.entries
       self._treeview:invalidate()
       self:__match__(self._search_pattern:snapshot())
@@ -662,75 +669,38 @@ end
 ---@param input                         string
 ---@return nil
 function M:__match__(input)
-  local items = self._items
-  local matches = {}
-
-  if #input > 0 then
-    local case_sensitive = self.flag_case_sensitive:snapshot()
-    local use_fuzzy = self.flag_fuzzy:snapshot()
-    local use_regex = self.flag_regex:snapshot()
-
-    local lines = {}
-    local search_pattern = case_sensitive and input or input:lower()
-
-    for _, item in ipairs(items) do
-      lines[#lines + 1] = case_sensitive and item.text or item.text_lower
+  local treeview = self._treeview
+  local orders ---@type era.view.result_tree.Orders|nil
+  if #input > 0 and self.flag_regex:snapshot() then
+    local keys, lines = {}, {}
+    for index, item in ipairs(self._items) do
+      keys[index], lines[index] = "item:" .. item.uuid, item.text
     end
-
-    ---@type yoz.search.ISearchInLinesOptions
-    local search_params = {
-      pattern = search_pattern,
-      lines = lines,
-      flag_fuzzy = use_fuzzy,
-      flag_regex = use_regex,
-      flag_case_sensitive = case_sensitive,
-    }
-    local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
-    if search_err then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "search_in_lines failed",
-        details = {
-          error = search_err,
-          params = search_params,
-        },
-      })
-      search_result = nil
+    orders = treeview:match_lines(keys, lines, input, self.flag_case_sensitive:snapshot())
+  elseif #input > 0 then
+    local result = self._corpus:query({
+      pattern = input,
+      fuzzy = self.flag_fuzzy:snapshot(),
+      case = self.flag_case_sensitive:snapshot() and "respect" or "smart",
+      rank = self._autosort,
+    })
+    -- Unchanged matches keep the published orders; highlights follow the latest query.
+    local previous = self._orders
+    orders = result
+    if
+      type(previous) == "userdata" and result:same(previous --[[@as yoz.fuzzy.Result]])
+    then
+      orders = previous --[[@as yoz.fuzzy.Result]]
     end
-    if search_result and search_result.lines then
-      local by_line = {}
-      for _, entry in ipairs(search_result.lines) do
-        local lnum = entry.lnum ---@type integer
-        local match = by_line[lnum]
-        if match then
-          match.score = math.max(match.score, entry.score)
-          vim.list_extend(match.matches, entry.matches)
-        else
-          match = { order = lnum, uuid = items[lnum].uuid, score = entry.score, matches = entry.matches }
-          by_line[lnum] = match
-          matches[#matches + 1] = match
-        end
-      end
-    end
+    treeview:show_matches(result)
+  else
+    treeview:clear_match()
   end
 
-  if self._autosort and #input > 0 then
-    table.sort(matches, function(a, b)
-      return a.score == b.score and a.order < b.order or a.score > b.score
-    end)
-  end
-
-  self._matches = matches
+  self._orders = orders
   self._matched_input = input
-  local native_matches = {}
-  for _, match in ipairs(matches) do
-    if #match.matches > 0 then
-      native_matches["item:" .. match.uuid] = match
-    end
-  end
-  self._treeview._matches = native_matches
-  if self._treeview.view then
-    self._treeview.view:refresh_decorations()
+  if treeview.view then
+    treeview.view:refresh_decorations()
   end
 end
 

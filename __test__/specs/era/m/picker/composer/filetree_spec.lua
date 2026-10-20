@@ -147,7 +147,7 @@ local function create_file(filepath, filetype)
   return key, paths:get(key)
 end
 
-t:test("canonicalizes reset ingress and matches either separator", function()
+t:test("canonicalizes reset ingress and matches canonical root-relative paths", function()
   local attached_rootpath = nil ---@type string|nil
   with_composer("canonical-filetree", function(composer)
     composer:reset_filepaths([[C:\workspace\project\]], {
@@ -158,16 +158,19 @@ t:test("canonicalizes reset ingress and matches either separator", function()
 
     local canonical_rootpath = "C:/workspace/project"
     t.assert_eq(canonical_rootpath, attached_rootpath, "attached rootpath")
-    t.assert_eq(3, #composer._uuids_order, "canonical cwd collection")
+    t.assert_eq(3, composer._uuids_order:count(), "canonical cwd collection")
 
-    local restore_path_sep = t:patch_table(stl.env, "PATH_SEP", "\\")
-    composer:__match__([[src\lib]])
-    restore_path_sep()
-
-    t.assert_eq(1, #composer._uuids_order, "backslash query match count")
-    local data = composer._filetree:get(composer._uuids_order[1]) ---@type era.view.result_paths.IFile|nil
+    composer:__match__("src/lib")
+    t.assert_eq(1, composer._uuids_order:count(), "canonical separator match count")
+    local data = composer._filetree:get(composer._uuids_order:keys()[1]) ---@type era.view.result_paths.IFile|nil
     t.assert_true(data ~= nil, "matched data")
     t.assert_eq(canonical_rootpath .. "/src/lib/util.lua", data and data.filepath, "matched canonical filepath")
+
+    -- Paths match relative to the root, and a backslash is literal rather than a separator.
+    composer:__match__("^src/")
+    t.assert_eq(2, composer._uuids_order:count(), "root-relative prefix")
+    composer:__match__([[src\lib]])
+    t.assert_eq(0, composer._uuids_order:count(), "backslash query match count")
   end, function(_, rootpath)
     attached_rootpath = rootpath
   end)
@@ -414,7 +417,7 @@ for _, phase in ipairs({ "before action", "during prompt" }) do
       "nvim_exec_lua",
       [[
       local files = {}
-      for _, uuid in ipairs(picker._uuids_file) do
+      for _, uuid in ipairs(picker._uuids_order:keys()) do
         files[#files + 1] = picker._filetree:get(uuid).basename
       end
       return files
@@ -482,10 +485,9 @@ t:test("directory removal synchronizes topology state and indexes", function()
     native.publish(composer._treeview)
     t.assert_nil(composer._treeview:retrieve(directory_uuid), "removed directory state")
     t.assert_nil(composer._treeview:retrieve(fileuuid), "removed child state")
-    t.assert_eq(0, #composer._uuids_file, "removed file index")
-    t.assert_eq(0, #composer._uuids_order, "removed order index")
+    t.assert_eq(0, composer._uuids_order:count(), "removed order index")
     composer:__match__("file")
-    t.assert_eq(0, #composer._uuids_order, "removed match index")
+    t.assert_eq(0, composer._uuids_order:count(), "removed match index")
   end)
 end)
 
@@ -534,9 +536,10 @@ t:test("file refresh preserves selection at the new identity", function()
     local target_uuid = require("era.view.result_paths").key(target)
     t.assert_true(composer._treeview:isselected(target_uuid), "renamed file selection")
     t.assert_eq(target_uuid, composer._uuid_current, "renamed current identity")
-    t.assert_eq(target_uuid, composer._uuids_file[1], "renamed file index")
-    t.assert_eq(target_uuid, composer._uuids_order[1], "renamed order index")
-    t.assert_false(vim.list_contains(composer._uuids_file, source_uuid), "old file index removed")
+    t.assert_true(vim.deep_equal({ target_uuid }, composer._uuids_order:keys()), "renamed order index")
+    composer:__match__("")
+    t.assert_true(vim.deep_equal({ target_uuid }, composer._uuids_order:keys()), "renamed file index")
+    t.assert_false(composer._uuids_order:has(source_uuid), "old file index removed")
   end)
 end)
 
@@ -560,7 +563,7 @@ t:test("root directory refresh remaps composer indexes", function()
     local target_file_uuid = require("era.view.result_paths").key(target .. "/file.lua")
     t.assert_eq(target_root_uuid, composer._uuid_root, "renamed attached root")
     t.assert_eq(target_file_uuid, composer._uuid_current, "renamed current child")
-    t.assert_eq(target_file_uuid, composer._uuids_file[1], "renamed root file index")
+    t.assert_true(vim.deep_equal({ target_file_uuid }, composer._uuids_order:keys()), "renamed root file index")
     t.assert_eq(target, attached, "renamed attached callback")
   end, function(_, rootpath)
     attached = rootpath

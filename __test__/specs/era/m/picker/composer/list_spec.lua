@@ -83,6 +83,18 @@ t:test("native List preserves callback payload identity, match byte offsets and 
   t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(1) == items[1]", {}), "original item identity")
   t.assert_true(ui:rpc("nvim_exec_lua", "return picker:retrieve(1).data == original", {}), "original payload identity")
   t.assert_eq(2, ui:rpc("nvim_exec_lua", "return picker.result.lnum_present:snapshot()", {}))
+  ui:rpc("nvim_exec_lua", [[picker.finder:set_content("nee")]], {})
+  wait_until(function()
+    ui:rpc("nvim_command", "redraw")
+    return ui:rpc(
+      "nvim_exec_lua",
+      [[
+      return picker._treeview:linecount() == 2 and matches[0] and matches[0][1] == 6 and matches[0][2] == 9
+    ]],
+      {}
+    )
+  end, 5000)
+  -- The same matches keep their rows; their highlights follow the longer query.
   ui:rpc("nvim_exec_lua", [[picker.finder:set_content("needle")]], {})
   wait_until(function()
     ui:rpc("nvim_command", "redraw")
@@ -170,7 +182,7 @@ t:test("equal presentation replaces action payloads through a new revision witho
   t.assert_eq(0, ui:rpc("nvim_exec_lua", "return writes", {}))
 end)
 
-t:test("multiple occurrences remain on one native row and all receive match highlights", function()
+t:test("multiple occurrences remain on one native row with the best alignment highlighted", function()
   local ui = session()
   ui:rpc(
     "nvim_exec_lua",
@@ -193,11 +205,55 @@ t:test("multiple occurrences remain on one native row and all receive match high
     return ui:rpc(
       "nvim_exec_lua",
       [[
-      return picker._treeview:linecount()==1 and spans["6:12"] and spans["13:19"]
+      return picker._treeview:linecount()==1 and spans["6:12"] and not spans["13:19"]
     ]],
       {}
     )
   end, 5000)
+end)
+
+t:test("fuzzy queries rank with smart case and regex queries keep their escapes", function()
+  local ui = session()
+  ui:rpc(
+    "nvim_exec_lua",
+    [[
+    picker:reset_data({items={
+      {uuid="space", text=" ", data={}},
+      {uuid="Upper", text="Abc", data={}},
+      {uuid="lower", text="abc", data={}},
+      {uuid="word", text="ab", data={}},
+    }})
+    controls.flag_fuzzy:next(true)
+  ]],
+    {}
+  )
+  ---@param query                       string
+  ---@param count                       integer
+  ---@return string[]
+  local function rows(query, count)
+    ui:rpc("nvim_exec_lua", "picker.finder:set_content(...)", { query })
+    wait_until(function()
+      return ui:rpc(
+        "nvim_exec_lua",
+        "return picker._matched_input == select(1, ...) and picker._treeview:linecount() == select(2, ...)",
+        { query, count }
+      )
+    end, 5000)
+    return ui:rpc(
+      "nvim_exec_lua",
+      [[
+      local uuids = {}
+      for row = 1, picker._treeview:linecount() do uuids[row] = picker:retrieve(row).uuid end
+      return uuids
+    ]],
+      {}
+    )
+  end
+  t.assert_true(vim.deep_equal({ "Upper" }, rows("Ab", 1)), "an uppercase query is case-sensitive")
+  t.assert_true(vim.deep_equal({ "word", "Upper", "lower" }, rows("ab", 3)), "shorter matches rank first")
+  ui:rpc("nvim_exec_lua", "controls.flag_regex:next(true)", {})
+  t.assert_true(vim.deep_equal({ "word" }, rows([[^\S\S$]], 1)), "\\S stays a non-space class")
+  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
 end)
 
 t:test("a newer reset supersedes partially prepared producer records", function()

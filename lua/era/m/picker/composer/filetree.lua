@@ -1,6 +1,7 @@
 ---@diagnostic disable: invisible
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.composer.filetree" ---@type string
+local FRECENCY_WEIGHT = 16 ---@type integer Match points for the most frecent file; see the fuzzy quality benchmark.
 
 ---@alias era.m.picker.composer.filetree.IOnAttached
 ---| fun(self: era.m.picker.FiletreeComposer, rootpath: string): nil
@@ -132,8 +133,8 @@ local __module_name__ = "era.m.picker.composer.filetree" ---@type string
 ---@field protected _last_preview_filepath string|nil
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
----@field protected _uuids_file         string[]
----@field protected _uuids_order        string[]
+---@field protected _uuids_order        era.view.result_tree.Orders
+---@field protected _weigh              (fun(key: string): number)|nil
 ---
 ---@field protected _on_attached        era.m.picker.composer.filetree.IOnAttached
 ---@field protected _on_confirm         era.m.picker.composer.filetree.IOnConfirm|nil
@@ -1012,8 +1013,10 @@ function M.new(props)
 
   self._last_preview_filepath = nil
   self._uuid_root = nil
-  self._uuids_file = {}
   self._uuids_order = {}
+  self._weigh = frecency and function(key)
+    return frecency:score(key) or 0
+  end or nil
 
   self._on_attached = on_attached
   self._on_confirm = on_confirm
@@ -1126,8 +1129,8 @@ function M:dispose()
 
   self._last_preview_filepath = nil
   self._uuid_root = nil
-  self._uuids_file = nil
   self._uuids_order = nil
+  self._weigh = nil
 
   self._on_attached = nil
   self._on_confirm = nil
@@ -1287,7 +1290,7 @@ function M:prepare_filepaths(cwd, filepaths, opts)
     end
     local ok, failure = pcall(function()
       local prepared = source:prepare(cwd, paths, checkpoint)
-      local entries, files = {}, {}
+      local entries = {}
       for key, record in pairs(prepared.records) do
         local entry = prepare_entry and prepare_entry(record.data) or {}
         entry.key, entry.nodetype = key, record.data.filetype == "directory" and "container" or "leaf"
@@ -1295,33 +1298,15 @@ function M:prepare_filepaths(cwd, filepaths, opts)
         checkpoint()
       end
       local root = require("era.view.result_paths").key(cwd)
-      prepared:walk(root, function(key, data)
-        if data.filetype == "file" then
-          files[#files + 1] = key
-        end
-        checkpoint()
-      end)
-      local ordered = vim.list_slice(files)
-      if self._frecency then
-        local scores = {}
-        for _, key in ipairs(files) do
-          scores[key] = self._frecency:score(key) or 0
-          checkpoint()
-        end
-        ordered = require("era.view.result_order").sort(ordered, function(left, right)
-          return scores[left] > scores[right]
-        end, checkpoint)
-      end
       checkpoint()
       if retained_root and prepared:contains(retained_root) then
         root = retained_root
       end
       treeview:adopt_filepaths(prepared, entries)
       self._last_preview_filepath, self._uuid_root = nil, root
-      self._uuids_file, self._uuids_order = files, ordered
-      if self._search_pattern:snapshot() ~= "" then
-        self:__match__(self._search_pattern:snapshot())
-      end
+      -- Build the match corpus cooperatively; a later change to the adopted tree cancels it.
+      source_revision, revision = source.revision, treeview._revision
+      self:__match__(self._search_pattern:snapshot(), checkpoint)
       self._path_request = nil
       self:mark_result_dirty()
       self._on_attached(self, prepared:get(root).filepath)
@@ -1473,54 +1458,24 @@ end
 ---@protected
 ---@return nil
 function M:__refresh_file_indexes__()
-  local filetree = self._filetree ---@type era.view.ResultPaths
-  local treeview = self._treeview ---@type era.m.picker.FiletreeView
-  local uuid_root = self._uuid_root ---@type string|nil
-  local uuids_file = uuid_root ~= nil and filetree:contains(uuid_root) and treeview:collect_file_uuids(uuid_root) or {} ---@type string[]
-  self._uuids_file = uuids_file
   self:__match__("")
 end
 
 ---@protected
 ---@param input                         string
+---@param checkpoint                    ?fun(): nil Called while building the match corpus; may yield or raise.
 ---@return nil
-function M:__match__(input)
-  local frecency = self._frecency ---@type stl.c.Frecency|nil
-  local treeview = self._treeview ---@type era.m.picker.FiletreeView
-
-  if #input < 1 then
-    treeview:clear_match()
-    local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
-    self._uuids_order = uuids_order
-    if frecency ~= nil then
-      table.sort(uuids_order, function(a, b)
-        local sa = frecency:score(a) or 0 ---@type integer
-        local sb = frecency:score(b) or 0 ---@type integer
-        return sa > sb
-      end)
-    end
-    return
-  end
-
-  local pattern = input ---@type string
-  if pattern:find("\\", 1, true) ~= nil then
-    pattern = pattern:gsub("\\", "/")
-  end
-
-  ---@type string[]
-  local uuids_order = treeview:match({
+function M:__match__(input, checkpoint)
+  self._uuids_order = self._treeview:match({
     rootuuid = self._uuid_root,
-    pattern = pattern,
+    pattern = input,
     case_sensitive = self.flag_case_sensitive:snapshot(),
     fuzzy = self.flag_fuzzy:snapshot(),
     regex = self.flag_regex:snapshot(),
-  })
-
-  table.sort(uuids_order, function(a, b)
-    return treeview:match_score(a) > treeview:match_score(b)
-  end)
-
-  self._uuids_order = uuids_order
+    scheme = "path",
+    weight = self._weigh and FRECENCY_WEIGHT or nil,
+    weigh = self._weigh,
+  }, checkpoint)
 end
 
 ---@param nodeuuid                      string

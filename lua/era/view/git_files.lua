@@ -207,14 +207,19 @@ end
 ---@return stl.c.Future
 function M:render(pattern, foldempty)
   self.pattern = pattern
-  local orders
+  local orders ---@type yoz.fuzzy.Result|nil
   if pattern ~= "" then
-    orders =
-      self:match({ rootuuid = self.root, pattern = pattern, fuzzy = true, regex = false, case_sensitive = false })
+    orders = self:match({
+      rootuuid = self.root,
+      pattern = pattern,
+      fuzzy = true,
+      regex = false,
+      case_sensitive = false,
+      scheme = "path",
+    }) --[[@as yoz.fuzzy.Result]]
   else
     self:clear_match()
   end
-  local matches = orders and self._matches or nil
   local request = {
     mode = "tree",
     rootuuid = self.root or self.source.root,
@@ -225,7 +230,7 @@ function M:render(pattern, foldempty)
   self._render = request
   return self:publish(request):map(function(reply)
     if self._render == request and reply.kind == "Applied" then
-      self._shown_matches = matches
+      self._shown_matches = orders
     end
     return reply
   end)
@@ -254,7 +259,7 @@ function M:targets(keys, frame)
     end
   end
   for key, entry in pairs(version.entries) do
-    if entry.nodetype == "leaf" and (not self._shown_matches or self._shown_matches[key]) then
+    if entry.nodetype == "leaf" and (not self._shown_matches or self._shown_matches:has(key)) then
       local path = version.data[key].filepath
       local included = files[key]
       for _, prefix in ipairs(directories) do

@@ -66,7 +66,7 @@ function M.defaults()
     find_vim_option = select_item.defaults(),
     lsp_reference = select_item.defaults(),
     lsp_symbols = select_item.defaults(),
-    search_file = select_item.defaults(),
+    search_file = select_item.defaults(false),
 
     find_buffer_scope = "A",
     find_file_scope = "C",
@@ -93,7 +93,7 @@ function M.normalize(data)
     find_vim_option = select_item.normalize(data.find_vim_option),
     lsp_reference = select_item.normalize(data.lsp_reference),
     lsp_symbols = select_item.normalize(data.lsp_symbols),
-    search_file = select_item.normalize(data.search_file),
+    search_file = select_item.normalize(data.search_file, false),
 
     find_buffer_scope = "A",
     find_file_scope = "C",

@@ -29,19 +29,20 @@
 ---@field public search_pattern_history stl.c.History
 
 ---@class dot.context.select.item
----@field public defaults               fun(): dot.context.select.item.data
----@field public normalize              fun(data: unknown): dot.context.select.item.data
+---@field public defaults               fun(fuzzy?: boolean): dot.context.select.item.data
+---@field public normalize              fun(data: unknown, fuzzy?: boolean): dot.context.select.item.data
 ---@field public dump                   fun(state: dot.context.select.item.state): dot.context.select.item.data
 ---@field public load                   fun(state: dot.context.select.item.state|nil, name: string, data: unknown): dot.context.select.item.state
 local M = {}
 
+---@param fuzzy                         ?boolean Default fuzzy flag; false for the searcher's literal search. Defaults to true.
 ---@return dot.context.select.item.data
-function M.defaults()
+function M.defaults(fuzzy)
   ---@type dot.context.select.item.data
   return {
     flag_case_sensitive = false,
     flag_exclude = true,
-    flag_fuzzy = false,
+    flag_fuzzy = fuzzy ~= false,
     flag_gitignore = true,
     flag_regex = false,
     flag_selected = false,
@@ -70,9 +71,10 @@ function M.defaults()
 end
 
 ---@param data                          any
+---@param fuzzy                         ?boolean Default fuzzy flag for data without one. Defaults to true.
 ---@return dot.context.select.item.data
-function M.normalize(data)
-  local resolved = M.defaults() ---@type dot.context.select.item.data
+function M.normalize(data, fuzzy)
+  local resolved = M.defaults(fuzzy) ---@type dot.context.select.item.data
   if type(data) == "table" then
     if type(data.flag_case_sensitive) == "boolean" then
       resolved.flag_case_sensitive = data.flag_case_sensitive

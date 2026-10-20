@@ -62,7 +62,7 @@ t:test("preparation keeps the live source intact, owns its input and preserves n
   t.assert_true(composer._filetree == source, "captured source references remain valid")
   t.assert_true(source:contains(Paths.key("/workspace/file10000.lua")))
   t.assert_false(source:contains(Paths.key("/workspace/caller-mutated.lua")))
-  t.assert_eq("/workspace/file00001.lua", source:get(composer._uuids_file[1]).filepath)
+  t.assert_eq("/workspace/file00001.lua", source:get(composer._uuids_order:keys()[1]).filepath)
   native.await(composer.result.draw())
   t.assert_eq(10001, tree:linecount())
   t.assert_true(tree:isselected(keep))
@@ -82,7 +82,7 @@ t:test("frecency preparation reads each score once and keeps deterministic ties"
   native.await(composer:prepare_filepaths("/rank", paths(3000)))
   t.assert_eq(3000, calls)
   local previous_score, previous_path = math.huge, ""
-  for _, key in ipairs(composer._uuids_order) do
+  for _, key in ipairs(composer._uuids_order:keys()) do
     local score, path = scores[key], composer._filetree:get(key).filepath
     t.assert_true(score <= previous_score)
     if score == previous_score then

@@ -109,7 +109,7 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
----@field protected _uuids_order        string[]
+---@field protected _uuids_order        era.view.result_tree.Orders
 ---
 ---@field protected _on_attached        era.m.picker.composer.tree.IOnAttached
 ---@field protected _on_confirm         era.m.picker.composer.tree.IOnConfirm
@@ -978,15 +978,13 @@ end
 function M:__match__(input)
   local treeview = self._treeview ---@type era.view.ResultTree
 
-  ---@type string[]
-  local uuids_order = treeview:match({
+  self._uuids_order = treeview:match({
     rootuuid = self._uuid_root,
     pattern = input,
     case_sensitive = self.flag_case_sensitive:snapshot(),
     fuzzy = self.flag_fuzzy:snapshot(),
     regex = self.flag_regex:snapshot(),
   })
-  self._uuids_order = uuids_order
 end
 
 ---@param nodeuuid                      string

@@ -63,4 +63,20 @@ t:test("scope defaults and serialization remain independent", function()
   t.assert_eq("B", Select.search_file_scope:snapshot(), "restored search scope")
 end)
 
+t:test("pickers default to fuzzy matching, the searcher to literal, and stored flags win", function()
+  t:patch_global("stl", { c = { Observable = Observable, History = { deserialize = function() end } } })
+  t:patch_table(package.loaded, "dot.context.workspace.select_item", nil)
+  local Select = assert(loadfile("lua/dot/context/workspace/select.lua"))()
+
+  local defaults = Select.defaults()
+  t.assert_true(defaults.find_file.flag_fuzzy)
+  t.assert_true(defaults.lsp_symbols.flag_fuzzy)
+  t.assert_false(defaults.search_file.flag_fuzzy)
+
+  local normalized = Select.normalize({ find_file = { flag_fuzzy = false }, find_git = {}, search_file = {} })
+  t.assert_false(normalized.find_file.flag_fuzzy, "a stored choice is kept")
+  t.assert_true(normalized.find_git.flag_fuzzy)
+  t.assert_false(normalized.search_file.flag_fuzzy)
+end)
+
 t:run()

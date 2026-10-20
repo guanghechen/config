@@ -67,19 +67,107 @@ end)
 
 t:test("search membership is projected through native ancestors", function()
   local view = fixture()
-  local keys = view:match({
+  local orders = view:match({
     rootuuid = Paths.key("/workspace"),
     pattern = "one.lua",
     fuzzy = false,
     regex = false,
     case_sensitive = false,
-  })
-  t.assert_eq(1, #keys)
-  t.assert_eq(Paths.key("/workspace/dir/one.lua"), keys[1])
-  native.publish(view, { rootuuid = Paths.key("/workspace"), only_matched = true, orders = keys })
+  }) --[[@as yoz.fuzzy.Result]]
+  t.assert_true(vim.deep_equal({ Paths.key("/workspace/dir/one.lua") }, orders:keys()))
+  native.publish(view, { rootuuid = Paths.key("/workspace"), only_matched = true, orders = orders })
   t.assert_eq(2, view:linecount())
   t.assert_eq(Paths.key("/workspace/dir"), view:retrieve_uuid(1))
-  t.assert_eq(keys[1], view:retrieve_uuid(2))
+  t.assert_eq(Paths.key("/workspace/dir/one.lua"), view:retrieve_uuid(2))
+end)
+
+t:test("fuzzy matches rank root-relative paths and keep their identity while unchanged", function()
+  local view = fixture()
+  view:reset_filepaths("/workspace", { "src/alpha.lua", "lib/alpha_test.lua", "alpha.lua", "notes.md" }, false)
+  local root = Paths.key("/workspace")
+  local params =
+    { rootuuid = root, pattern = "alpha", fuzzy = true, regex = false, case_sensitive = false, scheme = "path" }
+  local orders = view:match(params) --[[@as yoz.fuzzy.Result]]
+  local expected = {
+    Paths.key("/workspace/alpha.lua"),
+    Paths.key("/workspace/src/alpha.lua"),
+    Paths.key("/workspace/lib/alpha_test.lua"),
+  }
+  t.assert_true(vim.deep_equal(expected, orders:keys()), vim.inspect(orders:keys()))
+  t.assert_true(rawequal(orders, view:match(params)), "an unchanged result keeps its identity")
+  native.publish(view, { mode = "list", rootuuid = root, orders = orders })
+  t.assert_eq(expected[1], view:retrieve_uuid(1))
+  t.assert_eq(3, view:linecount())
+  -- The root's own path is not matched: every file lies under "workspace".
+  t.assert_eq(0, view:match(vim.tbl_extend("force", params, { pattern = "workspace" })):count())
+end)
+
+t:test("fuzzy highlights map root-relative positions onto displayed path columns", function()
+  local view = fixture()
+  local root = Paths.key("/workspace")
+  local key = Paths.key("/workspace/dir/one.lua")
+  view:match({
+    rootuuid = root,
+    pattern = "dione",
+    fuzzy = true,
+    regex = false,
+    case_sensitive = false,
+    scheme = "path",
+  })
+  local frame = native.publish(view, { mode = "list", rootuuid = root, orders = view._result, list_text = "ancestry" })
+  local spans = {}
+  t:patch_table(vim.api, "nvim_buf_set_extmark", function(_, _, _, col, options)
+    if options.hl_group == "TreeviewMatch" then
+      spans[#spans + 1] = { col, options.end_col }
+    end
+    return 0
+  end)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end)
+  view:decorate_row({ bufnr = bufnr }, frame, 0, frame:source():id(key), 10, "dir/one.lua", false)
+  t.assert_true(vim.deep_equal({ { 10, 12 }, { 14, 17 } }, spans), vim.inspect(spans))
+end)
+
+t:test("highlights follow the latest query while unchanged orders keep their identity", function()
+  local view = fixture()
+  local root = Paths.key("/workspace")
+  local key = Paths.key("/workspace/dir/one.lua")
+  local params =
+    { rootuuid = root, pattern = "on", fuzzy = true, regex = false, case_sensitive = false, scheme = "path" }
+  local orders = view:match(params)
+  local frame = native.publish(view, { mode = "list", rootuuid = root, orders = orders, list_text = "ancestry" })
+  t.assert_true(rawequal(orders, view:match(vim.tbl_extend("force", params, { pattern = "one" }))))
+  local spans = {}
+  t:patch_table(vim.api, "nvim_buf_set_extmark", function(_, _, _, col, options)
+    if options.hl_group == "TreeviewMatch" then
+      spans[#spans + 1] = { col, options.end_col }
+    end
+    return 0
+  end)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end)
+  view:decorate_row({ bufnr = bufnr }, frame, 0, frame:source():id(key), 0, "dir/one.lua", false)
+  t.assert_true(vim.deep_equal({ { 4, 7 } }, spans), vim.inspect(spans))
+end)
+
+t:test("regex matches list each file once however often it matches", function()
+  local view = fixture()
+  -- A pattern with a newline reports each occurrence as its own line match.
+  local keys = view:match({
+    rootuuid = Paths.key("/workspace"),
+    pattern = "o|\n",
+    fuzzy = false,
+    regex = true,
+    case_sensitive = false,
+  })
+  t.assert_true(
+    vim.deep_equal({ Paths.key("/workspace/dir/one.lua"), Paths.key("/workspace/two.lua") }, keys),
+    vim.inspect(keys)
+  )
 end)
 
 t:test("a plain file is never treated as a collapsed branch", function()

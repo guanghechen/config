@@ -8,7 +8,7 @@ local search_pattern_history = stl.c.InputHistory.new({
   input = search_pattern,
 })
 local o_flag_foldempty = stl.c.Observable.from_value(true)
-local o_flag_fuzzy = stl.c.Observable.from_value(false)
+local o_flag_fuzzy = stl.c.Observable.from_value(true)
 local o_flag_regex = stl.c.Observable.from_value(false)
 local o_flag_case_sensitive = stl.c.Observable.from_value(true)
 local o_flag_selected = stl.c.Observable.from_value(false)

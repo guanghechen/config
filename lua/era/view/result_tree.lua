@@ -32,7 +32,19 @@ local RECORD_DEFAULTS = {
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
----@field public cache_match            ?{score: number, matches: table[]}
+
+---@class era.view.result_tree.IMatchParams
+---@field public rootuuid               ?string
+---@field public pattern                string
+---@field public fuzzy                  boolean False matches plain terms as exact substrings.
+---@field public regex                  boolean
+---@field public case_sensitive         boolean False is smart case, except for regex.
+---@field public scheme                 ?yoz.fuzzy.Scheme Defaults to "default".
+---@field public weight                 ?integer Points added for an item weight of 100.
+---@field public weigh                  ?fun(key: string): number Item weight 0..100, read when the corpus is built.
+
+---Match order for publication: fuzzy results rank natively; regex matches are keys.
+---@alias era.view.result_tree.Orders string[]|yoz.fuzzy.Result
 
 ---@class era.view.result_tree.IRead
 ---@field frame                         yoz.ux.treeview.Frame
@@ -163,7 +175,7 @@ function M:dispose()
   self.view, self.state, self._data, self._request, self._mount = nil, nil, nil, nil, nil
   self.source:dispose()
   self.source, self._present, self._frame, self._configured = nil, nil, nil, nil
-  self._matches, self._last_match_result = nil, nil
+  self._matches, self._result, self._orders, self._fuzzy = nil, nil, nil, nil
   self._icons, self._directory_icons = nil, nil
   self._hidden = {}
   self._read_cache, self._record_cache = nil, nil
@@ -173,7 +185,6 @@ end
 ---@return nil
 function M:invalidate()
   self._revision = self._revision + 1
-  self._last_match_result = nil
 end
 
 ---@return nil
@@ -322,12 +333,10 @@ function M:retrieve(key, frame)
       local expandable = entry.nodetype == "container" or entry.locations and #entry.locations > 0
       local id = expandable and read.source:id(key)
       local flags = id and read.frame:flags(id)
-      local result = vim.tbl_extend("force", entry, {
+      return vim.tbl_extend("force", entry, {
         key = key,
         collapsed = expandable and flags and not flags.expanded or false,
       })
-      result.cache_match = self._matches and self._matches[key]
-      return result
     end
     return nil
   end
@@ -824,35 +833,134 @@ end
 
 ---@return nil
 function M:clear_match()
-  self._matches, self._last_match_result = nil, nil
+  self._matches, self._result, self._orders = nil, nil, nil
 end
 
----@param params                        table
----@return string[]
-function M:match(params)
-  local cached = self._last_match_result
-  if cached and cached.revision == self.source.revision and vim.deep_equal(cached.params, params) then
-    return vim.list_slice(cached.keys)
+---Highlight a fuzzy result computed outside `match`, over this tree's item keys.
+---@param result                        yoz.fuzzy.Result
+---@return nil
+function M:show_matches(result)
+  self._result, self._matches = result, nil
+end
+
+---Bytes of `filepath` before the root-relative path an item matches as, or 0.
+---@param filepath                      ?string
+---@param prefix                        ?string
+---@return integer
+local function relative_offset(filepath, prefix)
+  if filepath and prefix and #filepath > #prefix and filepath:sub(1, #prefix) == prefix then
+    return #prefix
   end
-  local keys, lines = {}, {}
-  local previous = cached and cached.params
-  local narrow = cached
-    and cached.revision == self.source.revision
-    and not params.regex
-    and not previous.regex
-    and previous.rootuuid == params.rootuuid
-    and previous.fuzzy == params.fuzzy
-    and previous.case_sensitive == params.case_sensitive
-    and params.pattern:sub(1, #previous.pattern) == previous.pattern
-  if narrow then
-    keys = vim.list_slice(cached.keys)
-    for index, key in ipairs(keys) do
-      -- Entry changes clear the cache, and every source change bumps its revision.
-      local data = assert(self.source:get(key), "narrowed match key left its source revision")
-      local entry = self.entries[key]
-      lines[index] = data.filepath or entry.text or data.name or ""
+  return 0
+end
+
+---The corpus of matchable entries under the root, rebuilt when the source, the entries or the match
+---settings change. File paths match relative to the root.
+---@param params                        era.view.result_tree.IMatchParams
+---@param checkpoint                    ?fun(): nil Called per item; may yield or raise to cancel.
+---@return {corpus: yoz.fuzzy.Corpus, prefix: string|nil}
+function M:_corpus(params, checkpoint)
+  local scheme = params.scheme or "default"
+  local cached = self._fuzzy
+  if
+    cached
+    and cached.source_revision == self.source.revision
+    and cached.revision == self._revision
+    and cached.root == params.rootuuid
+    and cached.scheme == scheme
+    and cached.weigh == params.weigh
+  then
+    return cached
+  end
+  local root = self.source:get(params.rootuuid or self.source.root)
+  local prefix = root and root.filepath
+  if prefix and prefix:sub(-1) ~= "/" then
+    prefix = prefix .. "/"
+  end
+  local texts, keys, weights = {}, {}, {}
+  local weigh = params.weigh
+  self.source:walk(params.rootuuid, function(key, data)
+    local entry = self.entries[key]
+    if entry and (entry.text ~= nil or entry.nodetype == "leaf") then
+      local filepath = data.filepath
+      texts[#texts + 1] = filepath and filepath:sub(relative_offset(filepath, prefix) + 1)
+        or entry.text
+        or data.name
+        or ""
+      local group = key ---@type string|string[]
+      if entry.locations and #entry.locations > 0 then
+        group = { key }
+        for _, location in ipairs(entry.locations) do
+          group[#group + 1] = location.locationuuid
+        end
+      end
+      keys[#keys + 1] = group
+      if weigh then
+        weights[#weights + 1] = string.char(math.max(0, math.min(100, math.floor(weigh(key) + 0.5))))
+      end
+      if checkpoint then
+        checkpoint()
+      end
     end
-  else
+  end)
+  local corpus = yoz.fuzzy.new_corpus({ scheme = scheme })
+  corpus:append(texts, keys)
+  if weigh then
+    corpus:set_weights(table.concat(weights))
+  end
+  self._fuzzy = {
+    corpus = corpus,
+    prefix = prefix,
+    source_revision = self.source.revision,
+    revision = self._revision,
+    root = params.rootuuid,
+    scheme = scheme,
+    weigh = weigh,
+  }
+  self._result, self._orders = nil, nil
+  return self._fuzzy
+end
+
+---Regex matches of `lines`: each key once, in line order, with its ranges for highlighting.
+---@param keys                          string[] Key of each line.
+---@param lines                         string[]
+---@param pattern                       string
+---@param case_sensitive                boolean
+---@return string[]
+function M:match_lines(keys, lines, pattern, case_sensitive)
+  local result, error = yoz.search.search_in_lines({
+    pattern = pattern,
+    lines = lines,
+    flag_fuzzy = false,
+    flag_regex = true,
+    flag_case_sensitive = case_sensitive,
+  })
+  if not result then
+    self:_error(error)
+  end
+  local matched, matches = {}, {}
+  for _, item in ipairs(result and result.lines or {}) do
+    local key = keys[item.lnum]
+    local match = matches[key]
+    if match then
+      vim.list_extend(match.matches, item.matches)
+    else
+      matched[#matched + 1] = key
+      matches[key] = { matches = vim.list_slice(item.matches) }
+    end
+  end
+  self._matches, self._result, self._orders = matches, nil, nil
+  return matched
+end
+
+---Match the entries under the root. The returned orders keep their identity while the matches and their
+---order stay the same, so an unchanged result republishes nothing; highlights follow the latest query.
+---@param params                        era.view.result_tree.IMatchParams
+---@param checkpoint                    ?fun(): nil Called while building the corpus; may yield or raise.
+---@return era.view.result_tree.Orders
+function M:match(params, checkpoint)
+  if params.regex and params.pattern ~= "" then
+    local keys, lines = {}, {}
     self.source:walk(params.rootuuid, function(key, data)
       local entry = self.entries[key]
       if entry and (entry.text ~= nil or entry.nodetype == "leaf") then
@@ -860,39 +968,24 @@ function M:match(params)
         lines[#lines + 1] = data.filepath or entry.text or data.name or ""
       end
     end)
+    return self:match_lines(keys, lines, params.pattern, params.case_sensitive)
   end
-  local matches = {}
-  if params.pattern ~= "" then
-    local result, error = yoz.search.search_in_lines({
-      pattern = params.pattern,
-      lines = lines,
-      flag_fuzzy = params.fuzzy,
-      flag_regex = params.regex,
-      flag_case_sensitive = params.case_sensitive,
-    })
-    if not result then
-      self:_error(error)
-      keys = {}
-    else
-      local matched = {}
-      for _, item in ipairs(result.lines or {}) do
-        local key = keys[item.lnum]
-        matched[#matched + 1] = key
-        matches[key] = { score = item.score, matches = item.matches }
-      end
-      keys = matched
-    end
+  local fuzzy = self:_corpus(params, checkpoint)
+  local result = fuzzy.corpus:query({
+    pattern = params.pattern,
+    fuzzy = params.fuzzy,
+    case = params.case_sensitive and "respect" or "smart",
+    weight = params.weight,
+  })
+  local orders = self._orders
+  if not (orders and result:same(orders)) then
+    orders = result
+  elseif self.view then
+    -- The Frame stays; only its highlights change.
+    self.view:refresh_decorations()
   end
-  self._matches = matches
-  self._last_match_result = { params = vim.deepcopy(params), keys = keys, revision = self.source.revision }
-  return vim.list_slice(keys)
-end
-
----@param key                           string
----@return number
-function M:match_score(key)
-  local match = self._matches and self._matches[key]
-  return match and match.score or 0
+  self._matches, self._result, self._orders = nil, result, orders
+  return orders
 end
 
 ---@param error                         any
@@ -1096,7 +1189,9 @@ function M:_display(request)
     list_text = request.list_text or "label",
     list_from_depth = request.list_from_depth,
   }
-  if not same and filtered then
+  if not same and filtered and type(request.orders) == "userdata" then
+    display.filter = request.orders:ids(source)
+  elseif not same and filtered then
     local filter = {}
     local keys = request.orders or self:collect_leafs(request.rootuuid)
     for _, key in ipairs(keys) do
@@ -1354,17 +1449,25 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
       priority = 100,
     })
   end
-  local match = node and self._matches and self._matches[node.key]
-  if node and match then
+  local points, shift
+  if node and self._result then
+    points = self._result:highlight(node.key)
+  elseif node and self._matches then
+    local match = self._matches[node.key]
+    points = match and match.matches
+  end
+  if node and points then
     local version = self._versions[frame:header().data_revision]
     local data = version and version.data[node.key]
     local base = data and data.filepath and #data.filepath - #data.basename - offset or -offset
     local length = data and data.basename and offset + #data.basename or #label
-    for _, point in ipairs(match.matches) do
+    -- Fuzzy positions index the root-relative path; regex positions index the whole path.
+    shift = self._result and self._fuzzy and relative_offset(data and data.filepath, self._fuzzy.prefix) or 0
+    for _, point in ipairs(points) do
       local regions = node.fields.match_regions or { { base, base + length, 0 } }
       for _, region in ipairs(regions) do
-        local first = math.max(point.l, region[1]) - region[1] + region[3]
-        local last = math.min(point.r, region[2]) - region[1] + region[3]
+        local first = math.max(point.l + shift, region[1]) - region[1] + region[3]
+        local last = math.min(point.r + shift, region[2]) - region[1] + region[3]
         if node.fields.match_regions then
           first, last = first + offset, last + offset
         end
