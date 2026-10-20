@@ -5,7 +5,7 @@ mod data;
 mod engine;
 mod incremental;
 pub(crate) mod lua;
-mod matching;
+pub(crate) mod matching;
 pub(crate) mod memory;
 mod model;
 mod projection;

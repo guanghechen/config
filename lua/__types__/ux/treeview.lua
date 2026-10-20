@@ -40,7 +40,7 @@
 ---@class ux.treeview.IDisplay
 ---@field public mode                   ?"tree"|"list"
 ---@field public pattern                ?string
----@field public filter                 ?ux.treeview.NodeId[] Ordered result membership. Tree retains connecting ancestors.
+---@field public filter                 ?ux.treeview.NodeId[]|yoz.ux.treeview.NodeIds Ordered result membership. Tree retains connecting ancestors.
 ---@field public sort                   ?"source"|"name"|"score"
 ---@field public list_text              ?"label"|"ancestry"
 ---@field public list_depth             ?integer Maximum depth below display roots; zero lists direct children only.

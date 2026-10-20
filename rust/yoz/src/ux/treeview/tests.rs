@@ -5473,8 +5473,10 @@ fn t_viewport_reads_bound_bytes_and_match_expansion() {
     engine
         .dispatch(
             state,
+            // Regex ranges list every occurrence; fuzzy ranges are one alignment per label.
             Command::SetDisplay(DisplayOptions {
                 pattern: "a".into(),
+                regex: true,
                 ..DisplayOptions::default()
             }),
             Context {

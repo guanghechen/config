@@ -827,7 +827,8 @@ end)
 
 t:test("decoration capacity failure preserves the previous publication", function()
   local data, state, a = fixture()
-  applied(await(state:set_display({ pattern = "a" })))
+  -- Regex ranges list every occurrence; fuzzy ranges are one alignment per label.
+  applied(await(state:set_display({ pattern = "a", regex = true })))
   local errors = {}
   local view = treeview.attach(state, {
     keymaps = false,

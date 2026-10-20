@@ -1,70 +1,56 @@
 use super::model::{DisplayOptions, Error, Result};
+use crate::fuzzy::{CaseMode, Scheme, TextMatcher};
 use regex::{Regex, RegexBuilder};
 
+/// Label filters: regex patterns, or the fzf syntax, smart case and alignment that pickers use.
 #[derive(Clone)]
-pub(crate) struct Matcher {
-    exact: Regex,
-    fuzzy: Option<Regex>,
+pub(crate) enum Matcher {
+    Regex(Regex),
+    Fuzzy(TextMatcher),
 }
 
 impl Matcher {
     pub(crate) fn new(display: &DisplayOptions) -> Result<Self> {
-        let compile = |pattern: &str| {
-            RegexBuilder::new(pattern)
+        if display.regex {
+            return RegexBuilder::new(&display.pattern)
                 .case_insensitive(!display.case_sensitive)
                 .build()
-                .map_err(|error| Error::invalid(error.to_string()))
-        };
-        let exact = compile(&if display.regex {
-            display.pattern.to_string()
+                .map(Self::Regex)
+                .map_err(|error| Error::invalid(error.to_string()));
+        }
+        let case = if display.case_sensitive {
+            CaseMode::Respect
         } else {
-            regex::escape(&display.pattern)
-        })?;
-        let fuzzy = if display.fuzzy && !display.regex {
-            let pattern = display
-                .pattern
-                .chars()
-                .map(|ch| format!("({})", regex::escape(&ch.to_string())))
-                .collect::<Vec<_>>()
-                .join(".*?");
-            Some(compile(&pattern)?)
-        } else {
-            None
+            CaseMode::Smart
         };
-        Ok(Self { exact, fuzzy })
+        Ok(Self::Fuzzy(TextMatcher::new(
+            &display.pattern,
+            display.fuzzy,
+            case,
+            Scheme::Path,
+        )))
     }
 
     pub(crate) fn is_match(&self, label: &str) -> bool {
-        self.exact.is_match(label)
-            || self
-                .fuzzy
-                .as_ref()
-                .is_some_and(|fuzzy| fuzzy.is_match(label))
+        match self {
+            Self::Regex(regex) => regex.is_match(label),
+            Self::Fuzzy(matcher) => matcher.is_match(label),
+        }
     }
 
     pub(crate) fn ranges(&self, label: &str, limit: usize) -> Vec<(usize, usize)> {
-        let exact: Vec<_> = self
-            .exact
-            .find_iter(label)
-            .take(limit)
-            .map(|range| (range.start(), range.end()))
-            .collect();
-        if !exact.is_empty() {
-            return exact;
+        match self {
+            Self::Regex(regex) => regex
+                .find_iter(label)
+                .take(limit)
+                .map(|range| (range.start(), range.end()))
+                .collect(),
+            Self::Fuzzy(matcher) => {
+                let mut ranges = matcher.ranges(label);
+                ranges.truncate(limit);
+                ranges
+            }
         }
-        self.fuzzy
-            .as_ref()
-            .and_then(|fuzzy| fuzzy.captures(label))
-            .map(|captures| {
-                captures
-                    .iter()
-                    .skip(1)
-                    .flatten()
-                    .take(limit)
-                    .map(|range| (range.start(), range.end()))
-                    .collect()
-            })
-            .unwrap_or_default()
     }
 }
 
@@ -73,7 +59,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fuzzy_highlights_original_utf8_bytes_and_prefers_literal_matches() {
+    fn fuzzy_highlights_original_utf8_bytes_of_the_best_alignment() {
         let matcher = Matcher::new(&DisplayOptions {
             pattern: "a中".into(),
             fuzzy: true,
@@ -81,8 +67,36 @@ mod tests {
         })
         .unwrap();
         assert_eq!(matcher.ranges("Ab中", 10), vec![(0, 1), (2, 5)]);
-        assert_eq!(matcher.ranges("a中a中", 10), vec![(0, 4), (4, 8)]);
+        // The occurrence at the start of the label scores higher than the one after a letter.
+        assert_eq!(matcher.ranges("a中a中", 10), vec![(0, 4)]);
         assert!(!matcher.is_match("中a"));
+        assert_eq!(matcher.ranges("中a", 10), Vec::<(usize, usize)>::new());
+    }
+
+    #[test]
+    fn labels_follow_the_picker_syntax_and_smart_case() {
+        let matcher = |pattern: &str, fuzzy: bool, case_sensitive: bool| {
+            Matcher::new(&DisplayOptions {
+                pattern: pattern.into(),
+                fuzzy,
+                case_sensitive,
+                ..DisplayOptions::default()
+            })
+            .unwrap()
+        };
+        assert!(matcher("RDm", true, false).is_match("README.md"));
+        assert!(!matcher("RDm", true, false).is_match("readme.md"));
+        assert!(matcher("rdm", true, false).is_match("README.md"));
+        assert!(!matcher("rdm", true, true).is_match("README.md"));
+        assert!(!matcher("rdm", false, false).is_match("readme.md"));
+        assert!(matcher("me.m", false, false).is_match("README.md"));
+        assert!(matcher("^read .md$ !test", true, false).is_match("readme.md"));
+        assert!(!matcher("^read .md$ !test", true, false).is_match("readme_test.md"));
+        assert!(matcher("lua$ | md$", true, false).is_match("init.lua"));
+        assert_eq!(
+            matcher("rdm", true, false).ranges("README.md", 1),
+            vec![(0, 1)]
+        );
     }
 
     #[test]

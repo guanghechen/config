@@ -9,6 +9,7 @@
 ---@field public dict                   yoz.dict
 ---@field public path                   yoz.path
 ---@field public fs                     yoz.fs
+---@field public fuzzy                  yoz.fuzzy
 ---@field public git                    yoz.git
 ---@field public im                     yoz.im|nil
 ---@field public replace                yoz.replace

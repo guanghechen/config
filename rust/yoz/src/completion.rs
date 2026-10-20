@@ -3,7 +3,7 @@
 use mlua::prelude::*;
 use mlua::{UserData, UserDataMethods};
 
-mod fuzzy;
+pub(crate) mod fuzzy;
 mod history;
 mod rank;
 

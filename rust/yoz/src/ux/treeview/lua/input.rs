@@ -154,7 +154,14 @@ pub(super) fn revision(value: LuaValue) -> Result<Revision> {
     token(value, 'r').map(Revision)
 }
 
+/// A Lua array of node ids, or a native id handle such as a fuzzy result's ids.
 pub(crate) fn ids(value: LuaValue) -> Result<Arc<[NodeId]>> {
+    if let LuaValue::UserData(value) = &value {
+        return value
+            .borrow::<super::LuaIds>()
+            .map(|ids| ids.0.clone())
+            .map_err(|_| Error::invalid("expected node ids"));
+    }
     let table = table(value)?;
     let count = array_len(&table)?;
     (1..=count)
