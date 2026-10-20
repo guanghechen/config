@@ -57,6 +57,7 @@ Submodules:
 - `yoz.dict`: dictionary search for English word completion
 - `yoz.completion`: immutable candidate snapshots, Unicode fuzzy/typo matching, global ranking and acceptance history
 - `yoz.find`: file finding (fd-like)
+- `yoz.fuzzy`: fzf-style matching over native corpora: extended syntax, scoring, weighted ranking and Treeview id handles
 - `yoz.fn`: utility functions (uuid, md5)
 - `yoz.fs`: filesystem queries (collect_files, readdir, get_filesize, resource path helpers)
 - `yoz.git`: asynchronous status/ignore/blame jobs, immutable snapshots, ignore cache and pure staging helpers

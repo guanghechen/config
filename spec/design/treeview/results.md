@@ -122,13 +122,14 @@ entry 与隐藏集合覆盖。`fields` 中以下键由 ResultTree 的 viewport �
 
 ### Picker 与 Searcher
 
-- Picker 复用既有 fuzzy/literal/regex matcher，把匹配身份和排序作为 `orders` 交给 display filter。
-  `ResultTree:match` 对同一 producer revision 的普通字符串追加在前次结果内继续匹配。
+- Picker 的 fuzzy/exact 匹配由 [Yoz Fuzzy](../feat/yoz/fuzzy.md) corpus 完成：`ResultTree:match` 返回结果句柄作为 `orders`，
+  `_display` 以 `orders:ids(source)` 生成 native filter，收窄由 corpus 的结果缓存负责；regex 仍用 `search_in_lines`，
+  `orders` 为去重后的 key 数组。
 - Searcher 的跨文件检索使用 `yoz.search` Job 与 Lua FileSearch generation，终态结果经 ResultFiles 准备后导入，
   遵循 [Yoz Search](../feat/yoz/search.md)；它不使用 Treeview 的 native Query session，两种查询入口的边界见 [query.md](query.md)。
-- 大批普通文件列表使用 `FiletreeComposer:prepare_filepaths`：复制输入数组，在独立 producer 中分片构建路径、entries
-  和排序，完成后一次性接管 records，保持原 Source 对象的引用有效。frecency 排序使用稳定的 cooperative merge sort，
-  每个文件的 frecency score 只读取一次，相同分数保留 source 顺序。新的请求、同步 mutation、切根、hide 或 dispose
+- 大批普通文件列表使用 `FiletreeComposer:prepare_filepaths`：复制输入数组，在独立 producer 中分片构建路径和 entries，
+  完成后一次性接管 records，保持原 Source 对象的引用有效，再分片构建匹配 corpus。每个文件的 frecency 只读取一次，
+  作为 corpus 权重；空查询按权重稳定排序，相同权重保留 source 顺序。新的请求、同步 mutation、切根、hide 或 dispose
   使旧准备失效；准备期间旧 Frame 保持可读，首次 render 等待准备完成，当前 query 在新 source 发布前应用。
   时间片限制长循环，不承诺中断单次 Lua/VM/native 调用，也不修改全局 GC 参数。Find Files 使用此流程；
   需要立即附加 locations/diagnostics 的 producer 使用同步 reset。

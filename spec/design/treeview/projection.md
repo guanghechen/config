@@ -33,7 +33,7 @@ Lua 类型见 `ux.treeview.IDisplay`，解析位于 `rust/yoz/src/ux/treeview/lu
 | `case_sensitive`  | `false`  | boolean                                                                | 同 `pattern`                            |
 | `fuzzy`           | `false`  | boolean                                                                | 同 `pattern`                            |
 | `regex`           | `false`  | boolean，优先于 `fuzzy`；非法表达式使投影失败                          | 同 `pattern`                            |
-| `filter`          | nil      | 有序 NodeId 数组，沿用 200,000 项数组上限                              | 成员；List 且 `sort=source` 时决定顺序  |
+| `filter`          | nil      | 有序 NodeId 数组（200,000 项上限）或 native NodeIds 句柄（不受该上限） | 成员；List 且 `sort=source` 时决定顺序  |
 | `sort`            | `source` | `source` / `name` / `score`                                            | 兄弟或 List 顺序                        |
 | `branches_first`  | `false`  | boolean                                                                | 同 `sort`                               |
 | `show_hidden`     | `true`   | boolean；为 false 时排除 `hidden` 节点，selected-only 下不生效         | 成员                                    |
@@ -57,7 +57,9 @@ Filter 是成员约束：nil 不限制成员，空数组表示无结果，不存
 List 只保留直接命中项，即使同时启用 selected-only 也不额外列出目录祖先。过滤不改写 source topology。
 排队和保留 filter 的内存计入 data owner 预算。
 
-Pattern 默认 literal；`regex=true` 优先于 `fuzzy=true`。Fuzzy 先尝试 literal，再按 Unicode 字符顺序匹配。
+`regex=true` 优先于 `fuzzy`，按正则匹配并标出全部匹配，`case_sensitive=false` 时不区分大小写。其余 pattern 采用
+[Yoz Fuzzy](../feat/yoz/fuzzy.md) 的 fzf 语法与 `path` scheme：`fuzzy=false` 时普通词为精确子串，`case_sensitive=false`
+为 smart-case，每个 label 只标出一个最佳对齐。
 匹配对象是节点 label，List 中可展开节点追加 `branch_suffix`；viewport spans 使用原始 UTF-8 byte offsets。
 Matcher 在 worker 构造，pattern 与三个匹配开关不变时复用。
 

@@ -21,6 +21,7 @@
 - [Find Explorer](feat/find/explorer.md)：picker 内的目录浏览与单项文件操作。
 - [Picker / Searcher Surface](feat/picker-surface.md)：共享 Result、Preview 及 feature 边界。
 - [Yoz Search](feat/yoz/search.md)：native job、取消、结果完整性与性能边界。
+- [Yoz Fuzzy](feat/yoz/fuzzy.md)：fzf 语法与打分、native corpus、排序与收窄，picker 与 Treeview label 过滤的接入。
 - [原生搜索反馈](feat/ux/search.md)：`/`、`?`、`n`、`N` 的 winline 状态。
 - [Winline LSP 面包屑](feat/lsp-symbols.md)：documentSymbol 请求合并、新鲜度契约与超大文档节奏。
 - [Git](feat/git.md)：status、watcher、hunk、staging、blame 与 ignore cache。

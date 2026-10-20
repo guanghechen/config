@@ -38,7 +38,8 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 
 ## 输入与过滤
 
-- Inputbox 的内容实时作为 fuzzy、大小写不敏感的路径 query 同时过滤两棵树；输入中的 CR / LF 归一化为空格。
+- Inputbox 的内容实时作为 [fzf 语法](yoz/fuzzy.md#查询语法)、smart-case 的路径 query 同时过滤两棵树；
+  输入中的 CR / LF 归一化为空格。
   隐藏后重开保留 query。过滤后的树保留连接祖先。
 - `/` 聚焦输入并进入 Insert；inputbox 中 `<CR>` 返回最近使用的树，`<Tab>` / `<S-Tab>` 分别进入 Staged / Unstaged。
 - `tf` 切换目录压缩，默认开启。

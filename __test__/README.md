@@ -87,6 +87,12 @@ to measure capture and restoration to the same current source, excluding cold in
 The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
 The benchmark aborts if the source changes externally and does not measure switching between input methods.
 
+Fuzzy matcher measurements (L1 Rust core, L2 FFI, L3 real UI) run through `node script/benchmark/fuzzy.mjs`;
+for example `node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --baseline-rev 117a4fc88 --runs 3`.
+`--current DIR` times a snapshot so the working tree stays editable during long runs. Corpora, levels, statistics, the
+fzf parity check (`fuzzy::perf_tests::fzf_parity`) and the ranking-quality probe (`fuzzy::perf_tests::fuzzy_quality`)
+are described in [Yoz Fuzzy](../spec/design/feat/yoz/fuzzy.md#评测).
+
 Cursor-path guide measurements use `nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [rows] [samples] [ui-height]`.
 Defaults are `lua/yoz.so`, no baseline override, 50,000 rows and 300 samples per operation after 30 warmups.
 Pass `''` for the baseline directory when specifying a larger row count. The fixture imports 512-record chunks,

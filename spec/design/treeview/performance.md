@@ -45,7 +45,8 @@ Status: Design。本文定义局部更新的成本边界、测量口径与性能
 | 全量结构布局                                         | 50,000 节点单次 < 8 ms，另计匹配、格式、传输与发布                     |
 
 Filter/sort 的计时从提交 display（SetDisplay）开始，到包含该提交的适用 Frame 完成 UI flush 为止；不含 consumer 的
-输入 debounce 和 Lua matcher/producer 准备。Consumer 端到端测量另行报告这两部分，不把 debounce 计入或排除后混报。
+输入 debounce 和 Lua matcher/producer 准备。Consumer 端到端测量另行报告这两部分，不把 debounce 计入或排除后混报；
+picker 的匹配成本与端到端测量见 [Yoz Fuzzy](../feat/yoz/fuzzy.md#性能)。
 
 使用足够长的样本验证目标；少量样本或纳秒级容器操作不作为生产 p95 证明。
 某条路径超过目标时记录具体阶段与数据形状，优化或重审策略，不通过忽略 Reset、GC 或大重排使结果达标。
