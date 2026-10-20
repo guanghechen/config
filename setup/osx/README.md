@@ -78,6 +78,24 @@ Open `System Settings` -> `Keyboard` -> `Keyboard Shortcuts`.
   - `Globe` -> `Control`
   - `Control` -> `Globe`
 
+## Terminal
+
+Terminal.app has no config file; profiles are stored in the `com.apple.Terminal` preferences domain and edited from `Terminal` -> `Settings` -> `Profiles`. Install the Maple Mono font first (the setup `font` step).
+
+- **Maple profile**
+  - Select `Clear Dark`, then `⋯` (below the profile list) -> `Duplicate Profile`, and rename the copy to `Maple`
+  - `Text` -> `Font` -> `Change…`: family `Maple Mono NF CN`, typeface `Medium`, size `15`
+  - Click `Default` below the profile list
+  - `General` -> `On startup, open` -> `New window with profile` -> `Maple`
+  - Terminal does not support OpenType feature settings, so Ghostty's `font-feature` (`cv*` / `ss*`) does not apply
+
+- **Verify**
+  - Both commands should print `Maple`:
+    ```bash
+    defaults read com.apple.Terminal "Default Window Settings"
+    defaults read com.apple.Terminal "Startup Window Settings"
+    ```
+
 ## FAQ
 
 ### Karabiner-Elements does not work
