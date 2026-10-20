@@ -157,35 +157,13 @@ pub fn find_files(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::TempDir;
     use std::collections::HashSet;
     use std::fs;
-    use std::path::{Path, PathBuf};
-    use uuid::Uuid;
+    use std::path::PathBuf;
 
-    struct TempWorkspace {
-        path: PathBuf,
-    }
-
-    impl TempWorkspace {
-        fn new(prefix: &str) -> Self {
-            let path = std::env::temp_dir().join(format!("yoz-find-{}-{}", prefix, Uuid::new_v4()));
-            fs::create_dir_all(&path).expect("failed to create temp workspace");
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TempWorkspace {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
-
-    fn setup_workspace() -> TempWorkspace {
-        let workspace = TempWorkspace::new("gitignore");
+    fn setup_workspace() -> TempDir {
+        let workspace = TempDir::new();
         let base = workspace.path();
 
         fs::write(base.join(".gitignore"), "ignored.txt\nignored_dir/\n")
@@ -207,8 +185,8 @@ mod tests {
         workspace
     }
 
-    fn setup_pattern_workspace() -> TempWorkspace {
-        let workspace = TempWorkspace::new("pattern");
+    fn setup_pattern_workspace() -> TempDir {
+        let workspace = TempDir::new();
         let base = workspace.path();
 
         fs::write(base.join("root.txt"), "root file\n").expect("failed to write root file");
@@ -224,8 +202,8 @@ mod tests {
         workspace
     }
 
-    fn setup_nested_workspace() -> (TempWorkspace, PathBuf) {
-        let workspace = TempWorkspace::new("gitignore-nested");
+    fn setup_nested_workspace() -> (TempDir, PathBuf) {
+        let workspace = TempDir::new();
         let base = workspace.path();
         let root = base.join("nested");
 

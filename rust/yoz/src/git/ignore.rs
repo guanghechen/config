@@ -392,7 +392,7 @@ fn prepare(
 mod tests {
     use super::*;
     use crate::git::test_support::Fixture;
-    use std::time::{Duration, Instant};
+    use crate::test_support::eventually;
 
     fn cache(fixture: &Fixture) -> IgnoreCache {
         let options = fixture.options();
@@ -404,7 +404,7 @@ mod tests {
             .iter()
             .map(|name| {
                 fixture
-                    .0
+                    .path()
                     .join(name)
                     .to_str()
                     .unwrap()
@@ -419,16 +419,11 @@ mod tests {
     }
 
     fn finish(job: &mut IgnoreJob) -> Arc<IgnoreReport> {
-        let started = Instant::now();
-        loop {
-            match job.poll().unwrap() {
-                Some(Outcome::Completed(report)) => return Arc::clone(report),
-                Some(other) => panic!("unexpected outcome: {other:?}"),
-                None => {}
-            }
-            assert!(started.elapsed() < Duration::from_secs(5));
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        eventually(|| match job.poll().unwrap() {
+            Some(Outcome::Completed(report)) => Some(Arc::clone(report)),
+            Some(other) => panic!("unexpected outcome: {other:?}"),
+            None => None,
+        })
     }
 
     #[test]
@@ -549,11 +544,7 @@ mod tests {
         let cache = cache(&fixture);
         let paths = repo_paths(&fixture, &["ignored"]);
         let mut job = start(&cache, paths.clone());
-        let started = Instant::now();
-        while job.worker.as_mut().unwrap().poll().unwrap().is_none() {
-            assert!(started.elapsed() < Duration::from_secs(5));
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        eventually(|| job.worker.as_mut().unwrap().poll().unwrap().is_some());
         fixture.write(".gitignore", "other\n");
         cache.clear();
         let report = finish(&mut job);
@@ -570,11 +561,7 @@ mod tests {
         let paths = repo_paths(&fixture, &["ignored"]);
         let mut job = start(&cache, paths.clone());
         job.cancel().unwrap();
-        let started = Instant::now();
-        while job.poll().unwrap().is_none() {
-            assert!(started.elapsed() < Duration::from_secs(5));
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        eventually(|| job.poll().unwrap().is_some());
         assert!(matches!(job.poll().unwrap(), Some(Outcome::Cancelled)));
         assert!(!cache.lookup(&paths[0]));
         job.dispose();
@@ -617,8 +604,8 @@ mod tests {
         let fixture = Fixture::new();
         fixture.write(".gitignore", "link\n");
         fixture.write("target/leaf/file", "content");
-        symlink("target", fixture.0.join("link")).unwrap();
-        symlink("leaf", fixture.0.join("target/inner")).unwrap();
+        symlink("target", fixture.path().join("link")).unwrap();
+        symlink("leaf", fixture.path().join("target/inner")).unwrap();
         let cache = cache(&fixture);
         let paths = repo_paths(&fixture, &["link", "link/leaf/file", "link/inner/file"]);
         let report = finish(&mut start(&cache, paths.clone()));

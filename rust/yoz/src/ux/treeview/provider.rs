@@ -808,6 +808,8 @@ impl Engine {
 
 #[cfg(test)]
 mod tests {
+    use super::super::test_support::*;
+    use super::super::*;
     use super::super::{Command, Context, SelectAction, Targets};
     use super::*;
 
@@ -1182,5 +1184,88 @@ mod tests {
             .unwrap_err();
         assert_eq!(error.code, ErrorCode::InvalidUpdate);
         assert!(Arc::ptr_eq(&engine.source, &original));
+    }
+
+    #[test]
+    fn t_scoped_import_retains_children_identity_and_rejects_cross_scope_removal() {
+        let (mut engine, _, root) = fixture(2);
+        let a = engine.source.id("n0").unwrap();
+        apply(
+            &mut engine,
+            vec![
+                Operation::Update {
+                    node: a.into(),
+                    patch: NodePatch {
+                        can_expand: Some(true),
+                        ..NodePatch::default()
+                    },
+                },
+                Operation::Insert {
+                    key: "inside".into(),
+                    parent: Some(a.into()),
+                    position: Position::Last,
+                    data: NodeData::leaf("inside"),
+                    completeness: Completeness::Complete,
+                },
+            ],
+        );
+        let inner = engine.source.id("inside").unwrap();
+        let parent_provider = engine.create_provider(DataScope::Children(root)).unwrap();
+        let _nested = engine.create_provider(DataScope::Descendants(a)).unwrap();
+        engine
+            .provider_import(
+                parent_provider,
+                engine.source.revision(),
+                vec![Record::new("n0", NodeData::branch("renamed"))],
+            )
+            .unwrap();
+        assert_eq!(engine.source.id("n0"), Some(a));
+        assert_eq!(engine.source.id("inside"), Some(inner));
+        assert!(engine.source.id("n1").is_none());
+        let old = engine.source.clone();
+        let result = engine.provider_import(parent_provider, engine.source.revision(), Vec::new());
+        assert_eq!(result.unwrap_err().code, ErrorCode::InvalidUpdate);
+        assert!(Arc::ptr_eq(&old, &engine.source));
+    }
+
+    #[test]
+    fn t_full_snapshot_reverses_ancestry_before_removing_obsolete_parents() {
+        let mut engine = Engine::new(Limits::default()).unwrap();
+        engine
+            .import(Import {
+                base_revision: engine.source.revision(),
+                scope: DataScope::Forest,
+                records: vec![
+                    Record::new("a", NodeData::branch("A")),
+                    Record {
+                        key: "b".into(),
+                        parent: Some("a".into()),
+                        data: NodeData::branch("B"),
+                        completeness: None,
+                    },
+                ],
+            })
+            .unwrap();
+        let a = engine.source.id("a").unwrap();
+        let b = engine.source.id("b").unwrap();
+        engine
+            .import(Import {
+                base_revision: engine.source.revision(),
+                scope: DataScope::Forest,
+                records: vec![
+                    Record {
+                        key: "a".into(),
+                        parent: Some("b".into()),
+                        data: NodeData::leaf("A"),
+                        completeness: None,
+                    },
+                    Record::new("b", NodeData::branch("B")),
+                ],
+            })
+            .unwrap();
+        assert_eq!(engine.source.id("a"), Some(a));
+        assert_eq!(engine.source.node(a).unwrap().parent, Some(b));
+        assert_eq!(engine.source.node(b).unwrap().parent, None);
+        assert!(!engine.source.node(a).unwrap().data.can_expand);
     }
 }

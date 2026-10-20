@@ -108,18 +108,14 @@ pub(crate) fn spawn<T: Send + 'static>(
 mod tests {
     use super::*;
     use crate::git::test_support::Fixture;
-    use std::time::{Duration, Instant};
+    use crate::test_support::eventually;
 
     #[test]
     fn t_completed_result_is_repeatable_and_disposal_is_idempotent() {
         let fixture = Fixture::new();
         fixture.write("new", "content");
         let mut job = start_status(fixture.options()).unwrap();
-        let started = Instant::now();
-        while job.poll().unwrap().is_none() {
-            assert!(started.elapsed() < Duration::from_secs(5));
-            thread::sleep(Duration::from_millis(1));
-        }
+        eventually(|| job.poll().unwrap().is_some());
         let Some(Outcome::Completed(first)) = job.poll().unwrap().cloned() else {
             panic!("completed")
         };

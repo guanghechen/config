@@ -132,7 +132,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn recent_acceptance_decays_continuously_without_amplifying_future_times() {
+    fn t_recent_acceptance_decays_continuously_without_amplifying_future_times() {
         let now = 4_000_000;
         for (age, expected) in [(-1, 4), (0, 4), (1, 3), (60, 2), (3600, 1), (86400, 0)] {
             let entry = Entry::new(vec![now - age], 0);
@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn ring_replaces_oldest_visits_and_expired_entries_are_released() {
+    fn t_ring_replaces_oldest_visits_and_expired_entries_are_released() {
         let mut history = History {
             max_timestamps: 3,
             ..History::default()
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn timestamp_replay_uses_acceptance_order_and_preserves_the_ring_bound() {
+    fn t_timestamp_replay_uses_acceptance_order_and_preserves_the_ring_bound() {
         let entry = Entry::new(vec![0, 60, 120], 2);
         assert_eq!(entry.score(120), 7);
         assert_eq!(entry.score(180), 3);
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn cached_scores_follow_the_retained_acceptance_order_through_wraps_and_clock_changes() {
+    fn t_cached_scores_follow_the_retained_acceptance_order_through_wraps_and_clock_changes() {
         let mut history = History {
             max_timestamps: 3,
             ..History::default()
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn candidate_digest_matches_the_persisted_key_namespace() {
+    fn t_candidate_digest_matches_the_persisted_key_namespace() {
         assert_eq!(
             candidate_key("lua", b"lsp\0lua_ls\0alpha"),
             key(b"lua\0lsp\0lua_ls\0alpha")

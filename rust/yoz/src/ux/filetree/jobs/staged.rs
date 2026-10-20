@@ -153,10 +153,6 @@ impl Runner {
                     parent.success &= success;
                     continue;
                 };
-                #[cfg(test)]
-                let values = crate::ux::filetree::profile::span(
-                    crate::ux::filetree::profile::Stage::SourceValues,
-                );
                 let entry = source.entry()?;
                 let source_path = source.path.clone();
                 let target_path = current.target.join(&entry.name);
@@ -165,8 +161,6 @@ impl Runner {
                 let source_parent = current.path.clone();
                 let charge = self.staged_reservation(&entry, &source_path, &target_path)?;
                 let signature = Signature::entry(&entry, false);
-                #[cfg(test)]
-                drop(values);
                 if entry.kind == Kind::Directory {
                     let prepared = self.cursor(&source).and_then(|children| {
                         let _execution = EXECUTOR.lock().unwrap_or_else(|error| error.into_inner());
@@ -216,13 +210,7 @@ impl Runner {
                     continue;
                 }
                 let copied = {
-                    #[cfg(test)]
-                    let waiting = crate::ux::filetree::profile::span(
-                        crate::ux::filetree::profile::Stage::ExecutionWait,
-                    );
                     let _execution = EXECUTOR.lock().unwrap_or_else(|error| error.into_inner());
-                    #[cfg(test)]
-                    drop(waiting);
                     self.check_item(&source)?;
                     self.verify_directory(&parent_expected, &source_parent)?;
                     let job = self.job.clone();

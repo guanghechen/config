@@ -1,15 +1,15 @@
 use super::*;
-use crate::ux::filetree::tests::Directory;
+use crate::test_support::TempDir;
 use crate::ux::treeview::{DataScope, Engine, Import, Limits, Record};
 
 #[test]
 fn t_entries_removed_after_enumeration_do_not_fail_the_directory_scan() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for index in 0..1000 {
-        fs::write(directory.0.join(format!("file-{index:04}")), b"test").unwrap();
+        fs::write(directory.path().join(format!("file-{index:04}")), b"test").unwrap();
     }
-    let mut entry = Entry::read(&directory.0).unwrap();
-    entry.anchor = Some(directory.0.clone());
+    let mut entry = Entry::read(directory.path()).unwrap();
+    entry.anchor = Some(directory.path().to_path_buf());
     let mut engine = Engine::new(Limits::default()).unwrap();
     engine
         .import(Import {
@@ -31,7 +31,7 @@ fn t_entries_removed_after_enumeration_do_not_fail_the_directory_scan() {
     /* Prime read_dir's buffered names, then remove them before their metadata is read. */
     scan.iterator.next().unwrap().unwrap();
     for index in 0..1000 {
-        fs::remove_file(directory.0.join(format!("file-{index:04}"))).unwrap();
+        fs::remove_file(directory.path().join(format!("file-{index:04}"))).unwrap();
     }
     loop {
         let page = scan
@@ -52,12 +52,12 @@ fn t_entries_removed_after_enumeration_do_not_fail_the_directory_scan() {
 
 #[test]
 fn t_scan_keeps_progressing_with_other_scans_holding_the_staging_budget() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for index in 0..4096 {
-        fs::write(directory.0.join(format!("file-{index:04}")), b"test").unwrap();
+        fs::write(directory.path().join(format!("file-{index:04}")), b"test").unwrap();
     }
-    let mut entry = Entry::read(&directory.0).unwrap();
-    entry.anchor = Some(directory.0.clone());
+    let mut entry = Entry::read(directory.path()).unwrap();
+    entry.anchor = Some(directory.path().to_path_buf());
     let mut engine = Engine::new(Limits::default()).unwrap();
     engine
         .import(Import {
@@ -103,13 +103,13 @@ fn t_scan_keeps_progressing_with_other_scans_holding_the_staging_budget() {
 
 #[test]
 fn t_deferred_storage_remains_charged_after_its_entries_leave_the_queue() {
-    let directory = Directory::new();
-    let mut root = Entry::read(&directory.0).unwrap();
-    root.anchor = Some(directory.0.clone());
+    let directory = TempDir::new();
+    let mut root = Entry::read(directory.path()).unwrap();
+    root.anchor = Some(directory.path().to_path_buf());
     let mut records = vec![Record::new("root", root.node_data())];
     for index in 0..1025 {
         let name = format!("old-{index:04}");
-        let path = directory.0.join(&name);
+        let path = directory.path().join(&name);
         fs::write(&path, b"test").unwrap();
         records.push(Record {
             key: name.into(),
@@ -117,7 +117,7 @@ fn t_deferred_storage_remains_charged_after_its_entries_leave_the_queue() {
             data: Entry::read(&path).unwrap().node_data(),
             completeness: Some(Completeness::Complete),
         });
-        fs::rename(&path, directory.0.join(format!("new-{index:04}"))).unwrap();
+        fs::rename(&path, directory.path().join(format!("new-{index:04}"))).unwrap();
     }
     let mut engine = Engine::new(Limits::default()).unwrap();
     engine

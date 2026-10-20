@@ -622,18 +622,19 @@ mod tests {
 
     #[test]
     fn t_initial_root_registration_failure_can_report_and_recover() {
-        use crate::ux::filetree::{Entry, tests::Directory as Fixture};
-        let directory = Fixture::new();
+        use crate::test_support::{TempDir, eventually};
+        use crate::ux::filetree::Entry;
+        let directory = TempDir::new();
         let target = || Target {
-            identity: Entry::read(&directory.0).unwrap().identity,
-            path: Arc::new(directory.0.clone()),
+            identity: Entry::read(directory.path()).unwrap().identity,
+            path: Arc::new(directory.path().to_path_buf()),
             nodes: Arc::new(vec![crate::ux::treeview::NodeId(1)]),
             names: None,
             _memory: Arc::new(Charge::new(0)),
         };
         let mut backend = Backend::new(Arc::new(|| {})).unwrap();
         backend.add(1, &target()).unwrap();
-        std::fs::remove_dir(&directory.0).unwrap();
+        std::fs::remove_dir(directory.path()).unwrap();
         assert!(backend.poll().unwrap().is_empty());
         let registration = backend.registration();
         assert_eq!(registration.roots, 0);
@@ -645,15 +646,13 @@ mod tests {
             "no stream can deliver HistoryDone after registration failure"
         );
 
-        std::fs::create_dir(&directory.0).unwrap();
+        std::fs::create_dir(directory.path()).unwrap();
         backend.add(1, &target()).unwrap();
         backend.poll().unwrap();
-        let began = std::time::Instant::now();
-        while !backend.ready() {
+        eventually(|| {
             backend.poll().unwrap();
-            assert!(began.elapsed() < std::time::Duration::from_secs(5));
-            std::thread::sleep(std::time::Duration::from_millis(1));
-        }
+            backend.ready()
+        });
         let registration = backend.registration();
         assert_eq!(registration.roots, 1);
         assert_eq!(registration.targets, HashSet::from([1]));
@@ -662,8 +661,9 @@ mod tests {
 
     #[test]
     fn t_many_directory_interests_share_one_root_and_one_descriptor() {
-        use crate::ux::filetree::{Entry, tests::Directory as Fixture};
-        let directory = Fixture::new();
+        use crate::test_support::{TempDir, eventually};
+        use crate::ux::filetree::Entry;
+        let directory = TempDir::new();
         let target = |path: PathBuf, interested: bool| Target {
             identity: Entry::read(&path).unwrap().identity,
             path: Arc::new(path),
@@ -676,19 +676,19 @@ mod tests {
             _memory: Arc::new(Charge::new(0)),
         };
         let mut backend = Backend::new(Arc::new(|| {})).unwrap();
-        backend.add(0, &target(directory.0.clone(), true)).unwrap();
+        backend
+            .add(0, &target(directory.path().to_path_buf(), true))
+            .unwrap();
         for index in 1..=96 {
-            let path = directory.0.join(format!("dir-{index}"));
+            let path = directory.path().join(format!("dir-{index}"));
             std::fs::create_dir(&path).unwrap();
             backend.add(index, &target(path, true)).unwrap();
         }
         backend.prioritize(&(0..=96).collect::<Vec<_>>());
-        let began = std::time::Instant::now();
-        while !backend.ready() {
+        eventually(|| {
             backend.poll().unwrap();
-            assert!(began.elapsed() < std::time::Duration::from_secs(5));
-            std::thread::sleep(std::time::Duration::from_millis(1));
-        }
+            backend.ready()
+        });
         assert_eq!(backend.registration().roots, 1);
         assert_eq!(backend.registration().targets.len(), 97);
         assert!(!backend.registration().limited);
@@ -696,7 +696,9 @@ mod tests {
         let stream = backend.stream.as_ref().unwrap().raw;
 
         /* Narrowing the view keeps the workspace subscription while changing its routing interest. */
-        backend.add(0, &target(directory.0.clone(), false)).unwrap();
+        backend
+            .add(0, &target(directory.path().to_path_buf(), false))
+            .unwrap();
         for index in 2..=96 {
             backend.remove(index);
         }
@@ -707,7 +709,7 @@ mod tests {
         assert_eq!(backend.stream.as_ref().unwrap().raw, stream);
         assert_eq!(
             backend.roots.values().next().unwrap().path,
-            std::fs::canonicalize(&directory.0).unwrap()
+            std::fs::canonicalize(directory.path()).unwrap()
         );
     }
 }

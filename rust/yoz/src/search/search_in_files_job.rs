@@ -194,9 +194,8 @@ fn poll_values(
 mod tests {
     use super::*;
     use crate::search::search_in_files;
+    use crate::test_support::eventually;
     use std::sync::Barrier;
-    use std::thread;
-    use std::time::Duration;
 
     fn fixture_options() -> ISearchInFilesOptions {
         let cwd = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -279,13 +278,10 @@ mod tests {
         assert!(job.terminal.is_none(), "cancel request is not terminal");
 
         release.wait();
-        for _ in 0..5_000 {
+        eventually(|| {
             job.update_terminal().expect("poll should succeed");
-            if job.terminal.is_some() {
-                break;
-            }
-            thread::sleep(Duration::from_millis(1));
-        }
+            job.terminal.is_some()
+        });
         assert!(matches!(
             job.terminal,
             Some(SearchInFilesOutcome::Cancelled)
@@ -309,13 +305,10 @@ mod tests {
         job.cancel().expect("cancel request should succeed");
         release.wait();
 
-        for _ in 0..5_000 {
+        eventually(|| {
             job.update_terminal().expect("poll should succeed");
-            if job.terminal.is_some() {
-                break;
-            }
-            thread::sleep(Duration::from_millis(1));
-        }
+            job.terminal.is_some()
+        });
 
         let Some(SearchInFilesOutcome::Failed(error)) = job.terminal.as_ref() else {
             panic!("worker panic must remain a failed terminal outcome");
@@ -329,13 +322,10 @@ mod tests {
         let expected = search_in_files(&options).expect("synchronous search should succeed");
         let mut job = start_search_in_files(options).expect("worker should start");
 
-        for _ in 0..5_000 {
+        eventually(|| {
             job.update_terminal().expect("poll should succeed");
-            if job.terminal.is_some() {
-                break;
-            }
-            thread::sleep(Duration::from_millis(1));
-        }
+            job.terminal.is_some()
+        });
 
         let terminal = job
             .terminal

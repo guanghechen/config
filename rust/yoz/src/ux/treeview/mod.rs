@@ -21,10 +21,9 @@ mod tasks;
 mod text;
 
 #[cfg(test)]
-mod tests;
-
+mod perf_tests;
 #[cfg(test)]
-pub(crate) use runtime::Listener;
+pub(crate) mod test_support;
 
 pub use command::{Command, Context, Effect, Reply, Revisions, Targets};
 pub use data::{Batch, Node, NodePatch, NodeRef, Operation, Position, Source};

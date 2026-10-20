@@ -216,7 +216,6 @@ mod native {
 
     #[cfg(test)]
     mod tests {
-        use super::super::input_locale_matches;
         use super::parse_source_id;
 
         #[test]
@@ -231,15 +230,6 @@ mod native {
             assert!(parse_source_id("", "test").is_err());
             assert!(parse_source_id("0", "test").is_err());
             assert!(parse_source_id("english", "test").is_err());
-        }
-
-        #[test]
-        fn t_matches_language_ids_and_exact_layouts() {
-            assert!(input_locale_matches(1033, 1033));
-            assert!(input_locale_matches(67_699_721, 67_699_721));
-            assert!(!input_locale_matches(67_699_721, 1033));
-            assert!(!input_locale_matches(134_481_924, 2052));
-            assert!(!input_locale_matches(67_699_721, 134_481_924));
         }
     }
 }

@@ -467,26 +467,4 @@ pub(crate) fn apply(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn t_deep_shared_text_has_linear_storage_and_iterative_release() {
-        let budget = super::super::memory::Budget::new(16 * 1024 * 1024);
-        let _guard = budget.enter();
-        let label: Arc<str> = "x".into();
-        let mut path = None;
-        for id in 1..=10_000 {
-            path = Some(TextPath::new(NodeId(id), label.clone(), path).unwrap());
-        }
-        let path = path.unwrap();
-        assert_eq!(path.bytes, 19_999);
-        assert!(budget.used() < 2 * 1024 * 1024);
-        let mut output = String::new();
-        path.append(&mut output, &mut Vec::new());
-        assert_eq!(output.len(), 19_999);
-        assert!(output.starts_with("x/x/x/"));
-        drop(path);
-        assert_eq!(budget.used(), 0);
-    }
-}
+mod tests;

@@ -25,18 +25,8 @@ pub(super) fn open(path: &Path, expected: &Signature) -> io::Result<Input> {
         use std::os::windows::fs::OpenOptionsExt;
         options.custom_flags(0x00200000);
     }
-    let file = {
-        #[cfg(test)]
-        let _span =
-            crate::ux::filetree::profile::span(crate::ux::filetree::profile::Stage::OpenCall);
-        options.open(path)?
-    };
-    let metadata = {
-        #[cfg(test)]
-        let _span =
-            crate::ux::filetree::profile::span(crate::ux::filetree::profile::Stage::Metadata);
-        file.metadata()?
-    };
+    let file = options.open(path)?;
+    let metadata = file.metadata()?;
     let same_file = metadata.is_file() && {
         #[cfg(unix)]
         {

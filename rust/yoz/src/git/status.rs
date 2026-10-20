@@ -205,8 +205,11 @@ mod tests {
         fixture.write("file", "base\n");
         fixture.commit();
         fixture.write("file", "changed\n");
-        let before = std::fs::read(fixture.0.join(".git/index")).unwrap();
+        let before = std::fs::read(fixture.path().join(".git/index")).unwrap();
         collect(&fixture.options(), &AtomicBool::new(false)).unwrap();
-        assert_eq!(before, std::fs::read(fixture.0.join(".git/index")).unwrap());
+        assert_eq!(
+            before,
+            std::fs::read(fixture.path().join(".git/index")).unwrap()
+        );
     }
 }

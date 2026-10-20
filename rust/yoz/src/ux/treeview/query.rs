@@ -543,3 +543,6 @@ impl Engine {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

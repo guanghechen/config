@@ -401,36 +401,18 @@ pub fn path_suffix(base: &[u8], path: &[u8]) -> Result<Option<Vec<u8>>, String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::TempDir;
     use std::fs;
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::time::{SystemTime, UNIX_EPOCH};
 
-    struct TempDir(PathBuf);
-
-    impl TempDir {
-        fn new() -> Self {
-            static NEXT: AtomicUsize = AtomicUsize::new(0);
-            let parent = std::env::var_os("YOZ_PATH_TEST_VOLUME")
-                .map(PathBuf::from)
-                .unwrap_or_else(std::env::temp_dir);
-            let path = parent.join(format!(
-                "yoz_path_suffix_{}_{}_{}",
-                std::process::id(),
-                NEXT.fetch_add(1, Ordering::Relaxed),
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos()
-            ));
-            fs::create_dir(&path).unwrap();
-            Self(path.canonicalize().unwrap())
-        }
-    }
-
-    impl Drop for TempDir {
-        fn drop(&mut self) {
-            fs::remove_dir_all(&self.0).unwrap();
-        }
+    /// A directory on `YOZ_PATH_TEST_VOLUME` when it is set, to exercise that filesystem's name rules;
+    /// the returned path is canonical.
+    fn temp_root() -> (TempDir, PathBuf) {
+        let root = match std::env::var_os("YOZ_PATH_TEST_VOLUME") {
+            Some(volume) => TempDir::new_in(Path::new(&volume)),
+            None => TempDir::new(),
+        };
+        let path = root.path().canonicalize().unwrap();
+        (root, path)
     }
 
     fn compare(base: &Path, path: &Path) -> Result<Option<Vec<u8>>, String> {
@@ -439,15 +421,15 @@ mod tests {
 
     #[test]
     fn t_component_boundaries_and_missing_descendants() {
-        let root = TempDir::new();
-        let base = root.0.join("missing");
+        let (_root, root) = temp_root();
+        let base = root.join("missing");
         assert_eq!(compare(&base, &base), Ok(Some(Vec::new())));
         assert_eq!(
             compare(&base, &base.join("cafe\u{301}/notes.txt")),
             Ok(Some("cafe\u{301}/notes.txt".as_bytes().to_vec()))
         );
-        assert_eq!(compare(&base, &root.0.join("missing-other")), Ok(None));
-        assert_eq!(compare(&base, &root.0), Ok(None));
+        assert_eq!(compare(&base, &root.join("missing-other")), Ok(None));
+        assert_eq!(compare(&base, &root), Ok(None));
         assert_eq!(
             compare(&base, &base.join("..")),
             Err("[path_suffix] paths must not contain parent components".into())
@@ -459,7 +441,7 @@ mod tests {
 
     #[test]
     fn t_missing_names_match_actual_filesystem_case_and_unicode_rules() {
-        let root = TempDir::new();
+        let (_root, root) = temp_root();
         for (index, (left, right)) in [
             ("TARGET.txt", "target.txt"),
             ("caf\u{e9}", "cafe\u{301}"),
@@ -488,7 +470,7 @@ mod tests {
         .iter()
         .enumerate()
         {
-            let directory = root.0.join(index.to_string());
+            let directory = root.join(index.to_string());
             fs::create_dir(&directory).unwrap();
             let left = directory.join(left);
             let right = directory.join(right);
@@ -520,9 +502,9 @@ mod tests {
 
     #[test]
     fn t_unicode_directory_alias_preserves_candidate_suffix_bytes() {
-        let root = TempDir::new();
-        let base = root.0.join("caf\u{e9}");
-        let alias = root.0.join("cafe\u{301}");
+        let (_root, root) = temp_root();
+        let base = root.join("caf\u{e9}");
+        let alias = root.join("cafe\u{301}");
         fs::create_dir(&base).unwrap();
         let expected = alias
             .exists()
@@ -535,7 +517,7 @@ mod tests {
 
     #[test]
     fn t_unicode_case_mapping_pairs_follow_actual_directory_rules() {
-        let root = TempDir::new();
+        let (_root, root) = temp_root();
         for character in (0..=0x10ffff).filter_map(char::from_u32) {
             let original = character.to_string();
             for variant in [
@@ -545,8 +527,8 @@ mod tests {
                 if original == variant {
                     continue;
                 }
-                let left = root.0.join(format!("name-{original}"));
-                let right = root.0.join(format!("name-{variant}"));
+                let left = root.join(format!("name-{original}"));
+                let right = root.join(format!("name-{variant}"));
                 let missing = compare(&left, &right).unwrap();
                 fs::write(&left, "sentinel").unwrap();
                 let same = match fs::OpenOptions::new()
@@ -573,9 +555,9 @@ mod tests {
 
     #[test]
     fn t_hard_links_are_distinct_entry_names() {
-        let root = TempDir::new();
-        let source = root.0.join("source");
-        let alias = root.0.join("alias");
+        let (_root, root) = temp_root();
+        let source = root.join("source");
+        let alias = root.join("alias");
         fs::write(&source, "sentinel").unwrap();
         fs::hard_link(&source, &alias).unwrap();
         assert_eq!(compare(&source, &alias), Ok(None));
@@ -588,9 +570,9 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn t_entry_path_resolves_existing_parent_aliases_and_preserves_missing_suffixes() {
-        let root = TempDir::new();
-        let real = root.0.join("real");
-        let alias = root.0.join("alias");
+        let (_root, root) = temp_root();
+        let real = root.join("real");
+        let alias = root.join("alias");
         fs::create_dir(&real).unwrap();
         std::os::unix::fs::symlink(&real, &alias).unwrap();
         let buffer = alias.join("new/nested/notes.txt");
@@ -609,44 +591,44 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn t_entry_path_resolves_dangling_parents_and_rejects_symlink_loops() {
-        let root = TempDir::new();
-        let alias = root.0.join("dangling");
-        std::os::unix::fs::symlink(root.0.join("future"), &alias).unwrap();
+        let (_root, root) = temp_root();
+        let alias = root.join("dangling");
+        std::os::unix::fs::symlink(root.join("future"), &alias).unwrap();
         assert_eq!(
             entry_path(&output_path(&alias.join("notes.txt")).unwrap()),
-            Ok(output_path(&root.0.join("future/notes.txt")).unwrap())
+            Ok(output_path(&root.join("future/notes.txt")).unwrap())
         );
-        std::os::unix::fs::symlink("loop-b", root.0.join("loop-a")).unwrap();
-        std::os::unix::fs::symlink("loop-a", root.0.join("loop-b")).unwrap();
-        assert!(entry_path(&output_path(&root.0.join("loop-a/notes.txt")).unwrap()).is_err());
+        std::os::unix::fs::symlink("loop-b", root.join("loop-a")).unwrap();
+        std::os::unix::fs::symlink("loop-a", root.join("loop-b")).unwrap();
+        assert!(entry_path(&output_path(&root.join("loop-a/notes.txt")).unwrap()).is_err());
         assert!(entry_path(b"relative").is_err());
         assert!(entry_path(b"/nul\0").is_err());
-        assert!(entry_path(&output_path(&root.0.join("..")).unwrap()).is_err());
+        assert!(entry_path(&output_path(&root.join("..")).unwrap()).is_err());
     }
 
     #[cfg(unix)]
     #[test]
     fn t_final_symlinks_and_non_utf8_names_preserve_entry_namespace() {
         use std::os::unix::ffi::OsStrExt;
-        let root = TempDir::new();
-        let source = root.0.join("source");
-        let alias = root.0.join("alias");
+        let (_root, root) = temp_root();
+        let source = root.join("source");
+        let alias = root.join("alias");
         fs::write(&source, "sentinel").unwrap();
         std::os::unix::fs::symlink(&source, &alias).unwrap();
         assert_eq!(compare(&source, &alias), Ok(None));
-        let base = root.0.join(OsStr::from_bytes(b"literal\\\xff"));
+        let base = root.join(OsStr::from_bytes(b"literal\\\xff"));
         assert_eq!(
             compare(&base, &base.join(OsStr::from_bytes(b"child\\\xfe"))),
             Ok(Some(b"child\\\xfe".to_vec()))
         );
-        assert_eq!(compare(&base, &root.0.join("literal/child")), Ok(None));
+        assert_eq!(compare(&base, &root.join("literal/child")), Ok(None));
     }
 
     #[cfg(any(target_os = "macos", windows))]
     #[test]
     fn t_query_failure_is_reported_only_for_possible_namespace_matches() {
-        let root = TempDir::new();
-        let blocker = root.0.join("file");
+        let (_root, root) = temp_root();
+        let blocker = root.join("file");
         fs::write(&blocker, "sentinel").unwrap();
         assert!(compare(&blocker.join("CHILD"), &blocker.join("child")).is_err());
         assert_eq!(

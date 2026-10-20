@@ -11,10 +11,6 @@ use std::time::{Duration, Instant};
 
 mod admission;
 mod create;
-#[cfg(test)]
-mod profile_tests;
-#[cfg(test)]
-mod progress_tests;
 mod results;
 use super::memory::{Memory, Reservation};
 #[cfg(any(target_os = "macos", target_os = "linux"))]
@@ -30,7 +26,7 @@ const COPY_PUBLICATION_ITEMS: usize = 16;
 const COPY_PUBLICATION_BYTES: usize = 64 * 1024;
 const SMALL_COPY_BYTES: u64 = 64 * 1024;
 static ACTIVE: AtomicUsize = AtomicUsize::new(0);
-static EXECUTOR: Mutex<()> = Mutex::new(());
+pub(super) static EXECUTOR: Mutex<()> = Mutex::new(());
 
 fn physical_path(path: &Path) -> std::io::Result<PathBuf> {
     let parent = std::fs::canonicalize(path.parent().expect("operation parent"))?;
@@ -483,16 +479,10 @@ fn launch(tree: Filetree, plan: OperationPlan) -> Result<Job> {
         pending_copies: Vec::new(),
         pending_copy_bytes: 0,
     };
-    #[cfg(test)]
-    let profile = super::profile::current();
     std::thread::Builder::new()
         .name(format!("yoz-filetree-job-{}", job.0.id))
         .spawn(move || {
             let _active = active;
-            #[cfg(test)]
-            let _profile = super::profile::enter(profile);
-            #[cfg(test)]
-            let _span = super::profile::span(super::profile::Stage::Job);
             let mut runner = runner;
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| runner.run()))
                 .unwrap_or_else(|_| Err(Error::invalid("file operation worker panicked")));
@@ -932,8 +922,6 @@ impl Runner {
         replaced: Option<job_owner::Replacement>,
         descendants: Option<job_owner::MovedDescendants>,
     ) -> Result<Option<Resource>> {
-        #[cfg(test)]
-        let _span = super::profile::span(super::profile::Stage::PublishModel);
         self.flush_copies();
         let result = Arc::new(Mutex::new(None));
         work::wait(
@@ -1053,8 +1041,6 @@ impl Runner {
         sync_error: Option<Error>,
         charge: Reservation,
     ) -> Arc<ItemResult> {
-        #[cfg(test)]
-        let _span = super::profile::span(super::profile::Stage::Results);
         let (source_physical, target_physical, path_memory) = self
             .physical
             .remove(&source.id)
@@ -1979,8 +1965,6 @@ impl Runner {
         Ok(success)
     }
     fn finish(&mut self, result: Result<()>) {
-        #[cfg(test)]
-        let _span = super::profile::span(super::profile::Stage::Cleanup);
         self.flush_copies();
         self.job.set_phase(JobPhase::Cleanup);
         let cleanup = self.plan.task.clone().map(|task| {
@@ -2036,199 +2020,4 @@ impl Runner {
 }
 
 #[cfg(test)]
-mod notification_tests {
-    use super::*;
-    use crate::ux::treeview::Listener;
-
-    struct Observer {
-        job: Job,
-        statuses: Mutex<Vec<JobStatus>>,
-    }
-
-    impl Listener for Observer {
-        fn wake(&self) {
-            /* Reading here also verifies that notification does not hold the Job status lock. */
-            let status = self.job.status();
-            self.statuses.lock().unwrap().push(status);
-        }
-
-        fn close(&self) {}
-
-        fn is_closed(&self) -> bool {
-            false
-        }
-    }
-
-    #[test]
-    fn t_job_notifications_coalesce_bytes_and_publish_confirmation_and_cancellation() {
-        let data = DataHandle::new(Limits::default()).unwrap();
-        let job = Job(Arc::new(Shared {
-            _source: data.source(),
-            _state: None,
-            data: data.downgrade(),
-            id: 1,
-            cancel: AtomicBool::new(false),
-            bytes: AtomicU64::new(0),
-            processed: AtomicUsize::new(0),
-            revision: AtomicU64::new(1),
-            progress: Mutex::new(None),
-            state: Mutex::new(Status {
-                phase: JobPhase::Preparing,
-                terminal: false,
-                cancelled: false,
-                confirmation: None,
-                answer: None,
-                results: Vec::new(),
-                published: 0,
-                error: None,
-                cleanup: None,
-            }),
-            changed: Condvar::new(),
-            task_memory: Memory::new(data.memory()),
-            _memory: Charge::new(1024),
-        }));
-        let observer = Arc::new(Observer {
-            job: job.clone(),
-            statuses: Mutex::new(Vec::new()),
-        });
-        let listener: Arc<dyn Listener> = observer.clone();
-        data.listen(&listener).unwrap();
-        job.set_phase(JobPhase::Reading);
-        assert_eq!(
-            observer.statuses.lock().unwrap().last().unwrap().phase,
-            JobPhase::Reading
-        );
-        job.set_phase(JobPhase::Working);
-        job.copied(100);
-        assert_eq!(observer.statuses.lock().unwrap().last().unwrap().bytes, 100);
-        let count = observer.statuses.lock().unwrap().len();
-        let revision = job.status().revision;
-        /* Keep scheduler pauses from advancing the progress window in this test. */
-        *job.0.progress.lock().unwrap() = Some(Instant::now() + Duration::from_secs(60));
-        job.copied(200);
-        assert_eq!(observer.statuses.lock().unwrap().len(), count);
-        assert_eq!(job.status().bytes, 300);
-        assert!(job.status_since(Some(revision)).is_none());
-        job.processed();
-        assert_eq!(observer.statuses.lock().unwrap().len(), count + 1);
-        assert_eq!(
-            observer.statuses.lock().unwrap().last().unwrap().processed,
-            1
-        );
-        *job.0.progress.lock().unwrap() = Some(Instant::now() + Duration::from_secs(60));
-        job.processed();
-        assert_eq!(observer.statuses.lock().unwrap().len(), count + 1);
-        assert_eq!(job.status().processed, 2);
-        let count = observer.statuses.lock().unwrap().len();
-        job.0.state.lock().unwrap().confirmation = Some(Confirmation {
-            token: 1,
-            item: ItemId(1),
-            node: Some(NodeId(1)),
-            source: PathBuf::from("source"),
-            target: PathBuf::from("target"),
-            prepare_move: false,
-        });
-        job.confirm(1, false).unwrap();
-        assert_eq!(observer.statuses.lock().unwrap().len(), count + 1);
-        assert_eq!(job.status_since(Some(revision)).unwrap().bytes, 300);
-        job.cancel();
-        assert!(observer.statuses.lock().unwrap().last().unwrap().cancelling);
-        assert_eq!(observer.statuses.lock().unwrap().len(), count + 2);
-        let weak = data.downgrade();
-        drop(data);
-        assert!(
-            weak.upgrade().is_none(),
-            "a Job notification must not retain its data owner"
-        );
-        job.notify();
-    }
-
-    #[test]
-    fn t_copy_keeps_completed_io_when_batch_submission_exceeds_the_budget() {
-        use super::super::tests::{Directory, request};
-        use std::fs;
-
-        struct Pressure {
-            job: Job,
-            memory: Arc<Budget>,
-            charge: Mutex<Option<Charge>>,
-        }
-        impl Listener for Pressure {
-            fn wake(&self) {
-                if self.job.status().bytes == 0 {
-                    return;
-                }
-                let mut charge = self.charge.lock().unwrap();
-                if charge.is_none() {
-                    let _guard = self.memory.enter();
-                    *charge = Some(Charge::new(Limits::default().memory_bytes));
-                }
-            }
-            fn close(&self) {}
-            fn is_closed(&self) -> bool {
-                false
-            }
-        }
-
-        let directory = Directory::new();
-        fs::create_dir(directory.0.join("dst")).unwrap();
-        fs::write(directory.0.join("source"), b"contents").unwrap();
-        let tree = request(Filetree::open(directory.0.clone()));
-        let source = request(tree.resolve(directory.0.join("source")));
-        let target = request(tree.resolve(directory.0.join("dst")));
-        /* Hold IO until the listener is registered. The first copied bytes trigger
-         * deterministic budget pressure after admission and before publication. */
-        let execution = EXECUTOR.lock().unwrap_or_else(|error| error.into_inner());
-        let job = tree
-            .start_operation(OperationPlan {
-                kind: OperationKind::Copy,
-                source: source.source.clone(),
-                nodes: vec![source.node].into(),
-                target: Some(target.clone()),
-                name: None,
-                task: None,
-                prepare_move: false,
-            })
-            .unwrap();
-        let pressure = Arc::new(Pressure {
-            job: job.clone(),
-            memory: tree.data().memory(),
-            charge: Mutex::new(None),
-        });
-        let listener: Arc<dyn Listener> = pressure.clone();
-        tree.data().listen(&listener).unwrap();
-        drop(execution);
-        let start = Instant::now();
-        while !job.status().terminal {
-            assert!(start.elapsed() < Duration::from_secs(10));
-            std::thread::sleep(Duration::from_millis(1));
-        }
-        assert!(pressure.charge.lock().unwrap().is_some());
-        let status = job.status();
-        assert!(status.error.is_none(), "{:?}", status.error);
-        assert!(!status.cancelled);
-        assert_eq!(status.results, 1);
-        let results = job.results(0, status.results).unwrap();
-        assert_eq!(results[0].status, ItemStatus::Success);
-        assert!(results[0].error().is_none());
-        assert_eq!(
-            results[0].sync_error().unwrap().code,
-            ErrorCode::ResourceLimit
-        );
-        assert_eq!(fs::read(directory.0.join("source")).unwrap(), b"contents");
-        assert_eq!(
-            fs::read(directory.0.join("dst/source")).unwrap(),
-            b"contents"
-        );
-        assert_eq!(fs::read_dir(directory.0.join("dst")).unwrap().count(), 1);
-        assert!(
-            tree.index
-                .lock()
-                .unwrap()
-                .child(Some(target.node), std::ffi::OsStr::new("source"))
-                .is_none()
-        );
-        drop(listener);
-        drop(pressure);
-    }
-}
+mod tests;

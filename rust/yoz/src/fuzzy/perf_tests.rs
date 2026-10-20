@@ -2,7 +2,7 @@
 //!
 //! `script/benchmark/fuzzy.mjs --level rust` runs them; by hand:
 //! `YOZ_FUZZY_BENCH_CORPUS=<dir> cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib
-//! fuzzy::perf_tests -- --ignored --nocapture --test-threads=1`
+//! fuzzy::perf_tests::t_fuzzy_l1 -- --exact --ignored --nocapture --test-threads=1`
 //! where `<dir>` was written by `script/benchmark/fuzzy-corpus.mjs`.
 //!
 //! Environment:
@@ -16,6 +16,7 @@ use super::corpus::default_threads;
 use super::{CaseMode, Corpus as FuzzyCorpus, Query as FuzzyQuery, Scheme};
 use crate::completion::fuzzy::Matcher as CompletionMatcher;
 use crate::search::search_in_lines;
+use crate::test_support::percentile;
 use crate::ux::treeview::DisplayOptions;
 use crate::ux::treeview::matching::Matcher as TreeviewMatcher;
 use std::collections::HashSet;
@@ -345,15 +346,11 @@ fn calibrate() -> f64 {
     best
 }
 
-fn percentile(sorted: &[u64], fraction: f64) -> u64 {
-    sorted[((sorted.len() as f64 * fraction).ceil() as usize).clamp(1, sorted.len()) - 1]
-}
-
 #[test]
 #[ignore = "explicit release-mode fuzzy benchmark; see the module documentation"]
-fn fuzzy_l1() {
+fn t_fuzzy_l1() {
     let Some(directory) = env("YOZ_FUZZY_BENCH_CORPUS").map(PathBuf::from) else {
-        eprintln!("fuzzy_l1: YOZ_FUZZY_BENCH_CORPUS is not set; skipped");
+        eprintln!("t_fuzzy_l1: YOZ_FUZZY_BENCH_CORPUS is not set; skipped");
         return;
     };
     let corpora = env("YOZ_FUZZY_BENCH_CORPORA").unwrap_or_else(|| {
@@ -461,16 +458,16 @@ fn fuzzy_l1() {
 /// Result order against fzf itself: `fzf --filter QUERY --literal --scheme=<corpus scheme>` on every query
 /// of each corpus, without weights. Needs `fzf` on `PATH`; by hand:
 /// `YOZ_FUZZY_BENCH_CORPUS=<dir> cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib
-/// fuzzy::perf_tests::fzf_parity -- --ignored --nocapture`.
+/// fuzzy::perf_tests::t_fzf_parity -- --ignored --nocapture`.
 /// `YOZ_FUZZY_PARITY_CORPORA` picks corpora (default: the ASCII ones below 100k items);
 /// `YOZ_FUZZY_PARITY_EXACT=1` compares exact matching with `fzf --exact`.
 #[test]
 #[ignore = "explicit comparison with an installed fzf; see the function documentation"]
-fn fzf_parity() {
+fn t_fzf_parity() {
     use std::process::{Command, Stdio};
 
     let Some(directory) = env("YOZ_FUZZY_BENCH_CORPUS").map(PathBuf::from) else {
-        eprintln!("fzf_parity: YOZ_FUZZY_BENCH_CORPUS is not set; skipped");
+        eprintln!("t_fzf_parity: YOZ_FUZZY_BENCH_CORPUS is not set; skipped");
         return;
     };
     let corpora = env("YOZ_FUZZY_PARITY_CORPORA")
@@ -606,12 +603,12 @@ fn fzf_parity() {
 /// keystroke. About 2% of items get a frecency of 10..=100, as the L3 runs seed them; the target is
 /// frecent (60) in one scenario and plain while distractors may be frecent in the other. By hand:
 /// `YOZ_FUZZY_BENCH_CORPUS=<dir> cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib
-/// fuzzy::perf_tests::fuzzy_quality -- --ignored --nocapture`.
+/// fuzzy::perf_tests::t_fuzzy_quality -- --ignored --nocapture`.
 #[test]
 #[ignore = "explicit ranking-quality measurement; see the function documentation"]
-fn fuzzy_quality() {
+fn t_fuzzy_quality() {
     let Some(directory) = env("YOZ_FUZZY_BENCH_CORPUS").map(PathBuf::from) else {
-        eprintln!("fuzzy_quality: YOZ_FUZZY_BENCH_CORPUS is not set; skipped");
+        eprintln!("t_fuzzy_quality: YOZ_FUZZY_BENCH_CORPUS is not set; skipped");
         return;
     };
     let corpora = env("YOZ_FUZZY_BENCH_CORPORA")

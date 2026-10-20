@@ -1379,3 +1379,6 @@ pub(crate) fn project(
         matched_children,
     }))
 }
+
+#[cfg(test)]
+mod tests;

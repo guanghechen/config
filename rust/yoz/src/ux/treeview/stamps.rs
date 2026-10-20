@@ -205,10 +205,6 @@ impl Summary {
         self.known_roots == 0 && self.known_self_only == 0 && !self.pending
     }
 
-    pub fn is_nonempty(self) -> bool {
-        self.known_roots != 0 || self.known_self_only != 0
-    }
-
     fn merge(&mut self, child: Self) {
         self.known_roots += child.known_roots;
         self.known_self_only += child.known_self_only;

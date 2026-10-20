@@ -11,6 +11,8 @@ pub mod path;
 pub mod replace;
 pub mod search;
 pub mod string;
+#[cfg(test)]
+mod test_support;
 pub mod types;
 pub mod uri;
 pub mod ux;

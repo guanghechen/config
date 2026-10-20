@@ -265,6 +265,8 @@ impl Payload {
 
 #[cfg(test)]
 mod tests {
+    use super::super::test_support::*;
+    use super::super::*;
     use super::*;
     use std::collections::BTreeMap;
 
@@ -380,5 +382,63 @@ mod tests {
         assert!(weak.upgrade().is_none());
         assert_eq!(budget.used(), 0);
         assert!(budget.payloads.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn t_retained_frames_consume_memory_and_releasing_them_restores_capacity() {
+        let mut engine = Engine::new(Limits {
+            memory_bytes: 3 * 1024 * 1024,
+            ..Limits::default()
+        })
+        .unwrap();
+        engine
+            .import(Import {
+                base_revision: engine.source.revision(),
+                scope: DataScope::Forest,
+                records: vec![Record::new("one", NodeData::leaf("initial"))],
+            })
+            .unwrap();
+        let id = engine.source.id("one").unwrap();
+        let state = engine
+            .create_state(Root::Forest(vec![id].into()), DisplayOptions::default())
+            .unwrap();
+        let mut retained = Vec::new();
+        let mut failed = false;
+        for index in 0..12 {
+            retained.push(engine.snapshot(state).unwrap());
+            let source = engine.source.clone();
+            let result = engine.apply_batch(Batch {
+                base_revision: source.revision(),
+                operations: vec![Operation::Update {
+                    node: id.into(),
+                    patch: NodePatch {
+                        label: Some(format!("{index}{}", "x".repeat(512 * 1024)).into()),
+                        ..NodePatch::default()
+                    },
+                }],
+            });
+            if let Err(error) = result {
+                assert_eq!(error.code, ErrorCode::ResourceLimit);
+                assert!(Arc::ptr_eq(&source, &engine.source));
+                failed = true;
+                break;
+            }
+            project(&mut engine, state);
+        }
+        assert!(failed);
+        let before = engine.memory.used();
+        retained.clear();
+        assert!(engine.memory.used() < before);
+        apply(
+            &mut engine,
+            vec![Operation::Update {
+                node: id.into(),
+                patch: NodePatch {
+                    label: Some("recovered".into()),
+                    ..NodePatch::default()
+                },
+            }],
+        );
+        project(&mut engine, state);
     }
 }

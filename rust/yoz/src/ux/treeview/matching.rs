@@ -59,7 +59,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fuzzy_highlights_original_utf8_bytes_of_the_best_alignment() {
+    fn t_fuzzy_highlights_original_utf8_bytes_of_the_best_alignment() {
         let matcher = Matcher::new(&DisplayOptions {
             pattern: "a中".into(),
             fuzzy: true,
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn labels_follow_the_picker_syntax_and_smart_case() {
+    fn t_labels_follow_the_picker_syntax_and_smart_case() {
         let matcher = |pattern: &str, fuzzy: bool, case_sensitive: bool| {
             Matcher::new(&DisplayOptions {
                 pattern: pattern.into(),
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn regex_takes_precedence_and_invalid_patterns_are_rejected() {
+    fn t_regex_takes_precedence_and_invalid_patterns_are_rejected() {
         let matcher = Matcher::new(&DisplayOptions {
             pattern: "^A[0-9]+$".into(),
             regex: true,

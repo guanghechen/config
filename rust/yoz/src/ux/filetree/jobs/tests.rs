@@ -1,34 +1,21 @@
-use super::tests::Directory;
 use super::*;
-use crate::ux::treeview::*;
+use crate::test_support::{TempDir, eventually};
+use crate::ux::filetree::test_support::*;
+use crate::ux::treeview::test_support::{Listening, hold, listen};
 use std::fs;
-use std::path::Path;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-
-fn until(mut predicate: impl FnMut() -> bool) {
-    let start = Instant::now();
-    while !predicate() {
-        assert!(
-            start.elapsed() < Duration::from_secs(15),
-            "file job timeout"
-        );
-        std::thread::sleep(Duration::from_millis(1));
-    }
-}
 
 #[cfg(unix)]
 #[test]
 fn t_move_captures_physical_paths_after_confirmation_without_following_final_links() {
     use std::os::unix::fs::symlink;
-    let directory = Directory::new();
-    fs::create_dir_all(directory.0.join("actual-a/inner")).unwrap();
-    fs::create_dir(directory.0.join("source")).unwrap();
-    fs::write(directory.0.join("referent"), "keep").unwrap();
-    symlink("../referent", directory.0.join("source/file")).unwrap();
-    fs::write(directory.0.join("actual-a/inner/file"), "old").unwrap();
-    symlink("actual-a", directory.0.join("route")).unwrap();
-    let tree = request(Filetree::open(directory.0.clone()));
+    let directory = TempDir::new();
+    fs::create_dir_all(directory.path().join("actual-a/inner")).unwrap();
+    fs::create_dir(directory.path().join("source")).unwrap();
+    fs::write(directory.path().join("referent"), "keep").unwrap();
+    symlink("../referent", directory.path().join("source/file")).unwrap();
+    fs::write(directory.path().join("actual-a/inner/file"), "old").unwrap();
+    symlink("actual-a", directory.path().join("route")).unwrap();
+    let tree = request(Filetree::open(directory.path().to_path_buf()));
     let job = tree
         .start_operation(plan(
             &tree,
@@ -37,10 +24,14 @@ fn t_move_captures_physical_paths_after_confirmation_without_following_final_lin
             OperationKind::Move,
         ))
         .unwrap();
-    until(|| job.status().confirmation.is_some());
-    fs::rename(directory.0.join("actual-a"), directory.0.join("actual-b")).unwrap();
-    fs::remove_file(directory.0.join("route")).unwrap();
-    symlink("actual-b", directory.0.join("route")).unwrap();
+    eventually(|| job.status().confirmation.is_some());
+    fs::rename(
+        directory.path().join("actual-a"),
+        directory.path().join("actual-b"),
+    )
+    .unwrap();
+    fs::remove_file(directory.path().join("route")).unwrap();
+    symlink("actual-b", directory.path().join("route")).unwrap();
     job.confirm(job.status().confirmation.unwrap().token, true)
         .unwrap();
     let results = done(&job);
@@ -51,7 +42,7 @@ fn t_move_captures_physical_paths_after_confirmation_without_following_final_lin
         .unwrap_or_else(|| results[0].source());
     assert_eq!(
         source,
-        fs::canonicalize(directory.0.join("source"))
+        fs::canonicalize(directory.path().join("source"))
             .unwrap()
             .join("file")
     );
@@ -62,32 +53,32 @@ fn t_move_captures_physical_paths_after_confirmation_without_following_final_lin
         .unwrap();
     assert_eq!(
         target,
-        fs::canonicalize(directory.0.join("actual-b/inner"))
+        fs::canonicalize(directory.path().join("actual-b/inner"))
             .unwrap()
             .join("file")
     );
     assert!(fs::symlink_metadata(target).unwrap().is_symlink());
     assert_eq!(
-        fs::read_to_string(directory.0.join("referent")).unwrap(),
+        fs::read_to_string(directory.path().join("referent")).unwrap(),
         "keep"
     );
 }
 
 #[test]
 fn t_move_preparation_follows_overwrite_confirmation_and_rechecks_source_identity() {
-    let directory = Directory::new();
-    fs::create_dir(directory.0.join("dest")).unwrap();
-    fs::write(directory.0.join("a"), "source").unwrap();
-    fs::write(directory.0.join("dest/a"), "destination").unwrap();
-    let tree = request(Filetree::open(directory.0.clone()));
+    let directory = TempDir::new();
+    fs::create_dir(directory.path().join("dest")).unwrap();
+    fs::write(directory.path().join("a"), "source").unwrap();
+    fs::write(directory.path().join("dest/a"), "destination").unwrap();
+    let tree = request(Filetree::open(directory.path().to_path_buf()));
     let mut operation = plan(&tree, "a", Some("dest"), OperationKind::Move);
     operation.prepare_move = true;
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     let overwrite = job.status().confirmation.unwrap();
     assert!(!overwrite.prepare_move);
     job.confirm(overwrite.token, true).unwrap();
-    until(|| {
+    eventually(|| {
         job.status()
             .confirmation
             .is_some_and(|request| request.prepare_move)
@@ -95,65 +86,76 @@ fn t_move_preparation_follows_overwrite_confirmation_and_rechecks_source_identit
     let preparation = job.status().confirmation.unwrap();
     assert_eq!(
         preparation.source,
-        fs::canonicalize(&directory.0).unwrap().join("a")
+        fs::canonicalize(directory.path()).unwrap().join("a")
     );
     assert_eq!(
-        fs::read(directory.0.join("dest/a")).unwrap(),
+        fs::read(directory.path().join("dest/a")).unwrap(),
         b"destination"
     );
-    fs::rename(directory.0.join("a"), directory.0.join("original")).unwrap();
-    fs::write(directory.0.join("a"), "replacement").unwrap();
+    fs::rename(
+        directory.path().join("a"),
+        directory.path().join("original"),
+    )
+    .unwrap();
+    fs::write(directory.path().join("a"), "replacement").unwrap();
     job.confirm(preparation.token, true).unwrap();
     let results = done(&job);
     assert_eq!(results[0].status, ItemStatus::Failed);
-    assert_eq!(fs::read(directory.0.join("a")).unwrap(), b"replacement");
     assert_eq!(
-        fs::read(directory.0.join("dest/a")).unwrap(),
+        fs::read(directory.path().join("a")).unwrap(),
+        b"replacement"
+    );
+    assert_eq!(
+        fs::read(directory.path().join("dest/a")).unwrap(),
         b"destination"
     );
 }
 
 #[test]
 fn t_cancel_during_move_preparation_keeps_files_and_releases_selection() {
-    let directory = Directory::new();
-    fs::create_dir(directory.0.join("dest")).unwrap();
-    fs::write(directory.0.join("a"), "source").unwrap();
-    let tree = request(Filetree::open(directory.0.clone()));
+    let directory = TempDir::new();
+    fs::create_dir(directory.path().join("dest")).unwrap();
+    fs::write(directory.path().join("a"), "source").unwrap();
+    let tree = request(Filetree::open(directory.path().to_path_buf()));
     let mut operation = plan(&tree, "a", Some("dest"), OperationKind::Move);
     operation.prepare_move = true;
     let state = selection(&tree, &mut operation);
     let job = tree.start_operation(operation).unwrap();
-    until(|| {
+    eventually(|| {
         job.status()
             .confirmation
             .is_some_and(|request| request.prepare_move)
     });
     job.cancel();
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     assert!(job.status().cancelled);
     assert!(!state.status().unwrap().locked);
-    assert!(directory.0.join("a").exists());
-    assert!(!directory.0.join("dest/a").exists());
+    assert!(directory.path().join("a").exists());
+    assert!(!directory.path().join("dest/a").exists());
     assert_eq!(state.snapshot().unwrap().summary.known_roots, 1);
 }
 
 #[test]
 fn t_replaced_source_is_rejected_before_move_preparation_is_requested() {
-    let directory = Directory::new();
-    fs::create_dir(directory.0.join("dest")).unwrap();
-    fs::write(directory.0.join("a"), "source").unwrap();
-    fs::write(directory.0.join("dest/a"), "destination").unwrap();
-    let tree = request(Filetree::open(directory.0.clone()));
+    let directory = TempDir::new();
+    fs::create_dir(directory.path().join("dest")).unwrap();
+    fs::write(directory.path().join("a"), "source").unwrap();
+    fs::write(directory.path().join("dest/a"), "destination").unwrap();
+    let tree = request(Filetree::open(directory.path().to_path_buf()));
     let mut operation = plan(&tree, "a", Some("dest"), OperationKind::Move);
     operation.prepare_move = true;
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     let overwrite = job.status().confirmation.unwrap();
     assert!(!overwrite.prepare_move);
-    fs::rename(directory.0.join("a"), directory.0.join("original")).unwrap();
-    fs::write(directory.0.join("a"), "replacement").unwrap();
+    fs::rename(
+        directory.path().join("a"),
+        directory.path().join("original"),
+    )
+    .unwrap();
+    fs::write(directory.path().join("a"), "replacement").unwrap();
     job.confirm(overwrite.token, true).unwrap();
-    until(|| {
+    eventually(|| {
         let status = job.status();
         assert!(
             !status
@@ -163,129 +165,35 @@ fn t_replaced_source_is_rejected_before_move_preparation_is_requested() {
         status.terminal
     });
     assert_eq!(done(&job)[0].status, ItemStatus::Failed);
-    assert_eq!(fs::read(directory.0.join("a")).unwrap(), b"replacement");
     assert_eq!(
-        fs::read(directory.0.join("dest/a")).unwrap(),
+        fs::read(directory.path().join("a")).unwrap(),
+        b"replacement"
+    );
+    assert_eq!(
+        fs::read(directory.path().join("dest/a")).unwrap(),
         b"destination"
     );
-}
-fn request<T: Clone>(request: Request<T>) -> T {
-    until(|| request.poll().is_some());
-    request
-        .poll()
-        .unwrap()
-        .unwrap_or_else(|error| panic!("{error:?}"))
-}
-fn reply(ticket: Ticket) -> Reply {
-    match ticket.wait() {
-        Outcome::Reply(Reply::Rejected { error }) => panic!("{error:?}"),
-        Outcome::Reply(reply) => reply,
-        _ => panic!("expected reply"),
-    }
-}
-pub(super) fn done(job: &Job) -> Vec<Arc<ItemResult>> {
-    until(|| job.status().terminal);
-    let status = job.status();
-    assert!(status.error.is_none(), "{:?}", status.error);
-    assert!(
-        status
-            .cleanup
-            .as_ref()
-            .is_none_or(|cleanup| cleanup.is_ok()),
-        "{:?}",
-        status.cleanup
-    );
-    job.results(0, status.results).unwrap()
-}
-pub(super) fn plan(
-    tree: &Filetree,
-    source: &str,
-    target: Option<&str>,
-    kind: OperationKind,
-) -> OperationPlan {
-    let base = tree
-        .inspect(tree.source(), tree.root())
-        .unwrap()
-        .path()
-        .unwrap();
-    let source = request(tree.resolve(base.join(source)));
-    let target = target.map(|target| request(tree.resolve(base.join(target))));
-    OperationPlan {
-        source: source.source,
-        nodes: vec![source.node].into(),
-        target,
-        kind,
-        name: None,
-        task: None,
-        prepare_move: false,
-    }
-}
-pub(super) fn selection(tree: &Filetree, plan: &mut OperationPlan) -> StateHandle {
-    prepare_selection(tree, plan, None)
-}
-fn prepare_selection(
-    tree: &Filetree,
-    plan: &mut OperationPlan,
-    deadline: Option<Instant>,
-) -> StateHandle {
-    let Outcome::State(state) = tree.create_state(None, DisplayOptions::default()).wait() else {
-        panic!("state");
-    };
-    reply(state.dispatch(
-        Command::Select {
-            targets: Targets::Nodes(plan.nodes.clone()),
-            action: SelectAction::Select,
-            scope: Scope::Subtree,
-        },
-        Context::default(),
-    ));
-    let Reply::Locked { token, .. } = reply(state.submit(Action::Lock(
-        state.id(),
-        state.status().unwrap().revisions.selection.unwrap(),
-        deadline,
-    ))) else {
-        panic!("lock");
-    };
-    let Reply::Ready {
-        source, cleanup, ..
-    } = reply(state.dispatch(
-        Command::PrepareSources {
-            lock: token,
-            retry: false,
-        },
-        Context::default(),
-    ))
-    else {
-        panic!("ready");
-    };
-    plan.source = source;
-    plan.task = Some(TaskContext {
-        state: state.clone(),
-        lock: token,
-        cleanup,
-    });
-    state
 }
 
 #[test]
 fn t_job_copy_merge_skip_continues_and_cleans_discovered_success_only() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src")).unwrap();
-    fs::create_dir_all(dir.0.join("dst/src")).unwrap();
-    fs::write(dir.0.join("src/a"), "new a").unwrap();
-    fs::write(dir.0.join("src/b"), "new b").unwrap();
-    let names: Vec<_> = fs::read_dir(dir.0.join("src"))
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src")).unwrap();
+    fs::create_dir_all(dir.path().join("dst/src")).unwrap();
+    fs::write(dir.path().join("src/a"), "new a").unwrap();
+    fs::write(dir.path().join("src/b"), "new b").unwrap();
+    let names: Vec<_> = fs::read_dir(dir.path().join("src"))
         .unwrap()
         .map(|entry| entry.unwrap().file_name())
         .collect();
     let completed = &names[0];
     let conflicting = &names[1];
-    fs::write(dir.0.join("src").join(completed), "new a").unwrap();
-    fs::write(dir.0.join("src").join(conflicting), "new b").unwrap();
-    fs::write(dir.0.join("dst/src").join(conflicting), "old b").unwrap();
-    fs::write(dir.0.join("dst/src/keep"), "keep").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let destination = request(tree.resolve(dir.0.join("dst/src")));
+    fs::write(dir.path().join("src").join(completed), "new a").unwrap();
+    fs::write(dir.path().join("src").join(conflicting), "new b").unwrap();
+    fs::write(dir.path().join("dst/src").join(conflicting), "old b").unwrap();
+    fs::write(dir.path().join("dst/src/keep"), "keep").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let destination = request(tree.resolve(dir.path().join("dst/src")));
     let Outcome::State(destination_state) = tree
         .create_state(
             Some(Root::ChildrenOf(destination.node)),
@@ -296,17 +204,19 @@ fn t_job_copy_merge_skip_continues_and_cleans_discovered_success_only() {
         panic!("destination state");
     };
     let _destination_view = destination_state.attach().unwrap();
-    until(|| tree.source().node(destination.node).unwrap().completeness == Completeness::Complete);
+    eventually(|| {
+        tree.source().node(destination.node).unwrap().completeness == Completeness::Complete
+    });
     let mut plan = plan(&tree, "src", Some("dst"), OperationKind::Copy);
     let root = plan.nodes[0];
     let state = selection(&tree, &mut plan);
     let job = tree.start_operation(plan).unwrap();
-    until(|| job.status().confirmation.is_some() || job.status().terminal);
+    eventually(|| job.status().confirmation.is_some() || job.status().terminal);
     let pending = job
         .status()
         .confirmation
         .unwrap_or_else(|| panic!("{:?}", job.status().error));
-    assert_eq!(pending.source, dir.0.join("src").join(conflicting));
+    assert_eq!(pending.source, dir.path().join("src").join(conflicting));
     assert!(
         tree.index
             .lock()
@@ -319,23 +229,22 @@ fn t_job_copy_merge_skip_continues_and_cleans_discovered_success_only() {
     assert!(job.confirm(pending.token, true).is_err());
     let results = done(&job);
     assert!(results.iter().any(
-        |result| result.source() == dir.0.join("src").join(completed)
+        |result| result.source() == dir.path().join("src").join(completed)
             && result.status == ItemStatus::Success
             && result.sync_error().is_none()
     ));
-    assert!(results.iter().any(
-        |result| result.source() == dir.0.join("src").join(conflicting)
-            && result.status == ItemStatus::Skipped
-    ));
+    assert!(results.iter().any(|result| result.source()
+        == dir.path().join("src").join(conflicting)
+        && result.status == ItemStatus::Skipped));
     assert_eq!(
-        fs::read_to_string(dir.0.join("dst/src").join(completed)).unwrap(),
+        fs::read_to_string(dir.path().join("dst/src").join(completed)).unwrap(),
         "new a"
     );
     assert_eq!(
-        fs::read_to_string(dir.0.join("dst/src").join(conflicting)).unwrap(),
+        fs::read_to_string(dir.path().join("dst/src").join(conflicting)).unwrap(),
         "old b"
     );
-    assert!(dir.0.join("dst/src/keep").exists());
+    assert!(dir.path().join("dst/src/keep").exists());
     assert!(!state.status().unwrap().locked);
     assert!(
         tree.index
@@ -345,7 +254,7 @@ fn t_job_copy_merge_skip_continues_and_cleans_discovered_success_only() {
             .is_none(),
         "skipped input stays lazy"
     );
-    let b = request(tree.resolve(dir.0.join("src").join(conflicting))).node;
+    let b = request(tree.resolve(dir.path().join("src").join(conflicting))).node;
     let Reply::Inspected { sources, .. } =
         reply(state.dispatch(Command::InspectSelection, Context::default()))
     else {
@@ -365,16 +274,16 @@ fn t_job_copy_merge_skip_continues_and_cleans_discovered_success_only() {
 #[test]
 fn t_directory_copy_and_merge_keep_unbrowsed_descendants_lazy() {
     for merge in [false, true] {
-        let dir = Directory::new();
-        fs::create_dir(dir.0.join("src")).unwrap();
-        fs::create_dir(dir.0.join("dst")).unwrap();
+        let dir = TempDir::new();
+        fs::create_dir(dir.path().join("src")).unwrap();
+        fs::create_dir(dir.path().join("dst")).unwrap();
         if merge {
-            fs::create_dir(dir.0.join("dst/src")).unwrap();
+            fs::create_dir(dir.path().join("dst/src")).unwrap();
         }
         for index in 0..24 {
-            fs::write(dir.0.join(format!("src/{index:02}")), b"data").unwrap();
+            fs::write(dir.path().join(format!("src/{index:02}")), b"data").unwrap();
         }
-        let tree = request(Filetree::open(dir.0.clone()));
+        let tree = request(Filetree::open(dir.path().to_path_buf()));
         let mut operation = plan(&tree, "src", Some("dst"), OperationKind::Copy);
         let source = operation.nodes[0];
         let state = selection(&tree, &mut operation);
@@ -392,7 +301,7 @@ fn t_directory_copy_and_merge_keep_unbrowsed_descendants_lazy() {
             Completeness::Unknown
         );
         assert!(tree.source().len() <= before + 1);
-        let copied = request(tree.resolve(dir.0.join("dst/src")));
+        let copied = request(tree.resolve(dir.path().join("dst/src")));
         assert_eq!(tree.source().node(copied.node).unwrap().child_count(), 0);
         let Outcome::State(browse) = tree
             .create_state(
@@ -404,12 +313,14 @@ fn t_directory_copy_and_merge_keep_unbrowsed_descendants_lazy() {
             panic!("browse state");
         };
         let _view = browse.attach().unwrap();
-        until(|| tree.source().node(copied.node).unwrap().completeness == Completeness::Complete);
+        eventually(|| {
+            tree.source().node(copied.node).unwrap().completeness == Completeness::Complete
+        });
         assert_eq!(tree.source().node(copied.node).unwrap().child_count(), 24);
         assert_eq!(tree.source().node(source).unwrap().child_count(), 0);
         for index in 0..24 {
             assert_eq!(
-                fs::read(dir.0.join(format!("dst/src/{index:02}"))).unwrap(),
+                fs::read(dir.path().join(format!("dst/src/{index:02}"))).unwrap(),
                 b"data"
             );
         }
@@ -418,11 +329,11 @@ fn t_directory_copy_and_merge_keep_unbrowsed_descendants_lazy() {
 
 #[test]
 fn t_job_move_keeps_occurrence_and_delete_discovers_unloaded_children() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src/sub")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("src/sub/a"), "a").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src/sub")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("src/sub/a"), "a").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut move_plan = plan(&tree, "src", Some("dst"), OperationKind::Move);
     let root = move_plan.nodes[0];
     let state = selection(&tree, &mut move_plan);
@@ -436,7 +347,7 @@ fn t_job_move_keeps_occurrence_and_delete_discovers_unloaded_children() {
     );
     assert_eq!(
         tree.inspect(tree.source(), root).unwrap().path().unwrap(),
-        dir.0.join("dst/src")
+        dir.path().join("dst/src")
     );
     assert!(!state.status().unwrap().locked);
     let mut delete_plan = plan(&tree, "dst/src", None, OperationKind::Delete);
@@ -450,22 +361,22 @@ fn t_job_move_keeps_occurrence_and_delete_discovers_unloaded_children() {
         result[0].sync_error()
     );
     assert!(!tree.source().contains(root));
-    assert!(!dir.0.join("dst/src").exists());
+    assert!(!dir.path().join("dst/src").exists());
     assert!(!state.status().unwrap().locked);
 }
 
 #[test]
 fn t_job_confirmation_does_not_apply_to_replaced_target_and_other_job_progresses() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("a"), "new").unwrap();
-    fs::write(dir.0.join("b"), "other").unwrap();
-    fs::write(dir.0.join("dst/a"), "old").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("a"), "new").unwrap();
+    fs::write(dir.path().join("b"), "other").unwrap();
+    fs::write(dir.path().join("dst/a"), "old").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let job = tree
         .start_operation(plan(&tree, "a", Some("dst"), OperationKind::Copy))
         .unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     let token = job.status().confirmation.unwrap().token;
     assert_eq!(
         done(
@@ -476,13 +387,13 @@ fn t_job_confirmation_does_not_apply_to_replaced_target_and_other_job_progresses
         .status,
         ItemStatus::Success
     );
-    fs::rename(dir.0.join("dst/a"), dir.0.join("dst/old")).unwrap();
-    fs::write(dir.0.join("dst/a"), "replacement").unwrap();
+    fs::rename(dir.path().join("dst/a"), dir.path().join("dst/old")).unwrap();
+    fs::write(dir.path().join("dst/a"), "replacement").unwrap();
     job.confirm(token, true).unwrap();
     let results = done(&job);
     assert_eq!(results[0].status, ItemStatus::Failed);
     assert_eq!(
-        fs::read_to_string(dir.0.join("dst/a")).unwrap(),
+        fs::read_to_string(dir.path().join("dst/a")).unwrap(),
         "replacement"
     );
 }
@@ -491,26 +402,26 @@ fn t_job_confirmation_does_not_apply_to_replaced_target_and_other_job_progresses
 #[test]
 fn t_job_links_are_copied_and_replaced_without_modifying_referents() {
     use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("a"), "new").unwrap();
-    fs::write(dir.0.join("referent"), "unchanged").unwrap();
-    symlink("../referent", dir.0.join("dst/a")).unwrap();
-    symlink("missing-relative", dir.0.join("link")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("a"), "new").unwrap();
+    fs::write(dir.path().join("referent"), "unchanged").unwrap();
+    symlink("../referent", dir.path().join("dst/a")).unwrap();
+    symlink("missing-relative", dir.path().join("link")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let job = tree
         .start_operation(plan(&tree, "a", Some("dst"), OperationKind::Copy))
         .unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     job.confirm(job.status().confirmation.unwrap().token, true)
         .unwrap();
     assert_eq!(done(&job)[0].status, ItemStatus::Success);
     assert_eq!(
-        fs::read_to_string(dir.0.join("referent")).unwrap(),
+        fs::read_to_string(dir.path().join("referent")).unwrap(),
         "unchanged"
     );
     assert!(
-        !fs::symlink_metadata(dir.0.join("dst/a"))
+        !fs::symlink_metadata(dir.path().join("dst/a"))
             .unwrap()
             .is_symlink()
     );
@@ -519,7 +430,7 @@ fn t_job_links_are_copied_and_replaced_without_modifying_referents() {
         .unwrap();
     assert_eq!(done(&job)[0].status, ItemStatus::Success);
     assert_eq!(
-        fs::read_link(dir.0.join("dst/link")).unwrap(),
+        fs::read_link(dir.path().join("dst/link")).unwrap(),
         std::path::PathBuf::from("missing-relative")
     );
 }
@@ -527,10 +438,10 @@ fn t_job_links_are_copied_and_replaced_without_modifying_referents() {
 #[cfg(unix)]
 #[test]
 fn t_job_copy_unknown_link_keeps_incomplete_children_after_read_failure() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    std::os::unix::fs::symlink("loop", dir.0.join("loop")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    std::os::unix::fs::symlink("loop", dir.path().join("loop")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let plan = plan(&tree, "loop", Some("dst"), OperationKind::Copy);
     let target = plan.target.as_ref().unwrap().node;
     assert_eq!(
@@ -579,7 +490,7 @@ fn t_job_copy_unknown_link_keeps_incomplete_children_after_read_failure() {
         panic!("state");
     };
     let _view = state.attach().unwrap();
-    until(|| tree.source().node(copied).unwrap().load_state == LoadState::Error);
+    eventually(|| tree.source().node(copied).unwrap().load_state == LoadState::Error);
     let source = tree.source();
     let node = source.node(copied).unwrap();
     assert_eq!(node.completeness, Completeness::Unknown);
@@ -595,12 +506,13 @@ fn t_job_link_operations_ignore_refreshed_directory_referent() {
         OperationKind::Delete,
     ] {
         for prepared in [false, true] {
-            let dir = Directory::new();
-            fs::create_dir(dir.0.join("dst")).unwrap();
-            fs::create_dir(dir.0.join("referent")).unwrap();
-            fs::write(dir.0.join("referent/content"), "old").unwrap();
-            std::os::unix::fs::symlink(dir.0.join("referent"), dir.0.join("link")).unwrap();
-            let tree = request(Filetree::open(dir.0.clone()));
+            let dir = TempDir::new();
+            fs::create_dir(dir.path().join("dst")).unwrap();
+            fs::create_dir(dir.path().join("referent")).unwrap();
+            fs::write(dir.path().join("referent/content"), "old").unwrap();
+            std::os::unix::fs::symlink(dir.path().join("referent"), dir.path().join("link"))
+                .unwrap();
+            let tree = request(Filetree::open(dir.path().to_path_buf()));
             let mut operation = plan(
                 &tree,
                 "link",
@@ -610,10 +522,10 @@ fn t_job_link_operations_ignore_refreshed_directory_referent() {
             let state = prepared.then(|| selection(&tree, &mut operation));
             let node = operation.nodes[0];
             let before = resource::entry(&operation.source, node).unwrap();
-            fs::rename(dir.0.join("referent"), dir.0.join("previous")).unwrap();
-            fs::create_dir(dir.0.join("referent")).unwrap();
-            fs::write(dir.0.join("referent/content"), "new").unwrap();
-            let refreshed = request(tree.resolve(dir.0.join("link")));
+            fs::rename(dir.path().join("referent"), dir.path().join("previous")).unwrap();
+            fs::create_dir(dir.path().join("referent")).unwrap();
+            fs::write(dir.path().join("referent/content"), "new").unwrap();
+            let refreshed = request(tree.resolve(dir.path().join("link")));
             let after = refreshed.entry().unwrap();
             assert_eq!(refreshed.node, node);
             assert_eq!(before.identity, after.identity);
@@ -629,34 +541,34 @@ fn t_job_link_operations_ignore_refreshed_directory_referent() {
                 results[0].sync_error()
             );
             assert_eq!(
-                fs::read_to_string(dir.0.join("referent/content")).unwrap(),
+                fs::read_to_string(dir.path().join("referent/content")).unwrap(),
                 "new"
             );
             assert_eq!(
-                fs::read_to_string(dir.0.join("previous/content")).unwrap(),
+                fs::read_to_string(dir.path().join("previous/content")).unwrap(),
                 "old"
             );
             if kind == OperationKind::Delete {
                 assert!(!tree.source().contains(node));
             } else {
                 assert_eq!(
-                    fs::read_link(dir.0.join("dst/link")).unwrap(),
-                    dir.0.join("referent")
+                    fs::read_link(dir.path().join("dst/link")).unwrap(),
+                    dir.path().join("referent")
                 );
                 if kind == OperationKind::Move {
                     assert_eq!(
                         resource::path(&tree.source(), node).unwrap(),
-                        dir.0.join("dst/link")
+                        dir.path().join("dst/link")
                     );
                 } else {
                     assert_eq!(
-                        fs::read_link(dir.0.join("link")).unwrap(),
-                        dir.0.join("referent")
+                        fs::read_link(dir.path().join("link")).unwrap(),
+                        dir.path().join("referent")
                     );
                 }
             }
             if kind != OperationKind::Copy {
-                assert!(fs::symlink_metadata(dir.0.join("link")).is_err());
+                assert!(fs::symlink_metadata(dir.path().join("link")).is_err());
             }
             if let Some(state) = state {
                 assert!(!state.status().unwrap().locked);
@@ -668,18 +580,18 @@ fn t_job_link_operations_ignore_refreshed_directory_referent() {
 #[cfg(unix)]
 #[test]
 fn t_job_publication_rejects_retargeted_destination_directory() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("real")).unwrap();
-    fs::write(dir.0.join("a"), "source").unwrap();
-    std::os::unix::fs::symlink("real", dir.0.join("dst")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let source = request(tree.resolve(dir.0.join("a")));
-    let target = request(tree.resolve(dir.0.join("dst")));
-    fs::copy(dir.0.join("a"), dir.0.join("dst/a")).unwrap();
-    let observed = Entry::read(&dir.0.join("dst/a")).unwrap();
-    fs::rename(dir.0.join("real"), dir.0.join("previous")).unwrap();
-    fs::create_dir(dir.0.join("real")).unwrap();
-    let refreshed = request(tree.resolve(dir.0.join("dst")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("real")).unwrap();
+    fs::write(dir.path().join("a"), "source").unwrap();
+    std::os::unix::fs::symlink("real", dir.path().join("dst")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let source = request(tree.resolve(dir.path().join("a")));
+    let target = request(tree.resolve(dir.path().join("dst")));
+    fs::copy(dir.path().join("a"), dir.path().join("dst/a")).unwrap();
+    let observed = Entry::read(&dir.path().join("dst/a")).unwrap();
+    fs::rename(dir.path().join("real"), dir.path().join("previous")).unwrap();
+    fs::create_dir(dir.path().join("real")).unwrap();
+    let refreshed = request(tree.resolve(dir.path().join("dst")));
     assert_eq!(refreshed.node, target.node);
     assert_ne!(
         refreshed.entry().unwrap().target,
@@ -712,9 +624,9 @@ fn t_job_publication_rejects_retargeted_destination_directory() {
             .child(Some(refreshed.node), std::ffi::OsStr::new("a"))
             .is_none()
     );
-    assert!(!dir.0.join("dst/a").exists());
+    assert!(!dir.path().join("dst/a").exists());
     assert_eq!(
-        fs::read_to_string(dir.0.join("previous/a")).unwrap(),
+        fs::read_to_string(dir.path().join("previous/a")).unwrap(),
         "source"
     );
 }
@@ -722,10 +634,10 @@ fn t_job_publication_rejects_retargeted_destination_directory() {
 #[test]
 fn t_job_rejected_plan_releases_prepared_lock_and_keeps_selection() {
     for failure in ["missing target", "invalid name", "memory limit"] {
-        let dir = Directory::new();
-        fs::create_dir(dir.0.join("dst")).unwrap();
-        fs::write(dir.0.join("a"), "content").unwrap();
-        let tree = request(Filetree::open(dir.0.clone()));
+        let dir = TempDir::new();
+        fs::create_dir(dir.path().join("dst")).unwrap();
+        fs::write(dir.path().join("a"), "content").unwrap();
+        let tree = request(Filetree::open(dir.path().to_path_buf()));
         let mut operation = plan(&tree, "a", Some("dst"), OperationKind::Copy);
         let node = operation.nodes[0];
         let state = selection(&tree, &mut operation);
@@ -752,45 +664,51 @@ fn t_job_rejected_plan_releases_prepared_lock_and_keeps_selection() {
             panic!("selection");
         };
         assert!(sources.subtree_roots.contains(&node));
-        assert_eq!(fs::read_to_string(dir.0.join("a")).unwrap(), "content");
-        assert!(!dir.0.join("dst/a").exists());
+        assert_eq!(fs::read_to_string(dir.path().join("a")).unwrap(), "content");
+        assert!(!dir.path().join("dst/a").exists());
     }
 }
 
 #[test]
 fn t_job_failed_claim_releases_only_its_unclaimed_selection_lock() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("a"), "original").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("a"), "original").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "a", Some("dst"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
-    fs::rename(dir.0.join("a"), dir.0.join("prior")).unwrap();
-    fs::write(dir.0.join("a"), "replacement").unwrap();
-    request(tree.resolve(dir.0.join("a")));
+    fs::rename(dir.path().join("a"), dir.path().join("prior")).unwrap();
+    fs::write(dir.path().join("a"), "replacement").unwrap();
+    request(tree.resolve(dir.path().join("a")));
     assert!(state.status().unwrap().locked);
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     assert_eq!(job.status().error.unwrap().code, ErrorCode::Stale);
     assert_eq!(
         job.status().cleanup.unwrap().unwrap_err().code,
         ErrorCode::Stale
     );
     assert!(!state.status().unwrap().locked);
-    assert_eq!(fs::read_to_string(dir.0.join("a")).unwrap(), "replacement");
-    assert_eq!(fs::read_to_string(dir.0.join("prior")).unwrap(), "original");
-    assert!(!dir.0.join("dst/a").exists());
+    assert_eq!(
+        fs::read_to_string(dir.path().join("a")).unwrap(),
+        "replacement"
+    );
+    assert_eq!(
+        fs::read_to_string(dir.path().join("prior")).unwrap(),
+        "original"
+    );
+    assert!(!dir.path().join("dst/a").exists());
 }
 
 #[cfg(any(target_os = "macos", windows))]
 #[test]
 fn t_job_case_only_rename_preserves_occurrence_and_actual_spelling() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("original"), "content").unwrap();
-    if !dir.0.join("ORIGINAL").exists() {
+    let dir = TempDir::new();
+    fs::write(dir.path().join("original"), "content").unwrap();
+    if !dir.path().join("ORIGINAL").exists() {
         return;
     }
-    let tree = request(Filetree::open(dir.0.clone()));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "original", Some("."), OperationKind::Move);
     let node = operation.nodes[0];
     operation.name = Some("Original".into());
@@ -802,21 +720,24 @@ fn t_job_case_only_rename_preserves_occurrence_and_actual_spelling() {
         "Original"
     );
     assert_eq!(
-        resource::observed_name(&dir.0.join("original")).unwrap(),
+        resource::observed_name(&dir.path().join("original")).unwrap(),
         "Original"
     );
-    assert_eq!(request(tree.resolve(dir.0.join("ORIGINAL"))).node, node);
+    assert_eq!(
+        request(tree.resolve(dir.path().join("ORIGINAL"))).node,
+        node
+    );
 }
 
 #[cfg(unix)]
 #[test]
 fn t_job_move_to_same_entry_through_alias_preserves_both_occurrences() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("real")).unwrap();
-    fs::write(dir.0.join("real/a"), "content").unwrap();
-    std::os::unix::fs::symlink("real", dir.0.join("alias")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let alias = request(tree.resolve(dir.0.join("alias/a")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("real")).unwrap();
+    fs::write(dir.path().join("real/a"), "content").unwrap();
+    std::os::unix::fs::symlink("real", dir.path().join("alias")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let alias = request(tree.resolve(dir.path().join("alias/a")));
     let mut operation = plan(&tree, "real/a", Some("alias"), OperationKind::Move);
     let source = operation.nodes[0];
     let before = tree.source();
@@ -841,28 +762,34 @@ fn t_job_move_to_same_entry_through_alias_preserves_both_occurrences() {
         panic!("selection");
     };
     assert!(sources.subtree_roots.contains(&source));
-    assert_eq!(fs::read_to_string(dir.0.join("real/a")).unwrap(), "content");
     assert_eq!(
-        request(tree.resolve(dir.0.join("alias/a"))).node,
+        fs::read_to_string(dir.path().join("real/a")).unwrap(),
+        "content"
+    );
+    assert_eq!(
+        request(tree.resolve(dir.path().join("alias/a"))).node,
         alias.node
     );
-    assert_eq!(request(tree.resolve(dir.0.join("real/a"))).node, source);
+    assert_eq!(
+        request(tree.resolve(dir.path().join("real/a"))).node,
+        source
+    );
 }
 
 #[cfg(windows)]
 #[test]
 fn t_job_windows_directory_links_keep_intrinsic_type_and_referents() {
     use std::os::windows::fs::{FileTypeExt, symlink_dir};
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    symlink_dir("absent", dir.0.join("link")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let source = request(tree.resolve(dir.0.join("link")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    symlink_dir("absent", dir.path().join("link")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let source = request(tree.resolve(dir.path().join("link")));
     let entry = source.entry().unwrap();
     let decoded = Entry::decode(&entry.encode()).unwrap();
     assert_eq!(
         super::io::Signature::entry(&decoded, false),
-        super::io::Signature::read(&dir.0.join("link"), false).unwrap()
+        super::io::Signature::read(&dir.path().join("link"), false).unwrap()
     );
     let results = done(
         &tree
@@ -871,17 +798,17 @@ fn t_job_windows_directory_links_keep_intrinsic_type_and_referents() {
     );
     assert_eq!(results[0].status, ItemStatus::Success);
     assert!(
-        fs::symlink_metadata(dir.0.join("dst/link"))
+        fs::symlink_metadata(dir.path().join("dst/link"))
             .unwrap()
             .file_type()
             .is_symlink_dir()
     );
     assert_eq!(
-        fs::read_link(dir.0.join("dst/link")).unwrap(),
+        fs::read_link(dir.path().join("dst/link")).unwrap(),
         std::path::PathBuf::from("absent")
     );
-    fs::create_dir(dir.0.join("absent")).unwrap();
-    fs::write(dir.0.join("absent/keep"), "referent").unwrap();
+    fs::create_dir(dir.path().join("absent")).unwrap();
+    fs::write(dir.path().join("absent/keep"), "referent").unwrap();
     for path in ["link", "dst/link"] {
         let results = done(
             &tree
@@ -889,10 +816,10 @@ fn t_job_windows_directory_links_keep_intrinsic_type_and_referents() {
                 .unwrap(),
         );
         assert_eq!(results[0].status, ItemStatus::Success);
-        assert!(fs::symlink_metadata(dir.0.join(path)).is_err());
+        assert!(fs::symlink_metadata(dir.path().join(path)).is_err());
     }
     assert_eq!(
-        fs::read_to_string(dir.0.join("absent/keep")).unwrap(),
+        fs::read_to_string(dir.path().join("absent/keep")).unwrap(),
         "referent"
     );
 }
@@ -901,22 +828,22 @@ fn t_job_windows_directory_links_keep_intrinsic_type_and_referents() {
 #[test]
 fn t_job_case_different_overwrite_retires_the_confirmed_occurrence() {
     for kind in [OperationKind::Copy, OperationKind::Move] {
-        let dir = Directory::new();
-        fs::create_dir(dir.0.join("src")).unwrap();
-        fs::create_dir(dir.0.join("dst")).unwrap();
-        fs::write(dir.0.join("src/Name"), "new").unwrap();
-        fs::write(dir.0.join("dst/name"), "old").unwrap();
-        if !dir.0.join("dst/Name").exists() {
+        let dir = TempDir::new();
+        fs::create_dir(dir.path().join("src")).unwrap();
+        fs::create_dir(dir.path().join("dst")).unwrap();
+        fs::write(dir.path().join("src/Name"), "new").unwrap();
+        fs::write(dir.path().join("dst/name"), "old").unwrap();
+        if !dir.path().join("dst/Name").exists() {
             return;
         }
-        let tree = request(Filetree::open(dir.0.clone()));
-        let old = request(tree.resolve(dir.0.join("dst/name")));
+        let tree = request(Filetree::open(dir.path().to_path_buf()));
+        let old = request(tree.resolve(dir.path().join("dst/name")));
         let mut operation = plan(&tree, "src/Name", Some("dst"), kind);
         let source = operation.nodes[0];
         let parent = operation.target.as_ref().unwrap().node;
         let state = selection(&tree, &mut operation);
         let job = tree.start_operation(operation).unwrap();
-        until(|| job.status().confirmation.is_some() || job.status().terminal);
+        eventually(|| job.status().confirmation.is_some() || job.status().terminal);
         job.confirm(job.status().confirmation.unwrap().token, true)
             .unwrap();
         let results = done(&job);
@@ -928,15 +855,18 @@ fn t_job_case_different_overwrite_retires_the_confirmed_occurrence() {
         );
         assert!(!tree.source().contains(old.node));
         assert_eq!(tree.source().node(parent).unwrap().child_count(), 1);
-        let output = request(tree.resolve(dir.0.join("dst/Name")));
+        let output = request(tree.resolve(dir.path().join("dst/Name")));
         assert_eq!(
             output.entry().unwrap().name,
-            resource::observed_name(&dir.0.join("dst/Name")).unwrap()
+            resource::observed_name(&dir.path().join("dst/Name")).unwrap()
         );
         if kind == OperationKind::Move {
             assert_eq!(output.node, source);
         }
-        assert_eq!(fs::read_to_string(dir.0.join("dst/Name")).unwrap(), "new");
+        assert_eq!(
+            fs::read_to_string(dir.path().join("dst/Name")).unwrap(),
+            "new"
+        );
         assert!(!state.status().unwrap().locked);
     }
 }
@@ -944,16 +874,16 @@ fn t_job_case_different_overwrite_retires_the_confirmed_occurrence() {
 #[cfg(any(target_os = "macos", windows))]
 #[test]
 fn t_job_case_different_directory_merge_preserves_actual_destination_name() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src/Name")).unwrap();
-    fs::create_dir_all(dir.0.join("dst/name")).unwrap();
-    fs::write(dir.0.join("src/Name/new"), "new").unwrap();
-    fs::write(dir.0.join("dst/name/keep"), "keep").unwrap();
-    if !dir.0.join("dst/Name").exists() {
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src/Name")).unwrap();
+    fs::create_dir_all(dir.path().join("dst/name")).unwrap();
+    fs::write(dir.path().join("src/Name/new"), "new").unwrap();
+    fs::write(dir.path().join("dst/name/keep"), "keep").unwrap();
+    if !dir.path().join("dst/Name").exists() {
         return;
     }
-    let tree = request(Filetree::open(dir.0.clone()));
-    let old = request(tree.resolve(dir.0.join("dst/name")));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let old = request(tree.resolve(dir.path().join("dst/name")));
     let operation = plan(&tree, "src/Name", Some("dst"), OperationKind::Copy);
     let parent = operation.target.as_ref().unwrap().node;
     let results = done(&tree.start_operation(operation).unwrap());
@@ -964,26 +894,26 @@ fn t_job_case_different_directory_merge_preserves_actual_destination_name() {
         results[0].sync_error()
     );
     assert_eq!(tree.source().node(parent).unwrap().child_count(), 1);
-    let output = request(tree.resolve(dir.0.join("dst/Name")));
+    let output = request(tree.resolve(dir.path().join("dst/Name")));
     assert_eq!(output.node, old.node);
     assert_eq!(output.entry().unwrap().name, "name");
     assert_eq!(
-        fs::read_to_string(dir.0.join("dst/name/keep")).unwrap(),
+        fs::read_to_string(dir.path().join("dst/name/keep")).unwrap(),
         "keep"
     );
     assert_eq!(
-        fs::read_to_string(dir.0.join("dst/name/new")).unwrap(),
+        fs::read_to_string(dir.path().join("dst/name/new")).unwrap(),
         "new"
     );
 }
 
 #[test]
 fn t_job_cancel_confirmation_releases_own_lock_and_rejects_duplicate_job() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("a"), "new").unwrap();
-    fs::write(dir.0.join("dst/a"), "old").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("a"), "new").unwrap();
+    fs::write(dir.path().join("dst/a"), "old").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut first = plan(&tree, "a", Some("dst"), OperationKind::Copy);
     let state = selection(&tree, &mut first);
     let second = OperationPlan {
@@ -996,7 +926,7 @@ fn t_job_cancel_confirmation_releases_own_lock_and_rejects_duplicate_job() {
         kind: first.kind,
     };
     let job = tree.start_operation(first).unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     let rejected = OperationPlan {
         source: second.source.clone(),
         nodes: second.nodes.clone(),
@@ -1009,27 +939,27 @@ fn t_job_cancel_confirmation_releases_own_lock_and_rejects_duplicate_job() {
     assert!(tree.start_operation(rejected).is_err());
     assert!(state.status().unwrap().locked);
     let duplicate = tree.start_operation(second).unwrap();
-    until(|| duplicate.status().terminal);
+    eventually(|| duplicate.status().terminal);
     assert_eq!(duplicate.status().error.unwrap().code, ErrorCode::Busy);
     assert!(state.status().unwrap().locked);
     job.cancel();
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     assert!(job.status().cancelled);
     assert!(job.status().cleanup.unwrap().is_ok());
     assert!(!state.status().unwrap().locked);
-    assert_eq!(fs::read_to_string(dir.0.join("dst/a")).unwrap(), "old");
+    assert_eq!(fs::read_to_string(dir.path().join("dst/a")).unwrap(), "old");
 }
 
 #[test]
 fn t_job_conflicts_and_actual_descendant_aliases_preserve_both_sides() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src/sub")).unwrap();
-    fs::create_dir_all(dir.0.join("dst/src")).unwrap();
-    fs::write(dir.0.join("src/a"), "source").unwrap();
-    fs::write(dir.0.join("dst/src/keep"), "keep").unwrap();
-    fs::write(dir.0.join("file"), "source file").unwrap();
-    fs::create_dir(dir.0.join("dst/file")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src/sub")).unwrap();
+    fs::create_dir_all(dir.path().join("dst/src")).unwrap();
+    fs::write(dir.path().join("src/a"), "source").unwrap();
+    fs::write(dir.path().join("dst/src/keep"), "keep").unwrap();
+    fs::write(dir.path().join("file"), "source file").unwrap();
+    fs::create_dir(dir.path().join("dst/file")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     for operation in [
         plan(&tree, "src", Some("dst"), OperationKind::Move),
         plan(&tree, "file", Some("dst"), OperationKind::Copy),
@@ -1040,7 +970,7 @@ fn t_job_conflicts_and_actual_descendant_aliases_preserve_both_sides() {
     }
     #[cfg(unix)]
     {
-        std::os::unix::fs::symlink(dir.0.join("src/sub"), dir.0.join("alias")).unwrap();
+        std::os::unix::fs::symlink(dir.path().join("src/sub"), dir.path().join("alias")).unwrap();
         let results = done(
             &tree
                 .start_operation(plan(&tree, "src", Some("alias"), OperationKind::Move))
@@ -1048,23 +978,26 @@ fn t_job_conflicts_and_actual_descendant_aliases_preserve_both_sides() {
         );
         assert_eq!(results[0].status, ItemStatus::Failed);
     }
-    assert_eq!(fs::read_to_string(dir.0.join("src/a")).unwrap(), "source");
-    assert!(dir.0.join("dst/src/keep").exists());
-    assert!(dir.0.join("dst/file").is_dir());
+    assert_eq!(
+        fs::read_to_string(dir.path().join("src/a")).unwrap(),
+        "source"
+    );
+    assert!(dir.path().join("dst/src/keep").exists());
+    assert!(dir.path().join("dst/file").is_dir());
 }
 
 #[test]
 fn t_job_same_parent_rename_and_empty_directory_replacement_preserve_identity() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src/sub")).unwrap();
-    fs::create_dir_all(dir.0.join("dst/src")).unwrap();
-    fs::write(dir.0.join("src/sub/a"), "a").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src/sub")).unwrap();
+    fs::create_dir_all(dir.path().join("dst/src")).unwrap();
+    fs::write(dir.path().join("src/sub/a"), "a").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "src", Some("dst"), OperationKind::Move);
     let source = operation.nodes[0];
     selection(&tree, &mut operation);
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     job.confirm(job.status().confirmation.unwrap().token, true)
         .unwrap();
     let result = done(&job);
@@ -1086,32 +1019,32 @@ fn t_job_same_parent_rename_and_empty_directory_replacement_preserve_identity() 
     );
     assert_eq!(
         tree.inspect(tree.source(), source).unwrap().path().unwrap(),
-        dir.0.join("dst/renamed")
+        dir.path().join("dst/renamed")
     );
-    assert!(dir.0.join("dst/renamed/sub/a").exists());
+    assert!(dir.path().join("dst/renamed/sub/a").exists());
 }
 
 #[test]
 fn t_job_large_copy_cancellation_keeps_destination_and_removes_private_output() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    let file = fs::File::create(dir.0.join("large")).unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    let file = fs::File::create(dir.path().join("large")).unwrap();
     file.set_len(256 * 1024 * 1024).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "large", Some("dst"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().bytes != 0 || job.status().terminal);
+    eventually(|| job.status().bytes != 0 || job.status().terminal);
     assert!(
         !job.status().terminal,
         "copy finished before cancellation test could act"
     );
     let start = Instant::now();
     job.cancel();
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     assert!(job.status().cancelled);
-    assert!(!dir.0.join("dst/large").exists());
-    assert_eq!(fs::read_dir(dir.0.join("dst")).unwrap().count(), 0);
+    assert!(!dir.path().join("dst/large").exists());
+    assert_eq!(fs::read_dir(dir.path().join("dst")).unwrap().count(), 0);
     assert!(job.status().cleanup.unwrap().is_ok());
     assert!(!state.status().unwrap().locked);
     eprintln!(
@@ -1123,21 +1056,21 @@ fn t_job_large_copy_cancellation_keeps_destination_and_removes_private_output() 
 
 #[test]
 fn t_job_cancel_flushes_completed_small_copies_before_selection_cleanup() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("src")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("src/a"), "done").unwrap();
-    fs::write(dir.0.join("src/b"), "grow").unwrap();
-    let names: Vec<_> = fs::read_dir(dir.0.join("src"))
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("src")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("src/a"), "done").unwrap();
+    fs::write(dir.path().join("src/b"), "grow").unwrap();
+    let names: Vec<_> = fs::read_dir(dir.path().join("src"))
         .unwrap()
         .map(|entry| entry.unwrap().file_name())
         .collect();
     let completed = &names[0];
     let growing = &names[1];
-    fs::write(dir.0.join("src").join(completed), "done").unwrap();
-    fs::write(dir.0.join("src").join(growing), "grow").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let b = request(tree.resolve(dir.0.join("src").join(growing)));
+    fs::write(dir.path().join("src").join(completed), "done").unwrap();
+    fs::write(dir.path().join("src").join(growing), "grow").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let b = request(tree.resolve(dir.path().join("src").join(growing)));
     assert_eq!(b.entry().unwrap().size, 4);
     let mut operation = plan(&tree, "src", Some("dst"), OperationKind::Copy);
     let root = operation.nodes[0];
@@ -1147,25 +1080,25 @@ fn t_job_cancel_flushes_completed_small_copies_before_selection_cleanup() {
      * Cancellation during its stream must still publish the completed prefix. */
     fs::OpenOptions::new()
         .write(true)
-        .open(dir.0.join("src").join(growing))
+        .open(dir.path().join("src").join(growing))
         .unwrap()
         .set_len(256 * 1024 * 1024)
         .unwrap();
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().bytes > 4 || job.status().terminal);
+    eventually(|| job.status().bytes > 4 || job.status().terminal);
     assert!(!job.status().terminal, "copy completed before cancellation");
     job.cancel();
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     let status = job.status();
     assert!(status.cancelled);
     assert!(status.cleanup.unwrap().is_ok());
     assert!(!state.status().unwrap().locked);
     assert_eq!(
-        fs::read(dir.0.join("dst/src").join(completed)).unwrap(),
+        fs::read(dir.path().join("dst/src").join(completed)).unwrap(),
         b"done"
     );
-    assert!(!dir.0.join("dst/src").join(growing).exists());
-    assert_eq!(fs::read_dir(dir.0.join("dst/src")).unwrap().count(), 1);
+    assert!(!dir.path().join("dst/src").join(growing).exists());
+    assert_eq!(fs::read_dir(dir.path().join("dst/src")).unwrap().count(), 1);
     let a = {
         let index = tree.index.lock().unwrap();
         let copied_root = index
@@ -1177,10 +1110,10 @@ fn t_job_cancel_flushes_completed_small_copies_before_selection_cleanup() {
         assert!(index.child(Some(copied_root), completed).is_none());
         index.child(Some(root), completed).unwrap()
     };
-    let copied = request(tree.resolve(dir.0.join("dst/src").join(completed)));
+    let copied = request(tree.resolve(dir.path().join("dst/src").join(completed)));
     assert_eq!(
         copied.path().unwrap(),
-        dir.0.join("dst/src").join(completed)
+        dir.path().join("dst/src").join(completed)
     );
     let results = job.results(0, status.results).unwrap();
     assert!(
@@ -1200,25 +1133,25 @@ fn t_job_cancel_flushes_completed_small_copies_before_selection_cleanup() {
 
 #[test]
 fn t_job_external_topology_change_keeps_io_results_and_reports_cleanup_stale() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src")).unwrap();
-    fs::create_dir_all(dir.0.join("dst/src")).unwrap();
-    fs::write(dir.0.join("src/a"), "a").unwrap();
-    fs::write(dir.0.join("src/z"), "z").unwrap();
-    let names: Vec<_> = fs::read_dir(dir.0.join("src"))
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src")).unwrap();
+    fs::create_dir_all(dir.path().join("dst/src")).unwrap();
+    fs::write(dir.path().join("src/a"), "a").unwrap();
+    fs::write(dir.path().join("src/z"), "z").unwrap();
+    let names: Vec<_> = fs::read_dir(dir.path().join("src"))
         .unwrap()
         .map(|entry| entry.unwrap().file_name())
         .collect();
     let completed = names[0].clone();
     let conflicting = names[1].clone();
-    fs::write(dir.0.join("dst/src").join(&conflicting), "old").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    request(tree.resolve(dir.0.join("src").join(&conflicting)));
+    fs::write(dir.path().join("dst/src").join(&conflicting), "old").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    request(tree.resolve(dir.path().join("src").join(&conflicting)));
     let mut operation = plan(&tree, "src", Some("dst"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
     let root = operation.nodes[0];
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     let token = job.status().confirmation.unwrap().token;
     let current = tree.source();
     let z = current
@@ -1232,19 +1165,18 @@ fn t_job_external_topology_change_keeps_io_results_and_reports_cleanup_stale() {
         operations: vec![Operation::Remove { node: z.into() }],
     })));
     let _ = job.confirm(token, true);
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     assert_eq!(
         job.status().cleanup.unwrap().unwrap_err().code,
         ErrorCode::Stale
     );
     let results = job.results(0, job.status().results).unwrap();
-    assert!(results.iter().any(
-        |result| result.source() == dir.0.join("src").join(&completed)
-            && result.status == ItemStatus::Success
-    ));
+    assert!(results.iter().any(|result| result.source()
+        == dir.path().join("src").join(&completed)
+        && result.status == ItemStatus::Success));
     assert!(!state.status().unwrap().locked);
     assert_eq!(
-        fs::read_to_string(dir.0.join("dst/src").join(&conflicting)).unwrap(),
+        fs::read_to_string(dir.path().join("dst/src").join(&conflicting)).unwrap(),
         "old"
     );
 }
@@ -1253,17 +1185,15 @@ fn t_job_external_topology_change_keeps_io_results_and_reports_cleanup_stale() {
 #[ignore = "requires FILETREE_TEST_VOLUME on a separate filesystem"]
 fn t_job_cross_filesystem_directory_move_retains_all_admitted_identities() {
     let volume = std::env::var_os("FILETREE_TEST_VOLUME").expect("separate test filesystem");
-    let target = std::path::PathBuf::from(volume).join(format!("yoz-job-{}", uuid::Uuid::new_v4()));
-    fs::create_dir(&target).unwrap();
-    let target = Directory(target);
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src/sub")).unwrap();
-    fs::write(dir.0.join("src/a"), "a").unwrap();
-    fs::write(dir.0.join("src/sub/b"), "b").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let target = TempDir::new_in(std::path::Path::new(&volume));
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src/sub")).unwrap();
+    fs::write(dir.path().join("src/a"), "a").unwrap();
+    fs::write(dir.path().join("src/sub/b"), "b").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "src", None, OperationKind::Delete);
     operation.kind = OperationKind::Move;
-    operation.target = Some(request(tree.resolve(target.0.clone())));
+    operation.target = Some(request(tree.resolve(target.path().to_path_buf())));
     assert_ne!(
         resource::entry(&operation.source, operation.nodes[0])
             .unwrap()
@@ -1290,40 +1220,29 @@ fn t_job_cross_filesystem_directory_move_retains_all_admitted_identities() {
     );
     assert_eq!(
         tree.inspect(tree.source(), root).unwrap().path().unwrap(),
-        target.0.join("src")
+        target.path().join("src")
     );
-    assert!(!dir.0.join("src").exists());
-    assert_eq!(fs::read_to_string(target.0.join("src/sub/b")).unwrap(), "b");
+    assert!(!dir.path().join("src").exists());
+    assert_eq!(
+        fs::read_to_string(target.path().join("src/sub/b")).unwrap(),
+        "b"
+    );
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 #[test]
 #[ignore = "requires FILETREE_TEST_VOLUME on a separate filesystem"]
 fn t_job_cross_filesystem_move_coordinates_watched_items_until_publication() {
-    use std::sync::mpsc;
-    struct Hold(mpsc::Sender<()>, mpsc::Receiver<()>);
-    impl NativeAction for Hold {
-        fn bytes(&self) -> usize {
-            0
-        }
-        fn apply(self: Box<Self>, _: &mut Engine) -> Result<Reply> {
-            let _ = self.0.send(());
-            let _ = self.1.recv();
-            Ok(Reply::NoChange)
-        }
-    }
     let volume = std::env::var_os("FILETREE_TEST_VOLUME").expect("separate test filesystem");
-    let target = std::path::PathBuf::from(volume).join(format!("yoz-job-{}", uuid::Uuid::new_v4()));
-    fs::create_dir(&target).unwrap();
-    let target = Directory(target);
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("src/sub")).unwrap();
-    fs::write(dir.0.join("src/sub/small"), "content").unwrap();
-    fs::File::create(dir.0.join("src/large"))
+    let target = TempDir::new_in(std::path::Path::new(&volume));
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("src/sub")).unwrap();
+    fs::write(dir.path().join("src/sub/small"), "content").unwrap();
+    fs::File::create(dir.path().join("src/large"))
         .unwrap()
         .set_len(128 * 1024 * 1024)
         .unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let Outcome::State(view_state) = tree
         .create_state(
             None,
@@ -1337,11 +1256,11 @@ fn t_job_cross_filesystem_move_coordinates_watched_items_until_publication() {
         panic!("watch state")
     };
     let _view = view_state.attach().unwrap();
-    let large = request(tree.resolve(dir.0.join("src/large")));
-    let small = request(tree.resolve(dir.0.join("src/sub/small")));
+    let large = request(tree.resolve(dir.path().join("src/large")));
+    let small = request(tree.resolve(dir.path().join("src/sub/small")));
     let mut operation = plan(&tree, "src", None, OperationKind::Delete);
     operation.kind = OperationKind::Move;
-    operation.target = Some(request(tree.resolve(target.0.clone())));
+    operation.target = Some(request(tree.resolve(target.path().to_path_buf())));
     assert_ne!(
         operation
             .target
@@ -1357,22 +1276,17 @@ fn t_job_cross_filesystem_move_coordinates_watched_items_until_publication() {
             .volume
     );
     let root = operation.nodes[0];
-    until(|| tree.watch_status().covered.contains(&root) && !tree.data().has_work());
+    eventually(|| tree.watch_status().covered.contains(&root) && !tree.data().has_work());
     let state = selection(&tree, &mut operation);
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().bytes > 1024 * 1024 || job.status().terminal);
+    eventually(|| job.status().bytes > 1024 * 1024 || job.status().terminal);
     assert!(
         !job.status().terminal,
         "copy completed before queue congestion"
     );
-    let (entered, ready) = mpsc::channel();
-    let (release, wait) = mpsc::channel();
-    let held = tree
-        .data()
-        .submit(Action::Native(Box::new(Hold(entered, wait))));
-    ready.recv_timeout(Duration::from_secs(15)).unwrap();
+    let (held, release) = hold(tree.data());
     /* The worker can finish IO while its publication waits behind this owner action. */
-    until(|| !dir.0.join("src/large").exists());
+    eventually(|| !dir.path().join("src/large").exists());
     let coordinated = tree.index.lock().unwrap().moving == Some(large.node);
     std::thread::sleep(Duration::from_millis(200));
     release.send(()).unwrap();
@@ -1389,21 +1303,21 @@ fn t_job_cross_filesystem_move_coordinates_watched_items_until_publication() {
     );
     assert_eq!(
         resource::path(&tree.source(), root).unwrap(),
-        target.0.join("src")
+        target.path().join("src")
     );
     assert_eq!(
         resource::path(&tree.source(), large.node).unwrap(),
-        target.0.join("src/large")
+        target.path().join("src/large")
     );
     assert_eq!(
         resource::path(&tree.source(), small.node).unwrap(),
-        target.0.join("src/sub/small")
+        target.path().join("src/sub/small")
     );
     assert_eq!(
-        fs::read_to_string(target.0.join("src/sub/small")).unwrap(),
+        fs::read_to_string(target.path().join("src/sub/small")).unwrap(),
         "content"
     );
-    assert!(!dir.0.join("src").exists());
+    assert!(!dir.path().join("src").exists());
     assert!(!state.status().unwrap().locked);
     assert!(tree.index.lock().unwrap().moving.is_none());
 }
@@ -1414,17 +1328,17 @@ fn t_job_move_relative_link_to_unknown_target_ends_old_children() {
     if unsafe { libc::geteuid() } == 0 {
         return;
     }
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("private/target")).unwrap();
-    fs::create_dir_all(dir.0.join("dst/private/target")).unwrap();
-    fs::write(dir.0.join("private/target/child"), "content").unwrap();
-    std::os::unix::fs::symlink("private/target", dir.0.join("link")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let old = request(tree.resolve(dir.0.join("link/child")));
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("private/target")).unwrap();
+    fs::create_dir_all(dir.path().join("dst/private/target")).unwrap();
+    fs::write(dir.path().join("private/target/child"), "content").unwrap();
+    std::os::unix::fs::symlink("private/target", dir.path().join("link")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let old = request(tree.resolve(dir.path().join("link/child")));
     let mut operation = plan(&tree, "link", Some("dst"), OperationKind::Move);
     let link = operation.nodes[0];
     selection(&tree, &mut operation);
-    let _denied = super::tests::DeniedDirectory::new(dir.0.join("dst/private"));
+    let _denied = DeniedDirectory::new(dir.path().join("dst/private"));
     let results = done(&tree.start_operation(operation).unwrap());
     assert_eq!(results[0].status, ItemStatus::Success);
     assert!(
@@ -1436,7 +1350,7 @@ fn t_job_move_relative_link_to_unknown_target_ends_old_children() {
     let moved = resource::entry(&tree.source(), link).unwrap();
     assert!(moved.target_unknown);
     assert!(moved.target.is_none());
-    assert!(dir.0.join("private/target/child").exists());
+    assert!(dir.path().join("private/target/child").exists());
 }
 
 #[cfg(unix)]
@@ -1444,7 +1358,7 @@ fn t_job_move_relative_link_to_unknown_target_ends_old_children() {
 fn t_job_directory_move_reconciles_loaded_link_descendants() {
     use std::os::unix::fs::symlink;
     for prepared in [false, true] {
-        let dir = Directory::new();
+        let dir = TempDir::new();
         for path in [
             "src/inside",
             "external",
@@ -1453,7 +1367,7 @@ fn t_job_directory_move_reconciles_loaded_link_descendants() {
             "dst/switch",
             "dst",
         ] {
-            fs::create_dir_all(dir.0.join(path)).unwrap();
+            fs::create_dir_all(dir.path().join(path)).unwrap();
         }
         for path in [
             "src/inside/keep",
@@ -1462,33 +1376,34 @@ fn t_job_directory_move_reconciles_loaded_link_descendants() {
             "switch/old",
             "dst/switch/new",
         ] {
-            fs::write(dir.0.join(path), "content").unwrap();
+            fs::write(dir.path().join(path), "content").unwrap();
         }
-        symlink("inside", dir.0.join("src/internal")).unwrap();
-        symlink("../../external", dir.0.join("src/inside/nested")).unwrap();
+        symlink("inside", dir.path().join("src/internal")).unwrap();
+        symlink("../../external", dir.path().join("src/inside/nested")).unwrap();
         symlink(
-            dir.0.join("src/inside"),
-            dir.0.join("src/absolute-internal"),
+            dir.path().join("src/inside"),
+            dir.path().join("src/absolute-internal"),
         )
         .unwrap();
-        fs::create_dir_all(dir.0.join("src/unseen/deep")).unwrap();
-        symlink(dir.0.join("external"), dir.0.join("src/absolute")).unwrap();
-        symlink("../gone", dir.0.join("src/a-gone")).unwrap();
-        symlink("../switch", dir.0.join("src/switched")).unwrap();
-        symlink("../src/inside", dir.0.join("src/through-root-name")).unwrap();
-        symlink("../appeared", dir.0.join("src/z-appeared")).unwrap();
-        fs::create_dir(dir.0.join("dst/appeared")).unwrap();
-        symlink(dir.0.join("dst"), dir.0.join("src/cycle")).unwrap();
-        let tree = request(Filetree::open(dir.0.clone()));
-        let internal = request(tree.resolve(dir.0.join("src/internal/keep")));
-        let nested = request(tree.resolve(dir.0.join("src/internal/nested/keep")));
-        let absolute_internal = request(tree.resolve(dir.0.join("src/absolute-internal/keep")));
-        let absolute = request(tree.resolve(dir.0.join("src/absolute/keep")));
-        let gone = request(tree.resolve(dir.0.join("src/a-gone/old")));
-        let switched = request(tree.resolve(dir.0.join("src/switched/old")));
-        let renamed = request(tree.resolve(dir.0.join("src/through-root-name/keep")));
-        let cycle_child = request(tree.resolve(dir.0.join("src/cycle/appeared")));
-        let appeared = request(tree.resolve(dir.0.join("src/z-appeared")));
+        fs::create_dir_all(dir.path().join("src/unseen/deep")).unwrap();
+        symlink(dir.path().join("external"), dir.path().join("src/absolute")).unwrap();
+        symlink("../gone", dir.path().join("src/a-gone")).unwrap();
+        symlink("../switch", dir.path().join("src/switched")).unwrap();
+        symlink("../src/inside", dir.path().join("src/through-root-name")).unwrap();
+        symlink("../appeared", dir.path().join("src/z-appeared")).unwrap();
+        fs::create_dir(dir.path().join("dst/appeared")).unwrap();
+        symlink(dir.path().join("dst"), dir.path().join("src/cycle")).unwrap();
+        let tree = request(Filetree::open(dir.path().to_path_buf()));
+        let internal = request(tree.resolve(dir.path().join("src/internal/keep")));
+        let nested = request(tree.resolve(dir.path().join("src/internal/nested/keep")));
+        let absolute_internal =
+            request(tree.resolve(dir.path().join("src/absolute-internal/keep")));
+        let absolute = request(tree.resolve(dir.path().join("src/absolute/keep")));
+        let gone = request(tree.resolve(dir.path().join("src/a-gone/old")));
+        let switched = request(tree.resolve(dir.path().join("src/switched/old")));
+        let renamed = request(tree.resolve(dir.path().join("src/through-root-name/keep")));
+        let cycle_child = request(tree.resolve(dir.path().join("src/cycle/appeared")));
+        let appeared = request(tree.resolve(dir.path().join("src/z-appeared")));
         let before = tree.source();
         let mut operation = plan(&tree, "src", Some("dst"), OperationKind::Move);
         let root = operation.nodes[0];
@@ -1535,7 +1450,7 @@ fn t_job_directory_move_reconciles_loaded_link_descendants() {
                 .find(|id| resource::entry(&before, *id).unwrap().name == name)
                 .unwrap();
             let entry = resource::entry(&after, link).unwrap();
-            let observed = Entry::read(&dir.0.join("dst/src").join(name)).unwrap();
+            let observed = Entry::read(&dir.path().join("dst/src").join(name)).unwrap();
             assert_eq!(entry.target, observed.target, "{name}");
             assert_eq!(entry.target_unknown, observed.target_unknown);
         }
@@ -1557,13 +1472,13 @@ fn t_job_directory_move_reconciles_loaded_link_descendants() {
                 .children()
                 .all(|id| resource::entry(&after, id).unwrap().name != "unseen")
         );
-        assert!(dir.0.join("dst/src/unseen/deep").is_dir());
+        assert!(dir.path().join("dst/src/unseen/deep").is_dir());
         assert_eq!(
-            request(tree.resolve(dir.0.join("dst/src/internal/keep"))).node,
+            request(tree.resolve(dir.path().join("dst/src/internal/keep"))).node,
             internal.node
         );
         assert_eq!(
-            request(tree.resolve(dir.0.join("dst/src/absolute/keep"))).node,
+            request(tree.resolve(dir.path().join("dst/src/absolute/keep"))).node,
             absolute.node
         );
     }
@@ -1573,14 +1488,14 @@ fn t_job_directory_move_reconciles_loaded_link_descendants() {
 #[test]
 fn t_job_directory_move_updates_cycle_boundaries_below_preserved_links() {
     use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("src")).unwrap();
-    fs::create_dir_all(dir.0.join("external/sub")).unwrap();
-    fs::write(dir.0.join("external/sub/keep"), "content").unwrap();
-    symlink("external/sub", dir.0.join("destination")).unwrap();
-    symlink(dir.0.join("external"), dir.0.join("src/alias")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let old = request(tree.resolve(dir.0.join("src/alias/sub/keep")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("src")).unwrap();
+    fs::create_dir_all(dir.path().join("external/sub")).unwrap();
+    fs::write(dir.path().join("external/sub/keep"), "content").unwrap();
+    symlink("external/sub", dir.path().join("destination")).unwrap();
+    symlink(dir.path().join("external"), dir.path().join("src/alias")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let old = request(tree.resolve(dir.path().join("src/alias/sub/keep")));
     let folder = old.source.node(old.node).unwrap().parent.unwrap();
     let link = old.source.node(folder).unwrap().parent.unwrap();
     let mut operation = plan(&tree, "src", Some("destination"), OperationKind::Move);
@@ -1595,11 +1510,11 @@ fn t_job_directory_move_updates_cycle_boundaries_below_preserved_links() {
     assert!(!resource::entry(&tree.source(), link).unwrap().cycle);
     assert!(resource::entry(&tree.source(), folder).unwrap().cycle);
     assert!(!tree.source().contains(old.node));
-    assert!(dir.0.join("external/sub/keep").exists());
-    let outside = Directory::new();
+    assert!(dir.path().join("external/sub/keep").exists());
+    let outside = TempDir::new();
     let mut operation = plan(&tree, "destination/src", None, OperationKind::Delete);
     operation.kind = OperationKind::Move;
-    operation.target = Some(request(tree.resolve(outside.0.clone())));
+    operation.target = Some(request(tree.resolve(outside.path().to_path_buf())));
     selection(&tree, &mut operation);
     let result = done(&tree.start_operation(operation).unwrap());
     assert!(
@@ -1614,7 +1529,7 @@ fn t_job_directory_move_updates_cycle_boundaries_below_preserved_links() {
         Completeness::Unknown
     );
     assert_ne!(
-        request(tree.resolve(outside.0.join("src/alias/sub/keep"))).node,
+        request(tree.resolve(outside.path().join("src/alias/sub/keep"))).node,
         old.node
     );
 }
@@ -1625,18 +1540,18 @@ fn t_job_directory_move_does_not_inherit_old_unknown_link_targets() {
     if unsafe { libc::geteuid() } == 0 {
         return;
     }
-    let dir = Directory::new();
+    let dir = TempDir::new();
     for path in ["src", "private/target", "dst/private/target"] {
-        fs::create_dir_all(dir.0.join(path)).unwrap();
+        fs::create_dir_all(dir.path().join(path)).unwrap();
     }
-    fs::write(dir.0.join("private/target/child"), "content").unwrap();
-    std::os::unix::fs::symlink("../private/target", dir.0.join("src/link")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let old = request(tree.resolve(dir.0.join("src/link/child")));
+    fs::write(dir.path().join("private/target/child"), "content").unwrap();
+    std::os::unix::fs::symlink("../private/target", dir.path().join("src/link")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let old = request(tree.resolve(dir.path().join("src/link/child")));
     let link = old.source.node(old.node).unwrap().parent.unwrap();
     let mut operation = plan(&tree, "src", Some("dst"), OperationKind::Move);
     selection(&tree, &mut operation);
-    let _denied = super::tests::DeniedDirectory::new(dir.0.join("dst/private"));
+    let _denied = DeniedDirectory::new(dir.path().join("dst/private"));
     let result = done(&tree.start_operation(operation).unwrap());
     assert_eq!(result[0].status, ItemStatus::Success);
     assert!(
@@ -1652,15 +1567,19 @@ fn t_job_directory_move_does_not_inherit_old_unknown_link_targets() {
 
 #[test]
 fn t_directory_move_defers_related_reads_and_preserves_explicit_requests() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("src")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("src")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
     for i in 0..1100 {
-        fs::write(dir.0.join("src").join(format!("file-{i:04}")), "content").unwrap();
+        fs::write(
+            dir.path().join("src").join(format!("file-{i:04}")),
+            "content",
+        )
+        .unwrap();
     }
-    let tree = request(Filetree::open(dir.0.clone()));
-    let source = request(tree.resolve(dir.0.join("src")));
-    let target = request(tree.resolve(dir.0.join("dst")));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let source = request(tree.resolve(dir.path().join("src")));
+    let target = request(tree.resolve(dir.path().join("dst")));
     tree.data()
         .acknowledge_publication(tree.source().revision());
     let Outcome::State(state) = tree
@@ -1673,7 +1592,7 @@ fn t_directory_move_defers_related_reads_and_preserves_explicit_requests() {
         panic!("state");
     };
     let view = state.attach().unwrap();
-    until(|| tree.source().node(source.node).unwrap().child_count() == 512);
+    eventually(|| tree.source().node(source.node).unwrap().child_count() == 512);
     reply(
         tree.data()
             .submit(Action::RequestChildren(vec![source.node], false)),
@@ -1691,8 +1610,8 @@ fn t_directory_move_defers_related_reads_and_preserves_explicit_requests() {
         tree.data()
             .submit(Action::RequestChildren(vec![tree.root()], true)),
     );
-    until(|| tree.source().node(tree.root()).unwrap().load_state == LoadState::Loading);
-    fs::rename(dir.0.join("src"), dir.0.join("dst/src")).unwrap();
+    eventually(|| tree.source().node(tree.root()).unwrap().load_state == LoadState::Loading);
+    fs::rename(dir.path().join("src"), dir.path().join("dst/src")).unwrap();
     let snapshot = tree.source();
     reply(
         tree.data()
@@ -1701,7 +1620,7 @@ fn t_directory_move_defers_related_reads_and_preserves_explicit_requests() {
                 source: Some(source.clone()),
                 anchor: source.clone(),
                 target: Some(target),
-                entry: Some(Entry::read(&dir.0.join("dst/src")).unwrap()),
+                entry: Some(Entry::read(&dir.path().join("dst/src")).unwrap()),
                 moved: true,
                 replaced: None,
                 token: None,
@@ -1719,7 +1638,7 @@ fn t_directory_move_defers_related_reads_and_preserves_explicit_requests() {
                 node: source.node,
             }))),
     );
-    until(|| {
+    eventually(|| {
         tree.data()
             .acknowledge_publication(tree.source().revision());
         let current = tree.source();
@@ -1734,21 +1653,21 @@ fn t_directory_move_defers_related_reads_and_preserves_explicit_requests() {
     assert_eq!(tree.source().node(source.node).unwrap().child_count(), 1100);
     assert_eq!(
         resource::path(&tree.source(), source.node).unwrap(),
-        dir.0.join("dst/src")
+        dir.path().join("dst/src")
     );
     assert!(tree.index.lock().unwrap().moving.is_none());
 }
 
 #[test]
 fn t_directory_move_publication_rejects_members_loaded_after_observation() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("src")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let source = request(tree.resolve(dir.0.join("src")));
-    let target = request(tree.resolve(dir.0.join("dst")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("src")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let source = request(tree.resolve(dir.path().join("src")));
+    let target = request(tree.resolve(dir.path().join("dst")));
     let snapshot = tree.source();
-    fs::rename(dir.0.join("src"), dir.0.join("dst/src")).unwrap();
+    fs::rename(dir.path().join("src"), dir.path().join("dst/src")).unwrap();
     reply(tree.data().submit(Action::Batch(Batch {
         base_revision: snapshot.revision(),
         operations: vec![Operation::Insert {
@@ -1767,7 +1686,7 @@ fn t_directory_move_publication_rejects_members_loaded_after_observation() {
             source: Some(source.clone()),
             anchor: source.clone(),
             target: Some(target),
-            entry: Some(Entry::read(&dir.0.join("dst/src")).unwrap()),
+            entry: Some(Entry::read(&dir.path().join("dst/src")).unwrap()),
             moved: true,
             replaced: None,
             token: None,
@@ -1784,7 +1703,7 @@ fn t_directory_move_publication_rejects_members_loaded_after_observation() {
     assert_eq!(tree.source().revision(), before.revision());
     assert_eq!(
         resource::path(&tree.source(), source.node).unwrap(),
-        dir.0.join("src")
+        dir.path().join("src")
     );
 }
 
@@ -1795,18 +1714,18 @@ fn t_failed_directory_rename_releases_read_coordination() {
     if unsafe { libc::geteuid() } == 0 {
         return;
     }
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("readonly/src")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir_all(dir.path().join("readonly/src")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "readonly/src", Some("dst"), OperationKind::Move);
     let node = operation.nodes[0];
     let state = selection(&tree, &mut operation);
-    let parent = dir.0.join("readonly");
+    let parent = dir.path().join("readonly");
     let permissions = fs::metadata(&parent).unwrap().permissions();
     fs::set_permissions(&parent, fs::Permissions::from_mode(0o500)).unwrap();
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     fs::set_permissions(&parent, permissions).unwrap();
     let result = done(&job);
     assert_eq!(result[0].status, ItemStatus::Failed);
@@ -1821,19 +1740,19 @@ fn t_failed_directory_rename_releases_read_coordination() {
         tree.data()
             .submit(Action::RequestChildren(vec![node], true)),
     );
-    until(|| tree.source().node(node).unwrap().completeness == Completeness::Complete);
+    eventually(|| tree.source().node(node).unwrap().completeness == Completeness::Complete);
 }
 
 #[cfg(unix)]
 #[test]
 fn t_job_moving_a_browsed_relative_link_retargets_its_children() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("real")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("real/keep"), "keep").unwrap();
-    std::os::unix::fs::symlink("real", dir.0.join("link")).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let old = request(tree.resolve(dir.0.join("link/keep")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("real")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("real/keep"), "keep").unwrap();
+    std::os::unix::fs::symlink("real", dir.path().join("link")).unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let old = request(tree.resolve(dir.path().join("link/keep")));
     let mut operation = plan(&tree, "link", Some("dst"), OperationKind::Move);
     let link = operation.nodes[0];
     selection(&tree, &mut operation);
@@ -1846,9 +1765,9 @@ fn t_job_moving_a_browsed_relative_link_retargets_its_children() {
     );
     assert!(!tree.source().contains(old.node));
     assert!(!tree.source().node(link).unwrap().data.can_expand);
-    assert!(dir.0.join("real/keep").exists());
+    assert!(dir.path().join("real/keep").exists());
     assert_eq!(
-        fs::read_link(dir.0.join("dst/link")).unwrap(),
+        fs::read_link(dir.path().join("dst/link")).unwrap(),
         std::path::PathBuf::from("real")
     );
 }
@@ -1859,19 +1778,17 @@ fn t_job_moving_a_browsed_relative_link_retargets_its_children() {
 fn t_job_cross_filesystem_partial_move_keeps_successful_child_identity() {
     use std::os::unix::ffi::OsStrExt;
     let volume = std::env::var_os("FILETREE_TEST_VOLUME").expect("separate test filesystem");
-    let target = std::path::PathBuf::from(volume).join(format!("yoz-job-{}", uuid::Uuid::new_v4()));
-    fs::create_dir(&target).unwrap();
-    let target = Directory(target);
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("src")).unwrap();
-    fs::write(dir.0.join("src/a"), "a").unwrap();
-    let fifo = std::ffi::CString::new(dir.0.join("src/fifo").as_os_str().as_bytes()).unwrap();
+    let target = TempDir::new_in(std::path::Path::new(&volume));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("src")).unwrap();
+    fs::write(dir.path().join("src/a"), "a").unwrap();
+    let fifo = std::ffi::CString::new(dir.path().join("src/fifo").as_os_str().as_bytes()).unwrap();
     assert_eq!(unsafe { libc::mkfifo(fifo.as_ptr(), 0o600) }, 0);
-    let tree = request(Filetree::open(dir.0.clone()));
-    let old = request(tree.resolve(dir.0.join("src/a")));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let old = request(tree.resolve(dir.path().join("src/a")));
     let mut operation = plan(&tree, "src", None, OperationKind::Delete);
     operation.kind = OperationKind::Move;
-    operation.target = Some(request(tree.resolve(target.0.clone())));
+    operation.target = Some(request(tree.resolve(target.path().to_path_buf())));
     let root = operation.nodes[0];
     selection(&tree, &mut operation);
     let job = tree.start_operation(operation).unwrap();
@@ -1889,21 +1806,21 @@ fn t_job_cross_filesystem_partial_move_keeps_successful_child_identity() {
             .unwrap()
             .path()
             .unwrap(),
-        target.0.join("src/a")
+        target.path().join("src/a")
     );
-    assert!(dir.0.join("src/fifo").exists());
-    assert!(!dir.0.join("src/a").exists());
+    assert!(dir.path().join("src/fifo").exists());
+    assert!(!dir.path().join("src/a").exists());
 }
 
 #[test]
 fn t_job_unviewed_multi_page_directory_and_finished_handle_release_memory() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("src")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("src")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
     for i in 0..1100 {
-        fs::write(dir.0.join(format!("src/file-{i:04}")), "x").unwrap();
+        fs::write(dir.path().join(format!("src/file-{i:04}")), "x").unwrap();
     }
-    let tree = request(Filetree::open(dir.0.clone()));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     /* A released Lua facade leaves its last UI acknowledgement behind. */
     tree.data()
         .acknowledge_publication(tree.source().revision());
@@ -1919,37 +1836,40 @@ fn t_job_unviewed_multi_page_directory_and_finished_handle_release_memory() {
         "{:?}",
         results[0].sync_error()
     );
-    assert_eq!(fs::read_dir(dir.0.join("dst/src")).unwrap().count(), 1100);
+    assert_eq!(
+        fs::read_dir(dir.path().join("dst/src")).unwrap().count(),
+        1100
+    );
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
-        let copied = request(tree.resolve(dir.0.join("dst/src")));
+        let copied = request(tree.resolve(dir.path().join("dst/src")));
         let source = tree.source();
         assert_eq!(source.node(copied.node).unwrap().child_count(), 0);
         assert_eq!(
             source.node(copied.node).unwrap().completeness,
             Completeness::Unknown
         );
-        let leaf = request(tree.resolve(dir.0.join("dst/src/file-0000")));
-        assert_eq!(leaf.path().unwrap(), dir.0.join("dst/src/file-0000"));
+        let leaf = request(tree.resolve(dir.path().join("dst/src/file-0000")));
+        assert_eq!(leaf.path().unwrap(), dir.path().join("dst/src/file-0000"));
         assert_eq!(tree.source().node(copied.node).unwrap().child_count(), 1);
     }
     drop(results);
     drop(job);
     drop(tree);
-    until(|| memory.used() == 0);
+    eventually(|| memory.used() == 0);
 }
 
 #[test]
 fn t_job_late_copy_publication_reuses_observed_output_but_cannot_replace_new_occurrence() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("a"), "source").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
-    let source = request(tree.resolve(dir.0.join("a")));
-    let target = request(tree.resolve(dir.0.join("dst")));
-    fs::write(dir.0.join("dst/a"), "output").unwrap();
-    let observed = Entry::read(&dir.0.join("dst/a")).unwrap();
-    let output = request(tree.resolve(dir.0.join("dst/a")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("a"), "source").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let source = request(tree.resolve(dir.path().join("a")));
+    let target = request(tree.resolve(dir.path().join("dst")));
+    fs::write(dir.path().join("dst/a"), "output").unwrap();
+    let observed = Entry::read(&dir.path().join("dst/a")).unwrap();
+    let output = request(tree.resolve(dir.path().join("dst/a")));
     let result = Arc::new(std::sync::Mutex::new(None));
     reply(
         tree.data()
@@ -1967,9 +1887,9 @@ fn t_job_late_copy_publication_reuses_observed_output_but_cannot_replace_new_occ
             }))),
     );
     assert_eq!(result.lock().unwrap().as_ref().unwrap().node, output.node);
-    fs::rename(dir.0.join("dst/a"), dir.0.join("dst/saved")).unwrap();
-    fs::write(dir.0.join("dst/a"), "replacement").unwrap();
-    let replacement = request(tree.resolve(dir.0.join("dst/a")));
+    fs::rename(dir.path().join("dst/a"), dir.path().join("dst/saved")).unwrap();
+    fs::write(dir.path().join("dst/a"), "replacement").unwrap();
+    let replacement = request(tree.resolve(dir.path().join("dst/a")));
     let result = tree
         .data()
         .submit(Action::Native(Box::new(super::job_owner::Publish {
@@ -2000,29 +1920,29 @@ fn t_job_late_copy_publication_reuses_observed_output_but_cannot_replace_new_occ
 
 #[test]
 fn t_job_copy_publication_batch_keeps_successes_around_a_stale_item() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
     for name in ["a", "b", "c"] {
-        fs::write(dir.0.join(name), "source").unwrap();
+        fs::write(dir.path().join(name), "source").unwrap();
     }
-    let tree = request(Filetree::open(dir.0.clone()));
-    let target = request(tree.resolve(dir.0.join("dst")));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let target = request(tree.resolve(dir.path().join("dst")));
     let sources: Vec<_> = ["a", "b", "c"]
         .into_iter()
-        .map(|name| request(tree.resolve(dir.0.join(name))))
+        .map(|name| request(tree.resolve(dir.path().join(name))))
         .collect();
-    fs::write(dir.0.join("dst/b"), "output").unwrap();
-    let old_b = Entry::read(&dir.0.join("dst/b")).unwrap();
-    fs::rename(dir.0.join("dst/b"), dir.0.join("saved-b")).unwrap();
-    fs::write(dir.0.join("dst/b"), "replacement").unwrap();
-    let replacement = request(tree.resolve(dir.0.join("dst/b")));
+    fs::write(dir.path().join("dst/b"), "output").unwrap();
+    let old_b = Entry::read(&dir.path().join("dst/b")).unwrap();
+    fs::rename(dir.path().join("dst/b"), dir.path().join("saved-b")).unwrap();
+    fs::write(dir.path().join("dst/b"), "replacement").unwrap();
+    let replacement = request(tree.resolve(dir.path().join("dst/b")));
     let mut items = Vec::new();
     for (name, source) in ["a", "b", "c"].into_iter().zip(sources) {
         let entry = if name == "b" {
             old_b.clone()
         } else {
-            fs::write(dir.0.join("dst").join(name), "output").unwrap();
-            Entry::read(&dir.0.join("dst").join(name)).unwrap()
+            fs::write(dir.path().join("dst").join(name), "output").unwrap();
+            Entry::read(&dir.path().join("dst").join(name)).unwrap()
         };
         items.push(super::job_owner::CopyPublication {
             source: Some(source.clone()),
@@ -2061,7 +1981,7 @@ fn t_job_copy_publication_batch_keeps_successes_around_a_stale_item() {
             .identity,
         replacement.entry().unwrap().identity
     );
-    assert_eq!(fs::read(dir.0.join("dst/b")).unwrap(), b"replacement");
+    assert_eq!(fs::read(dir.path().join("dst/b")).unwrap(), b"replacement");
 }
 
 #[test]
@@ -2077,22 +1997,22 @@ fn t_job_copy_publication_preserves_a_prefix_when_the_batch_exceeds_capacity() {
         }
     }
 
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
     for name in ["a", "b", "c"] {
-        fs::write(dir.0.join(name), "source").unwrap();
+        fs::write(dir.path().join(name), "source").unwrap();
     }
-    let tree = request(Filetree::open(dir.0.clone()));
-    let target = request(tree.resolve(dir.0.join("dst")));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let target = request(tree.resolve(dir.path().join("dst")));
     let sources: Vec<_> = ["a", "b", "c"]
         .into_iter()
-        .map(|name| request(tree.resolve(dir.0.join(name))))
+        .map(|name| request(tree.resolve(dir.path().join(name))))
         .collect();
     let items = ["a", "b", "c"]
         .into_iter()
         .zip(sources)
         .map(|(name, source)| {
-            let path = dir.0.join("dst").join(name);
+            let path = dir.path().join("dst").join(name);
             fs::write(&path, "output").unwrap();
             super::job_owner::CopyPublication {
                 source: Some(source.clone()),
@@ -2134,24 +2054,27 @@ fn t_job_copy_publication_preserves_a_prefix_when_the_batch_exceeds_capacity() {
     );
     assert_eq!(tree.source().node(target.node).unwrap().child_count(), 1);
     for name in ["a", "b", "c"] {
-        assert_eq!(fs::read(dir.0.join("dst").join(name)).unwrap(), b"output");
+        assert_eq!(
+            fs::read(dir.path().join("dst").join(name)).unwrap(),
+            b"output"
+        );
     }
 }
 
 #[cfg(any(target_os = "macos", windows))]
 #[test]
 fn t_case_different_publication_reuses_output_and_removes_confirmed_old_name() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("Name"), "source").unwrap();
-    fs::write(dir.0.join("dst/name"), "old").unwrap();
-    if !dir.0.join("dst/Name").exists() {
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("Name"), "source").unwrap();
+    fs::write(dir.path().join("dst/name"), "old").unwrap();
+    if !dir.path().join("dst/Name").exists() {
         return;
     }
-    let tree = request(Filetree::open(dir.0.clone()));
-    let source = request(tree.resolve(dir.0.join("Name")));
-    let old = request(tree.resolve(dir.0.join("dst/name")));
-    let target = request(tree.resolve(dir.0.join("dst")));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let source = request(tree.resolve(dir.path().join("Name")));
+    let old = request(tree.resolve(dir.path().join("dst/name")));
+    let target = request(tree.resolve(dir.path().join("dst")));
     let captured = Arc::new(std::sync::Mutex::new(None));
     reply(tree.data().submit(Action::Native(Box::new(
         super::job_owner::CaptureReplacement {
@@ -2162,9 +2085,9 @@ fn t_case_different_publication_reuses_output_and_removes_confirmed_old_name() {
             result: captured.clone(),
         },
     ))));
-    fs::write(dir.0.join("output"), "output").unwrap();
-    fs::rename(dir.0.join("output"), dir.0.join("dst/Name")).unwrap();
-    let observed = request(tree.resolve(dir.0.join("dst/Name")));
+    fs::write(dir.path().join("output"), "output").unwrap();
+    fs::rename(dir.path().join("output"), dir.path().join("dst/Name")).unwrap();
+    let observed = request(tree.resolve(dir.path().join("dst/Name")));
     let result = Arc::new(std::sync::Mutex::new(None));
     reply(
         tree.data()
@@ -2188,10 +2111,10 @@ fn t_case_different_publication_reuses_output_and_removes_confirmed_old_name() {
 
 #[test]
 fn t_job_same_parent_sorting_does_not_stale_another_prepared_selection() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("a"), "a").unwrap();
-    fs::write(dir.0.join("b"), "b").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::write(dir.path().join("a"), "a").unwrap();
+    fs::write(dir.path().join("b"), "b").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "a", Some("."), OperationKind::Move);
     operation.name = Some("z".into());
     let mut other = OperationPlan {
@@ -2225,26 +2148,26 @@ fn t_job_same_parent_sorting_does_not_stale_another_prepared_selection() {
 #[cfg(unix)]
 #[test]
 fn t_job_target_directory_rename_during_copy_cleans_the_original_directory() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::File::create(dir.0.join("large"))
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::File::create(dir.path().join("large"))
         .unwrap()
         .set_len(256 * 1024 * 1024)
         .unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let job = tree
         .start_operation(plan(&tree, "large", Some("dst"), OperationKind::Copy))
         .unwrap();
-    until(|| job.status().bytes != 0 || job.status().terminal);
+    eventually(|| job.status().bytes != 0 || job.status().terminal);
     assert!(
         !job.status().terminal,
         "copy finished before directory rename"
     );
-    fs::rename(dir.0.join("dst"), dir.0.join("relocated")).unwrap();
+    fs::rename(dir.path().join("dst"), dir.path().join("relocated")).unwrap();
     let results = done(&job);
     assert_eq!(results[0].status, ItemStatus::Failed);
     assert_eq!(
-        fs::read_dir(dir.0.join("relocated")).unwrap().count(),
+        fs::read_dir(dir.path().join("relocated")).unwrap().count(),
         0,
         "private output was left behind in the renamed directory"
     );
@@ -2254,21 +2177,29 @@ fn t_job_target_directory_rename_during_copy_cleans_the_original_directory() {
 #[test]
 fn t_job_copy_preserves_new_directory_permissions_and_keeps_merge_permissions() {
     use std::os::unix::fs::PermissionsExt;
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("private")).unwrap();
-    fs::create_dir(dir.0.join("readonly")).unwrap();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::create_dir_all(dir.0.join("merged/private")).unwrap();
-    fs::write(dir.0.join("private/file"), "value").unwrap();
-    fs::write(dir.0.join("readonly/file"), "value").unwrap();
-    fs::set_permissions(dir.0.join("private"), fs::Permissions::from_mode(0o700)).unwrap();
-    fs::set_permissions(dir.0.join("readonly"), fs::Permissions::from_mode(0o555)).unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("private")).unwrap();
+    fs::create_dir(dir.path().join("readonly")).unwrap();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::create_dir_all(dir.path().join("merged/private")).unwrap();
+    fs::write(dir.path().join("private/file"), "value").unwrap();
+    fs::write(dir.path().join("readonly/file"), "value").unwrap();
     fs::set_permissions(
-        dir.0.join("merged/private"),
+        dir.path().join("private"),
+        fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
+    fs::set_permissions(
+        dir.path().join("readonly"),
+        fs::Permissions::from_mode(0o555),
+    )
+    .unwrap();
+    fs::set_permissions(
+        dir.path().join("merged/private"),
         fs::Permissions::from_mode(0o750),
     )
     .unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     for (source, destination, mode) in [
         ("private", "dst", 0o700),
         ("readonly", "dst", 0o555),
@@ -2285,7 +2216,7 @@ fn t_job_copy_preserves_new_directory_permissions_and_keeps_merge_permissions() 
             "{:?}",
             result[0].sync_error()
         );
-        let path = dir.0.join(destination).join(source);
+        let path = dir.path().join(destination).join(source);
         assert_eq!(
             fs::metadata(&path).unwrap().permissions().mode() & 0o777,
             mode
@@ -2293,31 +2224,517 @@ fn t_job_copy_preserves_new_directory_permissions_and_keeps_merge_permissions() 
         assert!(path.join("file").exists());
         fs::set_permissions(path, fs::Permissions::from_mode(0o700)).unwrap();
     }
-    fs::set_permissions(dir.0.join("readonly"), fs::Permissions::from_mode(0o700)).unwrap();
+    fs::set_permissions(
+        dir.path().join("readonly"),
+        fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
 }
 
 #[test]
 fn t_job_confirmation_outlives_preparation_deadline_without_unlocking_selection() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dst")).unwrap();
-    fs::write(dir.0.join("file"), "new").unwrap();
-    fs::write(dir.0.join("dst/file"), "old").unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("dst")).unwrap();
+    fs::write(dir.path().join("file"), "new").unwrap();
+    fs::write(dir.path().join("dst/file"), "old").unwrap();
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let mut operation = plan(&tree, "file", Some("dst"), OperationKind::Copy);
-    let state = prepare_selection(
+    let state = selection_with_deadline(
         &tree,
         &mut operation,
         Some(Instant::now() + Duration::from_millis(250)),
     );
     let job = tree.start_operation(operation).unwrap();
-    until(|| job.status().confirmation.is_some());
+    eventually(|| job.status().confirmation.is_some());
     std::thread::sleep(Duration::from_millis(350));
     assert!(
         state.status().unwrap().locked,
         "preparation timeout released an executing task"
     );
     job.cancel();
-    until(|| job.status().terminal);
+    eventually(|| job.status().terminal);
     assert!(job.status().cleanup.unwrap().is_ok());
     assert!(!state.status().unwrap().locked);
+}
+
+/// Records the job's status on every wake, and with `cancel_on_item` cancels the job once an item is
+/// processed. Reading the status on wake also verifies that notification does not hold the Job
+/// status lock.
+struct Observer {
+    job: Job,
+    statuses: Arc<Mutex<Vec<JobStatus>>>,
+    _listening: Listening,
+}
+
+impl Observer {
+    fn new(data: &DataHandle, job: Job, cancel_on_item: bool) -> Self {
+        let statuses = Arc::new(Mutex::new(Vec::new()));
+        let (observed, recorded) = (job.clone(), statuses.clone());
+        let cancelled = AtomicBool::new(false);
+        let listening = listen(data, move || {
+            let mut statuses = recorded.lock().unwrap();
+            let status = observed.status();
+            let cancel = cancel_on_item && status.processed > 0 && !status.terminal;
+            statuses.push(status);
+            drop(statuses);
+            if cancel && !cancelled.swap(true, Ordering::AcqRel) {
+                observed.cancel();
+            }
+        });
+        Self {
+            job,
+            statuses,
+            _listening: listening,
+        }
+    }
+}
+
+/// Starts `operation` with an [`Observer`] registered before its IO begins.
+fn observe(tree: &Filetree, operation: OperationPlan, cancel_on_item: bool) -> Observer {
+    let execution = EXECUTOR.lock().unwrap_or_else(|error| error.into_inner());
+    let job = tree.start_operation(operation).unwrap();
+    let observer = Observer::new(tree.data(), job, cancel_on_item);
+    drop(execution);
+    observer
+}
+
+#[test]
+fn t_job_processed_counts_survive_subtree_compaction_including_empty_files() {
+    for contents in ["", "test"] {
+        let fixture = TempDir::new();
+        fs::create_dir_all(fixture.path().join("source/nested")).unwrap();
+        fs::create_dir(fixture.path().join("destination")).unwrap();
+        for index in 0..128 {
+            fs::write(
+                fixture.path().join(format!("source/nested/{index}")),
+                contents,
+            )
+            .unwrap();
+        }
+        let tree = request(Filetree::open(fixture.path().to_path_buf()));
+        let operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
+        let observer = observe(&tree, operation, false);
+        let results = done(&observer.job);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].status, ItemStatus::Success);
+        let status = observer.job.status();
+        assert_eq!(status.phase, JobPhase::Complete);
+        assert_eq!(status.processed, 130);
+        assert_eq!(status.bytes, 128 * contents.len() as u64);
+        let statuses = observer.statuses.lock().unwrap();
+        assert!(
+            statuses
+                .iter()
+                .any(|status| { !status.terminal && status.processed > 0 && status.results == 0 })
+        );
+        assert!(statuses.windows(2).all(|pair| {
+            pair[0].processed <= pair[1].processed && pair[0].bytes <= pair[1].bytes
+        }));
+        for index in 0..128 {
+            assert_eq!(
+                fs::read(
+                    fixture
+                        .path()
+                        .join(format!("destination/source/nested/{index}"))
+                )
+                .unwrap(),
+                contents.as_bytes()
+            );
+        }
+    }
+}
+
+#[test]
+fn t_empty_file_progress_can_cancel_before_directory_completion() {
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir(fixture.path().join("destination")).unwrap();
+    for index in 0..64 {
+        fs::write(fixture.path().join(format!("source/{index}")), "").unwrap();
+    }
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
+    let operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
+    let observer = observe(&tree, operation, true);
+    eventually(|| observer.job.status().terminal);
+    let status = observer.job.status();
+    let results = observer.job.results(0, status.results).unwrap();
+    assert!(status.cancelled);
+    assert_eq!(status.phase, JobPhase::Complete);
+    assert_eq!(status.bytes, 0);
+    assert!(status.processed > 0 && status.processed < 65);
+    let completed = results
+        .iter()
+        .filter(|item| item.status == ItemStatus::Success)
+        .count();
+    assert!(completed > 0 && completed < 64);
+    assert_eq!(
+        fs::read_dir(fixture.path().join("source")).unwrap().count(),
+        64
+    );
+    assert_eq!(
+        fs::read_dir(fixture.path().join("destination/source"))
+            .unwrap()
+            .count(),
+        completed
+    );
+}
+
+#[test]
+fn t_create_progress_counts_only_created_components() {
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("existing")).unwrap();
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
+    let target = request(tree.resolve(fixture.path().to_path_buf()));
+    let job = tree
+        .start_create(CreatePlan {
+            target,
+            path: "existing/new/empty".into(),
+            directory: false,
+        })
+        .unwrap();
+    let results = done(&job);
+    let status = job.status();
+    assert_eq!(status.processed, 2);
+    assert_eq!(results.len(), 2);
+    assert_eq!(status.bytes, 0);
+    assert_eq!(status.phase, JobPhase::Complete);
+}
+
+#[test]
+fn t_job_notifications_coalesce_bytes_and_publish_confirmation_and_cancellation() {
+    let data = DataHandle::new(Limits::default()).unwrap();
+    let job = Job(Arc::new(Shared {
+        _source: data.source(),
+        _state: None,
+        data: data.downgrade(),
+        id: 1,
+        cancel: AtomicBool::new(false),
+        bytes: AtomicU64::new(0),
+        processed: AtomicUsize::new(0),
+        revision: AtomicU64::new(1),
+        progress: Mutex::new(None),
+        state: Mutex::new(Status {
+            phase: JobPhase::Preparing,
+            terminal: false,
+            cancelled: false,
+            confirmation: None,
+            answer: None,
+            results: Vec::new(),
+            published: 0,
+            error: None,
+            cleanup: None,
+        }),
+        changed: Condvar::new(),
+        task_memory: Memory::new(data.memory()),
+        _memory: Charge::new(1024),
+    }));
+    let observer = Observer::new(&data, job.clone(), false);
+    job.set_phase(JobPhase::Reading);
+    assert_eq!(
+        observer.statuses.lock().unwrap().last().unwrap().phase,
+        JobPhase::Reading
+    );
+    job.set_phase(JobPhase::Working);
+    job.copied(100);
+    assert_eq!(observer.statuses.lock().unwrap().last().unwrap().bytes, 100);
+    let count = observer.statuses.lock().unwrap().len();
+    let revision = job.status().revision;
+    /* Keep scheduler pauses from advancing the progress window in this test. */
+    *job.0.progress.lock().unwrap() = Some(Instant::now() + Duration::from_secs(60));
+    job.copied(200);
+    assert_eq!(observer.statuses.lock().unwrap().len(), count);
+    assert_eq!(job.status().bytes, 300);
+    assert!(job.status_since(Some(revision)).is_none());
+    job.processed();
+    assert_eq!(observer.statuses.lock().unwrap().len(), count + 1);
+    assert_eq!(
+        observer.statuses.lock().unwrap().last().unwrap().processed,
+        1
+    );
+    *job.0.progress.lock().unwrap() = Some(Instant::now() + Duration::from_secs(60));
+    job.processed();
+    assert_eq!(observer.statuses.lock().unwrap().len(), count + 1);
+    assert_eq!(job.status().processed, 2);
+    let count = observer.statuses.lock().unwrap().len();
+    job.0.state.lock().unwrap().confirmation = Some(Confirmation {
+        token: 1,
+        item: ItemId(1),
+        node: Some(NodeId(1)),
+        source: PathBuf::from("source"),
+        target: PathBuf::from("target"),
+        prepare_move: false,
+    });
+    job.confirm(1, false).unwrap();
+    assert_eq!(observer.statuses.lock().unwrap().len(), count + 1);
+    assert_eq!(job.status_since(Some(revision)).unwrap().bytes, 300);
+    job.cancel();
+    assert!(observer.statuses.lock().unwrap().last().unwrap().cancelling);
+    assert_eq!(observer.statuses.lock().unwrap().len(), count + 2);
+    let weak = data.downgrade();
+    drop(data);
+    assert!(
+        weak.upgrade().is_none(),
+        "a Job notification must not retain its data owner"
+    );
+    job.notify();
+}
+
+#[test]
+fn t_copy_keeps_completed_io_when_batch_submission_exceeds_the_budget() {
+    let directory = TempDir::new();
+    fs::create_dir(directory.path().join("dst")).unwrap();
+    fs::write(directory.path().join("source"), b"contents").unwrap();
+    let tree = request(Filetree::open(directory.path().to_path_buf()));
+    let source = request(tree.resolve(directory.path().join("source")));
+    let target = request(tree.resolve(directory.path().join("dst")));
+    /* The first copied bytes exhaust the budget after admission and before publication. */
+    let memory = tree.data().memory();
+    let charge = Arc::new(Mutex::new(None));
+    let held = charge.clone();
+    let (job, _listener) = start_observed(
+        &tree,
+        OperationPlan {
+            kind: OperationKind::Copy,
+            source: source.source.clone(),
+            nodes: vec![source.node].into(),
+            target: Some(target.clone()),
+            name: None,
+            task: None,
+            prepare_move: false,
+        },
+        |status| status.bytes > 0,
+        move |_| {
+            let _guard = memory.enter();
+            *held.lock().unwrap() = Some(Charge::new(Limits::default().memory_bytes));
+        },
+    );
+    let status = finished(&job);
+    assert!(charge.lock().unwrap().is_some());
+    assert!(status.error.is_none(), "{:?}", status.error);
+    assert!(!status.cancelled);
+    assert_eq!(status.results, 1);
+    let results = job.results(0, status.results).unwrap();
+    assert_eq!(results[0].status, ItemStatus::Success);
+    assert!(results[0].error().is_none());
+    assert_eq!(
+        results[0].sync_error().unwrap().code,
+        ErrorCode::ResourceLimit
+    );
+    assert_eq!(
+        fs::read(directory.path().join("source")).unwrap(),
+        b"contents"
+    );
+    assert_eq!(
+        fs::read(directory.path().join("dst/source")).unwrap(),
+        b"contents"
+    );
+    assert_eq!(
+        fs::read_dir(directory.path().join("dst")).unwrap().count(),
+        1
+    );
+    assert!(
+        tree.index
+            .lock()
+            .unwrap()
+            .child(Some(target.node), std::ffi::OsStr::new("source"))
+            .is_none()
+    );
+}
+
+#[test]
+fn t_create_reobserves_publication_conflicts_without_recreating_or_retargeting() {
+    for race in ["sibling", "replacement", "parent"] {
+        let directory = TempDir::new();
+        let root = directory.path().join("parent");
+        fs::create_dir(&root).unwrap();
+        let sibling = root.join("sibling");
+        let path = root.join("created");
+        fs::write(&sibling, b"sibling").unwrap();
+        let tree = request(Filetree::open(root.clone()));
+        let target = tree.inspect(tree.source(), tree.root()).unwrap();
+        let (gate, release) = hold(tree.data());
+        let observed = tree.resolve(sibling);
+        eventually(|| tree.data().queue_depth() >= 1);
+        let job = tree
+            .start_create(CreatePlan {
+                target,
+                path: "created".into(),
+                directory: false,
+            })
+            .unwrap();
+        eventually(|| tree.data().queue_depth() >= 2);
+        let identity = Entry::read(&path).unwrap().identity;
+        if race == "replacement" {
+            fs::rename(&path, directory.path().join("original")).unwrap();
+            fs::write(&path, b"replacement").unwrap();
+        } else if race == "parent" {
+            let original = directory.path().join("original-parent");
+            fs::rename(&root, &original).unwrap();
+            fs::create_dir(&root).unwrap();
+            fs::hard_link(original.join("created"), &path).unwrap();
+        }
+        release.send(()).unwrap();
+        work::wait(gate).unwrap();
+        request(observed);
+        let status = finished(&job);
+        assert_eq!(status.results, 1);
+        let results = job.results(0, 1).unwrap();
+        assert_eq!(results[0].status, ItemStatus::Success);
+        if race == "replacement" {
+            assert_eq!(status.error.unwrap().code, ErrorCode::Stale);
+            assert!(results[0].sync_error().is_some());
+            assert_eq!(fs::read(&path).unwrap(), b"replacement");
+            assert_eq!(
+                Entry::read(&directory.path().join("original"))
+                    .unwrap()
+                    .identity,
+                identity
+            );
+        } else if race == "parent" {
+            assert!(status.error.is_some());
+            assert!(results[0].sync_error().is_some());
+            assert_eq!(Entry::read(&path).unwrap().identity, identity);
+            assert_eq!(
+                Entry::read(&directory.path().join("original-parent/created"))
+                    .unwrap()
+                    .identity,
+                identity
+            );
+        } else {
+            assert!(status.error.is_none(), "{:?}", status.error);
+            assert!(results[0].sync_error().is_none());
+            assert_eq!(Entry::read(&path).unwrap().identity, identity);
+            assert_eq!(
+                tree.inspect(tree.source(), results[0].node.unwrap())
+                    .unwrap()
+                    .entry()
+                    .unwrap()
+                    .identity,
+                identity
+            );
+        }
+    }
+}
+
+#[test]
+fn t_create_parents_and_empty_file_preserves_existing_contents_on_collision() {
+    let directory = TempDir::new();
+    let tree = request(Filetree::open(directory.path().to_path_buf()));
+    let target = tree.inspect(tree.source(), tree.root()).unwrap();
+    let plan = || CreatePlan {
+        target: target.clone(),
+        path: "notes/sub/file".into(),
+        directory: false,
+    };
+    let job = tree.start_create(plan()).unwrap();
+    let status = finished(&job);
+    assert!(status.error.is_none(), "{:?}", status.error);
+    assert_eq!(status.results, 3);
+    assert!(
+        job.results(0, 3)
+            .unwrap()
+            .iter()
+            .all(|item| item.status == ItemStatus::Success && item.sync_error().is_none())
+    );
+    let path = directory.path().join("notes/sub/file");
+    fs::write(&path, "keep").unwrap();
+    let collided = tree.start_create(plan()).unwrap();
+    assert!(finished(&collided).error.is_some());
+    assert_eq!(fs::read_to_string(path).unwrap(), "keep");
+    assert!(
+        tree.start_create(CreatePlan {
+            target,
+            path: "../outside".into(),
+            directory: false
+        })
+        .is_err()
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn t_create_uses_default_permissions_with_process_umask() {
+    use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt, PermissionsExt};
+
+    let directory = TempDir::new();
+    let control_directory = directory.path().join("control-directory");
+    fs::DirBuilder::new()
+        .mode(0o755)
+        .create(&control_directory)
+        .unwrap();
+    let control_file = directory.path().join("control-file");
+    fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o666)
+        .open(&control_file)
+        .unwrap();
+    let tree = request(Filetree::open(directory.path().to_path_buf()));
+    let target = tree.inspect(tree.source(), tree.root()).unwrap();
+    for (path, directory) in [("new/sub/file", false), ("empty-directory", true)] {
+        let job = tree
+            .start_create(CreatePlan {
+                target: target.clone(),
+                path: path.into(),
+                directory,
+            })
+            .unwrap();
+        let status = finished(&job);
+        assert!(status.error.is_none(), "{:?}", status.error);
+    }
+    for (path, control) in [
+        ("new", &control_directory),
+        ("new/sub", &control_directory),
+        ("empty-directory", &control_directory),
+        ("new/sub/file", &control_file),
+    ] {
+        assert_eq!(
+            fs::metadata(directory.path().join(path))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            fs::metadata(control).unwrap().permissions().mode() & 0o777,
+            "{path} must use the same defaults and umask as direct creation"
+        );
+    }
+}
+
+#[test]
+fn t_create_rejects_replaced_destination_and_cancellation_keeps_published_parents() {
+    let directory = TempDir::new();
+    let base = directory.path().join("base");
+    fs::create_dir(&base).unwrap();
+    let tree = request(Filetree::open(base.clone()));
+    let target = tree.inspect(tree.source(), tree.root()).unwrap();
+    fs::rename(&base, directory.path().join("old")).unwrap();
+    fs::create_dir(&base).unwrap();
+    let stale = tree
+        .start_create(CreatePlan {
+            target,
+            path: "file".into(),
+            directory: false,
+        })
+        .unwrap();
+    assert!(finished(&stale).error.is_some());
+    assert!(!base.join("file").exists());
+    let target = request(tree.resolve(base));
+    let job = tree
+        .start_create(CreatePlan {
+            target,
+            path: (0..64).map(|_| "p").collect(),
+            directory: true,
+        })
+        .unwrap();
+    eventually(|| {
+        assert!(!job.status().terminal, "{:?}", job.status().error);
+        job.status().results != 0
+    });
+    job.cancel();
+    let status = finished(&job);
+    assert!(status.cancelled);
+    assert!(status.results > 0 && status.results < 64);
+    for item in job.results(0, status.results).unwrap() {
+        assert!(item.target().as_ref().unwrap().is_dir());
+    }
 }

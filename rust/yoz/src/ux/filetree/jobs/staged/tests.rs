@@ -1,62 +1,30 @@
 use super::*;
-use crate::ux::filetree::jobs_tests::{done, plan, selection};
-use crate::ux::filetree::tests::{Directory as Fixture, request};
-
-struct DuringCopy {
-    job: Job,
-    action: Mutex<Option<Box<dyn FnOnce(&Job) + Send>>>,
-}
-
-impl Listener for DuringCopy {
-    fn wake(&self) {
-        if self.job.status().bytes == 0 {
-            return;
-        }
-        let mut action = self.action.lock().unwrap();
-        if let Some(action) = action.take() {
-            action(&self.job);
-        }
-    }
-    fn close(&self) {}
-    fn is_closed(&self) -> bool {
-        false
-    }
-}
-
-fn observed_job(
-    tree: &Filetree,
-    operation: OperationPlan,
-    action: impl FnOnce(&Job) + Send + 'static,
-) -> (Job, Arc<dyn Listener>) {
-    let execution = EXECUTOR.lock().unwrap_or_else(|error| error.into_inner());
-    let job = tree.start_operation(operation).unwrap();
-    let listener: Arc<dyn Listener> = Arc::new(DuringCopy {
-        job: job.clone(),
-        action: Mutex::new(Some(Box::new(action))),
-    });
-    tree.data().listen(&listener).unwrap();
-    drop(execution);
-    (job, listener)
-}
+use crate::test_support::{TempDir, eventually, isolated};
+use crate::ux::filetree::test_support::*;
 
 #[test]
 fn t_staged_job_does_not_deliver_or_clear_unpublished_successes_after_target_conflict() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir(fixture.0.join("destination")).unwrap();
-    fs::write(fixture.0.join("source/file"), "contents").unwrap();
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir(fixture.path().join("destination")).unwrap();
+    fs::write(fixture.path().join("source/file"), "contents").unwrap();
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let mut operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
-    let output = fixture.0.join("destination/source");
+    let output = fixture.path().join("destination/source");
     let competing = output.clone();
-    let (job, _listener) = observed_job(&tree, operation, move |job| {
-        assert_eq!(job.status().results, 0);
-        assert!(job.results(0, 1).is_err());
-        assert!(!competing.exists());
-        fs::create_dir(&competing).unwrap();
-        fs::write(competing.join("external"), "keep").unwrap();
-    });
+    let (job, _listener) = start_observed(
+        &tree,
+        operation,
+        |status| status.bytes > 0,
+        move |job| {
+            assert_eq!(job.status().results, 0);
+            assert!(job.results(0, 1).is_err());
+            assert!(!competing.exists());
+            fs::create_dir(&competing).unwrap();
+            fs::write(competing.join("external"), "keep").unwrap();
+        },
+    );
     let results = done(&job);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].status, ItemStatus::Failed);
@@ -69,7 +37,9 @@ fn t_staged_job_does_not_deliver_or_clear_unpublished_successes_after_target_con
     assert_eq!(fs::read(output.join("external")).unwrap(), b"keep");
     assert!(!output.join("file").exists());
     assert_eq!(
-        fs::read_dir(fixture.0.join("destination")).unwrap().count(),
+        fs::read_dir(fixture.path().join("destination"))
+            .unwrap()
+            .count(),
         1
     );
     assert!(!state.status().unwrap().locked);
@@ -78,54 +48,66 @@ fn t_staged_job_does_not_deliver_or_clear_unpublished_successes_after_target_con
 
 #[test]
 fn t_staged_job_rejects_a_replaced_source_root_without_publishing_its_old_prefix() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir(fixture.0.join("destination")).unwrap();
-    fs::write(fixture.0.join("source/file"), "contents").unwrap();
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir(fixture.path().join("destination")).unwrap();
+    fs::write(fixture.path().join("source/file"), "contents").unwrap();
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
-    let path = fixture.0.clone();
-    let (job, _listener) = observed_job(&tree, operation, move |_| {
-        fs::rename(path.join("source"), path.join("original")).unwrap();
-        fs::create_dir(path.join("source")).unwrap();
-        fs::write(path.join("source/file"), "replacement").unwrap();
-    });
+    let path = fixture.path().to_path_buf();
+    let (job, _listener) = start_observed(
+        &tree,
+        operation,
+        |status| status.bytes > 0,
+        move |_| {
+            fs::rename(path.join("source"), path.join("original")).unwrap();
+            fs::create_dir(path.join("source")).unwrap();
+            fs::write(path.join("source/file"), "replacement").unwrap();
+        },
+    );
     let results = done(&job);
     assert!(
         results
             .iter()
             .all(|result| result.status == ItemStatus::Failed)
     );
-    assert!(!fixture.0.join("destination/source").exists());
+    assert!(!fixture.path().join("destination/source").exists());
     assert_eq!(
-        fs::read(fixture.0.join("source/file")).unwrap(),
+        fs::read(fixture.path().join("source/file")).unwrap(),
         b"replacement"
     );
     assert_eq!(
-        fs::read(fixture.0.join("original/file")).unwrap(),
+        fs::read(fixture.path().join("original/file")).unwrap(),
         b"contents"
     );
     assert_eq!(
-        fs::read_dir(fixture.0.join("destination")).unwrap().count(),
+        fs::read_dir(fixture.path().join("destination"))
+            .unwrap()
+            .count(),
         0
     );
 }
 
 #[test]
 fn t_staged_job_keeps_committed_io_when_model_publication_exceeds_capacity() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir(fixture.0.join("destination")).unwrap();
-    fs::write(fixture.0.join("source/file"), "contents").unwrap();
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir(fixture.path().join("destination")).unwrap();
+    fs::write(fixture.path().join("source/file"), "contents").unwrap();
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
     let memory = tree.data().memory();
     let held = Arc::new(Mutex::new(None));
     let pressure = held.clone();
-    let (job, _listener) = observed_job(&tree, operation, move |_| {
-        let _guard = memory.enter();
-        *pressure.lock().unwrap() = Some(Charge::new(Limits::default().memory_bytes));
-    });
+    let (job, _listener) = start_observed(
+        &tree,
+        operation,
+        |status| status.bytes > 0,
+        move |_| {
+            let _guard = memory.enter();
+            *pressure.lock().unwrap() = Some(Charge::new(Limits::default().memory_bytes));
+        },
+    );
     let results = done(&job);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].status, ItemStatus::Success);
@@ -134,11 +116,13 @@ fn t_staged_job_keeps_committed_io_when_model_publication_exceeds_capacity() {
         ErrorCode::ResourceLimit
     );
     assert_eq!(
-        fs::read(fixture.0.join("destination/source/file")).unwrap(),
+        fs::read(fixture.path().join("destination/source/file")).unwrap(),
         b"contents"
     );
     assert_eq!(
-        fs::read_dir(fixture.0.join("destination")).unwrap().count(),
+        fs::read_dir(fixture.path().join("destination"))
+            .unwrap()
+            .count(),
         1
     );
     held.lock().unwrap().take();
@@ -146,14 +130,20 @@ fn t_staged_job_keeps_committed_io_when_model_publication_exceeds_capacity() {
 
 #[test]
 fn t_staged_partial_copy_cleans_only_successful_source_nodes_and_loads_target_on_demand() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir(fixture.0.join("destination")).unwrap();
-    fs::write(fixture.0.join("source/file"), "contents").unwrap();
-    let fifo = std::ffi::CString::new(fixture.0.join("source/fifo").as_os_str().as_encoded_bytes())
-        .unwrap();
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir(fixture.path().join("destination")).unwrap();
+    fs::write(fixture.path().join("source/file"), "contents").unwrap();
+    let fifo = std::ffi::CString::new(
+        fixture
+            .path()
+            .join("source/fifo")
+            .as_os_str()
+            .as_encoded_bytes(),
+    )
+    .unwrap();
     assert_eq!(unsafe { libc::mkfifo(fifo.as_ptr(), 0o600) }, 0);
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let mut operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
     let job = tree.start_operation(operation).unwrap();
@@ -169,14 +159,14 @@ fn t_staged_partial_copy_cleans_only_successful_source_nodes_and_loads_target_on
             .any(|result| result.status == ItemStatus::Failed && result.source().ends_with("fifo"))
     );
     assert_eq!(
-        fs::read(fixture.0.join("destination/source/file")).unwrap(),
+        fs::read(fixture.path().join("destination/source/file")).unwrap(),
         b"contents"
     );
-    assert!(!fixture.0.join("destination/source/fifo").exists());
-    let copied = request(tree.resolve(fixture.0.join("destination/source")));
+    assert!(!fixture.path().join("destination/source/fifo").exists());
+    let copied = request(tree.resolve(fixture.path().join("destination/source")));
     assert_eq!(tree.source().node(copied.node).unwrap().child_count(), 0);
-    let file = request(tree.resolve(fixture.0.join("source/file")));
-    let fifo = request(tree.resolve(fixture.0.join("source/fifo")));
+    let file = request(tree.resolve(fixture.path().join("source/file")));
+    let fifo = request(tree.resolve(fixture.path().join("source/fifo")));
     let Outcome::Reply(Reply::Inspected { sources, .. }) = state
         .dispatch(Command::InspectSelection, Context::default())
         .wait()
@@ -190,14 +180,20 @@ fn t_staged_partial_copy_cleans_only_successful_source_nodes_and_loads_target_on
 
 #[test]
 fn t_staged_partial_results_keep_execution_paths_after_both_parents_move() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir(fixture.0.join("destination")).unwrap();
-    fs::write(fixture.0.join("source/file"), "contents").unwrap();
-    let fifo = std::ffi::CString::new(fixture.0.join("source/fifo").as_os_str().as_encoded_bytes())
-        .unwrap();
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir(fixture.path().join("destination")).unwrap();
+    fs::write(fixture.path().join("source/file"), "contents").unwrap();
+    let fifo = std::ffi::CString::new(
+        fixture
+            .path()
+            .join("source/fifo")
+            .as_os_str()
+            .as_encoded_bytes(),
+    )
+    .unwrap();
     assert_eq!(unsafe { libc::mkfifo(fifo.as_ptr(), 0o600) }, 0);
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let job = tree
         .start_operation(plan(
             &tree,
@@ -216,8 +212,8 @@ fn t_staged_partial_results_keep_execution_paths_after_both_parents_move() {
         copied.node.is_none(),
         "history need not materialize a browse occurrence"
     );
-    let captured_source = fixture.0.join("source/file");
-    let captured_target = fixture.0.join("destination/source/file");
+    let captured_source = fixture.path().join("source/file");
+    let captured_target = fixture.path().join("destination/source/file");
     for (source, name) in [
         ("source", "renamed-source"),
         ("destination", "renamed-destination"),
@@ -236,63 +232,42 @@ fn t_staged_partial_results_keep_execution_paths_after_both_parents_move() {
     assert_eq!(copied.source(), captured_source);
     assert_eq!(copied.target(), Some(captured_target));
     assert_eq!(
-        fs::read(fixture.0.join("renamed-destination/source/file")).unwrap(),
+        fs::read(fixture.path().join("renamed-destination/source/file")).unwrap(),
         b"contents"
     );
 }
 
-struct BeforeCleanup {
-    job: Job,
-    action: Mutex<Option<Box<dyn FnOnce(&Job) + Send>>>,
-}
-
-impl Listener for BeforeCleanup {
-    fn wake(&self) {
-        if self.job.status().phase != JobPhase::Cleanup {
-            return;
-        }
-        let action = self.action.lock().unwrap().take();
-        if let Some(action) = action {
-            action(&self.job);
-        }
-    }
-    fn close(&self) {}
-    fn is_closed(&self) -> bool {
-        false
-    }
-}
-
 #[test]
 fn t_partial_cleanup_rechecks_bound_parent_identity_before_admitting_successes() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir_all(fixture.0.join("destination/source")).unwrap();
-    fs::write(fixture.0.join("source/file"), "contents").unwrap();
-    let fifo = std::ffi::CString::new(fixture.0.join("source/fifo").as_os_str().as_encoded_bytes())
-        .unwrap();
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir_all(fixture.path().join("destination/source")).unwrap();
+    fs::write(fixture.path().join("source/file"), "contents").unwrap();
+    let fifo = std::ffi::CString::new(
+        fixture
+            .path()
+            .join("source/fifo")
+            .as_os_str()
+            .as_encoded_bytes(),
+    )
+    .unwrap();
     assert_eq!(unsafe { libc::mkfifo(fifo.as_ptr(), 0o600) }, 0);
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let mut operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
     let source = operation.nodes[0];
-    let execution = EXECUTOR.lock().unwrap_or_else(|error| error.into_inner());
-    let job = tree.start_operation(operation).unwrap();
-    let path = fixture.0.clone();
-    let listener: Arc<dyn Listener> = Arc::new(BeforeCleanup {
-        job: job.clone(),
-        action: Mutex::new(Some(Box::new(move |_| {
+    let path = fixture.path().to_path_buf();
+    let (job, _listener) = start_observed(
+        &tree,
+        operation,
+        |status| status.phase == JobPhase::Cleanup,
+        move |_| {
             fs::rename(path.join("source"), path.join("original")).unwrap();
             fs::create_dir(path.join("source")).unwrap();
             fs::hard_link(path.join("original/file"), path.join("source/file")).unwrap();
-        }))),
-    });
-    tree.data().listen(&listener).unwrap();
-    drop(execution);
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while !job.status().terminal {
-        assert!(Instant::now() < deadline, "cleanup timed out");
-        std::thread::sleep(Duration::from_millis(1));
-    }
+        },
+    );
+    eventually(|| job.status().terminal);
     let results = job.results(0, job.status().results).unwrap();
     assert!(
         results
@@ -307,45 +282,45 @@ fn t_partial_cleanup_rechecks_bound_parent_identity_before_admitting_successes()
     assert!(!state.status().unwrap().locked);
     assert_eq!(state.snapshot().unwrap().summary.known_roots, 1);
     assert_eq!(
-        fs::read(fixture.0.join("destination/source/file")).unwrap(),
+        fs::read(fixture.path().join("destination/source/file")).unwrap(),
         b"contents"
     );
 }
 
 #[test]
 fn t_partial_cleanup_reserves_scratch_before_reading_success_metadata() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir_all(fixture.0.join("destination/source")).unwrap();
-    fs::write(fixture.0.join("source/file"), "contents").unwrap();
-    let fifo = std::ffi::CString::new(fixture.0.join("source/fifo").as_os_str().as_encoded_bytes())
-        .unwrap();
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir_all(fixture.path().join("destination/source")).unwrap();
+    fs::write(fixture.path().join("source/file"), "contents").unwrap();
+    let fifo = std::ffi::CString::new(
+        fixture
+            .path()
+            .join("source/fifo")
+            .as_os_str()
+            .as_encoded_bytes(),
+    )
+    .unwrap();
     assert_eq!(unsafe { libc::mkfifo(fifo.as_ptr(), 0o600) }, 0);
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let mut operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
     let source = operation.nodes[0];
-    let execution = EXECUTOR.lock().unwrap_or_else(|error| error.into_inner());
-    let job = tree.start_operation(operation).unwrap();
-    let path = fixture.0.clone();
+    let path = fixture.path().to_path_buf();
     let held = Arc::new(Mutex::new(None));
     let pressure = held.clone();
-    let listener: Arc<dyn Listener> = Arc::new(BeforeCleanup {
-        job: job.clone(),
-        action: Mutex::new(Some(Box::new(move |job| {
+    let (job, _listener) = start_observed(
+        &tree,
+        operation,
+        |status| status.phase == JobPhase::Cleanup,
+        move |job| {
             fs::remove_file(path.join("source/file")).unwrap();
             let memory = &job.0.task_memory;
             *pressure.lock().unwrap() =
                 Some(memory.reserve(RESULT_LIMIT - memory.used() - 512).unwrap());
-        }))),
-    });
-    tree.data().listen(&listener).unwrap();
-    drop(execution);
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while !job.status().terminal {
-        assert!(Instant::now() < deadline, "cleanup timed out");
-        std::thread::sleep(Duration::from_millis(1));
-    }
+        },
+    );
+    eventually(|| job.status().terminal);
     let results = job.results(0, job.status().results).unwrap();
     assert!(
         results
@@ -360,7 +335,7 @@ fn t_partial_cleanup_reserves_scratch_before_reading_success_metadata() {
     assert!(!state.status().unwrap().locked);
     assert_eq!(state.snapshot().unwrap().summary.known_roots, 1);
     assert_eq!(
-        fs::read(fixture.0.join("destination/source/file")).unwrap(),
+        fs::read(fixture.path().join("destination/source/file")).unwrap(),
         b"contents"
     );
     held.lock().unwrap().take();
@@ -378,27 +353,33 @@ fn t_partial_cleanup_capacity_failure_after_admission_keeps_all_selection_stamps
             Ok(Reply::NoChange)
         }
     }
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir_all(fixture.0.join("destination/source")).unwrap();
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir_all(fixture.path().join("destination/source")).unwrap();
     for index in 0..160 {
-        fs::write(fixture.0.join(format!("source/file-{index:03}")), b"data").unwrap();
-    }
-    let fifo = std::ffi::CString::new(fixture.0.join("source/fifo").as_os_str().as_encoded_bytes())
+        fs::write(
+            fixture.path().join(format!("source/file-{index:03}")),
+            b"data",
+        )
         .unwrap();
+    }
+    let fifo = std::ffi::CString::new(
+        fixture
+            .path()
+            .join("source/fifo")
+            .as_os_str()
+            .as_encoded_bytes(),
+    )
+    .unwrap();
     assert_eq!(unsafe { libc::mkfifo(fifo.as_ptr(), 0o600) }, 0);
-    let tree = request(Filetree::open(fixture.0.clone()));
-    request(tree.resolve(fixture.0.join("destination/source")));
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
+    request(tree.resolve(fixture.path().join("destination/source")));
     let mut operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
     let source = operation.nodes[0];
     let state = selection(&tree, &mut operation);
     work::wait(tree.data().submit(Action::Native(Box::new(LimitNodes)))).unwrap();
     let job = tree.start_operation(operation).unwrap();
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while !job.status().terminal {
-        assert!(Instant::now() < deadline, "cleanup timed out");
-        std::thread::sleep(Duration::from_millis(1));
-    }
+    eventually(|| job.status().terminal);
     assert_eq!(
         job.status().cleanup.unwrap().unwrap_err().code,
         ErrorCode::ResourceLimit
@@ -431,7 +412,7 @@ fn t_partial_cleanup_capacity_failure_after_admission_keeps_all_selection_stamps
         assert_eq!(
             fs::read(
                 fixture
-                    .0
+                    .path()
                     .join(format!("destination/source/file-{index:03}"))
             )
             .unwrap(),
@@ -442,56 +423,56 @@ fn t_partial_cleanup_capacity_failure_after_admission_keeps_all_selection_stamps
 
 #[test]
 fn t_private_traversal_directory_replacement_invalidates_loaded_success_cleanup() {
-    let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join("source")).unwrap();
-    fs::create_dir_all(fixture.0.join("destination/source")).unwrap();
+    let fixture = TempDir::new();
+    fs::create_dir(fixture.path().join("source")).unwrap();
+    fs::create_dir_all(fixture.path().join("destination/source")).unwrap();
     for index in 0..8 {
-        fs::write(fixture.0.join(format!("source/file-{index}")), b"data").unwrap();
+        fs::write(fixture.path().join(format!("source/file-{index}")), b"data").unwrap();
     }
-    let names: Vec<_> = fs::read_dir(fixture.0.join("source"))
+    let names: Vec<_> = fs::read_dir(fixture.path().join("source"))
         .unwrap()
         .map(|entry| entry.unwrap().file_name())
         .collect();
-    fs::write(fixture.0.join("destination/source").join(&names[1]), b"old").unwrap();
-    let tree = request(Filetree::open(fixture.0.clone()));
-    let root = request(tree.resolve(fixture.0.join("source"))).node;
+    fs::write(
+        fixture.path().join("destination/source").join(&names[1]),
+        b"old",
+    )
+    .unwrap();
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
+    let root = request(tree.resolve(fixture.path().join("source"))).node;
     work::wait(
         tree.data()
             .submit(Action::RequestChildren(vec![root], false)),
     )
     .unwrap();
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while tree.source().node(root).unwrap().completeness != Completeness::Complete {
-        assert!(Instant::now() < deadline);
-        std::thread::sleep(Duration::from_millis(1));
-    }
+    eventually(|| tree.source().node(root).unwrap().completeness == Completeness::Complete);
     let mut operation = plan(&tree, "source", Some("destination"), OperationKind::Copy);
     let state = selection(&tree, &mut operation);
     let job = tree.start_operation(operation).unwrap();
-    while job.status().confirmation.is_none() {
+    eventually(|| {
         assert!(!job.status().terminal);
-        assert!(Instant::now() < deadline);
-        std::thread::sleep(Duration::from_millis(1));
-    }
+        job.status().confirmation.is_some()
+    });
     let confirmation = job.status().confirmation.unwrap();
     assert_eq!(
-        fs::read(fixture.0.join("destination/source").join(&names[0])).unwrap(),
+        fs::read(fixture.path().join("destination/source").join(&names[0])).unwrap(),
         b"data"
     );
-    fs::rename(fixture.0.join("source"), fixture.0.join("original")).unwrap();
-    fs::create_dir(fixture.0.join("source")).unwrap();
+    fs::rename(
+        fixture.path().join("source"),
+        fixture.path().join("original"),
+    )
+    .unwrap();
+    fs::create_dir(fixture.path().join("source")).unwrap();
     for name in &names {
         fs::hard_link(
-            fixture.0.join("original").join(name),
-            fixture.0.join("source").join(name),
+            fixture.path().join("original").join(name),
+            fixture.path().join("source").join(name),
         )
         .unwrap();
     }
     job.confirm(confirmation.token, false).unwrap();
-    while !job.status().terminal {
-        assert!(Instant::now() < deadline);
-        std::thread::sleep(Duration::from_millis(1));
-    }
+    eventually(|| job.status().terminal);
     assert_eq!(job.status().error.unwrap().code, ErrorCode::Stale);
     assert_eq!(
         job.status().cleanup.unwrap().unwrap_err().code,
@@ -569,7 +550,7 @@ impl NativeAction for LoadedFixture {
 }
 
 fn capacity_case(count: usize, case: CapacityCase) {
-    let fixture = Fixture::new();
+    let fixture = TempDir::new();
     let prefix = if case == CapacityCase::NestedLong {
         "long-ancestor-component/".repeat(24)
     } else {
@@ -577,10 +558,10 @@ fn capacity_case(count: usize, case: CapacityCase) {
     };
     let source = format!("{prefix}source");
     let destination = format!("{prefix}destination");
-    fs::create_dir_all(fixture.0.join(&source)).unwrap();
-    fs::create_dir_all(fixture.0.join(&destination)).unwrap();
+    fs::create_dir_all(fixture.path().join(&source)).unwrap();
+    fs::create_dir_all(fixture.path().join(&destination)).unwrap();
     if matches!(case, CapacityCase::Merge | CapacityCase::LateSkip) {
-        fs::create_dir(fixture.0.join(&destination).join("source")).unwrap();
+        fs::create_dir(fixture.path().join(&destination).join("source")).unwrap();
     }
     let name = |index: usize| {
         if case == CapacityCase::NestedLong {
@@ -593,7 +574,7 @@ fn capacity_case(count: usize, case: CapacityCase) {
         for index in (0..count).step_by(1000) {
             fs::create_dir(
                 fixture
-                    .0
+                    .path()
                     .join(&source)
                     .join(format!("branch-{:02}", index / 1000)),
             )
@@ -601,17 +582,17 @@ fn capacity_case(count: usize, case: CapacityCase) {
         }
     }
     for index in 0..count {
-        fs::write(fixture.0.join(&source).join(name(index)), b"data").unwrap();
+        fs::write(fixture.path().join(&source).join(name(index)), b"data").unwrap();
     }
     let skipped = if case == CapacityCase::LateSkip {
-        let name = fs::read_dir(fixture.0.join(&source))
+        let name = fs::read_dir(fixture.path().join(&source))
             .unwrap()
             .last()
             .unwrap()
             .unwrap()
             .file_name();
         fs::write(
-            fixture.0.join(&destination).join("source").join(&name),
+            fixture.path().join(&destination).join("source").join(&name),
             b"existing",
         )
         .unwrap();
@@ -619,11 +600,11 @@ fn capacity_case(count: usize, case: CapacityCase) {
     } else {
         None
     };
-    let tree = request(Filetree::open(fixture.0.clone()));
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     if case == CapacityCase::Loaded {
-        let parent = request(tree.resolve(fixture.0.join(&source))).node;
+        let parent = request(tree.resolve(fixture.path().join(&source))).node;
         let entries = (0..count)
-            .map(|index| Entry::read(&fixture.0.join(&source).join(name(index))).unwrap())
+            .map(|index| Entry::read(&fixture.path().join(&source).join(name(index))).unwrap())
             .collect();
         work::wait(tree.data().submit(Action::Native(Box::new(LoadedFixture {
             tree: tree.clone(),
@@ -708,7 +689,7 @@ fn capacity_case(count: usize, case: CapacityCase) {
                     let mut node = source_node;
                     let index = tree.index.lock().unwrap();
                     for component in path
-                        .strip_prefix(fixture.0.join(&source))
+                        .strip_prefix(fixture.path().join(&source))
                         .unwrap()
                         .components()
                     {
@@ -730,7 +711,7 @@ fn capacity_case(count: usize, case: CapacityCase) {
     let mut copied = 0;
     for index in 0..count {
         let target = fixture
-            .0
+            .path()
             .join(&destination)
             .join("source")
             .join(name(index));
@@ -743,7 +724,7 @@ fn capacity_case(count: usize, case: CapacityCase) {
             assert!(!complete, "missing copied file {index}");
         }
         assert_eq!(
-            fs::read(fixture.0.join(&source).join(name(index))).unwrap(),
+            fs::read(fixture.path().join(&source).join(name(index))).unwrap(),
             b"data"
         );
     }
@@ -797,7 +778,9 @@ fn capacity_case(count: usize, case: CapacityCase) {
         }
     }
     assert_eq!(
-        fs::read_dir(fixture.0.join(&destination)).unwrap().count(),
+        fs::read_dir(fixture.path().join(&destination))
+            .unwrap()
+            .count(),
         usize::from(copied > 0 || complete)
     );
     eprintln!(
@@ -826,12 +809,6 @@ fn capacity_case(count: usize, case: CapacityCase) {
 }
 
 #[test]
-#[ignore = "creates and verifies 50k real files; run without concurrent load"]
-fn t_staged_50k_copy_completes_with_default_task_capacity_and_selection_cleanup() {
-    capacity_case(50_000, CapacityCase::Complete);
-}
-
-#[test]
 #[ignore = "creates and verifies 100k real files; run without concurrent load"]
 fn t_staged_100k_copy_completes_with_default_task_capacity_and_keeps_source_lazy() {
     capacity_case(100_000, CapacityCase::Complete);
@@ -840,12 +817,6 @@ fn t_staged_100k_copy_completes_with_default_task_capacity_and_keeps_source_lazy
 #[test]
 fn t_partial_frontier_uses_bounded_batches_and_survives_held_pages() {
     capacity_case(384, CapacityCase::LateSkip);
-}
-
-#[test]
-#[ignore = "creates and verifies 50k files with a directly loaded Source; run without concurrent load"]
-fn t_staged_50k_loaded_copy_completes_with_default_task_capacity() {
-    capacity_case(50_000, CapacityCase::Loaded);
 }
 
 #[test]
@@ -882,56 +853,32 @@ fn t_copy_capacity_nested_long_paths_preserve_results_and_cleanup() {
 fn t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry() {
     use std::time::{Duration, Instant};
 
-    if std::env::var_os("FILETREE_TWO_JOB_FD_CHILD").is_none() {
-        let output = std::process::Command::new(std::env::current_exe().unwrap())
-            .args(["--exact", "ux::filetree::jobs::staged::tests::t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry", "--nocapture", "--test-threads=1"])
-            .env("FILETREE_TWO_JOB_FD_CHILD", "1").output().unwrap();
-        assert!(
-            output.status.success(),
-            "{}\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr)
-        );
+    // Exhausts the process's file descriptors.
+    if !isolated(concat!(
+        module_path!(),
+        "::t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry"
+    )) {
         return;
     }
-    struct AfterFirstItem {
-        job: Job,
-        action: Mutex<Option<Box<dyn FnOnce() + Send>>>,
-    }
-    impl Listener for AfterFirstItem {
-        fn wake(&self) {
-            if self.job.status().processed == 0 {
-                return;
-            }
-            let action = self.action.lock().unwrap().take();
-            if let Some(action) = action {
-                action();
-            }
-        }
-        fn close(&self) {}
-        fn is_closed(&self) -> bool {
-            false
-        }
-    }
-    let fixture = Fixture::new();
+    let fixture = TempDir::new();
     for name in ["source", "destination-a", "destination-b"] {
-        fs::create_dir(fixture.0.join(name)).unwrap();
+        fs::create_dir(fixture.path().join(name)).unwrap();
     }
     for index in 0..12 {
-        fs::write(fixture.0.join(format!("source/{index:02}")), "data").unwrap();
+        fs::write(fixture.path().join(format!("source/{index:02}")), "data").unwrap();
     }
-    fs::write(fixture.0.join("single"), "other job").unwrap();
-    let tree = request(Filetree::open(fixture.0.clone()));
+    fs::write(fixture.path().join("single"), "other job").unwrap();
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let first_plan = plan(&tree, "source", Some("destination-a"), OperationKind::Copy);
     let other_plan = plan(&tree, "single", Some("destination-b"), OperationKind::Copy);
-    let execution = EXECUTOR.lock().unwrap();
-    let first = tree.start_operation(first_plan).unwrap();
     let concurrent = Arc::new(Mutex::new(None));
     let recorded = concurrent.clone();
     let other_tree = tree.clone();
-    let listener: Arc<dyn Listener> = Arc::new(AfterFirstItem {
-        job: first.clone(),
-        action: Mutex::new(Some(Box::new(move || {
+    let (first, _listener) = start_observed(
+        &tree,
+        first_plan,
+        |status| status.processed > 0,
+        move |_| {
             /* Hold the first writer between items while the second encounters a hard fd limit. */
             let execution = EXECUTOR.lock().unwrap();
             let other = other_tree.start_operation(other_plan).unwrap();
@@ -959,19 +906,12 @@ fn t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry() {
                 }
             }
             drop(execution);
-            while !other.status().terminal {
-                assert!(
-                    Instant::now() < deadline,
-                    "fd failure must terminate without holding the execution slot"
-                );
-                std::thread::sleep(Duration::from_millis(1));
-            }
+            // Fd failure must terminate without holding the execution slot.
+            eventually(|| other.status().terminal);
             *recorded.lock().unwrap() = Some(other);
             drop(held);
-        }))),
-    });
-    tree.data().listen(&listener).unwrap();
-    drop(execution);
+        },
+    );
     let first_results = done(&first);
     let other = concurrent
         .lock()
@@ -985,8 +925,11 @@ fn t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry() {
     assert!(first_results[0].sync_error().is_none());
     assert_eq!(other_results[0].status, ItemStatus::Failed);
     assert!(other_results[0].error().is_some());
-    assert!(!fixture.0.join("destination-b/single").exists());
-    assert_eq!(fs::read(fixture.0.join("single")).unwrap(), b"other job");
+    assert!(!fixture.path().join("destination-b/single").exists());
+    assert_eq!(
+        fs::read(fixture.path().join("single")).unwrap(),
+        b"other job"
+    );
     let retry = tree
         .start_operation(plan(
             &tree,
@@ -997,12 +940,17 @@ fn t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry() {
         .unwrap();
     assert_eq!(done(&retry)[0].status, ItemStatus::Success);
     assert_eq!(
-        fs::read(fixture.0.join("destination-b/single")).unwrap(),
+        fs::read(fixture.path().join("destination-b/single")).unwrap(),
         b"other job"
     );
     for index in 0..12 {
         assert_eq!(
-            fs::read(fixture.0.join(format!("destination-a/source/{index:02}"))).unwrap(),
+            fs::read(
+                fixture
+                    .path()
+                    .join(format!("destination-a/source/{index:02}"))
+            )
+            .unwrap(),
             b"data"
         );
     }
@@ -1010,15 +958,15 @@ fn t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry() {
 
 #[test]
 fn t_private_traversal_rejects_an_ancestor_move_without_loading_the_browse_source() {
-    let dir = Fixture::new();
+    let dir = TempDir::new();
     for path in ["parent/src", "copydst", "movedst", "idle"] {
-        fs::create_dir_all(dir.0.join(path)).unwrap();
+        fs::create_dir_all(dir.path().join(path)).unwrap();
     }
     for index in 0..1100 {
-        fs::write(dir.0.join(format!("parent/src/file-{index:04}")), "x").unwrap();
+        fs::write(dir.path().join(format!("parent/src/file-{index:04}")), "x").unwrap();
     }
-    let tree = request(Filetree::open(dir.0.clone()));
-    let idle = request(tree.resolve(dir.0.join("idle"))).node;
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
+    let idle = request(tree.resolve(dir.path().join("idle"))).node;
     let Outcome::State(state) = tree
         .create_state(Some(Root::ChildrenOf(idle)), DisplayOptions::default())
         .wait()
@@ -1026,56 +974,26 @@ fn t_private_traversal_rejects_an_ancestor_move_without_loading_the_browse_sourc
         panic!("state");
     };
     let _view = state.attach().unwrap();
-    let deadline = Instant::now() + Duration::from_secs(15);
-    while tree.source().node(idle).unwrap().completeness != Completeness::Complete
-        || tree.data().has_work()
-    {
-        assert!(Instant::now() < deadline);
-        std::thread::sleep(Duration::from_millis(1));
-    }
+    eventually(|| {
+        tree.source().node(idle).unwrap().completeness == Completeness::Complete
+            && !tree.data().has_work()
+    });
     let copy = plan(&tree, "parent/src", Some("copydst"), OperationKind::Copy);
     let source = copy.nodes[0];
     let move_parent = plan(&tree, "parent", Some("movedst"), OperationKind::Move);
-    struct BetweenItems {
-        job: Job,
-        action: std::sync::Mutex<Option<Box<dyn FnOnce() + Send>>>,
-    }
-    impl Listener for BetweenItems {
-        fn wake(&self) {
-            if self.job.status().processed == 0 {
-                return;
-            }
-            let action = self.action.lock().unwrap().take();
-            if let Some(action) = action {
-                action();
-            }
-        }
-        fn close(&self) {}
-        fn is_closed(&self) -> bool {
-            false
-        }
-    }
-    let execution = EXECUTOR.lock().unwrap();
-    let copying = tree.start_operation(copy).unwrap();
     let moving_tree = tree.clone();
-    let listener: Arc<dyn Listener> = Arc::new(BetweenItems {
-        job: copying.clone(),
-        action: std::sync::Mutex::new(Some(Box::new(move || {
+    let (copying, _listener) = start_observed(
+        &tree,
+        copy,
+        |status| status.processed > 0,
+        move |_| {
             assert_eq!(moving_tree.source().node(source).unwrap().child_count(), 0);
             let moved = done(&moving_tree.start_operation(move_parent).unwrap());
             assert_eq!(moved[0].status, ItemStatus::Success);
-        }))),
-    });
-    tree.data().listen(&listener).unwrap();
-    drop(execution);
-    let deadline = Instant::now() + Duration::from_secs(15);
-    while !copying.status().terminal {
-        assert!(
-            Instant::now() < deadline,
-            "private traversal must stop after input moves"
-        );
-        std::thread::sleep(Duration::from_millis(1));
-    }
+        },
+    );
+    // Private traversal must stop after input moves.
+    eventually(|| copying.status().terminal);
     assert_eq!(
         copying.status().error.as_ref().unwrap().code,
         ErrorCode::Stale
@@ -1089,9 +1007,9 @@ fn t_private_traversal_rejects_an_ancestor_move_without_loading_the_browse_sourc
     assert_eq!(result.len(), 1);
     assert_eq!(result[0].status, ItemStatus::Failed);
     assert_eq!(result[0].error().unwrap().code, ErrorCode::Stale);
-    assert!(!dir.0.join("copydst/src").exists());
+    assert!(!dir.path().join("copydst/src").exists());
     assert_eq!(
-        fs::read_dir(dir.0.join("movedst/parent/src"))
+        fs::read_dir(dir.path().join("movedst/parent/src"))
             .unwrap()
             .count(),
         1100

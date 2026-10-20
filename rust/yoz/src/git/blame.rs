@@ -290,7 +290,7 @@ mod tests {
     use super::*;
     use crate::git::Outcome;
     use crate::git::test_support::Fixture;
-    use std::time::Duration;
+    use crate::test_support::eventually;
 
     fn block(sha: &str, orig: usize, final_lnum: usize, count: usize) -> String {
         format!(
@@ -300,7 +300,7 @@ mod tests {
 
     fn query(fixture: &Fixture, path: &str, contents: &[u8]) -> BlameJob {
         start_blame(BlameOptions {
-            cwd: fixture.0.clone(),
+            cwd: fixture.path().to_path_buf(),
             path: path.into(),
             contents: contents.to_vec(),
             environment: std::env::vars_os().collect(),
@@ -309,16 +309,11 @@ mod tests {
     }
 
     fn finish(job: &mut BlameJob) -> Arc<BlameSnapshot> {
-        let started = Instant::now();
-        loop {
-            match job.poll().unwrap() {
-                Some(Outcome::Completed(snapshot)) => return Arc::clone(snapshot),
-                Some(other) => panic!("unexpected outcome: {other:?}"),
-                None => {}
-            }
-            assert!(started.elapsed() < Duration::from_secs(5));
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        eventually(|| match job.poll().unwrap() {
+            Some(Outcome::Completed(snapshot)) => Some(Arc::clone(snapshot)),
+            Some(other) => panic!("unexpected outcome: {other:?}"),
+            None => None,
+        })
     }
 
     #[test]
@@ -407,17 +402,20 @@ mod tests {
         let fixture = Fixture::new();
         fixture.write("file", "base\nunchanged\n");
         fixture.commit();
-        let index = std::fs::read(fixture.0.join(".git/index")).unwrap();
+        let index = std::fs::read(fixture.path().join(".git/index")).unwrap();
         let mut job = query(&fixture, "file", b"UNSAVED\nbase\nunchanged\n");
         let snapshot = finish(&mut job);
         assert!(snapshot.commit_at(1).unwrap().is_uncommitted());
         assert!(!snapshot.commit_at(2).unwrap().is_uncommitted());
         assert_eq!(snapshot.lines.len(), 3);
         assert_eq!(
-            std::fs::read(fixture.0.join("file")).unwrap(),
+            std::fs::read(fixture.path().join("file")).unwrap(),
             b"base\nunchanged\n"
         );
-        assert_eq!(std::fs::read(fixture.0.join(".git/index")).unwrap(), index);
+        assert_eq!(
+            std::fs::read(fixture.path().join(".git/index")).unwrap(),
+            index
+        );
         assert!(Arc::ptr_eq(&snapshot, &finish(&mut job)));
     }
 
@@ -438,11 +436,7 @@ mod tests {
         fixture.commit();
         let mut job = query(&fixture, "file", b"base\n");
         job.cancel().unwrap();
-        let started = Instant::now();
-        while job.poll().unwrap().is_none() {
-            assert!(started.elapsed() < Duration::from_secs(5));
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        eventually(|| job.poll().unwrap().is_some());
         assert!(matches!(job.poll().unwrap(), Some(Outcome::Cancelled)));
         job.dispose();
         job.dispose();

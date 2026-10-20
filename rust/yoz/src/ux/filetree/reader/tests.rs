@@ -1,6 +1,7 @@
-use super::super::tests::{Directory, request};
+use super::super::test_support::request;
 use super::super::{Entry, Filetree};
 use super::*;
+use crate::test_support::{TempDir, eventually};
 use crate::ux::treeview::*;
 use std::fs;
 use std::path::Path;
@@ -57,9 +58,9 @@ fn start_read(engine: &mut Engine, node: NodeId) -> ReadToken {
 
 #[test]
 fn t_scan_initialization_cancels_before_io_and_during_cached_member_alignment() {
-    let directory = Directory::new();
-    fs::write(directory.0.join("seed"), b"content").unwrap();
-    let (mut engine, _) = filesystem_engine(&directory.0, &[]);
+    let directory = TempDir::new();
+    fs::write(directory.path().join("seed"), b"content").unwrap();
+    let (mut engine, _) = filesystem_engine(directory.path(), &[]);
     let root = engine.source().id("root").unwrap();
     let staging = Arc::new(AtomicUsize::new(0));
     let cancelled = AtomicBool::new(true);
@@ -73,7 +74,7 @@ fn t_scan_initialization_cancels_before_io_and_during_cached_member_alignment() 
     assert_eq!(staging.load(Ordering::Acquire), 0);
 
     /* Synthetic cached members exercise initialization only; no large directory is scanned. */
-    let mut entry = Entry::read(&directory.0.join("seed")).unwrap();
+    let mut entry = Entry::read(&directory.path().join("seed")).unwrap();
     let operations = (0..50_000)
         .map(|index| {
             entry.name = format!("cached-{index:05}").into();
@@ -124,11 +125,11 @@ fn t_scan_initialization_cancels_before_io_and_during_cached_member_alignment() 
 
 #[test]
 fn t_wide_cached_scan_fits_the_existing_staging_limit() {
-    let directory = Directory::new();
-    fs::write(directory.0.join("seed"), b"content").unwrap();
-    let (mut engine, _) = filesystem_engine(&directory.0, &[]);
+    let directory = TempDir::new();
+    fs::write(directory.path().join("seed"), b"content").unwrap();
+    let (mut engine, _) = filesystem_engine(directory.path(), &[]);
     let root = engine.source().id("root").unwrap();
-    let mut entry = Entry::read(&directory.0.join("seed")).unwrap();
+    let mut entry = Entry::read(&directory.path().join("seed")).unwrap();
     for first in (0..100_000).step_by(2048) {
         let operations = (first..(first + 2048).min(100_000))
             .map(|index| {
@@ -183,20 +184,20 @@ fn t_wide_cached_scan_fits_the_existing_staging_limit() {
 
 #[test]
 fn t_scan_sparse_order_tracks_paged_renames_replacements_and_ambiguous_links() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     let names: Vec<_> = (0..4096).map(|index| format!("a-{index:04}")).collect();
     for (number, name) in names.iter().enumerate() {
         if number != 1199 {
-            fs::write(directory.0.join(name), b"original").unwrap();
+            fs::write(directory.path().join(name), b"original").unwrap();
         }
     }
     fs::hard_link(
-        directory.0.join(&names[1198]),
-        directory.0.join(&names[1199]),
+        directory.path().join(&names[1198]),
+        directory.path().join(&names[1199]),
     )
     .unwrap();
     let refs: Vec<_> = names.iter().map(String::as_str).collect();
-    let (mut engine, index) = filesystem_engine(&directory.0, &refs);
+    let (mut engine, index) = filesystem_engine(directory.path(), &refs);
     let root = engine.source().id("root").unwrap();
     let original: Vec<_> = names
         .iter()
@@ -204,37 +205,37 @@ fn t_scan_sparse_order_tracks_paged_renames_replacements_and_ambiguous_links() {
         .collect();
     for number in 0..800 {
         fs::rename(
-            directory.0.join(&names[number]),
-            directory.0.join(format!("z-{number:04}")),
+            directory.path().join(&names[number]),
+            directory.path().join(format!("z-{number:04}")),
         )
         .unwrap();
         if number < 150 {
-            fs::write(directory.0.join(&names[number]), b"replacement").unwrap();
+            fs::write(directory.path().join(&names[number]), b"replacement").unwrap();
         }
     }
     fs::hard_link(
-        directory.0.join(&names[1100]),
-        directory.0.join("new-hardlink"),
+        directory.path().join(&names[1100]),
+        directory.path().join("new-hardlink"),
     )
     .unwrap();
     fs::rename(
-        directory.0.join(&names[1101]),
-        directory.0.join("moved-hardlink"),
+        directory.path().join(&names[1101]),
+        directory.path().join("moved-hardlink"),
     )
     .unwrap();
     fs::hard_link(
-        directory.0.join("moved-hardlink"),
-        directory.0.join("another-hardlink"),
+        directory.path().join("moved-hardlink"),
+        directory.path().join("another-hardlink"),
     )
     .unwrap();
     for number in [1198, 1199] {
         fs::rename(
-            directory.0.join(&names[number]),
-            directory.0.join(format!("old-link-{number}")),
+            directory.path().join(&names[number]),
+            directory.path().join(format!("old-link-{number}")),
         )
         .unwrap();
     }
-    fs::create_dir(directory.0.join("new-directory")).unwrap();
+    fs::create_dir(directory.path().join("new-directory")).unwrap();
     let token = start_read(&mut engine, root);
     let staging = Arc::new(AtomicUsize::new(0));
     let cancelled = AtomicBool::new(false);
@@ -282,7 +283,7 @@ fn t_scan_sparse_order_tracks_paged_renames_replacements_and_ambiguous_links() {
         }
     }
     assert!(sequence > 2);
-    let mut expected: Vec<_> = fs::read_dir(&directory.0)
+    let mut expected: Vec<_> = fs::read_dir(directory.path())
         .unwrap()
         .map(|entry| Entry::read(&entry.unwrap().path()).unwrap())
         .collect();
@@ -329,128 +330,124 @@ fn t_scan_sparse_order_tracks_paged_renames_replacements_and_ambiguous_links() {
     assert_eq!(staging.load(Ordering::Acquire), 0);
 }
 
-fn scan_stages(count: usize) {
-    let directory = Directory::new();
-    let names: Vec<_> = (0..count).map(|index| format!("file-{index:06}")).collect();
-    for name in &names {
-        fs::write(directory.0.join(name), b"test").unwrap();
-    }
-    let names: Vec<_> = names.iter().map(String::as_str).collect();
-    for loaded in [false, true] {
-        let (mut engine, index) =
-            filesystem_engine(&directory.0, if loaded { &names } else { &[] });
-        let root = engine.source().id("root").unwrap();
-        let original: Vec<_> = engine.source().node(root).unwrap().children().collect();
-        let token = start_read(&mut engine, root);
-        let staging = Arc::new(AtomicUsize::new(0));
-        let cancelled = AtomicBool::new(false);
-        let start = Instant::now();
-        let created = Scan::new(
-            engine.source(),
-            root,
-            Reservation::new(engine.memory.clone(), staging.clone()),
-            &cancelled,
-        );
-        let initialization = start.elapsed();
-        let mut scan = match created {
-            Ok(scan) => scan,
-            Err(error) => {
-                println!(
-                    "scan_stage count={count} loaded={loaded} outcome={:?} initialize_ms={:.3}",
-                    error.code,
-                    initialization.as_secs_f64() * 1000.0
-                );
-                assert_eq!(staging.load(Ordering::Acquire), 0);
-                continue;
-            }
-        };
-        let mut peak = staging.load(Ordering::Acquire);
-        let mut times = [std::time::Duration::ZERO; 2];
-        let mut pages = 0;
-        let mut failure = None;
-        loop {
+#[test]
+#[ignore = "explicit release-mode cold/warm scan stage measurement"]
+fn t_scan_stages() {
+    for count in [1_000, 10_000, 100_000] {
+        let directory = TempDir::new();
+        let names: Vec<_> = (0..count).map(|index| format!("file-{index:06}")).collect();
+        for name in &names {
+            fs::write(directory.path().join(name), b"test").unwrap();
+        }
+        let names: Vec<_> = names.iter().map(String::as_str).collect();
+        for loaded in [false, true] {
+            let (mut engine, index) =
+                filesystem_engine(directory.path(), if loaded { &names } else { &[] });
+            let root = engine.source().id("root").unwrap();
+            let state = engine
+                .create_state(Root::ChildrenOf(root), DisplayOptions::default())
+                .unwrap();
+            engine.states.get_mut(&state).unwrap().views = 1;
+            let original: Vec<_> = engine.source().node(root).unwrap().children().collect();
+            let token = start_read(&mut engine, root);
+            let staging = Arc::new(AtomicUsize::new(0));
+            let cancelled = AtomicBool::new(false);
             let start = Instant::now();
-            let result = scan.page(
+            let created = Scan::new(
+                engine.source(),
                 root,
                 Reservation::new(engine.memory.clone(), staging.clone()),
                 &cancelled,
             );
-            times[0] += start.elapsed();
-            peak = peak.max(staging.load(Ordering::Acquire));
-            let page = match result {
-                Ok(page) => page,
+            let initialization = start.elapsed();
+            let mut scan = match created {
+                Ok(scan) => scan,
                 Err(error) => {
-                    failure = Some(error.code);
-                    break;
+                    println!(
+                        "scan_stage count={count} loaded={loaded} outcome={:?} initialize_ms={:.3}",
+                        error.code,
+                        initialization.as_secs_f64() * 1000.0
+                    );
+                    assert_eq!(staging.load(Ordering::Acquire), 0);
+                    continue;
                 }
             };
-            pages += 1;
-            let done = page.done;
+            let mut peak = staging.load(Ordering::Acquire);
+            let mut times = [std::time::Duration::ZERO; 3];
+            let mut pages = 0;
+            let mut failure = None;
+            loop {
+                let start = Instant::now();
+                let result = scan.page(
+                    root,
+                    Reservation::new(engine.memory.clone(), staging.clone()),
+                    &cancelled,
+                );
+                times[0] += start.elapsed();
+                peak = peak.max(staging.load(Ordering::Acquire));
+                let page = match result {
+                    Ok(page) => page,
+                    Err(error) => {
+                        failure = Some(error.code);
+                        break;
+                    }
+                };
+                pages += 1;
+                let done = page.done;
+                let start = Instant::now();
+                Box::new(Completion {
+                    token,
+                    sequence: pages,
+                    page,
+                    index: index.clone(),
+                })
+                .apply(&mut engine)
+                .unwrap();
+                times[1] += start.elapsed();
+                let start = Instant::now();
+                for (_, frame) in engine.project() {
+                    frame.unwrap();
+                }
+                times[2] += start.elapsed();
+                if done {
+                    break;
+                }
+            }
+            if failure.is_none() {
+                let children: Vec<_> = engine.source().node(root).unwrap().children().collect();
+                assert_eq!(children.len(), count);
+                assert_eq!(
+                    engine.source().node(root).unwrap().completeness,
+                    Completeness::Complete
+                );
+                for (id, name) in children.iter().zip(&names) {
+                    assert_eq!(resource::entry(engine.source(), *id).unwrap().name, *name);
+                }
+                if loaded {
+                    assert_eq!(children, original);
+                }
+            }
             let start = Instant::now();
-            Box::new(Completion {
-                token,
-                sequence: pages,
-                page,
-                index: index.clone(),
-            })
-            .apply(&mut engine)
-            .unwrap();
-            times[1] += start.elapsed();
-            if done {
-                break;
-            }
-        }
-        if failure.is_none() {
-            let children: Vec<_> = engine.source().node(root).unwrap().children().collect();
-            assert_eq!(children.len(), count);
-            assert_eq!(
-                engine.source().node(root).unwrap().completeness,
-                Completeness::Complete
+            drop(scan);
+            let retired = start.elapsed();
+            assert_eq!(staging.load(Ordering::Acquire), 0);
+            println!(
+                "scan_stage count={count} loaded={loaded} outcome={:?} initialize_ms={:.3} io_ms={:.3} apply_ms={:.3} project_ms={:.3} retire_ms={:.3} pages={pages} staging_peak={peak}",
+                failure,
+                initialization.as_secs_f64() * 1000.0,
+                times[0].as_secs_f64() * 1000.0,
+                times[1].as_secs_f64() * 1000.0,
+                times[2].as_secs_f64() * 1000.0,
+                retired.as_secs_f64() * 1000.0
             );
-            for (id, name) in children.iter().zip(&names) {
-                assert_eq!(resource::entry(engine.source(), *id).unwrap().name, *name);
-            }
-            if loaded {
-                assert_eq!(children, original);
-            }
         }
-        let start = Instant::now();
-        drop(scan);
-        let retired = start.elapsed();
-        assert_eq!(staging.load(Ordering::Acquire), 0);
-        println!(
-            "scan_stage count={count} loaded={loaded} outcome={:?} initialize_ms={:.3} io_ms={:.3} apply_ms={:.3} retire_ms={:.3} pages={pages} staging_peak={peak}",
-            failure,
-            initialization.as_secs_f64() * 1000.0,
-            times[0].as_secs_f64() * 1000.0,
-            times[1].as_secs_f64() * 1000.0,
-            retired.as_secs_f64() * 1000.0
-        );
     }
 }
 
 #[test]
-#[ignore = "explicit native cold/warm scan measurement"]
-fn t_scan_stages_1000() {
-    scan_stages(1_000);
-}
-
-#[test]
-#[ignore = "explicit native cold/warm scan measurement"]
-fn t_scan_stages_10000() {
-    scan_stages(10_000);
-}
-
-#[test]
-#[ignore = "explicit native cold/warm scan capacity measurement"]
-fn t_scan_stages_100000() {
-    scan_stages(100_000);
-}
-
-#[test]
 fn t_cancelled_worker_keeps_its_scan_pending_until_retirement() {
-    let directory = Directory::new();
-    let (mut engine, index) = filesystem_engine(&directory.0, &[]);
+    let directory = TempDir::new();
+    let (mut engine, index) = filesystem_engine(directory.path(), &[]);
     let root = engine.source().id("root").unwrap();
     let token = start_read(&mut engine, root);
     let mut reader = Reader::new(
@@ -529,8 +526,8 @@ fn t_scan_work_rejected_before_execution_does_not_wake_owner() {
         }
     }
 
-    let directory = Directory::new();
-    let (engine, _) = filesystem_engine(&directory.0, &[]);
+    let directory = TempDir::new();
+    let (engine, _) = filesystem_engine(directory.path(), &[]);
     let polls = Arc::new(AtomicUsize::new(0));
     let data =
         DataHandle::with_reader(Limits::default(), Some(Box::new(Counter(polls.clone())))).unwrap();
@@ -583,11 +580,11 @@ fn t_scan_work_rejected_before_execution_does_not_wake_owner() {
 #[cfg(unix)]
 #[test]
 fn t_delayed_probe_preserves_new_target_children() {
-    let dir = Directory::new();
-    let target = dir.0.join("target");
-    let path = dir.0.join("link");
+    let dir = TempDir::new();
+    let target = dir.path().join("target");
+    let path = dir.path().join("link");
     std::os::unix::fs::symlink("target", &path).unwrap();
-    let tree = request(Filetree::open(dir.0.clone()));
+    let tree = request(Filetree::open(dir.path().to_path_buf()));
     let link = request(tree.resolve(path.clone()));
     assert!(!link.source.node(link.node).unwrap().data.can_expand);
     let delayed = Probe {
@@ -616,9 +613,9 @@ fn t_delayed_probe_preserves_new_target_children() {
 #[test]
 fn t_delayed_parent_page_preserves_new_target_children() {
     for (restored, existing) in [(false, false), (true, false), (true, true)] {
-        let dir = Directory::new();
-        let workspace = dir.0.join("workspace");
-        let target = dir.0.join("target");
+        let dir = TempDir::new();
+        let workspace = dir.path().join("workspace");
+        let target = dir.path().join("target");
         fs::create_dir(&workspace).unwrap();
         fs::create_dir(&target).unwrap();
         if existing {
@@ -636,7 +633,7 @@ fn t_delayed_parent_page_preserves_new_target_children() {
         let link = engine.source().id("link").unwrap();
         let original = resource::entry(engine.source(), link).unwrap();
         let token = start_read(&mut engine, root);
-        fs::rename(&target, dir.0.join("original")).unwrap();
+        fs::rename(&target, dir.path().join("original")).unwrap();
         fs::create_dir(&target).unwrap();
         let staging = Arc::new(AtomicUsize::new(0));
         let mut scan = Scan::new(
@@ -655,9 +652,9 @@ fn t_delayed_parent_page_preserves_new_target_children() {
             .unwrap();
         assert!(page.done);
         let baseline = page.source.clone();
-        fs::rename(&target, dir.0.join("observed")).unwrap();
+        fs::rename(&target, dir.path().join("observed")).unwrap();
         if restored {
-            fs::rename(dir.0.join("original"), &target).unwrap();
+            fs::rename(dir.path().join("original"), &target).unwrap();
         } else {
             fs::create_dir(&target).unwrap();
         }
@@ -741,15 +738,15 @@ fn t_delayed_parent_page_preserves_new_target_children() {
 
 #[test]
 fn t_completed_parent_page_preserves_new_children_of_missing_member() {
-    let dir = Directory::new();
-    let workspace = dir.0.join("workspace");
+    let dir = TempDir::new();
+    let workspace = dir.path().join("workspace");
     let nested = workspace.join("nested");
     fs::create_dir_all(&nested).unwrap();
     let (mut engine, index) = filesystem_engine(&workspace, &["nested"]);
     let root = engine.source().id("root").unwrap();
     let parent = engine.source().id("nested").unwrap();
     let token = start_read(&mut engine, root);
-    fs::rename(&nested, dir.0.join("previous")).unwrap();
+    fs::rename(&nested, dir.path().join("previous")).unwrap();
     let staging = Arc::new(AtomicUsize::new(0));
     let mut scan = Scan::new(
         engine.source(),
@@ -766,7 +763,7 @@ fn t_completed_parent_page_preserves_new_children_of_missing_member() {
         )
         .unwrap();
     assert!(page.done && page.members.is_empty());
-    fs::rename(dir.0.join("previous"), &nested).unwrap();
+    fs::rename(dir.path().join("previous"), &nested).unwrap();
     fs::write(nested.join("child"), b"confirmed").unwrap();
     engine
         .apply_batch(Batch {
@@ -804,8 +801,8 @@ fn t_completed_parent_page_preserves_new_children_of_missing_member() {
 
 #[test]
 fn t_completed_parent_page_preserves_new_descendant_metadata() {
-    let dir = Directory::new();
-    let workspace = dir.0.join("workspace");
+    let dir = TempDir::new();
+    let workspace = dir.path().join("workspace");
     let nested = workspace.join("nested");
     fs::create_dir_all(&nested).unwrap();
     fs::write(nested.join("child"), b"old").unwrap();
@@ -814,7 +811,7 @@ fn t_completed_parent_page_preserves_new_descendant_metadata() {
     let parent = engine.source().id("nested").unwrap();
     let child = engine.source().id("nested/child").unwrap();
     let token = start_read(&mut engine, root);
-    fs::rename(&nested, dir.0.join("previous")).unwrap();
+    fs::rename(&nested, dir.path().join("previous")).unwrap();
     let staging = Arc::new(AtomicUsize::new(0));
     let mut scan = Scan::new(
         engine.source(),
@@ -832,7 +829,7 @@ fn t_completed_parent_page_preserves_new_descendant_metadata() {
         .unwrap();
     assert!(page.done && page.members.is_empty());
     let baseline = page.source.clone();
-    fs::rename(dir.0.join("previous"), &nested).unwrap();
+    fs::rename(dir.path().join("previous"), &nested).unwrap();
     fs::write(nested.join("child"), b"confirmed").unwrap();
     let metadata = Entry::read(&nested.join("child")).unwrap();
     engine
@@ -872,9 +869,9 @@ fn t_completed_parent_page_preserves_new_descendant_metadata() {
 #[test]
 fn t_delayed_failure_preserves_newer_descendant_metadata() {
     for unavailable in [false, true] {
-        let dir = Directory::new();
-        let workspace = dir.0.join("workspace");
-        let target = dir.0.join("target");
+        let dir = TempDir::new();
+        let workspace = dir.path().join("workspace");
+        let target = dir.path().join("target");
         fs::create_dir(&workspace).unwrap();
         fs::create_dir(&target).unwrap();
         fs::write(target.join("child"), b"old").unwrap();
@@ -887,9 +884,9 @@ fn t_delayed_failure_preserves_newer_descendant_metadata() {
         let baseline = engine.source().clone();
         let identity = resource::entry(&baseline, link).unwrap().identity;
         if unavailable {
-            fs::rename(&path, dir.0.join("saved-link")).unwrap();
+            fs::rename(&path, dir.path().join("saved-link")).unwrap();
         } else {
-            fs::rename(&target, dir.0.join("original")).unwrap();
+            fs::rename(&target, dir.path().join("original")).unwrap();
             fs::create_dir(&target).unwrap();
         }
         let error = match Scan::new(
@@ -913,10 +910,10 @@ fn t_delayed_failure_preserves_newer_descendant_metadata() {
             index,
         };
         if unavailable {
-            fs::rename(dir.0.join("saved-link"), &path).unwrap();
+            fs::rename(dir.path().join("saved-link"), &path).unwrap();
         } else {
-            fs::rename(&target, dir.0.join("observed")).unwrap();
-            fs::rename(dir.0.join("original"), &target).unwrap();
+            fs::rename(&target, dir.path().join("observed")).unwrap();
+            fs::rename(dir.path().join("original"), &target).unwrap();
         }
         fs::write(target.join("child"), b"confirmed").unwrap();
         let metadata = Entry::read(&path.join("child")).unwrap();
@@ -953,15 +950,15 @@ fn t_delayed_failure_preserves_newer_descendant_metadata() {
 
 #[test]
 fn t_parent_page_preserves_unrelated_subtree_progress() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("nested")).unwrap();
-    fs::write(dir.0.join("file"), b"old").unwrap();
-    let (mut engine, index) = filesystem_engine(&dir.0, &["nested", "file"]);
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("nested")).unwrap();
+    fs::write(dir.path().join("file"), b"old").unwrap();
+    let (mut engine, index) = filesystem_engine(dir.path(), &["nested", "file"]);
     let root = engine.source().id("root").unwrap();
     let nested = engine.source().id("nested").unwrap();
     let file = engine.source().id("file").unwrap();
     let token = start_read(&mut engine, root);
-    fs::write(dir.0.join("file"), b"observed").unwrap();
+    fs::write(dir.path().join("file"), b"observed").unwrap();
     let staging = Arc::new(AtomicUsize::new(0));
     let mut scan = Scan::new(
         engine.source(),
@@ -977,8 +974,8 @@ fn t_parent_page_preserves_unrelated_subtree_progress() {
             &AtomicBool::new(false),
         )
         .unwrap();
-    fs::write(dir.0.join("nested/child"), b"confirmed").unwrap();
-    let metadata = Entry::read(&dir.0.join("nested")).unwrap();
+    fs::write(dir.path().join("nested/child"), b"confirmed").unwrap();
+    let metadata = Entry::read(&dir.path().join("nested")).unwrap();
     engine
         .apply_batch(Batch {
             base_revision: engine.source().revision(),
@@ -994,7 +991,7 @@ fn t_parent_page_preserves_unrelated_subtree_progress() {
                     key: "confirmed-child".into(),
                     parent: Some(nested.into()),
                     position: Position::Last,
-                    data: Entry::read(&dir.0.join("nested/child"))
+                    data: Entry::read(&dir.path().join("nested/child"))
                         .unwrap()
                         .node_data(),
                     completeness: Completeness::Complete,
@@ -1028,19 +1025,19 @@ fn t_parent_page_preserves_unrelated_subtree_progress() {
 
 #[test]
 fn t_parent_pages_accept_their_earlier_metadata_updates() {
-    let dir = Directory::new();
+    let dir = TempDir::new();
     let names: Vec<_> = (0..=super::super::scan::PAGE_ITEMS)
         .map(|index| format!("file-{index:04}"))
         .collect();
     for name in &names {
-        fs::write(dir.0.join(name), b"old").unwrap();
+        fs::write(dir.path().join(name), b"old").unwrap();
     }
     let refs: Vec<_> = names.iter().map(String::as_str).collect();
-    let (mut engine, index) = filesystem_engine(&dir.0, &refs);
+    let (mut engine, index) = filesystem_engine(dir.path(), &refs);
     let root = engine.source().id("root").unwrap();
     let token = start_read(&mut engine, root);
     for name in &names {
-        fs::write(dir.0.join(name), b"observed").unwrap();
+        fs::write(dir.path().join(name), b"observed").unwrap();
     }
     let staging = Arc::new(AtomicUsize::new(0));
     let mut scan = Scan::new(
@@ -1155,12 +1152,12 @@ fn t_dirty_ancestor_refresh_admits_when_requested_capacity_is_full() {
     }
 
     for count in [255, 256] {
-        let directory = Directory::new();
-        let mut entry = super::super::Entry::read(&directory.0).unwrap();
-        entry.anchor = Some(directory.0.clone());
+        let directory = TempDir::new();
+        let mut entry = super::super::Entry::read(directory.path()).unwrap();
+        entry.anchor = Some(directory.path().to_path_buf());
         let mut records = vec![Record::new("root", entry.node_data())];
         for index in 0..count {
-            let path = directory.0.join(format!("child-{index}"));
+            let path = directory.path().join(format!("child-{index}"));
             std::fs::create_dir(&path).unwrap();
             std::fs::write(path.join("file"), b"content").unwrap();
             records.push(Record {
@@ -1199,10 +1196,10 @@ fn t_dirty_ancestor_refresh_admits_when_requested_capacity_is_full() {
             children: children.clone(),
         }))))
         .unwrap();
-        let started = Instant::now();
-        loop {
+        // A dirty ancestor makes progress with any number of queued requests.
+        eventually(|| {
             let source = data.source();
-            if dirty.lock().unwrap().is_empty()
+            dirty.lock().unwrap().is_empty()
                 && !data.has_work()
                 && children.iter().all(|id| {
                     source.node(*id).is_some_and(|node| {
@@ -1211,15 +1208,7 @@ fn t_dirty_ancestor_refresh_admits_when_requested_capacity_is_full() {
                             && node.child_count() == 1
                     })
                 })
-            {
-                break;
-            }
-            assert!(
-                started.elapsed() < std::time::Duration::from_secs(10),
-                "dirty ancestor did not make progress with {count} requests"
-            );
-            std::thread::sleep(std::time::Duration::from_millis(1));
-        }
+        });
     }
 }
 
@@ -1263,11 +1252,7 @@ fn t_probe_retries_and_no_change_do_not_publish_watch_errors() {
             Some(code) => Err(Error::new(code, "retry probe")),
             None => Ok(Reply::NoChange),
         });
-        let started = Instant::now();
-        while request.poll().is_none() {
-            assert!(started.elapsed() < std::time::Duration::from_secs(10));
-            std::thread::sleep(std::time::Duration::from_millis(1));
-        }
+        eventually(|| request.poll().is_some());
         reader.probes.insert(node, (request, 1));
         reader.publish(&engine, &data.downgrade());
         let status = &interest.lock().unwrap().status;
@@ -1275,85 +1260,4 @@ fn t_probe_retries_and_no_change_do_not_publish_watch_errors() {
         assert!(status.error.is_none());
         assert_eq!(dirty.lock().unwrap().get(&node).is_some(), code.is_some());
     }
-}
-
-#[test]
-#[ignore = "explicit release-mode directory stage measurement"]
-fn t_native_directory_stages() {
-    let dir = Directory::new();
-    for i in 0..50_000 {
-        std::fs::write(dir.0.join(format!("file-{i:05}")), b"").unwrap();
-    }
-    let mut entry = super::super::Entry::read(&dir.0).unwrap();
-    entry.anchor = Some(dir.0.clone());
-    let mut engine = Engine::new(Limits::default()).unwrap();
-    engine
-        .import(Import {
-            base_revision: engine.source().revision(),
-            scope: DataScope::Forest,
-            records: vec![Record::new("root", entry.node_data())],
-        })
-        .unwrap();
-    let root = engine.source().id("root").unwrap();
-    let state = engine
-        .create_state(Root::ChildrenOf(root), DisplayOptions::default())
-        .unwrap();
-    engine.states.get_mut(&state).unwrap().views = 1;
-    let Reply::Applied { effects, .. } = engine.request_children(&[root], true).unwrap() else {
-        panic!("request")
-    };
-    let Effect::NeedChildren { token, .. } = effects[0] else {
-        panic!("read")
-    };
-    let staging = Arc::new(AtomicUsize::new(0));
-    let mut scan = Scan::new(
-        engine.source(),
-        root,
-        Reservation::new(engine.memory.clone(), staging.clone()),
-        &AtomicBool::new(false),
-    )
-    .unwrap();
-    let index = Arc::new(Mutex::new(super::super::index::Index::default()));
-    let mut times = [0.0; 3];
-    let mut count = 0;
-    let mut visited = 0;
-    println!("native stages: begin scan");
-    loop {
-        count += 1;
-        let start = Instant::now();
-        let page = scan
-            .page(
-                root,
-                Reservation::new(engine.memory.clone(), staging.clone()),
-                &AtomicBool::new(false),
-            )
-            .unwrap();
-        times[0] += start.elapsed().as_secs_f64();
-        let done = page.done;
-        let start = Instant::now();
-        Box::new(Completion {
-            token,
-            sequence: count,
-            page,
-            index: index.clone(),
-        })
-        .apply(&mut engine)
-        .unwrap();
-        times[1] += start.elapsed().as_secs_f64();
-        let start = Instant::now();
-        for (_, frame) in engine.project() {
-            visited += frame.unwrap().visited_nodes;
-        }
-        times[2] += start.elapsed().as_secs_f64();
-        if done {
-            break;
-        }
-    }
-    println!(
-        "50k native stages pages={count} io_ms={:.3} apply_ms={:.3} projection_ms={:.3} visited={visited} retained={}",
-        times[0] * 1000.0,
-        times[1] * 1000.0,
-        times[2] * 1000.0,
-        engine.memory.used()
-    );
 }

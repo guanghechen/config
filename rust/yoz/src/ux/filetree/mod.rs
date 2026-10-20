@@ -10,8 +10,6 @@ mod listing;
 pub(crate) mod lua;
 mod memory;
 mod model;
-#[cfg(test)]
-mod profile;
 mod reader;
 mod resource;
 mod runtime;
@@ -34,7 +32,6 @@ pub use watch::Status as WatchStatus;
 pub use work::Request;
 
 #[cfg(test)]
-mod tests;
-
+pub(crate) mod test_support;
 #[cfg(test)]
-mod jobs_tests;
+mod tests;

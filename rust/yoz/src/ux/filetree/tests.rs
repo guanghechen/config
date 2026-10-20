@@ -1,14 +1,16 @@
+use super::test_support::*;
 use super::*;
+use crate::test_support::{TempDir, eventually};
 use crate::ux::treeview::*;
 use std::fs;
 use std::path::PathBuf;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 #[test]
 fn t_captured_resources_allow_metadata_loads_but_validate_the_entire_occurrence_chain() {
-    let directory = Directory::new();
-    let mut root = Entry::read(&directory.0).unwrap();
-    root.anchor = Some(directory.0.clone());
+    let directory = TempDir::new();
+    let mut root = Entry::read(directory.path()).unwrap();
+    root.anchor = Some(directory.path().to_path_buf());
     let mut branch = root.clone();
     branch.anchor = None;
     branch.name = "branch".into();
@@ -156,8 +158,8 @@ fn t_captured_resources_allow_metadata_loads_but_validate_the_entire_occurrence_
 
 #[test]
 fn t_insertion_positions_preserve_directory_order_and_exclude_the_moving_entry() {
-    let directory = Directory::new();
-    let base = Entry::read(&directory.0).unwrap();
+    let directory = TempDir::new();
+    let base = Entry::read(directory.path()).unwrap();
     let mut entries = Vec::new();
     for name in ["0", "a", "A", "aa", "Z", "z", "文"] {
         for kind in [Kind::File, Kind::Directory] {
@@ -254,72 +256,13 @@ fn t_resource_errors_classify_missing_paths_independently_of_the_message() {
     assert!(error.message.contains("staging capacity"));
 }
 
-pub(super) struct Directory(pub(super) PathBuf);
-impl Directory {
-    pub(super) fn new() -> Self {
-        let path = std::env::temp_dir().join(format!("yoz-filetree-{}", uuid::Uuid::new_v4()));
-        fs::create_dir(&path).unwrap();
-        Self(path)
-    }
-}
-impl Drop for Directory {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
-fn until(mut predicate: impl FnMut() -> bool) {
-    let start = Instant::now();
-    while !predicate() {
-        assert!(
-            start.elapsed() < Duration::from_secs(10),
-            "Filetree wait timed out"
-        );
-        std::thread::sleep(Duration::from_millis(1));
-    }
-}
-pub(super) fn request<T: Clone>(request: Request<T>) -> T {
-    until(|| request.poll().is_some());
-    request
-        .poll()
-        .unwrap()
-        .unwrap_or_else(|error| panic!("{error:?}"))
-}
-fn ticket(ticket: Ticket) -> Outcome {
-    until(|| ticket.poll().is_some());
-    let result = ticket.poll().unwrap();
-    if let Outcome::Reply(Reply::Rejected { error }) = &result {
-        panic!("{error:?}");
-    }
-    result
-}
-fn state(data: &Filetree, mode: Mode) -> StateHandle {
-    let Outcome::State(state) = ticket(data.create_state(
-        None,
-        DisplayOptions {
-            mode,
-            ..DisplayOptions::default()
-        },
-    )) else {
-        panic!("expected state")
-    };
-    state
-}
-fn loaded(data: &Filetree, node: NodeId) {
-    until(|| {
-        let source = data.source();
-        let node = source.node(node).unwrap();
-        assert!(node.error.is_none(), "{:?}", node.error);
-        node.completeness == Completeness::Complete && node.load_state == LoadState::Idle
-    });
-}
-
 #[test]
-fn bounded_directory_states_do_not_read_descendants_or_parent_siblings() {
-    let directory = Directory::new();
-    fs::create_dir_all(directory.0.join("sub/nested")).unwrap();
-    fs::write(directory.0.join("sub/nested/deep.txt"), b"deep").unwrap();
-    fs::write(directory.0.join("visible.txt"), b"visible").unwrap();
-    let data = request(Filetree::open(directory.0.clone()));
+fn t_bounded_directory_states_do_not_read_descendants_or_parent_siblings() {
+    let directory = TempDir::new();
+    fs::create_dir_all(directory.path().join("sub/nested")).unwrap();
+    fs::write(directory.path().join("sub/nested/deep.txt"), b"deep").unwrap();
+    fs::write(directory.path().join("visible.txt"), b"visible").unwrap();
+    let data = request(Filetree::open(directory.path().to_path_buf()));
     let Outcome::State(state) = ticket(data.create_state(
         None,
         DisplayOptions {
@@ -333,7 +276,7 @@ fn bounded_directory_states_do_not_read_descendants_or_parent_siblings() {
     };
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
-    until(|| !data.data().has_work());
+    eventually(|| !data.data().has_work());
     let sub = child(&data, data.root(), "sub");
     let source = data.source();
     assert_eq!(
@@ -346,7 +289,7 @@ fn bounded_directory_states_do_not_read_descendants_or_parent_siblings() {
         source.node(parent).unwrap().completeness,
         Completeness::Complete
     );
-    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 3));
+    eventually(|| state.snapshot().is_ok_and(|frame| frame.len() == 3));
     let frame = state.snapshot().unwrap();
     let listing = request(data.listing(frame.clone(), 0, frame.len(), false));
     assert_eq!(listing.rows.len(), 3);
@@ -364,7 +307,7 @@ fn bounded_directory_states_do_not_read_descendants_or_parent_siblings() {
     };
     let _preview = preview.attach().unwrap();
     loaded(&data, sub);
-    until(|| !data.data().has_work());
+    eventually(|| !data.data().has_work());
     let nested = child(&data, sub, "nested");
     assert_eq!(
         data.source().node(nested).unwrap().completeness,
@@ -376,8 +319,8 @@ fn bounded_directory_states_do_not_read_descendants_or_parent_siblings() {
 #[cfg(unix)]
 fn t_listing_parent_context_uses_captured_metadata_without_changing_row_identity() {
     use std::os::unix::fs::PermissionsExt;
-    let directory = Directory::new();
-    let parent = directory.0.join("parent");
+    let directory = TempDir::new();
+    let parent = directory.path().join("parent");
     let current = parent.join("current");
     fs::create_dir_all(&current).unwrap();
     fs::set_permissions(&parent, fs::Permissions::from_mode(0o755)).unwrap();
@@ -396,7 +339,7 @@ fn t_listing_parent_context_uses_captured_metadata_without_changing_row_identity
     };
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
-    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 1));
+    eventually(|| state.snapshot().is_ok_and(|frame| frame.len() == 1));
     let frame = state.snapshot().unwrap();
     fs::set_permissions(&parent, fs::Permissions::from_mode(0o700)).unwrap();
     let own = request(data.listing(frame.clone(), 0, 1, false));
@@ -407,16 +350,6 @@ fn t_listing_parent_context_uses_captured_metadata_without_changing_row_identity
     assert_eq!(context.rows[0].node, data.root());
 }
 
-fn child(data: &Filetree, parent: NodeId, name: &str) -> NodeId {
-    let source = data.source();
-    source
-        .node(parent)
-        .unwrap()
-        .children()
-        .find(|id| resource::entry(&source, *id).unwrap().name == name)
-        .unwrap()
-}
-
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 #[test]
 fn t_private_copy_output_stays_out_of_browse_refresh_watch_and_alias_resolution() {
@@ -424,19 +357,19 @@ fn t_private_copy_output_stays_out_of_browse_refresh_watch_and_alias_resolution(
     use std::os::unix::fs::{PermissionsExt, symlink};
     use std::sync::atomic::AtomicBool;
 
-    let fixture = Directory::new();
-    let source = fixture.0.join("seed");
+    let fixture = TempDir::new();
+    let source = fixture.path().join("seed");
     fs::write(&source, "contents").unwrap();
-    fs::create_dir(fixture.0.join(".yoz-filetree-user.tmp")).unwrap();
-    let tree = request(Filetree::open(fixture.0.clone()));
+    fs::create_dir(fixture.path().join(".yoz-filetree-user.tmp")).unwrap();
+    let tree = request(Filetree::open(fixture.path().to_path_buf()));
     let state = state(&tree, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&tree, tree.root());
     watching(&tree, tree.root());
 
     let target = io::Destination {
-        path: fixture.0.join("target"),
-        parent: io::Signature::read(&fixture.0, true).unwrap(),
+        path: fixture.path().join("target"),
+        parent: io::Signature::read(fixture.path(), true).unwrap(),
         expected: None,
     };
     let mut staged = io::staging::Staging::new(
@@ -459,13 +392,13 @@ fn t_private_copy_output_stays_out_of_browse_refresh_watch_and_alias_resolution(
             |_| {},
         )
         .unwrap();
-    let private = fs::read_dir(&fixture.0)
+    let private = fs::read_dir(fixture.path())
         .unwrap()
         .map(|entry| entry.unwrap().path())
         .find(|path| io::staging::private_directory(Entry::read(path).unwrap().identity))
         .unwrap();
-    symlink(&private, fixture.0.join("alias")).unwrap();
-    symlink(private.join("nested"), fixture.0.join("nested-alias")).unwrap();
+    symlink(&private, fixture.path().join("alias")).unwrap();
+    symlink(private.join("nested"), fixture.path().join("nested-alias")).unwrap();
     ticket(
         tree.data()
             .submit(Action::RequestChildren(vec![tree.root()], true)),
@@ -486,25 +419,25 @@ fn t_private_copy_output_stays_out_of_browse_refresh_watch_and_alias_resolution(
     for path in [
         private.clone(),
         private.join("nested/file"),
-        fixture.0.join("alias/nested/file"),
-        fixture.0.join("nested-alias/file"),
+        fixture.path().join("alias/nested/file"),
+        fixture.path().join("nested-alias/file"),
     ] {
         let resolving = tree.resolve(path);
-        until(|| resolving.poll().is_some());
+        eventually(|| resolving.poll().is_some());
         assert!(
             matches!(resolving.poll().unwrap(), Err(error) if error.code == ErrorCode::NotFound)
         );
     }
-    let alias = request(tree.resolve(fixture.0.join("nested-alias")));
+    let alias = request(tree.resolve(fixture.path().join("nested-alias")));
     ticket(
         tree.data()
             .submit(Action::RequestChildren(vec![alias.node], true)),
     );
-    until(|| tree.source().node(alias.node).unwrap().error.is_some());
+    eventually(|| tree.source().node(alias.node).unwrap().error.is_some());
     assert_eq!(tree.source().node(alias.node).unwrap().child_count(), 0);
 
     staged.publish(&target).unwrap();
-    until(|| names().contains(&"target".into()));
+    eventually(|| names().contains(&"target".into()));
     assert!(!names().contains(&private.file_name().unwrap().to_owned()));
     let copied = request(tree.resolve(target.path.join("nested/file")));
     assert_eq!(copied.entry().unwrap().kind, Kind::File);
@@ -532,11 +465,11 @@ fn t_ancestor_refresh_releases_saturated_reads_and_preserves_explicit_requests()
         }
     }
 
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for index in 0..6 {
-        fs::create_dir(directory.0.join(format!("child-{index}"))).unwrap();
+        fs::create_dir(directory.path().join(format!("child-{index}"))).unwrap();
     }
-    let data = request(Filetree::open(directory.0.clone()));
+    let data = request(Filetree::open(directory.path().to_path_buf()));
     ticket(
         data.data()
             .submit(Action::RequestChildren(vec![data.root()], true)),
@@ -559,32 +492,14 @@ fn t_ancestor_refresh_releases_saturated_reads_and_preserves_explicit_requests()
         loaded(&data, node);
     }
     loaded(&data, data.root());
-    until(|| !data.data().has_work());
-}
-
-#[cfg(unix)]
-pub(super) struct DeniedDirectory(PathBuf, fs::Permissions);
-#[cfg(unix)]
-impl DeniedDirectory {
-    pub(super) fn new(path: PathBuf) -> Self {
-        use std::os::unix::fs::PermissionsExt;
-        let permissions = fs::metadata(&path).unwrap().permissions();
-        fs::set_permissions(&path, fs::Permissions::from_mode(0)).unwrap();
-        Self(path, permissions)
-    }
-}
-#[cfg(unix)]
-impl Drop for DeniedDirectory {
-    fn drop(&mut self) {
-        fs::set_permissions(&self.0, self.1.clone()).unwrap();
-    }
+    eventually(|| !data.data().has_work());
 }
 
 #[cfg(unix)]
 #[test]
 fn t_resolve_reorders_links_when_directory_targets_appear_and_disappear() {
-    let dir = Directory::new();
-    let workspace = dir.0.join("workspace");
+    let dir = TempDir::new();
+    let workspace = dir.path().join("workspace");
     fs::create_dir(&workspace).unwrap();
     fs::write(workspace.join("a"), b"content").unwrap();
     std::os::unix::fs::symlink("../target", workspace.join("zlink")).unwrap();
@@ -607,9 +522,9 @@ fn t_resolve_reorders_links_when_directory_targets_appear_and_disappear() {
     assert_eq!(names(), ["a", "zlink"]);
     for directory in [true, false] {
         if directory {
-            fs::create_dir(dir.0.join("target")).unwrap();
+            fs::create_dir(dir.path().join("target")).unwrap();
         } else {
-            fs::remove_dir(dir.0.join("target")).unwrap();
+            fs::remove_dir(dir.path().join("target")).unwrap();
         }
         let resolved = request(data.resolve(workspace.join("zlink")));
         assert_eq!(resolved.node, link);
@@ -632,10 +547,10 @@ fn t_resolve_reorders_links_when_directory_targets_appear_and_disappear() {
 #[cfg(unix)]
 #[test]
 fn t_failed_link_read_reorders_siblings_after_target_disappears() {
-    let dir = Directory::new();
-    let workspace = dir.0.join("workspace");
+    let dir = TempDir::new();
+    let workspace = dir.path().join("workspace");
     fs::create_dir(&workspace).unwrap();
-    fs::create_dir(dir.0.join("target")).unwrap();
+    fs::create_dir(dir.path().join("target")).unwrap();
     fs::write(workspace.join("a"), b"content").unwrap();
     std::os::unix::fs::symlink("../target", workspace.join("zlink")).unwrap();
     let data = request(Filetree::open(workspace));
@@ -655,7 +570,7 @@ fn t_failed_link_read_reorders_siblings_after_target_disappears() {
             .collect::<Vec<_>>()
     };
     assert_eq!(names(), ["zlink", "a"]);
-    fs::remove_dir(dir.0.join("target")).unwrap();
+    fs::remove_dir(dir.path().join("target")).unwrap();
     ticket(
         data.data()
             .submit(Action::RequestChildren(vec![link], true)),
@@ -674,24 +589,28 @@ fn t_failed_link_read_reorders_siblings_after_target_disappears() {
 #[cfg(unix)]
 #[test]
 fn t_resolve_retargeted_link_replaces_child_on_first_attempt() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("target")).unwrap();
-    fs::write(dir.0.join("target/child"), "content").unwrap();
-    std::os::unix::fs::symlink("target", dir.0.join("link")).unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
-    let old = request(data.resolve(dir.0.join("link/child")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("target")).unwrap();
+    fs::write(dir.path().join("target/child"), "content").unwrap();
+    std::os::unix::fs::symlink("target", dir.path().join("link")).unwrap();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
+    let old = request(data.resolve(dir.path().join("link/child")));
     let link = old.source.node(old.node).unwrap().parent.unwrap();
-    fs::rename(dir.0.join("target"), dir.0.join("previous")).unwrap();
-    fs::create_dir(dir.0.join("target")).unwrap();
-    fs::rename(dir.0.join("previous/child"), dir.0.join("target/child")).unwrap();
-    let new = request(data.resolve(dir.0.join("link/child")));
+    fs::rename(dir.path().join("target"), dir.path().join("previous")).unwrap();
+    fs::create_dir(dir.path().join("target")).unwrap();
+    fs::rename(
+        dir.path().join("previous/child"),
+        dir.path().join("target/child"),
+    )
+    .unwrap();
+    let new = request(data.resolve(dir.path().join("link/child")));
     assert_ne!(new.node, old.node);
     assert_eq!(new.entry().unwrap().identity, old.entry().unwrap().identity);
     assert_eq!(new.source.node(new.node).unwrap().parent, Some(link));
     assert!(!new.source.contains(old.node));
     assert!(old.source.contains(old.node));
     assert_eq!(
-        request(data.resolve(dir.0.join("link/child"))).node,
+        request(data.resolve(dir.path().join("link/child"))).node,
         new.node
     );
 }
@@ -706,11 +625,11 @@ fn t_link_target_permission_failure_preserves_children_and_selection() {
         .into_iter()
         .chain(cfg!(any(target_os = "macos", target_os = "linux")).then_some("watch"))
     {
-        let dir = Directory::new();
-        fs::create_dir_all(dir.0.join("private/target")).unwrap();
-        fs::write(dir.0.join("private/target/child"), "content").unwrap();
-        std::os::unix::fs::symlink("private/target", dir.0.join("link")).unwrap();
-        let data = request(Filetree::open(dir.0.join("link")));
+        let dir = TempDir::new();
+        fs::create_dir_all(dir.path().join("private/target")).unwrap();
+        fs::write(dir.path().join("private/target/child"), "content").unwrap();
+        std::os::unix::fs::symlink("private/target", dir.path().join("link")).unwrap();
+        let data = request(Filetree::open(dir.path().join("link")));
         let state = state(&data, Mode::Tree);
         let _view = (mode == "watch").then(|| state.attach().unwrap());
         ticket(
@@ -731,11 +650,15 @@ fn t_link_target_permission_failure_preserves_children_and_selection() {
             },
             Context::default(),
         ));
-        let denied = DeniedDirectory::new(dir.0.join("private"));
-        assert!(Entry::read(&dir.0.join("link")).unwrap().target_unknown);
+        let denied = DeniedDirectory::new(dir.path().join("private"));
+        assert!(
+            Entry::read(&dir.path().join("link"))
+                .unwrap()
+                .target_unknown
+        );
         match mode {
             "resolve" => {
-                request(data.resolve(dir.0.join("link")));
+                request(data.resolve(dir.path().join("link")));
             }
             "scan" => {
                 let parent = data.source().node(data.root()).unwrap().parent.unwrap();
@@ -760,7 +683,7 @@ fn t_link_target_permission_failure_preserves_children_and_selection() {
                     .submit(Action::RequestChildren(vec![data.root()], true)),
             );
         }
-        until(|| {
+        eventually(|| {
             let source = data.source();
             let root = source.node(data.root()).unwrap();
             root.load_state == LoadState::Error && !data.data().has_work()
@@ -783,7 +706,7 @@ fn t_link_target_permission_failure_preserves_children_and_selection() {
         );
         drop(denied);
         if mode == "watch" {
-            until(|| data.source().node(data.root()).unwrap().error.is_none());
+            eventually(|| data.source().node(data.root()).unwrap().error.is_none());
             watching(&data, data.root());
         } else {
             ticket(data.refresh(&state).unwrap());
@@ -804,8 +727,8 @@ fn t_link_target_permission_failure_preserves_children_and_selection() {
 #[cfg(unix)]
 fn t_parent_components_preserve_final_symlink_in_open_and_resolve() {
     use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    let base = fs::canonicalize(&dir.0).unwrap();
+    let dir = TempDir::new();
+    let base = fs::canonicalize(dir.path()).unwrap();
     fs::create_dir_all(base.join("real/nested")).unwrap();
     fs::create_dir(base.join("real/target")).unwrap();
     symlink("real/nested", base.join("jump")).unwrap();
@@ -835,13 +758,13 @@ fn t_parent_components_preserve_final_symlink_in_open_and_resolve() {
 
 #[test]
 fn t_open_loads_only_ancestors_then_direct_children_in_raw_name_order() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("sub")).unwrap();
-    fs::write(dir.0.join("sub/deep"), b"x").unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("sub")).unwrap();
+    fs::write(dir.path().join("sub/deep"), b"x").unwrap();
     for name in ["b", "A2", "a1", "z\nline", ".hidden"] {
-        fs::write(dir.0.join(name), b"x").unwrap();
+        fs::write(dir.path().join(name), b"x").unwrap();
     }
-    let data = request(Filetree::open(dir.0.clone()));
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     assert_eq!(data.source().node(data.root()).unwrap().child_count(), 0);
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
@@ -860,8 +783,8 @@ fn t_open_loads_only_ancestors_then_direct_children_in_raw_name_order() {
         Completeness::Unknown
     );
     assert_eq!(source.node(sub).unwrap().child_count(), 0);
-    let deep = request(data.resolve(dir.0.join("sub/deep")));
-    assert_eq!(deep.path().unwrap(), dir.0.join("sub/deep"));
+    let deep = request(data.resolve(dir.path().join("sub/deep")));
+    assert_eq!(deep.path().unwrap(), dir.path().join("sub/deep"));
     assert_eq!(
         data.source().node(sub).unwrap().completeness,
         Completeness::Unknown
@@ -870,32 +793,32 @@ fn t_open_loads_only_ancestors_then_direct_children_in_raw_name_order() {
 
 #[test]
 fn t_refresh_preserves_metadata_identity_and_rename_but_replaces_new_resources() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("a"), b"a").unwrap();
-    fs::write(dir.0.join("gone"), b"gone").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::write(dir.path().join("a"), b"a").unwrap();
+    fs::write(dir.path().join("gone"), b"gone").unwrap();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let old = data.source();
     let a = child(&data, data.root(), "a");
     let gone = child(&data, data.root(), "gone");
-    fs::write(dir.0.join("a"), b"different-size").unwrap();
-    fs::remove_file(dir.0.join("gone")).unwrap();
-    fs::rename(dir.0.join("a"), dir.0.join("renamed")).unwrap();
+    fs::write(dir.path().join("a"), b"different-size").unwrap();
+    fs::remove_file(dir.path().join("gone")).unwrap();
+    fs::rename(dir.path().join("a"), dir.path().join("renamed")).unwrap();
     ticket(data.refresh(&state).unwrap());
-    until(|| data.source().node(gone).is_none());
+    eventually(|| data.source().node(gone).is_none());
     loaded(&data, data.root());
     assert_eq!(child(&data, data.root(), "renamed"), a);
-    assert_eq!(resource::path(&old, a).unwrap(), dir.0.join("a"));
+    assert_eq!(resource::path(&old, a).unwrap(), dir.path().join("a"));
     assert_eq!(
         resource::path(&data.source(), a).unwrap(),
-        dir.0.join("renamed")
+        dir.path().join("renamed")
     );
-    fs::write(dir.0.join("replacement"), b"new").unwrap();
-    fs::rename(dir.0.join("replacement"), dir.0.join("renamed")).unwrap();
+    fs::write(dir.path().join("replacement"), b"new").unwrap();
+    fs::rename(dir.path().join("replacement"), dir.path().join("renamed")).unwrap();
     ticket(data.refresh(&state).unwrap());
-    until(|| data.source().node(a).is_none());
+    eventually(|| data.source().node(a).is_none());
     loaded(&data, data.root());
     assert_ne!(child(&data, data.root(), "renamed"), a);
 }
@@ -904,12 +827,12 @@ fn t_refresh_preserves_metadata_identity_and_rename_but_replaces_new_resources()
 #[test]
 fn t_list_keeps_aliases_and_stops_ancestor_symlink_cycles() {
     use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("sub")).unwrap();
-    fs::write(dir.0.join("sub/file"), b"x").unwrap();
-    symlink("sub", dir.0.join("alias")).unwrap();
-    symlink("..", dir.0.join("sub/cycle")).unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("sub")).unwrap();
+    fs::write(dir.path().join("sub/file"), b"x").unwrap();
+    symlink("sub", dir.path().join("alias")).unwrap();
+    symlink("..", dir.path().join("sub/cycle")).unwrap();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     let state = state(&data, Mode::List);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
@@ -928,20 +851,20 @@ fn t_list_keeps_aliases_and_stops_ancestor_symlink_cycles() {
 
 #[test]
 fn t_native_pages_wait_for_publication_ack_and_preserve_complete_order() {
-    let dir = Directory::new();
+    let dir = TempDir::new();
     for i in 0..1300 {
-        fs::write(dir.0.join(format!("file-{i:04}")), b"").unwrap();
+        fs::write(dir.path().join(format!("file-{i:04}")), b"").unwrap();
     }
-    let data = request(Filetree::open(dir.0.clone()));
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     data.data()
         .acknowledge_publication(data.source().revision());
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
-    until(|| data.source().node(data.root()).unwrap().child_count() > 0);
+    eventually(|| data.source().node(data.root()).unwrap().child_count() > 0);
     assert_eq!(data.source().node(data.root()).unwrap().child_count(), 512);
     std::thread::sleep(Duration::from_millis(35));
     assert_eq!(data.source().node(data.root()).unwrap().child_count(), 512);
-    until(|| {
+    eventually(|| {
         data.data()
             .acknowledge_publication(data.source().revision());
         let source = data.source();
@@ -971,22 +894,22 @@ fn t_native_pages_wait_for_publication_ack_and_preserve_complete_order() {
 #[cfg(any(target_os = "macos", windows))]
 #[test]
 fn t_resolve_case_alias_reuses_actual_directory_entry_and_keeps_sort_order() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("Original"), b"x").unwrap();
-    fs::write(dir.0.join("z-last"), b"x").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::write(dir.path().join("Original"), b"x").unwrap();
+    fs::write(dir.path().join("z-last"), b"x").unwrap();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let original = child(&data, data.root(), "Original");
-    if dir.0.join("original").exists() {
-        let resolved = request(data.resolve(dir.0.join("original")));
+    if dir.path().join("original").exists() {
+        let resolved = request(data.resolve(dir.path().join("original")));
         assert_eq!(resolved.node, original);
-        assert_eq!(resolved.path().unwrap(), dir.0.join("Original"));
+        assert_eq!(resolved.path().unwrap(), dir.path().join("Original"));
         assert_eq!(data.source().node(data.root()).unwrap().child_count(), 2);
     }
-    fs::write(dir.0.join("a-first"), b"x").unwrap();
-    let first = request(data.resolve(dir.0.join("a-first")));
+    fs::write(dir.path().join("a-first"), b"x").unwrap();
+    let first = request(data.resolve(dir.path().join("a-first")));
     assert_eq!(
         data.source().node(data.root()).unwrap().child_at(0),
         Some(first.node)
@@ -995,25 +918,25 @@ fn t_resolve_case_alias_reuses_actual_directory_entry_and_keeps_sort_order() {
 
 #[test]
 fn t_replaced_entry_root_is_unavailable_and_never_rebinds_old_state() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("root")).unwrap();
-    fs::write(dir.0.join("root/old"), b"x").unwrap();
-    let data = request(Filetree::open(dir.0.join("root")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("root")).unwrap();
+    fs::write(dir.path().join("root/old"), b"x").unwrap();
+    let data = request(Filetree::open(dir.path().join("root")));
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let old = data.source();
-    fs::rename(dir.0.join("root"), dir.0.join("previous")).unwrap();
-    fs::create_dir(dir.0.join("root")).unwrap();
-    fs::write(dir.0.join("root/new"), b"x").unwrap();
+    fs::rename(dir.path().join("root"), dir.path().join("previous")).unwrap();
+    fs::create_dir(dir.path().join("root")).unwrap();
+    fs::write(dir.path().join("root/new"), b"x").unwrap();
     ticket(data.refresh(&state).unwrap());
-    until(|| !data.source().contains(data.root()));
-    until(|| state.snapshot().unwrap().is_empty());
+    eventually(|| !data.source().contains(data.root()));
+    eventually(|| state.snapshot().unwrap().is_empty());
     assert!(old.contains(data.root()));
     assert!(data.data().events().iter().any(
         |event| matches!(event, Effect::RootUnavailable { node, .. } if *node == data.root())
     ));
-    let current = request(data.resolve(dir.0.join("root")));
+    let current = request(data.resolve(dir.path().join("root")));
     assert_ne!(current.node, data.root());
     assert!(state.snapshot().unwrap().is_empty());
 }
@@ -1023,29 +946,29 @@ fn t_replaced_entry_root_is_unavailable_and_never_rebinds_old_state() {
 fn t_hardlink_ambiguity_ends_old_occurrence_and_native_names_remain_lossless() {
     #[cfg(not(target_os = "macos"))]
     use std::os::unix::ffi::OsStringExt;
-    let dir = Directory::new();
-    fs::write(dir.0.join("a"), b"x").unwrap();
-    fs::hard_link(dir.0.join("a"), dir.0.join("b")).unwrap();
+    let dir = TempDir::new();
+    fs::write(dir.path().join("a"), b"x").unwrap();
+    fs::hard_link(dir.path().join("a"), dir.path().join("b")).unwrap();
     #[cfg(not(target_os = "macos"))]
     let name = std::ffi::OsString::from_vec(vec![b'c', 0xff, b'\n']);
     #[cfg(target_os = "macos")]
     let name = std::ffi::OsString::from("c文\n");
-    fs::write(dir.0.join(&name), b"x").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
+    fs::write(dir.path().join(&name), b"x").unwrap();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let a = child(&data, data.root(), "a");
     let b = child(&data, data.root(), "b");
-    let raw = request(data.resolve(dir.0.join(&name)));
-    assert_eq!(raw.path().unwrap(), dir.0.join(&name));
+    let raw = request(data.resolve(dir.path().join(&name)));
+    assert_eq!(raw.path().unwrap(), dir.path().join(&name));
     assert_eq!(
         raw.source.node(raw.node).unwrap().data.label.as_ref(),
         display_name(&name)
     );
-    fs::rename(dir.0.join("a"), dir.0.join("renamed")).unwrap();
+    fs::rename(dir.path().join("a"), dir.path().join("renamed")).unwrap();
     ticket(data.refresh(&state).unwrap());
-    until(|| !data.source().contains(a));
+    eventually(|| !data.source().contains(a));
     loaded(&data, data.root());
     assert_ne!(child(&data, data.root(), "renamed"), a);
     assert_eq!(child(&data, data.root(), "b"), b);
@@ -1053,18 +976,18 @@ fn t_hardlink_ambiguity_ends_old_occurrence_and_native_names_remain_lossless() {
 
 #[test]
 fn t_detach_retires_a_paused_native_read_without_another_page() {
-    let dir = Directory::new();
+    let dir = TempDir::new();
     for i in 0..800 {
-        fs::write(dir.0.join(format!("file-{i}")), b"").unwrap();
+        fs::write(dir.path().join(format!("file-{i}")), b"").unwrap();
     }
-    let data = request(Filetree::open(dir.0.clone()));
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     data.data()
         .acknowledge_publication(data.source().revision());
     let state = state(&data, Mode::Tree);
     let view = state.attach().unwrap();
-    until(|| data.source().node(data.root()).unwrap().child_count() == 512);
+    eventually(|| data.source().node(data.root()).unwrap().child_count() == 512);
     drop(view);
-    until(|| data.source().node(data.root()).unwrap().load_state == LoadState::Idle);
+    eventually(|| data.source().node(data.root()).unwrap().load_state == LoadState::Idle);
     assert_eq!(data.source().node(data.root()).unwrap().child_count(), 512);
     assert_eq!(
         data.source().node(data.root()).unwrap().completeness,
@@ -1073,76 +996,42 @@ fn t_detach_retires_a_paused_native_read_without_another_page() {
 }
 
 #[test]
-#[ignore = "explicit release-mode real filesystem measurement"]
-fn t_native_wide_directory_performance() {
-    let dir = Directory::new();
-    for i in 0..50_000 {
-        fs::write(dir.0.join(format!("file-{i:05}")), b"").unwrap();
-    }
-    let data = request(Filetree::open(dir.0.clone()));
-    let start = Instant::now();
-    let state = state(&data, Mode::Tree);
-    let _view = state.attach().unwrap();
-    until(|| data.source().node(data.root()).unwrap().child_count() >= 512);
-    let first = start.elapsed();
-    loaded(&data, data.root());
-    let initial = start.elapsed();
-    let mut samples = Vec::new();
-    for _ in 0..5 {
-        let epoch = data.source().node(data.root()).unwrap().request_epoch;
-        let start = Instant::now();
-        ticket(data.refresh(&state).unwrap());
-        until(|| data.source().node(data.root()).unwrap().request_epoch > epoch);
-        loaded(&data, data.root());
-        samples.push(start.elapsed().as_secs_f64() * 1000.0);
-    }
-    samples.sort_by(f64::total_cmp);
-    println!(
-        "filetree real 50k: first512_ms={:.3}, initial_ms={:.3}, refresh_n=5 p50_ms={:.3} max_ms={:.3}",
-        first.as_secs_f64() * 1000.0,
-        initial.as_secs_f64() * 1000.0,
-        samples[2],
-        samples[4]
-    );
-}
-
-#[test]
 fn t_refresh_preserves_unambiguous_rename_when_original_name_is_recreated() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("a"), b"old").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::write(dir.path().join("a"), b"old").unwrap();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let a = child(&data, data.root(), "a");
-    fs::rename(dir.0.join("a"), dir.0.join("z")).unwrap();
-    fs::write(dir.0.join("a"), b"new").unwrap();
+    fs::rename(dir.path().join("a"), dir.path().join("z")).unwrap();
+    fs::write(dir.path().join("a"), b"new").unwrap();
     ticket(data.refresh(&state).unwrap());
-    until(|| data.source().node(data.root()).unwrap().child_count() == 2);
+    eventually(|| data.source().node(data.root()).unwrap().child_count() == 2);
     loaded(&data, data.root());
     assert_eq!(child(&data, data.root(), "z"), a);
     assert_ne!(child(&data, data.root(), "a"), a);
-    assert_eq!(request(data.resolve(dir.0.join("z"))).node, a);
+    assert_eq!(request(data.resolve(dir.path().join("z"))).node, a);
 }
 
 #[cfg(unix)]
 #[test]
 fn t_directory_symlink_target_replacement_keeps_link_but_ends_old_children() {
     use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("target")).unwrap();
-    fs::write(dir.0.join("target/old"), b"x").unwrap();
-    symlink("target", dir.0.join("alias")).unwrap();
-    let data = request(Filetree::open(dir.0.join("alias")));
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("target")).unwrap();
+    fs::write(dir.path().join("target/old"), b"x").unwrap();
+    symlink("target", dir.path().join("alias")).unwrap();
+    let data = request(Filetree::open(dir.path().join("alias")));
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let old = child(&data, data.root(), "old");
-    fs::rename(dir.0.join("target"), dir.0.join("previous")).unwrap();
-    fs::create_dir(dir.0.join("target")).unwrap();
-    fs::write(dir.0.join("target/new"), b"new").unwrap();
+    fs::rename(dir.path().join("target"), dir.path().join("previous")).unwrap();
+    fs::create_dir(dir.path().join("target")).unwrap();
+    fs::write(dir.path().join("target/new"), b"new").unwrap();
     ticket(data.refresh(&state).unwrap());
-    until(|| {
+    eventually(|| {
         !data.source().contains(old) || data.source().node(data.root()).unwrap().error.is_some()
     });
     assert!(
@@ -1156,26 +1045,26 @@ fn t_directory_symlink_target_replacement_keeps_link_but_ends_old_children() {
 
 #[test]
 fn t_directory_rename_restarts_a_paused_child_scan_at_its_current_path() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("before")).unwrap();
+    let dir = TempDir::new();
+    fs::create_dir(dir.path().join("before")).unwrap();
     for i in 0..900 {
-        fs::write(dir.0.join("before").join(format!("file-{i:04}")), b"").unwrap();
+        fs::write(dir.path().join("before").join(format!("file-{i:04}")), b"").unwrap();
     }
-    let data = request(Filetree::open(dir.0.clone()));
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     data.data()
         .acknowledge_publication(data.source().revision());
     let state = state(&data, Mode::List);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let folder = child(&data, data.root(), "before");
-    until(|| data.source().node(folder).unwrap().child_count() == 512);
-    fs::rename(dir.0.join("before"), dir.0.join("after")).unwrap();
+    eventually(|| data.source().node(folder).unwrap().child_count() == 512);
+    fs::rename(dir.path().join("before"), dir.path().join("after")).unwrap();
     ticket(
         data.data()
             .submit(Action::RequestChildren(vec![data.root()], true)),
     );
-    until(|| resource::entry(&data.source(), folder).unwrap().name == "after");
-    until(|| {
+    eventually(|| resource::entry(&data.source(), folder).unwrap().name == "after");
+    eventually(|| {
         data.data()
             .acknowledge_publication(data.source().revision());
         let source = data.source();
@@ -1186,379 +1075,12 @@ fn t_directory_rename_restarts_a_paused_child_scan_at_its_current_path() {
     assert_eq!(data.source().node(folder).unwrap().child_count(), 900);
 }
 
-fn watching(data: &Filetree, node: NodeId) {
-    let mut stable = None;
-    until(|| {
-        let status = data.watch_status();
-        assert!(status.error.is_none(), "{:?}", status.error);
-        let source = data.source();
-        let ready = status.covered.contains(&node)
-            && source.node(node).is_some_and(|node| {
-                node.load_state == LoadState::Idle && node.completeness == Completeness::Complete
-            })
-            && !data.data().has_work()
-            && data.data().queue_depth() == 0;
-        if ready {
-            stable.get_or_insert(Instant::now());
-        } else {
-            stable = None;
-        }
-        stable.is_some_and(|time| time.elapsed() >= Duration::from_millis(35))
-    });
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux", windows))]
-#[test]
-fn t_native_watch_reports_empty_root_removal() {
-    let dir = Directory::new();
-    let root = dir.0.join("workspace");
-    fs::create_dir(&root).unwrap();
-    let data = request(Filetree::open(root.clone()));
-    let state = state(&data, Mode::Tree);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    data.data().events();
-    fs::remove_dir(&root).unwrap();
-    until(|| !data.source().contains(data.root()));
-    assert!(data.data().events().iter().any(
-        |event| matches!(event, Effect::RootUnavailable { node, .. } if *node == data.root())
-    ));
-    until(|| data.watch_status().directories == 0);
-}
-
-#[cfg(target_os = "linux")]
-#[test]
-fn t_native_watch_parent_detects_pinned_root_removal_without_sibling_refresh() {
-    let dir = Directory::new();
-    let root = dir.0.join("workspace");
-    fs::create_dir(&root).unwrap();
-    let _pinned = fs::File::open(&root).unwrap();
-    let data = request(Filetree::open(root.clone()));
-    let state = state(&data, Mode::Tree);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    assert_eq!(data.watch_status().roots, 2);
-    assert_eq!(data.watch_status().directories, 1);
-    let revision = data.source().revision();
-    fs::write(dir.0.join("unrelated"), b"sibling").unwrap();
-    std::thread::sleep(Duration::from_millis(220));
-    assert_eq!(
-        data.source().revision(),
-        revision,
-        "parent watch must filter sibling names"
-    );
-    fs::remove_dir(&root).unwrap();
-    until(|| !data.source().contains(data.root()));
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux", windows))]
-#[test]
-fn t_zero_depth_grouped_list_watches_descendants_without_expansion() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("dir")).unwrap();
-    fs::write(dir.0.join("dir/old"), b"old").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
-    let Outcome::State(state) = ticket(data.create_state(
-        None,
-        DisplayOptions {
-            mode: Mode::Tree,
-            compress: false,
-            list_from_depth: Some(0),
-            ..DisplayOptions::default()
-        },
-    )) else {
-        panic!("expected state")
-    };
-    let _view = state.attach().unwrap();
-    loaded(&data, data.root());
-    let folder = child(&data, data.root(), "dir");
-    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 2));
-    watching(&data, folder);
-
-    fs::write(dir.0.join("dir/new"), b"new").unwrap();
-    until(|| state.snapshot().is_ok_and(|frame| frame.len() == 3));
-    assert_eq!(data.source().node(folder).unwrap().child_count(), 2);
-    child(&data, folder, "new");
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux", windows))]
-#[test]
-fn t_native_watch_coalesces_changes_and_releases_when_view_detaches() {
-    let dir = Directory::new();
-    let data = request(Filetree::open(dir.0.clone()));
-    let state = state(&data, Mode::Tree);
-    let view = state.attach().unwrap();
-    watching(&data, data.root());
-    let revision = data.source().revision();
-    std::thread::sleep(Duration::from_millis(180));
-    assert_eq!(
-        data.source().revision(),
-        revision,
-        "quiet directories must not be rescanned periodically"
-    );
-    let start = Instant::now();
-    for name in ["a", "b", "c"] {
-        fs::write(dir.0.join(name), b"x").unwrap();
-    }
-    until(|| data.source().node(data.root()).unwrap().child_count() == 3);
-    assert!(start.elapsed() >= Duration::from_millis(130));
-    watching(&data, data.root());
-    let a = child(&data, data.root(), "a");
-    fs::rename(dir.0.join("a"), dir.0.join("renamed")).unwrap();
-    until(|| resource::entry(&data.source(), a).unwrap().name == "renamed");
-    drop(view);
-    until(|| data.watch_status().directories == 0 && !data.data().has_work());
-    fs::write(dir.0.join("after-detach"), b"x").unwrap();
-    std::thread::sleep(Duration::from_millis(200));
-    assert_eq!(data.source().node(data.root()).unwrap().child_count(), 3);
-    let _view = state.attach().unwrap();
-    until(|| data.source().node(data.root()).unwrap().child_count() == 4);
-    watching(&data, data.root());
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_watch_budget_prefers_visible_directories() {
-    let dir = Directory::new();
-    for i in 0..60 {
-        fs::create_dir(dir.0.join(format!("dir-{i:02}"))).unwrap();
-    }
-    let data = request(Filetree::open(dir.0.clone()));
-    let state = state(&data, Mode::List);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    if cfg!(target_os = "macos") {
-        until(|| data.watch_status().directories == 61 && !data.watch_status().limited);
-        assert_eq!(data.watch_status().roots, 1);
-        let last = child(&data, data.root(), "dir-59");
-        fs::write(dir.0.join("dir-59/new"), "covered").unwrap();
-        until(|| data.source().node(last).unwrap().child_count() == 1);
-        watching(&data, last);
-        return;
-    }
-    until(|| {
-        data.watch_status().roots == 50
-            && data.watch_status().directories == 49
-            && data.watch_status().limited
-    });
-    let source = data.source();
-    let uncovered = source
-        .node(data.root())
-        .unwrap()
-        .children()
-        .find(|id| !data.watch_status().covered.contains(id))
-        .unwrap();
-    let budget = data.data().memory();
-    let _memory = budget.enter();
-    data.set_viewports(vec![watch::Viewport {
-        state: state.id(),
-        root: Root::ChildrenOf(data.root()),
-        nodes: vec![uncovered].into(),
-        _memory: crate::ux::treeview::memory::Charge::new(8),
-    }])
-    .unwrap();
-    until(|| data.watch_status().covered.contains(&uncovered));
-    assert_eq!(data.watch_status().roots, 50);
-    assert_eq!(data.watch_status().directories, 49);
-    assert!(data.watch_status().limited);
-}
-
-#[cfg(target_os = "macos")]
-#[test]
-fn t_recursive_watch_keeps_wide_expansion_and_closed_cache_fresh() {
-    let dir = Directory::new();
-    for index in 0..96 {
-        let path = dir.0.join(format!("dir-{index:02}"));
-        fs::create_dir(&path).unwrap();
-        fs::write(path.join("seed"), "seed").unwrap();
-    }
-    let data = request(Filetree::open(dir.0.clone()));
-    let wide = state(&data, Mode::Tree);
-    let view = wide.attach().unwrap();
-    watching(&data, data.root());
-    let nodes: Vec<_> = data
-        .source()
-        .node(data.root())
-        .unwrap()
-        .children()
-        .collect();
-    ticket(wide.dispatch(
-        Command::SetExpanded {
-            targets: Targets::Nodes(nodes.into()),
-            value: true,
-            scope: Scope::SelfOnly,
-        },
-        Context::default(),
-    ));
-    let first = child(&data, data.root(), "dir-00");
-    let last = child(&data, data.root(), "dir-95");
-    watching(&data, last);
-    until(|| data.watch_status().directories == 97);
-    assert_eq!(data.watch_status().roots, 1);
-    assert!(!data.watch_status().limited);
-    fs::write(
-        dir.0.join("dir-95/new"),
-        "outside the old fifty-directory cap",
-    )
-    .unwrap();
-    until(|| data.source().node(last).unwrap().child_count() == 2);
-
-    fs::rename(dir.0.join("dir-95"), dir.0.join("renamed")).unwrap();
-    until(|| resource::entry(&data.source(), last).unwrap().name == "renamed");
-    watching(&data, last);
-    fs::write(dir.0.join("renamed/after-rename"), "fresh").unwrap();
-    until(|| data.source().node(last).unwrap().child_count() == 3);
-
-    ticket(wide.dispatch(
-        Command::SetExpanded {
-            targets: Targets::Nodes(vec![first].into()),
-            value: false,
-            scope: Scope::SelfOnly,
-        },
-        Context::default(),
-    ));
-    until(|| !data.watch_status().covered.contains(&first));
-    assert_eq!(data.watch_status().roots, 1);
-    fs::write(dir.0.join("dir-00/while-closed"), "fresh").unwrap();
-    std::thread::sleep(Duration::from_millis(250));
-    assert_eq!(data.source().node(first).unwrap().child_count(), 1);
-    ticket(wide.dispatch(
-        Command::SetExpanded {
-            targets: Targets::Nodes(vec![first].into()),
-            value: true,
-            scope: Scope::SelfOnly,
-        },
-        Context::default(),
-    ));
-    until(|| data.source().node(first).unwrap().child_count() == 2);
-    watching(&data, first);
-
-    fs::remove_dir_all(dir.0.join("renamed")).unwrap();
-    until(|| !data.source().contains(last));
-    watching(&data, data.root());
-    let Outcome::State(narrow) =
-        ticket(data.create_state(Some(Root::ChildrenOf(first)), DisplayOptions::default()))
-    else {
-        panic!("state")
-    };
-    let _narrow = narrow.attach().unwrap();
-    drop(view);
-    watching(&data, first);
-    until(|| data.watch_status().directories == 1);
-    assert_eq!(data.watch_status().roots, 1);
-    assert!(!data.watch_status().limited);
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_overlapping_viewports_preserve_each_roots_visible_ancestors() {
-    let dir = Directory::new();
-    for i in 0..60 {
-        fs::create_dir(dir.0.join(format!("dir-{i:02}"))).unwrap();
-    }
-    fs::create_dir_all(dir.0.join("zz-parent/middle/narrow")).unwrap();
-    fs::write(dir.0.join("zz-parent/middle/narrow/leaf"), "content").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
-    let wide = state(&data, Mode::List);
-    let _wide_view = wide.attach().unwrap();
-    watching(&data, data.root());
-    let parent = child(&data, data.root(), "zz-parent");
-    loaded(&data, parent);
-    let middle = child(&data, parent, "middle");
-    loaded(&data, middle);
-    let narrow_root = child(&data, middle, "narrow");
-    loaded(&data, narrow_root);
-    let leaf = child(&data, narrow_root, "leaf");
-    let Outcome::State(narrow) = ticket(data.create_state(
-        Some(Root::ChildrenOf(narrow_root)),
-        DisplayOptions {
-            mode: Mode::List,
-            ..DisplayOptions::default()
-        },
-    )) else {
-        panic!("state");
-    };
-    let _narrow_view = narrow.attach().unwrap();
-    watching(&data, narrow_root);
-    if cfg!(target_os = "macos") {
-        until(|| data.watch_status().directories == 64 && !data.watch_status().limited);
-        assert_eq!(data.watch_status().roots, 1);
-    } else {
-        until(|| {
-            data.watch_status().roots == 50
-                && data.watch_status().directories == 49
-                && data.watch_status().limited
-        });
-        assert!(!data.watch_status().covered.contains(&parent));
-    }
-    let marker = data
-        .source()
-        .node(data.root())
-        .unwrap()
-        .children()
-        .find(|id| {
-            *id != parent
-                && (cfg!(target_os = "macos") || !data.watch_status().covered.contains(id))
-        })
-        .unwrap();
-    data.set_viewports(vec![
-        watch::Viewport {
-            state: narrow.id(),
-            root: Root::ChildrenOf(narrow_root),
-            nodes: vec![leaf].into(),
-            _memory: crate::ux::treeview::memory::Charge::new(8),
-        },
-        watch::Viewport {
-            state: wide.id(),
-            root: Root::ChildrenOf(data.root()),
-            nodes: vec![leaf, marker].into(),
-            _memory: crate::ux::treeview::memory::Charge::new(16),
-        },
-    ])
-    .unwrap();
-    until(|| data.watch_status().covered.contains(&marker));
-    let status = data.watch_status();
-    assert!(status.covered.contains(&parent));
-    assert!(status.covered.contains(&narrow_root));
-    assert_eq!(
-        status.directories,
-        if cfg!(target_os = "macos") { 64 } else { 49 }
-    );
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_directory_aliases_share_os_watch_and_refresh_each_occurrence() {
-    use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("target")).unwrap();
-    for i in 0..55 {
-        symlink("target", dir.0.join(format!("alias-{i:02}"))).unwrap();
-    }
-    let data = request(Filetree::open(dir.0.clone()));
-    let state = state(&data, Mode::List);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    until(|| data.watch_status().covered.len() == 57);
-    assert_eq!(data.watch_status().directories, 2);
-    assert!(!data.watch_status().limited);
-    fs::write(dir.0.join("target/new"), b"x").unwrap();
-    until(|| {
-        let source = data.source();
-        source
-            .node(data.root())
-            .unwrap()
-            .children()
-            .all(|id| source.node(id).unwrap().child_count() == 1)
-    });
-}
-
 #[test]
 fn t_data_release_reclaims_native_resources_after_retained_frames_are_dropped() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("file"), b"x").unwrap();
+    let dir = TempDir::new();
+    fs::write(dir.path().join("file"), b"x").unwrap();
     for _ in 0..100 {
-        let data = request(Filetree::open(dir.0.clone()));
+        let data = request(Filetree::open(dir.path().to_path_buf()));
         let state = state(&data, Mode::Tree);
         let view = state.attach().unwrap();
         loaded(&data, data.root());
@@ -1569,465 +1091,42 @@ fn t_data_release_reclaims_native_resources_after_retained_frames_are_dropped() 
         drop(view);
         drop(state);
         drop(data);
-        until(|| weak.upgrade().is_none());
+        eventually(|| weak.upgrade().is_none());
         assert!(budget.used() > 0);
         drop(frame);
         drop(source);
-        until(|| budget.used() == 0);
+        eventually(|| budget.used() == 0);
     }
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_shared_alias_roots_watch_each_occurrence_parent() {
-    use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    for name in ["target", "p1", "p2"] {
-        fs::create_dir(dir.0.join(name)).unwrap();
-    }
-    fs::write(dir.0.join("target/old"), "old").unwrap();
-    symlink("../target", dir.0.join("p1/alias")).unwrap();
-    symlink("../target", dir.0.join("p2/alias")).unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
-    let first = request(data.resolve(dir.0.join("p1/alias"))).node;
-    let second = request(data.resolve(dir.0.join("p2/alias"))).node;
-    let mut states = Vec::new();
-    let mut views = Vec::new();
-    for root in [first, second] {
-        let Outcome::State(state) =
-            ticket(data.create_state(Some(Root::ChildrenOf(root)), DisplayOptions::default()))
-        else {
-            panic!("state");
-        };
-        views.push(state.attach().unwrap());
-        states.push(state);
-    }
-    watching(&data, first);
-    watching(&data, second);
-    assert_eq!(data.watch_status().directories, 4);
-    fs::remove_file(dir.0.join("p2/alias")).unwrap();
-    until(|| !data.source().contains(second));
-    until(|| states[1].snapshot().unwrap().is_empty());
-    assert!(data.source().contains(first));
-    fs::write(dir.0.join("target/new"), "new").unwrap();
-    until(|| data.source().node(first).unwrap().child_count() == 2);
-    assert_eq!(fs::read_to_string(dir.0.join("target/old")).unwrap(), "old");
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_link_root_observes_referent_recreation_outside_its_occurrence_parent() {
-    use std::os::unix::fs::symlink;
-    for absolute in [false, true] {
-        let dir = Directory::new();
-        fs::create_dir(dir.0.join("links")).unwrap();
-        fs::create_dir(dir.0.join("target")).unwrap();
-        fs::write(dir.0.join("target/old"), "old").unwrap();
-        if absolute {
-            for index in 0..55 {
-                fs::create_dir(dir.0.join(format!("target/sub-{index:02}"))).unwrap();
-            }
-        }
-        let target = if absolute {
-            dir.0.join("target")
-        } else {
-            PathBuf::from("../target")
-        };
-        symlink(target, dir.0.join("links/alias")).unwrap();
-        let data = request(Filetree::open(dir.0.join("links/alias")));
-        let state = state(&data, if absolute { Mode::List } else { Mode::Tree });
-        let _view = state.attach().unwrap();
-        watching(&data, data.root());
-        assert_eq!(
-            data.watch_status().directories,
-            if absolute {
-                if cfg!(target_os = "macos") { 58 } else { 50 }
-            } else {
-                3
-            }
-        );
-        assert_eq!(
-            data.watch_status().limited,
-            absolute && !cfg!(target_os = "macos")
-        );
-        let old = child(&data, data.root(), "old");
-        fs::remove_dir_all(dir.0.join("target")).unwrap();
-        until(|| !data.source().node(data.root()).unwrap().data.can_expand);
-        until(|| data.watch_status().directories == 2 && !data.data().has_work());
-        std::thread::sleep(Duration::from_millis(200));
-        fs::create_dir(dir.0.join("target")).unwrap();
-        fs::write(dir.0.join("target/new"), "new").unwrap();
-        until(|| data.source().node(data.root()).unwrap().child_count() == 1);
-        watching(&data, data.root());
-        assert!(!data.source().contains(old));
-        child(&data, data.root(), "new");
-    }
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_busy_recovery_probe_retries_without_another_event() {
-    /* Saturate only this subprocess's shared IO pool, leaving parallel tests independent. */
-    if std::env::var_os("YOZ_FILETREE_BUSY_CHILD").is_none() {
-        let output = std::process::Command::new(std::env::current_exe().unwrap())
-            .args([
-                "--exact",
-                "ux::filetree::tests::t_busy_recovery_probe_retries_without_another_event",
-                "--nocapture",
-            ])
-            .env("YOZ_FILETREE_BUSY_CHILD", "1")
-            .output()
-            .unwrap();
-        assert!(
-            output.status.success(),
-            "{}\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr)
-        );
-        return;
-    }
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::{Arc, Condvar, Mutex};
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("target")).unwrap();
-    std::os::unix::fs::symlink("target", dir.0.join("link")).unwrap();
-    let data = request(Filetree::open(dir.0.join("link")));
-    let state = state(&data, Mode::Tree);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    fs::remove_dir(dir.0.join("target")).unwrap();
-    until(|| !data.source().node(data.root()).unwrap().data.can_expand && !data.data().has_work());
-    until(|| data.watch_status().directories == 1);
-    let gate = Arc::new((Mutex::new(false), Condvar::new()));
-    let started = Arc::new(AtomicUsize::new(0));
-    for _ in 0..4 {
-        let gate = gate.clone();
-        let started = started.clone();
-        work::submit(Box::new(move || {
-            started.fetch_add(1, Ordering::Release);
-            let mut open = gate.0.lock().unwrap();
-            while !*open {
-                open = gate.1.wait(open).unwrap();
-            }
-        }))
-        .unwrap();
-    }
-    until(|| started.load(Ordering::Acquire) == 4);
-    for _ in 0..256 {
-        work::submit(Box::new(|| {})).unwrap();
-    }
-    let full = work::Request::<()>::run(|| Ok(()));
-    assert!(matches!(full.poll(), Some(Err(error)) if error.code == ErrorCode::Busy));
-    let watch_revision = data.watch_status().revision;
-    fs::create_dir(dir.0.join("target")).unwrap();
-    fs::write(dir.0.join("target/recovered"), "content").unwrap();
-    /* Keep the queue full across the native event merge window without surfacing retries. */
-    let paused = Instant::now();
-    while paused.elapsed() < Duration::from_millis(500) {
-        let status = data.watch_status();
-        assert!(status.error.is_none(), "{:?}", status.error);
-        assert_eq!(status.revision, watch_revision);
-        std::thread::sleep(Duration::from_millis(1));
-    }
-    *gate.0.lock().unwrap() = true;
-    gate.1.notify_all();
-    until(|| data.source().node(data.root()).unwrap().child_count() == 1);
-    watching(&data, data.root());
-    child(&data, data.root(), "recovered");
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_nested_directory_links_observe_referent_recreation() {
-    for mode in [Mode::Tree, Mode::List] {
-        let dir = Directory::new();
-        fs::create_dir(dir.0.join("workspace")).unwrap();
-        fs::create_dir(dir.0.join("target")).unwrap();
-        fs::write(dir.0.join("target/old"), "old").unwrap();
-        std::os::unix::fs::symlink("../target", dir.0.join("workspace/link")).unwrap();
-        let data = request(Filetree::open(dir.0.join("workspace")));
-        let state = state(&data, mode);
-        let view = state.attach().unwrap();
-        watching(&data, data.root());
-        let link = child(&data, data.root(), "link");
-        if mode == Mode::Tree {
-            ticket(state.dispatch(
-                Command::SetExpanded {
-                    targets: Targets::Nodes(vec![link].into()),
-                    value: true,
-                    scope: Scope::SelfOnly,
-                },
-                Context::default(),
-            ));
-        }
-        watching(&data, link);
-        let registered = data.watch_status().directories;
-        let old = child(&data, link, "old");
-        fs::remove_dir_all(dir.0.join("target")).unwrap();
-        until(|| !data.source().node(link).unwrap().data.can_expand);
-        /* Do not let a lingering referent watch mask the missing parent recovery watch. */
-        until(|| {
-            data.watch_status().directories < registered
-                && !data.data().has_work()
-                && data.data().queue_depth() == 0
-        });
-        std::thread::sleep(Duration::from_millis(200));
-        fs::create_dir(dir.0.join("target")).unwrap();
-        fs::write(dir.0.join("target/new"), "new").unwrap();
-        until(|| data.source().node(link).unwrap().child_count() == 1);
-        watching(&data, link);
-        assert!(!data.source().contains(old));
-        child(&data, link, "new");
-        assert_eq!(data.watch_status().directories, 3);
-        drop(view);
-        until(|| data.watch_status().directories == 0);
-    }
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-#[ignore = "native watch-root budget stress; run with a file descriptor limit of at least 4096"]
-fn t_native_link_watch_budget_stress() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("workspace/visible")).unwrap();
-    for index in 0..55 {
-        let parent = dir.0.join(format!("external-{index:02}"));
-        fs::create_dir_all(parent.join("target")).unwrap();
-        std::os::unix::fs::symlink(
-            parent.join("target"),
-            dir.0.join(format!("workspace/link-{index:02}")),
-        )
-        .unwrap();
-    }
-    let data = request(Filetree::open(dir.0.join("workspace")));
-    let state = state(&data, Mode::List);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    let visible = child(&data, data.root(), "visible");
-    let link = child(&data, data.root(), "link-54");
-    data.set_viewports(vec![watch::Viewport {
-        state: state.id(),
-        root: Root::ChildrenOf(data.root()),
-        nodes: vec![visible, link].into(),
-        _memory: crate::ux::treeview::memory::Charge::new(16),
-    }])
-    .unwrap();
-    until(|| {
-        let status = data.watch_status();
-        status.limited
-            && (if cfg!(target_os = "macos") {
-                status.roots
-            } else {
-                status.directories
-            }) == 50
-            && status.covered.contains(&visible)
-            && status.covered.contains(&link)
-    });
-    watching(&data, link);
-    fs::write(dir.0.join("workspace/visible/new"), "visible").unwrap();
-    until(|| data.source().node(visible).unwrap().child_count() == 1);
-    fs::remove_dir(dir.0.join("external-54/target")).unwrap();
-    until(|| !data.source().node(link).unwrap().data.can_expand);
-    std::thread::sleep(Duration::from_millis(250));
-    fs::create_dir(dir.0.join("external-54/target")).unwrap();
-    fs::write(dir.0.join("external-54/target/new"), "recovered").unwrap();
-    until(|| data.source().node(link).unwrap().child_count() == 1);
-    let status = data.watch_status();
-    assert!(
-        (if cfg!(target_os = "macos") {
-            status.roots
-        } else {
-            status.directories
-        }) <= 50
-    );
-    child(&data, link, "new");
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_alias_recovery_budget_counts_resolved_parent_identities() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("workspace")).unwrap();
-    fs::create_dir_all(dir.0.join("external/repeat")).unwrap();
-    fs::create_dir(dir.0.join("external/target")).unwrap();
-    fs::write(dir.0.join("external/target/old"), "old").unwrap();
-    for index in 0..55 {
-        let target = format!("../external/{}target", "repeat/../".repeat(index));
-        std::os::unix::fs::symlink(target, dir.0.join(format!("workspace/link-{index:02}")))
-            .unwrap();
-    }
-    let data = request(Filetree::open(dir.0.join("workspace")));
-    let state = state(&data, Mode::List);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    until(|| data.watch_status().directories == 3);
-    assert!(
-        !data.watch_status().limited,
-        "raw paths must not consume the physical watch budget"
-    );
-    let links: Vec<_> = data
-        .source()
-        .node(data.root())
-        .unwrap()
-        .children()
-        .collect();
-    assert_eq!(links.len(), 55);
-    until(|| {
-        links
-            .iter()
-            .all(|node| data.source().node(*node).unwrap().child_count() == 1)
-    });
-    fs::remove_dir_all(dir.0.join("external/target")).unwrap();
-    until(|| {
-        links
-            .iter()
-            .all(|node| !data.source().node(*node).unwrap().data.can_expand)
-    });
-    until(|| data.watch_status().directories == 2 && !data.data().has_work());
-    std::thread::sleep(Duration::from_millis(200));
-    fs::create_dir(dir.0.join("external/target")).unwrap();
-    fs::write(dir.0.join("external/target/new"), "new").unwrap();
-    until(|| {
-        links
-            .iter()
-            .all(|node| data.source().node(*node).unwrap().child_count() == 1)
-    });
-    for link in links {
-        child(&data, link, "new");
-    }
-    assert_eq!(data.watch_status().directories, 3);
-    assert!(!data.watch_status().limited);
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_watched_directory_link_recovers_when_its_target_returns() {
-    use std::os::unix::fs::symlink;
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("target")).unwrap();
-    fs::write(dir.0.join("target/old"), b"x").unwrap();
-    symlink("target", dir.0.join("alias")).unwrap();
-    let data = request(Filetree::open(dir.0.join("alias")));
-    let state = state(&data, Mode::Tree);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    let old = child(&data, data.root(), "old");
-    fs::remove_dir_all(dir.0.join("target")).unwrap();
-    until(|| !data.source().node(data.root()).unwrap().data.can_expand);
-    assert!(!data.source().contains(old));
-    fs::create_dir(dir.0.join("target")).unwrap();
-    fs::write(dir.0.join("target/new"), b"x").unwrap();
-    until(|| data.source().node(data.root()).unwrap().child_count() == 1);
-    watching(&data, data.root());
-    child(&data, data.root(), "new");
-}
-
-#[cfg(target_os = "macos")]
-#[test]
-fn t_narrow_symlink_workspace_keeps_its_anchor_subscription_only() {
-    let dir = Directory::new();
-    fs::create_dir_all(dir.0.join("target/sub")).unwrap();
-    fs::write(dir.0.join("target/sub/seed"), "seed").unwrap();
-    std::os::unix::fs::symlink("target", dir.0.join("alias")).unwrap();
-    let data = request(Filetree::open(dir.0.join("alias")));
-    let sub = request(data.resolve(dir.0.join("alias/sub"))).node;
-    let Outcome::State(state) =
-        ticket(data.create_state(Some(Root::ChildrenOf(sub)), DisplayOptions::default()))
-    else {
-        panic!("state")
-    };
-    let _view = state.attach().unwrap();
-    watching(&data, sub);
-    let status = data.watch_status();
-    assert_eq!(status.roots, 1);
-    assert_eq!(status.directories, 1);
-    assert!(!status.covered.contains(&data.root()));
-    assert!(!status.limited);
-    fs::write(dir.0.join("target/sub/new"), "new").unwrap();
-    until(|| data.source().node(sub).unwrap().child_count() == 2);
 }
 
 #[test]
 fn t_refresh_identity_swap_updates_path_lookup_without_losing_occurrences() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("a"), b"a").unwrap();
-    fs::write(dir.0.join("b"), b"b").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
+    let dir = TempDir::new();
+    fs::write(dir.path().join("a"), b"a").unwrap();
+    fs::write(dir.path().join("b"), b"b").unwrap();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
     let state = state(&data, Mode::Tree);
     let _view = state.attach().unwrap();
     loaded(&data, data.root());
     let a = child(&data, data.root(), "a");
     let b = child(&data, data.root(), "b");
-    fs::rename(dir.0.join("a"), dir.0.join("temporary")).unwrap();
-    fs::rename(dir.0.join("b"), dir.0.join("a")).unwrap();
-    fs::rename(dir.0.join("temporary"), dir.0.join("b")).unwrap();
+    fs::rename(dir.path().join("a"), dir.path().join("temporary")).unwrap();
+    fs::rename(dir.path().join("b"), dir.path().join("a")).unwrap();
+    fs::rename(dir.path().join("temporary"), dir.path().join("b")).unwrap();
     ticket(data.refresh(&state).unwrap());
-    until(|| resource::entry(&data.source(), a).unwrap().name == "b");
+    eventually(|| resource::entry(&data.source(), a).unwrap().name == "b");
     loaded(&data, data.root());
-    assert_eq!(request(data.resolve(dir.0.join("a"))).node, b);
-    assert_eq!(request(data.resolve(dir.0.join("b"))).node, a);
+    assert_eq!(request(data.resolve(dir.path().join("a"))).node, b);
+    assert_eq!(request(data.resolve(dir.path().join("b"))).node, a);
     assert_eq!(data.source().node(data.root()).unwrap().child_count(), 2);
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_directory_watch_observes_in_place_file_writes_without_replacing_identity() {
-    let dir = Directory::new();
-    fs::write(dir.0.join("file"), "a").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
-    let state = state(&data, Mode::Tree);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    let file = child(&data, data.root(), "file");
-    let old = data.inspect(data.source(), file).unwrap();
-    fs::write(dir.0.join("file"), "changed contents").unwrap();
-    until(|| resource::entry(&data.source(), file).unwrap().size == 16);
-    assert_eq!(old.entry().unwrap().size, 1);
-    assert_eq!(child(&data, data.root(), "file"), file);
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_watched_directory_rename_keeps_following_file_metadata() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("before")).unwrap();
-    fs::write(dir.0.join("before/file"), "a").unwrap();
-    let data = request(Filetree::open(dir.0.clone()));
-    let state = state(&data, Mode::List);
-    let _view = state.attach().unwrap();
-    loaded(&data, data.root());
-    let folder = child(&data, data.root(), "before");
-    watching(&data, folder);
-    let file = child(&data, folder, "file");
-    fs::rename(dir.0.join("before"), dir.0.join("café")).unwrap();
-    until(|| resource::entry(&data.source(), folder).unwrap().name == "café");
-    watching(&data, folder);
-    fs::write(dir.0.join("café/file"), "new contents").unwrap();
-    until(|| resource::entry(&data.source(), file).unwrap().size == 12);
-    assert_eq!(child(&data, data.root(), "café"), folder);
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-#[test]
-fn t_unicode_directory_watch_updates_existing_files() {
-    let dir = Directory::new();
-    fs::create_dir(dir.0.join("目录-café")).unwrap();
-    fs::write(dir.0.join("目录-café/file"), "a").unwrap();
-    let data = request(Filetree::open(dir.0.join("目录-café")));
-    let state = state(&data, Mode::Tree);
-    let _view = state.attach().unwrap();
-    watching(&data, data.root());
-    let file = child(&data, data.root(), "file");
-    fs::write(dir.0.join("目录-café/file"), "changed").unwrap();
-    until(|| resource::entry(&data.source(), file).unwrap().size == 7);
 }
 
 #[test]
 fn t_details_reads_current_metadata_for_the_captured_resource() {
-    let directory = Directory::new();
-    let path = directory.0.join("details");
+    let directory = TempDir::new();
+    let path = directory.path().join("details");
     fs::write(&path, b"old").unwrap();
-    let data = request(Filetree::open(directory.0.clone()));
+    let data = request(Filetree::open(directory.path().to_path_buf()));
     let resource = request(data.resolve(path.clone()));
     fs::write(&path, b"current contents").unwrap();
     fs::OpenOptions::new()
@@ -2055,45 +1154,53 @@ fn t_details_reads_current_metadata_for_the_captured_resource() {
         assert_eq!(details.permissions, "rw-r-----");
         assert_eq!(details.mode & 0o777, 0o640);
     }
-    let other = request(Filetree::open(directory.0.clone()));
+    let other = request(Filetree::open(directory.path().to_path_buf()));
     assert!(other.details(resource).poll().unwrap().is_err());
 }
 
 #[cfg(unix)]
 #[test]
 fn t_details_rejects_replaced_ancestors_even_when_the_leaf_identity_is_unchanged() {
-    let directory = Directory::new();
-    let parent = directory.0.join("parent");
+    let directory = TempDir::new();
+    let parent = directory.path().join("parent");
     fs::create_dir(&parent).unwrap();
     fs::write(parent.join("file"), b"content").unwrap();
-    let data = request(Filetree::open(directory.0.clone()));
+    let data = request(Filetree::open(directory.path().to_path_buf()));
     let resource = request(data.resolve(parent.join("file")));
-    fs::rename(&parent, directory.0.join("old-parent")).unwrap();
+    fs::rename(&parent, directory.path().join("old-parent")).unwrap();
     fs::create_dir(&parent).unwrap();
-    fs::hard_link(directory.0.join("old-parent/file"), parent.join("file")).unwrap();
+    fs::hard_link(
+        directory.path().join("old-parent/file"),
+        parent.join("file"),
+    )
+    .unwrap();
     assert_eq!(
         resource.entry().unwrap().identity,
         Entry::read(&parent.join("file")).unwrap().identity
     );
     let details = data.details(resource);
-    until(|| details.poll().is_some());
+    eventually(|| details.poll().is_some());
     assert!(matches!(details.poll().unwrap(), Err(error) if error.code == ErrorCode::Stale));
 }
 
 #[cfg(unix)]
 #[test]
 fn t_details_inspects_the_link_and_rejects_a_replaced_target() {
-    let directory = Directory::new();
-    fs::write(directory.0.join("target"), b"target contents").unwrap();
-    std::os::unix::fs::symlink("target", directory.0.join("alias")).unwrap();
-    let data = request(Filetree::open(directory.0.clone()));
-    let resource = request(data.resolve(directory.0.join("alias")));
+    let directory = TempDir::new();
+    fs::write(directory.path().join("target"), b"target contents").unwrap();
+    std::os::unix::fs::symlink("target", directory.path().join("alias")).unwrap();
+    let data = request(Filetree::open(directory.path().to_path_buf()));
+    let resource = request(data.resolve(directory.path().join("alias")));
     let details = request(data.details(resource.clone()));
-    assert_eq!(details.path, directory.0.join("alias"));
+    assert_eq!(details.path, directory.path().join("alias"));
     assert_eq!(details.size, 6);
-    fs::rename(directory.0.join("target"), directory.0.join("old-target")).unwrap();
-    fs::write(directory.0.join("target"), b"replacement").unwrap();
+    fs::rename(
+        directory.path().join("target"),
+        directory.path().join("old-target"),
+    )
+    .unwrap();
+    fs::write(directory.path().join("target"), b"replacement").unwrap();
     let details = data.details(resource);
-    until(|| details.poll().is_some());
+    eventually(|| details.poll().is_some());
     assert!(matches!(details.poll().unwrap(), Err(error) if error.code == ErrorCode::Stale));
 }

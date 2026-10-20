@@ -331,9 +331,6 @@ impl Staging {
     }
 
     fn reserve(&mut self, parent: usize, name: &OsStr, kind: Kind) -> io::Result<usize> {
-        #[cfg(test)]
-        let _span =
-            crate::ux::filetree::profile::span(crate::ux::filetree::profile::Stage::Journal);
         let mut components = Path::new(name).components();
         if !matches!(components.next(), Some(Component::Normal(_))) || components.next().is_some() {
             return Err(io::Error::new(
@@ -388,9 +385,6 @@ impl Staging {
         cancel: &AtomicBool,
         progress: impl Fn(u64),
     ) -> io::Result<()> {
-        #[cfg(test)]
-        let _span =
-            crate::ux::filetree::profile::span(crate::ux::filetree::profile::Stage::Staging);
         cancelled(cancel)?;
         let mut input = copier.open_source(source, expected)?;
         if !matches!(expected.kind, Kind::File | Kind::Link) {
@@ -404,10 +398,6 @@ impl Staging {
         let result = (|| {
             if let Some(input) = input.as_mut() {
                 let fd = {
-                    #[cfg(test)]
-                    let _span = crate::ux::filetree::profile::span(
-                        crate::ux::filetree::profile::Stage::CreateCall,
-                    );
                     let name = c_path(Path::new(name))?;
                     super::file_descriptor(|| unsafe {
                         libc::openat(
@@ -428,13 +418,6 @@ impl Staging {
                 ));
                 self.entries.directory_mut(parent).children += 1;
                 copier.stream(&mut input.file, &mut output, cancel, &progress)?;
-                #[cfg(test)]
-                {
-                    let _span = crate::ux::filetree::profile::span(
-                        crate::ux::filetree::profile::Stage::Close,
-                    );
-                    drop(output);
-                }
             } else {
                 let text = expected.link.as_ref().ok_or_else(|| {
                     io::Error::new(io::ErrorKind::InvalidData, "missing link text")
@@ -481,12 +464,6 @@ impl Staging {
             }
             self.discard_last();
             return Err(error);
-        }
-        #[cfg(test)]
-        {
-            let _span =
-                crate::ux::filetree::profile::span(crate::ux::filetree::profile::Stage::Close);
-            drop(input);
         }
         Ok(())
     }
@@ -573,9 +550,6 @@ impl Staging {
 
     /** Only the root rename commits output; callers may deliver successes after it returns. */
     pub fn publish(&mut self, target: &Destination) -> io::Result<()> {
-        #[cfg(test)]
-        let _span =
-            crate::ux::filetree::profile::span(crate::ux::filetree::profile::Stage::PublishFs);
         self.verify()?;
         for index in (0..self.entries.len()).rev() {
             if let Some(permissions) = self.entries.permissions(index) {

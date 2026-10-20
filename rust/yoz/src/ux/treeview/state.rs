@@ -489,53 +489,38 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "explicit release-mode collapsed Tree demand measurement"]
-    fn t_collapsed_tree_children_demand_performance() {
-        for depth in [80, 160, 320, 420] {
-            let mut source = Source::empty().unwrap();
-            let mut nodes: Vec<NodeId> = Vec::with_capacity(depth + 1);
-            for index in 0..=depth {
-                let key = format!("d{index}");
-                source
-                    .apply(
-                        &Operation::Insert {
-                            key: key.as_str().into(),
-                            parent: nodes.last().copied().map(Into::into),
-                            position: Position::Last,
-                            data: NodeData::branch("d"),
-                            completeness: Completeness::Complete,
-                        },
-                        Revision(1),
-                        &Limits::default(),
-                        None,
-                    )
-                    .unwrap();
-                nodes.push(source.id(&key).unwrap());
-            }
-            let mut state = State::new(
-                &source,
-                Root::ChildrenOf(nodes[0]),
-                DisplayOptions::default(),
-            )
-            .unwrap();
-            state
-                .set_expanded(&source, &nodes[..1], false, Scope::Subtree)
+    fn t_collapsed_subtree_demands_no_children_at_any_depth() {
+        let mut source = Source::empty().unwrap();
+        let mut nodes: Vec<NodeId> = Vec::new();
+        for index in 0..=420 {
+            let key = format!("d{index}");
+            source
+                .apply(
+                    &Operation::Insert {
+                        key: key.as_str().into(),
+                        parent: nodes.last().copied().map(Into::into),
+                        position: Position::Last,
+                        data: NodeData::branch("d"),
+                        completeness: Completeness::Complete,
+                    },
+                    Revision(1),
+                    &Limits::default(),
+                    None,
+                )
                 .unwrap();
-            let mut samples = Vec::new();
-            for index in 0..26 {
-                let started = std::time::Instant::now();
-                for node in &nodes[1..] {
-                    assert!(!state.demands_children(&source, std::hint::black_box(*node)));
-                }
-                if index >= 2 {
-                    samples.push(started.elapsed().as_secs_f64() * 1000.0);
-                }
-            }
-            samples.sort_by(f64::total_cmp);
-            println!(
-                "collapsed Tree demand: depth={depth} samples=24 p50_ms={:.3} max_ms={:.3}",
-                samples[11], samples[23],
-            );
+            nodes.push(source.id(&key).unwrap());
+        }
+        let mut state = State::new(
+            &source,
+            Root::ChildrenOf(nodes[0]),
+            DisplayOptions::default(),
+        )
+        .unwrap();
+        state
+            .set_expanded(&source, &nodes[..1], false, Scope::Subtree)
+            .unwrap();
+        for node in &nodes[1..] {
+            assert!(!state.demands_children(&source, *node));
         }
     }
 

@@ -592,3 +592,6 @@ impl RenderPlan {
         Ok(next)
     }
 }
+
+#[cfg(test)]
+mod tests;

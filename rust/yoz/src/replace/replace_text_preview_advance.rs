@@ -128,73 +128,7 @@ pub fn replace_text_preview_advance(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn t_replace_text_preview_advance_1() {
-        let text = r#"require("node.path")"#.to_string();
-        {
-            let search_pattern = r#"require\(([\w\W]+?)\)"#.to_string();
-            let replace_pattern = r#"import $1"#.to_string();
-            println!(
-                "text: {}, search: {}, replace: {}",
-                text, search_pattern, replace_pattern
-            );
-            println!(
-                "{:?}",
-                super::replace_text_preview_advance(
-                    &text,
-                    &search_pattern,
-                    &replace_pattern,
-                    true,
-                    true,
-                    true
-                )
-            );
-            println!(
-                "{:?}",
-                super::replace_text_preview_advance(
-                    &text,
-                    &search_pattern,
-                    &replace_pattern,
-                    false,
-                    true,
-                    true
-                )
-            );
-        }
-
-        {
-            let search_pattern = r#"require("node.path")"#.to_string();
-            let replace_pattern = r#"import $1"#.to_string();
-            println!(
-                "text: {}, search: {}, replace: {}",
-                text, search_pattern, replace_pattern
-            );
-            println!(
-                "{:?}",
-                super::replace_text_preview_advance(
-                    &text,
-                    &search_pattern,
-                    &replace_pattern,
-                    true,
-                    false,
-                    true
-                )
-            );
-            println!(
-                "{:?}",
-                super::replace_text_preview_advance(
-                    &text,
-                    &search_pattern,
-                    &replace_pattern,
-                    false,
-                    false,
-                    true
-                )
-            );
-        }
-    }
-
-    #[test]
-    fn t_replace_text_preview_advance_2() {
+    fn t_literal_pattern_previews_the_same_with_and_without_regex() {
         // Spell out the whitespace-only line so formatters preserve the fixture.
         let text: &str = concat!(
             r#"

@@ -209,7 +209,7 @@ mod tests {
     fn t_git_failure_retains_stderr() {
         let fixture = Fixture::new();
         let error = run(
-            &fixture.0,
+            fixture.path(),
             &fixture.options().environment,
             &[
                 "rev-parse".into(),
@@ -229,7 +229,7 @@ mod tests {
         let input = vec![b'x'; 2 * 1024 * 1024];
         let expected = fixture.git(&["hash-object", "--stdin"], Some(&input));
         let result = output(
-            &fixture.0,
+            fixture.path(),
             &fixture.options().environment,
             &["hash-object".into(), "--stdin".into()],
             Some(input),
@@ -252,7 +252,7 @@ mod tests {
                 cancelled.store(true, Ordering::Release);
             });
             let result = output(
-                &fixture.0,
+                fixture.path(),
                 &fixture.options().environment,
                 &["-c".into(), "alias.slow=!sleep 30".into(), "slow".into()],
                 Some(vec![b'x'; 1024 * 1024]),
@@ -268,7 +268,7 @@ mod tests {
     fn t_nonzero_exit_preserves_stdout_after_early_stdin_close() {
         let fixture = Fixture::new();
         let result = output(
-            &fixture.0,
+            fixture.path(),
             &fixture.options().environment,
             &[
                 "-c".into(),
@@ -295,7 +295,7 @@ mod tests {
                 cancelled.store(true, Ordering::Release);
             });
             let result = run(
-                &fixture.0,
+                fixture.path(),
                 &fixture.options().environment,
                 &["-c".into(), "alias.slow=!sleep 30".into(), "slow".into()],
                 &cancelled,

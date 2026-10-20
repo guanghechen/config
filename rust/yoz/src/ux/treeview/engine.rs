@@ -1134,49 +1134,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "explicit release-mode List migration sampling"]
-    fn t_release_flat_import_sample() {
-        use super::super::provider::{DataScope, Import, Record};
-        for count in [1_000, 10_000, 50_000] {
-            let mut engine = Engine::new(Limits::default()).unwrap();
-            let mut records = vec![Record::new("list", NodeData::branch(""))];
-            records.extend((0..count).map(|index| Record {
-                key: format!("item:{index}").into(),
-                parent: Some("list".into()),
-                data: NodeData::leaf(format!("item-{index:06}.lua")),
-                completeness: None,
-            }));
-            let started = Instant::now();
-            engine
-                .import(Import {
-                    base_revision: engine.source.revision(),
-                    scope: DataScope::Forest,
-                    records,
-                })
-                .unwrap();
-            let import = started.elapsed();
-            let source_bytes = engine.memory.used();
-            let started = Instant::now();
-            let root = engine.source.id("list").unwrap();
-            engine
-                .create_state(
-                    Root::ChildrenOf(root),
-                    DisplayOptions {
-                        mode: Mode::List,
-                        ..DisplayOptions::default()
-                    },
-                )
-                .unwrap();
-            println!(
-                "flat_import: nodes={count}, import_ms={:.3}, state_ms={:.3}, source_bytes={source_bytes}, total_bytes={}",
-                import.as_secs_f64() * 1000.0,
-                started.elapsed().as_secs_f64() * 1000.0,
-                engine.memory.used()
-            );
-        }
-    }
-
-    #[test]
     fn t_failed_batch_discards_identity_and_every_state_patch() {
         let (mut engine, state, a, b, c) = fixture();
         select(

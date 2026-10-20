@@ -96,37 +96,10 @@ pub fn is_descendant(source: &str, target: &str) -> Result<bool, String> {
 #[cfg(test)]
 mod tests {
     use super::is_descendant;
+    use crate::test_support::TempDir;
     use std::fs;
     use std::io;
-    use std::path::{Path, PathBuf};
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    struct TempDir(PathBuf);
-
-    impl TempDir {
-        fn new(name: &str) -> Self {
-            let path = std::env::temp_dir().join(format!(
-                "yoz_is_descendant_{name}_{}_{}",
-                std::process::id(),
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .map(|duration| duration.as_nanos())
-                    .unwrap_or(0)
-            ));
-            fs::create_dir_all(&path).expect("create temporary directory");
-            Self(path)
-        }
-
-        fn path(&self) -> &Path {
-            &self.0
-        }
-    }
-
-    impl Drop for TempDir {
-        fn drop(&mut self) {
-            fs::remove_dir_all(&self.0).ok();
-        }
-    }
+    use std::path::Path;
 
     fn path_string(path: &Path) -> String {
         path.to_str().expect("test path must be UTF-8").to_owned()
@@ -143,8 +116,8 @@ mod tests {
     }
 
     #[test]
-    fn detects_missing_target_below_source() {
-        let root = TempDir::new("missing_target");
+    fn t_detects_missing_target_below_source() {
+        let root = TempDir::new();
         let source = root.path().join("source");
         fs::create_dir_all(&source).expect("create source");
         let target = source.join("missing/nested/copy");
@@ -155,8 +128,8 @@ mod tests {
     }
 
     #[test]
-    fn rejects_missing_target_below_sibling() {
-        let root = TempDir::new("sibling");
+    fn t_rejects_missing_target_below_sibling() {
+        let root = TempDir::new();
         let source = root.path().join("source");
         fs::create_dir_all(&source).expect("create source");
         let target = root.path().join("sibling/missing/copy");
@@ -167,8 +140,8 @@ mod tests {
     }
 
     #[test]
-    fn detects_target_reached_through_symlink_alias() {
-        let root = TempDir::new("symlink");
+    fn t_detects_target_reached_through_symlink_alias() {
+        let root = TempDir::new();
         let source = root.path().join("source");
         let alias = root.path().join("alias");
         fs::create_dir_all(&source).expect("create source");
@@ -188,8 +161,8 @@ mod tests {
     }
 
     #[test]
-    fn detects_target_with_same_filesystem_identity() {
-        let root = TempDir::new("filesystem_identity");
+    fn t_detects_target_with_same_filesystem_identity() {
+        let root = TempDir::new();
         let source = root.path().join("source");
         let alias = root.path().join("alias");
         fs::write(&source, "sentinel").expect("create source");
@@ -202,7 +175,7 @@ mod tests {
 
     #[cfg(target_os = "macos")]
     #[test]
-    fn detects_missing_target_through_firmlink_alias() {
+    fn t_detects_missing_target_through_firmlink_alias() {
         let source = Path::new("/Users");
         let alias = Path::new("/System/Volumes/Data/Users");
         let Ok(source_handle) = same_file::Handle::from_path(source) else {
@@ -222,8 +195,8 @@ mod tests {
     }
 
     #[test]
-    fn detects_casing_alias_on_case_insensitive_filesystem() {
-        let root = TempDir::new("casing");
+    fn t_detects_casing_alias_on_case_insensitive_filesystem() {
+        let root = TempDir::new();
         let source = root.path().join("CaseSource");
         let alias = root.path().join("casesource");
         fs::create_dir_all(&source).expect("create source");
@@ -241,8 +214,8 @@ mod tests {
     }
 
     #[test]
-    fn reports_missing_source() {
-        let root = TempDir::new("missing_source");
+    fn t_reports_missing_source() {
+        let root = TempDir::new();
         let source = root.path().join("missing-source");
         let target = root.path().join("target");
 
@@ -252,8 +225,8 @@ mod tests {
     }
 
     #[test]
-    fn rejects_relative_paths() {
-        let root = TempDir::new("relative");
+    fn t_rejects_relative_paths() {
+        let root = TempDir::new();
         let source = root.path().join("source");
         fs::create_dir_all(&source).expect("create source");
 
@@ -262,8 +235,8 @@ mod tests {
     }
 
     #[test]
-    fn rejects_parent_components_in_target() {
-        let root = TempDir::new("parent_component");
+    fn t_rejects_parent_components_in_target() {
+        let root = TempDir::new();
         let source = root.path().join("source");
         fs::create_dir_all(&source).expect("create source");
         let target = root

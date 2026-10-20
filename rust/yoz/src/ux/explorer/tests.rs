@@ -1,43 +1,16 @@
 use super::*;
-use crate::ux::filetree::{ItemStatus, JobStatus, OperationKind, Request};
+use crate::test_support::{TempDir, eventually};
+use crate::ux::filetree::test_support::{finished, request};
+use crate::ux::filetree::{ItemStatus, OperationKind};
 use std::fs;
-use std::path::PathBuf;
-use std::time::{Duration, Instant};
 
-struct Directory(PathBuf);
-impl Directory {
-    fn new() -> Self {
-        let path = std::env::temp_dir().join(format!("yoz-explorer-{}", uuid::Uuid::new_v4()));
-        fs::create_dir(&path).unwrap();
-        Self(path)
-    }
-}
-impl Drop for Directory {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
-fn request<T: Clone>(value: Request<T>) -> T {
-    let start = Instant::now();
-    loop {
-        if let Some(value) = value.poll() {
-            return value.unwrap();
-        }
-        assert!(start.elapsed() < Duration::from_secs(10));
-        std::thread::sleep(Duration::from_millis(1));
-    }
-}
 fn reply(explorer: &Explorer, ticket: Ticket) -> Reply {
     let Outcome::Reply(reply) = ticket.wait() else {
         panic!("expected reply")
     };
     assert!(!matches!(reply, Reply::Rejected { .. }), "{reply:?}");
     if let Reply::Applied { revisions, .. } | Reply::Locked { revisions, .. } = &reply {
-        let started = Instant::now();
-        while Some(explorer.state.snapshot().unwrap().state_revision()) < revisions.state {
-            assert!(started.elapsed() < Duration::from_secs(10));
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        eventually(|| Some(explorer.state.snapshot().unwrap().state_revision()) >= revisions.state);
     }
     reply
 }
@@ -56,22 +29,10 @@ fn explorer(path: &std::path::Path) -> Explorer {
     Explorer::new(tree, state, Workspace::Resource(workspace)).unwrap()
 }
 
-fn wait_job(job: &Job) -> JobStatus {
-    let started = Instant::now();
-    loop {
-        let status = job.status();
-        if status.terminal {
-            return status;
-        }
-        assert!(started.elapsed() < Duration::from_secs(10));
-        std::thread::sleep(Duration::from_millis(1));
-    }
-}
-
 #[test]
 fn t_workspace_is_an_observed_ancestor_independent_of_the_initial_display_root() {
-    let directory = Directory::new();
-    let child = directory.0.join("child");
+    let directory = TempDir::new();
+    let child = directory.path().join("child");
     fs::create_dir(&child).unwrap();
     for name in ["a", "b"] {
         fs::write(child.join(name), b"content").unwrap();
@@ -80,12 +41,12 @@ fn t_workspace_is_an_observed_ancestor_independent_of_the_initial_display_root()
     let explorer = Explorer::new(
         original.tree.clone(),
         original.state.clone(),
-        Workspace::Path(directory.0.clone()),
+        Workspace::Path(directory.path().to_path_buf()),
     )
     .unwrap();
-    let workspace = request(explorer.tree.resolve(directory.0.clone()));
+    let workspace = request(explorer.tree.resolve(directory.path().to_path_buf()));
     assert_eq!(explorer.workspace, Some(workspace.node));
-    assert_eq!(explorer.workspace_path().unwrap(), directory.0);
+    assert_eq!(explorer.workspace_path().unwrap(), directory.path());
     assert_eq!(
         *explorer.state.snapshot().unwrap().root(),
         Root::ChildrenOf(explorer.tree.root())
@@ -95,17 +56,17 @@ fn t_workspace_is_an_observed_ancestor_independent_of_the_initial_display_root()
 
 #[test]
 fn t_observed_workspace_requires_a_directory_from_the_same_filetree() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), b"content").unwrap();
+        fs::write(directory.path().join(name), b"content").unwrap();
     }
-    let original = explorer(&directory.0);
-    let foreign = request(Filetree::open(directory.0.clone()));
+    let original = explorer(directory.path());
+    let foreign = request(Filetree::open(directory.path().to_path_buf()));
     let foreign_root = Resource {
         source: foreign.source(),
         node: foreign.root(),
     };
-    let file = request(original.tree.resolve(directory.0.join("a")));
+    let file = request(original.tree.resolve(directory.path().join("a")));
     for (resource, message) in [
         (foreign_root, "another Filetree"),
         (file, "not a browsable directory"),
@@ -124,12 +85,12 @@ fn t_observed_workspace_requires_a_directory_from_the_same_filetree() {
 
 #[test]
 fn t_missing_workspace_keeps_its_path_without_blocking_a_valid_display_root() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), b"content").unwrap();
+        fs::write(directory.path().join(name), b"content").unwrap();
     }
-    let original = explorer(&directory.0);
-    let path = directory.0.join("missing");
+    let original = explorer(directory.path());
+    let path = directory.path().join("missing");
     let explorer = Explorer::new(
         original.tree.clone(),
         original.state.clone(),
@@ -151,15 +112,15 @@ fn t_missing_workspace_keeps_its_path_without_blocking_a_valid_display_root() {
 
 #[test]
 fn t_queued_parent_navigation_uses_each_preceding_owner_commit() {
-    let directory = Directory::new();
-    let path = directory.0.join("one/two");
+    let directory = TempDir::new();
+    let path = directory.path().join("one/two");
     fs::create_dir_all(&path).unwrap();
     for name in ["a", "b"] {
         fs::write(path.join(name), b"content").unwrap();
     }
     let explorer = explorer(&path);
-    let base = request(explorer.tree.resolve(directory.0.clone())).node;
-    let parent = request(explorer.tree.resolve(directory.0.join("one"))).node;
+    let base = request(explorer.tree.resolve(directory.path().to_path_buf())).node;
+    let parent = request(explorer.tree.resolve(directory.path().join("one"))).node;
     let first = explorer.navigate_parent();
     let second = explorer.navigate_parent();
     reply(&explorer, first);
@@ -173,14 +134,14 @@ fn t_queued_parent_navigation_uses_each_preceding_owner_commit() {
 
 #[test]
 fn t_completed_jobs_release_with_the_last_external_handle() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    fs::create_dir(directory.0.join("target")).unwrap();
-    let explorer = explorer(&directory.0);
-    let source = request(explorer.tree.resolve(directory.0.join("a")));
-    let target = request(explorer.tree.resolve(directory.0.join("target")));
+    fs::create_dir(directory.path().join("target")).unwrap();
+    let explorer = explorer(directory.path());
+    let source = request(explorer.tree.resolve(directory.path().join("a")));
+    let target = request(explorer.tree.resolve(directory.path().join("target")));
     for create in [false, true] {
         let job = if create {
             explorer.start_create(CreatePlan {
@@ -201,35 +162,32 @@ fn t_completed_jobs_release_with_the_last_external_handle() {
         }
         .unwrap();
         let retained = job.downgrade();
-        let status = wait_job(&job);
+        let status = finished(&job);
         assert!(status.error.is_none());
         assert_eq!(status.results, 1);
         assert_eq!(job.results(0, 1).unwrap()[0].status, ItemStatus::Success);
         drop(job);
-        let started = Instant::now();
-        while retained.upgrade().is_some() {
-            assert!(
-                started.elapsed() < Duration::from_secs(1),
-                "Explorer must not retain a completed Job after its callers release it"
-            );
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        // Explorer must not retain a completed Job after its callers release it.
+        eventually(|| retained.upgrade().is_none());
     }
-    assert_eq!(fs::read(directory.0.join("target/a")).unwrap(), b"content");
-    assert!(directory.0.join("target/created").is_file());
+    assert_eq!(
+        fs::read(directory.path().join("target/a")).unwrap(),
+        b"content"
+    );
+    assert!(directory.path().join("target/created").is_file());
 }
 
 #[test]
 fn t_running_job_blocks_both_start_paths_even_after_its_caller_drops_the_handle() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    fs::create_dir(directory.0.join("target")).unwrap();
-    fs::write(directory.0.join("target/a"), "conflict").unwrap();
-    let explorer = explorer(&directory.0);
-    let source = request(explorer.tree.resolve(directory.0.join("a")));
-    let target = request(explorer.tree.resolve(directory.0.join("target")));
+    fs::create_dir(directory.path().join("target")).unwrap();
+    fs::write(directory.path().join("target/a"), "conflict").unwrap();
+    let explorer = explorer(directory.path());
+    let source = request(explorer.tree.resolve(directory.path().join("a")));
+    let target = request(explorer.tree.resolve(directory.path().join("target")));
     let operation = || OperationPlan {
         kind: OperationKind::Copy,
         source: source.source.clone(),
@@ -241,14 +199,7 @@ fn t_running_job_blocks_both_start_paths_even_after_its_caller_drops_the_handle(
     };
     let job = explorer.start_operation(operation()).unwrap();
     let retained = job.downgrade();
-    let started = Instant::now();
-    let confirmation = loop {
-        if let Some(confirmation) = job.status().confirmation {
-            break confirmation;
-        }
-        assert!(started.elapsed() < Duration::from_secs(10));
-        std::thread::sleep(Duration::from_millis(1));
-    };
+    let confirmation = eventually(|| job.status().confirmation);
     drop(job);
     let other = explorer.clone();
     assert!(
@@ -264,19 +215,22 @@ fn t_running_job_blocks_both_start_paths_even_after_its_caller_drops_the_handle(
     ));
     let job = retained.upgrade().expect("the worker owns its running Job");
     job.confirm(confirmation.token, true).unwrap();
-    assert!(wait_job(&job).error.is_none());
+    assert!(finished(&job).error.is_none());
     assert_eq!(job.results(0, 1).unwrap()[0].status, ItemStatus::Success);
-    assert_eq!(fs::read(directory.0.join("target/a")).unwrap(), b"content");
-    assert!(!directory.0.join("target/unexpected").exists());
+    assert_eq!(
+        fs::read(directory.path().join("target/a")).unwrap(),
+        b"content"
+    );
+    assert!(!directory.path().join("target/unexpected").exists());
 }
 
 #[test]
 fn t_marking_switches_purpose_atomically_without_restamping_selected_nodes() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    let explorer = explorer(&directory.0);
+    let explorer = explorer(directory.path());
     let original = explorer.state.snapshot().unwrap();
     reply(
         &explorer,
@@ -307,11 +261,11 @@ fn t_marking_switches_purpose_atomically_without_restamping_selected_nodes() {
 
 #[test]
 fn t_normal_marks_resolve_in_order_without_waiting_for_a_frame() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    let explorer = explorer(&directory.0);
+    let explorer = explorer(directory.path());
     let frame = explorer.state.snapshot().unwrap();
     let first = explorer.mark(frame.clone(), 0, 1, Mark::Select, false);
     let second = explorer.mark(frame.clone(), 0, 1, Mark::Select, false);
@@ -338,15 +292,15 @@ fn t_normal_marks_resolve_in_order_without_waiting_for_a_frame() {
 
 #[test]
 fn t_relative_folds_use_owner_expansion_and_keep_key_time_targets() {
-    let directory = Directory::new();
-    let nested = directory.0.join("a/child/leaf");
+    let directory = TempDir::new();
+    let nested = directory.path().join("a/child/leaf");
     fs::create_dir_all(&nested).unwrap();
-    fs::write(directory.0.join("b"), "content").unwrap();
+    fs::write(directory.path().join("b"), "content").unwrap();
     fs::write(nested.join("payload"), "content").unwrap();
-    let explorer = explorer(&directory.0);
+    let explorer = explorer(directory.path());
     let leaf = request(explorer.tree.resolve(nested.join("payload"))).node;
-    let child = request(explorer.tree.resolve(directory.0.join("a/child"))).node;
-    let parent = request(explorer.tree.resolve(directory.0.join("a"))).node;
+    let child = request(explorer.tree.resolve(directory.path().join("a/child"))).node;
+    let parent = request(explorer.tree.resolve(directory.path().join("a"))).node;
     reply(&explorer, explorer.navigate(leaf, true));
     let frame = explorer.state.snapshot().unwrap();
     for kind in [Fold::Toggle, Fold::Recursive] {
@@ -380,11 +334,11 @@ fn t_relative_folds_use_owner_expansion_and_keep_key_time_targets() {
 
 #[test]
 fn t_select_mark_exits_transfer_without_unselecting_then_toggles() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    let explorer = explorer(&directory.0);
+    let explorer = explorer(directory.path());
     reply(
         &explorer,
         explorer.mark(explorer.state.snapshot().unwrap(), 0, 1, Mark::Copy, false),
@@ -421,11 +375,11 @@ fn t_select_mark_exits_transfer_without_unselecting_then_toggles() {
 
 #[test]
 fn t_cancel_transfer_preserves_selection_then_clears_without_a_cursor_target() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    let explorer = explorer(&directory.0);
+    let explorer = explorer(directory.path());
     for mark in [Mark::Copy, Mark::Cut] {
         reply(
             &explorer,
@@ -448,11 +402,11 @@ fn t_cancel_transfer_preserves_selection_then_clears_without_a_cursor_target() {
 
 #[test]
 fn t_cancel_transfer_uses_the_queued_purpose_before_a_frame_is_observed() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    let explorer = explorer(&directory.0);
+    let explorer = explorer(directory.path());
     let original = explorer.state.snapshot().unwrap();
     let marked = explorer.mark(original, 0, 1, Mark::Copy, false);
     let cancelled = explorer.cancel_transfer_or_clear_selection();
@@ -465,11 +419,11 @@ fn t_cancel_transfer_uses_the_queued_purpose_before_a_frame_is_observed() {
 
 #[test]
 fn t_visual_union_restamps_and_task_lock_rejects_mode_changes() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    let explorer = explorer(&directory.0);
+    let explorer = explorer(directory.path());
     reply(
         &explorer,
         explorer.mark(explorer.state.snapshot().unwrap(), 0, 1, Mark::Copy, false),
@@ -517,16 +471,16 @@ fn t_visual_union_restamps_and_task_lock_rejects_mode_changes() {
 
 #[test]
 fn t_range_inspection_deduplicates_subtrees_without_changing_locked_selection() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    fs::create_dir(directory.0.join("nested")).unwrap();
-    fs::write(directory.0.join("nested/file"), "content").unwrap();
-    let explorer = explorer(&directory.0);
-    let a = request(explorer.tree.resolve(directory.0.join("a")));
-    let nested = request(explorer.tree.resolve(directory.0.join("nested")));
-    let file = request(explorer.tree.resolve(directory.0.join("nested/file")));
+    fs::create_dir(directory.path().join("nested")).unwrap();
+    fs::write(directory.path().join("nested/file"), "content").unwrap();
+    let explorer = explorer(directory.path());
+    let a = request(explorer.tree.resolve(directory.path().join("a")));
+    let nested = request(explorer.tree.resolve(directory.path().join("nested")));
+    let file = request(explorer.tree.resolve(directory.path().join("nested/file")));
     reply(&explorer, explorer.navigate(file.node, true));
     let frame = explorer.state.snapshot().unwrap();
     let at = frame.position(a.node).unwrap();
@@ -580,12 +534,12 @@ fn t_range_inspection_deduplicates_subtrees_without_changing_locked_selection() 
 
 #[test]
 fn t_range_inspection_rejects_foreign_frames_invalid_bounds_and_removed_roots() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    let explorer = explorer(&directory.0);
-    let a = request(explorer.tree.resolve(directory.0.join("a")));
+    let explorer = explorer(directory.path());
+    let a = request(explorer.tree.resolve(directory.path().join("a")));
     let frame = explorer.state.snapshot().unwrap();
     let Outcome::State(other) = explorer
         .tree
@@ -606,13 +560,9 @@ fn t_range_inspection_rejects_foreign_frames_invalid_bounds_and_removed_roots() 
     assert!(
         matches!(invalid, Outcome::Reply(Reply::Rejected { error }) if error.code == ErrorCode::InvalidUpdate)
     );
-    fs::remove_file(directory.0.join("a")).unwrap();
+    fs::remove_file(directory.path().join("a")).unwrap();
     explorer.tree.refresh(&explorer.state).unwrap().wait();
-    let started = Instant::now();
-    while explorer.tree.source().contains(a.node) {
-        assert!(started.elapsed() < Duration::from_secs(10));
-        std::thread::sleep(Duration::from_millis(1));
-    }
+    eventually(|| !explorer.tree.source().contains(a.node));
     let at = frame.position(a.node).unwrap();
     let removed = explorer.inspect_range(frame, at, at + 1).wait();
     assert!(
@@ -691,15 +641,15 @@ fn t_reveal_invalidation_coalesces_with_loading_and_selection_updates() {
         }
     }
     for loading in [false, true] {
-        let directory = Directory::new();
+        let directory = TempDir::new();
         for name in ["a", "b"] {
-            fs::write(directory.0.join(name), "content").unwrap();
+            fs::write(directory.path().join(name), "content").unwrap();
         }
-        fs::create_dir(directory.0.join("nested")).unwrap();
-        fs::write(directory.0.join("nested/file"), "content").unwrap();
-        let explorer = explorer(&directory.0);
-        let selected = request(explorer.tree.resolve(directory.0.join("a"))).node;
-        let target = request(explorer.tree.resolve(directory.0.join("nested/file"))).node;
+        fs::create_dir(directory.path().join("nested")).unwrap();
+        fs::write(directory.path().join("nested/file"), "content").unwrap();
+        let explorer = explorer(directory.path());
+        let selected = request(explorer.tree.resolve(directory.path().join("a"))).node;
+        let target = request(explorer.tree.resolve(directory.path().join("nested/file"))).node;
         assert!(
             explorer
                 .state
@@ -728,15 +678,15 @@ fn t_reveal_invalidation_coalesces_with_loading_and_selection_updates() {
 
 #[test]
 fn t_reveal_updates_root_expansion_and_cursor_without_changing_selection() {
-    let directory = Directory::new();
+    let directory = TempDir::new();
     for name in ["a", "b"] {
-        fs::write(directory.0.join(name), "content").unwrap();
+        fs::write(directory.path().join(name), "content").unwrap();
     }
-    fs::create_dir(directory.0.join("nested")).unwrap();
-    fs::write(directory.0.join("nested/file"), "content").unwrap();
-    let explorer = explorer(&directory.0);
-    let a = request(explorer.tree.resolve(directory.0.join("a")));
-    let file = request(explorer.tree.resolve(directory.0.join("nested/file")));
+    fs::create_dir(directory.path().join("nested")).unwrap();
+    fs::write(directory.path().join("nested/file"), "content").unwrap();
+    let explorer = explorer(directory.path());
+    let a = request(explorer.tree.resolve(directory.path().join("a")));
+    let file = request(explorer.tree.resolve(directory.path().join("nested/file")));
     let frame = explorer.state.snapshot().unwrap();
     let at = frame.position(a.node).unwrap();
     reply(
@@ -759,23 +709,19 @@ fn t_reveal_updates_root_expansion_and_cursor_without_changing_selection() {
 
 #[test]
 fn t_reveal_resolves_an_external_target_after_the_display_root_is_removed() {
-    let directory = Directory::new();
-    let workspace = directory.0.join("workspace");
+    let directory = TempDir::new();
+    let workspace = directory.path().join("workspace");
     fs::create_dir(&workspace).unwrap();
     for name in ["a", "b"] {
         fs::write(workspace.join(name), "content").unwrap();
     }
-    let target = directory.0.join("external");
+    let target = directory.path().join("external");
     fs::write(&target, "content").unwrap();
     let explorer = explorer(&workspace);
     fs::remove_dir_all(&workspace).unwrap();
     assert_eq!(request(explorer.reveal_path(target.clone())), target);
     explorer.tree.refresh(&explorer.state).unwrap().wait();
-    let started = Instant::now();
-    while !explorer.tree.is_settled() {
-        assert!(started.elapsed() < Duration::from_secs(10));
-        std::thread::sleep(Duration::from_millis(1));
-    }
+    eventually(|| explorer.tree.is_settled());
     assert_eq!(request(explorer.reveal_path(target.clone())), target);
     let resource = request(explorer.tree.resolve(target));
     reply(&explorer, explorer.navigate(resource.node, true));

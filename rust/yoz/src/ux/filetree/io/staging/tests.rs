@@ -1,5 +1,5 @@
 use super::*;
-use crate::ux::filetree::tests::Directory;
+use crate::test_support::TempDir;
 use crate::ux::treeview::{
     ErrorCode,
     memory::{Budget, Charge},
@@ -15,11 +15,11 @@ fn memory() -> Arc<Memory> {
 #[test]
 fn t_staged_copy_rejects_mandatory_memory_before_io_and_can_retry() {
     for data_limit in [true, false] {
-        let directory = Directory::new();
-        let source = directory.0.join("source");
+        let directory = TempDir::new();
+        let source = directory.path().join("source");
         fs::write(&source, "data").unwrap();
         let expected = Signature::read(&source, false).unwrap();
-        let target = destination(&directory.0.join("target"));
+        let target = destination(&directory.path().join("target"));
         let data_limit_bytes = if data_limit {
             1024 * 1024
         } else {
@@ -78,10 +78,10 @@ fn destination(path: &Path) -> Destination {
 
 #[test]
 fn t_staged_tree_hides_its_root_and_publishes_links_and_readonly_directories() {
-    let directory = Directory::new();
-    let source = directory.0.join("source");
+    let directory = TempDir::new();
+    let source = directory.path().join("source");
     fs::write(&source, "contents").unwrap();
-    let target = destination(&directory.0.join("target"));
+    let target = destination(&directory.path().join("target"));
     let filter = Filter::new(target.parent.identity);
     let mut stage = Staging::new(&target, Permissions::from_mode(0o555), memory()).unwrap();
     let private = stage.temporary.path.clone();
@@ -105,7 +105,7 @@ fn t_staged_tree_hides_its_root_and_publishes_links_and_readonly_directories() {
             |_| {},
         )
         .unwrap();
-    let link = directory.0.join("link");
+    let link = directory.path().join("link");
     symlink("../source", &link).unwrap();
     stage
         .copy(
@@ -155,10 +155,10 @@ fn t_staged_tree_hides_its_root_and_publishes_links_and_readonly_directories() {
 
 #[test]
 fn t_staged_cancel_discards_the_incomplete_file_and_commits_the_finished_prefix() {
-    let directory = Directory::new();
-    let source = directory.0.join("source");
+    let directory = TempDir::new();
+    let source = directory.path().join("source");
     fs::write(&source, vec![7; super::super::COPY_BUFFER * 2]).unwrap();
-    let target = destination(&directory.0.join("target"));
+    let target = destination(&directory.path().join("target"));
     let mut stage = Staging::new(&target, Permissions::from_mode(0o755), memory()).unwrap();
     let mut copier = Copier::default();
     let cancel = AtomicBool::new(false);
@@ -196,10 +196,10 @@ fn t_staged_cancel_discards_the_incomplete_file_and_commits_the_finished_prefix(
 
 #[test]
 fn t_staged_publication_preserves_a_late_destination_and_cleans_after_parent_rename() {
-    let directory = Directory::new();
-    let source = directory.0.join("source");
+    let directory = TempDir::new();
+    let source = directory.path().join("source");
     fs::write(&source, "source").unwrap();
-    let parent = directory.0.join("parent");
+    let parent = directory.path().join("parent");
     fs::create_dir(&parent).unwrap();
     let target = destination(&parent.join("target"));
     let mut stage = Staging::new(&target, Permissions::from_mode(0o555), memory()).unwrap();
@@ -218,7 +218,7 @@ fn t_staged_publication_preserves_a_late_destination_and_cleans_after_parent_ren
     fs::write(&target.path, "external").unwrap();
     assert!(stage.publish(&target).is_err());
     assert_eq!(fs::read(&target.path).unwrap(), b"external");
-    let relocated = directory.0.join("relocated");
+    let relocated = directory.path().join("relocated");
     fs::rename(&parent, &relocated).unwrap();
     stage.clean().unwrap();
     assert!(!relocated.join(name).exists());
@@ -228,10 +228,10 @@ fn t_staged_publication_preserves_a_late_destination_and_cleans_after_parent_ren
 #[test]
 fn t_staged_replaced_and_unowned_entries_are_not_published_or_deleted() {
     for replace in [false, true] {
-        let directory = Directory::new();
-        let source = directory.0.join("source");
+        let directory = TempDir::new();
+        let source = directory.path().join("source");
         fs::write(&source, "source").unwrap();
-        let target = destination(&directory.0.join("target"));
+        let target = destination(&directory.path().join("target"));
         let mut stage = Staging::new(&target, Permissions::from_mode(0o755), memory()).unwrap();
         let private = stage.temporary.path.clone();
         stage
@@ -247,7 +247,7 @@ fn t_staged_replaced_and_unowned_entries_are_not_published_or_deleted() {
             .unwrap();
         let foreign = private.join(if replace { "owned" } else { "external" });
         if replace {
-            fs::rename(&foreign, directory.0.join("original")).unwrap();
+            fs::rename(&foreign, directory.path().join("original")).unwrap();
         }
         fs::write(&foreign, "external").unwrap();
         assert!(stage.publish(&target).is_err());
@@ -260,10 +260,10 @@ fn t_staged_replaced_and_unowned_entries_are_not_published_or_deleted() {
 
 #[test]
 fn t_staging_budget_precedes_io_and_lookalike_names_remain_visible() {
-    let directory = Directory::new();
-    let lookalike = directory.0.join(".yoz-filetree-user.tmp");
+    let directory = TempDir::new();
+    let lookalike = directory.path().join(".yoz-filetree-user.tmp");
     fs::create_dir(&lookalike).unwrap();
-    let target = destination(&directory.0.join("target"));
+    let target = destination(&directory.path().join("target"));
     let filter = Filter::new(target.parent.identity);
     assert!(filter.read(&lookalike).unwrap().is_some());
     let budget = Budget::new(1024);
@@ -284,7 +284,7 @@ fn t_staging_budget_precedes_io_and_lookalike_names_remain_visible() {
             .code,
         ErrorCode::ResourceLimit
     );
-    assert_eq!(fs::read_dir(&directory.0).unwrap().count(), 1);
+    assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 1);
     assert_eq!(budget.used(), 0);
     drop(_guard);
     let task_memory = memory();

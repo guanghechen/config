@@ -195,7 +195,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn nearby_filter_preserves_literal_matches_including_short_labels_and_invalid_bytes() {
+    fn t_nearby_filter_preserves_literal_matches_including_short_labels_and_invalid_bytes() {
         for text in [
             b"".as_slice(),
             b"alpha.omega\0beta",
@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn ranking_combines_scores_before_global_top_k() {
+    fn t_ranking_combines_scores_before_global_top_k() {
         let mut first = Snapshot {
             candidates: Vec::new(),
             regions: 1,
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn invalid_regions_and_nonmatching_duplicates_cannot_hide_valid_candidates() {
+    fn t_invalid_regions_and_nonmatching_duplicates_cannot_hide_valid_candidates() {
         let mut invalid = candidate(b"same", "foo", "0", 100.0);
         invalid.region = 1;
         let snapshot = Snapshot {
@@ -291,7 +291,7 @@ mod tests {
     }
 
     #[test]
-    fn history_proximity_deprecation_and_empty_queries_keep_their_weights() {
+    fn t_history_proximity_deprecation_and_empty_queries_keep_their_weights() {
         let first = candidate(b"first", "same", "a", 0.0);
         let mut preferred = candidate(b"preferred", "same", "b", 0.0);
         preferred.deprecated = true;
@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_sort_text_and_equal_sort_keys_preserve_candidate_order() {
+    fn t_missing_sort_text_and_equal_sort_keys_preserve_candidate_order() {
         let mut beta = candidate(b"z", "beta", "beta", 0.0);
         let mut alpha = candidate(b"a", "alpha", "alpha", 0.0);
         beta.has_sort_text = false;

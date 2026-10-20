@@ -523,3 +523,6 @@ impl Task {
         Ok(token)
     }
 }
+
+#[cfg(test)]
+mod tests;

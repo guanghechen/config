@@ -39,23 +39,14 @@ pub fn locate_nearest(start_dirpath: &str, filenames: &[String]) -> Option<Strin
 mod tests {
     use super::super::SEP;
     use super::locate_nearest;
+    use crate::test_support::TempDir;
     use std::fs;
     use std::path::Path;
 
-    fn unique_temp_dir(name: &str) -> std::path::PathBuf {
-        std::env::temp_dir().join(format!(
-            "yoz_locate_nearest_{name}_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_nanos())
-                .unwrap_or(0)
-        ))
-    }
-
     #[test]
     fn t_locate_nearest_prefers_closest_match() {
-        let base_dir = unique_temp_dir("closest");
+        let base = TempDir::new();
+        let base_dir = base.path();
         let deep_dir = base_dir.join(format!("foo{SEP}bar{SEP}baz"));
         fs::create_dir_all(&deep_dir).expect("create nested dirs");
 
@@ -76,13 +67,12 @@ mod tests {
             target_path,
             result
         );
-
-        fs::remove_dir_all(&base_dir).ok();
     }
 
     #[test]
     fn t_locate_nearest_handles_directory_targets() {
-        let base_dir = unique_temp_dir("directory");
+        let base = TempDir::new();
+        let base_dir = base.path();
         let nested_dir = base_dir.join(format!("foo{SEP}bar"));
         let lib_dir = base_dir.join(format!("foo{SEP}node_modules{SEP}typescript{SEP}lib"));
         fs::create_dir_all(&nested_dir).expect("create nested");
@@ -101,13 +91,12 @@ mod tests {
             lib_dir,
             result
         );
-
-        fs::remove_dir_all(&base_dir).ok();
     }
 
     #[test]
     fn t_locate_nearest_returns_none_when_missing() {
-        let base_dir = unique_temp_dir("missing");
+        let base = TempDir::new();
+        let base_dir = base.path();
         let nested_dir = base_dir.join(format!("foo{SEP}bar"));
         fs::create_dir_all(&nested_dir).expect("create nested");
 
@@ -117,7 +106,5 @@ mod tests {
         );
 
         assert!(result.is_none());
-
-        fs::remove_dir_all(&base_dir).ok();
     }
 }

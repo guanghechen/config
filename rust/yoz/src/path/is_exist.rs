@@ -26,25 +26,19 @@ mod tests {
     use super::super::SEP;
     use super::super::join;
     use super::*;
+    use crate::test_support::TempDir;
     use std::fs;
 
     struct PreparedPaths {
-        base: String,
+        _base: TempDir,
         dir: String,
         file: String,
         missing: String,
     }
 
     fn prepare_paths() -> PreparedPaths {
-        let base_dir = std::env::temp_dir().join(format!(
-            "yoz_path_is_exist_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_nanos())
-                .unwrap_or(0)
-        ));
-        let base = base_dir.to_string_lossy().to_string();
+        let base_dir = TempDir::new();
+        let base = base_dir.path().to_string_lossy().to_string();
         let dir = join(&base, "dir", false, SEP);
         let file = join(&base, "file.txt", false, SEP);
         let missing = join(&base, "missing.txt", false, SEP);
@@ -53,7 +47,7 @@ mod tests {
         fs::write(&file, b"data").expect("write file");
 
         PreparedPaths {
-            base,
+            _base: base_dir,
             dir,
             file,
             missing,
@@ -78,7 +72,5 @@ mod tests {
         assert!(!is_exist(""));
         assert!(!is_exist_directory(""));
         assert!(!is_exist_file(""));
-
-        fs::remove_dir_all(&paths.base).ok();
     }
 }

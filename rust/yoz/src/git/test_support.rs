@@ -1,34 +1,27 @@
 use crate::git::Options;
+use crate::test_support::TempDir;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::Path;
 use std::process::{Command, Stdio};
-use std::sync::atomic::{AtomicUsize, Ordering};
 
-pub struct Fixture(pub PathBuf);
-static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// A Git repository in a temporary directory.
+pub struct Fixture(TempDir);
 
 impl Fixture {
     pub fn new() -> Self {
-        let fixture = loop {
-            let path = std::env::temp_dir().join(format!(
-                "yoz-git-{}-{}",
-                std::process::id(),
-                NEXT.fetch_add(1, Ordering::Relaxed)
-            ));
-            match std::fs::create_dir(&path) {
-                Ok(()) => break Self(path),
-                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
-                Err(error) => panic!("temporary directory: {error}"),
-            }
-        };
+        let fixture = Self(TempDir::new());
         fixture.git(&["init", "-q"], None);
         fixture
+    }
+
+    pub fn path(&self) -> &Path {
+        self.0.path()
     }
 
     pub fn git(&self, args: &[&str], input: Option<&[u8]>) -> Vec<u8> {
         let mut command = Command::new("git");
         command
-            .current_dir(&self.0)
+            .current_dir(self.path())
             .args([
                 "-c",
                 "user.name=Test",
@@ -42,7 +35,7 @@ impl Fixture {
             .arg("-c")
             .arg(format!(
                 "core.hooksPath={}",
-                self.0.join("no-hooks").display()
+                self.path().join("no-hooks").display()
             ))
             .args(args)
             .stdout(Stdio::piped())
@@ -66,7 +59,7 @@ impl Fixture {
     }
 
     pub fn write(&self, path: &str, text: &str) {
-        let path = self.0.join(path);
+        let path = self.path().join(path);
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(path, text).unwrap();
     }
@@ -77,20 +70,19 @@ impl Fixture {
     }
 
     pub fn options(&self) -> Options {
-        let root = self.0.to_str().unwrap().replace('\\', "/").into_bytes();
+        let root = self
+            .path()
+            .to_str()
+            .unwrap()
+            .replace('\\', "/")
+            .into_bytes();
         Options {
-            cwd: self.0.clone(),
+            cwd: self.path().to_path_buf(),
             root,
             environment: std::env::vars_os().collect(),
             base: None,
             include_numstat: false,
             include_untracked: true,
         }
-    }
-}
-
-impl Drop for Fixture {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
     }
 }

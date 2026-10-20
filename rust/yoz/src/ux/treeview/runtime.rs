@@ -1263,3 +1263,6 @@ fn run_inner(
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

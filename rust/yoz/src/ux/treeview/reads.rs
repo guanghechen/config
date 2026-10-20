@@ -728,3 +728,6 @@ impl Engine {
         Ok(self.applied(None, vec![]))
     }
 }
+
+#[cfg(test)]
+mod tests;

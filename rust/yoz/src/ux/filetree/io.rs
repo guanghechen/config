@@ -146,8 +146,6 @@ impl Signature {
         })
     }
     pub fn verify(&self, path: &Path, parent: bool) -> io::Result<()> {
-        #[cfg(test)]
-        let _span = super::profile::span(super::profile::Stage::Validate);
         if Self::read(path, parent)? == *self {
             Ok(())
         } else {
@@ -548,8 +546,6 @@ impl Copier {
         source: &Path,
         expected: &Signature,
     ) -> io::Result<Option<source::Input>> {
-        #[cfg(test)]
-        let _span = super::profile::span(super::profile::Stage::Open);
         expected.verify(source, false)?;
         if expected.kind != Kind::File {
             return Ok(None);
@@ -572,8 +568,6 @@ impl Copier {
         cancel: &AtomicBool,
         progress: impl Fn(u64),
     ) -> io::Result<()> {
-        #[cfg(test)]
-        let _span = super::profile::span(super::profile::Stage::Transfer);
         loop {
             cancelled(cancel)?;
             #[cfg(target_os = "linux")]
@@ -614,8 +608,6 @@ impl Copier {
             output.write_all(&self.buffer[..size])?;
             progress(size as u64);
         }
-        #[cfg(test)]
-        let _permissions = super::profile::span(super::profile::Stage::Permissions);
         output.set_permissions(input.metadata()?.permissions())
     }
 

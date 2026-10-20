@@ -537,27 +537,12 @@ impl<'a> Input<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    struct Directory(PathBuf);
-
-    impl Directory {
-        fn new() -> Self {
-            let path = std::env::temp_dir().join(format!("yoz-filetree-{}", uuid::Uuid::new_v4()));
-            fs::create_dir(&path).unwrap();
-            Self(path)
-        }
-    }
-
-    impl Drop for Directory {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.0);
-        }
-    }
+    use crate::test_support::TempDir;
 
     #[test]
     fn t_borrowed_order_matches_owned_keys_for_native_names_and_directory_links() {
-        let directory = Directory::new();
-        let base = Entry::read(&directory.0).unwrap();
+        let directory = TempDir::new();
+        let base = Entry::read(directory.path()).unwrap();
         let mut names: Vec<OsString> = ["a", "A", "aa", "Z", "z", "文\\name", "\n"]
             .into_iter()
             .map(Into::into)
@@ -676,8 +661,8 @@ mod tests {
 
     #[test]
     fn t_file_identity_survives_setting_an_older_modified_time() {
-        let directory = Directory::new();
-        let path = directory.0.join("file");
+        let directory = TempDir::new();
+        let path = directory.path().join("file");
         let file = fs::File::create_new(&path).unwrap();
         let before = Entry::read(&path).unwrap();
         let identities = std::collections::HashSet::from([before.identity]);
@@ -696,15 +681,15 @@ mod tests {
 
     #[test]
     fn t_filesystem_identity_distinguishes_replacement_from_write_and_rename() {
-        let directory = Directory::new();
-        let path = directory.0.join("a");
+        let directory = TempDir::new();
+        let path = directory.path().join("a");
         fs::write(&path, b"first").unwrap();
         let first = Entry::read(&path).unwrap();
         fs::write(&path, b"second value").unwrap();
         let written = Entry::read(&path).unwrap();
         assert_eq!(first.identity, written.identity);
         assert_ne!(first.size, written.size);
-        let renamed = directory.0.join("renamed");
+        let renamed = directory.path().join("renamed");
         fs::rename(&path, &renamed).unwrap();
         let moved = Entry::read(&renamed).unwrap();
         assert_eq!(written.identity, moved.identity);
@@ -723,9 +708,9 @@ mod tests {
     #[test]
     fn t_symlink_identity_and_text_survive_target_changes() {
         use std::os::unix::fs::symlink;
-        let directory = Directory::new();
-        let path = directory.0.join("link");
-        let target = directory.0.join("target");
+        let directory = TempDir::new();
+        let path = directory.path().join("link");
+        let target = directory.path().join("target");
         fs::create_dir(&target).unwrap();
         symlink("target", &path).unwrap();
         let linked = Entry::read(&path).unwrap();
@@ -749,7 +734,7 @@ mod tests {
         assert_eq!(file_link.identity, linked.identity);
         assert_eq!(file_link.target.unwrap().0, Kind::File);
         assert!(!file_link.directory());
-        let invalid_path = directory.0.join("invalid");
+        let invalid_path = directory.path().join("invalid");
         symlink("target/child", &invalid_path).unwrap();
         let not_directory = Entry::read(&invalid_path).unwrap();
         assert!(!not_directory.target_unknown);
