@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/select/focus_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.select.focus")
+local t = harness.new()
 
 local picker_focused = false
 local picker_closed = 0

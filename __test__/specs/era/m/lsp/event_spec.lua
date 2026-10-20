@@ -1,13 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/event_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.lsp.event module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.lsp.event")
+local t = harness.new()
 
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "stl", {
   nvim = {
     fn = {
       augroup = function(name)
@@ -489,7 +485,7 @@ end
 
 t:test("inlay hints: pause in the buffer being typed in and resume once the mode settles outside typing", function()
   local switch = true ---@type boolean
-  bootstrap.with_dot(t, {
+  bootstrap.with_global(t, "dot", {
     context = {
       lsp = {
         inlay_hints = {

@@ -1,13 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/plugin/action_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.plugin.action")
+local t = harness.new()
+local git = require("__test__.support.git")
 local Future = require("stl.c.future")
 
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "stl", {
   async = require("stl.async"),
   c = { Future = Future },
   git = {
@@ -24,7 +22,7 @@ bootstrap.with_stl(t, {
     end,
   },
 })
-bootstrap.with_yoz(t, {
+bootstrap.with_global(t, "yoz", {
   canonical_path = {
     to_os_path = function(path)
       return path
@@ -45,7 +43,7 @@ local State = {
   reload_lock = function() end,
   update_lock = function() end,
 }
-bootstrap.with_dot(t, {
+bootstrap.with_global(t, "dot", {
   path = {
     join = function(...)
       return table.concat({ ... }, "/")
@@ -390,41 +388,27 @@ end)
 
 t:test("sync checks out the exact locked commit in a clean repository", function()
   reset_action()
-  local root = vim.fn.tempname()
+  local root = t:tempdir()
   local remote = root .. "/remote.git"
   local source = root .. "/source"
   local plugins = root .. "/plugins"
   local plugin = plugins .. "/exact.nvim"
   vim.fn.mkdir(source, "p")
   vim.fn.mkdir(plugins, "p")
-  ---@diagnostic disable-next-line: invisible
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
 
-  local function git(args, cwd)
-    local command = { "git" }
-    vim.list_extend(command, args)
-    local result = vim.system(command, { cwd = cwd, text = true }):wait()
-    t.assert_eq(0, result.code, "git " .. table.concat(args, " ") .. ": " .. tostring(result.stderr))
-    return vim.trim(result.stdout or "")
-  end
-
-  git({ "init", "--bare", remote })
-  git({ "init", "-b", "main" }, source)
-  git({ "config", "user.name", "Plugin Test" }, source)
-  git({ "config", "user.email", "plugin-test@example.test" }, source)
+  git.run(root, { "init", "--bare", remote })
+  git.run(source, { "init", "-b", "main" })
   vim.fn.writefile({ "one" }, source .. "/plugin.txt")
-  git({ "add", "plugin.txt" }, source)
-  git({ "commit", "-m", "first" }, source)
-  local first = git({ "rev-parse", "HEAD" }, source)
+  git.run(source, { "add", "plugin.txt" })
+  git.run(source, { "commit", "-m", "first" })
+  local first = vim.trim(git.run(source, { "rev-parse", "HEAD" }))
   vim.fn.writefile({ "two" }, source .. "/plugin.txt")
-  git({ "commit", "-am", "second" }, source)
-  local second = git({ "rev-parse", "HEAD" }, source)
-  git({ "remote", "add", "origin", remote }, source)
-  git({ "push", "-u", "origin", "main" }, source)
+  git.run(source, { "commit", "-am", "second" })
+  local second = vim.trim(git.run(source, { "rev-parse", "HEAD" }))
+  git.run(source, { "remote", "add", "origin", remote })
+  git.run(source, { "push", "-u", "origin", "main" })
   -- Clones need their own identity for checkout reflogs, avoiding hostname/email discovery.
-  git({
+  git.run(root, {
     "clone",
     "--config",
     "user.name=Plugin Test",
@@ -451,50 +435,36 @@ t:test("sync checks out the exact locked commit in a clean repository", function
 
   t.assert_eq("done", task.status, task.message)
   t.assert_eq("Synced", task.message, "sync message")
-  t.assert_eq(first, git({ "rev-parse", "HEAD" }, plugin), "checked out commit")
+  t.assert_eq(first, vim.trim(git.run(plugin, { "rev-parse", "HEAD" })), "checked out commit")
   t.assert_true(first ~= second, "test commits")
 end)
 
 t:test("sync fetches a lock branch outside the installed single-branch refspec", function()
   reset_action()
-  local root = vim.fn.tempname()
+  local root = t:tempdir()
   local remote = root .. "/remote.git"
   local source = root .. "/source"
   local plugins = root .. "/plugins"
   local plugin = plugins .. "/branch.nvim"
   vim.fn.mkdir(source, "p")
   vim.fn.mkdir(plugins, "p")
-  ---@diagnostic disable-next-line: invisible
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
 
-  local function git(args, cwd)
-    local command = { "git" }
-    vim.list_extend(command, args)
-    local result = vim.system(command, { cwd = cwd, text = true }):wait()
-    t.assert_eq(0, result.code, "git " .. table.concat(args, " ") .. ": " .. tostring(result.stderr))
-    return vim.trim(result.stdout or "")
-  end
-
-  git({ "init", "--bare", remote })
-  git({ "init", "-b", "main" }, source)
-  git({ "config", "user.name", "Plugin Test" }, source)
-  git({ "config", "user.email", "plugin-test@example.test" }, source)
+  git.run(root, { "init", "--bare", remote })
+  git.run(source, { "init", "-b", "main" })
   vim.fn.writefile({ "base" }, source .. "/plugin.txt")
-  git({ "add", "plugin.txt" }, source)
-  git({ "commit", "-m", "base" }, source)
-  git({ "branch", "stable" }, source)
+  git.run(source, { "add", "plugin.txt" })
+  git.run(source, { "commit", "-m", "base" })
+  git.run(source, { "branch", "stable" })
   vim.fn.writefile({ "main" }, source .. "/plugin.txt")
-  git({ "commit", "-am", "main-only" }, source)
-  git({ "switch", "stable" }, source)
+  git.run(source, { "commit", "-am", "main-only" })
+  git.run(source, { "switch", "stable" })
   vim.fn.writefile({ "stable" }, source .. "/plugin.txt")
-  git({ "commit", "-am", "stable-only" }, source)
-  local stable = git({ "rev-parse", "HEAD" }, source)
-  git({ "remote", "add", "origin", remote }, source)
-  git({ "push", "origin", "main", "stable" }, source)
+  git.run(source, { "commit", "-am", "stable-only" })
+  local stable = vim.trim(git.run(source, { "rev-parse", "HEAD" }))
+  git.run(source, { "remote", "add", "origin", remote })
+  git.run(source, { "push", "origin", "main", "stable" })
   -- Clones need their own identity for checkout reflogs, avoiding hostname/email discovery.
-  git({
+  git.run(root, {
     "clone",
     "--config",
     "user.name=Plugin Test",
@@ -525,7 +495,7 @@ t:test("sync fetches a lock branch outside the installed single-branch refspec",
 
   t.assert_eq("done", task.status, task.message)
   t.assert_eq("Synced", task.message, "sync message")
-  t.assert_eq(stable, git({ "rev-parse", "HEAD" }, plugin), "checked out lock branch commit")
+  t.assert_eq(stable, vim.trim(git.run(plugin, { "rev-parse", "HEAD" })), "checked out lock branch commit")
 end)
 
 t:run()

@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.ai.term" ---@type string
-
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.ai.term")
+local t = harness.new()
 
 ---@return era.m.ai.term
 ---@return table

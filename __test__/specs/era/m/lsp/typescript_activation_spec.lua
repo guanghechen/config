@@ -1,13 +1,10 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.lsp.typescript_activation" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.lsp.typescript_activation")
+local t = harness.new()
 
-bootstrap.with_yoz(t, require("yoz"))
-bootstrap.with_stl(t, { env = { PATH_SEP = "/", IS_WIN = false }, fs = require("stl.fs") })
-bootstrap.with_era(t, {
+t:patch_global("yoz", require("yoz"))
+bootstrap.with_global(t, "stl", { env = { PATH_SEP = "/", IS_WIN = false }, fs = require("stl.fs") })
+bootstrap.with_global(t, "era", {
   m = {
     lsp = {
       event = {
@@ -33,7 +30,7 @@ end
 ---@return string
 ---@return integer
 local function setup()
-  local root = vim.fn.tempname()
+  local root = t:tempdir()
   vim.fn.mkdir(root .. "/node_modules/typescript", "p")
   vim.fn.mkdir(root .. "/node_modules/.bin", "p")
   root = assert(vim.uv.fs_realpath(root))

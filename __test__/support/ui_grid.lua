@@ -4,11 +4,13 @@ local __module_name__ = "__test__.support.ui_grid" ---@type string
 local M = {}
 M.__index = M
 
+---A screen model fed by the UI's redraw events: cells per grid, highlight attributes by id, and the floating
+---window position of each grid that has one (ext_multigrid).
 ---@param ui                            __test__.support.UI
 ---@param on_flush                      ?fun(grid: table): nil
 ---@return table
 function M.new(ui, on_flush)
-  local self = setmetatable({ grids = {}, highlights = {}, flushes = 0 }, M)
+  local self = setmetatable({ grids = {}, highlights = {}, floats = {}, flushes = 0 }, M)
   ui.on_redraw = function(events)
     for _, event in ipairs(events) do
       local name = event[1]
@@ -51,6 +53,10 @@ function M.new(ui, on_flush)
           end
         elseif name == "hl_attr_define" then
           self.highlights[value[1]] = value[2]
+        elseif name == "win_float_pos" then
+          self.floats[value[1]] = value
+        elseif name == "win_close" or name == "win_hide" or name == "grid_destroy" then
+          self.floats[value[1]] = nil
         elseif name == "grid_cursor_goto" then
           self.cursor = value
         elseif name == "flush" then

@@ -1,30 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.fixtures.era.m.git.blame_history" ---@type string
 
-local M = {}
+local git = require("__test__.support.git")
 
----@param root                          string
----@param args                          string[]
----@param input                         ?string
----@return nil
-local function git(root, args, input)
-  local command = {
-    "git",
-    "-C",
-    root,
-    "-c",
-    "core.autocrlf=false",
-    "-c",
-    "core.fsmonitor=false",
-    "-c",
-    "commit.gpgSign=false",
-    "-c",
-    "core.hooksPath=" .. root .. "/no-hooks",
-  }
-  vim.list_extend(command, args)
-  local result = vim.system(command, { stdin = input, text = false }):wait(30000)
-  assert(result.code == 0, result.stderr)
-end
+local M = {}
 
 ---A balanced merge tree attributes every line to a leaf commit without quadratic blob history.
 ---@param root                          string Fresh, caller-owned temporary directory
@@ -34,7 +13,9 @@ end
 function M.build(root, leaf_count, lines_per_leaf)
   assert(leaf_count > 0 and lines_per_leaf > 0)
   assert(vim.uv.fs_stat(root .. "/.git") == nil, "fixture requires a fresh directory")
-  git(root, { "init", "-q", "--initial-branch=fixture" })
+  git.run(root, { "init", "-q", "--initial-branch=fixture" })
+  git.run(root, { "config", "core.autocrlf", "false" })
+  git.run(root, { "config", "core.fsmonitor", "false" })
   local stream, nodes = {}, {}
   local mark = 0
 
@@ -76,8 +57,8 @@ function M.build(root, leaf_count, lines_per_leaf)
     end
     nodes = parents
   end
-  git(root, { "fast-import", "--quiet" }, table.concat(stream))
-  git(root, { "read-tree", "HEAD" })
+  git.run(root, { "fast-import", "--quiet" }, table.concat(stream))
+  git.run(root, { "read-tree", "HEAD" })
   local file = assert(io.open(root .. "/file", "wb"))
   local written, err = file:write(nodes[1].text)
   file:close()

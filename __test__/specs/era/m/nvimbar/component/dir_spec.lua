@@ -3,7 +3,7 @@ local bootstrap = require("__test__.support.bootstrap")
 local clock_fixture = require("__test__.fixtures.era.m.nvimbar.clock")
 local nvim_fn = require("stl.nvim.fn")
 local yoz = require("yoz")
-local t = harness.new("era.m.nvimbar.component.dir")
+local t = harness.new()
 
 ---@class __test__.nvimbar.dir.IScene
 ---@field public bar                    era.m.nvimbar.Nvimbar
@@ -193,7 +193,7 @@ t:test("forks sharing a raw definition keep independent button targets", functio
   collectgarbage("collect")
   click(current, option(current.winnr))
   click(current, option(winnr))
-  t.assert_true(vim.deep_equal({ "/project/old", "/project/peer" }, current.clicked))
+  t.assert_same({ "/project/old", "/project/peer" }, current.clicked)
   fork:dispose()
   collectgarbage("collect")
   click(current, option(current.winnr))

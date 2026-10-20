@@ -1,8 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.runtime" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.runtime")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
+local git = require("__test__.support.git")
 local Git = require("era.m.git.state")
 
 ---@param widget                        era.m.explorer.Widget
@@ -23,17 +21,13 @@ local function annotation(widget, name)
 end
 
 t:test("real Git queries and OS watch update staged, modified, untracked and ignored rows", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a.lua", "b.lua", "c.lua" }) do
     fixture.write(path .. "/" .. name)
   end
   vim.fn.writefile({ "b.lua" }, path .. "/.gitignore")
-  for _, args in ipairs({ { "init", "-q" }, { "add", "a.lua", ".gitignore" } }) do
-    local command = { "git", "-C", path }
-    vim.list_extend(command, args)
-    local result = vim.system(command, { text = true }):wait()
-    t.assert_eq(0, result.code, result.stderr)
-  end
+  git.run(path, { "init", "-q" })
+  git.run(path, { "add", "a.lua", ".gitignore" })
   t:patch_table(dot.path, "is_git_repo", function()
     return true
   end)

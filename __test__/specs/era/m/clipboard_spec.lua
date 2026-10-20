@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/clipboard_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.clipboard process commands
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.clipboard")
+local t = harness.new()
 local reports = {} ---@type table[]
 
 bootstrap.with_runtime(t, {

@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/diagnostic_spec.lua
----@diagnostic disable: undefined-global, invisible
---- Test for era.m.lsp.diagnostic module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.lsp.diagnostic")
+local t = harness.new()
 local run_refresh_pending ---@type fun()|nil
 
 bootstrap.with_runtime(t, {

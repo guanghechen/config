@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.picker.composer.prepare" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.picker.composer.prepare")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local Paths = require("era.view.result_paths")
 
 ---@param frecency                      ?table
@@ -45,11 +42,11 @@ end
 t:test("preparation keeps the live source intact, owns its input and preserves native selection", function()
   local composer = fixture()
   composer:reset_filepaths("/workspace", { "keep.lua" }, false)
-  native.await(composer.result.draw())
+  treeview.await(composer.result.draw())
   local tree, source = composer._treeview, composer._filetree
   local keep = Paths.key("/workspace/keep.lua")
   tree:toggle_select(keep, true, false)
-  native.await(tree:ready())
+  treeview.await(tree:ready())
   local previous = source.records
   local files = paths(10000)
   files[#files + 1] = "keep.lua"
@@ -58,12 +55,12 @@ t:test("preparation keeps the live source intact, owns its input and preserves n
   t.assert_true(source.records == previous)
   t.assert_eq(1, tree:linecount(), "the old published result remains readable")
   files[1] = "caller-mutated.lua"
-  native.await(prepared)
+  treeview.await(prepared)
   t.assert_true(composer._filetree == source, "captured source references remain valid")
   t.assert_true(source:contains(Paths.key("/workspace/file10000.lua")))
   t.assert_false(source:contains(Paths.key("/workspace/caller-mutated.lua")))
   t.assert_eq("/workspace/file00001.lua", source:get(composer._uuids_order:keys()[1]).filepath)
-  native.await(composer.result.draw())
+  treeview.await(composer.result.draw())
   t.assert_eq(10001, tree:linecount())
   t.assert_true(tree:isselected(keep))
 end)
@@ -79,7 +76,7 @@ t:test("frecency preparation reads each score once and keeps deterministic ties"
       return scores[key]
     end,
   })
-  native.await(composer:prepare_filepaths("/rank", paths(3000)))
+  treeview.await(composer:prepare_filepaths("/rank", paths(3000)))
   t.assert_eq(3000, calls)
   local previous_score, previous_path = math.huge, ""
   for _, key in ipairs(composer._uuids_order:keys()) do
@@ -105,8 +102,8 @@ t:test("the first surface waits for prepared paths and applies the current query
     { border = "none", number = false, winhighlight = "" },
     { row = 0, col = 0, width = 40, height = 6 }
   )
-  native.await(pending)
-  native.await(composer._treeview:ready())
+  treeview.await(pending)
+  treeview.await(composer._treeview:ready())
   local frame = composer._treeview:frame()
   t.assert_eq(frame:source():id(Paths.key("/workspace")), initial_root.node)
   t.assert_eq(1, composer._treeview:linecount())
@@ -118,10 +115,10 @@ t:test("the attached callback can publish the completed producer", function()
   local called = false
   composer._on_attached = function()
     t.assert_nil(composer._path_request)
-    native.await(composer.result.draw())
+    treeview.await(composer.result.draw())
     called = true
   end
-  native.await(composer:prepare_filepaths("/callback", { "one.lua" }))
+  treeview.await(composer:prepare_filepaths("/callback", { "one.lua" }))
   t.assert_true(called)
   t.assert_eq(1, composer._treeview:linecount())
 end)
@@ -134,9 +131,9 @@ t:test("a reentrant attached callback keeps the newer preparation as the render 
       next_request = composer:prepare_filepaths("/second", paths(5000))
     end
   end
-  native.await(composer:prepare_filepaths("/first", { "one.lua" }))
+  treeview.await(composer:prepare_filepaths("/first", { "one.lua" }))
   t.assert_true(next_request ~= nil and composer._path_future == next_request)
-  native.await(next_request)
+  treeview.await(next_request)
   t.assert_true(composer._filetree:contains(Paths.key("/second/file00001.lua")))
 end)
 
@@ -147,7 +144,7 @@ for _, operation in ipairs({ "new request", "reset", "attach", "hide", "dispose"
     local pending = composer:prepare_filepaths("/obsolete", paths(10000))
     t.assert_false(pending:is_done())
     if operation == "new request" then
-      native.await(composer:prepare_filepaths("/latest", { "new.lua" }))
+      treeview.await(composer:prepare_filepaths("/latest", { "new.lua" }))
     elseif operation == "reset" then
       composer:reset_filepaths("/latest", { "new.lua" }, false)
     elseif operation == "attach" then

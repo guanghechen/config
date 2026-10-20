@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/workspace/refresh_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local CancellationToken = require("stl.c.cancellation_token")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.workspace.refresh")
+local t = harness.new()
 local requested_tree_focus
 
 bootstrap.with_global(t, "stl", {

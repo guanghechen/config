@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/hipattern/matcher_spec.lua
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.hipattern.matcher")
+local t = harness.new()
 local matcher = require("era.dressing.hipattern.matcher")
 
 ---@param decorations                   era.dressing.hipattern.IDecoration[]

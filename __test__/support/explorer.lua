@@ -3,6 +3,35 @@ local __module_name__ = "__test__.support.explorer" ---@type string
 
 local M = {}
 
+---@class __test__.support.explorer.IStartUi
+---@field width                         integer
+---@field height                        integer
+---@field path                          string
+---@field git_repo                      ?boolean
+
+---Prepares an Explorer UI child: a linegrid UI, the native library, the real stl/dot/era modules with `path` as
+---the workspace, and reporter warnings and errors collected as messages in the child's global `errors`.
+---@param ui                            __test__.support.UI
+---@param options                       __test__.support.explorer.IStartUi
+---@return nil
+function M.start_ui(ui, options)
+  ui:start({ width = options.width, height = options.height, runtime = "native" })
+  ui:lua(
+    [[
+    local path, git_repo = ...
+    stl, dot, era = require("stl"), require("dot"), require("era")
+    dot.path.workspace = function() return path end
+    dot.path.is_git_repo = function() return git_repo end
+    errors = {}
+    stl.reporter.warn = function(value) errors[#errors + 1] = value.message end
+    stl.reporter.error = stl.reporter.warn
+    stl.reporter.info = function() end
+  ]],
+    options.path,
+    options.git_repo == true
+  )
+end
+
 ---@param view                          ?ux.filetree.View
 ---@return boolean
 local function published(view)
@@ -10,10 +39,9 @@ local function published(view)
   return frame ~= nil and not view:status().preparing and view._latest == nil and view._state._native:applicable(frame)
 end
 
----@param name                          string
 ---@return table
-function M.new(name)
-  local fixture = require("__test__.support.filetree").new(name)
+function M.new()
+  local fixture = require("__test__.support.filetree").new()
   local t = fixture.t
   t:patch_global("stl", require("stl"))
   t:patch_global("dot", require("dot"))

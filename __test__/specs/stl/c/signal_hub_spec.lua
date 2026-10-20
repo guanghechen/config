@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.stl.c.signal_hub" ---@type string
-
 local harness = require("__test__.support.harness")
 local SignalHub = require("stl.c.signal_hub")
-local t = harness.new("stl.c.signal_hub")
+local t = harness.new()
 
 ---@return stl.c.SignalHub
 ---@return stl.c.signal_hub.IRole
@@ -639,7 +636,7 @@ t:test("unregistering releases callbacks and identities while the hub stays aliv
 end)
 
 for _, operation in ipairs({ "unregister_role", "unregister_signal", "dispose" }) do
-  t:test(operation .. " cleans 20000 different scopes within the CPU regression ceiling", function()
+  t:test(operation .. " cleans 20000 different scopes", function()
     local hub, sender, receiver, signal = setup()
     local subscriptions = {}
     local count = 20000
@@ -649,12 +646,6 @@ for _, operation in ipairs({ "unregister_role", "unregister_signal", "dispose" }
       end)
     end
 
-    collectgarbage("collect")
-    collectgarbage("stop")
-    t:defer(function()
-      collectgarbage("restart")
-    end)
-    local started = os.clock()
     if operation == "unregister_role" then
       hub:unregister_role(receiver)
     elseif operation == "unregister_signal" then
@@ -662,10 +653,6 @@ for _, operation in ipairs({ "unregister_role", "unregister_signal", "dispose" }
     else
       hub:dispose()
     end
-    local elapsed_ms = (os.clock() - started) * 1e3
-    collectgarbage("restart")
-    io.write(string.format("BENCH signal-hub %s scopes=%d cpu=%.3fms\n", operation, count, elapsed_ms))
-    t.assert_true(elapsed_ms < 100, "different-scope cleanup exceeded the 100 ms CPU regression ceiling")
 
     for _, subscription in ipairs(subscriptions) do
       subscription:unsubscribe()

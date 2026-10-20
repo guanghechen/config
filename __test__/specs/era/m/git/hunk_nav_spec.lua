@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/hunk_nav_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
 local hunk_nav = assert(loadfile("lua/era/m/git/hunk_nav.lua"))()
 
-local t = harness.new("era.m.git.hunk_nav")
+local t = harness.new()
 
 t:test("navigation persists until the source window changes buffer or is cleared", function()
   local winnr = vim.api.nvim_get_current_win()

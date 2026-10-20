@@ -1,6 +1,6 @@
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
-local t = harness.new("era.m.searcher.buffer")
+local t = harness.new()
 
 local errors = {}
 bootstrap.with_runtime(t, {

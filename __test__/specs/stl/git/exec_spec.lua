@@ -1,11 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/git/exec_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local Future = require("stl.c.future")
 local CancellationToken = require("stl.c.cancellation_token")
 
-local t = harness.new("stl.git.exec")
+local t = harness.new()
+local git = require("__test__.support.git")
 
 t:patch_global("stl", {
   c = { Future = Future },
@@ -96,29 +94,19 @@ t:test("exec_async preserves canonical and native UNC roots", function()
 end)
 
 t:test("exec raw mode preserves CRLF bytes inside NUL-delimited paths", function()
-  local repo = vim.fn.tempname() ---@type string
+  local repo = git.repo(t)
   local filename = "a\r\nb.lua"
-  vim.fn.mkdir(repo, "p")
+  vim.fn.writefile({ "content" }, repo .. "/" .. filename)
+  git.run(repo, { "add", "--", filename })
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, vim.system({ "git", "-C", repo, "init", "-q" }):wait().code, "git init")
-    vim.fn.writefile({ "content" }, repo .. "/" .. filename)
-    t.assert_eq(0, vim.system({ "git", "-C", repo, "add", "--", filename }):wait().code, "git add")
+  local future = exec.exec({ "diff", "--staged", "--name-status", "-z", "--" }, { cwd = repo, raw = true })
+  t.wait_until(function()
+    return future:is_done()
+  end, 5000, "raw Git command")
 
-    local future = exec.exec({ "diff", "--staged", "--name-status", "-z", "--" }, { cwd = repo, raw = true })
-    t.wait_until(function()
-      return future:is_done()
-    end, 5000, "raw Git command")
-
-    local result = assert(future:get_result(), "raw result")
-    t.assert_eq(0, result.code, "raw exit code")
-    t.assert_eq("A\0" .. filename .. "\0", result.lines[1], "raw stdout")
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
-  end
+  local result = assert(future:get_result(), "raw result")
+  t.assert_eq(0, result.code, "raw exit code")
+  t.assert_eq("A\0" .. filename .. "\0", result.lines[1], "raw stdout")
 end)
 
 t:test("exec preserves stderr for failed status queries", function()

@@ -1,9 +1,7 @@
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.dressing.dim")
+local t = harness.new()
 
 t:test("repeated setup registers one observer and preserves dim toggles", function()
   local toggle = stl.c.Observable.from_value(false)

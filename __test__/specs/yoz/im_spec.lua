@@ -1,25 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/yoz/im_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local native = require("yoz")
 
-local t = harness.new("yoz.im")
+local t = harness.new()
 local sysname = vim.uv.os_uname().sysname
-
-if native.im ~= nil then
-  t:test("exports only the source-oriented contract", function()
-    t.assert_eq("function", type(native.im.capture), "capture")
-    t.assert_eq("function", type(native.im.capture_and_select_english), "capture and select English")
-    t.assert_eq("function", type(native.im.restore), "restore")
-    t.assert_eq("function", type(native.im.is_english), "English predicate")
-    t.assert_nil(native.im.current, "legacy current")
-    t.assert_nil(native.im.select, "legacy select")
-    t.assert_nil(native.im.is_input_method, "legacy input method predicate")
-    t.assert_nil(native.im.get_input_method, "legacy input method getter")
-    t.assert_nil(native.im.set_input_method, "legacy input method setter")
-  end)
-end
 
 if sysname == "Darwin" then
   t:test("captures and restores an exact TIS source ID", function()

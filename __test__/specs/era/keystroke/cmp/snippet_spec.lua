@@ -1,5 +1,5 @@
 local harness = require("__test__.support.harness")
-local t = harness.new("era.keystroke.cmp.snippet")
+local t = harness.new()
 local Snippet = require("era.keystroke.cmp.snippet")
 
 t:test("preview words preserve literal prefixes and omit arguments and snippet syntax", function()

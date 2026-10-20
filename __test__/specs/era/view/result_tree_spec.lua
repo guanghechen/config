@@ -1,34 +1,10 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.view.result_tree" ---@type string
-
-local t = require("__test__.support.harness").new("era.view.result_tree")
+local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
-local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-bootstrap.with_yoz(t, assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))())
-local errors = {}
-bootstrap.with_stl(t, {
-  c = { Future = require("stl.c.future") },
-  nvim = { fn = require("stl.nvim.fn") },
-  reporter = {
-    error = function(value)
-      errors[#errors + 1] = value.message
-    end,
-  },
-})
+bootstrap.with_native(t)
+local reports = bootstrap.with_reporter(t)
+local support = require("__test__.support.treeview")
 local Source = require("era.view.result_source")
 local Tree = require("era.view.result_tree")
-
----@param future                        stl.c.Future
----@return table
-local function await(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 5000, "result publication did not finish: " .. vim.inspect(errors))
-  t.assert_false(future:is_failed(), future:get_error())
-  local result = future:get_result()
-  t.assert_eq("Applied", result.kind, vim.inspect(result))
-  return result
-end
 
 ---@return era.view.ResultTree
 local function fixture()
@@ -57,7 +33,7 @@ end
 
 t:test("ordered List filtering retains Tree ancestors and native selection across imports", function()
   local tree = fixture()
-  await(tree:publish({ mode = "tree", rootuuid = "root", only_matched = true, orders = { "two" } }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root", only_matched = true, orders = { "two" } }))
   t.assert_eq(2, tree:linecount())
   t.assert_eq("dir", tree:retrieve_uuid(1))
   t.assert_eq("two", tree:retrieve_uuid(2))
@@ -65,25 +41,25 @@ t:test("ordered List filtering retains Tree ancestors and native selection acros
   t.wait_until(function()
     return tree.state:snapshot():flags(tree._data:source():id("two")).marked
   end, 5000)
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = { "three", "two" } }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = { "three", "two" } }))
   t.assert_eq("three", tree:retrieve_uuid(1))
   t.assert_eq("two", tree:retrieve_uuid(2))
   t.assert_true(tree:isselected("two"))
   tree.source:update("two", { label = "updated" })
-  await(tree:publish({ mode = "tree", rootuuid = "root", orders = { "two" } }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root", orders = { "two" } }))
   tree:collapse("dir", "collapse", false)
   t.wait_until(function()
     return not tree.state:snapshot():flags(tree._data:source():id("dir")).expanded
   end, 5000)
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_true(tree:isselected("two"), "collapsed selection stays native")
   t.assert_eq("updated", tree:data("two").label)
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_same({}, reports.error)
 end)
 
 t:test("ready waits for every collapse change that is still in flight", function()
   local tree = fixture()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   local releases = {} ---@type fun(value: any)[]
   local original = tree.state.dispatch
   t:patch_table(tree.state, "dispatch", function(self, command, context)
@@ -114,14 +90,14 @@ t:test("ready waits for every collapse change that is still in flight", function
     "ready settled while the second change was in flight"
   )
   releases[2]()
-  local frame = await(ready).frame
+  local frame = support.applied(ready).frame
   t.assert_true(frame:flags(id).expanded, "ready frame includes both changes")
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_same({}, reports.error)
 end)
 
 t:test("input deferred behind a collapse decides on the Frame that shows it", function()
   local tree = fixture()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   local id = tree._data:source():id("dir")
   local before = tree:frame()
   local release ---@type fun(value: any)|nil
@@ -164,7 +140,7 @@ t:test("input deferred behind a collapse decides on the Frame that shows it", fu
   t.assert_true(tree:collapse_pending(), "an applied but unpublished change is pending")
   tree:_published(tree.state:snapshot())
   t.assert_false(tree:collapse_pending(), "after publication, later lag is unrelated to the change")
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_same({}, reports.error)
 end)
 
 t:test("ready settles when a publication that leaves the mounted Frame unchanged finishes", function()
@@ -178,8 +154,8 @@ t:test("ready settles when a publication that leaves the mounted Frame unchanged
   end)
   tree:mount(winnr, bufnr, function() end)
   local request = { mode = "tree", rootuuid = "root" }
-  await(tree:publish(request))
-  await(tree:ready())
+  support.applied(tree:publish(request))
+  support.applied(tree:ready())
   local release ---@type fun(value: any)|nil
   local display = tree._display
   t:patch_table(tree, "_display", function(self, ...)
@@ -199,7 +175,7 @@ t:test("ready settles when a publication that leaves the mounted Frame unchanged
   vim.wait(100)
   t.assert_false(ready:is_done(), "ready waits for the publication")
   assert(release)()
-  await(publication)
+  support.applied(publication)
   t.wait_until(function()
     return ready:is_done()
   end, 2000, "ready must settle once the publication finishes")
@@ -229,7 +205,7 @@ t:test("sparse presentation columns preserve defaults across import chunks and l
     source:insert("root", key, { label = key })
     tree:insert(key, { nodetype = "leaf" })
   end
-  await(tree:publish({ mode = "list", rootuuid = "root", all_rows = true }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", all_rows = true }))
   local before = tree:frame()
   for _, key in ipairs({ "1", "2", "256", "257", "512", "513", "514", "600" }) do
     local node = before:node(before:source():id(key))
@@ -238,7 +214,7 @@ t:test("sparse presentation columns preserve defaults across import chunks and l
   end
   special = { ["2"] = true }
   tree:invalidate()
-  await(tree:publish({ mode = "list", rootuuid = "root", all_rows = true }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", all_rows = true }))
   for _, key in ipairs({ "1", "2", "513" }) do
     local frame = tree:frame()
     local node = frame:node(frame:source():id(key))
@@ -285,7 +261,7 @@ t:test("foldempty compacts filtered directory chains and restores their full top
     only_matched = true,
     orders = { "config", "macos" },
   }
-  await(tree:publish(request))
+  support.applied(tree:publish(request))
   local compact = tree:frame()
   t.assert_eq(4, tree:linecount(), "unmatched siblings must not split the directory chain")
   t.assert_eq("rust/yoz/src", compact:rows(1, 1).labels[1])
@@ -295,13 +271,13 @@ t:test("foldempty compacts filtered directory chains and restores their full top
   t.assert_eq(4, compact:subtree_end(3))
 
   request.foldempty = false
-  await(tree:publish(request))
+  support.applied(tree:publish(request))
   t.assert_eq(6, tree:linecount(), "disabling foldempty restores every matching ancestor")
   request.foldempty = true
-  await(tree:publish(request))
+  support.applied(tree:publish(request))
   t.assert_eq(4, tree:linecount())
   request.only_matched = false
-  await(tree:publish(request))
+  support.applied(tree:publish(request))
   t.assert_eq(9, tree:linecount(), "clearing the filter restores the original branching topology")
   t.assert_eq(4, compact:header().row_count, "old frames retain their compressed mapping")
 end)
@@ -316,13 +292,13 @@ t:test("a native surface keeps old metadata until publication and survives reope
     end
   end)
   tree:mount(winnr, bufnr, function() end)
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_eq("one", tree:data("one").label)
   local identity = tree.state
   tree.source:update("one", { label = "new" })
   local pending = tree:publish({ mode = "tree", rootuuid = "root" })
   t.assert_eq("one", tree:data("one").label)
-  await(pending)
+  support.applied(pending)
   t.assert_eq("new", tree:data("one").label)
   tree:unmount()
   t.assert_false(vim.api.nvim_buf_is_valid(bufnr))
@@ -334,7 +310,7 @@ t:test("a native surface keeps old metadata until publication and survives reope
   end, 5000)
   t.assert_true(tree.state == identity)
   t.assert_eq("new", tree:data("one").label)
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_same({}, reports.error)
 end)
 
 t:test("an idle result retains native notifications without another Lua Future", function()
@@ -347,7 +323,7 @@ t:test("an idle result retains native notifications without another Lua Future",
     end
   end)
   tree:mount(winnr, bufnr, function() end)
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   vim.wait(30)
   local ticket = tree.state._native:dispatch({
     kind = "set_expanded",
@@ -368,15 +344,15 @@ t:test("queued result refreshes coalesce without mixing their membership and sou
   local first = tree:publish({ mode = "list", orders = { "one" } })
   local second = tree:publish({ mode = "list", orders = { "three" } })
   t.assert_eq("Superseded", first:get_result().kind)
-  await(second)
+  support.applied(second)
   t.assert_eq(1, tree:linecount())
   t.assert_eq("three", tree:retrieve_uuid(1))
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_same({}, reports.error)
 end)
 
 t:test("a producer change during preparation supersedes the partial snapshot", function()
   local tree = fixture()
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = { "one" } }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = { "one" } }))
   for index = 1, 600 do
     local key = "queued" .. index
     tree.source:insert("root", key, { label = key })
@@ -401,15 +377,15 @@ t:test("a producer change during preparation supersedes the partial snapshot", f
     return latest ~= nil and latest:is_done()
   end, 5000)
   t.assert_eq("Superseded", first:get_result().kind)
-  await(latest)
+  support.applied(latest)
   t.assert_eq("one", tree:retrieve_uuid(1))
   t.assert_eq("latest", tree:data("one").label)
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_same({}, reports.error)
 end)
 
 t:test("stable topology publishes sparse patches and skips unchanged native records", function()
   local tree = fixture()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   local before = tree:frame()
   local id = before:source():id("one")
   local calls, batch = 0, tree._data.batch
@@ -424,27 +400,27 @@ t:test("stable topology publishes sparse patches and skips unchanged native reco
   end)
   tree.source:update("one", { label = "renamed" })
   tree:invalidate()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_eq(1, calls)
   t.assert_eq(id, tree:frame():source():id("one"))
   t.assert_eq("renamed", tree:frame():node(id).label)
   t.assert_eq("one", before:node(id).label, "retained frames keep their payload")
   tree.source:update("one", { label = "renamed", metadata = "new" })
   tree:invalidate()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_eq(1, calls, "equal records require no native write")
   t.assert_eq("new", tree:data("one").metadata)
   restore_import()
   tree.source:move("one", "root")
   tree:invalidate()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_eq(id, tree:frame():source():id("one"), "structural imports still preserve identity")
   t.assert_nil(tree:retrieve_parent("one"), "the moved item is now a displayed root")
 end)
 
 t:test("an independent preview's commit does not delay an unchanged main publication", function()
   local tree = fixture()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   local future = tree:preview_state("dir", false)
   t.wait_until(function()
     return future:is_done()
@@ -455,7 +431,7 @@ t:test("an independent preview's commit does not delay an unchanged main publica
   t.wait_until(function()
     return collapsed:is_done()
   end, 5000)
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_eq(4, tree:linecount())
 end)
 
@@ -463,7 +439,7 @@ for _, phase in ipairs({ "create", "display" }) do
   t:test("disposal rejects a late " .. phase .. " reply without restoring native resources", function()
     local tree = fixture()
     if phase == "display" then
-      await(tree:publish({ mode = "tree", rootuuid = "root" }))
+      support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
     end
     local deferred, resolve = stl.c.Future.new_with_resolver()
     local reply
@@ -502,9 +478,9 @@ t:test("bulk deselection and the next action share one accepted native selection
     tree.source:insert("dir", key, { label = key })
     tree:insert(key, { nodetype = "leaf" })
   end
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   tree:toggle_select("dir", true, true)
-  await(tree:ready())
+  support.applied(tree:ready())
   for index = 1, 1000 do
     tree:set_selected("bulk" .. index, false)
   end
@@ -513,10 +489,10 @@ t:test("bulk deselection and the next action share one accepted native selection
     invoked = true
     t.assert_false(tree:isselected("bulk1000"))
   end))
-  await(tree:ready())
+  support.applied(tree:ready())
   t.assert_true(invoked)
   t.assert_true(tree:isselected("dir"), "self-only clear keeps the branch's own mark")
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_same({}, reports.error)
 end)
 
 t:test("bulk selection reads preserve visible order without per-row Lua queries", function()
@@ -526,10 +502,10 @@ t:test("bulk selection reads preserve visible order without per-row Lua queries"
     tree.source:insert("root", key, { label = key })
     tree:insert(key, { nodetype = "leaf" })
   end
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = { "two", "three", "one" } }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = { "two", "three", "one" } }))
   tree:toggle_select("one", true, false)
   tree:toggle_select("two", true, false)
-  await(tree:ready())
+  support.applied(tree:ready())
   t:patch_table(tree, "retrieve_uuid", function()
     error("bulk actions must not resolve every buffer row")
   end)
@@ -537,12 +513,12 @@ t:test("bulk selection reads preserve visible order without per-row Lua queries"
     error("bulk actions must not query every producer entry")
   end)
   t.assert_true(tree:has_selected())
-  t.assert_true(vim.deep_equal({ "two", "one" }, tree:selected_keys(true)), "visible order")
-  t.assert_true(vim.deep_equal({ 1, 3 }, tree:collect_selected_rows()), "visible row numbers")
-  t.assert_true(vim.deep_equal({ one = true, two = true }, tree:collect_selected()), "all selected identities")
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = { "three" } }))
+  t.assert_same({ "two", "one" }, tree:selected_keys(true), "visible order")
+  t.assert_same({ 1, 3 }, tree:collect_selected_rows(), "visible row numbers")
+  t.assert_same({ one = true, two = true }, tree:collect_selected(), "all selected identities")
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = { "three" } }))
   t.assert_false(tree:has_selected(), "filtered selection does not become an open target")
-  t.assert_true(vim.deep_equal({ one = true, two = true }, tree:collect_selected()), "filtered marks survive")
+  t.assert_same({ one = true, two = true }, tree:collect_selected(), "filtered marks survive")
 end)
 
 t:test("Visual selection skips marked queries for an empty captured frame", function()
@@ -551,12 +527,12 @@ t:test("Visual selection skips marked queries for an empty captured frame", func
     nodetype = "leaf",
     locations = { { nodetype = "location", leafuuid = "one", locationuuid = "one:1", lnum = 1 } },
   })
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = { "one", "two", "three" } }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = { "one", "two", "three" } }))
   local captured = tree:frame()
   t.assert_true(captured:header().summary.is_empty)
   tree:set_selected("one", true)
   tree:set_selected("two", true)
-  await(tree:ready())
+  support.applied(tree:ready())
   t.assert_false(tree:frame():header().summary.is_empty)
   local proxy = setmetatable({}, {
     __index = function(_, name)
@@ -591,7 +567,7 @@ t:test("Visual selection skips marked queries for an empty captured frame", func
   tree.state.dispatch = dispatch
   t.assert_eq("select_node", submitted.kind)
   t.assert_false(submitted.recursive)
-  t.assert_true(vim.deep_equal({ "one", "two" }, captured:node_keys(submitted.nodes)))
+  t.assert_same({ "one", "two" }, captured:node_keys(submitted.nodes))
 end)
 
 t:test("Visual selection reads only its range and preserves location and outside marks", function()
@@ -607,13 +583,13 @@ t:test("Visual selection reads only its range and preserves location and outside
     tree:insert(key, { nodetype = "leaf" })
     orders[#orders + 1] = key
   end
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = orders }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = orders }))
   tree:set_selected("one", true)
   tree:set_selected("one:1", true)
   for index = 1, 1100 do
     tree:set_selected("outside" .. index, true)
   end
-  await(tree:ready())
+  support.applied(tree:ready())
   local marked_reads = 0
   local view = {
     detach = function() end,
@@ -631,7 +607,7 @@ t:test("Visual selection reads only its range and preserves location and outside
             elseif name == "all_marked" then
               local ids = ...
               marked_reads = marked_reads + 1
-              t.assert_true(vim.deep_equal({ "one", "two" }, frame:node_keys(ids)), "only query eligible range nodes")
+              t.assert_same({ "one", "two" }, frame:node_keys(ids), "only query eligible range nodes")
             end
             return frame[name](frame, ...)
           end
@@ -657,7 +633,7 @@ t:test("Visual selection reads only its range and preserves location and outside
     end
     tree:toggle_selection()
     tree.view = nil
-    await(tree:ready())
+    support.applied(tree:ready())
     t.assert_eq(selected, tree:isselected("one"))
     t.assert_eq(selected, tree:isselected("two"))
     t.assert_true(tree:isselected("one:1"), "location marks are independent")
@@ -673,7 +649,7 @@ for _, module in ipairs({
 }) do
   t:test(module .. " resolves a published parent identity for collapse", function()
     local tree = fixture()
-    await(tree:publish({ mode = "tree", rootuuid = "root" }))
+    support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
     local composer = setmetatable({ _treeview = tree }, { __index = require(module) })
     local row, key = composer:__retrieve_lnum_parent__("two")
     t.assert_eq(1, row)
@@ -681,7 +657,7 @@ for _, module in ipairs({
     t.assert_nil(composer:__retrieve_lnum_parent__(nil))
     t.assert_nil(composer:__retrieve_lnum_parent__("absent"))
     tree:collapse(key, "collapse", true)
-    await(tree:ready())
+    support.applied(tree:ready())
     t.assert_nil(tree:retrieve_lnum("two"))
     t.assert_true(tree:retrieve("dir").collapsed)
   end)
@@ -691,7 +667,7 @@ for _, module in ipairs({
       nodetype = "leaf",
       locations = { { nodetype = "location", leafuuid = "one", locationuuid = "one:1", lnum = 1 } },
     })
-    await(tree:publish({ mode = "list", rootuuid = "root", orders = { "one" } }))
+    support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = { "one" } }))
     local composer = setmetatable({ _treeview = tree }, { __index = require(module) })
     local row, key = composer:__retrieve_lnum_parent__("one:1")
     t.assert_eq(1, row)
@@ -708,7 +684,7 @@ t:test("bulk row reads retain metadata and page identities without exporting nod
     tree.source:insert("root", key, { label = key })
     tree:insert(key, { nodetype = "leaf", text = key })
   end
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = keys }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = keys }))
   local frame = tree:frame()
   local pages = 0
   local proxy = setmetatable({}, {
@@ -725,7 +701,7 @@ t:test("bulk row reads retain metadata and page identities without exporting nod
   local iterator = tree:iter_rows(proxy, 1, #keys)
   tree.source:update(keys[2], { label = "replacement" })
   tree:insert(keys[2], { nodetype = "leaf", text = "replacement" })
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = keys }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = keys }))
   local count = 0
   for row, key, data, entry in iterator do
     count = count + 1
@@ -747,7 +723,7 @@ t:test("row iteration resumes after short byte-limited pages without losing meta
     tree.source:insert("root", key, { label = tostring(index) })
     tree:insert(key, { nodetype = "leaf", text = tostring(index) })
   end
-  await(tree:publish({ mode = "list", rootuuid = "root", orders = keys }))
+  support.applied(tree:publish({ mode = "list", rootuuid = "root", orders = keys }))
   local frame = tree:frame()
   local pages, count = 0, 0
   local proxy = setmetatable({}, {
@@ -778,7 +754,7 @@ t:test("range hiding preserves containers and outside marks while including file
     locations = { { nodetype = "location", leafuuid = "one", locationuuid = "one:1", lnum = 1 } },
   })
   tree:mark_node_invisible("previously-hidden")
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   local frame = tree:frame()
   tree:mark_rows_invisible(frame, 1, tree:retrieve_lnum("two"), true)
   t.assert_true(tree:isvisible("dir"))
@@ -787,7 +763,7 @@ t:test("range hiding preserves containers and outside marks while including file
   t.assert_false(tree:isvisible("two"))
   t.assert_true(tree:isvisible("three"))
   t.assert_false(tree:isvisible("previously-hidden"))
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_nil(tree:retrieve_lnum("one"))
   t.assert_nil(tree:retrieve_lnum("one:1"))
   t.assert_nil(tree:retrieve_lnum("two"))
@@ -796,7 +772,7 @@ end)
 
 t:test("cold key and subtree reads export no full nodes or decorated rows", function()
   local tree = fixture()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   local frame = tree:frame()
   tree._versions[frame:header().data_revision].keys = {}
   local reads = 0
@@ -819,9 +795,9 @@ end)
 
 t:test("root and source parent reads follow the captured Frame rather than a pending root or producer", function()
   local tree = fixture()
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   local original = tree:frame()
-  await(tree:publish({ mode = "tree", rootuuid = "dir" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "dir" }))
   local nested = tree:frame()
   t.assert_eq(original:header().data_revision, nested:header().data_revision)
   t.assert_eq("root", tree:root_key(original))
@@ -844,7 +820,7 @@ t:test("range actions retain subtree and Visual semantics and release a throwing
     end
   end)
   tree:mount(winnr, bufnr, function() end)
-  await(tree:publish({ mode = "tree", rootuuid = "root" }))
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   vim.api.nvim_win_set_cursor(winnr, { 1, 0 })
   local captured
   local future = tree:range_action(function(frame, first, last, visual)
@@ -872,17 +848,17 @@ t:test("range actions retain subtree and Visual semantics and release a throwing
     return submitted
   end)
   t.assert_true(dispatched == submitted, "native command receipts retain their Future")
-  local receipt = await(dispatched)
+  local receipt = support.applied(dispatched)
   t.assert_eq(receipt.revisions.commit, tree.view._minimum_commit)
-  local old_errors = #errors
+  local old_errors = #reports.error
   local failed = tree:range_action(function()
     error("range callback failed", 0)
   end)
   t.assert_true(failed:is_failed())
   t.assert_eq("range callback failed", failed:get_error())
   t.assert_nil(tree.view._submission)
-  t.assert_eq(old_errors + 1, #errors)
-  table.remove(errors)
+  t.assert_eq(old_errors + 1, #reports.error)
+  table.remove(reports.error)
   for _, flag in ipairs({ "_desynced", "_publishing" }) do
     tree.view[flag] = true
     local rejected = tree:range_action(function()

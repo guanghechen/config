@@ -1,14 +1,11 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.plugin.conform" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.plugin.conform")
+local t = harness.new()
 
-bootstrap.with_yoz(t, require("yoz"))
-bootstrap.with_stl(t, { env = { IS_WIN = false } })
-bootstrap.with_era(t, { m = { lsp = { fn = require("era.m.lsp.fn") } } })
-bootstrap.with_dot(t, {
+t:patch_global("yoz", require("yoz"))
+bootstrap.with_global(t, "stl", { env = { IS_WIN = false } })
+bootstrap.with_global(t, "era", { m = { lsp = { fn = require("era.m.lsp.fn") } } })
+bootstrap.with_global(t, "dot", {
   path = {
     normalize = function(path)
       return path
@@ -28,7 +25,7 @@ conform.setup(plugin.opts)
 ---@return string
 ---@return integer
 local function project(files)
-  local root = vim.fn.tempname() ---@type string
+  local root = t:tempdir()
   vim.fn.mkdir(root .. "/src", "p")
   root = assert(vim.uv.fs_realpath(root))
   t:defer(function()

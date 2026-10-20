@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/commits/action_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.commits.action")
+local t = harness.new()
 local line_maps = {} ---@type table<integer, era.m.diffview.ICommitsItem[]>
 local reports = {} ---@type table[]
 local dirty_count = 0 ---@type integer

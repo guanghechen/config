@@ -1,12 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/partial_unstage_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local Future = require("stl.c.future")
 local harness = require("__test__.support.harness")
 local staging = require("era.m.git.staging")
 
-local t = harness.new("era.m.diffview.partial_unstage")
+local t = harness.new()
 local errors = {} ---@type string[]
 
 bootstrap.with_global(t, "stl", {

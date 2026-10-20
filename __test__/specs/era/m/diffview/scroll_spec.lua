@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/scroll_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.scroll")
+local t = harness.new()
 
 local layout = assert(loadfile("lua/era/m/diffview/layout.lua"))()
 

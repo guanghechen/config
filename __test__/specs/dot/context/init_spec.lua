@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/context/init_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.context.init")
+local t = harness.new()
 
 local modules = {
   ["dot.context.editor.behavior"] = { auto_im = {}, bufs_relative = {} },

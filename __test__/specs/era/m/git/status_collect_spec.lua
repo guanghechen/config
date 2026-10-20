@@ -1,10 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/status_collect_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.git.status adapter")
-bootstrap.with_stl_c(t)
+local t = harness.new()
+bootstrap.with_global(t, "stl", {
+  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
+})
 bootstrap.with_runtime(t, {
   dot = {
     path = {

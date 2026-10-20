@@ -1,26 +1,22 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.keystroke.cmp.menu_highlight" ---@type string
-
 local harness = require("__test__.support.harness")
-local Rpc = require("__test__.support.rpc")
-local t = harness.new("era.keystroke.cmp.menu_highlight")
+local UI = require("__test__.support.ui")
+local Grid = require("__test__.support.ui_grid")
+local t = harness.new()
 
 ---@param options                       table
+---@return __test__.support.UI
 ---@return table
 local function editor(options)
-  local root = assert(vim.uv.cwd())
-  local rpc = Rpc.new(root)
+  local ui = UI.new()
   t:defer(function()
-    rpc:close()
+    ui:close()
   end)
-  rpc:request("nvim_ui_attach", { 100, 35, { ext_linegrid = true, rgb = true } })
-  rpc:lua(
+  local grid = Grid.new(ui)
+  ui:start({ width = 100, height = 35 })
+  ui:lua(
     [[
-    local root, options = ...
-    vim.opt.runtimepath:prepend(root)
-    package.path = root .. '/?.lua;' .. root .. '/?/init.lua;' .. package.path
-    options.engine = 'era'
-    require('__test__.fixtures.era.keystroke.cmp.behavior').setup(options)
+    local options = ...
+    require('__test__.support.cmp.behavior').setup(options)
     local deprecated = vim.api.nvim_get_hl(0,{name='CmpLabelDeprecated',link=false})
     assert(deprecated.strikethrough and deprecated.fg == nil and deprecated.bg == nil,'decoration-only fallback')
     local cmp_stl, cmp_dot = stl, dot
@@ -29,35 +25,35 @@ local function editor(options)
     stl, dot = cmp_stl, cmp_dot
     vim.o.pumblend = 0
   ]],
-    root,
     options
   )
   t:defer(function()
-    t.assert_eq("", rpc:lua([[return vim.v.errmsg]]), "no editor errors")
+    t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "no editor errors")
   end)
-  return rpc
+  return ui, grid
 end
 
----@param rpc                           table
+---@param ui                           table
 ---@param code                          string
 ---@param message                       string
 ---@return nil
-local function wait(rpc, code, message)
-  local ok = Rpc.wait(1000, function()
-    return rpc:lua(code)
-  end, 5)
+local function wait(ui, code, message)
+  local ok = pcall(ui.wait_until, ui, function()
+    return ui:lua(code)
+  end, 1000)
   if not ok then
     message = message
       .. ": "
-      .. vim.inspect(rpc:lua([[return {lines=vim.api.nvim_buf_get_lines(0,0,-1,false),mode=vim.api.nvim_get_mode()}]]))
+      .. vim.inspect(ui:lua([[return {lines=vim.api.nvim_buf_get_lines(0,0,-1,false),mode=vim.api.nvim_get_mode()}]]))
   end
   t.assert_true(ok, message)
 end
 
----@param rpc                           table
+---@param ui                           table
+---@param grid                          table
 ---@return table[]
-local function matching_cells(rpc)
-  local cells = rpc:lua([[
+local function matching_cells(ui, grid)
+  local cells = ui:lua([[
     local geometry, cells = vim.fn.pum_getpos(), {}
     if vim.fn.pumvisible() == 0 then return cells end
     for row = math.max(1,geometry.row), math.min(vim.o.lines,geometry.row+geometry.height+3) do
@@ -70,21 +66,9 @@ local function matching_cells(rpc)
     end
     return cells
   ]])
-  local attributes = {}
-  for _, event in ipairs(rpc.notifications) do
-    if event.method == "redraw" then
-      for _, update in ipairs(event.args) do
-        if update[1] == "hl_attr_define" then
-          for index = 2, #update do
-            attributes[update[index][1]] = update[index][2]
-          end
-        end
-      end
-    end
-  end
   local matches = {}
   for _, cell in ipairs(cells) do
-    local style = attributes[cell.attribute] or {}
+    local style = grid.highlights[cell.attribute] or {}
     if style.foreground == 0xf5a9b8 then
       cell.style = style
       matches[#matches + 1] = cell
@@ -93,12 +77,13 @@ local function matching_cells(rpc)
   return matches
 end
 
----@param rpc                           table
+---@param ui                           table
+---@param grid                          table
 ---@param selected                      integer
 ---@param deprecated                    ?boolean
 ---@return nil
-local function assert_matches(rpc, selected, deprecated)
-  local matches = matching_cells(rpc)
+local function assert_matches(ui, grid, selected, deprecated)
+  local matches = matching_cells(ui, grid)
   t.assert_eq(4, #matches, "both displayed candidates highlight their nonadjacent a/p")
   for index, cell in ipairs(matches) do
     t.assert_eq(index % 2 == 1 and "a" or "p", cell.text, "matched character")
@@ -132,32 +117,32 @@ for _, prefix in ipairs({ "obj.", "😀 obj." }) do
         },
       }
     end
-    local rpc = editor({ lines = { prefix }, items = items })
-    rpc:request("nvim_input", { "Aap" })
-    wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 0]], "ranked menu")
-    assert_matches(rpc, 0)
-    rpc:request("nvim_input", { "<C-j>" })
+    local ui, grid = editor({ lines = { prefix }, items = items })
+    ui:rpc("nvim_input", "Aap")
+    wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "ranked menu")
+    assert_matches(ui, grid, 0)
+    ui:rpc("nvim_input", "<C-j>")
     wait(
-      rpc,
+      ui,
       "return vim.api.nvim_get_current_line() == " .. string.format("%q", prefix .. "alpha_two"),
       "wide edit previews its suffix without duplicating the namespace"
     )
-    assert_matches(rpc, 1)
-    rpc:request("nvim_input", { "<C-e>" })
+    assert_matches(ui, grid, 1)
+    ui:rpc("nvim_input", "<C-e>")
     wait(
-      rpc,
+      ui,
       "return vim.fn.pumvisible() == 0 and vim.api.nvim_get_current_line() == " .. string.format("%q", prefix .. "ap"),
       "cancellation restores the original keyword"
     )
-    rpc:request("nvim_input", { "<C-Space>" })
-    wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 0]], "reopened menu")
+    ui:rpc("nvim_input", "<C-Space>")
+    wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "reopened menu")
     if prefix == "obj." then
-      rpc:request("nvim_input", { "<CR>" })
+      ui:rpc("nvim_input", "<CR>")
     else
-      rpc:lua([[vim.api.nvim_select_popupmenu_item(0,true,true,{})]])
+      ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,true,{})]])
     end
     wait(
-      rpc,
+      ui,
       "return vim.fn.pumvisible() == 0 and vim.api.nvim_get_current_line() == "
         .. string.format("%q", prefix .. "alpha_one"),
       "acceptance applies the complete LSP edit"
@@ -167,20 +152,20 @@ end
 
 t:test("mixed LSP filter ranges share a highlighted query suffix", function()
   local range = { start = { line = 0, character = 0 }, ["end"] = { line = 0, character = 6 } }
-  local rpc = editor({
+  local ui, grid = editor({
     lines = { "obj." },
     items = {
       { label = "alpha_one", textEdit = { range = range, newText = "obj.alpha_one" } },
       { label = "obj.alpha_two", textEdit = { range = range, newText = "obj.alpha_two" } },
     },
   })
-  rpc:request("nvim_input", { "Aap" })
-  wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 0]], "mixed filter queries")
-  assert_matches(rpc, 0)
+  ui:rpc("nvim_input", "Aap")
+  wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "mixed filter queries")
+  assert_matches(ui, grid, 0)
 end)
 
 t:test("a wide edit that changes the namespace waits for acceptance", function()
-  local rpc = editor({
+  local ui = editor({
     lines = { "obj." },
     items = {
       {
@@ -192,31 +177,32 @@ t:test("a wide edit that changes the namespace waits for acceptance", function()
       },
     },
   })
-  rpc:request("nvim_input", { "Aap" })
-  wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide replacement menu")
-  t.assert_eq("ap", rpc:lua([[return vim.fn.complete_info({'items'}).items[1].word]]), "safe native preview")
-  rpc:lua([[vim.api.nvim_select_popupmenu_item(0,true,true,{})]])
+  ui:rpc("nvim_input", "Aap")
+  wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide replacement menu")
+  t.assert_eq("ap", ui:lua([[return vim.fn.complete_info({'items'}).items[1].word]]), "safe native preview")
+  ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,true,{})]])
   wait(
-    rpc,
+    ui,
     [[return vim.fn.pumvisible() == 0 and vim.api.nvim_get_current_line() == 'other.alpha_one']],
     "native acceptance still replaces the complete namespace"
   )
 end)
 
 t:test("both deprecated markers keep pink matches on selected and unselected rows", function()
-  local rpc = editor({ items = { { label = "alpha_one", deprecated = true }, { label = "alpha_two", tags = { 1 } } } })
-  rpc:request("nvim_input", { "iap" })
-  wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 0]], "deprecated menu")
-  assert_matches(rpc, 0, true)
-  rpc:request("nvim_input", { "<C-j>" })
-  wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 1]], "selected tagged candidate")
-  assert_matches(rpc, 1, true)
+  local ui, grid =
+    editor({ items = { { label = "alpha_one", deprecated = true }, { label = "alpha_two", tags = { 1 } } } })
+  ui:rpc("nvim_input", "iap")
+  wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "deprecated menu")
+  assert_matches(ui, grid, 0, true)
+  ui:rpc("nvim_input", "<C-j>")
+  wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 1]], "selected tagged candidate")
+  assert_matches(ui, grid, 1, true)
 end)
 
 for _, prefix in ipairs({ "obj.", "😀 obj." }) do
   t:test("wide acceptance records dot repeat after a projected preview for " .. prefix, function()
     local result = prefix .. "alpha_one"
-    local rpc = editor({
+    local ui = editor({
       lines = { prefix, prefix },
       items = {
         {
@@ -231,15 +217,15 @@ for _, prefix in ipairs({ "obj.", "😀 obj." }) do
         },
       },
     })
-    rpc:request("nvim_input", { "Aap" })
-    wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide replacement menu")
-    rpc:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
-    wait(rpc, "return vim.api.nvim_get_current_line() == " .. string.format("%q", result), "projected preview")
-    rpc:request("nvim_input", { "<CR>" })
-    wait(rpc, [[return vim.fn.pumvisible() == 0]], "accepted wide edit")
-    rpc:request("nvim_input", { "<Esc>j$." })
+    ui:rpc("nvim_input", "Aap")
+    wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide replacement menu")
+    ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
+    wait(ui, "return vim.api.nvim_get_current_line() == " .. string.format("%q", result), "projected preview")
+    ui:rpc("nvim_input", "<CR>")
+    wait(ui, [[return vim.fn.pumvisible() == 0]], "accepted wide edit")
+    ui:rpc("nvim_input", "<Esc>j$.")
     wait(
-      rpc,
+      ui,
       "return vim.api.nvim_buf_get_lines(0,1,2,false)[1] == " .. string.format("%q", result),
       "dot repeat applies the complete edit at the second namespace"
     )
@@ -247,7 +233,7 @@ for _, prefix in ipairs({ "obj.", "😀 obj." }) do
 end
 
 t:test("wide snippets project their preview without trimming the accepted snippet", function()
-  local rpc = editor({
+  local ui = editor({
     lines = { "obj." },
     items = {
       {
@@ -261,23 +247,23 @@ t:test("wide snippets project their preview without trimming the accepted snippe
       },
     },
   })
-  rpc:request("nvim_input", { "Aap" })
-  wait(rpc, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide snippet menu")
+  ui:rpc("nvim_input", "Aap")
+  wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide snippet menu")
   t.assert_eq(
     "alpha_value",
-    rpc:lua([[return vim.fn.complete_info({'items'}).items[1].word]]),
+    ui:lua([[return vim.fn.complete_info({'items'}).items[1].word]]),
     "projected snippet prefix"
   )
-  rpc:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
-  wait(rpc, [[return vim.api.nvim_get_current_line() == 'obj.alpha_value']], "native snippet preview")
-  rpc:request("nvim_input", { "<CR>" })
+  ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
+  wait(ui, [[return vim.api.nvim_get_current_line() == 'obj.alpha_value']], "native snippet preview")
+  ui:rpc("nvim_input", "<CR>")
   wait(
-    rpc,
+    ui,
     [[return vim.snippet.active() and vim.api.nvim_get_current_line() == 'obj.alpha_value']],
     "the original wide snippet still owns its placeholder"
   )
-  rpc:request("nvim_input", { "replacement<Tab>" })
-  wait(rpc, [[return vim.api.nvim_get_current_line() == 'obj.alpha_replacement']], "placeholder editing")
+  ui:rpc("nvim_input", "replacement<Tab>")
+  wait(ui, [[return vim.api.nvim_get_current_line() == 'obj.alpha_replacement']], "placeholder editing")
 end)
 
 t:run()

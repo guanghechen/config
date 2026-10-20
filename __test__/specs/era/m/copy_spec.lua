@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/copy_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.copy")
+local t = harness.new()
 local copied = nil ---@type string|nil
 local bufnr_sourcefile = nil ---@type integer|nil
 local winnr_sourcefile = nil ---@type integer|nil

@@ -1,11 +1,8 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.filetree.subscriptions" ---@type string
-
-local fixture = require("__test__.support.filetree").new("ux.filetree.subscriptions")
+local fixture = require("__test__.support.filetree").new()
 local t, filetree, await = fixture.t, fixture.filetree, fixture.await
 
 t:test("a reentrant source update cannot deliver an older revision after the newer one", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   local data = await(filetree.open(path))
   local nested, revisions = false, {}
   local first = data:subscribe({
@@ -38,7 +35,7 @@ t:test("a reentrant source update cannot deliver an older revision after the new
 end)
 
 t:test("effect observers can change subscriptions without receiving an in-flight event twice", function()
-  local data = await(filetree.open(fixture.directory()))
+  local data = await(filetree.open(t:tempdir()))
   local state = await(data:create_state())
   local first, second, late
   local calls = { first = 0, second = 0, late = 0 }
@@ -84,7 +81,7 @@ t:test("effect observers can change subscriptions without receiving an in-flight
 end)
 
 t:test("a reentrant view close cannot restore superseded watch coverage", function()
-  local data = await(filetree.open(fixture.directory()))
+  local data = await(filetree.open(t:tempdir()))
   local state = await(data:create_state())
   local view, closed
   local received = {}
@@ -126,7 +123,7 @@ t:test("a failed subscriber cannot suppress later observers or the original hand
   t:patch_table(stl.reporter, "error", function(value)
     reports[#reports + 1] = value.message
   end)
-  local data = await(filetree.open(fixture.directory(), {
+  local data = await(filetree.open(t:tempdir(), {
     on_effect = function(effect)
       if effect.kind == "TaskFailed" then
         delivered[#delivered + 1] = "original"
@@ -156,8 +153,8 @@ t:test("a failed subscriber cannot suppress later observers or the original hand
   t.wait_until(function()
     return #delivered == 2
   end, 5000)
-  t.assert_true(vim.deep_equal({ "subscriber", "original" }, delivered))
-  t.assert_true(vim.deep_equal({ "subscriber failure" }, reports))
+  t.assert_same({ "subscriber", "original" }, delivered)
+  t.assert_same({ "subscriber failure" }, reports)
 end)
 
 t:run()

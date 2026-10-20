@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/hipattern/setup_spec.lua
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.hipattern.setup")
+local t = harness.new()
 
 t:test("dressing enables every existing visible buffer", function()
   local first = vim.api.nvim_get_current_buf() ---@type integer

@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/searcher/file_search_spec.lua
----@diagnostic disable: invisible
-
 local harness = require("__test__.support.harness")
 local FileSearch = require("era.m.searcher.file_search")
 local Scheduler = require("stl.c.scheduler")
 
-local t = harness.new("era.m.searcher.file_search")
+local t = harness.new()
 
 ---@param id                            string
 ---@return era.m.searcher.file_search.IRequest

@@ -1,0 +1,22 @@
+local bootstrap = require("__test__.support.bootstrap")
+local harness = require("__test__.support.harness")
+local t = harness.new()
+
+t:test("with_native exposes the installed library and raises reporter errors", function()
+  local native = bootstrap.with_native(t)
+  t.assert_true(rawequal(native, yoz) and type(native.fuzzy) == "table", "native library global")
+  local ok, err = pcall(stl.reporter.error, { message = "reported" })
+  t.assert_false(ok, "reporter errors raise")
+  t.assert_true(tostring(err):find("reported", 1, true) ~= nil, tostring(err))
+end)
+
+t:test("with_reporter records reports by level instead of raising", function()
+  bootstrap.with_native(t)
+  local reports = bootstrap.with_reporter(t)
+  stl.reporter.error({ message = "first" })
+  stl.reporter.warn({ message = "second" })
+  t.assert_same({ { message = "first" } }, reports.error)
+  t.assert_same({ { message = "second" } }, reports.warn)
+end)
+
+t:run()

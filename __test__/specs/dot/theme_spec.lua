@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/theme_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.theme")
+local t = harness.new()
 
 package.path = "lua/?.lua;lua/?/init.lua;" .. package.path
 package.cpath = "lua/?.so;" .. package.cpath

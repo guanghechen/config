@@ -1,9 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/fn/find-diagnostics_spec.lua
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.fn.find-diagnostics")
+local t = harness.new()
 
 t:test("preview resolves the selected file through the data contract", function()
   local filepath = "/workspace/main.lua"

@@ -1,10 +1,7 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.keystroke.cmp.session" ---@type string
-
 local harness = require("__test__.support.harness")
-local runtime = require("__test__.fixtures.era.keystroke.cmp.runtime")
+local runtime = require("__test__.support.cmp.runtime")
 runtime.setup()
-local t = harness.new("era.keystroke.cmp.session")
+local t = harness.new()
 local Context = require("era.keystroke.cmp.context")
 local Item = require("era.keystroke.cmp.item")
 local Session = require("era.keystroke.cmp.session")
@@ -321,11 +318,7 @@ t:test("eligible buffer fallback keeps its completed snapshot across prefix chan
 end)
 
 t:test("manual refresh discovers new directory entries without hiding the menu", function()
-  local directory = vim.fn.tempname()
-  vim.fn.mkdir(directory, "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
+  local directory = t:tempdir()
   vim.fn.writefile({}, directory .. "/alpha_one.lua")
   local state = fixture()
   state.names = { "path" }

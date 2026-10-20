@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua era/dressing/notifier/view_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local module_name = "era.dressing.notifier.view"
-local t = harness.new(module_name)
+local t = harness.new()
 
 t:test("refresh updates history without readonly warnings and restores buffer protection", function()
   local tasks = { { level = "INFO", title = "Build", timestamp = 0, times = 1, lines = { "first body" } } }

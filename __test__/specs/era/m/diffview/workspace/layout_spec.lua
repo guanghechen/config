@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/workspace/layout_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.workspace.layout")
+local t = harness.new()
 local null_bufnr = vim.api.nvim_create_buf(false, true)
 local requested_trees = {}
 local render_calls = {} ---@type table[]

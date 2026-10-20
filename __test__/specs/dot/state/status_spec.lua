@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/state/status_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.state.status")
+local t = harness.new()
 
 t:test("search state is scoped to its source window and buffer", function()
   local runtime_stl = require("stl")

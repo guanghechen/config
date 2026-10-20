@@ -1,11 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/buffer_documents_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local Future = require("stl.c.future")
 
-local t = harness.new("era.m.git.buffer_documents")
+local t = harness.new()
+local git = require("__test__.support.git")
 
 ---@param callback                      function
 ---@return table
@@ -18,21 +16,13 @@ local function callable(callback)
 end
 
 t:test("attach keeps authoritative index documents across edits, failures, and missing entries", function()
-  local repo_path = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo_path, "p")
-  repo_path = assert(vim.uv.fs_realpath(repo_path))
-  local function git(...)
-    return vim.system({ "git", "-C", repo_path, ... }, { text = false }):wait()
-  end
-  git("init", "-q")
-  git("config", "user.email", "test@test")
-  git("config", "user.name", "test")
+  local repo_path = git.repo(t)
   local filepath = repo_path .. "/f.txt" ---@type string
   local file = assert(io.open(filepath, "wb"))
   file:write("a\nb\n")
   file:close()
-  git("add", "f.txt")
-  git("commit", "-qm", "base")
+  git.run(repo_path, { "add", "f.txt" })
+  git.run(repo_path, { "commit", "-qm", "base" })
 
   local repo = {
     abbrev_head = "main",
@@ -158,7 +148,7 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
   t.assert_nil(failed.index_document, "index is not replaced with an empty document")
   t.assert_false(buffer.reset_buffer(bufnr), "reset is unavailable without authoritative index content")
 
-  git("rm", "-q", "--cached", "f.txt")
+  git.run(repo_path, { "rm", "-q", "--cached", "f.txt" })
   local recovery = nil ---@type { resolved: boolean, result: any }|nil
   buffer.refresh(bufnr, true):finally(function(resolved, result)
     recovery = { resolved = resolved, result = result }
@@ -183,7 +173,7 @@ t:test("attach keeps authoritative index documents across edits, failures, and m
   end, 5000, "stage from missing index")
   ---@diagnostic disable-next-line: need-check-nil
   t.assert_true(staged.ok, "real stage_hunk path: " .. tostring(staged.err))
-  t.assert_eq("A\n", git("cat-file", "-p", ":f.txt").stdout or "", "selected line staged")
+  t.assert_eq("A\n", git.run(repo_path, { "cat-file", "-p", ":f.txt" }), "selected line staged")
 
   local restore_info = t:patch_table(stl.git.info, "get_file_info", function()
     return Future.resolve({ ok = false, missing = false, err = "injected metadata failure" })

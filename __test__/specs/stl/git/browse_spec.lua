@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/git/browse_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.git.browse module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.git.browse")
+local t = harness.new()
 
 local normalize_sep = nil ---@type string|nil
 local relative_args = nil ---@type { from: string, to: string, keep: boolean, sep: string }|nil

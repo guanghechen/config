@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/term/action_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.term.action module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.term.action")
+local t = harness.new()
 
 local created = nil ---@type era.m.term.ICreateParams|nil
 local focused = false ---@type boolean

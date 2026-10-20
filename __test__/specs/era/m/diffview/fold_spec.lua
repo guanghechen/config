@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/fold_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.fold")
+local t = harness.new()
 
 t:patch_table(package.loaded, "era.m.diffview.config", {
   BUFOPTS_PANEL = {},

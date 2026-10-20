@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.dot.theme.rosepine_syntax_spec" ---@type string
-
 local harness = require("__test__.support.harness")
-local t = harness.new("dot.theme.rosepine syntax")
+local t = harness.new()
 
 t:patch_global("yoz", require("yoz"))
 t:patch_global("stl", require("stl"))

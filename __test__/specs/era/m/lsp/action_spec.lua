@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/action_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.m.lsp.action")
+local t = harness.new()
 
 ---@param lines                         string[]
 ---@return integer

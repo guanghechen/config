@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua era/dressing/notifier/
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local nvim_fn = require("stl.nvim.fn")
 local enums = require("stl.e")
 local module_name = "era.dressing.notifier"
-local t = harness.new(module_name)
+local t = harness.new()
 
 local function setup()
   local runtime = { observers = {}, groups = {}, group_ids = {}, schedules = 0, delays = {} }
@@ -102,7 +99,6 @@ local function setup()
   t:patch_global("era", require("era"))
   t:patch_table(package.loaded, module_name, nil)
   t.assert_eq(module_name, era.dressing.__mods.notifier, "module registration")
-  t.assert_nil(era.m.__mods.notifier, "old registration removed")
   runtime.notifier = era.dressing.notifier
   t:defer(function()
     runtime.notifier.dismiss_all()
@@ -134,14 +130,8 @@ t:test("dressing initializes once and preserves later notify wrappers and event 
   t.assert_eq(wrapper, vim.notify, "later notify wrapper preserved")
   t.assert_eq(2, #runtime.group_ids, "event groups registered once")
   t.assert_eq(1, runtime.schedules, "initial observer notification")
-  t.assert_true(
-    vim.deep_equal(enter_events, vim.api.nvim_get_autocmds({ group = enter_group })),
-    "entry callback preserved"
-  )
-  t.assert_true(
-    vim.deep_equal(resize_events, vim.api.nvim_get_autocmds({ group = resize_group })),
-    "resize callback preserved"
-  )
+  t.assert_same(enter_events, vim.api.nvim_get_autocmds({ group = enter_group }), "entry callback preserved")
+  t.assert_same(resize_events, vim.api.nvim_get_autocmds({ group = resize_group }), "resize callback preserved")
 
   runtime.observers[1]()
   vim.api.nvim_exec_autocmds("VimResized", { group = resize_group, modeline = false })

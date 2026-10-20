@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.diffview.workspace.discard" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.diffview.workspace.discard")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
 local action = require("era.m.diffview.view.workspace.action")
@@ -47,7 +44,7 @@ local function fixture(names)
   for _, name in ipairs(names) do
     entries[#entries + 1] = { filepath = name, stage_type = "unstaged", status = "?" }
   end
-  native.await(
+  treeview.await(
     changes.apply_to_buffer(bufnr, changes.render(entries, { stage_type = "unstaged", viewtype = "list" }), owner)
   )
   vim.api.nvim_win_set_cursor(winnr, { assert(changes.find_entry_line(bufnr, entries[1])), 0 })
@@ -116,7 +113,7 @@ t:test("pending discard keeps its captured path across cursor and workspace chan
   vim.fn.writefile({ "second" }, f.directory .. "/second.txt")
   vim.fn.mkdir(f.directory .. "/other", "p")
   vim.fn.writefile({ "other" }, f.directory .. "/other/first.txt")
-  local captured = native.await(Jobs.capture(f.path))
+  local captured = treeview.await(Jobs.capture(f.path))
   local waiting, resolve = Future.new_with_resolver()
   local captures = 0
   t:patch_table(Jobs, "capture", function(path)
@@ -146,7 +143,7 @@ t:test(
   function()
     local f = fixture({ "file.txt" })
     vim.fn.writefile({ "original" }, f.path)
-    local captured = native.await(Jobs.capture(f.path))
+    local captured = treeview.await(Jobs.capture(f.path))
     local waiting, resolve = Future.new_with_resolver()
     local restore = t:patch_table(Jobs, "capture", function()
       return waiting
@@ -215,7 +212,7 @@ end
 t:test("closing the workspace while capture is pending suppresses the late Job", function()
   local f = fixture({ "keep.txt" })
   vim.fn.writefile({ "keep" }, f.path)
-  local captured = native.await(Jobs.capture(f.path))
+  local captured = treeview.await(Jobs.capture(f.path))
   local waiting, resolve = Future.new_with_resolver()
   t:patch_table(Jobs, "capture", function()
     return waiting

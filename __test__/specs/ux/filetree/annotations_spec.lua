@@ -1,12 +1,9 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.filetree.annotations" ---@type string
-
-local fixture = require("__test__.support.filetree").new("ux.filetree.annotations")
+local fixture = require("__test__.support.filetree").new()
 local t, filetree = fixture.t, fixture.filetree
-local await, write, directory = fixture.await, fixture.write, fixture.directory
+local await, write = fixture.await, fixture.write
 
 t:test("diagnostics decorate a stable frame and clear by namespace without editing buffer lines", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   write(path .. "/b")
   local data = await(filetree.open(path))
@@ -49,7 +46,7 @@ t:test("diagnostics decorate a stable frame and clear by namespace without editi
   vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   await(data:sync_diagnostics(namespace, bufnr))
   local rows = await(data:annotations(frame, 1, 2))
-  t.assert_true(vim.deep_equal({ 1, 0, 0, 0 }, rows.rows[1].diagnostics))
+  t.assert_same({ 1, 0, 0, 0 }, rows.rows[1].diagnostics)
   t.assert_eq(1, await(data:next_annotation(frame, 2, "error", true)))
   vim.cmd.redraw()
   t.wait_until(function()
@@ -62,7 +59,7 @@ t:test("diagnostics decorate a stable frame and clear by namespace without editi
   end, 10000)
   t.assert_eq(0, await(data:next_annotation(frame, 0, "diagnostic", true)))
   t.assert_eq(frame:id(), view:frame():id())
-  t.assert_true(vim.deep_equal(lines, vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)))
+  t.assert_same(lines, vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true))
   t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr))
 end)
 

@@ -1,32 +1,32 @@
--- Run from the repository root: nvim -l __test__/fixtures/era/keystroke/cmp/lua_ls.lua [server]
+-- Run from the repository root: nvim -l __test__/manual/era/keystroke/cmp/lua_ls.lua [server]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.keystroke.cmp.lua_ls" ---@type string
+local __module_name__ = "__test__.manual.era.keystroke.cmp.lua_ls" ---@type string
 
 local root = assert(vim.uv.cwd())
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local Rpc = require("__test__.support.rpc")
+local UI = require("__test__.support.ui")
 local executable = arg[1] or vim.fn.stdpath("data") .. "/mason/bin/lua-language-server"
 assert(vim.fn.executable(executable) == 1, "Use an existing lua-language-server executable")
 local directory = vim.fn.tempname()
 vim.fn.mkdir(directory, "p")
 local path = directory .. "/sample.lua"
 vim.fn.writefile({ "local obj = { alpha = 1, alpine = 2 }", "obj." }, path)
-local rpc = Rpc.new(root)
+local ui = UI.new()
 
 ---@param code                          string
 ---@param ...                           any
 ---@return any
 local function run(code, ...)
-  return rpc:lua(code, ...)
+  return ui:lua(code, ...)
 end
 
 ---@param code                          string
 ---@param message                       string
 ---@return nil
 local function wait(code, message)
-  if not Rpc.wait(15000, function()
+  if not pcall(ui.wait_until, ui, function()
     return run(code)
-  end, 20) then
+  end, 15000) then
     print(
       vim.json.encode(
         run(
@@ -39,13 +39,11 @@ local function wait(code, message)
 end
 
 local ok, err = xpcall(function()
-  rpc:request("nvim_ui_attach", { 120, 40, { ext_linegrid = true, rgb = true } })
+  ui:start({ width = 120, height = 40 })
   run(
     [[
     local root, directory, path, executable = ...
-    vim.opt.runtimepath:prepend(root)
-    package.path = root .. '/?.lua;' .. root .. '/?/init.lua;' .. package.path
-    require('__test__.fixtures.era.keystroke.cmp.runtime').setup()
+    require('__test__.support.cmp.runtime').setup()
     vim.api.nvim_buf_set_name(0, path)
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'local obj = { alpha = 1, alpine = 2 }', 'obj.' })
     vim.api.nvim_set_option_value('filetype', 'lua', { buf = 0 })
@@ -100,16 +98,16 @@ local ok, err = xpcall(function()
       end, bufnr)
     end
   ]])
-  rpc:request("nvim_input", { "A" })
+  ui:rpc("nvim_input", "A")
   wait([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
   -- LuaLS can return null while its first document is still being indexed. A manual retry
   -- must query it again even if the editor already has local buffer candidates.
   local ready = false
   for _ = 1, 20 do
     run([[require('era.keystroke.cmp').show()]])
-    ready = Rpc.wait(500, function()
+    ready = pcall(ui.wait_until, ui, function()
       return run([[return cmp_smoke_menu('[lsp]')]])
-    end, 20)
+    end, 500)
     if ready then
       break
     end
@@ -119,7 +117,7 @@ local ok, err = xpcall(function()
   wait([[return vim.api.nvim_get_current_line() == 'obj.alpha']], "real LSP acceptance")
   print("PASS real Lua language server completion and acceptance")
 
-  rpc:request("nvim_input", { "<Esc>" })
+  ui:rpc("nvim_input", "<Esc>")
   wait([[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
   run([[
     local lines = {
@@ -129,7 +127,7 @@ local ok, err = xpcall(function()
     vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
     vim.api.nvim_win_set_cursor(0, { #lines, 0 })
   ]])
-  rpc:request("nvim_input", { "iadd" })
+  ui:rpc("nvim_input", "iadd")
   wait([[return cmp_smoke_menu('add(')]], "real function completion")
   wait(
     [[
@@ -145,34 +143,34 @@ local ok, err = xpcall(function()
     "real documentation contains one full signature and no repeated header or rule"
   )
   print("PASS real Lua language server documentation signature")
-  rpc:request("nvim_input", { "<CR>" })
+  ui:rpc("nvim_input", "<CR>")
   wait(
     [[return vim.api.nvim_get_current_line() == 'add(a, b)' and vim.snippet.active() and vim.api.nvim_get_mode().mode == 's']],
     "real function snippet acceptance"
   )
-  rpc:request("nvim_input", { "<Tab>" })
+  ui:rpc("nvim_input", "<Tab>")
   wait(
     [[return vim.api.nvim_get_mode().mode == 's' and vim.api.nvim_win_get_cursor(0)[2] == 7]],
     "real function second parameter"
   )
-  rpc:request("nvim_input", { "<Tab>" })
+  ui:rpc("nvim_input", "<Tab>")
   wait(
     [[return not vim.snippet.active() and vim.api.nvim_get_mode().mode == 'i' and vim.api.nvim_win_get_cursor(0)[2] == #'add(a, b)']],
     "real function final tabstop"
   )
   print("PASS real Lua language server function snippet and final tabstop")
 
-  rpc:request("nvim_input", { "<Esc>" })
+  ui:rpc("nvim_input", "<Esc>")
   wait([[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
   run([[
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'local function add(a, b) return a + b end', '' })
     vim.api.nvim_win_set_cursor(0, { 2, 0 })
   ]])
-  rpc:request("nvim_input", { "iadd(" })
+  ui:rpc("nvim_input", "iadd(")
   wait([[return cmp_smoke_window('cmp-signature', 'add')]], "real signature help")
   print("PASS real Lua language server signature help")
 
-  rpc:request("nvim_input", { "<Esc>" })
+  ui:rpc("nvim_input", "<Esc>")
   wait([[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
   run([[
     local bufnr = vim.api.nvim_create_buf(true, false)
@@ -181,7 +179,7 @@ local ok, err = xpcall(function()
     vim.api.nvim_win_set_cursor(0, { 2, 0 })
     cmp_smoke_responses = {}
   ]])
-  rpc:request("nvim_input", { "Aqzx" })
+  ui:rpc("nvim_input", "Aqzx")
   -- The preceding semantic checks ensure LuaLS has finished its initial indexing.
   -- Wait for its response so an early local fallback cannot hide a later Text result.
   wait([[return #cmp_smoke_responses > 0]], "real word completion response")
@@ -195,7 +193,7 @@ local ok, err = xpcall(function()
 end, debug.traceback)
 
 pcall(run, [[vim.lsp.stop_client(cmp_smoke_client, true)]])
-rpc:close()
+ui:close()
 vim.fn.delete(directory, "rf")
 if not ok then
   error(err)

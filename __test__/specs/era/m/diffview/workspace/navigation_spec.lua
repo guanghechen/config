@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/workspace/navigation_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.workspace.navigation")
+local t = harness.new()
 local requested_tree_focus
 
 local workspace = "/repo"

@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/trailspace_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local nvim_fn = require("stl.nvim.fn")
-local t = harness.new("era.dressing.trailspace")
+local t = harness.new()
 local module_name = "era.dressing.trailspace"
 local hlgroup = "f_ux_trailspace"
 
@@ -84,10 +81,7 @@ t:test("dressing preserves one observer and its autocmds across repeated calls",
   runtime.trailspace.dressing()
   t.assert_eq(1, #runtime.observers, "observer registrations")
   t.assert_eq(1, runtime.augroup_calls, "augroup registrations")
-  t.assert_true(
-    vim.deep_equal(autocmds, vim.api.nvim_get_autocmds({ group = runtime.group })),
-    "autocmds are preserved"
-  )
+  t.assert_same(autocmds, vim.api.nvim_get_autocmds({ group = runtime.group }), "autocmds are preserved")
 
   runtime.set_enabled(false)
   runtime.trailspace.dressing()

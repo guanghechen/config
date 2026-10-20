@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/nvimbar/component/nvim_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.nvimbar.component.nvim")
+local t = harness.new()
 
 ---@param message                       string
 ---@param search_pattern                string|nil

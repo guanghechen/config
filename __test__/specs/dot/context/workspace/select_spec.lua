@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/context/workspace/select_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.context.workspace.select")
+local t = harness.new()
 
 local Observable = {}
 Observable.__index = Observable

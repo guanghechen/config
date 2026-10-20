@@ -1,7 +1,5 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/init_spec.lua
-
 local harness = require("__test__.support.harness")
-local t = harness.new("era.dressing")
+local t = harness.new()
 
 ---@return era.dressing
 local function fresh_dressing()

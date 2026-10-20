@@ -1,9 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/yoz/search_job_spec.lua
-
 local harness = require("__test__.support.harness")
 local native = require("yoz")
 
-local t = harness.new("yoz.search_job")
+local t = harness.new()
 
 local function options()
   return {
@@ -34,12 +32,12 @@ t:test("native job matches synchronous ordered results and polls repeatedly", fu
 
   t.assert_eq("completed", status)
   t.assert_nil(err)
-  t.assert_true(vim.deep_equal(expected.items, result.items), "ordered search items must match")
+  t.assert_same(expected.items, result.items, "ordered search items must match")
 
   local status_again, result_again, err_again = search_job:poll()
   t.assert_eq("completed", status_again)
   t.assert_nil(err_again)
-  t.assert_true(vim.deep_equal(result.items, result_again.items), "terminal poll must be idempotent")
+  t.assert_same(result.items, result_again.items, "terminal poll must be idempotent")
 
   search_job:dispose()
   search_job:dispose()

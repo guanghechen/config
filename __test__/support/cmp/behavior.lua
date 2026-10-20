@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.keystroke.cmp.behavior" ---@type string
+local __module_name__ = "__test__.support.cmp.behavior" ---@type string
 
 local M = {}
 
@@ -7,7 +7,7 @@ local M = {}
 ---@return nil
 function M.setup(options)
   M.options = options
-  require("__test__.fixtures.era.keystroke.cmp.runtime").setup(options.engine == "era" and options.baseline or nil)
+  require("__test__.support.cmp.runtime").setup(options.baseline)
   M.notices, M.requests, M.commands = {}, {}, {}
   M.inline_calls = 0
   M.fallback_calls = {}
@@ -119,70 +119,41 @@ function M.setup(options)
   vim.lsp.get_client_by_id = function(id)
     return id == client.id and client or nil
   end
-  if options.engine == "era" then
-    local session = require("era.keystroke.cmp.session")
-    local new = session.new
-    session.new = function(props)
-      M.session = new(props)
-      return M.session
-    end
-    local sources_for = require("era.keystroke.cmp.policy").sources_for
-    require("era.keystroke.cmp.policy").sources_for = function(context, manual, previous)
-      local sources = sources_for(context, manual, previous)
-      return vim.list_contains(sources, "lsp") and (options.buffer and { "lsp", "buffer" } or { "lsp" }) or {}
-    end
-    M.cmp = require("era.keystroke.cmp")
-    M.cmp.setup()
-  else
-    vim.opt.runtimepath:append(options.blink)
-    local config = require("__test__.fixtures.era.keystroke.cmp.blink_options").opts()
-    -- Keep interaction settings intact. Isolate only payloads and persistent frecency state.
-    config.sources.default = options.buffer and { "lsp", "buffer" } or { "lsp" }
-    config.sources.per_filetype = {}
-    config.fuzzy.implementation = "rust"
-    config.fuzzy.prebuilt_binaries = { download = false }
-    config.fuzzy.frecency.path = options.output .. "/frecency-" .. vim.uv.os_getpid() .. ".dat"
-    M.cmp = require("blink.cmp")
-    M.cmp.setup(config)
+  local session = require("era.keystroke.cmp.session")
+  local new = session.new
+  session.new = function(props)
+    M.session = new(props)
+    return M.session
   end
+  local sources_for = require("era.keystroke.cmp.policy").sources_for
+  require("era.keystroke.cmp.policy").sources_for = function(context, manual, previous)
+    local sources = sources_for(context, manual, previous)
+    return vim.list_contains(sources, "lsp") and (options.buffer and { "lsp", "buffer" } or { "lsp" }) or {}
+  end
+  M.cmp = require("era.keystroke.cmp")
+  M.cmp.setup()
 end
 
 ---@return table
 function M.snapshot()
   local mode = vim.api.nvim_get_mode().mode
   local visible = M.cmp.is_menu_visible()
-  local items, selected, documentation, signature, doc_winnr, ghost, menu_bufnr
-  if M.options.engine == "era" then
-    local session = M.session
-    if mode == "c" then
-      local info = vim.fn.cmdcomplete_info()
-      items = {}
-      for _, label in ipairs(info.matches or {}) do
-        items[#items + 1] = { label = label }
-      end
-      selected = info.selected ~= nil and info.selected >= 0 and items[info.selected + 1] or nil
-    else
-      items = session and session.items or {}
-      selected = session and session:current_item()
+  local session = M.session
+  local items, selected
+  if mode == "c" then
+    local info = vim.fn.cmdcomplete_info()
+    items = {}
+    for _, label in ipairs(info.matches or {}) do
+      items[#items + 1] = { label = label }
     end
-    documentation = session ~= nil and session.documentation:is_visible()
-    doc_winnr = documentation and session.documentation.winnr or nil
-    signature = session ~= nil and session.signature.winnr ~= nil
-    ghost = false
+    selected = info.selected ~= nil and info.selected >= 0 and items[info.selected + 1] or nil
   else
-    local list = package.loaded["blink.cmp.completion.list"]
-    items = list and list.items or {}
-    selected = list and list.get_selected_item()
-    documentation = M.cmp.is_documentation_visible()
-    local docs = package.loaded["blink.cmp.completion.windows.documentation"]
-    doc_winnr = docs and docs.win:get_win()
-    signature = M.cmp.is_signature_visible()
-    local preview = package.loaded["blink.cmp.completion.windows.ghost_text"]
-    ghost = preview ~= nil and preview.is_open()
-    if M.options.menu_text and visible then
-      menu_bufnr = require("blink.cmp.completion.windows.menu").win:get_buf()
-    end
+    items = session and session.items or {}
+    selected = session and session:current_item()
   end
+  local documentation = session ~= nil and session.documentation:is_visible()
+  local doc_winnr = documentation and session.documentation.winnr or nil
+  local signature = session ~= nil and session.signature.winnr ~= nil
   local labels = {}
   if visible then
     for _, item in ipairs(items) do
@@ -199,7 +170,6 @@ function M.snapshot()
     native_menu = vim.fn.pumvisible() == 1,
     labels = labels,
     selected = visible and selected ~= nil and (selected.raw or selected).label or false,
-    ghost = ghost,
     documentation = documentation,
     signature = signature,
     snippet = vim.snippet.active(),
@@ -217,15 +187,8 @@ function M.snapshot()
   end
   if M.options.menu_text then
     state.menu_text = {}
-    if M.options.engine == "era" then
-      for _, item in ipairs(visible and vim.fn.complete_info({ "items" }).items or {}) do
-        state.menu_text[#state.menu_text + 1] = item.abbr
-      end
-    else
-      for _, line in ipairs(visible and vim.api.nvim_buf_get_lines(assert(menu_bufnr), 0, -1, false) or {}) do
-        -- Compare labels without the custom renderer's kind/source columns.
-        state.menu_text[#state.menu_text + 1] = vim.trim(line):gsub("^%S+%s+", ""):gsub("%s+%[[^%]]+%]$", "")
-      end
+    for _, item in ipairs(visible and vim.fn.complete_info({ "items" }).items or {}) do
+      state.menu_text[#state.menu_text + 1] = item.abbr
     end
   end
   return state

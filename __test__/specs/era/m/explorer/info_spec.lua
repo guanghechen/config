@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.info" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.info")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local Fileinfo = require("era.view.fileinfo")
 
@@ -21,7 +18,7 @@ local function capture_panels()
 end
 
 t:test("File Info displays the cursor file while preserving an unrelated copy selection", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c" }) do
     fixture.write(path .. "/" .. name)
   end
@@ -49,7 +46,7 @@ t:test("File Info displays the cursor file while preserving an unrelated copy se
 end)
 
 t:test("File Info captures its target and ignores a superseded request after its panel closes", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   fixture.write(path .. "/b")
   local widget = fixture.widget(path)
@@ -86,7 +83,7 @@ end)
 
 t:test("a delayed File Info request preserves its cursor target and respects lost focus", function()
   for _, leave in ipairs({ false, true }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/a")
     fixture.write(path .. "/b")
     local source_winnr = vim.api.nvim_get_current_win()
@@ -117,7 +114,7 @@ end)
 
 t:test("leaving and returning permanently invalidates pending File Info, including a late rejection", function()
   for _, rejected in ipairs({ false, true }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/a")
     local source_winnr = vim.api.nvim_get_current_win()
     local widget = fixture.widget(path)
@@ -145,7 +142,7 @@ t:test("leaving and returning permanently invalidates pending File Info, includi
 end)
 
 t:test("File Info displays supplied metadata and wraps long escaped paths within the screen", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   t:patch_table(dot.path, "workspace", function()
     return path
   end)

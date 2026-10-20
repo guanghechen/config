@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.diffview.native_navigation" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.diffview.native_navigation")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
 local commits = require("era.m.diffview.pane.commits")
@@ -39,7 +36,7 @@ local function pane(stage, entries, options)
       foldempty = true,
     }, options or {})
   )
-  native.await(changes.apply_to_buffer(bufnr, plan, owner))
+  treeview.await(changes.apply_to_buffer(bufnr, plan, owner))
   return owner, { stage_type = stage, bufnr = bufnr, winnr = winnr }, plan
 end
 
@@ -102,7 +99,7 @@ t:test("adjacent navigation reads only its target after a metadata publication",
   t.assert_eq(0, writes, "cursor movement does not rewrite body text")
 
   plan.source:get(tree.key(nil, entries[1].filepath, false)).presentation.right_text = "changed"
-  native.await(tree.apply(panel.bufnr, plan, owner))
+  treeview.await(tree.apply(panel.bufnr, plan, owner))
   reads, writes = 0, 0
   vim.api.nvim_win_set_cursor(panel.winnr, { 1, 0 })
   action.next_entry(ctx)
@@ -132,7 +129,7 @@ t:test("a file hidden by a folded path keeps its navigation direction", function
   local last = { filepath = "z.lua", stage_type = "unstaged", status = "M" }
   local owner, panel = pane("unstaged", { hidden, visible, last })
   owner:collapse(tree.key(nil, "a/b", true), "collapse", false)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   t.assert_nil(changes.find_entry_line(panel.bufnr, hidden))
   local anchor = changes.find_entry_anchor(panel.bufnr, hidden)
   t.assert_eq("a/b", changes.get_item_at_line(panel.bufnr, anchor).uuid)
@@ -157,10 +154,10 @@ t:test("commit positions follow the native projection across expansion", functio
     },
     { hash = "b", abbrev_hash = "b", author = "B", date = 0, message = "b" },
   }, { viewtype = "tree", foldempty = false, include_files = { a = true } })
-  native.await(tree.apply(panel.bufnr, plan, owner))
+  treeview.await(tree.apply(panel.bufnr, plan, owner))
   t.assert_eq(2, commits.find_commit_line(panel.bufnr, "b"))
   owner:collapse("commit:a", "expand", false)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   t.assert_eq(4, commits.find_commit_line(panel.bufnr, "b"))
   t.assert_nil(commits.find_commit_line(panel.bufnr, "absent"))
 end)
@@ -211,7 +208,7 @@ t:test("navigation across collapsed directories exports only the destination", f
   entries[#entries + 1] = target
   local owner, panel = pane("unstaged", entries)
   owner:set_expansion(tree.root, false, true)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   t.assert_eq(5001, owner:linecount())
   local ctx = context({ panel })
   local reads, item = 0, tree.item

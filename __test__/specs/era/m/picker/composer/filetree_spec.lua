@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/picker/composer/filetree_spec.lua
----@diagnostic disable: invisible
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.m.picker.composer.filetree")
-local native = require("__test__.support.result_tree")
+local t = harness.new()
+local treeview = require("__test__.support.treeview")
 
 ---@param value                         unknown
 ---@return stl.c.Observable
@@ -297,36 +294,26 @@ end)
 ---@param expression                    string
 ---@return nil
 local function wait_ui(ui, expression)
-  local deadline = vim.uv.hrtime() + 5000000000
-  t.wait_until(function()
-    t.assert_true(vim.uv.hrtime() < deadline, expression)
-    return ui:rpc("nvim_exec_lua", "return " .. expression, {})
-  end, 5000)
+  ui:wait_until(function()
+    return ui:lua("return " .. expression)
+  end, 5000, expression)
 end
 
 ---@return __test__.support.UI
 ---@return string
 local function new_picker_ui()
-  local directory = require("ux.filetree.path").from_os(vim.fn.tempname())
+  local directory = require("ux.filetree.path").from_os(t:tempdir())
   vim.fn.mkdir(directory .. "/root", "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
   vim.fn.writefile({ "a" }, directory .. "/root/a.lua")
   vim.fn.writefile({ "b" }, directory .. "/root/b.lua")
-  local ui = require("__test__.support.ui").new()
+  local ui = require("__test__.support.ui").new({ cwd = directory .. "/root" })
   t:defer(function()
     ui:close()
   end)
-  ui:rpc("nvim_ui_attach", 100, 32, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
+  ui:start({ width = 100, height = 32, runtime = "ark" })
+  ui:lua(
     [[
-    local root, path = ...
-    vim.opt.runtimepath:prepend(root)
-    package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-    vim.api.nvim_set_current_dir(path)
-    require("ark.bootstrap").setup()
+    local path = ...
     errors = {}
     stl.reporter.error = function(value) errors[#errors + 1] = value.message end
     local o = stl.c.Observable.from_value
@@ -339,7 +326,7 @@ local function new_picker_ui()
     picker:reset_filepaths(path, { path .. "/a.lua", path .. "/b.lua" }, false)
     picker:focus()
   ]],
-    { assert(vim.uv.cwd()), directory .. "/root" }
+    directory .. "/root"
   )
   wait_ui(ui, "picker._treeview.view and picker._treeview.view:frame() and picker.result.lnum_total:snapshot() == 2")
   return ui, directory
@@ -347,43 +334,35 @@ end
 
 t:test("create rejects a directory replaced while its prompt is open", function()
   local ui, directory = new_picker_ui()
-  ui:rpc(
-    "nvim_exec_lua",
-    [[
+  ui:lua([[
     vim.ui.input = function(_, callback) pending = callback end
     picker:__file_operation__("create")
-  ]],
-    {}
-  )
+  ]])
   wait_ui(ui, "pending ~= nil")
   assert(vim.uv.fs_rename(directory .. "/root", directory .. "/original"))
   assert(vim.uv.fs_mkdir(directory .. "/root", 493))
-  ui:rpc("nvim_exec_lua", [[pending("created.txt")]], {})
+  ui:lua([[pending("created.txt")]])
   wait_ui(ui, "not picker._file_operation_busy")
   t.assert_nil(vim.uv.fs_stat(directory .. "/root/created.txt"), "replacement directory must remain untouched")
   t.assert_nil(vim.uv.fs_stat(directory .. "/original/created.txt"), "moved directory must remain untouched")
-  t.assert_true(ui:rpc("nvim_exec_lua", "return #errors > 0", {}), "stale target must be reported")
+  t.assert_true(ui:lua("return #errors > 0"), "stale target must be reported")
 end)
 
 for _, phase in ipairs({ "before action", "during prompt" }) do
   t:test("an old Frame rename preserves a producer replaced " .. phase, function()
     local ui = new_picker_ui()
-    ui:rpc(
-      "nvim_exec_lua",
-      [[
+    ui:lua([[
       vim.cmd.stopinsert()
       vim.api.nvim_set_current_win(picker.result:get_winnr())
       picker.result:set_lnum_current(1)
       vim.cmd.normal({args={"V"}, bang=true})
       vim.ui.input = function(_, callback) pending = callback end
-    ]],
-      {}
-    )
+    ]])
     if phase == "during prompt" then
-      ui:rpc("nvim_exec_lua", [[picker:__file_operation__("rename")]], {})
+      ui:lua([[picker:__file_operation__("rename")]])
       wait_ui(ui, "pending ~= nil")
     end
-    ui:rpc("nvim_exec_lua", [[picker:reset_filepaths(test_directory, {test_directory .. "/b.lua"}, false)]], {})
+    ui:lua([[picker:reset_filepaths(test_directory, {test_directory .. "/b.lua"}, false)]])
     wait_ui(
       ui,
       [[
@@ -392,41 +371,33 @@ for _, phase in ipairs({ "before action", "during prompt" }) do
     )
     t.assert_eq(
       "a.lua",
-      ui:rpc(
-        "nvim_exec_lua",
-        [[
+      ui:lua([[
       local _, item = picker:__retrieve_file__()
       return item and item.basename
-    ]],
-        {}
-      ),
+    ]]),
       "the visible Frame still owns the original action target"
     )
     if phase == "before action" then
-      ui:rpc("nvim_exec_lua", [[picker:__file_operation__("rename")]], {})
+      ui:lua([[picker:__file_operation__("rename")]])
       wait_ui(ui, "pending ~= nil")
     end
-    ui:rpc("nvim_exec_lua", [[pending("renamed.lua")]], {})
+    ui:lua([[pending("renamed.lua")]])
     wait_ui(
       ui,
       [[vim.uv.fs_stat(test_directory .. "/renamed.lua") ~= nil and not require("era.m.filetree.jobs").pending()]]
     )
-    ui:rpc("nvim_exec_lua", [[vim.cmd.normal({args={vim.keycode("<Esc>")}, bang=true})]], {})
+    ui:lua([[vim.cmd.normal({args={vim.keycode("<Esc>")}, bang=true})]])
     wait_ui(ui, "not picker._file_operation_busy")
-    local files = ui:rpc(
-      "nvim_exec_lua",
-      [[
+    local files = ui:lua([[
       local files = {}
       for _, uuid in ipairs(picker._uuids_order:keys()) do
         files[#files + 1] = picker._filetree:get(uuid).basename
       end
       return files
-    ]],
-      {}
-    )
+    ]])
     t.assert_eq(1, #files, "the replacement producer must keep its own membership")
     t.assert_eq("b.lua", files[1])
-    t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
+    t.assert_eq(0, ui:lua("return #errors"))
   end)
 end
 
@@ -466,7 +437,7 @@ t:test("directory removal synchronizes topology state and indexes", function()
     end)
     composer:reset_filepaths(root, { filepath }, false)
     composer:__match__("file")
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     ---@diagnostic disable-next-line: assign-type-mismatch
     local directory_data = composer._filetree:get(directory_uuid) ---@type era.view.result_paths.IFile
     composer.__retrieve_file__ = function()
@@ -482,7 +453,7 @@ t:test("directory removal synchronizes topology state and indexes", function()
     t.assert_false(composer._filetree:contains(fileuuid), "removed child topology")
     t.assert_nil(composer._treeview.entries[directory_uuid], "removed directory producer metadata")
     t.assert_nil(composer._treeview.entries[fileuuid], "removed child producer metadata")
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     t.assert_nil(composer._treeview:retrieve(directory_uuid), "removed directory state")
     t.assert_nil(composer._treeview:retrieve(fileuuid), "removed child state")
     t.assert_eq(0, composer._uuids_order:count(), "removed order index")
@@ -496,21 +467,21 @@ t:test("directory moves preserve only producer membership without rescanning dis
     local source, target = "/workspace/src/old", "/archive/new"
     t:patch_table(composer._scheduler_match, "schedule", function() end)
     composer:reset_filepaths("/workspace", { source .. "/old.lua", source .. "/nested/child.lua" }, false)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     composer._treeview:set_selected(require("era.view.result_paths").key(source .. "/old.lua"), true)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     t:patch_table(yoz.fs, "collect_files", function()
       error("result moves must not scan disk")
     end)
     composer:__update_tree_after_rename__(source, target .. "/")
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     for _, path in ipairs({ target .. "/old.lua", target .. "/nested/child.lua" }) do
       local data = composer._filetree:get(require("era.view.result_paths").key(path))
       t.assert_eq(path, data and data.filepath)
     end
     local fileuuid = require("era.view.result_paths").key(target .. "/old.lua")
     t.assert_true(composer._treeview:isselected(fileuuid))
-    native.publish(composer._treeview, { only_selected = true })
+    treeview.publish(composer._treeview, { only_selected = true })
     t.assert_true(composer._treeview:retrieve_lnum(fileuuid) ~= nil)
   end)
 end)
@@ -521,24 +492,24 @@ t:test("file refresh preserves selection at the new identity", function()
     local target = "/workspace/foobar.lua"
     t:patch_table(composer._scheduler_match, "schedule", function() end)
     composer:reset_filepaths("/workspace", { source }, false)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     composer._treeview:set_selected(require("era.view.result_paths").key(source), true)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     composer._uuid_current = require("era.view.result_paths").key(source)
     composer:__match__("foo")
 
     composer:__update_tree_after_rename__(source, target)
 
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     composer:__match__("foo")
 
     local source_uuid = require("era.view.result_paths").key(source)
     local target_uuid = require("era.view.result_paths").key(target)
     t.assert_true(composer._treeview:isselected(target_uuid), "renamed file selection")
     t.assert_eq(target_uuid, composer._uuid_current, "renamed current identity")
-    t.assert_true(vim.deep_equal({ target_uuid }, composer._uuids_order:keys()), "renamed order index")
+    t.assert_same({ target_uuid }, composer._uuids_order:keys(), "renamed order index")
     composer:__match__("")
-    t.assert_true(vim.deep_equal({ target_uuid }, composer._uuids_order:keys()), "renamed file index")
+    t.assert_same({ target_uuid }, composer._uuids_order:keys(), "renamed file index")
     t.assert_false(composer._uuids_order:has(source_uuid), "old file index removed")
   end)
 end)
@@ -557,13 +528,13 @@ t:test("root directory refresh remaps composer indexes", function()
 
     composer:__update_tree_after_rename__(source, target .. "/")
 
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
 
     local target_root_uuid = require("era.view.result_paths").key(target)
     local target_file_uuid = require("era.view.result_paths").key(target .. "/file.lua")
     t.assert_eq(target_root_uuid, composer._uuid_root, "renamed attached root")
     t.assert_eq(target_file_uuid, composer._uuid_current, "renamed current child")
-    t.assert_true(vim.deep_equal({ target_file_uuid }, composer._uuids_order:keys()), "renamed root file index")
+    t.assert_same({ target_file_uuid }, composer._uuids_order:keys(), "renamed root file index")
     t.assert_eq(target, attached, "renamed attached callback")
   end, function(_, rootpath)
     attached = rootpath
@@ -582,7 +553,7 @@ t:test("directory refresh preserves an empty destination", function()
 
     composer:__update_tree_after_rename__(source, target .. "/")
 
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
 
     local target_uuid = require("era.view.result_paths").key(target)
     local data = composer._filetree:get(target_uuid) ---@type era.view.result_paths.IFile|nil
@@ -604,19 +575,19 @@ t:test("directory overwrite removes the replaced target subtree", function()
       return { files = { "moved.lua" } }, nil
     end)
     composer:reset_filepaths("/workspace", { source_file, stale_file }, false)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     composer._treeview:set_selected(require("era.view.result_paths").key(source_file), true)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     t.assert_true(
       composer._treeview:isselected(require("era.view.result_paths").key(source_file)),
       "publication includes queued selection"
     )
     composer._treeview:set_selected(require("era.view.result_paths").key(stale_file), true)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
 
     composer:__update_tree_after_rename__(source, target .. "/")
 
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
 
     local target_uuid = require("era.view.result_paths").key(target_file)
     local stale_uuid = require("era.view.result_paths").key(stale_file)
@@ -639,12 +610,12 @@ t:test("directory moves retain location metadata and native selection without di
     end)
     composer:reset_filepaths("/workspace", { source .. "/known.lua" }, false)
     composer._treeview:add_location(key, { locationuuid = "location", lnum = 7, col = 3, col_end = 5, text = "match" })
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     composer._treeview:set_selected("location", true)
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     local old = composer._treeview:frame():source():id("location")
     composer:__update_tree_after_rename__(source, target .. "/")
-    native.publish(composer._treeview)
+    treeview.publish(composer._treeview)
     local location = composer._treeview:retrieve("location")
     t.assert_eq(next_key, location.leafuuid)
     t.assert_eq(7, location.lnum)
@@ -674,7 +645,7 @@ t:test("lexical consumers emit slash-only relative paths", function()
 
       local bufnr = vim.api.nvim_create_buf(false, true)
       local ok, err = pcall(function()
-        native.await(composer.result.draw(bufnr))
+        treeview.await(composer.result.draw(bufnr))
 
         local copied = nil ---@type string|nil
         t:patch_table(stl.nvim.fn, "copy", function(filepath)
@@ -700,7 +671,7 @@ t:test("lexical consumers emit slash-only relative paths", function()
           width = 60,
           height = 8,
         })
-        native.await(composer._treeview:ready())
+        treeview.await(composer._treeview:ready())
         retrieve_action(composer, "filetree: send to qflist")()
         t.assert_eq(2, quickfix_items and #quickfix_items, "quickfix item count")
         local quickfix_filenames = {} ---@type table<string, true>
@@ -788,7 +759,7 @@ t:test("Enter opens a plain file and waits for an immediately preceding Tab", fu
       width = 60,
       height = 8,
     })
-    native.await(composer._treeview:ready())
+    treeview.await(composer._treeview:ready())
     local paths
     t:patch_table(composer._composer, "close", function() end)
     t:patch_table(composer, "__focus_source_win__", function()
@@ -827,7 +798,7 @@ t:test("expansion actions typed ahead act on the tree their earlier actions prod
       height = 8,
     })
     local tree = composer._treeview
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     local errors = {} ---@type table[]
     t:patch_table(stl.reporter, "error", function(value)
       errors[#errors + 1] = value
@@ -835,20 +806,7 @@ t:test("expansion actions typed ahead act on the tree their earlier actions prod
     local src = require("era.view.result_paths").key("/workspace/src")
     local open, collapse = retrieve_action(composer, "filetree: open"), retrieve_action(composer, "filetree: collapse")
     composer.result.lnum_current:next(tree:retrieve_lnum(src), { silent = true })
-    for _, case in ipairs({
-      { name = "collapse+open", actions = { collapse, open }, expanded = true },
-      { name = "collapse", actions = { collapse }, expanded = false },
-      { name = "open+collapse", actions = { open, collapse }, expanded = false },
-      { name = "open+collapse+open", actions = { open, collapse, open }, expanded = true },
-    }) do
-      for _, action in ipairs(case.actions) do
-        action()
-      end
-      t.wait_until(function()
-        return not tree:collapse_pending() and tree:expanded(src) == case.expanded
-      end, 5000, case.name .. " must leave src " .. (case.expanded and "expanded" or "collapsed"))
-      native.await(tree:ready())
-    end
+    treeview.assert_typed_ahead(t, tree, src, open, collapse)
     t.assert_eq(0, #errors, vim.inspect(errors))
   end)
 end)
@@ -863,12 +821,12 @@ t:test("rename restores the native cursor to the new file identity", function()
       height = 8,
     })
     local tree = composer._treeview
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     composer.result:set_lnum_current(2)
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     composer:__update_tree_after_rename__("/workspace/bbb.lua", "/workspace/renamed.lua")
-    native.await(composer.result.draw())
-    native.await(tree:ready())
+    treeview.await(composer.result.draw())
+    treeview.await(tree:ready())
     local cursor = vim.api.nvim_win_get_cursor(composer.result:get_winnr())[1]
     t.assert_eq("/workspace/renamed.lua", tree:data(tree:retrieve_uuid(cursor)).filepath)
     t.assert_eq(cursor, composer.result.lnum_current:snapshot())
@@ -892,7 +850,7 @@ t:test("quickfix reads the displayed files after an unpublished producer reset",
       width = 60,
       height = 8,
     })
-    native.await(composer._treeview:ready())
+    treeview.await(composer._treeview:ready())
     local frame = composer._treeview:frame()
     composer:reset_filepaths(root, { "replacement.lua" }, false)
     t.assert_eq(frame:id(), composer._treeview:frame():id())
@@ -920,10 +878,10 @@ t:test("a desynced result rejects hide actions before changing producer visibili
       height = 8,
     })
     local tree = composer._treeview
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     local key = tree:retrieve_uuid(1)
     composer.result:set_lnum_current(1)
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     t.assert_eq(1, composer.result.lnum_current:snapshot())
     tree.view._desynced = true
     retrieve_action(composer, "filetree: mark the node invisible")()
@@ -949,10 +907,10 @@ t:test("confirmation and create keep the displayed root after an unpublished cro
       height = 8,
     })
     local tree = composer._treeview
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     local key = Paths.key(root .. "/dir/a.lua")
     composer.result:set_lnum_current(tree:retrieve_lnum(key))
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     local frame = tree:frame()
     composer:reset_filepaths("/workspace/new-root", { "replacement.lua" }, false)
     t.assert_eq(frame:id(), tree:frame():id())
@@ -961,7 +919,7 @@ t:test("confirmation and create keep the displayed root after an unpublished cro
       confirmed = paths
     end)
     composer:__resolve_confirmation__(key)
-    t.assert_true(vim.deep_equal({ "dir/a.lua" }, confirmed))
+    t.assert_same({ "dir/a.lua" }, confirmed)
     t:patch_table(require("era.m.filetree.jobs"), "capture", function(path)
       captured = path
       return stl.c.Future.resolve({ data = {}, resource = {} })
@@ -993,23 +951,23 @@ t:test("attach and file-location toggle interpret the displayed nodes after prod
       height = 8,
     })
     local tree = composer._treeview
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     local directory, key = Paths.key(root .. "/dir"), Paths.key(root .. "/dir/a.lua")
     composer.result:set_lnum_current(tree:retrieve_lnum(directory))
-    native.await(tree:ready())
+    treeview.await(tree:ready())
     local frame = tree:frame()
     composer:reset_filepaths("/workspace/new-root", { "replacement.lua" }, false)
     attached = {}
     retrieve_action(composer, "filetree: change root")()
     t.assert_eq(directory, composer._uuid_root)
-    t.assert_true(vim.deep_equal({ root .. "/dir" }, attached))
+    t.assert_same({ root .. "/dir" }, attached)
     local toggled
     t:patch_table(tree, "collapse", function(_, uuid, kind, recursive, captured)
       toggled = { uuid, kind, recursive }
       t.assert_true(captured == frame)
     end)
     composer:__toggle_node__(key, false, false)
-    t.assert_true(vim.deep_equal({ key, "toggle", false }, toggled))
+    t.assert_same({ key, "toggle", false }, toggled)
   end, function(_, path)
     attached[#attached + 1] = path
   end)

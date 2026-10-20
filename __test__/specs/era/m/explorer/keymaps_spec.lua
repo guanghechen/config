@@ -1,7 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.keymaps" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.keymaps")
+local explorer = require("__test__.support.explorer")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 
 ---@param widget                        era.m.explorer.Widget
@@ -28,7 +26,7 @@ local function selected(widget, mode, count)
 end
 
 t:test("copy and cut prompt for a path without selection and mark an existing selection", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a.lua")
   fixture.write(path .. "/b.lua")
   local widget = fixture.widget(path)
@@ -61,7 +59,7 @@ t:test("copy and cut prompt for a path without selection and mark an existing se
 end)
 
 t:test("normal mark batches retain key-time targets while frame publication is delayed", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c" }) do
     fixture.write(path .. "/" .. name)
   end
@@ -83,7 +81,7 @@ t:test("normal mark batches retain key-time targets while frame publication is d
     paths[#paths + 1] = session.data:inspect(result.source, node):path()
   end
   table.sort(paths)
-  t.assert_true(vim.deep_equal({ path .. "/a", path .. "/b" }, paths))
+  t.assert_same({ path .. "/a", path .. "/b" }, paths)
   resume()
   view:_poll()
   selected(widget, "select", 2)
@@ -91,7 +89,7 @@ t:test("normal mark batches retain key-time targets while frame publication is d
 end)
 
 t:test("fold batches use preceding commits and a manual cursor move keeps its own target", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   vim.fn.mkdir(path .. "/a/child/leaf", "p")
   vim.fn.mkdir(path .. "/b/nested", "p")
   fixture.write(path .. "/a/child/leaf/file")
@@ -137,7 +135,7 @@ t:test("fold batches use preceding commits and a manual cursor move keeps its ow
 end)
 
 t:test("a rejected mark is reported once and late replies do not reopen a disposed view", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local widget = fixture.widget(path)
   local session, view = widget:context()
@@ -160,7 +158,7 @@ t:test("a rejected mark is reported once and late replies do not reopen a dispos
 end)
 
 t:test("explicit mark keys and Tab preserve a selected item when leaving copy or cut", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   fixture.write(path .. "/b")
   local widget = fixture.widget(path)
@@ -191,7 +189,7 @@ t:test("explicit mark keys and Tab preserve a selected item when leaving copy or
 end)
 
 t:test("double Escape cancels transfer before clearing selection and handles queued copy", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   fixture.write(path .. "/b")
   local widget = fixture.widget(path)
@@ -225,7 +223,7 @@ t:test("double Escape cancels transfer before clearing selection and handles que
 end)
 
 t:test("double Escape preserves a locked transfer instead of cancelling its task", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local widget = fixture.widget(path)
   local session = widget:context()
@@ -246,7 +244,7 @@ t:test("double Escape preserves a locked transfer instead of cancelling its task
 end)
 
 t:test("accepting the copy default duplicates the cursor file and cut uses the supplied path", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a.lua")
   local widget = fixture.widget(path)
   t:patch_table(vim.ui, "input", function(options, done)
@@ -270,7 +268,7 @@ t:test("accepting the copy default duplicates the cursor file and cut uses the s
 end)
 
 t:test("a queued selection change cannot turn a cursor path operation into a selected operation", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   fixture.write(path .. "/b")
   local widget = fixture.widget(path)
@@ -302,7 +300,7 @@ t:test("a queued selection change cannot turn a cursor path operation into a sel
 end)
 
 t:test("help shows effective Treeview keys, refresh aliases and local overrides without changing selection", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/file")
   local widget = fixture.widget(path)
   local _, view = widget:context()
@@ -367,29 +365,18 @@ t:test("help shows effective Treeview keys, refresh aliases and local overrides 
 end)
 
 t:test("leader toggle wins over the Space menu with separately typed keys and after which-key", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/file")
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()
   end)
-  ui:rpc("nvim_ui_attach", 100, 30, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
+  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+  ui:lua(
     [=[
-    local root, path = ...
-    vim.opt.runtimepath:prepend(root)
-    local system = vim.uv.os_uname().sysname
-    local library = system == "Windows_NT" and "yoz.dll" or (system == "Darwin" and "libyoz.dylib" or "libyoz.so")
-    yoz = assert(package.loadlib(root .. "/rust/target/debug/" .. library, "luaopen_yoz"))()
-    stl, dot, era = require("stl"), require("dot"), require("era")
-    dot.path.workspace = function() return path end
-    dot.path.is_git_repo = function() return false end
+    local path = ...
     vim.g.mapleader, vim.o.timeoutlen = " ", 300
     errors, menus, toggles = {}, 0, 0
-    stl.reporter.warn = function(value) errors[#errors + 1] = value.message end
-    stl.reporter.error = stl.reporter.warn
-    stl.reporter.info = function() end
     vim.ui.select = function(_, options, done)
       assert(options.prompt == "Explorer actions")
       menus = menus + 1
@@ -411,53 +398,48 @@ t:test("leader toggle wins over the Space menu with separately typed keys and af
       return current and current:frame() and current:frame():header().row_count == 1
     end))
   ]=],
-    { assert(vim.uv.cwd()), path }
+    path
   )
   for cycle = 1, 2 do
     ui:rpc("nvim_input", "[")
-    t.wait_until(function()
-      return ui:rpc("nvim_exec_lua", "return whichkey.state.keys == '['", {})
+    ui:wait_until(function()
+      return ui:lua("return whichkey.state.keys == '['")
     end, 10000)
     ui:rpc("nvim_input", "i")
-    t.wait_until(function()
-      return ui:rpc("nvim_exec_lua", "return whichkey.state.keys == ''", {})
+    ui:wait_until(function()
+      return ui:lua("return whichkey.state.keys == ''")
     end, 10000)
-    t.assert_eq(0, ui:rpc("nvim_exec_lua", "return vim.fn.maparg(' ', 'n', false, true).nowait", {}))
-    t.assert_eq(1, ui:rpc("nvim_exec_lua", "return vim.fn.maparg('z', 'n', false, true).nowait", {}))
+    t.assert_eq(0, ui:lua("return vim.fn.maparg(' ', 'n', false, true).nowait"))
+    t.assert_eq(1, ui:lua("return vim.fn.maparg('z', 'n', false, true).nowait"))
     ui:rpc("nvim_input", " ")
     vim.wait(40, function()
       return false
     end, 5)
     ui:rpc("nvim_input", "1")
-    t.wait_until(function()
-      return ui:rpc(
-        "nvim_exec_lua",
-        "local expected = ...; return toggles == expected and not widget:isvisible()",
-        { cycle * 2 - 1 }
-      )
+    ui:wait_until(function()
+      return ui:lua("local expected = ...; return toggles == expected and not widget:isvisible()", cycle * 2 - 1)
     end, 10000)
-    t.assert_eq(0, ui:rpc("nvim_exec_lua", "return menus", {}))
+    t.assert_eq(0, ui:lua("return menus"))
     ui:rpc("nvim_input", " 1")
-    t.wait_until(function()
-      return ui:rpc(
-        "nvim_exec_lua",
+    ui:wait_until(function()
+      return ui:lua(
         [=[
         local expected = ...
         local view = widget._views[vim.api.nvim_get_current_tabpage()]
         return toggles == expected and view and view:frame() and view:frame():header().row_count == 1
       ]=],
-        { cycle * 2 }
+        cycle * 2
       )
     end, 10000)
   end
-  ui:rpc("nvim_exec_lua", "menu_started = vim.uv.hrtime()", {})
+  ui:lua("menu_started = vim.uv.hrtime()")
   ui:rpc("nvim_input", " ")
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return menus == 1", {})
+  ui:wait_until(function()
+    return ui:lua("return menus == 1")
   end, 10000)
-  t.assert_true(ui:rpc("nvim_exec_lua", "return menu_at - menu_started >= 200000000", {}))
-  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
-  ui:rpc("nvim_exec_lua", "widget:dispose(); entry.widget = nil; whichkey.state.disable()", {})
+  t.assert_true(ui:lua("return menu_at - menu_started >= 200000000"))
+  t.assert_eq(0, ui:lua("return #errors"))
+  ui:lua("widget:dispose(); entry.widget = nil; whichkey.state.disable()")
 end)
 
 t:run()

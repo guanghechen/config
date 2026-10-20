@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/fileicon_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.fileicon
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.fileicon")
+local t = harness.new()
 
 local Filetype = require("stl.filetype")
 bootstrap.with_runtime(t, {

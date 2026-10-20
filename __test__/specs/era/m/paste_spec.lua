@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/paste_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.paste module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.paste")
+local t = harness.new()
 
 ---@class era.m.paste.test.ICall
 ---@field lines                         string[]
@@ -99,7 +95,7 @@ t:test("joins streamed chunks and commits once", function()
 
   t.assert_eq(1, #calls, "calls")
   t.assert_eq(-1, calls[1].phase, "phase")
-  t.assert_true(vim.deep_equal({ "alpha", "beta", "gamma", "delta" }, calls[1].lines), "lines")
+  t.assert_same({ "alpha", "beta", "gamma", "delta" }, calls[1].lines, "lines")
 end)
 
 t:test("preserves text across arbitrary chunk boundaries", function()
@@ -124,7 +120,7 @@ t:test("new stream replaces abandoned buffered chunks", function()
   paste({ "content" }, 3)
 
   t.assert_eq(1, #calls, "calls")
-  t.assert_true(vim.deep_equal({ "fresh", "content" }, calls[1].lines), "lines")
+  t.assert_same({ "fresh", "content" }, calls[1].lines, "lines")
 end)
 
 t:test("flushes bounded batches with streaming phases", function()
@@ -139,7 +135,7 @@ t:test("flushes bounded batches with streaming phases", function()
   t.assert_eq(1, calls[1].phase, "start phase")
   t.assert_eq(#chunk * 2, #calls[1].lines[1], "flushed bytes")
   t.assert_eq(3, calls[2].phase, "end phase")
-  t.assert_true(vim.deep_equal({ "tail" }, calls[2].lines), "tail")
+  t.assert_same({ "tail" }, calls[2].lines, "tail")
 end)
 
 t:test("propagates cancellation and releases buffered state", function()
@@ -209,7 +205,7 @@ t:test("ignores empty intermediate chunks", function()
   runtime.flush_idle()
   t.assert_eq(1, #calls, "content calls")
   t.assert_eq(1, calls[1].phase, "content phase")
-  t.assert_true(vim.deep_equal({ "content" }, calls[1].lines), "content")
+  t.assert_same({ "content" }, calls[1].lines, "content")
 end)
 
 t:test("emits settled for each idle segment", function()
@@ -231,7 +227,7 @@ t:test("passes non-streaming paste through unchanged", function()
 
   t.assert_eq(1, #calls, "calls")
   t.assert_eq(-1, calls[1].phase, "phase")
-  t.assert_true(vim.deep_equal(lines, calls[1].lines), "lines")
+  t.assert_same(lines, calls[1].lines, "lines")
 end)
 
 t:test("does not emit settled for empty non-streaming paste", function()
@@ -250,7 +246,7 @@ t:test("buffers insert mode streams", function()
 
   t.assert_eq(1, #calls, "calls")
   t.assert_eq(-1, calls[1].phase, "phase")
-  t.assert_true(vim.deep_equal({ "alphabeta" }, calls[1].lines), "lines")
+  t.assert_same({ "alphabeta" }, calls[1].lines, "lines")
 end)
 
 t:test("passes terminal streams through unchanged", function()

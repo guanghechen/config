@@ -1,9 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/nvimbar/component/explorer_spec.lua
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.m.nvimbar.component.explorer")
+local t = harness.new()
 
 ---@class era.m.nvimbar.component.explorer.ITestContext
 ---@field public component              era.m.nvimbar.component.explorer

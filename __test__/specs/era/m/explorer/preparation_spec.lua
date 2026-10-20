@@ -1,14 +1,11 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.preparation" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.preparation")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local Session = require("era.m.explorer.session")
 local jobs = require("era.m.explorer.jobs")
 
 ---@return era.m.explorer.Widget, string
 local function setup()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   assert(vim.uv.fs_mkdir(path .. "/branch", 448))
   local widget = fixture.widget(path)
@@ -64,7 +61,7 @@ t:test("read-only selection uses one snapshot across unrelated source updates", 
   end)
   await(widget._action:auxiliary("copy_path"))
   t.assert_true(changed)
-  t.assert_true(vim.deep_equal({ path .. "/a" }, captured), vim.inspect(captured))
+  t.assert_same({ path .. "/a" }, captured)
   t.assert_false(session:busy())
 end)
 
@@ -111,7 +108,7 @@ t:test("complete read-only selection coexists with an active job", function()
     captured = options.filepaths
   end)
   await(widget._action:auxiliary("copy_path"))
-  t.assert_true(vim.deep_equal({ path .. "/a" }, captured))
+  t.assert_same({ path .. "/a" }, captured)
   t.assert_true(session.job == job)
   t.assert_nil(session._preparation)
   t.assert_true(session.state:status().locked)

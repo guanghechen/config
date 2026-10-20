@@ -60,7 +60,7 @@ function M.setup(t, constructors)
       })
     end,
   })
-  bootstrap.with_era(t, {
+  bootstrap.with_global(t, "era", {
     m = { nvimbar = { Nvimbar = require("era.m.nvimbar.nvimbar"), component = components } },
   })
   return errors

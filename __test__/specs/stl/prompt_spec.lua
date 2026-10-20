@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/prompt_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.prompt module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.prompt")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   stl = { env = { IS_TMUX = false } },
@@ -51,10 +47,6 @@ t:test("tmux window resolver: spawn failure degrades to an empty value", functio
   local resolver = template.args.__TMUX_WINDOW_ID__ ---@type fun(): string
   t.assert_eq("", resolver(), "window id")
 end)
-
-----------------------------------------------------------------------------------------------------
--- substitute tests
-----------------------------------------------------------------------------------------------------
 
 t:test("substitute: empty string returns empty", function()
   t.assert_eq("", prompt.substitute(""))
@@ -214,10 +206,6 @@ Fix the diagnostics in @${__FILE_PATH__} ${__SELECTION_RANGE__}:
   t.assert_eq(expected, prompt.substitute(input))
 end)
 
-----------------------------------------------------------------------------------------------------
--- render tests
-----------------------------------------------------------------------------------------------------
-
 t:test("render: claude keeps slash commands unchanged", function()
   local input = "/commit then /review"
   t.assert_eq("/commit then /review", prompt.render(input, "claude"))
@@ -272,10 +260,6 @@ t:test("render: preserves non-command slashes", function()
   local input = "a/b and /command"
   t.assert_eq("a/b and /prompts:command", prompt.render(input, "codex"))
 end)
-
-----------------------------------------------------------------------------------------------------
--- builtin command tests
-----------------------------------------------------------------------------------------------------
 
 t:test("render: codex preserves builtin /help", function()
   local input = "/help"

@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/buffer_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.git.buffer module
-
 local Future = require("stl.c.future")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.git.buffer")
+local t = harness.new()
 
 ---@param callback fun(...)
 ---@return table
@@ -281,7 +277,7 @@ t:test("only edits that move sign marks force a sign repair", function()
   -- Rewriting lines 15-20 at once keeps their count but moves their marks onto line 21.
   on_lines("lines", 11, 0, 14, 20, 20)
   t.assert_true(current.force_next_update, "a same-count rewrite of several signed lines")
-  t.assert_true(vim.deep_equal({ 15, 21 }, checked), "the line below a rewrite holds its moved marks")
+  t.assert_same({ 15, 21 }, checked, "the line below a rewrite holds its moved marks")
 end)
 
 t:test("an async attach cannot publish after the buffer leaves the repository", function()

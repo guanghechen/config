@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.stl.c.subscribers" ---@type string
-
-local t = require("__test__.support.harness").new("stl.c.subscribers")
-require("__test__.support.bootstrap").with_stl(t, {
+local t = require("__test__.support.harness").new()
+require("__test__.support.bootstrap").with_global(t, "stl", {
   fn = { noop = function() end },
   c = { BatchHandler = require("stl.c.batch_handler") },
 })
@@ -51,7 +48,7 @@ t:test("unsubscribe does not dispose a subscriber shared by another publisher", 
   subscription:unsubscribe()
   first:dispose()
   second:notify("still active")
-  t.assert_true(vim.deep_equal({ "still active" }, values))
+  t.assert_same({ "still active" }, values)
   t.assert_eq(0, disposed)
   second:dispose()
   t.assert_eq(1, disposed)
@@ -79,9 +76,9 @@ t:test("unsubscribe and subscribe inside notification preserve delivery order", 
     end,
   }))
   subscribers:notify(1)
-  t.assert_true(vim.deep_equal({ "first" }, delivered))
+  t.assert_same({ "first" }, delivered)
   subscribers:notify(2)
-  t.assert_true(vim.deep_equal({ "first", "later" }, delivered))
+  t.assert_same({ "first", "later" }, delivered)
   t.assert_eq(1, subscribers:count())
 end)
 

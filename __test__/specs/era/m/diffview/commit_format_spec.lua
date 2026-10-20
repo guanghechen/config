@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/commit_format_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.commit_format")
+local t = harness.new()
 local format = assert(loadfile("lua/era/m/diffview/commit_format.lua"))()
 
 t:test("shortens authors to lazygit's two-column form", function()

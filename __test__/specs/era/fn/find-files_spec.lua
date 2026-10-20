@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.fn.file_picker_prepare" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.fn.file_picker_prepare")
+local t = require("__test__.support.harness").new()
 
 ---@return table
 local function controls()

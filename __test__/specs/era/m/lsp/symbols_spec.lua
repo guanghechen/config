@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/symbols_spec.lua
----@diagnostic disable: undefined-global, invisible
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.lsp.symbols")
+local t = harness.new()
 
 ---@class era.m.lsp.symbols.test.ICall
 ---@field handler                       fun(err: any, result: any, ctx: table): nil

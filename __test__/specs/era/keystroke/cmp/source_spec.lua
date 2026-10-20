@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
-local runtime = require("__test__.fixtures.era.keystroke.cmp.runtime")
+local runtime = require("__test__.support.cmp.runtime")
 runtime.setup()
-local t = harness.new("era.keystroke.cmp.sources")
+local t = harness.new()
 local Context = require("era.keystroke.cmp.context")
 local Path = require("era.keystroke.cmp.source.path")
 local Lsp = require("era.keystroke.cmp.source.lsp")
@@ -94,11 +94,8 @@ t:test("path targets reject invalid UTF-8 origins without invoking native path c
 end)
 
 t:test("directory scans skip invalid UTF-8 file and symlink names while preserving valid entries", function()
-  local directory = vim.fn.tempname()
+  local directory = t:tempdir()
   vim.fn.mkdir(directory .. "/child", "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
   vim.fn.writefile({}, directory .. "/alpha.txt")
   -- APFS refuses names that are not UTF-8; such names only exist on byte-oriented filesystems.
   local written, err = pcall(vim.fn.writefile, {}, directory .. "/a\255.txt")
@@ -125,11 +122,7 @@ t:test("directory scans skip invalid UTF-8 file and symlink names while preservi
 end)
 
 t:test("directory scans include late entries and resolve symlink directories", function()
-  local directory = vim.fn.tempname()
-  vim.fn.mkdir(directory, "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
+  local directory = t:tempdir()
   for index = 1, 225 do
     vim.fn.writefile({}, directory .. "/item" .. index)
   end
@@ -156,11 +149,7 @@ t:test("directory scans include late entries and resolve symlink directories", f
 end)
 
 t:test("cancelled path scans never publish and the same context can retry", function()
-  local directory = vim.fn.tempname()
-  vim.fn.mkdir(directory, "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
+  local directory = t:tempdir()
   t:patch_table(dot.path, "cwd", function()
     return directory
   end)
@@ -183,11 +172,7 @@ t:test("cancelled path scans never publish and the same context can retry", func
 end)
 
 t:test("path documentation reads regular files and skips current FIFO targets", function()
-  local directory = vim.fn.tempname()
-  vim.fn.mkdir(directory, "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
+  local directory = t:tempdir()
   vim.fn.writefile({ "preview body" }, directory .. "/regular.txt")
   vim.fn.writefile({}, directory .. "/changed")
   local created = vim.system({ "mkfifo", directory .. "/pipe" }):wait()
@@ -306,7 +291,7 @@ t:test("nullable completion fields fall back without changing opaque payloads", 
   t.assert_eq(vim.NIL, item.raw.data.list[1], "array null")
   t.assert_eq(vim.NIL, item.raw.command.arguments[1], "command argument null")
   t.assert_eq(vim.NIL, item.raw.extension, "unknown fields remain opaque")
-  t.assert_true(vim.deep_equal(original, raw), "source payload is immutable")
+  t.assert_same(original, raw, "source payload is immutable")
   local Rank = require("era.keystroke.cmp.rank")
   t.assert_eq(item, Rank.filter(context, Rank.prepare({ item }))[1], "candidate remains matchable")
 end)
@@ -404,7 +389,7 @@ t:test("LuaLS resolve promotes its leading signature without changing server pay
   t.assert_eq("\n\n---\n\nParameter documentation.", result.documentation.value)
   t.assert_eq(raw.insertText, result.insertText, "insertion semantics are retained")
   t.assert_eq(resolved.data, result.data, "opaque resolve data is shared")
-  t.assert_true(vim.deep_equal(original, resolved), "resolve response is immutable")
+  t.assert_same(original, resolved, "resolve response is immutable")
   t.assert_eq(nil, raw.detail, "original completion is immutable")
 
   client.server_capabilities.completionProvider.resolveProvider = false

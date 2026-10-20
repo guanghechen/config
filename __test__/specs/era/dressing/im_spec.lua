@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/im_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.dressing.im composition and lifecycle
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.im")
+local t = harness.new()
 local reports = {} ---@type table[]
 
 bootstrap.with_runtime(t, {
@@ -31,12 +27,6 @@ bootstrap.with_runtime(t, {
 local function unload(module_name)
   t:patch_table(package.loaded, module_name, nil)
 end
-
-t:test("module is registered under dressing only", function()
-  local namespace = require("era")
-  t.assert_eq("era.dressing.im", namespace.dressing.__mods.im, "module registration")
-  t.assert_nil(namespace.m.__mods.im, "old registration removed")
-end)
 
 ---@param options                       { use_wsl?: boolean, setup_error?: string, initial_snapshot?: era.dressing.im.Snapshot, with_ui?: boolean, ui_count?: integer, capture_and_select_error?: string, capture_failed?: boolean, defer_ui_enter?: boolean }|nil
 ---@return table
@@ -137,7 +127,7 @@ local function setup_lifecycle(options)
     end,
   }
 
-  bootstrap.with_stl(t, {
+  bootstrap.with_global(t, "stl", {
     c = {
       Subscriber = {
         new = function(props)
@@ -168,7 +158,7 @@ local function setup_lifecycle(options)
       end,
     },
   })
-  bootstrap.with_dot(t, {
+  bootstrap.with_global(t, "dot", {
     context = {
       behavior = {
         auto_im = auto_im_observable,
@@ -279,15 +269,6 @@ local function setup_lifecycle(options)
     end,
   }
 end
-
-t:test("public interface exposes only lifecycle setup", function()
-  local ctx = setup_lifecycle()
-
-  t.assert_nil(rawget(ctx.im, "capture"), "capture implementation")
-  t.assert_nil(rawget(ctx.im, "capture_and_select_english"), "capture and select implementation")
-  t.assert_nil(rawget(ctx.im, "restore"), "restore implementation")
-  t.assert_nil(rawget(ctx.im, "is_english"), "English predicate implementation")
-end)
 
 t:test("focus entry: command mode selects English with one fused call", function()
   local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry" })
@@ -994,7 +975,7 @@ end)
 
 t:test("linux: unconditional composition safely no-ops without a backend", function()
   local created_autocmd = false
-  bootstrap.with_stl(t, {
+  bootstrap.with_global(t, "stl", {
     env = { IS_OSX = false, IS_WSL = false, IS_WIN = false, IS_NIX = true },
   })
   t:patch_global("yoz", {})

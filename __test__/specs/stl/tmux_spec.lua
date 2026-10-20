@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/tmux_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.tmux module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.tmux")
+local t = harness.new()
 
 t:patch_table(vim.env, "TMUX", "/tmp/nvim-test-tmux,1,0")
 local schedule_count = 0 ---@type integer

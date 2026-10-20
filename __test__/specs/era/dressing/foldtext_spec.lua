@@ -1,11 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/foldtext_spec.lua
----@diagnostic disable: undefined-global
 -- cspell:ignore foldtextresult multibyte
 
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.foldtext")
+local t = harness.new()
 local module_name = "era.dressing.foldtext" ---@type string
 
 bootstrap.with_runtime(t, {

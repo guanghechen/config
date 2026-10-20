@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/term/widget_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.term.widget process failure handling
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.term.widget")
+local t = harness.new()
 local reports = {} ---@type table[]
 
 local Observable = {}

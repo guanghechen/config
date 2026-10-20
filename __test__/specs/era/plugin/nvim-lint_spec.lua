@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/plugin/nvim-lint_spec.lua
----@diagnostic disable: undefined-global, invisible
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.plugin.nvim-lint")
+local t = harness.new()
 
 local buffer_counter = 0
 
@@ -94,7 +91,7 @@ local function setup()
     end,
   }
 
-  bootstrap.with_stl(t, {
+  bootstrap.with_global(t, "stl", {
     c = {
       Subscriber = {
         new = function(props)
@@ -151,7 +148,7 @@ local function setup()
       end,
     },
   })
-  bootstrap.with_dot(t, {
+  bootstrap.with_global(t, "dot", {
     context = {
       lsp = {
         spellcheck = {
@@ -191,7 +188,7 @@ local function setup()
       N_BUF_DISABLE_LINT = "__test_disable_lint",
     },
   })
-  bootstrap.with_yoz(t, {
+  bootstrap.with_global(t, "yoz", {
     path = {
       is_absolute = function()
         return false

@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ark.vendor.statuscolumn" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("ark.vendor.statuscolumn")
+local t = harness.new()
 local expression = "%!v:lua.era.dressing.statuscolumn.statuscolumn()"
 
 ---@return integer

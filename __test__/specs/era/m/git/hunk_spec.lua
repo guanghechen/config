@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/hunk_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local diff = require("era.m.git.diff")
 local hunk = assert(loadfile("lua/era/m/git/hunk.lua"))()
 
-local t = harness.new("era.m.git.hunk")
+local t = harness.new()
 
 t:test("signs: a following deletion does not rewrite a change sign", function()
   local hunks = diff.run_diff({ "a", "b", "c", "" }, { "A", "b", "" })

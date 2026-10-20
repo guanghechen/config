@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.diffview.native_expansion" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.diffview.native_expansion")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local panels = require("era.m.diffview.pane.tree")
 local commits = require("era.m.diffview.pane.commits")
 local changes = require("era.m.diffview.pane.changes")
@@ -34,7 +31,7 @@ local function rows(owner, count)
   t.wait_until(function()
     return owner:linecount() == count
   end, 5000, "native expansion did not reach the surface")
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   t.assert_eq(count, vim.api.nvim_buf_line_count(owner.view.bufnr))
 end
 
@@ -61,7 +58,7 @@ local function history(files)
     state = state,
     layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr },
   }
-  native.await(commits_view.render_commits(ctx))
+  treeview.await(commits_view.render_commits(ctx))
   return ctx, state:get_tree("commits")
 end
 
@@ -72,7 +69,7 @@ t:test("commit signs survive native attachment, resume and replacement windows",
   t.assert_eq("yes:1", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
   t.assert_eq(1, vim.fn.sign_getplaced(bufnr, { group = dot.var.sign.GROUP_DIFFVIEW_COMMITS })[1].signs[1].lnum)
   owner:unmount(true)
-  native.await(commits_view.render_commits(ctx))
+  treeview.await(commits_view.render_commits(ctx))
   t.assert_eq("yes:1", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
   owner:unmount(true)
   ctx.layout.commits_winnr = window(bufnr)
@@ -83,7 +80,7 @@ t:test("commit signs survive native attachment, resume and replacement windows",
     end
   end)
   vim.api.nvim_win_set_buf(winnr, replacement)
-  native.await(commits_view.render_commits(ctx))
+  treeview.await(commits_view.render_commits(ctx))
   t.assert_eq("yes:1", vim.api.nvim_get_option_value("signcolumn", { win = ctx.layout.commits_winnr }))
   t.assert_eq(1, vim.fn.sign_getplaced(bufnr, { group = dot.var.sign.GROUP_DIFFVIEW_COMMITS })[1].signs[1].lnum)
 end)
@@ -99,13 +96,13 @@ t:test("workspace History preserves its single spacer through native publication
   end)
   state:set_commits({ { hash = "history", abbrev_hash = "history", author = "A", date = 0, message = "history" } })
   local ctx = { layout = layout.history, state = state }
-  native.await(commits_view.render_commits(ctx))
+  treeview.await(commits_view.render_commits(ctx))
   local winnr = layout.history.commits_winnr
   t.assert_eq("no", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
   t.assert_eq(" ", vim.api.nvim_get_option_value("statuscolumn", { win = winnr }))
   workspace_view.hide_history(layout)
   workspace_view.show_history(layout)
-  native.await(commits_view.render_commits(ctx))
+  treeview.await(commits_view.render_commits(ctx))
   winnr = layout.history.commits_winnr
   t.assert_eq("no", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
   t.assert_eq(" ", vim.api.nvim_get_option_value("statuscolumn", { win = winnr }))
@@ -136,7 +133,7 @@ t:test("commit and directory expansion reuse imported records and publish native
   t.assert_eq(1, imports, "the first expansion materializes cached files once")
   imports = 0
   local source = owner.source
-  native.await(owner.view:set_cursor(assert(owner:retrieve_lnum(panels.key("commit:review", "src", true)))))
+  treeview.await(owner.view:set_cursor(assert(owner:retrieve_lnum(panels.key("commit:review", "src", true)))))
   commits_action.collapse(ctx)
   rows(owner, 2)
   commits_action.expand(ctx)
@@ -174,7 +171,7 @@ t:test("standalone file loading defers inline records until the first inline exp
   t.wait_until(function()
     return loaded
   end, 5000)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   t.assert_eq(1, owner:linecount(), "loading records preserves the collapsed commit")
   t.assert_eq(2, owner._data:source():len(), "the standalone pane does not prepare unused inline files")
   commits_action.expand(ctx)
@@ -225,7 +222,7 @@ t:test("a hidden Commits pane can materialize and restore its logical expansion"
   t.assert_true(owner:data("commit:review").files_loaded)
   local bufnr = commits.create_buffer()
   ctx.layout.commits_bufnr, ctx.layout.commits_winnr = bufnr, window(bufnr)
-  native.await(commits_view.render_commits(ctx))
+  treeview.await(commits_view.render_commits(ctx))
   rows(owner, 3)
   t.assert_eq("src/hidden.lua", commits.get_item_at_line(bufnr, 3).entry.filepath)
 end)
@@ -250,7 +247,7 @@ for _, all in ipairs({ false, true }) do
     t.wait_until(function()
       return publication and publication:is_done() and ctx.state._materialization._pending == 0
     end, 5000)
-    native.await(owner:ready())
+    treeview.await(owner:ready())
     t.assert_eq(1, owner:linecount())
     t.assert_false(ctx.state:is_commit_expanded("review"))
     t.assert_false(owner:data("commit:review").files_loaded)
@@ -286,7 +283,7 @@ t:test("Changes actions update expansion without rebuilding either pane's record
       },
     },
   }
-  native.await(workspace_view.render_changes(ctx))
+  treeview.await(workspace_view.render_changes(ctx))
   local owner = state:get_tree("staged")
   local imports, import = 0, owner._import
   t:patch_table(owner, "_import", function(self, ...)

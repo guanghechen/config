@@ -1,9 +1,7 @@
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("ark.vendor.whichkey")
+local t = harness.new()
 
 for _, vendor in ipairs({ "neovim", "neovide" }) do
   t:test(vendor .. " includes deferred surround mappings in the initial whichkey tree", function()

@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/commentstring_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.commentstring")
+local t = harness.new()
 local module_name = "era.dressing.commentstring" ---@type string
 
 ---@param line                          string

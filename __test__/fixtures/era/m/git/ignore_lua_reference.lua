@@ -47,7 +47,6 @@ local function refresh_ignore_mtime()
   ignored_mtime_initialized = true
 end
 
-
 ---@param filepath                      string
 ---@return boolean
 function M.is_ignored(filepath)
@@ -66,7 +65,6 @@ function M.is_ignored(filepath)
 
   return false
 end
-
 
 ---@param filepath                      string
 ---@param workspace                     string
@@ -296,6 +294,5 @@ function M.preload_ignored(filepaths, token)
     end
   end)
 end
-
 
 return M

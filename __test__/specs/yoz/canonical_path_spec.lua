@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/yoz/canonical_path_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local native = require("yoz")
 
-local t = harness.new("yoz.canonical_path")
+local t = harness.new()
 
 t:test("from_os_path delegates canonical normalization", function()
   local cases = {

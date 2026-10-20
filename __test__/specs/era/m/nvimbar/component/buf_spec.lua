@@ -2,7 +2,7 @@ local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local nvim_fn = require("stl.nvim.fn")
 local refresh_bufs = require("dot.tab").refresh_bufs
-local t = harness.new("era.m.nvimbar.component.buf")
+local t = harness.new()
 
 local function setup(count, selected)
   local state = {
@@ -148,7 +148,7 @@ t:test("resizing uses an isolated snapshot without rereading mutable buffer data
   t.assert_false(wide:find("E 9", 1, true) ~= nil)
   t.assert_false(wide:find("", 1, true) ~= nil)
   t.assert_eq(wide, vim.api.nvim_eval_statusline(hltext, { maxwidth = 10000 }).str)
-  t.assert_true(vim.deep_equal(saved, snapshot), "layout does not mutate the snapshot")
+  t.assert_same(saved, snapshot, "layout does not mutate the snapshot")
 end)
 
 t:test("selection, disambiguation, diagnostics and click targets survive lazy formatting", function()

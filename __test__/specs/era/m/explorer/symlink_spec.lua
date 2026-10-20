@@ -1,12 +1,10 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.symlink" ---@type string
-
-local support = require("__test__.support.explorer").new("era.m.explorer.symlink")
+local explorer = require("__test__.support.explorer")
+local support = require("__test__.support.explorer").new()
 local t, await = support.t, support.await
 
 ---@return string
 local function directory()
-  local root = support.directory()
+  local root = t:tempdir()
   vim.fn.mkdir(root .. "/target/nested", "p")
   vim.fn.mkdir(root .. "/container", "p")
   support.write(root .. "/target/nested/file.lua")
@@ -145,21 +143,11 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
   t:defer(function()
     ui:close()
   end)
-  ui:rpc("nvim_ui_attach", 100, 30, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
+  explorer.start_ui(ui, { width = 100, height = 30, path = root })
+  ui:lua(
     [=[
-    local root, path = ...
-    vim.opt.runtimepath:prepend(root)
-    local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-    yoz = assert(package.loadlib(root .. "/rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))()
-    stl, dot, era = require("stl"), require("dot"), require("era")
-    dot.path.workspace = function() return path end
-    dot.path.is_git_repo = function() return false end
+    local path = ...
     errors, links, icons, names = {}, {}, {}, {}
-    stl.reporter.warn = function(value) errors[#errors + 1] = value.message end
-    stl.reporter.error = function(value) errors[#errors + 1] = value.message end
-    stl.reporter.info = function() end
     local namespace = vim.api.nvim_create_namespace("era.explorer")
     local mark = vim.api.nvim_buf_set_extmark
     vim.api.nvim_buf_set_extmark = function(bufnr, ns, row, col, options)
@@ -186,17 +174,14 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
     view:set_cursor(1)
     vim.api.nvim_win_call(view.winnr, function() vim.cmd("normal! zt") end)
   ]=],
-    { assert(vim.uv.cwd()), root }
+    root
   )
   local deadline = vim.uv.hrtime() + 10000000000
   local visible = false
   repeat
     ui:rpc("nvim_command", "redraw!")
-    visible = ui:rpc(
-      "nvim_exec_lua",
-      "return links['dir-link'] ~= nil and links['file-link.lua'] ~= nil and links['broken-link'] ~= nil",
-      {}
-    )
+    visible =
+      ui:lua("return links['dir-link'] ~= nil and links['file-link.lua'] ~= nil and links['broken-link'] ~= nil")
     if visible then
       break
     end
@@ -205,16 +190,10 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
     end, 10)
   until vim.uv.hrtime() >= deadline
   t.assert_true(visible, "all symlink markers must become visible")
-  t.assert_true(ui:rpc("nvim_exec_lua", "return links['plain.lua'] == nil and links.target == nil", {}))
-  t.assert_true(
-    ui:rpc("nvim_exec_lua", "return icons['file-link.lua'][1] == stl.fileicon.get_file_icon('file-link.lua')", {})
-  )
+  t.assert_true(ui:lua("return links['plain.lua'] == nil and links.target == nil"))
+  t.assert_true(ui:lua("return icons['file-link.lua'][1] == stl.fileicon.get_file_icon('file-link.lua')"))
   t.assert_false(
-    ui:rpc(
-      "nvim_exec_lua",
-      "return table.concat(vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)):find('', 1, true) ~= nil",
-      {}
-    )
+    ui:lua("return table.concat(vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)):find('', 1, true) ~= nil")
   )
   for _, case in ipairs({
     { git = 0, expected = "m_ex_symlink" },
@@ -226,8 +205,7 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
     { git = 4, staged = true, unstaged = true, expected = "m_ex_symlink_unstaged" },
     { git = 1, staged = true, unstaged = true, expected = "m_ex_symlink_unmerged" },
   }) do
-    local rendered = ui:rpc(
-      "nvim_exec_lua",
+    local rendered = ui:lua(
       [=[
       local case = ...
       local frame = view:frame()
@@ -242,7 +220,7 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
       vim.cmd("redraw!")
       return { links = links, names = names }
     ]=],
-      { case }
+      case
     )
     for _, name in ipairs({ "dir-link", "file-link.lua", "broken-link" }) do
       local options = rendered.links[name]
@@ -257,8 +235,8 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
       )
     end
   end
-  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
-  ui:rpc("nvim_exec_lua", "widget:dispose()", {})
+  t.assert_eq(0, ui:lua("return #errors"))
+  ui:lua("widget:dispose()")
 end)
 
 t:run()

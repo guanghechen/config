@@ -1,13 +1,10 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.navigation" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.navigation")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local Future = require("stl.c.future")
 local native_async = require("ux.treeview.async")
 
 t:test("typed parent navigation consumes every intent before the view catches up", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   vim.fn.mkdir(path .. "/one/two/three", "p")
   fixture.write(path .. "/one/two/three/file")
   local widget = fixture.widget(path .. "/one/two/three")
@@ -18,7 +15,7 @@ t:test("typed parent navigation consumes every intent before the view catches up
 end)
 
 t:test("fold input preserves parent steps queued behind a pending navigation", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   vim.fn.mkdir(path .. "/one/two/three", "p")
   fixture.write(path .. "/one/two/three/file")
   local widget = fixture.widget(path .. "/one/two/three")
@@ -54,7 +51,7 @@ t:test("fold input preserves parent steps queued behind a pending navigation", f
 end)
 
 t:test("typed annotation navigation preserves repeated steps in both directions", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c", "d" }) do
     fixture.write(path .. "/" .. name)
   end
@@ -93,7 +90,7 @@ end)
 
 t:test("new cursor input and closing a pane discard delayed annotation steps", function()
   for _, close in ipairs({ false, true }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     for _, name in ipairs({ "a", "b", "c", "d" }) do
       fixture.write(path .. "/" .. name)
     end
@@ -127,7 +124,7 @@ t:test("new cursor input and closing a pane discard delayed annotation steps", f
 end)
 
 t:test("fixture cursor movement cannot replay over a newer reveal before publication", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/sub", 448))
   fixture.write(path .. "/sub/file")
   fixture.write(path .. "/a")
@@ -157,7 +154,7 @@ t:test("fixture cursor movement cannot replay over a newer reveal before publica
 end)
 
 t:test("read-only navigation reobserves a path after overlapping publications", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   fixture.write(path .. "/b")
   local widget = fixture.widget(path)
@@ -181,7 +178,7 @@ end)
 
 t:test("superseded or disposed navigation cannot retry a delayed stale observation", function()
   for _, dispose in ipairs({ false, true }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/a")
     fixture.write(path .. "/b")
     local widget = fixture.widget(path)
@@ -219,7 +216,7 @@ end)
 
 t:test("navigation bounds stale retries and preserves other resolve failures", function()
   for _, case in ipairs({ { "Stale", 3 }, { "NotFound", 1 }, { "ProviderError", 1 } }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/a")
     local widget = fixture.widget(path)
     local session = widget._session

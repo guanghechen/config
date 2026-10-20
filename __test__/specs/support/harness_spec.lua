@@ -1,15 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/support/harness_spec.lua
----@diagnostic disable: undefined-global, invisible
---- Test for __test__.support.harness module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("__test__.support.harness")
+local t = harness.new()
 
 ---@param callback                      fun(inner: __test__.support.Harness)
 ---@return __test__.support.harness.IResult
 local function run_inner(callback)
-  local inner = harness.new("inner")
+  local inner = harness.new()
   inner:test("case", function()
     callback(inner)
   end)
@@ -18,7 +14,7 @@ end
 
 t:test("run: returns result without exiting", function()
   local result = run_inner(function() end)
-  t.assert_eq("inner", result.name, "suite name")
+  t.assert_eq(t.name, result.name, "suites are named after their script")
   t.assert_eq(1, result.passed, "passed count")
   t.assert_eq(0, result.failed, "failed count")
 end)
@@ -98,7 +94,7 @@ t:test("cleanup errors preserve the original failure and do not skip other clean
 end)
 
 t:test("an empty suite fails and still disposes suite resources", function()
-  local inner = harness.new("empty")
+  local inner = harness.new()
   local cleaned = false ---@type boolean
   inner:defer(function()
     cleaned = true
@@ -109,7 +105,7 @@ t:test("an empty suite fails and still disposes suite resources", function()
 end)
 
 t:test("suite resources survive cases and are disposed after the final case", function()
-  local inner = harness.new("suite cleanup")
+  local inner = harness.new()
   local live = true ---@type boolean
   inner:defer(function()
     live = false
@@ -151,6 +147,53 @@ t:test("a cleanup failure after skip still fails the case", function()
   t.assert_eq(1, result.failed, "failed count")
   t.assert_eq(0, result.skipped, "skipped count")
   t.assert_eq(1, #result.failures, "cleanup diagnostic only")
+end)
+
+---@param done                          boolean
+---@param error_value                   ?string
+---@param result                        ?any
+---@return table
+local function future(done, error_value, result)
+  return {
+    is_done = function()
+      return done
+    end,
+    is_failed = function()
+      return error_value ~= nil
+    end,
+    get_error = function()
+      return error_value
+    end,
+    get_result = function()
+      return result
+    end,
+  }
+end
+
+t:test("await returns a settled result and fails on a failed or unsettled future", function()
+  t.assert_eq(7, t.await(future(true, nil, 7)))
+  local ok, err = pcall(t.await, future(true, "boom"))
+  t.assert_false(ok, "failed future")
+  t.assert_true(tostring(err):find("boom", 1, true) ~= nil, tostring(err))
+  t.assert_false(pcall(t.await, future(false), 20), "unsettled future")
+end)
+
+t:test("assert_same compares structurally and shows both sides", function()
+  t.assert_same({ a = { 1, 2 } }, { a = { 1, 2 } })
+  local ok, err = pcall(t.assert_same, { 1 }, { 2 }, "values")
+  t.assert_false(ok, "different values")
+  t.assert_true(tostring(err):find("values: expected { 1 }, got { 2 }", 1, true) ~= nil, tostring(err))
+end)
+
+t:test("tempdir lives under the system temporary directory until its case ends", function()
+  local path ---@type string
+  local result = run_inner(function(inner)
+    path = inner:tempdir()
+    vim.fn.writefile({ "x" }, path .. "/file")
+    t.assert_true(vim.startswith(path, assert(vim.uv.fs_realpath(vim.uv.os_tmpdir()))), path)
+  end)
+  t.assert_eq(1, result.passed)
+  t.assert_nil(vim.uv.fs_stat(path), "removed with its case")
 end)
 
 t:run()

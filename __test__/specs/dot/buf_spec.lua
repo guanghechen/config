@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/buf_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.buf")
+local t = harness.new()
 
 ---@param located_bufnr                 integer|nil
 ---@param exists                        boolean

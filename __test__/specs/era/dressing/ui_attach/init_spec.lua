@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/ui_attach/init_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
 local module_name = "era.dressing.ui_attach"
-local t = harness.new(module_name .. ".init")
+local t = harness.new()
 
 ---@class era.dressing.ui_attach.init.test.IRuntime
 ---@field callback                       fun(event: string, ...): boolean|nil
@@ -162,7 +159,6 @@ local function setup(initially_enabled)
   t:patch_global("era", require("era"))
   t:patch_table(package.loaded, module_name, nil)
   t.assert_eq(module_name, era.dressing.__mods.ui_attach, "module registration")
-  t.assert_nil(era.m.__mods.ui_attach, "old registration removed")
   runtime.module = era.dressing.ui_attach
   runtime.module.dressing()
   return runtime
@@ -184,7 +180,7 @@ t:test("dressing attaches once and preserves queued UI events and the escape bin
 
   runtime.callback("msg_show", "echo", {}, false, false, false, 2, "")
   runtime.timer.callback()
-  t.assert_true(vim.deep_equal({ "msg_show:1", "msg_show:2" }, runtime.events), "pending events remain ordered")
+  t.assert_same({ "msg_show:1", "msg_show:2" }, runtime.events, "pending events remain ordered")
   t.assert_eq(1, runtime.flush_calls, "message flush count")
 
   runtime.enabled = false

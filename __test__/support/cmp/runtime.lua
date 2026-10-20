@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.keystroke.cmp.runtime" ---@type string
+local __module_name__ = "__test__.support.cmp.runtime" ---@type string
 
 local M = {}
 
@@ -8,7 +8,8 @@ local M = {}
 function M.setup(baseline)
   if baseline ~= nil then
     vim.opt.runtimepath:prepend(baseline)
-    package.preload.yoz = assert(package.loadlib(baseline .. "/bin/nix.yoz.so", "luaopen_yoz"))
+    local library = baseline .. "/lua/yoz." .. (vim.fn.has("win32") == 1 and "dll" or "so")
+    package.preload.yoz = assert(package.loadlib(library, "luaopen_yoz"))
   end
   _G.yoz = require("yoz")
   _G.stl = { env = { IS_NIX = vim.fn.has("unix") == 1 } }

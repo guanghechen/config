@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.opening" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.opening")
+local fixture = require("__test__.support.explorer").new()
 local Widget = require("era.m.explorer.widget")
 local Session = require("era.m.explorer.session")
 local t = fixture.t
@@ -17,7 +14,7 @@ local function root_is(widget, path)
 end
 
 t:test("cold focus_cwd keeps the constructor workspace as the gw destination", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/sub", 448))
   fixture.write(path .. "/sub/file")
   t:patch_table(dot.path, "workspace", function()
@@ -42,7 +39,7 @@ t:test("cold focus_cwd keeps the constructor workspace as the gw destination", f
 end)
 
 t:test("a missing constructor workspace does not block another root and can be recreated", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   local workspace, target = path .. "/missing", path .. "/target"
   assert(vim.uv.fs_mkdir(target, 448))
   fixture.write(target .. "/file")
@@ -63,7 +60,7 @@ end)
 
 t:test("an observed workspace keeps its resolved path after obsolete parent components disappear", function()
   for _, replace in ipairs({ false, true }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     for _, name in ipairs({ "unused", "workspace", "other" }) do
       assert(vim.uv.fs_mkdir(path .. "/" .. name, 448))
     end
@@ -97,7 +94,7 @@ t:test("cold child replacement retains a workspace observed through filesystem p
     if linked and stl.env.IS_WIN then
       break
     end
-    local path = assert(vim.uv.fs_realpath(fixture.directory()))
+    local path = t:tempdir()
     local prefix = path
     if linked then
       assert(vim.uv.fs_mkdir(path .. "/outside", 448))
@@ -131,9 +128,9 @@ end)
 
 t:test("parent traversal after a child symlink cannot rebind workspace to an external ancestor", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("needs Unix symbolic links and aliases")
   end
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   for _, name in ipairs({ "workspace", "outside", "outside/leaf", "outside/other" }) do
     assert(vim.uv.fs_mkdir(path .. "/" .. name, 448))
   end
@@ -153,7 +150,7 @@ end)
 
 t:test("replacement roots discard queued navigation and late opening completion", function()
   for _, success in ipairs({ false, true }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     for _, name in ipairs({ "one", "two" }) do
       assert(vim.uv.fs_mkdir(path .. "/" .. name, 448))
       fixture.write(path .. "/" .. name .. "/file")
@@ -204,7 +201,7 @@ t:test("replacement roots discard queued navigation and late opening completion"
 end)
 
 t:test("a shared-data workspace renamed after resolution retains its observed occurrence", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/child", 448))
   fixture.write(path .. "/child/file")
   local owner = fixture.widget(path)
@@ -236,7 +233,7 @@ t:test("a shared-data workspace renamed after resolution retains its observed oc
 end)
 
 t:test("custom roots and shared data fix their own workspace while a shared session retains its owner", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "custom", "independent", "destination" }) do
     assert(vim.uv.fs_mkdir(path .. "/" .. name, 448))
     fixture.write(path .. "/" .. name .. "/file")
@@ -272,7 +269,7 @@ t:test("one failed opening reports once across views, display changes and reveal
   t:patch_table(stl.reporter, "warn", function(value)
     reports[#reports + 1] = value.message
   end)
-  local path = fixture.directory() .. "/missing"
+  local path = t:tempdir() .. "/missing"
   local widget = Widget.new({ name = "opening-reports", root = path })
   t:defer(function()
     widget:dispose()
@@ -337,7 +334,7 @@ t:test("late opening failures cannot report or reclaim a newer opening or dispos
       end
       return open(...)
     end)
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/file")
     local widget = Widget.new({ name = "obsolete-opening-" .. tostring(dispose), root = path })
     t:defer(function()
@@ -368,7 +365,7 @@ t:test("a view attachment failure after a successful opening still reports", fun
   t:patch_table(stl.reporter, "warn", function(value)
     reports[#reports + 1] = value.message
   end)
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/file")
   local widget = Widget.new({ name = "attachment-error", root = path })
   t:defer(function()

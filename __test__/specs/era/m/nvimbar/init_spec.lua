@@ -2,7 +2,7 @@ local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local Component = require("era.m.nvimbar.component")
 local c = require("era.m.nvimbar").component
-local t = harness.new("era.m.nvimbar.init")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   stl = { reporter = {

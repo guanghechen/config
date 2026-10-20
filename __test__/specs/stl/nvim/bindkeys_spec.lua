@@ -1,6 +1,6 @@
 local harness = require("__test__.support.harness")
 local fn = require("stl.nvim.fn")
-local t = harness.new("stl.nvim.bindkeys")
+local t = harness.new()
 
 t:test("noremap false permits remapping and explicit overrides take priority", function()
   t:defer(function()

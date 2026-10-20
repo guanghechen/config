@@ -1,23 +1,13 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.view.result_locations" ---@type string
-
-local t = require("__test__.support.harness").new("era.view.result_locations")
+local t = require("__test__.support.harness").new()
 
 t:test("location spans are prepared for the viewport and metadata-only updates reach both surfaces", function()
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()
   end)
-  ui:rpc("nvim_ui_attach", 120, 30, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
-    [[
-    local root = ...
-    vim.opt.runtimepath:prepend(root)
-    package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-    package.cpath = root .. "/lua/?.so;" .. package.cpath
-    require("ark.bootstrap").setup()
-    native = require("__test__.support.result_tree")
+  ui:start({ width = 120, height = 30, runtime = "ark" })
+  ui:lua([[
+    treeview = require("__test__.support.treeview")
     local Paths = require("era.view.result_paths")
     local Files = require("era.view.result_files")
     spans, errors, formats = {}, {}, 0
@@ -47,14 +37,14 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
       })
     end
     request = {mode="tree", rootuuid=Paths.key("/location-viewport")}
-    native.publish(owner, request)
+    treeview.publish(owner, request)
     assert(formats == 0, "offscreen records must not prepare highlight spans")
     local frame = owner:frame()
     assert(frame:node(frame:source():id("match:1000")).fields.highlights == nil)
     main_bufnr = vim.api.nvim_create_buf(false, true)
     local winnr = vim.api.nvim_open_win(main_bufnr, false, {relative="editor",row=0,col=0,width=50,height=6})
     owner:mount(winnr, main_bufnr, function() end)
-    native.await(owner:ready())
+    treeview.await(owner:ready())
     preview = era.view.PickerPreview.new({
       name="location preview", diagnostic_scope="location preview", relative_number=false, keymaps={},
       tree=function() return {owner=owner,key=file_key,foldempty=false,title="locations"} end,
@@ -62,32 +52,20 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
     })
     preview:create_win({border="none",winhighlight=""},{row=0,col=60,width=50,height=6})
     preview:mark_content_dirty()
-  ]],
-    { assert(vim.uv.cwd()) }
-  )
-  t.wait_until(function()
-    return ui:rpc(
-      "nvim_exec_lua",
-      [[
+  ]])
+  ui:wait_until(function()
+    return ui:lua([[
       local other = preview:get_bufnr()
       return spans[main_bufnr] and spans[main_bufnr][1] and spans[other] and spans[other][0] or false
-    ]],
-      {}
-    )
+    ]])
   end, 5000)
-  local initial = ui:rpc(
-    "nvim_exec_lua",
-    "return {formats=formats,main=spans[main_bufnr][1],preview=spans[preview:get_bufnr()][0]}",
-    {}
-  )
+  local initial = ui:lua("return {formats=formats,main=spans[main_bufnr][1],preview=spans[preview:get_bufnr()][0]}")
   t.assert_true(initial.formats < 500, "only visible locations should be formatted")
   t.assert_eq("LocationOld", initial.main.highlight)
   t.assert_eq(6, initial.main.last - initial.main.col)
   t.assert_eq("LocationOld", initial.preview.highlight)
 
-  ui:rpc(
-    "nvim_exec_lua",
-    [[
+  ui:lua([[
     previous = owner:retrieve("match:1")
     revision = owner:frame():header().data_revision
     owner.entries["match:1"].highlights = {{coll=1,colr=4,hlname="LocationNew"}}
@@ -100,45 +78,30 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
       return prepare(...)
     end
     publication = owner:publish(vim.deepcopy(request))
-  ]],
-    {}
-  )
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return release ~= nil", {})
+  ]])
+  ui:wait_until(function()
+    return ui:lua("return release ~= nil")
   end, 5000)
-  t.assert_false(
-    ui:rpc("nvim_exec_lua", "return publication:is_done()", {}),
-    "publication waits for viewport preparation"
-  )
-  ui:rpc("nvim_exec_lua", "released=true; release(function() end)", {})
-  t.wait_until(function()
-    return ui:rpc(
-      "nvim_exec_lua",
-      [[
+  t.assert_false(ui:lua("return publication:is_done()"), "publication waits for viewport preparation")
+  ui:lua("released=true; release(function() end)")
+  ui:wait_until(function()
+    return ui:lua([[
       return publication:is_done() and spans[main_bufnr][1].highlight == "LocationNew"
         and spans[preview:get_bufnr()][0].highlight == "LocationNew"
-    ]],
-      {}
-    )
+    ]])
   end, 5000)
-  local result = ui:rpc(
-    "nvim_exec_lua",
-    [[
+  local result = ui:lua([[
     assert(not publication:is_failed(), publication:get_error())
     return {main=spans[main_bufnr][1],preview=spans[preview:get_bufnr()][0],
       unchanged=owner:frame():header().data_revision == revision,old=previous.highlights[1].hlname,errors=errors}
-  ]],
-    {}
-  )
+  ]])
   t.assert_true(result.unchanged, "location spans need no native record mutation")
   t.assert_eq("LocationOld", result.old, "the prior metadata snapshot remains immutable")
   t.assert_eq(3, result.main.last - result.main.col)
   t.assert_eq(3, result.preview.last - result.preview.col)
   t.assert_eq(0, #result.errors, vim.inspect(result.errors))
 
-  ui:rpc(
-    "nvim_exec_lua",
-    [[
+  ui:lua([[
     local prepare = preview._tree_view._options.prepare_frame
     preview._tree_view._options.prepare_frame = function(...)
       return prepare(...):then_(function(commit)
@@ -153,38 +116,28 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
     owner.entries["match:1"].text = "updated needle"
     owner:invalidate()
     publication = owner:publish(vim.deepcopy(request))
-  ]],
-    {}
-  )
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return publication:is_done() and release_preview ~= nil", {})
+  ]])
+  ui:wait_until(function()
+    return ui:lua("return publication:is_done() and release_preview ~= nil")
   end, 5000)
   t.assert_true(
-    ui:rpc(
-      "nvim_exec_lua",
-      [[
+    ui:lua([[
     local shown = preview._tree_view:frame():header().data_revision
     assert(shown ~= owner:frame():header().data_revision)
     return owner._versions[shown] ~= nil
-  ]],
-      {}
-    ),
+  ]]),
     "a lagging preview retains its displayed metadata"
   )
-  ui:rpc(
-    "nvim_exec_lua",
-    [[
+  ui:lua([[
     spans[preview:get_bufnr()] = {}
     vim.api.nvim__redraw({win=preview:get_winnr(),valid=false})
-  ]],
-    {}
-  )
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return spans[preview:get_bufnr()][0] ~= nil", {})
+  ]])
+  ui:wait_until(function()
+    return ui:lua("return spans[preview:get_bufnr()][0] ~= nil")
   end, 5000)
-  ui:rpc("nvim_exec_lua", "preview_released=true; release_preview()", {})
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return vim.tbl_count(owner._versions) == 1", {})
+  ui:lua("preview_released=true; release_preview()")
+  ui:wait_until(function()
+    return ui:lua("return vim.tbl_count(owner._versions) == 1")
   end, 5000, "obsolete preview metadata is reclaimed after its replacement publishes")
 end)
 

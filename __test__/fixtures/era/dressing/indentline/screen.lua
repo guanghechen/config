@@ -7,7 +7,7 @@ package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
-local t = harness.new("era.dressing.indentline.screen.fixture")
+local t = harness.new()
 t:patch_global("stl", require("stl"))
 require("ark.bootstrap").setup_patches()
 local enabled = stl.c.Observable.from_value(true)

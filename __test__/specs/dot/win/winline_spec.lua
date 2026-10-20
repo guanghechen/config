@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/win/winline_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.win.winline")
+local t = harness.new()
 local enums = assert(loadfile("lua/stl/e.lua"))()
 
 local function new_history()

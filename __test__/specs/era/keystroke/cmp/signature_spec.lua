@@ -1,10 +1,7 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.keystroke.cmp.signature" ---@type string
-
 local harness = require("__test__.support.harness")
-local runtime = require("__test__.fixtures.era.keystroke.cmp.runtime")
+local runtime = require("__test__.support.cmp.runtime")
 runtime.setup()
-local t = harness.new("era.keystroke.cmp.signature")
+local t = harness.new()
 local Context = require("era.keystroke.cmp.context")
 local Signature = require("era.keystroke.cmp.signature")
 
@@ -125,7 +122,7 @@ t:test("active signatures use ContentChange for ordinary input and per-client re
     t.assert_eq(3, context.triggerKind, "ContentChange")
     t.assert_nil(context.triggerCharacter)
     t.assert_eq(true, context.isRetrigger)
-    t.assert_true(vim.deep_equal(original, context.activeSignatureHelp), "complete response is preserved")
+    t.assert_same(original, context.activeSignatureHelp, "complete response is preserved")
   end
   state:update("foo(a,")
   state:wait(6)
@@ -139,7 +136,7 @@ t:test("active signatures use ContentChange for ordinary input and per-client re
     t.assert_eq(1, state.requests[index].params.context.triggerKind, "manual retrigger remains Invoked")
     t.assert_nil(state.requests[index].params.context.triggerCharacter)
   end
-  t.assert_true(vim.deep_equal(original, state.response), "rendering never rewrites protocol fields")
+  t.assert_same(original, state.response, "rendering never rewrites protocol fields")
 end)
 
 t:test("cancelled signature responses cannot reopen the window", function()

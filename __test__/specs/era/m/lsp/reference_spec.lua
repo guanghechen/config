@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/reference_spec.lua
----@diagnostic disable: undefined-global, invisible
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.m.lsp.reference")
+local t = harness.new()
 
 ---@param filepath                      string
 ---@param lines                         string[]
@@ -168,7 +165,7 @@ t:test("references: deduplicates overlapping clients and renders unique location
 
   local bufnr_result = create_buffer("", { "" })
   local view = resolved_picker._treeview
-  require("__test__.support.result_tree").publish(view, { rootuuid = resolved_picker._uuid_root })
+  require("__test__.support.treeview").publish(view, { rootuuid = resolved_picker._uuid_root })
   local rendered_ids = {} ---@type table<string, true>
   for lnum = 1, view:linecount(), 1 do
     local id = assert(view:retrieve_uuid(lnum)) ---@type string

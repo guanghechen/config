@@ -1,15 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/c/cancellation_token_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.c.CancellationToken module
-
 local harness = require("__test__.support.harness")
 local CancellationToken = require("stl.c.cancellation_token")
 
-local t = harness.new("stl.c.cancellation_token")
-
-----------------------------------------------------------------------------------------------------
--- Constructor tests
-----------------------------------------------------------------------------------------------------
+local t = harness.new()
 
 t:test("new: creates token with cancelled=false", function()
   local token = CancellationToken.new()
@@ -32,10 +24,6 @@ t:test("new: works with nil props", function()
   t.assert_false(token:is_cancelled(), "should create valid token")
 end)
 
-----------------------------------------------------------------------------------------------------
--- is_cancelled tests
-----------------------------------------------------------------------------------------------------
-
 t:test("is_cancelled: returns false before cancel", function()
   local token = CancellationToken.new()
   t.assert_false(token:is_cancelled(), "should be false")
@@ -46,10 +34,6 @@ t:test("is_cancelled: returns true after cancel", function()
   token:cancel()
   t.assert_true(token:is_cancelled(), "should be true")
 end)
-
-----------------------------------------------------------------------------------------------------
--- cancel tests
-----------------------------------------------------------------------------------------------------
 
 t:test("cancel: triggers registered callbacks", function()
   local token = CancellationToken.new()
@@ -156,10 +140,6 @@ t:test("cancel: a self-unsubscribing callback does not hide its neighbours", fun
   t.assert_eq("job-1,job-2", table.concat(aborted, ","), "both abort callbacks run")
 end)
 
-----------------------------------------------------------------------------------------------------
--- on_cancel tests
-----------------------------------------------------------------------------------------------------
-
 t:test("on_cancel: returns unsubscribable", function()
   local token = CancellationToken.new()
   local sub = token:on_cancel(function() end)
@@ -206,10 +186,6 @@ t:test("on_cancel: returns noop unsubscribe if already cancelled", function()
   sub:unsubscribe()
 end)
 
-----------------------------------------------------------------------------------------------------
--- throw_if_cancelled tests
-----------------------------------------------------------------------------------------------------
-
 t:test("throw_if_cancelled: does nothing if not cancelled", function()
   local token = CancellationToken.new()
   -- Should not throw
@@ -233,10 +209,6 @@ t:test("throw_if_cancelled: throws if cancelled", function()
   end
   t.assert_true(threw, "should throw error")
 end)
-
-----------------------------------------------------------------------------------------------------
--- IDisposable interface tests
-----------------------------------------------------------------------------------------------------
 
 t:test("isdisposed: returns false before cancel", function()
   local token = CancellationToken.new()

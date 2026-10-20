@@ -1,10 +1,6 @@
----@diagnostic disable: invisible
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.searcher.composer.filetree" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.searcher.composer.filetree")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local Paths = require("era.view.result_paths")
 local root = "/workspace/searcher-actions"
 
@@ -62,8 +58,8 @@ local function fixture(on_attached)
     width = 60,
     height = 12,
   })
-  native.await(composer.result.draw())
-  native.await(tree:ready())
+  treeview.await(composer.result.draw())
+  treeview.await(tree:ready())
   composer._published_search_inputs = composer:__snapshot_search_inputs__()
   t.assert_true(composer:__is_search_projection_current__())
   t.assert_true(tree.view:_valid())
@@ -114,7 +110,7 @@ t:test("AI location targets retain the captured file and coordinates after an un
   local key = Paths.key(root .. "/dir/a.lua")
   local location = tree:retrieve(key).locations[1]
   composer.result:set_lnum_current(tree:retrieve_lnum(location.locationuuid))
-  native.await(tree:ready())
+  treeview.await(tree:ready())
   local targets
   t:patch_table(era.fn, "add_locations_to_ai", function(value)
     targets = value
@@ -165,16 +161,13 @@ t:test("replacement uses the active Visual endpoint and only the captured contai
   vim.cmd.normal({ args = { "V" }, bang = true })
   vim.api.nvim_win_set_cursor(winnr, { first, 0 })
   replace()
-  t.assert_true(
-    vim.deep_equal({ root .. "/dir/a.lua" }, replaced),
-    "an active file does not replace the earlier container"
-  )
+  t.assert_same({ root .. "/dir/a.lua" }, replaced, "an active file does not replace the earlier container")
   replaced = {}
   vim.api.nvim_win_set_cursor(winnr, { last, 0 })
   vim.cmd.normal({ args = { "V" }, bang = true })
   vim.api.nvim_win_set_cursor(winnr, { directory, 0 })
   replace()
-  t.assert_true(vim.deep_equal({ root .. "/dir/a.lua", root .. "/dir/b.lua" }, replaced))
+  t.assert_same({ root .. "/dir/a.lua", root .. "/dir/b.lua" }, replaced)
   t.assert_eq("n", vim.fn.mode())
 end)
 
@@ -207,7 +200,7 @@ t:test("confirmation resolves relative paths against the displayed root after a 
   end)
   composer:reset_filepaths("/workspace/new-root", "/workspace/new-root", { "replacement.lua" })
   composer:__resolve_confirmation__(key)
-  t.assert_true(vim.deep_equal({ "dir/a.lua" }, confirmed))
+  t.assert_same({ "dir/a.lua" }, confirmed)
 end)
 
 t:test("attach and toggle retain the displayed file identity and locations after replacement", function()
@@ -218,20 +211,20 @@ t:test("attach and toggle retain the displayed file identity and locations after
   local tree = composer._treeview
   local key = Paths.key(root .. "/dir/a.lua")
   composer.result:set_lnum_current(tree:retrieve_lnum(key))
-  native.await(tree:ready())
+  treeview.await(tree:ready())
   local frame = tree:frame()
   composer:reset_filepaths("/workspace/new-root", "/workspace/new-root", { "replacement.lua" })
   attached = {}
   action(composer, "searcher: change root")()
   t.assert_eq(key, composer._uuid_root)
-  t.assert_true(vim.deep_equal({ root .. "/dir/a.lua" }, attached))
+  t.assert_same({ root .. "/dir/a.lua" }, attached)
   local toggled
   t:patch_table(tree, "collapse", function(_, uuid, kind, recursive, captured)
     toggled = { uuid, kind, recursive }
     t.assert_true(captured == frame)
   end)
   composer:__toggle_node__(key, false, false)
-  t.assert_true(vim.deep_equal({ key, "toggle", false }, toggled))
+  t.assert_same({ key, "toggle", false }, toggled)
 end)
 
 t:test("parent attachment uses the displayed root ancestry after a pending root replacement", function()
@@ -240,13 +233,13 @@ t:test("parent attachment uses the displayed root ancestry after a pending root 
     attached[#attached + 1] = path
   end)
   composer._uuid_root = Paths.key(root .. "/dir")
-  native.await(composer.result.draw())
-  native.await(composer._treeview:ready())
+  treeview.await(composer.result.draw())
+  treeview.await(composer._treeview:ready())
   composer:reset_filepaths("/workspace/new-root", "/workspace/new-root", { "replacement.lua" })
   attached = {}
   action(composer, "searcher: change root to parent")()
   t.assert_eq(Paths.key(root), composer._uuid_root)
-  t.assert_true(vim.deep_equal({ root }, attached))
+  t.assert_same({ root }, attached)
 end)
 
 t:test("expansion actions typed ahead act on the tree their earlier actions produce", function()
@@ -259,21 +252,8 @@ t:test("expansion actions typed ahead act on the tree their earlier actions prod
   local dir = Paths.key(root .. "/dir")
   local open, collapse = action(composer, "searcher: open"), action(composer, "searcher: collapse")
   composer.result:set_lnum_current(tree:retrieve_lnum(dir))
-  native.await(tree:ready())
-  for _, case in ipairs({
-    { name = "collapse+open", actions = { collapse, open }, expanded = true },
-    { name = "collapse", actions = { collapse }, expanded = false },
-    { name = "open+collapse", actions = { open, collapse }, expanded = false },
-    { name = "open+collapse+open", actions = { open, collapse, open }, expanded = true },
-  }) do
-    for _, run in ipairs(case.actions) do
-      run()
-    end
-    t.wait_until(function()
-      return not tree:collapse_pending() and tree:expanded(dir) == case.expanded
-    end, 5000, case.name .. " must leave dir " .. (case.expanded and "expanded" or "collapsed"))
-    native.await(tree:ready())
-  end
+  treeview.await(tree:ready())
+  treeview.assert_typed_ahead(t, tree, dir, open, collapse)
   t.assert_eq(0, #errors, vim.inspect(errors))
 end)
 

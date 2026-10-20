@@ -1,9 +1,7 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.git_files.preview" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.git_files.preview")
+local t = require("__test__.support.harness").new()
 local support = require("__test__.support.git_files")
+local git = require("__test__.support.git")
 
 ---@return table
 local function fixture()
@@ -18,7 +16,7 @@ local function fixture()
   end)
   local root = support.repo(t)
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "only-staged" })
-  support.git(root, { "add", "dir/mixed.lua" })
+  git.run(root, { "add", "dir/mixed.lua" })
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "only-staged", "only-unstaged" })
   local state = support.widget(t, root)
   state.widget._preview_enabled = false
@@ -83,15 +81,15 @@ end)
 t:test("untracked diff accepts Git's exit status one and preserves the index", function()
   local state = fixture()
   support.write(state.root, "new file.lua", { "untracked-line" })
-  support.await(state.widget:refresh(false))
+  t.await(state.widget:refresh(false))
   support.ready(state.widget)
-  local before = support.git(state.root, { "ls-files", "--stage", "-z" })
+  local before = git.run(state.root, { "ls-files", "--stage", "-z" })
   support.cursor(state.widget, "unstaged", "new file.lua")
   state.widget:toggle_preview()
   t.wait_until(function()
     return contains(state.widget.preview, "untracked-line")
   end, 5000)
-  t.assert_eq(before, support.git(state.root, { "ls-files", "--stage", "-z" }))
+  t.assert_eq(before, git.run(state.root, { "ls-files", "--stage", "-z" }))
 end)
 
 t:test("late preview output cannot replace a newer target or write after closing", function()

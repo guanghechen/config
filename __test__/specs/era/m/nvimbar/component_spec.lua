@@ -2,7 +2,7 @@ local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local Component = require("era.m.nvimbar.component")
 local Future = require("stl.c.future")
-local t = harness.new("era.m.nvimbar.component")
+local t = harness.new()
 
 local errors = {}
 bootstrap.with_runtime(t, {
@@ -71,7 +71,7 @@ t:test("queued requests collapse to the latest context", function()
   component:request(context("two"))
   component:request(context("three"))
   wait_status(component, "ready")
-  t.assert_true(vim.deep_equal({ "three" }, seen))
+  t.assert_same({ "three" }, seen)
   t.assert_eq(3, component.snapshot.version)
 end)
 
@@ -101,10 +101,10 @@ t:test("running requests reject stale results and rerun only the latest request"
     return #jobs == 2
   end, 1000)
   t.assert_eq("three", jobs[2].value)
-  t.assert_true(vim.deep_equal({}, published))
+  t.assert_same({}, published)
   jobs[2].resolve({ text = "three", hltext = "three" })
   wait_status(component, "ready")
-  t.assert_true(vim.deep_equal({ "three" }, published))
+  t.assert_same({ "three" }, published)
 end)
 
 t:test("a slow component does not hold another component's result", function()
@@ -537,7 +537,7 @@ t:test("a cancellation callback can request new work without losing its context 
   component:cancel()
   t.assert_eq("queued", component.status)
   wait_status(component, "ready")
-  t.assert_true(vim.deep_equal({ "old", "new" }, acquired))
+  t.assert_same({ "old", "new" }, acquired)
   t.assert_true(tokens[1]:is_cancelled())
   t.assert_eq("new", component:format(context("new"), 20))
 end)
@@ -555,10 +555,10 @@ t:test("cancelling queued work permits a fresh request before the old slot drain
   component:cancel()
   component:request(context("new"))
   wait_status(component, "ready")
-  t.assert_true(vim.deep_equal({ "new" }, acquired))
+  t.assert_same({ "new" }, acquired)
   component:request(context("again"))
   wait_status(component, "ready")
-  t.assert_true(vim.deep_equal({ "new", "again" }, acquired))
+  t.assert_same({ "new", "again" }, acquired)
 end)
 
 t:test("failed refreshes preserve the last snapshot and recover on a new request", function()

@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.paths" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.paths")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 
 ---@param widget                        era.m.explorer.Widget
@@ -17,9 +14,9 @@ end
 
 t:test("copy and move defaults keep Unix filename components intact", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("a backslash is a path separator on Windows")
   end
-  local base = assert(vim.uv.fs_realpath(fixture.directory()))
+  local base = t:tempdir()
   local literal = base .. "/work\\space"
   assert(vim.uv.fs_mkdir(literal, 448))
   assert(vim.uv.fs_mkdir(base .. "/work", 448))
@@ -51,9 +48,9 @@ end)
 
 t:test("path and directory transfers preserve raw names and create missing parents", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("needs raw Unix filename bytes")
   end
-  local base = assert(vim.uv.fs_realpath(fixture.directory()))
+  local base = t:tempdir()
   local source = base .. "/source\\name.txt"
   fixture.write(source)
   local widget = fixture.widget(base)
@@ -79,9 +76,9 @@ end)
 
 t:test("filesystem resolves parent components after following a directory link", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("needs Unix symbolic links and aliases")
   end
-  local base = assert(vim.uv.fs_realpath(fixture.directory()))
+  local base = t:tempdir()
   assert(vim.uv.fs_mkdir(base .. "/physical", 448))
   assert(vim.uv.fs_mkdir(base .. "/physical/inner", 448))
   assert(vim.uv.fs_symlink("physical/inner", base .. "/link"))
@@ -104,9 +101,9 @@ for _, case in ipairs({
 }) do
   t:test(case.kind .. " resolves a terminal directory component in " .. case.target, function()
     if case.link and stl.env.IS_WIN then
-      return
+      t.skip("needs Unix symbolic links and aliases")
     end
-    local base = require("ux.filetree.path").from_os(assert(vim.uv.fs_realpath(fixture.directory())))
+    local base = require("ux.filetree.path").from_os(t:tempdir())
     assert(vim.uv.fs_mkdir(base .. "/source", 448))
     fixture.write(base .. "/source/a")
     assert(vim.uv.fs_mkdir(base .. "/dest", 448))
@@ -133,9 +130,9 @@ end
 
 t:test("default reveal and Copy Path preserve a Unix backslash name", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("a backslash is a path separator on Windows")
   end
-  local base = assert(vim.uv.fs_realpath(fixture.directory()))
+  local base = t:tempdir()
   local source = base .. "/a\\b.txt"
   fixture.write(source)
   local widget = fixture.widget(base)

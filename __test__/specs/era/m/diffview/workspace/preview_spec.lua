@@ -1,5 +1,3 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/workspace/preview_spec.lua
----@diagnostic disable: undefined-global
 -- cspell:ignore unchanges worktree
 
 local bootstrap = require("__test__.support.bootstrap")
@@ -7,7 +5,8 @@ local Future = require("stl.c.future")
 local harness = require("__test__.support.harness")
 local staging = require("era.m.git.staging")
 
-local t = harness.new("era.m.diffview.workspace.preview")
+local t = harness.new()
+local git = require("__test__.support.git")
 local show_untracked = true
 
 bootstrap.with_global(t, "stl", {
@@ -109,13 +108,6 @@ t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
 ---@param predicate                     fun(): boolean
 local function wait(predicate)
   t.wait_until(predicate, 5000, "async preview operation")
-end
-
----@param repo                          string
----@param ...                           string
----@return vim.SystemCompleted
-local function git(repo, ...)
-  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
 end
 
 ---@return integer left_winnr
@@ -721,236 +713,194 @@ t:test("staged pair drains its sibling before propagating a load exception", fun
 end)
 
 t:test("index preview disambiguates a digit-colon filename from an unmerged stage", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  vim.fn.writefile({ "digit-colon" }, repo .. "/2:foo")
+  vim.fn.writefile({ "plain" }, repo .. "/foo")
+  git.run(repo, { "add", "--all" })
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "digit-colon" }, repo .. "/2:foo")
-    vim.fn.writefile({ "plain" }, repo .. "/foo")
-    t.assert_eq(0, git(repo, "add", "--all").code, "git add")
+  t:patch_table(dot.path, "workspace", function()
+    return repo
+  end)
+  t:patch_table(stl.git, "info", assert(loadfile("lua/stl/git/info.lua"))())
 
-    t:patch_table(dot.path, "workspace", function()
-      return repo
-    end)
-    t:patch_table(stl.git, "info", assert(loadfile("lua/stl/git/info.lua"))())
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local selector = production_util.staged_object("2:foo") ---@type string
+  local outcome = nil ---@type boolean|nil
+  stl.async.run(function()
+    outcome = pane.load_git_content(selector, bufnr)
+  end)
+  wait(function()
+    return outcome ~= nil
+  end)
 
-    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-    local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-    local selector = production_util.staged_object("2:foo") ---@type string
+  local expected_object = vim.trim(git.run(repo, { "rev-parse", ":./2:foo" })) ---@type string
+  t.assert_eq(":./2:foo", selector, "explicit stage-zero selector")
+  t.assert_true(outcome, "index preview loaded")
+  t.assert_eq("digit-colon", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "exact index content")
+  t.assert_eq(expected_object, vim.b[bufnr].git_object_name, "authoritative index object")
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("revision preview caches real blobs and observes HEAD changes", function()
+  local repo = git.repo(t)
+  vim.fn.writefile({ "base" }, repo .. "/f.txt")
+  git.run(repo, { "add", "--", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
+  local base_hash = vim.trim(git.run(repo, { "rev-parse", "HEAD" })) ---@type string
+
+  t:patch_table(dot.path, "workspace", function()
+    return repo
+  end)
+  local production_info = assert(loadfile("lua/stl/git/info.lua"))()
+  local get_show_blob = production_info.get_show_blob
+  local blob_calls = 0 ---@type integer
+  production_info.get_show_blob = function(...)
+    blob_calls = blob_calls + 1
+    return get_show_blob(...)
+  end
+  t:patch_table(stl.git, "info", production_info)
+
+  local writes = 0 ---@type integer
+  local replace_buffer_text = staging.replace_buffer_text
+  t:patch_table(staging, "replace_buffer_text", function(...)
+    writes = writes + 1
+    return replace_buffer_text(...)
+  end)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local head_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local commit_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local function load(object, bufnr)
     local outcome = nil ---@type boolean|nil
     stl.async.run(function()
-      outcome = pane.load_git_content(selector, bufnr)
+      outcome = pane.load_git_content(object, bufnr)
     end)
     wait(function()
       return outcome ~= nil
     end)
-
-    local expected_object = vim.trim(git(repo, "rev-parse", ":./2:foo").stdout or "") ---@type string
-    t.assert_eq(":./2:foo", selector, "explicit stage-zero selector")
-    t.assert_true(outcome, "index preview loaded")
-    t.assert_eq("digit-colon", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "exact index content")
-    t.assert_eq(expected_object, vim.b[bufnr].git_object_name, "authoritative index object")
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
+    return outcome
   end
-end)
 
-t:test("revision preview caches real blobs and observes HEAD changes", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  t.assert_true(load("HEAD:f.txt", head_bufnr), "initial HEAD load")
+  t.assert_true(load("HEAD:f.txt", head_bufnr), "cached HEAD load")
+  t.assert_eq(1, blob_calls, "cached HEAD skips blob read")
+  t.assert_eq(1, writes, "cached HEAD skips buffer write")
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "base" }, repo .. "/f.txt")
-    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "git add")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "commit base"
-    )
-    local base_hash = vim.trim(git(repo, "rev-parse", "HEAD").stdout or "") ---@type string
+  vim.fn.writefile({ "next" }, repo .. "/f.txt")
+  git.run(repo, { "commit", "-qam", "next" })
+  t.assert_true(load("HEAD:f.txt", head_bufnr), "changed HEAD load")
+  t.assert_eq(2, blob_calls, "changed HEAD reads blob")
+  t.assert_eq(2, writes, "changed HEAD rewrites buffer")
+  t.assert_eq("next\n", staging.from_buffer(head_bufnr).text, "latest HEAD content")
 
-    t:patch_table(dot.path, "workspace", function()
-      return repo
-    end)
-    local production_info = assert(loadfile("lua/stl/git/info.lua"))()
-    local get_show_blob = production_info.get_show_blob
-    local blob_calls = 0 ---@type integer
-    production_info.get_show_blob = function(...)
-      blob_calls = blob_calls + 1
-      return get_show_blob(...)
-    end
-    t:patch_table(stl.git, "info", production_info)
+  local commit_object = base_hash .. ":f.txt" ---@type string
+  t.assert_true(load(commit_object, commit_bufnr), "initial commit load")
+  t.assert_true(load(commit_object, commit_bufnr), "cached commit load")
+  t.assert_eq(3, blob_calls, "cached commit skips blob read")
+  t.assert_eq(3, writes, "cached commit skips buffer write")
+  t.assert_eq("base\n", staging.from_buffer(commit_bufnr).text, "commit content")
+  t.assert_eq(
+    vim.trim(git.run(repo, { "rev-parse", commit_object })),
+    vim.b[commit_bufnr].git_content_object_name,
+    "commit blob identity"
+  )
 
-    local writes = 0 ---@type integer
-    local replace_buffer_text = staging.replace_buffer_text
-    t:patch_table(staging, "replace_buffer_text", function(...)
-      writes = writes + 1
-      return replace_buffer_text(...)
-    end)
-
-    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-    local head_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-    local commit_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-    local function load(object, bufnr)
-      local outcome = nil ---@type boolean|nil
-      stl.async.run(function()
-        outcome = pane.load_git_content(object, bufnr)
-      end)
-      wait(function()
-        return outcome ~= nil
-      end)
-      return outcome
-    end
-
-    t.assert_true(load("HEAD:f.txt", head_bufnr), "initial HEAD load")
-    t.assert_true(load("HEAD:f.txt", head_bufnr), "cached HEAD load")
-    t.assert_eq(1, blob_calls, "cached HEAD skips blob read")
-    t.assert_eq(1, writes, "cached HEAD skips buffer write")
-
-    vim.fn.writefile({ "next" }, repo .. "/f.txt")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qam", "next").code,
-      "commit next"
-    )
-    t.assert_true(load("HEAD:f.txt", head_bufnr), "changed HEAD load")
-    t.assert_eq(2, blob_calls, "changed HEAD reads blob")
-    t.assert_eq(2, writes, "changed HEAD rewrites buffer")
-    t.assert_eq("next\n", staging.from_buffer(head_bufnr).text, "latest HEAD content")
-
-    local commit_object = base_hash .. ":f.txt" ---@type string
-    t.assert_true(load(commit_object, commit_bufnr), "initial commit load")
-    t.assert_true(load(commit_object, commit_bufnr), "cached commit load")
-    t.assert_eq(3, blob_calls, "cached commit skips blob read")
-    t.assert_eq(3, writes, "cached commit skips buffer write")
-    t.assert_eq("base\n", staging.from_buffer(commit_bufnr).text, "commit content")
-    t.assert_eq(
-      vim.trim(git(repo, "rev-parse", commit_object).stdout or ""),
-      vim.b[commit_bufnr].git_content_object_name,
-      "commit blob identity"
-    )
-
-    vim.api.nvim_buf_delete(head_bufnr, { force = true })
-    vim.api.nvim_buf_delete(commit_bufnr, { force = true })
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
-  end
+  vim.api.nvim_buf_delete(head_bufnr, { force = true })
+  vim.api.nvim_buf_delete(commit_bufnr, { force = true })
 end)
 
 t:test("real staged preview reuses captured identities without resolver processes", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  vim.fn.writefile({ "base" }, repo .. "/f.txt")
+  git.run(repo, { "add", "--", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
+  vim.fn.writefile({ "staged" }, repo .. "/f.txt")
+  git.run(repo, { "add", "--", "f.txt" })
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "base" }, repo .. "/f.txt")
-    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "add base")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "commit base"
-    )
-    vim.fn.writefile({ "staged" }, repo .. "/f.txt")
-    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "add staged change")
-
-    local head_object = vim.trim(git(repo, "rev-parse", "HEAD:f.txt").stdout or "") ---@type string
-    local index_object = vim.trim(git(repo, "rev-parse", ":f.txt").stdout or "") ---@type string
-    local resolution_calls = 0 ---@type integer
-    local blob_calls = 0 ---@type integer
-    local active_blob_calls = 0 ---@type integer
-    local max_active_blob_calls = 0 ---@type integer
-    local production_info = assert(loadfile("lua/stl/git/info.lua"))()
-    local get_object_name = production_info.get_object_name
-    local get_file_info = production_info.get_file_info
-    local get_show_blob = production_info.get_show_blob
-    production_info.get_object_name = function(...)
-      resolution_calls = resolution_calls + 1
-      return get_object_name(...)
-    end
-    production_info.get_file_info = function(...)
-      resolution_calls = resolution_calls + 1
-      return get_file_info(...)
-    end
-    production_info.get_show_blob = function(...)
-      blob_calls = blob_calls + 1
-      active_blob_calls = active_blob_calls + 1
-      max_active_blob_calls = math.max(max_active_blob_calls, active_blob_calls)
-      local future = get_show_blob(...)
-      future:finally(function()
-        active_blob_calls = active_blob_calls - 1
-      end)
-      return future
-    end
-
-    t:patch_table(dot.path, "workspace", function()
-      return repo
+  local head_object = vim.trim(git.run(repo, { "rev-parse", "HEAD:f.txt" })) ---@type string
+  local index_object = vim.trim(git.run(repo, { "rev-parse", ":f.txt" })) ---@type string
+  local resolution_calls = 0 ---@type integer
+  local blob_calls = 0 ---@type integer
+  local active_blob_calls = 0 ---@type integer
+  local max_active_blob_calls = 0 ---@type integer
+  local production_info = assert(loadfile("lua/stl/git/info.lua"))()
+  local get_object_name = production_info.get_object_name
+  local get_file_info = production_info.get_file_info
+  local get_show_blob = production_info.get_show_blob
+  production_info.get_object_name = function(...)
+    resolution_calls = resolution_calls + 1
+    return get_object_name(...)
+  end
+  production_info.get_file_info = function(...)
+    resolution_calls = resolution_calls + 1
+    return get_file_info(...)
+  end
+  production_info.get_show_blob = function(...)
+    blob_calls = blob_calls + 1
+    active_blob_calls = active_blob_calls + 1
+    max_active_blob_calls = math.max(max_active_blob_calls, active_blob_calls)
+    local future = get_show_blob(...)
+    future:finally(function()
+      active_blob_calls = active_blob_calls - 1
     end)
-    t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
-      return repo .. "/" .. filepath
+    return future
+  end
+
+  t:patch_table(dot.path, "workspace", function()
+    return repo
+  end)
+  t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
+    return repo .. "/" .. filepath
+  end)
+  t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
+    local bufnr = vim.fn.bufnr(name) ---@type integer
+    return bufnr ~= -1 and bufnr or nil
+  end)
+  t:patch_table(stl.git, "info", production_info)
+
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local left_winnr, right_winnr = create_windows()
+  ---@type era.m.diffview.IFileEntry
+  local entry = {
+    filepath = "f.txt",
+    stage_type = "staged",
+    status = "M",
+    old_object_name = head_object,
+    new_object_name = index_object,
+  }
+  local function open_preview()
+    local done = false ---@type boolean
+    stl.async.run(function()
+      pane.open_diff_entry({
+        left_winnr = left_winnr,
+        right_winnr = right_winnr,
+        entry = entry,
+        preserve_view = true,
+      })
+      done = true
     end)
-    t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
-      local bufnr = vim.fn.bufnr(name) ---@type integer
-      return bufnr ~= -1 and bufnr or nil
+    wait(function()
+      return done
     end)
-    t:patch_table(stl.git, "info", production_info)
+  end
 
-    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-    local left_winnr, right_winnr = create_windows()
-    ---@type era.m.diffview.IFileEntry
-    local entry = {
-      filepath = "f.txt",
-      stage_type = "staged",
-      status = "M",
-      old_object_name = head_object,
-      new_object_name = index_object,
-    }
-    local function open_preview()
-      local done = false ---@type boolean
-      stl.async.run(function()
-        pane.open_diff_entry({
-          left_winnr = left_winnr,
-          right_winnr = right_winnr,
-          entry = entry,
-          preserve_view = true,
-        })
-        done = true
-      end)
-      wait(function()
-        return done
-      end)
+  open_preview()
+  open_preview()
+
+  local left_bufnr = vim.api.nvim_win_get_buf(left_winnr) ---@type integer
+  local right_bufnr = vim.api.nvim_win_get_buf(right_winnr) ---@type integer
+  t.assert_eq(0, resolution_calls, "captured identities eliminate resolver processes")
+  t.assert_eq(2, blob_calls, "second preview reuses both immutable buffers")
+  t.assert_eq(2, max_active_blob_calls, "cold staged blobs load concurrently")
+  t.assert_eq("base", vim.api.nvim_buf_get_lines(left_bufnr, 0, 1, false)[1], "HEAD snapshot")
+  t.assert_eq("staged", vim.api.nvim_buf_get_lines(right_bufnr, 0, 1, false)[1], "index snapshot")
+
+  close_windows(left_winnr, right_winnr)
+  for _, bufnr in ipairs({ left_bufnr, right_bufnr, vim.fn.bufnr(repo .. "/f.txt") }) do
+    if bufnr ~= -1 and vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
     end
-
-    open_preview()
-    open_preview()
-
-    local left_bufnr = vim.api.nvim_win_get_buf(left_winnr) ---@type integer
-    local right_bufnr = vim.api.nvim_win_get_buf(right_winnr) ---@type integer
-    t.assert_eq(0, resolution_calls, "captured identities eliminate resolver processes")
-    t.assert_eq(2, blob_calls, "second preview reuses both immutable buffers")
-    t.assert_eq(2, max_active_blob_calls, "cold staged blobs load concurrently")
-    t.assert_eq("base", vim.api.nvim_buf_get_lines(left_bufnr, 0, 1, false)[1], "HEAD snapshot")
-    t.assert_eq("staged", vim.api.nvim_buf_get_lines(right_bufnr, 0, 1, false)[1], "index snapshot")
-
-    close_windows(left_winnr, right_winnr)
-    for _, bufnr in ipairs({ left_bufnr, right_bufnr, vim.fn.bufnr(repo .. "/f.txt") }) do
-      if bufnr ~= -1 and vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
   end
 end)
 
@@ -984,81 +934,55 @@ t:test("parallel preview does not publish buffers after either Git content load 
 end)
 
 t:test("conflict preview compares ours with the working tree", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t, { "-b", "main" })
+  vim.fn.writefile({ "base" }, repo .. "/f.txt")
+  git.run(repo, { "add", "--", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
+  git.run(repo, { "branch", "theirs" })
+  vim.fn.writefile({ "ours" }, repo .. "/f.txt")
+  git.run(repo, { "commit", "-am", "ours", "-q" })
+  git.run(repo, { "checkout", "-q", "theirs" })
+  vim.fn.writefile({ "theirs" }, repo .. "/f.txt")
+  git.run(repo, { "commit", "-am", "theirs", "-q" })
+  git.run(repo, { "checkout", "-q", "main" })
+  t.assert_eq(1, git.system(repo, { "merge", "theirs" }).code, "merge conflict")
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q", "-b", "main").code, "git init")
-    vim.fn.writefile({ "base" }, repo .. "/f.txt")
-    t.assert_eq(0, git(repo, "add", "--", "f.txt").code, "add base")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "commit base"
-    )
-    t.assert_eq(0, git(repo, "branch", "theirs").code, "create branch")
-    vim.fn.writefile({ "ours" }, repo .. "/f.txt")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-am", "ours", "-q").code,
-      "commit ours"
-    )
-    t.assert_eq(0, git(repo, "checkout", "-q", "theirs").code, "checkout theirs")
-    vim.fn.writefile({ "theirs" }, repo .. "/f.txt")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-am", "theirs", "-q").code,
-      "commit theirs"
-    )
-    t.assert_eq(0, git(repo, "checkout", "-q", "main").code, "checkout main")
-    t.assert_eq(
-      1,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "merge", "theirs").code,
-      "merge conflict"
-    )
+  t:patch_table(dot.path, "workspace", function()
+    return repo
+  end)
+  t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
+    return repo .. "/" .. filepath
+  end)
+  t:patch_table(stl.git, "info", require("stl.git.info"))
 
-    t:patch_table(dot.path, "workspace", function()
-      return repo
-    end)
-    t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
-      return repo .. "/" .. filepath
-    end)
-    t:patch_table(stl.git, "info", require("stl.git.info"))
+  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local applied = nil ---@type integer[]|nil
+  pane.__apply_buffers__ = function(_, _, left_bufnr, right_bufnr)
+    applied = { left_bufnr, right_bufnr }
+  end
 
-    local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-    local applied = nil ---@type integer[]|nil
-    pane.__apply_buffers__ = function(_, _, left_bufnr, right_bufnr)
-      applied = { left_bufnr, right_bufnr }
+  local done = false
+  stl.async.run(function()
+    pane.open_diff_entry({
+      left_winnr = -1,
+      right_winnr = -1,
+      entry = { filepath = "f.txt", stage_type = "unstaged", status = "U" },
+    })
+    done = true
+  end)
+  wait(function()
+    return done
+  end)
+
+  local buffers = assert(applied, "conflict preview applied")
+  t.assert_eq("ours", vim.api.nvim_buf_get_lines(buffers[1], 0, 1, false)[1], "stage two on left")
+  local working = table.concat(vim.api.nvim_buf_get_lines(buffers[2], 0, -1, false), "\n")
+  t.assert_true(working:find("<<<<<<< HEAD", 1, true) ~= nil, "working conflict markers on right")
+
+  for _, bufnr in ipairs(buffers) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
     end
-
-    local done = false
-    stl.async.run(function()
-      pane.open_diff_entry({
-        left_winnr = -1,
-        right_winnr = -1,
-        entry = { filepath = "f.txt", stage_type = "unstaged", status = "U" },
-      })
-      done = true
-    end)
-    wait(function()
-      return done
-    end)
-
-    local buffers = assert(applied, "conflict preview applied")
-    t.assert_eq("ours", vim.api.nvim_buf_get_lines(buffers[1], 0, 1, false)[1], "stage two on left")
-    local working = table.concat(vim.api.nvim_buf_get_lines(buffers[2], 0, -1, false), "\n")
-    t.assert_true(working:find("<<<<<<< HEAD", 1, true) ~= nil, "working conflict markers on right")
-
-    for _, bufnr in ipairs(buffers) do
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
   end
 end)
 

@@ -1,11 +1,8 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.entry" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.entry")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 
 t:test("opening enters one preconfigured scratch buffer and native attachment keeps its identity", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/file")
   local entered = {}
   local group = vim.api.nvim_create_augroup("ExplorerEntryOwnershipTest", { clear = true })
@@ -31,7 +28,7 @@ t:test("opening enters one preconfigured scratch buffer and native attachment ke
 end)
 
 t:test("the default Explorer entry opens native panes and retains state across hide and focus", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/file")
   t:patch_table(dot.path, "workspace", function()
     return path
@@ -63,9 +60,9 @@ end)
 
 t:test("reveal chooses the most specific child alias and preserves an alias workspace root", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("needs Unix symbolic links and aliases")
   end
-  local base = fixture.directory()
+  local base = t:tempdir()
   local workspace = base .. "/workspace"
   assert(vim.uv.fs_mkdir(workspace, 448))
   assert(vim.uv.fs_mkdir(base .. "/target", 448))

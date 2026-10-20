@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/ui_attach/cmdline_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.ui_attach.cmdline")
+local t = harness.new()
 
 ---@return era.dressing.ui_attach.cmdline, era.dressing.ui_attach.state
 ---@return table<integer, table>
@@ -215,8 +212,8 @@ t:test("cmdline position updates only the cursor when layout is unchanged", func
   cmdline.pos({ event = "cmdline_pos", args = { 4, 1 } })
 
   t.assert_eq(0, renders, "full renders")
-  t.assert_true(vim.deep_equal({ 1, 8 }, cursor), "buffer cursor")
-  t.assert_true(vim.deep_equal({ cursor = true, win = 20, flush = true }, redraw), "cursor redraw")
+  t.assert_same({ 1, 8 }, cursor, "buffer cursor")
+  t.assert_same({ cursor = true, win = 20, flush = true }, redraw, "cursor redraw")
   t.assert_eq(1, position_updates, "position update count")
 end)
 
@@ -472,15 +469,15 @@ t:test("cmdline block append renders only the new line when layout width is stab
   cmdline.block_append({ event = "cmdline_block_append", args = { { { 0, "x", 11 }, { 0, "y", 12 } } } })
 
   t.assert_eq(0, full_renders, "full render count")
-  t.assert_true(vim.deep_equal({ 10, 1, 1, false }, vim.list_slice(buffer_update, 1, 4)), "buffer range")
+  t.assert_same({ 10, 1, 1, false }, vim.list_slice(buffer_update, 1, 4), "buffer range")
   t.assert_eq("xy                  ", buffer_update[5][1], "padded line")
   t.assert_eq(2, window_config.height, "window height")
   t.assert_eq(8, block.content_width, "content width")
   t.assert_eq(2, #ranges, "highlight count")
-  t.assert_true(vim.deep_equal({ 1, 0 }, ranges[1].from), "first highlight start")
-  t.assert_true(vim.deep_equal({ 1, 1 }, ranges[1].to), "first highlight end")
-  t.assert_true(vim.deep_equal({ 1, 1 }, ranges[2].from), "second highlight start")
-  t.assert_true(vim.deep_equal({ 1, 2 }, ranges[2].to), "second highlight end")
+  t.assert_same({ 1, 0 }, ranges[1].from, "first highlight start")
+  t.assert_same({ 1, 1 }, ranges[1].to, "first highlight end")
+  t.assert_same({ 1, 1 }, ranges[2].from, "second highlight start")
+  t.assert_same({ 1, 2 }, ranges[2].to, "second highlight end")
   t.assert_eq(1, redraws, "redraw count")
 end)
 

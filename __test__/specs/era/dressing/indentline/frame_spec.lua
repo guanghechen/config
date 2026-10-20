@@ -1,9 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/indentline/frame_spec.lua
-
 local harness = require("__test__.support.harness")
 local parser = require("era.dressing.indentline.parser")
 local render = require("era.dressing.indentline.render")
-local t = harness.new("era.dressing.indentline.frame")
+local t = harness.new()
 
 t:test("frame cache is window-local and invalidated by changedtick", function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer

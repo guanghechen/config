@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/support/runner_spec.lua
-
 local harness = require("__test__.support.harness")
 local runner = require("__test__.support.runner")
-local t = harness.new("__test__.support.runner")
+local t = harness.new()
 local root = assert(vim.uv.cwd()) ---@type string
 
 ---@param callback                      fun(dir: string): nil
@@ -29,7 +27,7 @@ end
 local function write_spec(body, filepath)
   local lines = {
     'local harness = require("__test__.support.harness")',
-    'local t = harness.new("fixture")',
+    "local t = harness.new()",
     't:test("case", function()',
   }
   vim.list_extend(lines, vim.split(body, "\n", { plain = true }))
@@ -197,8 +195,8 @@ t:test("case failures, load errors, empty files, and missing run calls fail inde
     write_spec("error('expected failure')", dir .. "/case_spec.lua")
     write_file({ "this is not Lua" }, dir .. "/load_spec.lua")
     write_file({}, dir .. "/empty_spec.lua")
-    write_file({ 'require("__test__.support.harness").new("empty"):run()' }, dir .. "/no_cases_spec.lua")
-    write_file({ 'require("__test__.support.harness").new("missing run")' }, dir .. "/no_run_spec.lua")
+    write_file({ 'require("__test__.support.harness").new():run()' }, dir .. "/no_cases_spec.lua")
+    write_file({ 'require("__test__.support.harness").new()' }, dir .. "/no_run_spec.lua")
     write_spec("", dir .. "/pass_spec.lua")
     local failed, output = run_suites({ root = dir })
     t.assert_eq(5, failed, "failed suite count")
@@ -227,7 +225,7 @@ t:test("a leading timeout declaration only raises the limit of its own suite", f
       write_file({
         header,
         'local harness = require("__test__.support.harness")',
-        'local t = harness.new("fixture")',
+        "local t = harness.new()",
         't:test("case", function() vim.wait(' .. wait_ms .. ") end)",
         "t:run()",
       }, filepath)

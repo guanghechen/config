@@ -1,5 +1,5 @@
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.nvimbar.queue")
+local t = harness.new()
 
 -- A controlled clock checks dispatch ordering without wall-clock timing assumptions.
 local function clock()
@@ -68,9 +68,9 @@ t:test("new work and deadline changes do not postpone an earlier task", function
   end)
   queue.unwatch(key)
   advance(1)
-  t.assert_true(vim.deep_equal({ "first" }, seen))
+  t.assert_same({ "first" }, seen)
   advance(2)
-  t.assert_true(vim.deep_equal({ "first", "second" }, seen))
+  t.assert_same({ "first", "second" }, seen)
 end)
 
 t:test("pending main-loop dispatch is not duplicated by new work", function()
@@ -144,7 +144,7 @@ t:test("cold tasks yield before and after their own turn", function()
     seen[#seen + 1] = "warm 3"
   end, true)
   advance(1)
-  t.assert_true(vim.deep_equal({ "warm 1", "warm 2" }, seen))
+  t.assert_same({ "warm 1", "warm 2" }, seen)
   advance(1.5)
   t.assert_eq("publish", seen[3], "ready data publishes before cold work")
   advance(2)
@@ -215,7 +215,7 @@ t:test("cancellation during dispatch does not split the remaining warm batch", f
     seen[#seen + 1] = "last"
   end, true)
   advance(1)
-  t.assert_true(vim.deep_equal({ "first", "last" }, seen))
+  t.assert_same({ "first", "last" }, seen)
 end)
 
 t:test("cancelling a task releases its closure before the queue drains", function()
@@ -249,7 +249,7 @@ t:test("a deadline is checked before the next warm batch", function()
   advance(1)
   t.assert_eq(2, #seen)
   advance(3.2)
-  t.assert_true(vim.deep_equal({ "task", "task", "expired", "task" }, seen))
+  t.assert_same({ "task", "task", "expired", "task" }, seen)
 end)
 
 t:test("an expired callback can cancel and replace another due callback", function()

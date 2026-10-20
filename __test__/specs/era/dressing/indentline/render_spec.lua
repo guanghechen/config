@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/indentline/render_spec.lua
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.indentline.render")
+local t = harness.new()
 local render = require("era.dressing.indentline.render")
 
 local config = {

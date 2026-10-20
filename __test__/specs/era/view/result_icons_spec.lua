@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.view.result_icons" ---@type string
-
-local t = require("__test__.support.harness").new("era.view.result_icons")
+local t = require("__test__.support.harness").new()
 
 for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
   t:test(consumer .. " draws cached folder icons from each surface's expansion state", function()
@@ -9,16 +6,11 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
     t:defer(function()
       ui:close()
     end)
-    ui:rpc("nvim_ui_attach", 120, 30, { rgb = true, ext_linegrid = true })
-    local expected = ui:rpc(
-      "nvim_exec_lua",
+    ui:start({ width = 120, height = 30, runtime = "ark" })
+    local expected = ui:lua(
       [[
-      local root, consumer = ...
-      vim.opt.runtimepath:prepend(root)
-      package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-      package.cpath = root .. "/lua/?.so;" .. package.cpath
-      require("ark.bootstrap").setup()
-      native = require("__test__.support.result_tree")
+      local consumer = ...
+      treeview = require("__test__.support.treeview")
       errors, icon_marks, chevrons = {}, {}, {}
       lookups = {file={}, directory={}}
       stl.reporter.error = function(value) errors[#errors+1] = value.message end
@@ -54,14 +46,14 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
         for _, path in ipairs(paths) do files[#files+1] = {filepath=path, status="M"} end
         local commit = {hash="icons", abbrev_hash="icons", author="A", date=0, message="icons", files=files}
         owner = pane.new()
-        native.await(pane.apply(result_bufnr, commits.render({commit}, {
+        treeview.await(pane.apply(result_bufnr, commits.render({commit}, {
           viewtype="tree", foldempty=true, include_files={icons=true},
         }), owner))
         preview_root = "commit:icons"
         directory_key = pane.key(preview_root, "a/src", true)
         file_key = pane.key(preview_root, "b/src", false)
         owner:set_expansion(preview_root, true, false)
-        native.await(owner:ready())
+        treeview.await(owner:ready())
       else
         local Paths = require("era.view.result_paths")
         local Files = require(consumer == "picker" and "era.view.result_files" or "era.m.searcher.view.filetree")
@@ -69,13 +61,13 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
         owner:reset_filepaths("/icons", paths, false)
         owner:add_location(Paths.key("/icons/a/src/one.lua"), {lnum=2, col=0})
         preview_root, directory_key, file_key = Paths.key("/icons"), Paths.key("/icons/a/src"), Paths.key("/icons/b/src")
-        native.publish(owner, {rootuuid=preview_root, foldempty=true})
+        treeview.publish(owner, {rootuuid=preview_root, foldempty=true})
       end
       assert(next(lookups.file) == nil and next(lookups.directory) == nil, "import resolved offscreen icons")
       revision = owner:frame():header().data_revision
       local winnr = vim.api.nvim_open_win(result_bufnr, false, {relative="editor", row=0, col=0, width=55, height=14})
       owner:mount(winnr, result_bufnr, function() end)
-      native.await(owner:ready())
+      treeview.await(owner:ready())
       preview = era.view.PickerPreview.new({
         name="folder preview", diagnostic_scope="folder preview", relative_number=false, keymaps={},
         tree=function() return {owner=owner, key=preview_root, foldempty=true, title="preview"} end,
@@ -86,20 +78,20 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
       assert(vim.wait(5000, function() return preview._tree_view and preview._tree_view:frame() end, 1))
       return {open=stl.icon.filetype.FolderOpen, closed=closed, highlight=highlight, file=file}
     ]],
-      { assert(vim.uv.cwd()), consumer }
+      consumer
     )
 
     ---@param code                      string
     ---@return any
     local function eval(code)
-      return ui:rpc("nvim_exec_lua", code, {})
+      return ui:lua(code)
     end
 
     ---@param glyph                     string
     ---@return nil
     local function check(glyph)
       local actual
-      t.wait_until(function()
+      ui:wait_until(function()
         ui:rpc("nvim_command", "redraw")
         actual = eval([[
         local main = owner:frame()
@@ -128,9 +120,9 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
     end
 
     check(expected.open)
-    eval([[owner:collapse(directory_key, "collapse", false); native.await(owner:ready())]])
+    eval([[owner:collapse(directory_key, "collapse", false); treeview.await(owner:ready())]])
     check(expected.closed)
-    eval([[owner:collapse(directory_key, "expand", false); native.await(owner:ready())]])
+    eval([[owner:collapse(directory_key, "expand", false); treeview.await(owner:ready())]])
     check(expected.open)
     local count = eval("return vim.tbl_count(lookups.directory)")
     t.assert_true(count < 40, "only viewport directory names are resolved: " .. count)
@@ -144,15 +136,15 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
         refreshed_paths = vim.list_slice(owner.source._reset.paths)
         owner:reset_filepaths("/icons", refreshed_paths, false)
         owner:add_location(require("era.view.result_paths").key("/icons/a/src/one.lua"), {lnum=2,col=0})
-        native.publish(owner, {rootuuid=preview_root, foldempty=true})
+        treeview.publish(owner, {rootuuid=preview_root, foldempty=true})
       ]])
       check(expected.open)
       eval([[
         refreshed_paths[#refreshed_paths+1] = "fresh.lua"
         owner:reset_filepaths("/icons", refreshed_paths, false)
-        native.publish(owner, {rootuuid=preview_root, foldempty=true})
+        treeview.publish(owner, {rootuuid=preview_root, foldempty=true})
       ]])
-      t.wait_until(function()
+      ui:wait_until(function()
         return eval("return lookups.directory.src == 2 and lookups.file.src == 2")
       end, 5000, "a changed path set must invalidate its viewport icon cache")
     end

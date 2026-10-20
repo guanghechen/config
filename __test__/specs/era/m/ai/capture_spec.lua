@@ -1,7 +1,3 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/ai/capture_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.ai.capture pure capture-parsing helpers
-
 local harness = require("__test__.support.harness")
 
 local T = require("era.m.ai.capture")
@@ -9,7 +5,7 @@ local T = require("era.m.ai.capture")
 -- config drifts to a footer shape the parser no longer recognizes.
 local CLAUDE = require("era.m.ai.config").tools.claude
 
-local t = harness.new("era.m.ai.capture")
+local t = harness.new()
 
 --- Build a capture frame: header, the input box framed by two horizontal rules,
 --- then a footer line (idle by default — pass `footer` for a busy/other state).
@@ -26,10 +22,6 @@ local function frame(prompt_line, footer)
   }, "\n")
 end
 
-----------------------------------------------------------------------------------------------------
--- extract_input: strip exactly one UI prompt marker (F-001)
-----------------------------------------------------------------------------------------------------
-
 t:test("extract_input: strips ❯ marker but keeps a user-typed '>'", function()
   t.assert_eq("> quote this", T.extract_input(frame("❯ > quote this")), "leading user '>' must survive")
 end)
@@ -41,10 +33,6 @@ end)
 t:test("extract_input: normal ❯ prompt", function()
   t.assert_eq("hello world", T.extract_input(frame("❯ hello world")), "marker stripped, content intact")
 end)
-
-----------------------------------------------------------------------------------------------------
--- classify: pending vs submitted vs unknown (F-001 regression guard)
-----------------------------------------------------------------------------------------------------
 
 t:test("classify: '>'-prefixed prompt still in the box is pending, not submitted", function()
   local sig = T.make_signature("> quote this")

@@ -1,0 +1,15 @@
+local bootstrap = require("__test__.support.bootstrap")
+local support = require("__test__.support.treeview")
+local t = require("__test__.support.harness").new()
+bootstrap.with_native(t)
+local treeview = require("ux.treeview")
+
+t:test("await returns accepted replies and raises on Rejected ones", function()
+  local data = treeview.new_data()
+  t.assert_eq("Applied", support.applied(data:import({ { key = "root", label = "root" } })).kind)
+  local ok, err = pcall(support.await, data:import({ { key = "a", parent = "missing", label = "a" } }))
+  t.assert_false(ok, "rejected import")
+  t.assert_true(tostring(err):find("request rejected", 1, true) ~= nil, tostring(err))
+end)
+
+t:run()

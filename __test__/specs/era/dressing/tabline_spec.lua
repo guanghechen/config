@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua era/dressing/tabline_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local enums = require("stl.e")
 local module_name = "era.dressing.tabline"
-local t = harness.new(module_name)
+local t = harness.new()
 
 local function setup()
   local runtime = {
@@ -111,7 +108,6 @@ local function setup()
   })
   t:patch_table(package.loaded, module_name, nil)
   t.assert_eq(module_name, era.dressing.__mods.tabline, "module registration")
-  t.assert_nil(era.m.__mods.tabline, "old registration removed")
   local Tabline = era.dressing.tabline
 
   runtime.refresh = function()
@@ -141,7 +137,7 @@ t:test("dressing subscribes once and preserves visibility transition state", fun
   t.assert_eq(0, vim.api.nvim_get_option_value("showtabline", {}), "hidden tabline")
   t.assert_eq(2, runtime.explorer_redraws, "explorer redraw on hide")
   local winnrs = vim.api.nvim_list_wins()
-  t.assert_true(vim.deep_equal(winnrs, runtime.dirty_winnrs), "winline refresh after hiding")
+  t.assert_same(winnrs, runtime.dirty_winnrs, "winline refresh after hiding")
 
   Tabline.dressing()
   runtime.refresh()

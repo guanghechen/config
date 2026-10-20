@@ -1,12 +1,9 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.lsp.server_commands" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.lsp.server_commands")
+local t = harness.new()
 
-bootstrap.with_stl(t, { env = { IS_WIN = false } })
-bootstrap.with_era(t, {
+bootstrap.with_global(t, "stl", { env = { IS_WIN = false } })
+bootstrap.with_global(t, "era", {
   m = {
     lsp = {
       fn = require("era.m.lsp.fn"),
@@ -26,11 +23,8 @@ local servers = {
 
 ---@return string
 local function project()
-  local root = vim.fn.tempname() ---@type string
+  local root = t:tempdir()
   vim.fn.mkdir(root .. "/node_modules/.bin", "p")
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
   return assert(vim.uv.fs_realpath(root))
 end
 

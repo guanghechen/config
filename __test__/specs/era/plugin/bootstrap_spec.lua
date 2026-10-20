@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.plugin.bootstrap" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.plugin host policy")
+local t = harness.new()
 local plugin_names = {
   "blink.pairs",
   "conform.nvim",

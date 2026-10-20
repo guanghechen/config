@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ark.vendor.init" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("ark.vendor routing")
+local t = harness.new()
 
 for _, case in ipairs({
   { flags = {}, vendor = "neovim" },
@@ -19,7 +16,7 @@ for _, case in ipairs({
   t:test("routes " .. vim.inspect(case.flags) .. " to " .. case.vendor, function()
     local calls = {} ---@type string[]
     t:patch_table(vim, "g", vim.deepcopy(case.flags))
-    bootstrap.with_dot(t, { path = {
+    bootstrap.with_global(t, "dot", { path = {
       is_git_repo = function()
         return false
       end,
@@ -38,11 +35,12 @@ for _, case in ipairs({
 
     assert(loadfile("init.lua"))()
 
-    t.assert_true(
-      vim.deep_equal({ "ark.bootstrap", "bootstrap.setup", "ark.vendor." .. case.vendor }, calls),
+    t.assert_same(
+      { "ark.bootstrap", "bootstrap.setup", "ark.vendor." .. case.vendor },
+      calls,
       "one vendor is selected after bootstrap"
     )
-    t.assert_true(vim.deep_equal(case.flags, vim.g), "host identity is not rewritten")
+    t.assert_same(case.flags, vim.g, "host identity is not rewritten")
   end)
 end
 
@@ -84,7 +82,7 @@ t:test("Yuivim starts the real minimal profile without taking over host features
   t.assert_nil(vim.g.yozvim, "Yuivim does not impersonate Yozvim")
   local dressing_names = vim.tbl_keys(era.dressing.get_load_times())
   table.sort(dressing_names)
-  t.assert_true(vim.deep_equal({ "im" }, dressing_names), "only IM dressing is enabled")
+  t.assert_same({ "im" }, dressing_names, "only IM dressing is enabled")
   local winnr = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
   t.assert_eq("no", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))

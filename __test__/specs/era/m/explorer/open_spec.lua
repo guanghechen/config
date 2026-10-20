@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.open" ---@type string
-
-local support = require("__test__.support.explorer").new("era.m.explorer.open")
+local support = require("__test__.support.explorer").new()
 local t, await = support.t, support.await
 
 ---@return table
@@ -19,7 +16,7 @@ local function setup_open()
       end
     end
   end)
-  local root = assert(vim.uv.fs_realpath(support.directory()))
+  local root = t:tempdir()
   filepath = root .. "/file.txt"
   support.write(filepath)
   filepath = assert(vim.uv.fs_realpath(filepath))
@@ -68,7 +65,7 @@ for _, strategy in ipairs({ false, "pick" }) do
     t.assert_eq(fixture.filepath, vim.api.nvim_buf_get_name(bufnr), "file displayed")
     t.assert_eq(fixture.source_winnr, vim.api.nvim_get_current_win(), "target focused")
     t.assert_eq(0, fixture.old_entries, "old buffer never entered")
-    t.assert_true(vim.deep_equal({ bufnr }, fixture.focused_bufnrs), "focus enters the new buffer")
+    t.assert_same({ bufnr }, fixture.focused_bufnrs, "focus enters the new buffer")
   end)
 
   t:test(label .. ": a missing file preserves explorer focus and the target buffer", function()

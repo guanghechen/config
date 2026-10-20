@@ -1,46 +1,23 @@
 local harness = require("__test__.support.harness")
-local t = harness.new("yoz.git.BlameSnapshot")
+local t = harness.new()
+local git = require("__test__.support.git")
 t:patch_global("yoz", require("yoz"))
 local reference = assert(loadfile("__test__/fixtures/era/m/git/blame_lua_reference.lua"))()
 local workspace = ""
 
+---Runs git in the current fixture repository without taking optional locks.
 ---@param args                          string[]
 ---@param input                         ?string
 ---@return string
-local function git(args, input)
-  local command = {
-    "git",
-    "--no-optional-locks",
-    "-C",
-    workspace,
-    "-c",
-    "user.name=Test",
-    "-c",
-    "user.email=test@example.com",
-    "-c",
-    "commit.gpgSign=false",
-    "-c",
-    "core.autocrlf=false",
-    "-c",
-    "core.hooksPath=" .. workspace .. "/no-hooks",
-  }
-  vim.list_extend(command, args)
-  local output = vim.system(command, { stdin = input, text = false }):wait()
-  t.assert_eq(0, output.code, output.stderr)
-  return output.stdout or ""
+local function run(args, input)
+  return git.run(workspace, vim.list_extend({ "--no-optional-locks" }, args), input)
 end
 
 ---@param format                        ?string
 ---@return string
 local function new_repo(format)
-  workspace = vim.fn.tempname()
-  vim.fn.mkdir(workspace, "p")
-  local root = workspace
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
-  git({ "init", "-q", "--object-format=" .. (format or "sha1") })
-  return root
+  workspace = git.repo(t, { "--object-format=" .. (format or "sha1") })
+  return workspace
 end
 
 ---@param path                          string
@@ -82,7 +59,7 @@ local function assert_parity(path, content)
   local state, snapshot, err = query(path, content)
   t.assert_eq("completed", state, err)
   assert(snapshot)
-  local expected = reference.parse(git({ "blame", "--porcelain", "--contents", "-", "--", path }, content))
+  local expected = reference.parse(run({ "blame", "--porcelain", "--contents", "-", "--", path }, content))
   local actual = snapshot:entries()
   t.assert_eq(#expected, #actual, "full attribution count")
   for lnum, info in ipairs(expected) do
@@ -97,7 +74,7 @@ local function assert_parity(path, content)
         entry[field] = info[field]
       end
     end
-    t.assert_true(vim.deep_equal(info, entry), "porcelain fields differ at line " .. lnum)
+    t.assert_same(info, entry, "porcelain fields differ at line " .. lnum)
   end
   return snapshot
 end
@@ -105,11 +82,11 @@ end
 t:test("full snapshots match the Lua oracle across history and unsaved changes", function()
   local root = new_repo()
   write(root .. "/file", "one\ntwo\nthree\nfour\n")
-  git({ "add", "file" })
-  git({ "commit", "-qm", "base" })
+  run({ "add", "file" })
+  run({ "commit", "-qm", "base" })
   write(root .. "/file", "one\nchanged\nthree\nfour\n")
-  git({ "add", "file" })
-  git({ "commit", "-qm", "second" })
+  run({ "add", "file" })
+  run({ "commit", "-qm", "second" })
   local snapshot = assert_parity("file", "UNSAVED\none\nchanged\nthree\nfour\n")
   local lines, commits = snapshot:stats()
   t.assert_eq(5, lines, "line count")
@@ -120,8 +97,9 @@ t:test("full snapshots match the Lua oracle across history and unsaved changes",
   for index, commit in ipairs(snapshot:commits()) do
     labels[index] = commit.uncommitted and "unsaved" or commit.summary
   end
-  t.assert_true(
-    vim.deep_equal({ "unsaved", "base", "second", "base", "base" }, snapshot:annotations(labels)),
+  t.assert_same(
+    { "unsaved", "base", "second", "base", "base" },
+    snapshot:annotations(labels),
     "non-contiguous and repeated commit groups keep line order"
   )
 end)
@@ -129,8 +107,8 @@ end)
 t:test("SHA-256 snapshots retain full identities and eight-character display abbreviations", function()
   local root = new_repo("sha256")
   write(root .. "/file", "one\ntwo\n")
-  git({ "add", "file" })
-  git({ "commit", "-qm", "base" })
+  run({ "add", "file" })
+  run({ "commit", "-qm", "base" })
   local snapshot = assert_parity("file", "one\nUNSAVED\n")
   t.assert_eq(64, #snapshot:commit_at(1).sha, "full SHA-256")
   t.assert_eq(8, #snapshot:commit_at(1).abbrev_sha, "display abbreviation")
@@ -142,10 +120,10 @@ t:test("rename metadata and literal pathname bytes match the old porcelain contr
   local suffix = (package.config:sub(1, 1) == "/" and vim.uv.os_uname().sysname ~= "Darwin") and "\255" or "字"
   local old, new = "old-" .. suffix, "new-" .. suffix
   write(root .. "/" .. old, "one\ntwo\nthree\n")
-  git({ "add", "--", old })
-  git({ "commit", "-qm", "base" })
-  git({ "mv", "--", old, new })
-  git({ "commit", "-qm", "rename" })
+  run({ "add", "--", old })
+  run({ "commit", "-qm", "base" })
+  run({ "mv", "--", old, new })
+  run({ "commit", "-qm", "rename" })
   assert_parity(new, "one\ntwo\nthree\n")
 end)
 
@@ -153,8 +131,8 @@ t:test("contents preserve CRLF, BOM, legacy encoding and missing final newline",
   for _, content in ipairs({ "one\r\ntwo\r\n", "\239\187\191one\ntwo\n", "caf\233\ntwo\n", "one\ntwo" }) do
     local root = new_repo()
     write(root .. "/file", content)
-    git({ "add", "file" })
-    git({ "commit", "-qm", "bytes" })
+    run({ "add", "file" })
+    run({ "commit", "-qm", "bytes" })
     assert_parity("file", content)
   end
 end)
@@ -162,8 +140,8 @@ end)
 t:test("exports cannot mutate the snapshot and annotation projection reuses literal labels", function()
   local root = new_repo()
   write(root .. "/file", "one\ntwo\nthree\n")
-  git({ "add", "file" })
-  git({ "commit", "-qm", "base" })
+  run({ "add", "file" })
+  run({ "commit", "-qm", "base" })
   local snapshot = assert_parity("file", "one\ntwo\nthree\n")
   snapshot:commits()[1].author = "changed"
   snapshot:entries()[1].summary = "changed"
@@ -184,8 +162,8 @@ t:test("unborn HEAD and absent paths fail without returning a partial snapshot",
   t.assert_eq("failed", state, "unborn HEAD")
   t.assert_nil(snapshot, "no partial snapshot")
   t.assert_true(type(err) == "string" and #err > 0, "Git diagnostic")
-  git({ "add", "file" })
-  git({ "commit", "-qm", "base" })
+  run({ "add", "file" })
+  run({ "commit", "-qm", "base" })
   state, snapshot = query("missing", "one\n")
   t.assert_eq("failed", state, "missing path")
   t.assert_nil(snapshot, "missing path has no data")
@@ -194,8 +172,8 @@ end)
 t:test("annotations retain validation, byte values and array-prefix semantics", function()
   local root = new_repo()
   write(root .. "/file", "one\ntwo\n")
-  git({ "add", "file" })
-  git({ "commit", "-qm", "base" })
+  run({ "add", "file" })
+  run({ "commit", "-qm", "base" })
   local state, snapshot, err = query("file", "one\ntwo\n")
   t.assert_eq("completed", state, err)
   local literal = "\0\255 literal %1 <sha>"
@@ -208,9 +186,9 @@ t:test("annotations retain validation, byte values and array-prefix semantics", 
     end,
   })
   local first = snapshot:annotations(labels)
-  t.assert_true(vim.deep_equal({ literal, literal }, first), "literal byte projection")
+  t.assert_same({ literal, literal }, first, "literal byte projection")
   first[1] = "changed result"
-  t.assert_true(vim.deep_equal({ literal, literal }, snapshot:annotations(labels)), "independent calls")
+  t.assert_same({ literal, literal }, snapshot:annotations(labels), "independent calls")
   t.assert_eq(literal, labels[1], "input unchanged")
   t.assert_eq("42", snapshot:annotations({ 42 })[1], "existing numeric coercion")
   t.assert_eq(literal, snapshot:annotations({ [1] = literal, [3] = "ignored after hole" })[2], "array prefix")
@@ -229,8 +207,8 @@ t:test("annotations retain validation, byte values and array-prefix semantics", 
 
   state, snapshot, err = query("file", "")
   t.assert_eq("completed", state, err)
-  t.assert_true(vim.deep_equal({}, snapshot:annotations({})), "empty snapshot")
-  t.assert_true(vim.deep_equal({}, snapshot:annotations({ [2] = "after empty prefix" })), "empty prefix contract")
+  t.assert_same({}, snapshot:annotations({}), "empty snapshot")
+  t.assert_same({}, snapshot:annotations({ [2] = "after empty prefix" }), "empty prefix contract")
 end)
 
 t:test("annotation projection supports 10k distinct commits without exhausting Lua references", function()

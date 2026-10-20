@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
-local runtime = require("__test__.fixtures.era.keystroke.cmp.runtime")
+local runtime = require("__test__.support.cmp.runtime")
 runtime.setup()
-local t = harness.new("era.keystroke.cmp.rank")
+local t = harness.new()
 local Rank = require("era.keystroke.cmp.rank")
 local Item = require("era.keystroke.cmp.item")
 local Reference = require("__test__.fixtures.era.keystroke.cmp.rank_reference")
@@ -37,8 +37,8 @@ t:test("native snapshots reject inconsistent metadata and eligibility without da
   local ok = pcall(yoz.completion.rank, { { snapshot = snapshot, query = "al", eligible = {} } }, "")
   t.assert_eq(false, ok, "mask must cover every region")
   local groups, indexes = yoz.completion.rank({ { snapshot = snapshot, query = "al", eligible = { true } } }, "")
-  t.assert_true(vim.deep_equal({ 1 }, groups), "valid query remains usable")
-  t.assert_true(vim.deep_equal({ 1 }, indexes), "candidate remains available")
+  t.assert_same({ 1 }, groups, "valid query remains usable")
+  t.assert_same({ 1 }, indexes, "candidate remains available")
 end)
 
 t:test("opaque native identities preserve input order, deduplication and accepted history", function()
@@ -55,7 +55,7 @@ t:test("opaque native identities preserve input order, deduplication and accepte
   })
   local requests = { { snapshot = snapshot, query = "al", eligible = { true } } }
   local _, indexes, original_scores = yoz.completion.rank(requests, "")
-  t.assert_true(vim.deep_equal({ 1, 2 }, indexes), "input ordering and first duplicate identity")
+  t.assert_same({ 1, 2 }, indexes, "input ordering and first duplicate identity")
   local history = yoz.completion.new_history()
   history:access("lua\0accepted\255")
   local data = history:dump()
@@ -64,7 +64,7 @@ t:test("opaque native identities preserve input order, deduplication and accepte
   end
   history:load(data)
   local _, preferred, scores = yoz.completion.rank(requests, "", history)
-  t.assert_true(vim.deep_equal({ 1, 2 }, preferred), "access and snapshot use the same opaque key")
+  t.assert_same({ 1, 2 }, preferred, "access and snapshot use the same opaque key")
   t.assert_eq(
     math.min(6, history:score("lua\0accepted\255")),
     scores[1] - original_scores[1],
@@ -72,7 +72,7 @@ t:test("opaque native identities preserve input order, deduplication and accepte
   )
   local restored = yoz.completion.new_history(history:dump())
   local _, repeated = yoz.completion.rank(requests, "", restored)
-  t.assert_true(vim.deep_equal(preferred, repeated), "persisted history retains the byte key digest")
+  t.assert_same(preferred, repeated, "persisted history retains the byte key digest")
 end)
 
 t:test("missing sortText preserves provider order and remains distinct from explicit text", function()
@@ -83,11 +83,11 @@ t:test("missing sortText preserves provider order and remains distinct from expl
     assert(Item.new(context, "fixture", { label = "zeta", sortText = "0" })),
   }
   local ranked = Rank.filter(context, Rank.prepare(items))
-  t.assert_true(vim.deep_equal({ items[1], items[2], items[3] }, ranked), "missing keys keep original order")
+  t.assert_same({ items[1], items[2], items[3] }, ranked, "missing keys keep original order")
   items[1].raw.sortText = "2"
   items[2].raw.sortText = "1"
   ranked = Rank.filter(context, Rank.prepare(items))
-  t.assert_true(vim.deep_equal({ items[3], items[2], items[1] }, ranked), "explicit keys order candidates")
+  t.assert_same({ items[3], items[2], items[1] }, ranked, "explicit keys order candidates")
 end)
 
 t:test("compound LSP filters outrank suffix snippets without losing provider alternatives", function()

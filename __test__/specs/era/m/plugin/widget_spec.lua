@@ -1,12 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/plugin/widget_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
 local State = require("era.m.plugin.state")
 local Widget = require("era.m.plugin.widget")
-local t = harness.new("era.m.plugin.widget")
+local t = harness.new()
 
 ---@param widget                        era.m.plugin.Widget
 ---@return string[]

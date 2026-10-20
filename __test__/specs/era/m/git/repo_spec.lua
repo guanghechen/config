@@ -1,13 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/repo_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.git.repo module
-
 local bootstrap = require("__test__.support.bootstrap")
 local CancellationToken = require("stl.c.cancellation_token")
 local Future = require("stl.c.future")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.git.repo")
+local t = harness.new()
 
 ---@class era.m.git.repo.test.IRequest
 ---@field resolve                      fun(result: table|nil): nil
@@ -15,7 +11,7 @@ local t = harness.new("era.m.git.repo")
 
 local requests = {} ---@type era.m.git.repo.test.IRequest[]
 
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "stl", {
   async = require("stl.async"),
   c = { Future = Future },
   git = {
@@ -29,7 +25,7 @@ bootstrap.with_stl(t, {
   },
   os = { path = { relative = function() end } },
 })
-bootstrap.with_era(t, {
+bootstrap.with_global(t, "era", {
   m = {
     git = {
       index = require("era.m.git.index"),

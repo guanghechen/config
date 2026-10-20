@@ -1,10 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/workspace/staging_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.workspace.staging")
+local t = harness.new()
+local git = require("__test__.support.git")
 
 local git_calls = {} ---@type table[]
 local refreshed = 0
@@ -12,13 +10,6 @@ local git_result = { code = 0, stderr = "" }
 local git_results = {} ---@type table[]
 local reports = {} ---@type table[]
 local workspace = "/repo"
-
----@param repo                           string
----@param ...                            string
----@return vim.SystemCompleted
-local function git(repo, ...)
-  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
-end
 
 ---@param args                          string[]
 ---@param opts                          { cwd: string, stdin: string|nil }
@@ -692,200 +683,156 @@ end)
 
 t:test("stage, unstage, and discard treat pathspec-magic filenames literally", function()
   reset_calls()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  t:defer(function()
+    workspace = "/repo"
+  end)
+  local magic = ":(glob)o*.txt" ---@type string
+  vim.fn.writefile({ "magic base" }, repo .. "/" .. magic)
+  vim.fn.writefile({ "other base" }, repo .. "/other.txt")
+  git.run(repo, { "add", "--all" })
+  git.run(repo, { "commit", "-qm", "base" })
+  vim.fn.writefile({ "magic changed" }, repo .. "/" .. magic)
+  vim.fn.writefile({ "other changed" }, repo .. "/other.txt")
+  workspace = repo
 
-  local ok, err = xpcall(function()
-    local magic = ":(glob)o*.txt" ---@type string
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "magic base" }, repo .. "/" .. magic)
-    vim.fn.writefile({ "other base" }, repo .. "/other.txt")
-    t.assert_eq(0, git(repo, "add", "--all").code, "initial add")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "initial commit"
-    )
-    vim.fn.writefile({ "magic changed" }, repo .. "/" .. magic)
-    vim.fn.writefile({ "other changed" }, repo .. "/other.txt")
-    workspace = repo
+  t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
-    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "magic" })
+  local entry = { filepath = magic, stage_type = "unstaged", status = "M" }
+  entries_at_line[changes_bufnr] = { entry }
+  vim.api.nvim_win_set_buf(0, changes_bufnr)
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      get_current_entry = function()
+        return entry
+      end,
+      request_refresh = request_refresh,
+      set_current_entry = function() end,
+    },
+  }
 
-    local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    vim.api.nvim_buf_set_lines(changes_bufnr, 0, -1, false, { "magic" })
-    local entry = { filepath = magic, stage_type = "unstaged", status = "M" }
-    entries_at_line[changes_bufnr] = { entry }
-    vim.api.nvim_win_set_buf(0, changes_bufnr)
-    local ctx = {
-      layout = { changes_bufnr = changes_bufnr },
-      state = {
-        get_current_entry = function()
-          return entry
-        end,
-        request_refresh = request_refresh,
-        set_current_entry = function() end,
-      },
-    }
+  action.stage(ctx)
+  local cached = git.system(repo, { "diff", "--staged", "--name-only", "-z", "--" })
+  t.assert_eq(magic .. "\0", cached.stdout or "", "only the literal filename staged")
 
-    action.stage(ctx)
-    local cached = git(repo, "diff", "--staged", "--name-only", "-z", "--")
-    t.assert_eq(magic .. "\0", cached.stdout or "", "only the literal filename staged")
+  entry.stage_type = "staged"
+  action.unstage(ctx)
+  cached = git.system(repo, { "diff", "--staged", "--name-only", "-z", "--" })
+  t.assert_eq("", cached.stdout or "", "only the literal filename unstaged")
 
-    entry.stage_type = "staged"
-    action.unstage(ctx)
-    cached = git(repo, "diff", "--staged", "--name-only", "-z", "--")
-    t.assert_eq("", cached.stdout or "", "only the literal filename unstaged")
-
-    entry.stage_type = "unstaged"
-    action.reset(ctx)
-    t.assert_eq("magic base", vim.fn.readfile(repo .. "/" .. magic)[1], "literal filename discarded")
-    t.assert_eq("other changed", vim.fn.readfile(repo .. "/other.txt")[1], "glob target preserved")
-    t.assert_eq(3, refreshed, "refresh calls")
-    entries_at_line[changes_bufnr] = nil
-    vim.api.nvim_buf_delete(changes_bufnr, { force = true })
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  workspace = "/repo"
-  if not ok then
-    error(err)
-  end
+  entry.stage_type = "unstaged"
+  action.reset(ctx)
+  t.assert_eq("magic base", vim.fn.readfile(repo .. "/" .. magic)[1], "literal filename discarded")
+  t.assert_eq("other changed", vim.fn.readfile(repo .. "/other.txt")[1], "glob target preserved")
+  t.assert_eq(3, refreshed, "refresh calls")
+  entries_at_line[changes_bufnr] = nil
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 
 t:test("rename stage updates both paths in a real Git index", function()
   reset_calls()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  t:defer(function()
+    workspace = "/repo"
+  end)
+  vim.fn.writefile({ "content" }, repo .. "/old.lua")
+  git.run(repo, { "add", "--", "old.lua" })
+  git.run(repo, { "commit", "-qm", "base" })
+  t.assert_eq(0, vim.uv.fs_rename(repo .. "/old.lua", repo .. "/new.lua") and 0 or 1, "rename file")
+  git.run(repo, { "add", "-N", "--", "new.lua" })
+  workspace = repo
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "content" }, repo .. "/old.lua")
-    t.assert_eq(0, git(repo, "add", "--", "old.lua").code, "initial add")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "initial commit"
-    )
-    t.assert_eq(0, vim.uv.fs_rename(repo .. "/old.lua", repo .. "/new.lua") and 0 or 1, "rename file")
-    t.assert_eq(0, git(repo, "add", "-N", "--", "new.lua").code, "intent-to-add destination")
-    workspace = repo
+  t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
-    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      request_refresh = request_refresh,
+      get_current_entry = function()
+        return { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "unstaged", status = "R" }
+      end,
+    },
+  }
 
-    local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    local ctx = {
-      layout = { changes_bufnr = changes_bufnr },
-      state = {
-        request_refresh = request_refresh,
-        get_current_entry = function()
-          return { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "unstaged", status = "R" }
-        end,
-      },
-    }
+  action.stage(ctx)
 
-    action.stage(ctx)
-
-    local cached = git(repo, "diff", "--staged", "--name-status", "--")
-    local worktree = git(repo, "diff", "--name-status", "--")
-    t.assert_eq(0, cached.code, "cached diff")
-    t.assert_true((cached.stdout or ""):find("old.lua", 1, true) ~= nil, "source staged")
-    t.assert_true((cached.stdout or ""):find("new.lua", 1, true) ~= nil, "destination staged")
-    t.assert_eq("", worktree.stdout or "", "rename fully staged")
-    t.assert_eq(1, refreshed, "refresh calls")
-    vim.api.nvim_buf_delete(changes_bufnr, { force = true })
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  workspace = "/repo"
-  if not ok then
-    error(err)
-  end
+  local cached = git.system(repo, { "diff", "--staged", "--name-status", "--" })
+  local worktree = git.run(repo, { "diff", "--name-status", "--" })
+  t.assert_eq(0, cached.code, "cached diff")
+  t.assert_true((cached.stdout or ""):find("old.lua", 1, true) ~= nil, "source staged")
+  t.assert_true((cached.stdout or ""):find("new.lua", 1, true) ~= nil, "destination staged")
+  t.assert_eq("", worktree, "rename fully staged")
+  t.assert_eq(1, refreshed, "refresh calls")
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 
 t:test("rename unstage clears both paths from a real Git index", function()
   reset_calls()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  t:defer(function()
+    workspace = "/repo"
+  end)
+  vim.fn.writefile({ "content" }, repo .. "/old.lua")
+  git.run(repo, { "add", "--", "old.lua" })
+  git.run(repo, { "commit", "-qm", "base" })
+  git.run(repo, { "mv", "old.lua", "new.lua" })
+  workspace = repo
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "content" }, repo .. "/old.lua")
-    t.assert_eq(0, git(repo, "add", "--", "old.lua").code, "initial add")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "initial commit"
-    )
-    t.assert_eq(0, git(repo, "mv", "old.lua", "new.lua").code, "git mv")
-    workspace = repo
+  t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
-    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      request_refresh = request_refresh,
+      get_current_entry = function()
+        return { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "staged", status = "R" }
+      end,
+    },
+  }
 
-    local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    local ctx = {
-      layout = { changes_bufnr = changes_bufnr },
-      state = {
-        request_refresh = request_refresh,
-        get_current_entry = function()
-          return { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "staged", status = "R" }
-        end,
-      },
-    }
+  action.unstage(ctx)
 
-    action.unstage(ctx)
-
-    local cached = git(repo, "diff", "--staged", "--name-status", "--")
-    t.assert_eq(0, cached.code, "cached diff")
-    t.assert_eq("", cached.stdout or "", "index has no staged rename residue")
-    t.assert_eq(1, refreshed, "refresh calls")
-    vim.api.nvim_buf_delete(changes_bufnr, { force = true })
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  workspace = "/repo"
-  if not ok then
-    error(err)
-  end
+  local cached = git.system(repo, { "diff", "--staged", "--name-status", "--" })
+  t.assert_eq(0, cached.code, "cached diff")
+  t.assert_eq("", cached.stdout or "", "index has no staged rename residue")
+  t.assert_eq(1, refreshed, "refresh calls")
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 
 t:test("unborn unstage removes only the index entry", function()
   reset_calls()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  t:defer(function()
+    workspace = "/repo"
+  end)
+  vim.fn.writefile({ "content" }, repo .. "/staged.lua")
+  git.run(repo, { "add", "--", "staged.lua" })
+  workspace = repo
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "content" }, repo .. "/staged.lua")
-    t.assert_eq(0, git(repo, "add", "--", "staged.lua").code, "git add")
-    workspace = repo
+  t:patch_table(stl.git.exec, "exec_async", exec_real_git)
 
-    t:patch_table(stl.git.exec, "exec_async", exec_real_git)
+  local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local ctx = {
+    layout = { changes_bufnr = changes_bufnr },
+    state = {
+      request_refresh = request_refresh,
+      get_current_entry = function()
+        return { filepath = "staged.lua", stage_type = "staged", status = "A" }
+      end,
+    },
+  }
 
-    local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    local ctx = {
-      layout = { changes_bufnr = changes_bufnr },
-      state = {
-        request_refresh = request_refresh,
-        get_current_entry = function()
-          return { filepath = "staged.lua", stage_type = "staged", status = "A" }
-        end,
-      },
-    }
+  action.unstage(ctx)
 
-    action.unstage(ctx)
-
-    t.assert_eq(1, git(repo, "ls-files", "--error-unmatch", "--", "staged.lua").code, "index entry removed")
-    t.assert_eq(1, vim.fn.filereadable(repo .. "/staged.lua"), "worktree file preserved")
-    t.assert_eq(1, refreshed, "refresh calls")
-    vim.api.nvim_buf_delete(changes_bufnr, { force = true })
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  workspace = "/repo"
-  if not ok then
-    error(err)
-  end
+  t.assert_eq(1, git.system(repo, { "ls-files", "--error-unmatch", "--", "staged.lua" }).code, "index entry removed")
+  t.assert_eq(1, vim.fn.filereadable(repo .. "/staged.lua"), "worktree file preserved")
+  t.assert_eq(1, refreshed, "refresh calls")
+  vim.api.nvim_buf_delete(changes_bufnr, { force = true })
 end)
 
 t:test("stage and unstage report Git failures without refreshing", function()

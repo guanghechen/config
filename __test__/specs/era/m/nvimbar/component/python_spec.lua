@@ -2,7 +2,7 @@ local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local CancellationToken = require("stl.c.cancellation_token")
 local Component = require("era.m.nvimbar.component")
-local t = harness.new("era.m.nvimbar.component.python")
+local t = harness.new()
 
 local venv = "/venvs/first"
 bootstrap.with_runtime(t, {
@@ -72,7 +72,7 @@ t:test("Python version requests return a pending Future without waiting for a pr
   venv = "/venvs/first"
   local result = python.env("f_sl").refresh({ filetype = "python" }, token)
   t.assert_false(result:is_done())
-  t.assert_true(vim.deep_equal({ "/venvs/first/bin/python", "--version" }, jobs[1].command))
+  t.assert_same({ "/venvs/first/bin/python", "--version" }, jobs[1].command)
   jobs[1].callback({ code = 0, stdout = "Python 3.14.0\n" })
   t.wait_until(function()
     return result:is_done()

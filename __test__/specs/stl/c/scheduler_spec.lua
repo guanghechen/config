@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/c/scheduler_spec.lua
----@diagnostic disable: undefined-global, invisible
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.c.scheduler")
+local t = harness.new()
 
 t:patch_global("stl", {
   fn = {

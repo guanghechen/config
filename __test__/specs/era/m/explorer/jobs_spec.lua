@@ -1,11 +1,8 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.jobs" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.jobs")
-local t, await, write, directory = fixture.t, fixture.await, fixture.write, fixture.directory
+local fixture = require("__test__.support.explorer").new()
+local t, await, write = fixture.t, fixture.await, fixture.write
 
 t:test("a hidden Job drains its complete result backlog before releasing the session", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   for index = 1, 260 do
     write(string.format("%s/file-%03d", path, index))
@@ -55,7 +52,7 @@ t:test("a hidden Job drains its complete result backlog before releasing the ses
 end)
 
 t:test("early failures and skips survive the successful tail and remain available from Last results", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   assert(vim.uv.fs_mkdir(path .. "/next", 448))
   assert(vim.uv.fs_mkdir(path .. "/dst/file-001", 448))
@@ -108,7 +105,7 @@ end)
 
 for _, deep in ipairs({ false, true }) do
   t:test("issue history reports omissions at the " .. (deep and "byte" or "item") .. " limit", function()
-    local path = directory()
+    local path = t:tempdir()
     if deep then
       for _ = 1, 3 do
         path = path .. "/" .. string.rep("d", 180)

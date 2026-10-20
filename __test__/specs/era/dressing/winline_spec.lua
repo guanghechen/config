@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/winline_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
 local module_name = "era.dressing.winline"
-local t = harness.new(module_name)
+local t = harness.new()
 
 t:test("diffview winbar renders hunk navigation on the right", function()
   local winnr = vim.api.nvim_get_current_win()
@@ -215,7 +212,6 @@ t:test("dressing subscribes once and routes dirty updates to valid current and p
   t:patch_global("era", require("era"))
   t:patch_table(package.loaded, module_name, nil)
   t.assert_eq(module_name, era.dressing.__mods.winline, "module registration")
-  t.assert_nil(era.m.__mods.winline, "old registration removed")
   local winline = era.dressing.winline
 
   local function notify(winnr, winnr_prev)
@@ -230,17 +226,17 @@ t:test("dressing subscribes once and routes dirty updates to valid current and p
   t.assert_eq(0, #rendered_winnrs, "setup keeps rendering lazy")
 
   notify(winnr, previous_winnr)
-  t.assert_true(vim.deep_equal({ winnr, previous_winnr }, rendered_winnrs), "both dirty windows render once")
+  t.assert_same({ winnr, previous_winnr }, rendered_winnrs, "both dirty windows render once")
   rendered_winnrs = {}
   notify(winnr, winnr)
-  t.assert_true(vim.deep_equal({ winnr }, rendered_winnrs), "identical windows render once")
+  t.assert_same({ winnr }, rendered_winnrs, "identical windows render once")
 
   vim.api.nvim_win_close(previous_winnr, true)
   rendered_winnrs = {}
   notify(winnr, previous_winnr)
   notify(previous_winnr, winnr)
   notify(nil, nil)
-  t.assert_true(vim.deep_equal({ winnr, winnr }, rendered_winnrs), "closed and missing windows are ignored")
+  t.assert_same({ winnr, winnr }, rendered_winnrs, "closed and missing windows are ignored")
 end)
 
 t:test("source windows show the confirmed path at once and apply delivered symbols", function()

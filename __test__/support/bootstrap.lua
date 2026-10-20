@@ -24,32 +24,14 @@ local function merge(left, right)
   return result
 end
 
----@param harness                       __test__.support.Harness
----@param spec                          table
----@return fun()
-local function patch_global_table(harness, name, spec)
-  local current = rawget(_G, name) ---@type table|nil
-  local value = merge(type(current) == "table" and current or {}, spec)
-  return harness:patch_global(name, value)
-end
-
+---Replaces a global table with a copy of it merged with `spec`, restored when the case or suite ends.
 ---@param harness                       __test__.support.Harness
 ---@param name                          string
 ---@param spec                          table
 ---@return fun()
 function M.with_global(harness, name, spec)
-  return patch_global_table(harness, name, spec)
-end
-
----@param harness                       __test__.support.Harness
----@return fun()
-function M.with_stl_c(harness)
-  return M.with_global(harness, "stl", {
-    c = {
-      CancellationToken = require("stl.c.cancellation_token"),
-      Future = require("stl.c.future"),
-    },
-  })
+  local current = rawget(_G, name) ---@type table|nil
+  return harness:patch_global(name, merge(type(current) == "table" and current or {}, spec))
 end
 
 ---@param harness                       __test__.support.Harness
@@ -63,35 +45,40 @@ function M.with_runtime(harness, spec)
   return cleanups
 end
 
+---Exposes the native library this platform installs on the runtimepath (`lua/yoz.so`, or `lua/yoz.dll` on
+---Windows) as `yoz`, with the `stl` pieces its Lua wrappers use. Reporter errors raise; warnings are dropped.
 ---@param harness                       __test__.support.Harness
----@param spec                          ?table
----@return fun()
-function M.with_stl(harness, spec)
-  if spec == nil then
-    return M.with_stl_c(harness)
+---@return table
+function M.with_native(harness)
+  local native = require("yoz")
+  harness:patch_global("yoz", native)
+  M.with_global(harness, "stl", {
+    c = { Future = require("stl.c.future") },
+    nvim = { fn = require("stl.nvim.fn") },
+    reporter = {
+      warn = function() end,
+      error = function(options)
+        error(options.message, 2)
+      end,
+    },
+  })
+  return native
+end
+
+---Records every `stl.reporter` report by level, in order, until the case or suite ends.
+---@param harness                       __test__.support.Harness
+---@return table<"debug"|"info"|"warn"|"error", table[]>
+function M.with_reporter(harness)
+  if type(rawget(_G, "stl")) ~= "table" or type(stl.reporter) ~= "table" then
+    M.with_global(harness, "stl", { reporter = {} })
   end
-  return patch_global_table(harness, "stl", spec)
-end
-
----@param harness                       __test__.support.Harness
----@param spec                          table
----@return fun()
-function M.with_dot(harness, spec)
-  return patch_global_table(harness, "dot", spec)
-end
-
----@param harness                       __test__.support.Harness
----@param spec                          table
----@return fun()
-function M.with_era(harness, spec)
-  return patch_global_table(harness, "era", spec)
-end
-
----@param harness                       __test__.support.Harness
----@param spec                          table
----@return fun()
-function M.with_yoz(harness, spec)
-  return patch_global_table(harness, "yoz", spec)
+  local reports = { debug = {}, info = {}, warn = {}, error = {} } ---@type table<string, table[]>
+  for level, list in pairs(reports) do
+    harness:patch_table(stl.reporter, level, function(options)
+      list[#list + 1] = options
+    end)
+  end
+  return reports
 end
 
 return M

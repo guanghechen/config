@@ -1,10 +1,7 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.git.encoding" ---@type string
-
 local harness = require("__test__.support.harness")
 local fixture = require("__test__.fixtures.era.m.git.encoding")
 local staging = require("era.m.git.staging")
-local t = harness.new("era.m.git.encoding")
+local t = harness.new()
 
 for _, format in ipairs(fixture.formats) do
   t:test(format.name .. ": bytes match Neovim writing, including BOM and leading U+FEFF", function()

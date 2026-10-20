@@ -1,42 +1,78 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/c/future_spec.lua
----@diagnostic disable: undefined-global, invisible, unused-local, redundant-parameter
---- Test for stl.c.Future module
-
 local harness = require("__test__.support.harness")
 local async = require("stl.async")
 local Future = require("stl.c.future")
 local CancellationToken = require("stl.c.cancellation_token")
 
-local t = harness.new("stl.c.future")
+local t = harness.new()
 
 t:patch_global("stl", { async = async })
 
-----------------------------------------------------------------------------------------------------
--- Constructor tests
-----------------------------------------------------------------------------------------------------
+---@type table<string, fun(): stl.c.Future>
+local STATES = {
+  pending = function()
+    return Future.new()
+  end,
+  resolved = function()
+    return Future.resolve("value")
+  end,
+  rejected = function()
+    return Future.reject("error")
+  end,
+  cancelled = function()
+    local token = CancellationToken.new()
+    local future = Future.new({ token = token })
+    token:cancel()
+    return future
+  end,
+}
 
-t:test("new: creates pending future", function()
-  local future = Future.new()
-  t.assert_false(future:is_done(), "should not be done")
-  t.assert_false(future:is_resolved(), "should not be resolved")
-  t.assert_false(future:is_cancelled(), "should not be cancelled")
-  t.assert_false(future:is_failed(), "should not be failed")
+---@param future                        stl.c.Future
+---@return table
+local function observe(future)
+  local error_value = future:get_error()
+  return {
+    done = future:is_done(),
+    disposed = future:isdisposed(),
+    resolved = future:is_resolved(),
+    failed = future:is_failed(),
+    cancelled = future:is_cancelled(),
+    result = future:get_result(),
+    error = type(error_value) == "string" and error_value:match("cancelled") and "cancelled" or error_value,
+  }
+end
+
+---@type table<string, table>
+local OBSERVED = {
+  pending = { done = false, disposed = false, resolved = false, failed = false, cancelled = false },
+  resolved = { done = true, disposed = true, resolved = true, failed = false, cancelled = false, result = "value" },
+  rejected = { done = true, disposed = true, resolved = false, failed = true, cancelled = false, error = "error" },
+  cancelled = { done = true, disposed = true, resolved = false, failed = true, cancelled = true, error = "cancelled" },
+}
+
+t:test("each state reports itself through every accessor", function()
+  for name, build in pairs(STATES) do
+    t.assert_same(OBSERVED[name], observe(build()), name)
+  end
 end)
 
-t:test("new: accepts token in props", function()
-  local token = CancellationToken.new()
-  local future = Future.new({ token = token })
-  t.assert_false(future:is_done(), "should be pending")
+t:test("a pending future settles once; later resolution and rejection are ignored", function()
+  for _, case in ipairs({
+    { settle = "__resolve__", value = "value", state = "resolved" },
+    { settle = "__reject__", value = "error", state = "rejected" },
+  }) do
+    local future = Future.new()
+    future[case.settle](future, case.value)
+    t.assert_same(OBSERVED[case.state], observe(future), case.state)
+  end
+  for name, build in pairs(STATES) do
+    if name ~= "pending" then
+      local future = build()
+      future:__resolve__("later")
+      future:__reject__("later")
+      t.assert_same(OBSERVED[name], observe(future), name)
+    end
+  end
 end)
-
-t:test("new: works with nil props", function()
-  local future = Future.new(nil)
-  t.assert_false(future:is_done(), "should create valid future")
-end)
-
-----------------------------------------------------------------------------------------------------
--- Executor pattern tests (ES Promise-compatible)
-----------------------------------------------------------------------------------------------------
 
 t:test("new: executor pattern resolves synchronously", function()
   local future = Future.new(function(resolve, reject)
@@ -94,115 +130,6 @@ t:test("new: reject after resolve is ignored", function()
   t.assert_nil(future:get_error(), "should have no error")
 end)
 
-----------------------------------------------------------------------------------------------------
--- Static constructors
-----------------------------------------------------------------------------------------------------
-
-t:test("resolve: creates resolved future", function()
-  local future = Future.resolve("value")
-  t.assert_true(future:is_done(), "should be done")
-  t.assert_true(future:is_resolved(), "should be resolved")
-  t.assert_eq("value", future:get_result(), "should have result")
-end)
-
-t:test("reject: creates rejected future", function()
-  local future = Future.reject("error message")
-  t.assert_true(future:is_done(), "should be done")
-  t.assert_true(future:is_failed(), "should be failed")
-  t.assert_eq("error message", future:get_error(), "should have error")
-end)
-
-----------------------------------------------------------------------------------------------------
--- State checks
-----------------------------------------------------------------------------------------------------
-
-t:test("is_done: false when pending", function()
-  local future = Future.new()
-  t.assert_false(future:is_done())
-end)
-
-t:test("is_done: true when resolved", function()
-  local future = Future.new()
-  future:__resolve__("value")
-  t.assert_true(future:is_done())
-end)
-
-t:test("is_done: true when rejected", function()
-  local future = Future.new()
-  future:__reject__("error")
-  t.assert_true(future:is_done())
-end)
-
-t:test("is_done: true when cancelled", function()
-  local token = CancellationToken.new()
-  local future = Future.new({ token = token })
-  token:cancel()
-  t.assert_true(future:is_done())
-end)
-
-t:test("is_resolved: true only when resolved", function()
-  local future = Future.new()
-  future:__resolve__("value")
-  t.assert_true(future:is_resolved())
-  t.assert_false(future:is_failed())
-  t.assert_false(future:is_cancelled())
-end)
-
-t:test("is_cancelled: true only when cancelled", function()
-  local token = CancellationToken.new()
-  local future = Future.new({ token = token })
-  token:cancel()
-  t.assert_true(future:is_cancelled())
-  t.assert_true(future:is_failed()) -- cancelled is also failed
-  t.assert_false(future:is_resolved())
-end)
-
-t:test("is_failed: true when rejected or cancelled", function()
-  local future1 = Future.new()
-  future1:__reject__("error")
-  t.assert_true(future1:is_failed())
-
-  local token = CancellationToken.new()
-  local future2 = Future.new({ token = token })
-  token:cancel()
-  t.assert_true(future2:is_failed())
-end)
-
-----------------------------------------------------------------------------------------------------
--- get_result / get_error
-----------------------------------------------------------------------------------------------------
-
-t:test("get_result: returns nil when pending", function()
-  local future = Future.new()
-  t.assert_nil(future:get_result())
-end)
-
-t:test("get_result: returns value when resolved", function()
-  local future = Future.new()
-  future:__resolve__({ key = "value" })
-  local result = future:get_result()
-  t.assert_eq("value", result.key)
-end)
-
-t:test("get_error: returns nil when pending", function()
-  local future = Future.new()
-  t.assert_nil(future:get_error())
-end)
-
-t:test("get_error: returns error when rejected", function()
-  local future = Future.new()
-  future:__reject__("my error")
-  t.assert_eq("my error", future:get_error())
-end)
-
-t:test("get_error: returns error when cancelled", function()
-  local token = CancellationToken.new()
-  local future = Future.new({ token = token })
-  token:cancel()
-  local err = future:get_error()
-  t.assert_true(err ~= nil and string.find(err, "cancelled") ~= nil)
-end)
-
 t:test("token: every future sharing a token is cancelled", function()
   -- Each future unsubscribes itself from the token while the token dispatches, so a token that
   -- mutated its callback array mid-iteration used to cancel only every second future.
@@ -241,10 +168,6 @@ t:test("token: a shared token still runs plain cancel callbacks", function()
   t.assert_true(future:is_cancelled(), "future cancelled")
   t.assert_eq("job-1,job-2", table.concat(aborted, ","), "both abort callbacks run")
 end)
-
-----------------------------------------------------------------------------------------------------
--- finally tests
-----------------------------------------------------------------------------------------------------
 
 t:test("finally: called immediately if already resolved", function()
   local future = Future.resolve("value")
@@ -350,74 +273,6 @@ t:test("finally: handles callback errors gracefully", function()
   t.assert_true(second_called, "second listener should still be called")
 end)
 
-----------------------------------------------------------------------------------------------------
--- __resolve__ tests
-----------------------------------------------------------------------------------------------------
-
-t:test("__resolve__: transitions state to resolved", function()
-  local future = Future.new()
-  future:__resolve__("value")
-  t.assert_eq("value", future:get_result())
-  t.assert_true(future:is_resolved())
-end)
-
-t:test("__resolve__: is idempotent (second call ignored)", function()
-  local future = Future.new()
-  future:__resolve__("first")
-  future:__resolve__("second")
-  t.assert_eq("first", future:get_result(), "should keep first value")
-end)
-
-t:test("__resolve__: ignored if already rejected", function()
-  local future = Future.new()
-  future:__reject__("error")
-  future:__resolve__("value")
-  t.assert_true(future:is_failed(), "should still be failed")
-  t.assert_nil(future:get_result(), "should have no result")
-end)
-
-----------------------------------------------------------------------------------------------------
--- __reject__ tests
-----------------------------------------------------------------------------------------------------
-
-t:test("__reject__: transitions state to rejected", function()
-  local future = Future.new()
-  future:__reject__("error")
-  t.assert_eq("error", future:get_error())
-  t.assert_true(future:is_failed())
-end)
-
-t:test("__reject__: is idempotent (second call ignored)", function()
-  local future = Future.new()
-  future:__reject__("first error")
-  future:__reject__("second error")
-  t.assert_eq("first error", future:get_error(), "should keep first error")
-end)
-
-t:test("__reject__: ignored if already resolved", function()
-  local future = Future.new()
-  future:__resolve__("value")
-  future:__reject__("error")
-  t.assert_true(future:is_resolved(), "should still be resolved")
-  t.assert_nil(future:get_error(), "should have no error")
-end)
-
-----------------------------------------------------------------------------------------------------
--- Cancellation tests
-----------------------------------------------------------------------------------------------------
-
-t:test("cancel: token cancellation cancels future", function()
-  local token = CancellationToken.new()
-  local future = Future.new({ token = token })
-
-  t.assert_false(future:is_cancelled(), "should not be cancelled yet")
-
-  token:cancel()
-
-  t.assert_true(future:is_cancelled(), "should be cancelled")
-  t.assert_true(future:is_done(), "should be done")
-end)
-
 t:test("cancel: finally called on cancellation", function()
   local token = CancellationToken.new()
   local future = Future.new({ token = token })
@@ -435,32 +290,6 @@ t:test("cancel: finally called on cancellation", function()
   t.assert_false(received_ok, "ok should be false for cancellation")
 end)
 
-t:test("cancel: resolve after cancel is ignored", function()
-  local token = CancellationToken.new()
-  local future = Future.new({ token = token })
-
-  token:cancel()
-  future:__resolve__("value")
-
-  t.assert_true(future:is_cancelled(), "should remain cancelled")
-  t.assert_nil(future:get_result(), "should have no result")
-end)
-
-----------------------------------------------------------------------------------------------------
--- IDisposable interface tests
-----------------------------------------------------------------------------------------------------
-
-t:test("isdisposed: false when pending", function()
-  local future = Future.new()
-  t.assert_false(future:isdisposed())
-end)
-
-t:test("isdisposed: true when done", function()
-  local future = Future.new()
-  future:__resolve__("value")
-  t.assert_true(future:isdisposed())
-end)
-
 t:test("dispose: cancels via token", function()
   local token = CancellationToken.new()
   local future = Future.new({ token = token })
@@ -476,10 +305,6 @@ t:test("dispose: returns false without token", function()
   local result = future:dispose()
   t.assert_false(result, "dispose should return false without token")
 end)
-
-----------------------------------------------------------------------------------------------------
--- then_ tests
-----------------------------------------------------------------------------------------------------
 
 t:test("then_: chains resolved future", function()
   local future = Future.resolve(10)
@@ -571,10 +396,6 @@ t:test("then_: pending future chains correctly", function()
   t.assert_eq("hello!", chained:get_result())
 end)
 
-----------------------------------------------------------------------------------------------------
--- catch tests
-----------------------------------------------------------------------------------------------------
-
 t:test("catch: catches rejected future", function()
   local future = Future.reject("error")
   local caught = future:catch(function(err)
@@ -605,10 +426,6 @@ t:test("catch: catches cancelled future", function()
   t.assert_eq("caught cancel", caught:get_result())
 end)
 
-----------------------------------------------------------------------------------------------------
--- map tests
-----------------------------------------------------------------------------------------------------
-
 t:test("map: transforms resolved value", function()
   local future = Future.resolve(5)
   local mapped = future:map(function(x)
@@ -636,10 +453,6 @@ t:test("map: handles callback errors", function()
   local err = mapped:get_error()
   t.assert_true(err ~= nil and string.find(err, "map error") ~= nil)
 end)
-
-----------------------------------------------------------------------------------------------------
--- Future.all tests
-----------------------------------------------------------------------------------------------------
 
 t:test("all: resolves with empty array for empty input", function()
   local future = Future.all({})
@@ -716,10 +529,6 @@ t:test("all: ignores late results after rejection", function()
   t.assert_eq("early error", future:get_error())
 end)
 
-----------------------------------------------------------------------------------------------------
--- Future.race tests
-----------------------------------------------------------------------------------------------------
-
 t:test("race: returns pending for empty input", function()
   local future = Future.race({})
   t.assert_false(future:is_done())
@@ -771,10 +580,6 @@ t:test("race: supports token cancellation", function()
   token:cancel()
   t.assert_true(future:is_cancelled())
 end)
-
-----------------------------------------------------------------------------------------------------
--- Future.any tests
-----------------------------------------------------------------------------------------------------
 
 t:test("any: rejects for empty input", function()
   local future = Future.any({})
@@ -842,10 +647,6 @@ t:test("any: ignores late results after first success", function()
   r2("second")
   t.assert_eq("first", future:get_result())
 end)
-
-----------------------------------------------------------------------------------------------------
--- Future.allSettled tests
-----------------------------------------------------------------------------------------------------
 
 t:test("allSettled: resolves with empty array for empty input", function()
   local future = Future.allSettled({})

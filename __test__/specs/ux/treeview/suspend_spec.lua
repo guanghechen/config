@@ -1,37 +1,21 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.treeview.suspend" ---@type string
-
-local t = require("__test__.support.harness").new("ux.treeview.suspend")
+local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
-local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-bootstrap.with_yoz(t, assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))())
+bootstrap.with_native(t)
 local Future = require("stl.c.future")
-bootstrap.with_stl(t, { c = { Future = Future }, nvim = { fn = require("stl.nvim.fn") } })
 local treeview = require("ux.treeview")
+local support = require("__test__.support.treeview")
 local decorations = require("ux.treeview.decorations")
-
----@param future                        stl.c.Future
----@return any
-local function await(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 5000)
-  t.assert_false(future:is_failed(), future:get_error())
-  local result = future:get_result()
-  t.assert_false(type(result) == "table" and result.kind == "Rejected", vim.inspect(result))
-  return result
-end
 
 ---@return ux.treeview.Data
 ---@return ux.treeview.State
 local function fixture()
   local data = treeview.new_data()
-  await(data:import({
+  support.await(data:import({
     { key = "root", label = "root", can_expand = true },
     { key = "a", parent = "root", label = "alpha" },
     { key = "b", parent = "root", label = "beta" },
   }))
-  return data, await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
+  return data, support.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
 end
 
 ---@return integer
@@ -61,7 +45,7 @@ t:test("suspension retains ownership, rebinds a window and restores each window'
   t.wait_until(function()
     return view:frame() and not view:status().preparing
   end, 5000)
-  await(view:set_cursor(2))
+  support.await(view:set_cursor(2))
   t.wait_until(function()
     return view:frame():header().cursor_row == 2 and not view:status().preparing
   end, 5000)
@@ -127,12 +111,12 @@ t:test("a preparation reply from the released window cannot publish into the res
     end
     return Future.resolve(function() end)
   end
-  await(data:batch({ { kind = "update", node = "a", label = "intermediate" } }))
+  support.await(data:batch({ { kind = "update", node = "a", label = "intermediate" } }))
   t.wait_until(function()
     return held ~= nil
   end, 5000)
   view:suspend()
-  await(data:batch({ { kind = "update", node = "a", label = "latest" } }))
+  support.await(data:batch({ { kind = "update", node = "a", label = "latest" } }))
   local second = window()
   view:resume(second)
   held(function()

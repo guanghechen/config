@@ -1,21 +1,15 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.git.word_diff" ---@type string
-
 local harness = require("__test__.support.harness")
 local diff = require("era.m.git.diff")
 local native = require("yoz").git.word_diff
 local reference = assert(loadfile("__test__/fixtures/era/m/git/diff_lua_reference.lua"))()
-local t = harness.new("era.m.git.word_diff")
+local t = harness.new()
 
 ---@param expected                      any
 ---@param actual                        any
 ---@param context                       string
 ---@return nil
 local function equal(expected, actual, context)
-  t.assert_true(
-    vim.deep_equal(expected, actual),
-    context .. "\n" .. vim.inspect({ expected = expected, actual = actual })
-  )
+  t.assert_same(expected, actual, context .. "\n" .. vim.inspect({ expected = expected, actual = actual }))
 end
 
 ---@param text                          string

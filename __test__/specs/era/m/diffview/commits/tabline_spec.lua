@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/commits/tabline_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.commits.tabline")
+local t = harness.new()
 local layout = nil ---@type era.m.diffview.view.commits.ILayout|nil
 
 local function observable(value)

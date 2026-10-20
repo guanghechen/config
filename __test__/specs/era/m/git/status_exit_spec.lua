@@ -1,30 +1,18 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/status_exit_spec.lua
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.git.status exit")
+local t = harness.new()
+local git = require("__test__.support.git")
 
 t:test("Neovim exit waits for native Git cancellation acknowledgement", function()
-  local root = vim.fn.tempname()
-  vim.fn.mkdir(root, "p")
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
+  local root = t:tempdir()
   local marker = root .. "/started"
   local hook = root .. "/monitor"
   vim.fn.writefile({ "#!/bin/sh", "echo started > " .. vim.fn.shellescape(marker), "sleep 30" }, hook)
   assert(vim.uv.fs_chmod(hook, 493))
 
-  ---@param args                        string[]
-  ---@return nil
-  local function git(args)
-    local command = { "git", "-C", root }
-    vim.list_extend(command, args)
-    local result = vim.system(command):wait()
-    t.assert_eq(0, result.code, result.stderr)
-  end
-  git({ "init", "-q" })
+  git.run(root, { "init", "-q" })
   vim.fn.writefile({ "base" }, root .. "/file")
-  git({ "add", "file" })
-  git({ "config", "core.fsmonitor", hook })
+  git.run(root, { "add", "file" })
+  git.run(root, { "config", "core.fsmonitor", hook })
 
   local repo = vim.uv.cwd()
   local command = {

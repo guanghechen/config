@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/indentline/parser_spec.lua
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.indentline.parser")
+local t = harness.new()
 local parser = require("era.dressing.indentline.parser")
 
 local options = {

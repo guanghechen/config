@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/maximize_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.maximize")
+local t = harness.new()
 local enums = assert(loadfile("lua/stl/e.lua"))()
 local maximized = assert(loadfile("lua/dot/state/maximized.lua"))()
 

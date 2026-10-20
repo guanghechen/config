@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/whichkey/state_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.dressing.whichkey.state")
+local t = harness.new()
 local Whichkey = era.dressing.whichkey
 
 ---@return integer

@@ -1,10 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/watcher_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.git.watcher")
+local t = harness.new()
+local git = require("__test__.support.git")
 local head_refreshes = 0 ---@type integer
 
 bootstrap.with_runtime(t, {
@@ -52,43 +50,30 @@ bootstrap.with_runtime(t, {
 
 local watcher = require("era.m.git.watcher")
 
----@param repo                          string
----@param ...                           string
----@return vim.SystemCompleted
-local function git(repo, ...)
-  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
-end
-
 ---@param branch                        string|nil
 ---@param pack_refs                     boolean|nil
 ---@return nil
 local function assert_commit_detected(branch, pack_refs)
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
   t:defer(function()
     watcher.dispose()
-    vim.fn.delete(repo, "rf")
   end)
 
-  git(repo, "init", "-q")
-  git(repo, "config", "user.email", "test@test")
-  git(repo, "config", "user.name", "test")
   vim.fn.writefile({ "base" }, repo .. "/f.txt")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   if branch then
-    git(repo, "checkout", "-qb", branch)
+    git.run(repo, { "checkout", "-qb", branch })
   end
   if pack_refs then
-    git(repo, "pack-refs", "--all", "--prune")
+    git.run(repo, { "pack-refs", "--all", "--prune" })
   end
 
   head_refreshes = 0
   watcher.update(repo .. "/.git")
   vim.fn.writefile({ "changed" }, repo .. "/f.txt")
-  git(repo, "add", "f.txt")
-  local committed = git(repo, "commit", "-qm", "change")
-  t.assert_eq(0, committed.code, "git commit")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "change" })
 
   t.wait_until(function()
     return head_refreshes > 0
@@ -104,61 +89,52 @@ t:test("watcher observes commits on a nested branch", function()
 end)
 
 t:test("watcher follows HEAD when checkout changes the current ref", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
   t:defer(function()
     watcher.dispose()
-    vim.fn.delete(repo, "rf")
   end)
 
-  git(repo, "init", "-q")
-  git(repo, "config", "user.email", "test@test")
-  git(repo, "config", "user.name", "test")
   vim.fn.writefile({ "base" }, repo .. "/f.txt")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   watcher.update(repo .. "/.git")
 
   head_refreshes = 0
-  git(repo, "checkout", "-qb", "feature/switched")
+  git.run(repo, { "checkout", "-qb", "feature/switched" })
   t.wait_until(function()
     return head_refreshes > 0
   end, 3000, "checkout should refresh HEAD")
 
   head_refreshes = 0
   vim.fn.writefile({ "changed" }, repo .. "/f.txt")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "change")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "change" })
   t.wait_until(function()
     return head_refreshes > 0
   end, 3000, "new branch commit should refresh HEAD")
 end)
 
 t:test("watcher observes commits from a linked worktree", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = t:tempdir()
   local repo = root .. "/main" ---@type string
   local worktree = root .. "/worktree" ---@type string
   vim.fn.mkdir(repo, "p")
   t:defer(function()
     watcher.dispose()
-    vim.fn.delete(root, "rf")
   end)
 
-  git(repo, "init", "-q")
-  git(repo, "config", "user.email", "test@test")
-  git(repo, "config", "user.name", "test")
+  git.run(repo, { "init", "-q" })
   vim.fn.writefile({ "base" }, repo .. "/f.txt")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
-  local added = git(repo, "worktree", "add", "-qb", "feature/worktree", worktree)
-  t.assert_eq(0, added.code, "create worktree")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
+  git.run(repo, { "worktree", "add", "-qb", "feature/worktree", worktree })
 
-  local gitdir = vim.trim(git(worktree, "rev-parse", "--absolute-git-dir").stdout or "") ---@type string
+  local gitdir = vim.trim(git.run(worktree, { "rev-parse", "--absolute-git-dir" })) ---@type string
   head_refreshes = 0
   watcher.update(gitdir, repo .. "/.git")
   vim.fn.writefile({ "changed" }, worktree .. "/f.txt")
-  git(worktree, "add", "f.txt")
-  git(worktree, "commit", "-qm", "change")
+  git.run(worktree, { "add", "f.txt" })
+  git.run(worktree, { "commit", "-qm", "change" })
 
   t.wait_until(function()
     return head_refreshes > 0
@@ -167,20 +143,15 @@ end)
 
 for _, failure in ipairs({ "start", "callback" }) do
   t:test("watcher polls refs and index after fs_event " .. failure .. " failure", function()
-    local repo = vim.fn.tempname() ---@type string
-    vim.fn.mkdir(repo, "p")
+    local repo = git.repo(t)
     t:defer(function()
       watcher.dispose()
-      vim.fn.delete(repo, "rf")
     end)
-    git(repo, "init", "-q")
-    git(repo, "config", "user.email", "test@test")
-    git(repo, "config", "user.name", "test")
     vim.fn.writefile({ "base" }, repo .. "/f.txt")
-    git(repo, "add", "f.txt")
-    git(repo, "commit", "-qm", "base")
-    git(repo, "checkout", "-qb", "feature/polled")
-    git(repo, "pack-refs", "--all", "--prune")
+    git.run(repo, { "add", "f.txt" })
+    git.run(repo, { "commit", "-qm", "base" })
+    git.run(repo, { "checkout", "-qb", "feature/polled" })
+    git.run(repo, { "pack-refs", "--all", "--prune" })
 
     local callbacks = {}
     local closed = 0
@@ -228,19 +199,19 @@ for _, failure in ipairs({ "start", "callback" }) do
 
     head_refreshes, index_refreshes = 0, 0
     vim.fn.writefile({ "changed" }, repo .. "/f.txt")
-    git(repo, "add", "f.txt")
-    t.assert_eq(0, git(repo, "commit", "-qm", "change").code)
+    git.run(repo, { "add", "f.txt" })
+    git.run(repo, { "commit", "-qm", "change" })
     t.wait_until(function()
       return head_refreshes > 0 and index_refreshes > 0
     end, 3000, "polling detects ref creation and index replacement")
 
     head_refreshes = 0
-    git(repo, "checkout", "-qb", "feature/next")
+    git.run(repo, { "checkout", "-qb", "feature/next" })
     t.wait_until(function()
       return head_refreshes > 0
     end, 3000, "polling follows the new HEAD ref")
     head_refreshes = 0
-    t.assert_eq(0, git(repo, "commit", "--allow-empty", "-qm", "next").code)
+    git.run(repo, { "commit", "--allow-empty", "-qm", "next" })
     t.wait_until(function()
       return head_refreshes > 0
     end, 3000, "polling observes subsequent commits")

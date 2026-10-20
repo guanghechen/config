@@ -80,6 +80,8 @@ Use `stl.reporter.{debug|info|warn|error}` for structured diagnostics.
 - Lua specs live under `__test__/specs/`, grouped by module and named `*_spec.lua`.
 - Run all specs with `nvim -l __test__/run.lua`; append a literal path filter to run a directory or one spec.
 - Use `__test__.support.harness` for cases, assertions, and cleanup. Each spec ends with `t:run()`.
+- Specs are not modules: they declare no `__module_name__`, and `harness.new()` names the suite after its path.
+  Start a spec with its requires, without `Run with` lines, banners, or file-wide `---@diagnostic` comments.
 - Use `__test__.support.bootstrap` for declared runtime globals. Composed runtime tests may explicitly load the application bootstrap.
 - Register resource cleanup with `t:defer()` immediately after acquisition. Use `patch_global` / `patch_table` for mocks.
 - Helpers stay beside the relevant cases until multiple specs need them; shared support lives under `__test__/support/`.
@@ -114,5 +116,5 @@ stl.nvim.fn.bindkeys(keymaps, {
 - Follow existing `mlua` serialization/deserialization patterns.
 - Keep Lua-facing APIs synchronized with Lua call sites.
 - Prefix Rust unit tests with `t_` (for example `fn t_parses_config()`).
-- Keep Rust unit tests in the corresponding `rust/<crate>/src/` modules under `#[cfg(test)]`, preserving private access and platform gates. Shared Rust test support stays inside its crate and is also gated by `#[cfg(test)]`.
+- Keep Rust unit tests in the corresponding `rust/<crate>/src/` modules under `#[cfg(test)]`, preserving private access and platform gates; move long ones to `<module>/tests.rs`. Shared Rust test support lives in `#[cfg(test)]` `test_support.rs` modules, never in test files or production code. Release-mode measurements are `#[ignore]` tests in `perf_tests.rs`.
 - Put Node specs in `__test__/node/*.test.mjs` and run them with `node --test`.

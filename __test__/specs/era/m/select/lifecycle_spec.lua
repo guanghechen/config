@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.select.lifecycle" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.select.lifecycle")
+local fixture = require("__test__.support.explorer").new()
 local t = fixture.t
 local List = require("era.m.picker.composer.list")
 

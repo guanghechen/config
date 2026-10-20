@@ -2,7 +2,7 @@ local harness = require("__test__.support.harness")
 local Pattern = require("era.keystroke.textobject.pattern")
 local Search = require("era.keystroke.textobject.search")
 local Source = require("era.keystroke.textobject.source")
-local t = harness.new("era.keystroke.textobject.search")
+local t = harness.new()
 
 ---@param text                          string
 ---@param id                            string

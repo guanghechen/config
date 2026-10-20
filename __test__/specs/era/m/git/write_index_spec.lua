@@ -1,13 +1,14 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/write_index_spec.lua
 --- Timeout: 120000
----@diagnostic disable: undefined-global
 
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local encoding_fixture = require("__test__.fixtures.era.m.git.encoding")
 
-local t = harness.new("era.m.git.write_index")
-bootstrap.with_stl_c(t)
+local t = harness.new()
+local git = require("__test__.support.git")
+bootstrap.with_global(t, "stl", {
+  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
+})
 bootstrap.with_global(t, "stl", {
   c = { Ticker = {
     new = function()
@@ -37,23 +38,12 @@ bootstrap.with_global(t, "era", {
 local staging = era.m.git.staging
 local buffer = assert(loadfile("lua/era/m/git/buffer.lua"))() ---@type era.m.git.buffer
 
----@param repo                          string
----@param ...                           string
----@return vim.SystemCompleted
-local function git(repo, ...)
-  return vim.system({ "git", "-C", repo, ... }, { text = false }):wait()
-end
-
 ---@param autocrlf                      string|nil
 ---@return string
 local function make_repo(autocrlf)
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
-  git(repo, "init", "-q")
-  git(repo, "config", "user.email", "test@test")
-  git(repo, "config", "user.name", "test")
-  git(repo, "config", "core.autocrlf", autocrlf or "false")
-  git(repo, "config", "core.safecrlf", "false")
+  local repo = git.repo(t)
+  git.run(repo, { "config", "core.autocrlf", autocrlf or "false" })
+  git.run(repo, { "config", "core.safecrlf", "false" })
   return repo
 end
 
@@ -69,14 +59,14 @@ end
 ---@param relpath                       string
 ---@return string
 local function index_bytes(repo, relpath)
-  return git(repo, "cat-file", "-p", ":" .. relpath).stdout or ""
+  return git.run(repo, { "cat-file", "-p", ":" .. relpath })
 end
 
 ---@param repo                          string
 ---@param relpath                       string
 ---@return string
 local function index_mode(repo, relpath)
-  local output = git(repo, "ls-files", "--stage", "--", relpath).stdout or "" ---@type string
+  local output = git.run(repo, { "ls-files", "--stage", "--", relpath }) ---@type string
   return output:match("^(%d+)") or ""
 end
 
@@ -84,7 +74,7 @@ end
 ---@param relpath                       string
 ---@return string|nil
 local function index_object(repo, relpath)
-  local output = git(repo, "ls-files", "--stage", "--", relpath).stdout or "" ---@type string
+  local output = git.run(repo, { "ls-files", "--stage", "--", relpath }) ---@type string
   return output:match("^%d+%s+(%x+)%s+0%s+")
 end
 
@@ -154,8 +144,8 @@ end
 t:test("stage: one selected hunk leaves the other unstaged", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\nc\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   t.assert_true(stage(repo, staging.from_text("A\nb\nC\n"), { 1, 1 }).ok, "staged")
   t.assert_eq("A\nb\nc\n", index_bytes(repo, "f.txt"), "first hunk only")
@@ -165,8 +155,8 @@ end)
 t:test("stage: top insertion preserves the zero original anchor", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "b\nc\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   t.assert_true(stage(repo, staging.from_text("a\nb\nc\n"), { 1, 1 }).ok, "staged")
   t.assert_eq("a\nb\nc\n", index_bytes(repo, "f.txt"), "inserted before line 1")
@@ -176,8 +166,8 @@ end)
 t:test("stage: CRLF is reconstructed before Git clean filters", function()
   local repo = make_repo("false")
   write(repo .. "/f.txt", "aa\r\nbb\r\ncc\r\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   local document = staging.from_text("AA\r\nbb\r\nCC\r\n")
   local result = stage(repo, document, { 1, 1 })
@@ -189,8 +179,8 @@ end)
 t:test("stage: autocrlf clean filter matches Git index form", function()
   local repo = make_repo("true")
   write(repo .. "/f.txt", "aa\r\nbb\r\ncc\r\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   local document = staging.from_text("AA\r\nbb\r\nCC\r\n")
   local result = stage(repo, document, { 1, 1 })
@@ -202,8 +192,8 @@ end)
 t:test("stage: missing final newline is not invented", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "one\ntwo\nthree")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   t.assert_true(stage(repo, staging.from_text("ONE\ntwo\nthree"), { 1, 1 }).ok, "staged")
   t.assert_eq("ONE\ntwo\nthree", index_bytes(repo, "f.txt"), "no final newline")
@@ -214,8 +204,8 @@ t:test("stage: latin1 content is encoded before hashing", function()
   local repo = make_repo()
   local base = assert(vim.iconv("caf\195\169\nx\n", "utf-8", "latin1"))
   write(repo .. "/f.txt", base)
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   local document = staging.from_text("CAF\195\137\nx\n", { encoding = "latin1" })
   t.assert_true(stage(repo, document, { 1, 1 }, index_snapshot(repo, "f.txt", "latin1")).ok, "staged")
@@ -236,8 +226,8 @@ for _, format in ipairs(encoding_fixture.formats) do
           local base_text = prefix .. "café中\nmiddle\nlast" .. eof
           local base, bufnr = encoding_fixture.write(t, base_text, format.name, bomb, fileformat)
           write(repo .. "/f.txt", base)
-          t.assert_eq(0, git(repo, "add", "f.txt").code)
-          t.assert_eq(0, git(repo, "commit", "-qm", "base").code)
+          git.run(repo, { "add", "f.txt" })
+          git.run(repo, { "commit", "-qm", "base" })
           local changed = prefix .. "CAFÉ中" .. (format.astral and "🙂" or "")
           vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { changed, "middle", "LAST" })
           local document = staging.from_buffer(bufnr)
@@ -274,8 +264,8 @@ t:test("UTF-16BE alias stages actual BE bytes, including an astral character", f
     vim.fn.delete(repo, "rf")
   end)
   write(repo .. "/f.txt", base)
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local document = staging.from_text("ONE🙂\ntwo", { encoding = "utf-16be", bomb = true })
   local staged = stage(repo, document, { 1, 1 }, index_snapshot(repo, "f.txt", "utf-16be"))
   t.assert_true(staged.ok, tostring(staged.err))
@@ -293,8 +283,8 @@ t:test("Unicode encode failure leaves the index intact and releases the FIFO", f
     end)
     local base = encoding_fixture.write(t, "one\n", case[1], true)
     write(repo .. "/f.txt", base)
-    git(repo, "add", "f.txt")
-    git(repo, "commit", "-qm", "base")
+    git.run(repo, { "add", "f.txt" })
+    git.run(repo, { "commit", "-qm", "base" })
     local object = index_object(repo, "f.txt")
     local calls, hash_object = 0, stl.git.act.hash_object
     local restore = t:patch_table(stl.git.act, "hash_object", function(...)
@@ -328,8 +318,8 @@ t:test("malformed index Unicode is rejected before staging; the next write can p
       vim.fn.delete(repo, "rf")
     end)
     write(repo .. "/f.txt", case[2])
-    git(repo, "add", "f.txt")
-    git(repo, "commit", "-qm", "base")
+    git.run(repo, { "add", "f.txt" })
+    git.run(repo, { "commit", "-qm", "base" })
     local object = index_object(repo, "f.txt")
     local document = staging.from_text("new\n", { encoding = case[1], bomb = true })
     local failed = stage(repo, document, { 1, 1 }, { document = document, object_name = object })
@@ -349,11 +339,11 @@ t:test("malformed HEAD Unicode refuses unstage without blocking later staging", 
     vim.fn.delete(repo, "rf")
   end)
   write(repo .. "/f.txt", "\254\255\216\0")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "malformed HEAD")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "malformed HEAD" })
   local valid = encoding_fixture.write(t, "one\n", "utf-16", true)
   write(repo .. "/f.txt", valid)
-  git(repo, "add", "f.txt")
+  git.run(repo, { "add", "f.txt" })
   local snapshot = index_snapshot(repo, "f.txt", "utf-16")
   local failed = unstage(repo, { 1, 1 }, snapshot)
   t.assert_false(failed.ok, "malformed HEAD refused")
@@ -371,8 +361,8 @@ t:test("stage/unstage: empty output is a valid change, not a missing selection",
     vim.fn.delete(repo, "rf")
   end)
   write(repo .. "/f.txt", "a\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   t.assert_true(stage(repo, staging.from_text(""), { 1, 1 }).ok, "entire deletion staged")
   t.assert_eq("", index_bytes(repo, "f.txt"), "empty blob")
   t.assert_true(unstage(repo, { 1, 1 }).ok, "entire deletion unstaged")
@@ -385,8 +375,8 @@ t:test("native reconstruction failure leaves the index intact and releases the F
     vim.fn.delete(repo, "rf")
   end)
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local document = staging.from_text("A\nb\n")
   local run_diff = era.m.git.diff.run_diff
   local restore = t:patch_table(era.m.git.diff, "run_diff", function(...)
@@ -406,8 +396,8 @@ t:test("stage: existing executable mode is preserved", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "#!/bin/sh\none\ntwo\n")
   vim.fn.setfperm(repo .. "/f.txt", "rwxr-xr-x")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   t.assert_true(stage(repo, staging.from_text("#!/bin/sh\nONE\ntwo\n"), { 2, 2 }).ok, "staged")
   t.assert_eq("100755", index_mode(repo, "f.txt"), "mode")
@@ -436,9 +426,9 @@ t:test("stage: a missing index entry reuses the executable mode from HEAD", func
   local repo = make_repo()
   write(repo .. "/f.txt", "#!/bin/sh\none\n")
   vim.fn.setfperm(repo .. "/f.txt", "rwxr-xr-x")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
-  git(repo, "rm", "-q", "--cached", "f.txt")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
+  git.run(repo, { "rm", "-q", "--cached", "f.txt" })
 
   local document = staging.from_text("#!/bin/sh\nONE\n")
   local result = wait(buffer.stage_range({
@@ -457,10 +447,10 @@ end)
 
 t:test("stage: safecrlf rejection leaves the index unchanged", function()
   local repo = make_repo("true")
-  git(repo, "config", "core.safecrlf", "true")
+  git.run(repo, { "config", "core.safecrlf", "true" })
   write(repo .. "/f.txt", "aa\r\nbb\r\ncc\r\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local before = index_bytes(repo, "f.txt")
 
   local result = stage(repo, staging.from_text("AA\r\nbb\r\nCC\r\n"), { 1, 1 })
@@ -472,10 +462,10 @@ end)
 t:test("unstage: a staged deletion restores lines without reordering", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\nc\nd\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   write(repo .. "/f.txt", "a\nc\nd\n")
-  git(repo, "add", "f.txt")
+  git.run(repo, { "add", "f.txt" })
 
   t.assert_true(unstage(repo, { 1, 1 }).ok, "unstaged")
   t.assert_eq("a\nb\nc\nd\n", index_bytes(repo, "f.txt"), "HEAD restored")
@@ -485,10 +475,10 @@ end)
 t:test("unstage: one selected hunk leaves the other staged", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\nc\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   write(repo .. "/f.txt", "A\nb\nC\n")
-  git(repo, "add", "f.txt")
+  git.run(repo, { "add", "f.txt" })
 
   t.assert_true(unstage(repo, { 1, 1 }).ok, "unstaged")
   t.assert_eq("a\nb\nC\n", index_bytes(repo, "f.txt"), "second hunk remains")
@@ -498,10 +488,10 @@ end)
 t:test("unstage: final newline returns with the selected HEAD line", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   write(repo .. "/f.txt", "a\nB")
-  git(repo, "add", "f.txt")
+  git.run(repo, { "add", "f.txt" })
 
   t.assert_true(unstage(repo, { 2, 2 }).ok, "unstaged")
   t.assert_eq("a\nb\n", index_bytes(repo, "f.txt"), "newline restored")
@@ -511,11 +501,11 @@ end)
 t:test("writes: a stale index snapshot refuses without changing the index", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local stale = index_snapshot(repo, "f.txt")
   write(repo .. "/f.txt", "A\nb\n")
-  git(repo, "add", "f.txt")
+  git.run(repo, { "add", "f.txt" })
   local before = index_bytes(repo, "f.txt")
 
   local result = unstage(repo, { 1, 1 }, stale)
@@ -527,8 +517,8 @@ end)
 t:test("writes: a BOM-only concurrent index change is stale", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local stale = index_snapshot(repo, "f.txt")
 
   local bom_bytes = "\239\187\191a\nb\n"
@@ -536,7 +526,7 @@ t:test("writes: a BOM-only concurrent index change is stale", function()
     .system({ "git", "-C", repo, "hash-object", "-w", "--stdin" }, { stdin = bom_bytes, text = false })
     :wait()
   local hash = assert((hashed.stdout or ""):match("(%x+)"))
-  git(repo, "update-index", "--cacheinfo", "100644," .. hash .. ",f.txt")
+  git.run(repo, { "update-index", "--cacheinfo", "100644," .. hash .. ",f.txt" })
 
   local result = stage(repo, staging.from_text("A\nb\n"), { 1, 1 }, stale)
   t.assert_false(result.ok, "refused")
@@ -548,8 +538,8 @@ t:test("writes: different files share one repository FIFO", function()
   local repo = make_repo()
   write(repo .. "/a.txt", "a\n")
   write(repo .. "/b.txt", "b\n")
-  git(repo, "add", "a.txt", "b.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "a.txt", "b.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
 
   local original = stl.git.info.get_file_info
   local starts = {} ---@type string[]
@@ -606,8 +596,8 @@ end)
 t:test("stage: index blob read failure leaves the index unchanged", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local before = index_bytes(repo, "f.txt")
 
   local restore = t:patch_table(stl.git.info, "get_show_blob", function()
@@ -624,8 +614,8 @@ end)
 t:test("stage: index metadata failure leaves the index unchanged", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local before = index_bytes(repo, "f.txt")
 
   local restore = t:patch_table(stl.git.info, "get_file_info", function()
@@ -642,8 +632,8 @@ end)
 t:test("stage: unmerged index entry is refused", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local before = index_bytes(repo, "f.txt")
 
   local restore = t:patch_table(stl.git.info, "get_file_info", function()
@@ -665,9 +655,9 @@ t:test("stage: HEAD mode lookup failure does not default to regular file", funct
   local repo = make_repo()
   write(repo .. "/f.txt", "#!/bin/sh\none\n")
   vim.fn.setfperm(repo .. "/f.txt", "rwxr-xr-x")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
-  git(repo, "rm", "-q", "--cached", "f.txt")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
+  git.run(repo, { "rm", "-q", "--cached", "f.txt" })
 
   local restore = t:patch_table(stl.git.info, "get_head_file_mode", function()
     return stl.c.Future.resolve({ ok = false, missing = false, err = "injected mode failure" })
@@ -690,10 +680,10 @@ end)
 t:test("unstage: HEAD blob read failure leaves the index unchanged", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   write(repo .. "/f.txt", "A\nb\n")
-  git(repo, "add", "f.txt")
+  git.run(repo, { "add", "f.txt" })
   local before = index_bytes(repo, "f.txt")
 
   local original = stl.git.info.get_show_blob
@@ -714,8 +704,8 @@ end)
 t:test("writes: an asynchronous reconstruction error releases the repository queue", function()
   local repo = make_repo()
   write(repo .. "/f.txt", "a\nb\n")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   local document = staging.from_text("A\nb\n")
 
   local restore = t:patch_table(staging, "apply_selection", function()
@@ -736,8 +726,8 @@ t:test(
   function()
     local repo = make_repo()
     write(repo .. "/f.txt", "a\nb\n")
-    git(repo, "add", "f.txt")
-    git(repo, "commit", "-qm", "base")
+    git.run(repo, { "add", "f.txt" })
+    git.run(repo, { "commit", "-qm", "base" })
     local document = staging.from_text("A\nb\n")
 
     local restore = t:patch_table(stl.git.act, "hash_object", function()

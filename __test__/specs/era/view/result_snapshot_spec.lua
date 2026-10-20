@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.view.result_snapshot" ---@type string
-
-local t = require("__test__.support.harness").new("era.view.result_snapshot")
+local t = require("__test__.support.harness").new()
 local Source = require("era.view.result_source")
 local Snapshot = require("era.view.result_snapshot")
 

@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.action" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.action")
-local t, await, write, directory = fixture.t, fixture.await, fixture.write, fixture.directory
+local fixture = require("__test__.support.explorer").new()
+local t, await, write = fixture.t, fixture.await, fixture.write
 
 ---@param widget                        era.m.explorer.Widget
 ---@param mark                          string
@@ -18,7 +15,7 @@ local function mark(widget, mark)
 end
 
 t:test("Normal mode switching and Visual union use one native selection", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   write(path .. "/b")
   local widget = fixture.widget(path)
@@ -37,7 +34,7 @@ t:test("Normal mode switching and Visual union use one native selection", functi
 end)
 
 t:test("paste consumes selected sources and successful cleanup exits copy mode", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dest", 448))
   write(path .. "/a")
   local widget = fixture.widget(path)
@@ -56,7 +53,7 @@ t:test("paste consumes selected sources and successful cleanup exits copy mode",
 end)
 
 t:test("paste uses the committed purpose when cut is submitted before the frame redraw", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dest", 448))
   write(path .. "/a")
   local widget = fixture.widget(path)
@@ -77,7 +74,7 @@ t:test("paste uses the committed purpose when cut is submitted before the frame 
 end)
 
 t:test("rename preserves a modified buffer and delete leaves that buffer alive", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local bufnr = vim.api.nvim_create_buf(true, false)
   vim.api.nvim_buf_set_name(bufnr, path .. "/a")
@@ -108,9 +105,9 @@ end)
 
 t:test("accepting Rename's default preserves a native Unix name containing a backslash", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("a backslash is a path separator on Windows")
   end
-  local path, name = directory(), "a\\b"
+  local path, name = t:tempdir(), "a\\b"
   local widget = fixture.widget(path)
   await(widget._action:operate({ kind = "create", path = name }))
   fixture.idle(widget)
@@ -132,7 +129,7 @@ t:test("accepting Rename's default preserves a native Unix name containing a bac
 end)
 
 t:test("a pending conflict survives closing the pane and cancellation preserves selection", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dest", 448))
   write(path .. "/a")
   write(path .. "/dest/a")
@@ -165,7 +162,7 @@ t:test("a pending conflict survives closing the pane and cancellation preserves 
 end)
 
 t:test("new relative file creates parents, reveals it, and opens in a source window", function()
-  local path = directory()
+  local path = t:tempdir()
   local target = vim.api.nvim_get_current_win()
   t:patch_table(dot.win, "pick_sourcefile", function()
     return target
@@ -184,7 +181,7 @@ t:test("new relative file creates parents, reveals it, and opens in a source win
 end)
 
 t:test("creation through a directory link reveals the created logical occurrence", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/target", 448))
   assert(vim.uv.fs_symlink("target", path .. "/alias", { dir = true }))
   local target = vim.api.nvim_get_current_win()
@@ -208,7 +205,7 @@ t:test("creation through a directory link reveals the created logical occurrence
 end)
 
 t:test("editing the create directory prefix chooses a path under the captured display root", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/folder", 448))
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/folder")
@@ -226,7 +223,7 @@ end)
 t:test("create prefixes respect native root separators and preserve the captured directory", function()
   local Session = require("era.m.explorer.session")
   local Jobs = require("era.m.explorer.jobs")
-  local state = fixture.widget(directory())._session.state
+  local state = fixture.widget(t:tempdir())._session.state
   for _, case in ipairs({
     { windows = true, root = "C:\\", destination = "C:\\foo", default = "foo/" },
     { windows = true, root = "C:\\", destination = "C:\\", default = "" },
@@ -295,7 +292,7 @@ t:test("create prefixes respect native root separators and preserve the captured
 end)
 
 t:test("an unchanged create prefix cannot retarget a replaced destination directory", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/folder", 448))
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/folder")
@@ -318,7 +315,7 @@ t:test("an unchanged create prefix cannot retarget a replaced destination direct
 end)
 
 t:test("completion and confirmation release selection without a recurring progress timer", function()
-  local path = directory()
+  local path = t:tempdir()
   local widget = fixture.widget(path)
   local session, view = widget:context()
   local callbacks, completed = {}, 0
@@ -375,7 +372,7 @@ t:test("completion and confirmation release selection without a recurring progre
 end)
 
 t:test("cancelling preparation settles before a late prompt and permits a new operation", function()
-  local path = directory()
+  local path = t:tempdir()
   local widget = fixture.widget(path)
   local session, view = widget:context()
   local answered
@@ -406,7 +403,7 @@ t:test("cancelling preparation settles before a late prompt and permits a new op
 end)
 
 t:test("open captures its input before asynchronous selection inspection and preserves selection", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   write(path .. "/b")
   local target = vim.api.nvim_get_current_win()
@@ -433,7 +430,7 @@ t:test("open captures its input before asynchronous selection inspection and pre
 end)
 
 t:test("rename applies LSP edits before IO and notifies only after a successful move", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a.lua")
   write(path .. "/use.lua")
   local bufnr = vim.fn.bufadd(path .. "/use.lua")
@@ -504,7 +501,7 @@ t:test("trash configuration uses the platform tool and tool failure preserves th
   if not stl.env.IS_OSX and not (stl.env.IS_NIX and not stl.env.IS_WSL) then
     return
   end
-  local path = directory()
+  local path = t:tempdir()
   local bin, recycled = path .. "/bin", path .. "/recycled"
   assert(vim.uv.fs_mkdir(bin, 448))
   assert(vim.uv.fs_mkdir(recycled, 448))
@@ -547,7 +544,7 @@ t:test("trash configuration uses the platform tool and tool failure preserves th
 end)
 
 t:test("copy and move to a complete path create parents and keep rename within the current parent", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local widget = fixture.widget(path)
   local data = widget._session.data
@@ -582,7 +579,7 @@ t:test("copy and move to a complete path create parents and keep rename within t
 end)
 
 t:test("a non-missing resolve error cannot authorize creating parents through its message", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
@@ -608,9 +605,9 @@ end)
 
 t:test("copy to an alias inside the source is rejected before creating missing parents", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("needs Unix symbolic links and aliases")
   end
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/source", 448))
   write(path .. "/source/a")
   assert(vim.uv.fs_symlink("source", path .. "/alias"))
@@ -628,9 +625,9 @@ end)
 
 t:test("an unrelated non-UTF8 buffer does not interrupt successful move synchronization", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("needs non-UTF-8 filenames")
   end
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local raw, normal = vim.api.nvim_create_buf(true, false), vim.fn.bufadd(path .. "/a")
   vim.fn.bufload(normal)
@@ -656,7 +653,7 @@ end)
 t:test("directory prompts lock and capture the source before cursor or filesystem changes", function()
   for _, remove in ipairs({ false, true }) do
     local message_offset = #fixture.messages
-    local path = directory()
+    local path = t:tempdir()
     assert(vim.uv.fs_mkdir(path .. "/dest", 448))
     write(path .. "/a")
     write(path .. "/b")

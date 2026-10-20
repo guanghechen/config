@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/state_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.state")
+local t = harness.new()
 
 local Observable = {}
 Observable.__index = Observable
@@ -117,24 +114,15 @@ local function populate_tree(owner, keys)
     owner.source:insert(root, key, { presentation = { label = key } })
     owner.entries[key] = { nodetype = "container" }
   end
-  require("__test__.support.result_tree").publish(owner)
+  require("__test__.support.treeview").publish(owner)
 end
 
 ---@return nil
 local function native_runtime()
   t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
   local bootstrap = require("__test__.support.bootstrap")
-  local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-  bootstrap.with_yoz(t, assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))())
-  bootstrap.with_stl(t, {
-    c = { Observable = Observable, Future = require("stl.c.future") },
-    nvim = { fn = require("stl.nvim.fn") },
-    reporter = {
-      error = function(value)
-        error(value.message)
-      end,
-    },
-  })
+  bootstrap.with_native(t)
+  bootstrap.with_global(t, "stl", { c = { Observable = Observable } })
 end
 
 t:test("expanded commits keep directory collapse state independent", function()
@@ -148,12 +136,12 @@ t:test("expanded commits keep directory collapse state independent", function()
   local owner = state:get_tree("commits")
   populate_tree(owner, { panels.key("commit:commit-a", "src", true), panels.key("commit:commit-b", "src", true) })
   state:collapse_commit_dir("commit-a", "src")
-  require("__test__.support.result_tree").await(owner:ready())
+  require("__test__.support.treeview").await(owner:ready())
   t.assert_true(state:is_commit_dir_collapsed("commit-a", "src"))
   t.assert_false(state:is_commit_dir_collapsed("commit-b", "src"))
   state:toggle_commit_dir("commit-b", "src")
   state:expand_commit_dir("commit-a", "src")
-  require("__test__.support.result_tree").await(owner:ready())
+  require("__test__.support.treeview").await(owner:ready())
   t.assert_false(state:is_commit_dir_collapsed("commit-a", "src"))
   t.assert_true(state:is_commit_dir_collapsed("commit-b", "src"))
 end)
@@ -243,17 +231,17 @@ t:test("workspace keeps staged and unstaged tree state independent", function()
     populate_tree(state:get_tree(stage), { panels.key(nil, "src", true), panels.key(nil, stage .. "/dir", true) })
   end
   state:collapse_dir("staged", "src")
-  require("__test__.support.result_tree").await(state:get_tree("staged"):ready())
+  require("__test__.support.treeview").await(state:get_tree("staged"):ready())
   t.assert_true(state:is_collapsed("staged", "src"))
   t.assert_false(state:is_collapsed("unstaged", "src"))
   state:toggle_collapse("unstaged", "src")
   state:expand_dir("staged", "src")
-  require("__test__.support.result_tree").await(state:get_tree("staged"):ready())
-  require("__test__.support.result_tree").await(state:get_tree("unstaged"):ready())
+  require("__test__.support.treeview").await(state:get_tree("staged"):ready())
+  require("__test__.support.treeview").await(state:get_tree("unstaged"):ready())
   t.assert_false(state:is_collapsed("staged", "src"))
   t.assert_true(state:is_collapsed("unstaged", "src"))
   state:collapse_all("staged")
-  require("__test__.support.result_tree").await(state:get_tree("staged"):ready())
+  require("__test__.support.treeview").await(state:get_tree("staged"):ready())
   t.assert_true(state:is_collapsed("staged", "staged/dir"))
   t.assert_false(state:is_collapsed("unstaged", "unstaged/dir"))
 end)

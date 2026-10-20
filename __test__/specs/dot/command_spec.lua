@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/command_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.command")
+local t = harness.new()
 
 bootstrap.with_global(t, "stl", { reporter = { warn = function() end } })
 bootstrap.with_global(t, "dot", { var = { toggler = {}, themes = {} } })

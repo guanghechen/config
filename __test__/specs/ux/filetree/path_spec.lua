@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.filetree.path" ---@type string
-
-local t = require("__test__.support.harness").new("ux.filetree.path")
+local t = require("__test__.support.harness").new()
 local env = require("stl.env")
 local path = require("ux.filetree.path")
 

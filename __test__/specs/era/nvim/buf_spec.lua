@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/nvim/buf_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.nvim.buf")
+local t = harness.new()
 
 t:test("tab-local close deletes only requested unreferenced buffers", function()
   local requested_bufnr = 41

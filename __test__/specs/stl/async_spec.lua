@@ -1,14 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/async_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.async")
+local t = harness.new()
 local Async = require("stl.async")
 local Future = require("stl.c.future")
 
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "stl", {
   async = Async,
   c = { Future = Future },
 })

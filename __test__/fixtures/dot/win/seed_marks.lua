@@ -2,6 +2,8 @@
 local __module_name__ = "__test__.fixtures.dot.win.seed_marks" ---@type string
 
 local dir = assert(arg[1])
+-- The default 'shada' treats temporary directories as removable media and keeps no marks for their files.
+vim.o.shada = "!,'100,<50,s10,h"
 vim.o.hidden = true
 local names = {
   "first",

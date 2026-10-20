@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.inputs" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.inputs")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 
 ---@param path                          string
@@ -30,7 +27,7 @@ local function displayed(widget, count)
 end
 
 t:test("reopening a retained data source withdraws diagnostics cleared while unsubscribed", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local bufnr, namespace = diagnostic(path .. "/a")
   local first = fixture.widget(path)
@@ -44,7 +41,7 @@ t:test("reopening a retained data source withdraws diagnostics cleared while uns
 end)
 
 t:test("sparse severity counts survive another namespace being reset", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local bufnr, warnings = diagnostic(path .. "/a")
   local hints = vim.api.nvim_create_namespace("explorer-hints-" .. bufnr)
@@ -73,7 +70,7 @@ t:test("sparse severity counts survive another namespace being reset", function(
 end)
 
 t:test("shared data publishes watch coverage to every session and reconnects after disposal", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local first = fixture.widget(path)
   local data = first._session.data
@@ -107,7 +104,7 @@ t:test("shared data publishes watch coverage to every session and reconnects aft
 end)
 
 t:test("Busy diagnostic and Git inputs are retried without another editor event", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local bufnr, namespace = diagnostic(path .. "/a")
   local widget = fixture.widget(path)
@@ -140,7 +137,7 @@ t:test("Busy diagnostic and Git inputs are retried without another editor event"
 end)
 
 t:test("disposing during ignore preload cannot publish a late Git input", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local widget = fixture.widget(path)
   local session = widget._session
@@ -187,7 +184,7 @@ t:test("filesystem publications refresh Git without selection or annotation feed
     Git.o_refreshed:next({ change_scope = "unknown", generation = refreshes })
     return stl.c.Future.resolve(nil)
   end)
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/a")
   local widget = fixture.widget(path)
   local session, view = widget:context()
@@ -234,7 +231,7 @@ t:test("filesystem publications refresh Git without selection or annotation feed
 end)
 
 t:test("partial IO refreshes Git after the last pane and subscription are disposed", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dest", 448))
   fixture.write(path .. "/a")
   fixture.write(path .. "/b")
@@ -282,7 +279,7 @@ t:test("partial IO refreshes Git after the last pane and subscription are dispos
 end)
 
 t:test("ignore preloading keeps byte paths and isolates a broken viewport resource", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c", "d" }) do
     fixture.write(path .. "/" .. name)
   end

@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.diffview.commits.cache" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.diffview.commits.cache")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local Cache = require("era.m.diffview.view.commits.cache")
 local State = require("era.m.diffview.view.commits.state").State
 local view = require("era.m.diffview.view.commits.view")
@@ -44,7 +41,7 @@ local function fixture()
   state:set_current_commit(commits[3])
   local ctx =
     { state = state, layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr } }
-  native.await(view.render_commits(ctx))
+  treeview.await(view.render_commits(ctx))
   return ctx, state:get_tree("commits"), commits
 end
 
@@ -69,9 +66,9 @@ t:test("the cache bounds collapsed records, preserves folds and serializes new e
   expand(ctx, commits[1])
   local directory = tree.key("commit:a", "src", true)
   owner:set_expansion(directory, false, false)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   ctx.state:collapse_commit("a")
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   expand(ctx, commits[2])
   t.assert_true(owner:data("commit:a").files_loaded, "expanded content does not consume the collapsed cache budget")
   t.assert_true(owner:linecount() > 10050)
@@ -134,7 +131,7 @@ t:test("the cache bounds collapsed records, preserves folds and serializes new e
   t.assert_false(owner:expanded(directory))
   ctx.state:set_current_commit(commits[2])
   ctx.state:collapse_commit("a")
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   t.wait_until(function()
     return not cache._scheduled and not cache._trimming
   end, 15000)

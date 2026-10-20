@@ -1,10 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/blame_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.git.blame")
+local t = harness.new()
+local git = require("__test__.support.git")
 local attached = {} ---@type table<integer, era.m.git.buffer.ICache>
 
 bootstrap.with_runtime(t, {
@@ -47,29 +45,15 @@ bootstrap.with_runtime(t, {
 local blame = require("era.m.git.blame")
 blame.setup()
 
----@param repo                          string
----@param ...                           string
----@return vim.SystemCompleted
-local function git(repo, ...)
-  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
-end
-
 ---@return string
 local function make_repo()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
-  git(repo, "init", "-q")
-  git(repo, "config", "user.email", "test@test")
-  git(repo, "config", "user.name", "test")
+  local repo = git.repo(t)
   vim.fn.writefile({ "base" }, repo .. "/f.txt")
-  git(repo, "add", "f.txt")
-  git(repo, "commit", "-qm", "base")
+  git.run(repo, { "add", "f.txt" })
+  git.run(repo, { "commit", "-qm", "base" })
   vim.fn.writefile({ "base" }, repo .. "/g.txt")
-  git(repo, "add", "g.txt")
-  git(repo, "commit", "-qm", "second")
-  t:defer(function()
-    vim.fn.delete(repo, "rf")
-  end)
+  git.run(repo, { "add", "g.txt" })
+  git.run(repo, { "commit", "-qm", "second" })
   return repo
 end
 

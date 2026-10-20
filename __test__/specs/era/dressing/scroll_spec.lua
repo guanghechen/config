@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/scroll_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.dressing.scroll module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.scroll")
+local t = harness.new()
 
 ---@param callback                     function
 ---@param name                         string
@@ -440,7 +436,7 @@ t:test("a frame keeps the cursor off the part of a smoothscroll topline its view
   local skipped = { lnum = 8, col = 0, coladd = 0, curswant = 0, topline = 6, topfill = 0, leftcol = 0, skipcol = 960 }
   local commands = finish_animation(runtime, skipped).commands
 
-  t.assert_true(vim.deep_equal({ 6, 960 }, runtime.cursors[#runtime.cursors]), vim.inspect(runtime.cursors))
+  t.assert_same({ 6, 960 }, runtime.cursors[#runtime.cursors])
   for _, command in ipairs(commands) do
     t.assert_nil(command:match("normal! 1H"), "H onto the skipped topline: " .. command)
   end

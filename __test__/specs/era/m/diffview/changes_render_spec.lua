@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.diffview.changes_render" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.diffview.changes_render")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local changes = require("era.m.diffview.pane.changes")
 local panels = require("era.m.diffview.pane.tree")
 
@@ -35,7 +32,7 @@ local function render(mode, stage, input, width)
     metadata_widths = changes.measure_metadata(input or entries),
     panel_width = width or 40,
   })
-  native.await(changes.apply_to_buffer(bufnr, plan, owner))
+  treeview.await(changes.apply_to_buffer(bufnr, plan, owner))
   return owner, bufnr
 end
 
@@ -86,11 +83,11 @@ t:test("native navigation and collapse preserve file identity", function()
   local parent = changes.resolve_parent_lnum(changes.get_navigation(bufnr), row)
   t.assert_eq("src", changes.get_item_at_line(bufnr, parent).uuid)
   owner:collapse(owner:retrieve_uuid(parent), "collapse", false)
-  native.publish(owner, { rootuuid = panels.root })
+  treeview.publish(owner, { rootuuid = panels.root })
   t.assert_eq(1, owner:linecount())
   t.assert_nil(owner:retrieve_lnum(panels.key(nil, "src/foo.lua", false)))
   owner:collapse(owner:retrieve_uuid(1), "expand", false)
-  native.publish(owner, { rootuuid = panels.root })
+  treeview.publish(owner, { rootuuid = panels.root })
   t.assert_eq(
     "src/foo.lua",
     changes.get_entry_at_line(bufnr, owner:retrieve_lnum(panels.key(nil, "src/foo.lua", false))).filepath
@@ -111,9 +108,9 @@ t:test("Tree List Tree preserves directory identity, marks and collapsed state",
   local revision = source:revision()
   owner:set_expansion(directory, false, false)
   owner:set_selected(directory, true)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   for _, mode in ipairs({ "list", "tree", "list", "tree" }) do
-    native.await(changes.apply_to_buffer(
+    treeview.await(changes.apply_to_buffer(
       bufnr,
       changes.render(entries, {
         stage_type = "staged",
@@ -169,7 +166,7 @@ t:test("an attached Changes pane publishes through the owned native surface", fu
       vim.api.nvim_win_close(winnr, true)
     end
   end)
-  native.await(
+  treeview.await(
     changes.apply_to_buffer(
       bufnr,
       changes.render(entries, { stage_type = "staged", viewtype = "tree", foldempty = true }),

@@ -1,6 +1,6 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
-local t = harness.new("era.keystroke.textobject.treesitter")
+local Runtime = require("__test__.support.textobject")
+local t = harness.new()
 local Textobject = Runtime.setup(t)
 local Treesitter = require("era.keystroke.textobject.treesitter")
 

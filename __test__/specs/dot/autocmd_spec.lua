@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/autocmd_spec.lua
----@diagnostic disable: undefined-global
---- Test for tmux state refreshes in dot.autocmd
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.autocmd")
+local t = harness.new()
 
 ---@class dot.autocmd.test.IRuntime
 ---@field autocmds                    table<string, table>

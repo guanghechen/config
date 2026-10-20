@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.diffview.commits.navigation" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.diffview.commits.navigation")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local commits = require("era.m.diffview.pane.commits")
 local panels = require("era.m.diffview.pane.tree")
 
@@ -39,7 +36,7 @@ local function render(mode, input, compressed)
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end)
-  native.await(commits.apply_to_buffer(
+  treeview.await(commits.apply_to_buffer(
     bufnr,
     commits.render(input, {
       viewtype = mode or "tree",
@@ -58,7 +55,7 @@ end
 ---@return nil
 local function expand(owner, key, value)
   owner:set_expansion(key, value, false)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
 end
 
 t:test("commits begin collapsed and their file trees share native row navigation", function()
@@ -138,7 +135,7 @@ t:test("inline List retains commit groups and the hidden directory expansion acr
   local directory_id, nested_id = source:id(directory), source:id(nested)
   local revision = source:revision()
   for _, mode in ipairs({ "list", "tree" }) do
-    native.await(commits.apply_to_buffer(
+    treeview.await(commits.apply_to_buffer(
       bufnr,
       commits.render({ first, peer }, {
         viewtype = mode,
@@ -189,7 +186,7 @@ t:test("panel recreation reuses native state and a requested cursor waits for it
       vim.api.nvim_win_close(winnr, true)
     end
   end)
-  native.await(commits.apply_to_buffer(
+  treeview.await(commits.apply_to_buffer(
     next_bufnr,
     commits.render({ first, second }, {
       layout = 2,

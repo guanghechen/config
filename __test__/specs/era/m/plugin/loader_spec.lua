@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/plugin/loader_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local loader = require("era.m.plugin.loader")
 
-local t = harness.new("era.m.plugin.loader")
+local t = harness.new()
 
 -- PluginLoad delivery is tested explicitly below; other tests do not need to drain scheduled callbacks.
 t:patch_table(vim, "schedule", function() end)

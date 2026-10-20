@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/indentline/setup_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.indentline.setup")
+local t = harness.new()
 local module_name = "era.dressing.indentline" ---@type string
 local observable = {
   value = true,

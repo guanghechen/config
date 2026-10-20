@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/ui_attach/messages_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.ui_attach.messages")
+local t = harness.new()
 
 ---@class era.dressing.ui_attach.messages.test.IRuntime
 ---@field deferred                      fun()[]
@@ -252,15 +249,12 @@ t:test("message rendering preserves multiline byte ranges and caches highlight n
   run_scheduled(runtime)
 
   t.assert_eq("A文x\n\n字\n尾", runtime.reports[1].options.message, "message")
-  t.assert_true(
-    vim.deep_equal({
-      { lnum = 1, coll = 1, colr = 4, hlname = "Group11" },
-      { lnum = 1, coll = 4, colr = 5, hlname = "Group11" },
-      { lnum = 3, coll = 0, colr = 3, hlname = "Group12" },
-      { lnum = 4, coll = 0, colr = 3, hlname = "Group12" },
-    }, runtime.reports[1].options.highlights),
-    "highlight byte ranges"
-  )
+  t.assert_same({
+    { lnum = 1, coll = 1, colr = 4, hlname = "Group11" },
+    { lnum = 1, coll = 4, colr = 5, hlname = "Group11" },
+    { lnum = 3, coll = 0, colr = 3, hlname = "Group12" },
+    { lnum = 4, coll = 0, colr = 3, hlname = "Group12" },
+  }, runtime.reports[1].options.highlights, "highlight byte ranges")
   t.assert_eq(1, calls[11], "cached first highlight")
   t.assert_eq(1, calls[12], "cached second highlight")
   t.assert_nil(calls[0], "default highlight lookup")
@@ -456,20 +450,18 @@ t:test("message history renders multiline and appended entries", function()
 
   local bufnr = states.message.history_bufnr
   t.assert_true(bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr), "history buffer")
-  t.assert_true(
-    vim.deep_equal({ "first", "second + tail", "last", "文x" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)),
+  t.assert_same(
+    { "first", "second + tail", "last", "文x" },
+    vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
     "history lines"
   )
-  t.assert_true(
-    vim.deep_equal({
-      { hlname = "Group11", from = { 0, 0 }, to = { 0, 5 } },
-      { hlname = "Group12", from = { 1, 0 }, to = { 1, 6 } },
-      { hlname = "Group13", from = { 1, 6 }, to = { 1, 13 } },
-      { hlname = "Group13", from = { 2, 0 }, to = { 2, 4 } },
-      { hlname = "Group14", from = { 3, 0 }, to = { 3, 4 } },
-    }, ranges),
-    "history highlights"
-  )
+  t.assert_same({
+    { hlname = "Group11", from = { 0, 0 }, to = { 0, 5 } },
+    { hlname = "Group12", from = { 1, 0 }, to = { 1, 6 } },
+    { hlname = "Group13", from = { 1, 6 }, to = { 1, 13 } },
+    { hlname = "Group13", from = { 2, 0 }, to = { 2, 4 } },
+    { hlname = "Group14", from = { 3, 0 }, to = { 3, 4 } },
+  }, ranges, "history highlights")
 end)
 
 t:test("one failed report does not abort later groups", function()

@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.interaction" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.interaction")
-local t, await, write, directory = fixture.t, fixture.await, fixture.write, fixture.directory
+local fixture = require("__test__.support.explorer").new()
+local t, await, write = fixture.t, fixture.await, fixture.write
 
 t:patch_table(dot.context.explorer.trash, "snapshot", function()
   return false
@@ -28,7 +25,7 @@ local function assert_selection(session, node, purpose)
 end
 
 t:test("Enter and l open the cursor while explicit open uses and preserves the logical selection", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   write(path .. "/b")
   assert(vim.uv.fs_mkdir(path .. "/dir", 448))
@@ -71,7 +68,7 @@ t:test("Visual oa exports its forward or backward range with or without existing
     { keys = "V<C-v>k", marked = true },
   }) do
     local marked = case.marked
-    local path = directory()
+    local path = t:tempdir()
     for _, name in ipairs({ "a", "b", "c" }) do
       write(path .. "/" .. name)
     end
@@ -107,7 +104,7 @@ t:test("Visual d captures its range before confirmation and preserves unrelated 
     { keys = "V<C-v>k", marked = true },
   }) do
     local marked = case.marked
-    local path = directory()
+    local path = t:tempdir()
     for _, name in ipairs({ "a", "b", "c" }) do
       write(path .. "/" .. name)
     end
@@ -146,7 +143,7 @@ t:test("Visual d captures its range before confirmation and preserves unrelated 
 end)
 
 t:test("Visual copy aliases, cut and toggle apply to their ranges and preserve unrelated marks", function()
-  local path = directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c" }) do
     write(path .. "/" .. name)
   end
@@ -178,7 +175,7 @@ t:test("Visual copy aliases, cut and toggle apply to their ranges and preserve u
 end)
 
 t:test("cancelling Visual delete preserves files and Normal d still consumes the logical selection", function()
-  local path = directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c" }) do
     write(path .. "/" .. name)
   end
@@ -212,7 +209,7 @@ t:test("cancelling Visual delete preserves files and Normal d still consumes the
 end)
 
 t:test("Visual AI and delete treat a directory with its visible child as one subtree", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   assert(vim.uv.fs_mkdir(path .. "/dir", 448))
   write(path .. "/dir/file")
@@ -262,7 +259,7 @@ end)
 
 for _, published in ipairs({ false, true }) do
   t:test("Visual delete does not retarget a replacement with source publication " .. tostring(published), function()
-    local path = directory()
+    local path = t:tempdir()
     for _, name in ipairs({ "a", "b", "c" }) do
       write(path .. "/" .. name)
     end
@@ -319,7 +316,7 @@ for _, published in ipairs({ false, true }) do
 end
 
 t:test("delete confirmation bounds named prompts and cancellation preserves all sources", function()
-  local path = directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c", "d", "e", "f", "g" }) do
     write(path .. "/" .. name)
   end

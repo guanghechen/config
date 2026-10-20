@@ -1,44 +1,20 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.treeview.recovery" ---@type string
-
-local t = require("__test__.support.harness").new("ux.treeview.recovery")
+local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
-local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-bootstrap.with_yoz(t, assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))())
+bootstrap.with_native(t)
 local Future = require("stl.c.future")
-bootstrap.with_stl(t, {
-  c = { Future = Future },
-  nvim = { fn = require("stl.nvim.fn") },
-  reporter = {
-    error = function(options)
-      error(options.message)
-    end,
-  },
-})
 local treeview = require("ux.treeview")
-
----@param future                        stl.c.Future
----@return any
-local function await(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 5000)
-  t.assert_false(future:is_failed(), future:get_error())
-  local result = future:get_result()
-  t.assert_false(type(result) == "table" and result.kind == "Rejected", vim.inspect(result))
-  return result
-end
+local support = require("__test__.support.treeview")
 
 ---@param prepare_frame                 ?function
 ---@return ux.treeview.Data, ux.treeview.View, table
 local function fixture(prepare_frame)
   local data = treeview.new_data()
-  await(data:import({
+  support.await(data:import({
     { key = "root", label = "root", can_expand = true },
     { key = "a", parent = "root", label = "alpha" },
     { key = "b", parent = "root", label = "beta" },
   }))
-  local state = await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
+  local state = support.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
   local errors = {}
   local view = treeview.attach(state, {
     keymaps = false,
@@ -84,7 +60,7 @@ t:test("temporary frame preparation does not consume automatic recovery", functi
     return Future.resolve(function() end)
   end)
   local failures = fail_writes(view, 1)
-  await(data:batch({ { kind = "update", node = "a", label = "changed" } }))
+  support.await(data:batch({ { kind = "update", node = "a", label = "changed" } }))
   t.wait_until(function()
     return deferred == 1
   end, 5000)
@@ -107,11 +83,11 @@ t:test("a superseded recovery plan retries the latest topology", function()
     return Future.resolve(function() end)
   end)
   fail_writes(view, 1)
-  await(data:batch({ { kind = "update", node = "a", label = "changed" } }))
+  support.await(data:batch({ { kind = "update", node = "a", label = "changed" } }))
   t.wait_until(function()
     return complete ~= nil
   end, 5000)
-  await(data:batch({ { kind = "insert", key = "c", parent = "root", label = "gamma" } }))
+  support.await(data:batch({ { kind = "insert", key = "c", parent = "root", label = "gamma" } }))
   t.wait_until(function()
     return view._state:snapshot():header().row_count == 3
   end, 5000)
@@ -128,7 +104,7 @@ end)
 t:test("a second actual publication failure waits for explicit refresh", function()
   local data, view, errors = fixture()
   local failures = fail_writes(view, 2)
-  await(data:batch({ { kind = "update", node = "a", label = "changed" } }))
+  support.await(data:batch({ { kind = "update", node = "a", label = "changed" } }))
   t.wait_until(function()
     return failures() == 2 and view:status().desynced and not view:status().preparing
   end, 5000)

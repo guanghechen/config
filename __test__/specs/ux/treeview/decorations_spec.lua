@@ -1,33 +1,9 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.treeview.decorations" ---@type string
-
-local t = require("__test__.support.harness").new("ux.treeview.decorations")
+local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
-local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-bootstrap.with_yoz(t, assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))())
-bootstrap.with_stl(t, {
-  c = { Future = require("stl.c.future") },
-  nvim = { fn = require("stl.nvim.fn") },
-  reporter = {
-    error = function(value)
-      error(value.message)
-    end,
-  },
-})
+bootstrap.with_native(t)
 local treeview = require("ux.treeview")
+local support = require("__test__.support.treeview")
 local decorations = require("ux.treeview.decorations")
-
----@param future                        stl.c.Future
----@return any
-local function await(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 5000)
-  t.assert_false(future:is_failed(), future:get_error())
-  local result = future:get_result()
-  t.assert_false(result.kind == "Rejected", vim.inspect(result))
-  return result
-end
 
 ---@param count                         integer
 ---@param label_bytes                   ?integer
@@ -43,9 +19,9 @@ local function fixture(count, label_bytes)
       can_expand = index * 4 - 2 <= count,
     }
   end
-  await(data:import(records))
-  local state = await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
-  local reply = await(state:set_expanded({ data:source():id("root") }, true, true))
+  support.await(data:import(records))
+  local state = support.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
+  local reply = support.await(state:set_expanded({ data:source():id("root") }, true, true))
   t.wait_until(function()
     return state._native:applicable(state:snapshot(), reply.revisions.commit)
   end, 5000)
@@ -87,7 +63,7 @@ local function exact_rows(frame, cache)
         end
       end
     else
-      t.assert_true(vim.deep_equal(column, cache.rows[name]), "exact viewport column " .. name)
+      t.assert_same(column, cache.rows[name], "exact viewport column " .. name)
     end
   end
 end
@@ -112,7 +88,7 @@ t:test("small scrolls reuse native rows while consumers retain the exact viewpor
   t.assert_eq(0, original.first, "the earlier publication remains immutable")
 
   cache = decorations.prepare(proxy, 200, 248, cache)
-  t.assert_true(vim.deep_equal({ 201, 248 }, reads[#reads]), "cold jumps read only the requested rows")
+  t.assert_same({ 201, 248 }, reads[#reads], "cold jumps read only the requested rows")
   exact_rows(frame, cache)
 end)
 
@@ -121,7 +97,7 @@ t:test("row batches cannot survive a frame change without the same_rows publicat
   local frame = state:snapshot()
   local cache = decorations.prepare(frame, 0, 32)
   cache = decorations.prepare(frame, 1, 33, cache)
-  local reply = await(state:select_node({ frame:node_at(10) }, false))
+  local reply = support.await(state:select_node({ frame:node_at(10) }, false))
   t.wait_until(function()
     return state._native:applicable(state:snapshot(), reply.revisions.commit)
   end, 5000)
@@ -150,7 +126,7 @@ t:test("lookahead stays within row limits and falls back when the payload budget
   cache = decorations.prepare(proxy, 16, 48)
   cache = decorations.prepare(proxy, 17, 49, cache)
   t.assert_eq(3, #reads, "an oversized prefetch retries the exact viewport")
-  t.assert_true(vim.deep_equal({ 18, 49 }, reads[3]))
+  t.assert_same({ 18, 49 }, reads[3])
   t.assert_eq(17, cache.batch.first)
   t.assert_eq(49, cache.batch.last)
   exact_rows(frame, cache)

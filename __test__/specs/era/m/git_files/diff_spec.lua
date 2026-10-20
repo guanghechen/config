@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.git_files.diff" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.git_files.diff")
+local t = require("__test__.support.harness").new()
 local Diff = require("era.m.git_files.diff")
 
 t:test("source line numbers advance independently across replacements and separate hunks", function()
@@ -27,22 +24,19 @@ t:test("source line numbers advance independently across replacements and separa
   for _, row in ipairs(rows) do
     actual[#actual + 1] = { row.kind, row.old_lnum or false, row.new_lnum or false }
   end
-  t.assert_true(
-    vim.deep_equal({
-      { "hunk", false, false },
-      { "context", 10, 10 },
-      { "delete", 11, false },
-      { "delete", 12, false },
-      { "add", false, 11 },
-      { "add", false, 12 },
-      { "add", false, 13 },
-      { "context", 13, 14 },
-      { "hunk", false, false },
-      { "delete", 30, false },
-      { "add", false, 31 },
-    }, actual),
-    vim.inspect(actual)
-  )
+  t.assert_same({
+    { "hunk", false, false },
+    { "context", 10, 10 },
+    { "delete", 11, false },
+    { "delete", 12, false },
+    { "add", false, 11 },
+    { "add", false, 12 },
+    { "add", false, 13 },
+    { "context", 13, 14 },
+    { "hunk", false, false },
+    { "delete", 30, false },
+    { "add", false, 31 },
+  }, actual)
   t.assert_eq("@@ -10,4 +10,5 @@ local function example()", rows[1].text)
   t.assert_true(#rows[3].words > 0)
   t.assert_true(rows[3].words == rows[5].words, "word highlights pair replacement rows within a change block")

@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/view/picker/preview_spec.lua
----@diagnostic disable: invisible
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.view.picker.preview")
+local t = harness.new()
 
 t:test("feature Preview modules alias the shared surface", function()
   t.assert_true(era.m.picker.Preview == era.view.PickerPreview, "picker Preview alias identity")

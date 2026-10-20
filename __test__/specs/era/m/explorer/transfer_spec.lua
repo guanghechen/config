@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.transfer" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.transfer")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local Future = require("stl.c.future")
 
@@ -28,10 +25,10 @@ for _, case in ipairs({
 }) do
   local mark = case.mark
   t:test(mark .. " follows its target with outside root " .. tostring(case.outside), function()
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/source.txt")
     fixture.write(path .. "/remaining.txt")
-    local destination = case.outside and fixture.directory() or path
+    local destination = case.outside and t:tempdir() or path
     local target = destination .. "/target.txt"
     local widget = fixture.widget(path)
     local _, view = widget:context()
@@ -50,7 +47,7 @@ for _, case in ipairs({
 end
 
 t:test("a copied directory follows its root after more than 128 descendant results", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/source", 448))
   for index = 1, 140 do
     fixture.write(string.format("%s/source/file-%03d", path, index))
@@ -68,7 +65,7 @@ end)
 
 t:test("Space path actions follow a single selected source and expand a nested target", function()
   for _, choice in ipairs({ "Copy to path", "Move to path" }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/source")
     fixture.write(path .. "/other")
     local widget = fixture.widget(path)
@@ -91,7 +88,7 @@ end)
 
 for _, intent in ipairs({ "cursor", "root", "focus" }) do
   t:test("later " .. intent .. " intent during a path prompt revokes following even after returning", function()
-    local path, other = fixture.directory(), fixture.directory()
+    local path, other = t:tempdir(), t:tempdir()
     fixture.write(path .. "/source")
     fixture.write(path .. "/other")
     fixture.write(other .. "/file")
@@ -152,7 +149,7 @@ for _, intent in ipairs({
   local name = follows and "ignored " .. intent .. " preserves transfer following"
     or "destination resolution cannot override later " .. intent .. " intent"
   t:test(name, function()
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/source")
     fixture.write(path .. "/other")
     if intent == "native_fold" then
@@ -249,7 +246,7 @@ for _, intent in ipairs({
       local resource = await(data:resolve(path .. "/directory"))
       await(session:fold(view:frame(), resource:node(), "toggle"))
     elseif intent == "root" then
-      await(widget:set_root(fixture.directory()))
+      await(widget:set_root(t:tempdir()))
     elseif intent == "job" then
       await(session:operate(view, { kind = "create", path = "other-job" }))
       fixture.idle(widget)
@@ -282,7 +279,7 @@ end
 
 t:test("cancelled preparation, failed admission and skipped overwrite do not follow or retain observers", function()
   for _, outcome in ipairs({ "cancel", "failed", "skipped" }) do
-    local path = fixture.directory()
+    local path = t:tempdir()
     fixture.write(path .. "/source")
     fixture.write(path .. "/existing")
     local widget = fixture.widget(path)
@@ -314,7 +311,7 @@ t:test("cancelled preparation, failed admission and skipped overwrite do not fol
 end)
 
 t:test("partial directory copies leave navigation on the source and retain the successful files", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for _, directory in ipairs({ "source", "target" }) do
     assert(vim.uv.fs_mkdir(path .. "/" .. directory, 448))
   end
@@ -335,7 +332,7 @@ t:test("partial directory copies leave navigation on the source and retain the s
 end)
 
 t:test("cancelling a running overwrite ignores its late answer and releases follow observers", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/source")
   vim.fn.writefile({ "keep" }, path .. "/existing")
   local widget = fixture.widget(path)
@@ -359,7 +356,7 @@ t:test("cancelling a running overwrite ignores its late answer and releases foll
 end)
 
 t:test("an existing completion callback runs after unlock and can replace follow navigation", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   fixture.write(path .. "/source")
   fixture.write(path .. "/other")
   local widget = fixture.widget(path)
@@ -384,7 +381,7 @@ t:test("an existing completion callback runs after unlock and can replace follow
 end)
 
 t:test("pending annotation and queued parent navigation outrank a late transfer follow", function()
-  local parent = fixture.directory()
+  local parent = t:tempdir()
   local path = parent .. "/root"
   assert(vim.uv.fs_mkdir(path, 448))
   fixture.write(path .. "/source")

@@ -1,47 +1,23 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.treeview.cursor" ---@type string
-
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
-local t = harness.new("ux.treeview.cursor")
-local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-bootstrap.with_yoz(t, assert(package.loadlib("rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))())
-bootstrap.with_stl(t, {
-  c = { Future = require("stl.c.future") },
-  nvim = { fn = require("stl.nvim.fn") },
-  reporter = {
-    error = function(options)
-      error(options.message)
-    end,
-  },
-})
+local t = harness.new()
+bootstrap.with_native(t)
 local treeview = require("ux.treeview")
+local support = require("__test__.support.treeview")
 local async = require("ux.treeview.async")
 local surface = require("ux.treeview.surface")
-
----@param future                        stl.c.Future
----@return any
-local function await(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 5000)
-  t.assert_false(future:is_failed(), future:get_error())
-  local value = future:get_result()
-  t.assert_false(type(value) == "table" and value.kind == "Rejected", vim.inspect(value))
-  return value
-end
 
 ---@return ux.treeview.State, ux.treeview.View, string[]
 local function fixture()
   local data = treeview.new_data()
-  await(data:import({
+  support.await(data:import({
     { key = "root", label = "root", can_expand = true },
     { key = "a", parent = "root", label = "alpha" },
     { key = "b", parent = "root", label = "beta" },
     { key = "c", parent = "root", label = "gamma" },
   }))
   local source = data:source()
-  local state = await(data:create_state({ kind = "children_of", node = source:id("root") }))
+  local state = support.await(data:create_state({ kind = "children_of", node = source:id("root") }))
   local view = treeview.attach(state, { keymaps = false })
   t:defer(function()
     view:detach()
@@ -73,7 +49,7 @@ end
 ---@param node                          string
 ---@return nil
 local function native_cursor(state, node)
-  await(async.run(state._native:dispatch({ kind = "set_cursor", node = node })))
+  support.await(async.run(state._native:dispatch({ kind = "set_cursor", node = node })))
   t.wait_until(function()
     return state:snapshot():header().cursor == node
   end, 5000)
@@ -96,7 +72,7 @@ t:test("duplicate restored-position events cannot overwrite native navigation be
   for _ = 1, 3 do
     cursor_event(view)
   end
-  await(state:inspect_selection())
+  support.await(state:inspect_selection())
   t.assert_eq(0, submitted)
   t.assert_eq(nodes[2], state:snapshot():header().cursor)
 
@@ -144,7 +120,7 @@ t:test("cursor publication reuses row reads and only redraws changed consumer ou
   local original = view:frame()
   local pending = view:set_cursor(2)
   local immediate = redraws
-  await(pending)
+  support.await(pending)
   t.wait_until(function()
     return view:frame():header().cursor == nodes[2] and not view._busy and not view._latest
   end, 5000)
@@ -157,7 +133,7 @@ t:test("cursor publication reuses row reads and only redraws changed consumer ou
   unchanged = nil
   pending = view:set_cursor(3)
   immediate = redraws
-  await(pending)
+  support.await(pending)
   t.wait_until(function()
     return view:frame():header().cursor == nodes[3] and not view._busy and not view._latest
   end, 5000)
@@ -192,7 +168,7 @@ t:test("a cursor-frame observer can close its window before the redraw decision"
     view:detach()
     vim.api.nvim_win_close(winnr, true)
   end
-  await(view:set_cursor(2))
+  support.await(view:set_cursor(2))
   t.wait_until(function()
     return not vim.api.nvim_win_is_valid(winnr)
   end, 5000)
@@ -206,7 +182,7 @@ for _, programmatic in ipairs({ false, true }) do
       local state, view, nodes = fixture()
       local release = hold_publication(view)
       if programmatic then
-        await(view:set_cursor(2))
+        support.await(view:set_cursor(2))
       else
         vim.api.nvim_win_set_cursor(view.winnr, { 2, 0 })
         cursor_event(view)
@@ -217,7 +193,7 @@ for _, programmatic in ipairs({ false, true }) do
       native_cursor(state, nodes[3])
       cursor_event(view)
       cursor_event(view)
-      await(state:inspect_selection())
+      support.await(state:inspect_selection())
       t.assert_eq(nodes[3], state:snapshot():header().cursor)
       release()
       view:_poll()

@@ -1,21 +1,11 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/git/info_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.git.info module
-
 local bootstrap = require("__test__.support.bootstrap")
 local CancellationToken = require("stl.c.cancellation_token")
 local Future = require("stl.c.future")
 local harness = require("__test__.support.harness")
 local native = require("yoz")
 
-local t = harness.new("stl.git.info")
-
----@param repo                         string
----@param ...                          string
----@return vim.SystemCompleted
-local function git(repo, ...)
-  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
-end
+local t = harness.new()
+local git = require("__test__.support.git")
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -104,7 +94,7 @@ end)
 
 t:test("canonical Windows-style roots keep nested HEAD paths slash-only with real Git", function()
   local sep = package.config:sub(1, 1) ---@type string
-  local repo = vim.fn.tempname() ---@type string
+  local repo = git.repo(t)
   local canonical_repo = native.path.normalize(repo, false, "/") ---@type string
   local relpath = "lua/era/m/im/wsl.lua" ---@type string
   local filepath = native.path.normalize(canonical_repo .. "/" .. relpath, false, sep) ---@type string
@@ -113,28 +103,16 @@ t:test("canonical Windows-style roots keep nested HEAD paths slash-only with rea
   end)
 
   vim.fn.mkdir(vim.fs.dirname(filepath), "p")
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "content" }, filepath)
-    t.assert_eq(0, git(repo, "add", "--", relpath).code, "git add")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "git commit"
-    )
+  vim.fn.writefile({ "content" }, filepath)
+  git.run(repo, { "add", "--", relpath })
+  git.run(repo, { "commit", "-qm", "base" })
 
-    local future = info.get_show_blob(canonical_repo, "HEAD:" .. relpath)
-    wait_future(future)
+  local future = info.get_show_blob(canonical_repo, "HEAD:" .. relpath)
+  wait_future(future)
 
-    local result = future:get_result()
-    t.assert_true(result.ok, "HEAD blob")
-    t.assert_eq("content\n", result.bytes, "HEAD bytes")
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
-  end
+  local result = future:get_result()
+  t.assert_true(result.ok, "HEAD blob")
+  t.assert_eq("content\n", result.bytes, "HEAD bytes")
 end)
 
 t:test("get_object_name: resolves immutable identity and classifies absence", function()
@@ -444,40 +422,26 @@ t:test("get_head_file_mode: distinguishes mode, missing path, unborn HEAD, and f
 end)
 
 t:test("path queries treat pathspec-magic filenames literally", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  local magic = ":(glob)o*.txt" ---@type string
+  vim.fn.writefile({ "magic" }, repo .. "/" .. magic)
+  vim.fn.writefile({ "other" }, repo .. "/other.txt")
+  t.assert_true(vim.uv.fs_chmod(repo .. "/" .. magic, 493), "make magic path executable")
+  git.run(repo, { "add", "--all" })
+  git.run(repo, { "commit", "-qm", "base" })
 
-  local ok, err = xpcall(function()
-    local magic = ":(glob)o*.txt" ---@type string
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "magic" }, repo .. "/" .. magic)
-    vim.fn.writefile({ "other" }, repo .. "/other.txt")
-    t.assert_true(vim.uv.fs_chmod(repo .. "/" .. magic, 493), "make magic path executable")
-    t.assert_eq(0, git(repo, "add", "--all").code, "git add")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "git commit"
-    )
+  local expected_object = vim.trim(git.run(repo, { "rev-parse", "HEAD:" .. magic })) ---@type string
+  local file_future = info.get_file_info(repo, magic)
+  wait_future(file_future)
+  local file_result = file_future:get_result()
+  t.assert_true(file_result.ok, "index path found")
+  t.assert_eq(expected_object, file_result.info.object_name, "exact index object")
 
-    local expected_object = vim.trim(git(repo, "rev-parse", "HEAD:" .. magic).stdout or "") ---@type string
-    local file_future = info.get_file_info(repo, magic)
-    wait_future(file_future)
-    local file_result = file_future:get_result()
-    t.assert_true(file_result.ok, "index path found")
-    t.assert_eq(expected_object, file_result.info.object_name, "exact index object")
-
-    local mode_future = info.get_head_file_mode(repo, magic)
-    wait_future(mode_future)
-    local mode_result = mode_future:get_result()
-    t.assert_true(mode_result.ok, "HEAD path found")
-    t.assert_eq("100755", mode_result.mode_bits, "exact HEAD mode")
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
-  end
+  local mode_future = info.get_head_file_mode(repo, magic)
+  wait_future(mode_future)
+  local mode_result = mode_future:get_result()
+  t.assert_true(mode_result.ok, "HEAD path found")
+  t.assert_eq("100755", mode_result.mode_bits, "exact HEAD mode")
 end)
 
 t:test("get_repo_info: resolves a branch with one process", function()

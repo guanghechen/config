@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/image/ownership_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.image.ownership")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   dot = {
@@ -62,7 +59,7 @@ t:test("placement owns identity before registering with an image", function()
 
   t.assert_eq(11, first.id, "first placement id")
   t.assert_eq(12, second.id, "second placement id")
-  t.assert_true(vim.deep_equal({ 11, 12 }, registered), "registered ids")
+  t.assert_same({ 11, 12 }, registered, "registered ids")
   first:close()
   second:close()
 end)
@@ -123,7 +120,7 @@ t:test("image sizing preserves the state facade", function()
     },
   })
 
-  t.assert_true(vim.deep_equal({ width = 10, height = 5 }, size), "cell size")
+  t.assert_same({ width = 10, height = 5 }, size, "cell size")
 end)
 
 t:test("terminal output reads the environment owner without loading state", function()

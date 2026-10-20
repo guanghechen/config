@@ -1,20 +1,16 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/fn_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.lsp.fn module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.lsp.fn")
+local t = harness.new()
 
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "stl", {
   env = {
     HOME_NVIM_DATA = "/__nvim_test_data__",
     PATH_SEP = "/",
     IS_HEADLESS = true,
   },
 })
-bootstrap.with_yoz(t, {
+bootstrap.with_global(t, "yoz", {
   path = {
     is_exist = function(filepath)
       return vim.uv.fs_stat(filepath) ~= nil
@@ -49,7 +45,7 @@ t:test("locate_lsp_root: searches from the target file and accepts directory mar
 end)
 
 t:test("locate_lsp_root: preserves the search root for nested markers", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = t:tempdir()
   vim.fn.mkdir(root .. "/theme/static_src", "p")
   vim.fn.mkdir(root .. "/src", "p")
   vim.fn.writefile({}, root .. "/theme/static_src/tailwind.config.js")

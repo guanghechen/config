@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.editor_results" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.editor_results")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local buffers = require("era.m.explorer.buffers")
 
@@ -33,7 +30,7 @@ local function assert_plain_result(value)
 end
 
 t:test("a late buffer collision survives 129 successful results without changing IO success or recovery", function()
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   for index = 1, 130 do
     fixture.write(string.format("%s/file-%03d", path, index))
@@ -131,7 +128,7 @@ t:test("a late buffer collision survives 129 successful results without changing
 end)
 
 t:test("an unexpected notification failure preserves earlier buffer failures in one bounded outcome", function()
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   local source, target = path .. "/source", path .. "/target"
   fixture.write(source)
   local bufnr = edited_buffer(source, "unsaved edits")
@@ -188,7 +185,7 @@ for _, large in ipairs({ false, true }) do
   t:test(
     "editor issues obey the " .. (large and "byte" or "item") .. " history limit and reset with the next job",
     function()
-      local path = fixture.directory()
+      local path = t:tempdir()
       assert(vim.uv.fs_mkdir(path .. "/dst", 448))
       for index = 1, 520 do
         fixture.write(string.format("%s/file-%03d", path, index))

@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.dot.theme.hlgroup_spec" ---@type string
-
 local harness = require("__test__.support.harness")
-local t = harness.new("dot.theme.hlgroup")
+local t = harness.new()
 
 t:patch_global("yoz", require("yoz"))
 t:patch_global("stl", require("stl"))
@@ -161,14 +158,11 @@ t:test("every category falls back to unified when its theme implementation is ab
     local module = "dot.theme.hlgroup." .. category
     local expected = require(module .. ".unified").gen_hlgroup_map(context)
     local actual = apply_integration(category, context)
-    t.assert_true(vim.deep_equal(render_hlgroup_map(expected), actual), category .. " fallback")
+    t.assert_same(render_hlgroup_map(expected), actual, category .. " fallback")
   end
   local modes_color_map = require("dot.theme.hlgroup.basic.unified").gen_modes_color_map(context)
   local expected = require("dot.theme.hlgroup.common").gen_hlgroup_map(context, modes_color_map)
-  t.assert_true(
-    vim.deep_equal(render_hlgroup_map(expected), apply_integration("common", context)),
-    "mode palette fallback"
-  )
+  t.assert_same(render_hlgroup_map(expected), apply_integration("common", context), "mode palette fallback")
 end)
 
 t:test("all unified implementations depend only on the unified palette and transparency", function()
@@ -178,10 +172,7 @@ t:test("all unified implementations depend only on the unified palette and trans
       { scheme = { palette = { unified = context.scheme.palette.unified } }, transparency = transparency }
     for _, category in ipairs(categories) do
       local unified = require("dot.theme.hlgroup." .. category .. ".unified")
-      t.assert_true(
-        vim.deep_equal(unified.gen_hlgroup_map(context), unified.gen_hlgroup_map(unified_context)),
-        category
-      )
+      t.assert_same(unified.gen_hlgroup_map(context), unified.gen_hlgroup_map(unified_context), category)
     end
   end
 end)
@@ -205,7 +196,7 @@ t:test("a theme implementation replaces the entire map without implicit merging"
       end,
     }
   end)
-  t.assert_true(vim.deep_equal(render_hlgroup_map(expected), apply_integration("lsp", context)))
+  t.assert_same(render_hlgroup_map(expected), apply_integration("lsp", context))
 end)
 
 for _, scenario in ipairs({
@@ -218,11 +209,8 @@ for _, scenario in ipairs({
   },
 }) do
   t:test("an implementation " .. scenario.name .. " propagates instead of falling back", function()
-    local dirpath = vim.fn.tempname()
+    local dirpath = t:tempdir()
     vim.fn.mkdir(dirpath .. "/dot/theme/hlgroup/lsp", "p")
-    t:defer(function()
-      vim.fn.delete(dirpath, "rf")
-    end)
     local filepath = dirpath .. "/dot/theme/hlgroup/lsp/__test_failure__.lua"
     vim.fn.writefile({ scenario.source }, filepath)
     t:patch_table(package, "path", dirpath .. "/?.lua")
@@ -316,8 +304,8 @@ t:test("theme overrides do not mutate later unified or theme results", function(
     for _, hlgroup in pairs(first) do
       hlgroup.fg = "#abcdef"
     end
-    t.assert_true(vim.deep_equal(expected, entry.gen_hlgroup_map(context)), category .. " fresh theme map")
-    t.assert_true(vim.deep_equal(before, unified.gen_hlgroup_map(context)), category .. " pristine unified map")
+    t.assert_same(expected, entry.gen_hlgroup_map(context), category .. " fresh theme map")
+    t.assert_same(before, unified.gen_hlgroup_map(context), category .. " pristine unified map")
   end
 end)
 
@@ -443,7 +431,7 @@ t:test("Rose Pine explorer, module, widget and nvimbar implementations preserve 
     local actual_names = vim.tbl_keys(actual)
     table.sort(expected_names)
     table.sort(actual_names)
-    t.assert_true(vim.deep_equal(expected_names, actual_names), category .. " highlight coverage")
+    t.assert_same(expected_names, actual_names, category .. " highlight coverage")
   end
 end)
 

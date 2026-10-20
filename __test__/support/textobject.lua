@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.keystroke.textobject.runtime" ---@type string
+local __module_name__ = "__test__.support.textobject" ---@type string
 
 local bootstrap = require("__test__.support.bootstrap")
 local M = {}

@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.picker.composer.tree" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.picker.composer.tree")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local Source = require("era.view.result_source")
 local View = require("era.view.result_tree")
 local Composer = require("era.m.picker.composer.tree")
@@ -44,7 +41,7 @@ local function publish(composer)
       text = data.name,
     })
   end)
-  native.publish(composer._treeview)
+  treeview.publish(composer._treeview)
 end
 
 t:test("symbol insertion preserves source order in native rows", function()
@@ -63,7 +60,7 @@ t:test("reparenting a symbol preserves its native selection", function()
   composer:insert("left", "leaf", { name = "leaf" })
   publish(composer)
   composer._treeview:toggle_select("leaf", true, false)
-  native.publish(composer._treeview)
+  treeview.publish(composer._treeview)
   composer:insert("right", "leaf", { name = "leaf" })
   publish(composer)
   t.assert_true(composer._treeview:isselected("leaf"))
@@ -85,7 +82,7 @@ t:test("attach rejects unknown roots and publishes known symbol roots", function
   composer:insert("scope", "symbol", { name = "symbol" })
   publish(composer)
   composer:attach("scope")
-  native.publish(composer._treeview, { rootuuid = composer._uuid_root })
+  treeview.publish(composer._treeview, { rootuuid = composer._uuid_root })
   t.assert_eq("symbol", composer._treeview:retrieve_uuid(1))
 end)
 
@@ -128,8 +125,8 @@ local function mount(composer)
     width = 60,
     height = 8,
   })
-  native.await(composer.result.draw())
-  native.await(composer._treeview:ready())
+  treeview.await(composer.result.draw())
+  treeview.await(composer._treeview:ready())
 end
 
 ---@param composer                      era.m.picker.TreeComposer
@@ -196,21 +193,8 @@ t:test("expansion actions typed ahead act on the tree their earlier actions prod
   end)
   local open, collapse = action(composer, "tree: open"), action(composer, "tree: collapse")
   composer.result:set_lnum_current(tree:retrieve_lnum("scope"))
-  native.await(tree:ready())
-  for _, case in ipairs({
-    { name = "collapse+open", actions = { collapse, open }, expanded = true },
-    { name = "collapse", actions = { collapse }, expanded = false },
-    { name = "open+collapse", actions = { open, collapse }, expanded = false },
-    { name = "open+collapse+open", actions = { open, collapse, open }, expanded = true },
-  }) do
-    for _, run in ipairs(case.actions) do
-      run()
-    end
-    t.wait_until(function()
-      return not tree:collapse_pending() and tree:expanded("scope") == case.expanded
-    end, 5000, case.name .. " must leave scope " .. (case.expanded and "expanded" or "collapsed"))
-    native.await(tree:ready())
-  end
+  treeview.await(tree:ready())
+  treeview.assert_typed_ahead(t, tree, "scope", open, collapse)
   t.assert_eq(0, #errors, vim.inspect(errors))
 end)
 
@@ -250,8 +234,8 @@ t:test("a subtree with deep LSP identities hides completely across the native by
   for _, key in ipairs(expected) do
     t.assert_false(tree:isvisible(key))
   end
-  native.await(composer.result.draw())
-  native.await(tree:ready())
+  treeview.await(composer.result.draw())
+  treeview.await(tree:ready())
   t.assert_eq(0, tree:linecount(), "the successful hide must reach the published projection")
 end)
 
@@ -295,9 +279,9 @@ for _, description in ipairs({ "tree: mark the node invisible", "tree: mark the 
     end)
     action(composer, description)()
     t.assert_eq(2, pages)
-    t.assert_true(vim.deep_equal({ "injected page failure" }, failures))
+    t.assert_same({ "injected page failure" }, failures)
     t.assert_true(hidden == tree._hidden)
-    t.assert_true(vim.deep_equal({ ["previously-hidden"] = true }, tree._hidden))
+    t.assert_same({ ["previously-hidden"] = true }, tree._hidden)
     t.assert_eq(revision, tree._revision)
     t.assert_eq(0, dirty)
     t.assert_nil(tree.view._submission)

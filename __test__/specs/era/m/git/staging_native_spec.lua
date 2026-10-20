@@ -1,11 +1,8 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.git.staging_native" ---@type string
-
 local harness = require("__test__.support.harness")
 local staging = require("era.m.git.staging")
 local diff = require("era.m.git.diff")
 local reference = assert(loadfile("__test__/fixtures/era/m/git/staging_lua_reference.lua"))()
-local t = harness.new("era.m.git.staging_native")
+local t = harness.new()
 
 ---@param expected                      any
 ---@param actual                        any

@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/image/init_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.image module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.image.init")
+local t = harness.new()
 
 t:test("dressing attaches existing and future supported buffers", function()
   t.assert_nil(package.loaded["vim.treesitter"], "cold treesitter")

@@ -1,14 +1,11 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.fn.paste-image" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.fn.paste-image")
+local t = harness.new()
 local native = require("yoz")
 local filetype = require("stl.filetype")
 
-bootstrap.with_yoz(t, native)
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "yoz", native)
+bootstrap.with_global(t, "stl", {
   filetype = filetype,
   env = {
     PATH_SEP = "/",
@@ -17,18 +14,14 @@ bootstrap.with_stl(t, {
     end,
   },
 })
-bootstrap.with_dot(t, { path = {}, context = { module = {} } })
-bootstrap.with_era(t, { m = { clipboard = {}, input = {} } })
+bootstrap.with_global(t, "dot", { path = {}, context = { module = {} } })
+bootstrap.with_global(t, "era", { m = { clipboard = {}, input = {} } })
 local paste = dofile("lua/era/fn/paste-image.lua")
 
 ---@param ft                            string
 ---@return table
 local function prepare(ft)
-  local root = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(root, "p")
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
+  local root = t:tempdir()
   root = assert(vim.uv.fs_realpath(root))
   local bufnr = vim.api.nvim_create_buf(false, false)
   t:defer(function()

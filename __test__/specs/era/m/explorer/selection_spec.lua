@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.selection" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.selection")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local Task = require("ux.treeview.task")
 local jobs = require("era.m.explorer.jobs")
@@ -9,7 +6,7 @@ local Session = require("era.m.explorer.session")
 
 ---@return table
 local function selected_directory()
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dir", 448))
   for _, name in ipairs({ "a", "b", "c" }) do
     fixture.write(path .. "/dir/" .. name)
@@ -62,11 +59,11 @@ t:test("read-only selection loads missing children without scanning a fully sele
     captured = options.filepaths
   end)
   await(selected.action:auxiliary("copy_path"))
-  t.assert_true(vim.deep_equal({ selected.path .. "/dir" }, captured))
+  t.assert_same({ selected.path .. "/dir" }, captured)
   make_pending(selected)
   captured = nil
   await(selected.action:auxiliary("copy_path"))
-  t.assert_true(vim.deep_equal({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, captured))
+  t.assert_same({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, captured)
   t.assert_false(await(selected.session.state:inspect_selection()).summary.pending)
   t.assert_false(selected.session:busy())
   t.assert_eq(2, await(selected.session.state:inspect_selection()).subtree_roots:len())
@@ -195,7 +192,7 @@ t:test("real directory read failures retry after permissions recover without a s
   await(session.state:select_node({ selected.directory }, true))
   local before = session.data:source():revision()
   await(selected.action:auxiliary("copy_path"))
-  t.assert_true(vim.deep_equal({ dirpath }, captured))
+  t.assert_same({ dirpath }, captured)
   t.assert_eq(before, session.data:source():revision())
   t.assert_eq("error", session.data:source():node(selected.directory).load_state)
   make_pending(selected)
@@ -203,7 +200,7 @@ t:test("real directory read failures retry after permissions recover without a s
 
   assert(vim.uv.fs_chmod(dirpath, 448))
   await(selected.action:auxiliary("copy_path"))
-  t.assert_true(vim.deep_equal({ dirpath .. "/b", dirpath .. "/c" }, captured))
+  t.assert_same({ dirpath .. "/b", dirpath .. "/c" }, captured)
   t.assert_false(session:busy() or jobs.pending())
   t.assert_eq("copy", session:mode())
 end)
@@ -238,7 +235,7 @@ t:test("pending selection is locked before its acquisition reply reaches Lua", f
   t.assert_eq("Busy", cleared:get_result().error.code)
   resolve(true)
   await(future)
-  t.assert_true(vim.deep_equal({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, captured))
+  t.assert_same({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, captured)
   t.assert_eq("copy", selected.session:mode())
   t.assert_false(selected.session:busy() or jobs.pending())
 end)
@@ -263,7 +260,7 @@ t:test("a selection change queued before acquisition follows owner order", funct
   await(selected.action:auxiliary("copy_path"))
   restore()
   await(cleared)
-  t.assert_true(vim.deep_equal({ cursor }, captured))
+  t.assert_same({ cursor }, captured)
   t.assert_eq(0, await(state:inspect_selection()).subtree_roots:len())
   t.assert_false(session:busy() or jobs.pending())
 end)

@@ -1,7 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.icons" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.icons")
+local explorer = require("__test__.support.explorer")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local icons = require("era.m.explorer.icons")
 
@@ -21,7 +19,7 @@ local function prepare(widget, previous, first, last)
 end
 
 t:test("offscreen insertion and metadata refresh reuse visible icons", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for index = 1, 80 do
     fixture.write(path .. string.format("/item-%03d.lua", index))
   end
@@ -45,7 +43,7 @@ t:test("offscreen insertion and metadata refresh reuse visible icons", function(
 end)
 
 t:test("ancestor rename preserves identity while invalidating full-path filetype icons", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/before", 448))
   fixture.write(path .. "/before/sample")
   local match = vim.filetype.match
@@ -80,9 +78,9 @@ end)
 
 t:test("a retained symlink gets a directory icon when its missing target appears", function()
   if stl.env.IS_WIN then
-    return
+    t.skip("needs Unix symbolic links and aliases")
   end
-  local path = fixture.directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_symlink("target", path .. "/link"))
   local widget = fixture.widget(path)
   local session, view = widget:context()
@@ -105,7 +103,7 @@ t:test("a retained symlink gets a directory icon when its missing target appears
 end)
 
 t:test("scroll preparation keeps only its viewport and invalidated work stops before the next lookup", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for index = 1, 80 do
     fixture.write(path .. string.format("/item-%03d.lua", index))
   end
@@ -130,26 +128,15 @@ t:test("scroll preparation keeps only its viewport and invalidated work stops be
 end)
 
 t:test("real scrolling and theme changes prepare icons outside redraw without rewriting text", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()
   end)
-  ui:rpc("nvim_ui_attach", 100, 30, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
+  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+  ui:lua(
     [[
-      local root, path = ...
-      vim.opt.runtimepath:prepend(root)
-      local suffix = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-      yoz = assert(package.loadlib(root .. "/rust/target/debug/libyoz." .. suffix, "luaopen_yoz"))()
-      stl, dot, era = require("stl"), require("dot"), require("era")
-      dot.path.workspace = function() return path end
-      dot.path.is_git_repo = function() return false end
-      errors = {}
-      stl.reporter.warn = function(value) errors[#errors + 1] = value.message end
-      stl.reporter.error = stl.reporter.warn
-      stl.reporter.info = function() end
+      local path = ...
       local drawing = false
       local provider = vim.api.nvim_set_decoration_provider
       vim.api.nvim_set_decoration_provider = function(namespace, callbacks)
@@ -206,55 +193,43 @@ t:test("real scrolling and theme changes prepare icons outside redraw without re
         return lines(bufnr, ...)
       end
     ]],
-    { assert(vim.uv.cwd()), path }
+    path
   )
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return drawn[1] == 'A'", {})
+  ui:wait_until(function()
+    return ui:lua("return drawn[1] == 'A'")
   end, 10000)
-  t.assert_true(ui:rpc("nvim_exec_lua", "return empty_redraws", {}) > 0)
+  t.assert_true(ui:lua("return empty_redraws") > 0)
   ui:rpc("nvim_input", "65G")
-  t.wait_until(function()
-    return ui:rpc(
-      "nvim_exec_lua",
-      "return drawn[65] == 'A' and view:frame():header().cursor_row == 65 and not view:status().preparing",
-      {}
-    )
+  ui:wait_until(function()
+    return ui:lua("return drawn[65] == 'A' and view:frame():header().cursor_row == 65 and not view:status().preparing")
   end, 10000, "typed scrolling must prepare the new viewport")
   ui:rpc("nvim_command", "normal! zt")
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return drawn[90] == 'A' and not view:status().preparing", {})
+  ui:wait_until(function()
+    return ui:lua("return drawn[90] == 'A' and not view:status().preparing")
   end, 10000, "scrolling below a fixed cursor must prepare its newly visible rows")
   ui:rpc("nvim_command", "normal! zb")
-  t.wait_until(function()
-    return ui:rpc(
-      "nvim_exec_lua",
-      [[
+  ui:wait_until(function()
+    return ui:lua([[
         local first = vim.api.nvim_win_call(view.winnr, vim.fn.winsaveview).topline
         return first < 65 and drawn[first] == "A" and not view:status().preparing
-      ]],
-      {}
-    )
+      ]])
   end, 10000, "viewport changes without cursor movement must also prepare icons")
-  local before = ui:rpc("nvim_exec_lua", "return queries", {})
-  ui:rpc(
-    "nvim_exec_lua",
-    [[
+  local before = ui:lua("return queries")
+  ui:lua([[
       glyph, drawn = "B", {}
       vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "viewport-test" })
-    ]],
-    {}
-  )
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return drawn[65] == 'B' and not view:status().preparing", {})
+    ]])
+  ui:wait_until(function()
+    return ui:lua("return drawn[65] == 'B' and not view:status().preparing")
   end, 10000, "theme changes must invalidate the committed icon cache")
-  t.assert_true(ui:rpc("nvim_exec_lua", "return queries", {}) > before)
-  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return writes", {}))
-  t.assert_eq(0, ui:rpc("nvim_exec_lua", "return #errors", {}))
-  ui:rpc("nvim_exec_lua", "widget:dispose()", {})
+  t.assert_true(ui:lua("return queries") > before)
+  t.assert_eq(0, ui:lua("return writes"))
+  t.assert_eq(0, ui:lua("return #errors"))
+  ui:lua("widget:dispose()")
 end)
 
 t:test("a superseded first publication reuses completed icon work without publishing old rows", function()
-  local path = fixture.directory()
+  local path = t:tempdir()
   for index = 1, 20 do
     fixture.write(path .. string.format("/item-%03d.lua", index))
   end

@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua era/dressing/winsep/
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local nvim_fn = require("stl.nvim.fn")
-local t = harness.new("era.dressing.winsep")
+local t = harness.new()
 local module_name = "era.dressing.winsep"
 
 local function setup(initially_enabled)
@@ -74,7 +71,6 @@ local function setup(initially_enabled)
   t:patch_table(package.loaded, module_name .. ".line", nil)
   t:patch_global("era", require("era"))
   t.assert_eq(module_name, era.dressing.__mods.winsep, "module registration")
-  t.assert_nil(era.m.__mods.winsep, "old registration removed")
   runtime.module = era.dressing.winsep
   t.assert_eq(require(module_name .. ".line"), runtime.module.Line, "line module namespace")
   t:patch_table(runtime.module.Winsep, "show", function(_, winnr)
@@ -104,20 +100,15 @@ t:test("dressing creates one debounce and observer and preserves window callback
   t.assert_eq(1, #runtime.observers, "observer registrations")
   t.assert_eq(2, #resize_events, "resize events")
   t.assert_eq(1, #enter_events, "window entry event")
-  t.assert_true(
-    vim.deep_equal(resize_events, vim.api.nvim_get_autocmds({ group = resize_group })),
-    "resize callbacks preserved"
-  )
-  t.assert_true(
-    vim.deep_equal(enter_events, vim.api.nvim_get_autocmds({ group = enter_group })),
-    "entry callback preserved"
-  )
+  t.assert_same(resize_events, vim.api.nvim_get_autocmds({ group = resize_group }), "resize callbacks preserved")
+  t.assert_same(enter_events, vim.api.nvim_get_autocmds({ group = enter_group }), "entry callback preserved")
 
   runtime.notify()
   vim.api.nvim_exec_autocmds("WinResized", { group = resize_group, modeline = false })
   vim.api.nvim_exec_autocmds("WinEnter", { group = enter_group, modeline = false })
-  t.assert_true(
-    vim.deep_equal({ runtime.fixed_winnr, runtime.fixed_winnr, runtime.fixed_winnr }, runtime.shown),
+  t.assert_same(
+    { runtime.fixed_winnr, runtime.fixed_winnr, runtime.fixed_winnr },
+    runtime.shown,
     "flight and window events refresh the fixed window"
   )
 end)
@@ -133,7 +124,7 @@ t:test("dressing initializes while disabled and reuses its observer across toggl
   t.assert_eq(1, runtime.hidden, "disabled separators hidden")
   runtime.enabled = true
   runtime.notify()
-  t.assert_true(vim.deep_equal({ runtime.fixed_winnr }, runtime.shown), "enabled separators shown")
+  t.assert_same({ runtime.fixed_winnr }, runtime.shown, "enabled separators shown")
   runtime.module.dressing()
   runtime.enabled = false
   runtime.notify()

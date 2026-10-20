@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/workspace/winline_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.workspace.winline")
+local t = harness.new()
 local on_history_state_change = nil ---@type function|nil
 local bars = {} ---@type table<string, table>
 local metas = {} ---@type table<integer, dot.win.IMeta>

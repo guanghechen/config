@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/ark/autocmd_spec.lua
----@diagnostic disable: undefined-global
---- Test for ark.autocmd module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("ark.autocmd")
+local t = harness.new()
 
 ---@class ark.autocmd.test.IRuntime
 ---@field autocmds                      table<string, table>
@@ -168,7 +164,7 @@ t:test("refreshes the filepath cache after a buffer rename", function()
   local runtime = setup()
   local events = runtime.autocmd_events.ark_cache_buf_filepath
 
-  t.assert_true(vim.deep_equal({ "BufWinEnter", "BufFilePost" }, events), "cache refresh events")
+  t.assert_same({ "BufWinEnter", "BufFilePost" }, events, "cache refresh events")
 end)
 
 for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do

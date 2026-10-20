@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/statuscolumn_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.dressing.statuscolumn module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.statuscolumn")
+local t = harness.new()
 
 ---@param callback                     function
 ---@param name                         string
@@ -103,7 +99,6 @@ t:test("rendering and fold-click callbacks resolve through the dressing namespac
   vim.api.nvim_set_option_value("foldcolumn", "0", { win = winnr })
 
   t.assert_eq("era.dressing.statuscolumn", era.dressing.__mods.statuscolumn, "module registration")
-  t.assert_nil(era.m.__mods.statuscolumn, "old registration removed")
   local Statuscolumn = era.dressing.statuscolumn
   local render = Statuscolumn.statuscolumn
   local rendered

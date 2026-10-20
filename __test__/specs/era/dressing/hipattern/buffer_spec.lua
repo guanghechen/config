@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/hipattern/buffer_spec.lua
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.hipattern.buffer")
+local t = harness.new()
 local Hipattern = require("era.dressing.hipattern")
 local Filetype = require("stl.filetype")
 

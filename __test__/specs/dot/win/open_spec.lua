@@ -1,6 +1,6 @@
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("dot.win.open")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   yoz = require("yoz"),
@@ -96,7 +96,7 @@ t:test("explicit navigation takes precedence over the saved cursor", function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   t.assert_true(Win.open_filepath(winnr, filepath, 1, 2), "opened at location")
   settle()
-  t.assert_true(vim.deep_equal({ 1, 2 }, vim.api.nvim_win_get_cursor(winnr)), "explicit location")
+  t.assert_same({ 1, 2 }, vim.api.nvim_win_get_cursor(winnr), "explicit location")
 end)
 
 t:test("synchronous symbol navigation takes precedence over first-display restoration", function()
@@ -143,7 +143,7 @@ t:test("opening a multi-line scratch window preserves its explicit text cursor",
   end)
   vim.api.nvim_win_set_cursor(winnr, { 4, 1 })
   settle()
-  t.assert_true(vim.deep_equal({ 4, 1 }, vim.api.nvim_win_get_cursor(winnr)), "scratch text cursor retained")
+  t.assert_same({ 4, 1 }, vim.api.nvim_win_get_cursor(winnr), "scratch text cursor retained")
   t.assert_nil(vim.b[bufnr].eve_last_loc, "scratch buffer has no file restoration state")
 end)
 
@@ -155,13 +155,13 @@ t:test("batch opening initializes each file once and restores hidden files on fi
   settle()
   t.assert_eq(last, vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(winnr)), "last file displayed")
   t.assert_eq(3, vim.api.nvim_win_get_cursor(winnr)[1], "last file saved cursor")
-  t.assert_true(vim.deep_equal({ BufReadPost = 1, FileType = 1 }, first_counts), "first file initialized once")
-  t.assert_true(vim.deep_equal({ BufReadPost = 1, FileType = 1 }, last_counts), "last file initialized once")
+  t.assert_same({ BufReadPost = 1, FileType = 1 }, first_counts, "first file initialized once")
+  t.assert_same({ BufReadPost = 1, FileType = 1 }, last_counts, "last file initialized once")
 
   t.assert_true(Win.open_filepath(winnr, first), "first file displayed later")
   settle()
   t.assert_eq(3, vim.api.nvim_win_get_cursor(winnr)[1], "hidden file saved cursor")
-  t.assert_true(vim.deep_equal({ BufReadPost = 1, FileType = 1 }, first_counts), "hidden file not reinitialized")
+  t.assert_same({ BufReadPost = 1, FileType = 1 }, first_counts, "hidden file not reinitialized")
 end)
 
 t:test("an earlier entry handler cannot redirect saved cursor restoration to another window", function()
@@ -239,7 +239,7 @@ for _, batch in ipairs({ false, true }) do
       vim.api.nvim_win_set_buf(winnr, other_bufnr)
       vim.api.nvim_win_set_cursor(winnr, { 2, 1 })
       settle()
-      t.assert_true(vim.deep_equal({ 2, 1 }, vim.api.nvim_win_get_cursor(winnr)), "replacement buffer cursor retained")
+      t.assert_same({ 2, 1 }, vim.api.nvim_win_get_cursor(winnr), "replacement buffer cursor retained")
     end
   )
 end

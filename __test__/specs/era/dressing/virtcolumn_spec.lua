@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/virtcolumn_spec.lua
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.virtcolumn")
+local t = harness.new()
 
 local GUIDE = "╎" ---@type string
 
@@ -16,8 +14,7 @@ local function start()
   end)
   local grid = require("__test__.support.ui_grid").new(ui)
   ui:rpc("nvim_ui_attach", 130, 12, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
+  ui:lua(
     [=[
     local root = ...
     vim.opt.runtimepath:prepend(root)
@@ -58,7 +55,7 @@ local function start()
     vim.bo.filetype = "lua"
     vim.cmd("redraw!")
   ]=],
-    { assert(vim.uv.cwd()) }
+    assert(vim.uv.cwd())
   )
   return ui, grid
 end
@@ -67,7 +64,7 @@ end
 ---@param code                          string
 ---@return any
 local function exec(ui, code)
-  return ui:rpc("nvim_exec_lua", code, {})
+  return ui:lua(code)
 end
 
 ---@param grid                          table

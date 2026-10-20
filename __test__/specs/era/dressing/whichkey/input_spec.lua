@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/whichkey/input_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.dressing.whichkey.input")
+local t = harness.new()
 local Tree = assert(loadfile("lua/era/dressing/whichkey/tree.lua"))()
 t:patch_table(era.dressing.whichkey, "tree", Tree)
 local State = assert(loadfile("lua/era/dressing/whichkey/state.lua"))()

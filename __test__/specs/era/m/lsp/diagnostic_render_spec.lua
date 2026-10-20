@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/diagnostic_render_spec.lua
----@diagnostic disable: undefined-global, invisible
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.m.lsp.diagnostic.render")
+local t = harness.new()
 local Diagnostic = require("era.m.lsp.diagnostic")
 
 local ROOT = vim.uv.cwd() .. "/__test__/local.diagnostic-render" ---@type string

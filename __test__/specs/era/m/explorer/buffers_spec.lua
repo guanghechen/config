@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.buffers" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.buffers")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local buffers = require("era.m.explorer.buffers")
 
@@ -143,13 +140,13 @@ for _, case in ipairs({
       files = { { oldUri = vim.uri_from_fname(case.from), newUri = vim.uri_from_fname(case.to) } },
     }
     for _, method in ipairs({ "workspace/willRenameFiles", "workspace/didRenameFiles" }) do
-      t.assert_true(vim.deep_equal(expected, sent[method]), method .. ": " .. vim.inspect(sent[method]))
+      t.assert_same(expected, sent[method], method .. ": " .. vim.inspect(sent[method]))
     end
     local expected_renames = case.unrelated and {} or { { name, case.to .. suffix } }
-    t.assert_true(vim.deep_equal(expected_renames, renamed))
+    t.assert_same(expected_renames, renamed)
     t.assert_eq(case.physical, confirmation.source)
     t.assert_eq(case.destination, confirmation.target)
-    t.assert_true(vim.deep_equal({ "unsaved content" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)))
+    t.assert_same({ "unsaved content" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
     t.assert_true(vim.api.nvim_get_option_value("modified", { buf = bufnr }))
   end)
 end
@@ -158,7 +155,7 @@ for _, will_rename in ipairs({ false, true }) do
   t:test(
     "Move preparation preserves placeholders " .. (will_rename and "across LSP replies" or "without LSP edits"),
     function()
-      local path = assert(vim.uv.fs_realpath(fixture.directory()))
+      local path = t:tempdir()
       local source, target = path .. "/source", path .. "/target"
       fixture.write(source)
       local placeholder = vim.fn.bufadd(target)
@@ -214,7 +211,7 @@ for _, will_rename in ipairs({ false, true }) do
 end
 
 t:test("a file Move ignores an empty descendant placeholder after its parent becomes a file", function()
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   local source, target = path .. "/source", path .. "/target"
   fixture.write(source)
   fixture.write(path .. "/other")
@@ -257,7 +254,7 @@ t:test("a file Move ignores an empty descendant placeholder after its parent bec
 end)
 
 t:test("loaded rename round trips discard only empty placeholders and preserve unsaved undo history", function()
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   fixture.write(path .. "/a.txt")
   local bufnr = vim.fn.bufadd(path .. "/a.txt")
   vim.fn.bufload(bufnr)
@@ -302,7 +299,7 @@ end)
 
 for _, directory in ipairs({ false, true }) do
   t:test((directory and "directory" or "file") .. " moves reject a live target buffer before filesystem IO", function()
-    local path = assert(vim.uv.fs_realpath(fixture.directory()))
+    local path = t:tempdir()
     local source, target = path .. "/a.txt", path .. "/b.txt"
     if directory then
       assert(vim.uv.fs_mkdir(path .. "/old", 448))
@@ -339,7 +336,7 @@ for _, directory in ipairs({ false, true }) do
   t:test(
     (directory and "directory" or "file") .. " move protects destination buffers when the source is unopened",
     function()
-      local path = assert(vim.uv.fs_realpath(fixture.directory()))
+      local path = t:tempdir()
       local source, destination = path .. "/a.txt", path .. "/b.txt"
       if directory then
         assert(vim.uv.fs_mkdir(path .. "/old", 448))
@@ -365,7 +362,7 @@ for _, directory in ipairs({ false, true }) do
 end
 
 t:test("a destination buffer introduced by an LSP reply is checked again before IO", function()
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   fixture.write(path .. "/a.txt")
   local source = vim.fn.bufadd(path .. "/a.txt")
   vim.fn.bufload(source)
@@ -412,7 +409,7 @@ t:test("a destination buffer introduced by an LSP reply is checked again before 
 end)
 
 t:test("a late buffer collision preserves contents and rejects writes to the obsolete source path", function()
-  local path = assert(vim.uv.fs_realpath(fixture.directory()))
+  local path = t:tempdir()
   local source, target = path .. "/a.txt", path .. "/b.txt"
   fixture.write(source)
   local from = vim.fn.bufadd(source)

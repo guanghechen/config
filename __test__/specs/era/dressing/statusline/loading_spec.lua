@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.dressing.statusline.loading")
+local t = harness.new()
 local Nvimbar = require("era.m.nvimbar.nvimbar")
 
 t:test("statusline initializes components lazily without activating optional backends", function()

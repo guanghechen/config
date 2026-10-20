@@ -1,6 +1,6 @@
 --- Frozen pre-migration reference for differential tests. Never loaded by production code.
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.git.status" ---@type string
+local __module_name__ = "__test__.fixtures.era.m.git.status_lua_reference" ---@type string
 
 local DEFAULT_GIT_STATUS_HL = "m_ft_git_other"
 
@@ -93,7 +93,7 @@ for _, code in ipairs(STATUS_CODE_ORDER) do
   end
 end
 
----@class era.m.git.status
+---@class __test__.fixtures.era.m.git.StatusReference
 local M = {}
 
 M.DEFAULT_GIT_STATUS_HL = DEFAULT_GIT_STATUS_HL
@@ -289,7 +289,7 @@ local function create_status_groups()
   return groups
 end
 
----@class era.m.git.status.IRawStatusRecord
+---@class __test__.fixtures.era.m.git.status_lua_reference.IRawStatusRecord
 ---@field public new_object_name        string|nil
 ---@field public old_object_name        string|nil
 ---@field public previous               string|nil
@@ -307,13 +307,13 @@ end
 
 ---Parse the leading `--raw -z` records, preserving blob identities and literal paths.
 ---@param lines                       string[]
----@return era.m.git.status.IRawStatusRecord[] records
+---@return __test__.fixtures.era.m.git.status_lua_reference.IRawStatusRecord[] records
 ---@return string[] fields
 ---@return integer next_index
 local function parse_raw_records(lines)
   local output = table.concat(lines, "\n") ---@type string
   local fields = vim.split(output, "\0", { plain = true }) ---@type string[]
-  local records = {} ---@type era.m.git.status.IRawStatusRecord[]
+  local records = {} ---@type __test__.fixtures.era.m.git.status_lua_reference.IRawStatusRecord[]
   local index = 1 ---@type integer
 
   while index <= #fields do
@@ -356,7 +356,7 @@ end
 ---Parse combined `--raw --numstat -z` output. Raw records precede numstat records;
 ---both sections use Git's NUL protocol, including separate source/destination fields for renames.
 ---@param lines                       string[]
----@return era.m.git.status.IRawStatusRecord[] records
+---@return __test__.fixtures.era.m.git.status_lua_reference.IRawStatusRecord[] records
 ---@return table<string, era.m.git.status.INumstat> numstats
 local function parse_raw_numstat_output(lines)
   local records, fields, index = parse_raw_records(lines)
@@ -717,8 +717,8 @@ function M.collect(opts, token)
         require_query_result(results[index], labels[index])
       end
 
-      local staged_records = nil ---@type era.m.git.status.IRawStatusRecord[]|nil
-      local unstaged_records = nil ---@type era.m.git.status.IRawStatusRecord[]|nil
+      local staged_records = nil ---@type __test__.fixtures.era.m.git.status_lua_reference.IRawStatusRecord[]|nil
+      local unstaged_records = nil ---@type __test__.fixtures.era.m.git.status_lua_reference.IRawStatusRecord[]|nil
       local staged_numstats = nil ---@type table<string, era.m.git.status.INumstat>|nil
       local unstaged_numstats = nil ---@type table<string, era.m.git.status.INumstat>|nil
 

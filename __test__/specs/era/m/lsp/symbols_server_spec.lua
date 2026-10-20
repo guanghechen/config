@@ -1,8 +1,5 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/symbols_server_spec.lua
----@diagnostic disable: undefined-global
-local __module_name__ = "__test__.specs.era.m.lsp.symbols_server" ---@type string
 local harness = require("__test__.support.harness")
-local t = harness.new(__module_name__)
+local t = harness.new()
 
 require("ark.bootstrap").setup()
 local reports = {} ---@type table[]

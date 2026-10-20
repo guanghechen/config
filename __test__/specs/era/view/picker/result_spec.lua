@@ -1,9 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.view.picker.result" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.view.picker.result")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 
 ---@param count                         ?integer
 ---@return era.view.ResultTree
@@ -61,7 +58,7 @@ for _, kind in ipairs({ "picker", "searcher" }) do
     local owner = tree(512)
     local value = result(owner, kind)
     value:create_win({ border = "", number = false, winhighlight = "" }, { row = 0, col = 0, width = 40, height = 4 })
-    native.await(owner:ready())
+    treeview.await(owner:ready())
     vim.wait(100)
     local calls = 0
     local sign_place = vim.fn.sign_place
@@ -70,7 +67,7 @@ for _, kind in ipairs({ "picker", "searcher" }) do
       return sign_place(...)
     end)
     owner:toggle_select("root", true, true)
-    native.await(owner:ready())
+    treeview.await(owner:ready())
     vim.wait(100)
     t.assert_true(owner:isselected("512"))
     t.assert_true(calls <= 2, "selection must not place a persistent sign per result")
@@ -83,18 +80,18 @@ t:test("an omitted winbar preserves positions across refresh, resize and reopeni
   local options = { border = "single", number = false, winhighlight = "" }
   local dimension = { row = 0, col = 0, width = 40, height = 4 }
   local winnr = value:create_win(options, dimension)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   value:set_lnum_current(2)
   value:mark_nvimbar_dirty()
   value:resize({ row = 0, col = 0, width = 50, height = 5 })
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   vim.wait(100)
   t.assert_eq(2, value.lnum_current:snapshot())
   t.assert_eq(3, value.lnum_total:snapshot())
   t.assert_eq("", vim.api.nvim_get_option_value("winbar", { win = winnr }))
   value:hide()
   winnr = value:create_win(options, dimension)
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   vim.wait(100)
   t.assert_eq(2, value.lnum_current:snapshot())
   t.assert_eq("", vim.api.nvim_get_option_value("winbar", { win = winnr }))
@@ -125,7 +122,7 @@ t:test("status and diagnostic policies survive a failed publication", function()
     { border = "", number = false, winhighlight = "" },
     { row = 0, col = 0, width = 40, height = 4 }
   )
-  native.await(owner:ready())
+  treeview.await(owner:ready())
   t.wait_until(function()
     return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("READY", 1, true) ~= nil
   end, 1000)

@@ -1,8 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/hipattern/dirty_spec.lua
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.dressing.hipattern.dirty")
+local t = harness.new()
 local dirty = require("era.dressing.hipattern.dirty")
 
 ---@param ranges                        era.dressing.hipattern.dirty.IRange[]

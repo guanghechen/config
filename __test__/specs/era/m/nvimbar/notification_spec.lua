@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.nvimbar.notification" ---@type string
-
-local t = require("__test__.support.harness").new("era.m.nvimbar.notification")
+local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
 local clock_fixture = require("__test__.fixtures.era.m.nvimbar.clock")
 local Future = require("stl.c.future")

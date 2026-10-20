@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/dressing/whichkey/setup_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("era.dressing.whichkey.setup")
+local t = harness.new()
 
 t:test("repeated dressing setup keeps one observer and still responds to toggles", function()
   local Whichkey = era.dressing.whichkey

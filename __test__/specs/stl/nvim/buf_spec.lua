@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/nvim/buf_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.nvim.buf")
+local t = harness.new()
 
 bootstrap.with_global(t, "stl", {
   env = { IS_WIN = false },
@@ -189,7 +186,7 @@ end
 ---@param region                        stl.nvim.buf.IVisualRegion|nil
 ---@param msg                           string
 local function assert_region(expected, region, msg)
-  t.assert_true(vim.deep_equal(expected, region), msg .. ": " .. vim.inspect(region))
+  t.assert_same(expected, region, msg .. ": " .. vim.inspect(region))
 end
 
 t:test("a Visual region keeps whole characters and follows the Visual mode", function()

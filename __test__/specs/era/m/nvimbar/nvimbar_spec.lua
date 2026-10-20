@@ -2,7 +2,7 @@ local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local Nvimbar = require("era.m.nvimbar.nvimbar")
 local Future = require("stl.c.future")
-local t = harness.new("era.m.nvimbar.nvimbar")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -485,7 +485,7 @@ t:test("bar cancellation preserves refreshes requested by component cleanup", fu
   t.wait_until(function()
     return bar:snapshot():find("new1new2", 1, true) ~= nil
   end, 1000)
-  t.assert_true(vim.deep_equal({ 2, 2 }, refreshed))
+  t.assert_same({ 2, 2 }, refreshed)
 end)
 
 t:test("the debug counter advances when a late peer causes another layout", function()

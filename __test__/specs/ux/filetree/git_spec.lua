@@ -1,20 +1,16 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.filetree.git" ---@type string
-
-local fixture = require("__test__.support.filetree").new("ux.filetree.git")
+local fixture = require("__test__.support.filetree").new()
 local t, filetree = fixture.t, fixture.filetree
-local await, write, directory = fixture.await, fixture.write, fixture.directory
+local git = require("__test__.support.git")
+local await, write = fixture.await, fixture.write
 local native = fixture.native
 
 t:test("Git and ignored native snapshots are consumed without exporting their entries", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   write(path .. "/ignored")
   vim.fn.writefile({ "ignored" }, path .. "/.gitignore")
-  for _, args in ipairs({ { "git", "-C", path, "init", "-q" }, { "git", "-C", path, "add", "a" } }) do
-    local result = vim.system(args, { text = true }):wait()
-    t.assert_eq(0, result.code, result.stderr)
-  end
+  git.run(path, { "init", "-q" })
+  git.run(path, { "add", "a" })
   local job = native.git.start_status({ cwd = path })
   t:defer(function()
     job:dispose()

@@ -1,12 +1,9 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.filetree.runtime" ---@type string
-
-local fixture = require("__test__.support.filetree").new("ux.filetree.runtime")
+local fixture = require("__test__.support.filetree").new()
 local t, filetree = fixture.t, fixture.filetree
-local await, write, directory = fixture.await, fixture.write, fixture.directory
+local await, write = fixture.await, fixture.write
 
 t:test("directory pages finish while a source publication waits for its display deadline", function()
-  local path = directory()
+  local path = t:tempdir()
   for index = 1, 1200 do
     write(string.format("%s/file-%04d", path, index))
   end
@@ -43,7 +40,7 @@ end)
 
 t:test("watch revisions reach subscribers and the original handler once through attach and detach", function()
   local received, wrapped = {}, {}
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/first")
   local data = await(filetree.open(path, {
     on_effect = function(effect)
@@ -85,7 +82,7 @@ t:test("watch revisions reach subscribers and the original handler once through 
 end)
 
 t:test("source observers can unsubscribe and register during delivery without replay", function()
-  local path = directory()
+  local path = t:tempdir()
   local data = await(filetree.open(path))
   local first, second, late
   local calls = { first = 0, second = 0, late = 0 }
@@ -133,7 +130,7 @@ t:test("source observers can unsubscribe and register during delivery without re
 end)
 
 t:test("native resolve distinguishes missing resources from invalid parent types", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/file")
   local data = await(filetree.open(path))
   for _, case in ipairs({ { path .. "/missing/child", "NotFound" }, { path .. "/file/child", "ProviderError" } }) do
@@ -149,7 +146,7 @@ t:test("native resolve distinguishes missing resources from invalid parent types
 end)
 
 t:test("a visible idle Filetree sleeps until a real filesystem notification arrives", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/first")
   local data = await(filetree.open(path))
   local state = await(data:create_state())
@@ -186,7 +183,7 @@ t:test("a visible idle Filetree sleeps until a real filesystem notification arri
 end)
 
 t:test("hidden idle data stops polling and a new request or view resumes it", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/first")
   local data = await(filetree.open(path))
   local state = await(data:create_state())
@@ -236,7 +233,7 @@ end)
 t:test("hidden task deadlines deliver failure without another request and then stop polling", function()
   for _, deadline in ipairs({ 0, 100 }) do
     local failures = {}
-    local data = await(filetree.open(directory(), {
+    local data = await(filetree.open(t:tempdir(), {
       on_effect = function(effect)
         if effect.kind == "TaskFailed" then
           failures[#failures + 1] = effect
@@ -270,7 +267,7 @@ end)
 t:test("a deadline callback can retry with an already completed native ticket", function()
   local state, retry
   local failures = {}
-  local data = await(filetree.open(directory(), {
+  local data = await(filetree.open(t:tempdir(), {
     on_effect = function(effect)
       if effect.kind == "TaskFailed" then
         failures[#failures + 1] = effect.lock
@@ -309,7 +306,7 @@ end)
 
 t:test("prepared and unlocked hidden tasks release deadline polling demand", function()
   local failures = 0
-  local data = await(filetree.open(directory(), {
+  local data = await(filetree.open(t:tempdir(), {
     on_effect = function(effect)
       if effect.kind == "TaskFailed" then
         failures = failures + 1
@@ -352,7 +349,7 @@ t:test("prepared and unlocked hidden tasks release deadline polling demand", fun
 end)
 
 t:test("native List loads a real directory and preserves old resource paths on refresh", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/before", 448))
   write(path .. "/before/file")
   local data = await(filetree.open(path))
@@ -380,7 +377,7 @@ t:test("native List loads a real directory and preserves old resource paths on r
 end)
 
 t:test("paged native reads keep progressing while only the state and view remain", function()
-  local path = directory()
+  local path = t:tempdir()
   for i = 1, 1100 do
     write(path .. ("/file-%04d"):format(i))
   end
@@ -399,7 +396,7 @@ t:test("paged native reads keep progressing while only the state and view remain
 end)
 
 t:test("native watch updates the actual buffer without manual refresh", function()
-  local path = directory()
+  local path = t:tempdir()
   local data = await(filetree.open(path))
   local state = await(data:create_state(nil, { mode = "list" }))
   local view = filetree.attach(state, { keymaps = false })

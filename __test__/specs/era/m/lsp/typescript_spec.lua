@@ -1,13 +1,10 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.lsp.typescript" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.lsp.typescript")
+local t = harness.new()
 
-bootstrap.with_yoz(t, require("yoz"))
-bootstrap.with_stl(t, { env = { PATH_SEP = "/", IS_WIN = false }, fs = require("stl.fs") })
-bootstrap.with_era(t, {
+t:patch_global("yoz", require("yoz"))
+bootstrap.with_global(t, "stl", { env = { PATH_SEP = "/", IS_WIN = false }, fs = require("stl.fs") })
+bootstrap.with_global(t, "era", {
   m = {
     lsp = {
       event = {
@@ -25,8 +22,7 @@ local vtsls = dofile("lsp/vtsls.lua")
 
 ---@return string
 local function project()
-  local root = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(root, "p")
+  local root = t:tempdir()
   root = assert(vim.uv.fs_realpath(root))
   t:defer(function()
     vim.fn.delete(root, "rf")

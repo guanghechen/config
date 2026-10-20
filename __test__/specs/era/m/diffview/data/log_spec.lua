@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/data/log_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.data.log")
+local t = harness.new()
 local git_args = {} ---@type string[]
 local git_cwd = nil ---@type string|nil
 local git_result = { code = 0, lines = {}, stderr = "" } ---@type stl.git.exec.IResult

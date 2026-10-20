@@ -1,9 +1,5 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/image/tmux_spec.lua
----@diagnostic disable: undefined-global
-
-local __module_name__ = "era.m.image.tmux" ---@type string
 local harness = require("__test__.support.harness")
-local t = harness.new(__module_name__)
+local t = harness.new()
 
 local scenarios = {
   { name = "enables passthrough for the owning pane before installing image hooks", calls = 1 },
@@ -66,8 +62,9 @@ for _, scenario in ipairs(scenarios) do
       t.assert_true(warnings[1].message:find("controlled tmux failure", 1, true) ~= nil, "warning carries stderr")
     end
     if commands[1] then
-      t.assert_true(
-        vim.deep_equal({ "tmux", "set-option", "-p", "-t", "%7312", "allow-passthrough", "all" }, commands[1]),
+      t.assert_same(
+        { "tmux", "set-option", "-p", "-t", "%7312", "allow-passthrough", "all" },
+        commands[1],
         "activation targets only the owning pane"
       )
     end

@@ -1,8 +1,6 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.fn.find_git" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.fn.find_git")
+local t = require("__test__.support.harness").new()
+local git = require("__test__.support.git")
 local support = require("__test__.support.git_files")
 local Widget = require("era.m.git_files")
 
@@ -10,11 +8,11 @@ local Widget = require("era.m.git_files")
 local function fixture()
   local root = support.repo(t)
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged" })
-  support.git(root, { "add", "dir/mixed.lua" })
+  git.run(root, { "add", "dir/mixed.lua" })
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged", "unstaged" })
   local state = support.widget(t, root)
   state.collect = era.m.git.status.collect
-  state.snapshot = support.await(state.collect({ include_numstat = true }))
+  state.snapshot = t.await(state.collect({ include_numstat = true }))
   state.requests = {}
   t:patch_table(era.m.git.status, "collect", function(options, token)
     local request = { options = options, token = token }
@@ -146,7 +144,7 @@ t:test("changing workspace while opening discards the old request and allows reo
   state.requests[1].resolve(state.snapshot)
   t.assert_nil(state.widget._request)
   t.assert_false(state.widget:isvisible())
-  local snapshot = support.await(state.collect({ include_numstat = true }))
+  local snapshot = t.await(state.collect({ include_numstat = true }))
   state.widget:toggle()
   state.requests[2].resolve(snapshot)
   support.ready(state.widget)
@@ -159,10 +157,10 @@ t:test("switching to a nested repository resets each display root to that worksp
   local state = fixture()
   show(state)
   state.widget.input:set_content("mixed")
-  support.git(state.root, { "init", "-q", "nested" })
+  git.run(state.root, { "init", "-q", "nested" })
   state.root = state.root .. "/nested"
   support.write(state.root, "inside.lua", { "nested" })
-  local snapshot = support.await(state.collect({ include_numstat = true }))
+  local snapshot = t.await(state.collect({ include_numstat = true }))
   state.widget:refresh(false)
   state.requests[#state.requests].resolve(snapshot)
   support.ready(state.widget)

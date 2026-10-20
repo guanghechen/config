@@ -1,12 +1,8 @@
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.git.blame exit")
+local t = harness.new()
 
 t:test("Neovim exit acknowledges cancellation of a blocked native blame process", function()
-  local root = vim.fn.tempname()
-  vim.fn.mkdir(root, "p")
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
+  local root = t:tempdir()
   local marker = root .. "/started"
   local repo = assert(vim.uv.cwd())
   local windows = package.config:sub(1, 1) == "\\"

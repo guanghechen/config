@@ -1,20 +1,14 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.filetree.jobs" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.filetree.jobs")
+local t = require("__test__.support.harness").new()
 local Jobs = require("era.m.filetree.jobs")
 local Future = require("stl.c.future")
-local await = require("__test__.support.result_tree").await
+local await = require("__test__.support.treeview").await
 
 ---@return table
 ---@return string
 local function fixture()
-  local directory = vim.fn.tempname()
+  local directory = t:tempdir()
   vim.fn.mkdir(directory .. "/parent/root", "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
   return await(Jobs.capture(directory .. "/parent/root")), directory
 end
 

@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.progress" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.progress")
-local t, await, directory = fixture.t, fixture.await, fixture.directory
+local fixture = require("__test__.support.explorer").new()
+local t, await = fixture.t, fixture.await
 
 t:test("progress uses processed items and readable byte units before paths and flags", function()
   local before = vim.o.showtabline
@@ -10,7 +7,7 @@ t:test("progress uses processed items and readable byte units before paths and f
   t:defer(function()
     vim.o.showtabline = before
   end)
-  local widget = fixture.widget(directory())
+  local widget = fixture.widget(t:tempdir())
   local session, view = widget:context()
   t:patch_table(session, "job", {})
   t:patch_table(session, "operation", "copy")
@@ -46,7 +43,7 @@ for _, contents in ipairs({ "", "test" }) do
       t:defer(function()
         vim.o.showtabline = before
       end)
-      local path = directory()
+      local path = t:tempdir()
       assert(vim.uv.fs_mkdir(path .. "/source", 448))
       assert(vim.uv.fs_mkdir(path .. "/destination", 448))
       for index = 1, 1000 do

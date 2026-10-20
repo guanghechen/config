@@ -1,7 +1,7 @@
 --- Full-config E2E: open a tracked file with an unstaged change hunk, then execute this fixture.
 --- Disables context saving and exits the disposable Neovim process without saving buffers.
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.m.git.word_diff_runtime" ---@type string
+local __module_name__ = "__test__.manual.era.m.git.word_diff_runtime" ---@type string
 
 dot.context.save_on_exit = function() end
 

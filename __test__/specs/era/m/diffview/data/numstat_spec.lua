@@ -1,24 +1,15 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/data/numstat_spec.lua
----@diagnostic disable: undefined-global, missing-fields
-
 local bootstrap = require("__test__.support.bootstrap")
 local CancellationToken = require("stl.c.cancellation_token")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.data.numstat")
+local t = harness.new()
+local git = require("__test__.support.git")
 
 bootstrap.with_global(t, "stl", { env = { IS_WIN = false } })
 bootstrap.with_global(t, "dot", {})
 bootstrap.with_global(t, "era", {})
 
 local data = assert(loadfile("lua/era/m/diffview/data.lua"))()
-
----@param repo                          string
----@param ...                           string
----@return vim.SystemCompleted
-local function git(repo, ...)
-  return vim.system({ "git", "-C", repo, ... }, { text = true }):wait()
-end
 
 t:test("numstat: parses NUL-delimited normal and rename records", function()
   local normal = { filepath = "src/foo.lua", stage_type = "staged", status = "M" }
@@ -400,166 +391,135 @@ t:test("status conversion keeps staged deletion and same-path untracked replacem
 end)
 
 t:test("numstat: consumes Git's real NUL-delimited rename format", function()
-  local repo = vim.fn.tempname() ---@type string
+  local repo = git.repo(t)
   vim.fn.mkdir(repo .. "/src", "p")
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-
-    local original = {} ---@type string[]
-    for index = 1, 20 do
-      original[index] = "line " .. index
-    end
-    vim.fn.writefile(original, repo .. "/src/old.lua")
-    t.assert_eq(0, git(repo, "add", "--", "src/old.lua").code, "initial add")
-    t.assert_eq(
-      0,
-      git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "base").code,
-      "initial commit"
-    )
-
-    t.assert_eq(0, git(repo, "mv", "src/old.lua", "src/new.lua").code, "git mv")
-    vim.fn.writefile({ "added one", "added two" }, repo .. "/src/new.lua", "a")
-    t.assert_eq(0, git(repo, "add", "--", "src/new.lua").code, "stage rename")
-
-    local result = git(repo, "diff", "--staged", "--numstat", "-z", "--")
-    t.assert_eq(0, result.code, "numstat")
-    local lines = vim.split(result.stdout or "", "\n", { plain = true })
-    if lines[#lines] == "" then
-      lines[#lines] = nil
-    end
-
-    local renamed = { filepath = "src/new.lua", stage_type = "staged", status = "R" }
-    data.__apply_numstat_stats__({ renamed }, { code = result.code, lines = lines }, "staged")
-
-    t.assert_eq(2, renamed.insertions, "rename insertions")
-    t.assert_eq(0, renamed.deletions, "rename deletions")
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
+  local original = {} ---@type string[]
+  for index = 1, 20 do
+    original[index] = "line " .. index
   end
+  vim.fn.writefile(original, repo .. "/src/old.lua")
+  git.run(repo, { "add", "--", "src/old.lua" })
+  git.run(repo, { "commit", "-qm", "base" })
+
+  git.run(repo, { "mv", "src/old.lua", "src/new.lua" })
+  vim.fn.writefile({ "added one", "added two" }, repo .. "/src/new.lua", "a")
+  git.run(repo, { "add", "--", "src/new.lua" })
+
+  local result = git.system(repo, { "diff", "--staged", "--numstat", "-z", "--" })
+  t.assert_eq(0, result.code, "numstat")
+  local lines = vim.split(result.stdout or "", "\n", { plain = true })
+  if lines[#lines] == "" then
+    lines[#lines] = nil
+  end
+
+  local renamed = { filepath = "src/new.lua", stage_type = "staged", status = "R" }
+  data.__apply_numstat_stats__({ renamed }, { code = result.code, lines = lines }, "staged")
+
+  t.assert_eq(2, renamed.insertions, "rename insertions")
+  t.assert_eq(0, renamed.deletions, "rename deletions")
 end)
 
 t:test("numstat: reads real untracked text while preserving binary and empty semantics", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  vim.fn.writefile({ "one", "two", "three" }, repo .. "/plain.txt")
+  vim.fn.writefile({}, repo .. "/empty.txt")
+  local special = "tab\tand\nnewline.txt" ---@type string
+  vim.fn.writefile({ "one", "two" }, repo .. "/" .. special)
+  local magic = ":(glob)o*.txt" ---@type string
+  vim.fn.writefile({ "magic", "only" }, repo .. "/" .. magic)
+  vim.fn.writefile({ "other" }, repo .. "/other.txt")
+  local binary = assert(io.open(repo .. "/binary.dat", "wb"))
+  binary:write("before\0after")
+  binary:close()
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "one", "two", "three" }, repo .. "/plain.txt")
-    vim.fn.writefile({}, repo .. "/empty.txt")
-    local special = "tab\tand\nnewline.txt" ---@type string
-    vim.fn.writefile({ "one", "two" }, repo .. "/" .. special)
-    local magic = ":(glob)o*.txt" ---@type string
-    vim.fn.writefile({ "magic", "only" }, repo .. "/" .. magic)
-    vim.fn.writefile({ "other" }, repo .. "/other.txt")
-    local binary = assert(io.open(repo .. "/binary.dat", "wb"))
-    binary:write("before\0after")
-    binary:close()
-
-    stl.git = {
-      exec = {
-        exec = function(args, opts)
-          local cmd = { "git", "-C", opts.cwd }
-          vim.list_extend(cmd, args)
-          local result = vim.system(cmd, { env = opts.env, stdin = opts.stdin, text = false }):wait()
-          return {
-            code = result.code,
-            lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
-            stderr = result.stderr or "",
-          }
-        end,
-      },
-    }
-    stl.async = {
-      await_all = function(futures)
-        return futures
+  stl.git = {
+    exec = {
+      exec = function(args, opts)
+        local cmd = { "git", "-C", opts.cwd }
+        vim.list_extend(cmd, args)
+        local result = vim.system(cmd, { env = opts.env, stdin = opts.stdin, text = false }):wait()
+        return {
+          code = result.code,
+          lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
+          stderr = result.stderr or "",
+        }
       end,
-    }
-    dot.path = {
-      workspace = function()
-        return repo
-      end,
-    }
+    },
+  }
+  stl.async = {
+    await_all = function(futures)
+      return futures
+    end,
+  }
+  dot.path = {
+    workspace = function()
+      return repo
+    end,
+  }
 
-    local plain = { filepath = "plain.txt", stage_type = "unstaged", status = "?" }
-    local empty = { filepath = "empty.txt", stage_type = "unstaged", status = "?" }
-    local binary_entry = { filepath = "binary.dat", stage_type = "unstaged", status = "?" }
-    local special_entry = { filepath = special, stage_type = "unstaged", status = "?" }
-    local magic_entry = { filepath = magic, stage_type = "unstaged", status = "?" }
-    local other_entry = { filepath = "other.txt", stage_type = "unstaged", status = "?" }
-    data.__fetch_untracked_numstat__({ plain, empty, binary_entry, special_entry, magic_entry, other_entry })
+  local plain = { filepath = "plain.txt", stage_type = "unstaged", status = "?" }
+  local empty = { filepath = "empty.txt", stage_type = "unstaged", status = "?" }
+  local binary_entry = { filepath = "binary.dat", stage_type = "unstaged", status = "?" }
+  local special_entry = { filepath = special, stage_type = "unstaged", status = "?" }
+  local magic_entry = { filepath = magic, stage_type = "unstaged", status = "?" }
+  local other_entry = { filepath = "other.txt", stage_type = "unstaged", status = "?" }
+  data.__fetch_untracked_numstat__({ plain, empty, binary_entry, special_entry, magic_entry, other_entry })
 
-    t.assert_eq(3, plain.insertions, "text insertions")
-    t.assert_eq(0, plain.deletions, "text deletions")
-    t.assert_eq(0, empty.insertions, "empty insertions")
-    t.assert_eq(0, empty.deletions, "empty deletions")
-    t.assert_nil(binary_entry.insertions, "binary insertions")
-    t.assert_nil(binary_entry.deletions, "binary deletions")
-    t.assert_eq(2, special_entry.insertions, "special-path insertions")
-    t.assert_eq(0, special_entry.deletions, "special-path deletions")
-    t.assert_eq(2, magic_entry.insertions, "pathspec-magic filename insertions")
-    t.assert_eq(0, magic_entry.deletions, "pathspec-magic filename deletions")
-    t.assert_eq(1, other_entry.insertions, "glob target remains independent")
-    t.assert_eq(0, other_entry.deletions, "glob target deletions")
-  end, debug.traceback)
-
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
-  end
+  t.assert_eq(3, plain.insertions, "text insertions")
+  t.assert_eq(0, plain.deletions, "text deletions")
+  t.assert_eq(0, empty.insertions, "empty insertions")
+  t.assert_eq(0, empty.deletions, "empty deletions")
+  t.assert_nil(binary_entry.insertions, "binary insertions")
+  t.assert_nil(binary_entry.deletions, "binary deletions")
+  t.assert_eq(2, special_entry.insertions, "special-path insertions")
+  t.assert_eq(0, special_entry.deletions, "special-path deletions")
+  t.assert_eq(2, magic_entry.insertions, "pathspec-magic filename insertions")
+  t.assert_eq(0, magic_entry.deletions, "pathspec-magic filename deletions")
+  t.assert_eq(1, other_entry.insertions, "glob target remains independent")
+  t.assert_eq(0, other_entry.deletions, "glob target deletions")
 end)
 
 t:test("numstat: an unreadable untracked file does not block the Changes snapshot", function()
-  local repo = vim.fn.tempname() ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
   local unreadable = repo .. "/unreadable.txt" ---@type string
+  t:defer(function()
+    vim.uv.fs_chmod(unreadable, 384)
+  end)
+  vim.fn.writefile({ "cannot read this" }, unreadable)
+  t.assert_true(vim.uv.fs_chmod(unreadable, 0) == true, "make fixture unreadable")
 
-  local ok, err = xpcall(function()
-    t.assert_eq(0, git(repo, "init", "-q").code, "git init")
-    vim.fn.writefile({ "cannot read this" }, unreadable)
-    t.assert_true(vim.uv.fs_chmod(unreadable, 0) == true, "make fixture unreadable")
-
-    stl.git = {
-      exec = {
-        exec = function(args, opts)
-          local cmd = { "git", "-C", opts.cwd }
-          vim.list_extend(cmd, args)
-          local result = vim.system(cmd, { env = opts.env, stdin = opts.stdin, text = false }):wait()
-          return {
-            code = result.code,
-            lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
-            stderr = result.stderr or "",
-          }
-        end,
-      },
-    }
-    stl.async = {
-      await_all = function(futures)
-        return futures
+  stl.git = {
+    exec = {
+      exec = function(args, opts)
+        local cmd = { "git", "-C", opts.cwd }
+        vim.list_extend(cmd, args)
+        local result = vim.system(cmd, { env = opts.env, stdin = opts.stdin, text = false }):wait()
+        return {
+          code = result.code,
+          lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
+          stderr = result.stderr or "",
+        }
       end,
-    }
-    dot.path = {
-      workspace = function()
-        return repo
-      end,
-    }
+    },
+  }
+  stl.async = {
+    await_all = function(futures)
+      return futures
+    end,
+  }
+  dot.path = {
+    workspace = function()
+      return repo
+    end,
+  }
 
-    local entry = { filepath = "unreadable.txt", stage_type = "unstaged", status = "?" }
-    local result = data.__fetch_untracked_numstat__({ entry })
+  local entry = { filepath = "unreadable.txt", stage_type = "unstaged", status = "?" }
+  local result = data.__fetch_untracked_numstat__({ entry })
 
-    t.assert_true(result[1] == entry, "entry preserved")
-    t.assert_nil(entry.insertions, "insertions remain unknown")
-    t.assert_nil(entry.deletions, "deletions remain unknown")
-  end, debug.traceback)
-
-  vim.uv.fs_chmod(unreadable, 384)
-  vim.fn.delete(repo, "rf")
-  if not ok then
-    error(err)
-  end
+  t.assert_true(result[1] == entry, "entry preserved")
+  t.assert_nil(entry.insertions, "insertions remain unknown")
+  t.assert_nil(entry.deletions, "deletions remain unknown")
 end)
 
 t:run()

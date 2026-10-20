@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/commit_graph_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.commit_graph")
+local t = harness.new()
 local graph = assert(loadfile("lua/era/m/diffview/commit_graph.lua"))()
 
 ---@param hash string

@@ -1,13 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/illuminate_spec.lua
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.lsp.illuminate" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.lsp.illuminate")
+local t = harness.new()
 
-bootstrap.with_stl(t, { nvim = { fn = require("stl.nvim.fn") } })
-bootstrap.with_dot(t, {
+bootstrap.with_global(t, "stl", { nvim = { fn = require("stl.nvim.fn") } })
+bootstrap.with_global(t, "dot", {
   context = {
     flight = {
       dressing_illuminate = {

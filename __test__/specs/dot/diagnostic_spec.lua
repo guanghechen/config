@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/dot/diagnostic_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("dot.diagnostic")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   stl = {

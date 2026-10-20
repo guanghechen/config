@@ -1,0 +1,16 @@
+local git = require("__test__.support.git")
+local t = require("__test__.support.harness").new()
+
+t:test("a repository commits as the fixed identity and git failures raise with stderr", function()
+  local root = git.repo(t)
+  vim.fn.writefile({ "content" }, root .. "/file")
+  git.run(root, { "add", "file" })
+  git.run(root, { "commit", "-qm", "base" })
+  t.assert_eq("Test <test@example.com>\n", git.run(root, { "log", "-1", "--format=%an <%ae>" }))
+  local ok, err = pcall(git.run, root, { "rev-parse", "--verify", "missing" })
+  t.assert_false(ok, "nonzero exit")
+  t.assert_true(tostring(err):find("git rev-parse --verify missing: exit", 1, true) ~= nil, tostring(err))
+  t.assert_true(git.system(root, { "rev-parse", "--verify", "missing" }).code ~= 0)
+end)
+
+t:run()

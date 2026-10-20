@@ -1,30 +1,10 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.support.git_files" ---@type string
 
-local M = {}
+local git = require("__test__.support.git")
+local harness = require("__test__.support.harness")
 
----@param root                          string
----@param args                          string[]
----@return string
-function M.git(root, args)
-  local command = {
-    "git",
-    "-C",
-    root,
-    "-c",
-    "user.name=Test",
-    "-c",
-    "user.email=test@example.com",
-    "-c",
-    "commit.gpgSign=false",
-    "-c",
-    "core.hooksPath=/dev/null",
-  }
-  vim.list_extend(command, args)
-  local result = vim.system(command, { text = false }):wait()
-  assert(result.code == 0, result.stderr)
-  return result.stdout or ""
-end
+local M = {}
 
 ---@param root                          string
 ---@param path                          string
@@ -35,38 +15,20 @@ function M.write(root, path, lines)
   vim.fn.writefile(lines, root .. "/" .. path)
 end
 
----@param t                             table
+---A repository with a committed file in a directory, a second file beside it and one outside it.
+---@param t                             __test__.support.Harness
 ---@param unborn                        ?boolean
 ---@return string
 function M.repo(t, unborn)
-  local root = vim.fn.tempname()
-  vim.fn.mkdir(root, "p")
-  root = assert(vim.uv.fs_realpath(root))
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
-  M.git(root, { "init", "-q" })
+  local root = git.repo(t)
   if not unborn then
     M.write(root, "dir/mixed.lua", { "one", "two", "three" })
     M.write(root, "dir/second.lua", { "base" })
     M.write(root, "outside.lua", { "base" })
-    M.git(root, { "add", "." })
-    M.git(root, { "commit", "-qm", "fixture" })
+    git.run(root, { "add", "." })
+    git.run(root, { "commit", "-qm", "fixture" })
   end
   return root
-end
-
----@param future                        stl.c.Future
----@return any
-function M.await(future)
-  assert(
-    vim.wait(10000, function()
-      return future:is_done()
-    end, 1),
-    "Git Files operation timed out"
-  )
-  assert(not future:is_failed(), future:get_error())
-  return future:get_result()
 end
 
 ---@param t                             table
@@ -110,7 +72,7 @@ function M.ready(widget)
   )
   assert(not widget._failed, "Git Files refresh failed")
   for _, pane in pairs(widget.panes) do
-    M.await(pane.tree:ready())
+    harness.await(pane.tree:ready())
   end
 end
 
@@ -128,7 +90,7 @@ function M.cursor(widget, scope, path)
   widget:focus(scope)
   vim.api.nvim_win_set_cursor(assert(pane.result:get_winnr()), { row, 0 })
   vim.cmd("doautocmd CursorMoved")
-  M.await(pane.tree:ready())
+  harness.await(pane.tree:ready())
 end
 
 return M

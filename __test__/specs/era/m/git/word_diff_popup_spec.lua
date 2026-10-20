@@ -1,12 +1,9 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.git.word_diff_popup" ---@type string
-
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local diff = require("era.m.git.diff")
 local reference = assert(loadfile("__test__/fixtures/era/m/git/diff_lua_reference.lua"))()
 local Hunkview = require("era.m.git.hunkview")
-local t = harness.new("era.m.git.word_diff_popup")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -58,7 +55,7 @@ t:test("real popup text, byte highlights and cleanup match the Lua renderer inpu
     local source_winnr = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_cursor(source_winnr, { 1, 0 })
     for _, hunk in ipairs(hunks) do
-      local restore_buffer = bootstrap.with_era(t, {
+      local restore_buffer = bootstrap.with_global(t, "era", {
         m = {
           git = {
             buffer = {
@@ -99,13 +96,10 @@ t:test("real popup text, byte highlights and cleanup match the Lua renderer inpu
           restore()
         end
       end
-      t.assert_true(vim.deep_equal(results[1], results[2]), vim.inspect(results))
+      t.assert_same(results[1], results[2])
       t.assert_false(results[2].modifiable)
       t.assert_true(results[2].readonly)
-      t.assert_true(
-        vim.deep_equal(source_lines, vim.api.nvim_buf_get_lines(source_bufnr, 0, -1, false)),
-        "source unchanged"
-      )
+      t.assert_same(source_lines, vim.api.nvim_buf_get_lines(source_bufnr, 0, -1, false), "source unchanged")
       restore_buffer()
     end
   end

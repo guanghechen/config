@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.treeview.guide_path" ---@type string
-
-local t = require("__test__.support.harness").new("ux.treeview.guide_path")
+local t = require("__test__.support.harness").new()
 
 t:test("the cursor path colors individual guide columns and keeps Visual's displayed ancestry", function()
   local ui = require("__test__.support.ui").new()
@@ -9,26 +6,10 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   t:defer(function()
     ui:close()
   end)
-  ui:rpc("nvim_ui_attach", 100, 30, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
-    [=[
-    local root = ...
-    vim.opt.runtimepath:prepend(root)
-    local extension = vim.uv.os_uname().sysname == "Darwin" and "dylib" or "so"
-    yoz = assert(package.loadlib(root .. "/rust/target/debug/libyoz." .. extension, "luaopen_yoz"))()
-    errors, writes = {}, 0
-    stl = { c = { Future = require("stl.c.future") }, nvim = { fn = require("stl.nvim.fn") },
-      reporter = { error = function(options) errors[#errors + 1] = options.message end } }
-    ---@param future                    stl.c.Future
-    ---@return any
-    function await(future)
-      assert(vim.wait(10000, function() return future:is_done() end))
-      assert(not future:is_failed(), future:get_error())
-      local value = future:get_result()
-      assert(value.kind ~= "Rejected", vim.inspect(value))
-      return value
-    end
+  ui:start({ width = 100, height = 30, runtime = "native" })
+  ui:lua([=[
+    writes = 0
+    await = require("__test__.support.treeview").await
     local treeview = require("ux.treeview")
     local set_extmark = vim.api.nvim_buf_set_extmark
     guide_marks = {}
@@ -79,15 +60,7 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
       end))
     end
     move(5)
-  ]=],
-    { assert(vim.uv.cwd()) }
-  )
-
-  ---@param code                        string
-  ---@return any
-  local function eval(code)
-    return ui:rpc("nvim_exec_lua", code, {})
-  end
+  ]=])
 
   local normal, active, pink = 0x444444, 0x777777, 0xff69b4
 
@@ -108,7 +81,9 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
         end
         screen[#screen + 1] = table.concat(text)
       end
-      error("missing " .. label .. ": " .. vim.inspect(eval("return errors")) .. "\n" .. table.concat(screen, "\n"))
+      error(
+        "missing " .. label .. ": " .. vim.inspect(ui:lua("return reports.error")) .. "\n" .. table.concat(screen, "\n")
+      )
     end
     local start = location.col - (depth + 1) * 2 - 2
     local value = grid.grids[location.grid].rows[location.row + 1][start + column + 1]
@@ -135,33 +110,30 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   cell("target", 2, 5, "─", pink)
   cell("other", 1, 2, "╰", normal)
   cell("docs", 0, 0, "├", normal)
-  eval("guide_marks = {}")
+  ui:lua("guide_marks = {}")
   ui:rpc("nvim_command", "redraw!")
   t.assert_true(
-    eval(
+    ui:lua(
       "for _, count in pairs(guide_marks) do if count ~= 1 then return false end end return next(guide_marks) ~= nil"
     ),
     "each visible row submits one guide overlay"
   )
-  t.assert_true(
-    vim.deep_equal(
-      { { first = 1, last = 1, depth = 0 }, { first = 2, last = 2, depth = 1 }, { first = 3, last = 5, depth = 2 } },
-      eval("return view:frame():guide_path(5, 1, 10)")
-    ),
+  t.assert_same(
+    { { first = 1, last = 1, depth = 0 }, { first = 2, last = 2, depth = 1 }, { first = 3, last = 5, depth = 2 } },
+    ui:lua("return view:frame():guide_path(5, 1, 10)"),
     "native path rows use 1-based inclusive bounds"
   )
 
-  eval("cached_path = view._guide_path; vim.api.nvim_win_set_cursor(view.winnr, {5, 8})")
+  ui:lua("cached_path = view._guide_path; vim.api.nvim_win_set_cursor(view.winnr, {5, 8})")
   ui:rpc("nvim_command", "redraw")
-  t.assert_true(eval("return view._guide_path == cached_path"), "horizontal movement reuses the path")
+  t.assert_true(ui:lua("return view._guide_path == cached_path"), "horizontal movement reuses the path")
   for leftcol = 1, 7 do
-    ui:rpc(
-      "nvim_exec_lua",
+    ui:lua(
       [=[
       local leftcol = ...
       vim.api.nvim_win_call(view.winnr, function() vim.fn.winrestview({leftcol=leftcol}) end)
     ]=],
-      { leftcol }
+      leftcol
     )
     ui:rpc("nvim_command", "redraw!")
     local location = assert(grid:find("target"))
@@ -180,8 +152,8 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
       end
     end
   end
-  eval("vim.api.nvim_win_call(view.winnr, function() vim.fn.winrestview({leftcol=0}) end)")
-  eval("move(7)")
+  ui:lua("vim.api.nvim_win_call(view.winnr, function() vim.fn.winrestview({leftcol=0}) end)")
+  ui:lua("move(7)")
   ui:rpc("nvim_command", "redraw")
   cell("src", 0, 0, "│", pink)
   cell("src", 0, 1, "─", normal)
@@ -190,17 +162,17 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   cell("target", 2, 4, "╰", normal)
   cell("docs", 0, 0, "╰", pink)
   cell("docs", 0, 1, "─", pink)
-  t.assert_eq(0, eval("return writes"), "cursor paths never rewrite body text")
+  t.assert_eq(0, ui:lua("return writes"), "cursor paths never rewrite body text")
 
   for _, motion in ipairs({
     "vim.api.nvim_win_set_cursor(view.winnr, {7, 0})",
     'vim.cmd.normal({args={"7G"},bang=true})',
   }) do
-    eval("move(5)")
+    ui:lua("move(5)")
     ui:rpc("nvim_command", "redraw!")
-    eval(motion .. "; vim.cmd.redraw()")
-    t.wait_until(function()
-      return eval("return view:frame():header().cursor_row == 7 and not view._busy and not view._latest")
+    ui:lua(motion .. "; vim.cmd.redraw()")
+    ui:wait_until(function()
+      return ui:lua("return view:frame():header().cursor_row == 7 and not view._busy and not view._latest")
     end, 10000)
     cell("src", 0, 0, "│", pink)
     cell("src", 0, 1, "─", normal)
@@ -210,17 +182,17 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
     cell("docs", 0, 0, "╰", pink)
   end
 
-  eval("move(5)")
+  ui:lua("move(5)")
   ui:rpc("nvim_command", "redraw!")
-  eval([=[
+  ui:lua([=[
     vim.api.nvim_win_set_cursor(view.winnr, {7, 0})
     vim.cmd.redraw()
     vim.api.nvim_win_set_cursor(view.winnr, {5, 0})
     vim.cmd.redraw()
   ]=])
   -- A round trip can produce no CursorMoved event; the redraw itself must retain its pending differences.
-  t.wait_until(function()
-    return eval("return not view._guide_dirty and not view._guide_redraw_pending")
+  ui:wait_until(function()
+    return ui:lua("return not view._guide_dirty and not view._guide_redraw_pending")
   end, 10000)
   cell("src", 0, 0, "╰", pink)
   cell("src", 0, 1, "─", pink)
@@ -230,7 +202,7 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   cell("nested", 3, 4, "│", pink)
   cell("docs", 0, 0, "├", normal)
 
-  eval([=[
+  ui:lua([=[
     burst_dispatch, burst_redraw = state.dispatch, vim.api.nvim__redraw
     state.dispatch = function() return stl.c.Future.resolve({kind="NoChange"}) end
     burst_ranges = 0
@@ -241,63 +213,63 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
     for index = 1, 30 do view:set_cursor(index % 2 == 0 and 7 or 5) end
     state.dispatch = burst_dispatch
   ]=])
-  t.wait_until(function()
-    return eval("return not view._guide_dirty and not view._guide_redraw_pending")
+  ui:wait_until(function()
+    return ui:lua("return not view._guide_dirty and not view._guide_redraw_pending")
   end, 10000)
-  t.assert_true(eval("return burst_ranges <= 1"), "one callback coalesces intermediate cursor paths")
+  t.assert_true(ui:lua("return burst_ranges <= 1"), "one callback coalesces intermediate cursor paths")
   cell("src", 0, 0, "│", pink)
   cell("lib", 1, 2, "├", normal)
   cell("nested", 3, 0, "│", pink)
   cell("docs", 0, 0, "╰", pink)
-  eval("vim.api.nvim__redraw = burst_redraw")
+  ui:lua("vim.api.nvim__redraw = burst_redraw")
 
-  eval("move(5)")
-  eval([=[
+  ui:lua("move(5)")
+  ui:lua([=[
     saved_dispatch = state.dispatch
     state.dispatch = function() return stl.c.Future.resolve({kind="NoChange"}) end
     await(view:set_cursor(7))
   ]=])
   ui:rpc("nvim_command", "redraw")
-  t.assert_eq(5, eval("return view:frame():header().cursor_row"), "native publication is still at the old cursor")
+  t.assert_eq(5, ui:lua("return view:frame():header().cursor_row"), "native publication is still at the old cursor")
   cell("src", 0, 1, "─", normal)
   cell("lib", 1, 2, "├", normal)
   cell("nested", 3, 0, "│", pink)
   cell("docs", 0, 1, "─", pink)
-  eval("await(view:set_cursor(6))")
+  ui:lua("await(view:set_cursor(6))")
   ui:rpc("nvim_command", "redraw")
   cell("src", 0, 1, "─", pink)
   cell("lib", 1, 2, "│", pink)
   cell("lib", 1, 3, "─", normal)
   cell("other", 1, 3, "─", pink)
   cell("docs", 0, 1, "─", normal)
-  eval("state.dispatch = saved_dispatch; move(5)")
+  ui:lua("state.dispatch = saved_dispatch; move(5)")
   ui:rpc("nvim_input", "Vk")
-  t.wait_until(function()
-    return eval("return vim.api.nvim_get_mode().mode == 'V' and vim.api.nvim_win_get_cursor(view.winnr)[1] == 4")
+  ui:wait_until(function()
+    return ui:lua("return vim.api.nvim_get_mode().mode == 'V' and vim.api.nvim_win_get_cursor(view.winnr)[1] == 4")
   end, 10000)
   ui:rpc("nvim_command", "redraw")
   cell("helper", 2, 5, "─", pink)
   cell("nested", 3, 4, "│", active)
   cell("nested", 3, 6, "╰", pink)
   cell("target", 2, 4, "╰", active)
-  eval([=[
+  ui:lua([=[
     visual_frame = view:frame()
     await(data:batch({ {kind="insert", key="first", parent="lib", position="first", label="first"} }))
     assert(vim.wait(10000, function() return view._latest ~= nil end))
   ]=])
-  t.assert_true(eval("return view:frame() == visual_frame"), "Visual retains the displayed topology")
+  t.assert_true(ui:lua("return view:frame() == visual_frame"), "Visual retains the displayed topology")
   ui:rpc("nvim_input", "k")
-  t.wait_until(function()
-    return eval("return vim.api.nvim_win_get_cursor(view.winnr)[1] == 3")
+  ui:wait_until(function()
+    return ui:lua("return vim.api.nvim_win_get_cursor(view.winnr)[1] == 3")
   end, 10000)
   ui:rpc("nvim_command", "redraw")
   cell("helper", 2, 4, "╰", pink)
   cell("helper", 2, 5, "─", pink)
   cell("nested", 3, 6, "╰", active)
-  t.assert_eq(0, eval("return writes"), "frozen Visual paths never publish pending layout text")
+  t.assert_eq(0, ui:lua("return writes"), "frozen Visual paths never publish pending layout text")
   ui:rpc("nvim_input", "<Esc>")
-  t.wait_until(function()
-    return eval(
+  ui:wait_until(function()
+    return ui:lua(
       "return not view._gesture and view:frame():header().layout_revision ~= visual_frame:header().layout_revision"
     )
   end, 10000)
@@ -306,14 +278,14 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   cell("first", 2, 5, "─", normal)
   cell("helper", 2, 5, "─", pink)
 
-  eval([=[
+  ui:lua([=[
     cached_path = view._guide_path
     local result = await(data:batch({ {kind="update",node="helper",right_text="metadata"} }))
     assert(vim.wait(10000,function() return state._native:applicable(view:frame(),result.revisions.commit) end))
   ]=])
   ui:rpc("nvim_command", "redraw")
-  t.assert_true(eval("return view._guide_path == cached_path"), "metadata publications reuse the layout path")
-  eval([=[
+  t.assert_true(ui:lua("return view._guide_path == cached_path"), "metadata publications reuse the layout path")
+  ui:lua([=[
     local result = await(state:set_expanded({ data:source():id("lib") }, false, false))
     assert(vim.wait(10000,function() return state._native:applicable(view:frame(),result.revisions.commit) end))
   ]=])
@@ -321,26 +293,26 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   cell("lib", 1, 2, "╰", pink)
   cell("lib", 1, 3, "─", pink)
   t.assert_nil(grid:find("target"), "folded descendants disappear")
-  eval("move(80)")
+  ui:lua("move(80)")
   ui:rpc("nvim_command", "redraw")
-  t.assert_true(eval("return view._guide_path.first > 0"), "scrolled path is viewport-clipped")
-  local cursor_label = eval("return view:frame():rows(80, 80).labels[1]")
+  t.assert_true(ui:lua("return view._guide_path.first > 0"), "scrolled path is viewport-clipped")
+  local cursor_label = ui:lua("return view:frame():rows(80, 80).labels[1]")
   cell(cursor_label, 0, 0, "╰", pink)
   cell(cursor_label, 0, 1, "─", pink)
-  eval([=[
+  ui:lua([=[
     local result = await(state:set_display({mode="list"}))
     assert(vim.wait(10000,function() return state._native:applicable(view:frame(),result.revisions.commit) end))
   ]=])
   ui:rpc("nvim_command", "redraw")
-  t.assert_true(eval("return view._guide_path == nil"), "List does not retain a tree path")
-  eval([=[
+  t.assert_true(ui:lua("return view._guide_path == nil"), "List does not retain a tree path")
+  ui:lua([=[
     local result = await(state:set_display({mode="tree"}))
     assert(vim.wait(10000, function() return state._native:applicable(view:frame(),result.revisions.commit) end))
     move(1)
   ]=])
   ui:rpc("nvim_command", "redraw!")
   t.assert_true(
-    eval([=[
+    ui:lua([=[
     vim.api.nvim_win_set_cursor(view.winnr, {7, 0})
     vim.cmd.redraw()
     local pending = view._guide_redraw_pending
@@ -349,10 +321,10 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   ]=]),
     "detach occurs with a deferred path redraw queued"
   )
-  t.wait_until(function()
-    return eval("return not view._guide_dirty and not view._guide_redraw_pending")
+  ui:wait_until(function()
+    return ui:lua("return not view._guide_dirty and not view._guide_redraw_pending")
   end, 10000)
-  t.assert_eq(0, eval("return #errors"))
+  t.assert_eq(0, ui:lua("return #reports.error"))
 end)
 
 t:run()

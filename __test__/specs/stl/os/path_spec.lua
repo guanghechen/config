@@ -1,12 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/os/path_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.os.path module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local native = require("yoz")
 
-local t = harness.new("stl.os.path")
+local t = harness.new()
 
 bootstrap.with_runtime(t, { yoz = native })
 

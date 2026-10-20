@@ -1,16 +1,15 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.git_files.widget" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.m.git_files.widget")
+local t = require("__test__.support.harness").new()
 local support = require("__test__.support.git_files")
+local treeview = require("__test__.support.treeview")
+local git = require("__test__.support.git")
 local Paths = require("era.view.result_paths")
 
 ---@return table
 local function fixture()
   local root = support.repo(t)
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged" })
-  support.git(root, { "add", "dir/mixed.lua" })
+  git.run(root, { "add", "dir/mixed.lua" })
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged", "unstaged" })
   support.write(root, "dir/second.lua", { "base", "second" })
   local state = support.widget(t, root)
@@ -29,11 +28,11 @@ t:test("both trees have independent floating windows and retain roots and folds 
   t.assert_eq("editor", vim.api.nvim_win_get_config(unstaged.result:get_winnr()).relative)
   support.cursor(widget, "unstaged", "dir")
   widget:root("cursor")
-  support.await(unstaged.result.draw())
+  t.await(unstaged.result.draw())
   t.assert_eq(Paths.key(state.root .. "/dir"), unstaged.tree:root_key())
   t.assert_eq(Paths.key(state.root), staged.tree:root_key())
   staged.tree:collapse(Paths.key(state.root .. "/dir"), "collapse")
-  support.await(staged.tree:ready())
+  t.await(staged.tree:ready())
   widget:hide()
   widget:toggle()
   support.ready(widget)
@@ -47,14 +46,14 @@ t:test("directory staging respects the active filter and leaves other unstaged f
   local widget = state.widget
   widget._query = "mixed"
   for _, pane in pairs(widget.panes) do
-    support.await(pane.result.draw())
+    t.await(pane.result.draw())
   end
   support.cursor(widget, "unstaged", "dir")
-  support.await(assert(widget:transfer("unstaged")))
+  t.await(assert(widget:transfer("unstaged")))
   support.ready(widget)
-  t.assert_eq("dir/mixed.lua\n", support.git(state.root, { "diff", "--cached", "--name-only" }))
-  t.assert_eq("dir/second.lua\n", support.git(state.root, { "diff", "--name-only" }))
-  t.assert_true(support.git(state.root, { "show", ":dir/mixed.lua" }):find("unstaged", 1, true) ~= nil)
+  t.assert_eq("dir/mixed.lua\n", git.run(state.root, { "diff", "--cached", "--name-only" }))
+  t.assert_eq("dir/second.lua\n", git.run(state.root, { "diff", "--name-only" }))
+  t.assert_true(git.run(state.root, { "show", ":dir/mixed.lua" }):find("unstaged", 1, true) ~= nil)
   t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
 
@@ -64,11 +63,11 @@ t:test("marked files transfer together and source exhaustion moves focus to the 
   for _, path in ipairs({ "dir/mixed.lua", "dir/second.lua" }) do
     pane.tree:toggle_select(Paths.key(state.root .. "/" .. path), true)
   end
-  support.await(pane.tree:ready())
+  t.await(pane.tree:ready())
   widget:focus("unstaged")
-  support.await(assert(widget:transfer("unstaged")))
+  t.await(assert(widget:transfer("unstaged")))
   support.ready(widget)
-  t.assert_eq("", support.git(state.root, { "diff", "--name-only" }))
+  t.assert_eq("", git.run(state.root, { "diff", "--name-only" }))
   t.assert_eq(0, pane.tree.totals.count)
   t.assert_eq(2, widget.panes.staged.tree.totals.count)
   t.assert_true(widget.panes.staged.result:isfocused())
@@ -83,9 +82,9 @@ t:test("a Visual range stages all selected rows", function()
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
   end)
-  support.await(assert(widget:transfer("unstaged")))
+  t.await(assert(widget:transfer("unstaged")))
   support.ready(widget)
-  t.assert_eq("", support.git(state.root, { "diff", "--name-only" }))
+  t.assert_eq("", git.run(state.root, { "diff", "--name-only" }))
   t.assert_eq(2, widget.panes.staged.tree.totals.count)
   t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
@@ -97,17 +96,17 @@ t:test("copy uses displayed paths for a Visual range and does not modify Git", f
   t:patch_table(era.fn, "select_copy_filepaths", function(options)
     copied = options.filepaths
   end)
-  local before = support.git(state.root, { "ls-files", "--stage", "-z" })
+  local before = git.run(state.root, { "ls-files", "--stage", "-z" })
   support.cursor(widget, "unstaged", "dir/mixed.lua")
   vim.cmd.normal({ args = { "Vj" }, bang = true })
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
   end)
-  support.await(assert(widget:copy_paths()))
+  t.await(assert(widget:copy_paths()))
   t.assert_eq(2, #copied)
   t.assert_eq(state.root .. "/dir/mixed.lua", copied[1])
   t.assert_eq(state.root .. "/dir/second.lua", copied[2])
-  t.assert_eq(before, support.git(state.root, { "ls-files", "--stage", "-z" }))
+  t.assert_eq(before, git.run(state.root, { "ls-files", "--stage", "-z" }))
 end)
 
 t:test("open returns to the source window and a deleted file never opens an empty replacement", function()
@@ -140,7 +139,7 @@ t:test("untracked, empty and binary files get honest stats without changing the 
   local file = assert(io.open(root .. "/binary.dat", "wb"))
   file:write("a\0b\0c")
   file:close()
-  local before = support.git(root, { "ls-files", "--stage", "-z" })
+  local before = git.run(root, { "ls-files", "--stage", "-z" })
   local state = support.widget(t, root)
   state.widget:toggle()
   support.ready(state.widget)
@@ -153,7 +152,7 @@ t:test("untracked, empty and binary files get honest stats without changing the 
   t.assert_eq(0, empty.insertions)
   t.assert_eq(1, binary.unknown)
   t.assert_nil(binary.insertions)
-  t.assert_eq(before, support.git(root, { "ls-files", "--stage", "-z" }))
+  t.assert_eq(before, git.run(root, { "ls-files", "--stage", "-z" }))
   t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
 
@@ -182,7 +181,7 @@ t:test("the single-line input survives reopening and closing it closes every pan
   t.assert_eq(1, vim.api.nvim_win_get_height(widget.input:get_winnr()))
   widget.input:set_content("mixed")
   for _, pane in pairs(widget.panes) do
-    support.await(pane.result.draw())
+    t.await(pane.result.draw())
   end
   t.assert_true(widget.panes.staged.tree:linecount() > 0)
   t.assert_true(widget.panes.unstaged.tree:linecount() > 0)
@@ -201,22 +200,27 @@ t:test("expansion keys typed ahead act on the tree their earlier keys produce", 
   support.cursor(widget, "unstaged", "dir")
   local winnr = assert(widget.panes.unstaged.result:get_winnr())
   local row = vim.api.nvim_win_get_cursor(winnr)[1]
-  -- Feeding with "x" runs every key before the event loop can publish the change of an earlier key.
-  for _, case in ipairs({
-    { keys = "hl", expanded = true },
-    { keys = "h", expanded = false },
-    { keys = "lh", expanded = false },
-    { keys = "lhl", expanded = true },
-    { keys = "hlh", expanded = false },
-    { keys = "zh", expanded = false },
-  }) do
-    vim.api.nvim_feedkeys(case.keys, "x", false)
-    t.wait_until(function()
-      return not tree:collapse_pending() and tree:expanded(dir) == case.expanded
-    end, 5000, case.keys .. " must leave dir " .. (case.expanded and "expanded" or "collapsed"))
-    support.ready(widget)
-    t.assert_eq(row, vim.api.nvim_win_get_cursor(winnr)[1], case.keys .. " keeps the cursor on dir")
+  ---@param keys                        string
+  ---@return fun()
+  local function feed(keys)
+    -- Feeding with "x" runs every key before the event loop can publish the change of an earlier key.
+    return function()
+      vim.api.nvim_feedkeys(keys, "x", false)
+    end
   end
+  ---@param sequence                    string
+  ---@return nil
+  local function settled(sequence)
+    support.ready(widget)
+    t.assert_eq(row, vim.api.nvim_win_get_cursor(winnr)[1], sequence .. " keeps the cursor on dir")
+  end
+  treeview.assert_typed_ahead(t, tree, dir, feed("l"), feed("h"), settled)
+  -- "zh" collapses as well, through its own mapping.
+  feed("zh")()
+  t.wait_until(function()
+    return not tree:collapse_pending() and not tree:expanded(dir)
+  end, 5000, "zh must leave dir collapsed")
+  settled("zh")
   t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
 

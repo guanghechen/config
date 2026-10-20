@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.dressing.foldtext_highlight" ---@type string
-
 local harness = require("__test__.support.harness")
-local t = harness.new("era.dressing.foldtext highlights")
+local t = harness.new()
 
 t:test("fold badge stays opaque with transparent window backgrounds across themes", function()
   t:patch_global("yoz", require("yoz"))

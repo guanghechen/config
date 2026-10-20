@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/workspace/refresh_owner_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local async = require("stl.async")
 local Future = require("stl.c.future")
 
-local t = harness.new("era.m.diffview.workspace.refresh_owner")
+local t = harness.new()
 
 local reported_errors = {} ---@type table[]
 local CancellationToken = {}

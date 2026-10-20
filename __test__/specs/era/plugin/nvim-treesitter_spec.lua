@@ -1,13 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/plugin/nvim-treesitter_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.plugin.nvim-treesitter module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.plugin.nvim-treesitter")
+local t = harness.new()
 
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "stl", {
   filetype = {
     NOTEPAD = "notepad",
   },
@@ -19,7 +15,7 @@ bootstrap.with_stl(t, {
     },
   },
 })
-bootstrap.with_dot(t, {
+bootstrap.with_global(t, "dot", {
   path = {
     locate_data_filepath = function()
       return "/tmp/treesitter"

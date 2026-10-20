@@ -1,11 +1,10 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/git/reset_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.git.reset")
-bootstrap.with_stl_c(t)
+local t = harness.new()
+bootstrap.with_global(t, "stl", {
+  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
+})
 bootstrap.with_global(t, "stl", { c = { Ticker = {
   new = function()
     return {}

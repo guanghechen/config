@@ -5,7 +5,7 @@ package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local runtime = require("__test__.fixtures.era.dressing.statusline.runtime")
-local t = harness.new("era.dressing.statusline.exit")
+local t = harness.new()
 local errors = runtime.setup(t, {
   python = {
     env = function(position)
@@ -13,7 +13,7 @@ local errors = runtime.setup(t, {
     end,
   },
 })
-bootstrap.with_dot(t, {
+bootstrap.with_global(t, "dot", {
   G = {
     register_anonymous_fn = function()
       return "dot.G.noop"

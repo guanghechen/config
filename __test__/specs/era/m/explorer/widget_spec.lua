@@ -1,11 +1,8 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.widget" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.widget")
-local t, await, write, directory = fixture.t, fixture.await, fixture.write, fixture.directory
+local fixture = require("__test__.support.explorer").new()
+local t, await, write = fixture.t, fixture.await, fixture.write
 
 t:test("real panes use native Filetree, switch Tree/List, and preserve state across close", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/sub", 448))
   write(path .. "/sub/file")
   write(path .. "/a")
@@ -46,7 +43,7 @@ t:test("real panes use native Filetree, switch Tree/List, and preserve state acr
 end)
 
 t:test("reveal expands a nested file and root navigation retains selection", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/sub", 448))
   write(path .. "/sub/file")
   write(path .. "/a")
@@ -73,7 +70,7 @@ t:test("reveal expands a nested file and root navigation retains selection", fun
 end)
 
 t:test("shared data keeps independent states and subscriptions survive the first owner closing", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local first = fixture.widget(path)
   local shared = first._session.data
@@ -113,7 +110,7 @@ t:test("shared data keeps independent states and subscriptions survive the first
 end)
 
 t:test("reveal synchronizes display flags and later toggles preserve the revealed visibility", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/.hidden")
   write(path .. "/a")
   local widget = fixture.widget(path)
@@ -144,7 +141,7 @@ t:test("reveal synchronizes display flags and later toggles preserve the reveale
 end)
 
 t:test("concurrent shared-session flag changes retain both partial updates", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   write(path .. "/.hidden")
   local first = fixture.widget(path)
@@ -164,7 +161,7 @@ end)
 
 t:test("sharing flag observables cannot turn native display acknowledgements into new input", function()
   for _, order in ipairs({ { 4, 2 }, { 2, 4 } }) do
-    local path = directory()
+    local path = t:tempdir()
     write(path .. "/a")
     local first = fixture.widget(path)
     local second = fixture.widget(path, {
@@ -190,7 +187,7 @@ t:test("sharing flag observables cannot turn native display acknowledgements int
 end)
 
 t:test("a removed root can navigate to its parent and a recreated workspace", function()
-  local base = directory()
+  local base = t:tempdir()
   local path = base .. "/workspace"
   assert(vim.uv.fs_mkdir(path, 448))
   local widget = fixture.widget(path)
@@ -212,7 +209,7 @@ t:test("a removed root can navigate to its parent and a recreated workspace", fu
 end)
 
 t:test("manual refresh recovers a desynced surface after automatic recovery also fails", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local widget = fixture.widget(path)
   local session, view = widget:context()
@@ -238,7 +235,7 @@ t:test("manual refresh recovers a desynced surface after automatic recovery also
 end)
 
 t:test("hide and reopen release every Explorer buffer identity", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local before = {}
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
@@ -262,7 +259,7 @@ t:test("hide and reopen release every Explorer buffer identity", function()
 end)
 
 t:test("refreshing a healthy unchanged pane preserves its body publication", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local widget = fixture.widget(path)
   local session, view = widget:context()
@@ -279,7 +276,7 @@ t:test("refreshing a healthy unchanged pane preserves its body publication", fun
 end)
 
 t:test("reveal leaves a removed display root for an existing external file", function()
-  local path = directory()
+  local path = t:tempdir()
   local workspace = path .. "/workspace"
   assert(vim.uv.fs_mkdir(workspace, 448))
   write(path .. "/external")
@@ -295,7 +292,7 @@ t:test("reveal leaves a removed display root for an existing external file", fun
 end)
 
 t:test("empty background panes release obsolete resource snapshots", function()
-  local path = directory()
+  local path = t:tempdir()
   for index = 1, 1000 do
     write(path .. "/file-" .. index)
   end

@@ -1,8 +1,5 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.winbar" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.winbar")
-local t, await, directory, write = fixture.t, fixture.await, fixture.directory, fixture.write
+local fixture = require("__test__.support.explorer").new()
+local t, await, write = fixture.t, fixture.await, fixture.write
 
 t:test("winbar follows display root and four fixed flags when tabline is hidden", function()
   local before = vim.o.showtabline
@@ -10,7 +7,7 @@ t:test("winbar follows display root and four fixed flags when tabline is hidden"
     vim.o.showtabline = before
   end)
   vim.o.showtabline = 0
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/.hidden")
   write(path .. "/visible")
   local widget = fixture.widget(path)
@@ -50,20 +47,19 @@ t:test("winbar follows display root and four fixed flags when tabline is hidden"
 end)
 
 t:test("tabline visibility and Explorer OptionSet settle without a redraw feedback loop", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/file")
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()
   end)
   ui:rpc("nvim_ui_attach", 80, 24, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
+  ui:lua(
     [=[
     local root, path = ...
     vim.opt.runtimepath:prepend(root)
     package.path = root .. "/?.lua;" .. package.path
-    local fixture = require("__test__.support.explorer").new("explorer-tabline")
+    local fixture = require("__test__.support.explorer").new()
     vim.o.showtabline = 0
     local widget = fixture.widget(path)
     winbar_probe = { widget = widget, shown = false, renders = 0 }
@@ -85,35 +81,32 @@ t:test("tabline visibility and Explorer OptionSet settle without a redraw feedba
     }
     require("era.dressing.tabline").dressing()
   ]=],
-    { assert(vim.uv.cwd()), path }
+    assert(vim.uv.cwd()),
+    path
   )
 
   for _, shown in ipairs({ false, true, false }) do
-    ui:rpc("nvim_exec_lua", "winbar_probe.shown = ...; dot.state.status.dirtier_tabline:mark_dirty()", { shown })
-    t.wait_until(function()
+    ui:lua("winbar_probe.shown = ...; dot.state.status.dirtier_tabline:mark_dirty()", shown)
+    ui:wait_until(function()
       return ui:rpc("nvim_get_option_value", "showtabline", {}) == (shown and 2 or 0)
     end, 3000)
     vim.wait(100, function()
       return false
     end, 5)
-    local before = ui:rpc("nvim_exec_lua", "return winbar_probe.renders", {})
+    local before = ui:lua("return winbar_probe.renders")
     vim.wait(50, function()
       return false
     end, 5)
-    t.assert_eq(before, ui:rpc("nvim_exec_lua", "return winbar_probe.renders", {}), "idle redraws must settle")
-    local title = ui:rpc(
-      "nvim_exec_lua",
-      "return vim.api.nvim_get_option_value('winbar', {win = winbar_probe.widget:get_winnr()})",
-      {}
-    )
+    t.assert_eq(before, ui:lua("return winbar_probe.renders"), "idle redraws must settle")
+    local title = ui:lua("return vim.api.nvim_get_option_value('winbar', {win = winbar_probe.widget:get_winnr()})")
     t.assert_true(shown and title == "" or not shown and title:find(vim.fs.basename(path), 1, true) ~= nil)
-    ui:rpc("nvim_exec_lua", "vim.o.ignorecase = not vim.o.ignorecase", {})
-    t.assert_eq(before, ui:rpc("nvim_exec_lua", "return winbar_probe.renders", {}), "unrelated options do not redraw")
+    ui:lua("vim.o.ignorecase = not vim.o.ignorecase")
+    t.assert_eq(before, ui:lua("return winbar_probe.renders"), "unrelated options do not redraw")
   end
 end)
 
 t:test("failed initial open remains closable and refresh retries after the directory appears", function()
-  local root = directory()
+  local root = t:tempdir()
   local path = root .. "/missing"
   local Widget = require("era.m.explorer.widget")
   local widget = Widget.new({ name = "failed-open", root = path })
@@ -149,7 +142,7 @@ t:test("root scan failures preserve cached rows and shared views report each tra
   t:defer(function()
     vim.o.showtabline = before_tabline
   end)
-  local path = directory()
+  local path = t:tempdir()
   for _, name in ipairs({ "a", "b", "c" }) do
     write(path .. "/" .. name)
   end
@@ -213,7 +206,7 @@ t:test("root error and retry remain visible after programmatic and native window
   if stl.env.IS_WIN or vim.uv.getuid() == 0 then
     return
   end
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/file")
   local ui = require("__test__.support.ui").new()
   t:defer(function()
@@ -223,13 +216,12 @@ t:test("root error and retry remain visible after programmatic and native window
     vim.uv.fs_chmod(path, 448)
   end)
   ui:rpc("nvim_ui_attach", 80, 24, { rgb = true, ext_linegrid = true })
-  ui:rpc(
-    "nvim_exec_lua",
+  ui:lua(
     [=[
     local root, path = ...
     vim.opt.runtimepath:prepend(root)
     package.path = root .. "/?.lua;" .. package.path
-    local fixture = require("__test__.support.explorer").new("explorer-error-resize")
+    local fixture = require("__test__.support.explorer").new()
     vim.o.showtabline = 0
     local widget = fixture.widget(path)
     error_resize_probe = { widget = widget, fixture = fixture, renders = 0 }
@@ -240,17 +232,17 @@ t:test("root error and retry remain visible after programmatic and native window
     end
     widget:set_width(30)
   ]=],
-    { assert(vim.uv.cwd()), path }
+    assert(vim.uv.cwd()),
+    path
   )
   assert(vim.uv.fs_chmod(path, 0))
-  ui:rpc("nvim_exec_lua", "error_resize_probe.fixture.await(error_resize_probe.widget:refresh())", {})
-  t.wait_until(function()
-    return ui:rpc("nvim_exec_lua", "return error_resize_probe.widget:status_text()", {}) == "read failed · cached · R"
+  ui:lua("error_resize_probe.fixture.await(error_resize_probe.widget:refresh())")
+  ui:wait_until(function()
+    return ui:lua("return error_resize_probe.widget:status_text()") == "read failed · cached · R"
   end, 10000)
   for _, native in ipairs({ false, true }) do
     for _, width in ipairs({ 30, 12, 3, 1, 30 }) do
-      ui:rpc(
-        "nvim_exec_lua",
+      ui:lua(
         [=[
         local width, native = ...
         local widget = error_resize_probe.widget
@@ -260,11 +252,11 @@ t:test("root error and retry remain visible after programmatic and native window
           widget:set_width(width)
         end
       ]=],
-        { width, native }
+        width,
+        native
       )
-      t.wait_until(function()
-        return ui:rpc(
-          "nvim_exec_lua",
+      ui:wait_until(function()
+        return ui:lua(
           [=[
           local width = ...
           local winnr = error_resize_probe.widget:get_winnr()
@@ -274,14 +266,14 @@ t:test("root error and retry remain visible after programmatic and native window
             or width == 12 and "error · R" or width == 3 and "! R" or "!"
           return vim.api.nvim_win_get_width(winnr) == width and text:find(expected, 1, true) ~= nil
         ]=],
-          { width }
+          width
         )
       end, 3000, "error title must follow resize without an explicit render")
     end
   end
   local renders, stable_since = 0, vim.uv.hrtime()
-  t.wait_until(function()
-    local current = ui:rpc("nvim_exec_lua", "return error_resize_probe.renders", {})
+  ui:wait_until(function()
+    local current = ui:lua("return error_resize_probe.renders")
     if current ~= renders then
       renders, stable_since = current, vim.uv.hrtime()
     end
@@ -293,8 +285,8 @@ t:test("an empty failed root is distinct from empty success and changing root cl
   if stl.env.IS_WIN or vim.uv.getuid() == 0 then
     return
   end
-  local path = directory()
-  local target = directory()
+  local path = t:tempdir()
+  local target = t:tempdir()
   write(target .. "/visible")
   local widget = fixture.widget(path)
   local session, view = widget:context()
@@ -322,7 +314,7 @@ t:test("an empty failed root is distinct from empty success and changing root cl
 end)
 
 t:test("replacing an Explorer buffer releases its window and late cleanup preserves the reopened pane", function()
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local widget = fixture.widget(path)
   local _, view = widget:context()
@@ -382,7 +374,7 @@ t:test("a replaced loading placeholder cannot be claimed by a late attach", func
     opening = open(...)
     return pending
   end)
-  local path = directory()
+  local path = t:tempdir()
   write(path .. "/a")
   local widget = Widget.new({ name = "pending-owner", root = path })
   t:defer(function()

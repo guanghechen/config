@@ -1,9 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/reporter_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.reporter")
+local t = harness.new()
 
 t:test("dismiss delegates to notifier group cleanup when supported", function()
   local dismissed = nil ---@type string|nil

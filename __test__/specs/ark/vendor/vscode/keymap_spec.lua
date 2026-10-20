@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/ark/vendor/vscode/keymap_spec.lua
----@diagnostic disable: undefined-global
---- Test for ark.vendor.vscode.keymap module
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("ark.vendor.vscode.keymap")
+local t = harness.new()
 
 ---@param action                        string
 ---@return string

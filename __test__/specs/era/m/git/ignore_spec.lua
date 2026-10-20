@@ -1,5 +1,6 @@
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.git.ignore")
+local t = harness.new()
+local git = require("__test__.support.git")
 local workspace = ""
 local in_repo = true
 local warnings = {}
@@ -32,24 +33,9 @@ local ignore = require("era.m.git.ignore")
 local state = require("era.m.git.state")
 local reference = assert(loadfile("__test__/fixtures/era/m/git/ignore_lua_reference.lua"))()
 
----@param cwd                           string
----@param args                          string[]
----@return nil
-local function git(cwd, args)
-  local command = { "git", "-C", cwd }
-  vim.list_extend(command, args)
-  local result = vim.system(command):wait()
-  t.assert_eq(0, result.code, result.stderr)
-end
-
 ---@return string
 local function new_repo()
-  local root = vim.fn.tempname()
-  vim.fn.mkdir(root, "p")
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
-  git(root, { "init", "-q" })
+  local root = git.repo(t)
   workspace = root
   ignore.clear()
   reference.clear_ignored_cache()
@@ -68,7 +54,7 @@ end
 t:test("native cache matches the Lua oracle for rules, tracked paths, and literal newlines", function()
   local root = new_repo()
   vim.fn.writefile({ "tracked" }, root .. "/tracked")
-  git(root, { "add", "tracked" })
+  git.run(root, { "add", "tracked" })
   vim.fn.writefile({ "ignored-*", "nested/cache/", "tracked", "line?break" }, root .. "/.gitignore")
   vim.fn.writefile({ "excluded" }, root .. "/.git/info/exclude", "a")
   local paths = {}

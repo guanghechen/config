@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
 local Nvimbar = require("era.m.nvimbar.nvimbar")
-local t = harness.new("era.m.nvimbar.component.notepad")
+local t = harness.new()
 
 t:test("source selection handlers survive closed forks without accumulating registrations", function()
   local selections = 0

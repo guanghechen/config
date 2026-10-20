@@ -1,6 +1,5 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/ai/sender_spec.lua
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.ai.sender")
+local t = harness.new()
 
 local function load_sender(tmux)
   t:patch_global("era", { m = { ai = { tmux = tmux } } })

@@ -1,7 +1,7 @@
 --- Manual full-config E2E; open a changed tracked file, then execute this fixture with :luafile.
 --- Run in a disposable headless Neovim: this fixture disables context saving and exits the process.
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.m.git.status_runtime" ---@type string
+local __module_name__ = "__test__.manual.era.m.git.status_runtime" ---@type string
 
 dot.context.save_on_exit = function() end
 

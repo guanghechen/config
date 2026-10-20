@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/yoz/path_cwd_spec.lua
----@diagnostic disable: undefined-global
---- Test for the Lua-facing yoz path CWD contract
-
 local harness = require("__test__.support.harness")
 local native = require("yoz")
 
-local t = harness.new("yoz.path_cwd")
+local t = harness.new()
 
 ---@param input                         string
 ---@param label                         string

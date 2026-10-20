@@ -1,6 +1,6 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
-local t = harness.new("era.keystroke.textobject.keymap")
+local Runtime = require("__test__.support.textobject")
+local t = harness.new()
 
 local owned = {} ---@type table<string, function>
 for _, key in ipairs({ "an", "in", "ai", "ii" }) do
@@ -38,33 +38,25 @@ t:test("diff class motions fall back to native mappings", function()
 end)
 
 t:test("slowly typed custom objects are remapped after the prefix timeout", function()
-  local channel = vim.fn.jobstart(
-    { vim.v.progpath, "--embed", "--headless", "-u", "NONE", "-i", "NONE", "-n" },
-    { rpc = true }
-  )
+  local ui = require("__test__.support.ui").new()
   t:defer(function()
-    vim.fn.jobstop(channel)
+    ui:close()
   end)
-  vim.rpcrequest(
-    channel,
-    "nvim_exec_lua",
-    [[
-    vim.opt.runtimepath:prepend(...)
+  ui:start({})
+  ui:lua([[
     _G.stl = { nvim = { fn = require("stl.nvim.fn") } }
     _G.era = { keystroke = require("era.keystroke"), dressing = { whichkey = { add = function() end } } }
     era.keystroke.textobject.setup()
     vim.api.nvim_buf_set_lines(0, 0, -1, true, { "word other" })
     vim.o.timeoutlen = 1
     vim.keymap.set("o", "iz", function() vim.cmd("normal! viw") end)
-  ]],
-    { vim.uv.cwd() }
-  )
-  vim.rpcrequest(channel, "nvim_input", "yi")
+  ]])
+  ui:rpc("nvim_input", "yi")
   -- Real input keeps operator-pending alive, unlike feedkeys(..., "x").
   vim.wait(30)
-  vim.rpcrequest(channel, "nvim_input", "z")
-  t.wait_until(function()
-    return vim.rpcrequest(channel, "nvim_eval", "getreg('\"')") == "word"
+  ui:rpc("nvim_input", "z")
+  ui:wait_until(function()
+    return ui:rpc("nvim_eval", "getreg('\"')") == "word"
   end, 1000, "custom object after timeout")
 end)
 

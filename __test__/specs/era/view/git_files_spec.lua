@@ -1,12 +1,10 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.view.git_files" ---@type string
-
 require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new("era.view.git_files")
-local native = require("__test__.support.result_tree")
+local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local GitFiles = require("era.view.git_files")
 local Paths = require("era.view.result_paths")
 local support = require("__test__.support.git_files")
+local git = require("__test__.support.git")
 
 ---@param tcase                         table
 ---@return era.view.GitFiles
@@ -37,8 +35,8 @@ local function fixture(tcase)
   }
   staged:apply(staged:prepare("/git", { "/git/dir/mixed.lua", "/git/other.lua" }, snapshot, function() end))
   unstaged:apply(unstaged:prepare("/git", { "/git/dir/mixed.lua", "/git/dir/new.lua" }, snapshot, function() end))
-  native.await(staged:render("", false))
-  native.await(unstaged:render("", false))
+  treeview.await(staged:render("", false))
+  treeview.await(unstaged:render("", false))
   return staged, unstaged, snapshot
 end
 
@@ -83,7 +81,7 @@ t:test("each pane owns folds and selection independently across metadata refresh
   local file, directory = Paths.key("/git/dir/mixed.lua"), Paths.key("/git/dir")
   staged:toggle_select(file, true)
   staged:collapse(directory, "collapse")
-  native.await(staged:ready())
+  treeview.await(staged:ready())
   t.assert_nil(staged:retrieve_lnum(file))
   t.assert_true(unstaged:retrieve_lnum(file) ~= nil)
   t.assert_false(unstaged:isselected(file))
@@ -91,7 +89,7 @@ t:test("each pane owns folds and selection independently across metadata refresh
   local id, records = old:source():id(file), staged.source.records
   snapshot.numstats.staged["dir/mixed.lua"].insertions = 1234
   staged:apply(staged:prepare("/git", { "/git/dir/mixed.lua", "/git/other.lua" }, snapshot, function() end))
-  native.await(staged:render("", false))
+  treeview.await(staged:render("", false))
   t.assert_true(staged.source.records == records)
   t.assert_eq(id, staged:frame():source():id(file))
   t.assert_true(staged:isselected(file))
@@ -108,16 +106,16 @@ t:test("directory and overlapping selections resolve only matching files in the 
   local files = unstaged:targets({ directory, file })
   t.assert_eq(2, #files)
   t.assert_eq("dir/mixed.lua", files[1].path)
-  native.await(unstaged:render("mixed", false))
+  treeview.await(unstaged:render("mixed", false))
   files = unstaged:targets({ directory, file })
   t.assert_eq(1, #files)
   t.assert_eq("dir/mixed.lua", files[1].path)
   t.assert_eq(1, #staged:targets({ directory }))
   local clearing = unstaged:render("", false)
   t.assert_eq(1, #unstaged:targets({ directory }), "a pending filter change cannot widen a displayed action")
-  native.await(clearing)
+  treeview.await(clearing)
   t.assert_eq(2, #unstaged:targets({ directory }))
-  native.await(unstaged:render("+4", false))
+  treeview.await(unstaged:render("+4", false))
   t.assert_eq(0, unstaged:linecount(), "counts are not searchable path text")
 end)
 
@@ -125,13 +123,13 @@ t:test("unknown stats remain distinct from an empty text file", function()
   local _, unstaged, snapshot = fixture(t)
   snapshot.numstats.unstaged["dir/new.lua"] = nil
   unstaged:apply(unstaged:prepare("/git", { "/git/dir/mixed.lua", "/git/dir/new.lua" }, snapshot, function() end))
-  native.await(unstaged:render("", false))
+  treeview.await(unstaged:render("", false))
   t.assert_eq(string.rep(" ", 7) .. "— ? ", text(GitFiles.overlay(metadata(unstaged, "/git/dir/new.lua"))))
   t.assert_eq(1, unstaged.totals.unknown)
   t.assert_eq(4, unstaged.totals.insertions)
   snapshot.numstats.unstaged["dir/new.lua"] = { insertions = 0, deletions = 0 }
   unstaged:apply(unstaged:prepare("/git", { "/git/dir/mixed.lua", "/git/dir/new.lua" }, snapshot, function() end))
-  native.await(unstaged:render("", false))
+  treeview.await(unstaged:render("", false))
   t.assert_eq(" +0 -0 ? ", text(GitFiles.overlay(metadata(unstaged, "/git/dir/new.lua"))))
 end)
 
@@ -152,7 +150,7 @@ end)
 t:test("native Git supplies different staged and unstaged counts for a partially staged file", function()
   local root = support.repo(t)
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged one", "staged two" })
-  support.git(root, { "add", "dir/mixed.lua" })
+  git.run(root, { "add", "dir/mixed.lua" })
   support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged one", "staged two", "unstaged" })
   local state = support.widget(t, root)
   state.widget:toggle()

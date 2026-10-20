@@ -1,6 +1,6 @@
 local harness = require("__test__.support.harness")
-local Runtime = require("__test__.fixtures.era.keystroke.textobject.runtime")
-local t = harness.new("era.keystroke.textobject.editing")
+local Runtime = require("__test__.support.textobject")
+local t = harness.new()
 local clipboard = { ["+"] = { "PLUS" }, ["*"] = { "STAR" } }
 local previous_clipboard = vim.g.clipboard
 t:defer(function()

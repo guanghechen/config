@@ -1,13 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/lsp/init_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.lsp module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.lsp.init")
+local t = harness.new()
 
-bootstrap.with_stl(t, {
+bootstrap.with_global(t, "stl", {
   reporter = {
     debug = function() end,
     error = function() end,
@@ -35,7 +31,7 @@ local lsp_event = {
   on_attach = function() end,
 }
 t:patch_table(package.loaded, "era.m.lsp.event", lsp_event)
-bootstrap.with_era(t, {
+bootstrap.with_global(t, "era", {
   m = {
     lsp = {
       event = lsp_event,

@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/diffview/fn_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.m.diffview.fn module
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("era.m.diffview.fn")
+local t = harness.new()
 local enums = require("stl.e")
 
 local relative_args = nil ---@type { from: string, to: string }|nil

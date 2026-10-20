@@ -1,12 +1,9 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ux.filetree.jobs" ---@type string
-
-local fixture = require("__test__.support.filetree").new("ux.filetree.jobs")
+local fixture = require("__test__.support.filetree").new()
 local t, filetree = fixture.t, fixture.filetree
-local await, write, directory = fixture.await, fixture.write, fixture.directory
+local await, write = fixture.await, fixture.write
 
 t:test("an unchanged running Job sleeps and notification failure preserves completion", function()
-  local data = await(filetree.open(directory()))
+  local data = await(filetree.open(t:tempdir()))
   local owner, calls, observed = data._tree, 0, nil
   local status = {
     revision = "1",
@@ -58,7 +55,7 @@ t:test("an unchanged running Job sleeps and notification failure preserves compl
 end)
 
 t:test("a hidden Job delivers confirmation and cancellation through native notifications", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   write(path .. "/source")
   write(path .. "/dst/source")
@@ -88,7 +85,7 @@ t:test("a hidden Job delivers confirmation and cancellation through native notif
 end)
 
 t:test("registration observes already finished Jobs and failures without a source publication", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/target", 448))
   local data = await(filetree.open(path))
   local target = await(data:resolve(path .. "/target"))
@@ -122,7 +119,7 @@ t:test("registration observes already finished Jobs and failures without a sourc
 end)
 
 t:test("native Job confirms one conflict and consumes opaque prepared NodeIds", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   write(path .. "/source")
   write(path .. "/dst/source")
@@ -168,7 +165,7 @@ t:test("native Job confirms one conflict and consumes opaque prepared NodeIds", 
 end)
 
 t:test("Job finishes multiple pages after the Lua data facade is collected", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/src", 448))
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   for i = 1, 600 do
@@ -195,7 +192,7 @@ t:test("Job finishes multiple pages after the Lua data facade is collected", fun
 end)
 
 t:test("a prepared complete directory survives unchanged paged refresh before IO", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/src", 448))
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   for index = 1, 600 do
@@ -244,7 +241,7 @@ t:test("a prepared complete directory survives unchanged paged refresh before IO
 end)
 
 t:test("private descendants expose stable Job item IDs without requiring browse nodes", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/src", 448))
   assert(vim.uv.fs_mkdir(path .. "/dst", 448))
   assert(vim.uv.fs_mkdir(path .. "/dst/src", 448))
@@ -312,7 +309,7 @@ t:test("private descendants expose stable Job item IDs without requiring browse 
 end)
 
 t:test("terminal Job after the event drain still delivers the final RootUnavailable effect", function()
-  local path = directory()
+  local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/branch", 448))
   local received = false
   local data = await(filetree.open(path, {

@@ -1,12 +1,10 @@
----@diagnostic disable: undefined-global
-local __module_name__ = "__test__.specs.era.m.lsp.rename" ---@type string
 local harness = require("__test__.support.harness")
-local t = harness.new(__module_name__)
+local t = harness.new()
 local reports = {}
 
 require("ark.bootstrap").setup()
 local Jobs = require("era.m.filetree.jobs")
-local await = require("__test__.support.result_tree").await
+local await = require("__test__.support.treeview").await
 t:patch_table(stl.reporter, "error", function(report)
   reports[#reports + 1] = report
 end)
@@ -23,11 +21,7 @@ end
 
 ---@return integer, string, string
 local function new_buffer()
-  local directory = vim.fn.tempname()
-  vim.fn.mkdir(directory, "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
+  local directory = t:tempdir()
   local from = directory .. "/source.lua"
   vim.fn.writefile({ "disk content" }, from)
   local bufnr = vim.api.nvim_create_buf(true, false)
@@ -63,9 +57,9 @@ t:test("rename: preserves hidden modified buffer and undo", function()
   t.assert_eq("disk content", vim.fn.readfile(to)[1])
   t.assert_true(vim.api.nvim_buf_is_valid(bufnr))
   t.assert_eq(to, vim.api.nvim_buf_get_name(bufnr))
-  t.assert_true(vim.deep_equal({ "unsaved content" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)))
+  t.assert_same({ "unsaved content" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
   t.assert_true(vim.api.nvim_get_option_value("modified", { buf = bufnr }))
-  t.assert_true(vim.deep_equal(undo, vim.api.nvim_buf_call(bufnr, vim.fn.undotree)))
+  t.assert_same(undo, vim.api.nvim_buf_call(bufnr, vim.fn.undotree))
   t.assert_eq(1, file_events, "path cache notification")
 end)
 
@@ -93,7 +87,7 @@ t:test("rename: rejects target buffer before filesystem and LSP changes", functi
   t.assert_true(vim.uv.fs_stat(from) ~= nil)
   t.assert_nil(vim.uv.fs_stat(to))
   t.assert_eq(from, vim.api.nvim_buf_get_name(bufnr))
-  t.assert_true(vim.deep_equal({ "unsaved content" }, vim.api.nvim_buf_get_lines(target_bufnr, 0, -1, false)))
+  t.assert_same({ "unsaved content" }, vim.api.nvim_buf_get_lines(target_bufnr, 0, -1, false))
 end)
 
 t:test("rename: filesystem failure keeps original buffer", function()

@@ -1,10 +1,7 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.ark.vendor.keymap" ---@type string
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
-local t = harness.new("ark.vendor quit keymaps")
+local t = harness.new()
 local quit_keys = { " qq", "<C-a>q", "<D-q>", "<M-q>" } ---@type string[]
 
 ---@param mode                          string

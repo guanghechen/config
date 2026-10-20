@@ -1,11 +1,7 @@
---- Run with: nvim -l __test__/run.lua era/dressing/statusline/setup_spec.lua
----@diagnostic disable: undefined-global
---- Test for era.dressing.statusline module
-
 local harness = require("__test__.support.harness")
 local nvim_fn = require("stl.nvim.fn")
 
-local t = harness.new("era.dressing.statusline.setup")
+local t = harness.new()
 local module_name = "era.dressing.statusline"
 local EXPRESSION = "%!v:lua.require'era.dressing.statusline'.render()"
 
@@ -160,7 +156,6 @@ local function setup()
   t:patch_table(package.loaded, module_name, nil)
 
   t.assert_eq(module_name, era.dressing.__mods.statusline, "module registration")
-  t.assert_nil(era.m.__mods.statusline, "old registration removed")
   local Statusline = era.dressing.statusline
   return runtime, Statusline
 end
@@ -203,10 +198,7 @@ t:test("dressing subscribes once and preserves its mode callback", function()
   t.assert_eq(1, #runtime.subscribers, "dirty subscriptions")
   t.assert_eq(1, runtime.refresh_count, "initial render count")
   t.assert_eq(1, runtime.clean_count, "initial clean count")
-  t.assert_true(
-    vim.deep_equal(autocmds, vim.api.nvim_get_autocmds({ group = runtime.group })),
-    "mode callback preserved"
-  )
+  t.assert_same(autocmds, vim.api.nvim_get_autocmds({ group = runtime.group }), "mode callback preserved")
 
   runtime.mark_dirty()
   t.assert_eq(2, runtime.refresh_count, "one render per dirty update")
@@ -310,8 +302,9 @@ t:test("content changes redraw only the status line", function()
   runtime.fulfill("changed")
 
   t.assert_eq(1, #redraws, "redraws per changed text")
-  t.assert_true(
-    vim.deep_equal({ win = vim.api.nvim_get_current_win(), statusline = true }, redraws[1]),
+  t.assert_same(
+    { win = vim.api.nvim_get_current_win(), statusline = true },
+    redraws[1],
     "status line redraw of the current window"
   )
   t.assert_eq(0, #commands, "command redraws")

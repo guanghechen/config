@@ -1,5 +1,5 @@
 local harness = require("__test__.support.harness")
-local t = harness.new("ark.escape")
+local t = harness.new()
 
 require("ark.keymap")
 

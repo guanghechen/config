@@ -2,10 +2,12 @@
 local __module_name__ = "__test__.fixtures.dot.win.open_screen" ---@type string
 local root = vim.uv.cwd()
 local dir = assert(vim.env.OPEN_TEST_DIR)
+-- The default 'shada' treats temporary directories as removable media and keeps no marks for their files.
+vim.o.shada = "!,'100,<50,s10,h"
 vim.opt.runtimepath = { root, vim.env.VIMRUNTIME, vim.api.nvim__get_lib_dir() }
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local harness = require("__test__.support.harness")
-local t = harness.new("dot.win.open_screen.fixture")
+local t = harness.new()
 t:patch_global("yoz", require("yoz"))
 t:patch_global("stl", require("stl"))
 require("ark.bootstrap").setup_patches()

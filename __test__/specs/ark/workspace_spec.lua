@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/ark/workspace_spec.lua
----@diagnostic disable: undefined-global
---- Test for ark workspace setup
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("ark.workspace")
+local t = harness.new()
 
 ---@class ark.workspace.test.IOpts
 ---@field initial_cwd                   string

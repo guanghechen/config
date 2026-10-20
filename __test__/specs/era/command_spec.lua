@@ -1,10 +1,7 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/command_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 local Future = require("stl.c.future")
 
-local t = harness.new("era.command")
+local t = harness.new()
 
 t:test("command definitions and implementations stay symmetric", function()
   local next_info_calls = 0

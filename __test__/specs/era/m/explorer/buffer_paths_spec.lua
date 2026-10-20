@@ -1,7 +1,4 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.explorer.buffer_paths" ---@type string
-
-local fixture = require("__test__.support.explorer").new("era.m.explorer.buffer_paths")
+local fixture = require("__test__.support.explorer").new()
 local t, await = fixture.t, fixture.await
 local buffers = require("era.m.explorer.buffers")
 
@@ -15,7 +12,7 @@ local function directory()
       vim.fn.delete(path, "rf")
     end)
   else
-    path = fixture.directory()
+    path = t:tempdir()
   end
   path = assert(vim.uv.fs_realpath(path))
   t:defer(function()

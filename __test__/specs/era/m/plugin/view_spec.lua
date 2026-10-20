@@ -1,12 +1,9 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/era/m/plugin/view_spec.lua
----@diagnostic disable: undefined-global
-
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
 local View = require("era.m.plugin.view")
 local Widget = require("era.m.plugin.widget")
-local t = harness.new("era.m.plugin.view")
+local t = harness.new()
 
 ---@return table, table
 local function fake_action()

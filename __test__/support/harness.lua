@@ -50,12 +50,13 @@ local function run_cleanups(cleanups)
   return failures
 end
 
----@param name                          string
+---Names the suite after its script path, as the runner lists it.
 ---@return __test__.support.Harness
-function M.new(name)
+function M.new()
+  local script = _G.arg and _G.arg[0] or "suite" ---@type string
   ---@type __test__.support.Harness
   local harness = {
-    name = name,
+    name = vim.fs.relpath(assert(vim.uv.cwd()), vim.fs.abspath(script)) or script,
     _cases = {},
     _case_cleanups = nil,
     _suite_cleanups = {},
@@ -86,6 +87,20 @@ function Harness.assert_eq(expected, actual, msg)
   if expected ~= actual then
     error(
       string.format("%s: expected %s, got %s", msg or "assertion failed", format_value(expected), format_value(actual)),
+      2
+    )
+  end
+end
+
+---Compares values as vim.deep_equal does and shows both sides on failure.
+---@param expected                      any
+---@param actual                        any
+---@param msg                           ?string
+---@return nil
+function Harness.assert_same(expected, actual, msg)
+  if not vim.deep_equal(expected, actual) then
+    error(
+      string.format("%s: expected %s, got %s", msg or "assertion failed", vim.inspect(expected), vim.inspect(actual)),
       2
     )
   end
@@ -190,6 +205,38 @@ function Harness.wait_until(predicate, timeout_ms, msg)
   if not ok then
     error(msg or string.format("condition was not met within %d ms", timeout_ms), 2)
   end
+end
+
+---Waits for a Future to settle and returns its result; a failed Future fails the case.
+---@param future                        stl.c.Future
+---@param timeout_ms                    ?integer
+---@return any
+function Harness.await(future, timeout_ms)
+  timeout_ms = timeout_ms or 10000
+  local done = vim.wait(timeout_ms, function()
+    return future:is_done()
+  end, 1)
+  if not done then
+    error(string.format("future did not settle within %d ms", timeout_ms), 2)
+  end
+  if future:is_failed() then
+    error("future failed: " .. tostring(future:get_error()), 2)
+  end
+  return future:get_result()
+end
+
+-- Support modules await without a suite instance.
+M.await = Harness.await
+
+---Creates a directory under the system temporary directory, removed when the case (or the suite, outside a
+---case) ends.
+---@return string
+function Harness:tempdir()
+  local path = assert(vim.uv.fs_mkdtemp(vim.fs.joinpath(vim.uv.os_tmpdir(), "nvim-test-XXXXXX"))) ---@type string
+  self:defer(function()
+    vim.fn.delete(path, "rf")
+  end)
+  return assert(vim.uv.fs_realpath(path))
 end
 
 ---@param opts                          ?{ exit: boolean, quiet: boolean }

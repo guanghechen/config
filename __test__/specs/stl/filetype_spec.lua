@@ -1,10 +1,6 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/filetype_spec.lua
----@diagnostic disable: undefined-global
---- Test for stl.filetype
-
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.filetype")
+local t = harness.new()
 
 local Filetype = require("stl.filetype")
 

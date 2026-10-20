@@ -1,11 +1,8 @@
---- Run with: nvim -l __test__/run.lua __test__/specs/stl/git/act_spec.lua
----@diagnostic disable: undefined-global
-
 local bootstrap = require("__test__.support.bootstrap")
 local Future = require("stl.c.future")
 local harness = require("__test__.support.harness")
 
-local t = harness.new("stl.git.act")
+local t = harness.new()
 
 bootstrap.with_runtime(t, {
   stl = {

@@ -1,13 +1,10 @@
----@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.specs.era.m.lsp.rust_analyzer" ---@type string
-
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
-local t = harness.new("era.m.lsp.rust_analyzer")
+local t = harness.new()
 
-bootstrap.with_yoz(t, require("yoz"))
-bootstrap.with_stl(t, { env = { HOME_USER = "/unused-home" }, reporter = {} })
-bootstrap.with_dot(t, {
+t:patch_global("yoz", require("yoz"))
+bootstrap.with_global(t, "stl", { env = { HOME_USER = "/unused-home" }, reporter = {} })
+bootstrap.with_global(t, "dot", {
   path = {
     join = vim.fs.joinpath,
     normalize = function(path)
@@ -15,7 +12,7 @@ bootstrap.with_dot(t, {
     end,
   },
 })
-bootstrap.with_era(t, {
+bootstrap.with_global(t, "era", {
   m = {
     lsp = {
       event = { get_capabilities = vim.lsp.protocol.make_client_capabilities },
@@ -28,11 +25,8 @@ local config = dofile("lsp/rust_analyzer.lua")
 ---@return string
 ---@return integer
 local function project()
-  local root = vim.fn.tempname() ---@type string
+  local root = t:tempdir()
   vim.fn.mkdir(root .. "/src", "p")
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
   root = assert(vim.uv.fs_realpath(root))
   vim.fn.writefile({ "[package]", 'name = "fixture"', 'version = "0.1.0"' }, root .. "/Cargo.toml")
   local bufnr = vim.api.nvim_create_buf(false, false)
