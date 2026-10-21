@@ -70,6 +70,21 @@ local function checked(result)
   return result
 end
 
+---Like `checked`, but a change to a node that a publication has since removed no longer applies.
+---@param result                        any
+---@return any
+local function checked_change(result)
+  if
+    type(result) == "table"
+    and result.kind == "Rejected"
+    and type(result.error) == "table"
+    and result.error.code == "MissingNode"
+  then
+    return result
+  end
+  return checked(result)
+end
+
 ---@param state                         ux.treeview.State
 ---@param command                       ux.treeview.ICommand
 ---@return stl.c.Future
@@ -746,7 +761,7 @@ function M:collapse(key, action, recursive, frame)
         value = action == "expand",
         recursive = recursive == true,
       }, { frame = frame })
-      :map(checked)
+      :map(checked_change)
       :finally(function(ok, result)
         self._collapse_busy = math.max(0, (self._collapse_busy or 0) - 1)
         if not ok then
@@ -1672,7 +1687,7 @@ function M:_run_commands()
       value = command.value,
       recursive = command.recursive,
     }, { frame = frame })
-    :map(checked)
+    :map(checked_change)
     :finally(function(ok, error)
       self._command_busy = false
       if not ok then

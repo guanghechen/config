@@ -95,6 +95,38 @@ t:test("ready waits for every collapse change that is still in flight", function
   t.assert_same({}, reports.error)
 end)
 
+t:test("an expansion change for a node a publication removed is dropped without an error", function()
+  local tree = fixture()
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
+  local releases = {} ---@type fun(value: any)[]
+  local original = tree.state.dispatch
+  t:patch_table(tree.state, "dispatch", function(self, command, context)
+    local deferred, release = stl.c.Future.new_with_resolver()
+    releases[#releases + 1] = release
+    return deferred:then_(function()
+      return original(self, command, context)
+    end)
+  end)
+  tree:collapse("dir", "collapse", false)
+  tree:set_expansion("dir", true, false)
+  t.assert_eq(2, #releases, "both changes dispatched")
+
+  -- The next publication no longer holds `dir` or its children.
+  local source = Source.new("root", { label = "root" })
+  source:insert("root", "three", { label = "three" })
+  tree.source, tree.entries = source, {}
+  tree:invalidate()
+  tree:insert("root", { nodetype = "container" })
+  tree:insert("three", { nodetype = "leaf", text = "three" })
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
+  releases[1]()
+  releases[2]()
+  support.applied(tree:ready())
+
+  t.assert_eq("three", tree:retrieve_uuid(1), "the published rows")
+  t.assert_same({}, reports.error)
+end)
+
 t:test("input deferred behind a collapse decides on the Frame that shows it", function()
   local tree = fixture()
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
