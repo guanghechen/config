@@ -1,228 +1,71 @@
-local harness = require("__test__.support.harness")
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
+local git = require("__test__.support.git")
+local action = require("era.m.diffview.view.commits.action")
+local commits_view = require("era.m.diffview.view.commits.view")
+local data = require("era.m.diffview.data")
+local pane_commits = require("era.m.diffview.pane.commits")
+local tree = require("era.m.diffview.pane.tree")
 
-local t = harness.new()
-local line_maps = {} ---@type table<integer, era.m.diffview.ICommitsItem[]>
-local reports = {} ---@type table[]
-local dirty_count = 0 ---@type integer
-local search_match = nil ---@type era.m.diffview.ICommitSearchMatch|nil
-local search_error = nil ---@type string|nil
-local search_query = nil ---@type string|nil
-local search_path = nil ---@type string|nil
-local fetched_page = nil ---@type integer|nil
-local fetched_per_page = nil ---@type integer|nil
-local page_commits = {} ---@type era.m.diffview.ICommit[]
-
-local requested_tree_focus
-local materialization = {
-  bind = function() end,
-  observe = function() end,
-  restore = function() end,
-  run = function(_, callback)
-    callback()
-  end,
-}
----@param state                         table
----@return table
-local function mock_tree(state)
-  return {
-    state = state,
-    source = {
-      get = function()
-        return nil
-      end,
-    },
-    focus_key = function(_, key)
-      requested_tree_focus = key
-    end,
-    frame = function() end,
-    is_current = function()
-      return true
-    end,
-    ready = function()
-      return require("stl.c.future").resolve({ kind = "Applied" })
-    end,
-  }
+---A repository on main whose history is `messages`, oldest first, each commit editing f.txt; Diffview reads it as the
+---workspace for the rest of the case.
+---@param messages                      string[]
+---@return string root
+local function history(messages)
+  local root = diffview.workspace(t, git.repo(t, { "-b", "main" }))
+  local stream = {} ---@type string[]
+  for i, message in ipairs(messages) do
+    local content = tostring(i) .. "\n"
+    vim.list_extend(stream, {
+      "commit refs/heads/main",
+      "mark :" .. i,
+      string.format("committer Test <test@example.com> %d +0000", 1700000000 + i),
+      "data " .. #message,
+      message,
+    })
+    if i > 1 then
+      stream[#stream + 1] = "from :" .. (i - 1)
+    end
+    vim.list_extend(stream, { "M 100644 inline f.txt", "data " .. #content, content })
+  end
+  git.run(root, { "fast-import", "--quiet" }, table.concat(stream, "\n") .. "\n")
+  git.run(root, { "reset", "-q", "--hard", "main" })
+  return root
 end
 
-local pane_commits = {
-  apply_to_buffer = function(bufnr, result, owner)
-    local lines, items = {}, {}
-    for _, commit in ipairs(result.commits) do
-      lines[#lines + 1] = commit.hash
-      items[#items + 1] = { type = "commit", commit = commit }
-      if owner.state:is_commit_expanded(commit.hash) then
-        for _, entry in ipairs(commit.files or {}) do
-          lines[#lines + 1] = entry.filepath
-          items[#items + 1] = { type = "file", commit = commit, entry = entry }
-        end
-      end
-    end
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    line_maps[bufnr] = items
-    return require("stl.c.future").resolve({ kind = "Applied" })
-  end,
-  apply_winopts = function() end,
-  create_buffer = function()
-    return vim.api.nvim_create_buf(false, true)
-  end,
-  find_commit_line = function(bufnr, hash)
-    for lnum, item in ipairs(line_maps[bufnr] or {}) do
-      if item.type == "commit" and item.commit.hash == hash then
-        return lnum
-      end
-    end
-  end,
-  get_item_at_line = function(bufnr, lnum)
-    local line_map = line_maps[bufnr]
-    return line_map and line_map[lnum] or nil
-  end,
-  render = function(commits)
-    return { commits = commits }
-  end,
-}
-
-t:patch_global("dot", {
-  state = {
-    status = {
-      dirtier_tabline = {
-        mark_dirty = function()
-          dirty_count = dirty_count + 1
-        end,
-      },
-    },
-  },
-})
-t:patch_global("era", {})
-t:patch_global("stl", {
-  async = {
-    run = function(callback)
-      callback()
-    end,
-    scheduler = function() end,
-  },
-  reporter = {
-    warn = function(report)
-      reports[#reports + 1] = report
-    end,
-  },
-})
-t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100, COMMITS_WIDTH = 20 })
-local action_data = {
-  find_log_commit = function(query, path_filter)
-    search_query = query
-    search_path = path_filter
-    return search_match, search_error
-  end,
-  fetch_log_page = function(page, per_page)
-    fetched_page = page
-    fetched_per_page = per_page
-    return page_commits
-  end,
-}
-t:patch_table(package.loaded, "era.m.diffview.data", action_data)
-t:patch_table(package.loaded, "era.m.diffview.pane.commits", pane_commits)
-t:patch_table(package.loaded, "era.m.diffview.util", {
-  workspace_path = function(filepath)
-    return "/repo/" .. filepath
-  end,
-})
-
-local view = assert(loadfile("lua/era/m/diffview/view/commits/view.lua"))()
-t:patch_table(package.loaded, "era.m.diffview.view.commits.view", view)
-local action = assert(loadfile("lua/era/m/diffview/view/commits/action.lua"))()
-t:patch_table(package.loaded, "era.m.diffview.view.commits.action", action)
-
-local function reset_search()
-  reports = {}
-  dirty_count = 0
-  search_match = nil
-  search_error = nil
-  search_query = nil
-  search_path = nil
-  fetched_page = nil
-  fetched_per_page = nil
-  page_commits = {}
+---Counts tabline refreshes for the rest of the case.
+---@return { count: integer }
+local function count_dirty()
+  local dirty = { count = 0 }
+  t:patch_table(dot.state.status.dirtier_tabline, "mark_dirty", function()
+    dirty.count = dirty.count + 1
+  end)
+  return dirty
 end
 
----@return table
-local function new_search_state()
-  local state = {
-    _materialization = materialization,
-    get_tree = function(self)
-      return mock_tree(self)
-    end,
-    commits = {},
-    current_commit = nil,
-    current_entry = { filepath = "stale.lua" },
-    expanded = { stale = true },
-    page = 1,
-    total = 100,
-    path_filter = "lua/ark/autocmd.lua",
-    _content_generation = 0,
-    page_applied = 1,
-  }
-  ---@return nil
-  function state:collapse_all()
-    self.expanded = {}
-  end
-  ---@param hash                        string
-  ---@return boolean
-  function state:is_commit_expanded(hash)
-    return self.expanded[hash] == true
-  end
+---Records the last row identity the commits tree is asked to focus.
+---@param session                       era.m.diffview.CommitsSession
+---@return { key: string|nil }
+local function record_tree_focus(session)
+  local focus = { key = nil }
+  local owner = session.state:get_tree("commits")
+  local focus_key = owner.focus_key
+  t:patch_table(owner, "focus_key", function(self, key, ...)
+    focus.key = key
+    return focus_key(self, key, ...)
+  end)
+  return focus
+end
 
-  function state:get_commits()
-    return self.commits
-  end
-  function state:get_path_filter()
-    return self.path_filter
-  end
-  function state:get_commits_page()
-    return self.page
-  end
-  function state:get_commits_page_count()
-    return math.max(1, math.ceil(self.total / 100))
-  end
-  function state:request_commits_page(value)
-    self.page = value
-  end
-  function state:reset_commits_page()
-    self.page = self.page_applied
-  end
-  function state:begin_content_request()
-    self._content_generation = self._content_generation + 1
-    return self._content_generation
-  end
-  function state:owns_content_request(generation)
-    return self._content_generation == generation
-  end
-  function state:content_generation()
-    return self._content_generation
-  end
-  function state:materialization()
-    return self._materialization
-  end
-  function state:set_commits(value)
-    self.commits = value
-  end
-  function state:set_commits_page(value)
-    self.page = value
-    self.page_applied = value
-  end
-  function state:set_commits_total(value)
-    self.total = value
-  end
-  function state:set_current_commit(value)
-    self.current_commit = value
-  end
-  function state:set_current_entry(value)
-    self.current_entry = value
-  end
-  function state:set_lnum_present(value)
-    self.lnum_present = value
-  end
-  return state
+---Answers the search prompt with `answers`, in order.
+---@param answers                       string[]
+---@return nil
+local function answer_search(answers)
+  t:patch_table(vim.ui, "input", function(opts, callback)
+    t.assert_eq("Commit hash or message: ", opts.prompt, "search prompt")
+    callback(table.remove(answers, 1))
+  end)
 end
 
 t:test("commit details popup opens above a trigger near the bottom", function()
@@ -237,277 +80,261 @@ t:test("commit details popup opens above a trigger near the bottom", function()
   t.assert_eq("editor", config.relative, "editor-relative captured position")
   t.assert_eq(anchor_row - config.height - 2, config.row, "popup above trigger row")
   t.assert_true(config.row ~= math.floor((vim.o.lines - config.height) / 2), "popup is not centered")
-
   vim.api.nvim_win_close(popup_winnr, true)
 end)
 
 t:test("hide_commits keeps a commits-only tab alive", function()
-  local original_tabnr = vim.api.nvim_get_current_tabpage()
-  vim.cmd.tabnew()
-  local tabnr = vim.api.nvim_get_current_tabpage()
-  local commits_winnr = vim.api.nvim_get_current_win()
-  local commits_bufnr = pane_commits.create_buffer()
-  vim.api.nvim_win_set_buf(commits_winnr, commits_bufnr)
-  local lyt = {
-    tabnr = tabnr,
-    layout_type = 4,
-    commits_winnr = commits_winnr,
-    commits_bufnr = commits_bufnr,
-  }
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 4 })
+  local lyt = session.layout
+  local commits_winnr = assert(lyt.commits_winnr)
 
-  view.hide_commits(lyt)
+  commits_view.hide_commits(lyt)
 
-  t.assert_true(vim.api.nvim_tabpage_is_valid(tabnr), "commits-only tab")
+  t.assert_true(vim.api.nvim_tabpage_is_valid(session.tabnr), "commits-only tab")
   t.assert_true(vim.api.nvim_win_is_valid(commits_winnr), "last window")
   t.assert_eq(commits_winnr, lyt.commits_winnr, "layout reference")
-
-  vim.cmd.tabclose()
-  vim.api.nvim_set_current_tabpage(original_tabnr)
-  if vim.api.nvim_buf_is_valid(commits_bufnr) then
-    vim.api.nvim_buf_delete(commits_bufnr, { force = true })
-  end
 end)
 
 t:test("reveal expands and focuses the active file, then hides Commits", function()
-  local original_tabnr = vim.api.nvim_get_current_tabpage()
-  vim.cmd.tabnew()
-  local tabnr = vim.api.nvim_get_current_tabpage()
-  local sbs_winnr = vim.api.nvim_get_current_win()
-  local entry = { filepath = "src/a.lua", status = "M" }
-  local commit = { hash = "abc123", files = { entry } }
-  local expanded = false
-  local state = {
-    _materialization = materialization,
-    _content_generation = 0,
-    content_generation = function(self)
-      return self._content_generation
-    end,
-    materialization = function(self)
-      return self._materialization
-    end,
-    owns_content_request = function()
-      return true
-    end,
-    is_disposed = function()
-      return false
-    end,
-    expand_commit = function()
-      expanded = true
-    end,
-    get_tree = function(self)
-      return mock_tree(self)
-    end,
-    get_commits = function()
-      return { commit }
-    end,
-    get_current_commit = function()
-      return commit
-    end,
-    get_current_entry = function()
-      return entry
-    end,
-    is_commit_expanded = function()
-      return expanded
-    end,
-    toggle_commit_expanded = function()
-      expanded = not expanded
-    end,
-  }
-  local lyt = {
-    tabnr = tabnr,
-    layout_type = 3,
-    commits_winnr = nil,
-    commits_bufnr = nil,
-    sbs_left_winnr = sbs_winnr,
-  }
-  local ctx = diffview.commits_context({ layout = lyt, state = state })
-
-  action.reveal(ctx)
-  local commits_winnr = assert(lyt.commits_winnr)
-  local commits_bufnr = assert(lyt.commits_bufnr)
-  t.assert_true(expanded, "active commit expanded")
-  t.assert_eq(commits_winnr, vim.api.nvim_get_current_win(), "Commits focused")
-  t.assert_eq(
-    require("era.m.diffview.pane.tree").key("commit:" .. commit.hash, entry.filepath, false),
-    requested_tree_focus,
-    "active file cursor identity"
-  )
-
-  action.reveal(ctx)
-  t.assert_true(vim.api.nvim_tabpage_is_valid(tabnr), "tab remains valid")
-  t.assert_nil(lyt.commits_winnr, "Commits hidden")
-  t.assert_eq(sbs_winnr, vim.api.nvim_get_current_win(), "SBS retained")
-
-  vim.cmd.tabclose()
-  vim.api.nvim_set_current_tabpage(original_tabnr)
-  if vim.api.nvim_buf_is_valid(commits_bufnr) then
-    vim.api.nvim_buf_delete(commits_bufnr, { force = true })
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 3 })
+  local state = session.state
+  local commit = state:get_commits()[1]
+  -- The active file is one of the commit's files, as opening it from Commits leaves it.
+  stl.async.run(function()
+    action.__expand_commit__(session, commit)
+  end)
+  t.wait_until(function()
+    return commit.files ~= nil
+  end, 10000, "the commit's files")
+  state:collapse_commit(commit.hash)
+  local entry = nil ---@type era.m.diffview.IFileEntry|nil
+  for _, file in ipairs(commit.files) do
+    if file.filepath == "a.txt" then
+      entry = file
+    end
   end
+  state:set_current_commit(commit)
+  state:set_current_entry(assert(entry))
+  local focus = record_tree_focus(session)
+  local sbs_winnr = assert(session.layout.sbs_left_winnr)
+  vim.api.nvim_set_current_win(sbs_winnr)
+
+  action.reveal(session)
+  local commits_winnr = assert(session.layout.commits_winnr)
+  t.wait_until(function()
+    return focus.key == tree.key("commit:" .. commit.hash, "a.txt", false)
+  end, 10000, "active file cursor identity")
+  t.assert_true(session.state:is_commit_expanded(commit.hash), "active commit expanded")
+  t.assert_eq(commits_winnr, vim.api.nvim_get_current_win(), "Commits focused")
+
+  action.reveal(session)
+  t.assert_true(vim.api.nvim_tabpage_is_valid(session.tabnr), "tab remains valid")
+  t.assert_nil(session.layout.commits_winnr, "Commits hidden")
+  t.assert_eq(sbs_winnr, vim.api.nvim_get_current_win(), "SBS retained")
 end)
 
 t:test("search jumps across pages and selects the matching commit", function()
-  reset_search()
-  local original_tabnr = vim.api.nvim_get_current_tabpage()
-  vim.cmd.tabnew()
-  local tabnr = vim.api.nvim_get_current_tabpage()
-  local commits_winnr = vim.api.nvim_get_current_win()
-  local commits_bufnr = pane_commits.create_buffer()
-  vim.api.nvim_win_set_buf(commits_winnr, commits_bufnr)
-  local target = { hash = "target", abbrev_hash = "target", parents = {}, author = "A", date = 0, message = "target" }
-  search_match = { hash = target.hash, position = 103, total = 151 }
-  page_commits = {
-    { hash = "other", abbrev_hash = "other", parents = {}, author = "A", date = 0, message = "other" },
-    target,
-  }
-  local state = new_search_state()
-  local ctx = diffview.commits_context({
-    layout = { tabnr = tabnr, layout_type = 4, commits_winnr = commits_winnr, commits_bufnr = commits_bufnr },
-    state = state,
-  })
-  t:patch_table(vim.ui, "input", function(opts, callback)
-    t.assert_eq("Commit hash or message: ", opts.prompt, "search prompt")
-    callback("  target  ")
-  end)
-
-  action.search_commit(ctx)
-
-  t.assert_eq("target", search_query, "trimmed query")
-  t.assert_eq("lua/ark/autocmd.lua", search_path, "path filter")
-  t.assert_eq(2, fetched_page, "target page")
-  t.assert_eq(100, fetched_per_page, "page size")
-  t.assert_eq(2, state.page, "state page")
-  t.assert_eq(151, state.total, "state total")
-  t.assert_true(state.current_commit == target, "current commit")
-  t.assert_nil(state.current_entry, "stale entry")
-  t.assert_nil(next(state.expanded), "expanded commits")
-  t.assert_eq(2, state.lnum_present, "present line")
-  t.assert_eq("commit:" .. target.hash, requested_tree_focus, "cursor identity")
-  t.assert_eq(1, dirty_count, "tabline refresh")
-
-  vim.cmd.tabclose()
-  vim.api.nvim_set_current_tabpage(original_tabnr)
-  if vim.api.nvim_buf_is_valid(commits_bufnr) then
-    vim.api.nvim_buf_delete(commits_bufnr, { force = true })
+  local messages = {} ---@type string[]
+  for i = 1, 151 do
+    messages[i] = "commit " .. i
   end
+  -- The log lists the newest first, so the 49th commit is the 103rd entry.
+  messages[49] = "target"
+  history(messages)
+  local session = diffview.open_log(t, { layout = 4, path = "f.txt" })
+  local state = session.state
+  local first = state:get_commits()[1]
+  state:expand_commit(first.hash)
+  state:set_current_entry({ filepath = "stale.lua", status = "M" })
+  local found, fetched = nil, nil ---@type table|nil, table|nil
+  local find_log_commit, fetch_log_page = data.find_log_commit, data.fetch_log_page
+  t:patch_table(data, "find_log_commit", function(query, path_filter, ...)
+    found = { query = query, path_filter = path_filter }
+    return find_log_commit(query, path_filter, ...)
+  end)
+  t:patch_table(data, "fetch_log_page", function(page, per_page, ...)
+    fetched = { page = page, per_page = per_page }
+    return fetch_log_page(page, per_page, ...)
+  end)
+  local dirty = count_dirty()
+  local focus = record_tree_focus(session)
+  local errors = {} ---@type string[]
+  t:patch_table(stl.reporter, "error", function(report)
+    errors[#errors + 1] = report.message
+  end)
+  answer_search({ "  target  " })
+
+  action.search_commit(session)
+  t.wait_until(function()
+    return dirty.count > 0
+  end, 10000, "the search result")
+
+  local target = assert(state:get_current_commit(), "current commit")
+  t.assert_eq("target", assert(found).query, "trimmed query")
+  t.assert_eq("f.txt", assert(found).path_filter, "path filter")
+  t.assert_eq(2, assert(fetched).page, "target page")
+  t.assert_eq(100, assert(fetched).per_page, "page size")
+  t.assert_eq(2, state:get_commits_page(), "state page")
+  t.assert_eq(151, state:get_commits_total(), "state total")
+  t.assert_eq("target", target.message, "current commit")
+  t.assert_nil(state:get_current_entry(), "stale entry")
+  t.assert_false(state:is_commit_expanded(first.hash), "expanded commits")
+  t.assert_eq(3, state:get_lnum_present(), "present line")
+  t.assert_eq("commit:" .. target.hash, focus.key, "cursor identity")
+  t.assert_eq(1, dirty.count, "tabline refresh")
+  local settled = false
+  session.state:get_tree("commits"):ready():finally(function()
+    settled = true
+  end)
+  t.wait_until(function()
+    return settled
+  end, 5000, "settled tree changes")
+  t.assert_same({}, errors, "no errors")
 end)
 
 t:test("search keeps only the latest overlapping result", function()
-  reset_search()
-  local first = { hash = "first", abbrev_hash = "first", author = "A", date = 0, message = "first" }
-  local second = { hash = "second", abbrev_hash = "second", author = "A", date = 0, message = "second" }
-  local state = new_search_state()
-  local ctx = diffview.commits_context({ layout = { layout_type = 4 }, state = state })
-  local inputs = { "first", "second" }
-  t:patch_table(vim.ui, "input", function(_, callback)
-    callback(table.remove(inputs, 1))
-  end)
-  t:patch_table(action_data, "find_log_commit", function(query)
+  history({ "first", "second" })
+  local session = diffview.open_log(t, { layout = 4 })
+  local settled = 0
+  local find_log_commit = data.find_log_commit
+  t:patch_table(data, "find_log_commit", function(query, ...)
     if query == "first" then
-      action.search_commit(ctx)
-      return { hash = first.hash, position = 1, total = 2 }, nil
+      -- A newer search starts while this one is in flight.
+      action.search_commit(session)
     end
-    return { hash = second.hash, position = 2, total = 2 }, nil
+    local match, err = find_log_commit(query, ...)
+    settled = settled + 1
+    return match, err
   end)
-  t:patch_table(action_data, "fetch_log_page", function()
-    return { first, second }
+  local dirty = count_dirty()
+  answer_search({ "first", "second" })
+
+  action.search_commit(session)
+  t.wait_until(function()
+    return settled == 2 and dirty.count > 0
+  end, 10000, "both searches")
+  local flushed = false
+  vim.schedule(function()
+    flushed = true
   end)
+  t.wait_until(function()
+    return flushed
+  end, 1000, "scheduled work")
 
-  action.search_commit(ctx)
-
-  t.assert_true(state.current_commit == second, "latest current commit")
-  t.assert_eq(2, state.total, "latest total")
-  t.assert_eq(1, dirty_count, "single committed result")
+  t.assert_eq("second", session.state:get_current_commit().message, "latest current commit")
+  t.assert_eq(2, session.state:get_commits_total(), "latest total")
+  t.assert_eq(1, dirty.count, "single committed result")
 end)
 
 t:test("search reports a missing commit without changing pages", function()
-  reset_search()
-  local state = new_search_state()
-  state.page = 2
-  local ctx = diffview.commits_context({ layout = { layout_type = 4 }, state = state })
-  t:patch_table(vim.ui, "input", function(_, callback)
-    callback("missing")
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 4 })
+  session.state:request_commits_page(2)
+  local reports = {} ---@type table[]
+  t:patch_table(stl.reporter, "warn", function(report)
+    reports[#reports + 1] = report
   end)
+  local fetches = 0
+  local fetch_log_page = data.fetch_log_page
+  t:patch_table(data, "fetch_log_page", function(...)
+    fetches = fetches + 1
+    return fetch_log_page(...)
+  end)
+  local dirty = count_dirty()
+  answer_search({ "missing" })
 
-  action.search_commit(ctx)
+  action.search_commit(session)
+  t.wait_until(function()
+    return #reports > 0
+  end, 10000, "the report")
 
   t.assert_eq(1, #reports, "warning count")
   t.assert_eq('No commit matched "missing".', reports[1].message, "warning message")
-  t.assert_eq(1, state.page, "applied page restored")
-  t.assert_nil(fetched_page, "page fetch")
-  t.assert_eq(0, dirty_count, "tabline refresh")
+  t.assert_eq(1, session.state:get_commits_page(), "applied page restored")
+  t.assert_eq(0, fetches, "page fetch")
+  t.assert_eq(0, dirty.count, "tabline refresh")
 end)
 
 t:test("rapid page commands preserve every requested step", function()
-  reset_search()
-  local state = new_search_state()
-  state.total = 300
-  local ctx = diffview.commits_context({ layout = { layout_type = 4 }, state = state })
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 4 })
+  local state = session.state
+  state:set_commits_total(300)
+  local first = state:get_commits()[1]
+  state:expand_commit(first.hash)
   local pending = {} ---@type function[]
   t:patch_table(stl.async, "run", function(callback)
     pending[#pending + 1] = callback
   end)
 
-  action.next_page(ctx)
-  action.next_page(ctx)
+  action.next_page(session)
+  action.next_page(session)
 
-  t.assert_eq(3, state.page, "requested page")
-  t.assert_nil(next(state.expanded), "expanded commits")
+  t.assert_eq(3, state:get_commits_page(), "requested page")
+  t.assert_false(state:is_commit_expanded(first.hash), "expanded commits")
   t.assert_eq(2, #pending, "page requests")
 end)
 
 t:test("commit pane directories toggle independently and copy their displayed path", function()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local original_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-
-  local commit = { hash = "commit-a", abbrev_hash = "commit-a" }
-  line_maps[bufnr] = {
-    { type = "directory", commit = commit, entry = nil, filepath = "lua/era", uuid = "lua" },
-  }
-  local operations = {} ---@type string[]
-  local copied = nil ---@type table|nil
-  local ctx = diffview.commits_context({
-    layout = { commits_bufnr = bufnr, commits_winnr = winnr },
-    state = {
-      toggle_commit_dir = function(_, hash, uuid)
-        operations[#operations + 1] = "toggle:" .. hash .. ":" .. uuid
-      end,
-      collapse_commit_dir = function(_, hash, uuid)
-        operations[#operations + 1] = "collapse:" .. hash .. ":" .. uuid
-      end,
-      expand_commit_dir = function(_, hash, uuid)
-        operations[#operations + 1] = "expand:" .. hash .. ":" .. uuid
-      end,
-    },
-  })
-  local renders = 0
-  local restore_render = t:patch_table(view, "render_commits", function()
-    renders = renders + 1
+  local root = diffview.committed(t, { ["lua/era/a.lua"] = { "a" }, ["lua/era/b.lua"] = { "b" } })
+  local session = diffview.open_log(t, { layout = 4 })
+  local commit = session.state:get_commits()[1]
+  local lyt = session.layout
+  stl.async.run(function()
+    action.__expand_commit__(session, commit)
   end)
-  local restore_fn = t:patch_table(era, "fn", {
-    select_copy_filepath = function(opts)
-      copied = opts
-    end,
-  })
+  local row, directory = nil, nil ---@type integer|nil, table|nil
+  t.wait_until(function()
+    for lnum = 1, vim.api.nvim_buf_line_count(lyt.commits_bufnr) do
+      local item = pane_commits.get_item_at_line(lyt.commits_bufnr, lnum)
+      if item and item.type == "directory" then
+        row, directory = lnum, item
+        return true
+      end
+    end
+    return false
+  end, 10000, "the directory row")
+  vim.api.nvim_set_current_win(lyt.commits_winnr)
+  vim.api.nvim_win_set_cursor(lyt.commits_winnr, { assert(row), 0 })
 
-  action.select(ctx)
-  action.collapse(ctx)
-  action.expand(ctx)
-  action.copy_filepath(ctx)
+  local operations = {} ---@type string[]
+  for name, label in pairs({
+    toggle_commit_dir = "toggle",
+    collapse_commit_dir = "collapse",
+    expand_commit_dir = "expand",
+  }) do
+    local original = session.state[name]
+    t:patch_table(session.state, name, function(self, hash, uuid)
+      operations[#operations + 1] = label .. ":" .. hash .. ":" .. uuid
+      return original(self, hash, uuid)
+    end)
+  end
+  local renders = 0
+  local render_commits = commits_view.render_commits
+  t:patch_table(commits_view, "render_commits", function(...)
+    renders = renders + 1
+    return render_commits(...)
+  end)
+  local copied = nil ---@type table|nil
+  t:patch_table(era.fn, "select_copy_filepath", function(opts)
+    copied = opts
+  end)
 
-  t.assert_eq("toggle:commit-a:lua", operations[1], "select toggles directory")
-  t.assert_eq("collapse:commit-a:lua", operations[2], "collapse action")
-  t.assert_eq("expand:commit-a:lua", operations[3], "expand action")
+  action.select(session)
+  action.collapse(session)
+  action.expand(session)
+  action.copy_filepath(session)
+
+  local key = commit.hash .. ":" .. assert(directory).uuid
+  t.assert_eq("toggle:" .. key, operations[1], "select toggles directory")
+  t.assert_eq("collapse:" .. key, operations[2], "collapse action")
+  t.assert_eq("expand:" .. key, operations[3], "expand action")
   t.assert_eq(0, renders, "native directory expansion preserves the producer")
   local copy_opts = assert(copied)
-  t.assert_eq("/repo/lua/era", copy_opts.filepath, "displayed directory path")
+  t.assert_eq(root .. "/lua/era", copy_opts.filepath, "displayed directory path")
   t.assert_eq("cursor", copy_opts.relative, "copy picker anchor")
-
-  restore_fn()
-  restore_render()
-  vim.api.nvim_win_set_buf(winnr, original_bufnr)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:run()

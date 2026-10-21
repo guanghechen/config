@@ -386,9 +386,16 @@ function M.search_commit(ctx)
       ctx.state:set_commits(commits)
       ctx.state:set_current_commit(commit)
       ctx.state:set_current_entry(nil)
-      commits_view.render_commits(ctx)
+      local rendered = commits_view.render_commits(ctx)
       commits_view.render_filetree(ctx)
       commits_view.clear_sbs(ctx)
+      -- The match may be on another page: its row and tree node exist only once the page is published.
+      if rendered then
+        rendered:await()
+        if not ctx.state:owns_content_request(generation) then
+          return
+        end
+      end
       update_lnum_present(ctx, commit.hash)
       M.__update_commits_cursor__(ctx, commit.hash)
       dot.state.status.dirtier_tabline:mark_dirty()
