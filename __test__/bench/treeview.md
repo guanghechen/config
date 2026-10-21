@@ -7,30 +7,34 @@
 （`git log -p -- __test__/bench/treeview.md`）。各项数字只对所注明的提交、主机与条件成立；
 少量进程样本不支持生产 p95 结论。
 
-以下基线按统一结果格式（`bench/record.lua`、`bench/stats.lua`）之前的输出测得：p50 取下中位数，p95 不设样本下限，
-与新格式的 `median` / `p95` 不能直接比较，待按新格式重测后替换。
+2026-10-21 按统一结果格式（`bench/record.lua`、`bench/stats.lua`）重测了仓库内有驱动的场景：Apple M5 Pro（6P + 12E）、
+外接电源、Neovim 0.12.6、release library，计时任务串行运行。`median` 在偶数个值时取中点，样本少于 20 个时不报告 p95；
+单进程的 p95 只描述这一次运行。没有入库驱动的段落（压力档、结果消费者的迁移验收、普通 List 与 Find Explorer、
+Grouped List、watch 扫描、Visual 聚合）保留原记录，它们按旧格式测得（p50 取下中位数，p95 不设样本下限），
+不能与新格式直接比较。
 
 ## 合成投影：`treeview.lua`
 
 `nvim -l __test__/bench/treeview.lua [tree|ancestry]`，使用 release library、附着 UI 与自然 GC；
 当前脚本覆盖 text、selection 与 filter 三条路径，filter 以 `set_display` 切换 pattern，计时不含 consumer 输入 debounce。
 
-2026-09-16 基线：Apple M2 Max / 32 GiB、Darwin 27 arm64、Neovim 0.12.5，release build；
-50,001 个 source 节点、50,000 行投影、96-byte label、80×48 UI，每行两处高亮和右对齐文本。
-单行更新、Selection、filter 各 100 次；sort 300 次，额外持有初始 frame。以下为输入到适用 frame 的 UI flush 延迟：
+2026-10-21：50,001 个 source 节点、50,000 行投影、96-byte label、80×48 UI，每行一个高亮组和右对齐文本；
+display 始终带过滤 pattern `node-`。单行更新、Selection、filter 各 100 次，单进程。
+以下为输入到适用 frame 的 UI flush 延迟（ms）：
 
-| 路径        | p50 ms | p95 ms | max ms |
-| ----------- | -----: | -----: | -----: |
-| 单行更新    |  0.903 |  3.369 |  7.131 |
-| Selection   |  3.409 |  4.266 |  6.328 |
-| 全局 filter | 16.776 | 41.464 | 43.421 |
-| 全局 sort   | 45.241 | 48.788 | 50.735 |
+| 路径        | Tree median | Tree p95 | Ancestry median | Ancestry p95 |
+| ----------- | ----------: | -------: | --------------: | -----------: |
+| 单行更新    |       9.161 |   11.469 |           9.334 |       11.992 |
+| Selection   |       2.381 |    3.103 |           2.337 |        4.613 |
+| 全局 filter |      23.891 |   48.659 |          24.135 |       41.720 |
 
-- 与[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)的对应：单行更新与 Selection 对应
-  “常见局部发布及当前窗口 redraw”（p95 ≤ 8 ms）和“局部交互到 Frame flush”（p95 ≤ 16 ms）；全局 filter 与 sort 对应
-  50,000 驻留候选的 filter/sort 目标（p95 ≤ 50 ms）。“全量结构布局”目标没有对应记录。
-- 压缩链拆合、排序视图单项插入各 100 次，p95 分别为 2.15 / 1.90 ms；含 50,000 个直接 children 的宽目录中，
-  selected-only 单项变化 p95 为 5.41 ms。
+- 与[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)的对应：Selection 对应
+  “局部交互到 Frame flush”（p95 ≤ 16 ms）；全局 filter 对应 50,000 驻留候选的 filter/sort 目标（p95 ≤ 50 ms）。
+  单行更新在过滤态下运行，其中输入到投影完成占 8.374 ms（median），plan、staging 与发布刷新合计不足 1 ms；
+  它与“常见局部发布及当前窗口 redraw”（p95 ≤ 8 ms）不是同一口径，无过滤的单行更新没有驱动。
+  同日改动前用同一脚本测得 9.059 / 10.056 ms，本轮改动没有使它变化。
+- 全局 filter 的 p95 在同日三次单进程运行间为 38.4–48.7 ms，100 个样本不足以支持稳定的尾延迟结论。
+- 全局 sort、压缩链拆合、排序视图单项插入与宽目录 selected-only 变化已没有驱动，旧记录见 git 历史。
 
 ## Rust 测量测试：`ux::treeview::perf_tests`
 
@@ -42,9 +46,11 @@
 cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib <name> -- --exact --ignored --nocapture
 ```
 
-2026-09-22 基线（Apple M2 Max / 32 GiB、Darwin 27.0.0）：三 states 的 50k leaf 更新（`ancestry_wide_leaf`）p95 0.052 ms；
-在 native owner 上准备 50k 个显式操作 roots（`task_prepare`）p95 64.646 ms，与局部 UI 交互分开；
-8k 祖先过滤批次（`ancestry_filtered_batch`）p95 16.168 ms。深度安全另由常规测试覆盖 10k 层构建、文本存储与迭代释放。
+2026-10-21（环境同上）：三 states 的 50k leaf 更新（`ancestry_wide_leaf`，n=100）p50 0.031 / p95 0.036 ms；
+在 native owner 上准备 50k 个显式操作 roots（`task_prepare`，n=10）p50 55.672 / p95 90.302 ms，与局部 UI 交互分开；
+8k 祖先过滤批次（`ancestry_filtered_batch`，n=10）p50 13.403 / p95 17.286 ms；50k 行祖先过滤的投影阶段
+（`ancestry_filter_expand`，n=50）p50 15.187 / p95 15.954 ms。这些测试按 p50 / p95 打印，n=10 时 p95 接近最大值。
+深度安全另由常规测试覆盖 10k 层构建、文本存储与迭代释放。
 
 `ux::treeview::incremental::tests::t_large_multi_root_mutations_keep_retained_frames` 是显式 ignored 的压力用例：
 2 GiB 预算下 200,005 个 source 节点、三个不同 root 与 Tree/List 模式的 states、三个持有的旧 frame，
@@ -56,17 +62,18 @@ cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib <name> -- --ex
 默认 100 个正式样本，另有 5 次预热；使用 release library、附着 UI 和自然 GC，`lsp` 使用已安装的 Mason Lua language server。
 Adapter 验收到 Treeview surface，不切换现有业务入口。
 
-2026-09-16 基线（环境同合成投影）：
+2026-10-21（环境同合成投影），单进程 100 个正式样本，各列为 median / p95（ms）：
 
-| 链路与数据形状                                                | 输入到首批 flush p95 | 输入到末批 flush p95 | 数据就绪到末批 flush p95 |
-| ------------------------------------------------------------- | -------------------: | -------------------: | -----------------------: |
-| Filetree：真实 fs event + native readdir，128/129 个文件      |             52.69 ms |             52.69 ms |                  2.40 ms |
-| Searcher：native search 当前 Treeview Rust 源码，507 行，4 页 |              7.51 ms |             28.98 ms |                 24.92 ms |
-| Git：当前 checkout 的 status + numstat，52 行                 |             36.39 ms |             36.39 ms |                  2.86 ms |
-| LSP：真实 documentSymbol response，315 行                     |            220.58 ms |            220.58 ms |                  5.11 ms |
+| 链路与数据形状                                                | 输入到首批 flush | 输入到末批 flush | 数据就绪到末批 flush |
+| ------------------------------------------------------------- | ---------------: | ---------------: | -------------------: |
+| Filetree：真实 fs event + native readdir，128/129 个文件      |    50.83 / 54.19 |    50.83 / 54.19 |          3.24 / 5.74 |
+| Searcher：native search 当前 Treeview Rust 源码，758 行，6 页 |    10.97 / 13.32 |    20.67 / 23.02 |        11.76 / 13.20 |
+| Git：当前 checkout 的 status + numstat，2 行                  |    16.31 / 18.45 |    16.31 / 18.45 |          0.53 / 0.75 |
+| LSP：真实 documentSymbol response，485 行                     |   17.95 / 230.20 |   17.95 / 230.20 |          4.44 / 6.02 |
 
-- Filetree 完整时间包含 OS watch 通知等待；LSP 完整时间包含 language server 等待，不能当作已加载数据的局部交互延迟。
-- Searcher 测试 adapter 每页提取最多 128 行；原生结果导出的主线程成本计入测量，native poll 累计 p95 为 1.87 ms，
+- Filetree 完整时间包含 OS watch 通知等待；LSP 完整时间包含 language server 等待，其 p95 由首个请求等待 server 决定，
+  不能当作已加载数据的局部交互延迟。Searcher 与 Git 的数据形状随当前源码和 checkout 状态变化。
+- Searcher 测试 adapter 每页提取最多 128 行；原生结果导出的主线程成本计入测量，native poll 累计 median 2.15 / p95 2.86 ms，
   末批时间包含后续分页与发布背压。
 - JSON 另保存 plan 请求/完成的 Lua 观察时点、staging、buffer 写入、Lua heap、实际 buffer bytes 与关闭成本；
   这些观察时点不冒充 Rust worker 内部提交时点。所有样本最终 queue 为 0，关闭后 data/state/query/provider/view
@@ -87,29 +94,33 @@ Adapter 验收到 Treeview surface，不切换现有业务入口。
 
 ## Cursor 路径 guide：`treeview_guides.lua`
 
-用法与口径见[测试指南](../README.md#benchmarks)。50k 行、每动作 300 样本（30 次预热）、80×50 UI、自然 GC，
-所有样本零正文写入。
+用法与口径见[测试指南](../README.md#benchmarks)。2026-10-21：50k 行、每动作 300 样本（30 次预热）、80×50 UI、
+自然 GC，单进程，所有样本零正文写入。
 
-| 操作                           | settled p95 ms | 来源                                           |
-| ------------------------------ | -------------: | ---------------------------------------------- |
-| Normal 相邻移动                |          0.523 | 2026-10-12，3 进程对，每动作 100 次            |
-| 跨分支跳转                     |          1.529 | 2026-10-12                                     |
-| 滚动                           |          0.708 | 2026-10-12                                     |
-| Visual 移动                    |          0.494 | 2026-10-12                                     |
-| 一个 callback 内 8 次 API 请求 |          1.689 | overscan 优化（2026-10-10 后），3 进程对中位数 |
-| 冷跳转                         |          1.962 | overscan 优化（2026-10-10 后）                 |
+| 操作                           | settled median ms | settled p95 ms |
+| ------------------------------ | ----------------: | -------------: |
+| 相邻移动（`set_cursor`）       |             0.265 |          0.449 |
+| Normal `j` / `k`               |             0.371 |          1.001 |
+| 视口内跨分支跳转               |             0.482 |          0.937 |
+| 一个 callback 内 8 次 API 请求 |             0.563 |          0.949 |
+| 原生光标移动后立即 redraw      |             0.867 |          2.263 |
+| 冷跳转                         |             0.886 |          1.568 |
+| 滚动                           |             0.363 |          0.988 |
+| Visual 移动                    |             0.253 |          0.451 |
 
-- 相邻/Visual 移动只提交 2 个 guide extmarks，冷跳转 48 个；viewport 读取与整窗 redraw 各一次。
-  滚动每次导出约 6.91 个 native 行。80×150 UI 下 burst p95 3.387 ms、滚动 1.368 ms；200k 行时 burst 为 1.612–1.772 ms。
-- 真实 Explorer fixture（256 个预加载 Lua 文件、icons 与 annotation 管线，无 Git/LSP）：burst p95 2.853 ms、
-  滚动 4.780 ms、Normal 移动 1.449 ms；consumer 准备与重绘仍占主要成本。
+- 相邻/Visual 移动只提交 2 个 guide extmarks，视口内跨分支 36 个，冷跳转 48 个；冷跳转读取一次 viewport 并整窗
+  redraw，滚动每次导出约 6.91 个 native 行。
+- 旧格式记录（2026-10-12 前后）：80×150 UI 下 burst p95 3.387 ms、滚动 1.368 ms，200k 行时 burst 为 1.612–1.772 ms；
+  真实 Explorer fixture（256 个预加载 Lua 文件、icons 与 annotation 管线，无 Git/LSP）burst p95 2.853 ms、
+  滚动 4.780 ms、Normal 移动 1.449 ms，consumer 准备与重绘仍占主要成本。
 - 10,000 层 source 只显示 50 段路径的情形有 native 回归覆盖；不声称渲染 10,000 列缩进也满足同一 UI 延迟目标。
 
 ## 结果消费者
 
-`treeview_results.lua` 驱动生产 ResultPaths/ResultFiles adapter（虚拟文件记录，无文件系统扫描）。2026-10-10 macOS：
-50,000 文件生成 50,500 行，producer 190 ms，首次完整 UI flush 1.86 s，30 次 cursor 移动 p50 0.22 ms / p95 0.35 ms，
-native 确认 p95 0.61 ms，cursor 零正文写入，额外 Lua heap 67.6 MiB；收集 101 个选中身份 7.2 ms。单进程观察，不是延迟保证。
+`treeview_results.lua` 驱动生产 ResultPaths/ResultFiles adapter（虚拟文件记录，无文件系统扫描）。2026-10-21：
+50,000 文件生成 50,500 行，producer 127 ms，首次完整 UI flush 706 ms，30 次 cursor 移动 median 0.17 / p95 0.24 ms，
+native 确认 median 0.39 / p95 0.49 ms，cursor 零正文写入，保留 Lua heap 70.1 MiB；收集 101 个选中身份 5.1 ms。
+单进程观察，不是延迟保证。
 
 迁移收尾的整体验收（原始 `c55d9c6ad` 对比 runtime `543fcb2ca`，每变体 3 个独立进程，第二轮反转顺序；
 驱动为当时的本机脚本，经真实 FiletreeComposer 与虚拟路径，排除文件系统发现与外部 compositor）：
@@ -130,22 +141,23 @@ native 确认 p95 0.61 ms，cursor 零正文写入，额外 Lua heap 67.6 MiB；
 
 ## Diffview
 
-`treeview_diffview.lua 10000 10` 驱动真实 Diffview 展开 action（100×40 UI），三次独立运行的中位数：
-折叠首屏 3.2 ms，首次展开 337 ms，展开 p50 9.1 ms / p95 12.0 ms，折叠 p50 3.1 ms / p95 3.3 ms；
-热循环零 plan 重建、导入与 icon 查找。物化缓存（对比 `07b029f0f`，5 个各 10,000 文件的 commit，3 个进程）：
+`treeview_diffview.lua 10000 10` 驱动真实 Diffview 展开 action（100×40 UI）。2026-10-21，三次独立运行的中位数
+（每次展开、折叠各 10 次，不足 20 个样本不报告 p95）：折叠首屏 2.69 ms，首次展开 156 ms，展开 median 6.33 ms
+（单次最大 19.8 ms），折叠 median 2.13 ms；热循环零 plan 重建、导入与 icon 查找。
+旧格式记录的物化缓存（对比 `07b029f0f`，5 个各 10,000 文件的 commit，3 个进程）：
 保留物化节点 20,206，额外 Lua heap 42.7 MiB，RSS 增量 211 MiB，第五次展开加缓存结算 0.83 s；
 单 commit 热展开约 14 ms，折叠约 6.5–6.7 ms。展开中的/当前 commit 不计入 20,000 节点的折叠缓存预算。
 
 `diffview_navigation.lua <count> [baseline] [directories]` 测量真实 action 的路径解析，排除 preview I/O、
-逻辑 cursor acknowledgement 与 UI flush。2026-10-12（对比 `48f30fa57` → `7209211cd`，5 个独立进程交替）：
+逻辑 cursor acknowledgement 与 UI flush。2026-10-21，只测当前版本，5 个独立进程的中位数：
 
-| 场景                            | 冷 J 导航 ms | Lua item 读取 |
-| ------------------------------- | -----------: | ------------: |
-| List，5,000 文件                |        0.069 |             1 |
-| List，50,000 文件               |        0.019 |             1 |
-| 跳过 5,000 个折叠目录后定位文件 |        0.186 |             1 |
+| 场景                            | 冷 J ms | 热 J ms | Lua item 读取 |
+| ------------------------------- | ------: | ------: | ------------: |
+| List，5,000 文件                |   0.013 |   0.011 |             1 |
+| List，50,000 文件               |   0.014 |   0.002 |             1 |
+| 跳过 5,000 个折叠目录后定位文件 |   0.189 |   0.137 |             1 |
 
-- 5,000 文件仅更新 metadata 后，J 为 0.029 ms，Ctrl-j 为 0.740 ms；折叠目录场景的热 J 为 0.188 ms。
+- 5,000 文件仅更新 metadata 后，J 为 0.018 ms，Ctrl-j 为 0.48 ms；折叠目录场景同类操作为 0.21 / 0.69 ms。
   Native leaf 查询仍扫描实际跳过的行，不承诺任意目录分布下为常数时间。
 
 ## 普通 List 与 Find Explorer

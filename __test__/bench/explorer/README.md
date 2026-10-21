@@ -11,10 +11,11 @@ Git state. Git writes are confined to newly created disposable Git fixtures.
 This guide keeps each scenario's method and its latest accepted baseline. Dated
 acceptance logs, superseded measurements and their local evidence paths remain in
 this file's Git history (`git log -p -- __test__/bench/explorer/README.md`).
-The baselines below predate the unified benchmark naming: their `samples` are independent
-processes, `repeats` are iterations within a process, and the standalone Lua probes reported a
-lower-middle p50. They are not directly comparable with current results and are replaced as each
-scenario is measured again.
+The native snapshot that opens [Latest baselines](#latest-baselines) uses the unified result format.
+The older tables after it predate the unified naming: their `samples` are independent processes,
+`repeats` are iterations within a process, and the standalone Lua probes reported a lower-middle p50.
+They also ran on another host against the pre-native baseline, so they are not directly comparable
+with the snapshot and are replaced as each A/B scenario is measured again.
 
 ## Unified runner
 
@@ -545,6 +546,64 @@ Values are independent-process medians in milliseconds; fewer than 20 processes
 support no p95 claim. The baseline checkout is `00ccccfd3`, the pre-native Explorer.
 Each entry names its date and the change it accepted; rerun the unified runner before
 comparing against a different build.
+
+### Native snapshot, unified format (2026-10-21)
+
+`node script/benchmark/explorer.mjs --processes 3`, native only: Apple M5 Pro (6P + 12E) on AC power,
+Darwin 27.0.0, Neovim 0.12.6, libuv 1.53.0, Rust 1.99.0, a verified source-bound release receipt and
+macOS physical footprint. Values are medians of three independent processes after each process's median;
+three processes support no p95 claim. Every case in the matrix passed, including all acceptance drivers.
+
+Widget cases (ms; first flush is 10.6–12.7 ms throughout):
+
+| Case       | Mode |   Ready | Cursor | Scroll | Selection | Visual selection | Refresh ready | Reopen | Open MiB |
+| ---------- | ---- | ------: | -----: | -----: | --------: | ---------------: | ------------: | -----: | -------: |
+| mixed 200  | Tree |  11.844 |  0.261 |  0.684 |     0.409 |            4.988 |         9.510 |  4.699 |     10.5 |
+| mixed 200  | List |  11.111 |  0.248 |  0.758 |     0.407 |            4.835 |        10.166 |  4.261 |     11.0 |
+| flat 1k    | Tree |  32.074 |  0.233 |  0.709 |     0.510 |            4.002 |         9.683 |  4.341 |     14.7 |
+| flat 1k    | List |  31.770 |  0.213 |  0.661 |     0.522 |            3.627 |         9.585 |  5.640 |     14.8 |
+| flat 10k   | Tree | 115.208 |  0.264 |  0.653 |     0.782 |            5.544 |        28.581 |  8.335 |     44.2 |
+| flat 10k   | List | 114.881 |  0.239 |  0.799 |     0.922 |            4.256 |        29.179 |  7.789 |     44.4 |
+| branch 10k | Tree | 118.031 |  0.243 |  0.676 |     0.749 |            5.566 |        36.698 |  8.714 |     40.3 |
+| branch 10k | List | 126.626 |  0.245 |  0.605 |     0.800 |            5.115 |        36.587 |  8.434 |     42.1 |
+| flat 50k   | Tree | 857.852 |  0.221 |  0.680 |     3.499 |            7.434 |       157.175 | 21.302 |    151.5 |
+| flat 50k   | List | 861.067 |  0.211 |  0.627 |     3.329 |            7.416 |       160.041 | 22.349 |    151.6 |
+
+Startup and Git: real-configuration startup is ready at 75.303 ms and visible at 100.408 ms; the first
+default Explorer is ready at 26.290 ms. `git_1000` refresh is ready at 796.519 ms, of which the status
+query takes 792.822 ms, with 21.111 ms main-thread CPU and a 5.139 ms maximum tick gap.
+
+| Copy case           |   Job ms |   CPU ms | Ready ms |
+| ------------------- | -------: | -------: | -------: |
+| One dense 64 MiB    |   20.468 |   12.910 |   26.883 |
+| 100 × 4 B           |   22.479 |   19.249 |   26.276 |
+| 1k × 4 B            |  173.652 |  140.479 |  177.976 |
+| 10k × 4 B           | 1520.837 | 1313.794 | 1524.246 |
+| 1k × 4 KiB          |  163.910 |  141.032 |  168.003 |
+| 1k × 64 KiB         |  195.860 |  164.251 |  198.761 |
+| 1k, source expanded |  159.448 |  146.679 |  173.581 |
+| 1k, target outside  |  164.202 |  141.622 |  168.653 |
+
+Active loading (50k directory):
+
+| Mode | Phase | Input visible ms | Cancel visible ms | Resume ms | Max tick gap ms |
+| ---- | ----- | ---------------: | ----------------: | --------: | --------------: |
+| Tree | Cold  |            0.267 |             1.498 |   888.439 |           4.391 |
+| Tree | Warm  |            0.287 |            10.406 |   224.955 |           3.187 |
+| List | Cold  |            0.226 |            18.277 |   881.004 |           3.826 |
+| List | Warm  |            0.244 |             5.289 |   236.731 |           2.971 |
+
+- Idle visible, hidden and disposed phases each use 0.155–0.254 ms CPU per three seconds with no redraw
+  notifications at 11.5 MiB; the macOS recursive root watch over 97 idle directories uses 0.226 ms.
+- Watch activity: an isolated change is visible after 186 ms at 7.3% main-thread CPU, a continuous stream
+  after 29 ms at 9.0%, and a burst after 124 ms. The 256 MiB sparse-file Job takes 68.9 ms wall time,
+  3.8 ms main-thread CPU and a 6.4 ms maximum tick gap.
+- Soak (200 cycles): the cycle watch median is 186 ms; hidden-view footprint grows from 16.7 to 20.1 MiB
+  and settles at 19.8 MiB after the trace flush.
+- Full configuration: create, rename and delete are confirmed after 28.6, 9.9 and 10.5 ms; the worst cursor
+  during a refresh is 17.1 ms. The vtsls rename edits arrive after 71.6 ms with 6.8 ms of rename I/O.
+- Navigation acceptance: three processes of ten cycles each complete typed selection, nested reveal,
+  removed-root recovery and view release.
 
 ### Browsing (Tree, 2026-10-07 compact browse scan)
 

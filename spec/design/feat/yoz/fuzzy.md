@@ -147,24 +147,23 @@ Find Explorer 与其他设置 pattern 的 Treeview 视图因此与 picker 语义
 
 ## 性能
 
-所有数据来自 Apple M5 Pro（6P + 12E）、外接电源、NVIM v0.12.6，基线为提交 `117a4fc88`。
-以下数字按统一结果格式之前的输出测得（L1/L2 的 p95 不设样本下限），待按当前格式重测后替换。
+所有数据来自 Apple M5 Pro（6P + 12E）、外接电源、NVIM v0.12.6，2026-10-21 按统一结果格式测得，基线为提交 `117a4fc88`。
+L1 / L2 每个语料 3 个进程、每进程 5 轮，p95 为查询级；L3 合并 3 个进程的按键样本，`files_10k_tree` 另以 20 个进程复测，
+p95 同为 32.8 ms。L1 的基线是同一构建中的 `search_in_lines`，L2 的基线是旧 Lua 列表管线。
 
-| 层级 | 场景 | 基线 | 当前 | 预算 |
-| --- | --- | ---: | ---: | --- |
-| L1 Rust | 100k 路径，`fuzzy_rank` p95 | 120 ms（`search_in_lines`） | 2.06 ms | ≤ 4 ms |
-| L1 Rust | 1M 路径，`fuzzy_rank` p95 | 1383 ms | 21.0 ms | ≤ 40 ms |
-| L1 Rust | 100k 路径，`fuzzy_filter` p95 | — | 0.59 ms | — |
-| L2 FFI | 100k 路径，每次按键 p95 | 817 ms，分配 350 MB | 2.87 ms，分配 44 KB | ≤ 8 ms |
-| L3 UI | repo，调度到可见 p95 | 102 ms | 11.4 ms | ≤ 50 ms |
-| L3 UI | 10k 路径（树视图），调度到可见 p95 | 1491 ms | 31.2 ms | ≤ 50 ms |
-| L3 UI | labels 12k（列表），调度到可见 p95 | 83 ms | 18.7 ms | ≤ 50 ms |
-| L3 UI | 100k 路径（树视图），调度到可见 p95 | 14.6 s，且数组输入超限 | 144 ms | 只报告 |
+| 层级    | 场景                                |                         基线 |                       当前 | 预算    |
+| ------- | ----------------------------------- | ---------------------------: | -------------------------: | ------- |
+| L1 Rust | 100k 路径，`fuzzy_rank` p95         |  119 ms（`search_in_lines`） |                    2.04 ms | ≤ 4 ms  |
+| L1 Rust | 1M 路径，`fuzzy_rank` p95           | 1366 ms（`search_in_lines`） |                    22.6 ms | ≤ 40 ms |
+| L1 Rust | 100k 路径，`fuzzy_filter` p95       |                            — |                    0.59 ms | —       |
+| L2 FFI  | 100k 路径，每次按键 p95             |   817 ms，分配中位数 342 MiB | 2.75 ms，分配中位数 55 KiB | ≤ 8 ms  |
+| L3 UI   | repo（树视图），调度到可见 p95      |                      93.5 ms |                    18.6 ms | ≤ 50 ms |
+| L3 UI   | 10k 路径（树视图），调度到可见 p95  |                      1649 ms |                    32.8 ms | ≤ 50 ms |
+| L3 UI   | labels 12k（列表），调度到可见 p95  |                      99.5 ms |                    33.3 ms | ≤ 50 ms |
+| L3 UI   | 100k 路径（树视图），调度到可见 p95 |       16.1 s，且数组输入超限 |                     147 ms | 只报告  |
 
-L3 中匹配本身的 p95 不超过 2.3 ms，Lua `_display` 不超过 2 ms。剩余时间是 Treeview 对结果集的投影、渲染与 Neovim flush：
-
-- 10k 规模的单字符查询约有 6k 行，p50 约 15 ms；
-- 100k 规模的单字符查询约有 8.2 万行，p50 约 108 ms。
+L3 当前实现中匹配本身的 p95 不超过 2.7 ms，Lua `_display` 的 p95 不超过 4.1 ms，两者都出现在 100k 树视图。
+剩余时间是 Treeview 对结果集的投影、渲染与 Neovim flush：100k 树视图调度到可见的中位数为 66 ms，其中匹配只占 1.0 ms。
 
 L3 的预算沿用 [Treeview 性能契约](../../treeview/performance.md) 对 filter/sort 的规定（不超过 50k 候选时 p95 ≤ 50 ms）。
 100k 规模的端到端延迟由 Treeview 投影决定，L3 只报告、不判定。
