@@ -1,5 +1,12 @@
 #! /usr/bin/env bash
 
+# Every tmux CLI call costs a process start plus an IPC round trip, so adjacent
+# independent steps share one `;` queue. tmux drops the rest of a queue after a
+# failing command, so queued commands must not fail on ordinary server state:
+# unsetting a missing hook or option succeeds, errors inside a sourced file do
+# not stop the queue, and the optional local theme uses `source -q`. Commands
+# that can fail, such as session-scoped writes, keep their own invocation.
+
 function _ghc_tmux_set_status_ {
   local status_value=$1
   local current_status
@@ -52,16 +59,15 @@ function _ghc_tmux_status_layout_hooks_ {
 # output or a non-zero exit into view-mode; the next lifecycle event retries.
 # An optional format gate is checked in-server, so events that cannot change
 # renderer-owned state start no process.
-function _ghc_tmux_set_status_layout_hook_ {
-  local layout_hook=$1
-  local event=$2
-  local status_renderer=$3
-  local gate=${4:-}
+function _ghc_tmux_status_layout_hook_command_ {
+  local event=$1
+  local status_renderer=$2
+  local gate=${3:-}
   local command="run-shell -b '$status_renderer apply $event >/dev/null 2>&1 || true'"
   if [ -n "$gate" ]; then
     command="if -F '$gate' \"$command\""
   fi
-  tmux set-hook -g "$layout_hook" "$command"
+  printf '%s\n' "$command"
 }
 
 # Hook gates mirror what the renderer reads. A fixed two-row layout writes no
@@ -78,14 +84,18 @@ function _ghc_tmux_defer_status_bootstrap_ {
 }
 
 function _ghc_tmux_unset_status_layout_hooks_ {
+  local -a args=()
   local layout_hook
-  for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
-    tmux set-hook -gu "$layout_hook" 2>/dev/null || true
-  done
-  # Remove retired hooks: the bell reconcile hook from the previous state
+  # Also remove retired hooks: the bell reconcile hook from the previous state
   # transport, and window-changed, whose render never read window state.
-  tmux set-hook -gu 'alert-bell[40]' 2>/dev/null || true
-  tmux set-hook -gu 'session-window-changed[40]' 2>/dev/null || true
+  for layout_hook in $(_ghc_tmux_status_layout_hooks_) \
+    'alert-bell[40]' 'session-window-changed[40]'; do
+    if [ "${#args[@]}" -gt 0 ]; then
+      args+=(';')
+    fi
+    args+=(set-hook -gu "$layout_hook")
+  done
+  tmux "${args[@]}" 2>/dev/null || true
 }
 
 # The renderer writes both render cache and LAYOUT (rows / status-format / lengths /
@@ -240,8 +250,7 @@ function _ghc_tmux_load_theme_ {
 
   # Lifecycle is fenced before the first renderer-owned reset, so an in-flight
   # hook cannot publish stale status02 options over the selected mode.
-  tmux set -gu status-format 2>/dev/null || true
-  tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
+  tmux set -gu status-format ';' set -gu @GHC_SL_LAYOUT 2>/dev/null || true
   _ghc_tmux_reset_per_session_layout_
 
   case "$status_mode" in
@@ -253,11 +262,11 @@ function _ghc_tmux_load_theme_ {
       status_renderer=$(_ghc_tmux_status_renderer_bin_)
       local status_driver
       status_driver=$(_ghc_tmux_status_driver_bin_)
-      tmux set -g status-justify centre
-      tmux set -g status-position "$status_position"
       # Global single-row baseline; the renderer overrides per session (on/2). Any
       # session without a per-session override falls back to one row, never two.
-      tmux set -g status on
+      tmux set -g status-justify centre ';' \
+        set -g status-position "$status_position" ';' \
+        set -g status on
 
       if [ -z "$status_renderer" ] || [ -z "$status_driver" ]; then
         _ghc_tmux_load_status01_ "$status_position"
@@ -269,17 +278,24 @@ function _ghc_tmux_load_theme_ {
         _ghc_tmux_load_status01_ "$status_position"
         _ghc_tmux_defer_status_bootstrap_
       else
-        tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
         # Attach/detach change the attached-width set, so they share the
         # client-resized event kind. Attach is kept alongside session-changed
         # because older tmux releases do not always fire both.
-        _ghc_tmux_set_status_layout_hook_ 'client-attached[40]' client-resized "$status_renderer" "$_GHC_TMUX_CLIENT_GATE"
-        _ghc_tmux_set_status_layout_hook_ 'client-detached[40]' client-resized "$status_renderer" "$_GHC_TMUX_WIDTH_GATE"
-        _ghc_tmux_set_status_layout_hook_ 'client-resized[40]' client-resized "$status_renderer" "$_GHC_TMUX_WIDTH_GATE"
-        _ghc_tmux_set_status_layout_hook_ 'client-session-changed[40]' session-changed "$status_renderer" "$_GHC_TMUX_CLIENT_GATE"
-        _ghc_tmux_set_status_layout_hook_ 'session-created[40]' session-created "$status_renderer" "$_GHC_TMUX_LISTED_GATE"
-        _ghc_tmux_set_status_layout_hook_ 'session-closed[40]' session-closed "$status_renderer" "$_GHC_TMUX_LISTED_GATE"
-        _ghc_tmux_set_status_layout_hook_ 'session-renamed[40]' session-renamed "$status_renderer"
+        tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf" ';' \
+          set-hook -g 'client-attached[40]' \
+            "$(_ghc_tmux_status_layout_hook_command_ client-resized "$status_renderer" "$_GHC_TMUX_CLIENT_GATE")" ';' \
+          set-hook -g 'client-detached[40]' \
+            "$(_ghc_tmux_status_layout_hook_command_ client-resized "$status_renderer" "$_GHC_TMUX_WIDTH_GATE")" ';' \
+          set-hook -g 'client-resized[40]' \
+            "$(_ghc_tmux_status_layout_hook_command_ client-resized "$status_renderer" "$_GHC_TMUX_WIDTH_GATE")" ';' \
+          set-hook -g 'client-session-changed[40]' \
+            "$(_ghc_tmux_status_layout_hook_command_ session-changed "$status_renderer" "$_GHC_TMUX_CLIENT_GATE")" ';' \
+          set-hook -g 'session-created[40]' \
+            "$(_ghc_tmux_status_layout_hook_command_ session-created "$status_renderer" "$_GHC_TMUX_LISTED_GATE")" ';' \
+          set-hook -g 'session-closed[40]' \
+            "$(_ghc_tmux_status_layout_hook_command_ session-closed "$status_renderer" "$_GHC_TMUX_LISTED_GATE")" ';' \
+          set-hook -g 'session-renamed[40]' \
+            "$(_ghc_tmux_status_layout_hook_command_ session-renamed "$status_renderer")"
 
         local bootstrap_generation="$_GHC_TMUX_STATUS_FENCED_GENERATION"
         if ! "$status_renderer" apply theme-loaded "$bootstrap_generation"; then
@@ -299,15 +315,10 @@ function _ghc_tmux_load_theme_ {
         else
           # Seed fixed-width placeholders so metric pills never render blank values
           # before the first publishable sample; keep live values across reloads.
-          if [ -z "$(tmux show -gqv @GHC_CPU_NOW 2>/dev/null)" ]; then
-            tmux set -g @GHC_CPU_NOW " 0"
-          fi
-          if [ -z "$(tmux show -gqv @GHC_MEM_NOW 2>/dev/null)" ]; then
-            tmux set -g @GHC_MEM_NOW " 0"
-          fi
-          if [ -z "$(tmux show -gqv @GHC_NET_NOW 2>/dev/null)" ]; then
-            tmux set -g @GHC_NET_NOW "↓0B ↑0B"
-          fi
+          # Test emptiness with `==`: a bare `if -F` would treat a value of `0` as unset.
+          tmux if -F '#{==:#{@GHC_CPU_NOW},}' "set -g @GHC_CPU_NOW ' 0'" ';' \
+            if -F '#{==:#{@GHC_MEM_NOW},}' "set -g @GHC_MEM_NOW ' 0'" ';' \
+            if -F '#{==:#{@GHC_NET_NOW},}' "set -g @GHC_NET_NOW '↓0B ↑0B'"
           # status-left/status-format[0] own the tmux-managed #() driver. CAS +
           # leases inside the renderer deduplicate per-client invocations.
           local activation_status
@@ -328,24 +339,18 @@ function _ghc_tmux_load_theme_ {
       ;;
   esac
 
-  if [ "$panestatus_mode" == "01" ]; then
-    tmux set -g pane-border-status top
-    tmux source "$HOME/.config/tmux/conf/theme/panestatus01.tmux.conf"
-  elif [ "$panestatus_mode" == "02" ]; then
-    tmux set -g pane-border-status top
-    tmux source "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
-  elif [ "$panestatus_mode" == "11" ]; then
-    tmux set -g pane-border-status bottom
-    tmux source "$HOME/.config/tmux/conf/theme/panestatus01.tmux.conf"
-  elif [ "$panestatus_mode" == "12" ]; then
-    tmux set -g pane-border-status bottom
-    tmux source "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
-  fi
-
-  if [ -f "$HOME/.config/tmux/local/theme.tmux.conf" ]; then
-    tmux source "$HOME/.config/tmux/local/theme.tmux.conf"
-  fi
-  tmux source "$HOME/.config/tmux/conf/theme.tmux.conf"
+  local theme_dir="$HOME/.config/tmux/conf/theme"
+  local -a pane_status_args=()
+  case "$panestatus_mode" in
+    "01") pane_status_args=(set -g pane-border-status top ';' source "$theme_dir/panestatus01.tmux.conf" ';') ;;
+    "02") pane_status_args=(set -g pane-border-status top ';' source "$theme_dir/panestatus02.tmux.conf" ';') ;;
+    "11") pane_status_args=(set -g pane-border-status bottom ';' source "$theme_dir/panestatus01.tmux.conf" ';') ;;
+    "12") pane_status_args=(set -g pane-border-status bottom ';' source "$theme_dir/panestatus02.tmux.conf" ';') ;;
+  esac
+  tmux "${pane_status_args[@]}" \
+    source -q "$HOME/.config/tmux/local/theme.tmux.conf" ';' \
+    source "$HOME/.config/tmux/conf/theme.tmux.conf"
+  # Without an attached client refresh-client fails, so it stays out of the queue.
   tmux refresh-client -S 2>/dev/null || true
 }
 
