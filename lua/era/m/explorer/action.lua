@@ -482,7 +482,7 @@ function M:auxiliary(kind)
       paths[#paths + 1] = resource:path()
     end
     if kind == "copy_path" then
-      era.fn.select_copy_filepaths({ filepaths = paths, winopts = { relative = "cursor", row = 1, col = 4 } })
+      era.fn.select_copy_filepaths({ filepaths = paths, relative = "cursor", row = 1, col = 4 })
     elseif kind == "quickfix" then
       local items = {}
       for _, path in ipairs(paths) do

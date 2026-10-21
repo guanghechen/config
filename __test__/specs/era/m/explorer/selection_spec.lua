@@ -52,6 +52,36 @@ local function make_pending(selected)
   t.assert_eq(1, inspected.subtree_roots:len())
 end
 
+t:test("copying paths offers the choices one row below and four columns right of the cursor", function()
+  local selected = selected_directory()
+  local parent = vim.api.nvim_get_current_win() ---@type integer
+  -- A float opened with the intended offset from the same cursor gives the expected placement.
+  local reference = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, {
+    relative = "cursor",
+    row = 1,
+    col = 4,
+    width = 1,
+    height = 1,
+  })
+  local expected = vim.api.nvim_win_get_config(reference)
+  vim.api.nvim_win_close(reference, true)
+
+  await(selected.action:auxiliary("copy_path"))
+  local popup = vim.api.nvim_get_current_win() ---@type integer
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(popup) then
+      vim.api.nvim_win_close(popup, true)
+    end
+  end)
+
+  t.assert_eq(stl.e.WinTypeEnum.SELECT, vim.w[popup].wintype, "the copy choices")
+  local config = vim.api.nvim_win_get_config(popup)
+  t.assert_eq(expected.relative, config.relative, "relative to the cursor")
+  t.assert_eq(parent, config.win, "anchored to the Explorer window")
+  t.assert_eq(expected.row, config.row, "one row below the cursor")
+  t.assert_eq(expected.col, config.col, "four columns right of the cursor")
+end)
+
 t:test("read-only selection loads missing children without scanning a fully selected directory", function()
   local selected = selected_directory()
   local captured
