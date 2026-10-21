@@ -10,8 +10,8 @@
     },
     {
       "name": "kit-copilot",
-      "cmd": "kit",
-      "args": ["copilot", "start"],
+      "cmd": "kit-copilot",
+      "args": ["start"],
       "autostart": true,
       "autorestart": true,
       "maxRestarts": 16,
@@ -22,8 +22,7 @@
     {
       "name": "kit-shot",
       "platforms": ["osx"],
-      "cmd": "kit",
-      "args": ["shot"],
+      "cmd": "kit-shot",
       "autostart": true,
       "lifecycle": {
         "start": ["start"],
@@ -48,8 +47,7 @@
     {
       "name": "kit-touchpad",
       "platforms": ["osx"],
-      "cmd": "kit",
-      "args": ["touchpad"],
+      "cmd": "kit-touchpad",
       "autostart": false,
       "lifecycle": {
         "start": ["start", "--request-permissions"],
