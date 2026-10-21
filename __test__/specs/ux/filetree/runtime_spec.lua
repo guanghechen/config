@@ -314,12 +314,14 @@ t:test("prepared and unlocked hidden tasks release deadline polling demand", fun
     end,
   }))
   local state = await(data:create_state())
-  local owner, calls, sleeping = data._tree, 0, false
+  -- A poll that returns a value keeps the owner polling. Requests that settle at once leave their
+  -- wakeup poll for a later tick, which may land in an idle window; it must find nothing to do.
+  local owner, demands, sleeping = data._tree, 0, false
   local poll = owner._poll
   t:patch_table(owner, "_poll", function(self)
-    calls = calls + 1
     local value = poll(self)
     sleeping = value == nil
+    demands = demands + (sleeping and 0 or 1)
     return value
   end)
   local task = await(state:lock_selection(1000))
@@ -327,24 +329,26 @@ t:test("prepared and unlocked hidden tasks release deadline polling demand", fun
   t.wait_until(function()
     return sleeping
   end, 5000)
-  local idle_calls = calls
+  local idle_demands = demands
   vim.wait(1100, function()
     return false
   end, 50)
   t.assert_true(state:status().locked, "prepared tasks survive their preparation deadline")
-  t.assert_eq(idle_calls, calls)
+  t.assert_true(sleeping, "prepared tasks keep the owner asleep")
+  t.assert_eq(idle_demands, demands, "the preparation deadline adds no polling demand")
   await(task:unlock())
   task = await(state:lock_selection(1000))
   await(task:unlock())
   t.wait_until(function()
     return sleeping
   end, 5000)
-  idle_calls = calls
+  idle_demands = demands
   vim.wait(50, function()
     return false
   end, 50)
   t.assert_false(state:status().locked)
-  t.assert_eq(idle_calls, calls)
+  t.assert_true(sleeping, "unlocked tasks leave the owner asleep")
+  t.assert_eq(idle_demands, demands, "unlocked tasks release polling demand")
   t.assert_eq(0, failures)
 end)
 
