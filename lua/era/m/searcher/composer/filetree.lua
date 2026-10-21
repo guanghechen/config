@@ -544,14 +544,7 @@ function M.new(props)
 
       ---@return nil
       local function handle()
-        era.fn.select_copy_filepath({
-          filepath = data.filepath,
-          winopts = {
-            relative = "cursor",
-            row = 1,
-            col = 4,
-          },
-        })
+        era.fn.select_copy_filepath({ filepath = data.filepath, relative = "cursor", row = 1, col = 4 })
       end
 
       if winnr_current == winnr_result then
