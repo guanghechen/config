@@ -2,8 +2,11 @@
 
 本文补充[测试架构](arch.md)中的执行与失败契约。Lua/Node 测试位于 `__test__/`，Rust unit tests 位于对应 crate 的源码模块。
 
-Repository health check 依次执行各语言检查，并保留各 runner 的退出码；某项失败不跳过后续检查：
+Repository health check（`node script/healcheck.mjs`）依次执行各项检查，并保留各 runner 的退出码；某项失败不跳过后续检查：
 
+- Format：`script/format-check.mjs` 以固定版本（`STYLUA_VERSION`）的 Mason StyLua 检查全部 Lua，并运行
+  `cargo fmt --all --check`；两者均不得报告差异。
+- LuaLS：`script/luals-check.mjs` 不得报告 Warning 或 Error。
 - Node：通过 `node --test` 执行 `__test__/node/` 下的 specs。
 - Lua：通过 `__test__/run.lua` 执行 specs。
 - Rust：执行 `cargo test --workspace --all-targets`；Cargo 编译对应 crate 内的 `#[cfg(test)]` 测试模块。

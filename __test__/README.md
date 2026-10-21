@@ -176,9 +176,8 @@ nvim -l __test__/run.lua --jobs 1
 node --test __test__/node/*.test.mjs
 cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --quiet
 
-# Formatting, the LuaLS baseline, and the existing repository-wide health check
-~/.local/share/nvim/mason/bin/stylua --check __test__
-cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+# Formatting (pinned StyLua and rustfmt), the LuaLS baseline, and the repository-wide health check
+node script/format-check.mjs
 node script/luals-check.mjs
 node script/healcheck.mjs
 ```

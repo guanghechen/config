@@ -1,18 +1,11 @@
 // Run with: node script/luals-check.mjs
 // Repository LuaLS baseline: the pinned lua-language-server must report no Warning or Error.
-import { spawnSync } from "node:child_process"
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-} from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+
+import { masonBin, resolveNeovim, run } from "./tooling.mjs"
 
 // Diagnostics differ between LuaLS releases; bump only together with a clean re-check.
 export const LUALS_VERSION = "3.19.1"
@@ -21,23 +14,6 @@ const SEVERITY = { 1: "Error", 2: "Warning" }
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(scriptDir, "..")
-
-function run(command, args, { statuses = [0], ...options } = {}) {
-  const result = spawnSync(command, args, { encoding: "utf8", ...options })
-  if (result.error) throw new Error(`${command}: ${result.error.message}`)
-  if (!statuses.includes(result.status)) {
-    const detail = result.stderr?.trim() || `status ${result.status ?? result.signal}`
-    throw new Error(`${command} ${args.join(" ")}: ${detail}`)
-  }
-  return result
-}
-
-function resolveNeovim() {
-  const lua =
-    "io.stdout:write(vim.json.encode({ version = tostring(vim.version()), " +
-    'runtime = vim.env.VIMRUNTIME, data = vim.fn.stdpath("data") }))'
-  return JSON.parse(run("nvim", ["--clean", "--headless", "-c", `lua ${lua}`, "-c", "qa!"]).stdout)
-}
 
 export function checkVersion(output) {
   const version = output.trim()
@@ -99,7 +75,7 @@ export function formatDiagnostic({ filepath, line, col, severity, code, message 
 
 function check() {
   const neovim = resolveNeovim()
-  const bin = join(neovim.data, "mason", "bin", "lua-language-server")
+  const bin = masonBin(neovim, "lua-language-server")
   if (!existsSync(bin)) throw new Error(`missing ${bin}; run :MasonInstall lua-language-server@${LUALS_VERSION}`)
   const version = checkVersion(run(bin, ["--version"]).stdout)
 

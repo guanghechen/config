@@ -38,6 +38,7 @@ yoz -> stl -> dot -> era -> ark/vendor
 - Rust unit tests live in the corresponding `rust/<crate>/src/` modules under `#[cfg(test)]`; shared Rust test support stays in the crate's `#[cfg(test)]` `test_support.rs` modules, and production code carries no test hooks.
 - Lua specs use `__test__/specs/**/*_spec.lua`; run them with `nvim -l __test__/run.lua [path-filter]`. Node tests use `__test__/node/` with `node --test`; Rust tests use `cargo test --manifest-path rust/Cargo.toml --workspace --all-targets`. Native specs load the library `node script/build.mjs` installs for this platform (`lua/yoz.so`, or `lua/yoz.dll` on Windows) through `require("yoz")`. See `__test__/README.md`.
 - LuaLS baseline: `node script/luals-check.mjs` must report no Warning or Error. It checks tracked and unignored Lua files with Mason's `lua-language-server` pinned by `LUALS_VERSION` and the runtime, library (`$VIMRUNTIME/lua`, luv), and diagnostics settings in `.luarc.json`, which also govern the editor for this repository; bump the pin only together with a clean re-check.
+- Formatting: `node script/format-check.mjs` must report no difference. It runs Mason's `stylua` pinned by `STYLUA_VERSION` over the repository (`.stylua.toml`, `.styluaignore`, `.gitignore`) and `cargo fmt --all --check`. Keep a deliberately compact or column-aligned table with a statement-level `-- stylua: ignore`; StyLua ignores `ignore start/end` inside a table constructor. Both checks run in `node script/healcheck.mjs`.
 
 ## Module Usage Guidance (`yoz` / `stl` / `dot`)
 
