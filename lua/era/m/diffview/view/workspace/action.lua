@@ -6,9 +6,7 @@ local layout_util = require("era.m.diffview.layout")
 local pane_changes = require("era.m.diffview.pane.changes")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 local util = require("era.m.diffview.util")
-local workspace_state = require("era.m.diffview.view.workspace.state")
 local workspace_view = require("era.m.diffview.view.workspace.view")
-local pending_discards = {} ---@type table<era.m.diffview.view.workspace.State, table<string, stl.c.Future>>
 
 ---Workspace view actions.
 ---@class era.m.diffview.view.workspace.action
@@ -22,15 +20,18 @@ local M = {}
 ---@field public code                   integer
 ---@field public stderr                 string
 
+---What workspace actions and views act on; the workspace session implements it.
 ---@class era.m.diffview.view.workspace.IContext
 ---@field public layout                  era.m.diffview.view.workspace.ILayout
 ---@field public state                   era.m.diffview.view.workspace.State
----@field public history                 era.m.diffview.view.commits.IContext|nil
----@field public get_keymaps             (fun(): stl.t.IKeymap[])|nil
----@field public setup_changes           (fun(): nil)|nil
----@field public setup_history           (fun(): nil)|nil
----@field public setup_keymaps           (fun(): nil)|nil
----@field public setup_sbs               (fun(bufnr: integer): nil)|nil
+---@field public history                 era.m.diffview.view.commits.IContext
+---@field public pending_discards        table<string, stl.c.Future> Untracked discards in flight, by path.
+---@field public close                   fun(self: era.m.diffview.view.workspace.IContext): nil
+---@field public get_keymaps             fun(self: era.m.diffview.view.workspace.IContext): stl.t.IKeymap[]
+---@field public setup_changes           fun(self: era.m.diffview.view.workspace.IContext): nil
+---@field public setup_history           fun(self: era.m.diffview.view.workspace.IContext): nil
+---@field public setup_keymaps           fun(self: era.m.diffview.view.workspace.IContext): nil
+---@field public setup_sbs               fun(self: era.m.diffview.view.workspace.IContext, bufnr: integer): nil
 
 ----------------------------------------------------------------------------------------------------
 -- Local helpers
@@ -723,11 +724,10 @@ function M.reset(ctx)
     local paths = require("ux.filetree.path")
     local state, relative = ctx.state, entry.filepath
     local path = paths.from_os(util.workspace_path(relative))
-    local pending = pending_discards[state] or {}
+    local pending = ctx.pending_discards
     if pending[path] then
       return pending[path]
     end
-    pending_discards[state] = pending
     local future = Jobs.capture(path):then_(function(captured)
       if state:is_disposed() then
         return nil
@@ -742,9 +742,6 @@ function M.reset(ctx)
     pending[path] = future
     future:finally(function(ok, result)
       pending[path] = nil
-      if next(pending) == nil then
-        pending_discards[state] = nil
-      end
       if ok and result == nil then
         return
       end
@@ -894,9 +891,7 @@ function M.reveal(ctx)
   end
 
   workspace_view.show_changes(ctx.layout)
-  if ctx.setup_changes ~= nil then
-    ctx.setup_changes()
-  end
+  ctx:setup_changes()
 
   local current = ctx.state:get_current_entry()
   if current and current.stage_type then
@@ -1215,10 +1210,35 @@ end
 ---Close the diffview
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.close(ctx)
-  require("era.m.diffview.view.commits.state").remove(ctx.layout.tabnr)
-  workspace_state.remove(ctx.layout.tabnr)
-  workspace_view.remove_layout(ctx.layout.tabnr)
-  workspace_view.destroy(ctx.layout)
+  ctx:close()
+end
+
+---Toggle History, preparing and focusing it when it appears.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.toggle_history(ctx)
+  local lyt = ctx.layout
+  workspace_view.toggle_history(lyt)
+  if lyt.history.commits_winnr and vim.api.nvim_win_is_valid(lyt.history.commits_winnr) then
+    ctx:setup_history()
+    require("era.m.diffview.view.commits.view").render_commits(ctx.history)
+    workspace_view.focus_history(lyt)
+  end
+end
+
+---Toggle the whole sidebar, restoring Changes and History and focusing the current entry when it appears.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+function M.toggle_sidebar(ctx)
+  local lyt = ctx.layout
+  local _, visible = workspace_view.toggle_sidebar(lyt)
+  if not visible then
+    return
+  end
+  ctx:setup_changes()
+  workspace_view.render_changes(ctx)
+  ctx:setup_history()
+  require("era.m.diffview.view.commits.view").render_commits(ctx.history)
+  local current = ctx.state:get_current_entry()
+  workspace_view.focus_changes(lyt, current and current.stage_type or nil)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1228,11 +1248,9 @@ end
 ---Show keymap help
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.show_help(ctx)
-  local keymaps = ctx.get_keymaps and ctx.get_keymaps() or {} ---@type stl.t.IKeymap[]
-
   local sheet = era.view.Keysheet.new({
     title = "Diffview Workspace Keybindings",
-    keymaps = keymaps,
+    keymaps = ctx:get_keymaps(),
   })
   sheet:open()
 end

@@ -284,19 +284,19 @@ t:test("workspace status assigns fold default to flag 3 and untracked to flag 4"
     },
   })
   t:patch_table(package.loaded, "era.m.diffview.config", { FT = { CHANGES = "diffview-changes-test" } })
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {
-    get = function()
+  t:patch_table(package.loaded, "era.m.diffview.session", {
+    workspace = function()
       return {
-        get_entries = function()
-          return {}
-        end,
+        layout = {},
+        state = {
+          get_entries = function()
+            return {}
+          end,
+        },
       }
     end,
   })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
-    get_layout = function()
-      return {}
-    end,
     get_visible_entries = function(entries)
       return entries
     end,

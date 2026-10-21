@@ -7,7 +7,6 @@ local layout_util = require("era.m.diffview.layout")
 local pane_commits = require("era.m.diffview.pane.commits")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 local util = require("era.m.diffview.util")
-local commits_state = require("era.m.diffview.view.commits.state")
 local commits_view = require("era.m.diffview.view.commits.view")
 
 ---Commits view actions.
@@ -17,14 +16,6 @@ local M = {}
 ----------------------------------------------------------------------------------------------------
 -- Local helpers
 ----------------------------------------------------------------------------------------------------
-
----@param ctx                           era.m.diffview.view.commits.IContext
----@return nil
-local function setup_keymaps(ctx)
-  if ctx.setup_keymaps ~= nil then
-    ctx.setup_keymaps()
-  end
-end
 
 ---Get current buffer and cursor line number
 ---@return integer bufnr, integer lnum
@@ -785,14 +776,20 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.toggle_commits(ctx)
   ctx.layout = commits_view.toggle_commits(ctx)
-  commits_view.set_layout(ctx.layout.tabnr, ctx.layout)
+  if ctx.layout.commits_winnr and vim.api.nvim_win_is_valid(ctx.layout.commits_winnr) then
+    commits_view.render_commits(ctx)
+    vim.api.nvim_set_current_win(ctx.layout.commits_winnr)
+  end
 end
 
 ---Toggle filetree panel visibility
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.toggle_filetree(ctx)
   ctx.layout = commits_view.toggle_filetree(ctx)
-  commits_view.set_layout(ctx.layout.tabnr, ctx.layout)
+  if ctx.layout.filetree_winnr and vim.api.nvim_win_is_valid(ctx.layout.filetree_winnr) then
+    commits_view.render_filetree(ctx)
+    vim.api.nvim_set_current_win(ctx.layout.filetree_winnr)
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -966,10 +963,9 @@ function M.switch_to_layout(ctx, layout_type)
 
   -- Switch layout
   local new_lyt = commits_view.switch_layout(ctx.layout, layout_type)
-  commits_view.set_layout(ctx.layout.tabnr, new_lyt)
   ctx.layout = new_lyt
 
-  setup_keymaps(ctx)
+  ctx:setup_keymaps()
 
   -- Re-render and focus
   commits_view.render_commits(ctx)
@@ -1031,10 +1027,9 @@ function M.cycle_layout(ctx)
   -- Switch layout
   local new_lyt = commits_view.switch_layout(ctx.layout, next_layout_type)
 
-  commits_view.set_layout(ctx.layout.tabnr, new_lyt)
   ctx.layout = new_lyt
 
-  setup_keymaps(ctx)
+  ctx:setup_keymaps()
 
   -- Re-render and focus
   commits_view.render_commits(ctx)
@@ -1097,10 +1092,9 @@ function M.prev_layout(ctx)
   -- Switch layout
   local new_lyt = commits_view.switch_layout(ctx.layout, prev_layout_type)
 
-  commits_view.set_layout(ctx.layout.tabnr, new_lyt)
   ctx.layout = new_lyt
 
-  setup_keymaps(ctx)
+  ctx:setup_keymaps()
 
   -- Re-render and focus
   commits_view.render_commits(ctx)
@@ -1273,9 +1267,7 @@ end
 ---Close the diffview
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.close(ctx)
-  commits_state.remove(ctx.layout.tabnr)
-  commits_view.remove_layout(ctx.layout.tabnr)
-  commits_view.destroy(ctx.layout)
+  ctx:close()
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1285,11 +1277,9 @@ end
 ---Show keymap help
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.show_help(ctx)
-  local keymaps = ctx.get_keymaps and ctx.get_keymaps() or {} ---@type stl.t.IKeymap[]
-
   local sheet = era.view.Keysheet.new({
     title = "Diffview Commits Keybindings",
-    keymaps = keymaps,
+    keymaps = ctx:get_keymaps(),
   })
   sheet:open()
 end

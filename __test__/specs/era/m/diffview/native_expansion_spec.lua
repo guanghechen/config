@@ -1,5 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local treeview = require("__test__.support.treeview")
 local panels = require("era.m.diffview.pane.tree")
 local commits = require("era.m.diffview.pane.commits")
@@ -54,10 +55,10 @@ local function history(files)
   local commit = { hash = "review", abbrev_hash = "review", author = "A", date = 0, message = "review", files = files }
   state:set_commits({ commit })
   state:set_current_commit(commit)
-  local ctx = {
+  local ctx = diffview.commits_context({
     state = state,
     layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr },
-  }
+  })
   treeview.await(commits_view.render_commits(ctx))
   return ctx, state:get_tree("commits")
 end
@@ -95,7 +96,7 @@ t:test("workspace History preserves its single spacer through native publication
     state:dispose()
   end)
   state:set_commits({ { hash = "history", abbrev_hash = "history", author = "A", date = 0, message = "history" } })
-  local ctx = { layout = layout.history, state = state }
+  local ctx = diffview.commits_context({ layout = layout.history, state = state })
   treeview.await(commits_view.render_commits(ctx))
   local winnr = layout.history.commits_winnr
   t.assert_eq("no", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
@@ -273,7 +274,7 @@ t:test("Changes actions update expansion without rebuilding either pane's record
   }
   state:set_entries(files)
   state:set_current_entry(files[1])
-  local ctx = {
+  local ctx = diffview.workspace_context({
     state = state,
     layout = {
       tabnr = state.tabnr,
@@ -282,7 +283,7 @@ t:test("Changes actions update expansion without rebuilding either pane's record
         unstaged = { stage_type = "unstaged" },
       },
     },
-  }
+  })
   treeview.await(workspace_view.render_changes(ctx))
   local owner = state:get_tree("staged")
   local imports, import = 0, owner._import

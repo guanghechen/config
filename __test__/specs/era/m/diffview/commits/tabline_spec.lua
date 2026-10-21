@@ -86,15 +86,12 @@ local state = {
 }
 
 t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
-t:patch_table(package.loaded, "era.m.diffview.view.commits.state", {
-  get = function()
-    return state
+t:patch_table(package.loaded, "era.m.diffview.session", {
+  commits = function()
+    return { state = state, layout = layout }
   end,
 })
 t:patch_table(package.loaded, "era.m.diffview.view.commits.view", {
-  get_layout = function()
-    return layout
-  end,
   render_commits = function() end,
 })
 t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {

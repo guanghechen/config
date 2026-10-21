@@ -27,16 +27,18 @@ local M = {}
 ---@field public sbs_right_winnr         integer|nil
 ---@field public title                   string|nil
 
+---What commits actions and views act on: a log session, or the workspace's History.
 ---@class era.m.diffview.view.commits.IContext
 ---@field public layout                  era.m.diffview.view.commits.ILayout
 ---@field public state                   era.m.diffview.view.commits.State
----@field public begin_preview           (fun(): fun(): boolean)|nil
----@field public get_keymaps             (fun(): stl.t.IKeymap[])|nil
----@field public setup_commits           (fun(): nil)|nil
----@field public setup_filetree          (fun(): nil)|nil
----@field public setup_keymaps           (fun(): nil)|nil
----@field public setup_sbs               (fun(bufnr: integer): nil)|nil
----@field public render_winline          (fun(): nil)|nil
+---@field public begin_preview           fun(self: era.m.diffview.view.commits.IContext): fun(): boolean Starts a preview; the result tells whether it is still current.
+---@field public close                   fun(self: era.m.diffview.view.commits.IContext): nil
+---@field public get_keymaps             fun(self: era.m.diffview.view.commits.IContext): stl.t.IKeymap[]
+---@field public render_winline          fun(self: era.m.diffview.view.commits.IContext): nil
+---@field public setup_commits           fun(self: era.m.diffview.view.commits.IContext): nil
+---@field public setup_filetree          fun(self: era.m.diffview.view.commits.IContext): nil
+---@field public setup_keymaps           fun(self: era.m.diffview.view.commits.IContext): nil
+---@field public setup_sbs               fun(self: era.m.diffview.view.commits.IContext, bufnr: integer): nil
 
 ----------------------------------------------------------------------------------------------------
 -- Layout creation
@@ -430,9 +432,7 @@ function M.show_commits(ctx)
   pane_commits.apply_winopts(commits_winnr)
 
   lyt.commits_winnr = commits_winnr
-  if ctx.setup_commits ~= nil then
-    ctx.setup_commits()
-  end
+  ctx:setup_commits()
 
   return lyt
 end
@@ -494,9 +494,7 @@ function M.show_filetree(ctx)
   pane_filetree.apply_winopts(filetree_winnr)
 
   lyt.filetree_winnr = filetree_winnr
-  if ctx.setup_filetree ~= nil then
-    ctx.setup_filetree()
-  end
+  ctx:setup_filetree()
 
   return lyt
 end
@@ -727,9 +725,7 @@ function M.render_commits(ctx, include_files, omitted)
   local future = pane_commits.apply_to_buffer(lyt.commits_bufnr, result, owner, function(frame)
     if not state:is_disposed() then
       state:materialization():observe(frame)
-      if ctx.render_winline then
-        ctx.render_winline()
-      end
+      ctx:render_winline()
     end
   end)
   return future
@@ -779,7 +775,7 @@ function M.open_entry(ctx, commit, entry, token)
   if not lyt.sbs_right_winnr or not vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
     return
   end
-  local is_current = ctx.begin_preview and ctx.begin_preview() or nil ---@type (fun(): boolean)|nil
+  local is_current = ctx:begin_preview()
 
   pane_sbs.open_commit_entry({
     left_winnr = lyt.sbs_left_winnr,
@@ -792,24 +788,22 @@ function M.open_entry(ctx, commit, entry, token)
       return ctx.state:get_fold_unchanged()
     end,
   })
-  if is_current and not is_current() then
+  if not is_current() then
     return
   end
   if not vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) or not vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
     return
   end
 
-  if ctx.setup_sbs ~= nil then
-    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
-    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
-  end
+  ctx:setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
+  ctx:setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
 end
 
 ---Clear sbs view
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.clear_sbs(ctx)
   local lyt = ctx.layout
-  local is_current = ctx.begin_preview and ctx.begin_preview() or nil ---@type (fun(): boolean)|nil
+  local is_current = ctx:begin_preview()
 
   if
     lyt.sbs_left_winnr
@@ -824,34 +818,6 @@ function M.clear_sbs(ctx)
       end,
     })
   end
-end
-
-----------------------------------------------------------------------------------------------------
--- Storage
-----------------------------------------------------------------------------------------------------
-
----@type table<integer, era.m.diffview.view.commits.ILayout>
-M.__layouts__ = {}
-
----Store layout instance
----@param tabnr                          integer
----@param lyt                            era.m.diffview.view.commits.ILayout
-function M.set_layout(tabnr, lyt)
-  M.__layouts__[tabnr] = lyt
-end
-
----Get layout instance
----@param tabnr                          integer|nil
----@return era.m.diffview.view.commits.ILayout|nil
-function M.get_layout(tabnr)
-  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
-  return M.__layouts__[tabnr]
-end
-
----Remove layout instance
----@param tabnr                          integer
-function M.remove_layout(tabnr)
-  M.__layouts__[tabnr] = nil
 end
 
 return M

@@ -148,7 +148,7 @@ t:test("hiding untracked files selects the first remaining rendered entry", func
     end
     return visible
   end
-  local ctx = {
+  local ctx = require("__test__.support.diffview").workspace_context({
     layout = {
       changes = {
         staged = { stage_type = "staged" },
@@ -173,7 +173,7 @@ t:test("hiding untracked files selects the first remaining rendered entry", func
         current = entry
       end,
     },
-  }
+  })
 
   action.toggle_untracked(ctx)
 
@@ -212,7 +212,7 @@ t:test("cross-pane navigation follows visible changes order and wraps", function
     }
   end, opened, { alpha, hidden, beta })
 
-  local ctx = {
+  local ctx = require("__test__.support.diffview").workspace_context({
     layout = {
       changes = {
         staged = { stage_type = "staged", bufnr = staged_bufnr, winnr = staged_winnr },
@@ -237,7 +237,7 @@ t:test("cross-pane navigation follows visible changes order and wraps", function
         current = entry
       end,
     },
-  }
+  })
 
   action.goto_next_entry(ctx)
   t.assert_eq(beta, current, "next visible entry")
@@ -283,7 +283,7 @@ t:test("navigation skips hidden current entry without losing direction", functio
   }
   local action = load_action(line_map, opened, { before, hidden, after })
   local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local ctx = {
+  local ctx = require("__test__.support.diffview").workspace_context({
     layout = {
       changes = {
         staged = { stage_type = "staged" },
@@ -308,7 +308,7 @@ t:test("navigation skips hidden current entry without losing direction", functio
         current = entry
       end,
     },
-  }
+  })
 
   action.goto_next_entry(ctx)
   t.assert_eq(after, current, "next visible entry after hidden current")
@@ -327,7 +327,7 @@ t:test("navigation does not enter entries hidden by the rendered panel", functio
   local action = load_action({ { type = "header" }, { type = "directory", uuid = "collapsed" } }, opened)
   local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local current = hidden
-  local ctx = {
+  local ctx = require("__test__.support.diffview").workspace_context({
     layout = {
       changes = {
         staged = { stage_type = "staged" },
@@ -352,7 +352,7 @@ t:test("navigation does not enter entries hidden by the rendered panel", functio
         current = entry
       end,
     },
-  }
+  })
 
   action.goto_next_entry(ctx)
   t.assert_eq(hidden, current, "selection unchanged")
@@ -385,7 +385,7 @@ t:test("reveal expands hidden entry ancestors, focuses the entry, then hides Cha
       unstaged = { stage_type = "unstaged", bufnr = changes_bufnr, winnr = changes_winnr },
     },
   }
-  local ctx = {
+  local ctx = require("__test__.support.diffview").workspace_context({
     layout = lyt,
     state = {
       get_tree = function()
@@ -404,7 +404,7 @@ t:test("reveal expands hidden entry ancestors, focuses the entry, then hides Cha
         return current
       end,
     },
-  }
+  })
 
   action.reveal(ctx)
   t.assert_false(collapsed, "ancestor expanded")
@@ -430,7 +430,7 @@ t:test("navigation falls back to state order without a changes panel", function(
   local current = alpha
   local opened = {} ---@type era.m.diffview.IFileEntry[]
   local action = load_action(nil, opened)
-  local ctx = {
+  local ctx = require("__test__.support.diffview").workspace_context({
     layout = {
       changes = {
         staged = { stage_type = "staged" },
@@ -455,7 +455,7 @@ t:test("navigation falls back to state order without a changes panel", function(
         current = entry
       end,
     },
-  }
+  })
 
   action.goto_next_entry(ctx)
   t.assert_eq(beta, current, "fallback next")
@@ -477,7 +477,7 @@ t:test("goto file preserves a literal POSIX backslash", function()
   vim.cmd.tabnew()
   local diff_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local changes_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local ctx = {
+  local ctx = require("__test__.support.diffview").workspace_context({
     layout = { changes_bufnr = changes_bufnr },
     state = {
       get_tree = function()
@@ -491,7 +491,7 @@ t:test("goto file preserves a literal POSIX backslash", function()
         return { filepath = relative, stage_type = "unstaged", status = "M" }
       end,
     },
-  }
+  })
 
   action.goto_file(ctx)
 
@@ -504,6 +504,56 @@ t:test("goto file preserves a literal POSIX backslash", function()
   vim.api.nvim_buf_delete(changes_bufnr, { force = true })
   vim.fn.delete(repo, "rf")
   workspace = "/repo"
+end)
+
+t:test("toggle_sidebar restores Changes and History, then focuses the current entry", function()
+  local action = load_action({}, {})
+  local view = package.loaded["era.m.diffview.view.workspace.view"]
+  local calls = {} ---@type string[]
+  local visible = false
+  t:patch_table(view, "toggle_sidebar", function(lyt)
+    calls[#calls + 1] = "toggle"
+    visible = not visible
+    return lyt, visible
+  end)
+  t:patch_table(view, "render_changes", function()
+    calls[#calls + 1] = "render_changes"
+  end)
+  t:patch_table(view, "focus_changes", function(_, stage_type)
+    calls[#calls + 1] = "focus_" .. tostring(stage_type)
+  end)
+  local history = {}
+  t:patch_table(package.loaded, "era.m.diffview.view.commits.view", {
+    render_commits = function(actual)
+      t.assert_true(actual == history, "the session's History")
+      calls[#calls + 1] = "render_history"
+    end,
+  })
+  local ctx = require("__test__.support.diffview").workspace_context({
+    layout = {},
+    history = history,
+    state = {
+      get_current_entry = function()
+        return { stage_type = "unstaged" }
+      end,
+    },
+    setup_changes = function()
+      calls[#calls + 1] = "setup_changes"
+    end,
+    setup_history = function()
+      calls[#calls + 1] = "setup_history"
+    end,
+  })
+
+  action.toggle_sidebar(ctx)
+  t.assert_eq(
+    "toggle,setup_changes,render_changes,setup_history,render_history,focus_unstaged",
+    table.concat(calls, ","),
+    "showing restores the sidebar"
+  )
+  calls = {}
+  action.toggle_sidebar(ctx)
+  t.assert_eq("toggle", table.concat(calls, ","), "hiding renders nothing")
 end)
 
 t:run()

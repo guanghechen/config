@@ -27,49 +27,6 @@ function Observable:dispose()
   self.disposed = true
 end
 
----@param path                           string
----@param field                          string
-local function verify_invalid_handle_cleanup(path, field)
-  local valid = true
-  local callback
-  local deleted_autocmd
-
-  t:patch_global("stl", { c = { Observable = Observable } })
-  t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
-  t:patch_table(vim.api, "nvim_create_autocmd", function(_, opts)
-    callback = opts.callback
-    return 77
-  end)
-  t:patch_table(vim.api, "nvim_del_autocmd", function(autocmd_id)
-    deleted_autocmd = autocmd_id
-  end)
-  t:patch_table(vim.api, "nvim_tabpage_is_valid", function()
-    return valid
-  end)
-
-  local State = assert(loadfile(path))()
-  local state = State.create(101, true)
-
-  callback({ file = "1" })
-  local retained_while_valid = State.get(101) == state
-
-  valid = false
-  callback({ file = "1" })
-
-  t.assert_true(retained_while_valid, "state retained for valid handle")
-  t.assert_nil(State.get(101), "state removed for invalid handle")
-  t.assert_true(state[field].disposed, "state observables disposed")
-  t.assert_eq(77, deleted_autocmd, "TabClosed autocmd deletion")
-end
-
-t:test("workspace state cleanup follows tabpage handle validity", function()
-  verify_invalid_handle_cleanup("lua/era/m/diffview/view/workspace/state.lua", "entries")
-end)
-
-t:test("commits state cleanup follows tabpage handle validity", function()
-  verify_invalid_handle_cleanup("lua/era/m/diffview/view/commits/state.lua", "commits")
-end)
-
 t:test("commits content requests use latest-writer ownership and invalidate on dispose", function()
   t:patch_global("stl", { c = { Observable = Observable } })
   t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
@@ -181,38 +138,24 @@ t:test("workspace and commits keep independent per-view diff fold policies", fun
   commits:dispose()
 end)
 
-t:test("workspace state disposes its refresh owner after unsubscribing", function()
-  local disposed = {} ---@type string[]
-  local deleted_autocmd = nil ---@type integer|nil
+t:test("workspace state disposes its refresh owner and then ignores refreshes", function()
+  local disposed = 0
   t:patch_global("stl", { c = { Observable = Observable } })
-  t:patch_table(vim.api, "nvim_del_autocmd", function(autocmd_id)
-    deleted_autocmd = autocmd_id
-  end)
   local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
   local uninitialized = State.State.new(100, true)
   t.assert_false(pcall(uninitialized.request_refresh, uninitialized), "uninitialized refresh still rejected")
   uninitialized:dispose()
 
   local state = State.State.new(101, true)
-
   state:set_refresh({
     dispose = function()
-      disposed[#disposed + 1] = "refresh"
+      disposed = disposed + 1
     end,
   })
-  state:set_git_subscription({
-    unsubscribe = function()
-      disposed[#disposed + 1] = "subscription"
-    end,
-  })
-  state:set_resize_autocmd(88)
   state:dispose()
 
-  t.assert_eq("subscription", disposed[1], "subscription disposed first")
-  t.assert_eq("refresh", disposed[2], "refresh owner disposed second")
-  t.assert_eq(88, deleted_autocmd, "resize autocmd disposed")
+  t.assert_eq(1, disposed, "refresh owner disposed")
   t.assert_true(state:is_disposed(), "state marked disposed")
-
   local ok_request = pcall(state.request_refresh, state)
   local ok_check = pcall(state.request_refresh_if_stale, state)
   t.assert_true(ok_request, "late local refresh is ignored")

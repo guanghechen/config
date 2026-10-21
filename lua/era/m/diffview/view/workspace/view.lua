@@ -794,6 +794,57 @@ function M.__allocate_changes_heights__(total_height, history_visible)
   }
 end
 
+---@class era.m.diffview.view.workspace.IChangesSize
+---@field public winnrs                  string Visible Changes windows, joined.
+---@field public widths                  string Their widths, joined.
+---@field public width                   integer|nil The first visible pane's width.
+---@field public columns                 integer
+---@field public lines                   integer
+
+---@class era.m.diffview.view.workspace.IChangesResize
+---@field public render                  boolean
+---@field public remember_width          integer|nil A width the user chose for Changes.
+---@field public sync_heights            boolean
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return era.m.diffview.view.workspace.IChangesSize
+function M.measure_changes(lyt)
+  local winnrs, widths = {}, {} ---@type string[], string[]
+  local width = nil ---@type integer|nil
+  for _, pane in ipairs(M.get_changes_panes(lyt)) do
+    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
+      local pane_width = vim.api.nvim_win_get_width(pane.winnr) ---@type integer
+      winnrs[#winnrs + 1] = tostring(pane.winnr)
+      widths[#widths + 1] = tostring(pane_width)
+      width = width or pane_width
+    end
+  end
+  return {
+    winnrs = table.concat(winnrs, "|"),
+    widths = table.concat(widths, "|"),
+    width = width,
+    columns = vim.api.nvim_get_option_value("columns", {}),
+    lines = vim.api.nvim_get_option_value("lines", {}),
+  }
+end
+
+---What a resize between two measurements calls for: Changes render again when their width changes, a width
+---changed in the same windows by the same terminal is the user's, and a terminal height change resyncs heights.
+---@param previous                       era.m.diffview.view.workspace.IChangesSize
+---@param current                        era.m.diffview.view.workspace.IChangesSize
+---@return era.m.diffview.view.workspace.IChangesResize
+function M.changes_resize(previous, current)
+  if current.winnrs == previous.winnrs and current.widths == previous.widths then
+    return { render = false, sync_heights = current.lines ~= previous.lines }
+  end
+  if current.winnrs == "" then
+    return { render = false, sync_heights = false }
+  end
+  -- A rebuilt pane inherits the preference; its clamped width is not a user resize.
+  local chosen = current.winnrs == previous.winnrs and current.columns == previous.columns
+  return { render = true, remember_width = chosen and current.width or nil, sync_heights = false }
+end
+
 ---Synchronize the default navigation-column proportions.
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 function M.sync_changes_heights(lyt)
@@ -904,10 +955,8 @@ function M.open_entry(ctx, entry, token, opts)
     return
   end
 
-  if ctx.setup_sbs ~= nil then
-    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
-    ctx.setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
-  end
+  ctx:setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_left_winnr))
+  ctx:setup_sbs(vim.api.nvim_win_get_buf(lyt.sbs_right_winnr))
 end
 
 ---Clear sbs view
@@ -933,85 +982,6 @@ function M.clear_sbs(ctx)
         return ctx.state:get_fold_unchanged()
       end,
     })
-  end
-end
-
----Compose the repository History controller against the workspace-owned layout and SBS generation.
----@param lyt                            era.m.diffview.view.workspace.ILayout
----@param workspace_state                era.m.diffview.view.workspace.State
----@param history_state                  era.m.diffview.view.commits.State
----@return era.m.diffview.view.commits.IContext
-function M.history_context(lyt, workspace_state, history_state)
-  local history ---@type era.m.diffview.view.commits.IContext
-  history = {
-    layout = lyt.history,
-    state = history_state,
-    begin_preview = function()
-      local generation = M.begin_preview(lyt, "history") ---@type integer
-      return function()
-        return M.owns_preview(lyt, generation) and not workspace_state:is_disposed() and not history_state:is_disposed()
-      end
-    end,
-    render_winline = function()
-      require("era.m.diffview.view.workspace.winline").render_history(history)
-    end,
-  }
-  return history
-end
-
-----------------------------------------------------------------------------------------------------
--- Storage
-----------------------------------------------------------------------------------------------------
-
----@type table<integer, era.m.diffview.view.workspace.ILayout>
-M.__layouts__ = {}
-
----@type table<integer, integer>
-M.__layout_cleanup_autocmds__ = {}
-
----Store layout instance
----@param tabnr                          integer
----@param lyt                            era.m.diffview.view.workspace.ILayout
-function M.set_layout(tabnr, lyt)
-  M.__layouts__[tabnr] = lyt
-  if M.__layout_cleanup_autocmds__[tabnr] then
-    return
-  end
-
-  M.__layout_cleanup_autocmds__[tabnr] = vim.api.nvim_create_autocmd("TabClosed", {
-    desc = "diffview: release closed workspace layout",
-    callback = function()
-      if vim.api.nvim_tabpage_is_valid(tabnr) then
-        return
-      end
-
-      M.__layout_cleanup_autocmds__[tabnr] = nil
-      local closed_layout = M.__layouts__[tabnr]
-      M.__layouts__[tabnr] = nil
-      if closed_layout then
-        M.destroy(closed_layout)
-      end
-      return true
-    end,
-  })
-end
-
----Get layout instance
----@param tabnr                          integer|nil
----@return era.m.diffview.view.workspace.ILayout|nil
-function M.get_layout(tabnr)
-  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
-  return M.__layouts__[tabnr]
-end
-
----Remove layout instance
----@param tabnr                          integer
-function M.remove_layout(tabnr)
-  M.__layouts__[tabnr] = nil
-  local autocmd_id = M.__layout_cleanup_autocmds__[tabnr]
-  M.__layout_cleanup_autocmds__[tabnr] = nil
-  if autocmd_id then
-    pcall(vim.api.nvim_del_autocmd, autocmd_id)
   end
 end
 

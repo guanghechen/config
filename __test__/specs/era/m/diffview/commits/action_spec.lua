@@ -1,4 +1,5 @@
 local harness = require("__test__.support.harness")
+local diffview = require("__test__.support.diffview")
 
 local t = harness.new()
 local line_maps = {} ---@type table<integer, era.m.diffview.ICommitsItem[]>
@@ -323,7 +324,7 @@ t:test("reveal expands and focuses the active file, then hides Commits", functio
     commits_bufnr = nil,
     sbs_left_winnr = sbs_winnr,
   }
-  local ctx = { layout = lyt, state = state }
+  local ctx = diffview.commits_context({ layout = lyt, state = state })
 
   action.reveal(ctx)
   local commits_winnr = assert(lyt.commits_winnr)
@@ -363,10 +364,10 @@ t:test("search jumps across pages and selects the matching commit", function()
     target,
   }
   local state = new_search_state()
-  local ctx = {
+  local ctx = diffview.commits_context({
     layout = { tabnr = tabnr, layout_type = 4, commits_winnr = commits_winnr, commits_bufnr = commits_bufnr },
     state = state,
-  }
+  })
   t:patch_table(vim.ui, "input", function(opts, callback)
     t.assert_eq("Commit hash or message: ", opts.prompt, "search prompt")
     callback("  target  ")
@@ -399,7 +400,7 @@ t:test("search keeps only the latest overlapping result", function()
   local first = { hash = "first", abbrev_hash = "first", author = "A", date = 0, message = "first" }
   local second = { hash = "second", abbrev_hash = "second", author = "A", date = 0, message = "second" }
   local state = new_search_state()
-  local ctx = { layout = { layout_type = 4 }, state = state }
+  local ctx = diffview.commits_context({ layout = { layout_type = 4 }, state = state })
   local inputs = { "first", "second" }
   t:patch_table(vim.ui, "input", function(_, callback)
     callback(table.remove(inputs, 1))
@@ -426,7 +427,7 @@ t:test("search reports a missing commit without changing pages", function()
   reset_search()
   local state = new_search_state()
   state.page = 2
-  local ctx = { layout = { layout_type = 4 }, state = state }
+  local ctx = diffview.commits_context({ layout = { layout_type = 4 }, state = state })
   t:patch_table(vim.ui, "input", function(_, callback)
     callback("missing")
   end)
@@ -444,7 +445,7 @@ t:test("rapid page commands preserve every requested step", function()
   reset_search()
   local state = new_search_state()
   state.total = 300
-  local ctx = { layout = { layout_type = 4 }, state = state }
+  local ctx = diffview.commits_context({ layout = { layout_type = 4 }, state = state })
   local pending = {} ---@type function[]
   t:patch_table(stl.async, "run", function(callback)
     pending[#pending + 1] = callback
@@ -470,7 +471,7 @@ t:test("commit pane directories toggle independently and copy their displayed pa
   }
   local operations = {} ---@type string[]
   local copied = nil ---@type table|nil
-  local ctx = {
+  local ctx = diffview.commits_context({
     layout = { commits_bufnr = bufnr, commits_winnr = winnr },
     state = {
       toggle_commit_dir = function(_, hash, uuid)
@@ -483,7 +484,7 @@ t:test("commit pane directories toggle independently and copy their displayed pa
         operations[#operations + 1] = "expand:" .. hash .. ":" .. uuid
       end,
     },
-  }
+  })
   local renders = 0
   local restore_render = t:patch_table(view, "render_commits", function()
     renders = renders + 1
@@ -515,7 +516,7 @@ end)
 
 t:test("commits keymap exposes cross-page search", function()
   local found = {} ---@type table<string, boolean>
-  for _, candidate in ipairs(keymap.gen_commits({ layout = {}, state = new_search_state() })) do
+  for _, candidate in ipairs(keymap.gen_commits(diffview.commits_context({ layout = {}, state = new_search_state() }))) do
     found[candidate.key] = true
   end
   t.assert_true(found["g/"], "g/ search keymap")

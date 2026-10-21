@@ -185,19 +185,10 @@ t:test("History toggles at the bottom and shares preview ownership", function()
     local history_row = vim.api.nvim_win_get_position(lyt.history.commits_winnr)[1]
     t.assert_true(unstaged_row < history_row, "History restored below Changes")
 
-    local history_ctx = view.history_context(lyt, {
-      is_disposed = function()
-        return false
-      end,
-    }, {
-      is_disposed = function()
-        return false
-      end,
-    })
-    local history_is_current = assert(history_ctx.begin_preview)()
-    t.assert_true(history_is_current(), "History owns preview")
+    local history_generation = view.begin_preview(lyt, "history")
+    t.assert_true(view.owns_preview(lyt, history_generation), "History owns preview")
     view.begin_preview(lyt, "changes")
-    t.assert_false(history_is_current(), "Changes supersedes History preview")
+    t.assert_false(view.owns_preview(lyt, history_generation), "Changes supersedes History preview")
   end)
 end)
 
@@ -267,20 +258,35 @@ t:test("Changes restores the last focused sibling across SBS navigation and pane
   t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")
 end)
 
-t:test("direct tab close releases the hidden History buffer and workspace layout", function()
-  local original_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  vim.cmd.tabnew()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local lyt = view.__create_layout_full__(tabnr)
-  local history_bufnr = assert(lyt.history.commits_bufnr) ---@type integer
-  view.set_layout(tabnr, lyt)
-
-  vim.cmd.tabclose()
-
-  t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "previous tab restored")
-  t.assert_false(vim.api.nvim_buf_is_valid(history_bufnr), "History buffer deleted")
-  t.assert_nil(view.get_layout(tabnr), "closed layout removed")
-  t.assert_nil(view.__layout_cleanup_autocmds__[tabnr], "layout cleanup released")
+t:test("changes resize renders width changes and remembers only widths the user chose", function()
+  ---@return era.m.diffview.view.workspace.IChangesSize
+  local function size(winnrs, width, columns, lines)
+    return {
+      winnrs = winnrs,
+      widths = width and (width .. "|" .. width) or "",
+      width = width,
+      columns = columns,
+      lines = lines,
+    }
+  end
+  local previous = size("42|43", 40, 200, 60)
+  for _, step in ipairs({
+    { size("42|43", 40, 200, 60), false, nil, false, "same width" },
+    { size("42|43", 40, 200, 70), false, nil, true, "terminal height resyncs heights" },
+    { size("42|43", 40, 200, 70), false, nil, false, "unchanged height" },
+    { size("42|43", 5, 200, 70), true, 5, false, "a width the user chose" },
+    { size("42|43", 40, 240, 70), true, nil, false, "terminal width resize" },
+    { size("44|45", 24, 240, 70), true, nil, false, "recreated panes inherit the preference" },
+    { size("44|45", 18, 240, 70), true, 18, false, "recreated panes resized by the user" },
+    { size("", nil, 240, 70), false, nil, false, "hidden Changes" },
+  }) do
+    local current, render, remember, sync, label = unpack(step)
+    local resize = view.changes_resize(previous, current)
+    t.assert_eq(render, resize.render, label .. ": render")
+    t.assert_eq(remember, resize.remember_width, label .. ": remembered width")
+    t.assert_eq(sync, resize.sync_heights, label .. ": height sync")
+    previous = current
+  end
 end)
 
 t:test("height allocation keeps one History content row and balances Changes", function()

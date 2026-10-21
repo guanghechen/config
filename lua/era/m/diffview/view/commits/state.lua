@@ -21,9 +21,6 @@ local M = {}
 ---@field public commits_total           stl.c.Observable                Observable<integer>
 ---@field public lnum_present            stl.c.Observable                Observable<integer> line of currently displayed commit
 ---@field public path_filter             string|nil                      Path filter (file or directory path)
----@field protected _git_subscription    stl.c.IUnsubscribable|nil
----@field protected _git_debounce        stl.timer.IDisposableCallable|nil
----@field protected _tab_closed_autocmd  integer|nil
 ---@field protected _scheduler_lnum_present stl.c.Scheduler|nil
 ---@field protected _content_generation integer
 ---@field protected _disposed           boolean
@@ -57,9 +54,6 @@ function State.new(tabnr, fold_unchanged)
   self._materialization = require("era.m.diffview.view.commits.cache").new(self)
   self.path_filter = nil
 
-  self._git_subscription = nil
-  self._git_debounce = nil
-  self._tab_closed_autocmd = nil
   self._scheduler_lnum_present = nil
   self._content_generation = 0
   self._disposed = false
@@ -400,20 +394,6 @@ function State:subscribe(field, callback)
   return observable:subscribe(stl.c.Subscriber.new({ on_next = callback }))
 end
 
----Set git subscription for auto-refresh
----@param subscription                   stl.c.IUnsubscribable
----@param debounce                       stl.timer.IDisposableCallable|nil
-function State:set_git_subscription(subscription, debounce)
-  self._git_subscription = subscription
-  self._git_debounce = debounce
-end
-
----Set TabClosed autocmd id
----@param autocmd_id                     integer
-function State:set_tab_closed_autocmd(autocmd_id)
-  self._tab_closed_autocmd = autocmd_id
-end
-
 ----------------------------------------------------------------------------------------------------
 -- Dispose
 ----------------------------------------------------------------------------------------------------
@@ -425,22 +405,6 @@ function State:dispose()
   end
   self._disposed = true
   self._content_generation = self._content_generation + 1
-
-  -- Dispose git subscription and debounce timer
-  if self._git_subscription then
-    self._git_subscription:unsubscribe()
-    self._git_subscription = nil
-  end
-  if self._git_debounce then
-    self._git_debounce:dispose()
-    self._git_debounce = nil
-  end
-
-  -- Delete TabClosed autocmd
-  if self._tab_closed_autocmd then
-    pcall(vim.api.nvim_del_autocmd, self._tab_closed_autocmd)
-    self._tab_closed_autocmd = nil
-  end
 
   -- Dispose sign scheduler
   if self._scheduler_lnum_present then
@@ -460,62 +424,6 @@ function State:dispose()
   self.commits_page:dispose()
   self.commits_total:dispose()
   self.lnum_present:dispose()
-end
-
-----------------------------------------------------------------------------------------------------
--- Active states registry
-----------------------------------------------------------------------------------------------------
-
----@type table<integer, era.m.diffview.view.commits.State>
-M.active_states = {}
-
----Get state for tab
----@param tabnr                          integer|nil
----@return era.m.diffview.view.commits.State|nil
-function M.get(tabnr)
-  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
-  return M.active_states[tabnr]
-end
-
----Set state for tab
----@param tabnr                          integer
----@param state                          era.m.diffview.view.commits.State
-function M.set(tabnr, state)
-  M.active_states[tabnr] = state
-end
-
----Remove state for tab
----@param tabnr                          integer
-function M.remove(tabnr)
-  local state = M.active_states[tabnr]
-  if state then
-    state:dispose()
-    M.active_states[tabnr] = nil
-  end
-end
-
----Create new state for tab
----@param tabnr                          integer
----@param fold_unchanged                 boolean
----@return era.m.diffview.view.commits.State
-function M.create(tabnr, fold_unchanged)
-  local state = State.new(tabnr, fold_unchanged)
-  M.set(tabnr, state)
-
-  -- Setup TabClosed autocmd to clean up state when tab is closed directly
-  local autocmd_id = vim.api.nvim_create_autocmd("TabClosed", {
-    callback = function()
-      -- `TabClosed` reports the closing tab's *number*, but `tabnr` here is a tabpage handle and
-      -- the two diverge as soon as any tab has been closed. The handle is already invalid by the
-      -- time the event fires, so test that directly instead of comparing identifiers.
-      if not vim.api.nvim_tabpage_is_valid(tabnr) then
-        M.remove(tabnr)
-      end
-    end,
-  })
-  state:set_tab_closed_autocmd(autocmd_id)
-
-  return state
 end
 
 M.State = State

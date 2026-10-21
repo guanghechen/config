@@ -1,5 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local treeview = require("__test__.support.treeview")
 local Cache = require("era.m.diffview.view.commits.cache")
 local State = require("era.m.diffview.view.commits.state").State
@@ -39,8 +40,10 @@ local function fixture()
   end)
   state:set_commits(commits)
   state:set_current_commit(commits[3])
-  local ctx =
-    { state = state, layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr } }
+  local ctx = diffview.commits_context({
+    state = state,
+    layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr },
+  })
   treeview.await(view.render_commits(ctx))
   return ctx, state:get_tree("commits"), commits
 end

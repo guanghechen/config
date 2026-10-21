@@ -69,7 +69,7 @@ local function fixture(names)
     entries = entries,
     reports = reports,
     state = state,
-    context = { state = state },
+    context = require("__test__.support.diffview").workspace_context({ state = state }),
   }
 end
 

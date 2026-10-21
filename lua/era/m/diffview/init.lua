@@ -108,22 +108,22 @@ local view = setmetatable({
 
 ---@class era.m.diffview.__mods
 local __mods = {
-  cmd = "era.m.diffview.cmd",
   config = "era.m.diffview.config",
   data = "era.m.diffview.data",
   fn = "era.m.diffview.fn",
   layout = "era.m.diffview.layout",
+  session = "era.m.diffview.session",
   util = "era.m.diffview.util",
 }
 
 ---@class era.m.diffview
 ---@field public __mods                 era.m.diffview.__mods
----@field public cmd                    era.m.diffview.cmd
 ---@field public config                 era.m.diffview.config
 ---@field public data                   era.m.diffview.data
 ---@field public fn                     era.m.diffview.fn
 ---@field public layout                 era.m.diffview.layout
 ---@field public pane                   era.m.diffview.pane
+---@field public session                era.m.diffview.session
 ---@field public util                   era.m.diffview.util
 ---@field public view                   era.m.diffview.view
 local M = setmetatable({

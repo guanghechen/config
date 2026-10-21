@@ -2,8 +2,13 @@
 local __module_name__ = "era.m.diffview.view.commits.tabline" ---@type string
 
 local config = require("era.m.diffview.config")
-local commits_state = require("era.m.diffview.view.commits.state")
 local commits_view = require("era.m.diffview.view.commits.view")
+
+---@param tabnr                         ?integer
+---@return era.m.diffview.CommitsSession|nil
+local function session_of(tabnr)
+  return require("era.m.diffview.session").commits(tabnr)
+end
 
 ---Commits view tabline components and registration.
 ---@class era.m.diffview.view.commits.tabline
@@ -41,11 +46,12 @@ local ICON_FLAG_FOLD = stl.icon.symbols.flag_fold ---@type string
 ---@param tabnr                         integer
 ---@return integer|nil
 local function get_pane_winnr(tabnr)
-  local lyt = commits_view.get_layout(tabnr)
-  if not lyt then
+  local session = session_of(tabnr)
+  if not session then
     return nil
   end
 
+  local lyt = session.layout
   local winnr = lyt.commits_winnr ---@type integer|nil
   if not winnr or not vim.api.nvim_win_is_valid(winnr) then
     winnr = lyt.sbs_left_winnr
@@ -87,13 +93,9 @@ local function get_cb_viewtype()
     dot.context.diffview.flag_panel_viewtype:next(next_viewtype)
 
     -- Re-render commits pane
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = commits_state.get(tabnr)
-    local view = require("era.m.diffview.view.commits.view")
-    local lyt = view.get_layout(tabnr)
-
-    if state and lyt then
-      view.render_commits({ layout = lyt, state = state })
+    local session = session_of()
+    if session then
+      commits_view.render_commits(session)
     end
   end)
 end
@@ -106,13 +108,9 @@ local function get_cb_foldempty()
     dot.context.diffview.flag_foldempty:next(not current)
 
     -- Re-render commits pane
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = commits_state.get(tabnr)
-    local view = require("era.m.diffview.view.commits.view")
-    local lyt = view.get_layout(tabnr)
-
-    if state and lyt then
-      view.render_commits({ layout = lyt, state = state })
+    local session = session_of()
+    if session then
+      commits_view.render_commits(session)
     end
   end)
 end
@@ -121,13 +119,10 @@ end
 ---@return string
 local function get_cb_default_folds()
   return get_or_create_callback("commits_default_folds", function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = commits_state.get(tabnr)
-    local lyt = commits_view.get_layout(tabnr)
-    if not state or not lyt then
-      return
+    local session = session_of()
+    if session then
+      require("era.m.diffview.view.commits.action").toggle_default_folds(session)
     end
-    require("era.m.diffview.view.commits.action").toggle_default_folds({ layout = lyt, state = state })
   end)
 end
 
@@ -136,18 +131,10 @@ end
 local function get_cb_layout()
   return get_or_create_callback("commits_layout", function()
     -- Cycle through all 5 layout types using action
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = commits_state.get(tabnr)
-    local view = require("era.m.diffview.view.commits.view")
-    local lyt = view.get_layout(tabnr)
-
-    if not state or not lyt then
-      return
+    local session = session_of()
+    if session then
+      require("era.m.diffview.view.commits.action").cycle_layout(session)
     end
-
-    local binding = require("era.m.diffview.view.binding")
-    local action = require("era.m.diffview.view.commits.action")
-    action.cycle_layout(binding.commits({ layout = lyt, state = state }))
   end)
 end
 
@@ -178,7 +165,8 @@ function M.status_component()
     refresh = function(context)
       -- Get state from current tab
       local tabnr = context.tabnr ---@type integer
-      local state = commits_state.get(tabnr)
+      local session = session_of(tabnr)
+      local state = session and session.state
 
       local total = state and state:get_commits_total() or 0 ---@type integer
       local page = state and state:get_commits_page() or 1 ---@type integer
@@ -206,7 +194,7 @@ function M.status_component()
       local is_tree = viewtype == "tree" ---@type boolean
 
       -- Get current layout type from layout
-      local lyt = commits_view.get_layout(tabnr)
+      local lyt = session and session.layout
       local layout_type = lyt and lyt.layout_type or 1 ---@type integer
 
       -- Build flag texts (layout first for t0)
@@ -294,7 +282,8 @@ function M.filter_component()
     name = "diffview:commits_filter",
 
     refresh = function(context)
-      local state = commits_state.get(context.tabnr)
+      local session = session_of(context.tabnr)
+      local state = session and session.state
       local path = state and state:get_path_filter()
       if not path then
         return nil

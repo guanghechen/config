@@ -789,7 +789,7 @@ t:test("workspace view binds keymaps after replacing null buffers", function()
         return false
       end,
     },
-    setup_sbs = function(bufnr)
+    setup_sbs = function(_, bufnr)
       mapped[#mapped + 1] = bufnr
     end,
   }, {})

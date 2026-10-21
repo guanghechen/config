@@ -971,16 +971,14 @@ function M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, o
     M.apply_sbs_diff_winopts(left_winnr, fold_unchanged)
     M.apply_sbs_diff_winopts(right_winnr, fold_unchanged)
 
-    -- Detect filetype for syntax highlighting
-    if vim.api.nvim_buf_is_valid(left_bufnr) then
-      vim.api.nvim_buf_call(left_bufnr, function()
-        vim.cmd("filetype detect")
-      end)
-    end
-    if vim.api.nvim_buf_is_valid(right_bufnr) then
-      vim.api.nvim_buf_call(right_bufnr, function()
-        vim.cmd("filetype detect")
-      end)
+    -- Detect each side's filetype for highlighting. `:filetype detect` would also turn on detection globally.
+    for _, bufnr in ipairs({ left_bufnr, right_bufnr }) do
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        local filetype = vim.filetype.match({ buf = bufnr }) ---@type string|nil
+        if filetype then
+          vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
+        end
+      end
     end
   end)
 end

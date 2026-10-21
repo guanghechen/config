@@ -16,11 +16,8 @@ local M = {}
 ---@field public entries                 stl.c.Observable                Observable<era.m.diffview.IFileEntry[]>
 ---@field public current_entry           stl.c.Observable                Observable<era.m.diffview.IFileEntry|nil>
 ---@field protected _disposed            boolean
----@field protected _git_subscription    stl.c.IUnsubscribable|nil
 ---@field protected _entries_snapshot_applied boolean
 ---@field protected _refresh             era.m.diffview.view.workspace.Refresh|nil
----@field protected _resize_autocmd_id   integer|nil
----@field protected _tab_closed_autocmd  integer|nil
 local State = {}
 State.__index = State
 
@@ -40,11 +37,8 @@ function State.new(tabnr, fold_unchanged)
   self._trees = {}
 
   self._disposed = false
-  self._git_subscription = nil
   self._entries_snapshot_applied = false
   self._refresh = nil
-  self._resize_autocmd_id = nil
-  self._tab_closed_autocmd = nil
 
   return self
 end
@@ -235,24 +229,6 @@ function State:is_disposed()
   return self._disposed
 end
 
----Set git subscription for auto-refresh.
----@param subscription                   stl.c.IUnsubscribable
-function State:set_git_subscription(subscription)
-  self._git_subscription = subscription
-end
-
----Set Changes pane resize autocmd id.
----@param autocmd_id                     integer
-function State:set_resize_autocmd(autocmd_id)
-  self._resize_autocmd_id = autocmd_id
-end
-
----Set TabClosed autocmd id
----@param autocmd_id                     integer
-function State:set_tab_closed_autocmd(autocmd_id)
-  self._tab_closed_autocmd = autocmd_id
-end
-
 ----------------------------------------------------------------------------------------------------
 -- Dispose
 ----------------------------------------------------------------------------------------------------
@@ -264,24 +240,9 @@ function State:dispose()
   end
   self._disposed = true
 
-  -- Stop new refresh requests before disposing their owner.
-  if self._git_subscription then
-    self._git_subscription:unsubscribe()
-    self._git_subscription = nil
-  end
   if self._refresh then
     self._refresh:dispose()
     self._refresh = nil
-  end
-
-  -- Delete TabClosed autocmd
-  if self._tab_closed_autocmd then
-    pcall(vim.api.nvim_del_autocmd, self._tab_closed_autocmd)
-    self._tab_closed_autocmd = nil
-  end
-  if self._resize_autocmd_id then
-    pcall(vim.api.nvim_del_autocmd, self._resize_autocmd_id)
-    self._resize_autocmd_id = nil
   end
 
   for _, tree in pairs(self._trees) do
@@ -292,62 +253,6 @@ function State:dispose()
   -- Dispose observables
   self.entries:dispose()
   self.current_entry:dispose()
-end
-
-----------------------------------------------------------------------------------------------------
--- Active states registry
-----------------------------------------------------------------------------------------------------
-
----@type table<integer, era.m.diffview.view.workspace.State>
-M.active_states = {}
-
----Get state for tab
----@param tabnr                          integer|nil
----@return era.m.diffview.view.workspace.State|nil
-function M.get(tabnr)
-  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
-  return M.active_states[tabnr]
-end
-
----Set state for tab
----@param tabnr                          integer
----@param state                          era.m.diffview.view.workspace.State
-function M.set(tabnr, state)
-  M.active_states[tabnr] = state
-end
-
----Remove state for tab
----@param tabnr                          integer
-function M.remove(tabnr)
-  local state = M.active_states[tabnr]
-  if state then
-    state:dispose()
-    M.active_states[tabnr] = nil
-  end
-end
-
----Create new state for tab
----@param tabnr                          integer
----@param fold_unchanged                 boolean
----@return era.m.diffview.view.workspace.State
-function M.create(tabnr, fold_unchanged)
-  local state = State.new(tabnr, fold_unchanged)
-  M.set(tabnr, state)
-
-  -- Setup TabClosed autocmd to clean up state when tab is closed directly
-  local autocmd_id = vim.api.nvim_create_autocmd("TabClosed", {
-    callback = function()
-      -- `TabClosed` reports the closing tab's *number*, but `tabnr` here is a tabpage handle and
-      -- the two diverge as soon as any tab has been closed. The handle is already invalid by the
-      -- time the event fires, so test that directly instead of comparing identifiers.
-      if not vim.api.nvim_tabpage_is_valid(tabnr) then
-        M.remove(tabnr)
-      end
-    end,
-  })
-  state:set_tab_closed_autocmd(autocmd_id)
-
-  return state
 end
 
 M.State = State

@@ -2,8 +2,13 @@
 local __module_name__ = "era.m.diffview.view.workspace.tabline" ---@type string
 
 local config = require("era.m.diffview.config")
-local workspace_state = require("era.m.diffview.view.workspace.state")
 local workspace_view = require("era.m.diffview.view.workspace.view")
+
+---@param tabnr                         ?integer
+---@return era.m.diffview.WorkspaceSession|nil
+local function session_of(tabnr)
+  return require("era.m.diffview.session").workspace(tabnr)
+end
 
 ---Workspace view tabline components and registration.
 ---@class era.m.diffview.view.workspace.tabline
@@ -62,13 +67,9 @@ local function get_cb_viewtype()
     dot.context.diffview.flag_panel_viewtype:next(next_viewtype)
 
     -- Re-render changes pane
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = workspace_state.get(tabnr)
-    local view = require("era.m.diffview.view.workspace.view")
-    local lyt = view.get_layout(tabnr)
-
-    if state and lyt then
-      view.render_changes({ layout = lyt, state = state })
+    local session = session_of()
+    if session then
+      workspace_view.render_changes(session)
     end
   end)
 end
@@ -81,13 +82,9 @@ local function get_cb_foldempty()
     dot.context.diffview.flag_foldempty:next(not current)
 
     -- Re-render changes pane
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = workspace_state.get(tabnr)
-    local view = require("era.m.diffview.view.workspace.view")
-    local lyt = view.get_layout(tabnr)
-
-    if state and lyt then
-      view.render_changes({ layout = lyt, state = state })
+    local session = session_of()
+    if session then
+      workspace_view.render_changes(session)
     end
   end)
 end
@@ -110,22 +107,16 @@ function M.status_component()
   local cb_viewtype = get_cb_viewtype()
   local cb_foldempty = get_cb_foldempty()
   local cb_untracked = get_or_create_callback("workspace_untracked", function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = workspace_state.get(tabnr)
-    local lyt = workspace_view.get_layout(tabnr)
-    if not state or not lyt then
-      return
+    local session = session_of()
+    if session then
+      require("era.m.diffview.view.workspace.action").toggle_untracked(session)
     end
-    require("era.m.diffview.view.workspace.action").toggle_untracked({ layout = lyt, state = state })
   end)
   local cb_default_folds = get_or_create_callback("workspace_default_folds", function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local state = workspace_state.get(tabnr)
-    local lyt = workspace_view.get_layout(tabnr)
-    if not state or not lyt then
-      return
+    local session = session_of()
+    if session then
+      require("era.m.diffview.view.workspace.action").toggle_default_folds(session)
     end
-    require("era.m.diffview.view.workspace.action").toggle_default_folds({ layout = lyt, state = state })
   end)
 
   ---@type era.m.nvimbar.IRawComponent
@@ -135,7 +126,8 @@ function M.status_component()
     refresh = function(context)
       -- Get state from current tab
       local tabnr = context.tabnr ---@type integer
-      local state = workspace_state.get(tabnr)
+      local session = session_of(tabnr)
+      local state = session and session.state
 
       local entries = state and workspace_view.get_visible_entries(state:get_entries()) or {} ---@type era.m.diffview.IFileEntry[]
       local total = #entries ---@type integer

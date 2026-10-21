@@ -46,8 +46,8 @@ era.m.diffview/
 ├── util.lua          # 通用工具函数 + 窗口辅助函数
 ├── layout.lua        # 窗口分割工具（树形布局描述）
 ├── data.lua          # Git 数据获取
-├── fn.lua            # 公共函数入口
-├── cmd.lua           # 命令定义
+├── fn.lua            # 公共函数入口：查找当前 tab 的 session 并分派
+├── session.lua       # 每个 diffview tab 一个 session
 │
 ├── pane/             # 可复用渲染单元（只负责渲染+数据，不管窗口布局）
 │   ├── tree.lua      # ResultTree records、native Frame 发布与导航
@@ -57,7 +57,6 @@ era.m.diffview/
 │   └── sbs.lua       # Side-by-side diff（含 git 内容加载、diff 模式）
 │
 └── view/             # 视图控制器（管理布局+pane组合+状态+交互）
-    ├── binding.lua       # context/keymap composition，唯一 wiring owner
     ├── sbs_keymap.lua    # context-free SBS buffer binding adapter
     ├── workspace/
     │   ├── view.lua      # 布局管理、pane 组合、生命周期
@@ -84,22 +83,26 @@ era.m.diffview/
 | Tabline | `view/*/tabline.lua`           | 该视图的 tabline 渲染                         |
 | Action  | `view/*/action.lua`            | 该视图的用户操作（stage/unstage/选择文件等）  |
 | Keymap  | `view/*/keymap.lua`            | 该视图的快捷键绑定                            |
-| Binding | `view/binding.lua`             | 构造 context，组装 keymap 与共享 SBS resolver |
+| Session | `session.lua`                  | 每个 tab 一份：持有 layout、state、History 与 keymap 钩子，关闭时统一回收 |
 | Layout  | `layout.lua`                   | 工具方法：根据树形结构创建窗口分割            |
 | Nvimbar | `view/*/{tabline,winline}.lua` | tabline 与 window-owned winline composition   |
 
-`binding.lua` 负责 view 交互的组装：
+每个 diffview tab 有一个 session，它就是 action 与 view 操作的 context：
 
 ```text
-cmd / fn / tabline
-        ↓
-     binding ───────────────> sbs_keymap
-        ↓
+fn / tabline ──> session ───────────────> sbs_keymap
+                    ↓
       keymap → action → view → pane/state
 ```
 
-- `action` 与 `view` 通过 context callback 请求 keymap refresh，不反向依赖 `keymap`。
-- `sbs_keymap` 只安装 buffer-local mappings；当前 tab/context 的解析由 `binding` 注入。
+- `session.open_workspace()` / `open_log()` 创建 tab 与 session，或回到已打开的同一视图；`current()`、
+  `workspace(tabnr)`、`commits(tabnr)` 按 tab 查找。Workspace session 另持有 History：一个复用 workspace
+  layout 与共享 preview 的 commits context。
+- Context 的钩子都是必有方法：`setup_*`、`get_keymaps`，commits context 另有 `begin_preview`（返回判断预览是否
+  仍为最新的函数）与 `render_winline`。`action` 与 `view` 通过这些钩子请求 keymap refresh，不反向依赖 `keymap`。
+- Session 拥有 Git 订阅、Changes 尺寸监听、预览代次与 untracked discard 队列；`close()` 统一回收。一个模块级
+  `TabClosed` autocmd 关闭失去 tab 的 session；漏掉 `TabClosed` 的 session 在下一次查找时关闭。
+- `sbs_keymap` 只安装 buffer-local mappings；按键时由当前 tab 的 session 解析对应 keymap。
 
 ### 四种 Pane
 
