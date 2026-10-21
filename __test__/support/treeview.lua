@@ -27,6 +27,24 @@ function M.applied(future)
   return reply
 end
 
+---Data holding `root` with the leaves `a` (alpha) and `b` (beta), and a state over the children of `root`. Requires the
+---native library to be loaded.
+---@return ux.treeview.Data data
+---@return ux.treeview.State state
+---@return string a
+---@return string b
+function M.fixture()
+  local data = require("ux.treeview").new_data()
+  M.applied(data:import({
+    { key = "root", label = "root", can_expand = true },
+    { key = "a", parent = "root", label = "alpha" },
+    { key = "b", parent = "root", label = "beta" },
+  }))
+  local source = data:source()
+  local state = M.await(data:create_state({ kind = "children_of", node = source:id("root") }))
+  return data, state, source:id("a"), source:id("b")
+end
+
 ---Publishes a ResultTree rooted at its source root unless `options` says otherwise, and returns its frame.
 ---@param tree                          era.view.ResultTree
 ---@param options                       ?table

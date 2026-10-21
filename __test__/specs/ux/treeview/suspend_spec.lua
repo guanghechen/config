@@ -6,17 +6,7 @@ local treeview = require("ux.treeview")
 local support = require("__test__.support.treeview")
 local decorations = require("ux.treeview.decorations")
 
----@return ux.treeview.Data
----@return ux.treeview.State
-local function fixture()
-  local data = treeview.new_data()
-  support.await(data:import({
-    { key = "root", label = "root", can_expand = true },
-    { key = "a", parent = "root", label = "alpha" },
-    { key = "b", parent = "root", label = "beta" },
-  }))
-  return data, support.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
-end
+local fixture = support.fixture
 
 ---@return integer
 ---@return integer
