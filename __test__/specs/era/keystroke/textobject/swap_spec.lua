@@ -20,7 +20,7 @@ t:test("pure swap plans preserve separators and rotate by count", function()
   }
   local edit = assert(Swap.plan(lines, ranges, { 0, 2 }, 1, 2))
   t.assert_eq("longer, z, a", table.concat(edit.lines, "\n"))
-  t.assert_eq(vim.inspect({ 1, 13 }), vim.inspect(edit.cursor))
+  t.assert_same({ 1, 13 }, edit.cursor)
   t.assert_nil(Swap.plan(lines, ranges, { 0, 2 }, 1, 3), "unavailable count is not partially applied")
   t.assert_nil(Swap.plan(lines, ranges, { 0, 0 }, 1, 1), "cursor must be inside a parameter")
 end)

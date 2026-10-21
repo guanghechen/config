@@ -113,7 +113,7 @@ t:test("an edit redraws only the edited line, which is measured again", function
   ]]
   )
 
-  t.assert_eq(vim.inspect({ 0 }), vim.inspect(drawn), "rows drawn after the edit")
+  t.assert_same({ 0 }, drawn, "rows drawn after the edit")
   t.assert_eq("y", cell(grid, 0, 100), "the lengthened line covers column 100")
   t.assert_eq(GUIDE, cell(grid, 0, 120), "column 120 stays free")
 end)

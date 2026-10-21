@@ -102,8 +102,8 @@ t:test("source conversions preserve UTF-8 bytes, newlines, and empty boundaries"
     t.assert_eq(offset, Source.offset(source, row, col), "offset round trip")
   end
   local range = { 20, 3, 22, 4 }
-  t.assert_eq(vim.inspect(range), vim.inspect(Source.range(source, Source.span(source, range))))
-  t.assert_eq(vim.inspect({ 21, 0, 21, 0 }), vim.inspect(Source.range(source, Source.span(source, { 21, 0, 21, 0 }))))
+  t.assert_same(range, Source.range(source, Source.span(source, range)))
+  t.assert_same({ 21, 0, 21, 0 }, Source.range(source, Source.span(source, { 21, 0, 21, 0 })))
 end)
 
 t:test("quote boundaries retain escaped newlines and multiline backticks", function()

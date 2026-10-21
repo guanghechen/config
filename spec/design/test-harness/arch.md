@@ -78,6 +78,9 @@ runner 也不编译 native module。Baseline 比较按同样的路径加载另�
   不自动启动；测试 composed runtime 时可显式加载 `ark.bootstrap`。
 - Runner 以 argv 形式的 `vim.system` 并发执行最多 N 个 suite（`--jobs`，默认取硬件线程数的一半，最多 8）；
   各 suite 的输出整块写出，并按发现顺序排列，与顺序执行时一致。`--jobs 1` 即顺序执行。
+- 启动顺序按上次记录的耗时从长到短，没有记录的 suite 最先启动，避免慢 suite 最后才开始而拖长全程。
+  CLI 每次运行后把各 suite 耗时合并写入 `stdpath("cache")/test-suite-durations.json`，并删去已不存在的 suite；
+  记录缺失或无法读取时按发现顺序启动。记录只影响启动顺序，不影响输出与结果。
 - Suite 进程的环境去掉 `TMUX` 与 `TMUX_PANE`，子进程随之继承，测试无法驱动用户真实的 tmux。
 - 默认每个 suite 超时 30 秒，可由 CLI 覆盖。失败或超时不阻止其它 suite；不自动重试、安装依赖或编译 native module。
 
@@ -122,6 +125,6 @@ Suite 并发运行，CPU 竞争会拉长异步工作，因此等待按断言的�
 
 基础设施测试覆盖 discovery 边界、稳定排序、字面筛选、空选择、子进程状态隔离、含空格与 Unicode
 的路径、从其他 CWD 执行、加载/case/cleanup 失败、空 spec、遗漏 run、进程失败、超时和 CLI 诊断，
-以及并发上限、按发现顺序输出、suite 环境不含 tmux 变量与 `--jobs` 参数校验。
+以及并发上限、按发现顺序输出、suite 环境不含 tmux 变量、`--jobs` 参数校验，和按耗时记录的启动顺序与记录的更新、清理和容错。
 
 状态转换见[执行流程](flow.md)，可执行命令与示例见[测试指南](../../../__test__/README.md)。

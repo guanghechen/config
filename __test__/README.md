@@ -186,7 +186,9 @@ node script/healcheck.mjs
 The entry can also be invoked by absolute path from another working directory.
 It resolves the checkout's real path from its own location and gives every spec a fresh
 `--headless -u NONE -i NONE -n` Neovim process. Suites run concurrently; each suite's output is
-written as one block in discovery order, and suite processes do not inherit `TMUX`. Tests use this checkout's runtime
+written as one block in discovery order, and suite processes do not inherit `TMUX`. The slowest suites
+of earlier runs start first, from durations the runner records in Neovim's cache directory
+(`test-suite-durations.json`); without a record, suites start in discovery order. Tests use this checkout's runtime
 alongside Neovim's built-in runtime and library directories, including its bundled
 parsers. The canonical checkout is also the CWD. No user configuration or plugin
 startup is loaded automatically.

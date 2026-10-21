@@ -230,7 +230,7 @@ t:test("codelens: the refresh mapping requests lenses afresh even while they are
   end)
 
   assert(refresh, "refresh mapping")()
-  t.assert_eq(vim.inspect({ "false@" .. bufnr, "true@" .. bufnr }), vim.inspect(calls), "enable calls")
+  t.assert_same({ "false@" .. bufnr, "true@" .. bufnr }, calls, "enable calls")
 
   delete_buffer(bufnr)
 end)

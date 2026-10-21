@@ -55,7 +55,7 @@ end
 ---@return nil
 local function assert_lines(expected, bufnr, message)
   local actual = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  t.assert_eq(vim.inspect(expected), vim.inspect(actual), message)
+  t.assert_same(expected, actual, message)
 end
 
 t:test("setup keeps action implementation lazy", function()

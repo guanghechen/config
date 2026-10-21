@@ -1,0 +1,3 @@
+# Git-ignored benchmark checkouts. StyLua does not apply anchored rules of a parent .gitignore when it formats a
+# subdirectory such as `__test__`.
+/__test__/bench/results/

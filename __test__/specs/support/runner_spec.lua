@@ -324,6 +324,59 @@ t:test("an invalid job count fails before any suite starts", function()
   end)
 end)
 
+---Writes `<name>_spec.lua` suites that append their name to `starts` when they run.
+---@param dir                           string
+---@param names                         string[]
+---@return string starts
+local function write_start_specs(dir, names)
+  local starts = dir .. "/starts" ---@type string
+  for _, name in ipairs(names) do
+    write_spec(
+      string.format("local file = assert(io.open(%q, 'a')); file:write(%q); file:close()", starts, name),
+      dir .. "/" .. name .. "_spec.lua"
+    )
+  end
+  return starts
+end
+
+t:test("recorded durations start the slowest suites first while output keeps discovery order", function()
+  with_temp_root(function(dir)
+    local starts = write_start_specs(dir, { "a", "b", "c" })
+    local durations_path = dir .. "/durations.json"
+    write_file({
+      vim.json.encode({ [dir .. "/a_spec.lua"] = 10, [dir .. "/b_spec.lua"] = 60000, [dir .. "/gone_spec.lua"] = 1 }),
+    }, durations_path)
+    local failed, output = run_suites({ root = dir, jobs = 1, durations_path = durations_path })
+    t.assert_eq(0, failed, output)
+    t.assert_eq("cba", vim.fn.readfile(starts)[1], "an unrecorded suite, then the slowest recorded one")
+    local a, b, c =
+      output:find("a_spec.lua", 1, true), output:find("b_spec.lua", 1, true), output:find("c_spec.lua", 1, true)
+    t.assert_true(a < b and b < c, output)
+    local recorded = vim.json.decode(table.concat(vim.fn.readfile(durations_path), "\n"))
+    local suites = vim.tbl_keys(recorded)
+    table.sort(suites)
+    t.assert_same(
+      { dir .. "/a_spec.lua", dir .. "/b_spec.lua", dir .. "/c_spec.lua" },
+      suites,
+      "removed suites drop out"
+    )
+    t.assert_true(recorded[dir .. "/b_spec.lua"] < 60000, "the last run replaces an earlier duration")
+  end)
+end)
+
+t:test("an unreadable duration record starts suites in discovery order and is replaced", function()
+  with_temp_root(function(dir)
+    local starts = write_start_specs(dir, { "a", "b" })
+    local durations_path = dir .. "/durations.json"
+    write_file({ "{ not json" }, durations_path)
+    local failed, output = run_suites({ root = dir, jobs = 1, durations_path = durations_path })
+    t.assert_eq(0, failed, output)
+    t.assert_eq("ab", vim.fn.readfile(starts)[1], "start order")
+    local recorded = vim.json.decode(table.concat(vim.fn.readfile(durations_path), "\n"))
+    t.assert_eq("number", type(recorded[dir .. "/a_spec.lua"]), "recorded duration")
+  end)
+end)
+
 t:test("skipped cases are counted in the aggregate summary without failing", function()
   with_temp_root(function(dir)
     write_spec('t.skip("unsupported here")', dir .. "/skip_spec.lua")

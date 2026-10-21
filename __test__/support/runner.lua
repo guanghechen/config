@@ -15,6 +15,7 @@ local DEFAULT_JOBS = math.max(1, math.min(8, math.floor(vim.uv.available_paralle
 ---@field public filter                 ?string
 ---@field public timeout_ms             ?integer
 ---@field public jobs                   ?integer
+---@field public durations_path         ?string
 ---@field public list                   ?boolean
 ---@field public help                   ?boolean
 
@@ -22,6 +23,7 @@ local DEFAULT_JOBS = math.max(1, math.min(8, math.floor(vim.uv.available_paralle
 ---@field public output                 string
 ---@field public failed                 boolean
 ---@field public skipped                integer
+---@field public duration_ms            ?integer
 
 ---@param path                          string
 ---@return string
@@ -127,6 +129,7 @@ end
 local function start_suite(suite, timeout_ms, env, on_done)
   local name = display_path(suite) ---@type string
   local suite_timeout_ms = math.max(timeout_ms, declared_timeout_ms(suite) or 0) ---@type integer
+  local started_at = vim.uv.hrtime() ---@type number
   vim.system({
     vim.v.progpath,
     "--headless",
@@ -156,8 +159,45 @@ local function start_suite(suite, timeout_ms, env, on_done)
         or string.format("exit %s, signal %s", result.code, result.signal)
       parts[#parts + 1] = "FAIL " .. name .. ": " .. reason .. "\n"
     end
-    on_done({ output = table.concat(parts), failed = failed, skipped = skipped })
+    on_done({
+      output = table.concat(parts),
+      failed = failed,
+      skipped = skipped,
+      duration_ms = math.floor((vim.uv.hrtime() - started_at) / 1e6),
+    })
   end)
+end
+
+---Suite durations recorded by earlier runs, keyed by suite path. A missing or unreadable record reads as empty.
+---@param path                          string
+---@return table<string, integer>
+local function read_durations(path)
+  local ok, decoded = pcall(function()
+    return vim.json.decode(table.concat(vim.fn.readfile(path), "\n"))
+  end)
+  local durations = {} ---@type table<string, integer>
+  if ok and type(decoded) == "table" then
+    for suite, duration_ms in pairs(decoded) do
+      if type(suite) == "string" and type(duration_ms) == "number" then
+        durations[suite] = duration_ms
+      end
+    end
+  end
+  return durations
+end
+
+---Records `durations`, dropping suites that no longer exist.
+---@param path                          string
+---@param durations                     table<string, integer>
+---@return nil
+local function write_durations(path, durations)
+  for suite in pairs(durations) do
+    if vim.uv.fs_stat(suite) == nil then
+      durations[suite] = nil
+    end
+  end
+  vim.fn.mkdir(vim.fs.dirname(path), "p")
+  vim.fn.writefile({ vim.json.encode(durations) }, path)
 end
 
 ---@param opts                          ?__test__.support.runner.IOptions
@@ -184,6 +224,21 @@ function M.run_all(opts)
     return 0
   end
 
+  -- The slowest suites of earlier runs start first, so none of them starts last and extends the run; suites without
+  -- a record start before all others. Output still follows discovery order.
+  local durations = opts.durations_path and read_durations(opts.durations_path) or {} ---@type table<string, integer>
+  local order = {} ---@type integer[]
+  for index = 1, #suites do
+    order[index] = index
+  end
+  table.sort(order, function(a, b)
+    local left, right = durations[suites[a]] or math.huge, durations[suites[b]] or math.huge
+    if left ~= right then
+      return left > right
+    end
+    return a < b
+  end)
+
   local results = {} ---@type table<integer, __test__.support.runner.IResult>
   local env = suite_env() ---@type table<string, string>
   local started, running, written = 0, 0, 0 ---@type integer, integer, integer
@@ -191,7 +246,7 @@ function M.run_all(opts)
   while written < #suites do
     while running < jobs and started < #suites do
       started = started + 1
-      local index = started ---@type integer
+      local index = order[started] ---@type integer
       running = running + 1
       local ok, err = pcall(start_suite, suites[index], timeout_ms, env, function(result)
         results[index] = result
@@ -214,6 +269,16 @@ function M.run_all(opts)
       io.flush()
       failed = failed + (result.failed and 1 or 0)
       skipped = skipped + result.skipped
+    end
+  end
+
+  if opts.durations_path then
+    for index, suite in ipairs(suites) do
+      durations[suite] = results[index].duration_ms or durations[suite]
+    end
+    local ok, err = pcall(write_durations, opts.durations_path, durations)
+    if not ok then
+      io.stderr:write("suite durations not recorded: " .. tostring(err) .. "\n")
     end
   end
 
@@ -266,6 +331,7 @@ function M.main(args)
       io.write("Usage: nvim -l __test__/run.lua [--list] [--timeout ms] [--jobs n] [path-filter]\n")
       return 0
     end
+    opts.durations_path = vim.fs.joinpath(vim.fn.stdpath("cache") --[[@as string]], "test-suite-durations.json")
     return M.run_all(opts)
   end)
   if not ok then

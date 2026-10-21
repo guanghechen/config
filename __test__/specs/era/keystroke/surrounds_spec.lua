@@ -97,7 +97,7 @@ end
 ---@param message                       string
 ---@return nil
 local function assert_lines(expected, actual, message)
-  t.assert_eq(vim.inspect(expected), vim.inspect(actual), message)
+  t.assert_same(expected, actual, message)
 end
 
 t:test("keymaps follow buffer eligibility", function()
@@ -172,7 +172,7 @@ t:test("neighborhood conversions preserve empty and multiline regions", function
 
     local empty_span = neighborhood.region_to_span(reference)
     t.assert_eq(empty_span.from, empty_span.to, "empty region span")
-    t.assert_eq(vim.inspect(reference), vim.inspect(neighborhood.span_to_region(empty_span)), "empty region round trip")
+    t.assert_same(reference, neighborhood.span_to_region(empty_span), "empty region round trip")
 
     local multiline = {
       from = { line = 1, col = 2 },
@@ -240,10 +240,10 @@ t:test("function output and find actions", function()
     t.assert_eq("fname(alpha)", current_line(), "function output")
 
     feedkeys("gsff")
-    t.assert_eq(vim.inspect({ 1, 11 }), vim.inspect(vim.api.nvim_win_get_cursor(0)), "find right")
+    t.assert_same({ 1, 11 }, vim.api.nvim_win_get_cursor(0), "find right")
 
     feedkeys("gsFf")
-    t.assert_eq(vim.inspect({ 1, 5 }), vim.inspect(vim.api.nvim_win_get_cursor(0)), "find left")
+    t.assert_same({ 1, 5 }, vim.api.nvim_win_get_cursor(0), "find left")
   end)
 end)
 

@@ -185,7 +185,7 @@ t:test("dressing reads the unchanged image buffers that startup read as text", f
 
   assert(loadfile("lua/era/m/image/init.lua"))().dressing()
 
-  t.assert_eq(vim.inspect({ 21, 25 }), vim.inspect(reread), "image buffers read again")
+  t.assert_same({ 21, 25 }, reread, "image buffers read again")
 end)
 
 t:run()
