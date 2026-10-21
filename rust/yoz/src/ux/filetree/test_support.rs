@@ -5,8 +5,16 @@ use super::*;
 use crate::test_support::eventually;
 use crate::ux::treeview::test_support::{Listening, listen};
 use crate::ux::treeview::*;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
+
+/// Holds the right to start file operations. Operations share a process-wide limit on active jobs, so a test that
+/// starts operations or creates files holds this guard first; tests on other threads then cannot exhaust the limit
+/// for it. Acquire it once, at the top of the test, never in a helper.
+pub(crate) fn operations() -> MutexGuard<'static, ()> {
+    static OPERATIONS: Mutex<()> = Mutex::new(());
+    OPERATIONS.lock().unwrap_or_else(|error| error.into_inner())
+}
 
 /// The value of a request that must succeed.
 pub(crate) fn request<T: Clone>(request: Request<T>) -> T {

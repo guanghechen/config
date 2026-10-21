@@ -53,9 +53,11 @@ Runner 通过 `--suite` 启动新进程；该分支直接加载 spec，不导入
 不导入 runner 或 suite。
 
 Rust unit tests 定义在被测模块的 `#[cfg(test)] mod tests` 中，保留 private access 与 platform gate；
-较长的测试放在 `<module>/tests.rs`，测试文件之间不互相导入。共享支持只放在 `#[cfg(test)] test_support.rs`：
+较长的测试放在 `<module>/tests.rs`，再按契约拆成 `<module>/tests/<contract>.rs` 子模块；测试文件之间不互相导入。共享支持只放在 `#[cfg(test)] test_support.rs`：
 crate 级的 `TempDir`、`eventually`（轮询条件，超时即失败）、`percentile` 与 `isolated`（在子进程中单独重跑
 会耗尽进程级资源的测试），以及 `ux/treeview`、`ux/filetree`、`git` 各自的 fixture 与测试替身。
+文件操作共享进程级的活动 job 上限；启动操作或创建文件的测试在第一行持有 `ux::filetree::test_support::operations()`，
+避免并发运行的测试互相耗尽该上限。
 生产代码不含测试钩子，普通 build 不包含测试代码。测试函数以 `t_` 开头；release 模式的测量放在
 `perf_tests.rs` 的 `#[ignore]` 测试中，只断言正确性并打印样本。异步条件用 `eventually` 等待；
 固定 sleep 只用于断言一段时间内不发生某事，或跨越 deadline、watch 合并窗口等时间阈值。

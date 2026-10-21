@@ -4,6 +4,7 @@ use crate::ux::filetree::test_support::*;
 
 #[test]
 fn t_staged_job_does_not_deliver_or_clear_unpublished_successes_after_target_conflict() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir(fixture.path().join("destination")).unwrap();
@@ -48,6 +49,7 @@ fn t_staged_job_does_not_deliver_or_clear_unpublished_successes_after_target_con
 
 #[test]
 fn t_staged_job_rejects_a_replaced_source_root_without_publishing_its_old_prefix() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir(fixture.path().join("destination")).unwrap();
@@ -90,6 +92,7 @@ fn t_staged_job_rejects_a_replaced_source_root_without_publishing_its_old_prefix
 
 #[test]
 fn t_staged_job_keeps_committed_io_when_model_publication_exceeds_capacity() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir(fixture.path().join("destination")).unwrap();
@@ -130,6 +133,7 @@ fn t_staged_job_keeps_committed_io_when_model_publication_exceeds_capacity() {
 
 #[test]
 fn t_staged_partial_copy_cleans_only_successful_source_nodes_and_loads_target_on_demand() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir(fixture.path().join("destination")).unwrap();
@@ -180,6 +184,7 @@ fn t_staged_partial_copy_cleans_only_successful_source_nodes_and_loads_target_on
 
 #[test]
 fn t_staged_partial_results_keep_execution_paths_after_both_parents_move() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir(fixture.path().join("destination")).unwrap();
@@ -239,6 +244,7 @@ fn t_staged_partial_results_keep_execution_paths_after_both_parents_move() {
 
 #[test]
 fn t_partial_cleanup_rechecks_bound_parent_identity_before_admitting_successes() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir_all(fixture.path().join("destination/source")).unwrap();
@@ -289,6 +295,7 @@ fn t_partial_cleanup_rechecks_bound_parent_identity_before_admitting_successes()
 
 #[test]
 fn t_partial_cleanup_reserves_scratch_before_reading_success_metadata() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir_all(fixture.path().join("destination/source")).unwrap();
@@ -343,6 +350,7 @@ fn t_partial_cleanup_reserves_scratch_before_reading_success_metadata() {
 
 #[test]
 fn t_partial_cleanup_capacity_failure_after_admission_keeps_all_selection_stamps() {
+    let _operations = operations();
     struct LimitNodes;
     impl NativeAction for LimitNodes {
         fn bytes(&self) -> usize {
@@ -423,6 +431,7 @@ fn t_partial_cleanup_capacity_failure_after_admission_keeps_all_selection_stamps
 
 #[test]
 fn t_private_traversal_directory_replacement_invalidates_loaded_success_cleanup() {
+    let _operations = operations();
     let fixture = TempDir::new();
     fs::create_dir(fixture.path().join("source")).unwrap();
     fs::create_dir_all(fixture.path().join("destination/source")).unwrap();
@@ -811,46 +820,54 @@ fn capacity_case(count: usize, case: CapacityCase) {
 #[test]
 #[ignore = "creates and verifies 100k real files; run without concurrent load"]
 fn t_staged_100k_copy_completes_with_default_task_capacity_and_keeps_source_lazy() {
+    let _operations = operations();
     capacity_case(100_000, CapacityCase::Complete);
 }
 
 #[test]
 fn t_partial_frontier_uses_bounded_batches_and_survives_held_pages() {
+    let _operations = operations();
     capacity_case(384, CapacityCase::LateSkip);
 }
 
 #[test]
 #[ignore = "creates and verifies 100k files with a directly loaded Source; run without concurrent load"]
 fn t_staged_100k_loaded_copy_completes_with_default_task_capacity() {
+    let _operations = operations();
     capacity_case(100_000, CapacityCase::Loaded);
 }
 
 #[test]
 #[ignore = "copies 99999 files, skips the last enumerated file, and checks cleanup; run without concurrent load"]
 fn t_copy_capacity_100k_partial_frontier_cleans_only_successes() {
+    let _operations = operations();
     capacity_case(100_000, CapacityCase::LateSkip);
 }
 
 #[test]
 #[ignore = "creates and verifies 10k real files; run without concurrent load"]
 fn t_copy_capacity_merge_preserves_default_budget_and_selection_cleanup() {
+    let _operations = operations();
     capacity_case(10_000, CapacityCase::Merge);
 }
 
 #[test]
 #[ignore = "creates 50k files and cancels after at least 10k copies; run without concurrent load"]
 fn t_copy_capacity_cancel_preserves_paged_results_and_partial_cleanup() {
+    let _operations = operations();
     capacity_case(50_000, CapacityCase::Cancel);
 }
 
 #[test]
 #[ignore = "creates and verifies 10k files in nested long paths; run without concurrent load"]
 fn t_copy_capacity_nested_long_paths_preserve_results_and_cleanup() {
+    let _operations = operations();
     capacity_case(10_000, CapacityCase::NestedLong);
 }
 
 #[test]
 fn t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry() {
+    let _operations = operations();
     use std::time::{Duration, Instant};
 
     // Exhausts the process's file descriptors.
@@ -958,6 +975,7 @@ fn t_fd_pressure_fails_one_job_without_stalling_another_and_allows_retry() {
 
 #[test]
 fn t_private_traversal_rejects_an_ancestor_move_without_loading_the_browse_source() {
+    let _operations = operations();
     let dir = TempDir::new();
     for path in ["parent/src", "copydst", "movedst", "idle"] {
         fs::create_dir_all(dir.path().join(path)).unwrap();

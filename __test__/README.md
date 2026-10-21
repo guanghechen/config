@@ -86,7 +86,10 @@ platform gates. Shared Rust test support stays inside its crate in `#[cfg(test)]
 `isolated`), `ux/treeview/`, `ux/filetree/` and `git/`. Test functions are named `t_*`.
 Filetree and Treeview tests use a child `tests` module per production module, such as
 `ux/filetree/jobs/tests.rs` or `ux/treeview/reads/tests.rs`; their production files retain the
-same private module boundaries and platform gates. Opt-in release measurements live in
+same private module boundaries and platform gates. A large suite becomes a `tests.rs` that declares one
+child per contract, such as `ux/filetree/jobs/tests/{moves,links,copy,admission,create}.rs`. File
+operations share a process-wide limit on active jobs, so a test that starts operations or creates files
+holds `ux::filetree::test_support::operations()` from its first line. Opt-in release measurements live in
 `perf_tests.rs` modules and in `#[ignore]` cases named by the measurement records below.
 Production Lua modules have no test-directory references or test-only exports.
 Shared search fixtures preserve their original line endings through local Git

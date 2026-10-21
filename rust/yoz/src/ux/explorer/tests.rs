@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support::{TempDir, eventually};
-use crate::ux::filetree::test_support::{finished, request};
+use crate::ux::filetree::test_support::{finished, operations, request};
 use crate::ux::filetree::{ItemStatus, OperationKind};
 use std::fs;
 
@@ -134,6 +134,7 @@ fn t_queued_parent_navigation_uses_each_preceding_owner_commit() {
 
 #[test]
 fn t_completed_jobs_release_with_the_last_external_handle() {
+    let _operations = operations();
     let directory = TempDir::new();
     for name in ["a", "b"] {
         fs::write(directory.path().join(name), "content").unwrap();
@@ -179,6 +180,7 @@ fn t_completed_jobs_release_with_the_last_external_handle() {
 
 #[test]
 fn t_running_job_blocks_both_start_paths_even_after_its_caller_drops_the_handle() {
+    let _operations = operations();
     let directory = TempDir::new();
     for name in ["a", "b"] {
         fs::write(directory.path().join(name), "content").unwrap();

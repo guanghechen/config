@@ -226,22 +226,26 @@ fn private_copy_read_scope(tighten_later: bool, confirmed_member: bool) {
 
 #[test]
 fn t_private_copy_obeys_complete_read_scope_at_claim() {
+    let _operations = operations();
     private_copy_read_scope(false, true);
 }
 
 #[test]
 fn t_private_copy_obeys_complete_read_scope_after_capture() {
+    let _operations = operations();
     private_copy_read_scope(true, true);
 }
 
 #[test]
 fn t_private_copy_rechecks_waiting_confirmation_against_latest_read_scope() {
+    let _operations = operations();
     private_copy_read_scope(true, false);
 }
 
 #[test]
 #[cfg(unix)]
 fn t_private_parent_chain_tracks_browse_materialization_without_rebinding_history() {
+    let _operations = operations();
     for materialized in [false, true] {
         let directory = TempDir::new();
         fs::create_dir_all(directory.path().join("src/branch/sub")).unwrap();
@@ -718,10 +722,12 @@ fn delete_after_browse_materialization(complete: bool) {
 
 #[test]
 fn t_delete_tracks_browse_completed_after_launch() {
+    let _operations = operations();
     delete_after_browse_materialization(true);
 }
 
 #[test]
 fn t_delete_tracks_browse_partial_after_launch() {
+    let _operations = operations();
     delete_after_browse_materialization(false);
 }
