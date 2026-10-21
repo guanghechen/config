@@ -40,13 +40,12 @@ pub fn find_all_matched_points<T: PartialEq>(
     let mut result: Vec<usize> = Vec::new();
     let mut j: usize = 0;
 
-    #[allow(clippy::needless_range_loop)]
-    for i in 0..text.len() {
-        while j > 0 && pattern[j] != text[i] {
+    for (i, item) in text.iter().enumerate() {
+        while j > 0 && pattern[j] != *item {
             j = fails[j];
         }
 
-        if pattern[j] == text[i] {
+        if pattern[j] == *item {
             j += 1;
         }
 
@@ -83,13 +82,12 @@ pub fn find_first_matched_point<T: PartialEq>(
     let mut j: usize = 0;
     let mut remaining: usize = n_pattern + 1;
 
-    #[allow(clippy::needless_range_loop)]
-    for i in 0..text.len() {
-        while j > 0 && pattern[j] != text[i] {
+    for (i, item) in text.iter().enumerate() {
+        while j > 0 && pattern[j] != *item {
             j = fails[j];
         }
 
-        if pattern[j] == text[i] {
+        if pattern[j] == *item {
             j += 1;
             remaining -= 1;
         }

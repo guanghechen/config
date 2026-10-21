@@ -89,7 +89,7 @@ impl LuaUserData for LuaJob {
                 value.set("source_label", paths::label(&source))?;
                 if let Some(target) = &target {
                     value.set("target", paths::output(lua, target)?)?;
-                    value.set("target_label", paths::label(&target))?;
+                    value.set("target_label", paths::label(target))?;
                 }
                 if let Some(source) = result.source_physical() {
                     value.set("source_physical", paths::output(lua, source)?)?;

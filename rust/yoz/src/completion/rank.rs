@@ -179,10 +179,10 @@ pub(super) fn query<'a>(
             };
             if retained.len() < MAX_ITEMS {
                 retained.push(ranked);
-            } else if let Some(mut worst) = retained.peek_mut() {
-                if ranked < *worst {
-                    *worst = ranked;
-                }
+            } else if let Some(mut worst) = retained.peek_mut()
+                && ranked < *worst
+            {
+                *worst = ranked;
             }
         }
     }

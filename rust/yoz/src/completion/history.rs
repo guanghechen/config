@@ -23,7 +23,7 @@ pub(super) fn parse_key(text: &str) -> Option<Key> {
         return None;
     }
     let mut key = [0; 16];
-    for (index, bytes) in text.as_bytes().chunks_exact(2).enumerate() {
+    for (index, bytes) in text.as_bytes().as_chunks::<2>().0.iter().enumerate() {
         let high = char::from(bytes[0]).to_digit(16)?;
         let low = char::from(bytes[1]).to_digit(16)?;
         key[index] = (high * 16 + low) as u8;

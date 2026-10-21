@@ -238,6 +238,7 @@ pub(crate) fn fuzzy_index(
 
 /// FuzzyMatchV2. `fallback` mirrors fzf passing a slab: without one, long input never falls back to V1.
 /// With `with_pos`, the start is exact and `scratch.positions` holds the matched characters.
+// Hot path that keeps fzf's argument list; packing the slices and flags into a struct would only rename them.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn fuzzy_v2(
     classes: &Classes,
@@ -382,6 +383,7 @@ pub(super) fn single(
 
 /// fzf's `fuzzyMatchV2Two`: rows 0 and 1 of V2 in one pass over scalars; the rows are stored only for
 /// the backtrace.
+// Hot path that keeps fzf's argument list; packing the slices and flags into a struct would only rename them.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn two(
     classes: &Classes,
@@ -540,6 +542,7 @@ pub(super) fn two(
 }
 
 /// Phases 2 to 4 of V2 over `t`, the candidate range copied from the text; lowercased in place.
+// Hot path that keeps fzf's argument list; packing the slices and flags into a struct would only rename them.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn general<S: Symbol>(
     classes: &Classes,

@@ -770,10 +770,10 @@ fn capacity_case(count: usize, case: CapacityCase) {
             );
         }
         for result in job.results(0, 1).unwrap() {
-            if result.status == ItemStatus::Success {
-                if let Some(node) = result.node {
-                    assert!(!sources.subtree_roots.contains(&node));
-                }
+            if result.status == ItemStatus::Success
+                && let Some(node) = result.node
+            {
+                assert!(!sources.subtree_roots.contains(&node));
             }
         }
     }

@@ -155,6 +155,13 @@ function getChecks() {
       run: () => runCommand("nvim", ["-l", "__test__/run.lua"], rootDir),
     },
     {
+      // The toolchain floats, so the version is printed; fix new lints as they appear.
+      name: "Clippy",
+      run: () =>
+        runCommand("cargo", ["clippy", "--version"], rustDir) ??
+        runCommand("cargo", ["clippy", "--workspace", "--all-targets", "--quiet", "--", "-D", "warnings"], rustDir),
+    },
+    {
       name: "Rust tests",
       run: () => runCommand("cargo", ["test", "--workspace", "--all-targets", "--quiet"], rustDir),
     },

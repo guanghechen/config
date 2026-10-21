@@ -295,13 +295,13 @@ impl NativeReader for Reader {
                     dirty.remove(&id);
                 }
             }
-            if !live.is_empty() {
-                if let Some(data) = data.upgrade() {
-                    self.refresh = Some(data.submit(Action::Native(Box::new(RefreshDemand {
-                        nodes: live,
-                        dirty: self.dirty.clone(),
-                    }))));
-                }
+            if !live.is_empty()
+                && let Some(data) = data.upgrade()
+            {
+                self.refresh = Some(data.submit(Action::Native(Box::new(RefreshDemand {
+                    nodes: live,
+                    dirty: self.dirty.clone(),
+                }))));
             }
         }
         self.slots.retain(|work, slot| {
@@ -690,139 +690,136 @@ impl NativeAction for Failure {
         ) {
             return restart(engine, self.token);
         }
-        if let Some((path, identity)) = self.context {
-            if resource::path(engine.source(), self.token.node)? != path
-                || resource::entry(engine.source(), self.token.node)?.identity != identity
+        if let Some((path, identity)) = self.context
+            && (resource::path(engine.source(), self.token.node)? != path
+                || resource::entry(engine.source(), self.token.node)?.identity != identity)
+        {
+            return restart(engine, self.token);
+        }
+        if let Some((path, mut entry)) = self.retargeted
+            && resource::entry(engine.source(), self.token.node)?.identity == entry.identity
+            && resource::path(engine.source(), self.token.node)? == path
+        {
+            use crate::ux::treeview::{Batch, NodePatch, Operation};
+            let _memory = engine.memory.enter();
+            if let Some(parent) = engine
+                .source()
+                .node(self.token.node)
+                .and_then(|node| node.parent)
+            {
+                entry.cycle = entry.target_identity().is_some_and(|target| {
+                    resource::ancestors(engine.source(), parent)
+                        .is_ok_and(|ids| ids.contains(&target))
+                });
+            }
+            let old = resource::entry(engine.source(), self.token.node)?;
+            entry.retain_unknown_target(&old);
+            if entry != old
+                && !resource::unchanged(
+                    &self.source,
+                    engine.source(),
+                    self.token.node,
+                    resource::ends_children(&old, &entry),
+                )
             {
                 return restart(engine, self.token);
             }
-        }
-        if let Some((path, mut entry)) = self.retargeted {
-            if resource::entry(engine.source(), self.token.node)?.identity == entry.identity
-                && resource::path(engine.source(), self.token.node)? == path
-            {
-                use crate::ux::treeview::{Batch, NodePatch, Operation};
-                let _memory = engine.memory.enter();
-                if let Some(parent) = engine
+            let mut candidate = engine.clone();
+            let data = entry.node_data();
+            let mut operations = vec![Operation::Update {
+                node: self.token.node.into(),
+                patch: NodePatch {
+                    payload: Some(data.payload),
+                    can_expand: Some(data.can_expand),
+                    ..NodePatch::default()
+                },
+            }];
+            if old.sort_key() != entry.sort_key() {
+                let parent = engine
                     .source()
                     .node(self.token.node)
-                    .and_then(|node| node.parent)
-                {
-                    entry.cycle = entry.target_identity().is_some_and(|target| {
-                        resource::ancestors(engine.source(), parent)
-                            .is_ok_and(|ids| ids.contains(&target))
-                    });
-                }
-                let old = resource::entry(engine.source(), self.token.node)?;
-                entry.retain_unknown_target(&old);
-                if entry != old
-                    && !resource::unchanged(
-                        &self.source,
+                    .and_then(|node| node.parent);
+                operations.push(Operation::Reparent {
+                    node: self.token.node.into(),
+                    parent: parent.map(Into::into),
+                    position: resource::position(
                         engine.source(),
-                        self.token.node,
-                        resource::ends_children(&old, &entry),
-                    )
-                {
-                    return restart(engine, self.token);
-                }
-                let mut candidate = engine.clone();
-                let data = entry.node_data();
-                let mut operations = vec![Operation::Update {
-                    node: self.token.node.into(),
-                    patch: NodePatch {
-                        payload: Some(data.payload),
-                        can_expand: Some(data.can_expand),
-                        ..NodePatch::default()
-                    },
-                }];
-                if old.sort_key() != entry.sort_key() {
-                    let parent = engine
-                        .source()
-                        .node(self.token.node)
-                        .and_then(|node| node.parent);
-                    operations.push(Operation::Reparent {
-                        node: self.token.node.into(),
-                        parent: parent.map(Into::into),
-                        position: resource::position(
-                            engine.source(),
-                            parent,
-                            &entry,
-                            Some(self.token.node),
-                        )?,
-                    });
-                }
-                let operations = resource::retarget_children(engine.source(), operations)?;
-                let mut effects = candidate
-                    .apply_batch(Batch {
-                        base_revision: candidate.source().revision(),
-                        operations: operations.clone(),
-                    })?
-                    .into_effects();
-                if entry.target_unknown {
-                    effects.extend(
-                        candidate
-                            .children_failed(self.token, self.sequence, self.error.clone())?
-                            .into_effects(),
-                    );
-                    candidate.set_slot(
-                        self.token.node,
-                        Some(crate::ux::treeview::Completeness::Partial),
-                        crate::ux::treeview::LoadState::Error,
-                        Some(self.error),
-                        None,
-                    )?;
-                } else if entry.directory() {
-                    effects.extend(restart(&mut candidate, self.token)?.into_effects());
-                } else {
-                    candidate.children_cancelled(self.token)?;
-                    effects.extend(
-                        candidate
-                            .states
-                            .iter()
-                            .filter(|(_, state)| {
-                                state.state.root
-                                    == crate::ux::treeview::Root::ChildrenOf(self.token.node)
-                            })
-                            .map(|(&state, _)| Effect::RootUnavailable {
-                                state,
-                                node: self.token.node,
-                            }),
-                    );
-                }
-                let mut index = self.index.lock().unwrap_or_else(|error| error.into_inner());
-                let mut next = index.clone();
-                next.update(engine.source(), candidate.source(), &operations)?;
-                engine.memory.check()?;
-                *index = next;
-                *engine = candidate;
-                return Ok(engine.applied(None, effects));
+                        parent,
+                        &entry,
+                        Some(self.token.node),
+                    )?,
+                });
             }
-        }
-        if let Some((path, identity)) = self.unavailable {
-            if resource::entry(engine.source(), self.token.node)?.identity == identity
-                && resource::path(engine.source(), self.token.node)? == path
-            {
-                if !resource::unchanged(&self.source, engine.source(), self.token.node, true) {
-                    return restart(engine, self.token);
-                }
-                let _memory = engine.memory.enter();
-                let mut candidate = engine.clone();
-                let operations = vec![crate::ux::treeview::Operation::Remove {
-                    node: self.token.node.into(),
-                }];
-                let reply = candidate.apply_batch(crate::ux::treeview::Batch {
+            let operations = resource::retarget_children(engine.source(), operations)?;
+            let mut effects = candidate
+                .apply_batch(Batch {
                     base_revision: candidate.source().revision(),
                     operations: operations.clone(),
-                })?;
+                })?
+                .into_effects();
+            if entry.target_unknown {
+                effects.extend(
+                    candidate
+                        .children_failed(self.token, self.sequence, self.error.clone())?
+                        .into_effects(),
+                );
+                candidate.set_slot(
+                    self.token.node,
+                    Some(crate::ux::treeview::Completeness::Partial),
+                    crate::ux::treeview::LoadState::Error,
+                    Some(self.error),
+                    None,
+                )?;
+            } else if entry.directory() {
+                effects.extend(restart(&mut candidate, self.token)?.into_effects());
+            } else {
                 candidate.children_cancelled(self.token)?;
-                let mut index = self.index.lock().unwrap_or_else(|error| error.into_inner());
-                let mut next = index.clone();
-                next.update(engine.source(), candidate.source(), &operations)?;
-                engine.memory.check()?;
-                *index = next;
-                *engine = candidate;
-                return Ok(reply);
+                effects.extend(
+                    candidate
+                        .states
+                        .iter()
+                        .filter(|(_, state)| {
+                            state.state.root
+                                == crate::ux::treeview::Root::ChildrenOf(self.token.node)
+                        })
+                        .map(|(&state, _)| Effect::RootUnavailable {
+                            state,
+                            node: self.token.node,
+                        }),
+                );
             }
+            let mut index = self.index.lock().unwrap_or_else(|error| error.into_inner());
+            let mut next = index.clone();
+            next.update(engine.source(), candidate.source(), &operations)?;
+            engine.memory.check()?;
+            *index = next;
+            *engine = candidate;
+            return Ok(engine.applied(None, effects));
+        }
+        if let Some((path, identity)) = self.unavailable
+            && resource::entry(engine.source(), self.token.node)?.identity == identity
+            && resource::path(engine.source(), self.token.node)? == path
+        {
+            if !resource::unchanged(&self.source, engine.source(), self.token.node, true) {
+                return restart(engine, self.token);
+            }
+            let _memory = engine.memory.enter();
+            let mut candidate = engine.clone();
+            let operations = vec![crate::ux::treeview::Operation::Remove {
+                node: self.token.node.into(),
+            }];
+            let reply = candidate.apply_batch(crate::ux::treeview::Batch {
+                base_revision: candidate.source().revision(),
+                operations: operations.clone(),
+            })?;
+            candidate.children_cancelled(self.token)?;
+            let mut index = self.index.lock().unwrap_or_else(|error| error.into_inner());
+            let mut next = index.clone();
+            next.update(engine.source(), candidate.source(), &operations)?;
+            engine.memory.check()?;
+            *index = next;
+            *engine = candidate;
+            return Ok(reply);
         }
         engine.children_failed(self.token, self.sequence, self.error)
     }
@@ -861,17 +858,17 @@ impl NativeAction for Probe {
         }
         let parent = engine.source().node(self.node).and_then(|node| node.parent);
         let mut observed = self.entry;
-        if let Ok(Some(entry)) = &mut observed {
-            if entry.identity == old.identity && entry.kind == old.kind {
-                entry.anchor = old.anchor.clone();
-                if let Some(parent) = parent {
-                    if let Some(target) = entry.target_identity() {
-                        entry.cycle =
-                            resource::ancestors(engine.source(), parent)?.contains(&target);
-                    }
-                }
-                entry.retain_unknown_target(&old);
+        if let Ok(Some(entry)) = &mut observed
+            && entry.identity == old.identity
+            && entry.kind == old.kind
+        {
+            entry.anchor = old.anchor.clone();
+            if let Some(parent) = parent
+                && let Some(target) = entry.target_identity()
+            {
+                entry.cycle = resource::ancestors(engine.source(), parent)?.contains(&target);
             }
+            entry.retain_unknown_target(&old);
         }
         let children = match &observed {
             Ok(Some(entry)) if entry.identity == old.identity && entry.kind == old.kind => {

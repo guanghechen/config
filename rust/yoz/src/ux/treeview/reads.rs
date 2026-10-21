@@ -4,6 +4,7 @@ use super::engine::{Engine, Origin};
 use super::model::*;
 use super::provider::{DataScope, Record, plan_import};
 use super::storage::IndexedSequence;
+use super::tasks::Observed;
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -191,10 +192,12 @@ impl Engine {
                     &self.source,
                     &source,
                     &change,
-                    false,
-                    current_read.is_some() && task.needed.contains(&id),
-                    current_read.map(|_| id),
-                    None,
+                    Observed {
+                        own: false,
+                        required_read: current_read.is_some() && task.needed.contains(&id),
+                        read: current_read.map(|_| id),
+                        discovery: None,
+                    },
                 );
             }
             entry.dirty.pending = true;

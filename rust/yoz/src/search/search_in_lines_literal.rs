@@ -6,17 +6,17 @@ use crate::types::ISearchInLinesLiteralLineMatch;
 use crate::types::ISearchInLinesLiteralMatchPoint;
 use std::borrow::Cow;
 
+const SCORE_EXACT: u32 = 100;
+const SCORE_SCALAR: u32 = 30;
+const SCORE_EXACT_BONUS: f64 = 30.0;
+const SCORE_SCALAR_BONUS: f64 = 30.0;
+
 pub fn search_in_lines_literal(
     pattern: &str,
     buffer: &ISearchBuffer,
     flag_fuzzy: bool,
     flag_case_sensitive: bool,
 ) -> Vec<ISearchInLinesLiteralLineMatch> {
-    let score_exact: u32 = 100;
-    let score_scalar: u32 = 30;
-    let score_exact_bonus: f64 = 30.0;
-    let score_scalar_bonus: f64 = 30.0;
-
     let pattern_str = if flag_case_sensitive {
         pattern.to_string()
     } else {
@@ -25,7 +25,6 @@ pub fn search_in_lines_literal(
     let pattern_bytes = pattern_str.as_bytes();
     let pattern_chars = pattern_str.chars().collect::<Vec<char>>();
     let n_pattern_bytes: usize = pattern_bytes.len();
-    let n_pattern_chars: usize = pattern_chars.len();
     if n_pattern_bytes == 0 {
         return Vec::new();
     }
@@ -36,27 +35,14 @@ pub fn search_in_lines_literal(
     let is_multiline_pattern = pattern.contains('\n');
 
     if is_multiline_pattern {
-        return search_multiline(
-            buffer,
-            pattern_bytes,
-            n_pattern_bytes,
-            &fails,
-            score_exact,
-            flag_case_sensitive,
-        );
+        return search_multiline(buffer, pattern_bytes, &fails, flag_case_sensitive);
     }
 
     search_single_line(
         buffer,
         pattern_bytes,
         &pattern_chars,
-        n_pattern_bytes,
-        n_pattern_chars,
         &fails,
-        score_exact,
-        score_scalar,
-        score_exact_bonus,
-        score_scalar_bonus,
         flag_fuzzy,
         flag_case_sensitive,
     )
@@ -65,9 +51,7 @@ pub fn search_in_lines_literal(
 fn search_multiline(
     buffer: &ISearchBuffer,
     pattern_bytes: &[u8],
-    n_pattern_bytes: usize,
     fails: &Vec<usize>,
-    score_exact: u32,
     flag_case_sensitive: bool,
 ) -> Vec<ISearchInLinesLiteralLineMatch> {
     let line_offsets = buffer.line_offsets();
@@ -84,7 +68,7 @@ fn search_multiline(
     let mut matches: Vec<ISearchInLinesLiteralLineMatch> = Vec::new();
     let points = find_all_matched_points(search_text.as_bytes(), pattern_bytes, Some(fails));
     for start_pos in points {
-        let end_pos = start_pos + n_pattern_bytes;
+        let end_pos = start_pos + pattern_bytes.len();
         let line_num = locate_line(line_offsets, start_pos);
         if line_num == 0 || line_num > buffer.line_count() {
             continue;
@@ -97,7 +81,7 @@ fn search_multiline(
 
         matches.push(ISearchInLinesLiteralLineMatch {
             lnum: line_num,
-            score: score_exact,
+            score: SCORE_EXACT,
             matches: vec![ISearchInLinesLiteralMatchPoint {
                 start: relative_start,
                 end: relative_end,
@@ -108,18 +92,11 @@ fn search_multiline(
     matches
 }
 
-#[allow(clippy::too_many_arguments)]
 fn search_single_line(
     buffer: &ISearchBuffer,
     pattern_bytes: &[u8],
     pattern_chars: &[char],
-    n_pattern_bytes: usize,
-    n_pattern_chars: usize,
     fails: &Vec<usize>,
-    score_exact: u32,
-    score_scalar: u32,
-    score_exact_bonus: f64,
-    score_scalar_bonus: f64,
     flag_fuzzy: bool,
     flag_case_sensitive: bool,
 ) -> Vec<ISearchInLinesLiteralLineMatch> {
@@ -137,14 +114,14 @@ fn search_single_line(
         let points = find_all_matched_points(line_bytes, pattern_bytes, Some(fails));
         if !points.is_empty() {
             for start_pos in points {
-                let end_pos = start_pos + n_pattern_bytes;
+                let end_pos = start_pos + pattern_bytes.len();
                 let delta: f64 = end_pos as f64;
                 let bonus: u32 = if base <= f64::EPSILON {
                     0
                 } else {
-                    ((delta / base) * score_exact_bonus).round() as u32
+                    ((delta / base) * SCORE_EXACT_BONUS).round() as u32
                 };
-                let score = score_exact + bonus;
+                let score = SCORE_EXACT + bonus;
 
                 matches.push(ISearchInLinesLiteralLineMatch {
                     lnum: line_idx + 1,
@@ -162,14 +139,8 @@ fn search_single_line(
             continue;
         }
 
-        if let Some(fuzzy_match) = fuzzy_match_line(
-            &line_view,
-            pattern_chars,
-            n_pattern_chars,
-            score_scalar,
-            score_scalar_bonus,
-            flag_case_sensitive,
-        ) {
+        if let Some(fuzzy_match) = fuzzy_match_line(&line_view, pattern_chars, flag_case_sensitive)
+        {
             matches.push(ISearchInLinesLiteralLineMatch {
                 lnum: line_idx + 1,
                 score: fuzzy_match.0,
@@ -184,11 +155,9 @@ fn search_single_line(
 fn fuzzy_match_line(
     line_view: &str,
     pattern_chars: &[char],
-    n_pattern_chars: usize,
-    score_scalar: u32,
-    score_scalar_bonus: f64,
     case_sensitive: bool,
 ) -> Option<(u32, Vec<ISearchInLinesLiteralMatchPoint>)> {
+    let n_pattern_chars = pattern_chars.len();
     if line_view.is_empty() || n_pattern_chars == 0 {
         return None;
     }
@@ -298,9 +267,9 @@ fn fuzzy_match_line(
         all_pattern_matches.extend(pattern_matches);
 
         let bonus: u32 =
-            (max_weight as f64 / n_pattern_chars as f64 * score_scalar_bonus).round() as u32;
+            (max_weight as f64 / n_pattern_chars as f64 * SCORE_SCALAR_BONUS).round() as u32;
         let adjusted = heuristic_bonus.max(0) as u32;
-        score = score.saturating_add(score_scalar + bonus + adjusted);
+        score = score.saturating_add(SCORE_SCALAR + bonus + adjusted);
     }
 
     if score == 0 {

@@ -283,10 +283,11 @@ impl NativeAction for Install {
                 .and_then(|id| self.source.node(id))
                 .zip(old.and_then(|id| engine.source().node(id)))
                 .is_some_and(|(before, current)| before.parent == current.parent);
-            if let Some(current) = &current {
-                if current.identity == entry.identity && current.kind == entry.kind {
-                    entry.retain_unknown_target(current);
-                }
+            if let Some(current) = &current
+                && current.identity == entry.identity
+                && current.kind == entry.kind
+            {
+                entry.retain_unknown_target(current);
             }
             let unchanged = match (expected, old) {
                 (Some(before), Some(now)) => {

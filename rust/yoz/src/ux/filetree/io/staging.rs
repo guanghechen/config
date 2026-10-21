@@ -303,16 +303,16 @@ impl Staging {
         } else if self.entries[self.directory.0].parent() == Some(index) {
             match open_directory(&self.directory.1, OsStr::new(".."), expected) {
                 Ok(file) => file,
-                Err(_) => self.from_root(index)?,
+                Err(_) => self.open_from_root(index)?,
             }
         } else {
-            self.from_root(index)?
+            self.open_from_root(index)?
         };
         self.directory = (index, file.clone());
         Ok(file)
     }
 
-    fn from_root(&self, index: usize) -> io::Result<Arc<File>> {
+    fn open_from_root(&self, index: usize) -> io::Result<Arc<File>> {
         let mut path = Vec::new();
         let mut node = index;
         while node != 0 {
@@ -375,6 +375,8 @@ impl Staging {
         Ok(index)
     }
 
+    // Each argument is a separate input of one staged copy; the cancel flag and progress callback belong to the job.
+    #[allow(clippy::too_many_arguments)]
     pub fn copy(
         &mut self,
         copier: &mut Copier,

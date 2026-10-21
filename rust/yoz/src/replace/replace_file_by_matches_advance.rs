@@ -24,49 +24,44 @@ pub fn replace_file_by_matches_advance(
 
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let len_of_search: usize = search_pattern.len();
-    let next_text: String;
+
     let mut offset_delta: i64 = 0;
     let mut next_offsets: Vec<usize> = vec![];
-    if flag_regex {
-        match compile_regex(search_pattern) {
-            Ok(r) => {
-                let regex = r;
-                next_text = regex
-                    .replace_all(&text, |caps: &Captures| {
-                        let m = caps.get(0).unwrap();
-                        let offset: usize = m.start();
-                        let should_replace: bool = match_offsets.contains(&offset);
-                        if should_replace {
-                            let mut replacement: String = replace_pattern.to_string();
-                            for i in 1..caps.len() {
-                                if let Some(cap) = caps.get(i) {
-                                    let placeholder = format!("${}", i);
-                                    replacement = replacement.replace(&placeholder, cap.as_str());
-                                }
-                            }
-
-                            let mut i = next_offsets.len();
-                            while i < remain_offsets.len() {
-                                let remain_offset: usize = remain_offsets[i];
-                                if remain_offset > offset {
-                                    break;
-                                }
-
-                                next_offsets.push((remain_offset as i64 + offset_delta) as usize);
-                                i += 1;
-                            }
-                            offset_delta +=
-                                (replacement.len() as i64) - (m.end() as i64 - m.start() as i64);
-
-                            replacement
-                        } else {
-                            m.as_str().to_string()
+    let next_text: String = if flag_regex {
+        let regex = compile_regex(search_pattern)?;
+        regex
+            .replace_all(&text, |caps: &Captures| {
+                let m = caps.get(0).unwrap();
+                let offset: usize = m.start();
+                let should_replace: bool = match_offsets.contains(&offset);
+                if should_replace {
+                    let mut replacement: String = replace_pattern.to_string();
+                    for i in 1..caps.len() {
+                        if let Some(cap) = caps.get(i) {
+                            let placeholder = format!("${}", i);
+                            replacement = replacement.replace(&placeholder, cap.as_str());
                         }
-                    })
-                    .to_string();
-            }
-            Err(e) => return Err(e),
-        }
+                    }
+
+                    let mut i = next_offsets.len();
+                    while i < remain_offsets.len() {
+                        let remain_offset: usize = remain_offsets[i];
+                        if remain_offset > offset {
+                            break;
+                        }
+
+                        next_offsets.push((remain_offset as i64 + offset_delta) as usize);
+                        i += 1;
+                    }
+                    offset_delta +=
+                        (replacement.len() as i64) - (m.end() as i64 - m.start() as i64);
+
+                    replacement
+                } else {
+                    m.as_str().to_string()
+                }
+            })
+            .to_string()
     } else {
         let match_points: Vec<usize> = if flag_case_sensitive {
             find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
@@ -108,8 +103,8 @@ pub fn replace_file_by_matches_advance(
             i = j;
         }
         pieces.push(&text[i..]);
-        next_text = pieces.join("");
-    }
+        pieces.join("")
+    };
 
     let mut i: usize = next_offsets.len();
     while i < remain_offsets.len() {

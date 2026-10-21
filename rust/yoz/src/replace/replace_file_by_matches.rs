@@ -20,33 +20,28 @@ pub fn replace_file_by_matches(
 
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let len_of_search: usize = search_pattern.len();
-    let next_text: String;
-    if flag_regex {
-        match compile_regex(search_pattern) {
-            Ok(r) => {
-                let regex = r;
-                next_text = regex
-                    .replace_all(&text, |caps: &Captures| {
-                        let m = caps.get(0).unwrap();
-                        let offset: usize = m.start();
-                        if match_offsets.contains(&offset) {
-                            let mut replacement: String = replace_pattern.to_string();
-                            for i in 1..caps.len() {
-                                if let Some(cap) = caps.get(i) {
-                                    let placeholder = format!("${}", i);
-                                    replacement = replacement.replace(&placeholder, cap.as_str());
-                                }
-                            }
 
-                            replacement
-                        } else {
-                            m.as_str().to_string()
+    let next_text: String = if flag_regex {
+        let regex = compile_regex(search_pattern)?;
+        regex
+            .replace_all(&text, |caps: &Captures| {
+                let m = caps.get(0).unwrap();
+                let offset: usize = m.start();
+                if match_offsets.contains(&offset) {
+                    let mut replacement: String = replace_pattern.to_string();
+                    for i in 1..caps.len() {
+                        if let Some(cap) = caps.get(i) {
+                            let placeholder = format!("${}", i);
+                            replacement = replacement.replace(&placeholder, cap.as_str());
                         }
-                    })
-                    .to_string();
-            }
-            Err(e) => return Err(e),
-        }
+                    }
+
+                    replacement
+                } else {
+                    m.as_str().to_string()
+                }
+            })
+            .to_string()
     } else {
         let match_points: Vec<usize> = if flag_case_sensitive {
             find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
@@ -69,8 +64,8 @@ pub fn replace_file_by_matches(
             i = j;
         }
         pieces.push(&text[i..]);
-        next_text = pieces.join("");
-    }
+        pieces.join("")
+    };
 
     if text != next_text {
         let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;

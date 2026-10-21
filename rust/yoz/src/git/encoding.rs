@@ -114,7 +114,7 @@ impl Unicode {
             if !bytes.len().is_multiple_of(4) {
                 return Err("truncated code unit");
             }
-            for unit in bytes.chunks_exact(4) {
+            for unit in bytes.as_chunks::<4>().0 {
                 let unit = [unit[0], unit[1], unit[2], unit[3]];
                 let scalar = if little {
                     u32::from_le_bytes(unit)
@@ -127,7 +127,7 @@ impl Unicode {
             if !bytes.len().is_multiple_of(2) {
                 return Err("truncated code unit");
             }
-            let units = bytes.chunks_exact(2).map(|unit| {
+            let units = bytes.as_chunks::<2>().0.iter().map(|unit| {
                 let unit = [unit[0], unit[1]];
                 if little {
                     u16::from_le_bytes(unit)

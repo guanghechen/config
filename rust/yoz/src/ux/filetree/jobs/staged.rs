@@ -55,12 +55,14 @@ impl Runner {
             Err(error) => {
                 self.record(
                     &source,
-                    path,
-                    Some(destination.path),
-                    ItemStatus::Failed,
-                    Some(std::io::Error::other(error.clone())),
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: Some(destination.path),
+                        status: ItemStatus::Failed,
+                        error: Some(std::io::Error::other(error.clone())),
+                        sync_error: None,
+                        charge,
+                    },
                 );
                 return if self.job.0.cancel.load(Ordering::Acquire)
                     || error.code == ErrorCode::ResourceLimit
@@ -98,12 +100,14 @@ impl Runner {
                         .cloned();
                     self.record(
                         &source,
-                        path,
-                        Some(destination.path),
-                        ItemStatus::Failed,
-                        Some(error),
-                        None,
-                        charge,
+                        ItemOutcome {
+                            path,
+                            target: Some(destination.path),
+                            status: ItemStatus::Failed,
+                            error: Some(error),
+                            sync_error: None,
+                            charge,
+                        },
                     );
                     return fatal.map_or(Ok(false), Err);
                 }
@@ -135,16 +139,18 @@ impl Runner {
                         }
                         results.push(self.result(
                             &directory.source,
-                            directory.path,
-                            Some(directory.target),
-                            if success {
-                                ItemStatus::Success
-                            } else {
-                                ItemStatus::Failed
+                            ItemOutcome {
+                                path: directory.path,
+                                target: Some(directory.target),
+                                status: if success {
+                                    ItemStatus::Success
+                                } else {
+                                    ItemStatus::Failed
+                                },
+                                error: None,
+                                sync_error: None,
+                                charge,
                             },
-                            None,
-                            None,
-                            charge,
                         ));
                     }
                     let Some(parent) = stack.last_mut() else {
@@ -195,12 +201,14 @@ impl Runner {
                             stack.last_mut().expect("parent").success = false;
                             results.push(self.result(
                                 &source,
-                                source_path,
-                                Some(target_path),
-                                ItemStatus::Failed,
-                                Some(std::io::Error::other(error.clone())),
-                                None,
-                                charge,
+                                ItemOutcome {
+                                    path: source_path,
+                                    target: Some(target_path),
+                                    status: ItemStatus::Failed,
+                                    error: Some(std::io::Error::other(error.clone())),
+                                    sync_error: None,
+                                    charge,
+                                },
                             ));
                             if staged.damaged() || error.code == ErrorCode::ResourceLimit {
                                 return Err(error);
@@ -238,16 +246,18 @@ impl Runner {
                 stack.last_mut().expect("parent").success &= success;
                 results.push(self.result(
                     &source,
-                    source_path,
-                    Some(target_path),
-                    if success {
-                        ItemStatus::Success
-                    } else {
-                        ItemStatus::Failed
+                    ItemOutcome {
+                        path: source_path,
+                        target: Some(target_path),
+                        status: if success {
+                            ItemStatus::Success
+                        } else {
+                            ItemStatus::Failed
+                        },
+                        error: copied.err(),
+                        sync_error: None,
+                        charge,
                     },
-                    copied.err(),
-                    None,
-                    charge,
                 ));
                 if let Some(error) = fatal {
                     return Err(error);
@@ -261,15 +271,17 @@ impl Runner {
             if let Some(charge) = directory.charge {
                 results.push(self.result(
                     &directory.source,
-                    directory.path,
-                    Some(directory.target),
-                    ItemStatus::Failed,
-                    Some(std::io::Error::new(
-                        std::io::ErrorKind::Interrupted,
-                        "directory copy stopped before completion",
-                    )),
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path: directory.path,
+                        target: Some(directory.target),
+                        status: ItemStatus::Failed,
+                        error: Some(std::io::Error::new(
+                            std::io::ErrorKind::Interrupted,
+                            "directory copy stopped before completion",
+                        )),
+                        sync_error: None,
+                        charge,
+                    },
                 ));
             }
         }
@@ -311,12 +323,14 @@ impl Runner {
                 self.discard_results(&mut results, 0);
                 self.record(
                     &source,
-                    path,
-                    Some(destination.path),
-                    ItemStatus::Failed,
-                    Some(error),
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: Some(destination.path),
+                        status: ItemStatus::Failed,
+                        error: Some(error),
+                        sync_error: None,
+                        charge,
+                    },
                 );
                 if let Err(error) = walked {
                     return Err(error);
@@ -330,24 +344,36 @@ impl Runner {
                 let sync = observed
                     .map_err(|error| resource::io_error("read published directory", error))
                     .and_then(|entry| {
-                        self.publish(&source, Some(target), Some(entry), false, None, None, None)
-                            .map(|_| ())
+                        self.publish(
+                            &source,
+                            Publication {
+                                target: Some(target),
+                                entry: Some(entry),
+                                moved: false,
+                                token: None,
+                                replaced: None,
+                                descendants: None,
+                            },
+                        )
+                        .map(|_| ())
                     });
                 for result in results {
                     self.deliver(result);
                 }
                 self.record(
                     &source,
-                    path,
-                    Some(destination.path),
-                    if success {
-                        ItemStatus::Success
-                    } else {
-                        ItemStatus::Failed
+                    ItemOutcome {
+                        path,
+                        target: Some(destination.path),
+                        status: if success {
+                            ItemStatus::Success
+                        } else {
+                            ItemStatus::Failed
+                        },
+                        error: None,
+                        sync_error: sync.err(),
+                        charge,
                     },
-                    None,
-                    sync.err(),
-                    charge,
                 );
                 walked
             }

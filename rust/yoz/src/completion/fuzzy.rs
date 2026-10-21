@@ -767,7 +767,7 @@ mod tests {
             let (indexes, scores) = value.query(query);
             let packed = value.query_packed(query);
             assert_eq!(packed.len(), indexes.len() * 8);
-            for (position, record) in packed.chunks_exact(8).enumerate() {
+            for (position, record) in packed.as_chunks::<8>().0.iter().enumerate() {
                 assert_eq!(
                     u32::from_ne_bytes(record[..4].try_into().unwrap()) as usize,
                     indexes[position]

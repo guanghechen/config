@@ -83,6 +83,14 @@ impl std::fmt::Debug for NativeTaskStatus {
     }
 }
 
+/// How one source change relates to a task: whether the task caused it, and which read or discovery it answers.
+pub(crate) struct Observed {
+    pub own: bool,
+    pub required_read: bool,
+    pub read: Option<NodeId>,
+    pub discovery: Option<(NodeId, NodeId)>,
+}
+
 #[derive(Clone)]
 pub(crate) struct Task {
     reads: Map<NodeId, ReadGrant>,
@@ -280,16 +288,13 @@ impl Task {
         Ok(())
     }
 
-    pub fn changed(
-        &mut self,
-        old: &Source,
-        new: &Source,
-        change: &Change,
-        own: bool,
-        required_read: bool,
-        read: Option<NodeId>,
-        discovery: Option<(NodeId, NodeId)>,
-    ) {
+    pub fn changed(&mut self, old: &Source, new: &Source, change: &Change, observed: Observed) {
+        let Observed {
+            own,
+            required_read,
+            read,
+            discovery,
+        } = observed;
         if !self.valid
             || matches!(
                 change.kind,
@@ -310,23 +315,23 @@ impl Task {
                 .insert(change.node.expect("discovered member"), root);
             return;
         }
-        if let Some(slot) = read {
-            if let Some(grant) = self.reads.get(&slot).copied().filter(|grant| {
+        if let Some(slot) = read
+            && let Some(grant) = self.reads.get(&slot).copied().filter(|grant| {
                 new.node(slot)
                     .is_some_and(|node| node.request_epoch == grant.epoch)
-            }) {
-                if change.kind == ChangeKind::Completeness && change.node == Some(slot) {
-                    return;
+            })
+        {
+            if change.kind == ChangeKind::Completeness && change.node == Some(slot) {
+                return;
+            }
+            if grant.admit_new
+                && change.kind == ChangeKind::Insert
+                && change.new_parent == Some(slot)
+            {
+                if let Some(id) = change.node {
+                    self.members.insert(id, grant.root);
                 }
-                if grant.admit_new
-                    && change.kind == ChangeKind::Insert
-                    && change.new_parent == Some(slot)
-                {
-                    if let Some(id) = change.node {
-                        self.members.insert(id, grant.root);
-                    }
-                    return;
-                }
+                return;
             }
         }
         let affected = change.node.is_some_and(|id| {

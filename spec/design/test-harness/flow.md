@@ -9,6 +9,8 @@ Repository health check（`node script/healcheck.mjs`）依次执行各项检查
 - LuaLS：`script/luals-check.mjs` 不得报告 Warning 或 Error。
 - Node：通过 `node --test` 执行 `__test__/node/` 下的 specs。
 - Lua：通过 `__test__/run.lua` 执行 specs。
+- Clippy：`cargo clippy --workspace --all-targets -- -D warnings` 不得报告 warning；先打印 clippy 版本，toolchain
+  升级带来的新 lint 随之修复。
 - Rust：执行 `cargo test --workspace --all-targets`；Cargo 编译对应 crate 内的 `#[cfg(test)]` 测试模块。
 
 ## Lua CLI 与 suite 子进程

@@ -203,14 +203,14 @@ fn t_scan_sparse_order_tracks_paged_renames_replacements_and_ambiguous_links() {
         .iter()
         .map(|name| engine.source().id(name).unwrap())
         .collect();
-    for number in 0..800 {
+    for (number, name) in names.iter().enumerate().take(800) {
         fs::rename(
-            directory.path().join(&names[number]),
+            directory.path().join(name),
             directory.path().join(format!("z-{number:04}")),
         )
         .unwrap();
         if number < 150 {
-            fs::write(directory.path().join(&names[number]), b"replacement").unwrap();
+            fs::write(directory.path().join(name), b"replacement").unwrap();
         }
     }
     fs::hard_link(

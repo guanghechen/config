@@ -336,26 +336,26 @@ pub(crate) fn retarget_children(
     use crate::ux::treeview::{Completeness, Operation};
     let mut result = Vec::with_capacity(operations.len());
     for mut operation in operations {
-        if let Operation::Update { node, patch } = &mut operation {
-            if let Some(payload) = &patch.payload {
-                let id = source.resolve(node)?;
-                let old = entry(source, id)?;
-                if old.kind == super::Kind::Link
-                    || old.kind == super::Kind::Directory
-                        && (old.cycle || patch.can_expand == Some(false))
-                {
-                    let new = Entry::from_payload(payload)
-                        .map_err(|error| io_error("decode resource target", error))?;
-                    if ends_children(&old, &new) {
-                        for child in source.node(id).expect("updated resource").children() {
-                            result.push(Operation::Remove { node: child.into() });
-                        }
-                        patch.completeness = Some(if new.directory() || new.target_unknown {
-                            Completeness::Unknown
-                        } else {
-                            Completeness::Complete
-                        });
+        if let Operation::Update { node, patch } = &mut operation
+            && let Some(payload) = &patch.payload
+        {
+            let id = source.resolve(node)?;
+            let old = entry(source, id)?;
+            if old.kind == super::Kind::Link
+                || old.kind == super::Kind::Directory
+                    && (old.cycle || patch.can_expand == Some(false))
+            {
+                let new = Entry::from_payload(payload)
+                    .map_err(|error| io_error("decode resource target", error))?;
+                if ends_children(&old, &new) {
+                    for child in source.node(id).expect("updated resource").children() {
+                        result.push(Operation::Remove { node: child.into() });
                     }
+                    patch.completeness = Some(if new.directory() || new.target_unknown {
+                        Completeness::Unknown
+                    } else {
+                        Completeness::Complete
+                    });
                 }
             }
         }

@@ -405,10 +405,10 @@ fn launch(tree: Filetree, plan: OperationPlan) -> Result<Job> {
     if plan.nodes.len() > tree.data().limits().nodes {
         return Err(Error::limit("too many operation sources"));
     }
-    if let Some(target) = &plan.target {
-        if target.source.identity() != plan.source.identity() || !target.entry()?.directory() {
-            return Err(Error::invalid("invalid target directory"));
-        }
+    if let Some(target) = &plan.target
+        && (target.source.identity() != plan.source.identity() || !target.entry()?.directory())
+    {
+        return Err(Error::invalid("invalid target directory"));
     }
     if matches!(plan.kind, OperationKind::Delete | OperationKind::Trash) != plan.target.is_none() {
         return Err(Error::invalid("operation target does not match kind"));
@@ -425,10 +425,10 @@ fn launch(tree: Filetree, plan: OperationPlan) -> Result<Job> {
             ));
         }
     }
-    if let Some(task) = &plan.task {
-        if task.state.data().source().identity() != plan.source.identity() {
-            return Err(Error::invalid("task belongs to another Filetree"));
-        }
+    if let Some(task) = &plan.task
+        && task.state.data().source().identity() != plan.source.identity()
+    {
+        return Err(Error::invalid("task belongs to another Filetree"));
     }
     ACTIVE
         .try_update(Ordering::AcqRel, Ordering::Acquire, |count| {
@@ -526,9 +526,27 @@ struct Directory {
     successful_start: usize,
     charge: Reservation,
 }
+/// What one publication changes in the tree: the target and its entry, and how a move or replacement carries over.
+struct Publication {
+    target: Option<Resource>,
+    entry: Option<Entry>,
+    moved: bool,
+    token: Option<TaskUpdateToken>,
+    replaced: Option<job_owner::Replacement>,
+    descendants: Option<job_owner::MovedDescendants>,
+}
+/// How one item's attempt ended: its paths, status, failure and the reservation it releases.
+struct ItemOutcome {
+    path: PathBuf,
+    target: Option<PathBuf>,
+    status: ItemStatus,
+    error: Option<std::io::Error>,
+    sync_error: Option<Error>,
+    charge: Reservation,
+}
 enum Step {
     Done(bool),
-    Directory(Directory),
+    Directory(Box<Directory>),
 }
 impl Runner {
     fn check(&self) -> Result<()> {
@@ -653,7 +671,7 @@ impl Runner {
                                 parent.success &= success;
                             }
                         }
-                        Step::Directory(directory) => stack.push(directory),
+                        Step::Directory(directory) => stack.push(*directory),
                     }
                 }
                 let Some(directory) = stack.last_mut() else {
@@ -902,26 +920,27 @@ impl Runner {
             /* Disk IO has succeeded, even if publication or the whole submission failed. */
             self.record_result(
                 &copy.source,
-                copy.path,
-                Some(copy.target_path),
-                ItemStatus::Success,
-                None,
-                failure.clone().or_else(|| result.take()),
-                copy.charge,
+                ItemOutcome {
+                    path: copy.path,
+                    target: Some(copy.target_path),
+                    status: ItemStatus::Success,
+                    error: None,
+                    sync_error: failure.clone().or_else(|| result.take()),
+                    charge: copy.charge,
+                },
             );
         }
     }
 
-    fn publish(
-        &mut self,
-        source: &Item,
-        target: Option<Resource>,
-        entry: Option<Entry>,
-        moved: bool,
-        token: Option<TaskUpdateToken>,
-        replaced: Option<job_owner::Replacement>,
-        descendants: Option<job_owner::MovedDescendants>,
-    ) -> Result<Option<Resource>> {
+    fn publish(&mut self, source: &Item, publication: Publication) -> Result<Option<Resource>> {
+        let Publication {
+            target,
+            entry,
+            moved,
+            token,
+            replaced,
+            descendants,
+        } = publication;
         self.flush_copies();
         let result = Arc::new(Mutex::new(None));
         work::wait(
@@ -1003,44 +1022,25 @@ impl Runner {
                 .0;
         }
     }
-    fn record(
-        &mut self,
-        source: &Item,
-        path: PathBuf,
-        target: Option<PathBuf>,
-        status: ItemStatus,
-        error: Option<std::io::Error>,
-        sync_error: Option<Error>,
-        charge: Reservation,
-    ) {
+    fn record(&mut self, source: &Item, outcome: ItemOutcome) {
         self.flush_copies();
-        self.record_result(source, path, target, status, error, sync_error, charge);
+        self.record_result(source, outcome);
     }
 
-    fn record_result(
-        &mut self,
-        source: &Item,
-        path: PathBuf,
-        target: Option<PathBuf>,
-        status: ItemStatus,
-        error: Option<std::io::Error>,
-        sync_error: Option<Error>,
-        charge: Reservation,
-    ) {
-        let result = self.result(source, path, target, status, error, sync_error, charge);
+    fn record_result(&mut self, source: &Item, outcome: ItemOutcome) {
+        let result = self.result(source, outcome);
         self.deliver(result);
     }
 
-    fn result(
-        &mut self,
-        source: &Item,
-        path: PathBuf,
-        target: Option<PathBuf>,
-        status: ItemStatus,
-        error: Option<std::io::Error>,
-        sync_error: Option<Error>,
-        charge: Reservation,
-    ) -> Arc<ItemResult> {
+    fn result(&mut self, source: &Item, outcome: ItemOutcome) -> Arc<ItemResult> {
+        let ItemOutcome {
+            path,
+            target,
+            status,
+            error,
+            sync_error,
+            charge,
+        } = outcome;
         let (source_physical, target_physical, path_memory) = self
             .physical
             .remove(&source.id)
@@ -1214,12 +1214,14 @@ impl Runner {
             Err(error) => {
                 self.record(
                     &source,
-                    path,
-                    target_path,
-                    ItemStatus::Failed,
-                    Some(error),
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: target_path,
+                        status: ItemStatus::Failed,
+                        error: Some(error),
+                        sync_error: None,
+                        charge,
+                    },
                 );
                 return Ok(Step::Done(false));
             }
@@ -1237,12 +1239,14 @@ impl Runner {
             Err(error) => {
                 self.record(
                     &source,
-                    path,
-                    target_path,
-                    ItemStatus::Failed,
-                    None,
-                    Some(error),
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: target_path,
+                        status: ItemStatus::Failed,
+                        error: None,
+                        sync_error: Some(error),
+                        charge,
+                    },
                 );
                 return Ok(Step::Done(false));
             }
@@ -1274,12 +1278,14 @@ impl Runner {
             if !case_rename {
                 self.record(
                     &source,
-                    path,
-                    target_path,
-                    ItemStatus::Skipped,
-                    None,
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: target_path,
+                        status: ItemStatus::Skipped,
+                        error: None,
+                        sync_error: None,
+                        charge,
+                    },
                 );
                 return Ok(Step::Done(false));
             }
@@ -1291,12 +1297,14 @@ impl Runner {
         {
             self.record(
                 &source,
-                path,
-                target_path,
-                ItemStatus::Skipped,
-                None,
-                None,
-                charge,
+                ItemOutcome {
+                    path,
+                    target: target_path,
+                    status: ItemStatus::Skipped,
+                    error: None,
+                    sync_error: None,
+                    charge,
+                },
             );
             return Ok(Step::Done(false));
         }
@@ -1322,12 +1330,14 @@ impl Runner {
             if let Err(error) = valid {
                 self.record(
                     &source,
-                    path,
-                    target_path,
-                    ItemStatus::Failed,
-                    Some(error),
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: target_path,
+                        status: ItemStatus::Failed,
+                        error: Some(error),
+                        sync_error: None,
+                        charge,
+                    },
                 );
                 return Ok(Step::Done(false));
             }
@@ -1350,12 +1360,14 @@ impl Runner {
             if !self.ask(&source, &from, &to, true)? {
                 self.record(
                     &source,
-                    path,
-                    target_path,
-                    ItemStatus::Skipped,
-                    None,
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: target_path,
+                        status: ItemStatus::Skipped,
+                        error: None,
+                        sync_error: None,
+                        charge,
+                    },
                 );
                 return Ok(Step::Done(false));
             }
@@ -1372,12 +1384,14 @@ impl Runner {
         if let Err(error) = valid {
             self.record(
                 &source,
-                path,
-                target_path,
-                ItemStatus::Failed,
-                None,
-                Some(error),
-                charge,
+                ItemOutcome {
+                    path,
+                    target: target_path,
+                    status: ItemStatus::Failed,
+                    error: None,
+                    sync_error: Some(error),
+                    charge,
+                },
             );
             return Ok(Step::Done(false));
         }
@@ -1496,10 +1510,10 @@ impl Runner {
                 }
             }
             if recursive {
-                if let Some(destination) = &destination {
-                    if destination.expected.is_none() {
-                        io::create_directory(destination)?;
-                    }
+                if let Some(destination) = &destination
+                    && destination.expected.is_none()
+                {
+                    io::create_directory(destination)?;
                 }
                 return Ok(true);
             }
@@ -1584,12 +1598,14 @@ impl Runner {
                 }
                 self.record(
                     &source,
-                    path,
-                    target_path,
-                    ItemStatus::Failed,
-                    Some(error),
-                    None,
-                    charge,
+                    ItemOutcome {
+                        path,
+                        target: target_path,
+                        status: ItemStatus::Failed,
+                        error: Some(error),
+                        sync_error: None,
+                        charge,
+                    },
                 );
                 return Ok(Step::Done(false));
             }
@@ -1600,16 +1616,18 @@ impl Runner {
                 let error = resource::io_error("read completed destination", error);
                 self.record(
                     &source,
-                    path,
-                    target_path,
-                    if directory {
-                        ItemStatus::Failed
-                    } else {
-                        ItemStatus::Success
+                    ItemOutcome {
+                        path,
+                        target: target_path,
+                        status: if directory {
+                            ItemStatus::Failed
+                        } else {
+                            ItemStatus::Success
+                        },
+                        error: None,
+                        sync_error: Some(error),
+                        charge,
                     },
-                    None,
-                    Some(error),
-                    charge,
                 );
                 return Ok(Step::Done(!directory));
             }
@@ -1645,23 +1663,27 @@ impl Runner {
                 } else {
                     match self.publish(
                         &source,
-                        Some(target.clone()),
-                        Some(entry),
-                        false,
-                        None,
-                        replacement,
-                        None,
+                        Publication {
+                            target: Some(target.clone()),
+                            entry: Some(entry),
+                            moved: false,
+                            token: None,
+                            replaced: replacement,
+                            descendants: None,
+                        },
                     ) {
                         Ok(value) => value,
                         Err(error) => {
                             self.record(
                                 &source,
-                                path,
-                                target_path,
-                                ItemStatus::Failed,
-                                None,
-                                Some(error),
-                                charge,
+                                ItemOutcome {
+                                    path,
+                                    target: target_path,
+                                    status: ItemStatus::Failed,
+                                    error: None,
+                                    sync_error: Some(error),
+                                    charge,
+                                },
                             );
                             return Ok(Step::Done(false));
                         }
@@ -1678,12 +1700,14 @@ impl Runner {
                 Err(error) => {
                     self.record(
                         &source,
-                        path,
-                        target_path,
-                        ItemStatus::Failed,
-                        None,
-                        Some(error),
-                        charge,
+                        ItemOutcome {
+                            path,
+                            target: target_path,
+                            status: ItemStatus::Failed,
+                            error: None,
+                            sync_error: Some(error),
+                            charge,
+                        },
                     );
                     return Ok(Step::Done(false));
                 }
@@ -1696,7 +1720,7 @@ impl Runner {
                 .unwrap_or_else(|error| error.into_inner())
                 .results
                 .len();
-            return Ok(Step::Directory(Directory {
+            return Ok(Step::Directory(Box::new(Directory {
                 created,
                 source,
                 path,
@@ -1707,7 +1731,7 @@ impl Runner {
                 result_start,
                 successful_start: self.successful.len(),
                 charge,
-            }));
+            })));
         }
         if small_copy
             && replacement.is_none()
@@ -1747,22 +1771,26 @@ impl Runner {
         let sync = descendants.and_then(|descendants| {
             self.publish(
                 &source,
-                target,
-                observed,
-                self.plan.kind == OperationKind::Move,
-                token,
-                replacement,
-                descendants,
+                Publication {
+                    target,
+                    entry: observed,
+                    moved: self.plan.kind == OperationKind::Move,
+                    token,
+                    replaced: replacement,
+                    descendants,
+                },
             )
         });
         self.record(
             &source,
-            path,
-            target_path,
-            ItemStatus::Success,
-            None,
-            sync.err(),
-            charge,
+            ItemOutcome {
+                path,
+                target: target_path,
+                status: ItemStatus::Success,
+                error: None,
+                sync_error: sync.err(),
+                charge,
+            },
         );
         Ok(Step::Done(true))
     }
@@ -1903,7 +1931,17 @@ impl Runner {
                 }
                 Ok(()) if self.plan.kind == OperationKind::Delete => {
                     sync_error = self
-                        .publish(&directory.source, None, None, false, token, None, None)
+                        .publish(
+                            &directory.source,
+                            Publication {
+                                target: None,
+                                entry: None,
+                                moved: false,
+                                token,
+                                replaced: None,
+                                descendants: None,
+                            },
+                        )
                         .err();
                 }
                 Ok(()) => {
@@ -1951,16 +1989,18 @@ impl Runner {
         }
         self.record(
             &directory.source,
-            directory.path,
-            directory.target_path,
-            if success {
-                ItemStatus::Success
-            } else {
-                ItemStatus::Failed
+            ItemOutcome {
+                path: directory.path,
+                target: directory.target_path,
+                status: if success {
+                    ItemStatus::Success
+                } else {
+                    ItemStatus::Failed
+                },
+                error: failure,
+                sync_error,
+                charge: directory.charge,
             },
-            failure,
-            sync_error,
-            directory.charge,
         );
         Ok(success)
     }

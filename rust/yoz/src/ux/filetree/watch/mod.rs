@@ -389,18 +389,17 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
             let mut order = Vec::with_capacity(targets.len());
             for target in targets {
                 if let Some((id, current)) = active.get_mut(&target.identity) {
-                    if current.path != target.path
+                    if (current.path != target.path
                         || current.nodes.is_empty() != target.nodes.is_empty()
-                        || current.names != target.names
+                        || current.names != target.names)
+                        && let Err(error) = backend.add(*id, &target)
                     {
-                        if let Err(error) = backend.add(*id, &target) {
-                            last_error = Some(error);
-                            changed.extend(target.nodes.iter().copied());
-                            /* A failed path switch has no coverage and must retry registration. */
-                            backend.remove(*id);
-                            active.remove(&target.identity);
-                            continue;
-                        }
+                        last_error = Some(error);
+                        changed.extend(target.nodes.iter().copied());
+                        /* A failed path switch has no coverage and must retry registration. */
+                        backend.remove(*id);
+                        active.remove(&target.identity);
+                        continue;
                     }
                     order.push(*id);
                     for node in target
@@ -462,29 +461,29 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
                     }
             });
         }
-        if let Some((ticket, nodes)) = &pending {
-            if let Some(outcome) = ticket.poll() {
-                if let Outcome::Reply(Reply::Rejected { error }) = outcome {
-                    if matches!(error.code, ErrorCode::ResourceLimit | ErrorCode::Busy) {
-                        changed.extend(nodes.iter().copied());
-                        due = Some(Instant::now() + Duration::from_millis(10));
-                        delivery_error = Some(error.clone());
-                    }
-                    report = Some(Some(error));
-                } else if let Some(error) = delivery_error.take() {
-                    let mut interest = shared
-                        .interest
-                        .lock()
-                        .unwrap_or_else(|error| error.into_inner());
-                    /* Recovery owns only its delivery error, not a later registration or IO failure. */
-                    if report.is_none() && interest.status.error.as_ref() == Some(&error) {
-                        interest.status.error = None;
-                        interest.status.revision = interest.status.revision.saturating_add(1);
-                        status_changed = true;
-                    }
+        if let Some((ticket, nodes)) = &pending
+            && let Some(outcome) = ticket.poll()
+        {
+            if let Outcome::Reply(Reply::Rejected { error }) = outcome {
+                if matches!(error.code, ErrorCode::ResourceLimit | ErrorCode::Busy) {
+                    changed.extend(nodes.iter().copied());
+                    due = Some(Instant::now() + Duration::from_millis(10));
+                    delivery_error = Some(error.clone());
                 }
-                pending = None;
+                report = Some(Some(error));
+            } else if let Some(error) = delivery_error.take() {
+                let mut interest = shared
+                    .interest
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner());
+                /* Recovery owns only its delivery error, not a later registration or IO failure. */
+                if report.is_none() && interest.status.error.as_ref() == Some(&error) {
+                    interest.status.error = None;
+                    interest.status.revision = interest.status.revision.saturating_add(1);
+                    status_changed = true;
+                }
             }
+            pending = None;
         }
         if backend.ready() && pending.is_none() && due.is_some_and(|due| due <= Instant::now()) {
             let Some(data) = data.upgrade() else { break };
@@ -555,11 +554,15 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
     Ok(())
 }
 
+/// The inputs a watch publication was planned from: each state's id, root, display, expansion generation and view
+/// count, and the interest version.
+type PublishKey = (Vec<(u64, Root, DisplayOptions, u32, usize)>, u64);
+
 pub(crate) struct Watcher {
     interest: Arc<Mutex<Interest>>,
     dirty: Dirty,
     controller: Option<Controller>,
-    key: Option<(Vec<(u64, Root, DisplayOptions, u32, usize)>, u64)>,
+    key: Option<PublishKey>,
     index: Option<super::index::Index>,
     recent: Map<NodeId, u64>,
     previous: Map<NodeId, ()>,
@@ -746,30 +749,26 @@ impl Watcher {
             };
             let mut requests = Vec::new();
             let mut recovery_path = None;
-            if entry.directory() {
-                if let (Some(identity), Ok(path)) =
+            if entry.directory()
+                && let (Some(identity), Ok(path)) =
                     (entry.target_identity(), resource::path(source, id))
+            {
+                requests.push((identity, path, None));
+            }
+            if entry.kind == Kind::Link
+                && let Some(parent) = source.node(id).and_then(|node| node.parent)
+            {
+                if let (Ok(entry), Ok(path)) = (
+                    resource::entry(source, parent),
+                    resource::path(source, parent),
+                ) && let Some(identity) = entry.target_identity()
                 {
                     requests.push((identity, path, None));
                 }
-            }
-            if entry.kind == Kind::Link {
-                if let Some(parent) = source.node(id).and_then(|node| node.parent) {
-                    if let (Ok(entry), Ok(path)) = (
-                        resource::entry(source, parent),
-                        resource::path(source, parent),
-                    ) {
-                        if let Some(identity) = entry.target_identity() {
-                            requests.push((identity, path, None));
-                        }
-                    }
-                    if let (Some(link), Ok(parent_path)) =
-                        (&entry.link, resource::path(source, parent))
-                    {
-                        if let Some(path) = parent_path.join(link).parent() {
-                            recovery_path = Some(path.to_owned());
-                        }
-                    }
+                if let (Some(link), Ok(parent_path)) = (&entry.link, resource::path(source, parent))
+                    && let Some(path) = parent_path.join(link).parent()
+                {
+                    recovery_path = Some(path.to_owned());
                 }
             }
             #[cfg(target_os = "linux")]

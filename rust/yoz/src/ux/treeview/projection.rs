@@ -543,17 +543,16 @@ impl Snapshot {
                 "branch suffixes require List label text and at most 32 display bytes",
             ));
         }
-        if let Some(label) = &state.display.context_label {
-            if state.display.mode != Mode::List
+        if let Some(label) = &state.display.context_label
+            && (state.display.mode != Mode::List
                 || state.display.list_text != ListText::Label
                 || !matches!(state.root, Root::ChildrenOf(_))
                 || label.len() > 4096
-                || label.chars().any(char::is_control)
-            {
-                return Err(Error::invalid(
-                    "context labels require a ChildrenOf List with label text",
-                ));
-            }
+                || label.chars().any(char::is_control))
+        {
+            return Err(Error::invalid(
+                "context labels require a ChildrenOf List with label text",
+            ));
         }
         let summary = state.summary(&source)?;
         let matcher = if state.display.pattern.is_empty() {

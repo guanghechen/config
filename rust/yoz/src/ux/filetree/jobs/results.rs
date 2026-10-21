@@ -51,13 +51,12 @@ impl ItemResult {
             && value.sync_error.is_none()
             && value.source_physical.is_none()
             && value.target_physical.is_none()
-            && name.is_some()
+            && let Some(name) = name
             && value
                 .target
                 .as_ref()
-                .is_none_or(|path| path.file_name() == name)
+                .is_none_or(|path| path.file_name() == Some(name))
         {
-            let name = name.expect("success basename");
             let source = value.source.parent().expect("success parent");
             let target = value.target.as_deref().and_then(Path::parent);
             let origin = witness.as_ref().map(|witness| &witness.parent);

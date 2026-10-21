@@ -350,14 +350,16 @@ impl Engine {
                         &old,
                         &source,
                         &change,
-                        own && own_state == Some(id),
-                        required,
-                        request,
-                        match origin {
-                            Origin::Discovery(discovery) if discovery.state == id => {
-                                Some((discovery.parent, discovery.root))
-                            }
-                            _ => None,
+                        Observed {
+                            own: own && own_state == Some(id),
+                            required_read: required,
+                            read: request,
+                            discovery: match origin {
+                                Origin::Discovery(discovery) if discovery.state == id => {
+                                    Some((discovery.parent, discovery.root))
+                                }
+                                _ => None,
+                            },
                         },
                     );
                 }

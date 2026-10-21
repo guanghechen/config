@@ -37,6 +37,7 @@ fn chars(input: &str) -> Vec<char> {
 }
 
 /// fzf's `assertMatch`: positions, when present, decide start and end.
+// Mirrors fzf's assertMatch so its test cases port argument for argument.
 #[allow(clippy::too_many_arguments)]
 fn assert_match(
     algo: Algo,

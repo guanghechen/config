@@ -172,9 +172,10 @@ nvim -l __test__/run.lua --list era/dressing/
 nvim -l __test__/run.lua --timeout 60000 stl/c/
 nvim -l __test__/run.lua --jobs 1
 
-# Node and Rust tests
+# Node and Rust tests, and Rust lints
 node --test __test__/node/*.test.mjs
 cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --quiet
+cargo clippy --manifest-path rust/Cargo.toml --workspace --all-targets -- -D warnings
 
 # Formatting (pinned StyLua and rustfmt), the LuaLS baseline, and the repository-wide health check
 node script/format-check.mjs
