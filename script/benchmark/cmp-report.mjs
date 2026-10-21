@@ -3,15 +3,16 @@ import assert from "node:assert/strict"
 import { existsSync, readFileSync, realpathSync } from "node:fs"
 import { join } from "node:path"
 import { gunzipSync } from "node:zlib"
-import { median, percentile } from "./stats.mjs"
+import { summary } from "./stats.mjs"
 
 const phases = ["ranking", "ui", "load"]
 const sum = (values) => values.reduce((total, value) => total + value, 0)
 
+/** `stats.summary` of `values` with their total; null when empty. */
 export function statistics(values) {
-  assert(values.every(Number.isFinite), "samples must be finite numbers")
-  if (values.length === 0) return null
-  return { count: values.length, median: median(values), p95: percentile(values, 0.95), max: percentile(values, 1), total: sum(values) }
+  assert(values.every(Number.isFinite), "values must be finite numbers")
+  const result = summary(values)
+  return result ? { ...result, total: sum(values) } : null
 }
 
 function read(folder, phase) {
@@ -407,7 +408,7 @@ function cell(row) {
   if (row.unit === "total") return String(stats.total)
   if (row.unit === "rate")
     return sum(row.denominator) ? `${((stats.total / sum(row.denominator)) * 100).toFixed(1)}%` : "—"
-  return `${stats.median.toFixed(2)} / ${stats.p95.toFixed(2)}`
+  return `${stats.median.toFixed(2)} / ${stats.p95?.toFixed(2) ?? "—"}`
 }
 
 function table(title, headings, rows) {

@@ -1,16 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { median, percentile } from "./stats.mjs"
+import { median, summary } from "./stats.mjs"
 
-function statistics(values, observations = values.length) {
-  const sorted = [...values].sort((a, b) => a - b)
-  return {
-    runs: sorted.length, observations,
-    median: median(sorted), min: sorted[0], max: sorted.at(-1),
-    ...(sorted.length >= 20 ? { p95: percentile(sorted, 0.95) } : {}),
-  }
-}
+/** `stats.summary` of per-process medians; `observations` counts the operations behind them. */
+const statistics = (medians, observations) => ({ ...summary(medians), observations })
 
 export function summarize(trials) {
   if (!trials.length) throw new Error("no benchmark results")
@@ -176,7 +170,7 @@ export function analyze(directory) {
   const value = (group, key) => group.metrics[key]?.median.toFixed(3) ?? "—"
   for (const group of summary.groups.filter((item) => item.scope === "widget")) {
     lines.push(
-      `| ${group.case} | ${group.mode} | ${group.implementation} | ${group.metrics["open.ready_ms"]?.runs ?? 0} | ${[
+      `| ${group.case} | ${group.mode} | ${group.implementation} | ${group.metrics["open.ready_ms"]?.n ?? 0} | ${[
         "open.visible_ms",
         "open.ready_ms",
         "cursor.visible_ms",
@@ -200,7 +194,7 @@ export function analyze(directory) {
       const metric = group.metrics[`${kind}.${["cursor", "scroll", "selection", "visual_selection"].includes(kind) ? "visible_ms" : "ready_ms"}`]
       if (!metric) continue
       const rpc = group.metrics[`${kind}.observer_rpcs`]
-      lines.push(`| ${cell(group.case)} | ${group.mode} | ${group.implementation} | ${kind} | ${metric.runs} | ${metric.median.toFixed(3)} | ${metric.p95?.toFixed(3) ?? "—"} | ${metric.maximum_observation.toFixed(3)} | ${rpc?.maximum_observation ?? "—"} | ${value(group, `${kind}.readiness_checks`)} |`)
+      lines.push(`| ${cell(group.case)} | ${group.mode} | ${group.implementation} | ${kind} | ${metric.n} | ${metric.median.toFixed(3)} | ${metric.p95?.toFixed(3) ?? "—"} | ${metric.maximum_observation.toFixed(3)} | ${rpc?.maximum_observation ?? "—"} | ${value(group, `${kind}.readiness_checks`)} |`)
     }
   }
   lines.push("", "## Process memory", "", "| Case | Mode | Implementation | Definition | Open MiB | Final MiB |", "| --- | --- | --- | --- | ---: | ---: |")
@@ -212,7 +206,7 @@ export function analyze(directory) {
     lines.push("", "## Startup, Git and filesystem comparisons", "", "| Case | Implementation | Metric | Runs | Median | Min | Max |", "| --- | --- | --- | ---: | ---: | ---: | ---: |")
     for (const group of comparisons) {
       for (const [name, metric] of Object.entries(group.metrics).filter(([name]) => !name.includes("memory") && !name.startsWith("baseline."))) {
-        lines.push(`| ${cell(group.case)} | ${cell(group.implementation)} | ${cell(name)} | ${metric.runs} | ${metric.median.toFixed(3)} | ${metric.min.toFixed(3)} | ${metric.max.toFixed(3)} |`)
+        lines.push(`| ${cell(group.case)} | ${cell(group.implementation)} | ${cell(name)} | ${metric.n} | ${metric.median.toFixed(3)} | ${metric.min.toFixed(3)} | ${metric.max.toFixed(3)} |`)
       }
     }
   }
@@ -236,7 +230,7 @@ export function analyze(directory) {
       "| --- | --- | --- | --- | ---: | ---: | ---: | ---: |")
     for (const group of summary.probes) {
       for (const [name, metric] of Object.entries(group.metrics)) {
-        lines.push(`| ${cell(group.case)} | ${cell(group.scenario)} | ${cell(group.implementation)} | ${cell(name)} | ${metric.runs} | ${metric.median.toFixed(3)} | ${metric.min.toFixed(3)} | ${metric.max.toFixed(3)} |`)
+        lines.push(`| ${cell(group.case)} | ${cell(group.scenario)} | ${cell(group.implementation)} | ${cell(name)} | ${metric.n} | ${metric.median.toFixed(3)} | ${metric.min.toFixed(3)} | ${metric.max.toFixed(3)} |`)
       }
     }
   }

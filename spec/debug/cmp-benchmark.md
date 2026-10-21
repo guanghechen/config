@@ -53,7 +53,8 @@ Load 预置 64 项历史；UI 只在 `frecency_10000` 场景开启历史。Runne
 - Open-loop producer 在 parent 按 deadline 发送输入，child 阻塞不会推迟 offered load。
   同时报告 latency、CPU/key 和菜单 flush 覆盖率；覆盖率不等于丢键率。
 - Reporter 检查最终文本、请求位置、取消后的发布和 generation；事件 query lag 单列，不能直接认定候选错误。
-- CPU 为整个 child（含 observer）；heartbeat 也包含 OS 调度。未锁 CPU 频率、小样本 p95 不能外推稳定尾延迟。
+- CPU 为整个 child（含 observer）；heartbeat 也包含 OS 调度。未锁 CPU 频率；少于 20 个值的指标不报告 p95（显示 `—`），
+  已报告的 p95 也不能外推稳定尾延迟。
 - Lua heap 不含 Rust allocations；进程内存（macOS 为 physical footprint）包含 editor、fixture、allocator 保留页。
   Fresh 50k 预制多份响应会显著放大进程内存，不能当作日常内存或 leak 证据。
 

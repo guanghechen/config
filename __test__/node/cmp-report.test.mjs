@@ -130,7 +130,7 @@ function loadCase() {
 
 test("statistics use the mathematical median and nearest-rank p95 without mutating samples", () => {
   const samples = [4, 1, 3, 2]
-  assert.deepEqual(statistics(samples), { count: 4, median: 2.5, p95: 4, max: 4, total: 10 })
+  assert.deepEqual(statistics(samples), { n: 4, median: 2.5, p95: null, min: 1, max: 4, total: 10 })
   assert.deepEqual(samples, [4, 1, 3, 2])
   assert.equal(statistics(Array.from({ length: 20 }, (_, i) => i + 1)).p95, 19)
   assert.equal(statistics([]), null)
@@ -159,7 +159,7 @@ test("partial JSON and gzip runs pool raw samples of the same implementation", (
   const data = collectRuns([first, second])
   const row = [...data.metrics.values()].find((row) => row.metric === "rank")
   assert.equal(statistics(row.values).median, 6)
-  assert.equal(statistics(row.values).count, 6)
+  assert.equal(statistics(row.values).n, 6)
   assert.match(renderReport(data), /a\\\|b/)
 })
 

@@ -25,16 +25,17 @@ function run(trial, cursorTimes, mode = "tree") {
 test("repeated operations do not become independent trials or outweigh another process", () => {
   const result = summarize([run(1, [1, 1, 1, 1, 1]), run(2, [9])])
   assert.deepEqual(result.groups[0].metrics["cursor.visible_ms"], {
-    runs: 2,
+    n: 2,
     observations: 6,
     median: 5,
+    p95: null,
     min: 1,
     max: 9,
     maximum_observation: 9,
   })
   assert.equal(result.groups[0].metrics["open_memory.process_memory_mib"].median, 10)
   assert.equal(result.groups[0].memory_kind, "physical_footprint")
-  assert.equal(result.groups[0].metrics["open.ready_ms"].p95, undefined)
+  assert.equal(result.groups[0].metrics["open.ready_ms"].p95, null)
 })
 
 test("a slow individual input remains visible after reducing each process to its median", () => {
@@ -109,9 +110,9 @@ test("active loading keeps modes and cold versus warm scans in separate process 
   ] }] })
   assert.equal(groups.length, 3)
   const cold = groups.find(group => group.scenario === "tree_cold").metrics.input_visible_ms
-  assert.equal(cold.runs, 2)
+  assert.equal(cold.n, 2)
   assert.equal(cold.median, 6)
-  assert.equal(cold.p95, undefined)
+  assert.equal(cold.p95, null)
   assert.equal(groups.find(group => group.scenario === "tree_warm").metrics.input_visible_ms.median, 1)
   assert.equal(groups.find(group => group.scenario === "list_cold").metrics.input_visible_ms.median, 14)
 })
@@ -147,7 +148,7 @@ test("failed and partial runs still produce an honest report", (t) => {
   assert.match(report, /blocked.*missing server/)
   writeFileSync(join(directory, "results.jsonl"), JSON.stringify(run(1, [3])) + "\n")
   const summary = analyze(directory)
-  assert.equal(summary.groups[0].metrics["cursor.visible_ms"].runs, 1)
+  assert.equal(summary.groups[0].metrics["cursor.visible_ms"].n, 1)
   report = readFileSync(join(directory, "report.md"), "utf8")
   assert.match(report, /Run status: failed\. Comparable process records: 1/)
   assert.match(report, /failed.*second process failed/)
@@ -201,7 +202,7 @@ test("watch events stay within their process and idle phases stay separate", () 
     ] }],
   })
   assert.equal(groups.length, 4)
-  assert.deepEqual(groups[0].metrics.visible_ms, { runs: 2, observations: 6, median: 5, min: 1, max: 9 })
-  assert.equal(groups[1].metrics.one_core_percent.runs, 1)
+  assert.deepEqual(groups[0].metrics.visible_ms, { n: 2, observations: 6, median: 5, p95: null, min: 1, max: 9 })
+  assert.equal(groups[1].metrics.one_core_percent.n, 1)
   assert.throws(() => summarizeProbes({ idle: [{ records: [{ phase: "visible", cpu_ms: -1 }] }] }), /invalid probe metric/)
 })
