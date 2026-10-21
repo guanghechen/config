@@ -413,7 +413,7 @@ local ok, failure = xpcall(function()
     else
       ui:rpc("nvim_input", ":qall!<CR>")
       until_(function()
-        return grid:find("Cancel unfinished Explorer operations and exit?") ~= nil
+        return grid:find("Cancel unfinished Filetree operations and exit?") ~= nil
       end, "exit confirmation was not displayed")
       screen("exit-confirmation-" .. sample)
       ui:rpc("nvim_input", "y")

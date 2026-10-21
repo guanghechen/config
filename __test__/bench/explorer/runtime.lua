@@ -66,7 +66,7 @@ vim.o.laststatus, vim.o.showtabline = 0, 0
 vim.o.swapfile, vim.o.shadafile = false, "NONE"
 local Widget = require("era.m.explorer.widget")
 local native = implementation == "native"
-local drawn = {}
+local drawn, drawn_at = {}, {}
 
 ---@return table|nil
 local function current_view()
@@ -126,7 +126,14 @@ local function state_ready()
       and not session._subscriptions._git
       and next(session._subscriptions._buffers) == nil
       and header.data_revision == session.data:source():revision()
-    return ready and drawn[view.bufnr] == drawing_key(), header.row_count
+    local painted = drawn[view.bufnr] == drawing_key()
+    local phase = bench.phase
+    if phase and phase.kind == "cursor" and phase.started then
+      -- A cursor-only publication acknowledges pixels that may already have flushed and requests no redraw, so the
+      -- moved cursor counts once it has been drawn after the input.
+      painted = painted or (drawn_at[view.bufnr] or 0) >= phase.started
+    end
+    return ready and painted, header.row_count
   end
   local result = bench.widget:get_render_result()
   return result ~= nil and #result.deferred_file_icons == 0 and drawn[current_buffer()] == drawing_key(),
@@ -229,7 +236,7 @@ vim.api.nvim_set_decoration_provider(vim.api.nvim_create_namespace("explorer-ben
   end,
   on_end = function()
     if painting then
-      drawn[painting.bufnr] = painting.key
+      drawn[painting.bufnr], drawn_at[painting.bufnr] = painting.key, vim.uv.hrtime()
       painting = nil
       -- Include the final viewport callbacks, even when on_frame precedes their first redraw.
       vim.schedule(check)
