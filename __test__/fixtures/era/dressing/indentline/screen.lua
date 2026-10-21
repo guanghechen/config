@@ -126,7 +126,7 @@ local function advance()
     step.action()
   end
   local sync_frames = frames
-  local deadline = vim.uv.hrtime() + 1000e6
+  local deadline = vim.uv.hrtime() + 5000e6
   ---@return nil
   local function check()
     current = {

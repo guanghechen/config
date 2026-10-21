@@ -67,7 +67,7 @@ runner 也不编译 native module。Baseline 比较按同样的路径加载另�
 
 ## 执行契约
 
-公共命令：`nvim -l __test__/run.lua [--list] [--timeout ms] [path-filter]`。
+公共命令：`nvim -l __test__/run.lua [--list] [--timeout ms] [--jobs n] [path-filter]`。
 
 - `path-filter` 是 spec 路径的字面子串：完整路径选择一个 suite，目录路径选择其下的 specs。
 - 递归发现并排序所有以 `_spec.lua` 结尾的普通文件，不使用 helper 文件名黑名单。
@@ -76,8 +76,10 @@ runner 也不编译 native module。Baseline 比较按同样的路径加载另�
   Lua paths，同时保留 Neovim 内置 runtime/library 目录及独立于 `$VIMRUNTIME` 安装的 bundled parsers。
 - 每个 suite 使用独立的 `--headless -u NONE -i NONE -n` Neovim 进程。应用配置与 plugin
   不自动启动；测试 composed runtime 时可显式加载 `ark.bootstrap`。
-- Runner 使用 argv 形式的 `vim.system` 顺序执行 suite。默认每个 suite 超时 30 秒，可由 CLI 覆盖。
-  失败或超时不阻止后续 suite；不自动重试、安装依赖或编译 native module。
+- Runner 以 argv 形式的 `vim.system` 并发执行最多 N 个 suite（`--jobs`，默认取硬件线程数的一半，最多 8）；
+  各 suite 的输出整块写出，并按发现顺序排列，与顺序执行时一致。`--jobs 1` 即顺序执行。
+- Suite 进程的环境去掉 `TMUX` 与 `TMUX_PANE`，子进程随之继承，测试无法驱动用户真实的 tmux。
+- 默认每个 suite 超时 30 秒，可由 CLI 覆盖。失败或超时不阻止其它 suite；不自动重试、安装依赖或编译 native module。
 
 以下情况必须返回非零退出码：未选中 suite、目录缺失、CLI 参数无效、空 spec、遗漏 `t:run()`、
 加载错误、case/cleanup 失败、子进程启动失败、子进程非零退出或超时。
@@ -104,9 +106,22 @@ Bootstrap helper 显式声明所需 globals，并通过 harness 注册恢复操�
 Case 名称描述可观察行为。回归用例包含触发输入，并断言受影响结果。
 所有 Lua specs 使用相同的 harness 与资源生命周期。
 
+## 时序
+
+Suite 并发运行，CPU 竞争会拉长异步工作，因此等待按断言的性质选择：
+
+- 正向结果（某事应当发生）等条件成立：`t.wait_until`、`t.await`，条件中要发 RPC 时用 `ui:wait_until`。
+  超时取常规值（数秒）；超时只是失败兜底，不表达延迟要求。
+- 负向检查（某事不应发生）用固定观察窗口，窗口结束后断言。
+- 一步同时包含两者时，先等满窗口，正向期望未满足再继续轮询到截止时间，例如 completion behavior trace
+  与 PTY 场景 fixture。
+- 其余固定等待只用于排空 `vim.schedule` 回调，或跨越 `timeoutlen` 这类时间阈值。
+- 墙钟预算不写进测试；需要量化延迟时放进 benchmark。
+
 ## 验证
 
 基础设施测试覆盖 discovery 边界、稳定排序、字面筛选、空选择、子进程状态隔离、含空格与 Unicode
-的路径、从其他 CWD 执行、加载/case/cleanup 失败、空 spec、遗漏 run、进程失败、超时和 CLI 诊断。
+的路径、从其他 CWD 执行、加载/case/cleanup 失败、空 spec、遗漏 run、进程失败、超时和 CLI 诊断，
+以及并发上限、按发现顺序输出、suite 环境不含 tmux 变量与 `--jobs` 参数校验。
 
 状态转换见[执行流程](flow.md)，可执行命令与示例见[测试指南](../../../__test__/README.md)。

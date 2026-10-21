@@ -85,7 +85,11 @@ t:test("an omitted winbar preserves positions across refresh, resize and reopeni
   value:mark_nvimbar_dirty()
   value:resize({ row = 0, col = 0, width = 50, height = 5 })
   treeview.await(owner:ready())
+  -- The window lets a late winbar appear; positions may publish after it.
   vim.wait(100)
+  t.wait_until(function()
+    return value.lnum_current:snapshot() == 2 and value.lnum_total:snapshot() == 3
+  end, 5000, "positions after resize")
   t.assert_eq(2, value.lnum_current:snapshot())
   t.assert_eq(3, value.lnum_total:snapshot())
   t.assert_eq("", vim.api.nvim_get_option_value("winbar", { win = winnr }))
@@ -93,6 +97,9 @@ t:test("an omitted winbar preserves positions across refresh, resize and reopeni
   winnr = value:create_win(options, dimension)
   treeview.await(owner:ready())
   vim.wait(100)
+  t.wait_until(function()
+    return value.lnum_current:snapshot() == 2
+  end, 5000, "position after reopening")
   t.assert_eq(2, value.lnum_current:snapshot())
   t.assert_eq("", vim.api.nvim_get_option_value("winbar", { win = winnr }))
   value:set_lnum_current(3)

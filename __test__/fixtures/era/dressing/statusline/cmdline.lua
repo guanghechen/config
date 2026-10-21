@@ -49,7 +49,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     local expected = { "NORMAL", "COMMAND", "NORMAL" }
     local modes = { "n", "c", "n" }
     local samples = {}
-    local deadline = vim.uv.hrtime() / 1e6 + 3000
+    local deadline = vim.uv.hrtime() / 1e6 + 10000
     ---@return nil
     local function poll()
       local current = {

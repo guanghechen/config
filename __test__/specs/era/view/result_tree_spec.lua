@@ -324,6 +324,7 @@ t:test("an idle result retains native notifications without another Lua Future",
   end)
   tree:mount(winnr, bufnr, function() end)
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
+  -- Let the poll loop go idle; if it is still running, the check below is weaker, not wrong.
   vim.wait(30)
   local ticket = tree.state._native:dispatch({
     kind = "set_expanded",
@@ -848,8 +849,13 @@ t:test("range actions retain subtree and Visual semantics and release a throwing
     return submitted
   end)
   t.assert_true(dispatched == submitted, "native command receipts retain their Future")
+  -- Read the minimum right after the view's own listener sets it: a later publication may already clear it.
+  local minimum_commit
+  dispatched:finally(function()
+    minimum_commit = tree.view._minimum_commit
+  end)
   local receipt = support.applied(dispatched)
-  t.assert_eq(receipt.revisions.commit, tree.view._minimum_commit)
+  t.assert_eq(receipt.revisions.commit, minimum_commit)
   local old_errors = #reports.error
   local failed = tree:range_action(function()
     error("range callback failed", 0)

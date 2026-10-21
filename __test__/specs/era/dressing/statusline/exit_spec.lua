@@ -21,7 +21,7 @@ t:test("quitting Neovim terminates a pending Python probe", function()
   local pid = assert(tonumber(vim.fn.readfile(result_path)[1]), "probe PID")
   t.wait_until(function()
     return not vim.uv.kill(pid, 0)
-  end, 1000, "the Python probe outlived Neovim")
+  end, 5000, "the Python probe outlived Neovim")
   probe_exited = true
 end)
 

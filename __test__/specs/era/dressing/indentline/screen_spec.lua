@@ -9,7 +9,7 @@ t:test("batched refreshes reach the native screen while the command line is idle
     { "-n", "-i", "NONE", "--noplugin", "-u", "__test__/fixtures/era/dressing/indentline/screen.lua" },
     { width = 100, height = 24, env = { NVIM_NOTTYFAST = "1", INDENTLINE_TEST_RESULT = result_path } }
   )
-  process.assert_exited(t, { run }, 5000)
+  process.assert_exited(t, { run }, 30000)
   local result = vim.json.decode(table.concat(vim.fn.readfile(result_path), "\n"))
   t.assert_false(result.timed_out, vim.inspect(result.current))
   t.assert_eq(6, #result.samples, "initial screen, hidden options and command-line updates completed")

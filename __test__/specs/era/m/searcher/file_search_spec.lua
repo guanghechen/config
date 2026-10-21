@@ -164,7 +164,7 @@ t:test("queued debounce task cannot submit after generation invalidation", funct
 
   t.wait_until(function()
     return scheduler._tick_settled == 1
-  end, 100, "queued debounce task should settle")
+  end, 5000, "queued debounce task should settle")
   local rescheduled_context = scheduler._context
   scheduler:dispose()
   controller:dispose()

@@ -1,3 +1,4 @@
+--- Timeout: 120000
 local harness = require("__test__.support.harness")
 local process = require("__test__.support.process")
 local t = harness.new()
@@ -32,7 +33,7 @@ t:test("native opening preserves saved positions and navigation ownership with U
     runs[#runs + 1] = run
   end
 
-  process.assert_exited(t, runs, 20000)
+  process.assert_exited(t, runs, 60000)
   for _, run in ipairs(runs) do
     local result = vim.json.decode(table.concat(vim.fn.readfile(run.result_path), "\n"))
     t.assert_eq(0, #result.failures, vim.inspect(result.failures))

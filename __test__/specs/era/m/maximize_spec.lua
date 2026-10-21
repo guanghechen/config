@@ -174,7 +174,7 @@ t:test("leaving maximize closes it without stealing the selected tab", function(
   vim.api.nvim_set_current_tabpage(destination_tabnr)
   t.wait_until(function()
     return not vim.api.nvim_tabpage_is_valid(normal.maximize_tabnr) and maximized.get_normal() == nil
-  end, 100, "maximize tab was not closed")
+  end, 5000, "maximize tab was not closed")
 
   t.assert_eq(destination_tabnr, vim.api.nvim_get_current_tabpage(), "selected tab focus")
   t.assert_true(vim.api.nvim_tabpage_is_valid(source_tabnr), "source tab")

@@ -12,7 +12,7 @@ and [flow](../spec/design/test-harness/flow.md).
 __test__/
   run.lua                  # CLI and isolated suite entry
   support/
-    runner.lua             # discovery, process timeout, aggregate result
+    runner.lua             # discovery, parallel suite processes, timeouts, ordered aggregate output
     harness.lua            # cases, assertions, await, temporary directories, cleanup
     bootstrap.lua          # explicitly declared globals, the native library, reporter capture
     ui.lua                 # msgpack-RPC client for child Neovim processes, with redraws
@@ -166,9 +166,11 @@ nvim -l __test__/run.lua __test__/specs/era/dressing/indentline/provider_spec.lu
 nvim -l __test__/run.lua era/m/nvimbar/
 nvim -l __test__/run.lua era/dressing/statusline/
 
-# Inspect selection, or adjust the per-suite timeout (default: 30 seconds)
+# Inspect selection, adjust the per-suite timeout (default: 30 seconds), or the
+# number of suites run at once (default: half the hardware threads, at most 8)
 nvim -l __test__/run.lua --list era/dressing/
 nvim -l __test__/run.lua --timeout 60000 stl/c/
+nvim -l __test__/run.lua --jobs 1
 
 # Node and Rust tests
 node --test __test__/node/*.test.mjs
@@ -183,7 +185,8 @@ node script/healcheck.mjs
 
 The entry can also be invoked by absolute path from another working directory.
 It resolves the checkout's real path from its own location and gives every spec a fresh
-`--headless -u NONE -i NONE -n` Neovim process. Tests use this checkout's runtime
+`--headless -u NONE -i NONE -n` Neovim process. Suites run concurrently; each suite's output is
+written as one block in discovery order, and suite processes do not inherit `TMUX`. Tests use this checkout's runtime
 alongside Neovim's built-in runtime and library directories, including its bundled
 parsers. The canonical checkout is also the CWD. No user configuration or plugin
 startup is loaded automatically.
@@ -197,7 +200,7 @@ in its temporary directory; it is removed during cleanup. Real Git query/parsing
 
 Zero matches, an empty spec, a missing `t:run()`, load errors, case or cleanup
 failures, process failures, and timeouts all produce a nonzero exit status. A
-failed suite does not prevent later suites from running. There are no automatic
+failed suite does not prevent other suites from running. There are no automatic
 retries. A case that the environment cannot exercise calls `t.skip(reason)`; it
 prints `SKIP <case>: <reason>`, counts in the summary, and does not fail the suite.
 A suite slower than the shared limit declares `--- Timeout: <ms>` among its leading
@@ -235,6 +238,10 @@ t:run()
 - Register resources with `defer` immediately after acquisition. Cleanup runs in reverse order, including after failures. Top-level registrations last for the suite; registrations inside a case last for that case.
 - Declare application globals through `__test__.support.bootstrap`. Load `ark.bootstrap` explicitly only when the composed runtime is part of the test.
 - Compare tables with `t.assert_same(expected, actual, message)`, which shows both sides on failure.
+- Suites run concurrently, so wait by what the assertion claims: wait for something that should happen
+  until it holds, with a generous timeout; observe something that must not happen over a fixed window;
+  for a step that expects both, wait the window and then keep polling the expected state. Keep wall-clock
+  budgets out of specs; measure latency in benchmarks.
 - Wait for observable async completion with `t.wait_until(predicate, timeout_ms, message)` or a Future with
   `t.await(future, timeout_ms)`; settle or cancel owned work before cleanup. When the predicate makes RPC requests
   to a child, use `ui:wait_until`: a request inside a `vim.wait` callback keeps the wait from timing out.

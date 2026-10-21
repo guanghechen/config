@@ -36,7 +36,7 @@ t:test("an unchanged running Job sleeps and notification failure preserves compl
       previous, settled = calls, vim.uv.hrtime()
     end
     return vim.uv.hrtime() - settled >= 100000000
-  end, 2000, "a running Job without changes must stop status polling")
+  end, 10000, "a running Job without changes must stop status polling")
   local errors = {}
   t:patch_table(stl.reporter, "error", function(value)
     errors[#errors + 1] = value.message

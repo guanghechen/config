@@ -52,7 +52,12 @@ t:test("slowly typed custom objects are remapped after the prefix timeout", func
     vim.keymap.set("o", "iz", function() vim.cmd("normal! viw") end)
   ]])
   ui:rpc("nvim_input", "yi")
-  -- Real input keeps operator-pending alive, unlike feedkeys(..., "x").
+  -- Real input keeps operator-pending alive, unlike feedkeys(..., "x"). Wait until the child holds the pending
+  -- prefix, then let `timeoutlen` pass so the next key arrives after the prefix timed out.
+  ui:wait_until(function()
+    local mode = ui:rpc("nvim_get_mode")
+    return mode.mode == "no" and mode.blocking
+  end, 5000, "pending operator prefix")
   vim.wait(30)
   ui:rpc("nvim_input", "z")
   ui:wait_until(function()

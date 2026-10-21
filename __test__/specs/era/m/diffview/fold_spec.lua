@@ -73,7 +73,7 @@ local function wait_for_scheduled()
   end)
   t.wait_until(function()
     return done
-  end, 500, "scheduled fold commands")
+  end, 5000, "scheduled fold commands")
 end
 
 t:test("side-by-side fold policy is deterministic and preserves panel focus", function()
@@ -115,21 +115,21 @@ t:test("side-by-side fold policy is deterministic and preserves panel focus", fu
   pane_sbs.apply_fold_unchanged_pair(left_winnr, right_winnr, false)
   t.wait_until(function()
     return not is_fold_closed(left_winnr) and not is_fold_closed(right_winnr)
-  end, 500, "expanded diff folds")
+  end, 5000, "expanded diff folds")
   t.assert_eq(panel_winnr, vim.api.nvim_get_current_win(), "panel focus after expand")
 
   normal(right_winnr, "zM")
   pane_sbs.apply_fold_unchanged_pair(left_winnr, right_winnr, false)
   t.wait_until(function()
     return not is_fold_closed(left_winnr) and not is_fold_closed(right_winnr)
-  end, 500, "reapplied expanded diff folds")
+  end, 5000, "reapplied expanded diff folds")
 
   normal(left_winnr, "zR")
   normal(right_winnr, "zM")
   pane_sbs.apply_fold_unchanged_pair(left_winnr, right_winnr, true)
   t.wait_until(function()
     return is_fold_closed(left_winnr) and is_fold_closed(right_winnr)
-  end, 500, "collapsed diff folds")
+  end, 5000, "collapsed diff folds")
   wait_for_scheduled()
   t.assert_eq(panel_winnr, vim.api.nvim_get_current_win(), "panel focus after collapse")
   t.assert_false(is_fold_closed(panel_winnr), "panel folds unchanged")
@@ -143,7 +143,7 @@ t:test("side-by-side fold policy is deterministic and preserves panel focus", fu
   fold_unchanged = false
   t.wait_until(function()
     return not is_fold_closed(left_winnr) and not is_fold_closed(right_winnr)
-  end, 500, "latest fold policy applied")
+  end, 5000, "latest fold policy applied")
   wait_for_scheduled()
 end)
 

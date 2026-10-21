@@ -14,7 +14,7 @@ t:test("asynchronous mode changes reach the native screen while the command line
     "-u",
     "__test__/fixtures/era/dressing/statusline/cmdline.lua",
   }, { width = 100, height = 24, env = { NVIMBAR_TEST_RESULT = result_path } })
-  process.assert_exited(t, { run }, 5000)
+  process.assert_exited(t, { run }, 20000)
   local result = vim.json.decode(table.concat(vim.fn.readfile(result_path), "\n"))
   t.assert_eq(0, #result.errors, vim.inspect(result.errors))
   t.assert_false(result.timed_out, vim.inspect(result.current))

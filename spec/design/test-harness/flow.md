@@ -12,12 +12,13 @@ Repository health check 依次执行各语言检查，并保留各 runner 的退
 
 1. `__test__/run.lua` 定位 canonical checkout，准备 CWD、runtimepath、packpath 与 Lua module path，
    保留 Neovim 内置 runtime/library 目录。
-2. 父进程解析字面路径 filter、`--list` 与 `--timeout`。无效参数、不可读目录或空选择在启动前报错。
+2. 父进程解析字面路径 filter、`--list`、`--timeout` 与 `--jobs`。无效参数、不可读目录或空选择在启动前报错。
 3. 收集并排序 `__test__/specs/**/*_spec.lua`；list 模式只输出选中路径。
-4. 对每个选中路径，启动干净的 Neovim 进程执行 `__test__/run.lua --suite <path>`；子进程准备同一 checkout。
+4. 对每个选中路径，启动干净的 Neovim 进程执行 `__test__/run.lua --suite <path>`，同时运行的 suite 不超过
+   `--jobs`；子进程准备同一 checkout，环境中不含 tmux 变量。
 5. 子进程加载 spec。Spec 声明 globals、创建 harness、注册 cases，并调用 `t:run()`。
 6. 每个 case 执行后清空自己的 cleanup stack；最后一个 case 结束后清理 suite 资源。子进程保留失败诊断、报告并退出。
-7. 父进程记录输出与退出码。启动失败、非零退出或超时均计为 suite 失败，随后继续执行。
+7. 父进程记录输出与退出码，并按发现顺序整块输出。启动失败、非零退出或超时均计为 suite 失败，其它 suite 继续执行。
 8. 父进程汇总结果；任一 suite 失败则返回非零退出码。
 
 ## Case 生命周期

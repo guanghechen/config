@@ -105,7 +105,7 @@ t:test("input keeps a user-selected window after BufLeave cancellation", functio
   vim.api.nvim_set_current_win(other_winnr)
   t.wait_until(function()
     return not vim.api.nvim_win_is_valid(input_winnr) and callback_winnr ~= nil
-  end, 100, "input window was not disposed")
+  end, 5000, "input window was not disposed")
 
   t.assert_eq(other_winnr, vim.api.nvim_get_current_win(), "current window")
   t.assert_eq(other_winnr, callback_winnr, "callback window")
@@ -134,7 +134,7 @@ t:test("input does not restore a cursor into a replacement parent buffer", funct
 
   t.wait_until(function()
     return not vim.api.nvim_win_is_valid(input_winnr)
-  end, 100, "input window was not disposed")
+  end, 5000, "input window was not disposed")
 
   t.assert_eq(replacement_bufnr, vim.api.nvim_win_get_buf(parent_winnr), "parent buffer")
   t.assert_eq(1, vim.api.nvim_win_get_cursor(parent_winnr)[1], "replacement cursor line")
@@ -154,13 +154,13 @@ t:test("input retains deferred focus after nvim_win_call", function()
 
   t.wait_until(function()
     return vim.api.nvim_get_current_win() == input_winnr
-  end, 100, "input did not receive deferred focus")
+  end, 5000, "input did not receive deferred focus")
   t.assert_true(vim.api.nvim_win_is_valid(input_winnr), "input window")
 
   vim.api.nvim_win_close(input_winnr, true)
   t.wait_until(function()
     return callback_winnr ~= nil
-  end, 100, "input callback was not delivered")
+  end, 5000, "input callback was not delivered")
   t.assert_eq(origin_winnr, vim.api.nvim_get_current_win(), "origin window")
   t.assert_eq(origin_winnr, callback_winnr, "callback window")
 end)
@@ -179,7 +179,7 @@ t:test("input cancels deferred focus after entering a third window", function()
 
   t.wait_until(function()
     return not vim.api.nvim_win_is_valid(input_winnr) and callback_winnr ~= nil
-  end, 100, "input deferred focus was not cancelled")
+  end, 5000, "input deferred focus was not cancelled")
   t.assert_eq(third_winnr, vim.api.nvim_get_current_win(), "current window")
   t.assert_eq(third_winnr, callback_winnr, "callback window")
 end)
@@ -194,7 +194,7 @@ t:test("select keeps a user-selected window after BufLeave cancellation", functi
   vim.api.nvim_set_current_win(other_winnr)
   t.wait_until(function()
     return not vim.api.nvim_win_is_valid(select_winnr) and callback_winnr ~= nil
-  end, 100, "select window was not disposed")
+  end, 5000, "select window was not disposed")
 
   t.assert_eq(other_winnr, vim.api.nvim_get_current_win(), "current window")
   t.assert_eq(other_winnr, callback_winnr, "callback window")
@@ -213,13 +213,13 @@ t:test("select retains deferred focus after nvim_win_call", function()
 
   t.wait_until(function()
     return vim.api.nvim_get_current_win() == select_winnr
-  end, 100, "select did not receive deferred focus")
+  end, 5000, "select did not receive deferred focus")
   t.assert_true(vim.api.nvim_win_is_valid(select_winnr), "select window")
 
   vim.api.nvim_win_close(select_winnr, true)
   t.wait_until(function()
     return callback_winnr ~= nil
-  end, 100, "select callback was not delivered")
+  end, 5000, "select callback was not delivered")
   t.assert_eq(origin_winnr, vim.api.nvim_get_current_win(), "origin window")
   t.assert_eq(origin_winnr, callback_winnr, "callback window")
 end)
@@ -238,7 +238,7 @@ t:test("select cancels deferred focus after entering a third window", function()
 
   t.wait_until(function()
     return not vim.api.nvim_win_is_valid(select_winnr) and callback_winnr ~= nil
-  end, 100, "select deferred focus was not cancelled")
+  end, 5000, "select deferred focus was not cancelled")
   t.assert_eq(third_winnr, vim.api.nvim_get_current_win(), "current window")
   t.assert_eq(third_winnr, callback_winnr, "callback window")
 end)

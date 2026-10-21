@@ -434,15 +434,40 @@ t:test("draw suppresses a scope spanning the whole indented buffer", function()
 end)
 
 t:test("animated draw completes within the configured frame budget", function()
-  with_buffer({ "if ok then", "  one()", "  two()", "  three()", "end" }, function()
-    with_render_capture(function(render)
-      vim.api.nvim_win_set_cursor(0, { 3, 2 })
-      local scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
-      Indentscope.draw(scope, { interval = 5, max_duration = 20 })
+  with_buffer({ "if ok then", "  one", "  two", "  three", "  four", "  five", "  six", "  seven", "end" }, function()
+    local timer = { closing = false } ---@type table
+    function timer:start(timeout, repeat_ms, callback)
+      self.timeout, self.repeat_ms, self.callback = timeout, repeat_ms, callback
+    end
+    function timer:stop() end
+    function timer:close()
+      self.closing = true
+    end
+    function timer:is_closing()
+      return self.closing
+    end
+    t:patch_table(vim, "schedule_wrap", function(callback)
+      return callback
+    end)
+    t:patch_table(vim.uv, "new_timer", function()
+      return timer
+    end)
 
-      t.wait_until(function()
-        return #render(nil) == 3
-      end, 100, "animation completion")
+    with_render_capture(function(render)
+      vim.api.nvim_win_set_cursor(0, { 5, 2 })
+      local scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
+      -- Three layers to reveal, but the budget only fits two frames: each frame reveals more.
+      Indentscope.draw(scope, { interval = 20, max_duration = 40 })
+
+      t.assert_eq(20, timer.timeout, "first frame interval")
+      t.assert_eq(20, timer.repeat_ms, "frame interval")
+      local frames = 0 ---@type integer
+      while #render(nil) < 7 and frames < 10 do
+        timer.callback()
+        frames = frames + 1
+      end
+      t.assert_eq(7, #render(nil), "final frame")
+      t.assert_true(frames * 20 <= 40, "frames fit the budget, got " .. frames)
     end)
   end)
 end)
@@ -470,13 +495,15 @@ t:test("real timer preserves an intermediate animation frame", function()
     Indentscope.draw(scope, { interval = 100, max_duration = 600 })
     t.assert_eq(1, guide_count(), "origin frame")
 
-    vim.wait(120)
-    t.assert_eq(3, guide_count(), "intermediate frame")
+    -- Each timer tick flushes its frame, and the wait checks after every event, so the 100 ms frame is seen.
+    t.wait_until(function()
+      return guide_count() == 3
+    end, 5000, "intermediate frame")
     t.wait_until(function()
       -- Animation frames flush themselves; the finished static frame waits for the next redraw.
       vim.api.nvim__redraw({ flush = true })
       return guide_count() == 7
-    end, 600, "animation completion")
+    end, 5000, "animation completion")
   end)
 end)
 

@@ -4,6 +4,24 @@ local __module_name__ = "__test__.support.cmp.behavior_trace" ---@type string
 local UI = require("__test__.support.ui")
 local M = {}
 
+-- How long a step keeps waiting for its expected state once its observation window has passed.
+local SETTLE_MS = 3000 ---@type integer
+
+---@param expected                      ?table
+---@param state                         table
+---@return boolean
+local function reached(expected, state)
+  for key, value in pairs(expected or {}) do
+    if not vim.deep_equal(value, state[key]) then
+      return false
+    end
+  end
+  return true
+end
+
+---Runs a case step by step and returns each step's state. A step waits its observation window (`wait_ms`, 100 ms by
+---default), so states that must not appear have time to; it then keeps polling until the step reaches its `expect`
+---fields, so slow but correct work does not fail under load.
 ---@param options                       table
 ---@param case                          table
 ---@return table[]
@@ -34,7 +52,13 @@ function M.run(options, case)
         ui:lua("require('__test__.support.cmp.behavior').cmp.cancel()")
       end
       vim.wait(type(step) == "table" and step.wait_ms or 100)
-      local state = ui:lua("return require('__test__.support.cmp.behavior').snapshot()")
+      local snapshot = "return require('__test__.support.cmp.behavior').snapshot()"
+      local state = ui:lua(snapshot)
+      local deadline = vim.uv.hrtime() + SETTLE_MS * 1e6
+      while not reached((case.expect or {})[index], state) and vim.uv.hrtime() < deadline do
+        vim.wait(10)
+        state = ui:lua(snapshot)
+      end
       assert(state.errmsg == "", state.errmsg)
       assert(#state.notices == 0, vim.inspect(state.notices))
       states[#states + 1] = state

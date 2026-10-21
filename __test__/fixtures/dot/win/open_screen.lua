@@ -600,11 +600,19 @@ local function advance()
   if not ok then
     sample.action_error = err
   end
-  vim.defer_fn(function()
+  -- Each step is observed after a 350 ms window, so effects that must not appear have time to; a check that still
+  -- fails is retried until the deadline, so slow but correct work does not fail under load.
+  local deadline ---@type number
+  ---@return nil
+  local function verify()
     local valid, reason = xpcall(function()
       expect(vim.api.nvim_get_mode().mode == (step.mode or "n"), "unexpected mode: " .. vim.api.nvim_get_mode().mode)
       step.check()
     end, debug.traceback)
+    if ok and not valid and vim.uv.hrtime() < deadline then
+      vim.defer_fn(verify, 20)
+      return
+    end
     sample.ok = ok and valid
     if not sample.ok then
       result.failures[#result.failures + 1] = { name = step.name, error = sample.action_error or reason }
@@ -612,6 +620,10 @@ local function advance()
     sample.state = snapshot()
     result.samples[#result.samples + 1] = sample
     vim.defer_fn(advance, 15)
+  end
+  vim.defer_fn(function()
+    deadline = vim.uv.hrtime() + 3000e6
+    verify()
   end, 350)
 end
 vim.api.nvim_create_autocmd("VimEnter", {

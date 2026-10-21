@@ -208,7 +208,13 @@ end)
 t:test("timeout terminates a suite and allows the following suite to run", function()
   with_temp_root(function(dir)
     write_spec("vim.wait(10000)", dir .. "/hang_spec.lua")
-    write_spec("", dir .. "/pass_spec.lua")
+    -- Only the hanging suite is held to the short limit; the following suite may take as long as it needs to start.
+    write_file({
+      "--- Timeout: 30000",
+      'local t = require("__test__.support.harness").new()',
+      't:test("case", function() end)',
+      "t:run()",
+    }, dir .. "/pass_spec.lua")
     local failed, output = run_suites({ root = dir, timeout_ms = 250 })
     t.assert_eq(1, failed, "timed out suite")
     t.assert_true(output:find("timeout after 250 ms", 1, true) ~= nil, "timeout diagnostic")
@@ -230,12 +236,91 @@ t:test("a leading timeout declaration only raises the limit of its own suite", f
         "t:run()",
       }, filepath)
     end
-    write_waiting_spec("--- Timeout: 8000", 2000, dir .. "/raised_spec.lua")
+    write_waiting_spec("--- Timeout: 20000", 4000, dir .. "/raised_spec.lua")
     write_waiting_spec("--- Timeout: 100", 300, dir .. "/lowered_spec.lua")
-    write_waiting_spec("--- No declaration", 2000, dir .. "/plain_spec.lua")
-    local failed, output = run_suites({ root = dir, timeout_ms = 1500 })
+    write_waiting_spec("--- No declaration", 4000, dir .. "/plain_spec.lua")
+    local failed, output = run_suites({ root = dir, timeout_ms = 3000 })
     t.assert_eq(1, failed, "only the undeclared slow suite times out")
-    t.assert_true(output:find("plain_spec.lua: timeout after 1500 ms", 1, true) ~= nil, output)
+    t.assert_true(output:find("plain_spec.lua: timeout after 3000 ms", 1, true) ~= nil, output)
+  end)
+end)
+
+t:test("parallel suites report in discovery order, not completion order", function()
+  with_temp_root(function(dir)
+    write_spec("print('slow first'); vim.wait(800)", dir .. "/a_spec.lua")
+    write_spec("print('fast second')", dir .. "/b_spec.lua")
+    local failed, output = run_suites({ root = dir, jobs = 2 })
+    t.assert_eq(0, failed, output)
+    local first, second = output:find("a_spec.lua", 1, true), output:find("b_spec.lua", 1, true)
+    t.assert_true(first ~= nil and second ~= nil and first < second, output)
+    t.assert_true(output:find("slow first", 1, true) < second, "a suite's output stays in its own block")
+  end)
+end)
+
+t:test("at most `jobs` suites run at once", function()
+  with_temp_root(function(dir)
+    local spans = dir .. "/spans"
+    vim.fn.mkdir(spans, "p")
+    for index = 1, 4 do
+      local span = string.format("%q", spans .. "/" .. index)
+      write_spec(
+        "local started = vim.uv.hrtime(); vim.wait(400); vim.fn.writefile({ tostring(started), tostring(vim.uv.hrtime()) }, "
+          .. span
+          .. ")",
+        dir .. "/" .. index .. "_spec.lua"
+      )
+    end
+    local failed, output = run_suites({ root = dir, jobs = 2 })
+    t.assert_eq(0, failed, output)
+    local intervals = {} ---@type number[][]
+    for index = 1, 4 do
+      local lines = vim.fn.readfile(spans .. "/" .. index)
+      intervals[index] = { tonumber(lines[1]), tonumber(lines[2]) }
+    end
+    local peak = 0 ---@type integer
+    for _, probe in ipairs(intervals) do
+      local overlapping = 0 ---@type integer
+      for _, interval in ipairs(intervals) do
+        if interval[1] <= probe[1] and probe[1] < interval[2] then
+          overlapping = overlapping + 1
+        end
+      end
+      peak = math.max(peak, overlapping)
+    end
+    t.assert_eq(2, peak, "suites ran two at a time")
+  end)
+end)
+
+t:test("suite processes do not inherit tmux", function()
+  with_temp_root(function(dir)
+    for name, value in pairs({ TMUX = "/tmp/tmux-test/default,1,0", TMUX_PANE = "%1" }) do
+      local previous = vim.uv.os_getenv(name)
+      vim.uv.os_setenv(name, value)
+      t:defer(function()
+        if previous then
+          vim.uv.os_setenv(name, previous)
+        else
+          vim.uv.os_unsetenv(name)
+        end
+      end)
+    end
+    write_spec(
+      "assert(vim.env.TMUX == nil and vim.env.TMUX_PANE == nil, 'tmux leaked into the suite')",
+      dir .. "/env_spec.lua"
+    )
+    local failed, output = run_suites({ root = dir })
+    t.assert_eq(0, failed, output)
+  end)
+end)
+
+t:test("an invalid job count fails before any suite starts", function()
+  with_temp_root(function(dir)
+    write_spec("", dir .. "/pass_spec.lua")
+    for _, jobs in ipairs({ 0, -1, 1.5 }) do
+      assert_error(function()
+        run_suites({ root = dir, jobs = jobs })
+      end, "jobs must be a positive integer")
+    end
   end)
 end)
 
@@ -285,6 +370,9 @@ t:test("CLI reports invalid options and unmatched selectors with nonzero status"
     { "--timeout" },
     { "--timeout", "0" },
     { "--timeout", "1.5" },
+    { "--jobs" },
+    { "--jobs", "0" },
+    { "--jobs", "2.5" },
     { "first", "second" },
     { "__no_matching_suite__" },
   }) do

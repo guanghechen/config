@@ -378,7 +378,7 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
   t.assert_eq(generation, composer._file_search._generation, "Observable notification should remain asynchronous")
   t.wait_until(function()
     return composer._file_search._generation == generation + 1
-  end, 100, "finder mutation did not invalidate")
+  end, 5000, "finder mutation did not invalidate")
 
   t.wait_until(function()
     return composer._file_search._active == nil and #composer._uuids_order == 1
@@ -433,7 +433,7 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
   t.assert_eq(1, #composer._uuids_order, "queued observer must not have run yet")
   t.wait_until(function()
     return composer._file_search._generation == generation + 1 and #composer._uuids_order == 0
-  end, 100, "empty query did not invalidate and clear the projection")
+  end, 5000, "empty query did not invalidate and clear the projection")
 
   generation = composer._file_search._generation
   composer.finder:set_content("needle")
@@ -441,7 +441,7 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
   controls.flag_replace:next(true)
   t.wait_until(function()
     return composer._file_search._generation == generation + 1
-  end, 100, "input burst did not invalidate")
+  end, 5000, "input burst did not invalidate")
   vim.wait(20)
   t.assert_eq(generation + 1, composer._file_search._generation, "input burst must invalidate exactly once")
 

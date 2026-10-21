@@ -90,14 +90,15 @@ t:test("tabline visibility and Explorer OptionSet settle without a redraw feedba
     ui:wait_until(function()
       return ui:rpc("nvim_get_option_value", "showtabline", {}) == (shown and 2 or 0)
     end, 3000)
-    vim.wait(100, function()
-      return false
-    end, 5)
-    local before = ui:lua("return winbar_probe.renders")
-    vim.wait(50, function()
-      return false
-    end, 5)
-    t.assert_eq(before, ui:lua("return winbar_probe.renders"), "idle redraws must settle")
+    -- A redraw feedback loop never goes quiet, while the toggle's own redraws may still run under load.
+    local before, quiet_since = -1, vim.uv.hrtime()
+    ui:wait_until(function()
+      local renders = ui:lua("return winbar_probe.renders")
+      if renders ~= before then
+        before, quiet_since = renders, vim.uv.hrtime()
+      end
+      return vim.uv.hrtime() - quiet_since >= 150e6
+    end, 5000, "idle redraws must settle")
     local title = ui:lua("return vim.api.nvim_get_option_value('winbar', {win = winbar_probe.widget:get_winnr()})")
     t.assert_true(shown and title == "" or not shown and title:find(vim.fs.basename(path), 1, true) ~= nil)
     ui:lua("vim.o.ignorecase = not vim.o.ignorecase")
@@ -278,7 +279,7 @@ t:test("root error and retry remain visible after programmatic and native window
       renders, stable_since = current, vim.uv.hrtime()
     end
     return vim.uv.hrtime() - stable_since >= 400000000
-  end, 3000, "resize redraws must settle")
+  end, 10000, "resize redraws must settle")
 end)
 
 t:test("an empty failed root is distinct from empty success and changing root clears its status", function()
