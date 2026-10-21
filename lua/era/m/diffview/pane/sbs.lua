@@ -1,8 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.diffview.pane.sbs" ---@type string
 
----Side-by-side diff pane for diffview.
----Handles buffer creation, git content loading, and diff display.
+---Side-by-side diff pane for diffview: buffer creation and diff display. A `content.Loader` fills the buffers
+---with Git objects.
 ---@class era.m.diffview.pane.sbs
 local M = {}
 
@@ -132,7 +132,7 @@ function M.find_or_create_local_buffer(filepath)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Git content loading
+-- Request ownership
 ----------------------------------------------------------------------------------------------------
 
 ---@param token                         stl.c.CancellationToken|nil
@@ -140,232 +140,6 @@ end
 ---@return boolean
 local function is_request_current(token, is_current)
   return (not token or not token:is_cancelled()) and (not is_current or is_current())
-end
-
----@param object                        string
----@return string
----@return string
-local function get_document_format(object)
-  local relpath = object:match("^:%d:(.*)$") or object:match("^[^:]*:(.*)$") ---@type string|nil
-  if not relpath or relpath == "" then
-    return "utf-8", "\n"
-  end
-
-  local filepath = util.workspace_path(relpath) ---@type string
-  local local_bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
-  if vim.fn.filereadable(filepath) == 1 then
-    local_bufnr = local_bufnr or vim.fn.bufadd(filepath)
-    if not vim.api.nvim_buf_is_loaded(local_bufnr) then
-      vim.fn.bufload(local_bufnr)
-    end
-  end
-  if not local_bufnr or not vim.api.nvim_buf_is_loaded(local_bufnr) then
-    return "utf-8", "\n"
-  end
-
-  local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = local_bufnr }) ---@type string
-  local fileformat = vim.api.nvim_get_option_value("fileformat", { buf = local_bufnr }) ---@type string
-  return era.m.git.staging.normalize_encoding(encoding), era.m.git.staging.eol_from_fileformat(fileformat)
-end
-
----Load content from git object into buffer.
----@async
----@param object                        string                          git object (e.g., "HEAD:path" or ":./path")
----@param bufnr                         integer                         target buffer
----@param token                         ?stl.c.CancellationToken
----@param is_current                    (fun(): boolean)|nil
----@param before_write                  (fun(): nil)|nil
----@param resolved_object_name          string|nil                      object captured by the status snapshot
----@return boolean ok
----@return boolean content_changed
-function M.load_git_content(object, bufnr, token, is_current, before_write, resolved_object_name)
-  if not is_request_current(token, is_current) then
-    return false, false
-  end
-
-  -- Keep the index snapshot separate: partial unstage consumes it, while every resolved Git object
-  -- may own the content cache identity.
-  local index_object_name = nil ---@type string|nil
-  local content_object_name = nil ---@type string|nil
-  local blob_object = object ---@type string
-  local object_missing = false ---@type boolean
-  local source_encoding = nil ---@type string|nil
-  local source_default_eol = nil ---@type string|nil
-  local index_stage_path = object:match("^:%d:(.*)$") ---@type string|nil
-  local index_path = not index_stage_path and object:match("^:(.*)$") or nil ---@type string|nil
-  if index_path then
-    if resolved_object_name then
-      index_object_name = resolved_object_name
-    else
-      local info_result = stl.git.info.get_file_info(dot.path.workspace(), index_path, token):await()
-      if not is_request_current(token, is_current) then
-        return false, false
-      end
-      if
-        type(info_result) ~= "table"
-        or not info_result.ok
-        or not info_result.info
-        or info_result.info.has_conflicts
-        or not info_result.info.object_name
-      then
-        if not token or not token:is_cancelled() then
-          stl.reporter.error({
-            from = __module_name__,
-            subject = "load_git_content",
-            message = (type(info_result) == "table" and info_result.err) or "Unable to inspect index object",
-          })
-        end
-        return false, false
-      end
-      index_object_name = info_result.info.object_name
-    end
-    content_object_name = index_object_name
-    blob_object = content_object_name
-  elseif object:match("^[^:]+:") then
-    if resolved_object_name then
-      content_object_name = resolved_object_name
-      blob_object = content_object_name
-    else
-      local name_result = stl.git.info.get_object_name(dot.path.workspace(), object, token):await()
-      if not is_request_current(token, is_current) then
-        return false, false
-      end
-      if type(name_result) ~= "table" or not name_result.ok or not name_result.object_name then
-        if type(name_result) == "table" and name_result.missing then
-          object_missing = true
-        else
-          if not token or not token:is_cancelled() then
-            stl.reporter.error({
-              from = __module_name__,
-              subject = "load_git_content",
-              message = (type(name_result) == "table" and name_result.err) or "Unable to resolve Git object",
-            })
-          end
-          return false, false
-        end
-      else
-        content_object_name = name_result.object_name
-        blob_object = content_object_name
-      end
-    end
-  end
-
-  if content_object_name then
-    stl.async.scheduler()
-
-    if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-      return false, false
-    end
-
-    source_encoding, source_default_eol = get_document_format(object)
-    if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-      return false, false
-    end
-    if
-      vim.b[bufnr].git_content_object_name == content_object_name
-      and vim.b[bufnr].git_source_encoding == source_encoding
-      and vim.b[bufnr].git_source_default_eol == source_default_eol
-    then
-      vim.b[bufnr].git_object_name = index_object_name
-      return true, false
-    end
-  end
-
-  local bytes = object_missing and "" or nil ---@type string|nil
-  if not object_missing then
-    local result = stl.git.info.get_show_blob(dot.path.workspace(), blob_object, token):await()
-    if not is_request_current(token, is_current) then
-      return false, false
-    end
-
-    if type(result) ~= "table" then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "load_git_content",
-        message = "Invalid blob result for object: " .. object,
-      })
-      return false, false
-    end
-
-    bytes = result.bytes
-    if not result.ok then
-      if result.missing then
-        bytes = ""
-      else
-        if not token or not token:is_cancelled() then
-          stl.reporter.error({
-            from = __module_name__,
-            subject = "load_git_content",
-            message = result.err or ("Unable to read object: " .. object),
-          })
-        end
-        return false, false
-      end
-    end
-  end
-  if type(bytes) ~= "string" then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "load_git_content",
-      message = "Blob result has no bytes: " .. object,
-    })
-    return false, false
-  end
-
-  stl.async.scheduler()
-
-  if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-    return false, false
-  end
-
-  local encoding, default_eol = get_document_format(object) ---@type string, string
-  if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-    return false, false
-  end
-  local document, decode_err = era.m.git.staging.from_blob(bytes, encoding, default_eol)
-  if not document then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "load_git_content",
-      message = decode_err or ("Unable to decode object: " .. object),
-    })
-    return false, false
-  end
-
-  if before_write then
-    before_write()
-  end
-  if not is_request_current(token, is_current) or not vim.api.nvim_buf_is_valid(bufnr) then
-    return false, false
-  end
-
-  vim.b[bufnr].git_object_name = nil
-  vim.b[bufnr].git_content_object_name = nil
-  vim.b[bufnr].git_source_encoding = nil
-  vim.b[bufnr].git_source_default_eol = nil
-
-  local write_ok, write_err = pcall(function()
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_set_option_value("fileformat", document.eol == "\r\n" and "dos" or "unix", { buf = bufnr })
-    vim.api.nvim_set_option_value("fileencoding", document.encoding, { buf = bufnr })
-    vim.api.nvim_set_option_value("bomb", document.bomb, { buf = bufnr })
-    era.m.git.staging.replace_buffer_text(bufnr, document.text)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-    vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
-  end)
-  if not write_ok then
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      pcall(vim.api.nvim_set_option_value, "modifiable", false, { buf = bufnr })
-    end
-    error(write_err, 0)
-  end
-
-  vim.b[bufnr].git_object_name = index_object_name
-  vim.b[bufnr].git_content_object_name = content_object_name
-  vim.b[bufnr].git_source_encoding = content_object_name and encoding or nil
-  vim.b[bufnr].git_source_default_eol = content_object_name and default_eol or nil
-
-  return true, true
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -522,6 +296,7 @@ end
 ---@field public left_winnr             integer
 ---@field public right_winnr            integer
 ---@field public entry                  era.m.diffview.IFileEntry
+---@field public loader                 era.m.diffview.content.Loader
 ---@field public token                  ?stl.c.CancellationToken
 ---@field public is_current             (fun(): boolean)|nil
 ---@field public preserve_view           boolean|nil
@@ -534,6 +309,7 @@ function M.open_diff_entry(opts)
   local left_winnr = opts.left_winnr
   local right_winnr = opts.right_winnr
   local entry = opts.entry
+  local loader = opts.loader
   local token = opts.token
   local is_current = opts.is_current
 
@@ -566,8 +342,12 @@ function M.open_diff_entry(opts)
   ---@param resolved_object_name        string|nil
   ---@return boolean current
   local function load_content(object, bufnr, resolved_object_name)
-    local loaded, content_changed =
-      M.load_git_content(object, bufnr, token, is_current, capture_views, resolved_object_name)
+    local loaded, content_changed = loader:load(object, bufnr, {
+      token = token,
+      is_current = is_current,
+      before_write = capture_views,
+      object_name = resolved_object_name,
+    })
     if content_changed then
       apply_opts.refresh_diff = true
     end
@@ -598,8 +378,12 @@ function M.open_diff_entry(opts)
       return stl.c.Future.new(function(resolve)
         stl.async.run(function()
           local ok, result = xpcall(function()
-            local loaded, content_changed =
-              M.load_git_content(object, bufnr, token, is_current, capture_views, object_name)
+            local loaded, content_changed = loader:load(object, bufnr, {
+              token = token,
+              is_current = is_current,
+              before_write = capture_views,
+              object_name = object_name,
+            })
             return { loaded = loaded, content_changed = content_changed }
           end, debug.traceback)
           if ok then
@@ -795,6 +579,7 @@ end
 ---@field public right_winnr            integer
 ---@field public entry                  era.m.diffview.IFileEntry
 ---@field public commit                 era.m.diffview.ICommit
+---@field public loader                 era.m.diffview.content.Loader
 ---@field public token                  ?stl.c.CancellationToken
 ---@field public is_current             (fun(): boolean)|nil
 ---@field public get_fold_unchanged      (fun(): boolean)|nil
@@ -809,6 +594,14 @@ function M.open_commit_entry(opts)
   local commit = opts.commit
   local token = opts.token
   local is_current = opts.is_current
+  ---@type era.m.diffview.content.ILoadOpts
+  local load_opts = { token = token, is_current = is_current }
+  ---@param object                      string
+  ---@param bufnr                       integer
+  ---@return boolean
+  local function load(object, bufnr)
+    return (opts.loader:load(object, bufnr, load_opts))
+  end
   ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts
   local apply_opts = {
     get_fold_unchanged = opts.get_fold_unchanged,
@@ -832,7 +625,7 @@ function M.open_commit_entry(opts)
     left_bufnr = M.create_sbs_buffer(left_name)
     right_bufnr = M.get_null_buffer()
 
-    if not M.load_git_content(util.commit_object(parent_hash, parent_filepath), left_bufnr, token, is_current) then
+    if not load(util.commit_object(parent_hash, parent_filepath), left_bufnr) then
       return
     end
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
@@ -842,7 +635,7 @@ function M.open_commit_entry(opts)
     local right_name = util.gen_old_bufname(filepath, hash)
     right_bufnr = M.create_sbs_buffer(right_name)
 
-    if not M.load_git_content(util.commit_object(hash, filepath), right_bufnr, token, is_current) then
+    if not load(util.commit_object(hash, filepath), right_bufnr) then
       return
     end
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
@@ -853,10 +646,10 @@ function M.open_commit_entry(opts)
     left_bufnr = M.create_sbs_buffer(left_name)
     right_bufnr = M.create_sbs_buffer(right_name)
 
-    if not M.load_git_content(util.commit_object(parent_hash, parent_filepath), left_bufnr, token, is_current) then
+    if not load(util.commit_object(parent_hash, parent_filepath), left_bufnr) then
       return
     end
-    if not M.load_git_content(util.commit_object(hash, filepath), right_bufnr, token, is_current) then
+    if not load(util.commit_object(hash, filepath), right_bufnr) then
       return
     end
 

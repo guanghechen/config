@@ -2,6 +2,7 @@
 local __module_name__ = "era.m.diffview.session" ---@type string
 
 local CommitsState = require("era.m.diffview.view.commits.state").State
+local Loader = require("era.m.diffview.content").Loader
 local Refresh = require("era.m.diffview.view.workspace.refresh")
 local WorkspaceState = require("era.m.diffview.view.workspace.state").State
 local commits_action = require("era.m.diffview.view.commits.action")
@@ -546,11 +547,14 @@ function M.open_workspace(opts)
   watch_tabs()
   local fold_unchanged = dot.context.diffview.flag_fold_unchanges:snapshot() ---@type boolean
   local layout = workspace_view.create_layout(opts and opts.layout or 1)
+  -- History previews share the workspace panes, so they share its loader.
+  local loader = Loader.new(stl.git.info)
   ---@type era.m.diffview.WorkspaceSession
   local session = setmetatable({
     kind = "workspace",
     tabnr = layout.tabnr,
     layout = layout,
+    loader = loader,
     state = WorkspaceState.new(layout.tabnr, fold_unchanged),
     pending_discards = {},
     _cleanups = {},
@@ -558,6 +562,7 @@ function M.open_workspace(opts)
   }, WorkspaceSession)
   session.history = setmetatable({
     layout = layout.history,
+    loader = loader,
     state = CommitsState.new(layout.tabnr, fold_unchanged),
     workspace = session,
   }, History)
@@ -612,6 +617,7 @@ function M.open_log(opts)
     kind = "commits",
     tabnr = layout.tabnr,
     layout = layout,
+    loader = Loader.new(stl.git.info),
     state = CommitsState.new(layout.tabnr, dot.context.diffview.flag_fold_unchanges:snapshot()),
     _preview_generation = 0,
     _cleanups = {},

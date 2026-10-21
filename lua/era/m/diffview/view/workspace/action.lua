@@ -25,6 +25,7 @@ local M = {}
 ---@field public layout                  era.m.diffview.view.workspace.ILayout
 ---@field public state                   era.m.diffview.view.workspace.State
 ---@field public history                 era.m.diffview.view.commits.IContext
+---@field public loader                  era.m.diffview.content.Loader
 ---@field public pending_discards        table<string, stl.c.Future> Untracked discards in flight, by path.
 ---@field public close                   fun(self: era.m.diffview.view.workspace.IContext): nil
 ---@field public get_keymaps             fun(self: era.m.diffview.view.workspace.IContext): stl.t.IKeymap[]

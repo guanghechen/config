@@ -46,6 +46,7 @@ era.m.diffview/
 ├── util.lua          # 通用工具函数 + 窗口辅助函数
 ├── layout.lua        # 窗口分割工具（树形布局描述）
 ├── data.lua          # Git 数据获取
+├── content.lua       # Loader：把 Git object 写入 SBS buffer，按 object 与源格式复用
 ├── fn.lua            # 公共函数入口：查找当前 tab 的 session 并分派
 ├── session.lua       # 每个 diffview tab 一个 session
 │
@@ -54,7 +55,7 @@ era.m.diffview/
 │   ├── filetree.lua  # 通用文件树（用于 commits 展开的文件列表）
 │   ├── changes.lua   # workspace 专用的 staged/unstaged 文件树
 │   ├── commits.lua   # Commit 列表
-│   └── sbs.lua       # Side-by-side diff（含 git 内容加载、diff 模式）
+│   └── sbs.lua       # Side-by-side diff 的 buffer、窗口选项与 diff 模式
 │
 └── view/             # 视图控制器（管理布局+pane组合+状态+交互）
     ├── sbs_keymap.lua    # context-free SBS buffer binding adapter
@@ -100,6 +101,9 @@ fn / tabline ──> session ───────────────> sbs_
   layout 与共享 preview 的 commits context。
 - Context 的钩子都是必有方法：`setup_*`、`get_keymaps`，commits context 另有 `begin_preview`（返回判断预览是否
   仍为最新的函数）与 `render_winline`。`action` 与 `view` 通过这些钩子请求 keymap refresh，不反向依赖 `keymap`。
+- Session 持有 `content.Loader`（以 `stl.git.info` 构造），`open_*_entry` 必须经 `opts.loader` 加载内容；
+  workspace 的 History 与 workspace 共用 loader。Buffer 记录所含 object 与源文件格式，相同内容不重读、不重写；
+  重写前先清除该记录，写入失败时不会留下错误的缓存身份。
 - `keymap` 不 require `action`：`gen_*`、`setup_*` 与 `get_help_keymaps` 以参数接收 action 模块，workspace 另收
   History 使用的 commits action。Session 传入真实模块，路由测试传入记录调用的替身。
 - Session 拥有 Git 订阅、Changes 尺寸监听、预览代次与 untracked discard 队列；`close()` 统一回收。一个模块级
@@ -134,8 +138,8 @@ fn / tabline ──> session ───────────────> sbs_
 | `diffview-commits` | commits  | commit 列表面板                           |
 | `diffview-sbs`     | sbs      | 内部 buffer 的初始 filetype 与空内容占位  |
 
-这些值由 `config.FT` 引用 `stl.filetype` 常量。SBS 加载内容后执行 `filetype detect`，
-buffer 可使用对应语言的 filetype，因此不能仅凭 `diffview-sbs` 判断 SBS 身份。
+这些值由 `config.FT` 引用 `stl.filetype` 常量。SBS 加载内容后按 `vim.filetype.match` 设置该 buffer 的 filetype
+（不开启全局 filetype detection），buffer 可使用对应语言的 filetype，因此不能仅凭 `diffview-sbs` 判断 SBS 身份。
 Pane 归属由 view/layout 确定；tab 类型与命令适用范围见 [Tab](../../tab.md)。
 
 ## 命令

@@ -943,6 +943,7 @@ function M.open_entry(ctx, entry, token, opts)
     left_winnr = lyt.sbs_left_winnr,
     right_winnr = lyt.sbs_right_winnr,
     entry = entry,
+    loader = ctx.loader,
     token = token,
     is_current = is_current,
     preserve_view = opts and opts.preserve_view,

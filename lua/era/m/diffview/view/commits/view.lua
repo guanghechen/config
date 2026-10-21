@@ -31,6 +31,7 @@ local M = {}
 ---@class era.m.diffview.view.commits.IContext
 ---@field public layout                  era.m.diffview.view.commits.ILayout
 ---@field public state                   era.m.diffview.view.commits.State
+---@field public loader                  era.m.diffview.content.Loader
 ---@field public begin_preview           fun(self: era.m.diffview.view.commits.IContext): fun(): boolean Starts a preview; the result tells whether it is still current.
 ---@field public close                   fun(self: era.m.diffview.view.commits.IContext): nil
 ---@field public get_keymaps             fun(self: era.m.diffview.view.commits.IContext): stl.t.IKeymap[]
@@ -782,6 +783,7 @@ function M.open_entry(ctx, commit, entry, token)
     right_winnr = lyt.sbs_right_winnr,
     commit = commit,
     entry = entry,
+    loader = ctx.loader,
     token = token,
     is_current = is_current,
     get_fold_unchanged = function()

@@ -14,7 +14,6 @@ bootstrap.with_global(t, "stl", {
   c = { Future = Future },
   e = { TabTypeEnum = { DIFFVIEW_COMMITS = 1, DIFFVIEW_WORKSPACE = 2 } },
   env = { PATH_SEP = "/" },
-  git = { info = {} },
   nvim = { buf = {
     locate_bufnr = function()
       return nil
@@ -60,8 +59,6 @@ bootstrap.with_global(t, "era", {
     git = { staging = staging },
   },
 })
-
-local production_util = assert(loadfile("lua/era/m/diffview/util.lua"))()
 
 local config = {
   BUFOPTS_PANEL = {},
@@ -198,35 +195,6 @@ t:test("workspace preview generation makes the latest request the sole writer", 
   close_windows(left_winnr, right_winnr)
 end)
 
-t:test("stale async load cannot overwrite a shared preview buffer", function()
-  t:patch_table(stl.git.info, "get_object_name", function()
-    return Future.resolve({ ok = true, missing = false, object_name = "head-object" })
-  end)
-  t:patch_table(stl.git.info, "get_show_blob", function()
-    return Future.resolve({ ok = true, bytes = "NEW\n" })
-  end)
-
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "OLD" })
-  local current = true
-  local outcome = nil ---@type boolean|nil
-
-  stl.async.run(function()
-    outcome = pane.load_git_content("HEAD:f.txt", bufnr, nil, function()
-      return current
-    end)
-  end)
-  current = false
-  wait(function()
-    return outcome ~= nil
-  end)
-
-  t.assert_false(outcome, "stale load aborted")
-  t.assert_eq("OLD", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "buffer unchanged")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-end)
-
 t:test("matching refresh preserves view without resetting diff folds", function()
   local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
   local left_winnr, right_winnr = create_windows()
@@ -293,10 +261,12 @@ t:test("unchanged staged preview skips view capture and diff refresh", function(
     view_captures = view_captures + 1
     return {}
   end)
-  pane.load_git_content = function()
-    loads = loads + 1
-    return true, false
-  end
+  local loader = {
+    load = function()
+      loads = loads + 1
+      return true, false
+    end,
+  }
   pane.__apply_buffers__ = function(_, _, _, _, opts)
     applied_opts = opts
   end
@@ -305,6 +275,7 @@ t:test("unchanged staged preview skips view capture and diff refresh", function(
     left_winnr = left_winnr,
     right_winnr = right_winnr,
     entry = { filepath = "cached.txt", stage_type = "staged", status = "M" },
+    loader = loader,
     preserve_view = true,
   })
 
@@ -330,17 +301,19 @@ t:test("changed staged or mutable unstaged preview retains diff refresh", functi
     view_captures = view_captures + 1
     return {}
   end)
-  pane.load_git_content = function(_, _, _, _, before_write)
-    if mutable_phase then
-      return true, false
-    end
-    load_count = load_count + 1
-    local changed = load_count == 2
-    if changed then
-      before_write()
-    end
-    return true, changed
-  end
+  local loader = {
+    load = function(_, _, _, opts)
+      if mutable_phase then
+        return true, false
+      end
+      load_count = load_count + 1
+      local changed = load_count == 2
+      if changed then
+        opts.before_write()
+      end
+      return true, changed
+    end,
+  }
   pane.__apply_buffers__ = function(_, _, _, _, opts)
     applied[#applied + 1] = opts
   end
@@ -349,6 +322,7 @@ t:test("changed staged or mutable unstaged preview retains diff refresh", functi
     left_winnr = left_winnr,
     right_winnr = right_winnr,
     entry = { filepath = "changed.txt", stage_type = "staged", status = "M" },
+    loader = loader,
     preserve_view = true,
   })
   t.assert_true(applied[1].refresh_diff, "changed staged side refreshes diff")
@@ -360,6 +334,7 @@ t:test("changed staged or mutable unstaged preview retains diff refresh", functi
     left_winnr = left_winnr,
     right_winnr = right_winnr,
     entry = { filepath = "changed.txt", stage_type = "unstaged", status = "M" },
+    loader = loader,
     preserve_view = true,
   })
   t.assert_true(applied[2].refresh_diff, "mutable working-tree side refreshes diff")
@@ -422,17 +397,19 @@ t:test("workspace preview routes status snapshot identities for every file shape
     next_bufnr = next_bufnr + 1
     return next_bufnr
   end
-  pane.load_git_content = function(object, _, _, _, _, object_name)
-    calls[#calls + 1] = { object = object, object_name = object_name }
-    return true
-  end
+  local loader = {
+    load = function(_, object, _, opts)
+      calls[#calls + 1] = { object = object, object_name = opts.object_name }
+      return true
+    end,
+  }
   pane.__apply_buffers__ = function() end
 
   ---@param entry                      era.m.diffview.IFileEntry
   ---@return { object: string, object_name: string|nil }[]
   local function open(entry)
     calls = {}
-    pane.open_diff_entry({ left_winnr = -1, right_winnr = -1, entry = entry })
+    pane.open_diff_entry({ left_winnr = -1, right_winnr = -1, entry = entry, loader = loader })
     return calls
   end
 
@@ -507,13 +484,15 @@ t:test("staged preview starts both immutable loads before publishing", function(
     next_bufnr = next_bufnr + 1
     return next_bufnr
   end
-  pane.load_git_content = function(object)
-    started[#started + 1] = object
-    if object == "HEAD:f.txt" then
-      left_gate:await()
-    end
-    return true, true
-  end
+  local loader = {
+    load = function(_, object)
+      started[#started + 1] = object
+      if object == "HEAD:f.txt" then
+        left_gate:await()
+      end
+      return true, true
+    end,
+  }
   pane.__apply_buffers__ = function()
     applied = applied + 1
   end
@@ -523,6 +502,7 @@ t:test("staged preview starts both immutable loads before publishing", function(
       left_winnr = -1,
       right_winnr = -1,
       entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
+      loader = loader,
     })
   end)
 
@@ -549,14 +529,16 @@ t:test("stale staged pair cannot publish after both loads settle", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
   end
-  pane.load_git_content = function(object)
-    if object == "HEAD:f.txt" then
-      left_gate:await()
-    else
-      right_gate:await()
-    end
-    return true, true
-  end
+  local loader = {
+    load = function(_, object)
+      if object == "HEAD:f.txt" then
+        left_gate:await()
+      else
+        right_gate:await()
+      end
+      return true, true
+    end,
+  }
   pane.__apply_buffers__ = function()
     applied = applied + 1
   end
@@ -566,6 +548,7 @@ t:test("stale staged pair cannot publish after both loads settle", function()
       left_winnr = -1,
       right_winnr = -1,
       entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
+      loader = loader,
       is_current = function()
         return current
       end,
@@ -592,13 +575,15 @@ t:test("staged pair drains its sibling before propagating a load exception", fun
     next_bufnr = next_bufnr + 1
     return next_bufnr
   end
-  pane.load_git_content = function(object)
-    if object == "HEAD:f.txt" then
-      error("left load failed")
-    end
-    right_gate:await()
-    return true, true
-  end
+  local loader = {
+    load = function(_, object)
+      if object == "HEAD:f.txt" then
+        error("left load failed")
+      end
+      right_gate:await()
+      return true, true
+    end,
+  }
   pane.__apply_buffers__ = function()
     applied = applied + 1
   end
@@ -609,6 +594,7 @@ t:test("staged pair drains its sibling before propagating a load exception", fun
         left_winnr = -1,
         right_winnr = -1,
         entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
+        loader = loader,
       })
     end, debug.traceback)
     outcome = { ok = ok, err = tostring(err) }
@@ -622,104 +608,6 @@ t:test("staged pair drains its sibling before propagating a load exception", fun
   t.assert_false(assert(outcome).ok, "load exception propagated")
   t.assert_true(assert(outcome).err:find("left load failed", 1, true) ~= nil, "original exception retained")
   t.assert_eq(0, applied, "failed pair never published")
-end)
-
-t:test("index preview disambiguates a digit-colon filename from an unmerged stage", function()
-  local repo = git.repo(t)
-  vim.fn.writefile({ "digit-colon" }, repo .. "/2:foo")
-  vim.fn.writefile({ "plain" }, repo .. "/foo")
-  git.run(repo, { "add", "--all" })
-
-  t:patch_table(dot.path, "workspace", function()
-    return repo
-  end)
-  t:patch_table(stl.git, "info", assert(loadfile("lua/stl/git/info.lua"))())
-
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-  local selector = production_util.staged_object("2:foo") ---@type string
-  local outcome = nil ---@type boolean|nil
-  stl.async.run(function()
-    outcome = pane.load_git_content(selector, bufnr)
-  end)
-  wait(function()
-    return outcome ~= nil
-  end)
-
-  local expected_object = vim.trim(git.run(repo, { "rev-parse", ":./2:foo" })) ---@type string
-  t.assert_eq(":./2:foo", selector, "explicit stage-zero selector")
-  t.assert_true(outcome, "index preview loaded")
-  t.assert_eq("digit-colon", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "exact index content")
-  t.assert_eq(expected_object, vim.b[bufnr].git_object_name, "authoritative index object")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-end)
-
-t:test("revision preview caches real blobs and observes HEAD changes", function()
-  local repo = git.repo(t)
-  vim.fn.writefile({ "base" }, repo .. "/f.txt")
-  git.run(repo, { "add", "--", "f.txt" })
-  git.run(repo, { "commit", "-qm", "base" })
-  local base_hash = vim.trim(git.run(repo, { "rev-parse", "HEAD" })) ---@type string
-
-  t:patch_table(dot.path, "workspace", function()
-    return repo
-  end)
-  local production_info = assert(loadfile("lua/stl/git/info.lua"))()
-  local get_show_blob = production_info.get_show_blob
-  local blob_calls = 0 ---@type integer
-  production_info.get_show_blob = function(...)
-    blob_calls = blob_calls + 1
-    return get_show_blob(...)
-  end
-  t:patch_table(stl.git, "info", production_info)
-
-  local writes = 0 ---@type integer
-  local replace_buffer_text = staging.replace_buffer_text
-  t:patch_table(staging, "replace_buffer_text", function(...)
-    writes = writes + 1
-    return replace_buffer_text(...)
-  end)
-
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
-  local head_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-  local commit_bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-  local function load(object, bufnr)
-    local outcome = nil ---@type boolean|nil
-    stl.async.run(function()
-      outcome = pane.load_git_content(object, bufnr)
-    end)
-    wait(function()
-      return outcome ~= nil
-    end)
-    return outcome
-  end
-
-  t.assert_true(load("HEAD:f.txt", head_bufnr), "initial HEAD load")
-  t.assert_true(load("HEAD:f.txt", head_bufnr), "cached HEAD load")
-  t.assert_eq(1, blob_calls, "cached HEAD skips blob read")
-  t.assert_eq(1, writes, "cached HEAD skips buffer write")
-
-  vim.fn.writefile({ "next" }, repo .. "/f.txt")
-  git.run(repo, { "commit", "-qam", "next" })
-  t.assert_true(load("HEAD:f.txt", head_bufnr), "changed HEAD load")
-  t.assert_eq(2, blob_calls, "changed HEAD reads blob")
-  t.assert_eq(2, writes, "changed HEAD rewrites buffer")
-  t.assert_eq("next\n", staging.from_buffer(head_bufnr).text, "latest HEAD content")
-
-  local commit_object = base_hash .. ":f.txt" ---@type string
-  t.assert_true(load(commit_object, commit_bufnr), "initial commit load")
-  t.assert_true(load(commit_object, commit_bufnr), "cached commit load")
-  t.assert_eq(3, blob_calls, "cached commit skips blob read")
-  t.assert_eq(3, writes, "cached commit skips buffer write")
-  t.assert_eq("base\n", staging.from_buffer(commit_bufnr).text, "commit content")
-  t.assert_eq(
-    vim.trim(git.run(repo, { "rev-parse", commit_object })),
-    vim.b[commit_bufnr].git_content_object_name,
-    "commit blob identity"
-  )
-
-  vim.api.nvim_buf_delete(head_bufnr, { force = true })
-  vim.api.nvim_buf_delete(commit_bufnr, { force = true })
 end)
 
 t:test("real staged preview reuses captured identities without resolver processes", function()
@@ -769,7 +657,7 @@ t:test("real staged preview reuses captured identities without resolver processe
     local bufnr = vim.fn.bufnr(name) ---@type integer
     return bufnr ~= -1 and bufnr or nil
   end)
-  t:patch_table(stl.git, "info", production_info)
+  local loader = require("era.m.diffview.content").Loader.new(production_info)
 
   local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
   local left_winnr, right_winnr = create_windows()
@@ -788,6 +676,7 @@ t:test("real staged preview reuses captured identities without resolver processe
         left_winnr = left_winnr,
         right_winnr = right_winnr,
         entry = entry,
+        loader = loader,
         preserve_view = true,
       })
       done = true
@@ -825,10 +714,12 @@ t:test("parallel preview does not publish buffers after either Git content load 
     next_bufnr = next_bufnr + 1
     return next_bufnr
   end
-  pane.load_git_content = function(object)
-    objects[#objects + 1] = object
-    return false
-  end
+  local loader = {
+    load = function(_, object)
+      objects[#objects + 1] = object
+      return false
+    end,
+  }
   pane.__apply_buffers__ = function()
     applied = applied + 1
   end
@@ -837,6 +728,7 @@ t:test("parallel preview does not publish buffers after either Git content load 
     left_winnr = -1,
     right_winnr = -1,
     entry = { filepath = "new.lua", prev_filepath = "old.lua", stage_type = "staged", status = "R" },
+    loader = loader,
   })
 
   t.assert_eq(2, #objects, "both immutable loads start concurrently")
@@ -865,7 +757,7 @@ t:test("conflict preview compares ours with the working tree", function()
   t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
     return repo .. "/" .. filepath
   end)
-  t:patch_table(stl.git, "info", require("stl.git.info"))
+  local loader = require("era.m.diffview.content").Loader.new(require("stl.git.info"))
 
   local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
   local applied = nil ---@type integer[]|nil
@@ -879,6 +771,7 @@ t:test("conflict preview compares ours with the working tree", function()
       left_winnr = -1,
       right_winnr = -1,
       entry = { filepath = "f.txt", stage_type = "unstaged", status = "U" },
+      loader = loader,
     })
     done = true
   end)

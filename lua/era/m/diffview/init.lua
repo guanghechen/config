@@ -109,6 +109,7 @@ local view = setmetatable({
 ---@class era.m.diffview.__mods
 local __mods = {
   config = "era.m.diffview.config",
+  content = "era.m.diffview.content",
   data = "era.m.diffview.data",
   fn = "era.m.diffview.fn",
   layout = "era.m.diffview.layout",
@@ -119,6 +120,7 @@ local __mods = {
 ---@class era.m.diffview
 ---@field public __mods                 era.m.diffview.__mods
 ---@field public config                 era.m.diffview.config
+---@field public content                era.m.diffview.content
 ---@field public data                   era.m.diffview.data
 ---@field public fn                     era.m.diffview.fn
 ---@field public layout                 era.m.diffview.layout
