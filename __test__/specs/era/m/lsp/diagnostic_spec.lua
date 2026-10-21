@@ -1,249 +1,211 @@
-local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+require("ark.bootstrap").setup()
 
 local t = harness.new()
-local run_refresh_pending ---@type fun()|nil
-
-bootstrap.with_runtime(t, {
-  dot = {
-    state = {
-      status = {
-        dirtier_statusline = { mark_dirty = function() end },
-        dirtier_tabline = { mark_dirty = function() end },
-      },
-    },
-  },
-  stl = {
-    c = {
-      Subscribers = {
-        new = function()
-          return {
-            notify = function() end,
-            subscribe = function()
-              return { unsubscribe = function() end }
-            end,
-            dispose = function() end,
-          }
-        end,
-      },
-    },
-    nvim = {
-      fn = {
-        augroup = function()
-          return 1
-        end,
-      },
-    },
-    timer = {
-      debounce = function(callback)
-        run_refresh_pending = callback
-        return function() end
-      end,
-    },
-  },
-})
-
 local Diagnostic = require("era.m.lsp.diagnostic")
 
----@return { notifications: integer }
-local function reset_state()
-  local state = { notifications = 0 }
-  t:patch_table(Diagnostic, "_buffers", {})
-  t:patch_table(Diagnostic, "_subscribers_bufnr", {})
-  t:patch_table(Diagnostic, "_subscribers_all", {
-    notify = function()
-      state.notifications = state.notifications + 1
+local ROOT = vim.uv.cwd() .. "/__test__/local.diagnostic" ---@type string
+local ERROR, WARN = vim.diagnostic.severity.ERROR, vim.diagnostic.severity.WARN
+
+---@return era.m.lsp.diagnostic.Store
+---@return { changes: integer }
+local function new_store()
+  local state = { changes = 0 }
+  local store = Diagnostic.Store.new({
+    debounce_ms = 10,
+    on_change = function()
+      state.changes = state.changes + 1
     end,
   })
-  t:patch_table(Diagnostic, "_total_error", 0)
-  t:patch_table(Diagnostic, "_total_warn", 0)
-  t:patch_table(Diagnostic, "_total_info", 0)
-  t:patch_table(Diagnostic, "_total_hint", 0)
-  return state
-end
-
-local function flush_refresh()
-  assert(run_refresh_pending ~= nil, "missing refresh callback")
-  run_refresh_pending()
-end
-
-t:test("refresh: unchanged counts do not notify subscribers", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr, "diagnostic-false-notification-test.lua")
-
-  local diagnostics = {
-    { bufnr = bufnr, severity = vim.diagnostic.severity.ERROR },
-  } ---@type vim.Diagnostic[]
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local buffer_notifications = 0 ---@type integer
-  local state = reset_state()
-  ---@diagnostic disable-next-line: missing-fields
-  Diagnostic._subscribers_bufnr[bufnr] = {
-    notify = function()
-      buffer_notifications = buffer_notifications + 1
-    end,
-  }
-  t:patch_table(vim.diagnostic, "get", function(requested_bufnr)
-    t.assert_eq(bufnr, requested_bufnr, "scoped diagnostic query")
-    return diagnostics
+  t:defer(function()
+    store:dispose()
   end)
+  return store, state
+end
 
-  Diagnostic.refresh(bufnr)
-  flush_refresh()
-  t.assert_eq(1, state.notifications, "initial diagnostic")
-  t.assert_eq(1, buffer_notifications, "initial buffer diagnostic")
+---@param name                          string
+---@return integer
+local function named_buffer(name)
+  local bufnr = vim.api.nvim_create_buf(true, true)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  vim.api.nvim_buf_set_name(bufnr, ROOT .. "/" .. name)
+  return bufnr
+end
 
-  Diagnostic.refresh(bufnr)
-  flush_refresh()
-  t.assert_eq(1, state.notifications, "unchanged diagnostic")
-  t.assert_eq(1, buffer_notifications, "unchanged buffer diagnostic")
+---@param name                          string
+---@return integer
+local function namespace(name)
+  local ns = vim.api.nvim_create_namespace("diagnostic-spec-" .. name)
+  t:defer(function()
+    vim.diagnostic.reset(ns)
+  end)
+  return ns
+end
 
-  diagnostics = {
-    { bufnr = bufnr, severity = vim.diagnostic.severity.WARN },
-  }
-  Diagnostic.refresh(bufnr)
-  flush_refresh()
-  t.assert_eq(2, state.notifications, "changed severity")
-  t.assert_eq(2, buffer_notifications, "changed buffer severity")
+---@param ns                            integer
+---@param bufnr                         integer
+---@param severities                    vim.diagnostic.Severity[]
+---@return nil
+local function set(ns, bufnr, severities)
+  local diagnostics = {} ---@type vim.Diagnostic.Set[]
+  for index, severity in ipairs(severities) do
+    diagnostics[index] = { lnum = 0, col = 0, message = "diagnostic " .. index, severity = severity }
+  end
+  vim.diagnostic.set(ns, bufnr, diagnostics)
+end
 
-  diagnostics = {}
-  Diagnostic.refresh(bufnr)
-  flush_refresh()
-  t.assert_eq(3, state.notifications, "cleared diagnostic")
-  t.assert_eq(3, buffer_notifications, "cleared buffer diagnostic")
+-- Counts buffer-scoped queries, which tell a test that a batched refresh has run.
+---@return table<integer, integer>
+local function count_queries()
+  local calls = {} ---@type table<integer, integer>
+  local get = vim.diagnostic.get
+  t:patch_table(vim.diagnostic, "get", function(bufnr, opts)
+    if bufnr ~= nil then
+      calls[bufnr] = (calls[bufnr] or 0) + 1
+    end
+    return get(bufnr, opts)
+  end)
+  return calls
+end
 
-  vim.api.nvim_buf_delete(bufnr, { force = true })
+---@param predicate                     fun(): boolean
+---@param message                       string
+---@return nil
+local function wait(predicate, message)
+  t.assert_true(vim.wait(2000, predicate, 1), message)
+end
+
+t:test("refresh: unchanged counts do not report a change", function()
+  local store, state = new_store()
+  local bufnr = named_buffer("unchanged.lua")
+  local ns = namespace("unchanged")
+  local calls = count_queries()
+
+  ---@param changes                     integer
+  ---@param message                     string
+  local function refresh(changes, message)
+    local before = calls[bufnr] or 0 ---@type integer
+    store:refresh(bufnr)
+    wait(function()
+      return (calls[bufnr] or 0) > before
+    end, "refresh ran: " .. message)
+    t.assert_eq(changes, state.changes, message)
+  end
+
+  set(ns, bufnr, { ERROR })
+  refresh(1, "initial diagnostic")
+  refresh(1, "unchanged diagnostic")
+  set(ns, bufnr, { WARN })
+  refresh(2, "changed severity")
+  set(ns, bufnr, {})
+  refresh(3, "cleared diagnostic")
 end)
 
 t:test("refresh: debounce retains every changed buffer", function()
-  local bufnr1 = vim.api.nvim_create_buf(false, true) ---@type integer
-  local bufnr2 = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr1, "diagnostic-pending-1.lua")
-  vim.api.nvim_buf_set_name(bufnr2, "diagnostic-pending-2.lua")
+  local store, state = new_store()
+  local bufnr1 = named_buffer("pending-1.lua")
+  local bufnr2 = named_buffer("pending-2.lua")
+  local ns = namespace("pending")
+  set(ns, bufnr1, { ERROR })
+  set(ns, bufnr2, { WARN, WARN })
+  local calls = count_queries()
 
-  local calls = {} ---@type table<integer, integer>
-  local state = reset_state()
-  t:patch_table(vim.diagnostic, "get", function(bufnr)
-    t.assert_true(bufnr ~= nil, "buffer-scoped diagnostic query")
-    calls[bufnr] = (calls[bufnr] or 0) + 1
-    if bufnr == bufnr1 then
-      return { { severity = vim.diagnostic.severity.ERROR } }
-    end
-    return {
-      { severity = vim.diagnostic.severity.WARN },
-      { severity = vim.diagnostic.severity.WARN },
-    }
-  end)
-
-  Diagnostic.refresh(bufnr1)
-  Diagnostic.refresh(bufnr1)
-  Diagnostic.refresh(bufnr2)
+  store:refresh(bufnr1)
+  store:refresh(bufnr1)
+  store:refresh(bufnr2)
   t.assert_nil(calls[bufnr1], "queries before debounce flush")
   t.assert_nil(calls[bufnr2], "queries before debounce flush")
 
-  flush_refresh()
+  wait(function()
+    return state.changes > 0
+  end, "debounced refresh")
   t.assert_eq(1, calls[bufnr1], "deduplicated first buffer")
   t.assert_eq(1, calls[bufnr2], "retained second buffer")
-  t.assert_eq(1, state.notifications, "batched notification")
-
-  local errors, warns, infos, hints = Diagnostic.get_totals()
-  t.assert_eq(1, errors, "total errors")
-  t.assert_eq(2, warns, "total warnings")
-  t.assert_eq(0, infos, "total infos")
-  t.assert_eq(0, hints, "total hints")
-
-  vim.api.nvim_buf_delete(bufnr1, { force = true })
-  vim.api.nvim_buf_delete(bufnr2, { force = true })
+  t.assert_eq(1, state.changes, "batched change")
+  t.assert_eq(1, store:get(bufnr1).error, "first buffer errors")
+  t.assert_eq(2, store:get(bufnr2).warn, "second buffer warnings")
 end)
 
 t:test("refresh: aggregates every diagnostic namespace in the buffer", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr, "diagnostic-namespaces.lua")
-  local ns1 = vim.api.nvim_create_namespace("diagnostic-test-namespace-1")
-  local ns2 = vim.api.nvim_create_namespace("diagnostic-test-namespace-2")
-  local state = reset_state()
+  local store, state = new_store()
+  local bufnr = named_buffer("namespaces.lua")
+  local ns1 = namespace("namespace-1")
+  local ns2 = namespace("namespace-2")
 
-  vim.diagnostic.set(ns1, bufnr, {
-    { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
-  })
-  vim.diagnostic.set(ns2, bufnr, {
-    { lnum = 0, col = 0, message = "warning", severity = vim.diagnostic.severity.WARN },
-  })
-
-  Diagnostic.refresh(bufnr)
-  flush_refresh()
-  local data = Diagnostic.get_by_bufnr(bufnr)
-  t.assert_eq(2, data.total, "all namespaces")
+  set(ns1, bufnr, { ERROR })
+  set(ns2, bufnr, { WARN })
+  store:refresh(bufnr)
+  wait(function()
+    return state.changes == 1
+  end, "initial namespaces")
+  local data = store:get(bufnr)
   t.assert_eq(1, data.error, "namespace error")
   t.assert_eq(1, data.warn, "namespace warning")
-  t.assert_eq(1, state.notifications, "initial namespaces")
 
   vim.diagnostic.reset(ns1, bufnr)
-  Diagnostic.refresh(bufnr)
-  flush_refresh()
-  data = Diagnostic.get_by_bufnr(bufnr)
-  t.assert_eq(1, data.total, "remaining namespace")
+  store:refresh(bufnr)
+  wait(function()
+    return state.changes == 2
+  end, "cleared namespace")
+  data = store:get(bufnr)
   t.assert_eq(0, data.error, "cleared namespace error")
   t.assert_eq(1, data.warn, "remaining namespace warning")
-  t.assert_eq(2, state.notifications, "cleared namespace")
-
-  vim.diagnostic.reset(ns2, bufnr)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
-t:test("setup: buffer deletion removes totals and pending refreshes", function()
-  local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr, "diagnostic-delete.lua")
-  local ns = vim.api.nvim_create_namespace("diagnostic-test-delete")
-  vim.diagnostic.set(ns, bufnr, {
-    { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
-  })
+t:test("forget: a deleted buffer drops its counts and queued refresh", function()
+  local store, state = new_store()
+  local bufnr = named_buffer("deleted.lua")
+  local other = named_buffer("other.lua")
+  local ns = namespace("deleted")
+  set(ns, bufnr, { ERROR })
+  store:refresh_all()
+  t.assert_eq(1, state.changes, "initial diagnostic")
+  t.assert_eq(1, store:get(bufnr).error, "initial count")
 
-  local state = reset_state()
-  local buffer_notifications = 0 ---@type integer
-  local disposals = 0 ---@type integer
-  ---@diagnostic disable-next-line: missing-fields
-  Diagnostic._subscribers_bufnr[bufnr] = {
-    notify = function()
-      buffer_notifications = buffer_notifications + 1
-    end,
-    dispose = function()
-      disposals = disposals + 1
-    end,
-  }
+  store:refresh(bufnr)
+  store:forget(bufnr)
+  store:forget(bufnr)
+  t.assert_eq(2, state.changes, "deleted diagnostic")
+  t.assert_eq(0, store:get(bufnr).error, "deleted count")
 
-  local diagnostic_changed ---@type fun(args: { buf: integer })|nil
-  local buffer_deleted ---@type fun(args: { buf: integer })|nil
-  t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
-    if events == "DiagnosticChanged" then
-      diagnostic_changed = opts.callback
-    else
-      buffer_deleted = opts.callback
-    end
-    return 1
-  end)
+  -- Queued refreshes run as one batch: once a later one lands, a refresh still queued for the deleted buffer would too.
+  set(ns, other, { WARN })
+  store:refresh(other)
+  wait(function()
+    return state.changes == 3
+  end, "later refresh")
+  t.assert_eq(1, store:get(other).warn, "later count")
+  t.assert_eq(0, store:get(bufnr).error, "dropped queued refresh")
+end)
 
+t:test("setup: diagnostic changes and deleted buffers reach the default store", function()
+  local bufnr = named_buffer("setup.lua")
+  local ns = namespace("setup")
+  set(ns, bufnr, { ERROR })
   Diagnostic.setup()
-  t.assert_eq(1, state.notifications, "initial global diagnostic")
-  t.assert_eq(1, buffer_notifications, "initial buffer diagnostic")
-  t.assert_eq(1, select(1, Diagnostic.get_totals()), "initial total")
+  t:defer(function()
+    -- Creating the group again clears the autocmds setup registered.
+    stl.nvim.fn.augroup("era.m.lsp.diagnostic")
+  end)
+  t.assert_eq(1, Diagnostic.get_by_bufnr(bufnr).error, "initial count")
 
-  assert(diagnostic_changed ~= nil, "missing DiagnosticChanged callback")
-  assert(buffer_deleted ~= nil, "missing buffer deletion callback")
-  diagnostic_changed({ buf = bufnr })
-  buffer_deleted({ buf = bufnr })
-  buffer_deleted({ buf = bufnr })
-  flush_refresh()
+  set(ns, bufnr, { WARN, WARN })
+  wait(function()
+    return Diagnostic.get_by_bufnr(bufnr).warn == 2
+  end, "DiagnosticChanged refresh")
+  t.assert_eq(0, Diagnostic.get_by_bufnr(bufnr).error, "replaced count")
+  t.assert_eq(
+    Diagnostic.format(Diagnostic.get_by_bufnr(bufnr), 0, {}),
+    Diagnostic.render(ROOT .. "/setup.lua", 0, {}),
+    "render"
+  )
 
-  t.assert_eq(2, state.notifications, "deleted global diagnostic")
-  t.assert_eq(1, buffer_notifications, "no deleted buffer notification")
-  t.assert_eq(1, disposals, "subscriber disposal")
-  t.assert_eq(0, select(1, Diagnostic.get_totals()), "deleted total")
-  t.assert_nil(Diagnostic._buffers[bufnr], "deleted buffer cache")
-  t.assert_nil(Diagnostic._subscribers_bufnr[bufnr], "deleted buffer subscribers")
-
-  vim.diagnostic.reset(ns, bufnr)
   vim.api.nvim_buf_delete(bufnr, { force = true })
+  t.assert_eq(0, Diagnostic.get_by_bufnr(bufnr).warn, "deleted buffer")
 end)
 
 t:run()

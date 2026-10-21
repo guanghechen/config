@@ -6,7 +6,7 @@ local DEBOUNCE_MS = 50 ---@type integer
 ---@param bufnr                          integer
 ---@return era.m.lsp.diagnostic.IBufferDiagnostics
 local function new_buffer(bufnr)
-  return { bufnr = bufnr, error = 0, warn = 0, info = 0, hint = 0, total = 0 }
+  return { bufnr = bufnr, error = 0, warn = 0, info = 0, hint = 0 }
 end
 
 ---@param a                              era.m.lsp.diagnostic.IBufferDiagnostics
@@ -15,30 +15,6 @@ end
 local function equals_buffer(a, b)
   return a.error == b.error and a.warn == b.warn and a.info == b.info and a.hint == b.hint
 end
-
----@class era.m.lsp.diagnostic
-local M = {}
-
----@type table<integer, era.m.lsp.diagnostic.IBufferDiagnostics>
-M._buffers = {}
-
----@type stl.c.Subscribers
-M._subscribers_all = stl.c.Subscribers.new()
-
----@type table<integer, stl.c.Subscribers>
-M._subscribers_bufnr = {}
-
----@type integer
-M._total_error = 0
-
----@type integer
-M._total_warn = 0
-
----@type integer
-M._total_info = 0
-
----@type integer
-M._total_hint = 0
 
 ---@param bufnr                          integer
 ---@return boolean
@@ -67,7 +43,6 @@ local function add_diagnostic(data, diagnostic)
   elseif severity == vim.diagnostic.severity.HINT then
     data.hint = data.hint + 1
   end
-  data.total = data.total + 1
 end
 
 ---@param bufnr                          integer
@@ -89,63 +64,81 @@ local function collect_buffer(bufnr)
   return data
 end
 
+---@class era.m.lsp.diagnostic.IStoreProps
+---@field public debounce_ms            integer
+---@field public on_change              fun(): nil Called once per refresh that changed any buffer's counts.
+
+---Diagnostic counts per file buffer. Single-buffer refreshes are batched over `debounce_ms`.
+---@class era.m.lsp.diagnostic.Store
+---@field protected _buffers            table<integer, era.m.lsp.diagnostic.IBufferDiagnostics>
+---@field protected _keys               table<integer, { name: string, key: string }> Normalized names of buffers with counts, computed again whenever a buffer's name changes.
+---@field protected _on_change          fun(): nil
+---@field protected _pending            table<integer, boolean>
+---@field protected _refresh_pending    stl.timer.IDisposableCallable
+local Store = {}
+Store.__index = Store
+
+---@param props                          era.m.lsp.diagnostic.IStoreProps
+---@return era.m.lsp.diagnostic.Store
+function Store.new(props)
+  local self = setmetatable({}, Store)
+  self._buffers = {}
+  self._keys = {}
+  self._on_change = props.on_change
+  self._pending = {}
+  self._refresh_pending = stl.timer.debounce(function()
+    self:__refresh_pending__()
+  end, props.debounce_ms)
+  return self
+end
+
+-- The one writer of the per-buffer counts.
 ---@param bufnr                          integer
 ---@param next_data                      era.m.lsp.diagnostic.IBufferDiagnostics|nil
----@return boolean
-local function apply_buffer(bufnr, next_data)
-  -- Keep the per-buffer cache and aggregate totals consistent through one writer.
-  local prev_data = M._buffers[bufnr] ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
-  local prev_counts = prev_data or EMPTY_BUFFER ---@type era.m.lsp.diagnostic.IBufferDiagnostics
-  local next_counts = next_data or EMPTY_BUFFER ---@type era.m.lsp.diagnostic.IBufferDiagnostics
-  local changed = not equals_buffer(prev_counts, next_counts) ---@type boolean
-
-  M._buffers[bufnr] = next_data
-  if not changed then
-    return false
-  end
-
-  M._total_error = M._total_error + next_counts.error - prev_counts.error
-  M._total_warn = M._total_warn + next_counts.warn - prev_counts.warn
-  M._total_info = M._total_info + next_counts.info - prev_counts.info
-  M._total_hint = M._total_hint + next_counts.hint - prev_counts.hint
-
-  if next_data ~= nil then
-    local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
-    if subscribers ~= nil then
-      subscribers:notify(next_data)
-    end
-  end
-  return true
+---@return boolean changed
+function Store:__apply__(bufnr, next_data)
+  local prev_counts = self._buffers[bufnr] or EMPTY_BUFFER ---@type era.m.lsp.diagnostic.IBufferDiagnostics
+  self._buffers[bufnr] = next_data
+  return not equals_buffer(prev_counts, next_data or EMPTY_BUFFER)
 end
 
----@param changed                        boolean
----@return nil
-local function publish_changes(changed)
-  if not changed then
-    return
+---@param bufnr                          integer
+---@return string
+function Store:__key__(bufnr)
+  local name = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local cached = self._keys[bufnr]
+  if cached == nil or cached.name ~= name then
+    cached = { name = name, key = stl.nvim.buf.normalize_bufpath(name) }
+    self._keys[bufnr] = cached
   end
-
-  M._subscribers_all:notify(nil)
-  dot.state.status.dirtier_statusline:mark_dirty()
-  dot.state.status.dirtier_tabline:mark_dirty()
+  return cached.key
 end
 
-local pending_bufnrs = {} ---@type table<integer, boolean>
-
 ---@return nil
-local function do_refresh_pending()
-  local bufnrs = pending_bufnrs ---@type table<integer, boolean>
-  pending_bufnrs = {}
+function Store:__refresh_pending__()
+  local bufnrs = self._pending ---@type table<integer, boolean>
+  self._pending = {}
 
   local changed = false ---@type boolean
   for bufnr in pairs(bufnrs) do
-    changed = apply_buffer(bufnr, collect_buffer(bufnr)) or changed
+    changed = self:__apply__(bufnr, collect_buffer(bufnr)) or changed
   end
-  publish_changes(changed)
+  if changed then
+    self._on_change()
+  end
 end
 
+---Queues `bufnr` for the next batched refresh.
+---@param bufnr                          integer
 ---@return nil
-local function do_refresh_all()
+function Store:refresh(bufnr)
+  self._pending[bufnr] = true
+  self._refresh_pending()
+end
+
+---Counts every buffer again now.
+---@return nil
+function Store:refresh_all()
   local next_buffers = {} ---@type table<integer, era.m.lsp.diagnostic.IBufferDiagnostics>
   local diagnostics = vim.diagnostic.get() ---@type vim.Diagnostic[]
   for _, diagnostic in ipairs(diagnostics) do
@@ -161,7 +154,7 @@ local function do_refresh_all()
   end
 
   local bufnrs = {} ---@type table<integer, boolean>
-  for bufnr in pairs(M._buffers) do
+  for bufnr in pairs(self._buffers) do
     bufnrs[bufnr] = true
   end
   for bufnr in pairs(next_buffers) do
@@ -174,47 +167,48 @@ local function do_refresh_all()
     if next_data == nil and vim.api.nvim_buf_is_valid(bufnr) then
       next_data = new_buffer(bufnr)
     end
-    changed = apply_buffer(bufnr, next_data) or changed
+    changed = self:__apply__(bufnr, next_data) or changed
   end
-  publish_changes(changed)
+  if changed then
+    self._on_change()
+  end
 end
 
----@type stl.timer.IDisposableCallable
-local refresh_debounced = stl.timer.debounce(do_refresh_pending, DEBOUNCE_MS)
-
--- Normalized names of buffers with counts, computed again whenever a buffer's name changes.
-local bufpath_keys = {} ---@type table<integer, { name: string, key: string }>
+---Drops a deleted buffer's counts and its queued refresh.
+---@param bufnr                          integer
+---@return nil
+function Store:forget(bufnr)
+  self._pending[bufnr] = nil
+  self._keys[bufnr] = nil
+  if self:__apply__(bufnr, nil) then
+    self._on_change()
+  end
+end
 
 ---@param bufnr                          integer
----@return string
-local function bufpath_key(bufnr)
-  local name = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local cached = bufpath_keys[bufnr]
-  if cached == nil or cached.name ~= name then
-    cached = { name = name, key = stl.nvim.buf.normalize_bufpath(name) }
-    bufpath_keys[bufnr] = cached
-  end
-  return cached.key
+---@return era.m.lsp.diagnostic.IBufferDiagnostics
+function Store:get(bufnr)
+  return self._buffers[bufnr] or EMPTY_BUFFER
 end
 
 -- Only buffers with counts render anything, so a path is compared with their current names alone rather
 -- than located among every buffer, which result lists do for each of their files.
 ---@param filepath                       string
 ---@return era.m.lsp.diagnostic.IBufferDiagnostics|nil
-local function find_counted(filepath)
+function Store:find(filepath)
   -- Windows names also match case-insensitively, so several buffers can match; the full lookup decides.
   if stl.env.IS_WIN then
     local bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
-    return bufnr ~= nil and M._buffers[bufnr] or nil
+    return bufnr ~= nil and self._buffers[bufnr] or nil
   end
 
   local key = stl.nvim.buf.normalize_bufpath(filepath) ---@type string
   if key == "" then
     return nil
   end
-  for bufnr, data in pairs(M._buffers) do
+  for bufnr, data in pairs(self._buffers) do
     if data.error + data.warn + data.hint + data.info > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-      if bufpath_key(bufnr) == key then
+      if self:__key__(bufnr) == key then
         return data
       end
     end
@@ -222,119 +216,64 @@ local function find_counted(filepath)
   return nil
 end
 
+---@return nil
+function Store:dispose()
+  self._refresh_pending:dispose()
+  self._pending = {}
+end
+
+-- Rendered in this order, each with its own highlight.
+local PARTS = {
+  { field = "error", icon = "Error_alt", hlname = "f_lsp_diagnostic_error" },
+  { field = "warn", icon = "Warning_alt", hlname = "f_lsp_diagnostic_warn" },
+  { field = "hint", icon = "Hint_alt", hlname = "f_lsp_diagnostic_hint" },
+  { field = "info", icon = "Information_alt", hlname = "f_lsp_diagnostic_info" },
+}
+
+---@class era.m.lsp.diagnostic
+local M = {}
+
+M.Store = Store
+
+local default = Store.new({
+  debounce_ms = DEBOUNCE_MS,
+  on_change = function()
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
+  end,
+})
+
+---Counts as text placed at `offset`, appending a highlight for each nonzero count.
+---@param data                           era.m.lsp.diagnostic.IBufferDiagnostics
+---@param offset                         integer
+---@param highlights                     stl.t.IHighlightInline[]
+---@return string
+function M.format(data, offset, highlights)
+  local text = "" ---@type string
+  for _, part in ipairs(PARTS) do
+    local count = data[part.field] ---@type integer
+    if count > 0 then
+      local piece = " " .. stl.icon.diagnostic[part.icon] .. " " .. count ---@type string
+      highlights[#highlights + 1] = { coll = offset + #text, colr = offset + #text + #piece, hlname = part.hlname }
+      text = text .. piece
+    end
+  end
+  return text
+end
+
 ---@param filepath                       string
 ---@param offset                         integer
 ---@param highlights                     stl.t.IHighlightInline[]
 ---@return string
 function M.render(filepath, offset, highlights)
-  local data = find_counted(filepath) ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
-  if data == nil then
-    return ""
-  end
-
-  local text = "" ---@type string
-
-  if data.error > 0 then
-    local part = " " .. stl.icon.diagnostic.Error_alt .. " " .. data.error ---@type string
-    local offset_next = offset + #part ---@type integer
-    text = text .. part ---@type string
-    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_error" }
-    offset = offset_next
-  end
-
-  if data.warn > 0 then
-    local part = " " .. stl.icon.diagnostic.Warning_alt .. " " .. data.warn ---@type string
-    local offset_next = offset + #part ---@type integer
-    text = text .. part ---@type string
-    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_warn" }
-    offset = offset_next
-  end
-
-  if data.hint > 0 then
-    local part = " " .. stl.icon.diagnostic.Hint_alt .. " " .. data.hint ---@type string
-    local offset_next = offset + #part ---@type integer
-    text = text .. part ---@type string
-    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_hint" }
-    offset = offset_next
-  end
-
-  if data.info > 0 then
-    local part = " " .. stl.icon.diagnostic.Information_alt .. " " .. data.info ---@type string
-    local offset_next = offset + #part ---@type integer
-    text = text .. part ---@type string
-    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_info" }
-    offset = offset_next
-  end
-
-  return text
-end
-
----@return integer
----@return integer
----@return integer
----@return integer
-function M.get_totals()
-  return M._total_error, M._total_warn, M._total_info, M._total_hint
+  local data = default:find(filepath) ---@type era.m.lsp.diagnostic.IBufferDiagnostics|nil
+  return data ~= nil and M.format(data, offset, highlights) or ""
 end
 
 ---@param bufnr                          integer
 ---@return era.m.lsp.diagnostic.IBufferDiagnostics
 function M.get_by_bufnr(bufnr)
-  return M._buffers[bufnr] or EMPTY_BUFFER
-end
-
----@param filepath                       string
----@return era.m.lsp.diagnostic.IBufferDiagnostics
-function M.get_by_filepath(filepath)
-  local bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
-  if bufnr == nil or bufnr < 1 then
-    return EMPTY_BUFFER
-  end
-  return M._buffers[bufnr] or EMPTY_BUFFER
-end
-
----@param filepath                       string
----@param severity                       ?vim.diagnostic.Severity
----@return boolean
-function M.has_diagnostics(filepath, severity)
-  local data = M.get_by_filepath(filepath) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
-  if severity == nil then
-    return data.total > 0
-  elseif severity == vim.diagnostic.severity.ERROR then
-    return data.error > 0
-  elseif severity == vim.diagnostic.severity.WARN then
-    return data.warn > 0
-  elseif severity == vim.diagnostic.severity.HINT then
-    return data.hint > 0
-  elseif severity == vim.diagnostic.severity.INFO then
-    return data.info > 0
-  end
-  return false
-end
-
----@param bufnr                          integer
----@return nil
-function M.refresh(bufnr)
-  pending_bufnrs[bufnr] = true
-  refresh_debounced()
-end
-
----@param subscriber                     stl.c.ISubscriber
----@return stl.c.IUnsubscribable
-function M.subscribe_all(subscriber)
-  return M._subscribers_all:subscribe(subscriber)
-end
-
----@param bufnr                          integer
----@param subscriber                     stl.c.ISubscriber
----@return stl.c.IUnsubscribable
-function M.subscribe_bufnr(bufnr, subscriber)
-  local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
-  if subscribers == nil then
-    subscribers = stl.c.Subscribers.new()
-    M._subscribers_bufnr[bufnr] = subscribers
-  end
-  return subscribers:subscribe(subscriber)
+  return default:get(bufnr)
 end
 
 ---@return nil
@@ -344,27 +283,18 @@ function M.setup()
   vim.api.nvim_create_autocmd("DiagnosticChanged", {
     group = augroup,
     callback = function(args)
-      M.refresh(args.buf)
+      default:refresh(args.buf)
     end,
   })
 
   vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
     group = augroup,
     callback = function(args)
-      local bufnr = args.buf ---@type integer
-      pending_bufnrs[bufnr] = nil
-      bufpath_keys[bufnr] = nil
-      local changed = apply_buffer(bufnr, nil) ---@type boolean
-      local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
-      if subscribers ~= nil then
-        subscribers:dispose()
-        M._subscribers_bufnr[bufnr] = nil
-      end
-      publish_changes(changed)
+      default:forget(args.buf)
     end,
   })
 
-  do_refresh_all()
+  default:refresh_all()
 end
 
 ----------------------------------------------------------------------------------------------------
