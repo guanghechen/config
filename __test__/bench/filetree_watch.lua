@@ -78,9 +78,9 @@ local ok, result = xpcall(function()
     [[
     pending = nil
     view:detach()
-    assert(vim.wait(10000, function() return data:watch_status().directories == 0 and not data._native:is_busy() end, 1))
+    assert(vim.wait(10000, function() return data:watch_status().directories == 0 and not data:native():is_busy() end, 1))
     collectgarbage("collect")
-    return { watches = data:watch_status().directories, rust = data._native:stats(), lua_heap_bytes = collectgarbage("count") * 1024, process_memory_bytes = vim.uv.resident_set_memory() }
+    return { watches = data:watch_status().directories, rust = data:native():stats(), lua_heap_bytes = collectgarbage("count") * 1024, process_memory_bytes = vim.uv.resident_set_memory() }
   ]],
     {}
   )

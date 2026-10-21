@@ -264,13 +264,13 @@ t:test("refreshing a healthy unchanged pane preserves its body publication", fun
   local widget = fixture.widget(path)
   local session, view = widget:context()
   t.wait_until(function()
-    return not view:status().preparing and session.state._native:applicable(view:frame())
+    return not view:status().preparing and session.state:native():applicable(view:frame())
   end, 10000)
   local tick = vim.api.nvim_buf_get_changedtick(view.bufnr)
   await(widget:refresh())
   fixture.idle(widget)
   t.wait_until(function()
-    return not view:status().preparing and session.state._native:applicable(view:frame())
+    return not view:status().preparing and session.state:native():applicable(view:frame())
   end, 10000)
   t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(view.bufnr), "healthy refresh must not force a full body reset")
 end)
@@ -303,11 +303,11 @@ t:test("empty background panes release obsolete resource snapshots", function()
     return view:frame():header().row_count == 1000
       and view._filetree_annotations ~= nil
       and view._filetree_pending == nil
-      and not session.data._native:is_busy()
+      and not session.data:native():is_busy()
       and view:frame():header().data_revision == session.data:source():revision()
   end, 10000)
   collectgarbage("collect")
-  local before = session.data._native:stats().retained_bytes
+  local before = session.data:native():stats().retained_bytes
 
   local tabnr = vim.api.nvim_get_current_tabpage()
   vim.cmd.tabnew()
@@ -326,12 +326,12 @@ t:test("empty background panes release obsolete resource snapshots", function()
   end
   await(session:refresh())
   t.wait_until(function()
-    return view:frame():header().row_count == 0 and not session.data._native:is_busy()
+    return view:frame():header().row_count == 0 and not session.data:native():is_busy()
   end, 10000)
   t.assert_eq(other_tabnr, vim.api.nvim_get_current_tabpage())
   t.wait_until(function()
     collectgarbage("collect")
-    return session.data._native:stats().retained_bytes < before / 2
+    return session.data:native():stats().retained_bytes < before / 2
   end, 10000, "an empty background pane retained its previous directory snapshot")
 end)
 

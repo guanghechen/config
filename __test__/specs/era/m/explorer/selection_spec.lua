@@ -159,7 +159,7 @@ t:test("cancelling source loading discards late results and preserves the select
   t.assert_eq("copy", selected.session:mode())
   restore()
   t.wait_until(function()
-    return not selected.session.data._native:is_busy()
+    return not selected.session.data:native():is_busy()
   end, 10000)
   await(selected.action:auxiliary("copy_path"))
   t.assert_eq(2, #captured)
@@ -206,7 +206,7 @@ t:test("real directory read failures retry after permissions recover without a s
     local before = session.data:source():revision()
     local future = selected.action:auxiliary("copy_path")
     t.wait_until(function()
-      return future:is_done() and not session.data._native:is_busy()
+      return future:is_done() and not session.data:native():is_busy()
     end, 10000)
     t.assert_true(future:is_failed(), "unreadable children must fail without partial output")
     t.assert_nil(captured)
@@ -241,14 +241,9 @@ t:test("pending selection is locked before its acquisition reply reaches Lua", f
   local state = selected.session.state
   local pending, resolve = stl.c.Future.new_with_resolver()
   local waiting = false
-  local wait = Session.await
-  t:patch_table(Session, "await", function(future)
-    local reply = wait(future)
-    if type(reply) == "table" and reply.kind == "Locked" and not waiting then
-      waiting = true
-      wait(pending)
-    end
-    return reply
+  fixture.interject({ "Locked" }, function()
+    waiting = true
+    Session.await(pending)
   end)
   local captured
   t:patch_table(era.fn, "select_copy_filepaths", function(options)
@@ -303,16 +298,11 @@ t:test("cancel and disposal retain acquisition ownership until a late lock is re
       local session, state = selected.session, selected.session.state
       local pending, resolve = stl.c.Future.new_with_resolver()
       local token
-      local wait = Session.await
-      local restore_wait = t:patch_table(Session, "await", function(future)
-        local reply = wait(future)
-        if type(reply) == "table" and reply.kind == "Locked" and not token then
-          token = reply.token
-          if not before_submit then
-            wait(pending)
-          end
+      local restore_wait = fixture.interject({ "Locked" }, function(reply)
+        token = reply.token
+        if not before_submit then
+          Session.await(pending)
         end
-        return reply
       end)
       ---@return nil
       local function cancel()

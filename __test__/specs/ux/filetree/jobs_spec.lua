@@ -24,11 +24,11 @@ t:test("an unchanged running Job sleeps and notification failure preserves compl
       return vim.tbl_extend("force", {}, status)
     end,
   }
-  data:_track_job(job, function(value)
+  data:track_job(job, function(value)
     observed = value
   end)
   t.wait_until(function()
-    return observed ~= nil and not data._native:is_busy()
+    return observed ~= nil and not data:native():is_busy()
   end, 5000)
   local previous, settled = calls, vim.uv.hrtime()
   t.wait_until(function()
@@ -68,7 +68,7 @@ t:test("a hidden Job delivers confirmation and cancellation through native notif
     job:cancel()
   end)
   local observed
-  data:_track_job(job, function(status)
+  data:track_job(job, function(status)
     observed = status
   end)
   t.wait_until(function()
@@ -89,14 +89,14 @@ t:test("registration observes already finished Jobs and failures without a sourc
   assert(vim.uv.fs_mkdir(path .. "/target", 448))
   local data = await(filetree.open(path))
   local target = await(data:resolve(path .. "/target"))
-  local first = data._native:start_create({ target = target, path = "first", directory = false })
+  local first = data:native():start_create({ target = target, path = "first", directory = false })
   local deadline = vim.uv.hrtime() + 5000000000
   while not first:status().terminal and vim.uv.hrtime() < deadline do
     vim.uv.sleep(1)
   end
   t.assert_true(first:status().terminal)
   local completed, failure = 0, nil
-  data:_track_job(first, function(status)
+  data:track_job(first, function(status)
     t.assert_true(status.terminal)
     t.assert_eq(nil, status.error)
     completed = completed + 1
@@ -105,8 +105,8 @@ t:test("registration observes already finished Jobs and failures without a sourc
     return completed == 1 and data._tree._notification == nil
   end, 5000)
   assert(vim.uv.fs_rename(path .. "/target", path .. "/moved"))
-  local second = data._native:start_create({ target = target, path = "second", directory = false })
-  data:_track_job(second, function(status)
+  local second = data:native():start_create({ target = target, path = "second", directory = false })
+  data:track_job(second, function(status)
     if status.terminal then
       failure = status.error
     end
@@ -208,7 +208,7 @@ t:test("a prepared complete directory survives unchanged paged refresh before IO
   end)
   await(state:set_expanded({ source:node() }, true, false))
   t.wait_until(function()
-    return data._native:is_settled() and data:source():node(source:node()).completeness == "complete"
+    return data:native():is_settled() and data:source():node(source:node()).completeness == "complete"
   end, 10000)
   await(state:select_node({ source:node() }, true))
   local task = await(state:lock_selection())
@@ -216,7 +216,7 @@ t:test("a prepared complete directory survives unchanged paged refresh before IO
   t.assert_eq("Ready", ready.kind)
   await(data:refresh(state))
   t.wait_until(function()
-    return data._native:is_settled()
+    return data:native():is_settled()
   end, 10000)
   local job = data:start_operation({
     kind = "copy",

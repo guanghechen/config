@@ -28,7 +28,7 @@ t:test("File Info displays the cursor file while preserving an unrelated copy se
   vim.cmd.normal({ args = { "Vj" }, bang = true })
   local marked = await(widget._action:mark("copy"))
   t.wait_until(function()
-    return session.state._native:applicable(view:frame(), marked.revisions.commit)
+    return session.state:native():applicable(view:frame(), marked.revisions.commit)
   end, 10000)
   fixture.cursor(widget, path .. "/c")
   local panels = capture_panels()

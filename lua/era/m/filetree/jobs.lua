@@ -100,7 +100,7 @@ function M.run(data, plan, overwrite)
     end
   end
   work.update = update
-  data:_track_job(job, update)
+  data:track_job(job, update)
   return future
 end
 

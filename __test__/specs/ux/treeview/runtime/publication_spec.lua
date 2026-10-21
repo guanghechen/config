@@ -167,7 +167,7 @@ t:test("a visible idle view sleeps and native publication wakes it without anoth
     return false
   end, 10)
   t.assert_eq(idle_calls, calls, "an unchanged visible view must not poll on a timer")
-  local ticket = data._native:batch({
+  local ticket = data:native():batch({
     base_revision = data:source():revision(),
     operations = { { kind = "update", id = a, label = "awakened" } },
   })
@@ -189,7 +189,7 @@ t:test("closing a notification lease releases capacity before Lua garbage collec
   end)
   local closed = {}
   for index = 1, 128 do
-    local subscription = data._native:subscribe(descriptors.write)
+    local subscription = data:native():subscribe(descriptors.write)
     subscription:close()
     closed[index] = subscription
   end
@@ -199,7 +199,7 @@ end)
 t:test("notification readers do not retain a collected Lua owner while native data remains alive", function()
   local data = treeview.new_data()
   support.applied(data:import({ { key = "root", label = "root" } }))
-  local retained = data._native
+  local retained = data:native()
   local weak = setmetatable({ data, data._notification.subscription, data._notification.reader }, { __mode = "v" })
   data = nil
   t.wait_until(function()
@@ -229,7 +229,7 @@ t:test("a failed notification stream reports once and preserves publication thro
   end, 5000)
   t.assert_eq(1, #errors)
   t.assert_true(errors[1]:find("notification stream closed", 1, true) ~= nil)
-  local ticket = data._native:batch({
+  local ticket = data:native():batch({
     base_revision = data:source():revision(),
     operations = { { kind = "update", id = a, label = "recovered" } },
   })

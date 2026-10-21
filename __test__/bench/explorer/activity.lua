@@ -77,7 +77,7 @@ local setup = [=[
   end
   local jobs = require("era.m.explorer.jobs")
   bench.module_sources = { jobs = debug.getinfo(jobs.start, "S").source,
-    filetree = debug.getinfo(bench.widget._session.data._track_job, "S").source,
+    filetree = debug.getinfo(bench.widget._session.data.track_job, "S").source,
     filetree_observer = debug.getinfo(bench.widget._session.data._poll
       or bench.widget._session._subscriptions._poll_before, "S").source }
   if variant.lua_root then
@@ -285,7 +285,7 @@ local ok, result = xpcall(function()
             return { rows = header.row_count, cursor = header.cursor_row,
               first_lines = vim.api.nvim_buf_get_lines(view.bufnr, 0, 5, false),
               top = vim.api.nvim_win_call(view.winnr, function() return vim.fn.line('w0') end),
-              watches = session.data:watch_status().directories, queue = session.data._native:stats().queue_depth }
+              watches = session.data:watch_status().directories, queue = session.data:native():stats().queue_depth }
           ]],
             {}
           )
@@ -297,7 +297,7 @@ local ok, result = xpcall(function()
             [[
             local rows = ...
             local session, view = bench.widget:context()
-            return view:frame():header().row_count == rows and not session.data._native:is_busy() and not view._busy
+            return view:frame():header().row_count == rows and not session.data:native():is_busy() and not view._busy
           ]],
             { rows }
           )

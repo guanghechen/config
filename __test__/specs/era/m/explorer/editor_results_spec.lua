@@ -217,7 +217,7 @@ for _, large in ipairs({ false, true }) do
       -- Measure history retention without a watcher refresh invalidating the prepared selection.
       widget:hide()
       t.wait_until(function()
-        return session.data:watch_status().roots == 0 and not session.data._native:is_busy()
+        return session.data:watch_status().roots == 0 and not session.data:native():is_busy()
       end, 10000)
       await(session:operate(view, { kind = "move", target = target }))
       fixture.idle(widget)

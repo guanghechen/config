@@ -143,7 +143,7 @@ t:test("disposing during ignore preload cannot publish a late Git input", functi
   local session = widget._session
   local controller, data = session._subscriptions, session.data
   t.wait_until(function()
-    return not controller._running and not data._native:is_busy()
+    return not controller._running and not data:native():is_busy()
   end, 10000)
   t:patch_table(dot.path, "is_git_repo", function()
     return true
@@ -207,7 +207,7 @@ t:test("filesystem publications refresh Git without selection or annotation feed
   -- Wait through native watch coalescing before testing state-only input.
   local observed, quiet_since = refreshes, vim.uv.hrtime()
   t.wait_until(function()
-    if refreshes ~= observed or session.data._native:is_busy() or session._subscriptions._running then
+    if refreshes ~= observed or session.data:native():is_busy() or session._subscriptions._running then
       observed, quiet_since = refreshes, vim.uv.hrtime()
     end
     return vim.uv.hrtime() - quiet_since > 250000000

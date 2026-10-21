@@ -59,6 +59,12 @@ function Data:task_batch(authorization, operations, base_revision)
   }, authorization))
 end
 
+---The native data, for native consumers.
+---@return yoz.ux.treeview.Data
+function Data:native()
+  return self._native
+end
+
 ---@return yoz.ux.treeview.Source
 function Data:source()
   return self._native:source()

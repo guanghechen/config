@@ -161,9 +161,9 @@ t:test("root scan failures preserve cached rows and shared views report each tra
     t.wait_until(function()
       local node = session.data:source():node(root)
       return node.error ~= nil
-        and session.data._native:is_settled()
+        and session.data:native():is_settled()
         and #fixture.messages == before + attempt
-        and session.state._native:applicable(view:frame())
+        and session.state:native():applicable(view:frame())
     end, 10000)
     t.assert_eq(3, view:frame():header().row_count)
     t.assert_eq("read failed · cached · R", widget:status_text())
@@ -193,9 +193,9 @@ t:test("root scan failures preserve cached rows and shared views report each tra
     assert(vim.uv.fs_chmod(path, 448))
     await(widget:refresh())
     t.wait_until(function()
-      return session.data._native:is_settled()
+      return session.data:native():is_settled()
         and not session.data:source():node(root).error
-        and session.state._native:applicable(view:frame())
+        and session.state:native():applicable(view:frame())
         and session._reported_root_error == nil
     end, 10000)
     t.assert_eq("", widget:status_text())
@@ -298,7 +298,7 @@ t:test("an empty failed root is distinct from empty success and changing root cl
   assert(vim.uv.fs_chmod(path, 0))
   await(widget:refresh())
   t.wait_until(function()
-    return session.data._native:is_settled()
+    return session.data:native():is_settled()
       and session.data:source():node(root).error ~= nil
       and session._reported_root_error ~= nil
   end, 10000)

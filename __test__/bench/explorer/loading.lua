@@ -50,7 +50,7 @@ local setup = [=[
     operation.last_tick = now
     if operation.stage == "waiting" then
       if node.load_state ~= "loading" or header.row_count < 4 or view._busy
-        or not view._state._native:applicable(frame) then return end
+        or not view._state:native():applicable(frame) then return end
       local row = vim.api.nvim_win_get_cursor(view.winnr)[1]
       local target = assert(frame:node_at(row + 1))
       operation.target = target
@@ -70,7 +70,7 @@ local setup = [=[
         max_tick_gap_ms = operation.max_tick_gap_ms,
       })
     elseif operation.stage == "cancel" then
-      if header.mode ~= "tree" or header.row_count ~= 2 or not data._native:is_settled() or view._busy then return end
+      if header.mode ~= "tree" or header.row_count ~= 2 or not data:native():is_settled() or view._busy then return end
       assert(node.load_state ~= "loading", "hidden branch still owns a read")
       if operation.phase == "cold" then
         assert(node.child_count < operation.entries, "cold scan finished before cancellation")

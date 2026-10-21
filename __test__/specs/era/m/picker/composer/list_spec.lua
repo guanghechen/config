@@ -55,7 +55,7 @@ end
 
 t:test("native List preserves callback payload identity, match byte offsets and warm buffers", function()
   local ui = session()
-  t.assert_eq("userdata", ui:lua("return type(picker._treeview.state._native)"))
+  t.assert_eq("userdata", ui:lua("return type(picker._treeview.state:native())"))
   t.assert_true(ui:lua("return picker:retrieve(1) == items[1]"), "original item identity")
   t.assert_true(ui:lua("return picker:retrieve(1).data == original"), "original payload identity")
   t.assert_eq(2, ui:lua("return picker.result.lnum_present:snapshot()"))

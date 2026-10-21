@@ -50,7 +50,7 @@ local ok, result = xpcall(function()
         local frame = bench_view:frame()
         if frame:header().row_count >= 512 then bench_pending.first = bench_pending.first or vim.uv.hrtime() end
         local node = frame:source():node(bench_data.root)
-        if frame:header().row_count == 50000 and node.completeness == "complete" and bench_state._native:applicable(frame) then
+        if frame:header().row_count == 50000 and node.completeness == "complete" and bench_state:native():applicable(frame) then
           bench_pending.complete = bench_pending.complete or vim.uv.hrtime()
         end
       end
@@ -183,7 +183,7 @@ local ok, result = xpcall(function()
       "nvim_exec_lua",
       [[
       collectgarbage("collect")
-      return { rust = bench_data._native:stats(), lua_heap_bytes = collectgarbage("count") * 1024, buffer_lines = vim.api.nvim_buf_line_count(bench_view.bufnr), process_memory_bytes = vim.uv.resident_set_memory() }
+      return { rust = bench_data:native():stats(), lua_heap_bytes = collectgarbage("count") * 1024, buffer_lines = vim.api.nvim_buf_line_count(bench_view.bufnr), process_memory_bytes = vim.uv.resident_set_memory() }
     ]],
       {}
     ),

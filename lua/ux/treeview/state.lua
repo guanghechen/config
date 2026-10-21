@@ -18,6 +18,12 @@ function M.new(data, native)
   return setmetatable({ _data = data, _native = native, _navigation_sequence = 0 }, M)
 end
 
+---The native state, for native consumers such as the Explorer runtime.
+---@return yoz.ux.treeview.State
+function M:native()
+  return self._native
+end
+
 ---@return yoz.ux.treeview.Frame
 function M:snapshot()
   return self._native:snapshot()

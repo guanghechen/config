@@ -73,7 +73,7 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
     return ui:lua(
       [[
       return refreshing:is_done() and not refreshing:is_failed()
-        and not session.data._native:is_busy()
+        and not session.data:native():is_busy()
         and view:frame():header().data_revision ~= ...
     ]],
       previous_revision
@@ -150,7 +150,7 @@ t:test("purpose changes repaint all selection markers even when row data is reus
     assert(vim.wait(10000, function()
       local current = widget._views[vim.api.nvim_get_current_tabpage()]
       return current and current:frame() and current:frame():header().row_count == 2
-        and not current._busy and not current._latest and not widget._session.data._native:is_busy()
+        and not current._busy and not current._latest and not widget._session.data:native():is_busy()
     end))
     session, view = widget:context()
     ---@param future                    stl.c.Future
@@ -394,7 +394,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
     session, view = widget:context()
     assert(vim.wait(10000, function()
       return view:frame() and view:frame():header().row_count == 4
-        and not session.data._native:is_busy() and session.state._native:applicable(view:frame())
+        and not session.data:native():is_busy() and session.state:native():applicable(view:frame())
     end))
   ]=],
     path
@@ -592,7 +592,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
   local source_revision, quiet_since = nil, vim.uv.hrtime()
   ui:wait_until(function()
     local current = ui:lua(
-      "return { session.data:source():revision(), session.data._native:is_busy() or session._subscriptions._running }"
+      "return { session.data:source():revision(), session.data:native():is_busy() or session._subscriptions._running }"
     )
     if current[1] ~= source_revision or current[2] then
       source_revision, quiet_since = current[1], vim.uv.hrtime()
@@ -607,7 +607,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
       local before = { session.data:source():revision(), vim.api.nvim_buf_get_changedtick(view.bufnr) }
       if options.background then vim.cmd.tabnew() end
       colors = {}
-      ignore_revision = session.data._native:annotation_revision()
+      ignore_revision = session.data:native():annotation_revision()
       require("era.m.git.ignore").clear()
       if options.git_refresh then
         require("era.m.git.state").o_refreshed:next({generation=999,change_scope="unknown"})
@@ -619,7 +619,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
     if options.background then
       ui:wait_until(function()
         return ui:lua(
-          "return session.data._native:annotation_revision() ~= ignore_revision and not session._subscriptions._running"
+          "return session.data:native():annotation_revision() ~= ignore_revision and not session._subscriptions._running"
         )
       end, 10000)
       ui:lua("vim.api.nvim_set_current_tabpage(explorer_tabnr)")

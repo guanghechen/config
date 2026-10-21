@@ -18,9 +18,9 @@ t:test("diagnostics decorate a stable frame and clear by namespace without editi
     local ready = frame
       and frame:header().row_count == 2
       and data:watch_status().directories == 1
-      and state._native:applicable(frame)
-      and not data._native:is_busy()
-      and data._native:stats().queue_depth == 0
+      and state:native():applicable(frame)
+      and not data:native():is_busy()
+      and data:native():stats().queue_depth == 0
     if ready then
       if stable_frame ~= frame:id() then
         stable, stable_frame = vim.uv.hrtime(), frame:id()

@@ -203,7 +203,7 @@ local function target_directory(session, preparation, path, source)
       local job = session.native:start_create({ target = value, path = table.concat(names, "/"), directory = true })
       preparation.job = job
       local status = async.await(function(done)
-        session.data:_track_job(job, function(status)
+        session.data:track_job(job, function(status)
           if status.terminal then
             done(status)
           end
@@ -402,7 +402,7 @@ function M.start(session, view, request)
       ---@cast cursor -?
       return native_async.run(session.native:prepare_cursor(request.cursor.frame, cursor:node()))
     end
-    return native_async.run(state._native:lock_selection())
+    return native_async.run(state:native():lock_selection())
   end, function(task, preparation)
     -- Both acquisitions either lock the selection or reject.
     task = assert(task, "Explorer operation acquired no selection lock")
@@ -572,7 +572,7 @@ function M.start(session, view, request)
       end
       local context
       if selected then
-        context = { state = session.state._native, lock = task.token, cleanup = ready.cleanup }
+        context = { state = session.state:native(), lock = task.token, cleanup = ready.cleanup }
       else
         session._direct_task = task
       end
@@ -593,7 +593,7 @@ function M.start(session, view, request)
     session._counts = { success = 0, failed = 0, skipped = 0, editor_failed = 0 }
     session.results, session._on_complete = {}, request.on_complete
     session.issues, session.issues_omitted, session._issue_bytes = {}, 0, 0
-    session.data:_track_job(job, function(status)
+    session.data:track_job(job, function(status)
       update(session, job, status)
     end)
     return job

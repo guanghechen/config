@@ -9,7 +9,7 @@ local function mark(widget, mark)
   local session, view = widget:context()
   if result.revisions then
     t.wait_until(function()
-      return session.state._native:applicable(view:frame(), result.revisions.commit)
+      return session.state:native():applicable(view:frame(), result.revisions.commit)
     end, 10000)
   end
 end

@@ -65,7 +65,7 @@ end)
 
 t:test("nil, empty, and partial render contexts share default geometry", function()
   local _, state = fixture()
-  local view = state._native:attach()
+  local view = state:native():attach()
   t:defer(function()
     view:detach()
   end)
@@ -145,7 +145,7 @@ t:test("decoration capacity failure preserves the previous publication", functio
   t.assert_eq(frame, view:frame():id())
   support.applied(data:batch({ { kind = "update", id = a, label = "alpha" } }))
   t.wait_until(function()
-    return not view:status().error and state._native:applicable(view:frame(), nil)
+    return not view:status().error and state:native():applicable(view:frame(), nil)
   end, 5000)
 end)
 

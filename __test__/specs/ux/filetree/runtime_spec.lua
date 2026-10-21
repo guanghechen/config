@@ -27,7 +27,7 @@ t:test("directory pages finish while a source publication waits for its display 
   local timer = view._source_timer
   t.wait_until(function()
     local node = data:source():node(root)
-    return node.child_count == 1201 and node.load_state == "idle" and not data._native:is_busy()
+    return node.child_count == 1201 and node.load_state == "idle" and not data:native():is_busy()
   end, 5000, "pagination waited for the display deadline")
   t.assert_eq(frame:id(), view:frame():id(), "source progress does not publish an intermediate surface")
   view._source_after = 0
@@ -164,7 +164,7 @@ t:test("a visible idle Filetree sleeps until a real filesystem notification arri
     return view:frame()
       and view:frame():header().row_count == 1
       and data:watch_status().directories == 1
-      and not data._native:is_busy()
+      and not data:native():is_busy()
   end, 10000)
   -- The registration read may finish after watch coverage is first published.
   local observed_calls, unchanged_since = calls, vim.uv.hrtime()
@@ -278,7 +278,7 @@ t:test("a deadline callback can retry with an already completed native ticket", 
     end,
   }))
   state = await(data:create_state())
-  local native = state._native
+  local native = state:native()
   t:patch_table(state, "_native", {
     status = function()
       return native:status()
@@ -410,7 +410,7 @@ t:test("native watch updates the actual buffer without manual refresh", function
   t.wait_until(function()
     local status = data:watch_status()
     t.assert_eq(nil, status.error)
-    return status.directories == 1 and not data._native:is_busy()
+    return status.directories == 1 and not data:native():is_busy()
   end, 10000)
   write(path .. "/observed")
   t.wait_until(function()

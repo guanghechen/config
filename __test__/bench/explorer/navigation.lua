@@ -39,7 +39,7 @@ local function expect_cursor(grid, path)
       assert(#bench.errors == 0, vim.inspect(bench.errors))
       return bench.widget:get_cursor_filepath() == path and view:frame()
         and view:frame():header().cursor_row == vim.api.nvim_win_get_cursor(view.winnr)[1]
-        and not view._busy and not session.data._native:is_busy()
+        and not view._busy and not session.data:native():is_busy()
     ]],
       { path }
     )
@@ -93,7 +93,7 @@ local ok, result = xpcall(function()
           assert(vim.wait(10000, function()
             local view = bench.widget._views[vim.api.nvim_get_current_tabpage()]
             return view and view:frame() and view:frame():header().row_count == 2
-              and not view._busy and not bench.widget._session.data._native:is_busy()
+              and not view._busy and not bench.widget._session.data:native():is_busy()
           end, 2))
         end
         local _, view = bench.widget:context()
@@ -138,8 +138,8 @@ local ok, result = xpcall(function()
         local session = bench.widget._session
         bench.widget:hide()
         assert(vim.wait(10000, function()
-          return session.data:watch_status().roots == 0 and not session.data._native:is_busy()
-            and session.data._native:stats().queue_depth == 0
+          return session.data:watch_status().roots == 0 and not session.data:native():is_busy()
+            and session.data:native():stats().queue_depth == 0
         end, 2))
         bench.widget:dispose()
         bench.widget = nil

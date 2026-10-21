@@ -128,7 +128,7 @@ for _, deep in ipairs({ false, true }) do
     -- Keep the history-limit fixture independent of watcher/task invalidation.
     widget:hide()
     t.wait_until(function()
-      return session.data:watch_status().roots == 0 and not session.data._native:is_busy()
+      return session.data:watch_status().roots == 0 and not session.data:native():is_busy()
     end, 10000)
     await(session:operate(view, { kind = "copy", target = target }))
     fixture.idle(widget)

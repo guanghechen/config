@@ -268,7 +268,7 @@ t:test("directory import refreshes ancestry text in the published buffer", funct
   records[2].label = "after"
   local reply = support.applied(data:import(records))
   t.wait_until(function()
-    return state._native:applicable(view:frame(), reply.revisions.commit)
+    return state:native():applicable(view:frame(), reply.revisions.commit)
   end, 5000)
   t.assert_same({ "  after", "  after/文.lua" }, vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true))
   t.assert_same({ "before", "before/文.lua" }, old:rows(1, 2).labels)
@@ -515,7 +515,7 @@ for _, failure in ipairs({ "throw", "invalid future" }) do
     end, 5000)
     local selected = support.applied(state:select_node({ a }, false))
     t.wait_until(function()
-      return state._native:applicable(state:snapshot(), selected.revisions.commit)
+      return state:native():applicable(state:snapshot(), selected.revisions.commit)
     end, 5000)
     local target = state:snapshot():id()
     t.assert_true(target ~= original)

@@ -221,7 +221,7 @@ local ok, result = xpcall(function()
           if pending.publication and view:frame():id() ~= pending.frame
             and view:frame():header().cursor_row == pending.row and not view._busy and not view._latest
             and not view._guide_dirty and not view._guide_redraw_pending
-            and (not pending.requires_commit or pending.commit and state._native:applicable(view:frame(),pending.commit)) then
+            and (not pending.requires_commit or pending.commit and state:native():applicable(view:frame(),pending.commit)) then
             return {pending.started,pending.publication,decoration_ms,path_update_ms,counts}
           end
         ]=],

@@ -281,13 +281,13 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   ui:lua([=[
     cached_path = view._guide_path
     local result = await(data:batch({ {kind="update",node="helper",right_text="metadata"} }))
-    assert(vim.wait(10000,function() return state._native:applicable(view:frame(),result.revisions.commit) end))
+    assert(vim.wait(10000,function() return state:native():applicable(view:frame(),result.revisions.commit) end))
   ]=])
   ui:rpc("nvim_command", "redraw")
   t.assert_true(ui:lua("return view._guide_path == cached_path"), "metadata publications reuse the layout path")
   ui:lua([=[
     local result = await(state:set_expanded({ data:source():id("lib") }, false, false))
-    assert(vim.wait(10000,function() return state._native:applicable(view:frame(),result.revisions.commit) end))
+    assert(vim.wait(10000,function() return state:native():applicable(view:frame(),result.revisions.commit) end))
   ]=])
   ui:rpc("nvim_command", "redraw")
   cell("lib", 1, 2, "╰", pink)
@@ -301,13 +301,13 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
   cell(cursor_label, 0, 1, "─", pink)
   ui:lua([=[
     local result = await(state:set_display({mode="list"}))
-    assert(vim.wait(10000,function() return state._native:applicable(view:frame(),result.revisions.commit) end))
+    assert(vim.wait(10000,function() return state:native():applicable(view:frame(),result.revisions.commit) end))
   ]=])
   ui:rpc("nvim_command", "redraw")
   t.assert_true(ui:lua("return view._guide_path == nil"), "List does not retain a tree path")
   ui:lua([=[
     local result = await(state:set_display({mode="tree"}))
-    assert(vim.wait(10000, function() return state._native:applicable(view:frame(),result.revisions.commit) end))
+    assert(vim.wait(10000, function() return state:native():applicable(view:frame(),result.revisions.commit) end))
     move(1)
   ]=])
   ui:rpc("nvim_command", "redraw!")

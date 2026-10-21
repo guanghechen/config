@@ -1600,7 +1600,7 @@ function M:_published(frame)
   end
   local waiting = self._waiting
   local presented = not self.view or self.view:is_suspended() or not self.view:status().preparing
-  if waiting and frame and presented and not self:selection_pending() and self.state._native:applicable(frame) then
+  if waiting and frame and presented and not self:selection_pending() and self.state:native():applicable(frame) then
     self._waiting = nil
     waiting.resolve({ kind = "Applied", frame = frame })
   end

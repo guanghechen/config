@@ -45,15 +45,10 @@ t:test("read-only selection uses one snapshot across unrelated source updates", 
   fixture.idle(widget)
   fixture.write(path .. "/branch/new")
   local changed = false
-  local wait = Session.await
-  t:patch_table(Session, "await", function(future)
-    local value = wait(future)
-    if not changed and type(value) == "table" and (value.kind == "Inspected" or value.kind == "Ready") then
-      changed = true
-      wait(session.data:resolve(path .. "/branch/new"))
-      t.assert_true(value.revisions.data ~= session.data:source():revision())
-    end
-    return value
+  fixture.interject({ "Inspected", "Ready" }, function(reply)
+    changed = true
+    Session.await(session.data:resolve(path .. "/branch/new"))
+    t.assert_true(reply.revisions.data ~= session.data:source():revision())
   end)
   local captured
   t:patch_table(era.fn, "select_copy_filepaths", function(options)
@@ -122,14 +117,9 @@ t:test("cancelling a complete inspection discards its late snapshot without a ta
   await(widget._action:mark("copy"))
   local pending, resolve = stl.c.Future.new_with_resolver()
   local waiting = false
-  local wait = Session.await
-  t:patch_table(Session, "await", function(future)
-    local reply = wait(future)
-    if type(reply) == "table" and reply.kind == "Inspected" and not waiting then
-      waiting = true
-      wait(pending)
-    end
-    return reply
+  fixture.interject({ "Inspected" }, function()
+    waiting = true
+    Session.await(pending)
   end)
   local captured
   t:patch_table(era.fn, "select_copy_filepaths", function(options)

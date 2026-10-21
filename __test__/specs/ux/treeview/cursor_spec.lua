@@ -49,7 +49,7 @@ end
 ---@param node                          string
 ---@return nil
 local function native_cursor(state, node)
-  support.await(async.run(state._native:dispatch({ kind = "set_cursor", node = node })))
+  support.await(async.run(state:native():dispatch({ kind = "set_cursor", node = node })))
   t.wait_until(function()
     return state:snapshot():header().cursor == node
   end, 5000)

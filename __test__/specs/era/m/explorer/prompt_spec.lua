@@ -45,7 +45,7 @@ local function open_ui(names)
     assert(vim.wait(10000, function()
       session, view = widget._session, widget._views[vim.api.nvim_get_current_tabpage()]
       return session and view and view:frame() and view:frame():header().row_count == count
-        and not session.data._native:is_busy() and session.state._native:applicable(view:frame())
+        and not session.data:native():is_busy() and session.state:native():applicable(view:frame())
     end, 1))
   ]],
     path,

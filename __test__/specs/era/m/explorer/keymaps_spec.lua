@@ -19,7 +19,7 @@ local function selected(widget, mode, count)
   local session, view = widget:context()
   t.wait_until(function()
     local frame = view:frame()
-    return session.state._native:applicable(frame)
+    return session.state:native():applicable(frame)
       and session:mode(frame) == mode
       and frame:header().summary.known_roots == count
   end, 10000, "unexpected selection after a keypress")

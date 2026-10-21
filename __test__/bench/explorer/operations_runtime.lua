@@ -96,8 +96,8 @@ end
 if kind == "copy" then
   if native then
     local data = bench.widget._session.data
-    local track = data._track_job
-    data._track_job = function(self, job, observe)
+    local track = data.track_job
+    data.track_job = function(self, job, observe)
       bench.copy_job = job
       return track(self, job, function(status)
         assert(not status.error and not status.cancelled, vim.inspect(status))
@@ -271,17 +271,17 @@ function bench.hide_memory()
     session = session,
     state = session.state,
     data = session.data,
-    native = session.data._native,
+    native = session.data:native(),
     view = bench.current_view(),
   }, { __mode = "v" })
   -- Keep one explicit native owner to separate view disposal from Source/index release.
-  bench.retained_native = session.data._native
+  bench.retained_native = session.data:native()
   bench.widget:hide()
   assert(
     vim.wait(10000, function()
       return session.data:watch_status().directories == 0
-        and not session.data._native:is_busy()
-        and session.data._native:stats().queue_depth == 0
+        and not session.data:native():is_busy()
+        and session.data:native():stats().queue_depth == 0
     end, 2),
     "hidden copy view retained watches or queued work"
   )

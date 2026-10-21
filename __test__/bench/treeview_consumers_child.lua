@@ -351,7 +351,7 @@ function M.setup(root, mode)
         applicable = p.accepted and origin and origin.generation == M.query:info().generation
         complete = applicable and origin.completeness == "complete"
       else
-        applicable = p.expected and M.state._native:applicable(frame, p.expected)
+        applicable = p.expected and M.state:native():applicable(frame, p.expected)
         complete = applicable
       end
       if applicable then
@@ -400,7 +400,7 @@ function M.poll()
   local p = M.pending
   if p.published then
     assert(M.view:frame():header().row_count == p.nodes, "source rows were lost")
-    assert(M.data._native:queue_depth() == 0, "owner queue did not drain")
+    assert(M.data:native():queue_depth() == 0, "owner queue did not drain")
     assert(#vim.api.nvim_buf_get_extmarks(M.view.bufnr, -1, 0, -1, {}) == 0, "persistent per-row decorations")
     p.buffer_bytes = vim.api.nvim_buf_get_offset(M.view.bufnr, vim.api.nvim_buf_line_count(M.view.bufnr))
   end

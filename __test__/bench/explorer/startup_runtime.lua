@@ -57,7 +57,7 @@ function M.open(directory, entries, native)
       return view
           and view:frame()
           and view:frame():header().row_count == entries
-          and not M.widget._session.data._native:is_busy()
+          and not M.widget._session.data:native():is_busy()
           and not view._busy
           and not view._filetree_pending
         or false

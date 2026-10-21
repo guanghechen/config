@@ -8,7 +8,7 @@ local function cursor(widget, path)
   fixture.cursor(widget, path)
   local session, view = widget:context()
   t.wait_until(function()
-    return session.state._native:applicable(view:frame())
+    return session.state:native():applicable(view:frame())
   end, 10000)
 end
 

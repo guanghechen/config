@@ -225,13 +225,20 @@ function M:_poll(preparing)
   return busy
 end
 
+---Reports the progress of `job` to `on_update` while it runs.
 ---@param job                           yoz.ux.filetree.Job
 ---@param on_update                     ?fun(status: ux.filetree.IJobStatus): nil
 ---@return yoz.ux.filetree.Job
-function M:_track_job(job, on_update)
+function M:track_job(job, on_update)
   self._jobs[job] = { on_update = on_update }
   async.watch(self._tree)
   return job
+end
+
+---The native filetree data, for native consumers such as the Explorer runtime.
+---@return yoz.ux.filetree.Data
+function M:native()
+  return self._native
 end
 
 ---@return yoz.ux.treeview.Source
@@ -286,7 +293,7 @@ end
 ---@param state                         ux.treeview.State
 ---@return stl.c.Future
 function M:refresh(state)
-  return async.run(self._native:refresh(state._native))
+  return async.run(self._native:refresh(state:native()))
 end
 
 ---@return ux.filetree.IWatchStatus
@@ -299,16 +306,16 @@ end
 function M:start_operation(plan)
   if plan.task then
     plan = vim.tbl_extend("force", plan, {
-      task = { state = plan.task.state._native, lock = plan.task.lock, cleanup = plan.task.cleanup },
+      task = { state = plan.task.state:native(), lock = plan.task.lock, cleanup = plan.task.cleanup },
     })
   end
-  return self:_track_job(self._native:start_operation(plan))
+  return self:track_job(self._native:start_operation(plan))
 end
 
 ---@param plan                          ux.filetree.ICreatePlan
 ---@return yoz.ux.filetree.Job
 function M:start_create(plan)
-  return self:_track_job(self._native:start_create(plan))
+  return self:track_job(self._native:start_create(plan))
 end
 
 ---@param root                          string

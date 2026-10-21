@@ -157,7 +157,7 @@ t:test("connectors and navigation are exact, and persistent decoration errors st
     local await = require("__test__.support.treeview").await
     await(state:select_node({data:source():id("c")},false))
     local result=await(state:set_display({selected_only=true}))
-    assert(vim.wait(5000,function() return state._native:applicable(view:frame(),result.revisions.commit) end))
+    assert(vim.wait(5000,function() return state:native():applicable(view:frame(),result.revisions.commit) end))
   ]])
   channel:rpc("nvim_command", "redraw")
   t.assert_eq("╰─", channel:lua('return marks["0:0"] .. marks["0:1"]'))
@@ -170,7 +170,7 @@ t:test("connectors and navigation are exact, and persistent decoration errors st
     end)
   ]])
   channel:wait_until(function()
-    return channel:lua("return visual_commit and state._native:applicable(view:frame(),visual_commit)")
+    return channel:lua("return visual_commit and state:native():applicable(view:frame(),visual_commit)")
   end, 5000)
   channel:rpc("nvim_command", "redraw")
   t.assert_eq("V", channel:lua("return vim.api.nvim_get_mode().mode"))

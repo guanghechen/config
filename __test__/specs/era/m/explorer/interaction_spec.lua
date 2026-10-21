@@ -168,7 +168,7 @@ t:test("Visual copy aliases, cut and toggle apply to their ranges and preserve u
     t.assert_eq(case.count, value.subtree_roots:len(), case.action .. " must use the complete Visual-block range")
     t.assert_eq(case.purpose, session.state:status().selection_purpose)
     t.wait_until(function()
-      return vim.api.nvim_get_mode().mode == "n" and session.state._native:applicable(view:frame())
+      return vim.api.nvim_get_mode().mode == "n" and session.state:native():applicable(view:frame())
     end, 10000)
   end
   assert_selection(session, a:node(), "cut")
@@ -229,7 +229,7 @@ t:test("Visual AI and delete treat a directory with its visible child as one sub
       return row
         and frame:position(child:node()) == row + 1
         and frame:header().cursor == dir:node()
-        and session.state._native:applicable(frame)
+        and session.state:native():applicable(frame)
     end, 10000, "the directory and its child must be displayed before entering Visual mode")
     vim.cmd.normal({ args = { "Vj" }, bang = true })
   end
@@ -326,7 +326,7 @@ t:test("delete confirmation bounds named prompts and cancellation preserves all 
   vim.cmd.normal({ args = { "V6j" }, bang = true })
   local marked = await(widget._action:mark("copy"))
   t.wait_until(function()
-    return session.state._native:applicable(view:frame(), marked.revisions.commit)
+    return session.state:native():applicable(view:frame(), marked.revisions.commit)
   end, 10000)
   for _, trash in ipairs({ false, true }) do
     t:patch_table(dot.context.explorer.trash, "snapshot", function()

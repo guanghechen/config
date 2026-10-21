@@ -23,7 +23,7 @@ local function fixture(count, label_bytes)
   local state = support.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
   local reply = support.await(state:set_expanded({ data:source():id("root") }, true, true))
   t.wait_until(function()
-    return state._native:applicable(state:snapshot(), reply.revisions.commit)
+    return state:native():applicable(state:snapshot(), reply.revisions.commit)
   end, 5000)
   return state
 end
@@ -99,7 +99,7 @@ t:test("row batches cannot survive a frame change without the same_rows publicat
   cache = decorations.prepare(frame, 1, 33, cache)
   local reply = support.await(state:select_node({ frame:node_at(10) }, false))
   t.wait_until(function()
-    return state._native:applicable(state:snapshot(), reply.revisions.commit)
+    return state:native():applicable(state:snapshot(), reply.revisions.commit)
   end, 5000)
   local current = state:snapshot()
   t.assert_eq(frame:header().layout_revision, current:header().layout_revision)

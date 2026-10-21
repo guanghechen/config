@@ -117,8 +117,8 @@ local function state_ready()
     end
     local frame = view:frame()
     local header = frame:header()
-    local ready = session.data._native:is_settled()
-      and view._state._native:applicable(frame)
+    local ready = session.data:native():is_settled()
+      and view._state:native():applicable(frame)
       and not view._busy
       and not view._decoration_pending
       and not view._filetree_pending
@@ -166,7 +166,7 @@ local function check()
     if not future or not future:is_done() or future:is_failed() or not phase.accepted then
       return
     end
-    if bench.widget._session.data._native:is_settled() then
+    if bench.widget._session.data:native():is_settled() then
       phase.scanned = phase.scanned or vim.uv.hrtime()
     else
       phase.scanned = nil
@@ -404,7 +404,7 @@ end
 function bench.memory()
   collectgarbage("collect")
   local result = Metrics.memory()
-  result.retained = native and bench.widget and bench.widget._session and bench.widget._session.data._native:stats()
+  result.retained = native and bench.widget and bench.widget._session and bench.widget._session.data:native():stats()
     or nil
   result.buffer_lines = current_buffer() and vim.api.nvim_buf_line_count(current_buffer()) or 0
   result.pid = vim.uv.os_getpid()

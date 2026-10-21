@@ -36,7 +36,7 @@ end
 ---@return boolean
 local function published(view)
   local frame = view and view:frame()
-  return frame ~= nil and not view:status().preparing and view._latest == nil and view._state._native:applicable(frame)
+  return frame ~= nil and not view:status().preparing and view._latest == nil and view._state:native():applicable(frame)
 end
 
 ---@return table
@@ -83,7 +83,7 @@ function M.new()
     widget:focus()
     t.wait_until(function()
       local view = widget._views[vim.api.nvim_get_current_tabpage()]
-      return published(view) and not widget._session.data._native:is_busy()
+      return published(view) and not widget._session.data:native():is_busy()
     end, 10000)
     return widget
   end
@@ -115,9 +115,28 @@ function M.new()
       return not session.preparing
         and session.job == nil
         and not session.state:status().locked
-        and not session.data._native:is_busy()
+        and not session.data:native():is_busy()
     end, 10000)
   end
+  ---Runs `interject` once inside Explorer's await, right after the first reply whose kind is one of `kinds`. The
+  ---awaiting operation resumes when `interject` returns, so awaiting in it holds the operation at that reply.
+  ---@param kinds                       string[]
+  ---@param interject                   async fun(reply: table): nil
+  ---@return fun() restore
+  function fixture.interject(kinds, interject)
+    local Session = require("era.m.explorer.session")
+    local await = Session.await
+    local done = false
+    return t:patch_table(Session, "await", function(future)
+      local reply = await(future)
+      if not done and type(reply) == "table" and vim.list_contains(kinds, reply.kind) then
+        done = true
+        interject(reply)
+      end
+      return reply
+    end)
+  end
+
   fixture.messages = messages
   return fixture
 end

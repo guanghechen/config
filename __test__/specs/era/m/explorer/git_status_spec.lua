@@ -93,7 +93,7 @@ t:test("real Git queries and OS watch update staged, modified, untracked and ign
   local bufnr = view.bufnr
   widget:hide()
   t.wait_until(function()
-    return session.data:watch_status().directories == 0 and not session.data._native:is_busy()
+    return session.data:watch_status().directories == 0 and not session.data:native():is_busy()
   end, 10000)
   t.assert_false(vim.api.nvim_buf_is_valid(bufnr))
   widget:dispose()

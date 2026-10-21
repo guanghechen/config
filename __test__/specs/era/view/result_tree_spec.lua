@@ -358,7 +358,7 @@ t:test("an idle result retains native notifications without another Lua Future",
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   -- Let the poll loop go idle; if it is still running, the check below is weaker, not wrong.
   vim.wait(30)
-  local ticket = tree.state._native:dispatch({
+  local ticket = tree.state:native():dispatch({
     kind = "set_expanded",
     nodes = { tree._data:source():id("dir") },
     value = false,

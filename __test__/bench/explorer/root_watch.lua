@@ -62,8 +62,8 @@ local function watching(roots, directories)
       local session, view = bench.widget:context()
       local status = session.data:watch_status()
       return { roots = status.roots, directories = status.directories, limited = status.limited,
-        error = status.error, busy = session.data._native:is_busy() or view._busy,
-        queue = session.data._native:stats().queue_depth }
+        error = status.error, busy = session.data:native():is_busy() or view._busy,
+        queue = session.data:native():stats().queue_depth }
     ]])
     return status.roots == roots and status.directories == directories and not status.busy
   end, "unexpected watch coverage")
@@ -249,7 +249,7 @@ local ok, failure = xpcall(function()
         local data = bench.widget._session.data
         local status = data:watch_status()
         return status.roots == 0 and status.directories == 0
-          and not data._native:is_busy() and data._native:stats().queue_depth == 0
+          and not data:native():is_busy() and data:native():stats().queue_depth == 0
       ]])
     end, "hidden Explorer retained subscriptions or work")
     execute([[

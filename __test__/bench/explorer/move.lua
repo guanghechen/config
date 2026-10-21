@@ -99,12 +99,12 @@ t:test("bulk Move preserves every file and unsaved buffer", function()
   -- Isolate editor/Job cost from display and watcher refresh.
   widget:hide()
   t.wait_until(function()
-    return session.data:watch_status().roots == 0 and not session.data._native:is_busy()
+    return session.data:watch_status().roots == 0 and not session.data:native():is_busy()
   end, 10000)
   await(session.state:select_node(nodes, true))
   -- Preparation includes asynchronous waits; callback time overlaps preparation and synchronization.
   local metrics = { prepare_ms = 0, prepare_calls = 0, sync_ms = 0, sync_calls = 0, callbacks_ms = 0 }
-  local prepare, sync, track = buffers.prepare, buffers.sync, session.data._track_job
+  local prepare, sync, track = buffers.prepare, buffers.sync, session.data.track_job
   t:patch_table(buffers, "prepare", function(...)
     local start = vim.uv.hrtime()
     local future = prepare(...)
@@ -122,7 +122,7 @@ t:test("bulk Move preserves every file and unsaved buffer", function()
     return result
   end)
   local terminal
-  t:patch_table(session.data, "_track_job", function(self, job, observer)
+  t:patch_table(session.data, "track_job", function(self, job, observer)
     return track(self, job, function(status)
       if status.terminal then
         terminal = terminal or vim.uv.hrtime()
@@ -156,7 +156,7 @@ t:test("bulk Move preserves every file and unsaved buffer", function()
   local start = vim.uv.hrtime()
   local job = await(session:operate(view, { kind = "move", target = target }))
   t.wait_until(function()
-    return not session:busy() and not session.state:status().locked and not session.data._native:is_busy()
+    return not session:busy() and not session.state:status().locked and not session.data:native():is_busy()
   end, 60000)
   local finished = vim.uv.hrtime()
   local after = Metrics.usage()

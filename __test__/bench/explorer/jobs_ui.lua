@@ -65,7 +65,7 @@ local function cursor(path)
       local frame = view:frame()
       -- A finished Job can leave the displayed selection revision behind its paced source update.
       return a.widget:get_cursor_filepath() == path and frame and not view._busy
-        and view._latest == nil and session.state._native:applicable(frame) and not session.data._native:is_busy()
+        and view._latest == nil and session.state:native():applicable(frame) and not session.data:native():is_busy()
         and frame:header().cursor_row == vim.api.nvim_win_get_cursor(view.winnr)[1]
     ]],
       { path }
@@ -353,7 +353,7 @@ local ok, failure = xpcall(function()
         local a = acceptance
         return not require("era.m.explorer.jobs").pending() and next(a.widget._views) == nil
           and a.session.data == nil and a.session.state == nil and a.session.native == nil
-          and a.data:watch_status().directories == 0 and a.data._native:stats().queue_depth == 0
+          and a.data:watch_status().directories == 0 and a.data:native():stats().queue_depth == 0
       ]])
     end, "dispose left active work or watches")
     local summary = execute([[

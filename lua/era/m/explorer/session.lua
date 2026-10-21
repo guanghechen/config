@@ -103,7 +103,7 @@ function M.open(root, display, data, workspace)
     end
     self.state = M.await(self.data:create_state({ kind = "children_of", node = resource:node() }, display))
     -- Keep an observed occurrence even if another owner renames it before this state is created.
-    self.native = yoz.ux.explorer.new(self.data._native, self.state._native, workspace_input)
+    self.native = yoz.ux.explorer.new(self.data:native(), self.state:native(), workspace_input)
     self._subscriptions = require("era.m.explorer.subscriptions").new(self)
     return self
   end)
@@ -267,7 +267,7 @@ end
 ---@param frame                         yoz.ux.treeview.Frame
 ---@return nil
 function M:observe_root(frame)
-  if not self.state._native:applicable(frame) then
+  if not self.state:native():applicable(frame) then
     return
   end
   local root = assert(frame:header().root.node, "Explorer requires a directory display root")

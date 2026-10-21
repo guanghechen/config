@@ -73,7 +73,7 @@ local ok, result = xpcall(function()
         local view = bench.widget._views[vim.api.nvim_get_current_tabpage()]
         return session and view and view:frame() and view:frame():header().row_count == expected
           and not view._busy and not view._filetree_pending and not session._subscriptions._running
-          and not session.data._native:is_busy() and view:frame():header().data_revision == session.data:source():revision()
+          and not session.data:native():is_busy() and view:frame():header().data_revision == session.data:source():revision()
       end, 1), "Explorer did not settle at " .. expected .. " rows")
       assert(#bench.errors == 0, vim.inspect(bench.errors))
     end
@@ -128,8 +128,8 @@ local ok, result = xpcall(function()
       local weak = setmetatable({ widget, session, session.data, view }, { __mode = "v" })
       widget:hide()
       assert(vim.wait(10000, function()
-        return session.data:watch_status().directories == 0 and not session.data._native:is_busy()
-          and session.data._native:stats().queue_depth == 0
+        return session.data:watch_status().directories == 0 and not session.data:native():is_busy()
+          and session.data:native():stats().queue_depth == 0
       end, 1), "hidden pane retained watches or queued work")
       for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
         assert(soak.buffers[bufnr], "orphan buffer: " .. vim.api.nvim_buf_get_name(bufnr))

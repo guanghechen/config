@@ -53,8 +53,8 @@ local ok, result = xpcall(function()
               assert(vim.wait(10000, function()
                 local session = bench.widget._session
                 return session.data:watch_status().directories == 0
-                  and not session.data._native:is_busy()
-                  and session.data._native:stats().queue_depth == 0
+                  and not session.data:native():is_busy()
+                  and session.data:native():stats().queue_depth == 0
               end, 1))
             end
           elseif phase == "disposed" then

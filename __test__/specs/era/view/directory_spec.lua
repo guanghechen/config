@@ -68,7 +68,7 @@ end)
 
 t:test("Find Explorer uses native resources, bounded traversal and worker filtering", function()
   local ui, directory = fixture.new(t)
-  t.assert_eq("userdata", ui:lua("return type(surface.state._native)"))
+  t.assert_eq("userdata", ui:lua("return type(surface.state:native())"))
   t.assert_eq("  ../", ui:lua("return vim.api.nvim_buf_get_lines(picker.result:get_bufnr(),0,1,false)[1]"))
   t.assert_eq(
     directory:match("^(.*)/[^/]+$"),

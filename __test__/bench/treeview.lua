@@ -116,7 +116,7 @@ local ok, result = xpcall(function()
           [[
           if #bench_errors > 0 then error(table.concat(bench_errors, "\n")) end
           local pending = bench_pending
-          if pending.expected and pending.publication and bench_state._native:applicable(pending.publication.frame, pending.expected) then
+          if pending.expected and pending.publication and bench_state:native():applicable(pending.publication.frame, pending.expected) then
             return { pending.started, pending.publication.at, pending.projected, pending.planned, pending.writing }
           end
         ]],
