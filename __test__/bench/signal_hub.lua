@@ -1,19 +1,16 @@
--- Usage, from the repository root: LUA_PATH='./lua/?.lua;./lua/?/init.lua;./?.lua;;' luajit __test__/bench/signal_hub.lua [iterations=50000]
+-- Usage, from the repository root: nvim -l __test__/bench/signal_hub.lua [iterations=50000]
+-- Batches are timed with os.clock, the process CPU time.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.signal_hub" ---@type string
 
+package.path = "./lua/?.lua;./lua/?/init.lua;./?.lua;" .. package.path
 local SignalHub = require("stl.c.signal_hub")
+local Record = require("__test__.bench.record")
 local Stats = require("__test__.bench.stats")
 local iterations = tonumber(arg[1]) or 50000
 local rounds = 7
 assert(iterations > 0 and iterations % 1 == 0, "Expected a positive iteration count")
-
----@param samples                       number[]
----@return number
----@return number
-local function summarize(samples)
-  return Stats.median(samples), Stats.percentile(samples, 1)
-end
+local results = { delivery = {}, cleanup = {} }
 
 ---@param name                          string
 ---@param unrelated                     integer
@@ -60,12 +57,16 @@ local function measure_delivery(name, unrelated, fanout, targeted)
     local elapsed = os.clock() - started
     assert(calls - before == count * fanout, "Callback count mismatch")
     if round > 0 then
-      samples[#samples + 1] = elapsed * 1e6 / count
+      samples[#samples + 1] = elapsed * 1e3 / count
     end
   end
   hub:dispose()
-  local median, maximum = summarize(samples)
-  io.write(string.format("%s,%d,%d,%.3f,%.3f\n", name, unrelated, fanout, median, maximum))
+  table.insert(results.delivery, {
+    scenario = name,
+    unrelated_subscriptions = unrelated,
+    callbacks_per_emit = fanout,
+    cpu_ms_per_emit = Stats.summary(samples),
+  })
 end
 
 ---@param count                         integer
@@ -103,11 +104,15 @@ local function measure_cleanup(count, operation, role_count, scope_count)
     end
     hub:dispose()
   end
-  local median, maximum = summarize(samples)
-  io.write(string.format("%s,%d,%d,%d,%.3f,%.3f\n", operation, count, role_count, scope_count, median, maximum))
+  table.insert(results.cleanup, {
+    operation = operation,
+    subscriptions = count,
+    roles = role_count,
+    scopes = scope_count,
+    cpu_ms = Stats.summary(samples),
+  })
 end
 
-io.write("scenario,unrelated_subscriptions,callbacks_per_emit,median_batch_us_per_emit,max_batch_us_per_emit\n")
 measure_delivery("directed", 0, 1, true)
 measure_delivery("directed", 1000, 1, true)
 measure_delivery("directed", 10000, 1, true)
@@ -115,7 +120,6 @@ measure_delivery("broadcast", 0, 1, false)
 measure_delivery("broadcast", 1000, 1, false)
 measure_delivery("broadcast", 10000, 1, false)
 measure_delivery("broadcast", 1000, 32, false)
-io.write("scenario,subscriptions,roles,scopes,median_batch_ms,max_batch_ms\n")
 for _, count in ipairs({ 1000, 10000 }) do
   for _, operation in ipairs({ "unregister_role", "unregister_signal", "dispose" }) do
     measure_cleanup(count, operation, 1, 1)
@@ -124,3 +128,6 @@ for _, count in ipairs({ 1000, 10000 }) do
     measure_cleanup(count, operation, count, count)
   end
 end
+io.write(vim.json.encode(results), "\n")
+local conditions = { iterations = iterations, rounds = rounds, warmup = 1, clock = "os.clock" }
+io.write("results: ", Record.write("signal_hub", { conditions = conditions, results = results }), "\n")

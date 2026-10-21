@@ -42,7 +42,7 @@ local function read_job(job, request)
         job:dispose()
         if status == "completed" then
           M.pending.io_ready = vim.uv.hrtime()
-          M.pending.raw_heap_kib = collectgarbage("count")
+          M.pending.raw_heap_bytes = collectgarbage("count") * 1024
           resolve(value)
         else
           reject(err or status)
@@ -168,7 +168,7 @@ local function query_page(request)
           return
         end
         M.pending.io_ready = vim.uv.hrtime()
-        M.pending.raw_heap_kib = collectgarbage("count")
+        M.pending.raw_heap_bytes = collectgarbage("count") * 1024
         local started = vim.uv.hrtime()
         local records, stack = {}, {}
         for index = #symbols, 1, -1 do
@@ -334,7 +334,7 @@ function M.setup(root, mode)
     local started = vim.uv.hrtime()
     if M.pending then
       M.pending.staging_done = started
-      M.pending.stage_heap_kib = math.max(M.pending.stage_heap_kib or 0, collectgarbage("count"))
+      M.pending.stage_heap_bytes = math.max(M.pending.stage_heap_bytes or 0, collectgarbage("count") * 1024)
     end
     set_lines(...)
     if M.pending then
@@ -360,7 +360,7 @@ function M.setup(root, mode)
         if complete then
           p.published = now
         end
-        p.stage_heap_kib = math.max(p.stage_heap_kib or 0, collectgarbage("count"))
+        p.stage_heap_bytes = math.max(p.stage_heap_bytes or 0, collectgarbage("count") * 1024)
       end
     end
     return redraw(options)
@@ -446,7 +446,7 @@ function M.collect()
     end, 5),
     "Treeview handles remained reachable after close"
   )
-  return { lua_heap_kib = collectgarbage("count"), gc_ms = (vim.uv.hrtime() - started) / 1e6 }
+  return { lua_heap_bytes = collectgarbage("count") * 1024, gc_ms = (vim.uv.hrtime() - started) / 1e6 }
 end
 
 return M

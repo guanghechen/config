@@ -8,20 +8,10 @@ vim.api.nvim_set_current_dir(root)
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local ui = require("__test__.support.ui").new()
+local Record = require("__test__.bench.record")
+local Stats = require("__test__.bench.stats")
 local mode = arg[1] or "tree" ---@type string
 assert(mode == "tree" or mode == "ancestry", "usage: nvim -l __test__/bench/treeview.lua [tree|ancestry]")
-
----@param values                        number[]
----@return table
-local function distribution(values)
-  table.sort(values)
-  return {
-    samples = #values,
-    p50 = values[math.ceil(#values * 0.5)],
-    p95 = values[math.ceil(#values * 0.95)],
-    max = values[#values],
-  }
-end
 
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, 48, { rgb = true, ext_linegrid = true })
@@ -143,18 +133,16 @@ local ok, result = xpcall(function()
         stages.publish_flush[#stages.publish_flush + 1] = (ui.last_flush - times[5]) / 1000000
       end
     end
-    output.paths[kind] = { publication = distribution(publication), flush = distribution(flush) }
+    output.paths[kind] = { publication = Stats.summary(publication), flush = Stats.summary(flush) }
     for name, samples in pairs(stages) do
       if #samples > 0 then
-        output.paths[kind][name] = distribution(samples)
+        output.paths[kind][name] = Stats.summary(samples)
       end
     end
   end
-  output.lua_heap_kib = ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count")', {})
-  local pid = ui:rpc("nvim_exec_lua", "return vim.uv.os_getpid()", {})
-  output.rss_kib = tonumber(vim.system({ "ps", "-o", "rss=", "-p", tostring(pid) }, { text = true }):wait().stdout)
-  output.nvim = vim.version()
-  output.system = vim.uv.os_uname()
+  output.lua_heap_bytes =
+    ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count") * 1024', {})
+  output.process_memory_bytes = ui:rpc("nvim_exec_lua", "return vim.uv.resident_set_memory()", {})
   return output
 end, debug.traceback)
 ui:close()
@@ -162,3 +150,8 @@ if not ok then
   error(result)
 end
 io.stdout:write(vim.json.encode(result), "\n")
+io.stdout:write(
+  "results: ",
+  Record.write("treeview", { conditions = { mode = mode, ui = { 80, 48 } }, results = result }),
+  "\n"
+)

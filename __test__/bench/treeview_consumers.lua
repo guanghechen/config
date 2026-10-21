@@ -1,13 +1,15 @@
--- Usage, from the repository root: nvim -l __test__/bench/treeview_consumers.lua [filetree|searcher|git|lsp] [samples=100]
+-- Usage, from the repository root: nvim -l __test__/bench/treeview_consumers.lua [filetree|searcher|git|lsp] [iterations=100]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.treeview_consumers"
 local root =
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
 vim.api.nvim_set_current_dir(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local mode, samples = arg[1] or "searcher", tonumber(arg[2]) or 100
+local mode, iterations = arg[1] or "searcher", tonumber(arg[2]) or 100
 assert(vim.tbl_contains({ "filetree", "searcher", "git", "lsp" }, mode), "expected filetree, searcher, git, or lsp")
 local ui = require("__test__.support.ui").new()
+local Record = require("__test__.bench.record")
+local Stats = require("__test__.bench.stats")
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, 48, { rgb = true, ext_linegrid = true })
   ui:rpc(
@@ -20,7 +22,7 @@ local ok, result = xpcall(function()
     { root, mode }
   )
   local rows = {}
-  for iteration = 1, samples + 5 do
+  for iteration = 1, iterations + 5 do
     ui:rpc("nvim_exec_lua", "consumer_bench.start(...)", { iteration })
     local times, first_flush
     ui:wait_until(function()
@@ -47,28 +49,36 @@ local ok, result = xpcall(function()
         buffer_ms = times.buffer_ns / 1e6,
         nodes = times.nodes,
         pages = times.pages,
-        raw_heap_kib = times.raw_heap_kib,
-        stage_heap_kib = times.stage_heap_kib,
+        raw_heap_bytes = times.raw_heap_bytes,
+        stage_heap_bytes = times.stage_heap_bytes,
         buffer_bytes = times.buffer_bytes,
       }
     end
   end
-  local retained = ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count")', {})
-  local pid = ui:rpc("nvim_exec_lua", "return vim.uv.os_getpid()", {})
-  local rss = tonumber(vim.system({ "ps", "-o", "rss=", "-p", tostring(pid) }, { text = true }):wait().stdout)
+  local retained = ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count") * 1024', {})
+  local process_memory = ui:rpc("nvim_exec_lua", "return vim.uv.resident_set_memory()", {})
   local closed = ui:rpc("nvim_exec_lua", "return consumer_bench.finish()", {})
   local collected = ui:rpc("nvim_exec_lua", "return consumer_bench.collect()", {})
-  closed.lua_heap_kib = collected.lua_heap_kib
+  closed.lua_heap_bytes = collected.lua_heap_bytes
   closed.gc_ms = collected.gc_ms
   closed.release_ms = closed.release_ms + collected.gc_ms
   closed.handles_released = true
+  local summary = {}
+  for _, row in ipairs(rows) do
+    for name, value in pairs(row) do
+      summary[name] = summary[name] or {}
+      table.insert(summary[name], value)
+    end
+  end
+  for name, values in pairs(summary) do
+    summary[name] = Stats.summary(values)
+  end
   return {
-    mode = mode,
-    samples = rows,
-    lua_retained_kib = retained,
-    rss_kib = rss,
+    summary = summary,
+    iterations = rows,
+    lua_retained_bytes = retained,
+    process_memory_bytes = process_memory,
     closed = closed,
-    nvim = vim.version(),
   }
 end, debug.traceback)
 local _, directory = pcall(ui.rpc, ui, "nvim_exec_lua", "return consumer_bench and consumer_bench.directory", {})
@@ -79,4 +89,6 @@ end
 if not ok then
   error(result)
 end
-io.stdout:write(vim.json.encode(result), "\n")
+io.stdout:write(vim.json.encode(result.summary), "\n")
+local conditions = { mode = mode, iterations = iterations, warmup = 5, ui = { 80, 48 } }
+io.stdout:write("results: ", Record.write("treeview_consumers", { conditions = conditions, results = result }), "\n")

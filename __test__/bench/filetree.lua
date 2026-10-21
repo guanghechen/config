@@ -1,4 +1,4 @@
--- Usage, from the repository root: nvim -l __test__/bench/filetree.lua [samples=10] [tree|list] [annotations]
+-- Usage, from the repository root: nvim -l __test__/bench/filetree.lua [iterations=10] [tree|list] [annotations]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.filetree" ---@type string
 
@@ -7,10 +7,10 @@ local root =
 vim.api.nvim_set_current_dir(root)
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local samples = tonumber(arg[1]) or 10
+local iterations = tonumber(arg[1]) or 10
 local mode = arg[2] or "tree"
 local annotations = arg[3] == "annotations"
-assert(samples >= 1 and samples <= 100 and (mode == "tree" or mode == "list"))
+assert(iterations >= 1 and iterations <= 100 and (mode == "tree" or mode == "list"))
 local directory = vim.fn.tempname()
 assert(vim.uv.fs_mkdir(directory, 448))
 local prepared = vim
@@ -26,18 +26,8 @@ for i in range(50000): (p / f"file-{i:05}").touch()
   :wait()
 assert(prepared.code == 0, prepared.stderr)
 local ui = require("__test__.support.ui").new()
-
----@param values                        number[]
----@return table
-local function distribution(values)
-  table.sort(values)
-  return {
-    samples = #values,
-    p50 = values[math.ceil(#values * 0.5)],
-    p95 = values[math.ceil(#values * 0.95)],
-    max = values[#values],
-  }
-end
+local Record = require("__test__.bench.record")
+local Stats = require("__test__.bench.stats")
 
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, 48, { rgb = true, ext_linegrid = true })
@@ -71,7 +61,7 @@ local ok, result = xpcall(function()
     { root }
   )
   local first, complete, first_flush, complete_flush = {}, {}, {}, {}
-  for index = 1, samples do
+  for index = 1, iterations do
     ui:rpc(
       "nvim_exec_lua",
       [[
@@ -130,7 +120,7 @@ local ok, result = xpcall(function()
     ]],
       { directory }
     )
-    for index = 1, samples do
+    for index = 1, iterations do
       local times = ui:rpc(
         "nvim_exec_lua",
         [[
@@ -178,39 +168,38 @@ local ok, result = xpcall(function()
       end, 10000, "Filetree annotations did not flush", 1)
     end
     annotation_metrics = {
-      viewport48 = distribution(viewport),
-      navigation50000 = distribution(navigation),
-      update_flush = distribution(updates),
+      viewport48 = Stats.summary(viewport),
+      navigation50000 = Stats.summary(navigation),
+      update_flush = Stats.summary(updates),
     }
   end
   local output = {
-    entries = 50000,
-    mode = mode,
-    ui = { 80, 48 },
-    units = "milliseconds",
-    gc = "natural during samples",
-    first512_publication = distribution(first),
-    first512_flush = distribution(first_flush),
-    complete_publication = distribution(complete),
-    complete_flush = distribution(complete_flush),
+    first512_publication = Stats.summary(first),
+    first512_flush = Stats.summary(first_flush),
+    complete_publication = Stats.summary(complete),
+    complete_flush = Stats.summary(complete_flush),
     annotations = annotation_metrics,
     memory = ui:rpc(
       "nvim_exec_lua",
       [[
       collectgarbage("collect")
-      return { rust = bench_data._native:stats(), lua_heap_kib = collectgarbage("count"), buffer_lines = vim.api.nvim_buf_line_count(bench_view.bufnr) }
+      return { rust = bench_data._native:stats(), lua_heap_bytes = collectgarbage("count") * 1024, buffer_lines = vim.api.nvim_buf_line_count(bench_view.bufnr), process_memory_bytes = vim.uv.resident_set_memory() }
     ]],
       {}
     ),
-    nvim = vim.version(),
-    system = vim.uv.os_uname(),
   }
-  local pid = ui:rpc("nvim_exec_lua", "return vim.uv.os_getpid()", {})
-  output.memory.rss_kib =
-    tonumber(vim.system({ "ps", "-o", "rss=", "-p", tostring(pid) }, { text = true }):wait().stdout)
   return output
 end, debug.traceback)
 ui:close()
 vim.fn.delete(directory, "rf")
 assert(ok, result)
 io.stdout:write(vim.json.encode(result), "\n")
+local conditions = {
+  entries = 50000,
+  mode = mode,
+  annotations = annotations,
+  iterations = iterations,
+  ui = { 80, 48 },
+  gc = "natural during iterations",
+}
+io.stdout:write("results: ", Record.write("filetree", { conditions = conditions, results = result }), "\n")

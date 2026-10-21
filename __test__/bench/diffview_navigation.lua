@@ -17,6 +17,7 @@ if baseline then
 end
 require("ark.bootstrap").setup()
 local treeview = require("__test__.support.treeview")
+local Record = require("__test__.bench.record")
 local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
 local action = require("era.m.diffview.view.workspace.action")
@@ -87,7 +88,7 @@ local function metadata(label)
   treeview.await(tree.apply(bufnr, plan, owner))
 end
 
-local result = { rows = owner:linecount(), directories = directories }
+local result = { rows = owner:linecount() }
 result.cold_next = measure(function()
   action.next_entry(ctx)
 end)
@@ -105,3 +106,5 @@ end)
 assert(current.filepath == entries[directories and #entries or 2].filepath)
 owner:dispose()
 io.stdout:write(vim.json.encode(result), "\n")
+local conditions = { entries = count, directories = directories, baseline = baseline or vim.NIL }
+io.stdout:write("results: ", Record.write("diffview_navigation", { conditions = conditions, results = result }), "\n")

@@ -3,7 +3,7 @@ local __module_name__ = "__test__.bench.explorer.runtime" ---@type string
 local root, directory, implementation, entries, branch_entries, mode, variant = ...
 variant = variant or {}
 local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))
-local Metrics = assert(loadfile(here .. "/metrics.lua"))()
+local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 vim.api.nvim_set_current_dir(directory)
 local runtime = vim.env.VIMRUNTIME
 vim.opt.runtimepath = { root, runtime, vim.api.nvim__get_lib_dir() }

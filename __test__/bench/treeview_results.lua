@@ -6,6 +6,8 @@ local root =
 vim.api.nvim_set_current_dir(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local count = tonumber(arg[1]) or 50000
+local Record = require("__test__.bench.record")
+local Stats = require("__test__.bench.stats")
 local ui = require("__test__.support.ui").new({ timeout_ms = 60000 })
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 100, 40, { rgb = true, ext_linegrid = true })
@@ -111,13 +113,11 @@ local ok, result = xpcall(function()
     samples[#samples + 1] = (first_flush - started) / 1e6
     confirmations[#confirmations + 1] = (published - started) / 1e6
   end
-  table.sort(samples)
-  table.sort(confirmations)
   local counters = ui:rpc(
     "nvim_exec_lua",
     [[
     collectgarbage("collect")
-    return { writes = bench.writes, heap_mib = (collectgarbage("count") - bench.base_heap) / 1024, errors = bench.errors }
+    return { writes = bench.writes, heap_bytes = (collectgarbage("count") - bench.base_heap) * 1024, errors = bench.errors }
   ]],
     {}
   )
@@ -150,11 +150,10 @@ local ok, result = xpcall(function()
     rows = ready.rows,
     producer_ms = (ready.produced - ready.started) / 1e6,
     initial_flush_ms = (initial - ready.started) / 1e6,
-    cursor_p50_ms = samples[15],
-    cursor_p95_ms = samples[29],
-    cursor_confirmation_p95_ms = confirmations[29],
+    cursor_flush_ms = Stats.summary(samples),
+    cursor_confirmation_ms = Stats.summary(confirmations),
     cursor_buffer_writes = counters.writes,
-    lua_retained_mib = counters.heap_mib,
+    lua_retained_bytes = counters.heap_bytes,
     selected_nodes = selection.count,
     selected_keys_ms = selection.ms,
   }
@@ -164,3 +163,5 @@ if not ok then
   error(result)
 end
 io.stdout:write(vim.json.encode(result), "\n")
+local conditions = { files = count, cursor_iterations = 30, ui = { 100, 40 } }
+io.stdout:write("results: ", Record.write("treeview_results", { conditions = conditions, results = result }), "\n")

@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.explorer.metrics" ---@type string
+local __module_name__ = "__test__.bench.metrics" ---@type string
 
 local M = {}
 local ffi

@@ -1,4 +1,4 @@
--- Usage, from the repository root: nvim -l __test__/bench/filetree_watch.lua [samples=20]
+-- Usage, from the repository root: nvim -l __test__/bench/filetree_watch.lua [iterations=20]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.filetree_watch" ---@type string
 
@@ -7,24 +7,14 @@ local root =
 vim.api.nvim_set_current_dir(root)
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local samples = tonumber(arg[1]) or 20
-assert(samples >= 1 and samples <= 100)
+local iterations = tonumber(arg[1]) or 20
+assert(iterations >= 1 and iterations <= 100)
 local directory = vim.fn.tempname()
 assert(vim.uv.fs_mkdir(directory, 448))
 vim.fn.writefile({ "content" }, directory .. "/item-0")
 local ui = require("__test__.support.ui").new()
-
----@param values                        number[]
----@return table
-local function distribution(values)
-  table.sort(values)
-  return {
-    samples = #values,
-    p50 = values[math.ceil(#values * 0.5)],
-    p95 = values[math.ceil(#values * 0.95)],
-    max = values[#values],
-  }
-end
+local Record = require("__test__.bench.record")
+local Stats = require("__test__.bench.stats")
 
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, 24, { rgb = true, ext_linegrid = true })
@@ -67,7 +57,7 @@ local ok, result = xpcall(function()
     { root, directory }
   )
   local changes, publications = {}, {}
-  for index = 1, samples do
+  for index = 1, iterations do
     ui:rpc("nvim_exec_lua", "pending = {name = ..., started = vim.uv.hrtime()}", { "item-" .. index })
     assert(vim.uv.fs_rename(directory .. "/item-" .. (index - 1), directory .. "/item-" .. index))
     local deadline = vim.uv.hrtime() + 10000000000
@@ -90,22 +80,19 @@ local ok, result = xpcall(function()
     view:detach()
     assert(vim.wait(10000, function() return data:watch_status().directories == 0 and not data._native:is_busy() end, 1))
     collectgarbage("collect")
-    return { watches = data:watch_status().directories, rust = data._native:stats(), lua_heap_kib = collectgarbage("count") }
+    return { watches = data:watch_status().directories, rust = data._native:stats(), lua_heap_bytes = collectgarbage("count") * 1024, process_memory_bytes = vim.uv.resident_set_memory() }
   ]],
     {}
   )
   return {
-    samples = samples,
-    units = "milliseconds",
-    merge_window_ms = 150,
-    change_to_flush = distribution(changes),
-    observed_source_to_flush = distribution(publications),
+    change_to_flush = Stats.summary(changes),
+    observed_source_to_flush = Stats.summary(publications),
     after_detach = released,
-    system = vim.uv.os_uname(),
-    nvim = vim.version(),
   }
 end, debug.traceback)
 ui:close()
 vim.fn.delete(directory, "rf")
 assert(ok, result)
 io.stdout:write(vim.json.encode(result), "\n")
+local conditions = { iterations = iterations, merge_window_ms = 150, ui = { 80, 24 } }
+io.stdout:write("results: ", Record.write("filetree_watch", { conditions = conditions, results = result }), "\n")

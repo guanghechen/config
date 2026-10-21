@@ -40,4 +40,31 @@ function M.percentile(values, fraction)
   return ordered[math.min(#ordered, math.max(1, math.ceil(#ordered * fraction)))]
 end
 
+-- Fewer values than this leave p95 unreported: it would only restate the largest values.
+M.P95_MIN_COUNT = 20 ---@type integer
+
+---@class __test__.bench.stats.ISummary
+---@field n                             integer
+---@field median                        number
+---@field p95                           number|nil Nil below `P95_MIN_COUNT` values.
+---@field min                           number
+---@field max                           number
+
+---Count, median, nearest-rank p95, min and max of `values`; nil when empty.
+---@param values                        number[]
+---@return __test__.bench.stats.ISummary|nil
+function M.summary(values)
+  if #values == 0 then
+    return nil
+  end
+  local ordered = sorted(values)
+  return {
+    n = #ordered,
+    median = M.median(ordered),
+    p95 = #ordered >= M.P95_MIN_COUNT and M.percentile(ordered, 0.95) or nil,
+    min = ordered[1],
+    max = ordered[#ordered],
+  }
+end
+
 return M

@@ -89,7 +89,7 @@ local ok, result = xpcall(function()
     return { plugins = plugins, plugin_lockfile = state.options.lockfile,
       memory = assert(loadfile(metrics_path))().memory(), runtimepath = vim.opt.runtimepath:get() }
   ]],
-    { here .. "/metrics.lua" }
+    { vim.fs.dirname(here) .. "/metrics.lua" }
   )
   ui:rpc("nvim_exec_lua", "startup_bench.dispose()", {})
   return {

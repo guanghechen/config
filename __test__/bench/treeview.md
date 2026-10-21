@@ -7,6 +7,9 @@
 （`git log -p -- __test__/bench/treeview.md`）。各项数字只对所注明的提交、主机与条件成立；
 少量进程样本不支持生产 p95 结论。
 
+以下基线按统一结果格式（`bench/record.lua`、`bench/stats.lua`）之前的输出测得：p50 取下中位数，p95 不设样本下限，
+与新格式的 `median` / `p95` 不能直接比较，待按新格式重测后替换。
+
 ## 合成投影：`treeview.lua`
 
 `nvim -l __test__/bench/treeview.lua [tree|ancestry]`，使用 release library、附着 UI 与自然 GC；
@@ -49,7 +52,7 @@ cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib <name> -- --ex
 
 ## 真实数据链路：`treeview_consumers.lua`
 
-`nvim -l __test__/bench/treeview_consumers.lua <consumer> [samples]`，consumer 为 `filetree`、`searcher`、`git` 或 `lsp`，
+`nvim -l __test__/bench/treeview_consumers.lua <consumer> [iterations]`，consumer 为 `filetree`、`searcher`、`git` 或 `lsp`，
 默认 100 个正式样本，另有 5 次预热；使用 release library、附着 UI 和自然 GC，`lsp` 使用已安装的 Mason Lua language server。
 Adapter 验收到 Treeview surface，不切换现有业务入口。
 

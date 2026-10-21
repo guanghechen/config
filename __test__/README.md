@@ -261,7 +261,16 @@ t:run()
 Benchmarks are optional tooling. Run them sequentially, without concurrent builds,
 tests or other benchmarks; they use existing binaries and never install or download
 dependencies. Samples, traces and local analysis under `bench/results/` are ignored by Git. Measurement records keep each scenario's method
-and latest baseline:
+and latest baseline.
+
+Lua benchmarks write their runs through `bench/record.lua` to `bench/results/<bench>/<UTC>-<pid>.json` (schema
+`bench-run/1`) and print the results with that path. A run records its environment (Neovim, LuaJIT, host, checkout
+commit and dirty state, the native library's build receipt and the process-memory definition), its conditions and
+its results. Durations are milliseconds and memory is bytes. A distribution is `{ n, median, p95, min, max }` from
+`bench/stats.lua` (`script/benchmark/stats.mjs` in Node, checked against the same fixture): the median of an even
+count is the midpoint, p95 is nearest-rank and absent below 20 values. `iterations` counts repetitions within one
+process and `processes` counts fresh processes.
+
 
 - [Explorer and Filetree](bench/explorer/README.md): the unified Explorer runner in
   [`script/benchmark/`](../script/benchmark/), focused Lua probes, Filetree probes and
@@ -283,15 +292,15 @@ to measure capture and restoration to the same current source, excluding cold in
 The default library is `lua/yoz.so`; pass `rust/target/release/libyoz.dylib` to compare a new build.
 The benchmark aborts if the source changes externally and does not measure switching between input methods.
 
-Cursor-path guide measurements use `nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [rows] [samples] [ui-height]`.
-Defaults are `lua/yoz.so`, no baseline override, 50,000 rows and 300 samples per operation after 30 warmups.
+Cursor-path guide measurements use `nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [rows] [iterations] [ui-height]`.
+Defaults are `lua/yoz.so`, no baseline override, 50,000 rows and 300 iterations per operation after 30 warmups.
 Pass `''` for the baseline directory when specifying a larger row count. The fixture imports 512-record chunks,
 expands an eight-way tree, and attaches an 80×50 UI by default. It measures API/Normal adjacent movement, visible
 branch changes, eight API cursor requests in one callback, redraw before CursorMoved, cold jumps, scrolling and
 Visual movement through native publication and UI flush, with natural GC and an assertion of zero body writes.
 The burst alternates between two visible rows: its first request repeats the existing position and seven move it.
 The optional baseline directory contains the previous `decorations.lua`, `surface.lua` and `view.lua`; both variants
-use the same release native module. Output includes p50/p95/max, sample counts, surface work, path updates,
+use the same release native module. Results summarize each operation and add surface work, path updates,
 prepare/redraw/guide-extmark counts and retained Lua heap. `flush` measures visible output; `publication` measures
 native frame acknowledgement; `settled` waits for both and for deferred path invalidation to clear.
 Viewport preparation calls are separate from native row-query counts and exported-row totals, including bounded

@@ -25,7 +25,8 @@ local fixture = require("__test__.support.explorer").new()
 package.loadlib = loadlib
 local t, await = fixture.t, fixture.await
 local buffers = require("era.m.explorer.buffers")
-local Metrics = require("__test__.bench.explorer.metrics")
+local Metrics = require("__test__.bench.metrics")
+local Record = require("__test__.bench.record")
 local record
 
 t:test("bulk Move preserves every file and unsaved buffer", function()
@@ -194,3 +195,5 @@ end)
 local result = t:run({ exit = false, quiet = true })
 assert(result.failed == 0, table.concat(result.failures, "\n"))
 io.write(vim.json.encode(record) .. "\n")
+local conditions = { files = count, open_buffers = buffer_count, notifications = mode, profiling = profiling }
+io.write("results: ", Record.write("explorer_move", { conditions = conditions, results = record }), "\n")

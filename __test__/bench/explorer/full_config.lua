@@ -4,7 +4,7 @@ local __module_name__ = "__test__.bench.explorer.full_config" ---@type string
 local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
-local Metrics = assert(loadfile(here .. "/metrics.lua"))()
+local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local samples, moves = tonumber(arg[1]) or 3, tonumber(arg[2]) or 100
 assert(samples >= 1 and samples <= 100 and samples % 1 == 0)

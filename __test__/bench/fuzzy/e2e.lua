@@ -259,7 +259,7 @@ local ok, result = xpcall(function()
     end, "arm")
     sleep(250)
     events = {}
-    local usage = ui:rpc("nvim_exec_lua", "return require('__test__.bench.explorer.metrics').usage()", {})
+    local usage = ui:rpc("nvim_exec_lua", "return require('__test__.bench.metrics').usage()", {})
     local typed, previous = {}, ""
     for _, query in ipairs(sequence.steps) do
       local key = query:sub(#previous + 1)
@@ -273,7 +273,7 @@ local ok, result = xpcall(function()
       return visible_at(final.query, final.t) ~= nil
     end, 2)
     sleep(50)
-    local after = ui:rpc("nvim_exec_lua", "return require('__test__.bench.explorer.metrics').usage()", {})
+    local after = ui:rpc("nvim_exec_lua", "return require('__test__.bench.metrics').usage()", {})
     local status = call("status")
     for index, key in ipairs(typed) do
       local input = find("input", key.query, key.t)

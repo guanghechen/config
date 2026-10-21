@@ -7,8 +7,10 @@ vim.api.nvim_set_current_dir(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local count = tonumber(arg[1]) or 10000
 local iterations = tonumber(arg[2]) or 10
-assert(count > 0 and iterations > 0, "expected positive file and sample counts")
+assert(count > 0 and iterations > 0, "expected positive file and iteration counts")
 local ui = require("__test__.support.ui").new({ timeout_ms = 60000 })
+local Record = require("__test__.bench.record")
+local Stats = require("__test__.bench.stats")
 
 ---@param expected                      integer
 ---@param started                       integer
@@ -122,9 +124,7 @@ local ok, result = xpcall(function()
   )
   assert(counters.imports == 0 and counters.plans == 0, vim.inspect(counters))
   local metrics = {
-    files = count,
     rows_expanded = expanded_rows,
-    samples_per_action = iterations,
     initial_flush_ms = initial,
     first_expand_flush_ms = materialization,
     expansion_imports = counters.imports,
@@ -133,9 +133,7 @@ local ok, result = xpcall(function()
     expansion_directory_icon_lookups = counters.directory_icons,
   }
   for kind, timings in pairs(samples) do
-    table.sort(timings)
-    metrics[kind .. "_flush_p50_ms"] = timings[math.ceil(#timings * 0.5)]
-    metrics[kind .. "_flush_p95_ms"] = timings[math.ceil(#timings * 0.95)]
+    metrics[kind .. "_flush_ms"] = Stats.summary(timings)
   end
   return metrics
 end, debug.traceback)
@@ -144,3 +142,5 @@ if not ok then
   error(result)
 end
 io.stdout:write(vim.json.encode(result), "\n")
+local conditions = { files = count, iterations = iterations, ui = { 100, 40 } }
+io.stdout:write("results: ", Record.write("treeview_diffview", { conditions = conditions, results = result }), "\n")

@@ -1,4 +1,4 @@
--- Usage, from the repository root: nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [count=50000] [samples=300] [height=50]
+-- Usage, from the repository root: nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [count=50000] [iterations=300] [height=50]
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.treeview_guides" ---@type string
 
@@ -10,22 +10,12 @@ package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local library = arg[1] or root .. "/lua/yoz.so"
 local baseline = arg[2] or ""
 local count = tonumber(arg[3]) or 50000
-local samples = tonumber(arg[4]) or 300
+local iterations = tonumber(arg[4]) or 300
 local height = tonumber(arg[5]) or 50
-assert(count >= 50 and samples >= 1 and height >= 20 and height <= 500, "invalid benchmark dimensions")
+assert(count >= 50 and iterations >= 1 and height >= 20 and height <= 500, "invalid benchmark dimensions")
 local ui = require("__test__.support.ui").new({ timeout_ms = 30000 })
-
----@param values                        number[]
----@return table
-local function distribution(values)
-  table.sort(values)
-  return {
-    samples = #values,
-    p50 = values[math.ceil(#values * 0.5)],
-    p95 = values[math.ceil(#values * 0.95)],
-    max = values[#values],
-  }
-end
+local Record = require("__test__.bench.record")
+local Stats = require("__test__.bench.stats")
 
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, height, { rgb = true, ext_linegrid = true })
@@ -162,15 +152,7 @@ local ok, result = xpcall(function()
     { root, library, baseline, count }
   )
 
-  local output = {
-    rows = count,
-    ui = { 80, height },
-    baseline = baseline ~= "",
-    units = "milliseconds",
-    paths = {},
-    nvim = vim.version(),
-    system = vim.uv.os_uname(),
-  }
+  local output = { paths = {} }
   for _, kind in ipairs({ "adjacent", "normal", "visible_branch", "burst", "early_redraw", "jump", "scroll", "visual" }) do
     if kind ~= "adjacent" and kind ~= "jump" and kind ~= "scroll" then
       ui:rpc(
@@ -190,7 +172,7 @@ local ok, result = xpcall(function()
     local flush, publication, decoration, path_update, settled = {}, {}, {}, {}, {}
     local calls =
       { prepare = 0, full_redraw = 0, range_redraw = 0, guide_marks = 0, row_queries = 0, exported_rows = 0 }
-    for index = 1, samples + 30 do
+    for index = 1, iterations + 30 do
       ui:rpc(
         "nvim_exec_lua",
         [=[
@@ -255,7 +237,7 @@ local ok, result = xpcall(function()
         path_update[#path_update + 1] = timing[4]
         settled[#settled + 1] = (math.max(timing[2], ui.last_flush) - timing[1]) / 1000000
         for key, value in pairs(timing[5]) do
-          calls[key] = calls[key] + value / samples
+          calls[key] = calls[key] + value / iterations
         end
       end
     end
@@ -267,19 +249,20 @@ local ok, result = xpcall(function()
         + (after.utime.usec+after.stime.usec-before.utime.usec-before.stime.usec)/1000
     ]=],
       {}
-    ) / samples
+    ) / iterations
     output.paths[kind] = {
       cpu_ms_per_move = cpu_ms,
-      flush = distribution(flush),
-      publication = distribution(publication),
-      decorations = distribution(decoration),
-      path_update = distribution(path_update),
-      settled = distribution(settled),
+      flush = Stats.summary(flush),
+      publication = Stats.summary(publication),
+      decorations = Stats.summary(decoration),
+      path_update = Stats.summary(path_update),
+      settled = Stats.summary(settled),
       calls_per_move = calls,
     }
   end
   output.writes = ui:rpc("nvim_exec_lua", "return writes", {})
-  output.lua_heap_kib = ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count")', {})
+  output.lua_heap_bytes =
+    ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count") * 1024', {})
   assert(output.writes == 0, "cursor movement wrote body text")
   ui:rpc("nvim_exec_lua", "view:detach()", {})
   return output
@@ -287,3 +270,12 @@ end, debug.traceback)
 ui:close()
 assert(ok, result)
 io.stdout:write(vim.json.encode(result), "\n")
+local conditions = {
+  rows = count,
+  iterations = iterations,
+  warmup = 30,
+  ui = { 80, height },
+  library = library,
+  baseline = baseline ~= "" and baseline or vim.NIL,
+}
+io.stdout:write("results: ", Record.write("treeview_guides", { conditions = conditions, results = result }), "\n")

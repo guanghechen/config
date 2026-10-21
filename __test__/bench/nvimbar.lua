@@ -7,7 +7,9 @@ local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
 local Nvimbar = require("era.m.nvimbar.nvimbar")
 local Future = require("stl.c.future")
+local Record = require("__test__.bench.record")
 local Stats = require("__test__.bench.stats")
+local results = {}
 
 bootstrap.with_runtime(t, {
   stl = {
@@ -197,23 +199,17 @@ local function measure(count, staggered)
   )
   assert(published == expected)
   dispose()
-  io.write(
-    string.format(
-      "%s,%d,%.3f,%.3f,%.0f,%.0f,%.3f\n",
-      staggered and "staggered" or "batch",
-      count,
-      Stats.median(samples.cpu),
-      Stats.median(samples.wall),
-      Stats.median(samples.layouts),
-      Stats.median(samples.publications),
-      Stats.median(samples.lag)
-    )
-  )
+  table.insert(results, {
+    scenario = staggered and "staggered" or "batch",
+    components = count,
+    cpu_ms = Stats.summary(samples.cpu),
+    wall_ms = Stats.summary(samples.wall),
+    layouts = Stats.summary(samples.layouts),
+    publications = Stats.summary(samples.publications),
+    last_result_to_publication_ms = Stats.summary(samples.lag),
+  })
 end
 
-io.write(
-  "scenario,components,median_cpu_ms,median_wall_ms,median_layouts,median_publications,median_last_result_to_publication_ms\n"
-)
 t:test("completed snapshots always reach publication", function()
   for _, count in ipairs({ 8, 32, 64 }) do
     measure(count, false)
@@ -222,3 +218,9 @@ t:test("completed snapshots always reach publication", function()
 end)
 local result = t:run({ exit = false, quiet = true })
 assert(result.failed == 0, table.concat(result.failures, "\n"))
+io.write(vim.json.encode(results), "\n")
+io.write(
+  "results: ",
+  Record.write("nvimbar", { conditions = { component_counts = { 8, 32, 64 } }, results = results }),
+  "\n"
+)

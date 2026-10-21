@@ -4,7 +4,7 @@ local __module_name__ = "__test__.bench.explorer.idle" ---@type string
 local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
-local Metrics = assert(loadfile(here .. "/metrics.lua"))()
+local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 local baseline = arg[1] and arg[1] ~= "-" and assert(vim.uv.fs_realpath(arg[1])) or nil
 local samples = tonumber(arg[2]) or 3
 assert(arg[3] == nil and samples >= 1 and samples <= 100 and samples % 1 == 0)

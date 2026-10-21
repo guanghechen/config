@@ -4,7 +4,7 @@ local __module_name__ = "__test__.bench.explorer.soak" ---@type string
 local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
-local Metrics = assert(loadfile(here .. "/metrics.lua"))()
+local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. package.path
 local cycles, entries = tonumber(arg[1]) or 100, tonumber(arg[2]) or 1000
 assert(cycles >= 20 and cycles % 20 == 0 and cycles <= 10000, "cycles must be a multiple of 20, from 20 through 10000")
