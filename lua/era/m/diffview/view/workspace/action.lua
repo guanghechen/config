@@ -1149,15 +1149,24 @@ end
 -- Lifecycle actions
 ----------------------------------------------------------------------------------------------------
 
----Refresh the view
+---Refreshes Changes from Git.
 ---@async
 ---@param ctx                           era.m.diffview.view.workspace.IContext
 ---@param token                         ?stl.c.CancellationToken
 ---@return nil
 function M.refresh(ctx, token)
   -- Let in-flight Git reads settle; the token guards view ownership and prevents writes after disposal.
-  local entries = data.fetch_diff_entries()
+  M.apply_entries(ctx, data.fetch_diff_entries(), token)
+end
 
+---Shows a fetched entries snapshot: renders Changes when the snapshot changed, keeps the selection on its file or
+---the nearest visible entry, and refreshes the preview.
+---@async
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@param entries                       era.m.diffview.IFileEntry[]
+---@param token                         ?stl.c.CancellationToken
+---@return nil
+function M.apply_entries(ctx, entries, token)
   if token and token:is_cancelled() then
     return
   end

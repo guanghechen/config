@@ -104,6 +104,8 @@ fn / tabline ──> session ───────────────> sbs_
 - Session 持有 `content.Loader`（以 `stl.git.info` 构造），`open_*_entry` 必须经 `opts.loader` 加载内容；
   workspace 的 History 与 workspace 共用 loader。Buffer 记录所含 object 与源文件格式，相同内容不重读、不重写；
   重写前先清除该记录，写入失败时不会留下错误的缓存身份。
+- 刷新分为取数与应用两步：workspace 由 `data.fetch_diff_entries()` 取得 entries，再由 `action.apply_entries` 应用；
+  commits 的刷新与翻页取得一页后由 `action.apply_page` 应用。应用一侧只依赖传入的数据与请求归属，测试可直接喂数据。
 - `keymap` 不 require `action`：`gen_*`、`setup_*` 与 `get_help_keymaps` 以参数接收 action 模块，workspace 另收
   History 使用的 commits action。Session 传入真实模块，路由测试传入记录调用的替身。
 - Session 拥有 Git 订阅、Changes 尺寸监听、预览代次与 untracked discard 队列；`close()` 统一回收。一个模块级

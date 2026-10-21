@@ -1241,10 +1241,21 @@ function M.refresh(ctx, token)
     return false
   end
 
-  -- Fetch first page
-  local per_page = config.COMMITS_PER_PAGE
-  local commits = data.fetch_log_page(1, per_page, path_filter, token)
+  local commits = data.fetch_log_page(1, config.COMMITS_PER_PAGE, path_filter, token)
+  return M.apply_page(ctx, 1, commits, generation, token, total)
+end
 
+---Shows `commits` as page `page` of the log while request `generation` owns the view. A `total` starts a new log
+---of that size, collapsing every commit.
+---@async
+---@param ctx                            era.m.diffview.view.commits.IContext
+---@param page                           integer
+---@param commits                        era.m.diffview.ICommit[]
+---@param generation                     integer
+---@param token                          ?stl.c.CancellationToken
+---@param total                          ?integer
+---@return boolean applied
+function M.apply_page(ctx, page, commits, generation, token, total)
   if (token and token:is_cancelled()) or not ctx.state:owns_content_request(generation) then
     return false
   end
@@ -1253,9 +1264,11 @@ function M.refresh(ctx, token)
   if not ctx.state:owns_content_request(generation) then
     return false
   end
-  ctx.state:set_commits_total(total)
-  ctx.state:set_commits_page(1)
-  ctx.state:collapse_all()
+  if total then
+    ctx.state:set_commits_total(total)
+    ctx.state:collapse_all()
+  end
+  ctx.state:set_commits_page(page)
   ctx.state:set_commits(commits)
   commits_view.render_commits(ctx)
 
@@ -1427,31 +1440,16 @@ function M.__select_commit_for_filetree__(ctx, commit)
   end
 end
 
----Refresh commits for a specific page
+---Loads page `page` of the log for request `generation`.
 ---@async
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@param page                           integer
 ---@param generation                     integer
 ---@param token                          ?stl.c.CancellationToken
+---@return nil
 function M.__refresh_page__(ctx, page, generation, token)
-  local path_filter = ctx.state:get_path_filter()
-  local per_page = config.COMMITS_PER_PAGE
-  local commits = data.fetch_log_page(page, per_page, path_filter, token)
-
-  if (token and token:is_cancelled()) or not ctx.state:owns_content_request(generation) then
-    return
-  end
-
-  stl.async.scheduler()
-  if not ctx.state:owns_content_request(generation) then
-    return
-  end
-  ctx.state:set_commits_page(page)
-  ctx.state:set_commits(commits)
-  commits_view.render_commits(ctx)
-
-  -- Update tabline
-  dot.state.status.dirtier_tabline:mark_dirty()
+  local commits = data.fetch_log_page(page, config.COMMITS_PER_PAGE, ctx.state:get_path_filter(), token)
+  M.apply_page(ctx, page, commits, generation, token)
 end
 
 ---Update cursor in commits pane to match commit hash

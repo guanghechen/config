@@ -220,8 +220,8 @@ function M.cursor_on(session, stage_type, path)
   error(string.format("no %s row for %s", stage_type, path), 2)
 end
 
----Opens the workspace session and waits until History has rendered and the first file is selected, so later
----previews supersede the initial one; the case closes it.
+---Opens the workspace session and waits until History has rendered and the first refresh has applied, selecting the
+---first file when there is one, so later previews supersede the initial one; the case closes it.
 ---@param t                             __test__.support.Harness
 ---@return era.m.diffview.WorkspaceSession
 function M.open_workspace(t)
@@ -229,8 +229,11 @@ function M.open_workspace(t)
   t:defer(function()
     session:close()
   end)
+  local state = session.state
   t.wait_until(function()
-    return session.history.state:get_tree("commits"):frame() ~= nil and session.state:get_current_entry() ~= nil
+    return session.history.state:get_tree("commits"):frame() ~= nil
+      and state:is_entries_snapshot_applied()
+      and (#state:get_entries() == 0 or state:get_current_entry() ~= nil)
   end, 10000, "rendered History and the first selection")
   return session
 end
