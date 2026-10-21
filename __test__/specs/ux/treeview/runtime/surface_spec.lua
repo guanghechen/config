@@ -6,6 +6,36 @@ local treeview = require("ux.treeview")
 local support = require("__test__.support.treeview")
 local fixture = support.fixture
 
+t:test("closing the tab of a view's only window still reports TabClosed", function()
+  local _, state = fixture()
+  vim.cmd.tabnew()
+  -- The view takes over the window's empty scratch buffer, so no other buffer can replace it.
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(0, bufnr)
+  local view = treeview.attach(state, { bufnr = bufnr, keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  local closed = false
+  local group = vim.api.nvim_create_augroup("TreeviewTabClosedTest", { clear = true })
+  t:defer(function()
+    vim.api.nvim_del_augroup_by_id(group)
+  end)
+  vim.api.nvim_create_autocmd("TabClosed", {
+    group = group,
+    callback = function()
+      closed = true
+    end,
+  })
+
+  vim.cmd("tabclose")
+  t.assert_true(closed, "TabClosed")
+  t.assert_true(view:status().closed, "the view closes with its window")
+  t.wait_until(function()
+    return not vim.api.nvim_buf_is_valid(bufnr)
+  end, 1000, "the view's buffer is deleted once its window is gone")
+end)
+
 t:test("an empty scratch buffer transfers to the view without entering another buffer", function()
   local _, state = fixture()
   local bufnr = vim.api.nvim_create_buf(false, true)

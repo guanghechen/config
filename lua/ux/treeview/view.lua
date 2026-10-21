@@ -426,7 +426,7 @@ function M:_bind_window(winnr)
     group = self._group,
     pattern = tostring(winnr),
     callback = function()
-      self:detach()
+      self:_detach(true)
     end,
   })
 end
@@ -501,6 +501,12 @@ end
 
 ---@return nil
 function M:detach()
+  self:_detach(false)
+end
+
+---@param closing                       boolean The bound window is closing.
+---@return nil
+function M:_detach(closing)
   self:_cancel_source_timer()
   if self._detached then
     return
@@ -522,9 +528,21 @@ function M:detach()
   if self._group then
     vim.api.nvim_del_augroup_by_id(self._group)
   end
-  if vim.api.nvim_buf_is_valid(self.bufnr) then
-    vim.api.nvim_buf_delete(self.bufnr, { force = true })
+  if not vim.api.nvim_buf_is_valid(self.bufnr) then
+    return
   end
+  if not closing then
+    vim.api.nvim_buf_delete(self.bufnr, { force = true })
+    return
+  end
+  -- Deleting the buffer now would close the closing window from its own WinClosed, and a tab closed
+  -- that way never reports TabClosed. The buffer goes once the window is gone.
+  local bufnr = self.bufnr
+  vim.schedule(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
 end
 
 ---@param state                         ux.treeview.State
