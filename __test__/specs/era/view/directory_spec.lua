@@ -26,6 +26,46 @@ t:test("the parent context row displays the parent directory metadata", function
   )
 end)
 
+t:test("opening retries a resolve that an overlapping publication made stale", function()
+  local ui, directory = fixture.new(t)
+  ui:lua(
+    [[
+    local data, resolve = surface.data, surface.data.resolve
+    stale_resolves = 0
+    data.resolve = function(self, path)
+      if stale_resolves < 2 then
+        stale_resolves = stale_resolves + 1
+        return stl.c.Future.resolve({
+          kind = "Rejected",
+          error = { code = "Stale", message = "resource path changed during resolve" },
+        })
+      end
+      return resolve(self, path)
+    end
+    context_path = ...
+    surface:open(context_path)
+  ]],
+    directory .. "/folder"
+  )
+  ui:wait_until(function()
+    return ui:lua([[
+      local frame = surface:frame()
+      return frame and surface.data:inspect(frame:source(), frame:header().root.node):path() == context_path
+    ]])
+  end, 5000)
+  t.assert_eq(2, ui:lua("return stale_resolves"))
+  t.assert_eq(0, ui:lua("return #errors"))
+end)
+
+t:test("a focus whose entry is gone falls back to its row", function()
+  local ui, directory = fixture.new(t)
+  ui:lua([[surface:focus_path(..., 3)]], directory .. "/removed.lua")
+  ui:wait_until(function()
+    return ui:lua("return surface._focus == nil and picker.result.lnum_current:snapshot() == 3")
+  end, 5000)
+  t.assert_eq(0, ui:lua("return #errors"))
+end)
+
 t:test("Find Explorer uses native resources, bounded traversal and worker filtering", function()
   local ui, directory = fixture.new(t)
   t.assert_eq("userdata", ui:lua("return type(surface.state._native)"))

@@ -79,7 +79,7 @@ t:test("native create/copy/rename/delete update the current directory and editor
   wait(ui, [[not present("new-dir") and not require("era.m.filetree.jobs").pending()]])
   wait(ui, [[not surface._focus and select(2,surface:retrieve(picker.result.lnum_current:snapshot()))==false]])
   t.assert_nil(vim.uv.fs_stat(path .. "/new-dir"))
-  t.assert_eq(0, ui:lua("return #errors"))
+  t.assert_eq(0, ui:lua("return #errors"), vim.inspect(ui:lua("return errors")))
 end)
 
 t:test("completion preserves navigation made while the file operation was running", function()

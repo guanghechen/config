@@ -52,6 +52,21 @@ local function absolute(state, command, retries)
   end)
 end
 
+-- Read-only navigation observes again after a publication overlaps the request.
+---@param data                          ux.filetree.Data
+---@param path                          string
+---@param retries                       ?integer
+---@return stl.c.Future                 Resolves with the resource or the rejection that ended the retries.
+local function resolve(data, path, retries)
+  retries = retries or 8
+  return data:resolve(path):then_(function(reply)
+    if type(reply) == "table" and reply.kind == "Rejected" and reply.error.code == "Stale" and retries > 0 then
+      return resolve(data, path, retries - 1)
+    end
+    return reply
+  end)
+end
+
 ---@param error                         any
 ---@return nil
 local function report(error)
@@ -115,7 +130,7 @@ function M:open(directory, focus)
       return nil
     end
     self.data = data
-    return data:resolve(directory):map(checked):then_(function(resource)
+    return resolve(data, directory):map(checked):then_(function(resource)
       if self._disposed or generation ~= self._generation then
         return nil
       end
@@ -216,7 +231,15 @@ function M:_focused(frame)
     return
   end
   focus.submitted = true
-  local target = focus.path and self.data:resolve(focus.path):map(checked) or Future.resolve(nil)
+  -- A focus outlives the operation that requested it; an entry removed since then leaves its row.
+  local target = focus.path
+      and resolve(self.data, focus.path):map(function(reply)
+        if type(reply) == "table" and reply.kind == "Rejected" and reply.error.code == "NotFound" then
+          return nil
+        end
+        return checked(reply)
+      end)
+    or Future.resolve(nil)
   target
     :then_(function(resource)
       if self._disposed or self._focus ~= focus then
