@@ -37,6 +37,7 @@ local __mods = {
   staging = "era.m.git.staging",
   state = "era.m.git.state",
   status = "era.m.git.status",
+  user = "era.m.git.user",
   watcher = "era.m.git.watcher",
 }
 
@@ -55,6 +56,7 @@ local __mods = {
 ---@field public staging                era.m.git.staging
 ---@field public state                  era.m.git.state
 ---@field public status                 era.m.git.status
+---@field public user                   era.m.git.user
 ---@field public watcher                era.m.git.watcher
 local M = setmetatable({
   __mods = __mods,
@@ -71,6 +73,7 @@ local M = setmetatable({
 ---@return nil
 function M.setup()
   M.state.setup()
+  M.ignore.setup()
   require("era.m.git.job").setup()
   M.buffer.setup()
   M.blame.setup()

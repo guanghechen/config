@@ -211,7 +211,7 @@ local function target_directory(session, preparation, path, source)
       end)
       preparation.job = nil
       if status.results > 0 then
-        Git.refresh(false)
+        Git.refresh()
       end
       if status.error then
         error(status.error.message, 0)
@@ -343,7 +343,7 @@ local function update(session, job, status)
       end
       local counts = session._counts
       if counts.success > 0 then
-        Git.refresh(false)
+        Git.refresh()
       end
       stl.reporter.info({
         from = __module_name__,

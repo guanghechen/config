@@ -54,10 +54,10 @@ local function run()
   local ignored = directory .. "/lua/yoz.so"
   local visible = directory .. "/lua/era/m/git/status.lua"
   local ignore_reference = assert(loadfile("__test__/fixtures/era/m/git/ignore_lua_reference.lua"))()
-  await(git.state.preload_ignored({ ignored, visible }))
+  await(git.ignore.preload({ ignored, visible }))
   await(ignore_reference.preload_ignored({ ignored, visible }))
   for _, path in ipairs({ ignored, visible }) do
-    assert(git.state.is_ignored(path) == ignore_reference.is_ignored(path), "ignore cache differs from Lua oracle")
+    assert(git.ignore.is_ignored(path) == ignore_reference.is_ignored(path), "ignore cache differs from Lua oracle")
   end
   local source_winnr = vim.api.nvim_get_current_win()
   local widget = era.widget.explorer.get_widget()
@@ -98,7 +98,7 @@ local function run()
     local text = "    Not committed yet"
     if not info.sha:match("^0+$") and info.author ~= "Not Committed Yet" then
       local author = info.author
-      if git.state.get_user_name() == author or git.state.get_user_email() == info.author_mail then
+      if git.user.name() == author or git.user.email() == info.author_mail then
         author = "You"
       end
       local date = info.author_time > 0 and os.date("%Y-%m-%d %H:%M:%S", info.author_time) or ""

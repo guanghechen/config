@@ -7,7 +7,8 @@
 ```text
 era.m.git/
 ├── init.lua      -- 入口，初始化 watcher、autocmd、暴露公共 API
-├── state.lua     -- 全局状态管理（branch、staged/unstaged files、status cache）
+├── state.lua     -- 仓库状态（branch、status snapshot、刷新合并与节流）
+├── user.lua      -- 当前仓库的 Git 身份，供 blame 判断作者
 ├── repo.lua      -- Git 仓库抽象，封装常用操作，支持 worktree (commondir)
 ├── cmd.lua       -- Git 命令封装（async/sync）
 ├── index.lua     -- 主 index mutation 串行化
@@ -34,13 +35,15 @@ Histogram diff、legacy iconv 与 index 写入仍由 Lua 调用。
 
 ### state.lua
 
-维护全局 Git 状态，使用 `stl.c.Observable` 实现响应式更新：
+`State.new({ collect, snapshot, throttle_ms })` 持有一份仓库状态：`collect(token)` 返回 status 查询的 Future，
+`snapshot` 是首次查询前的状态。模块加载时创建唯一的默认实例，模块函数转发给它；测试为每个用例创建自己的实例。
 
 ```lua
 M.o_branch          -- Observable<string>: 当前分支名
 M.o_refreshed       -- Observable<IRefreshEvent>: 刷新 generation 与 change_scope
-M.o_staged_files    -- Observable<string[]>: 已暂存的文件列表
-M.o_unstaged_files  -- Observable<string[]>: 未暂存的文件列表
+M.snapshot()        -- 当前 yoz.git.StatusSnapshot
+M.refresh(token?)   -- 请求完整 status 查询；Future 在之后启动的查询完成时 settle
+M.refresh_index(token?) -- 已知 index 变更后的查询，事件可比较 blob identity
 ```
 
 `state.lua` 持有当前 `yoz.git.StatusSnapshot` handle，不再维护第二份 Lua status / directory cache。
@@ -48,12 +51,13 @@ Rust worker 完成查询、解析和 ancestor directory index 后，才发布 im
 全仓库扫描。刷新失败保留旧 snapshot；状态未变时复用旧 handle，仍发布刷新事件。
 
 每轮查询捕获启动前的 refresh 等待方；查询期间收到的请求合并到下一轮，不随当前查询提前完成。
-失败仍按原契约报告并完成该轮等待方；退出时取消查询并完成当前与排队等待方，迟到结果不重复完成。
+失败仍按原契约报告并完成该轮等待方；`dispose()`（退出时调用）取消查询并完成当前与排队等待方，迟到结果不重复完成。
 普通文件的 `BufWritePost` 按实际写入路径检查仓库边界并请求完整 status refresh，不依赖 buffer attach
 或 Explorer watcher；Diffview 的文件列表与统计随保存刷新。
 
-Ignore cache 也由 Rust 持有，Lua 只转发编辑器 invalidation 事件。`state.status_table()` 显式导出新的 Lua table，修改它不会
-改变 native snapshot；频繁路径查询应使用 `state.snapshot():lookup()`。
+Ignore cache 也由 Rust 持有，Lua 只转发编辑器 invalidation 事件。`state.snapshot():entries()` 显式导出新的 Lua table，
+修改它不会改变 native snapshot；频繁路径查询应使用 `state.snapshot():lookup()`。`status.calc_info(snapshot, …)` 由
+调用方传入 snapshot，status 不反向依赖 state。
 
 ### 数据流
 
@@ -418,8 +422,8 @@ Stage 状态：
 
 ## Ignore cache 与失效策略
 
-`ignore.lua` 保留 `state.preload_ignored()` / `is_ignored()` / `clear_ignored_cache()` 与
-`o_ignored_refreshed` 的入口。路径采用 canonical absolute key，末尾斜杠不影响 lookup；Unix 保留原始 bytes。
+`ignore.lua` 提供 `preload()` / `is_ignored()` / `clear()` 与 `o_refreshed` / `o_invalidated`，`setup()` 注册编辑器
+invalidation 事件。路径采用 canonical absolute key，末尾斜杠不影响 lookup；Unix 保留原始 bytes。
 
 - `yoz.git.ignore_cache(cwd)` 创建绑定仓库的 cache；`lookup(path)` 只读内存，unknown 返回 false。
 - `cache:start(paths)` 返回 ignore job，共用 `poll/cancel/dispose` contract。Worker 处理 fingerprint、
@@ -445,11 +449,10 @@ Warm preload 也异步检查 fingerprint，不再保证立即完成；但同步 
 local git = era.m.git
 
 -- 状态查询
-git.get_branch()                    -- 获取当前分支名
-git.state.o_staged_files:snapshot() -- 获取已暂存文件列表
-git.state.o_unstaged_files:snapshot() -- 获取未暂存文件列表
+git.state.o_branch:snapshot()       -- 获取当前分支名
 git.state.snapshot()                -- 获取 immutable native snapshot
-git.state.status_table()            -- 按需复制完整 status 表
+git.state.snapshot():entries()      -- 按需复制完整 status 表
+git.user.name() / git.user.email()  -- 当前仓库的 Git 身份
 
 -- Hunk 操作
 git.hunk.stage(range, callback)     -- Stage hunk/selection

@@ -7,7 +7,7 @@ local hln_hunk_nav = "m_git_hunk_indicator" ---@type string
 ---@return string|nil
 local function get_branch()
   local state = package.loaded["era.m.git.state"]
-  local branch = state and state.get_branch() or nil
+  local branch = state and state.o_branch:snapshot() or nil
   return branch ~= "" and branch or nil
 end
 

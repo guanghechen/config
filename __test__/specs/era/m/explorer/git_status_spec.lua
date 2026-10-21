@@ -97,7 +97,7 @@ t:test("real Git queries and OS watch update staged, modified, untracked and ign
   end, 10000)
   t.assert_false(vim.api.nvim_buf_is_valid(bufnr))
   widget:dispose()
-  await(Git.refresh(false))
+  await(Git.refresh())
   t.assert_eq(0, #fixture.messages, vim.inspect(fixture.messages))
 end)
 

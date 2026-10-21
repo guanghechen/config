@@ -31,10 +31,15 @@ bootstrap.with_runtime(t, {
           invalidate_index_all = function() end,
           mark_dirty_all = function() end,
         },
+        ignore = {
+          clear = function() end,
+        },
         state = {
-          clear_ignored_cache = function() end,
           refresh = function() end,
           refresh_index = function() end,
+        },
+        user = {
+          refresh = function() end,
         },
       },
     },

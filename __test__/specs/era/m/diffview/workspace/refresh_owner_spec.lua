@@ -298,13 +298,12 @@ t:test("workspace coalesces index refreshes and forces broader refreshes", funct
               return { unsubscribe = function() end }
             end,
           },
-          o_staged_files = {
-            subscribe = function()
-              error("workspace must subscribe to o_refreshed")
-            end,
-          },
-          status_table = function()
-            return {}
+          snapshot = function()
+            return {
+              entries = function()
+                return {}
+              end,
+            }
           end,
         },
       },

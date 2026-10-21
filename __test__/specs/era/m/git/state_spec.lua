@@ -1,111 +1,10 @@
-local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+require("ark.bootstrap").setup()
 
 local t = harness.new()
-local workspace = "/project" ---@type string
+local Git = require("era.m.git.state")
 
-local function normalize(filepath, keep_trailing_slash)
-  local had_trailing_slash = filepath:sub(-1) == "/" or filepath:sub(-1) == "\\" ---@type boolean
-  local normalized = filepath:gsub("\\", "/"):gsub("/+", "/") ---@type string
-  if keep_trailing_slash == false and normalized ~= "/" then
-    normalized = normalized:gsub("/+$", "")
-  elseif keep_trailing_slash ~= false and had_trailing_slash and normalized:sub(-1) ~= "/" then
-    normalized = normalized .. "/"
-  end
-  return normalized
-end
-
-local Observable = {}
-local observable_next_counts = setmetatable({}, { __mode = "k" }) ---@type table<table, integer>
-
-function Observable.from_value(initial)
-  local value = initial ---@type any
-  local observable ---@type table
-  observable = {
-    next = function(_, next_value)
-      value = next_value
-      observable_next_counts[observable] = observable_next_counts[observable] + 1
-    end,
-    snapshot = function()
-      return value
-    end,
-  }
-  observable_next_counts[observable] = 0
-  return observable
-end
-
-local Future = {}
-Future.__index = Future
-
-function Future.new(executor)
-  local self = setmetatable({ _done = false, _failed = false, _listeners = {} }, Future)
-  executor(function(result)
-    self._done = true
-    self._result = result
-    for _, listener in ipairs(self._listeners) do
-      listener(true, result)
-    end
-  end, function(err)
-    self._done = true
-    self._failed = true
-    self._error = err
-    for _, listener in ipairs(self._listeners) do
-      listener(false, err)
-    end
-  end)
-  return self
-end
-
-function Future.resolve(result)
-  return Future.new(function(resolve)
-    resolve(result)
-  end)
-end
-
-function Future.reject(err)
-  return Future.new(function(_, reject)
-    reject(err)
-  end)
-end
-
-function Future:is_done()
-  return self._done
-end
-
-function Future:is_failed()
-  return self._failed
-end
-
-function Future:get_error()
-  return self._error
-end
-
-function Future:finally(callback)
-  if self._done then
-    callback(not self._failed, self._failed and self._error or self._result)
-  else
-    self._listeners[#self._listeners + 1] = callback
-  end
-  return self
-end
-
-function Future:map(callback)
-  return Future.new(function(resolve, reject)
-    self:finally(function(ok, result)
-      if not ok then
-        reject(result)
-        return
-      end
-      local callback_ok, value = pcall(callback, result)
-      if callback_ok then
-        resolve(value)
-      else
-        reject(value)
-      end
-    end)
-  end)
-end
-
+---A status snapshot as State uses it: compared with `equals`, read through `entries`.
 ---@param entries                       table<string, table>
 ---@return table
 local function new_snapshot(entries)
@@ -117,302 +16,277 @@ local function new_snapshot(entries)
     entries = function()
       return entries
     end,
-    changed_files = function()
-      return {}, vim.tbl_keys(entries)
-    end,
-    display = function()
-      local result = {}
-      for path, entry in pairs(entries) do
-        result[path] = entry.display
-      end
-      return result
-    end,
   }
 end
 
-bootstrap.with_runtime(t, {
-  dot = {
-    path = {
-      dirname = function(filepath)
-        local normalized = normalize(filepath, false)
-        return normalized:match("^(.*)/[^/]+$") or normalized
-      end,
-      is_git_repo = function()
-        return true
-      end,
-      join = function(from, to)
-        return normalize(from .. "/" .. to, false)
-      end,
-      normalize = normalize,
-      workspace = function()
-        return workspace
-      end,
-    },
-  },
-  era = {
-    m = {
-      git = {
-        status = {
-          empty = function()
-            return new_snapshot({})
-          end,
-        },
-      },
-    },
-  },
-  stl = {
-    c = {
-      CancellationToken = {
-        new = function()
-          local cancelled = false
-          return {
-            cancel = function()
-              cancelled = true
-            end,
-            is_cancelled = function()
-              return cancelled
-            end,
-          }
-        end,
-      },
-      Future = Future,
-      Observable = Observable,
-    },
-    env = {
-      PATH_SEP = "/",
-    },
-    fn = {
-      equals_deep = vim.deep_equal,
-      noop = function() end,
-    },
-    reporter = {
-      error = function() end,
-      warn = function() end,
-    },
-    timer = {
-      throttle = function(callback)
-        return callback
-      end,
-    },
-  },
-})
+---@class __test__.git.state.IQuery
+---@field public token                  stl.c.CancellationToken
+---@field public resolve                fun(snapshot: table): nil
+---@field public reject                 fun(err: string): nil
 
-local state = require("era.m.git.state")
-
----@param future table
-local function wait_future(future)
-  t.assert_true(
-    vim.wait(3000, function()
-      return future:is_done()
-    end),
-    "future should resolve"
-  )
+---A State whose collections wait until the test settles them.
+---@return era.m.git.State
+---@return __test__.git.state.IQuery[]
+local function new_state()
+  local queries = {} ---@type __test__.git.state.IQuery[]
+  local state = Git.State.new({
+    collect = function(token)
+      local query = { token = token } ---@type __test__.git.state.IQuery
+      queries[#queries + 1] = query
+      return stl.c.Future.new(function(resolve, reject)
+        query.resolve, query.reject = resolve, reject
+      end)
+    end,
+    snapshot = new_snapshot({}),
+    throttle_ms = 20,
+  })
+  t:defer(function()
+    state:dispose()
+  end)
+  return state, queries
 end
 
----@param observable table
+---@param queries                       __test__.git.state.IQuery[]
+---@param count                         integer
+---@param message                       string
+---@return nil
+local function await_queries(queries, count, message)
+  t.wait_until(function()
+    return #queries >= count
+  end, 2000, message)
+  t.assert_eq(count, #queries, message)
+end
+
+---@param future                        stl.c.Future
+---@return nil
+local function wait_future(future)
+  t.wait_until(function()
+    return future:is_done()
+  end, 3000, "future should resolve")
+end
+
+-- Each publication advances the generation; subscribers hear of it on a later tick.
+---@param state                         era.m.git.State
 ---@return integer
-local function next_count(observable)
-  return observable_next_counts[observable]
+local function publications(state)
+  return state.o_refreshed:snapshot().generation
 end
 
 t:test("refresh: successful collections publish without rebuilding unchanged status", function()
-  local status_maps = {
-    { ["/project/file"] = { display = "M" } },
-    { ["/project/file"] = { display = "M" } },
-    { ["/project/file"] = { display = "D" } },
-  } ---@type table<string, table>[]
-  ---@diagnostic disable-next-line: assign-type-mismatch
-  local collect_index = 0 ---@type integer
-  local collect_base = "unset" ---@type string|false
+  local state, queries = new_state()
 
-  t:patch_table(era.m.git.status, "collect", function(opts)
-    collect_base = opts and opts.base or false
-    collect_index = collect_index + 1
-    return Future.new(function(resolve)
-      resolve(new_snapshot(status_maps[collect_index]))
-    end)
-  end)
-
-  local now = 0 ---@type integer
-  t:patch_table(vim.uv, "now", function()
-    now = now + 1
-    return now
-  end)
-
-  local refreshed_before = next_count(state.o_refreshed)
-  local staged_before = next_count(state.o_staged_files)
-  local unstaged_before = next_count(state.o_unstaged_files)
-
-  wait_future(state.refresh_index())
-  t.assert_false(collect_base, "global refresh must support unborn HEAD")
-  t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "initial changed status notification")
-  ---@diagnostic disable-next-line: undefined-field
+  local first = state:refresh_index()
+  await_queries(queries, 1, "index collection")
+  queries[1].resolve(new_snapshot({ ["/project/file"] = { display = "M" } }))
+  wait_future(first)
+  t.assert_eq(1, publications(state), "initial changed status notification")
   t.assert_eq("index", state.o_refreshed:snapshot().change_scope, "index-only refresh provenance")
-  t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "initial staged files notification")
-  t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "initial unstaged files notification")
 
-  local snapshot = state.snapshot()
+  local snapshot = state:snapshot()
 
-  wait_future(state.refresh(false))
-  t.assert_eq(refreshed_before + 2, next_count(state.o_refreshed), "unchanged status notification")
-  ---@diagnostic disable-next-line: undefined-field
+  local second = state:refresh()
+  await_queries(queries, 2, "unchanged collection")
+  queries[2].resolve(new_snapshot({ ["/project/file"] = { display = "M" } }))
+  wait_future(second)
+  t.assert_eq(2, publications(state), "unchanged status notification")
   t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "default refresh provenance")
-  t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "unchanged staged files notification")
-  t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "unchanged unstaged files notification")
-  t.assert_true(state.snapshot() == snapshot, "unchanged status should preserve the native snapshot")
-  t.assert_eq(2, state.last_refreshed_at(), "unchanged refresh should still update completion timestamp")
+  t.assert_true(state:snapshot() == snapshot, "unchanged status should preserve the native snapshot")
 
-  wait_future(state.refresh(false))
-  t.assert_eq(refreshed_before + 3, next_count(state.o_refreshed), "changed status notification")
-  t.assert_eq(staged_before + 2, next_count(state.o_staged_files), "changed staged files notification")
-  t.assert_eq(unstaged_before + 2, next_count(state.o_unstaged_files), "changed unstaged files notification")
-  t.assert_true(state.snapshot() ~= snapshot, "changed status should replace the native snapshot")
-  t.assert_eq("D", state.status_table()["/project/file"].display, "changed status should publish the new snapshot")
+  local third = state:refresh()
+  await_queries(queries, 3, "changed collection")
+  queries[3].resolve(new_snapshot({ ["/project/file"] = { display = "D" } }))
+  wait_future(third)
+  t.assert_eq(3, publications(state), "changed status notification")
+  t.assert_true(state:snapshot() ~= snapshot, "changed status should replace the native snapshot")
+  t.assert_eq(
+    "D",
+    state:snapshot():entries()["/project/file"].display,
+    "changed status should publish the new snapshot"
+  )
 end)
 
 t:test("refresh: failed collect reports once, preserves status, and permits recovery", function()
-  local snapshot = state.snapshot()
-  local refreshed_before = next_count(state.o_refreshed)
+  local state, queries = new_state()
+  local snapshot = state:snapshot()
   local reports = {} ---@type table[]
-  local attempts = 0 ---@type integer
-
-  t:patch_table(era.m.git.status, "collect", function()
-    attempts = attempts + 1
-    if attempts == 1 then
-      return Future.reject("fatal: status unavailable")
-    end
-    return Future.resolve(snapshot)
-  end)
   t:patch_table(stl.reporter, "error", function(opts)
     reports[#reports + 1] = opts
   end)
 
-  wait_future(state.refresh(false))
-  t.assert_true(state.snapshot() == snapshot, "failed collect should preserve status cache")
-  t.assert_eq(refreshed_before, next_count(state.o_refreshed), "failed collect notification")
+  local first = state:refresh()
+  await_queries(queries, 1, "failing collection")
+  queries[1].reject("fatal: status unavailable")
+  wait_future(first)
+  t.assert_true(state:snapshot() == snapshot, "failed collect should preserve status cache")
+  t.assert_eq(0, publications(state), "failed collect notification")
   t.assert_eq(1, #reports, "failure reported once")
   t.assert_true(reports[1].message:find("fatal: status unavailable", 1, true) ~= nil, "failure reason preserved")
 
-  wait_future(state.refresh(false))
-  t.assert_eq(2, attempts, "later refresh retried")
-  t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "successful retry published")
+  local second = state:refresh()
+  await_queries(queries, 2, "later refresh retried")
+  queries[2].resolve(snapshot)
+  wait_future(second)
+  t.assert_eq(1, publications(state), "successful retry published")
   t.assert_eq(1, #reports, "successful retry emits no additional error")
 end)
 
 t:test("refresh: trailing provenance stays conservative", function()
-  local resolvers = {} ---@type (fun(result: table): nil)[]
-  t:patch_table(era.m.git.status, "collect", function()
-    return Future.new(function(resolve)
-      resolvers[#resolvers + 1] = resolve
-    end)
-  end)
+  local state, queries = new_state()
 
-  state.refresh_index()
-  state.refresh(false)
-  t.assert_eq(1, #resolvers, "index collection started")
+  state:refresh_index()
+  await_queries(queries, 1, "index collection started")
+  state:refresh()
 
-  resolvers[1](new_snapshot({}))
-  ---@diagnostic disable-next-line: undefined-field
+  queries[1].resolve(new_snapshot({}))
   t.assert_eq("index", state.o_refreshed:snapshot().change_scope, "running collection keeps its provenance")
-  t.assert_eq(2, #resolvers, "broader request starts a trailing collection")
+  await_queries(queries, 2, "broader request starts a trailing collection")
 
-  resolvers[2](new_snapshot({}))
-  ---@diagnostic disable-next-line: undefined-field
+  queries[2].resolve(new_snapshot({}))
   t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "trailing collection stays conservative")
 end)
 
-t:test("status: propagates collection failures", function()
-  t:patch_table(era.m.git.status, "collect", function()
-    return Future.reject("fatal: status unavailable")
-  end)
-
-  local future = state.status("HEAD")
-
-  t.assert_true(future:is_done(), "status future settled")
-  t.assert_true(future:is_failed(), "status future rejected")
-  t.assert_eq("fatal: status unavailable", future:get_error(), "collection error preserved")
-end)
-
 t:test("refresh: callers arriving during a query wait for the trailing snapshot", function()
-  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
-  local resolvers = {}
-  t:patch_table(era.m.git.status, "collect", function()
-    return Future.new(function(resolve)
-      resolvers[#resolvers + 1] = resolve
-    end)
-  end)
+  local state, queries = new_state()
 
-  local first = local_state.refresh_index()
-  local second = local_state.refresh(true)
-  local third = local_state.refresh_index()
-  resolvers[1](new_snapshot({ ["/project/old"] = { display = "M" } }))
+  local first = state:refresh_index()
+  await_queries(queries, 1, "first collection started")
+  local second = state:refresh()
+  local third = state:refresh_index()
+  queries[1].resolve(new_snapshot({ ["/project/old"] = { display = "M" } }))
 
   t.assert_true(first:is_done(), "first caller completes with its query")
-  t.assert_false(second:is_done(), "forced refresh waits for the newer query")
+  t.assert_false(second:is_done(), "a caller arriving during the query waits for the newer query")
   t.assert_false(third:is_done(), "coalesced caller also waits")
-  t.assert_eq(2, #resolvers, "requests coalesce into one trailing query")
+  await_queries(queries, 2, "requests coalesce into one trailing query")
 
-  resolvers[2](new_snapshot({ ["/project/new"] = { display = "M" } }))
-  t.assert_true(second:is_done(), "forced refresh completes")
+  queries[2].resolve(new_snapshot({ ["/project/new"] = { display = "M" } }))
+  t.assert_true(second:is_done(), "trailing caller completes")
   t.assert_true(third:is_done(), "coalesced refresh completes")
-  t.assert_true(local_state.status_table()["/project/new"] ~= nil, "new snapshot is published first")
-  t.assert_eq("unknown", local_state.o_refreshed:snapshot().change_scope, "mixed provenance stays conservative")
+  t.assert_true(state:snapshot():entries()["/project/new"] ~= nil, "new snapshot is published first")
+  t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "mixed provenance stays conservative")
 end)
 
 t:test("refresh: a failed query does not complete callers waiting for its successor", function()
-  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
-  local queries = {}
-  t:patch_table(era.m.git.status, "collect", function()
-    return Future.new(function(resolve, reject)
-      queries[#queries + 1] = { resolve = resolve, reject = reject }
-    end)
-  end)
+  local state, queries = new_state()
+  t:patch_table(stl.reporter, "error", function() end)
 
-  local first = local_state.refresh()
-  local second = local_state.refresh()
+  local first = state:refresh()
+  await_queries(queries, 1, "first collection started")
+  local second = state:refresh()
   queries[1].reject("query failed")
   t.assert_true(first:is_done(), "failed collection retains the existing settlement contract")
   t.assert_false(second:is_done(), "later caller remains pending")
-  t.assert_eq(2, #queries, "trailing collection starts after failure")
+  await_queries(queries, 2, "trailing collection starts after failure")
   queries[2].resolve(new_snapshot({}))
   t.assert_true(second:is_done(), "later caller settles with the successful retry")
 end)
 
-t:test("refresh: publication callbacks can request a newer snapshot", function()
-  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
-  local resolvers = {}
-  t:patch_table(era.m.git.status, "collect", function()
-    return Future.new(function(resolve)
-      resolvers[#resolvers + 1] = resolve
-    end)
-  end)
-  local next_value = local_state.o_refreshed.next
-  local trailing
-  t:patch_table(local_state.o_refreshed, "next", function(self, value)
-    next_value(self, value)
-    if not trailing then
-      trailing = local_state.refresh()
-    end
+t:test("refresh: requests made while callers settle wait for a newer snapshot", function()
+  local state, queries = new_state()
+  local trailing ---@type stl.c.Future|nil
+  state:refresh():finally(function()
+    trailing = state:refresh()
   end)
 
-  local_state.refresh()
-  resolvers[1](new_snapshot({}))
-  t.assert_false(trailing:is_done(), "publication cannot complete its own refresh request")
-  resolvers[2](new_snapshot({}))
-  t.assert_true(trailing:is_done(), "publication request completes after its query")
+  await_queries(queries, 1, "first collection started")
+  queries[1].resolve(new_snapshot({}))
+  assert(trailing ~= nil, "the settled caller requested a refresh")
+  t.assert_false(trailing:is_done(), "a settling caller cannot complete its own refresh request")
+  await_queries(queries, 2, "the request starts a newer collection")
+  queries[2].resolve(new_snapshot({}))
+  t.assert_true(trailing:is_done(), "the request completes after its query")
+end)
+
+t:test("refresh: the throttle coalesces callers before and during a query", function()
+  local state, queries = new_state()
+
+  local first = state:refresh_index()
+  local joined = state:refresh_index()
+  await_queries(queries, 1, "initial requests should share a query")
+  local trailing = state:refresh()
+  queries[1].resolve(new_snapshot({}))
+  t.assert_true(first:is_done(), "first query completed")
+  t.assert_true(joined:is_done(), "pre-query caller joined the first collection")
+  t.assert_false(trailing:is_done(), "inflight caller waits")
+
+  await_queries(queries, 2, "trailing query should start after the throttle interval")
+  queries[2].resolve(new_snapshot({}))
+  t.assert_true(trailing:is_done(), "inflight caller settles after the newer collection")
+  t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "saved-file provenance retained")
+end)
+
+t:test("dispose: a queued refresh settles without starting another collection", function()
+  local state, queries = new_state()
+
+  local future = state:refresh()
+  state:dispose()
+  local drained = false
+  vim.schedule(function()
+    drained = true
+  end)
+  t.wait_until(function()
+    return drained
+  end, 1000, "scheduled refresh callback did not drain")
+
+  t.assert_true(future:is_done(), "queued caller settled during exit")
+  t.assert_eq(0, #queries, "already-scheduled refresh must not start after exit")
+  t.assert_true(state:refresh():is_done(), "post-exit refresh settles immediately")
+end)
+
+t:test("dispose: cancels inflight collection and suppresses late publication", function()
+  local state, queries = new_state()
+
+  local future = state:refresh()
+  await_queries(queries, 1, "collection did not start")
+  local before = state:snapshot()
+  local trailing = state:refresh()
+  local completed = 0
+  future:finally(function()
+    completed = completed + 1
+  end)
+  trailing:finally(function()
+    completed = completed + 1
+  end)
+
+  state:dispose()
+  t.assert_true(queries[1].token:is_cancelled(), "inflight native token cancelled")
+  t.assert_true(future:is_done(), "inflight caller settles before native acknowledgement")
+  t.assert_true(trailing:is_done(), "queued caller settles on exit")
+  t.assert_eq(2, completed, "both generations settled")
+  queries[1].resolve(new_snapshot({ ["/project/late"] = { display = "M" } }))
+
+  t.assert_eq(2, completed, "native acknowledgement cannot settle callers twice")
+  t.assert_true(future:is_done(), "inflight caller settled")
+  t.assert_true(state:snapshot() == before, "late result cannot replace snapshot")
+  t.assert_eq(0, publications(state), "no exit-time publication")
+end)
+
+t:test("default: collections pass no base, so an unborn HEAD still has a status", function()
+  local calls = {} ---@type { opts: table|nil }[]
+  t:patch_table(era.m.git.status, "collect", function(opts)
+    calls[#calls + 1] = { opts = opts }
+    return stl.c.Future.resolve(era.m.git.status.empty())
+  end)
+
+  wait_future(Git.refresh())
+  t.assert_eq(1, #calls, "one collection")
+  t.assert_nil(calls[1].opts, "global refresh must support unborn HEAD")
 end)
 
 t:test("writes: refresh repository files without requiring a Git buffer attachment", function()
-  t:patch_table(stl.timer, "throttle", require("stl.timer").throttle)
-  t:patch_global("yoz", require("yoz"))
-  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
-  local_state.setup()
+  t:patch_table(dot.path, "workspace", function()
+    return "/project"
+  end)
+  local in_repo = true
+  t:patch_table(dot.path, "is_git_repo", function()
+    return in_repo
+  end)
+  Git.setup()
   t:defer(function()
-    vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
     vim.api.nvim_del_augroup_by_name("DotModuleGitState")
   end)
   local requests = 0
-  t:patch_table(local_state, "refresh", function()
+  t:patch_table(Git, "refresh", function()
     requests = requests + 1
   end)
 
@@ -441,115 +315,25 @@ t:test("writes: refresh repository files without requiring a Git buffer attachme
     t.assert_eq(case.expected, requests, case.path)
   end
 
-  t:patch_table(dot.path, "is_git_repo", function()
-    return false
-  end)
+  in_repo = false
   vim.api.nvim_exec_autocmds("BufWritePost", { group = "DotModuleGitState", pattern = "/project/file.lua" })
   t.assert_eq(4, requests, "non-repository workspace does not refresh")
 end)
 
-t:test("refresh: real throttle coalesces callers before and during a query", function()
-  t:patch_table(stl.timer, "throttle", require("stl.timer").throttle)
-  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
-  local_state.setup()
-  t:defer(function()
-    vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
-    vim.api.nvim_del_augroup_by_name("DotModuleGitState")
-  end)
-  local resolvers = {}
+-- Exit disposes the shared state for the rest of this process, so this case runs last.
+t:test("setup: exit disposes the shared state", function()
   t:patch_table(era.m.git.status, "collect", function()
-    return Future.new(function(resolve)
-      resolvers[#resolvers + 1] = resolve
-    end)
+    return stl.c.Future.new(function() end)
   end)
-
-  local first = local_state.refresh_index()
-  local joined = local_state.refresh_index()
-  t.wait_until(function()
-    return #resolvers == 1
-  end, 1000, "initial requests should share a query")
-  local trailing = local_state.refresh()
-  resolvers[1](new_snapshot({}))
-  t.assert_true(first:is_done(), "first query completed")
-  t.assert_true(joined:is_done(), "pre-query caller joined the first collection")
-  t.assert_false(trailing:is_done(), "inflight caller waits")
-
-  t.wait_until(function()
-    return #resolvers == 2
-  end, 2000, "trailing query should start after the throttle interval")
-  resolvers[2](new_snapshot({}))
-  t.assert_true(trailing:is_done(), "inflight caller settles after the newer collection")
-  t.assert_eq("unknown", local_state.o_refreshed:snapshot().change_scope, "saved-file provenance retained")
-end)
-
-t:test("exit: queued refresh settles without starting another collection", function()
-  t:patch_table(stl.timer, "throttle", require("stl.timer").throttle)
-  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
-  local_state.setup()
+  Git.setup()
   t:defer(function()
     vim.api.nvim_del_augroup_by_name("DotModuleGitState")
   end)
-  local queries = 0
-  t:patch_table(era.m.git.status, "collect", function()
-    queries = queries + 1
-    return Future.resolve(new_snapshot({}))
-  end)
 
-  local future = local_state.refresh()
+  local future = Git.refresh()
   vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
-  local drained = false
-  vim.schedule(function()
-    drained = true
-  end)
-  t.wait_until(function()
-    return drained
-  end, 1000, "scheduled refresh callback did not drain")
-
-  t.assert_true(future:is_done(), "queued caller settled during exit")
-  t.assert_eq(0, queries, "already-scheduled refresh must not start after exit")
-  t.assert_true(local_state.refresh():is_done(), "post-exit refresh settles immediately")
-end)
-
-t:test("exit: cancels inflight collection and suppresses late publication", function()
-  t:patch_table(stl.timer, "throttle", require("stl.timer").throttle)
-  local local_state = assert(loadfile("lua/era/m/git/state.lua"))()
-  local_state.setup()
-  t:defer(function()
-    vim.api.nvim_del_augroup_by_name("DotModuleGitState")
-  end)
-  local resolve, token
-  t:patch_table(era.m.git.status, "collect", function(_, current_token)
-    token = current_token
-    return Future.new(function(callback)
-      resolve = callback
-    end)
-  end)
-  local future = local_state.refresh()
-  t.wait_until(function()
-    return resolve ~= nil
-  end, 1000, "collection did not start")
-  local before = local_state.snapshot()
-  local refreshed_before = next_count(local_state.o_refreshed)
-  local trailing = local_state.refresh(true)
-  local completed = 0
-  future:finally(function()
-    completed = completed + 1
-  end)
-  trailing:finally(function()
-    completed = completed + 1
-  end)
-
-  vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
-  t.assert_true(token:is_cancelled(), "inflight native token cancelled")
-  t.assert_true(future:is_done(), "inflight caller settles before native acknowledgement")
-  t.assert_true(trailing:is_done(), "queued caller settles on exit")
-  t.assert_eq(2, completed, "both generations settled")
-  resolve(new_snapshot({ ["/project/late"] = { display = "M" } }))
-
-  t.assert_eq(2, completed, "native acknowledgement cannot settle callers twice")
-  t.assert_true(future:is_done(), "inflight caller settled")
-  t.assert_true(local_state.snapshot() == before, "late result cannot replace snapshot")
-  t.assert_eq(refreshed_before, next_count(local_state.o_refreshed), "no exit-time publication")
+  t.assert_true(future:is_done(), "exit settles waiting callers")
+  t.assert_true(Git.refresh():is_done(), "post-exit refresh settles immediately")
 end)
 
 t:run()

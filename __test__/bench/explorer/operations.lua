@@ -75,7 +75,7 @@ local ok, result = xpcall(function()
     local deadline = vim.uv.hrtime() + 10000000000
     local ignored = false
     repeat
-      ignored = ui:rpc("nvim_exec_lua", "return require('era.m.git.state').is_ignored(...)", {
+      ignored = ui:rpc("nvim_exec_lua", "return require('era.m.git.ignore').is_ignored(...)", {
         directory .. "/a-ignored.lua",
       })
       if ignored then

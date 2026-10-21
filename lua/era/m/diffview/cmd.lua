@@ -376,7 +376,7 @@ function M.__setup_git_subscription_workspace__(st, ctx)
 
   local refresh = Refresh.new({
     is_stale = function()
-      return not data.matches_status_entries(st:get_entries(), era.m.git.state.status_table())
+      return not data.matches_status_entries(st:get_entries(), era.m.git.state.snapshot():entries())
     end,
     is_valid = function()
       return vim.api.nvim_tabpage_is_valid(tabnr) and workspace_state.get(tabnr) == st

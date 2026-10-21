@@ -117,7 +117,7 @@ local function refresh_branch()
     if result then
       r.abbrev_head = result.abbrev_head
       era.m.git.state.o_branch:next(result.abbrev_head)
-      era.m.git.state.refresh_user_info()
+      era.m.git.user.refresh()
     end
   end)
 end
@@ -151,11 +151,11 @@ local function trigger_gitdir_refresh()
       if do_head then
         era.m.git.buffer.invalidate_compare_text_all()
         era.m.git.blame.invalidate_all()
-        era.m.git.state.clear_ignored_cache()
-        era.m.git.state.refresh(true)
+        era.m.git.ignore.clear()
+        era.m.git.state.refresh()
       elseif do_status then
         era.m.git.buffer.mark_dirty_all()
-        era.m.git.state.refresh(false)
+        era.m.git.state.refresh()
       end
     end)
   )
@@ -195,7 +195,7 @@ local function on_fs_event(filename)
 
   if is_head_change(filename) then
     pending_head_change = true
-    era.m.git.state.clear_ignored_cache()
+    era.m.git.ignore.clear()
   else
     pending_status_change = true
   end
@@ -524,9 +524,9 @@ local function init_watcher()
     local r = era.m.git.repo.create(workspace):await()
     if r then
       era.m.git.state.o_branch:next(r.abbrev_head)
-      era.m.git.state.refresh_user_info()
+      era.m.git.user.refresh()
       M.update(r.gitdir, r.commondir)
-      era.m.git.state.refresh(false):await()
+      era.m.git.state.refresh():await()
     end
   end)
 end

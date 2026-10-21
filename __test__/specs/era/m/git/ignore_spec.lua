@@ -28,9 +28,7 @@ t:patch_global("dot", {
   },
 })
 local status = require("era.m.git.status")
-t:patch_global("era", { m = { git = { status = status } } })
 local ignore = require("era.m.git.ignore")
-local state = require("era.m.git.state")
 local reference = assert(loadfile("__test__/fixtures/era/m/git/ignore_lua_reference.lua"))()
 
 ---@return string
@@ -61,14 +59,14 @@ t:test("native cache matches the Lua oracle for rules, tracked paths, and litera
   for _, name in ipairs({ "ignored-file", "visible", "nested/cache/file", "tracked", "excluded", "line\nbreak" }) do
     paths[#paths + 1] = root .. "/" .. name
   end
-  wait(state.preload_ignored(paths))
+  wait(ignore.preload(paths))
   wait(reference.preload_ignored(paths))
   for _, path in ipairs(paths) do
-    t.assert_eq(reference.is_ignored(path), state.is_ignored(path), "native/Lua ignore parity")
-    t.assert_eq(state.is_ignored(path), state.is_ignored(path .. "/"), "trailing slash identity")
+    t.assert_eq(reference.is_ignored(path), ignore.is_ignored(path), "native/Lua ignore parity")
+    t.assert_eq(ignore.is_ignored(path), ignore.is_ignored(path .. "/"), "trailing slash identity")
   end
-  t.assert_false(state.is_ignored(root .. "/tracked"), "tracked paths are not ignored")
-  t.assert_true(state.is_ignored(root .. "/line\nbreak"), "literal newline retained")
+  t.assert_false(ignore.is_ignored(root .. "/tracked"), "tracked paths are not ignored")
+  t.assert_true(ignore.is_ignored(root .. "/line\nbreak"), "literal newline retained")
 end)
 
 t:test("failed batches publish confirmed matches without caching missing output as false", function()
@@ -93,7 +91,7 @@ t:test("concurrent completions notify once and invalidation can notify the same 
       events[#events + 1] = paths
     end,
   })
-  local subscription = state.o_ignored_refreshed:subscribe(subscriber, true)
+  local subscription = ignore.o_refreshed:subscribe(subscriber, true)
   t:defer(function()
     subscription:unsubscribe()
     subscriber:dispose()
@@ -119,9 +117,9 @@ t:test("invalidation while a request is pending retries and settles its original
   local root = new_repo()
   vim.fn.writefile({ "ignored" }, root .. "/.gitignore")
   local future = ignore.preload({ root .. "/ignored" })
-  state.clear_ignored_cache()
+  ignore.clear()
   wait(future)
-  t.assert_true(state.is_ignored(root .. "/ignored"), "fresh result published")
+  t.assert_true(ignore.is_ignored(root .. "/ignored"), "fresh result published")
 end)
 
 t:test("root fingerprints invalidate existing cache hits without an editor event", function()
@@ -165,10 +163,10 @@ t:test("editor write and focus events invalidate nested ignore changes", functio
   local root = new_repo()
   vim.fn.mkdir(root .. "/nested", "p")
   local path = root .. "/nested/file"
-  wait(state.preload_ignored({ path }))
-  state.setup()
+  wait(ignore.preload({ path }))
+  ignore.setup()
   t:defer(function()
-    vim.api.nvim_del_augroup_by_name("DotModuleGitState")
+    vim.api.nvim_del_augroup_by_name("DotModuleGitIgnore")
   end)
   local bufnr = vim.api.nvim_create_buf(false, false)
   t:defer(function()
@@ -181,12 +179,12 @@ t:test("editor write and focus events invalidate nested ignore changes", functio
   vim.api.nvim_buf_call(bufnr, function()
     vim.cmd("silent write")
   end)
-  wait(state.preload_ignored({ path }))
-  t.assert_true(state.is_ignored(path), "BufWritePost invalidation")
+  wait(ignore.preload({ path }))
+  t.assert_true(ignore.is_ignored(path), "BufWritePost invalidation")
   vim.fn.writefile({ "!file" }, root .. "/nested/.gitignore")
-  vim.api.nvim_exec_autocmds("FocusGained", { group = "DotModuleGitState" })
-  wait(state.preload_ignored({ path }))
-  t.assert_false(state.is_ignored(path), "external edit invalidated on focus")
+  vim.api.nvim_exec_autocmds("FocusGained", { group = "DotModuleGitIgnore" })
+  wait(ignore.preload({ path }))
+  t.assert_false(ignore.is_ignored(path), "external edit invalidated on focus")
 end)
 
 t:test("nested symlink paths inherit the outermost link instead of failing beyond a symlink", function()

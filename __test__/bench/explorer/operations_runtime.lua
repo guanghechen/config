@@ -34,7 +34,7 @@ end
 local marker = directory .. "/file-00000.lua"
 local marker_row
 if kind == "git" then
-  await(Git.refresh(true))
+  await(Git.refresh())
   for row, line in ipairs(vim.api.nvim_buf_get_lines(bench.current_buffer(), 0, -1, false)) do
     if line:find("file-00000.lua", 1, true) then
       marker_row = row
@@ -44,7 +44,7 @@ if kind == "git" then
   assert(marker_row)
   assert(
     vim.wait(10000, function()
-      return Git.is_ignored(directory .. "/a-ignored.lua")
+      return require("era.m.git.ignore").is_ignored(directory .. "/a-ignored.lua")
     end, 1),
     "ignore collection did not complete"
   )
@@ -218,7 +218,7 @@ function bench.run_operation(value)
     operation.started = vim.uv.hrtime()
     operation.last_tick = operation.started
     if kind == "git" then
-      Git.refresh(true):finally(function(ok, error)
+      Git.refresh():finally(function(ok, error)
         assert(ok, tostring(error))
         operation.query_at = vim.uv.hrtime()
         poll()

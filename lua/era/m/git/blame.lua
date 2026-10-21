@@ -116,8 +116,8 @@ local inline_augroup = vim.api.nvim_create_augroup("DotModuleGitInlineBlame", { 
 ---@param info                          yoz.git.BlameCommit
 ---@return boolean
 local function is_current_user(info)
-  local user_name = era.m.git.state.get_user_name()
-  local user_email = era.m.git.state.get_user_email()
+  local user_name = era.m.git.user.name()
+  local user_email = era.m.git.user.email()
   if user_email and info.author_mail == user_email then
     return true
   end
@@ -348,8 +348,8 @@ local buffer_config = {
 ---@param entry                         era.m.git.blame.ICacheEntry
 ---@return string[]
 local function buffer_annotations(entry)
-  local user_name = era.m.git.state.get_user_name()
-  local user_email = era.m.git.state.get_user_email()
+  local user_name = era.m.git.user.name()
+  local user_email = era.m.git.user.email()
   local timezone = vim.env.TZ
   local zone = os.date("%z:%Z") --[[@as string]]
   local locale = os.setlocale(nil, "time")

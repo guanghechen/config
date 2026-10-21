@@ -1,128 +1,89 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.git.state" ---@type string
 
-local ignore = require("era.m.git.ignore")
-
----@class era.m.git.state
-local M = {}
-
----@type stl.c.Observable<string>
-M.o_branch = stl.c.Observable.from_value("")
-
----@type stl.c.Observable<era.m.git.state.IRefreshEvent>
-M.o_refreshed = stl.c.Observable.from_value({ change_scope = "unknown", generation = 0 })
-
----@type stl.c.Observable<string[]>
-M.o_ignored_refreshed = ignore.o_refreshed
-
----@type stl.c.Observable<string[]>
-M.o_staged_files = stl.c.Observable.from_value({})
-
----@type stl.c.Observable<string[]>
-M.o_unstaged_files = stl.c.Observable.from_value({})
-
----@type string|nil
-local user_name = nil
-
----@type string|nil
-local user_email = nil
-
----@type yoz.git.StatusSnapshot
-local current_snapshot = era.m.git.status.empty()
-
----@type boolean
-local initialized = false
-
----@type integer
-local last_refresh = 0
-
----@type integer
-local refresh_generation = 0
-
----@type boolean
-local refreshing = false
-
-local exiting = false ---@type boolean
-
 local REFRESH_THROTTLE_MS = 800 ---@type integer
 
----@type boolean
-local pending_refresh = false
+---@class era.m.git.state.IProps
+---@field public collect                fun(token: stl.c.CancellationToken): stl.c.Future Resolves with yoz.git.StatusSnapshot.
+---@field public snapshot               yoz.git.StatusSnapshot The status before the first collection.
+---@field public throttle_ms            integer
 
----@type boolean
-local pending_force = false
-
----@type boolean
-local pending_unknown_change = false
-
----@type (fun(): nil)[]
-local queued_refresh_callbacks = {}
-
----@type (fun(): nil)[]
-local active_refresh_callbacks = {}
-
----@type stl.timer.IDisposableCallable
-local refresh_throttled
+---Repository status: coalesced, throttled collections and their publication.
+---@class era.m.git.State
+---@field public o_branch               stl.c.Observable<string>
+---@field public o_refreshed            stl.c.Observable<era.m.git.state.IRefreshEvent>
+---@field protected _active_callbacks   (fun(): nil)[] Callers the running collection settles.
+---@field protected _collect            fun(token: stl.c.CancellationToken): stl.c.Future
+---@field protected _collect_token      stl.c.CancellationToken|nil
+---@field protected _disposed           boolean
+---@field protected _generation         integer
+---@field protected _pending            boolean
+---@field protected _pending_unknown    boolean
+---@field protected _queued_callbacks   (fun(): nil)[] Callers waiting for a collection that has not started.
+---@field protected _refresh_throttled  stl.timer.IDisposableCallable
+---@field protected _refreshing         boolean
+---@field protected _snapshot           yoz.git.StatusSnapshot
+local State = {}
+State.__index = State
 
 ---@param callbacks                     (fun(): nil)[]
 ---@return nil
-local function run_refresh_callbacks(callbacks)
+local function run_callbacks(callbacks)
   for _, callback in ipairs(callbacks) do
     callback()
   end
 end
 
----@type stl.c.CancellationToken|nil
-local current_collect_token = nil
+---@param props                         era.m.git.state.IProps
+---@return era.m.git.State
+function State.new(props)
+  local self = setmetatable({}, State)
+  self.o_branch = stl.c.Observable.from_value("")
+  self.o_refreshed = stl.c.Observable.from_value({ change_scope = "unknown", generation = 0 })
+  self._active_callbacks = {}
+  self._collect = props.collect
+  self._collect_token = nil
+  self._disposed = false
+  self._generation = 0
+  self._pending = false
+  self._pending_unknown = false
+  self._queued_callbacks = {}
+  self._refreshing = false
+  self._snapshot = props.snapshot
+  self._refresh_throttled = stl.timer.throttle(function()
+    self:__collect__()
+  end, props.throttle_ms)
+  return self
+end
 
 ---@return nil
-local function do_refresh()
-  if exiting or refreshing or not pending_refresh then
+function State:__collect__()
+  if self._disposed or self._refreshing or not self._pending then
     return
   end
 
-  local force = pending_force ---@type boolean
-  local change_scope = pending_unknown_change and "unknown" or "index" ---@type era.m.git.StatusChangeScope
-  pending_force = false
-  pending_refresh = false
-  pending_unknown_change = false
-  refreshing = true
-  -- Requests arriving after capture need a later query, including requests from subscribers.
-  active_refresh_callbacks = queued_refresh_callbacks
-  queued_refresh_callbacks = {}
-
-  if force then
-    initialized = false
-  end
-
-  if current_collect_token then
-    current_collect_token:cancel()
-    current_collect_token = nil
-  end
+  local change_scope = self._pending_unknown and "unknown" or "index" ---@type era.m.git.StatusChangeScope
+  self._pending = false
+  self._pending_unknown = false
+  self._refreshing = true
+  -- Requests arriving after capture need a later query, including those its settling callers make.
+  self._active_callbacks = self._queued_callbacks
+  self._queued_callbacks = {}
 
   local token = stl.c.CancellationToken.new()
-  current_collect_token = token
+  self._collect_token = token
 
-  era.m.git.status.collect(nil, token):finally(function(resolved, result)
-    current_collect_token = nil
+  self._collect(token):finally(function(resolved, result)
+    self._collect_token = nil
 
-    if resolved and result and not exiting and not token:is_cancelled() then
-      local status_changed = not current_snapshot:equals(result) ---@type boolean
-      if status_changed then
-        current_snapshot = result
+    if resolved and result and not self._disposed and not token:is_cancelled() then
+      -- An unchanged status keeps its snapshot, so consumers can compare identities.
+      if not self._snapshot:equals(result) then
+        self._snapshot = result
       end
-
-      initialized = true
-      last_refresh = vim.uv.now()
-      refresh_generation = refresh_generation + 1
-      M.o_refreshed:next({ change_scope = change_scope, generation = refresh_generation })
-
-      if status_changed then
-        local staged, unstaged = current_snapshot:changed_files()
-        M.o_staged_files:next(staged)
-        M.o_unstaged_files:next(unstaged)
-      end
-    elseif not exiting and not token:is_cancelled() then
+      self._generation = self._generation + 1
+      self.o_refreshed:next({ change_scope = change_scope, generation = self._generation })
+    elseif not self._disposed and not token:is_cancelled() then
       local reason = tostring(result or "Unknown error"):match("^[^\r\n]+") or "Unknown error" ---@type string
       stl.reporter.error({
         from = __module_name__,
@@ -131,146 +92,114 @@ local function do_refresh()
       })
     end
 
-    refreshing = false
-    local callbacks = active_refresh_callbacks
-    active_refresh_callbacks = {}
-    run_refresh_callbacks(callbacks)
+    self._refreshing = false
+    local callbacks = self._active_callbacks
+    self._active_callbacks = {}
+    run_callbacks(callbacks)
 
-    if pending_refresh and not exiting then
-      refresh_throttled()
+    if self._pending and not self._disposed then
+      self._refresh_throttled()
     end
   end)
 end
 
-refresh_throttled = stl.timer.throttle(do_refresh, REFRESH_THROTTLE_MS)
-
----@return yoz.git.StatusSnapshot
-function M.snapshot()
-  return current_snapshot
-end
-
-M.clear_ignored_cache = ignore.clear
-M.is_ignored = ignore.is_ignored
-M.preload_ignored = ignore.preload
-
----@return string
-function M.get_branch()
-  return M.o_branch:snapshot()
-end
-
----@return string|nil
-function M.get_user_email()
-  return user_email
-end
-
----@return string|nil
-function M.get_user_name()
-  return user_name
-end
-
----@return boolean
-function M.is_initialized()
-  return initialized
-end
-
----@return integer
-function M.last_refreshed_at()
-  return last_refresh
-end
-
----@param force                         ?boolean
----@param callback                      ?(fun(): nil)
----@param change_scope                  ?era.m.git.StatusChangeScope
----@return nil
-local function __refresh__(force, callback, change_scope)
-  if callback then
-    queued_refresh_callbacks[#queued_refresh_callbacks + 1] = callback
-  end
-
-  if force then
-    pending_force = true
-  end
-  -- Only an exclusively index-triggered collection can be compared with raw blob identities.
-  -- Any coalesced request with broader or unknown provenance keeps the published event conservative.
-  if change_scope ~= "index" then
-    pending_unknown_change = true
-  end
-
-  pending_refresh = true
-  if not refreshing then
-    refresh_throttled()
-  end
-end
-
----@param force                         ?boolean
----@param token                         ?stl.c.CancellationToken
 ---@param change_scope                  era.m.git.StatusChangeScope
----@return stl.c.Future                 Resolves with nil when refresh completes
-local function refresh(force, token, change_scope)
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future
+function State:__request__(change_scope, token)
   return stl.c.Future.new(function(resolve)
-    if exiting or (token and token:is_cancelled()) then
+    if self._disposed or (token and token:is_cancelled()) then
       resolve(nil)
       return
     end
-    __refresh__(force, function()
+
+    self._queued_callbacks[#self._queued_callbacks + 1] = function()
       resolve(nil)
-    end, change_scope)
+    end
+    -- Only an exclusively index-triggered collection can be compared with raw blob identities.
+    -- Any coalesced request with broader or unknown provenance keeps the published event conservative.
+    if change_scope ~= "index" then
+      self._pending_unknown = true
+    end
+    self._pending = true
+    if not self._refreshing then
+      self._refresh_throttled()
+    end
   end)
 end
 
----Refresh git status (Future variant).
----Each caller waits for a collection started after its request; concurrent requests coalesce.
----Note: This operation uses internal throttling. The token only prevents waiting
----for resolution if cancelled before the call; it does not cancel the underlying
----throttled refresh operation which may be shared by multiple callers.
----@param force                         ?boolean
+---@return yoz.git.StatusSnapshot
+function State:snapshot()
+  return self._snapshot
+end
+
+---Refreshes the status. Each caller waits for a collection started after its request; concurrent requests
+---coalesce. The token only stops waiting when it is cancelled before the call; the shared collection runs on.
 ---@param token                         ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with nil when refresh completes
-function M.refresh(force, token)
-  return refresh(force, token, "unknown")
+---@return stl.c.Future                 Resolves with nil when refresh completes
+function State:refresh(token)
+  return self:__request__("unknown", token)
 end
 
----Refresh after a known Git index mutation, allowing consumers to compare blob identities.
----@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with nil when refresh completes
-function M.refresh_index(token)
-  return refresh(false, token, "index")
-end
-
----@param base                          ?string
+---Refreshes after a known Git index mutation, allowing consumers to compare blob identities.
 ---@param token                         ?stl.c.CancellationToken
----@return stl.c.Future                 Resolves with table<string, string>; propagates collection failures
-function M.status(base, token)
-  if token and token:is_cancelled() then
-    return stl.c.Future.resolve({})
-  end
-
-  return era.m.git.status.collect({ base = base }, token):map(function(collect_result)
-    return collect_result:display()
-  end)
+---@return stl.c.Future                 Resolves with nil when refresh completes
+function State:refresh_index(token)
+  return self:__request__("index", token)
 end
 
----@return table<string, era.m.git.StatusEntry>
-function M.status_table()
-  return current_snapshot:entries()
-end
-
-function M.refresh_user_info()
-  if not dot.path.is_git_repo() then
+---Cancels the running collection and settles every waiting caller; later requests settle at once.
+---@return nil
+function State:dispose()
+  if self._disposed then
     return
   end
 
-  local workspace = dot.path.workspace() ---@type string
-  stl.git.exec.exec({ "config", "user.name" }, { cwd = workspace }):finally(function(resolved, result)
-    if resolved and result and result.lines and #result.lines > 0 then
-      user_name = result.lines[1]
-    end
-  end)
-  stl.git.exec.exec({ "config", "user.email" }, { cwd = workspace }):finally(function(resolved, result)
-    if resolved and result and result.lines and #result.lines > 0 then
-      user_email = result.lines[1]
-    end
-  end)
+  self._disposed = true
+  self._pending = false
+  self._refresh_throttled:dispose()
+  if self._collect_token then
+    self._collect_token:cancel()
+  end
+  local callbacks = self._active_callbacks
+  vim.list_extend(callbacks, self._queued_callbacks)
+  self._active_callbacks = {}
+  self._queued_callbacks = {}
+  run_callbacks(callbacks)
+end
+
+---The repository status every consumer shares.
+---@class era.m.git.state
+local M = {}
+
+M.State = State
+
+local default = State.new({
+  collect = function(token)
+    return era.m.git.status.collect(nil, token)
+  end,
+  snapshot = era.m.git.status.empty(),
+  throttle_ms = REFRESH_THROTTLE_MS,
+})
+
+M.o_branch = default.o_branch
+M.o_refreshed = default.o_refreshed
+
+---@return yoz.git.StatusSnapshot
+function M.snapshot()
+  return default:snapshot()
+end
+
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with nil when refresh completes
+function M.refresh(token)
+  return default:refresh(token)
+end
+
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with nil when refresh completes
+function M.refresh_index(token)
+  return default:refresh_index(token)
 end
 
 ---@return nil
@@ -280,24 +209,8 @@ function M.setup()
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = augroup,
     callback = function()
-      exiting = true
-      pending_refresh = false
-      refresh_throttled:dispose()
-      if current_collect_token then
-        current_collect_token:cancel()
-      end
-      local callbacks = active_refresh_callbacks
-      vim.list_extend(callbacks, queued_refresh_callbacks)
-      active_refresh_callbacks = {}
-      queued_refresh_callbacks = {}
-      run_refresh_callbacks(callbacks)
+      default:dispose()
     end,
-  })
-
-  vim.api.nvim_create_autocmd("BufWritePost", {
-    group = augroup,
-    pattern = { ".gitignore", "*/.gitignore", "*/.git/info/exclude" },
-    callback = M.clear_ignored_cache,
   })
 
   vim.api.nvim_create_autocmd("BufWritePost", {
@@ -313,16 +226,9 @@ function M.setup()
       -- The event path is the written target, which can differ from the buffer name.
       local filepath = dot.path.normalize(args.match)
       if yoz.path.is_descendant(dot.path.workspace(), filepath) then
-        M.refresh(false)
+        M.refresh()
       end
     end,
-  })
-
-  -- External ignore edits are not observable through buffer events. Focus is a
-  -- cheap lifecycle boundary at which stale negative entries can be discarded.
-  vim.api.nvim_create_autocmd("FocusGained", {
-    group = augroup,
-    callback = M.clear_ignored_cache,
   })
 end
 

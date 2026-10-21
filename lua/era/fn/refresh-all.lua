@@ -10,7 +10,7 @@ local function refresh_all()
   vim.cmd("checktime")
   dot.tab.refresh()
   stl.async.run(function()
-    era.m.git.state.refresh(true):await()
+    era.m.git.state.refresh():await()
   end)
   era.m.git.buffer.invalidate_compare_text_all()
 

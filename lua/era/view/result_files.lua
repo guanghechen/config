@@ -32,7 +32,8 @@ function M.new(props)
     local name = vim.fn.strtrans(data.basename)
     local text = name
     local highlights = {}
-    local git, highlight = era.m.git.status.calc_info(data.filepath, data.filetype, #text, highlights)
+    local git, highlight =
+      era.m.git.status.calc_info(era.m.git.state.snapshot(), data.filepath, data.filetype, #text, highlights)
     text = text .. git
     text = text .. era.m.lsp.diagnostic.render(data.filepath, #text, highlights)
     return {

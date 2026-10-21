@@ -77,4 +77,22 @@ function M.preload(filepaths, token)
     end)
 end
 
+---@return nil
+function M.setup()
+  local augroup = vim.api.nvim_create_augroup("DotModuleGitIgnore", { clear = true }) ---@type integer
+
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    group = augroup,
+    pattern = { ".gitignore", "*/.gitignore", "*/.git/info/exclude" },
+    callback = M.clear,
+  })
+
+  -- External ignore edits are not observable through buffer events. Focus is a
+  -- cheap lifecycle boundary at which stale negative entries can be discarded.
+  vim.api.nvim_create_autocmd("FocusGained", {
+    group = augroup,
+    callback = M.clear,
+  })
+end
+
 return M

@@ -19,11 +19,11 @@ bootstrap.with_runtime(t, {
           end,
         },
         staging = require("era.m.git.staging"),
-        state = {
-          get_user_email = function()
+        user = {
+          email = function()
             return nil
           end,
-          get_user_name = function()
+          name = function()
             return nil
           end,
         },
@@ -299,7 +299,7 @@ t:test("metadata is literal and presentation follows current user identity and t
   end, 1000, "literal metadata was not rendered")
   local original = buffer_marks(bufnr)[1][4].virt_text[1][1]
   t.assert_true(original:find("100% ready <sha> %1", 1, true) ~= nil, "metadata is not reinterpreted")
-  t:patch_table(era.m.git.state, "get_user_email", function()
+  t:patch_table(era.m.git.user, "email", function()
     return "alice@test"
   end)
   blame.buffer_show(bufnr)

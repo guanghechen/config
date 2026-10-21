@@ -56,7 +56,7 @@ function M.new(session)
   controllers[session.data] = self
   self._subscriptions[#self._subscriptions + 1] = session.data:subscribe({
     on_source_changed = function()
-      Git.refresh(false)
+      Git.refresh()
     end,
     on_effect = function(effect)
       if effect.kind == "WatchStatus" then
@@ -76,7 +76,7 @@ function M.new(session)
       end
     end,
   })
-  for _, event in ipairs({ Git.o_refreshed, Git.o_ignored_refreshed, Ignore.o_invalidated }) do
+  for _, event in ipairs({ Git.o_refreshed, Ignore.o_refreshed, Ignore.o_invalidated }) do
     self._subscriptions[#self._subscriptions + 1] = event:subscribe(
       Subscriber.new({
         on_next = function()
@@ -214,7 +214,7 @@ function M:refresh()
     end
   end
   self:_drain()
-  Git.refresh(false)
+  Git.refresh()
 end
 
 ---@param frame                         yoz.ux.treeview.Frame

@@ -83,10 +83,8 @@ local function assert_snapshot_parity(processes, include_untracked)
   t:patch_global("era", {
     m = {
       git = {
+        -- The Lua reference resolves through the state's aggregated tables.
         state = {
-          snapshot = function()
-            return snapshot
-          end,
           aggregated = function()
             return aggregated
           end,
@@ -103,7 +101,7 @@ local function assert_snapshot_parity(processes, include_untracked)
       for _, kind in ipairs({ "file", "directory" }) do
         local expected_hl, actual_hl = {}, {}
         local expected, expected_name_hl = reference.calc_info(query, kind, 3, expected_hl)
-        local actual, actual_name_hl = status.calc_info(query, kind, 3, actual_hl)
+        local actual, actual_name_hl = status.calc_info(snapshot, query, kind, 3, actual_hl)
         t.assert_eq(expected, actual, "status text parity")
         t.assert_eq(expected_name_hl, actual_name_hl, "status name highlight parity")
         t.assert_same(expected_hl, actual_hl, "status segment highlight parity")

@@ -94,7 +94,7 @@ function M.run(data, plan, overwrite)
         end
       end
       if #work.results > 0 then
-        require("era.m.git.state").refresh(false)
+        require("era.m.git.state").refresh()
       end
       resolve({ status = status, items = work.results, success = success, error = failure })
     end

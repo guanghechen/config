@@ -63,39 +63,19 @@ local function resolve_highlight(info)
   return info.summary and GIT_STATUS_HIGHLIGHT[info.summary] or nil
 end
 
----@param filepath                      string
----@param filetype                      ?"file"|"directory"
----@return yoz.git.StatusInfo|nil
-local function lookup(filepath, filetype)
-  if type(filepath) ~= "string" or filepath == "" then
-    return nil
-  end
-  return era.m.git.state.snapshot():lookup(filepath, filetype == "directory")
-end
-
----@param filepath                      string
----@param filetype                      ?"file"|"directory"
----@return string|nil
----@return string|nil
-function M.resolve(filepath, filetype)
-  local info = lookup(filepath, filetype)
-  if not info or info.display == "" then
-    return nil, nil
-  end
-  return info.display, resolve_highlight(info)
-end
-
+---Status text of `filepath` in `snapshot`, placed at `offset` with a highlight per code, and the name highlight.
+---@param snapshot                      yoz.git.StatusSnapshot
 ---@param filepath                      string
 ---@param filetype                      ?"file"|"directory"
 ---@param offset                        integer
 ---@param highlights                    stl.t.IHighlightInline[]
 ---@return string
 ---@return string|nil
-function M.calc_info(filepath, filetype, offset, highlights)
-  if type(highlights) ~= "table" then
+function M.calc_info(snapshot, filepath, filetype, offset, highlights)
+  if type(highlights) ~= "table" or type(filepath) ~= "string" or filepath == "" then
     return "", nil
   end
-  local info = lookup(filepath, filetype)
+  local info = snapshot:lookup(filepath, filetype == "directory")
   if not info or info.display == "" then
     return "", nil
   end
