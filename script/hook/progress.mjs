@@ -34,6 +34,10 @@ function main() {
     case "SubagentStop":
       rmSync(marker, { force: true })
       break
+    // TaskStop kills a subagent without firing SubagentStop; its task_id is the agent_id.
+    case "PostToolUse":
+      rmSync(join(dir, `agent-${event.tool_input?.task_id}`), { force: true })
+      break
     // A starting process has no open turn or subagent; resetting also clears a busy
     // state stranded on the pane by a session that died without SessionEnd.
     case "SessionStart":

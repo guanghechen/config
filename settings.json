@@ -74,6 +74,18 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "^TaskStop$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Notification": [
       {
         "matcher": "^(?!idle_prompt$).*",
