@@ -157,20 +157,11 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
       opened = true
     end,
   }
-  t:patch_table(package.loaded, "era.m.diffview.data", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", workspace_view)
 
-  ---@diagnostic disable-next-line: missing-fields
-  era.m.diffview = {
-    util = {
-      gen_index_bufname = function(filepath)
-        return "diffview://index/" .. filepath
-      end,
-    },
-  }
+  t:patch_table(package.loaded["era.m.diffview.util"], "gen_index_bufname", function(filepath)
+    return "diffview://index/" .. filepath
+  end)
   era.m.git.buffer = {
     unstage_range = function(opts)
       captured = opts
@@ -781,10 +772,6 @@ t:test("workspace view binds keymaps after replacing null buffers", function()
       vim.api.nvim_win_set_buf(opts.right_winnr, right_bufnr)
     end,
   }
-  t:patch_table(package.loaded, "era.m.diffview.config", {})
-  t:patch_table(package.loaded, "era.m.diffview.layout", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", pane)
 
   vim.cmd("vnew")

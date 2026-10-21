@@ -5,9 +5,6 @@ local config = require("era.m.diffview.config")
 local workspace_state = require("era.m.diffview.view.workspace.state")
 local workspace_view = require("era.m.diffview.view.workspace.view")
 
-local btn = stl.nvim.fn.btn
-local txt = stl.nvim.fn.txt
-
 ---Workspace view tabline components and registration.
 ---@class era.m.diffview.view.workspace.tabline
 local M = {}
@@ -168,13 +165,14 @@ function M.status_component()
       end
 
       local flags_text = flag1_text .. flag2_text .. flag3_text .. flag4_text
-      local flags_hltext = btn(txt(flag1_text, hln_flag_viewtype), cb_viewtype)
+      local flags_hltext = stl.nvim.fn.btn(stl.nvim.fn.txt(flag1_text, hln_flag_viewtype), cb_viewtype)
       if is_tree then
-        flags_hltext = flags_hltext .. btn(txt(flag2_text, foldempty and hln_flag_on or hln_flag_off), cb_foldempty)
+        flags_hltext = flags_hltext
+          .. stl.nvim.fn.btn(stl.nvim.fn.txt(flag2_text, foldempty and hln_flag_on or hln_flag_off), cb_foldempty)
       end
       flags_hltext = flags_hltext
-        .. btn(txt(flag3_text, default_folds and hln_flag_on or hln_flag_off), cb_default_folds)
-        .. btn(txt(flag4_text, untracked and hln_flag_on or hln_flag_off), cb_untracked)
+        .. stl.nvim.fn.btn(stl.nvim.fn.txt(flag3_text, default_folds and hln_flag_on or hln_flag_off), cb_default_folds)
+        .. stl.nvim.fn.btn(stl.nvim.fn.txt(flag4_text, untracked and hln_flag_on or hln_flag_off), cb_untracked)
       return { winnr = get_pane_winnr(tabnr), title = title_text, flags = flags_text, flags_hltext = flags_hltext }
     end,
     render = function(snapshot, context, remain_width)
@@ -190,11 +188,14 @@ function M.status_component()
       local title_width, flags_width = vim.api.nvim_strwidth(snapshot.title), vim.api.nvim_strwidth(snapshot.flags)
       if width < title_width + flags_width + 2 then
         local blank = string.rep(" ", width)
-        return blank, txt(blank, hln_blank)
+        return blank, stl.nvim.fn.txt(blank, hln_blank)
       end
       local padding = string.rep(" ", width - title_width - flags_width - 1)
       return snapshot.title .. padding .. snapshot.flags .. " ",
-        txt(snapshot.title, hln_pink) .. txt(padding, hln_blank) .. snapshot.flags_hltext .. txt(" ", hln_split)
+        stl.nvim.fn.txt(snapshot.title, hln_pink)
+          .. stl.nvim.fn.txt(padding, hln_blank)
+          .. snapshot.flags_hltext
+          .. stl.nvim.fn.txt(" ", hln_split)
     end,
   }
   return component

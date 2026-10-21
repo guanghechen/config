@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-local format = assert(loadfile("lua/era/m/diffview/commit_format.lua"))()
+local format = require("era.m.diffview.commit_format")
 
 t:test("shortens authors to lazygit's two-column form", function()
   t.assert_eq("JD", format.short_author("Jesse Duffield"), "two-word initials")

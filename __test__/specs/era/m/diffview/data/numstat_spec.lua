@@ -9,7 +9,7 @@ bootstrap.with_global(t, "stl", { env = { IS_WIN = false } })
 bootstrap.with_global(t, "dot", {})
 bootstrap.with_global(t, "era", {})
 
-local data = assert(loadfile("lua/era/m/diffview/data.lua"))()
+local data = require("era.m.diffview.data")
 
 t:test("numstat: parses NUL-delimited normal and rename records", function()
   local normal = { filepath = "src/foo.lua", stage_type = "staged", status = "M" }

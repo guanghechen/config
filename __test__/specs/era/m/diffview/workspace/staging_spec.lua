@@ -67,7 +67,6 @@ bootstrap.with_global(t, "era", {
 
 local entries_at_line = {} ---@type table<integer, table<integer, era.m.diffview.IFileEntry>>
 local line_maps = {} ---@type table<integer, era.m.diffview.IFiletreeItem[]>
-t:patch_table(package.loaded, "era.m.diffview.data", {})
 local pane = require("__test__.support.diffview_pane").new(function(bufnr)
   return line_maps[bufnr]
 end)
@@ -78,13 +77,11 @@ pane.get_item_at_line = function(bufnr, lnum)
   return line_maps[bufnr] and line_maps[bufnr][lnum]
 end
 t:patch_table(package.loaded, "era.m.diffview.pane.changes", pane)
-t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
 t:patch_table(package.loaded, "era.m.diffview.util", {
   workspace_path = function(filepath)
     return "/repo/" .. filepath
   end,
 })
-t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
 t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
   focus_changes = function(lyt, stage_type)
     local pane = lyt.changes and lyt.changes[stage_type]
@@ -112,7 +109,7 @@ t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
   end,
 })
 
-local action = assert(loadfile("lua/era/m/diffview/view/workspace/action.lua"))()
+local action = require("era.m.diffview.view.workspace.action")
 
 local function request_refresh()
   refreshed = refreshed + 1
@@ -1010,10 +1007,6 @@ t:test("sbs keymaps expose workspace mutations only for a Changes preview", func
 end)
 
 t:test("History keymaps explicitly exclude standalone layout controls", function()
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {})
-  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
-
   local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
   local keymaps = keymap.gen_history({ history = {} })
   local keys = {} ---@type table<string, boolean>
@@ -1029,9 +1022,6 @@ t:test("History keymaps explicitly exclude standalone layout controls", function
 end)
 
 t:test("workspace help keeps normal and visual mappings for the same key", function()
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {})
-  t:patch_table(package.loaded, "era.m.git.visual", {})
-
   local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
   local modes = {} ---@type table<string, boolean>
   for _, mapping in ipairs(keymap.get_help_keymaps({})) do
@@ -1065,7 +1055,6 @@ t:test("shared sbs keymaps resolve the view in the current tab", function()
       commits_next_calls = commits_next_calls + 1
     end,
   })
-  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
 
   local workspace_keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
   local commits_keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
@@ -1239,7 +1228,6 @@ end)
 t:test("workspace refresh updates Changes and History together", function()
   local changes_refreshes = 0
   local history_refreshes = 0
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {})
   t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
     refresh = function()
       history_refreshes = history_refreshes + 1

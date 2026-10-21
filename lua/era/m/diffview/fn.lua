@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.diffview.fn" ---@type string
 
-local S = era.m.diffview
+local cmd = require("era.m.diffview.cmd")
 
 ---@class era.m.diffview.fn
 local M = {}
@@ -13,7 +13,7 @@ local M = {}
 ---Open the repository Git workspace.
 ---@param opts                        { layout: integer|nil }|nil
 function M.open_workspace(opts)
-  S.cmd.open(opts)
+  cmd.open(opts)
 end
 
 ---Open File History view (opens commits view with path filter)
@@ -51,7 +51,7 @@ function M.open_file_history(opts)
   local relative = stl.os.path.relative(workspace, filepath)
 
   -- Call commits with path filter
-  S.cmd.log({
+  cmd.log({
     layout = layout,
     path = relative,
   })
@@ -60,17 +60,17 @@ end
 ---Open commits view (git log)
 ---@param opts                        { layout: integer|nil, path: string|nil }|nil
 function M.open_commits(opts)
-  S.cmd.log(opts)
+  cmd.log(opts)
 end
 
 ---Close current Diffview
 function M.close()
-  S.cmd.close()
+  cmd.close()
 end
 
 ---Refresh current Diffview
 function M.refresh()
-  S.cmd.refresh()
+  cmd.refresh()
 end
 
 ---Handle window navigation that depends on the active Diffview layout.

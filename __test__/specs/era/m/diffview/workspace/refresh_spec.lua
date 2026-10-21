@@ -89,7 +89,6 @@ local function load_refresh_case(opts)
   end
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", pane)
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
     clear_sbs = function()
       if clear_failures > 0 then

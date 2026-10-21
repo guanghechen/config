@@ -15,17 +15,6 @@ bootstrap.with_runtime(t, {
       end,
     },
   },
-  era = {
-    m = {
-      diffview = {
-        cmd = {
-          log = function(opts)
-            log_opts = opts
-          end,
-        },
-      },
-    },
-  },
   stl = {
     e = enums,
     os = {
@@ -40,10 +29,15 @@ bootstrap.with_runtime(t, {
   },
 })
 
+-- Revealing builds keymap closures through binding; this partial stl cannot load the real commits keymap.
 t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", {})
-t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {})
+t:patch_table(package.loaded, "era.m.diffview.cmd", {
+  log = function(opts)
+    log_opts = opts
+  end,
+})
 
-local Fn = assert(loadfile("lua/era/m/diffview/fn.lua"))()
+local Fn = require("era.m.diffview.fn")
 
 t:test("open_file_history uses Git separators for Windows paths", function()
   local filepath = [[C:\repo\lua\era\m\im\wsl.lua]]

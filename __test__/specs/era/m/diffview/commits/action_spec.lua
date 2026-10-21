@@ -120,10 +120,7 @@ local action_data = {
   end,
 }
 t:patch_table(package.loaded, "era.m.diffview.data", action_data)
-t:patch_table(package.loaded, "era.m.diffview.layout", {})
 t:patch_table(package.loaded, "era.m.diffview.pane.commits", pane_commits)
-t:patch_table(package.loaded, "era.m.diffview.pane.filetree", {})
-t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
 t:patch_table(package.loaded, "era.m.diffview.util", {
   workspace_path = function(filepath)
     return "/repo/" .. filepath
@@ -132,7 +129,6 @@ t:patch_table(package.loaded, "era.m.diffview.util", {
 t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", {
   setup_commits = function() end,
 })
-t:patch_table(package.loaded, "era.m.diffview.view.commits.state", {})
 
 local view = assert(loadfile("lua/era/m/diffview/view/commits/view.lua"))()
 t:patch_table(package.loaded, "era.m.diffview.view.commits.view", view)

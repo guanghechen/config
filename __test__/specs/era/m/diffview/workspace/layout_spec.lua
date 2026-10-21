@@ -69,7 +69,7 @@ t:patch_table(package.loaded, "era.m.diffview.view.workspace.winline", {
   render_changes = function() end,
 })
 
-local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
+local view = require("era.m.diffview.view.workspace.view")
 
 ---@param lyt era.m.diffview.view.workspace.ILayout
 ---@param message string

@@ -101,7 +101,7 @@ t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
   apply_fold_unchanged_pair = function() end,
 })
 
-local tabline = assert(loadfile("lua/era/m/diffview/view/commits/tabline.lua"))()
+local tabline = require("era.m.diffview.view.commits.tabline")
 
 t:test("layout 3 renders status buttons against the left SBS pane", function()
   local sbs_left_winnr = vim.api.nvim_get_current_win()

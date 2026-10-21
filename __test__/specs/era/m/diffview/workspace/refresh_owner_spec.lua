@@ -30,7 +30,7 @@ t:patch_global("stl", {
   },
 })
 
-local Refresh = assert(loadfile("lua/era/m/diffview/view/workspace/refresh.lua"))()
+local Refresh = require("era.m.diffview.view.workspace.refresh")
 
 ---@return era.m.diffview.view.workspace.Refresh owner
 ---@return table state

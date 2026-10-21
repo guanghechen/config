@@ -18,7 +18,7 @@ t:patch_table(package.loaded, "era.m.diffview.config", {
 })
 t:patch_table(package.loaded, "era.m.diffview.util", {})
 
-local pane_sbs = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+local pane_sbs = require("era.m.diffview.pane.sbs")
 
 ---@param keymaps                       stl.t.IKeymap[]
 ---@param key                           string
@@ -182,19 +182,9 @@ t:test("fold actions separate the current view from the global default", functio
         applied[#applied + 1] = value
       end,
     }
-    t:patch_table(package.loaded, "era.m.diffview.data", {})
-    t:patch_table(package.loaded, "era.m.diffview.layout", {})
     t:patch_table(package.loaded, "era.m.diffview.pane.sbs", pane)
     if kind == "workspace" then
-      t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
-      t:patch_table(package.loaded, "era.m.diffview.util", {})
-      t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
-      t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {})
     else
-      t:patch_table(package.loaded, "era.m.diffview.config", {})
-      t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
-      t:patch_table(package.loaded, "era.m.diffview.view.commits.state", {})
-      t:patch_table(package.loaded, "era.m.diffview.view.commits.view", {})
     end
 
     local action = assert(loadfile("lua/era/m/diffview/view/" .. kind .. "/action.lua"))()
@@ -336,7 +326,6 @@ t:test("workspace fold keys control the current view while t3 changes the defaul
       calls[#calls + 1] = "default"
     end,
   })
-  t:patch_table(package.loaded, "era.m.git.visual", {})
 
   local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
   ---@diagnostic disable-next-line: missing-fields
@@ -374,7 +363,6 @@ t:test("commits exposes current-view fold commands from every pane", function()
       calls[#calls + 1] = "default"
     end,
   })
-  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
 
   local keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
   ---@diagnostic disable-next-line: missing-fields

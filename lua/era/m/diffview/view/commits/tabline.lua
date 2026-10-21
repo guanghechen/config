@@ -5,9 +5,6 @@ local config = require("era.m.diffview.config")
 local commits_state = require("era.m.diffview.view.commits.state")
 local commits_view = require("era.m.diffview.view.commits.view")
 
-local btn = stl.nvim.fn.btn
-local txt = stl.nvim.fn.txt
-
 ---Commits view tabline components and registration.
 ---@class era.m.diffview.view.commits.tabline
 local M = {}
@@ -239,21 +236,21 @@ function M.status_component()
       local flags_text = " │ " .. flag0_text .. flag1_text .. flag2_text .. flag3_text ---@type string
       local right_split = " " ---@type string
 
-      local flags_hltext = txt(" │ ", hln_dim)
-        .. btn(txt(flag0_text, flag0_hln), cb_layout)
-        .. btn(txt(flag1_text, flag1_hln), cb_viewtype)
+      local flags_hltext = stl.nvim.fn.txt(" │ ", hln_dim)
+        .. stl.nvim.fn.btn(stl.nvim.fn.txt(flag0_text, flag0_hln), cb_layout)
+        .. stl.nvim.fn.btn(stl.nvim.fn.txt(flag1_text, flag1_hln), cb_viewtype)
       if is_tree then
-        flags_hltext = flags_hltext .. btn(txt(flag2_text, flag2_hln), cb_foldempty)
+        flags_hltext = flags_hltext .. stl.nvim.fn.btn(stl.nvim.fn.txt(flag2_text, flag2_hln), cb_foldempty)
       end
-      flags_hltext = flags_hltext .. btn(txt(flag3_text, flag3_hln), cb_default_folds)
-      local split = txt(right_split, hln_split)
-      local commits_hltext = txt(commits_text, hln_pink)
+      flags_hltext = flags_hltext .. stl.nvim.fn.btn(stl.nvim.fn.txt(flag3_text, flag3_hln), cb_default_folds)
+      local split = stl.nvim.fn.txt(right_split, hln_split)
+      local commits_hltext = stl.nvim.fn.txt(commits_text, hln_pink)
       return {
         winnr = get_pane_winnr(tabnr),
         variants = {
           {
             text = commits_text .. page_text .. flags_text .. right_split,
-            hltext = commits_hltext .. txt(page_text, hln_dim) .. flags_hltext .. split,
+            hltext = commits_hltext .. stl.nvim.fn.txt(page_text, hln_dim) .. flags_hltext .. split,
           },
           { text = commits_text .. flags_text .. right_split, hltext = commits_hltext .. flags_hltext .. split },
           { text = commits_text .. right_split, hltext = commits_hltext .. split },
@@ -314,7 +311,7 @@ function M.filter_component()
       if vim.api.nvim_strwidth(prefix .. name) > remain_width then
         local available = remain_width - vim.api.nvim_strwidth(prefix .. "...")
         if available <= 0 then
-          return " " .. icon, txt(" " .. icon, hln_dim)
+          return " " .. icon, stl.nvim.fn.txt(" " .. icon, hln_dim)
         end
         local start = math.max(0, vim.fn.strchars(name) - available)
         while vim.api.nvim_strwidth(vim.fn.strcharpart(name, start)) > available do
@@ -322,7 +319,7 @@ function M.filter_component()
         end
         name = "..." .. vim.fn.strcharpart(name, start)
       end
-      return prefix .. name, txt(prefix, hln_dim) .. txt(name, hln_pink)
+      return prefix .. name, stl.nvim.fn.txt(prefix, hln_dim) .. stl.nvim.fn.txt(name, hln_pink)
     end,
   }
   return component

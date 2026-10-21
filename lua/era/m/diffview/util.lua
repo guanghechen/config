@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.diffview.util" ---@type string
 
-local S = era.m.diffview
+local config = require("era.m.diffview.config")
 
 ---@class era.m.diffview.util
 local M = {}
@@ -38,7 +38,7 @@ end
 ---@param status                       string
 ---@return string
 function M.get_status_icon(status)
-  return S.config.STATUS_ICONS[status] or "?"
+  return config.STATUS_ICONS[status] or "?"
 end
 
 ---Get status highlight group

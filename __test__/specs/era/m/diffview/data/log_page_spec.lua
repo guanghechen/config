@@ -28,9 +28,8 @@ bootstrap.with_global(t, "dot", {
   },
 })
 bootstrap.with_global(t, "era", {})
-t:patch_table(package.loaded, "era.m.diffview.commit_graph", assert(loadfile("lua/era/m/diffview/commit_graph.lua"))())
 
-local data = assert(loadfile("lua/era/m/diffview/data.lua"))()
+local data = require("era.m.diffview.data")
 
 local function log_line(hash, abbrev, parents, author, message)
   return table.concat({ hash, abbrev, parents, author, "2026-09-03 12:00:00 +0800", message }, "\0")

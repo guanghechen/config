@@ -30,7 +30,7 @@ bootstrap.with_global(t, "dot", {
 })
 bootstrap.with_global(t, "era", {})
 
-local data = assert(loadfile("lua/era/m/diffview/data.lua"))()
+local data = require("era.m.diffview.data")
 
 t:test("log search: hash prefix takes precedence over an earlier message match", function()
   git_result = {

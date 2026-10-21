@@ -1,6 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.diffview.config" ---@type string
 
+local filetype = require("stl.filetype")
+local icon = require("stl.icon")
+
 ---@class era.m.diffview.config
 local M = {}
 
@@ -16,10 +19,10 @@ M.NS = vim.api.nvim_create_namespace("era.m.diffview")
 
 ---@type table<string, string>
 M.FT = {
-  CHANGES = stl.filetype.DIFFVIEW_CHANGES,
-  COMMITS = stl.filetype.DIFFVIEW_COMMITS,
-  FILETREE = stl.filetype.DIFFVIEW_FILES,
-  SBS = stl.filetype.DIFFVIEW_SBS,
+  CHANGES = filetype.DIFFVIEW_CHANGES,
+  COMMITS = filetype.DIFFVIEW_COMMITS,
+  FILETREE = filetype.DIFFVIEW_FILES,
+  SBS = filetype.DIFFVIEW_SBS,
 }
 
 ----------------------------------------------------------------------------------------------------
@@ -108,9 +111,9 @@ M.COMMITS_PER_PAGE = 100
 ----------------------------------------------------------------------------------------------------
 
 M.ICONS = {
-  COLLAPSED = stl.icon.ui.ArrowClosed,
-  EXPANDED = stl.icon.ui.ArrowOpen,
-  FILE = stl.icon.filetype.File,
+  COLLAPSED = icon.ui.ArrowClosed,
+  EXPANDED = icon.ui.ArrowOpen,
+  FILE = icon.filetype.File,
   SEPARATOR = "─",
 }
 

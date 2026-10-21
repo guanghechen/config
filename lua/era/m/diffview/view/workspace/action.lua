@@ -652,7 +652,7 @@ function M.unstage_hunk(ctx, range)
   end
 
   local right_bufnr = vim.api.nvim_win_get_buf(right_winnr) ---@type integer
-  local expected_name = era.m.diffview.util.gen_index_bufname(entry.filepath) ---@type string
+  local expected_name = util.gen_index_bufname(entry.filepath) ---@type string
   if vim.api.nvim_buf_get_name(right_bufnr) ~= expected_name then
     stl.reporter.warn({
       from = __module_name__,

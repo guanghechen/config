@@ -2,7 +2,7 @@ local harness = require("__test__.support.harness")
 
 local t = harness.new()
 
-local layout = assert(loadfile("lua/era/m/diffview/layout.lua"))()
+local layout = require("era.m.diffview.layout")
 
 ---@param keymaps                       stl.t.IKeymap[]
 ---@param key                           string
@@ -125,7 +125,6 @@ t:test("panel buffers route mouse scrolling without leaking mappings to side-by-
     end,
   }
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", action)
-  t:patch_table(package.loaded, "era.m.git.visual", {})
 
   local workspace_keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
   ---@diagnostic disable-next-line: missing-fields
@@ -185,7 +184,6 @@ t:test("commits panel recreation installs mouse mappings", function()
     COMMITS_WIDTH = 20,
     FILETREE_WIDTH = 20,
   })
-  t:patch_table(package.loaded, "era.m.diffview.layout", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.commits", {
     apply_winopts = function() end,
     create_buffer = create_buffer,

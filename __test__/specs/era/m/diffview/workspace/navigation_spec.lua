@@ -30,7 +30,6 @@ bootstrap.with_global(t, "era", {})
 ---@param ordered_entries               era.m.diffview.IFileEntry[]|nil
 ---@return era.m.diffview.view.workspace.action
 local function load_action(line_map, opened, ordered_entries)
-  t:patch_table(package.loaded, "era.m.diffview.data", {})
   local pane = require("__test__.support.diffview_pane").new(function(bufnr)
     if type(line_map) == "function" then
       return line_map(bufnr)
@@ -45,7 +44,6 @@ local function load_action(line_map, opened, ordered_entries)
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
     setup_changes = function() end,
   })
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.state", {})
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
     focus_changes = function(lyt, stage_type)
       local pane = lyt.changes[stage_type]

@@ -1,7 +1,7 @@
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-local graph = assert(loadfile("lua/era/m/diffview/commit_graph.lua"))()
+local graph = require("era.m.diffview.commit_graph")
 
 ---@param hash string
 ---@param parents string[]

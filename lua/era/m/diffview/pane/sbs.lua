@@ -651,7 +651,7 @@ function M.open_diff_entry(opts)
   -- Handle different cases
   if status == "U" then
     -- Conflict preview contract: compare stage 2 (ours) with the editable working tree.
-    local left_name = era.m.diffview.util.gen_old_bufname(filepath, "ours")
+    local left_name = util.gen_old_bufname(filepath, "ours")
     left_bufnr = M.create_sbs_buffer(left_name)
 
     local absolute_path = util.workspace_path(filepath)
@@ -664,7 +664,7 @@ function M.open_diff_entry(opts)
       right_bufnr = M.get_null_buffer()
     end
 
-    if not load_content(era.m.diffview.util.index_stage_object(filepath, 2), left_bufnr) then
+    if not load_content(util.index_stage_object(filepath, 2), left_bufnr) then
       return
     end
     apply_buffers(left_bufnr, right_bufnr)
@@ -672,21 +672,21 @@ function M.open_diff_entry(opts)
     -- Deleted file: show old content on left, null on right
     if stage_type == "staged" then
       -- Staged delete: HEAD -> (deleted)
-      local left_name = era.m.diffview.util.gen_old_bufname(filepath, "HEAD")
+      local left_name = util.gen_old_bufname(filepath, "HEAD")
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.get_null_buffer()
 
-      if not load_content(era.m.diffview.util.head_object(filepath), left_bufnr, entry.old_object_name) then
+      if not load_content(util.head_object(filepath), left_bufnr, entry.old_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)
     else
       -- Unstaged delete: index -> (deleted)
-      local left_name = era.m.diffview.util.gen_old_bufname(filepath, "index")
+      local left_name = util.gen_old_bufname(filepath, "index")
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.get_null_buffer()
 
-      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr, entry.old_object_name) then
+      if not load_content(util.staged_object(filepath), left_bufnr, entry.old_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)
@@ -697,10 +697,10 @@ function M.open_diff_entry(opts)
 
     if stage_type == "staged" then
       -- Staged add: (new) -> index
-      local right_name = era.m.diffview.util.gen_index_bufname(filepath)
+      local right_name = util.gen_index_bufname(filepath)
       right_bufnr = M.create_sbs_buffer(right_name)
 
-      if not load_content(era.m.diffview.util.staged_object(filepath), right_bufnr, entry.new_object_name) then
+      if not load_content(util.staged_object(filepath), right_bufnr, entry.new_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)
@@ -718,18 +718,18 @@ function M.open_diff_entry(opts)
     end
   elseif status == "R" or status == "C" then
     local previous = entry.prev_filepath or filepath
-    local left_name = era.m.diffview.util.gen_old_bufname(previous, stage_type == "staged" and "HEAD" or "index")
+    local left_name = util.gen_old_bufname(previous, stage_type == "staged" and "HEAD" or "index")
     left_bufnr = M.create_sbs_buffer(left_name)
 
     if stage_type == "staged" then
-      local right_name = era.m.diffview.util.gen_index_bufname(filepath)
+      local right_name = util.gen_index_bufname(filepath)
       right_bufnr = M.create_sbs_buffer(right_name)
       if
         not load_content_pair(
-          era.m.diffview.util.head_object(previous),
+          util.head_object(previous),
           left_bufnr,
           entry.old_object_name,
-          era.m.diffview.util.staged_object(filepath),
+          util.staged_object(filepath),
           right_bufnr,
           entry.new_object_name
         )
@@ -741,7 +741,7 @@ function M.open_diff_entry(opts)
       if vim.api.nvim_win_is_valid(right_winnr) then
         M.save_winopts(right_bufnr, right_winnr)
       end
-      if not load_content(era.m.diffview.util.staged_object(previous), left_bufnr, entry.old_object_name) then
+      if not load_content(util.staged_object(previous), left_bufnr, entry.old_object_name) then
         return
       end
     end
@@ -750,17 +750,17 @@ function M.open_diff_entry(opts)
     -- Modified file: show old on left, new on right
     if stage_type == "staged" then
       -- Staged modify: HEAD -> index
-      local left_name = era.m.diffview.util.gen_old_bufname(filepath, "HEAD")
-      local right_name = era.m.diffview.util.gen_index_bufname(filepath)
+      local left_name = util.gen_old_bufname(filepath, "HEAD")
+      local right_name = util.gen_index_bufname(filepath)
       left_bufnr = M.create_sbs_buffer(left_name)
       right_bufnr = M.create_sbs_buffer(right_name)
 
       if
         not load_content_pair(
-          era.m.diffview.util.head_object(filepath),
+          util.head_object(filepath),
           left_bufnr,
           entry.old_object_name,
-          era.m.diffview.util.staged_object(filepath),
+          util.staged_object(filepath),
           right_bufnr,
           entry.new_object_name
         )
@@ -771,7 +771,7 @@ function M.open_diff_entry(opts)
       apply_buffers(left_bufnr, right_bufnr)
     else
       -- Unstaged modify: index -> working tree
-      local left_name = era.m.diffview.util.gen_old_bufname(filepath, "index")
+      local left_name = util.gen_old_bufname(filepath, "index")
       left_bufnr = M.create_sbs_buffer(left_name)
 
       local absolute_path = util.workspace_path(filepath)
@@ -782,7 +782,7 @@ function M.open_diff_entry(opts)
         M.save_winopts(right_bufnr, right_winnr)
       end
 
-      if not load_content(era.m.diffview.util.staged_object(filepath), left_bufnr, entry.old_object_name) then
+      if not load_content(util.staged_object(filepath), left_bufnr, entry.old_object_name) then
         return
       end
       apply_buffers(left_bufnr, right_bufnr)
@@ -828,49 +828,35 @@ function M.open_commit_entry(opts)
 
   if status == "D" then
     -- Deleted in this commit
-    local left_name = era.m.diffview.util.gen_old_bufname(parent_filepath, parent_hash)
+    local left_name = util.gen_old_bufname(parent_filepath, parent_hash)
     left_bufnr = M.create_sbs_buffer(left_name)
     right_bufnr = M.get_null_buffer()
 
-    if
-      not M.load_git_content(
-        era.m.diffview.util.commit_object(parent_hash, parent_filepath),
-        left_bufnr,
-        token,
-        is_current
-      )
-    then
+    if not M.load_git_content(util.commit_object(parent_hash, parent_filepath), left_bufnr, token, is_current) then
       return
     end
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   elseif status == "A" then
     -- Added in this commit
     left_bufnr = M.get_null_buffer()
-    local right_name = era.m.diffview.util.gen_old_bufname(filepath, hash)
+    local right_name = util.gen_old_bufname(filepath, hash)
     right_bufnr = M.create_sbs_buffer(right_name)
 
-    if not M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token, is_current) then
+    if not M.load_git_content(util.commit_object(hash, filepath), right_bufnr, token, is_current) then
       return
     end
     M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, apply_opts)
   else
     -- Modified
-    local left_name = era.m.diffview.util.gen_old_bufname(parent_filepath, parent_hash)
-    local right_name = era.m.diffview.util.gen_old_bufname(filepath, hash)
+    local left_name = util.gen_old_bufname(parent_filepath, parent_hash)
+    local right_name = util.gen_old_bufname(filepath, hash)
     left_bufnr = M.create_sbs_buffer(left_name)
     right_bufnr = M.create_sbs_buffer(right_name)
 
-    if
-      not M.load_git_content(
-        era.m.diffview.util.commit_object(parent_hash, parent_filepath),
-        left_bufnr,
-        token,
-        is_current
-      )
-    then
+    if not M.load_git_content(util.commit_object(parent_hash, parent_filepath), left_bufnr, token, is_current) then
       return
     end
-    if not M.load_git_content(era.m.diffview.util.commit_object(hash, filepath), right_bufnr, token, is_current) then
+    if not M.load_git_content(util.commit_object(hash, filepath), right_bufnr, token, is_current) then
       return
     end
 

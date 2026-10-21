@@ -57,25 +57,6 @@ bootstrap.with_global(t, "dot", {
 })
 bootstrap.with_global(t, "era", {
   m = {
-    diffview = {
-      util = {
-        gen_index_bufname = function(filepath)
-          return "index:" .. filepath
-        end,
-        gen_old_bufname = function(filepath, ref)
-          return ref .. ":" .. filepath
-        end,
-        head_object = function(filepath)
-          return "HEAD:" .. filepath
-        end,
-        index_stage_object = function(filepath, stage)
-          return string.format(":%d:%s", stage, filepath)
-        end,
-        staged_object = function(filepath)
-          return ":./" .. filepath
-        end,
-      },
-    },
     git = { staging = staging },
   },
 })
@@ -99,11 +80,25 @@ local config = {
 }
 t:patch_table(package.loaded, "era.m.diffview.config", config)
 t:patch_table(package.loaded, "era.m.diffview.util", {
+  gen_index_bufname = function(filepath)
+    return "index:" .. filepath
+  end,
+  gen_old_bufname = function(filepath, ref)
+    return ref .. ":" .. filepath
+  end,
+  head_object = function(filepath)
+    return "HEAD:" .. filepath
+  end,
+  index_stage_object = function(filepath, stage)
+    return string.format(":%d:%s", stage, filepath)
+  end,
+  staged_object = function(filepath)
+    return ":./" .. filepath
+  end,
   workspace_path = function(filepath)
     return "/repo/" .. filepath
   end,
 })
-t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
 
 ---@param predicate                     fun(): boolean
 local function wait(predicate)
@@ -132,9 +127,6 @@ local function close_windows(left_winnr, right_winnr)
 end
 
 t:test("workspace visibility filters untracked files without mutating the snapshot", function()
-  t:patch_table(package.loaded, "era.m.diffview.layout", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
   local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
   local tracked = { filepath = "tracked.lua", stage_type = "unstaged", status = "M" }
   local untracked = { filepath = "untracked.lua", stage_type = "unstaged", status = "?" }
@@ -154,8 +146,6 @@ t:test("workspace preview generation makes the latest request the sole writer", 
   local requests = {} ---@type era.m.diffview.pane.sbs.IOpenDiffOpts[]
   local clear_is_current = nil ---@type (fun(): boolean)|nil
   local fold_unchanged = false
-  t:patch_table(package.loaded, "era.m.diffview.layout", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
     clear = function(_, _, opts)
       clear_is_current = opts.is_current
@@ -214,9 +204,6 @@ end)
 t:test("workspace and History share latest preview ownership", function()
   local changes_requests = {} ---@type era.m.diffview.pane.sbs.IOpenDiffOpts[]
   local history_requests = {} ---@type era.m.diffview.pane.sbs.IOpenCommitOpts[]
-  t:patch_table(package.loaded, "era.m.diffview.layout", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.changes", {})
-  t:patch_table(package.loaded, "era.m.diffview.pane.filetree", {})
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
     open_diff_entry = function(opts)
       changes_requests[#changes_requests + 1] = opts
